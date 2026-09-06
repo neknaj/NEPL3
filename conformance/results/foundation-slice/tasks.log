@@ -1,0 +1,15 @@
+Command:
+cargo run --locked -p nepl3-tools -- tasks --check
+
+Exit code: 0
+
+Output:
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.27s
+     Running `target\debug\nepl3-tools.exe tasks --check`
+Independent design review: 4 open findings; affected tasks cannot be marked complete.
+Task documents are current.

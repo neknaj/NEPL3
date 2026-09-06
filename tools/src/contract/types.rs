@@ -260,7 +260,7 @@ mod tests {
             "List<Text,U64>",
         ] {
             let mut changed = model.clone();
-            changed["types"]["NodeRef"]["record"][0][1] = json!(ty);
+            changed["types"]["Requirement"]["record"][0][1] = json!(ty);
             assert!(check(&changed, &contracts).is_err(), "{ty}");
         }
         let mut changed = model.clone();
@@ -279,7 +279,7 @@ mod tests {
             json!([]),
             json!(["NdfScalar", "NdfScalar"]),
             json!(["NoSuchType"]),
-            json!(["NodeRef"]),
+            json!(["Requirement"]),
         ] {
             let mut changed = model.clone();
             changed["external_types"] = imports;
@@ -291,7 +291,7 @@ mod tests {
             assert!(check(&changed, &contracts).is_err(), "{name}");
         }
         let mut changed = model.clone();
-        changed["scalar_types"] = json!(["NodeRef"]);
+        changed["scalar_types"] = json!(["Requirement"]);
         assert!(check(&changed, &contracts).is_err());
         Ok(())
     }

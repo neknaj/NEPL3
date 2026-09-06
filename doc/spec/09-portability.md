@@ -45,7 +45,7 @@ NodeId/EntityId等は公開record内のindexとしてencodeし、同じbundleに
 
 このintrinsic記述は通常のdomain sumではない。たとえば `NdfValue.Integer(value: Integer)` の論理fieldを一般のVariantとしてtag11で包まず、上表のtag3へ直接写す。Integerのnegative/magnitude、Rationalの分子tag3と分母bytesは上表の専用表現を使う。tag10/11のfieldsは裸のCBOR arrayであり、Listのtag7を付けない。そのheader内のSchemaRefも裸の `[text,uint64,bytes32]` であり、通常のRecordのtag10を付けない。論理fieldのTextやU64も、上表で裸のCBOR text/uint64を指定する位置へ余分なNDF tagを付けない。codecの物理表現は上表を正本とする。
 
-intrinsicの識別子 `nepl3.ndf/1` は本符号化profileに組み込まれた固定識別子である。intrinsic自体へdomain SchemaRefや自己hashを要求しない。Record/Variant headerのSchemaRefは運ばれるdomain値のdescriptorを識別し、intrinsicの識別子とは別物である。domain descriptorの登録・digest検証は必要であり、TypedValueという型名やtag10/11であることだけでは検査済みにならない。ここで固定するSchemaRefの物理表現はintrinsic headerのものであり、任意のdomain recordのfieldとしてのSchemaRefまで裸のtupleになると解釈しない。後者のdescriptor所有schemaと符号化の閉包はR006の残課題とする。
+intrinsicの識別子 `nepl3.ndf/1` は本符号化profileに組み込まれた固定識別子である。intrinsic自体へdomain SchemaRefや自己hashを要求しない。Record/Variant headerのSchemaRefは運ばれるdomain値のdescriptorを識別し、intrinsicの識別子とは別物である。domain descriptorの登録・digest検証は必要であり、TypedValueという型名やtag10/11であることだけでは検査済みにならない。通常のfieldとしてのSchemaRefは `nepl3.foundation` revision 1のSchemaRef recordをtag10で運ぶ。そのheaderのSchemaRefだけが裸のtupleとなるため、無限のwrapper再帰は生じない。
 
 ### 2.2 descriptorの型参照検査と残る契約
 
@@ -53,7 +53,21 @@ fieldとunion参照の型式は `Name | List<Type> | Option<Type>` とする。N
 
 builtinはUnit、Bool、U64、Integer、Natural、Rational、Text、Bytes、Bytes32である。所有者は本profileであり、modelのscalar_typesとcontractsのscalar_aliasesはそれへの参照・説明である。model.types、contracts.records/enums/intrinsic_typesの名義型定義は重複を許さない。modelの外部参照はexternal_typesへ明示し、存在する外部所有型へ解決する。modelの可視名は自身の定義と明示したscalar/external importに限る。既存の再帰的な型graphは許すが、値の循環可否・source/Origin tableの整合は操作ごとの値検査で別に判定する。
 
-今回のR006に対する修正は、未定義だったNdfScalarと構造を欠いたTypedValue、および既存field/union/importの参照検査を具体化する。`nepl3-tools check` は型式・名義参照・intrinsicの固定case/tag/field/subsetを検査する。codecの実行、任意精度値の正規化、domain descriptorのdigest、bundle参照の値検証を実装した証拠ではない。27操作のinput/outputは依然として説明用の式を含み、閉じた実行可能schemaではない。provider frame、要求と応答の対応、Environment/Profile、Doc移行のDG01–DG06も別途確定が必要であり、R006を完了にはしない。型名がすべて解決することと公開操作契約が完成することを区別する。
+型名がすべて解決することと公開操作契約が完成することを区別する。27操作のinput/outputには説明用の式が残り、型付きの具体化・provider frame・Profile・Doc移行のDG01–DG06は対応する実装とともに完成させる。進捗と実行証拠は [実装記録](../progress/foundation-runtime.md) を参照する。
+
+### 2.3 実行可能なschema descriptor
+
+`interfaces/contracts.json` のTypeDescriptorはUnit/Bool/U64/Integer/Natural/Rational/Text/Bytes/Bytes32、intrinsicのNdfValue/NdfScalar/TypedValue、List、Option、Namedを区別する。Namedはpackage/revision/nameの記号参照でありdigestを入れない。Recordは順序付きfield、Variantは名前付きのvariantと順序付きpayloadを持つ。constraintsはschema所有の意味制約IDの集合である。
+
+SchemaDescriptorはpackage、revision、types、operationsを持つ。canonical JSONではtypesとoperationsを名前keyのobject、型定義を `{constraints,record}` または `{constraints,variant}` とし、fieldを `[name,TypeJSON]` の順序付きarrayにする。TypeJSONはbuiltin/intrinsic名の文字列、`{list:TypeJSON}`、`{option:TypeJSON}`、`{named:{name,package,revision}}` のいずれか。operationは `{input,output,pure}`。constraintsは重複を拒否して名前順に並べる。13章のkey順・escape・domain separatorでSHA-256を求める。
+
+登録は期待するSchemaRefとdescriptorの計算digestを照合する。一つのregistryで同じpackage/revisionに異なるdigestを同時選択しない。全packageを登録後にfinalizeし、使用されていないvariantやoperationも含むすべてのNamed参照を解決する。相互参照する型・packageの登録は許すが、finalize前の値検査・実行は拒否する。
+
+`interfaces/foundation.json` はcontractsから `cargo run --locked -p nepl3-tools -- foundation --write` で生成する実際の `nepl3.foundation` descriptorである。build.rsから生成せず、通常の検査で正本との一致とproduction core registryによる登録・参照閉包を検査する。未完成のoperation説明表を実行可能なoperationsへコピーしない。このpackageは共通値・transport recordのschemaを提供し、言語操作の実装を広告しない。
+
+同じ明示生成で `crates/foundation/core/src/schema/foundation.rs` を作り、productionの `foundation::descriptor` が型付きdescriptorを構築する。構築前に割当・work予算を計上し、toolsのJSON parserをproductionへ依存させない。通常の検査はJSONとRust投影の両方を正本と比較する。wireのsource/Span adapterはこのdescriptorを登録したregistryで構造を検査し、さらにsource digest・宣言順・identity・locator・snapshot・UTF-8境界を検査してnative型へ戻す。
+
+raw encode/decodeはNDF intrinsicのcanonical性を検査する。公開操作の境界ではexpected TypeDescriptorとfinalize済みregistryを渡すchecked encode/decodeを使い、受信したschema/kind/variant/field型を照合する。得られるStructuralValueは構造検査の証明であり、constraintsに列挙したsourceの対応・回路の幅等の意味検査を代替しない。coreの対応constructorまたはdomain操作で必要な不変条件を検査してから使用する。
 
 ## 3. 操作呼出し
 

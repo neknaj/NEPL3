@@ -1,0 +1,17 @@
+Command:
+$env:RUSTDOCFLAGS='-D warnings'
+cargo doc --workspace --no-deps --locked
+
+Exit code: 0
+
+Output:
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+ Documenting nepl3-wire v0.1.0 (C:\projects\NEPL3-runtime\crates\foundation\wire)
+ Documenting nepl3-reader v0.1.0 (C:\projects\NEPL3-runtime\crates\foundation\reader)
+ Documenting nepl3-tools v0.1.0 (C:\projects\NEPL3-runtime\tools)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.01s
+   Generated C:\projects\NEPL3-runtime\target\doc\nepl3_core\index.html and 3 other files

@@ -44,6 +44,12 @@ git diff
 
 `check` はリポジトリ内の設計metadataと実際のworkspaceの整合を検査します。言語処理系の代用ではなく、登録されたruntime受入試験を実行するコマンドでもありません。`implementation-status.json` の状態は実際の実行証拠に基づいて更新します。
 
+共通型を変更したときは `cargo run --locked -p nepl3-tools -- foundation --write` で実際のpackage descriptorを生成します。`check` は正本との一致に加え、production core registryによるdigest照合・参照finalizeも行います。通常buildからschema生成を呼ぶbuild.rsは置きません。
+
+reader包絡の正本は `interfaces/reader.json` です。変更時は `cargo run --locked -p nepl3-tools -- reader --write` でproductionの登録コードを生成します。参照するfoundation型と合わせたregistryのfinalizeを検査し、VMのstate・request・continuation型と同じ変更で同期します。
+
+CIのWASI jobはSHA-256を固定したWasmtime 44.0.1でcore/wireの実試験を実行し、browser向けWasmのcompileも行います。ローカルでは `CARGO_TARGET_WASM32_WASIP2_RUNNER` を `wasmtime run` とし、`cargo test --locked -p nepl3-core -p nepl3-wire --target wasm32-wasip2 -- --test-threads=1` を実行します。browser targetのcompile成功はブラウザ上の実行・描画試験を意味しません。
+
 タスクのacceptance参照はcoverageを示します。T16以外のタスクは自身の成果物・scope付き証拠・依存完了・設計blocker解消で判定し、後段を含む試験群全体の合格は別に記録します。証拠にはtask ID、検査対象、コマンド、target、結果、未検証範囲を残します。T16の完了には登録された全必須群のpassedが必要です。
 
 scope付き証拠は `conformance/results/` 以下へJSONで保存します。次は形式を示す例で、実行済みの記録ではありません。実際の検査名・コマンド・targetと未検証部分に置き換え、実行を確認してから状態を更新してください。

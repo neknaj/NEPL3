@@ -1,5 +1,5 @@
 {
-  "design": "nepl3-design-2026-09-06-r3",
+  "design": "nepl3-design-2026-09-06-r4",
   "tasks": [
     {
       "id": "T01",
@@ -258,7 +258,7 @@
         "U07",
         "U08"
       ],
-      "deliverable": "nepl3-ui-coreのModel/Msg/update/viewと型付きCmdを実装。R006の閉じた操作schemaを前提に、純粋性・epoch/request/snapshot照合・失敗状態を検証する。",
+      "deliverable": "nepl3-ui-coreのModel/Msg/update/viewと型付きCmdを、関連する操作schema・codecの具体化と並行して実装する。R006/R009の関連課題を解消し、公開契約を確定する前に純粋性・epoch/request/snapshot照合・失敗状態を検証する。",
       "spec": "doc/spec/14-web-ui.md"
     },
     {

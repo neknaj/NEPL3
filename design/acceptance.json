@@ -1,6 +1,6 @@
 {
   "schema": "nepl3.acceptance-catalog/1",
-  "design_revision": "nepl3-design-2026-09-06-r3",
+  "design_revision": "nepl3-design-2026-09-06-r4",
   "targets": {
     "native-x86_64-linux": {
       "description": "x86_64-unknown-linux-gnu native runner; log OS, compiler and runner versions",

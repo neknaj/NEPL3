@@ -11,174 +11,6 @@
     "Bytes32"
   ],
   "types": {
-    "NodeRef": {
-      "record": [
-        [
-          "id",
-          "U64"
-        ]
-      ]
-    },
-    "OriginRef": {
-      "record": [
-        [
-          "id",
-          "U64"
-        ]
-      ]
-    },
-    "ForeignSyntax": {
-      "record": [
-        [
-          "schema",
-          "SchemaRef"
-        ],
-        [
-          "category",
-          "Text"
-        ],
-        [
-          "root",
-          "NodeRef"
-        ],
-        [
-          "bundle",
-          "SyntaxBundle"
-        ],
-        [
-          "environment",
-          "EnvironmentRef"
-        ]
-      ]
-    },
-    "EnvironmentRef": {
-      "record": [
-        [
-          "id",
-          "U64"
-        ],
-        [
-          "digest",
-          "Bytes32"
-        ]
-      ]
-    },
-    "SyntaxBundle": {
-      "record": [
-        [
-          "sources",
-          "List<SourceContent>"
-        ],
-        [
-          "nodes",
-          "List<SyntaxNode>"
-        ],
-        [
-          "origins",
-          "List<Origin>"
-        ],
-        [
-          "root",
-          "NodeRef"
-        ]
-      ]
-    },
-    "SyntaxNode": {
-      "record": [
-        [
-          "schema",
-          "SchemaRef"
-        ],
-        [
-          "kind",
-          "Text"
-        ],
-        [
-          "fields",
-          "List<FieldValue>"
-        ],
-        [
-          "head",
-          "Option<Span>"
-        ],
-        [
-          "cover",
-          "Option<Span>"
-        ],
-        [
-          "origin",
-          "OriginRef"
-        ]
-      ]
-    },
-    "FieldValue": {
-      "sum": {
-        "Atom": [
-          [
-            "value",
-            "NdfScalar"
-          ]
-        ],
-        "Child": [
-          [
-            "node",
-            "NodeRef"
-          ]
-        ],
-        "Children": [
-          [
-            "nodes",
-            "List<NodeRef>"
-          ]
-        ],
-        "Foreign": [
-          [
-            "value",
-            "ForeignSyntax"
-          ]
-        ]
-      }
-    },
-    "Origin": {
-      "sum": {
-        "Direct": [
-          [
-            "span",
-            "Span"
-          ]
-        ],
-        "Composite": [
-          [
-            "inputs",
-            "List<OriginRef>"
-          ]
-        ],
-        "Generated": [
-          [
-            "operation",
-            "OperationRef"
-          ],
-          [
-            "callsite",
-            "Option<Span>"
-          ],
-          [
-            "inputs",
-            "List<OriginRef>"
-          ]
-        ],
-        "Synthetic": [
-          [
-            "reason",
-            "Text"
-          ],
-          [
-            "anchor",
-            "Option<Span>"
-          ]
-        ]
-      }
-    },
     "Math:Add": {
       "record": [
         [
@@ -1689,9 +1521,17 @@
     "OperationRef",
     "TypedValue",
     "NdfScalar",
-    "ResourceContent"
+    "ResourceContent",
+    "NodeRef",
+    "OriginRef",
+    "EnvironmentRef",
+    "ForeignSyntax",
+    "SyntaxBundle",
+    "SyntaxNode",
+    "FieldValue",
+    "Origin"
   ],
   "constraints": "doc/spec/12-model-invariants.md",
-  "design_revision": "nepl3-design-2026-09-06-r3",
+  "design_revision": "nepl3-design-2026-09-06-r4",
   "field_encoding": "record and each sum payload are ordered [name,type] arrays; sum and union variant maps are name-indexed and order-independent"
 }

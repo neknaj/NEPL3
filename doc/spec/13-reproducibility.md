@@ -6,7 +6,9 @@
 
 ## 1. digest
 
-Bytes32のdigest関数はSHA-256に固定する。sourceとresourceのcontent digestは元のbyte列にそのまま適用する。BOM、改行、空白も内容の一部であり、Unicode正規化を行わない。SourceRefのURIはworkspaceが付ける論理的な絶対URI。coreはOS path canonicalizationをしない。
+Bytes32のdigest関数はSHA-256に固定する。sourceとresourceのcontent digestは元のbyte列にそのまま適用する。BOM、改行、空白も内容の一部であり、Unicode正規化を行わない。SourceContentのURIはhostが付ける論理的な絶対locatorであり、SourceRefの同一性とは別に保持する。coreはOS path canonicalizationをしない。
+
+このlocatorの字句profileはASCIIのscheme `[A-Za-z][A-Za-z0-9+.-]*:` と空でない後続文字列である。control・未escapeの空白を拒否し、`%` は2桁のASCII hexが続く場合だけ許す。scheme以降のUnicode文字を正規化しない。相対path・空文字をabsolute locatorとして受け付けない。これはhost内部locatorの境界であり、HTTPのauthorityなどscheme固有の妥当性や到達可能性を保証しない。外部URLとして使用するadapterはその用途のURI/IRI検査を行う。schemeの根拠は [RFC 3986 §3.1](https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1)、Unicodeを含む識別子とURIの区別は [RFC 3987](https://www.rfc-editor.org/rfc/rfc3987.html)。
 
 SchemaRef.digestは、schemaの正規descriptorを対象とする。正規descriptorはpackage名、revision、kind/variant/field定義、意味上のoperation署名、局所制約識別を含み、source位置、documentation、cache、生成時刻を含まない。自己参照とforeign schemaは(package, revision, typeName)の記号的参照とし、このdescriptor内へ相互のdigestを再帰的に埋め込まない。実際に使用するforeign digestはProfileの解決済み一覧で固定して検査する。これによりDocとMathが互いの型を参照してもhashの固定点を計算する必要はない。
 
@@ -18,9 +20,17 @@ wireの操作要求は、解決済みProfileの全SchemaRefとprovider revision�
 
 ## 2. native値とwire値
 
-型名中のU64/Bytes32等の有限primitiveと、任意精度Natural/Integerを区別する。wire sourceはURI/revision/digestを使い、native SourceIdとのbijectionをSourceStoreが管理する。同じURIでもrevision/digestが違えば別snapshot。変換時にnative IDの数値をURIとして流用しない。
+型名中のU64/Bytes32等の有限primitiveと、任意精度Natural/Integerを区別する。wire sourceはopaque SourceId/revision/digestを使う。同じIDをbundle内・操作間の対応づけに使用し、URIやnative allocation addressへ置き換えない。同じURI/revision/byte列を持つ独立文書もSourceIdが異なれば別snapshotである。r3のURI-based bijectionは、この場合にspec02の宣言同一性を失うためr4で訂正した。
 
-native indexはallocationごとのIDでもよい。wire bundleではrootからfield順に訪問した最初の出現順で連番にする。shared nodeは二回目以降referenceを使う。source tableはURI/revision/digest順、schema tableはpackage/revision/digest順。Originの親参照はDAGを検査し、payload nodeとorigin nodeのID空間を分ける。
+native node indexはallocationごとのIDでもよい。wire bundleではrootからfield順に訪問した最初の出現順で連番にする。shared nodeは二回目以降referenceを使う。source tableはSourceIdのUnicode scalar順、revisionの数値順、digestのbyte順とし、schema tableはpackage/revision/digest順。Originの親参照はDAGを検査し、payload nodeとorigin nodeのID空間を分ける。SourceIdはこのnode index再採番の対象にしない。
+
+NodeRefの訪問はdepth-firstで、Childをその位置、Childrenを列の順にたどる。rootは0となり、全NodeRefを書き換える。ForeignSyntaxはguest bundleで独立して再採番し、ForeignSyntax.rootもguestの0へ対応させる。wire bundleは単一rootの到達閉包を表すため、到達不能nodeはUnreachableNodeで拒否し、黙って破棄しない。native arenaの未使用slotは許せるが、出力対象bundleへ含めない。Missing/Unexpected/Unparsed等の回復構文もrootから参照して保持する。
+
+TokenRef、Token内のViewRef、OriginRef、EnvironmentEntry.idはそれぞれの所有tableで宣言されたslotを指し、このNodeRef再採番の対象ではない。これらのtableとbinding/resource/role/relation/triviaの列順は値の一部として保存する。生成側はsource順または明示した生成順でtableを作り、allocation address・hash map列挙順を宣言順へ使わない。したがって、node arenaだけを並べ替えた同じ値はwire byte一致を要求するが、別tableの宣言順まで異なるgraphの同型性をこの規則だけで証明したとは扱わない。
+
+EnvironmentEntry.digestは `NEPL3-ENVIRONMENT-1` + zero byte + canonical NDF(Environment record) のSHA-256とする。entry自身のid/digestはhashへ入れない。bindings/resourcesの列順とbinding中のbundle局所OriginRefはEnvironment値の一部である。Origin tableを再編するhostは参照とdigestを共に更新し、別bundleへ同じ数値OriginRefだけを移して同一環境とみなさない。環境digest一致はoriginの実在・domain bindingの意味検査を代替しない。
+
+この値は局所table参照を含む内容digestであり、参照先Originの閉包digestではない。別のOrigin tableで同じ番号を使えば同じ内容digestになり得る。reader・editor・診断のcache keyはEnvironmentEntry.digestだけでなく、ReaderContextのOrigin table・選択Profile・source bundleのidentityを固定する。出自を持つ結果を別bundleへ再利用しない。originの再採番時はbindingとEnvironmentEntry.digestに加え、ForeignSyntax.environment.digestを同時に更新する。
 
 ## 3. normal formとartifact
 

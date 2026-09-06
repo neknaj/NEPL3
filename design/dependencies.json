@@ -15,7 +15,7 @@
         "nepl3-core"
       ],
       "no_std": true,
-      "responsibility": "reader計画・combinator・実行器"
+      "responsibility": "reader計画・combinator・実行器; dev-only nepl3-wire for verified native/wire context and provider equivalence tests"
     },
     {
       "name": "nepl3-engine",
@@ -203,5 +203,5 @@
       "responsibility": "生成・conformance・依存検査"
     }
   ],
-  "design_revision": "nepl3-design-2026-09-06-r3"
+  "design_revision": "nepl3-design-2026-09-06-r4"
 }

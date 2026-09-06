@@ -64,17 +64,49 @@ jobs:
       - name: Verify clean tracked files
         run: git diff --exit-code
 
+  wasi:
+    name: wasi and wasm compilation
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust targets
+        run: |
+          rustup show active-toolchain
+          rustup target add wasm32-wasip2 wasm32-unknown-unknown
+          rustc --version --verbose
+      - name: Install verified Wasmtime
+        run: |
+          curl --fail --location --retry 3 --output wasmtime.tar.xz https://github.com/bytecodealliance/wasmtime/releases/download/v44.0.1/wasmtime-v44.0.1-x86_64-linux.tar.xz
+          echo 'afd58715f105e3a7f454169daed22168c5736ec5f225fb04c4ac62c54c9508a3  wasmtime.tar.xz' | sha256sum --check --strict
+          tar -xf wasmtime.tar.xz
+          echo "$PWD/wasmtime-v44.0.1-x86_64-linux" >> "$GITHUB_PATH"
+      - name: Execute foundation tests on WASI
+        env:
+          CARGO_TARGET_WASM32_WASIP2_RUNNER: wasmtime run
+        run: |
+          wasmtime --version
+          cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire --target wasm32-wasip2 -- --test-threads=1
+      - name: Compile foundation for browser Wasm
+        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire --no-default-features --target wasm32-unknown-unknown
+
   quality:
     name: quality
     if: ${{ always() }}
-    needs: [native]
+    needs: [native, wasi]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Require every native job to pass
+      - name: Require native and WASI checks to pass
         env:
           NATIVE_RESULT: ${{ needs.native.result }}
-        run: test "$NATIVE_RESULT" = success
+          WASI_RESULT: ${{ needs.wasi.result }}
+        run: |
+          test "$NATIVE_RESULT" = success
+          test "$WASI_RESULT" = success
 
   deliver-source:
     name: deliver source

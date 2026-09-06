@@ -1,4 +1,6 @@
+pub(crate) mod foundation;
 mod intrinsic;
+pub(crate) mod reader;
 mod types;
 
 use crate::{Result, json, repository::local_path, task::unique};
@@ -190,6 +192,7 @@ pub(crate) fn check(root: &Path) -> Result<()> {
         contract_record(description, name)?;
     }
     types::check(&model, &contracts)?;
+    foundation::check(root, &contracts)?;
     let operations = contracts
         .get("operations")
         .and_then(Value::as_array)
@@ -248,6 +251,11 @@ mod tests {
             serde_json::from_str(include_str!("../../../interfaces/contracts.json"))?;
         contracts["operations"] = json!([{"operation":"test","definition":"doc/spec/test.md"}]);
         files.json("interfaces/contracts.json", &contracts)?;
+        files.json(
+            "interfaces/foundation.json",
+            &foundation::generated(&contracts)?,
+        )?;
+        foundation::write_projection(files.root(), &foundation::generated(&contracts)?)?;
         files.write("doc/spec/test.md", "fixture")?;
         files.json("conformance/cases.json", &json!({"cases":[]}))?;
         Ok(files)

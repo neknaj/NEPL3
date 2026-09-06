@@ -1,6 +1,6 @@
 {
   "schema": "nepl3.ui-plan/1",
-  "design_revision": "nepl3-design-2026-09-06-r3",
+  "design_revision": "nepl3-design-2026-09-06-r4",
   "status": "planned-not-executable-schema",
   "definition": "doc/spec/14-web-ui.md",
   "languages": [

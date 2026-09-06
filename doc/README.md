@@ -13,6 +13,7 @@
 7. [初期設計の独立レビュー](review.md)、[r2の契約訂正](decisions/0002-design-contract-corrections.md)
 8. [Web UI・TEA](spec/14-web-ui.md)、[静的サイト・Pages](spec/15-site.md)、[Doc DSL移行](spec/16-doc-migration.md)、[r3の判断](decisions/0003-web-tea-doc-migration.md)
 9. [Pages復旧と早期Doc inventoryの判断](decisions/0004-pages-recovery-doc-inventory.md)、[文書inventoryとgap audit](doc-inventory.md)
+10. [r4 foundation契約](decisions/0005-foundation-runtime-contracts.md)、[実装・検証の進捗](progress/foundation-runtime.md)
 
 ## 正本と派生資料
 
@@ -23,6 +24,7 @@
 | [design/dependencies.json](../design/dependencies.json) | crate責務と依存の許可集合 |
 | [design/tasks.json](../design/tasks.json) | タスクID、依存、成果物、受入条件の正本 |
 | [interfaces/model.json](../interfaces/model.json)、[contracts.json](../interfaces/contracts.json) | 言語中立の意味モデル・操作schema |
+| [interfaces/foundation.json](../interfaces/foundation.json) | contractsから生成しproduction registryで検査する共通package descriptor |
 | `languages/*/syntax.neplg` | 4言語の文法source |
 | [conformance/cases.json](../conformance/cases.json)、[examples/](../examples/) | 受入条件と検証入力 |
 | [implementation-status.json](../implementation-status.json) | 実装・試験の実行状態。仕様定義と分離する |
