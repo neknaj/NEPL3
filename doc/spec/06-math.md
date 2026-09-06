@@ -26,7 +26,7 @@ CheckedExpressionが保証するのは構造・binding・既知の局所制約�
 
 ## 3. evaluate
 
-入力はCheckedExpression、自由記号のBindingEnvironment、Limits。出力はExact(Value)またはSymbolic(expression, Requirements)。定義域違反・形状不一致は明確なEvalError。値の種類はScalar(Q)、Vector(List<Q>)、Matrix(rows,cols,List<Q>)、Truth(Bool)。
+入力はCheckedExpression、自由記号のBindingEnvironment、Limits。出力はExact(Value)またはSymbolic(expression, Requirements)。定義域違反・形状不一致は明確なEvalError。値の種類はScalar(Q)、`Vector(List<Q>)`、`Matrix(rows,cols,List<Q>)`、Truth(Bool)。
 
 評価はsource順の左から右、純粋。letはinitを評価してからbodyを評価する。未解決の記号に依存する部分はSymbolicとし、独立な数値subtreeの計算結果を保持できるが元の構文を上書きしない。
 

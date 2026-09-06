@@ -16,9 +16,14 @@ fn run() -> nepl3_tools::Result<()> {
         ["tasks", "--write"] => nepl3_tools::tasks(&root, true),
         ["tasks", "--check"] => nepl3_tools::tasks(&root, false),
         ["evidence", "identity"] => nepl3_tools::evidence_identity(&root),
+        ["doc-inventory", "--write", "--commit", commit] => {
+            nepl3_tools::doc_inventory(&root, Some(commit), false)
+        }
+        ["doc-inventory", "--check"] => nepl3_tools::doc_inventory(&root, None, false),
+        ["doc-inventory", "--check-current"] => nepl3_tools::doc_inventory(&root, None, true),
         ["--help"] | ["-h"] => {
             println!(
-                "nepl3-tools check | tasks --check | tasks --write | evidence identity\nRepository checks only; runtime conformance is not implemented."
+                "nepl3-tools check | tasks --check | tasks --write | evidence identity\n  doc-inventory --write --commit <40-hex-commit> | doc-inventory --check | doc-inventory --check-current\nRepository checks only; runtime conformance is not implemented."
             );
             Ok(())
         }

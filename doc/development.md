@@ -4,6 +4,8 @@
 
 [rust-toolchain.toml](../rust-toolchain.toml) に固定したRustと、Gitを使用します。rustupはworkspace内で指定toolchainを選びます。`cargo` の各コマンドはリポジトリrootで実行してください。`Cargo.lock` は管理対象で、CIでは `--locked` を使います。
 
+Doc inventoryのbaseline検証は固定commitのGit objectを必要とするため、CI checkoutは全履歴を取得します。shallow cloneではbaselineを取得してから検査し、object不在を監査成功としてskipしません。source archive単体にはこの履歴が含まれません。
+
 開発toolchainは1.97.0、現時点で宣言・検査するMSRVは1.97です。元設計の「1.85以上」は選定可能な下限であり、1.85での実行証拠を意味しません。初期段階では実際に検査するtoolchainとMSRVを一致させ、未検証の旧版対応を広告しない方針を採ります。将来MSRVを変更するときはCargo.toml、toolchainとCIの検査対象を合わせて見直します。
 
 独立した構造監査にはPython 3.13を使用します。これは標準ライブラリだけで動く開発host用の補助検査で、productionの依存ではありません。Rustの共通parserの完成を示すものでもありません。
@@ -89,8 +91,12 @@ WASI・ブラウザWasm・LSP・operation providerは目標仕様です。対応
 
 Web/TEA/siteとDoc移行の計画は [14章](spec/14-web-ui.md)〜[16章](spec/16-doc-migration.md) に従います。現在のCIはsource配布を維持し、Pages公開はT20の実装・受入後です。T21は初回公開とは別に最終完了へ必須で、移行前はMarkdownを正本とします。
 
+Pagesの実装では、公開後smokeが失敗したcandidateに対して [15章の復旧契約](spec/15-site.md) を実行します。public smoke済みLKGの元tarを通常のActions retentionとは別に保持し、同じpublisher lockで対象identityを確認して1回だけ復旧・再smokeします。新しい健康な公開や対象不明時は上書きせず停止します。復旧できても元candidate/runはfailedです。現在はこの設計の整備であり、live Pagesの保存先・journal・復旧workflowは未実装です。
+
 workflowの構文・権限・依存jobの扱いは [GitHub Actions公式仕様](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)、artifactの保存は [公式ガイド](https://docs.github.com/en/actions/tutorials/store-and-share-data) に従います。
 
 ## 実装と独立レビュー
+
+Doc関連の共通値・wire・文書意味APIを固定する前に、[早期inventoryとgap audit](doc-inventory.md) を確認します。`cargo run --locked -p nepl3-tools -- doc-inventory --check` は固定commitの原本と照合し、現在の文書・契約の追加/変更/削除を報告します。通常の `check` にも含まれます。現在の網羅性を主張する場合は新しいcommitを監査して `doc-inventory --check-current` を通します。現時点のbaselineと作業treeには差分があり、strict検査が失敗することを未移行/未監査の成功へ読み替えません。再生成方法と履歴要件は監査文書を参照してください。
 
 メインagentが作業範囲、依存順、担当ファイル、完了条件を統括し、実装subagentと独立したレビューsubagentを分けます。レビュー担当は実装担当自身の確認とは別に、契約、失敗系、テストの根拠、差分を評価します。メインagentが指摘の解消と必要な再検査を確認して統合します。具体的な規範は [AGENTS.md](../AGENTS.md) を参照してください。
