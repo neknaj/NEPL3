@@ -147,6 +147,58 @@ WithModeは構文rootのownerへ適用し、hostのListOf spineとguest要素を
 
 Langの契約は [RFC 5646 §2.2.9](https://www.rfc-editor.org/rfc/rfc5646.html#section-2.2.9) と照合した。well-formedはABNFへの適合であり、登録済みsubtagやvariant/extensionの重複拒否を含むvalidとは異なる。grandfatheredとprivate-useもABNFの対象に含む。文法だけの検査にnetwork照会や未指定のvalid制約を追加しない。
 
+## prefix engineへ向けた追加レビュー
+
+`8416e1f7b130012abcd0a6d5c79fe544ec7dcbfe` の組込みreader区切り後、`feat/prefix-engine` でowned TokenizationContinuationのnative境界を検査した。既存のreader 46試験は独立実行で成功した。一方、R023として停止済みの新Budgetを使う組合せを再現した。入力はspaceと引用されたaの4 bytes。Triviaを受理してReserveとなった時点のUsageはsource 4/work 1,231/allocation 12,012だったが、同じLimitsの新品Budgetをcancelしてreserveへ渡すと、Stopped(Cancelled)としてslotを消費しUsageを全0で返した。
+
+原因はprivate slotのLimits/累積Usage照合より先にpollと停止結果を返す処理を置いたことだった。独立補助probeは `.tmp/independent-core/` の `--bin tokenizer_cancel_reset` で本番APIを呼び、修正後はContinuation拒否となった。履歴sourceを比較すると、8416e1fのtokenizer reserveは照合をpollより先に行い、ReaderSession resumeは既にpollが先だった。後者の旧版での動的再現は実行していないため、3経路全てを今回導入された不具合とは扱わない。
+
+tokenizer reserve・tokenizer resume・ReaderSession resumeの3公開入口で、cancel済みの新Budgetを拒否した後も元slotで正式に再開できる管理対象回帰を実コードで照合した。修正後のreader 46試験は独立実行で成功した。その後に強化された `mode_text_reservation_is_lazy_and_echo_is_checked`、`cancellation_during_provider_wait_stops_and_consumes_the_pending_slot`、`tokenizer_preserves_accepted_skip_reports_and_sources_across_candidate_rollback` も `cargo test --locked -p nepl3-reader <試験名>` で個別に再実行し成功した。正規Budgetのcancelでは、先に受理した診断・event・累積Usageを保持し、tokenizerでは生成source・Triviaも保持する。R023はこのnative境界についてcorrectedとし、前段R022の検証範囲と区別する。完全なcontinuation codecとprefix実行はこの訂正の完成条件に含めていない。
+
+新しいaccepted collectorでは、R024を公開APIから再現した。`AcceptedTokenizationReport::diagnostic` へ一時host store内のauxiliary sourceを指す診断を渡すと、診断1件・所有source 0件で受理された。その後cancelし、元入力だけのstoreで `read_with_accepted` を呼ぶと、Stopped(Cancelled)にauxiliaryのprimary Spanだけが残った。独立補助入力は `.tmp/independent-core/src/bin/collector_closure.rs`、実行は `cargo run --manifest-path .tmp/independent-core/Cargo.toml --bin collector_closure`。修正後の同probeは所有source 1件をcancel後も保持する。
+
+訂正ではdiagnostic追加を明示source宣言の入口とし、primary/related/fixの参照先を検査・共有admissionで計上・所有化した後、診断とsource列を同時に確定する。root sourceだけに限定せず正当な複数sourceを保持する。管理対象の `accepted_diagnostic_owns_primary_related_and_fix_source_closure_before_publication` を独立再実行し、3種類の位置が別sourceを参照してもcancel後に全3件を保持し、fix参照先の宣言欠落とSourceLimit 0では診断・source列を確定しないことを確認した。`accepted_collector_crosses_language_sessions_only_in_its_original_operation` も独立成功し、別operation/profile/入力を拒否して正規の言語切替とcancelでは診断・event・sourceを保持する。R024はこのnative閉包についてcorrectedとする。完全なportable report/continuationの受入とは区別する。
+
+Profileの実入口は `cargo test --locked -p nepl3-engine --test package` の7件が独立実行で成功した。補助probe `alias_recovery` では、同じpackage・同じroot modeを登録したA/BでChildカテゴリだけをCode/Alternativeへ分け、登録順を逆転してもentry結果とprofile digestを保持することを確認した。recoveryの既定方針と同期候補順の単独変更でpackage意味identityが変わることも確認した。これらはresolve/entry/identityの検査であり、未接続のprefix parserが実際の子をそのmodeで読むことや回復することの証拠ではない。
+
+構文のstorage複製は `cargo test --locked -p nepl3-core --test syntax owned_syntax_copy` を独立実行し成功した。100k SourceIdに対する低Allocation停止、Work 0、source admissionの非再計上、32k段foreignの複製・比較・破棄を検査する。追加補助probeでは、外側Budget深さ3、4段bundle、内側tokenのSome 4段を合成し、必要総深さ11に対してlimit 10はDepthLimit、11は複製成功となった。これは `SyntaxBundle/FieldValue::clone_with_budget` のstorage/深さ検査であり、構文の意味検査やParseTree検証の完成を示さない。
+
+永続ParseTreeの検査では `cargo test --locked -p nepl3-engine persistent_tree` の公開回帰1件が成功した。一方、補助probe `tree_mutations` で既知form `let` をLeafとして保存しても受理され、R025として修正を要求した。同じprobeは訂正後にSelection拒否となる。さらに通常の `Text → Unit` facts操作をDynamicのshape/child_contextへ登録・allowlistすると、正規HeadShapeとchild contextsを付けて受理できた。訂正では投影要求・操作署名が未実装のDynamicをUnvalidatedDynamicで明示拒否し、同じprobeと追加された管理対象負例の両方で拒否を確認した。spec04も静的・回復・payload型の検証範囲を明記した。R025は偽の成功proofを防ぐ範囲でcorrectedとし、Dynamicの成功経路やP03の完成は未達のまま維持する。
+
+同probeで、意味Profileを保つReadSpec arena再配置に対して旧treeをExecutionIdentityで拒否し、digestだけ更新して古いread indexを残す場合も拒否、全indexを正しく写し替えれば成功することを確認した。局所child fieldをforeign pathとして使用する場合と重複BundleContextも拒否される。追加 `tree_list` probeではhost Alternative modeのListOf spineとguest BのCode modeを持つtreeが通り、tailのmode reset・guest alias差替え・局所tailをforeign pathとして指定する変更が拒否された。builtin原文 `x` とText payload `forged-name` の組合せは現在受理されるため、この検証器の型・所有位置・選択のproofをreader実行等価性へ広げない。完全なdynamic callback契約、実prefix解析、wrapper codecは別に検証する。
+
+最初のprefix公開試験 `cargo test --locked -p nepl3-engine --test parse` の2件は独立成功した。追加補助入力 `let` と `let x let` は、修正後に同じbundleのMissing 2件を一つのrecovery索引へまとめ、tree検査にも成功した。修正前の重複索引の動的失敗は独立実行していない。
+
+R026では、arity 2の `f(Name, Expr)` とCapture 20段のScalar readerを組み合わせ、depth limit 25で `f x ` の親を0/5/10/15個積んでも全てComplete・peak 23となることを本番APIで再現した。補助実行は `cargo run --manifest-path .tmp/independent-engine/Cargo.toml --bin parse_depth`。prefix frameのobserveだけでは内側readerのactive depthへ加算されず、共有上限を満たさない。修正と管理対象の複合境界回帰を要求している。
+
+R027では補助probe `parse_trivia` から、final `let ` のWhitespace[3,4)、final `let x # comment` のWhitespace[5,6)とComment[6,15)、同nonfinal入力の確定Whitespace[5,6)が結果/progressに保存されないことを確認した。元snapshot bytesは残るが、tokenが生成されない終端でreaderが確定したTriviaの種別・範囲・所属を捨てている。修正草稿でR026の元probeは親0のみComplete、親5/10/15でStopped DepthLimitへ変化し、R027の元入力もHost付きbatchへ各Whitespace/Commentを保持することを再確認した。最新のproduction parse 8件は独立成功したが、停止・再開を含む範囲の追加確認までR026/R027はopenとする。
+
+R028として、Name tokenizerがtokenを読めるがform/leafが一致しない `unknown`、`unknown tail`、`let x unknown tail` を補助probe `parse_unknown` で解析し、全てTree(Selection)となることを確認した。unknown headのtoken付きRecoveryUnparsedを生成する側と、通常node tokenを持たないUnparsed契約の不整合である。原文rangeと認識済tokenの保存先を明確にし、未知arityをleaf成功へ推測せず回復結果を返す修正を要求している。
+
+その後、`cargo test --locked -p nepl3-engine --test parse` の11件を独立に再実行し成功した。途中の10件MissingSchemaはfixtureに追加したoperationの参照schemaをProfileへ選択し忘れた同期不備で、成功へ置き換えて記録せず修正後に再実行した。補助 `parse_boundary` でも、caller depth 7からText Reserveとprovider Awaitを再開して両方peak 13で完了し、第2Awaitのcancelで診断1件とTrivia[3,4),[5,6)を保持した。元のunknown 3入力は全てRecoveredとなり、headと全Unparsed coverを別々に保持する。`unknown tail` はhead[0,7)/cover[0,12)、`let x unknown tail` はhead[6,13)/cover[6,18)である。spec04の規則、native型、ReaderFactBatchのschemaを照合し、R026/R027/R028をこの静的native範囲でcorrectedとした。動的HeadProvider、portable wrapper、全bootstrapの完成を意味しない。補助probeはignoredであり、再実行可能な管理対象production試験を検証の中心とする。
+
+同じpackageをA/Bへ登録しrootを共通Expr/Code、ChildだけB.Alternative（`~`をskip）へ変更した補助 `parse_alias` も実行した。`let x ~y` はAでRecovered/Child.Code、BでComplete/Child.Alternativeとなり、登録列の順序を反転しても結果・Profile digestが変わらない。これは先のentry APIだけの照合から、実ParseSessionとtree.validateまでの確認を追加したものである。
+
+`continue_input` の管理対象append回帰2件も独立成功した。補助 `parse_append` はcaller depth 7で短い `f x ` をNeedMoreにした後、host depth 0から親8段の入力へ伸ばす。Capture20段と合わせて、depth上限36/37/38は直接解析・再開ともStopped、39/40/80は両方Complete・peak39となった。元caller深さを保持しながら、新しく増えた親の深さも計上する。これは原状態からの全再解析であり、増分再利用やproviderの全経路の完成を証明するものではない。
+
+Grammarの初期reader loweringは `cargo test --locked -p nepl3-grammar-core` 1件、seed入力adapterは `python -m unittest discover -s tools/bootstrap -p test_grammar.py` 3件を独立に実行して成功した。seed adapterは元bytesとUTF-8 byte offsetsを保持するhost用入力変換であり、production parser/seed/P1/P2のbootstrap成功ではない。R029では補助 `grammar_catalog` で、同名NamedClassを異なる実classへ2件対応させると先頭だけで解決し、順序反転で意味が変化することを確認した。public ReaderContextの名前付きcatalogは事前検査proofを持たないため、同名/空名を明示拒否する入口検査と管理対象回帰を要求した。
+
+補助 `check_seed_positions.py` では4文法へ日本語🙂commentを前置しLFをCRLFへ変換した入力で、全head/list/literalの範囲を元bytesと照合した。対象はGrammar 1214、Doc 701、Math 722、Circuit 620要素で、未閉じ引用符・不正escape・末尾lexical gap・余剰tokenの4入力も拒否を確認した。初回の検証器がkind名とspellingを同一と仮定して失敗したため、forms正本のcategory別対応へ訂正して再実行した。確認対象は位置と構造であり、各DSLの意味ではない。
+
+R030では同じGrammar補助probeで、5 nodeのDocumentをnodes=0でvalidateしてもOk・Usage.nodes=0となることを確認した。他資源はsourceBytes67/work303/depth5/allocation598が計上されていた。共通のNodes上限をGrammar arenaだけ省略する理由はなく、統括ともこの境界を修正対象として合意した。実node数とDAG再訪時のwork/depthを区別して計上し、zero/exact境界の管理対象回帰を要求している。
+
+修正後のGrammar試験2件を独立実行して成功した。R029の元probeは両順ともDuplicateCatalogName(Classes)、R030の元probeはStopped(NodeLimit)へ変化した。各imports/classes/viewsのempty/duplicate 6ケースを公開compile入口から拒否する管理対象試験を確認し、node上限4は停止、5はUsage.nodes=5で成功する追加probeも実行した。R029/R030はこの境界修正としてcorrectedとした。全23 reader formの実行、package組立て、production bootstrapは別の未達範囲である。
+
+統括から指摘されたAngleTag例について、補助 `build_angle_probe.py` / `grammar_angle` で元sourceの全ASTとbyte spansを構築し、production reader compilerがReader(OutputType)で拒否することを独立実行で確認した。ChoiceのSeq枝2つはList<NdfValue>、Scalar枝はTextとなり、同型の選択契約に合わない。各枝を明示Discardで包むtyped AST候補は同じcompilerで成功した。R031として正式例source・契約説明・元不一致の負例・quoted `>` を含むtoken境界の実行試験を併せた訂正を要求した。まだ候補ASTだけの成功であり、修正済み正式sourceやG04合格とは扱わない。
+
+R032では補助 `build_print_probe.py` / `print_source` を使い、setup Budgetで検査済みのtreeをfreshなsourceBytes上限0のBudgetへ渡しても、公開 `print::source_tree` がComplete("let x ~y")・Usage.sourceBytes=0となることを再現した。構造の検査proofと現在操作へのsource受入れは別契約である。printerにも共有SourceAdmissionまたは同等の操作所属を持たせ、別操作では受け入れ直し、同じ操作では二重計上しない修正を要求した。
+
+共有SourceAdmission引数を追加した修正後、元printer probeはStopped(SourceLimit)・空出力へ変わり、先に同じ8-byte snapshotを受け入れた操作では印字後もsourceBytes8だった。管理対象のfresh cap0/同一操作/OutputLimit回帰を読み、parse全13件を独立実行して成功したためR032をcorrectedとした。printerは原綴りを保持する静的tree用であり、任意constructorの意味printerやportable操作全体の完成ではない。
+
+区切り保存前にhost seed importerの実Rust試験2件を独立成功確認した。全constructorの型付きロードと、source digest・constructor・literal・list境界の偽装拒否を検査する。実package組立てのtools integration 1件も独立成功した。Angle正式sourceはdiscard付きへ訂正され、旧bytesは明示的な負例へ保存されている。元例はOutputType拒否、訂正例はpackage.checkまで成功したが、quoted `>` の実reader境界は未検証なのでR031はopenを維持する。同じ試験でbinding正式例がInvalidBindingとなることも確認した。wordのSeq出力Listと、leafのreference selfが要求するTextが合わないため、R033として明示Text readerを使う訂正と実parse/binding回帰を残す。新Grammar lower入口では提供Profileへのtree.validate再実行をコード確認し、意味identityだけで別execution配置のindexを解釈する草稿の懸念は解消方向だが、lowerのproduction正例・変異試験はまだ未実行である。
+
+別の補助probe `parse_text` ではText予約を実際にresumeし、`let "ok" y` がCompleteとdecoded sourceを返し、`let "a\q" y` がRecoveredで元InvalidEscape診断・位置を保持することを確認した。このbuiltinの失敗経路については元診断の消失を再現していない。
+
 ## r1初回レビューの章ごとの確認範囲
 
 | 章 | 確認した契約 | 結論・残る検証 |

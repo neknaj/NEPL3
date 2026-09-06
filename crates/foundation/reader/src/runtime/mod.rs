@@ -240,14 +240,15 @@ impl<'a> ReaderSession<'a> {
         if self.closed {
             return Err(ReaderError::Closed);
         }
-        if let Err(reason) = budget.poll() {
-            return self.stop_pending(reason, budget);
-        }
         let saved = self.pending.as_ref().ok_or(ReaderError::NoPending)?;
         if saved.limits != budget.limits()
             || !usage_at_least(budget.usage(), saved.continuation.usage)
+            || saved.continuation.session_id != echo.session_id
         {
             return Err(ReaderError::Continuation);
+        }
+        if let Err(reason) = budget.poll() {
+            return self.stop_pending(reason, budget);
         }
         if let Err(reason) = echo.charge(budget) {
             return self.stop_pending(reason, budget);

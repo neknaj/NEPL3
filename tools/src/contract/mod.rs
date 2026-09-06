@@ -1,5 +1,6 @@
 pub(crate) mod engine;
 pub(crate) mod foundation;
+pub(crate) mod grammar;
 mod intrinsic;
 pub(crate) mod reader;
 mod types;

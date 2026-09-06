@@ -10,6 +10,8 @@ use crate::{
 };
 use alloc::{boxed::Box, string::String, vec::Vec};
 
+mod copy;
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct NodeRef(pub u64);
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

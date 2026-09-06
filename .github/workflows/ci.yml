@@ -49,6 +49,10 @@ jobs:
         run: python tools/audit/structure.py
       - name: Structure audit tests
         run: python -m unittest discover -s tools/audit -p test.py
+      - name: Grammar constructor projection
+        run: python tools/generate/grammar.py
+      - name: Initial seed input adapter tests
+        run: python -m unittest discover -s tools/bootstrap -p test_grammar.py
       - name: Format
         run: cargo fmt --all -- --check
       - name: Clippy
@@ -91,9 +95,9 @@ jobs:
           CARGO_TARGET_WASM32_WASIP2_RUNNER: wasmtime run
         run: |
           wasmtime --version
-          cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine --target wasm32-wasip2 -- --test-threads=1
+          cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --target wasm32-wasip2 -- --test-threads=1
       - name: Compile foundation for browser Wasm
-        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine --no-default-features --target wasm32-unknown-unknown
+        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --no-default-features --target wasm32-unknown-unknown
 
   quality:
     name: quality

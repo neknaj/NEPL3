@@ -1,0 +1,8 @@
+Command(s):
+cargo clippy --workspace --all-targets --locked -- -D warnings
+Target: x86_64-pc-windows-msvc
+Exit code: 0
+
+    Blocking waiting for file lock on build directory
+    Checking nepl3-reader v0.1.0 (C:\projects\NEPL3-runtime\crates\foundation\reader)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.11s

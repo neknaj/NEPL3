@@ -10,6 +10,10 @@ publish.workspace = true
 
 [dependencies]
 nepl3-core.workspace = true
+nepl3-grammar-core.workspace = true
+nepl3-reader.workspace = true
+nepl3-engine.workspace = true
+nepl3-wire.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true

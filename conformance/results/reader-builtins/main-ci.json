@@ -1,0 +1,48 @@
+{
+  "profile": "nepl3.development-ci-observation/1",
+  "commit": "8f28177915b6e6e3bff4fe82596cc35b33462486",
+  "implementation_commit": "8416e1f7b130012abcd0a6d5c79fe544ec7dcbfe",
+  "run_id": 34047427465,
+  "run_url": "https://github.com/neknaj/NEPL3/actions/runs/34047427465",
+  "pull_request": "https://github.com/neknaj/NEPL3/pull/7",
+  "result": "success",
+  "archive_sha256": "1d976f4f4dca92d05794f2e973ab673da688cbd895faa498aee05838d19fe491",
+  "archive_entries": 303,
+  "source_identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "4a74dfd4bb0aa2049883aad50059e7423cf3563f184d8eedf186ce2e4510a819",
+    "spec_sha256": "dc1bbe026f16d9d86322a3e3cfbf1611f062b2ee75a248bbca0da9f6a7a0f7c4"
+  },
+  "ci_test_counts": {
+    "native (macos-latest)": 173,
+    "native (ubuntu-latest)": 173,
+    "wasi and wasm compilation": 117,
+    "native (windows-latest)": 173
+  },
+  "all_packaged_evidence_hashes_match": true,
+  "log_retrieval_command": "gh run view 34047427465 --repo neknaj/NEPL3 --log",
+  "full_log_capture_format": "UTF-8 LF, lines joined with LF and one final LF",
+  "full_log_sha256": "a9276300d98940562729c6d4ded659af84fda340a10ad3cbd5092311bea8f565",
+  "native_allocation_probe": {
+    "command": "python tools/audit/allocation/run.py",
+    "targets": [
+      "x86_64-unknown-linux-gnu",
+      "x86_64-pc-windows-msvc",
+      "aarch64-apple-darwin"
+    ],
+    "positive_control_bytes": 4096,
+    "zero_budget_insert_bytes": 0,
+    "result": "passed"
+  },
+  "source_artifact": {
+    "name": "NEPL3-source-8f28177915b6e6e3bff4fe82596cc35b33462486",
+    "kind": "source-foundation",
+    "excludes_local_tmp": true,
+    "required_foundation_sources_present": true
+  },
+  "limits": [
+    "Historical observation for this exact merged commit; not evidence for later working-tree changes.",
+    "CI exercises implemented foundation APIs. Full acceptance groups and tasks are not marked complete.",
+    "Browser target compiled only; no browser execution or Pages publication is established."
+  ]
+}

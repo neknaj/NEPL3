@@ -54,3 +54,13 @@ SyntaxBundleにSourceMapを接続し、別snapshotのviewが全対応経路を�
 統合試験では、複数の制約IDを持つSyntaxBundleを追加したことでhost生成器とproduction canonical writerの順序不一致を検出した。制約は名前の集合なのでhost側も正準sortし、重複・不正IDの拒否と順序交換の回帰試験を追加した。field・choice・binding子列の意味順序は維持する。独立レビュー担当も元の失敗と修正後の3試験を実行して確認した。
 
 コマンド、target、実行ログとhash、対象source/spec、未検証範囲は [builtin/tokenizerの統合記録](../../conformance/results/reader-builtins/validation.json) に保存する。直前のmainへ統合された最初のsliceの3 OS・WASI CIとsource artifactの確認は [過去commitのCI記録](../../conformance/results/foundation-slice/main-ci.json) に分ける。次の実装はprefix engine、Profile解決、Grammar compilerとbootstrapであり、この区切りを最初のbootstrap節目やT16の達成とは扱わない。
+
+## 次段: prefix engineとGrammar compilerの途中checkpoint
+
+`feat/prefix-engine`の開始点は`4550e63f`。この節は変更中のtreeの記録であり、確定commitの統合試験identityは統括で別途保存する。packageの意味digestと具象arena・provenanceを固定するexecution digest、aliasを保持する解析Profile、静的prefix実行と回復tree、owned tokenizer待機を実装した。統括は現在のparser 13件をnativeとWASIで実行して成功を確認した。source上の綴りとtriviaを構造順に返すprinterは、source-less意味printerやwhole-file出力とは別である。
+
+Grammarの全constructorを持つ型付きAST、source/参照/Nodes予算の検査、全ReaderExprのlowering、host用の初回seed JSON importerを追加した。初回adapterは実sourceのUTF-8 byte spanを保持する。`cargo test --locked -p nepl3-grammar-core`の2件、`cargo test --locked -p nepl3-tools bootstrap`の2件、Python seed入力の3件が成功した。全constructorの実行網羅やbootstrapの成功を、この件数から推定しない。
+
+package assemblerはsymbolicなreader出力型から実surface descriptorを生成・登録し、reader/mode/form/leaf/namespace/binding/style/extensionを組み立て、productionのLanguagePackage検査へ接続した。`cargo test --locked -p nepl3-tools --test grammar`の1件で、旧Angle例の異なるchoice出力型とbinding例の非Textな名前leafを実際に拒否した。Angleの各枝を明示discardにした正式例はpackage検査に成功した。旧Angleは理由を持つnegative fixtureとして保存し、seqを暗黙文字列連結へ変更していない。
+
+このcheckpointでは`cargo clippy --locked -p nepl3-tools --all-targets -- -D warnings`、生成物の一致検査、repository checkが成功した。assemblerの一般的な全失敗系・位置付き診断、facts/v1の共通値と実descriptor、binding例の訂正、Angleの実ReaderSession境界試験、ParsedTreeからのlowerの実往復、完全seedからP1/P2を生成するbootstrapは未検証または未実装として残る。R006/R009等やT05の完成を宣言せず、次のcommitで継続する。

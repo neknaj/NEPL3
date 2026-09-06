@@ -8,17 +8,17 @@ language Angle 1 Tag
           cons some scalar asciiLetter
           cons many
             choice
-              cons seq
+              cons discard seq
                 cons literal "\""
                 cons many scalar except "\""
                 cons literal "\""
                 nil
-              cons seq
+              cons discard seq
                 cons literal "'"
                 cons many scalar except "'"
                 cons literal "'"
                 nil
-              cons scalar except "\"'><"
+              cons discard scalar except "\"'><"
               nil
           cons literal ">"
           nil

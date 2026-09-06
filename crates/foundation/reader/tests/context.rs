@@ -84,6 +84,55 @@ fn checked_context_uses_real_digest_and_exact_origin_source_closure() -> TestRes
         assert_eq!(checked.sources()[0].identity().source.0, "auxiliary");
         assert_eq!(usage.usage().source_bytes, 3);
     }
+    let retargeted = {
+        let temporary = context.clone();
+        let checked = temporary
+            .check(&mut codec, &sources, &registry, &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+        let empty = SourceStore::default();
+        assert!(matches!(
+            checked.retarget(
+                &temporary.schema,
+                "child",
+                "text",
+                &empty,
+                &registry,
+                &mut budget()
+            ),
+            Err(ContextError::Source(_))
+        ));
+        let mut stopped = Budget::new(Limits {
+            allocation_units: 0,
+            ..budget().limits()
+        });
+        assert!(matches!(
+            checked.retarget(
+                &temporary.schema,
+                "child",
+                "text",
+                &sources,
+                &registry,
+                &mut stopped
+            ),
+            Err(ContextError::Stopped(_))
+        ));
+        checked
+            .retarget(
+                &temporary.schema,
+                "child",
+                "text",
+                &sources,
+                &registry,
+                &mut budget(),
+            )
+            .map_err(|e| format!("{e:?}"))?
+    };
+    // The original raw context/proof is out of scope; no codec is needed to use this proof.
+    assert_eq!(retargeted.category, "child");
+    assert_eq!(retargeted.mode, "text");
+    assert_eq!(retargeted.environment, context.environment);
+    assert_eq!(retargeted.origins, context.origins);
+    assert_eq!(retargeted.sources().len(), 1);
     context.environment.digest.0[0] ^= 1;
     assert!(matches!(
         context.check(&mut codec, &sources, &registry, &mut usage),

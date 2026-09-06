@@ -300,6 +300,103 @@
       "evidence": ["crates/foundation/reader/src/tokenizer/session.rs", "crates/foundation/reader/src/tokenizer/model.rs", "crates/foundation/reader/src/model.rs", "crates/foundation/reader/tests/builtin.rs", "crates/foundation/reader/tests/runtime.rs", "interfaces/reader.json", "doc/spec/03-reader.md"],
       "resolution": "Public probes reproduced lost diagnostic/event after AllocationLimit, a reservation accepting a fresh Budget after committed trivia, and terminal Stopped leaving an inner provider pending at allocation caps18792/18920/19048. Corrected shared collectors move Report with sources/maps, all terminal ReadReply variants retain the formal closure, reservation slots bind limits/monotonic usage, and abandoned inner pending slots are cleared without closing the session. The original probes now retain diagnostic/event each1, reject fresh Budget with Continuation, and allow a new operation after every observed allocation stop. Independent reader44 tests passed, including generated-source Failed/Stopped preservation, NoMatch/NeedMore rollback, accepted skip artifacts across all four outcomes and the pending allocation sweep. The final reservation cancellation regression also passed, retaining trivia/cursor/state, consuming the slot and permitting session reuse. Full reply/continuation codecs and process-provider exchange remain R017 work; these native corrections do not establish whole-group conformance."
 
+    },
+    {
+      "id": "R023",
+      "status": "corrected",
+      "title": "Cancellation can consume reader and tokenizer pending slots before checking cumulative budgets",
+      "affected_tasks": ["T03", "T04"],
+      "evidence": ["crates/foundation/reader/src/tokenizer/session.rs", "crates/foundation/reader/src/runtime/mod.rs", "crates/foundation/reader/tests/builtin.rs", "crates/foundation/reader/tests/runtime.rs"],
+      "resolution": "Independent public API input consisting of a space and quoted a reached Reserve with accepted trivia and usage source4/work1231/allocation12012. A fresh same-limits Budget cancelled before reserve consumed the slot as Stopped(Cancelled) with all-zero usage. The original probe now returns Continuation. All three public entries (tokenizer reserve, tokenizer resume, ReaderSession resume) check saved limits, cumulative usage and session identity before polling cancellation. Tracked negative regressions reject the cancelled fresh budget and subsequently resume the original slot. Independent reader46 tests passed; the subsequently strengthened three focused tests also passed, verifying valid cancellation retains accepted reader diagnostics/events/usage and tokenizer generated sources/trivia. Historical source comparison shows 8416e1f tokenizer reserve checked budgets before polling, whereas ReaderSession resume already polled first; no historical dynamic probe was run for that reader path. R022 retains its previous scoped correction. Reply/continuation codecs and full prefix execution are outside this correction."
+
+    },
+    {
+      "id": "R024",
+      "status": "corrected",
+      "title": "Accepted diagnostic injection does not own its referenced source closure",
+      "affected_tasks": ["T03", "T04"],
+      "evidence": ["crates/foundation/reader/src/tokenizer/accepted.rs", "crates/foundation/reader/src/tokenizer/session.rs", "crates/foundation/reader/src/runtime/validate.rs", "crates/foundation/reader/tests/runtime.rs"],
+      "resolution": "The original public API probe accepted an auxiliary-source diagnostic without owning its source, then returned a dangling primary span after cancellation. Diagnostic admission now explicitly declares referenced snapshots, validates primary/related/fix locations, charges shared SourceAdmission and copies snapshots before committing the source list with the diagnostic. The original probe now retains its auxiliary source after cancellation. The independently executed tracked regression retains three distinct primary/related/fix snapshots with only the original input remaining in the caller store; a missing fix declaration and SourceLimit0 reject without committing diagnostics or source entries. The separate cross-language collector regression also independently passes, rejecting another operation/profile/input and preserving the generated source and counters during valid transfer/cancellation. This correction establishes these native source-closure paths, not full portable report/continuation conformance."
+    },
+    {
+      "id": "R025",
+      "status": "corrected",
+      "title": "Persistent selections bypass form priority and accept unrelated operations as head providers",
+      "affected_tasks": ["T04"],
+      "evidence": ["crates/foundation/engine/src/tree.rs", "crates/foundation/engine/src/selection.rs", "crates/foundation/engine/tests/package.rs"],
+      "resolution": "The original known-form-as-Leaf mutation now rejects with Selection. Until projected HeadProvider operation contracts are implemented, all Dynamic selections explicitly reject with UnvalidatedDynamic; the original allowed Text-to-Unit facts-operation probe and its tracked negative regression now reject. The independently rerun persistent_tree test passes, and spec04 states the static/recovery/payload-type scope without claiming reader execution equivalence. Additional independent probes verify stale concrete arena identity and indices reject while complete remapping succeeds, foreign list tail mode cannot reset, guest alias cannot change, and invalid paths/duplicate contexts reject. Ordered child_contexts are retained for future complete dynamic results but their successful dynamic validation and P03 remain unimplemented; closing this false-success defect does not close R006 or P03."
+    },
+    {
+      "id": "R026",
+      "status": "corrected",
+      "title": "Prefix frames are observed but not added to the nested reader's active depth",
+      "affected_tasks": ["T03", "T04"],
+      "evidence": ["crates/foundation/engine/src/parse/session.rs", "crates/foundation/engine/tests/parse.rs"],
+      "partial_progress": "An independent ParseSession::read probe uses an arity-two f(Name, Expr), a token reader with 20 nested Capture frames around Scalar Any, and depth limit25. Inputs with 0, 5, 10 or 15 pending f parents all Complete with peak depth23. The outstanding prefix parents and active reader frames are simultaneous and must compose, rather than taking their maximum.",
+      "resolution": "Prefix frames now contribute to active tokenizer/reader depth. The original nested-Capture probe changes from all Complete at peak23 to only the zero-parent input completing and 5/10/15 parents stopping at depth25. The tracked combined-depth, Text reservation and provider resume/cancel tests pass independently. An additional public-API probe enters at caller depth7, leaves the caller scope while waiting, then resumes Text Reserve and provider Await: both complete with peak13. Fresh cancelled budgets and altered continuations reject without consuming the legitimate pending state. This closes the demonstrated static native depth defect, not portable continuation or dynamic HeadProvider conformance."
+    },
+    {
+      "id": "R027",
+      "status": "corrected",
+      "title": "Prefix results drop accepted trivia when no token is produced",
+      "affected_tasks": ["T04", "T06"],
+      "evidence": ["crates/foundation/engine/src/parse/session.rs", "crates/foundation/engine/src/parse/model.rs", "crates/foundation/engine/tests/parse.rs"],
+      "partial_progress": "Independent read probes show final 'let ' consumes Whitespace[3,4) but stores no trivia; final 'let x # comment' consumes Whitespace[5,6) and Comment[6,15) but retains only the earlier token-leading Whitespace[3,4). The same nonfinal input reaches NeedMore at6 while dropping the already accepted Whitespace[5,6). Original snapshot bytes remain, so this is loss of interpreted trivia kind/range and ownership rather than lossless byte reconstruction.",
+      "resolution": "ReaderFactBatch now owns trivia together with its path and EntryContext in the native model and interfaces/engine.json. Original EOF/nonfinal probes retain the exact previously lost Whitespace/Comment ranges. Independently passing tracked tests cover EOF, NeedMore, Foreign ownership and provider resume/cancel; an additional second-Await cancellation probe retains prior diagnostic1 and trivia[3,4),[5,6) in Stopped progress. Original snapshot preservation is distinguished from these interpreted trivia facts. Portable wrapper conversion remains a separate unimplemented scope."
+    },
+    {
+      "id": "R028",
+      "status": "corrected",
+      "title": "Recognized tokens with unknown heads produce invalid Unparsed recovery nodes",
+      "affected_tasks": ["T04"],
+      "evidence": ["crates/foundation/engine/src/parse/session.rs", "crates/foundation/engine/src/tree.rs", "crates/foundation/engine/tests/parse.rs"],
+      "partial_progress": "A production parser fixture with the Name tokenizer and no matching leaves returns Tree(Selection) for final inputs unknown, unknown tail, and let x unknown tail. Recovery builds a token-bearing RecoveryUnparsed node through arena.head, while the tree invariant requires its separate Unparsed span and no ordinary node token. These inputs should yield explicit recoverable syntax rather than an internal validation failure.",
+      "resolution": "The Unparsed contract now explicitly permits an already recognized token/head while retaining the full unparsed cover and separate RecoveryEntry. All three original inputs return Recovered through production ParseSession and final tree validation. Independent checks verify unknown tail retains head[0,7) inside cover[0,12), and let x unknown tail retains head[6,13) inside cover[6,18), without inventing a regular leaf arity. The tracked unknown-head regression passes along with all11 native parse tests."
+    },
+    {
+      "id": "R029",
+      "status": "corrected",
+      "title": "Grammar reader compilation silently resolves duplicate catalog names by input order",
+      "affected_tasks": ["T05"],
+      "evidence": ["crates/languages/grammar/core/src/compile.rs", "crates/languages/grammar/core/src/compile/reader.rs", "crates/languages/grammar/core/tests/reader.rs"],
+      "partial_progress": "An independent compile::reader::compile call supplies a checked Region AST and two NamedClass entries with the same lookup name but distinct PresentationClass values. Both catalog orders compile successfully; reversing the entries changes the selected class from first to second. ReaderContext exposes raw public slices and carries no prior uniqueness proof. Provider-name and view-name lookups use the same first-match pattern and require corresponding boundary checks.",
+      "resolution": "ReaderContext validates empty and duplicate lookup names separately for imports, classes and views before any compilation lookup, with Work charged before variable-length comparisons. The original duplicate-class probe rejects both orders with DuplicateCatalogName(Classes). The independently passing tracked compiler catalog test rejects all six duplicate/empty catalog cases through the production compile entry. This does not close the full Grammar compiler/bootstrap scope."
+    },
+    {
+      "id": "R030",
+      "status": "corrected",
+      "title": "Grammar AST validation bypasses the shared node budget",
+      "affected_tasks": ["T01", "T05"],
+      "evidence": ["crates/languages/grammar/core/src/model.rs", "crates/languages/grammar/core/tests/reader.rs"],
+      "partial_progress": "An independent public Document.validate call validates a five-node Grammar AST with Limits.nodes=0 and returns Usage.nodes=0, while reporting sourceBytes67/work303/depth5/allocation598. Existing SyntaxBundle validation charges its syntax nodes, and the shared Limits contract does not give Grammar's typed arena an exemption.",
+      "resolution": "Document.validate charges each logical node at its first visit. Shared DAG revisits still account traversal Work and current path Depth without counting another logical node. The original zero-node probe now returns Stopped(NodeLimit); an additional independent exact boundary checks cap4 stops and cap5 succeeds with Usage.nodes=5. The tracked zero-node and successful five-node cases pass through Document.validate."
+    },
+    {
+      "id": "R031",
+      "status": "open",
+      "title": "The official AngleTag example mixes incompatible reader choice result types",
+      "affected_tasks": ["T05", "T16"],
+      "evidence": ["examples/grammar/angle-tag.neplg", "crates/languages/grammar/core/src/compile/reader.rs", "crates/foundation/reader/src/plan.rs"],
+      "partial_progress": "The original source is converted into its complete typed Grammar AST with source byte spans, then compiled through production compile::reader::compile. It rejects with Reader(OutputType): two Seq branches return List<NdfValue> and the Scalar branch returns Text, while Choice requires one common result type. The formal source now applies explicit Discard to each alternative and spec03 states the shared choice result type. The original bytes are retained as tools/tests/fixtures/grammar/angle-choice-output.neplg. Independently executed tools integration verifies the old source rejects and the corrected formal source compiles through complete package assembly and package.check. Actual quoted-greater-than runtime behavior is still pending.",
+      "blocking_condition": "Correct the example source and explicit reader-result contract together, then verify the corrected source through the production compiler and the intended single-token quoted-greater-than reader behavior. Retain the old mixed-type rejection as a regression."
+    },
+    {
+      "id": "R032",
+      "status": "corrected",
+      "title": "The source-backed printer reuses a validated tree without admitting its sources into a new operation",
+      "affected_tasks": ["T01", "T04"],
+      "evidence": ["crates/foundation/engine/src/parse/print.rs", "crates/foundation/engine/tests/parse.rs"],
+      "partial_progress": "An independent probe validates a complete tree under a setup budget, then invokes public print::source_tree with a fresh Budget whose sourceBytes limit is zero. It returns Complete(\"let x ~y\") with Usage.sourceBytes=0. The borrowed tree proof has no operation-budget identity and the printer accepts no SourceAdmission, so a prior successful validation silently bypasses the new operation's source limit.",
+      "resolution": "source_tree now accepts the shared SourceAdmission and admits each owning bundle's declared sources before reading token text. The original probe now returns Stopped(SourceLimit) with empty output and sourceBytes0. Pre-admitting the same eight-byte snapshot and printing within that operation leaves sourceBytes8. These boundaries are also exercised through the tracked static parser tests; all13 parse tests pass independently. This closes the native source-admission defect, not the future portable printer contract or semantic constructor printer."
+    },
+    {
+      "id": "R033",
+      "status": "open",
+      "title": "The official binding grammar uses a list-valued reader where a name binding requires Text",
+      "affected_tasks": ["T05", "T06"],
+      "evidence": ["examples/grammar/binding.neplg", "crates/foundation/engine/src/package/bindings.rs", "tools/tests/grammar.rs"],
+      "partial_progress": "The source's word reader is Seq(Scalar IdentifierStart, Many Scalar IdentifierContinue), which returns List<NdfValue>. The Name leaf requests reference Value self, whose checked binding contract requires Text. The independent tools integration executes the actual seed import and full package compiler and confirms Package(InvalidBinding), rather than accepting the design example as previously structurally audited.",
+      "blocking_condition": "Correct the source with an explicit Text-producing name reader or a specified transform, preserve the old invalid-type case as a regression, and exercise corrected parse plus binding behavior without introducing implicit Seq-to-Text concatenation."
     }
   ],
   "runtime_conformance_executed": false

@@ -174,6 +174,7 @@ pub struct LanguagePackage {
     pub namespaces: Vec<Namespace>,
     pub bindings: Vec<Binding>,
     pub extensions: Vec<ExtensionRequirement>,
+    pub recovery: crate::recovery::RecoveryPlan,
     pub provenance: PackageProvenance,
 }
 /// Package behavior identity is separate from the surface type descriptor digest.
@@ -185,6 +186,7 @@ pub struct PackageIdentity {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct EntryContext {
     pub package: PackageIdentity,
+    pub alias: String,
     pub category: String,
     pub mode: String,
 }

@@ -1,0 +1,174 @@
+{
+  "profile": "nepl3.development-slice/1",
+  "scope": "Static prefix execution, parsing Profile/package identities, source-backed output, Grammar typed AST import/lowering and initial reader/package compiler; partial T01-T05",
+  "recorded_at_utc": "2026-09-06 23:24:58 UTC",
+  "start_commit": "4550e63f3f30397e00e5d1b27b4460741d34a068",
+  "branch": "feat/prefix-engine",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "57ac4e6520628ce0e93fc92d46c25385f176021532511281b11d09ba0aa07be1",
+    "spec_sha256": "596517ecad8e594dbd0e662d2a829e802a4a724f427e27c91ec6114f838685e5"
+  },
+  "result": "passed-within-recorded-scope",
+  "test_counts": {
+    "native": {
+      "core": 51,
+      "reader": 49,
+      "wire": 19,
+      "engine": 22,
+      "grammar_core": 2,
+      "tools": 59,
+      "total": 202
+    },
+    "wasi": {
+      "core": 51,
+      "reader": 49,
+      "wire": 19,
+      "engine": 22,
+      "grammar_core": 2,
+      "total": 143
+    },
+    "python": {
+      "structure": 6,
+      "seed_input": 3
+    }
+  },
+  "checks": [
+    {
+      "name": "versions",
+      "command": "rustc --version --verbose\ncargo --version\nwasmtime --version\npython --version",
+      "target": "host-tools",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/prefix-engine/versions.log",
+      "log_sha256": "b5d61615d17a73e99293ca0c2780a14b3d1f7fabc4dee5b081e66ec922fa565b"
+    },
+    {
+      "name": "native",
+      "command": "cargo test --workspace --locked",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/prefix-engine/native.log",
+      "log_sha256": "23ea3dd5755b76fdb50601d87c0f7f6b94995d8254a0a96835b37792e1117542"
+    },
+    {
+      "name": "wasi",
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER = 'wasmtime run'\ncargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --target wasm32-wasip2 -- --test-threads=1",
+      "target": "wasm32-wasip2",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/prefix-engine/wasi.log",
+      "log_sha256": "4ac0a2c221dac41a16488301037e08911e7ca38a6a81f4dea577fbe893aa817c"
+    },
+    {
+      "name": "wasm",
+      "command": "cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --no-default-features --target wasm32-unknown-unknown",
+      "target": "wasm32-unknown-unknown (compile only)",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/prefix-engine/wasm.log",
+      "log_sha256": "c0ea50e514759ca25696a464102b316a33893b2c4bb390ff7069560f298b5997"
+    },
+    {
+      "name": "fmt",
+      "command": "cargo fmt --all -- --check",
+      "target": "host-repository",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/prefix-engine/fmt.log",
+      "log_sha256": "7a31ff28bbfb1bf4a44bce29287554ae3066691227450dbf83f0748a749c43f4"
+    },
+    {
+      "name": "clippy",
+      "command": "cargo clippy --workspace --all-targets --locked -- -D warnings",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/prefix-engine/clippy.log",
+      "log_sha256": "b944d7a74e1378c1d1acca3cb207ab1b3e9e6c65be7a504d3c968cb791dba9a2"
+    },
+    {
+      "name": "docs",
+      "command": "$env:RUSTDOCFLAGS = '-D warnings'\ncargo doc --workspace --no-deps --locked",
+      "target": "host-repository",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/prefix-engine/docs.log",
+      "log_sha256": "dc7973f2a89bac5eeb0d6a60b5c513a939e128a839dbeeb01a40b60b90646bd5"
+    },
+    {
+      "name": "contracts",
+      "command": "cargo run --locked -p nepl3-tools -- check",
+      "target": "host-repository",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/prefix-engine/contracts.log",
+      "log_sha256": "d1e49b686195669d52b5f3318344ac3c494fd07e687252baadfa8a42e2394510"
+    },
+    {
+      "name": "tasks",
+      "command": "cargo run --locked -p nepl3-tools -- tasks --check",
+      "target": "host-repository",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/prefix-engine/tasks.log",
+      "log_sha256": "d2355e8657308a243261397f0a5c69b58b1ce4c93f9cac2fc7a24f19e00f2feb"
+    },
+    {
+      "name": "allocation",
+      "command": "python tools/audit/allocation/run.py",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/prefix-engine/allocation.log",
+      "log_sha256": "7507cc4367e4361bc27ee29258bda85e1775aefc00cb98688927764fededa4d7"
+    },
+    {
+      "name": "audit",
+      "command": "python tools/audit/structure.py\npython -m unittest discover -s tools/audit -p test.py\npython tools/generate/grammar.py\npython -m unittest discover -s tools/bootstrap -p test_grammar.py",
+      "target": "host-repository (Python 3.13.12)",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/prefix-engine/audit.log",
+      "log_sha256": "d01e3742d62685761e1ed8114805876d16acdd35a072a9534e9e5d667463c020"
+    },
+    {
+      "name": "actionlint",
+      "command": "C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe .github/workflows/ci.yml",
+      "target": "host-repository (actionlint 1.7.12)",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/prefix-engine/actionlint.log",
+      "log_sha256": "9c47d0db689ed2c995bd9e169a409f93377fbc9fb4c40b2a1b1e12469787bb01"
+    }
+  ],
+  "review": {
+    "reviewer": "independent subagent Huygens (/root/review)",
+    "implementation_authors": [
+      "Hooke (/root/implementation)",
+      "Carson (/root/infrastructure)"
+    ],
+    "method": "Independent specification/code inspection, managed production API tests and separate old/new failure reproductions. Parser 13, Grammar 2, seed importer 2, example assembly 1 and Python seed 3 tests independently passed. Separate minimal package -> ParseSession -> Grammar lower probe preserved Japanese source bytes and rejected a same-semantic Profile with swapped concrete form indices.",
+    "result": "Approved as an explicitly incomplete development checkpoint. R023-R030/R032 corrections independently verified; R006/R009/R014/R017/R031/R033 remain open.",
+    "records": [
+      "doc/review.md",
+      "design/review.json"
+    ],
+    "auxiliary_limit": "The final minimal lower probe used ignored independent helper inputs; it is review evidence, not a committed acceptance command or full Grammar bootstrap."
+  },
+  "integration_fix": "Full-workspace Clippy caught a cloned reference in a reader test; replaced with core::slice::from_ref, then reran strict Clippy and native/WASI suites without lint suppression.",
+  "exclusions": [
+    "No task-complete or acceptance-passed state is established. All 55 required acceptance groups remain not-run.",
+    "Complete Grammar seed/P1/P2 bootstrap, facts/provider contracts, general compiler failure coverage and located compiler diagnostics remain unfinished.",
+    "R031: corrected Angle source passes actual package assembly; quoted-attribute token execution is still pending. R033: the binding example is currently rejected and still needs correction.",
+    "Dynamic HeadProvider P03, full synchronization-based recovery, complete parser/reader continuation/reply codecs and process-provider comparison remain incomplete.",
+    "Resolved parsing Profile is not the complete suite Profile; domain runtime, editor queries, CLI/WASI app, provider app, pure UI, Playground, Pages and Doc migration remain unfinished.",
+    "Source-backed structural output does not implement source-less domain printers or whole-file trailing-trivia output.",
+    "Browser Wasm was compiled only; no browser execution or rendering is claimed.",
+    "Linux/macOS and remote CI for this checkpoint are not yet recorded. reader-builtins/main-ci.json refers only to the preceding merged commit.",
+    "Documentation baseline audit passed, but current delta is 124 added/46 changed/0 removed and current completeness is not established."
+  ],
+  "log_format": "UTF-8 LF; actual command(s), target, exit code and captured output; terminal empty lines omitted."
+}

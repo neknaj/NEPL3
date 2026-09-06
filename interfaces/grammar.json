@@ -1,0 +1,1222 @@
+{
+  "operations": {},
+  "package": "nepl3.grammar",
+  "revision": 1,
+  "types": {
+    "Document": {
+      "constraints": [
+        "grammar.constructor_graph"
+      ],
+      "record": [
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "name": "SourceContent",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "nodes",
+          {
+            "list": {
+              "named": {
+                "name": "Node",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "root",
+          {
+            "named": {
+              "name": "NodeId",
+              "package": "nepl3.grammar",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "NameLiteral": {
+      "constraints": [],
+      "record": [
+        [
+          "value",
+          "Text"
+        ],
+        [
+          "span",
+          {
+            "named": {
+              "name": "Span",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "NatLiteral": {
+      "constraints": [
+        "grammar.natural"
+      ],
+      "record": [
+        [
+          "value",
+          "Integer"
+        ],
+        [
+          "span",
+          {
+            "named": {
+              "name": "Span",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "Node": {
+      "constraints": [
+        "grammar.node_source"
+      ],
+      "record": [
+        [
+          "kind",
+          {
+            "named": {
+              "name": "NodeKind",
+              "package": "nepl3.grammar",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "span",
+          {
+            "named": {
+              "name": "Span",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "NodeId": {
+      "constraints": [],
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ]
+    },
+    "NodeKind": {
+      "constraints": [
+        "grammar.constructor_categories"
+      ],
+      "variant": {
+        "Any": [],
+        "Asciiletter": [],
+        "Bind": [
+          [
+            "namespace",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "field",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Builtin": [
+          [
+            "reader",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Call": [
+          [
+            "provider",
+            {
+              "named": {
+                "name": "TextLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Capture": [
+          [
+            "name",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "CaptureSelector": [
+          [
+            "name",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Category": [
+          [
+            "name",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "mode",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Chars": [
+          [
+            "text",
+            {
+              "named": {
+                "name": "TextLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Choice": [
+          [
+            "alternatives",
+            {
+              "named": {
+                "name": "NodeList",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Commit": [
+          [
+            "body",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Custom": [
+          [
+            "provider",
+            {
+              "named": {
+                "name": "TextLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Decode": [
+          [
+            "decoder",
+            {
+              "named": {
+                "name": "TextLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Digit": [],
+        "Discard": [
+          [
+            "body",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Eof": [],
+        "Except": [
+          [
+            "text",
+            {
+              "named": {
+                "name": "TextLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Export": [
+          [
+            "namespace",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "field",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Extension": [
+          [
+            "alias",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "provider",
+            {
+              "named": {
+                "name": "TextLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "signature",
+            {
+              "named": {
+                "name": "TextLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "FieldDeclaration": [
+          [
+            "name",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "read",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "FieldSelector": [
+          [
+            "name",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Foreign": [
+          [
+            "alias",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "category",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Form": [
+          [
+            "kind",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "category",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "spelling",
+            {
+              "named": {
+                "name": "TextLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "fields",
+            {
+              "named": {
+                "name": "NodeList",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "bindings",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "styles",
+            {
+              "named": {
+                "name": "NodeList",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Global": [],
+        "Group": [
+          [
+            "plans",
+            {
+              "named": {
+                "name": "NodeList",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Head": [],
+        "Identifiercontinue": [],
+        "Identifierstart": [],
+        "Import": [
+          [
+            "child",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Language": [
+          [
+            "name",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "revision",
+            {
+              "named": {
+                "name": "NatLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "root",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "declarations",
+            {
+              "named": {
+                "name": "NodeList",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Leaf": [
+          [
+            "kind",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "category",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "token",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "bindings",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "styles",
+            {
+              "named": {
+                "name": "NodeList",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Lexical": [],
+        "ListOf": [
+          [
+            "element",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Literal": [
+          [
+            "text",
+            {
+              "named": {
+                "name": "TextLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Local": [
+          [
+            "category",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Look": [
+          [
+            "body",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Many": [
+          [
+            "body",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Map": [
+          [
+            "provider",
+            {
+              "named": {
+                "name": "TextLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Mode": [
+          [
+            "name",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "rules",
+            {
+              "named": {
+                "name": "NodeList",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Namespace": [
+          [
+            "name",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "policy",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Node": [
+          [
+            "kind",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "None": [],
+        "Not": [
+          [
+            "body",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Open": [],
+        "Optional": [
+          [
+            "body",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Propagate": [
+          [
+            "child",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Range": [
+          [
+            "lo",
+            {
+              "named": {
+                "name": "TextLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "hi",
+            {
+              "named": {
+                "name": "TextLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Reader": [
+          [
+            "name",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "expression",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Recursive": [
+          [
+            "declarations",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Ref": [
+          [
+            "name",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Reference": [
+          [
+            "namespace",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "field",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Region": [
+          [
+            "role",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Repeat": [
+          [
+            "min",
+            {
+              "named": {
+                "name": "NatLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "max",
+            {
+              "named": {
+                "name": "NatLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Scalar": [
+          [
+            "class",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Scope": [
+          [
+            "plans",
+            {
+              "named": {
+                "name": "NodeList",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Self": [],
+        "Seq": [
+          [
+            "parts",
+            {
+              "named": {
+                "name": "NodeList",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Sequential": [
+          [
+            "declarations",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Skip": [
+          [
+            "reader",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Some": [
+          [
+            "body",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Style": [
+          [
+            "selector",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "class",
+            {
+              "named": {
+                "name": "TextLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Take": [
+          [
+            "kind",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "reader",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Takecount": [
+          [
+            "count",
+            {
+              "named": {
+                "name": "NatLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Then": [
+          [
+            "first",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "provider",
+            {
+              "named": {
+                "name": "TextLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Until": [
+          [
+            "delimiter",
+            {
+              "named": {
+                "name": "TextLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Visit": [
+          [
+            "child",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Whitespace": [],
+        "WithMode": [
+          [
+            "mode",
+            {
+              "named": {
+                "name": "NameLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "read",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "NodeList": {
+      "constraints": [
+        "grammar.list_source"
+      ],
+      "record": [
+        [
+          "items",
+          {
+            "list": {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "span",
+          {
+            "named": {
+              "name": "Span",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "TextLiteral": {
+      "constraints": [],
+      "record": [
+        [
+          "value",
+          "Text"
+        ],
+        [
+          "span",
+          {
+            "named": {
+              "name": "Span",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    }
+  }
+}

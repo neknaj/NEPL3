@@ -1126,6 +1126,19 @@ fn fresh_budget_and_forged_call_or_source_cannot_resume_a_saved_slot() -> Result
         ),
         Err(ReaderError::Continuation)
     ));
+    let mut cancelled_foreign = Budget::new(b.limits());
+    let rejected_reply = terminal("a", 1, &mut budget())?;
+    cancelled_foreign.cancel();
+    assert_eq!(
+        session.resume(
+            &continuation,
+            rejected_reply,
+            &store,
+            &mut cancelled_foreign,
+            &mut admission
+        ),
+        Err(ReaderError::Continuation)
+    );
     for change in 0..4 {
         let mut forged = continuation.clone();
         match change {
@@ -1169,11 +1182,15 @@ fn fresh_budget_and_forged_call_or_source_cannot_resume_a_saved_slot() -> Result
 fn cancellation_during_provider_wait_stops_and_consumes_the_pending_slot() -> Result<(), ReaderError>
 {
     let (registry, schema) = registry()?;
-    let p = provider_plan(&schema);
+    let mut p = provider_plan(&schema);
+    p.expressions
+        .push(ReaderExpr::Seq(vec![ReaderId(0), ReaderId(0)]));
+    p.rules[0].root = ReaderId(1);
+    p.rules[0].output = TypeDescriptor::List(Box::new(TypeDescriptor::NdfValue));
     let checked = p.check(&registry, &mut budget())?;
     let mut b = budget();
     let mut session = ReaderSession::new("cancel".into(), &checked, &registry, &mut b)?;
-    let source = source("a")?;
+    let source = source("aa")?;
     let mut store = SourceStore::default();
     store.insert(source.clone())?;
     let mut admission = SourceAdmission::default();
@@ -1184,7 +1201,7 @@ fn cancellation_during_provider_wait_stops_and_consumes_the_pending_slot() -> Re
         ReadRequest {
             snapshot: &source,
             start: 0,
-            limit: 1,
+            limit: 2,
             final_input: true,
             context: &checked_context,
             state: &NdfValue::Unit,
@@ -1196,15 +1213,32 @@ fn cancellation_during_provider_wait_stops_and_consumes_the_pending_slot() -> Re
     let ReadReply::Await { continuation, .. } = reply else {
         return Err(ReaderError::NoPending);
     };
-    let reply = terminal("a", 1, &mut b)?;
+    let first = annotated_terminal(&schema, source.span(0, 1)?, 1, &mut b)?;
+    let reply = session.resume(&continuation, first, &store, &mut b, &mut admission)?;
+    let ReadReply::Await {
+        continuation,
+        report,
+        ..
+    } = reply
+    else {
+        return Err(ReaderError::NoPending);
+    };
+    assert_eq!(report.diagnostics.len(), 1);
+    assert_eq!(report.events.len(), 1);
+    let reply = terminal("a", 2, &mut b)?;
     b.cancel();
-    assert!(matches!(
-        session.resume(&continuation, reply, &store, &mut b, &mut admission)?,
-        ReadReply::Stopped {
-            reason: StopReason::Cancelled,
-            ..
-        }
-    ));
+    let ReadReply::Stopped {
+        reason,
+        report: stopped,
+        ..
+    } = session.resume(&continuation, reply, &store, &mut b, &mut admission)?
+    else {
+        return Err(ReaderError::Context);
+    };
+    assert_eq!(reason, StopReason::Cancelled);
+    assert_eq!(stopped.diagnostics, report.diagnostics);
+    assert_eq!(stopped.events, report.events);
+    assert_eq!(stopped.usage, b.usage());
     assert_eq!(b.poll(), Err(StopReason::Cancelled));
     Ok(())
 }
@@ -1602,6 +1636,19 @@ fn stopped_tokenizer_retains_reader_report_and_generated_source_closure() -> Res
     else {
         return Err(ReaderError::NoPending);
     };
+    let mut cancelled_foreign = Budget::new(b.limits());
+    let rejected_reply = terminal("a", 1, &mut budget())?;
+    cancelled_foreign.cancel();
+    assert_eq!(
+        session.resume(
+            &continuation,
+            rejected_reply,
+            &store,
+            &mut cancelled_foreign,
+            &mut admission
+        ),
+        Err(ReaderError::Continuation)
+    );
     let generated = admission.create(
         SourceId("generated".into()),
         0,
@@ -1774,7 +1821,7 @@ fn tokenizer_preserves_accepted_skip_reports_and_sources_across_candidate_rollba
 -> Result<(), ReaderError> {
     use nepl3_reader::tokenizer::*;
     let (registry, schema) = registry()?;
-    for mode in 0..4 {
+    for mode in 0..5 {
         let mut p = provider_plan(&schema);
         p.expressions.extend([
             ReaderExpr::Literal(if mode == 2 {
@@ -1827,7 +1874,7 @@ fn tokenizer_preserves_accepted_skip_reports_and_sources_across_candidate_rollba
         )?;
         let mut limits = budget().limits();
         if mode == 2 {
-            limits.allocation_units = measured.usage().allocation_units + 300_000;
+            limits.allocation_units = measured.usage().allocation_units + 800_000;
         }
         let mut b = Budget::new(limits);
         let mut admission = SourceAdmission::default();
@@ -1897,6 +1944,25 @@ fn tokenizer_preserves_accepted_skip_reports_and_sources_across_candidate_rollba
                 .any(|source| source.identity() == first.identity()),
             "provider request declares the report source closure"
         );
+        if mode == 4 {
+            let prior_usage = b.usage();
+            let ignored = terminal("a", 2, &mut budget())?;
+            b.cancel();
+            let cancelled =
+                session.resume(&continuation, ignored, &store, &mut b, &mut admission)?;
+            assert!(matches!(
+                cancelled.outcome,
+                TokenizationOutcome::Stopped {
+                    reason: StopReason::Cancelled
+                }
+            ));
+            assert_eq!(cancelled.report.diagnostics, reply.report.diagnostics);
+            assert_eq!(cancelled.report.events, reply.report.events);
+            assert_eq!(cancelled.sources, reply.sources);
+            assert_eq!(cancelled.trivia, reply.trivia);
+            assert_eq!(cancelled.report.usage, prior_usage);
+            continue;
+        }
         let second = admission.create(
             SourceId("candidate-generated".into()),
             0,
@@ -1989,7 +2055,7 @@ fn tokenizer_await_allocation_stops_clear_both_private_pending_slots() -> Result
     let constructor = measured.usage().allocation_units;
     let mut stopped = 0;
     let mut suspended = 0;
-    for extra in (500..30_000).step_by(128) {
+    for extra in (500..120_000).step_by(512) {
         let mut limits = budget().limits();
         limits.allocation_units = constructor + extra;
         let mut b = Budget::new(limits);
@@ -2036,5 +2102,350 @@ fn tokenizer_await_allocation_stops_clear_both_private_pending_slots() -> Result
         }
     }
     assert!(stopped > 0 && suspended > 0);
+    Ok(())
+}
+
+#[test]
+fn accepted_collector_crosses_language_sessions_only_in_its_original_operation()
+-> Result<(), ReaderError> {
+    use nepl3_reader::tokenizer::*;
+    let (registry, schema) = registry()?;
+    let p = provider_plan(&schema);
+    let checked = p.check(&registry, &mut budget())?;
+    for case in 0..5 {
+        let source = source("aa")?;
+        let mut store = SourceStore::default();
+        store.insert(source.clone())?;
+        let raw = context(&schema, &registry)?;
+        let mut b = budget();
+        let mut admission = SourceAdmission::default();
+        let proof = check_context(&raw, &store, &registry, &mut b, &mut admission)?;
+        let first_modes = vec![ReaderMode {
+            name: "test".into(),
+            skip: vec![],
+            take: vec![TakeRule {
+                reader: TokenReader::Rule("entry".into()),
+                kind: KindRef {
+                    schema: schema.clone(),
+                    local_kind: 0,
+                },
+            }],
+        }];
+        let guest_modes = vec![ReaderMode {
+            name: "guest-mode".into(),
+            skip: vec![],
+            take: first_modes[0].take.clone(),
+        }];
+        let mut first = TokenizationSession::new(
+            "first-language".into(),
+            &first_modes,
+            &checked,
+            &registry,
+            &mut b,
+        )?;
+        let mut guest = TokenizationSession::new(
+            "guest-language".into(),
+            &guest_modes,
+            &checked,
+            &registry,
+            &mut b,
+        )?;
+        let scope = TokenizationScope {
+            operation_id: "parse-operation-17".into(),
+            profile_digest: Digest([17; 32]),
+            snapshot: source.reference(),
+        };
+        let accepted = AcceptedTokenizationReport::empty(scope.clone(), &mut b)?;
+        let reply = first.read_with_accepted(
+            ScopedTokenizationRequest {
+                scope: &scope,
+                target: TokenTarget::Mode,
+                input: TokenizationRequest {
+                    snapshot: &source,
+                    start: 0,
+                    limit: 2,
+                    final_input: true,
+                    context: &proof,
+                    state: &NdfValue::Unit,
+                },
+            },
+            &store,
+            &mut b,
+            &mut admission,
+            accepted,
+        )?;
+        let TokenizationOutcome::Await { continuation, .. } = reply.outcome else {
+            return Err(ReaderError::NoPending);
+        };
+        let generated = admission.create(
+            SourceId("collector-generated".into()),
+            0,
+            "memory:collector-generated".into(),
+            b"g".to_vec(),
+            &mut b,
+        )?;
+        let mut provider = annotated_terminal(&schema, generated.span(0, 1)?, 1, &mut b)?;
+        if let ProviderReply::Read(reply) = &mut provider
+            && let ReadReply::Matched { sources, .. } = reply.as_mut()
+        {
+            sources.push(generated.clone());
+        }
+        let reply =
+            first.resume_accepted(&continuation, provider, &store, &mut b, &mut admission)?;
+        assert!(matches!(reply.outcome, TokenizationOutcome::Token(_)));
+        assert_eq!(reply.accepted.report().diagnostics.len(), 1);
+        assert_eq!(reply.accepted.report().events.len(), 1);
+        assert_eq!(reply.accepted.sources(), core::slice::from_ref(&generated));
+        let prior_report = reply.accepted.report().clone();
+        let guest_proof = proof
+            .retarget(
+                &schema,
+                "guest-category",
+                "guest-mode",
+                &store,
+                &registry,
+                &mut b,
+            )
+            .map_err(|_| ReaderError::Context)?;
+        let mut requested_scope = scope.clone();
+        if case == 1 {
+            requested_scope.operation_id.push('x');
+        }
+        if case == 3 {
+            requested_scope.profile_digest.0[0] ^= 1;
+        }
+        let changed = SourceSnapshot::new(
+            SourceId("other-input".into()),
+            0,
+            "memory:other-input".into(),
+            b"aa".to_vec(),
+            &mut budget(),
+        )?;
+        if case == 4 {
+            b.cancel();
+        }
+        let result = guest.read_with_accepted(
+            ScopedTokenizationRequest {
+                scope: &requested_scope,
+                target: TokenTarget::Mode,
+                input: TokenizationRequest {
+                    snapshot: if case == 2 { &changed } else { &source },
+                    start: 1,
+                    limit: 2,
+                    final_input: true,
+                    context: &guest_proof,
+                    state: &NdfValue::Unit,
+                },
+            },
+            &store,
+            &mut b,
+            &mut admission,
+            reply.accepted,
+        );
+        if (1..=3).contains(&case) {
+            assert!(matches!(result, Err(ReaderError::Continuation)));
+            continue;
+        }
+        let reply = result?;
+        if case == 4 {
+            assert!(matches!(
+                reply.outcome,
+                TokenizationOutcome::Stopped {
+                    reason: StopReason::Cancelled
+                }
+            ));
+        } else {
+            let TokenizationOutcome::Await { continuation, .. } = reply.outcome else {
+                return Err(ReaderError::NoPending);
+            };
+            assert_eq!(continuation.scope, scope);
+            b.cancel();
+            let ignored = terminal("a", 2, &mut budget())?;
+            let reply =
+                guest.resume_accepted(&continuation, ignored, &store, &mut b, &mut admission)?;
+            assert!(matches!(
+                reply.outcome,
+                TokenizationOutcome::Stopped {
+                    reason: StopReason::Cancelled
+                }
+            ));
+            assert_eq!(
+                reply.accepted.report().diagnostics,
+                prior_report.diagnostics
+            );
+            assert_eq!(reply.accepted.report().events, prior_report.events);
+            assert_eq!(reply.accepted.sources(), &[generated]);
+            assert_eq!(reply.accepted.report().usage.diagnostics, 1);
+            assert_eq!(reply.accepted.report().usage.events, 1);
+            continue;
+        }
+        assert_eq!(
+            reply.accepted.report().diagnostics,
+            prior_report.diagnostics
+        );
+        assert_eq!(reply.accepted.report().events, prior_report.events);
+        assert_eq!(reply.accepted.sources(), &[generated]);
+        assert_eq!(reply.accepted.report().usage.diagnostics, 1);
+        assert_eq!(reply.accepted.report().usage.events, 1);
+    }
+    Ok(())
+}
+
+#[test]
+fn accepted_diagnostic_owns_primary_related_and_fix_source_closure_before_publication()
+-> Result<(), ReaderError> {
+    use nepl3_core::diagnostic::{Fix, Related};
+    use nepl3_reader::tokenizer::*;
+    let (registry, schema) = registry()?;
+    let p = provider_plan(&schema);
+    let checked = p.check(&registry, &mut budget())?;
+    let input = source("aa")?;
+    let mut original = SourceStore::default();
+    original.insert(input.clone())?;
+    let mut declarations = SourceStore::default();
+    declarations.insert(input.clone())?;
+    let mut auxiliary = vec![];
+    for i in 0..3 {
+        let snapshot = SourceSnapshot::new(
+            SourceId(format!("auxiliary-{i}")),
+            0,
+            format!("memory:auxiliary-{i}"),
+            b"x".to_vec(),
+            &mut budget(),
+        )?;
+        declarations.insert(snapshot.clone())?;
+        auxiliary.push(snapshot);
+    }
+    let payload = TypedValue::Record(Record {
+        schema: schema.clone(),
+        kind: "Node".into(),
+        fields: vec![],
+    });
+    let diagnostic = Diagnostic {
+        schema: schema.clone(),
+        code: "RelatedInput".into(),
+        severity: Severity::Information,
+        stage: "parse".into(),
+        arguments: payload.clone(),
+        primary: Some(auxiliary[0].span(0, 1)?),
+        related: vec![Related {
+            span: Some(auxiliary[1].span(0, 1)?),
+            code: "Related".into(),
+            arguments: payload,
+        }],
+        fixes: vec![Fix {
+            id: "replace".into(),
+            edits: vec![nepl3_core::source::TextEdit {
+                span: auxiliary[2].span(0, 1)?,
+                expected_digest: auxiliary[2].identity().digest,
+                replacement: "y".into(),
+            }],
+        }],
+    };
+    let scope = TokenizationScope {
+        operation_id: "diagnostic-operation".into(),
+        profile_digest: Digest([21; 32]),
+        snapshot: input.reference(),
+    };
+    let mut incomplete = SourceStore::default();
+    incomplete.insert(input.clone())?;
+    incomplete.insert(auxiliary[0].clone())?;
+    incomplete.insert(auxiliary[1].clone())?;
+    let mut missing_budget = budget();
+    let mut missing = AcceptedTokenizationReport::empty(scope.clone(), &mut missing_budget)?;
+    assert_eq!(
+        missing.diagnostic(
+            diagnostic.clone(),
+            &incomplete,
+            &registry,
+            &mut missing_budget,
+            &mut SourceAdmission::default()
+        ),
+        Err(ReaderError::Source(SourceError::MissingSnapshot))
+    );
+    assert!(missing.report().diagnostics.is_empty());
+    assert!(missing.sources().is_empty());
+    let mut low_limits = budget().limits();
+    low_limits.source_bytes = 0;
+    let mut low = Budget::new(low_limits);
+    let mut unaccepted = AcceptedTokenizationReport::empty(scope.clone(), &mut low)?;
+    assert_eq!(
+        unaccepted.diagnostic(
+            diagnostic.clone(),
+            &declarations,
+            &registry,
+            &mut low,
+            &mut SourceAdmission::default()
+        ),
+        Err(ReaderError::Source(SourceError::Stopped(
+            StopReason::SourceLimit
+        )))
+    );
+    assert!(unaccepted.report().diagnostics.is_empty());
+    assert!(unaccepted.sources().is_empty());
+    let mut b = budget();
+    let mut admission = SourceAdmission::default();
+    let mut accepted = AcceptedTokenizationReport::empty(scope.clone(), &mut b)?;
+    accepted.diagnostic(
+        diagnostic.clone(),
+        &declarations,
+        &registry,
+        &mut b,
+        &mut admission,
+    )?;
+    assert_eq!(accepted.sources(), auxiliary);
+    assert_eq!(b.usage().source_bytes, 3);
+    assert_eq!(accepted.report().diagnostics, vec![diagnostic.clone()]);
+    let raw = context(&schema, &registry)?;
+    let proof = check_context(
+        &raw,
+        &original,
+        &registry,
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    let modes = vec![ReaderMode {
+        name: "test".into(),
+        skip: vec![],
+        take: vec![TakeRule {
+            reader: TokenReader::Rule("entry".into()),
+            kind: KindRef {
+                schema,
+                local_kind: 0,
+            },
+        }],
+    }];
+    let mut session =
+        TokenizationSession::new("closure".into(), &modes, &checked, &registry, &mut b)?;
+    b.cancel();
+    let reply = session
+        .read_with_accepted(
+            ScopedTokenizationRequest {
+                scope: &scope,
+                target: TokenTarget::Mode,
+                input: TokenizationRequest {
+                    snapshot: &input,
+                    start: 0,
+                    limit: 2,
+                    final_input: true,
+                    context: &proof,
+                    state: &NdfValue::Unit,
+                },
+            },
+            &original,
+            &mut b,
+            &mut admission,
+            accepted,
+        )?
+        .into_raw();
+    assert!(matches!(
+        reply.outcome,
+        TokenizationOutcome::Stopped {
+            reason: StopReason::Cancelled
+        }
+    ));
+    assert_eq!(reply.report.diagnostics, vec![diagnostic]);
+    assert_eq!(reply.sources, auxiliary);
+    assert_eq!(reply.report.usage.diagnostics, 1);
     Ok(())
 }

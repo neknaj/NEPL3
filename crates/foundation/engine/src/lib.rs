@@ -3,4 +3,9 @@
 extern crate alloc;
 
 pub mod package;
+pub mod parse;
+pub mod profile;
+pub mod recovery;
 pub mod schema;
+pub mod selection;
+pub mod tree;

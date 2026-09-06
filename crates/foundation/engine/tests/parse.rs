@@ -1,0 +1,1029 @@
+#[path = "parse/foreign.rs"]
+mod foreign;
+#[path = "parse/support.rs"]
+mod support;
+use nepl3_core::{
+    source::{SourceAdmission, SourceId, SourceSnapshot, SourceStore},
+    syntax::{Environment, EnvironmentEntry, FieldValue},
+    value::NdfValue,
+};
+use nepl3_engine::{parse::*, profile::*};
+use nepl3_reader::model::ReaderContext;
+use nepl3_wire::{environment::environment_digest, foundation::FoundationCodec};
+use support::*;
+fn run(input: &str, final_input: bool) -> Result<ParseReply, String> {
+    run_config(input, final_input, false, None)
+}
+fn run_config(
+    input: &str,
+    final_input: bool,
+    list: bool,
+    cap: Option<u64>,
+) -> Result<ParseReply, String> {
+    run_options(input, final_input, list, cap, None)
+}
+fn run_options(
+    input: &str,
+    final_input: bool,
+    list: bool,
+    cap: Option<u64>,
+    depth: Option<u64>,
+) -> Result<ParseReply, String> {
+    run_scenario(
+        input,
+        final_input,
+        Scenario {
+            list,
+            cap,
+            depth,
+            ..Scenario::default()
+        },
+    )
+}
+#[derive(Default)]
+struct Scenario {
+    list: bool,
+    cap: Option<u64>,
+    depth: Option<u64>,
+    text: bool,
+    unknown: bool,
+    caller_depth: u64,
+    provider: bool,
+    cancel_await: bool,
+    restart: Option<&'static str>,
+}
+fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<ParseReply, String> {
+    let Scenario {
+        list,
+        cap,
+        depth,
+        text,
+        unknown,
+        caller_depth,
+        provider,
+        cancel_await,
+        restart,
+    } = options;
+    let (mut package, registry) = fixture()?;
+    if unknown {
+        package.leaves.clear();
+    }
+    if text {
+        use nepl3_engine::package::ReadSpec;
+        let ReadSpec::Builtin { reader, .. } = &mut package.reads[0] else {
+            return Err("builtin fixture".into());
+        };
+        *reader = nepl3_reader::builtin::BuiltinReader::Text;
+    }
+    if provider {
+        use nepl3_reader::plan::*;
+        let signature = ProviderSignature {
+            operation: nepl3_core::value::OperationRef {
+                schema: package.schema.clone(),
+                name: "read".into(),
+            },
+            kind: ProviderKind::Read,
+            value_input: nepl3_core::schema::TypeDescriptor::Unit,
+            value_output: nepl3_core::schema::TypeDescriptor::Text,
+            pure: true,
+            state_type: nepl3_core::schema::TypeDescriptor::Unit,
+            continuation_type: nepl3_core::schema::TypeDescriptor::Named(
+                nepl3_core::schema::TypeRef {
+                    package: "nepl3.reader".into(),
+                    revision: 1,
+                    name: "ReaderContinuation".into(),
+                },
+            ),
+        };
+        package
+            .reader
+            .expressions
+            .push(ReaderExpr::Call(signature.operation.clone()));
+        package.reader.providers.push(signature);
+        package.reader.rules.push(ReaderRule {
+            name: "provided".into(),
+            root: ReaderId(0),
+            output: nepl3_core::schema::TypeDescriptor::Text,
+        });
+        package.modes[0].take[0].reader =
+            nepl3_reader::tokenizer::TokenReader::Rule("provided".into());
+    }
+    if depth.is_some() {
+        use nepl3_reader::plan::{CharClass, ReaderExpr, ReaderId, ReaderRule};
+        package.forms[0].spelling = "f".into();
+        if !provider {
+            package
+                .reader
+                .expressions
+                .push(ReaderExpr::Scalar(CharClass::Any));
+        }
+        for i in 0..20 {
+            package.reader.expressions.push(ReaderExpr::Capture {
+                name: format!("capture{i}"),
+                body: ReaderId(i),
+            });
+        }
+        package.reader.rules.push(ReaderRule {
+            name: "deep".into(),
+            root: ReaderId(20),
+            output: nepl3_core::schema::TypeDescriptor::Text,
+        });
+        package.modes[0].take[0].reader = nepl3_reader::tokenizer::TokenReader::Rule("deep".into());
+    }
+    if list {
+        let kind = |name: &str| -> Result<nepl3_core::value::KindRef, String> {
+            Ok(nepl3_core::value::KindRef {
+                schema: package.schema.clone(),
+                local_kind: registry
+                    .kind_id(&package.schema, name)
+                    .map_err(|e| format!("{e:?}"))?,
+            })
+        };
+        package.reads.push(nepl3_engine::package::ReadSpec::ListOf {
+            element: nepl3_engine::package::ReadSpecId(1),
+            cons: kind("List:LocalCons")?,
+            nil: kind("List:Nil")?,
+        });
+        package.forms[0].fields[1].read = nepl3_engine::package::ReadSpecId(2);
+    }
+    let mut setup = budget();
+    let identity = package
+        .check(&registry, &mut setup)
+        .map_err(|e| format!("{e:?}"))?
+        .semantic_identity(&mut setup)
+        .map_err(|e| format!("{e:?}"))?;
+    let foundation = registry
+        .selected("nepl3.foundation", 1)
+        .ok_or("foundation")?
+        .clone();
+    let mut profile = ParseProfile {
+        id: "parse-fixture".into(),
+        languages: vec![LanguageRegistration {
+            alias: "Host".into(),
+            package: identity,
+            default_category: "Expr".into(),
+        }],
+        schemas: vec![
+            package.schema.clone(),
+            foundation.clone(),
+            registry
+                .selected("nepl3.reader", 1)
+                .ok_or("reader schema")?
+                .clone(),
+        ],
+        category_modes: vec![],
+        providers: vec![],
+        allowlist: vec![],
+        resources: vec![],
+        limits: budget().limits(),
+    };
+    let mut providers = vec![];
+    if provider {
+        let operation = package.reader.providers[0].operation.clone();
+        let digest = nepl3_core::source::Digest::of(b"fixture reader implementation manifest");
+        profile.providers.push(ProviderRequirement {
+            provider: "test-provider".into(),
+            revision: 1,
+            implementation_digest: digest,
+            operation: operation.clone(),
+        });
+        profile.allowlist.push(operation.clone());
+        providers.push(ProviderImplementation {
+            provider: "test-provider".into(),
+            revision: 1,
+            implementation_digest: digest,
+            operations: vec![operation],
+        });
+    }
+    let packages = [&package];
+    let resolved = profile
+        .resolve(
+            &RuntimeCatalog {
+                packages: &packages,
+                providers: &providers,
+                resources: &[],
+            },
+            &registry,
+            &mut setup,
+        )
+        .map_err(|e| format!("{e:?}"))?;
+    let source = SourceSnapshot::new(
+        SourceId("input".into()),
+        0,
+        "memory:input".into(),
+        input.as_bytes().to_vec(),
+        &mut setup,
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let mut sources = SourceStore::default();
+    sources
+        .insert(source.clone())
+        .map_err(|e| format!("{e:?}"))?;
+    let environment = Environment {
+        bindings: vec![],
+        resources: vec![],
+    };
+    let digest = environment_digest(&environment, &foundation, &registry, &mut setup)
+        .map_err(|e| format!("{e:?}"))?;
+    let raw = ReaderContext {
+        schema: package.schema.clone(),
+        category: "Expr".into(),
+        mode: "Code".into(),
+        origins: vec![],
+        environment: EnvironmentEntry {
+            id: 0,
+            digest,
+            value: environment,
+        },
+    };
+    let mut setup_admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&registry, &sources, &mut setup_admission)
+        .map_err(|e| format!("{e:?}"))?;
+    let checked = raw
+        .check(&mut codec, &sources, &registry, &mut setup)
+        .map_err(|e| format!("{e:?}"))?;
+    let environments = ParseEnvironmentSet::prepare(
+        &resolved,
+        &[EnvironmentInput {
+            alias: "Host",
+            context: &checked,
+        }],
+        &sources,
+        &mut codec,
+        &mut setup,
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let entry = resolved
+        .entry("Host", None, &mut setup)
+        .map_err(|e| format!("{e:?}"))?;
+    let mut session = ParseSession::new(
+        "parse-operation".into(),
+        &resolved,
+        &environments,
+        &mut setup,
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let mut operation = if let Some(cap) = cap {
+        let mut limits = budget().limits();
+        limits.allocation_units = cap;
+        nepl3_core::budget::Budget::new(limits)
+    } else {
+        budget()
+    };
+    if let Some(depth) = depth {
+        let mut limits = operation.limits();
+        limits.depth = depth;
+        operation = nepl3_core::budget::Budget::new(limits);
+    }
+    let mut admission = SourceAdmission::default();
+    let mut reply = operation
+        .with_depth_at_least(caller_depth, |operation| {
+            session.read(
+                ParseRequest {
+                    snapshot: &source,
+                    start: 0,
+                    limit: input.len() as u64,
+                    final_input,
+                    entry: &entry,
+                    states: &[LanguageReaderState {
+                        alias: "Host".into(),
+                        state: NdfValue::Unit,
+                    }],
+                },
+                &sources,
+                operation,
+                &mut admission,
+            )
+        })
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(operation.current_depth(), 0);
+    if let Some(next_input) = restart {
+        let ParseOutcome::NeedMore { progress, .. } = &reply.outcome else {
+            return Err(format!("expected NeedMore: {reply:?}"));
+        };
+        let before = reply.report.usage;
+        let revision = if input == next_input { 0 } else { 1 };
+        let next = SourceSnapshot::new(
+            SourceId("input".into()),
+            revision,
+            "memory:input".into(),
+            next_input.as_bytes().to_vec(),
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        let mut next_store = SourceStore::default();
+        for source in sources.snapshots() {
+            next_store
+                .insert(source.clone())
+                .map_err(|e| format!("{e:?}"))?;
+        }
+        next_store
+            .insert(next.clone())
+            .map_err(|e| format!("{e:?}"))?;
+        let states = [LanguageReaderState {
+            alias: "Host".into(),
+            state: NdfValue::Unit,
+        }];
+        let request = || ParseRequest {
+            snapshot: &next,
+            start: 0,
+            limit: next_input.len() as u64,
+            final_input: true,
+            entry: &entry,
+            states: &states,
+        };
+        let mut fresh = nepl3_core::budget::Budget::new(operation.limits());
+        fresh.cancel();
+        assert!(matches!(
+            session.continue_input(progress, request(), &next_store, &mut fresh, &mut admission),
+            Err(ParseError::Continuation)
+        ));
+        let mut altered = progress.clone();
+        altered.cursor += 1;
+        assert!(matches!(
+            session.continue_input(
+                &altered,
+                request(),
+                &next_store,
+                &mut operation,
+                &mut admission
+            ),
+            Err(ParseError::Continuation)
+        ));
+        if !input.is_empty() {
+            let changed = SourceSnapshot::new(
+                SourceId("input".into()),
+                revision + 1,
+                "memory:input".into(),
+                format!("!{next_input}").into_bytes(),
+                &mut budget(),
+            )
+            .map_err(|e| format!("{e:?}"))?;
+            let mut changed_request = request();
+            changed_request.snapshot = &changed;
+            changed_request.limit = changed.text().len() as u64;
+            assert!(matches!(
+                session.continue_input(
+                    progress,
+                    changed_request,
+                    &next_store,
+                    &mut operation,
+                    &mut admission
+                ),
+                Err(ParseError::Continuation)
+            ));
+        }
+        let resumed = session
+            .continue_input(
+                progress,
+                request(),
+                &next_store,
+                &mut operation,
+                &mut admission,
+            )
+            .map_err(|e| format!("continue: {e:?}"))?;
+        assert!(matches!(
+            session.continue_input(
+                progress,
+                request(),
+                &next_store,
+                &mut operation,
+                &mut admission
+            ),
+            Err(ParseError::NoPending)
+        ));
+        assert!(resumed.report.usage.work > before.work);
+        assert_eq!(
+            resumed.report.usage.source_bytes,
+            if revision == 0 {
+                input.len() as u64
+            } else {
+                (input.len() + next_input.len()) as u64
+            }
+        );
+        reply = resumed;
+    }
+    if provider {
+        let mut count = 0;
+        while let ParseOutcome::Await { call, continuation } = &reply.outcome {
+            count += 1;
+            let nepl3_reader::model::ProviderCall::Read {
+                request,
+                depth_base,
+                ..
+            } = call.as_ref()
+            else {
+                return Err("read call".into());
+            };
+            assert!(*depth_base >= caller_depth + 3);
+            let mut fresh = nepl3_core::budget::Budget::new(operation.limits());
+            fresh.cancel();
+            let empty = nepl3_reader::runtime::ProviderReply::Read(Box::new(
+                nepl3_reader::model::ReadReply::Stopped {
+                    reason: nepl3_core::budget::StopReason::Cancelled,
+                    report: nepl3_core::diagnostic::Report::default(),
+                    sources: vec![],
+                    source_maps: vec![],
+                },
+            ));
+            assert!(matches!(
+                session.resume(continuation, empty, &sources, &mut fresh, &mut admission),
+                Err(ParseError::Continuation)
+            ));
+            if cancel_await && count == 2 {
+                operation.cancel();
+                let terminal = nepl3_reader::runtime::ProviderReply::Read(Box::new(
+                    nepl3_reader::model::ReadReply::Stopped {
+                        reason: nepl3_core::budget::StopReason::Cancelled,
+                        report: nepl3_core::diagnostic::Report::default(),
+                        sources: vec![],
+                        source_maps: vec![],
+                    },
+                ));
+                let stopped = session
+                    .resume(
+                        continuation,
+                        terminal,
+                        &sources,
+                        &mut operation,
+                        &mut admission,
+                    )
+                    .map_err(|e| format!("cancel: {e:?}"))?;
+                reply = stopped;
+                break;
+            }
+            let start = request.start as usize;
+            let end = input[start..].find(' ').map_or(input.len(), |i| start + i);
+            let value = &input[start..end];
+            let terminal = operation
+                .with_depth_at_least(
+                    *depth_base,
+                    |b| -> Result<_, nepl3_core::budget::StopReason> {
+                        b.charge(nepl3_core::budget::Resource::Work, value.len() as u64)?;
+                        b.charge(
+                            nepl3_core::budget::Resource::AllocationUnits,
+                            value.len() as u64,
+                        )?;
+                        b.charge(nepl3_core::budget::Resource::Diagnostics, 1)?;
+                        let diagnostic = nepl3_core::diagnostic::Diagnostic {
+                            schema: package.schema.clone(),
+                            code: "FixtureRead".into(),
+                            stage: "reader".into(),
+                            severity: nepl3_core::diagnostic::Severity::Information,
+                            arguments: nepl3_core::value::TypedValue::Record(
+                                nepl3_core::value::Record {
+                                    schema: package.schema.clone(),
+                                    kind: "List:Nil".into(),
+                                    fields: vec![],
+                                },
+                            ),
+                            primary: None,
+                            related: vec![],
+                            fixes: vec![],
+                        };
+                        Ok(nepl3_reader::runtime::ProviderReply::Read(Box::new(
+                            nepl3_reader::model::ReadReply::Matched {
+                                value: NdfValue::Text(value.into()),
+                                end: end as u64,
+                                new_state: NdfValue::Unit,
+                                view: nepl3_core::view::ViewBundle {
+                                    elements: vec![],
+                                    roots: vec![],
+                                },
+                                facts: vec![],
+                                sources: vec![],
+                                source_maps: vec![],
+                                report: nepl3_core::diagnostic::Report {
+                                    diagnostics: vec![diagnostic],
+                                    usage: b.usage(),
+                                    ..nepl3_core::diagnostic::Report::default()
+                                },
+                            },
+                        )))
+                    },
+                )
+                .map_err(|e| format!("host: {e:?}"))?;
+            let resumed = operation
+                .with_depth_at_least(caller_depth, |b| {
+                    session.resume(continuation, terminal, &sources, b, &mut admission)
+                })
+                .map_err(|e| format!("resume: {e:?}"))?;
+            reply = resumed;
+            assert_eq!(operation.current_depth(), 0);
+        }
+    }
+    if text {
+        let ParseOutcome::Reserve {
+            ref continuation, ..
+        } = reply.outcome
+        else {
+            return Err(format!("expected reservation: {reply:?}"));
+        };
+        let reservation = nepl3_core::source::SourceReservation {
+            source_id: SourceId("decoded".into()),
+            revision: 0,
+            uri: "memory:decoded".into(),
+        };
+        let mut fresh = nepl3_core::budget::Budget::new(operation.limits());
+        fresh.cancel();
+        assert!(matches!(
+            session.reserve(
+                continuation,
+                &reservation,
+                &sources,
+                &mut fresh,
+                &mut admission
+            ),
+            Err(ParseError::Continuation)
+        ));
+        let mut altered = continuation.clone();
+        altered.progress.frames[0].arity += 1;
+        assert!(matches!(
+            session.reserve(
+                &altered,
+                &reservation,
+                &sources,
+                &mut operation,
+                &mut admission
+            ),
+            Err(ParseError::Continuation)
+        ));
+        let resumed = operation
+            .with_depth_at_least(caller_depth, |operation| {
+                session.reserve(
+                    continuation,
+                    &reservation,
+                    &sources,
+                    operation,
+                    &mut admission,
+                )
+            })
+            .map_err(|e| format!("reserve: {e:?}"))?;
+        assert_eq!(operation.current_depth(), 0);
+        assert!(matches!(
+            session.reserve(
+                continuation,
+                &reservation,
+                &sources,
+                &mut operation,
+                &mut admission
+            ),
+            Err(ParseError::NoPending)
+        ));
+        reply = resumed;
+    }
+
+    if let ParseOutcome::Complete { tree, .. } | ParseOutcome::Recovered { tree, .. } =
+        &reply.outcome
+    {
+        let proof = tree
+            .validate(&resolved, &mut budget(), &mut SourceAdmission::default())
+            .map_err(|e| format!("tree: {e:?}"))?;
+        let printed = print::source_tree(&proof, &mut budget(), &mut SourceAdmission::default());
+        if matches!(reply.outcome, ParseOutcome::Recovered { .. }) {
+            assert!(matches!(printed, Err(print::PrintError::Recovered)));
+        } else {
+            let mut denied = nepl3_core::budget::Budget::new(nepl3_core::budget::Limits {
+                source_bytes: 0,
+                ..budget().limits()
+            });
+            assert!(matches!(
+                print::source_tree(&proof, &mut denied, &mut SourceAdmission::default())
+                    .map_err(|e| format!("{e:?}"))?
+                    .outcome,
+                print::PrintOutcome::Stopped {
+                    reason: nepl3_core::budget::StopReason::SourceLimit,
+                    ..
+                }
+            ));
+            let mut shared = budget();
+            let mut source_admission = SourceAdmission::default();
+            for source in &tree.bundle.sources {
+                source_admission
+                    .admit_existing(source, &mut shared)
+                    .map_err(|e| format!("{e:?}"))?;
+            }
+            let before = shared.usage().source_bytes;
+            print::source_tree(&proof, &mut shared, &mut source_admission)
+                .map_err(|e| format!("{e:?}"))?;
+            assert_eq!(shared.usage().source_bytes, before);
+            let print::PrintOutcome::Complete(output) =
+                printed.map_err(|e| format!("print: {e:?}"))?.outcome
+            else {
+                return Err("unexpected print stop".into());
+            };
+            let root = &tree.bundle.nodes[tree.bundle.root.0 as usize];
+            let cover = root.cover.as_ref().ok_or("root cover")?;
+            let current = tree
+                .bundle
+                .sources
+                .iter()
+                .find(|v| v.identity() == cover.snapshot_ref())
+                .ok_or("print source")?;
+            assert_eq!(
+                output,
+                current
+                    .slice_range(0, cover.end())
+                    .map_err(|e| format!("{e:?}"))?
+            );
+            let mut limited = nepl3_core::budget::Budget::new(nepl3_core::budget::Limits {
+                output_bytes: 0,
+                ..budget().limits()
+            });
+            assert!(matches!(
+                print::source_tree(&proof, &mut limited, &mut SourceAdmission::default())
+                    .map_err(|e| format!("{e:?}"))?
+                    .outcome,
+                print::PrintOutcome::Stopped {
+                    reason: nepl3_core::budget::StopReason::OutputLimit,
+                    ..
+                }
+            ));
+            if !provider && !text {
+                let printed_source = SourceSnapshot::new(
+                    SourceId("printed".into()),
+                    0,
+                    "memory:printed".into(),
+                    output.into_bytes(),
+                    &mut budget(),
+                )
+                .map_err(|e| format!("{e:?}"))?;
+                let mut printed_store = SourceStore::default();
+                printed_store
+                    .insert(printed_source.clone())
+                    .map_err(|e| format!("{e:?}"))?;
+                let mut parser = ParseSession::new(
+                    "printed-session".into(),
+                    &resolved,
+                    &environments,
+                    &mut budget(),
+                )
+                .map_err(|e| format!("{e:?}"))?;
+                let reparsed = parser
+                    .read(
+                        ParseRequest {
+                            snapshot: &printed_source,
+                            start: 0,
+                            limit: printed_source.text().len() as u64,
+                            final_input: true,
+                            entry: &entry,
+                            states: &[LanguageReaderState {
+                                alias: "Host".into(),
+                                state: NdfValue::Unit,
+                            }],
+                        },
+                        &printed_store,
+                        &mut budget(),
+                        &mut SourceAdmission::default(),
+                    )
+                    .map_err(|e| format!("reparse: {e:?}"))?;
+                let ParseOutcome::Complete { tree: again, .. } = reparsed.outcome else {
+                    return Err("print reparse not complete".into());
+                };
+                assert_eq!(
+                    tree.bundle
+                        .nodes
+                        .iter()
+                        .map(|n| (&n.kind, &n.fields))
+                        .collect::<Vec<_>>(),
+                    again
+                        .bundle
+                        .nodes
+                        .iter()
+                        .map(|n| (&n.kind, &n.fields))
+                        .collect::<Vec<_>>()
+                );
+                assert_eq!(
+                    tree.bundle
+                        .tokens
+                        .iter()
+                        .map(|t| &t.payload)
+                        .collect::<Vec<_>>(),
+                    again
+                        .bundle
+                        .tokens
+                        .iter()
+                        .map(|t| &t.payload)
+                        .collect::<Vec<_>>()
+                );
+            }
+        }
+    }
+    Ok(reply)
+}
+#[test]
+fn static_form_keeps_builtin_children_and_token_payloads() -> TestResult {
+    // Let has exactly two declared slots: Name and local Expr. The suffix is host-owned.
+    let reply = run("let x y trailing", true)?;
+    let ParseOutcome::Complete { tree, cursor, .. } = reply.outcome else {
+        return Err(format!("{reply:?}").into());
+    };
+    assert_eq!(cursor, 7);
+    assert_eq!(tree.bundle.nodes.len(), 3);
+    assert_eq!(tree.bundle.tokens.len(), 3);
+    let root = &tree.bundle.nodes[0];
+    assert_eq!(root.kind, "Form:Let");
+    assert_eq!(
+        root.fields,
+        vec![
+            FieldValue::Child(nepl3_core::syntax::NodeRef(1)),
+            FieldValue::Child(nepl3_core::syntax::NodeRef(2))
+        ]
+    );
+    assert_eq!(tree.bundle.nodes[1].kind, "Builtin:Name");
+    assert!(tree.bundle.nodes[1].fields.is_empty());
+    assert_eq!(tree.bundle.tokens[1].payload, NdfValue::Text("x".into()));
+    assert_eq!(tree.bundle.tokens[2].payload, NdfValue::Text("y".into()));
+    assert_eq!(tree.bundle.tokens[2].head.start(), 6);
+    assert_eq!(tree.bundle.tokens[2].leading_trivia.len(), 1);
+    assert_eq!(reply.report.usage.source_bytes, 16);
+    Ok(())
+}
+#[test]
+fn missing_final_child_and_nonfinal_input_are_distinct() -> TestResult {
+    assert!(matches!(
+        run("let x", false)?.outcome,
+        ParseOutcome::NeedMore { .. }
+    ));
+    let reply = run("let x", true)?;
+    let ParseOutcome::Recovered { tree, .. } = reply.outcome else {
+        return Err(format!("{reply:?}").into());
+    };
+    assert_eq!(reply.report.diagnostics.len(), 1);
+    assert_eq!(reply.report.diagnostics[0].code, "MissingChild");
+    assert_eq!(tree.recovery.len(), 1);
+    assert_eq!(tree.recovery[0].entries.len(), 1);
+    assert!(matches!(
+        tree.recovery[0].entries[0].kind,
+        nepl3_engine::recovery::RecoveryKind::Missing { .. }
+    ));
+    Ok(())
+}
+
+#[test]
+fn missing_children_share_one_bundle_recovery_table() -> TestResult {
+    for (input, count) in [("let", 2), ("let x let", 2)] {
+        let reply = run(input, true)?;
+        let ParseOutcome::Recovered { tree, .. } = reply.outcome else {
+            return Err(format!("{reply:?}").into());
+        };
+        assert_eq!(tree.recovery.len(), 1);
+        assert_eq!(tree.recovery[0].entries.len(), count);
+        assert_eq!(reply.report.diagnostics.len(), count);
+    }
+    Ok(())
+}
+#[test]
+fn explicit_list_spine_preserves_declared_head_and_tail_children() -> TestResult {
+    let reply = run_config("let x cons y cons z nil suffix", true, true, None)?;
+    let ParseOutcome::Complete { tree, cursor, .. } = reply.outcome else {
+        return Err(format!("{reply:?}").into());
+    };
+    assert_eq!(cursor, 23);
+    assert_eq!(tree.bundle.nodes.len(), 7);
+    assert_eq!(tree.bundle.nodes[2].kind, "List:LocalCons");
+    assert_eq!(tree.bundle.nodes[4].kind, "List:LocalCons");
+    assert_eq!(tree.bundle.nodes[6].kind, "List:Nil");
+    assert_eq!(
+        tree.bundle.nodes[2].fields,
+        vec![
+            FieldValue::Child(nepl3_core::syntax::NodeRef(3)),
+            FieldValue::Child(nepl3_core::syntax::NodeRef(4))
+        ]
+    );
+    Ok(())
+}
+#[test]
+fn allocation_stop_preserves_actual_usage_and_never_invents_a_root() -> TestResult {
+    let reply = run_config("let x y", true, false, Some(0))?;
+    assert!(matches!(
+        reply.outcome,
+        ParseOutcome::Stopped {
+            reason: nepl3_core::budget::StopReason::AllocationLimit,
+            progress: None
+        }
+    ));
+    assert_eq!(reply.report.usage.allocation_units, 0);
+    let mut retained_diagnostic = false;
+    for cap in (500..80_000).step_by(500) {
+        let reply = run_config("let", true, false, Some(cap))?;
+        if let ParseOutcome::Stopped { progress, .. } = &reply.outcome {
+            assert!(reply.report.usage.allocation_units <= cap);
+            if !reply.report.diagnostics.is_empty() {
+                retained_diagnostic = true;
+                assert!(progress.is_some());
+                for diagnostic in &reply.report.diagnostics {
+                    let span = diagnostic.primary.as_ref().ok_or("missing primary")?;
+                    assert!(
+                        reply
+                            .sources
+                            .iter()
+                            .any(|source| source.identity() == span.snapshot_ref())
+                    );
+                }
+            }
+        }
+    }
+    assert!(retained_diagnostic);
+    Ok(())
+}
+
+#[test]
+fn prefix_depth_composes_with_nested_reader_frames() -> TestResult {
+    let plain = run_options("y", true, false, None, Some(25))?;
+    assert!(matches!(plain.outcome, ParseOutcome::Complete { .. }));
+    // Fifteen still-open f(Name, Expr) frames coexist with twenty Capture frames.
+    let input = format!("{}y", "f x ".repeat(15));
+    let stopped = run_options(&input, true, false, None, Some(25))?;
+    assert!(matches!(
+        stopped.outcome,
+        ParseOutcome::Stopped {
+            reason: nepl3_core::budget::StopReason::DepthLimit,
+            progress: Some(_)
+        }
+    ));
+    let completed = run_options(&input, true, false, None, Some(80))?;
+    assert!(matches!(completed.outcome, ParseOutcome::Complete { .. }));
+    assert!(completed.report.usage.depth >= 36);
+    Ok(())
+}
+
+#[test]
+fn accepted_trivia_without_a_token_survives_eof_and_need_more() -> TestResult {
+    for (input, final_input, expected) in [
+        ("let ", true, vec![(3, 4)]),
+        ("let x # comment", true, vec![(3, 4), (5, 6), (6, 15)]),
+        ("let x # comment", false, vec![(3, 4), (5, 6)]),
+    ] {
+        let reply = run(input, final_input)?;
+        let batches = match &reply.outcome {
+            ParseOutcome::Recovered { facts, .. } => facts,
+            ParseOutcome::NeedMore { progress, .. } => &progress.facts,
+            _ => return Err(format!("{reply:?}").into()),
+        };
+        let ranges: Vec<_> = batches
+            .iter()
+            .flat_map(|b| b.trivia.iter())
+            .map(|v| (v.span.start(), v.span.end()))
+            .collect();
+        assert_eq!(ranges, expected);
+        assert!(
+            batches
+                .iter()
+                .all(|b| b.path.is_empty() && b.entry.alias == "Host")
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn text_reservation_preserves_prefix_identity_and_composed_caller_depth() -> TestResult {
+    let reply = run_scenario(
+        "let \"x\\n\" y",
+        true,
+        Scenario {
+            text: true,
+            caller_depth: 3,
+            ..Scenario::default()
+        },
+    )?;
+    let ParseOutcome::Complete { tree, .. } = reply.outcome else {
+        return Err(format!("{reply:?}").into());
+    };
+    assert_eq!(tree.bundle.tokens[1].payload, NdfValue::Text("x\n".into()));
+    assert!(!tree.bundle.source_maps.is_empty());
+    assert_eq!(tree.bundle.sources.len(), 2);
+    assert!(reply.report.usage.depth >= 6);
+    Ok(())
+}
+#[test]
+fn unknown_heads_preserve_remainder_without_inventing_a_leaf_arity() -> TestResult {
+    for input in ["unknown", "unknown tail", "let x unknown tail"] {
+        let reply = run_scenario(
+            input,
+            true,
+            Scenario {
+                unknown: true,
+                ..Scenario::default()
+            },
+        )?;
+        let ParseOutcome::Recovered { tree, cursor, .. } = reply.outcome else {
+            return Err(format!("{reply:?}").into());
+        };
+        assert_eq!(cursor, input.len() as u64);
+        assert_eq!(tree.recovery[0].entries.len(), 1);
+        assert!(matches!(
+            tree.recovery[0].entries[0].kind,
+            nepl3_engine::recovery::RecoveryKind::Unparsed { .. }
+        ));
+        assert_eq!(reply.report.diagnostics[0].code, "UnparsedInput");
+    }
+    Ok(())
+}
+
+#[test]
+fn provider_resume_keeps_prefix_frames_report_and_caller_depth() -> TestResult {
+    let reply = run_scenario(
+        "let x y",
+        true,
+        Scenario {
+            provider: true,
+            caller_depth: 3,
+            ..Scenario::default()
+        },
+    )?;
+    assert!(matches!(reply.outcome, ParseOutcome::Complete { .. }));
+    assert_eq!(reply.report.diagnostics.len(), 2);
+    assert_eq!(reply.report.usage.diagnostics, 2);
+    let reply = run_scenario(
+        "let x y",
+        true,
+        Scenario {
+            provider: true,
+            cancel_await: true,
+            caller_depth: 3,
+            ..Scenario::default()
+        },
+    )?;
+    let ParseOutcome::Stopped {
+        reason: nepl3_core::budget::StopReason::Cancelled,
+        progress: Some(progress),
+    } = &reply.outcome
+    else {
+        return Err(format!("{reply:?}").into());
+    };
+    assert_eq!(progress.frames[0].arity, 2);
+    assert_eq!(progress.frames[0].children.len(), 1);
+    assert_eq!(reply.report.diagnostics.len(), 1);
+    assert_eq!(reply.report.usage.diagnostics, 1);
+    assert!(
+        progress
+            .facts
+            .iter()
+            .flat_map(|v| &v.trivia)
+            .any(|v| v.span.start() == 5 && v.span.end() == 6)
+    );
+    Ok(())
+}
+
+#[test]
+fn append_retry_reparses_every_scalar_split_and_keeps_cumulative_usage() -> TestResult {
+    const COMPLETE: &str = "let \u{65e5}\u{672c} \u{540d}\u{524d}";
+    for end in (0..=COMPLETE.len()).filter(|i| COMPLETE.is_char_boundary(*i)) {
+        let reply = run_scenario(
+            &COMPLETE[..end],
+            false,
+            Scenario {
+                restart: Some(COMPLETE),
+                ..Scenario::default()
+            },
+        )?;
+        let ParseOutcome::Complete { tree, cursor, .. } = reply.outcome else {
+            return Err(format!("{reply:?}").into());
+        };
+        assert_eq!(cursor, COMPLETE.len() as u64);
+        assert_eq!(
+            tree.bundle.tokens[1].payload,
+            NdfValue::Text("\u{65e5}\u{672c}".into())
+        );
+        assert_eq!(
+            tree.bundle.tokens[2].payload,
+            NdfValue::Text("\u{540d}\u{524d}".into())
+        );
+        assert!(
+            tree.bundle
+                .nodes
+                .iter()
+                .filter_map(|v| v.head.as_ref())
+                .all(|v| v.snapshot_ref().revision == if end == COMPLETE.len() { 0 } else { 1 })
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn append_retry_retains_original_caller_depth_when_host_resumes_at_zero() -> TestResult {
+    const FULL: &str = "f x f x f x f x f x y";
+    let direct = run_scenario(
+        FULL,
+        true,
+        Scenario {
+            depth: Some(80),
+            caller_depth: 7,
+            ..Scenario::default()
+        },
+    )?;
+    let resumed = run_scenario(
+        "f x ",
+        false,
+        Scenario {
+            restart: Some(FULL),
+            depth: Some(80),
+            caller_depth: 7,
+            ..Scenario::default()
+        },
+    )?;
+    assert!(matches!(resumed.outcome, ParseOutcome::Complete { .. }));
+    assert_eq!(resumed.report.usage.depth, direct.report.usage.depth);
+    Ok(())
+}

@@ -16,6 +16,7 @@ fn run() -> nepl3_tools::Result<()> {
         ["foundation", "--write"] => nepl3_tools::foundation(&root),
         ["reader", "--write"] => nepl3_tools::reader(&root),
         ["engine", "--write"] => nepl3_tools::engine(&root),
+        ["grammar", "--write"] => nepl3_tools::grammar(&root),
         ["tasks", "--write"] => nepl3_tools::tasks(&root, true),
         ["tasks", "--check"] => nepl3_tools::tasks(&root, false),
         ["evidence", "identity"] => nepl3_tools::evidence_identity(&root),
