@@ -397,6 +397,15 @@
       "evidence": ["examples/grammar/binding.neplg", "crates/foundation/engine/src/package/bindings.rs", "tools/tests/grammar.rs"],
       "partial_progress": "The source's word reader is Seq(Scalar IdentifierStart, Many Scalar IdentifierContinue), which returns List<NdfValue>. The Name leaf requests reference Value self, whose checked binding contract requires Text. The independent tools integration executes the actual seed import and full package compiler and confirms Package(InvalidBinding), rather than accepting the design example as previously structurally audited.",
       "blocking_condition": "Correct the source with an explicit Text-producing name reader or a specified transform, preserve the old invalid-type case as a regression, and exercise corrected parse plus binding behavior without introducing implicit Seq-to-Text concatenation."
+    },
+    {
+      "id": "R034",
+      "status": "corrected",
+      "title": "Grammar compilation rejects reuse of an identical kind shape across categories",
+      "affected_tasks": ["T05"],
+      "evidence": ["doc/spec/04-grammar.md", "crates/languages/grammar/core/src/compile/package.rs", "crates/languages/grammar/core/src/compile/package/surface.rs"],
+      "partial_progress": "An independent source declares Atom in categories A and B, with the same atom spelling and identical empty field schemas. Production seed import plus full package compilation rejects the second declaration with DuplicateName. Spec04 explicitly permits one kind in multiple categories when its field schema is identical; the compiler currently applies its global form-kind duplicate test before that exception.",
+      "resolution": "Form/leaf declaration uniqueness now includes category, while the shared surface kind requires identical ordered field names and NodeRef versus ForeignSyntax storage shapes. The original independent Atom A/B probe compiles to one shared KindRef. The tracked shared_kind test passes independently in both the working tree and isolated NEPL3-prefix-validation tree: reordered declarations preserve semantic/schema identity, each declaration retains its own category and source Origin, same-category duplicates reject, and differing shapes reject with a located KindShape error."
     }
   ],
   "runtime_conformance_executed": false

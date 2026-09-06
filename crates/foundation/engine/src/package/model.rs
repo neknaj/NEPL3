@@ -150,6 +150,7 @@ pub enum DeclarationKind {
 pub struct DeclarationOrigin {
     pub kind: DeclarationKind,
     pub name: String,
+    pub category: Option<String>,
     pub origin: OriginId,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]

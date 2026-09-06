@@ -631,6 +631,7 @@ fn package_boundary_checks_extension_provenance_and_resource_limits() -> TestRes
     ));
     package.provenance.sources.push(source);
     package.provenance.declarations.push(DeclarationOrigin {
+        category: None,
         kind: DeclarationKind::Category,
         name: "Expr".into(),
         origin: OriginId(1),

@@ -115,3 +115,70 @@ fn full_example_assembly_reaches_actual_plan_and_binding_validation() -> Result<
     ));
     Ok(())
 }
+
+#[test]
+fn shared_kind_is_category_local_with_one_shape_and_distinct_provenance() -> Result<(), String> {
+    let original =
+        compile("tools/tests/fixtures/grammar/shared-kind.neplg")?.map_err(|e| format!("{e:?}"))?;
+    let reordered = compile("tools/tests/fixtures/grammar/shared-kind-reordered.neplg")?
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(original.package.forms.len(), 2);
+    assert_eq!(
+        original.package.forms[0].kind,
+        original.package.forms[1].kind
+    );
+    let a = original
+        .package
+        .check(&original.registry, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let b = reordered
+        .package
+        .check(&reordered.registry, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        a.semantic_identity(&mut budget())
+            .map_err(|e| format!("{e:?}"))?,
+        b.semantic_identity(&mut budget())
+            .map_err(|e| format!("{e:?}"))?
+    );
+    let declarations = original
+        .package
+        .provenance
+        .declarations
+        .iter()
+        .filter(|d| d.name == "Atom")
+        .collect::<Vec<_>>();
+    assert_eq!(declarations.len(), 2);
+    assert_eq!(declarations[0].category.as_deref(), Some("A"));
+    assert_eq!(declarations[1].category.as_deref(), Some("B"));
+    assert_ne!(declarations[0].origin, declarations[1].origin);
+    for declaration in declarations {
+        let nepl3_core::origin::Origin::Direct(span) =
+            &original.package.provenance.origins[declaration.origin.0 as usize]
+        else {
+            return Err("direct declaration provenance".into());
+        };
+        let raw = original.package.provenance.sources[0]
+            .slice(span)
+            .map_err(|e| format!("{e:?}"))?;
+        assert!(raw.starts_with(&format!(
+            "form Atom {} ",
+            declaration.category.as_deref().ok_or("category")?
+        )));
+    }
+    for (file, reason) in [
+        (
+            "shared-kind-duplicate",
+            compile::DeclarationError::DuplicateName,
+        ),
+        ("shared-kind-shape", compile::DeclarationError::KindShape),
+    ] {
+        let err = compile(&format!("tools/tests/fixtures/grammar/{file}.neplg"))?
+            .err()
+            .ok_or("expected rejection")?;
+        assert!(
+            matches!(err,compile::CompileError::Declaration{node,related:Some(other),reason:r} if r==reason && node!=other)
+        );
+    }
+    Ok(())
+}

@@ -231,6 +231,22 @@ impl LanguagePackage {
             if origin.name.is_empty() || origin.origin.0 >= self.provenance.origins.len() as u64 {
                 return Err(PackageError::Provenance);
             }
+            match origin.kind {
+                DeclarationKind::Form | DeclarationKind::Leaf => {
+                    let category = origin
+                        .category
+                        .as_deref()
+                        .filter(|v| !v.is_empty())
+                        .ok_or(PackageError::Provenance)?;
+                    budget.charge(
+                        Resource::Work,
+                        (self.categories.len() as u64).saturating_mul(category.len() as u64 + 1),
+                    )?;
+                    self.category(category)?;
+                }
+                _ if origin.category.is_some() => return Err(PackageError::Provenance),
+                _ => {}
+            }
         }
         Ok(CheckedLanguagePackage {
             package: self,

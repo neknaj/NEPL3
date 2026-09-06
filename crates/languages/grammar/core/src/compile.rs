@@ -62,6 +62,7 @@ pub enum CompileError {
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum DeclarationError {
+    KindShape,
     EmptyName,
     DuplicateName,
     MissingExtension,

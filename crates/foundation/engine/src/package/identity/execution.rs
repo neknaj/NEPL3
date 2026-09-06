@@ -192,6 +192,12 @@ impl CheckedLanguagePackage<'_> {
             out.push(",")?;
             out.quoted(&d.name)?;
             out.push(",")?;
+            if let Some(category) = &d.category {
+                out.quoted(category)?;
+            } else {
+                out.push("null")?;
+            }
+            out.push(",")?;
             out.number(d.origin.0)?;
             out.push("]")?;
         }

@@ -1,0 +1,24 @@
+command: cargo clippy --workspace --all-targets --locked -- -D warnings
+exit_code: 0
+    Blocking waiting for file lock on build directory
+    Checking unicode-ident v1.0.18
+    Checking memchr v2.8.3
+    Checking itoa v1.0.18
+    Checking unicase v2.9.0
+    Checking bitflags v2.13.1
+    Checking serde_core v1.0.229
+    Checking zmij v1.0.23
+    Checking nepl3-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\core)
+   Compiling proc-macro2 v1.0.107
+    Checking pulldown-cmark v0.13.4
+   Compiling quote v1.0.47
+   Compiling syn v3.0.5
+    Checking nepl3-wire v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\wire)
+    Checking nepl3-reader v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\reader)
+    Checking serde_json v1.0.151
+   Compiling serde_derive v1.0.229
+    Checking nepl3-engine v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\engine)
+    Checking nepl3-grammar-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\languages\grammar\core)
+    Checking serde v1.0.229
+    Checking nepl3-tools v0.1.0 (C:\projects\NEPL3-prefix-validation\tools)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 14.97s

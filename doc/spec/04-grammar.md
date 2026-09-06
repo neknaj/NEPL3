@@ -6,9 +6,11 @@ Grammarはreader・prefix形状・束縛・表示の定義を同じpackageへま
 
 ## 1. 文書の根と名前解決
 
-根は `language name revision root declarations`。declarationsはcons/nil列。全constructorは `grammar-signatures.md` に定義する。宣言の順番はmetadata解決に影響しない。category/mode/reader/form kind/namespace/extension aliasの各名前空間で同名を拒否し、参照先をcompile時に解決する。
+根は `language name revision root declarations`。declarationsはcons/nil列。全constructorは `grammar-signatures.md` に定義する。宣言の順番はmetadata解決に影響しない。category/mode/reader/namespace/extension aliasの各名前空間で同名を拒否し、参照先をcompile時に解決する。formとleafの宣言はそれぞれcategoryとkindの組で一意とする。
 
 一つのkindを複数categoryで受け入れることは、field schemaが完全に一致する場合に限り許可する。grammar自身のField宣言とSelectorのfield等、同じ綴りでshapeが異なる場合は異なるkind IDを付ける。modeごとのspellingとschema kindを混同しない。
+
+共有kindのsurface descriptorは一つであり、categoryごとのbinding/style/read宣言は別に保持する。DeclarationOriginはform/leafに限ってcategoryを持ち、同じkind名の各宣言位置を区別する。その他の宣言のcategoryはNoneである。この出自の区別はexecution identityへ含め、意味上の宣言順序は引き続き無関係とする。
 
 `builtin Name/Text/Nat/Lang` は配布された基礎readerを直接参照する。`local C` は現在言語のcategory。`foreign Alias C` はprofileで固定した別schemaのcategory。`withmode M R` はその引数だけのmode切替え。`listof R` は専用list categoryを特殊化し、cons/nilの既知shapeへ展開する。
 

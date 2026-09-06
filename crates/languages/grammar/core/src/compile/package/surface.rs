@@ -86,6 +86,35 @@ fn foreign(
         }
     }
 }
+pub(super) fn same_form_shape(
+    doc: &crate::model::Document,
+    left: NodeId,
+    right: NodeId,
+    budget: &mut Budget,
+) -> Result<bool, CompileError> {
+    let (NodeKind::Form { fields: a, .. }, NodeKind::Form { fields: b, .. }) =
+        (&doc.node(left)?.kind, &doc.node(right)?.kind)
+    else {
+        return Ok(true);
+    };
+    if a.items.len() != b.items.len() {
+        return Ok(false);
+    }
+    for (a, b) in a.items.iter().zip(&b.items) {
+        let (
+            NodeKind::FieldDeclaration { name: a, read: ar },
+            NodeKind::FieldDeclaration { name: b, read: br },
+        ) = (&doc.node(*a)?.kind, &doc.node(*b)?.kind)
+        else {
+            return Err(CompileError::WrongConstructor(left));
+        };
+        budget.charge(Resource::Work, a.value.len().min(b.value.len()) as u64 + 1)?;
+        if a.value != b.value || foreign(doc, *ar, budget)? != foreign(doc, *br, budget)? {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
 /// Stable symbolic ReadSpec identity: unary constructors are unfolded; names are
 /// JSON strings, independent of AST order, DAG sharing and final schema digest.
 pub(super) fn list_name(

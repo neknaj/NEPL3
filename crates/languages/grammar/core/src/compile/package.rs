@@ -39,6 +39,12 @@ fn issue(node: NodeId, reason: DeclarationError) -> CompileError {
         reason,
     }
 }
+fn declaration_category(node: &NodeKind) -> Option<&str> {
+    match node {
+        NodeKind::Form { category, .. } | NodeKind::Leaf { category, .. } => Some(&category.value),
+        _ => None,
+    }
+}
 fn name(prefix: &str, value: &str, budget: &mut Budget) -> Result<String, CompileError> {
     budget.charge(Resource::Work, (prefix.len() + value.len()) as u64 + 1)?;
     budget.charge(
@@ -236,6 +242,24 @@ pub fn compile(
         for (k, n, prior) in &declared {
             budget.charge(Resource::Work, n.len().min(value.len()) as u64 + 1)?;
             if *k == kind_value && n == value {
+                // Form/leaf declarations are category-local. Their common kind
+                // still owns exactly one descriptor, checked by surface assembly.
+                let left = declaration_category(&doc.node(*id)?.kind);
+                let right = declaration_category(&doc.node(*prior)?.kind);
+                budget.charge(
+                    Resource::Work,
+                    left.map_or(0, str::len).min(right.map_or(0, str::len)) as u64 + 1,
+                )?;
+                if left.is_some() && left != right {
+                    if !surface::same_form_shape(doc, *id, *prior, budget)? {
+                        return Err(CompileError::Declaration {
+                            node: *id,
+                            related: Some(*prior),
+                            reason: DeclarationError::KindShape,
+                        });
+                    }
+                    continue;
+                }
                 return Err(CompileError::Declaration {
                     node: *id,
                     related: Some(*prior),
@@ -571,6 +595,12 @@ pub fn compile(
             p::DeclarationOrigin {
                 kind,
                 name,
+                category: match &doc.node(id)?.kind {
+                    NodeKind::Form { category, .. } | NodeKind::Leaf { category, .. } => {
+                        Some(text(&category.value, budget)?)
+                    }
+                    _ => None,
+                },
                 origin: oid,
             },
             budget,

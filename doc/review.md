@@ -197,6 +197,10 @@ R032では補助 `build_print_probe.py` / `print_source` を使い、setup Budge
 
 区切り保存前にhost seed importerの実Rust試験2件を独立成功確認した。全constructorの型付きロードと、source digest・constructor・literal・list境界の偽装拒否を検査する。実package組立てのtools integration 1件も独立成功した。Angle正式sourceはdiscard付きへ訂正され、旧bytesは明示的な負例へ保存されている。元例はOutputType拒否、訂正例はpackage.checkまで成功したが、quoted `>` の実reader境界は未検証なのでR031はopenを維持する。同じ試験でbinding正式例がInvalidBindingとなることも確認した。wordのSeq出力Listと、leafのreference selfが要求するTextが合わないため、R033として明示Text readerを使う訂正と実parse/binding回帰を残す。新Grammar lower入口では提供Profileへのtree.validate再実行をコード確認し、意味identityだけで別execution配置のindexを解釈する草稿の懸念は解消方向だが、lowerのproduction正例・変異試験はまだ未実行である。
 
+次のbootstrap段階ではR034を再現した。補助source `shared-kind.neplg` は、AtomをA/Bの別categoryで受け入れ、双方のfield schemaを同じ空列にする。spec04が明示的に認める構成だが、実host import・package compilerは2つ目をDuplicateNameで拒否した。category内の宣言重複と、category間で共有するsurface kindのshape一致を別々に検査し、許可された構成を受け入れる修正を要求した。
+
+修正後の元Atom A/B probeは同じKindRefを持つ2つのformへcompileされた。管理対象 `shared_kind_is_category_local_with_one_shape_and_distinct_provenance` を作業treeと隔離した `NEPL3-prefix-validation` の両方で独立実行し成功した。宣言順の反転でsemantic/schema identityが一致し、category別Originが各宣言原文を指すこと、同categoryの重複と異なるfield shapeを拒否することを確認したため、R034をcorrectedとした。別途見つかったhost seed importerのnative main-thread stack overflowと、標準bootstrapの未達はこの修正承認に含めない。
+
 別の補助probe `parse_text` ではText予約を実際にresumeし、`let "ok" y` がCompleteとdecoded sourceを返し、`let "a\q" y` がRecoveredで元InvalidEscape診断・位置を保持することを確認した。このbuiltinの失敗経路については元診断の消失を再現していない。
 
 ## r1初回レビューの章ごとの確認範囲
