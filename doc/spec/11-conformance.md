@@ -65,7 +65,9 @@ S02: docs・例manifest・runtime・profile・assetsの版を照合する。cach
 S03: 配信予定artifactを実browserで開き、4言語の代表操作、入出力、診断選択、editor query、停止を実行する。大きなsourceの応答性とkeyboard/focusも確認する。
 S04: docs本文をJSなしで読み、4言語tutorial/reference/例から同じsourceをPlaygroundで開く。page/anchor/検索/linkとaccessibilityを検査し、自動検査と手動確認を区別する。
 S05: 外部backend・localhost・CDNなしで基本4言語操作を行い、sourceの外部送信をせず、sandbox previewがscriptを実行しないことを検査する。
-S06: 最小権限、同じ検査済みSHA/artifact、配信直列化とfreshness、失敗log保存を検査。実Pages公開後のHTTPS smokeとasset/build identityを照合して記録する。
+S06: 最小権限、同じ検査済みSHA/artifact、配信直列化とfreshness、失敗log保存を検査。実Pages公開後のHTTPS smokeとasset/build identityを照合して記録する。公開smoke失敗時は検証済みLKGへの有限復旧・再smoke・元run失敗保持を15章の契約で検査する。
+
+S06の失敗系には、(a)最新candidateのpublic smokeだけが失敗し元tarを復旧できる、(b)後続の健康なdeploymentがあるため旧candidateの復旧を拒否する、(c)cache/API/journal不一致・timeout・外部writer疑いで書込みを停止する、(d)初回公開でLKGがない、(e)Actions artifact失効後も永続snapshotから復旧する、(f)復旧payload消失・改変、(g)復旧deploy・再smokeの失敗、(h)smoke合格後の保存/journal昇格失敗、(i)deploy後にrunが強制cancelされ次のwriterがreconcileを要求する場合を含める。自動復旧回数・時間上限、lock保持、失敗run/incident記録、現行LKGと前世代の保持も検証する。模擬失敗系だけで実Pages公開/復旧のrunner要件を満たした扱いにしない。
 
 J01: 全対象文書のinventoryとDoc表現gapを独立レビューし、表/list/link/汎用code/図の必要なschema・文法・backend・wire・conformanceを完成させる。
 J02: 全移行ページを元の固定snapshotと比較し、意味・表・参照・数式・図・コードbyte列の同等性を独立に確認する。一つの正本と生成Markdownの差分検査を行う。

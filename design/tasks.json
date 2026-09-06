@@ -11,7 +11,7 @@
         "E04",
         "A04"
       ],
-      "deliverable": "source/schema/diagnostic/origin/budgetとNDFに対応する型を実装。UTF-8境界とsnapshot不一致を拒否する。",
+      "deliverable": "Doc関連の公開型・wire・意味モデルを確定する前に、固定baselineの全文書inventoryとgap reportを確認して必要表現を設計する。この早期監査はT21やbackend完成に依存しない。source/schema/diagnostic/origin/budgetとNDFに対応する型を実装。UTF-8境界とsnapshot不一致を拒否する。",
       "spec": "doc/spec/02-foundation.md"
     },
     {
@@ -23,7 +23,7 @@
       "acceptance": [
         "W01"
       ],
-      "deliverable": "全tag、canonical integer/rational、schema validation、参照検査を実装。",
+      "deliverable": "Doc関連の公開型・wire・意味モデルを確定する前に、固定baselineの全文書inventoryとgap reportを確認して必要表現を設計する。この早期監査はT21やbackend完成に依存しない。全tag、canonical integer/rational、schema validation、参照検査を実装。",
       "spec": "doc/spec/09-portability.md"
     },
     {
@@ -96,7 +96,7 @@
         "D03",
         "D04"
       ],
-      "deliverable": "literalとprefixの等価性、再帰paragraph、parallel、articleラベルを実装。",
+      "deliverable": "Doc関連の公開型・wire・意味モデルを確定する前に、固定baselineの全文書inventoryとgap reportを確認して必要表現を設計する。この早期監査はT21やbackend完成に依存しない。literalとprefixの等価性、再帰paragraph、parallel、articleラベルを実装。",
       "spec": "doc/spec/05-document.md"
     },
     {
@@ -310,7 +310,7 @@
         "S05",
         "S06"
       ],
-      "deliverable": "T19の静的サイトへ同じcheckoutのUI/Wasm/Workerを統合し、全必須Web受入を実browserで実行。同じ検査済みartifactをPagesへ直列配布し、公開HTTPSとidentityを照合する。",
+      "deliverable": "T19の静的サイトへ同じcheckoutのUI/Wasm/Workerを統合し、全必須Web受入を実browserで実行。同じ検査済みartifactをPagesへ直列配布し、公開HTTPSとidentityを照合する。公開smoke失敗時のLKG永続保存・同一writer排他・identity条件付き1回復旧・再smoke・初回/復旧不能状態と元run失敗保持を実装し、S06で検証する。",
       "spec": "doc/spec/15-site.md"
     },
     {
@@ -330,7 +330,7 @@
         "D01",
         "D05"
       ],
-      "deliverable": "全文書inventoryと不足表現のschema設計を独立レビュー後に実装し、ページ単位でDocへ損失なく移す。一正本、安定URL/anchor、例のbyte列、再現可能buildとbootstrap回避を検証し、Markdown二重保守を終了する。",
+      "deliverable": "T01/T02/T07のDoc設計前に用意した固定baseline inventoryとgap reportを再検査・更新し、不足表現のschema・wire・backend・conformanceを完成させてからページ単位でDocへ損失なく移す。一正本、安定URL/anchor、例byte列、再現可能buildとbootstrap回避を検証し、Markdown二重保守を終了する。早期監査だけでR014解消やT21完了にしない。",
       "spec": "doc/spec/16-doc-migration.md"
     }
   ]

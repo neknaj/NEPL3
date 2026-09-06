@@ -18,7 +18,7 @@ CRLFは元の2byteを維持する。LF、CRLF、CRをそれぞれ一つの改行
 
 `SchemaRef = (packageName, revision, digest)`。`KindRef = (SchemaRef, LocalKindId)`。LocalKindIdとfieldの並びはpackage schemaで定義する。Word/String/Variable/Function等を共通の閉じたTokenKindとして置かない。
 
-共通の型言語は Unit / Bool / Natural / Integer / Rational / Text / Bytes / List<T> / Option<T> / Record / Variant / Reference。全Record/Variantのfieldとvariantは登録済みschemaで検査する。domain内部は対応するRustのstruct/enumを使う。
+共通の型言語は Unit / Bool / Natural / Integer / Rational / Text / Bytes / `List<T>` / `Option<T>` / Record / Variant / Reference。全Record/Variantのfieldとvariantは登録済みschemaで検査する。domain内部は対応するRustのstruct/enumを使う。
 
 種類と表示classは独立。表示classは拡張可能なIDとfallback roleを持つ。共通fallbackはcontent、marker、delimiter、name、quantity、annotation。これは構文の意味分類ではない。
 

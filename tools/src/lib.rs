@@ -2,6 +2,7 @@
 
 mod contract;
 mod dependency;
+mod documentation;
 mod evidence;
 mod repository;
 mod task;
@@ -48,12 +49,21 @@ pub fn check(root: &Path) -> Result<()> {
     contract::check(root)?;
     dependency::check(root, &status.implemented_crates)?;
     task::generate(root, &tasks, &status, false)?;
+    documentation::check(root, false)?;
     println!(
         "Repository checks passed: {files} files, {} tasks, {} acceptance status entries. Runtime acceptance was not run.",
         tasks.tasks.len(),
         status.acceptance.len()
     );
     Ok(())
+}
+
+/// Verify a snapshot-bound documentation inventory and report current differences.
+pub fn doc_inventory(root: &Path, commit: Option<&str>, require_current: bool) -> Result<()> {
+    match commit {
+        Some(commit) => documentation::write(root, commit),
+        None => documentation::check(root, require_current),
+    }
 }
 
 /// Generate task documents or verify exact bytes against their source data.

@@ -12,6 +12,7 @@
 6. [開発手順](development.md)、[タスク索引](../tasks/README.md)、[実装状態](../implementation-status.json)
 7. [初期設計の独立レビュー](review.md)、[r2の契約訂正](decisions/0002-design-contract-corrections.md)
 8. [Web UI・TEA](spec/14-web-ui.md)、[静的サイト・Pages](spec/15-site.md)、[Doc DSL移行](spec/16-doc-migration.md)、[r3の判断](decisions/0003-web-tea-doc-migration.md)
+9. [Pages復旧と早期Doc inventoryの判断](decisions/0004-pages-recovery-doc-inventory.md)、[文書inventoryとgap audit](doc-inventory.md)
 
 ## 正本と派生資料
 

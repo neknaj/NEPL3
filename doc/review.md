@@ -24,6 +24,7 @@
 | R012 | acceptanceのpassedは証拠fileの存在までしか検査せず、別群・failed・古いsource/spec・不足targetの証拠でも通り得る。 | 群・結果・版・現在の入力inventory・実行環境・logを型付きで照合し、必須targetの実行を要求する。 |
 | R013 | ordered_fieldsの対象がmodelだけで、contracts.recordsのfields/variantsはobjectへ戻っても検出しない。 | 同じ順序付きfield検査を両方へ適用し、拒否例を入口から試験する。 |
 | R014 | 現行Docでは全ての正式文書の表・list・一般リンク・汎用code・図を損失なく表す契約がない。 | T21で全inventoryと不足を確定し、schema・文法・安全なbackend・wire・conformanceを実装してから切り替える。計画を追加しただけではこの不足を解消済みにしない。 |
+| R015 | 公開後smoke失敗を赤いstatusにしても、すでに公開された失敗候補は元に戻らない。最後に公開確認まで通ったartifactの保持・条件付き復旧が未定義だった。 | 成功artifactの保管とidentity、全writerの直列化、失敗候補が現在版である場合だけの復旧、初回・保管切れ・復旧失敗の状態を定義し、S06で実検査する。 |
 
 ## r3追補の対応確認
 
@@ -48,6 +49,20 @@ r3のtooling変更は差分と実際の入口を独立に確認し、`cargo test
 現在の変更はリポジトリ検査の訂正と実装計画として受け入れ可能である。R006、R009、R014はopenのまま維持する。19 crateの計画に対し実装済みは開発toolsの1 crateで、21タスク・55受入群のruntime/Web/移行の完了を認定したものではない。
 
 R006には、Source/Origin/Environmentのtableを各操作がどのbundleで受け渡すか、ReaderPlanとReadReplyの具体型、診断・失敗codeのschema、Checked値の再検査条件も含む。文章で責務が説明されていることと、別実装でdecodeできることは別の検証対象である。
+
+## 公開失敗からの復旧と早期Doc監査の追加レビュー
+
+commit `25a096b` に対する指摘を独立に確認した。公開後smokeの失敗を記録するだけでは、配信済みのcandidateを復旧できない。R015の訂正では、公開確認を通った元tarをimmutable recovery releaseに保存し、取得検証後にLKGへ昇格する契約を加えた。元payloadのidentityと、再deployで変わるartifact/deployment IDは区別する。
+
+通常公開・再実行・復旧・保管整理は同じ排他範囲を使い、変更前intentをjournalへ残す。失敗candidateが現在の公開物だと確認できる場合だけ復旧し、後続の健康な版や対象不明時は書き換えない。初回のLKG不在、保管破損、復旧失敗、run消失、保存途中の停止を明示し、自動復旧は有限にする。中断したLKG昇格には新しい公開smokeを要求し、復旧成功後も元candidate/runはfailedを維持する。これらの本文・site計画・S06失敗系を照合してR015をcorrectedとした。実Pagesの公開・復旧を検証済みという意味ではない。
+
+[Pages API](https://docs.github.com/en/rest/pages/pages) にはexpected-currentを指定した原子的な切替契約がなく、特定deploymentの成功statusだけでは現在の配信対象を証明できない。[concurrencyとenvironmentは独立](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/control-deployments) であり、排他を使わない別writerまで保護されない。このため単一writer・journal・公開identityを合わせ、不明時に止める設計とした。通常のActions artifactは [期限切れやrun削除で失われる](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/remove-workflow-artifacts)。[immutable release](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases) のasset保護を使いつつ、release全体の削除や外部障害まで防ぐ保証はしない。
+
+Doc監査は全T21完了を前提にせず、Docに関係する共通型・wire・意味モデルを確定する前の設計作業として行う。固定baseline `25a096bc183c2b71200902884084cd4082d0aae3` の全124ファイルがinventoryで一度ずつ分類されることを独立に照合した。57 Markdownページ、10 Rust sourceと5契約入力のbyte長・SHA-256がGitの元blobと一致した。root入口、GitHub checklist、生成task/signature、変化するhistory README、保存byte列を区別する。現在の追加・変更をbaselineの網羅性と取り違えず、移行時には最新の監査を要求する。R014の不足schemaとruntime検証はこの棚卸しだけでは解消しない。
+
+[具体的な監査](doc-inventory.md) のDG01〜DG09を現行Docとmarkup契約へ照合し、観測した表・list・link・code等と、観測0の将来候補を区別した。11 code block、695 inline code、204 link/image、278見出しの範囲が元blobのUTF-8境界内にあり、codeのraw範囲digestが一致することも独立に確認した。裸のgeneric型がHTMLとして読まれる4箇所はinline codeへ修正されている。
+
+最終toolingの38 Rust試験を独立に実行して成功した。ページの欠落・digest/構造の改変、現在の追加・変更・削除、履歴不足、Gitのsymlink mode、非通常の出力先、過大入力の拒否を含む。`doc-inventory --check` は固定baselineを再検証して成功し、`--check-current` は現在との差分を表示して終了コード1となった。後者は意図した拒否であり、現在の全ページを監査済みとする証拠にはしていない。
 
 ## r1初回レビューの章ごとの確認範囲
 

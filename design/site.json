@@ -71,5 +71,97 @@
     "interactive"
   ],
   "docs_only_prerequisites": "T19 host static builder and Markdown sources; no UI/runtime/Doc renderer or closed R006/R009 runtime schema required; unavailable capabilities are explicit",
-  "interactive_prerequisites": "T15/T18 runtime/UI artifacts plus T19; T20 tests and deploys same artifact"
+  "interactive_prerequisites": "T15/T18 runtime/UI artifacts plus T19; T20 tests and deploys same artifact",
+  "public_recovery": {
+    "status": "planned-not-implemented",
+    "definition": "doc/spec/15-site.md",
+    "scope": "publisher host policy; not an executable wire schema",
+    "last_known_good": {
+      "qualifies_after": [
+        "public-smoke-passed",
+        "immutable-recovery-release-published",
+        "saved-payload-downloaded-and-verified",
+        "journal-promotion-committed"
+      ],
+      "store": "repository immutable release under site-recovery/ tag namespace",
+      "preserved_payload": "original Pages tar byte sequence and SHA-256; upload wrapper and current-run artifact ID may differ",
+      "identities": [
+        "source_commit",
+        "build_identity",
+        "base_origin",
+        "capabilities",
+        "schema_profile_asset_digests",
+        "tar_sha256",
+        "public_deployment_id",
+        "public_smoke_evidence_digest",
+        "release_id",
+        "asset_id"
+      ],
+      "retention": "retain current and predecessor without time expiry; remove older snapshots only after successor promotion and explicit unreferenced cleanup under publisher lock",
+      "actions_retention_is_not_backup": true
+    },
+    "writer": {
+      "concurrency_group": "nepl3-pages-production",
+      "cancel_in_progress": false,
+      "lock_scope": [
+        "preflight",
+        "intent-journal",
+        "deploy",
+        "public-smoke",
+        "durable-promotion",
+        "recovery",
+        "recovery-smoke",
+        "final-journal",
+        "snapshot-cleanup"
+      ],
+      "journal": "protected pages-state branch; append-only events, fast-forward commits; not a Pages source branch",
+      "all_pages_writers_use_same_workflow_path": true,
+      "atomic_pages_compare_and_swap_available": false,
+      "unresolved_intent": "block new deploy and restore until control-plane and public-identity reconciliation"
+    },
+    "publication_pointers": {
+      "current_publication": "current served deployment receipt and latest public re-smoke, updated to the new restoration deployment ID after recovery",
+      "last_known_good": "immutable original payload/source/public-smoke lineage, preserved across restoration",
+      "interrupted_promotion": "re-confirm journal/API/public identity and run fresh public smoke before completing LKG promotion"
+    },
+    "restore_guard": [
+      "current journal transaction equals failed candidate",
+      "recorded deployment receipt/status agrees",
+      "public build and asset identity equals failed candidate",
+      "no newer deployment or external writer",
+      "saved LKG payload and evidence verify"
+    ],
+    "stop_without_write": [
+      "newer-healthy-deployment",
+      "unknown-control-plane",
+      "cache-identity-mismatch",
+      "unresolved-intent",
+      "external-writer-suspected",
+      "missing-or-corrupt-LKG"
+    ],
+    "limits": {
+      "automatic_restore_attempts_per_candidate": 1,
+      "deployment_status_seconds": 600,
+      "public_smoke_seconds": 300,
+      "identity_observations": 5,
+      "identity_seconds": 120,
+      "payload_fetch_seconds": 300,
+      "transaction_seconds": 3600
+    },
+    "states": [
+      "DeployIntent",
+      "RecoveryIntent",
+      "HealthyUncommitted",
+      "Healthy",
+      "Recovered",
+      "Superseded",
+      "RecoveryBlocked",
+      "RecoveryUnknown",
+      "BootstrapFailed",
+      "RecoveryFailed"
+    ],
+    "first_failure_without_lkg": "BootstrapFailed; no automatic site delete or unverified maintenance payload; explicit corrected candidate under same writer",
+    "restoration": "verify saved tar, upload it into current recovery run, deploy, then repeat public smoke and artifact identity checks",
+    "result": "original candidate and original workflow remain failed even after successful restoration; persist incident and re-smoke evidence"
+  }
 }

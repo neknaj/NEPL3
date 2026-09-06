@@ -38,10 +38,73 @@ T20でWasm/JS/Worker/docs/rustdoc/例manifest/build.jsonを一つのartifactに�
 
 Pagesのworkflow公開sourceを実状態で確認し、fork PRをprivileged workflowで再実行しない。配信は共通concurrency groupで直列化し、公開直前にmainとartifactのfreshnessを確認して古いrunの後勝ちを防ぐ。gateは実行したcode/schema/site checksとartifactに基づき、T16 completeの文字列をdeploy前提にしない。公開smoke→T20証拠→T16完了の順序を成立させる。
 
-公開後はHTTPSでdeep link・Worker/Wasm・例実行・asset digestとbuild identityを照合し、対象URL、commit、artifact ID、検査結果を保存する。失敗ログも保存し、壊れた新runtimeで正常な公開物を置き換えない。docs-only更新は動作確認済みruntimeをdigest固定して利用できるが、異なる版を混ぜて同一runtime版と称さず、build.jsonで各版と互換性を示す。runtime更新には当該runtimeとbrowserの受入条件を要求する。
+公開後はHTTPSでdeep link・Worker/Wasm・例実行・asset digestとbuild identityを照合し、対象URL、commit、artifact ID、検査結果を保存する。事前検査に失敗したcandidateは公開しない。公開後に初めて問題が判明する場合には、検証済み復旧が終わるまで不良candidateが配信される可能性がある。無停止・全cacheの原子的切替を保証せず、公開previewが使えることも前提にしない。docs-only更新は動作確認済みruntimeをdigest固定して利用できるが、異なる版を混ぜて同一runtime版と称さず、build.jsonで各版と互換性を示す。runtime更新には当該runtimeとbrowserの受入条件を要求する。
 
 公開後smokeが失敗した場合はworkflowを失敗として維持し、配信成功の記録を付けない。実Pages deployなしのローカルHTTP確認は公開確認の代わりにならない。失敗を記録するだけで緑の成功statusにする実装は禁止する。
+
+公開済みcandidateのsmoke失敗には、以下の旧成果物への復旧契約を適用する。失敗statusだけでは、すでに切り替わった公開物は元へ戻らない。
+
+## 5. 公開失敗からの復旧
+
+### 保持する成果物とidentity
+
+復旧基準（LastKnownGood、以下LKG）は、事前CIに通っただけのartifactではなく、**実Pages公開後の必須smokeにも合格し、その証拠と復旧用payloadを永続保存した成果物**とする。元source commit、build identity、base/origin、能力状態、schema/profile/asset digest、元のPages payload archiveのSHA-256、公開deployment ID、smoke証拠digest、保存先release/asset IDを結び付ける。デプロイ後にbuild.jsonへdeployment IDを書き足して検査済みpayloadを変更しない。deployment IDとの対応は外側のreceiptで管理する。
+
+復旧用の保存先はrepositoryのimmutableなrecovery releaseとし、予約した `site-recovery/` tagで通常のruntime releaseと区別する。Pagesのpublic smoke合格後、recovery releaseをpublishする前のdraftへ元payload・identity・smoke証拠をすべて添付し、immutableとして公開できたこと、download可能なbytesとdigestを確認してからLKGへ昇格する。現在この機能やPagesを有効化済みとは扱わず、T20で設定・権限・公開後のimmutabilityを実確認する。利用できなければ新candidateの自動公開を開始しない。
+
+保存単位は `upload-pages-artifact` が運ぶ**元のtar payloadのbyte列**とそのdigestである。Actions側のupload wrapper、圧縮やartifact IDは再uploadで変わり得る。復旧時は保存済みtarを検証して現在の復旧runへ再uploadし、Pagesが受けるpayloadの同一性を検査してdeployする。sourceからのrebuild、tar内容の編集、異なるHTMLへの差替えを復旧扱いにしない。
+
+Actions artifactの短いretentionや元runの存在を復旧保存の条件にしない。LKGとその直前の公開検証済みsnapshotを保持し、後継の公開smoke・永続保存・journal昇格がすべて済むまで削除しない。最後の更新から日数が経ってもこの2世代を期限切れにしない。3世代目以降の削除は参照・復旧中でないことを同じ公開lock内で確認し、管理者の明示した整理操作で行う。全過去版の永久保存は要求しない。release全体の削除や外部障害まで不可逆に防げるとは主張せず、次の公開前に復旧payloadの取得とdigestを再検査する。壊れていれば公開を止める。
+
+### 全writerを一つのtransactionにする
+
+通常公開・手動再実行・watchdog・復旧・LKG昇格・保管整理は、同じliteral concurrency group `nepl3-pages-production` を使うpublisher workflowだけで行う。`cancel-in-progress: false` とし、公開直前確認からdeploy、public smoke、昇格または復旧、再smoke、最終記録までlockを保持する。deployだけを一つのjobでlockし、smokeや復旧をlock外へ出さない。別のCI workflowのcancel設定をpublisherに引き継がない。
+
+Pagesへの直接書込み権限を持つ他workflow・tokenや旧branch公開を残さない。手動の復旧も同じwriter経路と `github-pages` environmentを通す。必要なPages権限はpublisher、release/journal書込みのcontents権限は当該保存jobに限定する。concurrencyは同一repositoryで同じgroupを使う実行間の排他であり、外部管理者操作を原子的に封鎖するAPIとは扱わない。待機の順序から新旧を推定せず、lock取得後にcandidateのsource freshnessを再検査する。
+
+`pages-state` 保護branchを公開制御journalに使い、Pagesのsource branchとはしない。journalは世代番号、transaction ID、元run/attempt、candidate artifact/deployment ID、前LKG、最新の公開観測、smoke/復旧結果をappend-only eventで記録する。force pushを使わずfast-forwardだけで更新し、読んだjournal世代と親commitが変わっていれば書込みをやめて再確認する。Git refの競合検出とPagesの切替は一つのatomic transactionではない。
+
+Pagesへの変更要求前にtransaction IDとpayload identityを持つ `DeployIntent` または `RecoveryIntent` をjournalへ永続記録する。APIが要求を受理した後、deployment IDを記録する前にrunが消失する場合がある。未解決intentを次のwriterが見たら、lockを取得できたことだけで前deployが終わったと仮定しない。control-plane上の受理・進行・配信対象を管理者も含め同じ経路でreconcileできるまで、新candidateと復旧の両方を停止する。
+
+LKG昇格順は「public smoke合格→immutable復旧releaseの確定とdownload検証→journalのLKG pointer更新」。途中で失敗したら `HealthyUncommitted` とし、旧LKGを残したまま次のcandidate公開を禁止する。再開時は同じpayload・証拠に加えてjournal/API/公開identityを再照合し、新たなpublic smokeに合格してから昇格を完了する。再smoke不合格はcandidate失敗として以下の照合付き復旧へ移し、対象不明ならRecoveryBlockedとする。過去のsmokeだけを信頼しない。journal更新後に保存物を作る順序は禁止する。
+
+### 失敗candidateだけを復旧する条件
+
+smokeが失敗したら、lock内でjournalが自分のtransaction/deploymentを現在の未解決candidateとして指していること、保存されたAPI receiptと当該deployment IDのstatus、公開build.jsonとasset identityを照合する。HTTPは有限の再取得・cache再検証を行うが、一回のcache hitを現在のdeploymentの証明にしない。
+
+公開identityが失敗candidateと一致し、API/journalに別の新しい公開がなく、LKGの保存payloadと証拠が検証できる場合だけ復旧を許す。候補Aの処理中に確認された後続BをAの復旧で上書きしない。Bが健康なら `Superseded` としてAの復旧を中止する。別candidate、status応答欠落、timeout、journal欠落、cache混在、APIと公開identityの不一致、外部writerの疑いは `RecoveryBlocked` とし、自動で公開物を書き換えない。
+
+公開APIはPages deploymentの作成・特定IDのstatus・cancelを提供するが、expected-current-deploymentを指定したcompare-and-swap切替は公開契約にない。特定IDの `succeed` は、そのIDが現在も配信中である証明ではない。単一writerとjournal、公開identityの照合を前提にし、それでも現在対象を確定できなければ止める。cache混在時にrollbackで安定するだろうと推測して書き込まない。
+
+### 有限の復旧と再確認
+
+適格なLKGを現在のrunへ再uploadし、新しい復旧deployment IDと元candidateへの関係をjournalへ記録してdeployする。復旧はcandidateあたり自動で1回まで。復旧後に元LKGの能力状態に対応するHTTPS smokeとpayload/asset identity検査をもう一度行う。合格した場合だけ `Recovered` とする。journalの `current_publication` は新しい復旧deployment IDと再smoke結果へ更新し、`last_known_good` は元payload/source/元smoke証拠の保存先を維持する。古いdeployment IDを現行配信のIDとして再利用しない。元candidateとそのrunの結果はfailedのまま維持し、復旧成功を元candidateの成功へ書き換えない。
+
+復旧payloadのsource commitがmainより古いことは意図した動作である。復旧のfreshnessは現在の失敗transaction・deployment・公開identityに対して検査し、新candidateをmainへ照合する規則と混同しない。復旧の実行codeは信頼済みpublisherを使い、古いsourceのworkflowを無検査で実行しない。
+
+初回公開にLKGがなくsmokeが失敗した場合は `BootstrapFailed` とし、復旧済みと主張しない。公開が不完全な可能性とLKG不在を明示し、後続の通常自動公開を停止する。既存のpayloadを削除したり、未検証の保守ページへ置換したりせず、管理者が同じwriter経路で状態を確認し、検証済みの修正candidateを明示的に選んで初回公開を再開する。
+
+復旧payloadの取得失敗・digest違反・復旧deploy失敗・再smoke失敗は `RecoveryFailed`、lock所有runの強制cancel・runner消失・journal途中状態は `RecoveryUnknown` とする。自動復旧の再帰や無限retryをしない。後続publisherは未解決journalを見たら通常公開を停止し、同じlockでreconcileする。状態が確定しない間は書込みを拒否する。管理者操作であっても新しい健康な公開を無条件に上書きしない。
+
+上限は各deploymentのstatus待機600秒、各public smoke300秒、identity再照合5回かつ120秒以内、復旧payload取得300秒、transaction全体3600秒とする。個々のcheckにも終了条件を持たせる。GitHub側の停止や全体timeoutでcleanupが必ず動くとは仮定せず、journalを次回のreconcileへ残す。
+
+| 状態 | 条件と次の動作 |
+| --- | --- |
+| DeployIntent / RecoveryIntent | 書込み前に保存。応答とdeployment IDが未確定なら新規書込みを停止 |
+| HealthyUncommitted | public smoke合格、永続保存またはLKG昇格が未確定。同じ内容の確定処理だけを再開 |
+| Healthy | public smoke・永続保存・journal昇格がすべて合格。次candidateを許す |
+| Recovered | 旧payloadの再deployと再smokeに合格。元candidate/runはfailed |
+| Superseded | 後続の健康な公開を確認。旧candidateの復旧を行わない |
+| RecoveryBlocked / RecoveryUnknown | 対象不一致・不明・未解決intent。reconcileまで書込み禁止 |
+| BootstrapFailed | LKGなしで初回smoke失敗。自動削除を行わず、明示した修正candidateで再開 |
+| RecoveryFailed | payload取得・deploy・再smokeが失敗。自動再帰をせずincidentに残す |
+
+元runの失敗、復旧の最終状態、対象/復旧deployment ID、payload digest、観測identity、API結果、試行数、時間上限、残る公開影響と次に必要な操作を一つのincident記録へ保存する。失敗ログと再smoke証拠を保存し、workflowをfailedで終了する。復旧不能・対象不明はrun summaryとincidentで管理者へ明示し、別途メール等へ送信する機能を暗黙に追加しない。
+
+これらはT20/S06の実装契約であり、現在のsource artifact CIへ未実装の復旧jobを追加した状態ではない。
 
 Doc移行に使う既知のrendererと同revision runtimeの試験を分ける規則は次章に従う。公開URLの準備だけでT20、T21、T16をcompleteにしない。
 
 GitHub Pagesの静的公開とproject siteの仕様は [GitHub公式資料](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)、workflowの権限・artifact・environmentは [custom workflows公式資料](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages) に従う。
+
+復旧契約の制約は [Pages REST API](https://docs.github.com/en/rest/pages/pages)、[deploy-pages](https://github.com/actions/deploy-pages)、[Actions concurrency](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#concurrency)、[artifact削除とretention](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/remove-workflow-artifacts)、[immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases) に照合した。GitHubの機能を組み合わせた上記の状態機械はNEPL3の設計判断であり、GitHubが自動rollbackを保証するという意味ではない。
