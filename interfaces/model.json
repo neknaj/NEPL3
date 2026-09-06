@@ -1692,6 +1692,6 @@
     "ResourceContent"
   ],
   "constraints": "doc/spec/12-model-invariants.md",
-  "design_revision": "nepl3-design-2026-09-06-r2",
+  "design_revision": "nepl3-design-2026-09-06-r3",
   "field_encoding": "record and each sum payload are ordered [name,type] arrays; sum and union variant maps are name-indexed and order-independent"
 }

@@ -8,6 +8,8 @@
 
 Profileはlanguage alias→SchemaRef、category mode、provider allowlist、operation bridge、resource snapshot、Limitsを持つ不変値。root languageはファイル拡張子またはCLI引数で選び、全ソースを一律のlexerで先にtoken化しない。
 
+`design/profile.json` はsource manifestであり、解決済みruntime Profileではない。R009の解消では生成結果の閉じた型、各schema/package/provider digest、許可capability、resource identityと整合検査を先に定める。T05/T11で実際の検査済みpackageから生成・差分検査し、UI/Workerはこの値を利用する。R006の操作・bundle型の未定義を文字列signatureや仮digestで補わない。
+
 配布拡張子は `.neplg`、`.nepld`、`.neplm`、`.neplc`。汎用 `.nepl` ではlanguage指定を必須にする。既存NCGやGlossのファイルを新言語として黙って解釈しない。
 
 ## 2. 標準bridge

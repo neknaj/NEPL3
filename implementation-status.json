@@ -1,5 +1,5 @@
 {
-  "design": "nepl3-design-2026-09-06-r2",
+  "design": "nepl3-design-2026-09-06-r3",
   "phase": "repository-foundation",
   "tasks": [
     {
@@ -79,6 +79,31 @@
     },
     {
       "id": "T16",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T17",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T18",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T19",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T20",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T21",
       "status": "not-implemented",
       "evidence": []
     }
@@ -268,10 +293,100 @@
       "id": "A04",
       "status": "not-run",
       "evidence": []
+    },
+    {
+      "id": "U01",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "U02",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "U03",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "U04",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "U05",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "U06",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "U07",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "U08",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "S01",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "S02",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "S03",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "S04",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "S05",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "S06",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "J01",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "J02",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "J03",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "J04",
+      "status": "not-run",
+      "evidence": []
     }
   ],
   "implemented_crates": [
     "nepl3-tools"
   ],
-  "note": "Repository checks are implemented; language operations and the 37 runtime acceptance groups are not implemented or not run."
+  "note": "Repository checks are implemented; language runtime, web UI/site, Pages delivery and Doc DSL documentation migration remain unimplemented. Acceptance state is defined by design/acceptance.json, not a fixed group count."
 }

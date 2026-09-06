@@ -1,0 +1,62 @@
+{
+  "schema": "nepl3.ui-plan/1",
+  "design_revision": "nepl3-design-2026-09-06-r3",
+  "status": "planned-not-executable-schema",
+  "definition": "doc/spec/14-web-ui.md",
+  "languages": [
+    "Grammar",
+    "Doc",
+    "Math",
+    "Circuit"
+  ],
+  "state_owners": {
+    "ui_core": [
+      "route",
+      "documents",
+      "selection",
+      "operation state",
+      "diagnostics",
+      "preview references",
+      "pending request identity"
+    ],
+    "host": [
+      "DOM",
+      "browser editor composition/undo",
+      "Worker lifecycle",
+      "fetch/storage/navigation",
+      "operation dispatch"
+    ]
+  },
+  "result_identity": [
+    "sessionEpoch",
+    "workerEpoch",
+    "requestId",
+    "sourceSetIdentity",
+    "profileIdentity",
+    "operationIdentity",
+    "optionsAndResourcesIdentity"
+  ],
+  "prerequisites": [
+    "R006: close typed operation/reader/protocol schema before implementing public Cmd/Msg payloads",
+    "R009: generate actual resolved Profile before dispatch"
+  ],
+  "forbidden_dependencies": [
+    "nepl3-suite",
+    "web-sys",
+    "js-sys",
+    "DOM",
+    "clock",
+    "filesystem",
+    "network"
+  ],
+  "preview_policy": "validated artifact in isolated scriptless preview; displaying source never invokes evaluation",
+  "schema_note": "This planning record names required responsibilities; it does not define portable field types or claim R006 resolved.",
+  "pure_functions": [
+    "init",
+    "update",
+    "view",
+    "subscriptions"
+  ],
+  "source_set_identity": "all source documents including Grammar and generated-DSL editors, each with document identity and snapshot revision/digest",
+  "acceptance_rule": "exact equality with the pending request identity of each result slot; no revision-only shortcut"
+}

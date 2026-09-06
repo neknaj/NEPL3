@@ -28,5 +28,5 @@
     "circuit.facts/v1"
   ],
   "external_environment_policy": "explicit-projection-only",
-  "design_revision": "nepl3-design-2026-09-06-r2"
+  "design_revision": "nepl3-design-2026-09-06-r3"
 }

@@ -13,6 +13,8 @@ Circuit: 二値・固定幅・同期離散時間の階層回路を宣言し、�
 
 完成品にはnative CLI、wasm32-wasip2 CLI、browser worker用Wasm、汎用LSP server、portable operation providerが含まれる。
 
+r3では4言語Web Playground、純粋TEA UI core、静的な文書・例・Rust APIサイトとGitHub Pages配布を含める。正式文書を最終的にNEPL3 Doc DSLへ移行する計画と受入も必須とする。現状のMarkdownは移行審査まで正本であり、未定義のDoc表現を損失ある変換やRawHtmlで埋めない。詳細は14〜16章。
+
 汎用NEPL3プログラミング言語、動画DSL、完全なHTML処理系、アナログ/伝播遅延回路、CAS、証明器、独自フォントrasterizerは本パッケージの言語ではない。これらの名前でstubを提供しない。追加実装は登録済みschema/operation/readerの公開契約から行う。MathML/HTML/SVG出力は正式な出力backendであり、後で捨てる仮のrendererとしない。
 
 ## 2. 保存する意味上の境界

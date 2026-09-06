@@ -27,10 +27,13 @@ Rust以外によるcore実装への置換では、同じ操作schemaとconforman
 - テキストはUTF-8。PowerShellで読み書きする場合はEncoding UTF8を明示する。通常ファイルはLF、source位置試験のfixtureは元byte列を維持する。
 - ユーザー指示を方針・契約に照らして検証し、問題があれば根拠を示す。ライブラリ仕様が曖昧ならWeb検索で公式資料を確認する。
 - `.tmp/` は説明用のローカル資料でありGit管理・ビルド・CI・配布へ含めない。正式な入口は `doc/README.md`。
-- 現在はリポジトリ基盤の整備段階。18 crateは目標構成で、実装済みmemberはCargo.tomlが示す。空のcrateや成功stubを揃えない。
+- 現在はリポジトリ基盤の整備段階。19 crateは目標構成で、実装済みmemberはCargo.tomlが示す。空のcrateや成功stubを揃えない。
 - 実装状態の正本は `implementation-status.json`、タスク定義の正本は `design/tasks.json`。タスク本文・索引は `cargo run --locked -p nepl3-tools -- tasks --write` で生成する。
 - 変更後は `doc/development.md` の検査を実行し、diffを確認する。未実行の受入試験をCI成功から推定しない。
 - `tools` は開発host用。JSONなどの動的入力境界でのみ動的な値を使い、言語の意味モデルの代用にしない。
+- Web UIは純粋TEAのnepl3-ui-coreとhost adapterを分け、UI coreからsuite・DOM・Worker・I/Oを実行しない。R006/R009を解消してから閉じたUI/Worker schemaを実装する。
+- 最終文書はNEPL3 Doc DSLへ移行する。現在はMarkdownを正本とし、T21の表現gap監査・意味同等性・リンク/安定ID・bootstrap検査後にページ単位で切り替える。AGENTS等の必要なMarkdownはDoc正本からの生成projectionを許すが二重手書き保守は禁止。
+- 受入群と必須targetはdesign/acceptance.jsonを正本とし、T16は全required群を動的に要求する。CI成功や証拠pathの存在だけでruntime/Web/文書移行をpassedへ変更しない。
 
 ## 実装・独立レビュー・統括の分担
 

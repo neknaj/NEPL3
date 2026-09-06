@@ -136,6 +136,15 @@
       "responsibility": "4言語profile・typed adapter・operation dispatch"
     },
     {
+      "name": "nepl3-ui-core",
+      "path": "crates/ui/core",
+      "dependencies": [
+        "nepl3-core"
+      ],
+      "no_std": true,
+      "responsibility": "純粋TEA Model/Msg/update/viewと型付きcommand記述。DOM・Worker・suite実行はhostへ委譲する。"
+    },
+    {
       "name": "nepl3-cli",
       "path": "apps/cli",
       "dependencies": [
@@ -162,7 +171,8 @@
       "dependencies": [
         "nepl3-core",
         "nepl3-suite",
-        "nepl3-wire"
+        "nepl3-wire",
+        "nepl3-ui-core"
       ],
       "no_std": false,
       "responsibility": "browser worker/wasm-bindgen境界"
@@ -193,5 +203,5 @@
       "responsibility": "生成・conformance・依存検査"
     }
   ],
-  "design_revision": "nepl3-design-2026-09-06-r2"
+  "design_revision": "nepl3-design-2026-09-06-r3"
 }

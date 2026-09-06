@@ -40,9 +40,9 @@ git diff --check
 git diff
 ```
 
-`check` はリポジトリ内の設計metadataと実際のworkspaceの整合を検査します。言語処理系の代用ではなく、37群のruntime受入試験を実行するコマンドでもありません。`implementation-status.json` の状態は実際の実行証拠に基づいて更新します。
+`check` はリポジトリ内の設計metadataと実際のworkspaceの整合を検査します。言語処理系の代用ではなく、登録されたruntime受入試験を実行するコマンドでもありません。`implementation-status.json` の状態は実際の実行証拠に基づいて更新します。
 
-タスクのacceptance参照はcoverageを示します。T01〜T15は自身の成果物・scope付き証拠・依存完了・設計blocker解消で判定し、後段を含む試験群全体の合格は別に記録します。証拠にはtask ID、検査対象、コマンド、target、結果、未検証範囲を残します。T16の完了には全37群のpassedが必要です。
+タスクのacceptance参照はcoverageを示します。T16以外のタスクは自身の成果物・scope付き証拠・依存完了・設計blocker解消で判定し、後段を含む試験群全体の合格は別に記録します。証拠にはtask ID、検査対象、コマンド、target、結果、未検証範囲を残します。T16の完了には登録された全必須群のpassedが必要です。
 
 scope付き証拠は `conformance/results/` 以下へJSONで保存します。次は形式を示す例で、実行済みの記録ではありません。実際の検査名・コマンド・targetと未検証部分に置き換え、実行を確認してから状態を更新してください。
 
@@ -56,6 +56,20 @@ scope付き証拠は `conformance/results/` 以下へJSONで保存します。�
   "excluded_acceptance_portions": ["E03/E04の未実装のエディタ操作"]
 }
 ```
+
+群全体のpassedは別のAcceptanceEvidenceを使用します。必須群・targetは [design/acceptance.json](../design/acceptance.json)、形式は [証拠schema](../interfaces/acceptance-evidence.schema.json) に従います。scope付きTaskEvidenceを群全体の成功証拠として流用しません。現在の入力identityは次の操作で取得します。
+
+```sh
+cargo run --locked -p nepl3-tools -- evidence identity
+```
+
+identity profileは `nepl3.repository-inputs/1` です。Gitから見える非ignoreファイルをpathのUTF-8 byte順で並べ、implementation-status.json、conformance/results/、生成tasks/を除外します。source digestはこの集合全体、spec digestはそのうちdoc/spec/、interfaces/、design/を対象にします。各入力はdomain文字列 `nepl3.repository-inputs/1`、zero byte、`source` または `spec`、zero byteで開始し、各pathの長さ（u64 big-endian）・UTF-8 path・内容長（u64 big-endian）・元byte列を順にSHA-256へ入力します。
+
+CIと同じ.gitattributesに従うfresh checkoutで通常ファイルをLFにそろえ、実際に検査したtreeからidentityを取得します。digest処理自体は改行・BOM・Unicodeを正規化しません。source位置fixtureや保存資料の元byte列を変えてdigestを合わせることは禁止です。
+
+証拠は同じdesign revisionとsource/spec digest、群ID、必須target、実行結果、log digestへ照合します。改変した証拠・別ID・古い版・未実行targetをpassedとして受理しません。形式検査だけで試験の正しさを証明した扱いにせず、期待値とlogの独立レビューを行います。
+
+実行証拠は `kind: command` としてコマンド、終了コード、runner/tool版を記録します。人による意味レビューは `kind: review` としてreviewer、独立性、scope、approved/rejectedを記録し、架空のコマンドを作りません。catalogのtarget種別と一致させ、非空の.txt/.log記録とSHA-256を添付します。詳細な必須fieldは証拠schemaに従います。
 
 ## CIと配布
 
@@ -72,6 +86,8 @@ GitHub側ではdescription・topics・文書へのhomepageを設定し、Issues�
 開発はbranchとPRで進め、mainへ統合する前に独立レビューとCIを確認します。mainの保護設定は `quality` 必須・最新mainに対する検査必須（strict）、管理者にも適用、force push・削除は禁止とします。GitHubアカウントによる必須承認数は設定せず、agentの独立レビュー記録と区別します。
 
 WASI・ブラウザWasm・LSP・operation providerは目標仕様です。対応する実装とrunnerができた段階で、buildに加えてrunnerによる受入試験を必須jobとして追加します。現時点のnative開発toolsの検査からcross-target対応を推定しません。runtime releaseは該当するconformanceの実行証拠がそろってから設けます。
+
+Web/TEA/siteとDoc移行の計画は [14章](spec/14-web-ui.md)〜[16章](spec/16-doc-migration.md) に従います。現在のCIはsource配布を維持し、Pages公開はT20の実装・受入後です。T21は初回公開とは別に最終完了へ必須で、移行前はMarkdownを正本とします。
 
 workflowの構文・権限・依存jobの扱いは [GitHub Actions公式仕様](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)、artifactの保存は [公式ガイド](https://docs.github.com/en/actions/tutorials/store-and-share-data) に従います。
 

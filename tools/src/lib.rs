@@ -2,8 +2,12 @@
 
 mod contract;
 mod dependency;
+mod evidence;
 mod repository;
 mod task;
+
+#[cfg(test)]
+mod testing;
 
 use std::{fs, path::Path, process::Command};
 
@@ -59,6 +63,15 @@ pub fn tasks(root: &Path, write: bool) -> Result<()> {
     println!(
         "Task documents {}.",
         if write { "written" } else { "are current" }
+    );
+    Ok(())
+}
+
+/// Print a reproducible identity for the current evidence input inventory.
+pub fn evidence_identity(root: &Path) -> Result<()> {
+    println!(
+        "{}",
+        serde_json::to_string_pretty(&evidence::identity(root)?)?
     );
     Ok(())
 }

@@ -15,13 +15,17 @@ fn run() -> nepl3_tools::Result<()> {
         ["check"] => nepl3_tools::check(&root),
         ["tasks", "--write"] => nepl3_tools::tasks(&root, true),
         ["tasks", "--check"] => nepl3_tools::tasks(&root, false),
+        ["evidence", "identity"] => nepl3_tools::evidence_identity(&root),
         ["--help"] | ["-h"] => {
             println!(
-                "nepl3-tools check | tasks --check | tasks --write\nRepository checks only; runtime conformance is not implemented."
+                "nepl3-tools check | tasks --check | tasks --write | evidence identity\nRepository checks only; runtime conformance is not implemented."
             );
             Ok(())
         }
-        _ => Err("expected: check | tasks --check | tasks --write (see --help)".into()),
+        _ => Err(
+            "expected: check | tasks --check | tasks --write | evidence identity (see --help)"
+                .into(),
+        ),
     }
 }
 

@@ -11,6 +11,7 @@
 5. [受入条件](spec/11-conformance.md)、[モデル不変条件](spec/12-model-invariants.md)、[再現性](spec/13-reproducibility.md)
 6. [開発手順](development.md)、[タスク索引](../tasks/README.md)、[実装状態](../implementation-status.json)
 7. [初期設計の独立レビュー](review.md)、[r2の契約訂正](decisions/0002-design-contract-corrections.md)
+8. [Web UI・TEA](spec/14-web-ui.md)、[静的サイト・Pages](spec/15-site.md)、[Doc DSL移行](spec/16-doc-migration.md)、[r3の判断](decisions/0003-web-tea-doc-migration.md)
 
 ## 正本と派生資料
 
@@ -24,6 +25,8 @@
 | `languages/*/syntax.neplg` | 4言語の文法source |
 | [conformance/cases.json](../conformance/cases.json)、[examples/](../examples/) | 受入条件と検証入力 |
 | [implementation-status.json](../implementation-status.json) | 実装・試験の実行状態。仕様定義と分離する |
+| [design/acceptance.json](../design/acceptance.json) | 必須受入群と必須targetのcatalog |
+| [design/ui.json](../design/ui.json)、[site.json](../design/site.json) | UI/siteの責務・配置計画。実行可能schemaではない |
 | [tasks/](../tasks/) | タスク正本から生成する読み物 |
 | [history/](history/README.md) | 取り込み元の由来と当時の検査報告 |
 
