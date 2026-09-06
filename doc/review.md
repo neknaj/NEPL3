@@ -25,6 +25,7 @@
 | R013 | ordered_fieldsの対象がmodelだけで、contracts.recordsのfields/variantsはobjectへ戻っても検出しない。 | 同じ順序付きfield検査を両方へ適用し、拒否例を入口から試験する。 |
 | R014 | 現行Docでは全ての正式文書の表・list・一般リンク・汎用code・図を損失なく表す契約がない。 | T21で全inventoryと不足を確定し、schema・文法・安全なbackend・wire・conformanceを実装してから切り替える。計画を追加しただけではこの不足を解消済みにしない。 |
 | R015 | 公開後smoke失敗を赤いstatusにしても、すでに公開された失敗候補は元に戻らない。最後に公開確認まで通ったartifactの保持・条件付き復旧が未定義だった。 | 成功artifactの保管とidentity、全writerの直列化、失敗候補が現在版である場合だけの復旧、初回・保管切れ・復旧失敗の状態を定義し、S06で実検査する。 |
+| R016 | inventory抽出がlink内のSoftBreak/HardBreakを捨てて単語を結合し、heading/link内のInlineMath/DisplayMath本文も落としていた。 | 共通のinline投影で区切りと数式本文・種類・source範囲を保持し、実Markdown入力の回帰試験とinventory版更新を行う。 |
 
 ## r3追補の対応確認
 
@@ -63,6 +64,14 @@ Doc監査は全T21完了を前提にせず、Docに関係する共通型・wire�
 [具体的な監査](doc-inventory.md) のDG01〜DG09を現行Docとmarkup契約へ照合し、観測した表・list・link・code等と、観測0の将来候補を区別した。11 code block、695 inline code、204 link/image、278見出しの範囲が元blobのUTF-8境界内にあり、codeのraw範囲digestが一致することも独立に確認した。裸のgeneric型がHTMLとして読まれる4箇所はinline codeへ修正されている。
 
 最終toolingの38 Rust試験を独立に実行して成功した。ページの欠落・digest/構造の改変、現在の追加・変更・削除、履歴不足、Gitのsymlink mode、非通常の出力先、過大入力の拒否を含む。`doc-inventory --check` は固定baselineを再検証して成功し、`--check-current` は現在との差分を表示して終了コード1となった。後者は意図した拒否であり、現在の全ページを監査済みとする証拠にはしていない。
+
+## Inline投影の欠落に対する追加レビュー
+
+R016は旧Rust抽出器を独立した検証用programから呼んで再現した。改行を含むlink labelは`firstsecond`へ結合され、`# Energy $E=mc^2$`の見出しは`Energy `へ、数式を含むlinkも数式がないlabelへ変わっていた。[CommonMarkのsoft break](https://spec.commonmark.org/0.31.2/#soft-line-breaks) は区切りを残し、[hard break](https://spec.commonmark.org/0.31.2/#hard-line-breaks) はlink内でも改行として扱う。数式payloadはparserのイベントに存在しており、欠落はinventory側の処理によるものだった。
+
+訂正後は共通の投影でsoft breakをspace、hard breakをLFとし、数式はinline/displayの種類とpayloadを保持する。見出し、link、入れ子imageへ同じtyped segmentをsource範囲付きで反映する。脚注markerも保存し、表示番号を推測しない。HTMLは別のliteral記録に残す方針が明記されており、要約文字列だけでHTMLやstyleを含む意味の完全同等性を判定できるとはしていない。
+
+45件のRust試験を独立実行し、CRLF・補助平面文字・両hard break表記・両math種別・setext見出し・入れ子image・code・脚注の回帰試験が成功した。同じ57ページのbaselineからinventory schema /2を生成したこと、元page/Rust/契約のidentityと要素数が変わらないこと、482のtyped segment範囲が元blobのUTF-8境界内にあることを確認した。これを根拠にR016をcorrectedとする。R006/R009/R014と処理系・移行の未実行範囲は維持する。
 
 ## r1初回レビューの章ごとの確認範囲
 
