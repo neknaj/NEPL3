@@ -1,0 +1,32 @@
+{
+  "id": "nepl3.standard/1",
+  "aliases": {
+    "Grammar": "Grammar/Root",
+    "Doc": "Doc/Article",
+    "Math": "Math/Expr",
+    "Circuit": "Circuit/Design"
+  },
+  "language_sources": {
+    "Grammar": "languages/grammar/syntax.neplg",
+    "Doc": "languages/doc/syntax.neplg",
+    "Math": "languages/math/syntax.neplg",
+    "Circuit": "languages/circuit/syntax.neplg"
+  },
+  "default_root_extensions": {
+    ".neplg": "Grammar/Root",
+    ".nepld": "Doc/Article",
+    ".neplm": "Math/Expr",
+    ".neplc": "Circuit/Design"
+  },
+  "trusted_providers": [
+    "nepl3.reader/name-v1",
+    "nepl3.reader/trivia-v1",
+    "nepl3.reader/number-v1",
+    "doc.reader/sentence-v1",
+    "grammar.facts/v1",
+    "doc.facts/v1",
+    "circuit.facts/v1"
+  ],
+  "external_environment_policy": "explicit-projection-only",
+  "design_revision": "nepl3-design-2026-09-06-r2"
+}

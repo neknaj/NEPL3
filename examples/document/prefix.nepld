@@ -1,0 +1,13 @@
+article ja "注釈の例"
+body
+  cons paragraph
+    cons sentence
+      cons text "これは"
+      cons ruby text "文書" text "ぶんしょ"
+      cons text "を"
+      cons ruby text "記述" text "きじゅつ"
+      cons text "するための"
+      cons anno text "DSL" cons text "Domain Specific Language" nil
+      nil
+    nil
+  nil

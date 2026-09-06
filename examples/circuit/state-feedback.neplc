@@ -1,0 +1,20 @@
+design
+  cons module Register
+    cons input d 1 nil
+    cons state q 1 false
+    cons next q d
+    nil
+    cons output value 1 q nil
+  cons module Feedback
+    nil
+    cons inst reg Register cons not at reg value nil
+    nil
+    cons output value 1 at reg value nil
+  nil
+  Feedback
+  cons test feedback Feedback
+    cons tick nil cons false nil
+    cons tick nil cons true nil
+    cons tick nil cons false nil
+    nil
+  nil

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 非公開のセキュリティ報告
+    url: https://github.com/neknaj/NEPL3/security/advisories/new
+    about: 未公開の脆弱性や悪用可能な詳細はこちらへ

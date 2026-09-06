@@ -1,0 +1,1697 @@
+{
+  "contract": "nepl3.model/1",
+  "scalar_types": [
+    "U64",
+    "Text",
+    "Natural",
+    "Integer",
+    "Rational",
+    "Bool",
+    "Bytes",
+    "Bytes32"
+  ],
+  "types": {
+    "NodeRef": {
+      "record": [
+        [
+          "id",
+          "U64"
+        ]
+      ]
+    },
+    "OriginRef": {
+      "record": [
+        [
+          "id",
+          "U64"
+        ]
+      ]
+    },
+    "ForeignSyntax": {
+      "record": [
+        [
+          "schema",
+          "SchemaRef"
+        ],
+        [
+          "category",
+          "Text"
+        ],
+        [
+          "root",
+          "NodeRef"
+        ],
+        [
+          "bundle",
+          "SyntaxBundle"
+        ],
+        [
+          "environment",
+          "EnvironmentRef"
+        ]
+      ]
+    },
+    "EnvironmentRef": {
+      "record": [
+        [
+          "id",
+          "U64"
+        ],
+        [
+          "digest",
+          "Bytes32"
+        ]
+      ]
+    },
+    "SyntaxBundle": {
+      "record": [
+        [
+          "sources",
+          "List<SourceContent>"
+        ],
+        [
+          "nodes",
+          "List<SyntaxNode>"
+        ],
+        [
+          "origins",
+          "List<Origin>"
+        ],
+        [
+          "root",
+          "NodeRef"
+        ]
+      ]
+    },
+    "SyntaxNode": {
+      "record": [
+        [
+          "schema",
+          "SchemaRef"
+        ],
+        [
+          "kind",
+          "Text"
+        ],
+        [
+          "fields",
+          "List<FieldValue>"
+        ],
+        [
+          "head",
+          "Option<Span>"
+        ],
+        [
+          "cover",
+          "Option<Span>"
+        ],
+        [
+          "origin",
+          "OriginRef"
+        ]
+      ]
+    },
+    "FieldValue": {
+      "sum": {
+        "Atom": [
+          [
+            "value",
+            "NdfScalar"
+          ]
+        ],
+        "Child": [
+          [
+            "node",
+            "NodeRef"
+          ]
+        ],
+        "Children": [
+          [
+            "nodes",
+            "List<NodeRef>"
+          ]
+        ],
+        "Foreign": [
+          [
+            "value",
+            "ForeignSyntax"
+          ]
+        ]
+      }
+    },
+    "Origin": {
+      "sum": {
+        "Direct": [
+          [
+            "span",
+            "Span"
+          ]
+        ],
+        "Composite": [
+          [
+            "inputs",
+            "List<OriginRef>"
+          ]
+        ],
+        "Generated": [
+          [
+            "operation",
+            "OperationRef"
+          ],
+          [
+            "callsite",
+            "Option<Span>"
+          ],
+          [
+            "inputs",
+            "List<OriginRef>"
+          ]
+        ],
+        "Synthetic": [
+          [
+            "reason",
+            "Text"
+          ],
+          [
+            "anchor",
+            "Option<Span>"
+          ]
+        ]
+      }
+    },
+    "Math:Add": {
+      "record": [
+        [
+          "left",
+          "Math/Expr"
+        ],
+        [
+          "right",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Sub": {
+      "record": [
+        [
+          "left",
+          "Math/Expr"
+        ],
+        [
+          "right",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Mul": {
+      "record": [
+        [
+          "left",
+          "Math/Expr"
+        ],
+        [
+          "right",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Frac": {
+      "record": [
+        [
+          "left",
+          "Math/Expr"
+        ],
+        [
+          "right",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Pow": {
+      "record": [
+        [
+          "left",
+          "Math/Expr"
+        ],
+        [
+          "right",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Equal": {
+      "record": [
+        [
+          "left",
+          "Math/Expr"
+        ],
+        [
+          "right",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Lt": {
+      "record": [
+        [
+          "left",
+          "Math/Expr"
+        ],
+        [
+          "right",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Le": {
+      "record": [
+        [
+          "left",
+          "Math/Expr"
+        ],
+        [
+          "right",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Subscript": {
+      "record": [
+        [
+          "left",
+          "Math/Expr"
+        ],
+        [
+          "right",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Superscript": {
+      "record": [
+        [
+          "left",
+          "Math/Expr"
+        ],
+        [
+          "right",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Neg": {
+      "record": [
+        [
+          "value",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Sqrt": {
+      "record": [
+        [
+          "value",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Transpose": {
+      "record": [
+        [
+          "value",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Det": {
+      "record": [
+        [
+          "value",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Root": {
+      "record": [
+        [
+          "degree",
+          "Math/Expr"
+        ],
+        [
+          "radicand",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Scripts": {
+      "record": [
+        [
+          "base",
+          "Math/Expr"
+        ],
+        [
+          "sub",
+          "Math/Expr"
+        ],
+        [
+          "sup",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Fence": {
+      "record": [
+        [
+          "open",
+          "Text"
+        ],
+        [
+          "close",
+          "Text"
+        ],
+        [
+          "value",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Sequence": {
+      "record": [
+        [
+          "values",
+          "List<Math/Expr>"
+        ]
+      ]
+    },
+    "Math:Symbol": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ]
+      ]
+    },
+    "Math:Text": {
+      "record": [
+        [
+          "text",
+          "Text"
+        ]
+      ]
+    },
+    "Math:Vector": {
+      "record": [
+        [
+          "values",
+          "List<Math/Expr>"
+        ]
+      ]
+    },
+    "Math:Matrix": {
+      "record": [
+        [
+          "rows",
+          "List<Math/Row>"
+        ]
+      ]
+    },
+    "Math:Let": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "init",
+          "Math/Expr"
+        ],
+        [
+          "body",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Sum": {
+      "record": [
+        [
+          "index",
+          "Text"
+        ],
+        [
+          "lower",
+          "Math/Expr"
+        ],
+        [
+          "upper",
+          "Math/Expr"
+        ],
+        [
+          "body",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Integral": {
+      "record": [
+        [
+          "index",
+          "Text"
+        ],
+        [
+          "lower",
+          "Math/Expr"
+        ],
+        [
+          "upper",
+          "Math/Expr"
+        ],
+        [
+          "body",
+          "Math/Expr"
+        ]
+      ]
+    },
+    "Math:Call": {
+      "record": [
+        [
+          "function",
+          "Math/Expr"
+        ],
+        [
+          "arguments",
+          "List<Math/Expr>"
+        ]
+      ]
+    },
+    "Math:Label": {
+      "record": [
+        [
+          "value",
+          "Math/Expr"
+        ],
+        [
+          "annotation",
+          "Math/DocGuest"
+        ]
+      ]
+    },
+    "Math:Number": {
+      "record": [
+        [
+          "value",
+          "Rational"
+        ],
+        [
+          "spelling",
+          "Option<Span>"
+        ]
+      ]
+    },
+    "Math/Expr": {
+      "union": {
+        "Add": "Math:Add",
+        "Sub": "Math:Sub",
+        "Mul": "Math:Mul",
+        "Frac": "Math:Frac",
+        "Pow": "Math:Pow",
+        "Equal": "Math:Equal",
+        "Lt": "Math:Lt",
+        "Le": "Math:Le",
+        "Subscript": "Math:Subscript",
+        "Superscript": "Math:Superscript",
+        "Neg": "Math:Neg",
+        "Sqrt": "Math:Sqrt",
+        "Transpose": "Math:Transpose",
+        "Det": "Math:Det",
+        "Root": "Math:Root",
+        "Scripts": "Math:Scripts",
+        "Fence": "Math:Fence",
+        "Sequence": "Math:Sequence",
+        "Symbol": "Math:Symbol",
+        "Text": "Math:Text",
+        "Vector": "Math:Vector",
+        "Matrix": "Math:Matrix",
+        "Let": "Math:Let",
+        "Sum": "Math:Sum",
+        "Integral": "Math:Integral",
+        "Call": "Math:Call",
+        "Label": "Math:Label",
+        "Number": "Math:Number"
+      }
+    },
+    "Math:Row": {
+      "record": [
+        [
+          "values",
+          "List<Math/Expr>"
+        ]
+      ]
+    },
+    "Math/Row": {
+      "union": {
+        "Row": "Math:Row"
+      }
+    },
+    "Math:DocGuest": {
+      "record": [
+        [
+          "syntax",
+          "ForeignSyntax"
+        ]
+      ]
+    },
+    "Math/DocGuest": {
+      "union": {
+        "DocGuest": "Math:DocGuest"
+      }
+    },
+    "Circuit:Design": {
+      "record": [
+        [
+          "modules",
+          "List<Circuit/Module>"
+        ],
+        [
+          "entry",
+          "Text"
+        ],
+        [
+          "tests",
+          "List<Circuit/Test>"
+        ]
+      ]
+    },
+    "Circuit/Design": {
+      "union": {
+        "Design": "Circuit:Design"
+      }
+    },
+    "Circuit:Module": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "inputs",
+          "List<Circuit/Input>"
+        ],
+        [
+          "declarations",
+          "List<Circuit/Declaration>"
+        ],
+        [
+          "outputs",
+          "List<Circuit/Output>"
+        ]
+      ]
+    },
+    "Circuit/Module": {
+      "union": {
+        "Module": "Circuit:Module"
+      }
+    },
+    "Circuit:Input": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "width",
+          "Natural"
+        ]
+      ]
+    },
+    "Circuit/Input": {
+      "union": {
+        "Input": "Circuit:Input"
+      }
+    },
+    "Circuit:Output": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "width",
+          "Natural"
+        ],
+        [
+          "value",
+          "Circuit/Expr"
+        ]
+      ]
+    },
+    "Circuit/Output": {
+      "union": {
+        "Output": "Circuit:Output"
+      }
+    },
+    "Circuit:Wire": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "value",
+          "Circuit/Expr"
+        ]
+      ]
+    },
+    "Circuit:State": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "width",
+          "Natural"
+        ],
+        [
+          "initial",
+          "Circuit/Bits"
+        ]
+      ]
+    },
+    "Circuit:Next": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "value",
+          "Circuit/Expr"
+        ]
+      ]
+    },
+    "Circuit:Instance": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "module",
+          "Text"
+        ],
+        [
+          "inputs",
+          "List<Circuit/Expr>"
+        ]
+      ]
+    },
+    "Circuit/Declaration": {
+      "union": {
+        "Wire": "Circuit:Wire",
+        "State": "Circuit:State",
+        "Next": "Circuit:Next",
+        "Instance": "Circuit:Instance"
+      }
+    },
+    "Circuit:And": {
+      "record": [
+        [
+          "left",
+          "Circuit/Expr"
+        ],
+        [
+          "right",
+          "Circuit/Expr"
+        ]
+      ]
+    },
+    "Circuit:Or": {
+      "record": [
+        [
+          "left",
+          "Circuit/Expr"
+        ],
+        [
+          "right",
+          "Circuit/Expr"
+        ]
+      ]
+    },
+    "Circuit:Xor": {
+      "record": [
+        [
+          "left",
+          "Circuit/Expr"
+        ],
+        [
+          "right",
+          "Circuit/Expr"
+        ]
+      ]
+    },
+    "Circuit:Nor": {
+      "record": [
+        [
+          "left",
+          "Circuit/Expr"
+        ],
+        [
+          "right",
+          "Circuit/Expr"
+        ]
+      ]
+    },
+    "Circuit:Add": {
+      "record": [
+        [
+          "left",
+          "Circuit/Expr"
+        ],
+        [
+          "right",
+          "Circuit/Expr"
+        ]
+      ]
+    },
+    "Circuit:Concat": {
+      "record": [
+        [
+          "left",
+          "Circuit/Expr"
+        ],
+        [
+          "right",
+          "Circuit/Expr"
+        ]
+      ]
+    },
+    "Circuit:Not": {
+      "record": [
+        [
+          "value",
+          "Circuit/Expr"
+        ]
+      ]
+    },
+    "Circuit:Mux": {
+      "record": [
+        [
+          "select",
+          "Circuit/Expr"
+        ],
+        [
+          "yes",
+          "Circuit/Expr"
+        ],
+        [
+          "no",
+          "Circuit/Expr"
+        ]
+      ]
+    },
+    "Circuit:Slice": {
+      "record": [
+        [
+          "value",
+          "Circuit/Expr"
+        ],
+        [
+          "lo",
+          "Natural"
+        ],
+        [
+          "width",
+          "Natural"
+        ]
+      ]
+    },
+    "Circuit:At": {
+      "record": [
+        [
+          "instance",
+          "Text"
+        ],
+        [
+          "output",
+          "Text"
+        ]
+      ]
+    },
+    "Circuit:Bits": {
+      "record": [
+        [
+          "width",
+          "Natural"
+        ],
+        [
+          "value",
+          "Natural"
+        ]
+      ]
+    },
+    "Circuit:True": {
+      "record": []
+    },
+    "Circuit:False": {
+      "record": []
+    },
+    "Circuit:SignalName": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ]
+      ]
+    },
+    "Circuit/Expr": {
+      "union": {
+        "And": "Circuit:And",
+        "Or": "Circuit:Or",
+        "Xor": "Circuit:Xor",
+        "Nor": "Circuit:Nor",
+        "Add": "Circuit:Add",
+        "Concat": "Circuit:Concat",
+        "Not": "Circuit:Not",
+        "Mux": "Circuit:Mux",
+        "Slice": "Circuit:Slice",
+        "At": "Circuit:At",
+        "Bits": "Circuit:Bits",
+        "True": "Circuit:True",
+        "False": "Circuit:False",
+        "SignalName": "Circuit:SignalName"
+      }
+    },
+    "Circuit/Bits": {
+      "union": {
+        "Bits": "Circuit:Bits",
+        "True": "Circuit:True",
+        "False": "Circuit:False"
+      }
+    },
+    "Circuit:Test": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "module",
+          "Text"
+        ],
+        [
+          "ticks",
+          "List<Circuit/Tick>"
+        ]
+      ]
+    },
+    "Circuit/Test": {
+      "union": {
+        "Test": "Circuit:Test"
+      }
+    },
+    "Circuit:Tick": {
+      "record": [
+        [
+          "inputs",
+          "List<Circuit/Bits>"
+        ],
+        [
+          "outputs",
+          "List<Circuit/Bits>"
+        ]
+      ]
+    },
+    "Circuit/Tick": {
+      "union": {
+        "Tick": "Circuit:Tick"
+      }
+    },
+    "Doc:Article": {
+      "record": [
+        [
+          "language",
+          "Text"
+        ],
+        [
+          "title",
+          "Doc/Sentence"
+        ],
+        [
+          "body",
+          "Doc/Body"
+        ]
+      ]
+    },
+    "Doc/Article": {
+      "union": {
+        "Article": "Doc:Article"
+      }
+    },
+    "Doc:Body": {
+      "record": [
+        [
+          "blocks",
+          "List<Doc/Block>"
+        ]
+      ]
+    },
+    "Doc/Body": {
+      "union": {
+        "Body": "Doc:Body"
+      }
+    },
+    "Doc:Paragraph": {
+      "record": [
+        [
+          "items",
+          "List<Doc/Flow>"
+        ]
+      ]
+    },
+    "Doc:Section": {
+      "record": [
+        [
+          "id",
+          "Text"
+        ],
+        [
+          "title",
+          "Doc/Sentence"
+        ],
+        [
+          "body",
+          "Doc/Body"
+        ]
+      ]
+    },
+    "Doc:DisplayMath": {
+      "record": [
+        [
+          "syntax",
+          "Doc/MathGuest"
+        ]
+      ]
+    },
+    "Doc:CircuitFigure": {
+      "record": [
+        [
+          "caption",
+          "Doc/Sentence"
+        ],
+        [
+          "syntax",
+          "Doc/CircuitGuest"
+        ]
+      ]
+    },
+    "Doc:Code": {
+      "record": [
+        [
+          "syntax",
+          "Doc/Guest"
+        ]
+      ]
+    },
+    "Doc/Block": {
+      "union": {
+        "Paragraph": "Doc:Paragraph",
+        "Section": "Doc:Section",
+        "DisplayMath": "Doc:DisplayMath",
+        "CircuitFigure": "Doc:CircuitFigure",
+        "Code": "Doc:Code"
+      }
+    },
+    "Doc:Sentence": {
+      "record": [
+        [
+          "inlines",
+          "List<Doc/Inline>"
+        ]
+      ]
+    },
+    "Doc/Sentence": {
+      "union": {
+        "Sentence": "Doc:Sentence"
+      }
+    },
+    "Doc:Parallel": {
+      "record": [
+        [
+          "variants",
+          "List<Doc/Variant>"
+        ]
+      ]
+    },
+    "Doc/Flow": {
+      "union": {
+        "Paragraph": "Doc:Paragraph",
+        "Section": "Doc:Section",
+        "DisplayMath": "Doc:DisplayMath",
+        "CircuitFigure": "Doc:CircuitFigure",
+        "Code": "Doc:Code",
+        "Sentence": "Doc:Sentence",
+        "Parallel": "Doc:Parallel"
+      }
+    },
+    "Doc:Variant": {
+      "record": [
+        [
+          "language",
+          "Text"
+        ],
+        [
+          "sentence",
+          "Doc/Sentence"
+        ]
+      ]
+    },
+    "Doc/Variant": {
+      "union": {
+        "Variant": "Doc:Variant"
+      }
+    },
+    "Doc:Text": {
+      "record": [
+        [
+          "text",
+          "Text"
+        ]
+      ]
+    },
+    "Doc:Concat": {
+      "record": [
+        [
+          "inlines",
+          "List<Doc/Inline>"
+        ]
+      ]
+    },
+    "Doc:Ruby": {
+      "record": [
+        [
+          "base",
+          "Doc/Inline"
+        ],
+        [
+          "reading",
+          "Doc/Inline"
+        ]
+      ]
+    },
+    "Doc:Anno": {
+      "record": [
+        [
+          "base",
+          "Doc/Inline"
+        ],
+        [
+          "notes",
+          "List<Doc/Inline>"
+        ]
+      ]
+    },
+    "Doc:InlineMath": {
+      "record": [
+        [
+          "syntax",
+          "Doc/MathGuest"
+        ]
+      ]
+    },
+    "Doc:Anchor": {
+      "record": [
+        [
+          "id",
+          "Text"
+        ],
+        [
+          "label",
+          "Doc/Inline"
+        ]
+      ]
+    },
+    "Doc:Reference": {
+      "record": [
+        [
+          "target",
+          "Text"
+        ],
+        [
+          "label",
+          "Doc/Inline"
+        ]
+      ]
+    },
+    "Doc:Emphasis": {
+      "record": [
+        [
+          "inline",
+          "Doc/Inline"
+        ]
+      ]
+    },
+    "Doc:Strong": {
+      "record": [
+        [
+          "inline",
+          "Doc/Inline"
+        ]
+      ]
+    },
+    "Doc:Break": {
+      "record": []
+    },
+    "Doc/Inline": {
+      "union": {
+        "Text": "Doc:Text",
+        "Concat": "Doc:Concat",
+        "Ruby": "Doc:Ruby",
+        "Anno": "Doc:Anno",
+        "InlineMath": "Doc:InlineMath",
+        "Anchor": "Doc:Anchor",
+        "Reference": "Doc:Reference",
+        "Emphasis": "Doc:Emphasis",
+        "Strong": "Doc:Strong",
+        "Break": "Doc:Break"
+      }
+    },
+    "Doc:MathGuest": {
+      "record": [
+        [
+          "syntax",
+          "ForeignSyntax"
+        ]
+      ]
+    },
+    "Doc/MathGuest": {
+      "union": {
+        "MathGuest": "Doc:MathGuest"
+      }
+    },
+    "Doc:CircuitGuest": {
+      "record": [
+        [
+          "syntax",
+          "ForeignSyntax"
+        ]
+      ]
+    },
+    "Doc/CircuitGuest": {
+      "union": {
+        "CircuitGuest": "Doc:CircuitGuest"
+      }
+    },
+    "Doc:GrammarGuest": {
+      "record": [
+        [
+          "syntax",
+          "ForeignSyntax"
+        ]
+      ]
+    },
+    "Doc:DocGuest": {
+      "record": [
+        [
+          "syntax",
+          "ForeignSyntax"
+        ]
+      ]
+    },
+    "Doc/Guest": {
+      "union": {
+        "GrammarGuest": "Doc:GrammarGuest",
+        "DocGuest": "Doc:DocGuest",
+        "MathGuest": "Doc:MathGuest",
+        "CircuitGuest": "Doc:CircuitGuest"
+      }
+    },
+    "Requirement": {
+      "record": [
+        [
+          "schema",
+          "SchemaRef"
+        ],
+        [
+          "code",
+          "Text"
+        ],
+        [
+          "arguments",
+          "TypedValue"
+        ],
+        [
+          "origin",
+          "OriginRef"
+        ]
+      ]
+    },
+    "CheckedEnvelope": {
+      "record": [
+        [
+          "domain",
+          "TypedValue"
+        ],
+        [
+          "schema",
+          "SchemaRef"
+        ],
+        [
+          "environmentDigest",
+          "Bytes32"
+        ],
+        [
+          "requirements",
+          "List<Requirement>"
+        ]
+      ]
+    },
+    "Math:Value": {
+      "sum": {
+        "Scalar": [
+          [
+            "value",
+            "Rational"
+          ]
+        ],
+        "Vector": [
+          [
+            "values",
+            "List<Rational>"
+          ]
+        ],
+        "Matrix": [
+          [
+            "rows",
+            "U64"
+          ],
+          [
+            "cols",
+            "U64"
+          ],
+          [
+            "values",
+            "List<Rational>"
+          ]
+        ],
+        "Truth": [
+          [
+            "value",
+            "Bool"
+          ]
+        ]
+      }
+    },
+    "Math:Evaluation": {
+      "sum": {
+        "Exact": [
+          [
+            "value",
+            "Math:Value"
+          ]
+        ],
+        "Symbolic": [
+          [
+            "expression",
+            "Math/Expr"
+          ],
+          [
+            "requirements",
+            "List<Requirement>"
+          ]
+        ]
+      }
+    },
+    "Circuit:PortInfo": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "width",
+          "U64"
+        ],
+        [
+          "origin",
+          "OriginRef"
+        ]
+      ]
+    },
+    "Circuit:StateSlot": {
+      "record": [
+        [
+          "id",
+          "U64"
+        ],
+        [
+          "path",
+          "List<U64>"
+        ],
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "width",
+          "U64"
+        ],
+        [
+          "initial",
+          "Natural"
+        ],
+        [
+          "next",
+          "U64"
+        ],
+        [
+          "origin",
+          "OriginRef"
+        ]
+      ]
+    },
+    "Circuit:GateOp": {
+      "sum": {
+        "Input": [
+          [
+            "port",
+            "U64"
+          ]
+        ],
+        "State": [
+          [
+            "slot",
+            "U64"
+          ]
+        ],
+        "Constant": [
+          [
+            "value",
+            "Natural"
+          ]
+        ],
+        "Not": [],
+        "And": [],
+        "Or": [],
+        "Xor": [],
+        "Nor": [],
+        "Add": [],
+        "Concat": [],
+        "Mux": [],
+        "Slice": [
+          [
+            "lo",
+            "U64"
+          ]
+        ]
+      }
+    },
+    "Circuit:NetNode": {
+      "record": [
+        [
+          "id",
+          "U64"
+        ],
+        [
+          "op",
+          "Circuit:GateOp"
+        ],
+        [
+          "width",
+          "U64"
+        ],
+        [
+          "inputs",
+          "List<U64>"
+        ],
+        [
+          "origin",
+          "OriginRef"
+        ]
+      ]
+    },
+    "Circuit:PreparedNetlist": {
+      "record": [
+        [
+          "inputs",
+          "List<Circuit:PortInfo>"
+        ],
+        [
+          "outputs",
+          "List<Circuit:PortInfo>"
+        ],
+        [
+          "outputNodes",
+          "List<U64>"
+        ],
+        [
+          "states",
+          "List<Circuit:StateSlot>"
+        ],
+        [
+          "nodes",
+          "List<Circuit:NetNode>"
+        ],
+        [
+          "order",
+          "List<U64>"
+        ],
+        [
+          "origins",
+          "List<Origin>"
+        ]
+      ]
+    },
+    "Circuit:NorNode": {
+      "sum": {
+        "InputBit": [
+          [
+            "port",
+            "U64"
+          ],
+          [
+            "bit",
+            "U64"
+          ]
+        ],
+        "StateBit": [
+          [
+            "slot",
+            "U64"
+          ],
+          [
+            "bit",
+            "U64"
+          ]
+        ],
+        "ConstBit": [
+          [
+            "value",
+            "Bool"
+          ]
+        ],
+        "Nor2": [
+          [
+            "left",
+            "U64"
+          ],
+          [
+            "right",
+            "U64"
+          ]
+        ]
+      }
+    },
+    "Circuit:NorNetlist": {
+      "record": [
+        [
+          "inputs",
+          "List<Circuit:PortInfo>"
+        ],
+        [
+          "outputs",
+          "List<Circuit:PortInfo>"
+        ],
+        [
+          "stateWidths",
+          "List<U64>"
+        ],
+        [
+          "initialBits",
+          "List<Bool>"
+        ],
+        [
+          "nodes",
+          "List<Circuit:NorNode>"
+        ],
+        [
+          "nextBits",
+          "List<U64>"
+        ],
+        [
+          "outputBits",
+          "List<U64>"
+        ],
+        [
+          "origins",
+          "List<OriginRef>"
+        ]
+      ]
+    },
+    "Circuit:Step": {
+      "record": [
+        [
+          "outputs",
+          "List<Circuit:Bits>"
+        ],
+        [
+          "nextState",
+          "List<Circuit:Bits>"
+        ]
+      ]
+    },
+    "Markup:Attribute": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "value",
+          "Text"
+        ]
+      ]
+    },
+    "Markup:Node": {
+      "sum": {
+        "Text": [
+          [
+            "value",
+            "Text"
+          ]
+        ],
+        "Element": [
+          [
+            "namespace",
+            "Text"
+          ],
+          [
+            "name",
+            "Text"
+          ],
+          [
+            "attributes",
+            "List<Markup:Attribute>"
+          ],
+          [
+            "children",
+            "List<Markup:Node>"
+          ],
+          [
+            "origin",
+            "Option<OriginRef>"
+          ]
+        ]
+      }
+    },
+    "Markup:Fragment": {
+      "record": [
+        [
+          "category",
+          "Text"
+        ],
+        [
+          "nodes",
+          "List<Markup:Node>"
+        ]
+      ]
+    },
+    "PreparedEmbed": {
+      "record": [
+        [
+          "node",
+          "NodeRef"
+        ],
+        [
+          "slot",
+          "Text"
+        ],
+        [
+          "fragment",
+          "Markup:Fragment"
+        ],
+        [
+          "schema",
+          "SchemaRef"
+        ],
+        [
+          "environmentDigest",
+          "Bytes32"
+        ]
+      ]
+    },
+    "Doc:PreparedArticle": {
+      "record": [
+        [
+          "article",
+          "Doc/Article"
+        ],
+        [
+          "embeds",
+          "List<PreparedEmbed>"
+        ],
+        [
+          "origins",
+          "List<Origin>"
+        ]
+      ]
+    },
+    "Artifact": {
+      "record": [
+        [
+          "mediaType",
+          "Text"
+        ],
+        [
+          "bytes",
+          "Bytes"
+        ],
+        [
+          "dependencies",
+          "List<ResourceContent>"
+        ],
+        [
+          "sourceMap",
+          "List<SourceMapEntry>"
+        ]
+      ]
+    },
+    "SourceMapEntry": {
+      "record": [
+        [
+          "generated",
+          "Span"
+        ],
+        [
+          "origins",
+          "List<OriginRef>"
+        ],
+        [
+          "invertibility",
+          "Text"
+        ]
+      ]
+    }
+  },
+  "external_types": [
+    "Span",
+    "SourceContent",
+    "SchemaRef",
+    "OperationRef",
+    "TypedValue",
+    "NdfScalar",
+    "ResourceContent"
+  ],
+  "constraints": "doc/spec/12-model-invariants.md",
+  "design_revision": "nepl3-design-2026-09-06-r2",
+  "field_encoding": "record and each sum payload are ordered [name,type] arrays; sum and union variant maps are name-indexed and order-independent"
+}

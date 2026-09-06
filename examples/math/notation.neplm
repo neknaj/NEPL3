@@ -1,0 +1,3 @@
+equal
+  integral x 0 1 pow x 2
+  frac 1 3

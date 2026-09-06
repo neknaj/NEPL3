@@ -1,0 +1,374 @@
+{
+  "design_revision": "nepl3-design-2026-09-06-r1",
+  "algorithm": "sha256",
+  "excludes": [
+    "manifest.json"
+  ],
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 2219,
+      "sha256": "0b2ee70967699beb9dc89621b941f986a800d946f2f286b100836a14a5178cc5"
+    },
+    {
+      "path": "CODEX.md",
+      "bytes": 1403,
+      "sha256": "74a3773efacabf04fdd5632913bb98b23c891cdcd9d62d6880ef48c26b72641f"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2501,
+      "sha256": "0f86dba5ba1544a35a859b62bd5252e752a78f5806d8bd582bd5b18171a3a2e4"
+    },
+    {
+      "path": "conformance/cases.json",
+      "bytes": 3828,
+      "sha256": "7f7afce09a468ddfdb053c2173891558e3560ea45bdf0a7c9133a64ae914e435"
+    },
+    {
+      "path": "conformance/design-validation.json",
+      "bytes": 7173,
+      "sha256": "40baa82eb6e050fe898ebd8504da72ca9d9fa9679229cbfc7bc8b9b1e8a80ee8"
+    },
+    {
+      "path": "conformance/expected/sentence.json",
+      "bytes": 1713,
+      "sha256": "1680cae9506444625094655102c85c7890c7a07e8709639871272a3584f4be27"
+    },
+    {
+      "path": "design/dependencies.json",
+      "bytes": 4916,
+      "sha256": "699e310c6359ae508f049eaa941a39567beb2e27743b90ba796e252b1fd76549"
+    },
+    {
+      "path": "design/forms.json",
+      "bytes": 40857,
+      "sha256": "9963bafb50417f0d4cfcc60e118ec12d27af0330b96fb56da939261fae6be294"
+    },
+    {
+      "path": "design/markup.json",
+      "bytes": 5482,
+      "sha256": "fcf261495216a2879f001847e9ef7f0c55f21044625409d6699a5a90f0305651"
+    },
+    {
+      "path": "design/profile.json",
+      "bytes": 804,
+      "sha256": "38fa9cb3f2b11997efde1e05934b6deb7b14f466140ea2ac998503d034ff0a0a"
+    },
+    {
+      "path": "design/tasks.json",
+      "bytes": 6385,
+      "sha256": "ea29ecf920e8ec315ca78d9fc615db14b9db1198f07f2ef45d31c449ebfcf936"
+    },
+    {
+      "path": "examples/circuit/half-adder.neplc",
+      "bytes": 469,
+      "sha256": "fba03ac378b5d00d68881c462421cdaede2b04634e220a3f513764e48f0efa7b"
+    },
+    {
+      "path": "examples/circuit/instances.neplc",
+      "bytes": 635,
+      "sha256": "5d860ee7e2520859426d3c36c3869026563a1400d38385134140933c3193a12c"
+    },
+    {
+      "path": "examples/circuit/simultaneous.neplc",
+      "bytes": 366,
+      "sha256": "4db0ae459473c23166dfbea5c165b253a8ae6e3b6ede7b24501b15a36d65468c"
+    },
+    {
+      "path": "examples/circuit/state-feedback.neplc",
+      "bytes": 426,
+      "sha256": "79dcca12b211c91a9db711ff1f938e68a5c5ef1c018b38c31910f6bec31fe8e2"
+    },
+    {
+      "path": "examples/circuit/toggle.neplc",
+      "bytes": 378,
+      "sha256": "f62ee835712134bdd8ac0c88bbb1071dcc66413e3d33996356e6ae65101396c9"
+    },
+    {
+      "path": "examples/document/integration.nepld",
+      "bytes": 635,
+      "sha256": "1c640bcb2bce563d1fa8e628f6a5c33c64b360e3231862b10a24d07c4121b70f"
+    },
+    {
+      "path": "examples/document/parallel.nepld",
+      "bytes": 564,
+      "sha256": "2f428566adfad6d6b09f9bae639e639a20399517ec96e0ece4862c56d87f4273"
+    },
+    {
+      "path": "examples/document/prefix.nepld",
+      "bytes": 342,
+      "sha256": "96339c361431ddf87748839f74295cb0b54f55d35a7135da4c13e5b3c25416e9"
+    },
+    {
+      "path": "examples/document/references.nepld",
+      "bytes": 337,
+      "sha256": "533d5d26e36ec4d61c0543957b7a25db6142ca6849a8ae90ecb2044dc49cd210"
+    },
+    {
+      "path": "examples/document/sentence.nepld",
+      "bytes": 173,
+      "sha256": "1219b7df432f493163300ab8b4621861e694bc3a75fc20697673c0c7e245c655"
+    },
+    {
+      "path": "examples/grammar/angle-tag.neplg",
+      "bytes": 741,
+      "sha256": "b7a3f67782e0620ea7a933e4a70f4ff3e652bc838c969c8e1d7d6be4b8d92fec"
+    },
+    {
+      "path": "examples/grammar/binding.neplg",
+      "bytes": 1214,
+      "sha256": "721d7ab2054be4e5ab8d3b5d02f8189afcf9e9fcf4b48c7a46c018e31c96d0c6"
+    },
+    {
+      "path": "examples/grammar/provider.neplg",
+      "bytes": 341,
+      "sha256": "77c138bfd3fd042da273f7f0c06a6eec0097cf9b0e76b5c655e88069960c0acf"
+    },
+    {
+      "path": "examples/math/binding.neplm",
+      "bytes": 31,
+      "sha256": "4ab069e5d45a41e039c8d370d60bcbfb4c72e4c5f8eb1d2bbcfffedaf227173a"
+    },
+    {
+      "path": "examples/math/decimal.neplm",
+      "bytes": 12,
+      "sha256": "d0651d928d93f94645a649ad4b0e6462c36e7fc71a5c4787c1988b53aa62d361"
+    },
+    {
+      "path": "examples/math/doc-label.neplm",
+      "bytes": 50,
+      "sha256": "0593850b4ff2f9a03cb13917062fbf1497640bb9a9d3aed78899d47f5b1bed24"
+    },
+    {
+      "path": "examples/math/matrix.neplm",
+      "bytes": 83,
+      "sha256": "c76010991b36a506aaf50bb3b8df92112e81fc2d2e8fba3a261607049a4a2832"
+    },
+    {
+      "path": "examples/math/notation.neplm",
+      "bytes": 42,
+      "sha256": "2e735adf10b04e8824d99eec22a60baf97362527f75c86174ce3246c8098cc78"
+    },
+    {
+      "path": "examples/math/rational.neplm",
+      "bytes": 22,
+      "sha256": "d6e750f5c286846b7f96603df878998006b99102c625564fc9f0099c9b129dd1"
+    },
+    {
+      "path": "examples/math/sum.neplm",
+      "bytes": 18,
+      "sha256": "b0ae528f50fa453778a8a6f4ba35a10c80488a5a8fc651ba4bb46add28aa95b3"
+    },
+    {
+      "path": "interfaces/contracts.json",
+      "bytes": 11543,
+      "sha256": "1305d430397e872d05a38a30f14954a3f7522d87d20bbcf2b546cfd291b95301"
+    },
+    {
+      "path": "interfaces/model.json",
+      "bytes": 19094,
+      "sha256": "5e6c134c9f50db1be3754661ed620dbc033cff54bbc0eb95f06a56720956a389"
+    },
+    {
+      "path": "languages/circuit/syntax.neplg",
+      "bytes": 4544,
+      "sha256": "4479db84f61ce5bcc286ebbb93624c5187f4ceebc5a5683615c504aa441beba5"
+    },
+    {
+      "path": "languages/doc/syntax.neplg",
+      "bytes": 5502,
+      "sha256": "aa39275f6ec4e89aa83c8e5fd873234d5017759f840ad759588b28bf3fc9196f"
+    },
+    {
+      "path": "languages/grammar/syntax.neplg",
+      "bytes": 9369,
+      "sha256": "00700c15d6f88109a33953612e91ff50f529d40c905315d2becb44071a57db41"
+    },
+    {
+      "path": "languages/math/syntax.neplg",
+      "bytes": 5262,
+      "sha256": "60aae430ba6c8f559e59cddbbf0484aeb2241bfb1f596fc6c0fba84a173467d3"
+    },
+    {
+      "path": "spec/00-contract.md",
+      "bytes": 3998,
+      "sha256": "3384f9efa21dbbe753a2583cc29683e874eb87b6326564c355ae21b5aa880dc9"
+    },
+    {
+      "path": "spec/01-architecture.md",
+      "bytes": 5091,
+      "sha256": "a2d6b5d7a271c22282bb0c0775205f4548f469bddb63f3e4592310d989c42f7a"
+    },
+    {
+      "path": "spec/02-foundation.md",
+      "bytes": 6531,
+      "sha256": "16b3c265d94a99c938d1109ba9606be20e3f49af2bfe75599e1c3755429ecd63"
+    },
+    {
+      "path": "spec/03-reader.md",
+      "bytes": 8677,
+      "sha256": "ec28fb9df14571bd011d39c43608e4ae8bea95be27fd5c0dc672c92072113175"
+    },
+    {
+      "path": "spec/04-grammar.md",
+      "bytes": 7769,
+      "sha256": "dec1f0ddb97786387c07680abc03973e1a79e449dd974a5b0332aa2f54117ac7"
+    },
+    {
+      "path": "spec/05-document.md",
+      "bytes": 7493,
+      "sha256": "2a5d38da11e13045634374d0d9e646b17e42d668a48454e98e96f0b2aebaf134"
+    },
+    {
+      "path": "spec/06-math.md",
+      "bytes": 6461,
+      "sha256": "3279f42f49db336b7acc9a54da65f9640389cd449c6726bb213e3fa767f382f6"
+    },
+    {
+      "path": "spec/07-circuit.md",
+      "bytes": 6422,
+      "sha256": "b98a1b5e5f17d8027565b68032f7e59e1951c8c524ecc732802b432018f6f5ce"
+    },
+    {
+      "path": "spec/08-editor.md",
+      "bytes": 6755,
+      "sha256": "6834b21d34095f8b7fafdd8b8531c90e79cfd60e8698b8a5ca27ad7adcbe434a"
+    },
+    {
+      "path": "spec/09-portability.md",
+      "bytes": 5885,
+      "sha256": "bf09e31dda81034b393799e48c9bb0632853323de27261b58c8e2f35d97e479b"
+    },
+    {
+      "path": "spec/10-integration.md",
+      "bytes": 5090,
+      "sha256": "6115acb5c74a5f676dd546bb20c26a0d1bd3215ea85c1a7e1dd763a2f01850a1"
+    },
+    {
+      "path": "spec/11-conformance.md",
+      "bytes": 5262,
+      "sha256": "4386ef64ef08cf8ac282e58362bae8c17dd7f93aaffed4c407c83cef9445c416"
+    },
+    {
+      "path": "spec/12-model-invariants.md",
+      "bytes": 5309,
+      "sha256": "6737c835d7dec92ede76f92cb52cafddc0dd4d74133b08a22bcc41bab83054b4"
+    },
+    {
+      "path": "spec/13-reproducibility.md",
+      "bytes": 4880,
+      "sha256": "8b23e3f0992c8c0f39861e44704477be748059856a804a5f5b63d52550f97841"
+    },
+    {
+      "path": "spec/circuit-signatures.md",
+      "bytes": 2926,
+      "sha256": "c83e11b268794a77de3d152f2ecd6d59e866f04d4d0db6bfd7060bf6acd727df"
+    },
+    {
+      "path": "spec/doc-signatures.md",
+      "bytes": 3149,
+      "sha256": "3d795cee81784249523bb1a01afc36db34bd8092662ac505f801e836ce7b1042"
+    },
+    {
+      "path": "spec/grammar-signatures.md",
+      "bytes": 5621,
+      "sha256": "d6250b15400989956256569d7f731a81b6517b71231d0ccfdc1fa51f3326e363"
+    },
+    {
+      "path": "spec/math-signatures.md",
+      "bytes": 2395,
+      "sha256": "0856758dc5c34c72cfcca552fcdb6c937cd412f1579c3a8374cf57b1f888a98c"
+    },
+    {
+      "path": "spec/references.md",
+      "bytes": 2479,
+      "sha256": "e88e91b6968f6523b4c6e2ea2ec11e5d67f73de72496222addbb774dedabf6d2"
+    },
+    {
+      "path": "tasks/README.md",
+      "bytes": 752,
+      "sha256": "5d485bd5a14bb979a8f6ab219c378dbea295dc8947908552af720743908edcd5"
+    },
+    {
+      "path": "tasks/T01.md",
+      "bytes": 401,
+      "sha256": "81ee5a6fb223078b7d2ec9423da50b44a172d7718ef145d3610b04d38cf25c12"
+    },
+    {
+      "path": "tasks/T02.md",
+      "bytes": 339,
+      "sha256": "f0c9a72ff5c920b4f6c689cdd9959fde0412cd23fc3156af5c3084cd17261ac6"
+    },
+    {
+      "path": "tasks/T03.md",
+      "bytes": 332,
+      "sha256": "32142512778d2a65ed2ee3d72a6b4e1750dd72898f92e7631594e0f81f73969c"
+    },
+    {
+      "path": "tasks/T04.md",
+      "bytes": 345,
+      "sha256": "2b97ab499880e8f9a51bccd55ea202a40ba43877d458b38e8bf426a0f7f323a3"
+    },
+    {
+      "path": "tasks/T05.md",
+      "bytes": 332,
+      "sha256": "3c0198b078891f0fa3971b4d9531ba7f4d3bbba85cb63319bb372270e0109e28"
+    },
+    {
+      "path": "tasks/T06.md",
+      "bytes": 368,
+      "sha256": "5b0f2e05afcd27eb17dcfce9a9fa4324247f01d66aa76387dab22bf478adafc2"
+    },
+    {
+      "path": "tasks/T07.md",
+      "bytes": 367,
+      "sha256": "43c1f48ad760ff73139fe0952de950814caae6d712e0fe23ef7ba5cd058d05c4"
+    },
+    {
+      "path": "tasks/T08.md",
+      "bytes": 342,
+      "sha256": "b436bb8a999e266113fe65872c86279b127b0bc6e98546acfb004b21f192a2c0"
+    },
+    {
+      "path": "tasks/T09.md",
+      "bytes": 372,
+      "sha256": "9ef3b0599871faa223d0a12bc957a1cd356fe347b68cf1db9262c6f841dd8eef"
+    },
+    {
+      "path": "tasks/T10.md",
+      "bytes": 350,
+      "sha256": "366903cf73c66a9ae6eeffb3b61db55638583bddcf1007b7a815c9b24463db2e"
+    },
+    {
+      "path": "tasks/T11.md",
+      "bytes": 366,
+      "sha256": "a886dfad8fce1529ea10e3c8f5952e344f92eaa78f2c41928cfefb3161d5f5ea"
+    },
+    {
+      "path": "tasks/T12.md",
+      "bytes": 344,
+      "sha256": "06367cda299abfc1819c3d5d6bbde5d792331541819b178e0a4ef9a5b50cffd4"
+    },
+    {
+      "path": "tasks/T13.md",
+      "bytes": 330,
+      "sha256": "7f45497892a1aec85210181bf6eeb138b450a681f3164a3c4eef8a4bc038aa9f"
+    },
+    {
+      "path": "tasks/T14.md",
+      "bytes": 388,
+      "sha256": "159810ce49e2e8bcb75c399b9177d05393ffb73e21bb55b0bc7531f22a052c33"
+    },
+    {
+      "path": "tasks/T15.md",
+      "bytes": 349,
+      "sha256": "5455ee781350c2c55a5c38cf93e4c72296a0d88a8721e090fd4e28a9c8dbe503"
+    },
+    {
+      "path": "tasks/T16.md",
+      "bytes": 378,
+      "sha256": "c8bf87b97e345882c6444707ec620b57e64688108f2a9d8121d088d9283214bc"
+    }
+  ]
+}

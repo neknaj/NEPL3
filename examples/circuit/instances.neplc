@@ -1,0 +1,23 @@
+design
+  cons module Register
+    cons input d 1 nil
+    cons state q 1 false
+    cons next q d
+    nil
+    cons output value 1 q nil
+  cons module Independent
+    cons input a 1 cons input b 1 nil
+    cons inst left Register cons a nil
+    cons inst right Register cons b nil
+    nil
+    cons output first 1 at left value
+    cons output second 1 at right value
+    nil
+  nil
+  Independent
+  cons test independent Independent
+    cons tick cons true cons false nil cons false cons false nil
+    cons tick cons false cons true nil cons true cons false nil
+    cons tick cons false cons false nil cons false cons true nil
+    nil
+  nil

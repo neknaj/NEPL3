@@ -1,0 +1,87 @@
+{
+  "kind": "Doc/Article",
+  "language": "ja",
+  "title": {
+    "kind": "Doc/Sentence",
+    "inlines": [
+      [
+        "text",
+        "注釈の例"
+      ]
+    ]
+  },
+  "body": {
+    "kind": "Doc/Body",
+    "blocks": [
+      {
+        "kind": "Doc/Paragraph",
+        "items": [
+          {
+            "kind": "Doc/Sentence",
+            "inlines": [
+              [
+                "text",
+                "これは"
+              ],
+              [
+                "ruby",
+                [
+                  [
+                    "text",
+                    "文書"
+                  ]
+                ],
+                [
+                  [
+                    "text",
+                    "ぶんしょ"
+                  ]
+                ]
+              ],
+              [
+                "text",
+                "を"
+              ],
+              [
+                "ruby",
+                [
+                  [
+                    "text",
+                    "記述"
+                  ]
+                ],
+                [
+                  [
+                    "text",
+                    "きじゅつ"
+                  ]
+                ]
+              ],
+              [
+                "text",
+                "するための"
+              ],
+              [
+                "anno",
+                [
+                  [
+                    "text",
+                    "DSL"
+                  ]
+                ],
+                [
+                  [
+                    [
+                      "text",
+                      "Domain Specific Language"
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

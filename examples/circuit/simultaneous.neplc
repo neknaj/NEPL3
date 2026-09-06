@@ -1,0 +1,17 @@
+design
+  cons module Swap
+    nil
+    cons state a 1 false
+    cons state b 1 true
+    cons next a b
+    cons next b a
+    nil
+    cons output first 1 a cons output second 1 b nil
+  nil
+  Swap
+  cons test simultaneous Swap
+    cons tick nil cons false cons true nil
+    cons tick nil cons true cons false nil
+    cons tick nil cons false cons true nil
+    nil
+  nil

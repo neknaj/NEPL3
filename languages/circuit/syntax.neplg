@@ -1,0 +1,205 @@
+language Circuit 1 Design
+cons extension BuiltinWord "nepl3.reader/name-v1" "reader/v1"
+cons extension BuiltinTrivia "nepl3.reader/trivia-v1" "reader/v1"
+cons reader word call "nepl3.reader/name-v1"
+cons reader trivia call "nepl3.reader/trivia-v1"
+cons mode Code
+cons skip trivia
+cons take Word word
+nil
+cons extension Facts "circuit.facts/v1" "facts/v1"
+cons category Design Code
+cons category Module Code
+cons category Input Code
+cons category Output Code
+cons category Declaration Code
+cons category Expr Code
+cons category Bits Code
+cons category Test Code
+cons category Tick Code
+cons form Design Design "design"
+cons field modules listof local Module
+cons field entry builtin Name
+cons field tests listof local Test
+nil
+custom "circuit.facts/v1"
+cons style head "marker" nil
+cons form Module Module "module"
+cons field name builtin Name
+cons field inputs listof local Input
+cons field declarations listof local Declaration
+cons field outputs listof local Output
+nil
+group cons visit inputs
+cons visit declarations
+cons visit outputs
+nil
+cons style head "marker" nil
+cons form Input Input "input"
+cons field name builtin Name
+cons field width builtin Nat
+nil
+none
+cons style head "marker" nil
+cons form Output Output "output"
+cons field name builtin Name
+cons field width builtin Nat
+cons field value local Expr
+nil
+group cons visit value
+nil
+cons style head "marker" nil
+cons form Wire Declaration "wire"
+cons field name builtin Name
+cons field value local Expr
+nil
+group cons visit value
+nil
+cons style head "marker" nil
+cons form State Declaration "state"
+cons field name builtin Name
+cons field width builtin Nat
+cons field initial local Bits
+nil
+group cons visit initial
+nil
+cons style head "marker" nil
+cons form Next Declaration "next"
+cons field name builtin Name
+cons field value local Expr
+nil
+group cons visit value
+nil
+cons style head "marker" nil
+cons form Instance Declaration "inst"
+cons field name builtin Name
+cons field module builtin Name
+cons field inputs listof local Expr
+nil
+group cons visit inputs
+nil
+cons style head "marker" nil
+cons form And Expr "and"
+cons field left local Expr
+cons field right local Expr
+nil
+group cons visit left
+cons visit right
+nil
+cons style head "marker" nil
+cons form Or Expr "or"
+cons field left local Expr
+cons field right local Expr
+nil
+group cons visit left
+cons visit right
+nil
+cons style head "marker" nil
+cons form Xor Expr "xor"
+cons field left local Expr
+cons field right local Expr
+nil
+group cons visit left
+cons visit right
+nil
+cons style head "marker" nil
+cons form Nor Expr "nor"
+cons field left local Expr
+cons field right local Expr
+nil
+group cons visit left
+cons visit right
+nil
+cons style head "marker" nil
+cons form Add Expr "add"
+cons field left local Expr
+cons field right local Expr
+nil
+group cons visit left
+cons visit right
+nil
+cons style head "marker" nil
+cons form Concat Expr "concat"
+cons field left local Expr
+cons field right local Expr
+nil
+group cons visit left
+cons visit right
+nil
+cons style head "marker" nil
+cons form Not Expr "not"
+cons field value local Expr
+nil
+group cons visit value
+nil
+cons style head "marker" nil
+cons form Mux Expr "mux"
+cons field select local Expr
+cons field yes local Expr
+cons field no local Expr
+nil
+group cons visit select
+cons visit yes
+cons visit no
+nil
+cons style head "marker" nil
+cons form Slice Expr "slice"
+cons field value local Expr
+cons field lo builtin Nat
+cons field width builtin Nat
+nil
+group cons visit value
+nil
+cons style head "marker" nil
+cons form At Expr "at"
+cons field instance builtin Name
+cons field output builtin Name
+nil
+none
+cons style head "marker" nil
+cons form Bits Expr "bits"
+cons field width builtin Nat
+cons field value builtin Nat
+nil
+none
+cons style head "marker" nil
+cons form True Expr "true"
+nil
+none
+cons style head "marker" nil
+cons form False Expr "false"
+nil
+none
+cons style head "marker" nil
+cons leaf SignalName Expr Word none cons style self "name" nil
+cons form Bits Bits "bits"
+cons field width builtin Nat
+cons field value builtin Nat
+nil
+none
+cons style head "marker" nil
+cons form True Bits "true"
+nil
+none
+cons style head "marker" nil
+cons form False Bits "false"
+nil
+none
+cons style head "marker" nil
+cons form Test Test "test"
+cons field name builtin Name
+cons field module builtin Name
+cons field ticks listof local Tick
+nil
+group cons visit ticks
+nil
+cons style head "marker" nil
+cons form Tick Tick "tick"
+cons field inputs listof local Bits
+cons field outputs listof local Bits
+nil
+group cons visit inputs
+cons visit outputs
+nil
+cons style head "marker" nil
+nil

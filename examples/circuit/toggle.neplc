@@ -1,0 +1,16 @@
+design
+  cons module Toggle
+    cons input toggle 1 nil
+    cons state q 1 false
+    cons next q xor q toggle
+    nil
+    cons output value 1 q nil
+  nil
+  Toggle
+  cons test sequence Toggle
+    cons tick cons true nil cons false nil
+    cons tick cons true nil cons true nil
+    cons tick cons false nil cons false nil
+    cons tick cons false nil cons false nil
+    nil
+  nil

@@ -1,0 +1,14 @@
+# 説明用のローカル資料。ビルド・検査・配布の入力にしない。
+/.tmp/
+/target/
+/dist/
+**/*.rs.bk
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+
+# ローカル秘密情報。公開用サンプルは明示して管理する。
+.env
+.env.*
+!.env.example

@@ -1,0 +1,233 @@
+language Doc 1 Article
+cons extension BuiltinWord "nepl3.reader/name-v1" "reader/v1"
+cons extension BuiltinTrivia "nepl3.reader/trivia-v1" "reader/v1"
+cons extension DocSentence "doc.reader/sentence-v1" "reader/v1"
+cons reader word call "nepl3.reader/name-v1"
+cons reader trivia call "nepl3.reader/trivia-v1"
+cons reader sentence call "doc.reader/sentence-v1"
+cons mode Code
+cons skip trivia
+cons take SentenceLiteral sentence
+cons take Word word
+nil
+cons extension Facts "doc.facts/v1" "facts/v1"
+cons category Article Code
+cons category Body Code
+cons category Block Code
+cons category Sentence Code
+cons category Flow Code
+cons category Variant Code
+cons category Inline Code
+cons category MathGuest Code
+cons category CircuitGuest Code
+cons category Guest Code
+cons form Article Article "article"
+cons field language builtin Lang
+cons field title local Sentence
+cons field body local Body
+nil
+custom "doc.facts/v1"
+cons style head "marker" nil
+cons form Body Body "body"
+cons field blocks listof local Block
+nil
+group cons visit blocks
+nil
+cons style head "marker" nil
+cons form Paragraph Block "paragraph"
+cons field items listof local Flow
+nil
+group cons visit items
+nil
+cons style head "marker" nil
+cons form Section Block "section"
+cons field id builtin Name
+cons field title local Sentence
+cons field body local Body
+nil
+group cons visit title
+cons visit body
+nil
+cons style head "marker" nil
+cons form DisplayMath Block "display"
+cons field syntax local MathGuest
+nil
+group cons visit syntax
+nil
+cons style head "marker" nil
+cons form CircuitFigure Block "circuit"
+cons field caption local Sentence
+cons field syntax local CircuitGuest
+nil
+group cons visit caption
+cons visit syntax
+nil
+cons style head "marker" nil
+cons form Code Block "code"
+cons field syntax local Guest
+nil
+group cons visit syntax
+nil
+cons style head "marker" nil
+cons form Sentence Sentence "sentence"
+cons field inlines listof local Inline
+nil
+group cons visit inlines
+nil
+cons style head "marker" nil
+cons leaf SentenceLiteral Sentence SentenceLiteral none cons style self "content" nil
+cons form Paragraph Flow "paragraph"
+cons field items listof local Flow
+nil
+group cons visit items
+nil
+cons style head "marker" nil
+cons form Section Flow "section"
+cons field id builtin Name
+cons field title local Sentence
+cons field body local Body
+nil
+group cons visit title
+cons visit body
+nil
+cons style head "marker" nil
+cons form DisplayMath Flow "display"
+cons field syntax local MathGuest
+nil
+group cons visit syntax
+nil
+cons style head "marker" nil
+cons form CircuitFigure Flow "circuit"
+cons field caption local Sentence
+cons field syntax local CircuitGuest
+nil
+group cons visit caption
+cons visit syntax
+nil
+cons style head "marker" nil
+cons form Code Flow "code"
+cons field syntax local Guest
+nil
+group cons visit syntax
+nil
+cons style head "marker" nil
+cons form Sentence Flow "sentence"
+cons field inlines listof local Inline
+nil
+group cons visit inlines
+nil
+cons style head "marker" nil
+cons form Parallel Flow "parallel"
+cons field variants listof local Variant
+nil
+group cons visit variants
+nil
+cons style head "marker" nil
+cons leaf SentenceLiteral Flow SentenceLiteral none cons style self "content" nil
+cons form Variant Variant "variant"
+cons field language builtin Lang
+cons field sentence local Sentence
+nil
+group cons visit sentence
+nil
+cons style head "marker" nil
+cons form Text Inline "text"
+cons field text builtin Text
+nil
+none
+cons style head "marker" nil
+cons form Concat Inline "concat"
+cons field inlines listof local Inline
+nil
+group cons visit inlines
+nil
+cons style head "marker" nil
+cons form Ruby Inline "ruby"
+cons field base local Inline
+cons field reading local Inline
+nil
+group cons visit base
+cons visit reading
+nil
+cons style head "marker" nil
+cons form Anno Inline "anno"
+cons field base local Inline
+cons field notes listof local Inline
+nil
+group cons visit base
+cons visit notes
+nil
+cons style head "marker" nil
+cons form InlineMath Inline "math"
+cons field syntax local MathGuest
+nil
+group cons visit syntax
+nil
+cons style head "marker" nil
+cons form Anchor Inline "anchor"
+cons field id builtin Name
+cons field label local Inline
+nil
+group cons visit label
+nil
+cons style head "marker" nil
+cons form Reference Inline "ref"
+cons field target builtin Name
+cons field label local Inline
+nil
+group cons visit label
+nil
+cons style head "marker" nil
+cons form Emphasis Inline "em"
+cons field inline local Inline
+nil
+group cons visit inline
+nil
+cons style head "marker" nil
+cons form Strong Inline "strong"
+cons field inline local Inline
+nil
+group cons visit inline
+nil
+cons style head "marker" nil
+cons form Break Inline "break"
+nil
+none
+cons style head "marker" nil
+cons form MathGuest MathGuest "Math"
+cons field syntax foreign Math Expr
+nil
+group cons visit syntax
+nil
+cons style head "marker" nil
+cons form CircuitGuest CircuitGuest "Circuit"
+cons field syntax foreign Circuit Design
+nil
+group cons visit syntax
+nil
+cons style head "marker" nil
+cons form GrammarGuest Guest "Grammar"
+cons field syntax foreign Grammar Root
+nil
+group cons visit syntax
+nil
+cons style head "marker" nil
+cons form DocGuest Guest "Doc"
+cons field syntax local Article
+nil
+group cons visit syntax
+nil
+cons style head "marker" nil
+cons form MathGuest Guest "Math"
+cons field syntax foreign Math Expr
+nil
+group cons visit syntax
+nil
+cons style head "marker" nil
+cons form CircuitGuest Guest "Circuit"
+cons field syntax foreign Circuit Design
+nil
+group cons visit syntax
+nil
+cons style head "marker" nil
+nil

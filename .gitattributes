@@ -1,0 +1,23 @@
+* text=auto eol=lf
+*.rs text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.neplg text eol=lf
+*.nepld text eol=lf
+*.neplm text eol=lf
+*.neplc text eol=lf
+*.ndf binary
+*.png binary
+*.zip binary
+
+# 取り込み元の証拠とsource位置試験は元byte列を保つ。
+doc/history/source-manifest.json -text
+doc/history/design-validation.json -text
+conformance/fixtures/source/** -text
+
+.tmp/** export-ignore
+target/** export-ignore
+dist/** export-ignore

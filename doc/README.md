@@ -1,0 +1,32 @@
+# NEPL3 ドキュメント
+
+正式な仕様・開発情報の入口です。会話やローカルの `.tmp/` を参照しなくても、ここから実装契約と現在の状態を確認できます。
+
+## 読み順
+
+1. [対象範囲と共通契約](spec/00-contract.md)、[アーキテクチャ](spec/01-architecture.md)
+2. [共通基盤](spec/02-foundation.md)、[reader](spec/03-reader.md)、[Grammar](spec/04-grammar.md)
+3. [Doc](spec/05-document.md)、[Math](spec/06-math.md)、[Circuit](spec/07-circuit.md)
+4. [エディタ支援](spec/08-editor.md)、[交換契約](spec/09-portability.md)、[統合](spec/10-integration.md)
+5. [受入条件](spec/11-conformance.md)、[モデル不変条件](spec/12-model-invariants.md)、[再現性](spec/13-reproducibility.md)
+6. [開発手順](development.md)、[タスク索引](../tasks/README.md)、[実装状態](../implementation-status.json)
+7. [初期設計の独立レビュー](review.md)、[r2の契約訂正](decisions/0002-design-contract-corrections.md)
+
+## 正本と派生資料
+
+| 場所 | 責務 |
+| --- | --- |
+| `doc/spec/` | 構文・意味・操作・失敗条件・受入条件の文章仕様 |
+| [design/forms.json](../design/forms.json) | formの構文signature |
+| [design/dependencies.json](../design/dependencies.json) | crate責務と依存の許可集合 |
+| [design/tasks.json](../design/tasks.json) | タスクID、依存、成果物、受入条件の正本 |
+| [interfaces/model.json](../interfaces/model.json)、[contracts.json](../interfaces/contracts.json) | 言語中立の意味モデル・操作schema |
+| `languages/*/syntax.neplg` | 4言語の文法source |
+| [conformance/cases.json](../conformance/cases.json)、[examples/](../examples/) | 受入条件と検証入力 |
+| [implementation-status.json](../implementation-status.json) | 実装・試験の実行状態。仕様定義と分離する |
+| [tasks/](../tasks/) | タスク正本から生成する読み物 |
+| [history/](history/README.md) | 取り込み元の由来と当時の検査報告 |
+
+仕様間の矛盾は実装の都合で読み替えず、影響するschema・文法・例・受入条件を合わせて修正します。[設計判断](decisions/0001-repository-foundation.md) に理由と検証範囲を残します。文法の詳細表は [Grammar](spec/grammar-signatures.md)、[Doc](spec/doc-signatures.md)、[Math](spec/math-signatures.md)、[Circuit](spec/circuit-signatures.md) を参照してください。
+
+設計一式は実装の完成証拠ではありません。取り込み元の検査報告をruntimeの受入試験結果へ転記しません。外部資料は [参考文献](spec/references.md) にまとめています。

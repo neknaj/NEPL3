@@ -1,0 +1,391 @@
+{
+  "contract": "nepl3.design.cases/1",
+  "cases": [
+    {
+      "id": "D-literal-prefix",
+      "operation": "doc.lower",
+      "left": "examples/document/sentence.nepld",
+      "right": "examples/document/prefix.nepld",
+      "expect": "equal-after-origin-erasure"
+    },
+    {
+      "id": "D-unclosed-ruby",
+      "category": "Doc/Sentence",
+      "source": "\"[文書/ぶんしょ\"",
+      "expect_code": "UnclosedAnnotation"
+    },
+    {
+      "id": "D-empty-reading",
+      "category": "Doc/Sentence",
+      "source": "\"[文書/]\"",
+      "expect_code": "EmptyAnnotationPart"
+    },
+    {
+      "id": "D-escaped-open",
+      "category": "Doc/Sentence",
+      "source": "\"\\u{5B}text\"",
+      "expect_text": "[text"
+    },
+    {
+      "id": "D-duplicate-language",
+      "category": "Doc/Flow",
+      "source": "parallel cons variant ja \"一\" cons variant JA \"二\" nil",
+      "expect_code": "DuplicateLanguage"
+    },
+    {
+      "id": "D-paragraph-variant",
+      "category": "Doc/Flow",
+      "source": "parallel cons variant ja paragraph nil cons variant en \"x\" nil",
+      "expect_code": "UnexpectedForm"
+    },
+    {
+      "id": "M-rational",
+      "path": "examples/math/rational.neplm",
+      "expect_exact": "5/6"
+    },
+    {
+      "id": "M-decimal",
+      "path": "examples/math/decimal.neplm",
+      "expect_exact": "3/10"
+    },
+    {
+      "id": "M-binding",
+      "path": "examples/math/binding.neplm",
+      "expect_exact": "11/1"
+    },
+    {
+      "id": "M-sum",
+      "path": "examples/math/sum.neplm",
+      "expect_exact": "30/1"
+    },
+    {
+      "id": "M-det",
+      "path": "examples/math/matrix.neplm",
+      "expect_exact": "-2/1"
+    },
+    {
+      "id": "M-divzero",
+      "category": "Math/Expr",
+      "source": "frac 1 0",
+      "expect_code": "DivisionByZero"
+    },
+    {
+      "id": "M-ragged",
+      "category": "Math/Expr",
+      "source": "matrix cons row cons 1 nil cons row cons 1 cons 2 nil nil",
+      "expect_code": "RaggedMatrix"
+    },
+    {
+      "id": "M-symbolic",
+      "category": "Math/Expr",
+      "source": "sqrt 2",
+      "expect_requirement": "AlgebraicValueRequired"
+    },
+    {
+      "id": "C-halfadder",
+      "path": "examples/circuit/half-adder.neplc",
+      "expect_tests": "all-pass"
+    },
+    {
+      "id": "C-toggle",
+      "path": "examples/circuit/toggle.neplc",
+      "expect_tests": "all-pass"
+    },
+    {
+      "id": "C-simultaneous",
+      "path": "examples/circuit/simultaneous.neplc",
+      "expect_tests": "all-pass"
+    },
+    {
+      "id": "C-instance",
+      "path": "examples/circuit/instances.neplc",
+      "expect_tests": "all-pass"
+    },
+    {
+      "id": "C-feedback",
+      "path": "examples/circuit/state-feedback.neplc",
+      "expect_tests": "all-pass"
+    },
+    {
+      "id": "C-overflow-literal",
+      "category": "Circuit/Bits",
+      "source": "bits 3 8",
+      "expect_code": "LiteralOutOfRange"
+    },
+    {
+      "id": "C-cycle",
+      "category": "Circuit/Design",
+      "source": "design cons module Loop nil cons wire a not a nil cons output value 1 a nil nil Loop nil",
+      "expect_code": "CombinationalCycle"
+    },
+    {
+      "id": "G-empty-repeat",
+      "category": "Grammar/ReaderExpr",
+      "source": "many literal \"\"",
+      "expect_code": "NonProgress"
+    },
+    {
+      "id": "E-unicode",
+      "source": "a𠮷b\r\n文書",
+      "byte_range": [
+        1,
+        5
+      ],
+      "utf16_range": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "utf32_range": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ]
+      ]
+    },
+    {
+      "id": "G-angle",
+      "grammar": "examples/grammar/angle-tag.neplg",
+      "source": "<a title=\">\" data=\"/\">",
+      "expect_tokens": 1
+    },
+    {
+      "id": "W-ordered-record-digest",
+      "operation": "schema.digest",
+      "acceptance": [
+        "W01"
+      ],
+      "left_fields": [
+        [
+          "left",
+          "U64"
+        ],
+        [
+          "right",
+          "Text"
+        ]
+      ],
+      "right_fields": [
+        [
+          "right",
+          "Text"
+        ],
+        [
+          "left",
+          "U64"
+        ]
+      ],
+      "expect": "different-digest; canonical JSON preserves field array order"
+    },
+    {
+      "id": "W-variant-map-order",
+      "operation": "schema.digest",
+      "acceptance": [
+        "W01"
+      ],
+      "left_variants": {
+        "A": [
+          [
+            "x",
+            "U64"
+          ]
+        ],
+        "B": []
+      },
+      "right_variants": {
+        "B": [],
+        "A": [
+          [
+            "x",
+            "U64"
+          ]
+        ]
+      },
+      "expect": "equal-digest; named variant maps have no ordinal semantics"
+    },
+    {
+      "id": "C-initial-prepared",
+      "operation": "circuit.initial",
+      "acceptance": [
+        "C02"
+      ],
+      "path": "examples/circuit/simultaneous.neplc",
+      "input_route": "check -> elaborate -> PreparedNetlist -> initial",
+      "expect": "initial state equals prepared slot initial values; CheckedDesign is not the operation input"
+    },
+    {
+      "id": "C-nor-sinks",
+      "operation": "circuit.lower_nor",
+      "acceptance": [
+        "C06"
+      ],
+      "path": "examples/circuit/toggle.neplc",
+      "expect": "nodes contain InputBit/StateBit/ConstBit/Nor2 only; nextBits/outputBits reference nodes in declared bit order"
+    },
+    {
+      "id": "D-same-language-code",
+      "category": "Doc/Block",
+      "acceptance": [
+        "E06"
+      ],
+      "source": "code Doc article ja \"broken reference\" body cons paragraph cons sentence cons ref absent text \"missing\" nil nil nil",
+      "expect": "Doc:DocGuest stores ForeignSyntax; code rendering does not lower, domain-check or evaluate guest; absent label is displayed as source"
+    },
+    {
+      "id": "M-number-nonterminating",
+      "operation": "model.validate",
+      "acceptance": [
+        "P01",
+        "W01"
+      ],
+      "type": "Math:Number",
+      "value": "1/3",
+      "expect_code": "NonFiniteDecimalNumber"
+    },
+    {
+      "id": "M-rational-expression-third",
+      "operation": "math.expression_from_rational",
+      "acceptance": [
+        "P01",
+        "M01"
+      ],
+      "value": "1/3",
+      "expect_constructor": "Frac(Number(1), Number(3))",
+      "expect_print": "frac 1 3"
+    },
+    {
+      "id": "M-rational-expression-eighth",
+      "operation": "math.expression_from_rational",
+      "acceptance": [
+        "P01",
+        "M01"
+      ],
+      "value": "1/8",
+      "expect_constructor": "Number(1/8)",
+      "expect_print": "0.125"
+    },
+    {
+      "id": "M-authored-frac-preserved",
+      "category": "Math/Expr",
+      "acceptance": [
+        "P01",
+        "M04"
+      ],
+      "source": "frac 1 2",
+      "expect_print": "frac 1 2"
+    },
+    {
+      "id": "M-space-length-valid",
+      "operation": "markup.validate",
+      "acceptance": [
+        "M04"
+      ],
+      "attribute_type": "NonnegativeMathLength",
+      "inputs": [
+        "0em",
+        "0.5em",
+        "2em"
+      ],
+      "expect": "valid"
+    },
+    {
+      "id": "M-space-length-invalid",
+      "operation": "markup.validate",
+      "acceptance": [
+        "M04"
+      ],
+      "attribute_type": "NonnegativeMathLength",
+      "inputs": [
+        "1",
+        "-1em",
+        "2%",
+        "1px",
+        "1e2em",
+        "01em",
+        "1.0em",
+        "NaNem"
+      ],
+      "expect_code": "InvalidMarkupAttribute"
+    },
+    {
+      "id": "A-source-limit",
+      "operation": "source.create",
+      "acceptance": [
+        "A04"
+      ],
+      "source": "𠮷",
+      "limits": {
+        "sourceBytes": 3
+      },
+      "expect_status": "Stopped",
+      "expect_reason": "SourceLimit"
+    },
+    {
+      "id": "O-xml-cdata-text",
+      "operation": "markup.serialize",
+      "acceptance": [
+        "D05",
+        "M04"
+      ],
+      "mode": "xml",
+      "text": "]]>&<",
+      "expect_serialized_text": "]]&gt;&amp;&lt;"
+    },
+    {
+      "id": "O-invalid-characters",
+      "operation": "markup.validate",
+      "acceptance": [
+        "D05",
+        "M04"
+      ],
+      "text_inputs": [
+        "\u0000",
+        "\u0001",
+        "￾",
+        "￿"
+      ],
+      "expect_code": "InvalidMarkupCharacter"
+    },
+    {
+      "id": "O-text-cr",
+      "operation": "markup.serialize",
+      "acceptance": [
+        "D05",
+        "M04"
+      ],
+      "text": "a\r\nb",
+      "expect_serialized_text": "a&#xD;\nb"
+    },
+    {
+      "id": "O-attribute-whitespace",
+      "operation": "markup.serialize",
+      "acceptance": [
+        "D05",
+        "M04"
+      ],
+      "attribute_value": "a\t\n\r\"&<>",
+      "expect_serialized_attribute": "a&#x9;&#xA;&#xD;&quot;&amp;&lt;&gt;"
+    },
+    {
+      "id": "D-incomplete-same-language-code",
+      "category": "Doc/Block",
+      "acceptance": [
+        "P04",
+        "E06"
+      ],
+      "source": "code Doc article ja \"unfinished\" body cons paragraph",
+      "parse_mode": "Recover",
+      "expect": "Code retains recovered ForeignSyntax and source/view with Missing/Unparsed; no guest lower/check/evaluate; no claim of valid Article"
+    }
+  ],
+  "design_revision": "nepl3-design-2026-09-06-r2"
+}

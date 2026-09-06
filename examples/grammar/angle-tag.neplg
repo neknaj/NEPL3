@@ -1,0 +1,28 @@
+language Angle 1 Tag
+  cons category Tag Tags
+  cons reader tag
+    seq
+      cons literal "<"
+      cons commit
+        seq
+          cons some scalar asciiLetter
+          cons many
+            choice
+              cons seq
+                cons literal "\""
+                cons many scalar except "\""
+                cons literal "\""
+                nil
+              cons seq
+                cons literal "'"
+                cons many scalar except "'"
+                cons literal "'"
+                nil
+              cons scalar except "\"'><"
+              nil
+          cons literal ">"
+          nil
+      nil
+  cons mode Tags cons take AngleTag tag nil
+  cons leaf AngleTag Tag AngleTag none cons style self "content" nil
+  nil

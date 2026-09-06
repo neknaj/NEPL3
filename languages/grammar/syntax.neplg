@@ -1,0 +1,417 @@
+language Grammar 1 Root
+cons extension BuiltinWord "nepl3.reader/name-v1" "reader/v1"
+cons extension BuiltinTrivia "nepl3.reader/trivia-v1" "reader/v1"
+cons reader word call "nepl3.reader/name-v1"
+cons reader trivia call "nepl3.reader/trivia-v1"
+cons mode Code
+cons skip trivia
+cons take Word word
+nil
+cons extension Facts "grammar.facts/v1" "facts/v1"
+cons category Root Code
+cons category Declaration Code
+cons category Policy Code
+cons category Field Code
+cons category ReadSpec Code
+cons category LexRule Code
+cons category ReaderExpr Code
+cons category CharClass Code
+cons category Binding Code
+cons category Style Code
+cons category Selector Code
+cons form Language Root "language"
+cons field name builtin Name
+cons field revision builtin Nat
+cons field root builtin Name
+cons field declarations listof local Declaration
+nil
+custom "grammar.facts/v1"
+cons style head "marker" nil
+cons form Category Declaration "category"
+cons field name builtin Name
+cons field mode builtin Name
+nil
+none
+cons style head "marker" nil
+cons form Namespace Declaration "namespace"
+cons field name builtin Name
+cons field policy local Policy
+nil
+group cons visit policy
+nil
+cons style head "marker" nil
+cons form Reader Declaration "reader"
+cons field name builtin Name
+cons field expression local ReaderExpr
+nil
+group cons visit expression
+nil
+cons style head "marker" nil
+cons form Mode Declaration "mode"
+cons field name builtin Name
+cons field rules listof local LexRule
+nil
+group cons visit rules
+nil
+cons style head "marker" nil
+cons form Form Declaration "form"
+cons field kind builtin Name
+cons field category builtin Name
+cons field spelling builtin Text
+cons field fields listof local Field
+cons field bindings local Binding
+cons field styles listof local Style
+nil
+group cons visit fields
+cons visit bindings
+cons visit styles
+nil
+cons style head "marker" nil
+cons form Leaf Declaration "leaf"
+cons field kind builtin Name
+cons field category builtin Name
+cons field token builtin Name
+cons field bindings local Binding
+cons field styles listof local Style
+nil
+group cons visit bindings
+cons visit styles
+nil
+cons style head "marker" nil
+cons form Extension Declaration "extension"
+cons field alias builtin Name
+cons field provider builtin Text
+cons field signature builtin Text
+nil
+none
+cons style head "marker" nil
+cons form Lexical Policy "lexical"
+nil
+none
+cons style head "marker" nil
+cons form Global Policy "global"
+nil
+none
+cons style head "marker" nil
+cons form Open Policy "open"
+nil
+none
+cons style head "marker" nil
+cons form FieldDeclaration Field "field"
+cons field name builtin Name
+cons field read local ReadSpec
+nil
+group cons visit read
+nil
+cons style head "marker" nil
+cons form Local ReadSpec "local"
+cons field category builtin Name
+nil
+none
+cons style head "marker" nil
+cons form Foreign ReadSpec "foreign"
+cons field alias builtin Name
+cons field category builtin Name
+nil
+none
+cons style head "marker" nil
+cons form ListOf ReadSpec "listof"
+cons field element local ReadSpec
+nil
+group cons visit element
+nil
+cons style head "marker" nil
+cons form WithMode ReadSpec "withmode"
+cons field mode builtin Name
+cons field read local ReadSpec
+nil
+group cons visit read
+nil
+cons style head "marker" nil
+cons form Builtin ReadSpec "builtin"
+cons field reader builtin Name
+nil
+none
+cons style head "marker" nil
+cons form Take LexRule "take"
+cons field kind builtin Name
+cons field reader builtin Name
+nil
+none
+cons style head "marker" nil
+cons form Skip LexRule "skip"
+cons field reader builtin Name
+nil
+none
+cons style head "marker" nil
+cons form Literal ReaderExpr "literal"
+cons field text builtin Text
+nil
+none
+cons style head "marker" nil
+cons form Scalar ReaderExpr "scalar"
+cons field class local CharClass
+nil
+group cons visit class
+nil
+cons style head "marker" nil
+cons form Seq ReaderExpr "seq"
+cons field parts listof local ReaderExpr
+nil
+group cons visit parts
+nil
+cons style head "marker" nil
+cons form Choice ReaderExpr "choice"
+cons field alternatives listof local ReaderExpr
+nil
+group cons visit alternatives
+nil
+cons style head "marker" nil
+cons form Many ReaderExpr "many"
+cons field body local ReaderExpr
+nil
+group cons visit body
+nil
+cons style head "marker" nil
+cons form Some ReaderExpr "some"
+cons field body local ReaderExpr
+nil
+group cons visit body
+nil
+cons style head "marker" nil
+cons form Optional ReaderExpr "optional"
+cons field body local ReaderExpr
+nil
+group cons visit body
+nil
+cons style head "marker" nil
+cons form Repeat ReaderExpr "repeat"
+cons field min builtin Nat
+cons field max builtin Nat
+cons field body local ReaderExpr
+nil
+group cons visit body
+nil
+cons style head "marker" nil
+cons form Look ReaderExpr "look"
+cons field body local ReaderExpr
+nil
+group cons visit body
+nil
+cons style head "marker" nil
+cons form Not ReaderExpr "not"
+cons field body local ReaderExpr
+nil
+group cons visit body
+nil
+cons style head "marker" nil
+cons form Commit ReaderExpr "commit"
+cons field body local ReaderExpr
+nil
+group cons visit body
+nil
+cons style head "marker" nil
+cons form Capture ReaderExpr "capture"
+cons field name builtin Name
+cons field body local ReaderExpr
+nil
+group cons visit body
+nil
+cons style head "marker" nil
+cons form Region ReaderExpr "region"
+cons field role builtin Name
+cons field body local ReaderExpr
+nil
+group cons visit body
+nil
+cons style head "marker" nil
+cons form Node ReaderExpr "node"
+cons field kind builtin Name
+cons field body local ReaderExpr
+nil
+group cons visit body
+nil
+cons style head "marker" nil
+cons form Discard ReaderExpr "discard"
+cons field body local ReaderExpr
+nil
+group cons visit body
+nil
+cons style head "marker" nil
+cons form Ref ReaderExpr "ref"
+cons field name builtin Name
+nil
+none
+cons style head "marker" nil
+cons form Decode ReaderExpr "decode"
+cons field decoder builtin Text
+cons field body local ReaderExpr
+nil
+group cons visit body
+nil
+cons style head "marker" nil
+cons form Map ReaderExpr "map"
+cons field provider builtin Text
+cons field body local ReaderExpr
+nil
+group cons visit body
+nil
+cons style head "marker" nil
+cons form Then ReaderExpr "then"
+cons field first local ReaderExpr
+cons field provider builtin Text
+nil
+group cons visit first
+nil
+cons style head "marker" nil
+cons form Call ReaderExpr "call"
+cons field provider builtin Text
+nil
+none
+cons style head "marker" nil
+cons form Eof ReaderExpr "eof"
+nil
+none
+cons style head "marker" nil
+cons form Takecount ReaderExpr "takecount"
+cons field count builtin Nat
+nil
+none
+cons style head "marker" nil
+cons form Until ReaderExpr "until"
+cons field delimiter builtin Text
+nil
+none
+cons style head "marker" nil
+cons form Any CharClass "any"
+nil
+none
+cons style head "marker" nil
+cons form Whitespace CharClass "whitespace"
+nil
+none
+cons style head "marker" nil
+cons form Identifierstart CharClass "identifierStart"
+nil
+none
+cons style head "marker" nil
+cons form Identifiercontinue CharClass "identifierContinue"
+nil
+none
+cons style head "marker" nil
+cons form Digit CharClass "digit"
+nil
+none
+cons style head "marker" nil
+cons form Asciiletter CharClass "asciiLetter"
+nil
+none
+cons style head "marker" nil
+cons form Chars CharClass "chars"
+cons field text builtin Text
+nil
+none
+cons style head "marker" nil
+cons form Except CharClass "except"
+cons field text builtin Text
+nil
+none
+cons style head "marker" nil
+cons form Range CharClass "range"
+cons field lo builtin Text
+cons field hi builtin Text
+nil
+none
+cons style head "marker" nil
+cons form Visit Binding "visit"
+cons field child builtin Name
+nil
+none
+cons style head "marker" nil
+cons form Import Binding "import"
+cons field child builtin Name
+nil
+none
+cons style head "marker" nil
+cons form Propagate Binding "propagate"
+cons field child builtin Name
+nil
+none
+cons style head "marker" nil
+cons form Scope Binding "scope"
+cons field plans listof local Binding
+nil
+group cons visit plans
+nil
+cons style head "marker" nil
+cons form Group Binding "group"
+cons field plans listof local Binding
+nil
+group cons visit plans
+nil
+cons style head "marker" nil
+cons form Bind Binding "bind"
+cons field namespace builtin Name
+cons field field builtin Name
+nil
+none
+cons style head "marker" nil
+cons form Reference Binding "reference"
+cons field namespace builtin Name
+cons field field builtin Name
+nil
+none
+cons style head "marker" nil
+cons form Export Binding "export"
+cons field namespace builtin Name
+cons field field builtin Name
+nil
+none
+cons style head "marker" nil
+cons form Sequential Binding "sequential"
+cons field declarations builtin Name
+cons field body builtin Name
+nil
+none
+cons style head "marker" nil
+cons form Recursive Binding "recursive"
+cons field declarations builtin Name
+cons field body builtin Name
+nil
+none
+cons style head "marker" nil
+cons form None Binding "none"
+nil
+none
+cons style head "marker" nil
+cons form Custom Binding "custom"
+cons field provider builtin Text
+nil
+none
+cons style head "marker" nil
+cons form Style Style "style"
+cons field selector local Selector
+cons field class builtin Text
+nil
+group cons visit selector
+nil
+cons style head "marker" nil
+cons form Head Selector "head"
+nil
+none
+cons style head "marker" nil
+cons form Self Selector "self"
+nil
+none
+cons style head "marker" nil
+cons form FieldSelector Selector "field"
+cons field name builtin Name
+nil
+none
+cons style head "marker" nil
+cons form CaptureSelector Selector "capture"
+cons field name builtin Name
+nil
+none
+cons style head "marker" nil
+nil

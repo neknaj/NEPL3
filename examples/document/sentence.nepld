@@ -1,0 +1,6 @@
+article ja "注釈の例"
+body
+  cons paragraph
+    cons "これは[文書/ぶんしょ]を[記述/きじゅつ]するための{DSL/Domain Specific Language}"
+    nil
+  nil

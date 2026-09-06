@@ -1,0 +1,277 @@
+{
+  "design": "nepl3-design-2026-09-06-r2",
+  "phase": "repository-foundation",
+  "tasks": [
+    {
+      "id": "T01",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T02",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T03",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T04",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T05",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T06",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T07",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T08",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T09",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T10",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T11",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T12",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T13",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T14",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T15",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T16",
+      "status": "not-implemented",
+      "evidence": []
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "G01",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "G02",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "G03",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "G04",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "G05",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "P01",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "P02",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "P03",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "P04",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "D01",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "D02",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "D03",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "D04",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "D05",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "M01",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "M02",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "M03",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "M04",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "C01",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "C02",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "C03",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "C04",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "C05",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "C06",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "E01",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "E02",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "E03",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "E04",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "E05",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "E06",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "W01",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "W02",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "W03",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "A01",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "A02",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "A03",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "A04",
+      "status": "not-run",
+      "evidence": []
+    }
+  ],
+  "implemented_crates": [
+    "nepl3-tools"
+  ],
+  "note": "Repository checks are implemented; language operations and the 37 runtime acceptance groups are not implemented or not run."
+}

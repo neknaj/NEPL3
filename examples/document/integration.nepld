@@ -1,0 +1,25 @@
+article ja "数式と回路"
+body
+  cons paragraph
+    cons "これは{[数式/すうしき]/formula}の[例/れい]である。"
+    cons sentence
+      cons text "値を計算する前の式: "
+      cons math Math add frac 1 2 frac 1 3
+      nil
+    nil
+  cons display Math
+    label frac 5 6 Doc "[厳密値/げんみつち]"
+  cons circuit "半加算器"
+    Circuit
+      design
+        cons module HalfAdder
+          cons input a 1 cons input b 1 nil
+          nil
+          cons output sum 1 xor a b
+          cons output carry 1 and a b
+          nil
+        nil
+        HalfAdder
+        nil
+  cons code Math frac 1 0
+  nil

@@ -1,0 +1,15 @@
+article ja "参照"
+body
+  cons paragraph
+    cons sentence
+      cons ref introduction text "はじめに"
+      cons text "を参照する。"
+      nil
+    nil
+  cons section introduction "はじめに"
+    body
+      cons paragraph
+        cons "ここが[定義/ていぎ][箇所/かしょ]である。"
+        nil
+      nil
+  nil

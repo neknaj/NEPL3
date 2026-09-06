@@ -1,0 +1,19 @@
+article ja "文単位の対応"
+body
+  cons paragraph
+    cons parallel
+      cons variant ja "これは[文/ぶん]である。"
+      cons variant en "This is a sentence."
+      nil
+    cons paragraph
+      cons parallel
+        cons variant ja "ここは[内側/うちがわ]の[段落/だんらく]である。"
+        cons variant en "This is a nested paragraph."
+        nil
+      nil
+    cons parallel
+      cons variant ja "[外側/そとがわ]に[戻/もど]った。"
+      cons variant en "We are back in the outer paragraph."
+      nil
+    nil
+  nil

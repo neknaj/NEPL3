@@ -1,0 +1,5 @@
+det
+  matrix
+    cons row cons 1 cons 2 nil
+    cons row cons 3 cons 4 nil
+    nil

@@ -1,0 +1,583 @@
+{
+  "contract": "nepl3.ndf/1",
+  "records": {
+    "SourceRef": {
+      "fields": [
+        [
+          "uri",
+          "Text"
+        ],
+        [
+          "revision",
+          "U64"
+        ],
+        [
+          "digest",
+          "Bytes32"
+        ]
+      ]
+    },
+    "Span": {
+      "fields": [
+        [
+          "source",
+          "SourceRef"
+        ],
+        [
+          "start",
+          "U64"
+        ],
+        [
+          "end",
+          "U64"
+        ]
+      ]
+    },
+    "SchemaRef": {
+      "fields": [
+        [
+          "package",
+          "Text"
+        ],
+        [
+          "revision",
+          "U64"
+        ],
+        [
+          "digest",
+          "Bytes32"
+        ]
+      ]
+    },
+    "OperationRef": {
+      "fields": [
+        [
+          "schema",
+          "SchemaRef"
+        ],
+        [
+          "name",
+          "Text"
+        ]
+      ]
+    },
+    "TypedValue": {
+      "description": "NDF tag10/tag11 with descriptor; validated against the requested operation input/output schema"
+    },
+    "Limits": {
+      "fields": [
+        [
+          "sourceBytes",
+          "U64"
+        ],
+        [
+          "work",
+          "U64"
+        ],
+        [
+          "depth",
+          "U64"
+        ],
+        [
+          "nodes",
+          "U64"
+        ],
+        [
+          "allocationUnits",
+          "U64"
+        ],
+        [
+          "outputBytes",
+          "U64"
+        ],
+        [
+          "diagnostics",
+          "U64"
+        ],
+        [
+          "events",
+          "U64"
+        ]
+      ]
+    },
+    "Diagnostic": {
+      "fields": [
+        [
+          "schema",
+          "SchemaRef"
+        ],
+        [
+          "code",
+          "Text"
+        ],
+        [
+          "severity",
+          "Severity"
+        ],
+        [
+          "stage",
+          "Text"
+        ],
+        [
+          "arguments",
+          "TypedValue"
+        ],
+        [
+          "primary",
+          "Option<Span>"
+        ],
+        [
+          "related",
+          "List<Related>"
+        ],
+        [
+          "fixes",
+          "List<Fix>"
+        ]
+      ]
+    },
+    "Related": {
+      "fields": [
+        [
+          "span",
+          "Option<Span>"
+        ],
+        [
+          "code",
+          "Text"
+        ],
+        [
+          "arguments",
+          "TypedValue"
+        ]
+      ]
+    },
+    "TextEdit": {
+      "fields": [
+        [
+          "span",
+          "Span"
+        ],
+        [
+          "expectedDigest",
+          "Bytes32"
+        ],
+        [
+          "replacement",
+          "Text"
+        ]
+      ]
+    },
+    "Fix": {
+      "fields": [
+        [
+          "id",
+          "Text"
+        ],
+        [
+          "edits",
+          "List<TextEdit>"
+        ]
+      ]
+    },
+    "Event": {
+      "fields": [
+        [
+          "schema",
+          "SchemaRef"
+        ],
+        [
+          "kind",
+          "Text"
+        ],
+        [
+          "operationPath",
+          "List<U64>"
+        ],
+        [
+          "span",
+          "Option<Span>"
+        ],
+        [
+          "payload",
+          "TypedValue"
+        ]
+      ]
+    },
+    "Invoke": {
+      "fields": [
+        [
+          "requestId",
+          "U64"
+        ],
+        [
+          "operation",
+          "OperationRef"
+        ],
+        [
+          "input",
+          "TypedValue"
+        ],
+        [
+          "environment",
+          "TypedValue"
+        ],
+        [
+          "sources",
+          "List<SourceContent>"
+        ],
+        [
+          "resources",
+          "List<ResourceContent>"
+        ],
+        [
+          "limits",
+          "Limits"
+        ]
+      ]
+    },
+    "SourceContent": {
+      "fields": [
+        [
+          "id",
+          "SourceRef"
+        ],
+        [
+          "utf8",
+          "Text"
+        ]
+      ]
+    },
+    "ResourceContent": {
+      "fields": [
+        [
+          "id",
+          "Text"
+        ],
+        [
+          "digest",
+          "Bytes32"
+        ],
+        [
+          "bytes",
+          "Bytes"
+        ]
+      ]
+    },
+    "Resume": {
+      "fields": [
+        [
+          "requestId",
+          "U64"
+        ],
+        [
+          "continuation",
+          "Continuation"
+        ],
+        [
+          "dependencyResults",
+          "List<OperationReply>"
+        ]
+      ]
+    },
+    "Continuation": {
+      "fields": [
+        [
+          "provider",
+          "OperationRef"
+        ],
+        [
+          "parentRequest",
+          "U64"
+        ],
+        [
+          "snapshotDigest",
+          "Bytes32"
+        ],
+        [
+          "state",
+          "TypedValue"
+        ]
+      ]
+    },
+    "OperationReply": {
+      "variants": {
+        "Complete": [
+          [
+            "value",
+            "TypedValue"
+          ],
+          [
+            "diagnostics",
+            "List<Diagnostic>"
+          ],
+          [
+            "events",
+            "List<Event>"
+          ],
+          [
+            "usage",
+            "Limits"
+          ]
+        ],
+        "Invalid": [
+          [
+            "partial",
+            "Option<TypedValue>"
+          ],
+          [
+            "diagnostics",
+            "List<Diagnostic>"
+          ],
+          [
+            "events",
+            "List<Event>"
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            "StopReason"
+          ],
+          [
+            "partial",
+            "Option<TypedValue>"
+          ],
+          [
+            "diagnostics",
+            "List<Diagnostic>"
+          ]
+        ],
+        "Await": [
+          [
+            "continuation",
+            "Continuation"
+          ],
+          [
+            "calls",
+            "List<Invoke>"
+          ]
+        ]
+      }
+    }
+  },
+  "scalar_aliases": {
+    "U64": "unsigned 64-bit",
+    "Text": "valid UTF-8",
+    "Bytes32": "exactly 32 bytes",
+    "Bytes": "byte sequence"
+  },
+  "enums": {
+    "Severity": [
+      "Error",
+      "Warning",
+      "Information",
+      "Hint"
+    ],
+    "StopReason": [
+      "Cancelled",
+      "SourceLimit",
+      "WorkLimit",
+      "DepthLimit",
+      "NodeLimit",
+      "AllocationLimit",
+      "OutputLimit",
+      "DiagnosticLimit",
+      "EventLimit"
+    ]
+  },
+  "operations": [
+    {
+      "operation": "grammar.compile",
+      "input": "ParsedGrammar + Profile",
+      "output": "LanguagePackage",
+      "definition": "doc/spec/04-grammar.md",
+      "pure": true
+    },
+    {
+      "operation": "reader.run",
+      "input": "ReaderPlan + ReadRequest",
+      "output": "ReadReply",
+      "definition": "doc/spec/03-reader.md",
+      "pure": true
+    },
+    {
+      "operation": "engine.parse",
+      "input": "SourceBundle + EntryContext + Profile + Limits",
+      "output": "ParsedTree + DiagnosticBundle",
+      "definition": "doc/spec/02-foundation.md",
+      "pure": true
+    },
+    {
+      "operation": "engine.analyze",
+      "input": "ParsedTree + BindingPlans + Environment",
+      "output": "AnalysisSnapshot",
+      "definition": "doc/spec/08-editor.md",
+      "pure": true
+    },
+    {
+      "operation": "engine.query",
+      "input": "AnalysisSnapshot + EditorQuery",
+      "output": "EditorResult",
+      "definition": "doc/spec/08-editor.md",
+      "pure": true
+    },
+    {
+      "operation": "doc.lower",
+      "input": "ParsedTree + Profile",
+      "output": "DomainSyntax",
+      "definition": "doc/spec/05-document.md",
+      "pure": true
+    },
+    {
+      "operation": "doc.check",
+      "input": "DomainSyntax + CheckEnvironment",
+      "output": "CheckedDomain + Requirements",
+      "definition": "doc/spec/05-document.md",
+      "pure": true
+    },
+    {
+      "operation": "doc.print",
+      "input": "DomainSyntax + PrintOptions",
+      "output": "SourceArtifact",
+      "definition": "doc/spec/05-document.md",
+      "pure": true
+    },
+    {
+      "operation": "math.lower",
+      "input": "ParsedTree + Profile",
+      "output": "DomainSyntax",
+      "definition": "doc/spec/06-math.md",
+      "pure": true
+    },
+    {
+      "operation": "math.check",
+      "input": "DomainSyntax + CheckEnvironment",
+      "output": "CheckedDomain + Requirements",
+      "definition": "doc/spec/06-math.md",
+      "pure": true
+    },
+    {
+      "operation": "math.print",
+      "input": "DomainSyntax + PrintOptions",
+      "output": "SourceArtifact",
+      "definition": "doc/spec/06-math.md",
+      "pure": true
+    },
+    {
+      "operation": "circuit.lower",
+      "input": "ParsedTree + Profile",
+      "output": "DomainSyntax",
+      "definition": "doc/spec/07-circuit.md",
+      "pure": true
+    },
+    {
+      "operation": "circuit.check",
+      "input": "DomainSyntax + CheckEnvironment",
+      "output": "CheckedDomain + Requirements",
+      "definition": "doc/spec/07-circuit.md",
+      "pure": true
+    },
+    {
+      "operation": "circuit.print",
+      "input": "DomainSyntax + PrintOptions",
+      "output": "SourceArtifact",
+      "definition": "doc/spec/07-circuit.md",
+      "pure": true
+    },
+    {
+      "operation": "doc.prepare",
+      "input": "CheckedArticle + ResolvedEmbeds",
+      "output": "PreparedArticle",
+      "definition": "doc/spec/05-document.md",
+      "pure": true
+    },
+    {
+      "operation": "doc.render",
+      "input": "PreparedArticle + RenderOptions",
+      "output": "HtmlArtifact",
+      "definition": "doc/spec/05-document.md",
+      "pure": true
+    },
+    {
+      "operation": "doc.plain_text",
+      "input": "Sentence + AnnotationPolicy",
+      "output": "Text",
+      "definition": "doc/spec/05-document.md",
+      "pure": true
+    },
+    {
+      "operation": "math.evaluate",
+      "input": "CheckedExpression + BindingEnvironment + Limits",
+      "output": "Exact | Symbolic | EvalError",
+      "definition": "doc/spec/06-math.md",
+      "pure": true
+    },
+    {
+      "operation": "math.free_symbols",
+      "input": "CheckedExpression",
+      "output": "List<FreeSymbol>",
+      "definition": "doc/spec/06-math.md",
+      "pure": true
+    },
+    {
+      "operation": "math.render",
+      "input": "CheckedExpression + PreparedEmbeds + RenderOptions",
+      "output": "MathMLArtifact",
+      "definition": "doc/spec/06-math.md",
+      "pure": true
+    },
+    {
+      "operation": "circuit.elaborate",
+      "input": "CheckedDesign + Entry",
+      "output": "PreparedNetlist",
+      "definition": "doc/spec/07-circuit.md",
+      "pure": true
+    },
+    {
+      "operation": "circuit.initial",
+      "input": "PreparedNetlist",
+      "output": "State",
+      "definition": "doc/spec/07-circuit.md",
+      "pure": true
+    },
+    {
+      "operation": "circuit.observe",
+      "input": "PreparedNetlist + State + Inputs",
+      "output": "Outputs",
+      "definition": "doc/spec/07-circuit.md",
+      "pure": true
+    },
+    {
+      "operation": "circuit.step",
+      "input": "PreparedNetlist + State + Inputs",
+      "output": "NextState + Outputs",
+      "definition": "doc/spec/07-circuit.md",
+      "pure": true
+    },
+    {
+      "operation": "circuit.run_tests",
+      "input": "CheckedDesign",
+      "output": "TestReport",
+      "definition": "doc/spec/07-circuit.md",
+      "pure": true
+    },
+    {
+      "operation": "circuit.lower_nor",
+      "input": "PreparedNetlist",
+      "output": "NorNetlist",
+      "definition": "doc/spec/07-circuit.md",
+      "pure": true
+    },
+    {
+      "operation": "circuit.diagram",
+      "input": "PreparedNetlist + RenderOptions",
+      "output": "SvgArtifact",
+      "definition": "doc/spec/07-circuit.md",
+      "pure": true
+    }
+  ],
+  "note": "Operation-level domain record constraints and sum variants are specified in the referenced chapters; domain constructor field order is design/forms.json.",
+  "design_revision": "nepl3-design-2026-09-06-r2",
+  "schema_status": "incomplete: see design/review.json R006; operation descriptions are not closed executable input/output schemas"
+}

@@ -1,0 +1,228 @@
+language Math 1 Expr
+cons extension BuiltinWord "nepl3.reader/name-v1" "reader/v1"
+cons extension BuiltinTrivia "nepl3.reader/trivia-v1" "reader/v1"
+cons extension BuiltinNumber "nepl3.reader/number-v1" "reader/v1"
+cons reader word call "nepl3.reader/name-v1"
+cons reader trivia call "nepl3.reader/trivia-v1"
+cons reader number call "nepl3.reader/number-v1"
+cons mode Code
+cons skip trivia
+cons take Word word
+cons take Number number
+nil
+cons namespace Symbol open
+cons category Expr Code
+cons category Row Code
+cons category DocGuest Code
+cons form Add Expr "add"
+cons field left local Expr
+cons field right local Expr
+nil
+group cons visit left
+cons visit right
+nil
+cons style head "marker" nil
+cons form Sub Expr "sub"
+cons field left local Expr
+cons field right local Expr
+nil
+group cons visit left
+cons visit right
+nil
+cons style head "marker" nil
+cons form Mul Expr "mul"
+cons field left local Expr
+cons field right local Expr
+nil
+group cons visit left
+cons visit right
+nil
+cons style head "marker" nil
+cons form Frac Expr "frac"
+cons field left local Expr
+cons field right local Expr
+nil
+group cons visit left
+cons visit right
+nil
+cons style head "marker" nil
+cons form Pow Expr "pow"
+cons field left local Expr
+cons field right local Expr
+nil
+group cons visit left
+cons visit right
+nil
+cons style head "marker" nil
+cons form Equal Expr "equal"
+cons field left local Expr
+cons field right local Expr
+nil
+group cons visit left
+cons visit right
+nil
+cons style head "marker" nil
+cons form Lt Expr "lt"
+cons field left local Expr
+cons field right local Expr
+nil
+group cons visit left
+cons visit right
+nil
+cons style head "marker" nil
+cons form Le Expr "le"
+cons field left local Expr
+cons field right local Expr
+nil
+group cons visit left
+cons visit right
+nil
+cons style head "marker" nil
+cons form Subscript Expr "subscript"
+cons field left local Expr
+cons field right local Expr
+nil
+group cons visit left
+cons visit right
+nil
+cons style head "marker" nil
+cons form Superscript Expr "superscript"
+cons field left local Expr
+cons field right local Expr
+nil
+group cons visit left
+cons visit right
+nil
+cons style head "marker" nil
+cons form Neg Expr "neg"
+cons field value local Expr
+nil
+group cons visit value
+nil
+cons style head "marker" nil
+cons form Sqrt Expr "sqrt"
+cons field value local Expr
+nil
+group cons visit value
+nil
+cons style head "marker" nil
+cons form Transpose Expr "transpose"
+cons field value local Expr
+nil
+group cons visit value
+nil
+cons style head "marker" nil
+cons form Det Expr "det"
+cons field value local Expr
+nil
+group cons visit value
+nil
+cons style head "marker" nil
+cons form Root Expr "root"
+cons field degree local Expr
+cons field radicand local Expr
+nil
+group cons visit degree
+cons visit radicand
+nil
+cons style head "marker" nil
+cons form Scripts Expr "scripts"
+cons field base local Expr
+cons field sub local Expr
+cons field sup local Expr
+nil
+group cons visit base
+cons visit sub
+cons visit sup
+nil
+cons style head "marker" nil
+cons form Fence Expr "fence"
+cons field open builtin Text
+cons field close builtin Text
+cons field value local Expr
+nil
+group cons visit value
+nil
+cons style head "marker" nil
+cons form Sequence Expr "sequence"
+cons field values listof local Expr
+nil
+group cons visit values
+nil
+cons style head "marker" nil
+cons form Symbol Expr "symbol"
+cons field name builtin Text
+nil
+reference Symbol name
+cons style head "marker" nil
+cons form Text Expr "text"
+cons field text builtin Text
+nil
+none
+cons style head "marker" nil
+cons form Vector Expr "vector"
+cons field values listof local Expr
+nil
+group cons visit values
+nil
+cons style head "marker" nil
+cons form Matrix Expr "matrix"
+cons field rows listof local Row
+nil
+group cons visit rows
+nil
+cons style head "marker" nil
+cons form Let Expr "let"
+cons field name builtin Name
+cons field init local Expr
+cons field body local Expr
+nil
+group cons visit init cons scope cons bind Symbol name cons visit body nil nil
+cons style head "marker" nil
+cons form Sum Expr "sum"
+cons field index builtin Name
+cons field lower local Expr
+cons field upper local Expr
+cons field body local Expr
+nil
+group cons visit lower cons visit upper cons scope cons bind Symbol index cons visit body nil nil
+cons style head "marker" nil
+cons form Integral Expr "integral"
+cons field index builtin Name
+cons field lower local Expr
+cons field upper local Expr
+cons field body local Expr
+nil
+group cons visit lower cons visit upper cons scope cons bind Symbol index cons visit body nil nil
+cons style head "marker" nil
+cons form Call Expr "call"
+cons field function local Expr
+cons field arguments listof local Expr
+nil
+group cons visit function
+cons visit arguments
+nil
+cons style head "marker" nil
+cons form Label Expr "label"
+cons field value local Expr
+cons field annotation local DocGuest
+nil
+group cons visit value
+cons visit annotation
+nil
+cons style head "marker" nil
+cons leaf Number Expr Number none cons style self "quantity" nil
+cons leaf SymbolName Expr Word reference Symbol self cons style self "name" nil
+cons form Row Row "row"
+cons field values listof local Expr
+nil
+group cons visit values
+nil
+cons style head "marker" nil
+cons form DocGuest DocGuest "Doc"
+cons field syntax foreign Doc Sentence
+nil
+group cons visit syntax
+nil
+cons style head "marker" nil
+nil

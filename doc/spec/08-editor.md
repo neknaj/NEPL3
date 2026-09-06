@@ -1,0 +1,69 @@
+# 08. 共通editor serviceと診断
+
+## 方針
+
+一度宣言したgrammar/binding/style情報からeditor機能を導出する。専用parserも同じfactsを返して支援を受ける。共通分類をプログラミング言語の要素に限定しない。
+
+## 1. AnalysisSnapshot
+
+入力はSourceSnapshot集合、profile/package revision集合、明示的なresource/schema環境、解析options。結果はParsed tree、内部views、Scope/Entity/Occurrence、typed Relations、Diagnostics、ExpectedAt、Dependencies。
+
+全結果にSnapshotIdとanalysis keyを付ける。keyには言語/reader/providerのrevision、context、操作optionsを含む。spanのある結果を意味値だけのcacheから再利用しない。
+
+## 2. 自動で得られる機能
+
+schemaのform/leaf/fieldとreader captureから構文ハイライト、構造的selection、expected categoryの補完を提供する。binding/reference/export/importから定義ジャンプ、参照検索、未定義/重複診断、scope内の候補補完を提供する。name fieldとenclosing rangeからoutlineを作る。ドキュメントfieldを宣言すればhoverに出す。
+
+型推論、回路幅、数値計算結果等はdomain factsの追加で精度を上げる。grammarだけから任意domainの意味を推測したと主張しない。
+
+手書きreaderにはview/factsの同じcontractを要求する。内部viewなしならtoken全体のfallbackだけ。すべてのcustom readerへ精密な内部支援を自動生成できるとはしない。
+
+## 3. regionの選択
+
+source positionから、同一snapshot上で包含する最小のfield/elementを選ぶ。grammar priority、最内側、宣言順でtie-breakを固定する。sentence内のreadingを問い合わせたらsentence token全体よりreading viewを優先する。
+
+highlightは内部regionへ分割し、leafに近い具体的classを優先する。overlapを持つ元データは保存するが、LSPへは非重複・source順・単一行に正規化したspan列を返す。色はthemeに委ねる。
+
+## 4. definitionとrelations
+
+definition結果はoriginSelection、targetUri、targetRange、targetSelectionを分離する。entityのnameだけ選択しつつ定義全体も示せる。sourceが配布packageの場合は読み取り専用virtual documentとして公開できる。
+
+CorrespondsToには「対応文へ移動」、Originには「生成元へ移動」を提供し、通常の定義ジャンプとは別relationとして扱う。多義的な解決は複数候補を返し、単語一致で一つに決めない。
+
+renameは同じEntityを指すOccurrenceだけを対象にする。新名の適格性、予約語、shadowing、scope内衝突、外側の参照の捕捉まで再検査する。SourceMapの逆変換が一意でない場所はRenameNotInvertible。全TextEditはrevision付きでatomicに返す。
+
+## 5. 不完全入力
+
+構文エラーで文書全体を失わない。treeにMissing(expected, anchor)、Unexpected(span)、Unparsed(range,reason)を持てる。通常の成功nodeと区別し、checked値へ混入させない。
+
+EOFで既知arityの子が不足するとMissingを作る。現在のcategoryに不適合だがancestorの明示的同期位置に適合するtokenは消費せずMissingを挿入できる。同期根拠がなければUnexpectedとして消費するか、その範囲をUnparsedとして残す。どちらを選ぶかはpackageのRecoveryPlanに固定する。
+
+arity不明のheadの子の数を推測しない。該当rangeをUnparsedにし、既に確定した周辺の情報だけを返す。prefix構文では誤り後の正しい境界が入力だけから復元できない場合がある。完全に復元できると広告しない。
+
+SentenceLiteralでは改行/EOF/終了引用符が回復境界。注釈の不足括弧についてexpected tokenと開始位置を返す。期待する閉じ括弧を自動挿入するfixは提案であり、ユーザー操作なしにソースを書き換えない。
+
+## 6. 増分解析と取消し
+
+編集はbaseRevision付きTextEdit列。編集後に新snapshotを作り、古いsnapshotは不変。編集に交差しないrangeは編集写像で新snapshotへ明示的に移せる。交差するtoken、子contextを変更する前方宣言、その依存下流を無効化する。
+
+再利用可能なnodeは、source内容、entry category、reader/context/provider digestが一致する場合に限る。独立な埋め込みや意味値は再利用できる。全再解析との出力比較をconformanceに含める。最悪時の全体再解析は正しい経路として残し、常に編集差分だけの計算量を保証しない。
+
+LSP側はdebounceとcancelを担当する。coreは明示的budget/pollを使う。古いrevisionの結果は公開しない。cacheと統計は明示的session stateであり、隠れたglobalにはしない。
+
+## 7. LSP adapter
+
+3.17で定義された位置encoding/diagnostic/semantic token/definition等の契約を利用し、機能はcapabilityで交渉する。UTF-8/UTF-16/UTF-32の位置変換をLineIndexで行う。UTF-16をfallbackとして必ず扱う。日本語や補助平面文字のbyte数、UTF-16 code unit数、表示幅を混同しない。
+
+一般的なDSL class名はsemantic token legendの独自typeとして出せる。クライアントが対応しない場合は表示fallbackを使うが、NEPL3内部kindを書き換えない。position/legendの変換はdomain crateに置かない。
+
+nepl3-lspは一つの汎用server。workspace設定から拡張子とLanguagePackageを選択し、各DSLごとのserverの再実装は不要。VS Code/Neovimには接続と設定だけの薄いadapterを置く。packageを変更したらanalysisを無効化し、必要ならlegend登録も更新する。
+
+## 8. 診断・ログの表示
+
+同一DiagnosticをCLI、LSP、browserへrenderする。CLI stderrは表示adapter、stdoutは要求された成果物だけ。JSON/NDF診断出力と人間用表示を分離する。詳細traceは明示的に選択し、ソース全文や環境の機密値を既定では記録しない。
+
+情報が不足する場合はstage/requirementsとして表示し、存在しないsource位置を作らない。providerの内部エラーとユーザーの構文ミスを区別する。
+
+## 9. workspace trust
+
+通常の解析と診断で対象プログラムをevaluateしない。Grammar reader providerはhostのallowlist・署名・schemaで制限する。workspaceからnative pluginを自動build/loadしない。untrusted providerには隔離runnerが必要で、ない環境ではTrustRequiredを返す。巨大入力/再帰/イベント/出力にも上限を設定する。

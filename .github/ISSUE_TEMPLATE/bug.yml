@@ -1,0 +1,22 @@
+name: 不具合報告
+description: 再現入力と契約との差を報告する
+body:
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 再現手順・入力
+      description: 最小の入力、実行コマンド、対象commit、OSとRustの版
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: 期待する結果と実際の結果
+      description: 関連する仕様・タスク・受入条件があれば記載してください
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 検証の証拠
+      description: 診断やログ。秘密情報は含めないでください

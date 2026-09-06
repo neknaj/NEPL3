@@ -1,0 +1,286 @@
+{
+  "design_revision": "nepl3-design-2026-09-06-r1",
+  "status": "design-checks-passed",
+  "validator": "independent local Python checker; not the Rust implementation",
+  "checks": [
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/circuit/half-adder.neplc",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/circuit/instances.neplc",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/circuit/simultaneous.neplc",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/circuit/state-feedback.neplc",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/circuit/toggle.neplc",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/document/integration.nepld",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/document/parallel.nepld",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/document/prefix.nepld",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/document/references.nepld",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/document/sentence.nepld",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/grammar/angle-tag.neplg",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/grammar/binding.neplg",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/grammar/provider.neplg",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/math/binding.neplm",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/math/decimal.neplm",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/math/doc-label.neplm",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/math/matrix.neplm",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/math/notation.neplm",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/math/rational.neplm",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "examples/math/sum.neplm",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "languages/circuit/syntax.neplg",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "languages/doc/syntax.neplg",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "languages/grammar/syntax.neplg",
+      "passed": true
+    },
+    {
+      "check": "complete-structural-parse",
+      "path": "languages/math/syntax.neplg",
+      "passed": true
+    },
+    {
+      "check": "surface-metadata-equivalence",
+      "language": "Grammar",
+      "forms": 68,
+      "passed": true
+    },
+    {
+      "check": "surface-metadata-equivalence",
+      "language": "Doc",
+      "forms": 32,
+      "passed": true
+    },
+    {
+      "check": "surface-metadata-equivalence",
+      "language": "Math",
+      "forms": 29,
+      "passed": true
+    },
+    {
+      "check": "surface-metadata-equivalence",
+      "language": "Circuit",
+      "forms": 26,
+      "passed": true
+    },
+    {
+      "check": "sentence-prefix-normalized-equivalence",
+      "passed": true
+    },
+    {
+      "check": "independent-exact-arithmetic",
+      "example": "rational",
+      "result": "5/6",
+      "passed": true
+    },
+    {
+      "check": "independent-exact-arithmetic",
+      "example": "decimal",
+      "result": "3/10",
+      "passed": true
+    },
+    {
+      "check": "independent-exact-arithmetic",
+      "example": "binding",
+      "result": "11/1",
+      "passed": true
+    },
+    {
+      "check": "independent-exact-arithmetic",
+      "example": "sum",
+      "result": "30/1",
+      "passed": true
+    },
+    {
+      "check": "independent-exact-arithmetic",
+      "example": "matrix",
+      "result": "-2/1",
+      "passed": true
+    },
+    {
+      "check": "independent-discrete-circuit-trace",
+      "example": "examples/circuit/half-adder.neplc",
+      "test": "all_inputs",
+      "ticks": 4,
+      "passed": true
+    },
+    {
+      "check": "independent-discrete-circuit-trace",
+      "example": "examples/circuit/instances.neplc",
+      "test": "independent",
+      "ticks": 3,
+      "passed": true
+    },
+    {
+      "check": "independent-discrete-circuit-trace",
+      "example": "examples/circuit/simultaneous.neplc",
+      "test": "simultaneous",
+      "ticks": 3,
+      "passed": true
+    },
+    {
+      "check": "independent-discrete-circuit-trace",
+      "example": "examples/circuit/state-feedback.neplc",
+      "test": "feedback",
+      "ticks": 3,
+      "passed": true
+    },
+    {
+      "check": "independent-discrete-circuit-trace",
+      "example": "examples/circuit/toggle.neplc",
+      "test": "sequence",
+      "ticks": 4,
+      "passed": true
+    },
+    {
+      "check": "sentence-negative-cases",
+      "count": 2,
+      "passed": true
+    },
+    {
+      "check": "unicode-supplementary-scalar-offset",
+      "passed": true
+    },
+    {
+      "check": "workspace-dependency-dag",
+      "crates": 18,
+      "topological_order": [
+        "nepl3-core",
+        "nepl3-reader",
+        "nepl3-engine",
+        "nepl3-wire",
+        "nepl3-grammar-core",
+        "nepl3-doc-core",
+        "nepl3-math-core",
+        "nepl3-circuit-core",
+        "nepl3-markup",
+        "nepl3-doc-html",
+        "nepl3-math-mathml",
+        "nepl3-circuit-svg",
+        "nepl3-suite",
+        "nepl3-cli",
+        "nepl3-lsp",
+        "nepl3-web",
+        "nepl3-provider",
+        "nepl3-tools"
+      ],
+      "passed": true
+    },
+    {
+      "check": "kind-field-consistency",
+      "distinct_form_kinds": 144,
+      "passed": true
+    }
+  ],
+  "not_verified": [
+    "Rust implementation/build",
+    "full Grammar semantic compiler",
+    "reader streaming/backtracking protocol",
+    "MathML/HTML/SVG visual rendering",
+    "LSP/editor implementation",
+    "NDF codec/provider transport",
+    "Unicode 16 complete character tables",
+    "full conformance suite",
+    "performance/physical resource bounds"
+  ],
+  "counts": {
+    "checks": 43,
+    "parsed_files": 24,
+    "grammar_form_occurrences": 155
+  },
+  "metadata_audit": {
+    "json_files_parsed": 10,
+    "tasks_unique": 16,
+    "task_dependency_dag": true,
+    "all_task_acceptance_references_exist": true,
+    "acceptance_group_count": 37,
+    "all_task_spec_paths_exist": true,
+    "markdown_relative_links_valid": true,
+    "markup_policy_json_valid": true,
+    "scope": "metadata integrity only; does not execute Rust, LSP, browser, NDF codecs or Grammar compiler"
+  }
+}

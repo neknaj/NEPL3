@@ -1,0 +1,16 @@
+design
+  cons module HalfAdder
+    cons input a 1 cons input b 1 nil
+    nil
+    cons output sum 1 xor a b
+    cons output carry 1 and a b
+    nil
+  nil
+  HalfAdder
+  cons test all_inputs HalfAdder
+    cons tick cons false cons false nil cons false cons false nil
+    cons tick cons false cons true nil cons true cons false nil
+    cons tick cons true cons false nil cons true cons false nil
+    cons tick cons true cons true nil cons false cons true nil
+    nil
+  nil

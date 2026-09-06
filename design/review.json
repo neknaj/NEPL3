@@ -1,0 +1,21 @@
+{
+  "review": "nepl3-initial-design-review-2026-09-06",
+  "source_design": "nepl3-design-2026-09-06-r1",
+  "reviewed_at": "2026-09-06",
+  "independent_from_implementation": true,
+  "scope": "14 specification chapters, signature tables, language sources, interface descriptions, repository metadata and supplied examples; not runtime conformance",
+  "findings": [
+    { "id": "R001", "status": "corrected", "title": "Ordered schema fields represented as unordered JSON objects", "affected_tasks": ["T01", "T02", "T05"], "evidence": ["interfaces/model.json", "doc/spec/09-portability.md", "doc/spec/13-reproducibility.md", "conformance/cases.json"] },
+    { "id": "R002", "status": "corrected", "title": "Circuit initial precondition and NOR sink terminology disagree", "affected_tasks": ["T09"], "evidence": ["interfaces/contracts.json", "interfaces/model.json", "doc/spec/07-circuit.md", "conformance/cases.json"] },
+    { "id": "R003", "status": "corrected", "title": "Doc code guest loses recoverable syntax boundary", "affected_tasks": ["T07", "T11"], "evidence": ["interfaces/model.json", "doc/spec/05-document.md", "doc/spec/10-integration.md", "conformance/cases.json"] },
+    { "id": "R004", "status": "corrected", "title": "Arbitrary rational Number has no structure-preserving surface spelling", "affected_tasks": ["T08"], "evidence": ["interfaces/model.json", "doc/spec/03-reader.md", "doc/spec/06-math.md", "doc/spec/12-model-invariants.md", "conformance/cases.json"] },
+    { "id": "R005", "status": "corrected", "title": "MathML mspace lengths allow invalid nonzero unitless values", "affected_tasks": ["T10"], "evidence": ["design/markup.json", "doc/spec/06-math.md", "conformance/cases.json"] },
+    { "id": "R006", "status": "open", "title": "Operation and transport schemas are not closed executable schemas", "affected_tasks": ["T01", "T02", "T03", "T12"], "evidence": ["interfaces/contracts.json", "interfaces/model.json", "doc/spec/09-portability.md", "doc/spec/12-model-invariants.md"], "blocking_condition": "Close all operation type references, reader and transport frame schemas, source/origin/environment bundles and domain constraints before claiming portable contracts complete." },
+    { "id": "R007", "status": "corrected", "title": "Source byte limit has no typed stop reason", "affected_tasks": ["T01", "T02"], "evidence": ["interfaces/contracts.json", "doc/spec/02-foundation.md", "conformance/cases.json"] },
+    { "id": "R008", "status": "corrected", "title": "Markup character and XML escaping contract is incomplete", "affected_tasks": ["T10"], "evidence": ["design/markup.json", "doc/spec/12-model-invariants.md", "doc/spec/13-reproducibility.md", "conformance/cases.json"] },
+    { "id": "R009", "status": "open", "title": "Source profile is not a resolved runtime profile", "affected_tasks": ["T05", "T11"], "evidence": ["design/profile.json", "doc/spec/10-integration.md"], "blocking_condition": "Generate real SchemaRef digests and provider manifests from validated packages; no placeholder digest." },
+    { "id": "R010", "status": "corrected", "title": "Imported design validation report cannot be reproduced from supplied validator source", "affected_tasks": ["T16"], "evidence": ["doc/history/design-validation.json", "doc/history/README.md", "doc/spec/11-conformance.md"], "resolution": "Historical report is explicitly unverified and cannot serve as current runtime acceptance evidence; original validator remains unavailable." },
+    { "id": "R011", "status": "corrected", "title": "Whole acceptance-group completion prevents dependency-first task completion", "affected_tasks": ["T01", "T16"], "evidence": ["design/tasks.json", "tools/src/task/mod.rs", "doc/spec/11-conformance.md"], "resolution": "Scoped task evidence, dependencies and design blockers gate task completion; T16 additionally requires all global groups passed. Independent task module tests passed." }
+  ],
+  "runtime_conformance_executed": false
+}

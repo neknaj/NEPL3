@@ -1,0 +1,8 @@
+language SentenceOnly 1 Sentence
+  cons category Sentence Sentences
+  cons extension Reader "doc.reader/sentence-v1" "reader/v1"
+  cons reader sentence call "doc.reader/sentence-v1"
+  cons mode Sentences cons take SentenceLiteral sentence nil
+  cons leaf SentenceLiteral Sentence SentenceLiteral none
+    cons style self "content" nil
+  nil

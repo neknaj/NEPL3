@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTDOCFLAGS: -D warnings
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  native:
+    name: native (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install pinned toolchain and components
+        run: |
+          rustup show active-toolchain
+          rustup component add rustfmt clippy
+          rustc --version --verbose
+          cargo --version
+      - name: Install structural audit interpreter
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.13'
+      - name: Independent structure audit
+        run: python tools/audit/structure.py
+      - name: Structure audit tests
+        run: python -m unittest discover -s tools/audit -p test.py
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Tests
+        run: cargo test --workspace --locked
+      - name: API documentation
+        run: cargo doc --workspace --no-deps --locked
+      - name: Repository contracts
+        run: cargo run --locked -p nepl3-tools -- check
+      - name: Generated tasks
+        run: cargo run --locked -p nepl3-tools -- tasks --check
+      - name: Verify clean tracked files
+        run: git diff --exit-code
+
+  quality:
+    name: quality
+    if: ${{ always() }}
+    needs: [native]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every native job to pass
+        env:
+          NATIVE_RESULT: ${{ needs.native.result }}
+        run: test "$NATIVE_RESULT" = success
+
+  deliver-source:
+    name: deliver source
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    needs: [quality]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout tested commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Archive tested source and record identity
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          mkdir -p dist
+          git archive --format=tar.gz --prefix=NEPL3/ --output=dist/NEPL3-source.tar.gz "$GITHUB_SHA"
+          cd dist
+          sha256sum NEPL3-source.tar.gz > SHA256SUMS
+          printf 'repository=%s\ncommit=%s\nworkflow_run=%s\nkind=source-foundation\n' "$GITHUB_REPOSITORY" "$GITHUB_SHA" "$GITHUB_RUN_ID" > SOURCE.txt
+      - name: Upload source bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: NEPL3-source-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
