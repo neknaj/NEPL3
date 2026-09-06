@@ -39,6 +39,25 @@ baselineは `25a096bc183c2b71200902884084cd4082d0aae3`。全trackedファイル�
 
 各code blockにはinfo文字列、raw source範囲とdigest、parserが返した内容のdigest/byte長を記録した。inline codeにもraw範囲とdigestがある。sourceはUTF-8 byte範囲であり、見た目の文字数ではない。JSONや説明用prefix例を評価せず、空白・改行や不完全例を保持する必要がある。リンク先の例もコピーせず元source identityを参照する。
 
+## 見出し・リンク・画像altのinline投影契約
+
+inventory schemaは `nepl3.doc-inventory/2`、inline抽出profileは `nepl3.markdown-inline-projection/1` とする。従来の抽出ではlink labelの改行が失われて単語が結合し、見出しとlink labelからmathが欠落した。修正に伴いschemaを更新し、同じbaseline commitから明示的に再生成した。parser版・元ファイルのdigest・対象ページは変更していない。
+
+見出しの `text` とlink/imageの `label` は共通の投影処理で作る。それぞれに `inline_segments` を保持し、各segmentは `content.kind`、必要な場合の `content.value`、元sourceのUTF-8半開byte範囲 `source_bytes` を持つ。入れ子のimageに含まれる内容は、そのimage、外側のlink、包含する見出しへ同じ順序で一度ずつ反映する。
+
+| kind | value | 要約文字列への投影 |
+| --- | --- | --- |
+| text / code | parserが返す内容 | 内容をそのまま追加。codeの元backtick等はsource範囲で保持 |
+| soft-break | なし | 1個のspace |
+| hard-break | なし | 1個のLF。soft-breakと同一視しない |
+| inline-math | delimiterを除くmath payload | `$payload$` |
+| display-math | delimiterを除くmath payload | `$$payload$$` |
+| footnote-reference | footnote label | `[^label]`。表示番号を推測しない |
+
+typed segmentを持つため、要約文字列に同じ`$`表記が現れても、通常Textとmathを混同せずに比較できる。CRLF、hard breakの2個のspaceやbackslash、非ASCII文字を含む元byte列はsegment範囲から取得できる。parserによるdecodeやcode内空白の正規化を、元sourceの書換えと見なさない。
+
+これはinventoryの要約投影であり、rendererのplain text抽出や完全なMarkdown ASTではない。emphasis等のstyleタグはここで再構築しない。inline HTML/tag/commentは要約文字列へ解釈して追加せず、既存の `html_fragments` にliteralとsource範囲を保持する。例えば`<br>`をhard-breakへ推測変換しないため、HTMLを含むlabelの意味は要約だけでは判定できない。脚注解決、数式評価、altの実表示、リンクの有効性も別の監査対象である。
+
 ## 既存Doc契約との差分
 
 監査の照合先はbaselineのforms、Doc syntax、model、contracts、markupである。以下の項目は必要情報と不足の記録であり、新constructorの承認済みsignatureではない。

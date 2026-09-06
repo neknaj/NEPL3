@@ -28,6 +28,7 @@ struct Inventory {
     baseline_commit: String,
     scope: String,
     extractor: String,
+    inline_projection: String,
     parser_options: Vec<String>,
     capability_contracts: Vec<File>,
     pages: Vec<Page>,
@@ -186,12 +187,13 @@ fn exclusion(path: &str) -> &'static str {
 fn generate(root: &Path, commit: &str) -> Result<Inventory> {
     let paths = snapshot_paths(root, commit)?;
     let mut result = Inventory {
-        schema: "nepl3.doc-inventory/1".into(),
+        schema: "nepl3.doc-inventory/2".into(),
         baseline_commit: commit.into(),
         scope:
             "immutable-commit-baseline; no claim of current completeness or migration acceptance"
                 .into(),
         extractor: "pulldown-cmark/0.13.4".into(),
+        inline_projection: "nepl3.markdown-inline-projection/1".into(),
         parser_options: markdown::option_names(),
         capability_contracts: Vec::new(),
         pages: Vec::new(),
