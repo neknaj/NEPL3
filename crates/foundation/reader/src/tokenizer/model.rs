@@ -2,11 +2,11 @@
 use crate::{builtin::BuiltinReader, model::*};
 use alloc::{boxed::Box, string::String, vec::Vec};
 use nepl3_core::{
-    budget::StopReason,
+    budget::{StopReason, Usage},
     diagnostic::{Diagnostic, Report},
     origin::Mapping,
-    source::{SourceRef, SourceSnapshot, Span},
-    value::{KindRef, NdfValue},
+    source::{Digest, SourceRef, SourceSnapshot, Span},
+    value::{KindRef, NdfValue, SchemaRef},
     view::{Token, Trivia},
 };
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -29,7 +29,61 @@ pub struct ReaderMode {
     pub skip: Vec<SkipRule>,
     pub take: Vec<TakeRule>,
 }
-/// Source/context remain borrowed while suspended; the initial state borrow ends after `read`.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum TokenTarget {
+    Mode,
+    Builtin {
+        reader: BuiltinReader,
+        token_kind: KindRef,
+    },
+}
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum TokenizationPhase {
+    Skip { next: u64 },
+    Take { next: u64 },
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum TokenizationWait {
+    Reservation {
+        request: ReservationRequest,
+    },
+    Provider {
+        continuation: Box<ReaderContinuation>,
+    },
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TokenizationScope {
+    pub operation_id: String,
+    pub profile_digest: Digest,
+    pub snapshot: SourceRef,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TokenizationContinuation {
+    pub scope: TokenizationScope,
+    pub session_id: String,
+    pub reader_schema: SchemaRef,
+    pub reader_plan_digest: Digest,
+    pub configuration_digest: Digest,
+    pub request: OwnedReadRequest,
+    pub mode: String,
+    pub target: TokenTarget,
+    pub phase: TokenizationPhase,
+    pub current: ReaderCheckpoint,
+    pub trivia: Vec<Trivia>,
+    pub expected: Vec<Expectation>,
+    pub furthest: u64,
+    pub pending: TokenizationWait,
+    pub depth_base: u64,
+    pub usage: Usage,
+    pub report: Report,
+}
+/// An explicit parsing operation may carry its accepted collector across language tokenizers.
+pub struct ScopedTokenizationRequest<'source, 'state> {
+    pub scope: &'source TokenizationScope,
+    pub target: TokenTarget,
+    pub input: TokenizationRequest<'source, 'state>,
+}
+/// Borrowed input for one call; suspension returns an owned continuation.
 #[derive(Clone, Copy)]
 pub struct TokenizationRequest<'source, 'state> {
     pub snapshot: &'source SourceSnapshot,
@@ -67,10 +121,11 @@ pub enum TokenizationOutcome {
     },
     Await {
         call: Box<ProviderCall>,
-        continuation: Box<ReaderContinuation>,
+        continuation: Box<TokenizationContinuation>,
     },
     Reserve {
         request: ReservationRequest,
+        continuation: Box<TokenizationContinuation>,
     },
 }
 #[derive(Debug, Eq, PartialEq)]

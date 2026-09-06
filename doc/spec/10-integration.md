@@ -10,7 +10,19 @@ Profileはlanguage alias→SchemaRef、category mode、provider allowlist、oper
 
 `design/profile.json` はsource manifestであり、解決済みruntime Profileではない。R009の解消では生成結果の閉じた型、各schema/package/provider digest、許可capability、resource identityと整合検査を先に定める。T05/T11で実際の検査済みpackageから生成・差分検査し、UI/Workerはこの値を利用する。R006の操作・bundle型の未定義を文字列signatureや仮digestで補わない。
 
+解析の実入口はengineの`ParseProfile`とし、suite Profileから渡す不変なprojectionとして扱う。`interfaces/engine.json`にlanguage登録、category mode、選択schema、provider要件、operation allowlist、resource identity、Limitsの型を置く。`resolve`は独立したhost RuntimeCatalogとfinalize済みregistryを使い、実package意味digest、schema参照閉包、guest category/mode、host provider登録の実装identity、resourceの実byte列digestを照合する。外部Profileの自己申告をそのままhost登録へ複写して検査済みとしない。
+
+provider identityはhostが実assetまたは版管理された実装manifestから確定する。coreはbinaryを読み込まず、binary自身のhashを同じbinary内の定数へ埋める自己hash循環も要求しない。operationのschema署名が既知でもcallbackが登録されたことにはならない。parseに使うreader providerは許可済み実登録を要求し、未実行のfacts等のextensionは署名を検査するが自動実行しない。
+
+解析Profileのidentityは`NEPL3-PARSE-PROFILE-1`、zero byte、canonical JSONのSHA-256。id、language登録、schema、category-mode指定、providerの実装identity、allowlist、resource identity、Limitsを含める。宣言はalias/idまたは完全OperationRef/SchemaRef順、Limits列はsourceBytes/work/depth/nodes/allocationUnits/outputBytes/diagnostics/events順とする。実resource bytesはhash照合し、Profileへ全文複製しない。
+
+ここでのallowlistはoperation呼出可否を表す。providerのtransport、隔離、ネットワーク等の権限、強制停止方法、bridge、EnvironmentProjectionを含むfull suite Profileの契約は引き続き実装対象である。この解析projectionだけではR009全体を完了しない。hostは実行環境のcapabilityを別途検査し、解析projectionはその承認を代行しない。
+
 配布拡張子は `.neplg`、`.nepld`、`.neplm`、`.neplc`。汎用 `.nepl` ではlanguage指定を必須にする。既存NCGやGlossのファイルを新言語として黙って解釈しない。
+
+ParseProfile.limitsは解析操作に対するresource別上限であり、単なる既定値ではない。操作開始時に実Budgetの全LimitsがProfile上限以下であることを照合し、超える場合はLimitsMismatchで拒否する。小さい操作予算を使うことは許す。既に消費したUsageはresetせず、継続も同じ操作Limitsと単調なUsageを保持する。Profileのresolve自体を行う開発・host側Budgetはこの解析操作Budgetとは別であり、解決時の消費を解析へ済んだものとして移さない。
+
+EntryContextはaliasを明示保存する。同じpackage identityを異なるaliasで登録してcategory-mode overrideだけを変えることを許し、子のLocal解決も親の実aliasを使う。Profileのlanguage列の並び順は意味に含めず、aliasから選ぶ対応を継続へ保持する。alias別のreader stateとenvironmentも明示し、guest不足をUnitやhost環境で補わない。
 
 ## 2. 標準bridge
 

@@ -1,0 +1,8 @@
+language Shared 1 A
+cons category A Code
+cons category B Code
+cons reader word scalar identifierStart
+cons mode Code cons take Word word nil
+cons form Atom A "a" nil none nil
+cons form Atom A "a" nil none nil
+nil

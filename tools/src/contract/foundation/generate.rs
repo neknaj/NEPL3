@@ -56,10 +56,6 @@ impl Cost {
 }
 
 pub(crate) fn source(descriptor: &SchemaDescriptor) -> Result<String> {
-    // Operations are intentionally still outside this bounded foundation projection.
-    if !descriptor.operations.is_empty() {
-        return Err("production foundation generator requires explicit operation support".into());
-    }
     let mut cost = Cost::default();
     let package = cost.string(&descriptor.package);
     let mut types = Vec::new();
@@ -95,15 +91,22 @@ pub(crate) fn source(descriptor: &SchemaDescriptor) -> Result<String> {
             .join(",");
         types.push(format!("super::NamedType {{ name: {name}, shape: {shape}, constraints: alloc::vec![{constraints}] }}"));
     }
+    let mut operations = Vec::new();
+    for operation in &descriptor.operations {
+        let name = cost.string(&operation.name);
+        let input = cost.ty(&operation.input);
+        let output = cost.ty(&operation.output);
+        operations.push(format!("super::OperationDescriptor {{ name: {name}, input: {input}, output: {output}, pure: {} }}",operation.pure));
+    }
     Ok(format!(
         "//! Generated from interfaces/contracts.json via interfaces/foundation.json.\n\
          //! Regenerate with `cargo run --locked -p nepl3-tools -- foundation --write`.\n\
          //! Registers structural shapes; named semantic constraints require their owning validators.\n\n\
          #[rustfmt::skip]\n\
          pub fn descriptor(budget: &mut crate::budget::Budget) -> Result<super::SchemaDescriptor, super::SchemaError> {{\n\
-         budget.charge(crate::budget::Resource::AllocationUnits, ({bytes}usize + {named} * core::mem::size_of::<super::NamedType>() + {fields} * core::mem::size_of::<super::FieldDescriptor>() + {variants} * core::mem::size_of::<super::VariantDescriptor>() + {boxes} * core::mem::size_of::<super::TypeDescriptor>() + {strings} * core::mem::size_of::<alloc::string::String>()) as u64)?;\n\
+         budget.charge(crate::budget::Resource::AllocationUnits, ({bytes}usize + {named} * core::mem::size_of::<super::NamedType>() + {fields} * core::mem::size_of::<super::FieldDescriptor>() + {variants} * core::mem::size_of::<super::VariantDescriptor>() + {boxes} * core::mem::size_of::<super::TypeDescriptor>() + {strings} * core::mem::size_of::<alloc::string::String>(){operation_cost}) as u64)?;\n\
          budget.charge(crate::budget::Resource::Work, {work})?;\n\
-         Ok(super::SchemaDescriptor {{ package: {package}, revision: {revision}, types: alloc::vec![{types}], operations: alloc::vec![] }})\n\
+         Ok(super::SchemaDescriptor {{ package: {package}, revision: {revision}, types: alloc::vec![{types}], operations: alloc::vec![{operations}] }})\n\
          }}\n",
         bytes = cost.bytes,
         named = descriptor.types.len(),
@@ -111,7 +114,21 @@ pub(crate) fn source(descriptor: &SchemaDescriptor) -> Result<String> {
         variants = cost.variants,
         boxes = cost.boxes,
         strings = cost.strings,
-        work = cost.bytes + cost.fields + cost.variants + cost.boxes + descriptor.types.len(),
+        work = cost.bytes
+            + cost.fields
+            + cost.variants
+            + cost.boxes
+            + descriptor.types.len()
+            + descriptor.operations.len(),
+        operation_cost = if descriptor.operations.is_empty() {
+            String::new()
+        } else {
+            format!(
+                " + {} * core::mem::size_of::<super::OperationDescriptor>()",
+                descriptor.operations.len()
+            )
+        },
+        operations = operations.join(",\n"),
         revision = descriptor.revision,
         types = types.join(",\n"),
     ))

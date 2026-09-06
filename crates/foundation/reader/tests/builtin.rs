@@ -667,7 +667,11 @@ fn mode_text_reservation_is_lazy_and_echo_is_checked() -> Result<(), ReaderError
         &mut b,
         &mut admission,
     )?;
-    let TokenizationOutcome::Reserve { request } = reply.outcome else {
+    let TokenizationOutcome::Reserve {
+        request,
+        continuation,
+    } = reply.outcome
+    else {
         return Err(ReaderError::Context);
     };
     assert_eq!(request.start, 5);
@@ -678,15 +682,15 @@ fn mode_text_reservation_is_lazy_and_echo_is_checked() -> Result<(), ReaderError
         revision: 0,
         uri: "memory:decoded".into(),
     };
-    let mut forged = request.clone();
-    forged.request_id += 1;
+    let mut forged = continuation.clone();
+    forged.depth_base += 1;
     assert_eq!(
         session.reserve(&forged, &reservation, &f.store, &mut b, &mut admission),
         Err(ReaderError::Continuation)
     );
     assert_eq!(
         session.reserve(
-            &request,
+            &continuation,
             &reservation,
             &f.store,
             &mut Budget::new(b.limits()),
@@ -695,7 +699,25 @@ fn mode_text_reservation_is_lazy_and_echo_is_checked() -> Result<(), ReaderError
         Err(ReaderError::Continuation),
         "a fresh budget cannot resume accepted skip state"
     );
-    let reply = session.reserve(&request, &reservation, &f.store, &mut b, &mut admission)?;
+    let mut cancelled_foreign = Budget::new(b.limits());
+    cancelled_foreign.cancel();
+    assert_eq!(
+        session.reserve(
+            &continuation,
+            &reservation,
+            &f.store,
+            &mut cancelled_foreign,
+            &mut admission
+        ),
+        Err(ReaderError::Continuation)
+    );
+    let reply = session.reserve(
+        &continuation,
+        &reservation,
+        &f.store,
+        &mut b,
+        &mut admission,
+    )?;
     let TokenizationOutcome::Token(token) = reply.outcome else {
         return Err(ReaderError::Context);
     };
@@ -703,7 +725,13 @@ fn mode_text_reservation_is_lazy_and_echo_is_checked() -> Result<(), ReaderError
     assert_eq!(reply.sources.len(), 1);
     assert_eq!(reply.source_maps.len(), 2);
     assert_eq!(
-        session.reserve(&request, &reservation, &f.store, &mut b, &mut admission),
+        session.reserve(
+            &continuation,
+            &reservation,
+            &f.store,
+            &mut b,
+            &mut admission
+        ),
         Err(ReaderError::NoPending)
     );
     let pending = session.read(
@@ -719,13 +747,23 @@ fn mode_text_reservation_is_lazy_and_echo_is_checked() -> Result<(), ReaderError
         &mut b,
         &mut admission,
     )?;
-    let TokenizationOutcome::Reserve { request } = pending.outcome else {
+    let TokenizationOutcome::Reserve {
+        request: _,
+        continuation,
+    } = pending.outcome
+    else {
         return Err(ReaderError::Context);
     };
     let expected_trivia = pending.trivia;
     let expected_sources = pending.sources;
     b.cancel();
-    let cancelled = session.reserve(&request, &reservation, &f.store, &mut b, &mut admission)?;
+    let cancelled = session.reserve(
+        &continuation,
+        &reservation,
+        &f.store,
+        &mut b,
+        &mut admission,
+    )?;
     assert!(matches!(
         cancelled.outcome,
         TokenizationOutcome::Stopped {
@@ -737,7 +775,13 @@ fn mode_text_reservation_is_lazy_and_echo_is_checked() -> Result<(), ReaderError
     assert_eq!(cancelled.sources, expected_sources);
     assert_eq!(cancelled.new_state, Some(NdfValue::Unit));
     assert_eq!(
-        session.reserve(&request, &reservation, &f.store, &mut b, &mut admission),
+        session.reserve(
+            &continuation,
+            &reservation,
+            &f.store,
+            &mut b,
+            &mut admission
+        ),
         Err(ReaderError::NoPending)
     );
     let retry = session.read(
@@ -856,6 +900,289 @@ fn empty_skip_and_take_readers_are_nonprogress_failures() -> Result<(), ReaderEr
         );
         assert_eq!(reply.cursor, 0);
         assert!(reply.trivia.is_empty());
+    }
+    Ok(())
+}
+
+#[test]
+fn owned_tokenizer_resume_does_not_borrow_the_original_context_and_checks_all_echo_fields()
+-> Result<(), ReaderError> {
+    let f = Fixture::new(" \"x\"")?;
+    let p = token_plan(&f);
+    let checked = p.check(&f.registry, &mut budget())?;
+    let modes = vec![ReaderMode {
+        name: "default".into(),
+        skip: vec![SkipRule {
+            reader: TokenReader::Builtin(BuiltinReader::Trivia),
+        }],
+        take: vec![], // Explicit Builtin target uses skip, never the take table.
+    }];
+    let mut b = budget();
+    let mut admission = SourceAdmission::default();
+    let mut session =
+        TokenizationSession::new("owned".into(), &modes, &checked, &f.registry, &mut b)?;
+    let reply = {
+        let raw = f.context.clone();
+        let mut codec =
+            nepl3_wire::foundation::FoundationCodec::new(&f.registry, &f.store, &mut admission)
+                .map_err(|_| ReaderError::Context)?;
+        let proof = raw
+            .check(&mut codec, &f.store, &f.registry, &mut b)
+            .map_err(|_| ReaderError::Context)?;
+        session.read_target(
+            TokenTarget::Builtin {
+                reader: BuiltinReader::Text,
+                token_kind: token_kind(&f)?,
+            },
+            TokenizationRequest {
+                snapshot: &f.source,
+                start: 0,
+                limit: 4,
+                final_input: true,
+                context: &proof,
+                state: &NdfValue::Unit,
+            },
+            &f.store,
+            &mut b,
+            &mut admission,
+        )?
+    }; // Both the raw context and its checked proof are now gone.
+    let TokenizationOutcome::Reserve {
+        request,
+        continuation,
+    } = reply.outcome
+    else {
+        return Err(ReaderError::Context);
+    };
+    assert_eq!(request.start, 1);
+    assert_eq!(continuation.current.cursor, 1);
+    assert_eq!(continuation.request.start, 0);
+    assert_eq!(continuation.trivia, reply.trivia);
+    assert_eq!(continuation.report, reply.report);
+    assert_eq!(continuation.usage, reply.report.usage);
+    let reservation = SourceReservation {
+        source_id: SourceId("owned-decoded".into()),
+        revision: 0,
+        uri: "memory:owned-decoded".into(),
+    };
+    for case in 0..9 {
+        let mut forged = continuation.clone();
+        match case {
+            0 => forged.configuration_digest.0[0] ^= 1,
+            1 => forged.reader_plan_digest.0[0] ^= 1,
+            2 => forged.target = TokenTarget::Mode,
+            3 => forged.phase = TokenizationPhase::Take { next: 1 },
+            4 => forged.request.context.category.push('x'),
+            5 => forged.request.snapshot.revision += 1,
+            6 => forged.current.cursor += 1,
+            7 => forged.trivia.clear(),
+            _ => forged.report.usage.work -= 1,
+        }
+        assert_eq!(
+            session.reserve(&forged, &reservation, &f.store, &mut b, &mut admission),
+            Err(ReaderError::Continuation)
+        );
+    }
+    let mut other =
+        TokenizationSession::new("other".into(), &modes, &checked, &f.registry, &mut b)?;
+    assert_eq!(
+        other.reserve(
+            &continuation,
+            &reservation,
+            &f.store,
+            &mut b,
+            &mut admission
+        ),
+        Err(ReaderError::NoPending)
+    );
+    let reply = session.reserve(
+        &continuation,
+        &reservation,
+        &f.store,
+        &mut b,
+        &mut admission,
+    )?;
+    let TokenizationOutcome::Token(token) = reply.outcome else {
+        return Err(ReaderError::Context);
+    };
+    assert_eq!(token.payload, NdfValue::Text("x".into()));
+    assert_eq!(token.head.start(), 1);
+    assert_eq!(token.head.end(), 4);
+    assert_eq!(reply.trivia.len(), 1);
+    assert_eq!(reply.sources.len(), 1);
+    Ok(())
+}
+
+#[test]
+fn tokenizer_configuration_identity_ignores_mode_declaration_order_but_retains_rule_order()
+-> Result<(), ReaderError> {
+    let f = Fixture::new("\"x\"")?;
+    let p = token_plan(&f);
+    let checked = p.check(&f.registry, &mut budget())?;
+    let base = ReaderMode {
+        name: "default".into(),
+        skip: vec![],
+        take: vec![
+            TakeRule {
+                reader: TokenReader::Builtin(BuiltinReader::Text),
+                kind: token_kind(&f)?,
+            },
+            TakeRule {
+                reader: TokenReader::Builtin(BuiltinReader::Name),
+                kind: token_kind(&f)?,
+            },
+        ],
+    };
+    let alternate = ReaderMode {
+        name: "alternate".into(),
+        skip: vec![],
+        take: vec![],
+    };
+    let mut ids = vec![];
+    for case in 0..3 {
+        let mut modes = if case == 1 {
+            vec![alternate.clone(), base.clone()]
+        } else {
+            vec![base.clone(), alternate.clone()]
+        };
+        if case == 2 {
+            modes[0].take.reverse();
+        }
+        let mut b = budget();
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            nepl3_wire::foundation::FoundationCodec::new(&f.registry, &f.store, &mut admission)
+                .map_err(|_| ReaderError::Context)?;
+        let proof = f
+            .context
+            .check(&mut codec, &f.store, &f.registry, &mut b)
+            .map_err(|_| ReaderError::Context)?;
+        let mut session =
+            TokenizationSession::new("identity".into(), &modes, &checked, &f.registry, &mut b)?;
+        let reply = session.read(
+            TokenizationRequest {
+                snapshot: &f.source,
+                start: 0,
+                limit: 3,
+                final_input: true,
+                context: &proof,
+                state: &NdfValue::Unit,
+            },
+            &f.store,
+            &mut b,
+            &mut admission,
+        )?;
+        let TokenizationOutcome::Reserve { continuation, .. } = reply.outcome else {
+            return Err(ReaderError::Context);
+        };
+        ids.push(continuation.configuration_digest);
+    }
+    assert_eq!(ids[0], ids[1]);
+    assert_ne!(ids[0], ids[2]);
+    Ok(())
+}
+
+#[test]
+fn selected_standard_provider_dispatch_uses_builtin_values_and_rejects_forgery()
+-> Result<(), ReaderError> {
+    for (kind, input) in [
+        (BuiltinReader::Name, "alpha"),
+        (BuiltinReader::Number, "1.250"),
+        (BuiltinReader::Trivia, " \t"),
+    ] {
+        let fixture = Fixture::new(input)?;
+        let op = provider::operation(kind, &fixture.registry, &mut budget())?;
+        let signature = provider::signature(kind, &fixture.registry, &mut budget())?;
+        let plan = ReaderPlan {
+            schema: op.schema.clone(),
+            state_type: TypeDescriptor::Unit,
+            expressions: vec![ReaderExpr::Call(op.clone())],
+            rules: vec![ReaderRule {
+                name: "standard".into(),
+                root: ReaderId(0),
+                output: signature.value_output.clone(),
+            }],
+            providers: vec![signature],
+        };
+        plan.check(&fixture.registry, &mut budget())?;
+        let mut setup = budget();
+        let mut setup_admission = SourceAdmission::default();
+        let mut codec = nepl3_wire::foundation::FoundationCodec::new(
+            &fixture.registry,
+            &fixture.store,
+            &mut setup_admission,
+        )
+        .map_err(|_| ReaderError::Context)?;
+        let context = fixture
+            .context
+            .check(&mut codec, &fixture.store, &fixture.registry, &mut setup)
+            .map_err(|_| ReaderError::Context)?;
+        let state = NdfValue::Unit;
+        let request = || ReadRequest {
+            snapshot: &fixture.source,
+            start: 0,
+            limit: input.len() as u64,
+            final_input: true,
+            context: &context,
+            state: &state,
+        };
+        let result = provider::read(
+            &op,
+            request(),
+            &fixture.registry,
+            &fixture.store,
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        )?;
+        let expected = fixture.whole(kind, true)?;
+        let ReadReply::Matched { value, end, .. } = result else {
+            return Err(ReaderError::ProviderContract);
+        };
+        let ReadReply::Matched {
+            value: expected,
+            end: expected_end,
+            ..
+        } = expected
+        else {
+            return Err(ReaderError::ProviderContract);
+        };
+        assert_eq!(value, expected);
+        assert_eq!(end, expected_end);
+        let mut wrong = op.clone();
+        wrong.schema.digest.0[0] ^= 1;
+        assert!(matches!(
+            provider::read(
+                &wrong,
+                request(),
+                &fixture.registry,
+                &fixture.store,
+                &mut budget(),
+                &mut SourceAdmission::default()
+            ),
+            Err(ReaderError::ProviderContract)
+        ));
+        let mut limited = Budget::new(Limits {
+            work: 0,
+            ..budget().limits()
+        });
+        assert!(matches!(
+            provider::read(
+                &op,
+                request(),
+                &fixture.registry,
+                &fixture.store,
+                &mut limited,
+                &mut SourceAdmission::default()
+            )?,
+            ReadReply::Stopped {
+                reason: StopReason::WorkLimit,
+                ..
+            }
+        ));
+        assert!(matches!(
+            provider::operation(BuiltinReader::Text, &fixture.registry, &mut budget()),
+            Err(ReaderError::ProviderContract)
+        ));
     }
     Ok(())
 }

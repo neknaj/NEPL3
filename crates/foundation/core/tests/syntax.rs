@@ -53,6 +53,74 @@ fn bundle(schema: &SchemaRef) -> SyntaxBundle {
         tokens: vec![],
     }
 }
+
+#[test]
+fn owned_syntax_copy_precharges_payloads_and_preserves_deep_foreign_ownership() -> Result<(), String>
+{
+    let (_, schema) = registry().map_err(|e| format!("{e:?}"))?;
+    let mut inner = bundle(&schema);
+    let source = SourceSnapshot::new(
+        SourceId("s".repeat(100_000)),
+        0,
+        "memory:copy".into(),
+        b"x".to_vec(),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    inner.sources.push(source);
+    let mut limits = budget().limits();
+    limits.allocation_units = 10_000;
+    assert_eq!(
+        inner.clone_with_budget(&mut Budget::new(limits)),
+        Err(StopReason::AllocationLimit)
+    );
+    limits = budget().limits();
+    limits.work = 0;
+    assert_eq!(
+        inner.clone_with_budget(&mut Budget::new(limits)),
+        Err(StopReason::WorkLimit)
+    );
+    let mut operation = budget();
+    let copied = inner
+        .clone_with_budget(&mut operation)
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(copied, inner);
+    assert_eq!(
+        operation.usage().source_bytes,
+        0,
+        "copy is storage, not a new operation admission"
+    );
+    drop(copied);
+    // This ownership graph deliberately exceeds the machine call stack. It need not
+    // be a valid language tree: the clone API copies data and makes no validity claim.
+    for _ in 0..32_000 {
+        let mut outer = bundle(&schema);
+        outer.nodes[0].fields.push(guest(&schema, inner));
+        inner = outer;
+    }
+    limits = budget().limits();
+    limits.depth = 100;
+    limits.work = u64::MAX;
+    limits.allocation_units = u64::MAX;
+    assert_eq!(
+        inner.clone_with_budget(&mut Budget::new(limits)),
+        Err(StopReason::DepthLimit)
+    );
+    limits.depth = u64::MAX;
+    let copied = inner
+        .clone_with_budget(&mut Budget::new(limits))
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(copied, inner);
+    // FieldValue's public helper uses the same iterative traversal, including the box.
+    let field = &inner.nodes[0].fields[0];
+    assert_eq!(
+        field
+            .clone_with_budget(&mut Budget::new(limits))
+            .map_err(|e| format!("{e:?}"))?,
+        *field
+    );
+    Ok(())
+}
 fn guest(schema: &SchemaRef, inner: SyntaxBundle) -> FieldValue {
     FieldValue::Foreign(Box::new(ForeignSyntax {
         schema: schema.clone(),

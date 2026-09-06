@@ -1,5 +1,57 @@
 {
-  "operations": {},
+  "operations": {
+    "builtinName": {
+      "input": {
+        "named": {
+          "name": "ReadRequest",
+          "package": "nepl3.reader",
+          "revision": 1
+        }
+      },
+      "output": {
+        "named": {
+          "name": "ReadReply",
+          "package": "nepl3.reader",
+          "revision": 1
+        }
+      },
+      "pure": true
+    },
+    "builtinNumber": {
+      "input": {
+        "named": {
+          "name": "ReadRequest",
+          "package": "nepl3.reader",
+          "revision": 1
+        }
+      },
+      "output": {
+        "named": {
+          "name": "ReadReply",
+          "package": "nepl3.reader",
+          "revision": 1
+        }
+      },
+      "pure": true
+    },
+    "builtinTrivia": {
+      "input": {
+        "named": {
+          "name": "ReadRequest",
+          "package": "nepl3.reader",
+          "revision": 1
+        }
+      },
+      "output": {
+        "named": {
+          "name": "ReadReply",
+          "package": "nepl3.reader",
+          "revision": 1
+        }
+      },
+      "pure": true
+    }
+  },
   "package": "nepl3.reader",
   "revision": 1,
   "types": {
@@ -1720,6 +1772,179 @@
         ]
       }
     },
+    "TokenTarget": {
+      "constraints": [],
+      "variant": {
+        "Builtin": [
+          [
+            "reader",
+            {
+              "named": {
+                "name": "BuiltinReader",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "tokenKind",
+            {
+              "named": {
+                "name": "KindRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Mode": []
+      }
+    },
+    "TokenizationContinuation": {
+      "constraints": [
+        "reader.tokenizer-continuation"
+      ],
+      "record": [
+        [
+          "scope",
+          {
+            "named": {
+              "name": "TokenizationScope",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "sessionId",
+          "Text"
+        ],
+        [
+          "readerSchema",
+          {
+            "named": {
+              "name": "SchemaRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "readerPlanDigest",
+          "Bytes32"
+        ],
+        [
+          "configurationDigest",
+          "Bytes32"
+        ],
+        [
+          "request",
+          {
+            "named": {
+              "name": "ReadRequest",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "mode",
+          "Text"
+        ],
+        [
+          "target",
+          {
+            "named": {
+              "name": "TokenTarget",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "phase",
+          {
+            "named": {
+              "name": "TokenizationPhase",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "current",
+          {
+            "named": {
+              "name": "ReaderCheckpoint",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "trivia",
+          {
+            "list": {
+              "named": {
+                "name": "Trivia",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "expected",
+          {
+            "list": {
+              "named": {
+                "name": "Expectation",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "furthest",
+          "U64"
+        ],
+        [
+          "pending",
+          {
+            "named": {
+              "name": "TokenizationWait",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "depthBase",
+          "U64"
+        ],
+        [
+          "usage",
+          {
+            "named": {
+              "name": "Usage",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "name": "Report",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
     "TokenizationOutcome": {
       "constraints": [],
       "variant": {
@@ -1738,7 +1963,7 @@
             "continuation",
             {
               "named": {
-                "name": "ReaderContinuation",
+                "name": "TokenizationContinuation",
                 "package": "nepl3.reader",
                 "revision": 1
               }
@@ -1812,6 +2037,16 @@
                 "revision": 1
               }
             }
+          ],
+          [
+            "continuation",
+            {
+              "named": {
+                "name": "TokenizationContinuation",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
           ]
         ],
         "Stopped": [
@@ -1836,6 +2071,23 @@
                 "revision": 1
               }
             }
+          ]
+        ]
+      }
+    },
+    "TokenizationPhase": {
+      "constraints": [],
+      "variant": {
+        "Skip": [
+          [
+            "next",
+            "U64"
+          ]
+        ],
+        "Take": [
+          [
+            "next",
+            "U64"
           ]
         ]
       }
@@ -1924,6 +2176,60 @@
           }
         ]
       ]
+    },
+    "TokenizationScope": {
+      "constraints": [
+        "reader.tokenizer-scope"
+      ],
+      "record": [
+        [
+          "operationId",
+          "Text"
+        ],
+        [
+          "profileDigest",
+          "Bytes32"
+        ],
+        [
+          "snapshot",
+          {
+            "named": {
+              "name": "SourceRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "TokenizationWait": {
+      "constraints": [],
+      "variant": {
+        "Provider": [
+          [
+            "continuation",
+            {
+              "named": {
+                "name": "ReaderContinuation",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Reservation": [
+          [
+            "request",
+            {
+              "named": {
+                "name": "ReservationRequest",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
     },
     "TransformReply": {
       "constraints": [

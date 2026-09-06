@@ -6,9 +6,11 @@ Grammarはreader・prefix形状・束縛・表示の定義を同じpackageへま
 
 ## 1. 文書の根と名前解決
 
-根は `language name revision root declarations`。declarationsはcons/nil列。全constructorは `grammar-signatures.md` に定義する。宣言の順番はmetadata解決に影響しない。category/mode/reader/form kind/namespace/extension aliasの各名前空間で同名を拒否し、参照先をcompile時に解決する。
+根は `language name revision root declarations`。declarationsはcons/nil列。全constructorは `grammar-signatures.md` に定義する。宣言の順番はmetadata解決に影響しない。category/mode/reader/namespace/extension aliasの各名前空間で同名を拒否し、参照先をcompile時に解決する。formとleafの宣言はそれぞれcategoryとkindの組で一意とする。
 
 一つのkindを複数categoryで受け入れることは、field schemaが完全に一致する場合に限り許可する。grammar自身のField宣言とSelectorのfield等、同じ綴りでshapeが異なる場合は異なるkind IDを付ける。modeごとのspellingとschema kindを混同しない。
+
+共有kindのsurface descriptorは一つであり、categoryごとのbinding/style/read宣言は別に保持する。DeclarationOriginはform/leafに限ってcategoryを持ち、同じkind名の各宣言位置を区別する。その他の宣言のcategoryはNoneである。この出自の区別はexecution identityへ含め、意味上の宣言順序は引き続き無関係とする。
 
 `builtin Name/Text/Nat/Lang` は配布された基礎readerを直接参照する。`local C` は現在言語のcategory。`foreign Alias C` はprofileで固定した別schemaのcategory。`withmode M R` はその引数だけのmode切替え。`listof R` は専用list categoryを特殊化し、cons/nilの既知shapeへ展開する。
 
@@ -101,6 +103,16 @@ Grammarが生成したdescriptorと、同じ契約をRustで直接構築したde
 外部HeadProviderは `shape(head, existingContext)` と `context_for_child(head, index, completedChildren)` を提供できる。後者は既に読了した子だけを参照する。schemaを変更する宣言の作用範囲は、その宣言が導入したbodyの部分木とし、復帰時に元へ戻す。
 
 今回の配布4言語はschemaをソース本体の途中で自己変更しない。Grammar sourceをcompileして別の入力に適用する順序を標準経路にする。動的HeadProvider経路は契約試験用の局所構文例で実装・検証する。単にAPIだけ残して未実装にしない。
+
+### 永続する解析選択と検査範囲
+
+ParseTreeはProfile digest、SyntaxBundle、bundleごとのNodeSelectionとRecoveryEntryを保持する。foreignへのpathの各NodeRefはその段階の所有bundleに属し、field名で次のForeignSyntaxを選ぶ。各到達nodeには選択がちょうど一つ必要で、static form/leaf/readのindexはEntryContextのaliasとpackage executionDigestで所有を固定する。既知formの原文spellingをleafへ付け替えてarityを変えたり、親ReadSpecと異なるalias/category/modeの子を置いたりしてはならない。ListOfのtailは同じspineのcontextとReadSpecを保持する。
+
+Dynamicの完成選択は固定HeadShape、providerの操作参照、field順のchildContextsを保存する。childContextsは完成treeではfieldsと同数であり、各実childの選択と一致する。callbackは固定arityやNodeRef/ForeignSyntaxのslot形状を変更できず、解決済みProfileの実package/aliasからcontextを選ぶ。進行中frameは既読または開始済みchildまでの確定prefixを保持し、完成treeと同じ完全性条件を先取りしない。
+
+現在のParseTree.validateは静的選択・参照所有・回復構文・payload型を検査する。HeadProviderの投影要求と操作署名の実装が接続されるまでは、DynamicをUnvalidatedDynamicで明示拒否し、allowlistとshapeだけで成功proofを発行しない。この検査は、任意のreader/providerを再実行して全payloadがその出力であることを証明するものではない。readerの実行等価性、native/portable provider比較、全体のP03完成は別の実行検証で確認する。
+
+Unparsedの先頭をtokenとして既に読んでいる場合は、そのTokenRefとheadを保持し、Unparsed coverがheadを包含することを検査する。未知arityを推測して通常leafへ変えることと、既読tokenのpayload/view/triviaを保存することは別である。tokenを得られないNoMatch等ではtoken/headをともにNoneとする。どちらの場合も不明範囲と理由はRecoveryEntryに残る。
 
 ## 8. Grammar自身のbootstrap
 

@@ -90,6 +90,44 @@ impl<'a> CheckedLanguagePackage<'a> {
     pub fn reader(&self) -> &CheckedPlan<'a> {
         &self.reader
     }
+    pub fn validate_head_shape(
+        &self,
+        shape: &crate::selection::HeadShape,
+        budget: &mut Budget,
+    ) -> Result<(), PackageError> {
+        budget.charge(Resource::Work, 1)?;
+        if shape.kind.schema != self.package.schema {
+            return Err(PackageError::KindShape);
+        }
+        let expected = super::shape::record_kind(&shape.kind, self.registry, budget)?;
+        if expected.len() != shape.fields.len() {
+            return Err(PackageError::KindShape);
+        }
+        for (field, expected) in shape.fields.iter().zip(expected) {
+            let name = if matches!(
+                super::shape::terminal(self.package, field.read, budget)?,
+                ReadSpec::Foreign { .. }
+            ) {
+                "ForeignSyntax"
+            } else {
+                "NodeRef"
+            };
+            if field.name != expected.name
+                || !matches!(&expected.ty,nepl3_core::schema::TypeDescriptor::Named(v) if v.package=="nepl3.foundation"&&v.revision==1&&v.name==name)
+            {
+                return Err(PackageError::KindShape);
+            }
+        }
+        super::bindings::owner(
+            self.package,
+            &shape.fields,
+            None,
+            shape.binding,
+            &shape.styles,
+            self.registry,
+            budget,
+        )
+    }
 }
 impl LanguagePackage {
     pub fn check<'a>(
@@ -105,6 +143,17 @@ impl LanguagePackage {
             budget.charge(Resource::Work, 1)?;
             if registry.descriptor(schema).is_none() {
                 return Err(SchemaError::UnknownSchema.into());
+            }
+        }
+        for (i, schema) in self.payload_schemas.iter().enumerate() {
+            for prior in &self.payload_schemas[..i] {
+                budget.charge(
+                    Resource::Work,
+                    schema.package.len().min(prior.package.len()) as u64 + 33,
+                )?;
+                if prior == schema {
+                    return Err(PackageError::DuplicateName);
+                }
             }
         }
         if self.reader.schema != self.schema {
@@ -162,6 +211,7 @@ impl LanguagePackage {
         }
         super::shape::check(self, registry, budget)?;
         super::bindings::check(self, registry, budget)?;
+        self.recovery.validate(self, registry, budget)?;
         let mut sources = SourceStore::default();
         let mut admission = SourceAdmission::default();
         for snapshot in &self.provenance.sources {
@@ -180,6 +230,22 @@ impl LanguagePackage {
             budget.charge(Resource::Work, 1)?;
             if origin.name.is_empty() || origin.origin.0 >= self.provenance.origins.len() as u64 {
                 return Err(PackageError::Provenance);
+            }
+            match origin.kind {
+                DeclarationKind::Form | DeclarationKind::Leaf => {
+                    let category = origin
+                        .category
+                        .as_deref()
+                        .filter(|v| !v.is_empty())
+                        .ok_or(PackageError::Provenance)?;
+                    budget.charge(
+                        Resource::Work,
+                        (self.categories.len() as u64).saturating_mul(category.len() as u64 + 1),
+                    )?;
+                    self.category(category)?;
+                }
+                _ if origin.category.is_some() => return Err(PackageError::Provenance),
+                _ => {}
             }
         }
         Ok(CheckedLanguagePackage {

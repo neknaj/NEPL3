@@ -1,6 +1,7 @@
 //! Standard lexical readers. Source reservations are supplied by the host, never generated here.
 mod language;
 pub(crate) mod lexical;
+pub mod provider;
 mod text;
 use crate::{
     model::*,

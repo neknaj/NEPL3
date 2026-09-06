@@ -1,6 +1,6 @@
 //! A native reader context carries proof of its actual environment digest.
 use crate::model::ReaderContext;
-use alloc::vec::Vec;
+use alloc::{borrow::Cow, vec::Vec};
 use core::ops::Deref;
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
@@ -29,13 +29,13 @@ impl<E> From<StopReason> for ContextError<E> {
 
 #[derive(Debug)]
 pub struct CheckedReaderContext<'a> {
-    raw: &'a ReaderContext,
+    raw: Cow<'a, ReaderContext>,
     foundation: SchemaRef,
     sources: Vec<&'a SourceSnapshot>,
 }
 impl CheckedReaderContext<'_> {
     pub fn raw(&self) -> &ReaderContext {
-        self.raw
+        self.raw.as_ref()
     }
     pub fn foundation_schema(&self) -> &SchemaRef {
         &self.foundation
@@ -43,11 +43,80 @@ impl CheckedReaderContext<'_> {
     pub fn sources(&self) -> &[&SourceSnapshot] {
         &self.sources
     }
+    /// Explicitly reuse the checked environment under another syntactic entry.
+    /// Foreign namespace isolation/projection is a separate host decision.
+    /// The returned proof owns its context and borrows only the supplied source store.
+    pub fn retarget<'a>(
+        &self,
+        schema: &SchemaRef,
+        category: &str,
+        mode: &str,
+        sources: &'a SourceStore,
+        registry: &SchemaRegistry,
+        budget: &mut Budget,
+    ) -> Result<CheckedReaderContext<'a>, ContextError<core::convert::Infallible>> {
+        use crate::runtime::copy::CopyCost;
+        budget.charge(Resource::Work, 1)?;
+        if !registry.is_finalized()
+            || registry.descriptor(&self.foundation).is_none()
+            || registry.descriptor(schema).is_none()
+            || category.is_empty()
+            || mode.is_empty()
+        {
+            return Err(ContextError::InvalidContext);
+        }
+        for binding in &self.environment.value.bindings {
+            if registry.descriptor(&binding.namespace.schema).is_none() {
+                return Err(ContextError::InvalidContext);
+            }
+            registry
+                .validate_typed(&binding.value, budget)
+                .map_err(ContextError::Schema)?;
+        }
+        let mut closure = Vec::new();
+        for prior in &self.sources {
+            budget.charge(
+                Resource::Work,
+                (sources.snapshots().len() as u64)
+                    .saturating_mul(prior.identity().source.0.len() as u64 + 33)
+                    .saturating_add(1),
+            )?;
+            let source = sources
+                .snapshots()
+                .iter()
+                .find(|source| source.identity() == prior.identity())
+                .ok_or(ContextError::Source(SourceError::MissingSnapshot))?;
+            budget.charge(Resource::Work, prior.uri().len() as u64 + 1)?;
+            if source.uri() != prior.uri() {
+                return Err(ContextError::InvalidContext);
+            }
+            budget.charge(
+                Resource::AllocationUnits,
+                core::mem::size_of::<&SourceSnapshot>() as u64,
+            )?;
+            closure.push(source);
+        }
+        self.raw().charge(budget)?;
+        budget.charge(
+            Resource::AllocationUnits,
+            (schema.package.len() + category.len() + mode.len() + self.foundation.package.len())
+                as u64,
+        )?;
+        let mut raw = self.raw().clone();
+        raw.schema = schema.clone();
+        raw.category = category.into();
+        raw.mode = mode.into();
+        Ok(CheckedReaderContext {
+            raw: Cow::Owned(raw),
+            foundation: self.foundation.clone(),
+            sources: closure,
+        })
+    }
 }
 impl Deref for CheckedReaderContext<'_> {
     type Target = ReaderContext;
     fn deref(&self) -> &ReaderContext {
-        self.raw
+        self.raw.as_ref()
     }
 }
 
@@ -126,7 +195,7 @@ impl ReaderContext {
             codec.foundation_schema().package.len() as u64,
         )?;
         Ok(CheckedReaderContext {
-            raw: self,
+            raw: Cow::Borrowed(self),
             foundation: codec.foundation_schema().clone(),
             sources: closure,
         })
@@ -185,7 +254,7 @@ pub(crate) fn restored<'a>(
     )?;
     budget.charge(Resource::AllocationUnits, foundation.package.len() as u64)?;
     Ok(CheckedReaderContext {
-        raw,
+        raw: Cow::Borrowed(raw),
         foundation: foundation.clone(),
         sources: closure,
     })

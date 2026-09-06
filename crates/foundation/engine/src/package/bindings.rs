@@ -80,7 +80,7 @@ pub(super) fn check(
     }
     Ok(())
 }
-fn owner(
+pub(super) fn owner(
     package: &LanguagePackage,
     fields: &[FieldSpec],
     self_type: Option<&TypeDescriptor>,

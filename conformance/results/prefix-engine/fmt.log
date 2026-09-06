@@ -1,0 +1,4 @@
+Command(s):
+cargo fmt --all -- --check
+Target: host-repository
+Exit code: 0

@@ -49,6 +49,7 @@ pub fn check(root: &Path) -> Result<()> {
     contract::check(root)?;
     contract::reader::check(root)?;
     contract::engine::check(root)?;
+    contract::grammar::check(root)?;
     dependency::check(root, &status.implemented_crates)?;
     task::generate(root, &tasks, &status, false)?;
     documentation::check(root, false)?;
@@ -84,6 +85,11 @@ pub fn foundation(root: &Path) -> Result<()> {
     contract::foundation::write(root)
 }
 
+/// Generate the production Grammar AST descriptor, whose shape comes from forms.json.
+pub fn grammar(root: &Path) -> Result<()> {
+    contract::grammar::write(root)
+}
+
 /// Regenerate the registered reader envelope descriptor projection.
 pub fn reader(root: &Path) -> Result<()> {
     contract::reader::write(root)
@@ -102,3 +108,4 @@ pub fn evidence_identity(root: &Path) -> Result<()> {
 pub fn engine(root: &Path) -> Result<()> {
     contract::engine::write(root)
 }
+pub mod bootstrap;

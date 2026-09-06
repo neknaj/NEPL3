@@ -184,6 +184,10 @@ fn fixture() -> Result<(LanguagePackage, SchemaRegistry), String> {
             },
         ],
         extensions: vec![],
+        recovery: nepl3_engine::recovery::RecoveryPlan {
+            default_unexpected: nepl3_engine::recovery::UnexpectedPolicy::PreserveRemainder,
+            rules: vec![],
+        },
         provenance: PackageProvenance {
             sources: vec![],
             origins: vec![],
@@ -192,6 +196,275 @@ fn fixture() -> Result<(LanguagePackage, SchemaRegistry), String> {
         },
     };
     Ok((package, registry))
+}
+
+#[test]
+fn persistent_tree_checks_parent_reads_spelling_payload_and_concrete_owner() -> TestResult {
+    use nepl3_core::{origin::*, source::*, syntax::*, value::NdfValue, view::*};
+    use nepl3_engine::{profile::*, recovery::*, selection::*, tree::*};
+    let (package, registry) = fixture()?;
+    let identity = package
+        .check(&registry, &mut budget())
+        .map_err(|e| format!("{e:?}"))?
+        .semantic_identity(&mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let profile = ParseProfile {
+        id: "tree-test".into(),
+        languages: vec![
+            LanguageRegistration {
+                alias: "A".into(),
+                package: identity.clone(),
+                default_category: "Expr".into(),
+            },
+            LanguageRegistration {
+                alias: "B".into(),
+                package: identity,
+                default_category: "Expr".into(),
+            },
+        ],
+        schemas: vec![
+            package.schema.clone(),
+            registry
+                .selected("nepl3.foundation", 1)
+                .ok_or("foundation")?
+                .clone(),
+        ],
+        category_modes: vec![],
+        providers: vec![],
+        allowlist: vec![],
+        resources: vec![],
+        limits: budget().limits(),
+    };
+    let packages = [&package];
+    let resolved = profile
+        .resolve(
+            &RuntimeCatalog {
+                packages: &packages,
+                providers: &[],
+                resources: &[],
+            },
+            &registry,
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+    let entry = resolved
+        .entry("A", None, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let execution = resolved
+        .execution_digest("A", &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let source = SourceSnapshot::new(
+        SourceId("tree".into()),
+        0,
+        "memory:tree".into(),
+        b"let x y".to_vec(),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let token_kind = package.leaves[0].token_kind.clone();
+    let spans = [source.span(0, 3), source.span(4, 5), source.span(6, 7)]
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| format!("{e:?}"))?;
+    let tokens = spans
+        .iter()
+        .zip(["let", "x", "y"])
+        .map(|(span, text)| Token {
+            kind: token_kind.clone(),
+            head: span.clone(),
+            payload: NdfValue::Text(text.into()),
+            views: ViewBundle {
+                elements: vec![],
+                roots: vec![],
+            },
+            leading_trivia: vec![],
+        })
+        .collect();
+    let node = |kind: &str, index: usize, fields: Vec<FieldValue>| SyntaxNode {
+        schema: package.schema.clone(),
+        kind: kind.into(),
+        fields,
+        head: Some(spans[index].clone()),
+        cover: Some(spans[index].clone()),
+        origin: OriginId(index as u64),
+        token: Some(TokenRef(index as u64)),
+    };
+    let mut parent = node(
+        "Form:Let",
+        0,
+        vec![FieldValue::Child(NodeRef(1)), FieldValue::Child(NodeRef(2))],
+    );
+    parent.cover = Some(source.span(0, 7).map_err(|e| format!("{e:?}"))?);
+    let mut tree = ParseTree {
+        profile_digest: resolved.digest(),
+        bundle: SyntaxBundle {
+            sources: vec![source],
+            nodes: vec![
+                parent,
+                node("Builtin:Name", 1, vec![]),
+                node("Leaf:Name", 2, vec![]),
+            ],
+            origins: spans.iter().cloned().map(Origin::Direct).collect(),
+            root: NodeRef(0),
+            environments: vec![],
+            tokens,
+            source_maps: vec![],
+        },
+        recovery: vec![],
+        contexts: vec![BundleContext {
+            path: vec![],
+            nodes: vec![
+                NodeSelection {
+                    node: NodeRef(0),
+                    entry: entry.clone(),
+                    execution_digest: execution,
+                    shape: ShapeSelection::Form { index: 0 },
+                },
+                NodeSelection {
+                    node: NodeRef(1),
+                    entry: entry.clone(),
+                    execution_digest: execution,
+                    shape: ShapeSelection::Builtin {
+                        read: ReadSpecId(0),
+                    },
+                },
+                NodeSelection {
+                    node: NodeRef(2),
+                    entry,
+                    execution_digest: execution,
+                    shape: ShapeSelection::Leaf { index: 0 },
+                },
+            ],
+        }],
+    };
+    tree.validate(&resolved, &mut budget(), &mut SourceAdmission::default())
+        .map_err(|e| format!("{e:?}"))?;
+    let mut bad = tree.clone();
+    bad.contexts[0].nodes[1].entry = resolved
+        .entry("B", None, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert!(
+        matches!(
+            bad.validate(&resolved, &mut budget(), &mut SourceAdmission::default()),
+            Err(TreeError::Selection)
+        ),
+        "same package under another alias is not the parent's child context"
+    );
+    let mut bad = tree.clone();
+    bad.bundle.nodes[0].fields[0] =
+        FieldValue::Atom(nepl3_core::value::NdfScalar::Text("x".into()));
+    assert!(
+        bad.validate(&resolved, &mut budget(), &mut SourceAdmission::default())
+            .is_err(),
+        "builtin fields own token-bearing child nodes"
+    );
+    let mut bad = tree.clone();
+    bad.contexts[0].nodes[2].execution_digest.0[0] ^= 1;
+    assert!(matches!(
+        bad.validate(&resolved, &mut budget(), &mut SourceAdmission::default()),
+        Err(TreeError::ExecutionIdentity)
+    ));
+    let mut bad = tree.clone();
+    bad.bundle.tokens[2].payload = NdfValue::U64(0);
+    assert!(
+        bad.validate(&resolved, &mut budget(), &mut SourceAdmission::default())
+            .is_err(),
+        "NDF validity alone does not satisfy leaf payload type"
+    );
+    let mut bad = tree.clone();
+    bad.bundle.tokens[2].kind = package.forms[0].kind.clone();
+    assert!(
+        bad.validate(&resolved, &mut budget(), &mut SourceAdmission::default())
+            .is_err()
+    );
+    let mut bad = tree.clone();
+    bad.bundle.nodes.truncate(1);
+    bad.bundle.nodes[0].kind = "Leaf:Name".into();
+    bad.bundle.nodes[0].fields.clear();
+    bad.bundle.nodes[0].cover = bad.bundle.nodes[0].head.clone();
+    bad.contexts[0].nodes.truncate(1);
+    bad.contexts[0].nodes[0].shape = ShapeSelection::Leaf { index: 0 };
+    assert!(
+        matches!(
+            bad.validate(&resolved, &mut budget(), &mut SourceAdmission::default()),
+            Err(TreeError::Selection)
+        ),
+        "a recognized form spelling cannot be reinterpreted as arity-zero leaf"
+    );
+    let mut bad = tree.clone();
+    bad.bundle.nodes[0].head = Some(spans[1].clone());
+    bad.bundle.nodes[0].token = Some(TokenRef(1));
+    assert!(
+        bad.validate(&resolved, &mut budget(), &mut SourceAdmission::default())
+            .is_err(),
+        "form head compares original source spelling, not arbitrary token payload"
+    );
+    let op = nepl3_core::value::OperationRef {
+        schema: package.schema.clone(),
+        name: "facts".into(),
+    };
+    let implementation = ProviderImplementation {
+        provider: "fixture-facts".into(),
+        revision: 1,
+        implementation_digest: Digest::of(b"fixture implementation"),
+        operations: vec![op.clone()],
+    };
+    let mut dynamic_profile = profile.clone();
+    dynamic_profile.providers.push(ProviderRequirement {
+        provider: implementation.provider.clone(),
+        revision: 1,
+        implementation_digest: implementation.implementation_digest,
+        operation: op.clone(),
+    });
+    dynamic_profile.allowlist.push(op.clone());
+    let implementations = [implementation];
+    let dynamic_resolved = dynamic_profile
+        .resolve(
+            &RuntimeCatalog {
+                packages: &packages,
+                providers: &implementations,
+                resources: &[],
+            },
+            &registry,
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+    let mut bad = tree.clone();
+    bad.profile_digest = dynamic_resolved.digest();
+    bad.contexts[0].nodes[0].shape = ShapeSelection::Dynamic {
+        provider: HeadProviderRef {
+            shape: op.clone(),
+            child_context: op,
+        },
+        shape: Box::new(HeadShape {
+            kind: package.forms[0].kind.clone(),
+            fields: package.forms[0].fields.clone(),
+            binding: package.forms[0].binding,
+            styles: package.forms[0].styles.clone(),
+        }),
+        child_contexts: vec![
+            bad.contexts[0].nodes[1].entry.clone(),
+            bad.contexts[0].nodes[2].entry.clone(),
+        ],
+    };
+    assert!(
+        matches!(
+            bad.validate(
+                &dynamic_resolved,
+                &mut budget(),
+                &mut SourceAdmission::default()
+            ),
+            Err(TreeError::UnvalidatedDynamic)
+        ),
+        "an allowed facts(Text -> Unit) operation cannot stand in for a checked HeadProvider protocol"
+    );
+    let duplicate = tree.contexts[0].nodes[0].clone();
+    tree.contexts[0].nodes.push(duplicate);
+    assert!(
+        tree.validate(&resolved, &mut budget(), &mut SourceAdmission::default())
+            .is_err()
+    );
+    Ok(())
 }
 #[test]
 fn package_checks_real_surface_shapes_modes_selectors_and_binding_coverage() -> TestResult {
@@ -358,6 +631,7 @@ fn package_boundary_checks_extension_provenance_and_resource_limits() -> TestRes
     ));
     package.provenance.sources.push(source);
     package.provenance.declarations.push(DeclarationOrigin {
+        category: None,
         kind: DeclarationKind::Category,
         name: "Expr".into(),
         origin: OriginId(1),
@@ -385,6 +659,412 @@ fn package_boundary_checks_extension_provenance_and_resource_limits() -> TestRes
     assert!(matches!(
         package.check(&registry, &mut stopped),
         Err(PackageError::Stopped(StopReason::DepthLimit))
+    ));
+    Ok(())
+}
+
+fn semantic(
+    package: &LanguagePackage,
+    registry: &SchemaRegistry,
+) -> Result<nepl3_core::source::Digest, String> {
+    package
+        .check(registry, &mut budget())
+        .map_err(|e| format!("{e:?}"))?
+        .semantic_identity(&mut budget())
+        .map(|v| v.semantic_digest)
+        .map_err(|e| format!("{e:?}"))
+}
+#[test]
+fn semantic_identity_removes_arena_layout_sharing_and_provenance() -> TestResult {
+    use nepl3_core::{
+        origin::Origin,
+        source::{SourceId, SourceSnapshot},
+    };
+    use nepl3_reader::plan::{ReaderExpr, ReaderId, ReaderRule};
+    let (mut a, registry) = fixture()?;
+    a.reader.expressions = vec![
+        ReaderExpr::Literal("a".into()),
+        ReaderExpr::Seq(vec![ReaderId(0), ReaderId(0)]),
+    ];
+    a.reader.rules = vec![ReaderRule {
+        name: "Pair".into(),
+        root: ReaderId(1),
+        output: TypeDescriptor::List(Box::new(TypeDescriptor::NdfValue)),
+    }];
+    let digest = semantic(&a, &registry)?;
+    let mut b = a.clone();
+    b.reader.expressions = vec![
+        ReaderExpr::Seq(vec![ReaderId(2), ReaderId(1)]),
+        ReaderExpr::Literal("a".into()),
+        ReaderExpr::Literal("a".into()),
+        ReaderExpr::Literal("unused arena storage".into()),
+    ];
+    b.reader.rules[0].root = ReaderId(0);
+    b.bindings.swap(0, 1);
+    b.bindings[2] = Binding::Group(vec![BindingId(1), BindingId(0)]);
+    b.reads.swap(0, 1);
+    b.forms[0].fields[0].read = ReadSpecId(1);
+    b.forms[0].fields[1].read = ReadSpecId(0);
+    assert_ne!(
+        a.reader
+            .digest(&mut budget())
+            .map_err(|e| format!("{e:?}"))?,
+        b.reader
+            .digest(&mut budget())
+            .map_err(|e| format!("{e:?}"))?
+    );
+    assert_eq!(digest, semantic(&b, &registry)?);
+    let execution = |p: &LanguagePackage| -> Result<_, String> {
+        p.check(&registry, &mut budget())
+            .map_err(|e| format!("{e:?}"))?
+            .execution_digest(&mut budget())
+            .map_err(|e| format!("{e:?}"))
+    };
+    assert_ne!(execution(&a)?, execution(&b)?);
+    let before_provenance = execution(&b)?;
+    let source = SourceSnapshot::new(
+        SourceId("grammar-provenance".into()),
+        4,
+        "memory:grammar".into(),
+        b"different layout".to_vec(),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    b.provenance.origins.push(Origin::Direct(
+        source.span(0, 9).map_err(|e| format!("{e:?}"))?,
+    ));
+    b.provenance.sources.push(source);
+    assert_eq!(digest, semantic(&b, &registry)?);
+    assert_ne!(before_provenance, execution(&b)?);
+    b.reader.expressions.push(ReaderExpr::Commit(ReaderId(999)));
+    assert!(b.check(&registry, &mut budget()).is_err());
+    Ok(())
+}
+
+#[test]
+fn recovery_strategy_and_sync_order_are_part_of_package_behavior() -> TestResult {
+    use nepl3_engine::recovery::*;
+    let (mut package, registry) = fixture()?;
+    let original = semantic(&package, &registry)?;
+    package.recovery.default_unexpected = UnexpectedPolicy::ConsumeToken;
+    assert_ne!(original, semantic(&package, &registry)?);
+    package.recovery.rules.push(RecoveryRule {
+        category: "Expr".into(),
+        unexpected: UnexpectedPolicy::PreserveRemainder,
+        synchronization: vec![
+            SyncToken {
+                ancestor_category: "Expr".into(),
+                kind: package.leaves[0].token_kind.clone(),
+                spelling: Some("end1".into()),
+            },
+            SyncToken {
+                ancestor_category: "Expr".into(),
+                kind: package.leaves[0].token_kind.clone(),
+                spelling: Some("end2".into()),
+            },
+        ],
+    });
+    let original = semantic(&package, &registry)?;
+    package.recovery.rules[0].synchronization.reverse();
+    assert_ne!(original, semantic(&package, &registry)?);
+    package.recovery.rules[0].synchronization[0].ancestor_category = "Absent".into();
+    assert!(matches!(
+        package.check(&registry, &mut budget()),
+        Err(PackageError::MissingCategory)
+    ));
+    Ok(())
+}
+#[test]
+fn semantic_identity_preserves_ordered_behavior_and_presentation_fallback() -> TestResult {
+    use nepl3_core::view::{FallbackRole, PresentationClass};
+    use nepl3_reader::plan::{ReaderExpr, ReaderId, ReaderRule};
+    let (mut a, registry) = fixture()?;
+    a.reader.expressions = vec![
+        ReaderExpr::Literal("a".into()),
+        ReaderExpr::Literal("b".into()),
+        ReaderExpr::Choice(vec![ReaderId(0), ReaderId(1)]),
+    ];
+    a.reader.rules = vec![ReaderRule {
+        name: "Word".into(),
+        root: ReaderId(2),
+        output: TypeDescriptor::Unit,
+    }];
+    a.forms[0].styles.push(StyleRule {
+        selector: StyleSelector::Head,
+        class: PresentationClass {
+            schema: a.schema.clone(),
+            name: "head".into(),
+            fallback: FallbackRole::Content,
+        },
+    });
+    a.modes[0].take.push(TakeRule {
+        reader: TokenReader::Builtin(BuiltinReader::Text),
+        kind: a.leaves[0].token_kind.clone(),
+    });
+    let digest = semantic(&a, &registry)?;
+    let mut b = a.clone();
+    b.reader.expressions[2] = ReaderExpr::Choice(vec![ReaderId(1), ReaderId(0)]);
+    assert_ne!(digest, semantic(&b, &registry)?);
+    let mut b = a.clone();
+    b.bindings[2] = Binding::Group(vec![BindingId(1), BindingId(0)]);
+    assert_ne!(digest, semantic(&b, &registry)?);
+    let mut b = a.clone();
+    b.modes[0].take.reverse();
+    assert_ne!(digest, semantic(&b, &registry)?);
+    let mut b = a.clone();
+    b.forms[0].styles[0].class.fallback = FallbackRole::Marker;
+    assert_ne!(digest, semantic(&b, &registry)?);
+    let checked = a
+        .check(&registry, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let mut stopped = Budget::new(Limits {
+        allocation_units: 0,
+        ..budget().limits()
+    });
+    assert!(matches!(
+        checked.semantic_identity(&mut stopped),
+        Err(PackageError::Stopped(_))
+    ));
+    Ok(())
+}
+
+#[test]
+fn resolved_profile_pins_real_package_host_providers_resources_and_foreign_modes() -> TestResult {
+    use nepl3_core::{source::Digest, value::OperationRef};
+    use nepl3_engine::profile::*;
+    let (mut host, registry) = fixture()?;
+    let mut guest = host.clone();
+    guest.modes.push(nepl3_reader::tokenizer::ReaderMode {
+        name: "GuestOnly".into(),
+        skip: vec![],
+        take: guest.modes[0].take.clone(),
+    });
+    host.reads.push(ReadSpec::Foreign {
+        alias: "Guest".into(),
+        category: "Expr".into(),
+    });
+    host.reads.push(ReadSpec::WithMode {
+        mode: "GuestOnly".into(),
+        read: ReadSpecId(2),
+    });
+    let identity = |p: &LanguagePackage| -> Result<PackageIdentity, String> {
+        p.check(&registry, &mut budget())
+            .map_err(|e| format!("{e:?}"))?
+            .semantic_identity(&mut budget())
+            .map_err(|e| format!("{e:?}"))
+    };
+    let op = OperationRef {
+        schema: host.schema.clone(),
+        name: "facts".into(),
+    };
+    // Test implementation manifest bytes are fixture data, never a distributed provider hash.
+    let provider = ProviderImplementation {
+        provider: "fixture-provider".into(),
+        revision: 1,
+        implementation_digest: Digest::of(b"fixture implementation manifest v1"),
+        operations: vec![op.clone()],
+    };
+    let resource = ResourceSnapshot {
+        id: "fixture-style".into(),
+        bytes: b"style content".to_vec(),
+    };
+    let mut profile = ParseProfile {
+        id: "fixture.profile".into(),
+        languages: vec![
+            LanguageRegistration {
+                alias: "Host".into(),
+                package: identity(&host)?,
+                default_category: "Expr".into(),
+            },
+            LanguageRegistration {
+                alias: "Guest".into(),
+                package: identity(&guest)?,
+                default_category: "Expr".into(),
+            },
+        ],
+        schemas: vec![
+            host.schema.clone(),
+            registry
+                .selected("nepl3.foundation", 1)
+                .ok_or("foundation")?
+                .clone(),
+        ],
+        category_modes: vec![CategoryMode {
+            alias: "Guest".into(),
+            category: "Expr".into(),
+            mode: "GuestOnly".into(),
+        }],
+        providers: vec![ProviderRequirement {
+            provider: provider.provider.clone(),
+            revision: provider.revision,
+            implementation_digest: provider.implementation_digest,
+            operation: op.clone(),
+        }],
+        allowlist: vec![op.clone()],
+        resources: vec![ResourceIdentity {
+            id: resource.id.clone(),
+            digest: Digest::of(&resource.bytes),
+        }],
+        limits: budget().limits(),
+    };
+    let packages = [&host, &guest];
+    let providers = [provider];
+    let resources = [resource];
+    let catalog = RuntimeCatalog {
+        packages: &packages,
+        providers: &providers,
+        resources: &resources,
+    };
+    let digest = profile
+        .resolve(&catalog, &registry, &mut budget())
+        .map_err(|e| format!("{e:?}"))?
+        .digest();
+    profile.languages.reverse();
+    profile.schemas.reverse();
+    let resolved = profile
+        .resolve(&catalog, &registry, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(digest, resolved.digest());
+    assert_eq!(
+        resolved
+            .entry("Host", None, &mut budget())
+            .map_err(|e| format!("{e:?}"))?
+            .mode,
+        "Code"
+    );
+    assert_eq!(
+        resolved
+            .entry("Guest", None, &mut budget())
+            .map_err(|e| format!("{e:?}"))?
+            .mode,
+        "GuestOnly"
+    );
+    let missing = RuntimeCatalog {
+        providers: &[],
+        ..catalog
+    };
+    assert!(matches!(
+        profile.resolve(&missing, &registry, &mut budget()),
+        Err(ProfileError::MissingProvider)
+    ));
+    let mut denied = profile.clone();
+    denied.allowlist.clear();
+    let resolved = denied
+        .resolve(&catalog, &registry, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert!(matches!(
+        resolved.provider(&op, &mut budget()),
+        Err(ProfileError::NotAllowed)
+    ));
+    let mut bad = profile.clone();
+    bad.providers[0].implementation_digest = Digest::of(b"self asserted change");
+    assert!(matches!(
+        bad.resolve(&catalog, &registry, &mut budget()),
+        Err(ProfileError::ProviderIdentity)
+    ));
+    let mut updated = providers.clone();
+    updated[0].implementation_digest = bad.providers[0].implementation_digest;
+    let changed = RuntimeCatalog {
+        providers: &updated,
+        ..catalog
+    };
+    assert_ne!(
+        digest,
+        bad.resolve(&changed, &registry, &mut budget())
+            .map_err(|e| format!("{e:?}"))?
+            .digest()
+    );
+    let mut bad = profile.clone();
+    bad.resources[0].digest = Digest::of(b"wrong resource");
+    assert!(matches!(
+        bad.resolve(&catalog, &registry, &mut budget()),
+        Err(ProfileError::ResourceIdentity)
+    ));
+    let mut bad = profile.clone();
+    bad.languages.retain(|v| v.alias != "Guest");
+    bad.category_modes.clear();
+    assert!(matches!(
+        bad.resolve(&catalog, &registry, &mut budget()),
+        Err(ProfileError::MissingAlias)
+    ));
+    let mut bad = profile.clone();
+    bad.category_modes[0].mode = "Absent".into();
+    assert!(matches!(
+        bad.resolve(&catalog, &registry, &mut budget()),
+        Err(ProfileError::MissingMode)
+    ));
+    let mut aliases = profile.clone();
+    let mut duplicate = aliases
+        .languages
+        .iter()
+        .find(|v| v.alias == "Guest")
+        .ok_or("guest")?
+        .clone();
+    duplicate.alias = "GuestCopy".into();
+    aliases.languages.push(duplicate);
+    let resolved = aliases
+        .resolve(&catalog, &registry, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        resolved
+            .entry("GuestCopy", None, &mut budget())
+            .map_err(|e| format!("{e:?}"))?
+            .alias,
+        "GuestCopy"
+    );
+    assert_eq!(
+        resolved
+            .entry("GuestCopy", None, &mut budget())
+            .map_err(|e| format!("{e:?}"))?
+            .mode,
+        "Code"
+    );
+    let long = "p".repeat(100_000);
+    let mut bad = profile.clone();
+    bad.providers[0].provider = format!("{long}x");
+    let mut long_providers = providers.clone();
+    long_providers[0].provider = format!("{long}y");
+    let long_catalog = RuntimeCatalog {
+        providers: &long_providers,
+        ..catalog
+    };
+    let mut limited = Budget::new(Limits {
+        work: 50_000,
+        ..budget().limits()
+    });
+    assert!(matches!(
+        bad.resolve(&long_catalog, &registry, &mut limited),
+        Err(ProfileError::Stopped(
+            nepl3_core::budget::StopReason::WorkLimit
+        ))
+    ));
+    let mut bad = profile.clone();
+    bad.resources[0].id = format!("{long}x");
+    let mut long_resources = resources.clone();
+    long_resources[0].id = format!("{long}y");
+    let long_catalog = RuntimeCatalog {
+        resources: &long_resources,
+        ..catalog
+    };
+    let mut limited = Budget::new(Limits {
+        work: 50_000,
+        ..budget().limits()
+    });
+    assert!(matches!(
+        bad.resolve(&long_catalog, &registry, &mut limited),
+        Err(ProfileError::Stopped(
+            nepl3_core::budget::StopReason::WorkLimit
+        ))
+    ));
+    let mut limited = Budget::new(Limits {
+        work: 500,
+        ..budget().limits()
+    });
+    assert!(matches!(
+        resolved.entry("GuestCopy", Some(&long), &mut limited),
+        Err(ProfileError::Stopped(
+            nepl3_core::budget::StopReason::WorkLimit
+        ))
     ));
     Ok(())
 }

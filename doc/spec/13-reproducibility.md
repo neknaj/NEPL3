@@ -20,6 +20,24 @@ Grammar packageの意味digestはschema digestと、source位置を除いたread
 
 wireの操作要求は、解決済みProfileの全SchemaRefとprovider revisionを含めてcache keyを作る。URIやsnapshot所属を除いてよいのは明示的な意味値だけのcacheであり、診断/editor結果のcacheにはsource identityとrevisionが必要。
 
+### Package意味正規形
+
+実装の`CheckedLanguagePackage::semantic_json`はcategories、extensions、forms、leaves、modes、namespaces、payloadSchemas、reader、recovery、root、schemaのkeyを持つcanonical JSONを返す。Category/Mode/Namespace/Extensionは名前順、Formはcategoryとspelling順、Leafはcategoryとcanonical token-kind ID順、payloadSchemasはpackage/revision/digest順に並べる。重複するpayload SchemaRefは拒否する。各レコードのpayload field順は`interfaces/engine.json`の対応型に従う。ただしread/binding参照は下記の式へ展開し、provenanceとarenaそのものは含めない。styleにはschema/nameに加えてfallback roleも含める。
+
+readとbindingの式はvariant名を先頭とするarrayで、variantのpayloadはnative公開型のfield順とする。ListOfは`["ListOf",cons,nil,element]`、Builtinは`["Builtin",reader,kind,tokenKind]`とする。kindは`[SchemaRef,localKind]`、operationは`[SchemaRef,name]`、styleは`[selector,SchemaRef,name,fallback]`である。modeは`[name,skipReaders,takePairs]`、formは`[category,spelling,kind,fields,binding,styles]`、leafは`[category,kind,tokenKind,payloadType,binding,styles]`とする。field、skip/take、choice/seq、bindingの子、styleの各列は意味順を保存する。
+
+readerは全名前付きruleを名前順にたどり、直接DAGの共有を出現ごとに展開したpostorder arenaへ置換したうえで、ReaderPlanの既存canonical descriptor形式を使う。rule名でのRefは展開しない。名前付きruleは未使用でも公開宣言として残す。匿名の未到達arena entryは意味正規形に含めないが、package検査はその不正参照・cycleも拒否する。ReadSpec/Bindingも使用元から展開し、匿名entryの共有・配置・未到達収納の差を除く。巨大な展開は共通予算でStoppedを返し、recursive stackに依存しない。
+
+この正規形は実行上の任意の等価性を証明するものではない。例えば異なるreader式への代数的書換えを同一視しない。providerの要求署名はpackageへ含めるが、hostの実装artifact identityは下記の解析Profileへ含める。packageの出自を持つeditor結果はこの意味digestだけでcacheしない。
+
+recoveryは `[defaultUnexpected,rules]` とし、ruleはcategory順の `[category,unexpected,synchronization]`、同期列は宣言順の `[ancestorCategory,kind,spellingOrNull]` とする。回復方針も実行挙動であり、順序やstrategyの変更を意味identityへ反映する。
+
+### 具体実行identity
+
+継続のarena indexと出自の参照先を固定するため、packageは意味identityとは別にexecutionDigestを持つ。hashは `NEPL3-PACKAGE-EXECUTION-1` + zero byte + 具体実行canonical JSON とする。意味正規形に加え、元のReaderPlan descriptor、ReadSpec/Bindingの全arenaと直接参照ID、form/leaf等の宣言配置、宣言のOrigin参照、全provenance source identity/URI、Origin/sourceMap tableを含める。sourceのbytesは検査済みsnapshot digestで固定する。意味上等しいarena再配置やgrammar source位置だけの変更でも、古いframeや診断originを再利用しない。
+
+EntryContextはpackage意味identityに加えてProfile内のaliasを保持する。同じpackageを異なるcategory-mode overrideで複数登録できるため、packageから最初のaliasを逆引きしてはならない。NodeSelectionのform/leaf/read/binding indexはそのaliasが指すexecutionDigestの実tableに属する。再開および後段での利用時に具体digestを照合し、意味digestが一致する別配置へ勝手に差し替えない。
+
 ## 2. native値とwire値
 
 型名中のU64/Bytes32等の有限primitiveと、任意精度Natural/Integerを区別する。wire sourceはopaque SourceId/revision/digestを使う。同じIDをbundle内・操作間の対応づけに使用し、URIやnative allocation addressへ置き換えない。同じURI/revision/byte列を持つ独立文書もSourceIdが異なれば別snapshotである。r3のURI-based bijectionは、この場合にspec02の宣言同一性を失うためr4で訂正した。

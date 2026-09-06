@@ -25,7 +25,7 @@
         "nepl3-reader"
       ],
       "no_std": true,
-      "responsibility": "共通prefix parser・束縛・editor query"
+      "responsibility": "共通prefix parser・束縛・editor query; dev-only nepl3-wire for real environment digest and native/portable parsing tests"
     },
     {
       "name": "nepl3-wire",

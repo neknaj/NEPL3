@@ -1,0 +1,17 @@
+[package]
+name = "nepl3-grammar-core"
+description = "Typed Grammar source and compilation into NEPL3 language packages"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+nepl3-core.workspace = true
+nepl3-reader.workspace = true
+nepl3-engine.workspace = true
+
+[lints]
+workspace = true

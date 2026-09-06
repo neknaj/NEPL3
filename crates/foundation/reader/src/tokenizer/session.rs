@@ -1,4 +1,4 @@
-use super::model::*;
+use super::{AcceptedTokenizationReply, AcceptedTokenizationReport, model::*};
 use crate::{
     builtin::{self, BuiltinReader},
     model::*,
@@ -8,27 +8,80 @@ use crate::{
         copy::{CopyCost, copy, slot},
     },
 };
-use alloc::{string::String, vec, vec::Vec};
+use alloc::{boxed::Box, rc::Rc, string::String, vec, vec::Vec};
 use nepl3_core::{
-    budget::{Budget, Limits, Resource, StopReason, Usage},
+    budget::{Budget, Limits, Resource, StopReason},
     diagnostic::Report,
     schema::SchemaRegistry,
-    source::{SourceAdmission, SourceReservation, SourceStore},
+    source::{Digest, SourceAdmission, SourceError, SourceReservation, SourceStore},
     view::{Token, Trivia, TriviaKind, ViewBundle},
 };
 
-#[derive(Clone, Copy)]
-enum Phase {
-    Skip(usize),
-    Take(usize),
+enum Resume<'a> {
+    Reservation(&'a SourceReservation),
+    Provider(ProviderReply),
 }
-enum Waiting {
-    Provider,
-    Reservation { request: ReservationRequest },
+enum Outcome {
+    Token(Token),
+    End,
+    NoMatch {
+        expected: Vec<Expectation>,
+        furthest: u64,
+    },
+    NeedMore {
+        expected: Vec<Expectation>,
+    },
+    Failed {
+        diagnostic: nepl3_core::diagnostic::Diagnostic,
+        recovery: Option<nepl3_core::source::Span>,
+    },
+    Stopped {
+        reason: StopReason,
+    },
+    Await {
+        call: Box<ProviderCall>,
+        continuation: Box<ReaderContinuation>,
+    },
+    Reserve {
+        request: ReservationRequest,
+    },
+}
+impl Outcome {
+    fn public(
+        self,
+        continuation: Option<Box<TokenizationContinuation>>,
+    ) -> Result<TokenizationOutcome, ReaderError> {
+        Ok(match self {
+            Self::Token(v) => TokenizationOutcome::Token(v),
+            Self::End => TokenizationOutcome::End,
+            Self::NoMatch { expected, furthest } => {
+                TokenizationOutcome::NoMatch { expected, furthest }
+            }
+            Self::NeedMore { expected } => TokenizationOutcome::NeedMore { expected },
+            Self::Failed {
+                diagnostic,
+                recovery,
+            } => TokenizationOutcome::Failed {
+                diagnostic,
+                recovery,
+            },
+            Self::Stopped { reason } => TokenizationOutcome::Stopped { reason },
+            Self::Await { call, .. } => TokenizationOutcome::Await {
+                call,
+                continuation: continuation.ok_or(ReaderError::Continuation)?,
+            },
+            Self::Reserve { request } => TokenizationOutcome::Reserve {
+                request,
+                continuation: continuation.ok_or(ReaderError::Continuation)?,
+            },
+        })
+    }
 }
 #[derive(Clone, Copy)]
 struct Input<'a> {
     snapshot: &'a nepl3_core::source::SourceSnapshot,
+    start: u64,
+    initial_state: &'a nepl3_core::value::NdfValue,
     limit: u64,
     final_input: bool,
     context: &'a crate::context::CheckedReaderContext<'a>,
@@ -49,30 +102,37 @@ impl Input<'_> {
         }
     }
 }
-struct Machine<'a> {
-    request: Input<'a>,
+struct Machine<'a, 'i> {
+    request: Input<'i>,
     mode: &'a ReaderMode,
-    phase: Phase,
+    target: TokenTarget,
+    phase: TokenizationPhase,
     current: ReaderCheckpoint,
     trivia: Vec<Trivia>,
-    waiting: Option<Waiting>,
+    waiting: bool,
     expected: Vec<Expectation>,
     furthest: u64,
     limits: Limits,
-    usage: Usage,
     depth_base: u64,
 }
-/// Retains private native continuation state. Input/context borrows outlive any suspension.
-/// This session does not claim a portable tokenizer continuation codec.
+struct Pending {
+    continuation: TokenizationContinuation,
+    limits: Limits,
+}
+/// Owns its saved continuation; no caller source/context borrow survives a suspension.
 pub struct TokenizationSession<'a> {
     session_id: String,
     modes: &'a [ReaderMode],
     checked: &'a CheckedPlan<'a>,
     registry: &'a SchemaRegistry,
     reader: ReaderSession<'a>,
-    pending: Option<Machine<'a>>,
+    pending: Option<Pending>,
     next_request: u64,
     closed: bool,
+    plan_digest: Digest,
+    configuration_digest: Digest,
+    scope: Option<Rc<TokenizationScope>>,
+    next_operation: u64,
 }
 impl<'a> TokenizationSession<'a> {
     pub fn new(
@@ -101,6 +161,8 @@ impl<'a> TokenizationSession<'a> {
                 registry.kind_name(&take.kind.schema, take.kind.local_kind)?;
             }
         }
+        let plan_digest = checked.plan().digest(budget)?;
+        let configuration_digest = super::identity::digest(modes, plan_digest, budget)?;
         let reader = ReaderSession::new(copy(&session_id, budget)?, checked, registry, budget)?;
         Ok(Self {
             session_id,
@@ -111,7 +173,16 @@ impl<'a> TokenizationSession<'a> {
             pending: None,
             next_request: 0,
             closed: false,
+            plan_digest,
+            configuration_digest,
+            scope: None,
+            next_operation: 0,
         })
+    }
+    /// Terminate the current suspended call after its enclosing operation has retained its report.
+    pub fn discard_pending(&mut self) {
+        self.pending = None;
+        self.reader.discard_pending();
     }
     pub fn close(&mut self) {
         self.closed = true;
@@ -120,7 +191,17 @@ impl<'a> TokenizationSession<'a> {
     }
     pub fn read(
         &mut self,
-        request: TokenizationRequest<'a, '_>,
+        request: TokenizationRequest<'_, '_>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<TokenizationReply, ReaderError> {
+        self.read_target(TokenTarget::Mode, request, sources, budget, admission)
+    }
+    pub fn read_target(
+        &mut self,
+        target: TokenTarget,
+        request: TokenizationRequest<'_, '_>,
         sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
@@ -131,6 +212,128 @@ impl<'a> TokenizationSession<'a> {
         if self.pending.is_some() {
             return Err(ReaderError::Busy);
         }
+        let prepared = (|| -> Result<_, ReaderError> {
+            self.next_operation = self
+                .next_operation
+                .checked_add(1)
+                .ok_or_else(|| budget.stop(StopReason::WorkLimit))?;
+            budget.charge(
+                Resource::AllocationUnits,
+                self.session_id.len() as u64
+                    + 22
+                    + request.snapshot.identity().source.0.len() as u64,
+            )?;
+            let scope = TokenizationScope {
+                operation_id: alloc::format!("{}:{}", self.session_id, self.next_operation),
+                profile_digest: self.configuration_digest,
+                snapshot: request.snapshot.reference(),
+            };
+            AcceptedTokenizationReport::empty(scope, budget)
+        })();
+        let accepted = match prepared {
+            Ok(v) => v,
+            Err(error) => {
+                return match runtime::stop_reason(&error) {
+                    Some(reason) => Ok(TokenizationReply {
+                        outcome: TokenizationOutcome::Stopped { reason },
+                        cursor: request.start,
+                        new_state: None,
+                        trivia: vec![],
+                        facts: vec![],
+                        sources: vec![],
+                        source_maps: vec![],
+                        report: Report {
+                            usage: budget.usage(),
+                            ..Report::default()
+                        },
+                    }),
+                    None => Err(error),
+                };
+            }
+        };
+        let scope = Rc::clone(&accepted.scope);
+        self.read_with_accepted(
+            ScopedTokenizationRequest {
+                scope: &scope,
+                target,
+                input: request,
+            },
+            sources,
+            budget,
+            admission,
+            accepted,
+        )
+        .map(AcceptedTokenizationReply::into_raw)
+    }
+
+    pub fn read_with_accepted(
+        &mut self,
+        request: ScopedTokenizationRequest<'_, '_>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        accepted: AcceptedTokenizationReport,
+    ) -> Result<AcceptedTokenizationReply, ReaderError> {
+        let ScopedTokenizationRequest {
+            scope,
+            target,
+            input: request,
+        } = request;
+        if accepted.limits != budget.limits()
+            || !runtime::usage_at_least(budget.usage(), accepted.report.usage)
+        {
+            return Err(ReaderError::Continuation);
+        }
+        if let Err(reason) = budget.charge(
+            Resource::Work,
+            scope.operation_id.len() as u64
+                + scope.snapshot.source_id.0.len() as u64
+                + request.snapshot.identity().source.0.len() as u64
+                + 65,
+        ) {
+            let scope = Rc::clone(&accepted.scope);
+            return Ok(AcceptedTokenizationReply::from_native(
+                empty_stop(request.start, reason, accepted, budget),
+                scope,
+                budget,
+            ));
+        }
+        if scope != accepted.scope()
+            || scope.snapshot.source_id != request.snapshot.identity().source
+            || scope.snapshot.revision != request.snapshot.identity().revision
+            || scope.snapshot.digest != request.snapshot.identity().digest
+        {
+            return Err(ReaderError::Continuation);
+        }
+        let scope = Rc::clone(&accepted.scope);
+        let result = self.read_seed(target, request, sources, budget, admission, accepted);
+        result.map(|reply| AcceptedTokenizationReply::from_native(reply, scope, budget))
+    }
+    fn read_seed(
+        &mut self,
+        target: TokenTarget,
+        request: TokenizationRequest<'_, '_>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        accepted: AcceptedTokenizationReport,
+    ) -> Result<TokenizationReply, ReaderError> {
+        if accepted.limits != budget.limits()
+            || !runtime::usage_at_least(budget.usage(), accepted.report.usage)
+        {
+            return Err(ReaderError::Continuation);
+        }
+        if let TokenTarget::Builtin { token_kind, .. } = &target {
+            self.registry
+                .kind_name(&token_kind.schema, token_kind.local_kind)?;
+        }
+        if self.closed {
+            return Err(ReaderError::Closed);
+        }
+        if self.pending.is_some() {
+            return Err(ReaderError::Busy);
+        }
+        self.scope = Some(Rc::clone(&accepted.scope));
         let mode = self
             .modes
             .iter()
@@ -153,23 +356,59 @@ impl<'a> TokenizationSession<'a> {
             admission,
         ) {
             return match runtime::stop_reason(&error) {
-                Some(reason) => Ok(empty_stop(request.start, reason, budget)),
+                Some(reason) => Ok(empty_stop(request.start, reason, accepted, budget)),
+                None => Err(error),
+            };
+        }
+        let accepted_check = (|| -> Result<(), ReaderError> {
+            for added in &accepted.sources {
+                budget.charge(
+                    Resource::Work,
+                    sources.snapshots().len() as u64
+                        * (added.identity().source.0.len() as u64 + 33),
+                )?;
+                for prior in sources.snapshots() {
+                    if prior.identity().source == added.identity().source
+                        && prior.identity().revision == added.identity().revision
+                    {
+                        budget.charge(Resource::Work, prior.uri().len() as u64 + 33)?;
+                        if prior.identity() != added.identity() || prior.uri() != added.uri() {
+                            return Err(SourceError::IdentityConflict.into());
+                        }
+                    }
+                }
+                admission.admit_existing(added, budget)?;
+            }
+            runtime::validate::accepted_report(
+                &accepted.report,
+                sources,
+                &accepted.sources,
+                self.registry,
+                budget,
+            )
+        })();
+        if let Err(error) = accepted_check {
+            return match runtime::stop_reason(&error) {
+                Some(reason) => Ok(empty_stop(request.start, reason, accepted, budget)),
                 None => Err(error),
             };
         }
         let state = match request.state.clone_with_budget(budget) {
             Ok(state) => state,
-            Err(reason) => return Ok(empty_stop(request.start, reason, budget)),
+            Err(reason) => return Ok(empty_stop(request.start, reason, accepted, budget)),
         };
         let mut machine = Machine {
             request: Input {
                 snapshot: request.snapshot,
+                start: request.start,
+                initial_state: request.state,
                 limit: request.limit,
                 final_input: request.final_input,
                 context: request.context,
             },
             mode,
-            phase: Phase::Skip(0),
+            target,
+            phase: TokenizationPhase::Skip { next: 0 },
             current: ReaderCheckpoint {
                 cursor: request.start,
                 state,
@@ -178,18 +417,17 @@ impl<'a> TokenizationSession<'a> {
                     roots: vec![],
                 },
                 facts: vec![],
-                diagnostics: vec![],
-                events: vec![],
-                trace_overflow: None,
-                sources: vec![],
-                source_maps: vec![],
+                diagnostics: accepted.report.diagnostics,
+                events: accepted.report.events,
+                trace_overflow: accepted.report.trace_overflow,
+                sources: accepted.sources,
+                source_maps: accepted.source_maps,
             },
             trivia: vec![],
-            waiting: None,
+            waiting: false,
             expected: vec![],
             furthest: request.start,
             limits: budget.limits(),
-            usage: budget.usage(),
             depth_base: budget
                 .current_depth()
                 .checked_add(1)
@@ -201,7 +439,7 @@ impl<'a> TokenizationSession<'a> {
     }
     pub fn reserve(
         &mut self,
-        echo: &ReservationRequest,
+        echo: &TokenizationContinuation,
         reservation: &SourceReservation,
         sources: &SourceStore,
         budget: &mut Budget,
@@ -210,42 +448,46 @@ impl<'a> TokenizationSession<'a> {
         if self.closed {
             return Err(ReaderError::Closed);
         }
-        let pending = self.pending.as_ref().ok_or(ReaderError::NoPending)?;
-        let Some(Waiting::Reservation { request: expected }) = &pending.waiting else {
-            return Err(ReaderError::Continuation);
-        };
-        if pending.limits != budget.limits()
-            || !runtime::usage_at_least(budget.usage(), pending.usage)
+        let saved = self.pending.as_ref().ok_or(ReaderError::NoPending)?;
+        if saved.limits != budget.limits()
+            || !runtime::usage_at_least(budget.usage(), saved.continuation.usage)
+            || saved.continuation.session_id != echo.session_id
         {
             return Err(ReaderError::Continuation);
         }
-        if let Err(reason) = budget.poll().and_then(|_| {
-            budget.charge(
-                Resource::Work,
-                (echo.session_id.len() + echo.snapshot.source_id.0.len()) as u64,
-            )
-        }) {
-            let machine = self.pending.take().ok_or(ReaderError::NoPending)?;
-            return Ok(reply(
-                TokenizationOutcome::Stopped { reason },
-                machine.current,
-                machine.trivia,
-                budget,
-            ));
+        if let Err(reason) = budget.poll() {
+            return self.stop_pending(reason, budget);
         }
-        if expected != echo {
+        if !matches!(
+            self.pending
+                .as_ref()
+                .ok_or(ReaderError::NoPending)?
+                .continuation
+                .pending,
+            TokenizationWait::Reservation { .. }
+        ) {
             return Err(ReaderError::Continuation);
         }
-        let mut machine = self.pending.take().ok_or(ReaderError::NoPending)?;
-        machine.waiting = None;
-        let outcome = budget.with_depth_at_least(machine.depth_base, |budget| {
-            self.drive(&mut machine, Some(reservation), sources, budget, admission)
-        });
-        self.finish(machine, outcome, budget)
+        let pending = match self.take_pending(echo, budget) {
+            Ok(pending) => pending,
+            Err(error) => {
+                return match runtime::stop_reason(&error) {
+                    Some(reason) => self.stop_pending(reason, budget),
+                    None => Err(error),
+                };
+            }
+        };
+        self.restore(
+            pending,
+            Resume::Reservation(reservation),
+            sources,
+            budget,
+            admission,
+        )
     }
     pub fn resume(
         &mut self,
-        echo: &ReaderContinuation,
+        echo: &TokenizationContinuation,
         reply: ProviderReply,
         sources: &SourceStore,
         budget: &mut Budget,
@@ -254,62 +496,255 @@ impl<'a> TokenizationSession<'a> {
         if self.closed {
             return Err(ReaderError::Closed);
         }
-        let pending = self.pending.as_ref().ok_or(ReaderError::NoPending)?;
-        if !matches!(pending.waiting, Some(Waiting::Provider)) {
+        let saved = self.pending.as_ref().ok_or(ReaderError::NoPending)?;
+        if saved.limits != budget.limits()
+            || !runtime::usage_at_least(budget.usage(), saved.continuation.usage)
+            || saved.continuation.session_id != echo.session_id
+        {
             return Err(ReaderError::Continuation);
         }
-        let reply = self
-            .reader
-            .resume(echo, reply, sources, budget, admission)?;
-        let mut machine = self.pending.take().ok_or(ReaderError::NoPending)?;
-        machine.waiting = None;
-        let outcome = match accept(&mut machine, reply, self.registry, budget) {
-            Ok(Some(outcome)) => Ok(outcome),
-            Ok(None) => budget.with_depth_at_least(machine.depth_base, |budget| {
-                self.drive(&mut machine, None, sources, budget, admission)
-            }),
-            Err(error) => Err(error),
+        if let Err(reason) = budget.poll() {
+            return self.stop_pending(reason, budget);
+        }
+        if !matches!(
+            self.pending
+                .as_ref()
+                .ok_or(ReaderError::NoPending)?
+                .continuation
+                .pending,
+            TokenizationWait::Provider { .. }
+        ) {
+            return Err(ReaderError::Continuation);
+        }
+        let pending = match self.take_pending(echo, budget) {
+            Ok(pending) => pending,
+            Err(error) => {
+                return match runtime::stop_reason(&error) {
+                    Some(reason) => self.stop_pending(reason, budget),
+                    None => Err(error),
+                };
+            }
+        };
+        self.restore(pending, Resume::Provider(reply), sources, budget, admission)
+    }
+    pub fn reserve_accepted(
+        &mut self,
+        echo: &TokenizationContinuation,
+        reservation: &SourceReservation,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<AcceptedTokenizationReply, ReaderError> {
+        let scope = Rc::clone(self.scope.as_ref().ok_or(ReaderError::NoPending)?);
+        self.reserve(echo, reservation, sources, budget, admission)
+            .map(|reply| AcceptedTokenizationReply::from_native(reply, scope, budget))
+    }
+    pub fn resume_accepted(
+        &mut self,
+        echo: &TokenizationContinuation,
+        reply: ProviderReply,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<AcceptedTokenizationReply, ReaderError> {
+        let scope = Rc::clone(self.scope.as_ref().ok_or(ReaderError::NoPending)?);
+        self.resume(echo, reply, sources, budget, admission)
+            .map(|reply| AcceptedTokenizationReply::from_native(reply, scope, budget))
+    }
+    fn take_pending(
+        &mut self,
+        echo: &TokenizationContinuation,
+        budget: &mut Budget,
+    ) -> Result<Pending, ReaderError> {
+        let pending = self.pending.as_ref().ok_or(ReaderError::NoPending)?;
+        if pending.limits != budget.limits()
+            || !runtime::usage_at_least(budget.usage(), pending.continuation.usage)
+        {
+            return Err(ReaderError::Continuation);
+        }
+        echo.charge(budget)?;
+        if &pending.continuation != echo {
+            return Err(ReaderError::Continuation);
+        }
+        self.pending.take().ok_or(ReaderError::NoPending)
+    }
+    fn stop_pending(
+        &mut self,
+        reason: StopReason,
+        budget: &Budget,
+    ) -> Result<TokenizationReply, ReaderError> {
+        let pending = self.pending.take().ok_or(ReaderError::NoPending)?;
+        self.reader.discard_pending();
+        Ok(reply(
+            TokenizationOutcome::Stopped { reason },
+            pending.continuation.current,
+            pending.continuation.trivia,
+            budget,
+        ))
+    }
+    fn restore(
+        &mut self,
+        pending: Pending,
+        resume: Resume<'_>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<TokenizationReply, ReaderError> {
+        let c = pending.continuation;
+        // Keep owned current/report/source artifacts until every fallible proof restoration succeeds.
+        let prepared = (|| -> Result<_, ReaderError> {
+            let snapshot = sources
+                .resolve(&c.request.snapshot)
+                .ok_or(SourceError::MissingSnapshot)?;
+            let foundation = self
+                .registry
+                .selected("nepl3.foundation", 1)
+                .ok_or(nepl3_core::schema::SchemaError::UnknownSchema)?;
+            let context = crate::context::restored(
+                &c.request.context,
+                foundation,
+                &c.request.sources,
+                budget,
+            )?;
+            runtime::validate::request(
+                &ReadRequest {
+                    snapshot,
+                    start: c.current.cursor,
+                    limit: c.request.limit,
+                    final_input: c.request.final_input,
+                    context: &context,
+                    state: &c.current.state,
+                },
+                sources,
+                self.registry,
+                &self.checked.plan().state_type,
+                budget,
+                admission,
+            )?;
+            let mode = self
+                .modes
+                .iter()
+                .find(|mode| mode.name == c.mode)
+                .ok_or(ReaderError::Context)?;
+            Ok((snapshot, context, mode))
+        })();
+        let (snapshot, context, mode) = match prepared {
+            Ok(v) => v,
+            Err(error) => {
+                self.reader.discard_pending();
+                return match runtime::stop_reason(&error) {
+                    Some(reason) => Ok(reply(
+                        TokenizationOutcome::Stopped { reason },
+                        c.current,
+                        c.trivia,
+                        budget,
+                    )),
+                    None => Err(error),
+                };
+            }
+        };
+        let mut machine = Machine {
+            request: Input {
+                snapshot,
+                start: c.request.start,
+                initial_state: &c.request.state,
+                limit: c.request.limit,
+                final_input: c.request.final_input,
+                context: &context,
+            },
+            mode,
+            target: c.target,
+            phase: c.phase,
+            current: c.current,
+            trivia: c.trivia,
+            waiting: false,
+            expected: c.expected,
+            furthest: c.furthest,
+            limits: pending.limits,
+            depth_base: c.depth_base,
+        };
+        let outcome = match (resume, c.pending) {
+            (Resume::Reservation(reservation), TokenizationWait::Reservation { .. }) => budget
+                .with_depth_at_least(machine.depth_base, |budget| {
+                    self.drive(&mut machine, Some(reservation), sources, budget, admission)
+                }),
+            (Resume::Provider(reply), TokenizationWait::Provider { continuation }) => {
+                match self
+                    .reader
+                    .resume(&continuation, reply, sources, budget, admission)
+                {
+                    Ok(reply) => match accept(&mut machine, reply, self.registry, budget) {
+                        Ok(Some(outcome)) => Ok(outcome),
+                        Ok(None) => budget.with_depth_at_least(machine.depth_base, |budget| {
+                            self.drive(&mut machine, None, sources, budget, admission)
+                        }),
+                        Err(error) => Err(error),
+                    },
+                    Err(error) => Err(error),
+                }
+            }
+            _ => Err(ReaderError::Continuation),
         };
         self.finish(machine, outcome, budget)
     }
     fn drive(
         &mut self,
-        machine: &mut Machine<'a>,
+        machine: &mut Machine<'a, '_>,
         mut reservation: Option<&SourceReservation>,
         sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
-    ) -> Result<TokenizationOutcome, ReaderError> {
+    ) -> Result<Outcome, ReaderError> {
         loop {
             budget.poll()?;
             budget.charge(Resource::Work, 1)?;
-            let reader = match machine.phase {
-                Phase::Skip(index) => match machine.mode.skip.get(index) {
-                    Some(rule) => &rule.reader,
-                    None => {
-                        machine.phase = Phase::Take(0);
-                        continue;
-                    }
-                },
-                Phase::Take(index) => {
-                    if machine.current.cursor == machine.request.limit {
-                        return Ok(if machine.request.final_input {
-                            TokenizationOutcome::End
-                        } else {
-                            TokenizationOutcome::NeedMore { expected: vec![] }
-                        });
-                    }
-                    match machine.mode.take.get(index) {
+            let builtin_target;
+            let reader =
+                match machine.phase {
+                    TokenizationPhase::Skip { next: index } => match machine
+                        .mode
+                        .skip
+                        .get(usize::try_from(index).map_err(|_| ReaderError::Continuation)?)
+                    {
                         Some(rule) => &rule.reader,
                         None => {
-                            return Ok(TokenizationOutcome::NoMatch {
-                                expected: core::mem::take(&mut machine.expected),
-                                furthest: machine.furthest,
+                            machine.phase = TokenizationPhase::Take { next: 0 };
+                            continue;
+                        }
+                    },
+                    TokenizationPhase::Take { next: index } => {
+                        if machine.current.cursor == machine.request.limit {
+                            return Ok(if machine.request.final_input {
+                                Outcome::End
+                            } else {
+                                Outcome::NeedMore { expected: vec![] }
                             });
                         }
+                        match (&machine.target, index) {
+                            (TokenTarget::Builtin { reader, .. }, 0) => {
+                                builtin_target = TokenReader::Builtin(*reader);
+                                &builtin_target
+                            }
+                            (TokenTarget::Builtin { .. }, _) => {
+                                return Ok(Outcome::NoMatch {
+                                    expected: core::mem::take(&mut machine.expected),
+                                    furthest: machine.furthest,
+                                });
+                            }
+                            (TokenTarget::Mode, _) => match machine.mode.take.get(
+                                usize::try_from(index).map_err(|_| ReaderError::Continuation)?,
+                            ) {
+                                Some(rule) => &rule.reader,
+                                None => {
+                                    return Ok(Outcome::NoMatch {
+                                        expected: core::mem::take(&mut machine.expected),
+                                        furthest: machine.furthest,
+                                    });
+                                }
+                            },
+                        }
                     }
-                }
-            };
+                };
             let reply = match reader {
                 TokenReader::Rule(name) => {
                     let report = take_report(&mut machine.current, budget);
@@ -388,15 +823,8 @@ impl<'a> TokenizationSession<'a> {
                             start: request.start,
                             limit: request.limit,
                         };
-                        slot::<ReservationRequest>(budget)?;
-                        budget.charge(
-                            Resource::AllocationUnits,
-                            (request.session_id.len() + request.snapshot.source_id.0.len()) as u64,
-                        )?;
-                        machine.waiting = Some(Waiting::Reservation {
-                            request: request.clone(),
-                        });
-                        return Ok(TokenizationOutcome::Reserve { request });
+                        machine.waiting = true;
+                        return Ok(Outcome::Reserve { request });
                     }
                     {
                         // A builtin emits at most one diagnostic and no event. Reserve only that
@@ -426,16 +854,16 @@ impl<'a> TokenizationSession<'a> {
     }
     fn finish(
         &mut self,
-        mut machine: Machine<'a>,
-        result: Result<TokenizationOutcome, ReaderError>,
+        mut machine: Machine<'a, '_>,
+        result: Result<Outcome, ReaderError>,
         budget: &mut Budget,
     ) -> Result<TokenizationReply, ReaderError> {
         let outcome = match result {
             Ok(outcome) => outcome,
             Err(error) => match runtime::stop_reason(&error) {
                 Some(reason) => {
-                    machine.waiting = None;
-                    TokenizationOutcome::Stopped { reason }
+                    machine.waiting = false;
+                    Outcome::Stopped { reason }
                 }
                 None => {
                     self.reader.discard_pending();
@@ -443,50 +871,145 @@ impl<'a> TokenizationSession<'a> {
                 }
             },
         };
-        if machine.waiting.is_some() {
-            let copied = (|| -> Result<_, StopReason> {
-                Ok((
-                    copy(&machine.current, budget)?,
-                    copy_trivia(&machine.trivia, budget)?,
-                ))
-            })();
-            match copied {
-                Ok((current, trivia)) => {
-                    machine.usage = budget.usage();
-                    let reply = reply(outcome, current, trivia, budget);
-                    self.pending = Some(machine);
-                    return Ok(reply);
-                }
-                Err(reason) => {
-                    self.reader.discard_pending();
-                    return Ok(reply(
-                        TokenizationOutcome::Stopped { reason },
-                        machine.current,
-                        machine.trivia,
+        if machine.waiting {
+            let prepared = (|| -> Result<_, ReaderError> {
+                let pending = match &outcome {
+                    Outcome::Reserve { request } => TokenizationWait::Reservation {
+                        request: copy(request, budget)?,
+                    },
+                    Outcome::Await { continuation, .. } => {
+                        slot::<ReaderContinuation>(budget)?;
+                        TokenizationWait::Provider {
+                            continuation: Box::new(copy(continuation.as_ref(), budget)?),
+                        }
+                    }
+                    _ => return Err(ReaderError::Continuation),
+                };
+                let current = copy(&machine.current, budget)?;
+                let trivia = copy(&machine.trivia, budget)?;
+                let mut c = TokenizationContinuation {
+                    scope: copy(
+                        self.scope
+                            .as_ref()
+                            .ok_or(ReaderError::Continuation)?
+                            .as_ref(),
                         budget,
-                    ));
+                    )?,
+                    session_id: copy(&self.session_id, budget)?,
+                    reader_schema: copy(&self.checked.plan().schema, budget)?,
+                    reader_plan_digest: self.plan_digest,
+                    configuration_digest: self.configuration_digest,
+                    request: owned_request(&machine, budget)?,
+                    mode: copy(&machine.mode.name, budget)?,
+                    target: copy(&machine.target, budget)?,
+                    phase: machine.phase,
+                    current: copy(&machine.current, budget)?,
+                    trivia: copy(&machine.trivia, budget)?,
+                    expected: copy(&machine.expected, budget)?,
+                    furthest: machine.furthest,
+                    pending,
+                    depth_base: machine.depth_base,
+                    usage: budget.usage(),
+                    report: Report {
+                        diagnostics: copy(&machine.current.diagnostics, budget)?,
+                        events: copy(&machine.current.events, budget)?,
+                        trace_overflow: machine.current.trace_overflow.clone(),
+                        usage: budget.usage(),
+                    },
+                };
+                c.charge(budget)?;
+                slot::<TokenizationContinuation>(budget)?;
+                c.usage = budget.usage();
+                c.report.usage = c.usage;
+                let outward = Box::new(c.clone());
+                Ok((c, outward, current, trivia))
+            })();
+            match prepared {
+                Ok((c, outward, current, trivia)) => {
+                    let public = outcome.public(Some(outward))?;
+                    self.pending = Some(Pending {
+                        continuation: c,
+                        limits: machine.limits,
+                    });
+                    return Ok(reply(public, current, trivia, budget));
+                }
+                Err(error) => {
+                    self.reader.discard_pending();
+                    return match runtime::stop_reason(&error) {
+                        Some(reason) => Ok(reply(
+                            TokenizationOutcome::Stopped { reason },
+                            machine.current,
+                            machine.trivia,
+                            budget,
+                        )),
+                        None => Err(error),
+                    };
                 }
             }
         }
         self.reader.discard_pending();
-        Ok(reply(outcome, machine.current, machine.trivia, budget))
+        Ok(reply(
+            outcome.public(None)?,
+            machine.current,
+            machine.trivia,
+            budget,
+        ))
     }
 }
-fn empty_stop(cursor: u64, reason: StopReason, budget: &Budget) -> TokenizationReply {
+fn owned_request(
+    machine: &Machine<'_, '_>,
+    budget: &mut Budget,
+) -> Result<OwnedReadRequest, ReaderError> {
+    let mut sources = Vec::new();
+    for source in core::iter::once(machine.request.snapshot)
+        .chain(machine.request.context.sources().iter().copied())
+        .chain(machine.current.sources.iter())
+    {
+        budget.charge(
+            Resource::Work,
+            sources.len() as u64 + source.identity().source.0.len() as u64,
+        )?;
+        if !sources
+            .iter()
+            .any(|prior: &nepl3_core::source::SourceSnapshot| prior.identity() == source.identity())
+        {
+            slot::<nepl3_core::source::SourceSnapshot>(budget)?;
+            sources.push(copy(source, budget)?);
+        }
+    }
+    budget.charge(
+        Resource::AllocationUnits,
+        machine.request.snapshot.identity().source.0.len() as u64,
+    )?;
+    Ok(OwnedReadRequest {
+        snapshot: machine.request.snapshot.reference(),
+        sources,
+        start: machine.request.start,
+        limit: machine.request.limit,
+        final_input: machine.request.final_input,
+        context: copy(machine.request.context.raw(), budget)?,
+        state: machine.request.initial_state.clone_with_budget(budget)?,
+    })
+}
+fn empty_stop(
+    cursor: u64,
+    reason: StopReason,
+    mut accepted: AcceptedTokenizationReport,
+    budget: &Budget,
+) -> TokenizationReply {
+    accepted.report.usage = budget.usage();
     TokenizationReply {
         outcome: TokenizationOutcome::Stopped { reason },
         cursor,
         new_state: None,
         trivia: vec![],
         facts: vec![],
-        sources: vec![],
-        source_maps: vec![],
-        report: Report {
-            usage: budget.usage(),
-            ..Report::default()
-        },
+        sources: accepted.sources,
+        source_maps: accepted.source_maps,
+        report: accepted.report,
     }
 }
+
 fn reply(
     outcome: TokenizationOutcome,
     current: ReaderCheckpoint,
@@ -521,11 +1044,11 @@ fn copy_trivia(trivia: &[Trivia], budget: &mut Budget) -> Result<Vec<Trivia>, St
     Ok(out)
 }
 fn accept(
-    machine: &mut Machine<'_>,
+    machine: &mut Machine<'_, '_>,
     reply: ReadReply,
     registry: &SchemaRegistry,
     budget: &mut Budget,
-) -> Result<Option<TokenizationOutcome>, ReaderError> {
+) -> Result<Option<Outcome>, ReaderError> {
     match reply {
         ReadReply::Matched {
             value,
@@ -545,7 +1068,7 @@ fn accept(
             }
             let start = machine.current.cursor;
             let token = match machine.phase {
-                Phase::Skip(_) => {
+                TokenizationPhase::Skip { next: _ } => {
                     let raw = machine.request.snapshot.slice_range(start, end)?;
                     let kind = if start == 0 && raw == "\u{feff}" {
                         TriviaKind::Bom
@@ -566,12 +1089,25 @@ fn accept(
                     });
                     None
                 }
-                Phase::Take(index) => {
-                    let rule = machine.mode.take.get(index).ok_or(ReaderError::Context)?;
+                TokenizationPhase::Take { next: index } => {
+                    let kind = match &machine.target {
+                        TokenTarget::Builtin { token_kind, .. } => token_kind,
+                        TokenTarget::Mode => {
+                            &machine
+                                .mode
+                                .take
+                                .get(
+                                    usize::try_from(index)
+                                        .map_err(|_| ReaderError::Continuation)?,
+                                )
+                                .ok_or(ReaderError::Context)?
+                                .kind
+                        }
+                    };
                     slot::<Token>(budget)?;
-                    rule.kind.schema.charge(budget)?;
+                    kind.schema.charge(budget)?;
                     Some(Token {
-                        kind: rule.kind.clone(),
+                        kind: kind.clone(),
                         head: machine
                             .request
                             .snapshot
@@ -587,9 +1123,9 @@ fn accept(
             machine.current.cursor = end;
             machine.current.state = new_state;
             match token {
-                Some(token) => Ok(Some(TokenizationOutcome::Token(token))),
+                Some(token) => Ok(Some(Outcome::Token(token))),
                 None => {
-                    machine.phase = Phase::Skip(0);
+                    machine.phase = TokenizationPhase::Skip { next: 0 };
                     Ok(None)
                 }
             }
@@ -605,8 +1141,10 @@ fn accept(
             machine.current.source_maps = source_maps;
             set_report(&mut machine.current, report);
             match machine.phase {
-                Phase::Skip(i) => machine.phase = Phase::Skip(i + 1),
-                Phase::Take(i) => {
+                TokenizationPhase::Skip { next: i } => {
+                    machine.phase = TokenizationPhase::Skip { next: i + 1 }
+                }
+                TokenizationPhase::Take { next: i } => {
                     if furthest > machine.furthest {
                         machine.expected.clear();
                         machine.furthest = furthest;
@@ -620,7 +1158,7 @@ fn accept(
                             }
                         }
                     }
-                    machine.phase = Phase::Take(i + 1);
+                    machine.phase = TokenizationPhase::Take { next: i + 1 };
                 }
             }
             Ok(None)
@@ -634,7 +1172,7 @@ fn accept(
             machine.current.sources = sources;
             machine.current.source_maps = source_maps;
             set_report(&mut machine.current, report);
-            Ok(Some(TokenizationOutcome::NeedMore { expected }))
+            Ok(Some(Outcome::NeedMore { expected }))
         }
         ReadReply::Failed {
             diagnostic,
@@ -646,7 +1184,7 @@ fn accept(
             machine.current.sources = sources;
             machine.current.source_maps = source_maps;
             set_report(&mut machine.current, report);
-            Ok(Some(TokenizationOutcome::Failed {
+            Ok(Some(Outcome::Failed {
                 diagnostic,
                 recovery,
             }))
@@ -660,7 +1198,7 @@ fn accept(
             machine.current.sources = sources;
             machine.current.source_maps = source_maps;
             set_report(&mut machine.current, report);
-            Ok(Some(TokenizationOutcome::Stopped { reason }))
+            Ok(Some(Outcome::Stopped { reason }))
         }
         ReadReply::Await {
             call,
@@ -686,8 +1224,8 @@ fn accept(
                     return Err(reason.into());
                 }
             }
-            machine.waiting = Some(Waiting::Provider);
-            Ok(Some(TokenizationOutcome::Await { call, continuation }))
+            machine.waiting = true;
+            Ok(Some(Outcome::Await { call, continuation }))
         }
     }
 }
@@ -779,10 +1317,10 @@ fn prefix_builtin(
     Ok(reply)
 }
 fn nonprogress(
-    machine: &mut Machine<'_>,
+    machine: &mut Machine<'_, '_>,
     registry: &SchemaRegistry,
     budget: &mut Budget,
-) -> Result<Option<TokenizationOutcome>, ReaderError> {
+) -> Result<Option<Outcome>, ReaderError> {
     budget.charge(
         Resource::AllocationUnits,
         core::mem::size_of::<nepl3_core::diagnostic::Diagnostic>() as u64,
