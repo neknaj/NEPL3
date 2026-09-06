@@ -215,5 +215,5 @@
   },
   "trusted_shell": "html/head/meta/style/body are emitted by fixed DocumentShell code, not accepted as user Markup nodes; stylesheet body is a fixed backend asset",
   "default_deny": true,
-  "design_revision": "nepl3-design-2026-09-06-r2"
+  "design_revision": "nepl3-design-2026-09-06-r3"
 }

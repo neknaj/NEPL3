@@ -1,5 +1,5 @@
 {
-  "design": "nepl3-design-2026-09-06-r2",
+  "design": "nepl3-design-2026-09-06-r3",
   "tasks": [
     {
       "id": "T01",
@@ -228,7 +228,9 @@
       "depends_on": [
         "T13",
         "T14",
-        "T15"
+        "T15",
+        "T20",
+        "T21"
       ],
       "acceptance": [
         "A01",
@@ -238,8 +240,98 @@
         "W02",
         "E05"
       ],
-      "deliverable": "全必須conformance、cross-target、fuzz、依存・生成差分・coverageを実行する。",
+      "deliverable": "登録された全必須受入群、cross-target、Web/Pages、Doc移行、fuzz、依存・生成差分・coverageを実行する。群数の固定値に依存せずdesign/acceptance.jsonを検査する。",
       "spec": "doc/spec/11-conformance.md"
+    },
+    {
+      "id": "T17",
+      "title": "純粋TEA UI coreと操作境界",
+      "depends_on": [
+        "T01",
+        "T02"
+      ],
+      "acceptance": [
+        "U01",
+        "U02",
+        "U03",
+        "U04",
+        "U07",
+        "U08"
+      ],
+      "deliverable": "nepl3-ui-coreのModel/Msg/update/viewと型付きCmdを実装。R006の閉じた操作schemaを前提に、純粋性・epoch/request/snapshot照合・失敗状態を検証する。",
+      "spec": "doc/spec/14-web-ui.md"
+    },
+    {
+      "id": "T18",
+      "title": "4言語playgroundと共通editor",
+      "depends_on": [
+        "T15",
+        "T17"
+      ],
+      "acceptance": [
+        "U02",
+        "U03",
+        "U04",
+        "U05",
+        "U06",
+        "U07",
+        "U08",
+        "S03",
+        "S05"
+      ],
+      "deliverable": "4言語のeditor・操作選択・診断・previewとGrammar生成DSL editorを共通engineに接続。IME/undo、Worker停止、stale結果、入力保護とpreview隔離を検証する。",
+      "spec": "doc/spec/14-web-ui.md"
+    },
+    {
+      "id": "T19",
+      "title": "文書・例・参照の静的サイト",
+      "depends_on": [],
+      "acceptance": [
+        "S01",
+        "S02",
+        "S04"
+      ],
+      "deliverable": "runtime/UIなしでbuildできるdocs-only静的サイト・4言語tutorial/reference・正本由来例manifest・rustdoc入口・SiteConfig/registryを実装。既存Markdown生成器を用い、実装のないPlayground/Wasmは能力状態で明示する。完全なinteractive版の受入はT20で統合する。",
+      "spec": "doc/spec/15-site.md"
+    },
+    {
+      "id": "T20",
+      "title": "Web全体受入とGitHub Pages配布",
+      "depends_on": [
+        "T15",
+        "T18",
+        "T19"
+      ],
+      "acceptance": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S06"
+      ],
+      "deliverable": "T19の静的サイトへ同じcheckoutのUI/Wasm/Workerを統合し、全必須Web受入を実browserで実行。同じ検査済みartifactをPagesへ直列配布し、公開HTTPSとidentityを照合する。",
+      "spec": "doc/spec/15-site.md"
+    },
+    {
+      "id": "T21",
+      "title": "正式文書のNEPL3 Doc DSL移行",
+      "depends_on": [
+        "T07",
+        "T10",
+        "T11",
+        "T19"
+      ],
+      "acceptance": [
+        "J01",
+        "J02",
+        "J03",
+        "J04",
+        "D01",
+        "D05"
+      ],
+      "deliverable": "全文書inventoryと不足表現のschema設計を独立レビュー後に実装し、ページ単位でDocへ損失なく移す。一正本、安定URL/anchor、例のbyte列、再現可能buildとbootstrap回避を検証し、Markdown二重保守を終了する。",
+      "spec": "doc/spec/16-doc-migration.md"
     }
   ]
 }

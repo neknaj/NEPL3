@@ -39,7 +39,10 @@ NEPL3/
       circuit/svg/src/  layout/ render/
     output/markup/src/  model/ validate/ serialize/
     integration/suite/src/ profile/ bridge/ operation/ workspace/
+    ui/core/src/ model/ message/ update/ command/ subscription/ view/
   apps/ cli/ lsp/ web/ provider/
+  web/src/ shell/ editor/ worker/ preview/ storage/ bindings/
+  site/
   editors/ vscode/ neovim/
   tools/src/ generate/ contract/ dependency/ task/
   examples/
@@ -66,13 +69,16 @@ math-mathml -> math-core, markup, core
 circuit-svg -> circuit-core, markup, core
 suite -> engine, reader, grammar-core, domain cores, output backends, core
 wire -> core
-apps -> suite, core (+ wire where required)
+ui-core -> core (公開操作のデータ契約のみ)
+apps -> suite, core (+ wire where required, web -> ui-core)
 tools -> grammar-core, suite, foundation
 ```
 
 `core`は全domainのenumを持たない。typed schema、位置、診断、公開値を所有する。domain coreは共通Parsed treeを受け取り、domainのモデルにlowerする。engineはDoc/Ruby等の意味を知らない。
 
 Doc内のMathとMath内のDocはsuiteのbridgeが処理する。doc-coreはmath-coreをimportしない。output backendも相互にimportしない。suiteが依存関係に従って埋め込みを準備し、backendsに型付きの解決済みfragmentを渡す。
+
+ui-coreは純粋なModel/Msg/update/viewとcommand/subscription記述を所有し、suiteやDOMを実行しない。実行・Worker・editor widgetはhost adapterが担当する。目標は19 crate（14 crateがno_std + alloc）であり、実装済みmember数と同一視しない。文書/site生成はtoolsの明示段階で行い、build.rsでcompilerと文書rendererを循環依存させない。
 
 ## 3. surface descriptorとbootstrap
 

@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://neknaj.github.io/NEPL3/interfaces/acceptance-evidence.schema.json",
+  "title": "NEPL3 acceptance execution evidence",
+  "$comment": "Structural schema only. nepl3-tools also verifies the current source/spec identity, catalog target coverage, result consistency, safe file paths, and log digests. A valid report does not independently attest that its claimed commands were executed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "acceptance_id", "design_revision", "identity", "result", "runs"],
+  "properties": {
+    "schema": {"const": "nepl3.acceptance-evidence/1"},
+    "acceptance_id": {"type": "string", "pattern": "^[A-Z][0-9]{2}$"},
+    "design_revision": {"$ref": "#/$defs/nonempty"},
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "source_sha256", "spec_sha256"],
+      "properties": {
+        "profile": {"const": "nepl3.repository-inputs/1"},
+        "source_sha256": {"$ref": "#/$defs/digest"},
+        "spec_sha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "result": {"enum": ["passed", "failed"]},
+    "runs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/run"}
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"result": {"const": "passed"}}},
+      "then": {"properties": {"runs": {"items": {"$ref": "#/$defs/success"}}}},
+      "else": {"properties": {"runs": {"contains": {"$ref": "#/$defs/failure"}}}}
+    }
+  ],
+  "$defs": {
+    "nonempty": {"type": "string", "pattern": "\\S"},
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "run": {"oneOf": [{"$ref": "#/$defs/command"}, {"$ref": "#/$defs/review"}]},
+    "success": {
+      "oneOf": [
+        {"required": ["kind", "result"], "properties": {"kind": {"const": "command"}, "result": {"const": "passed"}}},
+        {"required": ["kind", "decision"], "properties": {"kind": {"const": "review"}, "decision": {"const": "approved"}}}
+      ]
+    },
+    "failure": {
+      "oneOf": [
+        {"required": ["kind", "result"], "properties": {"kind": {"const": "command"}, "result": {"const": "failed"}}},
+        {"required": ["kind", "decision"], "properties": {"kind": {"const": "review"}, "decision": {"const": "rejected"}}}
+      ]
+    },
+    "version": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {"name": {"$ref": "#/$defs/nonempty"}, "version": {"$ref": "#/$defs/nonempty"}}
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "command", "target", "result", "exit_code", "checks", "environment", "log", "log_sha256"],
+      "properties": {
+        "kind": {"const": "command"},
+        "command": {"$ref": "#/$defs/nonempty"},
+        "target": {"$ref": "#/$defs/nonempty"},
+        "result": {"enum": ["passed", "failed"]},
+        "exit_code": {"type": "integer", "minimum": -2147483648, "maximum": 2147483647},
+        "checks": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/nonempty"}},
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["runner", "tools"],
+          "properties": {
+            "runner": {"$ref": "#/$defs/version"},
+            "tools": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/version"}}
+          }
+        },
+        "log": {"type": "string", "pattern": "^conformance/results/.+\\.(txt|log)$"},
+        "log_sha256": {"$ref": "#/$defs/digest"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"result": {"const": "passed"}}},
+          "then": {"properties": {"exit_code": {"const": 0}}},
+          "else": {"properties": {"exit_code": {"not": {"const": 0}}}}
+        }
+      ]
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "target", "reviewer", "independent", "decision", "scope", "log", "log_sha256"],
+      "properties": {
+        "kind": {"const": "review"},
+        "target": {"$ref": "#/$defs/nonempty"},
+        "reviewer": {"$ref": "#/$defs/nonempty"},
+        "independent": {"const": true},
+        "decision": {"enum": ["approved", "rejected"]},
+        "scope": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/nonempty"}},
+        "log": {"type": "string", "pattern": "^conformance/results/.+\\.(txt|log)$"},
+        "log_sha256": {"$ref": "#/$defs/digest"}
+      }
+    }
+  }
+}

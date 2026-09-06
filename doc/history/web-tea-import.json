@@ -1,0 +1,19 @@
+{
+  "supplement": "nepl3-web-pages-tea-2026-09-06-r1",
+  "base_design": "nepl3-design-2026-09-06-r2",
+  "base_commit": "4324078d18b8258531c7b8a15c0f7927d4933f3e",
+  "integrated_design": "nepl3-design-2026-09-06-r3",
+  "source": "User-supplied local supplement directory; all seven UTF-8 files read; original source remains local and ignored",
+  "manifest_sha256": "e791b8e2b595130e64518d2dee93e618e032513e415690ae61445f3ca4a5c496",
+  "verified_payload_sha256": {
+    "CODEX.md": "14e90782dd97d8d3a39637abf774569c17d0bef177fa92de8683dfd0bff2d7c8",
+    "README.md": "d00228179c835d1af6d55ee3cf2c8639857358289dbb62ed0023a199dd0ef05e",
+    "change-plan.json": "889be5fec8776e4337ffe3478fceabc74aace9a8e32ba91bd48c00dc2a94c7a4",
+    "evidence.md": "7e345abe4a6995072014e05938705dba7a52a96677f01dbf4fd1f918b34c9cb7",
+    "specification.md": "97dcddce85929847edc960284ad790c42a997a7aa4ed60e92e70f0dd2b0d43a9",
+    "validation.json": "1e11953ff32ab9e4552fd84642b6722ce071fe072711700bdbdf6d0646ef08a5"
+  },
+  "verification": "All six payload digests matched the supplied manifest; this checks source identity only",
+  "runtime_or_browser_tests_executed": false,
+  "integration_decision": "doc/decisions/0003-web-tea-doc-migration.md"
+}

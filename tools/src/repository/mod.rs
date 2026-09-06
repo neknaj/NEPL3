@@ -33,6 +33,20 @@ fn paths(bytes: &[u8]) -> Result<BTreeSet<String>> {
         .collect()
 }
 
+pub(crate) fn inventory(root: &Path) -> Result<BTreeSet<String>> {
+    paths(&command(
+        root,
+        "git",
+        &[
+            "ls-files",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+            "-z",
+        ],
+    )?)
+}
+
 fn forbidden(path: &str) -> bool {
     let lower = path.to_ascii_lowercase();
     let parts: Vec<_> = lower.split('/').collect();

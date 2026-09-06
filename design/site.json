@@ -1,0 +1,75 @@
+{
+  "schema": "nepl3.site-plan/1",
+  "design_revision": "nepl3-design-2026-09-06-r3",
+  "status": "planned-not-implemented",
+  "site_config": {
+    "production_base_path": "/NEPL3/",
+    "acceptance_base_paths": [
+      "/NEPL3/",
+      "/acceptance/project/"
+    ],
+    "route_style": "static-directory-index",
+    "asset_policy": "local-versioned-content-hash",
+    "canonical_origin": "https://neknaj.github.io"
+  },
+  "routes": [
+    {
+      "id": "home",
+      "path": ""
+    },
+    {
+      "id": "playground",
+      "path": "playground/",
+      "internal_route_style": "hash"
+    },
+    {
+      "id": "docs",
+      "path": "docs/"
+    },
+    {
+      "id": "tutorials",
+      "path": "docs/tutorials/"
+    },
+    {
+      "id": "reference",
+      "path": "docs/reference/"
+    },
+    {
+      "id": "design",
+      "path": "docs/design/"
+    },
+    {
+      "id": "rust-api",
+      "path": "api/rust/"
+    },
+    {
+      "id": "examples-manifest",
+      "path": "examples/manifest.json"
+    },
+    {
+      "id": "build-identity",
+      "path": "build.json"
+    },
+    {
+      "id": "assets",
+      "path": "assets/"
+    },
+    {
+      "id": "releases",
+      "path": "releases/"
+    }
+  ],
+  "interactive_schema_prerequisites": [
+    "R006 closed operation request/reply schemas",
+    "R009 resolved Profile with real schema/package/provider digests"
+  ],
+  "runtime_profile": "generate-and-validate-before-use; design/profile.json is source manifest only",
+  "deployment": "T20: tested static artifact via protected GitHub Pages environment; no deployment in current foundation phase",
+  "definition": "doc/spec/15-site.md",
+  "capability_states": [
+    "docs-only",
+    "interactive"
+  ],
+  "docs_only_prerequisites": "T19 host static builder and Markdown sources; no UI/runtime/Doc renderer or closed R006/R009 runtime schema required; unavailable capabilities are explicit",
+  "interactive_prerequisites": "T15/T18 runtime/UI artifacts plus T19; T20 tests and deploys same artifact"
+}

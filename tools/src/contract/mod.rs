@@ -93,11 +93,11 @@ fn ordered_fields(value: &Value, context: &str) -> Result<()> {
             .ok_or_else(|| format!("{context}: expected [name, type] pair"))?;
         let name = pair[0]
             .as_str()
-            .filter(|s| !s.is_empty())
+            .filter(|s| !s.trim().is_empty())
             .ok_or("field name must be nonempty text")?;
         let ty = pair[1]
             .as_str()
-            .filter(|s| !s.is_empty())
+            .filter(|s| !s.trim().is_empty())
             .ok_or("field type must be nonempty text")?;
         if !names.insert(name) {
             return Err(format!("{context}: duplicate field {name}").into());
@@ -122,6 +122,72 @@ fn ordered_fields(value: &Value, context: &str) -> Result<()> {
     Ok(())
 }
 
+fn variants(value: &Value, context: &str) -> Result<()> {
+    let variants = value
+        .as_object()
+        .filter(|v| !v.is_empty())
+        .ok_or_else(|| format!("{context}: variants must be a nonempty name map"))?;
+    for (name, fields) in variants {
+        if name.trim().is_empty() {
+            return Err(format!("{context}: variant name cannot be empty").into());
+        }
+        ordered_fields(fields, &format!("{context}/{name}"))?;
+    }
+    Ok(())
+}
+
+fn model_type(description: &Value, context: &str) -> Result<()> {
+    let shape = description
+        .as_object()
+        .filter(|v| v.len() == 1)
+        .ok_or_else(|| format!("{context}: expected exactly one model type shape"))?;
+    if let Some(record) = shape.get("record") {
+        return ordered_fields(record, context);
+    }
+    if let Some(sum) = shape.get("sum") {
+        return variants(sum, context);
+    }
+    if let Some(union) = shape.get("union") {
+        let variants = union
+            .as_object()
+            .filter(|v| !v.is_empty())
+            .ok_or("union must be a nonempty name map")?;
+        for (name, ty) in variants {
+            if name.trim().is_empty() || ty.as_str().is_none_or(|s| s.trim().is_empty()) {
+                return Err(
+                    format!("{context}: union names and types must be nonempty text").into(),
+                );
+            }
+        }
+        return Ok(());
+    }
+    Err(format!("{context}: unknown model type shape").into())
+}
+
+fn contract_record(description: &Value, context: &str) -> Result<()> {
+    let shape = description
+        .as_object()
+        .filter(|v| v.len() == 1)
+        .ok_or_else(|| format!("{context}: expected exactly one contract record shape"))?;
+    if let Some(fields) = shape.get("fields") {
+        return ordered_fields(fields, context);
+    }
+    if let Some(value) = shape.get("variants") {
+        return variants(value, context);
+    }
+    // R006 explicitly records this one incomplete descriptor. It must not make
+    // arbitrary malformed records pass, or be treated as schema closure.
+    if context == "TypedValue"
+        && shape
+            .get("description")
+            .and_then(Value::as_str)
+            .is_some_and(|s| !s.trim().is_empty())
+    {
+        return Ok(());
+    }
+    Err(format!("{context}: expected fields or variants; unresolved descriptors require a reviewed contract change").into())
+}
+
 pub(crate) fn check(root: &Path) -> Result<()> {
     let forms_file: Forms = json(root, "design/forms.json")?;
     forms(&forms_file)?;
@@ -131,16 +197,20 @@ pub(crate) fn check(root: &Path) -> Result<()> {
         .and_then(Value::as_object)
         .ok_or("model types must be an object")?;
     for (name, description) in types {
-        if let Some(record) = description.get("record") {
-            ordered_fields(record, name)?;
-        }
-        if let Some(variants) = description.get("sum") {
-            for (variant, fields) in variants.as_object().ok_or("sum must map variant names")? {
-                ordered_fields(fields, &format!("{name}/{variant}"))?;
-            }
-        }
+        model_type(description, name)?;
     }
     let contracts: Value = json(root, "interfaces/contracts.json")?;
+    let records = contracts
+        .get("records")
+        .and_then(Value::as_object)
+        .filter(|v| !v.is_empty())
+        .ok_or("contract records must be a nonempty object")?;
+    for (name, description) in records {
+        if name.trim().is_empty() {
+            return Err("contract record name cannot be empty".into());
+        }
+        contract_record(description, name)?;
+    }
     let operations = contracts
         .get("operations")
         .and_then(Value::as_array)
@@ -188,6 +258,74 @@ pub(crate) fn check(root: &Path) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::testing::Fixture;
+    use serde_json::json;
+
+    fn fixture() -> Result<Fixture> {
+        let files = Fixture::new()?;
+        files.json("design/forms.json", &json!({"roots":{"Test":"Test/Root"},"categories":{"Test/Root":{"forms":{"unit":{"kind":"Unit","fields":[]}},"leaf":null}}}))?;
+        files.json("interfaces/model.json", &json!({"types":{"Record":{"record":[["id","U64"]]},"Sum":{"sum":{"Some":[["value","U64"]],"None":[]}}}}))?;
+        files.json("interfaces/contracts.json", &json!({"records":{"SourceRef":{"fields":[["id","U64"]]},"OperationReply":{"variants":{"Complete":[["value","TypedValue"]],"Invalid":[]}},"TypedValue":{"description":"Reviewed incomplete descriptor R006"}},"operations":[{"operation":"test","definition":"doc/spec/test.md"}]}))?;
+        files.write("doc/spec/test.md", "fixture")?;
+        files.json("conformance/cases.json", &json!({"cases":[]}))?;
+        Ok(files)
+    }
+
+    #[test]
+    fn real_contract_checker_rejects_malformed_contract_fields_and_variant_payloads() -> Result<()>
+    {
+        let files = fixture()?;
+        check(files.root())?;
+        let original: Value = crate::json(files.root(), "interfaces/contracts.json")?;
+        for pointer in [
+            "/records/SourceRef/fields",
+            "/records/OperationReply/variants/Complete",
+        ] {
+            for bad in [
+                json!({"id":"U64"}),
+                json!([["id", "U64"], ["id", "Text"]]),
+                json!([["id"]]),
+                json!([["id", "U64", "extra"]]),
+                json!([[" ", "U64"]]),
+                json!([["id", 42]]),
+                json!([["id", "List<Text"]]),
+            ] {
+                let mut document = original.clone();
+                *document
+                    .pointer_mut(pointer)
+                    .ok_or("test pointer missing")? = bad;
+                files.json("interfaces/contracts.json", &document)?;
+                assert!(check(files.root()).is_err(), "{pointer}");
+            }
+        }
+        for bad in [
+            json!({}),
+            json!({"fields":[],"variants":{"V":[]}}),
+            json!({"variants":[]}),
+            json!({"description":"accidental missing fields"}),
+        ] {
+            let mut document = original.clone();
+            document["records"]["SourceRef"] = bad;
+            files.json("interfaces/contracts.json", &document)?;
+            assert!(check(files.root()).is_err());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn real_contract_checker_uses_same_validation_for_model_fields() -> Result<()> {
+        let files = fixture()?;
+        let original: Value = crate::json(files.root(), "interfaces/model.json")?;
+        for pointer in ["/types/Record/record", "/types/Sum/sum/Some"] {
+            let mut document = original.clone();
+            *document
+                .pointer_mut(pointer)
+                .ok_or("test pointer missing")? = json!([["id", "U64"], ["id", "Text"]]);
+            files.json("interfaces/model.json", &document)?;
+            assert!(check(files.root()).is_err(), "{pointer}");
+        }
+        Ok(())
+    }
 
     #[test]
     fn unordered_or_duplicate_schema_fields_are_rejected() {
