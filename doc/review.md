@@ -4,7 +4,7 @@
 
 同日のr3追補では、ユーザーが提示したWeb/TEA/Pages要件と最終Doc移行の指示、および提供された追補 `nepl3-web-pages-tea-2026-09-06-r1` の展開済み7ファイルを全て読んだ。独立にmanifestの6 payloadのSHA-256とUTF-8を検査し一致した。sandboxのZIPを直接取得したという記録ではない。元資料の検査報告はruntime実行の証拠へ転用しない。取り込み元は [記録](history/web-tea-import.json)、仕様上の訂正は [決定0003](decisions/0003-web-tea-doc-migration.md) に残す。
 
-状態の正本は [design/review.json](../design/review.json)。`open` は影響する実装を確定する前に解消すべき設計課題、`corrected` は文書・データの訂正を独立に確認した状態であり、runtime試験の合格ではない。
+状態の正本は [design/review.json](../design/review.json)。`open` は影響する実装を確定する前に解消すべき課題、`corrected` は記載された範囲の訂正を独立に確認した状態である。初期の設計訂正と、r4で初めて実行したcore/wireの試験を区別し、必須受入群全体の成功を意味させない。
 
 ## 確認した問題
 
@@ -47,7 +47,7 @@ r3のtooling変更は差分と実際の入口を独立に確認し、`cargo test
 
 群全体の証拠identityは、Gitから収集した現在の入力pathと元byte列に結び付く。状態・証拠・生成task文書だけを除き、commit hash自身との循環を避ける。除外したlogも別のdigestで検査する。通常文書のLFを揃えたcheckoutから採取し、source位置fixtureをhash時に正規化しない。scope付きTaskEvidenceのsource鮮度は今回の自動検査対象ではなく、従来の独立レビューを要する。いずれの証拠も、記載された実行や意味上の正しさをhashだけで保証しない。
 
-現在の変更はリポジトリ検査の訂正と実装計画として受け入れ可能である。R006、R009、R014はopenのまま維持する。19 crateの計画に対し実装済みは開発toolsの1 crateで、21タスク・55受入群のruntime/Web/移行の完了を認定したものではない。
+r3時点の変更はリポジトリ検査の訂正と実装計画として受け入れ可能とした。当時は19 crateの計画に対し実装済みが開発toolsの1 crateであり、21タスク・55受入群のruntime/Web/移行の完了を認定しなかった。R006、R009、R014はopenのまま維持し、後続のr4 runtime実装レビューは下記に分けて記録する。
 
 R006には、Source/Origin/Environmentのtableを各操作がどのbundleで受け渡すか、ReaderPlanとReadReplyの具体型、診断・失敗codeのschema、Checked値の再検査条件も含む。文章で責務が説明されていることと、別実装でdecodeできることは別の検証対象である。
 
@@ -73,13 +73,51 @@ R016は旧Rust抽出器を独立した検証用programから呼んで再現し�
 
 45件のRust試験を独立実行し、CRLF・補助平面文字・両hard break表記・両math種別・setext見出し・入れ子image・code・脚注の回帰試験が成功した。同じ57ページのbaselineからinventory schema /2を生成したこと、元page/Rust/契約のidentityと要素数が変わらないこと、482のtyped segment範囲が元blobのUTF-8境界内にあることを確認した。これを根拠にR016をcorrectedとする。R006/R009/R014と処理系・移行の未実行範囲は維持する。
 
-## NDF intrinsicと型参照の部分訂正
+## r3でのNDF intrinsicと型参照の部分訂正
 
-R006のうち、未定義だったNdfScalarと説明のみだったTypedValueを、既存NDF/1の論理constructorの明示的な部分集合として定義した。[交換仕様](spec/09-portability.md) と [intrinsic検査](../tools/src/contract/intrinsic.rs) を照合し、12種のtag、payload field順、部分集合を確認した。これらは通常のdomain Variantとして追加符号化する型ではない。Integer/Rationalの物理payload、Record/Variantの生array、headerのSchemaRef tupleを論理field表と区別している。通常のdomain fieldとしてのSchemaRefの所有schemaと符号化は未解決として残す。
+R006のうち、未定義だったNdfScalarと説明のみだったTypedValueを、既存NDF/1の論理constructorの明示的な部分集合として定義した。[交換仕様](spec/09-portability.md) と [intrinsic検査](../tools/src/contract/intrinsic.rs) を照合し、12種のtag、payload field順、部分集合を確認した。これらは通常のdomain Variantとして追加符号化する型ではない。Integer/Rationalの物理payload、Record/Variantの生array、headerのSchemaRef tupleを論理field表と区別している。通常のdomain fieldとしてのSchemaRefの所有schemaと符号化は、このr3段階では未解決だった。r4ではnepl3.foundationの通常recordとして定義し、下記の実codecで確認している。
 
 [共有の型参照検査](../tools/src/contract/types.rs) はName、List、Optionを解析し、modelとcontractsのrecord/sum field・union参照先を照合する。modelは自身の型と明示的にimportした型だけを使用できる。Unitを含む組込み型、再帰型の参照、重複owner、import漏れ、未知名、不正generic、NDF tagとsubsetの改変を検査する。operation表の説明用署名をこの検査が解釈できるとはしていない。
 
 訂正後の52 Rust試験とrepository checkを独立に実行して成功した。実際のcontract検査入口から、未解決の入れ子型、intrinsicの欠落、使用中のimportの削除を拒否する回帰試験も含む。これはdescriptorと参照の検証であり、codec、任意精度値の正規化、schema digest、bundleの値検査、操作・frame・UI schemaの完成を示さない。R006/R009/R014はopen、21タスクと55受入群の実装状態は変更しない。
+
+## r4の最初のcore・wire実装レビュー
+
+開始commitは `6c9dd5f07376a3920a52ef61022d0adc011cca9f`。以下は `feat/foundation-runtime` の変更中の実装を対象とする独立レビューで、開始commitそのものに実装が存在したという記録ではない。実装担当へ再現入力を戻し、訂正された公開APIとproduction試験を再実行した。
+
+| ID | 観測した失敗 | 訂正と残る範囲 |
+| --- | --- | --- |
+| R017 | URI-based SourceRefが独立文書のSourceIdを失い、UsageがLimitsと同型だった。 | r4でIDとlocator、許容量と使用量を分離。nativeのURI競合拒否まで確認した。portable source adapterとschema/nativeの最終照合は継続する。 |
+| R018 | imported Originがnodes/depthゼロでも成功、reportがallocationゼロでも成功、SourceMapがdisjointな逆方向対応をCycleと誤判定、4段のhost/guest構造がdepth 3で成功した。 | 共通予算、事前allocation検査、byte/anchor単位の対応graph、guestへ引き継ぐnode深さを訂正。unused schema参照もfinalize時に検査する。 |
+| R019 | 約200 KBの入力に100,000段のSomeを入れるとcodecがstack overflowした。codec訂正後も返されたStructuralValueのClone/Eq/Debugが同様に落ちた。 | codec・cleanup・Clone/Eqを反復処理に変更。Debugはcontainerのheader/countを示す明示的な要約とする。完全な値の交換にはNDFを使う。 |
+
+`cargo test --locked -p nepl3-core -p nepl3-wire` を独立実行し、core 42件とwire 7件が成功した。source/位置/atomic edit、schema digestと参照、Origin/View/構文graph、共有予算、NDF全12tagの既知byte列、非canonical入力と切断、深い値の所有・比較を含む。R018/R019の訂正範囲はこれらの実装であり、T01/T02全成果物やR006の全操作契約を完了とはしない。
+
+後続のsource adapterレビューでは、SourceAdmissionが10,007 byteのURIを複製する際、allocationUnits=100でも65だけを計上して成功する不備を公開APIで再現した。保存するtupleとURI payloadの事前計上へ訂正後、同じ入力はAllocationLimitで停止する。管理対象の `admission_accounts_for_copied_locator_payload` を含む `cargo test --locked -p nepl3-core` の43件を独立再実行した。
+
+WASI CIの追加は、native/WASIの両job成功をquality条件に含むことと、Wasmtime Linux配布物の固定SHA-256が[公式release API](https://api.github.com/repos/bytecodealliance/wasmtime/releases/tags/v44.0.1)のasset digestに一致することを独立確認した。[Rustの対象platform資料](https://doc.rust-lang.org/rustc/platform-support/wasm32-wasip2.html)とrunner指定も整合する。このworkflowレビュー自体をLinux jobの実行証拠とはしない。
+
+ReaderPlanへの型接続を確認する過程で、R019に別の経路を追加した。100,000段のListを持つTypeDescriptorをSchemaDescriptorへ入れると、`reference` はdepth=128で正しくDepthLimitを返すが、その後の通常dropがSTATUS_STACK_OVERFLOWとなった。隔離した `--bin deep_descriptor` で再現し、descriptorのDrop/Clone/Eqを反復処理、Debugを上位構造の表示へ訂正した。元の再現に加え100,000段のList/Option交互構造もclone/比較/表示/失敗cleanupに成功した。管理対象の `rejected_deep_descriptor_is_safe_to_clone_compare_debug_and_drop` を含むcore 45件を独立実行し、R019を再びcorrectedとした。
+
+TokenがViewBundleを所有する変更では、head外のviewをroot以外の表要素へ置くとnative/portable双方で受理される漏れを発見した。全owned elementへ包含検査を適用し、`token_owns_even_unreachable_view_elements` が追加された。上記45件と、別入力のnative validate・portable encode・改変wireのdecodeがCoverで拒否されることを独立確認した。これはSyntaxBundle全体の参照移送の完了を意味しない。
+
+typed adapterではsource 3件・view 2件・syntax 5件・origin 1件とcodec 7件、計18件を独立実行した。SourceBundleの同一URI別ID、元byte列、偽digest、canonical source順、部分失敗後の一度だけの計上、CBOR/UTF-8を先に検査する失敗順、Spanのscalar境界を含む。foreign bundleのTokenRef/ViewRef/OriginRefと構造化payloadの保持、環境digest偽装・Origin cycle拒否も確認した。同じ2-node graphのnative配置だけを変えた `--bin canonical_syntax` は当初wire bytes不一致かつroot=1だったが、root-first再採番の訂正後はroot=0とbyte一致を確認した。guest root/childの独立再採番、非canonical入力と未到達nodeの拒否も管理対象回帰に含む。
+
+Environment内容digestと参照先Origin閉包のidentityは別物であることを13章へ明示した。reader native入口はprivateなCheckedReaderContextを要求し、実際の環境digestとOriginが参照するsource閉包を検査する。context 1件とportable request 2件を含む `cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire` を独立実行し、core 45件・reader 26件・wire 18件が成功した。requestのNDF loopbackでは宣言source表を二段で復元し、同じReaderSessionのvalue/end/stateが一致する。宣言から欠落したsourceをhostのglobal storeで補っても拒否する。reply/continuation全体のportable化と別process provider比較は未実装であり、R017はopenのまま維持する。
+
+reader予算の独立再現には `cargo run --locked --manifest-path .tmp/independent-core/Cargo.toml --bin reader_allocation` を使用した。100,000 byteのSourceIdを持つsnapshotを準備し、ReaderSession constructorの消費分だけを上限として同じ操作Budgetを使い切る。その後のread区間だけをSystem allocator wrapperで計測すると、Stopped(AllocationLimit)を返しながら200,000 bytesを割り当てた。fixture構築、session構築、結果の表示は計測外である。借用による位置・identity検査へ訂正後、同じread区間の実allocationは0になった。管理対象の `long_source_identity_is_not_copied_after_allocation_budget_is_exhausted` も上記reader試験に含む。計測用harnessはignoredの補助証拠であり、clone可能な正式試験の代替とはしない。
+
+`--bin reader_stopped_report` はchecked contextを構築し、Seqのproviderがdiagnostic/eventを各1件返した後、長いliteral期待値のallocationで停止させた。返却はStopped(AllocationLimit)だったが、Reportの両列は0件、Usageのdiagnostics/eventsは各1となった。drive/finishで現在の報告を保持する訂正後、元の再現と管理対象の `stopped_reader_retains_committed_provider_reports` は両列1件を保持した。ただし追加の `--bin reader_second_resume` ではSeq(Call, Call)の第2回resumeでallocation停止すると、最初のproviderの報告が再び消えた。上限79,200、使用量79,169でStopped、diagnostics/events使用量は各1、返却列は各0だった。resume準備ではcheckpoint、provider検査後ではMachineの報告を保持する訂正後、同じ補助probeの10,000〜179,900を100刻みとする全走査で報告を保持した。管理対象の `allocation_faults_across_later_resumes_preserve_already_accepted_reports` は3回のCallを使い、後続resumeの停止と高予算での完了を確認する。追加後のruntime 24件を独立実行し成功した（reader合計27件）。これらのfixture helperは入力構築だけに使い、実行VMはproduction APIを呼んでいる。
+
+checked contextを別operationで再利用する `--bin reader_context_conflict` は、閉包sourceと同じID/revisionで内容が異なるsnapshotをcaller storeへ置くと、訂正前はMatchedを返した。digest込みの検索で不一致を単なる不在と扱ったためである。訂正後はIdentityConflictを返し、管理対象の同名境界試験も成功した。末尾に `-- missing` を付けてcaller storeから当該sourceを除くと、proofが保持する閉包から供給してMatchedとなることも独立確認した。不在と衝突を区別し、operationごとに閉包のsource予算を再計上する。
+
+readerの26件はnative VM、UTF-8分割、Unicode 16、巻戻し、消費するprovider反復、非進行・隠れた再帰、state復元、署名・session echo・予算の検査を含む。`map_decode_and_then_use_typed_provider_envelopes` はprovider dispatchと値の対応を検査する。escape decodeによる生成source/SourceMapの意味や、そこでのlook/choice巻戻しの証拠とはしない。SyntaxBundleには現時点でSourceMap所有tableがなく、readerの生成source対応をbundle全体で交換する契約も次段へ残る。組込みreader、完全なprovider交換、engineとGrammar bootstrapは次の実装・レビュー範囲である。
+
+独立probeはignoreされた `.tmp/independent-core/` から実際のcrateをpath依存で呼んだ。この補助harnessはcloneに含まれず、配布されたproduction試験として再実行できるものではない。実行証拠の中心は上記の管理対象の回帰試験である。`cargo run --locked --manifest-path .tmp/independent-core/Cargo.toml --bin deep_wire` で100,000段のdecode→encode一致→drop、およびListの第1子に深い正常値、第2子に不正byteを置いた失敗cleanupを再実行し、成功した。`--bin deep_traits`、同コマンド末尾の `-- eq` と `-- debug` は、checked decodeの成功値のClone/Eq/Debugを別processで確認した。旧版の終了は `0xc00000fd`、訂正後は全て終了コード0だった。これらの本質的な失敗条件は管理対象のcore/wire回帰試験にも残る。
+
+追加の `--bin wire_corpus` は、長さ0〜2の全byte列65,793件と、seed `0x71921a13` の32-bit LCG（`state = state * 1664525 + 1013904223`、wrapし上位byteを使用）による100,000列を実行した。後半の長さは連番 `n % 65`。計165,793入力でpanicはなく、受理された2件はencode後もbyte一致だった。この短い不正入力probeは深い構造や全意味のfuzz網羅性を示さず、管理対象の受入試験・runnerの代わりにしない。
+
+実行環境はWindows `10.0.26200.0`、target `x86_64-pc-windows-msvc`、rustc `1.97.0 (2d8144b78 2026-07-07)`、通常のCargo debug runner。WASI/browser/他OS、Grammar bootstrap、portable operation/frame全経路、言語・editor・UI・Pages・Doc移行の受入はこの結果から推定しない。入力identityと最終受入証拠は、対応する実装と仕様を固定したtreeで別途記録する。
 
 ## r1初回レビューの章ごとの確認範囲
 
@@ -110,9 +148,9 @@ CIと開発toolsも独立に読んだ。3 OSのnative検査、全jobの成功を
 
 R006はリポジトリ整備を止める理由にはしないが、影響する公開APIやportable経路の完成を止める。次の作業を仕様・schema・conformanceの一つの変更として行う。
 
-1. T01: 型参照の記法・束縛先とNdfScalarの定義、および未定義名・重複ownerの拒否は上記の部分訂正で追加した。残るSourceStore/SourceBundle、Environmentとresource/schema table、Origin/SourceMap bundle、Diagnostic codeと引数、Usage、Checked再検査条件を定義し、新しい型も同じ検査へ接続する。
-2. T02: NDF tagと全型を対応させる。Record、Variant、union、Referenceのwire表現とfield順、tag3 Natural制約、bundle内ID空間、canonical byte列の既知入力を定義する。異なるJSON parserのobject順に依存しない検証を入れる。
-3. T03: ReadRequest/ReadReply全variant、ReaderPlan、combinator値型、state/facts/view、provider manifest、Read/Transform/DependentReaderの入力・出力を具体化する。seqの異種値、choiceの結果型、名前leafのText値とlexemeの関係も決める。
+1. T01: 型参照・intrinsicに続き、r4ではSource/Origin/Environment/Usageと構造検査の実装・交換試験を追加した。上記部分実装と残る操作ごとのresource/schema table、Diagnostic code catalog、意味検査済み条件を区別し、未実装型を同じ検査へ接続する。
+2. T02: NDF全12tag、通常SchemaRef record、foundation bundle内の局所IDとcanonical node番号を実装した。今後のdomain・操作型もwire field順・値の不変条件・既知byte列へ対応させる。特にSourceMapを含む構文bundleと全操作reply/continuationの往復は残る。
+3. T03: ReadRequestとReaderPlan、state/facts/view、Read/Transform/DependentReaderのnative envelopeはr4で具体化した。request以外の全variantのportable adapter、完全なprovider manifestとの照合、builtins、文字escapeとSourceMapの意味・巻戻し、および実process経路を引き続き実装・検証する。
 4. T12: Invoke/Resume/Reply/Cancel/Closeを一つのFrame schemaへ定義する。ReplyはrequestIdで対応づけ、cancelとcompleteの競合、close後、重複ID、切断途中frame、unknown continuationの失敗と再開予算を固定する。
 5. 各domain実装: `DomainSyntax` 等の説明用名を操作ごとの入出力recordに置き換える。Docのlower/check/prepare/render/plain_text、Mathのlower/check/evaluate/free_symbols/render、Circuitのlower/check/elaborate/initial/observe/step/run_tests/lower_nor/diagram、各print、Grammar compile、engine parse/analyze/queryの署名とschemaを閉じる。
 
@@ -130,4 +168,4 @@ XML 1.0は許可する文字集合と文字データ中の]]>を制限する。R
 
 ## 検証の限界
 
-仕様の通読、具体例による矛盾の確認、公開規格との照合を行った。全formのRust parse/lower、NDF roundtrip、bootstrap、browser描画、回路実行、LSP、portable provider、cross-target conformanceはこのレビューでは実行していない。対応する実装が存在する段階で、implementation-status.jsonの未実行記録を実行証拠とともに更新する。
+仕様の通読、具体例による矛盾の確認、公開規格との照合を行った。r4では上記のcore/wire公開APIとNDF intrinsic roundtripを実行した。全formのRust parse/lower、bootstrap、browser描画、回路実行、LSP、portable operation provider、cross-target conformanceはまだこのレビューの実行範囲に含まれない。対応する実装が存在する段階で、implementation-status.jsonの未実行記録を実行証拠とともに更新する。

@@ -4,7 +4,7 @@
     "SourceRef": {
       "fields": [
         [
-          "uri",
+          "sourceId",
           "Text"
         ],
         [
@@ -240,6 +240,10 @@
           "SourceRef"
         ],
         [
+          "uri",
+          "Text"
+        ],
+        [
           "utf8",
           "Text"
         ]
@@ -314,7 +318,11 @@
           ],
           [
             "usage",
-            "Limits"
+            "Usage"
+          ],
+          [
+            "traceOverflow",
+            "Option<TraceOverflow>"
           ]
         ],
         "Invalid": [
@@ -329,6 +337,14 @@
           [
             "events",
             "List<Event>"
+          ],
+          [
+            "usage",
+            "Usage"
+          ],
+          [
+            "traceOverflow",
+            "Option<TraceOverflow>"
           ]
         ],
         "Stopped": [
@@ -343,6 +359,18 @@
           [
             "diagnostics",
             "List<Diagnostic>"
+          ],
+          [
+            "events",
+            "List<Event>"
+          ],
+          [
+            "usage",
+            "Usage"
+          ],
+          [
+            "traceOverflow",
+            "Option<TraceOverflow>"
           ]
         ],
         "Await": [
@@ -353,9 +381,822 @@
           [
             "calls",
             "List<Invoke>"
+          ],
+          [
+            "events",
+            "List<Event>"
+          ],
+          [
+            "diagnostics",
+            "List<Diagnostic>"
+          ],
+          [
+            "usage",
+            "Usage"
+          ],
+          [
+            "traceOverflow",
+            "Option<TraceOverflow>"
           ]
         ]
       }
+    },
+    "SourceBundle": {
+      "fields": [
+        [
+          "sources",
+          "List<SourceContent>"
+        ]
+      ]
+    },
+    "Usage": {
+      "fields": [
+        [
+          "sourceBytes",
+          "U64"
+        ],
+        [
+          "work",
+          "U64"
+        ],
+        [
+          "depth",
+          "U64"
+        ],
+        [
+          "nodes",
+          "U64"
+        ],
+        [
+          "allocationUnits",
+          "U64"
+        ],
+        [
+          "outputBytes",
+          "U64"
+        ],
+        [
+          "diagnostics",
+          "U64"
+        ],
+        [
+          "events",
+          "U64"
+        ]
+      ]
+    },
+    "TraceOverflow": {
+      "fields": [
+        [
+          "dropped",
+          "U64"
+        ]
+      ]
+    },
+    "TypeRef": {
+      "fields": [
+        [
+          "package",
+          "Text"
+        ],
+        [
+          "revision",
+          "U64"
+        ],
+        [
+          "name",
+          "Text"
+        ]
+      ]
+    },
+    "TypeDescriptor": {
+      "variants": {
+        "Unit": [],
+        "Bool": [],
+        "U64": [],
+        "Integer": [],
+        "Natural": [],
+        "Rational": [],
+        "Text": [],
+        "Bytes": [],
+        "Bytes32": [],
+        "NdfValue": [],
+        "NdfScalar": [],
+        "TypedValue": [],
+        "List": [
+          [
+            "item",
+            "TypeDescriptor"
+          ]
+        ],
+        "Option": [
+          [
+            "item",
+            "TypeDescriptor"
+          ]
+        ],
+        "Named": [
+          [
+            "reference",
+            "TypeRef"
+          ]
+        ]
+      }
+    },
+    "FieldDescriptor": {
+      "fields": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "type",
+          "TypeDescriptor"
+        ]
+      ]
+    },
+    "VariantDescriptor": {
+      "fields": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "fields",
+          "List<FieldDescriptor>"
+        ]
+      ]
+    },
+    "TypeShape": {
+      "variants": {
+        "Record": [
+          [
+            "fields",
+            "List<FieldDescriptor>"
+          ]
+        ],
+        "Variant": [
+          [
+            "variants",
+            "List<VariantDescriptor>"
+          ]
+        ]
+      }
+    },
+    "NamedTypeDescriptor": {
+      "fields": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "shape",
+          "TypeShape"
+        ],
+        [
+          "constraints",
+          "List<Text>"
+        ]
+      ]
+    },
+    "OperationDescriptor": {
+      "fields": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "input",
+          "TypeDescriptor"
+        ],
+        [
+          "output",
+          "TypeDescriptor"
+        ],
+        [
+          "pure",
+          "Bool"
+        ]
+      ]
+    },
+    "SchemaDescriptor": {
+      "fields": [
+        [
+          "package",
+          "Text"
+        ],
+        [
+          "revision",
+          "U64"
+        ],
+        [
+          "types",
+          "List<NamedTypeDescriptor>"
+        ],
+        [
+          "operations",
+          "List<OperationDescriptor>"
+        ]
+      ]
+    },
+    "KindRef": {
+      "fields": [
+        [
+          "schema",
+          "SchemaRef"
+        ],
+        [
+          "localKind",
+          "U64"
+        ]
+      ]
+    },
+    "NamespaceRef": {
+      "fields": [
+        [
+          "schema",
+          "SchemaRef"
+        ],
+        [
+          "name",
+          "Text"
+        ]
+      ]
+    },
+    "EnvironmentBinding": {
+      "fields": [
+        [
+          "namespace",
+          "NamespaceRef"
+        ],
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "value",
+          "TypedValue"
+        ],
+        [
+          "origin",
+          "Option<OriginRef>"
+        ]
+      ]
+    },
+    "Environment": {
+      "fields": [
+        [
+          "bindings",
+          "List<EnvironmentBinding>"
+        ],
+        [
+          "resources",
+          "List<ResourceContent>"
+        ]
+      ]
+    },
+    "EnvironmentEntry": {
+      "fields": [
+        [
+          "id",
+          "U64"
+        ],
+        [
+          "digest",
+          "Bytes32"
+        ],
+        [
+          "value",
+          "Environment"
+        ]
+      ]
+    },
+    "NodeRef": {
+      "fields": [
+        [
+          "id",
+          "U64"
+        ]
+      ]
+    },
+    "OriginRef": {
+      "fields": [
+        [
+          "id",
+          "U64"
+        ]
+      ]
+    },
+    "EnvironmentRef": {
+      "fields": [
+        [
+          "id",
+          "U64"
+        ],
+        [
+          "digest",
+          "Bytes32"
+        ]
+      ]
+    },
+    "ForeignSyntax": {
+      "fields": [
+        [
+          "schema",
+          "SchemaRef"
+        ],
+        [
+          "category",
+          "Text"
+        ],
+        [
+          "root",
+          "NodeRef"
+        ],
+        [
+          "bundle",
+          "SyntaxBundle"
+        ],
+        [
+          "environment",
+          "EnvironmentRef"
+        ]
+      ]
+    },
+    "SyntaxBundle": {
+      "fields": [
+        [
+          "sources",
+          "List<SourceContent>"
+        ],
+        [
+          "nodes",
+          "List<SyntaxNode>"
+        ],
+        [
+          "origins",
+          "List<Origin>"
+        ],
+        [
+          "root",
+          "NodeRef"
+        ],
+        [
+          "environments",
+          "List<EnvironmentEntry>"
+        ],
+        [
+          "tokens",
+          "List<Token>"
+        ]
+      ]
+    },
+    "SyntaxNode": {
+      "fields": [
+        [
+          "schema",
+          "SchemaRef"
+        ],
+        [
+          "kind",
+          "Text"
+        ],
+        [
+          "fields",
+          "List<FieldValue>"
+        ],
+        [
+          "head",
+          "Option<Span>"
+        ],
+        [
+          "cover",
+          "Option<Span>"
+        ],
+        [
+          "origin",
+          "OriginRef"
+        ],
+        [
+          "token",
+          "Option<TokenRef>"
+        ]
+      ]
+    },
+    "FieldValue": {
+      "variants": {
+        "Atom": [
+          [
+            "value",
+            "NdfScalar"
+          ]
+        ],
+        "Child": [
+          [
+            "node",
+            "NodeRef"
+          ]
+        ],
+        "Children": [
+          [
+            "nodes",
+            "List<NodeRef>"
+          ]
+        ],
+        "Foreign": [
+          [
+            "value",
+            "ForeignSyntax"
+          ]
+        ]
+      }
+    },
+    "Origin": {
+      "variants": {
+        "Direct": [
+          [
+            "span",
+            "Span"
+          ]
+        ],
+        "Composite": [
+          [
+            "inputs",
+            "List<OriginRef>"
+          ]
+        ],
+        "Generated": [
+          [
+            "operation",
+            "OperationRef"
+          ],
+          [
+            "callsite",
+            "Option<Span>"
+          ],
+          [
+            "inputs",
+            "List<OriginRef>"
+          ]
+        ],
+        "Synthetic": [
+          [
+            "reason",
+            "Text"
+          ],
+          [
+            "anchor",
+            "Option<Span>"
+          ]
+        ]
+      }
+    },
+    "SourceMapping": {
+      "fields": [
+        [
+          "source",
+          "Span"
+        ],
+        [
+          "target",
+          "Span"
+        ],
+        [
+          "kind",
+          "MappingKind"
+        ]
+      ]
+    },
+    "SourceMap": {
+      "fields": [
+        [
+          "mappings",
+          "List<SourceMapping>"
+        ]
+      ]
+    },
+    "OriginBundle": {
+      "fields": [
+        [
+          "sources",
+          "SourceBundle"
+        ],
+        [
+          "origins",
+          "List<Origin>"
+        ]
+      ]
+    },
+    "ViewRef": {
+      "fields": [
+        [
+          "id",
+          "U64"
+        ]
+      ]
+    },
+    "TriviaRef": {
+      "fields": [
+        [
+          "id",
+          "U64"
+        ]
+      ]
+    },
+    "PresentationClass": {
+      "fields": [
+        [
+          "schema",
+          "SchemaRef"
+        ],
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "fallback",
+          "FallbackRole"
+        ]
+      ]
+    },
+    "ViewField": {
+      "fields": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "children",
+          "List<ViewRef>"
+        ]
+      ]
+    },
+    "ViewRelation": {
+      "fields": [
+        [
+          "schema",
+          "SchemaRef"
+        ],
+        [
+          "kind",
+          "Text"
+        ],
+        [
+          "target",
+          "ViewRef"
+        ]
+      ]
+    },
+    "ViewElement": {
+      "fields": [
+        [
+          "kind",
+          "KindRef"
+        ],
+        [
+          "span",
+          "Span"
+        ],
+        [
+          "fields",
+          "List<ViewField>"
+        ],
+        [
+          "roles",
+          "List<PresentationClass>"
+        ],
+        [
+          "relations",
+          "List<ViewRelation>"
+        ]
+      ]
+    },
+    "ViewBundle": {
+      "fields": [
+        [
+          "elements",
+          "List<ViewElement>"
+        ],
+        [
+          "roots",
+          "List<ViewRef>"
+        ]
+      ]
+    },
+    "Trivia": {
+      "fields": [
+        [
+          "span",
+          "Span"
+        ],
+        [
+          "kind",
+          "TriviaKind"
+        ]
+      ]
+    },
+    "Token": {
+      "fields": [
+        [
+          "kind",
+          "KindRef"
+        ],
+        [
+          "head",
+          "Span"
+        ],
+        [
+          "payload",
+          "NdfValue"
+        ],
+        [
+          "views",
+          "ViewBundle"
+        ],
+        [
+          "leadingTrivia",
+          "List<Trivia>"
+        ]
+      ]
+    },
+    "Report": {
+      "fields": [
+        [
+          "diagnostics",
+          "List<Diagnostic>"
+        ],
+        [
+          "events",
+          "List<Event>"
+        ],
+        [
+          "traceOverflow",
+          "Option<TraceOverflow>"
+        ],
+        [
+          "usage",
+          "Usage"
+        ]
+      ]
+    },
+    "Position": {
+      "fields": [
+        [
+          "line",
+          "U64"
+        ],
+        [
+          "character",
+          "U64"
+        ]
+      ]
+    },
+    "SourceError": {
+      "variants": {
+        "Bounds": [],
+        "ScalarBoundary": [],
+        "SnapshotMismatch": [],
+        "Position": [],
+        "LineTerminator": [],
+        "IdentityConflict": [],
+        "MissingSnapshot": [],
+        "Revision": [],
+        "OverlappingEdits": [],
+        "ExpectedDigest": [],
+        "Locator": [],
+        "Stopped": [
+          [
+            "reason",
+            "StopReason"
+          ]
+        ],
+        "Decode": [
+          [
+            "validUpTo",
+            "U64"
+          ],
+          [
+            "errorLen",
+            "Option<U64>"
+          ]
+        ]
+      }
+    },
+    "SchemaError": {
+      "variants": {
+        "DuplicateName": [],
+        "EmptyName": [],
+        "DescriptorDepth": [],
+        "IdentityMismatch": [],
+        "ConflictingSchema": [],
+        "UnknownSchema": [],
+        "UnknownType": [],
+        "WrongType": [],
+        "FieldCount": [],
+        "UnknownVariant": [],
+        "Unfinalized": [],
+        "Stopped": [
+          [
+            "reason",
+            "StopReason"
+          ]
+        ]
+      }
+    },
+    "OriginError": {
+      "variants": {
+        "Reference": [],
+        "Cycle": [],
+        "EmptyReason": [],
+        "Ambiguous": [],
+        "Irreversible": [],
+        "Unmapped": [],
+        "Stopped": [
+          [
+            "reason",
+            "StopReason"
+          ]
+        ],
+        "Source": [
+          [
+            "error",
+            "SourceError"
+          ]
+        ]
+      }
+    },
+    "ViewError": {
+      "variants": {
+        "Reference": [],
+        "Cycle": [],
+        "Cover": [],
+        "DuplicateField": [],
+        "Presentation": [],
+        "Trivia": [],
+        "Stopped": [
+          [
+            "reason",
+            "StopReason"
+          ]
+        ],
+        "Source": [
+          [
+            "error",
+            "SourceError"
+          ]
+        ],
+        "Schema": [
+          [
+            "error",
+            "SchemaError"
+          ]
+        ]
+      }
+    },
+    "SyntaxError": {
+      "variants": {
+        "Reference": [],
+        "Cycle": [],
+        "Cover": [],
+        "ChildOrder": [],
+        "DuplicateSource": [],
+        "DuplicateEnvironment": [],
+        "Environment": [],
+        "ForeignRoot": [],
+        "ResourceDigest": [],
+        "Stopped": [
+          [
+            "reason",
+            "StopReason"
+          ]
+        ],
+        "Source": [
+          [
+            "error",
+            "SourceError"
+          ]
+        ],
+        "Origin": [
+          [
+            "error",
+            "OriginError"
+          ]
+        ],
+        "Schema": [
+          [
+            "error",
+            "SchemaError"
+          ]
+        ]
+      }
+    },
+    "TokenRef": {
+      "fields": [
+        [
+          "id",
+          "U64"
+        ]
+      ]
     }
   },
   "scalar_aliases": {
@@ -381,6 +1222,34 @@
       "OutputLimit",
       "DiagnosticLimit",
       "EventLimit"
+    ],
+    "MappingKind": [
+      "Exact",
+      "Transformed"
+    ],
+    "FallbackRole": [
+      "Content",
+      "Marker",
+      "Delimiter",
+      "Name",
+      "Quantity",
+      "Annotation"
+    ],
+    "TriviaKind": [
+      "Whitespace",
+      "Comment",
+      "Bom"
+    ],
+    "PositionEncoding": [
+      "Utf8",
+      "Utf16",
+      "Utf32"
+    ],
+    "NumberError": [
+      "LeadingZero",
+      "NegativeZero",
+      "ZeroDenominator",
+      "NotReduced"
     ]
   },
   "operations": [
@@ -575,7 +1444,7 @@
     }
   ],
   "note": "Operation-level domain record constraints and sum variants are specified in the referenced chapters; domain constructor field order is design/forms.json.",
-  "design_revision": "nepl3-design-2026-09-06-r3",
+  "design_revision": "nepl3-design-2026-09-06-r4",
   "schema_status": "incomplete: see design/review.json R006; operation descriptions are not closed executable input/output schemas",
   "intrinsic_types": {
     "NdfValue": {
@@ -724,5 +1593,70 @@
         ]
       }
     }
+  },
+  "constraints": {
+    "SourceRef": [
+      "source.identity"
+    ],
+    "SourceContent": [
+      "source.content"
+    ],
+    "SourceBundle": [
+      "source.bundle"
+    ],
+    "Span": [
+      "source.span"
+    ],
+    "SchemaRef": [
+      "schema.reference"
+    ],
+    "TypeRef": [
+      "schema.type-reference"
+    ],
+    "SchemaDescriptor": [
+      "schema.descriptor"
+    ],
+    "OperationReply": [
+      "operation.reporting"
+    ],
+    "TraceOverflow": [
+      "report.trace-overflow"
+    ],
+    "NamespaceRef": [
+      "namespace.reference"
+    ],
+    "Environment": [
+      "environment.bindings"
+    ],
+    "EnvironmentEntry": [
+      "environment.digest"
+    ],
+    "SyntaxBundle": [
+      "syntax.graph"
+    ],
+    "ForeignSyntax": [
+      "syntax.foreign"
+    ],
+    "SourceMap": [
+      "source.map"
+    ],
+    "OriginBundle": [
+      "origin.graph"
+    ],
+    "KindRef": [
+      "schema.kind-id"
+    ],
+    "ViewBundle": [
+      "view.graph"
+    ],
+    "Token": [
+      "token.boundary"
+    ],
+    "PresentationClass": [
+      "view.presentation"
+    ],
+    "Report": [
+      "operation.reporting"
+    ]
   }
 }

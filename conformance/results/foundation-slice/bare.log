@@ -1,0 +1,12 @@
+Command:
+cargo check --locked -p nepl3-core -p nepl3-wire -p nepl3-reader --no-default-features --target thumbv6m-none-eabi
+
+Exit code: 0
+
+Output:
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+    Checking nepl3-reader v0.1.0 (C:\projects\NEPL3-runtime\crates\foundation\reader)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.12s

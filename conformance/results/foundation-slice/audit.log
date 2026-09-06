@@ -1,0 +1,94 @@
+Command:
+python tools/audit/structure.py
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+python -m unittest discover -s tools/audit -p test.py
+
+Exit code: 0
+
+Output:
+{
+  "scope": "design-source structure only; not runtime conformance",
+  "sources": [
+    {
+      "path": "languages/grammar/syntax.neplg",
+      "form_signatures": 68
+    },
+    {
+      "path": "languages/doc/syntax.neplg",
+      "form_signatures": 32
+    },
+    {
+      "path": "languages/math/syntax.neplg",
+      "form_signatures": 29
+    },
+    {
+      "path": "languages/circuit/syntax.neplg",
+      "form_signatures": 26
+    },
+    {
+      "path": "examples/circuit/half-adder.neplc"
+    },
+    {
+      "path": "examples/circuit/instances.neplc"
+    },
+    {
+      "path": "examples/circuit/simultaneous.neplc"
+    },
+    {
+      "path": "examples/circuit/state-feedback.neplc"
+    },
+    {
+      "path": "examples/circuit/toggle.neplc"
+    },
+    {
+      "path": "examples/document/integration.nepld"
+    },
+    {
+      "path": "examples/document/parallel.nepld"
+    },
+    {
+      "path": "examples/document/prefix.nepld"
+    },
+    {
+      "path": "examples/document/references.nepld"
+    },
+    {
+      "path": "examples/document/sentence.nepld"
+    },
+    {
+      "path": "examples/grammar/angle-tag.neplg"
+    },
+    {
+      "path": "examples/grammar/binding.neplg"
+    },
+    {
+      "path": "examples/grammar/provider.neplg"
+    },
+    {
+      "path": "examples/math/binding.neplm"
+    },
+    {
+      "path": "examples/math/decimal.neplm"
+    },
+    {
+      "path": "examples/math/doc-label.neplm"
+    },
+    {
+      "path": "examples/math/matrix.neplm"
+    },
+    {
+      "path": "examples/math/notation.neplm"
+    },
+    {
+      "path": "examples/math/rational.neplm"
+    },
+    {
+      "path": "examples/math/sum.neplm"
+    }
+  ]
+}
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.003s
+
+OK

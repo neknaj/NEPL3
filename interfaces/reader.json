@@ -1,0 +1,1552 @@
+{
+  "operations": {},
+  "package": "nepl3.reader",
+  "revision": 1,
+  "types": {
+    "CharClass": {
+      "constraints": [
+        "valid-scalar-range"
+      ],
+      "variant": {
+        "Any": [],
+        "AsciiLetter": [],
+        "Chars": [
+          [
+            "text",
+            "Text"
+          ]
+        ],
+        "Digit": [],
+        "Except": [
+          [
+            "text",
+            "Text"
+          ]
+        ],
+        "IdentifierContinue": [],
+        "IdentifierStart": [],
+        "Range": [
+          [
+            "lo",
+            "Text"
+          ],
+          [
+            "hi",
+            "Text"
+          ]
+        ],
+        "Whitespace": []
+      }
+    },
+    "DependentRequest": {
+      "constraints": [
+        "reader.dependent-request"
+      ],
+      "record": [
+        [
+          "first",
+          "NdfValue"
+        ],
+        [
+          "end",
+          "U64"
+        ],
+        [
+          "request",
+          {
+            "named": {
+              "name": "ReadRequest",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "Expectation": {
+      "constraints": [],
+      "variant": {
+        "EndOfInput": [],
+        "Literal": [
+          [
+            "text",
+            "Text"
+          ]
+        ],
+        "Provider": [
+          [
+            "operation",
+            {
+              "named": {
+                "name": "OperationRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "arguments",
+            "TypedValue"
+          ]
+        ],
+        "ScalarClass": [
+          [
+            "class",
+            {
+              "named": {
+                "name": "CharClass",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "TokenBoundary": []
+      }
+    },
+    "FramePhase": {
+      "constraints": [],
+      "variant": {
+        "AwaitChild": [],
+        "Choice": [
+          [
+            "next",
+            "U64"
+          ],
+          [
+            "furthest",
+            "U64"
+          ],
+          [
+            "expected",
+            {
+              "list": {
+                "named": {
+                  "name": "Expectation",
+                  "package": "nepl3.reader",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "Enter": [],
+        "Provider": [
+          [
+            "callId",
+            "U64"
+          ]
+        ],
+        "Repeat": [
+          [
+            "count",
+            "U64"
+          ],
+          [
+            "iterationStart",
+            "U64"
+          ],
+          [
+            "values",
+            {
+              "list": "NdfValue"
+            }
+          ]
+        ],
+        "Seq": [
+          [
+            "next",
+            "U64"
+          ],
+          [
+            "values",
+            {
+              "list": "NdfValue"
+            }
+          ]
+        ],
+        "Then": [
+          [
+            "first",
+            "NdfValue"
+          ],
+          [
+            "end",
+            "U64"
+          ]
+        ]
+      }
+    },
+    "ProviderCall": {
+      "constraints": [
+        "reader.provider-call"
+      ],
+      "variant": {
+        "Dependent": [
+          [
+            "sessionId",
+            "Text"
+          ],
+          [
+            "callId",
+            "U64"
+          ],
+          [
+            "depthBase",
+            "U64"
+          ],
+          [
+            "operation",
+            {
+              "named": {
+                "name": "OperationRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "request",
+            {
+              "named": {
+                "name": "DependentRequest",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Read": [
+          [
+            "sessionId",
+            "Text"
+          ],
+          [
+            "callId",
+            "U64"
+          ],
+          [
+            "depthBase",
+            "U64"
+          ],
+          [
+            "operation",
+            {
+              "named": {
+                "name": "OperationRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "request",
+            {
+              "named": {
+                "name": "ReadRequest",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Transform": [
+          [
+            "sessionId",
+            "Text"
+          ],
+          [
+            "callId",
+            "U64"
+          ],
+          [
+            "depthBase",
+            "U64"
+          ],
+          [
+            "operation",
+            {
+              "named": {
+                "name": "OperationRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "request",
+            {
+              "named": {
+                "name": "TransformRequest",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "ProviderKind": {
+      "constraints": [],
+      "variant": {
+        "Dependent": [],
+        "Read": [],
+        "Transform": []
+      }
+    },
+    "ProviderSignature": {
+      "constraints": [
+        "reader.provider-signature"
+      ],
+      "record": [
+        [
+          "operation",
+          {
+            "named": {
+              "name": "OperationRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "kind",
+          {
+            "named": {
+              "name": "ProviderKind",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "valueInput",
+          {
+            "named": {
+              "name": "TypeDescriptor",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "valueOutput",
+          {
+            "named": {
+              "name": "TypeDescriptor",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "stateType",
+          {
+            "named": {
+              "name": "TypeDescriptor",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "continuationType",
+          {
+            "named": {
+              "name": "TypeDescriptor",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "pure",
+          "Bool"
+        ]
+      ]
+    },
+    "ReadReply": {
+      "constraints": [
+        "reader.reply"
+      ],
+      "variant": {
+        "Await": [
+          [
+            "call",
+            {
+              "named": {
+                "name": "ProviderCall",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "continuation",
+            {
+              "named": {
+                "name": "ReaderContinuation",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "report",
+            {
+              "named": {
+                "name": "Report",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Failed": [
+          [
+            "diagnostic",
+            {
+              "named": {
+                "name": "Diagnostic",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "recovery",
+            {
+              "option": {
+                "named": {
+                  "name": "Span",
+                  "package": "nepl3.foundation",
+                  "revision": 1
+                }
+              }
+            }
+          ],
+          [
+            "report",
+            {
+              "named": {
+                "name": "Report",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Matched": [
+          [
+            "value",
+            "NdfValue"
+          ],
+          [
+            "end",
+            "U64"
+          ],
+          [
+            "newState",
+            "NdfValue"
+          ],
+          [
+            "view",
+            {
+              "named": {
+                "name": "ViewBundle",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "facts",
+            {
+              "list": {
+                "named": {
+                  "name": "ReaderFact",
+                  "package": "nepl3.reader",
+                  "revision": 1
+                }
+              }
+            }
+          ],
+          [
+            "sources",
+            {
+              "list": {
+                "named": {
+                  "name": "SourceContent",
+                  "package": "nepl3.foundation",
+                  "revision": 1
+                }
+              }
+            }
+          ],
+          [
+            "sourceMaps",
+            {
+              "list": {
+                "named": {
+                  "name": "SourceMapping",
+                  "package": "nepl3.foundation",
+                  "revision": 1
+                }
+              }
+            }
+          ],
+          [
+            "report",
+            {
+              "named": {
+                "name": "Report",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "NeedMore": [
+          [
+            "expected",
+            {
+              "list": {
+                "named": {
+                  "name": "Expectation",
+                  "package": "nepl3.reader",
+                  "revision": 1
+                }
+              }
+            }
+          ],
+          [
+            "report",
+            {
+              "named": {
+                "name": "Report",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "NoMatch": [
+          [
+            "expected",
+            {
+              "list": {
+                "named": {
+                  "name": "Expectation",
+                  "package": "nepl3.reader",
+                  "revision": 1
+                }
+              }
+            }
+          ],
+          [
+            "furthest",
+            "U64"
+          ],
+          [
+            "report",
+            {
+              "named": {
+                "name": "Report",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "name": "StopReason",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "report",
+            {
+              "named": {
+                "name": "Report",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "ReadRequest": {
+      "constraints": [
+        "reader.request"
+      ],
+      "record": [
+        [
+          "snapshot",
+          {
+            "named": {
+              "name": "SourceRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "name": "SourceContent",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "start",
+          "U64"
+        ],
+        [
+          "limit",
+          "U64"
+        ],
+        [
+          "finalInput",
+          "Bool"
+        ],
+        [
+          "context",
+          {
+            "named": {
+              "name": "ReaderContext",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "state",
+          "NdfValue"
+        ]
+      ]
+    },
+    "ReaderCheckpoint": {
+      "constraints": [
+        "reader.checkpoint"
+      ],
+      "record": [
+        [
+          "cursor",
+          "U64"
+        ],
+        [
+          "state",
+          "NdfValue"
+        ],
+        [
+          "view",
+          {
+            "named": {
+              "name": "ViewBundle",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "facts",
+          {
+            "list": {
+              "named": {
+                "name": "ReaderFact",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "diagnostics",
+          {
+            "list": {
+              "named": {
+                "name": "Diagnostic",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "name": "SourceContent",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "name": "SourceMapping",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "events",
+          {
+            "list": {
+              "named": {
+                "name": "Event",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "traceOverflow",
+          {
+            "option": {
+              "named": {
+                "name": "TraceOverflow",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ReaderContext": {
+      "constraints": [
+        "reader.context"
+      ],
+      "record": [
+        [
+          "schema",
+          {
+            "named": {
+              "name": "SchemaRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "category",
+          "Text"
+        ],
+        [
+          "mode",
+          "Text"
+        ],
+        [
+          "environment",
+          {
+            "named": {
+              "name": "EnvironmentEntry",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "origins",
+          {
+            "list": {
+              "named": {
+                "name": "Origin",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ReaderContinuation": {
+      "constraints": [
+        "reader.continuation"
+      ],
+      "record": [
+        [
+          "sessionId",
+          "Text"
+        ],
+        [
+          "depthBase",
+          "U64"
+        ],
+        [
+          "planSchema",
+          {
+            "named": {
+              "name": "SchemaRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "planDigest",
+          "Bytes32"
+        ],
+        [
+          "request",
+          {
+            "named": {
+              "name": "ReadRequest",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "frames",
+          {
+            "list": {
+              "named": {
+                "name": "ReaderFrame",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "current",
+          {
+            "named": {
+              "name": "ReaderCheckpoint",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "pending",
+          {
+            "named": {
+              "name": "ProviderCall",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "usage",
+          {
+            "named": {
+              "name": "Usage",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "name": "Report",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "ReaderDiagnosticArguments": {
+      "constraints": [],
+      "record": [
+        [
+          "expected",
+          {
+            "list": {
+              "named": {
+                "name": "Expectation",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "offset",
+          "U64"
+        ]
+      ]
+    },
+    "ReaderDiagnosticCode": {
+      "constraints": [],
+      "variant": {
+        "BoundaryMismatch": [],
+        "ExpectedInput": [],
+        "InvalidEscape": [],
+        "InvalidScalar": [],
+        "NonProgress": [],
+        "NonProgressRecursion": [],
+        "ProviderContractViolation": [],
+        "UnknownDecoder": [],
+        "UnterminatedLiteral": []
+      }
+    },
+    "ReaderExpr": {
+      "constraints": [
+        "reader.expression"
+      ],
+      "variant": {
+        "Call": [
+          [
+            "operation",
+            {
+              "named": {
+                "name": "OperationRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Capture": [
+          [
+            "name",
+            "Text"
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "name": "ReaderId",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Choice": [
+          [
+            "items",
+            {
+              "list": {
+                "named": {
+                  "name": "ReaderId",
+                  "package": "nepl3.reader",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "Commit": [
+          [
+            "body",
+            {
+              "named": {
+                "name": "ReaderId",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Decode": [
+          [
+            "provider",
+            {
+              "named": {
+                "name": "OperationRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "name": "ReaderId",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Discard": [
+          [
+            "body",
+            {
+              "named": {
+                "name": "ReaderId",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Eof": [],
+        "Literal": [
+          [
+            "text",
+            "Text"
+          ]
+        ],
+        "Look": [
+          [
+            "body",
+            {
+              "named": {
+                "name": "ReaderId",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Many": [
+          [
+            "body",
+            {
+              "named": {
+                "name": "ReaderId",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Map": [
+          [
+            "provider",
+            {
+              "named": {
+                "name": "OperationRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "name": "ReaderId",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Node": [
+          [
+            "kind",
+            {
+              "named": {
+                "name": "KindRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "name": "ReaderId",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Not": [
+          [
+            "body",
+            {
+              "named": {
+                "name": "ReaderId",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Optional": [
+          [
+            "body",
+            {
+              "named": {
+                "name": "ReaderId",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Ref": [
+          [
+            "name",
+            "Text"
+          ]
+        ],
+        "Region": [
+          [
+            "class",
+            {
+              "named": {
+                "name": "PresentationClass",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "name": "ReaderId",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Repeat": [
+          [
+            "min",
+            "U64"
+          ],
+          [
+            "max",
+            "U64"
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "name": "ReaderId",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Scalar": [
+          [
+            "class",
+            {
+              "named": {
+                "name": "CharClass",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Seq": [
+          [
+            "items",
+            {
+              "list": {
+                "named": {
+                  "name": "ReaderId",
+                  "package": "nepl3.reader",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "Some": [
+          [
+            "body",
+            {
+              "named": {
+                "name": "ReaderId",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "TakeCount": [
+          [
+            "count",
+            "U64"
+          ]
+        ],
+        "Then": [
+          [
+            "first",
+            {
+              "named": {
+                "name": "ReaderId",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "provider",
+            {
+              "named": {
+                "name": "OperationRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Until": [
+          [
+            "delimiter",
+            "Text"
+          ]
+        ]
+      }
+    },
+    "ReaderFact": {
+      "constraints": [],
+      "variant": {
+        "Capture": [
+          [
+            "name",
+            "Text"
+          ],
+          [
+            "span",
+            {
+              "named": {
+                "name": "Span",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Presentation": [
+          [
+            "class",
+            {
+              "named": {
+                "name": "PresentationClass",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "span",
+            {
+              "named": {
+                "name": "Span",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Relation": [
+          [
+            "schema",
+            {
+              "named": {
+                "name": "SchemaRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "kind",
+            "Text"
+          ],
+          [
+            "from",
+            {
+              "named": {
+                "name": "Span",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "to",
+            {
+              "named": {
+                "name": "Span",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "ReaderFrame": {
+      "constraints": [],
+      "record": [
+        [
+          "expression",
+          {
+            "named": {
+              "name": "ReaderId",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "start",
+          "U64"
+        ],
+        [
+          "checkpoint",
+          {
+            "named": {
+              "name": "ReaderCheckpoint",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "phase",
+          {
+            "named": {
+              "name": "FramePhase",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "ReaderId": {
+      "constraints": [],
+      "record": [
+        [
+          "id",
+          "U64"
+        ]
+      ]
+    },
+    "ReaderPlan": {
+      "constraints": [
+        "reader.plan"
+      ],
+      "record": [
+        [
+          "schema",
+          {
+            "named": {
+              "name": "SchemaRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "stateType",
+          {
+            "named": {
+              "name": "TypeDescriptor",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "expressions",
+          {
+            "list": {
+              "named": {
+                "name": "ReaderExpr",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "rules",
+          {
+            "list": {
+              "named": {
+                "name": "ReaderRule",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "providers",
+          {
+            "list": {
+              "named": {
+                "name": "ProviderSignature",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ReaderRule": {
+      "constraints": [],
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "root",
+          {
+            "named": {
+              "name": "ReaderId",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "output",
+          {
+            "named": {
+              "name": "TypeDescriptor",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "TransformReply": {
+      "constraints": [
+        "reader.transform-reply"
+      ],
+      "record": [
+        [
+          "value",
+          "NdfValue"
+        ],
+        [
+          "view",
+          {
+            "named": {
+              "name": "ViewBundle",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "facts",
+          {
+            "list": {
+              "named": {
+                "name": "ReaderFact",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "name": "SourceContent",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "name": "SourceMapping",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "name": "Report",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "TransformRequest": {
+      "constraints": [
+        "reader.transform-request"
+      ],
+      "record": [
+        [
+          "value",
+          "NdfValue"
+        ],
+        [
+          "span",
+          {
+            "named": {
+              "name": "Span",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "view",
+          {
+            "named": {
+              "name": "ViewBundle",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "context",
+          {
+            "named": {
+              "name": "ReaderContext",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    }
+  }
+}

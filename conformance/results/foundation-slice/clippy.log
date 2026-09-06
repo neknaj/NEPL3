@@ -1,0 +1,10 @@
+Command:
+cargo clippy --workspace --all-targets --locked -- -D warnings
+
+Exit code: 0
+
+Output:
+    Blocking waiting for file lock on build directory
+    Checking nepl3-tools v0.1.0 (C:\projects\NEPL3-runtime\tools)
+    Checking nepl3-wire v0.1.0 (C:\projects\NEPL3-runtime\crates\foundation\wire)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 9.33s

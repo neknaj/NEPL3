@@ -387,5 +387,5 @@
       "expect": "Code retains recovered ForeignSyntax and source/view with Missing/Unparsed; no guest lower/check/evaluate; no claim of valid Article"
     }
   ],
-  "design_revision": "nepl3-design-2026-09-06-r3"
+  "design_revision": "nepl3-design-2026-09-06-r4"
 }

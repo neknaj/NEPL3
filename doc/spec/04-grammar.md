@@ -78,6 +78,12 @@ class名はschema所有ID。共通roleへfallbackできる。実際の色をgram
 
 compileは `LanguagePackage{schema, readerPlans, categoryShapes, bindingPlans, stylePlans, extensionRequirements, provenance}` を返す。意味データに加えてどのgrammar宣言から作ったかを保持し、grammar自身にもdefinition jumpを提供する。
 
+ここでschemaはsurface schemaであり、Doc:Sentence等の意味schemaと区別する。標準profileは `nepl3.syntax.grammar`、`nepl3.syntax.doc`、`nepl3.syntax.math`、`nepl3.syntax.circuit` をsurfaceの所有packageとし、意味packageはそれぞれ `nepl3.grammar`、`nepl3.doc`、`nepl3.math`、`nepl3.circuit` に分ける。LanguagePackageはpayloadSchemasとして必要な意味・provider schemaの実SchemaRefも宣言する。sourceのform名・token名・view名を同一descriptorで衝突させず、compiled metadataでそれぞれのkind identityへの対応を持つ。
+
+SyntaxNode.schemaとForeignSyntax.schemaは該当するsurface schemaを指す。Token.kindはWord等のlexical分類なので、Let等のSyntaxNode.kindと同一であるとは限らない。form/leaf宣言が両者の対応とpayload型を定める。SentenceLiteralの外側shapeはarity 0のまま、Token.payloadに入るDoc:Sentenceは意味schemaを指す。engineはsurface構造とpayloadの宣言型を照合するが、読むだけで意味操作を実行しない。
+
+解決済みProfileはsurface、意味、reader/providerの全descriptorと計算済みdigestを登録する。未生成のpackageへ架空のdigestを置かず、同じSchemaRefに異なるfield shapeを割り当てない。Grammar compileはsurface descriptorを作る責務を持ち、Doc/Math/Circuitの意味schemaを勝手に再生成・上書きしない。
+
 必須検査: 未定義category/mode/reader/namespace/provider、重複kind/field/spelling、field型の不一致、readerの空反復、進捗なし再帰、未読fieldへの構文context依存、bindingで非名前fieldを使用、範囲外のstyle selector、foreign alias不足、provider署名不一致。
 
 Grammarが生成したdescriptorと、同じ契約をRustで直接構築したdescriptorは同じengineで動く。埋め込まれたproviderをdescriptorの固定IRへ変換できなくても、その呼出し参照を保持する。

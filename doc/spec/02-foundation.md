@@ -6,7 +6,9 @@ source、種類、構造、意味、解析結果の出自を独立に保持す�
 
 ## 1. SourceとRange
 
-`SourceId`はworkspace内の不透明ID。`Revision`はそのsourceの版。`SnapshotId = (SourceId, Revision, contentDigest)`。SourceSnapshotはUTF-8の不変byte列とURIを持つ。ファイルだけでなくメモリ文書・生成文書も許可する。
+`SourceId`はhostが与える空でないopaque TextのID。`Revision`はそのsourceの版。`SnapshotId = (SourceId, Revision, contentDigest)` はnativeとwireで同じ同一性を持ち、wire record名はSourceRefとする。SourceSnapshotはUTF-8の不変byte列とlocatorとしてのURIを別に持つ。ファイルだけでなくメモリ文書・生成文書も許可する。同じURIを持つ独立文書も異なるSourceIdで区別する。coreは乱数・時計・pointerからIDを生成しない。
+
+SourceContentはid:SourceRef、uri:Text、utf8:Textを持つ。受信時は元UTF-8 byte列のSHA-256とid.digestを照合する。SourceBundleはsourcesの列を持ち、同じSourceId/revisionに異なる内容・digest・URIを割り当てる入力、重複したsnapshot宣言を拒否する。SourceStoreへの同一snapshotの再参照は既存の不変値を指し、文書を新しいrevisionへ自動更新しない。URI変更は新しいrevisionとして明示する。
 
 `Span = (SnapshotId, start:u64, end:u64)`。半開区間 `[start,end)`、`0 <= start <= end <= source.len`、UTF-8 scalar境界であることを構築時に検査する。挿入位置には空区間を使用できる。空区間は左/右へのaffinityを必要な操作で別に持つ。行・列・画面幅をSpanへ保存しない。
 
@@ -62,7 +64,9 @@ Diagnosticはcode、severity、stage、schema/provider、構造化args、primary
 
 Fixは前提snapshotと非重複TextEdit列。古いsnapshotに自動適用しない。expected text/digestを検査する。複数sourceのfixは一つのtransactionとして返す。
 
-EventはParseStarted/RuleTried/RuleCommitted/BindingResolved/OperationFinished等のschema所有kind、operation path、必要な範囲、構造化payload。domainログが全て文字列である必要はない。TraceLevelはOff/Summary/Detailed、イベント件数にも予算を設け、overflowは一度だけsummary化する。
+EventはParseStarted/RuleTried/RuleCommitted/BindingResolved/OperationFinished等のschema所有kind、operation path、必要な範囲、構造化payload。domainログが全て文字列である必要はない。TraceLevelはOff/Summary/Detailed。Offではeventを作らず予算も消費しない。上限を超えるevent追加の最初の試行でStopped(EventLimit)とし、先頭の許容件数を保持する。既存eventの上書きや、黙ったCompleteは行わない。
+
+overflowはevent列外の `traceOverflow: Option<TraceOverflow>` に一度だけ記録する。TraceOverflow.droppedは実際に追加を試みて受理されなかった件数であり、通常の即時停止では1。未実行の将来event数を推定しない。この報告fieldによりevents上限0でも停止理由と切捨てを表せる。既にcancelや別limitで停止した処理が終了eventを記録しようとしても、先に確定した停止理由をEventLimitへ置き換えない。
 
 backtrackingで取り消されたcandidateの診断やeditor factsを成功結果へ混入させない。debug traceだけが試行の記録を保持できる。coreはclockやloggerを呼ばず、hostが時刻と出力先を付ける。
 
@@ -70,6 +74,12 @@ backtrackingで取り消されたcandidateの診断やeditor factsを成功結�
 
 LimitsはsourceBytes、work、depth、nodes、allocationUnits、outputBytes、diagnostics、eventsを持つ。全再帰で共有し、言語を切り替えてリセットしない。論理的なlimit検査とOS allocatorの物理OOMは同一ではない。trusted native codeの無限loopを呼出し後の検査で停止できるとは主張しない。
 
-sourceBytesを超える入力は、文字数ではなく元のUTF-8 byte数で判定し、Stopped(SourceLimit)を返す。source snapshotを正常に構築した扱いにせず、他のlimitや構文エラーへ置き換えない。
+Usageは同じfield名を持つ別recordで、許容最大値ではなく実際の累積消費を表す。depthだけは最大同時再帰深さであり、現在深さを別に管理する。解放や巻戻しで消費済みwork/nodes/allocationUnits等を返却しない。整数加算のoverflowは該当limitの超過として拒否する。超過した試行を成功した消費に計上してUsageを上限より大きくしない。停止したbudgetを再開・外部操作・別言語への切替で新品に取り替えない。
 
-操作結果はComplete(value, diagnostics, events, usage)、Invalid(partial, diagnostics)、Stopped(reason, partial)を区別する。partialをchecked値として扱わない。入力の問題、未解決の要求、未対応の操作、上限超過、provider違反を別codeで返す。
+sourceBytesは一つの共有操作contextへ受け入れる各snapshotの元byte長を一度ずつ計上する。参照をたどるたびに同じsnapshotを再計上しない。ただし別のsnapshot生成、変更後のsource、decode後に作るsourceは別入力として計上する。snapshotの構築だけを繰り返す低水準APIと、受け入れ済みbundleの参照を区別する。
+
+sourceBytesを超える入力は、文字数ではなく元のUTF-8 byte数で判定し、Stopped(SourceLimit)を返す。元byte列を受け取るsnapshot constructorではこの長さの検査をUTF-8 decodeより前に行う。NDF受信ではCBOR構造・TextのUTF-8・schemaの検査を済ませて初めて埋込みsourceを識別できるため、その段階の失敗が先になる。既に停止したbudgetの理由は後続の検査で置き換えない。
+
+SourceAdmissionは操作共通の資源計上台帳であり、公開されたSourceStoreではない。bundleの後半で失敗しても、前半で受け入れたsnapshotの使用量とidentity照合情報を取り消さない。同じcontextで再試行しても同じsnapshotを二重計上せず、locator・内容の衝突は拒否する。typed bundleの返却とSourceStoreへの反映は全体の検査成功後に行い、取り消した候補のsourceを解析結果へ混入させない。
+
+操作結果はComplete(value)、Invalid(partial)、Stopped(reason, partial)を区別し、すべてにdiagnostics、events、usage、traceOverflowを持つReportを付ける。nativeでは共通Reportをまとめ、wireではOperationReplyの定義順にfieldを展開する。providerのAwaitも同じ報告と累積予算を保持する。partialをchecked値として扱わない。diagnostics上限の超過はStopped(DiagnosticLimit)であり、上限0のとき架空の診断を追加せずStopReasonで伝える。入力の問題、未解決の要求、未対応の操作、上限超過、provider違反を別codeで返す。

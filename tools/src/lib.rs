@@ -47,6 +47,7 @@ pub fn check(root: &Path) -> Result<()> {
     let files = repository::check(root)?;
     let (tasks, status) = task::load(root)?;
     contract::check(root)?;
+    contract::reader::check(root)?;
     dependency::check(root, &status.implemented_crates)?;
     task::generate(root, &tasks, &status, false)?;
     documentation::check(root, false)?;
@@ -75,6 +76,16 @@ pub fn tasks(root: &Path, write: bool) -> Result<()> {
         if write { "written" } else { "are current" }
     );
     Ok(())
+}
+
+/// Regenerate the foundational package descriptor and verify it using the core registry.
+pub fn foundation(root: &Path) -> Result<()> {
+    contract::foundation::write(root)
+}
+
+/// Regenerate the registered reader envelope descriptor projection.
+pub fn reader(root: &Path) -> Result<()> {
+    contract::reader::write(root)
 }
 
 /// Print a reproducible identity for the current evidence input inventory.

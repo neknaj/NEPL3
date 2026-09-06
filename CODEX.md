@@ -2,7 +2,7 @@
 
 まず [AGENTS.md](AGENTS.md)、[文書索引](doc/README.md)、[開発手順](doc/development.md) を読む。
 
-Grammar・Doc・Math・Circuitと共有基盤の目標仕様は `nepl3-design-2026-09-06-r3`。
+Grammar・Doc・Math・Circuitと共有基盤の目標仕様は `nepl3-design-2026-09-06-r4`。
 `design/tasks.json` の依存順でT01から実装する。今回のリポジトリ基盤整備はT01やT16の完成ではない。
 現状は [implementation-status.json](implementation-status.json) を参照する。
 

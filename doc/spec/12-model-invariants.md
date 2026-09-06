@@ -10,6 +10,45 @@ JSON内の `record` は `[fieldName, typeExpression]` の順序付きarrayであ
 
 Source由来の意味値はOriginを関連付けられる。各Recordが共有できるようにnative実装をarenaにしてもよいが、公開値の意味をpointerに依存させない。wireは参照table付きbundleを使い、全NodeRef/OriginRefが有効であることを検査する。意味上の構造木と回路graphのcycle制約は異なる。
 
+r4ではNodeRef/OriginRef、Origin、SyntaxNode/FieldValue、SyntaxBundle/ForeignSyntax、EnvironmentRefを共通foundation所有のcontractsへ移した。modelはexternal_typesから参照し、同じ名義型を二重定義しない。SyntaxBundleはsources、nodes、origins、root、environmentsを持つ。ForeignSyntax.rootとguest bundle.rootは等しくなければならず、guestのnode/origin IDはそのbundle内だけで解決する。ForeignSyntax.environmentはforeign slotを所有するhost bundleのEnvironmentEntryのid/digestへ一致させる。guestへの無条件の名前空間継承は行わない。
+
+EnvironmentEntryはid/digest/valueを持ち、Environmentは明示的なnamespace/name/value/originのbinding列とresource列を持つ。同じnamespace/nameのbindingとresource IDの重複を拒否する。bindingのOriginRefはそのentryの所属bundle内で解決する。entry digestはASCII `NEPL3-ENVIRONMENT-1`、zero byte、canonical NDFで符号化したEnvironment recordのSHA-256とする。型付きnative graph検査はentryの選択と参照を検査し、wire adapterはcanonical digestとresource元byte列のdigestも再検査する。
+
+通常のsource nodeではheadはcover内、各子のcoverは親cover内かつhead.end以降で、子同士はfield順に重複しない。graph/位置検査だけでformのarity・引数category・各field型まで検査したことにはしない。surface LanguagePackageの検査を別に行う。生成nodeに架空のcoverを要求しない。
+
+SourceMapはsource/target SpanとExactまたはTransformedのMapping列を持つ。Exactは元と先のbyte列が等しく、局所逆写像はoffset差で求める。Transformedは対応するfragment間の関係だけを表し、任意の部分区間を逆変換できるとはしない。重なった複数の候補はAmbiguous、非可逆はIrreversibleとしてrename等へ返す。
+
+map循環の頂点はsnapshotとbyte位置である。非空範囲は半開区間内の各byte、空範囲はそのoffsetの独立したanchor頂点とし、同じoffsetの内容byteとanchorを混同しない。Exactはoffset差を保存するedge、Transformedは元fragmentの全頂点から先fragmentの全頂点への関係である。この有限graphのcycleを拒否する。同一snapshot内でも一方向へ進む重複Exact区間や、互いに接続しない範囲はcycleとしない。検査量の超過はStoppedであり、粗いsnapshot依存だけを根拠にCycleと返さない。
+
+## 1.1 foundation制約ID
+
+constraint IDはstructural descriptorとともにdigestへ含める。共通Rust constructor・boundary adapterは次を検査する。descriptorにIDがあるだけで検査を実行したとは扱わない。
+
+| ID | 検査する不変条件 |
+| --- | --- |
+| source.identity | 空でないopaque IDと明示的なrevision/content digest |
+| source.content | locator profile、UTF-8元byte列、content digestの一致 |
+| source.bundle | snapshot宣言の一意性、同じID/revisionの矛盾拒否、共有操作での入力予算 |
+| source.span | 指定snapshotの範囲・半開順序・UTF-8 scalar境界 |
+| schema.reference / schema.type-reference | 空でないpackage/type名と、選択された版・digestまたは記号的参照先 |
+| schema.descriptor | 重複宣言拒否、canonical descriptor、全参照のfinalize |
+| operation.reporting | すべての結果の累積Usage、共有Limits、停止理由の維持、partialをCheckedとしない |
+| report.trace-overflow | 実際の未受理event件数が正、単一の報告、EventLimitの停止 |
+| namespace.reference | 明示したschemaと空でないnamespace名 |
+| environment.bindings / environment.digest | binding/resourceの一意性、範囲と型、canonical entry digest |
+| syntax.graph / syntax.foreign | bundle局所参照、有限graph、source geometry、host環境とguest rootの一致 |
+| source.map / origin.graph | 上記のmap関係とOrigin DAG、所属snapshot・OperationRef・参照先 |
+| schema.kind-id | 選択schemaの型名scalar順に割り当てたlocalKindとdescriptorの対応 |
+| view.graph | Tokenごとに局所的なview参照、DAG、field名の一意性、source範囲 |
+| token.boundary | token head・triviaのsnapshotと境界、内部viewの包含、payloadの型はreader/form契約で検査 |
+| view.presentation | schemaが所有する表示分類名と明示されたfallback role |
+
+SyntaxBundleはtokensのtableを持ち、SyntaxNode.tokenは同じbundleのTokenRefを指す。Tokenはpayload、内部ViewBundle、leadingTriviaを保持する。ViewRefはそのTokenのViewBundle内だけ、TokenRefはそのSyntaxBundle内だけで解決する。ForeignSyntaxのguest bundleは自身のtableを持つため、同じ数値IDをhostへ解決しない。通常のsource由来nodeにはheadに対応するtokenをengineが要求し、synthetic/recovery nodeのtoken不在はOptionで明示する。graphの検査とformのarity・payload型の検査を区別する。
+
+内部viewは外側のchildrenやarityへ加算しない。SentenceLiteralの構造化payloadとview、Codeが保持するforeign syntaxのtoken・triviaはnativeとNDFの両経路で保存し、元sourceの再parseを情報保持の代替にしない。
+
+Token.payloadは、その型が所有する独立bundleまたは明示source参照を持つ。まだ構築されていない外側SyntaxBundleのNodeRefを暗黙に参照しない。payload内に現れる数値を外側node IDと推測して再採番しない。この所有契約により、outer nodeのcanonical再採番はopaque payloadを壊さず行える。
+
 DocのSentenceLiteralはlower後にDoc:Sentenceとなる。raw Textには注釈構文を再適用しない。MathのNumberは有限十進で表現できるRational（約分後の分母の素因数が2と5だけ）と元の表記範囲を持ち、SymbolNameはMath:Symbolへ統合する。違反はNonFiniteDecimalNumber。Numeric spellingを表示に使う場合は、そのsnapshotと値が一致していることを検査する。生成Numberはcanonicalな整数または有限十進でprintする。任意有理数からの式構築と著者のFracの保存はMath章の規則に従う。
 
 ForeignSyntaxはguestのopaque bundleを持ち、host coreはguestの意味型をimportしない。suiteで登録済みschemaに検査してからguest操作に渡す。Doc:DocGuestもForeignSyntaxを保持する。Codeの準備はbundleの安全性を検査してsourceとviewを表示し、guestのlower・意味check・evaluateを呼ばない。

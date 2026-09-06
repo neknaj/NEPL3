@@ -28,5 +28,24 @@
     "circuit.facts/v1"
   ],
   "external_environment_policy": "explicit-projection-only",
-  "design_revision": "nepl3-design-2026-09-06-r3"
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "schema_owners": {
+    "Grammar": {
+      "surface_package": "nepl3.syntax.grammar",
+      "meaning_package": "nepl3.grammar"
+    },
+    "Doc": {
+      "surface_package": "nepl3.syntax.doc",
+      "meaning_package": "nepl3.doc"
+    },
+    "Math": {
+      "surface_package": "nepl3.syntax.math",
+      "meaning_package": "nepl3.math"
+    },
+    "Circuit": {
+      "surface_package": "nepl3.syntax.circuit",
+      "meaning_package": "nepl3.circuit"
+    }
+  },
+  "resolution_policy": "require-generated-descriptors-and-verified-digests; no-placeholder-schema-identities"
 }

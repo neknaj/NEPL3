@@ -1,20 +1,20 @@
 {
-  "design": "nepl3-design-2026-09-06-r3",
-  "phase": "repository-foundation",
+  "design": "nepl3-design-2026-09-06-r4",
+  "phase": "foundation-runtime",
   "tasks": [
     {
       "id": "T01",
-      "status": "not-implemented",
+      "status": "in-progress",
       "evidence": []
     },
     {
       "id": "T02",
-      "status": "not-implemented",
+      "status": "in-progress",
       "evidence": []
     },
     {
       "id": "T03",
-      "status": "not-implemented",
+      "status": "in-progress",
       "evidence": []
     },
     {
@@ -386,7 +386,10 @@
     }
   ],
   "implemented_crates": [
+    "nepl3-core",
+    "nepl3-reader",
+    "nepl3-wire",
     "nepl3-tools"
   ],
-  "note": "Repository checks are implemented; language runtime, web UI/site, Pages delivery and Doc DSL documentation migration remain unimplemented. Acceptance state is defined by design/acceptance.json, not a fixed group count."
+  "note": "Foundation runtime implementation is in progress. Implemented crate membership does not imply task or acceptance completion; required acceptance remains evidence-bound."
 }
