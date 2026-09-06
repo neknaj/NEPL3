@@ -1,0 +1,95 @@
+command: cargo test --locked -p nepl3-tools
+target: x86_64-pc-windows-msvc
+exit_code: 0
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-prefix-validation\tools)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.10s
+     Running unittests src\lib.rs (target\debug\deps\nepl3_tools-831ff04cf836fa1d.exe)
+
+running 58 tests
+test contract::foundation::tests::generated_foundation_is_registered_and_checks_ordinary_schema_ref_records ... ok
+test contract::foundation::tests::constraint_declaration_order_is_canonical_but_duplicates_are_invalid ... ok
+test contract::tests::unknown_form_reference_is_rejected ... ok
+test contract::tests::unordered_or_duplicate_schema_fields_are_rejected ... ok
+test contract::types::tests::parses_nested_types_and_rejects_unknown_or_malformed_generics ... ok
+test dependency::tests::indirect_domain_dependency_is_rejected ... ok
+test dependency::tests::renamed_build_dependency_is_checked_by_package_name ... ok
+test contract::types::tests::missing_or_description_only_intrinsic_is_not_a_closed_type ... ok
+test dependency::tests::development_edges_are_reported_separately ... ok
+test dependency::tests::production_host_boundary_does_not_depend_on_no_std_flag ... ok
+test contract::tests::real_contract_checker_uses_same_validation_for_model_fields ... ok
+test contract::types::tests::rejects_unresolved_nested_fields_union_targets_and_undeclared_parameters ... ok
+test documentation::markdown::tests::corrected_foundation_and_math_documents_have_no_accidental_html_tags ... ok
+test documentation::markdown::tests::footnote_markers_are_preserved_without_inventing_rendered_numbers ... ok
+test documentation::markdown::tests::generic_notation_is_literal_code_and_generated_comments_are_metadata ... ok
+test documentation::markdown::tests::heading_and_link_projection_keep_both_math_event_kinds ... ok
+test contract::types::tests::rejects_missing_duplicate_or_local_external_imports_and_duplicate_owners ... ok
+test documentation::markdown::tests::hard_break_is_the_same_typed_newline_in_setext_heading_and_link ... ok
+test contract::types::tests::repository_descriptors_resolve_including_recursive_intrinsics_and_models ... ok
+test documentation::markdown::tests::inline_html_is_retained_separately_and_not_interpreted_by_summary_projection ... ok
+test documentation::markdown::tests::nested_image_code_and_math_share_heading_and_link_projection ... ok
+test documentation::markdown::tests::link_projection_preserves_soft_and_hard_word_boundaries ... ok
+test documentation::markdown::tests::real_markdown_parser_keeps_badges_nested_links_and_literal_code_separate ... ok
+test documentation::markdown::tests::unicode_crlf_breaks_and_math_keep_original_byte_ranges ... ok
+test evidence::identity::tests::length_prefixed_profile_matches_independent_hashlib_vector ... ok
+test contract::types::tests::intrinsic_tags_payload_order_and_subset_membership_are_fixed_by_ndf1 ... ok
+test contract::foundation::tests::checker_rejects_changed_foundation_descriptor_before_registry_use ... ok
+test contract::reader::tests::reader_envelope_reference_closure_rejects_nested_missing_type ... ok
+test contract::tests::real_contract_entry_rejects_unresolved_fields_intrinsics_and_imports ... ok
+test bootstrap::tests::seed_rejects_forged_source_constructor_literal_and_list_boundaries ... ok
+test contract::tests::real_contract_checker_rejects_malformed_contract_fields_and_variant_payloads ... ok
+test repository::json::tests::duplicate_keys_cannot_hide_contract_fields ... ok
+test repository::tests::escaping_reference_is_rejected_before_reading ... ok
+test repository::tests::nul_paths_keep_spaces_and_non_ascii ... ok
+test repository::tests::secret_and_artifact_names_are_rejected ... ok
+test task::tests::acceptance_ids_are_spec_definitions_only ... ok
+test task::tests::dependency_graph_rejects_cycle_missing_and_duplicate_edges ... ok
+test task::tests::executed_status_requires_evidence ... ok
+test task::tests::final_completion_requires_all_global_acceptance_passed ... ok
+test task::tests::scoped_evidence_rejects_empty_checks_or_wrong_task ... ok
+test task::tests::scoped_task_completion_does_not_pretend_global_editor_acceptance_passed ... ok
+test task::tests::status_cannot_omit_an_acceptance_group ... ok
+test task::tests::terminal_task_uses_new_required_groups_and_not_optional_groups ... ok
+test documentation::tests::commit_reference_and_missing_history_are_not_silently_accepted ... ok
+test evidence::tests::actual_task_loader_accepts_only_matching_complete_attempt ... ok
+test evidence::tests::partial_success_reports_cannot_be_combined_into_a_full_attempt ... ok
+test evidence::tests::failed_attempt_can_record_early_failure_without_claiming_full_coverage ... ok
+test evidence::tests::evidence_status_and_generated_tasks_do_not_create_hash_self_reference ... ok
+test evidence::tests::actual_task_loader_rejects_missing_malformed_and_duplicate_key_reports ... ok
+test evidence::tests::modifying_excluded_log_still_invalidates_its_bound_report ... ok
+test bootstrap::tests::supplied_grammar_sources_load_complete_typed_constructor_arenas ... ok
+test evidence::tests::independent_review_is_typed_and_cannot_be_faked_as_a_process_run ... ok
+test evidence::tests::actual_task_loader_rejects_wrong_group_result_identity_and_target_coverage ... ok
+test documentation::tests::git_symlink_mode_is_rejected_without_creating_an_os_symlink ... ok
+test evidence::tests::inventory_addition_source_change_spec_change_and_deleted_input_invalidate ... ok
+test documentation::tests::real_checker_reports_added_changed_removed_and_rejects_current_claim ... ok
+test documentation::tests::nonregular_output_and_oversized_current_input_are_rejected ... ok
+test documentation::tests::real_checker_rejects_omitted_page_digest_and_structure_tampering ... ok
+
+test result: ok. 58 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.72s
+
+     Running unittests src\main.rs (target\debug\deps\nepl3_tools-d15b77ab79af5b67.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\bootstrap.rs (target\debug\deps\bootstrap-42666d0992e7d2c2.exe)
+
+running 1 test
+test seed_import_runs_on_main_thread_for_complete_sources_and_rejects_bad_input ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.03s
+
+     Running tests\grammar.rs (target\debug\deps\grammar-b67a284cb1ec7a73.exe)
+
+running 2 tests
+test full_example_assembly_reaches_actual_plan_and_binding_validation ... ok
+test shared_kind_is_category_local_with_one_shape_and_distinct_provenance ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.81s
+
+   Doc-tests nepl3_tools
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

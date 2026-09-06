@@ -13,6 +13,7 @@ fn run() -> nepl3_tools::Result<()> {
         .as_slice()
     {
         ["check"] => nepl3_tools::check(&root),
+        ["bootstrap", "seed-check"] => nepl3_tools::bootstrap::cli::seed_check(),
         ["foundation", "--write"] => nepl3_tools::foundation(&root),
         ["reader", "--write"] => nepl3_tools::reader(&root),
         ["engine", "--write"] => nepl3_tools::engine(&root),

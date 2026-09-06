@@ -201,6 +201,12 @@ R032では補助 `build_print_probe.py` / `print_source` を使い、setup Budge
 
 修正後の元Atom A/B probeは同じKindRefを持つ2つのformへcompileされた。管理対象 `shared_kind_is_category_local_with_one_shape_and_distinct_provenance` を作業treeと隔離した `NEPL3-prefix-validation` の両方で独立実行し成功した。宣言順の反転でsemantic/schema identityが一致し、category別Originが各宣言原文を指すこと、同categoryの重複と異なるfield shapeを拒否することを確認したため、R034をcorrectedとした。別途見つかったhost seed importerのnative main-thread stack overflowと、標準bootstrapの未達はこの修正承認に含めない。
 
+R035は、実Angle sourceをhost importerへ渡す通常のnative executableで再現した。補助 `seed_load_only` は `bootstrap::load` だけで main-thread stack overflowとなり、descriptor登録やreader実行へ到達しなかった。test thread上の既存試験成功と、通常main threadで安全に実行できることは異なる。再帰constructor呼出しをpostorder worklistと借用JSONの一時lookupへ置き換えた後、同じ `cargo run --quiet --manifest-path .tmp/independent-engine/Cargo.toml --features nepl3-tools,nepl3-grammar-core --bin seed_load_only` はstack設定を変更せずexit 0・36 nodesとなった。管理対象の別process回帰が確認できるまではopenを維持する。
+
+importer修正後の補助 `grammar_angle_runtime` は正式Angle sourceのimport・package compile・ParseSessionを実行した。二重引用符と単引用符の中の `>` を含む両入力はcursor 15・一tokenで成功し、途切れた引用符はnonfinalでNeedMore、finalで診断付きRecoveredとなった。これはR031の実行期待を満たす独立確認であり、管理対象の同じsource経路の回帰を確認後に訂正を確定する。上記補助probeはignoredであり、cloneから再実行できる管理対象試験の代わりにはしない。
+
+R035の管理対象 `seed_import_runs_on_main_thread_for_complete_sources_and_rejects_bad_input` を作業treeと隔離 `NEPL3-prefix-validation` の両方で独立実行し成功した。実tools CLIを別processとして通常main threadで起動し、Angleと4言語の正式grammarをimportする。Angleの36 nodes、空JSON objectのShape拒否と16MiB超過の入口拒否（exit 1）も確認した。入力依存の再帰constructor呼出しは明示worklistへ置き換わり、stack設定の拡大がないため、この不具合をcorrectedとした。空objectの負例は深い不正JSON cleanupの検証とは扱わない。bootstrap全体の完成条件は引き続き未達である。
+
 別の補助probe `parse_text` ではText予約を実際にresumeし、`let "ok" y` がCompleteとdecoded sourceを返し、`let "a\q" y` がRecoveredで元InvalidEscape診断・位置を保持することを確認した。このbuiltinの失敗経路については元診断の消失を再現していない。
 
 ## r1初回レビューの章ごとの確認範囲

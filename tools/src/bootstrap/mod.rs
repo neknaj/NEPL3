@@ -1,5 +1,6 @@
 //! Host-only import of the bounded first-seed JSON. This does not parse Grammar
 //! or certify bootstrap: production parser output is lowered by grammar-core.
+pub mod cli;
 mod generated;
 #[cfg(test)]
 mod tests;
@@ -10,6 +11,7 @@ use nepl3_core::{
 };
 use nepl3_grammar_core::model::*;
 use serde_json::Value;
+use std::collections::BTreeMap;
 #[derive(Debug)]
 pub enum SeedError {
     Stopped(StopReason),
@@ -39,7 +41,7 @@ struct Adapter<'a> {
     source: &'a SourceSnapshot,
     nodes: Vec<Node>,
     budget: &'a mut Budget,
-    depth: u64,
+    completed: BTreeMap<usize, NodeId>,
 }
 impl Adapter<'_> {
     fn string<'a>(&self, v: &'a Value, key: &str) -> Result<&'a str, SeedError> {
@@ -85,30 +87,91 @@ impl Adapter<'_> {
             .and_then(|v| v.get(name))
             .ok_or(SeedError::Shape)
     }
-    fn parse(&mut self, v: &Value, category: Category) -> Result<NodeId, SeedError> {
-        self.depth = self
-            .depth
-            .checked_add(1)
-            .ok_or_else(|| self.budget.stop(StopReason::DepthLimit))?;
-        self.budget.observe_depth(self.depth)?;
-        self.budget.charge(Resource::Work, 1)?;
-        let kind = self.constructor(v)?;
-        if kind.category() != category {
-            return Err(SeedError::Shape);
+    // Addresses are temporary host lookup keys only. They never enter the typed
+    // document, identity, wire format, or generated metadata. JSON stays borrowed
+    // and immutable for the entire postorder traversal.
+    fn key(value: &Value) -> usize {
+        core::ptr::from_ref(value) as usize
+    }
+    fn parse(&mut self, value: &Value, category: Category) -> Result<NodeId, SeedError> {
+        let mut pending = Vec::new();
+        self.schedule(&mut pending, value, false, 1)?;
+        while let Some((value, exit, depth)) = pending.pop() {
+            self.budget.observe_depth(depth)?;
+            self.budget.charge(Resource::Work, 1)?;
+            if exit {
+                let kind = self.constructor(value)?;
+                let span = self.span(value)?;
+                self.budget.charge(Resource::Nodes, 1)?;
+                self.budget.charge(
+                    Resource::AllocationUnits,
+                    (core::mem::size_of::<Node>() + core::mem::size_of::<(usize, NodeId)>()) as u64,
+                )?;
+                let id = NodeId(self.nodes.len() as u64);
+                self.nodes.push(Node { kind, span });
+                if self.completed.insert(Self::key(value), id).is_some() {
+                    return Err(SeedError::Shape);
+                }
+            } else {
+                self.schedule(&mut pending, value, true, depth)?;
+                let fields = value
+                    .get("fields")
+                    .and_then(Value::as_object)
+                    .ok_or(SeedError::Shape)?;
+                let next_depth = depth
+                    .checked_add(1)
+                    .ok_or_else(|| self.budget.stop(StopReason::DepthLimit))?;
+                for field in fields.values().rev() {
+                    self.budget.charge(Resource::Work, 1)?;
+                    if field.get("literal").is_some() {
+                        continue;
+                    }
+                    if let Some(items) = field.get("list").and_then(Value::as_array) {
+                        for item in items.iter().rev() {
+                            self.schedule(&mut pending, item, false, next_depth)?;
+                        }
+                    } else {
+                        self.schedule(&mut pending, field, false, next_depth)?;
+                    }
+                }
+            }
         }
-        let span = self.span(v)?;
-        self.budget.charge(Resource::Nodes, 1)?;
+        self.lookup(value, category)
+    }
+    fn schedule<'v>(
+        &mut self,
+        pending: &mut Vec<(&'v Value, bool, u64)>,
+        value: &'v Value,
+        exit: bool,
+        depth: u64,
+    ) -> Result<(), SeedError> {
         self.budget.charge(
             Resource::AllocationUnits,
-            core::mem::size_of::<Node>() as u64,
+            core::mem::size_of::<(&Value, bool, u64)>() as u64,
         )?;
-        let id = NodeId(self.nodes.len() as u64);
-        self.nodes.push(Node { kind, span });
-        self.depth -= 1;
+        pending.push((value, exit, depth));
+        Ok(())
+    }
+    fn lookup(&mut self, value: &Value, category: Category) -> Result<NodeId, SeedError> {
+        self.budget.charge(
+            Resource::Work,
+            self.completed.len().checked_ilog2().unwrap_or(0) as u64 + 1,
+        )?;
+        let id = *self
+            .completed
+            .get(&Self::key(value))
+            .ok_or(SeedError::Shape)?;
+        let node = self
+            .nodes
+            .get(usize::try_from(id.0).map_err(|_| SeedError::Shape)?)
+            .ok_or(SeedError::Shape)?;
+        if node.kind.category() != category {
+            return Err(SeedError::Shape);
+        }
         Ok(id)
     }
     fn node(&mut self, v: &Value, name: &str, category: Category) -> Result<NodeId, SeedError> {
-        self.parse(self.field(v, name)?, category)
+        self.lookup(self.field(v, name)?, category)
     }
     fn list(&mut self, v: &Value, name: &str, category: Category) -> Result<NodeList, SeedError> {
         let value = self.field(v, name)?;
@@ -137,7 +200,7 @@ impl Adapter<'_> {
                 return Err(SeedError::Shape);
             }
             if let Some(value) = values.get(i) {
-                let id = self.parse(value, category)?;
+                let id = self.lookup(value, category)?;
                 let child = &self.nodes[id.0 as usize].span;
                 let next = heads
                     .get(i + 1)
@@ -322,7 +385,7 @@ pub fn load(
         source: &source,
         nodes: Vec::new(),
         budget,
-        depth: 0,
+        completed: BTreeMap::new(),
     };
     let root = adapter.parse(value.get("root").ok_or(SeedError::Shape)?, Category::Root)?;
     let nodes = adapter.nodes;
