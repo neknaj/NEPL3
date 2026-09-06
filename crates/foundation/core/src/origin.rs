@@ -241,6 +241,137 @@ pub struct Mapping {
 pub struct SourceMap {
     mappings: Vec<Mapping>,
 }
+/// Borrowed proof of source geometry and an acyclic pointwise mapping relation.
+pub struct ValidatedSourceMap<'a> {
+    mappings: &'a [Mapping],
+}
+impl SourceMap {
+    /// Borrows a mapping table whose entries were admitted through `insert`.
+    pub fn validated(&self) -> ValidatedSourceMap<'_> {
+        ValidatedSourceMap {
+            mappings: &self.mappings,
+        }
+    }
+    pub fn validate_mappings<'a>(
+        mappings: &'a [Mapping],
+        sources: &SourceStore,
+        budget: &mut Budget,
+    ) -> Result<ValidatedSourceMap<'a>, OriginError> {
+        budget.charge(Resource::Work, 1)?;
+        for mapping in mappings {
+            budget.charge(Resource::Work, 1)?;
+            let source = sources
+                .get_ref(mapping.source.snapshot_ref())
+                .ok_or(SourceError::MissingSnapshot)?
+                .slice(&mapping.source)?;
+            let target = sources
+                .get_ref(mapping.target.snapshot_ref())
+                .ok_or(SourceError::MissingSnapshot)?
+                .slice(&mapping.target)?;
+            if mapping.kind == MappingKind::Exact {
+                budget.charge(Resource::Work, source.len().min(target.len()) as u64)?;
+                if source != target {
+                    return Err(OriginError::Irreversible);
+                }
+            }
+        }
+        check_map_cycles(mappings.iter(), budget)?;
+        Ok(ValidatedSourceMap { mappings })
+    }
+}
+impl ValidatedSourceMap<'_> {
+    /// Rechecks the declaration closure when this proof is reused with another source store.
+    pub fn validate_sources(
+        &self,
+        sources: &SourceStore,
+        budget: &mut Budget,
+    ) -> Result<(), OriginError> {
+        budget.charge(Resource::Work, 1)?;
+        for mapping in self.mappings {
+            for span in [&mapping.source, &mapping.target] {
+                budget.charge(Resource::Work, 1)?;
+                sources
+                    .get_ref(span.snapshot_ref())
+                    .ok_or(SourceError::MissingSnapshot)?
+                    .slice(span)?;
+            }
+        }
+        Ok(())
+    }
+    /// Every byte/anchor must trace back into `parent`; all incoming paths are required.
+    /// Once a point reaches the parent, its earlier provenance is irrelevant to containment.
+    pub fn contains(
+        &self,
+        parent: &Span,
+        child: &Span,
+        budget: &mut Budget,
+    ) -> Result<bool, OriginError> {
+        budget.charge(Resource::Work, 1)?;
+        if parent.contains(child) {
+            return Ok(true);
+        }
+        for offset in 0..point_count(child) {
+            let mut pending = Vec::new();
+            push_point(&mut pending, point(child, offset), false, 1, budget)?;
+            while let Some((current, _, depth)) = pending.pop() {
+                budget.charge(Resource::Work, 1)?;
+                budget.charge(Resource::Nodes, 1)?;
+                budget.observe_depth(depth)?;
+                if point_within(current, parent) {
+                    continue;
+                }
+                let mut found = false;
+                for mapping in self.mappings {
+                    budget.charge(Resource::Work, 1)?;
+                    if !point_on(current, &mapping.target) {
+                        continue;
+                    }
+                    found = true;
+                    let next_depth = depth.checked_add(1).ok_or(StopReason::DepthLimit)?;
+                    if mapping.kind == MappingKind::Exact {
+                        push_point(
+                            &mut pending,
+                            point(&mapping.source, current.offset - mapping.target.start()),
+                            false,
+                            next_depth,
+                            budget,
+                        )?;
+                    } else {
+                        for offset in 0..point_count(&mapping.source) {
+                            budget.charge(Resource::Work, 1)?;
+                            push_point(
+                                &mut pending,
+                                point(&mapping.source, offset),
+                                false,
+                                next_depth,
+                                budget,
+                            )?;
+                        }
+                    }
+                }
+                if !found {
+                    return Ok(false);
+                }
+            }
+        }
+        Ok(true)
+    }
+}
+fn point_on(point: Point<'_>, span: &Span) -> bool {
+    point.snapshot == span.snapshot_ref()
+        && point.anchor == (span.start() == span.end())
+        && point.offset >= span.start()
+        && point.offset - span.start() < point_count(span)
+}
+fn point_within(point: Point<'_>, span: &Span) -> bool {
+    point.snapshot == span.snapshot_ref()
+        && point.offset >= span.start()
+        && if point.anchor {
+            point.offset <= span.end()
+        } else {
+            point.offset < span.end()
+        }
+}
 impl SourceMap {
     pub fn insert(
         &mut self,
@@ -256,10 +387,16 @@ impl SourceMap {
             .get_ref(mapping.target.snapshot_ref())
             .ok_or(SourceError::MissingSnapshot)?
             .slice(&mapping.target)?;
-        if mapping.kind == MappingKind::Exact && source != target {
-            return Err(OriginError::Irreversible);
+        if mapping.kind == MappingKind::Exact {
+            budget.charge(Resource::Work, source.len().min(target.len()) as u64)?;
+            if source != target {
+                return Err(OriginError::Irreversible);
+            }
         }
-        self.check_cycles(&mapping, budget)?;
+        check_map_cycles(
+            self.mappings.iter().chain(core::iter::once(&mapping)),
+            budget,
+        )?;
         budget.charge(
             Resource::AllocationUnits,
             core::mem::size_of::<Mapping>() as u64,
@@ -267,87 +404,12 @@ impl SourceMap {
         self.mappings.push(mapping);
         Ok(())
     }
-    fn check_cycles(&self, candidate: &Mapping, budget: &mut Budget) -> Result<(), OriginError> {
-        // Exact edges preserve byte displacement. Transformed fragments relate every source
-        // byte to every target byte. Empty fragments use a distinct insertion-anchor vertex.
-        // This finite graph can be expensive; exhaustion returns Stopped, never a false cycle.
-        let mappings = || self.mappings.iter().chain(core::iter::once(candidate));
-        let mut state: BTreeMap<Point, u8> = BTreeMap::new();
-        for mapping in mappings() {
-            for offset in 0..point_count(&mapping.source) {
-                budget.charge(Resource::Work, 1)?;
-                let root = point(&mapping.source, offset);
-                if state.get(&root) == Some(&2) {
-                    continue;
-                }
-                let mut stack = Vec::new();
-                push_point(&mut stack, root, false, 1, budget)?;
-                while let Some((current, exiting, depth)) = stack.pop() {
-                    budget.charge(Resource::Work, 1)?;
-                    budget.observe_depth(depth)?;
-                    if exiting {
-                        state.insert(current, 2);
-                        continue;
-                    }
-                    match state.get(&current) {
-                        Some(2) => continue,
-                        Some(1) => return Err(OriginError::Cycle),
-                        _ => {}
-                    }
-                    budget.charge(Resource::Nodes, 1)?;
-                    budget.charge(
-                        Resource::AllocationUnits,
-                        core::mem::size_of::<(Point, u8)>() as u64,
-                    )?;
-                    state.insert(current.clone(), 1);
-                    push_point(&mut stack, current.clone(), true, depth, budget)?;
-                    for edge in mappings() {
-                        budget.charge(Resource::Work, 1)?;
-                        if current.snapshot != edge.source.snapshot()
-                            || current.anchor != (edge.source.start() == edge.source.end())
-                        {
-                            continue;
-                        }
-                        let Some(displacement) = current.offset.checked_sub(edge.source.start())
-                        else {
-                            continue;
-                        };
-                        if displacement >= point_count(&edge.source) {
-                            continue;
-                        }
-                        let next_depth = depth.checked_add(1).ok_or(StopReason::DepthLimit)?;
-                        if edge.kind == MappingKind::Exact {
-                            push_point(
-                                &mut stack,
-                                point(&edge.target, displacement),
-                                false,
-                                next_depth,
-                                budget,
-                            )?;
-                        } else {
-                            for offset in 0..point_count(&edge.target) {
-                                budget.charge(Resource::Work, 1)?;
-                                push_point(
-                                    &mut stack,
-                                    point(&edge.target, offset),
-                                    false,
-                                    next_depth,
-                                    budget,
-                                )?;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        Ok(())
-    }
     /// Returns one direct inverse only when a unique exact mapping covers the requested range.
     /// Composite chains must be explicitly traversed and rechecked by the caller.
     pub fn inverse(&self, target: &Span, sources: &SourceStore) -> Result<Span, OriginError> {
         let mut found = None;
         for mapping in &self.mappings {
-            if mapping.target.snapshot() != target.snapshot() {
+            if mapping.target.snapshot_ref() != target.snapshot_ref() {
                 continue;
             }
             let overlaps = if target.start() == target.end() {
@@ -384,25 +446,25 @@ impl SourceMap {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
-struct Point {
-    snapshot: SnapshotId,
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
+struct Point<'a> {
+    snapshot: &'a SnapshotId,
     offset: u64,
     anchor: bool,
 }
 fn point_count(span: &Span) -> u64 {
     (span.end() - span.start()).max(1)
 }
-fn point(span: &Span, offset: u64) -> Point {
+fn point(span: &Span, offset: u64) -> Point<'_> {
     Point {
-        snapshot: span.snapshot(),
+        snapshot: span.snapshot_ref(),
         offset: span.start() + offset,
         anchor: span.start() == span.end(),
     }
 }
-fn push_point(
-    stack: &mut Vec<(Point, bool, u64)>,
-    point: Point,
+fn push_point<'a>(
+    stack: &mut Vec<(Point<'a>, bool, u64)>,
+    point: Point<'a>,
     exiting: bool,
     depth: u64,
     budget: &mut Budget,
@@ -412,5 +474,83 @@ fn push_point(
         core::mem::size_of::<(Point, bool, u64)>() as u64,
     )?;
     stack.push((point, exiting, depth));
+    Ok(())
+}
+
+fn check_map_cycles<'a>(
+    input: impl Iterator<Item = &'a Mapping> + Clone,
+    budget: &mut Budget,
+) -> Result<(), OriginError> {
+    // Exact edges preserve byte displacement. Transformed fragments relate every source
+    // byte to every target byte. Empty fragments use a distinct insertion-anchor vertex.
+    // This finite graph can be expensive; exhaustion returns Stopped, never a false cycle.
+    let mappings = || input.clone();
+    let mut state: BTreeMap<Point, u8> = BTreeMap::new();
+    for mapping in mappings() {
+        for offset in 0..point_count(&mapping.source) {
+            budget.charge(Resource::Work, 1)?;
+            let root = point(&mapping.source, offset);
+            if state.get(&root) == Some(&2) {
+                continue;
+            }
+            let mut stack = Vec::new();
+            push_point(&mut stack, root, false, 1, budget)?;
+            while let Some((current, exiting, depth)) = stack.pop() {
+                budget.charge(Resource::Work, 1)?;
+                budget.observe_depth(depth)?;
+                if exiting {
+                    state.insert(current, 2);
+                    continue;
+                }
+                match state.get(&current) {
+                    Some(2) => continue,
+                    Some(1) => return Err(OriginError::Cycle),
+                    _ => {}
+                }
+                budget.charge(Resource::Nodes, 1)?;
+                budget.charge(
+                    Resource::AllocationUnits,
+                    core::mem::size_of::<(Point, u8)>() as u64,
+                )?;
+                state.insert(current, 1);
+                push_point(&mut stack, current, true, depth, budget)?;
+                for edge in mappings() {
+                    budget.charge(Resource::Work, 1)?;
+                    if current.snapshot != edge.source.snapshot_ref()
+                        || current.anchor != (edge.source.start() == edge.source.end())
+                    {
+                        continue;
+                    }
+                    let Some(displacement) = current.offset.checked_sub(edge.source.start()) else {
+                        continue;
+                    };
+                    if displacement >= point_count(&edge.source) {
+                        continue;
+                    }
+                    let next_depth = depth.checked_add(1).ok_or(StopReason::DepthLimit)?;
+                    if edge.kind == MappingKind::Exact {
+                        push_point(
+                            &mut stack,
+                            point(&edge.target, displacement),
+                            false,
+                            next_depth,
+                            budget,
+                        )?;
+                    } else {
+                        for offset in 0..point_count(&edge.target) {
+                            budget.charge(Resource::Work, 1)?;
+                            push_point(
+                                &mut stack,
+                                point(&edge.target, offset),
+                                false,
+                                next_depth,
+                                budget,
+                            )?;
+                        }
+                    }
+                }
+            }
+        }
+    }
     Ok(())
 }

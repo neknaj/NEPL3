@@ -48,6 +48,7 @@ pub fn check(root: &Path) -> Result<()> {
     let (tasks, status) = task::load(root)?;
     contract::check(root)?;
     contract::reader::check(root)?;
+    contract::engine::check(root)?;
     dependency::check(root, &status.implemented_crates)?;
     task::generate(root, &tasks, &status, false)?;
     documentation::check(root, false)?;
@@ -95,4 +96,9 @@ pub fn evidence_identity(root: &Path) -> Result<()> {
         serde_json::to_string_pretty(&evidence::identity(root)?)?
     );
     Ok(())
+}
+
+/// Regenerate the registered engine package descriptor projection.
+pub fn engine(root: &Path) -> Result<()> {
+    contract::engine::write(root)
 }

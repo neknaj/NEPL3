@@ -287,6 +287,7 @@ pub(crate) fn token_value(
             TriviaKind::Whitespace => "Whitespace",
             TriviaKind::Comment => "Comment",
             TriviaKind::Bom => "Bom",
+            TriviaKind::Skipped => "Skipped",
         };
         record(
             schema,
@@ -324,6 +325,7 @@ pub(crate) fn token_from(
             "Whitespace" => TriviaKind::Whitespace,
             "Comment" => TriviaKind::Comment,
             "Bom" => TriviaKind::Bom,
+            "Skipped" => TriviaKind::Skipped,
             _ => return Err(WireError::InvalidType),
         };
         Ok(Trivia {

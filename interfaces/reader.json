@@ -3,6 +3,56 @@
   "package": "nepl3.reader",
   "revision": 1,
   "types": {
+    "BuiltinReader": {
+      "constraints": [],
+      "variant": {
+        "Lang": [],
+        "Name": [],
+        "Nat": [],
+        "Number": [],
+        "Text": [],
+        "Trivia": []
+      }
+    },
+    "BuiltinRequest": {
+      "constraints": [
+        "reader.builtin-request"
+      ],
+      "record": [
+        [
+          "kind",
+          {
+            "named": {
+              "name": "BuiltinReader",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "request",
+          {
+            "named": {
+              "name": "ReadRequest",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "reservation",
+          {
+            "option": {
+              "named": {
+                "name": "SourceReservation",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
     "CharClass": {
       "constraints": [
         "valid-scalar-range"
@@ -434,6 +484,30 @@
                 "revision": 1
               }
             }
+          ],
+          [
+            "sources",
+            {
+              "list": {
+                "named": {
+                  "name": "SourceContent",
+                  "package": "nepl3.foundation",
+                  "revision": 1
+                }
+              }
+            }
+          ],
+          [
+            "sourceMaps",
+            {
+              "list": {
+                "named": {
+                  "name": "SourceMapping",
+                  "package": "nepl3.foundation",
+                  "revision": 1
+                }
+              }
+            }
           ]
         ],
         "Matched": [
@@ -528,6 +602,30 @@
                 "revision": 1
               }
             }
+          ],
+          [
+            "sources",
+            {
+              "list": {
+                "named": {
+                  "name": "SourceContent",
+                  "package": "nepl3.foundation",
+                  "revision": 1
+                }
+              }
+            }
+          ],
+          [
+            "sourceMaps",
+            {
+              "list": {
+                "named": {
+                  "name": "SourceMapping",
+                  "package": "nepl3.foundation",
+                  "revision": 1
+                }
+              }
+            }
           ]
         ],
         "NoMatch": [
@@ -556,6 +654,30 @@
                 "revision": 1
               }
             }
+          ],
+          [
+            "sources",
+            {
+              "list": {
+                "named": {
+                  "name": "SourceContent",
+                  "package": "nepl3.foundation",
+                  "revision": 1
+                }
+              }
+            }
+          ],
+          [
+            "sourceMaps",
+            {
+              "list": {
+                "named": {
+                  "name": "SourceMapping",
+                  "package": "nepl3.foundation",
+                  "revision": 1
+                }
+              }
+            }
           ]
         ],
         "Stopped": [
@@ -576,6 +698,30 @@
                 "name": "Report",
                 "package": "nepl3.foundation",
                 "revision": 1
+              }
+            }
+          ],
+          [
+            "sources",
+            {
+              "list": {
+                "named": {
+                  "name": "SourceContent",
+                  "package": "nepl3.foundation",
+                  "revision": 1
+                }
+              }
+            }
+          ],
+          [
+            "sourceMaps",
+            {
+              "list": {
+                "named": {
+                  "name": "SourceMapping",
+                  "package": "nepl3.foundation",
+                  "revision": 1
+                }
               }
             }
           ]
@@ -897,8 +1043,11 @@
       "constraints": [],
       "variant": {
         "BoundaryMismatch": [],
+        "DirectLineBreak": [],
         "ExpectedInput": [],
         "InvalidEscape": [],
+        "InvalidLanguageTag": [],
+        "InvalidNumber": [],
         "InvalidScalar": [],
         "NonProgress": [],
         "NonProgressRecursion": [],
@@ -1348,6 +1497,41 @@
         ]
       ]
     },
+    "ReaderMode": {
+      "constraints": [
+        "reader.mode"
+      ],
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "skip",
+          {
+            "list": {
+              "named": {
+                "name": "SkipRule",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "take",
+          {
+            "list": {
+              "named": {
+                "name": "TakeRule",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
     "ReaderPlan": {
       "constraints": [
         "reader.plan"
@@ -1433,6 +1617,307 @@
           {
             "named": {
               "name": "TypeDescriptor",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "ReservationRequest": {
+      "constraints": [
+        "reader.reservation-request"
+      ],
+      "record": [
+        [
+          "sessionId",
+          "Text"
+        ],
+        [
+          "requestId",
+          "U64"
+        ],
+        [
+          "snapshot",
+          {
+            "named": {
+              "name": "SourceRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "start",
+          "U64"
+        ],
+        [
+          "limit",
+          "U64"
+        ]
+      ]
+    },
+    "SkipRule": {
+      "constraints": [],
+      "record": [
+        [
+          "reader",
+          {
+            "named": {
+              "name": "TokenReader",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "TakeRule": {
+      "constraints": [],
+      "record": [
+        [
+          "reader",
+          {
+            "named": {
+              "name": "TokenReader",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "kind",
+          {
+            "named": {
+              "name": "KindRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "TokenReader": {
+      "constraints": [],
+      "variant": {
+        "Builtin": [
+          [
+            "reader",
+            {
+              "named": {
+                "name": "BuiltinReader",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Rule": [
+          [
+            "name",
+            "Text"
+          ]
+        ]
+      }
+    },
+    "TokenizationOutcome": {
+      "constraints": [],
+      "variant": {
+        "Await": [
+          [
+            "call",
+            {
+              "named": {
+                "name": "ProviderCall",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "continuation",
+            {
+              "named": {
+                "name": "ReaderContinuation",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "End": [],
+        "Failed": [
+          [
+            "diagnostic",
+            {
+              "named": {
+                "name": "Diagnostic",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "recovery",
+            {
+              "option": {
+                "named": {
+                  "name": "Span",
+                  "package": "nepl3.foundation",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "NeedMore": [
+          [
+            "expected",
+            {
+              "list": {
+                "named": {
+                  "name": "Expectation",
+                  "package": "nepl3.reader",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "NoMatch": [
+          [
+            "expected",
+            {
+              "list": {
+                "named": {
+                  "name": "Expectation",
+                  "package": "nepl3.reader",
+                  "revision": 1
+                }
+              }
+            }
+          ],
+          [
+            "furthest",
+            "U64"
+          ]
+        ],
+        "Reserve": [
+          [
+            "request",
+            {
+              "named": {
+                "name": "ReservationRequest",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "name": "StopReason",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Token": [
+          [
+            "token",
+            {
+              "named": {
+                "name": "Token",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "TokenizationReply": {
+      "constraints": [
+        "reader.tokenization-reply"
+      ],
+      "record": [
+        [
+          "outcome",
+          {
+            "named": {
+              "name": "TokenizationOutcome",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "cursor",
+          "U64"
+        ],
+        [
+          "newState",
+          {
+            "option": "NdfValue"
+          }
+        ],
+        [
+          "trivia",
+          {
+            "list": {
+              "named": {
+                "name": "Trivia",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "facts",
+          {
+            "list": {
+              "named": {
+                "name": "ReaderFact",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "name": "SourceContent",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "name": "SourceMapping",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "name": "Report",
               "package": "nepl3.foundation",
               "revision": 1
             }

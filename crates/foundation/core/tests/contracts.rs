@@ -446,3 +446,44 @@ fn admission_accounts_for_copied_locator_payload() -> Result<(), SourceError> {
     );
     Ok(())
 }
+
+#[test]
+fn generated_source_locator_scan_is_charged_before_validation() -> Result<(), SourceError> {
+    let mut limits = budget().limits();
+    limits.work = 1000;
+    let uri = format!("memory:{}", "x".repeat(100_000));
+    for value in [uri.clone(), format!("{uri} ")] {
+        let mut limited = Budget::new(limits);
+        assert_eq!(
+            SourceSnapshot::new(
+                SourceId("generated".into()),
+                1,
+                value,
+                b"x".to_vec(),
+                &mut limited
+            ),
+            Err(SourceError::Stopped(StopReason::WorkLimit))
+        );
+    }
+    let mut setup = budget();
+    let mut admission = SourceAdmission::default();
+    admission.create(
+        SourceId("generated".into()),
+        1,
+        uri.clone(),
+        b"x".to_vec(),
+        &mut setup,
+    )?;
+    let mut limited = Budget::new(limits);
+    assert_eq!(
+        admission.import(
+            SourceId("generated".into()),
+            1,
+            uri,
+            b"x".to_vec(),
+            &mut limited
+        ),
+        Err(SourceError::Stopped(StopReason::WorkLimit))
+    );
+    Ok(())
+}

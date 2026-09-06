@@ -19,7 +19,7 @@
     },
     {
       "id": "T04",
-      "status": "not-implemented",
+      "status": "in-progress",
       "evidence": []
     },
     {
@@ -388,6 +388,7 @@
   "implemented_crates": [
     "nepl3-core",
     "nepl3-reader",
+    "nepl3-engine",
     "nepl3-wire",
     "nepl3-tools"
   ],

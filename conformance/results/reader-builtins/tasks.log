@@ -1,0 +1,7 @@
+command: cargo run --locked -p nepl3-tools -- tasks --check
+exit_code: 0
+
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.18s
+     Running `target\debug\nepl3-tools.exe tasks --check`
+Independent design review: 4 open findings; affected tasks cannot be marked complete.
+Task documents are current.

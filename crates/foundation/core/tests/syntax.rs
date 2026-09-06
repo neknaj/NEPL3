@@ -41,6 +41,7 @@ fn node(schema: &SchemaRef, fields: Vec<FieldValue>) -> SyntaxNode {
 }
 fn bundle(schema: &SchemaRef) -> SyntaxBundle {
     SyntaxBundle {
+        source_maps: vec![],
         sources: vec![],
         nodes: vec![node(schema, vec![])],
         origins: vec![Origin::Synthetic {

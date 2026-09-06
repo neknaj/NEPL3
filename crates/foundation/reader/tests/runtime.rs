@@ -588,11 +588,15 @@ fn direct_repeat_failure_and_streaming_shortage_rollback_all_prior_iteration_rep
         };
         let provider = ProviderReply::Read(Box::new(if streaming {
             ReadReply::NeedMore {
+                sources: vec![],
+                source_maps: vec![],
                 expected: vec![Expectation::EndOfInput],
                 report,
             }
         } else {
             ReadReply::NoMatch {
+                sources: vec![],
+                source_maps: vec![],
                 expected: vec![Expectation::EndOfInput],
                 furthest: 1,
                 report,
@@ -661,6 +665,8 @@ fn programmed_repetition_requires_actual_consumption_and_accepts_consuming_calls
                 return Err(ReaderError::NoPending);
             };
             let provider = ProviderReply::Read(Box::new(ReadReply::NoMatch {
+                sources: vec![],
+                source_maps: vec![],
                 expected: vec![],
                 furthest: 1,
                 report: Report {
@@ -931,7 +937,7 @@ fn stopped_reader_retains_committed_provider_reports() -> Result<(), ReaderError
     };
     let reply = annotated_terminal(&schema, source.span(0, 1)?, 1, &mut b)?;
     match session.resume(&continuation, reply, &store, &mut b, &mut admission)? {
-        ReadReply::Stopped { reason, report } => {
+        ReadReply::Stopped { reason, report, .. } => {
             assert_eq!(reason, StopReason::AllocationLimit);
             assert_eq!(report.diagnostics.len(), 1);
             assert_eq!(report.events.len(), 1);
@@ -1495,7 +1501,7 @@ fn allocation_faults_across_later_resumes_preserve_already_accepted_reports()
         for end in [2, 3] {
             let reply = terminal("a", end, &mut b)?;
             match session.resume(&continuation, reply, &store, &mut b, &mut admission)? {
-                ReadReply::Stopped { reason, report } => {
+                ReadReply::Stopped { reason, report, .. } => {
                     assert_eq!(reason, StopReason::AllocationLimit);
                     assert_eq!(report.diagnostics.len(), 1, "cap={cap}, end={end}");
                     assert_eq!(report.events.len(), 1, "cap={cap}, end={end}");
@@ -1523,5 +1529,512 @@ fn allocation_faults_across_later_resumes_preserve_already_accepted_reports()
     }
     assert!(stops > 0);
     assert!(completions > 0);
+    Ok(())
+}
+
+#[test]
+fn stopped_tokenizer_retains_reader_report_and_generated_source_closure() -> Result<(), ReaderError>
+{
+    let (registry, schema) = registry()?;
+    let mut p = provider_plan(&schema);
+    p.expressions.extend([
+        ReaderExpr::Literal("q".repeat(100_000)),
+        ReaderExpr::Seq(vec![ReaderId(0), ReaderId(1)]),
+    ]);
+    p.rules[0].root = ReaderId(2);
+    p.rules[0].output = TypeDescriptor::List(Box::new(TypeDescriptor::NdfValue));
+    let checked = p.check(&registry, &mut budget())?;
+    let source = source("a")?;
+    let mut store = SourceStore::default();
+    store.insert(source.clone())?;
+    let raw = context(&schema, &registry)?;
+    let checked_context = check_context(
+        &raw,
+        &store,
+        &registry,
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    let modes = vec![nepl3_reader::tokenizer::ReaderMode {
+        name: "test".into(),
+        skip: vec![],
+        take: vec![nepl3_reader::tokenizer::TakeRule {
+            reader: nepl3_reader::tokenizer::TokenReader::Rule("entry".into()),
+            kind: KindRef {
+                schema: schema.clone(),
+                local_kind: 0,
+            },
+        }],
+    }];
+    let mut measured = budget();
+    let _ = nepl3_reader::tokenizer::TokenizationSession::new(
+        "stop".into(),
+        &modes,
+        &checked,
+        &registry,
+        &mut measured,
+    )?;
+    let mut limits = budget().limits();
+    limits.allocation_units = measured.usage().allocation_units + 90_000;
+    let mut b = Budget::new(limits);
+    let mut session = nepl3_reader::tokenizer::TokenizationSession::new(
+        "stop".into(),
+        &modes,
+        &checked,
+        &registry,
+        &mut b,
+    )?;
+    let mut admission = SourceAdmission::default();
+    let reply = session.read(
+        nepl3_reader::tokenizer::TokenizationRequest {
+            snapshot: &source,
+            start: 0,
+            limit: 1,
+            final_input: true,
+            context: &checked_context,
+            state: &NdfValue::Unit,
+        },
+        &store,
+        &mut b,
+        &mut admission,
+    )?;
+    let nepl3_reader::tokenizer::TokenizationOutcome::Await { continuation, .. } = reply.outcome
+    else {
+        return Err(ReaderError::NoPending);
+    };
+    let generated = admission.create(
+        SourceId("generated".into()),
+        0,
+        "memory:generated".into(),
+        b"g".to_vec(),
+        &mut b,
+    )?;
+    let mut reply = annotated_terminal(&schema, generated.span(0, 1)?, 1, &mut b)?;
+    if let ProviderReply::Read(reply) = &mut reply
+        && let ReadReply::Matched { sources, .. } = reply.as_mut()
+    {
+        sources.push(generated.clone());
+    }
+    let result = session.resume(&continuation, reply, &store, &mut b, &mut admission)?;
+    assert_eq!(result.sources, vec![generated.clone()]);
+    assert_eq!(
+        result.report.diagnostics[0]
+            .primary
+            .as_ref()
+            .map(|s| s.snapshot_ref()),
+        Some(generated.identity())
+    );
+    assert_eq!(store.snapshots().len(), 1);
+    let report = result.report;
+    match result.outcome {
+        nepl3_reader::tokenizer::TokenizationOutcome::Stopped { reason } => {
+            assert_eq!(reason, StopReason::AllocationLimit);
+            assert_eq!(report.diagnostics.len(), 1);
+            assert_eq!(report.events.len(), 1);
+            assert_eq!(report.usage.diagnostics, 1);
+            assert_eq!(report.usage.events, 1);
+        }
+        _ => return Err(ReaderError::Context),
+    }
+    Ok(())
+}
+#[test]
+fn failed_stopped_and_rollback_results_have_their_exact_formal_source_closure()
+-> Result<(), ReaderError> {
+    let (registry, schema) = registry()?;
+    for mode in 0..4 {
+        let mut p = provider_plan(&schema);
+        p.expressions.push(ReaderExpr::Literal(if mode == 1 {
+            "q".repeat(100_000)
+        } else {
+            "b".into()
+        }));
+        p.expressions.push(ReaderExpr::Commit(ReaderId(1)));
+        p.expressions.push(ReaderExpr::Seq(vec![
+            ReaderId(0),
+            ReaderId(if mode == 0 { 2 } else { 1 }),
+        ]));
+        p.rules[0].root = ReaderId(3);
+        p.rules[0].output = TypeDescriptor::List(Box::new(TypeDescriptor::NdfValue));
+        let checked = p.check(&registry, &mut budget())?;
+        let source = source("a")?;
+        let mut store = SourceStore::default();
+        store.insert(source.clone())?;
+        let raw = context(&schema, &registry)?;
+        let proof = check_context(
+            &raw,
+            &store,
+            &registry,
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        )?;
+        let mut measured = budget();
+        let _ = ReaderSession::new("closure".into(), &checked, &registry, &mut measured)?;
+        let mut limits = budget().limits();
+        if mode == 1 {
+            limits.allocation_units = measured.usage().allocation_units + 90_000;
+        }
+        let mut b = Budget::new(limits);
+        let mut admission = SourceAdmission::default();
+        let mut session = ReaderSession::new("closure".into(), &checked, &registry, &mut b)?;
+        let reply = session.read(
+            "entry",
+            ReadRequest {
+                snapshot: &source,
+                start: 0,
+                limit: 1,
+                final_input: mode != 3,
+                context: &proof,
+                state: &NdfValue::Unit,
+            },
+            &store,
+            &mut b,
+            &mut admission,
+        )?;
+        let ReadReply::Await { continuation, .. } = reply else {
+            return Err(ReaderError::NoPending);
+        };
+        let generated = admission.create(
+            SourceId("generated".into()),
+            0,
+            "memory:generated".into(),
+            b"g".to_vec(),
+            &mut b,
+        )?;
+        let mut provider = annotated_terminal(&schema, generated.span(0, 1)?, 1, &mut b)?;
+        if let ProviderReply::Read(reply) = &mut provider
+            && let ReadReply::Matched {
+                sources,
+                source_maps,
+                ..
+            } = reply.as_mut()
+        {
+            sources.push(generated.clone());
+            source_maps.push(nepl3_core::origin::Mapping {
+                source: source.span(0, 1)?,
+                target: generated.span(0, 1)?,
+                kind: nepl3_core::origin::MappingKind::Transformed,
+            });
+        }
+        let result = session.resume(&continuation, provider, &store, &mut b, &mut admission)?;
+        let (sources, maps, report) = match result {
+            ReadReply::Failed {
+                sources,
+                source_maps,
+                report,
+                ..
+            } if mode == 0 => (sources, source_maps, report),
+            ReadReply::Stopped {
+                sources,
+                source_maps,
+                report,
+                reason: StopReason::AllocationLimit,
+            } if mode == 1 => (sources, source_maps, report),
+            ReadReply::NoMatch {
+                sources,
+                source_maps,
+                report,
+                ..
+            } if mode == 2 => (sources, source_maps, report),
+            ReadReply::NeedMore {
+                sources,
+                source_maps,
+                report,
+                ..
+            } if mode == 3 => (sources, source_maps, report),
+            _ => return Err(ReaderError::Context),
+        };
+        if mode < 2 {
+            assert_eq!(sources, vec![generated.clone()]);
+            assert_eq!(maps.len(), 1);
+            assert_eq!(
+                report.diagnostics[0]
+                    .primary
+                    .as_ref()
+                    .map(|s| s.snapshot_ref()),
+                Some(generated.identity())
+            );
+        } else {
+            assert!(sources.is_empty());
+            assert!(maps.is_empty());
+            assert!(report.diagnostics.is_empty());
+            assert!(report.events.is_empty());
+        }
+        assert_eq!(store.snapshots().len(), 1);
+        assert_eq!(
+            b.usage().source_bytes,
+            2,
+            "rollback does not refund source admission"
+        );
+    }
+    Ok(())
+}
+#[test]
+fn tokenizer_preserves_accepted_skip_reports_and_sources_across_candidate_rollback()
+-> Result<(), ReaderError> {
+    use nepl3_reader::tokenizer::*;
+    let (registry, schema) = registry()?;
+    for mode in 0..4 {
+        let mut p = provider_plan(&schema);
+        p.expressions.extend([
+            ReaderExpr::Literal(if mode == 2 {
+                "q".repeat(1_000_000)
+            } else {
+                "b".into()
+            }),
+            ReaderExpr::Commit(ReaderId(1)),
+            ReaderExpr::Seq(vec![ReaderId(0), ReaderId(if mode == 3 { 2 } else { 1 })]),
+        ]);
+        p.rules[0].root = ReaderId(3);
+        p.rules[0].output = TypeDescriptor::List(Box::new(TypeDescriptor::NdfValue));
+        p.rules.push(ReaderRule {
+            name: "skip".into(),
+            root: ReaderId(0),
+            output: TypeDescriptor::Text,
+        });
+        let checked = p.check(&registry, &mut budget())?;
+        let modes = vec![ReaderMode {
+            name: "test".into(),
+            skip: vec![SkipRule {
+                reader: TokenReader::Rule("skip".into()),
+            }],
+            take: vec![TakeRule {
+                reader: TokenReader::Rule("entry".into()),
+                kind: KindRef {
+                    schema: schema.clone(),
+                    local_kind: 0,
+                },
+            }],
+        }];
+        let source = source("aa")?;
+        let mut store = SourceStore::default();
+        store.insert(source.clone())?;
+        let raw = context(&schema, &registry)?;
+        let proof = check_context(
+            &raw,
+            &store,
+            &registry,
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        )?;
+        let mut measured = budget();
+        let _ = TokenizationSession::new(
+            "skip-closure".into(),
+            &modes,
+            &checked,
+            &registry,
+            &mut measured,
+        )?;
+        let mut limits = budget().limits();
+        if mode == 2 {
+            limits.allocation_units = measured.usage().allocation_units + 300_000;
+        }
+        let mut b = Budget::new(limits);
+        let mut admission = SourceAdmission::default();
+        let mut session =
+            TokenizationSession::new("skip-closure".into(), &modes, &checked, &registry, &mut b)?;
+        let reply = session.read(
+            TokenizationRequest {
+                snapshot: &source,
+                start: 0,
+                limit: 2,
+                final_input: mode != 1,
+                context: &proof,
+                state: &NdfValue::Unit,
+            },
+            &store,
+            &mut b,
+            &mut admission,
+        )?;
+        let TokenizationOutcome::Await { continuation, .. } = reply.outcome else {
+            return Err(ReaderError::NoPending);
+        };
+        let first = admission.create(
+            SourceId("skip-generated".into()),
+            0,
+            "memory:skip-generated".into(),
+            b"s".to_vec(),
+            &mut b,
+        )?;
+        let mut provider = annotated_terminal(&schema, first.span(0, 1)?, 1, &mut b)?;
+        if let ProviderReply::Read(reply) = &mut provider
+            && let ReadReply::Matched { sources, .. } = reply.as_mut()
+        {
+            sources.push(first.clone());
+        }
+        let reply = session.resume(&continuation, provider, &store, &mut b, &mut admission)?;
+        assert_eq!(reply.trivia.len(), 1);
+        assert_eq!(reply.trivia[0].kind, TriviaKind::Skipped);
+        assert_eq!(reply.report.diagnostics.len(), 1);
+        assert_eq!(reply.sources, vec![first.clone()]);
+        let TokenizationOutcome::Await { continuation, .. } = reply.outcome else {
+            return Err(ReaderError::NoPending);
+        };
+        let provider = ProviderReply::Read(Box::new(ReadReply::NoMatch {
+            expected: vec![],
+            furthest: 1,
+            sources: vec![],
+            source_maps: vec![],
+            report: Report {
+                usage: b.usage(),
+                ..Report::default()
+            },
+        }));
+        let reply = session.resume(&continuation, provider, &store, &mut b, &mut admission)?;
+        assert_eq!(
+            reply.report.diagnostics.len(),
+            1,
+            "losing skip candidate retains the earlier skip report exactly once"
+        );
+        let TokenizationOutcome::Await { continuation, .. } = reply.outcome else {
+            return Err(ReaderError::NoPending);
+        };
+        assert!(
+            continuation
+                .request
+                .sources
+                .iter()
+                .any(|source| source.identity() == first.identity()),
+            "provider request declares the report source closure"
+        );
+        let second = admission.create(
+            SourceId("candidate-generated".into()),
+            0,
+            "memory:candidate-generated".into(),
+            b"c".to_vec(),
+            &mut b,
+        )?;
+        let mut provider = annotated_terminal(&schema, second.span(0, 1)?, 2, &mut b)?;
+        if let ProviderReply::Read(reply) = &mut provider
+            && let ReadReply::Matched { sources, .. } = reply.as_mut()
+        {
+            sources.push(second.clone());
+        }
+        let reply = session.resume(&continuation, provider, &store, &mut b, &mut admission)?;
+        match (&reply.outcome, mode) {
+            (TokenizationOutcome::NoMatch { .. }, 0)
+            | (TokenizationOutcome::NeedMore { .. }, 1)
+            | (
+                TokenizationOutcome::Stopped {
+                    reason: StopReason::AllocationLimit,
+                },
+                2,
+            )
+            | (TokenizationOutcome::Failed { .. }, 3) => {}
+            _ => return Err(ReaderError::Context),
+        }
+        assert_eq!(reply.trivia.len(), 1);
+        assert_eq!(reply.cursor, 1);
+        assert_eq!(reply.report.events.len(), if mode < 2 { 1 } else { 2 });
+        assert_eq!(
+            reply.report.diagnostics.len(),
+            if mode < 2 {
+                1
+            } else if mode == 2 {
+                2
+            } else {
+                3
+            }
+        );
+        assert_eq!(
+            reply.sources,
+            if mode < 2 {
+                vec![first.clone()]
+            } else {
+                vec![first.clone(), second]
+            }
+        );
+        assert_eq!(
+            reply.report.diagnostics[0]
+                .primary
+                .as_ref()
+                .map(|s| s.snapshot_ref()),
+            Some(first.identity())
+        );
+        assert_eq!(store.snapshots().len(), 1);
+        assert_eq!(b.usage().source_bytes, 4);
+    }
+    Ok(())
+}
+#[test]
+fn tokenizer_await_allocation_stops_clear_both_private_pending_slots() -> Result<(), ReaderError> {
+    use nepl3_reader::tokenizer::*;
+    let (registry, schema) = registry()?;
+    let p = provider_plan(&schema);
+    let checked = p.check(&registry, &mut budget())?;
+    let modes = vec![ReaderMode {
+        name: "test".into(),
+        skip: vec![],
+        take: vec![TakeRule {
+            reader: TokenReader::Rule("entry".into()),
+            kind: KindRef {
+                schema: schema.clone(),
+                local_kind: 0,
+            },
+        }],
+    }];
+    let source = source("a")?;
+    let mut store = SourceStore::default();
+    store.insert(source.clone())?;
+    let raw = context(&schema, &registry)?;
+    let proof = check_context(
+        &raw,
+        &store,
+        &registry,
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    let mut measured = budget();
+    let _ = TokenizationSession::new("faults".into(), &modes, &checked, &registry, &mut measured)?;
+    let constructor = measured.usage().allocation_units;
+    let mut stopped = 0;
+    let mut suspended = 0;
+    for extra in (500..30_000).step_by(128) {
+        let mut limits = budget().limits();
+        limits.allocation_units = constructor + extra;
+        let mut b = Budget::new(limits);
+        let mut session =
+            TokenizationSession::new("faults".into(), &modes, &checked, &registry, &mut b)?;
+        let reply = session.read(
+            TokenizationRequest {
+                snapshot: &source,
+                start: 0,
+                limit: 1,
+                final_input: true,
+                context: &proof,
+                state: &NdfValue::Unit,
+            },
+            &store,
+            &mut b,
+            &mut SourceAdmission::default(),
+        )?;
+        match reply.outcome {
+            TokenizationOutcome::Stopped {
+                reason: StopReason::AllocationLimit,
+            } => {
+                stopped += 1;
+                let retry = session.read(
+                    TokenizationRequest {
+                        snapshot: &source,
+                        start: 0,
+                        limit: 1,
+                        final_input: true,
+                        context: &proof,
+                        state: &NdfValue::Unit,
+                    },
+                    &store,
+                    &mut budget(),
+                    &mut SourceAdmission::default(),
+                )?;
+                assert!(
+                    matches!(retry.outcome, TokenizationOutcome::Await { .. }),
+                    "stopped operation left an inner Busy slot"
+                );
+            }
+            TokenizationOutcome::Await { .. } => suspended += 1,
+            _ => return Err(ReaderError::Context),
+        }
+    }
+    assert!(stopped > 0 && suspended > 0);
     Ok(())
 }

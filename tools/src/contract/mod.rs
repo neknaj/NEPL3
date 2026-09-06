@@ -1,3 +1,4 @@
+pub(crate) mod engine;
 pub(crate) mod foundation;
 mod intrinsic;
 pub(crate) mod reader;

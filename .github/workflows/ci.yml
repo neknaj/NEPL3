@@ -55,6 +55,8 @@ jobs:
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - name: Tests
         run: cargo test --workspace --locked
+      - name: Independent native allocation regression
+        run: python tools/audit/allocation/run.py
       - name: API documentation
         run: cargo doc --workspace --no-deps --locked
       - name: Repository contracts
@@ -89,9 +91,9 @@ jobs:
           CARGO_TARGET_WASM32_WASIP2_RUNNER: wasmtime run
         run: |
           wasmtime --version
-          cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire --target wasm32-wasip2 -- --test-threads=1
+          cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine --target wasm32-wasip2 -- --test-threads=1
       - name: Compile foundation for browser Wasm
-        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire --no-default-features --target wasm32-unknown-unknown
+        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine --no-default-features --target wasm32-unknown-unknown
 
   quality:
     name: quality

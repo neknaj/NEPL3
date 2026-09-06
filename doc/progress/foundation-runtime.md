@@ -38,3 +38,19 @@ readerのtyped request converterをcore境界trait経由で実装し、`cargo te
 統括はWASIのreader Context 1件・Runtime 14件も実行し成功を確認した。CIのWASI実行とbrowser向けcompileへnepl3-readerを追加した。readerのwire依存はこれらの実境界試験用dev-dependencyのみで、production readerはcoreだけへ依存する。
 
 readerはReadReplyとcheckpointに生成sourceとSourceMapを保持するが、現SyntaxBundleにはSourceMapの所有tableがない。この段階ではdecode対応が構文bundle全体のportable経路を通るとは主張しない。次のengine/builtin段階で所有field・codec・Originとの不変条件を具体化し、Text escapeごとのsource対応、foreignの局所所有、再採番後の往復を検証する。R017のsource対応の残範囲およびR006の操作境界具体化として扱い、元sourceの再解析で代用しない。
+
+## 次段: builtin・tokenizerと構文のsource対応
+
+開始commitは`3bccd48d49ee1a7564335c4fa703960791ea4bc3`、作業branchは`feat/reader-builtins`。直前節までの記録は最初のsliceの状態であり、その固定証拠は`conformance/results/foundation-slice/`に保管する。
+
+SyntaxBundleにSourceMapを接続し、別snapshotのviewが全対応経路を通じて所有tokenの範囲へ帰着することをnativeとwireで検査した。欠損・一部だけ外部の出自・guest source未宣言・空のdecode結果も検査する。readerは全terminalの正式reportが参照する生成source/mapsを保持し、対応するrequestの宣言tableと合わせて閉じる。無関係なhost storeから不足を補わない。
+
+この進行中treeで`cargo test --locked -p nepl3-core --test maps`の2件、wire syntaxの6件、engine packageの4件が成功した。engineは局所shape、binding selectorとvisit、extension署名、provenance参照、直接arena cycleと予算を検査する実APIである。意味digest計算、解決済Profile/EntryContext、prefix実行、Grammar bootstrapはまだ含まない。`PackageIdentity`等の型宣言を検査済みidentityとして利用する公開proofも提供していない。
+
+`python tools/audit/allocation/run.py`はWindows nativeでpositive control 4096 bytesと長いSourceId・ゼロ予算のSourceMapで0 bytesを確認した。独立レビューは同じ測定器で旧sliceが100000 bytesを割り当てて失敗することも確認した。CIのnative必須検査へ追加し、WASI実行/browser向けcompileにはengineを含めた。現在treeの確定identityと全体試験結果は統合時に別途採取する。受入55群の状態はこの部分試験から変更しない。
+
+この区切りの統合ではWindows native 173件（core 50・reader 44・wire 19・engine 4・tools 56）を実行した。builtinはName・Nat・Number・Lang・Text・Triviaを提供し、ordered tokenizerは非同期providerとText生成sourceの予約・再開・取消を扱う。reader停止後の正式診断と生成sourceの保持、予算のリセットを伴う再開の拒否、停止後のsession再利用をproduction APIで検証した。
+
+統合試験では、複数の制約IDを持つSyntaxBundleを追加したことでhost生成器とproduction canonical writerの順序不一致を検出した。制約は名前の集合なのでhost側も正準sortし、重複・不正IDの拒否と順序交換の回帰試験を追加した。field・choice・binding子列の意味順序は維持する。独立レビュー担当も元の失敗と修正後の3試験を実行して確認した。
+
+コマンド、target、実行ログとhash、対象source/spec、未検証範囲は [builtin/tokenizerの統合記録](../../conformance/results/reader-builtins/validation.json) に保存する。直前のmainへ統合された最初のsliceの3 OS・WASI CIとsource artifactの確認は [過去commitのCI記録](../../conformance/results/foundation-slice/main-ci.json) に分ける。次の実装はprefix engine、Profile解決、Grammar compilerとbootstrapであり、この区切りを最初のbootstrap節目やT16の達成とは扱わない。

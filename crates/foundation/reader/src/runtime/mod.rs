@@ -1,6 +1,6 @@
 //! Iterative transactional reader execution. Host calls are explicit suspension points.
-mod copy;
-mod validate;
+pub(crate) mod copy;
+pub(crate) mod validate;
 use crate::{
     model::*,
     plan::{CheckedPlan, PlanError, ProviderKind, ReaderExpr, ReaderId},
@@ -77,6 +77,11 @@ pub enum ProviderReply {
     Read(Box<ReadReply>),
     Transform(Box<TransformReply>),
 }
+pub(crate) struct AcceptedReport {
+    pub report: Report,
+    pub sources: Vec<SourceSnapshot>,
+    pub source_maps: Vec<nepl3_core::origin::Mapping>,
+}
 struct Pending {
     continuation: ReaderContinuation,
     limits: Limits,
@@ -130,6 +135,33 @@ impl<'a> ReaderSession<'a> {
         budget: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<ReadReply, ReaderError> {
+        self.read_with_report(
+            rule,
+            request,
+            sources,
+            budget,
+            admission,
+            AcceptedReport {
+                report: Report::default(),
+                sources: Vec::new(),
+                source_maps: Vec::new(),
+            },
+        )
+    }
+    /// The mode tokenizer moves its already accepted report into the same collector.
+    /// This is internal operation state, not a provider request field.
+    pub(crate) fn read_with_report(
+        &mut self,
+        rule: &str,
+        request: ReadRequest<'_>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        seed: AcceptedReport,
+    ) -> Result<ReadReply, ReaderError> {
+        let mut prefix = seed.report;
+        let mut seed_sources = seed.sources;
+        let mut seed_maps = seed.source_maps;
         if self.closed {
             return Err(ReaderError::Closed);
         }
@@ -146,19 +178,20 @@ impl<'a> ReaderSession<'a> {
                 admission,
             )?;
             let root = self.checked.plan().rule(rule)?.root;
+            let state = copy(request.state, budget)?;
             let current = ReaderCheckpoint {
                 cursor: request.start,
-                state: copy(request.state, budget)?,
+                state,
                 view: ViewBundle {
                     elements: Vec::new(),
                     roots: Vec::new(),
                 },
                 facts: Vec::new(),
-                diagnostics: Vec::new(),
-                events: Vec::new(),
-                trace_overflow: None,
-                sources: Vec::new(),
-                source_maps: Vec::new(),
+                diagnostics: core::mem::take(&mut prefix.diagnostics),
+                events: core::mem::take(&mut prefix.events),
+                trace_overflow: prefix.trace_overflow.take(),
+                sources: core::mem::take(&mut seed_sources),
+                source_maps: core::mem::take(&mut seed_maps),
             };
             let mut machine = Machine {
                 session_id: &self.session_id,
@@ -172,11 +205,28 @@ impl<'a> ReaderSession<'a> {
                 base: budget.current_depth(),
                 next_call: &mut self.next_call,
             };
-            machine.push(root, budget)?;
+            if let Err(error) = machine.push(root, budget) {
+                return match stop_reason(&error) {
+                    Some(reason) => Ok(checkpoint_stopped(machine.current, reason, budget)),
+                    None => Err(error),
+                };
+            }
             let control = machine.drive(None, budget)?;
             Self::finish(machine, control, self.digest, &mut self.pending, budget)
         })();
-        stopped(result, budget)
+        match result {
+            Err(error) if stop_reason(&error).is_some() => {
+                let reason = stop_reason(&error).ok_or(ReaderError::Context)?;
+                prefix.usage = budget.usage();
+                Ok(ReadReply::Stopped {
+                    reason,
+                    sources: seed_sources,
+                    source_maps: seed_maps,
+                    report: prefix,
+                })
+            }
+            result => result,
+        }
     }
     /// Echo must match the saved host slot byte-for-value. A successful resume consumes it once.
     pub fn resume(
@@ -319,6 +369,10 @@ impl<'a> ReaderSession<'a> {
         self.pending = None;
         self.closed = true;
     }
+    /// A containing tokenizer terminates its operation if it cannot publish an Await envelope.
+    pub(crate) fn discard_pending(&mut self) {
+        self.pending = None;
+    }
     fn finish(
         machine: Machine<'_, '_>,
         control: Control,
@@ -400,6 +454,8 @@ fn checkpoint_stopped(current: ReaderCheckpoint, reason: StopReason, budget: &Bu
     };
     ReadReply::Stopped {
         reason,
+        sources: current.sources,
+        source_maps: current.source_maps,
         report: Report {
             diagnostics: current.diagnostics,
             events: current.events,
@@ -408,7 +464,7 @@ fn checkpoint_stopped(current: ReaderCheckpoint, reason: StopReason, budget: &Bu
         },
     }
 }
-fn stop_reason(error: &ReaderError) -> Option<StopReason> {
+pub(crate) fn stop_reason(error: &ReaderError) -> Option<StopReason> {
     match error {
         ReaderError::Stopped(reason)
         | ReaderError::Schema(SchemaError::Stopped(reason))
@@ -418,7 +474,7 @@ fn stop_reason(error: &ReaderError) -> Option<StopReason> {
         _ => None,
     }
 }
-fn stopped(
+pub(crate) fn stopped(
     result: Result<ReadReply, ReaderError>,
     budget: &Budget,
 ) -> Result<ReadReply, ReaderError> {
@@ -429,6 +485,8 @@ fn stopped(
         | Err(ReaderError::Origin(OriginError::Stopped(reason)))
         | Err(ReaderError::View(ViewError::Stopped(reason))) => Ok(ReadReply::Stopped {
             reason,
+            sources: Vec::new(),
+            source_maps: Vec::new(),
             report: Report {
                 usage: budget.usage(),
                 ..Report::default()
@@ -1003,18 +1061,32 @@ impl Machine<'_, '_> {
             Outcome::NoMatch { expected, furthest } => ReadReply::NoMatch {
                 expected,
                 furthest,
+                sources: self.current.sources,
+                source_maps: self.current.source_maps,
                 report,
             },
-            Outcome::NeedMore(expected) => ReadReply::NeedMore { expected, report },
+            Outcome::NeedMore(expected) => ReadReply::NeedMore {
+                expected,
+                sources: self.current.sources,
+                source_maps: self.current.source_maps,
+                report,
+            },
             Outcome::Failed {
                 diagnostic,
                 recovery,
             } => ReadReply::Failed {
                 diagnostic: *diagnostic,
                 recovery,
+                sources: self.current.sources,
+                source_maps: self.current.source_maps,
                 report,
             },
-            Outcome::Stopped(reason) => ReadReply::Stopped { reason, report },
+            Outcome::Stopped(reason) => ReadReply::Stopped {
+                reason,
+                sources: self.current.sources,
+                source_maps: self.current.source_maps,
+                report,
+            },
         }
     }
 }
@@ -1042,7 +1114,7 @@ fn call_identity(call: &ProviderCall) -> (u64, u64) {
         } => (*call_id, *depth_base),
     }
 }
-fn usage_at_least(a: Usage, b: Usage) -> bool {
+pub(crate) fn usage_at_least(a: Usage, b: Usage) -> bool {
     a.source_bytes >= b.source_bytes
         && a.work >= b.work
         && a.depth >= b.depth

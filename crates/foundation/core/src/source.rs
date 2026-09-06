@@ -18,6 +18,22 @@ impl Digest {
 }
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct SourceId(pub String);
+/// Host-assigned identity reserved for one generated snapshot; its digest comes from the output.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SourceReservation {
+    pub source_id: SourceId,
+    pub revision: u64,
+    pub uri: String,
+}
+impl SourceReservation {
+    pub fn validate(&self, budget: &mut Budget) -> Result<(), SourceError> {
+        budget.charge(Resource::Work, self.uri.len() as u64 + 1)?;
+        if self.source_id.0.is_empty() || !valid_locator(&self.uri) {
+            return Err(SourceError::Locator);
+        }
+        Ok(())
+    }
+}
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct SnapshotId {
     pub source: SourceId,
@@ -84,6 +100,7 @@ impl SourceSnapshot {
         bytes: Vec<u8>,
         budget: &mut Budget,
     ) -> Result<Self, SourceError> {
+        budget.charge(Resource::Work, uri.len() as u64)?;
         if source.0.is_empty() || !valid_locator(&uri) {
             return Err(SourceError::Locator);
         }

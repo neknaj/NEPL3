@@ -8,6 +8,53 @@ use nepl3_core::{
     value::{NdfValue, OperationRef, SchemaRef},
 };
 
+pub(crate) fn mapping_value(
+    mapping: &Mapping,
+    schema: &SchemaRef,
+    budget: &mut Budget,
+) -> Result<NdfValue, WireError> {
+    record(
+        schema,
+        "SourceMapping",
+        [
+            span_value(&mapping.source, schema, budget)?,
+            span_value(&mapping.target, schema, budget)?,
+            variant(
+                schema,
+                "MappingKind",
+                match mapping.kind {
+                    MappingKind::Exact => "Exact",
+                    MappingKind::Transformed => "Transformed",
+                },
+                [],
+                budget,
+            )?,
+        ],
+        budget,
+    )
+}
+pub(crate) fn mapping_from(
+    value: &NdfValue,
+    schema: &SchemaRef,
+    sources: &SourceStore,
+    budget: &mut Budget,
+) -> Result<Mapping, WireError> {
+    let f = fields(value, schema, "SourceMapping", 3)?;
+    let (case, payload) = variant_parts(&f[2], schema, "MappingKind")?;
+    if !payload.is_empty() {
+        return Err(WireError::InvalidType);
+    }
+    Ok(Mapping {
+        source: span_from_value(&f[0], schema, sources, budget)?,
+        target: span_from_value(&f[1], schema, sources, budget)?,
+        kind: match case {
+            "Exact" => MappingKind::Exact,
+            "Transformed" => MappingKind::Transformed,
+            _ => return Err(WireError::InvalidType),
+        },
+    })
+}
+
 pub(crate) fn origin_value(
     origin: &Origin,
     schema: &SchemaRef,
