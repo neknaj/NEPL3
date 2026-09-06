@@ -1,7 +1,7 @@
 //! Boundary checking shared by native and externally supplied provider results.
 use super::*;
 use nepl3_core::{origin::SourceMap, schema::TypeDescriptor, value::TypedValue};
-pub(super) fn request(
+pub(crate) fn request(
     request: &ReadRequest<'_>,
     sources: &SourceStore,
     registry: &SchemaRegistry,
@@ -159,8 +159,12 @@ pub(super) fn provider(
                 expected,
                 furthest,
                 report: returned,
+                sources: added,
+                source_maps,
             } => {
                 if furthest < request.start
+                    || !added.is_empty()
+                    || !source_maps.is_empty()
                     || furthest > request.limit
                     || !returned.diagnostics.is_empty()
                     || !returned.events.is_empty()
@@ -177,8 +181,12 @@ pub(super) fn provider(
             ReadReply::NeedMore {
                 expected,
                 report: returned,
+                sources: added,
+                source_maps,
             } => {
                 if request.final_input
+                    || !added.is_empty()
+                    || !source_maps.is_empty()
                     || !returned.diagnostics.is_empty()
                     || !returned.events.is_empty()
                     || returned.trace_overflow.is_some()
@@ -194,7 +202,26 @@ pub(super) fn provider(
                 diagnostic,
                 recovery,
                 report: returned,
+                sources: added,
+                source_maps,
             } => {
+                let combined = combined(machine, &added, original_sources, budget, admission)?;
+                let sources = &combined;
+                artifacts(
+                    machine,
+                    &added,
+                    &source_maps,
+                    &ViewBundle {
+                        elements: Vec::new(),
+                        roots: Vec::new(),
+                    },
+                    &[],
+                    request.start,
+                    request.limit,
+                    sources,
+                    budget,
+                    admission,
+                )?;
                 report(&returned, saved, machine.registry, sources, budget)?;
                 if returned
                     .diagnostics
@@ -208,14 +235,7 @@ pub(super) fn provider(
                 if let Some(span) = &recovery {
                     validate_span(span, sources)?;
                 }
-                append_artifacts(
-                    machine,
-                    Vec::new(),
-                    Vec::new(),
-                    Vec::new(),
-                    returned,
-                    budget,
-                )?;
+                append_artifacts(machine, Vec::new(), added, source_maps, returned, budget)?;
                 slot::<Diagnostic>(budget)?;
                 Ok(Outcome::Failed {
                     diagnostic: Box::new(diagnostic),
@@ -225,16 +245,28 @@ pub(super) fn provider(
             ReadReply::Stopped {
                 reason,
                 report: returned,
+                sources: added,
+                source_maps,
             } => {
-                report(&returned, saved, machine.registry, sources, budget)?;
-                append_artifacts(
+                let combined = combined(machine, &added, original_sources, budget, admission)?;
+                let sources = &combined;
+                artifacts(
                     machine,
-                    Vec::new(),
-                    Vec::new(),
-                    Vec::new(),
-                    returned,
+                    &added,
+                    &source_maps,
+                    &ViewBundle {
+                        elements: Vec::new(),
+                        roots: Vec::new(),
+                    },
+                    &[],
+                    request.start,
+                    request.limit,
+                    sources,
                     budget,
+                    admission,
                 )?;
+                report(&returned, saved, machine.registry, sources, budget)?;
+                append_artifacts(machine, Vec::new(), added, source_maps, returned, budget)?;
                 Ok(Outcome::Stopped(reason))
             }
         },
@@ -365,15 +397,14 @@ fn artifacts(
     for mapping in machine.current.source_maps.iter().chain(maps) {
         source_map.insert(copy(mapping, budget)?, sources, budget)?;
     }
-    view.validate(sources, machine.registry, budget)?;
+    let mapped = source_map.validated();
+    view.validate_with_maps(sources, machine.registry, &mapped, budget)?;
     let consumed = machine
         .request
         .snapshot
         .span_with_budget(start, end, budget)?;
     for element in &view.elements {
-        if element.span.snapshot_ref() == consumed.snapshot_ref()
-            && !consumed.contains(&element.span)
-        {
+        if !mapped.contains(&consumed, &element.span, budget)? {
             return Err(ReaderError::ProviderContract);
         }
     }
@@ -385,7 +416,7 @@ fn artifacts(
                     return Err(ReaderError::ProviderContract);
                 }
                 validate_span(span, sources)?;
-                if span.snapshot_ref() == consumed.snapshot_ref() && !consumed.contains(span) {
+                if !mapped.contains(&consumed, span, budget)? {
                     return Err(ReaderError::ProviderContract);
                 }
             }

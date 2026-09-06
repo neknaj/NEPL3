@@ -1,0 +1,16 @@
+﻿command: python tools/audit/allocation/run.py
+measured source: reader-builtins working tree before freeze; final source identity is recorded separately by integration
+rustc 1.97.0 (2d8144b78 2026-07-07)
+binary: rustc
+commit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3
+commit-date: 2026-07-07
+host: x86_64-pc-windows-msvc
+release: 1.97.0
+LLVM version: 22.1.6
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-runtime\crates\foundation\core)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.79s
+measured core artifact: C:\projects\NEPL3-runtime\target\x86_64-pc-windows-msvc\debug\libnepl3_core.rlib
+positive control: observed 4096 allocated bytes
+SourceMap::insert: Err(Stopped(AllocationLimit)); observed 0 allocated bytes
+allocation regression passed
+exit_code: 0

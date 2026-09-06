@@ -82,6 +82,12 @@ compileは `LanguagePackage{schema, readerPlans, categoryShapes, bindingPlans, s
 
 SyntaxNode.schemaとForeignSyntax.schemaは該当するsurface schemaを指す。Token.kindはWord等のlexical分類なので、Let等のSyntaxNode.kindと同一であるとは限らない。form/leaf宣言が両者の対応とpayload型を定める。SentenceLiteralの外側shapeはarity 0のまま、Token.payloadに入るDoc:Sentenceは意味schemaを指す。engineはsurface構造とpayloadの宣言型を照合するが、読むだけで意味操作を実行しない。
 
+sourceから読むarity 0のleaf（builtin Name/Text/Nat等も含む）はfields=[]とし、値はnode.tokenが指すToken.payloadだけに所有する。builtin引数を親formのAtomへ直接縮約せず、token/head/cover/Originを持つliteral child nodeとして保持する。leafのsurface descriptorは空record、token descriptorのpayload fieldが実際の値型を宣言する。Binding/Styleのfield selectorは該当childのtokenとSourceMapを明示的にたどる。source-lessの意味constructor/printerはdomain意味モデルで提供し、架空のToken.head/Spanで生成構文を埋めない。
+
+surface descriptorの型名はForm:/Token:/View:/Builtin:等の役割を持つ名前空間で分け、同じsource kind名に異なるfield shapeを割り当てない。LanguagePackageの意味identityはsurface SchemaRef.digestとは別で、reader/mode/binding/style/extension等の実行metadataを含める。名前で参照する宣言の順序は除き、skip/take/choice/field/binding列の意味順を保存する。readerの直接ReaderId edgeはpackage内ではDAGとし、再帰は名前付きRefで表す。これは完全Grammar構文の有限ReaderExprと一致する。standalone ReaderPlanの直接cycleとは区別し、rule名順の根からDAGを展開する正準形によって共有・同じ式の複製・arena配置の違いを除く。Refは名前を保持するため再帰の正準形も有限である。
+
+extension requirementは既知の型付きoperation descriptorと署名を照合するが、実行callbackの登録とは別である。name-v1/trivia-v1のreader/v1 adapterはReadRequestを受け、対応するbuiltinを予約なしで実行してReadReplyを返す。予約を持つBuiltinRequestとreader/v1を暗黙互換にはしない。Text builtinは明示した予約付き入口を使う。facts/v1等のcustom bindingもparse/compileだけで自動実行せず、実行操作をhostが選んだ時にcallback未登録ならMissingProviderで拒否する。compiler自身の宣言名・selector検査をfacts callbackへ丸投げしない。
+
 解決済みProfileはsurface、意味、reader/providerの全descriptorと計算済みdigestを登録する。未生成のpackageへ架空のdigestを置かず、同じSchemaRefに異なるfield shapeを割り当てない。Grammar compileはsurface descriptorを作る責務を持ち、Doc/Math/Circuitの意味schemaを勝手に再生成・上書きしない。
 
 必須検査: 未定義category/mode/reader/namespace/provider、重複kind/field/spelling、field型の不一致、readerの空反復、進捗なし再帰、未読fieldへの構文context依存、bindingで非名前fieldを使用、範囲外のstyle selector、foreign alias不足、provider署名不一致。
@@ -101,3 +107,14 @@ Grammarが生成したdescriptorと、同じ契約をRustで直接構築したde
 完全な文法表からseed descriptorを生成し、通常engineで自分のlanguage定義を読む。seedのarity手書き表とsourceを独立に二重管理しない。生成した全表・source・seedの対応を機械検査する。
 
 Grammar packageの利用者が機能を拡張しても共通engineを書き換えない。編集対象の文法を変更したら依存package/queryを無効化し、schema digestの異なる結果を混用しない。
+
+
+### WithMode の所属と復帰
+
+`withmode M R` は R の構文rootを所有するpackageのmode Mを選ぶ。Builtin・Local・ListOfのrootは現在packageに属し、Foreignのrootはaliasが指すguestに属する。入れ子のWithModeは内側のrootまで所属をたどり、同じrootに複数overrideがある場合は最内側を使う。無効な外側mode宣言も黙殺せず、対応ownerのmodeとして検査する。
+
+`withmode Code (listof (foreign Guest Sentence))` はhostのcons/nil spineをCodeで読み、各guest要素はSentenceの既定modeを使う。`listof (withmode GuestCode (foreign Guest Sentence))` はhost listの既定modeを保ち、guest要素のrootだけGuestCodeを使う。hostの同名modeはguest modeの代用にならない。Builtinは選択modeのskipを使い、値のreaderは指定builtinを直接使う。
+
+overrideはそのrootへ適用する。通常formの各childは自身のReadSpecで新しいcontextを選び、親のoverrideを暗黙継承しない。同じlistのtailはspine modeを継続する。foreign終了時は保存したhost contextへ戻る。実prefix試験ではhostとguestに同名で異なるreaderのmodeを置き、所属・list tail・child・復帰を検査する。
+
+現在の`LanguagePackage::check`は局所metadataとshapeの検査であり、Foreignのalias/category/modeは解決済Profileで検査する対象として残る。package意味digest、解決済EntryContext/Profile、実parse/Grammar bootstrapをこの局所proofから推定しない。

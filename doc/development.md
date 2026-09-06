@@ -21,7 +21,12 @@ cargo run --locked -p nepl3-tools -- check
 cargo run --locked -p nepl3-tools -- tasks --check
 python tools/audit/structure.py
 python -m unittest discover -s tools/audit -p test.py
+python tools/audit/allocation/run.py
 ```
+
+allocation検査は [単体probe](../tools/audit/allocation/probe.rs) の呼出し区間で実際の割当を計測します。SourceMapが予算ゼロを返す前にsource IDを複製したR020は、返却値と論理的な使用量だけの試験では捕捉できません。このため計測器に限定したGlobalAlloc wrapperのunsafeを開発用途で監査します。unsafeは同じpointer/layoutをSystem allocatorへ転送する箇所だけとし、計測counterは割当を伴わないatomic操作です。coreと通常workspaceの `unsafe_code = "forbid"` は維持し、productionへ計測器を依存させません。
+
+[driver](../tools/audit/allocation/run.py) は固定toolchainの `cargo build --locked` が出力するJSONから対象coreのartifactを一意に取得し、同じtoolchainのrustcで一時実行ファイルを作ります。既存workspaceのlint設定を変更せず、この独立した開発計測器にだけ上記の範囲を適用します。意図的な割当のpositive controlを先に検査し、入力構築・表示・返却値のdropを計測区間から外します。失敗・runner不在・artifactの曖昧さは非0終了であり、未実行を成功へ読み替えません。通常native CIでもこのコマンドを実行し、単なる任意の手元確認にはしません。計測はこの具体的な先行割当の回帰を捕捉するもので、一般の物理メモリ上限やWASIでの実測を保証しません。
 
 APIドキュメントも警告をエラーとして検査します。
 
@@ -48,7 +53,7 @@ git diff
 
 reader包絡の正本は `interfaces/reader.json` です。変更時は `cargo run --locked -p nepl3-tools -- reader --write` でproductionの登録コードを生成します。参照するfoundation型と合わせたregistryのfinalizeを検査し、VMのstate・request・continuation型と同じ変更で同期します。
 
-CIのWASI jobはSHA-256を固定したWasmtime 44.0.1でcore/wireの実試験を実行し、browser向けWasmのcompileも行います。ローカルでは `CARGO_TARGET_WASM32_WASIP2_RUNNER` を `wasmtime run` とし、`cargo test --locked -p nepl3-core -p nepl3-wire --target wasm32-wasip2 -- --test-threads=1` を実行します。browser targetのcompile成功はブラウザ上の実行・描画試験を意味しません。
+CIのWASI jobはSHA-256を固定したWasmtime 44.0.1でcore/reader/wire/engineの実試験を実行し、browser向けWasmのcompileも行います。ローカルでは `CARGO_TARGET_WASM32_WASIP2_RUNNER` を `wasmtime run` とし、`cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine --target wasm32-wasip2 -- --test-threads=1` を実行します。browser targetのcompile成功はブラウザ上の実行・描画試験を意味しません。
 
 タスクのacceptance参照はcoverageを示します。T16以外のタスクは自身の成果物・scope付き証拠・依存完了・設計blocker解消で判定し、後段を含む試験群全体の合格は別に記録します。証拠にはtask ID、検査対象、コマンド、target、結果、未検証範囲を残します。T16の完了には登録された全必須群のpassedが必要です。
 

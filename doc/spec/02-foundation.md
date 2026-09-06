@@ -38,6 +38,8 @@ token/trivia/sourceのlossless保存により元ソースを再現できる。�
 
 `ViewElement = {kind, span, fields, roles, relations}`。一つのtokenに複数のViewElementが対応してよい。子は親の範囲に含まれる。ただし変換後のviewはSourceMapを介した別snapshot上に置く。外側parserはViewElementの木を歩いて構文を決めない。
 
+SyntaxBundleはsourceMapsを所有し、その全端点を同じbundleのsourcesで解決する。foreignのmapはguest bundleに局所であり、hostのtableで不足を補わない。map列は宣言順を保存し、node再採番から独立する。Tokenの各viewとViewElementの各子は、直接包含または検査済みmapによる包含を要求する。childの各byte（空spanは挿入anchor）から全逆経路をたどり、parent内へ帰着することを検査する。Exactはbyte displacement、Transformedは元範囲の全点を対応させ、対応欠損・一部でもparent外の終端がある場合はCoverを返す。parent内へ到達した後のさらに古い生成元は、今回のtokenへの帰属判定に含めない。単に一つのmap経路が存在するだけでは受理しない。全経路の検査にも共有Work/Depth/Nodes/Allocation予算を使い、超過はStoppedとする。
+
 readerが内部viewを公開しない場合にもtoken全体の位置は必須。その場合、内部の詳細なeditor機能が利用可能であると広告しない。
 
 ## 5. Origin graph

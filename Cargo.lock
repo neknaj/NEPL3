@@ -95,6 +95,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "nepl3-engine"
+version = "0.1.0"
+dependencies = [
+ "nepl3-core",
+ "nepl3-reader",
+]
+
+[[package]]
 name = "nepl3-reader"
 version = "0.1.0"
 dependencies = [

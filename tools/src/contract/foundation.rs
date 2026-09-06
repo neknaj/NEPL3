@@ -82,7 +82,21 @@ pub(super) fn generated(contracts: &Value) -> Result<Value> {
         let mut ty = Map::new();
         let constraints = match contracts.get("constraints").and_then(|v| v.get(name)) {
             None => value!([]),
-            Some(Value::Array(ids)) => Value::Array(ids.clone()),
+            Some(Value::Array(ids)) => {
+                // Constraints are named obligations, not an ordered execution plan.
+                // Match the production descriptor's scalar-sorted canonical set.
+                let mut sorted = BTreeSet::new();
+                for id in ids {
+                    let id = id
+                        .as_str()
+                        .filter(|id| !id.is_empty())
+                        .ok_or("constraint ID must be nonempty text")?;
+                    if !sorted.insert(id) {
+                        return Err(format!("{name}: duplicate constraint {id}").into());
+                    }
+                }
+                value!(sorted)
+            }
             Some(_) => return Err(format!("{name}: constraints must be an array").into()),
         };
         ty.insert("constraints".into(), constraints);
@@ -281,6 +295,28 @@ pub(super) fn write_projection(root: &Path, value: &Value) -> Result<()> {
 mod tests {
     use super::*;
     use nepl3_core::value::{NdfValue, Record};
+
+    #[test]
+    fn constraint_declaration_order_is_canonical_but_duplicates_are_invalid() -> Result<()> {
+        let mut contracts: Value =
+            serde_json::from_str(include_str!("../../../interfaces/contracts.json"))?;
+        contracts["constraints"]["SyntaxBundle"] = value!(["syntax.graph", "source.map"]);
+        let forward = generated(&contracts)?;
+        contracts["constraints"]["SyntaxBundle"] = value!(["source.map", "syntax.graph"]);
+        let reverse = generated(&contracts)?;
+        assert_eq!(forward, reverse);
+        assert_eq!(
+            descriptor(&forward)?
+                .canonical_json(&mut budget())
+                .map_err(|e| format!("{e:?}"))?,
+            serde_json::to_vec(&forward)?
+        );
+        contracts["constraints"]["SyntaxBundle"] = value!(["source.map", "source.map"]);
+        assert!(generated(&contracts).is_err());
+        contracts["constraints"]["SyntaxBundle"] = value!([42]);
+        assert!(generated(&contracts).is_err());
+        Ok(())
+    }
 
     #[test]
     fn generated_foundation_is_registered_and_checks_ordinary_schema_ref_records() -> Result<()> {

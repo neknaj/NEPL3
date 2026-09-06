@@ -231,6 +231,10 @@ pub struct CanonicalWriter<'a> {
     budget: &'a mut Budget,
 }
 impl<'a> CanonicalWriter<'a> {
+    /// Shares accounting with iterative serializers that maintain an explicit work stack.
+    pub fn budget(&mut self) -> &mut Budget {
+        self.budget
+    }
     /// Low-level descriptor writer; callers own structural tokens and canonical key order.
     /// quoted and number encode payloads, while push appends caller-owned JSON syntax.
     pub fn new(budget: &'a mut Budget) -> Self {

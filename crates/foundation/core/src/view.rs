@@ -1,6 +1,7 @@
 //! Reader-owned token views are sidecars, never implicit prefix-parser children.
 use crate::{
     budget::{Budget, Resource, StopReason},
+    origin::{OriginError, SourceMap, ValidatedSourceMap},
     schema::{SchemaError, SchemaRegistry, TypeDescriptor},
     source::{SourceError, SourceStore, Span},
     value::{KindRef, NdfValue, SchemaRef},
@@ -54,6 +55,8 @@ pub enum TriviaKind {
     Whitespace,
     Comment,
     Bom,
+    /// An explicitly skipped lexeme with no whitespace/comment interpretation.
+    Skipped,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Trivia {
@@ -72,6 +75,7 @@ pub struct Token {
 pub enum ViewError {
     Stopped(StopReason),
     Source(SourceError),
+    Origin(OriginError),
     Schema(SchemaError),
     Reference,
     Cycle,
@@ -83,6 +87,14 @@ pub enum ViewError {
 impl From<StopReason> for ViewError {
     fn from(e: StopReason) -> Self {
         Self::Stopped(e)
+    }
+}
+impl From<OriginError> for ViewError {
+    fn from(e: OriginError) -> Self {
+        match e {
+            OriginError::Stopped(reason) => Self::Stopped(reason),
+            e => Self::Origin(e),
+        }
     }
 }
 impl From<SourceError> for ViewError {
@@ -108,6 +120,17 @@ impl ViewBundle {
         registry: &SchemaRegistry,
         budget: &mut Budget,
     ) -> Result<(), ViewError> {
+        let maps = SourceMap::validate_mappings(&[], sources, budget)?;
+        self.validate_with_maps(sources, registry, &maps, budget)
+    }
+    pub fn validate_with_maps(
+        &self,
+        sources: &SourceStore,
+        registry: &SchemaRegistry,
+        maps: &ValidatedSourceMap<'_>,
+        budget: &mut Budget,
+    ) -> Result<(), ViewError> {
+        maps.validate_sources(sources, budget)?;
         for root in &self.roots {
             self.element(*root)?;
         }
@@ -126,7 +149,7 @@ impl ViewBundle {
                     return Err(ViewError::DuplicateField);
                 }
                 for child in &field.children {
-                    if !element.span.contains(&self.element(*child)?.span) {
+                    if !maps.contains(&element.span, &self.element(*child)?.span, budget)? {
                         return Err(ViewError::Cover);
                     }
                 }
@@ -201,7 +224,18 @@ impl Token {
         registry: &SchemaRegistry,
         budget: &mut Budget,
     ) -> Result<(), ViewError> {
-        self.views.validate(sources, registry, budget)?;
+        let maps = SourceMap::validate_mappings(&[], sources, budget)?;
+        self.validate_with_maps(sources, registry, &maps, budget)
+    }
+    pub fn validate_with_maps(
+        &self,
+        sources: &SourceStore,
+        registry: &SchemaRegistry,
+        maps: &ValidatedSourceMap<'_>,
+        budget: &mut Budget,
+    ) -> Result<(), ViewError> {
+        self.views
+            .validate_with_maps(sources, registry, maps, budget)?;
         check_kind(&self.kind, registry)?;
         sources
             .get_ref(self.head.snapshot_ref())
@@ -210,7 +244,7 @@ impl Token {
         registry.validate(&TypeDescriptor::NdfValue, &self.payload, budget)?;
         for view in &self.views.elements {
             budget.charge(Resource::Work, 1)?;
-            if !self.head.contains(&view.span) {
+            if !maps.contains(&self.head, &view.span, budget)? {
                 return Err(ViewError::Cover);
             }
         }
@@ -221,13 +255,14 @@ impl Token {
                 .get_ref(trivia.span.snapshot_ref())
                 .ok_or(SourceError::MissingSnapshot)?;
             let text = source.slice(&trivia.span)?;
-            if trivia.span.snapshot() != self.head.snapshot()
+            if trivia.span.snapshot_ref() != self.head.snapshot_ref()
                 || trivia.span.start() < last
                 || trivia.span.end() > self.head.start()
             {
                 return Err(ViewError::Trivia);
             }
             match trivia.kind {
+                TriviaKind::Skipped if text.is_empty() => return Err(ViewError::Trivia),
                 TriviaKind::Whitespace
                     if text.is_empty() || !text.chars().all(char::is_whitespace) =>
                 {

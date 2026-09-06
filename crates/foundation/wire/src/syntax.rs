@@ -210,6 +210,9 @@ fn bundle_value(
                         sequence(&bundle.tokens, budget, |token, b| {
                             token_value(token, schema, b)
                         })?,
+                        sequence(&bundle.source_maps, budget, |mapping, b| {
+                            mapping_value(mapping, schema, b)
+                        })?,
                     ],
                     budget,
                 )?;
@@ -242,7 +245,7 @@ fn bundle_from(
         match step {
             Decode::Enter(value, depth) => {
                 budget.observe_depth(depth)?;
-                let root = fields(value, schema, "SyntaxBundle", 6)?;
+                let root = fields(value, schema, "SyntaxBundle", 7)?;
                 let mut guests = Vec::new();
                 for node in list(&root[1])? {
                     let f = fields(node, schema, "SyntaxNode", 7)?;
@@ -267,7 +270,7 @@ fn bundle_from(
                 }
             }
             Decode::Finish(value, count) => {
-                let f = fields(value, schema, "SyntaxBundle", 6)?;
+                let f = fields(value, schema, "SyntaxBundle", 7)?;
                 let snapshots = sources_from(&f[0], schema, admission, budget)?;
                 let sources = store(&snapshots, budget)?;
                 let start = results
@@ -294,6 +297,9 @@ fn bundle_from(
                     })?,
                     tokens: collect(list(&f[5])?, budget, |value, b| {
                         token_from(value, schema, &sources, b)
+                    })?,
+                    source_maps: collect(list(&f[6])?, budget, |value, b| {
+                        mapping_from(value, schema, &sources, b)
                     })?,
                 };
                 let (indices, _) = order(&bundle, budget)?;

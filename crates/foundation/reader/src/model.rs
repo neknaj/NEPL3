@@ -185,19 +185,27 @@ pub enum ReadReply {
     NoMatch {
         expected: Vec<Expectation>,
         furthest: u64,
+        sources: Vec<SourceSnapshot>,
+        source_maps: Vec<Mapping>,
         report: Report,
     },
     NeedMore {
         expected: Vec<Expectation>,
+        sources: Vec<SourceSnapshot>,
+        source_maps: Vec<Mapping>,
         report: Report,
     },
     Failed {
         diagnostic: Diagnostic,
         recovery: Option<Span>,
+        sources: Vec<SourceSnapshot>,
+        source_maps: Vec<Mapping>,
         report: Report,
     },
     Stopped {
         reason: StopReason,
+        sources: Vec<SourceSnapshot>,
+        source_maps: Vec<Mapping>,
         report: Report,
     },
     Await {

@@ -119,6 +119,34 @@ readerの26件はnative VM、UTF-8分割、Unicode 16、巻戻し、消費する
 
 実行環境はWindows `10.0.26200.0`、target `x86_64-pc-windows-msvc`、rustc `1.97.0 (2d8144b78 2026-07-07)`、通常のCargo debug runner。WASI/browser/他OS、Grammar bootstrap、portable operation/frame全経路、言語・editor・UI・Pages・Doc移行の受入はこの結果から推定しない。入力identityと最終受入証拠は、対応する実装と仕様を固定したtreeで別途記録する。
 
+## 組込みreaderとSourceMap接続の追加レビュー
+
+次段 `feat/reader-builtins` はfirst sliceの `3bccd48d49ee1a7564335c4fa703960791ea4bc3` から継続する。R020では、1 byteのExact mappingと100,000 byteのSourceIdを使い、allocation_units=0の `SourceMap::insert` がStoppedを返す前に100,000 bytesを割り当てることを独立確認した。最初のignored `--bin map_allocation` によるSystem allocator計測はinsert呼出し区間だけを対象とした。SourceMapのpoint構築がsnapshot identityを複製してからstackの予算を検査する経路であり、前段R018の訂正範囲をこの未検査経路へ広げない。
+
+Pointを借用identityへ訂正後、同じ測定は0 bytesとなった。mapsの管理対象2試験も成功したが、返却値と論理予算だけの試験は旧版でも成功するため、この先行heap allocationを捕捉する回帰とは呼ばない。そこで [独立計測器](../tools/audit/allocation/run.py) を管理対象へ置き、[開発文書](development.md) でdev専用GlobalAlloc wrapperの限定的unsafeを明示した。production/workspaceのforbidは変えない。固定Rust 1.97.0のCargo-selected rlibへリンクし、4,096 bytesのpositive controlを通してから測定する。同一計測器を旧commitの別worktreeへ適用すると100,000 bytes・終了1、修正treeでは0 bytes・終了0となった。[旧版log](../conformance/results/reader-builtins/allocation-baseline.log) と [修正中treeのlog](../conformance/results/reader-builtins/allocation-working.log) を保存した。native CIへの必須step追加も確認し、この具体的な先行割当をR020 correctedとする。後者のlogはfreeze前の部分記録であり、最終treeの証拠は統合時に別途採取する。
+
+R021は別のWork計上不備である。公開builtin Textへ3 byteの入力と100,007 byteの予約URIを渡すと、Work上限1,000でもMatched、Usage.work=7となった。URI末尾だけを不正spaceにすると、長いURIを検査後にLocator、work=1となった。`--bin builtin_reservation` で再現し、builtin内部の予約検査と、Budget付きsource constructor/importのlocator再検査へ事前Work計上を要求した。低水準の所有値validatorの責任と、Budgetを受け取る操作内部の責任を区別し、先行heap allocationを測るR020とは別に追跡する。
+
+訂正後は同じvalid/末尾space URIの両入力がWorkLimitで停止した。管理対象の `generated_source_locator_scan_is_charged_before_validation` と `reservation_locator_validation_obeys_work_limit_before_scanning` を独立実行し成功を確認したため、このlocator経路をR021 correctedとする。任意長のidentity比較全般を検証済みとは扱わない。
+
+R022では、providerが診断/eventを各1件生成してからAllocationLimitとなる公開tokenizer経路が両方を捨て、Usageだけ1を残す不具合を再現した。またTriviaを受理してText予約で待機した後、同じLimitsの新しいBudgetを渡すとUsageが減少したままtokenを返した。訂正後、元のprobeは診断/event各1件を保持し、新BudgetはContinuationとして拒否した。
+
+Reportだけを引き継ぐと、生成source上のSpanに必要なsource/mapが失われるため、ReadReplyの全terminalへ正式artifactを追加する契約も確認中である。単独VMの管理対象 `failed_stopped_and_rollback_results_have_their_exact_formal_source_closure` は独立実行で成功した。Await外包の複製失敗を追加で走査すると、allocation上限18,792/18,920/19,048でStoppedを返した後に内側pendingが残り、次のreadがBusyとなった。`.tmp/independent-core/` の `--bin tokenizer_pending` はこの公開API再現であり、管理対象回帰と修正の確認まではR022をopenに保つ。
+
+この後、停止で返せなくなったAwaitの内側slotを破棄する訂正を確認し、元probeの全走査はfailures=0となった。管理対象のpending allocation sweep、先行skipから後続NoMatch/NeedMore/Failed/Stoppedへの正式source/report保持、および生成source上の診断を保った停止が成功した。reader全44試験（builtin 13、context 1、portable request 2、runtime 28）を独立実行した。最後に予約待機中cancelの回帰を読み再実行し、正式trivia/cursor/state保持、slot消費、同sessionでの新operation再開を確認した。このnative範囲をR022 correctedとし、全reply/continuationのcodecとprocess交換はR017に残す。
+
+新たなmapped containmentでは、source表とmap表が存在するだけで別snapshotのviewを受理してはならない。子の全byteと空anchorがmapを介して親の範囲に帰属すること、穴や外部の起源を隠さないことを検査対象とする。escapeの生成source/mapは失敗choiceやlook後に正式結果へ混入せず、消費済み予算は戻さない。
+
+実装されたSourceMap所有tableとmapped containmentについては、core maps 2件とwire syntax 6件を独立実行した。host/guestそれぞれの生成source、別snapshotのview、空anchorの往復、およびmap欠損・無関係range・Exact偽装・guest source宣言不足の拒否を確認した。これは全reader reply/continuationのportable化やprocess provider比較の完了を意味しない。
+
+reader修正のfreeze後、`cargo test --locked -p nepl3-core -p nepl3-wire` も独立実行し、core 50件・wire 19件が全て成功した。ここでの件数はproduction回帰の実行範囲であり、55受入群の合格数とは異なる。
+
+engineの今回の範囲は `LanguagePackage::check` の局所metadata/shape検査である。4件の公開API試験を独立実行し、field/selector/binding、登録済operationとの署名相違、provenanceの未宣言source・不正OriginRef、ゼロWork/Depth、直接ReaderId cycleの拒否を確認した。ListOfのforeign headをLocal NodeRefへ潰す草稿と、binding退出frameを1段深く計上する草稿を指摘し、ForeignSyntax head/NodeRef tail、およびBinding::Noneの深さ1の実回帰で訂正を確認した。
+
+WithModeは構文rootのownerへ適用し、hostのListOf spineとguest要素を分ける。guestのmodeをhostの同名modeで検査済みにしないという訂正文と局所検査を照合した。文字化けした規範段落も修復後に再読した。package意味digest、解決済EntryContext/Profile、prefix parse、Grammar compile/bootstrapはこの4件の範囲に含まれない。特にsurface SchemaRefの一致だけで挙動identityやcache有効性を保証せず、R006/R009をopenに保つ。
+
+Langの契約は [RFC 5646 §2.2.9](https://www.rfc-editor.org/rfc/rfc5646.html#section-2.2.9) と照合した。well-formedはABNFへの適合であり、登録済みsubtagやvariant/extensionの重複拒否を含むvalidとは異なる。grandfatheredとprivate-useもABNFの対象に含む。文法だけの検査にnetwork照会や未指定のvalid制約を追加しない。
+
 ## r1初回レビューの章ごとの確認範囲
 
 | 章 | 確認した契約 | 結論・残る検証 |

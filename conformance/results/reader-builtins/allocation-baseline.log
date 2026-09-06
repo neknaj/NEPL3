@@ -1,0 +1,17 @@
+﻿command: python tools/audit/allocation/run.py --repository .tmp/allocation-baseline
+measured commit: 3bccd48d49ee1a7564335c4fa703960791ea4bc3
+expected outcome: nonzero; historical R020 is reproduced
+rustc 1.97.0 (2d8144b78 2026-07-07)
+binary: rustc
+commit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3
+commit-date: 2026-07-07
+host: x86_64-pc-windows-msvc
+release: 1.97.0
+LLVM version: 22.1.6
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.06s
+measured core artifact: C:\projects\NEPL3-runtime\.tmp\allocation-baseline\target\x86_64-pc-windows-msvc\debug\libnepl3_core.rlib
+Error: "R020: zero allocation budget allowed an allocation before stopping"
+positive control: observed 4096 allocated bytes
+SourceMap::insert: Err(Stopped(AllocationLimit)); observed 100000 allocated bytes
+command failed (1): ['C:\\Users\\bem\\AppData\\Local\\Temp\\nepl3-allocation-93wdcd1t\\probe.exe']
+exit_code: 1

@@ -1476,6 +1476,25 @@
         ]
       ]
     },
+    "SourceReservation": {
+      "constraints": [
+        "source.reservation"
+      ],
+      "record": [
+        [
+          "sourceId",
+          "Text"
+        ],
+        [
+          "revision",
+          "U64"
+        ],
+        [
+          "uri",
+          "Text"
+        ]
+      ]
+    },
     "Span": {
       "constraints": [
         "source.span"
@@ -1517,6 +1536,7 @@
     },
     "SyntaxBundle": {
       "constraints": [
+        "source.map",
         "syntax.graph"
       ],
       "record": [
@@ -1584,6 +1604,18 @@
             "list": {
               "named": {
                 "name": "Token",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "name": "SourceMapping",
                 "package": "nepl3.foundation",
                 "revision": 1
               }
@@ -1857,6 +1889,7 @@
       "variant": {
         "Bom": [],
         "Comment": [],
+        "Skipped": [],
         "Whitespace": []
       }
     },

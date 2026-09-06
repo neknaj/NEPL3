@@ -748,6 +748,10 @@
         [
           "tokens",
           "List<Token>"
+        ],
+        [
+          "sourceMaps",
+          "List<SourceMapping>"
         ]
       ]
     },
@@ -1197,6 +1201,22 @@
           "U64"
         ]
       ]
+    },
+    "SourceReservation": {
+      "fields": [
+        [
+          "sourceId",
+          "Text"
+        ],
+        [
+          "revision",
+          "U64"
+        ],
+        [
+          "uri",
+          "Text"
+        ]
+      ]
     }
   },
   "scalar_aliases": {
@@ -1238,7 +1258,8 @@
     "TriviaKind": [
       "Whitespace",
       "Comment",
-      "Bom"
+      "Bom",
+      "Skipped"
     ],
     "PositionEncoding": [
       "Utf8",
@@ -1632,7 +1653,8 @@
       "environment.digest"
     ],
     "SyntaxBundle": [
-      "syntax.graph"
+      "syntax.graph",
+      "source.map"
     ],
     "ForeignSyntax": [
       "syntax.foreign"
@@ -1657,6 +1679,9 @@
     ],
     "Report": [
       "operation.reporting"
+    ],
+    "SourceReservation": [
+      "source.reservation"
     ]
   }
 }

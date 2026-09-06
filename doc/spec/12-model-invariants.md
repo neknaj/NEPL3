@@ -38,12 +38,17 @@ constraint IDはstructural descriptorとともにdigestへ含める。共通Rust
 | environment.bindings / environment.digest | binding/resourceの一意性、範囲と型、canonical entry digest |
 | syntax.graph / syntax.foreign | bundle局所参照、有限graph、source geometry、host環境とguest rootの一致 |
 | source.map / origin.graph | 上記のmap関係とOrigin DAG、所属snapshot・OperationRef・参照先 |
+| source.reservation | 空でないhost予約SourceId、revision、絶対logical URI。生成bytesからdigestを計算し、異なる結果への予約再利用を拒否 |
 | schema.kind-id | 選択schemaの型名scalar順に割り当てたlocalKindとdescriptorの対応 |
 | view.graph | Tokenごとに局所的なview参照、DAG、field名の一意性、source範囲 |
 | token.boundary | token head・triviaのsnapshotと境界、内部viewの包含、payloadの型はreader/form契約で検査 |
 | view.presentation | schemaが所有する表示分類名と明示されたfallback role |
 
 SyntaxBundleはtokensのtableを持ち、SyntaxNode.tokenは同じbundleのTokenRefを指す。Tokenはpayload、内部ViewBundle、leadingTriviaを保持する。ViewRefはそのTokenのViewBundle内だけ、TokenRefはそのSyntaxBundle内だけで解決する。ForeignSyntaxのguest bundleは自身のtableを持つため、同じ数値IDをhostへ解決しない。通常のsource由来nodeにはheadに対応するtokenをengineが要求し、synthetic/recovery nodeのtoken不在はOptionで明示する。graphの検査とformのarity・payload型の検査を区別する。
+
+sourceMapsはSyntaxBundleの所有列であり、全source/targetをそのbundleのsourcesで解決する。SourceMapの幾何・Exact内容一致・非循環を検査したproofだけをmapped view包含に使用する。standalone Token/ViewBundleのvalidateはmapを持たない直接包含の入口とし、変換viewはvalidate_with_mapsまたはSyntaxBundle境界を使う。包含は02章の全逆経路規則に従い、sourceがhost storeに偶然存在することを所有証明にしない。
+
+ValidatedSourceMapは不変なsnapshot identity上のmap関係のproofであり、任意の後続SourceStoreへの所属proofではない。Token/Viewのvalidate_with_mapsは使用時のstoreで全map端点の宣言閉包を再照合する。SourceMap.contains単体は関係上の包含計算であり、transport source tableの所属を検査する入口とは区別する。
 
 内部viewは外側のchildrenやarityへ加算しない。SentenceLiteralの構造化payloadとview、Codeが保持するforeign syntaxのtoken・triviaはnativeとNDFの両経路で保存し、元sourceの再parseを情報保持の代替にしない。
 

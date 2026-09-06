@@ -3,7 +3,7 @@
 use crate::view::{Token, ViewError};
 use crate::{
     budget::{Budget, Resource, StopReason},
-    origin::{Origin, OriginError, OriginGraph, OriginId},
+    origin::{Mapping, Origin, OriginError, OriginGraph, OriginId, SourceMap},
     schema::{SchemaError, SchemaRegistry},
     source::{Digest, SourceAdmission, SourceError, SourceSnapshot, SourceStore, Span},
     value::{NdfScalar, SchemaRef, TypedValue},
@@ -81,6 +81,7 @@ pub struct SyntaxBundle {
     pub root: NodeRef,
     pub environments: Vec<EnvironmentEntry>,
     pub tokens: Vec<Token>,
+    pub source_maps: Vec<Mapping>,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum SyntaxError {
@@ -164,16 +165,18 @@ impl SyntaxBundle {
             let mut sources = SourceStore::default();
             for (index, source) in bundle.sources.iter().enumerate() {
                 admission.admit_existing(source, budget)?;
-                budget.charge(Resource::Work, 1)?;
+                budget.charge(Resource::Work, index as u64 + 1)?;
                 if bundle.sources[..index]
                     .iter()
-                    .any(|prior| prior.id() == source.id())
+                    .any(|prior| prior.identity() == source.identity())
                 {
                     return Err(SyntaxError::DuplicateSource);
                 }
                 budget.charge(
                     Resource::AllocationUnits,
-                    source.text().len() as u64 + core::mem::size_of::<SourceSnapshot>() as u64,
+                    (source.text().len() + source.identity().source.0.len() + source.uri().len())
+                        as u64
+                        + core::mem::size_of::<SourceSnapshot>() as u64,
                 )?;
                 sources.insert(source.clone())?;
             }
@@ -217,8 +220,9 @@ impl SyntaxBundle {
                     }
                 }
             }
+            let maps = SourceMap::validate_mappings(&bundle.source_maps, &sources, budget)?;
             for token in &bundle.tokens {
-                token.validate(&sources, registry, budget)?;
+                token.validate_with_maps(&sources, registry, &maps, budget)?;
             }
             let node_depths = bundle.check_cycles(depth, budget)?;
             for (node_index, node) in bundle.nodes.iter().enumerate() {
@@ -455,6 +459,7 @@ impl SyntaxBundle {
                         root: NodeRef(0),
                         environments: Vec::new(),
                         tokens: Vec::new(),
+                        source_maps: Vec::new(),
                     };
                     pending.push(core::mem::replace(&mut foreign.bundle, empty));
                 }
@@ -482,6 +487,7 @@ impl Clone for SyntaxBundle {
                 root: NodeRef(0),
                 environments: Vec::new(),
                 tokens: Vec::new(),
+                source_maps: Vec::new(),
             }
         }
         fn shallow(source: &SyntaxBundle) -> SyntaxBundle {
@@ -491,6 +497,7 @@ impl Clone for SyntaxBundle {
                 root: source.root,
                 environments: source.environments.clone(),
                 tokens: source.tokens.clone(),
+                source_maps: source.source_maps.clone(),
                 nodes: source
                     .nodes
                     .iter()
@@ -549,6 +556,7 @@ impl PartialEq for SyntaxBundle {
                 || a.root != b.root
                 || a.environments != b.environments
                 || a.tokens != b.tokens
+                || a.source_maps != b.source_maps
                 || a.nodes.len() != b.nodes.len()
             {
                 return false;
@@ -593,6 +601,7 @@ impl core::fmt::Debug for SyntaxBundle {
             .field("nodes", &self.nodes.len())
             .field("sources", &self.sources.len())
             .field("origins", &self.origins.len())
+            .field("source_maps", &self.source_maps.len())
             .field("environments", &self.environments.len())
             .finish()
     }

@@ -10,14 +10,14 @@ use nepl3_core::{
     value::*,
     view::*,
 };
-pub(super) trait CopyCost {
+pub(crate) trait CopyCost {
     fn charge(&self, b: &mut Budget) -> Result<(), StopReason>;
 }
-pub(super) fn copy<T: CopyCost + Clone>(value: &T, b: &mut Budget) -> Result<T, StopReason> {
+pub(crate) fn copy<T: CopyCost + Clone>(value: &T, b: &mut Budget) -> Result<T, StopReason> {
     value.charge(b)?;
     Ok(value.clone())
 }
-pub(super) fn slot<T>(b: &mut Budget) -> Result<(), StopReason> {
+pub(crate) fn slot<T>(b: &mut Budget) -> Result<(), StopReason> {
     b.charge(Resource::Work, 1)?;
     b.charge(Resource::AllocationUnits, core::mem::size_of::<T>() as u64)
 }

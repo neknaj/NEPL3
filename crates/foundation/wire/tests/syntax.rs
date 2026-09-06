@@ -69,6 +69,7 @@ fn fixture() -> Result<(SchemaRef, SchemaRegistry, SyntaxBundle), String> {
     };
     // This is a shared graph fixture, not a claim that foundation Token is a language form.
     let guest = SyntaxBundle {
+        source_maps: vec![],
         sources: vec![source.clone()],
         nodes: vec![SyntaxNode {
             schema: schema.clone(),
@@ -95,6 +96,7 @@ fn fixture() -> Result<(SchemaRef, SchemaRegistry, SyntaxBundle), String> {
     let digest = environment_digest(&environment, &schema, &registry, &mut budget)
         .map_err(|e| format!("{e:?}"))?;
     let bundle = SyntaxBundle {
+        source_maps: vec![],
         sources: vec![source.clone()],
         nodes: vec![SyntaxNode {
             schema: schema.clone(),
@@ -293,6 +295,7 @@ fn nested_generated_bundles_use_iterative_conversion_and_shared_depth_budget() -
     let source = bundle.sources[0].clone();
     for _ in 0..256 {
         bundle = SyntaxBundle {
+            source_maps: vec![],
             sources: vec![source.clone()],
             root: NodeRef(0),
             origins: vec![Origin::Synthetic {
@@ -411,6 +414,159 @@ fn guest_arena_reordering_updates_foreign_root_and_guest_local_children() -> Tes
     assert_eq!(
         guest.bundle.nodes[0].fields,
         vec![FieldValue::Child(NodeRef(1))]
+    );
+    Ok(())
+}
+
+#[test]
+fn mapped_views_and_maps_survive_host_and_guest_wire_boundaries() -> TestResult {
+    use nepl3_core::origin::{Mapping, MappingKind};
+    let (schema, registry, mut bundle) = fixture()?;
+    let add = |bundle: &mut SyntaxBundle, id: &str, text: &str| -> Result<(), String> {
+        let decoded = SourceSnapshot::new(
+            SourceId(id.into()),
+            1,
+            format!("memory:{id}"),
+            text.as_bytes().to_vec(),
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        let span = decoded
+            .span(0, text.len() as u64)
+            .map_err(|e| format!("{e:?}"))?;
+        bundle.source_maps.push(Mapping {
+            source: bundle.tokens[0].head.clone(),
+            target: span.clone(),
+            kind: MappingKind::Transformed,
+        });
+        let kind = bundle.tokens[0].kind.clone();
+        bundle.tokens[0].views.elements[0].fields.push(ViewField {
+            name: "decoded".into(),
+            children: vec![ViewRef(1)],
+        });
+        bundle.tokens[0].views.elements.push(ViewElement {
+            kind,
+            span,
+            fields: vec![],
+            roles: vec![],
+            relations: vec![],
+        });
+        bundle.sources.push(decoded);
+        bundle
+            .sources
+            .sort_by(|a, b| a.identity().cmp(b.identity()));
+        Ok(())
+    };
+    add(&mut bundle, "decoded-host", "X")?;
+    let FieldValue::Foreign(guest) = &mut bundle.nodes[0].fields[0] else {
+        return Err("guest".into());
+    };
+    add(&mut guest.bundle, "decoded-guest", "Y")?;
+    let run = |bundle: &SyntaxBundle| {
+        encode_syntax(
+            bundle,
+            &schema,
+            &registry,
+            &mut SourceAdmission::default(),
+            &mut budget(),
+        )
+    };
+    let encoded = run(&bundle).map_err(|e| format!("{e:?}"))?;
+    let decoded = decode_syntax(
+        &encoded,
+        &schema,
+        &registry,
+        &mut SourceAdmission::default(),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(decoded, bundle);
+    let mut invalid = bundle.clone();
+    invalid.source_maps.clear();
+    assert!(run(&invalid).is_err());
+    // A declared mapping is insufficient when its original range is outside this token.
+    let mut unrelated = bundle.clone();
+    let original = unrelated
+        .sources
+        .iter()
+        .find(|s| s.identity().source.0 == "doc")
+        .ok_or("doc")?;
+    unrelated.source_maps[0].source = original.span(1, 2).map_err(|e| format!("{e:?}"))?;
+    assert!(run(&unrelated).is_err());
+    // The wire structural validator accepts the shape; the semantic adapter rejects missing provenance.
+    let mut value = decode(&encoded, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    let NdfValue::Record(root) = &mut value else {
+        return Err("bundle record".into());
+    };
+    root.fields[6] = NdfValue::List(vec![]);
+    let bytes = encode(&value, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    assert!(
+        decode_syntax(
+            &bytes,
+            &schema,
+            &registry,
+            &mut SourceAdmission::default(),
+            &mut budget()
+        )
+        .is_err()
+    );
+    let mut wrong_kind = decode(&encoded, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    let NdfValue::Record(root) = &mut wrong_kind else {
+        return Err("bundle record".into());
+    };
+    let NdfValue::List(maps) = &mut root.fields[6] else {
+        return Err("map list".into());
+    };
+    let NdfValue::Record(mapping) = &mut maps[0] else {
+        return Err("map record".into());
+    };
+    let NdfValue::Variant(kind) = &mut mapping.fields[2] else {
+        return Err("kind".into());
+    };
+    kind.variant = "Exact".into();
+    let bytes = encode(&wrong_kind, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    assert!(
+        decode_syntax(
+            &bytes,
+            &schema,
+            &registry,
+            &mut SourceAdmission::default(),
+            &mut budget()
+        )
+        .is_err()
+    );
+    // Guest provenance never resolves through the host's table.
+    let mut missing = bundle.clone();
+    let FieldValue::Foreign(guest) = &mut missing.nodes[0].fields[0] else {
+        return Err("guest".into());
+    };
+    let original = guest
+        .bundle
+        .sources
+        .iter()
+        .position(|s| s.identity().source.0 == "doc")
+        .ok_or("guest doc")?;
+    guest.bundle.sources.remove(original);
+    assert!(
+        missing
+            .sources
+            .iter()
+            .any(|s| s.identity().source.0 == "doc")
+    );
+    assert!(run(&missing).is_err());
+    let (_, _, mut empty) = fixture()?;
+    add(&mut empty, "decoded-empty", "")?;
+    let bytes = run(&empty).map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        decode_syntax(
+            &bytes,
+            &schema,
+            &registry,
+            &mut SourceAdmission::default(),
+            &mut budget()
+        )
+        .map_err(|e| format!("{e:?}"))?,
+        empty
     );
     Ok(())
 }
