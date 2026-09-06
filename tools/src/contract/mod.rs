@@ -1,3 +1,6 @@
+mod intrinsic;
+mod types;
+
 use crate::{Result, json, repository::local_path, task::unique};
 use serde::Deserialize;
 use serde_json::Value;
@@ -102,22 +105,7 @@ fn ordered_fields(value: &Value, context: &str) -> Result<()> {
         if !names.insert(name) {
             return Err(format!("{context}: duplicate field {name}").into());
         }
-        // Deliberately no closure claim: unresolved references are design review blockers.
-        let mut depth = 0_u32;
-        for character in ty.chars() {
-            match character {
-                '<' => depth += 1,
-                '>' => {
-                    depth = depth
-                        .checked_sub(1)
-                        .ok_or_else(|| format!("{context}: unbalanced type {ty}"))?
-                }
-                _ => {}
-            }
-        }
-        if depth != 0 {
-            return Err(format!("{context}: unbalanced type {ty}").into());
-        }
+        types::TypeExpr::parse(ty)?;
     }
     Ok(())
 }
@@ -175,16 +163,6 @@ fn contract_record(description: &Value, context: &str) -> Result<()> {
     if let Some(value) = shape.get("variants") {
         return variants(value, context);
     }
-    // R006 explicitly records this one incomplete descriptor. It must not make
-    // arbitrary malformed records pass, or be treated as schema closure.
-    if context == "TypedValue"
-        && shape
-            .get("description")
-            .and_then(Value::as_str)
-            .is_some_and(|s| !s.trim().is_empty())
-    {
-        return Ok(());
-    }
     Err(format!("{context}: expected fields or variants; unresolved descriptors require a reviewed contract change").into())
 }
 
@@ -211,6 +189,7 @@ pub(crate) fn check(root: &Path) -> Result<()> {
         }
         contract_record(description, name)?;
     }
+    types::check(&model, &contracts)?;
     let operations = contracts
         .get("operations")
         .and_then(Value::as_array)
@@ -247,7 +226,7 @@ pub(crate) fn check(root: &Path) -> Result<()> {
         }
     }
     println!(
-        "Contract structure: {} categories, {} model types, {} operation descriptions. Schema closure and language parsing are not established by these checks.",
+        "Contract structure: {} categories, {} model types, {} operation descriptions. Named field references and intrinsic shapes checked; operation schemas, value invariants and language parsing remain unverified.",
         forms_file.categories.len(),
         types.len(),
         operations.len()
@@ -264,11 +243,45 @@ mod tests {
     fn fixture() -> Result<Fixture> {
         let files = Fixture::new()?;
         files.json("design/forms.json", &json!({"roots":{"Test":"Test/Root"},"categories":{"Test/Root":{"forms":{"unit":{"kind":"Unit","fields":[]}},"leaf":null}}}))?;
-        files.json("interfaces/model.json", &json!({"types":{"Record":{"record":[["id","U64"]]},"Sum":{"sum":{"Some":[["value","U64"]],"None":[]}}}}))?;
-        files.json("interfaces/contracts.json", &json!({"records":{"SourceRef":{"fields":[["id","U64"]]},"OperationReply":{"variants":{"Complete":[["value","TypedValue"]],"Invalid":[]}},"TypedValue":{"description":"Reviewed incomplete descriptor R006"}},"operations":[{"operation":"test","definition":"doc/spec/test.md"}]}))?;
+        files.json("interfaces/model.json", &json!({"scalar_types":["U64"],"external_types":["TypedValue"],"types":{"Record":{"record":[["id","U64"]]},"Sum":{"sum":{"Some":[["value","U64"]],"None":[]}}}}))?;
+        let mut contracts: Value =
+            serde_json::from_str(include_str!("../../../interfaces/contracts.json"))?;
+        contracts["operations"] = json!([{"operation":"test","definition":"doc/spec/test.md"}]);
+        files.json("interfaces/contracts.json", &contracts)?;
         files.write("doc/spec/test.md", "fixture")?;
         files.json("conformance/cases.json", &json!({"cases":[]}))?;
         Ok(files)
+    }
+
+    #[test]
+    fn real_contract_entry_rejects_unresolved_fields_intrinsics_and_imports() -> Result<()> {
+        let files = fixture()?;
+        check(files.root())?;
+        let contracts: Value = crate::json(files.root(), "interfaces/contracts.json")?;
+        let model: Value = crate::json(files.root(), "interfaces/model.json")?;
+
+        let mut changed = contracts.clone();
+        changed["records"]["Span"]["fields"][0][1] = json!("List<Option<MissingType>>");
+        files.json("interfaces/contracts.json", &changed)?;
+        assert!(check(files.root()).is_err());
+
+        let mut changed = contracts.clone();
+        changed["intrinsic_types"]
+            .as_object_mut()
+            .ok_or("fixture intrinsics missing")?
+            .remove("TypedValue");
+        files.json("interfaces/contracts.json", &changed)?;
+        assert!(check(files.root()).is_err());
+
+        files.json("interfaces/contracts.json", &contracts)?;
+        let mut changed = model;
+        changed["types"]["Record"]["record"] = json!([["value", "TypedValue"]]);
+        files.json("interfaces/model.json", &changed)?;
+        check(files.root())?;
+        changed["external_types"] = json!([]);
+        files.json("interfaces/model.json", &changed)?;
+        assert!(check(files.root()).is_err());
+        Ok(())
     }
 
     #[test]

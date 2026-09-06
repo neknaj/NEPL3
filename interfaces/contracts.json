@@ -61,9 +61,6 @@
         ]
       ]
     },
-    "TypedValue": {
-      "description": "NDF tag10/tag11 with descriptor; validated against the requested operation input/output schema"
-    },
     "Limits": {
       "fields": [
         [
@@ -579,5 +576,153 @@
   ],
   "note": "Operation-level domain record constraints and sum variants are specified in the referenced chapters; domain constructor field order is design/forms.json.",
   "design_revision": "nepl3-design-2026-09-06-r3",
-  "schema_status": "incomplete: see design/review.json R006; operation descriptions are not closed executable input/output schemas"
+  "schema_status": "incomplete: see design/review.json R006; operation descriptions are not closed executable input/output schemas",
+  "intrinsic_types": {
+    "NdfValue": {
+      "intrinsic": "nepl3.ndf/1",
+      "cases": {
+        "Unit": {
+          "tag": 0,
+          "fields": []
+        },
+        "Bool": {
+          "tag": 1,
+          "fields": [
+            [
+              "value",
+              "Bool"
+            ]
+          ]
+        },
+        "U64": {
+          "tag": 2,
+          "fields": [
+            [
+              "value",
+              "U64"
+            ]
+          ]
+        },
+        "Integer": {
+          "tag": 3,
+          "fields": [
+            [
+              "value",
+              "Integer"
+            ]
+          ]
+        },
+        "Rational": {
+          "tag": 4,
+          "fields": [
+            [
+              "value",
+              "Rational"
+            ]
+          ]
+        },
+        "Text": {
+          "tag": 5,
+          "fields": [
+            [
+              "value",
+              "Text"
+            ]
+          ]
+        },
+        "Bytes": {
+          "tag": 6,
+          "fields": [
+            [
+              "value",
+              "Bytes"
+            ]
+          ]
+        },
+        "List": {
+          "tag": 7,
+          "fields": [
+            [
+              "values",
+              "List<NdfValue>"
+            ]
+          ]
+        },
+        "None": {
+          "tag": 8,
+          "fields": []
+        },
+        "Some": {
+          "tag": 9,
+          "fields": [
+            [
+              "value",
+              "NdfValue"
+            ]
+          ]
+        },
+        "Record": {
+          "tag": 10,
+          "fields": [
+            [
+              "schema",
+              "SchemaRef"
+            ],
+            [
+              "kind",
+              "Text"
+            ],
+            [
+              "fields",
+              "List<NdfValue>"
+            ]
+          ]
+        },
+        "Variant": {
+          "tag": 11,
+          "fields": [
+            [
+              "schema",
+              "SchemaRef"
+            ],
+            [
+              "type",
+              "Text"
+            ],
+            [
+              "variant",
+              "Text"
+            ],
+            [
+              "fields",
+              "List<NdfValue>"
+            ]
+          ]
+        }
+      }
+    },
+    "NdfScalar": {
+      "subset": {
+        "of": "NdfValue",
+        "cases": [
+          "Unit",
+          "Bool",
+          "U64",
+          "Integer",
+          "Rational",
+          "Text",
+          "Bytes"
+        ]
+      }
+    },
+    "TypedValue": {
+      "subset": {
+        "of": "NdfValue",
+        "cases": [
+          "Record",
+          "Variant"
+        ]
+      }
+    }
+  }
 }

@@ -15,7 +15,7 @@
 | R003 | Doc:DocGuestだけがDoc/Article意味値を保持する。Codeは壊れたguestも構文・位置のまま表示する契約なので、この型ではlowerに失敗する入力を保存できない。 | 同言語のコード表示もForeignSyntax bundleを保持する。 |
 | R004 | Math:Numberのvalueは任意RationalだがNumberのsurfaceは有限十進数のみ。Number(1/3)をfrac 1 3とprintすると別constructorへlowerされる。 | Numberを有限十進数に制約し、任意有理数からの式構築は必要に応じFracを返す。著者のFracを自動評価しない。 |
 | R005 | mspaceのwidth/height/depthはNonnegativeDecimalで、非zeroの単位なし値を許す。MathML Coreのlength-percentage契約に適合しない。 | 型付きの単位付き長さに変更し、正負・単位・無効値の試験入力を加える。 |
-| R006 | 操作表の入力・出力は「ParsedTree + Profile」等の説明記法であり、閉じた型schemaではない。NdfScalarはexternal宣言だけで定義がない。ReplyのrequestId envelope、Cancel、Closeのwire定義もない。 | T01/T02/T03/T12などの確定前にschemaを閉じ、全型参照とfield順、framing、cancel競合を定義する。現段階のinterfaceを完全な公開交換契約として広告しない。 |
+| R006 | 操作表の入力・出力は「ParsedTree + Profile」等の説明記法であり、閉じた型schemaではない。初期状態ではNdfScalarが未定義だった。ReplyのrequestId envelope、Cancel、Closeのwire定義もない。 | NDF intrinsicとfield型参照の部分訂正は下記参照。T01/T02/T03/T12などの確定前に残るschema、framing、cancel競合を定義する。現段階のinterfaceを完全な公開交換契約として広告しない。 |
 | R007 | Limits.sourceBytesに対応するStopReasonがない。 | SourceLimitを追加し、過大sourceが型付き停止になる試験を定義する。 |
 | R008 | XMLのText escapingが&と<だけでは、文字データの]]>をそのまま出す。Textはvalid UTF-8なのでXMLで表せないU+0000等も入る。 | 出力先の文字制約を検査し、表せない文字を明示的に拒否する。>やCR、属性内の改行等の保存規則を固定する。 |
 | R009 | profileはaliasとsource path中心で、解決済みSchemaRef/digest/provider manifestを持たない。 | source用manifestとruntimeの解決済みProfileを区別し、T05/T11で生成・差分検査を実装する。値を仮digestで埋めない。 |
@@ -73,6 +73,14 @@ R016は旧Rust抽出器を独立した検証用programから呼んで再現し�
 
 45件のRust試験を独立実行し、CRLF・補助平面文字・両hard break表記・両math種別・setext見出し・入れ子image・code・脚注の回帰試験が成功した。同じ57ページのbaselineからinventory schema /2を生成したこと、元page/Rust/契約のidentityと要素数が変わらないこと、482のtyped segment範囲が元blobのUTF-8境界内にあることを確認した。これを根拠にR016をcorrectedとする。R006/R009/R014と処理系・移行の未実行範囲は維持する。
 
+## NDF intrinsicと型参照の部分訂正
+
+R006のうち、未定義だったNdfScalarと説明のみだったTypedValueを、既存NDF/1の論理constructorの明示的な部分集合として定義した。[交換仕様](spec/09-portability.md) と [intrinsic検査](../tools/src/contract/intrinsic.rs) を照合し、12種のtag、payload field順、部分集合を確認した。これらは通常のdomain Variantとして追加符号化する型ではない。Integer/Rationalの物理payload、Record/Variantの生array、headerのSchemaRef tupleを論理field表と区別している。通常のdomain fieldとしてのSchemaRefの所有schemaと符号化は未解決として残す。
+
+[共有の型参照検査](../tools/src/contract/types.rs) はName、List、Optionを解析し、modelとcontractsのrecord/sum field・union参照先を照合する。modelは自身の型と明示的にimportした型だけを使用できる。Unitを含む組込み型、再帰型の参照、重複owner、import漏れ、未知名、不正generic、NDF tagとsubsetの改変を検査する。operation表の説明用署名をこの検査が解釈できるとはしていない。
+
+訂正後の52 Rust試験とrepository checkを独立に実行して成功した。実際のcontract検査入口から、未解決の入れ子型、intrinsicの欠落、使用中のimportの削除を拒否する回帰試験も含む。これはdescriptorと参照の検証であり、codec、任意精度値の正規化、schema digest、bundleの値検査、操作・frame・UI schemaの完成を示さない。R006/R009/R014はopen、21タスクと55受入群の実装状態は変更しない。
+
 ## r1初回レビューの章ごとの確認範囲
 
 | 章 | 確認した契約 | 結論・残る検証 |
@@ -102,7 +110,7 @@ CIと開発toolsも独立に読んだ。3 OSのnative検査、全jobの成功を
 
 R006はリポジトリ整備を止める理由にはしないが、影響する公開APIやportable経路の完成を止める。次の作業を仕様・schema・conformanceの一つの変更として行う。
 
-1. T01: 型参照の記法と束縛先を固定し、NdfScalar、SourceStore/SourceBundle、Environmentとresource/schema table、Origin/SourceMap bundle、Diagnostic codeと引数、Usage、Checked再検査条件を定義する。未定義名と重複名をschema checkerで拒否する。
+1. T01: 型参照の記法・束縛先とNdfScalarの定義、および未定義名・重複ownerの拒否は上記の部分訂正で追加した。残るSourceStore/SourceBundle、Environmentとresource/schema table、Origin/SourceMap bundle、Diagnostic codeと引数、Usage、Checked再検査条件を定義し、新しい型も同じ検査へ接続する。
 2. T02: NDF tagと全型を対応させる。Record、Variant、union、Referenceのwire表現とfield順、tag3 Natural制約、bundle内ID空間、canonical byte列の既知入力を定義する。異なるJSON parserのobject順に依存しない検証を入れる。
 3. T03: ReadRequest/ReadReply全variant、ReaderPlan、combinator値型、state/facts/view、provider manifest、Read/Transform/DependentReaderの入力・出力を具体化する。seqの異種値、choiceの結果型、名前leafのText値とlexemeの関係も決める。
 4. T12: Invoke/Resume/Reply/Cancel/Closeを一つのFrame schemaへ定義する。ReplyはrequestIdで対応づけ、cancelとcompleteの競合、close後、重複ID、切断途中frame、unknown continuationの失敗と再開予算を固定する。

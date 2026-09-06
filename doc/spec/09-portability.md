@@ -39,6 +39,22 @@ NodeId/EntityId等は公開record内のindexとしてencodeし、同じbundleに
 
 `interfaces/contracts.json` と各言語constructor表からcodecの網羅性検査を生成する。serdeのderive既定表現を契約にせず、custom codecでNDFへ写す。内部でserdeを使う場合も明示したarray/schemaに固定する。
 
+### 2.1 intrinsic値の閉じた記述
+
+`interfaces/contracts.json` の `intrinsic_types` は、NDF/1をdecodeした論理値の型を定義する。`NdfValue` の12caseは上表のtag 0–11に一対一で対応する。`NdfScalar` はUnit、Bool、U64、Integer、Rational、Text、Bytesの部分型、`TypedValue` はRecord、Variantだけの部分型である。subsetのcase列は集合であり、順序をwire IDにしない。Unitは追加payloadを持たず、Noneとは異なる。NaturalはIntegerの非負制約、Bytes32はBytesの長さ制約であり、追加のwire tagを持たない。
+
+このintrinsic記述は通常のdomain sumではない。たとえば `NdfValue.Integer(value: Integer)` の論理fieldを一般のVariantとしてtag11で包まず、上表のtag3へ直接写す。Integerのnegative/magnitude、Rationalの分子tag3と分母bytesは上表の専用表現を使う。tag10/11のfieldsは裸のCBOR arrayであり、Listのtag7を付けない。そのheader内のSchemaRefも裸の `[text,uint64,bytes32]` であり、通常のRecordのtag10を付けない。論理fieldのTextやU64も、上表で裸のCBOR text/uint64を指定する位置へ余分なNDF tagを付けない。codecの物理表現は上表を正本とする。
+
+intrinsicの識別子 `nepl3.ndf/1` は本符号化profileに組み込まれた固定識別子である。intrinsic自体へdomain SchemaRefや自己hashを要求しない。Record/Variant headerのSchemaRefは運ばれるdomain値のdescriptorを識別し、intrinsicの識別子とは別物である。domain descriptorの登録・digest検証は必要であり、TypedValueという型名やtag10/11であることだけでは検査済みにならない。ここで固定するSchemaRefの物理表現はintrinsic headerのものであり、任意のdomain recordのfieldとしてのSchemaRefまで裸のtupleになると解釈しない。後者のdescriptor所有schemaと符号化の閉包はR006の残課題とする。
+
+### 2.2 descriptorの型参照検査と残る契約
+
+fieldとunion参照の型式は `Name | List<Type> | Option<Type>` とする。NameはASCII英字で始まる英数字/underscoreのsegmentを `:` または `/` で接続する。空segment、空白、余分なtoken、未宣言のgeneric、引数の過不足は拒否する。List/Optionは予約された1引数constructorであり、名義型として宣言できない。開発checkerは128階層を超える型式を拒否する。この型名文法と上限は設計descriptorの記述に限り、利用者の言語中の名前・kind文字列・source・NDF Textの文字集合を制限しない。runtime入力のLimitsも代替しない。
+
+builtinはUnit、Bool、U64、Integer、Natural、Rational、Text、Bytes、Bytes32である。所有者は本profileであり、modelのscalar_typesとcontractsのscalar_aliasesはそれへの参照・説明である。model.types、contracts.records/enums/intrinsic_typesの名義型定義は重複を許さない。modelの外部参照はexternal_typesへ明示し、存在する外部所有型へ解決する。modelの可視名は自身の定義と明示したscalar/external importに限る。既存の再帰的な型graphは許すが、値の循環可否・source/Origin tableの整合は操作ごとの値検査で別に判定する。
+
+今回のR006に対する修正は、未定義だったNdfScalarと構造を欠いたTypedValue、および既存field/union/importの参照検査を具体化する。`nepl3-tools check` は型式・名義参照・intrinsicの固定case/tag/field/subsetを検査する。codecの実行、任意精度値の正規化、domain descriptorのdigest、bundle参照の値検証を実装した証拠ではない。27操作のinput/outputは依然として説明用の式を含み、閉じた実行可能schemaではない。provider frame、要求と応答の対応、Environment/Profile、Doc移行のDG01–DG06も別途確定が必要であり、R006を完了にはしない。型名がすべて解決することと公開操作契約が完成することを区別する。
+
 ## 3. 操作呼出し
 
 CallはrequestId、OperationRef、input TypedRecord、sources/resources/environment、Limitsを持つ。OperationRefはpackage/revision/digestとoperation名。provider manifestにinput/output schema、必要capability、純粋性契約を宣言する。
