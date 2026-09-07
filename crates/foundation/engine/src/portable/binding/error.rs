@@ -139,7 +139,7 @@ codec!(tree,tree_from,TreeError,engine,"TreeError",
     [Path,Duplicate,Selection,ExecutionIdentity,Recovery,Unreachable,UnvalidatedDynamic],
     [Syntax:syntax/syntax_from,Package:package/package_from,Profile:profile/profile_from]);
 codec!(binding,binding_from,BindingError,engine,"BindingFailure",
-    [AnalysisId,Target,Name,MissingNamespace,NamespaceBoundary,RecoveredTree,MissingProvider,UnsupportedPlan],
+    [AnalysisId,Target,Name,MissingNamespace,NamespaceBoundary,RecoveredTree,MissingProvider,UnsupportedPlan,DuplicateGlobal],
     [Tree:tree/tree_from,Profile:profile/profile_from,Fact:fact/fact_from,Source:source/source_from,Schema:schema/schema_from]);
 fn source<E>(
     value: &SourceError,

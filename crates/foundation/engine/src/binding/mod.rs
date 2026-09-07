@@ -33,6 +33,7 @@ pub enum BindingError {
     Target,
     Name,
     MissingNamespace,
+    DuplicateGlobal,
     NamespaceBoundary,
     RecoveredTree,
     MissingProvider,

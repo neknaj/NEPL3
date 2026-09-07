@@ -21,6 +21,8 @@ pub struct BindingStage {
 pub struct OccurrenceStage {
     pub occurrence: OccurrenceId,
     pub stage: StageId,
+    /// Namespace visibility captured at issuance; distinct from lexical location for Global.
+    pub namespace_stage: StageId,
 }
 /// Raw partial data; this is neither the structural FactSet proof nor a completed
 /// name analysis. Before initialization, `facts` is absent; admitted sources

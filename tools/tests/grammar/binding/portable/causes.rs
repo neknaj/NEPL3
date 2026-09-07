@@ -47,7 +47,8 @@ fn every_binding_failure_variant_keeps_its_typed_nested_cause() -> Result<(), St
             NamespaceBoundary,
             RecoveredTree,
             MissingProvider,
-            UnsupportedPlan
+            UnsupportedPlan,
+            DuplicateGlobal
         ]
     ) {
         roundtrip(value, &[name], r)?;

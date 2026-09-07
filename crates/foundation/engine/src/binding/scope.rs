@@ -125,6 +125,57 @@ impl Machine<'_, '_> {
             _ => ReferenceResolution::Ambiguous(candidates),
         })
     }
+    pub(super) fn namespace_stage(
+        &self,
+        bundle: usize,
+        lexical: StageId,
+        namespace: NamespaceRef,
+    ) -> Result<StageId, BindingError> {
+        let policy = self
+            .facts()?
+            .namespaces
+            .get(namespace.0 as usize)
+            .ok_or(BindingError::MissingNamespace)?
+            .policy;
+        if policy == NamespacePolicy::Global {
+            Ok(self.bundles.get(bundle).ok_or(BindingError::Target)?.root)
+        } else {
+            Ok(lexical)
+        }
+    }
+    pub(super) fn unique_global(
+        &mut self,
+        stage: StageId,
+        namespace: NamespaceRef,
+        name: &str,
+        selection: &Span,
+        allowed: Option<EntityId>,
+        budget: &mut Budget,
+    ) -> Result<(), BindingError> {
+        let previous = match self.resolve(stage, namespace, name, budget)? {
+            ReferenceResolution::Unresolved(_) => return Ok(()),
+            ReferenceResolution::Resolved(id) if Some(id) == allowed => return Ok(()),
+            ReferenceResolution::Resolved(id) => id,
+            _ => return Err(BindingError::Target),
+        };
+        let previous = self
+            .facts()?
+            .entities
+            .get(previous.0 as usize)
+            .ok_or(BindingError::Target)?;
+        let previous = span(
+            previous.selection.as_ref().ok_or(BindingError::Name)?,
+            budget,
+        )?;
+        self.diagnostic_at(
+            "DuplicateGlobalName",
+            namespace,
+            name,
+            (selection, Some(&previous)),
+            budget,
+        )?;
+        Err(BindingError::DuplicateGlobal)
+    }
     pub(super) fn diagnostic(
         &mut self,
         code: &str,
@@ -133,8 +184,18 @@ impl Machine<'_, '_> {
         span: &Span,
         budget: &mut Budget,
     ) -> Result<(), BindingError> {
+        self.diagnostic_at(code, namespace, name, (span, None), budget)
+    }
+    pub(super) fn diagnostic_at(
+        &mut self,
+        code: &str,
+        namespace: NamespaceRef,
+        name: &str,
+        (primary, related): (&Span, Option<&Span>),
+        budget: &mut Budget,
+    ) -> Result<(), BindingError> {
         use nepl3_core::{
-            diagnostic::{Diagnostic, Severity},
+            diagnostic::{Diagnostic, Related, Severity},
             value::{Record, TypedValue},
         };
         let schema = self
@@ -155,18 +216,31 @@ impl Machine<'_, '_> {
             budget,
         )?;
         push(&mut fields, NdfValue::Text(text(name, budget)?), budget)?;
+        let arguments = TypedValue::Record(Record {
+            schema: schema.clone(),
+            kind: text("BindingDiagnosticArguments", budget)?,
+            fields,
+        });
+        let mut related_locations = Vec::new();
+        if let Some(location) = related {
+            push(
+                &mut related_locations,
+                Related {
+                    span: Some(super::span(location, budget)?),
+                    code: text("PreviousDefinition", budget)?,
+                    arguments: arguments.clone_with_budget(budget)?,
+                },
+                budget,
+            )?;
+        }
         let diagnostic = Diagnostic {
             schema: schema.clone(),
             code: text(code, budget)?,
             severity: Severity::Error,
             stage: text("binding", budget)?,
-            arguments: TypedValue::Record(Record {
-                schema: schema.clone(),
-                kind: text("BindingDiagnosticArguments", budget)?,
-                fields,
-            }),
-            primary: Some(super::span(span, budget)?),
-            related: Vec::new(),
+            arguments,
+            primary: Some(super::span(primary, budget)?),
+            related: related_locations,
             fixes: Vec::new(),
         };
         // All arguments are schema-owned and the primary comes from the admitted tree.
