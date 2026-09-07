@@ -1,0 +1,105 @@
+{
+  "scope": "one-line Doc source host identity delta; exact extracted function native/WASI, not a full integration rerun",
+  "files": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "06723b9dba8c4309d9b718f972bfd0fe93aa675426df1f9222f07c46d5dbcacb",
+      "bytes": 3420
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "8416fb636211597646d1ddc92fab976d35385a2852b708c6ee17ba1b54ff7cfd",
+      "bytes": 246
+    },
+    {
+      "path": "expected.json",
+      "sha256": "d7e8abeafbf29303463d55ee9f146916b8ea80057fc6a1f8db019f635774973e",
+      "bytes": 199
+    },
+    {
+      "path": "files.json",
+      "sha256": "c581ead20ed4a0bf84777c02b5ec5926d9fefda0b25ad3e0bbd80742bc4a8729",
+      "bytes": 1220
+    },
+    {
+      "path": "identity.exe",
+      "sha256": "f094d009964b4fb5d590f3518723703c59a26626630457723ca50cf213a69cdf",
+      "bytes": 287744
+    },
+    {
+      "path": "identity.wasm",
+      "sha256": "e8ba4b382eeaf47af9180d3f0152a9dfd5ac0d7070879cf8567204a60a12e4e8",
+      "bytes": 10742149
+    },
+    {
+      "path": "main.rs",
+      "sha256": "e0d6de84a167d7cd685d18c8edc23e85b8f124027177a77460e4cb1655eea04f",
+      "bytes": 567
+    },
+    {
+      "path": "native-build.log",
+      "sha256": "6520cbf1e80cb702f7c053d3465a4c8c768f557e30e84525c71b3db0eed87313",
+      "bytes": 815
+    },
+    {
+      "path": "native-run.log",
+      "sha256": "a79ba219ac2c17235afa2ac5cf3c6a29cbe252e7cd6c133d8672c13beafab447",
+      "bytes": 103
+    },
+    {
+      "path": "review.md",
+      "sha256": "821f4dcfd1dc56f61a2ef8c7167299e882cdfe43c806d47293a070fc83b3d8b0",
+      "bytes": 2203
+    },
+    {
+      "path": "runs.json",
+      "sha256": "e626f476f7e6828051c8037b3cbfb8166550b19e7db40004d87f68214774e5af",
+      "bytes": 1131
+    },
+    {
+      "path": "snapshot/crates/foundation/reader/src/builtin/provider.rs",
+      "sha256": "918c94c08c1b9cdf1821b8709aa847638123e836ba6e0795a7ba353f9aa9440b",
+      "bytes": 4851
+    },
+    {
+      "path": "snapshot/tools/src/doc/host.rs",
+      "sha256": "4064d7dbc6f14fbcb6ba253e2e66dce7eb113723bd9d536bbc3705ce8f29f1e5",
+      "bytes": 10003
+    },
+    {
+      "path": "snapshot/tools/src/doc/identity.rs",
+      "sha256": "68036a5db4fc7c764342ca6a7f99f06a0cf32a01e2cc4e9d4292c41ae0570f18",
+      "bytes": 340
+    },
+    {
+      "path": "snapshot/tools/src/doc/reader.rs",
+      "sha256": "18397e24b17f4827f0b8477cf37cfcff3e98dc474770dbeedc50513d5bcba7a7",
+      "bytes": 9976
+    },
+    {
+      "path": "snapshot/tools/src/doc/source.rs",
+      "sha256": "328c3ebb399d63b43503a767b3e64690548eca1aaab00654b7e0b61fa6576f87",
+      "bytes": 16086
+    },
+    {
+      "path": "source-delta.diff",
+      "sha256": "7a5b28f1f84b94a9ec82b1f2c5e5b612cbd981662ccde3aaf73e508c50459b86",
+      "bytes": 344
+    },
+    {
+      "path": "versions.json",
+      "sha256": "6c83d4761c875d39aad7fe014989a7bc7cbb59a1c146417b66aade2349b55b9a",
+      "bytes": 505
+    },
+    {
+      "path": "wasi-build.log",
+      "sha256": "666ff71ddeb5f600a1bda4e92b1f6fa6554bc35a18b360c7811137825fbf3d37",
+      "bytes": 673
+    },
+    {
+      "path": "wasi-run.log",
+      "sha256": "a79ba219ac2c17235afa2ac5cf3c6a29cbe252e7cd6c133d8672c13beafab447",
+      "bytes": 103
+    }
+  ]
+}

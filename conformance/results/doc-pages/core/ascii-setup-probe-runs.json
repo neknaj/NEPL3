@@ -1,0 +1,46 @@
+[
+  {
+    "command": [
+      "cargo",
+      "build",
+      "--offline",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages\\probe\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-pages-probe-target"
+    ],
+    "exit": 0,
+    "deadline": 900
+  },
+  {
+    "command": [
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages\\actual-native.exe"
+    ],
+    "exit": 0,
+    "deadline": 180
+  },
+  {
+    "command": [
+      "cargo",
+      "build",
+      "--offline",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages\\probe\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-pages-probe-target",
+      "--target",
+      "wasm32-wasip2"
+    ],
+    "exit": 0,
+    "deadline": 900
+  },
+  {
+    "command": [
+      "wasmtime",
+      "run",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages\\actual-wasi.wasm"
+    ],
+    "exit": 0,
+    "deadline": 180
+  }
+]

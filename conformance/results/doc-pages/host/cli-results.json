@@ -1,0 +1,218 @@
+[
+  {
+    "name": "nested",
+    "exit": 0,
+    "seconds": 1.0518478999147192,
+    "output_exists": true,
+    "manifest_exists": true,
+    "log": ""
+  },
+  {
+    "name": "same-folder",
+    "exit": 0,
+    "seconds": 0.8904888000106439,
+    "output_exists": true,
+    "manifest_exists": true,
+    "log": ""
+  },
+  {
+    "name": "existing",
+    "exit": 1,
+    "seconds": 0.11396290000993758,
+    "output_exists": true,
+    "manifest_exists": false,
+    "log": "nepl3-tools: output directory already exists\n"
+  },
+  {
+    "name": "escape",
+    "exit": 1,
+    "seconds": 0.8091902999440208,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: Input(InvalidRegistration { page: 0, field: Route })\n"
+  },
+  {
+    "name": "absolute",
+    "exit": 1,
+    "seconds": 0.6591392999980599,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: Input(InvalidRegistration { page: 0, field: Route })\n"
+  },
+  {
+    "name": "backslash",
+    "exit": 1,
+    "seconds": 0.6422991000581533,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: Input(InvalidRegistration { page: 0, field: Route })\n"
+  },
+  {
+    "name": "bad-ext",
+    "exit": 1,
+    "seconds": 0.5382358999922872,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: HTML route must end in .html\n"
+  },
+  {
+    "name": "css-parent",
+    "exit": 0,
+    "seconds": 0.437826200039126,
+    "output_exists": true,
+    "manifest_exists": true,
+    "log": ""
+  },
+  {
+    "name": "marker-parent",
+    "exit": 1,
+    "seconds": 0.3402145999716595,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: reserved manifest path\n"
+  },
+  {
+    "name": "device",
+    "exit": 0,
+    "seconds": 0.2911621000384912,
+    "output_exists": true,
+    "manifest_exists": true,
+    "log": ""
+  },
+  {
+    "name": "route-case",
+    "exit": 1,
+    "seconds": 0.4411827999865636,
+    "output_exists": true,
+    "manifest_exists": false,
+    "log": "nepl3-tools: The file exists. (os error 80)\n"
+  },
+  {
+    "name": "css-case",
+    "exit": 0,
+    "seconds": 0.3741948999231681,
+    "output_exists": true,
+    "manifest_exists": true,
+    "log": ""
+  },
+  {
+    "name": "source-escape",
+    "exit": 1,
+    "seconds": 0.02160500001627952,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: not a repository-relative path: ../outside.nepld\n"
+  },
+  {
+    "name": "source-absolute",
+    "exit": 1,
+    "seconds": 0.02491160004865378,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: not a repository-relative path: C:\\projects\\NEPL3-doc-page-links\\.tmp\\review-pages-host\\cases\\nested\\a.nepld\n"
+  },
+  {
+    "name": "source-missing",
+    "exit": 1,
+    "seconds": 0.016441800049506128,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: The system cannot find the file specified. (os error 2)\n"
+  },
+  {
+    "name": "bad-utf8",
+    "exit": 1,
+    "seconds": 0.01519369997549802,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: invalid utf-8 sequence of 1 bytes from index 0\n"
+  },
+  {
+    "name": "oversize-source",
+    "exit": 1,
+    "seconds": 0.02358399995137006,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: SourceLimit\n"
+  },
+  {
+    "name": "oversize-manifest",
+    "exit": 1,
+    "seconds": 0.015651899971999228,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: ManifestLimit\n"
+  },
+  {
+    "name": "bad-json",
+    "exit": 1,
+    "seconds": 0.0159284999826923,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: EOF while parsing an object at line 1 column 1\n"
+  },
+  {
+    "name": "unknown-field",
+    "exit": 1,
+    "seconds": 0.015330399968661368,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: unknown field `extra`, expected `version` or `pages` at line 1 column 31\n"
+  },
+  {
+    "name": "version",
+    "exit": 1,
+    "seconds": 0.015032900031656027,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: invalid page manifest version/count\n"
+  },
+  {
+    "name": "empty",
+    "exit": 1,
+    "seconds": 0.017274999991059303,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: invalid page manifest version/count\n"
+  },
+  {
+    "name": "count",
+    "exit": 1,
+    "seconds": 0.014301500050351024,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: invalid page manifest version/count\n"
+  },
+  {
+    "name": "source-total",
+    "exit": 1,
+    "seconds": 0.022818700061179698,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: SourceLimit\n"
+  },
+  {
+    "name": "trailing",
+    "exit": 1,
+    "seconds": 0.2952361999778077,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: unexpected trailing input at byte 27\n"
+  },
+  {
+    "name": "missing-page",
+    "exit": 1,
+    "seconds": 0.32345929997973144,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: Input(MissingPage { page: 0, node: 3 })\n"
+  },
+  {
+    "name": "external",
+    "exit": 1,
+    "seconds": 0.3255823999643326,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: NeedsResolution(PageLinkPlan { identity: Digest([247, 113, 244, 253, 62, 173, 241, 193, 188, 104, 171, 13, 142, 181, 239, 242, 230, 190, 97, 52, 37, 8, 150, 132, 79, 164, 138, 204, 224, 150, 191, 178]), links: [], remaining: [PageRequirement { page: 0, requirement: Link { node: 3, target: External { uri: \"https://example.org\" } } }] })\n"
+  }
+]

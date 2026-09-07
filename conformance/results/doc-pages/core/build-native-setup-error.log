@@ -1,0 +1,86 @@
+     Locking 37 packages to latest Rust 1.97.0 compatible versions
+      Adding unicode-ident v1.0.18 (available: v1.0.24)
+   Compiling autocfg v1.5.1
+   Compiling typenum v1.20.1
+   Compiling unicode-ident v1.0.18
+   Compiling cfg-if v1.0.4
+   Compiling cpufeatures v0.3.1
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling serde v1.0.229
+   Compiling memchr v2.8.3
+   Compiling serde_json v1.0.151
+   Compiling pulldown-cmark v0.13.4
+   Compiling bitflags v2.13.1
+   Compiling itoa v1.0.18
+   Compiling unicase v2.9.0
+   Compiling num-traits v0.2.19
+   Compiling hybrid-array v0.4.14
+   Compiling syn v3.0.5
+   Compiling num-integer v0.1.47
+   Compiling crypto-common v0.2.2
+   Compiling block-buffer v0.12.1
+   Compiling num-bigint v0.4.8
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\foundation\core)
+   Compiling serde_derive v1.0.229
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\foundation\reader)
+   Compiling nepl3-doc-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\languages\doc\core)
+   Compiling nepl3-markup v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\output\markup)
+   Compiling nepl3-math-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\languages\math\core)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\foundation\wire)
+   Compiling nepl3-engine v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\foundation\engine)
+   Compiling nepl3-doc-html v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\languages\doc\html)
+   Compiling nepl3-grammar-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\languages\grammar\core)
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\tools)
+   Compiling independent-doc-pages v0.0.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\probe)
+warning: unused import: `budget::*`
+ --> src\main.rs:1:18
+  |
+1 | use nepl3_core::{budget::*,source::*,value::NdfValue};
+  |                  ^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0283]: type annotations needed
+  --> src\main.rs:23:600
+   |
+23 | ...(|s|s.text().len()as u64).sum());
+   |                              ^^^ cannot infer type of the type parameter `S` declared on the method `sum`
+   |
+   = note: multiple `impl`s satisfying `_: Sum<u64>` found in the following crates: `core`, `num_bigint`:
+           - impl Sum for u64;
+           - impl<T> Sum<T> for num_bigint::bigint::BigInt
+             where <num_bigint::bigint::BigInt as Add<T>>::Output == num_bigint::bigint::BigInt, num_bigint::bigint::BigInt: Add<T>, num_bigint::bigint::BigInt: ?Sized;
+           - impl<T> Sum<T> for num_bigint::biguint::BigUint
+             where <num_bigint::biguint::BigUint as Add<T>>::Output == num_bigint::biguint::BigUint, num_bigint::biguint::BigUint: Add<T>, num_bigint::biguint::BigUint: ?Sized;
+note: required by a bound in `std::iter::Iterator::sum`
+  --> /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library\core\src\iter\traits\iterator.rs:3669:4
+help: consider specifying a concrete type for the type parameter `S`
+   |
+23 | let mut fresh_a=SourceAdmission::default();let mut fresh=FoundationCodec::new(r,&empty,&mut fresh_a).map_err(err)?;let mut operation=budget();let received=portable::pages::set_from_value(&nepl3_wire::decode(&bytes,&mut operation).map_err(err)?,r,&mut fresh,&mut operation).map_err(err)?;let decoded=portable::pages::plan_from_value(&nepl3_wire::decode(&plan_bytes,&mut operation).map_err(err)?,&received,r,&mut fresh,&mut operation).map_err(err)?;assert_eq!(decoded,plan);assert_eq!(operation.usage().source_bytes,set.pages.iter().flat_map(|p|p.document.sources.iter()).map(|s|s.text().len()as u64).sum::</* Type */>());
+   |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           ++++++++++++++
+
+error[E0283]: type annotations needed
+  --> src\main.rs:23:600
+   |
+23 | ...n);assert_eq!(operation.usage().source_bytes,set.pages.iter().flat_map(|p|p.document.sources.iter()).map(|s|s.text().len()as u64).sum());
+   |       -------------------------------------------------------------------------------------------------------------------------------^^^---
+   |       |                                                                                                                              |
+   |       |                                                                                                                              cannot infer type of the type parameter `S` declared on the method `sum`
+   |       type must be known at this point
+   |
+   = note: multiple `impl`s satisfying `u64: PartialEq<_>` found in the following crates: `core`, `serde_json`:
+           - impl PartialEq for u64;
+           - impl PartialEq<serde_json::value::Value> for u64;
+help: consider specifying a concrete type for the type parameter `S`
+   |
+23 | let mut fresh_a=SourceAdmission::default();let mut fresh=FoundationCodec::new(r,&empty,&mut fresh_a).map_err(err)?;let mut operation=budget();let received=portable::pages::set_from_value(&nepl3_wire::decode(&bytes,&mut operation).map_err(err)?,r,&mut fresh,&mut operation).map_err(err)?;let decoded=portable::pages::plan_from_value(&nepl3_wire::decode(&plan_bytes,&mut operation).map_err(err)?,&received,r,&mut fresh,&mut operation).map_err(err)?;assert_eq!(decoded,plan);assert_eq!(operation.usage().source_bytes,set.pages.iter().flat_map(|p|p.document.sources.iter()).map(|s|s.text().len()as u64).sum::</* Type */>());
+   |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           ++++++++++++++
+
+For more information about this error, try `rustc --explain E0283`.
+warning: `independent-doc-pages` (bin "independent-doc-pages") generated 1 warning
+error: could not compile `independent-doc-pages` (bin "independent-doc-pages") due to 2 previous errors; 1 warning emitted

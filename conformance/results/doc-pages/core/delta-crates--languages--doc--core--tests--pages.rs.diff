@@ -1,0 +1,20 @@
+--- original/crates/languages/doc/core/tests/pages.rs
++++ delta/crates/languages/doc/core/tests/pages.rs
+@@ -174,7 +174,7 @@
+             PageField::Source => second.source = first.source,
+             PageField::Route => second.route = first.route,
+         }
+-        assert!(run(&s).unwrap_err().contains("Collision"));
++        assert!(matches!(run(&s), Err(e) if e.contains("Collision")));
+     }
+     for route in [
+         "docs/first/index.html/child",
+@@ -263,7 +263,7 @@
+         plan
+     );
+     let NdfValue::Record(ref mut bad) = p else {
+-        panic!("plan record")
++        return Err("expected plan record".into());
+     };
+     bad.fields[1] = NdfValue::List(vec![]);
+     assert!(portable::pages::plan_from_value(&p, &received, &r, &mut fresh, &mut b()).is_err());

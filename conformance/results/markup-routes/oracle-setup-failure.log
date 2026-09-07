@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "C:\projects\NEPL3-runtime\.tmp\review-markup-routes\urls-before-oracle.py", line 7, in <module>
+    _,source,target,fragment,href=line.split('\t');expected=posixpath.relpath(target,posixpath.dirname(source)or'.')+('#'+fragment if fragment else'');assert href==expected,(source,target,href,expected);rows.append(dict(source=source,target=target,fragment=fragment,href=href))
+                                                                                                                                                              ^^^^^^^^^^^^^^
+AssertionError: ('a/b', 'a', '../a', '.')

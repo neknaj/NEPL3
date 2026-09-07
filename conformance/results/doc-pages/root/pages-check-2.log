@@ -1,0 +1,10 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.06s
+     Running tests\doc.rs (target\debug\deps\doc-e0a7226c393ababd.exe)
+
+running 3 tests
+test export::export_preserves_content_and_binds_script_free_files ... ok
+test export::export_reserves_depth_for_the_document_shell ... ok
+test export::page_export_shares_script_free_shell_and_verifies_every_file ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 43 filtered out; finished in 1.94s
+

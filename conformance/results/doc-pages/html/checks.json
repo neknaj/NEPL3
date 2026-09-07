@@ -1,0 +1,70 @@
+[
+  {
+    "name": "native-html",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-doc-html",
+      "--target-dir",
+      ".tmp/review-target",
+      "--",
+      "--test-threads=1"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "native-doc",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--test",
+      "doc",
+      "--target-dir",
+      ".tmp/review-target",
+      "--",
+      "--test-threads=1"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "wasi-html",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-doc-html",
+      "--target",
+      "wasm32-wasip2",
+      "--target-dir",
+      ".tmp/review-target",
+      "--",
+      "--test-threads=1"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "wasi-doc",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--test",
+      "doc",
+      "--target",
+      "wasm32-wasip2",
+      "--target-dir",
+      ".tmp/review-target",
+      "--",
+      "--test-threads=1"
+    ],
+    "exit_code": 0
+  }
+]

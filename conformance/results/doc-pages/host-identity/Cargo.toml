@@ -1,0 +1,10 @@
+[package]
+name="review-doc-pages-host-identity"
+version="0.0.0"
+edition="2021"
+[dependencies]
+nepl3-core={path="C:/projects/NEPL3-runtime/.tmp/review-doc-pages/workspace/crates/foundation/core"}
+[[bin]]
+name="identity"
+path="main.rs"
+[workspace]

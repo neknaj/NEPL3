@@ -1,0 +1,26 @@
+[
+  {
+    "path": "tools/src/doc/source.rs",
+    "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages-host-identity\\snapshot\\tools\\src\\doc\\source.rs",
+    "sha256": "328c3ebb399d63b43503a767b3e64690548eca1aaab00654b7e0b61fa6576f87",
+    "unchanged_from_previous": false
+  },
+  {
+    "path": "tools/src/doc/host.rs",
+    "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages-host-identity\\snapshot\\tools\\src\\doc\\host.rs",
+    "sha256": "4064d7dbc6f14fbcb6ba253e2e66dce7eb113723bd9d536bbc3705ce8f29f1e5",
+    "unchanged_from_previous": true
+  },
+  {
+    "path": "tools/src/doc/reader.rs",
+    "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages-host-identity\\snapshot\\tools\\src\\doc\\reader.rs",
+    "sha256": "18397e24b17f4827f0b8477cf37cfcff3e98dc474770dbeedc50513d5bcba7a7",
+    "unchanged_from_previous": true
+  },
+  {
+    "path": "crates/foundation/reader/src/builtin/provider.rs",
+    "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages-host-identity\\snapshot\\crates\\foundation\\reader\\src\\builtin\\provider.rs",
+    "sha256": "918c94c08c1b9cdf1821b8709aa847638123e836ba6e0795a7ba353f9aa9440b",
+    "unchanged_from_previous": true
+  }
+]

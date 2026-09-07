@@ -47,6 +47,32 @@ impl Builder<'_, '_> {
             Break => {
                 self.element(Some(parent), node, HtmlTag::Br)?;
             }
+            Link { label, .. } => {
+                let mut href = None;
+                for (index, target) in self.links {
+                    self.b.charge(Resource::Work, 1)?;
+                    if *index == node {
+                        let HtmlHref::BetweenArtifacts {
+                            source,
+                            target,
+                            fragment,
+                        } = target
+                        else {
+                            return Err(RenderError::InternalShape);
+                        };
+                        href = Some(HtmlHref::BetweenArtifacts {
+                            source: copy(source, self.b)?,
+                            target: copy(target, self.b)?,
+                            fragment: fragment.as_ref().map(|s| copy(s, self.b)).transpose()?,
+                        });
+                        break;
+                    }
+                }
+                let value = href.ok_or(RenderError::InternalShape)?;
+                let e = self.element(Some(parent), node, HtmlTag::A)?;
+                self.attr(e, HtmlAttribute::Href { value })?;
+                self.job(label.0, e, level)?;
+            }
             InlineCode { text } => {
                 let e = self.element(Some(parent), node, HtmlTag::Code)?;
                 self.text(e, node, text)?;

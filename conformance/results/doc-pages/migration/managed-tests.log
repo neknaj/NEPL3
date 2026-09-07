@@ -1,0 +1,8 @@
+test_current_source_and_explicit_code (test_contract.ContractMigration.test_current_source_and_explicit_code) ... ok
+test_plain_soft_break_and_literal_escape (test_contract.ContractMigration.test_plain_soft_break_and_literal_escape) ... ok
+test_unsupported_features_fail_before_generation (test_contract.ContractMigration.test_unsupported_features_fail_before_generation) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.004s
+
+OK

@@ -1,0 +1,32 @@
+--- original/doc/spec/21-doc-pages.md
++++ delta/doc/spec/21-doc-pages.md
+@@ -19,6 +19,29 @@
+ `resolve` は全documentを既存の構造・source・label検査へ通す。同じ操作内で同じ
+ source/revisionを別の内容へ置き換えることはできない。文書間で同じlabel名を使う
+ ことは許す。未選択のParallel variantも含めて文書全体を検査する。
++
++開発用Doc source hostのdecode先IDは、元source IDのUTF-8 byte長、ID、revision、
++予約counterを `length:id:revision:counter` と連結する。同じsourceを同じ設定で
++読み直した場合は同じIDを生成し、別sourceのdecode結果を単独counterで衝突させない。
++入力bundle側が予約namespaceと衝突すれば既存source検査で拒否する。短い表現を使い、
++長い解説例もWork 100M / Allocation 500Mの既存上限で検証する。
++
++## HTMLページ集合
++
++`nepl3_doc_html::pages::render_pages` の入力はPageSetと共通RenderOptions。
++全ページを解決してから同じbackendで生成する。remainingがあれば要求を返して停止し、
++外部リンク・画像・foreignを空の表示へ変えない。結果のfragmentsは登録順であり、
++PageSet identityと各document digest、実際のoptions、markup、origin対応を保持する。
++
++各リンクは `BetweenArtifacts` として実際の元/先routeを結び、fragmentを共通のhex ID
++規則で変換する。全ページの生成後、出力された各hrefのfragmentがリンク先HTMLに
++実在することを検査する。Single表示で隠れたanchorを参照した場合は
++`MissingOutputAnchor { page, node, target }` とし、壊れたリンクを成功で返さない。
++リンク元自身が非表示の場合は出力hrefがないため、この表示上の失敗にはしない。
++
++portableは全PagesHtmlRequestから生成を再実行し、RenderedPages全体を照合する。
++route、options、source、targetの変更後に古い結果を採用しない。この結果はHTML
++fragment集合であり、fileの保存完了や公開確認の証拠ではない。
+ 
+ `LinkTarget.Page` は登録idで検索する。`Relative` はリンク元sourceの親directory
+ から解決し、`.` を除去、`..` を一段ずつ戻す。明示したrootより上への移動、絶対path、

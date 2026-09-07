@@ -1,0 +1,59 @@
+{
+  "budget_scope": "Separate bounded operations; not a single end-to-end budget",
+  "doc_schema_sha256": "2469eb13bb21b26d179241003077c7da3d285a398bafe6e584009d873b6e13cd",
+  "files": [
+    {
+      "mime": "text/html; charset=utf-8",
+      "path": "document.html",
+      "sha256": "c31a2d854e220ddb8b5bef076fa5ffc5539f37e571f01f4b9415bc39ecbfd093"
+    },
+    {
+      "license": "MIT",
+      "mime": "text/css; charset=utf-8",
+      "path": "assets/doc.css",
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    }
+  ],
+  "format": "nepl3.local-doc-export/1",
+  "operations": {
+    "lower": {
+      "allocation_units": 5179027,
+      "depth": 32,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 110832,
+      "output_bytes": 0,
+      "source_bytes": 6528,
+      "work": 1117507
+    },
+    "parse_and_validate": {
+      "allocation_units": 33350582,
+      "depth": 35,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 331176,
+      "output_bytes": 64786,
+      "source_bytes": 12206,
+      "work": 4316798
+    },
+    "prepare_render_serialize": {
+      "allocation_units": 10236388,
+      "depth": 11,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 123513,
+      "output_bytes": 1128876,
+      "source_bytes": 0,
+      "work": 2551818
+    }
+  },
+  "options": {
+    "parallel": "Rows"
+  },
+  "packages": "compiled checked bootstrap fixtures",
+  "profile_sha256": "1a348254d9f92346f108b3282ad750af5a02529a3fa9ec3ba6a45b44890c46f3",
+  "renderer": "nepl3-doc-html local/1",
+  "scope": "local Doc only; external pages, assets and foreign rendering require resolution",
+  "source_sha256": "0f958ae5c2fc8a2ce6059579e9cacb3dbb901b0f9cc3492b308bfdd97839070b",
+  "viewer_scripts": false
+}

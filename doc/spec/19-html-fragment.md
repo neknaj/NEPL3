@@ -12,6 +12,10 @@ classはHtmlPolicyに列挙されたbackend登録名だけを許す。名前はi
 
 リンクはFragment・Artifact・Externalを分ける。Artifactと画像srcのpathは空でない相対segment列で、各segmentはASCII英数字と`-_.`、空segment/`.`/`..`を禁止する。これはhostが割り当てる配布pathであり、任意の著者pathをそのまま通す入口ではない。page/asset解決が非ASCII等の著者IDから配布pathへ変換し、その対応とbyte列を別途検査する。
 
+文書間の出力には `BetweenArtifacts(source,target,fragment)` を追加する。sourceとtargetは、同じartifact rootからのファイルpathであり、両方に上記Artifact path字句を要求する。serializerはsourceの親directoryとtargetの共通segmentを取り除き、残るsource directoryごとに `../` を一つ出力し、targetの残りと任意の `#fragment` を続ける。たとえば `docs/a/index.html` から `docs/b/index.html` へは `../b/index.html` となる。著者の `../` を未検査で出力する方式ではない。固定origin・root相対URL・base要素を追加せず、配布siteの非root pathとオフラインのdirectory配置を保つ。この相対参照は [RFC 3986のpath merge規則](https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3) に従って閲覧先で解決される。
+
+構造検査だけでは、sourceが現在のshellの配置と一致すること、target/fragmentの実在、同じ版の配布物であることを保証しない。Doc/page準備と最終Artifact検査は、現在の公開routeをsourceへ結び付け、targetの登録・生成ID・出力実在を照合する。受信値の自己申告をこの証拠にしない。`BetweenArtifacts` の追加だけを文書registryやDocの文書間リンク解決の完成として扱わない。Fragment型は引き続き同fragment内の実在IDを検査する。
+
 Externalは現在のconstrained URI profileでは小文字http/https/mailto scheme、ASCII、正しいpercent escapeのみ。http(s)のauthorityはASCII DNS/punycodeまたはIPv4表記のhostと省略可能なASCII数字列のu16 port（符号なし）、userinfoなし。空白・backslash・不正percent・network-path referenceを拒否する。これは全URL標準のparserではない。より広い正当URIの扱いはDoc preparation時の正規化またはprofile拡張として明示する。リンクの存在、アクセス可否、ページrevisionを構造検査から推測しない。
 
 serializerは検査proofを借用し、attributeをASCII名前順に出力する。13章のXML文字・escapeを保ち、属性は二重引用符で囲み、void要素に終端tagを付けない。HTML parserがpre開始直後のLFを一つ除去する規則に合わせ、pre開始tag直後へ固定LFを一つ追加して元本文の先頭改行を保持する。doctype/head/CSP/CSSはDocumentShellの別責務である。

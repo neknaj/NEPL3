@@ -1,0 +1,59 @@
+{
+  "budget_scope": "Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
+  "files": [
+    {
+      "license": "MIT",
+      "mime": "text/css; charset=utf-8",
+      "path": "docs/a/assets/doc.css",
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "docs/a/index.html",
+      "sha256": "7d3170023ba9a91b4b838fd75b5a369e26cca29cf58bd540442047017fe0b8e9"
+    },
+    {
+      "license": "MIT",
+      "mime": "text/css; charset=utf-8",
+      "path": "docs/b/assets/doc.css",
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "docs/b/index.html",
+      "sha256": "f7801780a736aa6bb66f1bb1a108d691657bcfa5f5d0846d0b93f26ddc981ebc"
+    }
+  ],
+  "format": "nepl3.local-doc-pages/1",
+  "identity": "a8a774969b80f0b263c53dab1711e492ae69a89f401e9faa8c1140345bfb382b",
+  "options": {
+    "parallel": "Rows"
+  },
+  "output_usage": {
+    "allocation_units": 957239,
+    "output_bytes": 111052,
+    "work": 255802
+  },
+  "packages": "compiled checked bootstrap fixtures",
+  "pages": [
+    {
+      "id": "a",
+      "profile_sha256": "1a348254d9f92346f108b3282ad750af5a02529a3fa9ec3ba6a45b44890c46f3",
+      "route": "docs/a/index.html",
+      "source": "a.nepld",
+      "source_sha256": "86226b054387ad1c09b3ee01378d77b7c377dfb7c86b756a1889a51b157571d6"
+    },
+    {
+      "id": "b",
+      "profile_sha256": "1a348254d9f92346f108b3282ad750af5a02529a3fa9ec3ba6a45b44890c46f3",
+      "route": "docs/b/index.html",
+      "source": "b.nepld",
+      "source_sha256": "f6a208375e941ba4e5fd06a3f4c68f00b7b356e85b7068d05e862dbd4d8c01be"
+    }
+  ],
+  "renderer": "nepl3-doc-html pages/1",
+  "scope": "Internal Doc page links; external URI, assets and foreign rendering remain unsupported. Not Pages deployment evidence.",
+  "viewer_scripts": false
+}

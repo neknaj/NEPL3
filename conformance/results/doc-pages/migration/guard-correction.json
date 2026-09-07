@@ -1,0 +1,12 @@
+[
+  {
+    "path": "tools/migration/contract.py",
+    "before": "1d54aa7a506da7eeda9429f7a745b8a260f9315b09b1b3f57fa4f86c509878bf",
+    "after": "8b1ca6664425c079089dd7fd711838f97d523c0a58db5bb20caa72f4860c3d68"
+  },
+  {
+    "path": "tools/migration/test_contract.py",
+    "before": null,
+    "after": "330709355451ab506bf502a06a12cbad40e1d2d3b29184e177674f9b9f8c2c4b"
+  }
+]

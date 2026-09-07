@@ -1,0 +1,75 @@
+{
+  "scope": "independent restricted projection review",
+  "checks": {
+    "native": 8,
+    "wasi": 8,
+    "initial_reproduced_failures": 3
+  },
+  "files": [
+    {
+      "path": "record.md",
+      "sha256": "03959701a8eb952be06bcf6e8b72e708d11a80aacdaa4e9e3004104bf74aa0af",
+      "bytes": 4098
+    },
+    {
+      "path": "files.json",
+      "sha256": "b67dbb2987f257102cf06982f1ff56a3937b315e8ab049bf5da4effbf038d2e0",
+      "bytes": 766
+    },
+    {
+      "path": "workspace-files.json",
+      "sha256": "2d0950cc2967bc37adbf7d532e646a601337f5de7e6c636ba0da12eb63e3edab",
+      "bytes": 105537
+    },
+    {
+      "path": "delta-files.json",
+      "sha256": "3340ad94f9c70e093ca5cccc57740dfc1c7c08710095b1d8c8264cf0c0ffd7e6",
+      "bytes": 322
+    },
+    {
+      "path": "final-files.json",
+      "sha256": "b505537cff9554793402163466860608cc390e3c82d094701e992a2c1ff7f599",
+      "bytes": 322
+    },
+    {
+      "path": "reviewed-files.json",
+      "sha256": "fe1a9b06d59f23d53040aa87a210c0b2b9cb2594cf3e9e1a60034dbbc44131c0",
+      "bytes": 767
+    },
+    {
+      "path": "support-files.json",
+      "sha256": "eebffee8e3748c3ab0045962e37a716f99d5be7683e5ee8c86a6612623fee40f",
+      "bytes": 401
+    },
+    {
+      "path": "probe.rs",
+      "sha256": "0f284f6aa288ee55b8808e9ca3a6d9c286d32460beb3221a9f9ed5ad568836f8",
+      "bytes": 2724
+    },
+    {
+      "path": "probe-final.rs",
+      "sha256": "7477750d7db065ff35d87b65421483076e39d8a319127c80da0bd5e7068d42ce",
+      "bytes": 3780
+    },
+    {
+      "path": "native-before.log",
+      "sha256": "ebf4f10cbf043fcd2cfbc57a3f3a4bc89771da6185582efb4ca6d45a898bec53",
+      "bytes": 4239
+    },
+    {
+      "path": "native-delta-first.log",
+      "sha256": "16db65e85c0b280fea562a20969569434c5928d90974dc12b8960f9446f043b2",
+      "bytes": 1715
+    },
+    {
+      "path": "native-final.log",
+      "sha256": "3ba74818935576accd698063dca199b514619a7f270bbf27522cd054174baabb",
+      "bytes": 1332
+    },
+    {
+      "path": "wasi-final.log",
+      "sha256": "8b472d3ed802063ba4fd584c2142e2c58602052a8cdbeb0e823de6b333200bfe",
+      "bytes": 3286
+    }
+  ]
+}

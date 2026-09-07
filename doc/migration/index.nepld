@@ -1,0 +1,12 @@
+article ja "NEPL3 文書移行の確認用サイト"
+body
+  cons paragraph
+    cons "これは正式仕様をDoc DSLへ移すための確認用成果物です。現在の正本はMarkdownであり、内容の審査・旧URL互換・公開サイト全体の完成を示すものではありません。"
+    nil
+  cons paragraph
+    cons sentence
+      cons text "最初の候補: "
+      cons link page "contract" none text "対象と設計上の決定"
+      nil
+    nil
+  nil

@@ -61,3 +61,54 @@ fn export_reserves_depth_for_the_document_shell() -> Result<(), String> {
     }
     Ok(())
 }
+
+#[test]
+fn page_export_shares_script_free_shell_and_verifies_every_file() -> Result<(), String> {
+    use nepl3_tools::doc::export::pages::{self, Entry};
+    let compiled = compiled()?;
+    let inputs = vec![
+        (Entry { id: "intro".into(), source: "intro.nepld".into(), route: "docs/intro/index.html".into() },
+            r#"article en "Intro" body cons paragraph cons sentence cons link page "guide" none text "Guide" nil nil nil"#.into()),
+        (Entry { id: "guide".into(), source: "guide.nepld".into(), route: "docs/guide/index.html".into() },
+            r#"article en "Guide" body cons paragraph cons sentence cons link page "intro" none text "Back" nil nil nil"#.into()),
+    ];
+    let first = pages::generate(&compiled, &inputs)?;
+    let second = pages::generate(&compiled, &inputs)?;
+    assert_eq!(first.files, second.files);
+    assert_eq!(first.manifest, second.manifest);
+    assert_eq!(first.files.len(), 4);
+    let intro = std::str::from_utf8(&first.files["docs/intro/index.html"]).map_err(super::err)?;
+    assert!(intro.contains("href=\"../guide/index.html\""));
+    assert!(intro.contains("default-src 'none'"));
+    assert!(intro.contains("href=\"assets/doc.css\""));
+    assert!(!intro.contains("<script"));
+    let manifest: serde_json::Value = serde_json::from_str(&first.manifest).map_err(super::err)?;
+    for record in manifest["files"].as_array().ok_or("files")? {
+        let path = record["path"].as_str().ok_or("path")?;
+        let expected = nepl3_core::source::Digest::of(&first.files[path])
+            .0
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>();
+        assert_eq!(record["sha256"].as_str(), Some(expected.as_str()));
+    }
+    let mut inputs = inputs;
+    for route in [
+        "CON.html",
+        "com1.html",
+        "dir./page.html",
+        "DOCS/guide.html",
+        "docs/intro/INDEX.html",
+    ] {
+        inputs[1].0.route = route.into();
+        assert!(pages::generate(&compiled, &inputs).is_err(), "{route}");
+    }
+    inputs[1].0.route = "docs/intro/assets/doc.css/nested.html".into();
+    assert!(pages::generate(&compiled, &inputs).is_err_and(|e| e.contains("collision")));
+    inputs[1].0.route = "../escape.html".into();
+    assert!(pages::generate(&compiled, &inputs).is_err());
+    inputs.pop();
+    assert!(pages::generate(&compiled, &inputs).is_err_and(|e| e.contains("MissingPage")));
+    assert!(pages::generate(&compiled, &[]).is_err());
+    Ok(())
+}

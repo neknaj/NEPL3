@@ -28,7 +28,7 @@ pub(super) fn copy(s: &str, b: &mut Budget) -> Result<String, StopReason> {
     b.charge(Resource::AllocationUnits, s.len() as u64)?;
     Ok(s.into())
 }
-fn push<T>(v: &mut Vec<T>, item: T, b: &mut Budget) -> Result<(), StopReason> {
+pub(crate) fn push<T>(v: &mut Vec<T>, item: T, b: &mut Budget) -> Result<(), StopReason> {
     b.charge(Resource::Work, 1)?;
     b.charge(
         Resource::AllocationUnits,
@@ -60,7 +60,8 @@ struct Job {
     level: u64,
 }
 struct Builder<'a, 'b> {
-    prepared: &'a PreparedLocalArticle<'a>,
+    prepared: &'a crate::prepare::PreparedRendering<'a>,
+    links: &'a [(u64, HtmlHref)],
     b: &'b mut Budget,
     nodes: Vec<HtmlNode>,
     depths: Vec<u64>,
@@ -186,12 +187,20 @@ pub fn render(
     prepared: &PreparedLocalArticle<'_>,
     budget: &mut Budget,
 ) -> Result<RenderedFragment, RenderError> {
+    render_prepared(&prepared.0, &[], budget)
+}
+pub(crate) fn render_prepared(
+    prepared: &crate::prepare::PreparedRendering<'_>,
+    links: &[(u64, HtmlHref)],
+    budget: &mut Budget,
+) -> Result<RenderedFragment, RenderError> {
     budget.poll()?;
     let DocRoot::Article(root) = prepared.document.value.root else {
         return Err(RenderError::InternalShape);
     };
     let mut w = Builder {
         prepared,
+        links,
         b: budget,
         nodes: Vec::new(),
         depths: Vec::new(),

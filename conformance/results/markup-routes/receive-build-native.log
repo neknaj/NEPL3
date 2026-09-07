@@ -1,0 +1,11 @@
+   Compiling independent-markup-routes v0.0.0 (C:\projects\NEPL3-runtime\.tmp\review-markup-routes\probe)
+warning: function `render` is never used
+ --> src\bin\receive.rs:6:4
+  |
+6 | fn render(v:&HtmlRequest,b:&mut Budget)->Result<String,HtmlError>{serialize(&validate(&v.fragment,v.slot,&v.policy,b)?,b)}
+  |    ^^^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `independent-markup-routes` (bin "receive") generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.61s

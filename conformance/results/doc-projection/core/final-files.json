@@ -1,0 +1,12 @@
+[
+  {
+    "path": "tools/src/doc/projection.rs",
+    "sha256": "5ed4897ae6902f6f4b4c3a4fd547d8cab47fa3347511fa7c945468af26cc3fe4",
+    "bytes": 11191
+  },
+  {
+    "path": "tools/tests/doc/projection.rs",
+    "sha256": "cc2bd9ec5103e3e6b9c54756fe37b095757035422ee54ace4e0975b56560292e",
+    "bytes": 6742
+  }
+]

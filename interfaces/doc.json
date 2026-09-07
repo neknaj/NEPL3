@@ -2154,6 +2154,140 @@
         ]
       ],
       "constraints": []
+    },
+    "PageRegistration": {
+      "record": [
+        [
+          "id",
+          "Text"
+        ],
+        [
+          "source",
+          "Text"
+        ],
+        [
+          "route",
+          "Text"
+        ]
+      ],
+      "constraints": []
+    },
+    "PageDocument": {
+      "record": [
+        [
+          "registration",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "PageRegistration"
+            }
+          }
+        ],
+        [
+          "document",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "DocumentSyntax"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "PageSet": {
+      "record": [
+        [
+          "pages",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "PageDocument"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "PageLink": {
+      "record": [
+        [
+          "page",
+          "U64"
+        ],
+        [
+          "node",
+          "U64"
+        ],
+        [
+          "target",
+          "U64"
+        ],
+        [
+          "fragment",
+          {
+            "option": "Text"
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "PageRequirement": {
+      "record": [
+        [
+          "page",
+          "U64"
+        ],
+        [
+          "requirement",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "DocRequirement"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "PageLinkPlan": {
+      "record": [
+        [
+          "identity",
+          "Bytes"
+        ],
+        [
+          "links",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "PageLink"
+              }
+            }
+          }
+        ],
+        [
+          "remaining",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "PageRequirement"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
     }
   },
   "operations": {

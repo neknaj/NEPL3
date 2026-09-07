@@ -1,0 +1,5 @@
+{
+  "exit": 1,
+  "output_exists": false,
+  "log": "nepl3-tools: path escapes repository: linked/a.nepld\n"
+}

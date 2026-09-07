@@ -1,0 +1,82 @@
+[
+  {
+    "name": "reserved-con",
+    "exit": 1,
+    "seconds": 0.2702144000213593,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: nonportable output path: CON.html\n"
+  },
+  {
+    "name": "reserved-com1",
+    "exit": 1,
+    "seconds": 0.20646610006224364,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: nonportable output path: a/com1.html\n"
+  },
+  {
+    "name": "reserved-lpt9",
+    "exit": 1,
+    "seconds": 0.21079229994211346,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: nonportable output path: Lpt9.html\n"
+  },
+  {
+    "name": "trailing-dot",
+    "exit": 1,
+    "seconds": 0.2299763000337407,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: nonportable output path: dir./a.html\n"
+  },
+  {
+    "name": "reserved-nul",
+    "exit": 1,
+    "seconds": 0.25205320003442466,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: nonportable output path: NUL/a.html\n"
+  },
+  {
+    "name": "route-case",
+    "exit": 1,
+    "seconds": 0.2695746999233961,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: output path collision: a.html\n"
+  },
+  {
+    "name": "folder-case",
+    "exit": 1,
+    "seconds": 0.27823009993880987,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: output path collision: docs/b.html\n"
+  },
+  {
+    "name": "css-parent-case",
+    "exit": 1,
+    "seconds": 0.2690071000251919,
+    "output_exists": false,
+    "manifest_exists": false,
+    "log": "nepl3-tools: output path collision: ASSETS/DOC.CSS/a.html\n"
+  },
+  {
+    "name": "normal",
+    "exit": 0,
+    "seconds": 0.2610405000159517,
+    "output_exists": true,
+    "manifest_exists": true,
+    "log": ""
+  },
+  {
+    "name": "existing",
+    "exit": 1,
+    "seconds": 0.010851999977603555,
+    "output_exists": true,
+    "manifest_exists": false,
+    "log": "nepl3-tools: output directory already exists\n"
+  }
+]

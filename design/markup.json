@@ -32,7 +32,7 @@
     "Paint": "none or #RRGGBB; no url(), currentColor or arbitrary CSS",
     "DashList": "nonempty list of nonnegative Decimal, at least one > 0",
     "NonnegativeMathLength": "canonical nonnegative finite decimal followed by em; no sign, exponent, percentage, leading zeros or redundant trailing fractional zeros; zero is 0em",
-    "HtmlHref": "typed Fragment/Artifact/External; lexical constraints and structural checks in doc/spec/19-html-fragment.md; external page/revision resolution remains a separate preparation obligation",
+    "HtmlHref": "typed Fragment/Artifact/BetweenArtifacts/External; lexical constraints and structural checks in doc/spec/19-html-fragment.md; source route binding and target availability remain separate preparation obligations",
     "ArtifactPath": "nonempty relative ASCII alphanumeric/-_. path; no empty, dot or parent segments; assigned by artifact preparation, not arbitrary author input",
     "NonnegativeI32": "ASCII unsigned integer 0..2147483647"
   },

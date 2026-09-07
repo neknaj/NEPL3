@@ -8,10 +8,14 @@ mod html;
 mod labels;
 #[path = "doc/mixed.rs"]
 mod mixed;
+#[path = "doc/pages.rs"]
+mod pages;
 #[path = "doc/prepare.rs"]
 mod prepare;
 #[path = "doc/print.rs"]
 mod print;
+#[path = "doc/projection.rs"]
+mod projection;
 #[path = "doc/text.rs"]
 mod text;
 use nepl3_core::{budget::*, source::*};
