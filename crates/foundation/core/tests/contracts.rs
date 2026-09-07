@@ -24,6 +24,42 @@ fn source(id: &str, revision: u64, text: &str) -> Result<SourceSnapshot, SourceE
 }
 
 #[test]
+fn snapshot_metadata_copy_is_bounded_but_independent_comparison_is_not_free()
+-> Result<(), SourceError> {
+    let id = SourceId("名".repeat(20_000));
+    let uri = format!("memory:{}", "u".repeat(60_000));
+    let original =
+        SourceSnapshot::new(id.clone(), 1, uri.clone(), b"text".to_vec(), &mut budget())?;
+    let limits = Limits {
+        work: 1000,
+        allocation_units: 1024,
+        ..budget().limits()
+    };
+    let copy = original.clone_with_budget(&mut Budget::new(limits));
+    #[cfg(target_has_atomic = "ptr")]
+    {
+        let copy = copy.map_err(SourceError::Stopped)?;
+        assert!(original.eq_with_budget(&copy, &mut Budget::new(limits))?);
+        drop(original);
+        assert_eq!(copy.identity().source, id);
+        assert_eq!(copy.uri(), uri);
+        assert_eq!(copy.text(), "text");
+        assert_eq!(
+            copy.charge_clone(&mut Budget::new(limits)),
+            Err(StopReason::WorkLimit)
+        );
+        let independently_built = SourceSnapshot::new(id, 1, uri, b"text".to_vec(), &mut budget())?;
+        assert_eq!(
+            copy.eq_with_budget(&independently_built, &mut Budget::new(limits)),
+            Err(StopReason::WorkLimit)
+        );
+        assert!(copy.eq_with_budget(&independently_built, &mut budget())?);
+    }
+    #[cfg(not(target_has_atomic = "ptr"))]
+    assert_eq!(copy, Err(StopReason::WorkLimit));
+    Ok(())
+}
+#[test]
 fn borrowed_store_insert_does_not_clone_duplicates_or_publish_on_stop() -> Result<(), SourceError> {
     let original = source("日本語", 7, &"x".repeat(10_000))?;
     let mut store = SourceStore::default();

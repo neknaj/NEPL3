@@ -3,11 +3,11 @@ mod edit;
 use crate::budget::{Budget, Resource, StopReason};
 use alloc::{string::String, vec::Vec};
 #[cfg(target_has_atomic = "ptr")]
-type SnapshotText = alloc::sync::Arc<String>;
+type SnapshotStorage = alloc::sync::Arc<SnapshotData>;
 // Keep alloc-only targets without pointer atomics supported, and retain their
 // Send/Sync properties. Those targets keep the original owned-copy behavior.
 #[cfg(not(target_has_atomic = "ptr"))]
-type SnapshotText = String;
+type SnapshotStorage = SnapshotData;
 use sha2::{Digest as _, Sha256};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -82,13 +82,17 @@ impl From<StopReason> for SourceError {
 /// No public mutable byte access: identity always hashes exactly the stored UTF-8.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SourceSnapshot {
+    storage: SnapshotStorage,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct SnapshotData {
     id: SnapshotId,
     uri: String,
-    text: SnapshotText,
+    text: String,
 }
 impl SourceSnapshot {
     pub fn identity(&self) -> &SnapshotId {
-        &self.id
+        &self.storage.id
     }
     pub fn new(
         source: SourceId,
@@ -117,48 +121,64 @@ impl SourceSnapshot {
             valid_up_to: e.utf8_error().valid_up_to() as u64,
             error_len: e.utf8_error().error_len().map(|n| n as u64),
         })?;
-        #[cfg(target_has_atomic = "ptr")]
-        let text = {
-            budget.charge(
-                Resource::AllocationUnits,
-                (core::mem::size_of::<String>() + 2 * core::mem::size_of::<usize>()) as u64,
-            )?;
-            SnapshotText::new(text)
-        };
-        Ok(Self {
-            id: SnapshotId {
+        Self::from_parts(
+            SnapshotId {
                 source,
                 revision,
                 digest,
             },
             uri,
             text,
-        })
+            budget,
+        )
+    }
+    fn from_parts(
+        id: SnapshotId,
+        uri: String,
+        text: String,
+        budget: &mut Budget,
+    ) -> Result<Self, SourceError> {
+        #[cfg(target_has_atomic = "ptr")]
+        budget.charge(
+            Resource::AllocationUnits,
+            (core::mem::size_of::<SnapshotData>() + 2 * core::mem::size_of::<usize>()) as u64,
+        )?;
+        #[cfg(not(target_has_atomic = "ptr"))]
+        budget.poll()?;
+        let data = SnapshotData { id, uri, text };
+        #[cfg(target_has_atomic = "ptr")]
+        let storage = SnapshotStorage::new(data);
+        #[cfg(not(target_has_atomic = "ptr"))]
+        let storage = data;
+        Ok(Self { storage })
     }
     pub fn id(&self) -> SnapshotId {
-        self.id.clone()
+        self.storage.id.clone()
     }
     pub fn uri(&self) -> &str {
-        &self.uri
+        &self.storage.uri
     }
     pub fn text(&self) -> &str {
-        &self.text
+        &self.storage.text
     }
-    /// Account for a native clone. Immutable text is shared on pointer-atomic
-    /// targets; identity/URI strings remain owned. Wire encoding still carries
-    /// the complete bytes, and decoding constructs and validates a new snapshot.
+    /// Conservative copy/comparison traversal. Pointer-atomic targets share the
+    /// entire immutable snapshot, but external comparison still needs a bound
+    /// covering separately decoded metadata and text.
     pub fn charge_clone(&self, budget: &mut Budget) -> Result<(), StopReason> {
-        let bytes = (self.id.source.0.len() + self.uri.len()) as u64;
+        #[cfg(target_has_atomic = "ptr")]
+        let bytes = 0u64;
         #[cfg(not(target_has_atomic = "ptr"))]
-        let bytes = bytes.saturating_add(self.text.len() as u64);
+        let bytes = (self.storage.id.source.0.len() as u64)
+            .saturating_add(self.storage.uri.len() as u64)
+            .saturating_add(self.storage.text.len() as u64);
         // Existing continuation checks use this traversal before structural Eq.
         // A separately decoded snapshot can have different storage, so retain
         // a full-text comparison bound even though native cloning shares text.
         budget.charge(
             Resource::Work,
-            (self.id.source.0.len() as u64)
-                .saturating_add(self.uri.len() as u64)
-                .saturating_add(self.text.len() as u64)
+            (self.storage.id.source.0.len() as u64)
+                .saturating_add(self.storage.uri.len() as u64)
+                .saturating_add(self.storage.text.len() as u64)
                 .saturating_add(1),
         )?;
         budget.charge(
@@ -169,9 +189,12 @@ impl SourceSnapshot {
     /// Charge only an actual clone. This must not be used to bound equality
     /// against independently supplied storage; charge_clone retains that bound.
     pub fn charge_shared_clone(&self, budget: &mut Budget) -> Result<(), StopReason> {
-        let bytes = (self.id.source.0.len() + self.uri.len()) as u64;
+        #[cfg(target_has_atomic = "ptr")]
+        let bytes = 0u64;
         #[cfg(not(target_has_atomic = "ptr"))]
-        let bytes = bytes.saturating_add(self.text.len() as u64);
+        let bytes = (self.storage.id.source.0.len() as u64)
+            .saturating_add(self.storage.uri.len() as u64)
+            .saturating_add(self.storage.text.len() as u64);
         budget.charge(Resource::Work, bytes.saturating_add(1))?;
         budget.charge(
             Resource::AllocationUnits,
@@ -185,42 +208,44 @@ impl SourceSnapshot {
     /// Budget structural equality. Only identical immutable storage can skip
     /// the byte comparison; independently decoded snapshots still pay for it.
     pub fn eq_with_budget(&self, other: &Self, budget: &mut Budget) -> Result<bool, StopReason> {
-        budget.charge(
-            Resource::Work,
-            (self.id.source.0.len() as u64)
-                .saturating_add(other.id.source.0.len() as u64)
-                .saturating_add(self.uri.len() as u64)
-                .saturating_add(other.uri.len() as u64)
-                .saturating_add(34),
-        )?;
-        if self.id != other.id || self.uri != other.uri {
-            return Ok(false);
-        }
+        budget.charge(Resource::Work, 1)?;
         #[cfg(target_has_atomic = "ptr")]
-        if alloc::sync::Arc::ptr_eq(&self.text, &other.text) {
+        if alloc::sync::Arc::ptr_eq(&self.storage, &other.storage) {
             return Ok(true);
         }
         budget.charge(
             Resource::Work,
-            (self.text.len() as u64).saturating_add(other.text.len() as u64),
+            (self.storage.id.source.0.len() as u64)
+                .saturating_add(other.storage.id.source.0.len() as u64)
+                .saturating_add(self.storage.uri.len() as u64)
+                .saturating_add(other.storage.uri.len() as u64)
+                .saturating_add(34),
         )?;
-        Ok(self.text == other.text)
+        if self.storage.id != other.storage.id || self.storage.uri != other.storage.uri {
+            return Ok(false);
+        }
+        budget.charge(
+            Resource::Work,
+            (self.storage.text.len() as u64).saturating_add(other.storage.text.len() as u64),
+        )?;
+        Ok(self.storage.text == other.storage.text)
     }
     pub fn has_bom(&self) -> bool {
-        self.text.starts_with('\u{feff}')
+        self.storage.text.starts_with('\u{feff}')
     }
     pub fn reference(&self) -> SourceRef {
         SourceRef {
-            source_id: self.id.source.clone(),
-            revision: self.id.revision,
-            digest: self.id.digest,
+            source_id: self.storage.id.source.clone(),
+            revision: self.storage.id.revision,
+            digest: self.storage.id.digest,
         }
     }
     pub fn check_range(&self, start: u64, end: u64) -> Result<(), SourceError> {
-        if start > end || end > self.text.len() as u64 {
+        if start > end || end > self.storage.text.len() as u64 {
             return Err(SourceError::Bounds);
         }
-        if !self.text.is_char_boundary(start as usize) || !self.text.is_char_boundary(end as usize)
+        if !self.storage.text.is_char_boundary(start as usize)
+            || !self.storage.text.is_char_boundary(end as usize)
         {
             return Err(SourceError::ScalarBoundary);
         }
@@ -228,7 +253,8 @@ impl SourceSnapshot {
     }
     pub fn slice_range(&self, start: u64, end: u64) -> Result<&str, SourceError> {
         self.check_range(start, end)?;
-        self.text
+        self.storage
+            .text
             .get(start as usize..end as usize)
             .ok_or(SourceError::Bounds)
     }
@@ -241,23 +267,24 @@ impl SourceSnapshot {
         self.check_range(start, end)?;
         budget.charge(
             Resource::AllocationUnits,
-            core::mem::size_of::<Span>() as u64 + self.id.source.0.len() as u64,
+            core::mem::size_of::<Span>() as u64 + self.storage.id.source.0.len() as u64,
         )?;
         self.span(start, end)
     }
     pub fn span(&self, start: u64, end: u64) -> Result<Span, SourceError> {
         self.check_range(start, end)?;
         Ok(Span {
-            snapshot: self.id.clone(),
+            snapshot: self.storage.id.clone(),
             start,
             end,
         })
     }
     pub fn slice(&self, span: &Span) -> Result<&str, SourceError> {
-        if span.snapshot != self.id {
+        if span.snapshot != self.storage.id {
             return Err(SourceError::SnapshotMismatch);
         }
-        self.text
+        self.storage
+            .text
             .get(span.start as usize..span.end as usize)
             .ok_or(SourceError::Bounds)
     }
@@ -343,11 +370,11 @@ pub struct LineIndex {
 }
 impl LineIndex {
     pub fn new(source: &SourceSnapshot, budget: &mut Budget) -> Result<Self, SourceError> {
-        budget.charge(Resource::Work, source.text.len() as u64)?;
+        budget.charge(Resource::Work, source.storage.text.len() as u64)?;
         let mut lines = Vec::new();
         let mut start = 0;
         let mut cursor = 0;
-        let bytes = source.text.as_bytes();
+        let bytes = source.storage.text.as_bytes();
         while cursor < bytes.len() {
             if bytes[cursor] == b'\r' || bytes[cursor] == b'\n' {
                 budget.charge(
@@ -374,7 +401,7 @@ impl LineIndex {
             end: bytes.len(),
         });
         Ok(Self {
-            snapshot: source.id.clone(),
+            snapshot: source.storage.id.clone(),
             lines,
         })
     }
@@ -399,6 +426,7 @@ impl LineIndex {
             return Err(SourceError::LineTerminator);
         }
         let text = source
+            .storage
             .text
             .get(line.start..offset)
             .ok_or(SourceError::ScalarBoundary)?;
@@ -417,6 +445,7 @@ impl LineIndex {
         let index = usize::try_from(position.line).map_err(|_| SourceError::Position)?;
         let line = self.lines.get(index).ok_or(SourceError::Position)?;
         let text = source
+            .storage
             .text
             .get(line.start..line.end)
             .ok_or(SourceError::Bounds)?;
@@ -441,7 +470,7 @@ impl LineIndex {
         }
     }
     fn verify(&self, source: &SourceSnapshot) -> Result<(), SourceError> {
-        if self.snapshot == source.id {
+        if self.snapshot == source.storage.id {
             Ok(())
         } else {
             Err(SourceError::SnapshotMismatch)
@@ -504,11 +533,11 @@ impl SourceAdmission {
         budget: &mut Budget,
     ) -> Result<(), SourceError> {
         self.admit_parts(
-            &snapshot.id.source,
-            snapshot.id.revision,
-            snapshot.id.digest,
-            &snapshot.uri,
-            snapshot.text.len() as u64,
+            &snapshot.storage.id.source,
+            snapshot.storage.id.revision,
+            snapshot.storage.id.digest,
+            &snapshot.storage.uri,
+            snapshot.storage.text.len() as u64,
             budget,
         )
     }
@@ -614,18 +643,23 @@ impl SourceAdmission {
         budget.charge(
             Resource::AllocationUnits,
             core::mem::size_of::<(SnapshotId, String)>() as u64
-                + snapshot.id.source.0.len() as u64
-                + snapshot.uri.len() as u64,
+                + snapshot.storage.id.source.0.len() as u64
+                + snapshot.storage.uri.len() as u64,
         )?;
         budget.charge(
             Resource::Work,
-            (snapshot.id.source.0.len() as u64)
-                .saturating_add(snapshot.uri.len() as u64)
+            (snapshot.storage.id.source.0.len() as u64)
+                .saturating_add(snapshot.storage.uri.len() as u64)
                 .saturating_add(1),
         )?;
-        let at = self.prepare_insert(&snapshot.id.source, snapshot.id.revision, budget)?;
+        let at = self.prepare_insert(
+            &snapshot.storage.id.source,
+            snapshot.storage.id.revision,
+            budget,
+        )?;
         self.index.insert(at, self.admitted.len());
-        self.admitted.push((snapshot.id(), snapshot.uri.clone()));
+        self.admitted
+            .push((snapshot.id(), snapshot.storage.uri.clone()));
         Ok(())
     }
 }
@@ -739,15 +773,16 @@ impl SourceStore {
             let snapshot = &self.snapshots[self.index[mid]];
             budget.charge(
                 Resource::Work,
-                (snapshot.id.source.0.len() as u64)
+                (snapshot.storage.id.source.0.len() as u64)
                     .saturating_add(source.0.len() as u64)
                     .saturating_add(1),
             )?;
             match snapshot
+                .storage
                 .id
                 .source
                 .cmp(source)
-                .then_with(|| snapshot.id.revision.cmp(&revision))
+                .then_with(|| snapshot.storage.id.revision.cmp(&revision))
             {
                 core::cmp::Ordering::Equal => return Ok(Some(snapshot)),
                 core::cmp::Ordering::Less => low = mid + 1,
@@ -762,27 +797,29 @@ impl SourceStore {
             .find(|snapshot| snapshot.identity() == id)
     }
     pub fn get(&self, id: SnapshotId) -> Option<&SourceSnapshot> {
-        self.snapshots.iter().find(|s| s.id == id)
+        self.snapshots.iter().find(|s| s.storage.id == id)
     }
     pub fn resolve(&self, reference: &SourceRef) -> Option<&SourceSnapshot> {
         self.snapshots.iter().find(|s| {
-            s.id.source == reference.source_id
-                && s.id.revision == reference.revision
-                && s.id.digest == reference.digest
+            s.storage.id.source == reference.source_id
+                && s.storage.id.revision == reference.revision
+                && s.storage.id.digest == reference.digest
         })
     }
     pub fn latest(&self, source: &SourceId) -> Option<&SourceSnapshot> {
         self.snapshots
             .iter()
-            .filter(|s| &s.id.source == source)
-            .max_by_key(|s| s.id.revision)
+            .filter(|s| &s.storage.id.source == source)
+            .max_by_key(|s| s.storage.id.revision)
     }
 }
 
 fn source_key(a: &SourceSnapshot, b: &SourceSnapshot) -> core::cmp::Ordering {
-    a.id.source
-        .cmp(&b.id.source)
-        .then_with(|| a.id.revision.cmp(&b.id.revision))
+    a.storage
+        .id
+        .source
+        .cmp(&b.storage.id.source)
+        .then_with(|| a.storage.id.revision.cmp(&b.storage.id.revision))
 }
 fn source_index_position<'a>(
     index: &[usize],
@@ -796,8 +833,8 @@ fn source_index_position<'a>(
         let prior = get(index[mid]);
         budget.charge(
             Resource::Work,
-            (prior.id.source.0.len() as u64)
-                .saturating_add(snapshot.id.source.0.len() as u64)
+            (prior.storage.id.source.0.len() as u64)
+                .saturating_add(snapshot.storage.id.source.0.len() as u64)
                 .saturating_add(1),
         )?;
         match source_key(prior, snapshot) {

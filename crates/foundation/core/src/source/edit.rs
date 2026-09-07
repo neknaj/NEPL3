@@ -71,16 +71,16 @@ impl SourceStore {
             let id = &sorted[cursor].span.snapshot;
             let mut latest: Option<&SourceSnapshot> = None;
             for source in &self.snapshots {
-                comparison(&id.source, &source.id.source, budget)?;
-                if source.id.source == id.source
-                    && latest.is_none_or(|v| v.id.revision < source.id.revision)
+                comparison(&id.source, &source.storage.id.source, budget)?;
+                if source.storage.id.source == id.source
+                    && latest.is_none_or(|v| v.storage.id.revision < source.storage.id.revision)
                 {
                     latest = Some(source);
                 }
             }
             let source = latest.ok_or(SourceError::MissingSnapshot)?;
-            comparison(&id.source, &source.id.source, budget)?;
-            if source.id != *id {
+            comparison(&id.source, &source.storage.id.source, budget)?;
+            if source.storage.id != *id {
                 return Err(SourceError::SnapshotMismatch);
             }
             admission.admit_existing(source, budget)?;
@@ -95,9 +95,13 @@ impl SourceStore {
             }
             let mut end = 0;
             let mut previous_start = None;
-            let mut length = source.text.len() as u64;
+            let mut length = source.storage.text.len() as u64;
             for edit in &sorted[cursor..next] {
-                comparison(&edit.span.snapshot.source, &source.id.source, budget)?;
+                comparison(
+                    &edit.span.snapshot.source,
+                    &source.storage.id.source,
+                    budget,
+                )?;
                 let expected = source.slice(&edit.span)?;
                 budget.charge(Resource::Work, expected.len() as u64)?;
                 if Digest::of(expected.as_bytes()) != edit.expected_digest {
@@ -120,6 +124,7 @@ impl SourceStore {
             for edit in &sorted[cursor..next] {
                 hash.update(
                     source
+                        .storage
                         .text
                         .get(end as usize..edit.span.start as usize)
                         .ok_or(SourceError::Bounds)?
@@ -130,6 +135,7 @@ impl SourceStore {
             }
             hash.update(
                 source
+                    .storage
                     .text
                     .get(end as usize..)
                     .ok_or(SourceError::Bounds)?
@@ -154,10 +160,10 @@ impl SourceStore {
         // reserved output, precede any publication of generated identities.
         for plan in &mut plans {
             plan.admitted = admission.check_parts(
-                &plan.source.id.source,
+                &plan.source.storage.id.source,
                 plan.revision,
                 plan.digest,
-                &plan.source.uri,
+                &plan.source.storage.uri,
                 budget,
             )?;
         }
@@ -167,24 +173,24 @@ impl SourceStore {
                 budget.charge(Resource::SourceBytes, plan.length as u64)?;
                 budget.charge(
                     Resource::Work,
-                    (plan.source.id.source.0.len() as u64)
-                        .saturating_add(plan.source.uri.len() as u64)
+                    (plan.source.storage.id.source.0.len() as u64)
+                        .saturating_add(plan.source.storage.uri.len() as u64)
                         .saturating_add(1),
                 )?;
                 // Temporary ownership and the final admission-ledger slot.
                 allocation::<(SnapshotId, String)>(2, budget)?;
                 budget.charge(
                     Resource::AllocationUnits,
-                    (plan.source.id.source.0.len() as u64)
-                        .saturating_add(plan.source.uri.len() as u64),
+                    (plan.source.storage.id.source.0.len() as u64)
+                        .saturating_add(plan.source.storage.uri.len() as u64),
                 )?;
                 admitted_outputs.push((
                     SnapshotId {
-                        source: plan.source.id.source.clone(),
+                        source: plan.source.storage.id.source.clone(),
                         revision: plan.revision,
                         digest: plan.digest,
                     },
-                    plan.source.uri.clone(),
+                    plan.source.storage.uri.clone(),
                 ));
             }
         }
@@ -199,20 +205,21 @@ impl SourceStore {
             budget.charge(
                 Resource::Work,
                 (plan.length as u64)
-                    .saturating_add((source.id.source.0.len() as u64).saturating_mul(2))
-                    .saturating_add(source.uri.len() as u64),
+                    .saturating_add((source.storage.id.source.0.len() as u64).saturating_mul(2))
+                    .saturating_add(source.storage.uri.len() as u64),
             )?;
             budget.charge(
                 Resource::AllocationUnits,
                 (plan.length as u64)
-                    .saturating_add((source.id.source.0.len() as u64).saturating_mul(2))
-                    .saturating_add(source.uri.len() as u64),
+                    .saturating_add((source.storage.id.source.0.len() as u64).saturating_mul(2))
+                    .saturating_add(source.storage.uri.len() as u64),
             )?;
             let mut output = String::with_capacity(plan.length);
             let mut end = 0;
             for edit in &sorted[plan.first..plan.last] {
                 output.push_str(
                     source
+                        .storage
                         .text
                         .get(end..edit.span.start as usize)
                         .ok_or(SourceError::Bounds)?,
@@ -220,26 +227,19 @@ impl SourceStore {
                 output.push_str(&edit.replacement);
                 end = edit.span.end as usize;
             }
-            output.push_str(source.text.get(end..).ok_or(SourceError::Bounds)?);
+            output.push_str(source.storage.text.get(end..).ok_or(SourceError::Bounds)?);
             let id = SnapshotId {
-                source: source.id.source.clone(),
+                source: source.storage.id.source.clone(),
                 revision: plan.revision,
                 digest: plan.digest,
             };
             ids.push(id.clone());
-            #[cfg(target_has_atomic = "ptr")]
-            let output = {
-                budget.charge(
-                    Resource::AllocationUnits,
-                    (core::mem::size_of::<String>() + 2 * core::mem::size_of::<usize>()) as u64,
-                )?;
-                super::SnapshotText::new(output)
-            };
-            prepared.push(SourceSnapshot {
+            prepared.push(SourceSnapshot::from_parts(
                 id,
-                uri: source.uri.clone(),
-                text: output,
-            });
+                source.storage.uri.clone(),
+                output,
+                budget,
+            )?);
         }
         allocation::<usize>(self.index.len().saturating_add(prepared.len()), budget)?;
         budget.charge(Resource::Work, self.index.len() as u64)?;
