@@ -1,5 +1,16 @@
 use super::*;
 use nepl3_engine::facts::*;
+#[path = "custom/recursive.rs"]
+mod recursive;
+pub(super) fn implementation_digest() -> Digest {
+    Digest::of(
+        &[
+            include_bytes!("custom.rs").as_slice(),
+            include_bytes!("custom/recursive.rs").as_slice(),
+        ]
+        .concat(),
+    )
+}
 pub(super) fn compiled() -> Result<CompiledLanguage, String> {
     let document = nepl3_tools::bootstrap::load(
         include_bytes!("../../../../conformance/fixtures/grammar/binding/custom.json"),
@@ -79,13 +90,9 @@ fn custom_foreign_call_uses_its_own_namespace_and_root() -> Result<(), String> {
     )
 }
 #[test]
-fn custom_maximum_ids_and_unimplemented_recursive_phase_stay_typed() -> Result<(), String> {
+fn custom_maximum_ids_stay_typed() -> Result<(), String> {
     let compiled = compiled()?;
-    for input in [
-        "custom x early x y x",
-        "custom x early x y early x z x",
-        "recursive cons customdef x nil x",
-    ] {
+    for input in ["custom x early x y x", "custom x early x y early x z x"] {
         with_input(&compiled, input, |tree, profile, _, _| {
             let mut host = Host {
                 registered: true,
@@ -119,10 +126,6 @@ fn custom_maximum_ids_and_unimplemented_recursive_phase_stay_typed() -> Result<(
                     assert_eq!(reply.facts().ok_or("facts")?.entities.len(), 2);
                     assert_eq!(reply.report.events.len(), 1);
                 }
-                BindingOutcome::Invalid {
-                    error: BindingError::UnsupportedPlan,
-                    ..
-                } if input.starts_with("recursive") => assert_eq!(host.calls, 0),
                 _ => return Err(format!("{input}: {reply:?}")),
             }
             reply
@@ -167,7 +170,7 @@ impl BindingHost for Host {
         }
         if call.provider.operation.name != "bindingFacts"
             || call.provider.revision != 1
-            || call.provider.implementation_digest != Digest::of(include_bytes!("custom.rs"))
+            || call.provider.implementation_digest != implementation_digest()
         {
             return Err(BindingError::MissingProvider);
         }
@@ -924,6 +927,7 @@ fn borrowed_facts_boundary_shares_owned_validation_without_tree_or_fact_copies()
             node: tree.tree().bundle.root,
             existing: facts,
             authority: &authority,
+            phase: &nepl3_engine::facts::FactsPhase::Ordinary,
         };
         let owned = FactsRequest {
             tree: tree.tree().clone(),
@@ -931,6 +935,7 @@ fn borrowed_facts_boundary_shares_owned_validation_without_tree_or_fact_copies()
             node: view.node,
             existing: facts.clone(),
             authority: authority.clone(),
+            phase: nepl3_engine::facts::FactsPhase::Ordinary,
         };
         let mut owned_budget = budget();
         let mut borrowed_budget = budget();

@@ -1,0 +1,118 @@
+{
+  "format": "nepl3.development-slice/1",
+  "scope": "T01/T02/T06: recursive Custom phase execution, standalone foreign syntax closure, and typed codec stop causes",
+  "base_commit": "f0c634e1b9b2df0eb032339cd0fb12b356dfce6f",
+  "result": "passed-within-recorded-scope",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "854cdb29412073366a737da7324a823dcce759e00d2f2156214a31f0a6d0cbdb",
+    "spec_sha256": "7248c64e5a482bb4fdf347cdf7b99c76220e3c04eda939ac32d22ff51df29b28"
+  },
+  "checks": [
+    {
+      "command": "cargo test --workspace --locked",
+      "exit_code": 0,
+      "log": "conformance/results/recursive-foreign/native.log",
+      "sha256": "9bcdd1b29fa184d349771ea9fca09112baf292b9786854d6cc9e53cb0442ce46"
+    },
+    {
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER='wasmtime run'; cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar diagnostic::compiler_report_boundary_without_host_process --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::all_reader_constructors --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::compiled_reader_streaming_boundaries_and_rollback_keep_raw_positions --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --no-default-features --target wasm32-unknown-unknown",
+      "exit_code": 0,
+      "log": "conformance/results/recursive-foreign/wasi.log",
+      "sha256": "73c12c755b6085adb0fa9497cb5aaa807d2558e9abd99d096c5a18e1f5cf1193"
+    },
+    {
+      "command": "cargo fmt --all -- --check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo clippy --workspace --all-targets --locked -- -D warnings; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps --locked",
+      "exit_code": 0,
+      "log": "conformance/results/recursive-foreign/quality.log",
+      "sha256": "a23f573c40285c2031aa5112a8396d56e8c34d70e40a42d6c63ea23e02f29d3b"
+    },
+    {
+      "command": "cargo run --locked -p nepl3-tools -- check",
+      "exit_code": 0,
+      "log": "conformance/results/recursive-foreign/contract.log",
+      "sha256": "7652063f4310966e9b72a2ef8aeced7772c52dc2af392ebf67ee8e546e7c7ebb"
+    },
+    {
+      "command": "python tools/audit/structure.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/audit -p test.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/bootstrap -p test_grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/audit/allocation/run.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo run --locked -p nepl3-tools -- tasks --check",
+      "exit_code": 0,
+      "log": "conformance/results/recursive-foreign/audit.log",
+      "sha256": "1fa647b8f9d2ca9126deb6cb86b6e3134fc78852e3f66f74fb4561c38df0f524"
+    },
+    {
+      "command": "C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe --version; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe .github/workflows/ci.yml",
+      "exit_code": 0,
+      "log": "conformance/results/recursive-foreign/ci.log",
+      "sha256": "ad7ed44e79c7e5d554c2e008819df3a5da44834e9cfdb4aecaef9224a39c87dd"
+    }
+  ],
+  "execution": {
+    "native": {
+      "target": "x86_64-pc-windows-msvc",
+      "passed": 324,
+      "ignored": 1
+    },
+    "wasi": {
+      "target": "wasm32-wasip2",
+      "runner": "Wasmtime 44.0.1",
+      "passed": 244,
+      "scope": "203 five-crate tests, one compiler Report test, three ReaderExpr tests and 37 binding tests"
+    },
+    "browser_wasm": "Five no_std crates compiled; browser interaction not executed",
+    "toolchain": "Rust 1.97.0",
+    "other": "Format, strict Clippy, rustdoc, repository contracts, 6 Python structure and 3 bootstrap adapter tests, task generation, allocation regressions and actionlint 1.7.12 passed. Ordinary Grammar bootstrap retains its Work cap; the separate owned performance baseline remains ignored."
+  },
+  "implementation": [
+    "FactsPhase distinguishes Ordinary, Header(group) and Body(header). Recursive collection accepts all declaration headers before executing initializers and bodies; native private memo binds each accepted header to its exact group, target, BindingId and issuance order.",
+    "Body reuses accepted header Entity IDs and exports. Header references and resolution updates are rejected. Reissuing an existing Entity ID is rejected, while a distinct authorized ID is not treated as the same declaration merely because its name or source range matches.",
+    "Owned and borrowed Facts requests share phase validation. The same callback receives actual first-receiver CBOR requests and replies with native-equivalent facts, stages, resolution history and reports, using the original operation Budget and SourceAdmission.",
+    "ForeignClosure captures guest syntax and the selected owner environment with its original owner origin/source/map closure. Owner and guest local ID spaces remain separate; no owner AST or ambient source lookup is required by the receiving codec.",
+    "R046 separates symbolic EnvironmentNamespaceRef(schema,name) from numeric facts NamespaceRef, fixing real nonempty environment digest and codec failures.",
+    "R047 extracts all actual typed nested WireError stop causes while preserving ordinary semantic errors. No stopped-Budget fallback replaces unrelated semantic errors."
+  ],
+  "independent_review": {
+    "reviewer": "Huygens",
+    "record": "doc/review.md",
+    "recursive": "Nine original source inputs and four additional boundary cases check header-before-body order, mutual references, mixed static/custom plans, sequential contrast, repeated plans, same-name distinct IDs, Foreign roots, Unicode ranges, denied header references, reused IDs and cancellation. Four managed tests passed natively and under WASI, including five original inputs through actual CBOR callbacks, schema-valid receipt mutations and seven resource-limit sweeps.",
+    "foreign": "Independent owner and guest Env9/Origin0 fixtures with distinct contents survive sender destruction and first-receiver CBOR decoding with no ambient store. Missing owner sources, cross-arena substitutions, false digests and schema/root mismatch are rejected. Eight managed syntax tests passed natively and under WASI.",
+    "stop_causes": "An unchanged independent production encode_checked(Unit,Unit,Work0) probe reproduces missing stop extraction on the base snapshot and correct WorkLimit after repair, while WrongType remains non-stop. Two managed tests cover actual checked encoding/decoding and all nested typed causes under native/WASI.",
+    "root_confirmation": "Root reran all six gates on 41 frozen source/schema/spec/review files in an isolated worktree and verified both raw file hashes and staged Git blobs. Doc WIP, its registration and its review paragraphs are excluded from this slice."
+  },
+  "development_corrections": [
+    {
+      "id": "R046",
+      "log": "conformance/results/recursive-foreign/r046-before.log",
+      "provenance": "Independent reviewer tool output excerpt 8a3a97, exit 1; not a complete process log. The valid nonempty environment failed with Schema(FieldCount).",
+      "sha256": "8cec8cf5f99beeb802fb41b756e96cde3b8420b11e6ec3a718ac50d1bf0eb4cf"
+    },
+    {
+      "id": "R047",
+      "log": "conformance/results/recursive-foreign/r047-before.log",
+      "provenance": "Complete independent probe output on base validation checkout, exit 2; actual checked encoder returned a schema WorkLimit whose codec trait extraction was None.",
+      "sha256": "888bd5de338781d1ec674d11e9cecbb6dc030e79393953ec7e3412d2e1d53371"
+    },
+    {
+      "id": "R047",
+      "log": "conformance/results/recursive-foreign/r047-after.log",
+      "provenance": "Complete output of the unchanged independent probe against repaired live core/wire, exit 0; exact typed WorkLimit restored and WrongType control preserved.",
+      "sha256": "bbb33afb6e1205115e974f57a570a47e8a7890a3e8ea4164939c3dd191ac2fe1"
+    },
+    {
+      "id": "R047",
+      "log": "conformance/results/recursive-foreign/r047-probe.rs.txt",
+      "provenance": "The identical independent probe source used for the recorded before/after runs; retained as text, not an additional managed test.",
+      "sha256": "8f8596688fa7c49b6f19f3053ec8c092cac6468b8efbea118b200ac2b6e3e5a6"
+    }
+  ],
+  "integration": "Generated recursive.json uses LF to match repository attributes. Decoded JSON and original .neplg bytes were preserved; the actual source-to-seed adapter correspondence passed. Owner normalized the fixture before root's final snapshot verification.",
+  "log_normalization": "Captured root gate output uses LF and one final newline; other output content is retained. Independent reproduction files retain their original bytes.",
+  "unverified": [
+    "This slice does not complete T01, T02, T06 or any whole acceptance group. All 55 registered group statuses remain not-run.",
+    "Facts delegation to a separate process, authenticated remote quota settlement and provider termination remain separate implementation work; synchronous CBOR comparison is not that proof.",
+    "Raw phase receipts, ForeignClosure values and wire replies are structural data, not authentication of provider execution or guest semantic checks.",
+    "Keyed rename, completion, full field/view selection, generic editor/LSP integration and incremental reuse remain unfinished.",
+    "Doc domain implementation, actual Doc parsing/lowering, four-language outputs, CLI/WASI application, provider, Web Playground, Pages and Doc documentation migration are outside this commit.",
+    "Browser compile success does not establish browser execution, IME behavior or rendering; source archive delivery is not a runtime binary release."
+  ]
+}

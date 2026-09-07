@@ -623,7 +623,7 @@
       "fields": [
         [
           "namespace",
-          "NamespaceRef"
+          "EnvironmentNamespaceRef"
         ],
         [
           "name",
@@ -1706,6 +1706,42 @@
         "Metadata": [],
         "Usage": []
       }
+    },
+    "ForeignClosure": {
+      "fields": [
+        [
+          "syntax",
+          "ForeignSyntax"
+        ],
+        [
+          "ownerEnvironment",
+          "EnvironmentEntry"
+        ],
+        [
+          "ownerOrigins",
+          "List<Origin>"
+        ],
+        [
+          "ownerSources",
+          "List<SourceContent>"
+        ],
+        [
+          "ownerSourceMaps",
+          "List<SourceMapping>"
+        ]
+      ]
+    },
+    "EnvironmentNamespaceRef": {
+      "fields": [
+        [
+          "schema",
+          "SchemaRef"
+        ],
+        [
+          "name",
+          "Text"
+        ]
+      ]
     }
   },
   "scalar_aliases": {
@@ -2194,6 +2230,12 @@
     "FactDelta": [
       "facts.delta",
       "facts.source_closure"
+    ],
+    "ForeignClosure": [
+      "syntax.foreign-closure"
+    ],
+    "EnvironmentNamespaceRef": [
+      "namespace.reference"
     ]
   }
 }

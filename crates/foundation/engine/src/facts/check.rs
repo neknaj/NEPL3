@@ -18,6 +18,7 @@ pub enum FactsError {
     Origin(OriginError),
     Report(ReportValidationError),
     Target,
+    Phase,
 }
 impl FactsError {
     pub fn stop_reason(&self) -> Option<StopReason> {
@@ -156,6 +157,7 @@ fn validate_request(
             .existing
             .validate(profile.registry(), b, admission)?;
         request.authority.validate(&base, b, admission)?;
+        super::phase::validate(request, profile, b)?;
         // Independently valid tables must also agree on shared identities.
         closure_view(request, None, &[], &[], b, admission)?;
         Ok(())
@@ -194,6 +196,7 @@ impl FactsReply {
             request.request.authority.validate(&base, b, admission)?;
             if let Some(delta) = delta {
                 delta.validate(&base, request.request.authority, b, admission)?;
+                super::phase::delta(request.request.phase, delta, b)?;
             }
             let store = closure_view(request.request, delta, sources, maps, b, admission)?;
             report.validate(&store, &[], request.profile.registry(), b)?;

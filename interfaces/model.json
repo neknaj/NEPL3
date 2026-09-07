@@ -388,7 +388,7 @@
       "record": [
         [
           "syntax",
-          "ForeignSyntax"
+          "ForeignClosure"
         ]
       ]
     },
@@ -1011,7 +1011,7 @@
       "record": [
         [
           "syntax",
-          "ForeignSyntax"
+          "ForeignClosure"
         ]
       ]
     },
@@ -1024,7 +1024,7 @@
       "record": [
         [
           "syntax",
-          "ForeignSyntax"
+          "ForeignClosure"
         ]
       ]
     },
@@ -1037,7 +1037,7 @@
       "record": [
         [
           "syntax",
-          "ForeignSyntax"
+          "ForeignClosure"
         ]
       ]
     },
@@ -1045,7 +1045,7 @@
       "record": [
         [
           "syntax",
-          "ForeignSyntax"
+          "ForeignClosure"
         ]
       ]
     },
@@ -1529,7 +1529,8 @@
     "SyntaxBundle",
     "SyntaxNode",
     "FieldValue",
-    "Origin"
+    "Origin",
+    "ForeignClosure"
   ],
   "constraints": "doc/spec/12-model-invariants.md",
   "design_revision": "nepl3-design-2026-09-06-r4",

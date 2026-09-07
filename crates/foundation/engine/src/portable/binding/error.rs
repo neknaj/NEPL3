@@ -160,7 +160,7 @@ codec!(binding,binding_from,BindingError,engine,"BindingFailure",
 codec!(report,report_from,ReportValidationError,foundation,"ReportValidationError",
     [Metadata,Usage],[Source:source/source_from,Schema:schema/schema_from]);
 codec!(facts,facts_from,FactsError,engine,"FactsError",
-    [Target],[Tree:tree/tree_from,Fact:fact/fact_from,Source:source/source_from,Origin:origin/origin_from,Report:report/report_from]);
+    [Target,Phase],[Tree:tree/tree_from,Fact:fact/fact_from,Source:source/source_from,Origin:origin/origin_from,Report:report/report_from]);
 fn source<E>(
     value: &SourceError,
     s: &ErrorSchemas<'_>,

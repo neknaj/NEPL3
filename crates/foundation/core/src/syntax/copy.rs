@@ -346,4 +346,24 @@ macro_rules! owned_part {
         }
     )*};
 }
-owned_part!(Token, Origin, EnvironmentEntry, SourceSnapshot, Mapping);
+impl CopyCost for ForeignClosure {
+    fn charge(&self, b: &mut Budget) -> Result<(), StopReason> {
+        slot::<Self>(b)?;
+        self.syntax.schema.charge(b)?;
+        self.syntax.category.charge(b)?;
+        self.syntax.bundle.charge_clone(b)?;
+        self.owner_environment.charge(b)?;
+        self.owner_origins.charge(b)?;
+        self.owner_sources.charge(b)?;
+        self.owner_source_maps.charge(b)
+    }
+}
+owned_part!(
+    Token,
+    Origin,
+    EnvironmentEntry,
+    SourceSnapshot,
+    Mapping,
+    ViewBundle,
+    ForeignClosure
+);

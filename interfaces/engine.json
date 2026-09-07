@@ -2558,6 +2558,16 @@
               "name": "FactAuthority"
             }
           }
+        ],
+        [
+          "phase",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "FactsPhase"
+            }
+          }
         ]
       ]
     },
@@ -4516,7 +4526,8 @@
               }
             }
           ]
-        ]
+        ],
+        "Phase": []
       }
     },
     "CanonicalBindingTarget": {
@@ -5030,6 +5041,95 @@
           ]
         ]
       }
+    },
+    "FactsPhase": {
+      "variant": {
+        "Ordinary": [],
+        "Header": [
+          [
+            "group",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "ScopeId"
+              }
+            }
+          ]
+        ],
+        "Body": [
+          [
+            "header",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "FactsHeader"
+              }
+            }
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "FactsHeader": {
+      "record": [
+        [
+          "group",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "ScopeId"
+            }
+          }
+        ],
+        [
+          "provider",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "ProviderRequirement"
+            }
+          }
+        ],
+        [
+          "target",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "CanonicalBindingTarget"
+            }
+          }
+        ],
+        [
+          "entities",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "EntityId"
+              }
+            }
+          }
+        ],
+        [
+          "exports",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "EntityId"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
     }
   }
 }

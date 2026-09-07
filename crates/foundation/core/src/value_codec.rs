@@ -12,6 +12,9 @@ use alloc::vec::Vec;
 /// Implementations must enforce the registered foundation schema and its semantic
 /// source/view/environment constraints. This is not a provider-supplied callback.
 pub trait FoundationCodecError {
+    /// Extract the original stop even when typed Source/Schema/Origin/View or
+    /// another boundary cause wraps it. An unrelated Budget stop must not turn
+    /// an ordinary validation error into a stopped result.
     fn stop_reason(&self) -> Option<crate::budget::StopReason>;
 }
 pub trait FoundationValueCodec {
@@ -104,6 +107,16 @@ pub trait FoundationValueCodec {
         value: &crate::syntax::SyntaxBundle,
         budget: &mut Budget,
     ) -> Result<NdfValue, Self::Error>;
+    fn encode_foreign_closure(
+        &mut self,
+        value: &crate::syntax::ForeignClosure,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, Self::Error>;
+    fn decode_foreign_closure(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<crate::syntax::ForeignClosure, Self::Error>;
     fn decode_syntax(
         &mut self,
         value: &NdfValue,

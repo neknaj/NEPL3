@@ -32,6 +32,7 @@ fn request(tree: ParseTree, schema: &SchemaRef) -> Result<FactsRequest, String> 
         source_maps: vec![],
     };
     Ok(FactsRequest {
+        phase: nepl3_engine::facts::FactsPhase::Ordinary,
         tree,
         path: vec![ForeignStep {
             node: NodeRef(1),

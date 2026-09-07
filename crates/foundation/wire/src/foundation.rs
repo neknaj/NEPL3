@@ -223,6 +223,24 @@ impl FoundationValueCodec for FoundationCodec<'_> {
         result.validate_with_sources(self.registry, budget, self.admission)?;
         Ok(result)
     }
+    fn encode_foreign_closure(
+        &mut self,
+        value: &nepl3_core::syntax::ForeignClosure,
+        b: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
+        let value =
+            crate::syntax::foreign_value(value, self.schema, self.registry, self.admission, b)?;
+        self.validate(&value, "ForeignClosure", b)?;
+        Ok(value)
+    }
+    fn decode_foreign_closure(
+        &mut self,
+        value: &NdfValue,
+        b: &mut Budget,
+    ) -> Result<nepl3_core::syntax::ForeignClosure, WireError> {
+        self.validate(value, "ForeignClosure", b)?;
+        crate::syntax::foreign_from(value, self.schema, self.registry, self.admission, b)
+    }
     fn encode_report(
         &mut self,
         value: &nepl3_core::diagnostic::Report,

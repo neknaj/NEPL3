@@ -8,6 +8,7 @@ use nepl3_core::{
     value_codec::FoundationValueCodec,
 };
 pub(super) mod compare;
+mod phase;
 
 pub fn request_to_value<C: FoundationValueCodec>(
     request: &CheckedFactsRequest<'_, '_>,
@@ -47,6 +48,7 @@ pub fn request_view_to_value<C: FoundationValueCodec>(
             local
                 .encode_fact_authority(request.authority, b)
                 .map_err(boundary)?,
+            request.phase.value(&s, &mut local, b)?,
         ],
         b,
     )?;
@@ -89,7 +91,7 @@ pub fn request_decode<C: FoundationValueCodec>(
         .registry()
         .validate(&expected("FactsRequest", b)?, value, b)?;
     let s = Schemas::new(profile.registry())?;
-    let f = fields(value, s.engine, "FactsRequest", 5)?;
+    let f = fields(value, s.engine, "FactsRequest", 6)?;
     let tree = tree::from_value(&f[0], profile, codec, b)?;
     let existing = codec.decode_fact_set(&f[3], b).map_err(boundary)?;
     let store = crate::facts::check::closure_for(
@@ -108,6 +110,7 @@ pub fn request_decode<C: FoundationValueCodec>(
         node: Value::read(&f[2], &s, &mut local, b)?,
         existing,
         authority: local.decode_fact_authority(&f[4], b).map_err(boundary)?,
+        phase: Value::read(&f[5], &s, &mut local, b)?,
     };
     result.validate(profile, b, local.source_admission())?;
     Ok(result)
