@@ -1,7 +1,7 @@
 //! Exact host-issued requests and request-relative reply source/authority closure.
 use super::{PortableError, boundary, tree, value::*};
 use crate::facts::{CheckedFactsRequest, FactsReply, FactsRequest};
-use alloc::{boxed::Box, vec::Vec};
+use alloc::boxed::Box;
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     value::NdfValue,

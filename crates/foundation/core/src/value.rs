@@ -1,4 +1,5 @@
 //! NDF logical values. Numeric constructors preserve canonical wire invariants.
+mod compare;
 pub mod decimal;
 use crate::source::Digest;
 use alloc::{boxed::Box, string::String, vec::Vec};

@@ -47,6 +47,24 @@ pub trait DiagnosticSourceResolver {
         budget: &mut Budget,
     ) -> Result<&'a str, ReportValidationError>;
 }
+impl DiagnosticSourceResolver for SourceStore {
+    fn slice<'a>(
+        &'a self,
+        span: &Span,
+        budget: &mut Budget,
+    ) -> Result<&'a str, ReportValidationError> {
+        for source in self.snapshots() {
+            budget.charge(
+                Resource::Work,
+                (span.snapshot_ref().source.0.len() + source.identity().source.0.len()) as u64 + 34,
+            )?;
+            if source.identity() == span.snapshot_ref() {
+                return Ok(source.slice(span)?);
+            }
+        }
+        Err(SourceError::MissingSnapshot.into())
+    }
+}
 fn check_span(
     sources: &impl DiagnosticSourceResolver,
     span: &Span,
@@ -134,39 +152,51 @@ fn diagnostic(
     }
     for fix in &value.fixes {
         b.charge(Resource::Work, 1)?;
-        for (index, edit) in fix.edits.iter().enumerate() {
-            let expected = sources.slice(&edit.span, b)?;
-            b.charge(Resource::Work, expected.len() as u64)?;
-            if Digest::of(expected.as_bytes()) != edit.expected_digest {
-                return Err(SourceError::ExpectedDigest.into());
+        validate_edits(&fix.edits, sources, b)?;
+    }
+    Ok(())
+}
+/// Checks exact old bytes, one revision per source and nonoverlap for an atomic
+/// edit transaction. Does not apply edits or grant permission to write sources.
+pub fn validate_edits(
+    edits: &[crate::source::TextEdit],
+    sources: &impl DiagnosticSourceResolver,
+    b: &mut Budget,
+) -> Result<(), ReportValidationError> {
+    b.poll()?;
+    for (index, edit) in edits.iter().enumerate() {
+        let expected = sources.slice(&edit.span, b)?;
+        b.charge(Resource::Work, expected.len() as u64)?;
+        if Digest::of(expected.as_bytes()) != edit.expected_digest {
+            return Err(SourceError::ExpectedDigest.into());
+        }
+        // Preserve the advertised edit order without an allocation for sorting.
+        // The transaction applies a per-snapshot sorted copy; duplicate starts
+        // (including insertion anchors) and intersecting ranges cannot coexist.
+        for prior in &edits[..index] {
+            b.charge(
+                Resource::Work,
+                (prior.span.snapshot_ref().source.0.len() as u64)
+                    .saturating_add(edit.span.snapshot_ref().source.0.len() as u64)
+                    .saturating_add(34),
+            )?;
+            if prior.span.snapshot_ref().source == edit.span.snapshot_ref().source
+                && prior.span.snapshot_ref() != edit.span.snapshot_ref()
+            {
+                return Err(SourceError::SnapshotMismatch.into());
             }
-            // Preserve the advertised edit order without an allocation for sorting.
-            // The transaction applies a per-snapshot sorted copy; duplicate starts
-            // (including insertion anchors) and intersecting ranges cannot coexist.
-            for prior in &fix.edits[..index] {
-                b.charge(
-                    Resource::Work,
-                    (prior.span.snapshot_ref().source.0.len() as u64)
-                        .saturating_add(edit.span.snapshot_ref().source.0.len() as u64)
-                        .saturating_add(34),
-                )?;
-                if prior.span.snapshot_ref().source == edit.span.snapshot_ref().source
-                    && prior.span.snapshot_ref() != edit.span.snapshot_ref()
-                {
-                    return Err(SourceError::SnapshotMismatch.into());
-                }
-                if prior.span.snapshot_ref() == edit.span.snapshot_ref()
-                    && (prior.span.start() == edit.span.start()
-                        || (prior.span.start() < edit.span.end()
-                            && edit.span.start() < prior.span.end()))
-                {
-                    return Err(SourceError::OverlappingEdits.into());
-                }
+            if prior.span.snapshot_ref() == edit.span.snapshot_ref()
+                && (prior.span.start() == edit.span.start()
+                    || (prior.span.start() < edit.span.end()
+                        && edit.span.start() < prior.span.end()))
+            {
+                return Err(SourceError::OverlappingEdits.into());
             }
         }
     }
     Ok(())
 }
+
 fn event(
     value: &Event,
     sources: &impl DiagnosticSourceResolver,

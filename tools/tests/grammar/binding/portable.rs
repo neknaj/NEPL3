@@ -6,6 +6,8 @@ mod analysis;
 mod causes;
 #[path = "portable/query.rs"]
 mod query;
+#[path = "portable/rename.rs"]
+mod rename;
 
 #[test]
 fn namespace_visibility_stage_roundtrips_and_rejects_wrong_policy_or_root() -> Result<(), String> {

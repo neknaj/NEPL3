@@ -128,7 +128,7 @@ impl Value for QueryRequest {
         })
     }
 }
-fn access_value<C: FoundationValueCodec>(
+pub(in crate::portable) fn access_value<C: FoundationValueCodec>(
     e: &BindingAccessError,
     s: &Schemas<'_>,
     c: &mut C,
@@ -157,7 +157,7 @@ fn access_value<C: FoundationValueCodec>(
         ),
     }
 }
-fn access_read<C: FoundationValueCodec>(
+pub(in crate::portable) fn access_read<C: FoundationValueCodec>(
     v: &NdfValue,
     s: &Schemas<'_>,
     c: &mut C,

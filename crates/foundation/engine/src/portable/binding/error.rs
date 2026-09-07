@@ -25,6 +25,20 @@ pub(in crate::portable) fn source_read<E>(
 ) -> Result<SourceError, PortableError<E>> {
     source_from(value, &ErrorSchemas::new(registry)?, b)
 }
+pub(in crate::portable) fn origin_value<E>(
+    error: &OriginError,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<NdfValue, PortableError<E>> {
+    origin(error, &ErrorSchemas::new(registry)?, b)
+}
+pub(in crate::portable) fn origin_read<E>(
+    value: &NdfValue,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<OriginError, PortableError<E>> {
+    origin_from(value, &ErrorSchemas::new(registry)?, b)
+}
 pub(super) fn stop_reason(error: &BindingError) -> Option<StopReason> {
     error.stop_cause()
 }
