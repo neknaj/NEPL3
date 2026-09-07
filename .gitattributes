@@ -20,6 +20,7 @@ conformance/fixtures/source/** -text
 
 # 取得したCIログの元の空白・制御文字を、整形対象のソースとして変更しない。
 conformance/results/foundation-slice/main-ci.log -text -whitespace
+conformance/results/doc-native-host/** -text -whitespace
 
 .tmp/** export-ignore
 target/** export-ignore

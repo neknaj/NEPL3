@@ -25,7 +25,31 @@ use nepl3_wire::{environment::environment_digest, foundation::FoundationCodec};
 fn err(v: impl std::fmt::Debug) -> String {
     format!("{v:?}")
 }
+fn host_identity() -> Digest {
+    Digest::of(
+        concat!(
+            include_str!("../src/doc/host.rs"),
+            include_str!("../src/doc/reader.rs"),
+            include_str!("../../crates/foundation/reader/src/builtin/provider.rs")
+        )
+        .as_bytes(),
+    )
+}
 fn with_input<T>(
+    compiled: &Compiled,
+    input: &str,
+    category: &str,
+    finish: impl FnOnce(
+        &ValidatedParseTree<'_>,
+        &ResolvedParseProfile<'_>,
+        &mut Budget,
+        &mut SourceAdmission,
+    ) -> Result<T, String>,
+) -> Result<T, String> {
+    with_input_route(false, compiled, input, category, finish)
+}
+fn with_input_route<T>(
+    native: bool,
     compiled: &Compiled,
     input: &str,
     category: &str,
@@ -40,16 +64,8 @@ fn with_input<T>(
     let packages: Vec<_> = std::iter::once(&compiled.doc.package)
         .chain(compiled.others.iter())
         .collect();
-    // Each runtime registration identifies the actual source serving that operation.
-    let implementation_for = |operation: &nepl3_core::value::OperationRef| {
-        if operation.schema.package == "nepl3.doc.reader" {
-            Digest::of(include_bytes!("../src/doc/reader.rs"))
-        } else {
-            Digest::of(include_bytes!(
-                "../../crates/foundation/reader/src/builtin/provider.rs"
-            ))
-        }
-    };
+    // Fixture implementation identity binds all code selected by this host.
+    let implementation_for = |_: &nepl3_core::value::OperationRef| host_identity();
     let mut operations = Vec::new();
     for operation in packages
         .iter()
@@ -151,20 +167,11 @@ fn with_input<T>(
         &mut b,
     )
     .map_err(err)?;
-    let tree = parse_source(&source, &resolved, category, &mut b, &mut a)?;
+    let tree = parse_source_route(&source, &resolved, "Doc", category, &mut b, &mut a, native)?;
     let checked = tree.validate(&resolved, &mut b, &mut a).map_err(err)?;
     finish(&checked, &resolved, &mut b, &mut a)
 }
 
-fn parse_source(
-    source: &SourceSnapshot,
-    resolved: &ResolvedParseProfile<'_>,
-    category: &str,
-    b: &mut Budget,
-    a: &mut SourceAdmission,
-) -> Result<nepl3_engine::recovery::ParseTree, String> {
-    parse_source_as(source, resolved, "Doc", category, b, a)
-}
 fn parse_source_as(
     source: &SourceSnapshot,
     resolved: &ResolvedParseProfile<'_>,
@@ -172,6 +179,18 @@ fn parse_source_as(
     category: &str,
     b: &mut Budget,
     a: &mut SourceAdmission,
+) -> Result<nepl3_engine::recovery::ParseTree, String> {
+    parse_source_route(source, resolved, alias, category, b, a, false)
+}
+#[allow(clippy::too_many_arguments)]
+fn parse_source_route(
+    source: &SourceSnapshot,
+    resolved: &ResolvedParseProfile<'_>,
+    alias: &str,
+    category: &str,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+    native: bool,
 ) -> Result<nepl3_engine::recovery::ParseTree, String> {
     let r = resolved.registry();
     let foundation = r.selected("nepl3.foundation", 1).ok_or("foundation")?;
@@ -223,21 +242,28 @@ fn parse_source_as(
     });
     let mut parser =
         ParseSession::new("doc-parse".into(), resolved, &environments, b).map_err(err)?;
-    let mut result = parser
-        .read(
-            ParseRequest {
-                snapshot: source,
-                start: 0,
-                limit: source.text().len() as u64,
-                final_input: true,
-                entry: &entry,
-                states: &states,
-            },
-            &store,
-            b,
-            a,
-        )
-        .map_err(err)?;
+    let request = ParseRequest {
+        snapshot: source,
+        start: 0,
+        limit: source.text().len() as u64,
+        final_input: true,
+        entry: &entry,
+        states: &states,
+    };
+    let mut result = if native {
+        let mut host =
+            nepl3_tools::doc::host::NativeHost::new(r, host_identity(), "decoded-".into(), b)
+                .map_err(err)?;
+        let reply = parser
+            .read_with_host(request, &store, b, a, &mut host)
+            .map_err(err)?;
+        if let Some(error) = reply.host_error {
+            return Err(err(error));
+        }
+        reply.reply
+    } else {
+        parser.read(request, &store, b, a).map_err(err)?
+    };
     let mut reservations = 0;
     loop {
         match result.outcome {
@@ -309,8 +335,24 @@ fn parse_source_as(
                     .map_err(err)?;
             }
             ParseOutcome::Complete { tree, cursor, .. } => {
-                assert_eq!(cursor, source.text().len() as u64);
+                // A prefix parse ends after its root, before trailing source
+                // whitespace. Keep the original snapshot, including file LF.
+                let tail = usize::try_from(cursor)
+                    .ok()
+                    .and_then(|offset| source.text().get(offset..))
+                    .ok_or("invalid completed source cursor")?;
+                assert!(
+                    tail.bytes()
+                        .all(|c| matches!(c, b' ' | b'\t' | b'\r' | b'\n'))
+                );
                 return Ok(tree);
+            }
+            ParseOutcome::Stopped { reason, progress } => {
+                return Err(format!(
+                    "candidate stopped: {reason:?}; cursor={:?}; usage={:?}",
+                    progress.as_ref().map(|p| p.cursor),
+                    b.usage()
+                ));
             }
             other => return Err(format!("candidate: {other:?}")),
         }
@@ -383,6 +425,22 @@ fn compiled() -> Result<Compiled, String> {
     }
     doc.registry.finalize(&mut budget()).map_err(err)?;
     Ok(Compiled { doc, others })
+}
+#[test]
+fn native_doc_host_preserves_owned_parse_tree_and_uses_less_allocation() -> Result<(), String> {
+    let compiled = compiled()?;
+    let source = include_str!("../../examples/document/line-break.nepld");
+    let run = |native| {
+        with_input_route(native, &compiled, source, "Article", |tree, _, b, _| {
+            Ok((tree.tree().clone(), b.usage()))
+        })
+    };
+    let (owned, owned_usage) = run(false)?;
+    let (native, native_usage) = run(true)?;
+    assert_eq!(native, owned);
+    assert!(native_usage.allocation_units < owned_usage.allocation_units);
+    println!("Doc identical tree: owned={owned_usage:?}; native={native_usage:?}");
+    Ok(())
 }
 #[test]
 fn doc_prefix_original_annotation_examples_use_actual_parser_and_lower() -> Result<(), String> {

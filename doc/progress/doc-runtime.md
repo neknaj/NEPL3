@@ -2,6 +2,27 @@
 
 T07 は進行中。`doc/spec/05-document.md` と `design/forms.json` を最終契約とし、以下の native API ができたことを T07 全体の完了へ読み替えない。
 
+## 同期host接続と文書移行までの残り
+
+`nepl3_tools::doc::host::NativeHost` は、明示Profileの実装identityと操作登録を
+照合してDoc sentence・Name・Number・Trivia providerを実行する。
+呼出しに宣言されたsource閉包だけを使用し、同じBudget/SourceAdmissionを保持する。
+予約IDは操作内で単調に発行し、停止した予約ではIDを消費しない。
+`ParseSession::read_with_host`へ接続することで、各同期callで成長中のparse arenaを
+外向けcontinuationへ複写する処理を避ける。providerのreply検査は省略しない。
+catalogのVec全体とreply Boxは、実際の確保・provider実行より先に予算計上する。
+
+この接続だけをHTML backendの未保存変更から分離して検証し、nativeのDoc試験32件、
+WASI31件が成功した。差はhost processを使用するnative専用seed検査である。
+独立レビューでも通常経路・同期経路・fallbackの構文木一致、登録/sourceの不正入力、
+予約停止とconstructorの全Allocation上限を確認した。
+
+`linear-combination.nepld`の約13KB全文は、同期接続後もWork上限100,000,000で
+停止する。これはHTML出力や文書移行の完成証拠ではない。reader/tokenizerの
+継続状態コピーを削減し、同じ入力・予算・位置・診断を用いた回帰検査を進める。
+その後、文書間リンクとasset解決、HTML artifact、意味同等性・安定URLの検証を
+接続して、準備できたページからnepld正本とPages配布へ進める。
+
 ## 現在の実行経路
 
 `nepl3-doc-core` は `no_std` + `alloc`、production 依存は `nepl3-core` だけ。DocValue は型付き arena であり、構造検査・正規化・source/Origin/View 閉包検査と明示 NDF adapter を提供する。深い入力は平坦な参照と反復処理を使い、共有 DAG の最大経路と guest 内部検査の Depth を合成する。

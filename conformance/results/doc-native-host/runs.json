@@ -1,0 +1,30 @@
+[
+  {
+    "target": "native",
+    "command": [
+      "cargo",
+      "run",
+      "--offline",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-host-constructor\\probe\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target"
+    ],
+    "exit": 0
+  },
+  {
+    "target": "wasm32-wasip2",
+    "command": [
+      "cargo",
+      "run",
+      "--offline",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-host-constructor\\probe\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target",
+      "--target",
+      "wasm32-wasip2"
+    ],
+    "exit": 0
+  }
+]
