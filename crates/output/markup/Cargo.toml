@@ -1,0 +1,18 @@
+[package]
+name = "nepl3-markup"
+description = "Typed markup and artifact validation with budgeted serialization"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+nepl3-core.workspace = true
+
+[dev-dependencies]
+nepl3-wire.workspace = true
+
+[lints]
+workspace = true

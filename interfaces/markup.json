@@ -1,0 +1,327 @@
+{
+  "package": "nepl3.markup",
+  "revision": 1,
+  "types": {
+    "HtmlTag": {
+      "variant": {
+        "Article": [],
+        "Section": [],
+        "Div": [],
+        "P": [],
+        "Span": [],
+        "H1": [],
+        "H2": [],
+        "H3": [],
+        "H4": [],
+        "H5": [],
+        "H6": [],
+        "Ruby": [],
+        "Rt": [],
+        "Rp": [],
+        "Em": [],
+        "Strong": [],
+        "Br": [],
+        "Pre": [],
+        "Code": [],
+        "Figure": [],
+        "Figcaption": [],
+        "A": [],
+        "Ul": [],
+        "Ol": [],
+        "Li": [],
+        "Table": [],
+        "Caption": [],
+        "Thead": [],
+        "Tbody": [],
+        "Tr": [],
+        "Th": [],
+        "Td": [],
+        "Img": []
+      },
+      "constraints": []
+    },
+    "HtmlSlot": {
+      "variant": {
+        "Block": [],
+        "Phrasing": []
+      },
+      "constraints": []
+    },
+    "HtmlRole": {
+      "variant": {
+        "Heading": [],
+        "Img": [],
+        "Group": [],
+        "Note": []
+      },
+      "constraints": []
+    },
+    "CellScope": {
+      "variant": {
+        "Row": [],
+        "Col": []
+      },
+      "constraints": []
+    },
+    "TextContext": {
+      "variant": {
+        "Content": [],
+        "Attribute": []
+      },
+      "constraints": []
+    },
+    "HtmlHref": {
+      "variant": {
+        "Fragment": [
+          [
+            "id",
+            "Text"
+          ]
+        ],
+        "Artifact": [
+          [
+            "path",
+            "Text"
+          ],
+          [
+            "fragment",
+            {
+              "option": "Text"
+            }
+          ]
+        ],
+        "External": [
+          [
+            "uri",
+            "Text"
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "HtmlAttribute": {
+      "variant": {
+        "Id": [
+          [
+            "value",
+            "Text"
+          ]
+        ],
+        "Lang": [
+          [
+            "value",
+            "Text"
+          ]
+        ],
+        "AriaLabel": [
+          [
+            "value",
+            "Text"
+          ]
+        ],
+        "DataId": [
+          [
+            "value",
+            "Text"
+          ]
+        ],
+        "DataGroup": [
+          [
+            "value",
+            "Text"
+          ]
+        ],
+        "Alt": [
+          [
+            "value",
+            "Text"
+          ]
+        ],
+        "Class": [
+          [
+            "values",
+            {
+              "list": "Text"
+            }
+          ]
+        ],
+        "Role": [
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.markup",
+                "revision": 1,
+                "name": "HtmlRole"
+              }
+            }
+          ]
+        ],
+        "Href": [
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.markup",
+                "revision": 1,
+                "name": "HtmlHref"
+              }
+            }
+          ]
+        ],
+        "Src": [
+          [
+            "path",
+            "Text"
+          ]
+        ],
+        "AriaLevel": [
+          [
+            "value",
+            "U64"
+          ]
+        ],
+        "Width": [
+          [
+            "value",
+            "U64"
+          ]
+        ],
+        "Height": [
+          [
+            "value",
+            "U64"
+          ]
+        ],
+        "Start": [
+          [
+            "value",
+            "U64"
+          ]
+        ],
+        "Scope": [
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.markup",
+                "revision": 1,
+                "name": "CellScope"
+              }
+            }
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "HtmlNode": {
+      "variant": {
+        "Text": [
+          [
+            "text",
+            "Text"
+          ]
+        ],
+        "Element": [
+          [
+            "tag",
+            {
+              "named": {
+                "package": "nepl3.markup",
+                "revision": 1,
+                "name": "HtmlTag"
+              }
+            }
+          ],
+          [
+            "attributes",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.markup",
+                  "revision": 1,
+                  "name": "HtmlAttribute"
+                }
+              }
+            }
+          ],
+          [
+            "children",
+            {
+              "list": "U64"
+            }
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "HtmlFragment": {
+      "record": [
+        [
+          "root",
+          "U64"
+        ],
+        [
+          "nodes",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.markup",
+                "revision": 1,
+                "name": "HtmlNode"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "HtmlPolicy": {
+      "record": [
+        [
+          "classes",
+          {
+            "list": "Text"
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "HtmlRequest": {
+      "record": [
+        [
+          "fragment",
+          {
+            "named": {
+              "package": "nepl3.markup",
+              "revision": 1,
+              "name": "HtmlFragment"
+            }
+          }
+        ],
+        [
+          "slot",
+          {
+            "named": {
+              "package": "nepl3.markup",
+              "revision": 1,
+              "name": "HtmlSlot"
+            }
+          }
+        ],
+        [
+          "policy",
+          {
+            "named": {
+              "package": "nepl3.markup",
+              "revision": 1,
+              "name": "HtmlPolicy"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    }
+  },
+  "operations": {}
+}

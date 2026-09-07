@@ -519,3 +519,7 @@ Mathの最初の表示構造差分は、06章、正式forms/syntax、Math schema
 数値helperは小さい符号付き有理数100演算を独立な整数交差積とgcdの期待値へ比較し、256bit整数の演算でも切捨てがなかった。約分後に2/5以外の分母因子が残るNumberは拒否し、明示constructorは有限ならNumber、その他は整数2子のFracを生成した。rootが先に実測・修正したconstructor Depth0不足について、独立に必要深さ1/2とcaller7、不足時の原DepthLimit、元値不変を再確認した。修正前logはroot提供資料であり、独立の修正前実行とは扱わない。MAX/32bit超の参照、cycle、未到達node、共有DAGの最長経路、10万段Negの検査と破棄もnative/WASIで確認した。
 
 最終固定66file＋追補8行は重複を除き68fileである。全SHAを実行前後で照合し、独立2補助とMath core8件・実parserを使うtools Math2件をnative/WASI双方で成功確認した。4binary、全process log、元入力、補助source、固定manifestと支持資料は `.tmp/review-math-fixed/manifest.json` に保存する。今回はarena/shape/lower/初回CBORと正確な有理数演算・新規notation constructorの範囲であり、Math binding、evaluate、print、render、HTML/KaTeX方針の受入完了を主張しない。今回の独立試験から新しいproduction不一致は確認されず、既存review findingの状態は変更しない。
+
+HTML fragmentの固定差分は、独立担当が正式内容モデル、公開native/初回CBOR入口、反例と実browserのtreeを確認した。R049はWork課金前の幅比例割当、R050は不正Ruby/rp、R051は符号付きportの受理として元probeを保存し、同じ入力の修正後native/WASI実行で拒否または一定予算停止を確認した。管理14件＋独立6件を両targetで実行し、最後のport差分は管理5件＋独立2件で確認した。修正後の660個のHTML構造は実Chromium 151.0.7922.34とFirefox 153.0で要素・属性・本文が一致した。512/600段のbrowser平坦化は別の出力深度制約として19章と後続H1へ保持する。完全なDoc準備、文書shell、KaTeX、視覚・font・accessibilityやWeb全受入の完了ではない。
+
+Text escapeの独立確認では全1,112,064 Unicode scalar、XML禁止文字、Content/Attribute正規形、CR/LF/TABの実XML再parse、境界予算とWASIの実isize超過を確認した。初回のtext snapshotは後のrustfmtと空白差があるが、最終整形済みtextもHTML固定subsetに含まれ、root全体gateで再試験した。実行前後のsource hash、元probe、full logとbrowser結果は `conformance/results/markup-html/independent.json` の分割archiveに保存し、source未対応範囲を群全体成功へ転用しない。

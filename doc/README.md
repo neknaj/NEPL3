@@ -43,3 +43,5 @@
 設計一式は実装の完成証拠ではありません。取り込み元の検査報告をruntimeの受入試験結果へ転記しません。外部資料は [参考文献](spec/references.md) にまとめています。
 
 HTMLの先行利用は [T22〜T25の実装段階](spec/18-html-delivery.md) に従います。既存のDoc処理を再利用し、Doc単独HTML、数式HTML、Web preview/exportへ接続します。全体の最終範囲は維持します。
+
+型付きHTML fragmentの入力・検査・serializerは [19章](spec/19-html-fragment.md) と [markup schema](../interfaces/markup.json) を参照してください。

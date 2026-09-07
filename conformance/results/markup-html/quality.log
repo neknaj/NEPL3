@@ -1,0 +1,6 @@
+    Blocking waiting for file lock on build directory
+    Checking nepl3-markup v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\output\markup)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.37s
+ Documenting nepl3-markup v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\output\markup)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.00s
+   Generated C:\projects\NEPL3-prefix-validation\target\doc\nepl3_core\index.html and 8 other files

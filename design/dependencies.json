@@ -81,7 +81,7 @@
         "nepl3-core"
       ],
       "no_std": true,
-      "responsibility": "検査済みHTML/MathML/SVG treeと安全なserializer"
+      "responsibility": "検査済みHTML/MathML/SVG treeと安全なserializer; dev-only nepl3-wire tests actual CBOR first receiver"
     },
     {
       "name": "nepl3-doc-html",
