@@ -158,8 +158,7 @@ pub(crate) fn check_provider(
                     return Err(ReaderError::ProviderContract);
                 }
                 machine.snapshot.check_range(*furthest, *furthest)?;
-                let sources = combined(machine, &[], original_sources, budget, admission)?;
-                report(returned, saved, machine.registry, &sources, budget)?;
+                report(returned, saved, machine.registry, original_sources, budget)?;
                 expectations(expected, machine.registry, budget)?;
                 return Ok(());
             }
@@ -178,8 +177,7 @@ pub(crate) fn check_provider(
                 {
                     return Err(ReaderError::ProviderContract);
                 }
-                let sources = combined(machine, &[], original_sources, budget, admission)?;
-                report(returned, saved, machine.registry, &sources, budget)?;
+                report(returned, saved, machine.registry, original_sources, budget)?;
                 expectations(expected, machine.registry, budget)?;
                 return Ok(());
             }
@@ -189,6 +187,26 @@ pub(crate) fn check_provider(
     };
     if returned.trace_overflow.is_some() && machine.current.trace_overflow.is_some() {
         return Err(ReaderError::ProviderContract);
+    }
+    let failed = match reply {
+        ProviderReplyRef::Read(reply) => matches!(reply, ReadReply::Failed { .. }),
+        ProviderReplyRef::Transform(reply) => {
+            matches!(reply.outcome, TransformOutcome::Failed { .. })
+        }
+    };
+    if !failed
+        && added.is_empty()
+        && maps.is_empty()
+        && view.elements.is_empty()
+        && view.roots.is_empty()
+        && facts.is_empty()
+        && returned.diagnostics.is_empty()
+        && returned.events.is_empty()
+    {
+        // No new declaration and no returned source-position use. The private
+        // request/checkpoint prefix is already validated. Do not rebuild its
+        // resolver merely to validate an empty report's usage/overflow fields.
+        return report(returned, saved, machine.registry, original_sources, budget);
     }
     let sources = combined(machine, added, original_sources, budget, admission)?;
     artifacts(
@@ -248,7 +266,7 @@ fn check_view_offset(view: &ViewBundle, offset: usize) -> Result<(), ReaderError
 /// precede this phase; allocation stops still preserve accepted artifacts.
 pub(in crate::runtime) fn apply_provider(
     machine: &mut Machine<'_, '_>,
-    frame: &ReaderFrame,
+    frame: ReaderFrame,
     reply: ProviderReply,
     budget: &mut Budget,
 ) -> Result<Outcome, ReaderError> {
@@ -316,11 +334,11 @@ pub(in crate::runtime) fn apply_provider(
             ReadReply::NoMatch {
                 expected, furthest, ..
             } => {
-                machine.current = copy(&frame.checkpoint, budget)?;
+                machine.current = frame.checkpoint;
                 Ok(Outcome::NoMatch { expected, furthest })
             }
             ReadReply::NeedMore { expected, .. } => {
-                machine.current = copy(&frame.checkpoint, budget)?;
+                machine.current = frame.checkpoint;
                 Ok(Outcome::NeedMore(expected))
             }
             ReadReply::Failed {

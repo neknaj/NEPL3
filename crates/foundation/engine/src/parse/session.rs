@@ -25,11 +25,16 @@ use nepl3_core::{
 };
 use nepl3_reader::{runtime::ProviderReply, tokenizer::*};
 mod head;
+mod host;
 use head::HeadPending;
 
 struct Machine {
     progress: ParseProgress,
     accepted: Option<AcceptedTokenizationReport>,
+    // The private accepted collector only appends across successful token reads.
+    // Each open arena imports that prefix once. These cursors never come from
+    // an echoed ParseProgress or a provider payload.
+    imported: Vec<[usize; 2]>,
 }
 struct Incomplete {
     machine: Machine,
@@ -183,125 +188,24 @@ impl<'a> ParseSession<'a> {
                 host_error: None,
             });
         };
-        let mut result =
-            budget.with_depth(|budget| self.drive(&mut machine, sources, budget, admission));
-        loop {
-            let halt = match result {
-                Ok(halt) => halt,
-                Err(error) => {
-                    return Ok(super::ParseHostReply {
-                        reply: self.finish(machine, Err(error), depth_base, budget)?,
-                        host_error: None,
-                    });
-                }
-            };
-            if matches!(halt, Halt::Head(..)) {
-                let reply = self.finish(machine, Ok(halt), depth_base, budget)?;
-                return self.service_head_host(reply, sources, budget, admission, host);
-            }
-            let alias = if matches!(halt, Halt::Await(..) | Halt::Reserve(..)) {
-                let selected = machine
-                    .progress
-                    .frames
-                    .last()
-                    .ok_or(ParseError::Reference)
-                    .and_then(|frame| self.alias(&frame.entry.alias, budget));
-                match selected {
-                    Ok(alias) => alias,
-                    Err(error) => {
-                        return Ok(super::ParseHostReply {
-                            reply: self.finish(machine, Err(error), depth_base, budget)?,
-                            host_error: None,
-                        });
-                    }
-                }
-            } else {
-                return Ok(super::ParseHostReply {
-                    reply: self.finish(machine, Ok(halt), depth_base, budget)?,
-                    host_error: None,
-                });
-            };
-            // Keep the halt and original machine until the callback has succeeded.
-            // A callback error can still publish a fully owned retry continuation.
-            let dispatched = (|| -> Result<_, ParseError> {
-                match &halt {
-                    Halt::Await(call, tokenizer) => {
-                        use nepl3_reader::model::ProviderCall;
-                        let (operation, base) = match call.as_ref() {
-                            ProviderCall::Read {
-                                operation,
-                                depth_base,
-                                ..
-                            }
-                            | ProviderCall::Transform {
-                                operation,
-                                depth_base,
-                                ..
-                            }
-                            | ProviderCall::Dependent {
-                                operation,
-                                depth_base,
-                                ..
-                            } => (operation, *depth_base),
-                        };
-                        let requirement = self.profile.provider(operation, budget)?;
-                        let reply = budget.with_depth_at_least(base, |budget| {
-                            host.provider(call, requirement, budget, admission)
-                        })?;
-                        Ok(reply.map(|reply| {
-                            self.tokenizers[alias]
-                                .resume_accepted(tokenizer, reply, sources, budget, admission)
-                        }))
-                    }
-                    Halt::Reserve(request, tokenizer) => {
-                        let reservation = budget
-                            .with_depth_at_least(tokenizer.depth_base, |budget| {
-                                host.reservation(request, budget, admission)
-                            })?;
-                        Ok(reservation.map(|reservation| {
-                            self.tokenizers[alias].reserve_accepted(
-                                tokenizer,
-                                &reservation,
-                                sources,
-                                budget,
-                                admission,
-                            )
-                        }))
-                    }
-                    _ => Err(ParseError::Reference),
-                }
-            })();
-            let reply = match dispatched {
-                Ok(Some(reply)) => reply,
-                Ok(None) => {
-                    return Ok(super::ParseHostReply {
-                        reply: self.finish(machine, Ok(halt), depth_base, budget)?,
-                        host_error: None,
-                    });
-                }
-                Err(error) => {
-                    let reply = match budget.poll() {
-                        Err(reason) => self.stop(machine, reason, budget)?,
-                        Ok(()) => self.finish(machine, Ok(halt), depth_base, budget)?,
-                    };
-                    return Ok(super::ParseHostReply {
-                        reply,
-                        host_error: Some(error),
-                    });
-                }
-            };
-            result = match reply {
-                Ok(reply) => match self.accept(&mut machine, reply, sources, budget, admission) {
-                    Ok(Some(halt)) => Ok(halt),
-                    Ok(None) => budget.with_depth_at_least(depth_base, |budget| {
-                        self.drive(&mut machine, sources, budget, admission)
-                    }),
-                    Err(error) => Err(error),
-                },
-                Err(error) => Err(error.into()),
-            };
+        let mut host_error = None;
+        let result = budget.with_depth(|budget| {
+            self.drive_dispatch(
+                &mut machine,
+                sources,
+                budget,
+                admission,
+                Some(host),
+                &mut host_error,
+            )
+        });
+        let reply = self.finish(machine, result, depth_base, budget)?;
+        if matches!(reply.outcome, ParseOutcome::AwaitHead { .. }) {
+            return self.service_head_host(reply, sources, budget, admission, host);
         }
+        Ok(super::ParseHostReply { reply, host_error })
     }
+
     fn start(
         &mut self,
         request: ParseRequest<'_>,
@@ -436,8 +340,10 @@ impl<'a> ParseSession<'a> {
             declared_sources.push(source.clone_with_budget(budget)?);
         }
         let declared_origins = environment::origins(&arena.origins, 0, budget)?;
+        build::slot::<[usize; 2]>(budget)?;
         Ok(Machine {
             accepted: Some(accepted),
+            imported: vec![[0, 0]],
             progress: ParseProgress {
                 request: OwnedParseRequest {
                     snapshot: request.snapshot.reference(),
@@ -513,6 +419,17 @@ impl<'a> ParseSession<'a> {
         sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
+    ) -> Result<Halt, ParseError> {
+        self.drive_dispatch(machine, sources, budget, admission, None, &mut None)
+    }
+    fn drive_dispatch(
+        &mut self,
+        machine: &mut Machine,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        mut host: Option<&mut dyn super::ParseHost>,
+        host_error: &mut Option<ParseError>,
     ) -> Result<Halt, ParseError> {
         loop {
             budget.poll()?;
@@ -612,24 +529,42 @@ impl<'a> ParseSession<'a> {
                 .checked_add(machine.progress.frames.len() as u64)
                 .ok_or_else(|| budget.stop(StopReason::DepthLimit))?;
             let result = budget.with_depth_at_least(active_depth, |budget| {
-                self.tokenizers[alias].read_with_accepted(
-                    ScopedTokenizationRequest {
-                        scope: &machine.progress.scope,
-                        target,
-                        input: TokenizationRequest {
-                            snapshot,
-                            start: machine.progress.cursor,
-                            limit: machine.progress.request.limit,
-                            final_input: machine.progress.request.final_input,
-                            context: &context,
-                            state: &state.state,
-                        },
+                let request = ScopedTokenizationRequest {
+                    scope: &machine.progress.scope,
+                    target,
+                    input: TokenizationRequest {
+                        snapshot,
+                        start: machine.progress.cursor,
+                        limit: machine.progress.request.limit,
+                        final_input: machine.progress.request.final_input,
+                        context: &context,
+                        state: &state.state,
                     },
-                    sources,
-                    budget,
-                    admission,
-                    accepted,
-                )
+                };
+                if let Some(host) = host.as_deref_mut() {
+                    let mut adapter = host::TokenizerHost {
+                        host,
+                        profile: self.profile,
+                        error: host_error,
+                    };
+                    let result = self.tokenizers[alias].read_accepted_with_host(
+                        request,
+                        sources,
+                        budget,
+                        admission,
+                        accepted,
+                        &mut adapter,
+                    )?;
+                    if host_error.is_none()
+                        && let Some(error) = result.host_error
+                    {
+                        return Err(error);
+                    }
+                    Ok::<_, nepl3_reader::runtime::ReaderError>(result.reply)
+                } else {
+                    self.tokenizers[alias]
+                        .read_with_accepted(request, sources, budget, admission, accepted)
+                }
             })?;
             machine.progress.facts.push(batch);
             if let Some(halt) = self.accept(machine, result, sources, budget, admission)? {
@@ -813,15 +748,25 @@ impl<'a> ParseSession<'a> {
             .last_mut()
             .ok_or(ParseError::Reference)?;
         let accepted = machine.accepted.as_ref().ok_or(ParseError::Reference)?;
-        for source in accepted.sources() {
-            arena.source(source, budget)?;
-        }
-        for mapping in accepted.source_maps() {
+        let imported = machine.imported.last_mut().ok_or(ParseError::Reference)?;
+        arena.extend_sources(
+            accepted
+                .sources()
+                .get(imported[0]..)
+                .ok_or(ParseError::Reference)?,
+            budget,
+        )?;
+        for mapping in accepted
+            .source_maps()
+            .get(imported[1]..)
+            .ok_or(ParseError::Reference)?
+        {
             if !arena.source_maps.contains(mapping) {
                 build::slot::<nepl3_core::origin::Mapping>(budget)?;
                 arena.source_maps.push(mapping.clone_with_budget(budget)?);
             }
         }
+        *imported = [accepted.sources().len(), accepted.source_maps().len()];
         build::slot::<NodeSelection>(budget)?;
         let node = arena.head(token, kind, self.profile.registry(), budget)?;
         let stored_selection = copy::selection(&selection, budget)?;
@@ -920,7 +865,9 @@ impl<'a> ParseSession<'a> {
                 .ok_or(SourceError::MissingSnapshot)?;
             let arena = self.arena(source, path, budget)?;
             build::slot::<ParseArena>(budget)?;
+            build::slot::<[usize; 2]>(budget)?;
             machine.progress.arenas.push(arena);
+            machine.imported.push([0, 0]);
             machine.progress.arenas.len() as u64 - 1
         } else {
             parent.arena
@@ -973,6 +920,7 @@ impl<'a> ParseSession<'a> {
         }
         let value = if frame.foreign {
             let mut arena = machine.progress.arenas.pop().ok_or(ParseError::Reference)?;
+            machine.imported.pop().ok_or(ParseError::Reference)?;
             let context = BundleContext {
                 path: core::mem::take(&mut arena.path),
                 nodes: core::mem::take(&mut arena.selections),

@@ -136,7 +136,8 @@ impl<'a> View<'a> {
             if v.sources.get_ref(source.identity()).is_some() {
                 return Err(FactError::DuplicateId);
             }
-            v.sources.insert(source.clone_with_budget(budget)?)?;
+            v.sources
+                .insert_with_budget(source.clone_with_budget(budget)?, budget)?;
         }
         for origin in base
             .origins

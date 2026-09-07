@@ -210,7 +210,7 @@ pub(super) fn declared<E>(
             Resource::AllocationUnits,
             core::mem::size_of::<nepl3_core::source::SourceSnapshot>() as u64,
         )?;
-        out.insert(source.clone_with_budget(b)?)?;
+        out.insert_with_budget(source.clone_with_budget(b)?, b)?;
     }
     Ok(out)
 }

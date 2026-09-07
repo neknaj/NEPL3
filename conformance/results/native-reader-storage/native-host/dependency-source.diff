@@ -1,0 +1,23 @@
+--- 
++++ 
+@@ -543,8 +543,10 @@
+             // operations. Independently decoded storage takes the full check.
+             let key = alloc::sync::Arc::as_ptr(&snapshot.storage);
+             let (mut low, mut high) = (0, self.shared.len());
++            // Charge a size-derived search/shift bound, not pointer ordering:
++            // allocator placement must not change logical operation usage.
++            budget.charge(Resource::Work, (usize::BITS - high.leading_zeros()) as u64)?;
+             while low < high {
+-                budget.charge(Resource::Work, 1)?;
+                 let mid = low + (high - low) / 2;
+                 match alloc::sync::Arc::as_ptr(&self.shared[mid]).cmp(&key) {
+                     core::cmp::Ordering::Equal => return Ok(()),
+@@ -552,7 +554,7 @@
+                     core::cmp::Ordering::Greater => high = mid,
+                 }
+             }
+-            budget.charge(Resource::Work, (self.shared.len() - low) as u64 + 1)?;
++            budget.charge(Resource::Work, self.shared.len() as u64 + 1)?;
+             budget.charge(
+                 Resource::AllocationUnits,
+                 core::mem::size_of::<SnapshotStorage>() as u64,

@@ -1,0 +1,20 @@
+[
+  {
+    "case": "trailing-panic",
+    "exit": 1,
+    "result": "failed",
+    "error": "Error: UART protocol bytes"
+  },
+  {
+    "case": "missing-end",
+    "exit": 1,
+    "result": "failed",
+    "error": "Error: unexpected CPU wait before test completion"
+  },
+  {
+    "case": "allocator-exhaustion",
+    "exit": 1,
+    "result": "failed",
+    "error": "Error: UART malformed/panic/duplicate"
+  }
+]

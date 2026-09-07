@@ -1,0 +1,42 @@
+[
+  {
+    "command": [
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\final-nepl3-tools.exe",
+      "--help"
+    ],
+    "exit": 0,
+    "deadline": 60
+  },
+  {
+    "command": [
+      "python",
+      "tools/generate/doc_html.py"
+    ],
+    "exit": 0,
+    "deadline": 60
+  },
+  {
+    "command": [
+      "rustc",
+      "--version"
+    ],
+    "exit": 0,
+    "deadline": 60
+  },
+  {
+    "command": [
+      "cargo",
+      "--version"
+    ],
+    "exit": 0,
+    "deadline": 60
+  },
+  {
+    "command": [
+      "wasmtime",
+      "--version"
+    ],
+    "exit": 0,
+    "deadline": 60
+  }
+]

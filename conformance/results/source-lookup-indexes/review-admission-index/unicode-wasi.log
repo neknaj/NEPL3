@@ -1,0 +1,32 @@
+   Compiling review-lookup v0.0.0 (C:\projects\NEPL3-source-lookup-indexes\.tmp\review-admission-index\workspace\probe)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.09s
+     Running unittests src\lib.rs (.tmp\review-admission-index\wasi-target\wasm32-wasip2\debug\deps\review_lookup-441345cf257a0aab.wasm)
+
+running 9 tests
+test admission_and_store_indices_commit_together_for_multi_source_edits ... apply+admission Work cap0..=1423
+apply+admission AllocationUnits cap0..=979
+ok
+test admission_creation_and_import_stop_before_publishing_new_keys ... admission create Work cap0..=250
+admission create AllocationUnits cap0..=107
+ok
+test all_three_vertex_mapping_graphs_match_independent_transitive_closure ... 512 graphs x 2 declaration orders agree with transitive closure
+ok
+test empty_lookup_must_preserve_cancelled_budget ... ok
+test index_lookup_preserves_exact_revision_and_charged_name_comparisons ... ok
+test map_index_preserves_cycles_disjoint_self_edges_and_depth ... map Work caps0..=185
+map AllocationUnits caps0..=88
+ok
+test preadmitted_output_identity_is_checked_and_not_charged_again ... ok
+test report_added_index_resolves_exact_span_and_preserves_validation_stops ... report Work caps0..=240
+report AllocationUnits caps0..=12
+ok
+test reports_preserve_duplicate_and_identity_uri_rules ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.30s
+
+   Doc-tests review_lookup
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

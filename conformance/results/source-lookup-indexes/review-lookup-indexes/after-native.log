@@ -1,0 +1,24 @@
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-source-lookup-indexes\.tmp\review-lookup-indexes\workspace\crates\foundation\core)
+   Compiling review-lookup v0.0.0 (C:\projects\NEPL3-source-lookup-indexes\.tmp\review-lookup-indexes\workspace\probe)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.41s
+     Running unittests src\lib.rs (.tmp\review-lookup-indexes\target\debug\deps\review_lookup-97028be5ca7617f2.exe)
+
+running 5 tests
+test empty_lookup_must_preserve_cancelled_budget ... ok
+test index_lookup_preserves_exact_revision_and_charged_name_comparisons ... ok
+test reports_preserve_duplicate_and_identity_uri_rules ... ok
+report Work caps0..=240
+report AllocationUnits caps0..=24
+test report_added_index_resolves_exact_span_and_preserves_validation_stops ... ok
+map Work caps0..=185
+map AllocationUnits caps0..=152
+test map_index_preserves_cycles_disjoint_self_edges_and_depth ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests review_lookup
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

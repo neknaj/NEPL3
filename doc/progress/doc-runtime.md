@@ -2,6 +2,27 @@
 
 T07 は進行中。`doc/spec/05-document.md` と `design/forms.json` を最終契約とし、以下の native API ができたことを T07 全体の完了へ読み替えない。
 
+## 同期host接続と文書移行までの残り
+
+`nepl3_tools::doc::host::NativeHost` は、明示Profileの実装identityと操作登録を
+照合してDoc sentence・Name・Number・Trivia providerを実行する。
+呼出しに宣言されたsource閉包だけを使用し、同じBudget/SourceAdmissionを保持する。
+予約IDは操作内で単調に発行し、停止した予約ではIDを消費しない。
+`ParseSession::read_with_host`へ接続することで、各同期callで成長中のparse arenaを
+外向けcontinuationへ複写する処理を避ける。providerのreply検査は省略しない。
+catalogのVec全体とreply Boxは、実際の確保・provider実行より先に予算計上する。
+
+この接続だけをHTML backendの未保存変更から分離して検証し、nativeのDoc試験32件、
+WASI31件が成功した。差はhost processを使用するnative専用seed検査である。
+独立レビューでも通常経路・同期経路・fallbackの構文木一致、登録/sourceの不正入力、
+予約停止とconstructorの全Allocation上限を確認した。
+
+`linear-combination.nepld`の約13KB全文は、同期接続後もWork上限100,000,000で
+停止する。これはHTML出力や文書移行の完成証拠ではない。reader/tokenizerの
+継続状態コピーを削減し、同じ入力・予算・位置・診断を用いた回帰検査を進める。
+その後、文書間リンクとasset解決、HTML artifact、意味同等性・安定URLの検証を
+接続して、準備できたページからnepld正本とPages配布へ進める。
+
 ## 現在の実行経路
 
 `nepl3-doc-core` は `no_std` + `alloc`、production 依存は `nepl3-core` だけ。DocValue は型付き arena であり、構造検査・正規化・source/Origin/View 閉包検査と明示 NDF adapter を提供する。深い入力は平坦な参照と反復処理を使い、共有 DAG の最大経路と guest 内部検査の Depth を合成する。
@@ -37,3 +58,22 @@ Doc arena の node/root、Origin、局所 View と source map は portable 往�
 - Doc の正式 lower 操作の Report/部分結果包絡と全 suite adapter。native helper の Result を、別実装の操作包絡の完成として扱わない。
 
 設計入力は main `b5295cef655aa59affffd6644f2902268d071953` の文書監査。inventory SHA-256 は `daf94085913930f05c1655d2adbef4f56651864f9a97ac4d261400449c98499e`、61 Markdown / 231 Rust source owner、52 表 / 1283 cell、39 list / 233 item、1134 inline code、12 code block、249 link、1 image。追加 element category はない。この監査は実装中差分の completeness、rustdoc 意味監査、T21 の移行完了とは別である。
+
+## Tokenizer同期接続の次段階
+
+prefix engineからtokenizerの同期hostを使用し、成功callで外側tokenizer継続を発行しない
+経路を追加した。独立レビューで見つかった明示Stoppedエラーと入れ子の停止原因もBudgetへ
+保持する。既存所有経路との構文木・診断・source/map比較を維持する。
+HTMLの全文再現試験では同じWork上限100,000,000のまま停止位置が1412から1897へ進んだが、
+13KB文書の完走には至っていない。これは部分改善であり、文書移行やHTML全体の成功ではない。
+次は共有sourceの実コピー費用と外部echo比較費用の分離を検討し、外部入力の検査を維持して
+本文の反復コピー課金を解消する。
+
+続く実装では、実コピーと比較前の走査費用を分離し、source storeの重複検索を
+予算付きの二分探索へ変更した。公開snapshot列の順序、外部echoの全文比較上限、
+source編集の原子的な反映は維持する。同期reader callbackは外部継続を受け取らず、
+排他的なprivate slotを既存の返却値検査経路へ渡す。
+同じ全文試験は停止位置3399まで進んだが、なおWork上限で停止する。
+途中の線形検索版ではGrammar bootstrapも既存上限で停止したため、その版を完成扱いにせず、
+二分探索版でbootstrapを再実行して成功を確認した。workspace試験とClippyも成功した。
+次は残るsource admission・診断source・Origin graphの繰り返し検索を調べる。

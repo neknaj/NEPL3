@@ -1,0 +1,120 @@
+{
+  "package": "nepl3.doc.html",
+  "revision": 1,
+  "types": {
+    "ParallelMode": {
+      "variant": {
+        "Rows": [],
+        "Columns": [],
+        "Single": [
+          [
+            "language",
+            "Text"
+          ],
+          [
+            "fallbacks",
+            {
+              "list": "Text"
+            }
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "RenderOptions": {
+      "record": [
+        [
+          "parallel",
+          {
+            "named": {
+              "package": "nepl3.doc.html",
+              "revision": 1,
+              "name": "ParallelMode"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "LocalHtmlRequest": {
+      "record": [
+        [
+          "document",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "DocumentSyntax"
+            }
+          }
+        ],
+        [
+          "options",
+          {
+            "named": {
+              "package": "nepl3.doc.html",
+              "revision": 1,
+              "name": "RenderOptions"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "ElementOrigin": {
+      "record": [
+        [
+          "element",
+          "U64"
+        ],
+        [
+          "node",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "RenderedFragment": {
+      "record": [
+        [
+          "documentDigest",
+          "Bytes"
+        ],
+        [
+          "options",
+          {
+            "named": {
+              "package": "nepl3.doc.html",
+              "revision": 1,
+              "name": "RenderOptions"
+            }
+          }
+        ],
+        [
+          "markup",
+          {
+            "named": {
+              "package": "nepl3.markup",
+              "revision": 1,
+              "name": "HtmlRequest"
+            }
+          }
+        ],
+        [
+          "origins",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc.html",
+                "revision": 1,
+                "name": "ElementOrigin"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    }
+  },
+  "operations": {}
+}

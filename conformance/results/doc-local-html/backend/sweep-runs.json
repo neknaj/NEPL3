@@ -1,0 +1,64 @@
+[
+  {
+    "label": "sweep-build-native",
+    "command": [
+      "cargo",
+      "build",
+      "--offline",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-html-current\\probe\\Cargo.toml",
+      "--bins",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target"
+    ],
+    "exit": 0,
+    "seconds": 1.1469621658325195,
+    "deadline": 600,
+    "log": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-html-current\\sweep-build-native.log",
+    "sha256": "8e8584784993b72070551cfe9b6ee4b518946ef071632610b32735f15c3f47b9"
+  },
+  {
+    "label": "native-sweep",
+    "command": [
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-html-current\\native-sweep.exe"
+    ],
+    "exit": 0,
+    "seconds": 0.04480457305908203,
+    "deadline": 180,
+    "log": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-html-current\\native-sweep.log",
+    "sha256": "8ab35eafc36299698e67fb5ab7536232612d37fdb205fe96cb12706f17a1e877"
+  },
+  {
+    "label": "sweep-build-wasi",
+    "command": [
+      "cargo",
+      "build",
+      "--offline",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-html-current\\probe\\Cargo.toml",
+      "--bins",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target",
+      "--target",
+      "wasm32-wasip2"
+    ],
+    "exit": 0,
+    "seconds": 1.0307869911193848,
+    "deadline": 600,
+    "log": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-html-current\\sweep-build-wasi.log",
+    "sha256": "47e37903f5310a6032a92050f66b3efd44447b0cd1403a83158f2ae9d02ebf2b"
+  },
+  {
+    "label": "wasi-sweep",
+    "command": [
+      "wasmtime",
+      "run",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-html-current\\wasi-sweep.wasm"
+    ],
+    "exit": 0,
+    "seconds": 0.47898149490356445,
+    "deadline": 180,
+    "log": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-html-current\\wasi-sweep.log",
+    "sha256": "8ab35eafc36299698e67fb5ab7536232612d37fdb205fe96cb12706f17a1e877"
+  }
+]

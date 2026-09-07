@@ -1,5 +1,11 @@
 # 02. 共通データ契約
 
+atomic pointerを使えるnative/Wasmでは、SourceAdmissionは受入済みの不変snapshot storageを
+操作内だけで所有・索引化できる。同じstorageの再受入では既存の証明を再利用し、独立decodeの
+storageはsource/revision/digest/URIとSourceBytesの検査を通す。所有参照を保持してaddressの再利用を防ぐ。
+内部addressはwire・identity・出力へ含めず、索引のWorkは要素数による探索・shift上界を事前計上して
+allocator配置によるUsage差を防ぐ。別SourceAdmissionや非atomic targetには証明を引き継がない。
+
 ## 方針
 
 source、種類、構造、意味、解析結果の出自を独立に保持する。エラーやeditor結果を文字列から再解析しない。
@@ -9,6 +15,10 @@ source、種類、構造、意味、解析結果の出自を独立に保持す�
 `SourceId`はhostが与える空でないopaque TextのID。`Revision`はそのsourceの版。`SnapshotId = (SourceId, Revision, contentDigest)` はnativeとwireで同じ同一性を持ち、wire record名はSourceRefとする。SourceSnapshotはUTF-8の不変byte列とlocatorとしてのURIを別に持つ。ファイルだけでなくメモリ文書・生成文書も許可する。同じURIを持つ独立文書も異なるSourceIdで区別する。coreは乱数・時計・pointerからIDを生成しない。
 
 SourceContentはid:SourceRef、uri:Text、utf8:Textを持つ。受信時は元UTF-8 byte列のSHA-256とid.digestを照合する。SourceBundleはsourcesの列を持ち、同じSourceId/revisionに異なる内容・digest・URIを割り当てる入力、重複したsnapshot宣言を拒否する。SourceStoreへの同一snapshotの再参照は既存の不変値を指し、文書を新しいrevisionへ自動更新しない。URI変更は新しいrevisionとして明示する。
+
+Rustのnative SourceSnapshotは、pointer atomicが使えるtargetではidentity・URI・本文をまとめて非公開の共有不変storageとして保持し、cloneごとに複製しない。同じ共有storageなら三つの値がすべて同じことを保証できる。別storageのidentity・URI・本文は値で比較する。pointer atomicを持たないalloc-only targetでは所有Stringを複製し、Send/Syncの性質を不用意に変更しない。この内部表現をwireに露出させず、NDFの受信では全文とdigestを改めて検査する。編集は新しいsnapshotを構築し、共有元を変更しない。
+
+共有storageの初回確保と編集による新規確保はAllocationUnitsへ計上し、共有storageを用いるtargetのnative cloneではsnapshot slotを計上する。非atomic targetではidentity・URI・本文の複製費用も計上する。実コピーのclone_with_budgetとCopyPurpose::Cloneは共有storageの内容を走査しない。一方、外部continuation比較前のcharge_cloneとCopyPurpose::Compareはmetadataと本文長を含む保守的な上限を維持する。二つのsnapshotを直接照合するeq_with_budgetは同じ不変storageと確認できる場合だけ内容比較を省略し、別decodeのstorageは比較前に課金する。SpanのSourceId、診断、Originなど、snapshot以外の所有値の複製費用は引き続き計上する。source storeへの挿入は別の操作として索引比較・重複照合・成長費用を計上する。SourceBytesの入場、停止理由の保持、受信境界の検査を免除する最適化ではない。
 
 `Span = (SnapshotId, start:u64, end:u64)`。半開区間 `[start,end)`、`0 <= start <= end <= source.len`、UTF-8 scalar境界であることを構築時に検査する。挿入位置には空区間を使用できる。空区間は左/右へのaffinityを必要な操作で別に持つ。行・列・画面幅をSpanへ保存しない。
 
@@ -109,5 +119,7 @@ sourceBytesは一つの共有操作contextへ受け入れる各snapshotの元byt
 sourceBytesを超える入力は、文字数ではなく元のUTF-8 byte数で判定し、Stopped(SourceLimit)を返す。元byte列を受け取るsnapshot constructorではこの長さの検査をUTF-8 decodeより前に行う。NDF受信ではCBOR構造・TextのUTF-8・schemaの検査を済ませて初めて埋込みsourceを識別できるため、その段階の失敗が先になる。既に停止したbudgetの理由は後続の検査で置き換えない。
 
 SourceAdmissionは操作共通の資源計上台帳であり、公開されたSourceStoreではない。bundleの後半で失敗しても、前半で受け入れたsnapshotの使用量とidentity照合情報を取り消さない。同じcontextで再試行しても同じsnapshotを二重計上せず、locator・内容の衝突は拒否する。typed bundleの返却とSourceStoreへの反映は全体の検査成功後に行い、取り消した候補のsourceを解析結果へ混入させない。
+
+Rust実装のSourceStoreとSourceAdmissionは、SourceId・revisionをキーとする非公開索引を使用する。索引の一致だけでsnapshotの一致とはせず、digest・locatorと必要な内容比較を維持する。sourceの公開列は挿入順のままとし、索引の比較、追加領域、要素移動を予算へ計上する。複数sourceの編集ではsource列・入場台帳・両索引の準備をすべて済ませてから反映する。空の索引に対する検索も取消しを無視しない。Reportの補助source索引とSourceMapのgraph索引も内部実装であり、wireの順序や位置・循環の意味を変更しない。
 
 操作結果はComplete(value)、Invalid(partial)、Stopped(reason, partial)を区別し、すべてにdiagnostics、events、usage、traceOverflowを持つReportを付ける。nativeでは共通Reportをまとめ、wireではOperationReplyの定義順にfieldを展開する。providerのAwaitも同じ報告と累積予算を保持する。partialをchecked値として扱わない。diagnostics上限の超過はStopped(DiagnosticLimit)であり、上限0のとき架空の診断を追加せずStopReasonで伝える。入力の問題、未解決の要求、未対応の操作、上限超過、provider違反を別codeで返す。

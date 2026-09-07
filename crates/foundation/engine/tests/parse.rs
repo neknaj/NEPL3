@@ -1227,7 +1227,20 @@ fn native_host_cancel_and_invalid_reply_keep_boundary_semantics() -> TestResult 
         )
         .is_err()
     );
-    for cap in [0, 2_000, 20_000, 60_000, 100_000] {
+    // Derive boundary probes from the successful operation rather than assume
+    // that a previously insufficient fixed cap must remain insufficient.
+    let complete = run_scenario(
+        "let x y",
+        true,
+        Scenario {
+            provider: true,
+            native: Some(host::Action::Serve),
+            ..Scenario::default()
+        },
+    )?;
+    assert!(matches!(complete.outcome, ParseOutcome::Complete { .. }));
+    let needed = complete.report.usage.allocation_units;
+    for cap in [0, needed / 4, needed / 2, needed - 1] {
         let stopped = run_scenario(
             "let x y",
             true,
@@ -1247,7 +1260,8 @@ fn native_host_cancel_and_invalid_reply_keep_boundary_semantics() -> TestResult 
         ));
         assert!(stopped.report.usage.allocation_units <= cap);
     }
-    for work in [0, 100, 1_000, 5_000] {
+    let needed_work = complete.report.usage.work;
+    for work in [0, needed_work / 4, needed_work / 2, needed_work - 1] {
         let reply = run_scenario(
             "let x y",
             true,
@@ -1496,5 +1510,27 @@ fn completed_parse_wrappers_preserve_raw_outcomes_reports_and_costs() -> TestRes
         )?;
         assert_eq!(raw, sealed, "{input}");
     }
+    Ok(())
+}
+
+#[test]
+fn native_host_nested_stop_is_sticky_without_host_mutating_budget() -> TestResult {
+    let reply = run_scenario(
+        "let x y",
+        true,
+        Scenario {
+            provider: true,
+            native: Some(host::Action::NestedStopSecond),
+            ..Scenario::default()
+        },
+    )?;
+    assert!(matches!(
+        reply.outcome,
+        ParseOutcome::Stopped {
+            reason: nepl3_core::budget::StopReason::Cancelled,
+            ..
+        }
+    ));
+    assert_eq!(reply.report.diagnostics.len(), 1);
     Ok(())
 }

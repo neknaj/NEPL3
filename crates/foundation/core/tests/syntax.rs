@@ -117,6 +117,18 @@ fn owned_syntax_copy_precharges_payloads_and_preserves_deep_foreign_ownership() 
     inner.sources.push(source);
     let mut limits = budget().limits();
     limits.allocation_units = 10_000;
+    #[cfg(target_has_atomic = "ptr")]
+    assert_eq!(
+        inner.clone_with_budget(&mut Budget::new(limits)),
+        Ok(inner.clone()),
+        "immutable snapshot metadata is shared along with its text"
+    );
+    // Origin reasons are independently owned and must still be charged before
+    // copying. Sharing snapshot metadata does not grant free arbitrary payloads.
+    inner.origins[0] = Origin::Synthetic {
+        reason: "r".repeat(100_000),
+        anchor: None,
+    };
     assert_eq!(
         inner.clone_with_budget(&mut Budget::new(limits)),
         Err(StopReason::AllocationLimit)

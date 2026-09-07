@@ -1,0 +1,83 @@
+diff --git a/.gitattributes b/.gitattributes
+index b4503d6..f833886 100644
+--- a/.gitattributes
++++ b/.gitattributes
+@@ -20,9 +20,16 @@ conformance/fixtures/source/** -text
+ 
+ # 取得したCIログの元の空白・制御文字を、整形対象のソースとして変更しない。
+ conformance/results/foundation-slice/main-ci.log -text -whitespace
++conformance/results/doc-native-host/** -text -whitespace
+ # Hash-bound raw execution and independent review records retain original bytes.
+ conformance/results/portable-ci/** -text -whitespace
+ 
+ .tmp/** export-ignore
+ target/** export-ignore
+ dist/** export-ignore
++
++/conformance/results/tokenizer-native-host/** -text -whitespace
++/conformance/results/source-lookup-indexes/** -text -whitespace
++/conformance/results/reader-source-prefix/** -text -whitespace
++
++/conformance/results/native-reader-storage/** -text -whitespace
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index ef015bf..c38a2f2 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -57,6 +57,10 @@ jobs:
+         run: python tools/generate/math.py
+       - name: Check Markup schema generation
+         run: python tools/generate/markup.py
++      - name: Check Doc HTML schema generation
++        run: python tools/generate/doc_html.py
++      - name: Doc browser corpus audit input tests
++        run: python -m unittest discover -s tools/audit/doc_html -p 'test_*.py'
+       - name: Initial seed input adapter tests
+         run: python -m unittest discover -s tools/bootstrap -p test_grammar.py
+       - name: Format
+@@ -65,6 +69,19 @@ jobs:
+         run: cargo clippy --workspace --all-targets --locked -- -D warnings
+       - name: Tests
+         run: cargo test --workspace --locked
++      - name: Export the real Doc example
++        if: matrix.os == 'ubuntu-latest'
++        run: |
++          mkdir -p dist
++          cargo run --locked -p nepl3-tools -- doc-html export examples/document/linear-combination.nepld dist/doc-example
++      - name: Upload generated local document
++        if: matrix.os == 'ubuntu-latest'
++        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
++        with:
++          name: NEPL3-local-doc-${{ github.sha }}
++          path: dist/doc-example/
++          if-no-files-found: error
++          retention-days: 14
+       - name: Independent native allocation regression
+         run: python tools/audit/allocation/run.py
+       - name: API documentation
+@@ -101,7 +118,7 @@ jobs:
+           CARGO_TARGET_WASM32_WASIP2_RUNNER: wasmtime run
+         run: |
+           wasmtime --version
+-          cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup --target wasm32-wasip2 -- --test-threads=1
++          cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html --target wasm32-wasip2 -- --test-threads=1
+           cargo test --locked -p nepl3-tools --test grammar diagnostic::compiler_report_boundary_without_host_process --target wasm32-wasip2 -- --exact --test-threads=1
+           cargo test --locked -p nepl3-tools --test grammar reader::all_reader_constructors --target wasm32-wasip2 -- --test-threads=1
+           cargo test --locked -p nepl3-tools --test grammar reader::compiled_reader_streaming_boundaries_and_rollback_keep_raw_positions --target wasm32-wasip2 -- --exact --test-threads=1
+@@ -110,7 +127,7 @@ jobs:
+           cargo test --locked -p nepl3-tools --test doc --target wasm32-wasip2 -- --test-threads=1
+           cargo test --locked -p nepl3-tools --test math --target wasm32-wasip2 -- --test-threads=1
+       - name: Compile foundation for browser Wasm
+-        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup --no-default-features --target wasm32-unknown-unknown
++        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html --no-default-features --target wasm32-unknown-unknown
+       - name: Compare identical foundation components with Pulley64
+         env:
+           CARGO_TARGET_WASM32_WASIP2_RUNNER: python ${{ github.workspace }}/tools/emulators/wasmtime/compare.py
+@@ -142,7 +159,7 @@ jobs:
+       - name: Install ARMv6-M target
+         run: rustup target add thumbv6m-none-eabi
+       - name: Compile every implemented portable core for ARMv6-M
+-        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup --no-default-features --target thumbv6m-none-eabi
++        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html --no-default-features --target thumbv6m-none-eabi
+       - name: Validate converter and firmware formatting
+         run: |
+           python -m unittest discover -s tools/emulators/rp2040js -p 'test_*.py'

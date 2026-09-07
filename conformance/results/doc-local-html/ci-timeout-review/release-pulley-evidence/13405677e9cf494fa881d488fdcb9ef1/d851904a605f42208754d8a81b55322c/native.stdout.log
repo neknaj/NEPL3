@@ -1,0 +1,13 @@
+
+running 8 tests
+test foreign::standalone_foreign_keeps_selected_owner_environment_and_origin_arena ... ok
+test foreign::standalone_foreign_rejects_missing_owner_closure_hash_and_cross_arena_claims ... ok
+test foreign_bundle_rejects_forged_environment_digest_token_and_origin_references ... ok
+test foreign_bundle_roundtrip_keeps_local_token_view_origin_ids_and_payloads ... ok
+test guest_arena_reordering_updates_foreign_root_and_guest_local_children ... ok
+test mapped_views_and_maps_survive_host_and_guest_wire_boundaries ... ok
+test native_arena_order_is_canonicalized_and_unreachable_nodes_are_rejected ... ok
+test nested_generated_bundles_use_iterative_conversion_and_shared_depth_budget ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+

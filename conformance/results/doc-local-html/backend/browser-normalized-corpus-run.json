@@ -1,0 +1,19 @@
+{
+  "command": [
+    "python",
+    "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-html-current\\workspace\\tools\\audit\\doc_html\\browser.py",
+    "--corpus",
+    "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-html-current\\normalized-corpus.log",
+    "--css",
+    "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-html-current\\workspace\\crates\\languages\\doc\\html\\assets\\doc.css",
+    "--chromium",
+    "C:/Users/bem/AppData/Local/ms-playwright/chromium-1234/chrome-win64/chrome.exe",
+    "--firefox",
+    "C:/Users/bem/AppData/Local/ms-playwright/firefox-1538/firefox/firefox.exe",
+    "--output",
+    "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-html-current\\browser-result.json"
+  ],
+  "exit": 0,
+  "deadline": 180,
+  "normalization": "Removed Cargo test status prefix preceding first exact DOC_HTML_CASE marker; HTML hex unchanged"
+}

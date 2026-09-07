@@ -1,0 +1,6 @@
+{
+  "old_probe_sha256": "af5057c337f7364c2cfc2c16f1a7c7628f9e296d263ef24f4e412e83e21688c1",
+  "new_probe_sha256": "ec30ab6e384d4562e2b8c99811d6ffd903093b0648ff0004de840fb8901cb1b5",
+  "reason": "PowerShell stdin conversion replaced non-ASCII probe literal with question marks; use ASCII Rust Unicode escapes and assert runtime non-ASCII source identity",
+  "production_changed": false
+}

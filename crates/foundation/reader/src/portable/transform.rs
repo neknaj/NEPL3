@@ -48,7 +48,7 @@ impl TransformReplyContext<'_> {
                         .saturating_add(34),
                 )?;
             }
-            store.insert(crate::runtime::copy::copy(source, budget)?)?;
+            store.insert_with_budget(crate::runtime::copy::copy(source, budget)?, budget)?;
         }
         Ok(store)
     }

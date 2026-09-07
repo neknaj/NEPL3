@@ -127,7 +127,7 @@ impl<'a> FactsEmitter<'a> {
         let mut store = SourceStore::default();
         for source in self.sources.iter() {
             self.admission.admit_existing(source, self.budget)?;
-            store.insert(source.clone_with_budget(self.budget)?)?;
+            store.insert_with_budget(source.clone_with_budget(self.budget)?, self.budget)?;
         }
         let mut maps = Vec::new();
         for prior in self.maps.iter() {

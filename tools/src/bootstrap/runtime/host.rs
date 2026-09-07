@@ -45,7 +45,7 @@ impl ParseHost for NativeHost<'_> {
                 .measure(budget, |budget| -> Result<_, ParseError> {
                     let mut declared = SourceStore::default();
                     for source in &request.sources {
-                        declared.insert(source.clone_with_budget(budget)?)?;
+                        declared.insert_with_budget(source.clone_with_budget(budget)?, budget)?;
                     }
                     Ok(declared)
                 })?;

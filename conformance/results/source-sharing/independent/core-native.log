@@ -1,0 +1,43 @@
+cargo :    Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-source-sharing\workspace\crates\foundation\core)
+At line:2 char:147
++ ... ce/edit.rs; cargo test --locked -p nepl3-core --test contracts --test ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (   Compiling ne...oundation\core):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.27s
+     Running tests\contracts.rs (../target\debug\deps\contracts-4ccf74b50e85bba5.exe)
+
+running 19 tests
+test canonical_integers_reject_negative_zero_and_leading_zero ... ok
+test budget_exact_limits_overflow_zero_and_cancel_are_distinct ... ok
+test edit_size_limit_checked_before_replacement_is_built ... ok
+test first_budget_stop_is_sticky_across_smaller_charges_and_cancellation ... ok
+test edits_are_atomic_across_sources_and_reject_stale_or_conflicting_input ... ok
+test admission_accounts_for_copied_locator_payload ... ok
+test line_positions_roundtrip_unicode_and_all_line_endings ... ok
+test nested_budget_retains_work_and_peak_depth_after_failed_branch ... ok
+test source_admission_rejects_locator_changes_for_same_snapshot_identity ... ok
+test line_index_allocation_limit_is_enforced ... ok
+test locator_profile_is_checked_without_os_or_scheme_normalization ... ok
+test source_admission_charges_unique_snapshots_once_across_shared_calls ... ok
+test store_preserves_distinct_ids_at_same_uri_and_rejects_conflicting_revision ... ok
+test source_digest_is_sha256_of_exact_original_bytes ... ok
+test source_limits_precede_decode_and_decode_does_not_replace_bytes ... ok
+test generated_source_locator_scan_is_charged_before_validation ... ok
+test rational_constructors_normalize_native_but_reject_noncanonical_wire ... ok
+test span_rejects_scalar_interiors_bounds_and_other_identity ... ok
+test snapshot_clones_preserve_owned_lifetime_and_independent_identity_checks ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests\edit.rs (../target\debug\deps\edit-19ba4687d6377501.exe)
+
+running 5 tests
+test a_conflicting_preexisting_output_does_not_publish_other_transaction_outputs ... ok
+test deletion_admits_original_and_generated_snapshots_once ... ok
+test semantic_failure_does_not_reserve_an_unpublished_output_identity ... ok
+test work_source_and_locator_limits_stop_before_unbounded_owned_copies ... ok
+test every_allocation_stop_is_atomic_sticky_and_retryable_in_a_fresh_operation ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s

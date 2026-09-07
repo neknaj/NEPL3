@@ -1,6 +1,16 @@
 version: 2
 updates:
   - package-ecosystem: cargo
+    directory: /conformance/targets/rp2040
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: npm
+    directory: /tools/emulators/rp2040js
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: cargo
     directory: /
     schedule:
       interval: weekly

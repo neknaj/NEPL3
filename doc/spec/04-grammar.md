@@ -1,5 +1,10 @@
 # 04. Grammar言語
 
+共通parserの各arenaは、操作内で受理したsource/map列の取込位置をprivate状態として保持できる。
+受理列は成功したtoken読取り間でprefixを保持し、arenaへは未取込suffixだけを検査・追加する。
+Foreign arenaは独立した取込位置から開始し、host復帰後も必要なsource/mapを保持する。
+外部ParseProgressのechoからこの位置を構築せず、別revisionの再解析では新しい状態から開始する。
+
 ## 方針
 
 Grammarはreader・prefix形状・束縛・表示の定義を同じpackageへまとめる。任意プログラムを小さなGrammar IRへ必ず還元することは要求しない。call/map/thenで登録済みproviderへ委譲できる。

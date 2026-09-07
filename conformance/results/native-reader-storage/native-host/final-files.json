@@ -1,0 +1,27 @@
+[
+  {
+    "path": "crates/foundation/reader/src/runtime/mod.rs",
+    "sha256": "87731bb659c36189ff3b592ab825f907e3d254fcc971829618ef16c42436a9e9",
+    "bytes": 57922
+  },
+  {
+    "path": "crates/foundation/reader/src/tokenizer/session.rs",
+    "sha256": "fe5a0ebbac42a521902bccf271fb1a2844d1d2d2473e016c5032d608d7e0b2ff",
+    "bytes": 59289
+  },
+  {
+    "path": "tools/src/doc/host.rs",
+    "sha256": "4064d7dbc6f14fbcb6ba253e2e66dce7eb113723bd9d536bbc3705ce8f29f1e5",
+    "bytes": 10003
+  },
+  {
+    "path": "crates/foundation/engine/tests/parse.rs",
+    "sha256": "222361f97a5e9a44ff5255d3cb570702d757af513eb33cf7a782753af150d748",
+    "bytes": 53093
+  },
+  {
+    "path": "crates/foundation/reader/src/runtime/validate/provider.rs",
+    "sha256": "0dbb028225afa690092231a9599b5ecd7b36950d9a4e7c703e0b224a14b34971",
+    "bytes": 13459
+  }
+]

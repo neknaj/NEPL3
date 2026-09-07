@@ -414,7 +414,8 @@
     "nepl3-grammar-core",
     "nepl3-doc-core",
     "nepl3-math-core",
-    "nepl3-markup"
+    "nepl3-markup",
+    "nepl3-doc-html"
   ],
   "note": "Foundation runtime implementation is in progress. Implemented crate membership does not imply task or acceptance completion; required acceptance remains evidence-bound."
 }

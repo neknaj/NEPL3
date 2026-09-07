@@ -1,0 +1,24 @@
+   Compiling independent-doc-host-constructor v0.0.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-host-constructor\probe)
+warning: unused import: `ReadRequest`
+ --> C:/projects/NEPL3-runtime/.tmp/review-doc-native-host/probe/src/helpers.rs:9:27
+  |
+9 |     model::{ProviderCall, ReadRequest, ReaderContext},
+  |                           ^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `independent-doc-host-constructor` (bin "independent-doc-host-constructor") generated 1 warning (run `cargo fix --bin "independent-doc-host-constructor" -p independent-doc-host-constructor` to apply 1 suggestion)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.61s
+     Running `wasmtime run .tmp\review-fixed-target\wasm32-wasip2\debug\independent-doc-host-constructor.wasm`
+constructor identical registrations+Usage, allocation 1518, caps 1520, stopped 1518, success 2, pre-cancel typed
+catalog5 request5 stop3 checked at byte 0
+wrong payload rejected and original echo retried
+route 0 completed cursor 148 nodes 25
+route 1 completed cursor 148 nodes 25
+catalog5 request5 stop3 checked at byte 0
+wrong payload rejected and original echo retried
+route 2 completed cursor 148 nodes 25
+catalog5 request5 stop3 checked at byte 0
+wrong payload rejected and original echo retried
+route 3 completed cursor 148 nodes 25
+Production NativeHost: owned/native/None/error same tree; exact catalog, malformed request and stopped provider; bad response retry passed

@@ -227,7 +227,7 @@ pub(in crate::portable) fn add<E>(
                 Resource::AllocationUnits,
                 core::mem::size_of::<SourceSnapshot>() as u64,
             )?;
-            store.insert(source.clone_with_budget(b)?)?;
+            store.insert_with_budget(source.clone_with_budget(b)?, b)?;
         }
     }
     Ok(())

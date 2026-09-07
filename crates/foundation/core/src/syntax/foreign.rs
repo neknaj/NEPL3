@@ -62,7 +62,7 @@ impl ForeignClosure {
                     return Err(SyntaxError::DuplicateSource);
                 }
             }
-            store.insert(source.clone_with_budget(b)?)?;
+            store.insert_with_budget(source.clone_with_budget(b)?, b)?;
         }
         OriginGraph::validate_origins(&self.owner_origins, &store, b)?;
         SourceMap::validate_mappings(&self.owner_source_maps, &store, b)?;

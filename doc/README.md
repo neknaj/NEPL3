@@ -2,6 +2,8 @@
 
 正式な仕様・開発情報の入口です。会話やローカルの `.tmp/` を参照しなくても、ここから実装契約と現在の状態を確認できます。
 
+Docで例や解説を書く際は、[文書の執筆指針](authoring.md)のsentence literal・前置構築・parallel・Ruby/Annoの使い分けに従ってください。
+
 ## 読み順
 
 1. [対象範囲と共通契約](spec/00-contract.md)、[アーキテクチャ](spec/01-architecture.md)
@@ -45,3 +47,5 @@
 HTMLの先行利用は [T22〜T25の実装段階](spec/18-html-delivery.md) に従います。既存のDoc処理を再利用し、Doc単独HTML、数式HTML、Web preview/exportへ接続します。全体の最終範囲は維持します。
 
 型付きHTML fragmentの入力・検査・serializerは [19章](spec/19-html-fragment.md) と [markup schema](../interfaces/markup.json) を参照してください。
+
+- [Doc HTML変換の契約](spec/20-doc-html.md) — local準備・表示・portable再検査と未解決資源の扱い。

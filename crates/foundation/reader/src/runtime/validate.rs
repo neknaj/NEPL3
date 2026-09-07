@@ -37,7 +37,10 @@ pub(crate) fn request(
 ) -> Result<(), ReaderError> {
     budget.poll()?;
     request.snapshot.check_range(request.start, request.limit)?;
-    if sources.get_ref(request.snapshot.identity()) != Some(request.snapshot) {
+    let selected = sources
+        .get_ref(request.snapshot.identity())
+        .ok_or(SourceError::MissingSnapshot)?;
+    if !selected.eq_with_budget(request.snapshot, budget)? {
         return Err(SourceError::MissingSnapshot.into());
     }
     admission.admit_existing(request.snapshot, budget)?;
@@ -49,12 +52,12 @@ pub(crate) fn request(
         return Err(ReaderError::Context);
     }
     for source in context.sources() {
-        budget.charge(Resource::Work, sources.snapshots().len() as u64)?;
-        if sources.snapshots().iter().any(|existing| {
-            existing.identity().source == source.identity().source
-                && existing.identity().revision == source.identity().revision
-                && existing != *source
-        }) {
+        if let Some(existing) = sources.get_revision_with_budget(
+            &source.identity().source,
+            source.identity().revision,
+            budget,
+        )? && !existing.eq_with_budget(source, budget)?
+        {
             return Err(SourceError::IdentityConflict.into());
         }
         admission.admit_existing(source, budget)?;
@@ -186,6 +189,16 @@ fn artifacts(
     for source in added {
         admission.admit_existing(source, budget)?;
     }
+    budget.poll()?;
+    if maps.is_empty() && view.elements.is_empty() && view.roots.is_empty() && facts.is_empty() {
+        // There is no new mapping or source-position use to validate. The
+        // private checkpoint contains already accepted mappings; neither a
+        // provider reply nor an echoed continuation can mutate that collector.
+        // Source declarations, value/state, report and outcome checks remain
+        // in check_provider. Nonempty artifacts still validate the full union,
+        // including cycles introduced across old and new mappings.
+        return Ok(());
+    }
     let mut source_maps = Vec::new();
     for mapping in machine.current.source_maps.iter().chain(maps) {
         budget.charge(
@@ -304,7 +317,7 @@ fn combined(
         .chain(machine.declared.iter())
         .chain(&machine.current.sources)
     {
-        combined.insert(copy(source, budget)?)?;
+        combined.insert_ref_with_budget(source, budget)?;
     }
     for (index, source) in added.iter().enumerate() {
         for prior in &added[..index] {
@@ -321,30 +334,16 @@ fn combined(
         {
             return Err(ReaderError::ProviderContract);
         }
-        for prior in sources.snapshots() {
-            budget.charge(
-                Resource::Work,
-                (prior.identity().source.0.len() as u64)
-                    .saturating_add(source.identity().source.0.len() as u64)
-                    .saturating_add(34),
-            )?;
-            if prior.identity().source == source.identity().source
-                && prior.identity().revision == source.identity().revision
-            {
-                budget.charge(
-                    Resource::Work,
-                    (prior.uri().len() as u64)
-                        .saturating_add(source.uri().len() as u64)
-                        .saturating_add(prior.text().len() as u64)
-                        .saturating_add(source.text().len() as u64),
-                )?;
-                if prior != source {
-                    return Err(SourceError::IdentityConflict.into());
-                }
-            }
+        if let Some(prior) = sources.get_revision_with_budget(
+            &source.identity().source,
+            source.identity().revision,
+            budget,
+        )? && !prior.eq_with_budget(source, budget)?
+        {
+            return Err(SourceError::IdentityConflict.into());
         }
         admission.admit_existing(source, budget)?;
-        combined.insert(copy(source, budget)?)?;
+        combined.insert_ref_with_budget(source, budget)?;
     }
     Ok(combined)
 }

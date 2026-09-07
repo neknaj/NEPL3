@@ -1,0 +1,167 @@
+[
+  {
+    "path": "record.md",
+    "sha256": "56e4731e4fa3aec3333574111f5aeaa91ed1917bc1616f42c4c9d86f548fa79c",
+    "bytes": 9201
+  },
+  {
+    "path": "files.json",
+    "sha256": "e2e62006dd381fddeb614e2e80aedd0d3a70b689c99d45347e5fbc777f6b242d",
+    "bytes": 680
+  },
+  {
+    "path": "delta-files.json",
+    "sha256": "a8498edbfefe621c8b22813b7e123b7952e8f26df7053994057ae9ba4811848b",
+    "bytes": 519
+  },
+  {
+    "path": "final-files.json",
+    "sha256": "be84fd7d8e9d157fc2ba60bd320666c3ae6d1af17798f38229a80bc6cab5188b",
+    "bytes": 869
+  },
+  {
+    "path": "workspace-files.json",
+    "sha256": "6d3efd5bd1fee694c604454535ea488f5deab90f8bc02680d21790850ff16daa",
+    "bytes": 89355
+  },
+  {
+    "path": "final-workspace-files.json",
+    "sha256": "3d602d727ee5619b4c02bdcc039a7a34c8fa8c4bc798df2dda7fc4ea98d6609a",
+    "bytes": 86904
+  },
+  {
+    "path": "dependency-delta.json",
+    "sha256": "d5574bad006cde1fa2c9c54b99c46cf4e20b453d125bb5fa9a72265bd54837b4",
+    "bytes": 236
+  },
+  {
+    "path": "dependency-source-before.rs",
+    "sha256": "f4047ecc255ce98c5d960c000155c431e4fa77e1736bbabb7da74947b943969c",
+    "bytes": 30559
+  },
+  {
+    "path": "dependency-source-after.rs",
+    "sha256": "e2d301f1640bba50c99991feba9836ca84f032be174877d8383928f153f707da",
+    "bytes": 30744
+  },
+  {
+    "path": "dependency-source.diff",
+    "sha256": "57c2e1d04e4bd1003a6f74cbc374768cb102d5000276a1d271cdfcafb7a1e31d",
+    "bytes": 1206
+  },
+  {
+    "path": "reader-probe.rs",
+    "sha256": "23d73ba21629ebf90f19fd388f73b6d00a39fcf297464b78120ff0ebdb252305",
+    "bytes": 5469
+  },
+  {
+    "path": "reader-limit-probe.rs",
+    "sha256": "fc71044a9707737f49640d003c7819174b96c5b66c9e7f12e93536550960a1b6",
+    "bytes": 5835
+  },
+  {
+    "path": "reader-limit-retry-probe.rs",
+    "sha256": "aa5da5e812d06c672b960e5a4899cbb89e47932feca3acb1539d74617af50180",
+    "bytes": 5939
+  },
+  {
+    "path": "reader-final-probe.rs",
+    "sha256": "fc06dd726fb98982cec7915e44c40defcb42b6e5b4ce159373397c96dc4438c4",
+    "bytes": 9197
+  },
+  {
+    "path": "cache-probe.rs",
+    "sha256": "66fa26a03919ce869abec76e46630afc500a5cbcedf2c9ddf159f417f6902734",
+    "bytes": 2455
+  },
+  {
+    "path": "native-foundation-before.log",
+    "sha256": "995218de711423fb87f84a0ff070c14b306f63cccae916b34693f86b4fec6e87",
+    "bytes": 23772
+  },
+  {
+    "path": "native-limits-current.log",
+    "sha256": "d7edf25a27c736b8babc136d2251cc1a3bbf24cb3cb7ce97103a278b60b5f4de",
+    "bytes": 1628
+  },
+  {
+    "path": "native-limits-prior.log",
+    "sha256": "544cb39074e11ac7315c67c477cdf9e0a79464deeec836fe756b1197f5dd5f2b",
+    "bytes": 9026
+  },
+  {
+    "path": "native-limits-fixed.log",
+    "sha256": "6455ac51b26a9dc7fd3bc2df80a331eac5e234c503ea5eef602bcdbce754f4b0",
+    "bytes": 9026
+  },
+  {
+    "path": "native-limits-retry-setup.log",
+    "sha256": "30aa5dcbe086090729419ec5262f630eb7e444de2fc3ffc16199ab4998659ba9",
+    "bytes": 658
+  },
+  {
+    "path": "native-final-foundation.log",
+    "sha256": "c971ff8abdbb65fd9e13d1b60518912edfd5438dff3ecef3715372d7a5b94f15",
+    "bytes": 21173
+  },
+  {
+    "path": "native-final-cache.log",
+    "sha256": "4d3f71253cd29ffb3276b5970f12357a6a7f82984644bbcdac3a2bf08a3b6525",
+    "bytes": 597
+  },
+  {
+    "path": "native-owned-frame.log",
+    "sha256": "f4011d0d5f90391a45e47e9a7f4d0d40c942a0d40b8a4f07b6db5140245c4bd9",
+    "bytes": 496
+  },
+  {
+    "path": "wasi-foundation.log",
+    "sha256": "ad5c36635421daf7b82dab274bd36ff9010db2f403c208b9b51b757dab57ba59",
+    "bytes": 21946
+  },
+  {
+    "path": "wasi-cache.log",
+    "sha256": "8c7658579162bcd266afc13dc5845e855def4bc4e53aecceec042b2065b26621",
+    "bytes": 612
+  },
+  {
+    "path": "wasi-owned-frame.log",
+    "sha256": "5f2173b9eda77033cf3dddb0930ae63ec4a10eafa89c502588763b06e1ff46bb",
+    "bytes": 511
+  },
+  {
+    "path": "managed-delta.json",
+    "sha256": "34e98c9830798cf7be88f8166ddbe3652b7325e7bf949a7cdc9c19452cf8943c",
+    "bytes": 175
+  },
+  {
+    "path": "managed-delta/crates/foundation/reader/tests/runtime/tokenizer_host.rs",
+    "sha256": "ced99774bc67a3ae1b019c03ecc2b33821520caf3387c27c2a802458e3c77206",
+    "bytes": 9995
+  },
+  {
+    "path": "managed-native.log",
+    "sha256": "5216c62aab9e57c503a6a9f5599788dd308141dd1398cfbef8454fa6971a377b",
+    "bytes": 495
+  },
+  {
+    "path": "managed-wasi.log",
+    "sha256": "78bc514b27110f46bd3054ef15655dc2ec43d01e1aedadbf1a7999e1d68397fa",
+    "bytes": 510
+  },
+  {
+    "path": "record-before-managed-delta.md",
+    "sha256": "a5c3067d5b38b5cb60a694e247423077e32c1a14442ce23164d3481e8e7887e9",
+    "bytes": 7997
+  },
+  {
+    "path": "workspace-before-managed-delta.json",
+    "sha256": "f3c2ac14f55ffdc7c0908cf0d333c5011d05a42d03a35bf9759c4b16b86ae13f",
+    "bytes": 89541
+  },
+  {
+    "path": "evidence-before-managed-delta.json",
+    "sha256": "110d08aba1b0236cf30229eebcee19bc8d50f6a11a0c96a4ab4dc7892f5b1552",
+    "bytes": 3926
+  }
+]

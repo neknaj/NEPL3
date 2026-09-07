@@ -1,0 +1,6 @@
+{
+  "result": "passed",
+  "outer_timeout_seconds": 30,
+  "build_sha256": "20e67aafeb745c8b8e6bb5e26f6f4f2bbbaeeac0d642e0feef0ec5c4fe0168f8",
+  "emulator_sha256": "76b361b20e7456067b797b1be0c55416266e39eaf706f3b62e987cc38d063443"
+}

@@ -165,6 +165,19 @@ impl<'a> ReaderSession<'a> {
         admission: &mut SourceAdmission,
         seed: AcceptedReport,
     ) -> Result<ReadReply, ReaderError> {
+        self.read_with_report_host(rule, request, sources, budget, admission, seed, None)
+    }
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn read_with_report_host(
+        &mut self,
+        rule: &str,
+        request: ReadRequest<'_>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        seed: AcceptedReport,
+        native: Option<&mut NativeDispatch<'_>>,
+    ) -> Result<ReadReply, ReaderError> {
         let mut prefix = seed.report;
         let mut seed_sources = seed.sources;
         let mut seed_maps = seed.source_maps;
@@ -200,6 +213,7 @@ impl<'a> ReaderSession<'a> {
                 source_maps: core::mem::take(&mut seed_maps),
             };
             let mut machine = Machine {
+                limits: budget.limits(),
                 session_id: &self.session_id,
                 checked: self.checked,
                 registry: self.registry,
@@ -217,7 +231,10 @@ impl<'a> ReaderSession<'a> {
                     None => Err(error),
                 };
             }
-            let control = machine.drive(None, budget)?;
+            let mut control = machine.drive(None, budget)?;
+            if let Some(native) = native {
+                control = machine.dispatch_native(control, sources, budget, admission, native)?;
+            }
             Self::finish(machine, control, self.digest, &mut self.pending, budget)
         })();
         match result {
@@ -304,6 +321,31 @@ impl<'a> ReaderSession<'a> {
         }
         self.resume_saved(reply, sources, budget, admission)
     }
+    /// Called only by the owning tokenizer while servicing an immediate native
+    /// callback. No external continuation was received: the reader's private
+    /// pending slot is still exclusively owned through this mutable borrow.
+    /// Payload/context/source/report validation remains in resume_saved.
+    pub(crate) fn resume_native_callback(
+        &mut self,
+        reply: ProviderReply,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<ReadReply, ReaderError> {
+        if self.closed {
+            return Err(ReaderError::Closed);
+        }
+        let saved = self.pending.as_ref().ok_or(ReaderError::NoPending)?;
+        if saved.limits != budget.limits()
+            || !usage_at_least(budget.usage(), saved.continuation.usage)
+        {
+            return Err(ReaderError::Continuation);
+        }
+        if let Err(reason) = budget.poll() {
+            return self.stop_pending(reason, budget);
+        }
+        self.resume_saved(reply, sources, budget, admission)
+    }
     fn resume_saved(
         &mut self,
         reply: ProviderReply,
@@ -366,6 +408,7 @@ impl<'a> ReaderSession<'a> {
             state: &c.request.state,
         };
         let mut machine = Machine {
+            limits: budget.limits(),
             session_id: &self.session_id,
             checked: self.checked,
             registry: self.registry,
@@ -378,7 +421,7 @@ impl<'a> ReaderSession<'a> {
             next_call: &mut self.next_call,
         };
         let outcome = budget.with_depth_at_least(depth_base, |budget| {
-            validate::apply_provider(&mut machine, &frame, reply, budget)
+            validate::apply_provider(&mut machine, frame, reply, budget)
         });
         let control = match outcome {
             Ok(outcome) => machine.drive(Some(outcome), budget)?,
@@ -519,14 +562,14 @@ impl<'a> ReaderSession<'a> {
                     // All fallible storage charges happen while committed reports remain in Machine.
                     slot::<ReaderContinuation>(budget)?;
                     slot::<ProviderCall>(budget)?;
-                    session_id.charge(budget)?;
-                    plan_schema.charge(budget)?;
-                    request.charge(budget)?;
-                    machine.frames.charge(budget)?;
-                    machine.current.charge(budget)?;
-                    call.charge(budget)?;
-                    report.charge(budget)?;
-                    report.charge(budget)?;
+                    session_id.charge_copy(budget)?;
+                    plan_schema.charge_copy(budget)?;
+                    request.charge_copy(budget)?;
+                    machine.frames.charge_copy(budget)?;
+                    machine.current.charge_copy(budget)?;
+                    call.charge_copy(budget)?;
+                    report.charge_copy(budget)?;
+                    report.charge_copy(budget)?;
                     Ok((request, report, session_id, plan_schema, outward_call))
                 })();
                 let (request, mut report, session_id, plan_schema, outward_call) = match preparation
@@ -557,7 +600,7 @@ impl<'a> ReaderSession<'a> {
                 let report = continuation.report.clone();
                 *pending = Some(Pending {
                     continuation,
-                    limits: budget.limits(),
+                    limits: machine.limits,
                 });
                 Ok(ReadReply::Await {
                     call: Box::new(outward_call),
@@ -635,7 +678,13 @@ enum Control {
     Done(Outcome),
     Suspend(Box<ProviderCall>),
 }
+pub(crate) struct NativeDispatch<'a> {
+    pub host: &'a mut dyn crate::tokenizer::TokenizationHost,
+    pub error: &'a mut Option<ReaderError>,
+    pub deferred: bool,
+}
 struct Machine<'a, 'r> {
+    limits: Limits,
     session_id: &'r String,
     checked: &'a CheckedPlan<'a>,
     registry: &'a SchemaRegistry,
@@ -648,6 +697,97 @@ struct Machine<'a, 'r> {
     next_call: &'r mut u64,
 }
 impl Machine<'_, '_> {
+    /// Execute a synchronous callback while the original machine is still owned.
+    /// Only a genuine external wait (or rejected callback) materializes an echo.
+    fn dispatch_native(
+        &mut self,
+        mut control: Control,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        native: &mut NativeDispatch<'_>,
+    ) -> Result<Control, ReaderError> {
+        loop {
+            let Control::Suspend(call) = &control else {
+                return Ok(control);
+            };
+            let declared = match call.as_ref() {
+                ProviderCall::Read { request, .. } => &request.sources,
+                ProviderCall::Dependent { request, .. } => &request.request.sources,
+                // Transform still uses its existing saved context/codec path.
+                ProviderCall::Transform { .. } => return Ok(control),
+            };
+            let saved = budget.usage();
+            let (_, depth) = call_identity(call);
+            let response = budget.with_depth_at_least(depth, |budget| {
+                native.host.provider(call, budget, admission)
+            });
+            if budget.limits() != self.limits || !usage_at_least(budget.usage(), saved) {
+                *native.error = Some(ReaderError::Continuation);
+                return Ok(control);
+            }
+            let reply = match response {
+                Ok(Some(reply)) => reply,
+                Ok(None) => {
+                    native.deferred = true;
+                    return Ok(control);
+                }
+                Err(error) => {
+                    if let Some(reason) = error.stop_reason() {
+                        budget.stop(reason);
+                        *native.error = Some(error);
+                        return Ok(Control::Done(Outcome::Stopped(reason)));
+                    }
+                    *native.error = Some(error);
+                    return Ok(control);
+                }
+            };
+            let checked = budget.with_depth_at_least(depth, |budget| {
+                reply.validate_outcome()?;
+                let frame = self.frames.last().ok_or(ReaderError::Continuation)?;
+                let (call_id, _) = call_identity(call);
+                if frame.phase != (FramePhase::Provider { call_id }) {
+                    return Err(ReaderError::Continuation);
+                }
+                let boundary = validate::ProviderBoundary {
+                    plan: self.checked.plan(),
+                    registry: self.registry,
+                    snapshot: self.request.snapshot,
+                    declared,
+                    current: &self.current,
+                };
+                validate::check_provider(
+                    &boundary,
+                    frame,
+                    call,
+                    (&reply).into(),
+                    saved,
+                    sources,
+                    budget,
+                    admission,
+                )
+            });
+            if let Err(error) = checked {
+                if let Some(reason) = stop_reason(&error) {
+                    budget.stop(reason);
+                    return Ok(Control::Done(Outcome::Stopped(reason)));
+                }
+                *native.error = Some(error);
+                return Ok(control);
+            }
+            let frame = self.frames.pop().ok_or(ReaderError::Continuation)?;
+            let outcome = budget.with_depth_at_least(depth, |budget| {
+                validate::apply_provider(self, frame, reply, budget)
+            });
+            control = match outcome {
+                Ok(outcome) => self.drive(Some(outcome), budget)?,
+                Err(error) => match stop_reason(&error) {
+                    Some(reason) => return Ok(Control::Done(Outcome::Stopped(reason))),
+                    None => return Err(error),
+                },
+            };
+        }
+    }
     fn push(&mut self, expression: ReaderId, budget: &mut Budget) -> Result<(), ReaderError> {
         let target = self
             .base

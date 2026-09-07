@@ -23,3 +23,9 @@ pulldown-cmark.workspace = true
 
 [lints]
 workspace = true
+
+[dependencies.nepl3-doc-html]
+workspace = true
+
+[dependencies.nepl3-markup]
+workspace = true

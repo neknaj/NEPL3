@@ -20,9 +20,9 @@ inventoryとgap auditはT21まで延期せず、Docに関係するT01の共通�
 
 | 要素 | 現行契約と移行前に解消する課題 |
 | --- | --- |
-| 表・箇条書き | table/listの意味型・文法・HTML構造・accessibilityが未定義。段落へ平坦化して情報を失わせない |
-| 文書間・外部リンク | 現行refはarticle内の生成anchor中心。page registryとURIの許可範囲、失敗・link検査を設計する |
-| 汎用コードblock | Codeは4言語のForeignSyntax。Rust、shell、JSONや説明用の不完全例を損失なく表示する非評価の構造が必要 |
+| 表・箇条書き | 意味型・文法・lower/print/portable境界は実装済み。移行先HTMLの構造・accessibilityと元cell/list情報の同等性を検証する。段落へ平坦化しない |
+| 文書間・外部リンク | リンクの意味型と文書内ラベル検査は実装済み。page registryを使った文書間解決、URI・assetの検査、配布後のリンク検証を接続する |
+| 汎用コードblock | 非評価の汎用コード構造と4言語ForeignSyntaxを区別する型・文法は実装済み。Rust、shell、JSON等の元byte列をHTML・移行projectionまで保存する |
 | 図・画像・Mermaid等 | Circuit図だけでは一般の設計図を表せない。許可asset、digest、caption/代替説明、変換とsource対応を定める |
 | 見出し・anchor・脚注 | 明示ID、旧anchorへの互換、脚注と参照の意味を確認し、安定URLを維持する |
 

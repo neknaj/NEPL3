@@ -285,7 +285,10 @@ fn positions(
     let mut store = nepl3_core::source::SourceStore::default();
     for source in &doc.sources {
         store
-            .insert(source.clone_with_budget(b).map_err(StructureError::from)?)
+            .insert_with_budget(
+                source.clone_with_budget(b).map_err(StructureError::from)?,
+                b,
+            )
             .map_err(StructureError::from)?;
     }
     let maps =

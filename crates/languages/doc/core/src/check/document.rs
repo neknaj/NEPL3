@@ -110,7 +110,7 @@ impl DocumentSyntax {
                     return Err(StructureError::DuplicateSource);
                 }
             }
-            store.insert(source.clone_with_budget(b)?)?;
+            store.insert_with_budget(source.clone_with_budget(b)?, b)?;
         }
         OriginGraph::validate_origins(&self.origins, &store, b)?;
         let maps = SourceMap::validate_mappings(&self.source_maps, &store, b)?;

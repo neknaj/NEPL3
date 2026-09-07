@@ -20,7 +20,18 @@ conformance/fixtures/source/** -text
 
 # 取得したCIログの元の空白・制御文字を、整形対象のソースとして変更しない。
 conformance/results/foundation-slice/main-ci.log -text -whitespace
+conformance/results/doc-native-host/** -text -whitespace
+# Hash-bound raw execution and independent review records retain original bytes.
+conformance/results/portable-ci/** -text -whitespace
 
 .tmp/** export-ignore
 target/** export-ignore
 dist/** export-ignore
+
+/conformance/results/tokenizer-native-host/** -text -whitespace
+/conformance/results/source-lookup-indexes/** -text -whitespace
+/conformance/results/reader-source-prefix/** -text -whitespace
+
+/conformance/results/native-reader-storage/** -text -whitespace
+
+/conformance/results/doc-local-html/** -text -whitespace

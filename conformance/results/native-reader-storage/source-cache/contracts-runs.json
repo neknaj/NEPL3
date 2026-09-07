@@ -1,0 +1,52 @@
+[
+  {
+    "command": [
+      "cargo",
+      "test",
+      "--offline",
+      "--locked",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-admission-storage-cache-fixed\\source\\Cargo.toml",
+      "-p",
+      "nepl3-core",
+      "--test",
+      "contracts",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target",
+      "--",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-admission-storage-cache-fixed\\source",
+    "target": "native",
+    "exit": 0,
+    "deadline": 600,
+    "log": "contracts-native.log"
+  },
+  {
+    "command": [
+      "cargo",
+      "test",
+      "--offline",
+      "--locked",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-admission-storage-cache-fixed\\source\\Cargo.toml",
+      "-p",
+      "nepl3-core",
+      "--test",
+      "contracts",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target",
+      "--target",
+      "wasm32-wasip2",
+      "--",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-admission-storage-cache-fixed\\source",
+    "target": "wasm32-wasip2",
+    "exit": 0,
+    "deadline": 600,
+    "log": "contracts-wasm32-wasip2.log"
+  }
+]

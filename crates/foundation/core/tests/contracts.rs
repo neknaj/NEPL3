@@ -24,6 +24,82 @@ fn source(id: &str, revision: u64, text: &str) -> Result<SourceSnapshot, SourceE
 }
 
 #[test]
+fn snapshot_metadata_copy_is_bounded_but_independent_comparison_is_not_free()
+-> Result<(), SourceError> {
+    let id = SourceId("名".repeat(20_000));
+    let uri = format!("memory:{}", "u".repeat(60_000));
+    let original =
+        SourceSnapshot::new(id.clone(), 1, uri.clone(), b"text".to_vec(), &mut budget())?;
+    let limits = Limits {
+        work: 1000,
+        allocation_units: 1024,
+        ..budget().limits()
+    };
+    let copy = original.clone_with_budget(&mut Budget::new(limits));
+    #[cfg(target_has_atomic = "ptr")]
+    {
+        let copy = copy.map_err(SourceError::Stopped)?;
+        assert!(original.eq_with_budget(&copy, &mut Budget::new(limits))?);
+        drop(original);
+        assert_eq!(copy.identity().source, id);
+        assert_eq!(copy.uri(), uri);
+        assert_eq!(copy.text(), "text");
+        assert_eq!(
+            copy.charge_clone(&mut Budget::new(limits)),
+            Err(StopReason::WorkLimit)
+        );
+        let independently_built = SourceSnapshot::new(id, 1, uri, b"text".to_vec(), &mut budget())?;
+        assert_eq!(
+            copy.eq_with_budget(&independently_built, &mut Budget::new(limits)),
+            Err(StopReason::WorkLimit)
+        );
+        assert!(copy.eq_with_budget(&independently_built, &mut budget())?);
+    }
+    #[cfg(not(target_has_atomic = "ptr"))]
+    assert_eq!(copy, Err(StopReason::WorkLimit));
+    Ok(())
+}
+#[test]
+fn borrowed_store_insert_does_not_clone_duplicates_or_publish_on_stop() -> Result<(), SourceError> {
+    let original = source("日本語", 7, &"x".repeat(10_000))?;
+    let mut store = SourceStore::default();
+    store.insert_ref_with_budget(&original, &mut budget())?;
+    let mut no_allocation = Budget::new(Limits {
+        allocation_units: 0,
+        ..budget().limits()
+    });
+    store.insert_ref_with_budget(&original, &mut no_allocation)?;
+    assert_eq!(no_allocation.usage().allocation_units, 0);
+    assert_eq!(store.snapshots(), core::slice::from_ref(&original));
+    let independently_built = source("日本語", 7, &"x".repeat(10_000))?;
+    let mut too_little_comparison = Budget::new(Limits {
+        work: 1000,
+        ..budget().limits()
+    });
+    assert_eq!(
+        store.insert_ref_with_budget(&independently_built, &mut too_little_comparison),
+        Err(SourceError::Stopped(StopReason::WorkLimit))
+    );
+    let changed = source("日本語", 7, "changed")?;
+    assert_eq!(
+        store.insert_ref_with_budget(&changed, &mut budget()),
+        Err(SourceError::IdentityConflict)
+    );
+    let next = source("a", 0, "new")?;
+    let mut stopped = Budget::new(Limits {
+        allocation_units: 0,
+        ..budget().limits()
+    });
+    assert_eq!(
+        store.insert_ref_with_budget(&next, &mut stopped),
+        Err(SourceError::Stopped(StopReason::AllocationLimit))
+    );
+    assert!(store.get_ref(next.identity()).is_none());
+    store.insert_ref_with_budget(&next, &mut budget())?;
+    assert_eq!(store.snapshots(), &[original, next]);
+    Ok(())
+}
+#[test]
 fn source_digest_is_sha256_of_exact_original_bytes() -> Result<(), SourceError> {
     let empty = source("a", 0, "")?;
     // FIPS SHA-256 empty-message vector, independent of our implementation.
@@ -275,6 +351,45 @@ fn edit_size_limit_checked_before_replacement_is_built() -> Result<(), SourceErr
 }
 
 #[test]
+fn snapshot_clones_preserve_owned_lifetime_and_independent_identity_checks()
+-> Result<(), SourceError> {
+    let content = "a".repeat(100_000);
+    let original = source("shared", 3, &content)?;
+    let mut b = budget();
+    let cloned = original.clone_with_budget(&mut b)?;
+    #[cfg(target_has_atomic = "ptr")]
+    assert!(b.usage().allocation_units < 1024);
+    #[cfg(target_has_atomic = "ptr")]
+    assert!(b.usage().work < 1024);
+    #[cfg(not(target_has_atomic = "ptr"))]
+    assert!(b.usage().work >= content.len() as u64);
+    let mut comparison = budget();
+    original.charge_clone(&mut comparison)?;
+    assert!(comparison.usage().work >= content.len() as u64);
+    let independent = source("shared", 3, &content)?;
+    assert_eq!(cloned, independent);
+    assert_ne!(cloned, source("shared", 4, &content)?);
+    let mut changed = content.clone();
+    changed.replace_range(99_999..100_000, "b");
+    assert_ne!(cloned, source("shared", 3, &changed)?);
+    drop(original);
+    assert_eq!(cloned.text(), content);
+    assert_eq!(cloned.slice(&cloned.span(99_999, 100_000)?)?, "a");
+    let mut limits = budget().limits();
+    limits.allocation_units = 0;
+    assert_eq!(
+        cloned.clone_with_budget(&mut Budget::new(limits)),
+        Err(StopReason::AllocationLimit)
+    );
+    #[cfg(target_has_atomic = "ptr")]
+    {
+        fn send_sync<T: Send + Sync>() {}
+        send_sync::<SourceSnapshot>();
+    }
+    Ok(())
+}
+
+#[test]
 fn locator_profile_is_checked_without_os_or_scheme_normalization() {
     for uri in [
         "relative",
@@ -501,5 +616,220 @@ fn generated_source_locator_scan_is_charged_before_validation() -> Result<(), So
         ),
         Err(SourceError::Stopped(StopReason::WorkLimit))
     );
+    Ok(())
+}
+
+#[test]
+fn shared_copy_and_independent_comparison_have_separate_work_bounds() -> Result<(), SourceError> {
+    let text = "x".repeat(100_000);
+    let original = source("shared-cost", 0, &text)?;
+    let mut copy_budget = budget();
+    original.charge_shared_clone(&mut copy_budget)?;
+    let cloned = original.clone();
+    #[cfg(target_has_atomic = "ptr")]
+    assert!(copy_budget.usage().work < 1024);
+    #[cfg(not(target_has_atomic = "ptr"))]
+    assert!(copy_budget.usage().work >= text.len() as u64);
+    let mut limits = budget().limits();
+    limits.work = 1024;
+    #[cfg(target_has_atomic = "ptr")]
+    assert!(original.eq_with_budget(&cloned, &mut Budget::new(limits))?);
+    let independent = source("shared-cost", 0, &text)?;
+    assert_eq!(
+        original.eq_with_budget(&independent, &mut Budget::new(limits)),
+        Err(StopReason::WorkLimit)
+    );
+    let mut store = SourceStore::default();
+    store.insert(original)?;
+    assert_eq!(
+        store.insert_with_budget(independent, &mut Budget::new(limits)),
+        Err(SourceError::Stopped(StopReason::WorkLimit))
+    );
+    assert_eq!(store.snapshots().len(), 1);
+    assert_eq!(store.snapshots()[0], cloned);
+    let conflict = SourceReservation {
+        source_id: SourceId("shared-cost".into()),
+        revision: 0,
+        uri: "memory:different".into(),
+    };
+    let conflicting = SourceAdmission::default().create(
+        conflict.source_id,
+        conflict.revision,
+        conflict.uri,
+        text.into_bytes(),
+        &mut budget(),
+    )?;
+    assert_eq!(
+        store.insert_with_budget(conflicting, &mut budget()),
+        Err(SourceError::IdentityConflict)
+    );
+    Ok(())
+}
+
+#[test]
+fn indexed_source_insert_preserves_order_and_metered_duplicate_lookup() -> Result<(), SourceError> {
+    let mut store = SourceStore::default();
+    for index in (0..128).rev() {
+        store.insert(source(&format!("source-{index:03}"), 0, "data")?)?;
+    }
+    assert_eq!(store.snapshots()[0].identity().source.0, "source-127");
+    assert_eq!(store.snapshots()[127].identity().source.0, "source-000");
+    let duplicate = store.snapshots()[127].clone();
+    let mut b = budget();
+    store.insert_with_budget(duplicate, &mut b)?;
+    assert!(b.usage().work < 1024);
+    assert_eq!(store.snapshots().len(), 128);
+    let new = source("source-middle", 0, "other")?;
+    let mut limits = budget().limits();
+    limits.allocation_units = 0;
+    assert_eq!(
+        store.insert_with_budget(new.clone(), &mut Budget::new(limits)),
+        Err(SourceError::Stopped(StopReason::AllocationLimit))
+    );
+    assert_eq!(store.snapshots().len(), 128);
+    store.insert_with_budget(new, &mut budget())?;
+    assert_eq!(store.snapshots()[128].identity().source.0, "source-middle");
+    // Edits must update the same index atomically before later duplicate insertion.
+    let old = store.snapshots()[0].clone();
+    let ids = store.apply(
+        &[TextEdit {
+            span: old.span(0, 4)?,
+            expected_digest: old.identity().digest,
+            replacement: "changed".into(),
+        }],
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    let changed = store
+        .get_ref(&ids[0])
+        .ok_or(SourceError::MissingSnapshot)?
+        .clone();
+    store.insert_with_budget(changed, &mut budget())?;
+    assert_eq!(store.snapshots().len(), 130);
+    Ok(())
+}
+
+#[test]
+fn indexed_admission_keeps_unique_bytes_and_checks_empty_cancel() -> Result<(), SourceError> {
+    let store = SourceStore::default();
+    let mut stopped = budget();
+    stopped.cancel();
+    assert!(matches!(
+        store.get_revision_with_budget(&SourceId("none".into()), 0, &mut stopped),
+        Err(StopReason::Cancelled)
+    ));
+    let mut admission = SourceAdmission::default();
+    let mut b = budget();
+    let mut snapshots = Vec::new();
+    for i in (0..128).rev() {
+        snapshots.push(admission.create(
+            SourceId(format!("source-{i:03}")),
+            0,
+            format!("memory:{i}"),
+            b"data".to_vec(),
+            &mut b,
+        )?);
+    }
+    assert_eq!(b.usage().source_bytes, 512);
+    let before = b.usage();
+    admission.admit_existing(&snapshots[127], &mut b)?;
+    assert_eq!(b.usage().source_bytes, 512);
+    assert!(b.usage().work - before.work < 1024);
+    let copy = admission.import(
+        snapshots[127].identity().source.clone(),
+        0,
+        snapshots[127].uri().into(),
+        b"data".to_vec(),
+        &mut b,
+    )?;
+    assert_eq!(copy, snapshots[127]);
+    assert_eq!(b.usage().source_bytes, 512);
+    assert_eq!(
+        admission.import(
+            copy.identity().source.clone(),
+            0,
+            "memory:conflict".into(),
+            b"data".to_vec(),
+            &mut b
+        ),
+        Err(SourceError::IdentityConflict)
+    );
+    Ok(())
+}
+#[test]
+fn shared_admission_is_operation_local_and_independent_storage_still_checked()
+-> Result<(), SourceError> {
+    let make = |uri: &str, text: &str| {
+        SourceSnapshot::new(
+            SourceId("shared".into()),
+            0,
+            uri.into(),
+            text.as_bytes().to_vec(),
+            &mut budget(),
+        )
+    };
+    let original = make("memory:source", "\u{65e5}\u{672c}\r\n\u{1f600}")?;
+    let mut admission = SourceAdmission::default();
+    let mut b = budget();
+    admission.admit_existing(&original, &mut b)?;
+    let bytes = b.usage().source_bytes;
+    let clone = original.clone();
+    drop(original);
+    for _ in 0..10 {
+        admission.admit_existing(&clone, &mut b)?;
+    }
+    assert_eq!(b.usage().source_bytes, bytes);
+    let independent = make("memory:source", clone.text())?;
+    admission.admit_existing(&independent, &mut b)?;
+    assert_eq!(b.usage().source_bytes, bytes);
+    assert_eq!(
+        admission.admit_existing(&make("memory:changed", clone.text())?, &mut b),
+        Err(SourceError::IdentityConflict)
+    );
+    assert_eq!(
+        admission.admit_existing(&make("memory:source", "changed")?, &mut b),
+        Err(SourceError::IdentityConflict)
+    );
+    let mut fresh = SourceAdmission::default();
+    let mut fresh_budget = budget();
+    fresh.admit_existing(&clone, &mut fresh_budget)?;
+    assert_eq!(fresh_budget.usage().source_bytes, bytes);
+    b.stop(StopReason::Cancelled);
+    assert_eq!(
+        admission.admit_existing(&clone, &mut b),
+        Err(SourceError::Stopped(StopReason::Cancelled))
+    );
+    Ok(())
+}
+
+#[test]
+fn admission_usage_does_not_depend_on_snapshot_allocation_order() -> Result<(), SourceError> {
+    let run = |reverse: bool| -> Result<nepl3_core::budget::Usage, SourceError> {
+        let mut snapshots = Vec::new();
+        for at in 0..64 {
+            let id = if reverse { 63 - at } else { at };
+            snapshots.push(SourceSnapshot::new(
+                SourceId(format!("source-{id:02}")),
+                0,
+                format!("memory:source-{id:02}"),
+                b"abc".to_vec(),
+                &mut budget(),
+            )?);
+        }
+        if reverse {
+            snapshots.reverse();
+        }
+        let mut admission = SourceAdmission::default();
+        let mut b = budget();
+        for snapshot in &snapshots {
+            admission.admit_existing(snapshot, &mut b)?;
+        }
+        for snapshot in snapshots.iter().rev().chain(&snapshots) {
+            admission.admit_existing(snapshot, &mut b)?;
+        }
+        assert_eq!(b.usage().source_bytes, 192);
+        Ok(b.usage())
+    };
+    assert_eq!(run(false)?, run(true)?);
     Ok(())
 }

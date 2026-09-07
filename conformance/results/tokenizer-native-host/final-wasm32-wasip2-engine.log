@@ -1,0 +1,182 @@
+   Compiling nepl3-engine v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-tokenizer-host\final-source-exact\crates\foundation\engine)
+   Compiling independent-tokenizer-engine-final v0.0.0 (C:\projects\NEPL3-runtime\.tmp\review-tokenizer-host\final-engine)
+warning: unused import: `super::support::*`
+ --> C:\projects\NEPL3-runtime\.tmp\review-tokenizer-host\final-source-exact\crates\foundation\engine\tests\parse\foreign.rs:1:5
+  |
+1 | use super::support::*;
+  |     ^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `EnvironmentEntry`, `Environment`, `FieldValue`, `KindRef`, `NdfValue`, `SourceAdmission`, `SourceId`, `SourceSnapshot`, and `SourceStore`
+ --> C:\projects\NEPL3-runtime\.tmp\review-tokenizer-host\final-source-exact\crates\foundation\engine\tests\parse\foreign.rs:4:14
+  |
+4 |     source::{SourceAdmission, SourceId, SourceSnapshot, SourceStore},
+  |              ^^^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^  ^^^^^^^^^^^
+5 |     syntax::{Environment, EnvironmentEntry, FieldValue},
+  |              ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^
+6 |     value::{KindRef, NdfValue},
+  |             ^^^^^^^  ^^^^^^^^
+
+warning: unused imports: `parse::*` and `profile::*`
+ --> C:\projects\NEPL3-runtime\.tmp\review-tokenizer-host\final-source-exact\crates\foundation\engine\tests\parse\foreign.rs:8:32
+  |
+8 | use nepl3_engine::{package::*, parse::*, profile::*};
+  |                                ^^^^^^^^  ^^^^^^^^^^
+
+warning: unused import: `model::ReaderContext`
+  --> C:\projects\NEPL3-runtime\.tmp\review-tokenizer-host\final-source-exact\crates\foundation\engine\tests\parse\foreign.rs:10:5
+   |
+10 |     model::ReaderContext,
+   |     ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `environment::environment_digest` and `foundation::FoundationCodec`
+  --> C:\projects\NEPL3-runtime\.tmp\review-tokenizer-host\final-source-exact\crates\foundation\engine\tests\parse\foreign.rs:14:18
+   |
+14 | use nepl3_wire::{environment::environment_digest, foundation::FoundationCodec};
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `FieldValue`
+ --> root.rs:9:45
+  |
+9 |     syntax::{Environment, EnvironmentEntry, FieldValue},
+  |                                             ^^^^^^^^^^
+
+warning: unused import: `super::*`
+ --> ..\engine_independent.rs:1:5
+  |
+1 | use super::*;
+  |     ^^^^^^^^
+
+warning: function `run` is never used
+  --> root.rs:16:4
+   |
+16 | fn run(input: &str, final_input: bool) -> Result<ParseReply, String> {
+   |    ^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `run_config` is never used
+  --> root.rs:19:4
+   |
+19 | fn run_config(
+   |    ^^^^^^^^^^
+
+warning: function `run_options` is never used
+  --> root.rs:27:4
+   |
+27 | fn run_options(
+   |    ^^^^^^^^^^^
+
+warning: struct `Scenario` is never constructed
+  --> root.rs:46:8
+   |
+46 | struct Scenario {
+   |        ^^^^^^^^
+
+warning: function `run_scenario` is never used
+  --> root.rs:60:4
+   |
+60 | fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<ParseReply, String> {
+   |    ^^^^^^^^^^^^
+
+warning: function `unseal` is never used
+    --> root.rs:1465:4
+     |
+1465 | fn unseal(value: ParseCompletion) -> ParseReply {
+     |    ^^^^^^
+
+warning: function `mode` is never used
+  --> C:\projects\NEPL3-runtime\.tmp\review-tokenizer-host\final-source-exact\crates\foundation\engine\tests\parse\foreign.rs:15:4
+   |
+15 | fn mode(package: &mut LanguagePackage, name: &str, marker: &str) {
+   |    ^^^^
+
+warning: enum `Action` is never used
+  --> C:\projects\NEPL3-runtime\.tmp\review-tokenizer-host\final-engine\host.rs:17:10
+   |
+17 | pub enum Action {
+   |          ^^^^^^
+
+warning: struct `Host` is never constructed
+  --> C:\projects\NEPL3-runtime\.tmp\review-tokenizer-host\final-engine\host.rs:31:12
+   |
+31 | pub struct Host {
+   |            ^^^^
+
+warning: type alias `TestResult` is never used
+  --> C:\projects\NEPL3-runtime\.tmp\review-tokenizer-host\final-source-exact\crates\foundation\engine\tests\parse\support.rs:12:10
+   |
+12 | pub type TestResult = Result<(), Box<dyn std::error::Error>>;
+   |          ^^^^^^^^^^
+
+warning: function `budget` is never used
+  --> C:\projects\NEPL3-runtime\.tmp\review-tokenizer-host\final-source-exact\crates\foundation\engine\tests\parse\support.rs:13:8
+   |
+13 | pub fn budget() -> Budget {
+   |        ^^^^^^
+
+warning: function `field` is never used
+  --> C:\projects\NEPL3-runtime\.tmp\review-tokenizer-host\final-source-exact\crates\foundation\engine\tests\parse\support.rs:25:4
+   |
+25 | fn field(name: &str, ty: TypeDescriptor) -> FieldDescriptor {
+   |    ^^^^^
+
+warning: function `node_ref` is never used
+  --> C:\projects\NEPL3-runtime\.tmp\review-tokenizer-host\final-source-exact\crates\foundation\engine\tests\parse\support.rs:31:4
+   |
+31 | fn node_ref() -> TypeDescriptor {
+   |    ^^^^^^^^
+
+warning: function `record` is never used
+  --> C:\projects\NEPL3-runtime\.tmp\review-tokenizer-host\final-source-exact\crates\foundation\engine\tests\parse\support.rs:38:4
+   |
+38 | fn record(name: &str, fields: Vec<FieldDescriptor>) -> NamedType {
+   |    ^^^^^^
+
+warning: function `fixture` is never used
+  --> C:\projects\NEPL3-runtime\.tmp\review-tokenizer-host\final-source-exact\crates\foundation\engine\tests\parse\support.rs:45:8
+   |
+45 | pub fn fixture() -> Result<(LanguagePackage, SchemaRegistry), String> {
+   |        ^^^^^^^
+
+warning: `independent-tokenizer-engine-final` (lib) generated 22 warnings (run `cargo fix --lib -p independent-tokenizer-engine-final` to apply 7 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 12s
+     Running unittests root.rs (.tmp\review-fixed-target\wasm32-wasip2\debug\deps\independent_tokenizer_engine_final-b6db7fd6ff01240d.wasm)
+
+running 21 tests
+test accepted_trivia_without_a_token_survives_eof_and_need_more ... ok
+test allocation_stop_preserves_actual_usage_and_never_invents_a_root ... ok
+test append_retry_reparses_every_scalar_split_and_keeps_cumulative_usage ... ok
+test append_retry_retains_original_caller_depth_when_host_resumes_at_zero ... ok
+test completed_parse_wrappers_preserve_raw_outcomes_reports_and_costs ... ok
+test explicit_list_spine_preserves_declared_head_and_tail_children ... ok
+test foreign::foreign_root_mode_is_guest_owned_and_normal_child_and_host_restore_defaults ... ok
+test independent::nested_callback_stops_keep_reason_and_accepted_prefix ... nested action NestedReaderStop: outcome=Stopped { reason: Cancelled, progress: Some(ParseProgress { request: OwnedParseRequest { snapshot: SourceRef { source_id: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 0, limit: 7, final_input: true, entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, semantic_digest: Digest([96, 206, 196, 178, 247, 62, 71, 71, 242, 162, 52, 109, 222, 157, 79, 102, 13, 165, 243, 136, 162, 114, 223, 25, 119, 184, 172, 249, 248, 107, 219, 162]) }, alias: "Host", category: "Expr", mode: "Code" }, states: [LanguageReaderState { alias: "Host", state: Unit }], environments: [LanguageEnvironmentRef { alias: "Host", environment: EnvironmentRef { id: 0, digest: Digest([247, 69, 230, 176, 130, 176, 128, 97, 156, 253, 162, 143, 55, 30, 70, 237, 217, 154, 43, 57, 253, 148, 7, 141, 251, 197, 33, 69, 89, 34, 11, 206]) } }], environment_entries: [EnvironmentEntry { id: 0, digest: Digest([247, 69, 230, 176, 130, 176, 128, 97, 156, 253, 162, 143, 55, 30, 70, 237, 217, 154, 43, 57, 253, 148, 7, 141, 251, 197, 33, 69, 89, 34, 11, 206]), value: Environment { bindings: [], resources: [] } }], origins: [], sources: [SourceSnapshot { id: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, uri: "memory:input", text: "let x y" }] }, scope: TokenizationScope { operation_id: "parse-operation:1", profile_digest: Digest([191, 7, 230, 37, 66, 159, 1, 33, 96, 137, 131, 250, 67, 121, 188, 255, 186, 156, 30, 124, 46, 213, 88, 72, 238, 180, 223, 125, 7, 84, 116, 138]), snapshot: SourceRef { source_id: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) } }, cursor: 6, states: [LanguageReaderState { alias: "Host", state: Unit }], arenas: [ParseArena { path: [], sources: [SourceSnapshot { id: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, uri: "memory:input", text: "let x y" }], nodes: [SyntaxNode { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, kind: "Form:Let", fields: [], head: Some(Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 0, end: 3 }), cover: Some(Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 0, end: 3 }), origin: OriginId(0), token: Some(TokenRef(0)) }, SyntaxNode { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, kind: "Builtin:Name", fields: [], head: Some(Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 4, end: 5 }), cover: Some(Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 4, end: 5 }), origin: OriginId(1), token: Some(TokenRef(1)) }], origins: [Direct(Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 0, end: 3 }), Direct(Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 4, end: 5 })], tokens: [Token { kind: KindRef { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, local_kind: 10 }, head: Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 0, end: 3 }, payload: Text("let"), views: ViewBundle { elements: [], roots: [] }, leading_trivia: [] }, Token { kind: KindRef { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, local_kind: 10 }, head: Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 4, end: 5 }, payload: Text("x"), views: ViewBundle { elements: [], roots: [] }, leading_trivia: [Trivia { span: Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 3, end: 4 }, kind: Whitespace }] }], source_maps: [], environments: [EnvironmentEntry { id: 0, digest: Digest([247, 69, 230, 176, 130, 176, 128, 97, 156, 253, 162, 143, 55, 30, 70, 237, 217, 154, 43, 57, 253, 148, 7, 141, 251, 197, 33, 69, 89, 34, 11, 206]), value: Environment { bindings: [], resources: [] } }], selections: [NodeSelection { node: NodeRef(0), entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, semantic_digest: Digest([96, 206, 196, 178, 247, 62, 71, 71, 242, 162, 52, 109, 222, 157, 79, 102, 13, 165, 243, 136, 162, 114, 223, 25, 119, 184, 172, 249, 248, 107, 219, 162]) }, alias: "Host", category: "Expr", mode: "Code" }, execution_digest: Digest([234, 18, 234, 96, 27, 120, 227, 155, 3, 121, 61, 6, 36, 108, 59, 120, 226, 211, 49, 163, 67, 44, 95, 41, 114, 247, 174, 118, 104, 250, 60, 229]), shape: Form { index: 0 } }, NodeSelection { node: NodeRef(1), entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, semantic_digest: Digest([96, 206, 196, 178, 247, 62, 71, 71, 242, 162, 52, 109, 222, 157, 79, 102, 13, 165, 243, 136, 162, 114, 223, 25, 119, 184, 172, 249, 248, 107, 219, 162]) }, alias: "Host", category: "Expr", mode: "Code" }, execution_digest: Digest([234, 18, 234, 96, 27, 120, 227, 155, 3, 121, 61, 6, 36, 108, 59, 120, 226, 211, 49, 163, 67, 44, 95, 41, 114, 247, 174, 118, 104, 250, 60, 229]), shape: Builtin { read: ReadSpecId(0) } }], root: None }], frames: [ParseFrame { entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, semantic_digest: Digest([96, 206, 196, 178, 247, 62, 71, 71, 242, 162, 52, 109, 222, 157, 79, 102, 13, 165, 243, 136, 162, 114, 223, 25, 119, 184, 172, 249, 248, 107, 219, 162]) }, alias: "Host", category: "Expr", mode: "Code" }, read: None, selection: Some(Form { index: 0 }), node: Some(NodeRef(0)), arity: 2, children: [Child(NodeRef(1))], next_child: 1, arena: 0, foreign: false }, ParseFrame { entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, semantic_digest: Digest([96, 206, 196, 178, 247, 62, 71, 71, 242, 162, 52, 109, 222, 157, 79, 102, 13, 165, 243, 136, 162, 114, 223, 25, 119, 184, 172, 249, 248, 107, 219, 162]) }, alias: "Host", category: "Expr", mode: "Code" }, read: None, selection: None, node: None, arity: 0, children: [], next_child: 0, arena: 0, foreign: false }], facts: [ReaderFactBatch { path: [], node: Some(NodeRef(0)), entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, semantic_digest: Digest([96, 206, 196, 178, 247, 62, 71, 71, 242, 162, 52, 109, 222, 157, 79, 102, 13, 165, 243, 136, 162, 114, 223, 25, 119, 184, 172, 249, 248, 107, 219, 162]) }, alias: "Host", category: "Expr", mode: "Code" }, facts: [], trivia: [] }, ReaderFactBatch { path: [], node: Some(NodeRef(1)), entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, semantic_digest: Digest([96, 206, 196, 178, 247, 62, 71, 71, 242, 162, 52, 109, 222, 157, 79, 102, 13, 165, 243, 136, 162, 114, 223, 25, 119, 184, 172, 249, 248, 107, 219, 162]) }, alias: "Host", category: "Expr", mode: "Code" }, facts: [], trivia: [Trivia { span: Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 3, end: 4 }, kind: Whitespace }] }, ReaderFactBatch { path: [], node: None, entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, semantic_digest: Digest([96, 206, 196, 178, 247, 62, 71, 71, 242, 162, 52, 109, 222, 157, 79, 102, 13, 165, 243, 136, 162, 114, 223, 25, 119, 184, 172, 249, 248, 107, 219, 162]) }, alias: "Host", category: "Expr", mode: "Code" }, facts: [], trivia: [Trivia { span: Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 5, end: 6 }, kind: Whitespace }] }], recovery: [], contexts: [] }) }, accepted diagnostics=1
+nested action NestedSourceStop: outcome=Stopped { reason: Cancelled, progress: Some(ParseProgress { request: OwnedParseRequest { snapshot: SourceRef { source_id: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 0, limit: 7, final_input: true, entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, semantic_digest: Digest([96, 206, 196, 178, 247, 62, 71, 71, 242, 162, 52, 109, 222, 157, 79, 102, 13, 165, 243, 136, 162, 114, 223, 25, 119, 184, 172, 249, 248, 107, 219, 162]) }, alias: "Host", category: "Expr", mode: "Code" }, states: [LanguageReaderState { alias: "Host", state: Unit }], environments: [LanguageEnvironmentRef { alias: "Host", environment: EnvironmentRef { id: 0, digest: Digest([247, 69, 230, 176, 130, 176, 128, 97, 156, 253, 162, 143, 55, 30, 70, 237, 217, 154, 43, 57, 253, 148, 7, 141, 251, 197, 33, 69, 89, 34, 11, 206]) } }], environment_entries: [EnvironmentEntry { id: 0, digest: Digest([247, 69, 230, 176, 130, 176, 128, 97, 156, 253, 162, 143, 55, 30, 70, 237, 217, 154, 43, 57, 253, 148, 7, 141, 251, 197, 33, 69, 89, 34, 11, 206]), value: Environment { bindings: [], resources: [] } }], origins: [], sources: [SourceSnapshot { id: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, uri: "memory:input", text: "let x y" }] }, scope: TokenizationScope { operation_id: "parse-operation:1", profile_digest: Digest([191, 7, 230, 37, 66, 159, 1, 33, 96, 137, 131, 250, 67, 121, 188, 255, 186, 156, 30, 124, 46, 213, 88, 72, 238, 180, 223, 125, 7, 84, 116, 138]), snapshot: SourceRef { source_id: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) } }, cursor: 6, states: [LanguageReaderState { alias: "Host", state: Unit }], arenas: [ParseArena { path: [], sources: [SourceSnapshot { id: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, uri: "memory:input", text: "let x y" }], nodes: [SyntaxNode { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, kind: "Form:Let", fields: [], head: Some(Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 0, end: 3 }), cover: Some(Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 0, end: 3 }), origin: OriginId(0), token: Some(TokenRef(0)) }, SyntaxNode { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, kind: "Builtin:Name", fields: [], head: Some(Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 4, end: 5 }), cover: Some(Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 4, end: 5 }), origin: OriginId(1), token: Some(TokenRef(1)) }], origins: [Direct(Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 0, end: 3 }), Direct(Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 4, end: 5 })], tokens: [Token { kind: KindRef { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, local_kind: 10 }, head: Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 0, end: 3 }, payload: Text("let"), views: ViewBundle { elements: [], roots: [] }, leading_trivia: [] }, Token { kind: KindRef { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, local_kind: 10 }, head: Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 4, end: 5 }, payload: Text("x"), views: ViewBundle { elements: [], roots: [] }, leading_trivia: [Trivia { span: Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 3, end: 4 }, kind: Whitespace }] }], source_maps: [], environments: [EnvironmentEntry { id: 0, digest: Digest([247, 69, 230, 176, 130, 176, 128, 97, 156, 253, 162, 143, 55, 30, 70, 237, 217, 154, 43, 57, 253, 148, 7, 141, 251, 197, 33, 69, 89, 34, 11, 206]), value: Environment { bindings: [], resources: [] } }], selections: [NodeSelection { node: NodeRef(0), entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, semantic_digest: Digest([96, 206, 196, 178, 247, 62, 71, 71, 242, 162, 52, 109, 222, 157, 79, 102, 13, 165, 243, 136, 162, 114, 223, 25, 119, 184, 172, 249, 248, 107, 219, 162]) }, alias: "Host", category: "Expr", mode: "Code" }, execution_digest: Digest([234, 18, 234, 96, 27, 120, 227, 155, 3, 121, 61, 6, 36, 108, 59, 120, 226, 211, 49, 163, 67, 44, 95, 41, 114, 247, 174, 118, 104, 250, 60, 229]), shape: Form { index: 0 } }, NodeSelection { node: NodeRef(1), entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, semantic_digest: Digest([96, 206, 196, 178, 247, 62, 71, 71, 242, 162, 52, 109, 222, 157, 79, 102, 13, 165, 243, 136, 162, 114, 223, 25, 119, 184, 172, 249, 248, 107, 219, 162]) }, alias: "Host", category: "Expr", mode: "Code" }, execution_digest: Digest([234, 18, 234, 96, 27, 120, 227, 155, 3, 121, 61, 6, 36, 108, 59, 120, 226, 211, 49, 163, 67, 44, 95, 41, 114, 247, 174, 118, 104, 250, 60, 229]), shape: Builtin { read: ReadSpecId(0) } }], root: None }], frames: [ParseFrame { entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, semantic_digest: Digest([96, 206, 196, 178, 247, 62, 71, 71, 242, 162, 52, 109, 222, 157, 79, 102, 13, 165, 243, 136, 162, 114, 223, 25, 119, 184, 172, 249, 248, 107, 219, 162]) }, alias: "Host", category: "Expr", mode: "Code" }, read: None, selection: Some(Form { index: 0 }), node: Some(NodeRef(0)), arity: 2, children: [Child(NodeRef(1))], next_child: 1, arena: 0, foreign: false }, ParseFrame { entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, semantic_digest: Digest([96, 206, 196, 178, 247, 62, 71, 71, 242, 162, 52, 109, 222, 157, 79, 102, 13, 165, 243, 136, 162, 114, 223, 25, 119, 184, 172, 249, 248, 107, 219, 162]) }, alias: "Host", category: "Expr", mode: "Code" }, read: None, selection: None, node: None, arity: 0, children: [], next_child: 0, arena: 0, foreign: false }], facts: [ReaderFactBatch { path: [], node: Some(NodeRef(0)), entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, semantic_digest: Digest([96, 206, 196, 178, 247, 62, 71, 71, 242, 162, 52, 109, 222, 157, 79, 102, 13, 165, 243, 136, 162, 114, 223, 25, 119, 184, 172, 249, 248, 107, 219, 162]) }, alias: "Host", category: "Expr", mode: "Code" }, facts: [], trivia: [] }, ReaderFactBatch { path: [], node: Some(NodeRef(1)), entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, semantic_digest: Digest([96, 206, 196, 178, 247, 62, 71, 71, 242, 162, 52, 109, 222, 157, 79, 102, 13, 165, 243, 136, 162, 114, 223, 25, 119, 184, 172, 249, 248, 107, 219, 162]) }, alias: "Host", category: "Expr", mode: "Code" }, facts: [], trivia: [Trivia { span: Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 3, end: 4 }, kind: Whitespace }] }, ReaderFactBatch { path: [], node: None, entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: "fixture.syntax", revision: 1, digest: Digest([134, 232, 62, 4, 135, 44, 177, 220, 24, 179, 222, 250, 48, 130, 101, 110, 152, 8, 14, 105, 254, 170, 182, 43, 136, 254, 84, 193, 154, 79, 25, 157]) }, semantic_digest: Digest([96, 206, 196, 178, 247, 62, 71, 71, 242, 162, 52, 109, 222, 157, 79, 102, 13, 165, 243, 136, 162, 114, 223, 25, 119, 184, 172, 249, 248, 107, 219, 162]) }, alias: "Host", category: "Expr", mode: "Code" }, facts: [], trivia: [Trivia { span: Span { snapshot: SnapshotId { source: SourceId("input"), revision: 0, digest: Digest([211, 24, 252, 173, 124, 27, 68, 252, 231, 142, 56, 7, 114, 82, 18, 116, 0, 78, 237, 176, 49, 69, 247, 197, 186, 236, 241, 236, 58, 244, 248, 250]) }, start: 5, end: 6 }, kind: Whitespace }] }], recovery: [], contexts: [] }) }, accepted diagnostics=1
+ok
+test missing_children_share_one_bundle_recovery_table ... ok
+test missing_final_child_and_nonfinal_input_are_distinct ... ok
+test native_host_cancel_and_invalid_reply_keep_boundary_semantics ... ok
+test native_host_failure_keeps_generated_diagnostic_and_event_closure ... ok
+test native_host_mixed_text_provider_fallback_preserves_decoded_sources ... ok
+test native_host_nested_stop_is_sticky_without_host_mutating_budget ... ok
+test native_host_prefix_growth_reduces_measured_copy_work ... parents 1: owned Usage { source_bytes: 7, work: 11593, depth: 6, nodes: 38, allocation_units: 177711, output_bytes: 0, diagnostics: 2, events: 0 }, native Usage { source_bytes: 7, work: 6677, depth: 6, nodes: 36, allocation_units: 71420, output_bytes: 0, diagnostics: 2, events: 0 }
+parents 4: owned Usage { source_bytes: 25, work: 51019, depth: 9, nodes: 119, allocation_units: 713169, output_bytes: 0, diagnostics: 5, events: 0 }, native Usage { source_bytes: 25, work: 25571, depth: 9, nodes: 114, allocation_units: 245870, output_bytes: 0, diagnostics: 5, events: 0 }
+parents 8: owned Usage { source_bytes: 49, work: 141275, depth: 13, nodes: 255, allocation_units: 1910673, output_bytes: 0, diagnostics: 9, events: 0 }, native Usage { source_bytes: 49, work: 63979, depth: 13, nodes: 246, allocation_units: 587656, output_bytes: 0, diagnostics: 9, events: 0 }
+ok
+test native_host_preserves_tree_reports_maps_and_owned_fallback ... ok
+test prefix_depth_composes_with_nested_reader_frames ... ok
+test provider_resume_keeps_prefix_frames_report_and_caller_depth ... ok
+test static_form_keeps_builtin_children_and_token_payloads ... ok
+test text_reservation_preserves_prefix_identity_and_composed_caller_depth ... ok
+test unknown_heads_preserve_remainder_without_inventing_a_leaf_arity ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.94s
+
+   Doc-tests independent_tokenizer_engine_final
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

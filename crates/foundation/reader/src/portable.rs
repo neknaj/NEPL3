@@ -163,7 +163,13 @@ fn closed<C: FoundationValueCodec>(
     snapshot
         .check_range(request.start, request.limit)
         .map_err(PortableError::Source)?;
-    if sources.resolve(&request.snapshot) != Some(snapshot) {
+    let selected = sources
+        .resolve(&request.snapshot)
+        .ok_or(PortableError::UndeclaredSource)?;
+    if !selected
+        .eq_with_budget(snapshot, budget)
+        .map_err(|e| PortableError::Source(SourceError::Stopped(e)))?
+    {
         return Err(PortableError::UndeclaredSource);
     }
     let checked = request
@@ -172,7 +178,17 @@ fn closed<C: FoundationValueCodec>(
         .map_err(PortableError::Context)?;
     for source in checked.sources() {
         budget.charge(Resource::Work, request.sources.len() as u64)?;
-        if !request.sources.iter().any(|declared| declared == *source) {
+        let mut found = false;
+        for declared in &request.sources {
+            if declared
+                .eq_with_budget(source, budget)
+                .map_err(|e| PortableError::Source(SourceError::Stopped(e)))?
+            {
+                found = true;
+                break;
+            }
+        }
+        if !found {
             return Err(PortableError::UndeclaredSource);
         }
     }

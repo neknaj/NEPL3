@@ -1,0 +1,8 @@
+{
+  "command": [
+    "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-queue-before.exe"
+  ],
+  "exit": 0,
+  "deadline": 30,
+  "scope": "Exact copied private helper, not public export invocation; full source shell-delta-first.rs"
+}

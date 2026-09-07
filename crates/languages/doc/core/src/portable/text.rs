@@ -94,7 +94,7 @@ pub(super) fn sources<E>(
     for source in &document.sources {
         b.charge(Resource::Work, 1)?;
         store
-            .insert(source.clone_with_budget(b)?)
+            .insert_with_budget(source.clone_with_budget(b)?, b)
             .map_err(StructureError::from)?;
     }
     Ok(store)

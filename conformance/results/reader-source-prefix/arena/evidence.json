@@ -1,0 +1,67 @@
+[
+  {
+    "path": "record.md",
+    "sha256": "7170f7db78e275130161af70fabcb828dc0b07da117d92928177d3f35d6b1f74",
+    "bytes": 5476
+  },
+  {
+    "path": "files.json",
+    "sha256": "5c1780e272b700bcc24ad6563e6020591fc497572f657f63412bc4be90be6e5f",
+    "bytes": 354
+  },
+  {
+    "path": "workspace-files.json",
+    "sha256": "5e0ef8fd82396acb1171262871b7f1af2befa5676d3617fbccf07a7f928cd9da",
+    "bytes": 36295
+  },
+  {
+    "path": "final-workspace-files.json",
+    "sha256": "dd7c2f41128c477234d6bf184501b26c6ce51f2cd545e6eb4c7ef4aa1e44b46e",
+    "bytes": 36296
+  },
+  {
+    "path": "observer.txt",
+    "sha256": "957ab1c0516215450cef9d6955dae7512ac55aee11b5af5d1d85b20c60f55fb1",
+    "bytes": 648
+  },
+  {
+    "path": "probe.rs",
+    "sha256": "70534cff86beb774df6790e135572089cc69b8764f195af5423ab498ef84c8a8",
+    "bytes": 1605
+  },
+  {
+    "path": "foreign-probe.rs",
+    "sha256": "30f1b8079014c5573fca2d4235d884f06e1b61ad1e14f75eb5264fbab0008e64",
+    "bytes": 8606
+  },
+  {
+    "path": "probe-before.rs",
+    "sha256": "3c9ec2381f1d69dc520af371aa5918d36a3e2e72ed59947025ae76e29587f74e",
+    "bytes": 1693
+  },
+  {
+    "path": "probe-before-admission.rs",
+    "sha256": "ee999356ae9b77cc82b4ebc72c65e8981f152197bedd496be116686a66bd5f96",
+    "bytes": 1613
+  },
+  {
+    "path": "native-before.log",
+    "sha256": "926614b74e27863ee899b33317495b8b8865db5f0534a17ef705f5694a10b230",
+    "bytes": 4040
+  },
+  {
+    "path": "native-before-admission.log",
+    "sha256": "857d90a3ae2a5fb25525862094ac2d227a7f7ebf229b8b9a10a4d0d9d1f086dd",
+    "bytes": 3248
+  },
+  {
+    "path": "native-final.log",
+    "sha256": "93da258b4a6edfffeb07c4df7922964062e2bef0095e9f79c6ded2b131475fda",
+    "bytes": 2756
+  },
+  {
+    "path": "wasi.log",
+    "sha256": "3130ceec5bc677fbcd205bb7667fb42f57b1ac1b49cdaff62155f1dc5ace401a",
+    "bytes": 3667
+  }
+]

@@ -1,0 +1,18 @@
+[
+  {
+    "command": [
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\growth-native.exe"
+    ],
+    "exit": 0,
+    "deadline": 30
+  },
+  {
+    "command": [
+      "wasmtime",
+      "run",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\growth-wasi.wasm"
+    ],
+    "exit": 0,
+    "deadline": 30
+  }
+]

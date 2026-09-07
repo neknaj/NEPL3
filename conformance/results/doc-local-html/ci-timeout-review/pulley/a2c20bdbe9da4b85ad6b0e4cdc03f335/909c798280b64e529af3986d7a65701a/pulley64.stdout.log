@@ -1,0 +1,7 @@
+
+running 2 tests
+test delta_keeps_current_scope_namespace_reservations_and_foreign_scope_authority ... ok
+test facts_reject_missing_sources_namespace_roots_and_fresh_operation_limits ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.56s
+

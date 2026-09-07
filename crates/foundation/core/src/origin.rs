@@ -566,20 +566,29 @@ fn snapshot_dag<'a>(
     budget: &mut Budget,
 ) -> Result<bool, OriginError> {
     let mut nodes: Vec<&'a SnapshotId> = Vec::new();
+    let mut ordered: Vec<usize> = Vec::new();
     let mut edges = Vec::new();
     for mapping in input {
         let mut ids = [0usize; 2];
         for (slot, span) in [&mapping.source, &mapping.target].into_iter().enumerate() {
             let identity = span.snapshot_ref();
             let mut found = None;
-            for (index, prior) in nodes.iter().enumerate() {
+            let (mut low, mut high) = (0, ordered.len());
+            while low < high {
+                let mid = low + (high - low) / 2;
+                let index = ordered[mid];
+                let prior = nodes[index];
                 budget.charge(
                     Resource::Work,
                     prior.source.0.len().min(identity.source.0.len()) as u64 + 41,
                 )?;
-                if *prior == identity {
-                    found = Some(index);
-                    break;
+                match prior.cmp(identity) {
+                    core::cmp::Ordering::Equal => {
+                        found = Some(index);
+                        break;
+                    }
+                    core::cmp::Ordering::Less => low = mid + 1,
+                    core::cmp::Ordering::Greater => high = mid,
                 }
             }
             ids[slot] = match found {
@@ -589,8 +598,14 @@ fn snapshot_dag<'a>(
                         Resource::AllocationUnits,
                         core::mem::size_of::<&SnapshotId>() as u64,
                     )?;
+                    budget.charge(
+                        Resource::AllocationUnits,
+                        core::mem::size_of::<usize>() as u64,
+                    )?;
+                    budget.charge(Resource::Work, (ordered.len() - low) as u64)?;
                     let index = nodes.len();
                     nodes.push(identity);
+                    ordered.insert(low, index);
                     index
                 }
             };

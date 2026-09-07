@@ -1,0 +1,11 @@
+   Compiling independent-shell-queue v0.0.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-export\shell-probe)
+warning: function `check_shell_depth` is never used
+ --> src\bin\growth.rs:2:4
+  |
+2 | fn check_shell_depth(
+  |    ^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `independent-shell-queue` (bin "growth") generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.39s

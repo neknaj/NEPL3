@@ -2,6 +2,8 @@ use nepl3_core::{budget::*, diagnostic::*, schema::*, source::*, syntax::*, valu
 use nepl3_reader::{model::*, plan::*, runtime::*};
 #[path = "runtime/retry.rs"]
 mod retry;
+#[path = "runtime/tokenizer_host.rs"]
+mod tokenizer_host;
 #[path = "runtime/transform.rs"]
 mod transform;
 fn budget() -> Budget {

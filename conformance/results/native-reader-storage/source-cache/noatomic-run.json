@@ -1,0 +1,22 @@
+{
+  "command": [
+    "cargo",
+    "check",
+    "--offline",
+    "--locked",
+    "--manifest-path",
+    "C:\\projects\\NEPL3-runtime\\.tmp\\review-admission-storage-cache-fixed\\source\\Cargo.toml",
+    "-p",
+    "nepl3-core",
+    "-p",
+    "nepl3-wire",
+    "--target",
+    "thumbv6m-none-eabi",
+    "--target-dir",
+    "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-noatomic-target"
+  ],
+  "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-admission-storage-cache-fixed\\source",
+  "exit": 0,
+  "deadline": 600,
+  "target": "thumbv6m-none-eabi"
+}

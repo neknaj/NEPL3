@@ -69,6 +69,12 @@ Nonemptyはlower後に可視内容が存在すること。空Textや空Concatだ
 
 例: `"これは{[文書/ぶんしょ]/document}を記述する。"` はText + Anno(Ruby(...),[Text]) + Text。
 
+### 2.1. 文書構造の明示改行
+
+前置構文の `break`（Doc/Inline、arity 0）はDoc.Breakを構築する。同じSentence内の明示的な改行であり、新しいSentence・Paragraph・Parallel variantを作らない。例えば `sentence cons text "a" cons break cons text "b" nil` と書く。HTMLは`br`、plain_textはLFを出力し、source printerは`break`を保持する。
+
+著者が指定する文書の改行にはbreakを用いる。Text中の`\n`は文字データのLFとして保持する既存escapeであり、Break nodeを生成しない。literalにはBreak constructorを追加せず、明示改行を含むSentenceは前置構築を使う。TextのLF、明示Break、Paragraph境界、表示時の自動折返しを相互に推測変換しない。
+
 ## 3. prefix経路との等価性
 
 ```text

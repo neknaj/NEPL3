@@ -291,6 +291,44 @@ impl<'a> TokenizationSession<'a> {
         admission: &mut SourceAdmission,
         accepted: AcceptedTokenizationReport,
     ) -> Result<AcceptedTokenizationReply, ReaderError> {
+        self.read_accepted_dispatch(
+            request, sources, budget, admission, accepted, None, &mut None,
+        )
+    }
+    /// Complete synchronous calls before exporting a tokenizer checkpoint.
+    /// None or a rejected callback still publishes the regular owned boundary.
+    pub fn read_accepted_with_host(
+        &mut self,
+        request: ScopedTokenizationRequest<'_, '_>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        accepted: AcceptedTokenizationReport,
+        host: &mut impl super::TokenizationHost,
+    ) -> Result<super::TokenizationHostReply, ReaderError> {
+        let mut host_error = None;
+        let reply = self.read_accepted_dispatch(
+            request,
+            sources,
+            budget,
+            admission,
+            accepted,
+            Some(host),
+            &mut host_error,
+        )?;
+        Ok(super::TokenizationHostReply { reply, host_error })
+    }
+    #[allow(clippy::too_many_arguments)]
+    fn read_accepted_dispatch(
+        &mut self,
+        request: ScopedTokenizationRequest<'_, '_>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        accepted: AcceptedTokenizationReport,
+        host: Option<&mut dyn super::TokenizationHost>,
+        host_error: &mut Option<ReaderError>,
+    ) -> Result<AcceptedTokenizationReply, ReaderError> {
         let ScopedTokenizationRequest {
             scope,
             target,
@@ -323,9 +361,12 @@ impl<'a> TokenizationSession<'a> {
             return Err(ReaderError::Continuation);
         }
         let scope = Rc::clone(&accepted.scope);
-        let result = self.read_seed(target, request, sources, budget, admission, accepted);
+        let result = self.read_seed(
+            target, request, sources, budget, admission, accepted, host, host_error,
+        );
         result.map(|reply| AcceptedTokenizationReply::from_native(reply, scope, budget))
     }
+    #[allow(clippy::too_many_arguments)]
     fn read_seed(
         &mut self,
         target: TokenTarget,
@@ -334,6 +375,8 @@ impl<'a> TokenizationSession<'a> {
         budget: &mut Budget,
         admission: &mut SourceAdmission,
         accepted: AcceptedTokenizationReport,
+        host: Option<&mut dyn super::TokenizationHost>,
+        host_error: &mut Option<ReaderError>,
     ) -> Result<TokenizationReply, ReaderError> {
         if accepted.limits != budget.limits()
             || !runtime::usage_at_least(budget.usage(), accepted.report.usage)
@@ -379,22 +422,29 @@ impl<'a> TokenizationSession<'a> {
         }
         let accepted_check = (|| -> Result<(), ReaderError> {
             for added in &accepted.sources {
-                budget.charge(
-                    Resource::Work,
-                    sources.snapshots().len() as u64
-                        * (added.identity().source.0.len() as u64 + 33),
-                )?;
-                for prior in sources.snapshots() {
-                    if prior.identity().source == added.identity().source
-                        && prior.identity().revision == added.identity().revision
-                    {
-                        budget.charge(Resource::Work, prior.uri().len() as u64 + 33)?;
-                        if prior.identity() != added.identity() || prior.uri() != added.uri() {
-                            return Err(SourceError::IdentityConflict.into());
-                        }
+                if let Some(prior) = sources.get_revision_with_budget(
+                    &added.identity().source,
+                    added.identity().revision,
+                    budget,
+                )? {
+                    budget.charge(Resource::Work, prior.uri().len() as u64 + 33)?;
+                    if prior.identity() != added.identity() || prior.uri() != added.uri() {
+                        return Err(SourceError::IdentityConflict.into());
                     }
                 }
                 admission.admit_existing(added, budget)?;
+            }
+            if accepted.report.diagnostics.is_empty() && accepted.report.events.is_empty() {
+                // The loop above checked/admitted every source in this private
+                // prefix. An empty report has no range to resolve; retain its
+                // usage/overflow validation without rebuilding that same index.
+                return runtime::validate::accepted_report(
+                    &accepted.report,
+                    sources,
+                    &[],
+                    self.registry,
+                    budget,
+                );
             }
             runtime::validate::accepted_report(
                 &accepted.report,
@@ -450,8 +500,12 @@ impl<'a> TokenizationSession<'a> {
                 .checked_add(1)
                 .ok_or_else(|| budget.stop(StopReason::DepthLimit))?,
         };
-        let outcome =
-            budget.with_depth(|budget| self.drive(&mut machine, None, sources, budget, admission));
+        let outcome = budget.with_depth(|budget| match host {
+            Some(host) => {
+                self.drive_host(&mut machine, sources, budget, admission, host, host_error)
+            }
+            None => self.drive(&mut machine, None, sources, budget, admission),
+        });
         self.finish(machine, outcome, budget)
     }
     pub fn reserve(
@@ -742,13 +796,120 @@ impl<'a> TokenizationSession<'a> {
         };
         self.finish(machine, outcome, budget)
     }
+    fn drive_host(
+        &mut self,
+        machine: &mut Machine<'a, '_>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        host: &mut dyn super::TokenizationHost,
+        host_error: &mut Option<ReaderError>,
+    ) -> Result<Outcome, ReaderError> {
+        let mut native = runtime::NativeDispatch {
+            host,
+            error: host_error,
+            deferred: false,
+        };
+        let mut outcome =
+            self.drive_inner(machine, None, sources, budget, admission, Some(&mut native))?;
+        loop {
+            match &outcome {
+                Outcome::Await { call, .. } => {
+                    if native.error.is_some() || native.deferred {
+                        return Ok(outcome);
+                    }
+                    let base = match call.as_ref() {
+                        ProviderCall::Read { depth_base, .. }
+                        | ProviderCall::Transform { depth_base, .. }
+                        | ProviderCall::Dependent { depth_base, .. } => *depth_base,
+                    };
+                    let reply = match budget.with_depth_at_least(base, |budget| {
+                        native.host.provider(call, budget, admission)
+                    }) {
+                        Ok(Some(reply)) => reply,
+                        Ok(None) => return Ok(outcome),
+                        Err(error) => {
+                            if let Some(reason) = error.stop_reason() {
+                                budget.stop(reason);
+                            }
+                            *native.error = Some(error);
+                            return Ok(outcome);
+                        }
+                    };
+                    // The callback receives only a borrowed call, not a mutable
+                    // continuation. The reader retains the exclusive private slot.
+                    // External fallback still publishes/checks the complete echo.
+                    let reply = match self
+                        .reader
+                        .resume_native_callback(reply, sources, budget, admission)
+                    {
+                        Ok(reply) => reply,
+                        Err(error) => {
+                            if let Some(reason) = error.stop_reason() {
+                                budget.stop(reason);
+                            }
+                            *native.error = Some(error);
+                            return Ok(outcome);
+                        }
+                    };
+                    machine.waiting = false;
+                    outcome = match accept(machine, reply, self.registry, budget)? {
+                        Some(outcome) => outcome,
+                        None => self.drive_inner(
+                            machine,
+                            None,
+                            sources,
+                            budget,
+                            admission,
+                            Some(&mut native),
+                        )?,
+                    };
+                }
+                Outcome::Reserve { request } => {
+                    let reservation = match native.host.reservation(request, budget, admission) {
+                        Ok(Some(reservation)) => reservation,
+                        Ok(None) => return Ok(outcome),
+                        Err(error) => {
+                            if let Some(reason) = error.stop_reason() {
+                                budget.stop(reason);
+                            }
+                            *native.error = Some(error);
+                            return Ok(outcome);
+                        }
+                    };
+                    machine.waiting = false;
+                    outcome = self.drive_inner(
+                        machine,
+                        Some(&reservation),
+                        sources,
+                        budget,
+                        admission,
+                        Some(&mut native),
+                    )?;
+                }
+                _ => return Ok(outcome),
+            }
+        }
+    }
     fn drive(
+        &mut self,
+        machine: &mut Machine<'a, '_>,
+        reservation: Option<&SourceReservation>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<Outcome, ReaderError> {
+        self.drive_inner(machine, reservation, sources, budget, admission, None)
+    }
+    #[allow(clippy::too_many_arguments)]
+    fn drive_inner(
         &mut self,
         machine: &mut Machine<'a, '_>,
         mut reservation: Option<&SourceReservation>,
         sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
+        mut native: Option<&mut runtime::NativeDispatch<'_>>,
     ) -> Result<Outcome, ReaderError> {
         loop {
             budget.poll()?;
@@ -808,7 +969,7 @@ impl<'a> TokenizationSession<'a> {
                     let request = machine
                         .request
                         .request(machine.current.cursor, &machine.current.state);
-                    self.reader.read_with_report(
+                    self.reader.read_with_report_host(
                         name,
                         request,
                         sources,
@@ -819,6 +980,7 @@ impl<'a> TokenizationSession<'a> {
                             sources: retained_sources,
                             source_maps: retained_maps,
                         },
+                        native.as_deref_mut(),
                     )?
                 }
                 TokenReader::Builtin(kind) => {
@@ -973,7 +1135,7 @@ impl<'a> TokenizationSession<'a> {
                         usage: budget.usage(),
                     },
                 };
-                c.charge(budget)?;
+                c.charge_copy(budget)?;
                 slot::<TokenizationContinuation>(budget)?;
                 c.usage = budget.usage();
                 c.report.usage = c.usage;

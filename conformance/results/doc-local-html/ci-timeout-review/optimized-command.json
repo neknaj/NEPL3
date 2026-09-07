@@ -1,0 +1,23 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-core",
+    "-p",
+    "nepl3-reader",
+    "-p",
+    "nepl3-wire",
+    "-p",
+    "nepl3-engine",
+    "--target",
+    "wasm32-wasip2",
+    "--target-dir",
+    "C:\\projects\\NEPL3-doc-html-export\\.tmp\\review-ci-timeout\\optimized-target",
+    "--",
+    "--test-threads=1"
+  ],
+  "profile_test_opt_level": "2",
+  "runner": "C:\\projects\\NEPL3-doc-html-export\\.tmp\\review-ci-timeout\\old-compare.py"
+}

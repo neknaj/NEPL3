@@ -1,0 +1,57 @@
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-source-lookup-indexes\.tmp\review-lookup-indexes\workspace\crates\foundation\core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.53s
+     Running unittests src\lib.rs (.tmp\review-lookup-indexes\target\debug\deps\nepl3_core-1b9b143ee90d1469.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\budget.rs (.tmp\review-lookup-indexes\target\debug\deps\budget-3e89a6c069a967ca.exe)
+
+running 2 tests
+test observed_delegated_cost_is_atomic_across_all_resources_and_preserves_stops ... ok
+test temporary_ceilings_restore_on_result_paths_and_cannot_regrant_reserved_capacity ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\contracts.rs (.tmp\review-lookup-indexes\target\debug\deps\contracts-4ccf74b50e85bba5.exe)
+
+running 22 tests
+test budget_exact_limits_overflow_zero_and_cancel_are_distinct ... ok
+test canonical_integers_reject_negative_zero_and_leading_zero ... ok
+test line_positions_roundtrip_unicode_and_all_line_endings ... ok
+test edit_size_limit_checked_before_replacement_is_built ... ok
+test line_index_allocation_limit_is_enforced ... ok
+test admission_accounts_for_copied_locator_payload ... ok
+test locator_profile_is_checked_without_os_or_scheme_normalization ... ok
+test edits_are_atomic_across_sources_and_reject_stale_or_conflicting_input ... ok
+test rational_constructors_normalize_native_but_reject_noncanonical_wire ... ok
+test first_budget_stop_is_sticky_across_smaller_charges_and_cancellation ... ok
+test nested_budget_retains_work_and_peak_depth_after_failed_branch ... ok
+test source_admission_charges_unique_snapshots_once_across_shared_calls ... ok
+test source_admission_rejects_locator_changes_for_same_snapshot_identity ... ok
+test source_digest_is_sha256_of_exact_original_bytes ... ok
+test source_limits_precede_decode_and_decode_does_not_replace_bytes ... ok
+test span_rejects_scalar_interiors_bounds_and_other_identity ... ok
+test store_preserves_distinct_ids_at_same_uri_and_rejects_conflicting_revision ... ok
+test indexed_source_insert_preserves_order_and_metered_duplicate_lookup ... ok
+test indexed_admission_keeps_unique_bytes_and_checks_empty_cancel ... FAILED
+test generated_source_locator_scan_is_charged_before_validation ... ok
+test shared_copy_and_independent_comparison_have_separate_work_bounds ... ok
+test snapshot_clones_preserve_owned_lifetime_and_independent_identity_checks ... ok
+
+failures:
+
+---- indexed_admission_keeps_unique_bytes_and_checks_empty_cancel stdout ----
+
+thread 'indexed_admission_keeps_unique_bytes_and_checks_empty_cancel' (32324) panicked at crates\foundation\core\tests\contracts.rs:661:5:
+assertion failed: b.usage().work - before.work < 1024
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    indexed_admission_keeps_unique_bytes_and_checks_empty_cancel
+
+test result: FAILED. 21 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p nepl3-core --test contracts`

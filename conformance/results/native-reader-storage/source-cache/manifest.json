@@ -1,0 +1,141 @@
+{
+  "base": "beac8220a61bc00ba31255e9a567518d3dce6a50",
+  "scope": "Final deterministic owning admission storage cache",
+  "versions": {
+    "rustc --version --verbose": "rustc 1.97.0 (2d8144b78 2026-07-07)\nbinary: rustc\ncommit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3\ncommit-date: 2026-07-07\nhost: x86_64-pc-windows-msvc\nrelease: 1.97.0\nLLVM version: 22.1.6",
+    "cargo --version": "cargo 1.97.0 (c980f4866 2026-06-30)",
+    "wasmtime --version": "wasmtime 44.0.1 (f302ebd6b 2026-04-30)"
+  },
+  "files": [
+    {
+      "path": "allocation-order.rs",
+      "sha256": "56b87ba3b4cbf2981bc27e69e0745ef81d0839858e0de5e46c3f3af50e4bfde9",
+      "bytes": 1059
+    },
+    {
+      "path": "artifacts/independent_admission_storage_cache-527883a8dca3b291.wasm",
+      "sha256": "1acc6ddbdb677511f9ccba322f72c78b75d6740b3053778e727834b3a62a35d5",
+      "bytes": 16646338
+    },
+    {
+      "path": "artifacts/independent_admission_storage_cache-6507cfe560afb637.exe",
+      "sha256": "24f023b178d0b5dce69978ad8056c8d6686325d722ecfcb858bf156b2dfc2d5b",
+      "bytes": 1809920
+    },
+    {
+      "path": "base.zip",
+      "sha256": "9391a65e1ab37805a509ca38862d6ab63dca695e44e2b13a43e23e4b9306fc64",
+      "bytes": 3383804
+    },
+    {
+      "path": "contracts-native.log",
+      "sha256": "bef570722d3e0dbea06bd738e9f372cfa35c4281c5ea2082c2257ba0a1bdf299",
+      "bytes": 2211
+    },
+    {
+      "path": "contracts-runs.json",
+      "sha256": "217ad3abfa830114b5dea8d00db39232728baf2120824f6db0fa17f8472c1947",
+      "bytes": 1305
+    },
+    {
+      "path": "contracts-wasm32-wasip2.log",
+      "sha256": "9dcb0a9ea81f56d1631afea25f943e65ad37999d79f250971291736d7795de46",
+      "bytes": 2227
+    },
+    {
+      "path": "contracts.py",
+      "sha256": "746b249f4228bb4a60cce9cb4fa341e73ab3ad37b4ca2f983f0533dd9ff8019c",
+      "bytes": 924
+    },
+    {
+      "path": "dependency-base-equivalence.json",
+      "sha256": "f63d2dc72b4dd6ea0323d09109fe85552285bba41887494bb670c67095b386a4",
+      "bytes": 292
+    },
+    {
+      "path": "freeze.py",
+      "sha256": "6f879648632b8c24ed1a932ea730e38970537763ffa3f5eb0108b71c85995f58",
+      "bytes": 2606
+    },
+    {
+      "path": "native.log",
+      "sha256": "5f0cc297fe59e5bcffa879012f147037d6dd3ef0ec08ece2ed362c8b34e640de",
+      "bytes": 1833
+    },
+    {
+      "path": "noatomic-cfg.txt",
+      "sha256": "5d183d02034a414d743dd4831bf3ba308ccd3461eaaa726df0e0ef89b7bb9500",
+      "bytes": 343
+    },
+    {
+      "path": "noatomic-run.json",
+      "sha256": "231e05310fb3b475fc3be7bebca8a8f34a7cfbdf6d663a65c0aa1d780e20cd96",
+      "bytes": 549
+    },
+    {
+      "path": "noatomic.log",
+      "sha256": "a2afa6f94dfc2a26155f4db20549b34432e2e242ddd613df5ef6db0d34f374f6",
+      "bytes": 334
+    },
+    {
+      "path": "noatomic.py",
+      "sha256": "1b18cdd8ff485f39dae3f483145075cbaa6c0c5bb0be3eb1cfe5e8d6e4099ed2",
+      "bytes": 787
+    },
+    {
+      "path": "overlay/crates/foundation/core/src/source.rs",
+      "sha256": "e2d301f1640bba50c99991feba9836ca84f032be174877d8383928f153f707da",
+      "bytes": 30744
+    },
+    {
+      "path": "prepare.py",
+      "sha256": "ed35396ea251b09547aa79a37224c5582b751fabbb9d175cc6f2e08a4de212ac",
+      "bytes": 1173
+    },
+    {
+      "path": "probe/Cargo.lock",
+      "sha256": "0b824730a28d05555bd04fe2868f11c41ecc6a600e869b47663e24e404b60bab",
+      "bytes": 3525
+    },
+    {
+      "path": "probe/Cargo.toml",
+      "sha256": "81b79774aa8720ed6cd3e0834311edb0e2a1886969ed4f36ddba0e5beb8d37a0",
+      "bytes": 368
+    },
+    {
+      "path": "probe/root.rs",
+      "sha256": "1db30b35ebb07b0b3656171916c2aacbe657e0ff04127555e6ecd16471c66617",
+      "bytes": 6518
+    },
+    {
+      "path": "record.md",
+      "sha256": "08e0576d390718fad97e479c360fba0cd2aa670613045e4c3fba97551dfc8e04",
+      "bytes": 6318
+    },
+    {
+      "path": "run.py",
+      "sha256": "496c9d134dc008f443797b3b527c1ae27967acc1057435ff02f2f79df041c5fc",
+      "bytes": 825
+    },
+    {
+      "path": "runs.json",
+      "sha256": "7f8f654a7d66c4ccbd8259173dbd079aa132c438b886e848e865925151d645ff",
+      "bytes": 883
+    },
+    {
+      "path": "snapshot.json",
+      "sha256": "021f9cdd6fa012bae478e2e5785c8ea37a67ee9d9dffed833d9dc5109e6c90bb",
+      "bytes": 223
+    },
+    {
+      "path": "source-before.rs",
+      "sha256": "c220c1a2ff69203af6f59931c624a7181276405c4752673f2e8ff457c3dffafc",
+      "bytes": 29099
+    },
+    {
+      "path": "wasm32-wasip2.log",
+      "sha256": "d37cf9d5164b13b9f302c170e0e88275692850b961f7f743eac553577ee00888",
+      "bytes": 1726
+    }
+  ]
+}
