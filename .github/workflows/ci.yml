@@ -128,11 +128,91 @@ jobs:
           cargo test --locked -p nepl3-tools --test math --target wasm32-wasip2 -- --test-threads=1
       - name: Compile foundation for browser Wasm
         run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html --no-default-features --target wasm32-unknown-unknown
+      - name: Compare identical foundation components with Pulley64
+        env:
+          CARGO_TARGET_WASM32_WASIP2_RUNNER: python ${{ github.workspace }}/tools/emulators/wasmtime/compare.py
+          NEPL3_WASM_EVIDENCE: ${{ github.workspace }}/target/pulley-evidence
+        run: |
+          python -m unittest discover -s tools/emulators/wasmtime -p 'test_*.py'
+          python tools/emulators/wasmtime/compare.py --begin
+          cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine --target wasm32-wasip2 -- --test-threads=1
+          python tools/emulators/wasmtime/compare.py --check-results
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ always() }}
+        with:
+          name: pulley-execution-${{ github.sha }}
+          path: target/pulley-evidence/
+          if-no-files-found: error
+          retention-days: 14
+
+  baremetal-build:
+    name: baremetal ARMv6-M build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - name: Install ARMv6-M target
+        run: rustup target add thumbv6m-none-eabi
+      - name: Compile every implemented portable core for ARMv6-M
+        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html --no-default-features --target thumbv6m-none-eabi
+      - name: Validate converter and firmware formatting
+        run: |
+          python -m unittest discover -s tools/emulators/rp2040js -p 'test_*.py'
+          cargo fmt --manifest-path conformance/targets/rp2040/Cargo.toml -- --check
+      - name: Build production foundation firmware and record identity
+        run: python tools/emulators/rp2040js/firmware.py build conformance/targets/rp2040/target/bundle
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rp2040-firmware-${{ github.sha }}
+          path: conformance/targets/rp2040/target/bundle/
+          if-no-files-found: error
+          retention-days: 14
+
+  baremetal-rp2040:
+    name: baremetal RP2040 emulator execution
+    needs: [baremetal-build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.14.1'
+          cache: npm
+          cache-dependency-path: tools/emulators/rp2040js/package-lock.json
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: rp2040-firmware-${{ github.sha }}
+          path: conformance/targets/rp2040/target/bundle/
+      - name: Install pinned emulator and verify protocol rejection
+        working-directory: tools/emulators/rp2040js
+        run: |
+          npm ci --ignore-scripts
+          npm test
+      - name: Execute the build job's exact UF2 with an outer deadline
+        run: python tools/emulators/rp2040js/firmware.py execute conformance/targets/rp2040/target/bundle
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ always() }}
+        with:
+          name: rp2040-execution-${{ github.sha }}
+          path: conformance/targets/rp2040/target/bundle/
+          if-no-files-found: error
+          retention-days: 14
 
   quality:
     name: quality
     if: ${{ always() }}
-    needs: [native, wasi]
+    needs: [native, wasi, baremetal-build, baremetal-rp2040]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -140,9 +220,13 @@ jobs:
         env:
           NATIVE_RESULT: ${{ needs.native.result }}
           WASI_RESULT: ${{ needs.wasi.result }}
+          ARM_BUILD_RESULT: ${{ needs.baremetal-build.result }}
+          RP2040_RESULT: ${{ needs.baremetal-rp2040.result }}
         run: |
           test "$NATIVE_RESULT" = success
           test "$WASI_RESULT" = success
+          test "$ARM_BUILD_RESULT" = success
+          test "$RP2040_RESULT" = success
 
   deliver-source:
     name: deliver source

@@ -1,0 +1,5 @@
+nepl3-tools check | tasks --check | tasks --write | evidence identity
+  foundation --write | reader --write | engine --write | grammar --write | doc --write | math --write | markup --write | doc-html --write
+  doc-html export <input.nepld> <new-output-directory>
+  doc-inventory --write --commit <40-hex-commit> | doc-inventory --check | doc-inventory --check-current
+Repository checks do not establish runtime conformance.

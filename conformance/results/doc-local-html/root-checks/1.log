@@ -1,0 +1,5 @@
+    Checking nepl3-core v0.1.0 (C:\projects\NEPL3-doc-html-export\crates\foundation\core)
+    Checking nepl3-doc-core v0.1.0 (C:\projects\NEPL3-doc-html-export\crates\languages\doc\core)
+    Checking nepl3-markup v0.1.0 (C:\projects\NEPL3-doc-html-export\crates\output\markup)
+    Checking nepl3-doc-html v0.1.0 (C:\projects\NEPL3-doc-html-export\crates\languages\doc\html)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.93s

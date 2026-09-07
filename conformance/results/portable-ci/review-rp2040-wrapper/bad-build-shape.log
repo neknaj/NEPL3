@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "C:\projects\NEPL3-rp2040\.tmp\review-rp2040-wrapper\fixed\tools\emulators\rp2040js\firmware.py", line 95, in <module>
+    sys.exit(execute(folder))
+             ~~~~~~~^^^^^^^^
+  File "C:\projects\NEPL3-rp2040\.tmp\review-rp2040-wrapper\fixed\tools\emulators\rp2040js\firmware.py", line 52, in execute
+    if (build_record["format"] != "nepl3-rp2040-build/1"
+        ~~~~~~~~~~~~^^^^^^^^^^
+TypeError: list indices must be integers or slices, not str

@@ -1,0 +1,107 @@
+{
+  "protocol": "nepl3-rp2040-test/1",
+  "target": "thumbv6m-none-eabi",
+  "firmware_sha256": "85a580fff1a1f3ae52135562ae20e53fb257312fd3ead49583d7ef10b17a6ab2",
+  "node": "v24.14.1",
+  "rp2040js": "1.3.3",
+  "heap_bytes": 65536,
+  "startup": "Cortex-M vector entry; boot ROM and boot2 execution not tested",
+  "instruction_limit": 50000000,
+  "wall_timeout_ms": 15000,
+  "instructions": 92154,
+  "result": "passed",
+  "peripheral_warnings": [
+    {
+      "component": "PLL_SYS_BASE",
+      "message": "Unimplemented peripheral write to 0x4: 0x2d"
+    },
+    {
+      "component": "PLL_SYS_BASE",
+      "message": "Unimplemented peripheral write to 0x8: 0x0"
+    },
+    {
+      "component": "PLL_SYS_BASE",
+      "message": "Unimplemented peripheral write to 0x0: 0x1"
+    },
+    {
+      "component": "PLL_SYS_BASE",
+      "message": "Unimplemented peripheral write to 0x8: 0x7d"
+    },
+    {
+      "component": "PLL_SYS_BASE",
+      "message": "Unimplemented peripheral read from 0x4"
+    },
+    {
+      "component": "PLL_SYS_BASE",
+      "message": "Unimplemented peripheral write to 0x4: 0xffffffde"
+    },
+    {
+      "component": "PLL_SYS_BASE",
+      "message": "Unimplemented peripheral read from 0x0"
+    },
+    {
+      "component": "PLL_SYS_BASE",
+      "message": "Unimplemented peripheral write to 0xc: 0x62000"
+    },
+    {
+      "component": "PLL_SYS_BASE",
+      "message": "Unimplemented peripheral read from 0x4"
+    },
+    {
+      "component": "PLL_SYS_BASE",
+      "message": "Unimplemented peripheral write to 0x4: 0xfffffff7"
+    },
+    {
+      "component": "PLL_USB_BASE",
+      "message": "Unimplemented peripheral write to 0x4: 0x2d"
+    },
+    {
+      "component": "PLL_USB_BASE",
+      "message": "Unimplemented peripheral write to 0x8: 0x0"
+    },
+    {
+      "component": "PLL_USB_BASE",
+      "message": "Unimplemented peripheral write to 0x0: 0x1"
+    },
+    {
+      "component": "PLL_USB_BASE",
+      "message": "Unimplemented peripheral write to 0x8: 0x64"
+    },
+    {
+      "component": "PLL_USB_BASE",
+      "message": "Unimplemented peripheral read from 0x4"
+    },
+    {
+      "component": "PLL_USB_BASE",
+      "message": "Unimplemented peripheral write to 0x4: 0xffffffde"
+    },
+    {
+      "component": "PLL_USB_BASE",
+      "message": "Unimplemented peripheral read from 0x0"
+    },
+    {
+      "component": "PLL_USB_BASE",
+      "message": "Unimplemented peripheral write to 0xc: 0x55000"
+    },
+    {
+      "component": "PLL_USB_BASE",
+      "message": "Unimplemented peripheral read from 0x4"
+    },
+    {
+      "component": "PLL_USB_BASE",
+      "message": "Unimplemented peripheral write to 0x4: 0xfffffff7"
+    },
+    {
+      "component": "UART0",
+      "message": "Unimplemented peripheral write to 0x48: 0x3"
+    }
+  ],
+  "elapsed_ms": 19.7971,
+  "uart": "@NEPL3/1 BEGIN\n@NEPL3/1 PASS core.source\n@NEPL3/1 PASS core.budget\n@NEPL3/1 PASS wire.cbor\n@NEPL3/1 PASS wire.rejection\n@NEPL3/1 END\n",
+  "tests": {
+    "core.source": "PASS",
+    "core.budget": "PASS",
+    "wire.cbor": "PASS",
+    "wire.rejection": "PASS"
+  }
+}

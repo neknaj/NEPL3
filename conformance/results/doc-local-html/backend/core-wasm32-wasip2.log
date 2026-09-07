@@ -1,0 +1,10 @@
+   Compiling nepl3-doc-html v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-html-current\workspace\crates\languages\doc\html)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.04s
+     Running tests\local.rs (C:\projects\NEPL3-runtime\.tmp\review-fixed-target\wasm32-wasip2\debug\deps\local-8b61fc494dab7e22.wasm)
+
+running 2 tests
+test first_cbor_receiver_prepares_renders_and_rejects_stale_or_forged_results ... ok
+test output_budget_and_browser_depth_never_silently_flatten_the_document ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+

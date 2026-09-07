@@ -1,0 +1,8 @@
+{
+  "tools/src/doc/host.rs": {
+    "before_cfg_same": false
+  },
+  "tools/src/main.rs": {
+    "before_cfg_same": false
+  }
+}

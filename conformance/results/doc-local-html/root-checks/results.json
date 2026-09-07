@@ -1,0 +1,55 @@
+[
+  {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-doc-html",
+      "-p",
+      "nepl3-tools",
+      "--test",
+      "doc",
+      "--test",
+      "local",
+      "--target",
+      "wasm32-wasip2",
+      "--",
+      "--test-threads=1"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "cargo",
+      "check",
+      "--locked",
+      "-p",
+      "nepl3-doc-html",
+      "--no-default-features",
+      "--target",
+      "wasm32-unknown-unknown"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "cargo",
+      "clippy",
+      "--locked",
+      "--workspace",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "python",
+      "tools/generate/doc_html.py"
+    ],
+    "exit_code": 0
+  }
+]

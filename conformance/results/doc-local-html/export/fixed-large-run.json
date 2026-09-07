@@ -1,0 +1,22 @@
+{
+  "command": [
+    "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\fixed-nepl3-tools.exe",
+    "doc-html",
+    "export",
+    "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\workspace-fixed\\examples\\document\\linear-combination.nepld",
+    "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\fixed-large"
+  ],
+  "exit": 0,
+  "deadline": 180,
+  "html_css_equal_to_browser_tested_before": true,
+  "output_usage": {
+    "allocation_units": 12387868,
+    "depth": 15,
+    "diagnostics": 0,
+    "events": 0,
+    "nodes": 130674,
+    "output_bytes": 1410293,
+    "source_bytes": 0,
+    "work": 12232222
+  }
+}

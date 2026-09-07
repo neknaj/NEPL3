@@ -1,0 +1,46 @@
+{
+  "raw_unchanged_equal": true,
+  "malformed": [
+    {
+      "case": "missing",
+      "rejected": "ValueError"
+    },
+    {
+      "case": "duplicate",
+      "rejected": "ValueError"
+    },
+    {
+      "case": "arbitrary_prefix",
+      "rejected": "ValueError"
+    },
+    {
+      "case": "invalid_test_prefix",
+      "rejected": "ValueError"
+    },
+    {
+      "case": "missing_dots",
+      "rejected": "ValueError"
+    },
+    {
+      "case": "bad_hex",
+      "rejected": "ValueError"
+    },
+    {
+      "case": "bad_utf8",
+      "rejected": "UnicodeDecodeError"
+    },
+    {
+      "case": "extra_field",
+      "rejected": "ValueError"
+    },
+    {
+      "case": "unknown_case",
+      "rejected": "ValueError"
+    },
+    {
+      "case": "missing_payload",
+      "rejected": "ValueError"
+    }
+  ],
+  "plain_and_bom": true
+}

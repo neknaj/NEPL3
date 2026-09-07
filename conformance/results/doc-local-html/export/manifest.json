@@ -1,0 +1,1027 @@
+{
+  "scope": "local development-host Doc export and browser corpus helper; original failures and explicit corrected phases",
+  "before_inventory": "files.json",
+  "final_inventory": "effective-files.json",
+  "files": [
+    {
+      "path": "audit-delta/.github/workflows/ci.yml",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\audit-delta\\.github\\workflows\\ci.yml",
+      "bytes": 7339,
+      "sha256": "a55d7468022585713dd5853b5b56560018cddcb036c5d22127509f10d72bb84c"
+    },
+    {
+      "path": "audit-delta/tools/audit/doc_html/browser.py",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\audit-delta\\tools\\audit\\doc_html\\browser.py",
+      "bytes": 4514,
+      "sha256": "92905bcdc7f1d889126e8df9abb9b6c42d657d60607e9a9b70a52219379f2b7c"
+    },
+    {
+      "path": "audit-delta/tools/audit/doc_html/test_corpus.py",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\audit-delta\\tools\\audit\\doc_html\\test_corpus.py",
+      "bytes": 1516,
+      "sha256": "7ff2c699aed6ad4a3b4641fd5d2b388a803aa80d9119c0351b40b53782ed83b6"
+    },
+    {
+      "path": "audit-delta.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\audit-delta.json",
+      "bytes": 794,
+      "sha256": "54c9132a0d92bb635d4257438a861947bfa7e0b49f63fe210906a3c0b9b494c1"
+    },
+    {
+      "path": "audit-managed-final-run.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\audit-managed-final-run.json",
+      "bytes": 309,
+      "sha256": "337ed0f7bc8d869d3dc181a1129f709739252ed64542d6e26b5b9983a90dc09a"
+    },
+    {
+      "path": "audit-managed-final.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\audit-managed-final.log",
+      "bytes": 105,
+      "sha256": "354c3d828acda6a2a7353175af6f47b9a6ade35a84756ca5433e46f76b8d8b55"
+    },
+    {
+      "path": "browser-extraction-final.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\browser-extraction-final.json",
+      "bytes": 868,
+      "sha256": "870d2864c35b45dc7ac9088253df0993963a3469765c721e91bf5ed21de40304"
+    },
+    {
+      "path": "browser-extraction.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\browser-extraction.json",
+      "bytes": 868,
+      "sha256": "870d2864c35b45dc7ac9088253df0993963a3469765c721e91bf5ed21de40304"
+    },
+    {
+      "path": "browser-final.py",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\browser-final.py",
+      "bytes": 2438,
+      "sha256": "b443e9594a17c7205f89594d9cabcf34ad8a8d9a5f5d8223c4bd33fd47d6bc7a"
+    },
+    {
+      "path": "browser-raw-final-run.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\browser-raw-final-run.json",
+      "bytes": 739,
+      "sha256": "ed8400a0c2a77d2416c00f1b4ca0af95baab747df15c1fbcd3ced63c964b4092"
+    },
+    {
+      "path": "browser-raw-final.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\browser-raw-final.log",
+      "bytes": 103,
+      "sha256": "2511b2d7df46d5382143ea1386a088771057b124df6ce4f97ca63a99919e69dd"
+    },
+    {
+      "path": "browser-raw-fixed-run.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\browser-raw-fixed-run.json",
+      "bytes": 721,
+      "sha256": "9201952169b2faebfdc665d8d84f23a8b45a0421ea0606e1059e0071b1e752d0"
+    },
+    {
+      "path": "browser-raw-fixed.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\browser-raw-fixed.log",
+      "bytes": 103,
+      "sha256": "2511b2d7df46d5382143ea1386a088771057b124df6ce4f97ca63a99919e69dd"
+    },
+    {
+      "path": "browser-result-final.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\browser-result-final.json",
+      "bytes": 24579,
+      "sha256": "3625f1efa9ba6fb4062d9b684f55fffaea6fff9f56c6632b59bb2bbbe3eabdb6"
+    },
+    {
+      "path": "browser-result.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\browser-result.json",
+      "bytes": 24579,
+      "sha256": "3625f1efa9ba6fb4062d9b684f55fffaea6fff9f56c6632b59bb2bbbe3eabdb6"
+    },
+    {
+      "path": "browser.py",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\browser.py",
+      "bytes": 2408,
+      "sha256": "e81180916f6f5d0a6052d1eae8fbfc36b1851c85dd51aa86f35cba6012a69280"
+    },
+    {
+      "path": "build-cli.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\build-cli.log",
+      "bytes": 1253,
+      "sha256": "cb04e171d3116d313f29f4911c98a63f52642bdae2f1a591482de3f28fcfe470"
+    },
+    {
+      "path": "cargo.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\cargo.log",
+      "bytes": 36,
+      "sha256": "f4f564f8936fa8eb53bca8bbe50666489252bbcbeaae0cb0dd54682444697e52"
+    },
+    {
+      "path": "cli-asset.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\cli-asset.log",
+      "bytes": 310,
+      "sha256": "b95ea07aea7ecb218660bf3de31979bcc8b02836a8a40e3d95ab99a739020afd"
+    },
+    {
+      "path": "cli-existing-directory.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\cli-existing-directory.log",
+      "bytes": 45,
+      "sha256": "62f709f23e3cc390d89d613849c16b0e1255f0588b5425ea9cede82aba0c8aef"
+    },
+    {
+      "path": "cli-external.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\cli-external.log",
+      "bytes": 313,
+      "sha256": "7ba5a145ba63990eaefce126dbf27c92a3b80ae20e37bb94ad501d3824407ef6"
+    },
+    {
+      "path": "cli-first.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\cli-first.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "cli-foreign.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\cli-foreign.log",
+      "bytes": 440,
+      "sha256": "f8fc0d78a10838f873c4c968c31215379b3199cb451f6a1d49bfb6d221cca9dd"
+    },
+    {
+      "path": "cli-hidden-label.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\cli-hidden-label.log",
+      "bytes": 646,
+      "sha256": "15b4950490a40defe2d9c9c80b8ba3b076317e2ef8c61b7d0aabdabb5c8df37a"
+    },
+    {
+      "path": "cli-input-as-output.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\cli-input-as-output.log",
+      "bytes": 45,
+      "sha256": "62f709f23e3cc390d89d613849c16b0e1255f0588b5425ea9cede82aba0c8aef"
+    },
+    {
+      "path": "cli-invalid-utf8.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\cli-invalid-utf8.log",
+      "bytes": 60,
+      "sha256": "4132d406f6505ff3fa9df14be20cde6389e3e584cbc5f0a54363a73e6d1cec2b"
+    },
+    {
+      "path": "cli-large.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\cli-large.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "cli-missing-parent.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\cli-missing-parent.log",
+      "bytes": 69,
+      "sha256": "7a92268df9fe07caabc4e5fec74e4afcec9e4c16e730375bb6471202b63a98ce"
+    },
+    {
+      "path": "cli-over-cap.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\cli-over-cap.log",
+      "bytes": 25,
+      "sha256": "8e2d694a24ca9fa69e02d27a72e50dfc18bcb781ca150a5f6370f7919c333b9a"
+    },
+    {
+      "path": "cli-repeat.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\cli-repeat.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "cli-runs.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\cli-runs.json",
+      "bytes": 8806,
+      "sha256": "df334462453520529d29c0a911f8920f89d84e526dd349d62e903a6c0386fab1"
+    },
+    {
+      "path": "cli-syntax.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\cli-syntax.log",
+      "bytes": 7654,
+      "sha256": "abaa6422076bcd4b5b941214da61eeec243a98b2f50fd1f8533383f1db095360"
+    },
+    {
+      "path": "cli-trailing.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\cli-trailing.log",
+      "bytes": 50,
+      "sha256": "385758f087acd2b111e32d080a7f52815b07c4931b9eedab349513cf3b15c4cf"
+    },
+    {
+      "path": "cli.py",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\cli.py",
+      "bytes": 3636,
+      "sha256": "70ef6660a01228b423f6a52e0ed88a7b591ed59e6e18f3db52b1f496c5e6d41c"
+    },
+    {
+      "path": "concurrent-write.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\concurrent-write.json",
+      "bytes": 821,
+      "sha256": "032e5f31438aa55ffb2977f185adf007c6852d55721c71bdfc48fa0b4c13e016"
+    },
+    {
+      "path": "contender0.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\contender0.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "contender1.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\contender1.log",
+      "bytes": 80,
+      "sha256": "d8ac1ef3bdb09f1e60de51695559b9ab843864f2bd8247b53ffc463f13176901"
+    },
+    {
+      "path": "delta/tools/src/doc/export.rs",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\delta\\tools\\src\\doc\\export.rs",
+      "bytes": 7959,
+      "sha256": "6f13526fa53ca59b0073d859d1bacded9ee3c4afd79b71eefe1d075232ac7a01"
+    },
+    {
+      "path": "delta/tools/tests/doc/export.rs",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\delta\\tools\\tests\\doc\\export.rs",
+      "bytes": 2329,
+      "sha256": "f8c50f5837192cea1cae0876876cf9e4b8659a3755c31968988906aadfecec2b"
+    },
+    {
+      "path": "delta.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\delta.json",
+      "bytes": 497,
+      "sha256": "2b04c4ea765d30f16c1840cb54c8a441a7f9dfc076e56162316ee12a12b8a445"
+    },
+    {
+      "path": "depth250.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\depth250.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "depth251.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\depth251.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "depth252.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\depth252.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "effective-files.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\effective-files.json",
+      "bytes": 138012,
+      "sha256": "b5bd8616b07490d99573232512aa8d1a5d7991848e86f486e0463e95661461dd"
+    },
+    {
+      "path": "files.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\files.json",
+      "bytes": 134218,
+      "sha256": "c0cdf1ad6300b05e9a379b4cad0fd32eb33b1c30f2f3fd057a08f4f77a28ccd5"
+    },
+    {
+      "path": "filesystem/asset.nepld",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\asset.nepld",
+      "bytes": 66,
+      "sha256": "4828f9f5497c598e5193b0eac1999afffd890857355eeb26947f047d9032906d"
+    },
+    {
+      "path": "filesystem/contended/assets/doc.css",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\contended\\assets\\doc.css",
+      "bytes": 1860,
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "path": "filesystem/contended/document.html",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\contended\\document.html",
+      "bytes": 419,
+      "sha256": "4bb81cddeb6945d62f661dcc4a36bb6dd2f6e0926b6886d3663225c122112107"
+    },
+    {
+      "path": "filesystem/contended/manifest.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\contended\\manifest.json",
+      "bytes": 1712,
+      "sha256": "bac18a40f671fd4f60bdaa4ac323c41f54c2bfeee5da47fbfeadd46e44f21121"
+    },
+    {
+      "path": "filesystem/contender0.nepld",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\contender0.nepld",
+      "bytes": 29,
+      "sha256": "3fbb37593f03e7aa05b110ce01445bb208e0ee04ea31e1cecdbfbf9fc9676eb8"
+    },
+    {
+      "path": "filesystem/contender1.nepld",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\contender1.nepld",
+      "bytes": 29,
+      "sha256": "eb32a264ac83f9eada7395fafb585290bebb6c122e6800c863b9b3b1cd50af37"
+    },
+    {
+      "path": "filesystem/depth250/assets/doc.css",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\depth250\\assets\\doc.css",
+      "bytes": 1860,
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "path": "filesystem/depth250/document.html",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\depth250\\document.html",
+      "bytes": 4663,
+      "sha256": "ec996a41aca259bf8962927a9191c8d71d64d94eab443e225847cc2cd99998ec"
+    },
+    {
+      "path": "filesystem/depth250/manifest.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\depth250\\manifest.json",
+      "bytes": 1732,
+      "sha256": "a502048e1cd39905cc66a410de831afebda0c72117e08eafac1c84121ab35a09"
+    },
+    {
+      "path": "filesystem/depth250.nepld",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\depth250.nepld",
+      "bytes": 1796,
+      "sha256": "4b1f1e3a907568ab7924ebc7d1706f0b16b3079efdb3f9e2c9fba4943822ce1a"
+    },
+    {
+      "path": "filesystem/depth251/assets/doc.css",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\depth251\\assets\\doc.css",
+      "bytes": 1860,
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "path": "filesystem/depth251/document.html",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\depth251\\document.html",
+      "bytes": 4680,
+      "sha256": "9c27ed541bf8b03bcbaa5559bb3796aef2b1cd0759e9d31bafb21f4e1815be97"
+    },
+    {
+      "path": "filesystem/depth251/manifest.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\depth251\\manifest.json",
+      "bytes": 1732,
+      "sha256": "e0ba787ba42847f14b2f67e65b8b6c26e54cb7403dba8a54fbde5c13ad503451"
+    },
+    {
+      "path": "filesystem/depth251.nepld",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\depth251.nepld",
+      "bytes": 1803,
+      "sha256": "a49f81ac8649bff3fb3c99a4ea30139d8293daa7646de3e591fb7b81c3530227"
+    },
+    {
+      "path": "filesystem/depth252/assets/doc.css",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\depth252\\assets\\doc.css",
+      "bytes": 1860,
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "path": "filesystem/depth252/document.html",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\depth252\\document.html",
+      "bytes": 4697,
+      "sha256": "966d29f081b584035ecb4ff1a5d1e39678a869c4d5e4e662561539ac8e16d771"
+    },
+    {
+      "path": "filesystem/depth252/manifest.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\depth252\\manifest.json",
+      "bytes": 1732,
+      "sha256": "8302c60a1312322da039eff9e4eef344cae0bf33a0511ed90493bf4bd847b3b2"
+    },
+    {
+      "path": "filesystem/depth252.nepld",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\depth252.nepld",
+      "bytes": 1810,
+      "sha256": "c0f7e1c1111d9fae88994689dc5507691c0626812b0ba42846c9f6ad458673c5"
+    },
+    {
+      "path": "filesystem/external.nepld",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\external.nepld",
+      "bytes": 115,
+      "sha256": "759b4420109d51a903b16a9ee4daef6929b07b2dec2da05d8654cda027af9428"
+    },
+    {
+      "path": "filesystem/final1/assets/doc.css",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\final1\\assets\\doc.css",
+      "bytes": 1860,
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "path": "filesystem/final1/document.html",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\final1\\document.html",
+      "bytes": 20782,
+      "sha256": "158cc157066c05a55cfa444a9e90a7bc12bf98054492f1df02fbfcb465f39ada"
+    },
+    {
+      "path": "filesystem/final1/manifest.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\final1\\manifest.json",
+      "bytes": 1745,
+      "sha256": "8c5eedd7e8cd4c6b78d2572c771ad684513f08461a97d3775919d56303b4791f"
+    },
+    {
+      "path": "filesystem/final2/assets/doc.css",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\final2\\assets\\doc.css",
+      "bytes": 1860,
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "path": "filesystem/final2/document.html",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\final2\\document.html",
+      "bytes": 20782,
+      "sha256": "158cc157066c05a55cfa444a9e90a7bc12bf98054492f1df02fbfcb465f39ada"
+    },
+    {
+      "path": "filesystem/final2/manifest.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\final2\\manifest.json",
+      "bytes": 1745,
+      "sha256": "8c5eedd7e8cd4c6b78d2572c771ad684513f08461a97d3775919d56303b4791f"
+    },
+    {
+      "path": "filesystem/first/assets/doc.css",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\first\\assets\\doc.css",
+      "bytes": 1860,
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "path": "filesystem/first/document.html",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\first\\document.html",
+      "bytes": 720,
+      "sha256": "0650148c593b567c9ac1166e2977bd6b7ebcd24c2bb3d753fc0057c1da2ee1c4"
+    },
+    {
+      "path": "filesystem/first/manifest.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\first\\manifest.json",
+      "bytes": 1718,
+      "sha256": "bef14329f7968c9bbfed4f67eb253067c4a8715d024966fd33e2d4553d96c0cf"
+    },
+    {
+      "path": "filesystem/fixed-depth250/assets/doc.css",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\fixed-depth250\\assets\\doc.css",
+      "bytes": 1860,
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "path": "filesystem/fixed-depth250/document.html",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\fixed-depth250\\document.html",
+      "bytes": 4663,
+      "sha256": "ec996a41aca259bf8962927a9191c8d71d64d94eab443e225847cc2cd99998ec"
+    },
+    {
+      "path": "filesystem/fixed-depth250/manifest.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\fixed-depth250\\manifest.json",
+      "bytes": 1732,
+      "sha256": "02e936a7cc8a8af454c57e4f8a1b91b0c5510284c58305d23f01065bb3f3be5b"
+    },
+    {
+      "path": "filesystem/fixed-large/assets/doc.css",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\fixed-large\\assets\\doc.css",
+      "bytes": 1860,
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "path": "filesystem/fixed-large/document.html",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\fixed-large\\document.html",
+      "bytes": 20782,
+      "sha256": "158cc157066c05a55cfa444a9e90a7bc12bf98054492f1df02fbfcb465f39ada"
+    },
+    {
+      "path": "filesystem/fixed-large/manifest.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\fixed-large\\manifest.json",
+      "bytes": 1745,
+      "sha256": "3085fc8b0179ce22fe77abe435bae678addbbddb5d4219478421e2fc7ef15346"
+    },
+    {
+      "path": "filesystem/fixed-repeat1/assets/doc.css",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\fixed-repeat1\\assets\\doc.css",
+      "bytes": 1860,
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "path": "filesystem/fixed-repeat1/document.html",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\fixed-repeat1\\document.html",
+      "bytes": 720,
+      "sha256": "0650148c593b567c9ac1166e2977bd6b7ebcd24c2bb3d753fc0057c1da2ee1c4"
+    },
+    {
+      "path": "filesystem/fixed-repeat1/manifest.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\fixed-repeat1\\manifest.json",
+      "bytes": 1718,
+      "sha256": "3393b06e7f599d2306b6c165046d68ea0bdc85865304bd32fff6cf5ae2743327"
+    },
+    {
+      "path": "filesystem/fixed-repeat2/assets/doc.css",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\fixed-repeat2\\assets\\doc.css",
+      "bytes": 1860,
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "path": "filesystem/fixed-repeat2/document.html",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\fixed-repeat2\\document.html",
+      "bytes": 720,
+      "sha256": "0650148c593b567c9ac1166e2977bd6b7ebcd24c2bb3d753fc0057c1da2ee1c4"
+    },
+    {
+      "path": "filesystem/fixed-repeat2/manifest.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\fixed-repeat2\\manifest.json",
+      "bytes": 1718,
+      "sha256": "3393b06e7f599d2306b6c165046d68ea0bdc85865304bd32fff6cf5ae2743327"
+    },
+    {
+      "path": "filesystem/foreign.nepld",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\foreign.nepld",
+      "bytes": 47,
+      "sha256": "1d6dac9eaf4f7a351a592c344663894c0d8ad3ed19db41607919455dc5fc5210"
+    },
+    {
+      "path": "filesystem/hidden-label.nepld",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\hidden-label.nepld",
+      "bytes": 86,
+      "sha256": "f20b25d58ce8ee35e86311de8f3317c377356eea7f21a9ba0bf06a1c2e993b0c"
+    },
+    {
+      "path": "filesystem/input spaces & [literal].nepld",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\input spaces & [literal].nepld",
+      "bytes": 80,
+      "sha256": "0fd843dc460bfc4eec6277a84454b5efcbb5d356bcf8125288c47c57126e6ef2"
+    },
+    {
+      "path": "filesystem/invalid-utf8.nepld",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\invalid-utf8.nepld",
+      "bytes": 1,
+      "sha256": "a8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89"
+    },
+    {
+      "path": "filesystem/large/assets/doc.css",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\large\\assets\\doc.css",
+      "bytes": 1860,
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "path": "filesystem/large/document.html",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\large\\document.html",
+      "bytes": 20782,
+      "sha256": "158cc157066c05a55cfa444a9e90a7bc12bf98054492f1df02fbfcb465f39ada"
+    },
+    {
+      "path": "filesystem/large/manifest.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\large\\manifest.json",
+      "bytes": 1745,
+      "sha256": "a09e96239794aa3fb7c71ad94125c9bc1d21880afef9ce1e4bcb6b5927d030e2"
+    },
+    {
+      "path": "filesystem/over-cap.nepld",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\over-cap.nepld",
+      "bytes": 10000001,
+      "sha256": "a867bf9077ba63b8b180c9670e6f04454961bec6bb823a6043df4a16ddaa8d82"
+    },
+    {
+      "path": "filesystem/repeat/assets/doc.css",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\repeat\\assets\\doc.css",
+      "bytes": 1860,
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "path": "filesystem/repeat/document.html",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\repeat\\document.html",
+      "bytes": 720,
+      "sha256": "0650148c593b567c9ac1166e2977bd6b7ebcd24c2bb3d753fc0057c1da2ee1c4"
+    },
+    {
+      "path": "filesystem/repeat/manifest.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\repeat\\manifest.json",
+      "bytes": 1718,
+      "sha256": "bef14329f7968c9bbfed4f67eb253067c4a8715d024966fd33e2d4553d96c0cf"
+    },
+    {
+      "path": "filesystem/syntax.nepld",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\syntax.nepld",
+      "bytes": 20,
+      "sha256": "36651a792822e07f323933f24d47c45f558a6b782ba95fd21b2f0980ee2f5042"
+    },
+    {
+      "path": "filesystem/trailing.nepld",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\filesystem\\trailing.nepld",
+      "bytes": 91,
+      "sha256": "988a7a9fbf9ba6db64d4755ca203281dc13525aecde6f8e030fcbefe30115ba1"
+    },
+    {
+      "path": "final-build.py",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\final-build.py",
+      "bytes": 1272,
+      "sha256": "25eb07dd17eeaa2ee6f0bbe44806cde7f61f799f5bf7ed1a155ddbb7b6661ca0"
+    },
+    {
+      "path": "final-cli-build-run.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\final-cli-build-run.json",
+      "bytes": 384,
+      "sha256": "f7cecb6d24be5859dd35c8b7d7a901e79cd5540069748a257d1ebb73a0765d82"
+    },
+    {
+      "path": "final-cli-build.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\final-cli-build.log",
+      "bytes": 177,
+      "sha256": "c81ef7b427575b173526cdcf33a413c839906795573de072897636c95887603f"
+    },
+    {
+      "path": "final-cli-runs.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\final-cli-runs.json",
+      "bytes": 1400,
+      "sha256": "5e8af1285ac6daeab45ef86510c5463971c169482c4bcdb451c0a52c25d71669"
+    },
+    {
+      "path": "final-generator.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\final-generator.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "final-help.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\final-help.log",
+      "bytes": 424,
+      "sha256": "b3c25bb6b7c3b50e84edac909ec2149e8d2a87e7723f402acc1b9e836499bf28"
+    },
+    {
+      "path": "final-metadata-runs.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\final-metadata-runs.json",
+      "bytes": 631,
+      "sha256": "954f378f5e28a2c11e24fd8800abacb3f5e3a4b2ff7c16e3fba9955c07986abf"
+    },
+    {
+      "path": "final-nepl3-tools.exe",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\final-nepl3-tools.exe",
+      "bytes": 11707392,
+      "sha256": "ef1b0a0fce23b3352eeced7c9b4efa351735d99a990f4a941e94265062781c0e"
+    },
+    {
+      "path": "final1.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\final1.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "final2.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\final2.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "fixed-build-cli.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\fixed-build-cli.log",
+      "bytes": 177,
+      "sha256": "d7dac842ca99d223a74707a3c8191cb5ac7ed76ecdb45ea4160fe51338707e2c"
+    },
+    {
+      "path": "fixed-cli-runs.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\fixed-cli-runs.json",
+      "bytes": 2185,
+      "sha256": "f1b488723c7d069eb531e4c814cee07861967e18088e07e821b9c29e8b07df3b"
+    },
+    {
+      "path": "fixed-depth250.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\fixed-depth250.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "fixed-depth251.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\fixed-depth251.log",
+      "bytes": 60,
+      "sha256": "f06ef9efd391d2a73d0ea1b6d5d20b27f8de6306c79e07627df20acf2eb312f3"
+    },
+    {
+      "path": "fixed-depth252.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\fixed-depth252.log",
+      "bytes": 60,
+      "sha256": "f06ef9efd391d2a73d0ea1b6d5d20b27f8de6306c79e07627df20acf2eb312f3"
+    },
+    {
+      "path": "fixed-large-run.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\fixed-large-run.json",
+      "bytes": 655,
+      "sha256": "c7050d7d78efa89a5f71738d4f97b74833f4e90d36b12740007bbc47aa2e906e"
+    },
+    {
+      "path": "fixed-large.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\fixed-large.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "fixed-managed-native.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\fixed-managed-native.log",
+      "bytes": 545,
+      "sha256": "985a5701412745a0c342e4870ed487e8a96e3b1088ec721083d8180078f6ef5a"
+    },
+    {
+      "path": "fixed-managed-runs.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\fixed-managed-runs.json",
+      "bytes": 1661,
+      "sha256": "1073201da56975c714ca2de123072fd42a068c0a6f39c5f6635bd92cd421191c"
+    },
+    {
+      "path": "fixed-managed-wasi.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\fixed-managed-wasi.log",
+      "bytes": 561,
+      "sha256": "a9d84b281a9fbcd2811d6d5a4c757b76e57cb163f06e500bdfd9204f105ad4d3"
+    },
+    {
+      "path": "fixed-managed.py",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\fixed-managed.py",
+      "bytes": 1234,
+      "sha256": "bb367507b39be5c87f7e391b31da228dbcd4c3da4b923748366478a8e2733ca9"
+    },
+    {
+      "path": "fixed-nepl3-tools.exe",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\fixed-nepl3-tools.exe",
+      "bytes": 11705344,
+      "sha256": "cf4811fb60902bda9be1c6b4a6cedee83b1fc9f10d1a5727a8f7f8e9a391b3c4"
+    },
+    {
+      "path": "growth-build-native.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\growth-build-native.log",
+      "bytes": 461,
+      "sha256": "94f5805d2646db8c1ca1f51f05d7862f50ab3880eee609851f31b65be5c69559"
+    },
+    {
+      "path": "growth-build-wasi.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\growth-build-wasi.log",
+      "bytes": 461,
+      "sha256": "81da1e0574cd902e2006cd83fd10280f69880c6b38cf1386a75eeaeaf4a3f3e2"
+    },
+    {
+      "path": "growth-native.exe",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\growth-native.exe",
+      "bytes": 168960,
+      "sha256": "9b517e7f280d642f0b518fc2a3fbaedb3a8037e8f38d9cd5022973940d7e2e18"
+    },
+    {
+      "path": "growth-native.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\growth-native.log",
+      "bytes": 145,
+      "sha256": "d7958f3057f533cded8515419f201b9bab573fff90c4559059b93ab7cc9968e8"
+    },
+    {
+      "path": "growth-runs.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\growth-runs.json",
+      "bytes": 343,
+      "sha256": "5a754347629e79f4e2fa84d1bc427dbaf94b8ed72f160e90466b18d6d2e01b57"
+    },
+    {
+      "path": "growth-wasi.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\growth-wasi.log",
+      "bytes": 145,
+      "sha256": "d7958f3057f533cded8515419f201b9bab573fff90c4559059b93ab7cc9968e8"
+    },
+    {
+      "path": "growth-wasi.wasm",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\growth-wasi.wasm",
+      "bytes": 10798456,
+      "sha256": "a2d9c0b1f0c5e7e116326cd6365d9343f364efe5b42d5bac4fd272d029106d1b"
+    },
+    {
+      "path": "host-integration.diff",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\host-integration.diff",
+      "bytes": 2908,
+      "sha256": "523c6529cc287fa4588e1a740b3549cbd76c8d018158bf877082dc846d6e37cf"
+    },
+    {
+      "path": "identity-delta/tools/src/doc/host.rs",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\identity-delta\\tools\\src\\doc\\host.rs",
+      "bytes": 10003,
+      "sha256": "4064d7dbc6f14fbcb6ba253e2e66dce7eb113723bd9d536bbc3705ce8f29f1e5"
+    },
+    {
+      "path": "identity-delta/tools/src/main.rs",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\identity-delta\\tools\\src\\main.rs",
+      "bytes": 2657,
+      "sha256": "bbf4c157be56dcfc112a7be92e1859c0e058802bb9558170a5f85acb836b02a4"
+    },
+    {
+      "path": "identity-delta.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\identity-delta.json",
+      "bytes": 492,
+      "sha256": "3f46aca895faf5ae244da142f8165f499c984c2531bfaf1f2f25e754f7e805f9"
+    },
+    {
+      "path": "integration-code-equivalence.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\integration-code-equivalence.json",
+      "bytes": 131,
+      "sha256": "3c742a9072e056b06feff1b3432e67f3529ced8466b6dfbda4e0e0fd56a2dbe3"
+    },
+    {
+      "path": "integration-production-comparison.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\integration-production-comparison.json",
+      "bytes": 488,
+      "sha256": "ace411aa65cd7700b498f573bf6313d39f40e58eed217971f02d4b2ce261454f"
+    },
+    {
+      "path": "main-integration.diff",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\main-integration.diff",
+      "bytes": 1129,
+      "sha256": "a185abf1e10a5900350f231e4906a05586a1b6ffdfb7420c4b05f3e55f60092f"
+    },
+    {
+      "path": "managed-native.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\managed-native.log",
+      "bytes": 473,
+      "sha256": "93cd7d1059d6b8c1eb71f2a285621a9e027bd14705d21bd528562e7771f88e26"
+    },
+    {
+      "path": "managed-runs.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\managed-runs.json",
+      "bytes": 1642,
+      "sha256": "4029c0e08549479c00bc4b14c89f477777adcd1ae74c25a07fcdfc32996df581"
+    },
+    {
+      "path": "managed-wasi.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\managed-wasi.log",
+      "bytes": 1570,
+      "sha256": "bf75a8127118c787ab81bdfb02de5dd88b1eca4cfa0b46c22fe7cba57a8608dc"
+    },
+    {
+      "path": "managed.py",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\managed.py",
+      "bytes": 1202,
+      "sha256": "1237c29a868ab2c4bed88c8f452c5f5ed676b9262b51ac1ec0cb4c7f4bb3dd52"
+    },
+    {
+      "path": "nepl3-tools.exe",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\nepl3-tools.exe",
+      "bytes": 11698176,
+      "sha256": "39f3a3255ebedc1b4d324ccfe73b017265c42042d7fc447b8321b529bbc6743a"
+    },
+    {
+      "path": "original-browser-input.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\original-browser-input.log",
+      "bytes": 6536,
+      "sha256": "d4d39adcd86aa71edf8728a659a223ee3febcc6413ef6f5ba982a48e83343713"
+    },
+    {
+      "path": "prepare.py",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\prepare.py",
+      "bytes": 1069,
+      "sha256": "0ee467d5b779847a665bda131a07e628878f44bb76108af06f6a8d79209d29df"
+    },
+    {
+      "path": "review.md",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\review.md",
+      "bytes": 10384,
+      "sha256": "ce8436e1cf86143e8b23a3883a3bf19ebe9573bd39c94fd621dfd3a72e2f0a5d"
+    },
+    {
+      "path": "rustc.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\rustc.log",
+      "bytes": 36,
+      "sha256": "ac31499b5910ed7ddbf1a62e57e03c1d0ca49fa78efc075b291afa8d192a4d44"
+    },
+    {
+      "path": "served-browser.py",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\served-browser.py",
+      "bytes": 2650,
+      "sha256": "66c5e968851c6178e3f57fcda36d2113f28155ccf1d6b8a5ca214bfb7afa7e0a"
+    },
+    {
+      "path": "served-export-browser.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\served-export-browser.json",
+      "bytes": 1006,
+      "sha256": "1e6078c147dfc2aecad63024cd0e570592ae7ea917e202629f905a90ba4e8217"
+    },
+    {
+      "path": "shell-delta-first.rs",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-delta-first.rs",
+      "bytes": 7329,
+      "sha256": "f851c45fe00e50d6b100f47015401d0851dcbcbd1f9fc962cb2d280ae586b529"
+    },
+    {
+      "path": "shell-depth.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-depth.json",
+      "bytes": 243,
+      "sha256": "50ce3a52a0347caff713d0aafa0b63724b4222b2eab2b5f063646e00841dfe51"
+    },
+    {
+      "path": "shell-fixed-build-native.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-fixed-build-native.log",
+      "bytes": 812,
+      "sha256": "c10cb869a97cd17c39ac01247aa04e27b3b3a70baf4d7f61c4c1733e2c9a3436"
+    },
+    {
+      "path": "shell-fixed-build-wasi.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-fixed-build-wasi.log",
+      "bytes": 781,
+      "sha256": "e637accce392a248103b26b5465462f5c3f74e89c962614c18068e101a80c79e"
+    },
+    {
+      "path": "shell-fixed-runs.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-fixed-runs.json",
+      "bytes": 365,
+      "sha256": "d16836911e0d9b7ac5dfd4df867d5bad2a4860363fae266636aee1860382ec1d"
+    },
+    {
+      "path": "shell-fixed.py",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-fixed.py",
+      "bytes": 1109,
+      "sha256": "c3c0c0f22b73ab722534749431ba392e4a9aa78b795cd4e58056527d4c2d970b"
+    },
+    {
+      "path": "shell-helper-fixed.rs",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-helper-fixed.rs",
+      "bytes": 1782,
+      "sha256": "ccbb51a8aa1ccfcc2058a66f2cffe9e5c1ab74f9a382351012552b803c341f8e"
+    },
+    {
+      "path": "shell-helper.rs",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-helper.rs",
+      "bytes": 1133,
+      "sha256": "7eed549bf9b7098135c0c8f2c5d1f58d4f3c505da4a8a970eda3896dbb016642"
+    },
+    {
+      "path": "shell-probe/Cargo.lock",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-probe\\Cargo.lock",
+      "bytes": 3517,
+      "sha256": "a1cc1309a7fc3fb4b285913df5703a41b62f4ea1fac6b5840f1e5e5089aa79d1"
+    },
+    {
+      "path": "shell-probe/Cargo.toml",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-probe\\Cargo.toml",
+      "bytes": 311,
+      "sha256": "8a16adbb9c175efb125f781daa43202e5a80ce2bd0ab37d4fcf07f5be5ee468d"
+    },
+    {
+      "path": "shell-probe/src/bin/growth.rs",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-probe\\src\\bin\\growth.rs",
+      "bytes": 3319,
+      "sha256": "846c8aaa4679cb0f88f939b924fd7400d60907197ea404ef95af7c5cddbf5fb5"
+    },
+    {
+      "path": "shell-probe/src/main.rs",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-probe\\src\\main.rs",
+      "bytes": 2693,
+      "sha256": "3030b797ee7d0c0368b13661cb39b4a8a7af0d92930448d75594536b33cad1e8"
+    },
+    {
+      "path": "shell-probe-before.rs",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-probe-before.rs",
+      "bytes": 2044,
+      "sha256": "3ce00083500339258422675359e419fa82a4272175062c233ee486f4f1058c55"
+    },
+    {
+      "path": "shell-queue-before-run.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-queue-before-run.json",
+      "bytes": 249,
+      "sha256": "9e1037c4d27c0cc2646a17cf1d63276d12193c0b3fd6aef1677f5fc547995b9c"
+    },
+    {
+      "path": "shell-queue-before.exe",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-queue-before.exe",
+      "bytes": 173056,
+      "sha256": "ec0e2795c46e05c44b12e2313b6e404442e0efcd68d80b980b4741225c80267d"
+    },
+    {
+      "path": "shell-queue-before.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-queue-before.log",
+      "bytes": 167,
+      "sha256": "de5fd5515e2ee10ae5da41e0500b672219f28f4e48076a7a6f11dfaa3a3c7c7f"
+    },
+    {
+      "path": "shell-queue-fixed-native.exe",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-queue-fixed-native.exe",
+      "bytes": 177664,
+      "sha256": "cc7ac15e2309745ef8c89c9946845790ea0311015fd63901e06cddfe18968a61"
+    },
+    {
+      "path": "shell-queue-fixed-native.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-queue-fixed-native.log",
+      "bytes": 163,
+      "sha256": "1343e3d1fbc662a00de422bf8434450866472544221a678617d2f19eab3217de"
+    },
+    {
+      "path": "shell-queue-fixed-wasi.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-queue-fixed-wasi.log",
+      "bytes": 163,
+      "sha256": "1343e3d1fbc662a00de422bf8434450866472544221a678617d2f19eab3217de"
+    },
+    {
+      "path": "shell-queue-fixed-wasi.wasm",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\shell-queue-fixed-wasi.wasm",
+      "bytes": 11797120,
+      "sha256": "461407992158176ee831f1a857e60dfc40c7a130d88cfe8d187895befbf129e2"
+    },
+    {
+      "path": "snapshot.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\snapshot.json",
+      "bytes": 153,
+      "sha256": "cfb2b265a996175e688aaf6981ea06ef83ae2b6d889f49311ec635002acb5acd"
+    },
+    {
+      "path": "source-verification.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\source-verification.json",
+      "bytes": 71,
+      "sha256": "0f62526170d76bbc01be798391257931b152ec165a400aaa7dc5cd9e12e56e38"
+    },
+    {
+      "path": "spec-delta/doc/spec/20-doc-html.md",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\spec-delta\\doc\\spec\\20-doc-html.md",
+      "bytes": 7649,
+      "sha256": "4099cd8e010ba0e60ae6d4e447f56c4109f8b9988658844c73f89a10039744b1"
+    },
+    {
+      "path": "spec-delta.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\spec-delta.json",
+      "bytes": 251,
+      "sha256": "efd46d286e1ccfadd88407008df42bae3e8575764c4e642b94e9374d4b979a6c"
+    },
+    {
+      "path": "wasmtime.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\wasmtime.log",
+      "bytes": 39,
+      "sha256": "bc2447d08eb0796f481b89e53c08931b05a78245a083900bf44827228a902c38"
+    }
+  ]
+}

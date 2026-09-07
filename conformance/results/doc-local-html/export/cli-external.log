@@ -1,0 +1,1 @@
+nepl3-tools: NeedsResolution(DocPreparationPlan { document_digest: Digest([17, 72, 220, 165, 31, 15, 183, 39, 171, 104, 112, 232, 115, 241, 159, 239, 224, 121, 62, 171, 58, 33, 217, 242, 92, 149, 254, 17, 163, 2, 56, 39]), requirements: [Link { node: 3, target: External { uri: "https://example.invalid/" } }] })

@@ -1,0 +1,7 @@
+{
+  "original": "C:\\projects\\NEPL3-rp2040\\target\\pulley-evidence\\4a710ad0fbca4905bf087a170e9f54dc",
+  "checker_sha256": "768d0cd138ed7d97f3982fc36caf2b188a208ebb5de60ec3c8c5339878de15aa",
+  "result": "passed",
+  "summary": "31 component invocations; 209 tests per backend\n",
+  "method": "read-only validation of existing root execution evidence; not a new Cargo execution"
+}

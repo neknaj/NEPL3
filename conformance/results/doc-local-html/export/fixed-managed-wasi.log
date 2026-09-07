@@ -1,0 +1,10 @@
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-export\workspace-fixed\tools)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.22s
+     Running tests\doc.rs (C:\projects\NEPL3-runtime\.tmp\review-fixed-target\wasm32-wasip2\debug\deps\doc-d82c699289d48b18.wasm)
+
+running 2 tests
+test export::export_preserves_content_and_binds_script_free_files ... ok
+test export::export_reserves_depth_for_the_document_shell ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 40 filtered out; finished in 1.34s
+

@@ -1,0 +1,16 @@
+{
+  "command": [
+    "python",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tools/audit/doc_html",
+    "-p",
+    "test_*.py"
+  ],
+  "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-export\\workspace-final",
+  "exit": 0,
+  "deadline": 60,
+  "extract_cases_ast_unchanged": true
+}

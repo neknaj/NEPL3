@@ -1,0 +1,30 @@
+{
+  "chromium": {
+    "ruby": 76,
+    "anno": 51,
+    "sections": 4,
+    "tables": 1,
+    "scripts": 0,
+    "rubyDisplay": "inline-grid",
+    "background": "rgb(13, 17, 23)",
+    "styles": 1,
+    "horizontalOverflow": false,
+    "status": 200,
+    "browser": "151.0.7922.34",
+    "errors": []
+  },
+  "firefox": {
+    "ruby": 76,
+    "anno": 51,
+    "sections": 4,
+    "tables": 1,
+    "scripts": 0,
+    "rubyDisplay": "inline-grid",
+    "background": "rgb(13, 17, 23)",
+    "styles": 1,
+    "horizontalOverflow": false,
+    "status": 200,
+    "browser": "153.0",
+    "errors": []
+  }
+}
