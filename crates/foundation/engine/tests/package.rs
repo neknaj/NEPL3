@@ -161,6 +161,7 @@ fn fixture() -> Result<(LanguagePackage, SchemaRegistry), String> {
                 },
             ],
             binding: BindingId(2),
+            selection_rules: vec![],
             styles: vec![],
         }],
         leaves: vec![Leaf {
@@ -169,6 +170,7 @@ fn fixture() -> Result<(LanguagePackage, SchemaRegistry), String> {
             token_kind: kind("Token:Word")?,
             payload: TypeDescriptor::Text,
             binding: BindingId(3),
+            selection_rules: vec![],
             styles: vec![],
         }],
         namespaces: vec![Namespace {
@@ -445,6 +447,7 @@ fn persistent_tree_checks_parent_reads_spelling_payload_and_concrete_owner() -> 
             kind: package.forms[0].kind.clone(),
             fields: package.forms[0].fields.clone(),
             binding: package.forms[0].binding,
+            selection_rules: vec![],
             styles: package.forms[0].styles.clone(),
         }),
         child_contexts: vec![

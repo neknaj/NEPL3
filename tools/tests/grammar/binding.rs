@@ -30,7 +30,7 @@ fn with_input<T>(
         finish(&checked, profile, b, a)
     })
 }
-fn with_completed_input<T>(
+pub(super) fn with_completed_input<T>(
     compiled: &CompiledLanguage,
     input: &str,
     finish: impl FnOnce(
@@ -170,7 +170,7 @@ fn parse_completed(
 ) -> Result<CompletedParse, String> {
     parse_completed_with_aux(source, &[], &[], resolved, b, a)
 }
-fn parse_completed_with_aux(
+pub(super) fn parse_completed_with_aux(
     source: &SourceSnapshot,
     extras: &[SourceSnapshot],
     maps: &[nepl3_core::origin::Mapping],
@@ -178,6 +178,30 @@ fn parse_completed_with_aux(
     b: &mut Budget,
     a: &mut SourceAdmission,
 ) -> Result<CompletedParse, String> {
+    match parse_any_with_aux(source, extras, maps, resolved, b, a)? {
+        ParseCompletion::Continue(parsed) => Ok(parsed),
+        ParseCompletion::Break(reply) => Err(format!("candidate: {:?}", reply.outcome)),
+    }
+}
+pub(super) fn parse_any_with_aux(
+    source: &SourceSnapshot,
+    extras: &[SourceSnapshot],
+    maps: &[nepl3_core::origin::Mapping],
+    resolved: &ResolvedParseProfile<'_>,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+) -> Result<ParseCompletion, String> {
+    parse_with_artifacts(source, extras, maps, &[], resolved, b, a)
+}
+pub(super) fn parse_with_artifacts(
+    source: &SourceSnapshot,
+    extras: &[SourceSnapshot],
+    maps: &[nepl3_core::origin::Mapping],
+    facts: &[nepl3_reader::model::ReaderFact],
+    resolved: &ResolvedParseProfile<'_>,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+) -> Result<ParseCompletion, String> {
     let r = resolved.registry();
     let p = resolved.language("B", b).map_err(err)?;
     let foundation = r.selected("nepl3.foundation", 1).ok_or("foundation")?;
@@ -271,7 +295,7 @@ fn parse_completed_with_aux(
         let progress = match result {
             ParseCompletion::Continue(parsed) => {
                 assert_eq!(parsed.cursor(), source.text().len() as u64);
-                return Ok(parsed);
+                return Ok(ParseCompletion::Continue(parsed));
             }
             ParseCompletion::Break(reply) => reply,
         };
@@ -322,6 +346,7 @@ fn parse_completed_with_aux(
                     && let nepl3_reader::model::ReadReply::Matched {
                         sources,
                         source_maps,
+                        facts: returned_facts,
                         ..
                     } = &mut terminal
                 {
@@ -331,6 +356,7 @@ fn parse_completed_with_aux(
                         }
                     }
                     source_maps.extend_from_slice(maps);
+                    returned_facts.extend_from_slice(facts);
                     additional = true;
                 }
                 result = parser
@@ -354,7 +380,12 @@ fn parse_completed_with_aux(
                     .reserve_completed(&continuation, &reserved, &store, b, a)
                     .map_err(err)?;
             }
-            other => return Err(format!("candidate: {other:?}")),
+            other => {
+                return Ok(ParseCompletion::Break(ParseReply {
+                    outcome: other,
+                    ..progress
+                }));
+            }
         }
     }
 }

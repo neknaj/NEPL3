@@ -132,6 +132,8 @@ Ok(NodeKind::None)},
 Ok(NodeKind::Custom{provider:self.text(node,form,"provider")?})},
 ("Style","style")=>{
 Ok(NodeKind::Style{selector:self.node(node,form,"selector",Category::Selector)?,class:self.text(node,form,"class")?})},
+("Style","selection")=>{
+Ok(NodeKind::Selection{selector:self.node(node,form,"selector",Category::Selector)?,priority:self.nat(node,form,"priority")?})},
 ("Selector","head")=>{
 Ok(NodeKind::Head)},
 ("Selector","self")=>{

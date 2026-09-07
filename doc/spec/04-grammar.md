@@ -114,6 +114,10 @@ lambdaはparameter/bodyの2fieldとbodyだけのscope。letrecは同じnameをin
 
 style selector class-nameを登録する。head/self/field/captureからsource領域を選ぶ。captureはreaderが宣言したcapture名。未定義field/captureはcompile error。
 
+同じGrammar/Style列に `selection selector priority` を宣言できる。selectorはstyleと同じhead/self/field/captureで、priorityはNatから損失なく変換できるU64とする。省略したselectorのpriorityは0であり、同じownerの同一selectorへのselection重複は拒否する。範囲の大小が第一条件で、同じ範囲長の候補は大きいpriority、深い包含位置、宣言順の順で選ぶ。styleの既存arityを変更せず、classと優先度を別の列として保持する。
+
+LanguagePackageのForm/Leafおよび動的HeadShapeは `SelectionRule { selector, priority }` の順序付き列を持つ。実Grammar compilerがこの列を生成し、package意味identityと選択Profileのexecution identityへ含める。未定義field/capture、重複selector、U64上限を超えるNatは元operandまたは重複宣言の位置を持つ失敗として返す。priorityをnative arena配置から推定しない。
+
 class名はschema所有ID。共通roleへfallbackできる。実際の色をgrammarに固定しない。binding metadataからdefinition/reference修飾を自動で導出する。
 
 ## 6. compileの出力と検査

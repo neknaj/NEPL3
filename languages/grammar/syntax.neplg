@@ -389,6 +389,13 @@ cons field provider builtin Text
 nil
 none
 cons style head "marker" nil
+cons form Selection Style "selection"
+cons field selector local Selector
+cons field priority builtin Nat
+nil
+group cons visit selector
+nil
+cons style head "marker" nil
 cons form Style Style "style"
 cons field selector local Selector
 cons field class builtin Text

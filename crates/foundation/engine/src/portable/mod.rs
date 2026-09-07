@@ -5,6 +5,7 @@ pub mod binding;
 pub mod facts;
 pub mod head;
 pub mod query;
+pub mod region;
 pub mod rename;
 pub mod tree;
 mod value;
@@ -26,6 +27,15 @@ pub enum PortableError<E> {
     RequestMismatch,
     Facts(crate::facts::FactsError),
     Head(crate::head::HeadError),
+    Region(crate::analysis::region::RegionError),
+}
+impl<E> From<crate::analysis::region::RegionError> for PortableError<E> {
+    fn from(value: crate::analysis::region::RegionError) -> Self {
+        match value.stop_reason() {
+            Some(reason) => Self::Stopped(reason),
+            None => Self::Region(value),
+        }
+    }
 }
 impl<E> From<crate::head::HeadError> for PortableError<E> {
     fn from(value: crate::head::HeadError) -> Self {

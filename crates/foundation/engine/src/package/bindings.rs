@@ -11,12 +11,13 @@ fn field<'a>(
     name: &str,
     budget: &mut Budget,
 ) -> Result<(usize, &'a FieldSpec), PackageError> {
-    budget.charge(Resource::Work, fields.len() as u64 + 1)?;
-    fields
-        .iter()
-        .enumerate()
-        .find(|(_, v)| v.name == name)
-        .ok_or(PackageError::InvalidSelector)
+    for (index, field) in fields.iter().enumerate() {
+        budget.charge(Resource::Work, (field.name.len() + name.len()) as u64 + 1)?;
+        if field.name == name {
+            return Ok((index, field));
+        }
+    }
+    Err(PackageError::InvalidSelector)
 }
 fn push<T>(items: &mut Vec<T>, value: T, budget: &mut Budget) -> Result<(), PackageError> {
     budget.charge(Resource::AllocationUnits, core::mem::size_of::<T>() as u64)?;
@@ -95,8 +96,34 @@ struct Owner<'a> {
     self_type: Option<&'a TypeDescriptor>,
     root: BindingId,
     styles: &'a [StyleRule],
+    selection_rules: &'a [SelectionRule],
 }
 impl LanguagePackage {
+    /// Check one presentation selector using the same owner rules as package validation.
+    /// Compilers may use this entry to attribute a failure to its source operand.
+    pub fn check_presentation_selector(
+        &self,
+        owner: BindingOwner,
+        selector: &StyleSelector,
+        budget: &mut Budget,
+    ) -> Result<(), PackageError> {
+        let fields = match owner {
+            BindingOwner::Form(i) => {
+                &self
+                    .forms
+                    .get(usize::try_from(i).map_err(|_| PackageError::InvalidSelector)?)
+                    .ok_or(PackageError::InvalidSelector)?
+                    .fields[..]
+            }
+            BindingOwner::Leaf(i) => {
+                self.leaves
+                    .get(usize::try_from(i).map_err(|_| PackageError::InvalidSelector)?)
+                    .ok_or(PackageError::InvalidSelector)?;
+                &[]
+            }
+        };
+        check_selector(self, fields, selector, budget)
+    }
     /// Run the same binding validator used by `check`, retaining the failing
     /// binding arena index so source compilers can attribute their own AST.
     pub fn check_binding_owner(
@@ -117,6 +144,7 @@ impl LanguagePackage {
                     self_type: None,
                     root: v.binding,
                     styles: &v.styles,
+                    selection_rules: &v.selection_rules,
                 }),
             BindingOwner::Leaf(index) => self
                 .leaves
@@ -129,6 +157,7 @@ impl LanguagePackage {
                     self_type: Some(&v.payload),
                     root: v.binding,
                     styles: &v.styles,
+                    selection_rules: &v.selection_rules,
                 }),
         }
         .ok_or(BindingFailure {
@@ -153,7 +182,7 @@ pub(super) fn owner(
     fields: &[FieldSpec],
     self_type: Option<&TypeDescriptor>,
     root: BindingId,
-    styles: &[StyleRule],
+    presentation: (&[StyleRule], &[SelectionRule]),
     registry: &SchemaRegistry,
     budget: &mut Budget,
 ) -> Result<(), PackageError> {
@@ -163,7 +192,8 @@ pub(super) fn owner(
             fields,
             self_type,
             root,
-            styles,
+            styles: presentation.0,
+            selection_rules: presentation.1,
         },
         registry,
         budget,
@@ -182,6 +212,7 @@ fn owner_inner(
         self_type,
         root,
         styles,
+        selection_rules,
     } = owner;
     budget.charge(Resource::AllocationUnits, fields.len() as u64)?;
     let mut visited = alloc::vec![false;fields.len()];
@@ -266,18 +297,50 @@ fn owner_inner(
         if style.class.name.is_empty() || registry.descriptor(&style.class.schema).is_none() {
             return Err(PackageError::InvalidSelector);
         }
-        match &style.selector {
-            StyleSelector::Head | StyleSelector::SelfValue => {}
-            StyleSelector::Field(name) => {
-                field(fields, name, budget)?;
+        check_selector(package, fields, &style.selector, budget)?;
+    }
+    for (index, rule) in selection_rules.iter().enumerate() {
+        check_selector(package, fields, &rule.selector, budget)?;
+        for prior in &selection_rules[..index] {
+            let size = |v: &StyleSelector| match v {
+                StyleSelector::Field(v) | StyleSelector::Capture(v) => v.len(),
+                _ => 0,
+            };
+            budget.charge(
+                Resource::Work,
+                (size(&prior.selector) + size(&rule.selector)) as u64 + 1,
+            )?;
+            if prior.selector == rule.selector {
+                return Err(PackageError::InvalidSelector);
             }
-            StyleSelector::Capture(name) => {
-                budget.charge(Resource::Work, package.reader.expressions.len() as u64)?;
-                if !package.reader.expressions.iter().any(
-                    |expr| matches!(expr,ReaderExpr::Capture{name:declared,..} if declared==name),
-                ) {
-                    return Err(PackageError::InvalidSelector);
+        }
+    }
+    Ok(())
+}
+
+fn check_selector(
+    package: &LanguagePackage,
+    fields: &[FieldSpec],
+    selector: &StyleSelector,
+    budget: &mut Budget,
+) -> Result<(), PackageError> {
+    budget.charge(Resource::Work, 1)?;
+    match selector {
+        StyleSelector::Head | StyleSelector::SelfValue => {}
+        StyleSelector::Field(name) => {
+            field(fields, name, budget)?;
+        }
+        StyleSelector::Capture(name) => {
+            let mut found = false;
+            for expression in &package.reader.expressions {
+                budget.charge(Resource::Work, 1)?;
+                if let ReaderExpr::Capture { name: declared, .. } = expression {
+                    budget.charge(Resource::Work, (name.len() + declared.len()) as u64)?;
+                    found |= name == declared;
                 }
+            }
+            if !found {
+                return Err(PackageError::InvalidSelector);
             }
         }
     }

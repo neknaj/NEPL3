@@ -82,6 +82,7 @@ Recursive { declarations: NameLiteral, body: NameLiteral },
 None,
 Custom { provider: TextLiteral },
 Style { selector: NodeId, class: TextLiteral },
+Selection { selector: NodeId, priority: NatLiteral },
 Head,
 SelfSelector,
 FieldSelector { name: NameLiteral },
@@ -154,6 +155,7 @@ Self::Recursive {..} => Category::Binding,
 Self::None => Category::Binding,
 Self::Custom {..} => Category::Binding,
 Self::Style {..} => Category::Style,
+Self::Selection {..} => Category::Style,
 Self::Head => Category::Selector,
 Self::SelfSelector => Category::Selector,
 Self::FieldSelector {..} => Category::Selector,
@@ -224,6 +226,7 @@ Self::Recursive {..} => "recursive",
 Self::None => "none",
 Self::Custom {..} => "custom",
 Self::Style {..} => "style",
+Self::Selection {..} => "selection",
 Self::Head => "head",
 Self::SelfSelector => "self",
 Self::FieldSelector {..} => "field",
@@ -447,6 +450,10 @@ Ok(()) },
 Self::Style { selector, class } => {
 visitor.node(*selector, Category::Selector)?;
 visitor.literal(LiteralRef::Text(class))?;
+Ok(()) },
+Self::Selection { selector, priority } => {
+visitor.node(*selector, Category::Selector)?;
+visitor.literal(LiteralRef::Nat(priority))?;
 Ok(()) },
 Self::Head => {
 Ok(()) },

@@ -87,6 +87,7 @@ fn foreign_root_mode_is_guest_owned_and_normal_child_and_host_restore_defaults()
             },
         ],
         binding: BindingId(3),
+        selection_rules: vec![],
         styles: vec![],
     }];
     guest.forms = vec![Form {
@@ -98,6 +99,7 @@ fn foreign_root_mode_is_guest_owned_and_normal_child_and_host_restore_defaults()
             read: ReadSpecId(1),
         }],
         binding: BindingId(1),
+        selection_rules: vec![],
         styles: vec![],
     }];
     let mut setup = budget();

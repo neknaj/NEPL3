@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     head::*,
-    package::{BindingId, FieldSpec, StyleRule, StyleSelector},
+    package::{BindingId, FieldSpec, SelectionRule, StyleRule, StyleSelector},
     selection::{HeadProviderRef, HeadShape},
 };
 use alloc::boxed::Box;
@@ -243,7 +243,8 @@ record_value!(Limits,foundation,"Limits",8,[source_bytes:0,work:1,depth:2,nodes:
 record_value!(TraceOverflow,foundation,"TraceOverflow",1,[dropped:0]);
 record_value!(FieldSpec,engine,"FieldSpec",2,[name:0,read:1]);
 record_value!(StyleRule,engine,"StyleRule",2,[selector:0,class:1]);
-record_value!(HeadShape,engine,"HeadShape",4,[kind:0,fields:1,binding:2,styles:3]);
+record_value!(SelectionRule,engine,"SelectionRule",2,[selector:0,priority:1]);
+record_value!(HeadShape,engine,"HeadShape",5,[kind:0,fields:1,binding:2,styles:3,selection_rules:4]);
 record_value!(HeadProviderRef,engine,"HeadProviderRef",2,[shape:0,child_context:1]);
 record_value!(ProjectedSpan,engine,"ProjectedSpan",3,[source:0,start:1,end:2]);
 record_value!(SourceWindow,engine,"SourceWindow",2,[span:0,bytes:1]);

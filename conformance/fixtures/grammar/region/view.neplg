@@ -1,0 +1,18 @@
+language Regions 1 Expr
+  cons category Expr Main
+  cons reader word node Outer seq cons scalar digit cons node Reading some scalar digit nil
+  cons reader head literal "pair"
+  cons reader ws some scalar whitespace
+  cons mode Main cons skip ws cons take Head head cons take Word word nil
+  cons leaf Word Expr Word none
+    cons selection self 3 nil
+  cons form Pair Expr "pair"
+    cons field first local Expr
+    cons field second local Expr
+    nil
+    group cons visit first cons visit second nil
+    cons style head "marker"
+    cons selection head 7
+    cons selection field first 9
+    nil
+  nil

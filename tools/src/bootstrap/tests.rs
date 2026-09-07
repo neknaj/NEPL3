@@ -508,6 +508,10 @@ nil"#;
         source.replace("some scalar asciiLetter", "some scalar identifierStart"),
         source.replace("bind Names name", "reference Names name"),
         source.replace("style head \"content\"", "style head \"marker\""),
+        source.replace(
+            "style head \"content\" nil",
+            "style head \"content\" cons selection head 7 nil",
+        ),
     ];
     let mut identities = Vec::new();
     for (index, text) in variants.iter().enumerate() {

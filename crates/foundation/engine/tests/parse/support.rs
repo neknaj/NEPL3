@@ -202,6 +202,7 @@ pub fn fixture() -> Result<(LanguagePackage, SchemaRegistry), String> {
                 },
             ],
             binding: BindingId(2),
+            selection_rules: vec![],
             styles: vec![],
         }],
         leaves: vec![Leaf {
@@ -210,6 +211,7 @@ pub fn fixture() -> Result<(LanguagePackage, SchemaRegistry), String> {
             token_kind: kind("Token:Word")?,
             payload: TypeDescriptor::Text,
             binding: BindingId(3),
+            selection_rules: vec![],
             styles: vec![],
         }],
         namespaces: vec![Namespace {

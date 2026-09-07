@@ -1013,6 +1013,28 @@
             }
           ]
         ],
+        "Selection": [
+          [
+            "selector",
+            {
+              "named": {
+                "name": "NodeId",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "priority",
+            {
+              "named": {
+                "name": "NatLiteral",
+                "package": "nepl3.grammar",
+                "revision": 1
+              }
+            }
+          ]
+        ],
         "Self": [],
         "Seq": [
           [

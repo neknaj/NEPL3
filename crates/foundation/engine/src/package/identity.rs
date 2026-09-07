@@ -114,24 +114,29 @@ fn name(out: &mut CanonicalWriter<'_>, value: &NameSelector) -> Result<(), Packa
     }
     Ok(())
 }
+fn selector(out: &mut CanonicalWriter<'_>, value: &StyleSelector) -> Result<(), PackageError> {
+    match value {
+        StyleSelector::Head => out.push("[\"Head\"]")?,
+        StyleSelector::SelfValue => out.push("[\"SelfValue\"]")?,
+        StyleSelector::Field(value) => {
+            out.push("[\"Field\",")?;
+            out.quoted(value)?;
+            out.push("]")?;
+        }
+        StyleSelector::Capture(value) => {
+            out.push("[\"Capture\",")?;
+            out.quoted(value)?;
+            out.push("]")?;
+        }
+    }
+    Ok(())
+}
 fn styles(out: &mut CanonicalWriter<'_>, values: &[StyleRule]) -> Result<(), PackageError> {
     out.push("[")?;
     for (i, value) in values.iter().enumerate() {
         comma(out, i)?;
         out.push("[")?;
-        match &value.selector {
-            StyleSelector::Head => out.push("[\"Head\"]")?,
-            StyleSelector::SelfValue => out.push("[\"SelfValue\"]")?,
-            StyleSelector::Field(v) | StyleSelector::Capture(v) => {
-                out.push(if matches!(value.selector, StyleSelector::Field(_)) {
-                    "[\"Field\","
-                } else {
-                    "[\"Capture\","
-                })?;
-                out.quoted(v)?;
-                out.push("]")?;
-            }
-        }
+        selector(out, &value.selector)?;
         out.push(",")?;
         schema(out, &value.class.schema)?;
         out.push(",")?;
@@ -145,6 +150,19 @@ fn styles(out: &mut CanonicalWriter<'_>, values: &[StyleRule]) -> Result<(), Pac
             nepl3_core::view::FallbackRole::Quantity => "Quantity",
             nepl3_core::view::FallbackRole::Annotation => "Annotation",
         })?;
+        out.push("]")?;
+    }
+    out.push("]")?;
+    Ok(())
+}
+fn selections(out: &mut CanonicalWriter<'_>, rules: &[SelectionRule]) -> Result<(), PackageError> {
+    out.push("[")?;
+    for (index, rule) in rules.iter().enumerate() {
+        comma(out, index)?;
+        out.push("[")?;
+        selector(out, &rule.selector)?;
+        out.push(",")?;
+        out.number(rule.priority)?;
         out.push("]")?;
     }
     out.push("]")?;
@@ -371,6 +389,8 @@ impl CheckedLanguagePackage<'_> {
             binding(&mut out, p, f.binding)?;
             out.push(",")?;
             styles(&mut out, &f.styles)?;
+            out.push(",")?;
+            selections(&mut out, &f.selection_rules)?;
             out.push("]")?;
         }
         out.push("],\"leaves\":[")?;
@@ -406,6 +426,8 @@ impl CheckedLanguagePackage<'_> {
             binding(&mut out, p, l.binding)?;
             out.push(",")?;
             styles(&mut out, &l.styles)?;
+            out.push(",")?;
+            selections(&mut out, &l.selection_rules)?;
             out.push("]")?;
         }
         out.push("],\"modes\":[")?;
