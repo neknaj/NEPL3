@@ -159,13 +159,13 @@ body
     body
       cons paragraph
         cons sentence
-          cons text "以前の会話にあった "
+          cons concat cons ruby text "以前" text "いぜん" cons text "の" cons ruby text "会話" text "かいわ" cons text "にあった " nil
           cons code "Fn"
           cons text "、"
           cons code "value"
           cons text "、"
           cons code "splice"
-          cons text " は、今回の4言語の組込みではない。"
+          cons concat cons text " は、" cons ruby text "今回" text "こんかい" cons text "の4" cons ruby text "言語" text "げんご" cons text "の" cons ruby text "組込" text "くみこ" cons text "みではない。" nil
           nil
         cons "[構文生成/こうぶんせいせい]は、[各言語/かくげんご]の[公開/こうかい]constructor APIで[実際/じっさい]に[行/おこな]える。"
         cons "[将来/しょうらい]の[言語/げんご]は、[同/おな]じconstructor schemaを[呼/よ]び[出/だ]して[実装/じっそう]する。"
@@ -176,14 +176,14 @@ body
           cons code "map"
           cons text " / "
           cons code "then"
-          cons text " は、現在もRust providerへ接続できる完全な拡張点である。"
+          cons concat cons text " は、" cons ruby text "現在" text "げんざい" cons text "もRust providerへ" cons ruby text "接続" text "せつぞく" cons text "できる" cons ruby text "完全" text "かんぜん" cons text "な" cons ruby text "拡張点" text "かくちょうてん" cons text "である。" nil
           nil
         nil
       cons paragraph
         cons sentence
-          cons text "各言語の全constructorとarityは "
+          cons concat cons ruby text "各言語" text "かくげんご" cons text "の" cons ruby text "全" text "ぜん" cons text "constructorとarityは " nil
           cons code "design/forms.json"
-          cons text " に定める。"
+          cons concat cons text " に" cons ruby text "定" text "さだ" cons text "める。" nil
           nil
         cons "そこで[定義/ていぎ]されていない[綴/つづ]りは、[該当/がいとう]カテゴリの[明示的/めいじてき]な[識別子/しきべつし]leaf[規則/きそく]に[一致/いっち]する[場合/ばあい]だけ、[名前参照/なまえさんしょう]として[読/よ]める。"
         cons "[未知/みち]のformを、arity 0と[推測/すいそく]してはならない。"
