@@ -164,15 +164,18 @@ body
       cons "Markup modelがname/attributeをTextとして運べることは、任意のtagを許可することを意味しない。"
       cons "nepl3-markupは目的categoryに対して検査する。" nil
     cons paragraph
-      cons "HTMLの許可要素: article, section, div, p, span, h1〜h6, ruby, rt, rp, em, strong, br, pre, code, figure, figcaption, a。"
+      cons "HTMLでは文書構造・注釈・コード・リンクに加え、ul/ol/li、table/caption/thead/tbody/tr/th/td、imgを扱う。"
+      cons sentence cons text "全要素の列挙は " cons code "design/markup.json" cons text " を正本とし、内容モデルと型付き属性は " cons link relative "19-html-fragment.md" none text "HTML fragment契約" cons text " に従う。" nil
       cons "MathML: math, mrow, mi, mn, mo, mtext, mfrac, msqrt, mroot, msub, msup, msubsup, munder, mover, munderover, mtable, mtr, mtd, mspace。"
       cons "SVG: svg, g, rect, line, path, polyline, circle, text, title, desc。" nil
     cons paragraph
       cons sentence cons text "全要素・属性・属性値制約の正本は " cons code "design/markup.json" cons text "。" nil
       cons "属性を受け入れる集合はglobal、namespace、elementの各allowlistの和とし、列挙されていない属性は拒否する。"
       cons "SVGのpath/points等は自由な文字列として受けず、記述した型付き構造からserializerが綴りを生成する。"
-      cons "userから任意のon*、style、script、foreignObject、image、external href、任意のnamespace URLを受けない。"
-      cons "hrefはarticle内の生成済みanchorだけ。"
+      cons "userから任意のon*、style、script、foreignObject、SVG image、任意のnamespace URLを受けない。"
+      cons "HTMLのhrefは型付きFragment/Artifact/BetweenArtifacts/Externalを使い、URIの許可規則と内部targetの存在、文書間routeの対応をそれぞれ検査する。"
+      cons "HTML imgのsrcは検査済みartifact内の相対pathであり、任意の外部画像URLを許可しない。"
+      cons "字句検査だけでassetの存在・内容・権限を検証済みとせず、文書準備時の解決を別に要求する。"
       cons "CSSはbackendが所有する固定assetであり、本文文字列をCSSに埋め込まない。" nil
     cons paragraph
       cons "MathMLのmspaceのwidth/height/depthはNonnegativeMathLengthとする。"
