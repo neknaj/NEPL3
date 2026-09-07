@@ -3538,6 +3538,60 @@
           }
         ]
       ]
+    },
+    "HeadDelegation": {
+      "constraints": [
+        "head.delegation"
+      ],
+      "record": [
+        [
+          "call",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "HeadCall"
+            }
+          }
+        ],
+        [
+          "limits",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Limits"
+            }
+          }
+        ]
+      ]
+    },
+    "HeadDelivery": {
+      "constraints": [
+        "head.delivery"
+      ],
+      "record": [
+        [
+          "reply",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "HeadReply"
+            }
+          }
+        ],
+        [
+          "usage",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Usage"
+            }
+          }
+        ]
+      ]
     }
   }
 }

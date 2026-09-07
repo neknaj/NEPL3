@@ -1,6 +1,8 @@
 use super::{TestResult, budget, fixture};
 use nepl3_core::{source::Digest, value::OperationRef};
 use nepl3_engine::{profile::*, selection::HeadProviderRef};
+#[path = "head/portable.rs"]
+mod portable;
 fn error(e: impl core::fmt::Debug) -> String {
     format!("{e:?}")
 }

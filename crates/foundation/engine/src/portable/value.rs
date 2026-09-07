@@ -282,3 +282,4 @@ record_value!(SchemaRef,foundation,"SchemaRef",3,[package:0,revision:1,digest:2]
 record_value!(PackageIdentity,engine,"PackageIdentity",2,[schema:0,semantic_digest:1]);
 record_value!(EntryContext,engine,"EntryContext",4,[package:0,alias:1,category:2,mode:3]);
 record_value!(ForeignStep,engine,"ForeignStep",2,[node:0,field:1]);
+mod head;

@@ -1,10 +1,12 @@
 //! Dynamic head requests with a bounded projection of already read syntax.
+mod check;
 mod copy;
 mod error;
 mod model;
 mod projection;
 mod report;
 mod window;
+pub(crate) use check::compatible as compatible_windows;
 pub use error::HeadError;
 pub use model::*;
 pub(crate) use projection::capture_completed;

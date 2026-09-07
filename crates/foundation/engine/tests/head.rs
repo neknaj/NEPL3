@@ -1,3 +1,5 @@
+#[path = "head/portable.rs"]
+mod portable;
 #[path = "parse/support.rs"]
 mod support;
 use nepl3_core::{
@@ -72,6 +74,7 @@ fn dynamic_head_uses_compound_completed_child_and_restores_normal_child_context(
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Case {
     Owned,
+    Portable,
     Native,
     NativeFallback,
     NativeError,
@@ -485,8 +488,11 @@ fn run_case(input: &str, case: Case, exercise_rejections: bool) -> Result<ParseR
             break;
         };
         calls += 1;
-        let mut provider_reply =
-            answer(call, &resolved, &shape, &mut b).map_err(|v| format!("answer {v:?}"))?;
+        let mut provider_reply = if case == Case::Portable {
+            portable::answer(call, &resolved, &shape, &sources, &mut b, &mut a)?
+        } else {
+            answer(call, &resolved, &shape, &mut b).map_err(|v| format!("answer {v:?}"))?
+        };
         if matches!(
             case,
             Case::Cancel | Case::Fail | Case::LongFailure | Case::DeepFailure
@@ -779,6 +785,9 @@ fn run_case(input: &str, case: Case, exercise_rejections: bool) -> Result<ParseR
     };
     tree.validate(&resolved, &mut b, &mut a)
         .map_err(|v| format!("tree: {v:?}"))?;
+    if case == Case::Portable {
+        portable::tree_roundtrip(tree, &resolved)?;
+    }
     if case == Case::Owned {
         assert_eq!(calls, 4);
     } // choose shape, two contexts, and ordinary x's explicit None.

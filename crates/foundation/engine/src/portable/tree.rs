@@ -1,4 +1,4 @@
-//! Persistent static selections and recovery retain their bundle-local owners
+//! Persistent static/dynamic selections and recovery retain their bundle-local owners
 //! through the same canonical node mapping used by the core syntax codec.
 pub(super) mod canonical;
 mod selection;

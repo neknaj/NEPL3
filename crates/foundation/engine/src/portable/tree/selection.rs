@@ -22,7 +22,21 @@ impl Value for ShapeSelection {
                 b,
             ),
             Self::Recovery => variant(s.engine, name, "Recovery", [], b),
-            Self::Dynamic { .. } => Err(crate::tree::TreeError::UnvalidatedDynamic.into()),
+            Self::Dynamic {
+                provider,
+                shape,
+                child_contexts,
+            } => variant(
+                s.engine,
+                name,
+                "Dynamic",
+                [
+                    provider.value(s, c, b)?,
+                    shape.value(s, c, b)?,
+                    child_contexts.value(s, c, b)?,
+                ],
+                b,
+            ),
         }
     }
     fn read<C: FoundationValueCodec>(
@@ -46,7 +60,11 @@ impl Value for ShapeSelection {
                 cons: <bool as Value>::read(cons, s, c, b)?,
             },
             ("Recovery", []) => Self::Recovery,
-            ("Dynamic", _) => return Err(crate::tree::TreeError::UnvalidatedDynamic.into()),
+            ("Dynamic", [provider, shape, child_contexts]) => Self::Dynamic {
+                provider: Value::read(provider, s, c, b)?,
+                shape: Value::read(shape, s, c, b)?,
+                child_contexts: Value::read(child_contexts, s, c, b)?,
+            },
             _ => return Err(PortableError::Shape),
         })
     }
