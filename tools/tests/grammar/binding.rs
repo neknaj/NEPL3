@@ -202,6 +202,32 @@ pub(super) fn parse_with_artifacts(
     b: &mut Budget,
     a: &mut SourceAdmission,
 ) -> Result<ParseCompletion, String> {
+    parse_with_artifacts_at(source, extras, maps, (0, facts), resolved, b, a)
+}
+pub(super) fn parse_completed_with_aux_at(
+    source: &SourceSnapshot,
+    extras: &[SourceSnapshot],
+    maps: &[nepl3_core::origin::Mapping],
+    start: u64,
+    resolved: &ResolvedParseProfile<'_>,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+) -> Result<CompletedParse, String> {
+    match parse_with_artifacts_at(source, extras, maps, (start, &[]), resolved, b, a)? {
+        ParseCompletion::Continue(parsed) => Ok(parsed),
+        ParseCompletion::Break(reply) => Err(err(reply)),
+    }
+}
+fn parse_with_artifacts_at(
+    source: &SourceSnapshot,
+    extras: &[SourceSnapshot],
+    maps: &[nepl3_core::origin::Mapping],
+    injection: (u64, &[nepl3_reader::model::ReaderFact]),
+    resolved: &ResolvedParseProfile<'_>,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+) -> Result<ParseCompletion, String> {
+    let (injection_start, facts) = injection;
     let r = resolved.registry();
     let p = resolved.language("B", b).map_err(err)?;
     let foundation = r.selected("nepl3.foundation", 1).ok_or("foundation")?;
@@ -343,6 +369,7 @@ pub(super) fn parse_with_artifacts(
                     })
                     .map_err(err)?;
                 if !additional
+                    && request.start >= injection_start
                     && let nepl3_reader::model::ReadReply::Matched {
                         sources,
                         source_maps,

@@ -19,6 +19,7 @@ pub(super) fn prepare<'a, 'tree, 'profile, 'budget>(
     }
     let analysis = binding.for_source(&request.key, &request.source, budget)?;
     let facts = analysis.facts();
+    let owners = super::owner::Owners::new(original, analysis, budget)?;
     let mut sources = SourceStore::default();
     let mut admission = SourceAdmission::default();
     for source in binding.reply().sources() {
@@ -93,6 +94,7 @@ pub(super) fn prepare<'a, 'tree, 'profile, 'budget>(
         }
     }
     let mut edits = Vec::new();
+    let mut affected = Vec::new();
     for occurrence in &facts.occurrences {
         budget.charge(Resource::Work, 1)?;
         match &occurrence.resolution {
@@ -112,30 +114,62 @@ pub(super) fn prepare<'a, 'tree, 'profile, 'budget>(
                         return Err(RenameError::RenameNotInvertible);
                     }
                 }
-                add_edit(
+                let maps = owners.namespace(facts, occurrence.namespace, budget)?;
+                let index = add_edit(
                     &occurrence.span,
                     &occurrence.name,
-                    facts,
+                    (facts, maps),
                     request,
                     &sources,
                     &mut edits,
                     budget,
                 )?;
+                push(&mut affected, (index, occurrence.namespace), budget)?;
             }
             _ => {}
         }
     }
     // A declared entity name must be editable even when a custom provider does
     // not also issue a Definition occurrence.
-    add_edit(
+    let maps = owners.namespace(facts, target.namespace, budget)?;
+    let index = add_edit(
         target.selection.as_ref().ok_or(RenameError::NoLocation)?,
         &target.name,
-        facts,
+        (facts, maps),
         request,
         &sources,
         &mut edits,
         budget,
     )?;
+    push(&mut affected, (index, target.namespace), budget)?;
+    // Follow each edited declaration/reference through its own map closure.
+    // A shared root edit may have several owners; union only the final edits.
+    let mut candidates: Vec<TextEdit> = Vec::new();
+    for (index, namespace) in affected {
+        let maps = owners.namespace(facts, namespace, budget)?;
+        let derived = derived_edits(
+            core::slice::from_ref(&edits[index]),
+            facts,
+            maps,
+            &sources,
+            budget,
+        )?;
+        for edit in derived {
+            let mut found = false;
+            for prior in &candidates {
+                if same_source(prior.span.snapshot_ref(), edit.span.snapshot_ref(), budget)?
+                    && prior.span.start() == edit.span.start()
+                    && prior.span.end() == edit.span.end()
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if !found {
+                push(&mut candidates, edit, budget)?;
+            }
+        }
+    }
     for i in 1..edits.len() {
         let mut j = i;
         while j > 0 {
@@ -157,7 +191,6 @@ pub(super) fn prepare<'a, 'tree, 'profile, 'budget>(
     // Exact derived snapshots are part of the candidate, too. Apply explicit
     // internal edits while preserving every unmapped byte; only writable root
     // edits are eventually advertised to the editor.
-    let candidates = derived_edits(&edits, facts, &sources, budget)?;
     sources.apply(&candidates, budget, &mut admission)?;
     Ok(RenameDraft {
         original,
@@ -174,6 +207,7 @@ pub(super) fn prepare<'a, 'tree, 'profile, 'budget>(
 fn derived_edits(
     edits: &[TextEdit],
     facts: &FactSet,
+    maps: &[nepl3_core::origin::Mapping],
     sources: &SourceStore,
     b: &mut Budget,
 ) -> Result<Vec<TextEdit>, RenameError> {
@@ -194,13 +228,7 @@ fn derived_edits(
     let mut index = 0;
     while index < out.len() {
         b.observe_depth(depths[index])?;
-        let projected = super::mapping::project(
-            &out[index].span,
-            &facts.source_maps,
-            &facts.sources,
-            false,
-            b,
-        )?;
+        let projected = super::mapping::project(&out[index].span, maps, &facts.sources, false, b)?;
         for span in projected {
             let source = sources
                 .get_ref(span.snapshot_ref())
@@ -235,13 +263,14 @@ fn derived_edits(
 fn add_edit(
     span: &Span,
     name: &str,
-    facts: &FactSet,
+    closure: (&FactSet, &[nepl3_core::origin::Mapping]),
     request: &RenameRequest,
     sources: &SourceStore,
     edits: &mut Vec<TextEdit>,
     b: &mut Budget,
-) -> Result<(), RenameError> {
-    let span = inverse(span, facts, &request.writable, b)?;
+) -> Result<usize, RenameError> {
+    let (facts, maps) = closure;
+    let span = inverse(span, facts, maps, &request.writable, b)?;
     let old = sources
         .get_ref(span.snapshot_ref())
         .ok_or(SourceError::MissingSnapshot)?
@@ -252,12 +281,12 @@ fn add_edit(
     if old != name {
         return Err(RenameError::RenameNotInvertible);
     }
-    for prior in edits.iter() {
+    for (index, prior) in edits.iter().enumerate() {
         if same_source(prior.span.snapshot_ref(), span.snapshot_ref(), b)?
             && prior.span.start() == span.start()
             && prior.span.end() == span.end()
         {
-            return Ok(());
+            return Ok(index);
         }
     }
     b.charge(Resource::Work, old.len() as u64)?;
@@ -269,11 +298,13 @@ fn add_edit(
             replacement: text(&request.new_name, b)?,
         },
         b,
-    )
+    )?;
+    Ok(edits.len() - 1)
 }
 fn inverse(
     span: &Span,
     facts: &FactSet,
+    maps: &[nepl3_core::origin::Mapping],
     writable: &[SourceRef],
     b: &mut Budget,
 ) -> Result<Span, RenameError> {
@@ -292,8 +323,7 @@ fn inverse(
             }
         }
         push(&mut visited, copy_span(&current, b)?, b)?;
-        let mut projected =
-            super::mapping::project(&current, &facts.source_maps, &facts.sources, true, b)?;
+        let mut projected = super::mapping::project(&current, maps, &facts.sources, true, b)?;
         if projected.len() > 1 {
             return Err(RenameError::RenameNotInvertible);
         }

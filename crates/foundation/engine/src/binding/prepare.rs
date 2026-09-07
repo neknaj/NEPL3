@@ -119,7 +119,9 @@ impl<'a, 'p> Machine<'a, 'p> {
         }
         self.progress.facts = Some(facts);
         let mut root = None;
-        for (mapping, context) in mappings.entries().iter().zip(contexts) {
+        for (bundle_index, (mapping, context)) in
+            mappings.entries().iter().zip(contexts).enumerate()
+        {
             let bundle = mapping.bundle();
             let origin_base = self.facts()?.origins.len() as u64;
             // Origins may point forward inside this bundle. Publish the whole
@@ -154,6 +156,16 @@ impl<'a, 'p> Machine<'a, 'p> {
                             .origin
                             .0,
                 )),
+                budget,
+            )?;
+            let scope = self.stage(stage)?.scope;
+            push(
+                &mut self.progress.bundle_scopes,
+                BindingBundleScope {
+                    bundle: bundle_index as u64,
+                    scope,
+                    custom_source_maps: Vec::new(),
+                },
                 budget,
             )?;
             for node in mapping.order() {

@@ -36,6 +36,16 @@ pub(super) fn run(
     b: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> Result<QueryOutcome, QueryError> {
+    run_selected(binding, request, None, out, b, admission)
+}
+pub(super) fn run_selected(
+    binding: &BoundBindingReply,
+    request: &QueryRequest,
+    occurrence_id: Option<OccurrenceId>,
+    out: &mut Vec<SourceSnapshot>,
+    b: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<QueryOutcome, QueryError> {
     let analysis = binding.for_source(&request.key, &request.source, b)?;
     let sources = binding.reply().sources();
     let source = find_source(sources, &request.source, b)?;
@@ -46,6 +56,14 @@ pub(super) fn run(
     let mut selected: Option<&Occurrence> = None;
     for occurrence in &facts.occurrences {
         b.charge(Resource::Nodes, 1)?;
+        if let Some(id) = occurrence_id {
+            b.charge(Resource::Work, 1)?;
+            if occurrence.id == id {
+                selected = Some(occurrence);
+                break;
+            }
+            continue;
+        }
         b.charge(
             Resource::Work,
             (occurrence.span.snapshot_ref().source.0.len() + request.source.source_id.0.len())
@@ -62,6 +80,9 @@ pub(super) fn run(
         {
             selected = Some(occurrence);
         }
+    }
+    if occurrence_id.is_some() && selected.is_none() {
+        return Err(QueryError::Facts);
     }
     b.charge(Resource::Work, analysis.result().open_inputs.len() as u64)?;
     let selection = selected

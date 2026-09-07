@@ -24,6 +24,104 @@ fn transport(
 }
 
 #[test]
+fn region_queries_keep_custom_sparse_final_resolution_and_source_less_targets() -> Result<(), String>
+{
+    use nepl3_engine::{
+        analysis::region::{
+            RegionRequest,
+            query::{self as selected, RegionQueryOutcome, RegionQueryRequest},
+        },
+        portable::region,
+    };
+    let compiled = super::super::custom::compiled()?;
+    for source_less in [false, true] {
+        with_input(&compiled, "early x z custom x x", |tree, profile, _, _| {
+            let empty = SourceStore::default();
+            let mut a = SourceAdmission::default();
+            let mut c = FoundationCodec::new(profile.registry(), &empty, &mut a).map_err(err)?;
+            let prepared = keyed::prepare(
+                "region-custom",
+                tree.tree(),
+                BindingOptions,
+                budget().limits(),
+                profile,
+                &mut c,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            let mut host = super::super::custom::query_host(true, source_less);
+            let bound = prepared
+                .execute_with_host(&mut host, &mut budget(), &mut SourceAdmission::default())
+                .map_err(err)?;
+            let input = region::prepare(&prepared, None, &mut c, &mut budget()).map_err(err)?;
+            for offset in [6, 19] {
+                let request = RegionQueryRequest {
+                    region: RegionRequest {
+                        key: input.key(),
+                        source: tree.tree().bundle.sources[0].reference(),
+                        offset,
+                    },
+                    kind: QueryKind::Definition,
+                };
+                let reply = selected::query(
+                    &input,
+                    &bound,
+                    &request,
+                    &mut budget(),
+                    &mut SourceAdmission::default(),
+                );
+                let RegionQueryOutcome::Complete {
+                    region: Some(_),
+                    queries,
+                } = &reply.outcome
+                else {
+                    return Err(err(&reply));
+                };
+                assert_eq!(queries.len(), 1);
+                let QueryOutcome::Definition {
+                    selection: Some(selection),
+                    targets,
+                } = &queries[0]
+                else {
+                    return Err(err(queries));
+                };
+                assert_eq!(
+                    selection.resolution,
+                    ReferenceResolution::Resolved(EntityId(100))
+                );
+                assert_eq!(targets[0].entity, EntityId(100));
+                assert_eq!(targets[0].location.is_none(), source_less);
+                let value = region::query::reply_to_value(
+                    &reply,
+                    &request,
+                    &input,
+                    &bound,
+                    &mut c,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                let bytes = nepl3_wire::encode(&value, &mut budget()).map_err(err)?;
+                let value = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+                assert_eq!(
+                    region::query::reply_decode(
+                        &value,
+                        &request,
+                        &input,
+                        &bound,
+                        &mut c,
+                        &mut budget()
+                    )
+                    .map_err(err)?,
+                    reply
+                );
+            }
+            Ok(())
+        })?;
+    }
+    Ok(())
+}
+
+#[test]
 fn keyed_definition_uses_original_ranges_and_all_identity_candidates() -> Result<(), String> {
     // These are byte positions in the original inputs, independent of allocated IDs.
     type TargetRanges = (u64, u64, u64, u64);
@@ -721,6 +819,312 @@ fn query_import_option_uses_a_real_provider_occurrence() -> Result<(), String> {
                 }
             );
             transport(&reply, &request, profile.registry())?;
+        }
+        Ok(())
+    })
+}
+
+#[test]
+fn region_queries_use_only_accepted_custom_map_owners() -> Result<(), String> {
+    use nepl3_engine::{
+        analysis::region::{
+            RegionRequest,
+            query::{self as selected, RegionQueryOutcome, RegionQueryRequest},
+        },
+        portable::region,
+    };
+    let compiled = super::super::custom::compiled()?;
+    for emitted in [false, true] {
+        with_input(
+            &compiled,
+            "custom x guest custom x x",
+            |tree, profile, _, _| {
+                let empty = SourceStore::default();
+                let mut a = SourceAdmission::default();
+                let mut c =
+                    FoundationCodec::new(profile.registry(), &empty, &mut a).map_err(err)?;
+                let prepared = keyed::prepare(
+                    "region-custom-maps",
+                    tree.tree(),
+                    BindingOptions,
+                    budget().limits(),
+                    profile,
+                    &mut c,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                let mut host = super::super::custom::query_map_host(emitted, false);
+                let bound = prepared
+                    .execute_with_host(&mut host, &mut budget(), &mut SourceAdmission::default())
+                    .map_err(err)?;
+                let BindingOutcome::Complete(analysis) = &bound.reply().outcome else {
+                    return Err(err(bound.reply()));
+                };
+                assert_eq!(
+                    analysis
+                        .result()
+                        .bundle_scopes
+                        .iter()
+                        .map(|v| v.custom_source_maps.clone())
+                        .collect::<Vec<_>>(),
+                    [vec![0], vec![1, 2]]
+                );
+                let input = region::prepare(&prepared, None, &mut c, &mut budget()).map_err(err)?;
+                let packet =
+                    keyed::request_to_value(&prepared, &mut c, &mut budget()).map_err(err)?;
+                let bytes = nepl3_wire::encode(&packet, &mut budget()).map_err(err)?;
+                let packet = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+                let receiver_store = SourceStore::default();
+                let mut receiver_admission = SourceAdmission::default();
+                let mut receiver = FoundationCodec::new(
+                    profile.registry(),
+                    &receiver_store,
+                    &mut receiver_admission,
+                )
+                .map_err(err)?;
+                let received =
+                    keyed::request_decode(&packet, profile, &mut receiver, &mut budget())
+                        .map_err(err)?;
+                let received =
+                    keyed::prepare_received(&received, profile, &mut receiver, &mut budget())
+                        .map_err(err)?;
+                let mut receiver_host = super::super::custom::query_map_host(emitted, false);
+                let receiver_bound = received
+                    .execute_with_host(
+                        &mut receiver_host,
+                        &mut budget(),
+                        &mut SourceAdmission::default(),
+                    )
+                    .map_err(err)?;
+                let receiver_input =
+                    region::prepare(&received, None, &mut receiver, &mut budget()).map_err(err)?;
+                let BindingOutcome::Complete(receiver_analysis) = &receiver_bound.reply().outcome
+                else {
+                    return Err(err(receiver_bound.reply()));
+                };
+                assert_eq!(analysis.facts(), receiver_analysis.facts());
+                assert_eq!(
+                    analysis.result().bundle_scopes,
+                    receiver_analysis.result().bundle_scopes
+                );
+                assert_eq!(
+                    analysis.result().source_maps,
+                    receiver_analysis.result().source_maps
+                );
+                // Fixed original byte positions: host keyword 0, host name 7,
+                // guest name 22. Both providers return the same generated source.
+                for (offset, expected) in [(0, None), (7, Some(100)), (22, Some(200))] {
+                    let request = RegionQueryRequest {
+                        region: RegionRequest {
+                            key: input.key(),
+                            source: tree.tree().bundle.sources[0].reference(),
+                            offset,
+                        },
+                        kind: QueryKind::Definition,
+                    };
+                    let reply = selected::query(
+                        &input,
+                        &bound,
+                        &request,
+                        &mut budget(),
+                        &mut SourceAdmission::default(),
+                    );
+                    let RegionQueryOutcome::Complete { queries, .. } = &reply.outcome else {
+                        return Err(err(&reply));
+                    };
+                    assert_eq!(
+                        queries.len(),
+                        usize::from(expected.is_some()),
+                        "emitted {emitted} offset {offset}: {queries:?}"
+                    );
+                    if let Some(expected) = expected {
+                        let QueryOutcome::Definition { targets, .. } = &queries[0] else {
+                            return Err(err(queries));
+                        };
+                        assert_eq!(targets[0].entity, EntityId(expected));
+                        assert_eq!(
+                            targets[0]
+                                .location
+                                .as_ref()
+                                .ok_or("location")?
+                                .selection
+                                .as_ref()
+                                .ok_or("selection")?
+                                .snapshot_ref()
+                                .source
+                                .0,
+                            "custom-delta-source"
+                        );
+                    }
+                    let value = region::query::reply_to_value(
+                        &reply,
+                        &request,
+                        &input,
+                        &bound,
+                        &mut c,
+                        &mut budget(),
+                    )
+                    .map_err(err)?;
+                    let bytes = nepl3_wire::encode(&value, &mut budget()).map_err(err)?;
+                    let value = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+                    assert_eq!(
+                        region::query::reply_decode(
+                            &value,
+                            &request,
+                            &receiver_input,
+                            &receiver_bound,
+                            &mut receiver,
+                            &mut budget()
+                        )
+                        .map_err(err)?,
+                        reply
+                    );
+                }
+                Ok(())
+            },
+        )?;
+    }
+    Ok(())
+}
+
+#[test]
+fn custom_map_ownership_survives_stops_and_raw_validation() -> Result<(), String> {
+    let compiled = super::super::custom::compiled()?;
+    with_input(&compiled, "custom x x", |tree, profile, _, _| {
+        for cancelled in [false, true] {
+            let mut host = super::super::custom::query_map_host(true, cancelled);
+            let reply = analyze_with_host(
+                "map-stop",
+                tree,
+                profile,
+                &mut host,
+                &mut budget(),
+                &mut SourceAdmission::default(),
+            );
+            let owners = match &reply.outcome {
+                BindingOutcome::Complete(analysis) => &analysis.result().bundle_scopes,
+                BindingOutcome::Stopped { reason, progress } if cancelled => {
+                    assert_eq!(*reason, StopReason::Cancelled);
+                    assert!(progress.facts.as_ref().ok_or("facts")?.entities.is_empty());
+                    &progress.bundle_scopes
+                }
+                _ => return Err(err(&reply)),
+            };
+            assert_eq!(owners[0].custom_source_maps, [0]);
+            assert_eq!(reply.source_maps().len(), 1);
+            let empty = SourceStore::default();
+            let mut a = SourceAdmission::default();
+            let mut c = FoundationCodec::new(profile.registry(), &empty, &mut a).map_err(err)?;
+            let value =
+                wire_binding::reply_to_value(&reply, profile.registry(), &mut c, &mut budget())
+                    .map_err(err)?;
+            let bytes = nepl3_wire::encode(&value, &mut budget()).map_err(err)?;
+            let value = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+            let decoded =
+                wire_binding::reply_from_value(&value, profile.registry(), &mut c, &mut budget())
+                    .map_err(err)?;
+            let received = match &decoded.outcome {
+                DecodedBindingOutcome::Complete(result) => &result.bundle_scopes,
+                DecodedBindingOutcome::Stopped { progress, .. } => &progress.bundle_scopes,
+                _ => return Err(err(decoded)),
+            };
+            assert_eq!(owners, received);
+            for duplicated in [false, true] {
+                let mut invalid = value.clone();
+                let NdfValue::Record(reply) = &mut invalid else {
+                    return Err("reply".into());
+                };
+                let NdfValue::Variant(outcome) = &mut reply.fields[0] else {
+                    return Err("outcome".into());
+                };
+                let record_index = usize::from(cancelled);
+                let NdfValue::Record(result) = &mut outcome.fields[record_index] else {
+                    return Err("result".into());
+                };
+                let NdfValue::List(owners) = &mut result.fields[8] else {
+                    return Err("owners".into());
+                };
+                let NdfValue::Record(owner) = &mut owners[0] else {
+                    return Err("owner".into());
+                };
+                owner.fields[2] = NdfValue::List(if duplicated {
+                    vec![NdfValue::U64(0), NdfValue::U64(0)]
+                } else {
+                    vec![NdfValue::U64(u64::MAX)]
+                });
+                let bytes = nepl3_wire::encode(&invalid, &mut budget()).map_err(err)?;
+                let invalid = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+                assert!(
+                    wire_binding::reply_from_value(
+                        &invalid,
+                        profile.registry(),
+                        &mut c,
+                        &mut budget()
+                    )
+                    .is_err()
+                );
+            }
+        }
+        // Stop on either side of map/owner allocation. Every published map must
+        // retain its owner, including when no fact delta was accepted yet.
+        for allocation in [false, true] {
+            let mut stops = 0;
+            for cap in (0..60000).step_by(997) {
+                let mut limits = budget().limits();
+                if allocation {
+                    limits.allocation_units = cap;
+                } else {
+                    limits.work = cap;
+                }
+                let mut operation = Budget::new(limits);
+                let mut host = super::super::custom::query_map_host(true, false);
+                let reply = analyze_with_host(
+                    "map-sweep",
+                    tree,
+                    profile,
+                    &mut host,
+                    &mut operation,
+                    &mut SourceAdmission::default(),
+                );
+                let owners = match &reply.outcome {
+                    BindingOutcome::Complete(analysis) => &analysis.result().bundle_scopes,
+                    BindingOutcome::Stopped { reason, progress } => {
+                        assert_eq!(
+                            *reason,
+                            if allocation {
+                                StopReason::AllocationLimit
+                            } else {
+                                StopReason::WorkLimit
+                            }
+                        );
+                        stops += 1;
+                        &progress.bundle_scopes
+                    }
+                    _ => return Err(err(&reply)),
+                };
+                assert_eq!(
+                    owners
+                        .iter()
+                        .map(|v| v.custom_source_maps.len())
+                        .sum::<usize>(),
+                    reply.source_maps().len()
+                );
+                for owner in owners {
+                    for index in &owner.custom_source_maps {
+                        assert!((*index as usize) < reply.source_maps().len());
+                    }
+                }
+                let empty = SourceStore::default();
+                let mut a = SourceAdmission::default();
+                let mut c =
+                    FoundationCodec::new(profile.registry(), &empty, &mut a).map_err(err)?;
+                let value =
+                    wire_binding::reply_to_value(&reply, profile.registry(), &mut c, &mut budget())
+                        .map_err(err)?;
+                wire_binding::reply_from_value(&value, profile.registry(), &mut c, &mut budget())
+                    .map_err(err)?;
+            }
+            assert!(stops > 0);
         }
         Ok(())
     })

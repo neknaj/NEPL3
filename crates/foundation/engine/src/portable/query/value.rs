@@ -172,7 +172,7 @@ pub(in crate::portable) fn access_read<C: FoundationValueCodec>(
         _ => return Err(PortableError::Shape),
     })
 }
-fn error_value<C: FoundationValueCodec>(
+pub(in crate::portable) fn error_value<C: FoundationValueCodec>(
     e: &QueryError,
     r: &SchemaRegistry,
     s: &Schemas<'_>,
@@ -197,7 +197,7 @@ fn error_value<C: FoundationValueCodec>(
         ),
     }
 }
-fn error_read<C: FoundationValueCodec>(
+pub(in crate::portable) fn error_read<C: FoundationValueCodec>(
     v: &NdfValue,
     r: &SchemaRegistry,
     s: &Schemas<'_>,
@@ -211,7 +211,7 @@ fn error_read<C: FoundationValueCodec>(
         _ => return Err(PortableError::Shape),
     })
 }
-pub(super) fn outcome_value<C: FoundationValueCodec>(
+pub(in crate::portable) fn outcome_value<C: FoundationValueCodec>(
     o: &QueryOutcome,
     r: &SchemaRegistry,
     s: &Schemas<'_>,
@@ -245,7 +245,7 @@ pub(super) fn outcome_value<C: FoundationValueCodec>(
         }
     }
 }
-pub(super) fn outcome_read<C: FoundationValueCodec>(
+pub(in crate::portable) fn outcome_read<C: FoundationValueCodec>(
     v: &NdfValue,
     r: &SchemaRegistry,
     s: &Schemas<'_>,

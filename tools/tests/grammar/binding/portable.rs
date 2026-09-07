@@ -10,6 +10,101 @@ mod query;
 mod rename;
 
 #[test]
+fn binding_bundle_scope_ledger_preserves_ids_and_rejects_invalid_raw_roots() -> Result<(), String> {
+    let compiled = execution()?;
+    with_input(&compiled, "lambda x guest x", |tree, profile, b, a| {
+        let reply = analyze("owner-ledger", tree, profile, b, a);
+        let BindingOutcome::Complete(analysis) = &reply.outcome else {
+            return Err(err(&reply));
+        };
+        let expected = analysis.result().bundle_scopes.clone();
+        assert_eq!(expected.len(), 2);
+        assert_eq!(
+            expected.iter().map(|v| v.bundle).collect::<Vec<_>>(),
+            vec![0, 1]
+        );
+        assert_ne!(expected[0].scope, expected[1].scope);
+        let child = analysis
+            .facts()
+            .scopes
+            .iter()
+            .find(|v| v.parent.is_some())
+            .ok_or("child scope")?
+            .id;
+        let empty = SourceStore::default();
+        let mut a = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(profile.registry(), &empty, &mut a).map_err(err)?;
+        let value =
+            wire_binding::reply_to_value(&reply, profile.registry(), &mut codec, &mut budget())
+                .map_err(err)?;
+        let bytes = nepl3_wire::encode(&value, &mut budget()).map_err(err)?;
+        let received = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+        let decoded = wire_binding::reply_from_value(
+            &received,
+            profile.registry(),
+            &mut codec,
+            &mut budget(),
+        )
+        .map_err(err)?;
+        let DecodedBindingOutcome::Complete(result) = decoded.outcome else {
+            return Err("complete".into());
+        };
+        assert_eq!(result.bundle_scopes, expected);
+        for mutation in 0..4 {
+            let mut changed = value.clone();
+            let NdfValue::Record(reply) = &mut changed else {
+                return Err("reply".into());
+            };
+            let NdfValue::Variant(outcome) = &mut reply.fields[0] else {
+                return Err("outcome".into());
+            };
+            let NdfValue::Record(result) = &mut outcome.fields[0] else {
+                return Err("result".into());
+            };
+            let NdfValue::List(rows) = &mut result.fields[8] else {
+                return Err("ledger".into());
+            };
+            let NdfValue::Record(row) = &mut rows[1] else {
+                return Err("row".into());
+            };
+            if mutation == 0 {
+                row.fields[0] = NdfValue::U64(u64::MAX);
+            } else {
+                let NdfValue::Record(scope) = &mut row.fields[1] else {
+                    return Err("scope".into());
+                };
+                scope.fields[0] = NdfValue::U64(match mutation {
+                    1 => expected[0].scope.0,
+                    2 => child.0,
+                    _ => u64::MAX,
+                });
+            }
+            let ty = TypeDescriptor::Named(TypeRef {
+                package: "nepl3.engine".into(),
+                revision: 1,
+                name: "BindingReply".into(),
+            });
+            profile
+                .registry()
+                .validate(&ty, &changed, &mut budget())
+                .map_err(err)?;
+            let bytes = nepl3_wire::encode(&changed, &mut budget()).map_err(err)?;
+            let received = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+            assert!(
+                wire_binding::reply_from_value(
+                    &received,
+                    profile.registry(),
+                    &mut codec,
+                    &mut budget()
+                )
+                .is_err()
+            );
+        }
+        Ok(())
+    })
+}
+
+#[test]
 fn namespace_visibility_stage_roundtrips_and_rejects_wrong_policy_or_root() -> Result<(), String> {
     for global in [false, true] {
         let compiled = if global {

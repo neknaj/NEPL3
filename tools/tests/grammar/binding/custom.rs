@@ -40,6 +40,110 @@ pub(super) fn query_host_import() -> impl BindingHost {
         ..Default::default()
     }
 }
+/// Actual provider maps share one generated snapshot across host/Foreign calls.
+pub(super) fn query_map_host(emitted: bool, cancel: bool) -> impl BindingHost {
+    query_map_host_revision(emitted, cancel, 0)
+}
+pub(super) fn query_map_host_revision(
+    emitted: bool,
+    cancel: bool,
+    revision: u64,
+) -> impl BindingHost {
+    MapHost {
+        inner: Host {
+            registered: true,
+            raw_artifacts: true,
+            ..Default::default()
+        },
+        emitted,
+        cancel,
+        calls: 0,
+        revision,
+    }
+}
+struct MapHost {
+    inner: Host,
+    emitted: bool,
+    cancel: bool,
+    calls: u64,
+    revision: u64,
+}
+impl BindingHost for MapHost {
+    fn authorize(
+        &mut self,
+        call: &BindingCall<'_>,
+        b: &mut Budget,
+    ) -> Result<Option<FactAuthority>, BindingError> {
+        self.inner.entity_start = Some(100 + self.calls * 100);
+        let mut authority = self.inner.authorize(call, b)?;
+        if let Some(authority) = &mut authority {
+            authority.reservation.occurrences.start += self.calls * 100;
+            authority.reservation.occurrences.end += self.calls * 100;
+        }
+        Ok(authority)
+    }
+    fn facts(
+        &mut self,
+        provider: &ProviderRequirement,
+        request: &CheckedFactsView<'_, '_>,
+        emit: &mut FactsEmitter<'_>,
+    ) -> Result<CustomOutcome, BindingError> {
+        let result = self.inner.facts(provider, request, emit)?;
+        let CustomOutcome::Complete(mut delta) = result else {
+            return Err(BindingError::ProviderInvalid);
+        };
+        if self.revision != 0 {
+            let old = &delta.sources[0];
+            let source = SourceSnapshot::new(
+                old.identity().source.clone(),
+                self.revision,
+                old.uri().into(),
+                old.text().as_bytes().to_vec(),
+                emit.budget(),
+            )?;
+            let span = source.span_with_budget(0, source.text().len() as u64, emit.budget())?;
+            delta.source_maps[0].target = span.clone();
+            delta.occurrences[0].span = span.clone();
+            delta.entities[0].definition = Some(span.clone());
+            delta.entities[0].selection = Some(span);
+            delta.sources[0] = source;
+        }
+        delta.occurrences[0].id.0 += self.calls * 100;
+        self.calls += 1;
+        if !request.request().path.is_empty() {
+            // This explicit guest-only relation must not make the host keyword
+            // a location of the host entity on the shared generated snapshot.
+            let snapshot = &request.request().tree.bundle.sources[0];
+            delta.source_maps.push(nepl3_core::origin::Mapping {
+                source: snapshot.span_with_budget(0, 6, emit.budget())?,
+                target: delta.occurrences[0].span.clone(),
+                kind: nepl3_core::origin::MappingKind::Transformed,
+            });
+        }
+        if request
+            .request()
+            .existing
+            .sources
+            .iter()
+            .any(|source| source.identity() == delta.sources[0].identity())
+        {
+            delta.sources.clear();
+        }
+        if self.emitted {
+            for source in &delta.sources {
+                let source = source.clone_with_budget(emit.budget())?;
+                emit.source(source)?;
+            }
+            for mapping in core::mem::take(&mut delta.source_maps) {
+                emit.source_map(mapping)?;
+            }
+        }
+        if self.cancel {
+            emit.budget().cancel();
+        }
+        Ok(CustomOutcome::Complete(delta))
+    }
+}
 #[test]
 fn custom_foreign_call_uses_its_own_namespace_and_root() -> Result<(), String> {
     let compiled = compiled()?;

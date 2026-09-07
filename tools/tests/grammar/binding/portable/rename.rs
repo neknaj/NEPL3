@@ -1101,3 +1101,225 @@ fn rename_uses_custom_final_resolutions_and_refuses_missing_locations() -> Resul
     }
     Ok(())
 }
+
+#[test]
+fn rename_rejects_a_guest_map_as_host_edit_authority() -> Result<(), String> {
+    use nepl3_core::origin::{Mapping, MappingKind};
+    let compiled = execution()?;
+    with_completed_input(&compiled, "lambda x guest x", |base, profile, _, _| {
+        let input = &base.tree().bundle.sources[0];
+        let aux = SourceSnapshot::new(
+            SourceId("guest-only-origin".into()),
+            0,
+            "memory:guest-only-origin".into(),
+            b"x".to_vec(),
+            &mut budget(),
+        )
+        .map_err(err)?;
+        let map = Mapping {
+            source: aux.span(0, 1).map_err(err)?,
+            target: input.span(7, 8).map_err(err)?,
+            kind: MappingKind::Exact,
+        };
+        let parsed = super::super::parse_completed_with_aux_at(
+            input,
+            core::slice::from_ref(&aux),
+            core::slice::from_ref(&map),
+            15,
+            profile,
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        )?;
+        assert!(parsed.tree().bundle.source_maps.is_empty());
+        let guest = parsed
+            .tree()
+            .bundle
+            .nodes
+            .iter()
+            .flat_map(|v| &v.fields)
+            .find_map(|v| {
+                if let nepl3_core::syntax::FieldValue::Foreign(v) = v {
+                    Some(v)
+                } else {
+                    None
+                }
+            })
+            .ok_or("guest")?;
+        assert_eq!(guest.bundle.source_maps, [map]);
+        let empty = SourceStore::default();
+        let mut a = SourceAdmission::default();
+        let mut c = FoundationCodec::new(profile.registry(), &empty, &mut a).map_err(err)?;
+        let original = keyed::prepare(
+            "rename-owner",
+            parsed.tree(),
+            BindingOptions,
+            budget().limits(),
+            profile,
+            &mut c,
+            &mut budget(),
+        )
+        .map_err(err)?;
+        let bound = original
+            .execute(&mut budget(), &mut SourceAdmission::default())
+            .map_err(err)?;
+        let request = RenameRequest {
+            key: original.key(),
+            source: input.reference(),
+            offset: 7,
+            new_name: "z".into(),
+            writable: vec![aux.reference()],
+        };
+        assert!(matches!(
+            prepare(&parsed, &original, &bound, &request, &mut budget()),
+            Err(RenameError::NotWritable)
+        ));
+        let request = RenameRequest {
+            writable: vec![input.reference()],
+            ..request
+        };
+        let mut b = budget();
+        let mut draft = prepare(&parsed, &original, &bound, &request, &mut b).map_err(err)?;
+        let candidate = draft
+            .with_operation(|sources, _, _| sources.latest(&input.identity().source).cloned())
+            .ok_or("candidate")?;
+        assert_eq!(candidate.text(), "lambda z guest x");
+        // The guest's unrelated aux remains byte-identical. Its own legitimate
+        // relation can change independently; it cannot choose the host edit root.
+        let map = Mapping {
+            source: aux.span(0, 1).map_err(err)?,
+            target: candidate.span(15, 16).map_err(err)?,
+            kind: MappingKind::Exact,
+        };
+        let next_parse = draft.with_operation(|_, b, a| {
+            super::super::parse_completed_with_aux_at(
+                &candidate,
+                core::slice::from_ref(&aux),
+                core::slice::from_ref(&map),
+                15,
+                profile,
+                b,
+                a,
+            )
+        })?;
+        let (next, next_bound) = draft.with_operation(|sources, b, a| -> Result<_, String> {
+            let mut c = FoundationCodec::new(profile.registry(), sources, a).map_err(err)?;
+            let next = keyed::prepare(
+                "rename-owner",
+                next_parse.tree(),
+                BindingOptions,
+                b.limits(),
+                profile,
+                &mut c,
+                b,
+            )
+            .map_err(err)?;
+            let bound = next.execute(b, a).map_err(err)?;
+            Ok((next, bound))
+        })?;
+        let result = draft.accept(&next_parse, &next, &next_bound);
+        let RenameOutcome::Complete { edits, .. } = &result.outcome else {
+            return Err(err(&result));
+        };
+        assert_eq!(edits.len(), 1);
+        assert_eq!(edits[0].span, input.span(7, 8).map_err(err)?);
+        transport(&result, &request, profile.registry())?;
+        Ok(())
+    })
+}
+
+#[test]
+fn rename_custom_owned_generated_name_retains_inverse_and_forward_edits() -> Result<(), String> {
+    let compiled = super::super::custom::compiled()?;
+    for emitted in [false, true] {
+        with_completed_input(&compiled, "custom x x", |parsed, profile, _, _| {
+            let empty = SourceStore::default();
+            let mut a = SourceAdmission::default();
+            let mut c = FoundationCodec::new(profile.registry(), &empty, &mut a).map_err(err)?;
+            let original = keyed::prepare(
+                "rename-custom-map",
+                parsed.tree(),
+                BindingOptions,
+                budget().limits(),
+                profile,
+                &mut c,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            let mut host = super::super::custom::query_map_host(emitted, false);
+            let bound = original
+                .execute_with_host(&mut host, &mut budget(), &mut SourceAdmission::default())
+                .map_err(err)?;
+            let generated = bound
+                .reply()
+                .sources()
+                .iter()
+                .find(|s| s.identity().source.0 == "custom-delta-source")
+                .ok_or("generated")?;
+            let input = &parsed.tree().bundle.sources[0];
+            let request = RenameRequest {
+                key: original.key(),
+                source: generated.reference(),
+                offset: 0,
+                new_name: "z".into(),
+                writable: vec![input.reference()],
+            };
+            let mut b = budget();
+            let mut draft = prepare(parsed, &original, &bound, &request, &mut b).map_err(err)?;
+            let (candidate, revision) =
+                draft.with_operation(|sources, _, _| -> Result<_, String> {
+                    let input = sources
+                        .latest(&input.identity().source)
+                        .ok_or("input")?
+                        .clone();
+                    let generated = sources
+                        .latest(&generated.identity().source)
+                        .ok_or("generated")?;
+                    assert_eq!(generated.text(), "z");
+                    Ok((input, generated.identity().revision))
+                })?;
+            assert_eq!(candidate.text(), "custom z z");
+            assert_eq!(revision, 1);
+            let next_parse = draft.with_operation(|_, b, a| {
+                super::super::parse_completed(&candidate, profile, b, a)
+            })?;
+            let (next, next_bound) =
+                draft.with_operation(|sources, b, a| -> Result<_, String> {
+                    let mut c =
+                        FoundationCodec::new(profile.registry(), sources, a).map_err(err)?;
+                    let next = keyed::prepare(
+                        "rename-custom-map",
+                        next_parse.tree(),
+                        BindingOptions,
+                        b.limits(),
+                        profile,
+                        &mut c,
+                        b,
+                    )
+                    .map_err(err)?;
+                    let mut host =
+                        super::super::custom::query_map_host_revision(emitted, false, revision);
+                    let bound = next.execute_with_host(&mut host, b, a).map_err(err)?;
+                    Ok((next, bound))
+                })?;
+            let reply = draft.accept(&next_parse, &next, &next_bound);
+            let RenameOutcome::Complete { edits, .. } = &reply.outcome else {
+                return Err(err(&reply));
+            };
+            assert_eq!(
+                edits
+                    .iter()
+                    .map(|e| (e.span.start(), e.span.end()))
+                    .collect::<Vec<_>>(),
+                [(7, 8), (9, 10)]
+            );
+            assert!(
+                edits
+                    .iter()
+                    .all(|e| e.span.snapshot_ref() == input.identity())
+            );
+            transport(&reply, &request, profile.registry())?;
+            Ok(())
+        })?;
+    }
+    Ok(())
+}

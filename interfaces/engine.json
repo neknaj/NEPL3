@@ -3837,6 +3837,18 @@
               }
             }
           }
+        ],
+        [
+          "bundleScopes",
+          {
+            "list": {
+              "named": {
+                "name": "BindingBundleScope",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
         ]
       ]
     },
@@ -3935,6 +3947,18 @@
                 "package": "nepl3.engine",
                 "revision": 1,
                 "name": "BindingResolutionBatch"
+              }
+            }
+          }
+        ],
+        [
+          "bundleScopes",
+          {
+            "list": {
+              "named": {
+                "name": "BindingBundleScope",
+                "package": "nepl3.engine",
+                "revision": 1
               }
             }
           }
@@ -5778,6 +5802,203 @@
                 "package": "nepl3.foundation",
                 "revision": 1,
                 "name": "SourceContent"
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "BindingBundleScope": {
+      "constraints": [
+        "engine.binding-bundle-scope"
+      ],
+      "record": [
+        [
+          "bundle",
+          "U64"
+        ],
+        [
+          "scope",
+          {
+            "named": {
+              "name": "ScopeId",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "customSourceMaps",
+          {
+            "list": "U64"
+          }
+        ]
+      ]
+    },
+    "RegionQueryRequest": {
+      "constraints": [],
+      "record": [
+        [
+          "region",
+          {
+            "named": {
+              "name": "RegionRequest",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "kind",
+          {
+            "named": {
+              "name": "QueryKind",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "RegionQueryError": {
+      "constraints": [],
+      "variant": {
+        "Region": [
+          [
+            "error",
+            {
+              "named": {
+                "name": "RegionError",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Query": [
+          [
+            "error",
+            {
+              "named": {
+                "name": "QueryError",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "RegionQueryOutcome": {
+      "constraints": [
+        "engine.region-query-outcome"
+      ],
+      "variant": {
+        "Complete": [
+          [
+            "region",
+            {
+              "option": {
+                "named": {
+                  "name": "SourceRegion",
+                  "package": "nepl3.engine",
+                  "revision": 1
+                }
+              }
+            }
+          ],
+          [
+            "queries",
+            {
+              "list": {
+                "named": {
+                  "name": "QueryOutcome",
+                  "package": "nepl3.engine",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "Invalid": [
+          [
+            "error",
+            {
+              "named": {
+                "name": "RegionQueryError",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "name": "StopReason",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "RegionQueryReply": {
+      "constraints": [
+        "engine.region-query-reply"
+      ],
+      "record": [
+        [
+          "key",
+          {
+            "named": {
+              "name": "RegionKey",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "capability",
+          {
+            "named": {
+              "name": "RegionCapability",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "outcome",
+          {
+            "named": {
+              "name": "RegionQueryOutcome",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "name": "Report",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "name": "SourceContent",
+                "package": "nepl3.foundation",
+                "revision": 1
               }
             }
           }

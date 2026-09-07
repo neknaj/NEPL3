@@ -158,6 +158,7 @@ fn analyze_inner(
         Ok(()) => match machine.progress.facts.take() {
             Some(facts) => BindingOutcome::Complete(BindingAnalysis {
                 result: BindingResult {
+                    bundle_scopes: machine.progress.bundle_scopes,
                     facts,
                     sources: machine.progress.sources,
                     source_maps: machine.progress.source_maps,

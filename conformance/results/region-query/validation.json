@@ -1,0 +1,106 @@
+{
+  "format": "nepl3.development-slice/1",
+  "scope": "T06 RegionQuery and R048 owner-scoped rename correction",
+  "base_commit": "933f0bb5679ee2bcb6bf830ea0d33be08a006c7b",
+  "tested_base_equivalence": "All production gates used the frozen 34 files on 933f0bb. The two independent review files were added and repository contracts rerun without changing production files.",
+  "result": "passed-within-recorded-scope",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "checks": [
+    {
+      "command": "cargo test --workspace --locked",
+      "exit_code": 0,
+      "log": "conformance/results/region-query/native.log",
+      "sha256": "251f44760592501188c7e22ce7ff7ed0c900088324ae2927c272f7b12aa4ecb8"
+    },
+    {
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER='wasmtime run'; cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar diagnostic::compiler_report_boundary_without_host_process --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::all_reader_constructors --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::compiled_reader_streaming_boundaries_and_rollback_keep_raw_positions --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test doc --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar region:: --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core --no-default-features --target wasm32-unknown-unknown",
+      "exit_code": 0,
+      "log": "conformance/results/region-query/wasi.log",
+      "sha256": "da5bb348f93bd577143404a4c0c49512535e9a5ee7217204f55258773f5c1e39"
+    },
+    {
+      "command": "cargo fmt --all -- --check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo clippy --workspace --all-targets --locked -- -D warnings; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps --locked",
+      "exit_code": 0,
+      "log": "conformance/results/region-query/quality.log",
+      "sha256": "fcfbd129ec6e8ca0d6ab6808e2532d1373a7d9fb9d989dc5115fef2f27dcdfe8"
+    },
+    {
+      "command": "cargo run --locked -p nepl3-tools -- check",
+      "exit_code": 0,
+      "log": "conformance/results/region-query/contract.log",
+      "sha256": "158fc4973c6074575ac4b7c3c4d49c5e13b5aa6ff9d7af1b1c0721b1340c2147"
+    },
+    {
+      "command": "python tools/audit/structure.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/audit -p test.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/doc.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/bootstrap -p test_grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/audit/allocation/run.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo run --locked -p nepl3-tools -- tasks --check",
+      "exit_code": 0,
+      "log": "conformance/results/region-query/audit.log",
+      "sha256": "74e9c98a13b04a8ae0e12e2be8478dd4dbf020dc68094ab132626b88218637a3"
+    },
+    {
+      "command": "C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe --version; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe .github/workflows/ci.yml",
+      "exit_code": 0,
+      "log": "conformance/results/region-query/ci.log",
+      "sha256": "ad7ed44e79c7e5d554c2e008819df3a5da44834e9cfdb4aecaef9224a39c87dd"
+    }
+  ],
+  "execution": {
+    "native": {
+      "target": "x86_64-pc-windows-msvc",
+      "passed": 400,
+      "ignored": 1
+    },
+    "wasi": {
+      "target": "wasm32-wasip2",
+      "runner": "Wasmtime 44.0.1",
+      "passed": 319,
+      "scope": "Six production crates and the compiler, reader, binding, Doc and region integration suites"
+    },
+    "browser_wasm": "Six no_std crates compiled; browser execution not run",
+    "toolchain": "Rust 1.97.0"
+  },
+  "implementation": [
+    "RegionQuery connects the selected logical span and canonical bundle owner to final occurrences and resolutions, preserving sparse IDs and bidirectional source correspondence.",
+    "Binding records the bundle root and custom maps atomically when an emitter or checked delta is accepted. Guest and host mappings remain isolated even when their generated source bytes match.",
+    "The first CBOR receiver owns its sources and reexecutes actual binding before issuing execution proof. Raw ledger validation does not authenticate provider execution.",
+    "R048 rename resolves inverse mappings, derived edits and old/new comparison with each occurrence or entity namespace owner. A guest-only mapping cannot authorize editing a host declaration.",
+    "Unicode byte boundaries, half-open ranges, stale request identity, invalid input and sticky cancellation/resource stops remain explicit."
+  ],
+  "independent_review": {
+    "reviewer": "Huygens",
+    "record": "doc/review.md",
+    "archive": "conformance/results/region-query/independent.json",
+    "archive_sha256": "af6cf7cbb4fb038e6cf218d81611da9adea7cd93878203a6b399044d56fc4b34",
+    "text_records": 56,
+    "scope": "Fixed RegionQuery27 + R048 rename delta10, unique34; no Math or KaTeX work.",
+    "managed": {
+      "native": [
+        2,
+        2,
+        1,
+        1,
+        11
+      ],
+      "wasi": [
+        2,
+        2,
+        1,
+        1,
+        11
+      ]
+    },
+    "findings": "Four original probe programs pass on native and WASI. Six definition/reference positions, initial CBOR reception followed by actual binding and query; sparse Custom IDs 5000/7000 with shared generated Unicode source, owner isolation, emitter/delta paths, five invalid raw ledgers and two structurally valid raw self-claims, cancellation preserving accepted map/owner/event; same-owner Unicode rename through sealed candidate parse, actual Custom binding and accept; unchanged R048 counterexample now rejected with no-map positive preserved.",
+    "limitations": "R048 before runs are native only. The first source inventory was captured after Query27 adoption and does not certify that initial binary whole-source identity. The separate before-query27 native rebuild verifies its fixed27 files around the run. After builds verify all34 fixed files before and after and pass native/WASI. Raw result decoders do not mint private execution or communication authority. Root full gates are separate evidence. Absolute include paths are retained in probes; copied input seeds and build commands document their dependencies."
+  },
+  "log_normalization": "Root logs use LF and a final newline. Independent UTF-8 archive records preserve bytes.",
+  "unverified": [
+    "No task or whole acceptance group is complete; all 55 acceptance statuses remain not-run.",
+    "R048 before reproduction is native only. After reproduction and positive controls run on native and WASI.",
+    "Raw provider results do not authenticate remote execution. Remaining editor operations and adapters remain required.",
+    "Math/Circuit, backends, applications, Web/Pages and Doc migration remain required. One independent bootstrap performance baseline remains ignored; browser compilation does not prove browser behavior."
+  ],
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "42e94a1c606af941ebacc5bff08ce93746d1d2481254b86c4c8817abb6bc9c8f",
+    "spec_sha256": "bb90ba4c123efff79cb77c7f155357761e2e30f783d99bdeecc642b4858cb56b"
+  }
+}

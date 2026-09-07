@@ -278,3 +278,6 @@ fn actual_reader_capture_and_nested_view_remain_token_owned() -> Result<(), Stri
     }
     Ok(())
 }
+
+#[path = "region/query.rs"]
+mod query;
