@@ -81,7 +81,7 @@ fn node(bundle: &SyntaxBundle, id: NodeRef) -> Result<&nepl3_core::syntax::Synta
         .and_then(|i| bundle.nodes.get(i))
         .ok_or(TreeError::Path)
 }
-fn path<'a>(
+pub(crate) fn path<'a>(
     mut bundle: &'a SyntaxBundle,
     steps: &[ForeignStep],
     registry: &SchemaRegistry,

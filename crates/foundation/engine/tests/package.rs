@@ -9,6 +9,8 @@ use nepl3_reader::{
     plan::ReaderPlan,
     tokenizer::{ReaderMode, TakeRule, TokenReader},
 };
+#[path = "package/portable.rs"]
+mod portable;
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 fn budget() -> Budget {
     Budget::new(Limits {

@@ -60,6 +60,42 @@ impl<'a> FoundationCodec<'a> {
 }
 impl FoundationValueCodec for FoundationCodec<'_> {
     type Error = WireError;
+    fn source_admission(&mut self) -> &mut SourceAdmission {
+        self.admission
+    }
+    fn scoped<'a>(
+        &'a mut self,
+        sources: &'a SourceStore,
+    ) -> impl FoundationValueCodec<Error = WireError> + 'a {
+        FoundationCodec {
+            schema: self.schema,
+            registry: self.registry,
+            sources,
+            admission: self.admission,
+        }
+    }
+    fn encode_syntax(
+        &mut self,
+        value: &nepl3_core::syntax::SyntaxBundle,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
+        value.validate_with_sources(self.registry, budget, self.admission)?;
+        let value =
+            crate::syntax::bundle_value(value, self.schema, self.registry, self.admission, budget)?;
+        self.validate(&value, "SyntaxBundle", budget)?;
+        Ok(value)
+    }
+    fn decode_syntax(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<nepl3_core::syntax::SyntaxBundle, WireError> {
+        self.validate(value, "SyntaxBundle", budget)?;
+        let result =
+            crate::syntax::bundle_from(value, self.schema, self.registry, self.admission, budget)?;
+        result.validate_with_sources(self.registry, budget, self.admission)?;
+        Ok(result)
+    }
     fn encode_report(
         &mut self,
         value: &nepl3_core::diagnostic::Report,

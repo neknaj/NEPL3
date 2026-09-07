@@ -10,6 +10,7 @@ use crate::{
 };
 use alloc::{boxed::Box, string::String, vec::Vec};
 
+pub mod canonical;
 mod copy;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
