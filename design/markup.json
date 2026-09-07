@@ -31,7 +31,10 @@
     "Path": "typed Move/Line/Horizontal/Vertical/Close commands with Decimal arguments only",
     "Paint": "none or #RRGGBB; no url(), currentColor or arbitrary CSS",
     "DashList": "nonempty list of nonnegative Decimal, at least one > 0",
-    "NonnegativeMathLength": "canonical nonnegative finite decimal followed by em; no sign, exponent, percentage, leading zeros or redundant trailing fractional zeros; zero is 0em"
+    "NonnegativeMathLength": "canonical nonnegative finite decimal followed by em; no sign, exponent, percentage, leading zeros or redundant trailing fractional zeros; zero is 0em",
+    "HtmlHref": "typed Fragment/Artifact/External; lexical constraints and structural checks in doc/spec/19-html-fragment.md; external page/revision resolution remains a separate preparation obligation",
+    "ArtifactPath": "nonempty relative ASCII alphanumeric/-_. path; no empty, dot or parent segments; assigned by artifact preparation, not arbitrary author input",
+    "NonnegativeI32": "ASCII unsigned integer 0..2147483647"
   },
   "namespaces": {
     "html": {
@@ -57,11 +60,37 @@
         "code",
         "figure",
         "figcaption",
-        "a"
+        "a",
+        "ul",
+        "ol",
+        "li",
+        "table",
+        "caption",
+        "thead",
+        "tbody",
+        "tr",
+        "th",
+        "td",
+        "img"
       ],
       "attributes": {
         "a": {
-          "href": "FragmentHref"
+          "href": "HtmlHref"
+        },
+        "img": {
+          "src": "ArtifactPath",
+          "alt": "Text",
+          "width": "PositiveDecimal",
+          "height": "PositiveDecimal"
+        },
+        "ol": {
+          "start": "NonnegativeI32"
+        },
+        "th": {
+          "scope": [
+            "row",
+            "col"
+          ]
         }
       }
     },
@@ -204,7 +233,7 @@
   },
   "root_slots": {
     "HtmlBlock": "html flow elements, root math display=block, root svg",
-    "HtmlPhrasing": "html span/a/em/strong/ruby/br and their valid phrasing descendants, inline math; no html blocks or svg",
+    "HtmlPhrasing": "validated HTML phrasing including span/a/em/strong/ruby/br/code/img; inline math via its separate profile; no block elements or root svg",
     "Math": "root math with the required element arities",
     "Svg": "root svg"
   },
@@ -215,5 +244,6 @@
   },
   "trusted_shell": "html/head/meta/style/body are emitted by fixed DocumentShell code, not accepted as user Markup nodes; stylesheet body is a fixed backend asset",
   "default_deny": true,
-  "design_revision": "nepl3-design-2026-09-06-r4"
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "html_profile": "interfaces/markup.json and doc/spec/19-html-fragment.md define the implemented HTML fragment subset. Foreign namespace profiles and full artifact preparation remain required, not silently accepted."
 }

@@ -1,0 +1,89 @@
+{
+  "format": "nepl3.development-slice/1",
+  "scope": "T10/T23 checked HTML fragment values, canonical text escaping, native serializer and first-receiver portable boundary",
+  "base_commit": "1e259d5d54b74e51961b679ab324115fc750130a",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "result": "passed-within-recorded-scope",
+  "execution": {
+    "native": {
+      "target": "x86_64-pc-windows-msvc",
+      "passed": 425,
+      "ignored": 1
+    },
+    "wasi": {
+      "target": "wasm32-wasip2",
+      "runner": "Wasmtime 44.0.1",
+      "passed": 344
+    },
+    "browser_wasm": "Eight no_std crates compiled; not browser runtime execution",
+    "browser_markup": "Independent real Chromium 151.0.7922.34 and Firefox 153.0 DOMParser: 660 post-fix accepted structural cases match; no visual/font/accessibility acceptance",
+    "toolchain": "Rust 1.97.0"
+  },
+  "checks": [
+    {
+      "command": "cargo test --workspace --locked",
+      "exit_code": 0,
+      "log": "conformance/results/markup-html/native.log",
+      "sha256": "c14edfb9a24a9aabbb76ce47ff3eb9db4235e932f7ccb73592a44754a9063835"
+    },
+    {
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER='wasmtime run'; cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar diagnostic::compiler_report_boundary_without_host_process --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::all_reader_constructors --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::compiled_reader_streaming_boundaries_and_rollback_keep_raw_positions --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test doc --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test math --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar region:: --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup --no-default-features --target wasm32-unknown-unknown",
+      "exit_code": 0,
+      "log": "conformance/results/markup-html/wasi.log",
+      "sha256": "a16c19493a2d85a807f097467325aa6ee791478033a097f4eeed2ae734d56575"
+    },
+    {
+      "command": "cargo fmt --all -- --check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo clippy --workspace --all-targets --locked -- -D warnings; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps --locked",
+      "exit_code": 0,
+      "log": "conformance/results/markup-html/quality.log",
+      "sha256": "5641ea615470fde4ea13a1216dae7e2b2b02e806a1572e7658a75d63fc9e14db"
+    },
+    {
+      "command": "python tools/audit/structure.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/audit -p test.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/markup.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/math.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/doc.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/bootstrap -p test_grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/audit/allocation/run.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo run --locked -p nepl3-tools -- tasks --check",
+      "exit_code": 0,
+      "log": "conformance/results/markup-html/audit.log",
+      "sha256": "6e0d1c510d78b4925e57252f28a01816e141094a1f5b43e8b189f7056ac5f66e"
+    },
+    {
+      "command": "C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe --version; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe .github/workflows/ci.yml",
+      "exit_code": 0,
+      "log": "conformance/results/markup-html/ci.log",
+      "sha256": "ad7ed44e79c7e5d554c2e008819df3a5da44834e9cfdb4aecaef9224a39c87dd"
+    },
+    {
+      "command": "cargo run --locked -p nepl3-tools -- check",
+      "exit_code": 0,
+      "log": "conformance/results/markup-html/contract.log",
+      "sha256": "a5bf2f04c036e89e04923a2441f3fea7acb0d30d15de2a45c5d4a847e3f0aefb"
+    }
+  ],
+  "independent_review": {
+    "reviewers": [
+      "Huygens: isolated text/XML",
+      "Carson: HTML tree, serializer, CBOR, budgets and browser structure"
+    ],
+    "archive": "conformance/results/markup-html/independent.json",
+    "archive_sha256": "bbe8d7e7846bc8b52bbdf9d56650ec1f8bdcb6769d46379e2ab18f2a9d7b9603",
+    "text_records": 101,
+    "findings": "R049/R050/R051 reproduced before and verified after on native/WASI; unchanged independent probes retained",
+    "scope": "The final text differs from the original isolated text snapshot only by rustfmt whitespace; formatted text also belongs to the full HTML snapshot. Final URI delta received focused 7-test native/WASI recheck; root reran complete final suites. Review text/catalog-only closure followed and repository contracts were rerun."
+  },
+  "implementation": [
+    "Closed 33-tag HTML arena, typed attributes and link/path profile, structural content/ID/reference checks, iterative budgeted canonical serialization.",
+    "XML scalar/escape and actual text/attribute roundtrip; DAG/cycle/unreachable/duplicate-ID and resource stops use public production APIs.",
+    "Actual CBOR with empty receiving SourceStore revalidates the native structure and rejects schema-valid invalid content. Raw class policy does not establish stylesheet trust."
+  ],
+  "unverified": [
+    "No task or whole acceptance group is complete; all 55 acceptance statuses remain not-run.",
+    "Full Doc preparation, HTML backend and shell/assets, MathML/TeX/KaTeX, complete render Report/transport remain required.",
+    "Browser deep tree limits are documented, not silently treated as preserved DOM. No universal URL parser, visual/font/accessibility or Web/preview/export/Pages acceptance is claimed.",
+    "Doc DSL document migration remains mandatory and has not begun switching sources.",
+    "Ignored bootstrap performance baseline remains ignored."
+  ],
+  "log_normalization": "Root logs LF; independent source and logs preserve original bytes.",
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "3771369452d8aeaa29e4e9881c99b7be32f594e33f8e7f8aa168bfcb60136ec5",
+    "spec_sha256": "9d36d3703484adce8a4a784847b427963e2007d61a8ffb2ceb906d00d0fb6a09"
+  }
+}

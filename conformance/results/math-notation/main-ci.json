@@ -1,0 +1,20 @@
+{
+  "format": "nepl3.source-delivery-observation/1",
+  "commit": "1e259d5d54b74e51961b679ab324115fc750130a",
+  "run": 34131778604,
+  "ci_url": "https://github.com/neknaj/NEPL3/actions/runs/34131778604",
+  "result": "passed-within-recorded-scope",
+  "archive_sha256": "80939170cea8f0133c23a2fcf8da905a331ca4ef4277f292ba3ed195d957a72c",
+  "file_count": 811,
+  "comparison": "All downloaded archive file paths and bytes equal git archive of the merged commit. SHA256SUMS and SOURCE.txt match; all six main jobs succeeded.",
+  "ci_tests": {
+    "wasi and wasm compilation": 329,
+    "native (macos-latest)": 410,
+    "native (ubuntu-latest)": 410,
+    "native (windows-latest)": 410
+  },
+  "retrieved_log_sha256": "a409a8e942695856233135ac584dccbe218067d1f7621ec8484a9790492c9382",
+  "unverified": [
+    "This verifies source delivery and existing tests, not unimplemented runtime or whole acceptance conditions."
+  ]
+}

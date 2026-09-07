@@ -1,5 +1,5 @@
 [workspace]
-members = ["tools", "crates/foundation/core", "crates/foundation/wire", "crates/foundation/reader", "crates/foundation/engine", "crates/languages/grammar/core", "crates/languages/doc/core", "crates/languages/math/core"]
+members = ["tools", "crates/foundation/core", "crates/foundation/wire", "crates/foundation/reader", "crates/foundation/engine", "crates/languages/grammar/core", "crates/languages/doc/core", "crates/languages/math/core", "crates/output/markup"]
 resolver = "3"
 
 [workspace.package]
@@ -18,6 +18,7 @@ nepl3-engine = { path = "crates/foundation/engine" }
 nepl3-grammar-core = { path = "crates/languages/grammar/core" }
 nepl3-doc-core = { path = "crates/languages/doc/core" }
 nepl3-math-core = { path = "crates/languages/math/core" }
+nepl3-markup = { path = "crates/output/markup" }
 unicode-ident = { version = "=1.0.18", default-features = false }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"

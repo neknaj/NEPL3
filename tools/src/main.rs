@@ -20,6 +20,7 @@ fn run() -> nepl3_tools::Result<()> {
         ["grammar", "--write"] => nepl3_tools::grammar(&root),
         ["doc", "--write"] => nepl3_tools::doc(&root),
         ["math", "--write"] => nepl3_tools::math(&root),
+        ["markup", "--write"] => nepl3_tools::markup(&root),
         ["tasks", "--write"] => nepl3_tools::tasks(&root, true),
         ["tasks", "--check"] => nepl3_tools::tasks(&root, false),
         ["evidence", "identity"] => nepl3_tools::evidence_identity(&root),
@@ -30,7 +31,7 @@ fn run() -> nepl3_tools::Result<()> {
         ["doc-inventory", "--check-current"] => nepl3_tools::doc_inventory(&root, None, true),
         ["--help"] | ["-h"] => {
             println!(
-                "nepl3-tools check | tasks --check | tasks --write | evidence identity\n  foundation --write | reader --write | engine --write | grammar --write | doc --write | math --write\n  doc-inventory --write --commit <40-hex-commit> | doc-inventory --check | doc-inventory --check-current\nRepository checks do not establish runtime conformance."
+                "nepl3-tools check | tasks --check | tasks --write | evidence identity\n  foundation --write | reader --write | engine --write | grammar --write | doc --write | math --write | markup --write\n  doc-inventory --write --commit <40-hex-commit> | doc-inventory --check | doc-inventory --check-current\nRepository checks do not establish runtime conformance."
             );
             Ok(())
         }

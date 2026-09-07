@@ -1,0 +1,16 @@
+{
+  "format": "nepl3.independent-review-text-archive-index/1",
+  "reconstruction": "Verify each part SHA-256, then encode utf8_content without newline conversion and verify the record SHA-256. Original probes and full logs preserve before/after distinctions; binary identities remain in original manifests.",
+  "parts": [
+    {
+      "path": "conformance/results/markup-html/independent-part-1.json",
+      "sha256": "2a49a580a9b56f56ace7fe741f14d5ed07797053c291951baa8e45a68b9e4b48",
+      "records": 59
+    },
+    {
+      "path": "conformance/results/markup-html/independent-part-2.json",
+      "sha256": "49fcc5113b92e62295d2cd6bf23b99270179a3a79e00b3c7545ce8e55d84b0c6",
+      "records": 42
+    }
+  ]
+}

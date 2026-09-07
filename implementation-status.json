@@ -49,7 +49,7 @@
     },
     {
       "id": "T10",
-      "status": "not-implemented",
+      "status": "in-progress",
       "evidence": []
     },
     {
@@ -114,7 +114,7 @@
     },
     {
       "id": "T23",
-      "status": "not-implemented",
+      "status": "in-progress",
       "evidence": []
     },
     {
@@ -413,7 +413,8 @@
     "nepl3-tools",
     "nepl3-grammar-core",
     "nepl3-doc-core",
-    "nepl3-math-core"
+    "nepl3-math-core",
+    "nepl3-markup"
   ],
   "note": "Foundation runtime implementation is in progress. Implemented crate membership does not imply task or acceptance completion; required acceptance remains evidence-bound."
 }

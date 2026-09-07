@@ -122,6 +122,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "nepl3-markup"
+version = "0.1.0"
+dependencies = [
+ "nepl3-core",
+ "nepl3-wire",
+]
+
+[[package]]
 name = "nepl3-math-core"
 version = "0.1.0"
 dependencies = [

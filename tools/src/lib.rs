@@ -53,6 +53,7 @@ pub fn check(root: &Path) -> Result<()> {
     contract::grammar::check(root)?;
     contract::doc::check(root)?;
     contract::math::check(root)?;
+    contract::markup::check(root)?;
     dependency::check(root, &status.implemented_crates)?;
     task::generate(root, &tasks, &status, false)?;
     documentation::check(root, false)?;
@@ -121,4 +122,8 @@ pub fn doc(root: &Path) -> Result<()> {
 /// Generate the typed Math schema descriptor.
 pub fn math(root: &Path) -> Result<()> {
     contract::math::write(root)
+}
+
+pub fn markup(root: &Path) -> Result<()> {
+    contract::markup::write(root)
 }

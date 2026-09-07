@@ -255,8 +255,27 @@
       "id": "R017",
       "status": "open",
       "title": "Portable source, syntax and reporting boundaries require native contract alignment",
-      "affected_tasks": ["T01", "T02", "T03"],
-      "evidence": ["interfaces/contracts.json", "interfaces/foundation.json", "doc/spec/02-foundation.md", "doc/spec/09-portability.md", "doc/spec/13-reproducibility.md", "crates/foundation/core/src/source.rs", "crates/foundation/core/src/budget.rs", "crates/foundation/wire/src/source.rs", "crates/foundation/wire/src/view.rs", "crates/foundation/wire/src/syntax.rs", "crates/foundation/wire/tests/source.rs", "crates/foundation/wire/tests/view.rs", "crates/foundation/wire/tests/syntax.rs", "crates/foundation/reader/src/runtime/validate.rs"],
+      "affected_tasks": [
+        "T01",
+        "T02",
+        "T03"
+      ],
+      "evidence": [
+        "interfaces/contracts.json",
+        "interfaces/foundation.json",
+        "doc/spec/02-foundation.md",
+        "doc/spec/09-portability.md",
+        "doc/spec/13-reproducibility.md",
+        "crates/foundation/core/src/source.rs",
+        "crates/foundation/core/src/budget.rs",
+        "crates/foundation/wire/src/source.rs",
+        "crates/foundation/wire/src/view.rs",
+        "crates/foundation/wire/src/syntax.rs",
+        "crates/foundation/wire/tests/source.rs",
+        "crates/foundation/wire/tests/view.rs",
+        "crates/foundation/wire/tests/syntax.rs",
+        "crates/foundation/reader/src/runtime/validate.rs"
+      ],
       "partial_progress": "r4 separates opaque SourceId from URI and Usage from Limits. Source/token/view/foreign syntax/origin adapters have actual roundtrips and canonical-node rejection. Native CheckedReaderContext verifies environment digest and exact source closure; request NDF loopback requires explicit source declarations even with a global host store. Independent core45/reader27/wire18 production tests passed. The long-SourceId isolated allocation probe improved from 200000 bytes to zero at exhausted budget; the tracked boundary test also passes. Context reuse now rejects caller-store same-ID/revision content conflicts while allowing absent closure sources. The original stopped-report probe retains one diagnostic/event after drive allocation failure, and a second-resume probe that lost both at allocation cap79200 now retains both across the original cap sweep after resume preparation/provider boundary correction. The added three-call production regression independently passed. In the subsequent builtin slice, SyntaxBundle owns source maps and mapped view containment; core map2/wire syntax6 tests independently check host/guest roundtrip and missing/forged mapping or undeclared source rejection. Native terminal ReaderReply artifacts now retain generated diagnostic closure. Full reply/continuation codecs and process comparison remain unimplemented; this partial progress does not close the finding.",
       "blocking_condition": "Verify adopted source/report schemas against typed Rust and portable adapters, including digest/URI/identity conflicts, measured usage and bounded reporting. Do not close this finding on type-name correspondence alone."
     },
@@ -264,74 +283,156 @@
       "id": "R018",
       "status": "corrected",
       "title": "Initial foundation validation bypasses resource limits and misclassifies provenance graphs",
-      "affected_tasks": ["T01", "T02"],
-      "evidence": ["crates/foundation/core/src/source.rs", "crates/foundation/core/src/schema.rs", "crates/foundation/core/src/origin.rs", "crates/foundation/core/src/diagnostic.rs", "crates/foundation/core/src/syntax.rs", "crates/foundation/core/tests/contracts.rs", "crates/foundation/core/tests/structure.rs", "crates/foundation/core/tests/syntax.rs"],
+      "affected_tasks": [
+        "T01",
+        "T02"
+      ],
+      "evidence": [
+        "crates/foundation/core/src/source.rs",
+        "crates/foundation/core/src/schema.rs",
+        "crates/foundation/core/src/origin.rs",
+        "crates/foundation/core/src/diagnostic.rs",
+        "crates/foundation/core/src/syntax.rs",
+        "crates/foundation/core/tests/contracts.rs",
+        "crates/foundation/core/tests/structure.rs",
+        "crates/foundation/core/tests/syntax.rs"
+      ],
       "resolution": "Independent public API probes reproduced zero-budget origin/report acceptance, disjoint mapping rejection and a four-level host/guest tree accepted at depth three. Corrected shared depth and allocation accounting, precise byte/anchor mapping cycles, preallocation edit limits, schema finalization and source admission are covered by production tests. A later probe found admission copied a 10007-byte locator under a 100-unit allocation limit; charging the stored tuple and URI payload now rejects it. All 43 core tests independently passed after that correction. This approves these implemented boundaries, not language or operation-schema completion."
     },
     {
       "id": "R019",
       "status": "corrected",
       "title": "Deep foundation input overflows the stack during codec, value operations and rejected descriptor cleanup",
-      "affected_tasks": ["T01", "T02"],
-      "evidence": ["crates/foundation/wire/src/decode.rs", "crates/foundation/wire/src/encode.rs", "crates/foundation/core/src/value.rs", "crates/foundation/core/src/syntax.rs", "crates/foundation/core/src/schema.rs", "crates/foundation/wire/tests/codec.rs", "crates/foundation/core/tests/structure.rs", "crates/foundation/core/tests/syntax.rs"],
+      "affected_tasks": [
+        "T01",
+        "T02"
+      ],
+      "evidence": [
+        "crates/foundation/wire/src/decode.rs",
+        "crates/foundation/wire/src/encode.rs",
+        "crates/foundation/core/src/value.rs",
+        "crates/foundation/core/src/syntax.rs",
+        "crates/foundation/core/src/schema.rs",
+        "crates/foundation/wire/tests/codec.rs",
+        "crates/foundation/core/tests/structure.rs",
+        "crates/foundation/core/tests/syntax.rs"
+      ],
       "resolution": "Isolated production API probes reproduced STATUS_STACK_OVERFLOW on 100000 nested Some values, including checked-value clone/equality/debug. Iterative codecs, cleanup, clone/equality and explicit shallow Debug now pass the same probes, including malformed second-sibling cleanup. A subsequent probe found rejected 100000-level TypeDescriptor cleanup overflow after a correct DepthLimit result. Iterative descriptor traits now pass the original probe, an alternating List/Option clone/equality/debug/drop probe, and the tracked rejected_deep_descriptor regression. All 45 core tests independently passed after correction; the previously verified seven codec tests and foreign syntax regressions retain their bounded scope. Physical OOM and unexecuted targets remain outside this evidence."
     },
     {
       "id": "R020",
       "status": "corrected",
       "title": "SourceMap cycle validation clones source identities before allocation checks",
-      "affected_tasks": ["T01", "T02", "T03"],
-      "evidence": ["crates/foundation/core/src/origin.rs", "crates/foundation/core/tests/maps.rs", "tools/audit/allocation/run.py", "tools/audit/allocation/probe.rs", "doc/development.md", ".github/workflows/ci.yml", "conformance/results/reader-builtins/allocation-baseline.log", "conformance/results/reader-builtins/allocation-working.log"],
+      "affected_tasks": [
+        "T01",
+        "T02",
+        "T03"
+      ],
+      "evidence": [
+        "crates/foundation/core/src/origin.rs",
+        "crates/foundation/core/tests/maps.rs",
+        "tools/audit/allocation/run.py",
+        "tools/audit/allocation/probe.rs",
+        "doc/development.md",
+        ".github/workflows/ci.yml",
+        "conformance/results/reader-builtins/allocation-baseline.log",
+        "conformance/results/reader-builtins/allocation-working.log"
+      ],
       "resolution": "Point now borrows SnapshotId, removing precharge identity clones from cycle/mapped-containment traversal. The same tracked native allocator probe observes 100000 bytes and exits 1 against first-slice commit 3bccd48, but observes 0 and exits 0 against the correction; both runs pass a 4096-byte positive control. The dev-only audited allocator wrapper leaves workspace/core unsafe_code=forbid unchanged, and native CI invokes the driver. The two core map tests and six wire syntax tests independently passed; the logical-budget test alone also passed the old implementation and is not represented as a detector of this heap-allocation regression. New builtin locator-work defects are tracked separately in R021, and full operation conformance remains unestablished."
     },
     {
       "id": "R021",
       "status": "corrected",
       "title": "Generated source locator scans bypass the operation work budget",
-      "affected_tasks": ["T01", "T03"],
-      "evidence": ["crates/foundation/core/src/source.rs", "crates/foundation/core/tests/contracts.rs", "crates/foundation/reader/src/builtin/mod.rs", "crates/foundation/reader/tests/builtin.rs"],
+      "affected_tasks": [
+        "T01",
+        "T03"
+      ],
+      "evidence": [
+        "crates/foundation/core/src/source.rs",
+        "crates/foundation/core/tests/contracts.rs",
+        "crates/foundation/reader/src/builtin/mod.rs",
+        "crates/foundation/reader/tests/builtin.rs"
+      ],
       "resolution": "The original public Text probe used three input bytes, a 100007-byte reserved URI and work=1000; valid input incorrectly Matched at work7, while a late-invalid locator returned Locator at work1. Source reservation validation and budgeted source creation/import now charge locator work before scanning; the same valid and late-invalid probe inputs both stop with WorkLimit. Independently executed generated_source_locator_scan_is_charged_before_validation and reservation_locator_validation_obeys_work_limit_before_scanning production regressions passed. This correction covers these locator paths, not all possible variable-length identity comparisons or whole operation conformance."
     },
     {
       "id": "R022",
       "status": "corrected",
       "title": "Tokenizer suspensions lose formal artifacts, reset budgets and retain pending state after stopping",
-      "affected_tasks": ["T03", "T04"],
-      "evidence": ["crates/foundation/reader/src/tokenizer/session.rs", "crates/foundation/reader/src/tokenizer/model.rs", "crates/foundation/reader/src/model.rs", "crates/foundation/reader/tests/builtin.rs", "crates/foundation/reader/tests/runtime.rs", "interfaces/reader.json", "doc/spec/03-reader.md"],
+      "affected_tasks": [
+        "T03",
+        "T04"
+      ],
+      "evidence": [
+        "crates/foundation/reader/src/tokenizer/session.rs",
+        "crates/foundation/reader/src/tokenizer/model.rs",
+        "crates/foundation/reader/src/model.rs",
+        "crates/foundation/reader/tests/builtin.rs",
+        "crates/foundation/reader/tests/runtime.rs",
+        "interfaces/reader.json",
+        "doc/spec/03-reader.md"
+      ],
       "resolution": "Public probes reproduced lost diagnostic/event after AllocationLimit, a reservation accepting a fresh Budget after committed trivia, and terminal Stopped leaving an inner provider pending at allocation caps18792/18920/19048. Corrected shared collectors move Report with sources/maps, all terminal ReadReply variants retain the formal closure, reservation slots bind limits/monotonic usage, and abandoned inner pending slots are cleared without closing the session. The original probes now retain diagnostic/event each1, reject fresh Budget with Continuation, and allow a new operation after every observed allocation stop. Independent reader44 tests passed, including generated-source Failed/Stopped preservation, NoMatch/NeedMore rollback, accepted skip artifacts across all four outcomes and the pending allocation sweep. The final reservation cancellation regression also passed, retaining trivia/cursor/state, consuming the slot and permitting session reuse. Full reply/continuation codecs and process-provider exchange remain R017 work; these native corrections do not establish whole-group conformance."
-
     },
     {
       "id": "R023",
       "status": "corrected",
       "title": "Cancellation can consume reader and tokenizer pending slots before checking cumulative budgets",
-      "affected_tasks": ["T03", "T04"],
-      "evidence": ["crates/foundation/reader/src/tokenizer/session.rs", "crates/foundation/reader/src/runtime/mod.rs", "crates/foundation/reader/tests/builtin.rs", "crates/foundation/reader/tests/runtime.rs"],
+      "affected_tasks": [
+        "T03",
+        "T04"
+      ],
+      "evidence": [
+        "crates/foundation/reader/src/tokenizer/session.rs",
+        "crates/foundation/reader/src/runtime/mod.rs",
+        "crates/foundation/reader/tests/builtin.rs",
+        "crates/foundation/reader/tests/runtime.rs"
+      ],
       "resolution": "Independent public API input consisting of a space and quoted a reached Reserve with accepted trivia and usage source4/work1231/allocation12012. A fresh same-limits Budget cancelled before reserve consumed the slot as Stopped(Cancelled) with all-zero usage. The original probe now returns Continuation. All three public entries (tokenizer reserve, tokenizer resume, ReaderSession resume) check saved limits, cumulative usage and session identity before polling cancellation. Tracked negative regressions reject the cancelled fresh budget and subsequently resume the original slot. Independent reader46 tests passed; the subsequently strengthened three focused tests also passed, verifying valid cancellation retains accepted reader diagnostics/events/usage and tokenizer generated sources/trivia. Historical source comparison shows 8416e1f tokenizer reserve checked budgets before polling, whereas ReaderSession resume already polled first; no historical dynamic probe was run for that reader path. R022 retains its previous scoped correction. Reply/continuation codecs and full prefix execution are outside this correction."
-
     },
     {
       "id": "R024",
       "status": "corrected",
       "title": "Accepted diagnostic injection does not own its referenced source closure",
-      "affected_tasks": ["T03", "T04"],
-      "evidence": ["crates/foundation/reader/src/tokenizer/accepted.rs", "crates/foundation/reader/src/tokenizer/session.rs", "crates/foundation/reader/src/runtime/validate.rs", "crates/foundation/reader/tests/runtime.rs"],
+      "affected_tasks": [
+        "T03",
+        "T04"
+      ],
+      "evidence": [
+        "crates/foundation/reader/src/tokenizer/accepted.rs",
+        "crates/foundation/reader/src/tokenizer/session.rs",
+        "crates/foundation/reader/src/runtime/validate.rs",
+        "crates/foundation/reader/tests/runtime.rs"
+      ],
       "resolution": "The original public API probe accepted an auxiliary-source diagnostic without owning its source, then returned a dangling primary span after cancellation. Diagnostic admission now explicitly declares referenced snapshots, validates primary/related/fix locations, charges shared SourceAdmission and copies snapshots before committing the source list with the diagnostic. The original probe now retains its auxiliary source after cancellation. The independently executed tracked regression retains three distinct primary/related/fix snapshots with only the original input remaining in the caller store; a missing fix declaration and SourceLimit0 reject without committing diagnostics or source entries. The separate cross-language collector regression also independently passes, rejecting another operation/profile/input and preserving the generated source and counters during valid transfer/cancellation. This correction establishes these native source-closure paths, not full portable report/continuation conformance."
     },
     {
       "id": "R025",
       "status": "corrected",
       "title": "Persistent selections bypass form priority and accept unrelated operations as head providers",
-      "affected_tasks": ["T04"],
-      "evidence": ["crates/foundation/engine/src/tree.rs", "crates/foundation/engine/src/selection.rs", "crates/foundation/engine/tests/package.rs"],
+      "affected_tasks": [
+        "T04"
+      ],
+      "evidence": [
+        "crates/foundation/engine/src/tree.rs",
+        "crates/foundation/engine/src/selection.rs",
+        "crates/foundation/engine/tests/package.rs"
+      ],
       "resolution": "The original known-form-as-Leaf mutation now rejects with Selection. Until projected HeadProvider operation contracts are implemented, all Dynamic selections explicitly reject with UnvalidatedDynamic; the original allowed Text-to-Unit facts-operation probe and its tracked negative regression now reject. The independently rerun persistent_tree test passes, and spec04 states the static/recovery/payload-type scope without claiming reader execution equivalence. Additional independent probes verify stale concrete arena identity and indices reject while complete remapping succeeds, foreign list tail mode cannot reset, guest alias cannot change, and invalid paths/duplicate contexts reject. Ordered child_contexts are retained for future complete dynamic results but their successful dynamic validation and P03 remain unimplemented; closing this false-success defect does not close R006 or P03."
     },
     {
       "id": "R026",
       "status": "corrected",
       "title": "Prefix frames are observed but not added to the nested reader's active depth",
-      "affected_tasks": ["T03", "T04"],
-      "evidence": ["crates/foundation/engine/src/parse/session.rs", "crates/foundation/engine/tests/parse.rs"],
+      "affected_tasks": [
+        "T03",
+        "T04"
+      ],
+      "evidence": [
+        "crates/foundation/engine/src/parse/session.rs",
+        "crates/foundation/engine/tests/parse.rs"
+      ],
       "partial_progress": "An independent ParseSession::read probe uses an arity-two f(Name, Expr), a token reader with 20 nested Capture frames around Scalar Any, and depth limit25. Inputs with 0, 5, 10 or 15 pending f parents all Complete with peak depth23. The outstanding prefix parents and active reader frames are simultaneous and must compose, rather than taking their maximum.",
       "resolution": "Prefix frames now contribute to active tokenizer/reader depth. The original nested-Capture probe changes from all Complete at peak23 to only the zero-parent input completing and 5/10/15 parents stopping at depth25. The tracked combined-depth, Text reservation and provider resume/cancel tests pass independently. An additional public-API probe enters at caller depth7, leaves the caller scope while waiting, then resumes Text Reserve and provider Await: both complete with peak13. Fresh cancelled budgets and altered continuations reject without consuming the legitimate pending state. This closes the demonstrated static native depth defect, not portable continuation or dynamic HeadProvider conformance."
     },
@@ -339,8 +440,15 @@
       "id": "R027",
       "status": "corrected",
       "title": "Prefix results drop accepted trivia when no token is produced",
-      "affected_tasks": ["T04", "T06"],
-      "evidence": ["crates/foundation/engine/src/parse/session.rs", "crates/foundation/engine/src/parse/model.rs", "crates/foundation/engine/tests/parse.rs"],
+      "affected_tasks": [
+        "T04",
+        "T06"
+      ],
+      "evidence": [
+        "crates/foundation/engine/src/parse/session.rs",
+        "crates/foundation/engine/src/parse/model.rs",
+        "crates/foundation/engine/tests/parse.rs"
+      ],
       "partial_progress": "Independent read probes show final 'let ' consumes Whitespace[3,4) but stores no trivia; final 'let x # comment' consumes Whitespace[5,6) and Comment[6,15) but retains only the earlier token-leading Whitespace[3,4). The same nonfinal input reaches NeedMore at6 while dropping the already accepted Whitespace[5,6). Original snapshot bytes remain, so this is loss of interpreted trivia kind/range and ownership rather than lossless byte reconstruction.",
       "resolution": "ReaderFactBatch now owns trivia together with its path and EntryContext in the native model and interfaces/engine.json. Original EOF/nonfinal probes retain the exact previously lost Whitespace/Comment ranges. Independently passing tracked tests cover EOF, NeedMore, Foreign ownership and provider resume/cancel; an additional second-Await cancellation probe retains prior diagnostic1 and trivia[3,4),[5,6) in Stopped progress. Original snapshot preservation is distinguished from these interpreted trivia facts. Portable wrapper conversion remains a separate unimplemented scope."
     },
@@ -348,8 +456,14 @@
       "id": "R028",
       "status": "corrected",
       "title": "Recognized tokens with unknown heads produce invalid Unparsed recovery nodes",
-      "affected_tasks": ["T04"],
-      "evidence": ["crates/foundation/engine/src/parse/session.rs", "crates/foundation/engine/src/tree.rs", "crates/foundation/engine/tests/parse.rs"],
+      "affected_tasks": [
+        "T04"
+      ],
+      "evidence": [
+        "crates/foundation/engine/src/parse/session.rs",
+        "crates/foundation/engine/src/tree.rs",
+        "crates/foundation/engine/tests/parse.rs"
+      ],
       "partial_progress": "A production parser fixture with the Name tokenizer and no matching leaves returns Tree(Selection) for final inputs unknown, unknown tail, and let x unknown tail. Recovery builds a token-bearing RecoveryUnparsed node through arena.head, while the tree invariant requires its separate Unparsed span and no ordinary node token. These inputs should yield explicit recoverable syntax rather than an internal validation failure.",
       "resolution": "The Unparsed contract now explicitly permits an already recognized token/head while retaining the full unparsed cover and separate RecoveryEntry. All three original inputs return Recovered through production ParseSession and final tree validation. Independent checks verify unknown tail retains head[0,7) inside cover[0,12), and let x unknown tail retains head[6,13) inside cover[6,18), without inventing a regular leaf arity. The tracked unknown-head regression passes along with all11 native parse tests."
     },
@@ -357,8 +471,14 @@
       "id": "R029",
       "status": "corrected",
       "title": "Grammar reader compilation silently resolves duplicate catalog names by input order",
-      "affected_tasks": ["T05"],
-      "evidence": ["crates/languages/grammar/core/src/compile.rs", "crates/languages/grammar/core/src/compile/reader.rs", "crates/languages/grammar/core/tests/reader.rs"],
+      "affected_tasks": [
+        "T05"
+      ],
+      "evidence": [
+        "crates/languages/grammar/core/src/compile.rs",
+        "crates/languages/grammar/core/src/compile/reader.rs",
+        "crates/languages/grammar/core/tests/reader.rs"
+      ],
       "partial_progress": "An independent compile::reader::compile call supplies a checked Region AST and two NamedClass entries with the same lookup name but distinct PresentationClass values. Both catalog orders compile successfully; reversing the entries changes the selected class from first to second. ReaderContext exposes raw public slices and carries no prior uniqueness proof. Provider-name and view-name lookups use the same first-match pattern and require corresponding boundary checks.",
       "resolution": "ReaderContext validates empty and duplicate lookup names separately for imports, classes and views before any compilation lookup, with Work charged before variable-length comparisons. The original duplicate-class probe rejects both orders with DuplicateCatalogName(Classes). The independently passing tracked compiler catalog test rejects all six duplicate/empty catalog cases through the production compile entry. This does not close the full Grammar compiler/bootstrap scope."
     },
@@ -366,8 +486,14 @@
       "id": "R030",
       "status": "corrected",
       "title": "Grammar AST validation bypasses the shared node budget",
-      "affected_tasks": ["T01", "T05"],
-      "evidence": ["crates/languages/grammar/core/src/model.rs", "crates/languages/grammar/core/tests/reader.rs"],
+      "affected_tasks": [
+        "T01",
+        "T05"
+      ],
+      "evidence": [
+        "crates/languages/grammar/core/src/model.rs",
+        "crates/languages/grammar/core/tests/reader.rs"
+      ],
       "partial_progress": "An independent public Document.validate call validates a five-node Grammar AST with Limits.nodes=0 and returns Usage.nodes=0, while reporting sourceBytes67/work303/depth5/allocation598. Existing SyntaxBundle validation charges its syntax nodes, and the shared Limits contract does not give Grammar's typed arena an exemption.",
       "resolution": "Document.validate charges each logical node at its first visit. Shared DAG revisits still account traversal Work and current path Depth without counting another logical node. The original zero-node probe now returns Stopped(NodeLimit); an additional independent exact boundary checks cap4 stops and cap5 succeeds with Usage.nodes=5. The tracked zero-node and successful five-node cases pass through Document.validate."
     },
@@ -375,8 +501,17 @@
       "id": "R031",
       "status": "corrected",
       "title": "The official AngleTag example mixes incompatible reader choice result types",
-      "affected_tasks": ["T05", "T16"],
-      "evidence": ["examples/grammar/angle-tag.neplg", "crates/languages/grammar/core/src/compile/reader.rs", "crates/foundation/reader/src/plan.rs", "tools/src/bootstrap/tests.rs", "tools/tests/grammar.rs"],
+      "affected_tasks": [
+        "T05",
+        "T16"
+      ],
+      "evidence": [
+        "examples/grammar/angle-tag.neplg",
+        "crates/languages/grammar/core/src/compile/reader.rs",
+        "crates/foundation/reader/src/plan.rs",
+        "tools/src/bootstrap/tests.rs",
+        "tools/tests/grammar.rs"
+      ],
       "partial_progress": "The original source is converted into its complete typed Grammar AST with source byte spans, then compiled through production compile::reader::compile. It rejects with Reader(OutputType): two Seq branches return List<NdfValue> and the Scalar branch returns Text, while Choice requires one common result type. The formal source now applies explicit Discard to each alternative and spec03 states the shared choice result type. The original bytes are retained as tools/tests/fixtures/grammar/angle-choice-output.neplg. Independently executed tools integration verifies the old source rejects and the corrected formal source compiles through complete package assembly and package.check. The subsequent runtime verification is recorded in the resolution.",
       "resolution": "The corrected formal source uses explicit Discard on every choice branch and the original incompatible source remains a managed negative fixture. The independently passing compiled_angle_reader test imports and compiles that formal source, then invokes actual ReaderSession: both quote styles consume exactly 15 bytes, each nonfinal cut before the closing delimiter returns NeedMore, and a final truncated quote returns Failed. The additional independent ParseSession probe confirms one token and recovery behavior. This closes the example/type inconsistency and its native reader behavior, not all G04 or full Grammar bootstrap."
     },
@@ -384,8 +519,14 @@
       "id": "R032",
       "status": "corrected",
       "title": "The source-backed printer reuses a validated tree without admitting its sources into a new operation",
-      "affected_tasks": ["T01", "T04"],
-      "evidence": ["crates/foundation/engine/src/parse/print.rs", "crates/foundation/engine/tests/parse.rs"],
+      "affected_tasks": [
+        "T01",
+        "T04"
+      ],
+      "evidence": [
+        "crates/foundation/engine/src/parse/print.rs",
+        "crates/foundation/engine/tests/parse.rs"
+      ],
       "partial_progress": "An independent probe validates a complete tree under a setup budget, then invokes public print::source_tree with a fresh Budget whose sourceBytes limit is zero. It returns Complete(\"let x ~y\") with Usage.sourceBytes=0. The borrowed tree proof has no operation-budget identity and the printer accepts no SourceAdmission, so a prior successful validation silently bypasses the new operation's source limit.",
       "resolution": "source_tree now accepts the shared SourceAdmission and admits each owning bundle's declared sources before reading token text. The original probe now returns Stopped(SourceLimit) with empty output and sourceBytes0. Pre-admitting the same eight-byte snapshot and printing within that operation leaves sourceBytes8. These boundaries are also exercised through the tracked static parser tests; all13 parse tests pass independently. This closes the native source-admission defect, not the future portable printer contract or semantic constructor printer."
     },
@@ -393,8 +534,15 @@
       "id": "R033",
       "status": "corrected",
       "title": "The official binding grammar uses a list-valued reader where a name binding requires Text",
-      "affected_tasks": ["T05", "T06"],
-      "evidence": ["examples/grammar/binding.neplg", "crates/foundation/engine/src/package/bindings.rs", "tools/tests/grammar.rs"],
+      "affected_tasks": [
+        "T05",
+        "T06"
+      ],
+      "evidence": [
+        "examples/grammar/binding.neplg",
+        "crates/foundation/engine/src/package/bindings.rs",
+        "tools/tests/grammar.rs"
+      ],
       "partial_progress": "The source's word reader is Seq(Scalar IdentifierStart, Many Scalar IdentifierContinue), which returns List<NdfValue>. The Name leaf requests reference Value self, whose checked binding contract requires Text. The independent tools integration executes the actual seed import and full package compiler and confirms Package(InvalidBinding), rather than accepting the design example as previously structurally audited.",
       "resolution": "The formal example now explicitly calls nepl3.reader/name-v1, whose Text output satisfies reference Value self. The old source remains in tools/tests/fixtures/grammar/binding-nontext-name.neplg and the actual full-package regression still rejects it with InvalidBinding; that test passes independently. The new managed official_binding_let_lambda_visibility_and_entity_identity test also passes independently: the corrected formal source is compiled, parsed with the actual standard provider, analyzed, and its Let/Lambda/sibling/Unicode references are checked against declaration byte locations. FactSet NDF roundtrip preserves exact data and does not double-charge sources. This corrects the original example/type/behavior inconsistency, not all T06 binding constructors, resource boundaries or portable analysis acceptance."
     },
@@ -402,8 +550,14 @@
       "id": "R034",
       "status": "corrected",
       "title": "Grammar compilation rejects reuse of an identical kind shape across categories",
-      "affected_tasks": ["T05"],
-      "evidence": ["doc/spec/04-grammar.md", "crates/languages/grammar/core/src/compile/package.rs", "crates/languages/grammar/core/src/compile/package/surface.rs"],
+      "affected_tasks": [
+        "T05"
+      ],
+      "evidence": [
+        "doc/spec/04-grammar.md",
+        "crates/languages/grammar/core/src/compile/package.rs",
+        "crates/languages/grammar/core/src/compile/package/surface.rs"
+      ],
       "partial_progress": "An independent source declares Atom in categories A and B, with the same atom spelling and identical empty field schemas. Production seed import plus full package compilation rejects the second declaration with DuplicateName. Spec04 explicitly permits one kind in multiple categories when its field schema is identical; the compiler currently applies its global form-kind duplicate test before that exception.",
       "resolution": "Form/leaf declaration uniqueness now includes category, while the shared surface kind requires identical ordered field names and NodeRef versus ForeignSyntax storage shapes. The original independent Atom A/B probe compiles to one shared KindRef. The tracked shared_kind test passes independently in both the working tree and isolated NEPL3-prefix-validation tree: reordered declarations preserve semantic/schema identity, each declaration retains its own category and source Origin, same-category duplicates reject, and differing shapes reject with a located KindShape error."
     },
@@ -411,8 +565,16 @@
       "id": "R035",
       "status": "corrected",
       "title": "The host seed importer overflows the native main-thread stack on the formal Angle example",
-      "affected_tasks": ["T05"],
-      "evidence": ["tools/src/bootstrap/mod.rs", "tools/src/bootstrap/generated.rs", "tools/src/bootstrap/cli.rs", "tools/tests/bootstrap.rs", "examples/grammar/angle-tag.neplg"],
+      "affected_tasks": [
+        "T05"
+      ],
+      "evidence": [
+        "tools/src/bootstrap/mod.rs",
+        "tools/src/bootstrap/generated.rs",
+        "tools/src/bootstrap/cli.rs",
+        "tools/tests/bootstrap.rs",
+        "examples/grammar/angle-tag.neplg"
+      ],
       "partial_progress": "The independent seed_load_only executable calls the actual host bootstrap::load for the formal Angle source and crashes with main-thread stack overflow before descriptor construction or reader execution. The prior importer tests ran on Rust test threads and did not detect this default-main-thread failure. After replacing recursive constructor traversal with a postorder worklist and temporary borrowed-JSON lookup, the identical native executable exits successfully with 36 nodes. The subsequent actual source/compiler/ParseSession probe also passes both quoted-greater-than token boundaries and final/nonfinal truncation behavior. The subsequent managed native child-process verification is recorded in the resolution.",
       "resolution": "The iterative importer and bounded CLI are covered by seed_import_runs_on_main_thread_for_complete_sources_and_rejects_bad_input. It passes independently in the working tree and isolated NEPL3-prefix-validation tree, spawning the actual tools executable without a stack-size override for Angle and all four language grammars. The Angle source produces 36 nodes; invalid empty-object schema and oversized input return exit1. The original independent default-main-thread load-only probe now exits0. The fixed cause is recursive typed-constructor traversal; full bootstrap and unrelated malformed/deep runtime paths are not inferred from this correction."
     },
@@ -420,8 +582,17 @@
       "id": "R036",
       "status": "corrected",
       "title": "The shared Report boundary accepts inapplicable and overlapping diagnostic fixes",
-      "affected_tasks": ["T01", "T02", "T06"],
-      "evidence": ["doc/spec/02-foundation.md", "crates/foundation/core/src/diagnostic/validation.rs", "crates/foundation/wire/src/report.rs", "crates/foundation/wire/tests/report.rs"],
+      "affected_tasks": [
+        "T01",
+        "T02",
+        "T06"
+      ],
+      "evidence": [
+        "doc/spec/02-foundation.md",
+        "crates/foundation/core/src/diagnostic/validation.rs",
+        "crates/foundation/wire/src/report.rs",
+        "crates/foundation/wire/tests/report.rs"
+      ],
       "partial_progress": "An independent probe changes only a valid diagnostic Fix's expected_digest to a digest that disagrees with its declared source slice. A second candidate contains two edits of the same nonempty range with different replacements. Both pass Report.validate and roundtrip through encode_report/decode_report unchanged. The shared validator checks span geometry but not the expected-source digest or the nonoverlapping-edit invariant required by spec02.",
       "resolution": "The shared validator checks the expected-source digest with Work accounting, rejects intersecting edits and duplicate starts including insertion anchors, and requires one snapshot per SourceId within each Fix. All three independent original candidates now return typed ExpectedDigest, OverlappingEdits or SnapshotMismatch errors. Four managed report tests pass independently, including valid-schema NDF mutations to exercise decoder rejection separately from native encode, unsorted adjacent edits, insertion boundaries, multi-source edits and historical related spans. Report Usage authentication and full Facts operation envelopes remain separate obligations."
     },
@@ -429,8 +600,14 @@
       "id": "R037",
       "status": "corrected",
       "title": "SourceStore edit application allocates before checking its zero allocation budget",
-      "affected_tasks": ["T01", "T06"],
-      "evidence": ["crates/foundation/core/src/source.rs", "tools/audit/allocation/probe.rs"],
+      "affected_tasks": [
+        "T01",
+        "T06"
+      ],
+      "evidence": [
+        "crates/foundation/core/src/source.rs",
+        "tools/audit/allocation/probe.rs"
+      ],
       "partial_progress": "The coordinator extended the existing isolated allocation probe to call actual SourceStore::apply with one edit and a 100000-byte SourceId. Independently rerunning that executable observes 100008 allocated bytes before Err(AllocationLimit), while reported allocationUnits and Work remain zero. The same process's 4096-byte positive control succeeds and SourceMap::insert allocates zero with a zero allocation budget. SourceStore::apply collects edit references and clones source identities before its first budget check; this is separate from R036's report Fix invariant validation.",
       "resolution": "SourceStore.apply now takes the operation's SourceAdmission, charges before borrowed edit sorting, source/locator comparisons and owned output construction, and checks all generated identities before committing outputs and admission together. The tracked allocator probe passes independently with a 4096-byte positive control and zero bytes allocated by apply under AllocationUnits0. The original full-deletion probe now returns SourceLimit with the original store unchanged. All five managed edit tests pass independently, covering every lower allocation cap, sticky stops, source/locator limits and semantic-failure retries. A separate public-API probe verifies unsorted adjacent Unicode edits, endpoint insertion, sorted multi-source results, once-only source admission, atomic stale-revision/duplicate-anchor rejection and a successful corrected retry in the same operation."
     },
@@ -438,8 +615,15 @@
       "id": "R038",
       "status": "corrected",
       "title": "A Facts reply accepts duplicate source declarations natively but rejects their portable encoding",
-      "affected_tasks": ["T02", "T06"],
-      "evidence": ["crates/foundation/engine/src/facts/check.rs", "crates/foundation/engine/src/portable/facts.rs", "crates/foundation/engine/tests/package/portable/facts.rs"],
+      "affected_tasks": [
+        "T02",
+        "T06"
+      ],
+      "evidence": [
+        "crates/foundation/engine/src/facts/check.rs",
+        "crates/foundation/engine/src/portable/facts.rs",
+        "crates/foundation/engine/tests/package/portable/facts.rs"
+      ],
       "partial_progress": "An independent production probe repeats the same SourceSnapshot twice within one Invalid reply.sources table. FactsReply.validate accepts it, while reply_to_value rejects it with Boundary(Source(IdentityConflict)). The native closure silently deduplicates all sources across tables and consequently misses the uniqueness requirement within an individual declaration table.",
       "resolution": "The native closure now compares the reply's own declaration entries with budgeted borrowed identity checks and rejects duplicate SourceId/revision pairs before merging tables. The same probe now rejects natively and during encode. Two managed Facts operation tests pass independently, including the native duplicate regression. An additional independent mutation repeats a source in each of the five valid-schema reply variants and confirms typed decode rejects it. Legitimate sharing between separate tree/base/delta/report tables remains allowed with identical source identity and URI, and once-only admission still passes. This correction does not authenticate a transport peer or complete the Facts resolver."
     },
@@ -447,8 +631,13 @@
       "id": "R039",
       "status": "corrected",
       "title": "Head resume consumes its pending collector before rejecting a conflicting source locator",
-      "affected_tasks": ["T04"],
-      "evidence": ["crates/foundation/engine/src/parse/session/head.rs", "crates/foundation/engine/src/head/report.rs"],
+      "affected_tasks": [
+        "T04"
+      ],
+      "evidence": [
+        "crates/foundation/engine/src/parse/session/head.rs",
+        "crates/foundation/engine/src/head/report.rs"
+      ],
       "partial_progress": "An independent public ParseSession probe reaches the first Head Shape Await and returns a valid diagnostic within the saved head window. It supplies a caller SourceStore with the same source ID, revision, digest and bytes but a different URI. resume_head returns Reader(Source(IdentityConflict)); retrying the original echo and reply with the original store returns NoPending. Window restoration checks the bytes before taking the slot, but source admission happens later through append_report, after the private pending collector has already been removed.",
       "resolution": "The pending slot now survives non-stopping primary-source and report-closure rejection, while accepted-report publication remains transactional. Primary input identity and URI are checked before taking the slot; missing saved auxiliary declarations need not be supplied again. The added retarget_preserving_sources retains the checked context's borrowed declaration closure and rechecks its selected registry. Independent original URI, empty-primary and saved-auxiliary probes now pass, including successful retries and preserved formal diagnostics/events. Twelve managed Head tests pass independently; the auxiliary regression also rejects a conflicting caller URI before successful continuation with the primary-only store. Resource charges may advance after rejection, and cancellation/stops still consume the pending operation."
     },
@@ -456,8 +645,17 @@
       "id": "R040",
       "status": "corrected",
       "title": "Non-stopped operation replies accept trace overflow and continue execution",
-      "affected_tasks": ["T03", "T04", "T06"],
-      "evidence": ["doc/spec/02-foundation.md", "crates/foundation/engine/src/parse/session/head.rs", "crates/foundation/reader/src/runtime/validate.rs", "crates/foundation/engine/src/facts/check.rs"],
+      "affected_tasks": [
+        "T03",
+        "T04",
+        "T06"
+      ],
+      "evidence": [
+        "doc/spec/02-foundation.md",
+        "crates/foundation/engine/src/parse/session/head.rs",
+        "crates/foundation/reader/src/runtime/validate.rs",
+        "crates/foundation/engine/src/facts/check.rs"
+      ],
       "partial_progress": "An independent Head Shape reply with traceOverflow(dropped=1) completes the parse with the same overflow. A separate direct ReaderSession probe confirms Read Matched, Read Failed, Map TransformReply and Decode TransformReply all accept that metadata and return non-stopped results. Spec02 requires an event overflow to end execution with Stopped. Head and Facts corrections are under review; the Reader paths remain independently reproduced at this recording point.",
       "resolution": "Head and Facts reject overflow on every non-Stopped outcome. Reader ProviderReply.validate_outcome adds the constant-size tag check before Reader, Tokenizer and ParseSession consume their private slots, with full provider validation retaining the same check. The four original independent Reader probes now reject with ProviderContract. Managed direct-reader and outer-tokenizer retry tests, twelve Head tests and three Facts envelope tests pass independently, including Stopped Cancelled/WorkLimit with overflow. Facts tests mutate schema-valid NDF for all five reply forms. The following Head portable slice also passes its native and schema-valid NDF outcome mutations, but that separate protocol implementation is not implied complete by this correction. Standalone Report codec still permits valid stop metadata; unimplemented Reader reply transport and unrelated operation groups remain outside this finding's verified scope."
     },
@@ -465,8 +663,15 @@
       "id": "R041",
       "status": "corrected",
       "title": "Head delegation assigns the same remaining resources to remote work and later parent framing",
-      "affected_tasks": ["T02", "T04"],
-      "evidence": ["doc/spec/04-grammar.md", "crates/foundation/engine/src/portable/head/delegation.rs", "crates/foundation/engine/tests/package/head/portable.rs"],
+      "affected_tasks": [
+        "T02",
+        "T04"
+      ],
+      "evidence": [
+        "doc/spec/04-grammar.md",
+        "crates/foundation/engine/src/portable/head/delegation.rs",
+        "crates/foundation/engine/tests/package/head/portable.rs"
+      ],
       "partial_progress": "An independent public-API probe gives the parent a Work limit of 500000, issues a delegation, serializes it to NDF and actual CBOR, and runs receiver CBOR decode, delegation_decode and repeated actual validate_projection calls under the issued child limit. Before merging results, the parent has used 8544 Work and the child 497629, totaling 506173. issue gives the child the entire parent remainder before the parent's subsequent framing consumes part of the same resource allowance. Post-execution rejection by accept cannot undo work already performed.",
       "resolution": "IssuedHeadDelegation now exclusively borrows the parent Budget and subtracts an explicit host transport reserve before granting additive resources. Local codecs use a temporary ceiling; reservations are not Usage. Authenticated completed child costs settle exactly once, including after a parent stop, and unfinished proof Drop stops the parent. With the original shared Work cap500000 and reserve20000, the independent actual-codec/projection probe records parent8544 plus child477666, totaling486210. Independent stop/double-settlement/Drop and all eight atomic observed-usage boundaries pass. Managed core budget2, Head portable6 and actual ParseSession callback1 tests pass independently. The callback settles before decoding malformed replies, rejects modified call identities without changing formal counts, then resumes with valid replies to the native-equivalent Dynamic tree. Spec04 defines the partition, metering cutoff, source-window exemption, absolute depth, failure ordering and host authentication obligations. Separate-process authentication and shutdown remain unimplemented host responsibilities."
     },
@@ -474,8 +679,13 @@
       "id": "R042",
       "status": "corrected",
       "title": "Reader payload validation consumes the pending continuation before rejecting an invalid provider value",
-      "affected_tasks": ["T03"],
-      "evidence": ["crates/foundation/reader/src/runtime/mod.rs", "crates/foundation/reader/src/runtime/validate.rs"],
+      "affected_tasks": [
+        "T03"
+      ],
+      "evidence": [
+        "crates/foundation/reader/src/runtime/mod.rs",
+        "crates/foundation/reader/src/runtime/validate.rs"
+      ],
       "partial_progress": "An independent executable depends on the clean ab9c50b1d36ee0240d759cc80ef986f905242804 snapshot. A Read provider declares Text output; after an actual ReaderSession Await, changing only Matched.value to Unit returns Schema(WrongType). Retrying the same saved continuation with a valid Text result returns NoPending. The private slot is consumed before non-stopping payload validation completes.",
       "resolution": "Reader validates the borrowed reply before taking its private slot; Tokenizer and ParseSession retain or restore their outer slots on non-stopping rejection. Five independent retry cases preserve one previously accepted generated source, diagnostic and event after invalid output/state types, an out-of-range end, a later source URI conflict or an invalid ViewRef. The same five managed cases pass, as do an independent outer-tokenizer wrong-type retry and the managed three-layer ParseSession retry. All 34 reader runtime tests pass independently, including allocation-stop sweeps, formal source/report preservation and pending cleanup. Transform Map/Decode Complete/Failed/Stopped native/NDF paths use the same prevalidation and preserve prior collectors on cancellation. Resource/admission costs remain consumed after rejection; the correction does not assert completion of all request/continuation transports."
     },
@@ -483,8 +693,17 @@
       "id": "R043",
       "status": "corrected",
       "title": "Binding analysis misclassifies nested resource stops as invalid input",
-      "affected_tasks": ["T01", "T04", "T06"],
-      "evidence": ["crates/foundation/core/src/syntax.rs", "crates/foundation/core/src/view.rs", "crates/foundation/engine/src/tree.rs", "crates/foundation/engine/src/binding/mod.rs"],
+      "affected_tasks": [
+        "T01",
+        "T04",
+        "T06"
+      ],
+      "evidence": [
+        "crates/foundation/core/src/syntax.rs",
+        "crates/foundation/core/src/view.rs",
+        "crates/foundation/engine/src/tree.rs",
+        "crates/foundation/engine/src/binding/mod.rs"
+      ],
       "partial_progress": "An independent production Grammar/ParseSession/tree.validate/analyze chain analyzes lettext with an escaped x name. Reusing the valid tree under a fresh SourceBytes=0 budget returns Invalid(Tree(Syntax(Source(Stopped(SourceLimit))))) while Budget.poll reports SourceLimit. Nodes=5 returns Invalid(Tree(Syntax(View(Schema(Stopped(NodeLimit)))))); Work=51 similarly wraps WorkLimit. Five-resource sweeps over this input and a host/guest input expose 102 invalid-stop classifications. The checked partial FactSets in this sweep remain structurally valid; that is a separate property from correct outcome classification.",
       "resolution": "View and Syntax errors expose nested stop causes; typed conversions normalize those causes without converting ordinary input errors. Two explicit Tree validation wrappers that bypassed these conversions were also corrected after the first independent rerun left three NodeLimit failures. The original two-input five-resource sweep now has zero invalid-stop or broken-partial results and asserts each exact resource reason and sticky Budget.poll. Managed core conversion coverage and the actual analysis stop sweep pass independently, including diagnostic limits, partial FactSet/report closure, occurrence-stage pairing and caller depth restoration. This resolves the observed native analysis classification paths; the separate portable failure codec is reviewed independently."
     },
@@ -492,8 +711,13 @@
       "id": "R044",
       "status": "corrected",
       "title": "Sequential and recursive binding bodies retain the host stage when entering a Foreign bundle",
-      "affected_tasks": ["T06"],
-      "evidence": ["doc/spec/04-grammar.md", "crates/foundation/engine/src/binding/runtime.rs"],
+      "affected_tasks": [
+        "T06"
+      ],
+      "evidence": [
+        "doc/spec/04-grammar.md",
+        "crates/foundation/engine/src/binding/runtime.rs"
+      ],
       "partial_progress": "An independent valid Grammar uses listof local Decl declarations and a foreign B Expr body. Both sequence cons define x 1 nil x and recursive cons define x 1 nil x compile and parse into validated trees, then public analyze returns Invalid(Fact(MissingNamespace)). The guest reference uses its guest namespace but a host-descended scope/stage. The returned Some FactSet therefore violates namespace-root membership. Action::Declaration retains frame.stage across bundles while the ordinary child path selects the guest root.",
       "resolution": "Child and Declaration actions now use the same child_frame entry, choosing the owning guest root whenever the target bundle changes. Both original independent foreign-body inputs now return Complete with an unresolved guest reference, two roots and a structurally valid FactSet. The managed regression also covers a same-alias nested guest and passes independently. Host export identity remains unchanged; this correction does not implement explicit cross-root imports or grants."
     },
@@ -501,8 +725,15 @@
       "id": "R045",
       "status": "corrected",
       "title": "Equivalent binding requests with the same AnalysisKey assign different fact identities after tree transport",
-      "affected_tasks": ["T06"],
-      "evidence": ["doc/spec/08-editor.md", "doc/spec/13-reproducibility.md", "crates/foundation/engine/src/binding/prepare.rs", "crates/foundation/engine/src/portable/analysis.rs"],
+      "affected_tasks": [
+        "T06"
+      ],
+      "evidence": [
+        "doc/spec/08-editor.md",
+        "doc/spec/13-reproducibility.md",
+        "crates/foundation/engine/src/binding/prepare.rs",
+        "crates/foundation/engine/src/portable/analysis.rs"
+      ],
       "partial_progress": "An independent production Grammar/ParseSession input lambda x guest x is prepared and executed natively, then the same request is encoded to CBOR and decoded by a first receiver with an empty source store. Repreparing and executing yields the same AnalysisKey but different FactSet identities: native host definition NamespaceRef(1)/OriginId(2), receiver NamespaceRef(0)/OriginId(1). Native context path lengths are [1,0], while the canonical receiver uses [0,1]. Host/guest visibility remains semantically correct, but roots, namespace references and merged Origin order depend on the input table order. Binding preparation allocates those identities by tree.contexts order and namespace first occurrence by context.nodes order. The key hashes canonical tree order instead. The original independent probe is .tmp/build_analysis_guest_probe.py and its binding_key_guest executable.",
       "resolution": "Common binding preparation now traverses borrowed BundleMappings in canonical host-first foreign DFS order, obtains namespace first occurrences from canonical node order, and sorts borrowed source references by their portable identity order. It does not clone or serialize a complete tree to fix native execution. The unchanged original guest probe now yields equal FactSets for native and first-receiver execution. Independent combined Foreign/escaped-Text inputs separately reverse context, selection and source tables and retain the same key and all BindingResult fields, including exact fact IDs, Origins, SourceMaps and stages; direct unkeyed analyze also preserves formal source/diagnostic/event contents. The updated managed AnalysisKey regression covers original guest, Text and opposite table orders and passes independently. This correction stabilizes the observed ID allocation paths without claiming Custom callback or editor query completion."
     },
@@ -510,8 +741,18 @@
       "id": "R046",
       "status": "corrected",
       "title": "Nonempty environment bindings use the numeric facts NamespaceRef schema for a symbolic schema/name pair",
-      "affected_tasks": ["T01", "T02", "T03", "T07"],
-      "evidence": ["crates/foundation/core/src/syntax.rs", "crates/foundation/wire/src/environment.rs", "interfaces/foundation.json", "crates/foundation/wire/tests/syntax/foreign.rs"],
+      "affected_tasks": [
+        "T01",
+        "T02",
+        "T03",
+        "T07"
+      ],
+      "evidence": [
+        "crates/foundation/core/src/syntax.rs",
+        "crates/foundation/wire/src/environment.rs",
+        "interfaces/foundation.json",
+        "crates/foundation/wire/tests/syntax/foreign.rs"
+      ],
       "partial_progress": "An independent production parse of lambda x guest x is followed by constructing owner EnvironmentEntry 9 with a nonempty captured binding, a valid typed BindingDiagnosticArguments payload and OriginId(0). Computing its canonical environment digest returns Schema(FieldCount). The symbolic core syntax NamespaceRef has schema/name fields, and wire/environment.rs encoded both under the foundation NamespaceRef record reserved for the one-field numeric facts reference. Existing empty-environment tests never exercised this record. This is independently reproduced before the fix by .tmp/build_foreign_closure_probe.py and its foreign_closure executable; the new Doc foreign-closure design exposed an older shared environment boundary defect.",
       "resolution": "The environment schema and wire encoder/decoder now use EnvironmentNamespaceRef for the symbolic schema/name pair while facts NamespaceRef remains numeric. The unchanged valid-payload probe succeeds after the fix. It preserves distinct owner and guest EnvironmentEntry(9)/OriginId(0) contents through actual CBOR reception without the original owner or an ambient source store. Native and codec negatives reject missing owner sources, a guest environment substituted for the selected owner, mismatched outer/root schemas, forged content digests and missing portable source declarations. Both managed foreign-closure tests pass independently. This corrects the observed nonempty environment schema collision and the tested owner closure transport; it does not complete all Doc lowering, label, view or embed semantics, nor authenticate raw environment data."
     },
@@ -519,8 +760,16 @@
       "id": "R047",
       "status": "corrected",
       "title": "FoundationCodecError loses nested WireError stop causes at checked codec boundaries",
-      "affected_tasks": ["T01", "T02", "T07"],
-      "evidence": ["doc/spec/02-foundation.md", "crates/foundation/wire/src/lib.rs", "crates/foundation/wire/tests/stop.rs"],
+      "affected_tasks": [
+        "T01",
+        "T02",
+        "T07"
+      ],
+      "evidence": [
+        "doc/spec/02-foundation.md",
+        "crates/foundation/wire/src/lib.rs",
+        "crates/foundation/wire/tests/stop.rs"
+      ],
       "partial_progress": "Doc's new valid-input decode sweep exposed Foundation(Schema(Stopped(WorkLimit))) at Work cap 2242. An independent probe against the unchanged validation baseline confirms the older common boundary defect without depending on Doc: encode_checked(Unit, Unit, finalized registry, Work=0) returns WireError::Schema(SchemaError::Stopped(WorkLimit)), but FoundationCodecError::stop_reason returns None while Budget.poll remains WorkLimit. The trait matched only direct WireError::Stopped. The exact before process log is .tmp/r047-probe/before.log, exit 2; .tmp/run_r047_probe.py retains the source and a genuine WrongType control.",
       "resolution": "WireError now extracts only typed stop causes through Source, Schema, Origin, View, Syntax, Facts and Report wrappers. The unchanged public encode_checked probe against the repaired runtime returns Some(WorkLimit), exit 0, while the underlying nested error and semantic WrongType control remain unchanged. Both managed wire stop tests pass independently on native and WASI, covering all nine stop reasons and ordinary error controls. This corrects the common codec cause extractor; Doc's new integration and the separate surface language implementation remain their own review scope."
     },
@@ -528,10 +777,70 @@
       "id": "R048",
       "status": "corrected",
       "title": "Rename applies a Foreign bundle's source map to a host-owned declaration",
-      "affected_tasks": ["T06"],
-      "evidence": ["doc/spec/08-editor.md", "crates/foundation/engine/src/analysis/rename/prepare.rs", "crates/foundation/engine/src/analysis/rename/verify.rs", "crates/foundation/engine/src/binding/prepare.rs"],
+      "affected_tasks": [
+        "T06"
+      ],
+      "evidence": [
+        "doc/spec/08-editor.md",
+        "crates/foundation/engine/src/analysis/rename/prepare.rs",
+        "crates/foundation/engine/src/analysis/rename/verify.rs",
+        "crates/foundation/engine/src/binding/prepare.rs"
+      ],
       "partial_progress": "An independent actual compiler and sealed ParseSession probe parses lambda x guest x. Only the guest reader reply at byte 15 declares an auxiliary source x and an Exact map from auxiliary [0,1) to the host declaration [7,8); the accepted host bundle has zero maps and the guest bundle has one. Rename of the host declaration to z, with only the auxiliary source marked writable, proceeds through prepare, actual candidate parse and binding execution, then accept returns Complete with an edit to auxiliary [0,1). The private candidate also changed the host source to lambda z guest x. The no-map control returns the proper host edit. The existing rename inverse, derived edit and shape projection paths consume the flattened facts.source_maps union and lose the bundle ownership required to select a correspondence. No raw ParseTree mutation or fabricated CompletedParse was used. Original probe and full failing output are retained in .tmp/review-rename-owner/before; the first source inventory was captured after the separate RegionQuery snapshot arrived and is not asserted to be the first executable's complete linked source. An unchanged-input rebuild against the fixed snapshot is recorded separately.",
       "resolution": "Rename now selects tree and accepted Custom maps from each Entity/Occurrence namespace owner; forward derivation keeps each root edit and owner separate, and candidate checks use old/new owners and canonical syntax bundles. The unchanged original probe now rejects auxiliary-only writability with NotWritable on native and WASI, while its no-map actual parse/binding/accept control still edits host [7,8). An independent Custom Unicode case preserves valid same-owner emitter/delta inverse and forward mapping, regenerates the derived revision, and completes sealed candidate parsing, binding and accept. All 11 managed rename regressions pass independently on both targets. A separate pre-fix native rebuild on fixed Query27 reproduces the failure with source hashes checked around execution; no pre-fix WASI run is claimed. This corrects the observed ownership leak, not all editor or external provider authentication requirements."
+    },
+    {
+      "id": "R049",
+      "status": "corrected",
+      "title": "HTML validation and serialization allocate input-sized work queues before checking traversal work",
+      "affected_tasks": [
+        "T10",
+        "T23"
+      ],
+      "evidence": [
+        "doc/spec/19-html-fragment.md",
+        "crates/output/markup/src/html/check.rs",
+        "crates/output/markup/src/html/serialize.rs",
+        "crates/output/markup/tests/regression.rs",
+        "conformance/results/markup-html/independent.json"
+      ],
+      "partial_progress": "Independent native/WASI probes of the frozen first Markup subset show Work=6 serialization of 100000 shared Text children allocates 6400277 units before WorkLimit; Work=0 validation allocates the input-sized state vector. Root reproduced the serializer case, added enqueue and state initialization Work checks, charged the class length and output-piece loops, and added regression tests. Independent fixed-build verification is pending.",
+      "resolution": "The unchanged independent native/WASI probe now allocates a constant 277/205 units at Work=6 for widths 1, 1000 and 100000, and zero arena allocation at Work=0. State initialization and enqueue Work are charged before allocation; class length and final piece loops are also charged. The full managed 14-test subset and independent 6 tests passed on both targets. No whole render-operation or physical allocator bound is inferred."
+    },
+    {
+      "id": "R050",
+      "status": "corrected",
+      "title": "HTML fragment validation accepts nonconforming ruby and rp content",
+      "affected_tasks": [
+        "T10",
+        "T23"
+      ],
+      "evidence": [
+        "doc/spec/19-html-fragment.md",
+        "crates/output/markup/src/html/check.rs",
+        "crates/output/markup/src/html/ruby.rs",
+        "crates/output/markup/tests/regression.rs",
+        "conformance/results/markup-html/independent.json"
+      ],
+      "partial_progress": "Independent native/WASI probes accept an em element inside rp, unpaired rp, empty ruby and base-only ruby. HTML requires text-only rp and annotated base sequences with explicit constraints on nested ruby bases. Root added an iterative group state machine, descendant constraints and positive controls for multiple annotations and a single nested base. Independent fixed-build verification is pending.",
+      "resolution": "The independent original native/WASI Ruby failures and actual schema-valid CBOR rp(Em) mutation are now rejected. An iterative annotated-base group state machine, text-only rp and nested Ruby descendant rules preserve the normal, multiple-annotation and single nested-base positive cases. The fixed subset produced 660 accepted structural cases with matching DOM structure/text in actual Chromium and Firefox. Arbitrary browser depth and visual/font/accessibility support remain separate requirements."
+    },
+    {
+      "id": "R051",
+      "status": "corrected",
+      "title": "HTML external URI accepts a signed port although its profile requires ASCII decimal digits",
+      "affected_tasks": [
+        "T10",
+        "T23"
+      ],
+      "evidence": [
+        "crates/output/markup/src/html/uri.rs",
+        "crates/output/markup/tests/regression.rs",
+        "doc/spec/19-html-fragment.md",
+        "conformance/results/markup-html/independent.json"
+      ],
+      "partial_progress": "Independent native and fresh CBOR probes accept +80 and +0 ports; Chromium rejects both. Root added an ASCII-digit guard before u16 conversion and positive/negative port boundary cases. Independent fixed-build verification is pending.",
+      "resolution": "An ASCII decimal digit check now precedes u16 conversion. Independent unchanged native and fresh CBOR probes reject +80/+0 while retaining 80/65535 and the normal CBOR control. Focused regression and independent URI tests passed on native/WASI (7 each). This closes the signed-port defect in the constrained profile, without claiming complete WHATWG URL support."
     }
   ],
   "runtime_conformance_executed": false
