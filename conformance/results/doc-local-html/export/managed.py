@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 import os,subprocess,json,time,shutil
 D=Path(__file__).resolve().parent;W=D/'workspace';T=D.parent/'review-fixed-target';env=os.environ.copy();env['CARGO_TARGET_WASM32_WASIP2_RUNNER']='wasmtime run';runs=[]
 for label,args in [('build-cli',['build','--bin','nepl3-tools']),('managed-native',['test','--test','doc','export::']),('managed-wasi',['test','--test','doc','export::','--target','wasm32-wasip2'])]:

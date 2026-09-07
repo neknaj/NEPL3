@@ -1,0 +1,7 @@
+
+running 2 tests
+test observed_delegated_cost_is_atomic_across_all_resources_and_preserves_stops ... ok
+test temporary_ceilings_restore_on_result_paths_and_cannot_regrant_reserved_capacity ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

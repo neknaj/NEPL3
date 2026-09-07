@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 import os,subprocess,time,json,hashlib,shutil
 D=Path(__file__).resolve().parent;T=D.parent/'review-fixed-target';env=os.environ.copy();env['CARGO_TARGET_WASM32_WASIP2_RUNNER']='wasmtime run';runs=[]
 def run(label,cmd,timeout=600):

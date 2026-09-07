@@ -1,0 +1,8 @@
+
+running 3 tests
+test whole_language_tag_preserves_abnf_scope ... ok
+test whole_lexemes_stop_without_allocating_or_losing_cancellation ... ok
+test whole_name_uses_pinned_unicode_spelling_and_excludes_trivia ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

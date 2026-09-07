@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 import subprocess,shutil,json
 D=Path('C:/projects/NEPL3-runtime/.tmp/review-doc-export');T=D.parent/'review-shell-target';runs=[]
 for label,args,sub,ext in [('native',[],'debug','.exe'),('wasi',['--target','wasm32-wasip2'],'wasm32-wasip2/debug','.wasm')]:

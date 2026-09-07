@@ -1,0 +1,38 @@
+{
+  "arguments": [
+    "--test-threads=1"
+  ],
+  "result": "passed",
+  "runs": [
+    {
+      "backend": "native",
+      "command": [
+        "/home/runner/work/NEPL3/NEPL3/wasmtime-v44.0.1-x86_64-linux/wasmtime",
+        "run",
+        "/home/runner/work/NEPL3/NEPL3/target/wasm32-wasip2/debug/deps/edit-abd899d9ed55ed3e.wasm",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "stdout_sha256": "61e7a0f18385a918de4fe077ba9453150cb8512b17a9af421861fd810e0a023f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "backend": "pulley64",
+      "command": [
+        "/home/runner/work/NEPL3/NEPL3/wasmtime-v44.0.1-x86_64-linux/wasmtime",
+        "run",
+        "--target",
+        "pulley64",
+        "/home/runner/work/NEPL3/NEPL3/target/wasm32-wasip2/debug/deps/edit-abd899d9ed55ed3e.wasm",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "stdout_sha256": "b69d2ca0ab16aa503e55deffb2a2a6db1694277796ddce99b9efa1cd340e4615",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "artifact_sha256": "3f60c46e1c7914ce4cfd962c95abfb6566ec01d02c5307ea4da8bdd8b1a5d6b7",
+  "wasmtime": "wasmtime 44.0.1 (f302ebd6b 2026-04-30)",
+  "runner_sha256": "47e59a672f6a35ad071e3fbe7c0c541dcaea77b085d7aada4fd1a9ac77a0d601",
+  "passed": 5
+}
