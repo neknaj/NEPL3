@@ -632,3 +632,51 @@ fn indexed_source_insert_preserves_order_and_metered_duplicate_lookup() -> Resul
     assert_eq!(store.snapshots().len(), 130);
     Ok(())
 }
+
+#[test]
+fn indexed_admission_keeps_unique_bytes_and_checks_empty_cancel() -> Result<(), SourceError> {
+    let store = SourceStore::default();
+    let mut stopped = budget();
+    stopped.cancel();
+    assert!(matches!(
+        store.get_revision_with_budget(&SourceId("none".into()), 0, &mut stopped),
+        Err(StopReason::Cancelled)
+    ));
+    let mut admission = SourceAdmission::default();
+    let mut b = budget();
+    let mut snapshots = Vec::new();
+    for i in (0..128).rev() {
+        snapshots.push(admission.create(
+            SourceId(format!("source-{i:03}")),
+            0,
+            format!("memory:{i}"),
+            b"data".to_vec(),
+            &mut b,
+        )?);
+    }
+    assert_eq!(b.usage().source_bytes, 512);
+    let before = b.usage();
+    admission.admit_existing(&snapshots[127], &mut b)?;
+    assert_eq!(b.usage().source_bytes, 512);
+    assert!(b.usage().work - before.work < 1024);
+    let copy = admission.import(
+        snapshots[127].identity().source.clone(),
+        0,
+        snapshots[127].uri().into(),
+        b"data".to_vec(),
+        &mut b,
+    )?;
+    assert_eq!(copy, snapshots[127]);
+    assert_eq!(b.usage().source_bytes, 512);
+    assert_eq!(
+        admission.import(
+            copy.identity().source.clone(),
+            0,
+            "memory:conflict".into(),
+            b"data".to_vec(),
+            &mut b
+        ),
+        Err(SourceError::IdentityConflict)
+    );
+    Ok(())
+}

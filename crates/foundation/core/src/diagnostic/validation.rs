@@ -6,6 +6,7 @@ use crate::{
     schema::{SchemaError, SchemaRegistry},
     source::{Digest, SourceError, SourceSnapshot, SourceStore, Span},
 };
+use alloc::vec::Vec;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ReportValidationError {
@@ -75,7 +76,7 @@ fn check_span(
 }
 struct Sources<'a> {
     store: &'a SourceStore,
-    added: &'a [SourceSnapshot],
+    added: Vec<&'a SourceSnapshot>,
 }
 impl<'a> Sources<'a> {
     fn new(
@@ -84,35 +85,64 @@ impl<'a> Sources<'a> {
         b: &mut Budget,
     ) -> Result<Self, ReportValidationError> {
         b.charge(Resource::Work, 1)?;
-        for (i, source) in added.iter().enumerate() {
-            for prior in store.snapshots().iter().chain(&added[..i]) {
+        let mut index: Vec<&SourceSnapshot> = Vec::new();
+        for source in added {
+            if let Some(prior) = store.get_revision_with_budget(
+                &source.identity().source,
+                source.identity().revision,
+                b,
+            )? {
+                check_identity(prior, source, b)?;
+            }
+            let (mut low, mut high) = (0, index.len());
+            while low < high {
+                let mid = low + (high - low) / 2;
+                let prior = index[mid];
                 b.charge(
                     Resource::Work,
                     (source.identity().source.0.len() as u64)
                         .saturating_add(prior.identity().source.0.len() as u64)
                         .saturating_add(34),
                 )?;
-                if prior.identity().source == source.identity().source
-                    && prior.identity().revision == source.identity().revision
+                match prior
+                    .identity()
+                    .source
+                    .cmp(&source.identity().source)
+                    .then_with(|| prior.identity().revision.cmp(&source.identity().revision))
                 {
-                    b.charge(
-                        Resource::Work,
-                        (prior.uri().len() as u64)
-                            .saturating_add(source.uri().len() as u64)
-                            .saturating_add(1),
-                    )?;
-                    if prior.identity() != source.identity() || prior.uri() != source.uri() {
-                        return Err(SourceError::IdentityConflict.into());
+                    core::cmp::Ordering::Equal => {
+                        check_identity(prior, source, b)?;
+                        low = mid;
+                        break;
                     }
+                    core::cmp::Ordering::Less => low = mid + 1,
+                    core::cmp::Ordering::Greater => high = mid,
                 }
             }
+            b.charge(
+                Resource::AllocationUnits,
+                core::mem::size_of::<&SourceSnapshot>() as u64,
+            )?;
+            b.charge(Resource::Work, (index.len() - low) as u64)?;
+            index.insert(low, source);
         }
+        let added = index;
         Ok(Self { store, added })
     }
 }
 impl DiagnosticSourceResolver for Sources<'_> {
     fn slice<'a>(&'a self, span: &Span, b: &mut Budget) -> Result<&'a str, ReportValidationError> {
-        for source in self.store.snapshots().iter().chain(self.added) {
+        if let Some(source) = self.store.get_revision_with_budget(
+            &span.snapshot_ref().source,
+            span.snapshot_ref().revision,
+            b,
+        )? {
+            b.charge(Resource::Work, 33)?;
+            if source.identity() == span.snapshot_ref() {
+                return Ok(source.slice(span)?);
+            }
+        }
+        for source in &self.added {
             b.charge(
                 Resource::Work,
                 (span.snapshot_ref().source.0.len() as u64)
@@ -314,6 +344,23 @@ pub fn validate_report_usage(
         || overflow.is_some_and(|v| v.dropped == 0)
     {
         return Err(ReportValidationError::Usage);
+    }
+    Ok(())
+}
+
+fn check_identity(
+    a: &SourceSnapshot,
+    b: &SourceSnapshot,
+    budget: &mut Budget,
+) -> Result<(), ReportValidationError> {
+    budget.charge(
+        Resource::Work,
+        (a.uri().len() as u64)
+            .saturating_add(b.uri().len() as u64)
+            .saturating_add(34),
+    )?;
+    if a.identity().digest != b.identity().digest || a.uri() != b.uri() {
+        return Err(SourceError::IdentityConflict.into());
     }
     Ok(())
 }

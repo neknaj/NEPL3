@@ -460,6 +460,7 @@ fn units(text: &str, encoding: PositionEncoding) -> u64 {
 #[derive(Debug, Default)]
 pub struct SourceAdmission {
     admitted: Vec<(SnapshotId, String)>,
+    index: Vec<usize>,
 }
 impl SourceAdmission {
     /// Reconstructs a repeated declaration from a nested wire bundle without charging
@@ -473,11 +474,7 @@ impl SourceAdmission {
         budget: &mut Budget,
     ) -> Result<SourceSnapshot, SourceError> {
         budget.poll()?;
-        if self
-            .admitted
-            .iter()
-            .any(|(id, _)| id.source == source && id.revision == revision)
-        {
+        if self.find(&source, revision, budget)?.is_ok() {
             let snapshot = SourceSnapshot::from_charged(source, revision, uri, bytes, budget)?;
             self.admit_existing(&snapshot, budget)?;
             Ok(snapshot)
@@ -494,11 +491,7 @@ impl SourceAdmission {
         budget: &mut Budget,
     ) -> Result<SourceSnapshot, SourceError> {
         budget.poll()?;
-        if self
-            .admitted
-            .iter()
-            .any(|(id, _)| id.source == source && id.revision == revision)
-        {
+        if self.find(&source, revision, budget)?.is_ok() {
             return Err(SourceError::IdentityConflict);
         }
         let snapshot = SourceSnapshot::new(source, revision, uri, bytes, budget)?;
@@ -518,6 +511,36 @@ impl SourceAdmission {
             snapshot.text.len() as u64,
             budget,
         )
+    }
+    fn find(
+        &self,
+        source: &SourceId,
+        revision: u64,
+        budget: &mut Budget,
+    ) -> Result<Result<usize, usize>, SourceError> {
+        admission_index_position(
+            &self.index,
+            |i| &self.admitted[i].0,
+            source,
+            revision,
+            budget,
+        )
+    }
+    fn prepare_insert(
+        &self,
+        source: &SourceId,
+        revision: u64,
+        budget: &mut Budget,
+    ) -> Result<usize, SourceError> {
+        let at = self
+            .find(source, revision, budget)?
+            .map_or_else(Ok, |_| Err(SourceError::IdentityConflict))?;
+        budget.charge(
+            Resource::AllocationUnits,
+            core::mem::size_of::<usize>() as u64,
+        )?;
+        budget.charge(Resource::Work, (self.index.len() - at) as u64)?;
+        Ok(at)
     }
     // Used only with immutable validated snapshots or fully checked UTF-8 edit
     // output whose digest was computed from the exact fragments to be copied.
@@ -546,6 +569,8 @@ impl SourceAdmission {
                 .saturating_add(source.0.len() as u64)
                 .saturating_add(uri.len() as u64),
         )?;
+        let at = self.prepare_insert(source, revision, budget)?;
+        self.index.insert(at, self.admitted.len());
         self.admitted.push((
             SnapshotId {
                 source: source.clone(),
@@ -565,26 +590,19 @@ impl SourceAdmission {
         budget: &mut Budget,
     ) -> Result<bool, SourceError> {
         budget.poll()?;
-        for (id, locator) in &self.admitted {
+        if let Ok(at) = self.find(source, revision, budget)? {
+            let (id, locator) = &self.admitted[self.index[at]];
             budget.charge(
                 Resource::Work,
-                (id.source.0.len() as u64)
-                    .saturating_add(source.0.len() as u64)
+                (locator.len() as u64)
+                    .saturating_add(uri.len() as u64)
                     .saturating_add(34),
             )?;
-            if id.source == *source && id.revision == revision {
-                budget.charge(
-                    Resource::Work,
-                    (locator.len() as u64)
-                        .saturating_add(uri.len() as u64)
-                        .saturating_add(1),
-                )?;
-                return if id.digest == digest && locator == uri {
-                    Ok(true)
-                } else {
-                    Err(SourceError::IdentityConflict)
-                };
-            }
+            return if id.digest == digest && locator == uri {
+                Ok(true)
+            } else {
+                Err(SourceError::IdentityConflict)
+            };
         }
         Ok(false)
     }
@@ -599,6 +617,14 @@ impl SourceAdmission {
                 + snapshot.id.source.0.len() as u64
                 + snapshot.uri.len() as u64,
         )?;
+        budget.charge(
+            Resource::Work,
+            (snapshot.id.source.0.len() as u64)
+                .saturating_add(snapshot.uri.len() as u64)
+                .saturating_add(1),
+        )?;
+        let at = self.prepare_insert(&snapshot.id.source, snapshot.id.revision, budget)?;
+        self.index.insert(at, self.admitted.len());
         self.admitted.push((snapshot.id(), snapshot.uri.clone()));
         Ok(())
     }
@@ -668,6 +694,37 @@ impl SourceStore {
             }
         }
     }
+    /// Find a host source/revision with every index comparison charged.
+    pub fn get_revision_with_budget(
+        &self,
+        source: &SourceId,
+        revision: u64,
+        budget: &mut Budget,
+    ) -> Result<Option<&SourceSnapshot>, StopReason> {
+        budget.poll()?;
+        let (mut low, mut high) = (0, self.index.len());
+        while low < high {
+            let mid = low + (high - low) / 2;
+            let snapshot = &self.snapshots[self.index[mid]];
+            budget.charge(
+                Resource::Work,
+                (snapshot.id.source.0.len() as u64)
+                    .saturating_add(source.0.len() as u64)
+                    .saturating_add(1),
+            )?;
+            match snapshot
+                .id
+                .source
+                .cmp(source)
+                .then_with(|| snapshot.id.revision.cmp(&revision))
+            {
+                core::cmp::Ordering::Equal => return Ok(Some(snapshot)),
+                core::cmp::Ordering::Less => low = mid + 1,
+                core::cmp::Ordering::Greater => high = mid,
+            }
+        }
+        Ok(None)
+    }
     pub fn get_ref(&self, id: &SnapshotId) -> Option<&SourceSnapshot> {
         self.snapshots
             .iter()
@@ -713,6 +770,36 @@ fn source_index_position<'a>(
                 .saturating_add(1),
         )?;
         match source_key(prior, snapshot) {
+            core::cmp::Ordering::Equal => return Ok(Ok(mid)),
+            core::cmp::Ordering::Less => low = mid + 1,
+            core::cmp::Ordering::Greater => high = mid,
+        }
+    }
+    Ok(Err(low))
+}
+
+fn admission_index_position<'a>(
+    index: &[usize],
+    get: impl Fn(usize) -> &'a SnapshotId,
+    source: &SourceId,
+    revision: u64,
+    budget: &mut Budget,
+) -> Result<Result<usize, usize>, SourceError> {
+    let (mut low, mut high) = (0, index.len());
+    while low < high {
+        let mid = low + (high - low) / 2;
+        let id = get(index[mid]);
+        budget.charge(
+            Resource::Work,
+            (id.source.0.len() as u64)
+                .saturating_add(source.0.len() as u64)
+                .saturating_add(34),
+        )?;
+        match id
+            .source
+            .cmp(source)
+            .then_with(|| id.revision.cmp(&revision))
+        {
             core::cmp::Ordering::Equal => return Ok(Ok(mid)),
             core::cmp::Ordering::Less => low = mid + 1,
             core::cmp::Ordering::Greater => high = mid,

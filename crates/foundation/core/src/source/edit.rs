@@ -262,8 +262,35 @@ impl SourceStore {
             budget.charge(Resource::Work, (index.len() - at) as u64)?;
             index.insert(at, self.snapshots.len() + offset);
         }
+        allocation::<usize>(
+            admission.index.len().saturating_add(admitted_outputs.len()),
+            budget,
+        )?;
+        budget.charge(Resource::Work, admission.index.len() as u64)?;
+        let mut admission_index =
+            Vec::with_capacity(admission.index.len().saturating_add(admitted_outputs.len()));
+        admission_index.extend_from_slice(&admission.index);
+        for (offset, (id, _)) in admitted_outputs.iter().enumerate() {
+            let at = admission_index_position(
+                &admission_index,
+                |i| {
+                    if i < admission.admitted.len() {
+                        &admission.admitted[i].0
+                    } else {
+                        &admitted_outputs[i - admission.admitted.len()].0
+                    }
+                },
+                &id.source,
+                id.revision,
+                budget,
+            )?
+            .map_or_else(Ok, |_| Err(SourceError::IdentityConflict))?;
+            budget.charge(Resource::Work, (admission_index.len() - at) as u64)?;
+            admission_index.insert(at, admission.admitted.len() + offset);
+        }
         // No typed failure or budget charge can occur after this commit point.
         admission.admitted.extend(admitted_outputs);
+        admission.index = admission_index;
         self.snapshots.extend(prepared);
         self.index = index;
         Ok(ids)

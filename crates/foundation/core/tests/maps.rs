@@ -4,6 +4,64 @@ use nepl3_core::{
     source::{SourceId, SourceSnapshot, SourceStore},
 };
 type TestResult = Result<(), Box<dyn std::error::Error>>;
+#[test]
+fn indexed_map_graphs_agree_with_transitive_closure_in_both_orders() -> TestResult {
+    // The oracle uses Boolean reachability, independently of the production
+    // topological/pointwise algorithm. Distinct revisions remain distinct nodes.
+    let mut sources = SourceStore::default();
+    let mut vertices = Vec::new();
+    for (name, revision) in [("z", 0), ("日本語", 7), ("日本語", 1)] {
+        let snapshot = SourceSnapshot::new(
+            SourceId(name.into()),
+            revision,
+            format!("memory:{name}:{revision}"),
+            vec![b'x'],
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        sources
+            .insert(snapshot.clone())
+            .map_err(|e| format!("{e:?}"))?;
+        vertices.push(snapshot);
+    }
+    for mask in 0u32..512 {
+        let mut reach = [[false; 3]; 3];
+        let mut mappings = Vec::new();
+        for (i, row) in reach.iter_mut().enumerate() {
+            for (j, reachable) in row.iter_mut().enumerate() {
+                if mask & (1 << (3 * i + j)) != 0 {
+                    *reachable = true;
+                    mappings.push(Mapping {
+                        source: vertices[i].span(0, 1).map_err(|e| format!("{e:?}"))?,
+                        target: vertices[j].span(0, 1).map_err(|e| format!("{e:?}"))?,
+                        kind: MappingKind::Exact,
+                    });
+                }
+            }
+        }
+        for k in 0..3 {
+            for i in 0..3 {
+                for j in 0..3 {
+                    reach[i][j] |= reach[i][k] && reach[k][j];
+                }
+            }
+        }
+        let expected = if (0..3).any(|i| reach[i][i]) {
+            Err(OriginError::Cycle)
+        } else {
+            Ok(())
+        };
+        for _ in 0..2 {
+            assert_eq!(
+                SourceMap::validate_mappings(&mappings, &sources, &mut budget()).map(|_| ()),
+                expected,
+                "graph {mask}"
+            );
+            mappings.reverse();
+        }
+    }
+    Ok(())
+}
 fn budget() -> Budget {
     Budget::new(Limits {
         source_bytes: 1_000_000,
