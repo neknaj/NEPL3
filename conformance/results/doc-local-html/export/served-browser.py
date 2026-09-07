@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
 from functools import partial
 from threading import Thread

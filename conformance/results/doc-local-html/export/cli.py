@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 import subprocess,json,hashlib,time
 D=Path(__file__).resolve().parent;W=D/'workspace';E=D/'nepl3-tools.exe';F=D/'filesystem';F.mkdir(exist_ok=True);runs=[];sha=lambda b:hashlib.sha256(b).hexdigest()
 def call(name,input_path,out,success):

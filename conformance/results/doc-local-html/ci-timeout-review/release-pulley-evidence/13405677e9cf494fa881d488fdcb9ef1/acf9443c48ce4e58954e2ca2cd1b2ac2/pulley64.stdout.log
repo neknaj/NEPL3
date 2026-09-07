@@ -1,0 +1,31 @@
+
+running 26 tests
+test admission_accounts_for_copied_locator_payload ... ok
+test admission_usage_does_not_depend_on_snapshot_allocation_order ... ok
+test borrowed_store_insert_does_not_clone_duplicates_or_publish_on_stop ... ok
+test budget_exact_limits_overflow_zero_and_cancel_are_distinct ... ok
+test canonical_integers_reject_negative_zero_and_leading_zero ... ok
+test edit_size_limit_checked_before_replacement_is_built ... ok
+test edits_are_atomic_across_sources_and_reject_stale_or_conflicting_input ... ok
+test first_budget_stop_is_sticky_across_smaller_charges_and_cancellation ... ok
+test generated_source_locator_scan_is_charged_before_validation ... ok
+test indexed_admission_keeps_unique_bytes_and_checks_empty_cancel ... ok
+test indexed_source_insert_preserves_order_and_metered_duplicate_lookup ... ok
+test line_index_allocation_limit_is_enforced ... ok
+test line_positions_roundtrip_unicode_and_all_line_endings ... ok
+test locator_profile_is_checked_without_os_or_scheme_normalization ... ok
+test nested_budget_retains_work_and_peak_depth_after_failed_branch ... ok
+test rational_constructors_normalize_native_but_reject_noncanonical_wire ... ok
+test shared_admission_is_operation_local_and_independent_storage_still_checked ... ok
+test shared_copy_and_independent_comparison_have_separate_work_bounds ... ok
+test snapshot_clones_preserve_owned_lifetime_and_independent_identity_checks ... ok
+test snapshot_metadata_copy_is_bounded_but_independent_comparison_is_not_free ... ok
+test source_admission_charges_unique_snapshots_once_across_shared_calls ... ok
+test source_admission_rejects_locator_changes_for_same_snapshot_identity ... ok
+test source_digest_is_sha256_of_exact_original_bytes ... ok
+test source_limits_precede_decode_and_decode_does_not_replace_bytes ... ok
+test span_rejects_scalar_interiors_bounds_and_other_identity ... ok
+test store_preserves_distinct_ids_at_same_uri_and_rejects_conflicting_revision ... ok
+
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+

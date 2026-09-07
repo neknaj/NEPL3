@@ -1,0 +1,12 @@
+
+running 7 tests
+test all_twelve_tags_match_specified_cbor_bytes ... ok
+test checked_boundary_uses_real_registry_and_rejects_wrong_field_type ... ok
+test deeply_nested_values_do_not_use_the_native_call_stack ... ok
+test every_truncated_prefix_fails_and_complete_input_preserves_bytes ... ok
+test integer_width_boundaries_use_shortest_unsigned_encoding ... ok
+test limits_stop_with_typed_reasons_without_a_successful_partial_value ... ok
+test malformed_noncanonical_and_forbidden_cbor_values_are_rejected ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

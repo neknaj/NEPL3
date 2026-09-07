@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 import shutil,hashlib,json,subprocess,time
 D=Path('C:/projects/NEPL3-runtime/.tmp/review-doc-export');R=Path('C:/projects/NEPL3-doc-html-export');W=D/'workspace-final';shutil.copytree(D/'workspace-fixed',W);rows=[]
 for name in ['tools/src/doc/host.rs','tools/src/main.rs']:

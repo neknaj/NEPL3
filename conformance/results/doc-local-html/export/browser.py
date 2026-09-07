@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 import subprocess,os,json,importlib.util,sys
 D=Path(__file__).resolve().parent;W=D/'workspace';old=D.parent/'review-doc-html-current';env=os.environ.copy();env['PYTHONPATH']=str(D.parent/'review-markup-html/python');sys.path.insert(0,env['PYTHONPATH']);script=W/'tools/audit/doc_html/browser.py'
 spec=importlib.util.spec_from_file_location('fixed_browser',script);mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)

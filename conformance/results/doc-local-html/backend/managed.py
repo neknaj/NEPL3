@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 import json,subprocess,os
 p=Path(__file__).resolve().parent;w=p/'workspace';rows=[]
 for target in ['native','wasm32-wasip2']:

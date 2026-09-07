@@ -1,0 +1,1568 @@
+﻿2026-09-07T19:34:34.7192893Z Current runner version: '2.337.0'
+2026-09-07T19:34:34.7220291Z ##[group]Runner Image Provisioner
+2026-09-07T19:34:34.7221463Z Hosted Compute Agent
+2026-09-07T19:34:34.7222140Z Version: 20260828.587
+2026-09-07T19:34:34.7222825Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-09-07T19:34:34.7223590Z Build Date: 2026-08-28T16:44:25Z
+2026-09-07T19:34:34.7224383Z Worker ID: {6ca0841e-9815-4996-9944-61083beef6b2}
+2026-09-07T19:34:34.7225109Z Azure Region: eastus2
+2026-09-07T19:34:34.7225691Z ##[endgroup]
+2026-09-07T19:34:34.7227325Z ##[group]Operating System
+2026-09-07T19:34:34.7227993Z Ubuntu
+2026-09-07T19:34:34.7228712Z 24.04.4
+2026-09-07T19:34:34.7229256Z LTS
+2026-09-07T19:34:34.7229783Z ##[endgroup]
+2026-09-07T19:34:34.7230424Z ##[group]Runner Image
+2026-09-07T19:34:34.7231049Z Image: ubuntu-24.04
+2026-09-07T19:34:34.7231730Z Version: 20260831.293.1
+2026-09-07T19:34:34.7233057Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260831.293/images/ubuntu/Ubuntu2404-Readme.md
+2026-09-07T19:34:34.7234744Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260831.293
+2026-09-07T19:34:34.7235748Z ##[endgroup]
+2026-09-07T19:34:34.7237107Z ##[group]GITHUB_TOKEN Permissions
+2026-09-07T19:34:34.7239290Z Contents: read
+2026-09-07T19:34:34.7239979Z Metadata: read
+2026-09-07T19:34:34.7240618Z ##[endgroup]
+2026-09-07T19:34:34.7242765Z Secret source: Actions
+2026-09-07T19:34:34.7244229Z Prepare workflow directory
+2026-09-07T19:34:34.7658656Z Prepare all required actions
+2026-09-07T19:34:34.7705408Z Getting action download info
+2026-09-07T19:34:34.9873831Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-09-07T19:34:35.0949551Z Download action repository 'actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97' (SHA:5fda3b95a4ea91299a34e894583c3862153e4b97)
+2026-09-07T19:34:35.1723950Z Download action repository 'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a' (SHA:043fb46d1a93c77aae656e7c1c64a875d1fc6a0a)
+2026-09-07T19:34:35.3560018Z Complete job name: native (ubuntu-latest)
+2026-09-07T19:34:35.4362101Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-09-07T19:34:35.4363097Z with:
+2026-09-07T19:34:35.4363525Z   fetch-depth: 0
+2026-09-07T19:34:35.4363995Z   persist-credentials: false
+2026-09-07T19:34:35.4364511Z   repository: neknaj/NEPL3
+2026-09-07T19:34:35.4368884Z   token: ***
+2026-09-07T19:34:35.4369320Z   ssh-strict: true
+2026-09-07T19:34:35.4369757Z   ssh-user: git
+2026-09-07T19:34:35.4370184Z   clean: true
+2026-09-07T19:34:35.4370630Z   sparse-checkout-cone-mode: true
+2026-09-07T19:34:35.4371147Z   fetch-tags: false
+2026-09-07T19:34:35.4371599Z   show-progress: true
+2026-09-07T19:34:35.4372040Z   lfs: false
+2026-09-07T19:34:35.4372445Z   submodules: false
+2026-09-07T19:34:35.4372891Z   set-safe-directory: true
+2026-09-07T19:34:35.4373384Z   allow-unsafe-pr-checkout: false
+2026-09-07T19:34:35.4374104Z env:
+2026-09-07T19:34:35.4374537Z   CARGO_TERM_COLOR: always
+2026-09-07T19:34:35.4375045Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:34:35.4375567Z ##[endgroup]
+2026-09-07T19:34:35.5380080Z Syncing repository: neknaj/NEPL3
+2026-09-07T19:34:35.5382705Z ##[group]Getting Git version info
+2026-09-07T19:34:35.5383927Z Working directory is '/home/runner/work/NEPL3/NEPL3'
+2026-09-07T19:34:35.5385488Z [command]/usr/bin/git version
+2026-09-07T19:34:35.5434436Z git version 2.55.0
+2026-09-07T19:34:35.5454364Z ##[endgroup]
+2026-09-07T19:34:35.5464311Z Temporarily overriding HOME='/home/runner/work/_temp/7d2e8853-e201-4cf8-b71a-d25ac0270940' before making global git config changes
+2026-09-07T19:34:35.5466520Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-07T19:34:35.5471001Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/NEPL3/NEPL3
+2026-09-07T19:34:35.5520160Z Deleting the contents of '/home/runner/work/NEPL3/NEPL3'
+2026-09-07T19:34:35.5526149Z ##[group]Determining repository object format
+2026-09-07T19:34:35.5528269Z ##[endgroup]
+2026-09-07T19:34:35.5529625Z ##[group]Initializing the repository
+2026-09-07T19:34:35.5532806Z [command]/usr/bin/git init /home/runner/work/NEPL3/NEPL3
+2026-09-07T19:34:35.5614308Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-09-07T19:34:35.5615897Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-09-07T19:34:35.5617517Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-09-07T19:34:35.5618622Z hint: call:
+2026-09-07T19:34:35.5619232Z hint:
+2026-09-07T19:34:35.5620024Z hint: 	git config --global init.defaultBranch <name>
+2026-09-07T19:34:35.5620979Z hint:
+2026-09-07T19:34:35.5621869Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-09-07T19:34:35.5623347Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-09-07T19:34:35.5624456Z hint:
+2026-09-07T19:34:35.5625076Z hint: 	git branch -m <name>
+2026-09-07T19:34:35.5625837Z hint:
+2026-09-07T19:34:35.5626850Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-09-07T19:34:35.5641685Z Initialized empty Git repository in /home/runner/work/NEPL3/NEPL3/.git/
+2026-09-07T19:34:35.5644166Z [command]/usr/bin/git remote add origin https://github.com/neknaj/NEPL3
+2026-09-07T19:34:35.5683891Z ##[endgroup]
+2026-09-07T19:34:35.5685012Z ##[group]Disabling automatic garbage collection
+2026-09-07T19:34:35.5687465Z [command]/usr/bin/git config --local gc.auto 0
+2026-09-07T19:34:35.5720358Z ##[endgroup]
+2026-09-07T19:34:35.5721895Z ##[group]Setting up auth
+2026-09-07T19:34:35.5722729Z Removing SSH command configuration
+2026-09-07T19:34:35.5726271Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-07T19:34:35.5761448Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-07T19:34:35.6094591Z Removing HTTP extra header
+2026-09-07T19:34:35.6102785Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-07T19:34:35.6141558Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-07T19:34:35.6395968Z Removing includeIf entries pointing to credentials config files
+2026-09-07T19:34:35.6401596Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-07T19:34:35.6447697Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-07T19:34:35.6689682Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-f1714897-75c3-497a-a16f-88bf6fdc7391.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-07T19:34:35.6806228Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/NEPL3/NEPL3/.git.path /home/runner/work/_temp/git-credentials-f1714897-75c3-497a-a16f-88bf6fdc7391.config
+2026-09-07T19:34:35.6811346Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/NEPL3/NEPL3/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-f1714897-75c3-497a-a16f-88bf6fdc7391.config
+2026-09-07T19:34:35.6890572Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-f1714897-75c3-497a-a16f-88bf6fdc7391.config
+2026-09-07T19:34:35.6893816Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-f1714897-75c3-497a-a16f-88bf6fdc7391.config
+2026-09-07T19:34:35.6923191Z ##[endgroup]
+2026-09-07T19:34:35.6924165Z ##[group]Fetching the repository
+2026-09-07T19:34:35.6925709Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-09-07T19:34:36.2148210Z From https://github.com/neknaj/NEPL3
+2026-09-07T19:34:36.2150547Z  * [new branch]      feat/baremetal-rp2040 -> origin/feat/baremetal-rp2040
+2026-09-07T19:34:36.2152176Z  * [new branch]      feat/doc-html-export  -> origin/feat/doc-html-export
+2026-09-07T19:34:36.2153609Z  * [new branch]      feat/doc-local-html   -> origin/feat/doc-local-html
+2026-09-07T19:34:36.2155397Z  * [new branch]      feat/native-tokenizer-host -> origin/feat/native-tokenizer-host
+2026-09-07T19:34:36.2157281Z  * [new branch]      feat/snapshot-storage -> origin/feat/snapshot-storage
+2026-09-07T19:34:36.2159737Z  * [new branch]      feat/source-copy-accounting -> origin/feat/source-copy-accounting
+2026-09-07T19:34:36.2162112Z  * [new branch]      feat/source-lookup-indexes -> origin/feat/source-lookup-indexes
+2026-09-07T19:34:36.2164350Z  * [new branch]      main                  -> origin/main
+2026-09-07T19:34:36.2169215Z [command]/usr/bin/git branch --list --remote origin/feat/doc-html-export
+2026-09-07T19:34:36.2189357Z   origin/feat/doc-html-export
+2026-09-07T19:34:36.2198628Z [command]/usr/bin/git rev-parse refs/remotes/origin/feat/doc-html-export
+2026-09-07T19:34:36.2225610Z b2d3b3766a244a0d836e2ab2c77f8b4abf5800cd
+2026-09-07T19:34:36.2230987Z ##[endgroup]
+2026-09-07T19:34:36.2232379Z ##[group]Determining the checkout info
+2026-09-07T19:34:36.2233935Z ##[endgroup]
+2026-09-07T19:34:36.2235196Z [command]/usr/bin/git sparse-checkout disable
+2026-09-07T19:34:36.2288190Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-09-07T19:34:36.2325336Z ##[group]Checking out the ref
+2026-09-07T19:34:36.2329255Z [command]/usr/bin/git checkout --progress --force -B feat/doc-html-export refs/remotes/origin/feat/doc-html-export
+2026-09-07T19:34:36.3540080Z Switched to a new branch 'feat/doc-html-export'
+2026-09-07T19:34:36.3543155Z branch 'feat/doc-html-export' set up to track 'origin/feat/doc-html-export'.
+2026-09-07T19:34:36.3559680Z ##[endgroup]
+2026-09-07T19:34:36.3608282Z [command]/usr/bin/git log -1 --format=%H
+2026-09-07T19:34:36.3640502Z b2d3b3766a244a0d836e2ab2c77f8b4abf5800cd
+2026-09-07T19:34:36.3649752Z ##[group]Removing auth
+2026-09-07T19:34:36.3652380Z Removing SSH command configuration
+2026-09-07T19:34:36.3654520Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-07T19:34:36.3691824Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-07T19:34:36.3939625Z Removing HTTP extra header
+2026-09-07T19:34:36.3942886Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-07T19:34:36.3984313Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-07T19:34:36.4228130Z Removing includeIf entries pointing to credentials config files
+2026-09-07T19:34:36.4231487Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-07T19:34:36.4263147Z includeif.gitdir:/home/runner/work/NEPL3/NEPL3/.git.path
+2026-09-07T19:34:36.4266354Z includeif.gitdir:/home/runner/work/NEPL3/NEPL3/.git/worktrees/*.path
+2026-09-07T19:34:36.4269663Z includeif.gitdir:/github/workspace/.git.path
+2026-09-07T19:34:36.4272818Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-09-07T19:34:36.4280004Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/NEPL3/NEPL3/.git.path
+2026-09-07T19:34:36.4304410Z /home/runner/work/_temp/git-credentials-f1714897-75c3-497a-a16f-88bf6fdc7391.config
+2026-09-07T19:34:36.4315609Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/NEPL3/NEPL3/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-f1714897\-75c3\-497a\-a16f\-88bf6fdc7391\.config
+2026-09-07T19:34:36.4361282Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/NEPL3/NEPL3/.git/worktrees/*.path
+2026-09-07T19:34:36.4391412Z /home/runner/work/_temp/git-credentials-f1714897-75c3-497a-a16f-88bf6fdc7391.config
+2026-09-07T19:34:36.4400325Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/NEPL3/NEPL3/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-f1714897\-75c3\-497a\-a16f\-88bf6fdc7391\.config
+2026-09-07T19:34:36.4436456Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-09-07T19:34:36.4483816Z /github/runner_temp/git-credentials-f1714897-75c3-497a-a16f-88bf6fdc7391.config
+2026-09-07T19:34:36.4523010Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-f1714897\-75c3\-497a\-a16f\-88bf6fdc7391\.config
+2026-09-07T19:34:36.4544896Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-09-07T19:34:36.4572657Z /github/runner_temp/git-credentials-f1714897-75c3-497a-a16f-88bf6fdc7391.config
+2026-09-07T19:34:36.4582568Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-f1714897\-75c3\-497a\-a16f\-88bf6fdc7391\.config
+2026-09-07T19:34:36.4621758Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-07T19:34:36.4859581Z Removing credentials config '/home/runner/work/_temp/git-credentials-f1714897-75c3-497a-a16f-88bf6fdc7391.config'
+2026-09-07T19:34:36.4866280Z ##[endgroup]
+2026-09-07T19:34:36.5102127Z ##[group]Run rustup show active-toolchain
+2026-09-07T19:34:36.5103523Z [36;1mrustup show active-toolchain[0m
+2026-09-07T19:34:36.5104830Z [36;1mrustup component add rustfmt clippy[0m
+2026-09-07T19:34:36.5106155Z [36;1mrustc --version --verbose[0m
+2026-09-07T19:34:36.5107604Z [36;1mcargo --version[0m
+2026-09-07T19:34:36.5154534Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T19:34:36.5155942Z env:
+2026-09-07T19:34:36.5156809Z   CARGO_TERM_COLOR: always
+2026-09-07T19:34:36.5158095Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:34:36.5159110Z ##[endgroup]
+2026-09-07T19:34:36.5549280Z info: syncing channel updates for 1.97.0-x86_64-unknown-linux-gnu
+2026-09-07T19:34:36.7090370Z info: latest update on 2026-07-09 for version 1.97.0 (2d8144b78 2026-07-07)
+2026-09-07T19:34:36.7098754Z info: downloading 5 components
+2026-09-07T19:34:45.2684975Z 1.97.0-x86_64-unknown-linux-gnu (overridden by '/home/runner/work/NEPL3/NEPL3/rust-toolchain.toml')
+2026-09-07T19:34:45.3369926Z info: component rustfmt is up to date
+2026-09-07T19:34:45.3783843Z info: component clippy is up to date
+2026-09-07T19:34:45.4088167Z rustc 1.97.0 (2d8144b78 2026-07-07)
+2026-09-07T19:34:45.4088870Z binary: rustc
+2026-09-07T19:34:45.4089313Z commit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3
+2026-09-07T19:34:45.4089894Z commit-date: 2026-07-07
+2026-09-07T19:34:45.4090307Z host: x86_64-unknown-linux-gnu
+2026-09-07T19:34:45.4090711Z release: 1.97.0
+2026-09-07T19:34:45.4091026Z LLVM version: 22.1.6
+2026-09-07T19:34:45.4360056Z cargo 1.97.0 (c980f4866 2026-06-30)
+2026-09-07T19:34:45.4465300Z ##[group]Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+2026-09-07T19:34:45.4465715Z with:
+2026-09-07T19:34:45.4465944Z   python-version: 3.13
+2026-09-07T19:34:45.4466178Z   check-latest: false
+2026-09-07T19:34:45.4468970Z   token: ***
+2026-09-07T19:34:45.4469193Z   update-environment: true
+2026-09-07T19:34:45.4469505Z   allow-prereleases: false
+2026-09-07T19:34:45.4469741Z   freethreaded: false
+2026-09-07T19:34:45.4469968Z env:
+2026-09-07T19:34:45.4470163Z   CARGO_TERM_COLOR: always
+2026-09-07T19:34:45.4470409Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:34:45.4470649Z ##[endgroup]
+2026-09-07T19:34:45.5611507Z ##[group]Installed versions
+2026-09-07T19:34:45.5689382Z Successfully set up CPython (3.13.15)
+2026-09-07T19:34:45.5690444Z ##[endgroup]
+2026-09-07T19:34:45.5824288Z ##[group]Run python tools/audit/structure.py
+2026-09-07T19:34:45.5824866Z [36;1mpython tools/audit/structure.py[0m
+2026-09-07T19:34:45.5890052Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T19:34:45.5890645Z env:
+2026-09-07T19:34:45.5890995Z   CARGO_TERM_COLOR: always
+2026-09-07T19:34:45.5891392Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:34:45.5891898Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:45.5892658Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+2026-09-07T19:34:45.5893376Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:45.5894025Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:45.5894660Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:45.5895304Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+2026-09-07T19:34:45.5895861Z ##[endgroup]
+2026-09-07T19:34:46.1126786Z {
+2026-09-07T19:34:46.1127532Z   "scope": "design-source structure only; not runtime conformance",
+2026-09-07T19:34:46.1128079Z   "sources": [
+2026-09-07T19:34:46.1128386Z     {
+2026-09-07T19:34:46.1128749Z       "path": "languages/grammar/syntax.neplg",
+2026-09-07T19:34:46.1129208Z       "form_signatures": 69
+2026-09-07T19:34:46.1129554Z     },
+2026-09-07T19:34:46.1129827Z     {
+2026-09-07T19:34:46.1130155Z       "path": "languages/doc/syntax.neplg",
+2026-09-07T19:34:46.1130599Z       "form_signatures": 64
+2026-09-07T19:34:46.1130960Z     },
+2026-09-07T19:34:46.1131232Z     {
+2026-09-07T19:34:46.1131549Z       "path": "languages/math/syntax.neplg",
+2026-09-07T19:34:46.1131988Z       "form_signatures": 29
+2026-09-07T19:34:46.1132332Z     },
+2026-09-07T19:34:46.1132645Z     {
+2026-09-07T19:34:46.1132980Z       "path": "languages/circuit/syntax.neplg",
+2026-09-07T19:34:46.1133442Z       "form_signatures": 26
+2026-09-07T19:34:46.1133783Z     },
+2026-09-07T19:34:46.1133999Z     {
+2026-09-07T19:34:46.1134233Z       "path": "examples/circuit/half-adder.neplc"
+2026-09-07T19:34:46.1134521Z     },
+2026-09-07T19:34:46.1134700Z     {
+2026-09-07T19:34:46.1134934Z       "path": "examples/circuit/instances.neplc"
+2026-09-07T19:34:46.1135221Z     },
+2026-09-07T19:34:46.1135399Z     {
+2026-09-07T19:34:46.1135622Z       "path": "examples/circuit/simultaneous.neplc"
+2026-09-07T19:34:46.1135911Z     },
+2026-09-07T19:34:46.1136088Z     {
+2026-09-07T19:34:46.1136359Z       "path": "examples/circuit/state-feedback.neplc"
+2026-09-07T19:34:46.1136652Z     },
+2026-09-07T19:34:46.1136831Z     {
+2026-09-07T19:34:46.1137244Z       "path": "examples/circuit/toggle.neplc"
+2026-09-07T19:34:46.1137565Z     },
+2026-09-07T19:34:46.1137810Z     {
+2026-09-07T19:34:46.1138041Z       "path": "examples/document/integration.nepld"
+2026-09-07T19:34:46.1138322Z     },
+2026-09-07T19:34:46.1138499Z     {
+2026-09-07T19:34:46.1138721Z       "path": "examples/document/line-break.nepld"
+2026-09-07T19:34:46.1139010Z     },
+2026-09-07T19:34:46.1139185Z     {
+2026-09-07T19:34:46.1139445Z       "path": "examples/document/linear-combination.nepld"
+2026-09-07T19:34:46.1139762Z     },
+2026-09-07T19:34:46.1139951Z     {
+2026-09-07T19:34:46.1140186Z       "path": "examples/document/parallel.nepld"
+2026-09-07T19:34:46.1140484Z     },
+2026-09-07T19:34:46.1140669Z     {
+2026-09-07T19:34:46.1140889Z       "path": "examples/document/prefix.nepld"
+2026-09-07T19:34:46.1141165Z     },
+2026-09-07T19:34:46.1141343Z     {
+2026-09-07T19:34:46.1141572Z       "path": "examples/document/references.nepld"
+2026-09-07T19:34:46.1141856Z     },
+2026-09-07T19:34:46.1142034Z     {
+2026-09-07T19:34:46.1142252Z       "path": "examples/document/sentence.nepld"
+2026-09-07T19:34:46.1142521Z     },
+2026-09-07T19:34:46.1142703Z     {
+2026-09-07T19:34:46.1142915Z       "path": "examples/grammar/angle-tag.neplg"
+2026-09-07T19:34:46.1143190Z     },
+2026-09-07T19:34:46.1143366Z     {
+2026-09-07T19:34:46.1143578Z       "path": "examples/grammar/binding.neplg"
+2026-09-07T19:34:46.1144087Z     },
+2026-09-07T19:34:46.1144267Z     {
+2026-09-07T19:34:46.1144679Z       "path": "examples/grammar/provider.neplg"
+2026-09-07T19:34:46.1144966Z     },
+2026-09-07T19:34:46.1145144Z     {
+2026-09-07T19:34:46.1145382Z       "path": "examples/math/binding.neplm"
+2026-09-07T19:34:46.1145735Z     },
+2026-09-07T19:34:46.1145915Z     {
+2026-09-07T19:34:46.1146122Z       "path": "examples/math/decimal.neplm"
+2026-09-07T19:34:46.1146381Z     },
+2026-09-07T19:34:46.1146562Z     {
+2026-09-07T19:34:46.1146777Z       "path": "examples/math/doc-label.neplm"
+2026-09-07T19:34:46.1147227Z     },
+2026-09-07T19:34:46.1147410Z     {
+2026-09-07T19:34:46.1147617Z       "path": "examples/math/matrix.neplm"
+2026-09-07T19:34:46.1147883Z     },
+2026-09-07T19:34:46.1148068Z     {
+2026-09-07T19:34:46.1148279Z       "path": "examples/math/notation.neplm"
+2026-09-07T19:34:46.1148548Z     },
+2026-09-07T19:34:46.1148726Z     {
+2026-09-07T19:34:46.1148938Z       "path": "examples/math/rational.neplm"
+2026-09-07T19:34:46.1149205Z     },
+2026-09-07T19:34:46.1149385Z     {
+2026-09-07T19:34:46.1149591Z       "path": "examples/math/sum.neplm"
+2026-09-07T19:34:46.1149852Z     }
+2026-09-07T19:34:46.1150031Z   ]
+2026-09-07T19:34:46.1150215Z }
+2026-09-07T19:34:46.1200041Z ##[group]Run python -m unittest discover -s tools/audit -p test.py
+2026-09-07T19:34:46.1200550Z [36;1mpython -m unittest discover -s tools/audit -p test.py[0m
+2026-09-07T19:34:46.1241972Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T19:34:46.1242325Z env:
+2026-09-07T19:34:46.1242534Z   CARGO_TERM_COLOR: always
+2026-09-07T19:34:46.1242786Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:34:46.1243094Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.1243537Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+2026-09-07T19:34:46.1243957Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.1244334Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.1244722Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.1245101Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+2026-09-07T19:34:46.1245425Z ##[endgroup]
+2026-09-07T19:34:46.4874407Z ......
+2026-09-07T19:34:46.4875014Z ----------------------------------------------------------------------
+2026-09-07T19:34:46.4875596Z Ran 6 tests in 0.002s
+2026-09-07T19:34:46.4875829Z 
+2026-09-07T19:34:46.4875952Z OK
+2026-09-07T19:34:46.5023439Z ##[group]Run python tools/generate/grammar.py
+2026-09-07T19:34:46.5023797Z [36;1mpython tools/generate/grammar.py[0m
+2026-09-07T19:34:46.5063305Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T19:34:46.5063645Z env:
+2026-09-07T19:34:46.5063854Z   CARGO_TERM_COLOR: always
+2026-09-07T19:34:46.5064102Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:34:46.5064408Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.5064835Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+2026-09-07T19:34:46.5065276Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.5065648Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.5066080Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.5066458Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+2026-09-07T19:34:46.5066780Z ##[endgroup]
+2026-09-07T19:34:46.5559576Z ##[group]Run python tools/generate/doc.py
+2026-09-07T19:34:46.5559912Z [36;1mpython tools/generate/doc.py[0m
+2026-09-07T19:34:46.5597177Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T19:34:46.5597511Z env:
+2026-09-07T19:34:46.5597722Z   CARGO_TERM_COLOR: always
+2026-09-07T19:34:46.5597973Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:34:46.5598285Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.5598716Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+2026-09-07T19:34:46.5599136Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.5599706Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.5600073Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.5600439Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+2026-09-07T19:34:46.5600762Z ##[endgroup]
+2026-09-07T19:34:46.6050387Z ##[group]Run python tools/generate/math.py
+2026-09-07T19:34:46.6050726Z [36;1mpython tools/generate/math.py[0m
+2026-09-07T19:34:46.6087803Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T19:34:46.6088151Z env:
+2026-09-07T19:34:46.6088358Z   CARGO_TERM_COLOR: always
+2026-09-07T19:34:46.6088608Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:34:46.6088920Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.6089358Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+2026-09-07T19:34:46.6089807Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.6090209Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.6090573Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.6090943Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+2026-09-07T19:34:46.6091261Z ##[endgroup]
+2026-09-07T19:34:46.6526524Z ##[group]Run python tools/generate/markup.py
+2026-09-07T19:34:46.6526888Z [36;1mpython tools/generate/markup.py[0m
+2026-09-07T19:34:46.6564805Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T19:34:46.6565149Z env:
+2026-09-07T19:34:46.6565359Z   CARGO_TERM_COLOR: always
+2026-09-07T19:34:46.6565635Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:34:46.6565938Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.6566369Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+2026-09-07T19:34:46.6566788Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.6567333Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.6567718Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.6568087Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+2026-09-07T19:34:46.6568419Z ##[endgroup]
+2026-09-07T19:34:46.6999642Z ##[group]Run python tools/generate/doc_html.py
+2026-09-07T19:34:46.6999998Z [36;1mpython tools/generate/doc_html.py[0m
+2026-09-07T19:34:46.7038393Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T19:34:46.7038744Z env:
+2026-09-07T19:34:46.7038957Z   CARGO_TERM_COLOR: always
+2026-09-07T19:34:46.7039213Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:34:46.7039529Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.7039958Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+2026-09-07T19:34:46.7040387Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.7040755Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.7041141Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.7041513Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+2026-09-07T19:34:46.7041838Z ##[endgroup]
+2026-09-07T19:34:46.7483139Z ##[group]Run python -m unittest discover -s tools/audit/doc_html -p 'test_*.py'
+2026-09-07T19:34:46.7483716Z [36;1mpython -m unittest discover -s tools/audit/doc_html -p 'test_*.py'[0m
+2026-09-07T19:34:46.7521999Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T19:34:46.7522356Z env:
+2026-09-07T19:34:46.7522568Z   CARGO_TERM_COLOR: always
+2026-09-07T19:34:46.7522830Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:34:46.7523142Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.7523568Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+2026-09-07T19:34:46.7523984Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.7524358Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.7524910Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.7525281Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+2026-09-07T19:34:46.7525629Z ##[endgroup]
+2026-09-07T19:34:46.8490819Z ..
+2026-09-07T19:34:46.8491482Z ----------------------------------------------------------------------
+2026-09-07T19:34:46.8492018Z Ran 2 tests in 0.012s
+2026-09-07T19:34:46.8492212Z 
+2026-09-07T19:34:46.8492324Z OK
+2026-09-07T19:34:46.8607922Z ##[group]Run python -m unittest discover -s tools/bootstrap -p test_grammar.py
+2026-09-07T19:34:46.8608532Z [36;1mpython -m unittest discover -s tools/bootstrap -p test_grammar.py[0m
+2026-09-07T19:34:46.8648531Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T19:34:46.8648875Z env:
+2026-09-07T19:34:46.8649083Z   CARGO_TERM_COLOR: always
+2026-09-07T19:34:46.8649327Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:34:46.8649633Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.8650075Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+2026-09-07T19:34:46.8650495Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.8650868Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.8651242Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.8651620Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+2026-09-07T19:34:46.8651970Z ##[endgroup]
+2026-09-07T19:34:46.9376254Z ...
+2026-09-07T19:34:46.9376860Z ----------------------------------------------------------------------
+2026-09-07T19:34:46.9377665Z Ran 3 tests in 0.009s
+2026-09-07T19:34:46.9377924Z 
+2026-09-07T19:34:46.9462575Z OK
+2026-09-07T19:34:46.9488858Z ##[group]Run cargo fmt --all -- --check
+2026-09-07T19:34:46.9489195Z [36;1mcargo fmt --all -- --check[0m
+2026-09-07T19:34:46.9527422Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T19:34:46.9527769Z env:
+2026-09-07T19:34:46.9527980Z   CARGO_TERM_COLOR: always
+2026-09-07T19:34:46.9528242Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:34:46.9528547Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.9528973Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+2026-09-07T19:34:46.9529393Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.9529772Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.9530153Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:46.9530526Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+2026-09-07T19:34:46.9530853Z ##[endgroup]
+2026-09-07T19:34:48.1242101Z ##[group]Run cargo clippy --workspace --all-targets --locked -- -D warnings
+2026-09-07T19:34:48.1242661Z [36;1mcargo clippy --workspace --all-targets --locked -- -D warnings[0m
+2026-09-07T19:34:48.1282340Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T19:34:48.1282687Z env:
+2026-09-07T19:34:48.1282901Z   CARGO_TERM_COLOR: always
+2026-09-07T19:34:48.1283175Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:34:48.1283484Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:48.1283913Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+2026-09-07T19:34:48.1284328Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:48.1284710Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:48.1285094Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:34:48.1285467Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+2026-09-07T19:34:48.1285823Z ##[endgroup]
+2026-09-07T19:34:48.2111562Z [1m[92m    Updating[0m crates.io index
+2026-09-07T19:34:48.3470552Z [1m[92m Downloading[0m crates ...
+2026-09-07T19:34:48.3968016Z [1m[92m  Downloaded[0m memchr v2.8.3
+2026-09-07T19:34:48.4036108Z [1m[92m  Downloaded[0m cpufeatures v0.3.1
+2026-09-07T19:34:48.4052411Z [1m[92m  Downloaded[0m itoa v1.0.18
+2026-09-07T19:34:48.4069335Z [1m[92m  Downloaded[0m crypto-common v0.2.2
+2026-09-07T19:34:48.4081827Z [1m[92m  Downloaded[0m block-buffer v0.12.1
+2026-09-07T19:34:48.4095576Z [1m[92m  Downloaded[0m cfg-if v1.0.4
+2026-09-07T19:34:48.4109812Z [1m[92m  Downloaded[0m digest v0.11.3
+2026-09-07T19:34:48.4135702Z [1m[92m  Downloaded[0m unicase v2.9.0
+2026-09-07T19:34:48.4152007Z [1m[92m  Downloaded[0m hybrid-array v0.4.14
+2026-09-07T19:34:48.4177757Z [1m[92m  Downloaded[0m autocfg v1.5.1
+2026-09-07T19:34:48.4207940Z [1m[92m  Downloaded[0m zmij v1.0.23
+2026-09-07T19:34:48.4229232Z [1m[92m  Downloaded[0m sha2 v0.11.0
+2026-09-07T19:34:48.4267421Z [1m[92m  Downloaded[0m bitflags v2.13.1
+2026-09-07T19:34:48.4315429Z [1m[92m  Downloaded[0m serde_derive v1.0.229
+2026-09-07T19:34:48.4347123Z [1m[92m  Downloaded[0m num-traits v0.2.19
+2026-09-07T19:34:48.4374108Z [1m[92m  Downloaded[0m serde v1.0.229
+2026-09-07T19:34:48.4410182Z [1m[92m  Downloaded[0m serde_json v1.0.151
+2026-09-07T19:34:48.4487721Z [1m[92m  Downloaded[0m proc-macro2 v1.0.107
+2026-09-07T19:34:48.4518320Z [1m[92m  Downloaded[0m unicode-ident v1.0.18
+2026-09-07T19:34:48.4547127Z [1m[92m  Downloaded[0m num-integer v0.1.47
+2026-09-07T19:34:48.4563484Z [1m[92m  Downloaded[0m serde_core v1.0.229
+2026-09-07T19:34:48.4591970Z [1m[92m  Downloaded[0m quote v1.0.47
+2026-09-07T19:34:48.4619982Z [1m[92m  Downloaded[0m typenum v1.20.1
+2026-09-07T19:34:48.4656298Z [1m[92m  Downloaded[0m num-bigint v0.4.8
+2026-09-07T19:34:48.4707341Z [1m[92m  Downloaded[0m pulldown-cmark v0.13.4
+2026-09-07T19:34:48.4760224Z [1m[92m  Downloaded[0m syn v3.0.5
+2026-09-07T19:34:48.5156652Z [1m[92m   Compiling[0m autocfg v1.5.1
+2026-09-07T19:34:48.5157929Z [1m[92m    Checking[0m typenum v1.20.1
+2026-09-07T19:34:48.5158625Z [1m[92m    Checking[0m cfg-if v1.0.4
+2026-09-07T19:34:48.5170819Z [1m[92m    Checking[0m cpufeatures v0.3.1
+2026-09-07T19:34:48.5372344Z [1m[92m    Checking[0m unicode-ident v1.0.18
+2026-09-07T19:34:48.5439371Z [1m[92m   Compiling[0m proc-macro2 v1.0.107
+2026-09-07T19:34:48.6438591Z [1m[92m   Compiling[0m quote v1.0.47
+2026-09-07T19:34:48.7898879Z [1m[92m   Compiling[0m serde_core v1.0.229
+2026-09-07T19:34:48.7978314Z [1m[92m   Compiling[0m num-traits v0.2.19
+2026-09-07T19:34:48.9635703Z [1m[92m   Compiling[0m zmij v1.0.23
+2026-09-07T19:34:49.3217411Z [1m[92m    Checking[0m hybrid-array v0.4.14
+2026-09-07T19:34:49.4138635Z [1m[92m    Checking[0m num-integer v0.1.47
+2026-09-07T19:34:49.5068583Z [1m[92m   Compiling[0m syn v3.0.5
+2026-09-07T19:34:49.5868694Z [1m[92m    Checking[0m num-bigint v0.4.8
+2026-09-07T19:34:49.8015104Z [1m[92m    Checking[0m crypto-common v0.2.2
+2026-09-07T19:34:50.3348770Z [1m[92m    Checking[0m block-buffer v0.12.1
+2026-09-07T19:34:50.4070604Z [1m[92m    Checking[0m digest v0.11.3
+2026-09-07T19:34:50.4478017Z [1m[92m   Compiling[0m serde v1.0.229
+2026-09-07T19:34:50.4789920Z [1m[92m    Checking[0m sha2 v0.11.0
+2026-09-07T19:34:50.6028800Z [1m[92m   Compiling[0m serde_json v1.0.151
+2026-09-07T19:34:50.6971810Z [1m[92m   Compiling[0m pulldown-cmark v0.13.4
+2026-09-07T19:34:50.8208509Z [1m[92m    Checking[0m memchr v2.8.3
+2026-09-07T19:34:51.0558892Z [1m[92m    Checking[0m nepl3-core v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/foundation/core)
+2026-09-07T19:34:51.1338458Z [1m[92m    Checking[0m bitflags v2.13.1
+2026-09-07T19:34:51.1558619Z [1m[92m    Checking[0m unicase v2.9.0
+2026-09-07T19:34:51.2131237Z [1m[92m    Checking[0m itoa v1.0.18
+2026-09-07T19:34:51.7104445Z [1m[92m   Compiling[0m serde_derive v1.0.229
+2026-09-07T19:34:52.6042400Z [1m[92m    Checking[0m nepl3-wire v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/foundation/wire)
+2026-09-07T19:34:52.6088429Z [1m[92m    Checking[0m nepl3-reader v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/foundation/reader)
+2026-09-07T19:34:53.4359390Z [1m[92m    Checking[0m nepl3-doc-core v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/languages/doc/core)
+2026-09-07T19:34:53.6820491Z [1m[92m    Checking[0m nepl3-markup v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/output/markup)
+2026-09-07T19:34:54.1181717Z [1m[92m    Checking[0m nepl3-math-core v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/languages/math/core)
+2026-09-07T19:34:54.3159048Z [1m[92m    Checking[0m nepl3-engine v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/foundation/engine)
+2026-09-07T19:34:55.3914435Z [1m[92m    Checking[0m nepl3-doc-html v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/languages/doc/html)
+2026-09-07T19:35:00.0901098Z [1m[92m    Checking[0m nepl3-grammar-core v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/languages/grammar/core)
+2026-09-07T19:35:01.1597649Z [1m[92m    Checking[0m nepl3-tools v0.1.0 (/home/runner/work/NEPL3/NEPL3/tools)
+2026-09-07T19:35:05.1748304Z [1m[92m    Finished[0m `dev` profile [unoptimized + debuginfo] target(s) in 16.99s
+2026-09-07T19:35:05.2027488Z ##[group]Run cargo test --workspace --locked
+2026-09-07T19:35:05.2028006Z [36;1mcargo test --workspace --locked[0m
+2026-09-07T19:35:05.2067391Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T19:35:05.2067744Z env:
+2026-09-07T19:35:05.2067951Z   CARGO_TERM_COLOR: always
+2026-09-07T19:35:05.2068200Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:35:05.2068509Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:35:05.2068938Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+2026-09-07T19:35:05.2069379Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:35:05.2069765Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:35:05.2070143Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:35:05.2070526Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+2026-09-07T19:35:05.2070857Z ##[endgroup]
+2026-09-07T19:35:05.3017453Z [1m[92m   Compiling[0m unicode-ident v1.0.18
+2026-09-07T19:35:05.3018320Z [1m[92m   Compiling[0m typenum v1.20.1
+2026-09-07T19:35:05.3037920Z [1m[92m   Compiling[0m cpufeatures v0.3.1
+2026-09-07T19:35:05.3038638Z [1m[92m   Compiling[0m num-traits v0.2.19
+2026-09-07T19:35:05.3438484Z [1m[92m   Compiling[0m cfg-if v1.0.4
+2026-09-07T19:35:05.3680386Z [1m[92m   Compiling[0m proc-macro2 v1.0.107
+2026-09-07T19:35:05.3739104Z [1m[92m   Compiling[0m serde_core v1.0.229
+2026-09-07T19:35:05.8718567Z [1m[92m   Compiling[0m num-integer v0.1.47
+2026-09-07T19:35:05.9159456Z [1m[92m   Compiling[0m quote v1.0.47
+2026-09-07T19:35:06.0948651Z [1m[92m   Compiling[0m num-bigint v0.4.8
+2026-09-07T19:35:06.1286155Z [1m[92m   Compiling[0m syn v3.0.5
+2026-09-07T19:35:06.2298801Z [1m[92m   Compiling[0m hybrid-array v0.4.14
+2026-09-07T19:35:06.7168357Z [1m[92m   Compiling[0m block-buffer v0.12.1
+2026-09-07T19:35:06.8058388Z [1m[92m   Compiling[0m crypto-common v0.2.2
+2026-09-07T19:35:07.4818458Z [1m[92m   Compiling[0m digest v0.11.3
+2026-09-07T19:35:07.5713994Z [1m[92m   Compiling[0m sha2 v0.11.0
+2026-09-07T19:35:07.5798165Z [1m[92m   Compiling[0m memchr v2.8.3
+2026-09-07T19:35:07.8748252Z [1m[92m   Compiling[0m zmij v1.0.23
+2026-09-07T19:35:08.1378498Z [1m[92m   Compiling[0m bitflags v2.13.1
+2026-09-07T19:35:08.2528942Z [1m[92m   Compiling[0m nepl3-core v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/foundation/core)
+2026-09-07T19:35:08.2768583Z [1m[92m   Compiling[0m unicase v2.9.0
+2026-09-07T19:35:08.3578466Z [1m[92m   Compiling[0m serde_derive v1.0.229
+2026-09-07T19:35:08.4058621Z [1m[92m   Compiling[0m itoa v1.0.18
+2026-09-07T19:35:08.4538694Z [1m[92m   Compiling[0m pulldown-cmark v0.13.4
+2026-09-07T19:35:08.5111596Z [1m[92m   Compiling[0m serde_json v1.0.151
+2026-09-07T19:35:10.1216763Z [1m[92m   Compiling[0m nepl3-wire v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/foundation/wire)
+2026-09-07T19:35:11.0027879Z [1m[92m   Compiling[0m nepl3-reader v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/foundation/reader)
+2026-09-07T19:35:11.0572259Z [1m[92m   Compiling[0m nepl3-doc-core v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/languages/doc/core)
+2026-09-07T19:35:12.1939261Z [1m[92m   Compiling[0m nepl3-markup v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/output/markup)
+2026-09-07T19:35:12.5318729Z [1m[92m   Compiling[0m nepl3-engine v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/foundation/engine)
+2026-09-07T19:35:13.2409673Z [1m[92m   Compiling[0m nepl3-math-core v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/languages/math/core)
+2026-09-07T19:35:14.2511172Z [1m[92m   Compiling[0m nepl3-doc-html v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/languages/doc/html)
+2026-09-07T19:35:14.4728567Z [1m[92m   Compiling[0m serde v1.0.229
+2026-09-07T19:35:17.4358972Z [1m[92m   Compiling[0m nepl3-grammar-core v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/languages/grammar/core)
+2026-09-07T19:35:18.2855220Z [1m[92m   Compiling[0m nepl3-tools v0.1.0 (/home/runner/work/NEPL3/NEPL3/tools)
+2026-09-07T19:35:39.9069597Z [1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 34.66s
+2026-09-07T19:35:39.9179964Z [1m[92m     Running[0m unittests src/lib.rs (target/debug/deps/nepl3_core-98a0735658238982)
+2026-09-07T19:35:39.9192277Z 
+2026-09-07T19:35:39.9193113Z running 0 tests
+2026-09-07T19:35:39.9193355Z 
+2026-09-07T19:35:39.9193806Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:35:39.9194366Z 
+2026-09-07T19:35:39.9194954Z [1m[92m     Running[0m tests/budget.rs (target/debug/deps/budget-a97ca7400133c9c1)
+2026-09-07T19:35:39.9205013Z 
+2026-09-07T19:35:39.9205205Z running 2 tests
+2026-09-07T19:35:39.9208210Z test observed_delegated_cost_is_atomic_across_all_resources_and_preserves_stops ... ok
+2026-09-07T19:35:39.9209283Z test temporary_ceilings_restore_on_result_paths_and_cannot_regrant_reserved_capacity ... ok
+2026-09-07T19:35:39.9209857Z 
+2026-09-07T19:35:39.9210171Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:35:39.9210531Z 
+2026-09-07T19:35:39.9210968Z [1m[92m     Running[0m tests/contracts.rs (target/debug/deps/contracts-3561c4392a704697)
+2026-09-07T19:35:39.9220763Z 
+2026-09-07T19:35:39.9220924Z running 26 tests
+2026-09-07T19:35:39.9229491Z test budget_exact_limits_overflow_zero_and_cancel_are_distinct ... ok
+2026-09-07T19:35:39.9230659Z test canonical_integers_reject_negative_zero_and_leading_zero ... ok
+2026-09-07T19:35:39.9231614Z test edit_size_limit_checked_before_replacement_is_built ... ok
+2026-09-07T19:35:39.9232452Z test admission_accounts_for_copied_locator_payload ... ok
+2026-09-07T19:35:39.9233367Z test first_budget_stop_is_sticky_across_smaller_charges_and_cancellation ... ok
+2026-09-07T19:35:39.9234486Z test edits_are_atomic_across_sources_and_reject_stale_or_conflicting_input ... ok
+2026-09-07T19:35:39.9237509Z test borrowed_store_insert_does_not_clone_duplicates_or_publish_on_stop ... ok
+2026-09-07T19:35:39.9248822Z test admission_usage_does_not_depend_on_snapshot_allocation_order ... ok
+2026-09-07T19:35:39.9250010Z test indexed_source_insert_preserves_order_and_metered_duplicate_lookup ... ok
+2026-09-07T19:35:39.9250985Z test line_index_allocation_limit_is_enforced ... ok
+2026-09-07T19:35:39.9251835Z test line_positions_roundtrip_unicode_and_all_line_endings ... ok
+2026-09-07T19:35:39.9252784Z test locator_profile_is_checked_without_os_or_scheme_normalization ... ok
+2026-09-07T19:35:39.9253826Z test nested_budget_retains_work_and_peak_depth_after_failed_branch ... ok
+2026-09-07T19:35:39.9254834Z test rational_constructors_normalize_native_but_reject_noncanonical_wire ... ok
+2026-09-07T19:35:39.9262117Z test shared_admission_is_operation_local_and_independent_storage_still_checked ... ok
+2026-09-07T19:35:39.9263759Z test indexed_admission_keeps_unique_bytes_and_checks_empty_cancel ... ok
+2026-09-07T19:35:39.9286971Z test generated_source_locator_scan_is_charged_before_validation ... ok
+2026-09-07T19:35:39.9308256Z test source_admission_charges_unique_snapshots_once_across_shared_calls ... ok
+2026-09-07T19:35:39.9309362Z test source_admission_rejects_locator_changes_for_same_snapshot_identity ... ok
+2026-09-07T19:35:39.9331199Z test source_digest_is_sha256_of_exact_original_bytes ... ok
+2026-09-07T19:35:39.9331985Z test snapshot_metadata_copy_is_bounded_but_independent_comparison_is_not_free ... ok
+2026-09-07T19:35:39.9332814Z test source_limits_precede_decode_and_decode_does_not_replace_bytes ... ok
+2026-09-07T19:35:39.9334349Z test store_preserves_distinct_ids_at_same_uri_and_rejects_conflicting_revision ... ok
+2026-09-07T19:35:39.9335380Z test span_rejects_scalar_interiors_bounds_and_other_identity ... ok
+2026-09-07T19:35:39.9395776Z test shared_copy_and_independent_comparison_have_separate_work_bounds ... ok
+2026-09-07T19:35:39.9424963Z test snapshot_clones_preserve_owned_lifetime_and_independent_identity_checks ... ok
+2026-09-07T19:35:39.9425538Z 
+2026-09-07T19:35:39.9426220Z test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+2026-09-07T19:35:39.9426842Z 
+2026-09-07T19:35:39.9428794Z [1m[92m     Running[0m tests/decimal.rs (target/debug/deps/decimal-9ecd3c96654672c6)
+2026-09-07T19:35:39.9439213Z 
+2026-09-07T19:35:39.9439360Z running 2 tests
+2026-09-07T19:35:39.9442248Z test invalid_digits_and_resource_stops_precede_numeric_allocation ... ok
+2026-09-07T19:35:39.9443135Z test exact_decimal_constructor_is_independent_of_lexical_leading_zero_policy ... ok
+2026-09-07T19:35:39.9443723Z 
+2026-09-07T19:35:39.9444120Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:35:39.9444661Z 
+2026-09-07T19:35:39.9445153Z [1m[92m     Running[0m tests/edit.rs (target/debug/deps/edit-2b266835fc55771d)
+2026-09-07T19:35:39.9454218Z 
+2026-09-07T19:35:39.9454371Z running 5 tests
+2026-09-07T19:35:39.9477883Z test deletion_admits_original_and_generated_snapshots_once ... ok
+2026-09-07T19:35:39.9479076Z test a_conflicting_preexisting_output_does_not_publish_other_transaction_outputs ... ok
+2026-09-07T19:35:39.9480060Z test semantic_failure_does_not_reserve_an_unpublished_output_identity ... ok
+2026-09-07T19:35:39.9501779Z test work_source_and_locator_limits_stop_before_unbounded_owned_copies ... ok
+2026-09-07T19:35:39.9999510Z test every_allocation_stop_is_atomic_sticky_and_retryable_in_a_fresh_operation ... ok
+2026-09-07T19:35:40.0000124Z 
+2026-09-07T19:35:40.0000541Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+2026-09-07T19:35:40.0001091Z 
+2026-09-07T19:35:40.0002334Z [1m[92m     Running[0m tests/facts.rs (target/debug/deps/facts-4d67052257b3ce82)
+2026-09-07T19:35:40.0014691Z 
+2026-09-07T19:35:40.0015053Z running 2 tests
+2026-09-07T19:35:40.0084797Z test facts_reject_missing_sources_namespace_roots_and_fresh_operation_limits ... ok
+2026-09-07T19:35:40.0095483Z test delta_keeps_current_scope_namespace_reservations_and_foreign_scope_authority ... ok
+2026-09-07T19:35:40.0095903Z 
+2026-09-07T19:35:40.0096202Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-09-07T19:35:40.0096600Z 
+2026-09-07T19:35:40.0098296Z [1m[92m     Running[0m tests/lexical.rs (target/debug/deps/lexical-6838ebccb53f5177)
+2026-09-07T19:35:40.0108275Z 
+2026-09-07T19:35:40.0108394Z running 3 tests
+2026-09-07T19:35:40.0111330Z test whole_language_tag_preserves_abnf_scope ... ok
+2026-09-07T19:35:40.0112062Z test whole_name_uses_pinned_unicode_spelling_and_excludes_trivia ... ok
+2026-09-07T19:35:40.0113002Z test whole_lexemes_stop_without_allocating_or_losing_cancellation ... ok
+2026-09-07T19:35:40.0113626Z 
+2026-09-07T19:35:40.0114184Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:35:40.0115403Z [1m[92m     Running[0m tests/maps.rs (target/debug/deps/maps-7255a1f28b9feb12)
+2026-09-07T19:35:40.0115896Z 
+2026-09-07T19:35:40.0124744Z 
+2026-09-07T19:35:40.0124903Z running 4 tests
+2026-09-07T19:35:40.0130448Z test mapped_containment_requires_every_byte_and_every_reverse_path ... ok
+2026-09-07T19:35:40.0139609Z test snapshot_dag_proves_large_transforms_without_enumerating_the_point_product ... ok
+2026-09-07T19:35:40.0166582Z test map_admission_never_copies_long_identity_before_zero_allocation_budget ... ok
+2026-09-07T19:35:40.0210300Z test indexed_map_graphs_agree_with_transitive_closure_in_both_orders ... ok
+2026-09-07T19:35:40.0210822Z 
+2026-09-07T19:35:40.0211251Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-09-07T19:35:40.0211815Z 
+2026-09-07T19:35:40.0213064Z [1m[92m     Running[0m tests/structure.rs (target/debug/deps/structure-4e471fbbde961003)
+2026-09-07T19:35:40.0223085Z 
+2026-09-07T19:35:40.0223244Z running 20 tests
+2026-09-07T19:35:40.0228193Z test canonical_json_escapes_controls_without_unicode_normalization ... ok
+2026-09-07T19:35:40.0229263Z test descriptor_canonical_json_has_independently_specified_field_order ... ok
+2026-09-07T19:35:40.0230739Z test empty_anchor_cycles_and_transformed_relations_are_checked ... ok
+2026-09-07T19:35:40.0231786Z test descriptor_map_order_is_irrelevant_but_duplicates_are_rejected ... ok
+2026-09-07T19:35:40.0232801Z test forward_overlap_is_acyclic_and_map_budget_failure_does_not_insert ... ok
+2026-09-07T19:35:40.0233607Z test imported_origin_graph_honors_zero_nodes_and_depth_limits ... ok
+2026-09-07T19:35:40.0234516Z test imported_origin_graph_rejects_cycles_unknown_refs_and_missing_source ... ok
+2026-09-07T19:35:40.0235495Z test inverse_refuses_transformed_and_ambiguous_mappings ... ok
+2026-09-07T19:35:40.0236398Z test local_kind_ids_are_canonical_across_descriptor_input_order ... ok
+2026-09-07T19:35:40.0237698Z test registry_accepts_mutual_symbolic_references_then_seals_them ... ok
+2026-09-07T19:35:40.0238813Z test report_candidate_rollback_discards_facts_without_refunding_budget ... ok
+2026-09-07T19:35:40.0241133Z test report_diagnostic_limit_has_no_fabricated_global_message ... ok
+2026-09-07T19:35:40.0248739Z test registry_rejects_wrong_digest_and_unknown_unused_references ... ok
+2026-09-07T19:35:40.0249731Z test report_storage_obeys_allocation_budget ... ok
+2026-09-07T19:35:40.0250765Z test report_zero_event_capacity_keeps_one_typed_overflow_and_stop ... ok
+2026-09-07T19:35:40.0252329Z test structural_boundary_checks_field_count_kind_intrinsic_subset_and_negative_natural ... ok
+2026-09-07T19:35:40.0255387Z test validator_and_descriptor_depth_share_parent_budget_and_peak ... ok
+2026-09-07T19:35:40.0256260Z test source_map_checks_composable_interval_cycles_not_snapshot_cycles ... ok
+2026-09-07T19:35:40.0733316Z test rejected_deep_descriptor_is_safe_to_clone_compare_debug_and_drop ... ok
+2026-09-07T19:35:40.0821416Z test deeply_nested_value_cleanup_uses_no_recursive_drop_chain ... ok
+2026-09-07T19:35:40.0821908Z 
+2026-09-07T19:35:40.0822300Z test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+2026-09-07T19:35:40.0822901Z 
+2026-09-07T19:35:40.0825263Z [1m[92m     Running[0m tests/syntax.rs (target/debug/deps/syntax-a6b9ede14487898e)
+2026-09-07T19:35:40.0836906Z 
+2026-09-07T19:35:40.0837297Z running 10 tests
+2026-09-07T19:35:40.0842097Z test foreign_ids_are_local_but_environment_and_root_must_match ... ok
+2026-09-07T19:35:40.0842815Z test foreign_nesting_adds_to_containing_node_path_depth ... ok
+2026-09-07T19:35:40.0859394Z test source_child_cover_must_follow_head_and_stay_in_parent ... ok
+2026-09-07T19:35:40.0860207Z test syntax_graph_checks_all_refs_and_cycles_while_allowing_shared_children ... ok
+2026-09-07T19:35:40.0861103Z test syntax_preserves_nested_stop_causes_and_does_not_reclassify_semantic_errors ... ok
+2026-09-07T19:35:40.0862633Z test token_owns_even_unreachable_view_elements ... ok
+2026-09-07T19:35:40.0864779Z test view_child_edges_are_acyclic_but_semantic_relation_cycles_are_allowed ... ok
+2026-09-07T19:35:40.0866443Z test token_internal_view_is_sidecar_and_trivia_retains_bom_bytes ... ok
+2026-09-07T19:35:40.1525527Z test deeply_nested_foreign_bundle_cleanup_is_iterative ... ok
+2026-09-07T19:35:40.5670835Z test owned_syntax_copy_precharges_payloads_and_preserves_deep_foreign_ownership ... ok
+2026-09-07T19:35:40.5671460Z 
+2026-09-07T19:35:40.5672307Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.48s
+2026-09-07T19:35:40.5672840Z 
+2026-09-07T19:35:40.5695067Z [1m[92m     Running[0m tests/value.rs (target/debug/deps/value-6b023ab0ff3a245f)
+2026-09-07T19:35:40.5707215Z 
+2026-09-07T19:35:40.5707372Z running 2 tests
+2026-09-07T19:35:40.5710228Z test budgeted_equality_keeps_values_and_composes_caller_depth ... ok
+2026-09-07T19:35:40.5907405Z test equality_charges_frontier_before_queueing_wide_input ... ok
+2026-09-07T19:35:40.5907723Z 
+2026-09-07T19:35:40.5908016Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+2026-09-07T19:35:40.5908416Z 
+2026-09-07T19:35:40.5910627Z [1m[92m     Running[0m unittests src/lib.rs (target/debug/deps/nepl3_doc_core-8b8ca777e54c4eb9)
+2026-09-07T19:35:40.5922217Z 
+2026-09-07T19:35:40.5922911Z running 1 test
+2026-09-07T19:35:40.5926345Z test normalize::tests::normal_form_flattens_only_sequences_and_retains_explicit_break ... ok
+2026-09-07T19:35:40.5927191Z 
+2026-09-07T19:35:40.5927686Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:35:40.5928775Z [1m[92m     Running[0m tests/foreign.rs (target/debug/deps/foreign-c5402bdf4abd2999)
+2026-09-07T19:35:40.5929220Z 
+2026-09-07T19:35:40.5939630Z 
+2026-09-07T19:35:40.5939787Z running 2 tests
+2026-09-07T19:35:40.6048719Z test shared_embed_validation_composes_its_deepest_doc_owner ... ok
+2026-09-07T19:35:40.6053931Z test code_guest_stays_syntax_through_doc_structure_and_cbor ... ok
+2026-09-07T19:35:40.6054359Z 
+2026-09-07T19:35:40.6054614Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-09-07T19:35:40.6054975Z 
+2026-09-07T19:35:40.6057599Z [1m[92m     Running[0m tests/portable.rs (target/debug/deps/portable-4326692eca26042c)
+2026-09-07T19:35:40.6068453Z 
+2026-09-07T19:35:40.6068594Z running 3 tests
+2026-09-07T19:35:40.6213083Z test document_ndf_and_cbor_first_receiver_preserve_source_view_and_meaning ... ok
+2026-09-07T19:35:40.6272080Z test schema_valid_wrong_category_and_resource_stops_are_typed ... ok
+2026-09-07T19:35:40.6613534Z test valid_document_decode_keeps_work_stop_causes_at_inner_boundaries ... ok
+2026-09-07T19:35:40.6614077Z 
+2026-09-07T19:35:40.6614396Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+2026-09-07T19:35:40.6614796Z 
+2026-09-07T19:35:40.6616880Z [1m[92m     Running[0m tests/prepare.rs (target/debug/deps/prepare-92442eb452d3d0f3)
+2026-09-07T19:35:40.6628813Z 
+2026-09-07T19:35:40.6628974Z running 3 tests
+2026-09-07T19:35:40.6735870Z test inspection_requires_article_labels_and_preserves_sticky_stops ... ok
+2026-09-07T19:35:40.6805704Z test preparation_discovers_distinct_placements_without_loading_assets ... ok
+2026-09-07T19:35:40.6821169Z test portable_plan_recomputes_requirements_and_rejects_stale_or_incomplete_data ... ok
+2026-09-07T19:35:40.6821761Z 
+2026-09-07T19:35:40.6822082Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+2026-09-07T19:35:40.6822455Z 
+2026-09-07T19:35:40.6823829Z [1m[92m     Running[0m tests/sentence.rs (target/debug/deps/sentence-60903c5b339fd25d)
+2026-09-07T19:35:40.6834681Z 
+2026-09-07T19:35:40.6834829Z running 4 tests
+2026-09-07T19:35:40.7007373Z test text_merge_preserves_known_and_source_less_provenance ... ok
+2026-09-07T19:35:40.7008189Z test typed_prefix_constructor_and_literal_share_the_normal_form ... ok
+2026-09-07T19:35:40.7008859Z test literal_annotations_escapes_and_original_views ... ok
+2026-09-07T19:35:40.7011560Z test incomplete_and_failed_annotations_keep_raw_byte_positions ... ok
+2026-09-07T19:35:40.7012049Z 
+2026-09-07T19:35:40.7012442Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+2026-09-07T19:35:40.7012996Z 
+2026-09-07T19:35:40.7015392Z [1m[92m     Running[0m tests/shape.rs (target/debug/deps/shape-335d010eaa7f9d5f)
+2026-09-07T19:35:40.7024871Z 
+2026-09-07T19:35:40.7025005Z running 4 tests
+2026-09-07T19:35:40.7028745Z test categories_and_graph_are_checked_before_semantic_use ... ok
+2026-09-07T19:35:40.7029865Z test parallel_and_annotation_constraints_use_actual_child_content ... ok
+2026-09-07T19:35:40.7030562Z test shared_child_still_counts_on_the_longest_path ... ok
+2026-09-07T19:35:40.7854000Z test deep_arenas_stop_and_drop_without_recursive_ownership ... ok
+2026-09-07T19:35:40.7854342Z 
+2026-09-07T19:35:40.7854597Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+2026-09-07T19:35:40.7854949Z 
+2026-09-07T19:35:40.7861298Z [1m[92m     Running[0m unittests src/lib.rs (target/debug/deps/nepl3_doc_html-cd1a6424ba57b7ee)
+2026-09-07T19:35:40.7873020Z 
+2026-09-07T19:35:40.7873186Z running 0 tests
+2026-09-07T19:35:40.7873447Z 
+2026-09-07T19:35:40.7874142Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:35:40.7874502Z 
+2026-09-07T19:35:40.7876076Z [1m[92m     Running[0m tests/local.rs (target/debug/deps/local-8ea09a8000d39877)
+2026-09-07T19:35:40.7886343Z 
+2026-09-07T19:35:40.7886498Z running 2 tests
+2026-09-07T19:35:40.8039687Z test first_cbor_receiver_prepares_renders_and_rejects_stale_or_forged_results ... ok
+2026-09-07T19:35:40.8191766Z test output_budget_and_browser_depth_never_silently_flatten_the_document ... ok
+2026-09-07T19:35:40.8192318Z 
+2026-09-07T19:35:40.8192742Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+2026-09-07T19:35:40.8193338Z 
+2026-09-07T19:35:40.8195367Z [1m[92m     Running[0m unittests src/lib.rs (target/debug/deps/nepl3_engine-dc914125f21104c3)
+2026-09-07T19:35:40.8206511Z 
+2026-09-07T19:35:40.8206671Z running 2 tests
+2026-09-07T19:35:40.8210252Z test head::tests::window_preserves_exact_utf8_and_requires_admission_in_each_operation ... ok
+2026-09-07T19:35:40.8211018Z test head::tests::completed_projection_preserves_compound_values_without_unread_siblings_or_tables ... ok
+2026-09-07T19:35:40.8211509Z 
+2026-09-07T19:35:40.8211918Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:35:40.8212487Z 
+2026-09-07T19:35:40.8212986Z [1m[92m     Running[0m tests/head.rs (target/debug/deps/head-db4ca29c93f7a12d)
+2026-09-07T19:35:40.8224705Z 
+2026-09-07T19:35:40.8224848Z running 14 tests
+2026-09-07T19:35:40.8647379Z test deep_failed_payload_respects_saved_call_depth_and_keeps_prior_report ... ok
+2026-09-07T19:35:40.8648883Z test failed_child_context_preserves_known_parent_arity_and_formal_primary_once ... ok
+2026-09-07T19:35:40.8657925Z test dynamic_head_uses_compound_completed_child_and_restores_normal_child_context ... ok
+2026-09-07T19:35:40.9048276Z test completed_head_wrapper_preserves_owned_execution_and_pending_boundaries ... ok
+2026-09-07T19:35:40.9077856Z test head_resume_source_uri_conflict_and_missing_primary_preserve_the_original_slot ... ok
+2026-09-07T19:35:40.9089453Z test head_cancel_keeps_accepted_diagnostic_event_and_fixed_parent_progress ... ok
+2026-09-07T19:35:40.9121579Z test foreign_completed_selector_uses_local_projection_ids_and_returns_to_host_body ... ok
+2026-09-07T19:35:40.9486334Z test long_failed_reply_is_charged_before_primary_equality_and_keeps_prior_report ... ok
+2026-09-07T19:35:40.9500115Z test head_resume_uses_saved_auxiliary_context_and_rejects_caller_conflicts_before_consumption ... ok
+2026-09-07T19:35:40.9892077Z test shape_provider_failure_keeps_unknown_arity_unparsed_and_primary_once ... ok
+2026-09-07T19:35:40.9948015Z test head_trace_overflow_requires_stopped_and_invalid_success_keeps_pending ... ok
+2026-09-07T19:35:41.0017727Z test portable::portable_callback_and_dynamic_tree_match_owned_native_execution ... ok
+2026-09-07T19:35:41.0440868Z test synchronous_head_reader_head_dispatch_matches_owned_interleaving ... ok
+2026-09-07T19:35:41.0755608Z test synchronous_head_host_and_owned_fallback_keep_the_same_tree_and_positions ... ok
+2026-09-07T19:35:41.0756005Z 
+2026-09-07T19:35:41.0756288Z test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+2026-09-07T19:35:41.0757212Z 
+2026-09-07T19:35:41.0761234Z [1m[92m     Running[0m tests/package.rs (target/debug/deps/package-1c7bb532e4a4a532)
+2026-09-07T19:35:41.0775082Z 
+2026-09-07T19:35:41.0775230Z running 21 tests
+2026-09-07T19:35:41.1191826Z test head::portable::head_delegation_accounts_window_reception_once_and_merges_relative_costs_with_absolute_depth ... ok
+2026-09-07T19:35:41.1218213Z test head::portable::head_all_reply_branches_preserve_projected_report_and_reject_invalid_fixes_and_graphs ... ok
+2026-09-07T19:35:41.1247937Z test head::portable::delegated_grant_and_real_framing_share_the_original_work_cap ... ok
+2026-09-07T19:35:41.1358297Z test head::head_registrations_bind_alias_signature_host_identity_and_profile_digest ... ok
+2026-09-07T19:35:41.1588795Z test head::portable::projected_shared_payload_depth_includes_the_deeper_graph_path ... ok
+2026-09-07T19:35:41.1598090Z test head::portable::head_first_receiver_preserves_compound_projection_and_rejects_schema_valid_corruption ... ok
+2026-09-07T19:35:41.1629183Z test head::portable::stopped_transport_records_child_cost_and_unsettled_drop_blocks_parent_reuse ... ok
+2026-09-07T19:35:41.1720136Z test listof_foreign_has_foreign_head_and_local_tail_without_losing_its_selector ... ok
+2026-09-07T19:35:41.1948120Z test package_boundary_checks_extension_provenance_and_resource_limits ... ok
+2026-09-07T19:35:41.1997664Z test package_checks_real_surface_shapes_modes_selectors_and_binding_coverage ... ok
+2026-09-07T19:35:41.2018216Z test package_rejects_direct_reader_cycles_and_counts_binding_entry_depth ... ok
+2026-09-07T19:35:41.2122543Z test persistent_tree_checks_parent_reads_spelling_payload_and_concrete_owner ... ok
+2026-09-07T19:35:41.2448177Z test portable::facts::facts_first_receiver_decodes_without_the_senders_request_or_source_store ... ok
+2026-09-07T19:35:41.2481719Z test portable::facts::facts_all_reply_branches_keep_report_only_sources_and_request_relative_grants ... ok
+2026-09-07T19:35:41.2568081Z test portable::typed_tree_recovery_uses_the_guest_source_table_and_canonical_node_reference ... ok
+2026-09-07T19:35:41.2658206Z test portable::facts::facts_request_binds_complete_host_authority_and_canonical_target ... ok
+2026-09-07T19:35:41.2869890Z test recovery_strategy_and_sync_order_are_part_of_package_behavior ... ok
+2026-09-07T19:35:41.2878565Z test portable::typed_tree_roundtrip_remaps_every_local_owner_and_rejects_stale_wrapper_indices ... ok
+2026-09-07T19:35:41.3047345Z test semantic_identity_preserves_ordered_behavior_and_presentation_fallback ... ok
+2026-09-07T19:35:41.3139471Z test resolved_profile_pins_real_package_host_providers_resources_and_foreign_modes ... ok
+2026-09-07T19:35:41.3186391Z test semantic_identity_removes_arena_layout_sharing_and_provenance ... ok
+2026-09-07T19:35:41.3186948Z 
+2026-09-07T19:35:41.3187516Z test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s
+2026-09-07T19:35:41.3188061Z 
+2026-09-07T19:35:41.3192863Z [1m[92m     Running[0m tests/parse.rs (target/debug/deps/parse-d8a6ba521c48e99d)
+2026-09-07T19:35:41.3206949Z 
+2026-09-07T19:35:41.3207196Z running 20 tests
+2026-09-07T19:35:41.4087846Z test append_retry_retains_original_caller_depth_when_host_resumes_at_zero ... ok
+2026-09-07T19:35:41.4372148Z test accepted_trivia_without_a_token_survives_eof_and_need_more ... ok
+2026-09-07T19:35:41.4773797Z test explicit_list_spine_preserves_declared_head_and_tail_children ... ok
+2026-09-07T19:35:41.5208169Z test foreign::foreign_root_mode_is_guest_owned_and_normal_child_and_host_restore_defaults ... ok
+2026-09-07T19:35:41.5962963Z test missing_children_share_one_bundle_recovery_table ... ok
+2026-09-07T19:35:41.6768289Z test missing_final_child_and_nonfinal_input_are_distinct ... ok
+2026-09-07T19:35:41.7078538Z test append_retry_reparses_every_scalar_split_and_keeps_cumulative_usage ... ok
+2026-09-07T19:35:41.7888003Z test native_host_failure_keeps_generated_diagnostic_and_event_closure ... ok
+2026-09-07T19:35:41.8713774Z test completed_parse_wrappers_preserve_raw_outcomes_reports_and_costs ... ok
+2026-09-07T19:35:41.9157660Z test native_host_nested_stop_is_sticky_without_host_mutating_budget ... ok
+2026-09-07T19:35:41.9868212Z test native_host_mixed_text_provider_fallback_preserves_decoded_sources ... ok
+2026-09-07T19:35:42.2201996Z test native_host_preserves_tree_reports_maps_and_owned_fallback ... ok
+2026-09-07T19:35:42.2247909Z test native_host_cancel_and_invalid_reply_keep_boundary_semantics ... ok
+2026-09-07T19:35:42.3038324Z test provider_resume_keeps_prefix_frames_report_and_caller_depth ... ok
+2026-09-07T19:35:42.3437865Z test static_form_keeps_builtin_children_and_token_payloads ... ok
+2026-09-07T19:35:42.3502233Z test prefix_depth_composes_with_nested_reader_frames ... ok
+2026-09-07T19:35:42.3816743Z test text_reservation_preserves_prefix_identity_and_composed_caller_depth ... ok
+2026-09-07T19:35:42.3883286Z test native_host_prefix_growth_reduces_measured_copy_work ... ok
+2026-09-07T19:35:42.4648555Z test unknown_heads_preserve_remainder_without_inventing_a_leaf_arity ... ok
+2026-09-07T19:35:45.5789380Z test allocation_stop_preserves_actual_usage_and_never_invents_a_root ... ok
+2026-09-07T19:35:45.5789955Z 
+2026-09-07T19:35:45.5790363Z test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.26s
+2026-09-07T19:35:45.5790929Z 
+2026-09-07T19:35:45.5795327Z [1m[92m     Running[0m unittests src/lib.rs (target/debug/deps/nepl3_grammar_core-183893f40b2e4408)
+2026-09-07T19:35:45.5807518Z 
+2026-09-07T19:35:45.5807680Z running 0 tests
+2026-09-07T19:35:45.5807961Z 
+2026-09-07T19:35:45.5808394Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:35:45.5808943Z 
+2026-09-07T19:35:45.5810481Z [1m[92m     Running[0m tests/reader.rs (target/debug/deps/reader-d5a06c33b394dfef)
+2026-09-07T19:35:45.5820649Z 
+2026-09-07T19:35:45.5820819Z running 2 tests
+2026-09-07T19:35:45.6002084Z test compiler_catalogs_reject_ambiguous_and_empty_names_and_ast_charges_nodes ... ok
+2026-09-07T19:35:45.6003115Z test reader_compiler_lowers_real_plan_and_rejects_natural_range_repeat_and_reference_errors ... ok
+2026-09-07T19:35:45.6003515Z 
+2026-09-07T19:35:45.6003776Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+2026-09-07T19:35:45.6004244Z 
+2026-09-07T19:35:45.6005366Z [1m[92m     Running[0m unittests src/lib.rs (target/debug/deps/nepl3_markup-29b3001d5bfa44a2)
+2026-09-07T19:35:45.6015532Z 
+2026-09-07T19:35:45.6015671Z running 0 tests
+2026-09-07T19:35:45.6016004Z 
+2026-09-07T19:35:45.6016537Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:35:45.6017282Z 
+2026-09-07T19:35:45.6018321Z [1m[92m     Running[0m tests/html.rs (target/debug/deps/html-212da7e40783e5b3)
+2026-09-07T19:35:45.6028498Z 
+2026-09-07T19:35:45.6028654Z running 5 tests
+2026-09-07T19:35:45.6034168Z test sticky_stops_apply_to_validation_and_serialization_with_caller_depth ... ok
+2026-09-07T19:35:45.6035071Z test malformed_structure_and_attribute_values_never_become_partial_html ... ok
+2026-09-07T19:35:45.6035919Z test nested_paragraph_wrapper_links_lists_and_code_preserve_bytes ... ok
+2026-09-07T19:35:45.6036389Z test tables_images_and_typed_external_links ... ok
+2026-09-07T19:35:45.6734174Z test dag_appearance_identity_cycles_unreachable_and_deep_drop ... ok
+2026-09-07T19:35:45.6734671Z 
+2026-09-07T19:35:45.6735075Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+2026-09-07T19:35:45.6735434Z 
+2026-09-07T19:35:45.6740828Z [1m[92m     Running[0m tests/portable.rs (target/debug/deps/portable-cc2490788542b5d7)
+2026-09-07T19:35:45.6752728Z 
+2026-09-07T19:35:45.6752928Z running 2 tests
+2026-09-07T19:35:45.6873031Z test first_cbor_receiver_revalidates_owned_markup_and_matches_native_output ... ok
+2026-09-07T19:35:45.6874540Z test schema_valid_invalid_markup_and_unknown_tags_are_rejected_after_cbor ... ok
+2026-09-07T19:35:45.6875070Z 
+2026-09-07T19:35:45.6875484Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-09-07T19:35:45.6876542Z 
+2026-09-07T19:35:45.6877708Z [1m[92m     Running[0m tests/regression.rs (target/debug/deps/regression-65f12d34ba12d269)
+2026-09-07T19:35:45.6888176Z 
+2026-09-07T19:35:45.6888346Z running 5 tests
+2026-09-07T19:35:45.6898105Z test ruby_grammar_rejects_invalid_fallback_and_base_sequences ... ok
+2026-09-07T19:35:45.6898817Z test external_port_is_unsigned_ascii_decimal ... ok
+2026-09-07T19:35:45.6899497Z test ruby_group_annotations_and_single_nested_base_are_retained ... ok
+2026-09-07T19:35:45.7012449Z test zero_work_does_not_allocate_a_validation_arena ... ok
+2026-09-07T19:35:45.7372499Z test serializer_work_limit_bounds_frontier_before_enqueue ... ok
+2026-09-07T19:35:45.7372823Z 
+2026-09-07T19:35:45.7373445Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+2026-09-07T19:35:45.7373808Z 
+2026-09-07T19:35:45.7380910Z [1m[92m     Running[0m tests/text.rs (target/debug/deps/text-455c2b8c3b768605)
+2026-09-07T19:35:45.7391179Z 
+2026-09-07T19:35:45.7391335Z running 3 tests
+2026-09-07T19:35:45.7394385Z test canonical_escape_preserves_text_and_attribute_whitespace ... ok
+2026-09-07T19:35:45.7395234Z test escaping_limits_precede_result_allocation_and_stops_are_sticky ... ok
+2026-09-07T19:35:45.8546620Z test xml_character_ranges_and_error_byte_offsets_are_exact ... ok
+2026-09-07T19:35:45.8547257Z 
+2026-09-07T19:35:45.8547636Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+2026-09-07T19:35:45.8547984Z 
+2026-09-07T19:35:45.8549543Z [1m[92m     Running[0m unittests src/lib.rs (target/debug/deps/nepl3_math_core-68361ca72b31291d)
+2026-09-07T19:35:45.8560913Z 
+2026-09-07T19:35:45.8561071Z running 0 tests
+2026-09-07T19:35:45.8561331Z 
+2026-09-07T19:35:45.8561881Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:35:45.8562443Z 
+2026-09-07T19:35:45.8563608Z [1m[92m     Running[0m tests/construct.rs (target/debug/deps/construct-58bde61ea8360199)
+2026-09-07T19:35:45.8573364Z 
+2026-09-07T19:35:45.8573515Z running 1 test
+2026-09-07T19:35:45.8576629Z test fresh_rational_notation_obeys_structure_depth_and_caller ... ok
+2026-09-07T19:35:45.8577151Z 
+2026-09-07T19:35:45.8577425Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:35:45.8577775Z 
+2026-09-07T19:35:45.8579196Z [1m[92m     Running[0m tests/number.rs (target/debug/deps/number-645be16d609d3444)
+2026-09-07T19:35:45.8589878Z 
+2026-09-07T19:35:45.8590084Z running 2 tests
+2026-09-07T19:35:45.8593637Z test arithmetic_stops_before_big_integer_work_and_retains_operands ... ok
+2026-09-07T19:35:45.8594438Z test canonical_rationals_keep_exact_decimal_and_fraction_values ... ok
+2026-09-07T19:35:45.8594790Z 
+2026-09-07T19:35:45.8595068Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:35:45.8595615Z 
+2026-09-07T19:35:45.8596167Z [1m[92m     Running[0m tests/portable.rs (target/debug/deps/portable-d4617bc880a33ae7)
+2026-09-07T19:35:45.8607323Z 
+2026-09-07T19:35:45.8607674Z running 2 tests
+2026-09-07T19:35:45.8743298Z test schema_valid_math_rejects_nonfinite_numbers_and_missing_source_closure ... ok
+2026-09-07T19:35:45.8759217Z test first_receiver_keeps_fraction_notation_spelling_and_source_once ... ok
+2026-09-07T19:35:45.8760222Z [1m[92m     Running[0m tests/shape.rs (target/debug/deps/shape-e8a487fa8392b199)
+2026-09-07T19:35:45.8760708Z 
+2026-09-07T19:35:45.8761097Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-09-07T19:35:45.8761618Z 
+2026-09-07T19:35:45.8761631Z 
+2026-09-07T19:35:45.8761761Z running 3 tests
+2026-09-07T19:35:45.8767994Z test notation_shapes_enforce_matrix_vector_fence_and_root_constraints ... ok
+2026-09-07T19:35:45.8769132Z test rational_constructor_uses_number_only_for_finite_decimals ... ok
+2026-09-07T19:35:45.9533272Z test shared_paths_and_deep_cleanup_keep_limits_and_categories ... ok
+2026-09-07T19:35:45.9534067Z 
+2026-09-07T19:35:45.9534330Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+2026-09-07T19:35:45.9534680Z 
+2026-09-07T19:35:45.9539315Z [1m[92m     Running[0m unittests src/lib.rs (target/debug/deps/nepl3_reader-5cfcb32e909cd77a)
+2026-09-07T19:35:45.9551495Z 
+2026-09-07T19:35:45.9551638Z running 0 tests
+2026-09-07T19:35:45.9551867Z 
+2026-09-07T19:35:45.9552157Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:35:45.9552514Z 
+2026-09-07T19:35:45.9554595Z [1m[92m     Running[0m tests/builtin.rs (target/debug/deps/builtin-4ba050305e3cfd15)
+2026-09-07T19:35:45.9565688Z 
+2026-09-07T19:35:45.9565814Z running 17 tests
+2026-09-07T19:35:45.9758732Z test empty_skip_and_take_readers_are_nonprogress_failures ... ok
+2026-09-07T19:35:46.0157397Z test builtin_budget_stops_are_typed_and_do_not_return_partial_tokens ... ok
+2026-09-07T19:35:46.0415267Z test generated_source_admission_is_once_and_unsuccessful_text_has_no_source_charge ... ok
+2026-09-07T19:35:46.0616364Z test mode_take_is_ordered_choice_and_does_not_consume_trailing_trivia ... ok
+2026-09-07T19:35:46.0827740Z test mode_text_reservation_is_lazy_and_echo_is_checked ... ok
+2026-09-07T19:35:46.1090922Z test maximal_lexemes_wait_at_every_nonfinal_scalar_boundary ... ok
+2026-09-07T19:35:46.1505291Z test committed_text_rejects_invalid_escapes_scalars_and_direct_lines ... ok
+2026-09-07T19:35:46.1690304Z test owned_tokenizer_resume_does_not_borrow_the_original_context_and_checks_all_echo_fields ... ok
+2026-09-07T19:35:46.1887702Z test reservation_locator_validation_obeys_work_limit_before_scanning ... ok
+2026-09-07T19:35:46.2209546Z test names_preserve_unicode_spelling_and_read_maximal_identifier ... ok
+2026-09-07T19:35:46.2410426Z test selected_standard_provider_dispatch_uses_builtin_values_and_rejects_forgery ... ok
+2026-09-07T19:35:46.2575674Z test text_decoding_retains_each_exact_or_transformed_source_range ... ok
+2026-09-07T19:35:46.2609694Z test text_exact_runs_preserve_utf8_offsets_and_escape_boundaries ... ok
+2026-09-07T19:35:46.2781440Z test tokenizer_configuration_identity_ignores_mode_declaration_order_but_retains_rule_order ... ok
+2026-09-07T19:35:46.3095491Z test language_is_well_formed_abnf_not_registry_validity ... ok
+2026-09-07T19:35:46.3311282Z test trivia_keeps_ascii_line_boundaries_and_bom_position ... ok
+2026-09-07T19:35:46.3352725Z test naturals_and_finite_decimals_are_exact_and_boundary_checked ... ok
+2026-09-07T19:35:46.3353216Z 
+2026-09-07T19:35:46.3358652Z [1m[92m     Running[0m tests/context.rs (target/debug/deps/context-dc16fc2ea823d4be)
+2026-09-07T19:35:46.3359568Z test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.38s
+2026-09-07T19:35:46.3360110Z 
+2026-09-07T19:35:46.3371357Z 
+2026-09-07T19:35:46.3372476Z running 1 test
+2026-09-07T19:35:46.3440952Z test checked_context_uses_real_digest_and_exact_origin_source_closure ... ok
+2026-09-07T19:35:46.3441312Z 
+2026-09-07T19:35:46.3441608Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-09-07T19:35:46.3441980Z 
+2026-09-07T19:35:46.3443240Z [1m[92m     Running[0m tests/portable.rs (target/debug/deps/portable-5b63a6286dc41aac)
+2026-09-07T19:35:46.3453755Z 
+2026-09-07T19:35:46.3453913Z running 2 tests
+2026-09-07T19:35:46.3572357Z test host_global_source_cannot_fill_a_missing_request_declaration ... ok
+2026-09-07T19:35:46.3575926Z test native_request_and_checked_ndf_loopback_execute_with_identical_meaning ... ok
+2026-09-07T19:35:46.3576346Z 
+2026-09-07T19:35:46.3576604Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-09-07T19:35:46.3576972Z 
+2026-09-07T19:35:46.3579325Z [1m[92m     Running[0m tests/runtime.rs (target/debug/deps/runtime-0645a4b0b5c6ded3)
+2026-09-07T19:35:46.3591201Z 
+2026-09-07T19:35:46.3591351Z running 36 tests
+2026-09-07T19:35:46.3798178Z test bounded_repeat_zero_never_executes_nullable_body ... ok
+2026-09-07T19:35:46.3838120Z test accepted_diagnostic_owns_primary_related_and_fix_source_closure_before_publication ... ok
+2026-09-07T19:35:46.3867851Z test accepted_collector_crosses_language_sessions_only_in_its_original_operation ... ok
+2026-09-07T19:35:46.3987789Z test cancellation_during_provider_wait_stops_and_consumes_the_pending_slot ... ok
+2026-09-07T19:35:46.4017922Z test checked_context_reuse_admits_exact_source_closure_in_each_operation ... ok
+2026-09-07T19:35:46.4018872Z test checked_context_reuse_rejects_same_id_revision_with_changed_content ... ok
+2026-09-07T19:35:46.4167740Z test choice_rewinds_captures_views_and_retains_work ... ok
+2026-09-07T19:35:46.4197731Z test commit_does_not_hide_failure_or_need_more_in_choice ... ok
+2026-09-07T19:35:46.4227224Z test direct_repeat_failure_and_streaming_shortage_rollback_all_prior_iteration_reports ... ok
+2026-09-07T19:35:46.4387960Z test every_utf8_prefix_split_is_need_more_and_final_truncation_is_no_match ... ok
+2026-09-07T19:35:46.4417695Z test failed_choice_restores_programmed_state_before_next_provider_call ... ok
+2026-09-07T19:35:46.4503536Z test allocation_faults_across_later_resumes_preserve_already_accepted_reports ... ok
+2026-09-07T19:35:46.4563802Z test fresh_budget_and_forged_call_or_source_cannot_resume_a_saved_slot ... ok
+2026-09-07T19:35:46.4570799Z test generated_sources_are_validated_transactionally_and_available_to_diagnostics ... ok
+2026-09-07T19:35:46.4718248Z test long_source_identity_is_not_copied_after_allocation_budget_is_exhausted ... ok
+2026-09-07T19:35:46.4763017Z test map_decode_and_then_use_typed_provider_envelopes ... ok
+2026-09-07T19:35:46.4777619Z test node_sidecar_and_look_not_optional_discard_have_independent_values ... ok
+2026-09-07T19:35:46.4920638Z test failed_stopped_and_rollback_results_have_their_exact_formal_source_closure ... ok
+2026-09-07T19:35:46.4939863Z test programmed_repetition_requires_actual_consumption_and_accepts_consuming_calls ... ok
+2026-09-07T19:35:46.4988129Z test provider_overflow_rejects_read_failed_map_decode_without_consuming_slot ... ok
+2026-09-07T19:35:46.5075912Z test plan_identity_is_deterministic_but_distinguishes_arena_representation ... ok
+2026-09-07T19:35:46.5137894Z test provider_signature_checks_operation_envelope_and_pure_decoder ... ok
+2026-09-07T19:35:46.5140879Z test retry::rejected_read_payload_state_end_source_and_view_preserve_formal_collector_and_pending ... ok
+2026-09-07T19:35:46.5170667Z test runtime_rejects_left_recursion_hidden_behind_empty_programmed_call ... ok
+2026-09-07T19:35:46.5287895Z test session_binds_call_source_plan_usage_and_closes_after_consumed_resume ... ok
+2026-09-07T19:35:46.5289240Z test static_plan_rejects_unknown_references_types_and_unproductive_recursion ... ok
+2026-09-07T19:35:46.5497985Z test tokenizer_host::synchronous_text_reservation_preserves_decode_maps_and_fallback ... ok
+2026-09-07T19:35:46.5704583Z test tokenizer_host::synchronous_tokenizer_keeps_owned_fallback_and_validates_replies ... ok
+2026-09-07T19:35:46.5829256Z test stopped_reader_retains_committed_provider_reports ... ok
+2026-09-07T19:35:46.5947855Z test tokenizer_outer_echo_validates_every_nested_reader_component_before_private_resume ... ok
+2026-09-07T19:35:46.6424759Z test stopped_tokenizer_retains_reader_report_and_generated_source_closure ... ok
+2026-09-07T19:35:46.6425875Z test unicode_classes_use_pinned_unicode16_and_ascii_numeric_rules ... ok
+2026-09-07T19:35:46.6502549Z test transform::transform_all_outcomes_keep_sources_reports_and_retry_after_rejected_native_or_ndf_reply ... ok
+2026-09-07T19:35:46.6521873Z test tokenizer_await_allocation_stops_clear_both_private_pending_slots ... ok
+2026-09-07T19:35:46.6576662Z test until_leaves_delimiter_and_takecount_counts_scalars ... ok
+2026-09-07T19:35:47.2262264Z test tokenizer_preserves_accepted_skip_reports_and_sources_across_candidate_rollback ... ok
+2026-09-07T19:35:47.2262893Z 
+2026-09-07T19:35:47.2263282Z test result: ok. 36 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.87s
+2026-09-07T19:35:47.2264302Z 
+2026-09-07T19:35:47.2268195Z [1m[92m     Running[0m unittests src/lib.rs (target/debug/deps/nepl3_tools-2b3527f78cfc8e7c)
+2026-09-07T19:35:47.2284755Z 
+2026-09-07T19:35:47.2284929Z running 66 tests
+2026-09-07T19:35:47.2294697Z test bootstrap::tests::complete_grammar_bootstrap_host_comparison ... ignored, owned continuation performance baseline; run explicitly with --ignored --nocapture
+2026-09-07T19:35:47.3406759Z test bootstrap::tests::compiled_angle_reader_keeps_quoted_delimiters_and_streaming_commit ... ok
+2026-09-07T19:35:50.3298850Z test bootstrap::tests::lower_rechecks_execution_owner_even_when_semantic_profile_is_equal ... ok
+2026-09-07T19:35:50.6318557Z test bootstrap::tests::file_driver_distinguishes_trailing_trivia_stop_from_extra_input ... ok
+2026-09-07T19:35:50.6927203Z test bootstrap::tests::seed_rejects_forged_source_constructor_literal_and_list_boundaries ... ok
+2026-09-07T19:35:50.9748365Z test bootstrap::tests::original_grammar_parser_compiles_independent_reader_binding_style_mutations ... ok
+2026-09-07T19:35:51.0368242Z test contract::foundation::tests::checker_rejects_changed_foundation_descriptor_before_registry_use ... ok
+2026-09-07T19:35:51.0673516Z test contract::foundation::tests::constraint_declaration_order_is_canonical_but_duplicates_are_invalid ... ok
+2026-09-07T19:35:51.0958351Z test contract::foundation::tests::generated_foundation_is_registered_and_checks_ordinary_schema_ref_records ... ok
+2026-09-07T19:35:51.1300768Z test bootstrap::tests::supplied_grammar_sources_load_complete_typed_constructor_arenas ... ok
+2026-09-07T19:35:51.1905025Z test contract::reader::tests::reader_envelope_reference_closure_rejects_nested_missing_type ... ok
+2026-09-07T19:35:51.2178021Z test contract::tests::real_contract_checker_uses_same_validation_for_model_fields ... ok
+2026-09-07T19:35:51.3236565Z test contract::tests::real_contract_checker_rejects_malformed_contract_fields_and_variant_payloads ... ok
+2026-09-07T19:35:51.3250530Z test contract::tests::unknown_form_reference_is_rejected ... ok
+2026-09-07T19:35:51.3278264Z test contract::tests::unordered_or_duplicate_schema_fields_are_rejected ... ok
+2026-09-07T19:35:51.3361223Z test contract::tests::real_contract_entry_rejects_unresolved_fields_intrinsics_and_imports ... ok
+2026-09-07T19:35:51.3628358Z test contract::types::tests::missing_or_description_only_intrinsic_is_not_a_closed_type ... ok
+2026-09-07T19:35:51.3629660Z test contract::types::tests::parses_nested_types_and_rejects_unknown_or_malformed_generics ... ok
+2026-09-07T19:35:51.3818026Z test contract::types::tests::rejects_missing_duplicate_or_local_external_imports_and_duplicate_owners ... ok
+2026-09-07T19:35:51.3897947Z test contract::types::tests::intrinsic_tags_payload_order_and_subset_membership_are_fixed_by_ndf1 ... ok
+2026-09-07T19:35:51.4067970Z test contract::types::tests::repository_descriptors_resolve_including_recursive_intrinsics_and_models ... ok
+2026-09-07T19:35:51.4077761Z test dependency::tests::development_edges_are_reported_separately ... ok
+2026-09-07T19:35:51.4078699Z test dependency::tests::indirect_domain_dependency_is_rejected ... ok
+2026-09-07T19:35:51.4079580Z test dependency::tests::production_host_boundary_does_not_depend_on_no_std_flag ... ok
+2026-09-07T19:35:51.4080517Z test dependency::tests::renamed_build_dependency_is_checked_by_package_name ... ok
+2026-09-07T19:35:51.4081533Z test doc::host::tests::source_cache_tracks_exact_request_scope_and_rechecks_independent_values ... ok
+2026-09-07T19:35:51.4082728Z test documentation::markdown::tests::corrected_foundation_and_math_documents_have_no_accidental_html_tags ... ok
+2026-09-07T19:35:51.4083952Z test contract::types::tests::rejects_unresolved_nested_fields_union_targets_and_undeclared_parameters ... ok
+2026-09-07T19:35:51.4085182Z test documentation::markdown::tests::footnote_markers_are_preserved_without_inventing_rendered_numbers ... ok
+2026-09-07T19:35:51.4086397Z test documentation::markdown::tests::hard_break_is_the_same_typed_newline_in_setext_heading_and_link ... ok
+2026-09-07T19:35:51.4088795Z test documentation::markdown::tests::generic_notation_is_literal_code_and_generated_comments_are_metadata ... ok
+2026-09-07T19:35:51.4089961Z test documentation::markdown::tests::heading_and_link_projection_keep_both_math_event_kinds ... ok
+2026-09-07T19:35:51.4091187Z test documentation::markdown::tests::inline_html_is_retained_separately_and_not_interpreted_by_summary_projection ... ok
+2026-09-07T19:35:51.4092410Z test documentation::markdown::tests::link_projection_preserves_soft_and_hard_word_boundaries ... ok
+2026-09-07T19:35:51.4093608Z test documentation::markdown::tests::nested_image_code_and_math_share_heading_and_link_projection ... ok
+2026-09-07T19:35:51.4094808Z test documentation::markdown::tests::real_markdown_parser_keeps_badges_nested_links_and_literal_code_separate ... ok
+2026-09-07T19:35:51.4096238Z test documentation::markdown::tests::unicode_crlf_breaks_and_math_keep_original_byte_ranges ... ok
+2026-09-07T19:35:51.4168250Z test documentation::tests::commit_reference_and_missing_history_are_not_silently_accepted ... ok
+2026-09-07T19:35:51.4711509Z test documentation::tests::git_symlink_mode_is_rejected_without_creating_an_os_symlink ... ok
+2026-09-07T19:35:51.5351580Z test documentation::tests::nonregular_output_and_oversized_current_input_are_rejected ... ok
+2026-09-07T19:35:51.6084105Z test documentation::tests::real_checker_rejects_omitted_page_digest_and_structure_tampering ... ok
+2026-09-07T19:35:51.6108820Z test evidence::identity::tests::length_prefixed_profile_matches_independent_hashlib_vector ... ok
+2026-09-07T19:35:51.6229965Z test evidence::tests::actual_task_loader_accepts_only_matching_complete_attempt ... ok
+2026-09-07T19:35:51.6318270Z test documentation::tests::real_checker_reports_added_changed_removed_and_rejects_current_claim ... ok
+2026-09-07T19:35:51.6407913Z test evidence::tests::actual_task_loader_rejects_missing_malformed_and_duplicate_key_reports ... ok
+2026-09-07T19:35:51.6525843Z test evidence::tests::evidence_status_and_generated_tasks_do_not_create_hash_self_reference ... ok
+2026-09-07T19:35:51.6688108Z test evidence::tests::failed_attempt_can_record_early_failure_without_claiming_full_coverage ... ok
+2026-09-07T19:35:51.6926164Z test evidence::tests::actual_task_loader_rejects_wrong_group_result_identity_and_target_coverage ... ok
+2026-09-07T19:35:51.7066678Z test evidence::tests::independent_review_is_typed_and_cannot_be_faked_as_a_process_run ... ok
+2026-09-07T19:35:51.7234173Z test evidence::tests::modifying_excluded_log_still_invalidates_its_bound_report ... ok
+2026-09-07T19:35:51.7377999Z test evidence::tests::partial_success_reports_cannot_be_combined_into_a_full_attempt ... ok
+2026-09-07T19:35:51.7379092Z test repository::json::tests::duplicate_keys_cannot_hide_contract_fields ... ok
+2026-09-07T19:35:51.7380051Z test repository::tests::escaping_reference_is_rejected_before_reading ... ok
+2026-09-07T19:35:51.7380929Z test repository::tests::nul_paths_keep_spaces_and_non_ascii ... ok
+2026-09-07T19:35:51.7381954Z test repository::tests::secret_and_artifact_names_are_rejected ... ok
+2026-09-07T19:35:51.7382945Z test task::tests::acceptance_ids_are_spec_definitions_only ... ok
+2026-09-07T19:35:51.7383929Z test task::tests::dependency_graph_rejects_cycle_missing_and_duplicate_edges ... ok
+2026-09-07T19:35:51.7384886Z test task::tests::executed_status_requires_evidence ... ok
+2026-09-07T19:35:51.7385796Z test task::tests::final_completion_requires_all_global_acceptance_passed ... ok
+2026-09-07T19:35:51.7386809Z test task::tests::scoped_evidence_rejects_empty_checks_or_wrong_task ... ok
+2026-09-07T19:35:51.7388317Z test task::tests::scoped_task_completion_does_not_pretend_global_editor_acceptance_passed ... ok
+2026-09-07T19:35:51.7389406Z test task::tests::status_cannot_omit_an_acceptance_group ... ok
+2026-09-07T19:35:51.7390339Z test task::tests::terminal_task_uses_new_required_groups_and_not_optional_groups ... ok
+2026-09-07T19:35:51.7647885Z test evidence::tests::inventory_addition_source_change_spec_change_and_deleted_input_invalidate ... ok
+2026-09-07T19:35:53.1120597Z test bootstrap::tests::production_static_parse_lowers_actual_token_and_list_positions ... ok
+2026-09-07T19:35:55.2584915Z test bootstrap::tests::complete_grammar_bootstrap_uses_production_parser_lower_and_semantic_identity ... ok
+2026-09-07T19:35:55.2586402Z 
+2026-09-07T19:35:55.2586796Z test result: ok. 65 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 8.03s
+2026-09-07T19:35:55.2587520Z 
+2026-09-07T19:35:55.2596154Z [1m[92m     Running[0m unittests src/main.rs (target/debug/deps/nepl3_tools-e8c904a21c5fd485)
+2026-09-07T19:35:55.2608615Z 
+2026-09-07T19:35:55.2608757Z running 0 tests
+2026-09-07T19:35:55.2608967Z 
+2026-09-07T19:35:55.2609357Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:35:55.2609910Z 
+2026-09-07T19:35:55.2611455Z [1m[92m     Running[0m tests/bootstrap.rs (target/debug/deps/bootstrap-7f1037908b53c9e1)
+2026-09-07T19:35:55.2621334Z 
+2026-09-07T19:35:55.2621494Z running 1 test
+2026-09-07T19:35:55.6040062Z test seed_import_runs_on_main_thread_for_complete_sources_and_rejects_bad_input ... ok
+2026-09-07T19:35:55.6040585Z 
+2026-09-07T19:35:55.6040866Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.34s
+2026-09-07T19:35:55.6041236Z 
+2026-09-07T19:35:55.6042453Z [1m[92m     Running[0m tests/doc.rs (target/debug/deps/doc-20e35627e66b64b6)
+2026-09-07T19:35:55.6058539Z 
+2026-09-07T19:35:55.6058702Z running 43 tests
+2026-09-07T19:35:56.1162450Z test doc_prefix_limits_preserve_typed_stops_and_caller_depth ... ok
+2026-09-07T19:35:56.1718039Z test doc_code_same_alias_keeps_invalid_guest_meaning_and_restores_host ... ok
+2026-09-07T19:35:56.3946197Z test doc_prefix_original_annotation_examples_use_actual_parser_and_lower ... ok
+2026-09-07T19:35:56.4818719Z test doc_sentence_provider_failures_have_typed_report_positions_and_stops ... ok
+2026-09-07T19:35:56.7712010Z test doc_suite_seed_artifacts_match_the_original_sources ... ok
+2026-09-07T19:35:56.8308203Z test doc_sentence_provider_payload_and_prefix_share_the_actual_normal_form ... ok
+2026-09-07T19:35:57.4388410Z test export::export_preserves_content_and_binds_script_free_files ... ok
+2026-09-07T19:35:57.8945382Z test export::export_reserves_depth_for_the_document_shell ... ok
+2026-09-07T19:35:57.9678022Z test html::article_html_preserves_nested_paragraph_order_without_nested_p ... ok
+2026-09-07T19:35:58.0771801Z test doc_auxiliary_fragments_and_parent_operands_have_typed_boundaries ... ok
+2026-09-07T19:35:58.4079184Z test html::article_html_preserves_ruby_notes_and_forward_label_reference ... ok
+2026-09-07T19:35:59.1418119Z test html::explicit_break_renders_br_without_reinterpreting_text_line_feeds ... ok
+2026-09-07T19:36:01.2162527Z test html::parallel_html_selects_only_explicit_language_or_fallback ... ok
+2026-09-07T19:36:01.5682384Z test html::browser_layout_corpus_from_real_doc_source ... ok
+2026-09-07T19:36:01.8017876Z test html::real_source_html_crosses_first_receiver_cbor_with_positions_and_options ... ok
+2026-09-07T19:36:01.9205642Z test html::local_render_does_not_hide_unresolved_external_inputs_or_invalid_options ... ok
+2026-09-07T19:36:02.1173042Z test html::table_list_and_raw_code_keep_order_shape_and_original_characters ... ok
+2026-09-07T19:36:02.4856642Z test labels::article_labels_resolve_forward_names_and_keep_operand_selection ... ok
+2026-09-07T19:36:02.6538419Z test labels::field_location_first_receiver_rejects_kind_duplicates_and_position_claims ... ok
+2026-09-07T19:36:02.6763705Z test labels::article_labels_do_not_import_or_validate_guest_labels ... ok
+2026-09-07T19:36:03.0289213Z test labels::label_diagnostics_keep_typed_names_paths_and_original_failure_on_stop ... ok
+2026-09-07T19:36:03.2278426Z test labels::label_duplicates_use_name_operands_and_source_less_positions_stay_absent ... ok
+2026-09-07T19:36:03.2327866Z test labels::shared_label_display_occurrences_have_two_structural_paths ... ok
+2026-09-07T19:36:03.5978057Z test labels::unicode_crlf_labels_and_budget_stops_keep_their_input_positions ... ok
+2026-09-07T19:36:03.8178112Z test mixed::mixed_lower_keeps_doc_guest_syntax_without_meaning_check ... ok
+2026-09-07T19:36:04.0369219Z test mixed::literal_and_prefix_share_one_lower_with_source_and_local_view_retention ... ok
+2026-09-07T19:36:04.1249575Z test mixed::mixed_lower_rejects_other_token_view_and_semantic_positions_without_mutation ... ok
+2026-09-07T19:36:04.3977358Z test mixed::mixed_lower_stops_keep_original_tree_and_caller_depth ... ok
+2026-09-07T19:36:04.9339595Z test prepare::source_preparation_retains_code_and_identifies_each_foreign_closure ... ok
+2026-09-07T19:36:04.9687897Z test native_doc_host_preserves_owned_parse_tree_and_uses_less_allocation ... ok
+2026-09-07T19:36:05.6418247Z test print::printer_expands_shared_paths_with_bounded_output_and_deep_cleanup ... ok
+2026-09-07T19:36:06.2559073Z test print::printer_rejects_unprintable_source_less_names_and_languages_without_changing_values ... ok
+2026-09-07T19:36:06.6038165Z test print::prefix_and_compact_print_reparse_real_doc_annotation_and_explicit_break ... ok
+2026-09-07T19:36:07.1528579Z test print::printer_requires_explicit_current_guest_print_and_binding_at_first_receiver ... ok
+2026-09-07T19:36:07.3949900Z test print::printer_stops_preserve_request_and_report_at_preparation_and_output_boundaries ... ok
+2026-09-07T19:36:08.7118739Z test print::standalone_guest_fragments_keep_concrete_entry_and_foreign_syntax ... ok
+2026-09-07T19:36:09.0548413Z test text::plain_text_first_receiver_rejects_old_source_other_guest_and_owner_environment ... ok
+2026-09-07T19:36:09.3538427Z test text::plain_text_preparation_stops_are_formal_and_report_overflow_requires_stopped ... ok
+2026-09-07T19:36:09.5436576Z test text::plain_text_preserves_output_work_allocation_depth_and_cancel_stops ... ok
+2026-09-07T19:36:10.1079925Z test text::plain_text_uses_explicit_labels_alt_and_author_whitespace ... ok
+2026-09-07T19:36:10.2483680Z test text::plain_text_projects_only_policy_selected_embeds_and_roundtrips_typed_requests ... ok
+2026-09-07T19:36:15.2373590Z test html::annotated_linear_combination_document_reaches_real_html ... ok
+2026-09-07T19:36:24.7536366Z test print::every_form_prints_through_real_parser_and_typed_first_receiver ... ok
+2026-09-07T19:36:24.7536759Z 
+2026-09-07T19:36:24.7537290Z test result: ok. 43 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 29.15s
+2026-09-07T19:36:24.7537729Z 
+2026-09-07T19:36:24.7569240Z [1m[92m     Running[0m tests/grammar.rs (target/debug/deps/grammar-0f7d1992eb73a5c9)
+2026-09-07T19:36:24.7585379Z 
+2026-09-07T19:36:24.7585543Z running 81 tests
+2026-09-07T19:36:24.8318461Z test binding::custom::borrowed_facts_boundary_shares_owned_validation_without_tree_or_fact_copies ... ok
+2026-09-07T19:36:24.8387847Z test binding::analysis_revalidates_concrete_package_and_keeps_initial_failures_typed ... ok
+2026-09-07T19:36:24.9127871Z test binding::custom::custom_foreign_call_uses_its_own_namespace_and_root ... ok
+2026-09-07T19:36:24.9177938Z test binding::binding_stops_preserve_reason_partial_closure_and_caller_depth ... ok
+2026-09-07T19:36:24.9237819Z test binding::custom::custom_declared_mapping_and_report_survive_cancel ... ok
+2026-09-07T19:36:24.9998263Z test binding::custom::custom_global_diagnostic_retains_the_validated_delta_source ... ok
+2026-09-07T19:36:25.0297647Z test binding::custom::custom_maximum_ids_stay_typed ... ok
+2026-09-07T19:36:25.0477992Z test binding::custom::custom_global_checks_existing_batch_duplicates_and_lexical_authority ... ok
+2026-09-07T19:36:25.1198028Z test binding::custom::custom_provider_sparse_ids_then_normal_binding_and_accepted_stop ... ok
+2026-09-07T19:36:25.1594203Z test binding::custom::custom_resolution_history_preserves_issuance_and_updates_open_inputs ... ok
+2026-09-07T19:36:25.2428237Z test binding::binding_seed_artifacts_match_original_source_and_host_adapter ... ok
+2026-09-07T19:36:25.3440913Z test binding::custom::recursive::recursive_custom_rejects_header_references_and_id_reissue_but_preserves_distinct_names ... ok
+2026-09-07T19:36:25.3651405Z test binding::custom::custom_partial_reply_and_budget_stop_keep_checked_prefixes ... ok
+2026-09-07T19:36:25.4670747Z test binding::declaration_body_foreign_uses_independent_root_for_both_orders ... ok
+2026-09-07T19:36:25.5454413Z test binding::custom::recursive::recursive_custom_actual_cbor_requests_use_same_phase_callback_and_fact_ids ... ok
+2026-09-07T19:36:25.6431258Z test binding::global::global_duplicate_construction_stops_keep_the_formal_prefix ... ok
+2026-09-07T19:36:25.6468033Z test binding::custom::recursive::recursive_custom_reuses_header_ids_and_runs_initializers_after_all_headers ... ok
+2026-09-07T19:36:25.7247972Z test binding::open_inputs_and_global_occurrences_keep_their_distinct_scopes ... ok
+2026-09-07T19:36:25.7378169Z test binding::official_binding_let_lambda_visibility_and_entity_identity ... ok
+2026-09-07T19:36:25.8120534Z test binding::portable::analysis::keyed_invalid_reply_and_access_errors_keep_typed_causes ... ok
+2026-09-07T19:36:25.8398130Z test binding::global::global_visibility_is_ordered_and_duplicates_keep_both_locations ... ok
+2026-09-07T19:36:25.8918303Z test binding::portable::analysis::preparation_binds_conditions_and_uri_and_preserves_typed_stops ... ok
+2026-09-07T19:36:25.9938283Z test binding::custom::recursive::recursive_custom_phase_receipts_reject_schema_valid_claims_and_preserve_stop_prefix ... ok
+2026-09-07T19:36:26.0028221Z test binding::portable::analysis::selected_profile_provider_resource_and_execution_changes_invalidate_bound_results ... ok
+2026-09-07T19:36:26.0070643Z test binding::portable::analysis::prepared_binding_request_first_receiver_and_keyed_reply_preserve_identity ... ok
+2026-09-07T19:36:26.0728263Z test binding::portable::binding_bundle_scope_ledger_preserves_ids_and_rejects_invalid_raw_roots ... ok
+2026-09-07T19:36:26.0771160Z test binding::portable::binding_invalid_and_stopped_envelopes_preserve_typed_causes_and_partial_fact_invariants ... ok
+2026-09-07T19:36:26.0877797Z test binding::ordered_exports_recursive_headers_and_foreign_roots ... ok
+2026-09-07T19:36:26.1408024Z test binding::portable::causes::every_binding_failure_variant_keeps_its_typed_nested_cause ... ok
+2026-09-07T19:36:26.1431248Z test binding::portable::binding_result_first_receiver_preserves_visibility_reports_and_foreign_closure ... ok
+2026-09-07T19:36:26.2028604Z test binding::portable::query::custom_keyed_queries_use_sparse_final_ids_and_keep_absent_locations ... ok
+2026-09-07T19:36:26.2200161Z test binding::portable::namespace_visibility_stage_roundtrips_and_rejects_wrong_policy_or_root ... ok
+2026-09-07T19:36:26.2765334Z test binding::portable::query::keyed_references_boundary_options_and_sticky_stops ... ok
+2026-09-07T19:36:26.3068027Z test binding::portable::query::query_import_option_uses_a_real_provider_occurrence ... ok
+2026-09-07T19:36:26.3518163Z test binding::portable::query::query_received_geometry_identity_sources_and_stop_mutations_are_rejected ... ok
+2026-09-07T19:36:26.3557814Z test binding::portable::query::keyed_definition_uses_original_ranges_and_all_identity_candidates ... ok
+2026-09-07T19:36:26.4098420Z test binding::portable::query::query_role_options_ambiguity_and_open_inputs_remain_distinct ... ok
+2026-09-07T19:36:26.4720150Z test binding::portable::query::region_queries_keep_custom_sparse_final_resolution_and_source_less_targets ... ok
+2026-09-07T19:36:26.5198227Z test binding::portable::query::region_queries_use_only_accepted_custom_map_owners ... ok
+2026-09-07T19:36:26.5641078Z test binding::portable::rename::rename_candidate_checks_unmapped_bytes_uri_revision_and_explicit_exact_derivation ... ok
+2026-09-07T19:36:26.6058068Z test binding::portable::rename::rename_custom_owned_generated_name_retains_inverse_and_forward_edits ... ok
+2026-09-07T19:36:26.6535239Z test binding::portable::rename::rename_inverse_rejects_transformed_and_multiple_source_paths ... ok
+2026-09-07T19:36:26.6933913Z test binding::portable::rename::rename_exact_segments_preserve_unique_coverage_and_unmapped_geometry ... ok
+2026-09-07T19:36:26.7078289Z test binding::portable::rename::rename_refuses_ambiguous_and_encoded_names_without_inverse_encoder ... ok
+2026-09-07T19:36:26.7328035Z test binding::portable::query::custom_map_ownership_survives_stops_and_raw_validation ... ok
+2026-09-07T19:36:26.7798369Z test binding::portable::rename::rename_rejects_a_guest_map_as_host_edit_authority ... ok
+2026-09-07T19:36:26.7808175Z test binding::portable::rename::rename_refuses_capture_free_name_and_scope_collision_after_real_reanalysis ... ok
+2026-09-07T19:36:26.8018165Z test binding::portable::rename::rename_rejects_stale_requests_seal_swaps_and_sticky_resource_stops ... ok
+2026-09-07T19:36:26.8738586Z test binding::repeated_recursive_plan_reuses_only_its_own_header_entities ... ok
+2026-09-07T19:36:26.9168240Z test binding::portable::rename::rename_reparses_candidate_and_preserves_original_entity_correspondence ... ok
+2026-09-07T19:36:26.9296125Z test binding::portable::rename::rename_reserved_heads_use_namespace_owner_and_ignore_other_selected_language ... ok
+2026-09-07T19:36:26.9878308Z test binding::portable::rename::rename_uses_custom_final_resolutions_and_refuses_missing_locations ... ok
+2026-09-07T19:36:26.9968265Z test binding::stopped_origin_preparation_never_publishes_a_forward_reference_prefix ... ok
+2026-09-07T19:36:27.0158111Z test binding_example_uses_text_name_payload_and_actual_schema_dependencies ... ok
+2026-09-07T19:36:27.0428699Z test diagnostic::checked_in_seed_fixture_matches_the_real_bootstrap_adapter ... ok
+2026-09-07T19:36:27.0968059Z test complete_grammar_source_compiles_with_real_reader_and_facts_descriptors ... ok
+2026-09-07T19:36:27.1818540Z test diagnostic::compiler_diagnostic_is_typed_roundtrips_and_stops_without_losing_borrowed_location ... ok
+2026-09-07T19:36:27.2008188Z test diagnostic::compiler_diagnostic_rejects_an_unrelated_document_and_preserves_stopped_reason ... ok
+2026-09-07T19:36:27.2608219Z test diagnostic::compiler_report_boundary_without_host_process ... ok
+2026-09-07T19:36:27.2891515Z test diagnostic::detailed_package_checker_is_the_legacy_checker_with_exact_subjects ... ok
+2026-09-07T19:36:27.3708678Z test diagnostic::compiler_locations_use_utf8_raw_escape_ranges_and_typed_choice_operands ... ok
+2026-09-07T19:36:27.4010308Z test diagnostic::compiler_locates_missing_rule_range_and_binding_payload_from_real_source ... ok
+2026-09-07T19:36:27.5548514Z test diagnostic::plan_progress_and_recursion_failures_retain_the_compiled_expression_source ... ok
+2026-09-07T19:36:27.5682267Z test diagnostic::document_compile_and_diagnostic_share_one_source_admission ... ok
+2026-09-07T19:36:27.5982987Z test reader::all_reader_constructors_compile_and_execute_with_independent_results ... ok
+2026-09-07T19:36:27.6150529Z test reader::all_reader_constructors_preserve_failure_optional_and_commit_semantics ... ok
+2026-09-07T19:36:27.6478164Z test reader::compiled_reader_streaming_boundaries_and_rollback_keep_raw_positions ... ok
+2026-09-07T19:36:27.6868223Z test full_example_assembly_reaches_actual_plan_and_binding_validation ... ok
+2026-09-07T19:36:27.6958090Z test region::actual_parser_region_selects_field_priority_before_inner_depth ... ok
+2026-09-07T19:36:27.6986482Z test reader::reader_matrix_seed_matches_the_real_adapter ... ok
+2026-09-07T19:36:27.7748250Z test region::boundaries::region_recovery_utf8_end_stale_and_stops_do_not_invent_children ... ok
+2026-09-07T19:36:27.7887975Z test region::actual_reader_capture_and_nested_view_remain_token_owned ... ok
+2026-09-07T19:36:27.8348212Z test region::grammar_selection_priority_is_separate_from_style_and_changes_identity ... ok
+2026-09-07T19:36:27.8367931Z test region::boundaries::region_first_receiver_rebuilds_tree_and_sidecar_without_sender_sources ... ok
+2026-09-07T19:36:27.9071590Z test region::mapped::foreign_maps_stay_owner_local_and_compose_caller_depth ... ok
+2026-09-07T19:36:27.9307639Z test region::grammar_selection_errors_keep_the_exact_operand_location ... ok
+2026-09-07T19:36:27.9365017Z test region::mapped::formally_accepted_mapped_capture_and_trivia_republication_survive_wire ... ok
+2026-09-07T19:36:27.9999094Z test region::query::region_query_preserves_multiple_mapping_candidates_and_atomic_failures ... ok
+2026-09-07T19:36:28.1248698Z test diagnostic::package_subjects_locate_original_category_and_mode_operands ... ok
+2026-09-07T19:36:28.1473252Z test region::query::regions_drive_final_definition_and_references_without_name_lookup ... ok
+2026-09-07T19:36:28.2446029Z test shared_kind_is_category_local_with_one_shape_and_distinct_provenance ... ok
+2026-09-07T19:36:28.2446431Z 
+2026-09-07T19:36:28.2446707Z test result: ok. 81 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.49s
+2026-09-07T19:36:28.2447187Z 
+2026-09-07T19:36:28.2454408Z [1m[92m     Running[0m tests/math.rs (target/debug/deps/math-a6f16dc154e8cc7b)
+2026-09-07T19:36:28.2468721Z 
+2026-09-07T19:36:28.2468856Z running 2 tests
+2026-09-07T19:36:29.0539326Z test math_lower_failures_keep_original_constructor_and_sticky_resource_reason ... ok
+2026-09-07T19:36:31.0161671Z test all_math_constructors_lower_from_the_actual_parser_and_first_receiver ... ok
+2026-09-07T19:36:31.0162288Z 
+2026-09-07T19:36:31.0162692Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.77s
+2026-09-07T19:36:31.0163288Z 
+2026-09-07T19:36:31.0166601Z [1m[92m     Running[0m unittests src/lib.rs (target/debug/deps/nepl3_wire-e13d7cd4d8a85ea9)
+2026-09-07T19:36:31.0179381Z 
+2026-09-07T19:36:31.0179558Z running 0 tests
+2026-09-07T19:36:31.0179766Z 
+2026-09-07T19:36:31.0180464Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:36:31.0181009Z 
+2026-09-07T19:36:31.0182487Z [1m[92m     Running[0m tests/codec.rs (target/debug/deps/codec-610a0bfe9bfa8f7f)
+2026-09-07T19:36:31.0192539Z 
+2026-09-07T19:36:31.0192700Z running 7 tests
+2026-09-07T19:36:31.0198059Z test all_twelve_tags_match_specified_cbor_bytes ... ok
+2026-09-07T19:36:31.0199116Z test checked_boundary_uses_real_registry_and_rejects_wrong_field_type ... ok
+2026-09-07T19:36:31.0200210Z test every_truncated_prefix_fails_and_complete_input_preserves_bytes ... ok
+2026-09-07T19:36:31.0201074Z test integer_width_boundaries_use_shortest_unsigned_encoding ... ok
+2026-09-07T19:36:31.0201910Z test limits_stop_with_typed_reasons_without_a_successful_partial_value ... ok
+2026-09-07T19:36:31.0202765Z test malformed_noncanonical_and_forbidden_cbor_values_are_rejected ... ok
+2026-09-07T19:36:31.0846179Z test deeply_nested_values_do_not_use_the_native_call_stack ... ok
+2026-09-07T19:36:31.0846651Z 
+2026-09-07T19:36:31.0846970Z test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+2026-09-07T19:36:31.0847552Z 
+2026-09-07T19:36:31.0855985Z [1m[92m     Running[0m tests/digest.rs (target/debug/deps/digest-203ef2f0bb2f5cf8)
+2026-09-07T19:36:31.0868045Z 
+2026-09-07T19:36:31.0868304Z running 1 test
+2026-09-07T19:36:31.0938022Z test canonical_digest_uses_ndf_tagged_cbor_and_keeps_budget_stops ... ok
+2026-09-07T19:36:31.0938586Z 
+2026-09-07T19:36:31.0939003Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-09-07T19:36:31.0939599Z 
+2026-09-07T19:36:31.0940124Z [1m[92m     Running[0m tests/facts.rs (target/debug/deps/facts-03627b9f4c92d7b5)
+2026-09-07T19:36:31.0951055Z 
+2026-09-07T19:36:31.0951329Z running 1 test
+2026-09-07T19:36:31.1040096Z test typed_facts_and_delta_roundtrip_preserve_ids_and_reject_semantic_forgery ... ok
+2026-09-07T19:36:31.1040649Z 
+2026-09-07T19:36:31.1041025Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-09-07T19:36:31.1041484Z 
+2026-09-07T19:36:31.1042586Z [1m[92m     Running[0m tests/origin.rs (target/debug/deps/origin-257e70c85028af23)
+2026-09-07T19:36:31.1052692Z 
+2026-09-07T19:36:31.1052837Z running 1 test
+2026-09-07T19:36:31.1124589Z test origin_variants_roundtrip_and_wire_cycles_are_rejected ... ok
+2026-09-07T19:36:31.1124946Z 
+2026-09-07T19:36:31.1125255Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-09-07T19:36:31.1125613Z 
+2026-09-07T19:36:31.1126950Z [1m[92m     Running[0m tests/report.rs (target/debug/deps/report-dd1d9771681c524c)
+2026-09-07T19:36:31.1137284Z 
+2026-09-07T19:36:31.1137435Z running 4 tests
+2026-09-07T19:36:31.1245968Z test report_boundary_rejects_payload_count_and_source_forgery_and_preserves_stops ... ok
+2026-09-07T19:36:31.1254230Z test report_roundtrip_preserves_diagnostics_events_fixes_and_declared_sources ... ok
+2026-09-07T19:36:31.1259979Z test one_fix_uses_one_snapshot_per_source_but_allows_multiple_sources_and_historical_related ... ok
+2026-09-07T19:36:31.1264585Z test fix_preconditions_reject_digest_and_overlap_in_native_and_structural_wire_values ... ok
+2026-09-07T19:36:31.1265218Z 
+2026-09-07T19:36:31.1265652Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-09-07T19:36:31.1266229Z 
+2026-09-07T19:36:31.1267907Z [1m[92m     Running[0m tests/source.rs (target/debug/deps/source-0342e69ce2fa1a27)
+2026-09-07T19:36:31.1278635Z 
+2026-09-07T19:36:31.1278777Z running 3 tests
+2026-09-07T19:36:31.1348199Z test native_and_wire_admission_reject_zero_source_limit_and_span_scalar_interior ... ok
+2026-09-07T19:36:31.1387997Z test source_and_span_roundtrip_preserve_identity_bytes_and_shared_admission ... ok
+2026-09-07T19:36:31.1390793Z test malformed_source_declarations_reject_without_committing_and_retry_does_not_refund ... ok
+2026-09-07T19:36:31.1391416Z 
+2026-09-07T19:36:31.1391843Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-09-07T19:36:31.1392388Z 
+2026-09-07T19:36:31.1393380Z [1m[92m     Running[0m tests/stop.rs (target/debug/deps/stop-fca66e1a08fccb67)
+2026-09-07T19:36:31.1403876Z 
+2026-09-07T19:36:31.1404069Z running 2 tests
+2026-09-07T19:36:31.1407329Z test codec_stop_extraction_preserves_every_typed_nested_cause ... ok
+2026-09-07T19:36:31.1471484Z test actual_checked_codec_schema_work_stop_is_extractable ... ok
+2026-09-07T19:36:31.1471768Z 
+2026-09-07T19:36:31.1472013Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-09-07T19:36:31.1472348Z 
+2026-09-07T19:36:31.1474232Z [1m[92m     Running[0m tests/syntax.rs (target/debug/deps/syntax-8e3228b6a2bd57d5)
+2026-09-07T19:36:31.1484984Z 
+2026-09-07T19:36:31.1607983Z running 8 tests
+2026-09-07T19:36:31.1608617Z test foreign_bundle_roundtrip_keeps_local_token_view_origin_ids_and_payloads ... ok
+2026-09-07T19:36:31.1628015Z test foreign_bundle_rejects_forged_environment_digest_token_and_origin_references ... ok
+2026-09-07T19:36:31.1657724Z test foreign::standalone_foreign_keeps_selected_owner_environment_and_origin_arena ... ok
+2026-09-07T19:36:31.1738412Z test guest_arena_reordering_updates_foreign_root_and_guest_local_children ... ok
+2026-09-07T19:36:31.1785681Z test native_arena_order_is_canonicalized_and_unreachable_nodes_are_rejected ... ok
+2026-09-07T19:36:31.1787240Z test foreign::standalone_foreign_rejects_missing_owner_closure_hash_and_cross_arena_claims ... ok
+2026-09-07T19:36:31.1870822Z test mapped_views_and_maps_survive_host_and_guest_wire_boundaries ... ok
+2026-09-07T19:36:31.2528274Z test nested_generated_bundles_use_iterative_conversion_and_shared_depth_budget ... ok
+2026-09-07T19:36:31.2528660Z 
+2026-09-07T19:36:31.2528932Z test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+2026-09-07T19:36:31.2529279Z 
+2026-09-07T19:36:31.2532564Z [1m[92m     Running[0m tests/types.rs (target/debug/deps/types-a95f621cf2b22714)
+2026-09-07T19:36:31.2544527Z 
+2026-09-07T19:36:31.2544673Z running 2 tests
+2026-09-07T19:36:31.2613581Z test symbolic_type_descriptors_preserve_all_variants_and_nested_named_data ... ok
+2026-09-07T19:36:31.2924253Z test deep_symbolic_types_roundtrip_and_stop_without_recursive_cleanup ... ok
+2026-09-07T19:36:31.2924767Z 
+2026-09-07T19:36:31.2925168Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+2026-09-07T19:36:31.2931707Z [1m[92m     Running[0m tests/view.rs (target/debug/deps/view-821004958d652de2)
+2026-09-07T19:36:31.2932199Z 
+2026-09-07T19:36:31.2942687Z 
+2026-09-07T19:36:31.2942836Z running 2 tests
+2026-09-07T19:36:31.3056844Z test structured_payload_views_roles_relations_and_trivia_roundtrip_without_reparse ... ok
+2026-09-07T19:36:31.3061548Z test token_wire_rejects_invalid_local_view_and_trivia_references_and_source_limit ... ok
+2026-09-07T19:36:31.3062112Z 
+2026-09-07T19:36:31.3062545Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-09-07T19:36:31.3062976Z 
+2026-09-07T19:36:31.3063675Z [1m[92m   Doc-tests[0m nepl3_core
+2026-09-07T19:36:31.3959636Z 
+2026-09-07T19:36:31.3960224Z running 0 tests
+2026-09-07T19:36:31.3960503Z 
+2026-09-07T19:36:31.3960935Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:36:31.3961495Z 
+2026-09-07T19:36:31.3975635Z [1m[92m   Doc-tests[0m nepl3_doc_core
+2026-09-07T19:36:31.4961048Z 
+2026-09-07T19:36:31.4961561Z running 0 tests
+2026-09-07T19:36:31.4961831Z 
+2026-09-07T19:36:31.4962270Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:36:31.4962845Z 
+2026-09-07T19:36:31.4974315Z [1m[92m   Doc-tests[0m nepl3_doc_html
+2026-09-07T19:36:31.5254641Z 
+2026-09-07T19:36:31.5255126Z running 0 tests
+2026-09-07T19:36:31.5255386Z 
+2026-09-07T19:36:31.5255785Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:36:31.5256177Z 
+2026-09-07T19:36:31.5267285Z [1m[92m   Doc-tests[0m nepl3_engine
+2026-09-07T19:36:31.7763957Z 
+2026-09-07T19:36:31.7764457Z running 0 tests
+2026-09-07T19:36:31.7764716Z 
+2026-09-07T19:36:31.7765160Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:36:31.7765711Z 
+2026-09-07T19:36:31.7780604Z [1m[92m   Doc-tests[0m nepl3_grammar_core
+2026-09-07T19:36:31.8294783Z 
+2026-09-07T19:36:31.8295366Z running 0 tests
+2026-09-07T19:36:31.8295629Z 
+2026-09-07T19:36:31.8296077Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:36:31.8296656Z 
+2026-09-07T19:36:31.8308024Z [1m[92m   Doc-tests[0m nepl3_markup
+2026-09-07T19:36:31.8631846Z 
+2026-09-07T19:36:31.8632388Z running 0 tests
+2026-09-07T19:36:31.8632639Z 
+2026-09-07T19:36:31.8633073Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:36:31.8633621Z 
+2026-09-07T19:36:31.8645427Z [1m[92m   Doc-tests[0m nepl3_math_core
+2026-09-07T19:36:31.9063472Z 
+2026-09-07T19:36:31.9063889Z running 0 tests
+2026-09-07T19:36:31.9064073Z 
+2026-09-07T19:36:31.9064373Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:36:31.9064734Z 
+2026-09-07T19:36:31.9077217Z [1m[92m   Doc-tests[0m nepl3_reader
+2026-09-07T19:36:31.9942441Z 
+2026-09-07T19:36:31.9942881Z running 0 tests
+2026-09-07T19:36:31.9943184Z 
+2026-09-07T19:36:31.9943614Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:36:31.9944056Z 
+2026-09-07T19:36:31.9955880Z [1m[92m   Doc-tests[0m nepl3_tools
+2026-09-07T19:36:32.1680723Z 
+2026-09-07T19:36:32.1681265Z running 0 tests
+2026-09-07T19:36:32.1681531Z 
+2026-09-07T19:36:32.1681969Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:36:32.1682529Z 
+2026-09-07T19:36:32.1696830Z [1m[92m   Doc-tests[0m nepl3_wire
+2026-09-07T19:36:32.2110233Z 
+2026-09-07T19:36:32.2110674Z running 0 tests
+2026-09-07T19:36:32.2110944Z 
+2026-09-07T19:36:32.2111397Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-07T19:36:32.2111950Z 
+2026-09-07T19:36:32.2194995Z ##[group]Run mkdir -p dist
+2026-09-07T19:36:32.2195296Z [36;1mmkdir -p dist[0m
+2026-09-07T19:36:32.2195831Z [36;1mcargo run --locked -p nepl3-tools -- doc-html export examples/document/linear-combination.nepld dist/doc-example[0m
+2026-09-07T19:36:32.2235201Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T19:36:32.2235726Z env:
+2026-09-07T19:36:32.2235935Z   CARGO_TERM_COLOR: always
+2026-09-07T19:36:32.2236178Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:36:32.2236490Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:32.2236916Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+2026-09-07T19:36:32.2237509Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:32.2237879Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:32.2238252Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:32.2238659Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+2026-09-07T19:36:32.2238990Z ##[endgroup]
+2026-09-07T19:36:32.2860050Z [1m[92m    Finished[0m `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+2026-09-07T19:36:32.2879035Z [1m[92m     Running[0m `target/debug/nepl3-tools doc-html export examples/document/linear-combination.nepld dist/doc-example`
+2026-09-07T19:36:44.8190642Z ##[group]Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+2026-09-07T19:36:44.8191066Z with:
+2026-09-07T19:36:44.8191386Z   name: NEPL3-local-doc-b2d3b3766a244a0d836e2ab2c77f8b4abf5800cd
+2026-09-07T19:36:44.8191758Z   path: dist/doc-example/
+2026-09-07T19:36:44.8192007Z   if-no-files-found: error
+2026-09-07T19:36:44.8192238Z   retention-days: 14
+2026-09-07T19:36:44.8192456Z   compression-level: 6
+2026-09-07T19:36:44.8192675Z   overwrite: false
+2026-09-07T19:36:44.8192899Z   include-hidden-files: false
+2026-09-07T19:36:44.8193137Z   archive: true
+2026-09-07T19:36:44.8193335Z env:
+2026-09-07T19:36:44.8193535Z   CARGO_TERM_COLOR: always
+2026-09-07T19:36:44.8193769Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:36:44.8194072Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:44.8194498Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+2026-09-07T19:36:44.8194953Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:44.8195336Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:44.8195724Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:44.8196275Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+2026-09-07T19:36:44.8196780Z ##[endgroup]
+2026-09-07T19:36:44.9672132Z With the provided path, there will be 3 files uploaded
+2026-09-07T19:36:44.9673479Z Artifact name is valid!
+2026-09-07T19:36:44.9674300Z Root directory input is valid!
+2026-09-07T19:36:45.1651701Z Uploading artifact: NEPL3-local-doc-b2d3b3766a244a0d836e2ab2c77f8b4abf5800cd.zip
+2026-09-07T19:36:45.1690803Z Beginning upload of artifact content to blob storage
+2026-09-07T19:36:45.2461676Z Uploaded bytes 4394
+2026-09-07T19:36:45.2628597Z Finished uploading artifact content to blob storage!
+2026-09-07T19:36:45.2629495Z SHA256 digest of uploaded artifact is cb3877b53872e2e4d8a0f49772646211b548ff9eb2875f7984c8ac8b5858ad36
+2026-09-07T19:36:45.2630215Z Finalizing artifact upload
+2026-09-07T19:36:45.4712953Z Artifact NEPL3-local-doc-b2d3b3766a244a0d836e2ab2c77f8b4abf5800cd successfully finalized. Artifact ID 10031051351
+2026-09-07T19:36:45.4714075Z Artifact NEPL3-local-doc-b2d3b3766a244a0d836e2ab2c77f8b4abf5800cd has been successfully uploaded! Final size is 4394 bytes. Artifact ID is 10031051351
+2026-09-07T19:36:45.4716810Z Artifact download URL: https://github.com/neknaj/NEPL3/actions/runs/34156102042/artifacts/10031051351
+2026-09-07T19:36:45.4835284Z ##[group]Run python tools/audit/allocation/run.py
+2026-09-07T19:36:45.4835670Z [36;1mpython tools/audit/allocation/run.py[0m
+2026-09-07T19:36:45.4875611Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T19:36:45.4875967Z env:
+2026-09-07T19:36:45.4876177Z   CARGO_TERM_COLOR: always
+2026-09-07T19:36:45.4876432Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:36:45.4876747Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:45.4877408Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+2026-09-07T19:36:45.4878046Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:45.4878429Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:45.4878819Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:45.4879196Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+2026-09-07T19:36:45.4879523Z ##[endgroup]
+2026-09-07T19:36:49.6102192Z rustc 1.97.0 (2d8144b78 2026-07-07)
+2026-09-07T19:36:49.6102635Z binary: rustc
+2026-09-07T19:36:49.6103013Z commit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3
+2026-09-07T19:36:49.6103477Z commit-date: 2026-07-07
+2026-09-07T19:36:49.6103819Z host: x86_64-unknown-linux-gnu
+2026-09-07T19:36:49.6104150Z release: 1.97.0
+2026-09-07T19:36:49.6104423Z LLVM version: 22.1.6
+2026-09-07T19:36:49.6105029Z [1m[92m   Compiling[0m typenum v1.20.1
+2026-09-07T19:36:49.6105510Z [1m[92m   Compiling[0m autocfg v1.5.1
+2026-09-07T19:36:49.6105951Z [1m[92m   Compiling[0m cfg-if v1.0.4
+2026-09-07T19:36:49.6106445Z [1m[92m   Compiling[0m cpufeatures v0.3.1
+2026-09-07T19:36:49.6106967Z [1m[92m   Compiling[0m unicode-ident v1.0.18
+2026-09-07T19:36:49.6107680Z [1m[92m   Compiling[0m num-traits v0.2.19
+2026-09-07T19:36:49.6108169Z [1m[92m   Compiling[0m hybrid-array v0.4.14
+2026-09-07T19:36:49.6108657Z [1m[92m   Compiling[0m num-integer v0.1.47
+2026-09-07T19:36:49.6109138Z [1m[92m   Compiling[0m num-bigint v0.4.8
+2026-09-07T19:36:49.6109631Z [1m[92m   Compiling[0m block-buffer v0.12.1
+2026-09-07T19:36:49.6110116Z [1m[92m   Compiling[0m crypto-common v0.2.2
+2026-09-07T19:36:49.6110595Z [1m[92m   Compiling[0m digest v0.11.3
+2026-09-07T19:36:49.6111043Z [1m[92m   Compiling[0m sha2 v0.11.0
+2026-09-07T19:36:49.6111772Z [1m[92m   Compiling[0m nepl3-core v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/foundation/core)
+2026-09-07T19:36:49.6112664Z [1m[92m    Finished[0m `dev` profile [unoptimized + debuginfo] target(s) in 3.73s
+2026-09-07T19:36:49.6113575Z measured core artifact: /home/runner/work/NEPL3/NEPL3/target/x86_64-unknown-linux-gnu/debug/libnepl3_core.rlib
+2026-09-07T19:36:49.6114371Z positive control: observed 4096 allocated bytes
+2026-09-07T19:36:49.6115001Z SourceMap::insert: Err(Stopped(AllocationLimit)); observed 0 allocated bytes
+2026-09-07T19:36:49.6115782Z SourceStore::apply: Err(Stopped(AllocationLimit)); observed 0 allocated bytes
+2026-09-07T19:36:49.6116432Z allocation regression passed
+2026-09-07T19:36:49.6213274Z ##[group]Run cargo doc --workspace --no-deps --locked
+2026-09-07T19:36:49.6213670Z [36;1mcargo doc --workspace --no-deps --locked[0m
+2026-09-07T19:36:49.6253388Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T19:36:49.6253754Z env:
+2026-09-07T19:36:49.6253966Z   CARGO_TERM_COLOR: always
+2026-09-07T19:36:49.6254220Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:36:49.6254526Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:49.6254959Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+2026-09-07T19:36:49.6255389Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:49.6255763Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:49.6256136Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:49.6256504Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+2026-09-07T19:36:49.6256828Z ##[endgroup]
+2026-09-07T19:36:49.7045595Z [1m[92m    Checking[0m nepl3-core v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/foundation/core)
+2026-09-07T19:36:49.7057825Z [1m[92m Documenting[0m nepl3-core v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/foundation/core)
+2026-09-07T19:36:50.4927235Z [1m[92m    Checking[0m nepl3-reader v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/foundation/reader)
+2026-09-07T19:36:50.4928415Z [1m[92m    Checking[0m nepl3-markup v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/output/markup)
+2026-09-07T19:36:50.4929564Z [1m[92m    Checking[0m nepl3-doc-core v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/languages/doc/core)
+2026-09-07T19:36:50.4930849Z [1m[92m    Checking[0m nepl3-math-core v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/languages/math/core)
+2026-09-07T19:36:50.7868775Z [1m[92m    Checking[0m nepl3-wire v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/foundation/wire)
+2026-09-07T19:36:50.9861268Z [1m[92m Documenting[0m nepl3-math-core v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/languages/math/core)
+2026-09-07T19:36:51.3328943Z [1m[92m Documenting[0m nepl3-markup v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/output/markup)
+2026-09-07T19:36:51.5639681Z [1m[92m Documenting[0m nepl3-reader v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/foundation/reader)
+2026-09-07T19:36:51.6322182Z [1m[92m    Checking[0m nepl3-engine v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/foundation/engine)
+2026-09-07T19:36:51.8378924Z [1m[92m    Checking[0m nepl3-doc-html v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/languages/doc/html)
+2026-09-07T19:36:51.8515274Z [1m[92m Documenting[0m nepl3-doc-html v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/languages/doc/html)
+2026-09-07T19:36:52.0718905Z [1m[92m Documenting[0m nepl3-engine v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/foundation/engine)
+2026-09-07T19:36:52.3710040Z [1m[92m Documenting[0m nepl3-doc-core v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/languages/doc/core)
+2026-09-07T19:36:52.3962385Z [1m[92m Documenting[0m nepl3-wire v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/foundation/wire)
+2026-09-07T19:36:54.6786871Z [1m[92m    Checking[0m nepl3-grammar-core v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/languages/grammar/core)
+2026-09-07T19:36:54.6788359Z [1m[92m Documenting[0m nepl3-grammar-core v0.1.0 (/home/runner/work/NEPL3/NEPL3/crates/languages/grammar/core)
+2026-09-07T19:36:55.1091968Z [1m[92m Documenting[0m nepl3-tools v0.1.0 (/home/runner/work/NEPL3/NEPL3/tools)
+2026-09-07T19:36:55.8027360Z [1m[92m    Finished[0m `dev` profile [unoptimized + debuginfo] target(s) in 6.14s
+2026-09-07T19:36:55.8047421Z [1m[92m   Generated[0m /home/runner/work/NEPL3/NEPL3/target/doc/nepl3_core/index.html and 9 other files
+2026-09-07T19:36:55.8096928Z ##[group]Run cargo run --locked -p nepl3-tools -- check
+2026-09-07T19:36:55.8097568Z [36;1mcargo run --locked -p nepl3-tools -- check[0m
+2026-09-07T19:36:55.8136717Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T19:36:55.8137271Z env:
+2026-09-07T19:36:55.8137483Z   CARGO_TERM_COLOR: always
+2026-09-07T19:36:55.8137733Z   RUSTDOCFLAGS: -D warnings
+2026-09-07T19:36:55.8138047Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:55.8138478Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib/pkgconfig
+2026-09-07T19:36:55.8138905Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:55.8139278Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:55.8139658Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+2026-09-07T19:36:55.8140033Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.15/x64/lib
+2026-09-07T19:36:55.8140376Z ##[endgroup]
+2026-09-07T19:36:55.8745978Z [1m[92m    Finished[0m `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+2026-09-07T19:36:55.8768455Z [1m[92m     Running[0m `target/debug/nepl3-tools check`
+2026-09-07T19:36:55.9702099Z nepl3-tools: conformance/results/doc-local-html/backend/independent.py: UTF-8 BOM is not permitted
+2026-09-07T19:36:55.9720826Z ##[error]Process completed with exit code 1.
+2026-09-07T19:36:55.9841026Z Post job cleanup.
+2026-09-07T19:36:56.0699861Z [command]/usr/bin/git version
+2026-09-07T19:36:56.0752329Z git version 2.55.0
+2026-09-07T19:36:56.0787949Z Temporarily overriding HOME='/home/runner/work/_temp/0b1b77b1-f996-4a06-96c0-ceab8999c00b' before making global git config changes
+2026-09-07T19:36:56.0789237Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-07T19:36:56.0793189Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/NEPL3/NEPL3
+2026-09-07T19:36:56.0828481Z Removing SSH command configuration
+2026-09-07T19:36:56.0848077Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-07T19:36:56.0874164Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-07T19:36:56.1135234Z Removing HTTP extra header
+2026-09-07T19:36:56.1142805Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-07T19:36:56.1181059Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-07T19:36:56.1458050Z Removing includeIf entries pointing to credentials config files
+2026-09-07T19:36:56.1467506Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-07T19:36:56.1505895Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-07T19:36:56.1932979Z Cleaning up orphan processes

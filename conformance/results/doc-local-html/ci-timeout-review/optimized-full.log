@@ -1,0 +1,25 @@
+   Compiling typenum v1.20.1
+   Compiling autocfg v1.5.1
+   Compiling cfg-if v1.0.4
+   Compiling unicode-ident v1.0.18
+   Compiling num-traits v0.2.19
+   Compiling hybrid-array v0.4.14
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling num-integer v0.1.47
+   Compiling num-bigint v0.4.8
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-doc-html-export\crates\foundation\core)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-doc-html-export\crates\foundation\wire)
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-doc-html-export\crates\foundation\reader)
+   Compiling nepl3-engine v0.1.0 (C:\projects\NEPL3-doc-html-export\crates\foundation\engine)
+error: could not compile `nepl3-engine` (test "head")
+
+Caused by:
+  process didn't exit successfully: `C:\Users\bem\.rustup\toolchains\1.97.0-x86_64-pc-windows-msvc\bin\rustc.exe --crate-name head --edition=2024 crates\foundation\engine\tests\head.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C opt-level=2 -C embed-bitcode=no -C debuginfo=2 --deny=clippy::unwrap_used --forbid=unsafe_code --deny=clippy::unimplemented --deny=clippy::todo --deny=clippy::panic --deny=clippy::expect_used -C debug-assertions=on --test --check-cfg cfg(docsrs,test) --check-cfg "cfg(feature, values())" -C metadata=33d7665410f93650 -C extra-filename=-c7b872e85063f542 --out-dir C:\projects\NEPL3-doc-html-export\.tmp\review-ci-timeout\optimized-target\wasm32-wasip2\debug\deps --target wasm32-wasip2 -C incremental=C:\projects\NEPL3-doc-html-export\.tmp\review-ci-timeout\optimized-target\wasm32-wasip2\debug\incremental -L dependency=C:\projects\NEPL3-doc-html-export\.tmp\review-ci-timeout\optimized-target\wasm32-wasip2\debug\deps -L dependency=C:\projects\NEPL3-doc-html-export\.tmp\review-ci-timeout\optimized-target\debug\deps --extern nepl3_core=C:\projects\NEPL3-doc-html-export\.tmp\review-ci-timeout\optimized-target\wasm32-wasip2\debug\deps\libnepl3_core-b0374f2494b98044.rlib --extern nepl3_engine=C:\projects\NEPL3-doc-html-export\.tmp\review-ci-timeout\optimized-target\wasm32-wasip2\debug\deps\libnepl3_engine-73df8beb6586ce32.rlib --extern nepl3_reader=C:\projects\NEPL3-doc-html-export\.tmp\review-ci-timeout\optimized-target\wasm32-wasip2\debug\deps\libnepl3_reader-e3089c2f029715a5.rlib --extern nepl3_wire=C:\projects\NEPL3-doc-html-export\.tmp\review-ci-timeout\optimized-target\wasm32-wasip2\debug\deps\libnepl3_wire-0f7e6b9abcb4630f.rlib` (exit code: 0xffffffff)
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `nepl3-engine` (test "parse")
+
+Caused by:
+  process didn't exit successfully: `C:\Users\bem\.rustup\toolchains\1.97.0-x86_64-pc-windows-msvc\bin\rustc.exe --crate-name parse --edition=2024 crates\foundation\engine\tests\parse.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C opt-level=2 -C embed-bitcode=no -C debuginfo=2 --deny=clippy::unwrap_used --forbid=unsafe_code --deny=clippy::unimplemented --deny=clippy::todo --deny=clippy::panic --deny=clippy::expect_used -C debug-assertions=on --test --check-cfg cfg(docsrs,test) --check-cfg "cfg(feature, values())" -C metadata=724c5fc3e1b89585 -C extra-filename=-0c2c130217ae8714 --out-dir C:\projects\NEPL3-doc-html-export\.tmp\review-ci-timeout\optimized-target\wasm32-wasip2\debug\deps --target wasm32-wasip2 -C incremental=C:\projects\NEPL3-doc-html-export\.tmp\review-ci-timeout\optimized-target\wasm32-wasip2\debug\incremental -L dependency=C:\projects\NEPL3-doc-html-export\.tmp\review-ci-timeout\optimized-target\wasm32-wasip2\debug\deps -L dependency=C:\projects\NEPL3-doc-html-export\.tmp\review-ci-timeout\optimized-target\debug\deps --extern nepl3_core=C:\projects\NEPL3-doc-html-export\.tmp\review-ci-timeout\optimized-target\wasm32-wasip2\debug\deps\libnepl3_core-b0374f2494b98044.rlib --extern nepl3_engine=C:\projects\NEPL3-doc-html-export\.tmp\review-ci-timeout\optimized-target\wasm32-wasip2\debug\deps\libnepl3_engine-73df8beb6586ce32.rlib --extern nepl3_reader=C:\projects\NEPL3-doc-html-export\.tmp\review-ci-timeout\optimized-target\wasm32-wasip2\debug\deps\libnepl3_reader-e3089c2f029715a5.rlib --extern nepl3_wire=C:\projects\NEPL3-doc-html-export\.tmp\review-ci-timeout\optimized-target\wasm32-wasip2\debug\deps\libnepl3_wire-0f7e6b9abcb4630f.rlib` (exit code: 0xffffffff)
