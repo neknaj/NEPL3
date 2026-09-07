@@ -1,25 +1,333 @@
-article ja "{ベクトル/vector}の{[線型結合/せんけいけつごう]/linear combination}と{スパン/span}"
+article ja sentence
+  cons anno text "ベクトル" cons text "vector" nil
+  cons text "の"
+  cons anno ruby text "線型結合" text "せんけいけつごう" cons text "linear combination" nil
+  cons text "と"
+  cons anno text "スパン" cons text "span" nil
+  nil
 body
-  cons list unordered
-    cons item none body
+  cons section linear_combination sentence
+    cons anno ruby text "線型結合" text "せんけいけつごう" cons text "linear combination" nil
+    nil
+    body
       cons paragraph
-        cons "いくつかの{ベクトル/vector}をそれぞれ{[定数倍/ていすうばい]/scalar multiplication}して[足/た]し[合/あ]わせることを、{[線型結合/せんけいけつごう]/linear combination}といいます。それぞれの{ベクトル/vector}に[掛/か]ける[数/かず]が、{[係数/けいすう]/coefficient}です。"
+        cons parallel
+          cons variant ja "いくつかの{ベクトル/vector}をそれぞれ{[定数倍/ていすうばい]/scalar multiplication}して[足/た]し[合/あ]わせることを、{[線型結合/せんけいけつごう]/linear combination}といいます。"
+          cons variant en "A linear combination is formed by multiplying each of several vectors by a scalar and adding the results."
+          nil
+        cons parallel
+          cons variant ja sentence
+            cons text "それぞれの"
+            cons anno text "ベクトル" cons text "vector" nil
+            cons text "に"
+            cons ruby text "掛" text "か"
+            cons text "ける"
+            cons ruby text "数" text "かず"
+            cons text "が、"
+            cons anno ruby text "係数" text "けいすう" cons text "coefficient" nil
+            cons text "です。"
+            nil
+          cons variant en sentence
+            cons text "The number multiplying each vector is called its coefficient."
+            nil
+          nil
         nil
-      nil
-    cons item none body
+    nil
+  cons section span sentence
+    cons anno text "スパン" cons text "span" nil
+    nil
+    body
       cons paragraph
-        cons "{[係数/けいすう]/coefficient}を[自由/じゆう]に[変/か]えて、{[線型結合/せんけいけつごう]/linear combination}で[作/つく]れる{ベクトル/vector}をすべて[集/あつ]めたものが、[元/もと]の{ベクトル/vector}たちの{スパン/span}です。{[係数/けいすう]/coefficient}を[一組/ひとくみ]だけ[決/き]めて[得/え]られる{ベクトル/vector}と、そのすべての[可能性/かのうせい]を[集/あつ]めた{スパン/span}を[区別/くべつ]しましょう。"
+        cons parallel
+          cons variant ja sentence
+            cons anno ruby text "係数" text "けいすう" cons text "coefficient" nil
+            cons text "を"
+            cons ruby text "自由" text "じゆう"
+            cons text "に"
+            cons ruby text "変" text "か"
+            cons text "えて、"
+            cons ref linear_combination anno ruby text "線型結合" text "せんけいけつごう" cons text "linear combination" nil
+            cons text "で"
+            cons ruby text "作" text "つく"
+            cons text "れる"
+            cons anno text "ベクトル" cons text "vector" nil
+            cons text "を"
+            cons strong text "すべて"
+            cons ruby text "集" text "あつ"
+            cons text "めたものが、"
+            cons ruby text "元" text "もと"
+            cons text "の"
+            cons anno text "ベクトル" cons text "vector" nil
+            cons text "たちの"
+            cons anno text "スパン" cons text "span" nil
+            cons text "です。"
+            nil
+          cons variant en sentence
+            cons text "The span of a collection of vectors is the set of "
+            cons strong text "all vectors"
+            cons text " that can be formed as "
+            cons ref linear_combination text "linear combinations"
+            cons text " of them, allowing the coefficients to vary freely."
+            nil
+          nil
+        cons parallel
+          cons variant ja sentence
+            cons anno ruby text "係数" text "けいすう" cons text "coefficient" nil
+            cons text "を"
+            cons ruby text "一組" text "ひとくみ"
+            cons text "だけ"
+            cons ruby text "決" text "き"
+            cons text "めて"
+            cons ruby text "得" text "え"
+            cons text "られる"
+            cons anno text "ベクトル" cons text "vector" nil
+            cons text "と、そのすべての"
+            cons ruby text "可能性" text "かのうせい"
+            cons text "を"
+            cons ruby text "集" text "あつ"
+            cons text "めた"
+            cons anno text "スパン" cons text "span" nil
+            cons text "を"
+            cons ruby text "区別" text "くべつ"
+            cons text "しましょう。"
+            nil
+          cons variant en sentence
+            cons text "Distinguish a single vector obtained from one choice of coefficients from the span, which contains all possible results."
+            nil
+          nil
         nil
+    nil
+  cons section plane sentence
+    cons anno concat
+      cons ruby text "平面" text "へいめん"
+      cons text "での"
+      cons ruby text "例" text "れい"
       nil
-    cons item none body
+      cons text "examples in the plane" nil
+    nil
+    body
       cons paragraph
-        cons "たとえば{[平面/へいめん]/plane}では、0でない[一本/いっぽん]の{ベクトル/vector}の{スパン/span}は、{[原点/げんてん]/origin}を[通/とお]る[一本/いっぽん]の{[直線/ちょくせん]/line}です。[同/おな]じ[方向/ほうこう]や[逆方向/ぎゃくほうこう]の{ベクトル/vector}を[何本/なんぼん][加/くわ]えても、この{スパン/span}は[変/か]わりません。{[平行/へいこう]/parallel}でない{ベクトル/vector}を[加/くわ]えると、{スパン/span}は{[平面/へいめん]/plane}[全体/ぜんたい]になります。"
+        cons parallel
+          cons variant ja sentence
+            cons text "たとえば"
+            cons anno ruby text "平面" text "へいめん" cons text "plane" nil
+            cons text "では、0でない"
+            cons ruby text "一本" text "いっぽん"
+            cons text "の"
+            cons anno text "ベクトル" cons text "vector" nil
+            cons text "の"
+            cons anno text "スパン" cons text "span" nil
+            cons text "は、"
+            cons anno ruby text "原点" text "げんてん" cons text "origin" nil
+            cons text "を"
+            cons ruby text "通" text "とお"
+            cons text "る"
+            cons ruby text "一本" text "いっぽん"
+            cons text "の"
+            cons anno ruby text "直線" text "ちょくせん" cons text "line" nil
+            cons text "です。"
+            nil
+          cons variant en sentence
+            cons text "For example, in the plane, the span of one nonzero vector is a line through the origin."
+            nil
+          nil
+        cons parallel
+          cons variant ja sentence
+            cons ruby text "同" text "おな"
+            cons text "じ"
+            cons ruby text "方向" text "ほうこう"
+            cons text "や"
+            cons ruby text "逆方向" text "ぎゃくほうこう"
+            cons text "の"
+            cons anno text "ベクトル" cons text "vector" nil
+            cons text "を"
+            cons ruby text "何本" text "なんぼん"
+            cons ruby text "加" text "くわ"
+            cons text "えても、この"
+            cons anno text "スパン" cons text "span" nil
+            cons text "は"
+            cons ruby text "変" text "か"
+            cons text "わりません。"
+            nil
+          cons variant en sentence
+            cons text "Adding any number of vectors in the same or opposite direction leaves this span unchanged."
+            nil
+          nil
+        cons parallel
+          cons variant ja sentence
+            cons anno ruby text "平行" text "へいこう" cons text "parallel" nil
+            cons text "でない"
+            cons anno text "ベクトル" cons text "vector" nil
+            cons text "を"
+            cons ruby text "加" text "くわ"
+            cons text "えると、"
+            cons anno text "スパン" cons text "span" nil
+            cons text "は"
+            cons anno ruby text "平面" text "へいめん" cons text "plane" nil
+            cons ruby text "全体" text "ぜんたい"
+            cons text "になります。"
+            nil
+          cons variant en sentence
+            cons text "Adding a vector that is not parallel to that line makes the span the entire plane."
+            nil
+          nil
         nil
+      cons table cons left cons left cons right nil
+        some row
+          cons sentence
+            cons anno concat
+              cons ruby text "平面内" text "へいめんない"
+              cons text "のベクトル"
+              nil
+              cons text "vectors in the plane" nil
+            nil
+          cons sentence
+            cons anno text "スパン" cons text "span" nil
+            nil
+          cons sentence
+            cons anno ruby text "次元" text "じげん" cons text "dimension" nil
+            nil
+          nil
+        cons row
+          cons sentence
+            cons anno concat
+              cons text "0でない"
+              cons ruby text "一本" text "いっぽん"
+              nil
+              cons text "one nonzero vector" nil
+            nil
+          cons sentence
+            cons anno concat
+              cons ruby text "原点" text "げんてん"
+              cons text "を"
+              cons ruby text "通" text "とお"
+              cons text "る"
+              cons ruby text "直線" text "ちょくせん"
+              nil
+              cons text "a line through the origin" nil
+            nil
+          cons sentence cons text "1" nil
+          nil
+        cons row
+          cons sentence
+            cons anno concat
+              cons ruby text "平行" text "へいこう"
+              cons text "な"
+              cons ruby text "二本" text "にほん"
+              cons text "（"
+              cons ruby text "少" text "すく"
+              cons text "なくとも"
+              cons ruby text "一本" text "いっぽん"
+              cons text "は0でない）"
+              nil
+              cons text "two parallel vectors, at least one nonzero" nil
+            nil
+          cons sentence
+            cons anno concat
+              cons ruby text "原点" text "げんてん"
+              cons text "を"
+              cons ruby text "通" text "とお"
+              cons text "る"
+              cons ruby text "直線" text "ちょくせん"
+              nil
+              cons text "a line through the origin" nil
+            nil
+          cons sentence cons text "1" nil
+          nil
+        cons row
+          cons sentence
+            cons anno concat
+              cons ruby text "平行" text "へいこう"
+              cons text "でない"
+              cons ruby text "二本" text "にほん"
+              nil
+              cons text "two nonparallel vectors" nil
+            nil
+          cons sentence
+            cons anno ruby text "平面全体" text "へいめんぜんたい" cons text "the entire plane" nil
+            nil
+          cons sentence cons text "2" nil
+          nil
+        nil
+    nil
+  cons section independence sentence
+    cons anno concat
+      cons ruby text "一次独立" text "いちじどくりつ"
+      cons text "と"
+      cons ruby text "次元" text "じげん"
       nil
-    cons item none body
+      cons text "linear independence and dimension" nil
+    nil
+    body
       cons paragraph
-        cons "このように、{ベクトル/vector}の[本数/ほんすう]が[増/ふ]えても、{スパン/span}の{[次元/じげん]/dimension}が[増/ふ]えるとは[限/かぎ]りません。{スパン/span}の{[次元/じげん]/dimension}は、[元/もと]の{ベクトル/vector}たちから[選/えら]べる{[一次独立/いちじどくりつ]/linearly independent}な{ベクトル/vector}の[最大本数/さいだいほんすう]で[決/き]まります。{[一次独立/いちじどくりつ]/linearly independent}とは、[選/えら]んだどの[一本/いっぽん]も、[残/のこ]りの{ベクトル/vector}の{[線型結合/せんけいけつごう]/linear combination}では[作/つく]れないということです。"
+        cons parallel
+          cons variant ja sentence
+            cons text "このように、"
+            cons anno text "ベクトル" cons text "vector" nil
+            cons text "の"
+            cons ruby text "本数" text "ほんすう"
+            cons text "が"
+            cons ruby text "増" text "ふ"
+            cons text "えても、"
+            cons anno text "スパン" cons text "span" nil
+            cons text "の"
+            cons anno ruby text "次元" text "じげん" cons text "dimension" nil
+            cons text "が"
+            cons ruby text "増" text "ふ"
+            cons text "えるとは"
+            cons ruby text "限" text "かぎ"
+            cons text "りません。"
+            nil
+          cons variant en sentence
+            cons text "Increasing the number of vectors does not necessarily increase the dimension of their span."
+            nil
+          nil
+        cons parallel
+          cons variant ja sentence
+            cons anno text "スパン" cons text "span" nil
+            cons text "の"
+            cons anno ruby text "次元" text "じげん" cons text "dimension" nil
+            cons text "は、"
+            cons ruby text "元" text "もと"
+            cons text "の"
+            cons anno text "ベクトル" cons text "vector" nil
+            cons text "たちから"
+            cons ruby text "選" text "えら"
+            cons text "べる"
+            cons anno ruby text "一次独立" text "いちじどくりつ" cons text "linearly independent" nil
+            cons text "な"
+            cons anno text "ベクトル" cons text "vector" nil
+            cons text "の"
+            cons ruby text "最大本数" text "さいだいほんすう"
+            cons text "で"
+            cons ruby text "決" text "き"
+            cons text "まります。"
+            nil
+          cons variant en sentence
+            cons text "The dimension of the span is the largest number of linearly independent vectors that can be selected from the original collection."
+            nil
+          nil
+        cons parallel
+          cons variant ja sentence
+            cons anno ruby text "一次独立" text "いちじどくりつ" cons text "linearly independent" nil
+            cons text "とは、"
+            cons ruby text "選" text "えら"
+            cons text "んだどの"
+            cons ruby text "一本" text "いっぽん"
+            cons text "も、"
+            cons ruby text "残" text "のこ"
+            cons text "りの"
+            cons anno text "ベクトル" cons text "vector" nil
+            cons text "の"
+            cons anno ruby text "線型結合" text "せんけいけつごう" cons text "linear combination" nil
+            cons text "では"
+            cons ruby text "作" text "つく"
+            cons text "れないということです。"
+            nil
+          cons variant en sentence
+            cons text "The selected vectors are linearly independent if none of them can be formed as a linear combination of the others."
+            nil
+          nil
         nil
-      nil
     nil
   nil

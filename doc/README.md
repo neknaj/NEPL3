@@ -2,6 +2,8 @@
 
 正式な仕様・開発情報の入口です。会話やローカルの `.tmp/` を参照しなくても、ここから実装契約と現在の状態を確認できます。
 
+Docで例や解説を書く際は、[文書の執筆指針](authoring.md)のsentence literal・前置構築・parallel・Ruby/Annoの使い分けに従ってください。
+
 ## 読み順
 
 1. [対象範囲と共通契約](spec/00-contract.md)、[アーキテクチャ](spec/01-architecture.md)
