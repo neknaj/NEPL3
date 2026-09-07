@@ -1,0 +1,38 @@
+[
+  {
+    "target": "native",
+    "command": [
+      "cargo",
+      "test",
+      "--offline",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-admission-storage-cache-fixed\\probe\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target",
+      "--",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "exit": 0,
+    "log": "native.log"
+  },
+  {
+    "target": "wasm32-wasip2",
+    "command": [
+      "cargo",
+      "test",
+      "--offline",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-admission-storage-cache-fixed\\probe\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target",
+      "--target",
+      "wasm32-wasip2",
+      "--",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "exit": 0,
+    "log": "wasm32-wasip2.log"
+  }
+]

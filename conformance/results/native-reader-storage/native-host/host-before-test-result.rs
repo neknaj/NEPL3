@@ -224,11 +224,7 @@ mod tests {
             ..Limits::default()
         })
     }
-    fn source(
-        id: &str,
-        uri: &str,
-        text: &str,
-    ) -> Result<SourceSnapshot, nepl3_core::source::SourceError> {
+    fn source(id: &str, uri: &str, text: &str) -> SourceSnapshot {
         SourceSnapshot::new(
             SourceId(id.into()),
             0,
@@ -236,49 +232,54 @@ mod tests {
             text.into(),
             &mut budget(),
         )
+        .expect("valid test snapshot")
     }
     #[test]
-    fn source_cache_tracks_exact_request_scope_and_rechecks_independent_values()
-    -> Result<(), ParseError> {
-        let a = source("a", "memory:a", "\u{65e5}\u{672c}\r\n\u{1f600}")?;
-        let b = source("b", "memory:b", "b")?;
+    fn source_cache_tracks_exact_request_scope_and_rechecks_independent_values() {
+        let a = source("a", "memory:a", "\u{65e5}\u{672c}\r\n\u{1f600}");
+        let b = source("b", "memory:b", "b");
         let mut store = SourceStore::default();
-        refresh_sources(&mut store, &[a.clone(), b.clone()], &mut budget())?;
+        refresh_sources(&mut store, &[a.clone(), b.clone()], &mut budget())
+            .expect("valid cache transition");
         let mut reuse = Budget::new(Limits {
             work: 2,
             ..Limits::default()
         });
-        refresh_sources(&mut store, &[a.clone(), b.clone()], &mut reuse)?;
+        refresh_sources(&mut store, &[a.clone(), b.clone()], &mut reuse)
+            .expect("valid cache transition");
         assert_eq!(reuse.usage().allocation_units, 0);
-        refresh_sources(&mut store, core::slice::from_ref(&b), &mut budget())?;
+        refresh_sources(&mut store, core::slice::from_ref(&b), &mut budget())
+            .expect("valid cache transition");
         assert!(store.get_ref(a.identity()).is_none());
-        assert_eq!(store.snapshots(), core::slice::from_ref(&b));
-        refresh_sources(&mut store, &[b.clone(), a.clone()], &mut budget())?;
+        assert_eq!(store.snapshots(), &[b.clone()]);
+        refresh_sources(&mut store, &[b.clone(), a.clone()], &mut budget())
+            .expect("valid cache transition");
         assert_eq!(store.snapshots(), &[b.clone(), a.clone()]);
-        let independent = source("b", "memory:changed", "changed")?;
+        let independent = source("b", "memory:changed", "changed");
         refresh_sources(
             &mut store,
             core::slice::from_ref(&independent),
             &mut budget(),
-        )?;
+        )
+        .expect("valid cache transition");
         assert_eq!(store.snapshots(), &[independent]);
         // Conflicting duplicate declarations fail; neither old cached sources
         // nor an incomplete replacement can satisfy the rejected request.
         assert!(
             refresh_sources(
                 &mut store,
-                &[b.clone(), source("b", "memory:other", "b")?],
+                &[b.clone(), source("b", "memory:other", "b")],
                 &mut budget()
             )
             .is_err()
         );
-        refresh_sources(&mut store, &[a.clone(), b.clone()], &mut budget())?;
+        refresh_sources(&mut store, &[a.clone(), b.clone()], &mut budget())
+            .expect("valid cache transition");
         assert_eq!(store.snapshots(), &[a, b]);
-        refresh_sources(&mut store, &[], &mut budget())?;
+        refresh_sources(&mut store, &[], &mut budget()).expect("valid cache transition");
         assert!(store.snapshots().is_empty());
         let mut cancelled = budget();
         cancelled.stop(nepl3_core::budget::StopReason::Cancelled);
         assert!(refresh_sources(&mut store, &[], &mut cancelled).is_err());
-        Ok(())
     }
 }

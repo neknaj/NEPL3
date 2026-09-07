@@ -33,6 +33,16 @@ impl TokenizationHost for Host {
             5 => {
                 b.charge(Resource::Work, u64::MAX)?;
             }
+            7 | 8 => {
+                let mut limits = b.limits();
+                limits.work += 1;
+                let observed = b.usage();
+                *b = Budget::new(limits);
+                b.record_observed_usage(observed)?;
+                if self.mode == 8 {
+                    return Ok(None);
+                }
+            }
             _ => {}
         }
         let mut reply = terminal("a", request.start + 1, b)?;
@@ -188,8 +198,9 @@ fn synchronous_tokenizer_keeps_owned_fallback_and_validates_replies() -> Result<
         }],
     }];
     let mut successes = vec![];
-    for mode in 0..7 {
+    for mode in 0..9 {
         let mut b = budget();
+        let original_limits = b.limits();
         let mut a = SourceAdmission::default();
         let proof = check_context(&raw, &store, &r, &mut b, &mut a)?;
         let mut session = TokenizationSession::new("host".into(), &modes, &checked, &r, &mut b)?;
@@ -221,9 +232,12 @@ fn synchronous_tokenizer_keeps_owned_fallback_and_validates_replies() -> Result<
         )?;
         assert_eq!(host.calls, 1);
         assert_eq!(b.current_depth(), 0);
-        assert_eq!(reply.host_error.is_some(), matches!(mode, 2 | 3 | 5 | 6));
+        assert_eq!(
+            reply.host_error.is_some(),
+            matches!(mode, 2 | 3 | 5 | 6 | 7 | 8)
+        );
         let mut reply = reply.reply.into_raw();
-        if mode >= 4 {
+        if matches!(mode, 4..=6) {
             assert!(
                 matches!(reply.outcome, TokenizationOutcome::Stopped { reason }
                 if reason == if matches!(mode, 4 | 6) { StopReason::Cancelled } else { StopReason::WorkLimit })
@@ -231,6 +245,12 @@ fn synchronous_tokenizer_keeps_owned_fallback_and_validates_replies() -> Result<
             continue;
         }
         if mode != 0 {
+            if matches!(mode, 7 | 8) {
+                assert_eq!(b.limits().work, original_limits.work + 1);
+                let observed = b.usage();
+                b = Budget::new(original_limits);
+                b.record_observed_usage(observed)?;
+            }
             let TokenizationOutcome::Await { continuation, .. } = &reply.outcome else {
                 return Err(ReaderError::NoPending);
             };

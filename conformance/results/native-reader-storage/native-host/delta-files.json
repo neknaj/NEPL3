@@ -1,0 +1,17 @@
+[
+  {
+    "path": "crates/foundation/reader/src/runtime/mod.rs",
+    "sha256": "87731bb659c36189ff3b592ab825f907e3d254fcc971829618ef16c42436a9e9",
+    "bytes": 57922
+  },
+  {
+    "path": "crates/foundation/reader/src/runtime/validate/provider.rs",
+    "sha256": "0dbb028225afa690092231a9599b5ecd7b36950d9a4e7c703e0b224a14b34971",
+    "bytes": 13459
+  },
+  {
+    "path": "tools/src/doc/host.rs",
+    "sha256": "4064d7dbc6f14fbcb6ba253e2e66dce7eb113723bd9d536bbc3705ce8f29f1e5",
+    "bytes": 10003
+  }
+]

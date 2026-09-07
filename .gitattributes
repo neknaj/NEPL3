@@ -29,3 +29,5 @@ dist/** export-ignore
 /conformance/results/tokenizer-native-host/** -text -whitespace
 /conformance/results/source-lookup-indexes/** -text -whitespace
 /conformance/results/reader-source-prefix/** -text -whitespace
+
+/conformance/results/native-reader-storage/** -text -whitespace

@@ -490,8 +490,6 @@ fn units(text: &str, encoding: PositionEncoding) -> u64 {
 pub struct SourceAdmission {
     admitted: Vec<(SnapshotId, String)>,
     index: Vec<usize>,
-    #[cfg(target_has_atomic = "ptr")]
-    shared: Vec<SnapshotStorage>,
 }
 impl SourceAdmission {
     /// Reconstructs a repeated declaration from a nested wire bundle without charging
@@ -534,33 +532,6 @@ impl SourceAdmission {
         snapshot: &SourceSnapshot,
         budget: &mut Budget,
     ) -> Result<(), SourceError> {
-        budget.poll()?;
-        #[cfg(target_has_atomic = "ptr")]
-        let insertion = {
-            // Keep an owning reference: allocator address reuse cannot make a
-            // new snapshot inherit an old operation's admission. This index is
-            // private to this admission object, never encoded or shared across
-            // operations. Independently decoded storage takes the full check.
-            let key = alloc::sync::Arc::as_ptr(&snapshot.storage);
-            let (mut low, mut high) = (0, self.shared.len());
-            // Charge a size-derived search/shift bound, not pointer ordering:
-            // allocator placement must not change logical operation usage.
-            budget.charge(Resource::Work, (usize::BITS - high.leading_zeros()) as u64)?;
-            while low < high {
-                let mid = low + (high - low) / 2;
-                match alloc::sync::Arc::as_ptr(&self.shared[mid]).cmp(&key) {
-                    core::cmp::Ordering::Equal => return Ok(()),
-                    core::cmp::Ordering::Less => low = mid + 1,
-                    core::cmp::Ordering::Greater => high = mid,
-                }
-            }
-            budget.charge(Resource::Work, self.shared.len() as u64 + 1)?;
-            budget.charge(
-                Resource::AllocationUnits,
-                core::mem::size_of::<SnapshotStorage>() as u64,
-            )?;
-            low
-        };
         self.admit_parts(
             &snapshot.storage.id.source,
             snapshot.storage.id.revision,
@@ -568,11 +539,7 @@ impl SourceAdmission {
             &snapshot.storage.uri,
             snapshot.storage.text.len() as u64,
             budget,
-        )?;
-        #[cfg(target_has_atomic = "ptr")]
-        self.shared
-            .insert(insertion, alloc::sync::Arc::clone(&snapshot.storage));
-        Ok(())
+        )
     }
     fn find(
         &self,

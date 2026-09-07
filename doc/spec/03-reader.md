@@ -145,7 +145,11 @@ Local/WithModeのretargetは検査済みenvironmentとOriginを明示的に再�
 source閉包・候補巻戻しを通す。外部から継続を受け取る経路ではReaderContinuationのecho検査を維持する。
 同期callbackはProviderCallを借用するだけで継続を供給しないため、排他的に保持した
 readerのprivate slotを再開する。callのsignature・範囲・source・返却値・reportの検査は
-通常と同じresume_savedで行う。単に同signatureの合法値である別call由来のreplyを、
+共通check_providerで行う。Read/Dependentの同期返信は元Machineの所有中に検査・適用し、
+外部待機か不正返信の場合だけ完全なReaderContinuationを生成する。
+Transformは既存の保存context経路を使う。callbackの前後で元LimitsとUsageの単調性を照合し、
+hostによるBudgetの交換を正常な応答として採用しない。
+単に同signatureの合法値である別call由来のreplyを、
 payloadだけから識別できるとは保証しない。呼出しの対応付けはhostの責務である。
 Noneは通常の所有Await/Reserveへ戻る。callbackの非停止エラーもその境界と元エラーを返す。
 不正なprovider replyはreaderで拒否され、tokenizer入口では所有Awaitを保持する。
@@ -168,3 +172,8 @@ providerの追加map・viewの要素とroot・factsがすべて空なら、新�
 参照位置の解決に使うSourceStoreを再構築しない。reportのUsage・overflow、値・state・
 終端範囲・期待値などの検査は維持する。NoMatch/NeedMoreには従来どおり空の返却artifactを要求する。
 これは検査済みのprivate request/checkpointに対する処理であり、外部source宣言の検査省略ではない。
+
+tokenizerが受理済みprefixを次のreaderへ渡すときは、まず全sourceの競合と操作内admissionを検査する。
+診断・eventのないreportでは、この同じsource索引をreport検査用に再構築せずUsage/overflowを検査する。
+providerの適用へ渡すframeはprivate状態から取り出した所有値なので、NoMatch/NeedMoreの巻戻しは
+checkpointを再複製せず所有権を戻す。正式artifactの喪失や予算の払い戻しを伴わない。

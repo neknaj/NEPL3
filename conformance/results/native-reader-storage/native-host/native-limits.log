@@ -1,0 +1,21 @@
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-snapshot-storage\.tmp\review-native-reader-drive\workspace\crates\foundation\reader)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.47s
+     Running tests\runtime.rs (target\debug\deps\runtime-66fa20415fd05493.exe)
+
+running 1 test
+
+thread 'review_native::review_read_then_dependent_native_retry_scope_and_stops' (46256) panicked at crates\foundation\reader\tests\runtime\review_native.rs:20:790:
+assertion `left == right` failed
+  left: false
+ right: true
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test review_native::review_read_then_dependent_native_retry_scope_and_stops ... FAILED
+
+failures:
+
+failures:
+    review_native::review_read_then_dependent_native_retry_scope_and_stops
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 36 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p nepl3-reader --test runtime`

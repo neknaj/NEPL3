@@ -266,7 +266,7 @@ fn check_view_offset(view: &ViewBundle, offset: usize) -> Result<(), ReaderError
 /// precede this phase; allocation stops still preserve accepted artifacts.
 pub(in crate::runtime) fn apply_provider(
     machine: &mut Machine<'_, '_>,
-    frame: &ReaderFrame,
+    frame: ReaderFrame,
     reply: ProviderReply,
     budget: &mut Budget,
 ) -> Result<Outcome, ReaderError> {
@@ -334,11 +334,11 @@ pub(in crate::runtime) fn apply_provider(
             ReadReply::NoMatch {
                 expected, furthest, ..
             } => {
-                machine.current = copy(&frame.checkpoint, budget)?;
+                machine.current = frame.checkpoint;
                 Ok(Outcome::NoMatch { expected, furthest })
             }
             ReadReply::NeedMore { expected, .. } => {
-                machine.current = copy(&frame.checkpoint, budget)?;
+                machine.current = frame.checkpoint;
                 Ok(Outcome::NeedMore(expected))
             }
             ReadReply::Failed {

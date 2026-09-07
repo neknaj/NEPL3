@@ -1,0 +1,5 @@
+    Checking nepl3-core v0.1.0 (C:\projects\NEPL3-snapshot-storage\crates\foundation\core)
+    Checking nepl3-reader v0.1.0 (C:\projects\NEPL3-snapshot-storage\crates\foundation\reader)
+    Checking nepl3-wire v0.1.0 (C:\projects\NEPL3-snapshot-storage\crates\foundation\wire)
+    Checking nepl3-engine v0.1.0 (C:\projects\NEPL3-snapshot-storage\crates\foundation\engine)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.90s

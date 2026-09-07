@@ -1,5 +1,11 @@
 # 02. 共通データ契約
 
+atomic pointerを使えるnative/Wasmでは、SourceAdmissionは受入済みの不変snapshot storageを
+操作内だけで所有・索引化できる。同じstorageの再受入では既存の証明を再利用し、独立decodeの
+storageはsource/revision/digest/URIとSourceBytesの検査を通す。所有参照を保持してaddressの再利用を防ぐ。
+内部addressはwire・identity・出力へ含めず、索引のWorkは要素数による探索・shift上界を事前計上して
+allocator配置によるUsage差を防ぐ。別SourceAdmissionや非atomic targetには証明を引き継がない。
+
 ## 方針
 
 source、種類、構造、意味、解析結果の出自を独立に保持する。エラーやeditor結果を文字列から再解析しない。

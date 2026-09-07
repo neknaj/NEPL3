@@ -1,0 +1,70 @@
+--- 
++++ 
+@@ -213,6 +213,7 @@
+                 source_maps: core::mem::take(&mut seed_maps),
+             };
+             let mut machine = Machine {
++                limits: budget.limits(),
+                 session_id: &self.session_id,
+                 checked: self.checked,
+                 registry: self.registry,
+@@ -407,6 +408,7 @@
+             state: &c.request.state,
+         };
+         let mut machine = Machine {
++            limits: budget.limits(),
+             session_id: &self.session_id,
+             checked: self.checked,
+             registry: self.registry,
+@@ -419,7 +421,7 @@
+             next_call: &mut self.next_call,
+         };
+         let outcome = budget.with_depth_at_least(depth_base, |budget| {
+-            validate::apply_provider(&mut machine, &frame, reply, budget)
++            validate::apply_provider(&mut machine, frame, reply, budget)
+         });
+         let control = match outcome {
+             Ok(outcome) => machine.drive(Some(outcome), budget)?,
+@@ -598,7 +600,7 @@
+                 let report = continuation.report.clone();
+                 *pending = Some(Pending {
+                     continuation,
+-                    limits: budget.limits(),
++                    limits: machine.limits,
+                 });
+                 Ok(ReadReply::Await {
+                     call: Box::new(outward_call),
+@@ -682,6 +684,7 @@
+     pub deferred: bool,
+ }
+ struct Machine<'a, 'r> {
++    limits: Limits,
+     session_id: &'r String,
+     checked: &'a CheckedPlan<'a>,
+     registry: &'a SchemaRegistry,
+@@ -716,9 +719,14 @@
+             };
+             let saved = budget.usage();
+             let (_, depth) = call_identity(call);
+-            let reply = match budget.with_depth_at_least(depth, |budget| {
++            let response = budget.with_depth_at_least(depth, |budget| {
+                 native.host.provider(call, budget, admission)
+-            }) {
++            });
++            if budget.limits() != self.limits || !usage_at_least(budget.usage(), saved) {
++                *native.error = Some(ReaderError::Continuation);
++                return Ok(control);
++            }
++            let reply = match response {
+                 Ok(Some(reply)) => reply,
+                 Ok(None) => {
+                     native.deferred = true;
+@@ -769,7 +777,7 @@
+             }
+             let frame = self.frames.pop().ok_or(ReaderError::Continuation)?;
+             let outcome = budget.with_depth_at_least(depth, |budget| {
+-                validate::apply_provider(self, &frame, reply, budget)
++                validate::apply_provider(self, frame, reply, budget)
+             });
+             control = match outcome {
+                 Ok(outcome) => self.drive(Some(outcome), budget)?,

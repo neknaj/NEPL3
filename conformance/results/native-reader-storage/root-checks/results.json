@@ -1,0 +1,60 @@
+[
+  {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-core",
+      "-p",
+      "nepl3-reader",
+      "-p",
+      "nepl3-wire",
+      "-p",
+      "nepl3-engine",
+      "--target",
+      "wasm32-wasip2",
+      "--",
+      "--test-threads=1"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "cargo",
+      "check",
+      "--locked",
+      "-p",
+      "nepl3-core",
+      "-p",
+      "nepl3-reader",
+      "-p",
+      "nepl3-wire",
+      "-p",
+      "nepl3-engine",
+      "--target",
+      "thumbv6m-none-eabi",
+      "--no-default-features"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "check"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "python",
+      "tools/audit/allocation/run.py"
+    ],
+    "exit_code": 0
+  }
+]

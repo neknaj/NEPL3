@@ -756,3 +756,80 @@ fn indexed_admission_keeps_unique_bytes_and_checks_empty_cancel() -> Result<(), 
     );
     Ok(())
 }
+#[test]
+fn shared_admission_is_operation_local_and_independent_storage_still_checked()
+-> Result<(), SourceError> {
+    let make = |uri: &str, text: &str| {
+        SourceSnapshot::new(
+            SourceId("shared".into()),
+            0,
+            uri.into(),
+            text.as_bytes().to_vec(),
+            &mut budget(),
+        )
+    };
+    let original = make("memory:source", "\u{65e5}\u{672c}\r\n\u{1f600}")?;
+    let mut admission = SourceAdmission::default();
+    let mut b = budget();
+    admission.admit_existing(&original, &mut b)?;
+    let bytes = b.usage().source_bytes;
+    let clone = original.clone();
+    drop(original);
+    for _ in 0..10 {
+        admission.admit_existing(&clone, &mut b)?;
+    }
+    assert_eq!(b.usage().source_bytes, bytes);
+    let independent = make("memory:source", clone.text())?;
+    admission.admit_existing(&independent, &mut b)?;
+    assert_eq!(b.usage().source_bytes, bytes);
+    assert_eq!(
+        admission.admit_existing(&make("memory:changed", clone.text())?, &mut b),
+        Err(SourceError::IdentityConflict)
+    );
+    assert_eq!(
+        admission.admit_existing(&make("memory:source", "changed")?, &mut b),
+        Err(SourceError::IdentityConflict)
+    );
+    let mut fresh = SourceAdmission::default();
+    let mut fresh_budget = budget();
+    fresh.admit_existing(&clone, &mut fresh_budget)?;
+    assert_eq!(fresh_budget.usage().source_bytes, bytes);
+    b.stop(StopReason::Cancelled);
+    assert_eq!(
+        admission.admit_existing(&clone, &mut b),
+        Err(SourceError::Stopped(StopReason::Cancelled))
+    );
+    Ok(())
+}
+
+#[test]
+fn admission_usage_does_not_depend_on_snapshot_allocation_order() -> Result<(), SourceError> {
+    let run = |reverse: bool| -> Result<nepl3_core::budget::Usage, SourceError> {
+        let mut snapshots = Vec::new();
+        for at in 0..64 {
+            let id = if reverse { 63 - at } else { at };
+            snapshots.push(SourceSnapshot::new(
+                SourceId(format!("source-{id:02}")),
+                0,
+                format!("memory:source-{id:02}"),
+                b"abc".to_vec(),
+                &mut budget(),
+            )?);
+        }
+        if reverse {
+            snapshots.reverse();
+        }
+        let mut admission = SourceAdmission::default();
+        let mut b = budget();
+        for snapshot in &snapshots {
+            admission.admit_existing(snapshot, &mut b)?;
+        }
+        for snapshot in snapshots.iter().rev().chain(&snapshots) {
+            admission.admit_existing(snapshot, &mut b)?;
+        }
+        assert_eq!(b.usage().source_bytes, 192);
+        Ok(b.usage())
+    };
+    assert_eq!(run(false)?, run(true)?);
+    Ok(())
+}

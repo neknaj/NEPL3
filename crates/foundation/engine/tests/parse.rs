@@ -1260,7 +1260,8 @@ fn native_host_cancel_and_invalid_reply_keep_boundary_semantics() -> TestResult 
         ));
         assert!(stopped.report.usage.allocation_units <= cap);
     }
-    for work in [0, 100, 1_000, 5_000] {
+    let needed_work = complete.report.usage.work;
+    for work in [0, needed_work / 4, needed_work / 2, needed_work - 1] {
         let reply = run_scenario(
             "let x y",
             true,

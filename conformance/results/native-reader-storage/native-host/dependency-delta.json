@@ -1,0 +1,6 @@
+{
+  "path": "crates/foundation/core/src/source.rs",
+  "before": "f4047ecc255ce98c5d960c000155c431e4fa77e1736bbabb7da74947b943969c",
+  "after": "e2d301f1640bba50c99991feba9836ca84f032be174877d8383928f153f707da",
+  "bytes": 30744
+}
