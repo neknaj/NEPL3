@@ -1,0 +1,17 @@
+{
+  "command": [
+    "target/debug/nepl3-tools.exe",
+    "doc-html",
+    "pages",
+    "doc/migration/pages.json",
+    ".tmp\\pages-parent-repro\\dist\\doc-migration"
+  ],
+  "before": {
+    "exit": 1,
+    "stderr": "nepl3-tools: The system cannot find the path specified. (os error 3)\n"
+  },
+  "after": {
+    "exit": 0,
+    "stderr": ""
+  }
+}
