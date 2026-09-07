@@ -1,0 +1,218 @@
+{
+    "scope":  "Independent HTML identifier review. Original manifest includes local binaries omitted from repository archive; source and execution logs retained. Not migration acceptance.",
+    "reviewer_manifest_sha256":  "8326f7e531e1da4f175268e8ee84da4dd9fc3e385950bf912880648e59d7a86b",
+    "files":  [
+                  {
+                      "path":  "browser-result.json",
+                      "sha256":  "3afde86a470a8d425abf759f735408d59988db2cd04c836ec9c1fc08ce49e4fd",
+                      "bytes":  325
+                  },
+                  {
+                      "path":  "browser-run.json",
+                      "sha256":  "6f416fc404fce2053691ef1823b073b802bb2926f866174a81b691333b1e6c1c",
+                      "bytes":  385
+                  },
+                  {
+                      "path":  "browser.py",
+                      "sha256":  "2cb336cdfce3fbab13d72f904338c19fb204c7d57b3c2b2f32750ac830e93077",
+                      "bytes":  2924
+                  },
+                  {
+                      "path":  "delta-AGENTS.md.diff",
+                      "sha256":  "009e430c40676ae7503df7cae0e3d79ef710fe6105861e0dad22d27064a5e8b6",
+                      "bytes":  1417
+                  },
+                  {
+                      "path":  "delta-crates--output--markup--src--html--serialize.rs.diff",
+                      "sha256":  "e9b3c34fefb58ec87b07497d8e90818fda39b0ef2e7a8847ef4c70f1233001bc",
+                      "bytes":  389
+                  },
+                  {
+                      "path":  "delta-doc--spec--19-html-fragment.md.diff",
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "bytes":  0
+                  },
+                  {
+                      "path":  "final-delta/AGENTS.md",
+                      "sha256":  "849027165216a9a3adcb22ef58a44bc698c83e1707d2aa0727a1b73105282236",
+                      "bytes":  7613
+                  },
+                  {
+                      "path":  "final-delta/crates/output/markup/src/html/serialize.rs",
+                      "sha256":  "6cafc9b897a921ba825da8b0f0f94a63e592d0e38f07f5d56e7263ce2bcb4878",
+                      "bytes":  9981
+                  },
+                  {
+                      "path":  "final-delta/doc/spec/19-html-fragment.md",
+                      "sha256":  "1ef8b987603ce307f0622f3bb7ce19bdd8f7f94b78b34dfb8f8784e17e2022bf",
+                      "bytes":  9097
+                  },
+                  {
+                      "path":  "final-delta.json",
+                      "sha256":  "332571fe1355caf0b761b6a12116917e596e8bd88c660bde2920cf1fa215eda6",
+                      "bytes":  400
+                  },
+                  {
+                      "path":  "guard-build-native.log",
+                      "sha256":  "cb5ed315f6e7c888114642108c0ff2b7d6553b495c29051fc5ca1623325b73c3",
+                      "bytes":  193
+                  },
+                  {
+                      "path":  "guard-build-wasi.log",
+                      "sha256":  "683e6382a4bf9f3a189e7440d23a908b748b6b207d43b78cd60964ad91043788",
+                      "bytes":  193
+                  },
+                  {
+                      "path":  "guard-native.log",
+                      "sha256":  "bafd0ada50db240d604bdc4bd324121cee61ee521be1839c4b88670be6ffabc0",
+                      "bytes":  112
+                  },
+                  {
+                      "path":  "guard-runs.json",
+                      "sha256":  "88f1aee6cde20cd243ae480608479c973d03b784b0544a4c09556b958c8098c2",
+                      "bytes":  1154
+                  },
+                  {
+                      "path":  "guard-wasi.log",
+                      "sha256":  "bafd0ada50db240d604bdc4bd324121cee61ee521be1839c4b88670be6ffabc0",
+                      "bytes":  112
+                  },
+                  {
+                      "path":  "managed-runs.json",
+                      "sha256":  "3bd7f748724bbef1bb8561a2cbfec05266552d1002eedbd37055ee4b63d9d61d",
+                      "bytes":  1987
+                  },
+                  {
+                      "path":  "managed.py",
+                      "sha256":  "ab3ec3ff8e6a1af5211f645d4419802486ed8574fdfc93d5699b062b1fab3bd7",
+                      "bytes":  896
+                  },
+                  {
+                      "path":  "native-nepl3-doc-html.log",
+                      "sha256":  "dba42db854c73d80b180c0061fbc35b86d7e2dfb20d5242c9ea59422e8c0604c",
+                      "bytes":  1164
+                  },
+                  {
+                      "path":  "native-nepl3-markup.log",
+                      "sha256":  "ec7ae8fa15feb062b53f09e02e8a59da9749e032ecb033eea41fbbe1a6e50c59",
+                      "bytes":  4213
+                  },
+                  {
+                      "path":  "probe/allocation.rs",
+                      "sha256":  "1df8f58baac2c7ca7453c7e06a01c686bf069396b3ae50793b665976a0c9a1ea",
+                      "bytes":  1173
+                  },
+                  {
+                      "path":  "probe/Cargo.lock",
+                      "sha256":  "37982e27248bf0910aabb835dbb5e349017af4770c54fa8c0b389418d3b70ed2",
+                      "bytes":  5893
+                  },
+                  {
+                      "path":  "probe/Cargo.toml",
+                      "sha256":  "1ab2107713fbf34eb44025f2b631c076b073dfd8240da84a2a0a57b9a7ff53c8",
+                      "bytes":  381
+                  },
+                  {
+                      "path":  "probe/guard.rs",
+                      "sha256":  "bd17d21a2093089a6b7a146b1145ff7c7a27bfc8d7661946f1d90eb78cf97db1",
+                      "bytes":  47
+                  },
+                  {
+                      "path":  "probe/main.rs",
+                      "sha256":  "42d8f17a5ceecf5744444d762ba0f5bd88a52b03dbb14de5d1c328e20db8bdba",
+                      "bytes":  6212
+                  },
+                  {
+                      "path":  "probe/old_descriptor.rs",
+                      "sha256":  "0815530272b83c7be3031ba0f055b82d95823e89357fab9dcbc4de783407fc60",
+                      "bytes":  10733
+                  },
+                  {
+                      "path":  "probe-build-native.log",
+                      "sha256":  "36df2bcb2fc0a7f92c7e9b2edf195d0ad7e32d60a72184c1ea89acbde5611856",
+                      "bytes":  834
+                  },
+                  {
+                      "path":  "probe-build-wasi.log",
+                      "sha256":  "452d16420dd694fccfe807373dc46d817dd897913da0314b248c7436d138acc8",
+                      "bytes":  723
+                  },
+                  {
+                      "path":  "probe-native.log",
+                      "sha256":  "cbd6883d674d58133986208bcc06b9a5d968f3c9aff886a0f82d7147cd7dece7",
+                      "bytes":  308629
+                  },
+                  {
+                      "path":  "probe-runs.json",
+                      "sha256":  "6acd8acec8f3728c8a10cef83c1dc7de759dc1af665cb758e9277abc8a637af8",
+                      "bytes":  1118
+                  },
+                  {
+                      "path":  "probe-wasi.log",
+                      "sha256":  "cbd6883d674d58133986208bcc06b9a5d968f3c9aff886a0f82d7147cd7dece7",
+                      "bytes":  308629
+                  },
+                  {
+                      "path":  "probe.py",
+                      "sha256":  "1a7685cc032fed4a1a1784ee07016f1fb3689285d5ca26c002d19acc06b39ec7",
+                      "bytes":  1241
+                  },
+                  {
+                      "path":  "production.diff",
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "bytes":  0
+                  },
+                  {
+                      "path":  "review.md",
+                      "sha256":  "aab56340ee032001cbab8fb60136ebc2a683c568603ce7328c0fec09060b72b6",
+                      "bytes":  7076
+                  },
+                  {
+                      "path":  "sources.json",
+                      "sha256":  "f43a1b592a904008043ac110266e24f63c61779dec95682faad6b82221412b9a",
+                      "bytes":  409298
+                  },
+                  {
+                      "path":  "summary.json",
+                      "sha256":  "adbe1efd3faa9402e33545c0e167e71ed7672e4e12f6fc08eccb14f847ee86c8",
+                      "bytes":  194
+                  },
+                  {
+                      "path":  "versions.json",
+                      "sha256":  "6c83d4761c875d39aad7fe014989a7bc7cbb59a1c146417b66aade2349b55b9a",
+                      "bytes":  505
+                  },
+                  {
+                      "path":  "wasi-nepl3-doc-html.log",
+                      "sha256":  "c085163590f85860d285db1e3daaae061fe8fe9f0d9fa0b8775cf3e63b79e727",
+                      "bytes":  1195
+                  },
+                  {
+                      "path":  "wasi-nepl3-markup.log",
+                      "sha256":  "c7ec31f6dc889b157ed3daf076434ce1744dfcd11de133d677af830227a2c04a",
+                      "bytes":  4286
+                  }
+              ],
+    "omitted_local_binaries":  [
+                                   {
+                                       "path":  "guard-native.exe",
+                                       "sha256":  "42b9d6ede5e32316fd621c24874df82d96712edd02bb050a8449bf9448d68985",
+                                       "bytes":  138240
+                                   },
+                                   {
+                                       "path":  "guard-wasi.wasm",
+                                       "sha256":  "763a2bc68c49755017cab1b974e2e1df2acfcdb4c4f72948af97349a81432d55",
+                                       "bytes":  11666294
+                                   },
+                                   {
+                                       "path":  "probe-native.exe",
+                                       "sha256":  "d4e4ab921c796c7dd05dd0719b40f5b0bf3f8c5290043fa1fcbfe9f361cb048e",
+                                       "bytes":  1743360
+                                   },
+                                   {
+                                       "path":  "probe-wasi.wasm",
+                                       "sha256":  "c2f53d4b38249cc256f9d360603ca8d220b78f9b35d6bdb04376f3c1f8b9e8f2",
+                                       "bytes":  18066896
+                                   }
+                               ]
+}
