@@ -3,6 +3,9 @@ use crate::text::{TextContext, TextError, escape};
 use alloc::{format, vec};
 use nepl3_core::budget::{Budget, Resource, StopReason};
 fn allocate(n: usize, b: &mut Budget) -> Result<(), HtmlError> {
+    if n > isize::MAX as usize {
+        return Err(b.stop(StopReason::AllocationLimit).into());
+    }
     b.charge(Resource::Work, n as u64)?;
     b.charge(Resource::AllocationUnits, n as u64)?;
     Ok(())
