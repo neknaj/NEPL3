@@ -11,6 +11,7 @@ use nepl3_core::{
 };
 pub(crate) mod check;
 mod mapping;
+pub mod query;
 mod run;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

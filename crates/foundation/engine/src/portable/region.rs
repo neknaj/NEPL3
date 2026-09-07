@@ -13,6 +13,7 @@ use nepl3_core::{
     value::NdfValue,
     value_codec::FoundationValueCodec,
 };
+pub mod query;
 mod sidecar;
 mod value;
 pub fn request_to_value<C: FoundationValueCodec>(

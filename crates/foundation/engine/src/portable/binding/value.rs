@@ -1,5 +1,5 @@
 use super::*;
-use crate::binding::{BindingStage, OccurrenceStage, StageId};
+use crate::binding::{BindingBundleScope, BindingStage, OccurrenceStage, StageId};
 use nepl3_core::facts::{EntityId, OccurrenceId, ScopeId};
 macro_rules! id {
     ($ty:ident,$owner:ident,$name:literal) => {
@@ -32,6 +32,38 @@ id!(StageId, engine, "StageId");
 id!(ScopeId, foundation, "ScopeId");
 id!(EntityId, foundation, "EntityId");
 id!(OccurrenceId, foundation, "OccurrenceId");
+impl Value for BindingBundleScope {
+    fn value<C: FoundationValueCodec>(
+        &self,
+        s: &Schemas<'_>,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<NdfValue, PortableError<C::Error>> {
+        record(
+            s.engine,
+            "BindingBundleScope",
+            [
+                self.bundle.value(s, c, b)?,
+                self.scope.value(s, c, b)?,
+                self.custom_source_maps.value(s, c, b)?,
+            ],
+            b,
+        )
+    }
+    fn read<C: FoundationValueCodec>(
+        v: &NdfValue,
+        s: &Schemas<'_>,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<Self, PortableError<C::Error>> {
+        let f = fields(v, s.engine, "BindingBundleScope", 3)?;
+        Ok(Self {
+            bundle: u64::read(&f[0], s, c, b)?,
+            scope: ScopeId::read(&f[1], s, c, b)?,
+            custom_source_maps: Vec::<u64>::read(&f[2], s, c, b)?,
+        })
+    }
+}
 impl Value for BindingStage {
     fn value<C: FoundationValueCodec>(
         &self,
@@ -148,6 +180,7 @@ pub(super) fn data_value<C: FoundationValueCodec>(
             values(data.open_inputs, s, c, b)?,
             values(data.exports, s, c, b)?,
             values(data.history, s, c, b)?,
+            values(data.bundles, s, c, b)?,
         ],
         b,
     )
@@ -167,7 +200,7 @@ pub(super) fn data_from<C: FoundationValueCodec>(
         } else {
             "BindingProgress"
         },
-        8,
+        9,
     )?;
     let facts = if complete {
         Some(c.decode_fact_set(&f[0], b).map_err(boundary)?)
@@ -181,6 +214,7 @@ pub(super) fn data_from<C: FoundationValueCodec>(
     let sources = c.decode_sources(&f[1], b).map_err(boundary)?;
     // Mapping positions must resolve in the explicit fact/report source union.
     let empty = BindingProgress {
+        bundle_scopes: Vec::new(),
         facts,
         sources,
         source_maps: Vec::new(),
@@ -193,6 +227,7 @@ pub(super) fn data_from<C: FoundationValueCodec>(
     let store = check::source_closure(&Data::from(&empty), b, c.source_admission())?;
     let mut local = c.scoped(&store);
     Ok(BindingProgress {
+        bundle_scopes: Vec::<BindingBundleScope>::read(&f[8], s, &mut local, b)?,
         facts: empty.facts,
         sources: empty.sources,
         source_maps: local.decode_mappings(&f[2], b).map_err(boundary)?,

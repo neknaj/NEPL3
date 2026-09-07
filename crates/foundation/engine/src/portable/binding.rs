@@ -58,6 +58,7 @@ pub enum DecodedBindingOutcome {
     },
 }
 struct Data<'a> {
+    bundles: &'a [crate::binding::BindingBundleScope],
     facts: Option<&'a FactSet>,
     sources: &'a [SourceSnapshot],
     maps: &'a [Mapping],
@@ -70,6 +71,7 @@ struct Data<'a> {
 impl<'a> From<&'a BindingResult> for Data<'a> {
     fn from(v: &'a BindingResult) -> Self {
         Self {
+            bundles: &v.bundle_scopes,
             facts: Some(&v.facts),
             sources: &v.sources,
             maps: &v.source_maps,
@@ -84,6 +86,7 @@ impl<'a> From<&'a BindingResult> for Data<'a> {
 impl<'a> From<&'a BindingProgress> for Data<'a> {
     fn from(v: &'a BindingProgress) -> Self {
         Self {
+            bundles: &v.bundle_scopes,
             facts: v.facts.as_ref(),
             sources: &v.sources,
             maps: &v.source_maps,
@@ -212,6 +215,7 @@ pub fn reply_from_value<C: FoundationValueCodec>(
                 core::mem::size_of::<BindingResult>() as u64,
             )?;
             DecodedBindingOutcome::Complete(Box::new(BindingResult {
+                bundle_scopes: progress.bundle_scopes,
                 facts: progress.facts.ok_or(PortableError::Shape)?,
                 sources: progress.sources,
                 source_maps: progress.source_maps,

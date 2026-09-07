@@ -6,11 +6,56 @@ use nepl3_core::{
     syntax::canonical::BundleMappings,
 };
 
+/// Query correspondence is a relation, including both declared directions.
+/// Transformed ranges may yield several candidates; this never grants an edit.
+pub(super) fn correspond(
+    at: &Span,
+    requested: &SourceRef,
+    map: &BundleMappings<'_>,
+    declared: &[Mapping],
+    sources: &[SourceSnapshot],
+    b: &mut Budget,
+) -> Result<Vec<(Span, RegionMapping)>, RegionError> {
+    let mut both = Vec::new();
+    for edge in declared {
+        b.charge(Resource::Work, 1)?;
+        push(
+            &mut both,
+            Mapping {
+                source: span(&edge.source, b)?,
+                target: span(&edge.target, b)?,
+                kind: edge.kind,
+            },
+            b,
+        )?;
+        push(
+            &mut both,
+            Mapping {
+                source: span(&edge.target, b)?,
+                target: span(&edge.source, b)?,
+                kind: edge.kind,
+            },
+            b,
+        )?;
+    }
+    project_sources(at, requested, map, &both, sources, b)
+}
+
 pub(super) fn project(
     at: &Span,
     requested: &SourceRef,
     map: &BundleMappings<'_>,
     declared: &[Mapping],
+    b: &mut Budget,
+) -> Result<Vec<(Span, RegionMapping)>, RegionError> {
+    project_sources(at, requested, map, declared, &[], b)
+}
+fn project_sources(
+    at: &Span,
+    requested: &SourceRef,
+    map: &BundleMappings<'_>,
+    declared: &[Mapping],
+    sources: &[SourceSnapshot],
     b: &mut Budget,
 ) -> Result<Vec<(Span, RegionMapping)>, RegionError> {
     let mut edges = Vec::new();
@@ -50,7 +95,7 @@ pub(super) fn project(
         {
             push(&mut out, (span(&at, b)?, quality), b)?;
         }
-        for (next, q) in inverse(&at, &edges, map, b)? {
+        for (next, q) in inverse(&at, &edges, map, sources, b)? {
             let q = match (quality, q) {
                 (RegionMapping::Transformed, _) | (_, RegionMapping::Transformed) => {
                     RegionMapping::Transformed
@@ -95,6 +140,7 @@ fn inverse(
     at: &Span,
     edges: &[&Mapping],
     map: &BundleMappings<'_>,
+    sources: &[SourceSnapshot],
     b: &mut Budget,
 ) -> Result<Vec<(Span, RegionMapping)>, RegionError> {
     let mut groups: Vec<(&Span, i128)> = Vec::new();
@@ -171,7 +217,23 @@ fn inverse(
             } else {
                 RegionMapping::ExactFragment
             };
-            let source = check::source(map, source, b)?;
+            let mut found = None;
+            for candidate in sources {
+                b.charge(
+                    Resource::Work,
+                    (candidate.identity().source.0.len() + source.snapshot_ref().source.0.len())
+                        as u64
+                        + 41,
+                )?;
+                if candidate.identity() == source.snapshot_ref() {
+                    found = Some(candidate);
+                    break;
+                }
+            }
+            let source = match found {
+                Some(source) => source,
+                None => check::source(map, source, b)?,
+            };
             let start =
                 u64::try_from(i128::from(start) + delta).map_err(|_| RegionError::Mapping)?;
             let end = u64::try_from(i128::from(end) + delta).map_err(|_| RegionError::Mapping)?;

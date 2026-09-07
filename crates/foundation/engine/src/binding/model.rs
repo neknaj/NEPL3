@@ -9,6 +9,15 @@ use nepl3_core::{
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct StageId(pub u64);
+/// Explicit syntax-owner correspondence issued during canonical preparation.
+/// `bundle` is the analyzed tree's canonical bundle number, not a ScopeId.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct BindingBundleScope {
+    pub bundle: u64,
+    pub scope: ScopeId,
+    /// Accepted Custom map rows in the enclosing result/progress source_maps.
+    pub custom_source_maps: Vec<u64>,
+}
 /// A persistent visibility point. `previous` may be a prior stage in the same
 /// lexical scope or the parent's stage captured when this scope was entered.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -49,6 +58,7 @@ pub struct BindingResolutionBatch {
 /// and maps remain available without constructing an invalid FactSet.
 #[derive(Debug)]
 pub struct BindingProgress {
+    pub bundle_scopes: Vec<BindingBundleScope>,
     pub facts: Option<FactSet>,
     pub sources: Vec<SourceSnapshot>,
     pub source_maps: Vec<Mapping>,
@@ -61,6 +71,7 @@ pub struct BindingProgress {
 impl BindingProgress {
     pub(super) fn empty() -> Self {
         Self {
+            bundle_scopes: Vec::new(),
             facts: None,
             sources: Vec::new(),
             source_maps: Vec::new(),
@@ -75,6 +86,7 @@ impl BindingProgress {
 /// Portable data retains resolutions but is not itself proof of visibility.
 #[derive(Debug)]
 pub struct BindingResult {
+    pub bundle_scopes: Vec<BindingBundleScope>,
     pub facts: FactSet,
     pub sources: Vec<SourceSnapshot>,
     pub source_maps: Vec<Mapping>,

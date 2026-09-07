@@ -18,13 +18,15 @@ pub(super) fn check(
     p: &PreparedBindingRequest<'_, '_>,
     old: &FactSet,
     new: &FactSet,
+    owners: (&super::owner::Owners, &super::owner::Owners),
 ) -> Result<(), RenameError> {
     let a = BundleMappings::new(&d.original.tree.tree().bundle, d.budget).map_err(canonical)?;
     let c = BundleMappings::new(&p.tree.tree().bundle, d.budget).map_err(canonical)?;
     if a.entries().len() != c.entries().len() {
         return Err(RenameError::ShapeChanged);
     }
-    for (a, c) in a.entries().iter().zip(c.entries()) {
+    for (index, (a, c)) in a.entries().iter().zip(c.entries()).enumerate() {
+        let maps = (owners.0.bundle(index)?, owners.1.bundle(index)?);
         let ab = a.bundle();
         let cb = c.bundle();
         if a.order().len() != c.order().len() || ab.environments.len() != cb.environments.len() {
@@ -58,7 +60,7 @@ pub(super) fn check(
             }
             for (a, c) in [(&an.head, &cn.head), (&an.cover, &cn.cover)] {
                 match (a, c) {
-                    (Some(a), Some(c)) if super::verify::spans(d, old, new, a, c)? => {}
+                    (Some(a), Some(c)) if super::verify::spans(d, old, new, a, c, maps)? => {}
                     (None, None) => {}
                     _ => return Err(RenameError::ShapeChanged),
                 }
@@ -152,7 +154,9 @@ pub(super) fn check(
                         Resource::Work,
                         (x.kind.schema.package.len() + y.kind.schema.package.len()) as u64 + 42,
                     )?;
-                    if x.kind != y.kind || !super::verify::spans(d, old, new, &x.head, &y.head)? {
+                    if x.kind != y.kind
+                        || !super::verify::spans(d, old, new, &x.head, &y.head, maps)?
+                    {
                         return Err(RenameError::ShapeChanged);
                     }
                     if let NdfValue::Text(value) = &y.payload {

@@ -119,9 +119,23 @@ pub fn query(
     budget: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> QueryReply {
+    query_selected(binding, request, None, budget, admission)
+}
+pub(crate) fn query_selected(
+    binding: &BoundBindingReply,
+    request: &QueryRequest,
+    occurrence: Option<OccurrenceId>,
+    budget: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> QueryReply {
     let mut sources = Vec::new();
     let outcome = match budget.with_depth(|budget| {
-        let result = run::run(binding, request, &mut sources, budget, admission)?;
+        let result = match occurrence {
+            None => run::run(binding, request, &mut sources, budget, admission)?,
+            Some(id) => {
+                run::run_selected(binding, request, Some(id), &mut sources, budget, admission)?
+            }
+        };
         run::sort_sources(&mut sources, budget)?;
         Ok::<_, QueryError>(result)
     }) {

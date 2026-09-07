@@ -14,7 +14,8 @@ pub(super) fn validate<E>(
         facts
             .validate(registry, b, admission)
             .map_err(crate::facts::FactsError::from)?;
-    } else if !data.stages.is_empty()
+    } else if !data.bundles.is_empty()
+        || !data.stages.is_empty()
         || !data.occurrences.is_empty()
         || !data.open_inputs.is_empty()
         || !data.exports.is_empty()
@@ -28,6 +29,39 @@ pub(super) fn validate<E>(
         return Ok(store);
     };
     super::history::validate(data, registry, b, admission)?;
+    for (index, owner) in data.bundles.iter().enumerate() {
+        b.charge(Resource::Work, (index + facts.scopes.len() + 1) as u64)?;
+        let scope = facts
+            .scopes
+            .iter()
+            .find(|v| v.id == owner.scope)
+            .ok_or(PortableError::Shape)?;
+        if owner.bundle != index as u64
+            || scope.parent.is_some()
+            || data.bundles[..index].iter().any(|v| v.scope == owner.scope)
+        {
+            return Err(PortableError::Shape);
+        }
+    }
+    for (owner_index, owner) in data.bundles.iter().enumerate() {
+        for (index, map) in owner.custom_source_maps.iter().enumerate() {
+            b.charge(Resource::Work, 1)?;
+            if usize::try_from(*map)
+                .ok()
+                .and_then(|i| data.maps.get(i))
+                .is_none()
+                || (index > 0 && owner.custom_source_maps[index - 1] >= *map)
+            {
+                return Err(PortableError::Shape);
+            }
+            for prior in &data.bundles[..owner_index] {
+                b.charge(Resource::Work, prior.custom_source_maps.len() as u64)?;
+                if prior.custom_source_maps.contains(map) {
+                    return Err(PortableError::Shape);
+                }
+            }
+        }
+    }
     for (index, stage) in data.stages.iter().enumerate() {
         b.charge(Resource::Work, facts.scopes.len() as u64 + 1)?;
         let scope = facts

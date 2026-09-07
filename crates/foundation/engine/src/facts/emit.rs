@@ -22,6 +22,7 @@ pub struct FactsEmitter<'a> {
     report: &'a mut Report,
     sources: &'a mut Vec<SourceSnapshot>,
     maps: &'a mut Vec<Mapping>,
+    map_owner: &'a mut Vec<u64>,
     budget: &'a mut Budget,
     admission: &'a mut SourceAdmission,
 }
@@ -51,7 +52,7 @@ impl<'a> FactsEmitter<'a> {
         registry: &'a SchemaRegistry,
         report: &'a mut Report,
         sources: &'a mut Vec<SourceSnapshot>,
-        maps: &'a mut Vec<Mapping>,
+        maps: (&'a mut Vec<Mapping>, &'a mut Vec<u64>),
         budget: &'a mut Budget,
         admission: &'a mut SourceAdmission,
     ) -> Self {
@@ -59,7 +60,8 @@ impl<'a> FactsEmitter<'a> {
             registry,
             report,
             sources,
-            maps,
+            maps: maps.0,
+            map_owner: maps.1,
             budget,
             admission,
         }
@@ -145,6 +147,11 @@ impl<'a> FactsEmitter<'a> {
             Resource::AllocationUnits,
             core::mem::size_of::<Mapping>() as u64,
         )?;
+        self.budget.charge(
+            Resource::AllocationUnits,
+            core::mem::size_of::<u64>() as u64,
+        )?;
+        self.map_owner.push(self.maps.len() as u64);
         self.maps.push(mapping);
         Ok(())
     }

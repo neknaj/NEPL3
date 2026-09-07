@@ -130,7 +130,15 @@ impl<'a, 'p> Machine<'a, 'p> {
                 self.registry,
                 &mut self.report,
                 &mut self.progress.sources,
-                &mut self.progress.source_maps,
+                (
+                    &mut self.progress.source_maps,
+                    &mut self
+                        .progress
+                        .bundle_scopes
+                        .get_mut(frame.target.bundle)
+                        .ok_or(BindingError::Target)?
+                        .custom_source_maps,
+                ),
                 budget,
                 admission,
             );
@@ -239,6 +247,21 @@ impl<'a, 'p> Machine<'a, 'p> {
                         .saturating_mul(core::mem::size_of::<nepl3_core::origin::Mapping>() as u64),
                 ),
         )?;
+        let owner = self
+            .progress
+            .bundle_scopes
+            .get_mut(frame.target.bundle)
+            .ok_or(BindingError::Target)?;
+        budget.charge(Resource::Work, maps.len() as u64)?;
+        budget.charge(
+            Resource::AllocationUnits,
+            (maps.len() * core::mem::size_of::<u64>()) as u64,
+        )?;
+        for index in 0..maps.len() {
+            owner
+                .custom_source_maps
+                .push((self.progress.source_maps.len() + index) as u64);
+        }
         // These source declarations/maps were independently validated while the
         // budget ran. Retain them before emitting a semantic duplicate error.
         self.progress.sources.append(&mut sources);

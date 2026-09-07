@@ -493,3 +493,17 @@ PrintedGuest.textの意味は両digestで認証されない。同じidentityの�
 Source/Work/Nodes/Allocation/Depth/Outputの6資源を0・必要量−1・必要量で検査し、停止理由、sticky Budget、Report Usage、実返信CBORと元要求不変を確認した。元sourceの合計byte数だけをSourceBytesへonce計上し、caller深さ7はpeakへ合成された。source-lessの512段Strongは反復印字で全内容を保持し、Depth64で型付き停止した。source-less Nameの空・先頭結合文字・数字・空白は置換せず失敗とし、Unicode名と予約headのoperandは保持した。
 
 Doc printer28fileと対応表1fileだけの固定snapshotに依存先を束縛し、独立3補助および管理対象printer7件をnative/WASI双方で成功確認した。管理対象には全64form×2modeとguest6fragment、共有DAG出力停止、型正当なdigest長/overflow等の受信境界を含む。固定source、入力、補助、6binary、全process logとSHAは `.tmp/review-doc-print-fixed/manifest.json` に保存した。今回の範囲はDoc printerの明示guest供給を伴う操作であり、render、PreparedArticle全体、RegionQuery、外部guest実行認証の完了を主張しない。
+
+R048は後続RegionQueryのowner監査から見つかった既存renameの別不具合である。実 `lambda x guest x` のguest reader返信だけが補助source `x` からhost宣言 `[7,8)` へのExact mapを持つ入力を、通常のParseSessionで受理させた。host bundleのmapは0件、guestは1件なのに、補助sourceだけをwritableとしてhost名を `z` へrenameすると、prepare・実候補parse・binding・acceptを経て補助source `[0,1)` の編集がCompleteとして公開された。mapなしcontrolは正しくhost原文を編集した。raw treeやsealの書換えはなく、renameが平坦なfacts.source_mapsをinverse/派生編集/比較に使うことで所有を失う実再現である。元probeとfull before出力は `.tmp/review-rename-owner/before/` に保持する。初回の全source記録は後続Query snapshot取込み後の採取であり、最初のbinaryとその全依存sourceが一致した証拠とは扱わない。修正後の元入力再試験が済むまではopenとし、先に保存済みのDoc printer結果へ混ぜない。
+
+RegionQueryの固定27fileとR048修正10file（重複を除き34file）を独立に検査した。選択領域のlogical spanと正準bundle所有者を、実Bindingが発行したbundleScopesのrootへ結び付け、名前文字列の再検索でなく最終Occurrence/Resolutionを参照する。Foreign fieldの子位置はguest所有で扱い、返却regionの表示座標をhost定義の根拠へ流用しない。mapはそのbundleの局所表と、Custom受理時に同時公開したcustomSourceMaps行に限定される。
+
+独立原文の6位置では、`let x x apply x x` の初期化式を未解決、bodyの2参照を宣言 `[4,5)` へ、入れ子Lambdaを内側宣言 `[16,17)` へ対応させた。同じsource内のguest自由名へhost宣言は漏れず、guest内Lambdaはguest宣言 `[22,23)` へ対応した。`lambda あ apply あ あ` はUTF-8 byteの宣言 `[7,10)` と参照17/21を保持した。各入力をBindingRequest/sidecar/RegionQueryRequestの実CBORへ通し、空storeの初回receiverで実Bindingを再実行した結果ともDefinition/Referencesを照合した。Unicode scalar内部はInvalid、半開終端は選択なしであり、5資源の0上限とCancelは正式停止・空source返信・実Usageを保持した。
+
+独立Custom入力 `custom 名 guest custom 名 名` は、host/guestで同じ生成sourceを共有しながら疎Entity ID 5000/7000を発行した。元byte7はhost Entity、24/28はguest Entityへ対応し、guestだけのmapをhost keywordへ適用しなかった。FactsEmitterと検査済みdeltaの両経路、初回CBOR受信後の実再binding、正式返信CBORが一致した。生成map受理後の取消ではmap・owner行・eventを保持し、未受理deltaを採用しなかった。source-less定義位置はNoneのまま保持した。
+
+raw bundle ledgerの番号範囲外、root重複、map範囲外、同owner重複、owner間の同index重複を型正当CBORから拒否した。一方、構造上合法なowner行の交換と空の所有index列はrawデータとして復元可能である。04章の規範どおり、これだけで実行済みBindingAnalysisやBoundBindingReplyを発行せず、元要求・Profileに結び付く実bindingが意味proofの根拠となる。raw構造検査を通信認証やCustom授権へ拡大して主張しない。
+
+R048の修正後は、各Entity/Occurrenceのnamespace rootからmap所有者を選び、前向き導出も各元編集とownerの組ごとに閉包をたどる。再解析比較はold/newそれぞれの所有者、構文位置は正準bundleを用いる。元反例のprobe source SHAを変えず、guest mapしかない補助sourceへの書込要求がNotWritableとなることをnative/WASI双方で確認した。mapなしcontrolの実parse・binding・acceptは元host `[7,8)` 編集として成功した。別の独立 `custom 名 名` はemitter/delta双方で同ownerのExact逆写像を保持し、元source2箇所を `字` へ変更、派生source revision1を実再生成・sealed parse・binding後にacceptして成功した。関連管理rename11件も両targetで成功しており、この元所有混同の範囲でR048をcorrectedとする。
+
+R048のbeforeはnative実行である。初回採取の制限は前段落のまま残し、別途 `.tmp/review-rename-owner/before-query27/manifest.json` に固定Query27の全SHAを実行前後に確認した無変更probeの失敗（終了1）を保存した。afterは固定34fileを前後確認し、独立4補助をnative/WASI双方で再build・実行した。関連管理17件も各targetで成功した。全process log、8binary、元入力・補助source・固定SHA・before参照は `.tmp/review-region-query-fixed/manifest.json` に保存する。統括の全workspace/品質gateは別記録であり、今回の限定検査から全T06、外部実行認証、Mathの完了を推定しない。

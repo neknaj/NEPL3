@@ -16,17 +16,20 @@ pub(super) fn verify(
     {
         return Err(RenameError::RequestMismatch);
     }
-    let old = d
+    let prior = d
         .binding
-        .for_source(&d.request.key, &d.request.source, d.budget)?
-        .facts();
+        .for_source(&d.request.key, &d.request.source, d.budget)?;
+    let old = prior.facts();
     let crate::binding::BindingOutcome::Complete(analysis) = &reply.reply().outcome else {
         return Err(BindingAccessError::Incomplete.into());
     };
     let new = analysis.facts();
+    let old_owners = super::owner::Owners::new(d.original, prior, d.budget)?;
+    let new_owners = super::owner::Owners::new(p, analysis, d.budget)?;
+    let owners = (&old_owners, &new_owners);
     roots(d, old, new)?;
-    super::shape::check(d, p, old, new)?;
-    facts(d, old, new)?;
+    super::shape::check(d, p, old, new, owners)?;
+    facts(d, old, new, owners)?;
     let crate::binding::BindingOutcome::Complete(prior) = &d.binding.reply().outcome else {
         return Err(BindingAccessError::Incomplete.into());
     };
@@ -138,15 +141,20 @@ fn entity_location(
     new: &FactSet,
     a: &Entity,
     c: &Entity,
+    owners: (&super::owner::Owners, &super::owner::Owners),
 ) -> Result<bool, RenameError> {
     if !scope(old, new, a.scope, c.scope, d.budget)?
         || !namespace(old, new, a.namespace, c.namespace, d.budget)?
     {
         return Ok(false);
     }
+    let maps = (
+        owners.0.namespace(old, a.namespace, d.budget)?,
+        owners.1.namespace(new, c.namespace, d.budget)?,
+    );
     for (a, c) in [(&a.selection, &c.selection), (&a.definition, &c.definition)] {
         match (a, c) {
-            (Some(a), Some(c)) if spans(d, old, new, a, c)? => {}
+            (Some(a), Some(c)) if spans(d, old, new, a, c, maps)? => {}
             (None, None) => {}
             _ => return Ok(false),
         }
@@ -157,6 +165,7 @@ fn facts(
     d: &mut RenameDraft<'_, '_, '_, '_>,
     old: &FactSet,
     new: &FactSet,
+    owners: (&super::owner::Owners, &super::owner::Owners),
 ) -> Result<(), RenameError> {
     if old.scopes.len() != new.scopes.len()
         || old.entities.len() != new.entities.len()
@@ -183,7 +192,7 @@ fn facts(
         for c in &new.entities {
             d.budget
                 .charge(Resource::Work, (wanted.len() + c.name.len()) as u64 + 1)?;
-            if c.name != *wanted || !entity_location(d, old, new, a, c)? {
+            if c.name != *wanted || !entity_location(d, old, new, a, c, owners)? {
                 continue;
             }
             if found.is_some() {
@@ -224,10 +233,14 @@ fn facts(
     // Correspondence uses source geometry, lexical placement, role and issuance
     // order, not equality of opaque EntityId/OccurrenceId numbers.
     for (a, c) in old.occurrences.iter().zip(&new.occurrences) {
+        let maps = (
+            owners.0.namespace(old, a.namespace, d.budget)?,
+            owners.1.namespace(new, c.namespace, d.budget)?,
+        );
         if a.role != c.role
             || !scope(old, new, a.scope, c.scope, d.budget)?
             || !namespace(old, new, a.namespace, c.namespace, d.budget)?
-            || !spans(d, old, new, &a.span, &c.span)?
+            || !spans(d, old, new, &a.span, &c.span, maps)?
         {
             return Err(RenameError::ResolutionChanged);
         }
@@ -334,6 +347,10 @@ pub(super) fn spans(
     new: &FactSet,
     a: &Span,
     c: &Span,
+    maps: (
+        &[nepl3_core::origin::Mapping],
+        &[nepl3_core::origin::Mapping],
+    ),
 ) -> Result<bool, RenameError> {
     if same_source(a.snapshot_ref(), c.snapshot_ref(), d.budget)?
         && a.start() == c.start()
@@ -358,8 +375,8 @@ pub(super) fn spans(
             );
         }
     }
-    let a = root(a, old, d.budget)?;
-    let c = root(c, new, d.budget)?;
+    let a = root(a, old, maps.0, d.budget)?;
+    let c = root(c, new, maps.1, d.budget)?;
     let Some(snapshot) = d.sources.latest(&a.snapshot_ref().source) else {
         return Ok(false);
     };
@@ -385,7 +402,12 @@ fn shift(span: &Span, point: u64, edits: &[TextEdit], b: &mut Budget) -> Result<
     }
     u64::try_from(result).map_err(|_| RenameError::ShapeChanged)
 }
-fn root(span: &Span, facts: &FactSet, b: &mut Budget) -> Result<Span, RenameError> {
+fn root(
+    span: &Span,
+    facts: &FactSet,
+    maps: &[nepl3_core::origin::Mapping],
+    b: &mut Budget,
+) -> Result<Span, RenameError> {
     let mut span = copy_span(span, b)?;
     let mut seen = Vec::new();
     loop {
@@ -400,8 +422,7 @@ fn root(span: &Span, facts: &FactSet, b: &mut Budget) -> Result<Span, RenameErro
             }
         }
         push(&mut seen, copy_span(&span, b)?, b)?;
-        let mut projected =
-            super::mapping::project(&span, &facts.source_maps, &facts.sources, true, b)?;
+        let mut projected = super::mapping::project(&span, maps, &facts.sources, true, b)?;
         if projected.len() > 1 {
             return Err(RenameError::RenameNotInvertible);
         }

@@ -1,0 +1,13 @@
+    Blocking waiting for file lock on build directory
+    Checking nepl3-engine v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\engine)
+    Checking nepl3-grammar-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\languages\grammar\core)
+    Checking nepl3-tools v0.1.0 (C:\projects\NEPL3-prefix-validation\tools)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 33.82s
+    Blocking waiting for file lock on package cache
+    Checking nepl3-engine v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\engine)
+ Documenting nepl3-engine v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\engine)
+    Checking nepl3-grammar-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\languages\grammar\core)
+ Documenting nepl3-grammar-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\languages\grammar\core)
+ Documenting nepl3-tools v0.1.0 (C:\projects\NEPL3-prefix-validation\tools)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 6.89s
+   Generated C:\projects\NEPL3-prefix-validation\target\doc\nepl3_core\index.html and 6 other files

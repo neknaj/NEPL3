@@ -13,6 +13,7 @@ use nepl3_core::{
     },
 };
 mod mapping;
+mod owner;
 mod prepare;
 mod shape;
 mod verify;
