@@ -415,3 +415,14 @@ impl CopyCost for ReaderContinuation {
         self.report.charge(b)
     }
 }
+
+impl ReaderContinuation {
+    /// Charge the logical traversal/storage required to clone this owned value.
+    pub fn charge_clone(&self, budget: &mut Budget) -> Result<(), StopReason> {
+        self.charge(budget)
+    }
+    pub fn clone_with_budget(&self, budget: &mut Budget) -> Result<Self, StopReason> {
+        self.charge(budget)?;
+        Ok(self.clone())
+    }
+}

@@ -29,6 +29,11 @@ impl Cost {
 #[derive(Debug, Default)]
 pub struct Metrics {
     pub inline_host: bool,
+    /// Profiling only: isolated budgets measure one copy of actual owned values.
+    /// These costs overlap and are not added to the operation's real usage.
+    pub probe_continuations: bool,
+    pub reader_continuation_copy: Cost,
+    pub tokenizer_continuation_copy: Cost,
     pub initial: Cost,
     pub provider_sources: Cost,
     pub provider_context: Cost,

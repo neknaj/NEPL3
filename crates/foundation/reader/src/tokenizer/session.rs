@@ -46,6 +46,23 @@ enum Outcome {
         request: ReservationRequest,
     },
 }
+/// The public waiting payload after moving the reader-owned continuation into
+/// the tokenizer's private slot. It does not duplicate the nested VM state.
+enum WaitingOutcome {
+    Provider(Box<ProviderCall>),
+    Reservation(ReservationRequest),
+}
+impl WaitingOutcome {
+    fn public(self, continuation: Box<TokenizationContinuation>) -> TokenizationOutcome {
+        match self {
+            Self::Provider(call) => TokenizationOutcome::Await { call, continuation },
+            Self::Reservation(request) => TokenizationOutcome::Reserve {
+                request,
+                continuation,
+            },
+        }
+    }
+}
 impl Outcome {
     fn public(
         self,
@@ -669,10 +686,13 @@ impl<'a> TokenizationSession<'a> {
                     self.drive(&mut machine, Some(reservation), sources, budget, admission)
                 }),
             (Resume::Provider(reply), TokenizationWait::Provider { continuation }) => {
-                match self
-                    .reader
-                    .resume(&continuation, reply, sources, budget, admission)
-                {
+                match self.reader.resume_from_tokenizer(
+                    &continuation,
+                    reply,
+                    sources,
+                    budget,
+                    admission,
+                ) {
                     Ok(reply) => match accept(&mut machine, reply, self.registry, budget) {
                         Ok(Some(outcome)) => Ok(outcome),
                         Ok(None) => budget.with_depth_at_least(machine.depth_base, |budget| {
@@ -873,16 +893,17 @@ impl<'a> TokenizationSession<'a> {
         };
         if machine.waiting {
             let prepared = (|| -> Result<_, ReaderError> {
-                let pending = match &outcome {
-                    Outcome::Reserve { request } => TokenizationWait::Reservation {
-                        request: copy(request, budget)?,
-                    },
-                    Outcome::Await { continuation, .. } => {
-                        slot::<ReaderContinuation>(budget)?;
-                        TokenizationWait::Provider {
-                            continuation: Box::new(copy(continuation.as_ref(), budget)?),
-                        }
-                    }
+                let (pending, waiting) = match outcome {
+                    Outcome::Reserve { request } => (
+                        TokenizationWait::Reservation {
+                            request: copy(&request, budget)?,
+                        },
+                        WaitingOutcome::Reservation(request),
+                    ),
+                    Outcome::Await { call, continuation } => (
+                        TokenizationWait::Provider { continuation },
+                        WaitingOutcome::Provider(call),
+                    ),
                     _ => return Err(ReaderError::Continuation),
                 };
                 let current = copy(&machine.current, budget)?;
@@ -922,11 +943,11 @@ impl<'a> TokenizationSession<'a> {
                 c.usage = budget.usage();
                 c.report.usage = c.usage;
                 let outward = Box::new(c.clone());
-                Ok((c, outward, current, trivia))
+                Ok((c, outward, current, trivia, waiting))
             })();
             match prepared {
-                Ok((c, outward, current, trivia)) => {
-                    let public = outcome.public(Some(outward))?;
+                Ok((c, outward, current, trivia, waiting)) => {
+                    let public = waiting.public(outward);
                     self.pending = Some(Pending {
                         continuation: c,
                         limits: machine.limits,

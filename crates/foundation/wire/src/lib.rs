@@ -42,6 +42,16 @@ pub enum WireError {
     Facts(nepl3_core::facts::FactError),
     Report(nepl3_core::diagnostic::validation::ReportValidationError),
 }
+impl From<nepl3_core::syntax::canonical::CanonicalError> for WireError {
+    fn from(v: nepl3_core::syntax::canonical::CanonicalError) -> Self {
+        use nepl3_core::syntax::canonical::CanonicalError;
+        match v {
+            CanonicalError::Stopped(r) => Self::Stopped(r),
+            CanonicalError::Reference => Self::InvalidType,
+            CanonicalError::Unreachable => Self::UnreachableNode,
+        }
+    }
+}
 impl From<nepl3_core::diagnostic::validation::ReportValidationError> for WireError {
     fn from(value: nepl3_core::diagnostic::validation::ReportValidationError) -> Self {
         match value {
@@ -63,6 +73,14 @@ impl From<nepl3_core::facts::FactError> for WireError {
 impl From<StopReason> for WireError {
     fn from(value: StopReason) -> Self {
         Self::Stopped(value)
+    }
+}
+impl nepl3_core::value_codec::FoundationCodecError for WireError {
+    fn stop_reason(&self) -> Option<StopReason> {
+        match self {
+            Self::Stopped(reason) => Some(*reason),
+            _ => None,
+        }
     }
 }
 impl From<NumberError> for WireError {

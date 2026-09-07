@@ -11,9 +11,29 @@ use alloc::vec::Vec;
 
 /// Implementations must enforce the registered foundation schema and its semantic
 /// source/view/environment constraints. This is not a provider-supplied callback.
+pub trait FoundationCodecError {
+    fn stop_reason(&self) -> Option<crate::budget::StopReason>;
+}
 pub trait FoundationValueCodec {
-    type Error;
+    type Error: FoundationCodecError;
     fn foundation_schema(&self) -> &SchemaRef;
+    fn source_admission(&mut self) -> &mut crate::source::SourceAdmission;
+    /// Rebind source resolution while borrowing the same registry/admission.
+    /// A caller must supply the operation's explicit declaration closure.
+    fn scoped<'a>(
+        &'a mut self,
+        sources: &'a crate::source::SourceStore,
+    ) -> impl FoundationValueCodec<Error = Self::Error> + 'a;
+    fn encode_syntax(
+        &mut self,
+        value: &crate::syntax::SyntaxBundle,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, Self::Error>;
+    fn decode_syntax(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<crate::syntax::SyntaxBundle, Self::Error>;
     fn encode_report(
         &mut self,
         value: &crate::diagnostic::Report,

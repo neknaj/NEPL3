@@ -1,0 +1,38 @@
+{
+  "profile": "nepl3.ci-observation/1",
+  "commit": "852a722bbb95653d509f27e3e27b4b69c9231fe9",
+  "reviewed_head": "e3228390eb6129107d92bd301ba3a7bed7ba5f1f",
+  "pull_request": "https://github.com/neknaj/NEPL3/pull/10",
+  "run": "https://github.com/neknaj/NEPL3/actions/runs/34071703064",
+  "result": "success",
+  "tests": {
+    "x86_64-unknown-linux-gnu": 231,
+    "x86_64-pc-windows-msvc": 231,
+    "aarch64-apple-darwin": 231,
+    "wasm32-wasip2 (Wasmtime 44.0.1)": 162
+  },
+  "checks": [
+    "Full formal-source Grammar bootstrap executed on all three native hosts at the unchanged ordinary Work cap.",
+    "Actual SourceStore.apply allocation regression passed on all three native hosts.",
+    "Native, WASI, browser-Wasm compile, required quality and source delivery all succeeded."
+  ],
+  "artifact": {
+    "name": "NEPL3-source-852a722bbb95653d509f27e3e27b4b69c9231fe9",
+    "sha256": "b125c689043f4f289ea683508db8ac65aae1c221b606bfaad8a343fb353cc7b4",
+    "kind": "source-foundation",
+    "tar_members": 463,
+    "files": 366,
+    "verification": "Retrieved original archive, checked SOURCE.txt/SHA256SUMS and only regular files/directories without .tmp; recomputed source/spec identity and every report-codec/native-host/source-edits checkpoint log hash from archive bytes."
+  },
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "4804ad6fd63779a129d4ee46a3bb99691bb57e383a455cd2d037934d728aafab",
+    "spec_sha256": "6332c3a380f2ff93b8d19aa10607df70c29b18f4aa9c7fdd3d367938065eeea8"
+  },
+  "retrieved_ci_log_sha256": "4d0b29575c24ae912493bf33f37e27cf130985d3b8c7e03b852823facd9d9364",
+  "limits": [
+    "Full bootstrap is a tools-host test; WASI runs the five production crates, not that driver.",
+    "No whole acceptance group, completed task, browser execution or final product is claimed.",
+    "Later Facts envelope and reader optimization changes require separate validation."
+  ]
+}

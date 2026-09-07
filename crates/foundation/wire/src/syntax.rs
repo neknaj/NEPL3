@@ -84,7 +84,7 @@ enum Encode<'a> {
     Enter(&'a SyntaxBundle, u64),
     Finish(&'a SyntaxBundle, usize),
 }
-fn bundle_value(
+pub(crate) fn bundle_value(
     bundle: &SyntaxBundle,
     schema: &SchemaRef,
     registry: &SchemaRegistry,
@@ -230,7 +230,7 @@ enum Decode<'a> {
     Enter(&'a NdfValue, u64),
     Finish(&'a NdfValue, usize),
 }
-fn bundle_from(
+pub(crate) fn bundle_from(
     value: &NdfValue,
     schema: &SchemaRef,
     registry: &SchemaRegistry,

@@ -5,6 +5,7 @@ extern crate alloc;
 pub mod facts;
 pub mod package;
 pub mod parse;
+pub mod portable;
 pub mod profile;
 pub mod recovery;
 pub mod schema;

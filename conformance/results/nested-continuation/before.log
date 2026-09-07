@@ -1,0 +1,239 @@
+   Compiling typenum v1.20.1
+   Compiling autocfg v1.5.1
+   Compiling proc-macro2 v1.0.107
+   Compiling cfg-if v1.0.4
+   Compiling cpufeatures v0.3.1
+   Compiling unicode-ident v1.0.18
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling serde_json v1.0.151
+   Compiling memchr v2.8.3
+   Compiling pulldown-cmark v0.13.4
+   Compiling serde v1.0.229
+   Compiling itoa v1.0.18
+   Compiling bitflags v2.13.1
+   Compiling unicase v2.9.0
+   Compiling num-traits v0.2.19
+   Compiling hybrid-array v0.4.14
+   Compiling syn v3.0.5
+   Compiling num-integer v0.1.47
+   Compiling crypto-common v0.2.2
+   Compiling block-buffer v0.12.1
+   Compiling num-bigint v0.4.8
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling serde_derive v1.0.229
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\continuation-comparison\crates\foundation\core)
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-runtime\.tmp\continuation-comparison\crates\foundation\reader)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-runtime\.tmp\continuation-comparison\crates\foundation\wire)
+   Compiling nepl3-engine v0.1.0 (C:\projects\NEPL3-runtime\.tmp\continuation-comparison\crates\foundation\engine)
+   Compiling nepl3-grammar-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\continuation-comparison\crates\languages\grammar\core)
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-runtime\.tmp\continuation-comparison\tools)
+    Finished `release` profile [optimized] target(s) in 42.31s
+     Running unittests src\lib.rs (target\release\deps\nepl3_tools-d3d023b0250de28e.exe)
+
+running 1 test
+compile P0: 2.04ms; work 865739; allocation 633694; source 9369; nodes 607; output 0; depth peak 5
+parse P1 (includes host boundary/validation): 5.0397421s; work 4010682406; allocation 5134282861; source 19702; nodes 226401; output 293264; depth peak 96
+lower P1: 29.8039ms; work 18277934; allocation 1334105; source 0; nodes 5658; output 0; depth peak 96
+P1 driver metrics: Metrics {
+    inline_host: true,
+    initial: Cost {
+        calls: 1,
+        elapsed: 5.004309s,
+        usage: Usage {
+            source_bytes: 964,
+            work: 3993032644,
+            depth: 96,
+            nodes: 221574,
+            allocation_units: 5133221873,
+            output_bytes: 292894,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    provider_sources: Cost {
+        calls: 3945,
+        elapsed: 150.3337ms,
+        usage: Usage {
+            source_bytes: 0,
+            work: 57336235,
+            depth: 96,
+            nodes: 0,
+            allocation_units: 93658007,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    provider_context: Cost {
+        calls: 3945,
+        elapsed: 34.0905ms,
+        usage: Usage {
+            source_bytes: 0,
+            work: 595695,
+            depth: 96,
+            nodes: 23670,
+            allocation_units: 2008005,
+            output_bytes: 291930,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    provider_read: Cost {
+        calls: 3945,
+        elapsed: 17.3612ms,
+        usage: Usage {
+            source_bytes: 0,
+            work: 1098649,
+            depth: 96,
+            nodes: 3945,
+            allocation_units: 1300989,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    resume: Cost {
+        calls: 0,
+        elapsed: 0ns,
+        usage: Usage {
+            source_bytes: 0,
+            work: 0,
+            depth: 0,
+            nodes: 0,
+            allocation_units: 0,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    reservation: Cost {
+        calls: 0,
+        elapsed: 0ns,
+        usage: Usage {
+            source_bytes: 0,
+            work: 0,
+            depth: 0,
+            nodes: 0,
+            allocation_units: 0,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+}
+compile P1: 1.8817ms; work 3384947; allocation 759842; source 10333; nodes 607; output 0; depth peak 96
+parse P2 (includes host boundary/validation): 1.8761591s; work 4014477267; allocation 5134386976; source 20666; nodes 226401; output 293264; depth peak 96
+lower P2: 30.6728ms; work 18277934; allocation 1334105; source 0; nodes 5658; output 0; depth peak 96
+P2 driver metrics: Metrics {
+    inline_host: true,
+    initial: Cost {
+        calls: 1,
+        elapsed: 1.8424434s,
+        usage: Usage {
+            source_bytes: 0,
+            work: 3994288637,
+            depth: 96,
+            nodes: 221574,
+            allocation_units: 5133199469,
+            output_bytes: 292894,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    provider_sources: Cost {
+        calls: 3945,
+        elapsed: 57.3228ms,
+        usage: Usage {
+            source_bytes: 0,
+            work: 57336235,
+            depth: 96,
+            nodes: 0,
+            allocation_units: 93658007,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    provider_context: Cost {
+        calls: 3945,
+        elapsed: 8.7139ms,
+        usage: Usage {
+            source_bytes: 0,
+            work: 595695,
+            depth: 96,
+            nodes: 23670,
+            allocation_units: 2008005,
+            output_bytes: 291930,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    provider_read: Cost {
+        calls: 3945,
+        elapsed: 5.2091ms,
+        usage: Usage {
+            source_bytes: 0,
+            work: 1098649,
+            depth: 96,
+            nodes: 3945,
+            allocation_units: 1300989,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    resume: Cost {
+        calls: 0,
+        elapsed: 0ns,
+        usage: Usage {
+            source_bytes: 0,
+            work: 0,
+            depth: 0,
+            nodes: 0,
+            allocation_units: 0,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    reservation: Cost {
+        calls: 0,
+        elapsed: 0ns,
+        usage: Usage {
+            source_bytes: 0,
+            work: 0,
+            depth: 0,
+            nodes: 0,
+            allocation_units: 0,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+}
+compile P2: 2.6679ms; work 3384947; allocation 759842; source 10333; nodes 607; output 0; depth peak 96
+bootstrap actual usage: Usage { source_bytes: 109807, work: 8073006214, depth: 96, nodes: 467236, allocation_units: 10333383074, output_bytes: 586528, diagnostics: 0, events: 0 }; nodes 518
+test bootstrap::tests::complete_grammar_bootstrap_uses_production_parser_lower_and_semantic_identity ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 64 filtered out; finished in 7.16s
+
+     Running unittests src\main.rs (target\release\deps\nepl3_tools-a01676b7cd7278d3.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\bootstrap.rs (target\release\deps\bootstrap-91b2f932a45b4ab8.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests\grammar.rs (target\release\deps\grammar-163f74f77c53d3cf.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
