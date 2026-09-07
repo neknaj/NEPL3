@@ -13,7 +13,7 @@
 | [T03](T03.md) | Readerと拡張provider | in-progress | T01 |
 | [T04](T04.md) | 共通prefix parser | in-progress | T03 |
 | [T05](T05.md) | Grammar compilerとbootstrap | in-progress | T04 |
-| [T06](T06.md) | 束縛と汎用editor query | not-implemented | T05 |
+| [T06](T06.md) | 束縛と汎用editor query | in-progress | T05 |
 | [T07](T07.md) | Doc意味モデルとsentence reader | not-implemented | T04 |
 | [T08](T08.md) | Math意味モデルと厳密計算 | not-implemented | T04 |
 | [T09](T09.md) | Circuit checkerと実行 | not-implemented | T04 |

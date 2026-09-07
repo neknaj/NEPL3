@@ -37,9 +37,9 @@ impl From<StopReason> for TreeError {
 }
 impl From<SyntaxError> for TreeError {
     fn from(v: SyntaxError) -> Self {
-        match v {
-            SyntaxError::Stopped(v) => Self::Stopped(v),
-            v => Self::Syntax(v),
+        match v.stop_reason() {
+            Some(reason) => Self::Stopped(reason),
+            None => Self::Syntax(v),
         }
     }
 }
@@ -169,7 +169,7 @@ fn head_text<'a>(
         .ok_or(TreeError::Selection)?;
     let raw = source
         .slice(head)
-        .map_err(|e| TreeError::Syntax(SyntaxError::Source(e)))?;
+        .map_err(|e| TreeError::from(SyntaxError::from(e)))?;
     budget.charge(Resource::Work, raw.len() as u64 + 1)?;
     Ok(raw)
 }
@@ -316,7 +316,7 @@ fn static_fields(
             profile
                 .registry()
                 .validate(&leaf.payload, &token.payload, budget)
-                .map_err(|e| TreeError::Syntax(SyntaxError::Schema(e)))?;
+                .map_err(|e| TreeError::from(SyntaxError::from(e)))?;
         }
         ShapeSelection::Builtin { read } => {
             let ReadSpec::Builtin {

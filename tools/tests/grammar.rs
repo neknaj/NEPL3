@@ -281,3 +281,6 @@ mod diagnostic;
 
 #[path = "grammar/reader.rs"]
 mod reader;
+
+#[path = "grammar/binding.rs"]
+mod binding;

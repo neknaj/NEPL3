@@ -391,12 +391,12 @@
     },
     {
       "id": "R033",
-      "status": "open",
+      "status": "corrected",
       "title": "The official binding grammar uses a list-valued reader where a name binding requires Text",
       "affected_tasks": ["T05", "T06"],
       "evidence": ["examples/grammar/binding.neplg", "crates/foundation/engine/src/package/bindings.rs", "tools/tests/grammar.rs"],
       "partial_progress": "The source's word reader is Seq(Scalar IdentifierStart, Many Scalar IdentifierContinue), which returns List<NdfValue>. The Name leaf requests reference Value self, whose checked binding contract requires Text. The independent tools integration executes the actual seed import and full package compiler and confirms Package(InvalidBinding), rather than accepting the design example as previously structurally audited.",
-      "blocking_condition": "Correct the source with an explicit Text-producing name reader or a specified transform, preserve the old invalid-type case as a regression, and exercise corrected parse plus binding behavior without introducing implicit Seq-to-Text concatenation."
+      "resolution": "The formal example now explicitly calls nepl3.reader/name-v1, whose Text output satisfies reference Value self. The old source remains in tools/tests/fixtures/grammar/binding-nontext-name.neplg and the actual full-package regression still rejects it with InvalidBinding; that test passes independently. The new managed official_binding_let_lambda_visibility_and_entity_identity test also passes independently: the corrected formal source is compiled, parsed with the actual standard provider, analyzed, and its Let/Lambda/sibling/Unicode references are checked against declaration byte locations. FactSet NDF roundtrip preserves exact data and does not double-charge sources. This corrects the original example/type/behavior inconsistency, not all T06 binding constructors, resource boundaries or portable analysis acceptance."
     },
     {
       "id": "R034",
@@ -478,6 +478,24 @@
       "evidence": ["crates/foundation/reader/src/runtime/mod.rs", "crates/foundation/reader/src/runtime/validate.rs"],
       "partial_progress": "An independent executable depends on the clean ab9c50b1d36ee0240d759cc80ef986f905242804 snapshot. A Read provider declares Text output; after an actual ReaderSession Await, changing only Matched.value to Unit returns Schema(WrongType). Retrying the same saved continuation with a valid Text result returns NoPending. The private slot is consumed before non-stopping payload validation completes.",
       "resolution": "Reader validates the borrowed reply before taking its private slot; Tokenizer and ParseSession retain or restore their outer slots on non-stopping rejection. Five independent retry cases preserve one previously accepted generated source, diagnostic and event after invalid output/state types, an out-of-range end, a later source URI conflict or an invalid ViewRef. The same five managed cases pass, as do an independent outer-tokenizer wrong-type retry and the managed three-layer ParseSession retry. All 34 reader runtime tests pass independently, including allocation-stop sweeps, formal source/report preservation and pending cleanup. Transform Map/Decode Complete/Failed/Stopped native/NDF paths use the same prevalidation and preserve prior collectors on cancellation. Resource/admission costs remain consumed after rejection; the correction does not assert completion of all request/continuation transports."
+    },
+    {
+      "id": "R043",
+      "status": "corrected",
+      "title": "Binding analysis misclassifies nested resource stops as invalid input",
+      "affected_tasks": ["T01", "T04", "T06"],
+      "evidence": ["crates/foundation/core/src/syntax.rs", "crates/foundation/core/src/view.rs", "crates/foundation/engine/src/tree.rs", "crates/foundation/engine/src/binding/mod.rs"],
+      "partial_progress": "An independent production Grammar/ParseSession/tree.validate/analyze chain analyzes lettext with an escaped x name. Reusing the valid tree under a fresh SourceBytes=0 budget returns Invalid(Tree(Syntax(Source(Stopped(SourceLimit))))) while Budget.poll reports SourceLimit. Nodes=5 returns Invalid(Tree(Syntax(View(Schema(Stopped(NodeLimit)))))); Work=51 similarly wraps WorkLimit. Five-resource sweeps over this input and a host/guest input expose 102 invalid-stop classifications. The checked partial FactSets in this sweep remain structurally valid; that is a separate property from correct outcome classification.",
+      "resolution": "View and Syntax errors expose nested stop causes; typed conversions normalize those causes without converting ordinary input errors. Two explicit Tree validation wrappers that bypassed these conversions were also corrected after the first independent rerun left three NodeLimit failures. The original two-input five-resource sweep now has zero invalid-stop or broken-partial results and asserts each exact resource reason and sticky Budget.poll. Managed core conversion coverage and the actual analysis stop sweep pass independently, including diagnostic limits, partial FactSet/report closure, occurrence-stage pairing and caller depth restoration. This resolves the observed native analysis classification paths; the separate portable failure codec is reviewed independently."
+    },
+    {
+      "id": "R044",
+      "status": "corrected",
+      "title": "Sequential and recursive binding bodies retain the host stage when entering a Foreign bundle",
+      "affected_tasks": ["T06"],
+      "evidence": ["doc/spec/04-grammar.md", "crates/foundation/engine/src/binding/runtime.rs"],
+      "partial_progress": "An independent valid Grammar uses listof local Decl declarations and a foreign B Expr body. Both sequence cons define x 1 nil x and recursive cons define x 1 nil x compile and parse into validated trees, then public analyze returns Invalid(Fact(MissingNamespace)). The guest reference uses its guest namespace but a host-descended scope/stage. The returned Some FactSet therefore violates namespace-root membership. Action::Declaration retains frame.stage across bundles while the ordinary child path selects the guest root.",
+      "resolution": "Child and Declaration actions now use the same child_frame entry, choosing the owning guest root whenever the target bundle changes. Both original independent foreign-body inputs now return Complete with an unresolved guest reference, two roots and a structurally valid FactSet. The managed regression also covers a same-alias nested guest and passes independently. Host export identity remains unchanged; this correction does not implement explicit cross-root imports or grants."
     }
   ],
   "runtime_conformance_executed": false

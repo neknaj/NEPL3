@@ -253,7 +253,10 @@ pub fn reply_from_value<C: FoundationValueCodec>(
     result.validate(request, b, local.source_admission())?;
     Ok(result)
 }
-fn optional<E>(v: Option<NdfValue>, b: &mut Budget) -> Result<NdfValue, PortableError<E>> {
+pub(super) fn optional<E>(
+    v: Option<NdfValue>,
+    b: &mut Budget,
+) -> Result<NdfValue, PortableError<E>> {
     Ok(match v {
         Some(v) => {
             b.charge(
@@ -265,7 +268,7 @@ fn optional<E>(v: Option<NdfValue>, b: &mut Budget) -> Result<NdfValue, Portable
         None => NdfValue::None,
     })
 }
-fn stop_value<E>(
+pub(super) fn stop_value<E>(
     v: StopReason,
     s: &Schemas<'_>,
     b: &mut Budget,
@@ -283,7 +286,7 @@ fn stop_value<E>(
     };
     variant(s.foundation, "StopReason", name, [], b)
 }
-fn stop_from<E>(v: &NdfValue, s: &Schemas<'_>) -> Result<StopReason, PortableError<E>> {
+pub(super) fn stop_from<E>(v: &NdfValue, s: &Schemas<'_>) -> Result<StopReason, PortableError<E>> {
     let (name, f) = parts(v, s.foundation, "StopReason")?;
     if !f.is_empty() {
         return Err(PortableError::Shape);

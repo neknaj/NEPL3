@@ -2393,6 +2393,48 @@
           }
         ]
       ]
+    },
+    "PlanError": {
+      "constraints": [],
+      "variant": {
+        "Reference": [],
+        "DuplicateRule": [],
+        "DuplicateProvider": [],
+        "EmptyName": [],
+        "InvalidRange": [],
+        "InvalidRepeat": [],
+        "EmptyDelimiter": [],
+        "UnknownSchema": [],
+        "UnknownKind": [],
+        "ProviderSignature": [],
+        "OutputType": [],
+        "NonProgress": [],
+        "LeftRecursion": [],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ],
+        "Schema": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SchemaError"
+              }
+            }
+          ]
+        ]
+      }
     }
   }
 }

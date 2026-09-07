@@ -2,6 +2,7 @@
 #![no_std]
 extern crate alloc;
 
+pub mod binding;
 pub mod facts;
 pub mod head;
 pub mod package;

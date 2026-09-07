@@ -123,3 +123,77 @@ fn symbolic_type_descriptors_preserve_all_variants_and_nested_named_data() -> Re
     }
     Ok(())
 }
+
+#[test]
+fn deep_symbolic_types_roundtrip_and_stop_without_recursive_cleanup() -> Result<(), String> {
+    let mut registry = SchemaRegistry::default();
+    let descriptor = nepl3_core::schema::foundation::descriptor(&mut budget()).map_err(error)?;
+    let schema = descriptor.reference(&mut budget()).map_err(error)?;
+    registry
+        .register(schema, descriptor, &mut budget())
+        .map_err(error)?;
+    registry.finalize(&mut budget()).map_err(error)?;
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&registry, &empty, &mut admission).map_err(error)?;
+    let mut ty = TypeDescriptor::Named(TypeRef {
+        package: "unregistered".into(),
+        revision: 9,
+        name: "未登録型".into(),
+    });
+    for index in 0..2048 {
+        ty = if index % 2 == 0 {
+            TypeDescriptor::List(Box::new(ty))
+        } else {
+            TypeDescriptor::Option(Box::new(ty))
+        };
+    }
+    let mut limits = budget().limits();
+    limits.depth = 5000;
+    let mut b = Budget::new(limits);
+    let encoded = codec.encode_type_descriptor(&ty, &mut b).map_err(error)?;
+    let bytes = nepl3_wire::encode(&encoded, &mut b).map_err(error)?;
+    let decoded = nepl3_wire::decode(&bytes, &mut b).map_err(error)?;
+    assert_eq!(encoded, decoded);
+    // Inspect the constructor order independently of the encoder's algorithm.
+    let mut cursor = &decoded;
+    for index in (0..2048).rev() {
+        let NdfValue::Variant(wrapper) = cursor else {
+            return Err("wrapper".into());
+        };
+        assert_eq!(
+            wrapper.variant,
+            if index % 2 == 0 { "List" } else { "Option" }
+        );
+        assert_eq!(wrapper.fields.len(), 1);
+        cursor = &wrapper.fields[0];
+    }
+    let NdfValue::Variant(named) = cursor else {
+        return Err("named".into());
+    };
+    assert_eq!(named.variant, "Named");
+    let NdfValue::Record(reference) = &named.fields[0] else {
+        return Err("reference".into());
+    };
+    assert_eq!(reference.fields[2], NdfValue::Text("未登録型".into()));
+    drop(decoded);
+    drop(encoded);
+    drop(ty);
+
+    let mut too_deep = TypeDescriptor::Text;
+    for _ in 0..100_000 {
+        too_deep = TypeDescriptor::List(Box::new(too_deep));
+    }
+    let mut low = Budget::new(Limits {
+        depth: 64,
+        ..budget().limits()
+    });
+    assert_eq!(
+        codec.encode_type_descriptor(&too_deep, &mut low),
+        Err(WireError::Stopped(StopReason::DepthLimit))
+    );
+    assert_eq!(low.poll(), Err(StopReason::DepthLimit));
+    // Input and partially built encoder storage must also have bounded cleanup.
+    drop(too_deep);
+    Ok(())
+}
