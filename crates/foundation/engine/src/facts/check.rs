@@ -107,6 +107,9 @@ impl FactsReply {
         let result = (|| {
             b.poll()?;
             let (delta, report, sources, maps) = self.parts();
+            if report.trace_overflow.is_some() && !matches!(self, Self::Stopped { .. }) {
+                return Err(FactsError::Report(ReportValidationError::Usage));
+            }
             let base =
                 request
                     .request

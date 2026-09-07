@@ -16,6 +16,8 @@ provider identityはhostが実assetまたは版管理された実装manifestか�
 
 解析Profileのidentityは`NEPL3-PARSE-PROFILE-1`、zero byte、canonical JSONのSHA-256。id、language登録、schema、category-mode指定、providerの実装identity、allowlist、resource identity、Limitsを含める。宣言はalias/idまたは完全OperationRef/SchemaRef順、Limits列はsourceBytes/work/depth/nodes/allocationUnits/outputBytes/diagnostics/events順とする。実resource bytesはhash照合し、Profileへ全文複製しない。
 
+HeadProviderの登録はheadProvidersのHeadRegistration(alias,category,provider)で選ぶ。同じpackageを登録した別aliasの設定を共有したと推定しない。(alias,category)重複を拒否し、shape/childContextの両OperationRefについて純粋なHeadCall→HeadReply署名、allowlist、独立host catalogの実装identityを検査する。標準操作名はheadShape/headChildContextだが、登録済みの同署名操作も選択できる。Profile identityにはheadProviders keyを含め、alias/category順の `[alias,category,shapeOperation,childContextOperation]` 列で記述する。列挙順だけの変更はidentityを変えず、操作の役割・alias/categoryへの割当変更は変える。
+
 ここでのallowlistはoperation呼出可否を表す。providerのtransport、隔離、ネットワーク等の権限、強制停止方法、bridge、EnvironmentProjectionを含むfull suite Profileの契約は引き続き実装対象である。この解析projectionだけではR009全体を完了しない。hostは実行環境のcapabilityを別途検査し、解析projectionはその承認を代行しない。
 
 配布拡張子は `.neplg`、`.nepld`、`.neplm`、`.neplc`。汎用 `.nepl` ではlanguage指定を必須にする。既存NCGやGlossのファイルを新言語として黙って解釈しない。

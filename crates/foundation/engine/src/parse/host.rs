@@ -1,4 +1,4 @@
-//! Explicit synchronous reader dispatch. This is not the dynamic head protocol.
+//! Explicit synchronous dispatch of reader and projected head operations.
 use super::{ParseError, ParseReply};
 use crate::profile::ProviderRequirement;
 use nepl3_core::{
@@ -14,6 +14,17 @@ use nepl3_reader::{model::ProviderCall, runtime::ProviderReply, tokenizer::Reser
 /// Replies always pass through the same reader/tokenizer validation as `resume`.
 /// The supplied budget/admission and active caller depth belong to this operation.
 pub trait ParseHost {
+    /// Receives only the head/completed-child projection, never parser frames or
+    /// an implicit full source store. Unsupported operations remain owned AwaitHead.
+    fn head(
+        &mut self,
+        _call: &crate::head::HeadCall,
+        _requirement: &ProviderRequirement,
+        _budget: &mut Budget,
+        _admission: &mut SourceAdmission,
+    ) -> Result<Option<crate::head::HeadReply>, ParseError> {
+        Ok(None)
+    }
     fn provider(
         &mut self,
         call: &ProviderCall,

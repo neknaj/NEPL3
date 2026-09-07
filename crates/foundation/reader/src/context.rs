@@ -43,6 +43,82 @@ impl CheckedReaderContext<'_> {
     pub fn sources(&self) -> &[&SourceSnapshot] {
         &self.sources
     }
+    /// Reuse the exact immutable source closure retained by this checked proof.
+    /// The new context owns its metadata; it neither resolves auxiliary sources
+    /// through a new ambient store nor exempts a new read from source admission.
+    /// Foreign environment selection remains the caller's explicit decision.
+    pub fn retarget_preserving_sources<'a>(
+        &'a self,
+        schema: &SchemaRef,
+        category: &str,
+        mode: &str,
+        registry: &SchemaRegistry,
+        budget: &mut Budget,
+    ) -> Result<CheckedReaderContext<'a>, ContextError<core::convert::Infallible>> {
+        use crate::runtime::copy::CopyCost;
+        let result = (|| {
+            budget.charge(
+                Resource::Work,
+                (schema.package.len() as u64)
+                    .saturating_add(self.foundation.package.len() as u64)
+                    .saturating_add(68),
+            )?;
+            if !registry.is_finalized()
+                || registry.descriptor(&self.foundation).is_none()
+                || registry.descriptor(schema).is_none()
+                || category.is_empty()
+                || mode.is_empty()
+            {
+                return Err(ContextError::InvalidContext);
+            }
+            for binding in &self.environment.value.bindings {
+                budget.charge(
+                    Resource::Work,
+                    binding.namespace.schema.package.len() as u64 + 34,
+                )?;
+                if registry.descriptor(&binding.namespace.schema).is_none() {
+                    return Err(ContextError::InvalidContext);
+                }
+                registry
+                    .validate_typed(&binding.value, budget)
+                    .map_err(ContextError::Schema)?;
+            }
+            let mut closure = Vec::new();
+            for source in &self.sources {
+                budget.charge(Resource::Work, 1)?;
+                budget.charge(
+                    Resource::AllocationUnits,
+                    core::mem::size_of::<&SourceSnapshot>() as u64,
+                )?;
+                closure.push(*source);
+            }
+            self.raw().charge(budget)?;
+            budget.charge(
+                Resource::Work,
+                (schema.package.len() as u64)
+                    .saturating_add(category.len() as u64)
+                    .saturating_add(mode.len() as u64),
+            )?;
+            budget.charge(
+                Resource::AllocationUnits,
+                (schema.package.len() + category.len() + mode.len() + self.foundation.package.len())
+                    as u64,
+            )?;
+            let mut raw = self.raw().clone();
+            raw.schema = schema.clone();
+            raw.category = category.into();
+            raw.mode = mode.into();
+            Ok(CheckedReaderContext {
+                raw: Cow::Owned(raw),
+                foundation: self.foundation.clone(),
+                sources: closure,
+            })
+        })();
+        result.map_err(|error| match budget.poll() {
+            Err(reason) => ContextError::Stopped(reason),
+            Ok(()) => error,
+        })
+    }
     /// Explicitly reuse the checked environment under another syntactic entry.
     /// Foreign namespace isolation/projection is a separate host decision.
     /// The returned proof owns its context and borrows only the supplied source store.

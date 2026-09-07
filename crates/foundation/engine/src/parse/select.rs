@@ -17,12 +17,11 @@ pub(super) struct Head<'a> {
     pub selection: ShapeSelection,
     pub arity: u64,
 }
-pub(super) fn category<'a>(
+pub(super) fn form<'a>(
     package: &'a LanguagePackage,
     entry: &EntryContext,
     token: &Token,
     source: &SourceSnapshot,
-    registry: &SchemaRegistry,
     budget: &mut Budget,
 ) -> Result<Option<Head<'a>>, PackageError> {
     let raw = source.slice(&token.head)?;
@@ -41,6 +40,15 @@ pub(super) fn category<'a>(
             }));
         }
     }
+    Ok(None)
+}
+pub(super) fn leaf<'a>(
+    package: &'a LanguagePackage,
+    entry: &EntryContext,
+    token: &Token,
+    registry: &SchemaRegistry,
+    budget: &mut Budget,
+) -> Result<Option<Head<'a>>, PackageError> {
     for (index, leaf) in package.leaves.iter().enumerate() {
         budget.charge(
             Resource::Work,
@@ -58,6 +66,20 @@ pub(super) fn category<'a>(
         }
     }
     Ok(None)
+}
+
+pub(super) fn category<'a>(
+    package: &'a LanguagePackage,
+    entry: &EntryContext,
+    token: &Token,
+    source: &SourceSnapshot,
+    registry: &SchemaRegistry,
+    budget: &mut Budget,
+) -> Result<Option<Head<'a>>, PackageError> {
+    match form(package, entry, token, source, budget)? {
+        Some(head) => Ok(Some(head)),
+        None => leaf(package, entry, token, registry, budget),
+    }
 }
 
 pub(super) fn read(

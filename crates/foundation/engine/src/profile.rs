@@ -31,6 +31,12 @@ pub struct CategoryMode {
     pub category: String,
     pub mode: String,
 }
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct HeadRegistration {
+    pub alias: String,
+    pub category: String,
+    pub provider: crate::selection::HeadProviderRef,
+}
 /// Identity asserted by a profile and checked against a separately supplied host catalog.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ProviderRequirement {
@@ -64,6 +70,7 @@ pub struct ParseProfile {
     pub languages: Vec<LanguageRegistration>,
     pub schemas: Vec<SchemaRef>,
     pub category_modes: Vec<CategoryMode>,
+    pub head_providers: Vec<HeadRegistration>,
     pub providers: Vec<ProviderRequirement>,
     pub allowlist: Vec<OperationRef>,
     pub resources: Vec<ResourceIdentity>,

@@ -1,0 +1,81 @@
+{
+  "format": "nepl3.development-slice/1",
+  "scope": "T03/T04: native dynamic HeadProvider parsing, source-preserving continuation validation and operation outcome consistency",
+  "base_commit": "ad43f2516b6c4232d852d6d3d50e3073c41c64bb",
+  "result": "passed-within-recorded-scope",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "78134163cb5657d6a13d64f3411c1f28fa0c1774cc2d75015827c001c4e5b3b1",
+    "spec_sha256": "b884a745a2f0b85abe4844f09ad82ee9fcdb38478300830200f2a05332bf28de"
+  },
+  "checks": [
+    {
+      "command": "cargo test --workspace --locked",
+      "exit_code": 0,
+      "log": "conformance/results/native-head/native.log",
+      "sha256": "c6889b8cf9738f9d43c27e1fef627680f153ccb44a69f14caf04beea1759a21c"
+    },
+    {
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER='wasmtime run'; cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --no-default-features --target wasm32-unknown-unknown",
+      "exit_code": 0,
+      "log": "conformance/results/native-head/wasi.log",
+      "sha256": "b0c6ab88bde95b583ef0d015d595be701fb91411557dc2dc9c25bd07a7ef8e75"
+    },
+    {
+      "command": "cargo fmt --all -- --check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo clippy --workspace --all-targets --locked -- -D warnings; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps --locked",
+      "exit_code": 0,
+      "log": "conformance/results/native-head/quality.log",
+      "sha256": "7da2442600e2d3577ca960ec7573658755d1b1614dfd3c57a4ee95d416938c63"
+    },
+    {
+      "command": "cargo run --locked -p nepl3-tools -- check",
+      "exit_code": 0,
+      "log": "conformance/results/native-head/contracts.log",
+      "sha256": "2615621015c2d473fad72db23d031a74b22b42bb94eddbec304074715fcf3afa"
+    },
+    {
+      "command": "python tools/audit/structure.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/audit -p test.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/bootstrap -p test_grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/audit/allocation/run.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo run --locked -p nepl3-tools -- tasks --check",
+      "exit_code": 0,
+      "log": "conformance/results/native-head/audit.log",
+      "sha256": "d0f6428edc1d539bf895577bd1f39aece77159b1fe4acfe69a847684fd3f927e"
+    }
+  ],
+  "execution": {
+    "native": {
+      "target": "x86_64-pc-windows-msvc",
+      "passed": 253,
+      "ignored": 1,
+      "normal_full_grammar_bootstrap": "executed at unchanged Work cap"
+    },
+    "wasi": {
+      "target": "wasm32-wasip2",
+      "runner": "Wasmtime 44.0.1",
+      "passed": 184
+    },
+    "browser_wasm": "five no_std crate compilation only",
+    "toolchain": "Rust 1.97.0",
+    "python": "6 structural audit and 3 bootstrap adapter tests passed",
+    "allocation": "Existing SourceMap::insert and SourceStore::apply AllocationLimit regressions measured zero allocated bytes; positive control measured 4096 bytes."
+  },
+  "implementation": [
+    "Resolved Profile explicitly selects Head shape/child-context operations by language alias and category and includes registrations in execution identity.",
+    "Native ParseHost callbacks and owned AwaitHead/resume_head paths preserve compound completed selector payloads, choose child reader context and return to prefix parsing without consuming the unread tail.",
+    "Projected source windows and reports preserve UTF-8 snapshot coordinates and reject positions outside issued windows; partial windows do not prove whole-snapshot content hashes.",
+    "Rejected source metadata or missing primary input leaves the pending slot available. Checked context retargeting retains declared auxiliary sources without requiring caller-store registration (R039).",
+    "Reader, tokenizer, parse, Head and Facts boundaries reject non-Stopped results with terminal trace overflow before consuming pending slots; valid Stopped reasons retain overflow (R040)."
+  ],
+  "independent_review": {
+    "reviewer": "Huygens",
+    "record": "doc/review.md",
+    "managed_head_runtime_tests": 12,
+    "scope": "Direct production API reruns and independent reproductions for source identity conflicts, missing primary input, preserved auxiliary source closure, retry semantics, compound/foreign context switching, bounded failure reports and Reader/Head/Facts outcome consistency.",
+    "root_confirmation": "Root inspected the frozen diff and ran all workspace tests, five-crate WASI execution, browser compilation, strict quality gates and existing repository audits in the isolated worktree."
+  },
+  "unverified": [
+    "Head portable/delegation work is excluded from this snapshot and has a separate independent review.",
+    "No separate-process provider execution, transport authentication, complete continuation wire protocol or dedicated exhaustive Head allocation sweep is claimed.",
+    "Grammar compiler diagnostic completeness, bindings/editor services, remaining language runtimes, CLI, browser execution, Pages and Doc migration remain implementation work.",
+    "No required acceptance group or task is marked complete by this development-slice record."
+  ]
+}

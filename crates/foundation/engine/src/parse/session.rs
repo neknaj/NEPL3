@@ -24,6 +24,8 @@ use nepl3_core::{
     view::Token,
 };
 use nepl3_reader::{runtime::ProviderReply, tokenizer::*};
+mod head;
+use head::HeadPending;
 
 struct Machine {
     progress: ParseProgress,
@@ -50,6 +52,7 @@ enum Halt {
         Box<TokenizationContinuation>,
     ),
     Reserve(ReservationRequest, Box<TokenizationContinuation>),
+    Head(Box<crate::head::HeadCall>, Option<Box<Token>>),
 }
 pub struct ParseSession<'a> {
     session_id: String,
@@ -57,8 +60,10 @@ pub struct ParseSession<'a> {
     environments: &'a ParseEnvironmentSet<'a>,
     tokenizers: Vec<TokenizationSession<'a>>,
     pending: Option<Pending>,
+    head_pending: Option<HeadPending>,
     incomplete: Option<Incomplete>,
     next_operation: u64,
+    next_head_call: u64,
     closed: bool,
 }
 impl<'a> ParseSession<'a> {
@@ -100,14 +105,17 @@ impl<'a> ParseSession<'a> {
             environments,
             tokenizers,
             pending: None,
+            head_pending: None,
             incomplete: None,
             next_operation: 0,
+            next_head_call: 0,
             closed: false,
         })
     }
     pub fn close(&mut self) {
         self.closed = true;
         self.pending = None;
+        self.head_pending = None;
         self.incomplete = None;
         for tokenizer in &mut self.tokenizers {
             tokenizer.close();
@@ -123,7 +131,7 @@ impl<'a> ParseSession<'a> {
         if self.closed {
             return Err(ParseError::Closed);
         }
-        if self.pending.is_some() || self.incomplete.is_some() {
+        if self.pending.is_some() || self.head_pending.is_some() || self.incomplete.is_some() {
             return Err(ParseError::Busy);
         }
         self.start(request, sources, budget, admission, None)
@@ -141,7 +149,7 @@ impl<'a> ParseSession<'a> {
         if self.closed {
             return Err(ParseError::Closed);
         }
-        if self.pending.is_some() || self.incomplete.is_some() {
+        if self.pending.is_some() || self.head_pending.is_some() || self.incomplete.is_some() {
             return Err(ParseError::Busy);
         }
         let prepared = self.begin(request, sources, budget, admission, None);
@@ -187,6 +195,10 @@ impl<'a> ParseSession<'a> {
                     });
                 }
             };
+            if matches!(halt, Halt::Head(..)) {
+                let reply = self.finish(machine, Ok(halt), depth_base, budget)?;
+                return self.service_head_host(reply, sources, budget, admission, host);
+            }
             let alias = if matches!(halt, Halt::Await(..) | Halt::Reserve(..)) {
                 let selected = machine
                     .progress
@@ -514,6 +526,9 @@ impl<'a> ParseSession<'a> {
                     self.complete(machine, budget)?;
                     continue;
                 }
+                if let Some(halt) = self.child_head(machine, sources, budget, admission)? {
+                    return Ok(halt);
+                }
                 self.child(machine, sources, budget)?;
                 continue;
             }
@@ -543,15 +558,21 @@ impl<'a> ParseSession<'a> {
                 .ok_or(ParseError::Context)?;
             let context = original
                 .context
-                .retarget(
+                .retarget_preserving_sources(
                     &entry.package.schema,
                     &entry.category,
                     &entry.mode,
-                    sources,
                     self.profile.registry(),
                     budget,
                 )
-                .map_err(|_| ParseError::Context)?;
+                .map_err(|error| match error {
+                    nepl3_reader::context::ContextError::Stopped(reason) => {
+                        ParseError::Stopped(reason)
+                    }
+                    nepl3_reader::context::ContextError::Source(error) => ParseError::Source(error),
+                    nepl3_reader::context::ContextError::Schema(error) => ParseError::Schema(error),
+                    _ => ParseError::Context,
+                })?;
             let snapshot = sources
                 .resolve(&machine.progress.request.snapshot)
                 .ok_or(SourceError::MissingSnapshot)?;
@@ -662,8 +683,7 @@ impl<'a> ParseSession<'a> {
             .trivia = trivia;
         match outcome {
             TokenizationOutcome::Token(token) => {
-                self.token(machine, token, sources, budget, admission)?;
-                Ok(None)
+                self.token_selected(machine, token, false, sources, budget, admission)
             }
             TokenizationOutcome::Await { call, continuation } => {
                 Ok(Some(Halt::Await(call, continuation)))
@@ -684,14 +704,15 @@ impl<'a> ParseSession<'a> {
             }
         }
     }
-    fn token(
-        &self,
+    fn token_selected(
+        &mut self,
         machine: &mut Machine,
         token: Token,
+        skip_head: bool,
         sources: &SourceStore,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
-    ) -> Result<(), ParseError> {
+    ) -> Result<Option<Halt>, ParseError> {
         let frame = machine
             .progress
             .frames
@@ -701,6 +722,24 @@ impl<'a> ParseSession<'a> {
         let snapshot = sources
             .resolve(&machine.progress.request.snapshot)
             .ok_or(SourceError::MissingSnapshot)?;
+        if !skip_head
+            && frame.read.is_none()
+            && select::form(package, &frame.entry, &token, snapshot, budget)?.is_none()
+            && self
+                .profile
+                .head_provider(&frame.entry.alias, &frame.entry.category, budget)?
+                .is_some()
+        {
+            let call = self.make_head_call(
+                machine,
+                &token,
+                crate::head::HeadRequest::Shape,
+                budget,
+                admission,
+            )?;
+            build::slot::<Token>(budget)?;
+            return Ok(Some(Halt::Head(Box::new(call), Some(Box::new(token)))));
+        }
         let chosen = match frame.read {
             None => select::category(
                 package,
@@ -739,9 +778,33 @@ impl<'a> ParseSession<'a> {
             },
         };
         let Some(chosen) = chosen else {
-            return self.recover(machine, Some(token), false, sources, budget, admission);
+            self.recover(machine, Some(token), false, sources, budget, admission)?;
+            return Ok(None);
         };
-        let selection = chosen.selection;
+        self.install_head(
+            machine,
+            token,
+            chosen.kind,
+            chosen.selection,
+            chosen.arity,
+            budget,
+        )?;
+        Ok(None)
+    }
+    fn install_head(
+        &self,
+        machine: &mut Machine,
+        token: Token,
+        kind: &KindRef,
+        selection: ShapeSelection,
+        arity: u64,
+        budget: &mut Budget,
+    ) -> Result<(), ParseError> {
+        let frame = machine
+            .progress
+            .frames
+            .last()
+            .ok_or(ParseError::Reference)?;
         let entry = copy::entry(&frame.entry, budget)?;
         let execution_digest = self.profile.execution_digest(&entry.alias, budget)?;
         let arena = machine
@@ -760,12 +823,13 @@ impl<'a> ParseSession<'a> {
             }
         }
         build::slot::<NodeSelection>(budget)?;
-        let node = arena.head(token, chosen.kind, self.profile.registry(), budget)?;
+        let node = arena.head(token, kind, self.profile.registry(), budget)?;
+        let stored_selection = copy::selection(&selection, budget)?;
         arena.selections.push(NodeSelection {
             node,
             entry,
             execution_digest,
-            shape: selection.clone(),
+            shape: stored_selection,
         });
         let frame = machine
             .progress
@@ -773,7 +837,7 @@ impl<'a> ParseSession<'a> {
             .last_mut()
             .ok_or(ParseError::Reference)?;
         frame.node = Some(node);
-        frame.arity = chosen.arity;
+        frame.arity = arity;
         frame.selection = Some(selection);
         machine
             .progress
@@ -805,6 +869,10 @@ impl<'a> ParseSession<'a> {
                     .ok_or(ParseError::Reference)?;
                 (field.read, field.name.as_str(), false)
             }
+            ShapeSelection::Dynamic { shape, .. } => {
+                let field = shape.fields.get(index).ok_or(ParseError::Reference)?;
+                (field.read, field.name.as_str(), false)
+            }
             ShapeSelection::List { read, cons: true } => {
                 let ReadSpec::ListOf { element, .. } = package.read(*read)? else {
                     return Err(ParseError::Reference);
@@ -817,7 +885,7 @@ impl<'a> ParseSession<'a> {
             }
             _ => return Err(ParseError::Reference),
         };
-        let resolved = if tail {
+        let mut resolved = if tail {
             crate::profile::ResolvedRead {
                 entry: copy::entry(&parent.entry, budget)?,
                 read: Some(read),
@@ -826,6 +894,12 @@ impl<'a> ParseSession<'a> {
         } else {
             select::read(self.profile, &parent.entry, read, budget)?
         };
+        if let Some(ShapeSelection::Dynamic { child_contexts, .. }) = &parent.selection {
+            resolved.entry = copy::entry(
+                child_contexts.get(index).ok_or(ParseError::Reference)?,
+                budget,
+            )?;
+        }
         let arena = if resolved.foreign {
             let mut path = copy_path(
                 &machine
@@ -1140,6 +1214,7 @@ impl<'a> ParseSession<'a> {
             }
         };
         match halt {
+            Halt::Head(call, token) => self.suspend_head(machine, call, token, depth_base, budget),
             Halt::Await(call, tokenizer) => {
                 self.suspend(machine, Some(call), None, tokenizer, depth_base, budget)
             }
@@ -1457,6 +1532,9 @@ impl<'a> ParseSession<'a> {
                 | (TokenizationWait::Reservation { .. }, false, true)
         ) {
             return Err(ParseError::Continuation);
+        }
+        if let Some(reply) = &provider {
+            reply.validate_outcome()?;
         }
         let alias_result = self.alias(
             &pending

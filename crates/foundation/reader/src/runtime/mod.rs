@@ -305,6 +305,7 @@ impl<'a> ReaderSession<'a> {
         budget: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<ReadReply, ReaderError> {
+        reply.validate_outcome()?;
         let Pending {
             continuation: mut c,
             ..

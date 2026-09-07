@@ -177,6 +177,7 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
                 .ok_or("reader schema")?
                 .clone(),
         ],
+        head_providers: vec![],
         category_modes: vec![],
         providers: vec![],
         allowlist: vec![],

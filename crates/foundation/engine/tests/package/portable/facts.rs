@@ -379,6 +379,75 @@ fn facts_all_reply_branches_keep_report_only_sources_and_request_relative_grants
             b.usage().source_bytes,
             if branch == 1 || branch == 3 { 16 } else { 17 }
         );
+        // Overflow is legal in a standalone Report, but only Stopped can
+        // carry it as an operation result (regardless of the stopping reason).
+        let mut overflow = match &reply {
+            FactsReply::Complete {
+                delta,
+                report,
+                sources,
+                source_maps,
+            } => FactsReply::Complete {
+                delta: delta.clone(),
+                report: report.clone(),
+                sources: sources.clone(),
+                source_maps: source_maps.clone(),
+            },
+            FactsReply::Invalid {
+                partial,
+                report,
+                sources,
+                source_maps,
+            } => FactsReply::Invalid {
+                partial: partial.clone(),
+                report: report.clone(),
+                sources: sources.clone(),
+                source_maps: source_maps.clone(),
+            },
+            FactsReply::Stopped {
+                reason,
+                partial,
+                report,
+                sources,
+                source_maps,
+            } => FactsReply::Stopped {
+                reason: *reason,
+                partial: partial.clone(),
+                report: report.clone(),
+                sources: sources.clone(),
+                source_maps: source_maps.clone(),
+            },
+        };
+        let overflow_report = match &mut overflow {
+            FactsReply::Complete { report, .. }
+            | FactsReply::Invalid { report, .. }
+            | FactsReply::Stopped { report, .. } => report,
+        };
+        overflow_report.trace_overflow = Some(TraceOverflow { dropped: 1 });
+        let native = overflow.validate(&proof, &mut budget(), codec.source_admission());
+        assert_eq!(native.is_ok(), branch >= 3);
+        assert_eq!(
+            reply_to_value(&overflow, &proof, &mut codec, &mut budget()).is_ok(),
+            branch >= 3
+        );
+        let mut raw_overflow = value.clone();
+        let report_index = if branch >= 3 { 2 } else { 1 };
+        record(&mut variant(&mut raw_overflow)?[report_index])?[2] =
+            NdfValue::Some(Box::new(NdfValue::Record(nepl3_core::value::Record {
+                schema: registry
+                    .selected("nepl3.foundation", 1)
+                    .ok_or("foundation")?
+                    .clone(),
+                kind: "TraceOverflow".into(),
+                fields: vec![NdfValue::U64(1)],
+            })));
+        registry
+            .validate(&expected("FactsReply"), &raw_overflow, &mut budget())
+            .map_err(err)?;
+        assert_eq!(
+            reply_from_value(&raw_overflow, &proof, &mut codec, &mut budget()).is_ok(),
+            branch >= 3
+        );
         for resource in 0..5 {
             for encode in [true, false] {
                 let mut limits = budget().limits();

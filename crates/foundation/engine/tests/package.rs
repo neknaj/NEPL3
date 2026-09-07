@@ -9,6 +9,8 @@ use nepl3_reader::{
     plan::ReaderPlan,
     tokenizer::{ReaderMode, TakeRule, TokenReader},
 };
+#[path = "package/head.rs"]
+mod head;
 #[path = "package/portable.rs"]
 mod portable;
 type TestResult = Result<(), Box<dyn std::error::Error>>;
@@ -231,6 +233,7 @@ fn persistent_tree_checks_parent_reads_spelling_payload_and_concrete_owner() -> 
                 .ok_or("foundation")?
                 .clone(),
         ],
+        head_providers: vec![],
         category_modes: vec![],
         providers: vec![],
         allowlist: vec![],
@@ -901,6 +904,7 @@ fn resolved_profile_pins_real_package_host_providers_resources_and_foreign_modes
                 .ok_or("foundation")?
                 .clone(),
         ],
+        head_providers: vec![],
         category_modes: vec![CategoryMode {
             alias: "Guest".into(),
             category: "Expr".into(),

@@ -107,6 +107,17 @@ pub struct ParseContinuation {
     pub progress: ParseProgress,
     pub tokenizer: Box<TokenizationContinuation>,
 }
+/// The provider receives only `call`; this echoed parser state is retained by
+/// the host and compared with the session's private pending slot on resumption.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct HeadContinuation {
+    pub session_id: String,
+    pub usage: nepl3_core::budget::Usage,
+    pub depth_base: u64,
+    pub progress: ParseProgress,
+    pub call: crate::head::HeadCall,
+    pub pending_token: Option<Token>,
+}
 #[derive(Debug, Eq, PartialEq)]
 pub enum ParseOutcome {
     Complete {
@@ -132,6 +143,10 @@ pub enum ParseOutcome {
     Await {
         call: Box<ProviderCall>,
         continuation: Box<ParseContinuation>,
+    },
+    AwaitHead {
+        call: Box<crate::head::HeadCall>,
+        continuation: Box<HeadContinuation>,
     },
     Reserve {
         request: ReservationRequest,

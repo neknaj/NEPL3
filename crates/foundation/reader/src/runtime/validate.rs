@@ -1,6 +1,29 @@
 //! Boundary checking shared by native and externally supplied provider results.
 use super::*;
 use nepl3_core::{origin::SourceMap, schema::TypeDescriptor};
+impl ProviderReply {
+    /// Check the constant-size outcome/report tag invariant before consuming a
+    /// pending slot. Payload, schema, source and usage validation still occurs
+    /// at the provider boundary. Terminal event overflow requires a stopped result.
+    pub fn validate_outcome(&self) -> Result<(), ReaderError> {
+        let overflow = match self {
+            Self::Read(reply) => match reply.as_ref() {
+                ReadReply::Stopped { .. } => return Ok(()),
+                ReadReply::Matched { report, .. }
+                | ReadReply::NoMatch { report, .. }
+                | ReadReply::NeedMore { report, .. }
+                | ReadReply::Failed { report, .. }
+                | ReadReply::Await { report, .. } => report.trace_overflow.is_some(),
+            },
+            Self::Transform(reply) => reply.report.trace_overflow.is_some(),
+        };
+        if overflow {
+            Err(ReaderError::ProviderContract)
+        } else {
+            Ok(())
+        }
+    }
+}
 pub(crate) fn request(
     request: &ReadRequest<'_>,
     sources: &SourceStore,
@@ -54,6 +77,7 @@ pub(super) fn provider(
     budget: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> Result<Outcome, ReaderError> {
+    reply.validate_outcome()?;
     let (operation, kind) = match call {
         ProviderCall::Read { operation, .. } => (operation, ProviderKind::Read),
         ProviderCall::Transform { operation, .. } => (operation, ProviderKind::Transform),
