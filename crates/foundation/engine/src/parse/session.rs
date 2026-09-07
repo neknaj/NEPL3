@@ -1578,7 +1578,13 @@ impl<'a> ParseSession<'a> {
                 }),
                 Err(error) => Err(error),
             },
-            Err(error) => Err(error.into()),
+            Err(error) => {
+                if error.stop_reason().is_none() {
+                    self.pending = Some(pending);
+                    return Err(error.into());
+                }
+                Err(error.into())
+            }
         };
         self.finish(pending.machine, result, pending.depth_base, budget)
     }

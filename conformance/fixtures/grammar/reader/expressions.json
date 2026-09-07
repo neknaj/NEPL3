@@ -1,0 +1,1635 @@
+{
+  "root": {
+    "category": "Grammar/Root",
+    "fields": {
+      "declarations": {
+        "heads": [
+          [
+            23,
+            27
+          ],
+          [
+            55,
+            59
+          ],
+          [
+            93,
+            97
+          ],
+          [
+            152,
+            156
+          ],
+          [
+            216,
+            220
+          ],
+          [
+            250,
+            254
+          ],
+          [
+            284,
+            288
+          ],
+          [
+            327,
+            331
+          ],
+          [
+            370,
+            374
+          ],
+          [
+            404,
+            408
+          ],
+          [
+            436,
+            440
+          ],
+          [
+            474,
+            478
+          ],
+          [
+            525,
+            529
+          ],
+          [
+            578,
+            582
+          ],
+          [
+            623,
+            627
+          ],
+          [
+            670,
+            674
+          ],
+          [
+            697,
+            701
+          ],
+          [
+            754,
+            758
+          ],
+          [
+            805,
+            809
+          ],
+          [
+            858,
+            862
+          ],
+          [
+            887,
+            891
+          ],
+          [
+            907,
+            911
+          ],
+          [
+            941,
+            945
+          ],
+          [
+            969,
+            972
+          ]
+        ],
+        "list": [
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "text": {
+                    "literal": "Text",
+                    "raw": "\"x\"",
+                    "span": [
+                      51,
+                      54
+                    ],
+                    "value": "x"
+                  }
+                },
+                "head": [
+                  43,
+                  50
+                ],
+                "kind": "Literal",
+                "span": [
+                  43,
+                  54
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Literal",
+                "span": [
+                  35,
+                  42
+                ],
+                "value": "Literal"
+              }
+            },
+            "head": [
+              28,
+              34
+            ],
+            "kind": "Reader",
+            "span": [
+              28,
+              54
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "class": {
+                    "category": "Grammar/CharClass",
+                    "fields": {},
+                    "head": [
+                      81,
+                      92
+                    ],
+                    "kind": "Asciiletter",
+                    "span": [
+                      81,
+                      92
+                    ]
+                  }
+                },
+                "head": [
+                  74,
+                  80
+                ],
+                "kind": "Scalar",
+                "span": [
+                  74,
+                  92
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Scalar",
+                "span": [
+                  67,
+                  73
+                ],
+                "value": "Scalar"
+              }
+            },
+            "head": [
+              60,
+              66
+            ],
+            "kind": "Reader",
+            "span": [
+              60,
+              92
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "parts": {
+                    "heads": [
+                      [
+                        113,
+                        117
+                      ],
+                      [
+                        130,
+                        134
+                      ],
+                      [
+                        148,
+                        151
+                      ]
+                    ],
+                    "list": [
+                      {
+                        "category": "Grammar/ReaderExpr",
+                        "fields": {
+                          "text": {
+                            "literal": "Text",
+                            "raw": "\"x\"",
+                            "span": [
+                              126,
+                              129
+                            ],
+                            "value": "x"
+                          }
+                        },
+                        "head": [
+                          118,
+                          125
+                        ],
+                        "kind": "Literal",
+                        "span": [
+                          118,
+                          129
+                        ]
+                      },
+                      {
+                        "category": "Grammar/ReaderExpr",
+                        "fields": {
+                          "class": {
+                            "category": "Grammar/CharClass",
+                            "fields": {},
+                            "head": [
+                              142,
+                              147
+                            ],
+                            "kind": "Digit",
+                            "span": [
+                              142,
+                              147
+                            ]
+                          }
+                        },
+                        "head": [
+                          135,
+                          141
+                        ],
+                        "kind": "Scalar",
+                        "span": [
+                          135,
+                          147
+                        ]
+                      }
+                    ],
+                    "span": [
+                      113,
+                      151
+                    ]
+                  }
+                },
+                "head": [
+                  109,
+                  112
+                ],
+                "kind": "Seq",
+                "span": [
+                  109,
+                  151
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Seq",
+                "span": [
+                  105,
+                  108
+                ],
+                "value": "Seq"
+              }
+            },
+            "head": [
+              98,
+              104
+            ],
+            "kind": "Reader",
+            "span": [
+              98,
+              151
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "alternatives": {
+                    "heads": [
+                      [
+                        178,
+                        182
+                      ],
+                      [
+                        195,
+                        199
+                      ],
+                      [
+                        212,
+                        215
+                      ]
+                    ],
+                    "list": [
+                      {
+                        "category": "Grammar/ReaderExpr",
+                        "fields": {
+                          "text": {
+                            "literal": "Text",
+                            "raw": "\"x\"",
+                            "span": [
+                              191,
+                              194
+                            ],
+                            "value": "x"
+                          }
+                        },
+                        "head": [
+                          183,
+                          190
+                        ],
+                        "kind": "Literal",
+                        "span": [
+                          183,
+                          194
+                        ]
+                      },
+                      {
+                        "category": "Grammar/ReaderExpr",
+                        "fields": {
+                          "text": {
+                            "literal": "Text",
+                            "raw": "\"y\"",
+                            "span": [
+                              208,
+                              211
+                            ],
+                            "value": "y"
+                          }
+                        },
+                        "head": [
+                          200,
+                          207
+                        ],
+                        "kind": "Literal",
+                        "span": [
+                          200,
+                          211
+                        ]
+                      }
+                    ],
+                    "span": [
+                      178,
+                      215
+                    ]
+                  }
+                },
+                "head": [
+                  171,
+                  177
+                ],
+                "kind": "Choice",
+                "span": [
+                  171,
+                  215
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Choice",
+                "span": [
+                  164,
+                  170
+                ],
+                "value": "Choice"
+              }
+            },
+            "head": [
+              157,
+              163
+            ],
+            "kind": "Reader",
+            "span": [
+              157,
+              215
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "body": {
+                    "category": "Grammar/ReaderExpr",
+                    "fields": {
+                      "text": {
+                        "literal": "Text",
+                        "raw": "\"x\"",
+                        "span": [
+                          246,
+                          249
+                        ],
+                        "value": "x"
+                      }
+                    },
+                    "head": [
+                      238,
+                      245
+                    ],
+                    "kind": "Literal",
+                    "span": [
+                      238,
+                      249
+                    ]
+                  }
+                },
+                "head": [
+                  233,
+                  237
+                ],
+                "kind": "Many",
+                "span": [
+                  233,
+                  249
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Many",
+                "span": [
+                  228,
+                  232
+                ],
+                "value": "Many"
+              }
+            },
+            "head": [
+              221,
+              227
+            ],
+            "kind": "Reader",
+            "span": [
+              221,
+              249
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "body": {
+                    "category": "Grammar/ReaderExpr",
+                    "fields": {
+                      "text": {
+                        "literal": "Text",
+                        "raw": "\"x\"",
+                        "span": [
+                          280,
+                          283
+                        ],
+                        "value": "x"
+                      }
+                    },
+                    "head": [
+                      272,
+                      279
+                    ],
+                    "kind": "Literal",
+                    "span": [
+                      272,
+                      283
+                    ]
+                  }
+                },
+                "head": [
+                  267,
+                  271
+                ],
+                "kind": "Some",
+                "span": [
+                  267,
+                  283
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Some",
+                "span": [
+                  262,
+                  266
+                ],
+                "value": "Some"
+              }
+            },
+            "head": [
+              255,
+              261
+            ],
+            "kind": "Reader",
+            "span": [
+              255,
+              283
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "body": {
+                    "category": "Grammar/ReaderExpr",
+                    "fields": {
+                      "class": {
+                        "category": "Grammar/CharClass",
+                        "fields": {},
+                        "head": [
+                          321,
+                          326
+                        ],
+                        "kind": "Digit",
+                        "span": [
+                          321,
+                          326
+                        ]
+                      }
+                    },
+                    "head": [
+                      314,
+                      320
+                    ],
+                    "kind": "Scalar",
+                    "span": [
+                      314,
+                      326
+                    ]
+                  }
+                },
+                "head": [
+                  305,
+                  313
+                ],
+                "kind": "Optional",
+                "span": [
+                  305,
+                  326
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Optional",
+                "span": [
+                  296,
+                  304
+                ],
+                "value": "Optional"
+              }
+            },
+            "head": [
+              289,
+              295
+            ],
+            "kind": "Reader",
+            "span": [
+              289,
+              326
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "body": {
+                    "category": "Grammar/ReaderExpr",
+                    "fields": {
+                      "class": {
+                        "category": "Grammar/CharClass",
+                        "fields": {},
+                        "head": [
+                          364,
+                          369
+                        ],
+                        "kind": "Digit",
+                        "span": [
+                          364,
+                          369
+                        ]
+                      }
+                    },
+                    "head": [
+                      357,
+                      363
+                    ],
+                    "kind": "Scalar",
+                    "span": [
+                      357,
+                      369
+                    ]
+                  },
+                  "max": {
+                    "literal": "Nat",
+                    "raw": "2",
+                    "span": [
+                      355,
+                      356
+                    ],
+                    "value": "2"
+                  },
+                  "min": {
+                    "literal": "Nat",
+                    "raw": "1",
+                    "span": [
+                      353,
+                      354
+                    ],
+                    "value": "1"
+                  }
+                },
+                "head": [
+                  346,
+                  352
+                ],
+                "kind": "Repeat",
+                "span": [
+                  346,
+                  369
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Repeat",
+                "span": [
+                  339,
+                  345
+                ],
+                "value": "Repeat"
+              }
+            },
+            "head": [
+              332,
+              338
+            ],
+            "kind": "Reader",
+            "span": [
+              332,
+              369
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "body": {
+                    "category": "Grammar/ReaderExpr",
+                    "fields": {
+                      "text": {
+                        "literal": "Text",
+                        "raw": "\"x\"",
+                        "span": [
+                          400,
+                          403
+                        ],
+                        "value": "x"
+                      }
+                    },
+                    "head": [
+                      392,
+                      399
+                    ],
+                    "kind": "Literal",
+                    "span": [
+                      392,
+                      403
+                    ]
+                  }
+                },
+                "head": [
+                  387,
+                  391
+                ],
+                "kind": "Look",
+                "span": [
+                  387,
+                  403
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Look",
+                "span": [
+                  382,
+                  386
+                ],
+                "value": "Look"
+              }
+            },
+            "head": [
+              375,
+              381
+            ],
+            "kind": "Reader",
+            "span": [
+              375,
+              403
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "body": {
+                    "category": "Grammar/ReaderExpr",
+                    "fields": {
+                      "text": {
+                        "literal": "Text",
+                        "raw": "\"x\"",
+                        "span": [
+                          432,
+                          435
+                        ],
+                        "value": "x"
+                      }
+                    },
+                    "head": [
+                      424,
+                      431
+                    ],
+                    "kind": "Literal",
+                    "span": [
+                      424,
+                      435
+                    ]
+                  }
+                },
+                "head": [
+                  420,
+                  423
+                ],
+                "kind": "Not",
+                "span": [
+                  420,
+                  435
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Not",
+                "span": [
+                  416,
+                  419
+                ],
+                "value": "Not"
+              }
+            },
+            "head": [
+              409,
+              415
+            ],
+            "kind": "Reader",
+            "span": [
+              409,
+              435
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "body": {
+                    "category": "Grammar/ReaderExpr",
+                    "fields": {
+                      "text": {
+                        "literal": "Text",
+                        "raw": "\"x\"",
+                        "span": [
+                          470,
+                          473
+                        ],
+                        "value": "x"
+                      }
+                    },
+                    "head": [
+                      462,
+                      469
+                    ],
+                    "kind": "Literal",
+                    "span": [
+                      462,
+                      473
+                    ]
+                  }
+                },
+                "head": [
+                  455,
+                  461
+                ],
+                "kind": "Commit",
+                "span": [
+                  455,
+                  473
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Commit",
+                "span": [
+                  448,
+                  454
+                ],
+                "value": "Commit"
+              }
+            },
+            "head": [
+              441,
+              447
+            ],
+            "kind": "Reader",
+            "span": [
+              441,
+              473
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "body": {
+                    "category": "Grammar/ReaderExpr",
+                    "fields": {
+                      "class": {
+                        "category": "Grammar/CharClass",
+                        "fields": {},
+                        "head": [
+                          513,
+                          524
+                        ],
+                        "kind": "Asciiletter",
+                        "span": [
+                          513,
+                          524
+                        ]
+                      }
+                    },
+                    "head": [
+                      506,
+                      512
+                    ],
+                    "kind": "Scalar",
+                    "span": [
+                      506,
+                      524
+                    ]
+                  },
+                  "name": {
+                    "literal": "Name",
+                    "raw": "cap",
+                    "span": [
+                      502,
+                      505
+                    ],
+                    "value": "cap"
+                  }
+                },
+                "head": [
+                  494,
+                  501
+                ],
+                "kind": "Capture",
+                "span": [
+                  494,
+                  524
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Capture",
+                "span": [
+                  486,
+                  493
+                ],
+                "value": "Capture"
+              }
+            },
+            "head": [
+              479,
+              485
+            ],
+            "kind": "Reader",
+            "span": [
+              479,
+              524
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "body": {
+                    "category": "Grammar/ReaderExpr",
+                    "fields": {
+                      "class": {
+                        "category": "Grammar/CharClass",
+                        "fields": {},
+                        "head": [
+                          566,
+                          577
+                        ],
+                        "kind": "Asciiletter",
+                        "span": [
+                          566,
+                          577
+                        ]
+                      }
+                    },
+                    "head": [
+                      559,
+                      565
+                    ],
+                    "kind": "Scalar",
+                    "span": [
+                      559,
+                      577
+                    ]
+                  },
+                  "role": {
+                    "literal": "Name",
+                    "raw": "content",
+                    "span": [
+                      551,
+                      558
+                    ],
+                    "value": "content"
+                  }
+                },
+                "head": [
+                  544,
+                  550
+                ],
+                "kind": "Region",
+                "span": [
+                  544,
+                  577
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Region",
+                "span": [
+                  537,
+                  543
+                ],
+                "value": "Region"
+              }
+            },
+            "head": [
+              530,
+              536
+            ],
+            "kind": "Reader",
+            "span": [
+              530,
+              577
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "body": {
+                    "category": "Grammar/ReaderExpr",
+                    "fields": {
+                      "class": {
+                        "category": "Grammar/CharClass",
+                        "fields": {},
+                        "head": [
+                          611,
+                          622
+                        ],
+                        "kind": "Asciiletter",
+                        "span": [
+                          611,
+                          622
+                        ]
+                      }
+                    },
+                    "head": [
+                      604,
+                      610
+                    ],
+                    "kind": "Scalar",
+                    "span": [
+                      604,
+                      622
+                    ]
+                  },
+                  "kind": {
+                    "literal": "Name",
+                    "raw": "Box",
+                    "span": [
+                      600,
+                      603
+                    ],
+                    "value": "Box"
+                  }
+                },
+                "head": [
+                  595,
+                  599
+                ],
+                "kind": "Node",
+                "span": [
+                  595,
+                  622
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Node",
+                "span": [
+                  590,
+                  594
+                ],
+                "value": "Node"
+              }
+            },
+            "head": [
+              583,
+              589
+            ],
+            "kind": "Reader",
+            "span": [
+              583,
+              622
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "body": {
+                    "category": "Grammar/ReaderExpr",
+                    "fields": {
+                      "class": {
+                        "category": "Grammar/CharClass",
+                        "fields": {},
+                        "head": [
+                          658,
+                          669
+                        ],
+                        "kind": "Asciiletter",
+                        "span": [
+                          658,
+                          669
+                        ]
+                      }
+                    },
+                    "head": [
+                      651,
+                      657
+                    ],
+                    "kind": "Scalar",
+                    "span": [
+                      651,
+                      669
+                    ]
+                  }
+                },
+                "head": [
+                  643,
+                  650
+                ],
+                "kind": "Discard",
+                "span": [
+                  643,
+                  669
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Discard",
+                "span": [
+                  635,
+                  642
+                ],
+                "value": "Discard"
+              }
+            },
+            "head": [
+              628,
+              634
+            ],
+            "kind": "Reader",
+            "span": [
+              628,
+              669
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "name": {
+                    "literal": "Name",
+                    "raw": "Scalar",
+                    "span": [
+                      690,
+                      696
+                    ],
+                    "value": "Scalar"
+                  }
+                },
+                "head": [
+                  686,
+                  689
+                ],
+                "kind": "Ref",
+                "span": [
+                  686,
+                  696
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Ref",
+                "span": [
+                  682,
+                  685
+                ],
+                "value": "Ref"
+              }
+            },
+            "head": [
+              675,
+              681
+            ],
+            "kind": "Reader",
+            "span": [
+              675,
+              696
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "body": {
+                    "category": "Grammar/ReaderExpr",
+                    "fields": {
+                      "class": {
+                        "category": "Grammar/CharClass",
+                        "fields": {},
+                        "head": [
+                          742,
+                          753
+                        ],
+                        "kind": "Asciiletter",
+                        "span": [
+                          742,
+                          753
+                        ]
+                      }
+                    },
+                    "head": [
+                      735,
+                      741
+                    ],
+                    "kind": "Scalar",
+                    "span": [
+                      735,
+                      753
+                    ]
+                  },
+                  "decoder": {
+                    "literal": "Text",
+                    "raw": "\"transform\"",
+                    "span": [
+                      723,
+                      734
+                    ],
+                    "value": "transform"
+                  }
+                },
+                "head": [
+                  716,
+                  722
+                ],
+                "kind": "Decode",
+                "span": [
+                  716,
+                  753
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Decode",
+                "span": [
+                  709,
+                  715
+                ],
+                "value": "Decode"
+              }
+            },
+            "head": [
+              702,
+              708
+            ],
+            "kind": "Reader",
+            "span": [
+              702,
+              753
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "body": {
+                    "category": "Grammar/ReaderExpr",
+                    "fields": {
+                      "class": {
+                        "category": "Grammar/CharClass",
+                        "fields": {},
+                        "head": [
+                          793,
+                          804
+                        ],
+                        "kind": "Asciiletter",
+                        "span": [
+                          793,
+                          804
+                        ]
+                      }
+                    },
+                    "head": [
+                      786,
+                      792
+                    ],
+                    "kind": "Scalar",
+                    "span": [
+                      786,
+                      804
+                    ]
+                  },
+                  "provider": {
+                    "literal": "Text",
+                    "raw": "\"transform\"",
+                    "span": [
+                      774,
+                      785
+                    ],
+                    "value": "transform"
+                  }
+                },
+                "head": [
+                  770,
+                  773
+                ],
+                "kind": "Map",
+                "span": [
+                  770,
+                  804
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Map",
+                "span": [
+                  766,
+                  769
+                ],
+                "value": "Map"
+              }
+            },
+            "head": [
+              759,
+              765
+            ],
+            "kind": "Reader",
+            "span": [
+              759,
+              804
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "first": {
+                    "category": "Grammar/ReaderExpr",
+                    "fields": {
+                      "class": {
+                        "category": "Grammar/CharClass",
+                        "fields": {},
+                        "head": [
+                          834,
+                          845
+                        ],
+                        "kind": "Asciiletter",
+                        "span": [
+                          834,
+                          845
+                        ]
+                      }
+                    },
+                    "head": [
+                      827,
+                      833
+                    ],
+                    "kind": "Scalar",
+                    "span": [
+                      827,
+                      845
+                    ]
+                  },
+                  "provider": {
+                    "literal": "Text",
+                    "raw": "\"dependent\"",
+                    "span": [
+                      846,
+                      857
+                    ],
+                    "value": "dependent"
+                  }
+                },
+                "head": [
+                  822,
+                  826
+                ],
+                "kind": "Then",
+                "span": [
+                  822,
+                  857
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Then",
+                "span": [
+                  817,
+                  821
+                ],
+                "value": "Then"
+              }
+            },
+            "head": [
+              810,
+              816
+            ],
+            "kind": "Reader",
+            "span": [
+              810,
+              857
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "provider": {
+                    "literal": "Text",
+                    "raw": "\"read\"",
+                    "span": [
+                      880,
+                      886
+                    ],
+                    "value": "read"
+                  }
+                },
+                "head": [
+                  875,
+                  879
+                ],
+                "kind": "Call",
+                "span": [
+                  875,
+                  886
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Call",
+                "span": [
+                  870,
+                  874
+                ],
+                "value": "Call"
+              }
+            },
+            "head": [
+              863,
+              869
+            ],
+            "kind": "Reader",
+            "span": [
+              863,
+              886
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {},
+                "head": [
+                  903,
+                  906
+                ],
+                "kind": "Eof",
+                "span": [
+                  903,
+                  906
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Eof",
+                "span": [
+                  899,
+                  902
+                ],
+                "value": "Eof"
+              }
+            },
+            "head": [
+              892,
+              898
+            ],
+            "kind": "Reader",
+            "span": [
+              892,
+              906
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "count": {
+                    "literal": "Nat",
+                    "raw": "2",
+                    "span": [
+                      939,
+                      940
+                    ],
+                    "value": "2"
+                  }
+                },
+                "head": [
+                  929,
+                  938
+                ],
+                "kind": "Takecount",
+                "span": [
+                  929,
+                  940
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Takecount",
+                "span": [
+                  919,
+                  928
+                ],
+                "value": "Takecount"
+              }
+            },
+            "head": [
+              912,
+              918
+            ],
+            "kind": "Reader",
+            "span": [
+              912,
+              940
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "delimiter": {
+                    "literal": "Text",
+                    "raw": "\";\"",
+                    "span": [
+                      965,
+                      968
+                    ],
+                    "value": ";"
+                  }
+                },
+                "head": [
+                  959,
+                  964
+                ],
+                "kind": "Until",
+                "span": [
+                  959,
+                  968
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Until",
+                "span": [
+                  953,
+                  958
+                ],
+                "value": "Until"
+              }
+            },
+            "head": [
+              946,
+              952
+            ],
+            "kind": "Reader",
+            "span": [
+              946,
+              968
+            ]
+          }
+        ],
+        "span": [
+          23,
+          972
+        ]
+      },
+      "name": {
+        "literal": "Name",
+        "raw": "Matrix",
+        "span": [
+          9,
+          15
+        ],
+        "value": "Matrix"
+      },
+      "revision": {
+        "literal": "Nat",
+        "raw": "1",
+        "span": [
+          16,
+          17
+        ],
+        "value": "1"
+      },
+      "root": {
+        "literal": "Name",
+        "raw": "Root",
+        "span": [
+          18,
+          22
+        ],
+        "value": "Root"
+      }
+    },
+    "head": [
+      0,
+      8
+    ],
+    "kind": "Language",
+    "span": [
+      0,
+      972
+    ]
+  },
+  "schema": "nepl3.grammar-seed-input/1",
+  "source": {
+    "digest": "a86339e11dd25da9bc4a005c4c5c69b13a5f0a7e0e8a3bcb40d82f4e0cbd6c45",
+    "revision": 0,
+    "sourceId": "conformance/fixtures/grammar/reader/expressions.neplg",
+    "text": "language Matrix 1 Root\ncons reader Literal literal \"x\"\ncons reader Scalar scalar asciiLetter\ncons reader Seq seq cons literal \"x\" cons scalar digit nil\ncons reader Choice choice cons literal \"x\" cons literal \"y\" nil\ncons reader Many many literal \"x\"\ncons reader Some some literal \"x\"\ncons reader Optional optional scalar digit\ncons reader Repeat repeat 1 2 scalar digit\ncons reader Look look literal \"x\"\ncons reader Not not literal \"x\"\ncons reader Commit commit literal \"x\"\ncons reader Capture capture cap scalar asciiLetter\ncons reader Region region content scalar asciiLetter\ncons reader Node node Box scalar asciiLetter\ncons reader Discard discard scalar asciiLetter\ncons reader Ref ref Scalar\ncons reader Decode decode \"transform\" scalar asciiLetter\ncons reader Map map \"transform\" scalar asciiLetter\ncons reader Then then scalar asciiLetter \"dependent\"\ncons reader Call call \"read\"\ncons reader Eof eof\ncons reader Takecount takecount 2\ncons reader Until until \";\"\nnil\n",
+    "uri": "memory:grammar-example"
+  }
+}

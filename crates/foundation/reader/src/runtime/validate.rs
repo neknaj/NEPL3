@@ -15,7 +15,10 @@ impl ProviderReply {
                 | ReadReply::Failed { report, .. }
                 | ReadReply::Await { report, .. } => report.trace_overflow.is_some(),
             },
-            Self::Transform(reply) => reply.report.trace_overflow.is_some(),
+            Self::Transform(reply) => {
+                !matches!(reply.outcome, TransformOutcome::Stopped { .. })
+                    && reply.report.trace_overflow.is_some()
+            }
         };
         if overflow {
             Err(ReaderError::ProviderContract)
@@ -66,237 +69,10 @@ pub(crate) fn request(
 
     Ok(())
 }
-#[allow(clippy::too_many_arguments)]
-pub(super) fn provider(
-    machine: &mut Machine<'_, '_>,
-    frame: &ReaderFrame,
-    call: &ProviderCall,
-    reply: ProviderReply,
-    saved: Usage,
-    sources: &SourceStore,
-    budget: &mut Budget,
-    admission: &mut SourceAdmission,
-) -> Result<Outcome, ReaderError> {
-    reply.validate_outcome()?;
-    let (operation, kind) = match call {
-        ProviderCall::Read { operation, .. } => (operation, ProviderKind::Read),
-        ProviderCall::Transform { operation, .. } => (operation, ProviderKind::Transform),
-        ProviderCall::Dependent { operation, .. } => (operation, ProviderKind::Dependent),
-    };
-    let signature = machine.checked.plan().provider(operation, kind)?;
-    let original_sources = sources;
-    let base_sources = combined(machine, &[], sources, budget, admission)?;
-    let sources = &base_sources;
-    match (call, reply) {
-        (ProviderCall::Transform { request, .. }, ProviderReply::Transform(reply)) => {
-            let combined = combined(machine, &reply.sources, original_sources, budget, admission)?;
-            let sources = &combined;
-            report(&reply.report, saved, machine.registry, sources, budget)?;
-            machine
-                .registry
-                .validate(&signature.value_output, &reply.value, budget)?;
-            artifacts(
-                machine,
-                &reply.sources,
-                &reply.source_maps,
-                &reply.view,
-                &reply.facts,
-                request.span.start(),
-                request.span.end(),
-                sources,
-                budget,
-                admission,
-            )?;
-            let mut view = reply.view;
-            machine
-                .current
-                .view
-                .elements
-                .truncate(frame.checkpoint.view.elements.len());
-            machine
-                .current
-                .view
-                .roots
-                .truncate(frame.checkpoint.view.roots.len());
-            append_view(&mut machine.current.view, &mut view, budget)?;
-            append_artifacts(
-                machine,
-                reply.facts,
-                reply.sources,
-                reply.source_maps,
-                reply.report,
-                budget,
-            )?;
-            Ok(Outcome::Matched(reply.value))
-        }
-        (ProviderCall::Read { request, .. }, ProviderReply::Read(reply))
-        | (
-            ProviderCall::Dependent {
-                request: DependentRequest { request, .. },
-                ..
-            },
-            ProviderReply::Read(reply),
-        ) => match *reply {
-            ReadReply::Await { .. } => Err(ReaderError::ProviderContract),
-            ReadReply::Matched {
-                value,
-                end,
-                new_state,
-                mut view,
-                facts,
-                sources: added,
-                source_maps,
-                report: returned,
-            } => {
-                if end < request.start || end > request.limit {
-                    return Err(ReaderError::ProviderContract);
-                }
-                machine.request.snapshot.check_range(request.start, end)?;
-                let combined = combined(machine, &added, original_sources, budget, admission)?;
-                let sources = &combined;
-                report(&returned, saved, machine.registry, sources, budget)?;
-                machine
-                    .registry
-                    .validate(&signature.value_output, &value, budget)?;
-                machine
-                    .registry
-                    .validate(&signature.state_type, &new_state, budget)?;
-                artifacts(
-                    machine,
-                    &added,
-                    &source_maps,
-                    &view,
-                    &facts,
-                    request.start,
-                    end,
-                    sources,
-                    budget,
-                    admission,
-                )?;
-                append_view(&mut machine.current.view, &mut view, budget)?;
-                machine.current.cursor = end;
-                machine.current.state = new_state;
-                append_artifacts(machine, facts, added, source_maps, returned, budget)?;
-                Ok(Outcome::Matched(value))
-            }
-            ReadReply::NoMatch {
-                expected,
-                furthest,
-                report: returned,
-                sources: added,
-                source_maps,
-            } => {
-                if furthest < request.start
-                    || !added.is_empty()
-                    || !source_maps.is_empty()
-                    || furthest > request.limit
-                    || !returned.diagnostics.is_empty()
-                    || !returned.events.is_empty()
-                    || returned.trace_overflow.is_some()
-                {
-                    return Err(ReaderError::ProviderContract);
-                }
-                machine.request.snapshot.check_range(furthest, furthest)?;
-                report(&returned, saved, machine.registry, sources, budget)?;
-                expectations(&expected, machine.registry, budget)?;
-                machine.current = copy(&frame.checkpoint, budget)?;
-                Ok(Outcome::NoMatch { expected, furthest })
-            }
-            ReadReply::NeedMore {
-                expected,
-                report: returned,
-                sources: added,
-                source_maps,
-            } => {
-                if request.final_input
-                    || !added.is_empty()
-                    || !source_maps.is_empty()
-                    || !returned.diagnostics.is_empty()
-                    || !returned.events.is_empty()
-                    || returned.trace_overflow.is_some()
-                {
-                    return Err(ReaderError::ProviderContract);
-                }
-                report(&returned, saved, machine.registry, sources, budget)?;
-                expectations(&expected, machine.registry, budget)?;
-                machine.current = copy(&frame.checkpoint, budget)?;
-                Ok(Outcome::NeedMore(expected))
-            }
-            ReadReply::Failed {
-                diagnostic,
-                recovery,
-                report: returned,
-                sources: added,
-                source_maps,
-            } => {
-                let combined = combined(machine, &added, original_sources, budget, admission)?;
-                let sources = &combined;
-                artifacts(
-                    machine,
-                    &added,
-                    &source_maps,
-                    &ViewBundle {
-                        elements: Vec::new(),
-                        roots: Vec::new(),
-                    },
-                    &[],
-                    request.start,
-                    request.limit,
-                    sources,
-                    budget,
-                    admission,
-                )?;
-                report(&returned, saved, machine.registry, sources, budget)?;
-                if returned
-                    .diagnostics
-                    .iter()
-                    .filter(|d| *d == &diagnostic)
-                    .count()
-                    != 1
-                {
-                    return Err(ReaderError::ProviderContract);
-                }
-                if let Some(span) = &recovery {
-                    validate_span(span, sources)?;
-                }
-                append_artifacts(machine, Vec::new(), added, source_maps, returned, budget)?;
-                slot::<Diagnostic>(budget)?;
-                Ok(Outcome::Failed {
-                    diagnostic: Box::new(diagnostic),
-                    recovery,
-                })
-            }
-            ReadReply::Stopped {
-                reason,
-                report: returned,
-                sources: added,
-                source_maps,
-            } => {
-                let combined = combined(machine, &added, original_sources, budget, admission)?;
-                let sources = &combined;
-                artifacts(
-                    machine,
-                    &added,
-                    &source_maps,
-                    &ViewBundle {
-                        elements: Vec::new(),
-                        roots: Vec::new(),
-                    },
-                    &[],
-                    request.start,
-                    request.limit,
-                    sources,
-                    budget,
-                    admission,
-                )?;
-                report(&returned, saved, machine.registry, sources, budget)?;
-                append_artifacts(machine, Vec::new(), added, source_maps, returned, budget)?;
-                Ok(Outcome::Stopped(reason))
-            }
-        },
-        _ => Err(ReaderError::ProviderContract),
-    }
-}
+mod provider;
+pub(super) use provider::apply_provider;
+pub(crate) use provider::{ProviderBoundary, ProviderReplyRef, check_provider};
+
 fn expectations(
     expected: &[Expectation],
     registry: &SchemaRegistry,
@@ -374,7 +150,7 @@ pub(crate) fn accepted_report(
         .validate(sources, added, registry, budget)
         .map_err(report_error)
 }
-fn report(
+pub(crate) fn report(
     report: &Report,
     saved: Usage,
     registry: &SchemaRegistry,
@@ -396,7 +172,7 @@ fn report(
 }
 #[allow(clippy::too_many_arguments)]
 fn artifacts(
-    machine: &Machine<'_, '_>,
+    machine: &ProviderBoundary<'_>,
     added: &[SourceSnapshot],
     maps: &[nepl3_core::origin::Mapping],
     view: &ViewBundle,
@@ -420,10 +196,7 @@ fn artifacts(
     }
     let mapped = SourceMap::validate_mappings(&source_maps, sources, budget)?;
     view.validate_with_maps(sources, machine.registry, &mapped, budget)?;
-    let consumed = machine
-        .request
-        .snapshot
-        .span_with_budget(start, end, budget)?;
+    let consumed = machine.snapshot.span_with_budget(start, end, budget)?;
     for element in &view.elements {
         if !mapped.contains(&consumed, &element.span, budget)? {
             return Err(ReaderError::ProviderContract);
@@ -486,6 +259,9 @@ fn append_artifacts(
     mut report: Report,
     budget: &mut Budget,
 ) -> Result<(), ReaderError> {
+    if report.trace_overflow.is_some() && machine.current.trace_overflow.is_some() {
+        return Err(ReaderError::ProviderContract);
+    }
     let sizes = [
         (facts.len(), core::mem::size_of::<ReaderFact>()),
         (sources.len(), core::mem::size_of::<SourceSnapshot>()),
@@ -511,42 +287,61 @@ fn append_artifacts(
     machine.current.diagnostics.append(&mut report.diagnostics);
     machine.current.events.append(&mut report.events);
     if let Some(overflow) = report.trace_overflow {
-        if machine.current.trace_overflow.is_some() {
-            return Err(ReaderError::ProviderContract);
-        }
         machine.current.trace_overflow = Some(overflow);
     }
     Ok(())
 }
 
 fn combined(
-    machine: &Machine<'_, '_>,
+    machine: &ProviderBoundary<'_>,
     added: &[SourceSnapshot],
     sources: &SourceStore,
     budget: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> Result<SourceStore, ReaderError> {
     let mut combined = SourceStore::default();
-    for source in core::iter::once(machine.request.snapshot)
-        .chain(machine.request.context.sources().iter().copied())
+    for source in core::iter::once(machine.snapshot)
+        .chain(machine.declared.iter())
         .chain(&machine.current.sources)
     {
         combined.insert(copy(source, budget)?)?;
     }
     for (index, source) in added.iter().enumerate() {
+        for prior in &added[..index] {
+            budget.charge(
+                Resource::Work,
+                (prior.identity().source.0.len() as u64)
+                    .saturating_add(source.identity().source.0.len() as u64)
+                    .saturating_add(34),
+            )?;
+        }
         if added[..index]
             .iter()
             .any(|s| s.identity() == source.identity())
         {
             return Err(ReaderError::ProviderContract);
         }
-        budget.charge(Resource::Work, sources.snapshots().len() as u64)?;
-        if sources.snapshots().iter().any(|existing| {
-            existing.identity().source == source.identity().source
-                && existing.identity().revision == source.identity().revision
-                && existing != source
-        }) {
-            return Err(SourceError::IdentityConflict.into());
+        for prior in sources.snapshots() {
+            budget.charge(
+                Resource::Work,
+                (prior.identity().source.0.len() as u64)
+                    .saturating_add(source.identity().source.0.len() as u64)
+                    .saturating_add(34),
+            )?;
+            if prior.identity().source == source.identity().source
+                && prior.identity().revision == source.identity().revision
+            {
+                budget.charge(
+                    Resource::Work,
+                    (prior.uri().len() as u64)
+                        .saturating_add(source.uri().len() as u64)
+                        .saturating_add(prior.text().len() as u64)
+                        .saturating_add(source.text().len() as u64),
+                )?;
+                if prior != source {
+                    return Err(SourceError::IdentityConflict.into());
+                }
+            }
         }
         admission.admit_existing(source, budget)?;
         combined.insert(copy(source, budget)?)?;

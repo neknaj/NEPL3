@@ -105,12 +105,25 @@ pub enum ProviderCall {
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TransformReply {
-    pub value: NdfValue,
-    pub view: ViewBundle,
-    pub facts: Vec<ReaderFact>,
+    pub outcome: TransformOutcome,
     pub sources: Vec<SourceSnapshot>,
     pub source_maps: Vec<Mapping>,
     pub report: Report,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum TransformOutcome {
+    Complete {
+        value: NdfValue,
+        view: ViewBundle,
+        facts: Vec<ReaderFact>,
+    },
+    Failed {
+        diagnostic: Box<Diagnostic>,
+        recovery: Option<Span>,
+    },
+    Stopped {
+        reason: StopReason,
+    },
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ReaderCheckpoint {

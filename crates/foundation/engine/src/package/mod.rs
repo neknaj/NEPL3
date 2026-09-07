@@ -6,5 +6,5 @@ mod model;
 mod reader;
 mod shape;
 pub use bindings::{BindingFailure, BindingOwner};
-pub use check::{CheckedLanguagePackage, PackageError};
+pub use check::{CheckedLanguagePackage, PackageError, PackageFailure, PackageSubject};
 pub use model::*;

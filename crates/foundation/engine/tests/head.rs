@@ -479,6 +479,26 @@ fn run_case(input: &str, case: Case, exercise_rejections: bool) -> Result<ParseR
                     nepl3_reader::runtime::ReaderError::ProviderContract
                 ))
             );
+            // The selected provider promises a compound payload. A malformed
+            // value must preserve all three pending layers for the same retry.
+            let mut invalid = good.as_ref().clone();
+            let nepl3_reader::model::ReadReply::Matched { value: payload, .. } = &mut invalid
+            else {
+                return Err("matched reply".into());
+            };
+            *payload = nepl3_core::value::NdfValue::Unit;
+            assert!(matches!(
+                session.resume(
+                    continuation,
+                    nepl3_reader::runtime::ProviderReply::Read(Box::new(invalid)),
+                    &sources,
+                    &mut b,
+                    &mut a
+                ),
+                Err(ParseError::Reader(
+                    nepl3_reader::runtime::ReaderError::Schema(_)
+                ))
+            ));
             reply = session
                 .resume(continuation, value, &sources, &mut b, &mut a)
                 .map_err(|v| format!("selector resume {v:?}"))?;

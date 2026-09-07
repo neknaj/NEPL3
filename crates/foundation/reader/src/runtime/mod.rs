@@ -33,6 +33,12 @@ pub enum ReaderError {
     Continuation,
     ProviderContract,
 }
+impl ReaderError {
+    /// Nested typed resource stops retain their original cause at host boundaries.
+    pub fn stop_reason(&self) -> Option<StopReason> {
+        stop_reason(self)
+    }
+}
 impl From<StopReason> for ReaderError {
     fn from(e: StopReason) -> Self {
         Self::Stopped(e)
@@ -305,7 +311,14 @@ impl<'a> ReaderSession<'a> {
         budget: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<ReadReply, ReaderError> {
-        reply.validate_outcome()?;
+        // Validate against borrowed private state. A non-stopping rejection
+        // does not take the slot or modify its formal collector.
+        if let Err(error) = self.check_pending_reply(&reply, sources, budget, admission) {
+            return match stop_reason(&error) {
+                Some(reason) => self.stop_pending(reason, budget),
+                None => Err(error),
+            };
+        }
         let Pending {
             continuation: mut c,
             ..
@@ -321,22 +334,7 @@ impl<'a> ReaderSession<'a> {
                 &c.request.sources,
                 budget,
             )?;
-            let request = ReadRequest {
-                snapshot,
-                start: c.request.start,
-                limit: c.request.limit,
-                final_input: c.request.final_input,
-                context: &context,
-                state: &c.request.state,
-            };
-            validate::request(
-                &request,
-                sources,
-                self.registry,
-                &self.checked.plan().state_type,
-                budget,
-                admission,
-            )?;
+            // The same immutable request/store were checked before take.
             let frame = c.frames.pop().ok_or(ReaderError::Continuation)?;
             let (call_id, depth_base) = call_identity(&c.pending);
             if frame.phase != (FramePhase::Provider { call_id })
@@ -380,16 +378,7 @@ impl<'a> ReaderSession<'a> {
             next_call: &mut self.next_call,
         };
         let outcome = budget.with_depth_at_least(depth_base, |budget| {
-            validate::provider(
-                &mut machine,
-                &frame,
-                &c.pending,
-                reply,
-                c.usage,
-                sources,
-                budget,
-                admission,
-            )
+            validate::apply_provider(&mut machine, &frame, reply, budget)
         });
         let control = match outcome {
             Ok(outcome) => machine.drive(Some(outcome), budget)?,
@@ -402,6 +391,73 @@ impl<'a> ReaderSession<'a> {
             }
         };
         Self::finish(machine, control, self.digest, &mut self.pending, budget)
+    }
+    fn check_pending_reply(
+        &self,
+        reply: &ProviderReply,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<(), ReaderError> {
+        reply.validate_outcome()?;
+        let c = &self
+            .pending
+            .as_ref()
+            .ok_or(ReaderError::NoPending)?
+            .continuation;
+        let snapshot = sources
+            .resolve(&c.request.snapshot)
+            .ok_or(SourceError::MissingSnapshot)?;
+        let context = crate::context::restored(
+            &c.request.context,
+            self.foundation,
+            &c.request.sources,
+            budget,
+        )?;
+        validate::request(
+            &ReadRequest {
+                snapshot,
+                start: c.request.start,
+                limit: c.request.limit,
+                final_input: c.request.final_input,
+                context: &context,
+                state: &c.request.state,
+            },
+            sources,
+            self.registry,
+            &self.checked.plan().state_type,
+            budget,
+            admission,
+        )?;
+        let frame = c.frames.last().ok_or(ReaderError::Continuation)?;
+        let (call_id, depth_base) = call_identity(&c.pending);
+        if frame.phase != (FramePhase::Provider { call_id })
+            || depth_base
+                != c.depth_base
+                    .checked_add(c.frames.len() as u64)
+                    .ok_or(StopReason::DepthLimit)?
+        {
+            return Err(ReaderError::Continuation);
+        }
+        let boundary = validate::ProviderBoundary {
+            plan: self.checked.plan(),
+            registry: self.registry,
+            snapshot,
+            declared: &c.request.sources,
+            current: &c.current,
+        };
+        budget.with_depth_at_least(depth_base, |budget| {
+            validate::check_provider(
+                &boundary,
+                frame,
+                &c.pending,
+                reply.into(),
+                c.usage,
+                sources,
+                budget,
+                admission,
+            )
+        })
     }
     fn stop_pending(
         &mut self,
@@ -419,6 +475,21 @@ impl<'a> ReaderSession<'a> {
     pub fn close(&mut self) {
         self.pending = None;
         self.closed = true;
+    }
+    /// Borrow the exact saved transform dispatch for reply codecs. This proof
+    /// does not consume the slot and cannot be issued for an arbitrary call.
+    pub fn pending_transform(
+        &self,
+    ) -> Result<crate::portable::transform::TransformReplyContext<'_>, ReaderError> {
+        let saved = self.pending.as_ref().ok_or(ReaderError::NoPending)?;
+        if !matches!(saved.continuation.pending, ProviderCall::Transform { .. }) {
+            return Err(ReaderError::ProviderContract);
+        }
+        Ok(crate::portable::transform::TransformReplyContext {
+            continuation: &saved.continuation,
+            plan: self.checked.plan(),
+            registry: self.registry,
+        })
     }
     /// A containing tokenizer terminates its operation if it cannot publish an Await envelope.
     pub(crate) fn discard_pending(&mut self) {

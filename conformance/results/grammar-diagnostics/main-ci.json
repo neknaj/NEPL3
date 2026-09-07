@@ -1,0 +1,27 @@
+{
+  "commit": "1623b8ade43321b16837ca4fae520641de261c2c",
+  "run": "34079951708",
+  "archive_sha256": "bef7bb8139202699135c3779fbdc17e2d7c90f8e7dd41e5c23c8d5acf9a11028",
+  "tar_members": 579,
+  "files": 458,
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "eaf501c2c7847e50c669b05865e87b00124bee5f8a3aece39a68ea897cb3a4c6",
+    "spec_sha256": "8267bcbfd960ec72bdb5aa739cf54672d528abf0380faad3117c860641189a89"
+  },
+  "ci_tests": {
+    "wasi and wasm compilation": 195,
+    "native (windows-latest)": 271,
+    "native (macos-latest)": 271,
+    "native (ubuntu-latest)": 271
+  },
+  "retrieved_log_sha256": "4ec5d59307de87b5c6689e7e9342cde4d96e51d4528a5116451914fa394917d3",
+  "verified": [
+    "All six jobs succeeded for this merged commit.",
+    "Source archive checksum, receipt, regular paths and absence of .tmp, source/spec identity and checkpoint log hashes matched.",
+    "Native CI executed 271 tests on each of three operating systems and 195 WASI tests."
+  ],
+  "unverified": [
+    "Source archive only; no runtime binary release or full acceptance completion."
+  ]
+}

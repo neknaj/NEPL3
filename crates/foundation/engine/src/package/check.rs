@@ -34,6 +34,38 @@ pub enum PackageError {
     UnvisitedField,
     Provenance,
 }
+/// An index in the exact package being checked, never a portable source position.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PackageSubject {
+    Root,
+    Category(u64),
+    ModeSkip {
+        mode: u64,
+        rule: u64,
+    },
+    ModeTake {
+        mode: u64,
+        rule: u64,
+    },
+    Extension(u64),
+    Read(ReadSpecId),
+    Form(u64),
+    FormField {
+        form: u64,
+        field: u64,
+    },
+    Leaf(u64),
+    Binding {
+        owner: Option<BindingOwner>,
+        binding: Option<BindingId>,
+    },
+    Provenance(u64),
+}
+#[derive(Debug, Eq, PartialEq)]
+pub struct PackageFailure {
+    pub error: PackageError,
+    pub subject: Option<PackageSubject>,
+}
 impl From<StopReason> for PackageError {
     fn from(e: StopReason) -> Self {
         Self::Stopped(e)
@@ -148,6 +180,35 @@ impl LanguagePackage {
         budget: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<CheckedLanguagePackage<'a>, PackageError> {
+        self.check_detailed_with_admission(registry, budget, admission)
+            .map_err(|failure| failure.error)
+    }
+    /// Validate with the same rules as `check`, retaining the inspected package subject.
+    pub fn check_detailed<'a>(
+        &'a self,
+        registry: &'a SchemaRegistry,
+        budget: &mut Budget,
+    ) -> Result<CheckedLanguagePackage<'a>, PackageFailure> {
+        self.check_detailed_with_admission(registry, budget, &mut SourceAdmission::default())
+    }
+    /// Detailed validation within the caller's existing source admission operation.
+    pub fn check_detailed_with_admission<'a>(
+        &'a self,
+        registry: &'a SchemaRegistry,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<CheckedLanguagePackage<'a>, PackageFailure> {
+        let mut subject = None;
+        self.check_inner(registry, budget, admission, &mut subject)
+            .map_err(|error| PackageFailure { error, subject })
+    }
+    fn check_inner<'a>(
+        &'a self,
+        registry: &'a SchemaRegistry,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        subject: &mut Option<PackageSubject>,
+    ) -> Result<CheckedLanguagePackage<'a>, PackageError> {
         budget.charge(Resource::Work, 1)?;
         if !registry.is_finalized() {
             return Err(SchemaError::Unfinalized.into());
@@ -178,30 +239,55 @@ impl LanguagePackage {
         unique(self.modes.iter().map(|v| v.name.as_str()), budget)?;
         unique(self.namespaces.iter().map(|v| v.name.as_str()), budget)?;
         unique(self.extensions.iter().map(|v| v.alias.as_str()), budget)?;
+        *subject = Some(PackageSubject::Root);
         self.category(&self.root)?;
-        for category in &self.categories {
+        for (index, category) in self.categories.iter().enumerate() {
+            *subject = Some(PackageSubject::Category(index as u64));
             budget.charge(Resource::Work, self.modes.len() as u64 + 1)?;
             if !self.modes.iter().any(|v| v.name == category.mode) {
                 return Err(PackageError::MissingMode);
             }
         }
-        for mode in &self.modes {
-            for rule in mode
+        for (mode_index, mode) in self.modes.iter().enumerate() {
+            for (rule, reader) in mode
                 .skip
                 .iter()
-                .map(|v| &v.reader)
-                .chain(mode.take.iter().map(|v| &v.reader))
+                .enumerate()
+                .map(|(i, v)| {
+                    (
+                        PackageSubject::ModeSkip {
+                            mode: mode_index as u64,
+                            rule: i as u64,
+                        },
+                        &v.reader,
+                    )
+                })
+                .chain(mode.take.iter().enumerate().map(|(i, v)| {
+                    (
+                        PackageSubject::ModeTake {
+                            mode: mode_index as u64,
+                            rule: i as u64,
+                        },
+                        &v.reader,
+                    )
+                }))
             {
+                *subject = Some(rule);
                 budget.charge(Resource::Work, self.reader.rules.len() as u64 + 1)?;
-                if let TokenReader::Rule(name) = rule {
+                if let TokenReader::Rule(name) = reader {
                     self.reader.rule(name)?;
                 }
             }
-            for take in &mode.take {
+            for (rule, take) in mode.take.iter().enumerate() {
+                *subject = Some(PackageSubject::ModeTake {
+                    mode: mode_index as u64,
+                    rule: rule as u64,
+                });
                 super::shape::record_kind(&take.kind, registry, budget)?;
             }
         }
-        for extension in &self.extensions {
+        for (index, extension) in self.extensions.iter().enumerate() {
+            *subject = Some(PackageSubject::Extension(index as u64));
             budget.charge(Resource::Work, 1)?;
             if extension.provider.is_empty() || extension.signature.is_empty() {
                 return Err(PackageError::EmptyName);
@@ -227,8 +313,10 @@ impl LanguagePackage {
                 return Err(PackageError::SignatureMismatch);
             }
         }
-        super::shape::check(self, registry, budget)?;
-        super::bindings::check(self, registry, budget)?;
+        *subject = None;
+        super::shape::check(self, registry, budget, subject)?;
+        super::bindings::check(self, registry, budget, subject)?;
+        *subject = None;
         self.recovery.validate(self, registry, budget)?;
         let mut sources = SourceStore::default();
         for snapshot in &self.provenance.sources {
@@ -243,7 +331,8 @@ impl LanguagePackage {
         }
         OriginGraph::validate_origins(&self.provenance.origins, &sources, budget)?;
         SourceMap::validate_mappings(&self.provenance.source_maps, &sources, budget)?;
-        for origin in &self.provenance.declarations {
+        for (index, origin) in self.provenance.declarations.iter().enumerate() {
+            *subject = Some(PackageSubject::Provenance(index as u64));
             budget.charge(Resource::Work, 1)?;
             if origin.name.is_empty() || origin.origin.0 >= self.provenance.origins.len() as u64 {
                 return Err(PackageError::Provenance);

@@ -701,13 +701,15 @@ fn assemble(
             declarations,
         },
     };
-    if let Err(error) = package.check_with_admission(&registry, budget, admission) {
+    if let Err(error) = package.check_detailed_with_admission(&registry, budget, admission) {
         return Err(diagnostic::locate(
             &package,
             error,
-            doc,
-            &binding_ids,
-            &registry,
+            diagnostic::Sources {
+                doc,
+                reads: &read_ids,
+                bindings: &binding_ids,
+            },
             budget,
         ));
     }

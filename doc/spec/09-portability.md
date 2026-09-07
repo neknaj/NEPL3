@@ -79,6 +79,22 @@ Awaitは外部service要求とcontinuationを返す。hostはallowlistで照合�
 
 call graphはhostが追跡する。同じoperation/input/contextの循環依存はCyclicOperation。有限だが大きい再帰も共通Limitsで停止できる。provider内部のアルゴリズム固有costは性能情報であり、二実装でusageの数値一致を互換要件にしない。
 
+### 3.1 Reader Transformの操作返信
+
+Transformのdomain結果と外側OperationReplyは次のように対応する。内側のtyped TransformReplyはsources/sourceMapsを全結果で所有する。
+
+| TransformOutcome | OperationReply | typed payload |
+|---|---|---|
+| Complete | Complete | TransformReply |
+| Failed | Invalid | partial=Some(TransformReply) |
+| Stopped(reason) | Stopped(reason) | partial=Some(TransformReply) |
+
+内外のdiagnostics/events/usage/traceOverflowは同じReportの正確な再掲であり、不一致を拒否する。再掲によるstorageと符号化の費用は計上するが、診断・eventを再発行したことにはしない。Stoppedの理由も一致を要求する。CompleteにFailedを隠す、Invalidを成功Unitに変える、Transformに未定義のAwaitを返す、といった返信は拒否する。
+
+partial=NoneのInvalid/Stoppedは、domain Transform結果が得られる前のdispatch失敗である。adapterは型付きの拒否結果と正式Reportをhostへ返し、Readerの待機slotへ成功やdomain失敗として適用しない。この場合の位置参照は元の保存要求と正式checkpointのsource閉包だけに限り、そのsource/mapsを拒否結果が所有する。新しい生成source上の診断を返す場合は、明示source tableを持つtyped TransformReplyを使う。Reportが不正な返信は待機を消費せず、訂正返信を再検査できる。
+
+この対応の実codecは保存要求proofを使うTransform返信のnative/NDF比較を提供する。ReadのMatched/NoMatch/NeedMoreは正常なreader結果としてCompleteへ運ぶ対象だが、その操作返信adapter、初回provider要求、全Await継続、process transportの実装完了をこのTransform比較から推定しない。
+
 ## 4. native provider
 
 Rustの各coreは型付き関数を公開する。suiteの登録時に、その関数とOperationRefの対応を固定する。wire boundaryを通る場合にだけTypedRecordとencode/decodeを行う。全tokenを常にCBOR化する設計にしない。
