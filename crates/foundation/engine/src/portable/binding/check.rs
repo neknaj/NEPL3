@@ -18,6 +18,7 @@ pub(super) fn validate<E>(
         || !data.occurrences.is_empty()
         || !data.open_inputs.is_empty()
         || !data.exports.is_empty()
+        || !data.history.is_empty()
     {
         return Err(PortableError::Shape);
     }
@@ -26,6 +27,7 @@ pub(super) fn validate<E>(
     let Some(facts) = data.facts else {
         return Ok(store);
     };
+    super::history::validate(data, registry, b, admission)?;
     for (index, stage) in data.stages.iter().enumerate() {
         b.charge(Resource::Work, facts.scopes.len() as u64 + 1)?;
         let scope = facts
@@ -141,7 +143,7 @@ pub(super) fn source_closure<E>(
     add(&mut store, data.sources, b, admission)?;
     Ok(store)
 }
-fn add<E>(
+pub(in crate::portable) fn add<E>(
     store: &mut SourceStore,
     sources: &[SourceSnapshot],
     b: &mut Budget,

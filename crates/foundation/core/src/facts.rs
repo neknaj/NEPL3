@@ -63,6 +63,46 @@ pub enum ReferenceResolution {
     Ambiguous(Vec<EntityId>),
     Deferred(Vec<TypedValue>),
 }
+impl ReferenceResolution {
+    pub fn clone_with_budget(&self, budget: &mut Budget) -> Result<Self, StopReason> {
+        budget.charge(Resource::Work, 1)?;
+        Ok(match self {
+            Self::Resolved(id) => Self::Resolved(*id),
+            Self::Unresolved(name) => {
+                budget.charge(Resource::Work, name.len() as u64)?;
+                budget.charge(Resource::AllocationUnits, name.len() as u64)?;
+                Self::Unresolved(name.clone())
+            }
+            Self::Ambiguous(ids) => {
+                budget.charge(Resource::Work, ids.len() as u64)?;
+                budget.charge(
+                    Resource::AllocationUnits,
+                    (ids.len() as u64).saturating_mul(core::mem::size_of::<EntityId>() as u64),
+                )?;
+                Self::Ambiguous(ids.clone())
+            }
+            Self::Deferred(values) => {
+                let mut out = Vec::new();
+                for value in values {
+                    let (schema, name, variant) = match value {
+                        TypedValue::Record(v) => (&v.schema, &v.kind, 0),
+                        TypedValue::Variant(v) => (&v.schema, &v.type_name, v.variant.len()),
+                    };
+                    budget.charge(
+                        Resource::Work,
+                        (schema.package.len() + name.len() + variant) as u64 + 42,
+                    )?;
+                    budget.charge(
+                        Resource::AllocationUnits,
+                        core::mem::size_of::<TypedValue>() as u64,
+                    )?;
+                    out.push(value.clone_with_budget(budget)?);
+                }
+                Self::Deferred(out)
+            }
+        })
+    }
+}
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Occurrence {
     pub id: OccurrenceId,

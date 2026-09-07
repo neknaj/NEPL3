@@ -1,4 +1,5 @@
 use super::*;
+mod custom;
 #[derive(Clone, Copy, Eq, PartialEq)]
 struct Target {
     bundle: usize,
@@ -267,7 +268,7 @@ impl<'a, 'p> Machine<'a, 'p> {
             origin,
             resolution,
         } = value;
-        let id = OccurrenceId(self.facts()?.occurrences.len() as u64);
+        let id = OccurrenceId(next_id(&self.facts()?.occurrences, |v| v.id.0, budget)?);
         let scope = self.stage(stage)?.scope;
         // Both vectors are prepared before either half of the association is published.
         budget.charge(Resource::Nodes, 1)?;
@@ -336,7 +337,7 @@ impl<'a, 'p> Machine<'a, 'p> {
             if global && role == OccurrenceRole::Definition {
                 self.unique_global(namespace_stage, namespace, &name, &selection, None, budget)?;
             }
-            let id = EntityId(self.facts()?.entities.len() as u64);
+            let id = EntityId(next_id(&self.facts()?.entities, |v| v.id.0, budget)?);
             let scope = self.stage(namespace_stage)?.scope;
             let definition = layout.node.cover.as_ref().unwrap_or(&selection);
             let entity = Entity {
@@ -411,7 +412,14 @@ impl<'a, 'p> Machine<'a, 'p> {
             }
         }
     }
-    pub(super) fn run(&mut self, root: usize, budget: &mut Budget) -> Result<(), BindingError> {
+    pub(super) fn run(
+        &mut self,
+        root: usize,
+        tree: &'a crate::recovery::ParseTree,
+        host: &mut Option<&mut dyn BindingHost>,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<(), BindingError> {
         let local = self.bundles.get(root).ok_or(BindingError::Target)?;
         let frame = self.frame(
             Target {
@@ -452,11 +460,7 @@ impl<'a, 'p> Machine<'a, 'p> {
                                     parent.stage = self.scope(Some(parent.stage), None, budget)?;
                                 }
                                 for entity in frame.exports {
-                                    let value = self
-                                        .facts()?
-                                        .entities
-                                        .get(entity.0 as usize)
-                                        .ok_or(BindingError::Target)?;
+                                    let value = self.entity(entity, budget)?;
                                     let target_root =
                                         self.stage(self.bundles[parent.target.bundle].root)?.scope;
                                     if self.facts()?.namespaces[value.namespace.0 as usize].root
@@ -635,7 +639,12 @@ impl<'a, 'p> Machine<'a, 'p> {
                                 };
                                 push(&mut frame.actions, Action::Child { index, effect }, budget)?;
                             }
-                            Binding::Custom(_) => return Err(BindingError::MissingProvider),
+                            Binding::Custom(_) if frame.phase.header => {
+                                return Err(BindingError::UnsupportedPlan);
+                            }
+                            Binding::Custom(operation) => {
+                                self.custom(&mut frame, tree, operation, host, budget, admission)?
+                            }
                             Binding::Sequential { .. } | Binding::Recursive { .. }
                                 if frame.phase.header => {}
                             Binding::Sequential { declarations, body }

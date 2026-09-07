@@ -4,6 +4,8 @@ use nepl3_engine::portable::binding::{self as wire_binding, DecodedBindingOutcom
 mod analysis;
 #[path = "portable/causes.rs"]
 mod causes;
+#[path = "portable/query.rs"]
+mod query;
 
 #[test]
 fn namespace_visibility_stage_roundtrips_and_rejects_wrong_policy_or_root() -> Result<(), String> {

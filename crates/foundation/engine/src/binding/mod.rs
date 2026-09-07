@@ -16,7 +16,9 @@ use nepl3_core::{
     syntax::{FieldValue, NodeRef, SyntaxBundle, SyntaxNode},
     value::NdfValue,
 };
+mod host;
 mod model;
+pub use host::*;
 mod prepare;
 mod runtime;
 mod scope;
@@ -29,6 +31,8 @@ pub enum BindingError {
     Fact(FactError),
     Source(nepl3_core::source::SourceError),
     Schema(nepl3_core::schema::SchemaError),
+    Facts(crate::facts::FactsError),
+    ProviderInvalid,
     AnalysisId,
     Target,
     Name,
@@ -62,6 +66,14 @@ error_from!(crate::profile::ProfileError, Profile);
 error_from!(FactError, Fact);
 error_from!(nepl3_core::source::SourceError, Source);
 error_from!(nepl3_core::schema::SchemaError, Schema);
+impl From<crate::facts::FactsError> for BindingError {
+    fn from(value: crate::facts::FactsError) -> Self {
+        match value.stop_reason() {
+            Some(reason) => Self::Stopped(reason),
+            None => Self::Facts(value),
+        }
+    }
+}
 fn push<T>(values: &mut Vec<T>, value: T, budget: &mut Budget) -> Result<(), BindingError> {
     budget.charge(Resource::AllocationUnits, core::mem::size_of::<T>() as u64)?;
     values.push(value);
@@ -95,6 +107,28 @@ pub fn analyze(
     budget: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> BindingReply {
+    analyze_inner(analysis_id, tree, profile, None, budget, admission)
+}
+/// Execute Custom plans with a host-selected provider and checked authority.
+/// Ordinary analyze leaves unregistered Custom plans as MissingProvider.
+pub fn analyze_with_host(
+    analysis_id: &str,
+    tree: &ValidatedParseTree<'_>,
+    profile: &ResolvedParseProfile<'_>,
+    host: &mut dyn BindingHost,
+    budget: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> BindingReply {
+    analyze_inner(analysis_id, tree, profile, Some(host), budget, admission)
+}
+fn analyze_inner(
+    analysis_id: &str,
+    tree: &ValidatedParseTree<'_>,
+    profile: &ResolvedParseProfile<'_>,
+    mut host: Option<&mut dyn BindingHost>,
+    budget: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> BindingReply {
     let mut machine = Machine {
         profile,
         registry: profile.registry(),
@@ -113,7 +147,7 @@ pub fn analyze(
             return Err(BindingError::RecoveredTree);
         }
         let root = machine.prepare(tree.tree(), analysis_id, budget, admission)?;
-        machine.run(root, budget)?;
+        machine.run(root, tree.tree(), &mut host, budget, admission)?;
         machine
             .facts()?
             .validate(machine.registry, budget, admission)?;
@@ -131,6 +165,7 @@ pub fn analyze(
                     occurrence_stages: machine.progress.occurrence_stages,
                     open_inputs: machine.progress.open_inputs,
                     exports: machine.progress.exports,
+                    resolution_history: machine.progress.resolution_history,
                 },
             }),
             None => BindingOutcome::Invalid {
@@ -154,6 +189,23 @@ pub fn analyze(
 }
 
 impl Machine<'_, '_> {
+    fn entity(&self, id: EntityId, budget: &mut Budget) -> Result<&Entity, BindingError> {
+        let values = &self.facts()?.entities;
+        budget.charge(Resource::Work, 1)?;
+        if let Some(value) = usize::try_from(id.0)
+            .ok()
+            .and_then(|i| values.get(i))
+            .filter(|v| v.id == id)
+        {
+            return Ok(value);
+        }
+        budget.charge(Resource::Work, values.len() as u64)?;
+        values
+            .iter()
+            .find(|v| v.id == id)
+            .ok_or(BindingError::Target)
+    }
+
     fn facts(&self) -> Result<&FactSet, BindingError> {
         self.progress.facts.as_ref().ok_or(BindingError::Target)
     }
@@ -172,4 +224,20 @@ fn span(value: &Span, budget: &mut Budget) -> Result<Span, BindingError> {
         value.snapshot_ref().source.0.len() as u64,
     )?;
     Ok(value.clone())
+}
+
+// External FactDelta reservations permit sparse IDs. Vector position is only a
+// checked fast path, never the meaning of an EntityId/ScopeId/OccurrenceId.
+fn next_id<T>(
+    values: &[T],
+    id: impl Fn(&T) -> u64,
+    budget: &mut Budget,
+) -> Result<u64, BindingError> {
+    budget.charge(Resource::Work, values.len() as u64 + 1)?;
+    match values.iter().map(id).max() {
+        None => Ok(0),
+        Some(value) => value
+            .checked_add(1)
+            .ok_or(BindingError::Fact(FactError::Reservation)),
+    }
 }

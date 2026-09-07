@@ -12,7 +12,7 @@ impl Machine<'_, '_> {
         origin: Option<OriginId>,
         budget: &mut Budget,
     ) -> Result<StageId, BindingError> {
-        let id = ScopeId(self.facts()?.scopes.len() as u64);
+        let id = ScopeId(next_id(&self.facts()?.scopes, |v| v.id.0, budget)?);
         let parent_scope = parent
             .map(|id| self.stage(id).map(|v| v.scope))
             .transpose()?;
@@ -102,11 +102,7 @@ impl Machine<'_, '_> {
             }
             for id in &current.introduced {
                 budget.charge(Resource::Work, name.len() as u64 + 1)?;
-                let entity = self
-                    .facts()?
-                    .entities
-                    .get(id.0 as usize)
-                    .ok_or(BindingError::Target)?;
+                let entity = self.entity(*id, budget)?;
                 if entity.namespace == namespace && entity.name == name {
                     budget.charge(Resource::Work, candidates.len() as u64 + 1)?;
                     if !candidates.contains(id) {
@@ -152,26 +148,35 @@ impl Machine<'_, '_> {
         allowed: Option<EntityId>,
         budget: &mut Budget,
     ) -> Result<(), BindingError> {
+        self.unique_global_optional(stage, namespace, name, Some(selection), allowed, budget)
+    }
+    pub(super) fn unique_global_optional(
+        &mut self,
+        stage: StageId,
+        namespace: NamespaceRef,
+        name: &str,
+        selection: Option<&Span>,
+        allowed: Option<EntityId>,
+        budget: &mut Budget,
+    ) -> Result<(), BindingError> {
         let previous = match self.resolve(stage, namespace, name, budget)? {
             ReferenceResolution::Unresolved(_) => return Ok(()),
             ReferenceResolution::Resolved(id) if Some(id) == allowed => return Ok(()),
             ReferenceResolution::Resolved(id) => id,
             _ => return Err(BindingError::Target),
         };
-        let previous = self
-            .facts()?
-            .entities
-            .get(previous.0 as usize)
-            .ok_or(BindingError::Target)?;
-        let previous = span(
-            previous.selection.as_ref().ok_or(BindingError::Name)?,
-            budget,
-        )?;
-        self.diagnostic_at(
+        let previous = self.entity(previous, budget)?;
+        let previous = previous
+            .selection
+            .as_ref()
+            .or(previous.definition.as_ref())
+            .map(|location| span(location, budget))
+            .transpose()?;
+        self.diagnostic_optional_at(
             "DuplicateGlobalName",
             namespace,
             name,
-            (selection, Some(&previous)),
+            (selection, previous.as_ref()),
             budget,
         )?;
         Err(BindingError::DuplicateGlobal)
@@ -192,6 +197,16 @@ impl Machine<'_, '_> {
         namespace: NamespaceRef,
         name: &str,
         (primary, related): (&Span, Option<&Span>),
+        budget: &mut Budget,
+    ) -> Result<(), BindingError> {
+        self.diagnostic_optional_at(code, namespace, name, (Some(primary), related), budget)
+    }
+    pub(super) fn diagnostic_optional_at(
+        &mut self,
+        code: &str,
+        namespace: NamespaceRef,
+        name: &str,
+        (primary, related): (Option<&Span>, Option<&Span>),
         budget: &mut Budget,
     ) -> Result<(), BindingError> {
         use nepl3_core::{
@@ -239,7 +254,9 @@ impl Machine<'_, '_> {
             severity: Severity::Error,
             stage: text("binding", budget)?,
             arguments,
-            primary: Some(super::span(primary, budget)?),
+            primary: primary
+                .map(|location| super::span(location, budget))
+                .transpose()?,
             related: related_locations,
             fixes: Vec::new(),
         };

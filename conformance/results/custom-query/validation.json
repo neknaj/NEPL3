@@ -1,0 +1,104 @@
+{
+  "format": "nepl3.development-slice/1",
+  "scope": "T06: native Custom binding with checked deltas and keyed Definition/References queries",
+  "base_commit": "327f47f8142f2120158ba16a35095dc5bc011b81",
+  "result": "passed-within-recorded-scope",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "d7d6dfae6aad962aab9f6e33792be638607fd8dc847a2a3948d1b8ece10755bb",
+    "spec_sha256": "94012ed24f78724916eb822a891577f5a84ee0e4450185f69a8f1a1b9fcfb23e"
+  },
+  "checks": [
+    {
+      "command": "cargo test --workspace --locked",
+      "exit_code": 0,
+      "log": "conformance/results/custom-query/native.log",
+      "sha256": "66f8d6071dda68b77c387b4a2314cf99fce40558e92a02a418ff104d873bef13"
+    },
+    {
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER='wasmtime run'; cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar diagnostic::compiler_report_boundary_without_host_process --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::all_reader_constructors --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::compiled_reader_streaming_boundaries_and_rollback_keep_raw_positions --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --no-default-features --target wasm32-unknown-unknown",
+      "exit_code": 0,
+      "log": "conformance/results/custom-query/wasi.log",
+      "sha256": "1b1e0e2214a62ac1f7539c18f1e8fdfb95fc42d4b957738d8d385560561ef735"
+    },
+    {
+      "command": "cargo fmt --all -- --check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo clippy --workspace --all-targets --locked -- -D warnings; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps --locked",
+      "exit_code": 0,
+      "log": "conformance/results/custom-query/quality.log",
+      "sha256": "67d0fb6282887ac08d814da4ce136f6a5d99e9c432cb7dfd6deb16969b541551"
+    },
+    {
+      "command": "cargo run --locked -p nepl3-tools -- check",
+      "exit_code": 0,
+      "log": "conformance/results/custom-query/contract.log",
+      "sha256": "356fed43b15d975d9d8da4f07d6c00a01802f86f738a159e934ecc262fd901eb"
+    },
+    {
+      "command": "python tools/audit/structure.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/audit -p test.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/bootstrap -p test_grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/audit/allocation/run.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo run --locked -p nepl3-tools -- tasks --check",
+      "exit_code": 0,
+      "log": "conformance/results/custom-query/audit.log",
+      "sha256": "202819489715996dad3fc0ba179bddc4f2ded4ef3cbec005aac7d930c6255c88"
+    },
+    {
+      "command": "C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe --version; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe .github/workflows/ci.yml",
+      "exit_code": 0,
+      "log": "conformance/results/custom-query/ci.log",
+      "sha256": "ad7ed44e79c7e5d554c2e008819df3a5da44834e9cfdb4aecaef9224a39c87dd"
+    }
+  ],
+  "execution": {
+    "native": {
+      "target": "x86_64-pc-windows-msvc",
+      "passed": 316,
+      "ignored": 1
+    },
+    "wasi": {
+      "target": "wasm32-wasip2",
+      "runner": "Wasmtime 44.0.1",
+      "passed": 236,
+      "scope": "199 five-crate tests, one compiler Report test, three ReaderExpr tests and 33 binding tests"
+    },
+    "browser_wasm": "Five no_std crates compiled; browser interaction not executed",
+    "toolchain": "Rust 1.97.0",
+    "other": "Format, strict Clippy, rustdoc, repository contracts, 6 Python structure and 3 bootstrap adapter tests, task generation, allocation regressions and actionlint 1.7.12 passed. Ordinary Grammar bootstrap kept its unchanged Work cap; the separate owned performance baseline remains ignored."
+  },
+  "implementation": [
+    "Explicit native Custom dispatch uses the selected provider requirement and host-issued FactAuthority. Borrowed FactsRequestView and owned requests share validators; the callback does not require copying the whole tree through NDF.",
+    "FactsEmitter admits sources, mappings and typed diagnostics/events before accepting them into the operation collector. Subsequent stops preserve those records and original usage; raw deltas returned to an already stopped parent are not admitted.",
+    "Authorized FactDelta application preserves sparse IDs and enforces namespace/root and Global duplicate rules. Native bindings after external IDs allocate valid successors and return typed exhaustion at the u64 boundary. Source-less duplicate definitions never acquire invented source spans.",
+    "Explicit resolution updates preserve issuance stages. Canonical invocation targets, selected provider/authority and before/after transitions form a retained history whose chains and final resolutions are checked at the portable boundary.",
+    "Keyed Definition/References queries select exact-source half-open UTF-8 occurrences, follow final Entity IDs and retain all ambiguous candidates in resolver order. They distinguish no selection, unresolved, free input, deferred and source-less targets. Reference role and ambiguity options are explicit.",
+    "Real first-receiver QueryRequest CBOR decoding invokes the production query API. Reply decoding checks the corresponding request, source closure, URI/ranges, candidate IDs and options. Raw replies remain data and never manufacture native execution proof."
+  ],
+  "independent_review": {
+    "reviewer": "Huygens",
+    "record": "doc/review.md",
+    "custom": "Original compile/parse/native callback probes cover sparse ID 100 and MAX-1 through MAX/exhaustion, Global duplicates without source positions, immutable Open resolution history and denied updates, Foreign roots, report/map emission and typed partial stops. The independent 289-budget map/emitter sweep had 71 stops, including 24 after formal emission; every partial FactSet and real CBOR closure was checked.",
+    "query": "Seven original inputs and eleven selected byte positions cover Let initialization, nested/sibling shadowing, Unicode, foreign roots, all ambiguous candidates and escaped Text source positions. Additional source-less sparse targets, explicit resolution updates and four real Import/Export option combinations match native and first-receiver CBOR results. Managed Custom 9 and query 6 tests and all 33 WASI binding tests passed independently.",
+    "root_confirmation": "Root reran all six gates in the isolated validation worktree and verified 46 frozen source/schema/spec/review files against raw byte hashes and staged Git blobs. The explicit Import test helper override transferred ownership from the native implementer to the common-contract implementer."
+  },
+  "development_corrections": [
+    {
+      "log": "conformance/results/custom-query/query-ambiguity-initial-selection.log",
+      "provenance": "Author tool output excerpt, exec chunk 948ad5; not a complete log or a frozen-snapshot run.",
+      "reason": "The unchanged independent target byte positions represent the ambiguity candidate set, not a source-order guarantee. The test compares that set and separately requires returned Entity IDs to preserve the original resolution order.",
+      "sha256": "ab0054ccbfdb17f394b79479de43f8b5addcecf4aabe27832eff4f8ef955537e"
+    },
+    {
+      "log": "conformance/results/custom-query/query-import-initial-expectation.log",
+      "provenance": "Author tool output excerpt, exec chunk 740844; not a complete log or a frozen-snapshot run.",
+      "reason": "Grammar Import introduces exported candidates without creating an extra named occurrence. The count expectation was corrected from the original source and BindingPlan contract; a separate actual Custom Import occurrence now tests includeImports.",
+      "sha256": "fd95ce5f8e088d313bd34aa8d482971274933818f376029accc21a377fcd660b"
+    }
+  ],
+  "unverified": [
+    "Recursive Custom header/body phases currently return UnsupportedPlan without invoking the callback; their explicit phase/memo implementation is subsequent work.",
+    "External-process Facts invocation, reserved receive quotas and remote usage settlement remain incomplete. Native emission and ordinary raw Facts codecs do not establish that path.",
+    "Occurrence-based query selection does not complete the general field/view/grammar-priority region selector, rename, completion, incremental analysis or LSP integration.",
+    "Keys do not authenticate host grants or remote execution. The host must reflect semantic configuration/resource changes in declared identities.",
+    "Doc and other domain runtimes, suite, CLI/WASI apps, provider, UI, Web, Pages and Doc migration remain incomplete.",
+    "No task or required acceptance group is declared complete by this record."
+  ],
+  "log_normalization": "Captured output uses LF and one final newline; other output content is retained."
+}

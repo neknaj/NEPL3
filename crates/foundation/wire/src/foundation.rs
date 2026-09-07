@@ -150,6 +150,24 @@ impl FoundationValueCodec for FoundationCodec<'_> {
         self.validate(value, "FactAuthority", budget)?;
         crate::boundary::typed::Codec::from(value, self.schema, self.sources, budget)
     }
+    fn encode_reference_resolution(
+        &mut self,
+        value: &nepl3_core::facts::ReferenceResolution,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
+        use crate::boundary::typed::Codec;
+        let value = value.value(self.schema, budget)?;
+        self.validate(&value, "ReferenceResolution", budget)?;
+        Ok(value)
+    }
+    fn decode_reference_resolution(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<nepl3_core::facts::ReferenceResolution, WireError> {
+        self.validate(value, "ReferenceResolution", budget)?;
+        crate::boundary::typed::Codec::from(value, self.schema, self.sources, budget)
+    }
     fn encode_mappings(
         &mut self,
         value: &[nepl3_core::origin::Mapping],

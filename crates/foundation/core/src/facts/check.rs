@@ -14,6 +14,21 @@ impl CheckedFactSet<'_> {
     pub fn value(&self) -> &FactSet {
         self.value
     }
+    /// Check alternate resolutions against this set's entity/namespace/source
+    /// closure. This does not prove lexical visibility or permission to update.
+    pub fn validate_resolutions<'r>(
+        &self,
+        resolutions: impl IntoIterator<Item = (OccurrenceId, &'r ReferenceResolution)>,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<(), FactError> {
+        let view = View::new(self.value, None, budget, admission)?;
+        for (id, resolution) in resolutions {
+            let occurrence = view.occurrence(id, budget)?;
+            view.resolution(occurrence, resolution, self.registry, budget)?;
+        }
+        Ok(())
+    }
 }
 pub struct CheckedFactDelta<'a> {
     pub(super) base: &'a FactSet,

@@ -24,6 +24,26 @@ pub struct OccurrenceStage {
     /// Namespace visibility captured at issuance; distinct from lexical location for Global.
     pub namespace_stage: StageId,
 }
+/// Coordinates in the enclosing analysis request's canonical syntax numbering.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CanonicalBindingTarget {
+    pub path: Vec<crate::recovery::ForeignStep>,
+    pub node: nepl3_core::syntax::NodeRef,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ResolutionTransition {
+    pub occurrence: OccurrenceId,
+    pub before: nepl3_core::facts::ReferenceResolution,
+    pub after: nepl3_core::facts::ReferenceResolution,
+}
+/// Explicit Custom resolution history; lexical issuance stages stay unchanged.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct BindingResolutionBatch {
+    pub provider: crate::profile::ProviderRequirement,
+    pub authority: nepl3_core::facts::FactAuthority,
+    pub target: CanonicalBindingTarget,
+    pub updates: Vec<ResolutionTransition>,
+}
 /// Raw partial data; this is neither the structural FactSet proof nor a completed
 /// name analysis. Before initialization, `facts` is absent; admitted sources
 /// and maps remain available without constructing an invalid FactSet.
@@ -36,6 +56,7 @@ pub struct BindingProgress {
     pub occurrence_stages: Vec<OccurrenceStage>,
     pub open_inputs: Vec<OccurrenceId>,
     pub exports: Vec<EntityId>,
+    pub resolution_history: Vec<BindingResolutionBatch>,
 }
 impl BindingProgress {
     pub(super) fn empty() -> Self {
@@ -47,6 +68,7 @@ impl BindingProgress {
             occurrence_stages: Vec::new(),
             open_inputs: Vec::new(),
             exports: Vec::new(),
+            resolution_history: Vec::new(),
         }
     }
 }
@@ -60,6 +82,7 @@ pub struct BindingResult {
     pub occurrence_stages: Vec<OccurrenceStage>,
     pub open_inputs: Vec<OccurrenceId>,
     pub exports: Vec<EntityId>,
+    pub resolution_history: Vec<BindingResolutionBatch>,
 }
 /// Only execution of a validated plan can construct this semantic proof.
 #[derive(Debug)]

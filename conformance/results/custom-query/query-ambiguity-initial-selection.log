@@ -1,0 +1,14 @@
+Captured tool output excerpt: exec chunk 948ad5, exit 1.
+Command: cargo test --locked -p nepl3-tools --test grammar binding::portable -- --nocapture
+
+thread 'binding::portable::query::keyed_definition_uses_original_ranges_and_all_identity_candidates' (8644) panicked at tools\tests\grammar\binding\portable\query.rs:31:13:
+assertion `left == right` failed: twice x x x
+  left: [(8, 9, 0, 11), (6, 7, 0, 11)]
+ right: [(6, 7, 0, 11), (8, 9, 0, 11)]
+
+Reason for test correction: the independent expected locations describe the two
+original definition candidates. No source-order guarantee was established for
+ReferenceResolution::Ambiguous. Query keeps that explicit resolution candidate
+order (8..9, 6..7 here). Only the location-set assertion sorts its actual vector;
+the expected byte positions remain unchanged. An additional assertion compares
+returned Entity IDs directly with the original resolution's candidate order.

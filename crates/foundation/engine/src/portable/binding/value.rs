@@ -147,6 +147,7 @@ pub(super) fn data_value<C: FoundationValueCodec>(
             values(data.occurrences, s, c, b)?,
             values(data.open_inputs, s, c, b)?,
             values(data.exports, s, c, b)?,
+            values(data.history, s, c, b)?,
         ],
         b,
     )
@@ -166,7 +167,7 @@ pub(super) fn data_from<C: FoundationValueCodec>(
         } else {
             "BindingProgress"
         },
-        7,
+        8,
     )?;
     let facts = if complete {
         Some(c.decode_fact_set(&f[0], b).map_err(boundary)?)
@@ -187,6 +188,7 @@ pub(super) fn data_from<C: FoundationValueCodec>(
         occurrence_stages: Vec::new(),
         open_inputs: Vec::new(),
         exports: Vec::new(),
+        resolution_history: Vec::new(),
     };
     let store = check::source_closure(&Data::from(&empty), b, c.source_admission())?;
     let mut local = c.scoped(&store);
@@ -198,5 +200,8 @@ pub(super) fn data_from<C: FoundationValueCodec>(
         occurrence_stages: Vec::<OccurrenceStage>::read(&f[4], s, &mut local, b)?,
         open_inputs: Vec::<OccurrenceId>::read(&f[5], s, &mut local, b)?,
         exports: Vec::<EntityId>::read(&f[6], s, &mut local, b)?,
+        resolution_history: Vec::<crate::binding::BindingResolutionBatch>::read(
+            &f[7], s, &mut local, b,
+        )?,
     })
 }

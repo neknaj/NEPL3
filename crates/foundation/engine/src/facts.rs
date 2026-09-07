@@ -8,7 +8,9 @@ use nepl3_core::{
     syntax::NodeRef,
 };
 pub(crate) mod check;
-pub use check::{CheckedFactsRequest, FactsError};
+mod emit;
+pub use check::{CheckedFactsRequest, CheckedFactsView, FactsError};
+pub use emit::FactsEmitter;
 pub(crate) fn signature(
     input: &nepl3_core::schema::TypeDescriptor,
     output: &nepl3_core::schema::TypeDescriptor,
@@ -23,6 +25,27 @@ pub struct FactsRequest {
     pub node: NodeRef,
     pub existing: FactSet,
     pub authority: FactAuthority,
+}
+/// The same logical request as FactsRequest, borrowed from a native analysis.
+/// This carries no authority proof until the host explicitly issues it.
+#[derive(Clone, Copy)]
+pub struct FactsRequestView<'a> {
+    pub tree: &'a ParseTree,
+    pub path: &'a [ForeignStep],
+    pub node: NodeRef,
+    pub existing: &'a FactSet,
+    pub authority: &'a FactAuthority,
+}
+impl FactsRequest {
+    pub fn view(&self) -> FactsRequestView<'_> {
+        FactsRequestView {
+            tree: &self.tree,
+            path: &self.path,
+            node: self.node,
+            existing: &self.existing,
+            authority: &self.authority,
+        }
+    }
 }
 pub enum FactsReply {
     Complete {

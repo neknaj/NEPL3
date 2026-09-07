@@ -13,8 +13,9 @@ use nepl3_core::{
     value::NdfValue,
     value_codec::FoundationValueCodec,
 };
-mod check;
-mod error;
+pub(super) mod check;
+pub(super) mod error;
+mod history;
 mod value;
 use value::*;
 
@@ -64,6 +65,7 @@ struct Data<'a> {
     occurrences: &'a [crate::binding::OccurrenceStage],
     open_inputs: &'a [nepl3_core::facts::OccurrenceId],
     exports: &'a [nepl3_core::facts::EntityId],
+    history: &'a [crate::binding::BindingResolutionBatch],
 }
 impl<'a> From<&'a BindingResult> for Data<'a> {
     fn from(v: &'a BindingResult) -> Self {
@@ -75,6 +77,7 @@ impl<'a> From<&'a BindingResult> for Data<'a> {
             occurrences: &v.occurrence_stages,
             open_inputs: &v.open_inputs,
             exports: &v.exports,
+            history: &v.resolution_history,
         }
     }
 }
@@ -88,6 +91,7 @@ impl<'a> From<&'a BindingProgress> for Data<'a> {
             occurrences: &v.occurrence_stages,
             open_inputs: &v.open_inputs,
             exports: &v.exports,
+            history: &v.resolution_history,
         }
     }
 }
@@ -215,6 +219,7 @@ pub fn reply_from_value<C: FoundationValueCodec>(
                 occurrence_stages: progress.occurrence_stages,
                 open_inputs: progress.open_inputs,
                 exports: progress.exports,
+                resolution_history: progress.resolution_history,
             }))
         }
         "Invalid" => {

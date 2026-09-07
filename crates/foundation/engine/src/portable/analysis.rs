@@ -30,7 +30,7 @@ fn options_value<C: FoundationValueCodec>(
     let BindingOptions = options;
     record(s.engine, "BindingOptions", [], b)
 }
-fn key_value<C: FoundationValueCodec>(
+pub(super) fn key_value<C: FoundationValueCodec>(
     key: &AnalysisKey,
     s: &Schemas<'_>,
     codec: &mut C,
@@ -48,7 +48,7 @@ fn key_value<C: FoundationValueCodec>(
         b,
     )
 }
-fn key_read<C: FoundationValueCodec>(
+pub(super) fn key_read<C: FoundationValueCodec>(
     value: &NdfValue,
     s: &Schemas<'_>,
     codec: &mut C,

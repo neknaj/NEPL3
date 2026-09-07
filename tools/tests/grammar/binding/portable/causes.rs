@@ -36,6 +36,48 @@ fn roundtrip(
 fn every_binding_failure_variant_keeps_its_typed_nested_cause() -> Result<(), String> {
     let compiled = execution()?;
     let r = &compiled.registry;
+    use nepl3_core::diagnostic::validation::ReportValidationError as R;
+    use nepl3_engine::facts::FactsError;
+    for (cause, path) in [
+        (FactsError::Target, vec!["Facts", "Target"]),
+        (
+            FactsError::Tree(TreeError::ExecutionIdentity),
+            vec!["Facts", "Tree", "ExecutionIdentity"],
+        ),
+        (
+            FactsError::Fact(FactError::Authority),
+            vec!["Facts", "Fact", "Authority"],
+        ),
+        (
+            FactsError::Source(SourceError::Decode {
+                valid_up_to: 13,
+                error_len: None,
+            }),
+            vec!["Facts", "Source", "Decode"],
+        ),
+        (
+            FactsError::Origin(OriginError::Cycle),
+            vec!["Facts", "Origin", "Cycle"],
+        ),
+        (
+            FactsError::Report(R::Metadata),
+            vec!["Facts", "Report", "Metadata"],
+        ),
+        (
+            FactsError::Report(R::Usage),
+            vec!["Facts", "Report", "Usage"],
+        ),
+        (
+            FactsError::Report(R::Source(SourceError::ExpectedDigest)),
+            vec!["Facts", "Report", "Source", "ExpectedDigest"],
+        ),
+        (
+            FactsError::Report(R::Schema(SchemaError::WrongType)),
+            vec!["Facts", "Report", "Schema", "WrongType"],
+        ),
+    ] {
+        roundtrip(BindingError::Facts(cause), &path, r)?;
+    }
     macro_rules! cases {($ty:ident,[$($case:ident),*])=>{[$((stringify!($case),$ty::$case)),*]};}
     for (name, value) in cases!(
         BindingError,
@@ -48,7 +90,8 @@ fn every_binding_failure_variant_keeps_its_typed_nested_cause() -> Result<(), St
             RecoveredTree,
             MissingProvider,
             UnsupportedPlan,
-            DuplicateGlobal
+            DuplicateGlobal,
+            ProviderInvalid
         ]
     ) {
         roundtrip(value, &[name], r)?;
@@ -365,6 +408,26 @@ fn every_binding_failure_variant_keeps_its_typed_nested_cause() -> Result<(), St
         ]
     ) {
         roundtrip(BindingError::Stopped(reason), &["Stopped", name], r)?;
+        roundtrip(
+            BindingError::Facts(FactsError::Stopped(reason)),
+            &["Facts", "Stopped", name],
+            r,
+        )?;
+        roundtrip(
+            BindingError::Facts(FactsError::Report(R::Stopped(reason))),
+            &["Facts", "Report", "Stopped", name],
+            r,
+        )?;
+        roundtrip(
+            BindingError::Facts(FactsError::Report(R::Source(SourceError::Stopped(reason)))),
+            &["Facts", "Report", "Source", "Stopped", name],
+            r,
+        )?;
+        roundtrip(
+            BindingError::Facts(FactsError::Report(R::Schema(SchemaError::Stopped(reason)))),
+            &["Facts", "Report", "Schema", "Stopped", name],
+            r,
+        )?;
         roundtrip(
             BindingError::Source(SourceError::Stopped(reason)),
             &["Source", "Stopped", name],

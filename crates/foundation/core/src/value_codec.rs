@@ -71,6 +71,18 @@ pub trait FoundationValueCodec {
         value: &NdfValue,
         budget: &mut Budget,
     ) -> Result<crate::facts::FactAuthority, Self::Error>;
+    /// Structural data only; membership and authorized resolution transitions
+    /// are checked against the enclosing facts operation.
+    fn encode_reference_resolution(
+        &mut self,
+        value: &crate::facts::ReferenceResolution,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, Self::Error>;
+    fn decode_reference_resolution(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<crate::facts::ReferenceResolution, Self::Error>;
     fn encode_mappings(
         &mut self,
         value: &[crate::origin::Mapping],
