@@ -92,6 +92,7 @@ dependencies = [
  "num-integer",
  "num-traits",
  "sha2",
+ "unicode-ident",
 ]
 
 [[package]]
@@ -126,7 +127,6 @@ version = "0.1.0"
 dependencies = [
  "nepl3-core",
  "nepl3-wire",
- "unicode-ident",
 ]
 
 [[package]]

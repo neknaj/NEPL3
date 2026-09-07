@@ -24,13 +24,13 @@ pub(super) fn scan(
     };
     match kind {
         BuiltinReader::Name => {
-            if first != '_' && !unicode_ident::is_xid_start(first) {
+            if !nepl3_core::lexical::name_start(first) {
                 return Ok(Scan::NoMatch);
             }
             let mut end = first.len_utf8();
             for ch in input[end..].chars() {
                 budget.charge(Resource::Work, 1)?;
-                if !unicode_ident::is_xid_continue(ch) {
+                if !nepl3_core::lexical::name_continue(ch) {
                     break;
                 }
                 end += ch.len_utf8();
@@ -46,7 +46,7 @@ pub(super) fn scan(
             for ch in input.chars() {
                 budget.charge(Resource::Work, 1)?;
                 if !ch.is_ascii_alphanumeric() && ch != '-' {
-                    if unicode_ident::is_xid_continue(ch) {
+                    if nepl3_core::lexical::name_continue(ch) {
                         return Ok(Scan::Failed("BoundaryMismatch", end));
                     }
                     break;
@@ -145,7 +145,7 @@ fn number(
     if input[end..]
         .chars()
         .next()
-        .is_some_and(unicode_ident::is_xid_continue)
+        .is_some_and(nepl3_core::lexical::name_continue)
     {
         return Ok(Scan::Failed("BoundaryMismatch", end));
     }

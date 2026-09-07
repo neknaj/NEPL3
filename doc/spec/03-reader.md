@@ -46,6 +46,8 @@ choiceの途中の失敗診断は、最終的に全候補がNoMatchになった�
 
 配布profileではUnicode 16.0.0のXID_Start / XID_Continueを使用し、underscoreを開始にも許す。識別子を勝手にNFC変換しない。比較はscalar列の完全一致。将来のUnicode版変更はpackage revisionに含める。
 
+Name の文字判定と全綴り検査、および Lang の全綴りABNF検査は共通 core の `lexical` 契約として reader と domain printer が共有する。現native実装のXID表は pinned `unicode-ident = 1.0.18` の [Unicode 16.0.0生成表](https://github.com/dtolnay/unicode-ident/blob/1.0.18/src/tables.rs)に従う。全綴り検査は予算付きで区切り・triviaを含まない一つの語だけを判定し、選択言語の予約head判定や正規化を代行しない。readerの最大一致・非final入力のNeedMore・境界診断はreader側に残し、この共通化で認識集合を変更しない。printerは不適合な意味値を型付き失敗として扱い、reader依存や別Unicode/BCP47規則の複製を導入しない。
+
 基礎 `Name`: 上記識別子一つ。`Nat`: `0` または `[1-9][0-9]*`。`Number`: optional `-`、Nat、optional `.` と1桁以上の数字。指数表記はこのsurfaceにはない。`Text`: 通常の二重引用符文字列。`Lang`: ASCIIのwell-formed BCP47 tag。BCP47のtag比較はASCII case-insensitive、元の綴りは保存。登録状況のnetwork照会は行わない。
 
 通常Textのescapeは `\\`、`\"`、`\n`、`\r`、`\t`、`\u{1〜6 hex}`。surrogateとU+10FFFF超は拒否する。未知escapeはエラー。Textではruby/annoを認識しない。

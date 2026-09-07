@@ -6,7 +6,7 @@
       "path": "crates/foundation/core",
       "dependencies": [],
       "no_std": true,
-      "responsibility": "共通の値・schema・source・origin・diagnostic契約"
+      "responsibility": "共通の値・schema・source・origin・diagnostic契約; Name Unicode 16.0 XID predicates use pinned no_std unicode-ident 1.0.18; Lang RFC 5646 ABNF is shared without reader dependency"
     },
     {
       "name": "nepl3-reader",
