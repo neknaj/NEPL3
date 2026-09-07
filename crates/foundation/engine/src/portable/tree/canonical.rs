@@ -1,7 +1,7 @@
 use super::*;
 use nepl3_core::syntax::{FieldValue, SyntaxBundle, canonical::NodeMapping};
 
-pub(super) struct Mappings<'a> {
+pub(crate) struct Mappings<'a> {
     pub entries: Vec<NodeMapping<'a>>,
 }
 impl<'a> Mappings<'a> {

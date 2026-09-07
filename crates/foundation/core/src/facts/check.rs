@@ -405,6 +405,70 @@ fn has<T: PartialEq>(values: &[T], value: &T, budget: &mut Budget) -> Result<boo
     budget.charge(Resource::Work, values.len() as u64 + 1)?;
     Ok(values.contains(value))
 }
+impl FactAuthority {
+    /// Checks that a host's proposed grant refers to the declared existing
+    /// analysis. This validates its shape and scope bounds, not its provenance:
+    /// an operation receiver must still match the exact host-issued grant.
+    pub fn validate(
+        &self,
+        base: &CheckedFactSet<'_>,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<(), FactError> {
+        budget.charge(Resource::Work, self.analysis_id.len() as u64 + 1)?;
+        if self.analysis_id != base.value.analysis_id {
+            return Err(FactError::Analysis);
+        }
+        let view = View::new(base.value, None, budget, admission)?;
+        view.scope(self.current_scope, budget)?;
+        for (i, ns) in self.namespaces.iter().enumerate() {
+            if has(&self.namespaces[..i], ns, budget)? {
+                return Err(FactError::DuplicateId);
+            }
+            view.namespace(*ns)?;
+        }
+        for (i, scope) in self.writable_scopes.iter().enumerate() {
+            if has(&self.writable_scopes[..i], scope, budget)?
+                || !view.descendant(*scope, self.current_scope, budget)?
+            {
+                return Err(FactError::Authority);
+            }
+        }
+        for (i, scope) in self.import_scopes.iter().enumerate() {
+            if has(&self.import_scopes[..i], scope, budget)? {
+                return Err(FactError::DuplicateId);
+            }
+            view.scope(*scope, budget)?;
+        }
+        for (i, id) in self.resolution_updates.iter().enumerate() {
+            if has(&self.resolution_updates[..i], id, budget)? {
+                return Err(FactError::DuplicateId);
+            }
+            let occurrence = view.occurrence(*id, budget)?;
+            if !(occurrence.scope == self.current_scope
+                || has(&self.writable_scopes, &occurrence.scope, budget)?)
+                || !has(&self.namespaces, &occurrence.namespace, budget)?
+            {
+                return Err(FactError::Authority);
+            }
+        }
+        for target in &self.relation_sources {
+            view.target(target, budget)?;
+        }
+        for range in [
+            self.reservation.scopes,
+            self.reservation.entities,
+            self.reservation.occurrences,
+            self.reservation.relations,
+        ] {
+            budget.charge(Resource::Work, 1)?;
+            if range.start > range.end {
+                return Err(FactError::Reservation);
+            }
+        }
+        Ok(())
+    }
+}
 impl FactDelta {
     pub fn validate<'a>(
         &'a self,

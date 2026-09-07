@@ -1,6 +1,6 @@
 //! Persistent static selections and recovery retain their bundle-local owners
 //! through the same canonical node mapping used by the core syntax codec.
-mod canonical;
+pub(super) mod canonical;
 mod selection;
 use super::{PortableError, boundary, value::*};
 use crate::{profile::ResolvedParseProfile, recovery::*, selection::*};

@@ -18,6 +18,52 @@ pub trait FoundationValueCodec {
     type Error: FoundationCodecError;
     fn foundation_schema(&self) -> &SchemaRef;
     fn source_admission(&mut self) -> &mut crate::source::SourceAdmission;
+    fn encode_fact_set(
+        &mut self,
+        value: &crate::facts::FactSet,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, Self::Error>;
+    fn decode_fact_set(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<crate::facts::FactSet, Self::Error>;
+    fn encode_fact_delta(
+        &mut self,
+        value: &crate::facts::FactDelta,
+        base: &crate::facts::CheckedFactSet<'_>,
+        authority: &crate::facts::FactAuthority,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, Self::Error>;
+    fn decode_fact_delta(
+        &mut self,
+        value: &NdfValue,
+        base: &crate::facts::CheckedFactSet<'_>,
+        authority: &crate::facts::FactAuthority,
+        budget: &mut Budget,
+    ) -> Result<crate::facts::FactDelta, Self::Error>;
+    /// Structural representation only. The operation owner must compare this
+    /// value with the authority actually issued by its host.
+    fn encode_fact_authority(
+        &mut self,
+        value: &crate::facts::FactAuthority,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, Self::Error>;
+    fn decode_fact_authority(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<crate::facts::FactAuthority, Self::Error>;
+    fn encode_mappings(
+        &mut self,
+        value: &[crate::origin::Mapping],
+        budget: &mut Budget,
+    ) -> Result<NdfValue, Self::Error>;
+    fn decode_mappings(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<Vec<crate::origin::Mapping>, Self::Error>;
     /// Rebind source resolution while borrowing the same registry/admission.
     /// A caller must supply the operation's explicit declaration closure.
     fn scoped<'a>(

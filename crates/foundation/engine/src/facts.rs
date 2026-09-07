@@ -7,6 +7,8 @@ use nepl3_core::{
     facts::{FactAuthority, FactDelta, FactSet},
     syntax::NodeRef,
 };
+pub(crate) mod check;
+pub use check::{CheckedFactsRequest, FactsError};
 pub(crate) fn signature(
     input: &nepl3_core::schema::TypeDescriptor,
     output: &nepl3_core::schema::TypeDescriptor,

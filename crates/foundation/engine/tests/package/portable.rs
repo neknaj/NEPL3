@@ -9,6 +9,8 @@ use nepl3_engine::{
     tree::TreeError,
 };
 use nepl3_wire::foundation::FoundationCodec;
+#[path = "portable/facts.rs"]
+mod facts;
 
 fn profile(package: &LanguagePackage, registry: &SchemaRegistry) -> Result<ParseProfile, String> {
     let identity = package
