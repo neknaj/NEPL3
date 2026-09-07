@@ -2,6 +2,8 @@
 //! types. The host checks its selected parse/profile before passing this graph;
 //! this boundary checks the graph again with the operation's current resources.
 mod forms;
+mod literal;
+pub use literal::DocumentLowerError;
 mod operands;
 use crate::{
     check::{Category, ShapeError, StructureError},
@@ -34,6 +36,9 @@ pub enum LowerError {
         node: NodeRef,
     },
     AssetDigest {
+        node: NodeRef,
+    },
+    LiteralPayload {
         node: NodeRef,
     },
 }
@@ -78,7 +83,8 @@ struct Adapter<'a, 'b> {
     nodes: Vec<DocNode>,
     embeds: Vec<DocEmbed>,
     b: &'b mut Budget,
-    admission: &'b mut SourceAdmission,
+    presentations: Vec<literal::Presentation>,
+    next_origin: u64,
 }
 fn span(value: &Span, b: &mut Budget) -> Result<Span, StopReason> {
     b.charge(Resource::Work, value.snapshot_ref().source.0.len() as u64)?;
@@ -127,9 +133,46 @@ pub fn prefix(
     b: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> Result<DocumentSyntax, LowerError> {
+    run(
+        input,
+        surface,
+        category,
+        registry,
+        b,
+        &mut literal::PrefixOnly(admission),
+    )
+}
+/// Lower prefix constructors and accepted SentenceLiteral payloads together.
+/// The codec's shared admission owns both the host graph and decoded payload
+/// declarations. Payload failures retain their typed codec causes.
+pub fn document<C: nepl3_core::value_codec::FoundationValueCodec>(
+    input: &ValidatedSyntaxBundle<'_>,
+    surface: &SchemaRef,
+    category: Category,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+    codec: &mut C,
+) -> Result<DocumentSyntax, DocumentLowerError<C::Error>> {
+    run(
+        input,
+        surface,
+        category,
+        registry,
+        b,
+        &mut literal::Portable(codec),
+    )
+}
+fn run<D: literal::Decoder>(
+    input: &ValidatedSyntaxBundle<'_>,
+    surface: &SchemaRef,
+    category: Category,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+    decoder: &mut D,
+) -> Result<DocumentSyntax, D::Error> {
     let checked = input
         .bundle()
-        .validate_with_sources(registry, b, admission)?;
+        .validate_with_sources(registry, b, decoder.admission())?;
     let bundle = checked.bundle();
     let size = bundle.nodes.len();
     b.charge(
@@ -144,7 +187,8 @@ pub fn prefix(
         nodes: Vec::new(),
         embeds: Vec::new(),
         b,
-        admission,
+        presentations: Vec::new(),
+        next_origin: bundle.origins.len() as u64,
     };
     // Each frame retains the next field and child position, avoiding recursion
     // and repeated flattening of list/foreign source graphs.
@@ -191,7 +235,7 @@ pub fn prefix(
             (node.schema.package.len() + surface.package.len() + node.kind.len()) as u64 + 33,
         )?;
         if &node.schema != surface {
-            return Err(LowerError::Unsupported { node: id });
+            return Err(LowerError::Unsupported { node: id }.into());
         }
         push(&mut order, index, a.b)?;
         done[index] = true;
@@ -222,11 +266,16 @@ pub fn prefix(
         let depth = caller
             .checked_add(depths[index])
             .ok_or(StopReason::DepthLimit)?;
-        a.convert_at_depth(NodeRef(index as u64), &bundle.nodes[index], depth)?;
+        let node = &bundle.nodes[index];
+        if node.kind == "Leaf:SentenceLiteral" && node.fields.is_empty() {
+            a.literal_at_depth(NodeRef(index as u64), node, depth, decoder)?;
+        } else {
+            a.convert_at_depth(NodeRef(index as u64), node, depth, decoder.admission())?;
+        }
     }
     let Some(Mapped::Node(root_id)) = a.mapping.get(bundle.root.0 as usize).copied().flatten()
     else {
-        return Err(LowerError::Unsupported { node: bundle.root });
+        return Err(LowerError::Unsupported { node: bundle.root }.into());
     };
     let mut output = DocumentSyntax {
         value: DocValue {
@@ -258,10 +307,11 @@ pub fn prefix(
         let map = map.clone_with_budget(a.b)?;
         push(&mut output.source_maps, map, a.b)?;
     }
+    literal::append(a.presentations, &mut output, a.b)?;
     // Auxiliary constructor wrappers consumed into typed parent fields are not
     // semantic children. Compact only this freshly built, checked graph.
     output.value = crate::normalize::compact(output.value, a.b)?;
     output.value = crate::normalize::value(output.value, &mut output.origins, a.b)?;
-    output.validate_structure(registry, a.b, a.admission)?;
+    output.validate_structure(registry, a.b, decoder.admission())?;
     Ok(output)
 }

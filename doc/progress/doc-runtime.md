@@ -12,6 +12,8 @@ sentence recognizer は元 SourceSnapshot を借用し、Matched / NoMatch / Nee
 
 `lower::prefix` は host が選択を検査した SyntaxBundle と明示 surface SchemaRef/category を受け、現在の Budget/SourceAdmission で再検査して Doc arena へ変換する。構造 proof は PreparedArticle や guest の意味 proof ではない。prefix constructor と sentence recognizer は同じ正規化を使う。実 ParseSession の literal payload と prefix lower の正常例は同じ意味正規形となる。
 
+`lower::document` は同じ変換へ実FoundationValueCodecを渡し、prefixと受理済みSentenceLiteralを一括lowerする。payload自身のsource閉包、外tokenのhead/View完全一致、意味Span/Originのtoken内包含（明示SourceMapを含む）を検査する。元hostのOrigin列と各token-local Viewを維持し、payload Originのみ末尾へ再配置する。各snapshotのSourceBytesを操作内で一度だけ計上し、停止時は入力構文木を変更しない。従来のcodec不要な`lower::prefix`はliteral leafに対して明示Unsupportedを維持する。
+
 補助 constructor は独立 fragment として lower/codec でき、親 operand では型付き enum/Option へ取り込む。取り込んだ wrapper を意味的な子に残さず、元 View/Origin/source 宣言を保存する。Code の DocGuest は `foreign Doc Article` で、同 alias でも独立 bundle/environment を保持する。構文は正しいが注釈が意味的に不正な guest も Code の表示準備のために意味 lower しない。host への復帰を実 parse で検査する。
 
 ## 検証の境界
@@ -22,7 +24,6 @@ Doc arena の node/root、Origin、局所 View と source map は portable 往�
 
 ## 残り
 
-- `lower::prefix` の SentenceLiteral leaf は現時点で明示 Unsupported。受理済み literal payload と prefix constructor が混在する一括 lower、およびその source/Origin 再採番の検査を次に接続する。単独 literal の provider/typed payload と prefix の等価性試験を、この未接続経路の成功扱いにしない。
 - 全 constructor の print → parse → lower、compact printer、guest wrapper 単独の fragment API とその往復。
 - article label/外部 page・asset 解決、check/prepare、foreign requirements、plain_text、HTML backend と rendering。schema に表・list・link・code・asset があることだけで、これらの実装済みを主張しない。
 - Doc の正式 lower 操作の Report/部分結果包絡と全 suite adapter。native helper の Result を、別実装の操作包絡の完成として扱わない。

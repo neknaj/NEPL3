@@ -5,6 +5,7 @@ impl Adapter<'_, '_> {
         id: NodeRef,
         node: &SyntaxNode,
         depth: u64,
+        admission: &mut SourceAdmission,
     ) -> Result<(), LowerError> {
         let Self {
             checked,
@@ -13,7 +14,8 @@ impl Adapter<'_, '_> {
             nodes,
             embeds,
             b,
-            admission,
+            presentations,
+            next_origin,
         } = self;
         b.with_depth_at_least(depth, |b| {
             let mut adapter = Adapter {
@@ -23,16 +25,24 @@ impl Adapter<'_, '_> {
                 nodes: core::mem::take(nodes),
                 embeds: core::mem::take(embeds),
                 b,
-                admission,
+                presentations: core::mem::take(presentations),
+                next_origin: *next_origin,
             };
-            let result = adapter.convert(id, node);
+            let result = adapter.convert(id, node, admission);
             *mapping = adapter.mapping;
             *nodes = adapter.nodes;
             *embeds = adapter.embeds;
+            *presentations = adapter.presentations;
+            *next_origin = adapter.next_origin;
             result
         })
     }
-    pub(super) fn convert(&mut self, id: NodeRef, n: &SyntaxNode) -> Result<(), LowerError> {
+    pub(super) fn convert(
+        &mut self,
+        id: NodeRef,
+        n: &SyntaxNode,
+        admission: &mut SourceAdmission,
+    ) -> Result<(), LowerError> {
         use Category as C;
         let kind = match (n.kind.as_str(), n.fields.len()) {
             ("Builtin:Text" | "Builtin:Name" | "Builtin:Lang" | "Builtin:Nat", 0) => return Ok(()),
@@ -108,17 +118,17 @@ impl Adapter<'_, '_> {
                     .collect(),
             },
             ("Form:InlineMath", 1) => DocKind::InlineMath {
-                syntax: self.embed(id, n, 0, EmbedKind::InlineMath)?,
+                syntax: self.embed(id, n, 0, EmbedKind::InlineMath, admission)?,
             },
             ("Form:DisplayMath", 1) => DocKind::DisplayMath {
-                syntax: self.embed(id, n, 0, EmbedKind::DisplayMath)?,
+                syntax: self.embed(id, n, 0, EmbedKind::DisplayMath, admission)?,
             },
             ("Form:CircuitFigure", 2) => DocKind::CircuitFigure {
                 caption: SentenceRef(self.node(id, n, 0, C::Sentence)?),
-                syntax: self.embed(id, n, 1, EmbedKind::CircuitFigure)?,
+                syntax: self.embed(id, n, 1, EmbedKind::CircuitFigure, admission)?,
             },
             ("Form:Code", 1) => DocKind::Code {
-                syntax: self.embed(id, n, 0, EmbedKind::Code)?,
+                syntax: self.embed(id, n, 0, EmbedKind::Code, admission)?,
             },
             ("Form:Anchor", 2) => DocKind::Anchor {
                 id: self.text(id, n, 0, "Builtin:Name")?,

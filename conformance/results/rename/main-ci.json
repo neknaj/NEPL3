@@ -1,0 +1,27 @@
+{
+  "commit": "9eb0a252d9e97c78f03f053f181e1463d41703a0",
+  "run": "34098716618",
+  "archive_sha256": "4ac1e2cf734ed197c8b865d5eb6288dee3bbf2e809ae08f99ca0017885628f48",
+  "tar_members": 810,
+  "files": 648,
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "193a9e225c0dab757197854250f87d0d701748231ab5b8f8b1f083660f959bc2",
+    "spec_sha256": "9e2ad83bdaec1b70afad101f2f6d2efafb100deba1d089af2d19ef672e1d04d7"
+  },
+  "ci_tests": {
+    "native (macos-latest)": 358,
+    "wasi and wasm compilation": 277,
+    "native (windows-latest)": 358,
+    "native (ubuntu-latest)": 358
+  },
+  "retrieved_log_sha256": "8f1a7f5ad29e55899c0d466db02d94b21a9a086b764bbd6c74373568672660ed",
+  "verified": [
+    "All six main CI jobs succeeded for this merged commit.",
+    "Retrieved actual source archive and source/spec identities, root gate logs including original Clippy failure, and 55 independent archived text records matched their hashes.",
+    "Native CI executed 358 tests on each of three operating systems and 277 WASI tests."
+  ],
+  "unverified": [
+    "Source delivery only; no runtime binary release or full acceptance completion."
+  ]
+}
