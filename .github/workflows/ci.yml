@@ -96,6 +96,7 @@ jobs:
         run: |
           wasmtime --version
           cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --target wasm32-wasip2 -- --test-threads=1
+          cargo test --locked -p nepl3-tools --test grammar diagnostic::compiler_report_boundary_without_host_process --target wasm32-wasip2 -- --exact --test-threads=1
       - name: Compile foundation for browser Wasm
         run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --no-default-features --target wasm32-unknown-unknown
 

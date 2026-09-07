@@ -3,6 +3,35 @@
   "package": "nepl3.grammar",
   "revision": 1,
   "types": {
+    "CompileDiagnosticArguments": {
+      "constraints": [],
+      "record": [
+        [
+          "expected",
+          {
+            "option": {
+              "named": {
+                "name": "TypeDescriptor",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "actual",
+          {
+            "option": {
+              "named": {
+                "name": "TypeDescriptor",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
     "Document": {
       "constraints": [
         "grammar.constructor_graph"

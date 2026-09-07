@@ -1,0 +1,7 @@
+# 日本語🙂の位置診断
+language Tiny 1 Expr
+  cons category Expr Main
+  cons reader word ref absent
+  cons mode Main cons take Word word nil
+  cons leaf Word Expr Word none nil
+  nil

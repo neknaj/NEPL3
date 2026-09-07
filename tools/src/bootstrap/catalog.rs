@@ -94,7 +94,7 @@ pub fn compile(
     let checked = document
         .validate(budget, admission)
         .map_err(|e| format!("{e:?}"))?;
-    compile::package::compile(
+    compile::package::compile_with_admission(
         &checked,
         &PackageContext {
             package,
@@ -106,6 +106,7 @@ pub fn compile(
         },
         registry,
         budget,
+        admission,
     )
     .map_err(|e| format!("{e:?}"))
 }

@@ -5,5 +5,6 @@ pub(crate) mod identity;
 mod model;
 mod reader;
 mod shape;
+pub use bindings::{BindingFailure, BindingOwner};
 pub use check::{CheckedLanguagePackage, PackageError};
 pub use model::*;

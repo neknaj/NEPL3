@@ -201,7 +201,7 @@ fn reader_compiler_lowers_real_plan_and_rejects_natural_range_repeat_and_referen
     }
     assert!(matches!(
         run(&bad, &registry, &schema),
-        Err(CompileError::NaturalOverflow)
+        Err(error) if error.cause() == &CompileError::NaturalOverflow
     ));
     let mut bad = doc.clone();
     if let NodeKind::Repeat { min, .. } = &mut bad.nodes[2].kind {
@@ -209,7 +209,7 @@ fn reader_compiler_lowers_real_plan_and_rejects_natural_range_repeat_and_referen
     }
     assert!(matches!(
         run(&bad, &registry, &schema),
-        Err(CompileError::InvalidRepeat)
+        Err(error) if error.cause() == &CompileError::InvalidRepeat
     ));
     for wrong in ["", "ab", "🙂🙂"] {
         let mut bad = doc.clone();
@@ -218,7 +218,7 @@ fn reader_compiler_lowers_real_plan_and_rejects_natural_range_repeat_and_referen
         }
         assert!(matches!(
             run(&bad, &registry, &schema),
-            Err(CompileError::InvalidRange)
+            Err(error) if error.cause() == &CompileError::InvalidRange
         ));
     }
     let mut bad = doc.clone();
@@ -232,12 +232,12 @@ fn reader_compiler_lowers_real_plan_and_rejects_natural_range_repeat_and_referen
     bad.nodes.truncate(3);
     assert!(matches!(
         run(&bad, &registry, &schema),
-        Err(CompileError::MissingRule)
+        Err(error) if error.cause() == &CompileError::MissingRule
     ));
     bad.nodes[2].kind = NodeKind::Call { provider: literal };
     assert!(matches!(
         run(&bad, &registry, &schema),
-        Err(CompileError::MissingProvider)
+        Err(error) if error.cause() == &CompileError::MissingProvider
     ));
     Ok(())
 }

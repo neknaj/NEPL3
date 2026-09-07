@@ -469,6 +469,14 @@
       "evidence": ["doc/spec/04-grammar.md", "crates/foundation/engine/src/portable/head/delegation.rs", "crates/foundation/engine/tests/package/head/portable.rs"],
       "partial_progress": "An independent public-API probe gives the parent a Work limit of 500000, issues a delegation, serializes it to NDF and actual CBOR, and runs receiver CBOR decode, delegation_decode and repeated actual validate_projection calls under the issued child limit. Before merging results, the parent has used 8544 Work and the child 497629, totaling 506173. issue gives the child the entire parent remainder before the parent's subsequent framing consumes part of the same resource allowance. Post-execution rejection by accept cannot undo work already performed.",
       "resolution": "IssuedHeadDelegation now exclusively borrows the parent Budget and subtracts an explicit host transport reserve before granting additive resources. Local codecs use a temporary ceiling; reservations are not Usage. Authenticated completed child costs settle exactly once, including after a parent stop, and unfinished proof Drop stops the parent. With the original shared Work cap500000 and reserve20000, the independent actual-codec/projection probe records parent8544 plus child477666, totaling486210. Independent stop/double-settlement/Drop and all eight atomic observed-usage boundaries pass. Managed core budget2, Head portable6 and actual ParseSession callback1 tests pass independently. The callback settles before decoding malformed replies, rejects modified call identities without changing formal counts, then resumes with valid replies to the native-equivalent Dynamic tree. Spec04 defines the partition, metering cutoff, source-window exemption, absolute depth, failure ordering and host authentication obligations. Separate-process authentication and shutdown remain unimplemented host responsibilities."
+    },
+    {
+      "id": "R042",
+      "status": "open",
+      "title": "Reader payload validation consumes the pending continuation before rejecting an invalid provider value",
+      "affected_tasks": ["T03"],
+      "evidence": ["crates/foundation/reader/src/runtime/mod.rs", "crates/foundation/reader/src/runtime/validate.rs"],
+      "partial_progress": "An independent executable depends on the clean ab9c50b1d36ee0240d759cc80ef986f905242804 snapshot. A Read provider declares Text output; after an actual ReaderSession Await, changing only Matched.value to Unit returns Schema(WrongType). Retrying the same saved continuation with a valid Text result returns NoPending. The private slot is consumed before non-stopping payload validation completes. The current separate Reader work-in-progress performs borrowed validation before take and this minimal retry succeeds, but formal collector/source closure and the final managed regressions are not yet independently reviewed."
     }
   ],
   "runtime_conformance_executed": false

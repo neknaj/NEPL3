@@ -165,9 +165,7 @@ fn compile(path: &str) -> Result<Result<CompiledLanguage, compile::CompileError>
 fn full_example_assembly_reaches_actual_plan_and_binding_validation() -> Result<(), String> {
     assert!(matches!(
         compile("tools/tests/fixtures/grammar/angle-choice-output.neplg")?,
-        Err(compile::CompileError::Reader(
-            nepl3_reader::plan::PlanError::OutputType
-        ))
+        Err(error) if error.cause() == &compile::CompileError::Reader(nepl3_reader::plan::PlanError::OutputType)
     ));
     let compiled = compile("examples/grammar/angle-tag.neplg")?
         .map_err(|e| format!("corrected angle: {e:?}"))?;
@@ -177,9 +175,7 @@ fn full_example_assembly_reaches_actual_plan_and_binding_validation() -> Result<
         .map_err(|e| format!("{e:?}"))?;
     assert!(matches!(
         compile("tools/tests/fixtures/grammar/binding-nontext-name.neplg")?,
-        Err(compile::CompileError::Package(
-            nepl3_engine::package::PackageError::InvalidBinding
-        ))
+        Err(error) if error.cause() == &compile::CompileError::Package(nepl3_engine::package::PackageError::InvalidBinding)
     ));
     Ok(())
 }
@@ -245,7 +241,7 @@ fn shared_kind_is_category_local_with_one_shape_and_distinct_provenance() -> Res
             .err()
             .ok_or("expected rejection")?;
         assert!(
-            matches!(err,compile::CompileError::Declaration{node,related:Some(other),reason:r} if r==reason && node!=other)
+            matches!(err.cause(),compile::CompileError::Declaration{node,related:Some(other),reason:r} if *r==reason && node!=other)
         );
     }
     Ok(())
@@ -279,3 +275,6 @@ fn complete_grammar_source_compiles_with_real_reader_and_facts_descriptors() -> 
         .map_err(|e| format!("{e:?}"))?;
     Ok(())
 }
+
+#[path = "grammar/diagnostic.rs"]
+mod diagnostic;

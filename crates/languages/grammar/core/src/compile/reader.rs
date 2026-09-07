@@ -32,12 +32,17 @@ fn class(
             budget.charge(Resource::Work, (lo.value.len() + hi.value.len()) as u64 + 1)?;
             let mut a = lo.value.chars();
             let mut b = hi.value.chars();
-            let (Some(lo), Some(hi)) = (a.next(), b.next()) else {
-                return Err(CompileError::InvalidRange);
-            };
-            if a.next().is_some() || b.next().is_some() || lo > hi {
-                return Err(CompileError::InvalidRange);
+            let lower = a.next();
+            let upper = b.next();
+            if lower.is_none() || a.next().is_some() {
+                return Err(CompileError::InvalidRange.at(&lo.span, Some(&hi.span), budget));
             }
+            if upper.is_none() || b.next().is_some() || lower > upper {
+                return Err(CompileError::InvalidRange.at(&hi.span, Some(&lo.span), budget));
+            }
+            let (Some(lo), Some(hi)) = (lower, upper) else {
+                return Err(CompileError::WrongConstructor(node));
+            };
             CharClass::Range { lo, hi }
         }
         _ => return Err(CompileError::WrongConstructor(node)),
@@ -103,14 +108,14 @@ fn lower(
         NodeKind::Commit { body } => ReaderExpr::Commit(one(body)?),
         NodeKind::Discard { body } => ReaderExpr::Discard(one(body)?),
         NodeKind::Repeat { min, max, body } => {
-            let min = natural_u64(min, budget)?;
-            let max = natural_u64(max, budget)?;
-            if min > max {
-                return Err(CompileError::InvalidRepeat);
+            let minimum = natural_u64(min, budget)?;
+            let maximum = natural_u64(max, budget)?;
+            if minimum > maximum {
+                return Err(CompileError::InvalidRepeat.at(&max.span, Some(&min.span), budget));
             }
             ReaderExpr::Repeat {
-                min,
-                max,
+                min: minimum,
+                max: maximum,
                 body: one(body)?,
             }
         }
@@ -127,7 +132,7 @@ fn lower(
                 .classes
                 .iter()
                 .find(|v| v.name == role.value)
-                .ok_or(CompileError::MissingClass)?
+                .ok_or_else(|| CompileError::MissingClass.at(&role.span, None, budget))?
                 .class;
             budget.charge(
                 Resource::AllocationUnits,
@@ -147,7 +152,7 @@ fn lower(
                 .views
                 .iter()
                 .find(|v| v.name == kind.value)
-                .ok_or(CompileError::MissingView)?
+                .ok_or_else(|| CompileError::MissingView.at(&kind.span, None, budget))?
                 .kind;
             budget.charge(Resource::AllocationUnits, kind.schema.package.len() as u64)?;
             ReaderExpr::Node {
@@ -155,25 +160,52 @@ fn lower(
                 body: one(body)?,
             }
         }
-        NodeKind::Ref { name } => ReaderExpr::Ref(text(&name.value, budget)?),
+        NodeKind::Ref { name } => {
+            let mut found = false;
+            for candidate in &document.document().nodes {
+                budget.charge(Resource::Work, name.value.len() as u64 + 1)?;
+                if matches!(&candidate.kind, NodeKind::Reader { name: declared, .. } if declared.value == name.value)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if !found {
+                return Err(CompileError::MissingRule.at(&name.span, None, budget));
+            }
+            ReaderExpr::Ref(text(&name.value, budget)?)
+        }
         NodeKind::Decode { decoder, body } => ReaderExpr::Decode {
-            provider: provider(context, &decoder.value, ProviderKind::Transform, budget)?,
+            provider: provider(context, &decoder.value, ProviderKind::Transform, budget)
+                .map_err(|error| error.at(&decoder.span, None, budget))?,
             body: one(body)?,
         },
         NodeKind::Map { provider: p, body } => ReaderExpr::Map {
-            provider: provider(context, &p.value, ProviderKind::Transform, budget)?,
+            provider: provider(context, &p.value, ProviderKind::Transform, budget)
+                .map_err(|error| error.at(&p.span, None, budget))?,
             body: one(body)?,
         },
         NodeKind::Then { first, provider: p } => ReaderExpr::Then {
             first: one(first)?,
-            provider: provider(context, &p.value, ProviderKind::Dependent, budget)?,
+            provider: provider(context, &p.value, ProviderKind::Dependent, budget)
+                .map_err(|error| error.at(&p.span, None, budget))?,
         },
-        NodeKind::Call { provider: p } => {
-            ReaderExpr::Call(provider(context, &p.value, ProviderKind::Read, budget)?)
-        }
+        NodeKind::Call { provider: p } => ReaderExpr::Call(
+            provider(context, &p.value, ProviderKind::Read, budget)
+                .map_err(|error| error.at(&p.span, None, budget))?,
+        ),
         NodeKind::Eof => ReaderExpr::Eof,
         NodeKind::Takecount { count } => ReaderExpr::TakeCount(natural_u64(count, budget)?),
-        NodeKind::Until { delimiter } => ReaderExpr::Until(text(&delimiter.value, budget)?),
+        NodeKind::Until { delimiter } => {
+            if delimiter.value.is_empty() {
+                return Err(CompileError::Reader(PlanError::EmptyDelimiter).at(
+                    &delimiter.span,
+                    None,
+                    budget,
+                ));
+            }
+            ReaderExpr::Until(text(&delimiter.value, budget)?)
+        }
         _ => return Err(CompileError::WrongConstructor(node)),
     })
 }
@@ -206,7 +238,8 @@ pub fn compile(
     let mut expressions = Vec::new();
     for (i, slot) in map.iter().enumerate() {
         if slot.is_some() {
-            let expr = lower(document, NodeId(i as u64), &map, context, budget)?;
+            let expr = lower(document, NodeId(i as u64), &map, context, budget)
+                .map_err(|error| error.at_node(doc, NodeId(i as u64), budget))?;
             push(&mut expressions, expr, budget)?;
         }
     }
@@ -218,7 +251,7 @@ pub fn compile(
                 (roots.len() as u64).saturating_mul(name.value.len() as u64 + 1),
             )?;
             if roots.iter().any(|(n, _)| n == &name.value) {
-                return Err(CompileError::DuplicateRule);
+                return Err(CompileError::DuplicateRule.at(&name.span, None, budget));
             }
             push(
                 &mut roots,
@@ -265,7 +298,44 @@ pub fn compile(
         rules,
         providers,
     };
-    plan.check(context.registry, budget)?;
+    if let Err(failure) = plan.check_detailed(context.registry, budget) {
+        let error = CompileError::from(failure.error);
+        if let Some(expression) = failure.expression {
+            for (index, id) in map.iter().enumerate() {
+                budget.charge(Resource::Work, 1)?;
+                if *id == Some(expression) {
+                    if let ReaderExpr::Choice(parts) = &plan.expressions[expression.0 as usize]
+                        && let Some(first) = parts.first()
+                    {
+                        for part in parts.iter().skip(1) {
+                            budget.charge(Resource::Work, 1)?;
+                            if !same_output(
+                                &outputs[part.0 as usize],
+                                &outputs[first.0 as usize],
+                                budget,
+                            )? {
+                                let primary = source_node(&map, *part, budget)?;
+                                let related = source_node(&map, *first, budget)?;
+                                return Err(error
+                                    .at(
+                                        &doc.node(primary)?.span,
+                                        Some(&doc.node(related)?.span),
+                                        budget,
+                                    )
+                                    .with_types(
+                                        &outputs[first.0 as usize],
+                                        &outputs[part.0 as usize],
+                                        budget,
+                                    ));
+                            }
+                        }
+                    }
+                    return Err(error.at_node(doc, NodeId(index as u64), budget));
+                }
+            }
+        }
+        return Err(error);
+    }
     Ok(plan)
 }
 fn infer(
@@ -382,4 +452,47 @@ fn infer(
         push(&mut result, ty.ok_or(CompileError::OutputType)?, budget)?;
     }
     Ok(result)
+}
+
+fn source_node(
+    map: &[Option<ReaderId>],
+    reader: ReaderId,
+    budget: &mut Budget,
+) -> Result<NodeId, CompileError> {
+    for (index, candidate) in map.iter().enumerate() {
+        budget.charge(Resource::Work, 1)?;
+        if *candidate == Some(reader) {
+            return Ok(NodeId(index as u64));
+        }
+    }
+    Err(CompileError::OutputType)
+}
+
+// Descriptor equality must account for symbolic-name bytes before comparing them.
+fn same_output(
+    mut left: &TypeDescriptor,
+    mut right: &TypeDescriptor,
+    budget: &mut Budget,
+) -> Result<bool, CompileError> {
+    let mut depth = 1;
+    loop {
+        budget.observe_depth(depth)?;
+        budget.charge(Resource::Work, 1)?;
+        match (left, right) {
+            (TypeDescriptor::List(a), TypeDescriptor::List(b))
+            | (TypeDescriptor::Option(a), TypeDescriptor::Option(b)) => {
+                left = a;
+                right = b;
+                depth += 1;
+            }
+            (TypeDescriptor::Named(a), TypeDescriptor::Named(b)) => {
+                budget.charge(
+                    Resource::Work,
+                    (a.package.len() + a.name.len() + b.package.len() + b.name.len()) as u64 + 1,
+                )?;
+                return Ok(a == b);
+            }
+            _ => return Ok(core::mem::discriminant(left) == core::mem::discriminant(right)),
+        }
+    }
 }

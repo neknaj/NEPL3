@@ -19,7 +19,7 @@ pub(crate) fn infer_document(
                     previous.len().min(name.value.len()) as u64 + 1,
                 )?;
                 if previous == &name.value {
-                    return Err(CompileError::DuplicateRule);
+                    return Err(CompileError::DuplicateRule.at(&name.span, None, budget));
                 }
             }
             let _ = index;
@@ -60,7 +60,7 @@ pub(crate) fn infer_document(
                     get(roots
                         .iter()
                         .find(|(n, _)| n == &name.value)
-                        .ok_or(CompileError::MissingRule)?
+                        .ok_or_else(|| CompileError::MissingRule.at(&name.span, None, budget))?
                         .1)
                 }
                 NodeKind::Call { provider }
@@ -77,7 +77,9 @@ pub(crate) fn infer_document(
                         &imports
                             .iter()
                             .find(|p| p.provider == provider.value)
-                            .ok_or(CompileError::MissingProvider)?
+                            .ok_or_else(|| {
+                                CompileError::MissingProvider.at(&provider.span, None, budget)
+                            })?
                             .signature
                             .value_output,
                     )
@@ -139,7 +141,7 @@ pub(crate) fn infer_document(
         let ty = types
             .get(id.0 as usize)
             .and_then(Option::as_ref)
-            .ok_or(CompileError::OutputType)?
+            .ok_or_else(|| CompileError::OutputType.at_node(doc, id, budget))?
             .clone_with_budget(budget)?;
         push(&mut out, (name, ty), budget)?;
     }

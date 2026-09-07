@@ -134,6 +134,13 @@ pub enum PlanError {
     NonProgress,
     LeftRecursion,
 }
+/// Exact expression under inspection when a plan check failed. Global schema
+/// and host provider catalog failures have no invented expression reference.
+#[derive(Debug, Eq, PartialEq)]
+pub struct PlanFailure {
+    pub error: PlanError,
+    pub expression: Option<ReaderId>,
+}
 impl From<SchemaError> for PlanError {
     fn from(e: SchemaError) -> Self {
         match e {
@@ -199,11 +206,30 @@ impl ReaderPlan {
         registry: &'a SchemaRegistry,
         budget: &mut Budget,
     ) -> Result<CheckedPlan<'a>, PlanError> {
+        self.check_detailed(registry, budget)
+            .map_err(|failure| failure.error)
+    }
+    pub fn check_detailed<'a>(
+        &'a self,
+        registry: &'a SchemaRegistry,
+        budget: &mut Budget,
+    ) -> Result<CheckedPlan<'a>, PlanFailure> {
+        let mut expression = None;
+        self.check_inner(registry, budget, &mut expression)
+            .map_err(|error| PlanFailure { error, expression })
+    }
+    fn check_inner<'a>(
+        &'a self,
+        registry: &'a SchemaRegistry,
+        budget: &mut Budget,
+        at: &mut Option<ReaderId>,
+    ) -> Result<CheckedPlan<'a>, PlanError> {
         if !registry.is_finalized() || registry.descriptor(&self.schema).is_none() {
             return Err(PlanError::UnknownSchema);
         }
         registry.validate_type(&self.state_type, budget)?;
         for (index, rule) in self.rules.iter().enumerate() {
+            *at = Some(rule.root);
             budget.charge(Resource::Work, index as u64 + 1)?;
             if rule.name.is_empty() {
                 return Err(PlanError::EmptyName);
@@ -214,6 +240,7 @@ impl ReaderPlan {
             self.expression(rule.root)?;
             registry.validate_type(&rule.output, budget)?;
         }
+        *at = None;
         for (index, provider) in self.providers.iter().enumerate() {
             budget.charge(Resource::Work, index as u64 + 1)?;
             if self.providers[..index]
@@ -250,7 +277,8 @@ impl ReaderPlan {
                 return Err(PlanError::ProviderSignature);
             }
         }
-        for expr in &self.expressions {
+        for (index, expr) in self.expressions.iter().enumerate() {
+            *at = Some(ReaderId(index as u64));
             budget.charge(Resource::Nodes, 1)?;
             budget.charge(Resource::Work, 1)?;
             for child in children(expr) {
@@ -304,6 +332,7 @@ impl ReaderPlan {
         loop {
             let mut changed = false;
             for (index, expr) in self.expressions.iter().enumerate() {
+                *at = Some(ReaderId(index as u64));
                 budget.charge(Resource::Work, 1)?;
                 let value = self.nullable(expr, &nullable)?;
                 if value && !nullable[index] {
@@ -315,7 +344,8 @@ impl ReaderPlan {
                 break;
             }
         }
-        for expr in &self.expressions {
+        for (index, expr) in self.expressions.iter().enumerate() {
+            *at = Some(ReaderId(index as u64));
             match expr {
                 ReaderExpr::Many(body) | ReaderExpr::Some(body) if nullable[body.0 as usize] => {
                     return Err(PlanError::NonProgress);
@@ -326,9 +356,10 @@ impl ReaderPlan {
                 _ => {}
             }
         }
-        self.check_left_recursion(&nullable, budget)?;
-        let outputs = self.infer_outputs(budget)?;
+        self.check_left_recursion(&nullable, budget, at)?;
+        let outputs = self.infer_outputs(budget, at)?;
         for rule in &self.rules {
+            *at = Some(rule.root);
             if outputs[rule.root.0 as usize] != rule.output {
                 return Err(PlanError::OutputType);
             }
@@ -371,6 +402,7 @@ impl ReaderPlan {
         &self,
         nullable: &[bool],
         budget: &mut Budget,
+        at: &mut Option<ReaderId>,
     ) -> Result<(), PlanError> {
         budget.charge(Resource::AllocationUnits, self.expressions.len() as u64)?;
         let mut state = alloc::vec![0u8;self.expressions.len()];
@@ -378,6 +410,7 @@ impl ReaderPlan {
             let mut pending = Vec::new();
             push(&mut pending, root, false, budget)?;
             while let Some((index, exiting)) = pending.pop() {
+                *at = Some(ReaderId(index as u64));
                 budget.charge(Resource::Work, 1)?;
                 if exiting {
                     state[index] = 2;
@@ -416,7 +449,11 @@ impl ReaderPlan {
         }
         Ok(())
     }
-    fn infer_outputs(&self, budget: &mut Budget) -> Result<Vec<TypeDescriptor>, PlanError> {
+    fn infer_outputs(
+        &self,
+        budget: &mut Budget,
+        at: &mut Option<ReaderId>,
+    ) -> Result<Vec<TypeDescriptor>, PlanError> {
         use alloc::boxed::Box;
         budget.charge(
             Resource::AllocationUnits,
@@ -427,6 +464,7 @@ impl ReaderPlan {
         for _ in 0..=self.expressions.len() {
             let mut changed = false;
             for (index, expr) in self.expressions.iter().enumerate() {
+                *at = Some(ReaderId(index as u64));
                 budget.charge(Resource::Work, 1)?;
                 if outputs[index].is_some() {
                     continue;
@@ -503,11 +541,14 @@ impl ReaderPlan {
             Resource::AllocationUnits,
             (outputs.len() as u64).saturating_mul(core::mem::size_of::<TypeDescriptor>() as u64),
         )?;
-        let outputs: Vec<_> = outputs
-            .into_iter()
-            .collect::<Option<Vec<_>>>()
-            .ok_or(PlanError::OutputType)?;
-        for expr in &self.expressions {
+        let mut complete = Vec::new();
+        for (index, value) in outputs.into_iter().enumerate() {
+            *at = Some(ReaderId(index as u64));
+            complete.push(value.ok_or(PlanError::OutputType)?);
+        }
+        let outputs = complete;
+        for (index, expr) in self.expressions.iter().enumerate() {
+            *at = Some(ReaderId(index as u64));
             match expr {
                 ReaderExpr::Choice(parts) => {
                     let first = parts.first().ok_or(PlanError::OutputType)?;

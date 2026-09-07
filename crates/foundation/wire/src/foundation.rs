@@ -1,4 +1,5 @@
 //! Concrete host boundary used by crates that depend on core rather than wire.
+mod types;
 use crate::{WireError, environment::*, source::*, view::*};
 use alloc::vec::Vec;
 use nepl3_core::{
@@ -60,6 +61,15 @@ impl<'a> FoundationCodec<'a> {
 }
 impl FoundationValueCodec for FoundationCodec<'_> {
     type Error = WireError;
+    fn encode_type_descriptor(
+        &mut self,
+        value: &TypeDescriptor,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
+        let encoded = types::encode(value, self.schema, budget)?;
+        self.validate(&encoded, "TypeDescriptor", budget)?;
+        Ok(encoded)
+    }
     fn source_admission(&mut self) -> &mut SourceAdmission {
         self.admission
     }

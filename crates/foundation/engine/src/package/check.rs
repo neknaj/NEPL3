@@ -130,10 +130,23 @@ impl<'a> CheckedLanguagePackage<'a> {
     }
 }
 impl LanguagePackage {
+    /// Validate as a standalone operation with a fresh source admission ledger.
+    /// Use [`Self::check_with_admission`] when checking a compiled package within
+    /// the operation that has already admitted its provenance sources.
     pub fn check<'a>(
         &'a self,
         registry: &'a SchemaRegistry,
         budget: &mut Budget,
+    ) -> Result<CheckedLanguagePackage<'a>, PackageError> {
+        self.check_with_admission(registry, budget, &mut SourceAdmission::default())
+    }
+    /// Check within an existing operation, admitting each provenance snapshot
+    /// only once through the caller's shared source ledger.
+    pub fn check_with_admission<'a>(
+        &'a self,
+        registry: &'a SchemaRegistry,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
     ) -> Result<CheckedLanguagePackage<'a>, PackageError> {
         budget.charge(Resource::Work, 1)?;
         if !registry.is_finalized() {
@@ -218,7 +231,6 @@ impl LanguagePackage {
         super::bindings::check(self, registry, budget)?;
         self.recovery.validate(self, registry, budget)?;
         let mut sources = SourceStore::default();
-        let mut admission = SourceAdmission::default();
         for snapshot in &self.provenance.sources {
             admission.admit_existing(snapshot, budget)?;
             budget.charge(

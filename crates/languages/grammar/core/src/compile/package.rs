@@ -15,6 +15,7 @@ use nepl3_reader::{
     builtin::BuiltinReader,
     tokenizer::{ReaderMode, SkipRule, TakeRule, TokenReader},
 };
+mod diagnostic;
 mod payload;
 mod surface;
 
@@ -176,11 +177,55 @@ fn styles(
 }
 /// Compile all declarations into an actual registered surface schema and checked
 /// package. Runtime providers are intentionally outside this operation.
+///
+/// This standalone entry owns a fresh source admission ledger. Use
+/// [`compile_with_admission`] to share admission with document validation and
+/// diagnostic serialization within one operation.
 pub fn compile(
+    document: &CheckedDocument<'_>,
+    context: &PackageContext<'_>,
+    registry: SchemaRegistry,
+    budget: &mut Budget,
+) -> Result<CompiledLanguage, CompileError> {
+    compile_with_admission(
+        document,
+        context,
+        registry,
+        budget,
+        &mut nepl3_core::source::SourceAdmission::default(),
+    )
+}
+/// Compile in the same operation as document validation and later diagnostic
+/// materialization, reusing the caller's source admission ledger.
+pub fn compile_with_admission(
+    document: &CheckedDocument<'_>,
+    context: &PackageContext<'_>,
+    registry: SchemaRegistry,
+    budget: &mut Budget,
+    admission: &mut nepl3_core::source::SourceAdmission,
+) -> Result<CompiledLanguage, CompileError> {
+    for source in &document.document().sources {
+        admission
+            .admit_existing(source, budget)
+            .map_err(ModelError::from)?;
+    }
+    assemble(document, context, registry, budget, admission).map_err(|error| {
+        if matches!(
+            error,
+            CompileError::Declaration { .. } | CompileError::WrongConstructor(_)
+        ) {
+            error.at_node(document.document(), document.document().root, budget)
+        } else {
+            error
+        }
+    })
+}
+fn assemble(
     document: &CheckedDocument<'_>,
     context: &PackageContext<'_>,
     mut registry: SchemaRegistry,
     budget: &mut Budget,
+    admission: &mut nepl3_core::source::SourceAdmission,
 ) -> Result<CompiledLanguage, CompileError> {
     budget.charge(Resource::Work, 1)?;
     let doc = document.document();
@@ -656,7 +701,16 @@ pub fn compile(
             declarations,
         },
     };
-    package.check(&registry, budget)?;
+    if let Err(error) = package.check_with_admission(&registry, budget, admission) {
+        return Err(diagnostic::locate(
+            &package,
+            error,
+            doc,
+            &binding_ids,
+            &registry,
+            budget,
+        ));
+    }
     Ok(CompiledLanguage { package, registry })
 }
 fn binding(
