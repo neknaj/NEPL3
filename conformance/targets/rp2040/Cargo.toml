@@ -15,7 +15,7 @@ nepl3-reader = { path = "../../../crates/foundation/reader" }
 nepl3-wire = { path = "../../../crates/foundation/wire" }
 nepl3-engine = { path = "../../../crates/foundation/engine" }
 cortex-m = "=0.7.7"
-cortex-m-rt = "=0.7.5"
+cortex-m-rt = "=0.7.6"
 rp2040-hal = { version = "=0.12.0", features = ["rt", "critical-section-impl", "disable-intrinsics"] }
 rp2040-boot2 = "=0.3.0"
 
