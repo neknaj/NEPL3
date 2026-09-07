@@ -1,0 +1,9 @@
+# PR45 documentation / attributes follow-up
+
+The e775fca merge's nonempty .gitattributes lines are exactly the union of its two parents. Both html-anchor-identifiers and doc-markdown-code evidence rules retain `-text -whitespace`; no parent rule is lost. This confirms this conflict resolution, not a fresh runtime validation of the entire merged branch.
+
+Read 5657677's two-paragraph spec12 change against the same commit's design/markup.json, spec19 and actual typed HTML model/checker. The HTML list/table/img names exist in the closed HtmlTag model and declarative list. SVG image remains excluded from the SVG allowlist. Href has exactly Fragment, Artifact, BetweenArtifacts and External branches; Fragment is checked against collected local IDs, Artifact/BetweenArtifacts paths and optional fragments undergo lexical checks, and External uses the constrained URI validator. Src is accepted only on Img with relative ArtifactPath validation, and Img requires Src and Alt.
+
+The revised summary correctly removes the obsolete claim that all external href/image uses are forbidden, while preserving the distinction between HTML img and forbidden SVG image. Arbitrary handlers/style/script/namespaces remain outside the typed contract. The normative referenced spec19 explicitly makes actual-shell source route binding, cross-artifact target existence/version and stylesheet/resource authority separate preparation obligations. The spec12 phrase about respective URI/target/route checks must be read with that boundary; the raw markup checker itself does not newly prove artifact existence. The new final asset sentence also preserves that distinction.
+
+No blocking inconsistency found in these documentation/conflict deltas. No production edit or new build/runtime test was needed or performed for this two-paragraph correction. The broader HTML migration and human acceptance requirements remain separate.
