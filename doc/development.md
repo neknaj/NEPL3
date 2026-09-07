@@ -100,6 +100,14 @@ CIと同じ.gitattributesに従うfresh checkoutで通常ファイルをLFにそ
 
 ## CIと配布
 
+Doc単独の生成物は次で確認できます。出力先は存在しないディレクトリを指定してください。
+
+```sh
+cargo run --locked -p nepl3-tools -- doc-html export examples/document/linear-combination.nepld .tmp/linear-combination-html
+```
+
+`document.html` と `assets/` を一緒に配布します。数式・外部ページ・画像等の解決はまだこのlocal入口の対象外で、必要な場合は生成を拒否します。正式文書の正本切替とPages公開は、リンク・意味同等性・配布検査を含む別の工程です。契約は [20章](spec/20-doc-html.md) を参照してください。
+
 [CI workflow](../.github/workflows/ci.yml) はpush・pull request・手動実行で起動し、Linux・Windows・macOSで上記のRust検査とリポジトリ検査を実行します。文書だけの変更も対象です。すべてのmatrix jobの成功を集約する固定名 `quality` を、mainの必須status checkとして使用します。失敗・cancel・skipを成功へ読み替えません。
 
 `main` へのpushで `quality` が成功した後、同じcommit SHAのGit管理対象をsource archiveとしてActions artifactへ保存します。archiveにはLICENSE・仕様・schema・文法・例・開発toolsが入り、SHA-256とcommit識別情報を添付します。保存期間は30日です。これは基盤整備段階の継続的な成果物配布であり、言語runtimeのbinary releaseではありません。`.tmp/` はarchiveへ入りません。
@@ -127,3 +135,5 @@ Doc関連の共通値・wire・文書意味APIを固定する前に、[早期inv
 メインagentが設計具体化、実装、試験、指摘修正と統括を担当し、subagentには独立レビューだけを依頼します。レビュー担当はメインagentの説明だけを根拠にせず、元の契約、実コード、失敗系、期待値の根拠、差分と実行結果を確認します。メインagentが必要な修正・再レビュー・再検査を確認して統合します。専用branchでこまめにcommit・pushし、未レビューのcheckpointと統合可能な変更を区別します。利用上限等で独立レビューが未実行の場合も成功にせず、独立して進められる作業を続けます。具体的な規範は [AGENTS.md](../AGENTS.md) を参照してください。
 
 HTML fragmentの生成adapterは `python tools/generate/markup.py`、schema projectionは `cargo run --locked -p nepl3-tools -- markup --write` を使用する。fragment単体の成功をDoc/asset/KaTeX/Web全体の受入へ拡張しない。
+
+Doc HTMLの値schemaは `cargo run --locked -p nepl3-tools -- doc-html --write`、型付きadapterは `python tools/generate/doc_html.py --write` で生成し、通常checkで照合する。`cargo test --locked -p nepl3-doc-html` とtoolsのDoc試験でnative/実source経路を検査する。local-onlyのfragment成功を、資源解決・配布文書・T23全体の成功へ拡張しない。

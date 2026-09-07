@@ -21,6 +21,11 @@ fn run() -> nepl3_tools::Result<()> {
         ["doc", "--write"] => nepl3_tools::doc(&root),
         ["math", "--write"] => nepl3_tools::math(&root),
         ["markup", "--write"] => nepl3_tools::markup(&root),
+        ["doc-html", "--write"] => nepl3_tools::doc_html(&root),
+        ["doc-html", "export", input, output] => nepl3_tools::doc::export::write(
+            std::path::Path::new(input),
+            std::path::Path::new(output),
+        ),
         ["tasks", "--write"] => nepl3_tools::tasks(&root, true),
         ["tasks", "--check"] => nepl3_tools::tasks(&root, false),
         ["evidence", "identity"] => nepl3_tools::evidence_identity(&root),
@@ -31,7 +36,7 @@ fn run() -> nepl3_tools::Result<()> {
         ["doc-inventory", "--check-current"] => nepl3_tools::doc_inventory(&root, None, true),
         ["--help"] | ["-h"] => {
             println!(
-                "nepl3-tools check | tasks --check | tasks --write | evidence identity\n  foundation --write | reader --write | engine --write | grammar --write | doc --write | math --write | markup --write\n  doc-inventory --write --commit <40-hex-commit> | doc-inventory --check | doc-inventory --check-current\nRepository checks do not establish runtime conformance."
+                "nepl3-tools check | tasks --check | tasks --write | evidence identity\n  foundation --write | reader --write | engine --write | grammar --write | doc --write | math --write | markup --write | doc-html --write\n  doc-html export <input.nepld> <new-output-directory>\n  doc-inventory --write --commit <40-hex-commit> | doc-inventory --check | doc-inventory --check-current\nRepository checks do not establish runtime conformance."
             );
             Ok(())
         }

@@ -54,6 +54,7 @@ pub fn check(root: &Path) -> Result<()> {
     contract::doc::check(root)?;
     contract::math::check(root)?;
     contract::markup::check(root)?;
+    contract::doc_html::check(root)?;
     dependency::check(root, &status.implemented_crates)?;
     task::generate(root, &tasks, &status, false)?;
     documentation::check(root, false)?;
@@ -126,4 +127,7 @@ pub fn math(root: &Path) -> Result<()> {
 
 pub fn markup(root: &Path) -> Result<()> {
     contract::markup::write(root)
+}
+pub fn doc_html(root: &Path) -> Result<()> {
+    contract::doc_html::write(root)
 }

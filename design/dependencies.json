@@ -92,7 +92,7 @@
         "nepl3-markup"
       ],
       "no_std": true,
-      "responsibility": "Docを構造化HTMLへ変換"
+      "responsibility": "Docを構造化HTMLへ変換; dev-only nepl3-wire tests actual CBOR first receiver"
     },
     {
       "name": "nepl3-math-tex",
@@ -210,10 +210,12 @@
         "nepl3-grammar-core",
         "nepl3-suite",
         "nepl3-doc-core",
-        "nepl3-math-core"
+        "nepl3-math-core",
+        "nepl3-doc-html",
+        "nepl3-markup"
       ],
       "no_std": false,
-      "responsibility": "生成・conformance・依存検査"
+      "responsibility": "Generation, conformance, dependency checks and local Doc artifact host"
     }
   ],
   "design_revision": "nepl3-design-2026-09-06-r4"

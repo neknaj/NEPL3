@@ -57,6 +57,10 @@ jobs:
         run: python tools/generate/math.py
       - name: Check Markup schema generation
         run: python tools/generate/markup.py
+      - name: Check Doc HTML schema generation
+        run: python tools/generate/doc_html.py
+      - name: Doc browser corpus audit input tests
+        run: python -m unittest discover -s tools/audit/doc_html -p 'test_*.py'
       - name: Initial seed input adapter tests
         run: python -m unittest discover -s tools/bootstrap -p test_grammar.py
       - name: Format
@@ -65,6 +69,19 @@ jobs:
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - name: Tests
         run: cargo test --workspace --locked
+      - name: Export the real Doc example
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          mkdir -p dist
+          cargo run --locked -p nepl3-tools -- doc-html export examples/document/linear-combination.nepld dist/doc-example
+      - name: Upload generated local document
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: NEPL3-local-doc-${{ github.sha }}
+          path: dist/doc-example/
+          if-no-files-found: error
+          retention-days: 14
       - name: Independent native allocation regression
         run: python tools/audit/allocation/run.py
       - name: API documentation
@@ -101,7 +118,7 @@ jobs:
           CARGO_TARGET_WASM32_WASIP2_RUNNER: wasmtime run
         run: |
           wasmtime --version
-          cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup --target wasm32-wasip2 -- --test-threads=1
+          cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked -p nepl3-tools --test grammar diagnostic::compiler_report_boundary_without_host_process --target wasm32-wasip2 -- --exact --test-threads=1
           cargo test --locked -p nepl3-tools --test grammar reader::all_reader_constructors --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked -p nepl3-tools --test grammar reader::compiled_reader_streaming_boundaries_and_rollback_keep_raw_positions --target wasm32-wasip2 -- --exact --test-threads=1
@@ -110,7 +127,7 @@ jobs:
           cargo test --locked -p nepl3-tools --test doc --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked -p nepl3-tools --test math --target wasm32-wasip2 -- --test-threads=1
       - name: Compile foundation for browser Wasm
-        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup --no-default-features --target wasm32-unknown-unknown
+        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html --no-default-features --target wasm32-unknown-unknown
 
   quality:
     name: quality

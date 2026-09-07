@@ -1,0 +1,20 @@
+[package]
+name = "nepl3-doc-html"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+description = "Pure checked Doc to HTML conversion"
+
+[dependencies]
+nepl3-core.workspace = true
+nepl3-doc-core.workspace = true
+nepl3-markup.workspace = true
+
+[dev-dependencies]
+nepl3-wire.workspace = true
+
+[lints]
+workspace = true
