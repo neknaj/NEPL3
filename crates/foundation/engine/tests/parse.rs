@@ -44,6 +44,7 @@ fn run_options(
 }
 #[derive(Default)]
 struct Scenario {
+    sealed: bool,
     work: Option<u64>,
     list: bool,
     cap: Option<u64>,
@@ -58,6 +59,7 @@ struct Scenario {
 }
 fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<ParseReply, String> {
     let Scenario {
+        sealed,
         list,
         cap,
         work,
@@ -324,7 +326,13 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
                 }
                 Ok(result.reply)
             } else {
-                session.read(request, &sources, operation, &mut admission)
+                if sealed {
+                    session
+                        .read_completed(request, &sources, operation, &mut admission)
+                        .map(unseal)
+                } else {
+                    session.read(request, &sources, operation, &mut admission)
+                }
             }
         })
         .map_err(|e| format!("{e:?}"))?;
@@ -570,7 +578,19 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
                     .map_err(|e| format!("host: {e:?}"))?;
                 let resumed = operation
                     .with_depth_at_least(caller_depth, |b| {
-                        session.resume(continuation, terminal, &sources, b, &mut admission)
+                        if sealed {
+                            session
+                                .resume_completed(
+                                    continuation,
+                                    terminal,
+                                    &sources,
+                                    b,
+                                    &mut admission,
+                                )
+                                .map(unseal)
+                        } else {
+                            session.resume(continuation, terminal, &sources, b, &mut admission)
+                        }
                     })
                     .map_err(|e| format!("resume: {e:?}"))?;
                 reply = resumed;
@@ -615,13 +635,25 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
             ));
             let resumed = operation
                 .with_depth_at_least(caller_depth, |operation| {
-                    session.reserve(
-                        continuation,
-                        &reservation,
-                        &sources,
-                        operation,
-                        &mut admission,
-                    )
+                    if sealed {
+                        session
+                            .reserve_completed(
+                                continuation,
+                                &reservation,
+                                &sources,
+                                operation,
+                                &mut admission,
+                            )
+                            .map(unseal)
+                    } else {
+                        session.reserve(
+                            continuation,
+                            &reservation,
+                            &sources,
+                            operation,
+                            &mut admission,
+                        )
+                    }
                 })
                 .map_err(|e| format!("reserve: {e:?}"))?;
             assert_eq!(operation.current_depth(), 0);
@@ -1414,5 +1446,55 @@ fn native_host_mixed_text_provider_fallback_preserves_decoded_sources() -> TestR
     assert_eq!(cancelled.report.diagnostics.len(), 1);
     assert_eq!(cancelled.sources.len(), 1);
     assert_eq!(cancelled.source_maps.len(), 2);
+    Ok(())
+}
+
+fn unseal(value: ParseCompletion) -> ParseReply {
+    match value {
+        ParseCompletion::Continue(proof) => {
+            let cursor = proof.cursor();
+            let raw = proof.into_reply();
+            assert!(matches!(raw.outcome,ParseOutcome::Complete{cursor:v,..} if v==cursor));
+            raw
+        }
+        ParseCompletion::Break(raw) => {
+            assert!(!matches!(raw.outcome, ParseOutcome::Complete { .. }));
+            raw
+        }
+    }
+}
+#[test]
+fn completed_parse_wrappers_preserve_raw_outcomes_reports_and_costs() -> TestResult {
+    for (input, final_input, text, provider, work) in [
+        ("let x x", true, false, false, None),
+        ("let x", true, false, false, None),
+        ("let x", false, false, false, None),
+        ("x", true, false, false, Some(0)),
+        ("let \"x\" \"x\"", true, true, false, None),
+        ("let x x", true, false, true, None),
+    ] {
+        let raw = run_scenario(
+            input,
+            final_input,
+            Scenario {
+                text,
+                provider,
+                work,
+                ..Scenario::default()
+            },
+        )?;
+        let sealed = run_scenario(
+            input,
+            final_input,
+            Scenario {
+                sealed: true,
+                text,
+                provider,
+                work,
+                ..Scenario::default()
+            },
+        )?;
+        assert_eq!(raw, sealed, "{input}");
+    }
     Ok(())
 }

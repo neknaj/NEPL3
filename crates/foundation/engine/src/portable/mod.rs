@@ -5,6 +5,7 @@ pub mod binding;
 pub mod facts;
 pub mod head;
 pub mod query;
+pub mod rename;
 pub mod tree;
 mod value;
 use nepl3_core::{

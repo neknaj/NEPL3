@@ -5130,6 +5130,216 @@
         ]
       ],
       "constraints": []
+    },
+    "RenameRequest": {
+      "record": [
+        [
+          "key",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "AnalysisKey"
+            }
+          }
+        ],
+        [
+          "source",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "SourceRef"
+            }
+          }
+        ],
+        [
+          "offset",
+          "U64"
+        ],
+        [
+          "newName",
+          "Text"
+        ],
+        [
+          "writable",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceRef"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "RenameError": {
+      "constraints": [],
+      "variant": {
+        "NoOccurrence": [],
+        "Unresolved": [],
+        "Ambiguous": [],
+        "Deferred": [],
+        "NoLocation": [],
+        "InvalidName": [],
+        "NotWritable": [],
+        "RenameNotInvertible": [],
+        "RequestMismatch": [],
+        "ShapeChanged": [],
+        "ResolutionChanged": [],
+        "Collision": [],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ],
+        "Access": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingAccessError"
+              }
+            }
+          ]
+        ],
+        "Source": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceError"
+              }
+            }
+          ]
+        ],
+        "Origin": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "OriginError"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "RenameOutcome": {
+      "constraints": [],
+      "variant": {
+        "Complete": [
+          [
+            "newKey",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "AnalysisKey"
+              }
+            }
+          ],
+          [
+            "edits",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.foundation",
+                  "revision": 1,
+                  "name": "TextEdit"
+                }
+              }
+            }
+          ]
+        ],
+        "Invalid": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "RenameError"
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "RenameReply": {
+      "record": [
+        [
+          "key",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "AnalysisKey"
+            }
+          }
+        ],
+        [
+          "outcome",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "RenameOutcome"
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Report"
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceContent"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
     }
   }
 }

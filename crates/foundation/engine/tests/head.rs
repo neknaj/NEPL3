@@ -74,6 +74,7 @@ fn dynamic_head_uses_compound_completed_child_and_restores_normal_child_context(
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Case {
     Owned,
+    Sealed,
     Portable,
     Native,
     NativeFallback,
@@ -445,6 +446,11 @@ fn run_case(input: &str, case: Case, exercise_rejections: bool) -> Result<ParseR
             assert_eq!(host.reader_calls, 1);
         }
         result.reply
+    } else if case == Case::Sealed {
+        session
+            .read_completed(request, &sources, &mut b, &mut a)
+            .map(unseal)
+            .map_err(|v| format!("sealed read {v:?}"))?
     } else {
         session
             .read(request, &sources, &mut b, &mut a)
@@ -792,9 +798,14 @@ fn run_case(input: &str, case: Case, exercise_rejections: bool) -> Result<ParseR
         } else {
             &sources
         };
-        reply = session
-            .resume_head(continuation, provider_reply, caller_sources, &mut b, &mut a)
-            .map_err(|v| format!("resume call {calls}: {v:?}"))?;
+        reply = if case == Case::Sealed {
+            session
+                .resume_head_completed(continuation, provider_reply, caller_sources, &mut b, &mut a)
+                .map(unseal)
+        } else {
+            session.resume_head(continuation, provider_reply, caller_sources, &mut b, &mut a)
+        }
+        .map_err(|v| format!("resume call {calls}: {v:?}"))?;
     }
     if matches!(case, Case::LongFailure | Case::DeepFailure) {
         return Ok(reply);
@@ -1224,5 +1235,24 @@ fn head_resume_uses_saved_auxiliary_context_and_rejects_caller_conflicts_before_
     );
     assert_eq!(reply.report.diagnostics.len(), 1);
     assert_eq!(reply.report.usage.diagnostics, 1);
+    Ok(())
+}
+
+fn unseal(value: ParseCompletion) -> ParseReply {
+    match value {
+        ParseCompletion::Continue(proof) => proof.into_reply(),
+        ParseCompletion::Break(raw) => {
+            assert!(!matches!(raw.outcome, ParseOutcome::Complete { .. }));
+            raw
+        }
+    }
+}
+#[test]
+fn completed_head_wrapper_preserves_owned_execution_and_pending_boundaries() -> TestResult {
+    let input = "choose alt @let z x tail";
+    assert_eq!(
+        run_case(input, Case::Owned, true)?,
+        run_case(input, Case::Sealed, true)?
+    );
     Ok(())
 }

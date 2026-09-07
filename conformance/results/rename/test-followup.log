@@ -1,0 +1,19 @@
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.73s
+     Running tests\value.rs (target\debug\deps\value-6dff7e8fffbe2006.exe)
+
+running 2 tests
+test budgeted_equality_keeps_values_and_composes_caller_depth ... ok
+test equality_charges_frontier_before_queueing_wide_input ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.51s
+     Running tests\value.rs (target\wasm32-wasip2\debug\deps\value-760133befc8c117c.wasm)
+
+running 2 tests
+test budgeted_equality_keeps_values_and_composes_caller_depth ... ok
+test equality_charges_frontier_before_queueing_wide_input ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s

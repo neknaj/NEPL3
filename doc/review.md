@@ -431,3 +431,15 @@ Doc拡張表層の独立構造監査では、forms正本と元syntax.neplgの64 
 R047は新Doc decoderのWork停止試験から、既存共通codecの原因抽出不足として切り分けた。旧validation依存の実 `encode_checked(Unit, Unit, Work0)` は `Schema(Stopped(WorkLimit))` を返すが、`FoundationCodecError::stop_reason` はNoneとなる。修正前後で同じ補助sourceを実行し、修正後は元nested payloadとBudgetの停止を保持してSome(WorkLimit)を取得、通常WrongTypeはNoneのままであることを確認した。管理対象wire stop2件はnative/WASI双方で成功し、9停止理由の各typed wrapperと非停止原因を区別した。補助は `.tmp/run_r047_probe.py`、元全出力は `.tmp/r047-probe/before.log`、修正後は `after.log`。この修正は共通原因抽出だけの証拠であり、後続Doc実装の完成を表さない。
 
 仕様の通読、具体例による矛盾の確認、公開規格との照合を行った。r4では上記のcore/wire公開APIとNDF intrinsic roundtripに加え、標準Grammar原文のnative bootstrapを実行した。4言語全formのRust parse/lower、browser描画、回路実行、LSP、portable operation provider、および全要求targetでのconformanceはまだこのレビューの実行範囲に含まれない。対応する実装が存在する段階で、implementation-status.jsonの未実行記録を実行証拠とともに更新する。
+
+renameの独立レビューでは、元Grammar入力を実compiler・CompletedParse・bindingへ通し、候補編集をprivate draft内で実parse・再解析してから受理した。Letの元byte位置4..5/14..15/16..17、Lambdaのshadowing、Unicode名、CRLFとForeign root分離を照合した。外側の自由参照捕捉・内側宣言による捕捉・予約headは拒否され、対象namespaceと関係しない別言語だけのheadは拒否理由にならない。別の実parseが完全同じtreeを返しても、元prepared proofと異なるCompletedParseの組合せは拒否される。raw cloneや受信NDFから完了parse proofを再発行する入口はない。
+
+保存前の独立入力で、SourceMap.targetという理由だけで補助source全体を比較から除く初稿を検出した。`lambda x x` のxをzへ変更し、部分Exactの外にある補助source `l a` を `l b` へ改変しても旧入口が受理した。修正は全宣言sourceのbytes・revision・URIを比較し、候補treeを実ParseSession由来のCompletedParseへ限定する。旧raw入口の原probeとfull logを保全し、新APIでは補助sourceを実provider返信で宣言するよう適応した。未改変補助sourceは成功、末尾改変・triviaだけの変更・URI変更はRequestMismatchとなる。API変更を挟んだため、旧probeの無変更再実行とは記録しない。
+
+隣接Exactの独立入力 `lambda ab ab` は、補助source `ab` の同一変位による連続した1byte区間を一意逆写像として扱うべきだが、初稿は単一mapだけを要求して拒否した。全区間の穴なし被覆へ修正した後も、実候補parse後のacceptがShapeChangedを返す別の不足を検出し、公開root editに加えて内部派生editを形状比較へ接続した。修正後はwhole・split・逆順のmap表で実acceptまで成功し、穴・異source・異変位・曖昧な逆写像・Transformed混在は拒否した。`ab→xyz`、`あい→漢`、`あい→漢字仮` のwhole/split計6例では、新readerが返すsegment境界と表順も変えて成功し、公開編集は元補助sourceへの1件に限られる。
+
+同6例を実request/reply CBORで初回受信し、元storeを共有しないreceiverで再encode一致とsource bytes onceを確認した。writable除去、source宣言欠落、expectedDigest・replacement改変は拒否し、6資源のdecode停止は元理由を保持した。候補parse・binding後にWorkを使い切る場合とcancelする場合は、acceptが編集を公開せずStoppedと累積Usageを保持する。現在のrename ReportはUsageだけを返し、各parse/analyzeの正式Reportはcallerが保持する二段入口である。全段共通Report包絡、任意encoder、raw外部実行の認証はこの範囲の完了に含めない。
+
+renameに付随して公開した `NdfValue::equal_with_budget` は旧private comparatorの算法を引き継いでおり、Work=1で100000子をqueueへ積んでから停止することを実測した。Allocation自体は課金されるが、幅比例の走査が次のWork課金より前に起き、native AllocationUnitsは2400024だった。子enqueue前のWork課金修正後、原probe無変更でWorkLimitを保ち、queueはroot1件の24bytes（WASI16bytes）だけとなった。追加課金により元controlのWork=400000は不足するため停止する。別の高予算controlではWork=400001でtrueとなることもnative/WASIで確認した。新規rename退行とは断定せず、保存前補修と旧private由来を分けて記録する。
+
+独立rename補助11実行はnativeで成功し、原入力・修正前後のfull process log・sourceとbinaryのSHAを `.tmp/review-rename-evidence/manifest.json` と `.tmp/review-compare-frontier/manifest.json` に保存した。保存済みrename補助binaryは各時点の成功buildであり、全最終snapshotとのlink対応は未証明である。管理対象rename9件はnative/WASIで独立成功し、比較境界のcore value2件も両targetで独立成功した。元parse/head completionの専用2件と全workspace最終gateは統括の固定snapshot検査範囲として区別する。今回レビューはrenameと付随比較の範囲であり、後続Doc SentenceLiteral混在lowerやR006等の未達を完了扱いにしない。

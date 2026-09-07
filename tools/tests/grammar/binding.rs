@@ -25,6 +25,34 @@ fn with_input<T>(
         &mut SourceAdmission,
     ) -> Result<T, String>,
 ) -> Result<T, String> {
+    with_completed_input(compiled, input, |parsed, profile, b, a| {
+        let checked = parsed.tree().validate(profile, b, a).map_err(err)?;
+        finish(&checked, profile, b, a)
+    })
+}
+fn with_completed_input<T>(
+    compiled: &CompiledLanguage,
+    input: &str,
+    finish: impl FnOnce(
+        &CompletedParse,
+        &ResolvedParseProfile<'_>,
+        &mut Budget,
+        &mut SourceAdmission,
+    ) -> Result<T, String>,
+) -> Result<T, String> {
+    with_completed_input_extra(compiled, None, input, finish)
+}
+fn with_completed_input_extra<T>(
+    compiled: &CompiledLanguage,
+    extra: Option<&nepl3_engine::package::LanguagePackage>,
+    input: &str,
+    finish: impl FnOnce(
+        &CompletedParse,
+        &ResolvedParseProfile<'_>,
+        &mut Budget,
+        &mut SourceAdmission,
+    ) -> Result<T, String>,
+) -> Result<T, String> {
     let p = &compiled.package;
     let r = &compiled.registry;
     let identity = p
@@ -80,13 +108,27 @@ fn with_input<T>(
             schemas.push(schema.clone());
         }
     }
+    let mut languages = vec![LanguageRegistration {
+        alias: "B".into(),
+        package: identity,
+        default_category: "Expr".into(),
+    }];
+    let mut packages = vec![p];
+    if let Some(extra) = extra {
+        schemas.push(extra.schema.clone());
+        languages.push(LanguageRegistration {
+            alias: "Other".into(),
+            package: extra
+                .check(r, &mut budget())
+                .and_then(|v| v.semantic_identity(&mut budget()))
+                .map_err(err)?,
+            default_category: "Expr".into(),
+        });
+        packages.push(extra);
+    }
     let profile = ParseProfile {
         id: "binding-review".into(),
-        languages: vec![LanguageRegistration {
-            alias: "B".into(),
-            package: identity,
-            default_category: "Expr".into(),
-        }],
+        languages,
         schemas,
         head_providers: vec![],
         category_modes: vec![],
@@ -95,7 +137,6 @@ fn with_input<T>(
         resources: vec![],
         limits: budget().limits(),
     };
-    let packages = [p];
     let resolved = profile
         .resolve(
             &RuntimeCatalog {
@@ -107,7 +148,6 @@ fn with_input<T>(
             &mut budget(),
         )
         .map_err(err)?;
-    let foundation = r.selected("nepl3.foundation", 1).ok_or("foundation")?;
     let mut b = budget();
     let mut a = SourceAdmission::default();
     let source = SourceSnapshot::new(
@@ -118,64 +158,124 @@ fn with_input<T>(
         &mut b,
     )
     .map_err(err)?;
+    let parsed = parse_completed(&source, &resolved, &mut b, &mut a)?;
+    finish(&parsed, &resolved, &mut b, &mut a)
+}
+
+fn parse_completed(
+    source: &SourceSnapshot,
+    resolved: &ResolvedParseProfile<'_>,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+) -> Result<CompletedParse, String> {
+    parse_completed_with_aux(source, &[], &[], resolved, b, a)
+}
+fn parse_completed_with_aux(
+    source: &SourceSnapshot,
+    extras: &[SourceSnapshot],
+    maps: &[nepl3_core::origin::Mapping],
+    resolved: &ResolvedParseProfile<'_>,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+) -> Result<CompletedParse, String> {
+    let r = resolved.registry();
+    let p = resolved.language("B", b).map_err(err)?;
+    let foundation = r.selected("nepl3.foundation", 1).ok_or("foundation")?;
     let mut store = SourceStore::default();
     store.insert(source.clone()).map_err(err)?;
+    for source in extras {
+        store.insert(source.clone()).map_err(err)?;
+    }
     let value = Environment {
         bindings: vec![],
         resources: vec![],
     };
-    let digest = environment_digest(&value, foundation, r, &mut b).map_err(err)?;
+    let digest = environment_digest(&value, foundation, r, b).map_err(err)?;
     let raw = ReaderContext {
         schema: p.schema.clone(),
         category: "Expr".into(),
         mode: "Code".into(),
-        origins: vec![],
+        origins: extras
+            .iter()
+            .map(|v| {
+                v.span(0, v.text().len() as u64)
+                    .map(nepl3_core::origin::Origin::Direct)
+            })
+            .collect::<Result<_, _>>()
+            .map_err(err)?,
         environment: EnvironmentEntry {
             id: 0,
             digest,
             value,
         },
     };
+    let mut raws = vec![raw];
+    for language in &resolved.profile().languages {
+        if language.alias == "B" {
+            continue;
+        }
+        let p = resolved.language(&language.alias, b).map_err(err)?;
+        let mut raw = raws[0].clone();
+        raw.schema = p.schema.clone();
+        raw.category = language.default_category.clone();
+        raws.push(raw);
+    }
     let environments = {
-        let mut codec = FoundationCodec::new(r, &store, &mut a).map_err(err)?;
-        let proof = raw.check(&mut codec, &store, r, &mut b).map_err(err)?;
-        ParseEnvironmentSet::prepare(
-            &resolved,
-            &[EnvironmentInput {
-                alias: "B",
-                context: &proof,
-            }],
-            &store,
-            &mut codec,
-            &mut b,
-        )
-        .map_err(err)?
+        let mut codec = FoundationCodec::new(r, &store, a).map_err(err)?;
+        let proofs = raws
+            .iter()
+            .map(|raw| raw.check(&mut codec, &store, r, b).map_err(err))
+            .collect::<Result<Vec<_>, _>>()?;
+        let inputs = resolved
+            .profile()
+            .languages
+            .iter()
+            .zip(&proofs)
+            .map(|(language, proof)| EnvironmentInput {
+                alias: &language.alias,
+                context: proof,
+            })
+            .collect::<Vec<_>>();
+        ParseEnvironmentSet::prepare(resolved, &inputs, &store, &mut codec, b).map_err(err)?
     };
-    let entry = resolved.entry("B", None, &mut b).map_err(err)?;
-    let states = [LanguageReaderState {
-        alias: "B".into(),
-        state: NdfValue::Unit,
-    }];
+    let entry = resolved.entry("B", None, b).map_err(err)?;
+    let states = resolved
+        .profile()
+        .languages
+        .iter()
+        .map(|v| LanguageReaderState {
+            alias: v.alias.clone(),
+            state: NdfValue::Unit,
+        })
+        .collect::<Vec<_>>();
     let mut parser =
-        ParseSession::new("binding-parse".into(), &resolved, &environments, &mut b).map_err(err)?;
+        ParseSession::new("binding-parse".into(), resolved, &environments, b).map_err(err)?;
     let mut result = parser
-        .read(
+        .read_completed(
             ParseRequest {
-                snapshot: &source,
+                snapshot: source,
                 start: 0,
-                limit: input.len() as u64,
+                limit: source.text().len() as u64,
                 final_input: true,
                 entry: &entry,
                 states: &states,
             },
             &store,
-            &mut b,
-            &mut a,
+            b,
+            a,
         )
         .map_err(err)?;
     let mut reservations = 0;
+    let mut additional = false;
     loop {
-        match &result.outcome {
+        let progress = match result {
+            ParseCompletion::Continue(parsed) => {
+                assert_eq!(parsed.cursor(), source.text().len() as u64);
+                return Ok(parsed);
+            }
+            ParseCompletion::Break(reply) => reply,
+        };
+        match progress.outcome {
             ParseOutcome::Await { call, continuation } => {
                 let ProviderCall::Read {
                     operation,
@@ -193,9 +293,9 @@ fn with_input<T>(
                 let snapshot = declared
                     .resolve(&request.snapshot)
                     .ok_or("request source")?;
-                let terminal = b
+                let mut terminal = b
                     .with_depth_at_least(*depth_base, |b| {
-                        let mut codec = FoundationCodec::new(r, &declared, &mut a)
+                        let mut codec = FoundationCodec::new(r, &declared, a)
                             .map_err(|_| nepl3_reader::runtime::ReaderError::Context)?;
                         let checked = request
                             .context
@@ -214,17 +314,32 @@ fn with_input<T>(
                             r,
                             &declared,
                             b,
-                            &mut a,
+                            a,
                         )
                     })
                     .map_err(err)?;
+                if !additional
+                    && let nepl3_reader::model::ReadReply::Matched {
+                        sources,
+                        source_maps,
+                        ..
+                    } = &mut terminal
+                {
+                    for source in extras {
+                        if !sources.iter().any(|v| v.identity() == source.identity()) {
+                            sources.push(source.clone());
+                        }
+                    }
+                    source_maps.extend_from_slice(maps);
+                    additional = true;
+                }
                 result = parser
-                    .resume(
-                        continuation,
+                    .resume_completed(
+                        &continuation,
                         ProviderReply::Read(Box::new(terminal)),
                         &store,
-                        &mut b,
-                        &mut a,
+                        b,
+                        a,
                     )
                     .map_err(err)?;
             }
@@ -236,15 +351,10 @@ fn with_input<T>(
                     uri: format!("memory:decoded-{reservations}"),
                 };
                 result = parser
-                    .reserve(continuation, &reserved, &store, &mut b, &mut a)
+                    .reserve_completed(&continuation, &reserved, &store, b, a)
                     .map_err(err)?;
             }
-            ParseOutcome::Complete { tree, cursor, .. } => {
-                assert_eq!(*cursor, input.len() as u64);
-                let checked = tree.validate(&resolved, &mut b, &mut a).map_err(err)?;
-                return finish(&checked, &resolved, &mut b, &mut a);
-            }
-            other => return Err(format!("input {input:?}: {other:?}")),
+            other => return Err(format!("candidate: {other:?}")),
         }
     }
 }

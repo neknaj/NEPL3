@@ -12,7 +12,7 @@ use nepl3_core::{
     value_codec::FoundationValueCodec,
 };
 mod check;
-mod value;
+pub(super) mod value;
 
 pub fn request_to_value<C: FoundationValueCodec>(
     request: &QueryRequest,
