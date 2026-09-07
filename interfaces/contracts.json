@@ -1150,6 +1150,12 @@
             "error",
             "SchemaError"
           ]
+        ],
+        "Origin": [
+          [
+            "error",
+            "OriginError"
+          ]
         ]
       }
     },
@@ -1186,6 +1192,12 @@
           [
             "error",
             "SchemaError"
+          ]
+        ],
+        "View": [
+          [
+            "error",
+            "ViewError"
           ]
         ]
       }
@@ -1629,6 +1641,47 @@
           "List<SourceMapping>"
         ]
       ]
+    },
+    "FactError": {
+      "variants": {
+        "Analysis": [],
+        "DuplicateId": [],
+        "MissingScope": [],
+        "MissingNamespace": [],
+        "MissingEntity": [],
+        "MissingOccurrence": [],
+        "MissingOrigin": [],
+        "Cycle": [],
+        "Name": [],
+        "Span": [],
+        "Resolution": [],
+        "Authority": [],
+        "Reservation": [],
+        "Stopped": [
+          [
+            "reason",
+            "StopReason"
+          ]
+        ],
+        "Source": [
+          [
+            "error",
+            "SourceError"
+          ]
+        ],
+        "Origin": [
+          [
+            "error",
+            "OriginError"
+          ]
+        ],
+        "Schema": [
+          [
+            "error",
+            "SchemaError"
+          ]
+        ]
+      }
     }
   },
   "scalar_aliases": {

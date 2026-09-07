@@ -11,6 +11,53 @@ fn budget() -> Budget {
         events: 100,
     })
 }
+#[test]
+fn syntax_preserves_nested_stop_causes_and_does_not_reclassify_semantic_errors() {
+    for reason in [
+        StopReason::Cancelled,
+        StopReason::SourceLimit,
+        StopReason::WorkLimit,
+        StopReason::DepthLimit,
+        StopReason::NodeLimit,
+        StopReason::AllocationLimit,
+        StopReason::OutputLimit,
+        StopReason::DiagnosticLimit,
+        StopReason::EventLimit,
+    ] {
+        for view in [
+            ViewError::Stopped(reason),
+            ViewError::Source(SourceError::Stopped(reason)),
+            ViewError::Schema(SchemaError::Stopped(reason)),
+            ViewError::Origin(OriginError::Stopped(reason)),
+            ViewError::Origin(OriginError::Source(SourceError::Stopped(reason))),
+        ] {
+            assert_eq!(SyntaxError::View(view.clone()).stop_reason(), Some(reason));
+            assert_eq!(SyntaxError::from(view), SyntaxError::Stopped(reason));
+        }
+        assert_eq!(
+            SyntaxError::from(SourceError::Stopped(reason)),
+            SyntaxError::Stopped(reason)
+        );
+        assert_eq!(
+            SyntaxError::from(SchemaError::Stopped(reason)),
+            SyntaxError::Stopped(reason)
+        );
+        assert_eq!(
+            SyntaxError::from(OriginError::Source(SourceError::Stopped(reason))),
+            SyntaxError::Stopped(reason)
+        );
+    }
+    let semantic = ViewError::Schema(SchemaError::WrongType);
+    assert_eq!(semantic.stop_reason(), None);
+    assert_eq!(
+        SyntaxError::from(semantic.clone()),
+        SyntaxError::View(semantic)
+    );
+    assert_eq!(
+        SyntaxError::from(SourceError::Bounds),
+        SyntaxError::Source(SourceError::Bounds)
+    );
+}
 fn registry() -> Result<(SchemaRegistry, SchemaRef), SchemaError> {
     let descriptor = SchemaDescriptor {
         package: "surface".into(),

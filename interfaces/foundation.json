@@ -547,6 +547,72 @@
         ]
       ]
     },
+    "FactError": {
+      "constraints": [],
+      "variant": {
+        "Analysis": [],
+        "Authority": [],
+        "Cycle": [],
+        "DuplicateId": [],
+        "MissingEntity": [],
+        "MissingNamespace": [],
+        "MissingOccurrence": [],
+        "MissingOrigin": [],
+        "MissingScope": [],
+        "Name": [],
+        "Origin": [
+          [
+            "error",
+            {
+              "named": {
+                "name": "OriginError",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Reservation": [],
+        "Resolution": [],
+        "Schema": [
+          [
+            "error",
+            {
+              "named": {
+                "name": "SchemaError",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Source": [
+          [
+            "error",
+            {
+              "named": {
+                "name": "SourceError",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Span": [],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "name": "StopReason",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
     "FactNamespace": {
       "constraints": [],
       "record": [
@@ -2585,6 +2651,18 @@
               }
             }
           ]
+        ],
+        "View": [
+          [
+            "error",
+            {
+              "named": {
+                "name": "ViewError",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
         ]
       }
     },
@@ -3065,6 +3143,18 @@
         "Cover": [],
         "Cycle": [],
         "DuplicateField": [],
+        "Origin": [
+          [
+            "error",
+            {
+              "named": {
+                "name": "OriginError",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
         "Presentation": [],
         "Reference": [],
         "Schema": [

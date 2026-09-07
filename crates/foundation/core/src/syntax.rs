@@ -103,9 +103,25 @@ pub enum SyntaxError {
     ResourceDigest,
     View(ViewError),
 }
+impl SyntaxError {
+    pub fn stop_reason(&self) -> Option<StopReason> {
+        match self {
+            Self::Stopped(reason)
+            | Self::Source(SourceError::Stopped(reason))
+            | Self::Schema(SchemaError::Stopped(reason))
+            | Self::Origin(OriginError::Stopped(reason))
+            | Self::Origin(OriginError::Source(SourceError::Stopped(reason))) => Some(*reason),
+            Self::View(error) => error.stop_reason(),
+            _ => None,
+        }
+    }
+}
 impl From<ViewError> for SyntaxError {
     fn from(e: ViewError) -> Self {
-        Self::View(e)
+        match e.stop_reason() {
+            Some(reason) => Self::Stopped(reason),
+            None => Self::View(e),
+        }
     }
 }
 impl From<StopReason> for SyntaxError {
@@ -115,17 +131,28 @@ impl From<StopReason> for SyntaxError {
 }
 impl From<SourceError> for SyntaxError {
     fn from(e: SourceError) -> Self {
-        Self::Source(e)
+        match e {
+            SourceError::Stopped(reason) => Self::Stopped(reason),
+            e => Self::Source(e),
+        }
     }
 }
 impl From<OriginError> for SyntaxError {
     fn from(e: OriginError) -> Self {
-        Self::Origin(e)
+        match e {
+            OriginError::Stopped(reason) | OriginError::Source(SourceError::Stopped(reason)) => {
+                Self::Stopped(reason)
+            }
+            e => Self::Origin(e),
+        }
     }
 }
 impl From<SchemaError> for SyntaxError {
     fn from(e: SchemaError) -> Self {
-        Self::Schema(e)
+        match e {
+            SchemaError::Stopped(reason) => Self::Stopped(reason),
+            e => Self::Schema(e),
+        }
     }
 }
 #[derive(Debug)]

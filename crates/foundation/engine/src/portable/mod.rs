@@ -1,5 +1,6 @@
 //! Engine-owned typed NDF adapters. The host composes these with a wire codec;
 //! production engine and wire never depend on one another.
+pub mod binding;
 pub mod facts;
 pub mod head;
 pub mod tree;

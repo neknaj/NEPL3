@@ -55,6 +55,19 @@
   "package": "nepl3.engine",
   "revision": 1,
   "types": {
+    "BindingDiagnosticArguments": {
+      "record": [
+        [
+          "namespace",
+          "Text"
+        ],
+        [
+          "name",
+          "Text"
+        ]
+      ],
+      "constraints": []
+    },
     "Binding": {
       "constraints": [
         "engine.binding"
@@ -3592,6 +3605,631 @@
           }
         ]
       ]
+    },
+    "StageId": {
+      "constraints": [],
+      "record": [
+        [
+          "id",
+          "U64"
+        ]
+      ]
+    },
+    "BindingStage": {
+      "constraints": [
+        "engine.binding-stage"
+      ],
+      "record": [
+        [
+          "scope",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "ScopeId"
+            }
+          }
+        ],
+        [
+          "previous",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "StageId"
+              }
+            }
+          }
+        ],
+        [
+          "introduced",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "EntityId"
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "OccurrenceStage": {
+      "constraints": [],
+      "record": [
+        [
+          "occurrence",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "OccurrenceId"
+            }
+          }
+        ],
+        [
+          "stage",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "StageId"
+            }
+          }
+        ]
+      ]
+    },
+    "BindingProgress": {
+      "constraints": [
+        "engine.binding-progress"
+      ],
+      "record": [
+        [
+          "facts",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "FactSet"
+              }
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceContent"
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceMapping"
+              }
+            }
+          }
+        ],
+        [
+          "stages",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingStage"
+              }
+            }
+          }
+        ],
+        [
+          "occurrenceStages",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "OccurrenceStage"
+              }
+            }
+          }
+        ],
+        [
+          "openInputs",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "OccurrenceId"
+              }
+            }
+          }
+        ],
+        [
+          "exports",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "EntityId"
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "BindingAnalysis": {
+      "constraints": [
+        "engine.binding-analysis"
+      ],
+      "record": [
+        [
+          "facts",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "FactSet"
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceContent"
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceMapping"
+              }
+            }
+          }
+        ],
+        [
+          "stages",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingStage"
+              }
+            }
+          }
+        ],
+        [
+          "occurrenceStages",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "OccurrenceStage"
+              }
+            }
+          }
+        ],
+        [
+          "openInputs",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "OccurrenceId"
+              }
+            }
+          }
+        ],
+        [
+          "exports",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "EntityId"
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "BindingFailure": {
+      "constraints": [],
+      "variant": {
+        "AnalysisId": [],
+        "Target": [],
+        "Name": [],
+        "MissingNamespace": [],
+        "NamespaceBoundary": [],
+        "RecoveredTree": [],
+        "MissingProvider": [],
+        "UnsupportedPlan": [],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ],
+        "Tree": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "TreeError"
+              }
+            }
+          ]
+        ],
+        "Profile": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "ProfileError"
+              }
+            }
+          ]
+        ],
+        "Fact": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "FactError"
+              }
+            }
+          ]
+        ],
+        "Source": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceError"
+              }
+            }
+          ]
+        ],
+        "Schema": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SchemaError"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "BindingOutcome": {
+      "constraints": [
+        "engine.binding-outcome"
+      ],
+      "variant": {
+        "Complete": [
+          [
+            "analysis",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingAnalysis"
+              }
+            }
+          ]
+        ],
+        "Invalid": [
+          [
+            "failure",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingFailure"
+              }
+            }
+          ],
+          [
+            "progress",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingProgress"
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ],
+          [
+            "progress",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingProgress"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "BindingReply": {
+      "constraints": [
+        "engine.binding-reply"
+      ],
+      "record": [
+        [
+          "outcome",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "BindingOutcome"
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Report"
+            }
+          }
+        ]
+      ]
+    },
+    "PackageError": {
+      "constraints": [],
+      "variant": {
+        "EmptyName": [],
+        "DuplicateName": [],
+        "MissingMode": [],
+        "MissingCategory": [],
+        "MissingReader": [],
+        "MissingNamespace": [],
+        "MissingExtension": [],
+        "SignatureMismatch": [],
+        "InvalidRead": [],
+        "InvalidBinding": [],
+        "DirectCycle": [],
+        "KindShape": [],
+        "InvalidSelector": [],
+        "UnvisitedField": [],
+        "Provenance": [],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ],
+        "Schema": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SchemaError"
+              }
+            }
+          ]
+        ],
+        "Reader": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.reader",
+                "revision": 1,
+                "name": "PlanError"
+              }
+            }
+          ]
+        ],
+        "Source": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceError"
+              }
+            }
+          ]
+        ],
+        "Origin": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "OriginError"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "ProfileError": {
+      "constraints": [],
+      "variant": {
+        "EmptyName": [],
+        "Duplicate": [],
+        "MissingPackage": [],
+        "PackageIdentity": [],
+        "MissingSchema": [],
+        "MissingAlias": [],
+        "MissingCategory": [],
+        "MissingMode": [],
+        "MissingProvider": [],
+        "ProviderIdentity": [],
+        "NotAllowed": [],
+        "MissingResource": [],
+        "ResourceIdentity": [],
+        "HeadSignature": [],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ],
+        "Package": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "PackageError"
+              }
+            }
+          ]
+        ],
+        "Schema": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SchemaError"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "TreeError": {
+      "constraints": [],
+      "variant": {
+        "Path": [],
+        "Duplicate": [],
+        "Selection": [],
+        "ExecutionIdentity": [],
+        "Recovery": [],
+        "Unreachable": [],
+        "UnvalidatedDynamic": [],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ],
+        "Syntax": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SyntaxError"
+              }
+            }
+          ]
+        ],
+        "Package": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "PackageError"
+              }
+            }
+          ]
+        ],
+        "Profile": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "ProfileError"
+              }
+            }
+          ]
+        ]
+      }
     }
   }
 }

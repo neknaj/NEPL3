@@ -84,6 +84,20 @@ pub enum ViewError {
     Presentation,
     Trivia,
 }
+impl ViewError {
+    /// Extract the actual typed cause; an unrelated stopped Budget does not
+    /// turn a semantic validation failure into a resource stop.
+    pub fn stop_reason(&self) -> Option<StopReason> {
+        match self {
+            Self::Stopped(reason)
+            | Self::Source(SourceError::Stopped(reason))
+            | Self::Schema(SchemaError::Stopped(reason))
+            | Self::Origin(OriginError::Stopped(reason))
+            | Self::Origin(OriginError::Source(SourceError::Stopped(reason))) => Some(*reason),
+            _ => None,
+        }
+    }
+}
 impl From<StopReason> for ViewError {
     fn from(e: StopReason) -> Self {
         Self::Stopped(e)
