@@ -1,0 +1,36 @@
+
+running 2 tests
+test editing_does_not_mutate_shared_original_and_low_work_cannot_clone ... ok
+test shared_clone_and_fresh_wire_storage_have_equal_data_not_equal_allocation ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+
+running 3 tests
+test malformed_source_declarations_reject_without_committing_and_retry_does_not_refund ... ok
+test native_and_wire_admission_reject_zero_source_limit_and_span_scalar_interior ... ok
+test source_and_span_roundtrip_preserve_identity_bytes_and_shared_admission ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-source-sharing\workspace\crates\foundation\wire)
+warning: unused import: `WireError`
+ --> crates\foundation\wire\tests\shared_review.rs:7:18
+  |
+7 | use nepl3_wire::{WireError, decode, encode, source::*};
+  |                  ^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `wire` is never used
+  --> crates\foundation\wire\tests\shared_review.rs:47:4
+   |
+47 | fn wire(bytes: &[u8], change: impl FnOnce(&mut Vec<NdfValue>)) -> Result<Vec<u8>, String> {
+   |    ^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `nepl3-wire` (test "shared_review") generated 2 warnings (run `cargo fix --test "shared_review" -p nepl3-wire` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.04s
+     Running tests\shared_review.rs (../target\wasm32-wasip2\debug\deps\shared_review-55f848c7a0f10d58.wasm)
+     Running tests\source.rs (../target\wasm32-wasip2\debug\deps\source-7748c71d143912be.wasm)

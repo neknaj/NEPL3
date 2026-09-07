@@ -2,6 +2,12 @@
 mod edit;
 use crate::budget::{Budget, Resource, StopReason};
 use alloc::{string::String, vec::Vec};
+#[cfg(target_has_atomic = "ptr")]
+type SnapshotText = alloc::sync::Arc<String>;
+// Keep alloc-only targets without pointer atomics supported, and retain their
+// Send/Sync properties. Those targets keep the original owned-copy behavior.
+#[cfg(not(target_has_atomic = "ptr"))]
+type SnapshotText = String;
 use sha2::{Digest as _, Sha256};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -78,7 +84,7 @@ impl From<StopReason> for SourceError {
 pub struct SourceSnapshot {
     id: SnapshotId,
     uri: String,
-    text: String,
+    text: SnapshotText,
 }
 impl SourceSnapshot {
     pub fn identity(&self) -> &SnapshotId {
@@ -111,6 +117,14 @@ impl SourceSnapshot {
             valid_up_to: e.utf8_error().valid_up_to() as u64,
             error_len: e.utf8_error().error_len().map(|n| n as u64),
         })?;
+        #[cfg(target_has_atomic = "ptr")]
+        let text = {
+            budget.charge(
+                Resource::AllocationUnits,
+                (core::mem::size_of::<String>() + 2 * core::mem::size_of::<usize>()) as u64,
+            )?;
+            SnapshotText::new(text)
+        };
         Ok(Self {
             id: SnapshotId {
                 source,
@@ -129,6 +143,32 @@ impl SourceSnapshot {
     }
     pub fn text(&self) -> &str {
         &self.text
+    }
+    /// Account for a native clone. Immutable text is shared on pointer-atomic
+    /// targets; identity/URI strings remain owned. Wire encoding still carries
+    /// the complete bytes, and decoding constructs and validates a new snapshot.
+    pub fn charge_clone(&self, budget: &mut Budget) -> Result<(), StopReason> {
+        let bytes = (self.id.source.0.len() + self.uri.len()) as u64;
+        #[cfg(not(target_has_atomic = "ptr"))]
+        let bytes = bytes.saturating_add(self.text.len() as u64);
+        // Existing continuation checks use this traversal before structural Eq.
+        // A separately decoded snapshot can have different storage, so retain
+        // a full-text comparison bound even though native cloning shares text.
+        budget.charge(
+            Resource::Work,
+            (self.id.source.0.len() as u64)
+                .saturating_add(self.uri.len() as u64)
+                .saturating_add(self.text.len() as u64)
+                .saturating_add(1),
+        )?;
+        budget.charge(
+            Resource::AllocationUnits,
+            bytes.saturating_add(core::mem::size_of::<Self>() as u64),
+        )
+    }
+    pub fn clone_with_budget(&self, budget: &mut Budget) -> Result<Self, StopReason> {
+        self.charge_clone(budget)?;
+        Ok(self.clone())
     }
     pub fn has_bom(&self) -> bool {
         self.text.starts_with('\u{feff}')

@@ -275,6 +275,40 @@ fn edit_size_limit_checked_before_replacement_is_built() -> Result<(), SourceErr
 }
 
 #[test]
+fn snapshot_clones_preserve_owned_lifetime_and_independent_identity_checks()
+-> Result<(), SourceError> {
+    let content = "a".repeat(100_000);
+    let original = source("shared", 3, &content)?;
+    let mut b = budget();
+    let cloned = original.clone_with_budget(&mut b)?;
+    #[cfg(target_has_atomic = "ptr")]
+    assert!(b.usage().allocation_units < 1024);
+    // Keep the comparison bound for equal bytes from a separately decoded source.
+    assert!(b.usage().work >= content.len() as u64);
+    let independent = source("shared", 3, &content)?;
+    assert_eq!(cloned, independent);
+    assert_ne!(cloned, source("shared", 4, &content)?);
+    let mut changed = content.clone();
+    changed.replace_range(99_999..100_000, "b");
+    assert_ne!(cloned, source("shared", 3, &changed)?);
+    drop(original);
+    assert_eq!(cloned.text(), content);
+    assert_eq!(cloned.slice(&cloned.span(99_999, 100_000)?)?, "a");
+    let mut limits = budget().limits();
+    limits.allocation_units = 0;
+    assert_eq!(
+        cloned.clone_with_budget(&mut Budget::new(limits)),
+        Err(StopReason::AllocationLimit)
+    );
+    #[cfg(target_has_atomic = "ptr")]
+    {
+        fn send_sync<T: Send + Sync>() {}
+        send_sync::<SourceSnapshot>();
+    }
+    Ok(())
+}
+
+#[test]
 fn locator_profile_is_checked_without_os_or_scheme_normalization() {
     for uri in [
         "relative",

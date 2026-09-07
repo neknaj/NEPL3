@@ -227,6 +227,14 @@ impl SourceStore {
                 digest: plan.digest,
             };
             ids.push(id.clone());
+            #[cfg(target_has_atomic = "ptr")]
+            let output = {
+                budget.charge(
+                    Resource::AllocationUnits,
+                    (core::mem::size_of::<String>() + 2 * core::mem::size_of::<usize>()) as u64,
+                )?;
+                super::SnapshotText::new(output)
+            };
             prepared.push(SourceSnapshot {
                 id,
                 uri: source.uri.clone(),

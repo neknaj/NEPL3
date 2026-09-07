@@ -1,0 +1,32 @@
+[
+  {
+    "path": "crates/foundation/core/src/source.rs",
+    "sha256": "d4acefc6bb7fd6226ec8d123d47d3c36a15946c7a35dd877fd9f51d74394525e",
+    "bytes": 19519
+  },
+  {
+    "path": "crates/foundation/core/tests/contracts.rs",
+    "sha256": "863e2b98098eb057a969288f66a5d6adc749a5feb690d5b7ba455f4641841abd",
+    "bytes": 16548
+  },
+  {
+    "path": "crates/foundation/core/src/source/edit.rs",
+    "sha256": "07eaf096aad050f6d0a9ed9b9764507b8d12a707b3880476dce1deccde725c3b",
+    "bytes": 10163
+  },
+  {
+    "path": "crates/foundation/core/src/syntax/copy.rs",
+    "sha256": "389afe3eb4cbd6418d9357c544ace97eebe4567124185c9f2206d841b0ac78fa",
+    "bytes": 11293
+  },
+  {
+    "path": "crates/foundation/reader/src/runtime/copy.rs",
+    "sha256": "afcf2a2929d68a1d9999fc05c048a1dd34d3c6c997117041ab5fb1a2d47f73b9",
+    "bytes": 12242
+  },
+  {
+    "path": "doc/spec/02-foundation.md",
+    "sha256": "d5d1901e524c442113fecbdacc15bbaa5dacb5bb075703518a86e418b8279e14",
+    "bytes": 18913
+  }
+]

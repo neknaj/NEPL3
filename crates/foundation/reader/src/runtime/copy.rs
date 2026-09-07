@@ -69,18 +69,10 @@ impl CopyCost for Span {
 }
 impl CopyCost for SourceSnapshot {
     fn charge(&self, b: &mut Budget) -> Result<(), StopReason> {
-        slot::<Self>(b)?;
-        self.identity().source.0.charge(b)?;
-        b.charge(
-            Resource::AllocationUnits,
-            (self.text().len() + self.uri().len()) as u64,
-        )?;
-        b.charge(
-            Resource::Work,
-            (self.text().len() + self.uri().len()) as u64,
-        )
+        self.charge_clone(b)
     }
 }
+
 impl CopyCost for NdfValue {
     fn charge(&self, b: &mut Budget) -> Result<(), StopReason> {
         self.charge_clone(b)
