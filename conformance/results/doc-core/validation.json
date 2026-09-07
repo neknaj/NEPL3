@@ -1,0 +1,102 @@
+{
+  "format": "nepl3.development-slice/1",
+  "scope": "T07: typed Doc values, sentence recognition, explicit prefix lowering and preserved guest syntax",
+  "base_commit": "b5295cef655aa59affffd6644f2902268d071953",
+  "result": "passed-within-recorded-scope",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "050b803739da5dd341d4ebefce975ab0636522cd35c0ed31b58a2f5066ede7db",
+    "spec_sha256": "31a20682520245d5727db267fb8d622c7ac9c3e588e3c2b029428feab3dd996c"
+  },
+  "checks": [
+    {
+      "command": "cargo test --workspace --locked",
+      "exit_code": 0,
+      "log": "conformance/results/doc-core/native.log",
+      "sha256": "cdb6feeaf74cca56bd9b82532d65840e562e17ede51e14543d50f07bdf772905"
+    },
+    {
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER='wasmtime run'; cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar diagnostic::compiler_report_boundary_without_host_process --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::all_reader_constructors --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::compiled_reader_streaming_boundaries_and_rollback_keep_raw_positions --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test doc --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core --no-default-features --target wasm32-unknown-unknown",
+      "exit_code": 0,
+      "log": "conformance/results/doc-core/wasi.log",
+      "sha256": "e9eb8f38aa82738d484e804de528926ae4ffd8f8e468ccf32c55edbbe6e58873"
+    },
+    {
+      "command": "cargo fmt --all -- --check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo clippy --workspace --all-targets --locked -- -D warnings; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps --locked",
+      "exit_code": 0,
+      "log": "conformance/results/doc-core/quality.log",
+      "sha256": "8347db03344860f65a623fa83ad2de640bbbca2d9b35d137fe21e2f280e519ce"
+    },
+    {
+      "command": "cargo run --locked -p nepl3-tools -- check",
+      "exit_code": 0,
+      "log": "conformance/results/doc-core/contract.log",
+      "sha256": "d6bccdff9f5023f715aa029213ad464705e845023a25c27e8b105ed157f7ae24"
+    },
+    {
+      "command": "python tools/audit/structure.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/audit -p test.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/doc.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/bootstrap -p test_grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/audit/allocation/run.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo run --locked -p nepl3-tools -- tasks --check",
+      "exit_code": 0,
+      "log": "conformance/results/doc-core/audit.log",
+      "sha256": "460b8c2648b8dcfd7437510353976d620d649194d3dda710178f0b382957f2f6"
+    },
+    {
+      "command": "C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe --version; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe .github/workflows/ci.yml",
+      "exit_code": 0,
+      "log": "conformance/results/doc-core/ci.log",
+      "sha256": "ad7ed44e79c7e5d554c2e008819df3a5da44834e9cfdb4aecaef9224a39c87dd"
+    }
+  ],
+  "execution": {
+    "native": {
+      "target": "x86_64-pc-windows-msvc",
+      "passed": 345,
+      "ignored": 1
+    },
+    "wasi": {
+      "target": "wasm32-wasip2",
+      "runner": "Wasmtime 44.0.1",
+      "passed": 264,
+      "scope": "217 six-crate tests, one compiler Report test, three ReaderExpr tests, 37 binding tests and six Doc integration tests"
+    },
+    "browser_wasm": "Six no_std crates compiled; browser execution and rendering not run",
+    "toolchain": "Rust 1.97.0",
+    "other": "Strict format, Clippy and rustdoc; repository contracts; six Python structure and three bootstrap adapter tests; both generated projections; allocation regressions; tasks; actionlint 1.7.12."
+  },
+  "implementation": [
+    "New no_std + alloc Doc core depends only on common core. Flat typed arenas and iterative graph validation retain categories, sharing, longest paths and caller depth without recursive ownership cleanup.",
+    "Sentence recognition preserves original UTF-8 source windows, nested Ruby/Anno structure, escape boundaries, token-local views, source/origin mappings, typed failure locations and sticky resource stops.",
+    "Explicit prefix constructors lower from checked common SyntaxBundle data. Four original Grammar sources are compiled and used by the actual engine with explicit aliases and checked environments; text is not reinterpreted as sentence markup.",
+    "Doc schema and grammar include DG01-DG06 table, list, target, code, image and helper values informed by the latest base inventory. Full constructor rendering and documentation migration remain later work.",
+    "Same-alias Doc code guests retain independent ForeignClosure values and return to the host context; semantically invalid code examples are not semantically lowered for display.",
+    "Doc native and initial CBOR values share structural, source, view, origin and foreign closure validation. Source table order and guest NodeRef identities follow existing common wire canonicalization; owner origins/digests and meaningful source content remain intact.",
+    "The minimal descriptor generator change omits zero allocation terms and multiplication by one without altering counts or resource amounts."
+  ],
+  "independent_review": {
+    "reviewer": "Huygens",
+    "record": "doc/review.md",
+    "scope": "Eight original Doc probe programs were executed natively and with Wasmtime, covering arenas, sentence cases, normalization/source closure, helper values, foreign closure, real prefix source, same-alias guests and boundaries. Saved binary identities and original source/output records identify these development runs; they are not asserted to link every later frozen WIP file.",
+    "declarations": "Four source-to-seed adapter outputs match original source bytes and all AST metadata. All 64 Doc declarations and 52 distinct Form branch names were checked; this is not all-constructor runtime coverage.",
+    "root_confirmation": "Root executed all six gates on an isolated base plus the frozen Doc changes and independent review. The late contracts.json correspondence note changes no runtime bytes; final contract checks were repeated after it was added.",
+    "archive": "conformance/results/doc-core/independent.json",
+    "archive_sha256": "fcc720e019b36d44cd6a6c48c3bdb790f06ca7b9c7ca75fd83e24c737325a050",
+    "final_review": "Huygens independently compared all 57 author-file hashes plus the review snapshot and final Doc contract correspondence; no additional blocking finding. The source/linked-binary limitation remains explicit."
+  },
+  "integration": "Sixty explicitly frozen source/schema/spec/evidence/review files were hash-checked against their original snapshots and staged Git blobs. Selected CRLF metadata was converted to repository LF in the owner snapshot; source-position fixtures were not changed. Rename WIP is excluded.",
+  "log_normalization": "Root logs use LF and a final newline. Independent archived UTF-8 text is stored inside JSON strings, preserving each original byte sequence and SHA-256, including any CRLF.",
+  "unverified": [
+    "T07 and R006/R009/R014 remain in progress. No task or whole acceptance group is completed by this checkpoint; all 55 acceptance group statuses remain not-run.",
+    "SentenceLiteral leaves mixed into prefix lowering remain explicit Unsupported. Actual standalone provider payload/prefix equivalence does not claim that path is finished.",
+    "Article labels, page/asset resolution, check/prepare, full operation error/Report envelopes, printers, plain_text, renderers and standalone guest wrapper fragments remain unfinished.",
+    "The original Doc inventory is a design input at b5295ce; it is not current WIP completeness, a complete rustdoc semantic inventory, or the T21 migration.",
+    "Math/Circuit domain runtime, suite, CLI/WASI application, process provider, full editor/LSP, TEA/Web Playground, Pages and final Doc migration remain subsequent implementation work.",
+    "The separate owned bootstrap performance baseline remains ignored. Browser Wasm compilation and source delivery are not browser behavior, runtime binary release or complete acceptance evidence."
+  ],
+  "inventory_input": {
+    "summary": "conformance/results/doc-core/inventory-summary.json",
+    "summary_sha256": "7b885ae04a7b2ccc8f9065573ceae708946015035503ea41557f820d37c173bc",
+    "generation_log": "conformance/results/doc-core/inventory-generation.log",
+    "log_sha256": "8534d21bad7a42dc27db49b66e643f3889b16ecb28d44dbae9301c8b81b097ab",
+    "scope": "Recomputed from the exact base Git commit; baseline inventory was restored byte-for-byte afterward."
+  }
+}

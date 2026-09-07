@@ -1657,6 +1657,72 @@
               "read": "Doc/Guest"
             }
           ]
+        },
+        "table": {
+          "kind": "Table",
+          "fields": [
+            {
+              "name": "columns",
+              "read": {
+                "list": "Doc/Alignment"
+              }
+            },
+            {
+              "name": "header",
+              "read": "Doc/OptionalRow"
+            },
+            {
+              "name": "rows",
+              "read": {
+                "list": "Doc/Row"
+              }
+            }
+          ]
+        },
+        "list": {
+          "kind": "List",
+          "fields": [
+            {
+              "name": "style",
+              "read": "Doc/ListStyle"
+            },
+            {
+              "name": "items",
+              "read": {
+                "list": "Doc/ListItem"
+              }
+            }
+          ]
+        },
+        "rawcode": {
+          "kind": "RawCode",
+          "fields": [
+            {
+              "name": "languageHint",
+              "read": "Doc/OptionalText"
+            },
+            {
+              "name": "text",
+              "read": "@Text"
+            }
+          ]
+        },
+        "image": {
+          "kind": "Image",
+          "fields": [
+            {
+              "name": "asset",
+              "read": "Doc/Asset"
+            },
+            {
+              "name": "alt",
+              "read": "Doc/Sentence"
+            },
+            {
+              "name": "caption",
+              "read": "Doc/OptionalSentence"
+            }
+          ]
         }
       },
       "leaf": null
@@ -1757,6 +1823,72 @@
               "read": {
                 "list": "Doc/Variant"
               }
+            }
+          ]
+        },
+        "table": {
+          "kind": "Table",
+          "fields": [
+            {
+              "name": "columns",
+              "read": {
+                "list": "Doc/Alignment"
+              }
+            },
+            {
+              "name": "header",
+              "read": "Doc/OptionalRow"
+            },
+            {
+              "name": "rows",
+              "read": {
+                "list": "Doc/Row"
+              }
+            }
+          ]
+        },
+        "list": {
+          "kind": "List",
+          "fields": [
+            {
+              "name": "style",
+              "read": "Doc/ListStyle"
+            },
+            {
+              "name": "items",
+              "read": {
+                "list": "Doc/ListItem"
+              }
+            }
+          ]
+        },
+        "rawcode": {
+          "kind": "RawCode",
+          "fields": [
+            {
+              "name": "languageHint",
+              "read": "Doc/OptionalText"
+            },
+            {
+              "name": "text",
+              "read": "@Text"
+            }
+          ]
+        },
+        "image": {
+          "kind": "Image",
+          "fields": [
+            {
+              "name": "asset",
+              "read": "Doc/Asset"
+            },
+            {
+              "name": "alt",
+              "read": "Doc/Sentence"
+            },
+            {
+              "name": "caption",
+              "read": "Doc/OptionalSentence"
             }
           ]
         }
@@ -1887,6 +2019,41 @@
         "break": {
           "kind": "Break",
           "fields": []
+        },
+        "link": {
+          "kind": "Link",
+          "fields": [
+            {
+              "name": "target",
+              "read": "Doc/LinkTarget"
+            },
+            {
+              "name": "label",
+              "read": "Doc/Inline"
+            }
+          ]
+        },
+        "code": {
+          "kind": "InlineCode",
+          "fields": [
+            {
+              "name": "text",
+              "read": "@Text"
+            }
+          ]
+        },
+        "image": {
+          "kind": "InlineImage",
+          "fields": [
+            {
+              "name": "asset",
+              "read": "Doc/Asset"
+            },
+            {
+              "name": "alt",
+              "read": "Doc/Sentence"
+            }
+          ]
         }
       },
       "leaf": null
@@ -1959,6 +2126,198 @@
         }
       },
       "leaf": null
+    },
+    "Doc/Alignment": {
+      "forms": {
+        "default": {
+          "kind": "AlignmentDefault",
+          "fields": []
+        },
+        "left": {
+          "kind": "AlignmentLeft",
+          "fields": []
+        },
+        "center": {
+          "kind": "AlignmentCenter",
+          "fields": []
+        },
+        "right": {
+          "kind": "AlignmentRight",
+          "fields": []
+        }
+      }
+    },
+    "Doc/ListStyle": {
+      "forms": {
+        "unordered": {
+          "kind": "Unordered",
+          "fields": []
+        },
+        "ordered": {
+          "kind": "Ordered",
+          "fields": [
+            {
+              "name": "start",
+              "read": "@Nat"
+            }
+          ]
+        }
+      }
+    },
+    "Doc/Check": {
+      "forms": {
+        "none": {
+          "kind": "CheckNone",
+          "fields": []
+        },
+        "checked": {
+          "kind": "Checked",
+          "fields": []
+        },
+        "unchecked": {
+          "kind": "Unchecked",
+          "fields": []
+        }
+      }
+    },
+    "Doc/OptionalRow": {
+      "forms": {
+        "none": {
+          "kind": "NoRow",
+          "fields": []
+        },
+        "some": {
+          "kind": "SomeRow",
+          "fields": [
+            {
+              "name": "row",
+              "read": "Doc/Row"
+            }
+          ]
+        }
+      }
+    },
+    "Doc/OptionalSentence": {
+      "forms": {
+        "none": {
+          "kind": "NoSentence",
+          "fields": []
+        },
+        "some": {
+          "kind": "SomeSentence",
+          "fields": [
+            {
+              "name": "sentence",
+              "read": "Doc/Sentence"
+            }
+          ]
+        }
+      }
+    },
+    "Doc/OptionalText": {
+      "forms": {
+        "none": {
+          "kind": "NoText",
+          "fields": []
+        },
+        "some": {
+          "kind": "SomeText",
+          "fields": [
+            {
+              "name": "text",
+              "read": "@Text"
+            }
+          ]
+        }
+      }
+    },
+    "Doc/LinkTarget": {
+      "forms": {
+        "page": {
+          "kind": "PageTarget",
+          "fields": [
+            {
+              "name": "page",
+              "read": "@Text"
+            },
+            {
+              "name": "fragment",
+              "read": "Doc/OptionalText"
+            }
+          ]
+        },
+        "relative": {
+          "kind": "RelativeTarget",
+          "fields": [
+            {
+              "name": "path",
+              "read": "@Text"
+            },
+            {
+              "name": "fragment",
+              "read": "Doc/OptionalText"
+            }
+          ]
+        },
+        "external": {
+          "kind": "ExternalTarget",
+          "fields": [
+            {
+              "name": "uri",
+              "read": "@Text"
+            }
+          ]
+        }
+      }
+    },
+    "Doc/Asset": {
+      "forms": {
+        "asset": {
+          "kind": "AssetRef",
+          "fields": [
+            {
+              "name": "id",
+              "read": "@Text"
+            },
+            {
+              "name": "digest",
+              "read": "Doc/OptionalText"
+            }
+          ]
+        }
+      }
+    },
+    "Doc/Row": {
+      "forms": {
+        "row": {
+          "kind": "Row",
+          "fields": [
+            {
+              "name": "cells",
+              "read": {
+                "list": "Doc/Sentence"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Doc/ListItem": {
+      "forms": {
+        "item": {
+          "kind": "ListItem",
+          "fields": [
+            {
+              "name": "checked",
+              "read": "Doc/Check"
+            },
+            {
+              "name": "body",
+              "read": "Doc/Body"
+            }
+          ]
+        }
+      }
     }
   },
   "design_revision": "nepl3-design-2026-09-06-r4"

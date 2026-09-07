@@ -1,3 +1,4 @@
+pub(crate) mod doc;
 pub(crate) mod engine;
 pub(crate) mod foundation;
 pub(crate) mod grammar;

@@ -197,7 +197,8 @@
         "nepl3-engine",
         "nepl3-wire",
         "nepl3-grammar-core",
-        "nepl3-suite"
+        "nepl3-suite",
+        "nepl3-doc-core"
       ],
       "no_std": false,
       "responsibility": "生成・conformance・依存検査"
