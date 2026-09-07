@@ -292,4 +292,16 @@ R037の修正後、管理対象edit 5件と `python tools/audit/allocation/run.p
 
 追加の独立 `edit_transaction` は、順不同の隣接Unicode編集、末尾挿入、複数SourceIdの返却順、入力と生成snapshotのSourceBytes 25を検査して成功した。同じ操作で古いrevisionと重複anchorを拒否した後も全storeが不変で、訂正した編集は成功する。初回補助sourceはPowerShell pipeで日本語が `?` へ変わり、fixture構築時のBoundsで失敗したため、Rust Unicode escapeで元の意図を保持して再実行した。この補助fixtureの失敗を実装不具合とは扱わない。管理対象の全allocation上限走査、失敗後retry、長ID/URI、生成identity衝突の回帰と併せてR037をcorrectedとした。
 
+次のT05実装入力として、短いGrammar sourceからsource位置を失うcompile失敗を3件確認した。日本語commentとCRLFを含む有効な対照sourceはcompileに成功する。`ref absent` はMissingRule、`scalar range "z" "a"` はInvalidRange、Seq readerのList<NdfValue>をleafのreference selfで名前として扱うsourceはPackage(InvalidBinding)を返す。いずれも実ASTにはLocatedのSpanがあるが、返却errorには該当NodeIdやSpanがない。
+
+補助fixtureの期待位置は、未定義名absentが[88,94)、逆転rangeのhiが[101,104)とrelated lo[97,100)、bindingのselfが[227,231)とrelated reader式[84,108)である。これは後から原文を検索して診断位置を捏造する提案ではなく、既に保持するASTの位置をtyped error/Diagnosticへ渡すための独立期待値である。実行はbootstrap::load・Document.validate・compile::package::compileを使った `.tmp/independent-engine/src/bin/compiler_diagnostics.rs` と `.tmp/compiler-diagnostics-review.log` に記録した。初回range fixtureのNat引数は正式文法がTextを要求するため訂正して再実行した。途中で別担当のFacts adapter接続により再buildが未完となったため、成功build時の補助executableを用いて3例を実行した。未完成adapterのcompile失敗を製品不具合とは扱わない。この診断位置の未達はT05の要件であり、binding例の型不一致R033の解消とは別である。
+
+Reader/Tokenizerのnested continuationコピー削減は、reader runtime 31件を独立実行した。外側TokenizationContinuationの全量echo照合は残り、成功後にprivate pending slotから取り出した内側continuationだけを唯一のresume_from_tokenizer呼出しへ渡すことを確認した。公開ReaderSession.resumeの全量照合は維持される。管理対象9種類に加え、補助 `nested_continuation` では内側の環境digest・report.traceOverflow・frame.phaseも変え、全12偽装が拒否された。元echoで正常再開し、二重再開を拒否した後に同sessionを別操作で再利用できた。生成source上の正式diagnostic/eventを持つ停止と、Await構築中のallocation faultで両pending slotを残さない既存回帰も成功した。性能比較やFacts全包絡を含む全workspace検査は、この境界確認とは別に行う。
+
+最終の1/4/8段prefix比較を独立再実行した。owned/nativeのWorkは11068/8510、48832/34727、135556/91663、AllocationUnitsは244688/150447、971108/542043、2589212/1352585で、各段のoutcome・診断の一致と費用の大小を確認した。これらは当該fixtureの観測値であり、全入力で一定比率の高速化を保証するものではない。
+
+releaseは、実装担当が最後の同source buildと確認したtest executable（SHA-256 `39da4aaa9ef437d7f5dca11d955a4e724b581ba98169183ba27af07502c38edd`）を独立に再実行した。通常の非ignore bootstrapをexact指定し、上限10BのままP0/P1/P2の意味一致・518 nodes、Work 7,287,412,952、AllocationUnits 8,045,061,614、Depth 96で成功した。3.30秒はこの単回native実行の観測で、以前の別source/buildやowned経路との速度比には使わない。ログは `.tmp/review-nested-release.log`。実装担当の追加owned/native比較ログ `.tmp/continuation-copy-after.log` も読み、owned側は上限20BでWork 10,597,852,458を要することを確認したが、そのowned比較を独立再実行したとは記録しない。
+
+追加profilingは実値のcharge_cloneを独立Budgetで計測し、その内訳は重なるためoperation Usageへ足さない。通常bootstrapのCI実行・10B上限は維持し、追加owned比較だけをignoreの任意測定とする構成を確認した。動的head protocol、全Facts包絡、内部コピーの全解消はこの性能sliceの承認範囲に含めない。
+
 仕様の通読、具体例による矛盾の確認、公開規格との照合を行った。r4では上記のcore/wire公開APIとNDF intrinsic roundtripに加え、標準Grammar原文のnative bootstrapを実行した。4言語全formのRust parse/lower、browser描画、回路実行、LSP、portable operation provider、および全要求targetでのconformanceはまだこのレビューの実行範囲に含まれない。対応する実装が存在する段階で、implementation-status.jsonの未実行記録を実行証拠とともに更新する。

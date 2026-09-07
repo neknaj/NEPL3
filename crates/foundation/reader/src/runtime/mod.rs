@@ -256,6 +256,55 @@ impl<'a> ReaderSession<'a> {
         if &saved.continuation != echo {
             return Err(ReaderError::Continuation);
         }
+        self.resume_saved(reply, sources, budget, admission)
+    }
+    /// Only the owning tokenizer may use this entry, after its complete external
+    /// TokenizationContinuation echo (including this nested ReaderContinuation's
+    /// request, plan, provider, current state and all frame checkpoints) matched
+    /// its immutable private pending slot. The value passed here is moved from
+    /// that private slot, never taken from the caller's echo.
+    pub(crate) fn resume_from_tokenizer(
+        &mut self,
+        owned: &ReaderContinuation,
+        reply: ProviderReply,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<ReadReply, ReaderError> {
+        if self.closed {
+            return Err(ReaderError::Closed);
+        }
+        let saved = self.pending.as_ref().ok_or(ReaderError::NoPending)?;
+        if saved.limits != budget.limits()
+            || !usage_at_least(budget.usage(), saved.continuation.usage)
+        {
+            return Err(ReaderError::Continuation);
+        }
+        if let Err(reason) = budget.poll() {
+            return self.stop_pending(reason, budget);
+        }
+        // Only ownership metadata is compared here; the outer boundary already
+        // validated the entire nested value. No allocation occurs for this check.
+        if let Err(reason) = budget.charge(Resource::Work, self.session_id.len() as u64 + 49) {
+            return self.stop_pending(reason, budget);
+        }
+        let saved = self.pending.as_ref().ok_or(ReaderError::NoPending)?;
+        if saved.continuation.session_id != owned.session_id
+            || saved.continuation.plan_digest != owned.plan_digest
+            || saved.continuation.usage != owned.usage
+            || call_identity(&saved.continuation.pending) != call_identity(&owned.pending)
+        {
+            return Err(ReaderError::Continuation);
+        }
+        self.resume_saved(reply, sources, budget, admission)
+    }
+    fn resume_saved(
+        &mut self,
+        reply: ProviderReply,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<ReadReply, ReaderError> {
         let Pending {
             continuation: mut c,
             ..

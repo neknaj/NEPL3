@@ -2449,3 +2449,138 @@ fn accepted_diagnostic_owns_primary_related_and_fix_source_closure_before_public
     assert_eq!(reply.report.usage.diagnostics, 1);
     Ok(())
 }
+
+#[test]
+fn tokenizer_outer_echo_validates_every_nested_reader_component_before_private_resume()
+-> Result<(), ReaderError> {
+    use nepl3_reader::tokenizer::*;
+    let (registry, schema) = registry()?;
+    let plan = provider_plan(&schema);
+    let checked = plan.check(&registry, &mut budget())?;
+    let source = source("a")?;
+    let mut store = SourceStore::default();
+    store.insert(source.clone())?;
+    let raw = context(&schema, &registry)?;
+    let context = check_context(
+        &raw,
+        &store,
+        &registry,
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    let modes = [ReaderMode {
+        name: "test".into(),
+        skip: vec![],
+        take: vec![TakeRule {
+            reader: TokenReader::Rule("entry".into()),
+            kind: KindRef {
+                schema,
+                local_kind: 0,
+            },
+        }],
+    }];
+    let mut b = budget();
+    let mut admission = SourceAdmission::default();
+    let mut session =
+        TokenizationSession::new("nested-owner".into(), &modes, &checked, &registry, &mut b)?;
+    let initial_state = NdfValue::Unit;
+    let request = || TokenizationRequest {
+        snapshot: &source,
+        start: 0,
+        limit: 1,
+        final_input: true,
+        context: &context,
+        state: &initial_state,
+    };
+    let reply = session.read(request(), &store, &mut b, &mut admission)?;
+    let TokenizationOutcome::Await { continuation, .. } = reply.outcome else {
+        return Err(ReaderError::NoPending);
+    };
+    // Each payload below is part of the external tokenizer echo, even though its
+    // nested VM is resumed through an internal ownership-only check afterwards.
+    for change in 0..9 {
+        let mut altered = continuation.clone();
+        let TokenizationWait::Provider {
+            continuation: inner,
+        } = &mut altered.pending
+        else {
+            return Err(ReaderError::Continuation);
+        };
+        match change {
+            0 => inner.request.start += 1,
+            1 => inner.request.state = NdfValue::Bool(true),
+            2 => inner.plan_digest = Digest::of(b"another execution plan"),
+            3 => match &mut inner.pending {
+                ProviderCall::Read { operation, .. } => operation.name.push('x'),
+                _ => return Err(ReaderError::Continuation),
+            },
+            4 => inner.current.state = NdfValue::Bool(true),
+            5 => inner.frames[0].checkpoint.state = NdfValue::Bool(true),
+            6 => inner.frames[0].expression = ReaderId(u64::MAX),
+            7 => inner.usage.work += 1,
+            8 => {
+                inner.request.sources[0] = SourceSnapshot::new(
+                    SourceId("other".into()),
+                    0,
+                    "memory:other".into(),
+                    b"a".to_vec(),
+                    &mut budget(),
+                )?
+            }
+            _ => return Err(ReaderError::Context),
+        }
+        let terminal = terminal("a", 1, &mut b)?;
+        assert_eq!(
+            session.resume(&altered, terminal, &store, &mut b, &mut admission),
+            Err(ReaderError::Continuation)
+        );
+    }
+    let TokenizationWait::Provider {
+        continuation: inner,
+    } = &continuation.pending
+    else {
+        return Err(ReaderError::Continuation);
+    };
+    let mut denied = Budget::new(Limits {
+        allocation_units: 0,
+        ..budget().limits()
+    });
+    assert_eq!(
+        inner.clone_with_budget(&mut denied),
+        Err(StopReason::AllocationLimit)
+    );
+    let accepted_terminal = terminal("a", 1, &mut b)?;
+    let reply = session.resume(
+        &continuation,
+        accepted_terminal,
+        &store,
+        &mut b,
+        &mut admission,
+    )?;
+    let TokenizationOutcome::Token(token) = reply.outcome else {
+        return Err(ReaderError::Context);
+    };
+    assert_eq!(token.payload, NdfValue::Text("a".into()));
+    assert_eq!(reply.report.usage, b.usage());
+    assert_eq!(
+        session.resume(
+            &continuation,
+            terminal("a", 1, &mut b)?,
+            &store,
+            &mut b,
+            &mut admission
+        ),
+        Err(ReaderError::NoPending)
+    );
+    // Rejection did not consume the slot; successful completion did, and the same
+    // session can start a new operation without a dangling inner reader slot.
+    let mut next_budget = budget();
+    let mut next_admission = SourceAdmission::default();
+    assert!(matches!(
+        session
+            .read(request(), &store, &mut next_budget, &mut next_admission)?
+            .outcome,
+        TokenizationOutcome::Await { .. }
+    ));
+    Ok(())
+}

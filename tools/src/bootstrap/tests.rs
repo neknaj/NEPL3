@@ -684,6 +684,7 @@ fn measured_parse(
     let started = std::time::Instant::now();
     let mut metrics = runtime::metrics::Metrics {
         inline_host,
+        probe_continuations: !inline_host,
         ..runtime::metrics::Metrics::default()
     };
     let result = runtime::with_tree_measured(

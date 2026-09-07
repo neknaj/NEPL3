@@ -391,6 +391,22 @@ pub(super) fn with_tree_measured<T>(
         let step = (|| -> Result<Step<T>, RuntimeError> {
             match &reply.outcome {
                 ParseOutcome::Await { call, continuation } => {
+                    if metrics.probe_continuations {
+                        let mut probe = Budget::new(budget.limits());
+                        metrics
+                            .tokenizer_continuation_copy
+                            .measure(&mut probe, |b| continuation.tokenizer.charge_clone(b))
+                            .map_err(boundary)?;
+                        if let nepl3_reader::tokenizer::TokenizationWait::Provider {
+                            continuation: reader,
+                        } = &continuation.tokenizer.pending
+                        {
+                            metrics
+                                .reader_continuation_copy
+                                .measure(&mut probe, |b| reader.charge_clone(b))
+                                .map_err(boundary)?;
+                        }
+                    }
                     let ProviderCall::Read {
                         operation,
                         request,
