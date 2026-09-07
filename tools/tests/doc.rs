@@ -4,6 +4,8 @@
 mod labels;
 #[path = "doc/mixed.rs"]
 mod mixed;
+#[path = "doc/text.rs"]
+mod text;
 use nepl3_core::{budget::*, source::*};
 use nepl3_core::{
     syntax::{Environment, EnvironmentEntry},

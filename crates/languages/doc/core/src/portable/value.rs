@@ -1,8 +1,10 @@
 use super::{PortableError, boundary};
 use crate::model::*;
+use crate::text::*;
 use alloc::{boxed::Box, string::String, vec::Vec};
 use nepl3_core::{
-    budget::{Budget, Resource},
+    budget::{Budget, Resource, StopReason},
+    diagnostic::Report,
     origin::{Mapping, MappingKind, OriginId},
     source::{Digest, Span},
     syntax::ForeignClosure,
@@ -262,6 +264,52 @@ macro_rules! foundation {
     };
 }
 foundation!(Span, encode_span, decode_span);
+foundation!(Report, encode_report, decode_report);
+impl Value for StopReason {
+    fn put<C: FoundationValueCodec>(
+        &self,
+        _: &SchemaRef,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<NdfValue, PortableError<C::Error>> {
+        let tag = match self {
+            Self::Cancelled => "Cancelled",
+            Self::SourceLimit => "SourceLimit",
+            Self::WorkLimit => "WorkLimit",
+            Self::DepthLimit => "DepthLimit",
+            Self::NodeLimit => "NodeLimit",
+            Self::AllocationLimit => "AllocationLimit",
+            Self::OutputLimit => "OutputLimit",
+            Self::DiagnosticLimit => "DiagnosticLimit",
+            Self::EventLimit => "EventLimit",
+        };
+        variant(c.foundation_schema(), "StopReason", tag, [], b)
+    }
+    fn read<C: FoundationValueCodec>(
+        v: &NdfValue,
+        _: &SchemaRef,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<Self, PortableError<C::Error>> {
+        b.charge(Resource::Work, 64)?;
+        let (tag, fields) = case(v, c.foundation_schema(), "StopReason")?;
+        if !fields.is_empty() {
+            return Err(PortableError::Shape);
+        }
+        Ok(match tag {
+            "Cancelled" => Self::Cancelled,
+            "SourceLimit" => Self::SourceLimit,
+            "WorkLimit" => Self::WorkLimit,
+            "DepthLimit" => Self::DepthLimit,
+            "NodeLimit" => Self::NodeLimit,
+            "AllocationLimit" => Self::AllocationLimit,
+            "OutputLimit" => Self::OutputLimit,
+            "DiagnosticLimit" => Self::DiagnosticLimit,
+            "EventLimit" => Self::EventLimit,
+            _ => return Err(PortableError::Shape),
+        })
+    }
+}
 foundation!(ViewBundle, encode_views, decode_views);
 foundation!(
     ForeignClosure,

@@ -24,10 +24,12 @@ Doc arena の node/root、Origin、局所 View と source map は portable 往�
 
 管理対象は Doc core の構造・literal・正規化・source/ForeignClosure・初回 CBOR と、tools の実 compiler/parse/prefix lower・helper 範囲・DocGuest・resource 停止。host seed と元 source/adapter の一致だけは Python process を使う native 専用試験で、同じ保存 seed を使う実処理は WASI でも実行する。browser target は compile 検査であり実描画の成功ではない。
 
+`text::plain_text` は正式PlainTextRequestを受け、document/guestの正準digestへ束縛した明示host textを用いてSentenceを投影する。BaseOnly / WithReadings / WithAllNotesの固定規則と、表示しないnote/readingには未提供embed textを要求しない規則を実行する。全提供entryはpolicyにかかわらず検査する。型付きrequest/replyの初回CBOR、実prefix→lower→投影、元source変更・guest差替え・owner環境変更、準備中と出力中の停止を管理対象で検査する。公開prepareはidentity取得だけで、公開実行が再検査と資源計上を省略するproofではない。これはguest意味checkやPreparedArticleの完成を表さない。
+
 ## 残り
 
 - 全 constructor の print → parse → lower、compact printer、guest wrapper 単独の fragment API とその往復。
-- 外部 page・asset 解決、foreign Requirementを含む完全なcheck/prepare、plain_text、HTML backend と rendering。schema に表・list・link・code・asset があることだけで、これらの実装済みを主張しない。
+- 外部 page・asset 解決、foreign Requirementを含む完全なcheck/prepare、HTML backend と rendering。schema に表・list・link・code・asset があることだけで、これらの実装済みを主張しない。
 - Doc の正式 lower 操作の Report/部分結果包絡と全 suite adapter。native helper の Result を、別実装の操作包絡の完成として扱わない。
 
 設計入力は main `b5295cef655aa59affffd6644f2902268d071953` の文書監査。inventory SHA-256 は `daf94085913930f05c1655d2adbef4f56651864f9a97ac4d261400449c98499e`、61 Markdown / 231 Rust source owner、52 表 / 1283 cell、39 list / 233 item、1134 inline code、12 code block、249 link、1 image。追加 element category はない。この監査は実装中差分の completeness、rustdoc 意味監査、T21 の移行完了とは別である。

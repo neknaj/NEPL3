@@ -1395,7 +1395,255 @@
         ]
       ],
       "constraints": []
+    },
+    "AnnotationPolicy": {
+      "variant": {
+        "BaseOnly": [],
+        "WithReadings": [],
+        "WithAllNotes": []
+      },
+      "constraints": []
+    },
+    "InlineTextTarget": {
+      "record": [
+        [
+          "embed",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "EmbedRef"
+            }
+          }
+        ],
+        [
+          "guestDigest",
+          "Bytes"
+        ]
+      ],
+      "constraints": []
+    },
+    "TextIdentity": {
+      "record": [
+        [
+          "documentDigest",
+          "Bytes"
+        ],
+        [
+          "embeds",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "InlineTextTarget"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "ResolvedInlineText": {
+      "record": [
+        [
+          "documentDigest",
+          "Bytes"
+        ],
+        [
+          "embed",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "EmbedRef"
+            }
+          }
+        ],
+        [
+          "guestDigest",
+          "Bytes"
+        ],
+        [
+          "text",
+          "Text"
+        ]
+      ],
+      "constraints": []
+    },
+    "PlainTextRequest": {
+      "record": [
+        [
+          "document",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "DocumentSyntax"
+            }
+          }
+        ],
+        [
+          "sentence",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "SentenceRef"
+            }
+          }
+        ],
+        [
+          "policy",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "AnnotationPolicy"
+            }
+          }
+        ],
+        [
+          "resolved",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "ResolvedInlineText"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "ResolutionMismatch": {
+      "variant": {
+        "Document": [],
+        "Guest": [],
+        "Embed": [],
+        "Duplicate": []
+      },
+      "constraints": []
+    },
+    "PlainTextFailure": {
+      "variant": {
+        "ExpectedSentence": [
+          [
+            "node",
+            "U64"
+          ]
+        ],
+        "InvalidResolution": [
+          [
+            "entry",
+            "U64"
+          ],
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "ResolutionMismatch"
+              }
+            }
+          ]
+        ],
+        "UnresolvedEmbed": [
+          [
+            "embed",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "PlainTextOutcome": {
+      "variant": {
+        "Complete": [
+          [
+            "text",
+            "Text"
+          ]
+        ],
+        "Invalid": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "PlainTextFailure"
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "PlainTextReply": {
+      "record": [
+        [
+          "outcome",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "PlainTextOutcome"
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Report"
+            }
+          }
+        ]
+      ],
+      "constraints": []
     }
   },
-  "operations": {}
+  "operations": {
+    "plainText": {
+      "input": {
+        "named": {
+          "package": "nepl3.doc",
+          "revision": 1,
+          "name": "PlainTextRequest"
+        }
+      },
+      "output": {
+        "named": {
+          "package": "nepl3.doc",
+          "revision": 1,
+          "name": "PlainTextReply"
+        }
+      },
+      "pure": true
+    }
+  }
 }

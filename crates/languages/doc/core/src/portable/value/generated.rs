@@ -497,4 +497,118 @@ let f=fields(v,s,"LabelDiagnosticArguments",2)?;
 Ok(Self {name:Value::read(&f[0],s,c,b)?,paths:Value::read(&f[1],s,c,b)?})
 }
 }
+impl Value for AnnotationPolicy {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::BaseOnly => variant(s,"AnnotationPolicy","BaseOnly",[],b),
+Self::WithReadings => variant(s,"AnnotationPolicy","WithReadings",[],b),
+Self::WithAllNotes => variant(s,"AnnotationPolicy","WithAllNotes",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,48)?;
+let (tag,f)=case(v,s,"AnnotationPolicy")?;
+match (tag,f.len()) {
+("BaseOnly",0)=>Ok(Self::BaseOnly),
+("WithReadings",0)=>Ok(Self::WithReadings),
+("WithAllNotes",0)=>Ok(Self::WithAllNotes),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for InlineTextTarget {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"InlineTextTarget",[self.embed.put(s,c,b)?,self.guest_digest.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,48)?;
+let f=fields(v,s,"InlineTextTarget",2)?;
+Ok(Self {embed:Value::read(&f[0],s,c,b)?,guest_digest:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for TextIdentity {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"TextIdentity",[self.document_digest.put(s,c,b)?,self.embeds.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,44)?;
+let f=fields(v,s,"TextIdentity",2)?;
+Ok(Self {document_digest:Value::read(&f[0],s,c,b)?,embeds:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for ResolvedInlineText {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"ResolvedInlineText",[self.document_digest.put(s,c,b)?,self.embed.put(s,c,b)?,self.guest_digest.put(s,c,b)?,self.text.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,50)?;
+let f=fields(v,s,"ResolvedInlineText",4)?;
+Ok(Self {document_digest:Value::read(&f[0],s,c,b)?,embed:Value::read(&f[1],s,c,b)?,guest_digest:Value::read(&f[2],s,c,b)?,text:Value::read(&f[3],s,c,b)?})
+}
+}
+impl Value for ResolutionMismatch {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Document => variant(s,"ResolutionMismatch","Document",[],b),
+Self::Guest => variant(s,"ResolutionMismatch","Guest",[],b),
+Self::Embed => variant(s,"ResolutionMismatch","Embed",[],b),
+Self::Duplicate => variant(s,"ResolutionMismatch","Duplicate",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,50)?;
+let (tag,f)=case(v,s,"ResolutionMismatch")?;
+match (tag,f.len()) {
+("Document",0)=>Ok(Self::Document),
+("Guest",0)=>Ok(Self::Guest),
+("Embed",0)=>Ok(Self::Embed),
+("Duplicate",0)=>Ok(Self::Duplicate),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for PlainTextFailure {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::ExpectedSentence {node} => variant(s,"PlainTextFailure","ExpectedSentence",[node.put(s,c,b)?],b),
+Self::InvalidResolution {entry,reason} => variant(s,"PlainTextFailure","InvalidResolution",[entry.put(s,c,b)?,reason.put(s,c,b)?],b),
+Self::UnresolvedEmbed {embed} => variant(s,"PlainTextFailure","UnresolvedEmbed",[embed.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,48)?;
+let (tag,f)=case(v,s,"PlainTextFailure")?;
+match (tag,f.len()) {
+("ExpectedSentence",1)=>Ok(Self::ExpectedSentence {node:Value::read(&f[0],s,c,b)?}),
+("InvalidResolution",2)=>Ok(Self::InvalidResolution {entry:Value::read(&f[0],s,c,b)?,reason:Value::read(&f[1],s,c,b)?}),
+("UnresolvedEmbed",1)=>Ok(Self::UnresolvedEmbed {embed:Value::read(&f[0],s,c,b)?}),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for PlainTextOutcome {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Complete {text} => variant(s,"PlainTextOutcome","Complete",[text.put(s,c,b)?],b),
+Self::Invalid {error} => variant(s,"PlainTextOutcome","Invalid",[error.put(s,c,b)?],b),
+Self::Stopped {reason} => variant(s,"PlainTextOutcome","Stopped",[reason.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,48)?;
+let (tag,f)=case(v,s,"PlainTextOutcome")?;
+match (tag,f.len()) {
+("Complete",1)=>Ok(Self::Complete {text:Value::read(&f[0],s,c,b)?}),
+("Invalid",1)=>Ok(Self::Invalid {error:Value::read(&f[0],s,c,b)?}),
+("Stopped",1)=>Ok(Self::Stopped {reason:Value::read(&f[0],s,c,b)?}),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for PlainTextReply {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"PlainTextReply",[self.outcome.put(s,c,b)?,self.report.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,46)?;
+let f=fields(v,s,"PlainTextReply",2)?;
+Ok(Self {outcome:Value::read(&f[0],s,c,b)?,report:Value::read(&f[1],s,c,b)?})
+}
+}
 }

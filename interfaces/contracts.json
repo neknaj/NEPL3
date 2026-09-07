@@ -2252,7 +2252,15 @@
       "input": "nepl3.reader.ReadRequest",
       "output": "nepl3.reader.ReadReply",
       "value_output": "nepl3.doc.DocumentSyntax",
-      "scope": "Executable reader adapter. The explanatory doc.lower/check/print/prepare/render/plain_text entries remain domain contracts; their complete operation error and partial-result envelopes are not provided by this adapter. The doc.facts/v1 compilation signature does not establish a completed Facts implementation."
+      "scope": "Executable reader adapter. The explanatory doc.lower/check/print/prepare/render entries remain domain contracts; their complete operation error and partial-result envelopes are not provided by this adapter. The doc.facts/v1 compilation signature does not establish a completed Facts implementation."
+    },
+    "DocPlainText": {
+      "descriptor": "interfaces/doc.json",
+      "package": "nepl3.doc",
+      "operation": "plainText",
+      "input": "nepl3.doc.PlainTextRequest",
+      "output": "nepl3.doc.PlainTextReply",
+      "scope": "Executable plain-text operation over an explicit DocumentSyntax, SentenceRef, AnnotationPolicy, and ResolvedInlineText inputs. Preparation and execution failures retain typed Invalid or Stopped outcomes and Report usage. Reply sources resolve only through the request document closure; decoding does not authenticate resolved inline text or issue a prepared-domain execution proof. Printing, domain prepare/render, and full Facts remain separate contracts."
     }
   }
 }
