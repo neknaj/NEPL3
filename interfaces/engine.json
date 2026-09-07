@@ -4241,6 +4241,168 @@
           ]
         ]
       }
+    },
+    "BindingOptions": {
+      "constraints": [],
+      "record": []
+    },
+    "AnalysisKey": {
+      "constraints": [],
+      "record": [
+        [
+          "treeDigest",
+          "Bytes32"
+        ],
+        [
+          "profileDigest",
+          "Bytes32"
+        ],
+        [
+          "executionDigest",
+          "Bytes32"
+        ],
+        [
+          "requestDigest",
+          "Bytes32"
+        ]
+      ]
+    },
+    "AnalysisExecution": {
+      "constraints": [],
+      "record": [
+        [
+          "alias",
+          "Text"
+        ],
+        [
+          "executionDigest",
+          "Bytes32"
+        ]
+      ]
+    },
+    "BindingConditions": {
+      "constraints": [],
+      "record": [
+        [
+          "analysisId",
+          "Text"
+        ],
+        [
+          "options",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "BindingOptions"
+            }
+          }
+        ],
+        [
+          "limits",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Limits"
+            }
+          }
+        ]
+      ]
+    },
+    "BindingRequest": {
+      "constraints": [],
+      "record": [
+        [
+          "analysisId",
+          "Text"
+        ],
+        [
+          "tree",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "ParseTree"
+            }
+          }
+        ],
+        [
+          "options",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "BindingOptions"
+            }
+          }
+        ],
+        [
+          "limits",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Limits"
+            }
+          }
+        ],
+        [
+          "key",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "AnalysisKey"
+            }
+          }
+        ]
+      ]
+    },
+    "BoundBindingReply": {
+      "constraints": [],
+      "record": [
+        [
+          "key",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "AnalysisKey"
+            }
+          }
+        ],
+        [
+          "reply",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "BindingReply"
+            }
+          }
+        ]
+      ]
+    },
+    "BindingAccessError": {
+      "constraints": [],
+      "variant": {
+        "LimitsMismatch": [],
+        "StaleAnalysis": [],
+        "MissingSource": [],
+        "Incomplete": [],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ]
+      }
     }
   }
 }

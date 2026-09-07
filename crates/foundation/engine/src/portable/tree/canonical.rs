@@ -1,27 +1,12 @@
 use super::*;
-use nepl3_core::syntax::{FieldValue, SyntaxBundle, canonical::NodeMapping};
+use nepl3_core::syntax::{SyntaxBundle, canonical::NodeMapping};
 
 pub(crate) struct Mappings<'a> {
     pub entries: Vec<NodeMapping<'a>>,
 }
 impl<'a> Mappings<'a> {
     pub fn new<E>(bundle: &'a SyntaxBundle, b: &mut Budget) -> Result<Self, PortableError<E>> {
-        let mut entries = Vec::new();
-        let mut pending = Vec::new();
-        push(&mut pending, (bundle, 1u64), b)?;
-        while let Some((bundle, depth)) = pending.pop() {
-            b.observe_depth(depth)?;
-            let mapping = NodeMapping::new(bundle, b)?;
-            for node in mapping.order().iter().rev() {
-                for field in bundle.nodes[*node].fields.iter().rev() {
-                    b.charge(Resource::Work, 1)?;
-                    if let FieldValue::Foreign(v) = field {
-                        push(&mut pending, (&v.bundle, depth.saturating_add(1)), b)?;
-                    }
-                }
-            }
-            push(&mut entries, mapping, b)?;
-        }
+        let entries = nepl3_core::syntax::canonical::BundleMappings::new(bundle, b)?.into_entries();
         Ok(Self { entries })
     }
     pub fn owner<E>(

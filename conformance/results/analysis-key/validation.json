@@ -1,0 +1,87 @@
+{
+  "format": "nepl3.development-slice/1",
+  "scope": "T06: prepared keyed Binding requests, first-receiver codecs and canonical native binding initialization",
+  "base_commit": "18468f65ba5d415eba9f9366fa9f7d8b84893638",
+  "result": "passed-within-recorded-scope",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "4c788c40c9d8be6547fbf7248b551f66370a452303fa7bcf64dab04e15bc54bb",
+    "spec_sha256": "3691468f7ca990cdf402e034b2b4847688b6a6a804f85674c57cdcd9399cd64e"
+  },
+  "checks": [
+    {
+      "command": "cargo test --workspace --locked",
+      "exit_code": 0,
+      "log": "conformance/results/analysis-key/native.log",
+      "sha256": "42e7b8594795e0f18b2833fc2daf339c457024367730deee8d84f3861a801741"
+    },
+    {
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER='wasmtime run'; cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar diagnostic::compiler_report_boundary_without_host_process --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::all_reader_constructors --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::compiled_reader_streaming_boundaries_and_rollback_keep_raw_positions --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --no-default-features --target wasm32-unknown-unknown",
+      "exit_code": 0,
+      "log": "conformance/results/analysis-key/wasi.log",
+      "sha256": "0588aafd02f516c7fe9c0b8988ddb797d62c63185b6588b0a06770bb31ccd244"
+    },
+    {
+      "command": "cargo fmt --all -- --check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo clippy --workspace --all-targets --locked -- -D warnings; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps --locked",
+      "exit_code": 0,
+      "log": "conformance/results/analysis-key/quality.log",
+      "sha256": "22eaeed311675fd061b08757077a67b03f354731e79d7cda5fb21cc9a0438867"
+    },
+    {
+      "command": "cargo run --locked -p nepl3-tools -- check",
+      "exit_code": 0,
+      "log": "conformance/results/analysis-key/contract.log",
+      "sha256": "5a89f8a3bc5f972716f654e2ea337fa69d2b6b4f0634fce05d6304b7b30d4cd2"
+    },
+    {
+      "command": "python tools/audit/structure.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/audit -p test.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/bootstrap -p test_grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/audit/allocation/run.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo run --locked -p nepl3-tools -- tasks --check",
+      "exit_code": 0,
+      "log": "conformance/results/analysis-key/audit.log",
+      "sha256": "5dabb2f7e90d917a4f2a7cbbb4cc8534883f3c5906b1bdb4f34c9d793098b4ad"
+    },
+    {
+      "command": "C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe --version; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe .github/workflows/ci.yml",
+      "exit_code": 0,
+      "log": "conformance/results/analysis-key/ci.log",
+      "sha256": "ad7ed44e79c7e5d554c2e008819df3a5da44834e9cfdb4aecaef9224a39c87dd"
+    }
+  ],
+  "execution": {
+    "native": {
+      "target": "x86_64-pc-windows-msvc",
+      "passed": 301,
+      "ignored": 1
+    },
+    "wasi": {
+      "target": "wasm32-wasip2",
+      "runner": "Wasmtime 44.0.1",
+      "passed": 221,
+      "scope": "199 five-crate tests, one compiler Report test, three ReaderExpr tests and eighteen binding tests"
+    },
+    "browser_wasm": "Five no_std crates compiled; browser interaction not executed",
+    "toolchain": "Rust 1.97.0",
+    "other": "Format, strict Clippy, rustdoc, repository contracts, 6 Python structure and 3 bootstrap adapter tests, task generation, allocation regressions and actionlint 1.7.12 passed. Ordinary Grammar P0/P1/P2 bootstrap kept the unchanged Work cap; its separate owned performance baseline remains ignored."
+  },
+  "implementation": [
+    "AnalysisKey fixes canonical tree data, resolved Profile identity, concrete per-alias execution identities and typed analysis conditions/effective Limits. Sources, URI, content, embedded environments, provider/resource selections and arena execution layout participate in those identities.",
+    "Explicit prepared requests validate actual inputs and compute keys. Their borrowed typed proof fixes the tree/profile for execution; the actual execution Budget must match the effective limits. No raw key or requested limits grants host permission.",
+    "Real BindingRequest CBOR decode works with a fresh receiver lacking the original request/store. It verifies the complete received tree and recalculates the key; preparing again rejects subsequent changes. Bound replies retain every ordinary result branch and typed access failures.",
+    "Keyed for_source checks expected current key, exact source revision/digest and completion before exposing the native analysis proof. Raw reply decoding remains structural data, not execution provenance.",
+    "Core BundleMappings provides charged borrowed canonical DFS/node indices. Binding initialization uses that same order for roots/namespaces/Origins, canonical selection order and sorted borrowed source references. Normal analyze does not encode/decode or clone the whole tree.",
+    "Seven generic type annotations accidentally interpreted as HTML were corrected to inline code in reader/Grammar/review Markdown. The current documentation audit showed existing table/list/link/code gaps remain relevant to the later Doc model."
+  ],
+  "independent_review": {
+    "reviewer": "Huygens",
+    "record": "doc/review.md",
+    "r045": "The original lambda x guest x native and first-receiver runs shared a key but assigned different namespace/root/Origin IDs because tree.contexts storage order differed. The unchanged original reproduction now matches. Separately reversing context, node selection and source tables, including escaped Text generated sources inside Foreign bundles, preserves the full BindingResult and formal source/diagnostic closure.",
+    "other": "Independent same-semantic different-Form-arena Profile rejected the old tree, accepted correctly remapped selections with equal facts, changed execution_digest and rejected stale keyed access. Key/request/source/guest environment/provider/resource/limits mutations, cancellation and first-receiver tests passed; latest four managed key tests passed independently on native and WASI.",
+    "root_confirmation": "Root reran all isolated gates and verified the 19 frozen implementation/spec/review files against raw SHA-256 and byte/CRLF manifests; the prepare prerequisite also matches its author's independent one-file manifest."
+  },
+  "unverified": [
+    "for_source is a stale-result gate; definition, references, completion, rename, highlighting and incremental query algorithms are not completed by it.",
+    "Custom/Facts callback execution, explicit namespace sharing and resolution update history remain subsequent implementation work.",
+    "Keys do not authenticate remote usage, transport peers or raw result execution. Other language runtimes, hosts, Web, Pages and Doc migration remain incomplete.",
+    "No task or required acceptance group is declared complete by this record."
+  ]
+}

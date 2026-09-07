@@ -1,5 +1,6 @@
 use super::*;
 use crate::recovery::ParseTree;
+use nepl3_core::syntax::canonical::{BundleMappings, CanonicalError};
 impl<'a, 'p> Machine<'a, 'p> {
     pub(super) fn prepare(
         &mut self,
@@ -8,10 +9,50 @@ impl<'a, 'p> Machine<'a, 'p> {
         budget: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<usize, BindingError> {
+        // IDs follow the same structural visitation order as portable syntax,
+        // independently of the storage order of context and selection tables.
+        // This is a borrowed index view, not a copy of the input tree.
+        let mappings = BundleMappings::new(&tree.bundle, budget).map_err(|error| match error {
+            CanonicalError::Stopped(reason) => BindingError::Stopped(reason),
+            CanonicalError::Reference | CanonicalError::Unreachable => BindingError::Target,
+        })?;
+        let mut contexts = Vec::new();
+        for mapping in mappings.entries() {
+            let mut found = None;
+            for context in &tree.contexts {
+                budget.charge(Resource::Work, 1)?;
+                let bundle = crate::tree::path(&tree.bundle, &context.path, self.registry, budget)?;
+                if core::ptr::eq(bundle, mapping.bundle()) {
+                    found = Some(context);
+                    break;
+                }
+            }
+            push(&mut contexts, found.ok_or(BindingError::Target)?, budget)?;
+        }
         // Admit and own all explicit tree sources before any diagnostic can refer to them.
-        for context in &tree.contexts {
-            let bundle = crate::tree::path(&tree.bundle, &context.path, self.registry, budget)?;
+        for mapping in mappings.entries() {
+            let bundle = mapping.bundle();
+            // Source tables are unordered declarations on the wire. Match its
+            // SourceId/revision/digest order without cloning owned sort keys.
+            let mut sources = Vec::new();
             for source in &bundle.sources {
+                push(&mut sources, source, budget)?;
+                let mut at = sources.len() - 1;
+                while at > 0 {
+                    budget.charge(
+                        Resource::Work,
+                        sources[at - 1].identity().source.0.len() as u64
+                            + sources[at].identity().source.0.len() as u64
+                            + 41,
+                    )?;
+                    if sources[at - 1].identity() <= sources[at].identity() {
+                        break;
+                    }
+                    sources.swap(at - 1, at);
+                    at -= 1;
+                }
+            }
+            for source in sources {
                 admission.admit_existing(source, budget)?;
                 budget.charge(
                     Resource::Work,
@@ -78,8 +119,8 @@ impl<'a, 'p> Machine<'a, 'p> {
         }
         self.progress.facts = Some(facts);
         let mut root = None;
-        for context in &tree.contexts {
-            let bundle = crate::tree::path(&tree.bundle, &context.path, self.registry, budget)?;
+        for (mapping, context) in mappings.entries().iter().zip(contexts) {
+            let bundle = mapping.bundle();
             let origin_base = self.facts()?.origins.len() as u64;
             // Origins may point forward inside this bundle. Publish the whole
             // rebased graph atomically, so a stopped partial FactSet stays closed.
@@ -115,7 +156,13 @@ impl<'a, 'p> Machine<'a, 'p> {
                 )),
                 budget,
             )?;
-            for selection in &context.nodes {
+            for node in mapping.order() {
+                budget.charge(Resource::Work, context.nodes.len() as u64)?;
+                let selection = context
+                    .nodes
+                    .iter()
+                    .find(|selection| selection.node.0 == *node as u64)
+                    .ok_or(BindingError::Target)?;
                 let package = self.profile.language(&selection.entry.alias, budget)?;
                 for namespace in &package.namespaces {
                     let scope = self.stage(stage)?.scope;

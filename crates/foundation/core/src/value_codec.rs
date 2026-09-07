@@ -16,6 +16,16 @@ pub trait FoundationCodecError {
 }
 pub trait FoundationValueCodec {
     type Error: FoundationCodecError;
+    /// SHA-256 of `domain || canonical NDF/1 CBOR(value)`. This checks intrinsic
+    /// value invariants; the operation owner validates its expected schema first.
+    /// Encoding and hashing consume this operation's Budget. No source authority
+    /// is inferred from records contained in the value.
+    fn canonical_value_digest(
+        &mut self,
+        domain: &[u8],
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<Digest, Self::Error>;
     /// Encode a symbolic type description as foundation data. This does not
     /// assert that a described Named type resolves in the current registry.
     fn encode_type_descriptor(
