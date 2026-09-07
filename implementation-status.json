@@ -39,7 +39,7 @@
     },
     {
       "id": "T08",
-      "status": "not-implemented",
+      "status": "in-progress",
       "evidence": []
     },
     {
@@ -104,6 +104,26 @@
     },
     {
       "id": "T21",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T22",
+      "status": "in-progress",
+      "evidence": []
+    },
+    {
+      "id": "T23",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T24",
+      "status": "not-implemented",
+      "evidence": []
+    },
+    {
+      "id": "T25",
       "status": "not-implemented",
       "evidence": []
     }
@@ -392,7 +412,8 @@
     "nepl3-wire",
     "nepl3-tools",
     "nepl3-grammar-core",
-    "nepl3-doc-core"
+    "nepl3-doc-core",
+    "nepl3-math-core"
   ],
   "note": "Foundation runtime implementation is in progress. Implemented crate membership does not imply task or acceptance completion; required acceptance remains evidence-bound."
 }

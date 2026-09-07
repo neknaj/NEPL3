@@ -97,7 +97,7 @@ source上の名前の選択範囲と、定義全体の範囲を分ける。Refer
 
 InlineMath / DisplayMath / CircuitFigure / Codeは、スロット種別とForeignClosureを保持する。ForeignClosureはForeignSyntaxに選択済みowner環境、元Origin表、source/map宣言閉包を加えた共通型である。環境digestに含まれる元Origin IDを保存し、guest自身のOrigin表と混同しない。MathやCircuitの型をdoc-coreへimportしない。
 
-suiteがMathの構造・bindingをcheckし、math-mathmlからsafeなMathML subtreeを作る。CircuitFigureはcheck/elaborateとdiagramを使う。Codeは元のguest sourceとviewの表示であり、guestのlower・意味check・compile・evaluateを実行しない。guestがDoc自身の場合もDoc:DocGuest.syntaxはForeignClosure中のForeignSyntaxを保持し、Doc/Articleの意味値への変換を表示の前提にしない。bundleのschema・参照・source範囲の安全性検査は省略しない。
+suiteがMathの構造・bindingをcheckし、[17章](17-math-html.md)の生成policyに従ってhostによるKaTeX生成、または独立math-mathmlの検査済みfragmentを準備する。閲覧時にKaTeXを再実行しない。CircuitFigureはcheck/elaborateとdiagramを使う。Codeは元のguest sourceとviewの表示であり、guestのlower・意味check・compile・evaluateを実行しない。guestがDoc自身の場合もDoc:DocGuest.syntaxはForeignClosure中のForeignSyntaxを保持し、Doc/Articleの意味値への変換を表示の前提にしない。bundleのschema・参照・source範囲の安全性検査は省略しない。
 
 標準Doc文法の `DocGuest.syntax` は `foreign Doc Article` を読む。表層の `Doc article ...` は変わらないが、同aliasへの入れ子でも独立guest bundleと選択された環境を保持し、終了後はhostの読取contextへ復帰する。Profileには標準alias `Doc` の登録が必要である。hostを別aliasへ登録してもforeign先をそのaliasへ暗黙に置換しない。同じpackageを `Doc` として明示登録するか、別名を指定する変更済み文法/packageを明示選択する。Code用Doc guestが意味的に不正な注釈やlabelを含んでも、構文が成立している限り表示のためにguestのDoc lowerを呼んで拒否しない。
 

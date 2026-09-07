@@ -30,7 +30,7 @@ EntryContextはaliasを明示保存する。同じpackage identityを異なるal
 
 | host slot | source入口 | guest root | 操作 |
 |---|---|---|---|
-| Doc InlineMath | Math | Math.Expr | lower/check/render_mathml |
+| Doc InlineMath | Math | Math.Expr | lower/check、17章の生成policyによるrender |
 | Doc DisplayMath | Math | Math.Expr | 同上、display style |
 | Doc CircuitFigure | Circuit | Circuit.Design | lower/check/elaborate/diagram |
 | Doc Code | Grammar/Doc/Math/Circuit | 対応する根 | source/viewの表示のみ |
@@ -56,14 +56,14 @@ Doc→Math→Docの有限の注記は循環ではない。同じnodeのrenderが
 
 backendsに任意raw HTML stringを渡さない。suiteがforeign subtreeをtyped MarkupFragmentへ変換し、そのslotに適合する内容モデルを検査する。doc-htmlはPreparedEmbedsの対応表を入力として受け取る。math-mathml/circuit-svgを直接importしない。
 
-asset参照は固定内容とdigestを持つResourceSnapshot。coreがpathから読んだりURLへ接続したりしない。HTML出力は既定でnetwork無しのCSS/MathML/SVG。fontはartifactに同梱しない。外部資源を追加する場合は明示的なartifact dependencyとして報告する。
+asset参照は固定内容とdigestを持つResourceSnapshot。coreがpathから読んだりURLへ接続したりしない。HTML出力は既定で外部network無しで閲覧できる。KaTeX生成時は同じ固定版のCSS/fontをartifactへ同梱し、相対参照とlicenseを保持する。host生成・独立MathML fallback・出力検査・asset identityは[17章](17-math-html.md)に従う。全資源を明示的なartifact dependencyとして報告する。
 
 ## 6. CLI
 
 `nepl3 parse --language doc input.nepld --format ndf|json` はRecover treeと診断を出す。
 `nepl3 check input.nepld` は必要なdomain検査と参照検査を行う。
 `nepl3 render input.nepld --output out.html` は埋め込みをprepareしHTMLを出す。
-`nepl3 render input.neplm --output out.html` はMathMLを含むHTMLを出す。
+`nepl3 render input.neplm --output out.html` は生成済み数式を含むHTMLと必要assetを出す。Doc/Mathのrenderは `--math-renderer katex-preferred|mathml-only` を取り、既定はKaTeX優先。生成能力不足等のMathML fallbackは診断を保持する。
 `nepl3 evaluate input.neplm --bindings bindings.ndf` はExact/Symbolic/Invalidを構造化出力する。
 `nepl3 grammar compile input.neplg --output out.ndf` はLanguagePackageを出す。
 `nepl3 circuit test input.neplc` は全testを実行する。

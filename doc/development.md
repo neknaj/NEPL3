@@ -24,6 +24,7 @@ python -m unittest discover -s tools/audit -p test.py
 python tools/audit/allocation/run.py
 python tools/generate/grammar.py
 python tools/generate/doc.py
+python tools/generate/math.py
 python -m unittest discover -s tools/bootstrap -p test_grammar.py
 ```
 
@@ -60,11 +61,13 @@ reader包絡の正本は `interfaces/reader.json` です。変更時は `cargo r
 
 Grammarの型付きconstructor arenaは `design/forms.json` から `python tools/generate/grammar.py --write` で明示生成します。この生成物は構文shapeの投影であり、reader/binding/style/extensionを含むLanguagePackageをforms表だけから作るものではありません。初回seed入力adapterの `tools/bootstrap/grammar.py` は完全なsyntax.neplgを読み、元bytes/digest、constructor/literal/listのUTF-8 byte範囲と全metadataを保持したASTを出します。ASCII識別子のseed用部分集合に限定し、TextではNEPL3のescapeを使いJSON固有escapeを拒否します。これはproduction parserやbootstrap合格の代わりではなく、実Grammar compilerへの初期入力を用意する開発host処理です。P1/P2はproduction reader/engineで同じsourceを読み直して比較します。
 
-CIのWASI jobはSHA-256を固定したWasmtime 44.0.1でcore/reader/wire/engineの実試験を実行し、browser向けWasmのcompileも行います。ローカルでは `CARGO_TARGET_WASM32_WASIP2_RUNNER` を `wasmtime run` とし、`cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core --target wasm32-wasip2 -- --test-threads=1` を実行します。browser targetのcompile成功はブラウザ上の実行・描画試験を意味しません。
+CIのWASI jobはSHA-256を固定したWasmtime 44.0.1で実装済みcoreの実試験を実行し、browser向けWasmのcompileも行います。ローカルでは `CARGO_TARGET_WASM32_WASIP2_RUNNER` を `wasmtime run` とし、`cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core --target wasm32-wasip2 -- --test-threads=1` を実行します。browser targetのcompile成功はブラウザ上の実行・描画試験を意味しません。
 
 Binding の fixture と Python seed adapter の一致確認は子processを起動する native host 専用試験です。native の通常試験で実行し、Wasm target ではその host 試験だけを型条件で除外します。同じ fixture を使う production compile・parse・analyze・portable codec の試験は `cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1` でも実行します。host 試験を WASI へ誤って含めた初回失敗は対象選択の失敗として記録し、後の runtime 試験成功へ読み替えません。
 
 Doc は `cargo test --locked -p nepl3-doc-core` と `cargo test --locked -p nepl3-tools --test doc` で検査します。後者は実4言語文法のcompile、ParseSession、Doc provider/prefix lowerを通します。同じ試験は `cargo test --locked -p nepl3-tools --test doc --target wasm32-wasip2 -- --test-threads=1` で実行し、元sourceとPython seed adapterの一致確認1件だけをnative専用とします。Docの進行中の範囲と未接続操作は [段階実装](progress/doc-runtime.md) を参照してください。
+
+Math は `cargo test --locked -p nepl3-math-core` と `cargo test --locked -p nepl3-tools --test math` で検査します。後者は実文法のcompile・ParseSessionからMathの表記を保持するlowerを通し、同じ元入力でWASIも実行します。構造検査と数値演算の個別試験から、式全体の評価・束縛・印字の完成を推定しません。[段階実装](progress/math-runtime.md)に検証済みの範囲と残りを記録します。
 
 タスクのacceptance参照はcoverageを示します。T16以外のタスクは自身の成果物・scope付き証拠・依存完了・設計blocker解消で判定し、後段を含む試験群全体の合格は別に記録します。証拠にはtask ID、検査対象、コマンド、target、結果、未検証範囲を残します。T16の完了には登録された全必須群のpassedが必要です。
 
@@ -121,4 +124,4 @@ workflowの構文・権限・依存jobの扱いは [GitHub Actions公式仕様](
 
 Doc関連の共通値・wire・文書意味APIを固定する前に、[早期inventoryとgap audit](doc-inventory.md) を確認します。`cargo run --locked -p nepl3-tools -- doc-inventory --check` は固定commitの原本と照合し、現在の文書・契約の追加/変更/削除を報告します。通常の `check` にも含まれます。現在の網羅性を主張する場合は新しいcommitを監査して `doc-inventory --check-current` を通します。現時点のbaselineと作業treeには差分があり、strict検査が失敗することを未移行/未監査の成功へ読み替えません。再生成方法と履歴要件は監査文書を参照してください。
 
-メインagentが作業範囲、依存順、担当ファイル、完了条件を統括し、実装subagentと独立したレビューsubagentを分けます。レビュー担当は実装担当自身の確認とは別に、契約、失敗系、テストの根拠、差分を評価します。メインagentが指摘の解消と必要な再検査を確認して統合します。具体的な規範は [AGENTS.md](../AGENTS.md) を参照してください。
+メインagentが設計具体化、実装、試験、指摘修正と統括を担当し、subagentには独立レビューだけを依頼します。レビュー担当はメインagentの説明だけを根拠にせず、元の契約、実コード、失敗系、期待値の根拠、差分と実行結果を確認します。メインagentが必要な修正・再レビュー・再検査を確認して統合します。専用branchでこまめにcommit・pushし、未レビューのcheckpointと統合可能な変更を区別します。利用上限等で独立レビューが未実行の場合も成功にせず、独立して進められる作業を続けます。具体的な規範は [AGENTS.md](../AGENTS.md) を参照してください。

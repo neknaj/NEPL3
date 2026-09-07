@@ -122,6 +122,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "nepl3-math-core"
+version = "0.1.0"
+dependencies = [
+ "nepl3-core",
+ "nepl3-wire",
+ "num-bigint",
+ "num-traits",
+]
+
+[[package]]
 name = "nepl3-reader"
 version = "0.1.0"
 dependencies = [
@@ -137,6 +147,7 @@ dependencies = [
  "nepl3-doc-core",
  "nepl3-engine",
  "nepl3-grammar-core",
+ "nepl3-math-core",
  "nepl3-reader",
  "nepl3-wire",
  "pulldown-cmark",

@@ -42,7 +42,7 @@ IME中にpreview更新でeditorを再生成したり、無条件の全文置換�
 | --- | --- |
 | Grammar | 文法の編集・検査・package生成、対象DSL sourceの別editor、生成した文法でparse、highlight、定義ジャンプ |
 | Doc | sentence literal/prefix、Ruby/Anno、sentence単位parallel、HTML preview、artifact取得 |
-| Math | 元の式、bindings入力、明示評価、Exact/Symbolic/Invalid/Stopped、MathML artifact |
+| Math | 元の式、bindings入力、明示評価、Exact/Symbolic/Invalid/Stopped、HTML/MathML artifact、KaTeX優先/MathMLのみの設定 |
 | Circuit | 接続・幅検査、入力変更、initial/step/reset、現在state/output、test、SVG、NOR IR |
 | 共通 | 例選択、source入出力、診断一覧と位置移動、処理状態/cancel、成果物入出力 |
 
@@ -59,6 +59,8 @@ source表示からguest評価を開始しない。Doc/Math/Circuitの表示は�
 previewは検査済みMarkup artifactだけを、scriptを許さない隔離されたiframeへ渡す。top navigation、form送信、任意network、同origin権限の付与を避け、hostとの連携は検証したmessageと明示したIDだけを受ける。例外的な機能を必要とするならtrust契約を先に変更する。外部providerの許可とpreviewの隔離は別に検査する。
 
 sourceへの移動はhostの診断・構造paneから提供でき、iframe内のscriptやpostMessage発行を必要としない。hostが受信するその他の連携messageにもorigin・payload・要求identity検査を適用する。
+
+数式は[17章](17-math-html.md)に従いWorker内のKaTeX adapterで生成し、同じ完成artifactをpreviewと書出しへ渡す。iframe内でKaTeXを再実行せず、CSS/fontもその文書に適用する。完全要求identity・停止・設定・asset診断をTEAのMsg/Cmdへ統合する。JavaScript無効時の対話生成不可と、書出し済み文書のJavaScript不要な閲覧を区別する。
 
 編集中sourceを無断でnetwork送信しない。読込・保存・download・共有はhostの明示操作とし、失敗、保存容量上限、権限拒否を状態に反映する。未保存編集を例選択で上書きする場合の確認は実装契約として設ける。
 

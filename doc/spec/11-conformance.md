@@ -26,7 +26,7 @@ D05: HTMLにユーザー由来scriptが出ず、Doc paragraphのネストが正�
 M01: 1/2+1/3=5/6、0.1+0.2=3/10、大整数を丸めず計算。
 M02: matrix形状違反、次元不一致、0除算、非整数指数等を仕様通り分類。
 M03: let/sumのscope、外側と内側の同名、free symbol、notation-onlyのSymbolic。
-M04: すべてのMath constructorをMathMLへ描画。弱い子の括弧、sub/powの結合、source式保存。mspaceの単位付き非負em長さと無効値、Markupの文字制約とXML escapeを検査する。
+M04: すべてのMath constructorをMathMLへ描画。弱い子の括弧、sub/powの結合、source式保存。mspaceの単位付き非負em長さと無効値、Markupの文字制約とXML escapeを検査する。[17章](17-math-html.md)の純粋TeX変換の忠実性・escape、生成時KaTeX、独立MathML fallbackと診断、macro独立性、出力検査、資源上限とStopped保持も要求する。host能力のないWASIでは明示的MathML経路を、対応hostでは実KaTeX経路を実行する。
 
 C01: half-adderを全4入力、adderは小幅の全入力で確認。
 C02: 複数stateの同時更新、testごとのreset、pre-edge出力を検査。initialはPreparedNetlistを受けてslot順の初期値を返す。

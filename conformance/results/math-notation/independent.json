@@ -1,0 +1,21 @@
+{
+  "format": "nepl3.independent-review-text-archive-index/1",
+  "reconstruction": "Verify each part SHA-256, then encode utf8_content without newline conversion and verify its SHA-256. Source and logs are preserved; compiled binary identities are recorded in the original manifest. Root constructor before reproduction is explicitly separate from independent after verification.",
+  "parts": [
+    {
+      "path": "conformance/results/math-notation/independent-part-1.json",
+      "sha256": "3afdcf48e5f949d370147c14d41a804cf005116aba55938771274070106cfaf1",
+      "records": 28
+    },
+    {
+      "path": "conformance/results/math-notation/independent-part-2.json",
+      "sha256": "6add971f836465f8e3eaa5f968fe7a023fc03350a2a52808620559398721c1c2",
+      "records": 2
+    },
+    {
+      "path": "conformance/results/math-notation/independent-part-3.json",
+      "sha256": "356fe683fee62d7f638f42596b31a5159ffab9d413346d551c4c3025ad8d9f5a",
+      "records": 7
+    }
+  ]
+}

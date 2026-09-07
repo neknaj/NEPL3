@@ -65,6 +65,7 @@ math-core -> core
 circuit-core -> core
 markup -> core
 doc-html -> doc-core, markup, core
+math-tex -> math-core, core
 math-mathml -> math-core, markup, core
 circuit-svg -> circuit-core, markup, core
 suite -> engine, reader, grammar-core, domain cores, output backends, core
@@ -78,7 +79,7 @@ tools -> grammar-core, suite, foundation
 
 Doc内のMathとMath内のDocはsuiteのbridgeが処理する。doc-coreはmath-coreをimportしない。output backendも相互にimportしない。suiteが依存関係に従って埋め込みを準備し、backendsに型付きの解決済みfragmentを渡す。
 
-ui-coreは純粋なModel/Msg/update/viewとcommand/subscription記述を所有し、suiteやDOMを実行しない。実行・Worker・editor widgetはhost adapterが担当する。目標は19 crate（14 crateがno_std + alloc）であり、実装済みmember数と同一視しない。文書/site生成はtoolsの明示段階で行い、build.rsでcompilerと文書rendererを循環依存させない。
+ui-coreは純粋なModel/Msg/update/viewとcommand/subscription記述を所有し、suiteやDOMを実行しない。実行・Worker・editor widgetはhost adapterが担当する。目標は20 crate（15 crateがno_std + alloc）であり、実装済みmember数と同一視しない。文書/site生成はtoolsの明示段階で行い、build.rsでcompilerと文書rendererを循環依存させない。
 
 ## 3. surface descriptorとbootstrap
 
