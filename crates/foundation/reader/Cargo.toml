@@ -9,7 +9,6 @@ publish.workspace = true
 
 [dependencies]
 nepl3-core.workspace = true
-unicode-ident.workspace = true
 
 [dev-dependencies]
 nepl3-wire.workspace = true

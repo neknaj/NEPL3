@@ -1,0 +1,24 @@
+    Blocking waiting for file lock on build directory
+    Checking nepl3-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\core)
+    Checking nepl3-wire v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\wire)
+    Checking nepl3-reader v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\reader)
+    Checking nepl3-doc-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\languages\doc\core)
+    Checking nepl3-engine v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\engine)
+    Checking nepl3-grammar-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\languages\grammar\core)
+    Checking nepl3-tools v0.1.0 (C:\projects\NEPL3-prefix-validation\tools)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3m 33s
+    Blocking waiting for file lock on build directory
+    Checking nepl3-reader v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\reader)
+    Checking nepl3-doc-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\languages\doc\core)
+    Checking nepl3-wire v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\wire)
+ Documenting nepl3-reader v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\reader)
+ Documenting nepl3-doc-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\languages\doc\core)
+ Documenting nepl3-wire v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\wire)
+ Documenting nepl3-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\core)
+    Checking nepl3-engine v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\engine)
+ Documenting nepl3-engine v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\engine)
+    Checking nepl3-grammar-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\languages\grammar\core)
+ Documenting nepl3-grammar-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\languages\grammar\core)
+ Documenting nepl3-tools v0.1.0 (C:\projects\NEPL3-prefix-validation\tools)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 21.36s
+   Generated C:\projects\NEPL3-prefix-validation\target\doc\nepl3_core\index.html and 6 other files

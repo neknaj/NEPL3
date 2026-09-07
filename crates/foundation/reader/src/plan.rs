@@ -28,8 +28,8 @@ impl CharClass {
         match self {
             Self::Any => true,
             Self::Whitespace => matches!(c, ' ' | '\t' | '\r' | '\n'),
-            Self::IdentifierStart => c == '_' || unicode_ident::is_xid_start(c),
-            Self::IdentifierContinue => unicode_ident::is_xid_continue(c),
+            Self::IdentifierStart => nepl3_core::lexical::name_start(c),
+            Self::IdentifierContinue => nepl3_core::lexical::name_continue(c),
             Self::Digit => c.is_ascii_digit(),
             Self::AsciiLetter => c.is_ascii_alphabetic(),
             Self::Chars(chars) => chars.contains(c),
