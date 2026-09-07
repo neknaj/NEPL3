@@ -8,6 +8,21 @@ use alloc::{string::String, vec::Vec};
 pub use check::{HtmlError, ValidatedHtml, validate};
 pub use serialize::serialize;
 
+/// Check the existing constrained output URI profile without loading its target.
+/// Host preparation and serialization share this lexical rule. This does not
+/// certify remote availability or authorize any network request.
+pub fn external_uri(
+    value: &str,
+    budget: &mut nepl3_core::budget::Budget,
+) -> Result<bool, nepl3_core::budget::StopReason> {
+    use nepl3_core::budget::{Resource, StopReason};
+    let work = (value.len() as u64)
+        .checked_mul(4)
+        .ok_or_else(|| budget.stop(StopReason::WorkLimit))?;
+    budget.charge(Resource::Work, work)?;
+    Ok(uri::external(value))
+}
+
 macro_rules! tags {
     ($($tag:ident => $name:literal),+ $(,)?) => {
         #[derive(Clone, Copy, Debug, Eq, PartialEq)]

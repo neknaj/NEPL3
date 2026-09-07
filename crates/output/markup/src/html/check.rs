@@ -121,7 +121,7 @@ fn attr(
                     }
                     HtmlHref::External { uri: s } => {
                         text(s, r, b)?;
-                        uri::external(s)
+                        super::external_uri(s, b)?
                     }
                 }
         }

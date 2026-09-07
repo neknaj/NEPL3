@@ -29,11 +29,17 @@ source/revisionを別の内容へ置き換えることはできない。文書�
 ## HTMLページ集合
 
 `nepl3_doc_html::pages::render_pages` の入力はPageSetと共通RenderOptions。
-全ページを解決してから同じbackendで生成する。remainingがあれば要求を返して停止し、
-外部リンク・画像・foreignを空の表示へ変えない。結果のfragmentsは登録順であり、
+全ページを解決してから同じbackendで生成する。外部リンクは19章の既存Markup URI
+profile（http/https/mailto）で検査してHrefとして生成する。これは参照文字列の生成であり、
+接続・到達性確認・リンク先の処理は実行しない。未選択variant内のURIも検査し、不正なら
+`InvalidExternalUri { page, node }` で拒否する。schemeの推測、空白除去、相対URIからの
+外部URL補完を行わない。許可集合はMarkup validatorと同じ実装を使用する。
+画像・foreign等の未解決要求があれば元のplanを返して停止する。このplanは意味側の
+要求を保持するため、既に字句検査した外部リンクも含む。空の表示で代替しない。
+結果のfragmentsは登録順であり、
 PageSet identityと各document digest、実際のoptions、markup、origin対応を保持する。
 
-各リンクは `BetweenArtifacts` として実際の元/先routeを結び、fragmentを共通のhex ID
+ページ集合内のリンクは `BetweenArtifacts` として実際の元/先routeを結び、fragmentを共通のhex ID
 規則で変換する。全ページの生成後、出力された各hrefのfragmentがリンク先HTMLに
 実在することを検査する。Single表示で隠れたanchorを参照した場合は
 `MissingOutputAnchor { page, node, target }` とし、壊れたリンクを成功で返さない。
@@ -87,7 +93,7 @@ linkの省略・先の改変・偽造された成功を受け入れない。
 
 この段階はDoc移行用の意味上のページ索引であり、完全なPreparedArticleではない。
 HTML hostは実際の配置routeとの一致、選択言語でのtarget anchorの出力、全page fileの
-存在を確認する。asset/guest解決、旧URL/anchor対応、Markdown projection、意味レビュー、
+存在を確認する。asset/guest解決、旧URL/anchor対応、一般Markdown projection、意味レビュー、
 Pages配信と復旧の受入は別途必要である。文書inventoryの過去baselineをこの登録の
 代わりに使わず、移行時の実際の文書集合から作成する。
 

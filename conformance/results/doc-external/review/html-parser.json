@@ -1,0 +1,13 @@
+{
+  "links": [
+    {
+      "href": "https://example.org/?x='&y=%22#part"
+    },
+    {
+      "href": "index.html"
+    }
+  ],
+  "text": "LinksGo <&> / Self",
+  "unexpected_attributes": false,
+  "balanced_dom": true
+}

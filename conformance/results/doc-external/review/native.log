@@ -1,0 +1,20 @@
+
+running 6 tests
+test review_external::independent_external_profile_and_sticky_stop ... ok
+INDEPENDENT_HTML=<article class="nepl-doc" lang="en"><h1><span>Links</span></h1><div class="nepl-paragraph"><p><span><a href="https://example.org/?x='&amp;y=%22#part">Go &lt;&amp;&gt;</a> / <a href="index.html">Self</a></span></p></div></article>
+STOP_CAP=0 baseline=215298
+STOP_CAP=1 baseline=215298
+STOP_CAP=100 baseline=215298
+STOP_CAP=1000 baseline=215298
+STOP_CAP=215297 baseline=215298
+test review_external::independent_external_fresh_wire_and_stale_response ... ok
+test external::external_links_use_shared_markup_rules_and_portable_revalidation ... ok
+test review_external::independent_external_hidden_receiver_and_render_stops ... ok
+test external::hidden_unsafe_links_are_rejected_and_other_requirements_remain ... ok
+test html::local_render_does_not_hide_unresolved_external_inputs_or_invalid_options ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 49 filtered out; finished in 1.37s
+
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-doc-external\workspace\tools)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.82s
+     Running tests\doc.rs (.tmp/review-target\debug\deps\doc-e0a7226c393ababd.exe)

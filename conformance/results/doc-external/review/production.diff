@@ -1,0 +1,202 @@
+diff --git a/crates/languages/doc/html/src/build/inline.rs b/crates/languages/doc/html/src/build/inline.rs
+index a57d548..ffa694e 100644
+--- a/crates/languages/doc/html/src/build/inline.rs
++++ b/crates/languages/doc/html/src/build/inline.rs
+@@ -52,18 +52,20 @@ impl Builder<'_, '_> {
+                 for (index, target) in self.links {
+                     self.b.charge(Resource::Work, 1)?;
+                     if *index == node {
+-                        let HtmlHref::BetweenArtifacts {
+-                            source,
+-                            target,
+-                            fragment,
+-                        } = target
+-                        else {
+-                            return Err(RenderError::InternalShape);
+-                        };
+-                        href = Some(HtmlHref::BetweenArtifacts {
+-                            source: copy(source, self.b)?,
+-                            target: copy(target, self.b)?,
+-                            fragment: fragment.as_ref().map(|s| copy(s, self.b)).transpose()?,
++                        href = Some(match target {
++                            HtmlHref::BetweenArtifacts {
++                                source,
++                                target,
++                                fragment,
++                            } => HtmlHref::BetweenArtifacts {
++                                source: copy(source, self.b)?,
++                                target: copy(target, self.b)?,
++                                fragment: fragment.as_ref().map(|s| copy(s, self.b)).transpose()?,
++                            },
++                            HtmlHref::External { uri } => HtmlHref::External {
++                                uri: copy(uri, self.b)?,
++                            },
++                            _ => return Err(RenderError::InternalShape),
+                         });
+                         break;
+                     }
+diff --git a/crates/languages/doc/html/src/pages.rs b/crates/languages/doc/html/src/pages.rs
+index 0ecc49c..3ebed9c 100644
+--- a/crates/languages/doc/html/src/pages.rs
++++ b/crates/languages/doc/html/src/pages.rs
+@@ -8,6 +8,7 @@ use nepl3_core::{
+     value_codec::FoundationValueCodec,
+ };
+ use nepl3_doc_core::{
++    model::LinkTarget,
+     pages::{self, PageLinkPlan, PageSet},
+     prepare,
+ };
+@@ -31,6 +32,7 @@ pub enum PagesRenderError<'a, E> {
+     Preparation(LocalPreparationError<'a, E>),
+     Render(RenderError),
+     MissingOutputAnchor { page: u64, node: u64, target: u64 },
++    InvalidExternalUri { page: u64, node: u64 },
+ }
+ impl<E> From<StopReason> for PagesRenderError<'_, E> {
+     fn from(s: StopReason) -> Self {
+@@ -50,7 +52,25 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
+             e => PagesRenderError::Input(e),
+         })?
+         .into_plan();
+-    if !plan.remaining.is_empty() {
++    let mut unresolved = false;
++    for pending in &plan.remaining {
++        b.charge(Resource::Work, 1)?;
++        if let prepare::DocRequirement::Link {
++            node,
++            target: LinkTarget::External { uri },
++        } = &pending.requirement
++        {
++            if !nepl3_markup::html::external_uri(uri, b)? {
++                return Err(PagesRenderError::InvalidExternalUri {
++                    page: pending.page,
++                    node: *node,
++                });
++            }
++        } else {
++            unresolved = true;
++        }
++    }
++    if unresolved {
+         return Err(PagesRenderError::NeedsResolution(plan));
+     }
+     let mut fragments = Vec::new();
+@@ -90,6 +110,20 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
+             };
+             push(&mut links, (link.node, href), b)?;
+         }
++        for pending in &plan.remaining {
++            b.charge(Resource::Work, 1)?;
++            if pending.page != page as u64 {
++                continue;
++            }
++            if let prepare::DocRequirement::Link {
++                node,
++                target: LinkTarget::External { uri },
++            } = &pending.requirement
++            {
++                let href = HtmlHref::External { uri: copy(uri, b)? };
++                push(&mut links, (*node, href), b)?;
++            }
++        }
+         let fragment =
+             crate::build::render_prepared(&prepared, &links, b).map_err(|e| match e {
+                 RenderError::Stopped(s) => PagesRenderError::Stopped(s),
+diff --git a/crates/output/markup/src/html/check.rs b/crates/output/markup/src/html/check.rs
+index 3b69b9c..ba227bb 100644
+--- a/crates/output/markup/src/html/check.rs
++++ b/crates/output/markup/src/html/check.rs
+@@ -121,7 +121,7 @@ fn attr(
+                     }
+                     HtmlHref::External { uri: s } => {
+                         text(s, r, b)?;
+-                        uri::external(s)
++                        super::external_uri(s, b)?
+                     }
+                 }
+         }
+diff --git a/crates/output/markup/src/html/mod.rs b/crates/output/markup/src/html/mod.rs
+index 3621fa3..1138133 100644
+--- a/crates/output/markup/src/html/mod.rs
++++ b/crates/output/markup/src/html/mod.rs
+@@ -8,6 +8,21 @@ use alloc::{string::String, vec::Vec};
+ pub use check::{HtmlError, ValidatedHtml, validate};
+ pub use serialize::serialize;
+ 
++/// Check the existing constrained output URI profile without loading its target.
++/// Host preparation and serialization share this lexical rule. This does not
++/// certify remote availability or authorize any network request.
++pub fn external_uri(
++    value: &str,
++    budget: &mut nepl3_core::budget::Budget,
++) -> Result<bool, nepl3_core::budget::StopReason> {
++    use nepl3_core::budget::{Resource, StopReason};
++    let work = (value.len() as u64)
++        .checked_mul(4)
++        .ok_or_else(|| budget.stop(StopReason::WorkLimit))?;
++    budget.charge(Resource::Work, work)?;
++    Ok(uri::external(value))
++}
++
+ macro_rules! tags {
+     ($($tag:ident => $name:literal),+ $(,)?) => {
+         #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+diff --git a/doc/migration/index.nepld b/doc/migration/index.nepld
+index 4b95b26..bd5c6f6 100644
+--- a/doc/migration/index.nepld
++++ b/doc/migration/index.nepld
+@@ -9,4 +9,10 @@ body
+       cons link page "contract" none text "対象と設計上の決定"
+       nil
+     nil
++  cons paragraph
++    cons sentence
++      cons text "実装状況とソースコード: "
++      cons link external "https://github.com/neknaj/NEPL3" text "NEPL3 repository"
++      nil
++    nil
+   nil
+diff --git a/doc/spec/21-doc-pages.md b/doc/spec/21-doc-pages.md
+index c63d2fc..261c8de 100644
+--- a/doc/spec/21-doc-pages.md
++++ b/doc/spec/21-doc-pages.md
+@@ -29,8 +29,14 @@ source/revisionを別の内容へ置き換えることはできない。文書
+ ## HTMLページ集合
+ 
+ `nepl3_doc_html::pages::render_pages` の入力はPageSetと共通RenderOptions。
+-全ページを解決してから同じbackendで生成する。remainingがあれば要求を返して停止し、
+-外部リンク・画像・foreignを空の表示へ変えない。結果のfragmentsは登録順であり、
++全ページを解決してから同じbackendで生成する。外部リンクは19章の既存Markup URI
++profile（http/https/mailto）で検査してHrefとして生成する。これは参照文字列の生成であり、
++接続・到達性確認・リンク先の処理は実行しない。未選択variant内のURIも検査し、不正なら
++`InvalidExternalUri { page, node }` で拒否する。schemeの推測、空白除去、相対URIからの
++外部URL補完を行わない。許可集合はMarkup validatorと同じ実装を使用する。
++画像・foreign等の未解決要求があれば元のplanを返して停止する。このplanは意味側の
++要求を保持するため、既に字句検査した外部リンクも含む。空の表示で代替しない。
++結果のfragmentsは登録順であり、
+ PageSet identityと各document digest、実際のoptions、markup、origin対応を保持する。
+ 
+ 各リンクは `BetweenArtifacts` として実際の元/先routeを結び、fragmentを共通のhex ID
+@@ -87,7 +93,7 @@ linkの省略・先の改変・偽造された成功を受け入れない。
+ 
+ この段階はDoc移行用の意味上のページ索引であり、完全なPreparedArticleではない。
+ HTML hostは実際の配置routeとの一致、選択言語でのtarget anchorの出力、全page fileの
+-存在を確認する。asset/guest解決、旧URL/anchor対応、Markdown projection、意味レビュー、
++存在を確認する。asset/guest解決、旧URL/anchor対応、一般Markdown projection、意味レビュー、
+ Pages配信と復旧の受入は別途必要である。文書inventoryの過去baselineをこの登録の
+ 代わりに使わず、移行時の実際の文書集合から作成する。
+ 
+diff --git a/tools/tests/doc.rs b/tools/tests/doc.rs
+index 68154d5..1652042 100644
+--- a/tools/tests/doc.rs
++++ b/tools/tests/doc.rs
+@@ -2,6 +2,8 @@
+ //! are compile-time declarations only; this parse-only host serves reader calls.
+ #[path = "doc/export.rs"]
+ mod export;
++#[path = "doc/external.rs"]
++mod external;
+ #[path = "doc/html.rs"]
+ mod html;
+ #[path = "doc/labels.rs"]

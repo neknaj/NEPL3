@@ -8,6 +8,7 @@ use nepl3_core::{
     value_codec::FoundationValueCodec,
 };
 use nepl3_doc_core::{
+    model::LinkTarget,
     pages::{self, PageLinkPlan, PageSet},
     prepare,
 };
@@ -31,6 +32,7 @@ pub enum PagesRenderError<'a, E> {
     Preparation(LocalPreparationError<'a, E>),
     Render(RenderError),
     MissingOutputAnchor { page: u64, node: u64, target: u64 },
+    InvalidExternalUri { page: u64, node: u64 },
 }
 impl<E> From<StopReason> for PagesRenderError<'_, E> {
     fn from(s: StopReason) -> Self {
@@ -50,7 +52,25 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
             e => PagesRenderError::Input(e),
         })?
         .into_plan();
-    if !plan.remaining.is_empty() {
+    let mut unresolved = false;
+    for pending in &plan.remaining {
+        b.charge(Resource::Work, 1)?;
+        if let prepare::DocRequirement::Link {
+            node,
+            target: LinkTarget::External { uri },
+        } = &pending.requirement
+        {
+            if !nepl3_markup::html::external_uri(uri, b)? {
+                return Err(PagesRenderError::InvalidExternalUri {
+                    page: pending.page,
+                    node: *node,
+                });
+            }
+        } else {
+            unresolved = true;
+        }
+    }
+    if unresolved {
         return Err(PagesRenderError::NeedsResolution(plan));
     }
     let mut fragments = Vec::new();
@@ -89,6 +109,20 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
                 fragment: link.fragment.as_ref().map(|s| hex_id(s, b)).transpose()?,
             };
             push(&mut links, (link.node, href), b)?;
+        }
+        for pending in &plan.remaining {
+            b.charge(Resource::Work, 1)?;
+            if pending.page != page as u64 {
+                continue;
+            }
+            if let prepare::DocRequirement::Link {
+                node,
+                target: LinkTarget::External { uri },
+            } = &pending.requirement
+            {
+                let href = HtmlHref::External { uri: copy(uri, b)? };
+                push(&mut links, (*node, href), b)?;
+            }
         }
         let fragment =
             crate::build::render_prepared(&prepared, &links, b).map_err(|e| match e {

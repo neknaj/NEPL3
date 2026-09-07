@@ -118,8 +118,8 @@ pub fn generate(compiled: &Compiled, inputs: &[(Entry, String)]) -> Result<Gener
         .collect::<Vec<_>>();
     let manifest = serde_json::to_string_pretty(&serde_json::json!({
         "format":"nepl3.local-doc-pages/1","identity":digest_hex(rendered.identity),"pages":origins,"files":records,
-        "renderer":"nepl3-doc-html pages/1","options":{"parallel":"Rows"},"viewer_scripts":false,
-        "packages":"compiled checked bootstrap fixtures","scope":"Internal Doc page links; external URI, assets and foreign rendering remain unsupported. Not Pages deployment evidence.",
+        "renderer":"nepl3-doc-html pages/2","options":{"parallel":"Rows"},"viewer_scripts":false,
+        "packages":"compiled checked bootstrap fixtures","scope":"Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Assets and foreign rendering remain unsupported. Not Pages deployment evidence.",
         "budget_scope":"Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
         "output_usage":{"work":output_budget.usage().work,"allocation_units":output_budget.usage().allocation_units,"output_bytes":output_budget.usage().output_bytes}
     })).map_err(err)? + "\n";

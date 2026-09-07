@@ -2,6 +2,8 @@
 //! are compile-time declarations only; this parse-only host serves reader calls.
 #[path = "doc/export.rs"]
 mod export;
+#[path = "doc/external.rs"]
+mod external;
 #[path = "doc/html.rs"]
 mod html;
 #[path = "doc/labels.rs"]

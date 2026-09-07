@@ -9,4 +9,10 @@ body
       cons link page "contract" none text "対象と設計上の決定"
       nil
     nil
+  cons paragraph
+    cons sentence
+      cons text "実装状況とソースコード: "
+      cons link external "https://github.com/neknaj/NEPL3" text "NEPL3 repository"
+      nil
+    nil
   nil

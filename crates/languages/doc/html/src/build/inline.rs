@@ -52,18 +52,20 @@ impl Builder<'_, '_> {
                 for (index, target) in self.links {
                     self.b.charge(Resource::Work, 1)?;
                     if *index == node {
-                        let HtmlHref::BetweenArtifacts {
-                            source,
-                            target,
-                            fragment,
-                        } = target
-                        else {
-                            return Err(RenderError::InternalShape);
-                        };
-                        href = Some(HtmlHref::BetweenArtifacts {
-                            source: copy(source, self.b)?,
-                            target: copy(target, self.b)?,
-                            fragment: fragment.as_ref().map(|s| copy(s, self.b)).transpose()?,
+                        href = Some(match target {
+                            HtmlHref::BetweenArtifacts {
+                                source,
+                                target,
+                                fragment,
+                            } => HtmlHref::BetweenArtifacts {
+                                source: copy(source, self.b)?,
+                                target: copy(target, self.b)?,
+                                fragment: fragment.as_ref().map(|s| copy(s, self.b)).transpose()?,
+                            },
+                            HtmlHref::External { uri } => HtmlHref::External {
+                                uri: copy(uri, self.b)?,
+                            },
+                            _ => return Err(RenderError::InternalShape),
                         });
                         break;
                     }
