@@ -1,0 +1,228 @@
+{
+  "scope": "BetweenArtifacts markup route structure, serialization, first CBOR, URL resolution; not page preparation",
+  "source_inventory": "files.json",
+  "files": [
+    {
+      "path": "browser-url.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\browser-url.json",
+      "bytes": 700,
+      "sha256": "c174ce7097e2592196f30ecc6302efa424db2abd9588b087648d7666f7f37161"
+    },
+    {
+      "path": "browser-urls-run.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\browser-urls-run.json",
+      "bytes": 225,
+      "sha256": "7a9d22313ebe199b1b45aa0c597d179d8b9d8f35faa72ad21925cc0e7d2a7250"
+    },
+    {
+      "path": "browser-urls.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\browser-urls.log",
+      "bytes": 104,
+      "sha256": "0866ce3f1cb2607fd178d87699f0ac35ad0dd26e999d42218352cb0989356dce"
+    },
+    {
+      "path": "cargo.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\cargo.log",
+      "bytes": 36,
+      "sha256": "f4f564f8936fa8eb53bca8bbe50666489252bbcbeaae0cb0dd54682444697e52"
+    },
+    {
+      "path": "files.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\files.json",
+      "bytes": 241992,
+      "sha256": "5bdbfb416f5dafb06338569c419471f92c54a2b3008c2cb68aaf453abf522702"
+    },
+    {
+      "path": "generator.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\generator.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "managed-native.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\managed-native.log",
+      "bytes": 916,
+      "sha256": "b91153649651a72db0f40764e8053eb0b8a76414339ca2a37ec66d58ea962cca"
+    },
+    {
+      "path": "managed-wasi.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\managed-wasi.log",
+      "bytes": 932,
+      "sha256": "160ec6022357ad0146dff202baece1b187891b7b91d4978830c9b9da5626804f"
+    },
+    {
+      "path": "metadata-runs.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\metadata-runs.json",
+      "bytes": 782,
+      "sha256": "d24c9f5eb0fc95f53c3cba14f0f9c1a3524e9e19c36ca735396bb7607bcf4952"
+    },
+    {
+      "path": "oracle-setup-failure.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\oracle-setup-failure.log",
+      "bytes": 637,
+      "sha256": "e20b5d3863716664865f902ab80b6d276e81919b5f60935d12d40ec30382a793"
+    },
+    {
+      "path": "probe/Cargo.lock",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\probe\\Cargo.lock",
+      "bytes": 3619,
+      "sha256": "89c93ad0873697dc20cd409a65ff45b12d0e1bdca7b7ff72252e3e037c7fad6f"
+    },
+    {
+      "path": "probe/Cargo.toml",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\probe\\Cargo.toml",
+      "bytes": 425,
+      "sha256": "29690ff1511870978e889f28ab27a5240a95c7990b19466482d7bb682457d234"
+    },
+    {
+      "path": "probe/src/bin/receive.rs",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\probe\\src\\bin\\receive.rs",
+      "bytes": 3939,
+      "sha256": "c2252cbaa9df4547a4080a3e20ab315ed5e75e75c5bf6daf041219cd6b867e54"
+    },
+    {
+      "path": "probe/src/main.rs",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\probe\\src\\main.rs",
+      "bytes": 5718,
+      "sha256": "0620e06da9ebdb96aba15c392d830a8a4c27b8d1ab7e3a7fce431ed97c268afb"
+    },
+    {
+      "path": "probe-build-native.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\probe-build-native.log",
+      "bytes": 1058,
+      "sha256": "a51d5b32e47b4fe3963d0f8b0758450dc5506ec2180650a09b2f0927ae776ea3"
+    },
+    {
+      "path": "probe-build-wasi.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\probe-build-wasi.log",
+      "bytes": 904,
+      "sha256": "168efbcb962a28c2211eec223252307a2c2da8a068dc4b2a1f75b03483daec14"
+    },
+    {
+      "path": "probe-native.exe",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\probe-native.exe",
+      "bytes": 1672704,
+      "sha256": "be0334fee18991d93cfbc11f81b1e8a17422aa8b87be87631097df7e4df25638"
+    },
+    {
+      "path": "probe-native.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\probe-native.log",
+      "bytes": 22904,
+      "sha256": "7d0ffebdb1c609f4c294cb209a1a8b9bde1976db626fe3ced4d189d30dcb0caa"
+    },
+    {
+      "path": "probe-wasi.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\probe-wasi.log",
+      "bytes": 22904,
+      "sha256": "7d0ffebdb1c609f4c294cb209a1a8b9bde1976db626fe3ced4d189d30dcb0caa"
+    },
+    {
+      "path": "probe-wasi.wasm",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\probe-wasi.wasm",
+      "bytes": 16699829,
+      "sha256": "5dda22d452be0914f5f44e9c1c3d169bb1d61f8d0e25c66aad614dcb893efd87"
+    },
+    {
+      "path": "receive-build-native.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\receive-build-native.log",
+      "bytes": 543,
+      "sha256": "eff742abf8a378a765552e030f7ee675b3b755989e01011391ba3b77482daaf8"
+    },
+    {
+      "path": "receive-build-wasi.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\receive-build-wasi.log",
+      "bytes": 543,
+      "sha256": "600bd67f045702852ad6715f77114882b1b69e06798c68826c106c185d65dc8d"
+    },
+    {
+      "path": "receive-native.exe",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\receive-native.exe",
+      "bytes": 1463296,
+      "sha256": "5de4e8357fed0094b7ecc61189e774ac7fb17ef8689e4b2683cd14fb32060f63"
+    },
+    {
+      "path": "receive-native.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\receive-native.log",
+      "bytes": 138,
+      "sha256": "eeb69180233ae3832a87979521dbc3f91b5a470809b7dc4a957a2c681a9f671d"
+    },
+    {
+      "path": "receive-runs.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\receive-runs.json",
+      "bytes": 351,
+      "sha256": "966a4b7d756607d65738bb8400e811499cb8bb97aaaa28e180438d8e4a8e297a"
+    },
+    {
+      "path": "receive-wasi.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\receive-wasi.log",
+      "bytes": 138,
+      "sha256": "eeb69180233ae3832a87979521dbc3f91b5a470809b7dc4a957a2c681a9f671d"
+    },
+    {
+      "path": "receive-wasi.wasm",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\receive-wasi.wasm",
+      "bytes": 16302339,
+      "sha256": "13ac096a9770082528a086f07b2faefb0ac2c30b3e9dfcf6c7bb3f672ab52ba2"
+    },
+    {
+      "path": "review.md",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\review.md",
+      "bytes": 6267,
+      "sha256": "77d16b53ede802b64f83dba321fc2fb97582e82a219488fd1c9dd26decbd5275"
+    },
+    {
+      "path": "routes.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\routes.json",
+      "bytes": 52619,
+      "sha256": "ae28cd4b281bd60fe4d6916b05d90411436385bc682ffa4d35a911cdd3a81bdb"
+    },
+    {
+      "path": "run.py",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\run.py",
+      "bytes": 1330,
+      "sha256": "50ed7b669cfb21bbe15d9a8d6e8b3feb9e2108e6d45d350791a5a3f8be3252f0"
+    },
+    {
+      "path": "runs.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\runs.json",
+      "bytes": 2231,
+      "sha256": "fa9dcc11cb440b22802709bafe50c96158a0ce9da19750f25696aea2e34f0e3b"
+    },
+    {
+      "path": "rustc.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\rustc.log",
+      "bytes": 36,
+      "sha256": "ac31499b5910ed7ddbf1a62e57e03c1d0ca49fa78efc075b291afa8d192a4d44"
+    },
+    {
+      "path": "snapshot.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\snapshot.json",
+      "bytes": 76,
+      "sha256": "75b017a9ce4bb3c847502b4633bdd74ed83d620f9514a17e32aa8463ab08a694"
+    },
+    {
+      "path": "source-verification.json",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\source-verification.json",
+      "bytes": 42,
+      "sha256": "46df8ca3d131ff72ebaba6deb269b467940825cf88d244e68cdb7a586757376f"
+    },
+    {
+      "path": "urls-before-oracle.py",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\urls-before-oracle.py",
+      "bytes": 1857,
+      "sha256": "f4b67b7b7fd3f795976907a4c0d4d81a29bfdbfdcfab210983bd0b877bf18ada"
+    },
+    {
+      "path": "urls.py",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\urls.py",
+      "bytes": 1997,
+      "sha256": "1bc16dabe8d3862bd82f7c29b0999f99a67fdaa1b40fb9c8b28c32a84da05ff6"
+    },
+    {
+      "path": "wasmtime.log",
+      "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\wasmtime.log",
+      "bytes": 39,
+      "sha256": "bc2447d08eb0796f481b89e53c08931b05a78245a083900bf44827228a902c38"
+    }
+  ]
+}

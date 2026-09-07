@@ -155,6 +155,7 @@ match self {
 Self::Fragment {id} => variant(s,"HtmlHref","Fragment",[id.put(s,c,b)?],b),
 Self::Artifact {path,fragment} => variant(s,"HtmlHref","Artifact",[path.put(s,c,b)?,fragment.put(s,c,b)?],b),
 Self::External {uri} => variant(s,"HtmlHref","External",[uri.put(s,c,b)?],b),
+Self::BetweenArtifacts {source,target,fragment} => variant(s,"HtmlHref","BetweenArtifacts",[source.put(s,c,b)?,target.put(s,c,b)?,fragment.put(s,c,b)?],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -164,6 +165,7 @@ match (tag,f.len()) {
 ("Fragment",1)=>Ok(Self::Fragment {id:Value::read(&f[0],s,c,b)?}),
 ("Artifact",2)=>Ok(Self::Artifact {path:Value::read(&f[0],s,c,b)?,fragment:Value::read(&f[1],s,c,b)?}),
 ("External",1)=>Ok(Self::External {uri:Value::read(&f[0],s,c,b)?}),
+("BetweenArtifacts",3)=>Ok(Self::BetweenArtifacts {source:Value::read(&f[0],s,c,b)?,target:Value::read(&f[1],s,c,b)?,fragment:Value::read(&f[2],s,c,b)?}),
 _=>Err(PortableError::Shape),}
 }
 }

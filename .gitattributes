@@ -35,3 +35,4 @@ dist/** export-ignore
 /conformance/results/native-reader-storage/** -text -whitespace
 
 /conformance/results/doc-local-html/** -text -whitespace
+/conformance/results/markup-routes/** -text -whitespace

@@ -79,6 +79,13 @@ pub enum CellScope {
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum HtmlHref {
+    /// Two paths in the same artifact root. Host preparation must bind source
+    /// to the actual document route and verify target/fragment availability.
+    BetweenArtifacts {
+        source: String,
+        target: String,
+        fragment: Option<String>,
+    },
     Fragment {
         id: String,
     },

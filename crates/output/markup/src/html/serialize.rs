@@ -37,6 +37,14 @@ fn value(a: &HtmlAttribute, b: &mut Budget) -> Result<String, HtmlError> {
         return Ok(s.into());
     }
     match a {
+        Href {
+            value:
+                HtmlHref::BetweenArtifacts {
+                    source,
+                    target,
+                    fragment,
+                },
+        } => between_artifacts(source, target, fragment.as_deref(), b),
         AriaLevel { value } | Width { value } | Height { value } | Start { value } => {
             allocate(20, b)?;
             Ok(format!("{value}"))
@@ -74,6 +82,49 @@ fn value(a: &HtmlAttribute, b: &mut Budget) -> Result<String, HtmlError> {
         }
         _ => Err(HtmlError::Policy),
     }
+}
+
+/// Input paths have already passed the closed artifact-path grammar. Compare
+/// complete directory segments, never filename prefixes. No URL decoding or
+/// ambient base URI is involved; the host supplies both artifact-root paths.
+fn between_artifacts(
+    source: &str,
+    target: &str,
+    fragment: Option<&str>,
+    b: &mut Budget,
+) -> Result<String, HtmlError> {
+    let work = (source.len() as u64)
+        .checked_add(target.len() as u64)
+        .and_then(|n| n.checked_mul(3))
+        .ok_or_else(|| b.stop(StopReason::WorkLimit))?;
+    b.charge(Resource::Work, work)?;
+    let parent = &source[..source.rfind('/').map_or(0, |i| i + 1)];
+    let mut common = 0;
+    for (left, right) in parent.split_inclusive('/').zip(target.split_inclusive('/')) {
+        if left != right {
+            break;
+        }
+        common += left.len();
+    }
+    let up = parent[common..].bytes().filter(|c| *c == b'/').count();
+    let tail = &target[common..];
+    let n = up
+        .checked_mul(3)
+        .and_then(|n| n.checked_add(tail.len()))
+        .and_then(|n| n.checked_add(fragment.map_or(0, |s| s.len() + 1)))
+        .filter(|n| *n <= isize::MAX as usize)
+        .ok_or_else(|| b.stop(StopReason::AllocationLimit))?;
+    allocate(n, b)?;
+    let mut out = String::with_capacity(n);
+    for _ in 0..up {
+        out.push_str("../");
+    }
+    out.push_str(tail);
+    if let Some(fragment) = fragment {
+        out.push('#');
+        out.push_str(fragment);
+    }
+    Ok(out)
 }
 struct Output {
     pieces: Vec<String>,

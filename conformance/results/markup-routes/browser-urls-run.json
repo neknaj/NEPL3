@@ -1,0 +1,9 @@
+{
+  "command": [
+    "python",
+    "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\urls.py"
+  ],
+  "exit": 0,
+  "deadline": 60,
+  "scope": "Browser URL interface resolution, not network resource existence"
+}

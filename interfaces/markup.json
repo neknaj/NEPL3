@@ -95,6 +95,22 @@
             "uri",
             "Text"
           ]
+        ],
+        "BetweenArtifacts": [
+          [
+            "source",
+            "Text"
+          ],
+          [
+            "target",
+            "Text"
+          ],
+          [
+            "fragment",
+            {
+              "option": "Text"
+            }
+          ]
         ]
       },
       "constraints": []

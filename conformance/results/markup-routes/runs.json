@@ -1,0 +1,96 @@
+[
+  {
+    "label": "probe-build-native",
+    "command": [
+      "cargo",
+      "build",
+      "--offline",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\probe\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-routes-target"
+    ],
+    "exit": 0,
+    "deadline": 600
+  },
+  {
+    "label": "probe-native",
+    "command": [
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\probe-native.exe"
+    ],
+    "exit": 0,
+    "deadline": 60
+  },
+  {
+    "label": "managed-native",
+    "command": [
+      "cargo",
+      "test",
+      "--offline",
+      "--locked",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\workspace\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-routes-target",
+      "-p",
+      "nepl3-markup",
+      "--test",
+      "routes",
+      "--",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "exit": 0,
+    "deadline": 600
+  },
+  {
+    "label": "probe-build-wasi",
+    "command": [
+      "cargo",
+      "build",
+      "--offline",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\probe\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-routes-target",
+      "--target",
+      "wasm32-wasip2"
+    ],
+    "exit": 0,
+    "deadline": 600
+  },
+  {
+    "label": "probe-wasi",
+    "command": [
+      "wasmtime",
+      "run",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\probe-wasi.wasm"
+    ],
+    "exit": 0,
+    "deadline": 60
+  },
+  {
+    "label": "managed-wasi",
+    "command": [
+      "cargo",
+      "test",
+      "--offline",
+      "--locked",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\workspace\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-routes-target",
+      "-p",
+      "nepl3-markup",
+      "--test",
+      "routes",
+      "--target",
+      "wasm32-wasip2",
+      "--",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "exit": 0,
+    "deadline": 600
+  }
+]
