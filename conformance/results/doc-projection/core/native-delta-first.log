@@ -1,0 +1,30 @@
+
+running 7 tests
+inspect output=1563 projection=Ok("# T\n\na\\!\\?\\&\n\n") used=1563
+test review_projection::independent_projection_charges_generated_markdown_output ... FAILED
+test projection::markdown_projection_preserves_literal_punctuation_and_code_delimiters ... ok
+explicit rejection: Unsupported { node: 3 }
+explicit rejection: Unsupported { node: 18 }
+test review_projection::independent_projection_list_boundary_across_section_must_not_merge ... ok
+test projection::projection_stops_without_returning_partial_markdown ... ok
+explicit rejection: Unsupported { node: 3 }
+explicit rejection: Unsupported { node: 3 }
+test review_projection::independent_projection_adjacent_code_preserves_both_values_or_rejects ... ok
+test projection::projection_refuses_lossy_or_unsupported_doc_shapes ... ok
+test projection::actual_contract_projects_to_equivalent_markdown_events ... ok
+
+failures:
+
+failures:
+    review_projection::independent_projection_charges_generated_markdown_output
+
+test result: FAILED. 6 passed; 1 failed; 0 ignored; 0 measured; 46 filtered out; finished in 0.96s
+
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-doc-projection\workspace\tools)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.55s
+     Running tests\doc.rs (.tmp/review-target\debug\deps\doc-e0a7226c393ababd.exe)
+
+thread 'review_projection::independent_projection_charges_generated_markdown_output' (52656) panicked at tools\tests\doc\review_projection.rs:36:2:
+assertion failed: matches!(value,Err(Error::Stopped(StopReason::OutputLimit)))
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+error: test failed, to rerun pass `-p nepl3-tools --test doc`

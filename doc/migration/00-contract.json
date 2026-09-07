@@ -5,6 +5,6 @@
   "candidate_sha256": "1ee46981e30e57e2c5965a21f3e1f318636178582faac645dfef780c60cfa520",
   "status": "candidate-not-canonical",
   "human_meaning_review": "not-run",
-  "markdown_projection": "not-implemented",
+  "markdown_projection": "restricted-candidate-view",
   "legacy_anchor_compatibility": "not-implemented"
 }

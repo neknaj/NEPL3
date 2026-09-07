@@ -14,6 +14,8 @@ mod pages;
 mod prepare;
 #[path = "doc/print.rs"]
 mod print;
+#[path = "doc/projection.rs"]
+mod projection;
 #[path = "doc/text.rs"]
 mod text;
 use nepl3_core::{budget::*, source::*};

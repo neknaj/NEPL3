@@ -1,0 +1,38 @@
+{
+  "run": 34160389457,
+  "source": "2ddddd05e9334b83c9f654e3a1042555de5aefd4",
+  "artifact": 10032422156,
+  "archive_sha256": "8a633a91b634c675e93886a3257e55c5b6dea1249ef4b93750dec0e25c69b457",
+  "files": [
+    {
+      "path": "assets/doc.css",
+      "same": true,
+      "remote_sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2",
+      "local_sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "path": "index.html",
+      "same": true,
+      "remote_sha256": "ee8464717f7c97cd1f915456b6fafce3c0a96ca88e388c51d360439c7f8ba801",
+      "local_sha256": "ee8464717f7c97cd1f915456b6fafce3c0a96ca88e388c51d360439c7f8ba801"
+    },
+    {
+      "path": "manifest.json",
+      "same": true,
+      "remote_sha256": "3c369eb41110d52b73b0e661c2538c4fa45d23c5d9712ea40ed520f2a9755b09",
+      "local_sha256": "3c369eb41110d52b73b0e661c2538c4fa45d23c5d9712ea40ed520f2a9755b09"
+    },
+    {
+      "path": "reference/contract/assets/doc.css",
+      "same": true,
+      "remote_sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2",
+      "local_sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "path": "reference/contract/index.html",
+      "same": true,
+      "remote_sha256": "a064239075aa71de6f237afe9a89f1a90a6023711a9680d52ee9fb8f3bd410fc",
+      "local_sha256": "a064239075aa71de6f237afe9a89f1a90a6023711a9680d52ee9fb8f3bd410fc"
+    }
+  ]
+}

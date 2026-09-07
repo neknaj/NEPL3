@@ -92,7 +92,7 @@ def main():
                        "canonical_lf_sha256": hashlib.sha256(text.encode()).hexdigest(),
                        "candidate_sha256": hashlib.sha256(generated.encode()).hexdigest(),
                        "status": "candidate-not-canonical", "human_meaning_review": "not-run",
-                       "markdown_projection": "not-implemented", "legacy_anchor_compatibility": "not-implemented"},
+                       "markdown_projection": "restricted-candidate-view", "legacy_anchor_compatibility": "not-implemented"},
                       indent=2) + "\n"
     for path, data in [(TARGET, generated), (TARGET.with_suffix(".json"), audit)]:
         if args.write:

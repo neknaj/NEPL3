@@ -90,3 +90,33 @@ HTML hostは実際の配置routeとの一致、選択言語でのtarget anchor�
 存在を確認する。asset/guest解決、旧URL/anchor対応、Markdown projection、意味レビュー、
 Pages配信と復旧の受入は別途必要である。文書inventoryの過去baselineをこの登録の
 代わりに使わず、移行時の実際の文書集合から作成する。
+
+## 最初のMarkdown互換projection
+
+`nepl3-tools doc-markdown <source.nepld> <new-file.md>` は正式文書の最初の移行候補を
+GitHub等でも閲覧するための限定したhost出力である。通常のDoc parse/lowerに続いて
+`prepare::inspect` を実行し、未解決要求を持つ文書を拒否する。本文をsource文字列の
+正規表現置換で取り出さず、検査済みのDoc arenaを読む。
+
+対応するArticleは、同階層のSectionだけを持つもの、またはSectionを持たないもの。
+段落は単一Sentence、listは非空unordered・checkboxなし・各itemが単一段落である。
+Sentence内は非空TextとInlineCodeだけを扱う。隣接するcode、隣接list、節の入れ子や
+節外の後続blockは、Markdownでの再結合・所属変更を避けるため拒否する。注釈、parallel、
+画像、表、リンク、code block等は将来の契約・試験ができるまでUnsupportedとする。
+これはDoc DSL自体の表現能力を縮小する制約ではない。
+
+TextのASCII句読記号をescapeし、Codeのbacktickと前後空白を保持する。
+制御文字、空のinline、Sentence端のText空白はこのprojectionでは拒否する。
+規則は [CommonMark 0.31.2](https://spec.commonmark.org/0.31.2/#code-spans) に従い、
+実際のMarkdown parserで内容とblock/code event列を独立に比較する。
+
+型付き `markdown` の準備と出力は同じBudgetを消費し、Work・AllocationUnitsに加え、
+生成する各UTF-8 byteをOutputBytesへ先行計上する。本文上限は1MiB。途中停止から
+部分Markdownを返さない。CLIは別途source上限10MBと入力pathのUTF-8/4096byte上限を
+検査し、source path・digest・renderer版のcommentを付け、新fileへだけ保存する。
+comment内のpathはdelimiterにならないようescapeする。I/O途中失敗は未完成fileを
+残す場合があり、既存fileを置換して成功扱いにはしない。
+
+Sectionの明示ID、source/origin対応、Doc固有のSentence境界をMarkdownから復元する
+一般的なroundtripではない。旧anchor対応・正本registry切替・人の意味レビューは別条件で、
+限定projectionの成功だけで元Markdownを削除しない。
