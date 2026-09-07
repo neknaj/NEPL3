@@ -2,6 +2,18 @@
   "schema": "nepl3.acceptance-catalog/1",
   "design_revision": "nepl3-design-2026-09-06-r4",
   "targets": {
+    "baremetal-armv6m-build": {
+      "description": "Production foundation compiled into thumbv6m-none-eabi RP2040 firmware; record compiler, source and firmware identities; compilation does not imply execution",
+      "kind": "command"
+    },
+    "baremetal-rp2040-rp2040js": {
+      "description": "Exact identified UF2 executed from vector entry under pinned rp2040js; initial four core/wire checks only; not boot ROM, peripherals, full reader/engine or hardware acceptance",
+      "kind": "command"
+    },
+    "wasi-wasip2-pulley64": {
+      "description": "Same wasm32-wasip2 foundation component compared under Wasmtime native codegen and Pulley64 interpreter; not an independent compiler implementation",
+      "kind": "command"
+    },
     "native-x86_64-linux": {
       "description": "x86_64-unknown-linux-gnu native runner; log OS, compiler and runner versions",
       "kind": "command"

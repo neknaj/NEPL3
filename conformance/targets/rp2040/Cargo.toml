@@ -1,0 +1,27 @@
+[package]
+name = "nepl3-conformance-rp2040"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "MIT"
+
+# A bare-metal test executable, not a production workspace member. Every NEPL3
+# dependency below is the same source used by the native/WASI products.
+[workspace]
+
+[dependencies]
+nepl3-core = { path = "../../../crates/foundation/core" }
+nepl3-reader = { path = "../../../crates/foundation/reader" }
+nepl3-wire = { path = "../../../crates/foundation/wire" }
+nepl3-engine = { path = "../../../crates/foundation/engine" }
+cortex-m = "=0.7.7"
+cortex-m-rt = "=0.7.5"
+rp2040-hal = { version = "=0.12.0", features = ["rt", "critical-section-impl", "disable-intrinsics"] }
+rp2040-boot2 = "=0.3.0"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+debug = 1

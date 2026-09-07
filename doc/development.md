@@ -1,5 +1,24 @@
 # 開発と検査
 
+## Portable execution CI
+
+WASI foundationは同じcomponentをWasmtime 44.0.1のnative codegenと
+Pulley64で実行し、終了状態・試験数・elapsed以外の出力を比較します。
+PulleyもCraneliftでbytecodeを生成するため、別compilerの検証とは扱いません。
+空のlibrary test binaryはemptyとして記録し、集約では実試験の成功を要求します。
+各processは180秒で停止・回収し、失敗ログもartifactへ保存します。
+
+[RP2040 adapter](../conformance/targets/rp2040/README.md) は別workspaceの
+bare-metal harnessです。production core/reader/wire/engineの依存を使用し、
+HAL・UART・allocatorを外側へ置きます。ARMv6-M buildと固定版rp2040jsでの
+UF2実行は別job・別証拠です。初期実行範囲はsource位置・budget・NDFの4件で、
+Reader/Engine全受入や実機試験の代わりにはしません。
+
+実ブラウザ、RISC-V、big-endianの検査はそれぞれ独立した未達範囲です。
+このCI整備をDoc HTML・文書移行・Pages公開の完成へ読み替えません。
+CIの区切り後はDoc生成を進め、意味・リンク・安定IDの対応を検証できたページから
+nepld正本へ移行し、検査済みの同じsite artifactを公開します。
+
 ## ローカル環境
 
 [rust-toolchain.toml](../rust-toolchain.toml) に固定したRustと、Gitを使用します。rustupはworkspace内で指定toolchainを選びます。`cargo` の各コマンドはリポジトリrootで実行してください。`Cargo.lock` は管理対象で、CIでは `--locked` を使います。
