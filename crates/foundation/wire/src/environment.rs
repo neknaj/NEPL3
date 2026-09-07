@@ -28,7 +28,7 @@ pub(crate) fn environment_value(
             [
                 record(
                     schema,
-                    "NamespaceRef",
+                    "EnvironmentNamespaceRef",
                     [
                         schema_value(&binding.namespace.schema, schema, budget)?,
                         text(&binding.namespace.name, budget)?,
@@ -66,7 +66,7 @@ pub(crate) fn environment_from(
     let f = fields(value, schema, "Environment", 2)?;
     let bindings = collect(list(&f[0])?, budget, |value, budget| {
         let f = fields(value, schema, "EnvironmentBinding", 4)?;
-        let namespace = fields(&f[0], schema, "NamespaceRef", 2)?;
+        let namespace = fields(&f[0], schema, "EnvironmentNamespaceRef", 2)?;
         let mut payload = f[2].clone_with_budget(budget)?;
         let value = match &mut payload {
             NdfValue::Record(v) => TypedValue::Record(nepl3_core::value::Record {

@@ -1,5 +1,14 @@
 use super::*;
 mod custom;
+use crate::facts::{FactsHeader, FactsPhase};
+use alloc::boxed::Box;
+struct CustomHeader {
+    group: ScopeId,
+    target: Target,
+    binding: BindingId,
+    phase: FactsPhase,
+    used: bool,
+}
 #[derive(Clone, Copy, Eq, PartialEq)]
 struct Target {
     bundle: usize,
@@ -432,6 +441,7 @@ impl<'a, 'p> Machine<'a, 'p> {
             budget,
         )?;
         let mut headers = Vec::<ExportHeader>::new();
+        let mut custom_headers = Vec::<CustomHeader>::new();
         let mut frames = Vec::new();
         push(&mut frames, frame, budget)?;
         let depth_base = budget.current_depth();
@@ -518,8 +528,12 @@ impl<'a, 'p> Machine<'a, 'p> {
                     Action::Restore(stage) => frame.stage = stage,
                     Action::Child { index, effect } => {
                         let target = self.child(frame.target, index, budget)?;
-                        let child =
-                            self.child_frame(&frame, target, effect, frame.phase, budget)?;
+                        let phase = if matches!(effect, Effect::Visit | Effect::Import) {
+                            Phase::default()
+                        } else {
+                            frame.phase
+                        };
+                        let child = self.child_frame(&frame, target, effect, phase, budget)?;
                         push(&mut frames, frame, budget)?;
                         push(&mut frames, child, budget)?;
                         return Ok(());
@@ -639,11 +653,72 @@ impl<'a, 'p> Machine<'a, 'p> {
                                 };
                                 push(&mut frame.actions, Action::Child { index, effect }, budget)?;
                             }
-                            Binding::Custom(_) if frame.phase.header => {
-                                return Err(BindingError::UnsupportedPlan);
-                            }
                             Binding::Custom(operation) => {
-                                self.custom(&mut frame, tree, operation, host, budget, admission)?
+                                if let Some(group) = frame.phase.group {
+                                    if frame.phase.header {
+                                        // Reserve memo storage before accepting the header delta.
+                                        budget.charge(
+                                            Resource::AllocationUnits,
+                                            (core::mem::size_of::<CustomHeader>()
+                                                + core::mem::size_of::<FactsHeader>())
+                                                as u64,
+                                        )?;
+                                        let phase = FactsPhase::Header { group };
+                                        let receipt = self
+                                            .custom(
+                                                &mut frame,
+                                                tree,
+                                                (operation, &phase),
+                                                host,
+                                                budget,
+                                                admission,
+                                            )?
+                                            .ok_or(BindingError::Target)?;
+                                        custom_headers.push(CustomHeader {
+                                            group,
+                                            target: frame.target,
+                                            binding: id,
+                                            phase: FactsPhase::Body {
+                                                header: Box::new(receipt),
+                                            },
+                                            used: false,
+                                        });
+                                    } else {
+                                        let mut found = None;
+                                        for (index, memo) in custom_headers.iter().enumerate() {
+                                            budget.charge(Resource::Work, 3)?;
+                                            if !memo.used
+                                                && memo.group == group
+                                                && memo.target == frame.target
+                                                && memo.binding == id
+                                            {
+                                                found = Some(index);
+                                                break;
+                                            }
+                                        }
+                                        let index = found.ok_or(BindingError::Facts(
+                                            crate::facts::FactsError::Phase,
+                                        ))?;
+                                        self.custom(
+                                            &mut frame,
+                                            tree,
+                                            (operation, &custom_headers[index].phase),
+                                            host,
+                                            budget,
+                                            admission,
+                                        )?;
+                                        custom_headers[index].used = true;
+                                    }
+                                } else {
+                                    self.custom(
+                                        &mut frame,
+                                        tree,
+                                        (operation, &FactsPhase::Ordinary),
+                                        host,
+                                        budget,
+                                        admission,
+                                    )?;
+                                }
                             }
                             Binding::Sequential { .. } | Binding::Recursive { .. }
                                 if frame.phase.header => {}

@@ -225,7 +225,7 @@
           "namespace",
           {
             "named": {
-              "name": "NamespaceRef",
+              "name": "EnvironmentNamespaceRef",
               "package": "nepl3.foundation",
               "revision": 1
             }
@@ -275,6 +275,27 @@
               "revision": 1
             }
           }
+        ]
+      ]
+    },
+    "EnvironmentNamespaceRef": {
+      "constraints": [
+        "namespace.reference"
+      ],
+      "record": [
+        [
+          "schema",
+          {
+            "named": {
+              "name": "SchemaRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "name",
+          "Text"
         ]
       ]
     },
@@ -971,6 +992,69 @@
             "list": {
               "named": {
                 "name": "TextEdit",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ForeignClosure": {
+      "constraints": [
+        "syntax.foreign-closure"
+      ],
+      "record": [
+        [
+          "syntax",
+          {
+            "named": {
+              "name": "ForeignSyntax",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "ownerEnvironment",
+          {
+            "named": {
+              "name": "EnvironmentEntry",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "ownerOrigins",
+          {
+            "list": {
+              "named": {
+                "name": "Origin",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "ownerSources",
+          {
+            "list": {
+              "named": {
+                "name": "SourceContent",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "ownerSourceMaps",
+          {
+            "list": {
+              "named": {
+                "name": "SourceMapping",
                 "package": "nepl3.foundation",
                 "revision": 1
               }

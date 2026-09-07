@@ -40,6 +40,7 @@ fn every_binding_failure_variant_keeps_its_typed_nested_cause() -> Result<(), St
     use nepl3_engine::facts::FactsError;
     for (cause, path) in [
         (FactsError::Target, vec!["Facts", "Target"]),
+        (FactsError::Phase, vec!["Facts", "Phase"]),
         (
             FactsError::Tree(TreeError::ExecutionIdentity),
             vec!["Facts", "Tree", "ExecutionIdentity"],

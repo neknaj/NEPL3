@@ -77,8 +77,28 @@ impl From<StopReason> for WireError {
 }
 impl nepl3_core::value_codec::FoundationCodecError for WireError {
     fn stop_reason(&self) -> Option<StopReason> {
+        use nepl3_core::{
+            diagnostic::validation::ReportValidationError, facts::FactError, origin::OriginError,
+            source::SourceError,
+        };
         match self {
-            Self::Stopped(reason) => Some(*reason),
+            Self::Stopped(reason)
+            | Self::Schema(SchemaError::Stopped(reason))
+            | Self::Source(SourceError::Stopped(reason))
+            | Self::Origin(OriginError::Stopped(reason))
+            | Self::Origin(OriginError::Source(SourceError::Stopped(reason)))
+            | Self::Facts(FactError::Stopped(reason))
+            | Self::Facts(FactError::Source(SourceError::Stopped(reason)))
+            | Self::Facts(FactError::Schema(SchemaError::Stopped(reason)))
+            | Self::Facts(FactError::Origin(OriginError::Stopped(reason)))
+            | Self::Facts(FactError::Origin(OriginError::Source(SourceError::Stopped(reason))))
+            | Self::Report(ReportValidationError::Stopped(reason))
+            | Self::Report(ReportValidationError::Source(SourceError::Stopped(reason)))
+            | Self::Report(ReportValidationError::Schema(SchemaError::Stopped(reason))) => {
+                Some(*reason)
+            }
+            Self::View(error) => error.stop_reason(),
+            Self::Syntax(error) => error.stop_reason(),
             _ => None,
         }
     }

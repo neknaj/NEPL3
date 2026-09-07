@@ -68,6 +68,12 @@ impl<'a> FactsEmitter<'a> {
     pub fn budget(&mut self) -> &mut Budget {
         self.budget
     }
+    /// A synchronous portable adapter may borrow the same operation ledger
+    /// while converting a request/reply. This does not declare sources in the
+    /// formal report; `source` and checked delta acceptance still do that.
+    pub fn budget_and_admission(&mut self) -> (&mut Budget, &mut SourceAdmission) {
+        (self.budget, self.admission)
+    }
 
     /// Explicitly admit a diagnostic source. This grants no fact/scope authority.
     /// Repeated identical declarations do not duplicate storage or SourceBytes.

@@ -1,7 +1,47 @@
 use super::*;
-use crate::facts::{FactsEmitter, FactsRequestView};
+use crate::facts::{FactsEmitter, FactsHeader, FactsPhase, FactsRequestView};
 use nepl3_core::value::OperationRef;
 mod history;
+fn header(
+    group: ScopeId,
+    provider: &crate::profile::ProviderRequirement,
+    request: FactsRequestView<'_>,
+    delta: &FactDelta,
+    registry: &SchemaRegistry,
+    budget: &mut Budget,
+) -> Result<FactsHeader, BindingError> {
+    let mut entities = Vec::new();
+    for entity in &delta.entities {
+        push(&mut entities, entity.id, budget)?;
+    }
+    let mut exports = Vec::new();
+    for occurrence in &delta.occurrences {
+        budget.charge(Resource::Work, exports.len() as u64 + 1)?;
+        if occurrence.role == OccurrenceRole::Export
+            && let ReferenceResolution::Resolved(id) = occurrence.resolution
+            && !exports.contains(&id)
+        {
+            push(&mut exports, id, budget)?;
+        }
+    }
+    let target =
+        crate::facts::phase::target(request.tree, request.path, request.node, registry, budget)?;
+    let size = (provider.provider.len()
+        + provider.operation.name.len()
+        + provider.operation.schema.package.len()) as u64;
+    budget.charge(Resource::Work, size + 80)?;
+    budget.charge(
+        Resource::AllocationUnits,
+        size + core::mem::size_of::<FactsHeader>() as u64,
+    )?;
+    Ok(FactsHeader {
+        group,
+        provider: provider.clone(),
+        target,
+        entities,
+        exports,
+    })
+}
 fn publishes(delta: &FactDelta, id: EntityId, budget: &mut Budget) -> Result<bool, BindingError> {
     let mut export = false;
     let mut definition = false;
@@ -36,11 +76,12 @@ impl<'a, 'p> Machine<'a, 'p> {
         &mut self,
         frame: &mut Frame,
         tree: &'a crate::recovery::ParseTree,
-        operation: &OperationRef,
+        invocation: (&OperationRef, &FactsPhase),
         host: &mut Option<&mut dyn BindingHost>,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
-    ) -> Result<(), BindingError> {
+    ) -> Result<Option<FactsHeader>, BindingError> {
+        let (operation, phase) = invocation;
         budget.poll()?;
         let host = host.as_deref_mut().ok_or(BindingError::MissingProvider)?;
         let provider = self.profile.provider(operation, budget)?;
@@ -68,6 +109,7 @@ impl<'a, 'p> Machine<'a, 'p> {
             node: frame.target.node,
             scope: self.stage(frame.stage)?.scope,
             existing: self.facts()?,
+            phase,
         };
         let authority = host
             .authorize(&call, budget)?
@@ -81,6 +123,7 @@ impl<'a, 'p> Machine<'a, 'p> {
                 node: frame.target.node,
                 existing,
                 authority: &authority,
+                phase,
             }
             .issue(self.profile, budget, admission)?;
             let mut emit = FactsEmitter::new(
@@ -103,6 +146,7 @@ impl<'a, 'p> Machine<'a, 'p> {
                 (partial, Some(BindingError::Stopped(reason)))
             }
         };
+        let mut receipt = None;
         if let Some(delta) = delta {
             let request = FactsRequestView {
                 tree,
@@ -110,11 +154,23 @@ impl<'a, 'p> Machine<'a, 'p> {
                 node: frame.target.node,
                 existing: self.facts()?,
                 authority: &authority,
+                phase,
             };
             let base = request
                 .existing
                 .validate(self.registry, budget, admission)?;
             delta.validate(&base, &authority, budget, admission)?;
+            crate::facts::phase::delta(phase, &delta, budget)?;
+            if let FactsPhase::Header { group } = phase {
+                receipt = Some(header(
+                    *group,
+                    provider,
+                    request,
+                    &delta,
+                    self.registry,
+                    budget,
+                )?);
+            }
             crate::facts::check::closure_view(request, Some(&delta), &[], &[], budget, admission)?;
             let mut writable = Vec::new();
             for scope in &authority.writable_scopes {
@@ -132,10 +188,18 @@ impl<'a, 'p> Machine<'a, 'p> {
                 budget,
             )?;
             self.apply_custom(frame, delta, history, &writable, budget)?;
+            if let FactsPhase::Body { header } = phase {
+                for id in &header.exports {
+                    budget.charge(Resource::Work, frame.exports.len() as u64 + 1)?;
+                    if !frame.exports.contains(id) {
+                        push(&mut frame.exports, *id, budget)?;
+                    }
+                }
+            }
         }
         match failure {
             Some(error) => Err(error),
-            None => Ok(()),
+            None => Ok(receipt),
         }
     }
     fn apply_custom(

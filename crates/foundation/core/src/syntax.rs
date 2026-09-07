@@ -12,6 +12,8 @@ use alloc::{boxed::Box, string::String, vec::Vec};
 
 pub mod canonical;
 mod copy;
+mod foreign;
+pub use foreign::{ForeignClosure, ValidatedForeignClosure};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct NodeRef(pub u64);
@@ -222,33 +224,7 @@ impl SyntaxBundle {
                 {
                     return Err(SyntaxError::DuplicateEnvironment);
                 }
-                for (index, binding) in environment.value.bindings.iter().enumerate() {
-                    budget.charge(Resource::Work, 1)?;
-                    require_schema(registry, &binding.namespace.schema)?;
-                    if binding.name.is_empty()
-                        || binding.namespace.name.is_empty()
-                        || environment.value.bindings[..index]
-                            .iter()
-                            .any(|b| b.namespace == binding.namespace && b.name == binding.name)
-                    {
-                        return Err(SyntaxError::Environment);
-                    }
-                    if let Some(origin) = binding.origin {
-                        check_origin(bundle, origin)?;
-                    }
-                    registry.validate_typed(&binding.value, budget)?;
-                }
-                for (index, resource) in environment.value.resources.iter().enumerate() {
-                    budget.charge(Resource::Work, resource.bytes.len() as u64)?;
-                    if resource.id.is_empty()
-                        || environment.value.resources[..index]
-                            .iter()
-                            .any(|r| r.id == resource.id)
-                        || resource.digest != Digest::of(&resource.bytes)
-                    {
-                        return Err(SyntaxError::ResourceDigest);
-                    }
-                }
+                foreign::environment(&environment.value, bundle.origins.len(), registry, budget)?;
             }
             let maps = SourceMap::validate_mappings(&bundle.source_maps, &sources, budget)?;
             for token in &bundle.tokens {

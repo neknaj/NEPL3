@@ -35,7 +35,7 @@ fn with_input<T>(
     let implementation = Digest::of(include_bytes!("binding.rs"));
     let implementation_for = |operation: &nepl3_core::value::OperationRef| {
         if operation.name == "bindingFacts" {
-            Digest::of(include_bytes!("binding/custom.rs"))
+            custom::implementation_digest()
         } else {
             implementation
         }
@@ -445,6 +445,11 @@ fn ordered_exports_recursive_headers_and_foreign_roots() -> Result<(), String> {
 #[test]
 fn binding_seed_artifacts_match_original_source_and_host_adapter() -> Result<(), String> {
     for (path, bytes) in [
+        (
+            "conformance/fixtures/grammar/binding/recursive.neplg",
+            include_bytes!("../../../conformance/fixtures/grammar/binding/recursive.json")
+                .as_slice(),
+        ),
         (
             "conformance/fixtures/grammar/binding/custom.neplg",
             include_bytes!("../../../conformance/fixtures/grammar/binding/custom.json").as_slice(),

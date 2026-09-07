@@ -20,6 +20,7 @@ pub struct BindingCall<'a> {
     pub node: NodeRef,
     pub scope: ScopeId,
     pub existing: &'a FactSet,
+    pub phase: &'a crate::facts::FactsPhase,
 }
 /// Formal diagnostics belong to FactsEmitter, independently of this unchecked
 /// delta. A stopped parent never accepts new raw values from this outcome.

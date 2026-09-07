@@ -38,6 +38,12 @@ Parsed nodeはkind、head span、enclosing source cover、子NodeId列、opaque 
 
 token/trivia/sourceのlossless保存により元ソースを再現できる。意味正規形のprinterによるroundtripと、元sourceをそのまま出すlossless roundtripは異なる操作。
 
+ForeignClosureは、単体で取り出したForeignSyntaxと、そのfieldのownerから選択したEnvironmentEntry、ownerOrigins、ownerSources、ownerSourceMapsを持つ。ForeignSyntax.environmentはowner環境表の局所参照であり、同じIDのguest環境へ解決しない。EnvironmentBinding.originもownerOriginsへ解決し、guestのOriginRefと同一視しない。ownerの構文node全体は閉包へ複製しない。
+
+この形式はownerのOrigin列全体を元の順序・IDで保持する。環境のcanonical digestはOriginRefの数値を含むため、origin列を並べ替えたり部分列へ再番号化したままdigestを保存してはならない。ownerとguestはそれぞれ宣言したsourcesだけでOrigin/map/Spanを解決し、相手の表やambient storeで欠損を補わない。表を跨ぐ同一snapshotの共有は許可し、同一表の重複・identity/URI矛盾は拒否する。
+
+環境中の名前空間契約はwireのEnvironmentNamespaceRef(schema,name)であり、FactSet中のNamespaceRef(value:U64)とは異なる型である。Rustでは前者をsyntax::NamespaceRef、後者をfacts::NamespaceRefとして区別する。旧EnvironmentBindingのwire参照が両者を混同して非empty bindingをFieldCountで拒否していた不整合を、この明示したdescriptorへ訂正する（R046）。
+
 ## 4. 内部view
 
 `ViewElement = {kind, span, fields, roles, relations}`。一つのtokenに複数のViewElementが対応してよい。子は親の範囲に含まれる。ただし変換後のviewはSourceMapを介した別snapshot上に置く。外側parserはViewElementの木を歩いて構文を決めない。
