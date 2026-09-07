@@ -41,6 +41,7 @@ pub enum ShapeError {
     ParallelArity(u64),
     DuplicateLanguage { node: u64, first: u64, second: u64 },
     TableWidth(u64),
+    FieldLocation(u64),
 }
 impl From<StopReason> for ShapeError {
     fn from(value: StopReason) -> Self {

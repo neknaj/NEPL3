@@ -89,6 +89,10 @@ Section.idとInline Anchor.idはarticleのDocLabel空間へ定義をexportする
 
 source上の名前の選択範囲と、定義全体の範囲を分ける。Referenceは表示labelを持ち、参照先の見出し文字列を自動コピーしない。HTML idは `n-` + UTF-8 byteの小文字hexとし、任意の名前から衝突なく生成する。
 
+`DocNode.locations` は名前operandの位置を `DocFieldLocation` として保持する。fieldはDoc所有の閉じた種別SectionId / AnchorId / ReferenceTargetで、対応するDocKindだけに指定でき、同じfieldの重複を許さない。lowerは元の型付きchild/tokenからSpanとOriginを取得し、意味Stringの綴りを本文から検索して位置を作らない。source-less constructorでは空のlocationsまたはNoneの位置を保持する。存在するSpan/Originは宣言済みsource/Origin arenaを参照し、Spanは指定された定義全体cover内へ明示SourceMapを通じて包含される必要がある。Originも指定した場合は、その明示causeが選択Spanを支えることを検査する。構造検査と初回NDF decodeに同じ条件を適用し、元tokenの局所Viewは変更しない。
+
+意味nodeの共有と表示上のanchorの一意性は別である。同じSection/Anchor nodeへArticle rootから複数の表示経路がある場合はDuplicateOccurrenceとする。直接同じ子を二度参照する場合と、共有parentを介する場合の双方を含む。labelを含まないDAG共有は許容する。暗黙のID複製・改名では回避しない。経路数を2で飽和させる予算付き検査を行い、同じsource selectionを持つ二つの出現は、owner node・子の順序index・target nodeを並べた `LabelOccurrencePaths` で識別する。この型付き経路を通常Diagnosticの `LabelDiagnosticArguments` に含め、架空のSpanを追加しない。foreign guestの構造はこのArticleの表示経路として展開せず、そのlabelを暗黙に定義・参照へ取り込まない。
+
 ## 6. 埋め込み
 
 InlineMath / DisplayMath / CircuitFigure / Codeは、スロット種別とForeignClosureを保持する。ForeignClosureはForeignSyntaxに選択済みowner環境、元Origin表、source/map宣言閉包を加えた共通型である。環境digestに含まれる元Origin IDを保存し、guest自身のOrigin表と混同しない。MathやCircuitの型をdoc-coreへimportしない。

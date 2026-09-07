@@ -64,6 +64,7 @@ fn typed_prefix_constructor_and_literal_share_the_normal_form() -> Result<(), St
             nodes: kinds
                 .into_iter()
                 .map(|kind| DocNode {
+                    locations: Vec::new(),
                     kind,
                     origin: None,
                     span: None,
@@ -131,16 +132,19 @@ fn text_merge_preserves_known_and_source_less_provenance() -> Result<(), String>
             root: DocRoot::Sentence(SentenceRef(2)),
             nodes: vec![
                 DocNode {
+                    locations: Vec::new(),
                     kind: DocKind::Text { text: "a".into() },
                     origin: Some(OriginId(0)),
                     span: Some(span.clone()),
                 },
                 DocNode {
+                    locations: Vec::new(),
                     kind: DocKind::Text { text: "b".into() },
                     origin: None,
                     span: None,
                 },
                 DocNode {
+                    locations: Vec::new(),
                     kind: DocKind::Sentence {
                         inlines: vec![InlineRef(0), InlineRef(1)],
                     },

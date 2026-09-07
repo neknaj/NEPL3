@@ -21,6 +21,7 @@ fn value(root: DocRoot, kinds: Vec<DocKind>) -> DocValue {
         nodes: kinds
             .into_iter()
             .map(|kind| DocNode {
+                locations: Vec::new(),
                 kind,
                 origin: None,
                 span: None,

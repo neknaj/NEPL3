@@ -11,6 +11,17 @@ impl DocumentSyntax {
         for node in &self.value.nodes {
             b.charge(Resource::Work, 1)?;
             let mut bytes = kind_bytes(&node.kind);
+            for location in &node.locations {
+                b.charge(Resource::Work, 1)?;
+                bytes = bytes
+                    .saturating_add(core::mem::size_of::<DocFieldLocation>() as u64)
+                    .saturating_add(
+                        location
+                            .span
+                            .as_ref()
+                            .map_or(0, |s| s.snapshot_ref().source.0.len() as u64),
+                    );
+            }
             if let Some(span) = &node.span {
                 bytes = bytes.saturating_add(span.snapshot_ref().source.0.len() as u64);
             }

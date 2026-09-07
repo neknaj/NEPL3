@@ -117,6 +117,26 @@ impl DocValue {
     ) -> Result<(), ShapeError> {
         use DocKind::*;
         let id = node as u64;
+        let item = &self.nodes[node];
+        // Every current named constructor has exactly one location kind;
+        // retaining repeated entries cannot make its selection ambiguous.
+        budget.charge(Resource::Work, item.locations.len() as u64)?;
+        if item.locations.len() > 1 {
+            return Err(ShapeError::FieldLocation(node as u64));
+        }
+        for location in &item.locations {
+            if !matches!(
+                (&item.kind, location.field),
+                (DocKind::Section { .. }, crate::model::DocField::SectionId)
+                    | (DocKind::Anchor { .. }, crate::model::DocField::AnchorId)
+                    | (
+                        DocKind::Reference { .. },
+                        crate::model::DocField::ReferenceTarget
+                    )
+            ) {
+                return Err(ShapeError::FieldLocation(node as u64));
+            }
+        }
         match &self.nodes[node].kind {
             Ruby { base, reading } => {
                 for r in [base, reading] {

@@ -321,12 +321,12 @@ _=>Err(PortableError::Shape),}
 }
 impl Value for DocNode {
 fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
-record(s,"DocNode",[self.kind.put(s,c,b)?,self.origin.put(s,c,b)?,self.span.put(s,c,b)?],b)
+record(s,"DocNode",[self.kind.put(s,c,b)?,self.origin.put(s,c,b)?,self.span.put(s,c,b)?,self.locations.put(s,c,b)?],b)
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
 b.charge(Resource::Work,39)?;
-let f=fields(v,s,"DocNode",3)?;
-Ok(Self {kind:Value::read(&f[0],s,c,b)?,origin:Value::read(&f[1],s,c,b)?,span:Value::read(&f[2],s,c,b)?})
+let f=fields(v,s,"DocNode",4)?;
+Ok(Self {kind:Value::read(&f[0],s,c,b)?,origin:Value::read(&f[1],s,c,b)?,span:Value::read(&f[2],s,c,b)?,locations:Value::read(&f[3],s,c,b)?})
 }
 }
 impl Value for DocEmbed {
@@ -437,6 +437,64 @@ fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)
 b.charge(Resource::Work,47)?;
 let f=fields(v,s,"OptionalTextRef",1)?;
 Ok(Self(Value::read(&f[0],s,c,b)?))
+}
+}
+impl Value for DocField {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::SectionId => variant(s,"DocField","SectionId",[],b),
+Self::AnchorId => variant(s,"DocField","AnchorId",[],b),
+Self::ReferenceTarget => variant(s,"DocField","ReferenceTarget",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,40)?;
+let (tag,f)=case(v,s,"DocField")?;
+match (tag,f.len()) {
+("SectionId",0)=>Ok(Self::SectionId),
+("AnchorId",0)=>Ok(Self::AnchorId),
+("ReferenceTarget",0)=>Ok(Self::ReferenceTarget),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for DocFieldLocation {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"DocFieldLocation",[self.field.put(s,c,b)?,self.origin.put(s,c,b)?,self.span.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,48)?;
+let f=fields(v,s,"DocFieldLocation",3)?;
+Ok(Self {field:Value::read(&f[0],s,c,b)?,origin:Value::read(&f[1],s,c,b)?,span:Value::read(&f[2],s,c,b)?})
+}
+}
+impl Value for DocPathStep {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"DocPathStep",[self.owner.put(s,c,b)?,self.child.put(s,c,b)?,self.target.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,43)?;
+let f=fields(v,s,"DocPathStep",3)?;
+Ok(Self {owner:Value::read(&f[0],s,c,b)?,child:Value::read(&f[1],s,c,b)?,target:Value::read(&f[2],s,c,b)?})
+}
+}
+impl Value for LabelOccurrencePaths {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"LabelOccurrencePaths",[self.first.put(s,c,b)?,self.second.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,52)?;
+let f=fields(v,s,"LabelOccurrencePaths",2)?;
+Ok(Self {first:Value::read(&f[0],s,c,b)?,second:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for LabelDiagnosticArguments {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"LabelDiagnosticArguments",[self.name.put(s,c,b)?,self.paths.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,56)?;
+let f=fields(v,s,"LabelDiagnosticArguments",2)?;
+Ok(Self {name:Value::read(&f[0],s,c,b)?,paths:Value::read(&f[1],s,c,b)?})
 }
 }
 }

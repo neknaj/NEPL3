@@ -20,6 +20,7 @@ pub enum StructureError {
     DuplicateSource,
     OriginReference(u64),
     ViewOwner,
+    FieldPosition(u64),
 }
 impl From<StopReason> for StructureError {
     fn from(v: StopReason) -> Self {
@@ -113,7 +114,7 @@ impl DocumentSyntax {
         }
         OriginGraph::validate_origins(&self.origins, &store, b)?;
         let maps = SourceMap::validate_mappings(&self.source_maps, &store, b)?;
-        for node in &self.value.nodes {
+        for (index, node) in self.value.nodes.iter().enumerate() {
             b.charge(Resource::Work, 1)?;
             if let Some(origin) = node.origin
                 && usize::try_from(origin.0)
@@ -131,6 +132,68 @@ impl DocumentSyntax {
                     .get_ref(span.snapshot_ref())
                     .ok_or(SourceError::MissingSnapshot)?
                     .slice(span)?;
+            }
+            for location in &node.locations {
+                b.charge(Resource::Work, 1)?;
+                if let Some(origin) = location.origin
+                    && usize::try_from(origin.0)
+                        .ok()
+                        .is_none_or(|id| id >= self.origins.len())
+                {
+                    return Err(StructureError::OriginReference(origin.0));
+                }
+                if let Some(span) = &location.span {
+                    b.charge(
+                        Resource::Work,
+                        span.snapshot_ref().source.0.len() as u64 + 40,
+                    )?;
+                    store
+                        .get_ref(span.snapshot_ref())
+                        .ok_or(SourceError::MissingSnapshot)?
+                        .slice(span)?;
+                    if let Some(cover) = &node.span
+                        && !maps.contains(cover, span, b)?
+                    {
+                        return Err(StructureError::FieldPosition(index as u64));
+                    }
+                    if let Some(origin) = location.origin {
+                        // The selected bytes must be supported by an explicit
+                        // cause. Composite/Generated arenas remain iterative.
+                        let mut pending = alloc::vec::Vec::new();
+                        b.charge(Resource::AllocationUnits, 8)?;
+                        pending.push(origin);
+                        let mut found = false;
+                        while let Some(origin) = pending.pop() {
+                            b.charge(Resource::Work, 1)?;
+                            let (position, parents) = match &self.origins[origin.0 as usize] {
+                                nepl3_core::origin::Origin::Direct(span) => (Some(span), &[][..]),
+                                nepl3_core::origin::Origin::Composite(parents) => {
+                                    (None, parents.as_slice())
+                                }
+                                nepl3_core::origin::Origin::Generated {
+                                    callsite, inputs, ..
+                                } => (callsite.as_ref(), inputs.as_slice()),
+                                nepl3_core::origin::Origin::Synthetic { anchor, .. } => {
+                                    (anchor.as_ref(), &[][..])
+                                }
+                            };
+                            if let Some(position) = position
+                                && maps.contains(position, span, b)?
+                            {
+                                found = true;
+                                break;
+                            }
+                            for parent in parents {
+                                b.charge(Resource::Work, 1)?;
+                                b.charge(Resource::AllocationUnits, 8)?;
+                                pending.push(*parent);
+                            }
+                        }
+                        if !found {
+                            return Err(StructureError::FieldPosition(index as u64));
+                        }
+                    }
+                }
             }
         }
         for view in &self.views {

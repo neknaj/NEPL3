@@ -311,9 +311,36 @@ impl Adapter<'_, '_> {
             .as_ref()
             .map(|s| super::span(s, self.b))
             .transpose()?;
+        let field = match kind {
+            DocKind::Section { .. } => Some(DocField::SectionId),
+            DocKind::Anchor { .. } => Some(DocField::AnchorId),
+            DocKind::Reference { .. } => Some(DocField::ReferenceTarget),
+            _ => None,
+        };
+        let mut locations = Vec::new();
+        if let Some(field) = field {
+            let child = self.child(id, n, 0)?;
+            let child = self
+                .checked
+                .bundle()
+                .nodes
+                .get(child.0 as usize)
+                .ok_or(SyntaxError::Reference)?;
+            let token = child
+                .token
+                .and_then(|id| self.checked.bundle().tokens.get(id.0 as usize))
+                .ok_or(LowerError::Operand { node: id, field: 0 })?;
+            let location = DocFieldLocation {
+                field,
+                origin: Some(child.origin),
+                span: Some(super::span(&token.head, self.b)?),
+            };
+            push(&mut locations, location, self.b)?;
+        }
         push(
             &mut self.nodes,
             DocNode {
+                locations,
                 kind,
                 origin: Some(n.origin),
                 span,

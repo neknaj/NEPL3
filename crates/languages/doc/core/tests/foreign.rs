@@ -104,6 +104,7 @@ fn code_guest_stays_syntax_through_doc_structure_and_cbor() -> Result<(), String
         value: DocValue {
             root: DocRoot::Block(BlockRef(0)),
             nodes: vec![DocNode {
+                locations: Vec::new(),
                 kind: DocKind::Code {
                     syntax: EmbedRef(0),
                 },
@@ -142,6 +143,7 @@ fn code_guest_stays_syntax_through_doc_structure_and_cbor() -> Result<(), String
 fn shared_embed_validation_composes_its_deepest_doc_owner() -> Result<(), String> {
     let r = registry()?;
     let mut nodes = vec![DocNode {
+        locations: Vec::new(),
         kind: DocKind::InlineMath {
             syntax: EmbedRef(0),
         },
@@ -150,6 +152,7 @@ fn shared_embed_validation_composes_its_deepest_doc_owner() -> Result<(), String
     }];
     for i in 1..20 {
         nodes.push(DocNode {
+            locations: Vec::new(),
             kind: DocKind::Strong {
                 inline: InlineRef(i - 1),
             },
@@ -158,6 +161,7 @@ fn shared_embed_validation_composes_its_deepest_doc_owner() -> Result<(), String
         });
     }
     nodes.push(DocNode {
+        locations: Vec::new(),
         kind: DocKind::Sentence {
             inlines: vec![InlineRef(0), InlineRef(19)],
         },
