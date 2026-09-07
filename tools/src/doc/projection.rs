@@ -177,6 +177,41 @@ impl<'a> Writer<'a, '_> {
         }
         self.sentence(items[0].0, Some(continuation))
     }
+    fn raw_code(&mut self, node: u64, hint: Option<&str>, text: &str) -> Result<(), Error> {
+        self.budget.charge(Resource::Work, text.len() as u64)?;
+        // CommonMark normalizes CR/CRLF and supplies a final newline to a
+        // nonempty fenced block. Do not silently change those source bytes.
+        if (!text.is_empty() && !text.ends_with('\n'))
+            || text
+                .chars()
+                .any(|c| c.is_control() && c != '\n' && c != '\t')
+        {
+            return Err(Error::Text { node });
+        }
+        if let Some(hint) = hint {
+            self.budget.charge(Resource::Work, hint.len() as u64)?;
+            if hint.is_empty()
+                || !hint
+                    .bytes()
+                    .all(|c| c.is_ascii_alphanumeric() || b"_+.-".contains(&c))
+            {
+                return Err(Error::Text { node });
+            }
+        }
+        let fence = (text.split(|c| c != '`').map(str::len).max().unwrap_or(0) + 1).max(3);
+        for _ in 0..fence {
+            self.emit("`")?;
+        }
+        if let Some(hint) = hint {
+            self.emit(hint)?;
+        }
+        self.emit("\n")?;
+        self.emit(text)?;
+        for _ in 0..fence {
+            self.emit("`")?;
+        }
+        self.emit("\n\n")
+    }
     fn body(&mut self, node: u64, level: usize) -> Result<(), Error> {
         self.budget.charge(Resource::Work, 1)?;
         let DocKind::Body { blocks } = self.kind(node) else {
@@ -213,6 +248,12 @@ impl<'a> Writer<'a, '_> {
                 DocKind::Paragraph { .. } => {
                     self.paragraph(child.0, "")?;
                     self.emit("\n\n")?;
+                }
+                DocKind::RawCode {
+                    language_hint,
+                    text,
+                } => {
+                    self.raw_code(child.0, language_hint.as_deref(), text)?;
                 }
                 DocKind::List {
                     kind: ListKind::Unordered,
@@ -301,7 +342,7 @@ pub fn write(input: &std::path::Path, output: &std::path::Path) -> crate::Result
         .map(|b| format!("{b:02x}"))
         .collect();
     let provenance = format!(
-        "<!-- Generated from {escaped}; renderer nepl3-tools.markdown/2; source SHA-256 {digest}. Edit the Doc source. -->\n\n"
+        "<!-- Generated from {escaped}; renderer nepl3-tools.markdown/3; source SHA-256 {digest}. Edit the Doc source. -->\n\n"
     );
     let mut file = std::fs::OpenOptions::new()
         .write(true)
