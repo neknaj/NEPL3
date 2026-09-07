@@ -163,6 +163,7 @@ fn sequence(
                         };
                         let id = InlineRef(nodes.len() as u64);
                         nodes.push(DocNode {
+                            locations: Vec::new(),
                             kind: DocKind::Text { text },
                             origin,
                             span: None,
@@ -282,6 +283,7 @@ mod tests {
             nodes: kinds
                 .into_iter()
                 .map(|kind| DocNode {
+                    locations: Vec::new(),
                     kind,
                     origin: None,
                     span: None,

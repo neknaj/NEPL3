@@ -1012,6 +1012,18 @@
               }
             }
           }
+        ],
+        [
+          "locations",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "DocFieldLocation"
+              }
+            }
+          }
         ]
       ],
       "constraints": []
@@ -1266,6 +1278,120 @@
         [
           "index",
           "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "DocField": {
+      "variant": {
+        "SectionId": [],
+        "AnchorId": [],
+        "ReferenceTarget": []
+      },
+      "constraints": []
+    },
+    "DocFieldLocation": {
+      "record": [
+        [
+          "field",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "DocField"
+            }
+          }
+        ],
+        [
+          "origin",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "OriginRef"
+              }
+            }
+          }
+        ],
+        [
+          "span",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Span"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "DocPathStep": {
+      "record": [
+        [
+          "owner",
+          "U64"
+        ],
+        [
+          "child",
+          "U64"
+        ],
+        [
+          "target",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "LabelOccurrencePaths": {
+      "record": [
+        [
+          "first",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "DocPathStep"
+              }
+            }
+          }
+        ],
+        [
+          "second",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "DocPathStep"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "LabelDiagnosticArguments": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "paths",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "LabelOccurrencePaths"
+              }
+            }
+          }
         ]
       ],
       "constraints": []

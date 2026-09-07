@@ -86,7 +86,7 @@ struct Adapter<'a, 'b> {
     presentations: Vec<literal::Presentation>,
     next_origin: u64,
 }
-fn span(value: &Span, b: &mut Budget) -> Result<Span, StopReason> {
+pub(crate) fn span(value: &Span, b: &mut Budget) -> Result<Span, StopReason> {
     b.charge(Resource::Work, value.snapshot_ref().source.0.len() as u64)?;
     b.charge(
         Resource::AllocationUnits,

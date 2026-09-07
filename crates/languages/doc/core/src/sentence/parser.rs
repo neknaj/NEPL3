@@ -214,6 +214,7 @@ impl Parser<'_> {
         self.origins.push(Origin::Direct(origin_span));
         let r = InlineRef(self.nodes.len() as u64);
         self.nodes.push(DocNode {
+            locations: Vec::new(),
             kind,
             span: Some(span),
             origin: Some(origin),

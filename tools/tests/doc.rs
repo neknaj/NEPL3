@@ -1,5 +1,7 @@
 //! Actual standard Doc source compilation and prefix parsing. Facts signatures
 //! are compile-time declarations only; this parse-only host serves reader calls.
+#[path = "doc/labels.rs"]
+mod labels;
 #[path = "doc/mixed.rs"]
 mod mixed;
 use nepl3_core::{budget::*, source::*};

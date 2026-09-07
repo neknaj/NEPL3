@@ -10,6 +10,41 @@ use nepl3_core::{
     value_codec::{FoundationCodecError, FoundationValueCodec},
 };
 use value::{Value, fields, record};
+pub(crate) fn label_arguments<C: FoundationValueCodec>(
+    name: &str,
+    paths: Option<&crate::model::LabelOccurrencePaths>,
+    registry: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<nepl3_core::value::TypedValue, PortableError<C::Error>> {
+    let s = schema(registry)?;
+    b.charge(Resource::Work, name.len() as u64)?;
+    b.charge(Resource::AllocationUnits, name.len() as u64)?;
+    let paths = match paths {
+        Some(paths) => {
+            let value = paths.put(s, c, b)?;
+            b.charge(
+                Resource::AllocationUnits,
+                core::mem::size_of::<NdfValue>() as u64,
+            )?;
+            NdfValue::Some(alloc::boxed::Box::new(value))
+        }
+        None => NdfValue::None,
+    };
+    let kind = "LabelDiagnosticArguments";
+    b.charge(Resource::Work, (s.package.len() + kind.len() + 1) as u64)?;
+    b.charge(
+        Resource::AllocationUnits,
+        (s.package.len() + kind.len() + 2 * core::mem::size_of::<NdfValue>()) as u64,
+    )?;
+    Ok(nepl3_core::value::TypedValue::Record(
+        nepl3_core::value::Record {
+            schema: s.clone(),
+            kind: kind.into(),
+            fields: alloc::vec![NdfValue::Text(name.into()), paths],
+        },
+    ))
+}
 #[derive(Debug, Eq, PartialEq)]
 pub enum PortableError<E> {
     Stopped(StopReason),

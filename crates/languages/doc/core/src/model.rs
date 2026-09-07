@@ -34,6 +34,38 @@ references!(
     OptionalTextRef
 );
 
+/// The semantic name operand, distinct from its enclosing definition cover.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum DocField {
+    SectionId,
+    AnchorId,
+    ReferenceTarget,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct DocFieldLocation {
+    pub field: DocField,
+    pub origin: Option<OriginId>,
+    pub span: Option<Span>,
+}
+/// One edge in the ordered semantic child sequence of a Doc node. Paths
+/// distinguish repeated presentation occurrences without inventing source spans.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct DocPathStep {
+    pub owner: u64,
+    pub child: u64,
+    pub target: u64,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LabelOccurrencePaths {
+    pub first: Vec<DocPathStep>,
+    pub second: Vec<DocPathStep>,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LabelDiagnosticArguments {
+    pub name: String,
+    pub paths: Option<LabelOccurrencePaths>,
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum DocRoot {
     Article(ArticleRef),
@@ -233,6 +265,8 @@ pub enum DocKind {
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DocNode {
+    /// Empty or explicitly absent positions represent source-less constructors.
+    pub locations: Vec<DocFieldLocation>,
     pub kind: DocKind,
     pub origin: Option<OriginId>,
     pub span: Option<Span>,
