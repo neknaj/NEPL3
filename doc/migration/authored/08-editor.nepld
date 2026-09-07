@@ -1,0 +1,313 @@
+article ja "08. [共通/きょうつう]editor serviceと[診断/しんだん]"
+body
+  cons section policy "[方針/ほうしん]" body
+    cons paragraph
+      cons "一度宣言したgrammar/binding/style情報からeditor機能を導出する。"
+      cons "専用parserも同じfactsを返して支援を受ける。"
+      cons "共通分類をプログラミング言語の要素に限定しない。" nil
+    nil
+  cons section snapshot "1. AnalysisSnapshot" body
+    cons paragraph
+      cons "入力はSourceSnapshot集合、profile/package revision集合、明示的なresource/schema環境、解析options。"
+      cons "結果はParsed tree、内部views、Scope/Entity/Occurrence、typed Relations、Diagnostics、ExpectedAt、Dependencies。" nil
+    cons paragraph
+      cons "全結果にSnapshotIdとanalysis keyを付ける。"
+      cons "keyには言語/reader/providerのrevision、context、操作optionsを含む。"
+      cons "spanのある結果を意味値だけのcacheから再利用しない。" nil
+    cons paragraph
+      cons "Binding の prepared request は AnalysisKey の treeDigest、profileDigest、executionDigest、requestDigest を固定する。"
+      cons "treeDigest は局所nodeを正準化した完全な ParseTree の NDF/1 CBORに基づき、明示sourceのidentity・URI・元bytes、payload、環境、各選択contextを含む。"
+      cons "profileDigest は解決済みProfileの意味identityで、選択schema、provider実装、resource、既定limitsを含む。"
+      cons "executionDigest はalias名順の実package execution identity表に基づき、同じ意味でも異なるarena配置を区別する。"
+      cons "requestDigest はanalysis ID、型付きBindingOptions、有効な操作Limitsを含む。"
+      cons "現在のBindingOptionsは空recordであり、未実装の意味optionを黙って受け入れない。" nil
+    cons paragraph
+      cons sentence cons text "treeDigest・executionDigest・requestDigestは " cons code "SHA-256(domain || canonical NDF/1 CBOR(value))" cons text " とし、tree・execution・requestのdomainはそれぞれ " cons code "nepl3.analysis.tree/1" cons text "、" cons code "nepl3.analysis.execution/1" cons text "、" cons code "nepl3.analysis.request/1" cons text " に終端zero byteを付ける。" nil
+      cons "profileDigestは既存の解決済みProfile identityアルゴリズムに従う。"
+      cons "codecは正準化とhashのWork・割当・出力量を操作Budgetへ計上する。"
+      cons "SourceSnapshotを内包した値のhash計算だけで新たなsource lookup権限を付与しない。" nil
+    cons paragraph
+      cons "prepareは明示的に渡されたBudgetとSourceAdmissionで要求を検査し、keyを算出する。"
+      cons "実行LimitsはProfileの上限を超えられず、executeのBudgetのLimitsは要求と完全一致しなければならない。"
+      cons "prepareと実行は独立した操作予算を使うことも、同一pipelineの累積Budget/SourceAdmissionを共有することもできるが、使用済み量を払い戻さない。"
+      cons "keyは有効上限を保持し、開始時の残量やtransportの観測Usageを認証する値ではない。"
+      cons "途中停止結果から完了proofを生成しない。" nil
+    cons paragraph
+      cons "初回BindingRequest decoderは元のRust要求を持たず、明示sourceを持つ受信treeと選択済みProfileからkeyを再計算する。"
+      cons "自己申告keyやLimitsを通信認証・hostの実行許可へ昇格しない。"
+      cons "受信raw要求のprepareでも再計算・一致検査を行い、その間に変更されたtree/contextや条件を拒否する。"
+      cons "BoundBindingReplyは全結果枝のkeyと通常BindingReplyを保持する。"
+      cons "raw返信decoderの一致検査は意味proofの発行ではなく、完了proofは実BindingPlanの実行からのみ得る。" nil
+    cons paragraph
+      cons "BoundBindingReply.for_source はhostが現在要求しているAnalysisKeyとの完全一致とSourceRefのrevision/digestを検査してから、完了したBindingAnalysisを公開する。"
+      cons "これは定義・参照検索の前提となる照合入口であり、positionからの対象選択、定義ジャンプ、参照検索、renameのアルゴリズム完成を意味しない。"
+      cons "既存のunkeyed analyzeのFactSet.analysis_idだけを、editor用のstale判定として使わない。" nil
+    nil
+  cons section derived "2. [自動/じどう]で[得/え]られる[機能/きのう]" body
+    cons paragraph
+      cons "schemaのform/leaf/fieldとreader captureから構文ハイライト、構造的selection、expected categoryの補完を提供する。"
+      cons "binding/reference/export/importから定義ジャンプ、参照検索、未定義/重複診断、scope内の候補補完を提供する。"
+      cons "name fieldとenclosing rangeからoutlineを作る。"
+      cons "ドキュメントfieldを宣言すればhoverに出す。" nil
+    cons paragraph
+      cons "型推論、回路幅、数値計算結果等はdomain factsの追加で精度を上げる。"
+      cons "grammarだけから任意domainの意味を推測したと主張しない。" nil
+    cons paragraph
+      cons "手書きreaderにはview/factsの同じcontractを要求する。"
+      cons "内部viewなしならtoken全体のfallbackだけ。"
+      cons "すべてのcustom readerへ精密な内部支援を自動生成できるとはしない。" nil
+    nil
+  cons section region "3. regionの[選択/せんたく]" body
+    cons paragraph
+      cons "source positionから、同一snapshot上で包含する最小のfield/elementを選ぶ。"
+      cons "grammar priority、最内側、宣言順でtie-breakを固定する。"
+      cons "sentence内のreadingを問い合わせたらsentence token全体よりreading viewを優先する。" nil
+    cons paragraph
+      cons sentence cons text "現在の " cons code "analysis::region::regions" cons text " はprepared Binding入力の検査済みtree/Profileと、明示ReaderFactBatch sidecarを受ける。" nil
+      cons sentence cons code "RegionKey" cons text " は既存AnalysisKeyとsidecarのdigestの組である。" nil
+      cons sentence cons text "sidecarは " cons code "RegionSidecar { facts: Option<List<ReaderFactBatch>> }" cons text " を正準NDF/1 CBORへ符号化し、" cons code "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)" cons text " で識別する。" nil
+      cons "Foreign pathとnodeはtreeの正準DFS番号へ写し、batch/fact/triviaの順序は保存する。"
+      cons "NoneはSyntaxOnly、Some（空列を含む）はReaderFactsとして区別し、入力しなかったCaptureをView名から推測しない。" nil
+    cons paragraph
+      cons "sidecarのentryは所有bundle/nodeの保存selectionと照合する。"
+      cons "nodeのあるbatchのtriviaはToken.leadingTriviaの完全な再掲であり、別tokenをSkippedと名乗って混入できない。"
+      cons "Captureは所有bundleの宣言SourceMapを使い、token headまたは正式なskip triviaへの包含を検査する。"
+      cons "Presentation/Relationは通常reader契約どおり明示source/schemaの整合を検査し、消費範囲への包含条件を追加しない。"
+      cons "所有bundleのsource/map不足をForeignの別表で補わない。"
+      cons "これらは構造と出自参照の検査であり、raw sidecarが実providerから返されたことを認証しない。" nil
+    cons paragraph
+      cons "RegionRequestはRegionKey、SourceRef、byte offsetを持つ。"
+      cons "key/revision/digestとUTF-8 scalar境界を照合し、範囲は半開区間とする。"
+      cons "返すSourceRegionは正準bundle/node、field/element番号またはtoken所有Viewのroot/field/child path、表示source span、元のlogical span、priority、depth、宣言順、PresentationClassを保持する。"
+      cons "nodeなしの末尾/skip-only batchはnode=Noneであり、架空のroot所有nodeを作らない。"
+      cons "通常node/field/headのdepthはその宣言ownerの深さ、Viewはそのownerに内部field/childの深さを加える。"
+      cons "子nodeは親fieldより内側となる。" nil
+    cons paragraph
+      cons "同じ長さならpriority降順、depth降順、宣言順で選ぶ。"
+      cons "宣言順はrootからfield順のDFSとViewの宣言順で、arenaの保存順とは区別する。"
+      cons "共有DAGの同じ対象には最初の宣言順と実際の最深到達経路を保持する。"
+      cons "回復nodeはRecoveryとして区別し、UnknownHeadのUnparsed範囲へ推測した子を追加しない。"
+      cons "Missingの空anchorやEOFを直前の名前に吸着させない。" nil
+    cons paragraph
+      cons "表示用SourceMap投影は領域ownerの明示表だけをたどる。"
+      cons "隣接Exact区間は同じsourceとbyte変位の連続被覆として結合し、区間分割や表順で結果を変えない。"
+      cons "完全Exact、部分被覆ExactFragment、保守的なTransformedを区別し、多義的な表示候補を保持する。"
+      cons "この表示情報はrenameの一意逆写像や位置単位の名前解決を証明しない。"
+      cons "Foreign fieldの子位置には子bundleの表を使い、guestだけにあるmapをhost nodeへ適用しない。"
+      cons "map探索の深さは構文/View ownerの深さに合成して計量する。" nil
+    cons paragraph
+      cons "RegionReplyは全表示regionと選択index、またはtyped Invalid/Stopped、Usage-only Report、明示source閉包を返す。"
+      cons "停止で候補途中列を公開しない。"
+      cons "初回tree/sidecar/request復元は元Rust要求やambient sourceによる補完を必要としない。"
+      cons "返信のCompleteは対応する準備入力から構造選択を予算付きで再計算して照合する。"
+      cons "これはreader実行認証、Binding完了proof、別process費用計測の代わりではない。"
+      cons "一般regionを用いるdefinition/references入口は次節のRegionQueryであり、既存のOccurrenceベース入口の動作を変更しない。" nil
+    cons paragraph
+      cons "型付きregion列の構築はWork・Nodes・Depth・AllocationUnitsとsource受入を計上し、まだ生成していないserializationのbyte数をOutputBytesへ推計加算しない。"
+      cons "native返信のReportはその計算終了時点のUsageである。"
+      cons "実NDF/1 CBOR encodeは同じ操作予算へ実出力のOutputBytesを生成前に課金する。"
+      cons "従ってnativeのOutputBytes上限0で型付き結果が得られることと、実encodeがOutputLimitで停止することは別の境界であり、返信中のUsageをその後のserializationや外部transportまで含む総費用と扱わない。" nil
+    cons paragraph
+      cons "highlightは内部regionへ分割し、leafに近い具体的classを優先する。"
+      cons "overlapを持つ元データは保存するが、LSPへは非重複・source順・単一行に正規化したspan列を返す。"
+      cons "色はthemeに委ねる。" nil
+    nil
+  cons section relations "4. definitionとrelations" body
+    cons paragraph
+      cons sentence cons text "Occurrenceベースの " cons code "analysis::query::query" cons text " は、完了したBoundBindingReplyとQueryRequest(key, SourceRef, byte offset, kind)を受ける。" nil
+      cons "SourceRefのrevision/digestと現在要求するkeyを照合し、UTF-8 scalar境界を検査する。"
+      cons "範囲は半開区間で、終端byteや空白を直前の名前へ吸着させない。"
+      cons "包含するOccurrence.spanのうち最小のものを選び、同長なら確定factsの発行順を使う。" nil
+    cons paragraph
+      cons sentence cons text "一般regionを使う " cons code "analysis::region::query::query" cons text " は、同じ準備入力と実Binding完了結果に対するRegionQueryRequest(region:RegionRequest, kind:QueryKind)を受ける。" nil
+      cons "まず3節のpriorityを含む構造選択を実行し、選択したSourceRegionを保持する。"
+      cons "確定BindingBundleScopeからそのbundleのrootを解決し、そのrootのOccurrenceだけを候補にする。"
+      cons "Foreign fieldは宣言元のRegionTargetを保持したまま、内容のguest bundleに対応するrootと局所mapを用いる。"
+      cons "単なるsource座標一致でhost/guestの名前を混ぜない。" nil
+    cons paragraph
+      cons "要求位置の一Unicode scalar範囲と選択regionのlogical範囲を、所有bundleの宣言Exact/Transformed関係でOccurrenceのsourceへ対応付け、両者とOccurrence.spanが重なるものを残す。"
+      cons "Exactはbyte差分と被覆区間、Transformedは宣言された範囲全体の対応である。"
+      cons "query用の対応は双方向の関係であり、非一意なExactやTransformedの候補を黙って一つへ絞らず、rename用の一意な逆変換や編集権限とは区別する。"
+      cons "source不足・古いrevision・不正scalar境界・停止は型付き失敗となる。" nil
+    cons paragraph
+      cons "対応に使うmapはそのSyntaxBundleの局所表と、実BindingBundleScope.customSourceMapsが指すCustom受理行だけである。"
+      cons "Customの生成sourceもBinding結果の明示source閉包で解決する。"
+      cons "Binding全体の平坦なsourceMaps表を全bundleへ適用せず、同じ生成sourceをhost/guestが共有していても別ownerのmapによる候補追加を許さない。" nil
+    cons paragraph
+      cons "RegionQueryReplyのCompleteは選択regionとOccurrenceごとのDefinition/References結果列を持つ。"
+      cons "列は確定factsの発行順を保ち、各結果は保存された最終ResolutionのEntity IDを使う。"
+      cons "region=None、regionはあるがOccurrenceがない、未解決/Open入力、複数Occurrence、Ambiguousの複数Entity、位置を持たないEntityを区別する。"
+      cons "名前の再探索や発行時stageの書換えでCustomの更新を消さない。"
+      cons "途中候補はInvalid/Stoppedで公開せず、使用済み資源を払い戻さない。"
+      cons "ReportのUsageはnative処理終了時点であり、後続serializationの実出力課金とは分ける。" nil
+    cons paragraph
+      cons "初回RegionQuery受信は、明示BindingRequest/ReaderFactBatch sidecarを復元して準備し、同じ選択Profileで実Bindingを実行した後に要求と返信を照合する。"
+      cons "返信Completeのcodec検査はこの入力と完了結果からqueryを予算付きで再計算し、候補・選択・source閉包を比較する。"
+      cons "raw BindingResultやbundleScopes行、自己申告RegionKeyから意味proof・通信認証・provider実行許可を発行しない。" nil
+    cons paragraph
+      cons "QuerySelectionは元のOccurrenceId・span・確定ReferenceResolutionとopenInputを保持する。"
+      cons "対象なしはNone、未解決とOpen namespaceのfree inputはopenInputで区別し、DeferredもUnresolvedに潰さない。"
+      cons "定義候補は確定resolutionのEntity ID列に従い、曖昧な全候補とその順序を維持する。"
+      cons "位置を持たないEntityはIDとlocation=Noneを返し、仮のsource位置を作らない。"
+      cons "locationがある場合はURI、定義全体range、任意の名前selectionを分離する。" nil
+    cons paragraph
+      cons "Referencesは選択した各Entity IDごとに確定Occurrenceを検索する。"
+      cons "既定ではResolvedのReferenceだけを返す。"
+      cons "ReferenceOptionsはDefinition・Import・Export role、およびそのEntityをAmbiguous候補に含むOccurrenceをそれぞれ明示的に追加できる。"
+      cons "曖昧な出現はambiguous=trueで区別し、同綴りの別Entityを混ぜない。"
+      cons "通常BindingのImportが子のexport候補を可視にする操作と、providerが明示的に返すImport roleのOccurrenceは別であり、queryが新しいOccurrenceを捏造しない。"
+      cons "Customの更新後も元stageから名前検索をやり直さず、確定resolutionを用いる。" nil
+    cons paragraph
+      cons "QueryReplyはDefinition/References/Invalid/StoppedとReport、参照位置に必要な宣言sourcesを持つ。"
+      cons "現queryは新たな診断・eventを発行せず、解析診断は元BindingReplyに残す。"
+      cons "query失敗はtyped原因または元StopReasonを保持し、候補途中列を成功結果として公開しない。"
+      cons "使用済みBudgetとSourceAdmissionは払い戻さない。"
+      cons "sourcesはsource ID・revision・digest順に正準化する。" nil
+    cons paragraph
+      cons "QueryRequestの初回decoderは元Rust要求を必要としないが、自己申告keyから完了したBindingAnalysisを作らない。"
+      cons "実queryはhostが保持する同keyの意味proofを使う。"
+      cons "返信decoderは対応する要求、role options、候補ID列、範囲・URIと明示source閉包を検査し、ambient sourceで欠損を埋めない。"
+      cons "これはraw結果の構造検査であり、通信認証やリモートの解決結果の意味証明ではない。" nil
+    cons paragraph
+      cons "Customを使うprepared実行にも同じkey/有効Limitsの検査を適用する。"
+      cons "hostのauthorizeが参照する設定・権限方針・明示resourceを変えて結果が変わる場合、hostはその入力変更をProfile resourcesやschemaで宣言したrequest options等のidentityへ反映し、旧keyの結果を再利用してはならない。"
+      cons "keyは実行時FactAuthorityそのものを認証せず、同じkeyのまま任意のhost設定変更を安全に許す値でもない。" nil
+    cons paragraph
+      cons "definition結果はoriginSelection、targetUri、targetRange、targetSelectionを分離する。"
+      cons "entityのnameだけ選択しつつ定義全体も示せる。"
+      cons "sourceが配布packageの場合は読み取り専用virtual documentとして公開できる。" nil
+    cons paragraph
+      cons "CorrespondsToには「対応文へ移動」、Originには「生成元へ移動」を提供し、通常の定義ジャンプとは別relationとして扱う。"
+      cons "多義的な解決は複数候補を返し、単語一致で一つに決めない。" nil
+    cons paragraph
+      cons "renameは同じEntityを指すOccurrenceだけを対象にする。"
+      cons "新名の適格性、予約語、shadowing、scope内衝突、外側の参照の捕捉まで再検査する。"
+      cons "SourceMapの逆変換が一意でない場所はRenameNotInvertible。"
+      cons "全TextEditはrevision付きでatomicに返す。" nil
+    cons paragraph
+      cons sentence cons text "現在の rename は " cons code "RenameRequest(key, source, offset, newName, writable)" cons text " に対する二段操作である。" nil
+      cons "対象選択は上記の名前Occurrence規則を使う。"
+      cons "writable はhostが許可した元snapshot集合であり、受信したSourceRefやURIだけから編集権限を発行しない。"
+      cons "未選択・未解決・曖昧・Deferred・位置なしを型付きで区別して拒否する。"
+      cons "予約headは対象EntityのFactNamespace.schemaを所有する選択済みpackageのForm.spellingと照合する。"
+      cons "別schemaの言語だけに存在するheadを予約語へ加えない。"
+      cons "最終的な名前のreader適格性と構文選択は実再parseで検査する。" nil
+    cons paragraph
+      cons "prepareは元の実parse完了結果と、その同じimmutable treeを借用するprepared Binding要求、同keyの完了解析を要求する。"
+      cons "private RenameDraftには元revisionへの編集候補と候補snapshot集合を保持するが、成功transactionや編集列の公開入口を与えない。"
+      cons "draftはrename操作専用SourceAdmissionを所有し、同じ有効LimitsのBudgetをprepare・再parse・再解析・acceptの間、排他的に借用する。"
+      cons "失敗やdraft破棄で使用済み費用を払い戻さない。"
+      cons "別候補は同じ元revisionから分岐でき、共有の元SourceStoreを候補作成時に変更しない。" nil
+    cons paragraph
+      cons "逆写像は宣言SourceMapを全探索し、同一source・revision・digest上の一意な連続範囲へ達するExact対応だけを使う。"
+      cons "隣接するExact区間は同じbyte変位で穴なく全対象範囲を被覆するなら結合でき、表順や区間分割で結果を変えない。"
+      cons "異なるsourceや変位への多義性、被覆穴、Transformed、Composite/Synthetic origin、cycleは拒否する。"
+      cons "quoteやescapeから復号された意味名と元bytesが異なる場合、明示逆encoderがないままquoteを消す置換を行わない。"
+      cons "探索・範囲比較・複製はWork/Depth/Nodes/Allocationの対象となる。" nil
+    cons paragraph
+      cons "ここで探索する宣言表は対象Entityまたは各Occurrenceのnamespace rootに対応する実bundleの局所mapと、そのbundleのcustomSourceMapsが指す受理mapに限る。"
+      cons "平坦なFactSet.sourceMaps全体を編集先の根拠にしない。"
+      cons "各Occurrenceは自分のownerで逆写像し、同じEntityを指すという理由だけで対象Entityのmapを流用しない。"
+      cons "前向き導出も各元編集と対応ownerの組ごとに独立した閉包をたどり、最終的な編集列だけを統合する。"
+      cons "再解析後のsource位置対応はold/newそれぞれのEntity・Occurrence owner、構文位置は各正準bundle ownerで検査する。"
+      cons "guestだけが宣言したmapでhost名のwritable rootを置き換えることはできない。" nil
+    cons paragraph
+      cons "元への編集からExact対応を前向きにも適用し、影響する派生snapshotの次revisionと内部編集を作る。"
+      cons "派生側の未対応byteは保存する。"
+      cons "再parseが返す全宣言sourceはdraftの指定snapshot集合と、ID・revision・digest・URI・全bytesで一致しなければならない。"
+      cons "mapのtargetであることはsnapshot全体の照合免除にならない。"
+      cons "hostがreaderの生成sourceを予約する場合も、この候補identityを使う。"
+      cons "公開する編集は許可された元snapshotへの列だけで、派生側の内部編集を追加の書込権限として外部へ渡さない。" nil
+    cons paragraph
+      cons "acceptは候補の実parse完了結果と同じimmutable treeに対するprepared要求・完了解析を照合する。"
+      cons "Profileの意味identity、provider/package実行identity、options・analysis ID・有効Limitsを維持し、候補全source、構文kind/field/選択context、編集に対応する位置と意味payloadを検査する。"
+      cons "Entityの対応は宣言位置・scope/namespace・意味名に基づき、opaque IDの数値一致だけで決めない。"
+      cons "対象外の名前も含め、Resolved・全Ambiguous候補・Unresolved/free input・Deferred・Customの確定resolutionが対応していることを検査する。"
+      cons "後続scopeで名前検索をやり直してCustomの判断を上書きしない。"
+      cons "衝突・捕捉・構文変更・別要求との組替え・停止では編集列を一部も公開しない。" nil
+    cons paragraph
+      cons "nativeのCompletedParseは実ParseSessionのread/resume/reserve/resume_headがCompleteを返した場合だけ発行する所有proofであり、待機・回復・停止は通常のParseReplyを保持する。"
+      cons "元と候補のprepared treeがこのproofの同一immutable treeを借用する条件はnative内部の保証で、pointerやRust ABIを公開schemaへ露出しない。"
+      cons "raw treeの取出しはproofを消費し、raw ParseTreeやNDF decodeから再発行できない。"
+      cons "将来の別言語・別process parserも、認証された発行要求と実parse実行結果を結ぶ同等のhost境界を必要とする。"
+      cons "現在のraw rename request/reply codecはschema、要求key、書込対象、old digest、編集非重複、元source閉包を検査するが、通信認証やparse実行証明を発行しない。" nil
+    cons paragraph
+      cons "RenameReplyのCompleteは新AnalysisKeyと全TextEdit、Invalid/Stoppedは編集なしを返す。"
+      cons "Reportは実消費Usageを保持し、この操作自身は新規diagnostic/eventを発行しない。"
+      cons "再parse/解析の正式Reportはそれぞれの返り値に保持する。"
+      cons "受信したUsageの内部整合と外部処理費用の認証は別の責務である。"
+      cons "最終適用は呼出側の元SourceStoreに対し、base revision・old digest付きのatomic applyで行う。"
+      cons "一般region selector、任意encoderによる意味名の逆変換、増分再解析、外部parser実行の認証transportはこの段階の完成範囲に含めない。" nil
+    nil
+  cons section recovery "5. [不完全入力/ふかんぜんにゅうりょく]" body
+    cons paragraph
+      cons "構文エラーで文書全体を失わない。"
+      cons "treeにMissing(expected, anchor)、Unexpected(span)、Unparsed(range,reason)を持てる。"
+      cons "通常の成功nodeと区別し、checked値へ混入させない。" nil
+    cons paragraph
+      cons "EOFで既知arityの子が不足するとMissingを作る。"
+      cons "現在のcategoryに不適合だがancestorの明示的同期位置に適合するtokenは消費せずMissingを挿入できる。"
+      cons "同期根拠がなければUnexpectedとして消費するか、その範囲をUnparsedとして残す。"
+      cons "どちらを選ぶかはpackageのRecoveryPlanに固定する。" nil
+    cons paragraph
+      cons "arity不明のheadの子の数を推測しない。"
+      cons "該当rangeをUnparsedにし、既に確定した周辺の情報だけを返す。"
+      cons "prefix構文では誤り後の正しい境界が入力だけから復元できない場合がある。"
+      cons "完全に復元できると広告しない。" nil
+    cons paragraph
+      cons "SentenceLiteralでは改行/EOF/終了引用符が回復境界。"
+      cons "注釈の不足括弧についてexpected tokenと開始位置を返す。"
+      cons "期待する閉じ括弧を自動挿入するfixは提案であり、ユーザー操作なしにソースを書き換えない。" nil
+    nil
+  cons section incremental "6. [増分解析/ぞうぶんかいせき]と[取消/とりけ]し" body
+    cons paragraph
+      cons "編集はbaseRevision付きTextEdit列。"
+      cons "編集後に新snapshotを作り、古いsnapshotは不変。"
+      cons "編集に交差しないrangeは編集写像で新snapshotへ明示的に移せる。"
+      cons "交差するtoken、子contextを変更する前方宣言、その依存下流を無効化する。" nil
+    cons paragraph
+      cons "再利用可能なnodeは、source内容、entry category、reader/context/provider digestが一致する場合に限る。"
+      cons "独立な埋め込みや意味値は再利用できる。"
+      cons "全再解析との出力比較をconformanceに含める。"
+      cons "最悪時の全体再解析は正しい経路として残し、常に編集差分だけの計算量を保証しない。" nil
+    cons paragraph
+      cons "LSP側はdebounceとcancelを担当する。"
+      cons "coreは明示的budget/pollを使う。"
+      cons "古いrevisionの結果は公開しない。"
+      cons "cacheと統計は明示的session stateであり、隠れたglobalにはしない。" nil
+    nil
+  cons section lsp "7. LSP adapter" body
+    cons paragraph
+      cons "3.17で定義された位置encoding/diagnostic/semantic token/definition等の契約を利用し、機能はcapabilityで交渉する。"
+      cons "UTF-8/UTF-16/UTF-32の位置変換をLineIndexで行う。"
+      cons "UTF-16をfallbackとして必ず扱う。"
+      cons "日本語や補助平面文字のbyte数、UTF-16 code unit数、表示幅を混同しない。" nil
+    cons paragraph
+      cons "一般的なDSL class名はsemantic token legendの独自typeとして出せる。"
+      cons "クライアントが対応しない場合は表示fallbackを使うが、NEPL3内部kindを書き換えない。"
+      cons "position/legendの変換はdomain crateに置かない。" nil
+    cons paragraph
+      cons "nepl3-lspは一つの汎用server。"
+      cons "workspace設定から拡張子とLanguagePackageを選択し、各DSLごとのserverの再実装は不要。"
+      cons "VS Code/Neovimには接続と設定だけの薄いadapterを置く。"
+      cons "packageを変更したらanalysisを無効化し、必要ならlegend登録も更新する。" nil
+    nil
+  cons section diagnostics "8. [診断/しんだん]・ログの[表示/ひょうじ]" body
+    cons paragraph
+      cons "同一DiagnosticをCLI、LSP、browserへrenderする。"
+      cons "CLI stderrは表示adapter、stdoutは要求された成果物だけ。"
+      cons "JSON/NDF診断出力と人間用表示を分離する。"
+      cons "詳細traceは明示的に選択し、ソース全文や環境の機密値を既定では記録しない。" nil
+    cons paragraph
+      cons "情報が不足する場合はstage/requirementsとして表示し、存在しないsource位置を作らない。"
+      cons "providerの内部エラーとユーザーの構文ミスを区別する。" nil
+    nil
+  cons section trust "9. workspace trust" body
+    cons paragraph
+      cons "通常の解析と診断で対象プログラムをevaluateしない。"
+      cons "Grammar reader providerはhostのallowlist・署名・schemaで制限する。"
+      cons "workspaceからnative pluginを自動build/loadしない。"
+      cons "untrusted providerには隔離runnerが必要で、ない環境ではTrustRequiredを返す。"
+      cons "巨大入力/再帰/イベント/出力にも上限を設定する。" nil
+    nil
+  nil

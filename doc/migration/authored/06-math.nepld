@@ -1,0 +1,182 @@
+article ja "06. Math[言語/げんご]"
+body
+  cons section policy "[方針/ほうしん]" body
+    cons paragraph
+      cons "数式の表示対象を保ち、その一部に対する[厳密計算/げんみつけいさん]を独立した操作として公開する。"
+      cons "parse/renderが数式を簡約したり、等式の正しさを主張したりしない。" nil
+    nil
+  cons section expression "1. [表現/ひょうげん]" body
+    cons paragraph
+      cons "全constructorはmath-signatures参照。"
+      cons "Numberは有限十進の原表記を持ち、意味値はBigRationalへ正確に変換する。"
+      cons "整数p、分母qはq>0、gcd(|p|,q)=1、zero=0/1へ正規化する。"
+      cons "Numberに格納できる値は、約分後のqの素因数が2と5だけの有理数に限る。"
+      cons "これ以外をNumberとして構築・decodeする場合はNonFiniteDecimalNumberで拒否する。"
+      cons "評価値のRationalはこの制限を持たない。" nil
+    cons paragraph
+      cons sentence cons text "任意有理数から式を作るconstructor helper " cons code "expression_from_rational" cons text " は、有限十進ならNumber、それ以外なら整数Numberを子とするFrac(Number(p), Number(q))を返す。" nil
+      cons "元の構文をlowerするときにこのhelperで著者のFracを折り畳まない。"
+      cons sentence cons code "frac 1 2" cons text " はFracのまま保持する。" nil
+      cons "Numberのprintはcanonicalな整数または有限十進（指数表記なし、冗長な末尾zeroなし、zeroは0）で、意味値とsnapshotの一致を確認した場合には元lexemeを表示に利用できる。"
+      cons "Number(1/3)をprint時だけFracへ変換する設計にはしない。" nil
+    cons paragraph
+      cons "Identifier leafは数学記号。"
+      cons "{[自由記号/じゆうきごう]/free symbol}を許可する。"
+      cons "自由記号はUnresolvedNameのエラーにしない。"
+      cons "意味上の入力要求として列挙する。"
+      cons sentence cons code "symbol \"...\"" cons text " で予約語と同じ綴りや複数文字の名前を明示できる。" nil
+      cons "裸のNameとsymbolの同じ綴りは同じ名前解決規則を使う。" nil
+    cons paragraph
+      cons "letはinitを外側、bodyを新しい記号scopeで読む。"
+      cons "sum/integralのindexはbodyだけで有効であり、lower/upperでは外側を参照する。"
+      cons "自由記号に架空の定義位置を与えない。" nil
+    cons paragraph
+      cons "subscript/superscript/scriptsは表示構造。"
+      cons "一般の添字を配列アクセスや指数演算に暗黙変換しない。"
+      cons "代数的な累乗にはpowを使う。"
+      cons sentence cons code "call" cons text "は数学の関数適用表現で、任意のFnコード実行ではない。" nil nil
+    nil
+  cons section structure "2. [構造検査/こうぞうけんさ]" body
+    cons paragraph
+      cons "matrixは一つ以上のrow、各rowは同じ正の列数。"
+      cons "vectorは一つ以上の要素。"
+      cons "fenceは左右それぞれ0または1Unicode scalar。"
+      cons "空文字で片側だけの括弧を表せる。" nil
+    cons paragraph
+      cons "rootのdegreeが数値literalで0ならInvalidRootDegree。"
+      cons "その他の定義域はevaluate時にも検査する。"
+      cons "表示だけの式に実数/複素数の数値領域を勝手に割り当てない。" nil
+    cons paragraph cons "CheckedExpressionが保証するのは構造・binding・既知の局所制約であり、全記号の値や全演算の数値評価可能性ではない。" nil
+    nil
+  cons section evaluate "3. evaluate" body
+    cons paragraph
+      cons "入力はCheckedExpression、自由記号のBindingEnvironment、Limits。"
+      cons "出力はExact(Value)またはSymbolic(expression, Requirements)。"
+      cons "定義域違反・形状不一致は明確なEvalError。"
+      cons sentence cons text "値の種類はScalar(Q)、" cons code "Vector(List<Q>)" cons text "、" cons code "Matrix(rows,cols,List<Q>)" cons text "、Truth(Bool)。" nil nil
+    cons paragraph
+      cons "評価はsource順の左から右、純粋。"
+      cons "letはinitを評価してからbodyを評価する。"
+      cons "未解決の記号に依存する部分はSymbolicとし、独立な数値subtreeの計算結果を保持できるが元の構文を上書きしない。" nil
+    cons paragraph cons "正確に評価する演算:" nil
+    cons list unordered
+      cons item none body cons paragraph cons "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。" nil nil
+      cons item none body cons paragraph cons "neg: Scalar/Vector/Matrixの全要素の符号反転。" nil nil
+      cons item none body cons paragraph
+        cons "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。"
+        cons "Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。" nil nil
+      cons item none body cons paragraph cons "frac: Scalar同士、分母0はDivisionByZero。" nil nil
+      cons item none body cons paragraph
+        cons "pow: Scalarの整数指数。"
+        cons "0^0は空積として1。"
+        cons "0の負指数はDivisionByZero。"
+        cons "非整数指数はSymbolic(NonIntegralExponent)。" nil nil
+      cons item none body cons paragraph
+        cons "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。"
+        cons "非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。" nil nil
+      cons item none body cons paragraph
+        cons "root: 正の整数次数だけExact候補。"
+        cons "奇数次数の負数を許し、分子分母が完全n乗ならExact。"
+        cons "次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。" nil nil
+      cons item none body cons paragraph
+        cons "equal: 同じ種類・形状のExact値の等値。"
+        cons "Scalar/配列の比較を混同しない。" nil nil
+      cons item none body cons paragraph cons "lt/le: Scalar同士だけ。" nil nil
+      cons item none body cons paragraph
+        cons "transpose: Matrixの転置。"
+        cons "Vectorは1×nのMatrixにする。" nil nil
+      cons item none body cons paragraph
+        cons "det: 正方Matrixだけ。"
+        cons "正確な有理数の消去法を用い、pivotは最初の非zero行。"
+        cons "形状不正はNotSquare。" nil nil
+      cons item none body cons paragraph
+        cons "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。"
+        cons "inclusive区間。"
+        cons "upper<lowerならScalar 0。"
+        cons "各indexはその整数のScalar。"
+        cons "反復数はLimitsで制限。"
+        cons "Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。" nil nil
+      cons item none body cons paragraph
+        cons "fence/label: 数値意味は内部valueと等しい。"
+        cons "annotationは数値評価しない。" nil nil
+      nil
+    cons paragraph
+      cons "integral、call、表示用text/sequence/subscript/superscript/scriptsは、評価専用規則がない限りSymbolic(NotationOnly)。"
+      cons "これらの表示は完全に対応する。"
+      cons "解析的な積分や任意関数評価を実装済みとしない。" nil
+    nil
+  cons section mathml "4. MathML backend" body
+    cons paragraph
+      cons "MathML Coreの要素をtyped Markupで生成する。"
+      cons "Number=mn、Symbol=mi、表示Text=mtext、加減乗・比較=mrow+mo、frac=mfrac、sqrt=msqrt、root=mroot、sub/sup/scripts=msub/msup/msubsup、vector/matrix=mtable/mtr/mtd、総和と積分=munder/munderoverまたは対応するscript形をdisplay modeから決定する。" nil
+    cons paragraph
+      cons "暗黙のブラウザprecedence解釈へ依存しない。"
+      cons "binding powerは比較10、add/sub20、mul30、neg40、pow50、atomic60。"
+      cons "弱い子を強い親へ入れる際はmoによる可視括弧を挿入。"
+      cons "subの右側、powの左側等、同じprecedenceでも非結合な位置に括弧を入れる。"
+      cons "fracは分子分母の構造自体がgroupになる。" nil
+    cons paragraph
+      cons "数学表示の2項演算は元の順序を保持する。"
+      cons "mulのscalar/記号列でも、読み違いを避けるためreference backendは中央点を表示する。"
+      cons "callはfunctionと括弧付きarguments。"
+      cons "sequenceは指定順のmrowであり、勝手に演算を補わない。" nil
+    cons paragraph
+      cons "letは「name := init ; body」のmrow。"
+      cons "sumの下限は「index = lower」、上限はupper、bodyに必要な括弧を付ける。"
+      cons "integralは積分記号と上下限、body、微分記号dとindex。"
+      cons "equalは表示であって証明書ではない。" nil
+    cons paragraph
+      cons "labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備し、mtextを介した注記として出力する。"
+      cons "MathMLの内容モデルに適合しないblock内容は受け入れない。" nil
+    nil
+  cons section arena "4.1. [公開/こうかい]arenaと[原文保持/げんぶんほじ]" body
+    cons paragraph
+      cons sentence cons code "interfaces/model.json" cons text " のMath record/unionはconstructorの論理的な意味展開であり、Rust enum順や別の再帰wire layoutではない。" nil
+      cons sentence cons text "実値のschemaは " cons code "interfaces/math.json" cons text " の " cons code "MathSyntax" cons text " / " cons code "MathValue" cons text " とする。" nil
+      cons "MathRootはExpr / Row / DocGuestの3種類。"
+      cons "MathKindは29 formとNumber leafに対応し、bare SymbolNameは明示Symbolと同じ意味kindへlowerする。"
+      cons "子はExprRef / RowRef / DocGuestRef、guestはEmbedRefで平坦なarenaを参照する。"
+      cons "schemaの明示variant名とfield列がwire tagであり、入力由来の深さをnativeの再帰所有へ転写しない。" nil
+    cons paragraph
+      cons "MathValueの構造検査はカテゴリ、参照、到達性、cycle、共有DAGの最大経路、Number有限十進制約、vector/matrix形状、fence幅、literal 0のroot degreeを検査する。"
+      cons "単独Rowは空を表せるが、Matrixに取り込むrowの列数は正で全row同一でなければならない。"
+      cons "この証明はsymbol解決済みCheckedExpressionや評価可能性の証明ではない。" nil
+    cons paragraph
+      cons "MathSyntaxはsource宣言、元Origin表、tokenごとのowner headを持つMathView、SourceMapを所有する。"
+      cons sentence cons text "Number.spellingは " cons code "Option<Span>" cons text " のまま保持し、存在する場合は宣言sourceとnode coverに整合する位置を指す。" nil
+      cons "意味Rationalと原lexemeの一致を証明したときだけ元表記をprintへ利用でき、位置構造検査だけをその証明とみなさない。"
+      cons "Symbol/Let/Sum/Integralの名前operandは閉じたMathFieldLocationで選択位置とOriginを保持する。"
+      cons "本文の名前検索で位置を再発見せず、source-lessの位置はNoneとする。" nil
+    cons paragraph
+      cons "LabelのDoc annotationと独立DocGuestは、Doc SentenceのForeignClosureを保持する。"
+      cons "ownerの環境・Origin ID・source/map閉包とguest自身のID空間を混同せず、意味変換を行わない。"
+      cons "元構文に意味的に不正なDoc annotationがあっても、Mathのsource構造検査を理由にDoc lowerや評価を呼び出してはならない。"
+      cons "prepared表示へ渡す意味・内容モデル検査は別の要求として残す。" nil
+    cons paragraph
+      cons sentence cons code "lower::expression" cons text " はhostが選択済みparse/profileを確認したSyntaxBundleと明示Math表層SchemaRef/categoryを受け、現在のBudget/SourceAdmissionで再検査してMathSyntaxを返す。" nil
+      cons "共有sourceは一度だけ計上し、原Frac・表示scripts等を簡約しない。"
+      cons "局所constructor制約の失敗は元のsource NodeRefとShapeErrorへ帰属させ、破棄した出力arenaのindexだけを位置情報として返さない。"
+      cons "停止は原StopReasonを保持し、元構文木を変更しない。" nil
+    cons paragraph
+      cons "初回NDF受信はschema検査後に同じsource/Origin/View/guest閉包とarena制約を検査する。"
+      cons "宣言sourceの欠落をreceiverのambient storeから補わない。"
+      cons "raw MathSyntaxの受信はbinding・free symbol要求・評価結果のproofを発行しない。"
+      cons "明示constructor helperは新しいsource-less式を作るためのもので、元式を置換する処理ではない。" nil
+    nil
+  cons section resources "5. [出力/しゅつりょく]と[資源/しげん]" body
+    cons paragraph
+      cons "MathMLは独立した正式portable出力であり、ブラウザがfont/layoutを担当する。"
+      cons sentence cons text "Doc・MathのHTML生成は" cons link relative "17-math-html.md" none text "17章" cons text "のKaTeXPreferredを標準とし、生成環境でKaTeXを実行してCSS/fontと配布する。" nil
+      cons "忠実変換不能・生成能力不足時はNEPL3 MathMLへ診断付きで切り替える。"
+      cons "閲覧時にKaTeXを再実行せず、CLIがpixel描画まで行うとも広告しない。" nil
+    cons paragraph
+      cons "独自layout/rasterizerを追加する場合は、CheckedExpressionまたはMathLayout入力modelを受ける別backendとする。"
+      cons "OpenType MATH tableやglyph outlineの実装都合をMathの意味モデルへ持ち込まない。" nil
+    nil
+  cons section public "6. [公開操作/こうかいそうさ]" body
+    cons paragraph
+      cons "lower、check、free_symbols、evaluate、print、render_mathml。"
+      cons "評価結果、部分評価の新式、元の式を別値として返す。"
+      cons "文書側のrender要求がevaluateを自動で要求しない。" nil
+    nil
+  nil

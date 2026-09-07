@@ -1,0 +1,164 @@
+article ja "07. Circuit[言語/げんご]"
+body
+  cons section policy "[方針/ほうしん]" body
+    cons paragraph
+      cons "[二値/にち]・[固定幅/こていはば]・[同期離散時間/どうきりさんじかん]の[回路/かいろ]を[正式/せいしき]な[意味領域/いみりょういき]とする。"
+      cons "[構文木/こうぶんぎ]と[回路/かいろ]graph、[回路生成/かいろせいせい]と[信号/しんごう]の[実行値/じっこうち]、[定義/ていぎ]の[再利用/さいりよう]と[状態/じょうたい]の[共有/きょうゆう]を[分離/ぶんり]する。"
+      nil
+    nil
+  cons section surface "1. surfaceと[型/かた]" body
+    cons paragraph
+      cons "Designはmodules、entry[名/めい]、tests。"
+      cons "Moduleはname、[入力列/にゅうりょくれつ]、[宣言列/せんげんれつ]、[出力列/しゅつりょくれつ]。"
+      cons "[入力/にゅうりょく]/[出力/しゅつりょく]/stateの[幅/はば]は[正/せい]のNat。"
+      cons "upper boundは[構成上/こうせいじょう]のLimitsで[決/き]まり、[暗黙/あんもく]の32/64bitに[制限/せいげん]しない。"
+      nil
+    cons paragraph
+      cons sentence cons text "bit-vectorは " cons code "(width, unsigned value)" cons text "、" cons code "0 <= value < 2^width" cons text "。" nil
+      cons "bits width valueの[範囲外/はんいがい]はエラーで、literalの[切捨/きりす]てをしない。"
+      cons "true/falseは1bit。"
+      nil
+    cons paragraph
+      cons "[信号名/しんごうめい]はinput/wire/stateの[共通空間/きょうつうくうかん]。"
+      cons "instance[名/めい]はInstance[空間/くうかん]、module[名/めい]はDesign[内/ない]のModule[空間/くうかん]、output[名/めい]は[各/かく]moduleのOutput[空間/くうかん]。"
+      cons "[同/おな]じ[空間/くうかん]の[重複/ちょうふく]はエラー。"
+      cons "outputは[内部/ないぶ]で[裸/はだか]の[名前参照/なまえさんしょう]として[再利用/さいりよう]しない。"
+      cons "[共有/きょうゆう]したい[式/しき]はwireで[宣言/せんげん]する。"
+      nil
+    cons paragraph
+      cons "Name leafは[信号参照/しんごうさんしょう]。"
+      cons "at instance outputは、そのinstanceが[参照/さんしょう]するmoduleのoutputを[参照/さんしょう]する。"
+      cons "definition linkにはinstance siteとoutput definitionの[双方/そうほう]を[提示/ていじ]できる。"
+      nil
+    nil
+  cons section declarations "2. [各宣言/かくせんげん]" body
+    cons list unordered
+      cons item none body cons paragraph
+        cons sentence cons code "wire name expr" cons text ": exprの値を共有する組合せ信号。" nil
+        cons "[宣言順/せんげんじゅん]に[依存/いぞん]せず[前方参照/ぜんぽうさんしょう]を[認/みと]める。" nil nil
+      cons item none body cons paragraph
+        cons sentence cons code "state name width initial" cons text ": 初期値を持つ状態。" nil
+        cons "initialはBitsのliteralで[幅/はば]が[一致/いっち]する[必要/ひつよう]がある。" nil nil
+      cons item none body cons paragraph
+        cons sentence cons code "next name expr" cons text ": 次のtickのstate値。" nil
+        cons "[対象/たいしょう]はstateに[限/かぎ]り、[各/かく]stateにちょうど[一/ひと]つ[必要/ひつよう]。"
+        cons "[省略/しょうりゃく]を[暗黙/あんもく]の[保持/ほじ]としない。"
+        cons sentence cons text "保持は " cons code "next q q" cons text " と明示する。" nil nil nil
+      cons item none body cons paragraph
+        cons sentence cons code "inst name module arguments" cons text ": moduleの入力列の順に引数を接続する。" nil
+        cons "[毎回独立/まいかいどくりつ]したinstanceを[作/つく]る。"
+        cons "[定義/ていぎ]の[構文/こうぶん]fragmentの[共有/きょうゆう]は[状態/じょうたい]の[共有/きょうゆう]を[意味/いみ]しない。" nil nil
+      cons item none body cons paragraph
+        cons sentence cons code "output name width expr" cons text ": 外部出力。" nil
+        cons "[明示幅/めいじはば]とexpr[幅/はば]の[一致/いっち]を[要求/ようきゅう]する。" nil nil
+      nil
+    nil
+  cons section operations "3. [演算/えんざん]" body
+    cons paragraph
+      cons "notはbitwise。"
+      cons "and/or/xor/nor/addは[等幅/とうはば]の2[入力/にゅうりょく]。"
+      cons "addはmod 2^widthの[加算/かさん]。"
+      cons "[符号付/ふごうつ]き[解釈/かいしゃく]はしない。" nil
+    cons paragraph
+      cons "muxは1bit selectと[等幅/とうはば]のyes/no。"
+      cons "select=1ならyes。" nil
+    cons paragraph cons "concat a bはaを[上位/じょうい]、bを[下位/かい]へ[置/お]き、[幅/はば]はwa+wb。" nil
+    cons paragraph
+      cons sentence cons text "slice value lo widthはLSB=0として " cons code "[lo,lo+width)" cons text " を抜き出す。" nil
+      cons "width>0かつlo+width<=[入力幅/にゅうりょくはば]。"
+      cons "[全加算/ぜんかさん]・index[計算/けいさん]をcheckedにする。" nil
+    nil
+  cons section elaboration "4. [検査/けんさ]とelaboration" body
+    cons list ordered 1
+      cons item none body cons paragraph
+        cons "Design[内/ない]のmodule signatureを[収集/しゅうしゅう]する。"
+        cons "entryと[各/かく]instanceのmoduleを[解決/かいけつ]する。" nil nil
+      cons item none body cons paragraph
+        cons "module-instantiation graphがDAGであることを[検査/けんさ]する。"
+        cons "[再帰/さいき]instantiationは[有限/ゆうげん]な[回路/かいろ]にならないので[拒否/きょひ]する。" nil nil
+      cons item none body cons paragraph
+        cons "[各/かく]instanceを[独立/どくりつ]した[階層/かいそう]pathへ[展開/てんかい]し、[信号参照/しんごうさんしょう]と[状態/じょうたい]を[結/むす]ぶ。"
+        cons "[未使用/みしよう]moduleも[単独/たんどく]に[検査/けんさ]し、[不正/ふせい]な[定義/ていぎ]を[放置/ほうち]しない。" nil nil
+      cons item none body cons paragraph
+        cons "[各/かく]state readを[組合/くみあわ]せgraphの[入力/にゅうりょく]として[扱/あつか]い、next assignmentを[別/べつ]のsinkにする。"
+        cons "state readからnext exprへ[逆/ぎゃく]の[依存/いぞん]edgeを[加/くわ]えない。" nil nil
+      cons item none body cons paragraph
+        cons "その[実際/じっさい]のgraphで[組合/くみあわ]せcycleを[検査/けんさ]する。"
+        cons "instanceの[全入力/ぜんにゅうりょく]が[全出力/ぜんしゅつりょく]に[依存/いぞん]すると[近似/きんじ]してはいけない。"
+        cons "[内部/ないぶ]stateで[遮断/しゃだん]されるfeedbackを[誤拒否/ごきょひ]しない。" nil nil
+      cons item none body cons paragraph
+        cons "DAGの[順序/じゅんじょ]でwidthを[推論/すいろん]・[検査/けんさ]する。"
+        cons "input/state/constantが[既知幅/きちはば]のroot。"
+        cons "[各/かく]output/state-next/instance-inputの[要求幅/ようきゅうはば]と[照合/しょうごう]する。" nil nil
+      nil
+    cons paragraph
+      cons "[共有/きょうゆう]wireは[同/おな]じsignal identity。"
+      cons "[再利用/さいりよう]moduleは[異/こと]なるinstance identity。"
+      cons "instance pathはowner module instanceと[宣言/せんげん]ordinalで[一意/いちい]にし、[表示名/ひょうじめい]の[連結/れんけつ]だけでIDを[作/つく]らない。" nil
+    nil
+  cons section time "5. stepと[時間/じかん]" body
+    cons paragraph
+      cons "[状態/じょうたい]q_k、[入力/にゅうりょく]u_kに[対/たい]し、[組合/くみあわ]せgraphからy_kとnext[値/ち]を[計算/けいさん]し、[結果/けっか]として(q_\{k+1\},y_k)を[返/かえ]す。"
+      cons "[全/ぜん]stateは[同時更新/どうじこうしん]。"
+      cons "stateを[逐次上書/ちくじうわが]きして[後続/こうぞく]のnext[計算/けいさん]へ[影響/えいきょう]させない。" nil
+    cons paragraph
+      cons sentence cons code "initial(PreparedNetlist)" cons text " は、entryを選んでelaborateした全instanceのstate初期値をslot順に返す。" nil
+      cons "CheckedDesignとentryはelaborateの[入力/にゅうりょく]であり、initialは[階層展開/かいそうてんかい]と[組合/くみあわ]せDAG・[幅/はば]の[検査/けんさ]を[済/す]ませた[値/あたい]だけを[受/う]ける。"
+      cons sentence cons code "step" cons text " は入力stateを変更せず新しい値を返す。" nil
+      cons sentence cons code "observe" cons text " は現在の出力だけを返す純粋操作。" nil
+      cons "[入力列/にゅうりょくれつ]と[出力列/しゅつりょくれつ]の[順/じゅん]はmodule[宣言順/せんげんじゅん]。" nil
+    cons paragraph
+      cons "test name module ticksはそのtest[開始時/かいしじ]にinitial[状態/じょうたい]へ[戻/もど]す。"
+      cons "tick inputs expectedOutputsはpre-edgeのy_kを[比較/ひかく]してからstateを[更新/こうしん]する。"
+      cons "[同/おな]じtest[内/ない]のticksは[連続時間/れんぞくじかん]。"
+      cons "[別/べつ]testでは[状態/じょうたい]を[共有/きょうゆう]しない。"
+      cons "[期待列/きたいれつ]の[数/かず]/[幅/はば]の[不一致/ふいっち]はtest[失敗/しっぱい]と[別/べつ]のInvalidTestShape。" nil
+    cons paragraph
+      cons "この[仕様/しよう]は[非同期/ひどうき]latch、[伝播遅延/でんぱちえん]、X/Z、アナログ[挙動/きょどう]をモデル[化/か]しない。"
+      cons "これらを[適当/てきとう]に[二値/にち]へ[潰/つぶ]す[変換/へんかん]は[許可/きょか]しない。"
+      cons "[別/べつ]modelを[導入/どうにゅう]するならschemaと[操作/そうさ]の[版/はん]を[分/わ]ける。" nil
+    nil
+  cons section nor "6. NOR IR" body
+    cons paragraph
+      cons "[正式/せいしき]なlowering[先/さき]は4[種/しゅ]のnode（InputBit、StateBit、ConstBit、Nor2）と2[種/しゅ]のsink（nextBits、outputBits）から[成/な]るNorNetlist。"
+      cons "vector-level[演算/えんざん]をbit-levelへ[展開/てんかい]する。"
+      cons "NextBit/OutputBitという[独立/どくりつ]node variantは[作/つく]らず、sink[配列/はいれつ]の[各項/かくこう]が[既存/きそん]nodeのindexを[参照/さんしょう]する。"
+      cons "StateBitとnextBitsを[維持/いじ]するので[順序回路/じゅんじょかいろ]も[表現/ひょうげん]できる。"
+      cons "stateの[初期/しょき]bit[列/れつ]、sinkの[長/なが]さとLSBからの[順序/じゅんじょ]はモデル[不変条件/ふへんじょうけん]に[従/したが]う。" nil
+    cons paragraph
+      cons "not a = nor a a。"
+      cons "or a b = not (nor a b)。"
+      cons "and a b = nor (not a) (not b)。"
+      cons "xor a b = nor (nor a b) (and a b)。"
+      cons "mux = (select AND yes) OR ((NOT select) AND no)。"
+      cons "addはLSBからcarryを[伝/つた]えるfull-adderで[最終/さいしゅう]carryを[捨/す]てる。"
+      cons "slice/concat/wireはbit[参照/さんしょう]の[配線/はいせん]になる。" nil
+    cons paragraph
+      cons "[式/しき]の[入力順/にゅうりょくじゅん]、bit[順/じゅん]、[生成/せいせい]node ordinalを[固定/こてい]し、[同/おな]じ[入力/にゅうりょく]から[同/おな]じIRを[出/だ]す。"
+      cons "[任意最適化/にんいさいてきか]をreference loweringへ[混在/こんざい]させない。"
+      cons "[最適化/さいてきか]を[提供/ていきょう]する[場合/ばあい]は[別/べつ]operationとして[同値/どうち]テストとsource mapを[要求/ようきゅう]する。" nil
+    cons paragraph
+      cons "[比較試験/ひかくしけん]は[元/もと]のvector evaluatorとNOR evaluatorの[両方/りょうほう]で、[全小幅入力/ぜんしょうはばにゅうりょく]・[複数/ふくすう]tickを[比較/ひかく]する。"
+      cons "NOR evaluatorを[元/もと]のevaluatorと[同/おな]じコードへの[単/たん]なるaliasにしない。" nil
+    nil
+  cons section svg "7. SVG backend" body
+    cons paragraph
+      cons "elaborated vector-level graphを[対象/たいしょう]に、[入力/にゅうりょく]/stateをrank0、[各組合/かくくみあわ]せnodeを[前提/ぜんてい]nodeの[最大/さいだい]rank+1、[出力/しゅつりょく]を[最後/さいご]に[配置/はいち]する。"
+      cons "[同/どう]rank[内/ない]は[定義/ていぎ]/instance ordinal[順/じゅん]。"
+      cons "[固定/こてい]paddingとlabelのscalar[数/すう]から[幅/はば]を[決/き]め、SVG textLengthを[使/つか]って[描画幅/びょうがはば]を[明示/めいじ]する。"
+      cons "font[依存/いぞん]でSVG byte[列/れつ]を[変/か]えない。" nil
+    cons paragraph
+      cons "edgeはrank[間/かん]のlaneをordinalで[割/わ]り[当/あ]てた[直交線/ちょっこうせん]。"
+      cons "stateへのnext edgeは[破線/はせん]で[表示/ひょうじ]し、[組合/くみあわ]せedgeと[区別/くべつ]する。"
+      cons "node/edgeにはEntityIdとOriginを[対応付/たいおうづ]け、クリックでソースに[戻/もど]せる。"
+      cons "[最小交差数/さいしょうこうさすう]や[最適配置/さいてきはいち]を[保証/ほしょう]する[算法/さんぽう]とはしない。" nil
+    cons paragraph cons "[全/ぜん]ラベルはescapeし、[任意/にんい]scriptやURLを[挿入/そうにゅう]しない。" nil
+    nil
+  cons section public "8. [公開操作/こうかいそうさ]" body
+    cons paragraph
+      cons "lower、check、elaborate、initial、observe、step、run_tests、lower_nor、print、diagram。"
+      cons "CheckedDesignは[必要/ひつよう]なmodule[検査/けんさ]を[含/ふく]む。"
+      cons "PreparedNetlistはinstance[展開/てんかい]と[組合/くみあわ]せDAG/[幅検査済/はばけんさず]み。"
+      cons "sourceをparseしただけでsimulationを[開始/かいし]しない。" nil
+    nil
+  nil

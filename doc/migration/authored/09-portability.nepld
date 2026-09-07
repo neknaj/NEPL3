@@ -1,0 +1,220 @@
+article ja "09. Rust[以外/いがい]へ[置換/ちかん]するための[契約/けいやく]"
+body
+  cons section policy "[方針/ほうしん]" body
+    cons paragraph
+      cons "意味モデル・操作・診断・source対応のschemaを公開境界とする。"
+      cons "Rustのメモリ表現やtrait objectをABIにしない。"
+      cons "native fast pathとportable pathを同時に提供し、その意味を比較する。" nil
+    nil
+  cons section layers "1. [三/みっ]つの[層/そう]" body
+    cons list ordered 1
+      cons item none body cons paragraph cons "言語中立のschema: field順、variant、必須制約、整数/有理数、範囲と参照、operation signature。" nil nil
+      cons item none body cons paragraph cons "Rustの型付きAPI: schemaに対応するstruct/enumと関数。" cons "Rust内の通常利用ではserialize不要。" nil nil
+      cons item none body cons paragraph cons "transport adapter: schema値をNDF（下記）でencode/decodeし、別process/別実装へ渡す。" nil nil
+      nil
+    cons paragraph
+      cons "この分離により、将来のNEPL3プログラミング言語は同じschemaを生成/消費する実装を持てばよい。"
+      cons "現在のRustのallocator、enum discriminant、pointer、Arc/Rc、usize、trait vtableは境界を越えない。" nil
+    nil
+  cons section ndf "2. NDF/1" body
+    cons paragraph
+      cons "NDFは本仕様の型付き値をCBORで運ぶ符号化profile。"
+      cons "RFC 8949のdefinite lengthと最短の整数/長さ表現を要求する。"
+      cons "map、float、NaN、CBOR tag、null、indefinite lengthはNDFでは使用しない。"
+      cons "CBORそのものの汎用機能を全部許可するわけではない。" nil
+    cons paragraph cons "値は次のtagged arrayで表す。" nil
+    cons table cons right cons default cons default nil
+      some row cons "tag" cons "[配列/はいれつ]" cons "[型/かた]" nil
+      cons row cons "0" cons sentence cons code "[0]" nil cons "Unit" nil
+      cons row cons "1" cons sentence cons code "[1, bool]" nil cons "Bool" nil
+      cons row cons "2" cons sentence cons code "[2, uint64]" nil cons "Offset/Index等の有限unsigned" nil
+      cons row cons "3" cons sentence cons code "[3, negative:bool, magnitude:bytes]" nil cons "任意精度Integer" nil
+      cons row cons "4" cons sentence cons code "[4, numerator:Value(tag3), denominator:bytes]" nil cons "Rational" nil
+      cons row cons "5" cons sentence cons code "[5, text]" nil cons "Text（valid UTF-8）" nil
+      cons row cons "6" cons sentence cons code "[6, bytes]" nil cons "Bytes" nil
+      cons row cons "7" cons sentence cons code "[7, [Value...]]" nil cons "List" nil
+      cons row cons "8" cons sentence cons code "[8]" nil cons "None" nil
+      cons row cons "9" cons sentence cons code "[9, Value]" nil cons "Some" nil
+      cons row cons "10" cons sentence cons code "[10, SchemaRef, KindName, [Value...]]" nil cons "Record、field順はschema" nil
+      cons row cons "11" cons sentence cons code "[11, SchemaRef, TypeName, VariantName, [Value...]]" nil cons "Variant" nil
+      nil
+    cons paragraph
+      cons sentence cons text "SchemaRefは " cons code "[packageName:text, revision:uint64, digest:bytes32]" cons text "。" nil
+      cons "型名/kind名は登録済みschemaに照合する。"
+      cons "naturalはtag3のnonnegativeを要求するfield制約。"
+      cons "integer magnitudeはbig-endian、先頭zeroなし、zeroはempty bytesかつnegative=false。"
+      cons "rational denominatorは正で先頭zeroなし、gcd=1、zero numeratorはdenominator=1。" nil
+    cons paragraph
+      cons "NodeId/EntityId等は公開record内のindexとしてencodeし、同じbundleに対応するtableとschemaを含める。"
+      cons "未定義参照、循環禁止構造の循環、重複ID、範囲外spanはdecode直後に拒否する。"
+      cons "文字列型の違反を遅れてRustのdowncastで検出する方式にしない。" nil
+    cons paragraph
+      cons sentence cons code "interfaces/contracts.json" cons text " と各言語constructor表からcodecの網羅性検査を生成する。" nil
+      cons "serdeのderive既定表現を契約にせず、custom codecでNDFへ写す。"
+      cons "内部でserdeを使う場合も明示したarray/schemaに固定する。" nil
+    cons section intrinsic "2.1 intrinsic[値/ち]の[閉/と]じた[記述/きじゅつ]" body
+      cons paragraph
+        cons sentence cons code "interfaces/contracts.json" cons text " の " cons code "intrinsic_types" cons text " は、NDF/1をdecodeした論理値の型を定義する。" nil
+        cons sentence cons code "NdfValue" cons text " の12caseは上表のtag 0–11に一対一で対応する。" nil
+        cons sentence cons code "NdfScalar" cons text " はUnit、Bool、U64、Integer、Rational、Text、Bytesの部分型、" cons code "TypedValue" cons text " はRecord、Variantだけの部分型である。" nil
+        cons "subsetのcase列は集合であり、順序をwire IDにしない。"
+        cons "Unitは追加payloadを持たず、Noneとは異なる。"
+        cons "NaturalはIntegerの非負制約、Bytes32はBytesの長さ制約であり、追加のwire tagを持たない。" nil
+      cons paragraph
+        cons "このintrinsic記述は通常のdomain sumではない。"
+        cons sentence cons text "たとえば " cons code "NdfValue.Integer(value: Integer)" cons text " の論理fieldを一般のVariantとしてtag11で包まず、上表のtag3へ直接写す。" nil
+        cons "Integerのnegative/magnitude、Rationalの分子tag3と分母bytesは上表の専用表現を使う。"
+        cons "tag10/11のfieldsは裸のCBOR arrayであり、Listのtag7を付けない。"
+        cons sentence cons text "そのheader内のSchemaRefも裸の " cons code "[text,uint64,bytes32]" cons text " であり、通常のRecordのtag10を付けない。" nil
+        cons "論理fieldのTextやU64も、上表で裸のCBOR text/uint64を指定する位置へ余分なNDF tagを付けない。"
+        cons "codecの物理表現は上表を正本とする。" nil
+      cons paragraph
+        cons sentence cons text "intrinsicの識別子 " cons code "nepl3.ndf/1" cons text " は本符号化profileに組み込まれた固定識別子である。" nil
+        cons "intrinsic自体へdomain SchemaRefや自己hashを要求しない。"
+        cons "Record/Variant headerのSchemaRefは運ばれるdomain値のdescriptorを識別し、intrinsicの識別子とは別物である。"
+        cons "domain descriptorの登録・digest検証は必要であり、TypedValueという型名やtag10/11であることだけでは検査済みにならない。"
+        cons sentence cons text "通常のfieldとしてのSchemaRefは " cons code "nepl3.foundation" cons text " revision 1のSchemaRef recordをtag10で運ぶ。" nil
+        cons "そのheaderのSchemaRefだけが裸のtupleとなるため、無限のwrapper再帰は生じない。" nil
+      nil
+    cons section references "2.2 descriptorの[型参照検査/かたさんしょうけんさ]と[残/のこ]る[契約/けいやく]" body
+      cons paragraph
+        cons sentence cons text "fieldとunion参照の型式は " cons code "Name | List<Type> | Option<Type>" cons text " とする。" nil
+        cons sentence cons text "NameはASCII英字で始まる英数字/underscoreのsegmentを " cons code ":" cons text " または " cons code "/" cons text " で接続する。" nil
+        cons "空segment、空白、余分なtoken、未宣言のgeneric、引数の過不足は拒否する。"
+        cons "List/Optionは予約された1引数constructorであり、名義型として宣言できない。"
+        cons "開発checkerは128階層を超える型式を拒否する。"
+        cons "この型名文法と上限は設計descriptorの記述に限り、利用者の言語中の名前・kind文字列・source・NDF Textの文字集合を制限しない。"
+        cons "runtime入力のLimitsも代替しない。" nil
+      cons paragraph
+        cons "builtinはUnit、Bool、U64、Integer、Natural、Rational、Text、Bytes、Bytes32である。"
+        cons "所有者は本profileであり、modelのscalar_typesとcontractsのscalar_aliasesはそれへの参照・説明である。"
+        cons "model.types、contracts.records/enums/intrinsic_typesの名義型定義は重複を許さない。"
+        cons "modelの外部参照はexternal_typesへ明示し、存在する外部所有型へ解決する。"
+        cons "modelの可視名は自身の定義と明示したscalar/external importに限る。"
+        cons "既存の再帰的な型graphは許すが、値の循環可否・source/Origin tableの整合は操作ごとの値検査で別に判定する。" nil
+      cons paragraph
+        cons "型名がすべて解決することと公開操作契約が完成することを区別する。"
+        cons "27操作のinput/outputには説明用の式が残り、型付きの具体化・provider frame・Profile・Doc移行のDG01–DG06は対応する実装とともに完成させる。"
+        cons sentence cons text "進捗と実行証拠は " cons link relative "../progress/foundation-runtime.md" none text "実装記録" cons text " を参照する。" nil nil
+      nil
+    cons section descriptor "2.3 [実行可能/じっこうかのう]なschema descriptor" body
+      cons paragraph
+        cons sentence cons code "interfaces/contracts.json" cons text " のTypeDescriptorはUnit/Bool/U64/Integer/Natural/Rational/Text/Bytes/Bytes32、intrinsicのNdfValue/NdfScalar/TypedValue、List、Option、Namedを区別する。" nil
+        cons "Namedはpackage/revision/nameの記号参照でありdigestを入れない。"
+        cons "Recordは順序付きfield、Variantは名前付きのvariantと順序付きpayloadを持つ。"
+        cons "constraintsはschema所有の意味制約IDの集合である。" nil
+      cons paragraph
+        cons "SchemaDescriptorはpackage、revision、types、operationsを持つ。"
+        cons sentence cons text "canonical JSONではtypesとoperationsを名前keyのobject、型定義を " cons code "{constraints,record}" cons text " または " cons code "{constraints,variant}" cons text " とし、fieldを " cons code "[name,TypeJSON]" cons text " の順序付きarrayにする。" nil
+        cons sentence cons text "TypeJSONはbuiltin/intrinsic名の文字列、" cons code "{list:TypeJSON}" cons text "、" cons code "{option:TypeJSON}" cons text "、" cons code "{named:{name,package,revision}}" cons text " のいずれか。" nil
+        cons sentence cons text "operationは " cons code "{input,output,pure}" cons text "。" nil
+        cons "constraintsは重複を拒否して名前順に並べる。"
+        cons "13章のkey順・escape・domain separatorでSHA-256を求める。" nil
+      cons paragraph
+        cons "登録は期待するSchemaRefとdescriptorの計算digestを照合する。"
+        cons "一つのregistryで同じpackage/revisionに異なるdigestを同時選択しない。"
+        cons "全packageを登録後にfinalizeし、使用されていないvariantやoperationも含むすべてのNamed参照を解決する。"
+        cons "相互参照する型・packageの登録は許すが、finalize前の値検査・実行は拒否する。" nil
+      cons paragraph
+        cons sentence cons code "interfaces/foundation.json" cons text " はcontractsから " cons code "cargo run --locked -p nepl3-tools -- foundation --write" cons text " で生成する実際の " cons code "nepl3.foundation" cons text " descriptorである。" nil
+        cons "build.rsから生成せず、通常の検査で正本との一致とproduction core registryによる登録・参照閉包を検査する。"
+        cons "未完成のoperation説明表を実行可能なoperationsへコピーしない。"
+        cons "このpackageは共通値・transport recordのschemaを提供し、言語操作の実装を広告しない。" nil
+      cons paragraph
+        cons sentence cons text "同じ明示生成で " cons code "crates/foundation/core/src/schema/foundation.rs" cons text " を作り、productionの " cons code "foundation::descriptor" cons text " が型付きdescriptorを構築する。" nil
+        cons "構築前に割当・work予算を計上し、toolsのJSON parserをproductionへ依存させない。"
+        cons "通常の検査はJSONとRust投影の両方を正本と比較する。"
+        cons "wireのsource/Span adapterはこのdescriptorを登録したregistryで構造を検査し、さらにsource digest・宣言順・identity・locator・snapshot・UTF-8境界を検査してnative型へ戻す。" nil
+      cons paragraph
+        cons "raw encode/decodeはNDF intrinsicのcanonical性を検査する。"
+        cons "公開操作の境界ではexpected TypeDescriptorとfinalize済みregistryを渡すchecked encode/decodeを使い、受信したschema/kind/variant/field型を照合する。"
+        cons "得られるStructuralValueは構造検査の証明であり、constraintsに列挙したsourceの対応・回路の幅等の意味検査を代替しない。"
+        cons "coreの対応constructorまたはdomain操作で必要な不変条件を検査してから使用する。" nil
+      nil
+    nil
+  cons section invocation "3. [操作呼出/そうさよびだ]し" body
+    cons paragraph
+      cons "CallはrequestId、OperationRef、input TypedRecord、sources/resources/environment、Limitsを持つ。"
+      cons "OperationRefはpackage/revision/digestとoperation名。"
+      cons "provider manifestにinput/output schema、必要capability、純粋性契約を宣言する。" nil
+    cons paragraph
+      cons "ReplyはComplete / Invalid / Stopped / Awaitのvariant。"
+      cons "DiagnosticとEventは成功値と別field。"
+      cons "未対応operationを空の値や成功Unitで返さない。" nil
+    cons paragraph
+      cons "Awaitは外部service要求とcontinuationを返す。"
+      cons "hostはallowlistで照合し、同一親予算で要求を実行してresumeする。"
+      cons "continuationはprovider revision、親request、snapshot digestに束縛し、別providerへ渡せない。"
+      cons "中断中の要求を実装差替え対象にしない。" nil
+    cons paragraph
+      cons "call graphはhostが追跡する。"
+      cons "同じoperation/input/contextの循環依存はCyclicOperation。"
+      cons "有限だが大きい再帰も共通Limitsで停止できる。"
+      cons "provider内部のアルゴリズム固有costは性能情報であり、二実装でusageの数値一致を互換要件にしない。" nil
+    cons section transform "3.1 Reader Transformの[操作返信/そうさへんしん]" body
+      cons paragraph
+        cons "Transformのdomain結果と外側OperationReplyは次のように対応する。"
+        cons "内側のtyped TransformReplyはsources/sourceMapsを全結果で所有する。" nil
+      cons table cons default cons default cons default nil
+        some row cons "TransformOutcome" cons "OperationReply" cons "typed payload" nil
+        cons row cons "Complete" cons "Complete" cons "TransformReply" nil
+        cons row cons "Failed" cons "Invalid" cons "partial=Some(TransformReply)" nil
+        cons row cons "Stopped(reason)" cons "Stopped(reason)" cons "partial=Some(TransformReply)" nil
+        nil
+      cons paragraph
+        cons "内外のdiagnostics/events/usage/traceOverflowは同じReportの正確な再掲であり、不一致を拒否する。"
+        cons "再掲によるstorageと符号化の費用は計上するが、診断・eventを再発行したことにはしない。"
+        cons "Stoppedの理由も一致を要求する。"
+        cons "CompleteにFailedを隠す、Invalidを成功Unitに変える、Transformに未定義のAwaitを返す、といった返信は拒否する。" nil
+      cons paragraph
+        cons "partial=NoneのInvalid/Stoppedは、domain Transform結果が得られる前のdispatch失敗である。"
+        cons "adapterは型付きの拒否結果と正式Reportをhostへ返し、Readerの待機slotへ成功やdomain失敗として適用しない。"
+        cons "この場合の位置参照は元の保存要求と正式checkpointのsource閉包だけに限り、そのsource/mapsを拒否結果が所有する。"
+        cons "新しい生成source上の診断を返す場合は、明示source tableを持つtyped TransformReplyを使う。"
+        cons "Reportが不正な返信は待機を消費せず、訂正返信を再検査できる。" nil
+      cons paragraph
+        cons "この対応の実codecは保存要求proofを使うTransform返信のnative/NDF比較を提供する。"
+        cons "ReadのMatched/NoMatch/NeedMoreは正常なreader結果としてCompleteへ運ぶ対象だが、その操作返信adapter、初回provider要求、全Await継続、process transportの実装完了をこのTransform比較から推定しない。" nil
+      nil
+    nil
+  cons section native "4. native provider" body
+    cons paragraph
+      cons "Rustの各coreは型付き関数を公開する。"
+      cons "suiteの登録時に、その関数とOperationRefの対応を固定する。"
+      cons "wire boundaryを通る場合にだけTypedRecordとencode/decodeを行う。"
+      cons "全tokenを常にCBOR化する設計にしない。" nil
+    cons paragraph
+      cons "呼出し元へ渡すparse treeやsourceは借用してよいが、そのborrow/lifetimeをoperation schemaへ露出しない。"
+      cons "wire要求では必要なsnapshot bundleを明示的な値として渡す。" nil
+    nil
+  cons section process "5. process provider" body
+    cons paragraph
+      cons "apps/providerはstdin/stdoutの8byte unsigned big-endian length + NDF frameを処理する。"
+      cons "最大frame長をLimitsで検査する。"
+      cons "stdoutへlogを書かない。"
+      cons "失敗診断はReply、hostの運用logはstderr。" nil
+    cons paragraph
+      cons "frame kindはInvoke / Resume / Reply / Cancel / Close。"
+      cons "複数要求をrequestIdで識別する。"
+      cons "requestIdの重複、知らないcontinuation、schema mismatchをprotocol errorにする。"
+      cons "再試行は純粋なoperationに限り、要求全体が同じ場合に行う。" nil
+    cons paragraph
+      cons "runtime I/Oはこのadapter内に限定し、各coreの計算は純粋入力/出力に保つ。"
+      cons "processによる別実装はnative APIの代替として使える。"
+      cons "Wasm用adapterも同じCall/Replyを利用でき、wasm32-wasip2自体をこのwire ABIの別名としない。" nil
+    nil
+  cons section replacement "6. [置換手順/ちかんてじゅん]" body
+    cons paragraph
+      cons "一つのoperationについて新実装を登録し、同じconformance入力をnative Rust経路とNDF経路へ渡す。"
+      cons "比較対象は意味正規形、定義済みdiagnostic code/位置、参照先、source対応、出力artifactのcanonical内容。"
+      cons "traceの内部手順や実行時間は比較対象外。" nil
+    cons paragraph
+      cons "新実装がpassingになったoperationだけdispatchを切り替える。"
+      cons "残りをRustで実行する混在を許す。"
+      cons "各coreが別言語coreへ直接依存していないため、単一言語・単一操作から交換できる。" nil
+    cons paragraph
+      cons "最初のRust実装段階からencode/decode loopbackと別process providerを受入対象にする。"
+      cons "「後でABIを決める」作業を残さない。"
+      cons "ただし将来言語のコンパイラ・runtimeそのものが既に存在すると仮定しない。" nil
+    nil
+  nil
