@@ -166,9 +166,45 @@ impl SourceSnapshot {
             bytes.saturating_add(core::mem::size_of::<Self>() as u64),
         )
     }
+    /// Charge only an actual clone. This must not be used to bound equality
+    /// against independently supplied storage; charge_clone retains that bound.
+    pub fn charge_shared_clone(&self, budget: &mut Budget) -> Result<(), StopReason> {
+        let bytes = (self.id.source.0.len() + self.uri.len()) as u64;
+        #[cfg(not(target_has_atomic = "ptr"))]
+        let bytes = bytes.saturating_add(self.text.len() as u64);
+        budget.charge(Resource::Work, bytes.saturating_add(1))?;
+        budget.charge(
+            Resource::AllocationUnits,
+            bytes.saturating_add(core::mem::size_of::<Self>() as u64),
+        )
+    }
     pub fn clone_with_budget(&self, budget: &mut Budget) -> Result<Self, StopReason> {
-        self.charge_clone(budget)?;
+        self.charge_shared_clone(budget)?;
         Ok(self.clone())
+    }
+    /// Budget structural equality. Only identical immutable storage can skip
+    /// the byte comparison; independently decoded snapshots still pay for it.
+    pub fn eq_with_budget(&self, other: &Self, budget: &mut Budget) -> Result<bool, StopReason> {
+        budget.charge(
+            Resource::Work,
+            (self.id.source.0.len() as u64)
+                .saturating_add(other.id.source.0.len() as u64)
+                .saturating_add(self.uri.len() as u64)
+                .saturating_add(other.uri.len() as u64)
+                .saturating_add(34),
+        )?;
+        if self.id != other.id || self.uri != other.uri {
+            return Ok(false);
+        }
+        #[cfg(target_has_atomic = "ptr")]
+        if alloc::sync::Arc::ptr_eq(&self.text, &other.text) {
+            return Ok(true);
+        }
+        budget.charge(
+            Resource::Work,
+            (self.text.len() as u64).saturating_add(other.text.len() as u64),
+        )?;
+        Ok(self.text == other.text)
     }
     pub fn has_bom(&self) -> bool {
         self.text.starts_with('\u{feff}')
@@ -578,23 +614,59 @@ pub struct TextEdit {
 #[derive(Debug, Default)]
 pub struct SourceStore {
     snapshots: Vec<SourceSnapshot>,
+    // Snapshot insertion order remains public; only this private index is sorted.
+    index: Vec<usize>,
 }
 impl SourceStore {
     pub fn snapshots(&self) -> &[SourceSnapshot] {
         &self.snapshots
     }
     pub fn insert(&mut self, snapshot: SourceSnapshot) -> Result<(), SourceError> {
-        for prior in &self.snapshots {
-            if prior.id.source == snapshot.id.source && prior.id.revision == snapshot.id.revision {
-                return if prior == &snapshot {
+        let position = self
+            .index
+            .binary_search_by(|i| source_key(&self.snapshots[*i], &snapshot));
+        match position {
+            Ok(at) => {
+                if self.snapshots[self.index[at]] == snapshot {
                     Ok(())
                 } else {
                     Err(SourceError::IdentityConflict)
-                };
+                }
+            }
+            Err(at) => {
+                self.index.insert(at, self.snapshots.len());
+                self.snapshots.push(snapshot);
+                Ok(())
             }
         }
-        self.snapshots.push(snapshot);
-        Ok(())
+    }
+    /// Insert with metered index search, duplicate comparison, and storage growth.
+    pub fn insert_with_budget(
+        &mut self,
+        snapshot: SourceSnapshot,
+        budget: &mut Budget,
+    ) -> Result<(), SourceError> {
+        let position =
+            source_index_position(&self.index, |i| &self.snapshots[i], &snapshot, budget)?;
+        match position {
+            Ok(at) => {
+                if self.snapshots[self.index[at]].eq_with_budget(&snapshot, budget)? {
+                    Ok(())
+                } else {
+                    Err(SourceError::IdentityConflict)
+                }
+            }
+            Err(at) => {
+                budget.charge(Resource::Work, (self.index.len() - at) as u64)?;
+                budget.charge(
+                    Resource::AllocationUnits,
+                    (core::mem::size_of::<SourceSnapshot>() + core::mem::size_of::<usize>()) as u64,
+                )?;
+                self.index.insert(at, self.snapshots.len());
+                self.snapshots.push(snapshot);
+                Ok(())
+            }
+        }
     }
     pub fn get_ref(&self, id: &SnapshotId) -> Option<&SourceSnapshot> {
         self.snapshots
@@ -617,4 +689,34 @@ impl SourceStore {
             .filter(|s| &s.id.source == source)
             .max_by_key(|s| s.id.revision)
     }
+}
+
+fn source_key(a: &SourceSnapshot, b: &SourceSnapshot) -> core::cmp::Ordering {
+    a.id.source
+        .cmp(&b.id.source)
+        .then_with(|| a.id.revision.cmp(&b.id.revision))
+}
+fn source_index_position<'a>(
+    index: &[usize],
+    get: impl Fn(usize) -> &'a SourceSnapshot,
+    snapshot: &SourceSnapshot,
+    budget: &mut Budget,
+) -> Result<Result<usize, usize>, SourceError> {
+    let (mut low, mut high) = (0, index.len());
+    while low < high {
+        let mid = low + (high - low) / 2;
+        let prior = get(index[mid]);
+        budget.charge(
+            Resource::Work,
+            (prior.id.source.0.len() as u64)
+                .saturating_add(snapshot.id.source.0.len() as u64)
+                .saturating_add(1),
+        )?;
+        match source_key(prior, snapshot) {
+            core::cmp::Ordering::Equal => return Ok(Ok(mid)),
+            core::cmp::Ordering::Less => low = mid + 1,
+            core::cmp::Ordering::Greater => high = mid,
+        }
+    }
+    Ok(Err(low))
 }

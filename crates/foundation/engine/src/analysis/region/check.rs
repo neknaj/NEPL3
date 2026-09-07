@@ -103,7 +103,7 @@ pub(crate) fn validate(
         let mut store = nepl3_core::source::SourceStore::default();
         for source in &owner.bundle().sources {
             admission.admit_existing(source, b)?;
-            store.insert(source.clone_with_budget(b)?)?;
+            store.insert_with_budget(source.clone_with_budget(b)?, b)?;
         }
         let mapped = nepl3_core::origin::SourceMap::validate_mappings(
             &owner.bundle().source_maps,

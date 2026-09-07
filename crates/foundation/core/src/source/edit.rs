@@ -241,9 +241,31 @@ impl SourceStore {
                 text: output,
             });
         }
+        allocation::<usize>(self.index.len().saturating_add(prepared.len()), budget)?;
+        budget.charge(Resource::Work, self.index.len() as u64)?;
+        let mut index = Vec::with_capacity(self.index.len().saturating_add(prepared.len()));
+        index.extend_from_slice(&self.index);
+        for (offset, snapshot) in prepared.iter().enumerate() {
+            let at = source_index_position(
+                &index,
+                |i| {
+                    if i < self.snapshots.len() {
+                        &self.snapshots[i]
+                    } else {
+                        &prepared[i - self.snapshots.len()]
+                    }
+                },
+                snapshot,
+                budget,
+            )?
+            .map_or_else(Ok, |_| Err(SourceError::IdentityConflict))?;
+            budget.charge(Resource::Work, (index.len() - at) as u64)?;
+            index.insert(at, self.snapshots.len() + offset);
+        }
         // No typed failure or budget charge can occur after this commit point.
         admission.admitted.extend(admitted_outputs);
         self.snapshots.extend(prepared);
+        self.index = index;
         Ok(ids)
     }
 }

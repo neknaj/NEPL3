@@ -30,7 +30,7 @@ pub(super) fn prepare<'a, 'tree, 'profile, 'budget>(
                 (prior.identity().source.0.len() + source.identity().source.0.len()) as u64 + 42,
             )?;
         }
-        sources.insert(source.clone_with_budget(budget)?)?;
+        sources.insert_with_budget(source.clone_with_budget(budget)?, budget)?;
     }
     let source = sources
         .resolve(&request.source)

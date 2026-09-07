@@ -283,8 +283,13 @@ fn snapshot_clones_preserve_owned_lifetime_and_independent_identity_checks()
     let cloned = original.clone_with_budget(&mut b)?;
     #[cfg(target_has_atomic = "ptr")]
     assert!(b.usage().allocation_units < 1024);
-    // Keep the comparison bound for equal bytes from a separately decoded source.
+    #[cfg(target_has_atomic = "ptr")]
+    assert!(b.usage().work < 1024);
+    #[cfg(not(target_has_atomic = "ptr"))]
     assert!(b.usage().work >= content.len() as u64);
+    let mut comparison = budget();
+    original.charge_clone(&mut comparison)?;
+    assert!(comparison.usage().work >= content.len() as u64);
     let independent = source("shared", 3, &content)?;
     assert_eq!(cloned, independent);
     assert_ne!(cloned, source("shared", 4, &content)?);
@@ -535,5 +540,95 @@ fn generated_source_locator_scan_is_charged_before_validation() -> Result<(), So
         ),
         Err(SourceError::Stopped(StopReason::WorkLimit))
     );
+    Ok(())
+}
+
+#[test]
+fn shared_copy_and_independent_comparison_have_separate_work_bounds() -> Result<(), SourceError> {
+    let text = "x".repeat(100_000);
+    let original = source("shared-cost", 0, &text)?;
+    let mut copy_budget = budget();
+    original.charge_shared_clone(&mut copy_budget)?;
+    let cloned = original.clone();
+    #[cfg(target_has_atomic = "ptr")]
+    assert!(copy_budget.usage().work < 1024);
+    #[cfg(not(target_has_atomic = "ptr"))]
+    assert!(copy_budget.usage().work >= text.len() as u64);
+    let mut limits = budget().limits();
+    limits.work = 1024;
+    #[cfg(target_has_atomic = "ptr")]
+    assert!(original.eq_with_budget(&cloned, &mut Budget::new(limits))?);
+    let independent = source("shared-cost", 0, &text)?;
+    assert_eq!(
+        original.eq_with_budget(&independent, &mut Budget::new(limits)),
+        Err(StopReason::WorkLimit)
+    );
+    let mut store = SourceStore::default();
+    store.insert(original)?;
+    assert_eq!(
+        store.insert_with_budget(independent, &mut Budget::new(limits)),
+        Err(SourceError::Stopped(StopReason::WorkLimit))
+    );
+    assert_eq!(store.snapshots().len(), 1);
+    assert_eq!(store.snapshots()[0], cloned);
+    let conflict = SourceReservation {
+        source_id: SourceId("shared-cost".into()),
+        revision: 0,
+        uri: "memory:different".into(),
+    };
+    let conflicting = SourceAdmission::default().create(
+        conflict.source_id,
+        conflict.revision,
+        conflict.uri,
+        text.into_bytes(),
+        &mut budget(),
+    )?;
+    assert_eq!(
+        store.insert_with_budget(conflicting, &mut budget()),
+        Err(SourceError::IdentityConflict)
+    );
+    Ok(())
+}
+
+#[test]
+fn indexed_source_insert_preserves_order_and_metered_duplicate_lookup() -> Result<(), SourceError> {
+    let mut store = SourceStore::default();
+    for index in (0..128).rev() {
+        store.insert(source(&format!("source-{index:03}"), 0, "data")?)?;
+    }
+    assert_eq!(store.snapshots()[0].identity().source.0, "source-127");
+    assert_eq!(store.snapshots()[127].identity().source.0, "source-000");
+    let duplicate = store.snapshots()[127].clone();
+    let mut b = budget();
+    store.insert_with_budget(duplicate, &mut b)?;
+    assert!(b.usage().work < 1024);
+    assert_eq!(store.snapshots().len(), 128);
+    let new = source("source-middle", 0, "other")?;
+    let mut limits = budget().limits();
+    limits.allocation_units = 0;
+    assert_eq!(
+        store.insert_with_budget(new.clone(), &mut Budget::new(limits)),
+        Err(SourceError::Stopped(StopReason::AllocationLimit))
+    );
+    assert_eq!(store.snapshots().len(), 128);
+    store.insert_with_budget(new, &mut budget())?;
+    assert_eq!(store.snapshots()[128].identity().source.0, "source-middle");
+    // Edits must update the same index atomically before later duplicate insertion.
+    let old = store.snapshots()[0].clone();
+    let ids = store.apply(
+        &[TextEdit {
+            span: old.span(0, 4)?,
+            expected_digest: old.identity().digest,
+            replacement: "changed".into(),
+        }],
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    let changed = store
+        .get_ref(&ids[0])
+        .ok_or(SourceError::MissingSnapshot)?
+        .clone();
+    store.insert_with_budget(changed, &mut budget())?;
+    assert_eq!(store.snapshots().len(), 130);
     Ok(())
 }

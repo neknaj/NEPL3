@@ -37,7 +37,10 @@ pub(crate) fn request(
 ) -> Result<(), ReaderError> {
     budget.poll()?;
     request.snapshot.check_range(request.start, request.limit)?;
-    if sources.get_ref(request.snapshot.identity()) != Some(request.snapshot) {
+    let selected = sources
+        .get_ref(request.snapshot.identity())
+        .ok_or(SourceError::MissingSnapshot)?;
+    if !selected.eq_with_budget(request.snapshot, budget)? {
         return Err(SourceError::MissingSnapshot.into());
     }
     admission.admit_existing(request.snapshot, budget)?;
@@ -50,12 +53,19 @@ pub(crate) fn request(
     }
     for source in context.sources() {
         budget.charge(Resource::Work, sources.snapshots().len() as u64)?;
-        if sources.snapshots().iter().any(|existing| {
-            existing.identity().source == source.identity().source
+        for existing in sources.snapshots() {
+            budget.charge(
+                Resource::Work,
+                (existing.identity().source.0.len() as u64)
+                    .saturating_add(source.identity().source.0.len() as u64)
+                    .saturating_add(1),
+            )?;
+            if existing.identity().source == source.identity().source
                 && existing.identity().revision == source.identity().revision
-                && existing != *source
-        }) {
-            return Err(SourceError::IdentityConflict.into());
+                && !existing.eq_with_budget(source, budget)?
+            {
+                return Err(SourceError::IdentityConflict.into());
+            }
         }
         admission.admit_existing(source, budget)?;
     }
@@ -304,7 +314,7 @@ fn combined(
         .chain(machine.declared.iter())
         .chain(&machine.current.sources)
     {
-        combined.insert(copy(source, budget)?)?;
+        combined.insert_with_budget(copy(source, budget)?, budget)?;
     }
     for (index, source) in added.iter().enumerate() {
         for prior in &added[..index] {
@@ -344,7 +354,7 @@ fn combined(
             }
         }
         admission.admit_existing(source, budget)?;
-        combined.insert(copy(source, budget)?)?;
+        combined.insert_with_budget(copy(source, budget)?, budget)?;
     }
     Ok(combined)
 }

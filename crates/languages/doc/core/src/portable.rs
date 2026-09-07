@@ -120,7 +120,7 @@ pub fn to_value<C: FoundationValueCodec>(
     let mut store = SourceStore::default();
     for source in &document.sources {
         store
-            .insert(source.clone_with_budget(b)?)
+            .insert_with_budget(source.clone_with_budget(b)?, b)
             .map_err(StructureError::from)?;
     }
     let mut scoped = c.scoped(&store);
@@ -152,7 +152,7 @@ pub fn from_value<C: FoundationValueCodec>(
     let mut store = SourceStore::default();
     for source in &sources {
         store
-            .insert(source.clone_with_budget(b)?)
+            .insert_with_budget(source.clone_with_budget(b)?, b)
             .map_err(StructureError::from)?;
     }
     let mut scoped = c.scoped(&store);

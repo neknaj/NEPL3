@@ -291,7 +291,7 @@ pub(super) fn with_tree_measured<T>(
         .map_err(boundary)?;
     let mut sources = SourceStore::default();
     sources
-        .insert(source.clone_with_budget(budget).map_err(boundary)?)
+        .insert_with_budget(source.clone_with_budget(budget).map_err(boundary)?, budget)
         .map_err(boundary)?;
     let foundation = registry
         .selected("nepl3.foundation", 1)
@@ -424,7 +424,10 @@ pub(super) fn with_tree_measured<T>(
                             let mut declared = SourceStore::default();
                             for source in &request.sources {
                                 declared
-                                    .insert(source.clone_with_budget(budget).map_err(boundary)?)
+                                    .insert_with_budget(
+                                        source.clone_with_budget(budget).map_err(boundary)?,
+                                        budget,
+                                    )
                                     .map_err(boundary)?;
                             }
                             Ok(declared)

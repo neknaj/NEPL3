@@ -260,7 +260,7 @@ pub(crate) fn delta_from(
     let sources = sources_from(&f[8], s, admission, b)?;
     let mut store = store(&base.value().sources, b)?;
     for source in &sources {
-        store.insert(source.clone_with_budget(b)?)?;
+        store.insert_with_budget(source.clone_with_budget(b)?, b)?;
     }
     let value = FactDelta {
         analysis_id: Codec::from(&f[0], s, &store, b)?,

@@ -304,6 +304,31 @@ impl<'a> ReaderSession<'a> {
         }
         self.resume_saved(reply, sources, budget, admission)
     }
+    /// Called only by the owning tokenizer while servicing an immediate native
+    /// callback. No external continuation was received: the reader's private
+    /// pending slot is still exclusively owned through this mutable borrow.
+    /// Payload/context/source/report validation remains in resume_saved.
+    pub(crate) fn resume_native_callback(
+        &mut self,
+        reply: ProviderReply,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<ReadReply, ReaderError> {
+        if self.closed {
+            return Err(ReaderError::Closed);
+        }
+        let saved = self.pending.as_ref().ok_or(ReaderError::NoPending)?;
+        if saved.limits != budget.limits()
+            || !usage_at_least(budget.usage(), saved.continuation.usage)
+        {
+            return Err(ReaderError::Continuation);
+        }
+        if let Err(reason) = budget.poll() {
+            return self.stop_pending(reason, budget);
+        }
+        self.resume_saved(reply, sources, budget, admission)
+    }
     fn resume_saved(
         &mut self,
         reply: ProviderReply,
@@ -519,14 +544,14 @@ impl<'a> ReaderSession<'a> {
                     // All fallible storage charges happen while committed reports remain in Machine.
                     slot::<ReaderContinuation>(budget)?;
                     slot::<ProviderCall>(budget)?;
-                    session_id.charge(budget)?;
-                    plan_schema.charge(budget)?;
-                    request.charge(budget)?;
-                    machine.frames.charge(budget)?;
-                    machine.current.charge(budget)?;
-                    call.charge(budget)?;
-                    report.charge(budget)?;
-                    report.charge(budget)?;
+                    session_id.charge_copy(budget)?;
+                    plan_schema.charge_copy(budget)?;
+                    request.charge_copy(budget)?;
+                    machine.frames.charge_copy(budget)?;
+                    machine.current.charge_copy(budget)?;
+                    call.charge_copy(budget)?;
+                    report.charge_copy(budget)?;
+                    report.charge_copy(budget)?;
                     Ok((request, report, session_id, plan_schema, outward_call))
                 })();
                 let (request, mut report, session_id, plan_schema, outward_call) = match preparation

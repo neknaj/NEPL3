@@ -801,7 +801,7 @@ impl<'a> TokenizationSession<'a> {
         let mut outcome = self.drive(machine, None, sources, budget, admission)?;
         loop {
             match &outcome {
-                Outcome::Await { call, continuation } => {
+                Outcome::Await { call, .. } => {
                     let base = match call.as_ref() {
                         ProviderCall::Read { depth_base, .. }
                         | ProviderCall::Transform { depth_base, .. }
@@ -820,23 +820,22 @@ impl<'a> TokenizationSession<'a> {
                             return Ok(outcome);
                         }
                     };
-                    // This is still the fully checked public Reader echo path.
-                    // Do not use resume_from_tokenizer: no outer echo has been
-                    // published or validated in this synchronous path.
-                    let reply =
-                        match self
-                            .reader
-                            .resume(continuation, reply, sources, budget, admission)
-                        {
-                            Ok(reply) => reply,
-                            Err(error) => {
-                                if let Some(reason) = error.stop_reason() {
-                                    budget.stop(reason);
-                                }
-                                *host_error = Some(error);
-                                return Ok(outcome);
+                    // The callback receives only a borrowed call, not a mutable
+                    // continuation. The reader retains the exclusive private slot.
+                    // External fallback still publishes/checks the complete echo.
+                    let reply = match self
+                        .reader
+                        .resume_native_callback(reply, sources, budget, admission)
+                    {
+                        Ok(reply) => reply,
+                        Err(error) => {
+                            if let Some(reason) = error.stop_reason() {
+                                budget.stop(reason);
                             }
-                        };
+                            *host_error = Some(error);
+                            return Ok(outcome);
+                        }
+                    };
                     machine.waiting = false;
                     outcome = match accept(machine, reply, self.registry, budget)? {
                         Some(outcome) => outcome,
@@ -1094,7 +1093,7 @@ impl<'a> TokenizationSession<'a> {
                         usage: budget.usage(),
                     },
                 };
-                c.charge(budget)?;
+                c.charge_copy(budget)?;
                 slot::<TokenizationContinuation>(budget)?;
                 c.usage = budget.usage();
                 c.report.usage = c.usage;

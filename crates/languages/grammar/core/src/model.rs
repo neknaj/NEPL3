@@ -173,7 +173,7 @@ impl Document {
             if sources.get_ref(source.identity()).is_some() {
                 return Err(ModelError::DuplicateSource);
             }
-            sources.insert(source.clone_with_budget(budget)?)?;
+            sources.insert_with_budget(source.clone_with_budget(budget)?, budget)?;
         }
         budget.charge(Resource::AllocationUnits, self.nodes.len() as u64)?;
         let mut color = alloc::vec![0u8;self.nodes.len()];

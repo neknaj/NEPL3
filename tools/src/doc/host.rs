@@ -107,7 +107,7 @@ impl ParseHost for NativeHost<'_> {
         }
         let mut sources = SourceStore::default();
         for source in &request.sources {
-            sources.insert(source.clone_with_budget(budget)?)?;
+            sources.insert_with_budget(source.clone_with_budget(budget)?, budget)?;
         }
         let snapshot = sources
             .resolve(&request.snapshot)
