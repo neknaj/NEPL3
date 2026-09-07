@@ -31,7 +31,8 @@ references!(
     AssetValueRef,
     OptionalRowRef,
     OptionalSentenceRef,
-    OptionalTextRef
+    OptionalTextRef,
+    GuestRef
 );
 
 /// The semantic name operand, distinct from its enclosing definition cover.
@@ -85,6 +86,17 @@ pub enum DocRoot {
     OptionalRow(OptionalRowRef),
     OptionalSentence(OptionalSentenceRef),
     OptionalText(OptionalTextRef),
+    Guest(GuestRef),
+    MathGuest(GuestRef),
+    CircuitGuest(GuestRef),
+}
+/// Explicit standard Doc surface wrapper, never inferred from a schema alias.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum GuestLanguage {
+    Math,
+    Circuit,
+    Grammar,
+    Doc,
 }
 /// Resource identities are data, not permission to load or render an asset.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -124,12 +136,19 @@ pub enum EmbedKind {
     DisplayMath,
     CircuitFigure,
     Code,
+    Guest,
 }
 
 /// Closed Doc node kinds. Category checks distinguish references to, for
 /// example, an Inline from those to a Sentence even though both use an arena.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DocKind {
+    /// A standalone foreign wrapper retains syntax and its concrete surface
+    /// entry. Embedded operands continue to be owned by their parent slot.
+    Guest {
+        language: GuestLanguage,
+        syntax: EmbedRef,
+    },
     // Surface auxiliary categories have standalone fragment roots. When used
     // as a parent constructor operand, lowering stores their typed value there.
     Alignment {

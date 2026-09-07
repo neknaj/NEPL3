@@ -26,6 +26,9 @@ pub enum Category {
     OptionalRow,
     OptionalSentence,
     OptionalText,
+    Guest,
+    MathGuest,
+    CircuitGuest,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ShapeError {

@@ -4,6 +4,8 @@
 mod labels;
 #[path = "doc/mixed.rs"]
 mod mixed;
+#[path = "doc/print.rs"]
+mod print;
 #[path = "doc/text.rs"]
 mod text;
 use nepl3_core::{budget::*, source::*};
@@ -159,6 +161,16 @@ fn parse_source(
     b: &mut Budget,
     a: &mut SourceAdmission,
 ) -> Result<nepl3_engine::recovery::ParseTree, String> {
+    parse_source_as(source, resolved, "Doc", category, b, a)
+}
+fn parse_source_as(
+    source: &SourceSnapshot,
+    resolved: &ResolvedParseProfile<'_>,
+    alias: &str,
+    category: &str,
+    b: &mut Budget,
+    a: &mut SourceAdmission,
+) -> Result<nepl3_engine::recovery::ParseTree, String> {
     let r = resolved.registry();
     let foundation = r.selected("nepl3.foundation", 1).ok_or("foundation")?;
     let mut store = SourceStore::default();
@@ -202,7 +214,7 @@ fn parse_source(
         ParseEnvironmentSet::prepare(resolved, &inputs, &store, &mut codec, b)
             .map_err(|e| format!("environments: {e:?}"))?
     };
-    let entry = resolved.entry("Doc", Some(category), b).map_err(err)?;
+    let entry = resolved.entry(alias, Some(category), b).map_err(err)?;
     let states = ["Doc", "Math", "Circuit", "Grammar"].map(|alias| LanguageReaderState {
         alias: alias.into(),
         state: NdfValue::Unit,

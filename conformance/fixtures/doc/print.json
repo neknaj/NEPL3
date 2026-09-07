@@ -1,0 +1,325 @@
+{
+  "basis": "Explicit inputs from design/forms.json constructor signatures; no printer-generated expected source.",
+  "cases": [
+    {
+      "entry": "Article",
+      "kind": "Article",
+      "source": "article en sentence cons text \"Title\" nil body nil"
+    },
+    {
+      "entry": "Body",
+      "kind": "Body",
+      "source": "body nil"
+    },
+    {
+      "entry": "Block",
+      "kind": "Paragraph",
+      "source": "paragraph nil"
+    },
+    {
+      "entry": "Block",
+      "kind": "Section",
+      "source": "section sectionName sentence nil body nil"
+    },
+    {
+      "entry": "Block",
+      "kind": "DisplayMath",
+      "source": "display Math add 1 2"
+    },
+    {
+      "entry": "Block",
+      "kind": "CircuitFigure",
+      "source": "circuit sentence nil Circuit design nil Main nil"
+    },
+    {
+      "entry": "Block",
+      "kind": "Code",
+      "source": "code Doc article en sentence cons anno text \"\" cons text \"note\" nil nil body nil"
+    },
+    {
+      "entry": "Block",
+      "kind": "Table",
+      "source": "table cons left nil some row cons sentence nil nil cons row cons sentence cons text \"cell\" nil nil nil"
+    },
+    {
+      "entry": "Block",
+      "kind": "List",
+      "source": "list ordered 18446744073709551615 cons item checked body nil nil"
+    },
+    {
+      "entry": "Block",
+      "kind": "RawCode",
+      "source": "rawcode some \"rust\" \"fn main() {\\n\\t[]\\r}\""
+    },
+    {
+      "entry": "Block",
+      "kind": "Image",
+      "source": "image asset \"logo\" none sentence cons text \"alt\" nil some sentence nil"
+    },
+    {
+      "entry": "Sentence",
+      "kind": "Sentence",
+      "source": "sentence cons ruby text \"base\" text \"reading\" nil"
+    },
+    {
+      "entry": "Flow",
+      "kind": "Paragraph",
+      "source": "paragraph nil"
+    },
+    {
+      "entry": "Flow",
+      "kind": "Section",
+      "source": "section sectionName sentence nil body nil"
+    },
+    {
+      "entry": "Flow",
+      "kind": "DisplayMath",
+      "source": "display Math add 1 2"
+    },
+    {
+      "entry": "Flow",
+      "kind": "CircuitFigure",
+      "source": "circuit sentence nil Circuit design nil Main nil"
+    },
+    {
+      "entry": "Flow",
+      "kind": "Code",
+      "source": "code Doc article en sentence cons anno text \"\" cons text \"note\" nil nil body nil"
+    },
+    {
+      "entry": "Flow",
+      "kind": "Table",
+      "source": "table cons left nil some row cons sentence nil nil cons row cons sentence cons text \"cell\" nil nil nil"
+    },
+    {
+      "entry": "Flow",
+      "kind": "List",
+      "source": "list ordered 18446744073709551615 cons item checked body nil nil"
+    },
+    {
+      "entry": "Flow",
+      "kind": "RawCode",
+      "source": "rawcode some \"rust\" \"fn main() {\\n\\t[]\\r}\""
+    },
+    {
+      "entry": "Flow",
+      "kind": "Image",
+      "source": "image asset \"logo\" none sentence cons text \"alt\" nil some sentence nil"
+    },
+    {
+      "entry": "Flow",
+      "kind": "Sentence",
+      "source": "sentence nil"
+    },
+    {
+      "entry": "Flow",
+      "kind": "Parallel",
+      "source": "parallel cons variant en sentence nil cons variant ja sentence nil nil"
+    },
+    {
+      "entry": "Variant",
+      "kind": "Variant",
+      "source": "variant en sentence nil"
+    },
+    {
+      "entry": "Inline",
+      "kind": "Text",
+      "source": "text \"[]{} / \\\" \\\\ \\n\""
+    },
+    {
+      "entry": "Inline",
+      "kind": "Concat",
+      "source": "concat cons text \"a\" cons text \"b\" nil"
+    },
+    {
+      "entry": "Inline",
+      "kind": "Ruby",
+      "source": "ruby text \"base\" text \"reading\""
+    },
+    {
+      "entry": "Inline",
+      "kind": "Anno",
+      "source": "anno text \"base\" cons text \"one\" cons ruby text \"two\" text \"reading\" nil"
+    },
+    {
+      "entry": "Inline",
+      "kind": "InlineMath",
+      "source": "math Math add 1 2"
+    },
+    {
+      "entry": "Inline",
+      "kind": "Anchor",
+      "source": "anchor here text \"label\""
+    },
+    {
+      "entry": "Inline",
+      "kind": "Reference",
+      "source": "ref there text \"label\""
+    },
+    {
+      "entry": "Inline",
+      "kind": "Emphasis",
+      "source": "em text \"em\""
+    },
+    {
+      "entry": "Inline",
+      "kind": "Strong",
+      "source": "strong text \"strong\""
+    },
+    {
+      "entry": "Inline",
+      "kind": "Break",
+      "source": "break"
+    },
+    {
+      "entry": "Inline",
+      "kind": "Link",
+      "source": "link external \"https://example.invalid\" text \"label\""
+    },
+    {
+      "entry": "Inline",
+      "kind": "InlineCode",
+      "source": "code \"[]{} /\""
+    },
+    {
+      "entry": "Inline",
+      "kind": "InlineImage",
+      "source": "image asset \"logo\" none sentence cons text \"alt\" nil"
+    },
+    {
+      "entry": "MathGuest",
+      "kind": "MathGuest",
+      "source": "Math add 1 2"
+    },
+    {
+      "entry": "CircuitGuest",
+      "kind": "CircuitGuest",
+      "source": "Circuit design nil Main nil"
+    },
+    {
+      "entry": "Guest",
+      "kind": "MathGuest",
+      "source": "Math add 1 2"
+    },
+    {
+      "entry": "Guest",
+      "kind": "CircuitGuest",
+      "source": "Circuit design nil Main nil"
+    },
+    {
+      "entry": "Guest",
+      "kind": "GrammarGuest",
+      "source": "Grammar language Tiny 1 Expr nil"
+    },
+    {
+      "entry": "Guest",
+      "kind": "DocGuest",
+      "source": "Doc article en sentence cons anno text \"\" cons text \"note\" nil nil body nil"
+    },
+    {
+      "entry": "Alignment",
+      "kind": "AlignmentDefault",
+      "source": "default"
+    },
+    {
+      "entry": "Alignment",
+      "kind": "AlignmentLeft",
+      "source": "left"
+    },
+    {
+      "entry": "Alignment",
+      "kind": "AlignmentCenter",
+      "source": "center"
+    },
+    {
+      "entry": "Alignment",
+      "kind": "AlignmentRight",
+      "source": "right"
+    },
+    {
+      "entry": "ListStyle",
+      "kind": "Unordered",
+      "source": "unordered"
+    },
+    {
+      "entry": "ListStyle",
+      "kind": "Ordered",
+      "source": "ordered 18446744073709551615"
+    },
+    {
+      "entry": "Check",
+      "kind": "CheckNone",
+      "source": "none"
+    },
+    {
+      "entry": "Check",
+      "kind": "Checked",
+      "source": "checked"
+    },
+    {
+      "entry": "Check",
+      "kind": "Unchecked",
+      "source": "unchecked"
+    },
+    {
+      "entry": "OptionalRow",
+      "kind": "NoRow",
+      "source": "none"
+    },
+    {
+      "entry": "OptionalRow",
+      "kind": "SomeRow",
+      "source": "some row nil"
+    },
+    {
+      "entry": "OptionalSentence",
+      "kind": "NoSentence",
+      "source": "none"
+    },
+    {
+      "entry": "OptionalSentence",
+      "kind": "SomeSentence",
+      "source": "some sentence nil"
+    },
+    {
+      "entry": "OptionalText",
+      "kind": "NoText",
+      "source": "none"
+    },
+    {
+      "entry": "OptionalText",
+      "kind": "SomeText",
+      "source": "some \"fragment\""
+    },
+    {
+      "entry": "LinkTarget",
+      "kind": "PageTarget",
+      "source": "page \"page\" some \"fragment\""
+    },
+    {
+      "entry": "LinkTarget",
+      "kind": "RelativeTarget",
+      "source": "relative \"../page\" none"
+    },
+    {
+      "entry": "LinkTarget",
+      "kind": "ExternalTarget",
+      "source": "external \"https://example.invalid\""
+    },
+    {
+      "entry": "Asset",
+      "kind": "AssetRef",
+      "source": "asset \"logo\" some \"01ab01ab01ab01ab01ab01ab01ab01ab01ab01ab01ab01ab01ab01ab01ab01ab\""
+    },
+    {
+      "entry": "Row",
+      "kind": "Row",
+      "source": "row cons sentence cons text \"cell\" nil nil"
+    },
+    {
+      "entry": "ListItem",
+      "kind": "ListItem",
+      "source": "item none body nil"
+    }
+  ]
+}
