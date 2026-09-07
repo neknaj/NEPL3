@@ -1,0 +1,18 @@
+{
+  "head": "8d6af49ea2d25520cd8098bbb8d61cd8dbca869e",
+  "json_changes": [
+    [
+      "/tasks/20/status",
+      "not-implemented",
+      "in-progress"
+    ]
+  ],
+  "command": [
+    "C:\\projects\\NEPL3-doc-page-links\\target\\debug\\nepl3-tools.exe",
+    "tasks",
+    "--check"
+  ],
+  "binary_sha256": "5486f56b5820dbfcf4c99d4084122a33c00254d0c06209e4f607936aa6b1740e",
+  "exit": 0,
+  "deadline_seconds": 60
+}
