@@ -20,12 +20,8 @@ pub fn generate(compiled: &Compiled, input: &str) -> Result<LocalDocument, Strin
     if input.len() as u64 > MAX_SOURCE_BYTES {
         return Err("SourceLimit".into());
     }
-    with_input_route(true, compiled, input, "Article", |tree, profile, b, a| {
-        let checked = tree
-            .tree()
-            .bundle
-            .validate_with_sources(profile.registry(), b, a)
-            .map_err(err)?;
+    with_input_route(true, compiled, input, "Article", |tree, profile, b, _a| {
+        let checked = tree.syntax();
         let parse_usage = b.usage();
         let empty = SourceStore::default();
         let mut admission = SourceAdmission::default();
@@ -33,7 +29,7 @@ pub fn generate(compiled: &Compiled, input: &str) -> Result<LocalDocument, Strin
             FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
         let mut lower_budget = budget();
         let doc = lower::document(
-            &checked,
+            checked,
             &compiled.doc.package.schema,
             Category::Article,
             profile.registry(),
