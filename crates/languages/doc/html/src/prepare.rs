@@ -23,7 +23,8 @@ impl<E> From<StopReason> for LocalPreparationError<'_, E> {
         Self::Stopped(e)
     }
 }
-pub struct PreparedLocalArticle<'a> {
+pub struct PreparedLocalArticle<'a>(pub(crate) PreparedRendering<'a>);
+pub(crate) struct PreparedRendering<'a> {
     pub(crate) document: &'a DocumentSyntax,
     pub(crate) options: &'a RenderOptions,
     pub(crate) selections: Vec<Option<VariantRef>>,
@@ -45,6 +46,14 @@ pub fn prepare_local<'a, C: FoundationValueCodec>(
     if !plan.requirements.is_empty() {
         return Err(LocalPreparationError::NeedsResolution(plan));
     }
+    prepare_rendering(document, options, plan.document_digest, budget).map(PreparedLocalArticle)
+}
+pub(crate) fn prepare_rendering<'a, E>(
+    document: &'a DocumentSyntax,
+    options: &'a RenderOptions,
+    identity: Digest,
+    budget: &mut Budget,
+) -> Result<PreparedRendering<'a>, LocalPreparationError<'a, E>> {
     if let ParallelMode::Single {
         language,
         fallbacks,
@@ -107,10 +116,10 @@ pub fn prepare_local<'a, C: FoundationValueCodec>(
         )?;
         selections.push(selected);
     }
-    Ok(PreparedLocalArticle {
+    Ok(PreparedRendering {
         document,
         options,
         selections,
-        identity: plan.document_digest,
+        identity,
     })
 }

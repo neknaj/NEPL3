@@ -1,0 +1,12 @@
+--- original/crates/languages/doc/core/src/pages.rs
++++ delta/crates/languages/doc/core/src/pages.rs
+@@ -109,6 +109,9 @@
+     }
+     pub fn plan(&self) -> &PageLinkPlan {
+         &self.plan
++    }
++    pub fn into_plan(self) -> PageLinkPlan {
++        self.plan
+     }
+ }
+ pub(crate) fn push<T>(v: &mut Vec<T>, item: T, b: &mut Budget) -> Result<(), StopReason> {

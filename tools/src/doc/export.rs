@@ -1,4 +1,5 @@
 //! Script-free local Doc export, using the same production pipeline as tests.
+pub mod pages;
 use super::source::{Compiled, budget, compiled, err, with_input_route};
 use nepl3_core::source::{Digest, SourceAdmission, SourceStore};
 use nepl3_doc_core::{check::Category, lower};
@@ -53,27 +54,7 @@ pub fn generate(compiled: &Compiled, input: &str) -> Result<LocalDocument, Strin
         )
         .map_err(err)?;
         let rendered = render(&prepared, &mut output_budget).map_err(err)?;
-        let m = &rendered.markup;
-        let checked =
-            nepl3_markup::html::validate(&m.fragment, m.slot, &m.policy, &mut output_budget)
-                .map_err(err)?;
-        check_shell_depth(&m.fragment, &mut output_budget)?;
-        let fragment = nepl3_markup::html::serialize(&checked, &mut output_budget).map_err(err)?;
-        let head = "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'self'; base-uri 'none'; form-action 'none'\"><title>NEPL3 Doc</title><link rel=\"stylesheet\" href=\"assets/doc.css\"></head><body>\n";
-        let tail = "\n</body></html>\n";
-        output_budget
-            .charge(
-                nepl3_core::budget::Resource::OutputBytes,
-                (head.len() + tail.len() + CSS.len()) as u64,
-            )
-            .map_err(err)?;
-        output_budget
-            .charge(
-                nepl3_core::budget::Resource::AllocationUnits,
-                (head.len() + fragment.len() + tail.len()) as u64,
-            )
-            .map_err(err)?;
-        let html = format!("{head}{fragment}{tail}");
+        let html = shell(&rendered, &mut output_budget)?;
         let digest = |bytes: &[u8]| {
             Digest::of(bytes)
                 .0
@@ -189,4 +170,31 @@ pub fn write(input: &Path, output: &Path) -> crate::Result<()> {
     // This is written last. Missing manifest means the output is incomplete.
     fs::write(output.join("manifest.json"), generated.manifest.as_bytes())?;
     Ok(())
+}
+
+fn shell(
+    rendered: &nepl3_doc_html::RenderedFragment,
+    output_budget: &mut nepl3_core::budget::Budget,
+) -> Result<String, String> {
+    let m = &rendered.markup;
+    let checked =
+        nepl3_markup::html::validate(&m.fragment, m.slot, &m.policy, output_budget).map_err(err)?;
+    check_shell_depth(&m.fragment, output_budget)?;
+    let fragment = nepl3_markup::html::serialize(&checked, output_budget).map_err(err)?;
+    let head = "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'self'; base-uri 'none'; form-action 'none'\"><title>NEPL3 Doc</title><link rel=\"stylesheet\" href=\"assets/doc.css\"></head><body>\n";
+    let tail = "\n</body></html>\n";
+    output_budget
+        .charge(
+            nepl3_core::budget::Resource::OutputBytes,
+            (head.len() + tail.len() + CSS.len()) as u64,
+        )
+        .map_err(err)?;
+    output_budget
+        .charge(
+            nepl3_core::budget::Resource::AllocationUnits,
+            (head.len() + fragment.len() + tail.len()) as u64,
+        )
+        .map_err(err)?;
+    let html = format!("{head}{fragment}{tail}");
+    Ok(html)
 }

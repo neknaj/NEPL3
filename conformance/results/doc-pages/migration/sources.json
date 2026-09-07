@@ -1,0 +1,30 @@
+{
+  "head": "b3032824764328901637ad6011149e3064ef1a4d",
+  "files": [
+    {
+      "path": "tools/migration/contract.py",
+      "sha256": "1d54aa7a506da7eeda9429f7a745b8a260f9315b09b1b3f57fa4f86c509878bf",
+      "bytes": 4310
+    },
+    {
+      "path": "doc/spec/00-contract.md",
+      "sha256": "4ca8d780d32696bf102774c346ffdf18d01452085f93a2daae9e49acf16b003f",
+      "bytes": 4368
+    },
+    {
+      "path": "doc/migration/00-contract.json",
+      "sha256": "713c94cc443d5ba78069e20e288e8c91779925147aa5e7f17fc25136a2d7ed67",
+      "bytes": 450
+    },
+    {
+      "path": "doc/migration/00-contract.nepld",
+      "sha256": "1ee46981e30e57e2c5965a21f3e1f318636178582faac645dfef780c60cfa520",
+      "bytes": 5636
+    },
+    {
+      "path": "doc/migration/README.md",
+      "sha256": "2d980f16c1aca892f24b9c65ec43d30c2bc84703fb0abdd0413010fb40bf8816",
+      "bytes": 959
+    }
+  ]
+}

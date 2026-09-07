@@ -61,4 +61,24 @@ let f=fields(v,s,"RenderedFragment",4)?;
 Ok(Self {document_digest:Value::read(&f[0],s,r,c,b)?,options:Value::read(&f[1],s,r,c,b)?,markup:Value::read(&f[2],s,r,c,b)?,origins:Value::read(&f[3],s,r,c,b)?})
 }
 }
+impl Value for PagesHtmlRequest {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,r:&SchemaRegistry,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"PagesHtmlRequest",[self.set.put(s,r,c,b)?,self.options.put(s,r,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,r:&SchemaRegistry,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,48)?;
+let f=fields(v,s,"PagesHtmlRequest",2)?;
+Ok(Self {set:Value::read(&f[0],s,r,c,b)?,options:Value::read(&f[1],s,r,c,b)?})
+}
+}
+impl Value for RenderedPages {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,r:&SchemaRegistry,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"RenderedPages",[self.identity.put(s,r,c,b)?,self.fragments.put(s,r,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,r:&SchemaRegistry,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,45)?;
+let f=fields(v,s,"RenderedPages",2)?;
+Ok(Self {identity:Value::read(&f[0],s,r,c,b)?,fragments:Value::read(&f[1],s,r,c,b)?})
+}
+}
 }

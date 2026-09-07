@@ -1,0 +1,27 @@
+   Compiling autocfg v1.5.1
+   Compiling typenum v1.20.1
+   Compiling cfg-if v1.0.4
+   Compiling unicode-ident v1.0.18
+   Compiling num-traits v0.2.19
+   Compiling hybrid-array v0.4.14
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling num-integer v0.1.47
+   Compiling num-bigint v0.4.8
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\foundation\core)
+   Compiling nepl3-doc-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\languages\doc\core)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\foundation\wire)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 38.85s
+     Running tests\pages.rs (C:\projects\NEPL3-runtime\.tmp\review-pages-target\wasm32-wasip2\debug\deps\pages-f37511b81167ea66.wasm)
+
+running 5 tests
+test external_links_remain_requirements_not_successful_page_links ... ok
+test first_cbor_receiver_recomputes_plan_and_rejects_forged_or_stale_links ... ok
+test page_resolution_obeys_sticky_resource_limits ... ok
+test pages_resolve_forward_and_relative_links_with_explicit_identity ... ok
+test registry_collisions_and_unknown_destinations_are_rejected ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+

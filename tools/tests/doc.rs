@@ -8,6 +8,8 @@ mod html;
 mod labels;
 #[path = "doc/mixed.rs"]
 mod mixed;
+#[path = "doc/pages.rs"]
+mod pages;
 #[path = "doc/prepare.rs"]
 mod prepare;
 #[path = "doc/print.rs"]

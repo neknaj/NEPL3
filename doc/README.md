@@ -49,3 +49,4 @@ HTMLの先行利用は [T22〜T25の実装段階](spec/18-html-delivery.md) に�
 型付きHTML fragmentの入力・検査・serializerは [19章](spec/19-html-fragment.md) と [markup schema](../interfaces/markup.json) を参照してください。
 
 - [Doc HTML変換の契約](spec/20-doc-html.md) — local準備・表示・portable再検査と未解決資源の扱い。
+- [Docページ集合とリンク解決](spec/21-doc-pages.md) — 明示された文書と配置を索引化し、ページ・見出しへの参照を検査する。

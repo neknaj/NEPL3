@@ -120,6 +120,22 @@ CIと同じ.gitattributesに従うfresh checkoutで通常ファイルをLFにそ
 
 実行証拠は `kind: command` としてコマンド、終了コード、runner/tool版を記録します。人による意味レビューは `kind: review` としてreviewer、独立性、scope、approved/rejectedを記録し、架空のコマンドを作りません。catalogのtarget種別と一致させ、非空の.txt/.log記録とSHA-256を添付します。詳細な必須fieldは証拠schemaに従います。
 
+## ページ集合と移行候補
+
+内部のページ参照を含むDoc原稿は、[21章](spec/21-doc-pages.md) の登録manifestから
+一括生成できます。全ページの参照・表示anchor・出力pathを検査してから保存します。
+
+```sh
+python tools/migration/contract.py
+python -m unittest discover -s tools/migration -p test_contract.py
+cargo run --locked -p nepl3-tools -- doc-html pages doc/migration/pages.json dist/doc-migration
+```
+
+[最初の移行候補](migration/README.md) は実際のDoc処理系でHTMLへ変換します。
+CIは候補の原本との一致と生成を各native OSで検査し、Ubuntuの生成物をartifactへ保存します。
+これは公開deployでも正本切替でもありません。旧anchor・Markdown projection・意味審査の
+条件を満たしてから、ページ単位で正式文書を移行します。
+
 ## CIと配布
 
 Doc単独の生成物は次で確認できます。出力先は存在しないディレクトリを指定してください。

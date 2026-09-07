@@ -36,3 +36,4 @@ dist/** export-ignore
 
 /conformance/results/doc-local-html/** -text -whitespace
 /conformance/results/markup-routes/** -text -whitespace
+/conformance/results/doc-pages/** -text -whitespace

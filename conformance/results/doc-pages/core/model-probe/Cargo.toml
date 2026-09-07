@@ -1,0 +1,9 @@
+[package]
+name="independent-page-model"
+version="0.0.0"
+edition="2024"
+[workspace]
+[dependencies]
+nepl3-core={path="C:/projects/NEPL3-runtime/.tmp/review-doc-pages/workspace/crates/foundation/core"}
+nepl3-wire={path="C:/projects/NEPL3-runtime/.tmp/review-doc-pages/workspace/crates/foundation/wire"}
+nepl3-doc-core={path="C:/projects/NEPL3-runtime/.tmp/review-doc-pages/workspace/crates/languages/doc/core"}

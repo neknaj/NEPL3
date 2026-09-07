@@ -1,0 +1,66 @@
+[
+  {
+    "engine": "chromium",
+    "version": "151.0.7922.34",
+    "mode": "http-subpath",
+    "result": {
+      "title": "NEPL3 Doc",
+      "sections": 6,
+      "lists": 1,
+      "items": 6,
+      "codes": 10,
+      "scripts": 0,
+      "styles": 1,
+      "background": "rgb(13, 17, 23)",
+      "overflow": false
+    }
+  },
+  {
+    "engine": "chromium",
+    "version": "151.0.7922.34",
+    "mode": "file",
+    "result": {
+      "title": "NEPL3 Doc",
+      "sections": 6,
+      "lists": 1,
+      "items": 6,
+      "codes": 10,
+      "scripts": 0,
+      "styles": 1,
+      "background": "rgb(13, 17, 23)",
+      "overflow": false
+    }
+  },
+  {
+    "engine": "firefox",
+    "version": "153.0",
+    "mode": "http-subpath",
+    "result": {
+      "title": "NEPL3 Doc",
+      "sections": 6,
+      "lists": 1,
+      "items": 6,
+      "codes": 10,
+      "scripts": 0,
+      "styles": 1,
+      "background": "rgb(13, 17, 23)",
+      "overflow": false
+    }
+  },
+  {
+    "engine": "firefox",
+    "version": "153.0",
+    "mode": "file",
+    "result": {
+      "title": "NEPL3 Doc",
+      "sections": 6,
+      "lists": 1,
+      "items": 6,
+      "codes": 10,
+      "scripts": 0,
+      "styles": 1,
+      "background": "rgb(13, 17, 23)",
+      "overflow": false
+    }
+  }
+]

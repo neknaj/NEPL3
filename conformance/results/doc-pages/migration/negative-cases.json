@@ -1,0 +1,312 @@
+[
+  {
+    "name": "hardbreak",
+    "markdown": "first  \nsecond",
+    "outcome": "accepted",
+    "independent_ast": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "raw": "first"
+          },
+          {
+            "type": "linebreak"
+          },
+          {
+            "type": "text",
+            "raw": "second"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "entity",
+    "markdown": "x &amp; y",
+    "outcome": "accepted",
+    "independent_ast": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "raw": "x &amp; y"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "indented",
+    "markdown": "    code here",
+    "outcome": "accepted",
+    "independent_ast": [
+      {
+        "type": "block_code",
+        "raw": "code here",
+        "style": "indent"
+      }
+    ]
+  },
+  {
+    "name": "setext",
+    "markdown": "Heading\n=======",
+    "outcome": "accepted",
+    "independent_ast": [
+      {
+        "type": "heading",
+        "style": "setext",
+        "attrs": {
+          "level": 1
+        },
+        "children": [
+          {
+            "type": "text",
+            "raw": "Heading"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "closing-heading",
+    "markdown": "## Extra ##",
+    "outcome": "rejected: contract section inventory changed; review migration",
+    "independent_ast": [
+      {
+        "type": "heading",
+        "attrs": {
+          "level": 2
+        },
+        "style": "atx",
+        "children": [
+          {
+            "type": "text",
+            "raw": "Extra"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "code-padding",
+    "markdown": "before `  code  ` after",
+    "outcome": "accepted",
+    "independent_ast": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "text",
+            "raw": "before "
+          },
+          {
+            "type": "codespan",
+            "raw": " code "
+          },
+          {
+            "type": "text",
+            "raw": " after"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "link",
+    "markdown": "[label](guide.md)",
+    "outcome": "rejected: unsupported inline Markdown",
+    "independent_ast": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "link",
+            "children": [
+              {
+                "type": "text",
+                "raw": "label"
+              }
+            ],
+            "attrs": {
+              "url": "guide.md"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "emphasis",
+    "markdown": "*word*",
+    "outcome": "rejected: unsupported inline Markdown",
+    "independent_ast": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "emphasis",
+            "children": [
+              {
+                "type": "text",
+                "raw": "word"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "fence",
+    "markdown": "```rust\ncode\n```",
+    "outcome": "rejected: unsupported block Markdown",
+    "independent_ast": [
+      {
+        "type": "block_code",
+        "raw": "code\n",
+        "style": "fenced",
+        "marker": "```",
+        "attrs": {
+          "info": "rust"
+        }
+      }
+    ]
+  },
+  {
+    "name": "ordered",
+    "markdown": "1. item",
+    "outcome": "rejected: unsupported block Markdown",
+    "independent_ast": [
+      {
+        "type": "list",
+        "children": [
+          {
+            "type": "list_item",
+            "children": [
+              {
+                "type": "block_text",
+                "children": [
+                  {
+                    "type": "text",
+                    "raw": "item"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "tight": true,
+        "bullet": ".",
+        "attrs": {
+          "depth": 0,
+          "ordered": true
+        }
+      }
+    ]
+  },
+  {
+    "name": "nested-list",
+    "markdown": "- outer\n  - inner",
+    "outcome": "rejected: unsupported block Markdown",
+    "independent_ast": [
+      {
+        "type": "list",
+        "children": [
+          {
+            "type": "list_item",
+            "children": [
+              {
+                "type": "block_text",
+                "children": [
+                  {
+                    "type": "text",
+                    "raw": "outer"
+                  }
+                ]
+              },
+              {
+                "type": "list",
+                "children": [
+                  {
+                    "type": "list_item",
+                    "children": [
+                      {
+                        "type": "block_text",
+                        "children": [
+                          {
+                            "type": "text",
+                            "raw": "inner"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "tight": true,
+                "bullet": "-",
+                "attrs": {
+                  "depth": 1,
+                  "ordered": false
+                }
+              }
+            ]
+          }
+        ],
+        "tight": true,
+        "bullet": "-",
+        "attrs": {
+          "depth": 0,
+          "ordered": false
+        }
+      }
+    ]
+  },
+  {
+    "name": "image",
+    "markdown": "![alt](a.png)",
+    "outcome": "rejected: unsupported inline Markdown",
+    "independent_ast": [
+      {
+        "type": "paragraph",
+        "children": [
+          {
+            "type": "image",
+            "children": [
+              {
+                "type": "text",
+                "raw": "alt"
+              }
+            ],
+            "attrs": {
+              "url": "a.png"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "blockquote",
+    "markdown": "> quote",
+    "outcome": "rejected: unsupported block Markdown",
+    "independent_ast": [
+      {
+        "type": "block_quote",
+        "children": [
+          {
+            "type": "paragraph",
+            "children": [
+              {
+                "type": "text",
+                "raw": "quote"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

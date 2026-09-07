@@ -1,0 +1,16 @@
+   Compiling independent-page-model v0.0.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\model-probe)
+warning: unused imports: `Digest`, `Resource`, and `value::NdfValue`
+ --> src\main.rs:2:30
+  |
+2 |     budget::{Budget, Limits, Resource},
+  |                              ^^^^^^^^
+3 |     schema::SchemaRegistry,
+4 |     source::{Digest, SourceAdmission, SourceStore},
+  |              ^^^^^^
+5 |     value::NdfValue,
+  |     ^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `independent-page-model` (bin "independent-page-model") generated 1 warning (run `cargo fix --bin "independent-page-model" -p independent-page-model` to apply 1 suggestion)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.78s

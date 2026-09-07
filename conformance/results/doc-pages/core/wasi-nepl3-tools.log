@@ -1,0 +1,30 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling serde v1.0.229
+   Compiling memchr v2.8.3
+   Compiling pulldown-cmark v0.13.4
+   Compiling serde_json v1.0.151
+   Compiling unicase v2.9.0
+   Compiling itoa v1.0.18
+   Compiling bitflags v2.13.1
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\foundation\reader)
+   Compiling nepl3-markup v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\output\markup)
+   Compiling nepl3-math-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\languages\math\core)
+   Compiling nepl3-doc-html v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\languages\doc\html)
+   Compiling syn v3.0.5
+   Compiling nepl3-engine v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\foundation\engine)
+   Compiling serde_derive v1.0.229
+   Compiling nepl3-grammar-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\crates\languages\grammar\core)
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-pages\workspace\tools)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 37s
+     Running tests\doc.rs (C:\projects\NEPL3-runtime\.tmp\review-pages-target\wasm32-wasip2\debug\deps\doc-d82c699289d48b18.wasm)
+
+running 1 test
+test pages::real_two_page_sources_resolve_without_ambient_documents ... intro: [(SnapshotId { source: SourceId("intro"), revision: 0, digest: Digest([141, 107, 223, 219, 16, 197, 49, 206, 31, 238, 168, 31, 170, 35, 247, 219, 243, 91, 144, 132, 25, 142, 49, 195, 165, 78, 107, 186, 150, 222, 42, 242]) }, "memory:intro"), (SnapshotId { source: SourceId("5:intro:0:1"), revision: 0, digest: Digest([26, 121, 48, 39, 32, 23, 9, 11, 226, 108, 130, 109, 75, 134, 88, 215, 38, 32, 224, 25, 71, 168, 33, 130, 173, 164, 231, 169, 78, 180, 209, 153]) }, "memory:5:intro:0:1"), (SnapshotId { source: SourceId("5:intro:0:2"), revision: 0, digest: Digest([131, 202, 104, 190, 98, 39, 175, 47, 235, 21, 242, 39, 72, 94, 209, 138, 255, 142, 202, 233, 148, 22, 164, 189, 109, 243, 190, 27, 94, 128, 89, 180]) }, "memory:5:intro:0:2"), (SnapshotId { source: SourceId("5:intro:0:3"), revision: 0, digest: Digest([10, 78, 76, 41, 67, 46, 203, 1, 185, 95, 135, 216, 127, 250, 255, 156, 180, 243, 108, 228, 184, 159, 241, 161, 161, 54, 173, 28, 115, 146, 174, 7]) }, "memory:5:intro:0:3"), (SnapshotId { source: SourceId("5:intro:0:4"), revision: 0, digest: Digest([23, 201, 228, 22, 13, 79, 10, 181, 62, 248, 207, 85, 151, 213, 139, 210, 62, 22, 57, 170, 94, 178, 225, 232, 203, 35, 169, 230, 216, 64, 145, 156]) }, "memory:5:intro:0:4")]
+guide: [(SnapshotId { source: SourceId("guide"), revision: 0, digest: Digest([61, 179, 205, 86, 71, 183, 42, 149, 215, 174, 184, 90, 168, 191, 105, 104, 24, 82, 156, 221, 18, 144, 67, 36, 176, 83, 178, 201, 97, 100, 33, 39]) }, "memory:guide"), (SnapshotId { source: SourceId("5:guide:0:1"), revision: 0, digest: Digest([194, 133, 159, 132, 144, 143, 194, 14, 206, 253, 108, 157, 111, 75, 183, 183, 225, 29, 65, 5, 146, 12, 62, 127, 229, 230, 207, 17, 124, 8, 129, 39]) }, "memory:5:guide:0:1"), (SnapshotId { source: SourceId("5:guide:0:2"), revision: 0, digest: Digest([204, 237, 40, 198, 220, 63, 153, 194, 57, 106, 94, 170, 215, 50, 191, 107, 40, 20, 35, 53, 137, 43, 28, 208, 230, 175, 108, 219, 83, 245, 204, 250]) }, "memory:5:guide:0:2"), (SnapshotId { source: SourceId("5:guide:0:3"), revision: 0, digest: Digest([74, 213, 176, 101, 115, 241, 148, 107, 66, 70, 89, 93, 182, 168, 97, 199, 62, 175, 193, 135, 221, 197, 98, 161, 94, 146, 195, 26, 194, 253, 112, 49]) }, "memory:5:guide:0:3")]
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 42 filtered out; finished in 0.43s
+

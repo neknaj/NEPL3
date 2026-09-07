@@ -1,0 +1,96 @@
+[
+  {
+    "command": [
+      "cargo",
+      "test",
+      "--offline",
+      "--locked",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages\\workspace\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-pages-target",
+      "-p",
+      "nepl3-doc-core",
+      "--test",
+      "pages",
+      "--",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "exit": 0,
+    "seconds": 7.329346179962158,
+    "deadline": 1200
+  },
+  {
+    "command": [
+      "cargo",
+      "test",
+      "--offline",
+      "--locked",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages\\workspace\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-pages-target",
+      "-p",
+      "nepl3-tools",
+      "--test",
+      "doc",
+      "pages::",
+      "--",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "exit": 0,
+    "seconds": 17.516741275787354,
+    "deadline": 1200
+  },
+  {
+    "command": [
+      "cargo",
+      "test",
+      "--offline",
+      "--locked",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages\\workspace\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-pages-target",
+      "-p",
+      "nepl3-doc-core",
+      "--test",
+      "pages",
+      "--target",
+      "wasm32-wasip2",
+      "--",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "exit": 0,
+    "seconds": 39.492756843566895,
+    "deadline": 1200
+  },
+  {
+    "command": [
+      "cargo",
+      "test",
+      "--offline",
+      "--locked",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages\\workspace\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-pages-target",
+      "-p",
+      "nepl3-tools",
+      "--test",
+      "doc",
+      "pages::",
+      "--target",
+      "wasm32-wasip2",
+      "--",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "exit": 0,
+    "seconds": 159.28931045532227,
+    "deadline": 1200
+  }
+]

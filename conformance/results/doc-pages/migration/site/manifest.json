@@ -1,0 +1,59 @@
+{
+  "budget_scope": "Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
+  "files": [
+    {
+      "license": "MIT",
+      "mime": "text/css; charset=utf-8",
+      "path": "assets/doc.css",
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "index.html",
+      "sha256": "ee8464717f7c97cd1f915456b6fafce3c0a96ca88e388c51d360439c7f8ba801"
+    },
+    {
+      "license": "MIT",
+      "mime": "text/css; charset=utf-8",
+      "path": "reference/contract/assets/doc.css",
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "reference/contract/index.html",
+      "sha256": "a064239075aa71de6f237afe9a89f1a90a6023711a9680d52ee9fb8f3bd410fc"
+    }
+  ],
+  "format": "nepl3.local-doc-pages/1",
+  "identity": "0abd1263f17c1637ef3aa15aa0f463d3069a0dd66a80be9e4b971e3794fc0737",
+  "options": {
+    "parallel": "Rows"
+  },
+  "output_usage": {
+    "allocation_units": 33276094,
+    "output_bytes": 3572467,
+    "work": 8054062
+  },
+  "packages": "compiled checked bootstrap fixtures",
+  "pages": [
+    {
+      "id": "migration",
+      "profile_sha256": "1a348254d9f92346f108b3282ad750af5a02529a3fa9ec3ba6a45b44890c46f3",
+      "route": "index.html",
+      "source": "index.nepld",
+      "source_sha256": "554c9a8eed5840d5be646644ff24cfbe78c6510ea6ddb91a625b6b842c14c7d4"
+    },
+    {
+      "id": "contract",
+      "profile_sha256": "1a348254d9f92346f108b3282ad750af5a02529a3fa9ec3ba6a45b44890c46f3",
+      "route": "reference/contract/index.html",
+      "source": "00-contract.nepld",
+      "source_sha256": "1ee46981e30e57e2c5965a21f3e1f318636178582faac645dfef780c60cfa520"
+    }
+  ],
+  "renderer": "nepl3-doc-html pages/1",
+  "scope": "Internal Doc page links; external URI, assets and foreign rendering remain unsupported. Not Pages deployment evidence.",
+  "viewer_scripts": false
+}

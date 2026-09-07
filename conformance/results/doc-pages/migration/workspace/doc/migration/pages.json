@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "pages": [
+    {"id": "migration", "source": "index.nepld", "route": "index.html"},
+    {"id": "contract", "source": "00-contract.nepld", "route": "reference/contract/index.html"}
+  ]
+}

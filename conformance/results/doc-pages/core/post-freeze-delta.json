@@ -1,0 +1,22 @@
+[
+  {
+    "path": "crates/languages/doc/core/src/pages.rs",
+    "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages\\post-freeze-delta\\crates\\languages\\doc\\core\\src\\pages.rs",
+    "sha256": "8b2b149912079442ec4463309aa91e5dff73ad65dfc9823ee373a78d26b3d116"
+  },
+  {
+    "path": "crates/languages/doc/core/tests/pages.rs",
+    "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages\\post-freeze-delta\\crates\\languages\\doc\\core\\tests\\pages.rs",
+    "sha256": "4933232bdccc7977b7e20199fc8469aab11e8d1cbf32dda80581151332524eaf"
+  },
+  {
+    "path": "tools/tests/doc/pages.rs",
+    "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages\\post-freeze-delta\\tools\\tests\\doc\\pages.rs",
+    "sha256": "9f0c0776fddfae3714d299705fdea6fe5704dc3e36d607b9e05c04b56c252aab"
+  },
+  {
+    "path": "doc/spec/21-doc-pages.md",
+    "source_path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages\\post-freeze-delta\\doc\\spec\\21-doc-pages.md",
+    "sha256": "f2d99c220264aa0ae64e96eae41af0c2389519df6b46970155fcec97978927b7"
+  }
+]
