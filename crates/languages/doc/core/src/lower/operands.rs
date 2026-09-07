@@ -184,6 +184,7 @@ impl Adapter<'_, '_> {
         n: &SyntaxNode,
         f: usize,
         kind: EmbedKind,
+        admission: &mut SourceAdmission,
     ) -> Result<EmbedRef, LowerError> {
         let child = self.child(id, n, f)?;
         let node = self
@@ -210,7 +211,7 @@ impl Adapter<'_, '_> {
             });
         };
         let closure =
-            ForeignClosure::capture(foreign, self.checked, self.registry, self.b, self.admission)?;
+            ForeignClosure::capture(foreign, self.checked, self.registry, self.b, admission)?;
         let index = EmbedRef(self.embeds.len() as u64);
         push(&mut self.embeds, DocEmbed { kind, closure }, self.b)?;
         Ok(index)
