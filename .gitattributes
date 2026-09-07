@@ -38,3 +38,4 @@ dist/** export-ignore
 /conformance/results/markup-routes/** -text -whitespace
 /conformance/results/doc-pages/** -text -whitespace
 /conformance/results/doc-projection/** -text -whitespace
+/conformance/results/doc-external/** -text -whitespace
