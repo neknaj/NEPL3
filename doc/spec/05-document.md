@@ -121,7 +121,19 @@ lower(Parsed, Profile) -> DocumentSyntax + diagnostics。
 check(DocumentSyntax, LabelEnvironment) -> CheckedArticle + foreign Requirements。
 prepare(CheckedArticle, ResolvedEmbeds) -> PreparedArticle。
 render(PreparedArticle, RenderOptions) -> HtmlArtifact。
-plain_text(Sentence, AnnotationPolicy) -> Text。
+plain_text(PlainTextRequest) -> PlainTextReply。
 print(DocumentSyntax, Prefix|Compact) -> SourceArtifact。
 
 AnnotationPolicyはBaseOnly、WithReadings、WithAllNotesを明示する。テキスト抽出時に隠れた翻訳選択を行わない。各constructorはRust APIとportable record constructorの双方から呼べる。
+
+### 8.1. plain_text の実行契約
+
+実操作descriptorは `nepl3.doc@1` の `plainText: PlainTextRequest -> PlainTextReply`（pure）である。要求は宣言source閉包を持つDocumentSyntax、対象SentenceRef、AnnotationPolicy、明示ResolvedInlineText列を所有する。SentenceRefはそのdocument内のSentenceを指す必要があり、別categoryはExpectedSentenceとなる。schemaとDocumentSyntax構造の不正は入力境界の型付きエラーである。受理済み要求の名前付き失敗はPlainTextFailureで返し、停止は準備段階も含めStoppedと元StopReasonを返す。成功時だけComplete.textを返す。Reportは同一操作のUsageを持ち、その位置参照は元要求documentの宣言source閉包に限る。独立返信codecにも元要求documentを明示して渡し、ambient sourceを補完しない。非StoppedとtraceOverflowの組合せを拒否する。
+
+BaseOnlyはRubyとAnnoのbaseだけを投影する。WithReadingsはRubyを `base[reading]` とし、Annoはbaseだけを投影する。WithAllNotesはRubyも同じとし、Annoを `base{note1/note2}` とする。入れ子にも同じpolicyを適用する。TextとInlineCodeの文字は変更せず、BreakはLFを一つ出力する。装飾は子inline、Anchor/Reference/Linkは明示label、InlineImageは明示alt Sentenceを投影する。Sentence/Concatの子間に空白を追加しない。この出力は再parse用sentence literalではなく、角括弧・波括弧・slashをescapeし直さない。任意separatorのoptionsは設けない。
+
+InlineMathは暗黙にlower・意味check・評価しない。必要な表示textはhostが `ResolvedInlineText{documentDigest,embed,guestDigest,text}` として提供する。documentDigestは `SHA-256("NEPL3.Doc.PlainText.Document.v1\0" || canonical-NDF/1-CBOR(DocumentSyntax))`、guestDigestは `SHA-256("NEPL3.Doc.PlainText.Guest.v1\0" || canonical-NDF/1-CBOR(ForeignClosure))` とする。引用内の `\0` は一つのゼロbyte、他はASCII byteである。値はそれぞれDocの正式DocumentSyntax codecとfoundationの正式ForeignClosure codecが返すschema検査済み値であり、型を参照するSchemaRefのdigestもcanonical CBORへ含める。guest側はowner環境・元Origin列・source/map閉包も含み、局所EmbedRefだけの一致で別guestや古い環境のtextを再利用しない。
+
+全提供entryについて32byte digest、対象InlineMath、重複EmbedRef、現在document/guest両identityとの一致を検査する。policyがそのentryを表示しない場合も不正entryを黙殺しない。一方、未提供textによるUnresolvedEmbedは選択policyで実際に投影するInlineMathだけに適用し、BaseOnlyで隠れるreading/notesのtextを要求しない。hostのtextは明示データであり、guest意味checkが成功した証明ではない。
+
+identity取得のprepareは独立した操作であり、後の実行予算を支払い済みとするproofではない。公開実行入口plain_textは毎回同一Budget/SourceAdmissionでdocument検査、canonical値生成とhash、entry検査、出力を合成する。sourceは共有admissionで同snapshotを一度だけ計上し、出力byte、Work、Allocation、深さを計上する。停止時は元要求を変更せず、不完全なTextをCompleteへ昇格させない。

@@ -11,3 +11,4 @@ pub mod normalize;
 pub mod portable;
 pub mod schema;
 pub mod sentence;
+pub mod text;

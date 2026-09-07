@@ -23,9 +23,9 @@ def signatures():
 def generate():
     types=json.loads((ROOT/"interfaces/doc.json").read_text(encoding="utf-8"))["types"]
     out=["// Generated from interfaces/doc.json by tools/generate/doc.py. Do not edit.","use super::*;","#[rustfmt::skip]","mod adapters {", "use super::*;"]
-    rename={"languageHint":"language_hint","sourceMaps":"source_maps"}
+    rename={"languageHint":"language_hint","sourceMaps":"source_maps","documentDigest":"document_digest","guestDigest":"guest_digest"}
     for name,shape in types.items():
-        if name=="DocumentSyntax" or name.startswith("View:"): continue
+        if name in ("DocumentSyntax", "PlainTextRequest") or name.startswith("View:"): continue
         out.append(f"impl Value for {name} {{")
         unused_c = "variant" in shape and not any(shape["variant"].values())
         out.append("fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,"+("_c" if unused_c else "c")+":&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {")
