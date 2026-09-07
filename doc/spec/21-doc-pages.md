@@ -106,13 +106,17 @@ GitHub等でも閲覧するための限定したhost出力である。通常のD
 
 対応するArticleは、同階層のSectionだけを持つもの、またはSectionを持たないもの。
 段落は単一Sentence、listは非空unordered・checkboxなし・各itemが単一段落である。
-Sentence内は非空TextとInlineCodeだけを扱う。隣接するcode、隣接list、節の入れ子や
+Sentence内は非空TextとInlineCode、および本文途中のBreakを扱う。隣接するcode、隣接list、節の入れ子や
 節外の後続blockは、Markdownでの再結合・所属変更を避けるため拒否する。注釈、parallel、
 画像、表、リンク、code block等は将来の契約・試験ができるまでUnsupportedとする。
 これはDoc DSL自体の表現能力を縮小する制約ではない。
 
 TextのASCII句読記号をescapeし、Codeのbacktickと前後空白を保持する。
 制御文字、空のinline、Sentence端のText空白はこのprojectionでは拒否する。
+本文のBreakはbackslashと改行でCommonMarkのhard line breakへ写し、list内では
+継続行をitem本文へindentする。見出し内、Sentence端、連続するBreak、Break前後の
+Text空白は、Markdownで構造や空白が失われるため拒否する。DocのBreak自体を制約せず、
+この閲覧用projectionの非対応として扱う。Text内の改行をBreakへ暗黙変換しない。
 規則は [CommonMark 0.31.2](https://spec.commonmark.org/0.31.2/#code-spans) に従い、
 実際のMarkdown parserで内容とblock/code event列を独立に比較する。
 

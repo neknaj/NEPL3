@@ -2,6 +2,76 @@ use super::*;
 use nepl3_tools::doc::projection::from_source;
 
 #[test]
+fn explicit_breaks_preserve_markdown_paragraph_and_list_structure() -> Result<(), String> {
+    use pulldown_cmark::{Event, Parser, Tag};
+    let compiled = compiled()?;
+    let source = r##"article en "Title" body
+      cons paragraph cons sentence cons text "first" cons break cons text "# second" nil nil
+      cons list unordered
+        cons item none body cons paragraph cons sentence cons code "one" cons break cons text "- two" nil nil nil
+        cons item none body cons paragraph cons "third" nil nil
+      nil nil"##;
+    let output = from_source(&compiled, source)?;
+    let mut observed = Vec::new();
+    let mut lists = 0;
+    let mut items = 0;
+    let mut headings = 0;
+    let mut paragraphs = 0;
+    for event in Parser::new(&output) {
+        match event {
+            Event::Text(t) => observed.push(format!("text:{t}")),
+            Event::Code(t) => observed.push(format!("code:{t}")),
+            Event::HardBreak => observed.push("break".into()),
+            Event::SoftBreak => return Err("unexpected soft break".into()),
+            Event::Start(Tag::List(_)) => lists += 1,
+            Event::Start(Tag::Item) => items += 1,
+            Event::Start(Tag::Heading { .. }) => headings += 1,
+            Event::Start(Tag::Paragraph) => paragraphs += 1,
+            _ => {}
+        }
+    }
+    // Independently specified semantic sequence, not generated output golden.
+    assert_eq!(
+        observed,
+        [
+            "text:Title",
+            "text:first",
+            "break",
+            "text:# second",
+            "code:one",
+            "break",
+            "text:- two",
+            "text:third"
+        ]
+    );
+    assert_eq!((lists, items, headings, paragraphs), (1, 2, 1, 1));
+    Ok(())
+}
+
+#[test]
+fn markdown_breaks_refuse_lossy_edges_and_heading_line_splitting() -> Result<(), String> {
+    let compiled = compiled()?;
+    for inlines in [
+        "cons break cons text \"x\"",
+        "cons text \"x\" cons break",
+        "cons text \"x\" cons break cons break cons text \"y\"",
+        "cons text \"x \" cons break cons text \"y\"",
+        "cons text \"x\" cons break cons text \" y\"",
+    ] {
+        let source =
+            format!("article en \"T\" body cons paragraph cons sentence {inlines} nil nil nil");
+        assert!(from_source(&compiled, &source).is_err(), "{source}");
+    }
+    for source in [
+        r#"article en sentence cons text "x" cons break cons text "y" nil body nil"#,
+        r#"article en "T" body cons section s sentence cons text "x" cons break cons text "y" nil body nil nil"#,
+    ] {
+        assert!(from_source(&compiled, source).is_err(), "{source}");
+    }
+    Ok(())
+}
+
+#[test]
 fn markdown_projection_preserves_literal_punctuation_and_code_delimiters() -> Result<(), String> {
     let compiled = compiled()?;
     let source = r##"article en "Title" body cons paragraph cons sentence cons text "[x] &amp; *y* " cons code "`a`" cons text " / " cons code " both " nil nil nil"##;
