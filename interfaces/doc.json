@@ -297,6 +297,42 @@
               }
             }
           ]
+        ],
+        "Guest": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "GuestRef"
+              }
+            }
+          ]
+        ],
+        "MathGuest": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "GuestRef"
+              }
+            }
+          ]
+        ],
+        "CircuitGuest": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "GuestRef"
+              }
+            }
+          ]
         ]
       },
       "constraints": []
@@ -379,7 +415,8 @@
         "InlineMath": [],
         "DisplayMath": [],
         "CircuitFigure": [],
-        "Code": []
+        "Code": [],
+        "Guest": []
       },
       "constraints": []
     },
@@ -969,6 +1006,28 @@
             "text",
             {
               "option": "Text"
+            }
+          ]
+        ],
+        "Guest": [
+          [
+            "language",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "GuestLanguage"
+              }
+            }
+          ],
+          [
+            "syntax",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
             }
           ]
         ]
@@ -1625,6 +1684,392 @@
         ]
       ],
       "constraints": []
+    },
+    "GuestRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "GuestLanguage": {
+      "variant": {
+        "Math": [],
+        "Circuit": [],
+        "Grammar": [],
+        "Doc": []
+      },
+      "constraints": []
+    },
+    "PrintMode": {
+      "variant": {
+        "Prefix": [],
+        "Compact": []
+      },
+      "constraints": []
+    },
+    "GuestBinding": {
+      "record": [
+        [
+          "schema",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "SchemaRef"
+            }
+          }
+        ],
+        [
+          "category",
+          "Text"
+        ],
+        [
+          "language",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "GuestLanguage"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "PrintedGuest": {
+      "record": [
+        [
+          "documentDigest",
+          "Bytes"
+        ],
+        [
+          "embed",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "EmbedRef"
+            }
+          }
+        ],
+        [
+          "guestDigest",
+          "Bytes"
+        ],
+        [
+          "text",
+          "Text"
+        ]
+      ],
+      "constraints": []
+    },
+    "PrintGuestTarget": {
+      "record": [
+        [
+          "embed",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "EmbedRef"
+            }
+          }
+        ],
+        [
+          "guestDigest",
+          "Bytes"
+        ]
+      ],
+      "constraints": []
+    },
+    "PrintIdentity": {
+      "record": [
+        [
+          "documentDigest",
+          "Bytes"
+        ],
+        [
+          "guests",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "PrintGuestTarget"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "PrintRequest": {
+      "record": [
+        [
+          "document",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "DocumentSyntax"
+            }
+          }
+        ],
+        [
+          "mode",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "PrintMode"
+            }
+          }
+        ],
+        [
+          "bindings",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "GuestBinding"
+              }
+            }
+          }
+        ],
+        [
+          "guests",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "PrintedGuest"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "PrintEntry": {
+      "variant": {
+        "Article": [],
+        "Body": [],
+        "Block": [],
+        "Flow": [],
+        "Sentence": [],
+        "Inline": [],
+        "Variant": [],
+        "Row": [],
+        "ListItem": [],
+        "Alignment": [],
+        "ListStyle": [],
+        "Check": [],
+        "LinkTarget": [],
+        "Asset": [],
+        "OptionalRow": [],
+        "OptionalSentence": [],
+        "OptionalText": [],
+        "MathGuest": [],
+        "CircuitGuest": [],
+        "Guest": []
+      },
+      "constraints": []
+    },
+    "SourceArtifact": {
+      "record": [
+        [
+          "text",
+          "Text"
+        ],
+        [
+          "entry",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "PrintEntry"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "PrintMismatch": {
+      "variant": {
+        "Document": [],
+        "Guest": [],
+        "Embed": [],
+        "Duplicate": []
+      },
+      "constraints": []
+    },
+    "PrintFailure": {
+      "variant": {
+        "InvalidBinding": [
+          [
+            "binding",
+            "U64"
+          ]
+        ],
+        "ConflictingBinding": [
+          [
+            "binding",
+            "U64"
+          ]
+        ],
+        "MissingBinding": [
+          [
+            "embed",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "GuestCategory": [
+          [
+            "embed",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "InvalidGuest": [
+          [
+            "entry",
+            "U64"
+          ],
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "PrintMismatch"
+              }
+            }
+          ]
+        ],
+        "UnresolvedGuest": [
+          [
+            "embed",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "UnprintableName": [
+          [
+            "node",
+            "U64"
+          ],
+          [
+            "field",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "DocField"
+              }
+            }
+          ]
+        ],
+        "UnprintableLanguage": [
+          [
+            "node",
+            "U64"
+          ]
+        ],
+        "UnprintableLiteral": [
+          [
+            "node",
+            "U64"
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "PrintOutcome": {
+      "variant": {
+        "Complete": [
+          [
+            "artifact",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "SourceArtifact"
+              }
+            }
+          ]
+        ],
+        "Invalid": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "PrintFailure"
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "PrintReply": {
+      "record": [
+        [
+          "outcome",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "PrintOutcome"
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Report"
+            }
+          }
+        ]
+      ],
+      "constraints": []
     }
   },
   "operations": {
@@ -1641,6 +2086,23 @@
           "package": "nepl3.doc",
           "revision": 1,
           "name": "PlainTextReply"
+        }
+      },
+      "pure": true
+    },
+    "print": {
+      "input": {
+        "named": {
+          "package": "nepl3.doc",
+          "revision": 1,
+          "name": "PrintRequest"
+        }
+      },
+      "output": {
+        "named": {
+          "package": "nepl3.doc",
+          "revision": 1,
+          "name": "PrintReply"
         }
       },
       "pure": true

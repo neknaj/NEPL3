@@ -19,6 +19,9 @@ pub(crate) fn root(root: DocRoot) -> (u64, Category) {
         DocRoot::OptionalRow(v) => (v.0, Category::OptionalRow),
         DocRoot::OptionalSentence(v) => (v.0, Category::OptionalSentence),
         DocRoot::OptionalText(v) => (v.0, Category::OptionalText),
+        DocRoot::Guest(v) => (v.0, Category::Guest),
+        DocRoot::MathGuest(v) => (v.0, Category::MathGuest),
+        DocRoot::CircuitGuest(v) => (v.0, Category::CircuitGuest),
     }
 }
 pub(crate) fn accepts(kind: &DocKind, category: Category) -> bool {
@@ -32,6 +35,21 @@ pub(crate) fn accepts(kind: &DocKind, category: Category) -> bool {
         Category::OptionalRow => matches!(kind, OptionalRow { .. }),
         Category::OptionalSentence => matches!(kind, OptionalSentence { .. }),
         Category::OptionalText => matches!(kind, OptionalText { .. }),
+        Category::Guest => matches!(kind, Guest { .. }),
+        Category::MathGuest => matches!(
+            kind,
+            Guest {
+                language: crate::model::GuestLanguage::Math,
+                ..
+            }
+        ),
+        Category::CircuitGuest => matches!(
+            kind,
+            Guest {
+                language: crate::model::GuestLanguage::Circuit,
+                ..
+            }
+        ),
         Category::Article => matches!(kind, Article { .. }),
         Category::Body => matches!(kind, Body { .. }),
         Category::Block => matches!(
@@ -89,7 +107,8 @@ pub(crate) fn edge(kind: &DocKind, index: usize) -> Option<(u64, Category)> {
                 None
             }
         }
-        Alignment { .. }
+        Guest { .. }
+        | Alignment { .. }
         | ListStyle { .. }
         | Check { .. }
         | Target { .. }
@@ -165,7 +184,8 @@ pub(crate) fn rewrite(
                 sentence.0 = map(sentence.0)?;
             }
         }
-        DocKind::Alignment { .. }
+        DocKind::Guest { .. }
+        | DocKind::Alignment { .. }
         | DocKind::ListStyle { .. }
         | DocKind::Check { .. }
         | DocKind::Target { .. }
@@ -299,6 +319,9 @@ pub(crate) fn rewrite_root(
         DocRoot::OptionalRow(v) => v.0 = id,
         DocRoot::OptionalSentence(v) => v.0 = id,
         DocRoot::OptionalText(v) => v.0 = id,
+        DocRoot::Guest(v) => v.0 = id,
+        DocRoot::MathGuest(v) => v.0 = id,
+        DocRoot::CircuitGuest(v) => v.0 = id,
     }
     Ok(())
 }

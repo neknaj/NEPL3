@@ -1,0 +1,91 @@
+{
+  "format": "nepl3.development-slice/1",
+  "scope": "T07 Doc printer: explicit guest inputs, Prefix and Compact modes, typed native and portable operation",
+  "base_commit": "eb25a64c54010c618c135dc87a367f227b451456",
+  "tested_base_equivalence": "All production gates used the 29 frozen files on eb25a64. The independent review text was then added and repository contracts rerun; production files remained unchanged.",
+  "result": "passed-within-recorded-scope",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "checks": [
+    {
+      "command": "cargo test --workspace --locked",
+      "exit_code": 0,
+      "log": "conformance/results/doc-print/native.log",
+      "sha256": "566ee91193d5d862f9e386ac4e13d82dc6939e1c2d8ed7bc31600e47d1ff2f6e"
+    },
+    {
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER='wasmtime run'; cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar diagnostic::compiler_report_boundary_without_host_process --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::all_reader_constructors --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::compiled_reader_streaming_boundaries_and_rollback_keep_raw_positions --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test doc --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar region:: --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core --no-default-features --target wasm32-unknown-unknown",
+      "exit_code": 0,
+      "log": "conformance/results/doc-print/wasi.log",
+      "sha256": "6f0cf4665bb7b8412f517e3537135ee353c7882ebdbcf727f6691eb3400c75fa"
+    },
+    {
+      "command": "cargo fmt --all -- --check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo clippy --workspace --all-targets --locked -- -D warnings; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps --locked",
+      "exit_code": 0,
+      "log": "conformance/results/doc-print/quality.log",
+      "sha256": "b42bfb0b073c63ac13ef65150c7968d5fd8ecdb66b9bc2c50b9b75310cf409d5"
+    },
+    {
+      "command": "cargo run --locked -p nepl3-tools -- check",
+      "exit_code": 0,
+      "log": "conformance/results/doc-print/contract.log",
+      "sha256": "9ba9e9f5e9018934735ed99637a54037ee365b2b28dc19ae1faab002603f2548"
+    },
+    {
+      "command": "python tools/audit/structure.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/audit -p test.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/doc.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/bootstrap -p test_grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/audit/allocation/run.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo run --locked -p nepl3-tools -- tasks --check",
+      "exit_code": 0,
+      "log": "conformance/results/doc-print/audit.log",
+      "sha256": "fd8a210040259df75ff83efff7ef0a2d4340a4d54129adcf440bde4e425d1f29"
+    },
+    {
+      "command": "C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe --version; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe .github/workflows/ci.yml",
+      "exit_code": 0,
+      "log": "conformance/results/doc-print/ci.log",
+      "sha256": "ad7ed44e79c7e5d554c2e008819df3a5da44834e9cfdb4aecaef9224a39c87dd"
+    }
+  ],
+  "execution": {
+    "native": {
+      "target": "x86_64-pc-windows-msvc",
+      "passed": 392,
+      "ignored": 1
+    },
+    "wasi": {
+      "target": "wasm32-wasip2",
+      "runner": "Wasmtime 44.0.1",
+      "passed": 311,
+      "scope": "Six production crates, one compiler Report, three ReaderExpr, 46 binding, 29 Doc and eight region integration tests"
+    },
+    "browser_wasm": "Six no_std crates compiled; browser execution not run",
+    "toolchain": "Rust 1.97.0"
+  },
+  "implementation": [
+    "The public Doc printer accepts DocumentSyntax, PrintMode and explicit guest bindings/texts. It returns a source artifact with the exact entry category, typed invalid input, or a stopped result under the same operation budget.",
+    "Prefix covers 20 categories and 64 forms. Compact uses a sentence literal only for representable Text/Concat/Ruby/Anno content. Break, formatting and foreign content preserve their explicit semantic constructors.",
+    "The three standalone guest entries and four language wrappers retain ForeignClosure, owner environment, source/view/origin identity and guest syntax without implicit semantic evaluation.",
+    "Source-less names and language spellings use the shared lexical contract. Unprintable values return typed failures instead of replacement text. Iterative traversal charges work, nodes, allocation, depth, source admission and output before producing data.",
+    "PrintedGuest is an explicit host assertion. Canonical document and guest digests bind its target, not the correctness of its text. The public suite must validate actual guest syntax/source correspondence before claiming a normal roundtrip. It must not require semantic success for Code examples.",
+    "The request/reply schema and first CBOR boundary validate the owned source closure, IDs, exact digest lengths and report invariants without using ambient source records."
+  ],
+  "independent_review": {
+    "reviewer": "Huygens",
+    "record": "doc/review.md",
+    "archive": "conformance/results/doc-print/independent.json",
+    "scope": "Fixed Doc printer 28 + contracts1 only; excludes RegionQuery and Custom map ownership work.",
+    "archive_sha256": "a2e6c9d45d241c45f1015bc2bc47bb66a23cf226d95d2763f1e29f71ad8d274b",
+    "text_records": 25,
+    "managed": "7 actual printer tests pass on native and WASI, including 64 forms x Prefix/Compact and 6 guest fragments. Root full workspace/quality gates recorded separately.",
+    "findings": "No blocking finding. Three independent programs pass on native and WASI: original-source roundtrips, genuine engine-printer guest inputs and independently constructed digest expectations, alias/assertion boundaries, six resource limits, source admission once, caller depth, cancellation and source-less values. Same-identity invalid guest text is deliberately shown to assemble but fail actual parsing, documenting the low-level host-assertion boundary."
+  },
+  "log_normalization": "Root logs use LF and a final newline. Archived independent UTF-8 records preserve original bytes and SHA-256.",
+  "unverified": [
+    "No task or whole acceptance group is completed; all 55 acceptance statuses remain not-run.",
+    "PreparedArticle, external page/asset resolution, rendering, full lower Report envelope and standard-suite guest correspondence verification remain required.",
+    "Math/Circuit runtimes, remaining editor and application operations, TEA Web Playground, Pages and Doc migration remain required.",
+    "One separate owned bootstrap performance baseline remains ignored. Browser compilation is not browser behavior or final acceptance."
+  ],
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "5e25ac32a8bdc13a45ae1df9d9bc0c2a2eec4e953df77eb75ee4cf7d872a6988",
+    "spec_sha256": "84db07c006fdc73a28c01ff47b663abb95b9b79e7635299d3706600b2932ffeb"
+  }
+}

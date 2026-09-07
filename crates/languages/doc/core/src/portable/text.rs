@@ -3,7 +3,7 @@
 use super::*;
 use crate::text::{PlainTextOutcome, PlainTextReply, PlainTextRequest, TextIdentity};
 
-fn check_type<E>(
+pub(super) fn check_type<E>(
     v: &NdfValue,
     name: &str,
     r: &SchemaRegistry,
@@ -86,7 +86,10 @@ fn report_tag<E>(reply: &PlainTextReply) -> Result<(), PortableError<E>> {
     }
     Ok(())
 }
-fn sources<E>(document: &DocumentSyntax, b: &mut Budget) -> Result<SourceStore, PortableError<E>> {
+pub(super) fn sources<E>(
+    document: &DocumentSyntax,
+    b: &mut Budget,
+) -> Result<SourceStore, PortableError<E>> {
     let mut store = SourceStore::default();
     for source in &document.sources {
         b.charge(Resource::Work, 1)?;

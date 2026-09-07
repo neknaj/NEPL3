@@ -1,5 +1,6 @@
 use super::{PortableError, boundary};
 use crate::model::*;
+use crate::print::*;
 use crate::text::*;
 use alloc::{boxed::Box, string::String, vec::Vec};
 use nepl3_core::{
@@ -239,6 +240,37 @@ impl Value for Digest {
             )),
             _ => Err(PortableError::Shape),
         }
+    }
+}
+impl Value for SchemaRef {
+    fn put<C: FoundationValueCodec>(
+        &self,
+        s: &SchemaRef,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<NdfValue, PortableError<C::Error>> {
+        let package = self.package.put(s, c, b)?;
+        let revision = self.revision.put(s, c, b)?;
+        let digest = self.digest.put(s, c, b)?;
+        record(
+            c.foundation_schema(),
+            "SchemaRef",
+            [package, revision, digest],
+            b,
+        )
+    }
+    fn read<C: FoundationValueCodec>(
+        v: &NdfValue,
+        s: &SchemaRef,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<Self, PortableError<C::Error>> {
+        let f = fields(v, c.foundation_schema(), "SchemaRef", 3)?;
+        Ok(Self {
+            package: Value::read(&f[0], s, c, b)?,
+            revision: Value::read(&f[1], s, c, b)?,
+            digest: Value::read(&f[2], s, c, b)?,
+        })
     }
 }
 macro_rules! foundation {

@@ -233,7 +233,8 @@ impl DocumentSyntax {
                 index += 1;
             }
             let embed = match self.value.nodes[*node].kind {
-                DocKind::InlineMath { syntax }
+                DocKind::Guest { syntax, .. }
+                | DocKind::InlineMath { syntax }
                 | DocKind::DisplayMath { syntax }
                 | DocKind::CircuitFigure { syntax, .. }
                 | DocKind::Code { syntax } => Some(syntax.0),

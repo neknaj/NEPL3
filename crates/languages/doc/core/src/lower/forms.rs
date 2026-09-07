@@ -48,10 +48,38 @@ impl Adapter<'_, '_> {
             ("Builtin:Text" | "Builtin:Name" | "Builtin:Lang" | "Builtin:Nat", 0) => return Ok(()),
             (name, 0 | 2) if name.starts_with("List:") => return Ok(()),
             ("Form:MathGuest" | "Form:CircuitGuest" | "Form:GrammarGuest" | "Form:DocGuest", 1) => {
-                if !matches!(n.fields.first(), Some(FieldValue::Foreign(_))) {
+                let Some(FieldValue::Foreign(foreign)) = n.fields.first() else {
                     return Err(LowerError::Operand { node: id, field: 0 });
+                };
+                if id != self.checked.bundle().root {
+                    // A parent slot captures its own typed embed; do not retain
+                    // an unreachable standalone wrapper or duplicate closure.
+                    return Ok(());
                 }
-                return Ok(());
+                let language = match n.kind.as_str() {
+                    "Form:MathGuest" => GuestLanguage::Math,
+                    "Form:CircuitGuest" => GuestLanguage::Circuit,
+                    "Form:GrammarGuest" => GuestLanguage::Grammar,
+                    "Form:DocGuest" => GuestLanguage::Doc,
+                    _ => return Err(LowerError::Unsupported { node: id }),
+                };
+                let closure = ForeignClosure::capture(
+                    foreign,
+                    self.checked,
+                    self.registry,
+                    self.b,
+                    admission,
+                )?;
+                let syntax = EmbedRef(self.embeds.len() as u64);
+                push(
+                    &mut self.embeds,
+                    DocEmbed {
+                        kind: EmbedKind::Guest,
+                        closure,
+                    },
+                    self.b,
+                )?;
+                DocKind::Guest { language, syntax }
             }
             ("Form:Article", 3) => DocKind::Article {
                 language: self.text(id, n, 0, "Builtin:Lang")?,

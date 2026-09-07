@@ -112,6 +112,7 @@ pub(crate) fn kind_bytes(kind: &DocKind) -> u64 {
         | OptionalRow { .. }
         | OptionalSentence { .. } => 0,
         Ruby { .. }
+        | Guest { .. }
         | InlineMath { .. }
         | Emphasis { .. }
         | Strong { .. }

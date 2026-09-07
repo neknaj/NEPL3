@@ -5,6 +5,7 @@ extern crate alloc;
 pub mod budget;
 pub mod diagnostic;
 pub mod facts;
+pub mod lexical;
 pub mod origin;
 pub mod schema;
 pub mod source;
