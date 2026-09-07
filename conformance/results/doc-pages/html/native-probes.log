@@ -1,0 +1,12 @@
+
+running 3 tests
+canonical source-order difference only: received=["1:a:0:1", "1:a:0:2", "1:a:0:3", "1:a:0:4", "1:a:0:5", "a"] native=["a", "1:a:0:1", "1:a:0:2", "1:a:0:3", "1:a:0:4", "1:a:0:5"]
+test review_pages::independent_pages_resources_local_guard_and_unresolved_external_remain_errors ... ok
+test review_pages::independent_pages_only_emitted_crosslinks_require_visible_anchor ... ok
+test review_pages::independent_pages_first_receiver_rejects_forged_source_target_fragment_and_stale_requests ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 45 filtered out; finished in 0.52s
+
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-html-pages\workspace\tools)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.53s
+     Running tests\doc.rs (.tmp/review-target\debug\deps\doc-e0a7226c393ababd.exe)

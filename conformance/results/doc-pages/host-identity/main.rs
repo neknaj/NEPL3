@@ -1,0 +1,2 @@
+#[path="snapshot/tools/src/doc/identity.rs"] mod identity;
+fn main(){assert_eq!(identity::host_identity().0,[168, 41, 226, 60, 238, 172, 247, 255, 246, 221, 182, 108, 249, 67, 76, 118, 20, 65, 48, 148, 50, 45, 23, 4, 175, 75, 195, 225, 202, 200, 142, 30]);assert_ne!(identity::host_identity().0,[231, 210, 214, 96, 175, 129, 117, 129, 56, 185, 96, 167, 77, 171, 173, 107, 23, 147, 226, 186, 187, 115, 47, 222, 115, 244, 184, 173, 75, 134, 171, 203]);println!("exact host_identity function: native source bytes SHA matches independent SHA256; old identity differs");}

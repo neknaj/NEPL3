@@ -1,0 +1,18 @@
+[
+  {
+    "command": [
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages\\model-native.exe"
+    ],
+    "exit": 0,
+    "deadline": 180
+  },
+  {
+    "command": [
+      "wasmtime",
+      "run",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages\\model-wasi.wasm"
+    ],
+    "exit": 0,
+    "deadline": 180
+  }
+]

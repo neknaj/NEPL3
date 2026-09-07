@@ -1,0 +1,10 @@
+--- reviewed-before/source.rs
++++ final/source.rs
+@@ -19,6 +19,7 @@
+ pub fn host_identity() -> Digest {
+     Digest::of(
+         concat!(
++            include_str!("source.rs"),
+             include_str!("host.rs"),
+             include_str!("reader.rs"),
+             include_str!("../../../crates/foundation/reader/src/builtin/provider.rs")

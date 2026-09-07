@@ -1,0 +1,21 @@
+
+running 8 tests
+inspect output=1563 projection=Err(Stopped(OutputLimit)) used=1563
+test review_projection::independent_projection_charges_generated_markdown_output ... ok
+explicit rejection: Unsupported { node: 3 }
+explicit rejection: Unsupported { node: 18 }
+test review_projection::independent_projection_list_boundary_across_section_must_not_merge ... ok
+test projection::markdown_projection_preserves_literal_punctuation_and_code_delimiters ... ok
+test projection::projection_stops_without_returning_partial_markdown ... ok
+explicit rejection: Unsupported { node: 3 }
+explicit rejection: Unsupported { node: 3 }
+test review_projection::independent_projection_adjacent_code_preserves_both_values_or_rejects ... ok
+test projection::actual_contract_projects_to_equivalent_markdown_events ... ok
+test projection::projection_refuses_lossy_or_unsupported_doc_shapes ... ok
+test review_projection::independent_projection_code_whitespace_and_markers_remain_literal ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 46 filtered out; finished in 1.29s
+
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-doc-projection\workspace\tools)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.48s
+     Running tests\doc.rs (.tmp/review-target\debug\deps\doc-e0a7226c393ababd.exe)

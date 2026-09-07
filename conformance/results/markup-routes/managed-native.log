@@ -1,0 +1,14 @@
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-markup-routes\workspace\crates\foundation\core)
+   Compiling nepl3-markup v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-markup-routes\workspace\crates\output\markup)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-markup-routes\workspace\crates\foundation\wire)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.40s
+     Running tests\routes.rs (C:\projects\NEPL3-runtime\.tmp\review-routes-target\debug\deps\routes-2c25088708131250.exe)
+
+running 4 tests
+test raw_routes_do_not_authorize_parent_segments_or_url_syntax ... ok
+test relative_routes_preserve_complete_directory_segments ... ok
+test route_first_cbor_receiver_checks_both_paths ... ok
+test route_serialization_keeps_resource_stops_and_input ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

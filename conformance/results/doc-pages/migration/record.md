@@ -1,0 +1,19 @@
+# Independent first Doc migration candidate review
+
+Scope: tools/migration/contract.py and test_contract.py; doc/migration/*; canonical doc/spec/00-contract.md; supplied actual HTML output; final CI delta. Frozen bytes and changes are identified by sources.json, guard-correction.json and final-changes.json. No live implementation edits by reviewer.
+
+Final result: no blocking finding for a migration CANDIDATE. Markdown remains canonical. No final migration, human approval, legacy-anchor compatibility, Markdown projection, or Pages deployment is asserted.
+
+Current content: independent Mistune 3.3.2 parsing/rendering of the canonical Markdown was compared using a separate Python HTMLParser against both the supplied local HTML and the subsequently generated multi-page contract HTML. All 23 ordered content blocks match, including article title, six section headings, paragraph text, six list items, and ten inline-code positions/contents. One unordered list is retained. Ordinary HTML whitespace is normalized for comparison; the current code spans contain no padded whitespace. Audit JSON binds LF-normalized canonical bytes to candidate bytes; output manifest source_sha256 binds the exact candidate. All output file hashes were verified.
+
+Candidate SHA256: 1ee46981e30e57e2c5965a21f3e1f318636178582faac645dfef780c60cfa520.
+
+Initial guard findings: the claimed fail-closed converter accepted unsupported hard breaks, character entities, indented code, setext headings, and padded code spans. The first five counterexample candidates were sent through the actual production CLI successfully, demonstrating downstream parsing did not rescue these semantic losses. Initial negative inputs/results and rendered artifacts remain preserved. Root added explicit rejection guards; managed three tests and 13 independent negatives passed. A second finding, loose flat list split into two lists, was then reproduced and corrected by root. Final independent 14 negatives all reject and current candidate bytes remain unchanged. verify.py reproduces the final checks. This is a deliberately narrow page converter, not proof of complete Markdown support or rejection of every possible extension.
+
+Final multi-page path: index.nepld is a new migration-preview index, not a second hand-maintained copy of existing canonical prose. pages.json links it to the candidate at reference/contract/index.html. Actual CLI export succeeded, index href and nested CSS presence were checked, and all manifest file hashes match. It used the independently built binary from the preceding host pages review; negative-render-results.json records that binary identity. Core/page-renderer deep reviews remain owned by the other independent reviewers.
+
+CI inspection: candidate drift and rejection tests execute before generation. Real doc-html pages export uses the declared page manifest and a new dist/doc-migration directory. Ubuntu uploads the generated directory under a commit-SHA-qualified artifact name with if-no-files-found:error; other native jobs still execute generation. It reuses the workflow's pinned upload action. No deploy permissions or Pages deployment job are introduced by this delta. Remote execution of the changed workflow was not performed by this reviewer.
+
+README and audit correctly preserve candidate-not-canonical, human_meaning_review:not-run, markdown_projection:not-implemented and legacy_anchor_compatibility:not-implemented. Generated section IDs remain new contract_0..5 IDs rather than legacy Markdown anchors; this is explicitly pending, not falsely accepted. No canonical Markdown was deleted or overwritten.
+
+Limits: structural/text/code comparison is not visual browser/CSS validation or a human linguistic review. No full T21 or site acceptance is established. Initial counterexample renderings are intentionally invalid migration examples and must not be treated as publishable canonical documents.

@@ -1,0 +1,14 @@
+[
+  {
+    "path": "pages-ci-failure.log",
+    "sha256": "3a6aeb1f4469c381a4ec974e70ee7cc94ec91f9cbd0861f2c3b9e920dd719bd9"
+  },
+  {
+    "path": "result.json",
+    "sha256": "6d5555bb1e9e5c1faa0339d6c10d98678f316167e5ab8eab6a016b38d665818f"
+  },
+  {
+    "path": "record.md",
+    "sha256": "0d3da5ab9b4e44c676b4ef76f5ef03033950507ad8fb5fd88f21df9ec09197f6"
+  }
+]

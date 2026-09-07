@@ -1,0 +1,108 @@
+[
+  {
+    "name": "basic",
+    "exit": 0,
+    "output_exists": true,
+    "stdout": "",
+    "sha256": "d72ef6d883c951920fb6ad28b0616e71193bc9f9afcbb3dae496bd74a07d3aa0",
+    "comment": "<!-- Generated from C:\\projects\\NEPL3&#45;doc&#45;page&#45;links\\.tmp\\review&#45;projection&#45;cli\\cases\\basic\\source.nepld; renderer nepl3-tools.markdown/1; source SHA-256 f1c337ee9d29fa8f026c95e3baa18c7d0c952953e02880a81eadc7e608146982. Edit the Doc source. -->"
+  },
+  {
+    "name": "comment",
+    "exit": 0,
+    "output_exists": true,
+    "stdout": "",
+    "sha256": "67d59afbc2c0dd9f3b8464ce3ea4762845a8d9af1811202eb7c58a2a07274658",
+    "comment": "<!-- Generated from C:\\projects\\NEPL3&#45;doc&#45;page&#45;links\\.tmp\\review&#45;projection&#45;cli\\cases\\comment\\source&#45;&#45;&amp;.nepld; renderer nepl3-tools.markdown/1; source SHA-256 f1c337ee9d29fa8f026c95e3baa18c7d0c952953e02880a81eadc7e608146982. Edit the Doc source. -->"
+  },
+  {
+    "name": "unicode",
+    "exit": 0,
+    "output_exists": true,
+    "stdout": "",
+    "sha256": "c8c4b4343342ed781827969c304442e05b4c6f52043125aa3d2b98da12c0b263",
+    "comment": "<!-- Generated from C:\\projects\\NEPL3&#45;doc&#45;page&#45;links\\.tmp\\review&#45;projection&#45;cli\\cases\\unicode\\文書&#45;&#45;&amp;.nepld; renderer nepl3-tools.markdown/1; source SHA-256 99286bc5ab874ce6cbc844ae2ada710c2a872e8085660e2bbe821e7a2fcff556. Edit the Doc source. -->"
+  },
+  {
+    "name": "crlf",
+    "exit": 0,
+    "output_exists": true,
+    "stdout": "",
+    "sha256": "b79b45d070023ebb87b697ea0f89a17bd20853d633b4475b3d6b5ae3f2551ba0",
+    "comment": "<!-- Generated from C:\\projects\\NEPL3&#45;doc&#45;page&#45;links\\.tmp\\review&#45;projection&#45;cli\\cases\\crlf\\source.nepld; renderer nepl3-tools.markdown/1; source SHA-256 3e323d68305cecad4059b62c2e3b3c539d8fd863833b749ba0f1534eb69a42aa. Edit the Doc source. -->"
+  },
+  {
+    "name": "existing",
+    "exit": 1,
+    "output_exists": true,
+    "stdout": "nepl3-tools: output already exists\n"
+  },
+  {
+    "name": "missing-parent",
+    "exit": 1,
+    "output_exists": false,
+    "stdout": "nepl3-tools: The system cannot find the path specified. (os error 3)\n"
+  },
+  {
+    "name": "invalid-utf8",
+    "exit": 1,
+    "output_exists": false,
+    "stdout": "nepl3-tools: stream did not contain valid UTF-8\n"
+  },
+  {
+    "name": "truncated-utf8",
+    "exit": 1,
+    "output_exists": false,
+    "stdout": "nepl3-tools: stream did not contain valid UTF-8\n"
+  },
+  {
+    "name": "oversize",
+    "exit": 1,
+    "output_exists": false,
+    "stdout": "nepl3-tools: SourceLimit\n"
+  },
+  {
+    "name": "trailing",
+    "exit": 1,
+    "output_exists": false,
+    "stdout": "nepl3-tools: unexpected trailing input at byte 58\n"
+  },
+  {
+    "name": "broken",
+    "exit": 1,
+    "output_exists": false,
+    "stdout": "nepl3-tools: candidate: Recovered { tree: ParseTree { profile_digest: Digest([35, 101, 185, 82, 73, 127, 64, 19, 142, 99, 120, 235, 75, 83, 1, 179, 0, 36, 58, 54, 245, 77, 181, 222, 141, 137, 241, 233, 47, 226, 22, 176]), bundle: SyntaxBundle { root: NodeRef(0), nodes: 4, sources: 1, origins: 4, source_maps: 0, environments: 4 }, recovery: [BundleRecovery { path: [], entries: [RecoveryEntry { node: NodeRef(2), kind: Unparsed { span: Span { snapshot: SnapshotId { source: SourceId(\"doc-input\"), revision: 0, digest: Digest([72, 185, 70, 247, 50, 128, 146, 179, 213, 241, 132, 41, 145, 107, 100, 139, 93, 105, 70, 110, 217, 76, 171, 103, 224, 22, 223, 35, 121, 5, 130, 98]) }, start: 11, end: 24 }, reason: UnknownHead } }, RecoveryEntry { node: NodeRef(3), kind: Missing { expected: EntryContext { package: PackageIdentity { schema: SchemaRef { package: \"standard.doc\", revision: 1, digest: Digest([36, 105, 235, 19, 187, 33, 178, 109, 23, 146, 65, 0, 48, 119, 199, 218, 61, 40, 90, 57, 139, 175, 230, 229, 132, 0, 157, 135, 59, 110, 19, 205]) }, semantic_digest: Digest([79, 100, 55, 167, 80, 24, 92, 42, 5, 183, 15, 216, 40, 164, 179, 87, 89, 173, 74, 74, 188, 93, 70, 111, 119, 62, 247, 27, 6, 35, 209, 156]) }, alias: \"Doc\", category: \"Body\", mode: \"Code\" }, anchor: Span { snapshot: SnapshotId { source: SourceId(\"doc-input\"), revision: 0, digest: Digest([72, 185, 70, 247, 50, 128, 146, 179, 213, 241, 132, 41, 145, 107, 100, 139, 93, 105, 70, 110, 217, 76, 171, 103, 224, 22, 223, 35, 121, 5, 130, 98]) }, start: 24, end: 24 } } }] }], contexts: [BundleContext { path: [], nodes: [NodeSelection { node: NodeRef(0), entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: \"standard.doc\", revision: 1, digest: Digest([36, 105, 235, 19, 187, 33, 178, 109, 23, 146, 65, 0, 48, 119, 199, 218, 61, 40, 90, 57, 139, 175, 230, 229, 132, 0, 157, 135, 59, 110, 19, 205]) }, semantic_digest: Digest([79, 100, 55, 167, 80, 24, 92, 42, 5, 183, 15, 216, 40, 164, 179, 87, 89, 173, 74, 74, 188, 93, 70, 111, 119, 62, 247, 27, 6, 35, 209, 156]) }, alias: \"Doc\", category: \"Article\", mode: \"Code\" }, execution_digest: Digest([113, 141, 51, 51, 166, 182, 125, 229, 214, 190, 206, 201, 19, 113, 140, 66, 49, 7, 248, 135, 9, 158, 224, 59, 239, 250, 28, 160, 193, 172, 173, 142]), shape: Form { index: 0 } }, NodeSelection { node: NodeRef(1), entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: \"standard.doc\", revision: 1, digest: Digest([36, 105, 235, 19, 187, 33, 178, 109, 23, 146, 65, 0, 48, 119, 199, 218, 61, 40, 90, 57, 139, 175, 230, 229, 132, 0, 157, 135, 59, 110, 19, 205]) }, semantic_digest: Digest([79, 100, 55, 167, 80, 24, 92, 42, 5, 183, 15, 216, 40, 164, 179, 87, 89, 173, 74, 74, 188, 93, 70, 111, 119, 62, 247, 27, 6, 35, 209, 156]) }, alias: \"Doc\", category: \"Article\", mode: \"Code\" }, execution_digest: Digest([113, 141, 51, 51, 166, 182, 125, 229, 214, 190, 206, 201, 19, 113, 140, 66, 49, 7, 248, 135, 9, 158, 224, 59, 239, 250, 28, 160, 193, 172, 173, 142]), shape: Builtin { read: ReadSpecId(0) } }, NodeSelection { node: NodeRef(2), entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: \"standard.doc\", revision: 1, digest: Digest([36, 105, 235, 19, 187, 33, 178, 109, 23, 146, 65, 0, 48, 119, 199, 218, 61, 40, 90, 57, 139, 175, 230, 229, 132, 0, 157, 135, 59, 110, 19, 205]) }, semantic_digest: Digest([79, 100, 55, 167, 80, 24, 92, 42, 5, 183, 15, 216, 40, 164, 179, 87, 89, 173, 74, 74, 188, 93, 70, 111, 119, 62, 247, 27, 6, 35, 209, 156]) }, alias: \"Doc\", category: \"Sentence\", mode: \"Code\" }, execution_digest: Digest([113, 141, 51, 51, 166, 182, 125, 229, 214, 190, 206, 201, 19, 113, 140, 66, 49, 7, 248, 135, 9, 158, 224, 59, 239, 250, 28, 160, 193, 172, 173, 142]), shape: Recovery }, NodeSelection { node: NodeRef(3), entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: \"standard.doc\", revision: 1, digest: Digest([36, 105, 235, 19, 187, 33, 178, 109, 23, 146, 65, 0, 48, 119, 199, 218, 61, 40, 90, 57, 139, 175, 230, 229, 132, 0, 157, 135, 59, 110, 19, 205]) }, semantic_digest: Digest([79, 100, 55, 167, 80, 24, 92, 42, 5, 183, 15, 216, 40, 164, 179, 87, 89, 173, 74, 74, 188, 93, 70, 111, 119, 62, 247, 27, 6, 35, 209, 156]) }, alias: \"Doc\", category: \"Body\", mode: \"Code\" }, execution_digest: Digest([113, 141, 51, 51, 166, 182, 125, 229, 214, 190, 206, 201, 19, 113, 140, 66, 49, 7, 248, 135, 9, 158, 224, 59, 239, 250, 28, 160, 193, 172, 173, 142]), shape: Recovery }] }] }, cursor: 24, states: [LanguageReaderState { alias: \"Doc\", state: Unit }, LanguageReaderState { alias: \"Math\", state: Unit }, LanguageReaderState { alias: \"Circuit\", state: Unit }, LanguageReaderState { alias: \"Grammar\", state: Unit }], facts: [ReaderFactBatch { path: [], node: Some(NodeRef(0)), entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: \"standard.doc\", revision: 1, digest: Digest([36, 105, 235, 19, 187, 33, 178, 109, 23, 146, 65, 0, 48, 119, 199, 218, 61, 40, 90, 57, 139, 175, 230, 229, 132, 0, 157, 135, 59, 110, 19, 205]) }, semantic_digest: Digest([79, 100, 55, 167, 80, 24, 92, 42, 5, 183, 15, 216, 40, 164, 179, 87, 89, 173, 74, 74, 188, 93, 70, 111, 119, 62, 247, 27, 6, 35, 209, 156]) }, alias: \"Doc\", category: \"Article\", mode: \"Code\" }, facts: [], trivia: [] }, ReaderFactBatch { path: [], node: Some(NodeRef(1)), entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: \"standard.doc\", revision: 1, digest: Digest([36, 105, 235, 19, 187, 33, 178, 109, 23, 146, 65, 0, 48, 119, 199, 218, 61, 40, 90, 57, 139, 175, 230, 229, 132, 0, 157, 135, 59, 110, 19, 205]) }, semantic_digest: Digest([79, 100, 55, 167, 80, 24, 92, 42, 5, 183, 15, 216, 40, 164, 179, 87, 89, 173, 74, 74, 188, 93, 70, 111, 119, 62, 247, 27, 6, 35, 209, 156]) }, alias: \"Doc\", category: \"Article\", mode: \"Code\" }, facts: [], trivia: [Trivia { span: Span { snapshot: SnapshotId { source: SourceId(\"doc-input\"), revision: 0, digest: Digest([72, 185, 70, 247, 50, 128, 146, 179, 213, 241, 132, 41, 145, 107, 100, 139, 93, 105, 70, 110, 217, 76, 171, 103, 224, 22, 223, 35, 121, 5, 130, 98]) }, start: 7, end: 8 }, kind: Whitespace }] }, ReaderFactBatch { path: [], node: None, entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: \"standard.doc\", revision: 1, digest: Digest([36, 105, 235, 19, 187, 33, 178, 109, 23, 146, 65, 0, 48, 119, 199, 218, 61, 40, 90, 57, 139, 175, 230, 229, 132, 0, 157, 135, 59, 110, 19, 205]) }, semantic_digest: Digest([79, 100, 55, 167, 80, 24, 92, 42, 5, 183, 15, 216, 40, 164, 179, 87, 89, 173, 74, 74, 188, 93, 70, 111, 119, 62, 247, 27, 6, 35, 209, 156]) }, alias: \"Doc\", category: \"Sentence\", mode: \"Code\" }, facts: [], trivia: [Trivia { span: Span { snapshot: SnapshotId { source: SourceId(\"doc-input\"), revision: 0, digest: Digest([72, 185, 70, 247, 50, 128, 146, 179, 213, 241, 132, 41, 145, 107, 100, 139, 93, 105, 70, 110, 217, 76, 171, 103, 224, 22, 223, 35, 121, 5, 130, 98]) }, start: 10, end: 11 }, kind: Whitespace }] }, ReaderFactBatch { path: [], node: None, entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: \"standard.doc\", revision: 1, digest: Digest([36, 105, 235, 19, 187, 33, 178, 109, 23, 146, 65, 0, 48, 119, 199, 218, 61, 40, 90, 57, 139, 175, 230, 229, 132, 0, 157, 135, 59, 110, 19, 205]) }, semantic_digest: Digest([79, 100, 55, 167, 80, 24, 92, 42, 5, 183, 15, 216, 40, 164, 179, 87, 89, 173, 74, 74, 188, 93, 70, 111, 119, 62, 247, 27, 6, 35, 209, 156]) }, alias: \"Doc\", category: \"Body\", mode: \"Code\" }, facts: [], trivia: [] }] }\n"
+  },
+  {
+    "name": "unsupported",
+    "exit": 1,
+    "output_exists": false,
+    "stdout": "nepl3-tools: Unsupported { node: 4 }\n"
+  },
+  {
+    "name": "path-limit",
+    "exit": 1,
+    "output_exists": false,
+    "stdout": "nepl3-tools: input path is not representable in projection metadata\n"
+  },
+  {
+    "name": "path-control",
+    "exit": 1,
+    "output_exists": false,
+    "stdout": "nepl3-tools: input path is not representable in projection metadata\n"
+  },
+  {
+    "name": "missing-file",
+    "exit": 1,
+    "output_exists": false,
+    "stdout": "nepl3-tools: The system cannot find the file specified. (os error 2)\n"
+  },
+  {
+    "name": "candidate",
+    "exit": 0,
+    "output_exists": true,
+    "stdout": "",
+    "sha256": "8a7e6710a82ea78e7d0e4d169835cce3964852654ef1ac4eae6d05dc0dc6d57e",
+    "comment": "<!-- Generated from C:\\projects\\NEPL3&#45;doc&#45;page&#45;links\\.tmp\\review&#45;projection&#45;cli\\cases\\candidate\\source.nepld; renderer nepl3-tools.markdown/1; source SHA-256 1ee46981e30e57e2c5965a21f3e1f318636178582faac645dfef780c60cfa520. Edit the Doc source. -->"
+  }
+]

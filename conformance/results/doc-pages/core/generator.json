@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python",
+    "tools/generate/doc.py"
+  ],
+  "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-pages\\workspace",
+  "exit": 0,
+  "stdout": "",
+  "stderr": "",
+  "deadline_seconds": 60
+}

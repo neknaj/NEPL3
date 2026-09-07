@@ -1,4 +1,5 @@
 use super::PortableError;
+use crate::pages::{PagesHtmlRequest, RenderedPages};
 use crate::*;
 use alloc::{boxed::Box, string::String, vec::Vec};
 use nepl3_core::{
@@ -59,6 +60,26 @@ impl Value for DocumentSyntax {
         b: &mut Budget,
     ) -> Result<Self, PortableError<C::Error>> {
         nepl3_doc_core::portable::from_value(v, r, c, b).map_err(doc_error)
+    }
+}
+impl Value for nepl3_doc_core::pages::PageSet {
+    fn put<C: FoundationValueCodec>(
+        &self,
+        _: &SchemaRef,
+        r: &SchemaRegistry,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<NdfValue, PortableError<C::Error>> {
+        nepl3_doc_core::portable::pages::set_to_value(self, r, c, b).map_err(doc_error)
+    }
+    fn read<C: FoundationValueCodec>(
+        v: &NdfValue,
+        _: &SchemaRef,
+        r: &SchemaRegistry,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<Self, PortableError<C::Error>> {
+        nepl3_doc_core::portable::pages::set_from_value(v, r, c, b).map_err(doc_error)
     }
 }
 fn doc_error<E>(e: nepl3_doc_core::portable::PortableError<E>) -> PortableError<E> {

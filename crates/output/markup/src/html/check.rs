@@ -94,6 +94,20 @@ fn attr(
         Href { value } => {
             t == HtmlTag::A
                 && match value {
+                    HtmlHref::BetweenArtifacts {
+                        source,
+                        target,
+                        fragment,
+                    } => {
+                        text(source, r, b)?;
+                        text(target, r, b)?;
+                        if let Some(f) = fragment {
+                            text(f, r, b)?;
+                        }
+                        uri::path(source)
+                            && uri::path(target)
+                            && fragment.as_ref().is_none_or(|s| uri::id(s))
+                    }
                     HtmlHref::Fragment { id } => {
                         text(id, r, b)?;
                         uri::id(id)

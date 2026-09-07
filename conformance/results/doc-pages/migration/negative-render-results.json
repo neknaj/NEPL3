@@ -1,0 +1,31 @@
+{
+  "binary": "C:\\projects\\NEPL3-doc-page-links\\.tmp\\review-pages-host\\target\\debug\\nepl3-tools.exe",
+  "binary_sha256": "bfc61aac6f5b507b9101a313d43688a2414623bd327bb59d266c16b0b0dcf39d",
+  "cases": [
+    {
+      "name": "hardbreak",
+      "exit": 0,
+      "output_html_sha256": "8f7b37bb56942a1dff63b5059e899d367c096911f68deac754aee129c78067bb"
+    },
+    {
+      "name": "entity",
+      "exit": 0,
+      "output_html_sha256": "c31a2d854e220ddb8b5bef076fa5ffc5539f37e571f01f4b9415bc39ecbfd093"
+    },
+    {
+      "name": "indented",
+      "exit": 0,
+      "output_html_sha256": "1e92c9cbb934ea6fdc1906b8f2e040cc36ebd2df6d783773815eca5728adb509"
+    },
+    {
+      "name": "setext",
+      "exit": 0,
+      "output_html_sha256": "554766c45dcc76290c60b50d8d0500d28b1cd67485dd6e8557c415dcdad9de6d"
+    },
+    {
+      "name": "code-padding",
+      "exit": 0,
+      "output_html_sha256": "1f45f17786ebe88f585a2cc1a9b22503708a60392f608a00ddaf1b4000706ae2"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "path": "tools/migration/contract.py",
+    "before": "8b1ca6664425c079089dd7fd711838f97d523c0a58db5bb20caa72f4860c3d68",
+    "after": "8b96c3d2ba730faaf61aebf38c97c0aee2e51fe7321a0ca57fbafbd213356af2"
+  },
+  {
+    "path": "tools/migration/test_contract.py",
+    "before": "330709355451ab506bf502a06a12cbad40e1d2d3b29184e177674f9b9f8c2c4b",
+    "after": "1eb3e8c75cb2e7d00cdfb610e43095d9f9f5206a2509d21208ad68fb95e48f6b"
+  },
+  {
+    "path": "doc/migration/index.nepld",
+    "before": null,
+    "after": "554c9a8eed5840d5be646644ff24cfbe78c6510ea6ddb91a625b6b842c14c7d4"
+  },
+  {
+    "path": "doc/migration/pages.json",
+    "before": null,
+    "after": "55f65f6172df174f6e19a5965a1bfd4eba3716ff486b09a31a9cc8085c92c969"
+  },
+  {
+    "path": "doc/migration/README.md",
+    "before": "2d980f16c1aca892f24b9c65ec43d30c2bc84703fb0abdd0413010fb40bf8816",
+    "after": "02d50ad7374ca82ea7d4e394440bf5da3fb6a52ae09eb4984cb4a50529ce4fd9"
+  },
+  {
+    "path": ".github/workflows/ci.yml",
+    "before": null,
+    "after": "b7176ce5139d96a5dc0e2f40957d696e9086549cd96122e36fbf408d28a34c68"
+  }
+]

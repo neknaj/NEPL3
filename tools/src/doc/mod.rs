@@ -2,5 +2,6 @@
 pub mod catalog;
 pub mod export;
 pub mod host;
+pub mod projection;
 pub mod reader;
 pub mod source;

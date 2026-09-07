@@ -114,6 +114,52 @@
         ]
       ],
       "constraints": []
+    },
+    "PagesHtmlRequest": {
+      "record": [
+        [
+          "set",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "PageSet"
+            }
+          }
+        ],
+        [
+          "options",
+          {
+            "named": {
+              "package": "nepl3.doc.html",
+              "revision": 1,
+              "name": "RenderOptions"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "RenderedPages": {
+      "record": [
+        [
+          "identity",
+          "Bytes"
+        ],
+        [
+          "fragments",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc.html",
+                "revision": 1,
+                "name": "RenderedFragment"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
     }
   },
   "operations": {}

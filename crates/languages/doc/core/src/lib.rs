@@ -8,6 +8,7 @@ pub mod labels;
 pub mod lower;
 pub mod model;
 pub mod normalize;
+pub mod pages;
 pub mod portable;
 pub mod prepare;
 pub mod print;

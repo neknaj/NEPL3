@@ -875,4 +875,44 @@ let f=fields(v,s,"DocPreparationPlan",2)?;
 Ok(Self {document_digest:Value::read(&f[0],s,c,b)?,requirements:Value::read(&f[1],s,c,b)?})
 }
 }
+impl Value for PageRegistration {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"PageRegistration",[self.id.put(s,c,b)?,self.source.put(s,c,b)?,self.route.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,48)?;
+let f=fields(v,s,"PageRegistration",3)?;
+Ok(Self {id:Value::read(&f[0],s,c,b)?,source:Value::read(&f[1],s,c,b)?,route:Value::read(&f[2],s,c,b)?})
+}
+}
+impl Value for PageLink {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"PageLink",[self.page.put(s,c,b)?,self.node.put(s,c,b)?,self.target.put(s,c,b)?,self.fragment.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,40)?;
+let f=fields(v,s,"PageLink",4)?;
+Ok(Self {page:Value::read(&f[0],s,c,b)?,node:Value::read(&f[1],s,c,b)?,target:Value::read(&f[2],s,c,b)?,fragment:Value::read(&f[3],s,c,b)?})
+}
+}
+impl Value for PageRequirement {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"PageRequirement",[self.page.put(s,c,b)?,self.requirement.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,47)?;
+let f=fields(v,s,"PageRequirement",2)?;
+Ok(Self {page:Value::read(&f[0],s,c,b)?,requirement:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for PageLinkPlan {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"PageLinkPlan",[self.identity.put(s,c,b)?,self.links.put(s,c,b)?,self.remaining.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,44)?;
+let f=fields(v,s,"PageLinkPlan",3)?;
+Ok(Self {identity:Value::read(&f[0],s,c,b)?,links:Value::read(&f[1],s,c,b)?,remaining:Value::read(&f[2],s,c,b)?})
+}
+}
 }

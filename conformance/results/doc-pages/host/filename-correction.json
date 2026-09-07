@@ -1,0 +1,17 @@
+[
+  {
+    "path": "tools/src/doc/export/pages.rs",
+    "before": "ac7284cc8fbf62b6e4496a75118ac28ebdd22f9a3984427c0a3795d167aee4c1",
+    "after": "840b973191e65bdfdd84a1d86eb6c9e0055d5e6a8d8d53268880d2035714a603"
+  },
+  {
+    "path": "tools/tests/doc/export.rs",
+    "before": "e0a426ac703f48be49c78dba2182bc9a5dc47e8880678100b5285ea3bb485f5b",
+    "after": "ed23415c00428768944f169e06dc3a8449e683c979ea80d2721c90c5772bc2f4"
+  },
+  {
+    "path": "tools/src/main.rs",
+    "before": "9194bace89b0ae0ebba21b2e84b56badb887a785e062e4ba27a829c020e6e179",
+    "after": "9194bace89b0ae0ebba21b2e84b56badb887a785e062e4ba27a829c020e6e179"
+  }
+]

@@ -1,0 +1,11 @@
+# PageSet host identity delta review
+
+No blocking discrepancy found. The fixed source.rs SHA is 328c3ebb399d63b43503a767b3e64690548eca1aaab00654b7e0b61fa6576f87. The only change from the prior independently executed PageSet snapshot is include_str!("source.rs") inside host_identity's concat. The other included host.rs, reader.rs and builtin/provider.rs bytes remain unchanged.
+
+The actual implementation registration, provider requirements and NativeHost construction all call this same function. Thus the reservation namespace implementation in source.rs is now part of the effective provider implementation identity in both execution paths. A namespace change changes this digest; otherwise stale prepared inputs could retain the previous provider identity. Including an entire source file conservatively also invalidates identity on comments or formatting. It is a development-host source fingerprint, not a portable claim of complete binary or dependency identity.
+
+Self inclusion reads literal UTF-8 source bytes into a string. It does not evaluate the embedded source or recursively compute a digest. The isolated probe contains the exact extracted production function body, includes the exact four frozen production files at the original relative paths, and calls the unchanged production core Digest::of. An independently calculated Python SHA256 of the four byte sequences establishes the expected value, rather than deriving the expectation from the function under test.
+
+The expected new digest is a829e23ceeacf7fff6ddb66cf9434c7614413094322d1704af4bc3e1cac88e1e; the previous digest was e7d2d660af81758138b960a74dabad6b1793e2babb732fde73f4b8ad4b86abcb. Native and wasm32-wasip2 build/execution both passed. Runs are recorded in runs.json and full logs. This bounded function test is separate from the earlier full real-source PageSet native/WASI tests and the parent's final two-page integration reruns. No claim of independently reexecuting the full PageSet pipeline after this identity-only delta is made.
+
+The original .tmp/review-doc-pages manifest remains immutable. Only this separate review snapshot and evidence were written; no production, shared document or Git edits were made.

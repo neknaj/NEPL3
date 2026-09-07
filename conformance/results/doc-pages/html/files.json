@@ -1,0 +1,182 @@
+[
+  {
+    "path": "crates/languages/doc/html/src/pages.rs",
+    "sha256": "96cb913cc25be2afe53675ce27853603d82fc6ce5b63474ae1565c08812ba6de",
+    "bytes": 6502
+  },
+  {
+    "path": "crates/languages/doc/html/src/portable/pages.rs",
+    "sha256": "edcc1ca047eefff31a2b4237a1212331f2c4d788f671bcdda60bb51de5d96b27",
+    "bytes": 1979
+  },
+  {
+    "path": "doc/spec/21-doc-pages.md",
+    "sha256": "f2d99c220264aa0ae64e96eae41af0c2389519df6b46970155fcec97978927b7",
+    "bytes": 5584
+  },
+  {
+    "path": "tools/tests/doc/pages.rs",
+    "sha256": "9f0c0776fddfae3714d299705fdea6fe5704dc3e36d607b9e05c04b56c252aab",
+    "bytes": 9473
+  },
+  {
+    "path": "crates/languages/doc/html/Cargo.toml",
+    "sha256": "07c674045b9b9f76004f3aa2a5e7229008ce91079b2c8c03ab08738976d5cb18",
+    "bytes": 424
+  },
+  {
+    "path": "crates/languages/doc/html/assets/doc.css",
+    "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2",
+    "bytes": 1860
+  },
+  {
+    "path": "crates/languages/doc/html/src/build.rs",
+    "sha256": "0f62ef873cfa1ace50196491d528068f47d02ffe10ba75ee541dc2edac5e5ac1",
+    "bytes": 8230
+  },
+  {
+    "path": "crates/languages/doc/html/src/build/block.rs",
+    "sha256": "735088e63b8dc5a333392f7884a4ed95d9b6dab351197b07ca12b7f13ba48a9a",
+    "bytes": 6647
+  },
+  {
+    "path": "crates/languages/doc/html/src/build/inline.rs",
+    "sha256": "00cb0f0c777124ea7677e6120592e83e1b4339b26a95e244f6c667d48b8cded6",
+    "bytes": 6305
+  },
+  {
+    "path": "crates/languages/doc/html/src/lib.rs",
+    "sha256": "cec90e45291a383dc202674b380151cfcfca1ea2945dd61f95c6526e0231f82c",
+    "bytes": 1833
+  },
+  {
+    "path": "crates/languages/doc/html/src/portable.rs",
+    "sha256": "ec16865b0080495639c24d295fd5892a55a39bdec70217a7bf03ea5182e658be",
+    "bytes": 4001
+  },
+  {
+    "path": "crates/languages/doc/html/src/portable/value.rs",
+    "sha256": "7206fe4fc5dbc5a8a7d2cc08cfdb73eab01ae36bbd662a463256e8ac14834ca2",
+    "bytes": 10292
+  },
+  {
+    "path": "crates/languages/doc/html/src/portable/value/generated.rs",
+    "sha256": "fd3ec474c7c66336db3191605b8febe88bfe3ec8a61b7fe1ed56366cb2d7abfc",
+    "bytes": 4386
+  },
+  {
+    "path": "crates/languages/doc/html/src/prepare.rs",
+    "sha256": "1f9a50dd42056b6db7c5f635dde73a9fa33ca575128e9a34d27e5a40189d24c0",
+    "bytes": 4465
+  },
+  {
+    "path": "crates/languages/doc/html/src/schema.rs",
+    "sha256": "8ff4f966819eebf30f3d1103503cf2b17d225ca5fd282e922efea57eb07036d8",
+    "bytes": 141
+  },
+  {
+    "path": "crates/languages/doc/html/src/schema/descriptor.rs",
+    "sha256": "2e45d6faf6acb52db34ba38ddd3dc61df5b376966eba342b84208a2e6fc01396",
+    "bytes": 4280
+  },
+  {
+    "path": "crates/languages/doc/html/tests/local.rs",
+    "sha256": "da184734b19456b1c4579b2142f0c3e7db391f0ee3ee5515114c9515a61ef77c",
+    "bytes": 7866
+  },
+  {
+    "path": "crates/output/markup/Cargo.toml",
+    "sha256": "8e6303a2796b049d0610f8ce420d67938801b9615da7dd532d7400b43a9331ac",
+    "bytes": 389
+  },
+  {
+    "path": "crates/output/markup/src/html/check.rs",
+    "sha256": "1ea9d64d7cc4477444ea3d03f4286f3e104248424a2b8d6137af6544c24a9a1a",
+    "bytes": 14195
+  },
+  {
+    "path": "crates/output/markup/src/html/mod.rs",
+    "sha256": "26ebc521d1da98622e909a64681e73c9013dfed254729b7a5a26ff0596e0b240",
+    "bytes": 4990
+  },
+  {
+    "path": "crates/output/markup/src/html/ruby.rs",
+    "sha256": "e4ef1b1a8450ad81f955cb8be83872905bbba9636e9aa4f7e1734a399b96f438",
+    "bytes": 1634
+  },
+  {
+    "path": "crates/output/markup/src/html/serialize.rs",
+    "sha256": "1c32868dc47c60e3ae598bb14812f4bd05da45bfddd99fa273f534ee500dafd3",
+    "bytes": 8606
+  },
+  {
+    "path": "crates/output/markup/src/html/uri.rs",
+    "sha256": "0ea4b933186ff83c7b00cc056f34f92eb704470233f760b705a0506ef204abcf",
+    "bytes": 2374
+  },
+  {
+    "path": "crates/output/markup/src/lib.rs",
+    "sha256": "55a7142b1639d583108104f873ff4508a6369f5537e1eafd65acdcf40c6e34a3",
+    "bytes": 251
+  },
+  {
+    "path": "crates/output/markup/src/portable.rs",
+    "sha256": "467ce97482b96545ceeffb1e9e55add2819922aef6b912ca82a37b8cf36ee78a",
+    "bytes": 2437
+  },
+  {
+    "path": "crates/output/markup/src/portable/value.rs",
+    "sha256": "60509cf0d2e459eca7810252e68957dca7e0ff27ae05d7e56e2be6ea625abc43",
+    "bytes": 6648
+  },
+  {
+    "path": "crates/output/markup/src/portable/value/generated.rs",
+    "sha256": "1f85985aff59be6ad9d2d2f742c46a204885e22d670278765fce0a211819a72e",
+    "bytes": 11560
+  },
+  {
+    "path": "crates/output/markup/src/schema.rs",
+    "sha256": "02691f04d2972cd8805b527af0bfdd9d2b4dc98b87b6f0e6fbb62d29fdabe06f",
+    "bytes": 216
+  },
+  {
+    "path": "crates/output/markup/src/schema/descriptor.rs",
+    "sha256": "0815530272b83c7be3031ba0f055b82d95823e89357fab9dcbc4de783407fc60",
+    "bytes": 10733
+  },
+  {
+    "path": "crates/output/markup/src/text.rs",
+    "sha256": "bfade198aca4f6b993fda577e249e85245ab4de3d8af1877cb4cfe8ea13e10fd",
+    "bytes": 3034
+  },
+  {
+    "path": "crates/output/markup/tests/html.rs",
+    "sha256": "349c3c7a9a9761dfdf893bd25010b5d84c67d111cfa122ca10758d8dab343f1b",
+    "bytes": 10479
+  },
+  {
+    "path": "crates/output/markup/tests/portable.rs",
+    "sha256": "92566a2d4db12e7d333ed0f43d597b22b4a6e4a1174f987f2af628fd4457ffc9",
+    "bytes": 5712
+  },
+  {
+    "path": "crates/output/markup/tests/regression.rs",
+    "sha256": "85489d5b41bc6fa3e8be32be715db041179a10d29f20f5b2aad51d2a9995de81",
+    "bytes": 5174
+  },
+  {
+    "path": "crates/output/markup/tests/routes.rs",
+    "sha256": "5a5721fdb06df1aab89799c903ea667beb01cc5b2de297caaed45d2150417758",
+    "bytes": 7011
+  },
+  {
+    "path": "crates/output/markup/tests/text.rs",
+    "sha256": "abf9701c30681bbaf1fb6c064b8ad0ed9d1c66f20a31464e79d6d9c39a8d64cf",
+    "bytes": 3530
+  },
+  {
+    "path": "interfaces/doc-html.json",
+    "sha256": "664843c909b7462fb59fc3f46e01afb4c6b245289a5fd4fc326f6e3f2e3d006c",
+    "bytes": 3137
+  }
+]

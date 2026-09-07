@@ -1,0 +1,38 @@
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 2 tests
+test first_cbor_receiver_prepares_renders_and_rejects_stale_or_forged_results ... ok
+test output_budget_and_browser_depth_never_silently_flatten_the_document ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling typenum v1.20.1
+   Compiling autocfg v1.5.1
+   Compiling cfg-if v1.0.4
+   Compiling unicode-ident v1.0.18
+   Compiling num-traits v0.2.19
+   Compiling hybrid-array v0.4.14
+   Compiling num-integer v0.1.47
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling num-bigint v0.4.8
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-html-pages\workspace\crates\foundation\core)
+   Compiling nepl3-markup v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-html-pages\workspace\crates\output\markup)
+   Compiling nepl3-doc-core v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-html-pages\workspace\crates\languages\doc\core)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-html-pages\workspace\crates\foundation\wire)
+   Compiling nepl3-doc-html v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-html-pages\workspace\crates\languages\doc\html)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 01s
+     Running unittests src\lib.rs (.tmp/review-target\wasm32-wasip2\debug\deps\nepl3_doc_html-fb403d017d6d309d.wasm)
+     Running tests\local.rs (.tmp/review-target\wasm32-wasip2\debug\deps\local-8b61fc494dab7e22.wasm)
+   Doc-tests nepl3_doc_html

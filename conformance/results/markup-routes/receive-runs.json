@@ -1,0 +1,18 @@
+[
+  {
+    "command": [
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\receive-native.exe"
+    ],
+    "exit": 0,
+    "deadline": 60
+  },
+  {
+    "command": [
+      "wasmtime",
+      "run",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-markup-routes\\receive-wasi.wasm"
+    ],
+    "exit": 0,
+    "deadline": 60
+  }
+]
