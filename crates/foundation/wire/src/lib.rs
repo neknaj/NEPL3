@@ -10,6 +10,7 @@ pub mod environment;
 pub mod facts;
 pub mod foundation;
 pub mod origin;
+pub mod report;
 pub mod source;
 pub mod syntax;
 pub mod view;
@@ -39,6 +40,17 @@ pub enum WireError {
     Origin(nepl3_core::origin::OriginError),
     Syntax(nepl3_core::syntax::SyntaxError),
     Facts(nepl3_core::facts::FactError),
+    Report(nepl3_core::diagnostic::validation::ReportValidationError),
+}
+impl From<nepl3_core::diagnostic::validation::ReportValidationError> for WireError {
+    fn from(value: nepl3_core::diagnostic::validation::ReportValidationError) -> Self {
+        match value {
+            nepl3_core::diagnostic::validation::ReportValidationError::Stopped(r) => {
+                Self::Stopped(r)
+            }
+            v => Self::Report(v),
+        }
+    }
 }
 impl From<nepl3_core::facts::FactError> for WireError {
     fn from(value: nepl3_core::facts::FactError) -> Self {

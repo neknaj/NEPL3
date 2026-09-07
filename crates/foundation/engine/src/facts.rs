@@ -26,14 +26,20 @@ pub enum FactsReply {
     Complete {
         delta: FactDelta,
         report: Report,
+        sources: Vec<nepl3_core::source::SourceSnapshot>,
+        source_maps: Vec<nepl3_core::origin::Mapping>,
     },
     Invalid {
         partial: Option<FactDelta>,
         report: Report,
+        sources: Vec<nepl3_core::source::SourceSnapshot>,
+        source_maps: Vec<nepl3_core::origin::Mapping>,
     },
     Stopped {
         reason: StopReason,
         partial: Option<FactDelta>,
         report: Report,
+        sources: Vec<nepl3_core::source::SourceSnapshot>,
+        source_maps: Vec<nepl3_core::origin::Mapping>,
     },
 }

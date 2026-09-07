@@ -14,6 +14,16 @@ use alloc::vec::Vec;
 pub trait FoundationValueCodec {
     type Error;
     fn foundation_schema(&self) -> &SchemaRef;
+    fn encode_report(
+        &mut self,
+        value: &crate::diagnostic::Report,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, Self::Error>;
+    fn decode_report(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<crate::diagnostic::Report, Self::Error>;
     fn encode_origins(
         &mut self,
         value: &[Origin],
