@@ -105,7 +105,15 @@ pub fn fixture() -> Result<(LanguagePackage, SchemaRegistry), String> {
             record("Form:Wrap", vec![field("value", node_ref())]),
             record("Builtin:Name", vec![]),
             record("Leaf:Name", vec![]),
+            record("Leaf:Compound", vec![]),
             record("Token:Word", vec![field("payload", TypeDescriptor::Text)]),
+            record(
+                "Token:Compound",
+                vec![field(
+                    "payload",
+                    TypeDescriptor::List(Box::new(TypeDescriptor::NdfValue)),
+                )],
+            ),
             record(
                 "List:Cons",
                 vec![

@@ -76,6 +76,7 @@ impl core::fmt::Debug for RuntimeError {
                     ParseOutcome::NeedMore { .. } => "NeedMore",
                     ParseOutcome::Stopped { .. } => "Stopped",
                     ParseOutcome::Await { .. } => "Await",
+                    ParseOutcome::AwaitHead { .. } => "AwaitHead",
                     ParseOutcome::Reserve { .. } => "Reserve",
                 };
                 f.debug_struct("Incomplete")
@@ -269,6 +270,7 @@ pub(super) fn with_tree_measured<T>(
             default_category: package.root.clone(),
         }],
         schemas: schemas(compiled, budget)?,
+        head_providers: vec![],
         category_modes: vec![],
         providers: requirements,
         allowlist,

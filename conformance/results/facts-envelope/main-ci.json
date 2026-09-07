@@ -1,0 +1,31 @@
+{
+  "commit": "ad43f2516b6c4232d852d6d3d50e3073c41c64bb",
+  "run": "34074337724",
+  "archive_sha256": "7c7636579fb32046013d02eb81267e5e933603711d7f0597469fcf7d86eb1615",
+  "tar_members": 503,
+  "files": 397,
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "effd73705ae14be949b046faf5fee82148300b63862e2d4443832631a44a3dd4",
+    "spec_sha256": "d4ecc4a072fb1c67b143c95131ec9373f5dd04ffa59085a23fe27570d19a4ad9"
+  },
+  "ci_tests": {
+    "wasi and wasm compilation": 168,
+    "native (windows-latest)": 237,
+    "native (ubuntu-latest)": 237,
+    "native (macos-latest)": 237
+  },
+  "retrieved_log_sha256": "3e4c964da83bc4a025ebb377ee9053f4e6421765e04dfc5b1f51677f6abd65cc",
+  "format": "nepl3.remote-ci-observation/1",
+  "result": "passed-within-recorded-scope",
+  "workflow_url": "https://github.com/neknaj/NEPL3/actions/runs/34074337724",
+  "verification": [
+    "Exact main commit and all six CI jobs succeeded.",
+    "Source archive checksum and SOURCE.txt matched; archive paths are confined regular files/directories without .tmp.",
+    "Recomputed source/spec identities match the frozen Facts checkpoint; checkpoint log hashes match."
+  ],
+  "unverified": [
+    "Source artifact, not runtime binary distribution.",
+    "No real browser, separate-process provider or required acceptance group completion is inferred."
+  ]
+}

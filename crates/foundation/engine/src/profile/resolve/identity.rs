@@ -80,6 +80,26 @@ pub(super) fn digest(profile: &ParseProfile, budget: &mut Budget) -> Result<Dige
         out.quoted(&v.mode)?;
         out.push("]")?;
     }
+    out.push("],\"headProviders\":[")?;
+    for (i, v) in sorted(
+        &profile.head_providers,
+        |v| (&v.alias, &v.category),
+        out.budget(),
+    )?
+    .iter()
+    .enumerate()
+    {
+        separator(&mut out, i)?;
+        out.push("[")?;
+        out.quoted(&v.alias)?;
+        out.push(",")?;
+        out.quoted(&v.category)?;
+        out.push(",")?;
+        operation(&mut out, &v.provider.shape)?;
+        out.push(",")?;
+        operation(&mut out, &v.provider.child_context)?;
+        out.push("]")?;
+    }
     out.push("],\"id\":")?;
     out.quoted(&profile.id)?;
     out.push(",\"languages\":[")?;

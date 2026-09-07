@@ -2549,6 +2549,18 @@ fn tokenizer_outer_echo_validates_every_nested_reader_component_before_private_r
         inner.clone_with_budget(&mut denied),
         Err(StopReason::AllocationLimit)
     );
+    let mut invalid = terminal("a", 1, &mut b)?;
+    let ProviderReply::Read(value) = &mut invalid else {
+        return Err(ReaderError::ProviderContract);
+    };
+    let ReadReply::Matched { report, .. } = value.as_mut() else {
+        return Err(ReaderError::ProviderContract);
+    };
+    report.trace_overflow = Some(TraceOverflow { dropped: 1 });
+    assert_eq!(
+        session.resume(&continuation, invalid, &store, &mut b, &mut admission),
+        Err(ReaderError::ProviderContract)
+    );
     let accepted_terminal = terminal("a", 1, &mut b)?;
     let reply = session.resume(
         &continuation,
@@ -2582,5 +2594,168 @@ fn tokenizer_outer_echo_validates_every_nested_reader_component_before_private_r
             .outcome,
         TokenizationOutcome::Await { .. }
     ));
+    Ok(())
+}
+
+#[test]
+fn provider_overflow_rejects_read_failed_map_decode_without_consuming_slot()
+-> Result<(), ReaderError> {
+    let (registry, schema) = registry()?;
+    for case in 0..6 {
+        let mut p = provider_plan(&schema);
+        if matches!(case, 2 | 3) {
+            let operation = signature(&schema, ProviderKind::Transform).operation;
+            let transform = if case == 2 {
+                ReaderExpr::Map {
+                    provider: operation,
+                    body: ReaderId(0),
+                }
+            } else {
+                ReaderExpr::Decode {
+                    provider: operation,
+                    body: ReaderId(0),
+                }
+            };
+            p = plan(
+                &schema,
+                vec![ReaderExpr::Scalar(CharClass::Any), transform],
+                1,
+                TypeDescriptor::Text,
+            );
+            p.providers
+                .push(signature(&schema, ProviderKind::Transform));
+        }
+        let checked = p.check(&registry, &mut budget())?;
+        let mut b = budget();
+        let mut session = ReaderSession::new("overflow".into(), &checked, &registry, &mut b)?;
+        let input = source("a")?;
+        let mut store = SourceStore::default();
+        store.insert(input.clone())?;
+        let mut admission = SourceAdmission::default();
+        let raw = context(&schema, &registry)?;
+        let ctx = check_context(&raw, &store, &registry, &mut b, &mut admission)?;
+        let ReadReply::Await { continuation, .. } = session.read(
+            "entry",
+            ReadRequest {
+                snapshot: &input,
+                start: 0,
+                limit: 1,
+                final_input: true,
+                context: &ctx,
+                state: &NdfValue::Unit,
+            },
+            &store,
+            &mut b,
+            &mut admission,
+        )?
+        else {
+            return Err(ReaderError::NoPending);
+        };
+        let ProviderReply::Read(good) = annotated_terminal(&schema, input.span(0, 1)?, 1, &mut b)?
+        else {
+            return Err(ReaderError::ProviderContract);
+        };
+        let ReadReply::Matched { report, .. } = good.as_ref() else {
+            return Err(ReaderError::ProviderContract);
+        };
+        let provider = |overflow: bool| {
+            let mut report = report.clone();
+            report.trace_overflow = overflow.then_some(TraceOverflow { dropped: 1 });
+            match case {
+                0 => {
+                    let mut reply = good.as_ref().clone();
+                    if let ReadReply::Matched { report: target, .. } = &mut reply {
+                        *target = report;
+                    }
+                    ProviderReply::Read(Box::new(reply))
+                }
+                1 => ProviderReply::Read(Box::new(ReadReply::Failed {
+                    recovery: None,
+                    diagnostic: report.diagnostics[0].clone(),
+                    sources: vec![],
+                    source_maps: vec![],
+                    report,
+                })),
+                2 | 3 => ProviderReply::Transform(Box::new(TransformReply {
+                    value: NdfValue::Text("A".into()),
+                    view: ViewBundle {
+                        elements: vec![],
+                        roots: vec![],
+                    },
+                    facts: vec![],
+                    sources: vec![],
+                    source_maps: vec![],
+                    report,
+                })),
+                _ => ProviderReply::Read(Box::new(ReadReply::Stopped {
+                    reason: if case == 4 {
+                        StopReason::Cancelled
+                    } else {
+                        StopReason::WorkLimit
+                    },
+                    sources: vec![],
+                    source_maps: vec![],
+                    report,
+                })),
+            }
+        };
+        if case < 4 {
+            assert_eq!(
+                session.resume(
+                    &continuation,
+                    provider(true),
+                    &store,
+                    &mut b,
+                    &mut admission
+                ),
+                Err(ReaderError::ProviderContract)
+            );
+            let result = session.resume(
+                &continuation,
+                provider(false),
+                &store,
+                &mut b,
+                &mut admission,
+            )?;
+            match result {
+                ReadReply::Matched { report, .. } | ReadReply::Failed { report, .. } => {
+                    assert!(report.trace_overflow.is_none());
+                    assert_eq!(report.diagnostics.len(), 1);
+                }
+                _ => return Err(ReaderError::ProviderContract),
+            }
+            assert_eq!(
+                session.resume(
+                    &continuation,
+                    provider(false),
+                    &store,
+                    &mut b,
+                    &mut admission
+                ),
+                Err(ReaderError::NoPending)
+            );
+        } else {
+            let ReadReply::Stopped { reason, report, .. } = session.resume(
+                &continuation,
+                provider(true),
+                &store,
+                &mut b,
+                &mut admission,
+            )?
+            else {
+                return Err(ReaderError::ProviderContract);
+            };
+            assert_eq!(
+                reason,
+                if case == 4 {
+                    StopReason::Cancelled
+                } else {
+                    StopReason::WorkLimit
+                }
+            );
+            assert_eq!(report.trace_overflow, Some(TraceOverflow { dropped: 1 }));
+            assert_eq!(report.diagnostics.len(), 1);
+        }
+    }
     Ok(())
 }

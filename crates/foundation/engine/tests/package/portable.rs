@@ -39,6 +39,7 @@ fn profile(package: &LanguagePackage, registry: &SchemaRegistry) -> Result<Parse
                 .ok_or("foundation")?
                 .clone(),
         ],
+        head_providers: vec![],
         category_modes: vec![],
         providers: vec![],
         allowlist: vec![],

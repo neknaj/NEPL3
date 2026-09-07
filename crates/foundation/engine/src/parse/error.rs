@@ -13,6 +13,7 @@ pub enum ParseError {
     Syntax(SyntaxError),
     Reader(ReaderError),
     Tree(crate::tree::TreeError),
+    Head(crate::head::HeadError),
     LimitsMismatch,
     Context,
     State,
@@ -40,3 +41,11 @@ from!(SyntaxError, Syntax);
 from!(ReaderError, Reader);
 
 from!(crate::tree::TreeError, Tree);
+impl From<crate::head::HeadError> for ParseError {
+    fn from(value: crate::head::HeadError) -> Self {
+        match value {
+            crate::head::HeadError::Stopped(reason) => Self::Stopped(reason),
+            value => Self::Head(value),
+        }
+    }
+}

@@ -37,6 +37,24 @@ impl From<SchemaError> for ReportValidationError {
     }
 }
 
+/// Host-selected resolver for exact, already authorized source ranges. A window
+/// resolver must reject spans outside its explicit windows and must not treat a
+/// claimed full-snapshot digest as proof of bytes it was not given.
+pub trait DiagnosticSourceResolver {
+    fn slice<'a>(
+        &'a self,
+        span: &Span,
+        budget: &mut Budget,
+    ) -> Result<&'a str, ReportValidationError>;
+}
+fn check_span(
+    sources: &impl DiagnosticSourceResolver,
+    span: &Span,
+    b: &mut Budget,
+) -> Result<(), ReportValidationError> {
+    sources.slice(span, b)?;
+    Ok(())
+}
 struct Sources<'a> {
     store: &'a SourceStore,
     added: &'a [SourceSnapshot],
@@ -73,7 +91,9 @@ impl<'a> Sources<'a> {
         }
         Ok(Self { store, added })
     }
-    fn slice(&self, span: &Span, b: &mut Budget) -> Result<&str, ReportValidationError> {
+}
+impl DiagnosticSourceResolver for Sources<'_> {
+    fn slice<'a>(&'a self, span: &Span, b: &mut Budget) -> Result<&'a str, ReportValidationError> {
         for source in self.store.snapshots().iter().chain(self.added) {
             b.charge(
                 Resource::Work,
@@ -87,14 +107,10 @@ impl<'a> Sources<'a> {
         }
         Err(SourceError::MissingSnapshot.into())
     }
-    fn span(&self, span: &Span, b: &mut Budget) -> Result<(), ReportValidationError> {
-        self.slice(span, b)?;
-        Ok(())
-    }
 }
 fn diagnostic(
     value: &Diagnostic,
-    sources: &Sources<'_>,
+    sources: &impl DiagnosticSourceResolver,
     registry: &SchemaRegistry,
     b: &mut Budget,
 ) -> Result<(), ReportValidationError> {
@@ -107,13 +123,13 @@ fn diagnostic(
     }
     registry.validate_typed(&value.arguments, b)?;
     if let Some(span) = &value.primary {
-        sources.span(span, b)?;
+        check_span(sources, span, b)?;
     }
     for related in &value.related {
         b.charge(Resource::Work, 1)?;
         registry.validate_typed(&related.arguments, b)?;
         if let Some(span) = &related.span {
-            sources.span(span, b)?;
+            check_span(sources, span, b)?;
         }
     }
     for fix in &value.fixes {
@@ -153,7 +169,7 @@ fn diagnostic(
 }
 fn event(
     value: &Event,
-    sources: &Sources<'_>,
+    sources: &impl DiagnosticSourceResolver,
     registry: &SchemaRegistry,
     b: &mut Budget,
 ) -> Result<(), ReportValidationError> {
@@ -163,11 +179,21 @@ fn event(
     }
     registry.validate_typed(&value.payload, b)?;
     if let Some(span) = &value.span {
-        sources.span(span, b)?;
+        check_span(sources, span, b)?;
     }
     Ok(())
 }
 impl Diagnostic {
+    /// Same typed/Fix validation with a host-selected range resolver. This does
+    /// not confer source access, authenticate Usage, or absorb remote charges.
+    pub fn validate_with_sources(
+        &self,
+        sources: &impl DiagnosticSourceResolver,
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+    ) -> Result<(), ReportValidationError> {
+        diagnostic(self, sources, registry, b)
+    }
     /// Validate against explicit declarations. This does not clone, admit sources,
     /// charge Diagnostics, or prove a domain-specific diagnostic's truth.
     pub fn validate(
@@ -191,6 +217,17 @@ impl Report {
         b: &mut Budget,
     ) -> Result<(), ReportValidationError> {
         let sources = Sources::new(declared, added, b)?;
+        self.validate_with_sources(&sources, registry, b)
+    }
+    /// Uses the same Report and Fix rules for a host-authorized range resolver.
+    /// Empty reports still poll the shared operation budget.
+    pub fn validate_with_sources(
+        &self,
+        sources: &impl DiagnosticSourceResolver,
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+    ) -> Result<(), ReportValidationError> {
+        b.charge(Resource::Work, 1)?;
         if self.usage.diagnostics < self.diagnostics.len() as u64
             || self.usage.events < self.events.len() as u64
             || self.trace_overflow.as_ref().is_some_and(|v| v.dropped == 0)
@@ -198,10 +235,10 @@ impl Report {
             return Err(ReportValidationError::Usage);
         }
         for value in &self.diagnostics {
-            diagnostic(value, &sources, registry, b)?;
+            diagnostic(value, sources, registry, b)?;
         }
         for value in &self.events {
-            event(value, &sources, registry, b)?;
+            event(value, sources, registry, b)?;
         }
         Ok(())
     }

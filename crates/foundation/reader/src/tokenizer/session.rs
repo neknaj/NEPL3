@@ -533,6 +533,7 @@ impl<'a> TokenizationSession<'a> {
         ) {
             return Err(ReaderError::Continuation);
         }
+        reply.validate_outcome()?;
         let pending = match self.take_pending(echo, budget) {
             Ok(pending) => pending,
             Err(error) => {

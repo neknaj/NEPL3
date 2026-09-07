@@ -3,6 +3,7 @@
 extern crate alloc;
 
 pub mod facts;
+pub mod head;
 pub mod package;
 pub mod parse;
 pub mod portable;

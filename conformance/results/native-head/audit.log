@@ -1,0 +1,109 @@
+{
+  "scope": "design-source structure only; not runtime conformance",
+  "sources": [
+    {
+      "path": "languages/grammar/syntax.neplg",
+      "form_signatures": 68
+    },
+    {
+      "path": "languages/doc/syntax.neplg",
+      "form_signatures": 32
+    },
+    {
+      "path": "languages/math/syntax.neplg",
+      "form_signatures": 29
+    },
+    {
+      "path": "languages/circuit/syntax.neplg",
+      "form_signatures": 26
+    },
+    {
+      "path": "examples/circuit/half-adder.neplc"
+    },
+    {
+      "path": "examples/circuit/instances.neplc"
+    },
+    {
+      "path": "examples/circuit/simultaneous.neplc"
+    },
+    {
+      "path": "examples/circuit/state-feedback.neplc"
+    },
+    {
+      "path": "examples/circuit/toggle.neplc"
+    },
+    {
+      "path": "examples/document/integration.nepld"
+    },
+    {
+      "path": "examples/document/parallel.nepld"
+    },
+    {
+      "path": "examples/document/prefix.nepld"
+    },
+    {
+      "path": "examples/document/references.nepld"
+    },
+    {
+      "path": "examples/document/sentence.nepld"
+    },
+    {
+      "path": "examples/grammar/angle-tag.neplg"
+    },
+    {
+      "path": "examples/grammar/binding.neplg"
+    },
+    {
+      "path": "examples/grammar/provider.neplg"
+    },
+    {
+      "path": "examples/math/binding.neplm"
+    },
+    {
+      "path": "examples/math/decimal.neplm"
+    },
+    {
+      "path": "examples/math/doc-label.neplm"
+    },
+    {
+      "path": "examples/math/matrix.neplm"
+    },
+    {
+      "path": "examples/math/notation.neplm"
+    },
+    {
+      "path": "examples/math/rational.neplm"
+    },
+    {
+      "path": "examples/math/sum.neplm"
+    }
+  ]
+}
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.002s
+
+OK
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.014s
+
+OK
+rustc 1.97.0 (2d8144b78 2026-07-07)
+binary: rustc
+commit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3
+commit-date: 2026-07-07
+host: x86_64-pc-windows-msvc
+release: 1.97.0
+LLVM version: 22.1.6
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\core)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.76s
+measured core artifact: C:\projects\NEPL3-prefix-validation\target\x86_64-pc-windows-msvc\debug\libnepl3_core.rlib
+positive control: observed 4096 allocated bytes
+SourceMap::insert: Err(Stopped(AllocationLimit)); observed 0 allocated bytes
+SourceStore::apply: Err(Stopped(AllocationLimit)); observed 0 allocated bytes
+allocation regression passed
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.06s
+     Running `target\debug\nepl3-tools.exe tasks --check`
+Independent design review: 5 open findings; affected tasks cannot be marked complete.
+Task documents are current.

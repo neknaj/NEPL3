@@ -39,6 +39,116 @@ impl AcceptedTokenizationReport {
     pub fn scope(&self) -> &TokenizationScope {
         &self.scope
     }
+    /// Validate and append a complete operation report. `sources` explicitly
+    /// declares its referenced snapshots; payload values grant no source access.
+    /// The previous collector remains owned by `self` on every failed charge.
+    pub fn append_report(
+        &mut self,
+        report: Report,
+        saved: nepl3_core::budget::Usage,
+        sources: &nepl3_core::source::SourceStore,
+        registry: &nepl3_core::schema::SchemaRegistry,
+        budget: &mut Budget,
+        admission: &mut nepl3_core::source::SourceAdmission,
+    ) -> Result<(), crate::runtime::ReaderError> {
+        use nepl3_core::budget::Resource;
+        if self.limits != budget.limits()
+            || !crate::runtime::usage_at_least(budget.usage(), self.report.usage)
+            || !crate::runtime::usage_at_least(saved, self.report.usage)
+        {
+            return Err(crate::runtime::ReaderError::Continuation);
+        }
+        let result = (|| {
+            crate::runtime::validate::accepted_report(
+                &report,
+                sources,
+                &self.sources,
+                registry,
+                budget,
+            )?;
+            if !crate::runtime::usage_at_least(report.usage, saved)
+                || report.usage.diagnostics.saturating_sub(saved.diagnostics)
+                    < report.diagnostics.len() as u64
+                || report.usage.events.saturating_sub(saved.events) < report.events.len() as u64
+            {
+                return Err(crate::runtime::ReaderError::ProviderContract);
+            }
+            let mut captured = Vec::new();
+            let spans = report
+                .diagnostics
+                .iter()
+                .flat_map(|v| {
+                    v.primary
+                        .iter()
+                        .chain(v.related.iter().filter_map(|v| v.span.as_ref()))
+                        .chain(v.fixes.iter().flat_map(|v| v.edits.iter().map(|v| &v.span)))
+                })
+                .chain(report.events.iter().filter_map(|v| v.span.as_ref()));
+            for span in spans {
+                let mut found = None;
+                for source in self.sources.iter().chain(sources.snapshots()) {
+                    budget.charge(
+                        Resource::Work,
+                        (source.identity().source.0.len() as u64)
+                            .saturating_add(span.snapshot_ref().source.0.len() as u64)
+                            .saturating_add(34),
+                    )?;
+                    if source.identity() == span.snapshot_ref() {
+                        found = Some(source);
+                        break;
+                    }
+                }
+                let source = found.ok_or(nepl3_core::source::SourceError::MissingSnapshot)?;
+                admission.admit_existing(source, budget)?;
+                let mut present = false;
+                for prior in self.sources.iter().chain(&captured) {
+                    budget.charge(
+                        Resource::Work,
+                        (prior.identity().source.0.len() as u64)
+                            .saturating_add(source.identity().source.0.len() as u64)
+                            .saturating_add(34),
+                    )?;
+                    if prior.identity() == source.identity() {
+                        present = true;
+                        break;
+                    }
+                }
+                if !present {
+                    captured.push(source.clone_with_budget(budget)?);
+                }
+            }
+            let dropped = self
+                .report
+                .trace_overflow
+                .as_ref()
+                .map_or(0, |v| v.dropped)
+                .checked_add(report.trace_overflow.as_ref().map_or(0, |v| v.dropped))
+                .ok_or(crate::runtime::ReaderError::ProviderContract)?;
+            budget.charge(
+                Resource::AllocationUnits,
+                (captured.len() as u64)
+                    .saturating_mul(core::mem::size_of::<SourceSnapshot>() as u64)
+                    .saturating_add((report.diagnostics.len() as u64).saturating_mul(
+                        core::mem::size_of::<nepl3_core::diagnostic::Diagnostic>() as u64,
+                    ))
+                    .saturating_add((report.events.len() as u64).saturating_mul(
+                        core::mem::size_of::<nepl3_core::diagnostic::Event>() as u64,
+                    )),
+            )?;
+            self.sources.extend(captured);
+            self.report.diagnostics.extend(report.diagnostics);
+            self.report.events.extend(report.events);
+            if dropped > 0 {
+                self.report.trace_overflow =
+                    Some(nepl3_core::diagnostic::TraceOverflow { dropped });
+            }
+            Ok(())
+        })();
+        if result.is_ok() {
+            self.report.usage = budget.usage();
+        }
+        result
+    }
     /// Explicitly admit the snapshots referenced by this diagnostic into this operation.
     /// `sources` supplies declarations chosen by the caller, including additional documents.
     /// Referenced snapshots are validated, charged once, and owned before publication.

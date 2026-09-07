@@ -6,6 +6,7 @@ use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::{SchemaError, SchemaRegistry, TypeDescriptor, TypeShape},
 };
+mod head;
 mod identity;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -26,6 +27,7 @@ pub enum ProfileError {
     NotAllowed,
     MissingResource,
     ResourceIdentity,
+    HeadSignature,
 }
 impl From<StopReason> for ProfileError {
     fn from(v: StopReason) -> Self {
@@ -323,6 +325,7 @@ impl ParseProfile {
             execution_digests,
             digest,
         };
+        resolved.validate_heads(budget)?;
         for (i, override_) in self.category_modes.iter().enumerate() {
             lookup(budget, i, override_.alias.len() + override_.category.len())?;
             if self.category_modes[..i]

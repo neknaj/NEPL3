@@ -27,6 +27,15 @@ fn shape(v: &ShapeSelection, b: &mut Budget) -> Result<(), StopReason> {
     } = v
     {
         b.charge(
+            Resource::Work,
+            (provider.shape.schema.package.len()
+                + provider.shape.name.len()
+                + provider.child_context.schema.package.len()
+                + provider.child_context.name.len()
+                + shape.kind.schema.package.len()) as u64
+                + 1,
+        )?;
+        b.charge(
             Resource::AllocationUnits,
             (provider.shape.schema.package.len()
                 + provider.shape.name.len()
@@ -36,13 +45,26 @@ fn shape(v: &ShapeSelection, b: &mut Budget) -> Result<(), StopReason> {
         )?;
         slot::<crate::selection::HeadShape>(b)?;
         for context in child_contexts {
+            b.charge(
+                Resource::Work,
+                (context.alias.len()
+                    + context.category.len()
+                    + context.mode.len()
+                    + context.package.schema.package.len()) as u64
+                    + 1,
+            )?;
             charge_entry(context, b)?;
         }
         for field in &shape.fields {
+            b.charge(Resource::Work, field.name.len() as u64 + 1)?;
             slot::<crate::package::FieldSpec>(b)?;
             b.charge(Resource::AllocationUnits, field.name.len() as u64)?;
         }
         for style in &shape.styles {
+            b.charge(
+                Resource::Work,
+                (style.class.schema.package.len() + style.class.name.len()) as u64 + 1,
+            )?;
             slot::<crate::package::StyleRule>(b)?;
             b.charge(
                 Resource::AllocationUnits,
@@ -51,11 +73,19 @@ fn shape(v: &ShapeSelection, b: &mut Budget) -> Result<(), StopReason> {
             if let crate::package::StyleSelector::Field(v)
             | crate::package::StyleSelector::Capture(v) = &style.selector
             {
+                b.charge(Resource::Work, v.len() as u64 + 1)?;
                 b.charge(Resource::AllocationUnits, v.len() as u64)?;
             }
         }
     }
     Ok(())
+}
+pub(super) fn selection(
+    value: &ShapeSelection,
+    budget: &mut Budget,
+) -> Result<ShapeSelection, StopReason> {
+    shape(value, budget)?;
+    Ok(value.clone())
 }
 pub(super) fn states(
     values: &[LanguageReaderState],

@@ -133,6 +133,7 @@ fn foreign_root_mode_is_guest_owned_and_normal_child_and_host_restore_defaults()
                 .ok_or("reader schema")?
                 .clone(),
         ],
+        head_providers: vec![],
         category_modes: vec![],
         providers: vec![],
         allowlist: vec![],

@@ -16,6 +16,40 @@
         }
       },
       "pure": true
+    },
+    "headShape": {
+      "input": {
+        "named": {
+          "name": "HeadCall",
+          "package": "nepl3.engine",
+          "revision": 1
+        }
+      },
+      "output": {
+        "named": {
+          "name": "HeadReply",
+          "package": "nepl3.engine",
+          "revision": 1
+        }
+      },
+      "pure": true
+    },
+    "headChildContext": {
+      "input": {
+        "named": {
+          "name": "HeadCall",
+          "package": "nepl3.engine",
+          "revision": 1
+        }
+      },
+      "output": {
+        "named": {
+          "name": "HeadReply",
+          "package": "nepl3.engine",
+          "revision": 1
+        }
+      },
+      "pure": true
     }
   },
   "package": "nepl3.engine",
@@ -1431,6 +1465,28 @@
               }
             }
           ]
+        ],
+        "AwaitHead": [
+          [
+            "call",
+            {
+              "named": {
+                "name": "HeadCall",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "continuation",
+            {
+              "named": {
+                "name": "HeadContinuation",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
         ]
       }
     },
@@ -1473,6 +1529,18 @@
             "list": {
               "named": {
                 "name": "CategoryMode",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "headProviders",
+          {
+            "list": {
+              "named": {
+                "name": "HeadRegistration",
                 "package": "nepl3.engine",
                 "revision": 1
               }
@@ -2638,6 +2706,838 @@
           ]
         ]
       }
+    },
+    "HeadRegistration": {
+      "constraints": [
+        "profile.head-registration"
+      ],
+      "record": [
+        [
+          "alias",
+          "Text"
+        ],
+        [
+          "category",
+          "Text"
+        ],
+        [
+          "provider",
+          {
+            "named": {
+              "name": "HeadProviderRef",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "ProjectedSpan": {
+      "constraints": [
+        "head.projected-span"
+      ],
+      "record": [
+        [
+          "source",
+          {
+            "named": {
+              "name": "SourceRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "start",
+          "U64"
+        ],
+        [
+          "end",
+          "U64"
+        ]
+      ]
+    },
+    "SourceWindow": {
+      "constraints": [
+        "head.source-window"
+      ],
+      "record": [
+        [
+          "span",
+          {
+            "named": {
+              "name": "ProjectedSpan",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "bytes",
+          "Bytes"
+        ]
+      ]
+    },
+    "ProjectedToken": {
+      "constraints": [
+        "head.projected-token"
+      ],
+      "record": [
+        [
+          "kind",
+          {
+            "named": {
+              "name": "KindRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "head",
+          {
+            "named": {
+              "name": "ProjectedSpan",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "payload",
+          "NdfValue"
+        ]
+      ]
+    },
+    "ProjectedHead": {
+      "constraints": [
+        "head.projected-head"
+      ],
+      "record": [
+        [
+          "token",
+          {
+            "named": {
+              "name": "ProjectedToken",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "window",
+          {
+            "named": {
+              "name": "SourceWindow",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "ProjectedNodeRef": {
+      "constraints": [],
+      "record": [
+        [
+          "id",
+          "U64"
+        ]
+      ]
+    },
+    "ProjectedFieldValue": {
+      "constraints": [],
+      "variant": {
+        "Atom": [
+          [
+            "value",
+            "NdfScalar"
+          ]
+        ],
+        "Child": [
+          [
+            "node",
+            {
+              "named": {
+                "name": "ProjectedNodeRef",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Children": [
+          [
+            "nodes",
+            {
+              "list": {
+                "named": {
+                  "name": "ProjectedNodeRef",
+                  "package": "nepl3.engine",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "Foreign": [
+          [
+            "schema",
+            {
+              "named": {
+                "name": "SchemaRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "category",
+            "Text"
+          ],
+          [
+            "root",
+            {
+              "named": {
+                "name": "ProjectedNodeRef",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "environment",
+            {
+              "named": {
+                "name": "EnvironmentRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "ProjectedNode": {
+      "constraints": [],
+      "record": [
+        [
+          "schema",
+          {
+            "named": {
+              "name": "SchemaRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "kind",
+          "Text"
+        ],
+        [
+          "head",
+          {
+            "option": {
+              "named": {
+                "name": "ProjectedSpan",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "cover",
+          {
+            "option": {
+              "named": {
+                "name": "ProjectedSpan",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "token",
+          {
+            "option": {
+              "named": {
+                "name": "ProjectedToken",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "fields",
+          {
+            "list": {
+              "named": {
+                "name": "ProjectedFieldValue",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ProjectedSyntax": {
+      "constraints": [
+        "head.projected-syntax"
+      ],
+      "record": [
+        [
+          "nodes",
+          {
+            "list": {
+              "named": {
+                "name": "ProjectedNode",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "roots",
+          {
+            "list": {
+              "named": {
+                "name": "ProjectedNodeRef",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "windows",
+          {
+            "list": {
+              "named": {
+                "name": "SourceWindow",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "HeadCallIdentity": {
+      "constraints": [
+        "head.call-identity"
+      ],
+      "record": [
+        [
+          "sessionId",
+          "Text"
+        ],
+        [
+          "callId",
+          "U64"
+        ],
+        [
+          "operation",
+          {
+            "named": {
+              "name": "OperationRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "profileDigest",
+          "Bytes32"
+        ],
+        [
+          "executionDigest",
+          "Bytes32"
+        ]
+      ]
+    },
+    "HeadRequest": {
+      "constraints": [],
+      "variant": {
+        "Shape": [],
+        "ChildContext": [
+          [
+            "shape",
+            {
+              "named": {
+                "name": "HeadShape",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "index",
+            "U64"
+          ],
+          [
+            "completed",
+            {
+              "named": {
+                "name": "ProjectedSyntax",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "HeadCall": {
+      "constraints": [
+        "head.call"
+      ],
+      "record": [
+        [
+          "identity",
+          {
+            "named": {
+              "name": "HeadCallIdentity",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "depthBase",
+          "U64"
+        ],
+        [
+          "entry",
+          {
+            "named": {
+              "name": "EntryContext",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "environment",
+          {
+            "named": {
+              "name": "EnvironmentRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "head",
+          {
+            "named": {
+              "name": "ProjectedHead",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "request",
+          {
+            "named": {
+              "name": "HeadRequest",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "HeadOutcome": {
+      "constraints": [],
+      "variant": {
+        "Shape": [
+          [
+            "shape",
+            {
+              "option": {
+                "named": {
+                  "name": "HeadShape",
+                  "package": "nepl3.engine",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "ChildContext": [
+          [
+            "context",
+            {
+              "named": {
+                "name": "EntryContext",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Failed": [
+          [
+            "diagnostic",
+            {
+              "named": {
+                "name": "ProjectedDiagnostic",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "name": "StopReason",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "HeadReply": {
+      "constraints": [
+        "head.reply"
+      ],
+      "record": [
+        [
+          "identity",
+          {
+            "named": {
+              "name": "HeadCallIdentity",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "outcome",
+          {
+            "named": {
+              "name": "HeadOutcome",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "name": "ProjectedReport",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "ProjectedRelated": {
+      "constraints": [],
+      "record": [
+        [
+          "span",
+          {
+            "option": {
+              "named": {
+                "name": "ProjectedSpan",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "code",
+          "Text"
+        ],
+        [
+          "arguments",
+          "TypedValue"
+        ]
+      ]
+    },
+    "ProjectedEdit": {
+      "constraints": [],
+      "record": [
+        [
+          "span",
+          {
+            "named": {
+              "name": "ProjectedSpan",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "expectedDigest",
+          "Bytes32"
+        ],
+        [
+          "replacement",
+          "Text"
+        ]
+      ]
+    },
+    "ProjectedFix": {
+      "constraints": [],
+      "record": [
+        [
+          "id",
+          "Text"
+        ],
+        [
+          "edits",
+          {
+            "list": {
+              "named": {
+                "name": "ProjectedEdit",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ProjectedDiagnostic": {
+      "constraints": [],
+      "record": [
+        [
+          "schema",
+          {
+            "named": {
+              "name": "SchemaRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "code",
+          "Text"
+        ],
+        [
+          "severity",
+          {
+            "named": {
+              "name": "Severity",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "stage",
+          "Text"
+        ],
+        [
+          "arguments",
+          "TypedValue"
+        ],
+        [
+          "primary",
+          {
+            "option": {
+              "named": {
+                "name": "ProjectedSpan",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "related",
+          {
+            "list": {
+              "named": {
+                "name": "ProjectedRelated",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "fixes",
+          {
+            "list": {
+              "named": {
+                "name": "ProjectedFix",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ProjectedEvent": {
+      "constraints": [],
+      "record": [
+        [
+          "schema",
+          {
+            "named": {
+              "name": "SchemaRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "kind",
+          "Text"
+        ],
+        [
+          "operationPath",
+          {
+            "list": "U64"
+          }
+        ],
+        [
+          "span",
+          {
+            "option": {
+              "named": {
+                "name": "ProjectedSpan",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "payload",
+          "TypedValue"
+        ]
+      ]
+    },
+    "ProjectedReport": {
+      "constraints": [
+        "head.projected-report"
+      ],
+      "record": [
+        [
+          "diagnostics",
+          {
+            "list": {
+              "named": {
+                "name": "ProjectedDiagnostic",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "events",
+          {
+            "list": {
+              "named": {
+                "name": "ProjectedEvent",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "traceOverflow",
+          {
+            "option": {
+              "named": {
+                "name": "TraceOverflow",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "usage",
+          {
+            "named": {
+              "name": "Usage",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "HeadContinuation": {
+      "constraints": [
+        "head.continuation"
+      ],
+      "record": [
+        [
+          "sessionId",
+          "Text"
+        ],
+        [
+          "usage",
+          {
+            "named": {
+              "name": "Usage",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "depthBase",
+          "U64"
+        ],
+        [
+          "progress",
+          {
+            "named": {
+              "name": "ParseProgress",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "call",
+          {
+            "named": {
+              "name": "HeadCall",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "pendingToken",
+          {
+            "option": {
+              "named": {
+                "name": "Token",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
     }
   }
 }

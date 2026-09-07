@@ -389,6 +389,16 @@ fn static_fields(
             ref child_contexts,
             ..
         } => {
+            let raw = head_text(bundle, node, budget)?;
+            for form in &package.forms {
+                budget.charge(
+                    Resource::Work,
+                    (selected.entry.category.len() + raw.len()) as u64 + 1,
+                )?;
+                if form.category == selected.entry.category && form.spelling == raw {
+                    return Err(TreeError::Selection);
+                }
+            }
             if child_contexts.len() != shape.fields.len() {
                 return Err(TreeError::Selection);
             }
@@ -557,10 +567,28 @@ impl ParseTree {
                     ShapeSelection::Dynamic {
                         provider, shape, ..
                     } => {
+                        let registered = profile.head_provider(
+                            &selected.entry.alias,
+                            &selected.entry.category,
+                            budget,
+                        )?;
+                        budget.charge(
+                            Resource::Work,
+                            (provider.shape.schema.package.len()
+                                + provider.shape.name.len()
+                                + provider.child_context.schema.package.len()
+                                + provider.child_context.name.len())
+                                as u64
+                                + 66,
+                        )?;
+                        if registered != Some(provider) {
+                            return Err(TreeError::UnvalidatedDynamic);
+                        }
                         profile.provider(&provider.shape, budget)?;
                         profile.provider(&provider.child_context, budget)?;
                         checked.validate_head_shape(shape, budget)?;
-                        return Err(TreeError::UnvalidatedDynamic);
+                        same_kind(node, &shape.kind, registry)
+                            && node.fields.len() == shape.fields.len()
                     }
                     ShapeSelection::Recovery => {
                         let entries = &recovery.ok_or(TreeError::Recovery)?.entries;
