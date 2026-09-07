@@ -1,0 +1,7 @@
+{
+  "source": "root production get_revision_with_budget exact extraction",
+  "change": "budget.poll before empty index search",
+  "full_live_source_sha256": "8279cfd6e83232482b8db0a3cb4258afd5f7d60c5157ce770c2595661edf3099",
+  "copied_function_sha256": "b10f6464acb1c6775544526e341261b787aac12aab459851d0959069fd2fa107",
+  "review_snapshot_source_sha256": "4d1f3c467e112ec13eef4aaf17a4e9f0cbeb379f3fccf952c773d0f2437bb527"
+}

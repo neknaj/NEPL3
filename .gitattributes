@@ -27,3 +27,4 @@ target/** export-ignore
 dist/** export-ignore
 
 /conformance/results/tokenizer-native-host/** -text -whitespace
+/conformance/results/source-lookup-indexes/** -text -whitespace

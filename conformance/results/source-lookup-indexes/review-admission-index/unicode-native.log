@@ -1,0 +1,33 @@
+    Blocking waiting for file lock on package cache
+   Compiling review-lookup v0.0.0 (C:\projects\NEPL3-source-lookup-indexes\.tmp\review-admission-index\workspace\probe)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.63s
+     Running unittests src\lib.rs (.tmp\review-admission-index\target\debug\deps\review_lookup-97028be5ca7617f2.exe)
+
+running 9 tests
+map Work caps0..=185
+report Work caps0..=240
+map AllocationUnits caps0..=152
+report AllocationUnits caps0..=24
+test empty_lookup_must_preserve_cancelled_budget ... ok
+test index_lookup_preserves_exact_revision_and_charged_name_comparisons ... ok
+test preadmitted_output_identity_is_checked_and_not_charged_again ... ok
+test map_index_preserves_cycles_disjoint_self_edges_and_depth ... ok
+test report_added_index_resolves_exact_span_and_preserves_validation_stops ... ok
+test reports_preserve_duplicate_and_identity_uri_rules ... ok
+admission create Work cap0..=250
+admission create AllocationUnits cap0..=147
+test admission_creation_and_import_stop_before_publishing_new_keys ... ok
+512 graphs x 2 declaration orders agree with transitive closure
+test all_three_vertex_mapping_graphs_match_independent_transitive_closure ... ok
+apply+admission Work cap0..=1423
+apply+admission AllocationUnits cap0..=1291
+test admission_and_store_indices_commit_together_for_multi_source_edits ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.36s
+
+   Doc-tests review_lookup
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
