@@ -2,6 +2,66 @@ use super::*;
 use nepl3_tools::doc::projection::from_source;
 
 #[test]
+fn raw_code_projection_preserves_bytes_and_distinct_blocks() -> Result<(), String> {
+    use pulldown_cmark::{CodeBlockKind, Event, Parser, Tag};
+    let compiled = compiled()?;
+    let source = r##"article en "T" body
+      cons rawcode some "Rust" "\tlet x = \"<script>\";\n```\n````\n  日本語  \n\n"
+      cons rawcode none ""
+      cons paragraph cons "after" nil nil"##;
+    let output = from_source(&compiled, source)?;
+    let mut blocks = Vec::new();
+    let mut active = false;
+    for event in Parser::new(&output) {
+        match event {
+            Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(hint))) => {
+                blocks.push((hint.into_string(), String::new()));
+                active = true;
+            }
+            Event::Text(text) if active => blocks
+                .last_mut()
+                .ok_or("code text without block")?
+                .1
+                .push_str(&text),
+            Event::End(pulldown_cmark::TagEnd::CodeBlock) => active = false,
+            Event::Html(_) | Event::InlineHtml(_) => return Err("code escaped its fence".into()),
+            _ => {}
+        }
+    }
+    assert_eq!(
+        blocks,
+        vec![
+            (
+                "Rust".into(),
+                "\tlet x = \"<script>\";\n```\n````\n  日本語  \n\n".into()
+            ),
+            (String::new(), String::new())
+        ]
+    );
+    Ok(())
+}
+
+#[test]
+fn raw_code_projection_rejects_normalized_bytes_and_ambiguous_hints() -> Result<(), String> {
+    let compiled = compiled()?;
+    for raw in [
+        r#"none "no final newline""#,
+        r#"none "CRLF\r\n""#,
+        r#"some "" "x\n""#,
+        r#"some "two words" "x\n""#,
+        r#"some "bad`hint" "x\n""#,
+        r#"some "<tag>" "x\n""#,
+    ] {
+        let source = format!("article en \"T\" body cons rawcode {raw} nil");
+        assert!(
+            from_source(&compiled, &source).is_err_and(|e| e.starts_with("Text")),
+            "{source}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn explicit_breaks_preserve_markdown_paragraph_and_list_structure() -> Result<(), String> {
     use pulldown_cmark::{Event, Parser, Tag};
     let compiled = compiled()?;
@@ -162,7 +222,7 @@ fn projection_stops_without_returning_partial_markdown() -> Result<(), String> {
     let compiled = compiled()?;
     with_input(
         &compiled,
-        r#"article en "Title" body cons paragraph cons "Body" nil nil"#,
+        r#"article en "Title" body cons paragraph cons "Body" nil cons rawcode some "sh" "echo example\n```\n" nil"#,
         "Article",
         |tree, profile, b, a| {
             let checked = tree
