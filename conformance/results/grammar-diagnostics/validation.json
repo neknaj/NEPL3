@@ -1,0 +1,105 @@
+{
+  "format": "nepl3.development-slice/1",
+  "scope": "T02/T05: source-located Grammar compiler diagnostics, symbolic type payloads and production Report NDF roundtrip",
+  "base_commit": "b71d49e3f5c1da0570badfe41b1c337f6c075c1e",
+  "result": "passed-within-recorded-scope",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "eaf501c2c7847e50c669b05865e87b00124bee5f8a3aece39a68ea897cb3a4c6",
+    "spec_sha256": "8267bcbfd960ec72bdb5aa739cf54672d528abf0380faad3117c860641189a89"
+  },
+  "checks": [
+    {
+      "command": "cargo test --workspace --locked",
+      "exit_code": 0,
+      "log": "conformance/results/grammar-diagnostics/native.log",
+      "sha256": "4d3e8ba7ed7b92e25eded7828d5fae6ab13cb4d1115ffab3ba83b64bfe497fc2"
+    },
+    {
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER='wasmtime run'; cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --no-default-features --target wasm32-unknown-unknown; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar --target wasm32-wasip2 diagnostic::compiler_report_boundary_without_host_process -- --exact --nocapture",
+      "exit_code": 0,
+      "log": "conformance/results/grammar-diagnostics/wasi.log",
+      "sha256": "7a8c3ec2890bb2ae9488a4769ad9561eb176fc98e0ffafa357b58dfefe43e63d"
+    },
+    {
+      "command": "cargo fmt --all -- --check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo clippy --workspace --all-targets --locked -- -D warnings; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps --locked",
+      "exit_code": 0,
+      "log": "conformance/results/grammar-diagnostics/quality.log",
+      "sha256": "e9cd9a7fc7dba1bdd7000baa24fbc102a641cb8ec4759fe9e8308610770803c7"
+    },
+    {
+      "command": "cargo run --locked -p nepl3-tools -- check",
+      "exit_code": 0,
+      "log": "conformance/results/grammar-diagnostics/contracts.log",
+      "sha256": "66621b0c9e29547a41c4c5ca895c78e3ff19003831a2661dbc7115e3870c68ea"
+    },
+    {
+      "command": "python tools/audit/structure.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/audit -p test.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/bootstrap -p test_grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/audit/allocation/run.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo run --locked -p nepl3-tools -- tasks --check",
+      "exit_code": 0,
+      "log": "conformance/results/grammar-diagnostics/audit.log",
+      "sha256": "e1e6a11493ff86d84f37fc48ea74afb337fb530cfd1e3498c33a169ee67a7d5e"
+    },
+    {
+      "command": "C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe --version; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe .github/workflows/ci.yml",
+      "exit_code": 0,
+      "log": "conformance/results/grammar-diagnostics/ci.log",
+      "sha256": "ad7ed44e79c7e5d554c2e008819df3a5da44834e9cfdb4aecaef9224a39c87dd"
+    }
+  ],
+  "initial_failed_attempts": {
+    "reason": "Copy-Item preserved earlier source modification times in a reused Cargo target directory. Initial native and WASI compilation reused stale dependency metadata and could not find encode_type_descriptor. All 32 copied source bytes were checked against the frozen SHA-256 manifest, then their modification times were refreshed without changing bytes; full builds and tests passed. These failures are retained as local build-cache setup failures, not successful tests.",
+    "checks": [
+      {
+        "command": "cargo test --workspace --locked",
+        "exit_code": 1,
+        "log": "conformance/results/grammar-diagnostics/initial-native-build.log",
+        "sha256": "ac094544f2c206130183e33fb90f70af7e220e09df1a69671c3aab36f566703e"
+      },
+      {
+        "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER='wasmtime run'; cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --no-default-features --target wasm32-unknown-unknown; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar --target wasm32-wasip2 diagnostic::compiler_report_boundary_without_host_process -- --exact --nocapture",
+        "exit_code": 101,
+        "log": "conformance/results/grammar-diagnostics/initial-wasi-build.log",
+        "sha256": "1e0b26a7b59543597f72a83feccf7624c9b5b3e52ade0f6c73f7cc5f758b86de"
+      }
+    ]
+  },
+  "execution": {
+    "native": {
+      "target": "x86_64-pc-windows-msvc",
+      "passed": 271,
+      "ignored": 1,
+      "normal_full_grammar_bootstrap": "executed at unchanged Work cap"
+    },
+    "wasi": {
+      "target": "wasm32-wasip2",
+      "runner": "Wasmtime 44.0.1",
+      "passed": 195,
+      "scope": "194 tests across five production crates and one process-free compiler-to-Diagnostic-to-CBOR-to-Report test"
+    },
+    "browser_wasm": "five no_std crate compilation only",
+    "toolchain": "Rust 1.97.0",
+    "python": "6 structural audit and 3 bootstrap adapter tests passed",
+    "allocation": "SourceMap::insert and SourceStore::apply AllocationLimit regressions measured zero allocated bytes; positive control measured 4096 bytes.",
+    "ci": "actionlint 1.7.12 passed; the process-free compiler Report boundary test is included in the existing WASI CI job"
+  },
+  "implementation": [
+    "Compiler failures retain original parsed-node primary and related locations. Reader-plan and binding diagnostics use their existing semantic checkers; source locations are not reconstructed by searching raw text.",
+    "Typed diagnostic arguments include symbolic expected and actual TypeDescriptor data. These symbolic descriptions do not claim referenced user type names have been registered.",
+    "The iterative core-owned TypeDescriptor encoding contract is implemented by wire. Compiler diagnostics roundtrip through real CBOR and the production Report codec, retaining sources, locations and typed arguments.",
+    "Shared SourceAdmission counts the same source once across document validation, compilation, package checking and diagnostic generation. A fresh zero limit or unrelated Document is rejected; stop retains original located failure.",
+    "Native fixtures are checked against the actual bootstrap adapter. The independent process-free test uses that checked-in seed and executes under WASI without spawning Python."
+  ],
+  "independent_review": {
+    "reviewer": "Huygens",
+    "record": "doc/review.md",
+    "scope": "Original Japanese, supplementary-plane, CRLF and escaped inputs; exact primary and related spans; expected/actual type payloads; three original-source CBOR Report roundtrips; deep TypeDescriptor rejection and successful mixed List/Option symbolic type roundtrip.",
+    "root_confirmation": "Root ran the isolated full workspace, five-crate WASI and process-free diagnostic WASI test, browser compilation, strict quality gates and audits. All 32 staged Git blobs match the frozen byte/hash manifest; all nine intentional CRLF fixtures preserve their original bytes."
+  },
+  "unverified": [
+    "Complete PackageSubject operand attribution and the complete ReaderExpr success/failure matrix are subsequent work.",
+    "Reader Transform failure/stop envelopes and rejection-safe resume remain in progress; R042 is open in this snapshot.",
+    "Full operation/frame closure, binding execution and editor services, other language runtimes, applications, browser interaction, Pages and Doc migration remain in progress or unimplemented.",
+    "No required acceptance group or task is marked complete by this development-slice record."
+  ]
+}

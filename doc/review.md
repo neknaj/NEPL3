@@ -348,4 +348,12 @@ R041の最終管理対象を独立実行し、core Budget2件、Head portable6�
 
 別の `head_callback` 補助では不正返信の拒否理由をHeadError::Identityと明示して検査した。拒否に要したWorkは増える一方、diagnostics/events/SourceBytesは変化せず、その後同じpendingから正常に完走した。spec04の予約・相対費用・絶対depth・窓免除・未精算破棄・受信認証責務の同期も読み、R041をcorrectedとした。この結果は同process内の実NDF/CBOR交換とcallback実行の証拠であり、別processの通信認証・終了制御・メータリング実装や全P03受入条件の合格まで主張しない。
 
+T05の位置付きcompiler診断は、独立した日本語・emoji commentとCRLFを含む原文で再検査した。MissingRuleは名前のbyte範囲104..110、逆転rangeは上限122..125をprimary・escaped下限113..121をrelated、Choice異型は後続scalar129..147をprimary・先行literal112..123をrelatedに保持する。Choiceの期待Unit・実際Textも一致した。通常DiagnosticをReportへ包み、実NDF/CBOR encode/decodeを通した独立補助 `compiler_report` は3例すべてで構造全Eqとなり、SourceBytesは原文198/213/239bytesの各1回、Diagnosticsは1だった。管理対象 `cargo test --locked -p nepl3-tools --test grammar diagnostic --target-dir .tmp/review-target` の6件も独立成功し、fresh Source/Allocation/Diagnostics停止・別Documentへの流用拒否・共有SourceAdmissionを確認した。元fixtureは子 `.gitattributes` の `*.neplg -text` によりCRLFを保持する設定を確認した。これを全T05や未実装binding挙動の合格とはせず、R033は別の未達として維持する。
+
+TypeDescriptor encoderの管理対象1件に加え、独立main-thread補助 `type_descriptor_depth` は100000層ListをDepth1000で停止し安全に破棄できた。2048層のList/Optionと未知packageのUnicode Named参照は実CBOR往復と各層の照合が成功した。Namedは記号的な型記述なので、ここで未知参照を実行可能型として登録・承認した意味ではない。これらignored補助は管理対象試験数へ含めず、位置付き診断の実行境界の追加検証として記録する。
+
+process起動不要の管理対象 `diagnostic::compiler_report_boundary_without_host_process` は、wasm32-wasip2へbuildした実tools試験artifactをWasmtime44.0.1で直接実行し1件成功した。初回cargo実行はrunner未設定により試験未実行だったため成功へ数えず、同じartifactの明示runner実行結果を根拠とする。これは管理下seed入力からcompile/Diagnostic/Reportへ至る経路であり、Python adapter自体をWASI上で動かした意味ではない。
+
+R042は後続Reader修正と分離し、clean commit ab9c50b1d36ee0240d759cc80ef986f905242804の公開APIで確認した。実Read providerの出力型Textに対し、Await後のMatched.valueだけをUnitへ変更するとSchema(WrongType)となり、同じ保存continuationへ正常Textを再返信するとNoPendingになる。実行は `cargo run --manifest-path .tmp/reader-payload-old/Cargo.toml --target-dir .tmp/review-old-target`、依存先は読取専用の隔離snapshotである。補助の成功はこの旧欠陥assertの成立を示す。現Reader草稿のslot取得前検査では同じ正常再送がMatchedへ改善したが、最終回帰とcollector/source閉包の原子性は後続sliceで確認するためR042はopenとする。
+
 仕様の通読、具体例による矛盾の確認、公開規格との照合を行った。r4では上記のcore/wire公開APIとNDF intrinsic roundtripに加え、標準Grammar原文のnative bootstrapを実行した。4言語全formのRust parse/lower、browser描画、回路実行、LSP、portable operation provider、および全要求targetでのconformanceはまだこのレビューの実行範囲に含まれない。対応する実装が存在する段階で、implementation-status.jsonの未実行記録を実行証拠とともに更新する。

@@ -16,6 +16,13 @@ pub trait FoundationCodecError {
 }
 pub trait FoundationValueCodec {
     type Error: FoundationCodecError;
+    /// Encode a symbolic type description as foundation data. This does not
+    /// assert that a described Named type resolves in the current registry.
+    fn encode_type_descriptor(
+        &mut self,
+        value: &crate::schema::TypeDescriptor,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, Self::Error>;
     fn foundation_schema(&self) -> &SchemaRef;
     fn source_admission(&mut self) -> &mut crate::source::SourceAdmission;
     fn encode_fact_set(

@@ -1,0 +1,8 @@
+# 位置診断
+language Tiny 1 Expr
+  cons category Expr Main
+  cons reader word seq cons literal "x" nil
+  cons mode Main cons take Word word nil
+  cons namespace Value lexical
+  cons leaf Word Expr Word reference Value self nil
+  nil

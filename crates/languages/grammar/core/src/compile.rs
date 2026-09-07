@@ -1,5 +1,6 @@
 //! Production Grammar lowering. No provider is executed by compilation.
 use crate::model::{CheckedDocument, ModelError, NatLiteral, NodeId};
+use alloc::boxed::Box;
 use alloc::{string::String, vec::Vec};
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
@@ -8,6 +9,7 @@ use nepl3_core::{
     view::PresentationClass,
 };
 use nepl3_reader::plan::{PlanError, ProviderSignature};
+pub mod diagnostic;
 pub mod package;
 pub mod reader;
 
@@ -36,6 +38,7 @@ pub struct ReaderContext<'a> {
 }
 #[derive(Debug, Eq, PartialEq)]
 pub enum CompileError {
+    Located(Box<diagnostic::LocatedCompileError>),
     Stopped(StopReason),
     Model(ModelError),
     Schema(SchemaError),
@@ -162,7 +165,7 @@ impl From<PlanError> for CompileError {
 pub fn natural_u64(value: &NatLiteral, budget: &mut Budget) -> Result<u64, CompileError> {
     budget.charge(Resource::Work, 1)?;
     if value.value.is_negative() || value.value.as_bigint().bits() > 64 {
-        return Err(CompileError::NaturalOverflow);
+        return Err(CompileError::NaturalOverflow.at(&value.span, None, budget));
     }
     budget.charge(Resource::AllocationUnits, 8)?;
     let (_, bytes) = value.value.canonical_parts();

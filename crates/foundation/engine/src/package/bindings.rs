@@ -80,6 +80,75 @@ pub(super) fn check(
     }
     Ok(())
 }
+/// The concrete declaration whose existing binding rules are being checked.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum BindingOwner {
+    Form(u64),
+    Leaf(u64),
+}
+#[derive(Debug, Eq, PartialEq)]
+pub struct BindingFailure {
+    pub error: PackageError,
+    pub binding: Option<BindingId>,
+}
+struct Owner<'a> {
+    fields: &'a [FieldSpec],
+    self_type: Option<&'a TypeDescriptor>,
+    root: BindingId,
+    styles: &'a [StyleRule],
+}
+impl LanguagePackage {
+    /// Run the same binding validator used by `check`, retaining the failing
+    /// binding arena index so source compilers can attribute their own AST.
+    pub fn check_binding_owner(
+        &self,
+        owner: BindingOwner,
+        registry: &SchemaRegistry,
+        budget: &mut Budget,
+    ) -> Result<(), BindingFailure> {
+        let selected = match owner {
+            BindingOwner::Form(index) => self
+                .forms
+                .get(usize::try_from(index).map_err(|_| BindingFailure {
+                    error: PackageError::InvalidBinding,
+                    binding: None,
+                })?)
+                .map(|v| Owner {
+                    fields: &v.fields,
+                    self_type: None,
+                    root: v.binding,
+                    styles: &v.styles,
+                }),
+            BindingOwner::Leaf(index) => self
+                .leaves
+                .get(usize::try_from(index).map_err(|_| BindingFailure {
+                    error: PackageError::InvalidBinding,
+                    binding: None,
+                })?)
+                .map(|v| Owner {
+                    fields: &[],
+                    self_type: Some(&v.payload),
+                    root: v.binding,
+                    styles: &v.styles,
+                }),
+        }
+        .ok_or(BindingFailure {
+            error: PackageError::InvalidBinding,
+            binding: None,
+        })?;
+        detailed(self, selected, registry, budget)
+    }
+}
+fn detailed(
+    package: &LanguagePackage,
+    owner: Owner<'_>,
+    registry: &SchemaRegistry,
+    budget: &mut Budget,
+) -> Result<(), BindingFailure> {
+    let mut binding = None;
+    owner_inner(package, owner, registry, budget, &mut binding)
+        .map_err(|error| BindingFailure { error, binding })
+}
 pub(super) fn owner(
     package: &LanguagePackage,
     fields: &[FieldSpec],
@@ -89,11 +158,38 @@ pub(super) fn owner(
     registry: &SchemaRegistry,
     budget: &mut Budget,
 ) -> Result<(), PackageError> {
+    detailed(
+        package,
+        Owner {
+            fields,
+            self_type,
+            root,
+            styles,
+        },
+        registry,
+        budget,
+    )
+    .map_err(|failure| failure.error)
+}
+fn owner_inner(
+    package: &LanguagePackage,
+    owner: Owner<'_>,
+    registry: &SchemaRegistry,
+    budget: &mut Budget,
+    at: &mut Option<BindingId>,
+) -> Result<(), PackageError> {
+    let Owner {
+        fields,
+        self_type,
+        root,
+        styles,
+    } = owner;
     budget.charge(Resource::AllocationUnits, fields.len() as u64)?;
     let mut visited = alloc::vec![false;fields.len()];
     let mut pending = Vec::new();
     push(&mut pending, root, budget)?;
     while let Some(id) = pending.pop() {
+        *at = Some(id);
         budget.charge(Resource::Work, 1)?;
         let binding = usize::try_from(id.0)
             .ok()
@@ -160,6 +256,7 @@ pub(super) fn owner(
             }
         }
     }
+    *at = None;
     for (i, field) in fields.iter().enumerate() {
         if !visited[i] && !super::shape::literal(package, field.read, budget)? {
             return Err(PackageError::UnvisitedField);

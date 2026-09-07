@@ -17,6 +17,7 @@ def descriptor(root=ROOT):
     named = lambda name, package="nepl3.grammar": {"named": {"package": package, "revision": 1, "name": name}}
     record = lambda fields, constraints=[]: {"record": fields, "constraints": constraints}
     types = {
+        "CompileDiagnosticArguments": record([["expected", {"option": named("TypeDescriptor", "nepl3.foundation")}], ["actual", {"option": named("TypeDescriptor", "nepl3.foundation")}]]),
         "NodeId": record([["index", "U64"]]),
         "NameLiteral": record([["value", "Text"], ["span", named("Span", "nepl3.foundation")]]),
         "TextLiteral": record([["value", "Text"], ["span", named("Span", "nepl3.foundation")]]),

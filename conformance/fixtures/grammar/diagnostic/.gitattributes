@@ -1,0 +1,2 @@
+# Exact UTF-8 source bytes, including CRLF, are part of diagnostic expectations.
+*.neplg -text whitespace=trailing-space,space-before-tab,cr-at-eol
