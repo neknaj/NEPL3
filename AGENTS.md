@@ -27,7 +27,7 @@ Rust以外によるcore実装への置換では、同じ操作schemaとconforman
 - テキストはUTF-8。PowerShellで読み書きする場合はEncoding UTF8を明示する。通常ファイルはLF、source位置試験のfixtureは元byte列を維持する。
 - ユーザー指示を方針・契約に照らして検証し、問題があれば根拠を示す。ライブラリ仕様が曖昧ならWeb検索で公式資料を確認する。
 - `.tmp/` は説明用のローカル資料でありGit管理・ビルド・CI・配布へ含めない。正式な入口は `doc/README.md`。
-- 現在は共通runtimeの実装を進めている。19 crateは目標構成で、実際のmemberはCargo.tomlが示す。R006/R009/R014は実装開始を禁止する条件ではなく、実装とともに解消し公開契約を確定する前に検証する課題である。型付きschema・Rust API・codec・不変条件試験を対応させ、空のcrateや成功stubを揃えない。
+- 現在は共通runtimeの実装を進めている。20 crateは目標構成で、実際のmemberはCargo.tomlが示す。R006/R009/R014は実装開始を禁止する条件ではなく、実装とともに解消し公開契約を確定する前に検証する課題である。型付きschema・Rust API・codec・不変条件試験を対応させ、空のcrateや成功stubを揃えない。
 - 実装状態の正本は `implementation-status.json`、タスク定義の正本は `design/tasks.json`。タスク本文・索引は `cargo run --locked -p nepl3-tools -- tasks --write` で生成する。
 - 変更後は `doc/development.md` の検査を実行し、diffを確認する。未実行の受入試験をCI成功から推定しない。
 - `tools` は開発host用。JSONなどの動的入力境界でのみ動的な値を使い、言語の意味モデルの代用にしない。
@@ -35,10 +35,13 @@ Rust以外によるcore実装への置換では、同じ操作schemaとconforman
 - 最終文書はNEPL3 Doc DSLへ移行する。現在はMarkdownを正本とし、T21の表現gap監査・意味同等性・リンク/安定ID・bootstrap検査後にページ単位で切り替える。AGENTS等の必要なMarkdownはDoc正本からの生成projectionを許すが二重手書き保守は禁止。
 - 受入群と必須targetはdesign/acceptance.jsonを正本とし、T16は全required群を動的に要求する。CI成功や証拠pathの存在だけでruntime/Web/文書移行をpassedへ変更しない。
 
+Doc/Mathの数式HTMLは `doc/spec/17-math-html.md` に従い生成時KaTeX優先・独立MathML fallbackとする。CLIはhost、WebはWorkerで生成し、preview/書出し済み文書内ではKaTeXを再実行しない。
+
 ## 実装・独立レビュー・統括の分担
 
-- 開発は、実装するsubagentと、その実装を独立にレビューする別のsubagentを用いて行う。
-- メインagentは統括を担当する。作業範囲と担当ファイル、依存関係、受入条件を定め、担当間を調整し、レビュー結果と実行証拠を確認して統合・報告する。
+- 実装はメインagentが担当し、subagentには独立レビューを依頼する。設計具体化・コード・試験・指摘修正の実装をsubagentへ委任しない。
+- メインagentは実装と統括を担当する。作業範囲、依存関係、受入条件を定め、仕様・差分・実行証拠と独立レビューを確認して統合・報告する。共通契約の編集責任もメインagentへ集約する。
 - 実装担当の自己確認だけで独立レビューを代替しない。レビュー担当は元の要求・仕様・変更差分・試験を自分で確認し、設計上の誤りと検証不足も指摘する。
-- 指摘の修正は実装担当へ戻し、必要な再レビュー・再検証を経てから完了とする。未解決事項や未実行の検査は統括agentが明示する。
+- 指摘の修正はメインagentが行い、必要な再レビュー・再検証を経てから完了とする。subagentの利用上限や未実行をレビュー成功へ読み替えず、独立して進められる実装・試験を続ける。
+- 専用branch/worktreeで未保存変更を保全し、区切りごとにcommit・pushする。未レビューのcheckpointはその状態を明記し、mainへの統合には独立レビューと必須CIを要求する。
 - ChatGPT作成の設計や過去の検証記録を無条件に採用しない。各契約を本文・schema・文法・例・受入条件および必要な公式資料と照合し、訂正理由と影響範囲を残す。

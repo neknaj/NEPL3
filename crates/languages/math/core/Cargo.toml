@@ -1,0 +1,20 @@
+[package]
+name = "nepl3-math-core"
+description = "Typed mathematical notation and exact operations"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+nepl3-core.workspace = true
+num-bigint.workspace = true
+num-traits.workspace = true
+
+[dev-dependencies]
+nepl3-wire.workspace = true
+
+[lints]
+workspace = true

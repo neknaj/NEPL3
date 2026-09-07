@@ -1,0 +1,9 @@
+    Blocking waiting for file lock on build directory
+   Compiling nepl3-math-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\languages\math\core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.61s
+     Running tests\construct.rs (target\wasm32-wasip2\debug\deps\construct-0b9f6b8ad072c1b2.wasm)
+
+running 1 test
+test fresh_rational_notation_obeys_structure_depth_and_caller ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

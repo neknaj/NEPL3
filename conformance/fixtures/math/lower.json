@@ -1,0 +1,160 @@
+{
+  "basis": "Specification 06 and normative Math form signatures. Inputs are fixed independently of lower output. SymbolName and explicit Symbol intentionally share semantic Symbol.",
+  "cases": [
+    {
+      "kind": "Add",
+      "source": "add 1 2",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Sub",
+      "source": "sub 1 2",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Mul",
+      "source": "mul 1 2",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Frac",
+      "source": "frac 1 2",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Pow",
+      "source": "pow 1 2",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Equal",
+      "source": "equal 1 2",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Lt",
+      "source": "lt 1 2",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Le",
+      "source": "le 1 2",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Subscript",
+      "source": "subscript 1 2",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Superscript",
+      "source": "superscript 1 2",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Neg",
+      "source": "neg x",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Sqrt",
+      "source": "sqrt x",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Transpose",
+      "source": "transpose x",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Det",
+      "source": "det x",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Root",
+      "source": "root 3 x",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Scripts",
+      "source": "scripts x 1 2",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Fence",
+      "source": "fence \"(\" \")\" x",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Sequence",
+      "source": "sequence cons x cons 1 nil",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Symbol",
+      "source": "symbol \"alpha beta\"",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Text",
+      "source": "text \"display only\"",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Vector",
+      "source": "vector cons 1 cons 2 nil",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Matrix",
+      "source": "matrix cons row cons 1 cons 2 nil cons row cons 3 cons 4 nil nil",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Let",
+      "source": "let x x x",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Sum",
+      "source": "sum i 1 n i",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Integral",
+      "source": "integral x 0 1 x",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Call",
+      "source": "call f cons x cons y nil",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Label",
+      "source": "label x Doc \"note\"",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Number",
+      "source": "0.10",
+      "entry": "Expr"
+    },
+    {
+      "kind": "SymbolName",
+      "source": "x",
+      "entry": "Expr"
+    },
+    {
+      "kind": "Row",
+      "source": "row cons 1 cons x nil",
+      "entry": "Row"
+    },
+    {
+      "kind": "DocGuest",
+      "source": "Doc \"[x/ex]\"",
+      "entry": "DocGuest"
+    }
+  ]
+}

@@ -59,9 +59,23 @@ letは「name := init ; body」のmrow。sumの下限は「index = lower」、�
 
 labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備し、mtextを介した注記として出力する。MathMLの内容モデルに適合しないblock内容は受け入れない。
 
+## 4.1. 公開arenaと原文保持
+
+`interfaces/model.json` のMath record/unionはconstructorの論理的な意味展開であり、Rust enum順や別の再帰wire layoutではない。実値のschemaは `interfaces/math.json` の `MathSyntax` / `MathValue` とする。MathRootはExpr / Row / DocGuestの3種類。MathKindは29 formとNumber leafに対応し、bare SymbolNameは明示Symbolと同じ意味kindへlowerする。子はExprRef / RowRef / DocGuestRef、guestはEmbedRefで平坦なarenaを参照する。schemaの明示variant名とfield列がwire tagであり、入力由来の深さをnativeの再帰所有へ転写しない。
+
+MathValueの構造検査はカテゴリ、参照、到達性、cycle、共有DAGの最大経路、Number有限十進制約、vector/matrix形状、fence幅、literal 0のroot degreeを検査する。単独Rowは空を表せるが、Matrixに取り込むrowの列数は正で全row同一でなければならない。この証明はsymbol解決済みCheckedExpressionや評価可能性の証明ではない。
+
+MathSyntaxはsource宣言、元Origin表、tokenごとのowner headを持つMathView、SourceMapを所有する。Number.spellingは `Option<Span>` のまま保持し、存在する場合は宣言sourceとnode coverに整合する位置を指す。意味Rationalと原lexemeの一致を証明したときだけ元表記をprintへ利用でき、位置構造検査だけをその証明とみなさない。Symbol/Let/Sum/Integralの名前operandは閉じたMathFieldLocationで選択位置とOriginを保持する。本文の名前検索で位置を再発見せず、source-lessの位置はNoneとする。
+
+LabelのDoc annotationと独立DocGuestは、Doc SentenceのForeignClosureを保持する。ownerの環境・Origin ID・source/map閉包とguest自身のID空間を混同せず、意味変換を行わない。元構文に意味的に不正なDoc annotationがあっても、Mathのsource構造検査を理由にDoc lowerや評価を呼び出してはならない。prepared表示へ渡す意味・内容モデル検査は別の要求として残す。
+
+`lower::expression` はhostが選択済みparse/profileを確認したSyntaxBundleと明示Math表層SchemaRef/categoryを受け、現在のBudget/SourceAdmissionで再検査してMathSyntaxを返す。共有sourceは一度だけ計上し、原Frac・表示scripts等を簡約しない。局所constructor制約の失敗は元のsource NodeRefとShapeErrorへ帰属させ、破棄した出力arenaのindexだけを位置情報として返さない。停止は原StopReasonを保持し、元構文木を変更しない。
+
+初回NDF受信はschema検査後に同じsource/Origin/View/guest閉包とarena制約を検査する。宣言sourceの欠落をreceiverのambient storeから補わない。raw MathSyntaxの受信はbinding・free symbol要求・評価結果のproofを発行しない。明示constructor helperは新しいsource-less式を作るためのもので、元式を置換する処理ではない。
+
 ## 5. 出力と資源
 
-MathMLはこの仕様の正式なportable出力である。ブラウザがfont/layoutを担当する。native CLIでも同じMathMLを含むHTML artifactを出力できる。CLIがブラウザなしでpixel描画まで行うと広告しない。
+MathMLは独立した正式portable出力であり、ブラウザがfont/layoutを担当する。Doc・MathのHTML生成は[17章](17-math-html.md)のKaTeXPreferredを標準とし、生成環境でKaTeXを実行してCSS/fontと配布する。忠実変換不能・生成能力不足時はNEPL3 MathMLへ診断付きで切り替える。閲覧時にKaTeXを再実行せず、CLIがpixel描画まで行うとも広告しない。
 
 独自layout/rasterizerを追加する場合は、CheckedExpressionまたはMathLayout入力modelを受ける別backendとする。OpenType MATH tableやglyph outlineの実装都合をMathの意味モデルへ持ち込まない。
 

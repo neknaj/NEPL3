@@ -108,3 +108,7 @@ Doc移行に使う既知のrendererと同revision runtimeの試験を分ける�
 GitHub Pagesの静的公開とproject siteの仕様は [GitHub公式資料](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)、workflowの権限・artifact・environmentは [custom workflows公式資料](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages) に従う。
 
 復旧契約の制約は [Pages REST API](https://docs.github.com/en/rest/pages/pages)、[deploy-pages](https://github.com/actions/deploy-pages)、[Actions concurrency](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#concurrency)、[artifact削除とretention](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/remove-workflow-artifacts)、[immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases) に照合した。GitHubの機能を組み合わせた上記の状態機械はNEPL3の設計判断であり、GitHubが自動rollbackを保証するという意味ではない。
+
+## 数式生成assetと書出し文書
+
+[17章](17-math-html.md)のKaTeX実装・CSS/fontは同版の同一artifactに束縛し、path・digest・license・CSS相対font参照を検査する。PlaygroundのWorkerはその資源からHTMLを生成し、previewと書出しで同じ生成artifactを使う。S01/S02/S03/S04/S05では非root path、資源欠落時の診断とMathML設定、外部CDNなしの閲覧、JavaScript無効の書出済み文書を検査する。対話生成がJavaScriptを必要とすることと、生成済み文書の閲覧条件を分けて表示する。

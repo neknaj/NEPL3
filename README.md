@@ -23,7 +23,7 @@ cargo run --locked -p nepl3-tools -- check
 cargo run --locked -p nepl3-tools -- tasks --check
 ```
 
-Rustの版は [rust-toolchain.toml](rust-toolchain.toml) で固定しています。19 crateは目標構成であり、実際のworkspace memberは [Cargo.toml](Cargo.toml) を参照してください。
+Rustの版は [rust-toolchain.toml](rust-toolchain.toml) で固定しています。20 crateは目標構成であり、実際のworkspace memberは [Cargo.toml](Cargo.toml) を参照してください。
 
 設計識別子は `nepl3-design-2026-09-06-r4`。[foundationの訂正](doc/decisions/0005-foundation-runtime-contracts.md)、[Web・Doc移行の判断](doc/decisions/0003-web-tea-doc-migration.md)、[r2の契約訂正](doc/decisions/0002-design-contract-corrections.md)、未解消の課題は [独立レビュー](doc/review.md) に記録します。説明用の `.tmp/` はGit管理・CI・配布の対象外です。
 

@@ -15,17 +15,21 @@
 | [T05](T05.md) | Grammar compilerとbootstrap | in-progress | T04 |
 | [T06](T06.md) | 束縛と汎用editor query | in-progress | T05 |
 | [T07](T07.md) | Doc意味モデルとsentence reader | in-progress | T04 |
-| [T08](T08.md) | Math意味モデルと厳密計算 | not-implemented | T04 |
+| [T08](T08.md) | Math意味モデルと厳密計算 | in-progress | T04 |
 | [T09](T09.md) | Circuit checkerと実行 | not-implemented | T04 |
-| [T10](T10.md) | 安全な出力backend | not-implemented | T07, T08, T09 |
-| [T11](T11.md) | Suiteと埋め込みbridge | not-implemented | T05, T06, T10 |
+| [T10](T10.md) | 安全な出力backend | not-implemented | T07, T08, T09, T24 |
+| [T11](T11.md) | Suiteと埋め込みbridge | not-implemented | T05, T06, T10, T24 |
 | [T12](T12.md) | 別process provider | not-implemented | T02, T11 |
-| [T13](T13.md) | Native/WASI CLI | not-implemented | T11, T12 |
+| [T13](T13.md) | Native/WASI CLI | not-implemented | T11, T12, T23, T24 |
 | [T14](T14.md) | 汎用LSP serverとeditor接続 | not-implemented | T06, T11 |
-| [T15](T15.md) | Browser workerとWasm API | not-implemented | T11, T02 |
-| [T16](T16.md) | 全体受入・CI | not-implemented | T13, T14, T15, T20, T21 |
-| [T17](T17.md) | 純粋TEA UI coreと操作境界 | not-implemented | T01, T02 |
-| [T18](T18.md) | 4言語playgroundと共通editor | not-implemented | T15, T17 |
+| [T15](T15.md) | Browser workerとWasm API | not-implemented | T11, T02, T25 |
+| [T16](T16.md) | 全体受入・CI | not-implemented | T13, T14, T15, T20, T21, T25 |
+| [T17](T17.md) | 純粋TEA UI coreと操作境界 | not-implemented | T01, T02, T25 |
+| [T18](T18.md) | 4言語playgroundと共通editor | not-implemented | T15, T17, T25 |
 | [T19](T19.md) | 文書・例・参照の静的サイト | not-implemented | なし |
 | [T20](T20.md) | Web全体受入とGitHub Pages配布 | not-implemented | T15, T18, T19 |
-| [T21](T21.md) | 正式文書のNEPL3 Doc DSL移行 | not-implemented | T07, T10, T11, T19 |
+| [T21](T21.md) | 正式文書のNEPL3 Doc DSL移行 | not-implemented | T24, T19 |
+| [T22](T22.md) | H0: HTML公開契約の整合 | in-progress | なし |
+| [T23](T23.md) | H1: Doc単独HTMLの実経路 | not-implemented | T22 |
+| [T24](T24.md) | H2: Mathを含む生成済みHTML | not-implemented | T23 |
+| [T25](T25.md) | H3: Web生成・隔離preview・export | not-implemented | T24 |

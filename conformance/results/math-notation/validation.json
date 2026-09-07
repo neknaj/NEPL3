@@ -1,0 +1,99 @@
+{
+  "format": "nepl3.development-slice/1",
+  "scope": "T08 Math notation, source lower, portable value boundary and rational helpers; T22 HTML delivery policy",
+  "base_commit": "4e1f69e6a95d7480517a30bafa4b1ac67db22d21",
+  "tested_base_equivalence": "Tests used 1c7de36, whose tree equals merge commit 4e1f69e. The 68 implementation/policy files remained fixed after the final delta. Independent review text was appended and repository/task checks rerun. WASI full suite precedes a test-only lint correction; the corrected constructor test was then rerun on WASI. No H1 markup files are included.",
+  "result": "passed-within-recorded-scope",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "execution": {
+    "native": {
+      "target": "x86_64-pc-windows-msvc",
+      "passed": 410,
+      "ignored": 1
+    },
+    "wasi": {
+      "target": "wasm32-wasip2",
+      "runner": "Wasmtime 44.0.1",
+      "passed": 329
+    },
+    "browser_wasm": "Seven no_std crates compiled; browser execution not run",
+    "toolchain": "Rust 1.97.0"
+  },
+  "checks": [
+    {
+      "command": "cargo test --workspace --locked",
+      "exit_code": 0,
+      "log": "conformance/results/math-notation/native.log",
+      "sha256": "9094403e379950d834eb908bd0fc0f3d185c4d3d1faad212e7496dede42b336c"
+    },
+    {
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER='wasmtime run'; cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar diagnostic::compiler_report_boundary_without_host_process --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::all_reader_constructors --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::compiled_reader_streaming_boundaries_and_rollback_keep_raw_positions --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test doc --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test math --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar region:: --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core --no-default-features --target wasm32-unknown-unknown",
+      "exit_code": 0,
+      "log": "conformance/results/math-notation/wasi.log",
+      "sha256": "dc01fe8472d97c9fcb7304ea856cf157ea220d563ecb044a4599bc3e0c875ca3"
+    },
+    {
+      "command": "cargo fmt --all -- --check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo clippy --workspace --all-targets --locked -- -D warnings; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps --locked",
+      "exit_code": 0,
+      "log": "conformance/results/math-notation/quality.log",
+      "sha256": "6c5b358da742e049415da2671ba297e95d4ef66608b6f595c10fdcc5d128ea01"
+    },
+    {
+      "command": "cargo run --locked -p nepl3-tools -- check; cargo run --locked -p nepl3-tools -- tasks --check (stop on failure)",
+      "exit_code": 0,
+      "log": "conformance/results/math-notation/contract.log",
+      "sha256": "3ebc6704330f668926b91d169aeb61d55a0361942c25709da77da93a1f82f05e"
+    },
+    {
+      "command": "python tools/audit/structure.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/audit -p test.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/math.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/doc.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/bootstrap -p test_grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/audit/allocation/run.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo run --locked -p nepl3-tools -- tasks --check",
+      "exit_code": 0,
+      "log": "conformance/results/math-notation/audit.log",
+      "sha256": "c0d9d88706a3674c654523093ecd170db2700232ba6549ff451d993e38dc17af"
+    },
+    {
+      "command": "C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe --version; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe .github/workflows/ci.yml",
+      "exit_code": 0,
+      "log": "conformance/results/math-notation/ci.log",
+      "sha256": "ad7ed44e79c7e5d554c2e008819df3a5da44834e9cfdb4aecaef9224a39c87dd"
+    },
+    {
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER='wasmtime run'; cargo test --locked -p nepl3-math-core --test construct --target wasm32-wasip2 -- --test-threads=1",
+      "exit_code": 0,
+      "log": "conformance/results/math-notation/constructor-wasi-final.log",
+      "sha256": "5ddfd31dba550e8000352ead4a5fe781c2e72ed8664087c5f916d06c468b6248"
+    }
+  ],
+  "independent_review": {
+    "reviewers": [
+      "Huygens: Math implementation",
+      "Carson: HTML policy and dependency graph"
+    ],
+    "archive": "conformance/results/math-notation/independent.json",
+    "archive_sha256": "48e040eac70b441cd9f4c920916efb2a85e4fccd08c29f3ee01da24672d11ac6",
+    "text_records": 37,
+    "math_scope": "Math production/06/source/codec/numeric substrate only. Fixed66 plus delta8 has unique68 files; HTML17/18/ADR policy reviewed separately by another reviewer. No evaluation/print/render/KaTeX implementation claim.",
+    "math_findings": "Two probe programs pass native/WASI: 100 exact signed rational arithmetic checks against integer cross-product/gcd oracle, 256-bit arithmetic, fresh notation depth/caller/limits, 32-bit reference bounds, DAG/cycle/unreachable/100000-node cleanup, source-less CBOR. Ten actual source inputs plus three located failures, whole-source declaration checks, three raw field mutations, nonfinite/finite payload boundary, valid decode Work sweep, six stop reasons, guest owner source/category mutations, first CBOR canonical equality.",
+    "math_managed": "Math core8 and tools math2 pass independently native/WASI; tools2 cover all29 forms and2 leaves plus original-location/resource regression. Root whole-workspace gates remain separate.",
+    "math_limitations": "Original helper setup is borrowed from fixed tools/tests/math.rs, independently inspected and given new inputs/expectations. Probe compile adjustments used SourceSnapshot.text and borrowed NdfValue patterns. Early full native Eq expectations were corrected using specification13 source/node canonicalization; native source order is not a portable invariant. Number spelling supports location, not provider payload semantic authentication. The included constructor before log was supplied by root; reviewer independently executed the repaired API only. No new production defect found; no catalogue status changed.",
+    "policy_record": "review-html-policy/record.md in the archive",
+    "policy_scope": "Static specification, user requirements and 25-task DAG; not HTML/KaTeX/browser execution."
+  },
+  "implementation": [
+    "MathValue and MathSyntax preserve all notation constructors, original source, fields, Origin, View, maps and owned foreign syntax. Display lowering never evaluates.",
+    "Public construction, shape checking, exact rational helpers and first CBOR receiver are exercised directly; semantic binding, evaluator and renderer remain separate unfinished operations.",
+    "A source-less rational constructor now observes required depth one or two under the caller depth and sticky Budget. The original failing reproduction and independent after tests are recorded.",
+    "HTML policy separates pure backends, host/Worker KaTeX generation, independent MathML and shared preview/export artifacts. T21 migrates actual documentation page by page after supported HTML rendering, retaining one source and stable references."
+  ],
+  "log_normalization": "Root logs are LF with final newline; independent text preserves original bytes.",
+  "unverified": [
+    "No task or whole acceptance group is completed; all 55 acceptance statuses remain not-run.",
+    "Math binding, expression evaluation, printer, MathML/TeX/KaTeX, full Doc preparation and HTML rendering remain required.",
+    "H0-H3, real browser/Worker behavior, final products, Pages and Doc migration are not complete.",
+    "The ignored separate bootstrap performance baseline remains ignored."
+  ],
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "ec82a4e4d94e1a8c2017648672dcb9cbc1a02555cf65ff1ddce88fdb269ca831",
+    "spec_sha256": "94386daafcfbbd16b96f4eb5a1637a61d81a3a70a8638206f6887ead93ba4212"
+  }
+}

@@ -507,3 +507,15 @@ raw bundle ledgerの番号範囲外、root重複、map範囲外、同owner重複
 R048の修正後は、各Entity/Occurrenceのnamespace rootからmap所有者を選び、前向き導出も各元編集とownerの組ごとに閉包をたどる。再解析比較はold/newそれぞれの所有者、構文位置は正準bundleを用いる。元反例のprobe source SHAを変えず、guest mapしかない補助sourceへの書込要求がNotWritableとなることをnative/WASI双方で確認した。mapなしcontrolの実parse・binding・acceptは元host `[7,8)` 編集として成功した。別の独立 `custom 名 名` はemitter/delta双方で同ownerのExact逆写像を保持し、元source2箇所を `字` へ変更、派生source revision1を実再生成・sealed parse・binding後にacceptして成功した。関連管理rename11件も両targetで成功しており、この元所有混同の範囲でR048をcorrectedとする。
 
 R048のbeforeはnative実行である。初回採取の制限は前段落のまま残し、別途 `.tmp/review-rename-owner/before-query27/manifest.json` に固定Query27の全SHAを実行前後に確認した無変更probeの失敗（終了1）を保存した。afterは固定34fileを前後確認し、独立4補助をnative/WASI双方で再build・実行した。関連管理17件も各targetで成功した。全process log、8binary、元入力・補助source・固定SHA・before参照は `.tmp/review-region-query-fixed/manifest.json` に保存する。統括の全workspace/品質gateは別記録であり、今回の限定検査から全T06、外部実行認証、Mathの完了を推定しない。
+
+Mathの最初の表示構造差分は、06章、正式forms/syntax、Math schema、生成adapter、公開arena/check/lower/codecを独立に照合した。Expr / Row / DocGuestの3カテゴリ、29 form、Numberを加えた30 MathKindと、bare SymbolNameを含む31元入力fixtureの集合は一致した。Math coreのproduction依存はfoundation coreとno_std数値libraryであり、Docの意味coreやtoolsへ依存しない。Symbol/Let/Sum/Integralの位置は閉じたfield型、guestはowner環境を含むForeignClosureとして保持し、構造proofをbinding/evaluate済みのCheckedExpressionへ読み替えない。
+
+独立10原文は、`frac 2 4` の非簡約、`add 0.10 0.20` の正確な1/10と1/5および原綴り、scriptsのbase/sub/sup順、Unicode名とCRLF、escapeしたSymbol、単独の空Row、非zeroの負root次数、片側Unicode fence、意味上不正な空Annoを含むDoc Label、DocGuest literalを扱った。Let名 `[4,7)` とbody名 `[15,18)` の原byte位置を固定期待として照合し、元parse treeは不変だった。root0と不等列Matrix・空rowを取り込むMatrixの独立3失敗は、破棄したMath arenaの番号でなく元構文NodeRefへ帰属した。表示構造の段階で負rootを評価domain違反にしたり、Doc annotationを意味lowerしたりしなかった。
+
+元送信storeを共有しない初回CBOR受信では、Math node/field位置・Origin・View・SourceMapを保持し、guest込みのcanonical CBOR再encodeが一致した。13章に従いsource表とguest構文は正準化されるため、nativeの配列順全Eqを保証とはせず、sourceのidentity/URI/bytes集合と位置列のexact一致を別に検査した。escape由来sourceの入場もonceだった。ambient sourceが存在してもMath宣言表の欠落は拒否し、guestのowner source表欠落とcategory変更もnative/初回CBORで拒否した。
+
+型が正しいNDFから、Numberの1/3、Let operand位置のbody側への差替え、異なるfield型、同field重複を拒否した。別の有限Number意味値と元spelling位置の組は構造上受理される。06章の規範どおり、spellingは位置の情報であり、そのbyte列と数値payloadが意味上一致した証明ではない。valid入力のWork sweepは成功とWorkLimitの両方を実行し、他の意味エラーへ化けず、消費量はcap以内だった。Source/Work/Nodes/Allocation/Depthの0上限とCancelは原停止理由とsticky Budgetを保持した。
+
+数値helperは小さい符号付き有理数100演算を独立な整数交差積とgcdの期待値へ比較し、256bit整数の演算でも切捨てがなかった。約分後に2/5以外の分母因子が残るNumberは拒否し、明示constructorは有限ならNumber、その他は整数2子のFracを生成した。rootが先に実測・修正したconstructor Depth0不足について、独立に必要深さ1/2とcaller7、不足時の原DepthLimit、元値不変を再確認した。修正前logはroot提供資料であり、独立の修正前実行とは扱わない。MAX/32bit超の参照、cycle、未到達node、共有DAGの最長経路、10万段Negの検査と破棄もnative/WASIで確認した。
+
+最終固定66file＋追補8行は重複を除き68fileである。全SHAを実行前後で照合し、独立2補助とMath core8件・実parserを使うtools Math2件をnative/WASI双方で成功確認した。4binary、全process log、元入力、補助source、固定manifestと支持資料は `.tmp/review-math-fixed/manifest.json` に保存する。今回はarena/shape/lower/初回CBORと正確な有理数演算・新規notation constructorの範囲であり、Math binding、evaluate、print、render、HTML/KaTeX方針の受入完了を主張しない。今回の独立試験から新しいproduction不一致は確認されず、既存review findingの状態は変更しない。

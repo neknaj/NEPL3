@@ -53,6 +53,8 @@ jobs:
         run: python tools/generate/grammar.py
       - name: Doc typed adapter projection
         run: python tools/generate/doc.py
+      - name: Check Math schema generation
+        run: python tools/generate/math.py
       - name: Initial seed input adapter tests
         run: python -m unittest discover -s tools/bootstrap -p test_grammar.py
       - name: Format
@@ -97,15 +99,16 @@ jobs:
           CARGO_TARGET_WASM32_WASIP2_RUNNER: wasmtime run
         run: |
           wasmtime --version
-          cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core --target wasm32-wasip2 -- --test-threads=1
+          cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked -p nepl3-tools --test grammar diagnostic::compiler_report_boundary_without_host_process --target wasm32-wasip2 -- --exact --test-threads=1
           cargo test --locked -p nepl3-tools --test grammar reader::all_reader_constructors --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked -p nepl3-tools --test grammar reader::compiled_reader_streaming_boundaries_and_rollback_keep_raw_positions --target wasm32-wasip2 -- --exact --test-threads=1
           cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked -p nepl3-tools --test grammar region:: --target wasm32-wasip2 -- --test-threads=1
           cargo test --locked -p nepl3-tools --test doc --target wasm32-wasip2 -- --test-threads=1
+          cargo test --locked -p nepl3-tools --test math --target wasm32-wasip2 -- --test-threads=1
       - name: Compile foundation for browser Wasm
-        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core --no-default-features --target wasm32-unknown-unknown
+        run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core --no-default-features --target wasm32-unknown-unknown
 
   quality:
     name: quality

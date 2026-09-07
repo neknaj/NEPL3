@@ -1,0 +1,903 @@
+{
+  "package": "nepl3.math",
+  "revision": 1,
+  "types": {
+    "ExprRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "RowRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "DocGuestRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "EmbedRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "MathRoot": {
+      "variant": {
+        "Expr": [
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Row": [
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "RowRef"
+              }
+            }
+          ]
+        ],
+        "DocGuest": [
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "DocGuestRef"
+              }
+            }
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "MathField": {
+      "variant": {
+        "SymbolName": [],
+        "LetName": [],
+        "SumIndex": [],
+        "IntegralIndex": []
+      },
+      "constraints": []
+    },
+    "MathFieldLocation": {
+      "record": [
+        [
+          "field",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "MathField"
+            }
+          }
+        ],
+        [
+          "origin",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "OriginRef"
+              }
+            }
+          }
+        ],
+        [
+          "span",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Span"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathKind": {
+      "variant": {
+        "Add": [
+          [
+            "left",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "right",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Sub": [
+          [
+            "left",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "right",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Mul": [
+          [
+            "left",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "right",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Frac": [
+          [
+            "left",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "right",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Pow": [
+          [
+            "left",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "right",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Equal": [
+          [
+            "left",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "right",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Lt": [
+          [
+            "left",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "right",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Le": [
+          [
+            "left",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "right",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Subscript": [
+          [
+            "left",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "right",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Superscript": [
+          [
+            "left",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "right",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Neg": [
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Sqrt": [
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Transpose": [
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Det": [
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Root": [
+          [
+            "degree",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "radicand",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Scripts": [
+          [
+            "base",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "sub",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "sup",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Fence": [
+          [
+            "open",
+            "Text"
+          ],
+          [
+            "close",
+            "Text"
+          ],
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Sequence": [
+          [
+            "values",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.math",
+                  "revision": 1,
+                  "name": "ExprRef"
+                }
+              }
+            }
+          ]
+        ],
+        "Symbol": [
+          [
+            "name",
+            "Text"
+          ]
+        ],
+        "Text": [
+          [
+            "text",
+            "Text"
+          ]
+        ],
+        "Vector": [
+          [
+            "values",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.math",
+                  "revision": 1,
+                  "name": "ExprRef"
+                }
+              }
+            }
+          ]
+        ],
+        "Matrix": [
+          [
+            "rows",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.math",
+                  "revision": 1,
+                  "name": "RowRef"
+                }
+              }
+            }
+          ]
+        ],
+        "Let": [
+          [
+            "name",
+            "Text"
+          ],
+          [
+            "init",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Sum": [
+          [
+            "index",
+            "Text"
+          ],
+          [
+            "lower",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "upper",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Integral": [
+          [
+            "index",
+            "Text"
+          ],
+          [
+            "lower",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "upper",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ]
+        ],
+        "Call": [
+          [
+            "function",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "arguments",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.math",
+                  "revision": 1,
+                  "name": "ExprRef"
+                }
+              }
+            }
+          ]
+        ],
+        "Label": [
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "ExprRef"
+              }
+            }
+          ],
+          [
+            "annotation",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "DocGuestRef"
+              }
+            }
+          ]
+        ],
+        "Number": [
+          [
+            "value",
+            "Rational"
+          ],
+          [
+            "spelling",
+            {
+              "option": {
+                "named": {
+                  "package": "nepl3.foundation",
+                  "revision": 1,
+                  "name": "Span"
+                }
+              }
+            }
+          ]
+        ],
+        "Row": [
+          [
+            "values",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.math",
+                  "revision": 1,
+                  "name": "ExprRef"
+                }
+              }
+            }
+          ]
+        ],
+        "DocGuest": [
+          [
+            "syntax",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "MathNode": {
+      "record": [
+        [
+          "kind",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "MathKind"
+            }
+          }
+        ],
+        [
+          "origin",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "OriginRef"
+              }
+            }
+          }
+        ],
+        [
+          "span",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Span"
+              }
+            }
+          }
+        ],
+        [
+          "locations",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathFieldLocation"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathValue": {
+      "record": [
+        [
+          "root",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "MathRoot"
+            }
+          }
+        ],
+        [
+          "nodes",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathNode"
+              }
+            }
+          }
+        ],
+        [
+          "embeds",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "ForeignClosure"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": [
+        "math.graph_and_local_constraints"
+      ]
+    },
+    "MathView": {
+      "record": [
+        [
+          "head",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Span"
+            }
+          }
+        ],
+        [
+          "view",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "ViewBundle"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathSyntax": {
+      "record": [
+        [
+          "value",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "MathValue"
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceContent"
+              }
+            }
+          }
+        ],
+        [
+          "origins",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Origin"
+              }
+            }
+          }
+        ],
+        [
+          "views",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathView"
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceMapping"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": [
+        "math.source_closure"
+      ]
+    }
+  },
+  "operations": {}
+}
