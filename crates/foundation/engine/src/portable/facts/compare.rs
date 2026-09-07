@@ -1,7 +1,7 @@
 use super::*;
 /// A borrowed iterative comparison charges variable payload comparisons before
 /// touching them. No full-value clone or recursive derived equality is used.
-pub(super) fn equal<E>(
+pub(in crate::portable) fn equal<E>(
     a: &NdfValue,
     c: &NdfValue,
     b: &mut Budget,

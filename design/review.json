@@ -3,7 +3,7 @@
   "source_design": "nepl3-design-2026-09-06-r1",
   "reviewed_at": "2026-09-07",
   "independent_from_implementation": true,
-  "scope": "Initial design and repository review; r3 Web/TEA/Pages and migration supplement; r4 core/wire/reader/static prefix implementation, public API failure reproductions, native Grammar bootstrap and synchronous host versus owned-continuation boundary checks. Full runtime acceptance groups have not been established by this review.",
+  "scope": "Initial design and repository review; r3 Web/TEA/Pages and migration supplement; r4 core/wire/reader/static prefix implementation, public API failure reproductions, native Grammar bootstrap, synchronous host versus owned-continuation boundaries, binding visibility and keyed Definition/References queries. Custom review includes granted sparse-ID deltas, immutable resolution history, accepted report/source/map closure and typed stops. Raw portable results do not authenticate provider execution. Recursive Custom phases and external provider metering remain unverified; full runtime acceptance groups have not been established by this review.",
   "reviewed_design": "nepl3-design-2026-09-06-r4",
   "findings": [
     {

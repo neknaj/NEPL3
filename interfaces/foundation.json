@@ -2002,6 +2002,49 @@
         ]
       ]
     },
+    "ReportValidationError": {
+      "constraints": [],
+      "variant": {
+        "Metadata": [],
+        "Schema": [
+          [
+            "error",
+            {
+              "named": {
+                "name": "SchemaError",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Source": [
+          [
+            "error",
+            {
+              "named": {
+                "name": "SourceError",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "name": "StopReason",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Usage": []
+      }
+    },
     "ResolutionUpdate": {
       "constraints": [],
       "record": [

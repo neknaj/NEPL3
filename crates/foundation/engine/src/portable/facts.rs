@@ -7,10 +7,19 @@ use nepl3_core::{
     value::NdfValue,
     value_codec::FoundationValueCodec,
 };
-mod compare;
+pub(super) mod compare;
 
 pub fn request_to_value<C: FoundationValueCodec>(
     request: &CheckedFactsRequest<'_, '_>,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    request_view_to_value(&request.view(), codec, b)
+}
+/// Serialize the same issued request from borrowed native data. The native
+/// provider path need not first clone a complete tree and existing FactSet.
+pub fn request_view_to_value<C: FoundationValueCodec>(
+    request: &crate::facts::CheckedFactsView<'_, '_>,
     codec: &mut C,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
@@ -20,22 +29,23 @@ pub fn request_to_value<C: FoundationValueCodec>(
     let s = Schemas::new(profile.registry())?;
     let mappings = tree::canonical::Mappings::new(&request.tree.bundle, b)?;
     let (path, owner) =
-        mappings.path_value(&request.tree.bundle, &request.path, &s, profile, codec, b)?;
+        mappings.path_value(&request.tree.bundle, request.path, &s, profile, codec, b)?;
     let node = mappings.owner(owner, b)?.mapped(request.node)?;
-    let store = crate::facts::check::closure(request, None, &[], &[], b, codec.source_admission())?;
+    let store =
+        crate::facts::check::closure_view(request, None, &[], &[], b, codec.source_admission())?;
     let mut local = codec.scoped(&store);
     let value = record(
         s.engine,
         "FactsRequest",
         [
-            tree::to_value(&request.tree, profile, &mut local, b)?,
+            tree::to_value(request.tree, profile, &mut local, b)?,
             path,
             node.value(&s, &mut local, b)?,
             local
-                .encode_fact_set(&request.existing, b)
+                .encode_fact_set(request.existing, b)
                 .map_err(boundary)?,
             local
-                .encode_fact_authority(&request.authority, b)
+                .encode_fact_authority(request.authority, b)
                 .map_err(boundary)?,
         ],
         b,

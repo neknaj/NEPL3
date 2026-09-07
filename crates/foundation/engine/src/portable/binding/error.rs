@@ -1,6 +1,8 @@
 //! Exact typed causes, including nested foundation/reader failures.
 use super::*;
+use crate::facts::FactsError;
 use crate::{binding::BindingError, package::PackageError, profile::ProfileError, tree::TreeError};
+use nepl3_core::diagnostic::validation::ReportValidationError;
 use nepl3_core::{
     facts::FactError, origin::OriginError, schema::SchemaError, source::SourceError,
     syntax::SyntaxError, value::SchemaRef, view::ViewError,
@@ -8,6 +10,20 @@ use nepl3_core::{
 use nepl3_reader::plan::PlanError;
 trait StopCause {
     fn stop_cause(&self) -> Option<StopReason>;
+}
+pub(in crate::portable) fn source_value<E>(
+    error: &SourceError,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<NdfValue, PortableError<E>> {
+    source(error, &ErrorSchemas::new(registry)?, b)
+}
+pub(in crate::portable) fn source_read<E>(
+    value: &NdfValue,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<SourceError, PortableError<E>> {
+    source_from(value, &ErrorSchemas::new(registry)?, b)
 }
 pub(super) fn stop_reason(error: &BindingError) -> Option<StopReason> {
     error.stop_cause()
@@ -139,8 +155,12 @@ codec!(tree,tree_from,TreeError,engine,"TreeError",
     [Path,Duplicate,Selection,ExecutionIdentity,Recovery,Unreachable,UnvalidatedDynamic],
     [Syntax:syntax/syntax_from,Package:package/package_from,Profile:profile/profile_from]);
 codec!(binding,binding_from,BindingError,engine,"BindingFailure",
-    [AnalysisId,Target,Name,MissingNamespace,NamespaceBoundary,RecoveredTree,MissingProvider,UnsupportedPlan,DuplicateGlobal],
-    [Tree:tree/tree_from,Profile:profile/profile_from,Fact:fact/fact_from,Source:source/source_from,Schema:schema/schema_from]);
+    [AnalysisId,Target,Name,MissingNamespace,NamespaceBoundary,RecoveredTree,MissingProvider,UnsupportedPlan,DuplicateGlobal,ProviderInvalid],
+    [Tree:tree/tree_from,Profile:profile/profile_from,Fact:fact/fact_from,Source:source/source_from,Schema:schema/schema_from,Facts:facts/facts_from]);
+codec!(report,report_from,ReportValidationError,foundation,"ReportValidationError",
+    [Metadata,Usage],[Source:source/source_from,Schema:schema/schema_from]);
+codec!(facts,facts_from,FactsError,engine,"FactsError",
+    [Target],[Tree:tree/tree_from,Fact:fact/fact_from,Source:source/source_from,Origin:origin/origin_from,Report:report/report_from]);
 fn source<E>(
     value: &SourceError,
     s: &ErrorSchemas<'_>,

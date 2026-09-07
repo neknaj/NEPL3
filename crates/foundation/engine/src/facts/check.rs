@@ -9,7 +9,7 @@ use nepl3_core::{
     syntax::FieldValue,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum FactsError {
     Stopped(StopReason),
     Tree(crate::tree::TreeError),
@@ -18,6 +18,19 @@ pub enum FactsError {
     Origin(OriginError),
     Report(ReportValidationError),
     Target,
+}
+impl FactsError {
+    pub fn stop_reason(&self) -> Option<StopReason> {
+        match self {
+            Self::Stopped(reason)
+            | Self::Tree(crate::tree::TreeError::Stopped(reason))
+            | Self::Fact(FactError::Stopped(reason))
+            | Self::Source(SourceError::Stopped(reason))
+            | Self::Origin(OriginError::Stopped(reason))
+            | Self::Report(ReportValidationError::Stopped(reason)) => Some(*reason),
+            _ => None,
+        }
+    }
 }
 macro_rules! error_from {
     ($ty:ty,$case:ident) => {
@@ -50,6 +63,51 @@ impl<'a, 'profile> CheckedFactsRequest<'a, 'profile> {
         self.profile
     }
 }
+/// Host-issued proof for a borrowed request. Neither a raw view nor its wire
+/// representation can manufacture this proof through structural decoding.
+pub struct CheckedFactsView<'a, 'profile> {
+    request: FactsRequestView<'a>,
+    profile: &'a ResolvedParseProfile<'profile>,
+}
+impl<'a, 'profile> CheckedFactsView<'a, 'profile> {
+    pub fn request(&self) -> FactsRequestView<'a> {
+        self.request
+    }
+    pub fn profile(&self) -> &'a ResolvedParseProfile<'profile> {
+        self.profile
+    }
+}
+impl<'a, 'profile> CheckedFactsRequest<'a, 'profile> {
+    pub fn view(&self) -> CheckedFactsView<'a, 'profile> {
+        CheckedFactsView {
+            request: self.request.view(),
+            profile: self.profile,
+        }
+    }
+}
+impl<'a> FactsRequestView<'a> {
+    pub fn issue<'profile>(
+        self,
+        profile: &'a ResolvedParseProfile<'profile>,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<CheckedFactsView<'a, 'profile>, FactsError> {
+        self.validate(profile, b, admission)?;
+        Ok(CheckedFactsView {
+            request: self,
+            profile,
+        })
+    }
+    /// Uses the identical data/authority/source checks as owned host issuance.
+    pub fn validate(
+        &self,
+        profile: &ResolvedParseProfile<'_>,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<(), FactsError> {
+        validate_request(*self, profile, b, admission)
+    }
+}
 impl FactsRequest {
     /// Host issuance boundary, not authentication of provider-supplied grants.
     /// A receiver must authenticate its transport and authorize the operation
@@ -74,33 +132,51 @@ impl FactsRequest {
         b: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<(), FactsError> {
-        let result = (|| {
-            self.tree.validate(profile, b, admission)?;
-            let owner = crate::tree::path(&self.tree.bundle, &self.path, profile.registry(), b)?;
-            b.charge(Resource::Work, 1)?;
-            if usize::try_from(self.node.0)
-                .ok()
-                .and_then(|i| owner.nodes.get(i))
-                .is_none()
-            {
-                return Err(FactsError::Target);
-            }
-            let base = self.existing.validate(profile.registry(), b, admission)?;
-            self.authority.validate(&base, b, admission)?;
-            // Independently valid tables must also agree on shared identities.
-            closure(self, None, &[], &[], b, admission)?;
-            Ok(())
-        })();
-        result.map_err(|e| match b.poll() {
-            Err(r) => FactsError::Stopped(r),
-            Ok(()) => e,
-        })
+        self.view().validate(profile, b, admission)
     }
+}
+fn validate_request(
+    request: FactsRequestView<'_>,
+    profile: &ResolvedParseProfile<'_>,
+    b: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<(), FactsError> {
+    let result = (|| {
+        request.tree.validate(profile, b, admission)?;
+        let owner = crate::tree::path(&request.tree.bundle, request.path, profile.registry(), b)?;
+        b.charge(Resource::Work, 1)?;
+        if usize::try_from(request.node.0)
+            .ok()
+            .and_then(|i| owner.nodes.get(i))
+            .is_none()
+        {
+            return Err(FactsError::Target);
+        }
+        let base = request
+            .existing
+            .validate(profile.registry(), b, admission)?;
+        request.authority.validate(&base, b, admission)?;
+        // Independently valid tables must also agree on shared identities.
+        closure_view(request, None, &[], &[], b, admission)?;
+        Ok(())
+    })();
+    result.map_err(|e| match b.poll() {
+        Err(r) => FactsError::Stopped(r),
+        Ok(()) => e,
+    })
 }
 impl FactsReply {
     pub fn validate(
         &self,
         request: &CheckedFactsRequest<'_, '_>,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<(), FactsError> {
+        self.validate_view(&request.view(), b, admission)
+    }
+    pub fn validate_view(
+        &self,
+        request: &CheckedFactsView<'_, '_>,
         b: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<(), FactsError> {
@@ -117,9 +193,9 @@ impl FactsReply {
                     .validate(request.profile.registry(), b, admission)?;
             request.request.authority.validate(&base, b, admission)?;
             if let Some(delta) = delta {
-                delta.validate(&base, &request.request.authority, b, admission)?;
+                delta.validate(&base, request.request.authority, b, admission)?;
             }
-            let store = closure(request.request, delta, sources, maps, b, admission)?;
+            let store = closure_view(request.request, delta, sources, maps, b, admission)?;
             report.validate(&store, &[], request.profile.registry(), b)?;
             Ok(())
         })();
@@ -165,9 +241,19 @@ pub(crate) fn closure(
     b: &mut Budget,
     admission: &mut SourceAdmission,
 ) -> Result<SourceStore, FactsError> {
+    closure_view(request.view(), delta, added, maps, b, admission)
+}
+pub(crate) fn closure_view(
+    request: FactsRequestView<'_>,
+    delta: Option<&FactDelta>,
+    added: &[SourceSnapshot],
+    maps: &[Mapping],
+    b: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<SourceStore, FactsError> {
     closure_for(
-        &request.tree,
-        &request.existing,
+        request.tree,
+        request.existing,
         delta,
         added,
         maps,

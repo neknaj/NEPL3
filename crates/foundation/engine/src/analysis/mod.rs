@@ -1,5 +1,6 @@
 //! Explicit prepared binding requests and keyed access to completed analysis.
 //! Portable data alone never creates a completed name-resolution proof.
+pub mod query;
 use crate::{
     binding::{BindingAnalysis, BindingOutcome, BindingReply},
     profile::ResolvedParseProfile,
@@ -68,6 +69,30 @@ pub struct BoundBindingReply {
 impl PreparedBindingRequest<'_, '_> {
     pub fn key(&self) -> AnalysisKey {
         self.key
+    }
+    /// Uses the same prepared identities and effective limits while a host
+    /// explicitly dispatches registered Custom providers and grants authority.
+    pub fn execute_with_host(
+        &self,
+        host: &mut dyn crate::binding::BindingHost,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<BoundBindingReply, BindingAccessError> {
+        if budget.limits() != self.limits {
+            return Err(BindingAccessError::LimitsMismatch);
+        }
+        let reply = crate::binding::analyze_with_host(
+            self.analysis_id,
+            &self.tree,
+            self.profile,
+            host,
+            budget,
+            admission,
+        );
+        Ok(BoundBindingReply {
+            key: self.key,
+            reply,
+        })
     }
     pub fn execute(
         &self,

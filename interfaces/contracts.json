@@ -1682,6 +1682,30 @@
           ]
         ]
       }
+    },
+    "ReportValidationError": {
+      "variants": {
+        "Stopped": [
+          [
+            "reason",
+            "StopReason"
+          ]
+        ],
+        "Source": [
+          [
+            "error",
+            "SourceError"
+          ]
+        ],
+        "Schema": [
+          [
+            "error",
+            "SchemaError"
+          ]
+        ],
+        "Metadata": [],
+        "Usage": []
+      }
     }
   },
   "scalar_aliases": {

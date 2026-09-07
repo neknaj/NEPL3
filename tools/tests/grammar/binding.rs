@@ -33,26 +33,41 @@ fn with_input<T>(
         .map_err(err)?;
     // This fixture registers the exact source of its host adapter implementation.
     let implementation = Digest::of(include_bytes!("binding.rs"));
-    let providers: Vec<_> = p
+    let implementation_for = |operation: &nepl3_core::value::OperationRef| {
+        if operation.name == "bindingFacts" {
+            Digest::of(include_bytes!("binding/custom.rs"))
+        } else {
+            implementation
+        }
+    };
+    let mut operations = Vec::new();
+    for operation in p
         .reader
         .providers
         .iter()
-        .map(|v| ProviderImplementation {
-            provider: v.operation.name.clone(),
+        .map(|v| &v.operation)
+        .chain(p.extensions.iter().map(|v| &v.operation))
+    {
+        if !operations.contains(operation) {
+            operations.push(operation.clone());
+        }
+    }
+    let providers: Vec<_> = operations
+        .iter()
+        .map(|operation| ProviderImplementation {
+            provider: operation.name.clone(),
             revision: 1,
-            implementation_digest: implementation,
-            operations: vec![v.operation.clone()],
+            implementation_digest: implementation_for(operation),
+            operations: vec![operation.clone()],
         })
         .collect();
-    let requirements = p
-        .reader
-        .providers
+    let requirements = operations
         .iter()
-        .map(|v| ProviderRequirement {
-            provider: v.operation.name.clone(),
+        .map(|operation| ProviderRequirement {
+            provider: operation.name.clone(),
             revision: 1,
-            implementation_digest: implementation,
-            operation: v.operation.clone(),
+            implementation_digest: implementation_for(operation),
+            operation: operation.clone(),
         })
         .collect();
     let mut schemas = vec![p.schema.clone()];
@@ -76,12 +91,7 @@ fn with_input<T>(
         head_providers: vec![],
         category_modes: vec![],
         providers: requirements,
-        allowlist: p
-            .reader
-            .providers
-            .iter()
-            .map(|v| v.operation.clone())
-            .collect(),
+        allowlist: operations,
         resources: vec![],
         limits: budget().limits(),
     };
@@ -435,6 +445,10 @@ fn ordered_exports_recursive_headers_and_foreign_roots() -> Result<(), String> {
 #[test]
 fn binding_seed_artifacts_match_original_source_and_host_adapter() -> Result<(), String> {
     for (path, bytes) in [
+        (
+            "conformance/fixtures/grammar/binding/custom.neplg",
+            include_bytes!("../../../conformance/fixtures/grammar/binding/custom.json").as_slice(),
+        ),
         (
             "conformance/fixtures/grammar/binding/global.neplg",
             include_bytes!("../../../conformance/fixtures/grammar/binding/global.json").as_slice(),
@@ -868,3 +882,6 @@ fn stopped_origin_preparation_never_publishes_a_forward_reference_prefix() -> Re
 
 #[path = "binding/global.rs"]
 mod global;
+
+#[path = "binding/custom.rs"]
+mod custom;
