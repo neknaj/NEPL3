@@ -22,6 +22,7 @@ pub enum Action {
     FailSecond,
     CancelSecond,
     WrongSecond,
+    NestedStopSecond,
     GeneratedFailSecond,
     GeneratedCancelSecond,
 }
@@ -64,6 +65,13 @@ impl ParseHost for Host {
                 Action::CancelSecond | Action::GeneratedCancelSecond => {
                     budget.cancel();
                     budget.poll()?;
+                }
+                Action::NestedStopSecond => {
+                    return Err(ParseError::Reader(
+                        nepl3_reader::runtime::ReaderError::Stopped(
+                            nepl3_core::budget::StopReason::Cancelled,
+                        ),
+                    ));
                 }
                 Action::WrongSecond => {
                     return Ok(Some(ProviderReply::Read(Box::new(ReadReply::Matched {

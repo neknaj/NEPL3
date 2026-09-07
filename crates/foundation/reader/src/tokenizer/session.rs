@@ -291,6 +291,44 @@ impl<'a> TokenizationSession<'a> {
         admission: &mut SourceAdmission,
         accepted: AcceptedTokenizationReport,
     ) -> Result<AcceptedTokenizationReply, ReaderError> {
+        self.read_accepted_dispatch(
+            request, sources, budget, admission, accepted, None, &mut None,
+        )
+    }
+    /// Complete synchronous calls before exporting a tokenizer checkpoint.
+    /// None or a rejected callback still publishes the regular owned boundary.
+    pub fn read_accepted_with_host(
+        &mut self,
+        request: ScopedTokenizationRequest<'_, '_>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        accepted: AcceptedTokenizationReport,
+        host: &mut impl super::TokenizationHost,
+    ) -> Result<super::TokenizationHostReply, ReaderError> {
+        let mut host_error = None;
+        let reply = self.read_accepted_dispatch(
+            request,
+            sources,
+            budget,
+            admission,
+            accepted,
+            Some(host),
+            &mut host_error,
+        )?;
+        Ok(super::TokenizationHostReply { reply, host_error })
+    }
+    #[allow(clippy::too_many_arguments)]
+    fn read_accepted_dispatch(
+        &mut self,
+        request: ScopedTokenizationRequest<'_, '_>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        accepted: AcceptedTokenizationReport,
+        host: Option<&mut dyn super::TokenizationHost>,
+        host_error: &mut Option<ReaderError>,
+    ) -> Result<AcceptedTokenizationReply, ReaderError> {
         let ScopedTokenizationRequest {
             scope,
             target,
@@ -323,9 +361,12 @@ impl<'a> TokenizationSession<'a> {
             return Err(ReaderError::Continuation);
         }
         let scope = Rc::clone(&accepted.scope);
-        let result = self.read_seed(target, request, sources, budget, admission, accepted);
+        let result = self.read_seed(
+            target, request, sources, budget, admission, accepted, host, host_error,
+        );
         result.map(|reply| AcceptedTokenizationReply::from_native(reply, scope, budget))
     }
+    #[allow(clippy::too_many_arguments)]
     fn read_seed(
         &mut self,
         target: TokenTarget,
@@ -334,6 +375,8 @@ impl<'a> TokenizationSession<'a> {
         budget: &mut Budget,
         admission: &mut SourceAdmission,
         accepted: AcceptedTokenizationReport,
+        host: Option<&mut dyn super::TokenizationHost>,
+        host_error: &mut Option<ReaderError>,
     ) -> Result<TokenizationReply, ReaderError> {
         if accepted.limits != budget.limits()
             || !runtime::usage_at_least(budget.usage(), accepted.report.usage)
@@ -450,8 +493,12 @@ impl<'a> TokenizationSession<'a> {
                 .checked_add(1)
                 .ok_or_else(|| budget.stop(StopReason::DepthLimit))?,
         };
-        let outcome =
-            budget.with_depth(|budget| self.drive(&mut machine, None, sources, budget, admission));
+        let outcome = budget.with_depth(|budget| match host {
+            Some(host) => {
+                self.drive_host(&mut machine, sources, budget, admission, host, host_error)
+            }
+            None => self.drive(&mut machine, None, sources, budget, admission),
+        });
         self.finish(machine, outcome, budget)
     }
     pub fn reserve(
@@ -741,6 +788,80 @@ impl<'a> TokenizationSession<'a> {
             },
         };
         self.finish(machine, outcome, budget)
+    }
+    fn drive_host(
+        &mut self,
+        machine: &mut Machine<'a, '_>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        host: &mut dyn super::TokenizationHost,
+        host_error: &mut Option<ReaderError>,
+    ) -> Result<Outcome, ReaderError> {
+        let mut outcome = self.drive(machine, None, sources, budget, admission)?;
+        loop {
+            match &outcome {
+                Outcome::Await { call, continuation } => {
+                    let base = match call.as_ref() {
+                        ProviderCall::Read { depth_base, .. }
+                        | ProviderCall::Transform { depth_base, .. }
+                        | ProviderCall::Dependent { depth_base, .. } => *depth_base,
+                    };
+                    let reply = match budget
+                        .with_depth_at_least(base, |budget| host.provider(call, budget, admission))
+                    {
+                        Ok(Some(reply)) => reply,
+                        Ok(None) => return Ok(outcome),
+                        Err(error) => {
+                            if let Some(reason) = error.stop_reason() {
+                                budget.stop(reason);
+                            }
+                            *host_error = Some(error);
+                            return Ok(outcome);
+                        }
+                    };
+                    // This is still the fully checked public Reader echo path.
+                    // Do not use resume_from_tokenizer: no outer echo has been
+                    // published or validated in this synchronous path.
+                    let reply =
+                        match self
+                            .reader
+                            .resume(continuation, reply, sources, budget, admission)
+                        {
+                            Ok(reply) => reply,
+                            Err(error) => {
+                                if let Some(reason) = error.stop_reason() {
+                                    budget.stop(reason);
+                                }
+                                *host_error = Some(error);
+                                return Ok(outcome);
+                            }
+                        };
+                    machine.waiting = false;
+                    outcome = match accept(machine, reply, self.registry, budget)? {
+                        Some(outcome) => outcome,
+                        None => self.drive(machine, None, sources, budget, admission)?,
+                    };
+                }
+                Outcome::Reserve { request } => {
+                    let reservation = match host.reservation(request, budget, admission) {
+                        Ok(Some(reservation)) => reservation,
+                        Ok(None) => return Ok(outcome),
+                        Err(error) => {
+                            if let Some(reason) = error.stop_reason() {
+                                budget.stop(reason);
+                            }
+                            *host_error = Some(error);
+                            return Ok(outcome);
+                        }
+                    };
+                    machine.waiting = false;
+                    outcome =
+                        self.drive(machine, Some(&reservation), sources, budget, admission)?;
+                }
+                _ => return Ok(outcome),
+            }
+        }
     }
     fn drive(
         &mut self,
