@@ -30,6 +30,8 @@ Doc arena の node/root、Origin、局所 View と source map は portable 往�
 
 ## 残り
 
+`prepare::inspect` はArticleの全variant・labelを検査し、Link/Assetの意味node別要求とForeignClosure別要求を列挙する。正式DocPreparationPlanはdocument/guestのcanonical digestへ束縛され、独立受信時には明示documentから全要求を再導出する。実sourceのCode/InlineMathは構文のまま保持し、外部資源を読まず評価しない。これは準備入力の発見であり、下記の資源解決・HTML出力の完成ではない。
+
 - 公開suiteでのhost guest-printの供給と、対象guest parserによる構造正規形・source対応の検査。現在の管理対象は実generic engine parser/checked tree/printerを使う構文往復であり、raw PrintedGuestのtextだけで一致proofを得ない。この残りは全guestの意味lower/checkを要求するものではなく、意味不正・回復構文を表示用Codeとして保持する契約を維持する。Math/Circuit等の意味check・評価の完成でもない。
 - 外部 page・asset 解決、foreign Requirementを含む完全なcheck/prepare、HTML backend と rendering。schema に表・list・link・code・asset があることだけで、これらの実装済みを主張しない。
 - Doc の正式 lower 操作の Report/部分結果包絡と全 suite adapter。native helper の Result を、別実装の操作包絡の完成として扱わない。

@@ -33,6 +33,18 @@ DG04のInlineCodeとRawCodeは意味解析しないTextを保持する。RawCode
 
 この要素選択はmain `b5295cef655aa59affffd6644f2902268d071953` の文書入力監査（inventory SHA-256 `daf94085913930f05c1655d2adbef4f56651864f9a97ac4d261400449c98499e`）に基づく。61 Markdown、52表/1283cell、39list/233item、1134 inline code、12 code block、249link、1imageを含む。監査は実装中差分やrustdocの意味監査の完了を示さず、実装済み操作は `implementation-status.json` と実行済み受入で区別する。
 
+### 1.3 文書準備の要求発見
+
+`prepare::inspect` はArticleの構造・source閉包・article内labelを検査し、`DocPreparationPlan` を返す。これは必要な外部入力の列挙であり、完全なPreparedArticleではない。全Parallel variantを対象とし、表示言語の選択やguest操作を実行しない。
+
+planは `documentDigest` と順序付き `requirements` を持つ。Linkは意味node indexと元LinkTarget、Assetは意味node indexと元AssetRef、ForeignはEmbedRef・EmbedKind・guestDigestを持つ。Link/Assetはarena順に一度ずつ列挙し、その後owner embed表順にForeignを列挙する。同じ資源を参照する別nodeは別の要求であり、共有nodeの表示出現ごとには増やさない。Codeも構文のままForeignとして保持し、意味エラーを含む例の表示を可能にする。
+
+documentDigestは `SHA-256("NEPL3.Doc.Prepare.Document.v1\0" || canonical-NDF/1-CBOR(DocumentSyntax))`、guestDigestは `SHA-256("NEPL3.Doc.Prepare.Guest.v1\0" || canonical-NDF/1-CBOR(ForeignClosure))`。domainの `\0` はゼロbyte、digestは32byte。owner環境・source・Originを含め、型名やURIだけをidentityにしない。Doc nodeとOrigin IDは保持し、共通codecのsource表順・guest NodeRef正準化に従う。
+
+portable planの送受信には対象DocumentSyntaxを明示し、同じ検査と要求列挙を再実行して全fieldを比較する。schema-validでも古い文書、欠落/追加/重複/順序違い、異なるnode/guest/digestを拒否する。source admissionとBudgetを操作内で共有し、停止は元StopReasonを保持する。native helperのPreparationErrorは構造/label/boundary/停止を区別するが、完全なcheck/prepareのReport操作包絡として広告しない。
+
+この発見段階はURIの安全性、page/fragmentの存在、asset byte列・MIME・digestの適合、guest生成物や表示言語の準備を証明しない。後続prepareで明示資源・解決結果を同じdocument/guest identityへ束縛し、必要条件がすべて満たされてからHTML backendへ渡す。
+
 ## 2. sentence literalの完全な規則
 
 説明用EBNF:

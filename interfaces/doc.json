@@ -2070,6 +2070,90 @@
         ]
       ],
       "constraints": []
+    },
+    "DocRequirement": {
+      "variant": {
+        "Link": [
+          [
+            "node",
+            "U64"
+          ],
+          [
+            "target",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "LinkTarget"
+              }
+            }
+          ]
+        ],
+        "Asset": [
+          [
+            "node",
+            "U64"
+          ],
+          [
+            "asset",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "AssetRef"
+              }
+            }
+          ]
+        ],
+        "Foreign": [
+          [
+            "embed",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ],
+          [
+            "kind",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "EmbedKind"
+              }
+            }
+          ],
+          [
+            "guestDigest",
+            "Bytes"
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "DocPreparationPlan": {
+      "record": [
+        [
+          "documentDigest",
+          "Bytes"
+        ],
+        [
+          "requirements",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "DocRequirement"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
     }
   },
   "operations": {

@@ -4,6 +4,8 @@
 mod labels;
 #[path = "doc/mixed.rs"]
 mod mixed;
+#[path = "doc/prepare.rs"]
+mod prepare;
 #[path = "doc/print.rs"]
 mod print;
 #[path = "doc/text.rs"]
