@@ -9,6 +9,7 @@ pub mod lower;
 pub mod model;
 pub mod normalize;
 pub mod portable;
+pub mod print;
 pub mod schema;
 pub mod sentence;
 pub mod text;

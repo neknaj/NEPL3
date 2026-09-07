@@ -203,6 +203,7 @@ impl DocValue {
             DisplayMath { syntax } => self.embed(syntax.0, EmbedKind::DisplayMath, used)?,
             CircuitFigure { syntax, .. } => self.embed(syntax.0, EmbedKind::CircuitFigure, used)?,
             Code { syntax } => self.embed(syntax.0, EmbedKind::Code, used)?,
+            Guest { syntax, .. } => self.embed(syntax.0, EmbedKind::Guest, used)?,
             _ => {}
         }
         Ok(())

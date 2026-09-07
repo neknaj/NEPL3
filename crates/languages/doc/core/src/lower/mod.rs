@@ -118,6 +118,9 @@ fn root(category: Category, node: u64) -> DocRoot {
         Category::OptionalRow => DocRoot::OptionalRow(OptionalRowRef(node)),
         Category::OptionalSentence => DocRoot::OptionalSentence(OptionalSentenceRef(node)),
         Category::OptionalText => DocRoot::OptionalText(OptionalTextRef(node)),
+        Category::Guest => DocRoot::Guest(GuestRef(node)),
+        Category::MathGuest => DocRoot::MathGuest(GuestRef(node)),
+        Category::CircuitGuest => DocRoot::CircuitGuest(GuestRef(node)),
     }
 }
 /// The explicit surface schema is the compiler-produced Doc syntax schema,

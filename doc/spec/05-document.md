@@ -17,7 +17,7 @@ InlineはText、Concat、Ruby(base,reading)、Anno(base,notes)、InlineMath、An
 
 `interfaces/model.json` の `Doc:*` recordと `Doc/*` unionはconstructorの論理的な意味展開であり、独立した再帰wire layoutではない。Doc操作で送受信する値の正本は `interfaces/doc.json` の `DocumentSyntax` / `DocValue`。`DocValue.nodes` の各 `DocNode.kind` がconstructorを表し、子はカテゴリ別のindex参照を使う。Rust enumの並びをwire tagへ転用せず、schemaの明示variant名とfield列を対応させる。
 
-Article以外のBody、Block、Flow、Sentence、Inline、Variant、Row、ListItemも明示 `DocRoot` として単独のfragmentを構成できる。Alignment、ListStyle、Check、LinkTarget、Asset、OptionalRow、OptionalSentence、OptionalTextは表層の固定arity補助constructorである。単独lower時には対応するarena wrapperをrootとする。親constructorのoperandである場合はAlignment、ListKind、Option、LinkTarget、AssetRefという型付き値へ取り込み、補助wrapperを意味的な子として残さない。元operandのView、Origin、source byte宣言はこの取り込みで破棄しない。Optionやlistの暗黙文法は導入せず、signatureにある `none` / `some`、`cons` / `nil` を読む。
+Article以外のBody、Block、Flow、Sentence、Inline、Variant、Row、ListItem、MathGuest、CircuitGuest、Guestも明示 `DocRoot` として単独のfragmentを構成できる。Alignment、ListStyle、Check、LinkTarget、Asset、OptionalRow、OptionalSentence、OptionalTextは表層の固定arity補助constructorである。単独lower時には対応するarena wrapperをrootとする。親constructorのoperandである場合はAlignment、ListKind、Option、LinkTarget、AssetRefという型付き値へ取り込み、補助wrapperを意味的な子として残さない。元operandのView、Origin、source byte宣言はこの取り込みで破棄しない。Optionやlistの暗黙文法は導入せず、signatureにある `none` / `some`、`cons` / `nil` を読む。
 
 arenaの構造検査はroot/childカテゴリ、index範囲、循環、到達性、注釈内容、表の列数等を検査する。共有DAGを許すが全経路の最大Depthを検査し、ForeignClosureの内側深さもその所有nodeまでの深さに合成する。この構造proofはlabel解決、guest意味check、PreparedArticleを意味しない。tokenごとのViewは `DocView.head` に束縛し、ViewRefとrelationのID空間をtoken間で混ぜない。Text正規化後も元ViewとOriginを保存する。sourceを持つTextとsource-less Textを結合する場合、後者を明示Synthetic OriginとしてCompositeに含め、既知spanを全体のspanに偽装しない。
 
@@ -122,7 +122,7 @@ check(DocumentSyntax, LabelEnvironment) -> CheckedArticle + foreign Requirements
 prepare(CheckedArticle, ResolvedEmbeds) -> PreparedArticle。
 render(PreparedArticle, RenderOptions) -> HtmlArtifact。
 plain_text(PlainTextRequest) -> PlainTextReply。
-print(DocumentSyntax, Prefix|Compact) -> SourceArtifact。
+print(PrintRequest) -> PrintReply。
 
 AnnotationPolicyはBaseOnly、WithReadings、WithAllNotesを明示する。テキスト抽出時に隠れた翻訳選択を行わない。各constructorはRust APIとportable record constructorの双方から呼べる。
 
@@ -137,3 +137,21 @@ InlineMathは暗黙にlower・意味check・評価しない。必要な表示tex
 全提供entryについて32byte digest、対象InlineMath、重複EmbedRef、現在document/guest両identityとの一致を検査する。policyがそのentryを表示しない場合も不正entryを黙殺しない。一方、未提供textによるUnresolvedEmbedは選択policyで実際に投影するInlineMathだけに適用し、BaseOnlyで隠れるreading/notesのtextを要求しない。hostのtextは明示データであり、guest意味checkが成功した証明ではない。
 
 identity取得のprepareは独立した操作であり、後の実行予算を支払い済みとするproofではない。公開実行入口plain_textは毎回同一Budget/SourceAdmissionでdocument検査、canonical値生成とhash、entry検査、出力を合成する。sourceは共有admissionで同snapshotを一度だけ計上し、出力byte、Work、Allocation、深さを計上する。停止時は元要求を変更せず、不完全なTextをCompleteへ昇格させない。
+
+### 8.2. print の実行契約
+
+実descriptorは `nepl3.doc@1` の `print: PrintRequest -> PrintReply`（pure）。PrintRequestはDocumentSyntax、PrintMode（Prefix / Compact）、明示GuestBinding列、PrintedGuest列を所有する。Completeだけが `SourceArtifact{text,entry}` を返す。entryは再parseする具体的なDoc表層categoryであり、hostがtext保存時のSourceId・revision・URIとSourceSnapshotを発行する。printerが架空のsnapshotや元source位置を作ることはない。再parse/lowerとの一致はsource/Originを除いた意味正規形について定め、未正規化のconstructor値を変更して入力へ書き戻さない。
+
+Prefixは全constructorを正式なheadと引数順で出力する。CompactはSentence内がText / Concat / Ruby / Annoだけで表せる場合にsentence literalへし、それ以外はprefixを保持する。Textは引用符・backslash・CR・LF・tabをescapeし、literalでは注釈delimiterもescapeする。escapeの生成文字を再び注釈と解釈しない。明示BreakはTextの改行と異なる意味nodeなので、Breakを含むSentenceをliteralへ変換しない。装飾・link・画像・Mathを省略してliteral化することもない。
+
+補助fragmentを含む表層entryは20種類である。guestの具体entryはMathGuest / CircuitGuest / Guestの3種類、wrapperはMath / Circuit / Grammar / Docの4種類。独立rootでは `DocKind.Guest{language,syntax}` とEmbedKind.Guestを保持し、MathGuest/CircuitGuestのrootはそのlanguageとの一致を検査する。親の埋め込みoperandへ取り込む場合はwrapper nodeを別の意味子として残さず、元ForeignClosure・View・Originを保持する。GrammarGuestとDocGuestはform kindであり、独立した文法category名ではない。
+
+NameとLangはreaderと共通の `nepl3_core::lexical` の規則で印字可能性を検査する。NameはUnicode 16 XIDと先頭underscore、Langは既存readerのRFC 5646節2.1 ABNFでありregistry上の登録や重複variant/singletonの追加制約を意味しない。source-less意味値の定義域をこの表層規則へ狭めず、表せない値をUnprintableName / UnprintableLanguageとして返す。名前の正規化・置換・本文からの位置推測は行わない。
+
+GuestBindingは `{schema,category,language}`。標準wrapperに対応するcategoryはMath→Expr、Circuit→Design、Grammar→Root、Doc→Articleとする。schemaからaliasを推測しない。同じschemaまたは同じlanguage（表層alias）への複数binding、カテゴリ不整合、使用するguestのbinding欠落を型付き失敗とする。InlineMath/DisplayMath/CircuitFigureと独立guest rootではslot/languageの制約も検査する。提供bindingは使用の有無によらず検査する。
+
+PrintedGuestは `{documentDigest,embed,guestDigest,text}`。documentDigestは `SHA-256("NEPL3.Doc.Print.Document.v1\0" || canonical-NDF/1-CBOR(DocumentSyntax))`、guestDigestは `SHA-256("NEPL3.Doc.Print.Guest.v1\0" || canonical-NDF/1-CBOR(ForeignClosure))` とする。`\0` はゼロbyte、他のdomain文字はASCIIで、正式Doc/foundation codecが返すschema検査済み値のSchemaRef digest、owner環境、元Origin表、source/map閉包を含める。全提供entryの32byte digest、EmbedRefの存在、重複、両identityを検査し、必要な印字がなければUnresolvedGuestとする。
+
+このdigestはtextがguest意味と一致することを証明しない。通常printの意味roundtrip保証は、hostが同じguestを扱う実printerの正しい出力を供給することを前提とする。raw受信やDoc coreはその意味proofを発行せず、guestのlower・意味check・評価も呼ばない。原文取得helper `original_guest_source` はroot coverに対応する保持byteを返すだけであり、coverがなければNoneとなる。構造検査済みForeignClosureにも構文と原文の一致proofはないため、通常printはこのhelperを自動fallbackとして使わない。host側の統合試験では実guest parserとchecked tree、generic engine printerを通し、Doc→Docの意味不正なCodeもguest構文のまま保持する。
+
+公開identity取得はhost要求の準備データであり、実行予算を支払い済みにするproofではない。公開printは同一Budget/SourceAdmissionでDocumentSyntax再検査、canonical値生成・digest、全entry検査と出力を合成する。sourceの重複計上を避け、反復処理で共有DAGの各表示経路を出力し、そのWork・出力byte・Allocation・Depthを計上する。停止時は元要求を変更せず、準備中も元StopReasonのStoppedとUsageを返し、途中textをCompleteへ昇格させない。構造/schema不正は型付き入力境界エラー、受理後の不適合はPrintFailureとなる。返信Reportの位置は明示要求documentの宣言source閉包だけを参照でき、独立reply codecにもそのdocumentを渡す。ambient補完と非StoppedのtraceOverflowを拒否する。

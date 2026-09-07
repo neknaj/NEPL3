@@ -196,7 +196,7 @@ impl Adapter<'_, '_> {
         let accepted = match kind {
             EmbedKind::InlineMath | EmbedKind::DisplayMath => node.kind == "Form:MathGuest",
             EmbedKind::CircuitFigure => node.kind == "Form:CircuitGuest",
-            EmbedKind::Code => matches!(
+            EmbedKind::Code | EmbedKind::Guest => matches!(
                 node.kind.as_str(),
                 "Form:MathGuest" | "Form:CircuitGuest" | "Form:GrammarGuest" | "Form:DocGuest"
             ),

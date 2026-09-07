@@ -123,6 +123,9 @@ Self::Asset(root) => variant(s,"DocRoot","Asset",[root.put(s,c,b)?],b),
 Self::OptionalRow(root) => variant(s,"DocRoot","OptionalRow",[root.put(s,c,b)?],b),
 Self::OptionalSentence(root) => variant(s,"DocRoot","OptionalSentence",[root.put(s,c,b)?],b),
 Self::OptionalText(root) => variant(s,"DocRoot","OptionalText",[root.put(s,c,b)?],b),
+Self::Guest(root) => variant(s,"DocRoot","Guest",[root.put(s,c,b)?],b),
+Self::MathGuest(root) => variant(s,"DocRoot","MathGuest",[root.put(s,c,b)?],b),
+Self::CircuitGuest(root) => variant(s,"DocRoot","CircuitGuest",[root.put(s,c,b)?],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -146,6 +149,9 @@ match (tag,f.len()) {
 ("OptionalRow",1)=>Ok(Self::OptionalRow(Value::read(&f[0],s,c,b)?)),
 ("OptionalSentence",1)=>Ok(Self::OptionalSentence(Value::read(&f[0],s,c,b)?)),
 ("OptionalText",1)=>Ok(Self::OptionalText(Value::read(&f[0],s,c,b)?)),
+("Guest",1)=>Ok(Self::Guest(Value::read(&f[0],s,c,b)?)),
+("MathGuest",1)=>Ok(Self::MathGuest(Value::read(&f[0],s,c,b)?)),
+("CircuitGuest",1)=>Ok(Self::CircuitGuest(Value::read(&f[0],s,c,b)?)),
 _=>Err(PortableError::Shape),}
 }
 }
@@ -220,6 +226,7 @@ Self::InlineMath => variant(s,"EmbedKind","InlineMath",[],b),
 Self::DisplayMath => variant(s,"EmbedKind","DisplayMath",[],b),
 Self::CircuitFigure => variant(s,"EmbedKind","CircuitFigure",[],b),
 Self::Code => variant(s,"EmbedKind","Code",[],b),
+Self::Guest => variant(s,"EmbedKind","Guest",[],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -230,6 +237,7 @@ match (tag,f.len()) {
 ("DisplayMath",0)=>Ok(Self::DisplayMath),
 ("CircuitFigure",0)=>Ok(Self::CircuitFigure),
 ("Code",0)=>Ok(Self::Code),
+("Guest",0)=>Ok(Self::Guest),
 _=>Err(PortableError::Shape),}
 }
 }
@@ -273,6 +281,7 @@ Self::Asset {asset} => variant(s,"DocKind","Asset",[asset.put(s,c,b)?],b),
 Self::OptionalRow {row} => variant(s,"DocKind","OptionalRow",[row.put(s,c,b)?],b),
 Self::OptionalSentence {sentence} => variant(s,"DocKind","OptionalSentence",[sentence.put(s,c,b)?],b),
 Self::OptionalText {text} => variant(s,"DocKind","OptionalText",[text.put(s,c,b)?],b),
+Self::Guest {language,syntax} => variant(s,"DocKind","Guest",[language.put(s,c,b)?,syntax.put(s,c,b)?],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -316,6 +325,7 @@ match (tag,f.len()) {
 ("OptionalRow",1)=>Ok(Self::OptionalRow {row:Value::read(&f[0],s,c,b)?}),
 ("OptionalSentence",1)=>Ok(Self::OptionalSentence {sentence:Value::read(&f[0],s,c,b)?}),
 ("OptionalText",1)=>Ok(Self::OptionalText {text:Value::read(&f[0],s,c,b)?}),
+("Guest",2)=>Ok(Self::Guest {language:Value::read(&f[0],s,c,b)?,syntax:Value::read(&f[1],s,c,b)?}),
 _=>Err(PortableError::Shape),}
 }
 }
@@ -608,6 +618,232 @@ record(s,"PlainTextReply",[self.outcome.put(s,c,b)?,self.report.put(s,c,b)?],b)
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
 b.charge(Resource::Work,46)?;
 let f=fields(v,s,"PlainTextReply",2)?;
+Ok(Self {outcome:Value::read(&f[0],s,c,b)?,report:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for GuestRef {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"GuestRef",[self.0.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,40)?;
+let f=fields(v,s,"GuestRef",1)?;
+Ok(Self(Value::read(&f[0],s,c,b)?))
+}
+}
+impl Value for GuestLanguage {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Math => variant(s,"GuestLanguage","Math",[],b),
+Self::Circuit => variant(s,"GuestLanguage","Circuit",[],b),
+Self::Grammar => variant(s,"GuestLanguage","Grammar",[],b),
+Self::Doc => variant(s,"GuestLanguage","Doc",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,45)?;
+let (tag,f)=case(v,s,"GuestLanguage")?;
+match (tag,f.len()) {
+("Math",0)=>Ok(Self::Math),
+("Circuit",0)=>Ok(Self::Circuit),
+("Grammar",0)=>Ok(Self::Grammar),
+("Doc",0)=>Ok(Self::Doc),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for PrintMode {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Prefix => variant(s,"PrintMode","Prefix",[],b),
+Self::Compact => variant(s,"PrintMode","Compact",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,41)?;
+let (tag,f)=case(v,s,"PrintMode")?;
+match (tag,f.len()) {
+("Prefix",0)=>Ok(Self::Prefix),
+("Compact",0)=>Ok(Self::Compact),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for GuestBinding {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"GuestBinding",[self.schema.put(s,c,b)?,self.category.put(s,c,b)?,self.language.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,44)?;
+let f=fields(v,s,"GuestBinding",3)?;
+Ok(Self {schema:Value::read(&f[0],s,c,b)?,category:Value::read(&f[1],s,c,b)?,language:Value::read(&f[2],s,c,b)?})
+}
+}
+impl Value for PrintedGuest {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"PrintedGuest",[self.document_digest.put(s,c,b)?,self.embed.put(s,c,b)?,self.guest_digest.put(s,c,b)?,self.text.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,44)?;
+let f=fields(v,s,"PrintedGuest",4)?;
+Ok(Self {document_digest:Value::read(&f[0],s,c,b)?,embed:Value::read(&f[1],s,c,b)?,guest_digest:Value::read(&f[2],s,c,b)?,text:Value::read(&f[3],s,c,b)?})
+}
+}
+impl Value for PrintGuestTarget {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"PrintGuestTarget",[self.embed.put(s,c,b)?,self.guest_digest.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,48)?;
+let f=fields(v,s,"PrintGuestTarget",2)?;
+Ok(Self {embed:Value::read(&f[0],s,c,b)?,guest_digest:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for PrintIdentity {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"PrintIdentity",[self.document_digest.put(s,c,b)?,self.guests.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,45)?;
+let f=fields(v,s,"PrintIdentity",2)?;
+Ok(Self {document_digest:Value::read(&f[0],s,c,b)?,guests:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for PrintEntry {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Article => variant(s,"PrintEntry","Article",[],b),
+Self::Body => variant(s,"PrintEntry","Body",[],b),
+Self::Block => variant(s,"PrintEntry","Block",[],b),
+Self::Flow => variant(s,"PrintEntry","Flow",[],b),
+Self::Sentence => variant(s,"PrintEntry","Sentence",[],b),
+Self::Inline => variant(s,"PrintEntry","Inline",[],b),
+Self::Variant => variant(s,"PrintEntry","Variant",[],b),
+Self::Row => variant(s,"PrintEntry","Row",[],b),
+Self::ListItem => variant(s,"PrintEntry","ListItem",[],b),
+Self::Alignment => variant(s,"PrintEntry","Alignment",[],b),
+Self::ListStyle => variant(s,"PrintEntry","ListStyle",[],b),
+Self::Check => variant(s,"PrintEntry","Check",[],b),
+Self::LinkTarget => variant(s,"PrintEntry","LinkTarget",[],b),
+Self::Asset => variant(s,"PrintEntry","Asset",[],b),
+Self::OptionalRow => variant(s,"PrintEntry","OptionalRow",[],b),
+Self::OptionalSentence => variant(s,"PrintEntry","OptionalSentence",[],b),
+Self::OptionalText => variant(s,"PrintEntry","OptionalText",[],b),
+Self::MathGuest => variant(s,"PrintEntry","MathGuest",[],b),
+Self::CircuitGuest => variant(s,"PrintEntry","CircuitGuest",[],b),
+Self::Guest => variant(s,"PrintEntry","Guest",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,42)?;
+let (tag,f)=case(v,s,"PrintEntry")?;
+match (tag,f.len()) {
+("Article",0)=>Ok(Self::Article),
+("Body",0)=>Ok(Self::Body),
+("Block",0)=>Ok(Self::Block),
+("Flow",0)=>Ok(Self::Flow),
+("Sentence",0)=>Ok(Self::Sentence),
+("Inline",0)=>Ok(Self::Inline),
+("Variant",0)=>Ok(Self::Variant),
+("Row",0)=>Ok(Self::Row),
+("ListItem",0)=>Ok(Self::ListItem),
+("Alignment",0)=>Ok(Self::Alignment),
+("ListStyle",0)=>Ok(Self::ListStyle),
+("Check",0)=>Ok(Self::Check),
+("LinkTarget",0)=>Ok(Self::LinkTarget),
+("Asset",0)=>Ok(Self::Asset),
+("OptionalRow",0)=>Ok(Self::OptionalRow),
+("OptionalSentence",0)=>Ok(Self::OptionalSentence),
+("OptionalText",0)=>Ok(Self::OptionalText),
+("MathGuest",0)=>Ok(Self::MathGuest),
+("CircuitGuest",0)=>Ok(Self::CircuitGuest),
+("Guest",0)=>Ok(Self::Guest),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for SourceArtifact {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"SourceArtifact",[self.text.put(s,c,b)?,self.entry.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,46)?;
+let f=fields(v,s,"SourceArtifact",2)?;
+Ok(Self {text:Value::read(&f[0],s,c,b)?,entry:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for PrintMismatch {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Document => variant(s,"PrintMismatch","Document",[],b),
+Self::Guest => variant(s,"PrintMismatch","Guest",[],b),
+Self::Embed => variant(s,"PrintMismatch","Embed",[],b),
+Self::Duplicate => variant(s,"PrintMismatch","Duplicate",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,45)?;
+let (tag,f)=case(v,s,"PrintMismatch")?;
+match (tag,f.len()) {
+("Document",0)=>Ok(Self::Document),
+("Guest",0)=>Ok(Self::Guest),
+("Embed",0)=>Ok(Self::Embed),
+("Duplicate",0)=>Ok(Self::Duplicate),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for PrintFailure {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::InvalidBinding {binding} => variant(s,"PrintFailure","InvalidBinding",[binding.put(s,c,b)?],b),
+Self::ConflictingBinding {binding} => variant(s,"PrintFailure","ConflictingBinding",[binding.put(s,c,b)?],b),
+Self::MissingBinding {embed} => variant(s,"PrintFailure","MissingBinding",[embed.put(s,c,b)?],b),
+Self::GuestCategory {embed} => variant(s,"PrintFailure","GuestCategory",[embed.put(s,c,b)?],b),
+Self::InvalidGuest {entry,reason} => variant(s,"PrintFailure","InvalidGuest",[entry.put(s,c,b)?,reason.put(s,c,b)?],b),
+Self::UnresolvedGuest {embed} => variant(s,"PrintFailure","UnresolvedGuest",[embed.put(s,c,b)?],b),
+Self::UnprintableName {node,field} => variant(s,"PrintFailure","UnprintableName",[node.put(s,c,b)?,field.put(s,c,b)?],b),
+Self::UnprintableLanguage {node} => variant(s,"PrintFailure","UnprintableLanguage",[node.put(s,c,b)?],b),
+Self::UnprintableLiteral {node} => variant(s,"PrintFailure","UnprintableLiteral",[node.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,44)?;
+let (tag,f)=case(v,s,"PrintFailure")?;
+match (tag,f.len()) {
+("InvalidBinding",1)=>Ok(Self::InvalidBinding {binding:Value::read(&f[0],s,c,b)?}),
+("ConflictingBinding",1)=>Ok(Self::ConflictingBinding {binding:Value::read(&f[0],s,c,b)?}),
+("MissingBinding",1)=>Ok(Self::MissingBinding {embed:Value::read(&f[0],s,c,b)?}),
+("GuestCategory",1)=>Ok(Self::GuestCategory {embed:Value::read(&f[0],s,c,b)?}),
+("InvalidGuest",2)=>Ok(Self::InvalidGuest {entry:Value::read(&f[0],s,c,b)?,reason:Value::read(&f[1],s,c,b)?}),
+("UnresolvedGuest",1)=>Ok(Self::UnresolvedGuest {embed:Value::read(&f[0],s,c,b)?}),
+("UnprintableName",2)=>Ok(Self::UnprintableName {node:Value::read(&f[0],s,c,b)?,field:Value::read(&f[1],s,c,b)?}),
+("UnprintableLanguage",1)=>Ok(Self::UnprintableLanguage {node:Value::read(&f[0],s,c,b)?}),
+("UnprintableLiteral",1)=>Ok(Self::UnprintableLiteral {node:Value::read(&f[0],s,c,b)?}),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for PrintOutcome {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Complete {artifact} => variant(s,"PrintOutcome","Complete",[artifact.put(s,c,b)?],b),
+Self::Invalid {error} => variant(s,"PrintOutcome","Invalid",[error.put(s,c,b)?],b),
+Self::Stopped {reason} => variant(s,"PrintOutcome","Stopped",[reason.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,44)?;
+let (tag,f)=case(v,s,"PrintOutcome")?;
+match (tag,f.len()) {
+("Complete",1)=>Ok(Self::Complete {artifact:Value::read(&f[0],s,c,b)?}),
+("Invalid",1)=>Ok(Self::Invalid {error:Value::read(&f[0],s,c,b)?}),
+("Stopped",1)=>Ok(Self::Stopped {reason:Value::read(&f[0],s,c,b)?}),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for PrintReply {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"PrintReply",[self.outcome.put(s,c,b)?,self.report.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,42)?;
+let f=fields(v,s,"PrintReply",2)?;
 Ok(Self {outcome:Value::read(&f[0],s,c,b)?,report:Value::read(&f[1],s,c,b)?})
 }
 }
