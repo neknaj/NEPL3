@@ -193,6 +193,11 @@ impl LanguagePackage {
             if extension.provider.is_empty() || extension.signature.is_empty() {
                 return Err(PackageError::EmptyName);
             }
+            if extension.signature == "facts/v1"
+                && !crate::facts::signature(&extension.input, &extension.output, extension.pure)
+            {
+                return Err(PackageError::SignatureMismatch);
+            }
             let descriptor = registry
                 .descriptor(&extension.operation.schema)
                 .ok_or(PackageError::MissingExtension)?;

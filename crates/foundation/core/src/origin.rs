@@ -481,6 +481,9 @@ fn check_map_cycles<'a>(
     input: impl Iterator<Item = &'a Mapping> + Clone,
     budget: &mut Budget,
 ) -> Result<(), OriginError> {
+    if snapshot_dag(input.clone(), budget)? {
+        return Ok(());
+    }
     // Exact edges preserve byte displacement. Transformed fragments relate every source
     // byte to every target byte. Empty fragments use a distinct insertion-anchor vertex.
     // This finite graph can be expensive; exhaustion returns Stopped, never a false cycle.
@@ -553,4 +556,99 @@ fn check_map_cycles<'a>(
         }
     }
     Ok(())
+}
+
+/// A pointwise cycle implies a snapshot cycle. Proving the coarse graph acyclic
+/// is sufficient, but a coarse cycle is inconclusive: retain the exact fallback
+/// for disjoint ranges, self-snapshot shifts and insertion anchors.
+fn snapshot_dag<'a>(
+    input: impl Iterator<Item = &'a Mapping>,
+    budget: &mut Budget,
+) -> Result<bool, OriginError> {
+    let mut nodes: Vec<&'a SnapshotId> = Vec::new();
+    let mut edges = Vec::new();
+    for mapping in input {
+        let mut ids = [0usize; 2];
+        for (slot, span) in [&mapping.source, &mapping.target].into_iter().enumerate() {
+            let identity = span.snapshot_ref();
+            let mut found = None;
+            for (index, prior) in nodes.iter().enumerate() {
+                budget.charge(
+                    Resource::Work,
+                    prior.source.0.len().min(identity.source.0.len()) as u64 + 41,
+                )?;
+                if *prior == identity {
+                    found = Some(index);
+                    break;
+                }
+            }
+            ids[slot] = match found {
+                Some(index) => index,
+                None => {
+                    budget.charge(
+                        Resource::AllocationUnits,
+                        core::mem::size_of::<&SnapshotId>() as u64,
+                    )?;
+                    let index = nodes.len();
+                    nodes.push(identity);
+                    index
+                }
+            };
+        }
+        budget.charge(
+            Resource::AllocationUnits,
+            core::mem::size_of::<(usize, usize)>() as u64,
+        )?;
+        edges.push((ids[0], ids[1]));
+    }
+    budget.charge(
+        Resource::AllocationUnits,
+        (nodes.len() as u64)
+            .saturating_mul((core::mem::size_of::<usize>() + core::mem::size_of::<u64>()) as u64),
+    )?;
+    let mut incoming = alloc::vec![0usize;nodes.len()];
+    let mut depth = alloc::vec![1u64;nodes.len()];
+    for (_, target) in &edges {
+        budget.charge(Resource::Work, 1)?;
+        incoming[*target] = incoming[*target]
+            .checked_add(1)
+            .ok_or(StopReason::AllocationLimit)?;
+    }
+    let mut ready = Vec::new();
+    for (index, count) in incoming.iter().enumerate() {
+        budget.charge(Resource::Work, 1)?;
+        if *count == 0 {
+            budget.charge(
+                Resource::AllocationUnits,
+                core::mem::size_of::<usize>() as u64,
+            )?;
+            ready.push(index);
+        }
+    }
+    let mut visited = 0usize;
+    while let Some(current) = ready.pop() {
+        budget.charge(Resource::Nodes, 1)?;
+        budget.observe_depth(depth[current])?;
+        visited += 1;
+        for (source, target) in &edges {
+            budget.charge(Resource::Work, 1)?;
+            if *source != current {
+                continue;
+            }
+            incoming[*target] -= 1;
+            depth[*target] = depth[*target].max(
+                depth[current]
+                    .checked_add(1)
+                    .ok_or(StopReason::DepthLimit)?,
+            );
+            if incoming[*target] == 0 {
+                budget.charge(
+                    Resource::AllocationUnits,
+                    core::mem::size_of::<usize>() as u64,
+                )?;
+                ready.push(*target);
+            }
+        }
+    }
+    Ok(visited == nodes.len())
 }

@@ -103,6 +103,90 @@
         ]
       ]
     },
+    "Entity": {
+      "constraints": [],
+      "record": [
+        [
+          "id",
+          {
+            "named": {
+              "name": "EntityId",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "scope",
+          {
+            "named": {
+              "name": "ScopeId",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "namespace",
+          {
+            "named": {
+              "name": "NamespaceRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "definition",
+          {
+            "option": {
+              "named": {
+                "name": "Span",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "selection",
+          {
+            "option": {
+              "named": {
+                "name": "Span",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "origin",
+          {
+            "option": {
+              "named": {
+                "name": "OriginRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "EntityId": {
+      "constraints": [],
+      "record": [
+        [
+          "value",
+          "U64"
+        ]
+      ]
+    },
     "Environment": {
       "constraints": [
         "environment.bindings"
@@ -247,6 +331,487 @@
           "TypedValue"
         ]
       ]
+    },
+    "FactAuthority": {
+      "constraints": [
+        "facts.authority"
+      ],
+      "record": [
+        [
+          "analysisId",
+          "Text"
+        ],
+        [
+          "currentScope",
+          {
+            "named": {
+              "name": "ScopeId",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "namespaces",
+          {
+            "list": {
+              "named": {
+                "name": "NamespaceRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "writableScopes",
+          {
+            "list": {
+              "named": {
+                "name": "ScopeId",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "importScopes",
+          {
+            "list": {
+              "named": {
+                "name": "ScopeId",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "resolutionUpdates",
+          {
+            "list": {
+              "named": {
+                "name": "OccurrenceId",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "relationSources",
+          {
+            "list": {
+              "named": {
+                "name": "FactTarget",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "reservation",
+          {
+            "named": {
+              "name": "FactReservation",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "FactDelta": {
+      "constraints": [
+        "facts.delta",
+        "facts.source_closure"
+      ],
+      "record": [
+        [
+          "analysisId",
+          "Text"
+        ],
+        [
+          "originBase",
+          "U64"
+        ],
+        [
+          "scopes",
+          {
+            "list": {
+              "named": {
+                "name": "Scope",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "entities",
+          {
+            "list": {
+              "named": {
+                "name": "Entity",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "occurrences",
+          {
+            "list": {
+              "named": {
+                "name": "Occurrence",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "relations",
+          {
+            "list": {
+              "named": {
+                "name": "Relation",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "edges",
+          {
+            "list": {
+              "named": {
+                "name": "ScopeEdge",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "resolutions",
+          {
+            "list": {
+              "named": {
+                "name": "ResolutionUpdate",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "name": "SourceContent",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "origins",
+          {
+            "list": {
+              "named": {
+                "name": "Origin",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "name": "SourceMapping",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "FactNamespace": {
+      "constraints": [],
+      "record": [
+        [
+          "schema",
+          {
+            "named": {
+              "name": "SchemaRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "policy",
+          {
+            "named": {
+              "name": "FactNamespacePolicy",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "root",
+          {
+            "named": {
+              "name": "ScopeId",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "FactNamespacePolicy": {
+      "constraints": [],
+      "variant": {
+        "Global": [],
+        "Lexical": [],
+        "Open": []
+      }
+    },
+    "FactReservation": {
+      "constraints": [],
+      "record": [
+        [
+          "scopes",
+          {
+            "named": {
+              "name": "IdRange",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "entities",
+          {
+            "named": {
+              "name": "IdRange",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "occurrences",
+          {
+            "named": {
+              "name": "IdRange",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "relations",
+          {
+            "named": {
+              "name": "IdRange",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "FactSet": {
+      "constraints": [
+        "facts.graph",
+        "facts.identity",
+        "facts.source_closure"
+      ],
+      "record": [
+        [
+          "analysisId",
+          "Text"
+        ],
+        [
+          "namespaces",
+          {
+            "list": {
+              "named": {
+                "name": "FactNamespace",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "scopes",
+          {
+            "list": {
+              "named": {
+                "name": "Scope",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "entities",
+          {
+            "list": {
+              "named": {
+                "name": "Entity",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "occurrences",
+          {
+            "list": {
+              "named": {
+                "name": "Occurrence",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "relations",
+          {
+            "list": {
+              "named": {
+                "name": "Relation",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "edges",
+          {
+            "list": {
+              "named": {
+                "name": "ScopeEdge",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "name": "SourceContent",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "origins",
+          {
+            "list": {
+              "named": {
+                "name": "Origin",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "name": "SourceMapping",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "FactTarget": {
+      "constraints": [],
+      "variant": {
+        "Entity": [
+          [
+            "id",
+            {
+              "named": {
+                "name": "EntityId",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Occurrence": [
+          [
+            "id",
+            {
+              "named": {
+                "name": "OccurrenceId",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Scope": [
+          [
+            "id",
+            {
+              "named": {
+                "name": "ScopeId",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Source": [
+          [
+            "span",
+            {
+              "named": {
+                "name": "Span",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
     },
     "FallbackRole": {
       "constraints": [],
@@ -396,6 +961,19 @@
               "revision": 1
             }
           }
+        ]
+      ]
+    },
+    "IdRange": {
+      "constraints": [],
+      "record": [
+        [
+          "start",
+          "U64"
+        ],
+        [
+          "end",
+          "U64"
         ]
       ]
     },
@@ -556,18 +1134,8 @@
       ],
       "record": [
         [
-          "schema",
-          {
-            "named": {
-              "name": "SchemaRef",
-              "package": "nepl3.foundation",
-              "revision": 1
-            }
-          }
-        ],
-        [
-          "name",
-          "Text"
+          "value",
+          "U64"
         ]
       ]
     },
@@ -587,6 +1155,105 @@
         "NegativeZero": [],
         "NotReduced": [],
         "ZeroDenominator": []
+      }
+    },
+    "Occurrence": {
+      "constraints": [],
+      "record": [
+        [
+          "id",
+          {
+            "named": {
+              "name": "OccurrenceId",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "scope",
+          {
+            "named": {
+              "name": "ScopeId",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "namespace",
+          {
+            "named": {
+              "name": "NamespaceRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "role",
+          {
+            "named": {
+              "name": "OccurrenceRole",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "span",
+          {
+            "named": {
+              "name": "Span",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "origin",
+          {
+            "option": {
+              "named": {
+                "name": "OriginRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "resolution",
+          {
+            "named": {
+              "name": "ReferenceResolution",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "OccurrenceId": {
+      "constraints": [],
+      "record": [
+        [
+          "value",
+          "U64"
+        ]
+      ]
+    },
+    "OccurrenceRole": {
+      "constraints": [],
+      "variant": {
+        "Definition": [],
+        "Export": [],
+        "Import": [],
+        "Reference": []
       }
     },
     "OperationDescriptor": {
@@ -1098,6 +1765,51 @@
         ]
       ]
     },
+    "ReferenceResolution": {
+      "constraints": [],
+      "variant": {
+        "Ambiguous": [
+          [
+            "candidates",
+            {
+              "list": {
+                "named": {
+                  "name": "EntityId",
+                  "package": "nepl3.foundation",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "Deferred": [
+          [
+            "requirements",
+            {
+              "list": "TypedValue"
+            }
+          ]
+        ],
+        "Resolved": [
+          [
+            "entity",
+            {
+              "named": {
+                "name": "EntityId",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Unresolved": [
+          [
+            "name",
+            "Text"
+          ]
+        ]
+      }
+    },
     "Related": {
       "constraints": [],
       "record": [
@@ -1120,6 +1832,54 @@
         [
           "arguments",
           "TypedValue"
+        ]
+      ]
+    },
+    "Relation": {
+      "constraints": [],
+      "record": [
+        [
+          "id",
+          {
+            "named": {
+              "name": "RelationId",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "source",
+          {
+            "named": {
+              "name": "FactTarget",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "target",
+          {
+            "named": {
+              "name": "FactTarget",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "payload",
+          "TypedValue"
+        ]
+      ]
+    },
+    "RelationId": {
+      "constraints": [],
+      "record": [
+        [
+          "value",
+          "U64"
         ]
       ]
     },
@@ -1169,6 +1929,31 @@
           {
             "named": {
               "name": "Usage",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "ResolutionUpdate": {
+      "constraints": [],
+      "record": [
+        [
+          "occurrence",
+          {
+            "named": {
+              "name": "OccurrenceId",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "resolution",
+          {
+            "named": {
+              "name": "ReferenceResolution",
               "package": "nepl3.foundation",
               "revision": 1
             }
@@ -1307,6 +2092,123 @@
         [
           "digest",
           "Bytes32"
+        ]
+      ]
+    },
+    "Scope": {
+      "constraints": [],
+      "record": [
+        [
+          "id",
+          {
+            "named": {
+              "name": "ScopeId",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "parent",
+          {
+            "option": {
+              "named": {
+                "name": "ScopeId",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "origin",
+          {
+            "option": {
+              "named": {
+                "name": "OriginRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ScopeEdge": {
+      "constraints": [],
+      "variant": {
+        "Export": [
+          [
+            "from",
+            {
+              "named": {
+                "name": "ScopeId",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "to",
+            {
+              "named": {
+                "name": "ScopeId",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "entity",
+            {
+              "named": {
+                "name": "EntityId",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Import": [
+          [
+            "from",
+            {
+              "named": {
+                "name": "ScopeId",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "to",
+            {
+              "named": {
+                "name": "ScopeId",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "namespace",
+            {
+              "named": {
+                "name": "NamespaceRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "ScopeId": {
+      "constraints": [],
+      "record": [
+        [
+          "value",
+          "U64"
         ]
       ]
     },

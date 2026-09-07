@@ -503,11 +503,15 @@ fn artifacts(
     for source in added {
         admission.admit_existing(source, budget)?;
     }
-    let mut source_map = SourceMap::default();
+    let mut source_maps = Vec::new();
     for mapping in machine.current.source_maps.iter().chain(maps) {
-        source_map.insert(copy(mapping, budget)?, sources, budget)?;
+        budget.charge(
+            Resource::AllocationUnits,
+            core::mem::size_of::<nepl3_core::origin::Mapping>() as u64,
+        )?;
+        source_maps.push(copy(mapping, budget)?);
     }
-    let mapped = source_map.validated();
+    let mapped = SourceMap::validate_mappings(&source_maps, sources, budget)?;
     view.validate_with_maps(sources, machine.registry, &mapped, budget)?;
     let consumed = machine
         .request

@@ -122,6 +122,8 @@ pub(crate) fn source(descriptor: &SchemaDescriptor) -> Result<String> {
             + descriptor.operations.len(),
         operation_cost = if descriptor.operations.is_empty() {
             String::new()
+        } else if descriptor.operations.len() == 1 {
+            " + core::mem::size_of::<super::OperationDescriptor>()".into()
         } else {
             format!(
                 " + {} * core::mem::size_of::<super::OperationDescriptor>()",

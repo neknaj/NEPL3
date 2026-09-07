@@ -15,6 +15,7 @@ use nepl3_reader::{
     builtin::BuiltinReader,
     tokenizer::{ReaderMode, SkipRule, TakeRule, TokenReader},
 };
+mod payload;
 mod surface;
 
 pub struct PackageContext<'a> {
@@ -622,9 +623,18 @@ pub fn compile(
             budget,
         )?;
     }
+    let payload_schemas = payload::schemas(
+        &registry,
+        &schema,
+        &reader,
+        &forms,
+        &leaves,
+        &extensions,
+        budget,
+    )?;
     let package = p::LanguagePackage {
         schema,
-        payload_schemas: Vec::new(),
+        payload_schemas,
         root: text(&root.value, budget)?,
         reader,
         modes,

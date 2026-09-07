@@ -614,12 +614,8 @@
     "NamespaceRef": {
       "fields": [
         [
-          "schema",
-          "SchemaRef"
-        ],
-        [
-          "name",
-          "Text"
+          "value",
+          "U64"
         ]
       ]
     },
@@ -1217,6 +1213,422 @@
           "Text"
         ]
       ]
+    },
+    "ScopeId": {
+      "fields": [
+        [
+          "value",
+          "U64"
+        ]
+      ]
+    },
+    "EntityId": {
+      "fields": [
+        [
+          "value",
+          "U64"
+        ]
+      ]
+    },
+    "OccurrenceId": {
+      "fields": [
+        [
+          "value",
+          "U64"
+        ]
+      ]
+    },
+    "RelationId": {
+      "fields": [
+        [
+          "value",
+          "U64"
+        ]
+      ]
+    },
+    "FactNamespace": {
+      "fields": [
+        [
+          "schema",
+          "SchemaRef"
+        ],
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "policy",
+          "FactNamespacePolicy"
+        ],
+        [
+          "root",
+          "ScopeId"
+        ]
+      ]
+    },
+    "Scope": {
+      "fields": [
+        [
+          "id",
+          "ScopeId"
+        ],
+        [
+          "parent",
+          "Option<ScopeId>"
+        ],
+        [
+          "origin",
+          "Option<OriginRef>"
+        ]
+      ]
+    },
+    "Entity": {
+      "fields": [
+        [
+          "id",
+          "EntityId"
+        ],
+        [
+          "scope",
+          "ScopeId"
+        ],
+        [
+          "namespace",
+          "NamespaceRef"
+        ],
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "definition",
+          "Option<Span>"
+        ],
+        [
+          "selection",
+          "Option<Span>"
+        ],
+        [
+          "origin",
+          "Option<OriginRef>"
+        ]
+      ]
+    },
+    "ReferenceResolution": {
+      "variants": {
+        "Resolved": [
+          [
+            "entity",
+            "EntityId"
+          ]
+        ],
+        "Unresolved": [
+          [
+            "name",
+            "Text"
+          ]
+        ],
+        "Ambiguous": [
+          [
+            "candidates",
+            "List<EntityId>"
+          ]
+        ],
+        "Deferred": [
+          [
+            "requirements",
+            "List<TypedValue>"
+          ]
+        ]
+      }
+    },
+    "Occurrence": {
+      "fields": [
+        [
+          "id",
+          "OccurrenceId"
+        ],
+        [
+          "scope",
+          "ScopeId"
+        ],
+        [
+          "namespace",
+          "NamespaceRef"
+        ],
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "role",
+          "OccurrenceRole"
+        ],
+        [
+          "span",
+          "Span"
+        ],
+        [
+          "origin",
+          "Option<OriginRef>"
+        ],
+        [
+          "resolution",
+          "ReferenceResolution"
+        ]
+      ]
+    },
+    "FactTarget": {
+      "variants": {
+        "Scope": [
+          [
+            "id",
+            "ScopeId"
+          ]
+        ],
+        "Entity": [
+          [
+            "id",
+            "EntityId"
+          ]
+        ],
+        "Occurrence": [
+          [
+            "id",
+            "OccurrenceId"
+          ]
+        ],
+        "Source": [
+          [
+            "span",
+            "Span"
+          ]
+        ]
+      }
+    },
+    "Relation": {
+      "fields": [
+        [
+          "id",
+          "RelationId"
+        ],
+        [
+          "source",
+          "FactTarget"
+        ],
+        [
+          "target",
+          "FactTarget"
+        ],
+        [
+          "payload",
+          "TypedValue"
+        ]
+      ]
+    },
+    "ScopeEdge": {
+      "variants": {
+        "Import": [
+          [
+            "from",
+            "ScopeId"
+          ],
+          [
+            "to",
+            "ScopeId"
+          ],
+          [
+            "namespace",
+            "NamespaceRef"
+          ]
+        ],
+        "Export": [
+          [
+            "from",
+            "ScopeId"
+          ],
+          [
+            "to",
+            "ScopeId"
+          ],
+          [
+            "entity",
+            "EntityId"
+          ]
+        ]
+      }
+    },
+    "FactSet": {
+      "fields": [
+        [
+          "analysisId",
+          "Text"
+        ],
+        [
+          "namespaces",
+          "List<FactNamespace>"
+        ],
+        [
+          "scopes",
+          "List<Scope>"
+        ],
+        [
+          "entities",
+          "List<Entity>"
+        ],
+        [
+          "occurrences",
+          "List<Occurrence>"
+        ],
+        [
+          "relations",
+          "List<Relation>"
+        ],
+        [
+          "edges",
+          "List<ScopeEdge>"
+        ],
+        [
+          "sources",
+          "List<SourceContent>"
+        ],
+        [
+          "origins",
+          "List<Origin>"
+        ],
+        [
+          "sourceMaps",
+          "List<SourceMapping>"
+        ]
+      ]
+    },
+    "IdRange": {
+      "fields": [
+        [
+          "start",
+          "U64"
+        ],
+        [
+          "end",
+          "U64"
+        ]
+      ]
+    },
+    "FactReservation": {
+      "fields": [
+        [
+          "scopes",
+          "IdRange"
+        ],
+        [
+          "entities",
+          "IdRange"
+        ],
+        [
+          "occurrences",
+          "IdRange"
+        ],
+        [
+          "relations",
+          "IdRange"
+        ]
+      ]
+    },
+    "FactAuthority": {
+      "fields": [
+        [
+          "analysisId",
+          "Text"
+        ],
+        [
+          "currentScope",
+          "ScopeId"
+        ],
+        [
+          "namespaces",
+          "List<NamespaceRef>"
+        ],
+        [
+          "writableScopes",
+          "List<ScopeId>"
+        ],
+        [
+          "importScopes",
+          "List<ScopeId>"
+        ],
+        [
+          "resolutionUpdates",
+          "List<OccurrenceId>"
+        ],
+        [
+          "relationSources",
+          "List<FactTarget>"
+        ],
+        [
+          "reservation",
+          "FactReservation"
+        ]
+      ]
+    },
+    "ResolutionUpdate": {
+      "fields": [
+        [
+          "occurrence",
+          "OccurrenceId"
+        ],
+        [
+          "resolution",
+          "ReferenceResolution"
+        ]
+      ]
+    },
+    "FactDelta": {
+      "fields": [
+        [
+          "analysisId",
+          "Text"
+        ],
+        [
+          "originBase",
+          "U64"
+        ],
+        [
+          "scopes",
+          "List<Scope>"
+        ],
+        [
+          "entities",
+          "List<Entity>"
+        ],
+        [
+          "occurrences",
+          "List<Occurrence>"
+        ],
+        [
+          "relations",
+          "List<Relation>"
+        ],
+        [
+          "edges",
+          "List<ScopeEdge>"
+        ],
+        [
+          "resolutions",
+          "List<ResolutionUpdate>"
+        ],
+        [
+          "sources",
+          "List<SourceContent>"
+        ],
+        [
+          "origins",
+          "List<Origin>"
+        ],
+        [
+          "sourceMaps",
+          "List<SourceMapping>"
+        ]
+      ]
     }
   },
   "scalar_aliases": {
@@ -1271,6 +1683,17 @@
       "NegativeZero",
       "ZeroDenominator",
       "NotReduced"
+    ],
+    "FactNamespacePolicy": [
+      "Lexical",
+      "Global",
+      "Open"
+    ],
+    "OccurrenceRole": [
+      "Definition",
+      "Reference",
+      "Import",
+      "Export"
     ]
   },
   "operations": [
@@ -1682,6 +2105,18 @@
     ],
     "SourceReservation": [
       "source.reservation"
+    ],
+    "FactSet": [
+      "facts.identity",
+      "facts.source_closure",
+      "facts.graph"
+    ],
+    "FactAuthority": [
+      "facts.authority"
+    ],
+    "FactDelta": [
+      "facts.delta",
+      "facts.source_closure"
     ]
   }
 }

@@ -1,0 +1,21 @@
+language LowerGrammar 1 Root
+cons reader word choice cons literal "language" cons literal "nil" nil
+cons reader trivia some scalar whitespace
+cons mode Code cons skip trivia cons take Word word nil
+cons category Root Code
+cons category Declaration Code
+cons form Language Root "language"
+cons field name builtin Name
+cons field revision builtin Nat
+cons field root builtin Name
+cons field declarations listof local Declaration
+nil
+group cons visit name cons visit revision cons visit root cons visit declarations nil
+nil
+cons form Category Declaration "category"
+cons field name builtin Name
+cons field mode builtin Name
+nil
+group cons visit name cons visit mode nil
+nil
+nil
