@@ -436,6 +436,10 @@ fn ordered_exports_recursive_headers_and_foreign_roots() -> Result<(), String> {
 fn binding_seed_artifacts_match_original_source_and_host_adapter() -> Result<(), String> {
     for (path, bytes) in [
         (
+            "conformance/fixtures/grammar/binding/global.neplg",
+            include_bytes!("../../../conformance/fixtures/grammar/binding/global.json").as_slice(),
+        ),
+        (
             "conformance/fixtures/grammar/binding/foreign-body.neplg",
             include_bytes!("../../../conformance/fixtures/grammar/binding/foreign-body.json")
                 .as_slice(),
@@ -731,7 +735,7 @@ fn analysis_revalidates_concrete_package_and_keeps_initial_failures_typed() -> R
 }
 
 #[test]
-fn open_names_are_inputs_and_unimplemented_global_is_not_lexical_success() -> Result<(), String> {
+fn open_inputs_and_global_occurrences_keep_their_distinct_scopes() -> Result<(), String> {
     let mut compiled = execution()?;
     compiled.package.namespaces[0].policy = nepl3_engine::package::NamespacePolicy::Open;
     with_input(&compiled, "free", |tree, profile, b, a| {
@@ -757,35 +761,32 @@ fn open_names_are_inputs_and_unimplemented_global_is_not_lexical_success() -> Re
     compiled.package.namespaces[0].policy = nepl3_engine::package::NamespacePolicy::Global;
     with_input(&compiled, "lambda x x", |tree, profile, b, a| {
         let reply = analyze("global-pending", tree, profile, b, a);
-        assert!(matches!(
-            reply.outcome,
-            BindingOutcome::Invalid {
-                error: BindingError::UnsupportedPlan,
-                ..
-            }
-        ));
-        assert_eq!(reply.report.diagnostics.len(), 1);
+        let BindingOutcome::Complete(analysis) = &reply.outcome else {
+            return Err(format!("{reply:?}"));
+        };
+        let facts = analysis.facts();
+        let definition = facts
+            .occurrences
+            .iter()
+            .find(|o| o.role == OccurrenceRole::Definition)
+            .ok_or("definition")?;
+        let root = facts.namespaces[definition.namespace.0 as usize].root;
+        assert_ne!(definition.scope, root);
+        assert_eq!(facts.entities[0].scope, root);
+        let location = analysis
+            .result()
+            .occurrence_stages
+            .iter()
+            .find(|v| v.occurrence == definition.id)
+            .ok_or("stage")?;
         assert_eq!(
-            reply.report.diagnostics[0].code,
-            "UnsupportedGlobalNamespace"
+            analysis.result().stages[location.stage.0 as usize].scope,
+            definition.scope
         );
         assert_eq!(
-            reply.report.diagnostics[0]
-                .primary
-                .as_ref()
-                .ok_or("primary")?
-                .start(),
-            7
+            analysis.result().stages[location.namespace_stage.0 as usize].scope,
+            root
         );
-        reply
-            .report
-            .validate(
-                &SourceStore::default(),
-                reply.sources(),
-                &compiled.registry,
-                &mut budget(),
-            )
-            .map_err(err)?;
         Ok(())
     })
 }
@@ -864,3 +865,6 @@ fn stopped_origin_preparation_never_publishes_a_forward_reference_prefix() -> Re
         Ok(())
     })
 }
+
+#[path = "binding/global.rs"]
+mod global;

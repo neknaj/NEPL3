@@ -386,4 +386,10 @@ Binding portableの管理対象3件も独立成功した。完成した実解析
 
 最終追加のOrigin前方参照回帰もnativeで独立成功し、binding管理対象の独立native確認は計12件となった。実treeへ合法なComposite→後方配置Directを加え、公開validate/analyzeのWork/Allocation走査で公開originsが空または全graphのいずれかであること、停止前後のSome FactSetが構造検査を通ることを確かめる。Wasmtimeの独立実行は11件すべて成功した（`cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 --target-dir .tmp/review-target -- --skip binding_seed_artifacts_match_original_source_and_host_adapter --test-threads=1`、runner=`wasmtime run`）。Pythonを起動するseed原文一致だけはnative必須としてcfgで区別され、最終CIはWASIでbinding::全対象を実行する。通常の解析・停止・portable試験を任意実行へ外してはいない。
 
+次のGlobal実装は、先に固定した15原文と追加3入力を独立 `binding_global` で実compile・ParseSession・analyzeへ通して確認した。成功13例は原文位置で識別したEntityへ解決し、重複5例はDuplicateGlobalとprimary/relatedを保持する。先行bindはscope復帰後の兄弟にも見え、先行referenceへ後続bindは見えない。export候補だけでは公開せず、import後に可視となる。sequentialの順序とrecursiveの明示header収集を区別し、Foreignの同名宣言は別rootへ留まる。escaped Unicode名の重複は元綴りが異なっても意味名で検出し、primary27..32・related8..18を保持した。この例は管理対象にも追加され、その試験を独立再実行した。
+
+Occurrence.scopeと既存stageは実発行のlexical位置を保ち、追加namespaceStageがGlobal rootの発行時履歴を捕捉する。Global Entityの配置先だけをrootとし、語彙位置をrootへ上書きしない。独立補助は各referenceについて保存namespaceStageから過去のintroduced列をたどり、実際の解決候補と一致することもassertした。18結果すべてを実NDF/CBOR往復し、NamespacePolicy・Entity・両stage・Report・再encodeの一致を確認した。`binding_global_stops` は重複入力を6資源で制限し、各partial resultをportable往復して、元StopReason・構造閉包・Report保持を確認した。
+
+Global追加後のbinding管理対象15件は独立native成功し、process起動不要の14件もWASIで独立成功した（`cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 --target-dir .tmp/review-target -- --test-threads=1`、runner=`wasmtime run`）。portableの追加負例はnamespaceStageを語彙stageと取り違える場合、policyに合わないroot、範囲外IDをschema-valid NDFとして拒否する。共通codecは構造とroot所属を検査し、発行時点の履歴であることや導入権限を受信値だけで証明しないというspec04の区別も照合した。Globalへの従来のUnsupportedPlanはこの実装範囲で解除されたが、Custom facts callback・明示root共有・AnalysisKey/queryおよびT06全条件は引き続き別の未完範囲である。
+
 仕様の通読、具体例による矛盾の確認、公開規格との照合を行った。r4では上記のcore/wire公開APIとNDF intrinsic roundtripに加え、標準Grammar原文のnative bootstrapを実行した。4言語全formのRust parse/lower、browser描画、回路実行、LSP、portable operation provider、および全要求targetでのconformanceはまだこのレビューの実行範囲に含まれない。対応する実装が存在する段階で、implementation-status.jsonの未実行記録を実行証拠とともに更新する。

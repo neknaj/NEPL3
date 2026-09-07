@@ -4,6 +4,123 @@ use nepl3_engine::portable::binding::{self as wire_binding, DecodedBindingOutcom
 mod causes;
 
 #[test]
+fn namespace_visibility_stage_roundtrips_and_rejects_wrong_policy_or_root() -> Result<(), String> {
+    for global in [false, true] {
+        let compiled = if global {
+            super::global::compiled()?
+        } else {
+            execution()?
+        };
+        with_input(&compiled, "apply lambda x x x", |tree, profile, b, a| {
+            let reply = analyze("namespace-stage", tree, profile, b, a);
+            let BindingOutcome::Complete(analysis) = &reply.outcome else {
+                return Err(format!("{reply:?}"));
+            };
+            let result = analysis.result();
+            let definition = result
+                .facts
+                .occurrences
+                .iter()
+                .find(|o| o.role == OccurrenceRole::Definition)
+                .ok_or("definition")?;
+            let point_index = result
+                .occurrence_stages
+                .iter()
+                .position(|p| p.occurrence == definition.id)
+                .ok_or("point")?;
+            let point = result.occurrence_stages[point_index];
+            let root = result.facts.namespaces[definition.namespace.0 as usize].root;
+            assert_ne!(definition.scope, root);
+            if global {
+                assert_eq!(result.stages[point.namespace_stage.0 as usize].scope, root);
+                assert_ne!(point.stage, point.namespace_stage);
+            } else {
+                assert_eq!(point.stage, point.namespace_stage);
+            }
+            let expected_points = result.occurrence_stages.clone();
+            let wrong_stage = if global {
+                point.stage
+            } else {
+                nepl3_engine::binding::StageId(
+                    result
+                        .stages
+                        .iter()
+                        .position(|s| s.scope == root)
+                        .ok_or("root stage")? as u64,
+                )
+            };
+            let empty = SourceStore::default();
+            let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
+            let value = wire_binding::reply_to_value(&reply, profile.registry(), &mut codec, b)
+                .map_err(err)?;
+            let bytes = nepl3_wire::encode(&value, b).map_err(err)?;
+            drop(reply);
+            let mut receiving = budget();
+            let mut admission = SourceAdmission::default();
+            let mut receiver =
+                FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
+            let packet = nepl3_wire::decode(&bytes, &mut receiving).map_err(err)?;
+            let decoded = wire_binding::reply_from_value(
+                &packet,
+                profile.registry(),
+                &mut receiver,
+                &mut receiving,
+            )
+            .map_err(err)?;
+            let DecodedBindingOutcome::Complete(result) = decoded.outcome else {
+                return Err("complete".into());
+            };
+            assert_eq!(result.occurrence_stages, expected_points);
+            for wrong in [wrong_stage.0, u64::MAX] {
+                let mut changed = packet.clone();
+                let NdfValue::Record(reply) = &mut changed else {
+                    return Err("reply".into());
+                };
+                let NdfValue::Variant(outcome) = &mut reply.fields[0] else {
+                    return Err("outcome".into());
+                };
+                let NdfValue::Record(result) = &mut outcome.fields[0] else {
+                    return Err("result".into());
+                };
+                let NdfValue::List(points) = &mut result.fields[4] else {
+                    return Err("points".into());
+                };
+                let NdfValue::Record(point) = &mut points[point_index] else {
+                    return Err("point".into());
+                };
+                let NdfValue::Record(id) = &mut point.fields[2] else {
+                    return Err("id".into());
+                };
+                id.fields[0] = NdfValue::U64(wrong);
+                profile
+                    .registry()
+                    .validate(
+                        &nepl3_core::schema::TypeDescriptor::Named(nepl3_core::schema::TypeRef {
+                            package: "nepl3.engine".into(),
+                            revision: 1,
+                            name: "BindingReply".into(),
+                        }),
+                        &changed,
+                        &mut budget(),
+                    )
+                    .map_err(err)?;
+                assert!(
+                    wire_binding::reply_from_value(
+                        &changed,
+                        profile.registry(),
+                        &mut receiver,
+                        &mut budget()
+                    )
+                    .is_err()
+                );
+            }
+            Ok(())
+        })?;
+    }
+    Ok(())
+}
+
+#[test]
 fn binding_result_first_receiver_preserves_visibility_reports_and_foreign_closure()
 -> Result<(), String> {
     let compiled = execution()?;

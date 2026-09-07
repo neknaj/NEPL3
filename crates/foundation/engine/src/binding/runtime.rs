@@ -48,6 +48,7 @@ struct ExportHeader {
     entity: EntityId,
 }
 struct NamedOccurrence {
+    namespace_stage: StageId,
     namespace: NamespaceRef,
     name: String,
     role: OccurrenceRole,
@@ -258,6 +259,7 @@ impl<'a, 'p> Machine<'a, 'p> {
         budget: &mut Budget,
     ) -> Result<OccurrenceId, BindingError> {
         let NamedOccurrence {
+            namespace_stage,
             namespace,
             name,
             role,
@@ -286,6 +288,7 @@ impl<'a, 'p> Machine<'a, 'p> {
         self.progress.occurrence_stages.push(OccurrenceStage {
             occurrence: id,
             stage,
+            namespace_stage,
         });
         Ok(id)
     }
@@ -300,24 +303,17 @@ impl<'a, 'p> Machine<'a, 'p> {
     ) -> Result<(), BindingError> {
         let namespace = self.namespace(frame.target.bundle, layout.package, namespace, budget)?;
         let (name, selection, origin) = self.name(frame.target, layout, selector, budget)?;
-        if self.facts()?.namespaces[namespace.0 as usize].policy == NamespacePolicy::Global {
-            self.diagnostic(
-                "UnsupportedGlobalNamespace",
-                namespace,
-                &name,
-                &selection,
-                budget,
-            )?;
-            return Err(BindingError::UnsupportedPlan);
-        }
-
+        let global =
+            self.facts()?.namespaces[namespace.0 as usize].policy == NamespacePolicy::Global;
+        let namespace_stage = self.namespace_stage(frame.target.bundle, frame.stage, namespace)?;
         if role == OccurrenceRole::Reference {
-            let resolution = self.resolve(frame.stage, namespace, &name, budget)?;
+            let resolution = self.resolve(namespace_stage, namespace, &name, budget)?;
             let undefined = matches!(resolution, ReferenceResolution::Unresolved(_));
             let ambiguous = matches!(resolution, ReferenceResolution::Ambiguous(_));
             let id = self.occurrence(
                 frame.stage,
                 NamedOccurrence {
+                    namespace_stage,
                     namespace,
                     name: text(&name, budget)?,
                     role,
@@ -337,8 +333,11 @@ impl<'a, 'p> Machine<'a, 'p> {
                 self.diagnostic("AmbiguousName", namespace, &name, &selection, budget)?;
             }
         } else {
+            if global && role == OccurrenceRole::Definition {
+                self.unique_global(namespace_stage, namespace, &name, &selection, None, budget)?;
+            }
             let id = EntityId(self.facts()?.entities.len() as u64);
-            let scope = self.stage(frame.stage)?.scope;
+            let scope = self.stage(namespace_stage)?.scope;
             let definition = layout.node.cover.as_ref().unwrap_or(&selection);
             let entity = Entity {
                 id,
@@ -352,13 +351,23 @@ impl<'a, 'p> Machine<'a, 'p> {
             budget.charge(Resource::Nodes, 1)?;
             push(&mut self.facts_mut()?.entities, entity, budget)?;
             if role == OccurrenceRole::Definition {
-                frame.stage = self.introduce(frame.stage, id, budget)?;
+                let next = self.introduce(namespace_stage, id, budget)?;
+                if global {
+                    self.bundles[frame.target.bundle].root = next;
+                } else {
+                    frame.stage = next;
+                }
             } else {
                 push(&mut frame.exports, id, budget)?;
             }
             self.occurrence(
                 frame.stage,
                 NamedOccurrence {
+                    namespace_stage: self.namespace_stage(
+                        frame.target.bundle,
+                        frame.stage,
+                        namespace,
+                    )?,
                     namespace,
                     name,
                     role,
@@ -455,13 +464,43 @@ impl<'a, 'p> Machine<'a, 'p> {
                                     {
                                         return Err(BindingError::NamespaceBoundary);
                                     };
+                                    let namespace = value.namespace;
+                                    let global = self.facts()?.namespaces[namespace.0 as usize]
+                                        .policy
+                                        == NamespacePolicy::Global;
+                                    let current = self.namespace_stage(
+                                        parent.target.bundle,
+                                        parent.stage,
+                                        namespace,
+                                    )?;
+                                    let from = value.scope;
+                                    if global {
+                                        let name = text(&value.name, budget)?;
+                                        let selection = span(
+                                            value.selection.as_ref().ok_or(BindingError::Name)?,
+                                            budget,
+                                        )?;
+                                        self.unique_global(
+                                            current,
+                                            namespace,
+                                            &name,
+                                            &selection,
+                                            Some(entity),
+                                            budget,
+                                        )?;
+                                    }
                                     let edge = ScopeEdge::Export {
-                                        from: value.scope,
-                                        to: self.stage(parent.stage)?.scope,
+                                        from,
+                                        to: self.stage(current)?.scope,
                                         entity,
                                     };
                                     push(&mut self.facts_mut()?.edges, edge, budget)?;
-                                    parent.stage = self.introduce(parent.stage, entity, budget)?;
+                                    let next = self.introduce(current, entity, budget)?;
+                                    if global {
+                                        self.bundles[parent.target.bundle].root = next;
+                                    } else {
+                                        parent.stage = next;
+                                    }
                                 }
                             }
                             Effect::Root => return Err(BindingError::Target),

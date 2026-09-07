@@ -81,6 +81,26 @@ pub(super) fn validate<E>(
         {
             return Err(PortableError::Shape);
         }
+        let namespace = usize::try_from(occurrence.namespace.0)
+            .ok()
+            .and_then(|i| facts.namespaces.get(i))
+            .ok_or(PortableError::Shape)?;
+        let namespace_stage = usize::try_from(point.namespace_stage.0)
+            .ok()
+            .and_then(|i| data.stages.get(i))
+            .ok_or(PortableError::Shape)?;
+        match namespace.policy {
+            NamespacePolicy::Lexical | NamespacePolicy::Open => {
+                if point.namespace_stage != point.stage {
+                    return Err(PortableError::Shape);
+                }
+            }
+            NamespacePolicy::Global => {
+                if namespace_stage.scope != namespace.root {
+                    return Err(PortableError::Shape);
+                }
+            }
+        }
     }
     for (i, id) in data.open_inputs.iter().enumerate() {
         b.charge(Resource::Work, (facts.occurrences.len() + i + 1) as u64)?;

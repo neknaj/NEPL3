@@ -3678,6 +3678,16 @@
               "name": "StageId"
             }
           }
+        ],
+        [
+          "namespaceStage",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "StageId"
+            }
+          }
         ]
       ]
     },
@@ -3943,7 +3953,8 @@
               }
             }
           ]
-        ]
+        ],
+        "DuplicateGlobal": []
       }
     },
     "BindingOutcome": {

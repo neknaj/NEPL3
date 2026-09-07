@@ -82,7 +82,11 @@ impl Value for OccurrenceStage {
         record(
             s.engine,
             "OccurrenceStage",
-            [self.occurrence.value(s, c, b)?, self.stage.value(s, c, b)?],
+            [
+                self.occurrence.value(s, c, b)?,
+                self.stage.value(s, c, b)?,
+                self.namespace_stage.value(s, c, b)?,
+            ],
             b,
         )
     }
@@ -92,10 +96,11 @@ impl Value for OccurrenceStage {
         c: &mut C,
         b: &mut Budget,
     ) -> Result<Self, PortableError<C::Error>> {
-        let f = fields(v, s.engine, "OccurrenceStage", 2)?;
+        let f = fields(v, s.engine, "OccurrenceStage", 3)?;
         Ok(Self {
             occurrence: OccurrenceId::read(&f[0], s, c, b)?,
             stage: StageId::read(&f[1], s, c, b)?,
+            namespace_stage: StageId::read(&f[2], s, c, b)?,
         })
     }
 }

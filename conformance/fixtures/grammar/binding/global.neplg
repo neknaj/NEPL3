@@ -1,0 +1,51 @@
+language BindingReview 1 Expr
+  cons category Expr Code
+  cons category Decl Code
+  cons namespace Value global
+  cons reader ws some scalar whitespace
+  cons extension BuiltinWord "nepl3.reader/name-v1" "reader/v1"
+  cons reader word call "nepl3.reader/name-v1"
+  cons reader number some scalar digit
+  cons mode Code cons skip ws cons take Word word cons take Number number nil
+  cons leaf Number Expr Number none nil
+  cons leaf Name Expr Word reference Value self nil
+  cons form Let Expr "let"
+    cons field name builtin Name cons field init local Expr cons field body local Expr nil
+    group cons visit init cons scope cons bind Value name cons visit body nil nil nil
+  cons form Lambda Expr "lambda"
+    cons field parameter builtin Name cons field body local Expr nil
+    scope cons bind Value parameter cons visit body nil nil
+  cons form Apply Expr "apply"
+    cons field function local Expr cons field argument local Expr nil
+    group cons visit function cons visit argument nil nil
+  cons form Define Decl "define"
+    cons field name builtin Name cons field init local Expr nil
+    group cons export Value name cons visit init nil nil
+  cons form Wrapped Decl "wrapped"
+    cons field declaration local Decl nil propagate declaration nil
+  cons form Sequential Expr "sequence"
+    cons field declarations listof local Decl cons field body local Expr nil
+    sequential declarations body nil
+  cons form Recursive Expr "recursive"
+    cons field declarations listof local Decl cons field body local Expr nil
+    recursive declarations body nil
+  cons form Imported Expr "imported"
+    cons field declaration local Decl cons field body local Expr nil
+    group cons import declaration cons visit body nil nil
+  cons form Unimported Expr "unimported"
+    cons field declaration local Decl nil visit declaration nil
+  cons form LetText Expr "lettext"
+    cons field name builtin Text cons field body local Expr nil
+    scope cons bind Value name cons visit body nil nil
+  cons form Guest Expr "guest"
+    cons field value foreign B Expr nil visit value nil
+  cons form Early Expr "early"
+    cons field before local Expr cons field name builtin Name cons field after local Expr nil
+    group cons visit before cons bind Value name cons visit after nil nil
+  cons form Twice Expr "twice"
+    cons field first builtin Name cons field second builtin Name cons field body local Expr nil
+    group cons bind Value first cons bind Value second cons visit body nil nil
+  cons form Repeated Expr "repeat"
+    cons field declarations listof local Decl cons field body local Expr nil
+    group cons recursive declarations body cons recursive declarations body nil nil
+  nil

@@ -1,0 +1,4233 @@
+{
+  "root": {
+    "category": "Grammar/Root",
+    "fields": {
+      "declarations": {
+        "heads": [
+          [
+            32,
+            36
+          ],
+          [
+            58,
+            62
+          ],
+          [
+            84,
+            88
+          ],
+          [
+            114,
+            118
+          ],
+          [
+            154,
+            158
+          ],
+          [
+            218,
+            222
+          ],
+          [
+            265,
+            269
+          ],
+          [
+            304,
+            308
+          ],
+          [
+            382,
+            386
+          ],
+          [
+            422,
+            426
+          ],
+          [
+            474,
+            478
+          ],
+          [
+            678,
+            682
+          ],
+          [
+            840,
+            844
+          ],
+          [
+            999,
+            1003
+          ],
+          [
+            1153,
+            1157
+          ],
+          [
+            1256,
+            1260
+          ],
+          [
+            1409,
+            1413
+          ],
+          [
+            1561,
+            1565
+          ],
+          [
+            1725,
+            1729
+          ],
+          [
+            1830,
+            1834
+          ],
+          [
+            1984,
+            1988
+          ],
+          [
+            2071,
+            2075
+          ],
+          [
+            2270,
+            2274
+          ],
+          [
+            2476,
+            2480
+          ],
+          [
+            2672,
+            2675
+          ]
+        ],
+        "list": [
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "mode": {
+                "literal": "Name",
+                "raw": "Code",
+                "span": [
+                  51,
+                  55
+                ],
+                "value": "Code"
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Expr",
+                "span": [
+                  46,
+                  50
+                ],
+                "value": "Expr"
+              }
+            },
+            "head": [
+              37,
+              45
+            ],
+            "kind": "Category",
+            "span": [
+              37,
+              55
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "mode": {
+                "literal": "Name",
+                "raw": "Code",
+                "span": [
+                  77,
+                  81
+                ],
+                "value": "Code"
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "Decl",
+                "span": [
+                  72,
+                  76
+                ],
+                "value": "Decl"
+              }
+            },
+            "head": [
+              63,
+              71
+            ],
+            "kind": "Category",
+            "span": [
+              63,
+              81
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "name": {
+                "literal": "Name",
+                "raw": "Value",
+                "span": [
+                  99,
+                  104
+                ],
+                "value": "Value"
+              },
+              "policy": {
+                "category": "Grammar/Policy",
+                "fields": {},
+                "head": [
+                  105,
+                  111
+                ],
+                "kind": "Global",
+                "span": [
+                  105,
+                  111
+                ]
+              }
+            },
+            "head": [
+              89,
+              98
+            ],
+            "kind": "Namespace",
+            "span": [
+              89,
+              111
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "body": {
+                    "category": "Grammar/ReaderExpr",
+                    "fields": {
+                      "class": {
+                        "category": "Grammar/CharClass",
+                        "fields": {},
+                        "head": [
+                          141,
+                          151
+                        ],
+                        "kind": "Whitespace",
+                        "span": [
+                          141,
+                          151
+                        ]
+                      }
+                    },
+                    "head": [
+                      134,
+                      140
+                    ],
+                    "kind": "Scalar",
+                    "span": [
+                      134,
+                      151
+                    ]
+                  }
+                },
+                "head": [
+                  129,
+                  133
+                ],
+                "kind": "Some",
+                "span": [
+                  129,
+                  151
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "ws",
+                "span": [
+                  126,
+                  128
+                ],
+                "value": "ws"
+              }
+            },
+            "head": [
+              119,
+              125
+            ],
+            "kind": "Reader",
+            "span": [
+              119,
+              151
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "alias": {
+                "literal": "Name",
+                "raw": "BuiltinWord",
+                "span": [
+                  169,
+                  180
+                ],
+                "value": "BuiltinWord"
+              },
+              "provider": {
+                "literal": "Text",
+                "raw": "\"nepl3.reader/name-v1\"",
+                "span": [
+                  181,
+                  203
+                ],
+                "value": "nepl3.reader/name-v1"
+              },
+              "signature": {
+                "literal": "Text",
+                "raw": "\"reader/v1\"",
+                "span": [
+                  204,
+                  215
+                ],
+                "value": "reader/v1"
+              }
+            },
+            "head": [
+              159,
+              168
+            ],
+            "kind": "Extension",
+            "span": [
+              159,
+              215
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "provider": {
+                    "literal": "Text",
+                    "raw": "\"nepl3.reader/name-v1\"",
+                    "span": [
+                      240,
+                      262
+                    ],
+                    "value": "nepl3.reader/name-v1"
+                  }
+                },
+                "head": [
+                  235,
+                  239
+                ],
+                "kind": "Call",
+                "span": [
+                  235,
+                  262
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "word",
+                "span": [
+                  230,
+                  234
+                ],
+                "value": "word"
+              }
+            },
+            "head": [
+              223,
+              229
+            ],
+            "kind": "Reader",
+            "span": [
+              223,
+              262
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "expression": {
+                "category": "Grammar/ReaderExpr",
+                "fields": {
+                  "body": {
+                    "category": "Grammar/ReaderExpr",
+                    "fields": {
+                      "class": {
+                        "category": "Grammar/CharClass",
+                        "fields": {},
+                        "head": [
+                          296,
+                          301
+                        ],
+                        "kind": "Digit",
+                        "span": [
+                          296,
+                          301
+                        ]
+                      }
+                    },
+                    "head": [
+                      289,
+                      295
+                    ],
+                    "kind": "Scalar",
+                    "span": [
+                      289,
+                      301
+                    ]
+                  }
+                },
+                "head": [
+                  284,
+                  288
+                ],
+                "kind": "Some",
+                "span": [
+                  284,
+                  301
+                ]
+              },
+              "name": {
+                "literal": "Name",
+                "raw": "number",
+                "span": [
+                  277,
+                  283
+                ],
+                "value": "number"
+              }
+            },
+            "head": [
+              270,
+              276
+            ],
+            "kind": "Reader",
+            "span": [
+              270,
+              301
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "name": {
+                "literal": "Name",
+                "raw": "Code",
+                "span": [
+                  314,
+                  318
+                ],
+                "value": "Code"
+              },
+              "rules": {
+                "heads": [
+                  [
+                    319,
+                    323
+                  ],
+                  [
+                    332,
+                    336
+                  ],
+                  [
+                    352,
+                    356
+                  ],
+                  [
+                    376,
+                    379
+                  ]
+                ],
+                "list": [
+                  {
+                    "category": "Grammar/LexRule",
+                    "fields": {
+                      "reader": {
+                        "literal": "Name",
+                        "raw": "ws",
+                        "span": [
+                          329,
+                          331
+                        ],
+                        "value": "ws"
+                      }
+                    },
+                    "head": [
+                      324,
+                      328
+                    ],
+                    "kind": "Skip",
+                    "span": [
+                      324,
+                      331
+                    ]
+                  },
+                  {
+                    "category": "Grammar/LexRule",
+                    "fields": {
+                      "kind": {
+                        "literal": "Name",
+                        "raw": "Word",
+                        "span": [
+                          342,
+                          346
+                        ],
+                        "value": "Word"
+                      },
+                      "reader": {
+                        "literal": "Name",
+                        "raw": "word",
+                        "span": [
+                          347,
+                          351
+                        ],
+                        "value": "word"
+                      }
+                    },
+                    "head": [
+                      337,
+                      341
+                    ],
+                    "kind": "Take",
+                    "span": [
+                      337,
+                      351
+                    ]
+                  },
+                  {
+                    "category": "Grammar/LexRule",
+                    "fields": {
+                      "kind": {
+                        "literal": "Name",
+                        "raw": "Number",
+                        "span": [
+                          362,
+                          368
+                        ],
+                        "value": "Number"
+                      },
+                      "reader": {
+                        "literal": "Name",
+                        "raw": "number",
+                        "span": [
+                          369,
+                          375
+                        ],
+                        "value": "number"
+                      }
+                    },
+                    "head": [
+                      357,
+                      361
+                    ],
+                    "kind": "Take",
+                    "span": [
+                      357,
+                      375
+                    ]
+                  }
+                ],
+                "span": [
+                  319,
+                  379
+                ]
+              }
+            },
+            "head": [
+              309,
+              313
+            ],
+            "kind": "Mode",
+            "span": [
+              309,
+              379
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "bindings": {
+                "category": "Grammar/Binding",
+                "fields": {},
+                "head": [
+                  411,
+                  415
+                ],
+                "kind": "None",
+                "span": [
+                  411,
+                  415
+                ]
+              },
+              "category": {
+                "literal": "Name",
+                "raw": "Expr",
+                "span": [
+                  399,
+                  403
+                ],
+                "value": "Expr"
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "Number",
+                "span": [
+                  392,
+                  398
+                ],
+                "value": "Number"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    416,
+                    419
+                  ]
+                ],
+                "list": [],
+                "span": [
+                  416,
+                  419
+                ]
+              },
+              "token": {
+                "literal": "Name",
+                "raw": "Number",
+                "span": [
+                  404,
+                  410
+                ],
+                "value": "Number"
+              }
+            },
+            "head": [
+              387,
+              391
+            ],
+            "kind": "Leaf",
+            "span": [
+              387,
+              419
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "bindings": {
+                "category": "Grammar/Binding",
+                "fields": {
+                  "field": {
+                    "literal": "Name",
+                    "raw": "self",
+                    "span": [
+                      463,
+                      467
+                    ],
+                    "value": "self"
+                  },
+                  "namespace": {
+                    "literal": "Name",
+                    "raw": "Value",
+                    "span": [
+                      457,
+                      462
+                    ],
+                    "value": "Value"
+                  }
+                },
+                "head": [
+                  447,
+                  456
+                ],
+                "kind": "Reference",
+                "span": [
+                  447,
+                  467
+                ]
+              },
+              "category": {
+                "literal": "Name",
+                "raw": "Expr",
+                "span": [
+                  437,
+                  441
+                ],
+                "value": "Expr"
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "Name",
+                "span": [
+                  432,
+                  436
+                ],
+                "value": "Name"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    468,
+                    471
+                  ]
+                ],
+                "list": [],
+                "span": [
+                  468,
+                  471
+                ]
+              },
+              "token": {
+                "literal": "Name",
+                "raw": "Word",
+                "span": [
+                  442,
+                  446
+                ],
+                "value": "Word"
+              }
+            },
+            "head": [
+              427,
+              431
+            ],
+            "kind": "Leaf",
+            "span": [
+              427,
+              471
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "bindings": {
+                "category": "Grammar/Binding",
+                "fields": {
+                  "plans": {
+                    "heads": [
+                      [
+                        600,
+                        604
+                      ],
+                      [
+                        616,
+                        620
+                      ],
+                      [
+                        668,
+                        671
+                      ]
+                    ],
+                    "list": [
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "child": {
+                            "literal": "Name",
+                            "raw": "init",
+                            "span": [
+                              611,
+                              615
+                            ],
+                            "value": "init"
+                          }
+                        },
+                        "head": [
+                          605,
+                          610
+                        ],
+                        "kind": "Visit",
+                        "span": [
+                          605,
+                          615
+                        ]
+                      },
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "plans": {
+                            "heads": [
+                              [
+                                627,
+                                631
+                              ],
+                              [
+                                648,
+                                652
+                              ],
+                              [
+                                664,
+                                667
+                              ]
+                            ],
+                            "list": [
+                              {
+                                "category": "Grammar/Binding",
+                                "fields": {
+                                  "field": {
+                                    "literal": "Name",
+                                    "raw": "name",
+                                    "span": [
+                                      643,
+                                      647
+                                    ],
+                                    "value": "name"
+                                  },
+                                  "namespace": {
+                                    "literal": "Name",
+                                    "raw": "Value",
+                                    "span": [
+                                      637,
+                                      642
+                                    ],
+                                    "value": "Value"
+                                  }
+                                },
+                                "head": [
+                                  632,
+                                  636
+                                ],
+                                "kind": "Bind",
+                                "span": [
+                                  632,
+                                  647
+                                ]
+                              },
+                              {
+                                "category": "Grammar/Binding",
+                                "fields": {
+                                  "child": {
+                                    "literal": "Name",
+                                    "raw": "body",
+                                    "span": [
+                                      659,
+                                      663
+                                    ],
+                                    "value": "body"
+                                  }
+                                },
+                                "head": [
+                                  653,
+                                  658
+                                ],
+                                "kind": "Visit",
+                                "span": [
+                                  653,
+                                  663
+                                ]
+                              }
+                            ],
+                            "span": [
+                              627,
+                              667
+                            ]
+                          }
+                        },
+                        "head": [
+                          621,
+                          626
+                        ],
+                        "kind": "Scope",
+                        "span": [
+                          621,
+                          667
+                        ]
+                      }
+                    ],
+                    "span": [
+                      600,
+                      671
+                    ]
+                  }
+                },
+                "head": [
+                  594,
+                  599
+                ],
+                "kind": "Group",
+                "span": [
+                  594,
+                  671
+                ]
+              },
+              "category": {
+                "literal": "Name",
+                "raw": "Expr",
+                "span": [
+                  488,
+                  492
+                ],
+                "value": "Expr"
+              },
+              "fields": {
+                "heads": [
+                  [
+                    503,
+                    507
+                  ],
+                  [
+                    532,
+                    536
+                  ],
+                  [
+                    559,
+                    563
+                  ],
+                  [
+                    586,
+                    589
+                  ]
+                ],
+                "list": [
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "name",
+                        "span": [
+                          514,
+                          518
+                        ],
+                        "value": "name"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "reader": {
+                            "literal": "Name",
+                            "raw": "Name",
+                            "span": [
+                              527,
+                              531
+                            ],
+                            "value": "Name"
+                          }
+                        },
+                        "head": [
+                          519,
+                          526
+                        ],
+                        "kind": "Builtin",
+                        "span": [
+                          519,
+                          531
+                        ]
+                      }
+                    },
+                    "head": [
+                      508,
+                      513
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      508,
+                      531
+                    ]
+                  },
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "init",
+                        "span": [
+                          543,
+                          547
+                        ],
+                        "value": "init"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Expr",
+                            "span": [
+                              554,
+                              558
+                            ],
+                            "value": "Expr"
+                          }
+                        },
+                        "head": [
+                          548,
+                          553
+                        ],
+                        "kind": "Local",
+                        "span": [
+                          548,
+                          558
+                        ]
+                      }
+                    },
+                    "head": [
+                      537,
+                      542
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      537,
+                      558
+                    ]
+                  },
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "body",
+                        "span": [
+                          570,
+                          574
+                        ],
+                        "value": "body"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Expr",
+                            "span": [
+                              581,
+                              585
+                            ],
+                            "value": "Expr"
+                          }
+                        },
+                        "head": [
+                          575,
+                          580
+                        ],
+                        "kind": "Local",
+                        "span": [
+                          575,
+                          585
+                        ]
+                      }
+                    },
+                    "head": [
+                      564,
+                      569
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      564,
+                      585
+                    ]
+                  }
+                ],
+                "span": [
+                  503,
+                  589
+                ]
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "Let",
+                "span": [
+                  484,
+                  487
+                ],
+                "value": "Let"
+              },
+              "spelling": {
+                "literal": "Text",
+                "raw": "\"let\"",
+                "span": [
+                  493,
+                  498
+                ],
+                "value": "let"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    672,
+                    675
+                  ]
+                ],
+                "list": [],
+                "span": [
+                  672,
+                  675
+                ]
+              }
+            },
+            "head": [
+              479,
+              483
+            ],
+            "kind": "Form",
+            "span": [
+              479,
+              675
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "bindings": {
+                "category": "Grammar/Binding",
+                "fields": {
+                  "plans": {
+                    "heads": [
+                      [
+                        788,
+                        792
+                      ],
+                      [
+                        814,
+                        818
+                      ],
+                      [
+                        830,
+                        833
+                      ]
+                    ],
+                    "list": [
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "field": {
+                            "literal": "Name",
+                            "raw": "parameter",
+                            "span": [
+                              804,
+                              813
+                            ],
+                            "value": "parameter"
+                          },
+                          "namespace": {
+                            "literal": "Name",
+                            "raw": "Value",
+                            "span": [
+                              798,
+                              803
+                            ],
+                            "value": "Value"
+                          }
+                        },
+                        "head": [
+                          793,
+                          797
+                        ],
+                        "kind": "Bind",
+                        "span": [
+                          793,
+                          813
+                        ]
+                      },
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "child": {
+                            "literal": "Name",
+                            "raw": "body",
+                            "span": [
+                              825,
+                              829
+                            ],
+                            "value": "body"
+                          }
+                        },
+                        "head": [
+                          819,
+                          824
+                        ],
+                        "kind": "Visit",
+                        "span": [
+                          819,
+                          829
+                        ]
+                      }
+                    ],
+                    "span": [
+                      788,
+                      833
+                    ]
+                  }
+                },
+                "head": [
+                  782,
+                  787
+                ],
+                "kind": "Scope",
+                "span": [
+                  782,
+                  833
+                ]
+              },
+              "category": {
+                "literal": "Name",
+                "raw": "Expr",
+                "span": [
+                  695,
+                  699
+                ],
+                "value": "Expr"
+              },
+              "fields": {
+                "heads": [
+                  [
+                    713,
+                    717
+                  ],
+                  [
+                    747,
+                    751
+                  ],
+                  [
+                    774,
+                    777
+                  ]
+                ],
+                "list": [
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "parameter",
+                        "span": [
+                          724,
+                          733
+                        ],
+                        "value": "parameter"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "reader": {
+                            "literal": "Name",
+                            "raw": "Name",
+                            "span": [
+                              742,
+                              746
+                            ],
+                            "value": "Name"
+                          }
+                        },
+                        "head": [
+                          734,
+                          741
+                        ],
+                        "kind": "Builtin",
+                        "span": [
+                          734,
+                          746
+                        ]
+                      }
+                    },
+                    "head": [
+                      718,
+                      723
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      718,
+                      746
+                    ]
+                  },
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "body",
+                        "span": [
+                          758,
+                          762
+                        ],
+                        "value": "body"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Expr",
+                            "span": [
+                              769,
+                              773
+                            ],
+                            "value": "Expr"
+                          }
+                        },
+                        "head": [
+                          763,
+                          768
+                        ],
+                        "kind": "Local",
+                        "span": [
+                          763,
+                          773
+                        ]
+                      }
+                    },
+                    "head": [
+                      752,
+                      757
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      752,
+                      773
+                    ]
+                  }
+                ],
+                "span": [
+                  713,
+                  777
+                ]
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "Lambda",
+                "span": [
+                  688,
+                  694
+                ],
+                "value": "Lambda"
+              },
+              "spelling": {
+                "literal": "Text",
+                "raw": "\"lambda\"",
+                "span": [
+                  700,
+                  708
+                ],
+                "value": "lambda"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    834,
+                    837
+                  ]
+                ],
+                "list": [],
+                "span": [
+                  834,
+                  837
+                ]
+              }
+            },
+            "head": [
+              683,
+              687
+            ],
+            "kind": "Form",
+            "span": [
+              683,
+              837
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "bindings": {
+                "category": "Grammar/Binding",
+                "fields": {
+                  "plans": {
+                    "heads": [
+                      [
+                        949,
+                        953
+                      ],
+                      [
+                        969,
+                        973
+                      ],
+                      [
+                        989,
+                        992
+                      ]
+                    ],
+                    "list": [
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "child": {
+                            "literal": "Name",
+                            "raw": "function",
+                            "span": [
+                              960,
+                              968
+                            ],
+                            "value": "function"
+                          }
+                        },
+                        "head": [
+                          954,
+                          959
+                        ],
+                        "kind": "Visit",
+                        "span": [
+                          954,
+                          968
+                        ]
+                      },
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "child": {
+                            "literal": "Name",
+                            "raw": "argument",
+                            "span": [
+                              980,
+                              988
+                            ],
+                            "value": "argument"
+                          }
+                        },
+                        "head": [
+                          974,
+                          979
+                        ],
+                        "kind": "Visit",
+                        "span": [
+                          974,
+                          988
+                        ]
+                      }
+                    ],
+                    "span": [
+                      949,
+                      992
+                    ]
+                  }
+                },
+                "head": [
+                  943,
+                  948
+                ],
+                "kind": "Group",
+                "span": [
+                  943,
+                  992
+                ]
+              },
+              "category": {
+                "literal": "Name",
+                "raw": "Expr",
+                "span": [
+                  856,
+                  860
+                ],
+                "value": "Expr"
+              },
+              "fields": {
+                "heads": [
+                  [
+                    873,
+                    877
+                  ],
+                  [
+                    904,
+                    908
+                  ],
+                  [
+                    935,
+                    938
+                  ]
+                ],
+                "list": [
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "function",
+                        "span": [
+                          884,
+                          892
+                        ],
+                        "value": "function"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Expr",
+                            "span": [
+                              899,
+                              903
+                            ],
+                            "value": "Expr"
+                          }
+                        },
+                        "head": [
+                          893,
+                          898
+                        ],
+                        "kind": "Local",
+                        "span": [
+                          893,
+                          903
+                        ]
+                      }
+                    },
+                    "head": [
+                      878,
+                      883
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      878,
+                      903
+                    ]
+                  },
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "argument",
+                        "span": [
+                          915,
+                          923
+                        ],
+                        "value": "argument"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Expr",
+                            "span": [
+                              930,
+                              934
+                            ],
+                            "value": "Expr"
+                          }
+                        },
+                        "head": [
+                          924,
+                          929
+                        ],
+                        "kind": "Local",
+                        "span": [
+                          924,
+                          934
+                        ]
+                      }
+                    },
+                    "head": [
+                      909,
+                      914
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      909,
+                      934
+                    ]
+                  }
+                ],
+                "span": [
+                  873,
+                  938
+                ]
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "Apply",
+                "span": [
+                  850,
+                  855
+                ],
+                "value": "Apply"
+              },
+              "spelling": {
+                "literal": "Text",
+                "raw": "\"apply\"",
+                "span": [
+                  861,
+                  868
+                ],
+                "value": "apply"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    993,
+                    996
+                  ]
+                ],
+                "list": [],
+                "span": [
+                  993,
+                  996
+                ]
+              }
+            },
+            "head": [
+              845,
+              849
+            ],
+            "kind": "Form",
+            "span": [
+              845,
+              996
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "bindings": {
+                "category": "Grammar/Binding",
+                "fields": {
+                  "plans": {
+                    "heads": [
+                      [
+                        1104,
+                        1108
+                      ],
+                      [
+                        1127,
+                        1131
+                      ],
+                      [
+                        1143,
+                        1146
+                      ]
+                    ],
+                    "list": [
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "field": {
+                            "literal": "Name",
+                            "raw": "name",
+                            "span": [
+                              1122,
+                              1126
+                            ],
+                            "value": "name"
+                          },
+                          "namespace": {
+                            "literal": "Name",
+                            "raw": "Value",
+                            "span": [
+                              1116,
+                              1121
+                            ],
+                            "value": "Value"
+                          }
+                        },
+                        "head": [
+                          1109,
+                          1115
+                        ],
+                        "kind": "Export",
+                        "span": [
+                          1109,
+                          1126
+                        ]
+                      },
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "child": {
+                            "literal": "Name",
+                            "raw": "init",
+                            "span": [
+                              1138,
+                              1142
+                            ],
+                            "value": "init"
+                          }
+                        },
+                        "head": [
+                          1132,
+                          1137
+                        ],
+                        "kind": "Visit",
+                        "span": [
+                          1132,
+                          1142
+                        ]
+                      }
+                    ],
+                    "span": [
+                      1104,
+                      1146
+                    ]
+                  }
+                },
+                "head": [
+                  1098,
+                  1103
+                ],
+                "kind": "Group",
+                "span": [
+                  1098,
+                  1146
+                ]
+              },
+              "category": {
+                "literal": "Name",
+                "raw": "Decl",
+                "span": [
+                  1016,
+                  1020
+                ],
+                "value": "Decl"
+              },
+              "fields": {
+                "heads": [
+                  [
+                    1034,
+                    1038
+                  ],
+                  [
+                    1063,
+                    1067
+                  ],
+                  [
+                    1090,
+                    1093
+                  ]
+                ],
+                "list": [
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "name",
+                        "span": [
+                          1045,
+                          1049
+                        ],
+                        "value": "name"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "reader": {
+                            "literal": "Name",
+                            "raw": "Name",
+                            "span": [
+                              1058,
+                              1062
+                            ],
+                            "value": "Name"
+                          }
+                        },
+                        "head": [
+                          1050,
+                          1057
+                        ],
+                        "kind": "Builtin",
+                        "span": [
+                          1050,
+                          1062
+                        ]
+                      }
+                    },
+                    "head": [
+                      1039,
+                      1044
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      1039,
+                      1062
+                    ]
+                  },
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "init",
+                        "span": [
+                          1074,
+                          1078
+                        ],
+                        "value": "init"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Expr",
+                            "span": [
+                              1085,
+                              1089
+                            ],
+                            "value": "Expr"
+                          }
+                        },
+                        "head": [
+                          1079,
+                          1084
+                        ],
+                        "kind": "Local",
+                        "span": [
+                          1079,
+                          1089
+                        ]
+                      }
+                    },
+                    "head": [
+                      1068,
+                      1073
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      1068,
+                      1089
+                    ]
+                  }
+                ],
+                "span": [
+                  1034,
+                  1093
+                ]
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "Define",
+                "span": [
+                  1009,
+                  1015
+                ],
+                "value": "Define"
+              },
+              "spelling": {
+                "literal": "Text",
+                "raw": "\"define\"",
+                "span": [
+                  1021,
+                  1029
+                ],
+                "value": "define"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    1147,
+                    1150
+                  ]
+                ],
+                "list": [],
+                "span": [
+                  1147,
+                  1150
+                ]
+              }
+            },
+            "head": [
+              1004,
+              1008
+            ],
+            "kind": "Form",
+            "span": [
+              1004,
+              1150
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "bindings": {
+                "category": "Grammar/Binding",
+                "fields": {
+                  "child": {
+                    "literal": "Name",
+                    "raw": "declaration",
+                    "span": [
+                      1238,
+                      1249
+                    ],
+                    "value": "declaration"
+                  }
+                },
+                "head": [
+                  1228,
+                  1237
+                ],
+                "kind": "Propagate",
+                "span": [
+                  1228,
+                  1249
+                ]
+              },
+              "category": {
+                "literal": "Name",
+                "raw": "Decl",
+                "span": [
+                  1171,
+                  1175
+                ],
+                "value": "Decl"
+              },
+              "fields": {
+                "heads": [
+                  [
+                    1190,
+                    1194
+                  ],
+                  [
+                    1224,
+                    1227
+                  ]
+                ],
+                "list": [
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "declaration",
+                        "span": [
+                          1201,
+                          1212
+                        ],
+                        "value": "declaration"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Decl",
+                            "span": [
+                              1219,
+                              1223
+                            ],
+                            "value": "Decl"
+                          }
+                        },
+                        "head": [
+                          1213,
+                          1218
+                        ],
+                        "kind": "Local",
+                        "span": [
+                          1213,
+                          1223
+                        ]
+                      }
+                    },
+                    "head": [
+                      1195,
+                      1200
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      1195,
+                      1223
+                    ]
+                  }
+                ],
+                "span": [
+                  1190,
+                  1227
+                ]
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "Wrapped",
+                "span": [
+                  1163,
+                  1170
+                ],
+                "value": "Wrapped"
+              },
+              "spelling": {
+                "literal": "Text",
+                "raw": "\"wrapped\"",
+                "span": [
+                  1176,
+                  1185
+                ],
+                "value": "wrapped"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    1250,
+                    1253
+                  ]
+                ],
+                "list": [],
+                "span": [
+                  1250,
+                  1253
+                ]
+              }
+            },
+            "head": [
+              1158,
+              1162
+            ],
+            "kind": "Form",
+            "span": [
+              1158,
+              1253
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "bindings": {
+                "category": "Grammar/Binding",
+                "fields": {
+                  "body": {
+                    "literal": "Name",
+                    "raw": "body",
+                    "span": [
+                      1398,
+                      1402
+                    ],
+                    "value": "body"
+                  },
+                  "declarations": {
+                    "literal": "Name",
+                    "raw": "declarations",
+                    "span": [
+                      1385,
+                      1397
+                    ],
+                    "value": "declarations"
+                  }
+                },
+                "head": [
+                  1374,
+                  1384
+                ],
+                "kind": "Sequential",
+                "span": [
+                  1374,
+                  1402
+                ]
+              },
+              "category": {
+                "literal": "Name",
+                "raw": "Expr",
+                "span": [
+                  1277,
+                  1281
+                ],
+                "value": "Expr"
+              },
+              "fields": {
+                "heads": [
+                  [
+                    1297,
+                    1301
+                  ],
+                  [
+                    1339,
+                    1343
+                  ],
+                  [
+                    1366,
+                    1369
+                  ]
+                ],
+                "list": [
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "declarations",
+                        "span": [
+                          1308,
+                          1320
+                        ],
+                        "value": "declarations"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "element": {
+                            "category": "Grammar/ReadSpec",
+                            "fields": {
+                              "category": {
+                                "literal": "Name",
+                                "raw": "Decl",
+                                "span": [
+                                  1334,
+                                  1338
+                                ],
+                                "value": "Decl"
+                              }
+                            },
+                            "head": [
+                              1328,
+                              1333
+                            ],
+                            "kind": "Local",
+                            "span": [
+                              1328,
+                              1338
+                            ]
+                          }
+                        },
+                        "head": [
+                          1321,
+                          1327
+                        ],
+                        "kind": "ListOf",
+                        "span": [
+                          1321,
+                          1338
+                        ]
+                      }
+                    },
+                    "head": [
+                      1302,
+                      1307
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      1302,
+                      1338
+                    ]
+                  },
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "body",
+                        "span": [
+                          1350,
+                          1354
+                        ],
+                        "value": "body"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Expr",
+                            "span": [
+                              1361,
+                              1365
+                            ],
+                            "value": "Expr"
+                          }
+                        },
+                        "head": [
+                          1355,
+                          1360
+                        ],
+                        "kind": "Local",
+                        "span": [
+                          1355,
+                          1365
+                        ]
+                      }
+                    },
+                    "head": [
+                      1344,
+                      1349
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      1344,
+                      1365
+                    ]
+                  }
+                ],
+                "span": [
+                  1297,
+                  1369
+                ]
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "Sequential",
+                "span": [
+                  1266,
+                  1276
+                ],
+                "value": "Sequential"
+              },
+              "spelling": {
+                "literal": "Text",
+                "raw": "\"sequence\"",
+                "span": [
+                  1282,
+                  1292
+                ],
+                "value": "sequence"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    1403,
+                    1406
+                  ]
+                ],
+                "list": [],
+                "span": [
+                  1403,
+                  1406
+                ]
+              }
+            },
+            "head": [
+              1261,
+              1265
+            ],
+            "kind": "Form",
+            "span": [
+              1261,
+              1406
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "bindings": {
+                "category": "Grammar/Binding",
+                "fields": {
+                  "body": {
+                    "literal": "Name",
+                    "raw": "body",
+                    "span": [
+                      1550,
+                      1554
+                    ],
+                    "value": "body"
+                  },
+                  "declarations": {
+                    "literal": "Name",
+                    "raw": "declarations",
+                    "span": [
+                      1537,
+                      1549
+                    ],
+                    "value": "declarations"
+                  }
+                },
+                "head": [
+                  1527,
+                  1536
+                ],
+                "kind": "Recursive",
+                "span": [
+                  1527,
+                  1554
+                ]
+              },
+              "category": {
+                "literal": "Name",
+                "raw": "Expr",
+                "span": [
+                  1429,
+                  1433
+                ],
+                "value": "Expr"
+              },
+              "fields": {
+                "heads": [
+                  [
+                    1450,
+                    1454
+                  ],
+                  [
+                    1492,
+                    1496
+                  ],
+                  [
+                    1519,
+                    1522
+                  ]
+                ],
+                "list": [
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "declarations",
+                        "span": [
+                          1461,
+                          1473
+                        ],
+                        "value": "declarations"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "element": {
+                            "category": "Grammar/ReadSpec",
+                            "fields": {
+                              "category": {
+                                "literal": "Name",
+                                "raw": "Decl",
+                                "span": [
+                                  1487,
+                                  1491
+                                ],
+                                "value": "Decl"
+                              }
+                            },
+                            "head": [
+                              1481,
+                              1486
+                            ],
+                            "kind": "Local",
+                            "span": [
+                              1481,
+                              1491
+                            ]
+                          }
+                        },
+                        "head": [
+                          1474,
+                          1480
+                        ],
+                        "kind": "ListOf",
+                        "span": [
+                          1474,
+                          1491
+                        ]
+                      }
+                    },
+                    "head": [
+                      1455,
+                      1460
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      1455,
+                      1491
+                    ]
+                  },
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "body",
+                        "span": [
+                          1503,
+                          1507
+                        ],
+                        "value": "body"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Expr",
+                            "span": [
+                              1514,
+                              1518
+                            ],
+                            "value": "Expr"
+                          }
+                        },
+                        "head": [
+                          1508,
+                          1513
+                        ],
+                        "kind": "Local",
+                        "span": [
+                          1508,
+                          1518
+                        ]
+                      }
+                    },
+                    "head": [
+                      1497,
+                      1502
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      1497,
+                      1518
+                    ]
+                  }
+                ],
+                "span": [
+                  1450,
+                  1522
+                ]
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "Recursive",
+                "span": [
+                  1419,
+                  1428
+                ],
+                "value": "Recursive"
+              },
+              "spelling": {
+                "literal": "Text",
+                "raw": "\"recursive\"",
+                "span": [
+                  1434,
+                  1445
+                ],
+                "value": "recursive"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    1555,
+                    1558
+                  ]
+                ],
+                "list": [],
+                "span": [
+                  1555,
+                  1558
+                ]
+              }
+            },
+            "head": [
+              1414,
+              1418
+            ],
+            "kind": "Form",
+            "span": [
+              1414,
+              1558
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "bindings": {
+                "category": "Grammar/Binding",
+                "fields": {
+                  "plans": {
+                    "heads": [
+                      [
+                        1675,
+                        1679
+                      ],
+                      [
+                        1699,
+                        1703
+                      ],
+                      [
+                        1715,
+                        1718
+                      ]
+                    ],
+                    "list": [
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "child": {
+                            "literal": "Name",
+                            "raw": "declaration",
+                            "span": [
+                              1687,
+                              1698
+                            ],
+                            "value": "declaration"
+                          }
+                        },
+                        "head": [
+                          1680,
+                          1686
+                        ],
+                        "kind": "Import",
+                        "span": [
+                          1680,
+                          1698
+                        ]
+                      },
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "child": {
+                            "literal": "Name",
+                            "raw": "body",
+                            "span": [
+                              1710,
+                              1714
+                            ],
+                            "value": "body"
+                          }
+                        },
+                        "head": [
+                          1704,
+                          1709
+                        ],
+                        "kind": "Visit",
+                        "span": [
+                          1704,
+                          1714
+                        ]
+                      }
+                    ],
+                    "span": [
+                      1675,
+                      1718
+                    ]
+                  }
+                },
+                "head": [
+                  1669,
+                  1674
+                ],
+                "kind": "Group",
+                "span": [
+                  1669,
+                  1718
+                ]
+              },
+              "category": {
+                "literal": "Name",
+                "raw": "Expr",
+                "span": [
+                  1580,
+                  1584
+                ],
+                "value": "Expr"
+              },
+              "fields": {
+                "heads": [
+                  [
+                    1600,
+                    1604
+                  ],
+                  [
+                    1634,
+                    1638
+                  ],
+                  [
+                    1661,
+                    1664
+                  ]
+                ],
+                "list": [
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "declaration",
+                        "span": [
+                          1611,
+                          1622
+                        ],
+                        "value": "declaration"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Decl",
+                            "span": [
+                              1629,
+                              1633
+                            ],
+                            "value": "Decl"
+                          }
+                        },
+                        "head": [
+                          1623,
+                          1628
+                        ],
+                        "kind": "Local",
+                        "span": [
+                          1623,
+                          1633
+                        ]
+                      }
+                    },
+                    "head": [
+                      1605,
+                      1610
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      1605,
+                      1633
+                    ]
+                  },
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "body",
+                        "span": [
+                          1645,
+                          1649
+                        ],
+                        "value": "body"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Expr",
+                            "span": [
+                              1656,
+                              1660
+                            ],
+                            "value": "Expr"
+                          }
+                        },
+                        "head": [
+                          1650,
+                          1655
+                        ],
+                        "kind": "Local",
+                        "span": [
+                          1650,
+                          1660
+                        ]
+                      }
+                    },
+                    "head": [
+                      1639,
+                      1644
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      1639,
+                      1660
+                    ]
+                  }
+                ],
+                "span": [
+                  1600,
+                  1664
+                ]
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "Imported",
+                "span": [
+                  1571,
+                  1579
+                ],
+                "value": "Imported"
+              },
+              "spelling": {
+                "literal": "Text",
+                "raw": "\"imported\"",
+                "span": [
+                  1585,
+                  1595
+                ],
+                "value": "imported"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    1719,
+                    1722
+                  ]
+                ],
+                "list": [],
+                "span": [
+                  1719,
+                  1722
+                ]
+              }
+            },
+            "head": [
+              1566,
+              1570
+            ],
+            "kind": "Form",
+            "span": [
+              1566,
+              1722
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "bindings": {
+                "category": "Grammar/Binding",
+                "fields": {
+                  "child": {
+                    "literal": "Name",
+                    "raw": "declaration",
+                    "span": [
+                      1812,
+                      1823
+                    ],
+                    "value": "declaration"
+                  }
+                },
+                "head": [
+                  1806,
+                  1811
+                ],
+                "kind": "Visit",
+                "span": [
+                  1806,
+                  1823
+                ]
+              },
+              "category": {
+                "literal": "Name",
+                "raw": "Expr",
+                "span": [
+                  1746,
+                  1750
+                ],
+                "value": "Expr"
+              },
+              "fields": {
+                "heads": [
+                  [
+                    1768,
+                    1772
+                  ],
+                  [
+                    1802,
+                    1805
+                  ]
+                ],
+                "list": [
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "declaration",
+                        "span": [
+                          1779,
+                          1790
+                        ],
+                        "value": "declaration"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Decl",
+                            "span": [
+                              1797,
+                              1801
+                            ],
+                            "value": "Decl"
+                          }
+                        },
+                        "head": [
+                          1791,
+                          1796
+                        ],
+                        "kind": "Local",
+                        "span": [
+                          1791,
+                          1801
+                        ]
+                      }
+                    },
+                    "head": [
+                      1773,
+                      1778
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      1773,
+                      1801
+                    ]
+                  }
+                ],
+                "span": [
+                  1768,
+                  1805
+                ]
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "Unimported",
+                "span": [
+                  1735,
+                  1745
+                ],
+                "value": "Unimported"
+              },
+              "spelling": {
+                "literal": "Text",
+                "raw": "\"unimported\"",
+                "span": [
+                  1751,
+                  1763
+                ],
+                "value": "unimported"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    1824,
+                    1827
+                  ]
+                ],
+                "list": [],
+                "span": [
+                  1824,
+                  1827
+                ]
+              }
+            },
+            "head": [
+              1730,
+              1734
+            ],
+            "kind": "Form",
+            "span": [
+              1730,
+              1827
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "bindings": {
+                "category": "Grammar/Binding",
+                "fields": {
+                  "plans": {
+                    "heads": [
+                      [
+                        1937,
+                        1941
+                      ],
+                      [
+                        1958,
+                        1962
+                      ],
+                      [
+                        1974,
+                        1977
+                      ]
+                    ],
+                    "list": [
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "field": {
+                            "literal": "Name",
+                            "raw": "name",
+                            "span": [
+                              1953,
+                              1957
+                            ],
+                            "value": "name"
+                          },
+                          "namespace": {
+                            "literal": "Name",
+                            "raw": "Value",
+                            "span": [
+                              1947,
+                              1952
+                            ],
+                            "value": "Value"
+                          }
+                        },
+                        "head": [
+                          1942,
+                          1946
+                        ],
+                        "kind": "Bind",
+                        "span": [
+                          1942,
+                          1957
+                        ]
+                      },
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "child": {
+                            "literal": "Name",
+                            "raw": "body",
+                            "span": [
+                              1969,
+                              1973
+                            ],
+                            "value": "body"
+                          }
+                        },
+                        "head": [
+                          1963,
+                          1968
+                        ],
+                        "kind": "Visit",
+                        "span": [
+                          1963,
+                          1973
+                        ]
+                      }
+                    ],
+                    "span": [
+                      1937,
+                      1977
+                    ]
+                  }
+                },
+                "head": [
+                  1931,
+                  1936
+                ],
+                "kind": "Scope",
+                "span": [
+                  1931,
+                  1977
+                ]
+              },
+              "category": {
+                "literal": "Name",
+                "raw": "Expr",
+                "span": [
+                  1848,
+                  1852
+                ],
+                "value": "Expr"
+              },
+              "fields": {
+                "heads": [
+                  [
+                    1867,
+                    1871
+                  ],
+                  [
+                    1896,
+                    1900
+                  ],
+                  [
+                    1923,
+                    1926
+                  ]
+                ],
+                "list": [
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "name",
+                        "span": [
+                          1878,
+                          1882
+                        ],
+                        "value": "name"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "reader": {
+                            "literal": "Name",
+                            "raw": "Text",
+                            "span": [
+                              1891,
+                              1895
+                            ],
+                            "value": "Text"
+                          }
+                        },
+                        "head": [
+                          1883,
+                          1890
+                        ],
+                        "kind": "Builtin",
+                        "span": [
+                          1883,
+                          1895
+                        ]
+                      }
+                    },
+                    "head": [
+                      1872,
+                      1877
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      1872,
+                      1895
+                    ]
+                  },
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "body",
+                        "span": [
+                          1907,
+                          1911
+                        ],
+                        "value": "body"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Expr",
+                            "span": [
+                              1918,
+                              1922
+                            ],
+                            "value": "Expr"
+                          }
+                        },
+                        "head": [
+                          1912,
+                          1917
+                        ],
+                        "kind": "Local",
+                        "span": [
+                          1912,
+                          1922
+                        ]
+                      }
+                    },
+                    "head": [
+                      1901,
+                      1906
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      1901,
+                      1922
+                    ]
+                  }
+                ],
+                "span": [
+                  1867,
+                  1926
+                ]
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "LetText",
+                "span": [
+                  1840,
+                  1847
+                ],
+                "value": "LetText"
+              },
+              "spelling": {
+                "literal": "Text",
+                "raw": "\"lettext\"",
+                "span": [
+                  1853,
+                  1862
+                ],
+                "value": "lettext"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    1978,
+                    1981
+                  ]
+                ],
+                "list": [],
+                "span": [
+                  1978,
+                  1981
+                ]
+              }
+            },
+            "head": [
+              1835,
+              1839
+            ],
+            "kind": "Form",
+            "span": [
+              1835,
+              1981
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "bindings": {
+                "category": "Grammar/Binding",
+                "fields": {
+                  "child": {
+                    "literal": "Name",
+                    "raw": "value",
+                    "span": [
+                      2059,
+                      2064
+                    ],
+                    "value": "value"
+                  }
+                },
+                "head": [
+                  2053,
+                  2058
+                ],
+                "kind": "Visit",
+                "span": [
+                  2053,
+                  2064
+                ]
+              },
+              "category": {
+                "literal": "Name",
+                "raw": "Expr",
+                "span": [
+                  2000,
+                  2004
+                ],
+                "value": "Expr"
+              },
+              "fields": {
+                "heads": [
+                  [
+                    2017,
+                    2021
+                  ],
+                  [
+                    2049,
+                    2052
+                  ]
+                ],
+                "list": [
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "value",
+                        "span": [
+                          2028,
+                          2033
+                        ],
+                        "value": "value"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "alias": {
+                            "literal": "Name",
+                            "raw": "B",
+                            "span": [
+                              2042,
+                              2043
+                            ],
+                            "value": "B"
+                          },
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Expr",
+                            "span": [
+                              2044,
+                              2048
+                            ],
+                            "value": "Expr"
+                          }
+                        },
+                        "head": [
+                          2034,
+                          2041
+                        ],
+                        "kind": "Foreign",
+                        "span": [
+                          2034,
+                          2048
+                        ]
+                      }
+                    },
+                    "head": [
+                      2022,
+                      2027
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      2022,
+                      2048
+                    ]
+                  }
+                ],
+                "span": [
+                  2017,
+                  2052
+                ]
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "Guest",
+                "span": [
+                  1994,
+                  1999
+                ],
+                "value": "Guest"
+              },
+              "spelling": {
+                "literal": "Text",
+                "raw": "\"guest\"",
+                "span": [
+                  2005,
+                  2012
+                ],
+                "value": "guest"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    2065,
+                    2068
+                  ]
+                ],
+                "list": [],
+                "span": [
+                  2065,
+                  2068
+                ]
+              }
+            },
+            "head": [
+              1989,
+              1993
+            ],
+            "kind": "Form",
+            "span": [
+              1989,
+              2068
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "bindings": {
+                "category": "Grammar/Binding",
+                "fields": {
+                  "plans": {
+                    "heads": [
+                      [
+                        2204,
+                        2208
+                      ],
+                      [
+                        2222,
+                        2226
+                      ],
+                      [
+                        2243,
+                        2247
+                      ],
+                      [
+                        2260,
+                        2263
+                      ]
+                    ],
+                    "list": [
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "child": {
+                            "literal": "Name",
+                            "raw": "before",
+                            "span": [
+                              2215,
+                              2221
+                            ],
+                            "value": "before"
+                          }
+                        },
+                        "head": [
+                          2209,
+                          2214
+                        ],
+                        "kind": "Visit",
+                        "span": [
+                          2209,
+                          2221
+                        ]
+                      },
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "field": {
+                            "literal": "Name",
+                            "raw": "name",
+                            "span": [
+                              2238,
+                              2242
+                            ],
+                            "value": "name"
+                          },
+                          "namespace": {
+                            "literal": "Name",
+                            "raw": "Value",
+                            "span": [
+                              2232,
+                              2237
+                            ],
+                            "value": "Value"
+                          }
+                        },
+                        "head": [
+                          2227,
+                          2231
+                        ],
+                        "kind": "Bind",
+                        "span": [
+                          2227,
+                          2242
+                        ]
+                      },
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "child": {
+                            "literal": "Name",
+                            "raw": "after",
+                            "span": [
+                              2254,
+                              2259
+                            ],
+                            "value": "after"
+                          }
+                        },
+                        "head": [
+                          2248,
+                          2253
+                        ],
+                        "kind": "Visit",
+                        "span": [
+                          2248,
+                          2259
+                        ]
+                      }
+                    ],
+                    "span": [
+                      2204,
+                      2263
+                    ]
+                  }
+                },
+                "head": [
+                  2198,
+                  2203
+                ],
+                "kind": "Group",
+                "span": [
+                  2198,
+                  2263
+                ]
+              },
+              "category": {
+                "literal": "Name",
+                "raw": "Expr",
+                "span": [
+                  2087,
+                  2091
+                ],
+                "value": "Expr"
+              },
+              "fields": {
+                "heads": [
+                  [
+                    2104,
+                    2108
+                  ],
+                  [
+                    2133,
+                    2137
+                  ],
+                  [
+                    2162,
+                    2166
+                  ],
+                  [
+                    2190,
+                    2193
+                  ]
+                ],
+                "list": [
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "before",
+                        "span": [
+                          2115,
+                          2121
+                        ],
+                        "value": "before"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Expr",
+                            "span": [
+                              2128,
+                              2132
+                            ],
+                            "value": "Expr"
+                          }
+                        },
+                        "head": [
+                          2122,
+                          2127
+                        ],
+                        "kind": "Local",
+                        "span": [
+                          2122,
+                          2132
+                        ]
+                      }
+                    },
+                    "head": [
+                      2109,
+                      2114
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      2109,
+                      2132
+                    ]
+                  },
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "name",
+                        "span": [
+                          2144,
+                          2148
+                        ],
+                        "value": "name"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "reader": {
+                            "literal": "Name",
+                            "raw": "Name",
+                            "span": [
+                              2157,
+                              2161
+                            ],
+                            "value": "Name"
+                          }
+                        },
+                        "head": [
+                          2149,
+                          2156
+                        ],
+                        "kind": "Builtin",
+                        "span": [
+                          2149,
+                          2161
+                        ]
+                      }
+                    },
+                    "head": [
+                      2138,
+                      2143
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      2138,
+                      2161
+                    ]
+                  },
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "after",
+                        "span": [
+                          2173,
+                          2178
+                        ],
+                        "value": "after"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Expr",
+                            "span": [
+                              2185,
+                              2189
+                            ],
+                            "value": "Expr"
+                          }
+                        },
+                        "head": [
+                          2179,
+                          2184
+                        ],
+                        "kind": "Local",
+                        "span": [
+                          2179,
+                          2189
+                        ]
+                      }
+                    },
+                    "head": [
+                      2167,
+                      2172
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      2167,
+                      2189
+                    ]
+                  }
+                ],
+                "span": [
+                  2104,
+                  2193
+                ]
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "Early",
+                "span": [
+                  2081,
+                  2086
+                ],
+                "value": "Early"
+              },
+              "spelling": {
+                "literal": "Text",
+                "raw": "\"early\"",
+                "span": [
+                  2092,
+                  2099
+                ],
+                "value": "early"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    2264,
+                    2267
+                  ]
+                ],
+                "list": [],
+                "span": [
+                  2264,
+                  2267
+                ]
+              }
+            },
+            "head": [
+              2076,
+              2080
+            ],
+            "kind": "Form",
+            "span": [
+              2076,
+              2267
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "bindings": {
+                "category": "Grammar/Binding",
+                "fields": {
+                  "plans": {
+                    "heads": [
+                      [
+                        2405,
+                        2409
+                      ],
+                      [
+                        2427,
+                        2431
+                      ],
+                      [
+                        2450,
+                        2454
+                      ],
+                      [
+                        2466,
+                        2469
+                      ]
+                    ],
+                    "list": [
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "field": {
+                            "literal": "Name",
+                            "raw": "first",
+                            "span": [
+                              2421,
+                              2426
+                            ],
+                            "value": "first"
+                          },
+                          "namespace": {
+                            "literal": "Name",
+                            "raw": "Value",
+                            "span": [
+                              2415,
+                              2420
+                            ],
+                            "value": "Value"
+                          }
+                        },
+                        "head": [
+                          2410,
+                          2414
+                        ],
+                        "kind": "Bind",
+                        "span": [
+                          2410,
+                          2426
+                        ]
+                      },
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "field": {
+                            "literal": "Name",
+                            "raw": "second",
+                            "span": [
+                              2443,
+                              2449
+                            ],
+                            "value": "second"
+                          },
+                          "namespace": {
+                            "literal": "Name",
+                            "raw": "Value",
+                            "span": [
+                              2437,
+                              2442
+                            ],
+                            "value": "Value"
+                          }
+                        },
+                        "head": [
+                          2432,
+                          2436
+                        ],
+                        "kind": "Bind",
+                        "span": [
+                          2432,
+                          2449
+                        ]
+                      },
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "child": {
+                            "literal": "Name",
+                            "raw": "body",
+                            "span": [
+                              2461,
+                              2465
+                            ],
+                            "value": "body"
+                          }
+                        },
+                        "head": [
+                          2455,
+                          2460
+                        ],
+                        "kind": "Visit",
+                        "span": [
+                          2455,
+                          2465
+                        ]
+                      }
+                    ],
+                    "span": [
+                      2405,
+                      2469
+                    ]
+                  }
+                },
+                "head": [
+                  2399,
+                  2404
+                ],
+                "kind": "Group",
+                "span": [
+                  2399,
+                  2469
+                ]
+              },
+              "category": {
+                "literal": "Name",
+                "raw": "Expr",
+                "span": [
+                  2286,
+                  2290
+                ],
+                "value": "Expr"
+              },
+              "fields": {
+                "heads": [
+                  [
+                    2303,
+                    2307
+                  ],
+                  [
+                    2333,
+                    2337
+                  ],
+                  [
+                    2364,
+                    2368
+                  ],
+                  [
+                    2391,
+                    2394
+                  ]
+                ],
+                "list": [
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "first",
+                        "span": [
+                          2314,
+                          2319
+                        ],
+                        "value": "first"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "reader": {
+                            "literal": "Name",
+                            "raw": "Name",
+                            "span": [
+                              2328,
+                              2332
+                            ],
+                            "value": "Name"
+                          }
+                        },
+                        "head": [
+                          2320,
+                          2327
+                        ],
+                        "kind": "Builtin",
+                        "span": [
+                          2320,
+                          2332
+                        ]
+                      }
+                    },
+                    "head": [
+                      2308,
+                      2313
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      2308,
+                      2332
+                    ]
+                  },
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "second",
+                        "span": [
+                          2344,
+                          2350
+                        ],
+                        "value": "second"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "reader": {
+                            "literal": "Name",
+                            "raw": "Name",
+                            "span": [
+                              2359,
+                              2363
+                            ],
+                            "value": "Name"
+                          }
+                        },
+                        "head": [
+                          2351,
+                          2358
+                        ],
+                        "kind": "Builtin",
+                        "span": [
+                          2351,
+                          2363
+                        ]
+                      }
+                    },
+                    "head": [
+                      2338,
+                      2343
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      2338,
+                      2363
+                    ]
+                  },
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "body",
+                        "span": [
+                          2375,
+                          2379
+                        ],
+                        "value": "body"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Expr",
+                            "span": [
+                              2386,
+                              2390
+                            ],
+                            "value": "Expr"
+                          }
+                        },
+                        "head": [
+                          2380,
+                          2385
+                        ],
+                        "kind": "Local",
+                        "span": [
+                          2380,
+                          2390
+                        ]
+                      }
+                    },
+                    "head": [
+                      2369,
+                      2374
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      2369,
+                      2390
+                    ]
+                  }
+                ],
+                "span": [
+                  2303,
+                  2394
+                ]
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "Twice",
+                "span": [
+                  2280,
+                  2285
+                ],
+                "value": "Twice"
+              },
+              "spelling": {
+                "literal": "Text",
+                "raw": "\"twice\"",
+                "span": [
+                  2291,
+                  2298
+                ],
+                "value": "twice"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    2470,
+                    2473
+                  ]
+                ],
+                "list": [],
+                "span": [
+                  2470,
+                  2473
+                ]
+              }
+            },
+            "head": [
+              2275,
+              2279
+            ],
+            "kind": "Form",
+            "span": [
+              2275,
+              2473
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "bindings": {
+                "category": "Grammar/Binding",
+                "fields": {
+                  "plans": {
+                    "heads": [
+                      [
+                        2596,
+                        2600
+                      ],
+                      [
+                        2629,
+                        2633
+                      ],
+                      [
+                        2662,
+                        2665
+                      ]
+                    ],
+                    "list": [
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "body": {
+                            "literal": "Name",
+                            "raw": "body",
+                            "span": [
+                              2624,
+                              2628
+                            ],
+                            "value": "body"
+                          },
+                          "declarations": {
+                            "literal": "Name",
+                            "raw": "declarations",
+                            "span": [
+                              2611,
+                              2623
+                            ],
+                            "value": "declarations"
+                          }
+                        },
+                        "head": [
+                          2601,
+                          2610
+                        ],
+                        "kind": "Recursive",
+                        "span": [
+                          2601,
+                          2628
+                        ]
+                      },
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "body": {
+                            "literal": "Name",
+                            "raw": "body",
+                            "span": [
+                              2657,
+                              2661
+                            ],
+                            "value": "body"
+                          },
+                          "declarations": {
+                            "literal": "Name",
+                            "raw": "declarations",
+                            "span": [
+                              2644,
+                              2656
+                            ],
+                            "value": "declarations"
+                          }
+                        },
+                        "head": [
+                          2634,
+                          2643
+                        ],
+                        "kind": "Recursive",
+                        "span": [
+                          2634,
+                          2661
+                        ]
+                      }
+                    ],
+                    "span": [
+                      2596,
+                      2665
+                    ]
+                  }
+                },
+                "head": [
+                  2590,
+                  2595
+                ],
+                "kind": "Group",
+                "span": [
+                  2590,
+                  2665
+                ]
+              },
+              "category": {
+                "literal": "Name",
+                "raw": "Expr",
+                "span": [
+                  2495,
+                  2499
+                ],
+                "value": "Expr"
+              },
+              "fields": {
+                "heads": [
+                  [
+                    2513,
+                    2517
+                  ],
+                  [
+                    2555,
+                    2559
+                  ],
+                  [
+                    2582,
+                    2585
+                  ]
+                ],
+                "list": [
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "declarations",
+                        "span": [
+                          2524,
+                          2536
+                        ],
+                        "value": "declarations"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "element": {
+                            "category": "Grammar/ReadSpec",
+                            "fields": {
+                              "category": {
+                                "literal": "Name",
+                                "raw": "Decl",
+                                "span": [
+                                  2550,
+                                  2554
+                                ],
+                                "value": "Decl"
+                              }
+                            },
+                            "head": [
+                              2544,
+                              2549
+                            ],
+                            "kind": "Local",
+                            "span": [
+                              2544,
+                              2554
+                            ]
+                          }
+                        },
+                        "head": [
+                          2537,
+                          2543
+                        ],
+                        "kind": "ListOf",
+                        "span": [
+                          2537,
+                          2554
+                        ]
+                      }
+                    },
+                    "head": [
+                      2518,
+                      2523
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      2518,
+                      2554
+                    ]
+                  },
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "body",
+                        "span": [
+                          2566,
+                          2570
+                        ],
+                        "value": "body"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Expr",
+                            "span": [
+                              2577,
+                              2581
+                            ],
+                            "value": "Expr"
+                          }
+                        },
+                        "head": [
+                          2571,
+                          2576
+                        ],
+                        "kind": "Local",
+                        "span": [
+                          2571,
+                          2581
+                        ]
+                      }
+                    },
+                    "head": [
+                      2560,
+                      2565
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      2560,
+                      2581
+                    ]
+                  }
+                ],
+                "span": [
+                  2513,
+                  2585
+                ]
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "Repeated",
+                "span": [
+                  2486,
+                  2494
+                ],
+                "value": "Repeated"
+              },
+              "spelling": {
+                "literal": "Text",
+                "raw": "\"repeat\"",
+                "span": [
+                  2500,
+                  2508
+                ],
+                "value": "repeat"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    2666,
+                    2669
+                  ]
+                ],
+                "list": [],
+                "span": [
+                  2666,
+                  2669
+                ]
+              }
+            },
+            "head": [
+              2481,
+              2485
+            ],
+            "kind": "Form",
+            "span": [
+              2481,
+              2669
+            ]
+          }
+        ],
+        "span": [
+          32,
+          2675
+        ]
+      },
+      "name": {
+        "literal": "Name",
+        "raw": "BindingReview",
+        "span": [
+          9,
+          22
+        ],
+        "value": "BindingReview"
+      },
+      "revision": {
+        "literal": "Nat",
+        "raw": "1",
+        "span": [
+          23,
+          24
+        ],
+        "value": "1"
+      },
+      "root": {
+        "literal": "Name",
+        "raw": "Expr",
+        "span": [
+          25,
+          29
+        ],
+        "value": "Expr"
+      }
+    },
+    "head": [
+      0,
+      8
+    ],
+    "kind": "Language",
+    "span": [
+      0,
+      2675
+    ]
+  },
+  "schema": "nepl3.grammar-seed-input/1",
+  "source": {
+    "digest": "e02737b8f45973b8f99d014f73c191be128c5456fca9c110c5508e0e0fdbc53e",
+    "revision": 0,
+    "sourceId": "conformance/fixtures/grammar/binding/global.neplg",
+    "text": "language BindingReview 1 Expr\n  cons category Expr Code\n  cons category Decl Code\n  cons namespace Value global\n  cons reader ws some scalar whitespace\n  cons extension BuiltinWord \"nepl3.reader/name-v1\" \"reader/v1\"\n  cons reader word call \"nepl3.reader/name-v1\"\n  cons reader number some scalar digit\n  cons mode Code cons skip ws cons take Word word cons take Number number nil\n  cons leaf Number Expr Number none nil\n  cons leaf Name Expr Word reference Value self nil\n  cons form Let Expr \"let\"\n    cons field name builtin Name cons field init local Expr cons field body local Expr nil\n    group cons visit init cons scope cons bind Value name cons visit body nil nil nil\n  cons form Lambda Expr \"lambda\"\n    cons field parameter builtin Name cons field body local Expr nil\n    scope cons bind Value parameter cons visit body nil nil\n  cons form Apply Expr \"apply\"\n    cons field function local Expr cons field argument local Expr nil\n    group cons visit function cons visit argument nil nil\n  cons form Define Decl \"define\"\n    cons field name builtin Name cons field init local Expr nil\n    group cons export Value name cons visit init nil nil\n  cons form Wrapped Decl \"wrapped\"\n    cons field declaration local Decl nil propagate declaration nil\n  cons form Sequential Expr \"sequence\"\n    cons field declarations listof local Decl cons field body local Expr nil\n    sequential declarations body nil\n  cons form Recursive Expr \"recursive\"\n    cons field declarations listof local Decl cons field body local Expr nil\n    recursive declarations body nil\n  cons form Imported Expr \"imported\"\n    cons field declaration local Decl cons field body local Expr nil\n    group cons import declaration cons visit body nil nil\n  cons form Unimported Expr \"unimported\"\n    cons field declaration local Decl nil visit declaration nil\n  cons form LetText Expr \"lettext\"\n    cons field name builtin Text cons field body local Expr nil\n    scope cons bind Value name cons visit body nil nil\n  cons form Guest Expr \"guest\"\n    cons field value foreign B Expr nil visit value nil\n  cons form Early Expr \"early\"\n    cons field before local Expr cons field name builtin Name cons field after local Expr nil\n    group cons visit before cons bind Value name cons visit after nil nil\n  cons form Twice Expr \"twice\"\n    cons field first builtin Name cons field second builtin Name cons field body local Expr nil\n    group cons bind Value first cons bind Value second cons visit body nil nil\n  cons form Repeated Expr \"repeat\"\n    cons field declarations listof local Decl cons field body local Expr nil\n    group cons recursive declarations body cons recursive declarations body nil nil\n  nil\n",
+    "uri": "memory:grammar-example"
+  }
+}
