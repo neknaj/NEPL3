@@ -12,7 +12,7 @@ SourceContentはid:SourceRef、uri:Text、utf8:Textを持つ。受信時は元UT
 
 Rustのnative SourceSnapshotは、pointer atomicが使えるtargetでは本文を非公開の共有不変storageとして保持し、cloneごとに全文を複製しない。identityとURIは従来どおり値で比較する。pointer atomicを持たないalloc-only targetでは所有Stringを複製し、Send/Syncの性質を不用意に変更しない。この内部表現をwireに露出させず、NDFの受信では全文とdigestを改めて検査する。編集は新しいsnapshotを構築し、共有元を変更しない。
 
-共有storageの初回確保と編集による新規確保はAllocationUnitsへ計上し、共有storageを用いるtargetのnative cloneでは実際に複製するidentity・URIとsnapshot slotを計上する。非atomic targetでは本文の複製費用も計上する。既存continuationの構造比較がcopyの課金走査を併用するため、Workは引き続き本文長も含む保守的な上限とする。別decodeで異なるstorageに入った全文の比較費用を、共有cloneの費用削減に合わせて省略しない。SourceBytesの入場、停止理由の保持、受信境界の検査を免除する最適化ではない。
+共有storageの初回確保と編集による新規確保はAllocationUnitsへ計上し、共有storageを用いるtargetのnative cloneでは実際に複製するidentity・URIとsnapshot slotを計上する。非atomic targetでは本文の複製費用も計上する。実コピーのclone_with_budgetとCopyPurpose::Cloneは共有本文のWorkを計上しない。一方、外部continuation比較前のcharge_cloneとCopyPurpose::Compareは本文長を含む保守的な上限を維持する。二つのsnapshotを直接照合するeq_with_budgetは同じ不変storageと確認できる場合だけ本文比較を省略し、別decodeのstorageは全文比較前に課金する。source storeへの挿入は別の操作として索引比較・重複照合・成長費用を計上する。SourceBytesの入場、停止理由の保持、受信境界の検査を免除する最適化ではない。
 
 `Span = (SnapshotId, start:u64, end:u64)`。半開区間 `[start,end)`、`0 <= start <= end <= source.len`、UTF-8 scalar境界であることを構築時に検査する。挿入位置には空区間を使用できる。空区間は左/右へのaffinityを必要な操作で別に持つ。行・列・画面幅をSpanへ保存しない。
 
