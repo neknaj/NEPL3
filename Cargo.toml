@@ -20,7 +20,7 @@ nepl3-doc-core = { path = "crates/languages/doc/core" }
 nepl3-math-core = { path = "crates/languages/math/core" }
 nepl3-markup = { path = "crates/output/markup" }
 nepl3-doc-html = { path = "crates/languages/doc/html" }
-unicode-ident = { version = "=1.0.18", default-features = false }
+unicode-ident = { version = "=1.0.24", default-features = false }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 sha2 = { version = "0.11.0", default-features = false }
