@@ -1,0 +1,82 @@
+[
+  {
+    "target": "native",
+    "kind": "reader",
+    "command": [
+      "cargo",
+      "test",
+      "--offline",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-tokenizer-host\\final-reader\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target",
+      "--",
+      "--nocapture",
+      "--test-threads=1",
+      "--skip",
+      "independent::invalid_reservation_keeps_owned_retry"
+    ],
+    "exit": 0,
+    "log": "final-native-reader.log"
+  },
+  {
+    "target": "native",
+    "kind": "engine",
+    "command": [
+      "cargo",
+      "test",
+      "--offline",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-tokenizer-host\\final-engine\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target",
+      "--",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "exit": 0,
+    "log": "final-native-engine.log"
+  },
+  {
+    "target": "wasm32-wasip2",
+    "kind": "reader",
+    "command": [
+      "cargo",
+      "test",
+      "--offline",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-tokenizer-host\\final-reader\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target",
+      "--target",
+      "wasm32-wasip2",
+      "--",
+      "--nocapture",
+      "--test-threads=1",
+      "--skip",
+      "independent::invalid_reservation_keeps_owned_retry"
+    ],
+    "exit": 0,
+    "log": "final-wasm32-wasip2-reader.log"
+  },
+  {
+    "target": "wasm32-wasip2",
+    "kind": "engine",
+    "command": [
+      "cargo",
+      "test",
+      "--offline",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-tokenizer-host\\final-engine\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target",
+      "--target",
+      "wasm32-wasip2",
+      "--",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "exit": 0,
+    "log": "final-wasm32-wasip2-engine.log"
+  }
+]

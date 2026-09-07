@@ -1,0 +1,398 @@
+{
+  "production_commit": "4c9080cfb6606de12d1dd1b765e768ec02db8d0c",
+  "documentation_commit": "abbc9ef34d9a7964cb276b32627bddc58cc2c152",
+  "source_directory": "final-source-exact",
+  "verified_source_files": 890,
+  "before_snapshot": "snapshot.json",
+  "accepted_runs": [
+    "final-runs.json",
+    "reservation-runs.json"
+  ],
+  "excluded_reservation_route_evidence_prefix": "rejected-fixture-",
+  "versions": {
+    "rustc --version --verbose": "rustc 1.97.0 (2d8144b78 2026-07-07)\nbinary: rustc\ncommit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3\ncommit-date: 2026-07-07\nhost: x86_64-pc-windows-msvc\nrelease: 1.97.0\nLLVM version: 22.1.6",
+    "cargo --version": "cargo 1.97.0 (c980f4866 2026-06-30)",
+    "wasmtime --version": "wasmtime 44.0.1 (f302ebd6b 2026-04-30)"
+  },
+  "artifacts": [
+    {
+      "target": "native",
+      "kind": "reader",
+      "source": "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target\\debug\\deps\\independent_tokenizer_reader_final-932a352ef87c9809.exe",
+      "path": "executed-artifacts/independent_tokenizer_reader_final-932a352ef87c9809.exe",
+      "sha256": "f7b6784d174ee149b0944b002b199ead40c350b8c84fb122d138961c9c9125be"
+    },
+    {
+      "target": "native",
+      "kind": "engine",
+      "source": "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target\\debug\\deps\\independent_tokenizer_engine_final-93a69695c53e75eb.exe",
+      "path": "executed-artifacts/independent_tokenizer_engine_final-93a69695c53e75eb.exe",
+      "sha256": "75b9fe2141f70f0483bb970ac647564d5322bf7c7d2dee2913cf148b6f6546f2"
+    },
+    {
+      "target": "wasm32-wasip2",
+      "kind": "reader",
+      "source": "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target\\wasm32-wasip2\\debug\\deps\\independent_tokenizer_reader_final-1daeac95bdb1deff.wasm",
+      "path": "executed-artifacts/independent_tokenizer_reader_final-1daeac95bdb1deff.wasm",
+      "sha256": "02f80293498b6d17ede4574c4f96ceb9cc26d9bcf98d93b8abdb52f59a4463fc"
+    },
+    {
+      "target": "wasm32-wasip2",
+      "kind": "engine",
+      "source": "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target\\wasm32-wasip2\\debug\\deps\\independent_tokenizer_engine_final-b6db7fd6ff01240d.wasm",
+      "path": "executed-artifacts/independent_tokenizer_engine_final-b6db7fd6ff01240d.wasm",
+      "sha256": "eb7d45549ab6ff57bd0545054c97ee80c5f205ca154affdc9cbb38d3bc15b92a"
+    },
+    {
+      "target": "native",
+      "kind": "reservation",
+      "source": "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target\\debug\\deps\\independent_tokenizer_reservation-fa8e6e00157047b1.exe",
+      "path": "executed-artifacts/independent_tokenizer_reservation-fa8e6e00157047b1.exe",
+      "sha256": "9d8d936a60632e2944f5f636ee006483c246e4fd19b4df647bcc6f490a0c0aed"
+    },
+    {
+      "target": "wasm32-wasip2",
+      "kind": "reservation",
+      "source": "C:\\projects\\NEPL3-runtime\\.tmp\\review-fixed-target\\wasm32-wasip2\\debug\\deps\\independent_tokenizer_reservation-1495685e74958966.wasm",
+      "path": "executed-artifacts/independent_tokenizer_reservation-1495685e74958966.wasm",
+      "sha256": "337b1a336ab48a28a746041b624952b6dbb559724b34fd89baa25c2f4b194d5e"
+    }
+  ],
+  "files": [
+    {
+      "path": "add_after.py",
+      "sha256": "78b3fd516b1493ea98b66ab855fcd3decf8334210e7c0501dc79ae9a71ad9342",
+      "bytes": 2888
+    },
+    {
+      "path": "after-native-engine.log",
+      "sha256": "0b078ba0506b7dfda5404ad4dee560b47b7e884cb8f600877df14619573f1073",
+      "bytes": 32197
+    },
+    {
+      "path": "after-native-reader.log",
+      "sha256": "5db452d796ba4d93295fefe95428a661fe332de54c0a492403fe895fde5d81fa",
+      "bytes": 8567
+    },
+    {
+      "path": "after-runs.json",
+      "sha256": "2d1fae29cdb590028ae1daa7018373cf2c687624dc7f9b7cd7652caf5a684f40",
+      "bytes": 2024
+    },
+    {
+      "path": "after-snapshot.json",
+      "sha256": "3ac1bb440072a9e16e5b8de1488411073f61a2a315c4cac31a05dedcd94be1fc",
+      "bytes": 1513
+    },
+    {
+      "path": "after-wasm32-wasip2-engine.log",
+      "sha256": "c2138ddf80ed03205fc28da276ef7bd80050c4b1c539dd1697b75d27e7c9b80d",
+      "bytes": 32339
+    },
+    {
+      "path": "after-wasm32-wasip2-reader.log",
+      "sha256": "6b515a816de983c63d8fde20e90a60e1fb9e060ff9cf1bf56398d75d86167542",
+      "bytes": 8830
+    },
+    {
+      "path": "artifacts.json",
+      "sha256": "8b2f5b7188ab05229c02c1f8b4245e97e45cf754fd9164523cc51d4139932c21",
+      "bytes": 2288
+    },
+    {
+      "path": "base.zip",
+      "sha256": "8082ac653827ca8da6aa11c14d46c93ce2cf0ee590eb1fef67afd2da6e3209f4",
+      "bytes": 3155152
+    },
+    {
+      "path": "before-independent.log",
+      "sha256": "d9f82469a5a804385be20fe62bd50b1c71f280aeb96acbbf51007ea7b95d1aca",
+      "bytes": 13602
+    },
+    {
+      "path": "before-managed.log",
+      "sha256": "05260394f1f225872dee8624f9c119540ed48d9e4afaa4563df5526f428030bd",
+      "bytes": 489
+    },
+    {
+      "path": "before-probe.exe",
+      "sha256": "389f6cce9cfa6875cd0690e8a8ca5c9f9c4b7d59b35fa4036c8c14990b1729cd",
+      "bytes": 4181504
+    },
+    {
+      "path": "before-runs.json",
+      "sha256": "819064d3511bb1b8110361ed7eca4b5cd07b53197aa9af6ca396d2a670ef1c65",
+      "bytes": 920
+    },
+    {
+      "path": "before_run.py",
+      "sha256": "667430cfe252312c4f133c0de3e2274485c9e0ea4bd7c317df60d4133ddefeb7",
+      "bytes": 898
+    },
+    {
+      "path": "correct_reservation_probe.py",
+      "sha256": "c614bb78263615edfb2e28589ccb77cb69aaf780913d517ed23e24268491cf9e",
+      "bytes": 1291
+    },
+    {
+      "path": "document-fix/doc/progress/doc-runtime.md",
+      "sha256": "14c19fd8cf88397d3737c7f7896612f013f0ef27cd9e139ea221aac80f7db03c",
+      "bytes": 10180
+    },
+    {
+      "path": "document-fix/doc/spec/03-reader.md",
+      "sha256": "2b4bd6184639af2dcdab03f73858eb1db666ebf06f480a11625e51d7ff9571cf",
+      "bytes": 25161
+    },
+    {
+      "path": "document-fix.diff",
+      "sha256": "b1453a160bced7279ad66e751b648e9f2d8170e276570addd6487c1957954a1c",
+      "bytes": 4461
+    },
+    {
+      "path": "engine_independent.rs",
+      "sha256": "37e097bc886ab687593e354737ac72a13f48ab26969f6e5da67db4c98bb41154",
+      "bytes": 594
+    },
+    {
+      "path": "executed-artifacts/independent_tokenizer_engine_final-93a69695c53e75eb.exe",
+      "sha256": "75b9fe2141f70f0483bb970ac647564d5322bf7c7d2dee2913cf148b6f6546f2",
+      "bytes": 5475840
+    },
+    {
+      "path": "executed-artifacts/independent_tokenizer_engine_final-b6db7fd6ff01240d.wasm",
+      "sha256": "eb7d45549ab6ff57bd0545054c97ee80c5f205ca154affdc9cbb38d3bc15b92a",
+      "bytes": 37764137
+    },
+    {
+      "path": "executed-artifacts/independent_tokenizer_reader_final-1daeac95bdb1deff.wasm",
+      "sha256": "02f80293498b6d17ede4574c4f96ceb9cc26d9bcf98d93b8abdb52f59a4463fc",
+      "bytes": 24949703
+    },
+    {
+      "path": "executed-artifacts/independent_tokenizer_reader_final-932a352ef87c9809.exe",
+      "sha256": "f7b6784d174ee149b0944b002b199ead40c350b8c84fb122d138961c9c9125be",
+      "bytes": 4199936
+    },
+    {
+      "path": "executed-artifacts/independent_tokenizer_reservation-1495685e74958966.wasm",
+      "sha256": "337b1a336ab48a28a746041b624952b6dbb559724b34fd89baa25c2f4b194d5e",
+      "bytes": 37722795
+    },
+    {
+      "path": "executed-artifacts/independent_tokenizer_reservation-fa8e6e00157047b1.exe",
+      "sha256": "9d8d936a60632e2944f5f636ee006483c246e4fd19b4df647bcc6f490a0c0aed",
+      "bytes": 5475840
+    },
+    {
+      "path": "final-base.zip",
+      "sha256": "d68eaa532c6db7cce91228d24294de03f6e4988cf459e5bdbdc2378202c6cc10",
+      "bytes": 3160241
+    },
+    {
+      "path": "final-engine/Cargo.lock",
+      "sha256": "bd6b2d8c281f81f292a06dd7e6b7807ab24bf47e463fea002a6538893fa08fb7",
+      "bytes": 3749
+    },
+    {
+      "path": "final-engine/Cargo.toml",
+      "sha256": "e7ea4c08d9fd89c7e9b75d61893bf7503417755a8316795cf6e807be801f064b",
+      "bytes": 599
+    },
+    {
+      "path": "final-engine/host.rs",
+      "sha256": "f852a814956c7990157d138233188cfca037575345d6c2800bef1101c9f02848",
+      "bytes": 6779
+    },
+    {
+      "path": "final-engine/root.rs",
+      "sha256": "f4d59766dad4548c4a958305f172c8619a11f3f3e84b8afcebd476df633909a9",
+      "bytes": 53329
+    },
+    {
+      "path": "final-native-engine.log",
+      "sha256": "a641c9c51a62512546664b36f58ec4083f1f1b1ac748e2e4be5f28b62bfb2203",
+      "bytes": 32600
+    },
+    {
+      "path": "final-native-reader.log",
+      "sha256": "6c5ff7b8aed5a54b37d0c2bd5ba01c0e7f50e6e27481ca9740d4d35b82cf2125",
+      "bytes": 9052
+    },
+    {
+      "path": "final-native-reservation.log",
+      "sha256": "d7b186b95fb44c7ff1885293367107926bdc56207eb6f072abe39631e88a417e",
+      "bytes": 760
+    },
+    {
+      "path": "final-reader/Cargo.lock",
+      "sha256": "ac97e1e98ac572a4a2a7896eb969966010726e23f1defd73fa11a8bb64a70f69",
+      "bytes": 3628
+    },
+    {
+      "path": "final-reader/Cargo.toml",
+      "sha256": "a5e5ae48a80b2d25d3fa34242d37ec847ed07581d9b58882ccb5ef7874b044ab",
+      "bytes": 480
+    },
+    {
+      "path": "final-reader/root.rs",
+      "sha256": "cd9f19f8955894f068d4512872db5c290bbf4a748ab1fe5cfbb3e329ca91d1c2",
+      "bytes": 95418
+    },
+    {
+      "path": "final-runs.json",
+      "sha256": "ae689a6460709559cd6490ea286a4d4ed637b452568e5414728c777d7b7ec5d8",
+      "bytes": 2024
+    },
+    {
+      "path": "final-snapshot.json",
+      "sha256": "1007fb5e62db4226ea67541542cb52b8c389d1bec4c64d6e7665d3729af64114",
+      "bytes": 138296
+    },
+    {
+      "path": "final-wasm32-wasip2-engine.log",
+      "sha256": "ea483c4890960168a86f49d995b1b4625b821ed9bf449afb6ed1d7b5fdcae861",
+      "bytes": 32492
+    },
+    {
+      "path": "final-wasm32-wasip2-reader.log",
+      "sha256": "d56d81834964215b25dbaa511299b2437e8dbf9f5020ef182c5d9d0353dd09c3",
+      "bytes": 8890
+    },
+    {
+      "path": "final-wasm32-wasip2-reservation.log",
+      "sha256": "86482ce21f8a136e924d8a38eec7cd5dcdb7b0e2517002d5c92e7b5e6431677b",
+      "bytes": 775
+    },
+    {
+      "path": "freeze_evidence.py",
+      "sha256": "77b5117b79de4445ff8bf61b16d4a3558f32d8420accca7d15c1f02f50a4de88",
+      "bytes": 3229
+    },
+    {
+      "path": "independent-after.rs",
+      "sha256": "aae210e5538b602e0558821396cff4bb42e2bd91c3e064bb5c08bf632cb7792a",
+      "bytes": 5717
+    },
+    {
+      "path": "independent.rs",
+      "sha256": "d2e5c25ee84821121076503e72b9ffa875b82b4fbf4df5d90cc7e4ec18288442",
+      "bytes": 3180
+    },
+    {
+      "path": "prepare.py",
+      "sha256": "0437321a995698eda3fbce7a0264d03d7fdcad64ae3608fb7812910ef6403631",
+      "bytes": 1797
+    },
+    {
+      "path": "prepare_after.py",
+      "sha256": "dee5a4911f1f58af42df0ceccc861ff10fb1df58fec3e75882abdb2fe62a6006",
+      "bytes": 2619
+    },
+    {
+      "path": "prepare_exact.py",
+      "sha256": "21440efed967f824c7da907e4b49f861d54a99052731ebb974ff96329c57331d",
+      "bytes": 2816
+    },
+    {
+      "path": "prepare_final.py",
+      "sha256": "fd652d57ca28340bcfd9b929714bb7a7b97c84a8081173cab9ab93c38d948a94",
+      "bytes": 754
+    },
+    {
+      "path": "prepare_final_generated.py",
+      "sha256": "d0cbd13a5ac8c0ab416b217ffb1aeb3ce4b936b9e1ba1538a7632314b6a836a1",
+      "bytes": 2619
+    },
+    {
+      "path": "probe/Cargo.lock",
+      "sha256": "12c5e375274a556baaf0aebf21af9f7598645952a3b8e5cf9b3edfdb132db1a9",
+      "bytes": 3620
+    },
+    {
+      "path": "probe/Cargo.toml",
+      "sha256": "a571f731e0c8f2b0c6d5a8ecd72a72cce16b8cbcefed03962f16f57a222fa5b0",
+      "bytes": 436
+    },
+    {
+      "path": "probe/root.rs",
+      "sha256": "b426d60c5c88c8050a171cca16fab3da16550e5f404dbbfe54faab8b29bb3bf6",
+      "bytes": 95376
+    },
+    {
+      "path": "rejected-fixture-final-native-reservation.log",
+      "sha256": "78ee873be8ee7d43c4655316de870feb3b31a988815ad0994807424c72b44a7f",
+      "bytes": 820
+    },
+    {
+      "path": "rejected-fixture-final-wasm32-wasip2-reservation.log",
+      "sha256": "b9dfc20426a208928400154dd6cb3377ccf167259a62dcc3a12c4aa6abc2d47c",
+      "bytes": 657
+    },
+    {
+      "path": "rejected-fixture-reservation-runs.json",
+      "sha256": "cda0ad9755f7d3f01b4beb4c30741785b17fb53502ffed5531101ca552a65c59",
+      "bytes": 1019
+    },
+    {
+      "path": "rejected-fixture-reservation_probe.py",
+      "sha256": "12e8ef15beb9e1ef7b3a8bbf75f004eb76cf7bae71c3b15f5173a326e18399df",
+      "bytes": 2492
+    },
+    {
+      "path": "reservation-probe/Cargo.lock",
+      "sha256": "a9bec5746fec9289d160d5429e993aa12811bb1127df4ef38a8f54dbdc4819fd",
+      "bytes": 3748
+    },
+    {
+      "path": "reservation-probe/Cargo.toml",
+      "sha256": "f8e957bde91703406325a421354bc85ae961312692fdf2ffc6c115070f564c6a",
+      "bytes": 598
+    },
+    {
+      "path": "reservation-probe/host.rs",
+      "sha256": "acacadad47a4d90171077ac198712d02dc67f8c689bcd08df39eaf52337d40d5",
+      "bytes": 7064
+    },
+    {
+      "path": "reservation-probe/root.rs",
+      "sha256": "7a203b65c24c6561b36408b9ba54f3beb7c1c78322091c0a78f57c11ddf9c45f",
+      "bytes": 53803
+    },
+    {
+      "path": "reservation-runs.json",
+      "sha256": "cda0ad9755f7d3f01b4beb4c30741785b17fb53502ffed5531101ca552a65c59",
+      "bytes": 1019
+    },
+    {
+      "path": "reservation_probe.py",
+      "sha256": "7c0e024642feb429a49f3b8cce544cfd7472415f25d6f9376ef10928b45fb612",
+      "bytes": 3013
+    },
+    {
+      "path": "review.md",
+      "sha256": "6ed863db0b894462a959d1e1e7938f0d62b0058e103249aa0717aa3ebe3c2491",
+      "bytes": 6129
+    },
+    {
+      "path": "run_after.py",
+      "sha256": "e5d54a8125e63fe45ea98877ab0a89bc4622e621e0948931d3c3cbe6736bfd5b",
+      "bytes": 979
+    },
+    {
+      "path": "run_final.py",
+      "sha256": "47813aa6e71d7335cd02eb24380abc6793e6c0a4f6a1584eae1e354ad26ece5b",
+      "bytes": 979
+    },
+    {
+      "path": "snapshot.json",
+      "sha256": "7e63d70fef669cd8ecc6d336d11ece331fe6320584601823a326638c1fce3ceb",
+      "bytes": 880
+    },
+    {
+      "path": "versions.json",
+      "sha256": "b1f9f91417a0ae32bf8aa776cd94a6953e672768ce141eb1385d6f32994179d7",
+      "bytes": 362
+    }
+  ]
+}

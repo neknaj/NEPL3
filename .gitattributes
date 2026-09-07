@@ -25,3 +25,5 @@ conformance/results/doc-native-host/** -text -whitespace
 .tmp/** export-ignore
 target/** export-ignore
 dist/** export-ignore
+
+/conformance/results/tokenizer-native-host/** -text -whitespace
