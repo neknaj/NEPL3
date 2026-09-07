@@ -1,0 +1,61 @@
+
+running 6 tests
+test review_external::independent_external_profile_and_sticky_stop ... ok
+INDEPENDENT_HTML=<article class="nepl-doc" lang="en"><h1><span>Links</span></h1><div class="nepl-paragraph"><p><span><a href="https://example.org/?x='&amp;y=%22#part">Go &lt;&amp;&gt;</a> / <a href="index.html">Self</a></span></p></div></article>
+test review_external::independent_external_hidden_receiver_and_render_stops ... FAILED
+test external::external_links_use_shared_markup_rules_and_portable_revalidation ... ok
+test review_external::independent_external_fresh_wire_and_stale_response ... ok
+test external::hidden_unsafe_links_are_rejected_and_other_requirements_remain ... ok
+test html::local_render_does_not_hide_unresolved_external_inputs_or_invalid_options ... ok
+
+failures:
+
+failures:
+    review_external::independent_external_hidden_receiver_and_render_stops
+
+test result: FAILED. 5 passed; 1 failed; 0 ignored; 0 measured; 49 filtered out; finished in 1.51s
+
+   Compiling typenum v1.20.1
+   Compiling autocfg v1.5.1
+   Compiling unicode-ident v1.0.18
+   Compiling cfg-if v1.0.4
+   Compiling cpufeatures v0.3.1
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling serde_json v1.0.151
+   Compiling serde v1.0.229
+   Compiling memchr v2.8.3
+   Compiling pulldown-cmark v0.13.4
+   Compiling bitflags v2.13.1
+   Compiling itoa v1.0.18
+   Compiling unicase v2.9.0
+   Compiling num-traits v0.2.19
+   Compiling hybrid-array v0.4.14
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling syn v3.0.5
+   Compiling num-integer v0.1.47
+   Compiling num-bigint v0.4.8
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-doc-external\workspace\crates\foundation\core)
+   Compiling serde_derive v1.0.229
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-doc-external\workspace\crates\foundation\reader)
+   Compiling nepl3-doc-core v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-doc-external\workspace\crates\languages\doc\core)
+   Compiling nepl3-markup v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-doc-external\workspace\crates\output\markup)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-doc-external\workspace\crates\foundation\wire)
+   Compiling nepl3-math-core v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-doc-external\workspace\crates\languages\math\core)
+   Compiling nepl3-engine v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-doc-external\workspace\crates\foundation\engine)
+   Compiling nepl3-doc-html v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-doc-external\workspace\crates\languages\doc\html)
+   Compiling nepl3-grammar-core v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-doc-external\workspace\crates\languages\grammar\core)
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-page-links\.tmp\review-doc-external\workspace\tools)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 23.96s
+     Running tests\doc.rs (.tmp/review-target\debug\deps\doc-e0a7226c393ababd.exe)
+
+thread 'review_external::independent_external_hidden_receiver_and_render_stops' (54676) panicked at tools\tests\doc\review_external.rs:105:112:
+assertion failed: matches!(render_pages(&req,r,&mut codec,&mut
+    b),Err(PagesRenderError::Stopped(StopReason::WorkLimit)))
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+error: test failed, to rerun pass `-p nepl3-tools --test doc`

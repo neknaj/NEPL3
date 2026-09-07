@@ -1,0 +1,85 @@
+[
+  {
+    "engine": "chromium",
+    "version": "151.0.7922.34",
+    "mode": "http-subpath",
+    "result": {
+      "title": "NEPL3 Doc",
+      "sections": 6,
+      "lists": 1,
+      "items": 6,
+      "codes": 10,
+      "scripts": 0,
+      "styles": 1,
+      "background": "rgb(13, 17, 23)",
+      "overflow": false
+    },
+    "requests": [
+      "http://127.0.0.1:55479/migration-external/index.html",
+      "http://127.0.0.1:55479/migration-external/assets/doc.css",
+      "http://127.0.0.1:55479/migration-external/reference/contract/index.html",
+      "http://127.0.0.1:55479/migration-external/reference/contract/assets/doc.css"
+    ]
+  },
+  {
+    "engine": "chromium",
+    "version": "151.0.7922.34",
+    "mode": "file",
+    "result": {
+      "title": "NEPL3 Doc",
+      "sections": 6,
+      "lists": 1,
+      "items": 6,
+      "codes": 10,
+      "scripts": 0,
+      "styles": 1,
+      "background": "rgb(13, 17, 23)",
+      "overflow": false
+    },
+    "requests": [
+      "file:///C:/projects/NEPL3-doc-page-links/.tmp/migration-external/index.html",
+      "file:///C:/projects/NEPL3-doc-page-links/.tmp/migration-external/assets/doc.css",
+      "file:///C:/projects/NEPL3-doc-page-links/.tmp/migration-external/reference/contract/index.html",
+      "file:///C:/projects/NEPL3-doc-page-links/.tmp/migration-external/reference/contract/assets/doc.css"
+    ]
+  },
+  {
+    "engine": "firefox",
+    "version": "153.0",
+    "mode": "http-subpath",
+    "result": {
+      "title": "NEPL3 Doc",
+      "sections": 6,
+      "lists": 1,
+      "items": 6,
+      "codes": 10,
+      "scripts": 0,
+      "styles": 1,
+      "background": "rgb(13, 17, 23)",
+      "overflow": false
+    },
+    "requests": [
+      "http://127.0.0.1:55479/migration-external/index.html",
+      "http://127.0.0.1:55479/migration-external/assets/doc.css",
+      "http://127.0.0.1:55479/migration-external/reference/contract/index.html",
+      "http://127.0.0.1:55479/migration-external/reference/contract/assets/doc.css"
+    ]
+  },
+  {
+    "engine": "firefox",
+    "version": "153.0",
+    "mode": "file",
+    "result": {
+      "title": "NEPL3 Doc",
+      "sections": 6,
+      "lists": 1,
+      "items": 6,
+      "codes": 10,
+      "scripts": 0,
+      "styles": 1,
+      "background": "rgb(13, 17, 23)",
+      "overflow": false
+    },
+    "requests": []
+  }
+]
