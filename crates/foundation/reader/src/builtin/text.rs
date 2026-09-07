@@ -28,7 +28,7 @@ pub(super) fn read(
         return rejection(scan, BuiltinReader::Text, &request, registry, budget);
     }
     let mut decoded = String::new();
-    let mut segments = Vec::new();
+    let mut segments: Vec<Segment> = Vec::new();
     let mut cursor = 1;
     loop {
         budget.charge(Resource::Work, 1)?;
@@ -135,19 +135,37 @@ pub(super) fn read(
             (ch, MappingKind::Exact)
         };
         budget.charge(Resource::OutputBytes, value.len_utf8() as u64)?;
-        budget.charge(
-            Resource::AllocationUnits,
-            value.len_utf8() as u64 + core::mem::size_of::<Segment>() as u64,
-        )?;
+        budget.charge(Resource::AllocationUnits, value.len_utf8() as u64)?;
         let target_start = decoded.len();
-        decoded.push(value);
-        segments.push(Segment {
-            source_start,
-            source_end: cursor,
-            target_start,
-            target_end: decoded.len(),
-            kind,
+        let previous = segments.last_mut().filter(|previous| {
+            previous.kind == MappingKind::Exact
+                && kind == MappingKind::Exact
+                && previous.source_end == source_start
+                && previous.target_end == target_start
+                && previous.source_end - previous.source_start
+                    == previous.target_end - previous.target_start
         });
+        if let Some(previous) = previous {
+            // Adjacent unchanged UTF-8 bytes have the same exact displacement.
+            // Escape relations remain separate; no transformed segment or empty
+            // insertion anchor is merged into a literal run.
+            decoded.push(value);
+            previous.source_end = cursor;
+            previous.target_end = decoded.len();
+        } else {
+            budget.charge(
+                Resource::AllocationUnits,
+                core::mem::size_of::<Segment>() as u64,
+            )?;
+            decoded.push(value);
+            segments.push(Segment {
+                source_start,
+                source_end: cursor,
+                target_start,
+                target_end: decoded.len(),
+                kind,
+            });
+        }
     }
     if segments.is_empty() {
         budget.charge(

@@ -1186,3 +1186,65 @@ fn selected_standard_provider_dispatch_uses_builtin_values_and_rejects_forgery()
     }
     Ok(())
 }
+
+#[test]
+fn text_exact_runs_preserve_utf8_offsets_and_escape_boundaries() -> Result<(), ReaderError> {
+    use nepl3_core::origin::{MappingKind, SourceMap};
+    let fixture = Fixture::new("\"ab\u{65e5}\u{1f600}\\ncd\u{65e5}\\u{1f600}ef\"")?;
+    let ReadReply::Matched {
+        sources,
+        source_maps,
+        value,
+        ..
+    } = fixture.whole(BuiltinReader::Text, true)?
+    else {
+        return Err(ReaderError::Context);
+    };
+    assert_eq!(
+        value,
+        NdfValue::Text("ab\u{65e5}\u{1f600}\ncd\u{65e5}\u{1f600}ef".into())
+    );
+    // Three exact runs, separated by two distinct escape relations. UTF-8 byte
+    // offsets inside a run retain the original one-to-one displacement.
+    assert_eq!(source_maps.len(), 5);
+    let expected = [
+        (1, 10, 0, 9, MappingKind::Exact),
+        (10, 12, 9, 10, MappingKind::Transformed),
+        (12, 17, 10, 15, MappingKind::Exact),
+        (17, 26, 15, 19, MappingKind::Transformed),
+        (26, 28, 19, 21, MappingKind::Exact),
+    ];
+    let mut store = SourceStore::default();
+    store.insert(fixture.source.clone())?;
+    store.insert(sources[0].clone())?;
+    let mut maps = SourceMap::default();
+    for (mapping, (a, b, c, d, kind)) in source_maps.iter().zip(expected) {
+        assert_eq!(
+            (
+                mapping.source.start(),
+                mapping.source.end(),
+                mapping.target.start(),
+                mapping.target.end(),
+                mapping.kind
+            ),
+            (a, b, c, d, kind)
+        );
+        maps.insert(mapping.clone(), &store, &mut budget())?;
+    }
+    for (start, end) in [
+        (0, 1),
+        (1, 2),
+        (2, 5),
+        (5, 9),
+        (10, 11),
+        (11, 12),
+        (12, 15),
+        (19, 20),
+        (20, 21),
+    ] {
+        let span = sources[0].span(start, end)?;
+        let inverse = maps.inverse(&span, &store)?;
+        assert_eq!(sources[0].slice(&span)?, fixture.source.slice(&inverse)?);
+    }
+    Ok(())
+}

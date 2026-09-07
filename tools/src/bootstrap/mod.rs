@@ -1,7 +1,9 @@
 //! Host-only import of the bounded first-seed JSON. This does not parse Grammar
 //! or certify bootstrap: production parser output is lowered by grammar-core.
+pub mod catalog;
 pub mod cli;
 mod generated;
+pub mod runtime;
 #[cfg(test)]
 mod tests;
 use nepl3_core::{

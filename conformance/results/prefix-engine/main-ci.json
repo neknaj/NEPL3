@@ -1,0 +1,38 @@
+{
+  "profile": "nepl3.ci-observation/1",
+  "recorded_at_utc": "2026-09-07 00:03:30 UTC",
+  "commit": "16e71d9347e733c9d873f879e792b3c6952c3eb4",
+  "reviewed_head": "b79dbdd8320849eb058758cb9f44f2de80f5a9f3",
+  "pull_request": "https://github.com/neknaj/NEPL3/pull/8",
+  "run": "https://github.com/neknaj/NEPL3/actions/runs/34068305344",
+  "result": "success",
+  "tests": {
+    "x86_64-unknown-linux-gnu": 204,
+    "x86_64-pc-windows-msvc": 204,
+    "aarch64-apple-darwin": 204,
+    "wasm32-wasip2 (Wasmtime 44.0.1)": 143
+  },
+  "checks": [
+    "Native three-platform tests, formatting, Clippy, rustdoc, repository contracts, generators, Python audits, allocation regression and clean tracked diff passed.",
+    "WASI tests executed and browser-Wasm compilation passed.",
+    "Required quality and main-only source delivery succeeded."
+  ],
+  "artifact": {
+    "name": "NEPL3-source-16e71d9347e733c9d873f879e792b3c6952c3eb4",
+    "sha256": "38a343b14202c7439cdfab22d844dd93c5bdcd7328a53ebadfe99e4f6ac4904d",
+    "kind": "source-foundation",
+    "tar_members": 409,
+    "files": 321,
+    "verification": "Retrieved artifact; matched SOURCE.txt commit/run, SHA256SUMS, all recorded log hashes in the three new checkpoint reports and the final source/spec identity recomputed from archived bytes. No .tmp or nonregular file entries."
+  },
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "8010694295a4d543b53d232640d8337901f99adc149e13b6a6ab14bc4297d43c",
+    "spec_sha256": "d0be321216c04d67dac19f986328318056b6728d0d697d4788a33c0f367c03b5"
+  },
+  "retrieved_ci_log_sha256": "9c199cd13e63ee5aaef9f3687b4518330c56033cb70cc2690a1b80814a3062bb",
+  "limits": [
+    "This records the merged prefix-engine/shared-kind/seed-stack checkpoint, not the subsequent uncommitted complete-bootstrap/facts work.",
+    "No browser runtime, full acceptance group, Pages deployment or completed task is claimed."
+  ]
+}

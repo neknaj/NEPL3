@@ -1,0 +1,101 @@
+{
+  "profile": "nepl3.development-slice/1",
+  "recorded_at_utc": "2026-09-07 00:15:29 UTC",
+  "start_commit": "b79dbdd8320849eb058758cb9f44f2de80f5a9f3",
+  "scope": "Complete formal Grammar source bootstrap through production parser/lower/compiler; core-owned typed facts and checked wire values; source map and Text reader improvements.",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "1a0b3f507c2c515db68593ea52f2f79fdcf02c55fd12f4c30a9abdecdb4867c4",
+    "spec_sha256": "9e2d42866813914e98d69c1775507c73d581dfffe07e5b894eed52a200230052"
+  },
+  "result": "passed-within-recorded-scope",
+  "tools": {
+    "rustc": "1.97.0 (2d8144b78 2026-07-07)",
+    "cargo": "1.97.0 (c980f4866 2026-06-30)",
+    "python": "3.13.12",
+    "wasmtime": "44.0.1 (f302ebd6b 2026-04-30)"
+  },
+  "checks": [
+    {
+      "command": "cargo test --workspace --locked",
+      "target": "x86_64-pc-windows-msvc",
+      "exit_code": 0,
+      "result": "passed",
+      "tests": 217,
+      "log": "conformance/results/grammar-bootstrap/native.log",
+      "log_sha256": "00851e6ef4bd7b2478d1a2cf2362bd791b81b813d2ebd3716304e3ed7fc0651b"
+    },
+    {
+      "command": "cargo fmt --all -- --check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo clippy --workspace --all-targets --locked -- -D warnings; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps --locked",
+      "target": "host-repository",
+      "exit_code": 0,
+      "result": "passed",
+      "log": "conformance/results/grammar-bootstrap/quality.log",
+      "log_sha256": "c8c1e46afa59c5ba1853c2d97068bcfcd4f81976a98ef7e0ccb10b298d208c2e"
+    },
+    {
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER='wasmtime run'; cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --no-default-features --target wasm32-unknown-unknown",
+      "target": "wasm32-wasip2 executed with Wasmtime; wasm32-unknown-unknown compilation only",
+      "exit_code": 0,
+      "result": "passed",
+      "tests": 148,
+      "log": "conformance/results/grammar-bootstrap/wasi.log",
+      "log_sha256": "6611f92114dc519915ef18c501d15cf93c33987af20fc88890a4d3dda6ef60dd"
+    },
+    {
+      "command": "python tools/audit/structure.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/audit -p test.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/bootstrap -p test_grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo run --locked -p nepl3-tools -- check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo run --locked -p nepl3-tools -- tasks --check",
+      "target": "host-repository",
+      "exit_code": 0,
+      "result": "passed",
+      "log": "conformance/results/grammar-bootstrap/audit.log",
+      "log_sha256": "eb01091f8bf771537fa5655b2867526a17fe9013e270fd98ab9f688883cc6663"
+    },
+    {
+      "command": "python tools/audit/allocation/run.py",
+      "target": "x86_64-pc-windows-msvc",
+      "exit_code": 0,
+      "result": "passed",
+      "log": "conformance/results/grammar-bootstrap/allocation.log",
+      "log_sha256": "85c40246cd424427b81cc791976fd7bebce61df2d7b09f6074847c1772dd6449"
+    }
+  ],
+  "review": {
+    "reviewer": "Huygens (/root/review)",
+    "independent": true,
+    "result": "Independent production API execution, formal-source bootstrap and mutation probes; bounded scope has no outstanding blocking finding.",
+    "records": [
+      "design/review.json",
+      "doc/review.md"
+    ]
+  },
+  "bootstrap": {
+    "source": "languages/grammar/syntax.neplg",
+    "source_bytes": 9369,
+    "nodes_each": 518,
+    "path": "Bounded complete seed input -> actual compiler P0 -> actual ParseSession/readers/lower/compiler P1 -> same formal source parsed with P1 -> lower/compiler P2",
+    "comparison": "All three full semantic package identities are equal; independent source reader/binding/style mutations change identity.",
+    "independent_debug_seconds": 116.11,
+    "integrated_tools_unit_suite_seconds": 126.99,
+    "cumulative_usage": {
+      "work": 9126464211,
+      "allocation_units": 59758042639,
+      "depth": 96
+    },
+    "measurement_limit": "AllocationUnits counts cumulative logical charges, not simultaneously resident heap. Integrated suite time includes the other tools unit tests. High parse/host cost remains to be improved."
+  },
+  "cases": [
+    "Formal Angle source compiles to an actual ReaderSession that preserves quoted closing delimiters, all nonfinal cuts and committed final failure.",
+    "Production parser/lower preserves source positions, refuses wrong execution ownership, and retains last accepted reply/report when later host work stops.",
+    "Facts native and NDF boundaries reject ID, namespace, authority, source and Origin forgery; added source/Origin deltas roundtrip.",
+    "Large acyclic source map transforms use a sound coarse proof; possible snapshot cycles retain pointwise cycle checking.",
+    "Text exact UTF-8 runs coalesce without merging transformed escapes or changing inverse mapping."
+  ],
+  "exclusions": [
+    "No task or acceptance group is completed by this checkpoint.",
+    "Bootstrap execution here is native Windows; WASI tests cover the five production crates, not the host-orchestrated full bootstrap.",
+    "Browser Wasm was compiled, not executed in a browser.",
+    "Full operation/frame/continuation/facts request-reply codecs, dynamic HeadProvider, full recovery, compiler failure coverage, resolved suite Profile and binding/editor execution remain incomplete.",
+    "Four language products, native/WASI CLI, process provider, Web UI, Pages deployment, Doc migration and final acceptance remain unfinished."
+  ]
+}

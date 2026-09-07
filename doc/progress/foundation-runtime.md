@@ -64,3 +64,11 @@ Grammarの全constructorを持つ型付きAST、source/参照/Nodes予算の検�
 package assemblerはsymbolicなreader出力型から実surface descriptorを生成・登録し、reader/mode/form/leaf/namespace/binding/style/extensionを組み立て、productionのLanguagePackage検査へ接続した。`cargo test --locked -p nepl3-tools --test grammar`の1件で、旧Angle例の異なるchoice出力型とbinding例の非Textな名前leafを実際に拒否した。Angleの各枝を明示discardにした正式例はpackage検査に成功した。旧Angleは理由を持つnegative fixtureとして保存し、seqを暗黙文字列連結へ変更していない。
 
 このcheckpointでは`cargo clippy --locked -p nepl3-tools --all-targets -- -D warnings`、生成物の一致検査、repository checkが成功した。assemblerの一般的な全失敗系・位置付き診断、facts/v1の共通値と実descriptor、binding例の訂正、Angleの実ReaderSession境界試験、ParsedTreeからのlowerの実往復、完全seedからP1/P2を生成するbootstrapは未検証または未実装として残る。R006/R009等やT05の完成を宣言せず、次のcommitで継続する。
+
+## 次段: 共通factsと実Grammar bootstrap
+
+`feat/grammar-bootstrap`ではcoreにFactSet/FactDeltaとhostが明示する変更権限を追加し、型付きwire交換でもsource・Origin・scope・namespace・予約IDの検査を共有する。native facts 2件、wire facts 1件が成功し、追加source/Originを持つdeltaの往復とsource宣言欠落の拒否も含む。これは構造・権限・参照閉包の検査であり、名前解決の正しさ、delta適用、Custom binding callbackとFactsRequest/Reply全体のcodec成立を意味しない。
+
+標準catalogは実reader/facts descriptorを登録する。正式Binding例はname-v1からTextを取得するよう訂正し、旧例をnegative fixtureへ分けた。packageのpayloadSchemasは実際に参照する型と操作の閉包を保持する。toolsのgrammar 4件で、完全Grammarのpackage組立、正式例、共有kind、実schema依存を検査した。
+
+SourceMapのsnapshot DAGによる十分条件と従来の厳密なpointwise fallbackを併用し、reader成果物のmap検査をbatch化した。map 3件と既存の精密cycle等4件が成功した。Textの連続Exact対応をまとめる変更と合わせ、実engineで正式Grammar sourceを解析・lower・compileするP0/P1/P2の意味identity一致が初めて成功した。最初のdebug観測は約105秒、累積Work約91億、Allocation約598億、深さ96であり、コピー費用の最適化と全失敗系・全reader constructorのcompiler経由検査は残る。facts callbackは実行していない。確定treeのコマンド・測定値・mutationと停止試験・cross-target結果は統括の今回の検証記録へ分離し、過去commitのCI成功を現在treeへ流用しない。

@@ -1,5 +1,23 @@
 {
-  "operations": {},
+  "operations": {
+    "bindingFacts": {
+      "input": {
+        "named": {
+          "package": "nepl3.engine",
+          "revision": 1,
+          "name": "FactsRequest"
+        }
+      },
+      "output": {
+        "named": {
+          "package": "nepl3.engine",
+          "revision": 1,
+          "name": "FactsReply"
+        }
+      },
+      "pure": true
+    }
+  },
   "package": "nepl3.engine",
   "revision": 1,
   "types": {
@@ -2401,6 +2419,152 @@
         "CategoryMismatch": [],
         "ProviderFailure": [],
         "UnknownHead": []
+      }
+    },
+    "FactsRequest": {
+      "constraints": [
+        "engine.facts_request"
+      ],
+      "record": [
+        [
+          "tree",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "ParseTree"
+            }
+          }
+        ],
+        [
+          "path",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "ForeignStep"
+              }
+            }
+          }
+        ],
+        [
+          "node",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "NodeRef"
+            }
+          }
+        ],
+        [
+          "existing",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "FactSet"
+            }
+          }
+        ],
+        [
+          "authority",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "FactAuthority"
+            }
+          }
+        ]
+      ]
+    },
+    "FactsReply": {
+      "constraints": [
+        "engine.facts_reply"
+      ],
+      "variant": {
+        "Complete": [
+          [
+            "delta",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "FactDelta"
+              }
+            }
+          ],
+          [
+            "report",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Report"
+              }
+            }
+          ]
+        ],
+        "Invalid": [
+          [
+            "partial",
+            {
+              "option": {
+                "named": {
+                  "package": "nepl3.foundation",
+                  "revision": 1,
+                  "name": "FactDelta"
+                }
+              }
+            }
+          ],
+          [
+            "report",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Report"
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ],
+          [
+            "partial",
+            {
+              "option": {
+                "named": {
+                  "package": "nepl3.foundation",
+                  "revision": 1,
+                  "name": "FactDelta"
+                }
+              }
+            }
+          ],
+          [
+            "report",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Report"
+              }
+            }
+          ]
+        ]
       }
     }
   }

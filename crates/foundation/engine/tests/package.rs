@@ -592,16 +592,26 @@ fn package_boundary_checks_extension_provenance_and_resource_limits() -> TestRes
         value::OperationRef,
     };
     let (mut package, registry) = fixture()?;
+    let fact_type = |name: &str| {
+        TypeDescriptor::Named(TypeRef {
+            package: "nepl3.engine".into(),
+            revision: 1,
+            name: name.into(),
+        })
+    };
     package.extensions.push(ExtensionRequirement {
         alias: "facts".into(),
         provider: "fixture.facts/v1".into(),
         signature: "facts/v1".into(),
         operation: OperationRef {
-            schema: package.schema.clone(),
-            name: "facts".into(),
+            schema: registry
+                .selected("nepl3.engine", 1)
+                .ok_or("engine")?
+                .clone(),
+            name: "bindingFacts".into(),
         },
-        input: TypeDescriptor::Text,
-        output: TypeDescriptor::Unit,
+        input: fact_type("FactsRequest"),
+        output: fact_type("FactsReply"),
         pure: true,
     });
     package
@@ -612,7 +622,7 @@ fn package_boundary_checks_extension_provenance_and_resource_limits() -> TestRes
         package.check(&registry, &mut budget()),
         Err(PackageError::SignatureMismatch)
     ));
-    package.extensions[0].output = TypeDescriptor::Unit;
+    package.extensions[0].output = fact_type("FactsReply");
     let source = SourceSnapshot::new(
         SourceId("grammar-source".into()),
         0,

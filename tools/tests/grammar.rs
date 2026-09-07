@@ -6,6 +6,74 @@ use nepl3_grammar_core::compile::{
     package::{CompiledLanguage, PackageContext},
 };
 use std::{path::PathBuf, process::Command};
+
+#[test]
+fn binding_example_uses_text_name_payload_and_actual_schema_dependencies() -> Result<(), String> {
+    let doc = load("examples/grammar/binding.neplg")?;
+    let compiled = nepl3_tools::bootstrap::catalog::compile(
+        &doc,
+        "test.binding",
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    let name = compiled
+        .package
+        .leaves
+        .iter()
+        .find(|l| {
+            compiled
+                .registry
+                .kind_name(&l.kind.schema, l.kind.local_kind)
+                == Ok("Leaf:Name")
+        })
+        .ok_or("Name leaf")?;
+    assert_eq!(name.payload, TypeDescriptor::Text);
+    let number = compiled
+        .package
+        .leaves
+        .iter()
+        .find(|l| {
+            compiled
+                .registry
+                .kind_name(&l.kind.schema, l.kind.local_kind)
+                == Ok("Leaf:Number")
+        })
+        .ok_or("Number leaf")?;
+    assert_eq!(
+        number.payload,
+        TypeDescriptor::List(Box::new(TypeDescriptor::Text))
+    );
+    for dependency in &compiled.package.payload_schemas {
+        assert_eq!(
+            compiled
+                .registry
+                .selected(&dependency.package, dependency.revision),
+            Some(dependency)
+        );
+    }
+    assert!(
+        compiled
+            .package
+            .payload_schemas
+            .iter()
+            .any(|v| v.package == "nepl3.reader")
+    );
+    assert!(
+        compiled
+            .package
+            .payload_schemas
+            .iter()
+            .any(|v| v.package == "nepl3.foundation")
+    );
+    assert!(
+        !compiled
+            .package
+            .payload_schemas
+            .iter()
+            .any(|v| v.package == "nepl3.grammar" || v.package == "nepl3.engine")
+    );
+    Ok(())
+}
 fn budget() -> Budget {
     Budget::new(Limits {
         source_bytes: 10_000_000,
@@ -108,7 +176,7 @@ fn full_example_assembly_reaches_actual_plan_and_binding_validation() -> Result<
         .check(&compiled.registry, &mut budget())
         .map_err(|e| format!("{e:?}"))?;
     assert!(matches!(
-        compile("examples/grammar/binding.neplg")?,
+        compile("tools/tests/fixtures/grammar/binding-nontext-name.neplg")?,
         Err(compile::CompileError::Package(
             nepl3_engine::package::PackageError::InvalidBinding
         ))
@@ -180,5 +248,34 @@ fn shared_kind_is_category_local_with_one_shape_and_distinct_provenance() -> Res
             matches!(err,compile::CompileError::Declaration{node,related:Some(other),reason:r} if r==reason && node!=other)
         );
     }
+    Ok(())
+}
+
+#[test]
+fn complete_grammar_source_compiles_with_real_reader_and_facts_descriptors() -> Result<(), String> {
+    let doc = load("languages/grammar/syntax.neplg")?;
+    let compiled = nepl3_tools::bootstrap::catalog::compile(
+        &doc,
+        "nepl3.syntax.grammar",
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    assert_eq!(compiled.package.root, "Root");
+    assert!(compiled.package.forms.len() > 60);
+    assert_eq!(compiled.package.reader.rules.len(), 2);
+    let facts = compiled
+        .package
+        .extensions
+        .iter()
+        .find(|v| v.provider == "grammar.facts/v1")
+        .ok_or("facts declaration")?;
+    assert_eq!(facts.signature, "facts/v1");
+    assert!(
+        matches!(&facts.input,TypeDescriptor::Named(v) if v.package=="nepl3.engine"&&v.name=="FactsRequest")
+    );
+    compiled
+        .package
+        .check(&compiled.registry, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
     Ok(())
 }

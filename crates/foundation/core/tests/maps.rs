@@ -140,3 +140,70 @@ fn mapped_containment_requires_every_byte_and_every_reverse_path() -> TestResult
     ));
     Ok(())
 }
+#[test]
+fn snapshot_dag_proves_large_transforms_without_enumerating_the_point_product() -> Result<(), String>
+{
+    use nepl3_core::{budget::*, origin::*, source::*};
+    let limits = Limits {
+        source_bytes: 100_000,
+        work: 1_000_000,
+        depth: 100,
+        nodes: 1_000_000,
+        allocation_units: 10_000_000,
+        output_bytes: 1000,
+        diagnostics: 10,
+        events: 10,
+    };
+    let mut setup = Budget::new(limits);
+    let mut sources = SourceStore::default();
+    let a = SourceSnapshot::new(
+        SourceId("large-a".into()),
+        0,
+        "memory:large-a".into(),
+        vec![b'a'; 10000],
+        &mut setup,
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let b = SourceSnapshot::new(
+        SourceId("large-b".into()),
+        0,
+        "memory:large-b".into(),
+        vec![b'b'; 10000],
+        &mut setup,
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let mappings = vec![Mapping {
+        source: a.span(0, 10000).map_err(|e| format!("{e:?}"))?,
+        target: b.span(0, 10000).map_err(|e| format!("{e:?}"))?,
+        kind: MappingKind::Transformed,
+    }];
+    sources.insert(a.clone()).map_err(|e| format!("{e:?}"))?;
+    sources.insert(b.clone()).map_err(|e| format!("{e:?}"))?;
+    let mut bounded = Budget::new(Limits {
+        nodes: 2,
+        allocation_units: 4096,
+        ..limits
+    });
+    SourceMap::validate_mappings(&mappings, &sources, &mut bounded)
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(bounded.usage().nodes, 2);
+    // A coarse cycle is not declared valid. The exact fallback still rejects an
+    // actual point cycle, and existing forward-overlap tests cover valid coarse cycles.
+    let cycle = vec![
+        Mapping {
+            source: a.span(0, 1).map_err(|e| format!("{e:?}"))?,
+            target: b.span(0, 1).map_err(|e| format!("{e:?}"))?,
+            kind: MappingKind::Transformed,
+        },
+        Mapping {
+            source: b.span(0, 1).map_err(|e| format!("{e:?}"))?,
+            target: a.span(0, 1).map_err(|e| format!("{e:?}"))?,
+            kind: MappingKind::Transformed,
+        },
+    ];
+    assert!(matches!(
+        SourceMap::validate_mappings(&cycle, &sources, &mut Budget::new(limits)),
+        Err(OriginError::Cycle)
+    ));
+    Ok(())
+}

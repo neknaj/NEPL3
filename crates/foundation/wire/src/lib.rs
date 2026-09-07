@@ -7,6 +7,7 @@ mod boundary;
 mod decode;
 mod encode;
 pub mod environment;
+pub mod facts;
 pub mod foundation;
 pub mod origin;
 pub mod source;
@@ -37,6 +38,15 @@ pub enum WireError {
     View(nepl3_core::view::ViewError),
     Origin(nepl3_core::origin::OriginError),
     Syntax(nepl3_core::syntax::SyntaxError),
+    Facts(nepl3_core::facts::FactError),
+}
+impl From<nepl3_core::facts::FactError> for WireError {
+    fn from(value: nepl3_core::facts::FactError) -> Self {
+        match value {
+            nepl3_core::facts::FactError::Stopped(r) => Self::Stopped(r),
+            v => Self::Facts(v),
+        }
+    }
 }
 impl From<StopReason> for WireError {
     fn from(value: StopReason) -> Self {
