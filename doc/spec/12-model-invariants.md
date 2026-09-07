@@ -80,11 +80,11 @@ NorNetlistはbit順をport宣言順、その中をLSB→MSBとする。stateもs
 
 Markup modelがname/attributeをTextとして運べることは、任意のtagを許可することを意味しない。nepl3-markupは目的categoryに対して検査する。
 
-HTMLの許可要素: article, section, div, p, span, h1〜h6, ruby, rt, rp, em, strong, br, pre, code, figure, figcaption, a。
+HTMLでは文書構造・注釈・コード・リンクに加え、ul/ol/li、table/caption/thead/tbody/tr/th/td、imgを扱う。全要素の列挙は `design/markup.json` を正本とし、内容モデルと型付き属性は [HTML fragment契約](19-html-fragment.md) に従う。
 MathML: math, mrow, mi, mn, mo, mtext, mfrac, msqrt, mroot, msub, msup, msubsup, munder, mover, munderover, mtable, mtr, mtd, mspace。
 SVG: svg, g, rect, line, path, polyline, circle, text, title, desc。
 
-全要素・属性・属性値制約の正本は `design/markup.json`。属性を受け入れる集合はglobal、namespace、elementの各allowlistの和とし、列挙されていない属性は拒否する。SVGのpath/points等は自由な文字列として受けず、記述した型付き構造からserializerが綴りを生成する。userから任意のon*、style、script、foreignObject、image、external href、任意のnamespace URLを受けない。hrefはarticle内の生成済みanchorだけ。CSSはbackendが所有する固定assetであり、本文文字列をCSSに埋め込まない。
+全要素・属性・属性値制約の正本は `design/markup.json`。属性を受け入れる集合はglobal、namespace、elementの各allowlistの和とし、列挙されていない属性は拒否する。SVGのpath/points等は自由な文字列として受けず、記述した型付き構造からserializerが綴りを生成する。userから任意のon*、style、script、foreignObject、SVG image、任意のnamespace URLを受けない。HTMLのhrefは型付きFragment/Artifact/BetweenArtifacts/Externalを使い、URIの許可規則と内部targetの存在、文書間routeの対応をそれぞれ検査する。HTML imgのsrcは検査済みartifact内の相対pathであり、任意の外部画像URLを許可しない。字句検査だけでassetの存在・内容・権限を検証済みとせず、文書準備時の解決を別に要求する。CSSはbackendが所有する固定assetであり、本文文字列をCSSに埋め込まない。
 
 MathMLのmspaceのwidth/height/depthはNonnegativeMathLengthとする。非負のcanonical有限十進にemを付け、zeroは0em、百分率・指数表記・他単位・負値・冗長なzeroを拒否する。これはMathML Coreのlength-percentageのうち本profileが使用する部分集合であり、SVGの座標用Decimalとは区別する。違反はInvalidMarkupAttribute。
 
