@@ -20,6 +20,38 @@ pub struct NodeMapping<'a> {
     order: Vec<usize>,
     indices: Vec<u64>,
 }
+/// Root bundle followed by its foreign bundles in canonical node/field DFS
+/// order. Storage order of nodes and external metadata tables has no effect.
+pub struct BundleMappings<'a> {
+    entries: Vec<NodeMapping<'a>>,
+}
+impl<'a> BundleMappings<'a> {
+    pub fn new(bundle: &'a SyntaxBundle, b: &mut Budget) -> Result<Self, CanonicalError> {
+        let mut entries = Vec::new();
+        let mut pending = Vec::new();
+        push(&mut pending, (bundle, 1u64), b)?;
+        while let Some((bundle, depth)) = pending.pop() {
+            b.observe_depth(depth)?;
+            let mapping = NodeMapping::new(bundle, b)?;
+            for node in mapping.order().iter().rev() {
+                for field in bundle.nodes[*node].fields.iter().rev() {
+                    b.charge(Resource::Work, 1)?;
+                    if let FieldValue::Foreign(value) = field {
+                        push(&mut pending, (&value.bundle, depth.saturating_add(1)), b)?;
+                    }
+                }
+            }
+            push(&mut entries, mapping, b)?;
+        }
+        Ok(Self { entries })
+    }
+    pub fn entries(&self) -> &[NodeMapping<'a>] {
+        &self.entries
+    }
+    pub fn into_entries(self) -> Vec<NodeMapping<'a>> {
+        self.entries
+    }
+}
 fn push<T>(v: &mut Vec<T>, x: T, b: &mut Budget) -> Result<(), CanonicalError> {
     b.charge(Resource::AllocationUnits, core::mem::size_of::<T>() as u64)?;
     v.push(x);

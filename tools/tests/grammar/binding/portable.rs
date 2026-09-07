@@ -1,5 +1,7 @@
 use super::*;
 use nepl3_engine::portable::binding::{self as wire_binding, DecodedBindingOutcome};
+#[path = "portable/analysis.rs"]
+mod analysis;
 #[path = "portable/causes.rs"]
 mod causes;
 
