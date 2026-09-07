@@ -108,7 +108,7 @@ GitHub等でも閲覧するための限定したhost出力である。通常のD
 段落は単一Sentence、listは非空unordered・checkboxなし・各itemが単一段落である。
 Sentence内は非空TextとInlineCode、および本文途中のBreakを扱う。隣接するcode、隣接list、節の入れ子や
 節外の後続blockは、Markdownでの再結合・所属変更を避けるため拒否する。注釈、parallel、
-画像、表、リンク、code block等は将来の契約・試験ができるまでUnsupportedとする。
+画像、表、リンク等は将来の契約・試験ができるまでUnsupportedとする。
 これはDoc DSL自体の表現能力を縮小する制約ではない。
 
 TextのASCII句読記号をescapeし、Codeのbacktickと前後空白を保持する。
@@ -119,6 +119,17 @@ Text空白は、Markdownで構造や空白が失われるため拒否する。Do
 この閲覧用projectionの非対応として扱う。Text内の改行をBreakへ暗黙変換しない。
 規則は [CommonMark 0.31.2](https://spec.commonmark.org/0.31.2/#code-spans) に従い、
 実際のMarkdown parserで内容とblock/code event列を独立に比較する。
+
+Body内のRawCodeは非評価のfenced code blockへ写す。本文内の最長backtick列より
+長く、最低3文字のfenceを使い、TAB・空白・Unicode・LF・末尾の空行を保持する。
+空本文は許す。非空本文は末尾LFを必須とし、CR/CRLFおよびLF/TAB以外の制御文字は
+このprojectionではTextエラーとする。Markdownによる改行正規化や末尾LFの補充を
+元のRawCodeと同一と扱わない。language hintはNoneまたは非空のASCII英数字と
+`_+.-`のみを許し、曖昧なinfo stringを黙って変更しない。list内のRawCodeは未対応。
+この制約はDocのRawCode自体やHTML出力には適用しない。
+規則は [CommonMarkのfenced code block](https://spec.commonmark.org/0.31.2/#fenced-code-blocks)
+に従い、生成Markdownを別parserで読み、コード本文byte列・hint・blockの分離を検査する。
+CLIのrenderer識別子は `nepl3-tools.markdown/3` とする。
 
 型付き `markdown` の準備と出力は同じBudgetを消費し、Work・AllocationUnitsに加え、
 生成する各UTF-8 byteをOutputBytesへ先行計上する。本文上限は1MiB。途中停止から
