@@ -28,6 +28,47 @@ pub(super) fn span(value: &Span, budget: &mut Budget) -> Result<Span, StopReason
     Ok(value.clone())
 }
 impl ParseArena {
+    /// Merge a complete accepted source closure with one temporary index. The
+    /// public source list keeps insertion order and has no serialized cache.
+    pub(super) fn extend_sources(
+        &mut self,
+        sources: &[SourceSnapshot],
+        budget: &mut Budget,
+    ) -> Result<(), SyntaxError> {
+        budget.poll()?;
+        let mut index = Vec::new();
+        for (i, source) in self.sources.iter().enumerate() {
+            let at = source_position(&index, &self.sources, source, budget)?
+                .map_or_else(Ok, |_| Err(SourceError::IdentityConflict))?;
+            slot::<usize>(budget)?;
+            budget.charge(Resource::Work, (index.len() - at) as u64)?;
+            index.insert(at, i);
+        }
+        for source in sources {
+            match source_position(&index, &self.sources, source, budget)? {
+                Ok(at) => {
+                    let prior = &self.sources[index[at]];
+                    budget.charge(
+                        Resource::Work,
+                        (prior.uri().len() as u64)
+                            .saturating_add(source.uri().len() as u64)
+                            .saturating_add(33),
+                    )?;
+                    if prior.identity() != source.identity() || prior.uri() != source.uri() {
+                        return Err(SourceError::IdentityConflict.into());
+                    }
+                }
+                Err(at) => {
+                    slot::<usize>(budget)?;
+                    budget.charge(Resource::Work, (index.len() - at) as u64)?;
+                    let owned = source.clone_with_budget(budget)?;
+                    index.insert(at, self.sources.len());
+                    self.sources.push(owned);
+                }
+            }
+        }
+        Ok(())
+    }
     pub fn source(
         &mut self,
         source: &SourceSnapshot,
@@ -45,13 +86,7 @@ impl ParseArena {
                 return Ok(());
             }
         }
-        slot::<SourceSnapshot>(budget)?;
-        budget.charge(
-            Resource::AllocationUnits,
-            (source.text().len() + source.uri().len() + source.identity().source.0.len()) as u64,
-        )?;
-        budget.charge(Resource::Work, source.text().len() as u64)?;
-        self.sources.push(source.clone());
+        self.sources.push(source.clone_with_budget(budget)?);
         Ok(())
     }
     pub fn head(
@@ -102,15 +137,20 @@ impl ParseArena {
             .as_ref()
             .or(node.cover.as_ref())
             .ok_or(SyntaxError::Cover)?;
-        budget.charge(
-            Resource::Work,
-            self.sources.len() as u64 * (head.snapshot_ref().source.0.len() as u64 + 33),
-        )?;
-        let source = self
-            .sources
-            .iter()
-            .find(|s| s.identity() == head.snapshot_ref())
-            .ok_or(SourceError::MissingSnapshot)?;
+        let mut source = None;
+        for candidate in &self.sources {
+            budget.charge(
+                Resource::Work,
+                (head.snapshot_ref().source.0.len() as u64)
+                    .saturating_add(candidate.identity().source.0.len() as u64)
+                    .saturating_add(33),
+            )?;
+            if candidate.identity() == head.snapshot_ref() {
+                source = Some(candidate);
+                break;
+            }
+        }
+        let source = source.ok_or(SourceError::MissingSnapshot)?;
         let cover = source.span_with_budget(head.start(), end, budget)?;
         let origin_span = span(&cover, budget)?;
         let origin_id = usize::try_from(node.origin.0).map_err(|_| SyntaxError::Reference)?;
@@ -137,4 +177,34 @@ impl ParseArena {
             root,
         }
     }
+}
+
+fn source_position(
+    index: &[usize],
+    sources: &[SourceSnapshot],
+    source: &SourceSnapshot,
+    budget: &mut Budget,
+) -> Result<Result<usize, usize>, StopReason> {
+    let (mut low, mut high) = (0, index.len());
+    while low < high {
+        let mid = low + (high - low) / 2;
+        let prior = sources[index[mid]].identity();
+        let id = source.identity();
+        budget.charge(
+            Resource::Work,
+            (prior.source.0.len() as u64)
+                .saturating_add(id.source.0.len() as u64)
+                .saturating_add(1),
+        )?;
+        match prior
+            .source
+            .cmp(&id.source)
+            .then_with(|| prior.revision.cmp(&id.revision))
+        {
+            core::cmp::Ordering::Equal => return Ok(Ok(mid)),
+            core::cmp::Ordering::Less => low = mid + 1,
+            core::cmp::Ordering::Greater => high = mid,
+        }
+    }
+    Ok(Err(low))
 }

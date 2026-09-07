@@ -422,19 +422,14 @@ impl<'a> TokenizationSession<'a> {
         }
         let accepted_check = (|| -> Result<(), ReaderError> {
             for added in &accepted.sources {
-                budget.charge(
-                    Resource::Work,
-                    sources.snapshots().len() as u64
-                        * (added.identity().source.0.len() as u64 + 33),
-                )?;
-                for prior in sources.snapshots() {
-                    if prior.identity().source == added.identity().source
-                        && prior.identity().revision == added.identity().revision
-                    {
-                        budget.charge(Resource::Work, prior.uri().len() as u64 + 33)?;
-                        if prior.identity() != added.identity() || prior.uri() != added.uri() {
-                            return Err(SourceError::IdentityConflict.into());
-                        }
+                if let Some(prior) = sources.get_revision_with_budget(
+                    &added.identity().source,
+                    added.identity().revision,
+                    budget,
+                )? {
+                    budget.charge(Resource::Work, prior.uri().len() as u64 + 33)?;
+                    if prior.identity() != added.identity() || prior.uri() != added.uri() {
+                        return Err(SourceError::IdentityConflict.into());
                     }
                 }
                 admission.admit_existing(added, budget)?;

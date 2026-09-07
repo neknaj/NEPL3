@@ -24,6 +24,46 @@ fn source(id: &str, revision: u64, text: &str) -> Result<SourceSnapshot, SourceE
 }
 
 #[test]
+fn borrowed_store_insert_does_not_clone_duplicates_or_publish_on_stop() -> Result<(), SourceError> {
+    let original = source("日本語", 7, &"x".repeat(10_000))?;
+    let mut store = SourceStore::default();
+    store.insert_ref_with_budget(&original, &mut budget())?;
+    let mut no_allocation = Budget::new(Limits {
+        allocation_units: 0,
+        ..budget().limits()
+    });
+    store.insert_ref_with_budget(&original, &mut no_allocation)?;
+    assert_eq!(no_allocation.usage().allocation_units, 0);
+    assert_eq!(store.snapshots(), core::slice::from_ref(&original));
+    let independently_built = source("日本語", 7, &"x".repeat(10_000))?;
+    let mut too_little_comparison = Budget::new(Limits {
+        work: 1000,
+        ..budget().limits()
+    });
+    assert_eq!(
+        store.insert_ref_with_budget(&independently_built, &mut too_little_comparison),
+        Err(SourceError::Stopped(StopReason::WorkLimit))
+    );
+    let changed = source("日本語", 7, "changed")?;
+    assert_eq!(
+        store.insert_ref_with_budget(&changed, &mut budget()),
+        Err(SourceError::IdentityConflict)
+    );
+    let next = source("a", 0, "new")?;
+    let mut stopped = Budget::new(Limits {
+        allocation_units: 0,
+        ..budget().limits()
+    });
+    assert_eq!(
+        store.insert_ref_with_budget(&next, &mut stopped),
+        Err(SourceError::Stopped(StopReason::AllocationLimit))
+    );
+    assert!(store.get_ref(next.identity()).is_none());
+    store.insert_ref_with_budget(&next, &mut budget())?;
+    assert_eq!(store.snapshots(), &[original, next]);
+    Ok(())
+}
+#[test]
 fn source_digest_is_sha256_of_exact_original_bytes() -> Result<(), SourceError> {
     let empty = source("a", 0, "")?;
     // FIPS SHA-256 empty-message vector, independent of our implementation.

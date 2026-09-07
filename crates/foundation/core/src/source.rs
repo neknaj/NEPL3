@@ -694,6 +694,37 @@ impl SourceStore {
             }
         }
     }
+    /// Admit a borrowed snapshot to this store, cloning only a new declaration.
+    /// This does not replace operation-wide SourceAdmission resource accounting.
+    pub fn insert_ref_with_budget(
+        &mut self,
+        snapshot: &SourceSnapshot,
+        budget: &mut Budget,
+    ) -> Result<(), SourceError> {
+        budget.poll()?;
+        let position =
+            source_index_position(&self.index, |i| &self.snapshots[i], snapshot, budget)?;
+        match position {
+            Ok(at) => {
+                if self.snapshots[self.index[at]].eq_with_budget(snapshot, budget)? {
+                    Ok(())
+                } else {
+                    Err(SourceError::IdentityConflict)
+                }
+            }
+            Err(at) => {
+                budget.charge(Resource::Work, (self.index.len() - at) as u64)?;
+                budget.charge(
+                    Resource::AllocationUnits,
+                    core::mem::size_of::<usize>() as u64,
+                )?;
+                let owned = snapshot.clone_with_budget(budget)?;
+                self.index.insert(at, self.snapshots.len());
+                self.snapshots.push(owned);
+                Ok(())
+            }
+        }
+    }
     /// Find a host source/revision with every index comparison charged.
     pub fn get_revision_with_budget(
         &self,

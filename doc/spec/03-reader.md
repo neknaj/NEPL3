@@ -156,3 +156,10 @@ prefix engineのnative接続はProfileの選択済みProviderRequirementと実�
 この経路を使用する。未対応callをその場で二重dispatchせず所有境界へ戻す。
 engineでの不正provider replyの扱いは従来どおり解析エラーである。
 公開wire型や別processの照合を省略する許可ではなく、同期呼出しで不要なコピーだけを避ける。
+
+providerの追加map・viewの要素とroot・factsがすべて空なら、新たな位置対応の検査対象はない。
+この場合だけ、private checkpointで保持する既存map列の複製とgraph再検査を省く。
+既存mapは受理済みprovider結果、または予約した新snapshotへ正しい対応を構成する組込みreaderに由来する。
+返却source、値・state、report、停止・失敗条件は従来どおり検査する。
+追加mapまたはview/factがあれば既存mapとの和集合を検査し、後から循環を作る追加も拒否する。
+外部から受け取ったraw mapにこの省略条件だけで検査済みproofを付けることはない。

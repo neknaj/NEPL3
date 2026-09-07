@@ -742,9 +742,7 @@ impl<'a> ParseSession<'a> {
             .last_mut()
             .ok_or(ParseError::Reference)?;
         let accepted = machine.accepted.as_ref().ok_or(ParseError::Reference)?;
-        for source in accepted.sources() {
-            arena.source(source, budget)?;
-        }
+        arena.extend_sources(accepted.sources(), budget)?;
         for mapping in accepted.source_maps() {
             if !arena.source_maps.contains(mapping) {
                 build::slot::<nepl3_core::origin::Mapping>(budget)?;
