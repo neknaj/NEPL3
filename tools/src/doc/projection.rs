@@ -121,6 +121,16 @@ impl<'a> Writer<'a, '_> {
         Ok(())
     }
     fn sentence(&mut self, node: u64, continuation: Option<&str>) -> Result<(), Error> {
+        self.sentence_part(node, continuation, true, true, &mut false)
+    }
+    fn sentence_part(
+        &mut self,
+        node: u64,
+        continuation: Option<&str>,
+        first: bool,
+        last: bool,
+        previous_code: &mut bool,
+    ) -> Result<(), Error> {
         self.budget.charge(Resource::Work, 1)?;
         let DocKind::Sentence { inlines } = self.kind(node) else {
             return Err(Error::Unsupported { node });
@@ -128,17 +138,16 @@ impl<'a> Writer<'a, '_> {
         if inlines.is_empty() {
             return Err(Error::Unsupported { node });
         }
-        if inlines.first().is_some_and(|r| matches!(self.kind(r.0), DocKind::Text { text } if text.starts_with(char::is_whitespace)))
-            || inlines.last().is_some_and(|r| matches!(self.kind(r.0), DocKind::Text { text } if text.ends_with(char::is_whitespace))) {
+        if (first && inlines.first().is_some_and(|r| matches!(self.kind(r.0), DocKind::Text { text } if text.starts_with(char::is_whitespace))))
+            || (last && inlines.last().is_some_and(|r| matches!(self.kind(r.0), DocKind::Text { text } if text.ends_with(char::is_whitespace)))) {
             return Err(Error::Text { node });
         }
-        let mut previous_code = false;
         for (index, child) in inlines.iter().enumerate() {
             let is_code = matches!(self.kind(child.0), DocKind::InlineCode { .. });
-            if is_code && previous_code {
+            if is_code && *previous_code {
                 return Err(Error::Unsupported { node: child.0 });
             }
-            previous_code = is_code;
+            *previous_code = is_code;
             match self.kind(child.0) {
                 DocKind::Text { text } => self.text(child.0, text, false)?,
                 DocKind::InlineCode { text } => self.text(child.0, text, true)?,
@@ -172,10 +181,23 @@ impl<'a> Writer<'a, '_> {
         let DocKind::Paragraph { items } = self.kind(node) else {
             return Err(Error::Unsupported { node });
         };
-        if items.len() != 1 {
+        if items.is_empty() {
             return Err(Error::Unsupported { node });
         }
-        self.sentence(items[0].0, Some(continuation))
+        // Sentence boundaries do not insert spaces or line breaks. Keep the
+        // author's text in one Markdown paragraph, including explicit spacing.
+        // Code delimiter adjacency must be checked across these boundaries too.
+        let mut previous_code = false;
+        for (index, item) in items.iter().enumerate() {
+            self.sentence_part(
+                item.0,
+                Some(continuation),
+                index == 0,
+                index + 1 == items.len(),
+                &mut previous_code,
+            )?;
+        }
+        Ok(())
     }
     fn raw_code(&mut self, node: u64, hint: Option<&str>, text: &str) -> Result<(), Error> {
         self.budget.charge(Resource::Work, text.len() as u64)?;
@@ -342,7 +364,7 @@ pub fn write(input: &std::path::Path, output: &std::path::Path) -> crate::Result
         .map(|b| format!("{b:02x}"))
         .collect();
     let provenance = format!(
-        "<!-- Generated from {escaped}; renderer nepl3-tools.markdown/3; source SHA-256 {digest}. Edit the Doc source. -->\n\n"
+        "<!-- Generated from {escaped}; renderer nepl3-tools.markdown/4; source SHA-256 {digest}. Edit the Doc source. -->\n\n"
     );
     let mut file = std::fs::OpenOptions::new()
         .write(true)
