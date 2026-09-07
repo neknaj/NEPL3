@@ -1,0 +1,28 @@
+{
+  "commit": "51f86290035b42ab0a3dd3b15eb5ce831ad3b526",
+  "run": "34077021672",
+  "archive_sha256": "6ab82e98978c465524bab7d6aa3a6cd4aaa268af4e76aa33d9b51d76ec83e8f1",
+  "tar_members": 525,
+  "files": 416,
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "78134163cb5657d6a13d64f3411c1f28fa0c1774cc2d75015827c001c4e5b3b1",
+    "spec_sha256": "b884a745a2f0b85abe4844f09ad82ee9fcdb38478300830200f2a05332bf28de"
+  },
+  "ci_tests": {
+    "wasi and wasm compilation": 184,
+    "native (macos-latest)": 253,
+    "native (windows-latest)": 253,
+    "native (ubuntu-latest)": 253
+  },
+  "retrieved_log_sha256": "fcc9c2a87eadb1a5d3a29ce45c2b532f63e421b1f4caded7092867b3936ae54b",
+  "verified": [
+    "All required jobs succeeded for this exact merged commit.",
+    "Source archive checksum, receipt commit/run, regular-file paths, absence of .tmp, source/spec identity and checkpoint log hashes matched.",
+    "CI tests executed 253 native tests on each of three operating systems and 184 WASI tests."
+  ],
+  "unverified": [
+    "Source archive is not a runtime binary release.",
+    "Browser execution, separate-process provider execution and required acceptance completion are not claimed."
+  ]
+}

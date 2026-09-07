@@ -114,14 +114,14 @@ fn diagnostic(
     registry: &SchemaRegistry,
     b: &mut Budget,
 ) -> Result<(), ReportValidationError> {
-    b.charge(Resource::Work, 1)?;
-    if value.code.is_empty()
-        || value.stage.is_empty()
-        || registry.descriptor(&value.schema).is_none()
-    {
-        return Err(ReportValidationError::Metadata);
-    }
-    registry.validate_typed(&value.arguments, b)?;
+    validate_diagnostic_metadata(
+        &value.schema,
+        &value.code,
+        &value.stage,
+        &value.arguments,
+        registry,
+        b,
+    )?;
     if let Some(span) = &value.primary {
         check_span(sources, span, b)?;
     }
@@ -173,11 +173,7 @@ fn event(
     registry: &SchemaRegistry,
     b: &mut Budget,
 ) -> Result<(), ReportValidationError> {
-    b.charge(Resource::Work, 1)?;
-    if value.kind.is_empty() || registry.descriptor(&value.schema).is_none() {
-        return Err(ReportValidationError::Metadata);
-    }
-    registry.validate_typed(&value.payload, b)?;
+    validate_event_metadata(&value.schema, &value.kind, &value.payload, registry, b)?;
     if let Some(span) = &value.span {
         check_span(sources, span, b)?;
     }
@@ -228,12 +224,12 @@ impl Report {
         b: &mut Budget,
     ) -> Result<(), ReportValidationError> {
         b.charge(Resource::Work, 1)?;
-        if self.usage.diagnostics < self.diagnostics.len() as u64
-            || self.usage.events < self.events.len() as u64
-            || self.trace_overflow.as_ref().is_some_and(|v| v.dropped == 0)
-        {
-            return Err(ReportValidationError::Usage);
-        }
+        validate_report_usage(
+            self.usage,
+            self.diagnostics.len(),
+            self.events.len(),
+            self.trace_overflow.as_ref(),
+        )?;
         for value in &self.diagnostics {
             diagnostic(value, sources, registry, b)?;
         }
@@ -242,4 +238,52 @@ impl Report {
         }
         Ok(())
     }
+}
+
+/// Position-independent diagnostic rules, shared by full-snapshot diagnostics
+/// and protocols whose separately checked positions are only projected claims.
+pub fn validate_diagnostic_metadata(
+    schema: &crate::value::SchemaRef,
+    code: &str,
+    stage: &str,
+    arguments: &crate::value::TypedValue,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<(), ReportValidationError> {
+    b.charge(Resource::Work, schema.package.len() as u64 + 34)?;
+    if code.is_empty() || stage.is_empty() || registry.descriptor(schema).is_none() {
+        return Err(ReportValidationError::Metadata);
+    }
+    registry.validate_typed(arguments, b)?;
+    Ok(())
+}
+/// Shared event rules excluding the protocol-specific position resolver.
+pub fn validate_event_metadata(
+    schema: &crate::value::SchemaRef,
+    kind: &str,
+    payload: &crate::value::TypedValue,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<(), ReportValidationError> {
+    b.charge(Resource::Work, schema.package.len() as u64 + 34)?;
+    if kind.is_empty() || registry.descriptor(schema).is_none() {
+        return Err(ReportValidationError::Metadata);
+    }
+    registry.validate_typed(payload, b)?;
+    Ok(())
+}
+/// Internal count consistency only; this neither authenticates nor absorbs Usage.
+pub fn validate_report_usage(
+    usage: crate::budget::Usage,
+    diagnostics: usize,
+    events: usize,
+    overflow: Option<&super::TraceOverflow>,
+) -> Result<(), ReportValidationError> {
+    if usage.diagnostics < diagnostics as u64
+        || usage.events < events as u64
+        || overflow.is_some_and(|v| v.dropped == 0)
+    {
+        return Err(ReportValidationError::Usage);
+    }
+    Ok(())
 }

@@ -98,6 +98,116 @@ impl Budget {
     pub fn limits(&self) -> Limits {
         self.limits
     }
+    /// Temporarily lower resource ceilings without changing observed Usage.
+    /// Nested calls cannot widen the current ceiling. Every Result path restores
+    /// the outer limits, while a stop remains sticky and is never rolled back.
+    pub fn with_ceiling<T, E: From<StopReason>>(
+        &mut self,
+        ceiling: Limits,
+        operation: impl FnOnce(&mut Self) -> Result<T, E>,
+    ) -> Result<T, E> {
+        self.poll()?;
+        let outer = self.limits;
+        self.limits = Limits {
+            source_bytes: outer.source_bytes.min(ceiling.source_bytes),
+            work: outer.work.min(ceiling.work),
+            depth: outer.depth.min(ceiling.depth),
+            nodes: outer.nodes.min(ceiling.nodes),
+            allocation_units: outer.allocation_units.min(ceiling.allocation_units),
+            output_bytes: outer.output_bytes.min(ceiling.output_bytes),
+            diagnostics: outer.diagnostics.min(ceiling.diagnostics),
+            events: outer.events.min(ceiling.events),
+        };
+        let result = (|| {
+            for resource in [
+                Resource::SourceBytes,
+                Resource::Work,
+                Resource::Nodes,
+                Resource::AllocationUnits,
+                Resource::OutputBytes,
+                Resource::Diagnostics,
+                Resource::Events,
+            ] {
+                self.charge(resource, 0)?;
+            }
+            if self.usage.depth > self.limits.depth {
+                return Err(self.stop(StopReason::DepthLimit).into());
+            }
+            operation(self)
+        })();
+        self.limits = outer;
+        result
+    }
+    /// Record already completed work observed by an authorized host, including
+    /// a delegated operation that finished after this budget stopped locally.
+    /// This grants no permission to execute more work and does not authenticate
+    /// a remote claim. The caller must verify the saved grant and observation.
+    /// All bounds are checked before recording; an existing stop is preserved.
+    pub fn record_observed_usage(&mut self, observed: Usage) -> Result<(), StopReason> {
+        fn sum(a: u64, b: u64, limit: u64, reason: StopReason) -> Result<u64, StopReason> {
+            a.checked_add(b).filter(|v| *v <= limit).ok_or(reason)
+        }
+        let next = (|| {
+            Ok(Usage {
+                source_bytes: sum(
+                    self.usage.source_bytes,
+                    observed.source_bytes,
+                    self.limits.source_bytes,
+                    StopReason::SourceLimit,
+                )?,
+                work: sum(
+                    self.usage.work,
+                    observed.work,
+                    self.limits.work,
+                    StopReason::WorkLimit,
+                )?,
+                depth: {
+                    let depth = self.usage.depth.max(observed.depth);
+                    if depth > self.limits.depth {
+                        return Err(StopReason::DepthLimit);
+                    }
+                    depth
+                },
+                nodes: sum(
+                    self.usage.nodes,
+                    observed.nodes,
+                    self.limits.nodes,
+                    StopReason::NodeLimit,
+                )?,
+                allocation_units: sum(
+                    self.usage.allocation_units,
+                    observed.allocation_units,
+                    self.limits.allocation_units,
+                    StopReason::AllocationLimit,
+                )?,
+                output_bytes: sum(
+                    self.usage.output_bytes,
+                    observed.output_bytes,
+                    self.limits.output_bytes,
+                    StopReason::OutputLimit,
+                )?,
+                diagnostics: sum(
+                    self.usage.diagnostics,
+                    observed.diagnostics,
+                    self.limits.diagnostics,
+                    StopReason::DiagnosticLimit,
+                )?,
+                events: sum(
+                    self.usage.events,
+                    observed.events,
+                    self.limits.events,
+                    StopReason::EventLimit,
+                )?,
+            })
+        })();
+        match next {
+            Ok(next) => {
+                self.usage = next;
+                self.poll()
+            }
+            Err(reason) => Err(self.stop(reason)),
+        }
+    }
     /// Records a validated nested operation's stop without replacing an earlier cause.
     pub fn stop(&mut self, reason: StopReason) -> StopReason {
         *self.stopped.get_or_insert(reason)
