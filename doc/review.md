@@ -278,4 +278,14 @@ R037の同じapply入口では、別setupで構築した既存source `abc` を�
 
 R036の追加修正後、同一SourceIdの2 revisionを持つ元Fix probeはSnapshotMismatchで拒否された。管理対象report 4件を独立実行し、元のdigest/重複編集の拒否、schema自体は正しいNDF改変からのdecode拒否、順不同の隣接編集、挿入境界、異なるSourceIdへの同時編集、related spanの履歴参照を確認した。codeはFixの編集だけを同一前提snapshotへ制限し、診断全体の履歴参照を禁止しないため、R036をcorrectedとした。SourceStore.applyの資源計上漏れR037は別のopen課題として残す。
 
+次の性能変更では、`ParseSession::read_with_host` の管理対象native_host 5件を独立実行し成功した。明示hostが実provider catalogの要求を照合し、同期応答も既存reader/tokenizerの再開検査を通すことをコードで確認した。Noneまたは通常callback失敗はowned Await/Reserveへ戻り、停止時は正式diagnostic・event・source/map閉包を保持する。dynamic head providerの実装や権限隔離の完成とは扱わない。
+
+独立の補助 `native_host_boundary` では、caller深さ7で `let "x\n" y tail` を読み、Text予約とproviderが交互に現れる経路を検査した。全同期、2回目None、2回目通常失敗の各結果がowned経路とtree・source/map・diagnostic・depthで一致した。decoded Text受理後の取消はdiagnostic 1・source 1・map 2を保持した。Allocation上限100000から2000000を32768刻みで振ると、Text受理後の停止6ケースと完了51ケースを確認し、停止でsource/map閉包が欠落せず、使用量が上限を超えないことを検査した。この補助probeはignoredであり、同じ交互経路と取消を扱う管理対象 `native_host_mixed_text_provider_fallback_preserves_decoded_sources` の独立成功と区別して記録する。
+
+変更後の通常bootstrap試験もログ保存付きで独立再実行し、完全な原GrammarからP0/P1/P2のsemantic identity一致を確認した。`cargo test --locked -p nepl3-tools complete_grammar_bootstrap -- --nocapture` は必須の通常試験1件が成功した。任意のowned性能比較1件はignoreのままであり、この実行で比較試験も通したとはしない。今回のnative debug実行は25.29秒、Work 8,073,006,166、AllocationUnits 10,333,383,050、Depth 96、AST 518 nodesだった。実行時間は並行処理の影響を含む単回観測で、releaseの速度比を独立証明する値ではない。累積コピー計上量は以前のbootstrapより減ったが、標準予算での完了や内部コピーの全解消、全targetでの性能要件達成は未検証のままである。
+
+この25.29秒の計測対象は共用runtimeの変更中treeであり、R037のadmission比較Work計上も含む。native host差分だけを隔離したcheckpointのsource identityや速度比較と同一視しない。
+
+統括の報告では、Reportだけを保存したcheckpoint 267c531のCI 34070506992は、3 OSともP2 byte 9223でWork上限10Bに達して失敗した。このremote結果は統括による確認であり、本レビューのnativeローカル成功へ置き換えない。今回の同期host経路は通常bootstrapの上限10BとCIでの実行を維持し、owned比較だけを任意の追加測定とする。改善後のremote CIは再検証待ちで、owned経路の高いコピー費用は未解決である。
+
 仕様の通読、具体例による矛盾の確認、公開規格との照合を行った。r4では上記のcore/wire公開APIとNDF intrinsic roundtripに加え、標準Grammar原文のnative bootstrapを実行した。4言語全formのRust parse/lower、browser描画、回路実行、LSP、portable operation provider、および全要求targetでのconformanceはまだこのレビューの実行範囲に含まれない。対応する実装が存在する段階で、implementation-status.jsonの未実行記録を実行証拠とともに更新する。

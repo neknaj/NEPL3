@@ -1,0 +1,59 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+   Compiling nepl3-engine v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 25.11s
+     Running unittests src\lib.rs (target\wasm32-wasip2\debug\deps\nepl3_engine-f7261a2043e723cc.wasm)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\package.rs (target\wasm32-wasip2\debug\deps\package-36bc91b00eb9eb59.wasm)
+
+running 9 tests
+test listof_foreign_has_foreign_head_and_local_tail_without_losing_its_selector ... ok
+test package_boundary_checks_extension_provenance_and_resource_limits ... ok
+test package_checks_real_surface_shapes_modes_selectors_and_binding_coverage ... ok
+test package_rejects_direct_reader_cycles_and_counts_binding_entry_depth ... ok
+test persistent_tree_checks_parent_reads_spelling_payload_and_concrete_owner ... ok
+test recovery_strategy_and_sync_order_are_part_of_package_behavior ... ok
+test resolved_profile_pins_real_package_host_providers_resources_and_foreign_modes ... ok
+test semantic_identity_preserves_ordered_behavior_and_presentation_fallback ... ok
+test semantic_identity_removes_arena_layout_sharing_and_provenance ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.31s
+
+     Running tests\parse.rs (target\wasm32-wasip2\debug\deps\parse-35741830cbb85023.wasm)
+
+running 18 tests
+test accepted_trivia_without_a_token_survives_eof_and_need_more ... ok
+test allocation_stop_preserves_actual_usage_and_never_invents_a_root ... ok
+test append_retry_reparses_every_scalar_split_and_keeps_cumulative_usage ... ok
+test append_retry_retains_original_caller_depth_when_host_resumes_at_zero ... ok
+test explicit_list_spine_preserves_declared_head_and_tail_children ... ok
+test foreign::foreign_root_mode_is_guest_owned_and_normal_child_and_host_restore_defaults ... ok
+test missing_children_share_one_bundle_recovery_table ... ok
+test missing_final_child_and_nonfinal_input_are_distinct ... ok
+test native_host_cancel_and_invalid_reply_keep_boundary_semantics ... ok
+test native_host_failure_keeps_generated_diagnostic_and_event_closure ... ok
+test native_host_mixed_text_provider_fallback_preserves_decoded_sources ... ok
+test native_host_prefix_growth_reduces_measured_copy_work ... ok
+test native_host_preserves_tree_reports_maps_and_owned_fallback ... ok
+test prefix_depth_composes_with_nested_reader_frames ... ok
+test provider_resume_keeps_prefix_frames_report_and_caller_depth ... ok
+test static_form_keeps_builtin_children_and_token_payloads ... ok
+test text_reservation_preserves_prefix_identity_and_composed_caller_depth ... ok
+test unknown_heads_preserve_remainder_without_inventing_a_leaf_arity ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.65s
+
+   Doc-tests nepl3_engine
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+    Blocking waiting for file lock on build directory
+    Checking nepl3-engine v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\engine)
+    Checking nepl3-grammar-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\languages\grammar\core)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.80s

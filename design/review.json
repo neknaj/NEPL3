@@ -3,7 +3,7 @@
   "source_design": "nepl3-design-2026-09-06-r1",
   "reviewed_at": "2026-09-07",
   "independent_from_implementation": true,
-  "scope": "Initial design and repository review; r3 Web/TEA/Pages and migration supplement; r4 initial core/wire/reader implementation, public API failure reproductions and native unit tests. Full runtime acceptance groups have not been established by this review.",
+  "scope": "Initial design and repository review; r3 Web/TEA/Pages and migration supplement; r4 core/wire/reader/static prefix implementation, public API failure reproductions, native Grammar bootstrap and synchronous host versus owned-continuation boundary checks. Full runtime acceptance groups have not been established by this review.",
   "reviewed_design": "nepl3-design-2026-09-06-r4",
   "findings": [
     {

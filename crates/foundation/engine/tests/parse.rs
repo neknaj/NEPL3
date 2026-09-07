@@ -1,5 +1,7 @@
 #[path = "parse/foreign.rs"]
 mod foreign;
+#[path = "parse/host.rs"]
+mod host;
 #[path = "parse/support.rs"]
 mod support;
 use nepl3_core::{
@@ -42,6 +44,7 @@ fn run_options(
 }
 #[derive(Default)]
 struct Scenario {
+    work: Option<u64>,
     list: bool,
     cap: Option<u64>,
     depth: Option<u64>,
@@ -51,11 +54,13 @@ struct Scenario {
     provider: bool,
     cancel_await: bool,
     restart: Option<&'static str>,
+    native: Option<host::Action>,
 }
 fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<ParseReply, String> {
     let Scenario {
         list,
         cap,
+        work,
         depth,
         text,
         unknown,
@@ -63,6 +68,7 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
         provider,
         cancel_await,
         restart,
+        native,
     } = options;
     let (mut package, registry) = fixture()?;
     if unknown {
@@ -275,28 +281,78 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
         limits.depth = depth;
         operation = nepl3_core::budget::Budget::new(limits);
     }
+    if let Some(work) = work {
+        let mut limits = operation.limits();
+        limits.work = work;
+        operation = nepl3_core::budget::Budget::new(limits);
+    }
     let mut admission = SourceAdmission::default();
     let mut reply = operation
         .with_depth_at_least(caller_depth, |operation| {
-            session.read(
-                ParseRequest {
-                    snapshot: &source,
-                    start: 0,
-                    limit: input.len() as u64,
-                    final_input,
-                    entry: &entry,
-                    states: &[LanguageReaderState {
-                        alias: "Host".into(),
-                        state: NdfValue::Unit,
-                    }],
-                },
-                &sources,
-                operation,
-                &mut admission,
-            )
+            let request = ParseRequest {
+                snapshot: &source,
+                start: 0,
+                limit: input.len() as u64,
+                final_input,
+                entry: &entry,
+                states: &[LanguageReaderState {
+                    alias: "Host".into(),
+                    state: NdfValue::Unit,
+                }],
+            };
+            if let Some(action) = native {
+                let mut host = host::Host {
+                    action,
+                    calls: 0,
+                    minimum_depth: caller_depth + 3,
+                };
+                let result = session.read_with_host(
+                    request,
+                    &sources,
+                    operation,
+                    &mut admission,
+                    &mut host,
+                )?;
+                if matches!(
+                    action,
+                    host::Action::FailSecond | host::Action::GeneratedFailSecond
+                ) {
+                    assert_eq!(result.host_error, Some(ParseError::Context));
+                    assert!(matches!(result.reply.outcome, ParseOutcome::Await { .. }));
+                    assert_eq!(result.reply.report.diagnostics.len(), 1);
+                }
+                Ok(result.reply)
+            } else {
+                session.read(request, &sources, operation, &mut admission)
+            }
         })
         .map_err(|e| format!("{e:?}"))?;
     assert_eq!(operation.current_depth(), 0);
+    if native == Some(host::Action::CloseAfterDecline) {
+        let ParseOutcome::Await { continuation, .. } = &reply.outcome else {
+            return Err("owned fallback".into());
+        };
+        session.close();
+        let terminal = nepl3_reader::runtime::ProviderReply::Read(Box::new(
+            nepl3_reader::model::ReadReply::Stopped {
+                reason: nepl3_core::budget::StopReason::Cancelled,
+                report: nepl3_core::diagnostic::Report::default(),
+                sources: vec![],
+                source_maps: vec![],
+            },
+        ));
+        assert!(matches!(
+            session.resume(
+                continuation,
+                terminal,
+                &sources,
+                &mut operation,
+                &mut admission
+            ),
+            Err(ParseError::Closed)
+        ));
+        return Ok(reply);
+    }
     if let Some(next_input) = restart {
         let ParseOutcome::NeedMore { progress, .. } = &reply.outcome else {
             return Err(format!("expected NeedMore: {reply:?}"));
@@ -403,36 +459,30 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
         );
         reply = resumed;
     }
-    if provider {
-        let mut count = 0;
-        while let ParseOutcome::Await { call, continuation } = &reply.outcome {
-            count += 1;
-            let nepl3_reader::model::ProviderCall::Read {
-                request,
-                depth_base,
-                ..
-            } = call.as_ref()
-            else {
-                return Err("read call".into());
-            };
-            assert!(*depth_base >= caller_depth + 3);
-            let mut fresh = nepl3_core::budget::Budget::new(operation.limits());
-            fresh.cancel();
-            let empty = nepl3_reader::runtime::ProviderReply::Read(Box::new(
-                nepl3_reader::model::ReadReply::Stopped {
-                    reason: nepl3_core::budget::StopReason::Cancelled,
-                    report: nepl3_core::diagnostic::Report::default(),
-                    sources: vec![],
-                    source_maps: vec![],
-                },
-            ));
-            assert!(matches!(
-                session.resume(continuation, empty, &sources, &mut fresh, &mut admission),
-                Err(ParseError::Continuation)
-            ));
-            if cancel_await && count == 2 {
-                operation.cancel();
-                let terminal = nepl3_reader::runtime::ProviderReply::Read(Box::new(
+    let mut count = usize::from(matches!(
+        native,
+        Some(
+            host::Action::DeclineSecond
+                | host::Action::FailSecond
+                | host::Action::GeneratedFailSecond
+        )
+    ));
+    loop {
+        if provider {
+            while let ParseOutcome::Await { call, continuation } = &reply.outcome {
+                count += 1;
+                let nepl3_reader::model::ProviderCall::Read {
+                    request,
+                    depth_base,
+                    ..
+                } = call.as_ref()
+                else {
+                    return Err("read call".into());
+                };
+                assert!(*depth_base >= caller_depth + 3);
+                let mut fresh = nepl3_core::budget::Budget::new(operation.limits());
+                fresh.cancel();
+                let empty = nepl3_reader::runtime::ProviderReply::Read(Box::new(
                     nepl3_reader::model::ReadReply::Stopped {
                         reason: nepl3_core::budget::StopReason::Cancelled,
                         report: nepl3_core::diagnostic::Report::default(),
@@ -440,137 +490,159 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
                         source_maps: vec![],
                     },
                 ));
-                let stopped = session
-                    .resume(
-                        continuation,
-                        terminal,
-                        &sources,
-                        &mut operation,
-                        &mut admission,
+                assert!(matches!(
+                    session.resume(continuation, empty, &sources, &mut fresh, &mut admission),
+                    Err(ParseError::Continuation)
+                ));
+                if cancel_await && count == 2 {
+                    operation.cancel();
+                    let terminal = nepl3_reader::runtime::ProviderReply::Read(Box::new(
+                        nepl3_reader::model::ReadReply::Stopped {
+                            reason: nepl3_core::budget::StopReason::Cancelled,
+                            report: nepl3_core::diagnostic::Report::default(),
+                            sources: vec![],
+                            source_maps: vec![],
+                        },
+                    ));
+                    let stopped = session
+                        .resume(
+                            continuation,
+                            terminal,
+                            &sources,
+                            &mut operation,
+                            &mut admission,
+                        )
+                        .map_err(|e| format!("cancel: {e:?}"))?;
+                    reply = stopped;
+                    break;
+                }
+                let start = request.start as usize;
+                let end = input[start..].find(' ').map_or(input.len(), |i| start + i);
+                let value = &input[start..end];
+                let terminal = operation
+                    .with_depth_at_least(
+                        *depth_base,
+                        |b| -> Result<_, nepl3_core::budget::StopReason> {
+                            b.charge(nepl3_core::budget::Resource::Work, value.len() as u64)?;
+                            b.charge(
+                                nepl3_core::budget::Resource::AllocationUnits,
+                                value.len() as u64,
+                            )?;
+                            b.charge(nepl3_core::budget::Resource::Diagnostics, 1)?;
+                            let diagnostic = nepl3_core::diagnostic::Diagnostic {
+                                schema: package.schema.clone(),
+                                code: "FixtureRead".into(),
+                                stage: "reader".into(),
+                                severity: nepl3_core::diagnostic::Severity::Information,
+                                arguments: nepl3_core::value::TypedValue::Record(
+                                    nepl3_core::value::Record {
+                                        schema: package.schema.clone(),
+                                        kind: "List:Nil".into(),
+                                        fields: vec![],
+                                    },
+                                ),
+                                primary: None,
+                                related: vec![],
+                                fixes: vec![],
+                            };
+                            Ok(nepl3_reader::runtime::ProviderReply::Read(Box::new(
+                                nepl3_reader::model::ReadReply::Matched {
+                                    value: NdfValue::Text(value.into()),
+                                    end: end as u64,
+                                    new_state: NdfValue::Unit,
+                                    view: nepl3_core::view::ViewBundle {
+                                        elements: vec![],
+                                        roots: vec![],
+                                    },
+                                    facts: vec![],
+                                    sources: vec![],
+                                    source_maps: vec![],
+                                    report: nepl3_core::diagnostic::Report {
+                                        diagnostics: vec![diagnostic],
+                                        usage: b.usage(),
+                                        ..nepl3_core::diagnostic::Report::default()
+                                    },
+                                },
+                            )))
+                        },
                     )
-                    .map_err(|e| format!("cancel: {e:?}"))?;
-                reply = stopped;
-                break;
+                    .map_err(|e| format!("host: {e:?}"))?;
+                let resumed = operation
+                    .with_depth_at_least(caller_depth, |b| {
+                        session.resume(continuation, terminal, &sources, b, &mut admission)
+                    })
+                    .map_err(|e| format!("resume: {e:?}"))?;
+                reply = resumed;
+                assert_eq!(operation.current_depth(), 0);
             }
-            let start = request.start as usize;
-            let end = input[start..].find(' ').map_or(input.len(), |i| start + i);
-            let value = &input[start..end];
-            let terminal = operation
-                .with_depth_at_least(
-                    *depth_base,
-                    |b| -> Result<_, nepl3_core::budget::StopReason> {
-                        b.charge(nepl3_core::budget::Resource::Work, value.len() as u64)?;
-                        b.charge(
-                            nepl3_core::budget::Resource::AllocationUnits,
-                            value.len() as u64,
-                        )?;
-                        b.charge(nepl3_core::budget::Resource::Diagnostics, 1)?;
-                        let diagnostic = nepl3_core::diagnostic::Diagnostic {
-                            schema: package.schema.clone(),
-                            code: "FixtureRead".into(),
-                            stage: "reader".into(),
-                            severity: nepl3_core::diagnostic::Severity::Information,
-                            arguments: nepl3_core::value::TypedValue::Record(
-                                nepl3_core::value::Record {
-                                    schema: package.schema.clone(),
-                                    kind: "List:Nil".into(),
-                                    fields: vec![],
-                                },
-                            ),
-                            primary: None,
-                            related: vec![],
-                            fixes: vec![],
-                        };
-                        Ok(nepl3_reader::runtime::ProviderReply::Read(Box::new(
-                            nepl3_reader::model::ReadReply::Matched {
-                                value: NdfValue::Text(value.into()),
-                                end: end as u64,
-                                new_state: NdfValue::Unit,
-                                view: nepl3_core::view::ViewBundle {
-                                    elements: vec![],
-                                    roots: vec![],
-                                },
-                                facts: vec![],
-                                sources: vec![],
-                                source_maps: vec![],
-                                report: nepl3_core::diagnostic::Report {
-                                    diagnostics: vec![diagnostic],
-                                    usage: b.usage(),
-                                    ..nepl3_core::diagnostic::Report::default()
-                                },
-                            },
-                        )))
-                    },
-                )
-                .map_err(|e| format!("host: {e:?}"))?;
-            let resumed = operation
-                .with_depth_at_least(caller_depth, |b| {
-                    session.resume(continuation, terminal, &sources, b, &mut admission)
-                })
-                .map_err(|e| format!("resume: {e:?}"))?;
-            reply = resumed;
-            assert_eq!(operation.current_depth(), 0);
         }
-    }
-    if text {
-        let ParseOutcome::Reserve {
-            ref continuation, ..
-        } = reply.outcome
-        else {
-            return Err(format!("expected reservation: {reply:?}"));
-        };
-        let reservation = nepl3_core::source::SourceReservation {
-            source_id: SourceId("decoded".into()),
-            revision: 0,
-            uri: "memory:decoded".into(),
-        };
-        let mut fresh = nepl3_core::budget::Budget::new(operation.limits());
-        fresh.cancel();
-        assert!(matches!(
-            session.reserve(
-                continuation,
-                &reservation,
-                &sources,
-                &mut fresh,
-                &mut admission
-            ),
-            Err(ParseError::Continuation)
-        ));
-        let mut altered = continuation.clone();
-        altered.progress.frames[0].arity += 1;
-        assert!(matches!(
-            session.reserve(
-                &altered,
-                &reservation,
-                &sources,
-                &mut operation,
-                &mut admission
-            ),
-            Err(ParseError::Continuation)
-        ));
-        let resumed = operation
-            .with_depth_at_least(caller_depth, |operation| {
+        if text && matches!(reply.outcome, ParseOutcome::Reserve { .. }) {
+            let ParseOutcome::Reserve {
+                ref continuation, ..
+            } = reply.outcome
+            else {
+                return Err(format!("expected reservation: {reply:?}"));
+            };
+            let reservation = nepl3_core::source::SourceReservation {
+                source_id: SourceId("decoded".into()),
+                revision: 0,
+                uri: "memory:decoded".into(),
+            };
+            let mut fresh = nepl3_core::budget::Budget::new(operation.limits());
+            fresh.cancel();
+            assert!(matches!(
                 session.reserve(
                     continuation,
                     &reservation,
                     &sources,
-                    operation,
-                    &mut admission,
-                )
-            })
-            .map_err(|e| format!("reserve: {e:?}"))?;
-        assert_eq!(operation.current_depth(), 0);
-        assert!(matches!(
-            session.reserve(
+                    &mut fresh,
+                    &mut admission
+                ),
+                Err(ParseError::Continuation)
+            ));
+            let mut altered = continuation.clone();
+            altered.progress.frames[0].arity += 1;
+            assert!(matches!(
+                session.reserve(
+                    &altered,
+                    &reservation,
+                    &sources,
+                    &mut operation,
+                    &mut admission
+                ),
+                Err(ParseError::Continuation)
+            ));
+            let resumed = operation
+                .with_depth_at_least(caller_depth, |operation| {
+                    session.reserve(
+                        continuation,
+                        &reservation,
+                        &sources,
+                        operation,
+                        &mut admission,
+                    )
+                })
+                .map_err(|e| format!("reserve: {e:?}"))?;
+            assert_eq!(operation.current_depth(), 0);
+            let stale = session.reserve(
                 continuation,
                 &reservation,
                 &sources,
                 &mut operation,
-                &mut admission
-            ),
-            Err(ParseError::NoPending)
-        ));
-        reply = resumed;
+                &mut admission,
+            );
+            if matches!(
+                resumed.outcome,
+                ParseOutcome::Await { .. } | ParseOutcome::Reserve { .. }
+            ) {
+                assert!(matches!(stale, Err(ParseError::Continuation)));
+            } else {
+                assert!(matches!(stale, Err(ParseError::NoPending)));
+            }
+            reply = resumed;
+            continue;
+        }
+        break;
     }
 
     if let ParseOutcome::Complete { tree, .. } | ParseOutcome::Recovered { tree, .. } =
@@ -1025,5 +1097,321 @@ fn append_retry_retains_original_caller_depth_when_host_resumes_at_zero() -> Tes
     )?;
     assert!(matches!(resumed.outcome, ParseOutcome::Complete { .. }));
     assert_eq!(resumed.report.usage.depth, direct.report.usage.depth);
+    Ok(())
+}
+
+#[test]
+fn native_host_preserves_tree_reports_maps_and_owned_fallback() -> TestResult {
+    let owned = run_scenario(
+        "let x y tail",
+        true,
+        Scenario {
+            provider: true,
+            caller_depth: 7,
+            ..Scenario::default()
+        },
+    )?;
+    for action in [
+        host::Action::Serve,
+        host::Action::DeclineSecond,
+        host::Action::FailSecond,
+    ] {
+        let native = run_scenario(
+            "let x y tail",
+            true,
+            Scenario {
+                provider: true,
+                caller_depth: 7,
+                native: Some(action),
+                ..Scenario::default()
+            },
+        )?;
+        // Two provider heads, unchanged fixed arity, and the next host token remains unread.
+        assert_eq!(native.outcome, owned.outcome);
+        assert_eq!(native.report.diagnostics, owned.report.diagnostics);
+        assert_eq!(native.report.events, owned.report.events);
+        assert_eq!(native.sources, owned.sources);
+        assert_eq!(native.source_maps, owned.source_maps);
+        assert_eq!(native.report.usage.depth, owned.report.usage.depth);
+        if action == host::Action::Serve {
+            assert!(native.report.usage.allocation_units < owned.report.usage.allocation_units);
+        }
+    }
+    let owned = run_scenario(
+        "let \"x\\n\" y tail",
+        true,
+        Scenario {
+            text: true,
+            caller_depth: 7,
+            ..Scenario::default()
+        },
+    )?;
+    let native = run_scenario(
+        "let \"x\\n\" y tail",
+        true,
+        Scenario {
+            text: true,
+            caller_depth: 7,
+            native: Some(host::Action::Serve),
+            ..Scenario::default()
+        },
+    )?;
+    assert_eq!(native.outcome, owned.outcome);
+    assert_eq!(native.sources, owned.sources);
+    assert_eq!(native.source_maps, owned.source_maps);
+    Ok(())
+}
+#[test]
+fn native_host_cancel_and_invalid_reply_keep_boundary_semantics() -> TestResult {
+    let stopped = run_scenario(
+        "let x y",
+        true,
+        Scenario {
+            provider: true,
+            caller_depth: 7,
+            native: Some(host::Action::CancelSecond),
+            ..Scenario::default()
+        },
+    )?;
+    assert!(matches!(
+        stopped.outcome,
+        ParseOutcome::Stopped {
+            reason: nepl3_core::budget::StopReason::Cancelled,
+            ..
+        }
+    ));
+    assert_eq!(stopped.report.diagnostics.len(), 1);
+    assert_eq!(stopped.report.usage.diagnostics, 1);
+    assert!(
+        run_scenario(
+            "let x y",
+            true,
+            Scenario {
+                provider: true,
+                native: Some(host::Action::WrongSecond),
+                ..Scenario::default()
+            }
+        )
+        .is_err()
+    );
+    for cap in [0, 2_000, 20_000, 60_000, 100_000] {
+        let stopped = run_scenario(
+            "let x y",
+            true,
+            Scenario {
+                provider: true,
+                cap: Some(cap),
+                native: Some(host::Action::Serve),
+                ..Scenario::default()
+            },
+        )?;
+        assert!(matches!(
+            stopped.outcome,
+            ParseOutcome::Stopped {
+                reason: nepl3_core::budget::StopReason::AllocationLimit,
+                ..
+            }
+        ));
+        assert!(stopped.report.usage.allocation_units <= cap);
+    }
+    for work in [0, 100, 1_000, 5_000] {
+        let reply = run_scenario(
+            "let x y",
+            true,
+            Scenario {
+                provider: true,
+                work: Some(work),
+                native: Some(host::Action::Serve),
+                ..Scenario::default()
+            },
+        )?;
+        assert!(matches!(
+            reply.outcome,
+            ParseOutcome::Stopped {
+                reason: nepl3_core::budget::StopReason::WorkLimit,
+                ..
+            }
+        ));
+        assert!(reply.report.usage.work <= work);
+    }
+    let closed = run_scenario(
+        "let x y",
+        true,
+        Scenario {
+            provider: true,
+            native: Some(host::Action::CloseAfterDecline),
+            ..Scenario::default()
+        },
+    )?;
+    assert_eq!(closed.report.diagnostics.len(), 1);
+    let mixed_cancel = run_scenario(
+        "let x y",
+        true,
+        Scenario {
+            provider: true,
+            cancel_await: true,
+            native: Some(host::Action::DeclineSecond),
+            ..Scenario::default()
+        },
+    )?;
+    assert!(matches!(
+        mixed_cancel.outcome,
+        ParseOutcome::Stopped {
+            reason: nepl3_core::budget::StopReason::Cancelled,
+            ..
+        }
+    ));
+    assert_eq!(mixed_cancel.report.diagnostics.len(), 1);
+    assert_eq!(mixed_cancel.report.usage.diagnostics, 1);
+    let stopped = run_scenario(
+        "let x y",
+        true,
+        Scenario {
+            provider: true,
+            depth: Some(10),
+            caller_depth: 7,
+            native: Some(host::Action::Serve),
+            ..Scenario::default()
+        },
+    )?;
+    assert!(matches!(
+        stopped.outcome,
+        ParseOutcome::Stopped {
+            reason: nepl3_core::budget::StopReason::DepthLimit,
+            ..
+        }
+    ));
+    Ok(())
+}
+
+#[test]
+fn native_host_prefix_growth_reduces_measured_copy_work() -> TestResult {
+    for parents in [1, 4, 8] {
+        let input = format!("{}y", "let x ".repeat(parents));
+        let owned = run_scenario(
+            &input,
+            true,
+            Scenario {
+                provider: true,
+                ..Scenario::default()
+            },
+        )?;
+        let native = run_scenario(
+            &input,
+            true,
+            Scenario {
+                provider: true,
+                native: Some(host::Action::Serve),
+                ..Scenario::default()
+            },
+        )?;
+        assert_eq!(native.outcome, owned.outcome);
+        assert_eq!(native.report.diagnostics, owned.report.diagnostics);
+        assert!(native.report.usage.work < owned.report.usage.work);
+        assert!(native.report.usage.allocation_units < owned.report.usage.allocation_units);
+        eprintln!(
+            "parents {parents}: owned {:?}, native {:?}",
+            owned.report.usage, native.report.usage
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn native_host_failure_keeps_generated_diagnostic_and_event_closure() -> TestResult {
+    for action in [
+        host::Action::GeneratedFailSecond,
+        host::Action::GeneratedCancelSecond,
+    ] {
+        let reply = run_scenario(
+            "let x y",
+            true,
+            Scenario {
+                provider: true,
+                native: Some(action),
+                ..Scenario::default()
+            },
+        )?;
+        let primary = reply.report.diagnostics[0]
+            .primary
+            .as_ref()
+            .ok_or("generated primary")?;
+        assert_eq!(primary.snapshot_ref().source.0, "host-generated");
+        assert_eq!(reply.report.events.len(), 1);
+        assert_eq!(reply.report.events[0].span.as_ref(), Some(primary));
+        assert_eq!(reply.report.usage.events, 1);
+        assert!(
+            reply
+                .sources
+                .iter()
+                .any(|source| source.identity() == primary.snapshot_ref())
+        );
+        assert_eq!(
+            reply.report.usage.diagnostics,
+            if action == host::Action::GeneratedFailSecond {
+                2
+            } else {
+                1
+            }
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn native_host_mixed_text_provider_fallback_preserves_decoded_sources() -> TestResult {
+    let input = "let \"x\\n\" y tail";
+    let owned = run_scenario(
+        input,
+        true,
+        Scenario {
+            provider: true,
+            text: true,
+            caller_depth: 7,
+            ..Scenario::default()
+        },
+    )?;
+    for action in [
+        host::Action::Serve,
+        host::Action::DeclineSecond,
+        host::Action::FailSecond,
+    ] {
+        let native = run_scenario(
+            input,
+            true,
+            Scenario {
+                provider: true,
+                text: true,
+                caller_depth: 7,
+                native: Some(action),
+                ..Scenario::default()
+            },
+        )?;
+        assert_eq!(native.outcome, owned.outcome);
+        assert_eq!(native.sources, owned.sources);
+        assert_eq!(native.source_maps, owned.source_maps);
+        assert_eq!(native.report.diagnostics, owned.report.diagnostics);
+        assert_eq!(native.report.usage.depth, owned.report.usage.depth);
+    }
+    let cancelled = run_scenario(
+        input,
+        true,
+        Scenario {
+            provider: true,
+            text: true,
+            native: Some(host::Action::CancelSecond),
+            ..Scenario::default()
+        },
+    )?;
+    assert!(matches!(
+        cancelled.outcome,
+        ParseOutcome::Stopped {
+            reason: nepl3_core::budget::StopReason::Cancelled,
+            ..
+        }
+    ));
+    assert_eq!(cancelled.report.diagnostics.len(), 1);
+    assert_eq!(cancelled.sources.len(), 1);
+    assert_eq!(cancelled.source_maps.len(), 2);
     Ok(())
 }
