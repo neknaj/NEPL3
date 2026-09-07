@@ -1,0 +1,25 @@
+article ja "{ベクトル/vector}の{[線型結合/せんけいけつごう]/linear combination}と{スパン/span}"
+body
+  cons list unordered
+    cons item none body
+      cons paragraph
+        cons "いくつかの{ベクトル/vector}をそれぞれ{[定数倍/ていすうばい]/scalar multiplication}して[足/た]し[合/あ]わせることを、{[線型結合/せんけいけつごう]/linear combination}といいます。それぞれの{ベクトル/vector}に[掛/か]ける[数/かず]が、{[係数/けいすう]/coefficient}です。"
+        nil
+      nil
+    cons item none body
+      cons paragraph
+        cons "{[係数/けいすう]/coefficient}を[自由/じゆう]に[変/か]えて、{[線型結合/せんけいけつごう]/linear combination}で[作/つく]れる{ベクトル/vector}をすべて[集/あつ]めたものが、[元/もと]の{ベクトル/vector}たちの{スパン/span}です。{[係数/けいすう]/coefficient}を[一組/ひとくみ]だけ[決/き]めて[得/え]られる{ベクトル/vector}と、そのすべての[可能性/かのうせい]を[集/あつ]めた{スパン/span}を[区別/くべつ]しましょう。"
+        nil
+      nil
+    cons item none body
+      cons paragraph
+        cons "たとえば{[平面/へいめん]/plane}では、0でない[一本/いっぽん]の{ベクトル/vector}の{スパン/span}は、{[原点/げんてん]/origin}を[通/とお]る[一本/いっぽん]の{[直線/ちょくせん]/line}です。[同/おな]じ[方向/ほうこう]や[逆方向/ぎゃくほうこう]の{ベクトル/vector}を[何本/なんぼん][加/くわ]えても、この{スパン/span}は[変/か]わりません。{[平行/へいこう]/parallel}でない{ベクトル/vector}を[加/くわ]えると、{スパン/span}は{[平面/へいめん]/plane}[全体/ぜんたい]になります。"
+        nil
+      nil
+    cons item none body
+      cons paragraph
+        cons "このように、{ベクトル/vector}の[本数/ほんすう]が[増/ふ]えても、{スパン/span}の{[次元/じげん]/dimension}が[増/ふ]えるとは[限/かぎ]りません。{スパン/span}の{[次元/じげん]/dimension}は、[元/もと]の{ベクトル/vector}たちから[選/えら]べる{[一次独立/いちじどくりつ]/linearly independent}な{ベクトル/vector}の[最大本数/さいだいほんすう]で[決/き]まります。{[一次独立/いちじどくりつ]/linearly independent}とは、[選/えら]んだどの[一本/いっぽん]も、[残/のこ]りの{ベクトル/vector}の{[線型結合/せんけいけつごう]/linear combination}では[作/つく]れないということです。"
+        nil
+      nil
+    nil
+  nil
