@@ -1,4 +1,5 @@
 //! Immutable UTF-8 snapshots, checked byte spans and editor position adapters.
+mod edit;
 use crate::budget::{Budget, Resource, StopReason};
 use alloc::{string::String, vec::Vec};
 use sha2::{Digest as _, Sha256};
@@ -433,20 +434,83 @@ impl SourceAdmission {
         snapshot: &SourceSnapshot,
         budget: &mut Budget,
     ) -> Result<(), SourceError> {
-        budget.poll()?;
-        if let Some(prior) = self
-            .admitted
-            .iter()
-            .find(|(id, _)| id.source == snapshot.id.source && id.revision == snapshot.id.revision)
-        {
-            return if prior.0 == snapshot.id && prior.1 == snapshot.uri {
-                Ok(())
-            } else {
-                Err(SourceError::IdentityConflict)
-            };
+        self.admit_parts(
+            &snapshot.id.source,
+            snapshot.id.revision,
+            snapshot.id.digest,
+            &snapshot.uri,
+            snapshot.text.len() as u64,
+            budget,
+        )
+    }
+    // Used only with immutable validated snapshots or fully checked UTF-8 edit
+    // output whose digest was computed from the exact fragments to be copied.
+    fn admit_parts(
+        &mut self,
+        source: &SourceId,
+        revision: u64,
+        digest: Digest,
+        uri: &str,
+        length: u64,
+        budget: &mut Budget,
+    ) -> Result<(), SourceError> {
+        if self.check_parts(source, revision, digest, uri, budget)? {
+            return Ok(());
         }
-        budget.charge(Resource::SourceBytes, snapshot.text.len() as u64)?;
-        self.remember(snapshot, budget)
+        budget.charge(Resource::SourceBytes, length)?;
+        budget.charge(
+            Resource::Work,
+            (source.0.len() as u64)
+                .saturating_add(uri.len() as u64)
+                .saturating_add(1),
+        )?;
+        budget.charge(
+            Resource::AllocationUnits,
+            (core::mem::size_of::<(SnapshotId, String)>() as u64)
+                .saturating_add(source.0.len() as u64)
+                .saturating_add(uri.len() as u64),
+        )?;
+        self.admitted.push((
+            SnapshotId {
+                source: source.clone(),
+                revision,
+                digest,
+            },
+            uri.into(),
+        ));
+        Ok(())
+    }
+    fn check_parts(
+        &self,
+        source: &SourceId,
+        revision: u64,
+        digest: Digest,
+        uri: &str,
+        budget: &mut Budget,
+    ) -> Result<bool, SourceError> {
+        budget.poll()?;
+        for (id, locator) in &self.admitted {
+            budget.charge(
+                Resource::Work,
+                (id.source.0.len() as u64)
+                    .saturating_add(source.0.len() as u64)
+                    .saturating_add(34),
+            )?;
+            if id.source == *source && id.revision == revision {
+                budget.charge(
+                    Resource::Work,
+                    (locator.len() as u64)
+                        .saturating_add(uri.len() as u64)
+                        .saturating_add(1),
+                )?;
+                return if id.digest == digest && locator == uri {
+                    Ok(true)
+                } else {
+                    Err(SourceError::IdentityConflict)
+                };
+            }
+        }
+        Ok(false)
     }
     fn remember(
         &mut self,
@@ -512,77 +576,5 @@ impl SourceStore {
             .iter()
             .filter(|s| &s.id.source == source)
             .max_by_key(|s| s.id.revision)
-    }
-    /// Validates all edits before inserting any new snapshots. Each source advances exactly one revision.
-    pub fn apply(
-        &mut self,
-        edits: &[TextEdit],
-        budget: &mut Budget,
-    ) -> Result<Vec<SnapshotId>, SourceError> {
-        let mut sorted: Vec<&TextEdit> = edits.iter().collect();
-        sorted.sort_by_key(|e| (e.span.snapshot.source.clone(), e.span.start, e.span.end));
-        let mut prepared = Vec::new();
-        let mut cursor = 0;
-        while cursor < sorted.len() {
-            let id = sorted[cursor].span.snapshot.clone();
-            let source = self
-                .latest(&id.source)
-                .ok_or(SourceError::MissingSnapshot)?;
-            if source.id != id {
-                return Err(SourceError::SnapshotMismatch);
-            }
-            let mut next = cursor + 1;
-            while next < sorted.len() && sorted[next].span.snapshot.source == id.source {
-                next += 1;
-            }
-            let group = &sorted[cursor..next];
-            let mut end = 0;
-            let mut previous_start = None;
-            let mut length = source.text.len() as u64;
-            for edit in group {
-                let expected = source.slice(&edit.span)?;
-                if Digest::of(expected.as_bytes()) != edit.expected_digest {
-                    return Err(SourceError::ExpectedDigest);
-                }
-                if edit.span.start < end || previous_start == Some(edit.span.start) {
-                    return Err(SourceError::OverlappingEdits);
-                }
-                length = length
-                    .checked_sub(edit.span.end - edit.span.start)
-                    .and_then(|n| n.checked_add(edit.replacement.len() as u64))
-                    .ok_or(SourceError::Stopped(StopReason::SourceLimit))?;
-                end = edit.span.end;
-                previous_start = Some(edit.span.start);
-            }
-            budget.charge(Resource::SourceBytes, length)?;
-            budget.charge(Resource::AllocationUnits, length)?;
-            let capacity = usize::try_from(length)
-                .map_err(|_| SourceError::Stopped(StopReason::AllocationLimit))?;
-            let mut output = String::with_capacity(capacity);
-            end = 0;
-            for edit in group {
-                output.push_str(
-                    source
-                        .text
-                        .get(end as usize..edit.span.start as usize)
-                        .ok_or(SourceError::Bounds)?,
-                );
-                output.push_str(&edit.replacement);
-                end = edit.span.end;
-            }
-            output.push_str(source.text.get(end as usize..).ok_or(SourceError::Bounds)?);
-            let revision = id.revision.checked_add(1).ok_or(SourceError::Revision)?;
-            prepared.push(SourceSnapshot::from_charged(
-                id.source,
-                revision,
-                source.uri.clone(),
-                output.into_bytes(),
-                budget,
-            )?);
-            cursor = next;
-        }
-        let ids = prepared.iter().map(SourceSnapshot::id).collect();
-        self.snapshots.extend(prepared);
-        Ok(ids)
     }
 }

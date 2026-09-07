@@ -216,21 +216,33 @@ fn edits_are_atomic_across_sources_and_reject_stale_or_conflicting_input() -> Re
         replacement: "X".into(),
     };
     assert_eq!(
-        store.apply(&[edit.clone(), wrong], &mut budget()),
+        store.apply(
+            &[edit.clone(), wrong],
+            &mut budget(),
+            &mut SourceAdmission::default()
+        ),
         Err(SourceError::ExpectedDigest)
     );
     assert_eq!(store.latest(&a.id().source), Some(&a));
     assert_eq!(
-        store.apply(&[edit.clone(), edit.clone()], &mut budget()),
+        store.apply(
+            &[edit.clone(), edit.clone()],
+            &mut budget(),
+            &mut SourceAdmission::default()
+        ),
         Err(SourceError::OverlappingEdits)
     );
-    let ids = store.apply(core::slice::from_ref(&edit), &mut budget())?;
+    let ids = store.apply(
+        core::slice::from_ref(&edit),
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
     assert_eq!(
         store.get(ids[0].clone()).map(SourceSnapshot::text),
         Some("日🙂bc")
     );
     assert_eq!(
-        store.apply(&[edit], &mut budget()),
+        store.apply(&[edit], &mut budget(), &mut SourceAdmission::default()),
         Err(SourceError::SnapshotMismatch)
     );
     Ok(())
@@ -250,10 +262,14 @@ fn edit_size_limit_checked_before_replacement_is_built() -> Result<(), SourceErr
     limits.source_bytes = 1;
     let mut budget = Budget::new(limits);
     assert_eq!(
-        store.apply(&[edit], &mut budget),
+        store.apply(&[edit], &mut budget, &mut SourceAdmission::default()),
         Err(SourceError::Stopped(StopReason::SourceLimit))
     );
-    assert_eq!(budget.usage().allocation_units, 0);
+    // Borrowed edit ordering and the input admission ledger are real allocations.
+    // The 400-byte output buffer has not been allocated when its source cap fails.
+    assert!(budget.usage().allocation_units > 0);
+    assert!(budget.usage().allocation_units < 400);
+    assert_eq!(budget.usage().source_bytes, 1);
     assert_eq!(store.latest(&a.id().source), Some(&a));
     Ok(())
 }

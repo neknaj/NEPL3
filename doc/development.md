@@ -28,6 +28,8 @@ python -m unittest discover -s tools/bootstrap -p test_grammar.py
 
 allocation検査は [単体probe](../tools/audit/allocation/probe.rs) の呼出し区間で実際の割当を計測します。SourceMapが予算ゼロを返す前にsource IDを複製したR020は、返却値と論理的な使用量だけの試験では捕捉できません。このため計測器に限定したGlobalAlloc wrapperのunsafeを開発用途で監査します。unsafeは同じpointer/layoutをSystem allocatorへ転送する箇所だけとし、計測counterは割当を伴わないatomic操作です。coreと通常workspaceの `unsafe_code = "forbid"` は維持し、productionへ計測器を依存させません。
 
+同じ計測器はR037のSourceStore.applyも検査します。100000byteのSourceIdを持つ編集に対し、AllocationUnits=0で停止するまでに実割当がないことを要求します。共有SourceAdmission、全削除の入力入場、複数sourceの原子性と再試行は別のproduction API試験で検証します。古いapply署名はadmissionを受け取らないため、旧版の元反例と現行probeのAPI差を区別して記録します。
+
 [driver](../tools/audit/allocation/run.py) は固定toolchainの `cargo build --locked` が出力するJSONから対象coreのartifactを一意に取得し、同じtoolchainのrustcで一時実行ファイルを作ります。既存workspaceのlint設定を変更せず、この独立した開発計測器にだけ上記の範囲を適用します。意図的な割当のpositive controlを先に検査し、入力構築・表示・返却値のdropを計測区間から外します。失敗・runner不在・artifactの曖昧さは非0終了であり、未実行を成功へ読み替えません。通常native CIでもこのコマンドを実行し、単なる任意の手元確認にはしません。計測はこの具体的な先行割当の回帰を捕捉するもので、一般の物理メモリ上限やWASIでの実測を保証しません。
 
 APIドキュメントも警告をエラーとして検査します。

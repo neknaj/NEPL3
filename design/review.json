@@ -427,12 +427,12 @@
     },
     {
       "id": "R037",
-      "status": "open",
+      "status": "corrected",
       "title": "SourceStore edit application allocates before checking its zero allocation budget",
       "affected_tasks": ["T01", "T06"],
       "evidence": ["crates/foundation/core/src/source.rs", "tools/audit/allocation/probe.rs"],
       "partial_progress": "The coordinator extended the existing isolated allocation probe to call actual SourceStore::apply with one edit and a 100000-byte SourceId. Independently rerunning that executable observes 100008 allocated bytes before Err(AllocationLimit), while reported allocationUnits and Work remain zero. The same process's 4096-byte positive control succeeds and SourceMap::insert allocates zero with a zero allocation budget. SourceStore::apply collects edit references and clones source identities before its first budget check; this is separate from R036's report Fix invariant validation.",
-      "blocking_condition": "Check shared resource limits before edit sorting, identity copies and output preparation; preserve all-or-nothing snapshot insertion on failure. A second independent probe deletes an existing three-byte source under a fresh SourceLimit0 and successfully inserts revision1 with sourceBytes0: apply must accept the shared SourceAdmission and account both the original and generated snapshots once. Extend managed native allocation and source-admission regressions to this API, including valid adjacent/multi-source edits."
+      "resolution": "SourceStore.apply now takes the operation's SourceAdmission, charges before borrowed edit sorting, source/locator comparisons and owned output construction, and checks all generated identities before committing outputs and admission together. The tracked allocator probe passes independently with a 4096-byte positive control and zero bytes allocated by apply under AllocationUnits0. The original full-deletion probe now returns SourceLimit with the original store unchanged. All five managed edit tests pass independently, covering every lower allocation cap, sticky stops, source/locator limits and semantic-failure retries. A separate public-API probe verifies unsorted adjacent Unicode edits, endpoint insertion, sorted multi-source results, once-only source admission, atomic stale-revision/duplicate-anchor rejection and a successful corrected retry in the same operation."
     }
   ],
   "runtime_conformance_executed": false

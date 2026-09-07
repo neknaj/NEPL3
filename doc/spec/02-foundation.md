@@ -16,6 +16,10 @@ CRLFは元の2byteを維持する。LF、CRLF、CRをそれぞれ一つの改行
 
 診断・query・編集は必ずsnapshotを指定する。最新revision以外の結果を、単にoffsetを保ったまま最新文書へ適用しない。
 
+SourceStore.applyは同じ操作のBudgetとSourceAdmissionを受け、編集元と生成snapshotを一度ずつSourceBytesへ計上する。全削除で結果が空でも元snapshotの入場を省略しない。edit並替え、snapshot探索と比較、期待digest/出力digestの計算、結果・locator・返却IDのコピーには処理前にWork/AllocationUnitsを課す。並替えはborrowed参照だけを動かし、SourceIdをsort keyとして無計上で複製しない。
+
+全編集の前提と生成identity、全出力と返却IDを準備してから、生成snapshotのadmissionとSourceStoreを同時に確定する。後半の検査失敗で一部sourceのrevisionだけを進めず、未公開の生成IDも予約状態として残さない。既存入力のadmissionと消費済みWork/Allocation/SourceBytesは戻さない。意味検査の失敗後は同じ操作で訂正して再試行できる。予算停止後は同じBudgetの停止理由を保持し、再試行はhostが別操作のBudget/SourceAdmissionを明示した場合に限る。返却IDの順はSourceId順である。
+
 ## 2. schemaとkind
 
 `SchemaRef = (packageName, revision, digest)`。`KindRef = (SchemaRef, LocalKindId)`。LocalKindIdとfieldの並びはpackage schemaで定義する。Word/String/Variable/Function等を共通の閉じたTokenKindとして置かない。
