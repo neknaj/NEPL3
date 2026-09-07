@@ -1,0 +1,77 @@
+{
+  "format": "nepl3.development-slice/1",
+  "scope": "T07/T23 Article requirement discovery and portable plan helpers",
+  "base_commit": "dde71be2dcc77c771139111ab295b0afba661791",
+  "result": "passed-within-recorded-scope",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "execution": {
+    "native": {
+      "target": "x86_64-pc-windows-msvc",
+      "passed": 429,
+      "ignored": 1
+    },
+    "wasi": {
+      "target": "wasm32-wasip2",
+      "runner": "Wasmtime 44.0.1",
+      "passed": 348
+    },
+    "browser_wasm": "Eight no_std crates compiled; browser runtime not run",
+    "toolchain": "Rust 1.97.0"
+  },
+  "checks": [
+    {
+      "command": "cargo test --workspace --locked",
+      "exit_code": 0,
+      "log": "conformance/results/doc-prepare/native.log",
+      "sha256": "9e489801ed3bd580f1e6dd06c979d80f805233afbc2f07b5ffa3f5732f50418c"
+    },
+    {
+      "command": "cargo fmt --all -- --check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo clippy --workspace --all-targets --locked -- -D warnings; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps --locked",
+      "exit_code": 0,
+      "log": "conformance/results/doc-prepare/quality.log",
+      "sha256": "a46cef91c989d4148c89065ca84440fd3afe26d72192d9facb248e09a6c45905"
+    },
+    {
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER='wasmtime run'; cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar diagnostic::compiler_report_boundary_without_host_process --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::all_reader_constructors --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::compiled_reader_streaming_boundaries_and_rollback_keep_raw_positions --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test doc --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test math --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar region:: --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup --no-default-features --target wasm32-unknown-unknown",
+      "exit_code": 0,
+      "log": "conformance/results/doc-prepare/wasi.log",
+      "sha256": "7ae4a3ecef87fe6f0630e2930632877a1154bd6d22bf591656a52ea261cbfc73"
+    },
+    {
+      "command": "python tools/audit/structure.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/audit -p test.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/markup.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/math.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/doc.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/bootstrap -p test_grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/audit/allocation/run.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo run --locked -p nepl3-tools -- tasks --check",
+      "exit_code": 0,
+      "log": "conformance/results/doc-prepare/audit.log",
+      "sha256": "0ae626bbc91c8c950041c0c49f861e76202a66e8e50ee44b1fe805b3be727727"
+    },
+    {
+      "command": "cargo run --locked -p nepl3-tools -- check",
+      "exit_code": 0,
+      "log": "conformance/results/doc-prepare/contract.log",
+      "sha256": "fec855dcc8bde26b26d967f3cd832f253350c9e4de7275684cc7e2802c2e0be9"
+    }
+  ],
+  "independent_review": {
+    "reviewer": "Huygens",
+    "archive": "conformance/results/doc-prepare/independent.json",
+    "archive_sha256": "a9ae989b1706a7c15da32f1c98f059192c862ed4c18cd4471c06654122426732",
+    "recorded_files": 23,
+    "scope": "Doc preparation discovery and portable plan helpers only",
+    "source_identity": "Independent clean base 1e259d5 plus 12 frozen files; root full gates use merged Markup base dde71be with exactly those 12 files. Foundation and Doc baseline files were checked unchanged between bases. Review/progress-only records were appended after code gates; final repository contracts rerun."
+  },
+  "implementation": [
+    "Article label/source validation precedes deterministic per-node Link/Asset and per-owner Foreign requirements. All Parallel variants participate.",
+    "Document and guest identities hash actual canonical NDF/CBOR with distinct zero-terminated domains; the owner source/origin/environment closure is retained.",
+    "Native and first CBOR receiver rederive the full plan against the explicitly supplied document. Code and Math invalid evaluation inputs remain syntax; no guest operation or host I/O runs."
+  ],
+  "unverified": [
+    "No task or whole acceptance group is completed; all 55 statuses remain not-run.",
+    "This is requirement discovery, not PreparedArticle, URI safety, page/asset resolution, HTML rendering or a complete check/prepare Report operation.",
+    "Other concurrently developed Doc HTML files were excluded from these code gates and this commit.",
+    "The ignored separate bootstrap performance baseline remains ignored."
+  ],
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "05702160d9fb32785ae9708948bd94a344c6e6e6649c8ea480ea6dfd49884513",
+    "spec_sha256": "8daef30100c39c8a2ed78e9d986a65a40fe125f76edf7e85563f1a863ef2e1e5"
+  }
+}

@@ -1,5 +1,6 @@
 use super::{PortableError, boundary};
 use crate::model::*;
+use crate::prepare::{DocPreparationPlan, DocRequirement};
 use crate::print::*;
 use crate::text::*;
 use alloc::{boxed::Box, string::String, vec::Vec};

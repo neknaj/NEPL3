@@ -847,4 +847,32 @@ let f=fields(v,s,"PrintReply",2)?;
 Ok(Self {outcome:Value::read(&f[0],s,c,b)?,report:Value::read(&f[1],s,c,b)?})
 }
 }
+impl Value for DocRequirement {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Link {node,target} => variant(s,"DocRequirement","Link",[node.put(s,c,b)?,target.put(s,c,b)?],b),
+Self::Asset {node,asset} => variant(s,"DocRequirement","Asset",[node.put(s,c,b)?,asset.put(s,c,b)?],b),
+Self::Foreign {embed,kind,guest_digest} => variant(s,"DocRequirement","Foreign",[embed.put(s,c,b)?,kind.put(s,c,b)?,guest_digest.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,46)?;
+let (tag,f)=case(v,s,"DocRequirement")?;
+match (tag,f.len()) {
+("Link",2)=>Ok(Self::Link {node:Value::read(&f[0],s,c,b)?,target:Value::read(&f[1],s,c,b)?}),
+("Asset",2)=>Ok(Self::Asset {node:Value::read(&f[0],s,c,b)?,asset:Value::read(&f[1],s,c,b)?}),
+("Foreign",3)=>Ok(Self::Foreign {embed:Value::read(&f[0],s,c,b)?,kind:Value::read(&f[1],s,c,b)?,guest_digest:Value::read(&f[2],s,c,b)?}),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for DocPreparationPlan {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"DocPreparationPlan",[self.document_digest.put(s,c,b)?,self.requirements.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,50)?;
+let f=fields(v,s,"DocPreparationPlan",2)?;
+Ok(Self {document_digest:Value::read(&f[0],s,c,b)?,requirements:Value::read(&f[1],s,c,b)?})
+}
+}
 }
