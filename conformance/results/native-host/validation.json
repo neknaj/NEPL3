@@ -1,0 +1,98 @@
+{
+  "format": "nepl3.development-slice/1",
+  "scope": "T04/T05 synchronous native prefix host without publishing the whole parser continuation for every token",
+  "result": "passed-within-recorded-scope",
+  "base_commit": "0d6d8c4da86c9f8c5cad4a60f5ecb92311186e2d",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "3fc4213af18c0adb198e1ab008e5110bfa61f6ab51a9c58e46a629c9ba6103bd",
+    "spec_sha256": "233bc91e795268eea3f032b782a32aa3128a1839572daf4a3b7948c3ec9a472e"
+  },
+  "snapshot": "Isolated worktree includes native host and reviewed records; R037 source edit changes are excluded. Review record additionally describes independent working-tree measurements and explicitly distinguishes their source.",
+  "checks": [
+    {
+      "command": "cargo test --release --locked -p nepl3-tools complete_grammar_bootstrap_host_comparison -- --ignored --nocapture",
+      "exit_code": 0,
+      "log": "conformance/results/native-host/comparison.log",
+      "sha256": "a21582f764fe4f19cbc1e249c714827c424d2a8b23c84f1ee1ebc2c8b4e3c7e1"
+    },
+    {
+      "command": "cargo run --locked -p nepl3-tools -- check",
+      "exit_code": 0,
+      "log": "conformance/results/native-host/contracts.log",
+      "sha256": "0b1b040a9306aa1e9b7c6ac6856be634af370a601bd12a8e6baaada935e39955"
+    },
+    {
+      "command": "cargo test --workspace --locked",
+      "exit_code": 0,
+      "log": "conformance/results/native-host/native.log",
+      "sha256": "fd1766d2e4af63a107952d197195e6d83d7a18164d184eb7e2802b1e98bcba9f"
+    },
+    {
+      "command": "cargo fmt --all -- --check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo clippy --workspace --all-targets --locked -- -D warnings; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps --locked",
+      "exit_code": 0,
+      "log": "conformance/results/native-host/quality.log",
+      "sha256": "7fec7db8421abaf066a9b1221ebea749a30893af140761e70f0418b7995dd9c9"
+    },
+    {
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER='wasmtime run'; cargo test --locked -p nepl3-engine --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --no-default-features --target wasm32-unknown-unknown",
+      "exit_code": 0,
+      "log": "conformance/results/native-host/wasi.log",
+      "sha256": "78ed44904936809b94d1d1103000f3c03dfb6d1a4a38f5c88fa556923f611454"
+    }
+  ],
+  "execution": {
+    "native": {
+      "target": "x86_64-pc-windows-msvc",
+      "passed": 226,
+      "ignored": 1,
+      "required_full_bootstrap": "executed normally, unchanged Work cap 10000000000"
+    },
+    "comparison": {
+      "target": "x86_64-pc-windows-msvc",
+      "passed": 1,
+      "notes": "Additional ignored comparison explicitly executed in one release binary with equal Work cap 20000000000 for measurement headroom. This does not raise the ordinary required bootstrap cap.",
+      "owned": {
+        "p1_seconds": 13.8795381,
+        "p2_seconds": 11.446109,
+        "work": 10224368473,
+        "allocation_units": 59758050358
+      },
+      "native": {
+        "p1_seconds": 1.749766,
+        "p2_seconds": 1.7704319,
+        "work": 6913928967,
+        "allocation_units": 10333383078
+      },
+      "same_semantic_identities": true,
+      "nodes": 518
+    },
+    "wasi": {
+      "target": "wasm32-wasip2",
+      "runner": "Wasmtime 44.0.1",
+      "engine_passed": 27
+    },
+    "browser_wasm": "five no_std crates compile only; not browser execution",
+    "tools": "Rust 1.97.0"
+  },
+  "independent_review": {
+    "reviewer": "Huygens",
+    "record": "doc/review.md",
+    "managed_tests": 5,
+    "scope": "Implementation and original contracts inspected; owned/native semantic and source/report closure, callback fallback, cancellation, allocation/depth boundaries and full bootstrap independently exercised."
+  },
+  "prior_failure": {
+    "commit": "267c53122fc1579f541ff7fda913594af7a7e9ef",
+    "run": "https://github.com/neknaj/NEPL3/actions/runs/34070506992",
+    "result": "failed",
+    "reason": "Report validation adds real integrity work; owned full bootstrap exceeded unchanged 10B cap at P2 byte 9223 on all three native CI hosts. Not merged. New native route requires fresh remote CI."
+  },
+  "unverified": [
+    "Default-budget bootstrap and eliminating reader/tokenizer continuation copying",
+    "Dynamic HeadProvider and full recovery protocol",
+    "Facts full operation envelopes, external process provider and browser runtime",
+    "R037 SourceStore.apply fix (separate pending slice)",
+    "All required conformance groups and T16; statuses remain unchanged"
+  ]
+}

@@ -1,6 +1,6 @@
 //! Boundary checking shared by native and externally supplied provider results.
 use super::*;
-use nepl3_core::{origin::SourceMap, schema::TypeDescriptor, value::TypedValue};
+use nepl3_core::{origin::SourceMap, schema::TypeDescriptor};
 pub(crate) fn request(
     request: &ReadRequest<'_>,
     sources: &SourceStore,
@@ -311,14 +311,6 @@ fn validate_span(
         .slice(span)?;
     Ok(())
 }
-fn typed(
-    value: &TypedValue,
-    registry: &SchemaRegistry,
-    budget: &mut Budget,
-) -> Result<(), ReaderError> {
-    registry.validate_typed(value, budget)?;
-    Ok(())
-}
 /// Validate one diagnostic against the explicitly declared request sources and accepted delta.
 /// Does not clone a report, admit new sources, or charge the diagnostic count.
 pub(crate) fn accepted_diagnostic(
@@ -328,62 +320,20 @@ pub(crate) fn accepted_diagnostic(
     registry: &SchemaRegistry,
     budget: &mut Budget,
 ) -> Result<(), ReaderError> {
-    budget.charge(Resource::Work, 1)?;
-    for (i, source) in added.iter().enumerate() {
-        budget.charge(
-            Resource::Work,
-            ((sources.snapshots().len() + i) as u64)
-                .saturating_mul(source.identity().source.0.len() as u64 + 33),
-        )?;
-        for prior in sources.snapshots().iter().chain(&added[..i]) {
-            if prior.identity().source == source.identity().source
-                && prior.identity().revision == source.identity().revision
-            {
-                budget.charge(Resource::Work, prior.uri().len() as u64 + 1)?;
-                if prior.identity() != source.identity() || prior.uri() != source.uri() {
-                    return Err(SourceError::IdentityConflict.into());
-                }
-            }
+    diagnostic
+        .validate(sources, added, registry, budget)
+        .map_err(report_error)
+}
+fn report_error(error: nepl3_core::diagnostic::validation::ReportValidationError) -> ReaderError {
+    use nepl3_core::diagnostic::validation::ReportValidationError;
+    match error {
+        ReportValidationError::Stopped(r) => r.into(),
+        ReportValidationError::Source(e) => e.into(),
+        ReportValidationError::Schema(e) => e.into(),
+        ReportValidationError::Metadata | ReportValidationError::Usage => {
+            ReaderError::ProviderContract
         }
     }
-    if diagnostic.code.is_empty()
-        || diagnostic.stage.is_empty()
-        || registry.descriptor(&diagnostic.schema).is_none()
-    {
-        return Err(ReaderError::ProviderContract);
-    }
-    typed(&diagnostic.arguments, registry, budget)?;
-    let check_span =
-        |span: &nepl3_core::source::Span, budget: &mut Budget| -> Result<(), ReaderError> {
-            budget.charge(
-                Resource::Work,
-                ((sources.snapshots().len() + added.len()) as u64)
-                    .saturating_mul(span.snapshot_ref().source.0.len() as u64 + 33),
-            )?;
-            let source = sources
-                .snapshots()
-                .iter()
-                .chain(added)
-                .find(|s| s.identity() == span.snapshot_ref())
-                .ok_or(SourceError::MissingSnapshot)?;
-            source.slice(span)?;
-            Ok(())
-        };
-    if let Some(span) = &diagnostic.primary {
-        check_span(span, budget)?;
-    }
-    for related in &diagnostic.related {
-        typed(&related.arguments, registry, budget)?;
-        if let Some(span) = &related.span {
-            check_span(span, budget)?;
-        }
-    }
-    for fix in &diagnostic.fixes {
-        for edit in &fix.edits {
-            check_span(&edit.span, budget)?;
-        }
-    }
-    Ok(())
 }
 pub(crate) fn accepted_report(
     accepted: &Report,
@@ -392,42 +342,13 @@ pub(crate) fn accepted_report(
     registry: &SchemaRegistry,
     budget: &mut Budget,
 ) -> Result<(), ReaderError> {
-    budget.charge(Resource::Work, 1)?;
-    if !usage_at_least(budget.usage(), accepted.usage)
-        || accepted.usage.diagnostics < accepted.diagnostics.len() as u64
-        || accepted.usage.events < accepted.events.len() as u64
-        || accepted
-            .trace_overflow
-            .as_ref()
-            .is_some_and(|v| v.dropped == 0)
-    {
+    budget.poll()?;
+    if !usage_at_least(budget.usage(), accepted.usage) {
         return Err(ReaderError::ProviderContract);
     }
-    for diagnostic in &accepted.diagnostics {
-        accepted_diagnostic(diagnostic, sources, added, registry, budget)?;
-    }
-    for event in &accepted.events {
-        budget.charge(Resource::Work, 1)?;
-        if event.kind.is_empty() || registry.descriptor(&event.schema).is_none() {
-            return Err(ReaderError::ProviderContract);
-        }
-        typed(&event.payload, registry, budget)?;
-        if let Some(span) = &event.span {
-            budget.charge(
-                Resource::Work,
-                ((sources.snapshots().len() + added.len()) as u64)
-                    .saturating_mul(span.snapshot_ref().source.0.len() as u64 + 33),
-            )?;
-            sources
-                .snapshots()
-                .iter()
-                .chain(added)
-                .find(|s| s.identity() == span.snapshot_ref())
-                .ok_or(SourceError::MissingSnapshot)?
-                .slice(span)?;
-        }
-    }
-    Ok(())
+    accepted
+        .validate(sources, added, registry, budget)
+        .map_err(report_error)
 }
 fn report(
     report: &Report,
@@ -436,6 +357,7 @@ fn report(
     sources: &SourceStore,
     budget: &mut Budget,
 ) -> Result<(), ReaderError> {
+    budget.poll()?;
     if !usage_at_least(report.usage, saved)
         || !usage_at_least(budget.usage(), report.usage)
         || report.usage.diagnostics.saturating_sub(saved.diagnostics)
@@ -444,48 +366,9 @@ fn report(
     {
         return Err(ReaderError::ProviderContract);
     }
-    for diagnostic in &report.diagnostics {
-        budget.charge(Resource::Work, 1)?;
-        if diagnostic.code.is_empty()
-            || diagnostic.stage.is_empty()
-            || registry.descriptor(&diagnostic.schema).is_none()
-        {
-            return Err(ReaderError::ProviderContract);
-        }
-        typed(&diagnostic.arguments, registry, budget)?;
-        if let Some(span) = &diagnostic.primary {
-            validate_span(span, sources)?;
-        }
-        for related in &diagnostic.related {
-            typed(&related.arguments, registry, budget)?;
-            if let Some(span) = &related.span {
-                validate_span(span, sources)?;
-            }
-        }
-        for fix in &diagnostic.fixes {
-            for edit in &fix.edits {
-                validate_span(&edit.span, sources)?;
-            }
-        }
-    }
-    for event in &report.events {
-        budget.charge(Resource::Work, 1)?;
-        if event.kind.is_empty() || registry.descriptor(&event.schema).is_none() {
-            return Err(ReaderError::ProviderContract);
-        }
-        typed(&event.payload, registry, budget)?;
-        if let Some(span) = &event.span {
-            validate_span(span, sources)?;
-        }
-    }
-    if report
-        .trace_overflow
-        .as_ref()
-        .is_some_and(|o| o.dropped == 0)
-    {
-        return Err(ReaderError::ProviderContract);
-    }
-    Ok(())
+    report
+        .validate(sources, &[], registry, budget)
+        .map_err(report_error)
 }
 #[allow(clippy::too_many_arguments)]
 fn artifacts(

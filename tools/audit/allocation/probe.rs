@@ -5,7 +5,9 @@
 use nepl3_core::{
     budget::{Budget, Limits, StopReason},
     origin::{Mapping, MappingKind, OriginError, SourceMap},
-    source::{SourceId, SourceSnapshot, SourceStore},
+    source::{
+        Digest, SourceAdmission, SourceError, SourceId, SourceSnapshot, SourceStore, TextEdit,
+    },
 };
 use std::{
     alloc::{GlobalAlloc, Layout, System},
@@ -97,6 +99,11 @@ fn main() -> Result<(), String> {
         target: generated.span(0, 1).map_err(|error| format!("{error:?}"))?,
         kind: MappingKind::Exact,
     };
+    let edit = TextEdit {
+        span: original.span(0, 1).map_err(|error| format!("{error:?}"))?,
+        expected_digest: Digest::of(b"a"),
+        replacement: "b".into(),
+    };
     let mut sources = SourceStore::default();
     sources
         .insert(original)
@@ -113,6 +120,14 @@ fn main() -> Result<(), String> {
     println!("SourceMap::insert: {result:?}; observed {allocated} allocated bytes");
     if result != Err(OriginError::Stopped(StopReason::AllocationLimit)) || allocated != 0 {
         return Err("R020: zero allocation budget allowed an allocation before stopping".into());
+    }
+    let mut operation = Budget::new(limits);
+    let mut admission = SourceAdmission::default();
+    let (result, allocated) =
+        measure(|| sources.apply(core::slice::from_ref(&edit), &mut operation, &mut admission));
+    println!("SourceStore::apply: {result:?}; observed {allocated} allocated bytes");
+    if result != Err(SourceError::Stopped(StopReason::AllocationLimit)) || allocated != 0 {
+        return Err("R037: source edit allocated before its zero allocation limit".into());
     }
     println!("allocation regression passed");
     Ok(())

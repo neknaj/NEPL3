@@ -1,0 +1,38 @@
+{
+  "profile": "nepl3.ci-observation/1",
+  "recorded_at_utc": "2026-09-07 00:31:04 UTC",
+  "commit": "66c30f8fda8f8af8d6f5dab2f56e9ec2d0d10bec",
+  "reviewed_head": "d743c0b405e252c4e62504aa30826a6aa1cc2e12",
+  "pull_request": "https://github.com/neknaj/NEPL3/pull/9",
+  "run": "https://github.com/neknaj/NEPL3/actions/runs/34069575785",
+  "result": "success",
+  "tests": {
+    "x86_64-unknown-linux-gnu": 217,
+    "x86_64-pc-windows-msvc": 217,
+    "aarch64-apple-darwin": 217,
+    "wasm32-wasip2 (Wasmtime 44.0.1)": 148
+  },
+  "checks": [
+    "Full formal-source Grammar bootstrap executed on all three native hosts.",
+    "Native checks, WASI execution, browser-Wasm compilation, required quality and source delivery succeeded."
+  ],
+  "artifact": {
+    "name": "NEPL3-source-66c30f8fda8f8af8d6f5dab2f56e9ec2d0d10bec",
+    "sha256": "7bf7c778203195ae22da04d7fa61367790e61842e9faa9adc6b11e5c6f1900ce",
+    "kind": "source-foundation",
+    "tar_members": 429,
+    "files": 339,
+    "verification": "Retrieved archive, checked SOURCE.txt and SHA256SUMS, recomputed the checkpoint source/spec identity and each bootstrap evidence log hash from original archived bytes; no .tmp or nonregular entries."
+  },
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "1a0b3f507c2c515db68593ea52f2f79fdcf02c55fd12f4c30a9abdecdb4867c4",
+    "spec_sha256": "9e2d42866813914e98d69c1775507c73d581dfffe07e5b894eed52a200230052"
+  },
+  "retrieved_ci_log_sha256": "45f9982b5afacd6c971d2e64cb15f41c35dfea0a54441d8c7de9c7430e24fd7c",
+  "limits": [
+    "The complete bootstrap is a tools-host test; the WASI suite executes the five production crates, not that full host driver.",
+    "No complete acceptance group, completed task, browser runtime or final product is claimed.",
+    "Subsequent Report/facts-operation/performance changes require their own validation."
+  ]
+}

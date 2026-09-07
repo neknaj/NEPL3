@@ -3,7 +3,7 @@
   "source_design": "nepl3-design-2026-09-06-r1",
   "reviewed_at": "2026-09-07",
   "independent_from_implementation": true,
-  "scope": "Initial design and repository review; r3 Web/TEA/Pages and migration supplement; r4 initial core/wire/reader implementation, public API failure reproductions and native unit tests. Full runtime acceptance groups have not been established by this review.",
+  "scope": "Initial design and repository review; r3 Web/TEA/Pages and migration supplement; r4 core/wire/reader/static prefix implementation, public API failure reproductions, native Grammar bootstrap and synchronous host versus owned-continuation boundary checks. Full runtime acceptance groups have not been established by this review.",
   "reviewed_design": "nepl3-design-2026-09-06-r4",
   "findings": [
     {
@@ -415,6 +415,24 @@
       "evidence": ["tools/src/bootstrap/mod.rs", "tools/src/bootstrap/generated.rs", "tools/src/bootstrap/cli.rs", "tools/tests/bootstrap.rs", "examples/grammar/angle-tag.neplg"],
       "partial_progress": "The independent seed_load_only executable calls the actual host bootstrap::load for the formal Angle source and crashes with main-thread stack overflow before descriptor construction or reader execution. The prior importer tests ran on Rust test threads and did not detect this default-main-thread failure. After replacing recursive constructor traversal with a postorder worklist and temporary borrowed-JSON lookup, the identical native executable exits successfully with 36 nodes. The subsequent actual source/compiler/ParseSession probe also passes both quoted-greater-than token boundaries and final/nonfinal truncation behavior. The subsequent managed native child-process verification is recorded in the resolution.",
       "resolution": "The iterative importer and bounded CLI are covered by seed_import_runs_on_main_thread_for_complete_sources_and_rejects_bad_input. It passes independently in the working tree and isolated NEPL3-prefix-validation tree, spawning the actual tools executable without a stack-size override for Angle and all four language grammars. The Angle source produces 36 nodes; invalid empty-object schema and oversized input return exit1. The original independent default-main-thread load-only probe now exits0. The fixed cause is recursive typed-constructor traversal; full bootstrap and unrelated malformed/deep runtime paths are not inferred from this correction."
+    },
+    {
+      "id": "R036",
+      "status": "corrected",
+      "title": "The shared Report boundary accepts inapplicable and overlapping diagnostic fixes",
+      "affected_tasks": ["T01", "T02", "T06"],
+      "evidence": ["doc/spec/02-foundation.md", "crates/foundation/core/src/diagnostic/validation.rs", "crates/foundation/wire/src/report.rs", "crates/foundation/wire/tests/report.rs"],
+      "partial_progress": "An independent probe changes only a valid diagnostic Fix's expected_digest to a digest that disagrees with its declared source slice. A second candidate contains two edits of the same nonempty range with different replacements. Both pass Report.validate and roundtrip through encode_report/decode_report unchanged. The shared validator checks span geometry but not the expected-source digest or the nonoverlapping-edit invariant required by spec02.",
+      "resolution": "The shared validator checks the expected-source digest with Work accounting, rejects intersecting edits and duplicate starts including insertion anchors, and requires one snapshot per SourceId within each Fix. All three independent original candidates now return typed ExpectedDigest, OverlappingEdits or SnapshotMismatch errors. Four managed report tests pass independently, including valid-schema NDF mutations to exercise decoder rejection separately from native encode, unsorted adjacent edits, insertion boundaries, multi-source edits and historical related spans. Report Usage authentication and full Facts operation envelopes remain separate obligations."
+    },
+    {
+      "id": "R037",
+      "status": "corrected",
+      "title": "SourceStore edit application allocates before checking its zero allocation budget",
+      "affected_tasks": ["T01", "T06"],
+      "evidence": ["crates/foundation/core/src/source.rs", "tools/audit/allocation/probe.rs"],
+      "partial_progress": "The coordinator extended the existing isolated allocation probe to call actual SourceStore::apply with one edit and a 100000-byte SourceId. Independently rerunning that executable observes 100008 allocated bytes before Err(AllocationLimit), while reported allocationUnits and Work remain zero. The same process's 4096-byte positive control succeeds and SourceMap::insert allocates zero with a zero allocation budget. SourceStore::apply collects edit references and clones source identities before its first budget check; this is separate from R036's report Fix invariant validation.",
+      "resolution": "SourceStore.apply now takes the operation's SourceAdmission, charges before borrowed edit sorting, source/locator comparisons and owned output construction, and checks all generated identities before committing outputs and admission together. The tracked allocator probe passes independently with a 4096-byte positive control and zero bytes allocated by apply under AllocationUnits0. The original full-deletion probe now returns SourceLimit with the original store unchanged. All five managed edit tests pass independently, covering every lower allocation cap, sticky stops, source/locator limits and semantic-failure retries. A separate public-API probe verifies unsorted adjacent Unicode edits, endpoint insertion, sorted multi-source results, once-only source admission, atomic stale-revision/duplicate-anchor rejection and a successful corrected retry in the same operation."
     }
   ],
   "runtime_conformance_executed": false

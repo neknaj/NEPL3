@@ -1,0 +1,316 @@
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\core)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\wire)
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\reader)
+   Compiling nepl3-engine v0.1.0 (C:\projects\NEPL3-prefix-validation\crates\foundation\engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 10.53s
+     Running unittests src\lib.rs (target\debug\deps\nepl3_core-7aa423d3ddb0d0c5.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\contracts.rs (target\debug\deps\contracts-a6271fce5eff8409.exe)
+
+running 18 tests
+test budget_exact_limits_overflow_zero_and_cancel_are_distinct ... ok
+test line_index_allocation_limit_is_enforced ... ok
+test first_budget_stop_is_sticky_across_smaller_charges_and_cancellation ... ok
+test source_admission_charges_unique_snapshots_once_across_shared_calls ... ok
+test rational_constructors_normalize_native_but_reject_noncanonical_wire ... ok
+test source_limits_precede_decode_and_decode_does_not_replace_bytes ... ok
+test source_admission_rejects_locator_changes_for_same_snapshot_identity ... ok
+test edits_are_atomic_across_sources_and_reject_stale_or_conflicting_input ... ok
+test canonical_integers_reject_negative_zero_and_leading_zero ... ok
+test nested_budget_retains_work_and_peak_depth_after_failed_branch ... ok
+test admission_accounts_for_copied_locator_payload ... ok
+test line_positions_roundtrip_unicode_and_all_line_endings ... ok
+test edit_size_limit_checked_before_replacement_is_built ... ok
+test source_digest_is_sha256_of_exact_original_bytes ... ok
+test locator_profile_is_checked_without_os_or_scheme_normalization ... ok
+test store_preserves_distinct_ids_at_same_uri_and_rejects_conflicting_revision ... ok
+test span_rejects_scalar_interiors_bounds_and_other_identity ... ok
+test generated_source_locator_scan_is_charged_before_validation ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\decimal.rs (target\debug\deps\decimal-c1293449445a6bd8.exe)
+
+running 2 tests
+test invalid_digits_and_resource_stops_precede_numeric_allocation ... ok
+test exact_decimal_constructor_is_independent_of_lexical_leading_zero_policy ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\facts.rs (target\debug\deps\facts-8ab5783723ad12f8.exe)
+
+running 2 tests
+test facts_reject_missing_sources_namespace_roots_and_fresh_operation_limits ... ok
+test delta_keeps_current_scope_namespace_reservations_and_foreign_scope_authority ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\maps.rs (target\debug\deps\maps-b4f545a3574c44f2.exe)
+
+running 3 tests
+test mapped_containment_requires_every_byte_and_every_reverse_path ... ok
+test snapshot_dag_proves_large_transforms_without_enumerating_the_point_product ... ok
+test map_admission_never_copies_long_identity_before_zero_allocation_budget ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\structure.rs (target\debug\deps\structure-63d08c1b51569297.exe)
+
+running 20 tests
+test report_candidate_rollback_discards_facts_without_refunding_budget ... ok
+test canonical_json_escapes_controls_without_unicode_normalization ... ok
+test imported_origin_graph_honors_zero_nodes_and_depth_limits ... ok
+test descriptor_map_order_is_irrelevant_but_duplicates_are_rejected ... ok
+test empty_anchor_cycles_and_transformed_relations_are_checked ... ok
+test forward_overlap_is_acyclic_and_map_budget_failure_does_not_insert ... ok
+test imported_origin_graph_rejects_cycles_unknown_refs_and_missing_source ... ok
+test inverse_refuses_transformed_and_ambiguous_mappings ... ok
+test registry_accepts_mutual_symbolic_references_then_seals_them ... ok
+test local_kind_ids_are_canonical_across_descriptor_input_order ... ok
+test registry_rejects_wrong_digest_and_unknown_unused_references ... ok
+test report_diagnostic_limit_has_no_fabricated_global_message ... ok
+test report_storage_obeys_allocation_budget ... ok
+test descriptor_canonical_json_has_independently_specified_field_order ... ok
+test report_zero_event_capacity_keeps_one_typed_overflow_and_stop ... ok
+test source_map_checks_composable_interval_cycles_not_snapshot_cycles ... ok
+test structural_boundary_checks_field_count_kind_intrinsic_subset_and_negative_natural ... ok
+test validator_and_descriptor_depth_share_parent_budget_and_peak ... ok
+test rejected_deep_descriptor_is_safe_to_clone_compare_debug_and_drop ... ok
+test deeply_nested_value_cleanup_uses_no_recursive_drop_chain ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests\syntax.rs (target\debug\deps\syntax-016dc4d048e73305.exe)
+
+running 9 tests
+test syntax_graph_checks_all_refs_and_cycles_while_allowing_shared_children ... ok
+test foreign_nesting_adds_to_containing_node_path_depth ... ok
+test foreign_ids_are_local_but_environment_and_root_must_match ... ok
+test source_child_cover_must_follow_head_and_stay_in_parent ... ok
+test view_child_edges_are_acyclic_but_semantic_relation_cycles_are_allowed ... ok
+test token_owns_even_unreachable_view_elements ... ok
+test token_internal_view_is_sidecar_and_trivia_retains_bom_bytes ... ok
+test deeply_nested_foreign_bundle_cleanup_is_iterative ... ok
+test owned_syntax_copy_precharges_payloads_and_preserves_deep_foreign_ownership ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.75s
+
+     Running unittests src\lib.rs (target\debug\deps\nepl3_engine-785aef645786a71c.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\package.rs (target\debug\deps\package-a0e3b7d500c61ddb.exe)
+
+running 9 tests
+test package_boundary_checks_extension_provenance_and_resource_limits ... ok
+test recovery_strategy_and_sync_order_are_part_of_package_behavior ... ok
+test semantic_identity_preserves_ordered_behavior_and_presentation_fallback ... ok
+test package_rejects_direct_reader_cycles_and_counts_binding_entry_depth ... ok
+test listof_foreign_has_foreign_head_and_local_tail_without_losing_its_selector ... ok
+test semantic_identity_removes_arena_layout_sharing_and_provenance ... ok
+test package_checks_real_surface_shapes_modes_selectors_and_binding_coverage ... ok
+test persistent_tree_checks_parent_reads_spelling_payload_and_concrete_owner ... ok
+test resolved_profile_pins_real_package_host_providers_resources_and_foreign_modes ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
+     Running tests\parse.rs (target\debug\deps\parse-ea3b7a8ff9358216.exe)
+
+running 13 tests
+test text_reservation_preserves_prefix_identity_and_composed_caller_depth ... ok
+test foreign::foreign_root_mode_is_guest_owned_and_normal_child_and_host_restore_defaults ... ok
+test missing_final_child_and_nonfinal_input_are_distinct ... ok
+test append_retry_retains_original_caller_depth_when_host_resumes_at_zero ... ok
+test provider_resume_keeps_prefix_frames_report_and_caller_depth ... ok
+test explicit_list_spine_preserves_declared_head_and_tail_children ... ok
+test static_form_keeps_builtin_children_and_token_payloads ... ok
+test missing_children_share_one_bundle_recovery_table ... ok
+test prefix_depth_composes_with_nested_reader_frames ... ok
+test unknown_heads_preserve_remainder_without_inventing_a_leaf_arity ... ok
+test accepted_trivia_without_a_token_survives_eof_and_need_more ... ok
+test append_retry_reparses_every_scalar_split_and_keeps_cumulative_usage ... ok
+test allocation_stop_preserves_actual_usage_and_never_invents_a_root ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.95s
+
+     Running unittests src\lib.rs (target\debug\deps\nepl3_reader-a8b21cbd29a94272.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\builtin.rs (target\debug\deps\builtin-1339681f61724624.exe)
+
+running 17 tests
+test mode_take_is_ordered_choice_and_does_not_consume_trailing_trivia ... ok
+test owned_tokenizer_resume_does_not_borrow_the_original_context_and_checks_all_echo_fields ... ok
+test text_exact_runs_preserve_utf8_offsets_and_escape_boundaries ... ok
+test mode_text_reservation_is_lazy_and_echo_is_checked ... ok
+test tokenizer_configuration_identity_ignores_mode_declaration_order_but_retains_rule_order ... ok
+test reservation_locator_validation_obeys_work_limit_before_scanning ... ok
+test empty_skip_and_take_readers_are_nonprogress_failures ... ok
+test text_decoding_retains_each_exact_or_transformed_source_range ... ok
+test selected_standard_provider_dispatch_uses_builtin_values_and_rejects_forgery ... ok
+test generated_source_admission_is_once_and_unsuccessful_text_has_no_source_charge ... ok
+test builtin_budget_stops_are_typed_and_do_not_return_partial_tokens ... ok
+test maximal_lexemes_wait_at_every_nonfinal_scalar_boundary ... ok
+test trivia_keeps_ascii_line_boundaries_and_bom_position ... ok
+test committed_text_rejects_invalid_escapes_scalars_and_direct_lines ... ok
+test names_preserve_unicode_spelling_and_read_maximal_identifier ... ok
+test naturals_and_finite_decimals_are_exact_and_boundary_checked ... ok
+test language_is_well_formed_abnf_not_registry_validity ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.36s
+
+     Running tests\context.rs (target\debug\deps\context-0d1df32d877a2217.exe)
+
+running 1 test
+test checked_context_uses_real_digest_and_exact_origin_source_closure ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\portable.rs (target\debug\deps\portable-b3491903dec25756.exe)
+
+running 2 tests
+test native_request_and_checked_ndf_loopback_execute_with_identical_meaning ... ok
+test host_global_source_cannot_fill_a_missing_request_declaration ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\runtime.rs (target\debug\deps\runtime-f930795e0c41a671.exe)
+
+running 30 tests
+test failed_choice_restores_programmed_state_before_next_provider_call ... ok
+test accepted_diagnostic_owns_primary_related_and_fix_source_closure_before_publication ... ok
+test checked_context_reuse_admits_exact_source_closure_in_each_operation ... ok
+test bounded_repeat_zero_never_executes_nullable_body ... ok
+test choice_rewinds_captures_views_and_retains_work ... ok
+test direct_repeat_failure_and_streaming_shortage_rollback_all_prior_iteration_reports ... ok
+test fresh_budget_and_forged_call_or_source_cannot_resume_a_saved_slot ... ok
+test long_source_identity_is_not_copied_after_allocation_budget_is_exhausted ... ok
+test checked_context_reuse_rejects_same_id_revision_with_changed_content ... ok
+test commit_does_not_hide_failure_or_need_more_in_choice ... ok
+test node_sidecar_and_look_not_optional_discard_have_independent_values ... ok
+test programmed_repetition_requires_actual_consumption_and_accepts_consuming_calls ... ok
+test cancellation_during_provider_wait_stops_and_consumes_the_pending_slot ... ok
+test runtime_rejects_left_recursion_hidden_behind_empty_programmed_call ... ok
+test every_utf8_prefix_split_is_need_more_and_final_truncation_is_no_match ... ok
+test static_plan_rejects_unknown_references_types_and_unproductive_recursion ... ok
+test unicode_classes_use_pinned_unicode16_and_ascii_numeric_rules ... ok
+test until_leaves_delimiter_and_takecount_counts_scalars ... ok
+test generated_sources_are_validated_transactionally_and_available_to_diagnostics ... ok
+test accepted_collector_crosses_language_sessions_only_in_its_original_operation ... ok
+test provider_signature_checks_operation_envelope_and_pure_decoder ... ok
+test session_binds_call_source_plan_usage_and_closes_after_consumed_resume ... ok
+test plan_identity_is_deterministic_but_distinguishes_arena_representation ... ok
+test failed_stopped_and_rollback_results_have_their_exact_formal_source_closure ... ok
+test map_decode_and_then_use_typed_provider_envelopes ... ok
+test allocation_faults_across_later_resumes_preserve_already_accepted_reports ... ok
+test stopped_reader_retains_committed_provider_reports ... ok
+test stopped_tokenizer_retains_reader_report_and_generated_source_closure ... ok
+test tokenizer_await_allocation_stops_clear_both_private_pending_slots ... ok
+test tokenizer_preserves_accepted_skip_reports_and_sources_across_candidate_rollback ... ok
+
+test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.78s
+
+     Running unittests src\lib.rs (target\debug\deps\nepl3_wire-93cdf93175bcaa7f.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\codec.rs (target\debug\deps\codec-da0d7f6d4c07e1fc.exe)
+
+running 7 tests
+test integer_width_boundaries_use_shortest_unsigned_encoding ... ok
+test malformed_noncanonical_and_forbidden_cbor_values_are_rejected ... ok
+test all_twelve_tags_match_specified_cbor_bytes ... ok
+test checked_boundary_uses_real_registry_and_rejects_wrong_field_type ... ok
+test every_truncated_prefix_fails_and_complete_input_preserves_bytes ... ok
+test limits_stop_with_typed_reasons_without_a_successful_partial_value ... ok
+test deeply_nested_values_do_not_use_the_native_call_stack ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+     Running tests\facts.rs (target\debug\deps\facts-97ee2fef51f6cedb.exe)
+
+running 1 test
+test typed_facts_and_delta_roundtrip_preserve_ids_and_reject_semantic_forgery ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\origin.rs (target\debug\deps\origin-1df7236521565949.exe)
+
+running 1 test
+test origin_variants_roundtrip_and_wire_cycles_are_rejected ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests\report.rs (target\debug\deps\report-a76c0d000f25fa6d.exe)
+
+running 4 tests
+test report_boundary_rejects_payload_count_and_source_forgery_and_preserves_stops ... ok
+test report_roundtrip_preserves_diagnostics_events_fixes_and_declared_sources ... ok
+test one_fix_uses_one_snapshot_per_source_but_allows_multiple_sources_and_historical_related ... ok
+test fix_preconditions_reject_digest_and_overlap_in_native_and_structural_wire_values ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\source.rs (target\debug\deps\source-cd5bda0d1fc38352.exe)
+
+running 3 tests
+test native_and_wire_admission_reject_zero_source_limit_and_span_scalar_interior ... ok
+test source_and_span_roundtrip_preserve_identity_bytes_and_shared_admission ... ok
+test malformed_source_declarations_reject_without_committing_and_retry_does_not_refund ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\syntax.rs (target\debug\deps\syntax-0da0e1c1e3f0d10a.exe)
+
+running 6 tests
+test guest_arena_reordering_updates_foreign_root_and_guest_local_children ... ok
+test foreign_bundle_rejects_forged_environment_digest_token_and_origin_references ... ok
+test native_arena_order_is_canonicalized_and_unreachable_nodes_are_rejected ... ok
+test foreign_bundle_roundtrip_keeps_local_token_view_origin_ids_and_payloads ... ok
+test mapped_views_and_maps_survive_host_and_guest_wire_boundaries ... ok
+test nested_generated_bundles_use_iterative_conversion_and_shared_depth_budget ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+
+     Running tests\view.rs (target\debug\deps\view-5ce83ae77105f29b.exe)
+
+running 2 tests
+test structured_payload_views_roles_relations_and_trivia_roundtrip_without_reparse ... ok
+test token_wire_rejects_invalid_local_view_and_trivia_references_and_source_limit ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests nepl3_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests nepl3_engine
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests nepl3_reader
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests nepl3_wire
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

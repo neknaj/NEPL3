@@ -1,5 +1,8 @@
 //! Host orchestration of the real reader/engine/lower path. Providers are selected
 //! explicitly; this adapter does not emulate tokenization or prefix parsing.
+mod host;
+pub(super) mod metrics;
+use metrics::Metrics;
 use nepl3_core::{
     budget::{Budget, Resource, StopReason, Usage},
     schema::{TypeDescriptor, TypeShape},
@@ -17,6 +20,10 @@ use nepl3_reader::{
 use nepl3_wire::{environment::environment_digest, foundation::FoundationCodec};
 pub enum RuntimeError {
     Boundary(String),
+    Host {
+        error: ParseError,
+        reply: Box<ParseReply>,
+    },
     /// Setup stopped before a parser reply existed. No successful tree or fake
     /// parser progress is supplied; usage belongs to the caller's shared budget.
     PreparationStopped {
@@ -37,6 +44,11 @@ impl core::fmt::Debug for RuntimeError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::Boundary(error) => f.debug_tuple("Boundary").field(error).finish(),
+            Self::Host { error, reply } => f
+                .debug_struct("Host")
+                .field("error", error)
+                .field("usage", &reply.report.usage)
+                .finish(),
             Self::PreparationStopped { reason, usage } => f
                 .debug_struct("PreparationStopped")
                 .field("reason", reason)
@@ -186,6 +198,33 @@ pub(super) fn with_tree<T>(
         &mut SourceAdmission,
     ) -> Result<T, RuntimeError>,
 ) -> Result<T, RuntimeError> {
+    with_tree_measured(
+        source,
+        compiled,
+        implementation,
+        budget,
+        admission,
+        &mut Metrics {
+            inline_host: true,
+            ..Metrics::default()
+        },
+        finish,
+    )
+}
+pub(super) fn with_tree_measured<T>(
+    source: &SourceSnapshot,
+    compiled: &CompiledLanguage,
+    implementation: Digest,
+    budget: &mut Budget,
+    admission: &mut SourceAdmission,
+    metrics: &mut Metrics,
+    finish: impl FnOnce(
+        &nepl3_engine::tree::ValidatedParseTree<'_>,
+        &ResolvedParseProfile<'_>,
+        &mut Budget,
+        &mut SourceAdmission,
+    ) -> Result<T, RuntimeError>,
+) -> Result<T, RuntimeError> {
     let registry = &compiled.registry;
     let package = &compiled.package;
     let identity = package
@@ -292,25 +331,55 @@ pub(super) fn with_tree<T>(
     let mut parser =
         ParseSession::new("grammar-bootstrap".into(), &resolved, &environments, budget)
             .map_err(boundary)?;
-    let mut reply = parser
-        .read(
-            ParseRequest {
-                snapshot: source,
-                start: 0,
-                limit: source.text().len() as u64,
-                final_input: true,
-                entry: &entry,
-                states: &[LanguageReaderState {
-                    alias: "Grammar".into(),
-                    state: NdfValue::Unit,
-                }],
-            },
-            &sources,
-            budget,
-            admission,
-        )
-        .map_err(boundary)?;
+    let states = [LanguageReaderState {
+        alias: "Grammar".into(),
+        state: NdfValue::Unit,
+    }];
+    let request = ParseRequest {
+        snapshot: source,
+        start: 0,
+        limit: source.text().len() as u64,
+        final_input: true,
+        entry: &entry,
+        states: &states,
+    };
+    let mut initial = core::mem::take(&mut metrics.initial);
     let mut reservation_id = 0u64;
+    let mut reply = if metrics.inline_host {
+        let mut host = host::NativeHost {
+            registry,
+            providers: &providers,
+            source,
+            reservation_id: 0,
+            metrics,
+        };
+        let result = initial
+            .measure(budget, |budget| {
+                parser.read_with_host(request, &sources, budget, admission, &mut host)
+            })
+            .map_err(boundary)?;
+        reservation_id = host.reservation_id;
+        if let Some(error) = result.host_error {
+            return match budget.poll() {
+                Err(reason) => Err(RuntimeError::Stopped {
+                    reason,
+                    reply: Box::new(result.reply),
+                }),
+                Ok(()) => Err(RuntimeError::Host {
+                    error,
+                    reply: Box::new(result.reply),
+                }),
+            };
+        }
+        result.reply
+    } else {
+        initial
+            .measure(budget, |budget| {
+                parser.read(request, &sources, budget, admission)
+            })
+            .map_err(boundary)?
+    };
+    metrics.initial = initial;
     let mut finish = Some(finish);
     enum Step<T> {
         Next,
@@ -331,50 +400,62 @@ pub(super) fn with_tree<T>(
                     else {
                         return Err(boundary("non-read standard operation"));
                     };
-                    let mut declared = SourceStore::default();
-                    for source in &request.sources {
-                        declared
-                            .insert(source.clone_with_budget(budget).map_err(boundary)?)
-                            .map_err(boundary)?;
-                    }
+                    let declared = metrics.provider_sources.measure(
+                        budget,
+                        |budget| -> Result<_, RuntimeError> {
+                            let mut declared = SourceStore::default();
+                            for source in &request.sources {
+                                declared
+                                    .insert(source.clone_with_budget(budget).map_err(boundary)?)
+                                    .map_err(boundary)?;
+                            }
+                            Ok(declared)
+                        },
+                    )?;
                     let snapshot = declared
                         .resolve(&request.snapshot)
                         .ok_or_else(|| boundary("provider snapshot missing"))?;
-                    let checked = {
+                    let checked = metrics.provider_context.measure(budget, |budget| {
                         let mut codec = FoundationCodec::new(registry, &declared, admission)
                             .map_err(boundary)?;
                         request
                             .context
                             .check(&mut codec, &declared, registry, budget)
-                            .map_err(boundary)?
-                    };
-                    let terminal = budget
-                        .with_depth_at_least(*depth_base, |b| {
-                            provider::read(
-                                operation,
-                                ReadRequest {
-                                    snapshot,
-                                    start: request.start,
-                                    limit: request.limit,
-                                    final_input: request.final_input,
-                                    context: &checked,
-                                    state: &request.state,
-                                },
-                                registry,
-                                &declared,
-                                b,
+                            .map_err(boundary)
+                    })?;
+                    let terminal = metrics
+                        .provider_read
+                        .measure(budget, |budget| {
+                            budget.with_depth_at_least(*depth_base, |b| {
+                                provider::read(
+                                    operation,
+                                    ReadRequest {
+                                        snapshot,
+                                        start: request.start,
+                                        limit: request.limit,
+                                        final_input: request.final_input,
+                                        context: &checked,
+                                        state: &request.state,
+                                    },
+                                    registry,
+                                    &declared,
+                                    b,
+                                    admission,
+                                )
+                            })
+                        })
+                        .map_err(boundary)?;
+                    let next = metrics
+                        .resume
+                        .measure(budget, |budget| {
+                            parser.resume(
+                                continuation,
+                                ProviderReply::Read(Box::new(terminal)),
+                                &sources,
+                                budget,
                                 admission,
                             )
                         })
-                        .map_err(boundary)?;
-                    let next = parser
-                        .resume(
-                            continuation,
-                            ProviderReply::Read(Box::new(terminal)),
-                            &sources,
-                            budget,
-                            admission,
-                        )
                         .map_err(boundary)?;
                     reply = next;
                     Ok(Step::Next)
@@ -392,8 +473,11 @@ pub(super) fn with_tree<T>(
                         revision: source.identity().revision,
                         uri: format!("memory:grammar-decoded/{reservation_id}"),
                     };
-                    let next = parser
-                        .reserve(continuation, &reservation, &sources, budget, admission)
+                    let next = metrics
+                        .reservation
+                        .measure(budget, |budget| {
+                            parser.reserve(continuation, &reservation, &sources, budget, admission)
+                        })
                         .map_err(boundary)?;
                     reply = next;
                     Ok(Step::Next)

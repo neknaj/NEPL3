@@ -189,9 +189,26 @@ fn lower_fixture(
 #[test]
 fn complete_grammar_bootstrap_uses_production_parser_lower_and_semantic_identity()
 -> crate::Result<()> {
+    complete_bootstrap(true, 10_000_000_000).map(|_| ())
+}
+/// Explicit comparison benchmark, excluded from routine conformance execution.
+#[test]
+#[ignore = "owned continuation performance baseline; run explicitly with --ignored --nocapture"]
+fn complete_grammar_bootstrap_host_comparison() -> crate::Result<()> {
+    let owned = complete_bootstrap(false, 20_000_000_000)?;
+    let native = complete_bootstrap(true, 20_000_000_000)?;
+    assert_eq!(owned, native);
+    Ok(())
+}
+fn complete_bootstrap(
+    inline_host: bool,
+    work_cap: u64,
+) -> crate::Result<nepl3_engine::package::PackageIdentity> {
     let bytes = seed("languages/grammar/syntax.neplg")?;
     let mut limits = budget().limits();
-    limits.work = 10_000_000_000;
+    // The comparison gives both routes the same explicit measurement headroom.
+    // Normal native conformance retains its earlier cap; this is not a performance fix.
+    limits.work = work_cap;
     limits.allocation_units = 100_000_000_000;
     limits.depth = 4096;
     let mut b = Budget::new(limits);
@@ -211,6 +228,7 @@ fn complete_grammar_bootstrap_uses_production_parser_lower_and_semantic_identity
         implementation,
         &mut b,
         &mut admission,
+        inline_host,
     )?;
     let second = measure("compile P1", &mut b, &mut admission, |b, a| {
         catalog::compile(&p1, "nepl3.syntax.grammar", b, a).map_err(Into::into)
@@ -222,6 +240,7 @@ fn complete_grammar_bootstrap_uses_production_parser_lower_and_semantic_identity
         implementation,
         &mut b,
         &mut admission,
+        inline_host,
     )?;
     let third = measure("compile P2", &mut b, &mut admission, |b, a| {
         catalog::compile(&p2, "nepl3.syntax.grammar", b, a).map_err(Into::into)
@@ -246,7 +265,7 @@ fn complete_grammar_bootstrap_uses_production_parser_lower_and_semantic_identity
         b.usage(),
         p2.nodes.len()
     );
-    Ok(())
+    Ok(identities.remove(0))
 }
 
 #[test]
@@ -659,15 +678,21 @@ fn measured_parse(
     implementation: nepl3_core::source::Digest,
     budget: &mut Budget,
     admission: &mut SourceAdmission,
+    inline_host: bool,
 ) -> crate::Result<Document> {
     let before = budget.usage();
     let started = std::time::Instant::now();
-    runtime::with_tree(
+    let mut metrics = runtime::metrics::Metrics {
+        inline_host,
+        ..runtime::metrics::Metrics::default()
+    };
+    let result = runtime::with_tree_measured(
         source,
         compiled,
         implementation,
         budget,
         admission,
+        &mut metrics,
         |tree, profile, budget, admission| {
             print_usage(
                 &format!("parse {stage} (includes host boundary/validation)"),
@@ -682,5 +707,7 @@ fn measured_parse(
             .map_err(|e| runtime::RuntimeError::Boundary(e.to_string()))
         },
     )
-    .map_err(|e| format!("{stage}: {e:?}").into())
+    .map_err(|e| format!("{stage}: {e:?}").into());
+    eprintln!("{stage} driver metrics: {metrics:#?}");
+    result
 }

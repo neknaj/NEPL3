@@ -128,6 +128,168 @@ impl<'a> ParseSession<'a> {
         }
         self.start(request, sources, budget, admission, None)
     }
+    /// Service synchronous reader callbacks without publishing copies of the
+    /// growing prefix arenas. Unsupported calls retain the ordinary owned Await.
+    pub fn read_with_host(
+        &mut self,
+        request: ParseRequest<'_>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        host: &mut impl super::ParseHost,
+    ) -> Result<super::ParseHostReply, ParseError> {
+        if self.closed {
+            return Err(ParseError::Closed);
+        }
+        if self.pending.is_some() || self.incomplete.is_some() {
+            return Err(ParseError::Busy);
+        }
+        let prepared = self.begin(request, sources, budget, admission, None);
+        let mut machine = match prepared {
+            Ok(machine) => machine,
+            Err(error) => {
+                return match budget.poll() {
+                    Err(reason) => Ok(super::ParseHostReply {
+                        reply: ParseReply {
+                            outcome: ParseOutcome::Stopped {
+                                reason,
+                                progress: None,
+                            },
+                            report: Report {
+                                usage: budget.usage(),
+                                ..Report::default()
+                            },
+                            sources: vec![],
+                            source_maps: vec![],
+                        },
+                        host_error: None,
+                    }),
+                    Ok(()) => Err(error),
+                };
+            }
+        };
+        let Some(depth_base) = budget.current_depth().checked_add(1) else {
+            let reason = budget.stop(StopReason::DepthLimit);
+            return Ok(super::ParseHostReply {
+                reply: self.stop(machine, reason, budget)?,
+                host_error: None,
+            });
+        };
+        let mut result =
+            budget.with_depth(|budget| self.drive(&mut machine, sources, budget, admission));
+        loop {
+            let halt = match result {
+                Ok(halt) => halt,
+                Err(error) => {
+                    return Ok(super::ParseHostReply {
+                        reply: self.finish(machine, Err(error), depth_base, budget)?,
+                        host_error: None,
+                    });
+                }
+            };
+            let alias = if matches!(halt, Halt::Await(..) | Halt::Reserve(..)) {
+                let selected = machine
+                    .progress
+                    .frames
+                    .last()
+                    .ok_or(ParseError::Reference)
+                    .and_then(|frame| self.alias(&frame.entry.alias, budget));
+                match selected {
+                    Ok(alias) => alias,
+                    Err(error) => {
+                        return Ok(super::ParseHostReply {
+                            reply: self.finish(machine, Err(error), depth_base, budget)?,
+                            host_error: None,
+                        });
+                    }
+                }
+            } else {
+                return Ok(super::ParseHostReply {
+                    reply: self.finish(machine, Ok(halt), depth_base, budget)?,
+                    host_error: None,
+                });
+            };
+            // Keep the halt and original machine until the callback has succeeded.
+            // A callback error can still publish a fully owned retry continuation.
+            let dispatched = (|| -> Result<_, ParseError> {
+                match &halt {
+                    Halt::Await(call, tokenizer) => {
+                        use nepl3_reader::model::ProviderCall;
+                        let (operation, base) = match call.as_ref() {
+                            ProviderCall::Read {
+                                operation,
+                                depth_base,
+                                ..
+                            }
+                            | ProviderCall::Transform {
+                                operation,
+                                depth_base,
+                                ..
+                            }
+                            | ProviderCall::Dependent {
+                                operation,
+                                depth_base,
+                                ..
+                            } => (operation, *depth_base),
+                        };
+                        let requirement = self.profile.provider(operation, budget)?;
+                        let reply = budget.with_depth_at_least(base, |budget| {
+                            host.provider(call, requirement, budget, admission)
+                        })?;
+                        Ok(reply.map(|reply| {
+                            self.tokenizers[alias]
+                                .resume_accepted(tokenizer, reply, sources, budget, admission)
+                        }))
+                    }
+                    Halt::Reserve(request, tokenizer) => {
+                        let reservation = budget
+                            .with_depth_at_least(tokenizer.depth_base, |budget| {
+                                host.reservation(request, budget, admission)
+                            })?;
+                        Ok(reservation.map(|reservation| {
+                            self.tokenizers[alias].reserve_accepted(
+                                tokenizer,
+                                &reservation,
+                                sources,
+                                budget,
+                                admission,
+                            )
+                        }))
+                    }
+                    _ => Err(ParseError::Reference),
+                }
+            })();
+            let reply = match dispatched {
+                Ok(Some(reply)) => reply,
+                Ok(None) => {
+                    return Ok(super::ParseHostReply {
+                        reply: self.finish(machine, Ok(halt), depth_base, budget)?,
+                        host_error: None,
+                    });
+                }
+                Err(error) => {
+                    let reply = match budget.poll() {
+                        Err(reason) => self.stop(machine, reason, budget)?,
+                        Ok(()) => self.finish(machine, Ok(halt), depth_base, budget)?,
+                    };
+                    return Ok(super::ParseHostReply {
+                        reply,
+                        host_error: Some(error),
+                    });
+                }
+            };
+            result = match reply {
+                Ok(reply) => match self.accept(&mut machine, reply, sources, budget, admission) {
+                    Ok(Some(halt)) => Ok(halt),
+                    Ok(None) => budget.with_depth_at_least(depth_base, |budget| {
+                        self.drive(&mut machine, sources, budget, admission)
+                    }),
+                    Err(error) => Err(error),
+                },
+                Err(error) => Err(error.into()),
+            };
+        }
+    }
     fn start(
         &mut self,
         request: ParseRequest<'_>,

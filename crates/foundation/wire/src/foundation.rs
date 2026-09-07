@@ -60,6 +60,30 @@ impl<'a> FoundationCodec<'a> {
 }
 impl FoundationValueCodec for FoundationCodec<'_> {
     type Error = WireError;
+    fn encode_report(
+        &mut self,
+        value: &nepl3_core::diagnostic::Report,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
+        for source in self.sources.snapshots() {
+            self.admission.admit_existing(source, budget)?;
+        }
+        let value =
+            crate::report::report_value(value, self.schema, self.registry, self.sources, budget)?;
+        self.validate(&value, "Report", budget)?;
+        Ok(value)
+    }
+    fn decode_report(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<nepl3_core::diagnostic::Report, WireError> {
+        self.validate(value, "Report", budget)?;
+        for source in self.sources.snapshots() {
+            self.admission.admit_existing(source, budget)?;
+        }
+        crate::report::report_from(value, self.schema, self.registry, self.sources, budget)
+    }
     fn encode_origins(
         &mut self,
         value: &[nepl3_core::origin::Origin],

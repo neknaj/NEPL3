@@ -1,4 +1,5 @@
 //! Structured operation reports. Hosts supply translated messages, clocks and output sinks.
+pub mod validation;
 use crate::budget::{Budget, Resource};
 use crate::{
     budget::{StopReason, Usage},

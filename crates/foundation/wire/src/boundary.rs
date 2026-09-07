@@ -1,4 +1,5 @@
 //! Shared mechanics for typed foundation adapters; no language-specific dispatch.
+pub(crate) mod typed;
 use crate::{WireError, source::*, view::*};
 use alloc::{boxed::Box, vec::Vec};
 use nepl3_core::{
