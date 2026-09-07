@@ -1,0 +1,1275 @@
+{
+  "package": "nepl3.doc",
+  "revision": 1,
+  "types": {
+    "ArticleRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "BodyRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "BlockRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "FlowRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "SentenceRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "InlineRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "VariantRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "RowRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "ListItemRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "EmbedRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "DocRoot": {
+      "variant": {
+        "Article": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "ArticleRef"
+              }
+            }
+          ]
+        ],
+        "Body": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "BodyRef"
+              }
+            }
+          ]
+        ],
+        "Block": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "BlockRef"
+              }
+            }
+          ]
+        ],
+        "Flow": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "FlowRef"
+              }
+            }
+          ]
+        ],
+        "Sentence": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "SentenceRef"
+              }
+            }
+          ]
+        ],
+        "Inline": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "InlineRef"
+              }
+            }
+          ]
+        ],
+        "Variant": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "VariantRef"
+              }
+            }
+          ]
+        ],
+        "Row": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "RowRef"
+              }
+            }
+          ]
+        ],
+        "ListItem": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "ListItemRef"
+              }
+            }
+          ]
+        ],
+        "Alignment": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "AlignmentRef"
+              }
+            }
+          ]
+        ],
+        "ListStyle": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "ListStyleRef"
+              }
+            }
+          ]
+        ],
+        "Check": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "CheckRef"
+              }
+            }
+          ]
+        ],
+        "Target": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "TargetRef"
+              }
+            }
+          ]
+        ],
+        "Asset": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "AssetValueRef"
+              }
+            }
+          ]
+        ],
+        "OptionalRow": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "OptionalRowRef"
+              }
+            }
+          ]
+        ],
+        "OptionalSentence": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "OptionalSentenceRef"
+              }
+            }
+          ]
+        ],
+        "OptionalText": [
+          [
+            "root",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "OptionalTextRef"
+              }
+            }
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "AssetRef": {
+      "record": [
+        [
+          "id",
+          "Text"
+        ],
+        [
+          "digest",
+          {
+            "option": "Bytes"
+          }
+        ]
+      ],
+      "constraints": [
+        "doc.asset_digest"
+      ]
+    },
+    "LinkTarget": {
+      "variant": {
+        "Page": [
+          [
+            "page",
+            "Text"
+          ],
+          [
+            "fragment",
+            {
+              "option": "Text"
+            }
+          ]
+        ],
+        "Relative": [
+          [
+            "path",
+            "Text"
+          ],
+          [
+            "fragment",
+            {
+              "option": "Text"
+            }
+          ]
+        ],
+        "External": [
+          [
+            "uri",
+            "Text"
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "Alignment": {
+      "variant": {
+        "Default": [],
+        "Left": [],
+        "Center": [],
+        "Right": []
+      },
+      "constraints": []
+    },
+    "ListKind": {
+      "variant": {
+        "Unordered": [],
+        "Ordered": [
+          [
+            "start",
+            "U64"
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "EmbedKind": {
+      "variant": {
+        "InlineMath": [],
+        "DisplayMath": [],
+        "CircuitFigure": [],
+        "Code": []
+      },
+      "constraints": []
+    },
+    "DocKind": {
+      "variant": {
+        "Article": [
+          [
+            "language",
+            "Text"
+          ],
+          [
+            "title",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "SentenceRef"
+              }
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "BodyRef"
+              }
+            }
+          ]
+        ],
+        "Body": [
+          [
+            "blocks",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.doc",
+                  "revision": 1,
+                  "name": "BlockRef"
+                }
+              }
+            }
+          ]
+        ],
+        "Paragraph": [
+          [
+            "items",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.doc",
+                  "revision": 1,
+                  "name": "FlowRef"
+                }
+              }
+            }
+          ]
+        ],
+        "Section": [
+          [
+            "id",
+            "Text"
+          ],
+          [
+            "title",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "SentenceRef"
+              }
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "BodyRef"
+              }
+            }
+          ]
+        ],
+        "Sentence": [
+          [
+            "inlines",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.doc",
+                  "revision": 1,
+                  "name": "InlineRef"
+                }
+              }
+            }
+          ]
+        ],
+        "Parallel": [
+          [
+            "variants",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.doc",
+                  "revision": 1,
+                  "name": "VariantRef"
+                }
+              }
+            }
+          ]
+        ],
+        "Variant": [
+          [
+            "language",
+            "Text"
+          ],
+          [
+            "sentence",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "SentenceRef"
+              }
+            }
+          ]
+        ],
+        "Text": [
+          [
+            "text",
+            "Text"
+          ]
+        ],
+        "Concat": [
+          [
+            "inlines",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.doc",
+                  "revision": 1,
+                  "name": "InlineRef"
+                }
+              }
+            }
+          ]
+        ],
+        "Ruby": [
+          [
+            "base",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "InlineRef"
+              }
+            }
+          ],
+          [
+            "reading",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "InlineRef"
+              }
+            }
+          ]
+        ],
+        "Anno": [
+          [
+            "base",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "InlineRef"
+              }
+            }
+          ],
+          [
+            "notes",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.doc",
+                  "revision": 1,
+                  "name": "InlineRef"
+                }
+              }
+            }
+          ]
+        ],
+        "InlineMath": [
+          [
+            "syntax",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "Anchor": [
+          [
+            "id",
+            "Text"
+          ],
+          [
+            "label",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "InlineRef"
+              }
+            }
+          ]
+        ],
+        "Reference": [
+          [
+            "target",
+            "Text"
+          ],
+          [
+            "label",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "InlineRef"
+              }
+            }
+          ]
+        ],
+        "Emphasis": [
+          [
+            "inline",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "InlineRef"
+              }
+            }
+          ]
+        ],
+        "Strong": [
+          [
+            "inline",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "InlineRef"
+              }
+            }
+          ]
+        ],
+        "Break": [],
+        "DisplayMath": [
+          [
+            "syntax",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "CircuitFigure": [
+          [
+            "caption",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "SentenceRef"
+              }
+            }
+          ],
+          [
+            "syntax",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "Code": [
+          [
+            "syntax",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "Table": [
+          [
+            "columns",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.doc",
+                  "revision": 1,
+                  "name": "Alignment"
+                }
+              }
+            }
+          ],
+          [
+            "header",
+            {
+              "option": {
+                "named": {
+                  "package": "nepl3.doc",
+                  "revision": 1,
+                  "name": "RowRef"
+                }
+              }
+            }
+          ],
+          [
+            "rows",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.doc",
+                  "revision": 1,
+                  "name": "RowRef"
+                }
+              }
+            }
+          ]
+        ],
+        "Row": [
+          [
+            "cells",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.doc",
+                  "revision": 1,
+                  "name": "SentenceRef"
+                }
+              }
+            }
+          ]
+        ],
+        "List": [
+          [
+            "kind",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "ListKind"
+              }
+            }
+          ],
+          [
+            "items",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.doc",
+                  "revision": 1,
+                  "name": "ListItemRef"
+                }
+              }
+            }
+          ]
+        ],
+        "ListItem": [
+          [
+            "checked",
+            {
+              "option": "Bool"
+            }
+          ],
+          [
+            "body",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "BodyRef"
+              }
+            }
+          ]
+        ],
+        "Link": [
+          [
+            "target",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "LinkTarget"
+              }
+            }
+          ],
+          [
+            "label",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "InlineRef"
+              }
+            }
+          ]
+        ],
+        "InlineCode": [
+          [
+            "text",
+            "Text"
+          ]
+        ],
+        "RawCode": [
+          [
+            "languageHint",
+            {
+              "option": "Text"
+            }
+          ],
+          [
+            "text",
+            "Text"
+          ]
+        ],
+        "Image": [
+          [
+            "asset",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "AssetRef"
+              }
+            }
+          ],
+          [
+            "alt",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "SentenceRef"
+              }
+            }
+          ],
+          [
+            "caption",
+            {
+              "option": {
+                "named": {
+                  "package": "nepl3.doc",
+                  "revision": 1,
+                  "name": "SentenceRef"
+                }
+              }
+            }
+          ]
+        ],
+        "InlineImage": [
+          [
+            "asset",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "AssetRef"
+              }
+            }
+          ],
+          [
+            "alt",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "SentenceRef"
+              }
+            }
+          ]
+        ],
+        "Alignment": [
+          [
+            "alignment",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "Alignment"
+              }
+            }
+          ]
+        ],
+        "ListStyle": [
+          [
+            "style",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "ListKind"
+              }
+            }
+          ]
+        ],
+        "Check": [
+          [
+            "checked",
+            {
+              "option": "Bool"
+            }
+          ]
+        ],
+        "Target": [
+          [
+            "target",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "LinkTarget"
+              }
+            }
+          ]
+        ],
+        "Asset": [
+          [
+            "asset",
+            {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "AssetRef"
+              }
+            }
+          ]
+        ],
+        "OptionalRow": [
+          [
+            "row",
+            {
+              "option": {
+                "named": {
+                  "package": "nepl3.doc",
+                  "revision": 1,
+                  "name": "RowRef"
+                }
+              }
+            }
+          ]
+        ],
+        "OptionalSentence": [
+          [
+            "sentence",
+            {
+              "option": {
+                "named": {
+                  "package": "nepl3.doc",
+                  "revision": 1,
+                  "name": "SentenceRef"
+                }
+              }
+            }
+          ]
+        ],
+        "OptionalText": [
+          [
+            "text",
+            {
+              "option": "Text"
+            }
+          ]
+        ]
+      },
+      "constraints": [
+        "doc.constructor_categories"
+      ]
+    },
+    "DocNode": {
+      "record": [
+        [
+          "kind",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "DocKind"
+            }
+          }
+        ],
+        [
+          "origin",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "OriginRef"
+              }
+            }
+          }
+        ],
+        [
+          "span",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Span"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "DocEmbed": {
+      "record": [
+        [
+          "kind",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "EmbedKind"
+            }
+          }
+        ],
+        [
+          "closure",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "ForeignClosure"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "DocValue": {
+      "record": [
+        [
+          "root",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "DocRoot"
+            }
+          }
+        ],
+        [
+          "nodes",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "DocNode"
+              }
+            }
+          }
+        ],
+        [
+          "embeds",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "DocEmbed"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": [
+        "doc.category_graph"
+      ]
+    },
+    "DocView": {
+      "record": [
+        [
+          "head",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Span"
+            }
+          }
+        ],
+        [
+          "view",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "ViewBundle"
+            }
+          }
+        ]
+      ],
+      "constraints": [
+        "doc.view_owner"
+      ]
+    },
+    "DocumentSyntax": {
+      "record": [
+        [
+          "value",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "DocValue"
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceContent"
+              }
+            }
+          }
+        ],
+        [
+          "origins",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Origin"
+              }
+            }
+          }
+        ],
+        [
+          "views",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "DocView"
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceMapping"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": [
+        "doc.source_closure"
+      ]
+    },
+    "View:Sentence": {
+      "record": [],
+      "constraints": []
+    },
+    "View:TextRun": {
+      "record": [],
+      "constraints": []
+    },
+    "View:Escape": {
+      "record": [],
+      "constraints": []
+    },
+    "View:Ruby": {
+      "record": [],
+      "constraints": []
+    },
+    "View:Anno": {
+      "record": [],
+      "constraints": []
+    },
+    "View:Delimiter": {
+      "record": [],
+      "constraints": []
+    },
+    "AlignmentRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "ListStyleRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "CheckRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "TargetRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "AssetValueRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "OptionalRowRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "OptionalSentenceRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "OptionalTextRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    }
+  },
+  "operations": {}
+}

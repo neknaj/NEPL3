@@ -104,34 +104,32 @@ pub(crate) fn source(descriptor: &SchemaDescriptor) -> Result<String> {
          //! Registers structural shapes; named semantic constraints require their owning validators.\n\n\
          #[rustfmt::skip]\n\
          pub fn descriptor(budget: &mut crate::budget::Budget) -> Result<super::SchemaDescriptor, super::SchemaError> {{\n\
-         budget.charge(crate::budget::Resource::AllocationUnits, ({bytes}usize + {named} * core::mem::size_of::<super::NamedType>() + {fields} * core::mem::size_of::<super::FieldDescriptor>() + {variants} * core::mem::size_of::<super::VariantDescriptor>() + {boxes} * core::mem::size_of::<super::TypeDescriptor>() + {strings} * core::mem::size_of::<alloc::string::String>(){operation_cost}) as u64)?;\n\
+         budget.charge(crate::budget::Resource::AllocationUnits, ({bytes}usize{named}{fields}{variants}{boxes}{strings}{operation_cost}) as u64)?;\n\
          budget.charge(crate::budget::Resource::Work, {work})?;\n\
          Ok(super::SchemaDescriptor {{ package: {package}, revision: {revision}, types: alloc::vec![{types}], operations: alloc::vec![{operations}] }})\n\
          }}\n",
         bytes = cost.bytes,
-        named = descriptor.types.len(),
-        fields = cost.fields,
-        variants = cost.variants,
-        boxes = cost.boxes,
-        strings = cost.strings,
+        named = storage(descriptor.types.len(), "super::NamedType"),
+        fields = storage(cost.fields, "super::FieldDescriptor"),
+        variants = storage(cost.variants, "super::VariantDescriptor"),
+        boxes = storage(cost.boxes, "super::TypeDescriptor"),
+        strings = storage(cost.strings, "alloc::string::String"),
         work = cost.bytes
             + cost.fields
             + cost.variants
             + cost.boxes
             + descriptor.types.len()
             + descriptor.operations.len(),
-        operation_cost = if descriptor.operations.is_empty() {
-            String::new()
-        } else if descriptor.operations.len() == 1 {
-            " + core::mem::size_of::<super::OperationDescriptor>()".into()
-        } else {
-            format!(
-                " + {} * core::mem::size_of::<super::OperationDescriptor>()",
-                descriptor.operations.len()
-            )
-        },
+        operation_cost = storage(descriptor.operations.len(), "super::OperationDescriptor"),
         operations = operations.join(",\n"),
         revision = descriptor.revision,
         types = types.join(",\n"),
     ))
+}
+fn storage(count: usize, ty: &str) -> String {
+    match count {
+        0 => String::new(),
+        1 => format!(" + core::mem::size_of::<{ty}>()"),
+        count => format!(" + {count} * core::mem::size_of::<{ty}>()"),
+    }
 }

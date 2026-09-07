@@ -2,6 +2,7 @@
 
 mod contract;
 mod dependency;
+pub mod doc;
 mod documentation;
 mod evidence;
 mod repository;
@@ -50,6 +51,7 @@ pub fn check(root: &Path) -> Result<()> {
     contract::reader::check(root)?;
     contract::engine::check(root)?;
     contract::grammar::check(root)?;
+    contract::doc::check(root)?;
     dependency::check(root, &status.implemented_crates)?;
     task::generate(root, &tasks, &status, false)?;
     documentation::check(root, false)?;
@@ -109,3 +111,8 @@ pub fn engine(root: &Path) -> Result<()> {
     contract::engine::write(root)
 }
 pub mod bootstrap;
+
+/// Generate the production Doc domain descriptor.
+pub fn doc(root: &Path) -> Result<()> {
+    contract::doc::write(root)
+}

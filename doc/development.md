@@ -23,6 +23,7 @@ python tools/audit/structure.py
 python -m unittest discover -s tools/audit -p test.py
 python tools/audit/allocation/run.py
 python tools/generate/grammar.py
+python tools/generate/doc.py
 python -m unittest discover -s tools/bootstrap -p test_grammar.py
 ```
 
@@ -59,9 +60,11 @@ reader包絡の正本は `interfaces/reader.json` です。変更時は `cargo r
 
 Grammarの型付きconstructor arenaは `design/forms.json` から `python tools/generate/grammar.py --write` で明示生成します。この生成物は構文shapeの投影であり、reader/binding/style/extensionを含むLanguagePackageをforms表だけから作るものではありません。初回seed入力adapterの `tools/bootstrap/grammar.py` は完全なsyntax.neplgを読み、元bytes/digest、constructor/literal/listのUTF-8 byte範囲と全metadataを保持したASTを出します。ASCII識別子のseed用部分集合に限定し、TextではNEPL3のescapeを使いJSON固有escapeを拒否します。これはproduction parserやbootstrap合格の代わりではなく、実Grammar compilerへの初期入力を用意する開発host処理です。P1/P2はproduction reader/engineで同じsourceを読み直して比較します。
 
-CIのWASI jobはSHA-256を固定したWasmtime 44.0.1でcore/reader/wire/engineの実試験を実行し、browser向けWasmのcompileも行います。ローカルでは `CARGO_TARGET_WASM32_WASIP2_RUNNER` を `wasmtime run` とし、`cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --target wasm32-wasip2 -- --test-threads=1` を実行します。browser targetのcompile成功はブラウザ上の実行・描画試験を意味しません。
+CIのWASI jobはSHA-256を固定したWasmtime 44.0.1でcore/reader/wire/engineの実試験を実行し、browser向けWasmのcompileも行います。ローカルでは `CARGO_TARGET_WASM32_WASIP2_RUNNER` を `wasmtime run` とし、`cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core --target wasm32-wasip2 -- --test-threads=1` を実行します。browser targetのcompile成功はブラウザ上の実行・描画試験を意味しません。
 
 Binding の fixture と Python seed adapter の一致確認は子processを起動する native host 専用試験です。native の通常試験で実行し、Wasm target ではその host 試験だけを型条件で除外します。同じ fixture を使う production compile・parse・analyze・portable codec の試験は `cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1` でも実行します。host 試験を WASI へ誤って含めた初回失敗は対象選択の失敗として記録し、後の runtime 試験成功へ読み替えません。
+
+Doc は `cargo test --locked -p nepl3-doc-core` と `cargo test --locked -p nepl3-tools --test doc` で検査します。後者は実4言語文法のcompile、ParseSession、Doc provider/prefix lowerを通します。同じ試験は `cargo test --locked -p nepl3-tools --test doc --target wasm32-wasip2 -- --test-threads=1` で実行し、元sourceとPython seed adapterの一致確認1件だけをnative専用とします。Docの進行中の範囲と未接続操作は [段階実装](progress/doc-runtime.md) を参照してください。
 
 タスクのacceptance参照はcoverageを示します。T16以外のタスクは自身の成果物・scope付き証拠・依存完了・設計blocker解消で判定し、後段を含む試験群全体の合格は別に記録します。証拠にはtask ID、検査対象、コマンド、target、結果、未検証範囲を残します。T16の完了には登録された全必須群のpassedが必要です。
 

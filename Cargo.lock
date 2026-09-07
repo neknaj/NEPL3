@@ -95,6 +95,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "nepl3-doc-core"
+version = "0.1.0"
+dependencies = [
+ "nepl3-core",
+ "nepl3-wire",
+]
+
+[[package]]
 name = "nepl3-engine"
 version = "0.1.0"
 dependencies = [
@@ -126,6 +134,7 @@ name = "nepl3-tools"
 version = "0.1.0"
 dependencies = [
  "nepl3-core",
+ "nepl3-doc-core",
  "nepl3-engine",
  "nepl3-grammar-core",
  "nepl3-reader",

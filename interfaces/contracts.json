@@ -2237,5 +2237,22 @@
     "EnvironmentNamespaceRef": [
       "namespace.reference"
     ]
+  },
+  "schema_correspondence": {
+    "DocValue": {
+      "descriptor": "interfaces/doc.json",
+      "package": "nepl3.doc",
+      "type": "DocumentSyntax",
+      "scope": "Typed domain value; decoding does not issue a checked-domain or prepared-domain execution proof."
+    },
+    "DocSentenceReader": {
+      "descriptor": "interfaces/doc-reader.json",
+      "package": "nepl3.doc.reader",
+      "operation": "sentence",
+      "input": "nepl3.reader.ReadRequest",
+      "output": "nepl3.reader.ReadReply",
+      "value_output": "nepl3.doc.DocumentSyntax",
+      "scope": "Executable reader adapter. The explanatory doc.lower/check/print/prepare/render/plain_text entries remain domain contracts; their complete operation error and partial-result envelopes are not provided by this adapter. The doc.facts/v1 compilation signature does not establish a completed Facts implementation."
+    }
   }
 }

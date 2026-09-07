@@ -21,6 +21,16 @@ cons category Inline Code
 cons category MathGuest Code
 cons category CircuitGuest Code
 cons category Guest Code
+cons category Alignment Code
+cons category ListStyle Code
+cons category Check Code
+cons category OptionalRow Code
+cons category OptionalSentence Code
+cons category OptionalText Code
+cons category LinkTarget Code
+cons category Asset Code
+cons category Row Code
+cons category ListItem Code
 cons form Article Article "article"
 cons field language builtin Lang
 cons field title local Sentence
@@ -67,6 +77,41 @@ cons form Code Block "code"
 cons field syntax local Guest
 nil
 group cons visit syntax
+nil
+cons style head "marker" nil
+cons form Table Block "table"
+cons field columns listof local Alignment
+cons field header local OptionalRow
+cons field rows listof local Row
+nil
+group cons visit columns
+cons visit header
+cons visit rows
+nil
+cons style head "marker" nil
+cons form List Block "list"
+cons field style local ListStyle
+cons field items listof local ListItem
+nil
+group cons visit style
+cons visit items
+nil
+cons style head "marker" nil
+cons form RawCode Block "rawcode"
+cons field languageHint local OptionalText
+cons field text builtin Text
+nil
+group cons visit languageHint
+nil
+cons style head "marker" nil
+cons form Image Block "image"
+cons field asset local Asset
+cons field alt local Sentence
+cons field caption local OptionalSentence
+nil
+group cons visit asset
+cons visit alt
+cons visit caption
 nil
 cons style head "marker" nil
 cons form Sentence Sentence "sentence"
@@ -121,6 +166,41 @@ cons form Parallel Flow "parallel"
 cons field variants listof local Variant
 nil
 group cons visit variants
+nil
+cons style head "marker" nil
+cons form Table Flow "table"
+cons field columns listof local Alignment
+cons field header local OptionalRow
+cons field rows listof local Row
+nil
+group cons visit columns
+cons visit header
+cons visit rows
+nil
+cons style head "marker" nil
+cons form List Flow "list"
+cons field style local ListStyle
+cons field items listof local ListItem
+nil
+group cons visit style
+cons visit items
+nil
+cons style head "marker" nil
+cons form RawCode Flow "rawcode"
+cons field languageHint local OptionalText
+cons field text builtin Text
+nil
+group cons visit languageHint
+nil
+cons style head "marker" nil
+cons form Image Flow "image"
+cons field asset local Asset
+cons field alt local Sentence
+cons field caption local OptionalSentence
+nil
+group cons visit asset
+cons visit alt
+cons visit caption
 nil
 cons style head "marker" nil
 cons leaf SentenceLiteral Flow SentenceLiteral none cons style self "content" nil
@@ -194,6 +274,27 @@ cons form Break Inline "break"
 nil
 none
 cons style head "marker" nil
+cons form Link Inline "link"
+cons field target local LinkTarget
+cons field label local Inline
+nil
+group cons visit target
+cons visit label
+nil
+cons style head "marker" nil
+cons form InlineCode Inline "code"
+cons field text builtin Text
+nil
+none
+cons style head "marker" nil
+cons form InlineImage Inline "image"
+cons field asset local Asset
+cons field alt local Sentence
+nil
+group cons visit asset
+cons visit alt
+nil
+cons style head "marker" nil
 cons form MathGuest MathGuest "Math"
 cons field syntax foreign Math Expr
 nil
@@ -213,7 +314,7 @@ group cons visit syntax
 nil
 cons style head "marker" nil
 cons form DocGuest Guest "Doc"
-cons field syntax local Article
+cons field syntax foreign Doc Article
 nil
 group cons visit syntax
 nil
@@ -228,6 +329,112 @@ cons form CircuitGuest Guest "Circuit"
 cons field syntax foreign Circuit Design
 nil
 group cons visit syntax
+nil
+cons style head "marker" nil
+cons form AlignmentDefault Alignment "default"
+nil
+none
+cons style head "marker" nil
+cons form AlignmentLeft Alignment "left"
+nil
+none
+cons style head "marker" nil
+cons form AlignmentCenter Alignment "center"
+nil
+none
+cons style head "marker" nil
+cons form AlignmentRight Alignment "right"
+nil
+none
+cons style head "marker" nil
+cons form Unordered ListStyle "unordered"
+nil
+none
+cons style head "marker" nil
+cons form Ordered ListStyle "ordered"
+cons field start builtin Nat
+nil
+none
+cons style head "marker" nil
+cons form CheckNone Check "none"
+nil
+none
+cons style head "marker" nil
+cons form Checked Check "checked"
+nil
+none
+cons style head "marker" nil
+cons form Unchecked Check "unchecked"
+nil
+none
+cons style head "marker" nil
+cons form NoRow OptionalRow "none"
+nil
+none
+cons style head "marker" nil
+cons form SomeRow OptionalRow "some"
+cons field row local Row
+nil
+group cons visit row
+nil
+cons style head "marker" nil
+cons form NoSentence OptionalSentence "none"
+nil
+none
+cons style head "marker" nil
+cons form SomeSentence OptionalSentence "some"
+cons field sentence local Sentence
+nil
+group cons visit sentence
+nil
+cons style head "marker" nil
+cons form NoText OptionalText "none"
+nil
+none
+cons style head "marker" nil
+cons form SomeText OptionalText "some"
+cons field text builtin Text
+nil
+none
+cons style head "marker" nil
+cons form PageTarget LinkTarget "page"
+cons field page builtin Text
+cons field fragment local OptionalText
+nil
+group cons visit fragment
+nil
+cons style head "marker" nil
+cons form RelativeTarget LinkTarget "relative"
+cons field path builtin Text
+cons field fragment local OptionalText
+nil
+group cons visit fragment
+nil
+cons style head "marker" nil
+cons form ExternalTarget LinkTarget "external"
+cons field uri builtin Text
+nil
+none
+cons style head "marker" nil
+cons form AssetRef Asset "asset"
+cons field id builtin Text
+cons field digest local OptionalText
+nil
+group cons visit digest
+nil
+cons style head "marker" nil
+cons form Row Row "row"
+cons field cells listof local Sentence
+nil
+group cons visit cells
+nil
+cons style head "marker" nil
+cons form ListItem ListItem "item"
+cons field checked local Check
+cons field body local Body
+nil
+group cons visit checked
+cons visit body
 nil
 cons style head "marker" nil
 nil

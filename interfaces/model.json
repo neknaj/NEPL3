@@ -850,7 +850,11 @@
         "Section": "Doc:Section",
         "DisplayMath": "Doc:DisplayMath",
         "CircuitFigure": "Doc:CircuitFigure",
-        "Code": "Doc:Code"
+        "Code": "Doc:Code",
+        "Table": "Doc:Table",
+        "List": "Doc:List",
+        "RawCode": "Doc:RawCode",
+        "Image": "Doc:Image"
       }
     },
     "Doc:Sentence": {
@@ -882,7 +886,11 @@
         "CircuitFigure": "Doc:CircuitFigure",
         "Code": "Doc:Code",
         "Sentence": "Doc:Sentence",
-        "Parallel": "Doc:Parallel"
+        "Parallel": "Doc:Parallel",
+        "Table": "Doc:Table",
+        "List": "Doc:List",
+        "RawCode": "Doc:RawCode",
+        "Image": "Doc:Image"
       }
     },
     "Doc:Variant": {
@@ -1004,7 +1012,10 @@
         "Reference": "Doc:Reference",
         "Emphasis": "Doc:Emphasis",
         "Strong": "Doc:Strong",
-        "Break": "Doc:Break"
+        "Break": "Doc:Break",
+        "Link": "Doc:Link",
+        "InlineCode": "Doc:InlineCode",
+        "InlineImage": "Doc:InlineImage"
       }
     },
     "Doc:MathGuest": {
@@ -1512,6 +1523,284 @@
           "Text"
         ]
       ]
+    },
+    "Doc:Table": {
+      "record": [
+        [
+          "columns",
+          "List<Doc/Alignment>"
+        ],
+        [
+          "header",
+          "Doc/OptionalRow"
+        ],
+        [
+          "rows",
+          "List<Doc/Row>"
+        ]
+      ]
+    },
+    "Doc:List": {
+      "record": [
+        [
+          "style",
+          "Doc/ListStyle"
+        ],
+        [
+          "items",
+          "List<Doc/ListItem>"
+        ]
+      ]
+    },
+    "Doc:RawCode": {
+      "record": [
+        [
+          "languageHint",
+          "Doc/OptionalText"
+        ],
+        [
+          "text",
+          "Text"
+        ]
+      ]
+    },
+    "Doc:Image": {
+      "record": [
+        [
+          "asset",
+          "Doc/Asset"
+        ],
+        [
+          "alt",
+          "Doc/Sentence"
+        ],
+        [
+          "caption",
+          "Doc/OptionalSentence"
+        ]
+      ]
+    },
+    "Doc:Link": {
+      "record": [
+        [
+          "target",
+          "Doc/LinkTarget"
+        ],
+        [
+          "label",
+          "Doc/Inline"
+        ]
+      ]
+    },
+    "Doc:InlineCode": {
+      "record": [
+        [
+          "text",
+          "Text"
+        ]
+      ]
+    },
+    "Doc:InlineImage": {
+      "record": [
+        [
+          "asset",
+          "Doc/Asset"
+        ],
+        [
+          "alt",
+          "Doc/Sentence"
+        ]
+      ]
+    },
+    "Doc:AlignmentDefault": {
+      "record": []
+    },
+    "Doc:AlignmentLeft": {
+      "record": []
+    },
+    "Doc:AlignmentCenter": {
+      "record": []
+    },
+    "Doc:AlignmentRight": {
+      "record": []
+    },
+    "Doc/Alignment": {
+      "union": {
+        "AlignmentDefault": "Doc:AlignmentDefault",
+        "AlignmentLeft": "Doc:AlignmentLeft",
+        "AlignmentCenter": "Doc:AlignmentCenter",
+        "AlignmentRight": "Doc:AlignmentRight"
+      }
+    },
+    "Doc:Unordered": {
+      "record": []
+    },
+    "Doc:Ordered": {
+      "record": [
+        [
+          "start",
+          "Natural"
+        ]
+      ]
+    },
+    "Doc/ListStyle": {
+      "union": {
+        "Unordered": "Doc:Unordered",
+        "Ordered": "Doc:Ordered"
+      }
+    },
+    "Doc:CheckNone": {
+      "record": []
+    },
+    "Doc:Checked": {
+      "record": []
+    },
+    "Doc:Unchecked": {
+      "record": []
+    },
+    "Doc/Check": {
+      "union": {
+        "CheckNone": "Doc:CheckNone",
+        "Checked": "Doc:Checked",
+        "Unchecked": "Doc:Unchecked"
+      }
+    },
+    "Doc:NoRow": {
+      "record": []
+    },
+    "Doc:SomeRow": {
+      "record": [
+        [
+          "row",
+          "Doc/Row"
+        ]
+      ]
+    },
+    "Doc/OptionalRow": {
+      "union": {
+        "NoRow": "Doc:NoRow",
+        "SomeRow": "Doc:SomeRow"
+      }
+    },
+    "Doc:NoSentence": {
+      "record": []
+    },
+    "Doc:SomeSentence": {
+      "record": [
+        [
+          "sentence",
+          "Doc/Sentence"
+        ]
+      ]
+    },
+    "Doc/OptionalSentence": {
+      "union": {
+        "NoSentence": "Doc:NoSentence",
+        "SomeSentence": "Doc:SomeSentence"
+      }
+    },
+    "Doc:NoText": {
+      "record": []
+    },
+    "Doc:SomeText": {
+      "record": [
+        [
+          "text",
+          "Text"
+        ]
+      ]
+    },
+    "Doc/OptionalText": {
+      "union": {
+        "NoText": "Doc:NoText",
+        "SomeText": "Doc:SomeText"
+      }
+    },
+    "Doc:PageTarget": {
+      "record": [
+        [
+          "page",
+          "Text"
+        ],
+        [
+          "fragment",
+          "Doc/OptionalText"
+        ]
+      ]
+    },
+    "Doc:RelativeTarget": {
+      "record": [
+        [
+          "path",
+          "Text"
+        ],
+        [
+          "fragment",
+          "Doc/OptionalText"
+        ]
+      ]
+    },
+    "Doc:ExternalTarget": {
+      "record": [
+        [
+          "uri",
+          "Text"
+        ]
+      ]
+    },
+    "Doc/LinkTarget": {
+      "union": {
+        "PageTarget": "Doc:PageTarget",
+        "RelativeTarget": "Doc:RelativeTarget",
+        "ExternalTarget": "Doc:ExternalTarget"
+      }
+    },
+    "Doc:AssetRef": {
+      "record": [
+        [
+          "id",
+          "Text"
+        ],
+        [
+          "digest",
+          "Option<Bytes32>"
+        ]
+      ]
+    },
+    "Doc/Asset": {
+      "union": {
+        "AssetRef": "Doc:AssetRef"
+      }
+    },
+    "Doc:Row": {
+      "record": [
+        [
+          "cells",
+          "List<Doc/Sentence>"
+        ]
+      ]
+    },
+    "Doc/Row": {
+      "union": {
+        "Row": "Doc:Row"
+      }
+    },
+    "Doc:ListItem": {
+      "record": [
+        [
+          "checked",
+          "Doc/Check"
+        ],
+        [
+          "body",
+          "Doc/Body"
+        ]
+      ]
+    },
+    "Doc/ListItem": {
+      "union": {
+        "ListItem": "Doc:ListItem"
+      }
     }
   },
   "external_types": [
