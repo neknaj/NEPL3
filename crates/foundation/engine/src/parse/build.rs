@@ -36,6 +36,9 @@ impl ParseArena {
         budget: &mut Budget,
     ) -> Result<(), SyntaxError> {
         budget.poll()?;
+        if sources.is_empty() {
+            return Ok(());
+        }
         let mut index = Vec::new();
         for (i, source) in self.sources.iter().enumerate() {
             let at = source_position(&index, &self.sources, source, budget)?

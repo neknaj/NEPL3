@@ -1,0 +1,44 @@
+   Compiling nepl3-engine v0.1.0 (C:\projects\NEPL3-snapshot-storage\.tmp\review-accepted-prefix\workspace\crates\foundation\engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.91s
+     Running tests\parse.rs (target\debug\deps\parse-4631596fce90cc28.exe)
+
+running 21 tests
+test explicit_list_spine_preserves_declared_head_and_tail_children ... ok
+test native_host_nested_stop_is_sticky_without_host_mutating_budget ... ok
+test foreign::foreign_root_mode_is_guest_owned_and_normal_child_and_host_restore_defaults ... ok
+test append_retry_retains_original_caller_depth_when_host_resumes_at_zero ... ok
+parents 1: owned Usage { source_bytes: 7, work: 11467, depth: 6, nodes: 38, allocation_units: 236590, output_bytes: 0, diagnostics: 2, events: 0 }, native Usage { source_bytes: 7, work: 6143, depth: 6, nodes: 36, allocation_units: 75854, output_bytes: 0, diagnostics: 2, events: 0 }
+test missing_children_share_one_bundle_recovery_table ... ok
+test missing_final_child_and_nonfinal_input_are_distinct ... ok
+test static_form_keeps_builtin_children_and_token_payloads ... ok
+test text_reservation_preserves_prefix_identity_and_composed_caller_depth ... ok
+test native_host_failure_keeps_generated_diagnostic_and_event_closure ... ok
+test accepted_trivia_without_a_token_survives_eof_and_need_more ... ok
+test prefix_depth_composes_with_nested_reader_frames ... ok
+test provider_resume_keeps_prefix_frames_report_and_caller_depth ... ok
+parents 4: owned Usage { source_bytes: 25, work: 49666, depth: 9, nodes: 119, allocation_units: 949939, output_bytes: 0, diagnostics: 5, events: 0 }, native Usage { source_bytes: 25, work: 22163, depth: 9, nodes: 114, allocation_units: 259487, output_bytes: 0, diagnostics: 5, events: 0 }
+test native_host_mixed_text_provider_fallback_preserves_decoded_sources ... ok
+test unknown_heads_preserve_remainder_without_inventing_a_leaf_arity ... ok
+parents 8: owned Usage { source_bytes: 49, work: 135934, depth: 13, nodes: 255, allocation_units: 2546583, output_bytes: 0, diagnostics: 9, events: 0 }, native Usage { source_bytes: 49, work: 52455, depth: 13, nodes: 246, allocation_units: 613307, output_bytes: 0, diagnostics: 9, events: 0 }
+test native_host_prefix_growth_reduces_measured_copy_work ... ok
+test native_host_preserves_tree_reports_maps_and_owned_fallback ... ok
+
+thread 'review_nested_generated_prefix_keeps_every_source_and_position' (53184) panicked at crates\foundation\engine\tests\parse.rs:1547:4:
+assertion `left == right` failed
+  left: 33
+ right: 37
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test review_nested_generated_prefix_keeps_every_source_and_position ... FAILED
+test append_retry_reparses_every_scalar_split_and_keeps_cumulative_usage ... ok
+test completed_parse_wrappers_preserve_raw_outcomes_reports_and_costs ... ok
+test native_host_cancel_and_invalid_reply_keep_boundary_semantics ... ok
+test allocation_stop_preserves_actual_usage_and_never_invents_a_root ... ok
+
+failures:
+
+failures:
+    review_nested_generated_prefix_keeps_every_source_and_position
+
+test result: FAILED. 20 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.22s
+
+error: test failed, to rerun pass `-p nepl3-engine --test parse`

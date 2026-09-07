@@ -163,3 +163,8 @@ providerの追加map・viewの要素とroot・factsがすべて空なら、新�
 返却source、値・state、report、停止・失敗条件は従来どおり検査する。
 追加mapまたはview/factがあれば既存mapとの和集合を検査し、後から循環を作る追加も拒否する。
 外部から受け取ったraw mapにこの省略条件だけで検査済みproofを付けることはない。
+
+さらに返却source・map・view・facts・診断・eventがすべて空で、Failedでもない返信では、
+参照位置の解決に使うSourceStoreを再構築しない。reportのUsage・overflow、値・state・
+終端範囲・期待値などの検査は維持する。NoMatch/NeedMoreには従来どおり空の返却artifactを要求する。
+これは検査済みのprivate request/checkpointに対する処理であり、外部source宣言の検査省略ではない。
