@@ -472,11 +472,12 @@
     },
     {
       "id": "R042",
-      "status": "open",
+      "status": "corrected",
       "title": "Reader payload validation consumes the pending continuation before rejecting an invalid provider value",
       "affected_tasks": ["T03"],
       "evidence": ["crates/foundation/reader/src/runtime/mod.rs", "crates/foundation/reader/src/runtime/validate.rs"],
-      "partial_progress": "An independent executable depends on the clean ab9c50b1d36ee0240d759cc80ef986f905242804 snapshot. A Read provider declares Text output; after an actual ReaderSession Await, changing only Matched.value to Unit returns Schema(WrongType). Retrying the same saved continuation with a valid Text result returns NoPending. The private slot is consumed before non-stopping payload validation completes. The current separate Reader work-in-progress performs borrowed validation before take and this minimal retry succeeds, but formal collector/source closure and the final managed regressions are not yet independently reviewed."
+      "partial_progress": "An independent executable depends on the clean ab9c50b1d36ee0240d759cc80ef986f905242804 snapshot. A Read provider declares Text output; after an actual ReaderSession Await, changing only Matched.value to Unit returns Schema(WrongType). Retrying the same saved continuation with a valid Text result returns NoPending. The private slot is consumed before non-stopping payload validation completes.",
+      "resolution": "Reader validates the borrowed reply before taking its private slot; Tokenizer and ParseSession retain or restore their outer slots on non-stopping rejection. Five independent retry cases preserve one previously accepted generated source, diagnostic and event after invalid output/state types, an out-of-range end, a later source URI conflict or an invalid ViewRef. The same five managed cases pass, as do an independent outer-tokenizer wrong-type retry and the managed three-layer ParseSession retry. All 34 reader runtime tests pass independently, including allocation-stop sweeps, formal source/report preservation and pending cleanup. Transform Map/Decode Complete/Failed/Stopped native/NDF paths use the same prevalidation and preserve prior collectors on cancellation. Resource/admission costs remain consumed after rejection; the correction does not assert completion of all request/continuation transports."
     }
   ],
   "runtime_conformance_executed": false

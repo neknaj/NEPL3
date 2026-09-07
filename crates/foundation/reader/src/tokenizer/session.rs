@@ -649,16 +649,63 @@ impl<'a> TokenizationSession<'a> {
         let (snapshot, context, mode) = match prepared {
             Ok(v) => v,
             Err(error) => {
-                self.reader.discard_pending();
                 return match runtime::stop_reason(&error) {
-                    Some(reason) => Ok(reply(
-                        TokenizationOutcome::Stopped { reason },
-                        c.current,
-                        c.trivia,
-                        budget,
-                    )),
-                    None => Err(error),
+                    Some(reason) => {
+                        self.reader.discard_pending();
+                        Ok(reply(
+                            TokenizationOutcome::Stopped { reason },
+                            c.current,
+                            c.trivia,
+                            budget,
+                        ))
+                    }
+                    None => {
+                        self.pending = Some(Pending {
+                            continuation: c,
+                            limits: pending.limits,
+                        });
+                        Err(error)
+                    }
                 };
+            }
+        };
+        // The outer checkpoint remains owned and untouched until the inner
+        // reader accepts the response. Rejection restores the same outer slot,
+        // without cloning its state or refunding consumed budget/admission.
+        let (provider_reply, reservation) = match (resume, &c.pending) {
+            (Resume::Provider(response), TokenizationWait::Provider { continuation }) => match self
+                .reader
+                .resume_from_tokenizer(continuation, response, sources, budget, admission)
+            {
+                Ok(reply) => (Some(reply), None),
+                Err(error) => {
+                    drop(context);
+                    if let Some(reason) = runtime::stop_reason(&error) {
+                        self.reader.discard_pending();
+                        return Ok(reply(
+                            TokenizationOutcome::Stopped { reason },
+                            c.current,
+                            c.trivia,
+                            budget,
+                        ));
+                    }
+                    self.pending = Some(Pending {
+                        continuation: c,
+                        limits: pending.limits,
+                    });
+                    return Err(error);
+                }
+            },
+            (Resume::Reservation(reservation), TokenizationWait::Reservation { .. }) => {
+                (None, Some(reservation))
+            }
+            _ => {
+                drop(context);
+                self.pending = Some(Pending {
+                    continuation: c,
+                    limits: pending.limits,
+                });
+                return Err(ReaderError::Continuation);
             }
         };
         let mut machine = Machine {
@@ -681,30 +728,17 @@ impl<'a> TokenizationSession<'a> {
             limits: pending.limits,
             depth_base: c.depth_base,
         };
-        let outcome = match (resume, c.pending) {
-            (Resume::Reservation(reservation), TokenizationWait::Reservation { .. }) => budget
-                .with_depth_at_least(machine.depth_base, |budget| {
-                    self.drive(&mut machine, Some(reservation), sources, budget, admission)
+        let outcome = match provider_reply {
+            None => budget.with_depth_at_least(machine.depth_base, |budget| {
+                self.drive(&mut machine, reservation, sources, budget, admission)
+            }),
+            Some(reply) => match accept(&mut machine, reply, self.registry, budget) {
+                Ok(Some(outcome)) => Ok(outcome),
+                Ok(None) => budget.with_depth_at_least(machine.depth_base, |budget| {
+                    self.drive(&mut machine, None, sources, budget, admission)
                 }),
-            (Resume::Provider(reply), TokenizationWait::Provider { continuation }) => {
-                match self.reader.resume_from_tokenizer(
-                    &continuation,
-                    reply,
-                    sources,
-                    budget,
-                    admission,
-                ) {
-                    Ok(reply) => match accept(&mut machine, reply, self.registry, budget) {
-                        Ok(Some(outcome)) => Ok(outcome),
-                        Ok(None) => budget.with_depth_at_least(machine.depth_base, |budget| {
-                            self.drive(&mut machine, None, sources, budget, admission)
-                        }),
-                        Err(error) => Err(error),
-                    },
-                    Err(error) => Err(error),
-                }
-            }
-            _ => Err(ReaderError::Continuation),
+                Err(error) => Err(error),
+            },
         };
         self.finish(machine, outcome, budget)
     }

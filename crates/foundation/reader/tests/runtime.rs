@@ -1,5 +1,9 @@
 use nepl3_core::{budget::*, diagnostic::*, schema::*, source::*, syntax::*, value::*, view::*};
 use nepl3_reader::{model::*, plan::*, runtime::*};
+#[path = "runtime/retry.rs"]
+mod retry;
+#[path = "runtime/transform.rs"]
+mod transform;
 fn budget() -> Budget {
     Budget::new(Limits {
         source_bytes: 10_000_000,
@@ -820,12 +824,14 @@ fn map_decode_and_then_use_typed_provider_envelopes() -> Result<(), ReaderError>
             };
             assert_eq!(request.value, NdfValue::Text("a".into()));
             ProviderReply::Transform(Box::new(TransformReply {
-                value: NdfValue::Text("A".into()),
-                view: ViewBundle {
-                    elements: vec![],
-                    roots: vec![],
+                outcome: TransformOutcome::Complete {
+                    value: NdfValue::Text("A".into()),
+                    view: ViewBundle {
+                        elements: vec![],
+                        roots: vec![],
+                    },
+                    facts: vec![],
                 },
-                facts: vec![],
                 sources: vec![],
                 source_maps: vec![],
                 report: Report {
@@ -2677,12 +2683,14 @@ fn provider_overflow_rejects_read_failed_map_decode_without_consuming_slot()
                     report,
                 })),
                 2 | 3 => ProviderReply::Transform(Box::new(TransformReply {
-                    value: NdfValue::Text("A".into()),
-                    view: ViewBundle {
-                        elements: vec![],
-                        roots: vec![],
+                    outcome: TransformOutcome::Complete {
+                        value: NdfValue::Text("A".into()),
+                        view: ViewBundle {
+                            elements: vec![],
+                            roots: vec![],
+                        },
+                        facts: vec![],
                     },
-                    facts: vec![],
                     sources: vec![],
                     source_maps: vec![],
                     report,

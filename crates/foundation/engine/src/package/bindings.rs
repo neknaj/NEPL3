@@ -27,6 +27,7 @@ pub(super) fn check(
     package: &LanguagePackage,
     registry: &SchemaRegistry,
     budget: &mut Budget,
+    subject: &mut Option<PackageSubject>,
 ) -> Result<(), PackageError> {
     // Reject every direct binding cycle, including currently unused declarations.
     for root in 0..package.bindings.len() {
@@ -34,6 +35,10 @@ pub(super) fn check(
         let mut path = Vec::new();
         push(&mut pending, (BindingId(root as u64), false), budget)?;
         while let Some((id, exit)) = pending.pop() {
+            *subject = Some(PackageSubject::Binding {
+                owner: None,
+                binding: Some(id),
+            });
             budget.charge(Resource::Work, path.len() as u64 + 1)?;
             if exit {
                 path.pop();
@@ -56,27 +61,21 @@ pub(super) fn check(
             }
         }
     }
-    for form in &package.forms {
-        owner(
-            package,
-            &form.fields,
-            None,
-            form.binding,
-            &form.styles,
-            registry,
-            budget,
-        )?;
-    }
-    for leaf in &package.leaves {
-        owner(
-            package,
-            &[],
-            Some(&leaf.payload),
-            leaf.binding,
-            &leaf.styles,
-            registry,
-            budget,
-        )?;
+    for owner in (0..package.forms.len())
+        .map(|i| BindingOwner::Form(i as u64))
+        .chain((0..package.leaves.len()).map(|i| BindingOwner::Leaf(i as u64)))
+    {
+        *subject = Some(PackageSubject::Binding {
+            owner: Some(owner),
+            binding: None,
+        });
+        if let Err(failure) = package.check_binding_owner(owner, registry, budget) {
+            *subject = Some(PackageSubject::Binding {
+                owner: Some(owner),
+                binding: failure.binding,
+            });
+            return Err(failure.error);
+        }
     }
     Ok(())
 }

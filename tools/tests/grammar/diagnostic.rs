@@ -447,3 +447,97 @@ fn checked_in_seed_fixture_matches_the_real_bootstrap_adapter() -> Result<(), St
     assert_eq!(generated, saved);
     Ok(())
 }
+
+#[test]
+fn package_subjects_locate_original_category_and_mode_operands() -> Result<(), String> {
+    use nepl3_engine::package::PackageError;
+    for (case, range, code) in [
+        ("root", (32, 38), PackageError::MissingCategory),
+        ("mode", (59, 65), PackageError::MissingMode),
+        ("local", (228, 234), PackageError::MissingCategory),
+        ("withmode", (231, 237), PackageError::MissingMode),
+        ("form-category", (193, 199), PackageError::MissingCategory),
+        ("leaf-category", (156, 162), PackageError::MissingCategory),
+    ] {
+        let path = format!("conformance/fixtures/grammar/diagnostic/package-{case}.neplg");
+        let Err(error) = compile(&path)? else {
+            return Err(format!("{case} accepted"));
+        };
+        assert_eq!(error.cause(), &CompileError::Package(code));
+        let location = error
+            .location()
+            .ok_or_else(|| format!("{case}: {error:?}"))?;
+        assert_eq!(
+            (location.primary().start(), location.primary().end()),
+            range
+        );
+        assert_eq!(location.primary().snapshot_ref().source.0, path);
+        // The independent source fixture puts the missing operand at these bytes.
+        let document = load(&path)?;
+        assert_eq!(
+            document.sources[0]
+                .slice(location.primary())
+                .map_err(|e| format!("{e:?}"))?,
+            "Absent"
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn detailed_package_checker_is_the_legacy_checker_with_exact_subjects() -> Result<(), String> {
+    use nepl3_engine::package::{PackageError, PackageSubject};
+    let compiled = compile("conformance/fixtures/grammar/diagnostic/valid.neplg")?
+        .map_err(|e| format!("{e:?}"))?;
+    for case in 0..4 {
+        let mut package = compiled.package.clone();
+        let (error, subject) = match case {
+            0 => {
+                package.root = "Absent".into();
+                (PackageError::MissingCategory, PackageSubject::Root)
+            }
+            1 => {
+                package.categories[0].mode = "Absent".into();
+                (PackageError::MissingMode, PackageSubject::Category(0))
+            }
+            2 => {
+                package.leaves[0].category = "Absent".into();
+                (PackageError::MissingCategory, PackageSubject::Leaf(0))
+            }
+            _ => {
+                package.modes[0].take[0].reader =
+                    nepl3_reader::tokenizer::TokenReader::Rule("Absent".into());
+                (
+                    PackageError::Reader(nepl3_reader::plan::PlanError::Reference),
+                    PackageSubject::ModeTake { mode: 0, rule: 0 },
+                )
+            }
+        };
+        let mut legacy_budget = budget();
+        let mut detailed_budget = budget();
+        let legacy = package
+            .check(&compiled.registry, &mut legacy_budget)
+            .err()
+            .ok_or("legacy accepted")?;
+        let detailed = package
+            .check_detailed(&compiled.registry, &mut detailed_budget)
+            .err()
+            .ok_or("detailed accepted")?;
+        assert_eq!(legacy, error);
+        assert_eq!(detailed.error, error);
+        assert_eq!(detailed.subject, Some(subject));
+        assert_eq!(legacy_budget.usage(), detailed_budget.usage());
+    }
+    let mut limited = Budget::new(Limits {
+        work: 0,
+        ..budget().limits()
+    });
+    let error = compiled
+        .package
+        .check_detailed(&compiled.registry, &mut limited)
+        .err()
+        .ok_or("limit ignored")?;
+    assert_eq!(error.error, PackageError::Stopped(StopReason::WorkLimit));
+    assert_eq!(error.subject, None);
+    Ok(())
+}

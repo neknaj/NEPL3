@@ -1,0 +1,91 @@
+{
+  "format": "nepl3.development-slice/1",
+  "scope": "T03/T04/T05: typed Transform outcomes, rejection-safe reader/tokenizer/parser resume, located package errors and all ReaderExpr execution matrix",
+  "base_commit": "1623b8ade43321b16837ca4fae520641de261c2c",
+  "result": "passed-within-recorded-scope",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "d08c0d553f943d782c4191d491ddbbd72dc512fd63981ed2cc43b63f8909e50c",
+    "spec_sha256": "f59d072f21758b3d9b7255e06e31d9b645a9b7613ee92b9bf311fc74700fa142"
+  },
+  "checks": [
+    {
+      "command": "cargo test --workspace --locked",
+      "exit_code": 0,
+      "log": "conformance/results/reader-transform/native.log",
+      "sha256": "b973ac058576c135e768223cbe5fe8ce60fb3e285d317f0074bb5d9fd56bcb46"
+    },
+    {
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER='wasmtime run'; cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar diagnostic::compiler_report_boundary_without_host_process --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::all_reader_constructors --target wasm32-wasip2 -- --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo test --locked -p nepl3-tools --test grammar reader::compiled_reader_streaming_boundaries_and_rollback_keep_raw_positions --target wasm32-wasip2 -- --exact --test-threads=1; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core --no-default-features --target wasm32-unknown-unknown",
+      "exit_code": 0,
+      "log": "conformance/results/reader-transform/wasi.log",
+      "sha256": "67852412d715d52625557c62449dbff85a795162ca18b8c232c0a87b8364747e"
+    },
+    {
+      "command": "cargo fmt --all -- --check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo clippy --workspace --all-targets --locked -- -D warnings; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps --locked",
+      "exit_code": 0,
+      "log": "conformance/results/reader-transform/quality.log",
+      "sha256": "9b6101e555083310e8bc9bafdf9d566379de47a498732dd544906a6adc01826c"
+    },
+    {
+      "command": "cargo run --locked -p nepl3-tools -- check",
+      "exit_code": 0,
+      "log": "conformance/results/reader-transform/contracts.log",
+      "sha256": "d06872bffcf06a42558640c81d5d788e0f909fefa1887f95a9ee68ef3b4c0431"
+    },
+    {
+      "command": "python tools/audit/structure.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/audit -p test.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/generate/grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python -m unittest discover -s tools/bootstrap -p test_grammar.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; python tools/audit/allocation/run.py; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; cargo run --locked -p nepl3-tools -- tasks --check",
+      "exit_code": 0,
+      "log": "conformance/results/reader-transform/audit.log",
+      "sha256": "2c21ca88f82ee61b28d661b737db6cf79015def9adc82e1597ed24cefc414008"
+    },
+    {
+      "command": "C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe --version; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; C:/projects/NEPL3/.tmp/actionlint/bin/actionlint.exe .github/workflows/ci.yml",
+      "exit_code": 0,
+      "log": "conformance/results/reader-transform/ci.log",
+      "sha256": "ad7ed44e79c7e5d554c2e008819df3a5da44834e9cfdb4aecaef9224a39c87dd"
+    }
+  ],
+  "execution": {
+    "native": {
+      "target": "x86_64-pc-windows-msvc",
+      "passed": 279,
+      "ignored": 1,
+      "normal_full_grammar_bootstrap": "P0/P1/P2 equality tested with unchanged Work limit"
+    },
+    "wasi": {
+      "target": "wasm32-wasip2",
+      "runner": "Wasmtime 44.0.1",
+      "passed": 200,
+      "scope": "196 five-crate tests plus one process-free compiler Report test and three ReaderExpr matrix tests"
+    },
+    "browser_wasm": "five no_std crate compilation only",
+    "toolchain": "Rust 1.97.0",
+    "python": "6 structural audit and 3 bootstrap adapter tests passed",
+    "allocation": "Existing SourceMap::insert and SourceStore::apply regressions measured zero allocated bytes before AllocationLimit; positive control measured 4096 bytes.",
+    "ci": "actionlint 1.7.12 passed; the ReaderExpr success/failure and streaming tests now execute in the existing WASI CI job"
+  },
+  "implementation": [
+    "TransformReply owns sources, source maps and Report for every typed Complete, Failed or Stopped outcome. Native Map/Decode and NDF paths preserve those fields without fabricating a successful result.",
+    "Borrowed validation checks the pending reader dispatch before consuming private state. Ordinary schema/source/view rejection retains that state; accepted formal diagnostics, events and generated source tables survive subsequent valid resume.",
+    "Tokenizer and prefix parser retain their corresponding outer pending slots after ordinary inner reader rejection. Spent Work and SourceAdmission are not refunded; real resource stops retain the original reason and formal progress.",
+    "OperationReply explicitly maps Complete, Invalid-with-partial and Stopped-with-partial to the corresponding Transform outcome, requiring exact Report and stop-reason agreement. Invalid/Stopped without a partial result remains a typed dispatch rejection, restricted to the saved source closure; duplicated Report fields are not counted as new emissions.",
+    "The package checker now exposes the declaration/read operand that failed, using the same underlying validation. Compiler mapping reports the original missing category/mode/reader operand, including nested read specifications.",
+    "Actual Grammar compilation and ReaderSession execution cover each of the 23 ReaderExpr constructors on successful, failing and nonfinal input. Expected values and input consumption are explicit in tests; the checked-in first-seed fixture is independently compared with the real bootstrap adapter."
+  ],
+  "independent_review": {
+    "reviewer": "Huygens",
+    "record": "doc/review.md",
+    "r042": "The old public ReaderSession accepted an Await then consumed its only slot when a Text provider returned Unit; a subsequent valid reply failed with NoPending. The corrected production Reader, Tokenizer and ParseSession entries reject the wrong type and then accept the same legitimate continuation. Additional rejected reply fields and late source conflicts preserve the formal collector.",
+    "scope": "Reader runtime 34 managed tests, parser retry, independent Transform outcome and outer OperationReply mutations, PackageSubject diagnostics with original Unicode/CRLF source offsets, native ReaderExpr matrix and three real WASI matrix tests.",
+    "root_confirmation": "All 38 frozen implementation/spec/review Git blobs match their supplied hashes and byte/CRLF counts. Root reran the isolated complete workspace and cross-target suites, strict quality gates, generation and allocation regressions."
+  },
+  "unverified": [
+    "First-receive Transform provider request decoding, complete Read/Tokenizer continuation and OperationReply codecs, and separate-process transport remain incomplete.",
+    "Remote execution usage authentication and absorption are not established by these Transform value envelopes.",
+    "PackageSubject and ReaderExpr tests do not cover every character-class mutation or declare all T05 requirements complete.",
+    "Binding/editor execution, remaining language runtimes, applications, browser interaction, Pages and Doc migration remain in progress or unimplemented.",
+    "No task or required acceptance group is marked complete by this development-slice record."
+  ]
+}

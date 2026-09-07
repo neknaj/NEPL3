@@ -278,3 +278,6 @@ fn complete_grammar_source_compiles_with_real_reader_and_facts_descriptors() -> 
 
 #[path = "grammar/diagnostic.rs"]
 mod diagnostic;
+
+#[path = "grammar/reader.rs"]
+mod reader;

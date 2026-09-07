@@ -1,0 +1,25 @@
+language Matrix 1 Root
+cons reader Literal literal "x"
+cons reader Scalar scalar asciiLetter
+cons reader Seq seq cons literal "x" cons scalar digit nil
+cons reader Choice choice cons literal "x" cons literal "y" nil
+cons reader Many many literal "x"
+cons reader Some some literal "x"
+cons reader Optional optional scalar digit
+cons reader Repeat repeat 1 2 scalar digit
+cons reader Look look literal "x"
+cons reader Not not literal "x"
+cons reader Commit commit literal "x"
+cons reader Capture capture cap scalar asciiLetter
+cons reader Region region content scalar asciiLetter
+cons reader Node node Box scalar asciiLetter
+cons reader Discard discard scalar asciiLetter
+cons reader Ref ref Scalar
+cons reader Decode decode "transform" scalar asciiLetter
+cons reader Map map "transform" scalar asciiLetter
+cons reader Then then scalar asciiLetter "dependent"
+cons reader Call call "read"
+cons reader Eof eof
+cons reader Takecount takecount 2
+cons reader Until until ";"
+nil

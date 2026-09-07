@@ -2231,34 +2231,89 @@
         ]
       }
     },
+    "TransformOutcome": {
+      "constraints": [
+        "reader.transform-outcome"
+      ],
+      "variant": {
+        "Complete": [
+          [
+            "value",
+            "NdfValue"
+          ],
+          [
+            "view",
+            {
+              "named": {
+                "name": "ViewBundle",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "facts",
+            {
+              "list": {
+                "named": {
+                  "name": "ReaderFact",
+                  "package": "nepl3.reader",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "Failed": [
+          [
+            "diagnostic",
+            {
+              "named": {
+                "name": "Diagnostic",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "recovery",
+            {
+              "option": {
+                "named": {
+                  "name": "Span",
+                  "package": "nepl3.foundation",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "name": "StopReason",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
     "TransformReply": {
       "constraints": [
         "reader.transform-reply"
       ],
       "record": [
         [
-          "value",
-          "NdfValue"
-        ],
-        [
-          "view",
+          "outcome",
           {
             "named": {
-              "name": "ViewBundle",
-              "package": "nepl3.foundation",
+              "name": "TransformOutcome",
+              "package": "nepl3.reader",
               "revision": 1
-            }
-          }
-        ],
-        [
-          "facts",
-          {
-            "list": {
-              "named": {
-                "name": "ReaderFact",
-                "package": "nepl3.reader",
-                "revision": 1
-              }
             }
           }
         ],

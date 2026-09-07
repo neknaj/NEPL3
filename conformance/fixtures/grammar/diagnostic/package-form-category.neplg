@@ -1,0 +1,8 @@
+# 位置診断
+language Tiny 1 Expr
+  cons category Expr Main
+  cons reader word literal "x"
+  cons mode Main cons take Word word nil
+  cons leaf Word Expr Word none nil
+  cons form Wrap Absent "wrap" nil none nil
+  nil

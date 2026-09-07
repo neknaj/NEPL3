@@ -98,9 +98,11 @@ pub(super) fn check(
     package: &LanguagePackage,
     registry: &SchemaRegistry,
     budget: &mut Budget,
+    subject: &mut Option<PackageSubject>,
 ) -> Result<(), PackageError> {
     // Each ReadSpec has at most one direct edge; categories carry recursion by name.
     for (root, read) in package.reads.iter().enumerate() {
+        *subject = Some(PackageSubject::Read(ReadSpecId(root as u64)));
         let mut current = ReadSpecId(root as u64);
         for depth in 0..=package.reads.len() {
             budget.charge(Resource::Work, 1)?;
@@ -180,6 +182,7 @@ pub(super) fn check(
         }
     }
     for (i, form) in package.forms.iter().enumerate() {
+        *subject = Some(PackageSubject::Form(i as u64));
         package.category(&form.category)?;
         if form.spelling.is_empty() || form.kind.schema != package.schema {
             return Err(PackageError::KindShape);
@@ -198,7 +201,11 @@ pub(super) fn check(
         if fields.len() != form.fields.len() {
             return Err(PackageError::KindShape);
         }
-        for (field, expected) in form.fields.iter().zip(fields) {
+        for (index, (field, expected)) in form.fields.iter().zip(fields).enumerate() {
+            *subject = Some(PackageSubject::FormField {
+                form: i as u64,
+                field: index as u64,
+            });
             let name = if matches!(
                 terminal(package, field.read, budget)?,
                 ReadSpec::Foreign { .. }
@@ -213,6 +220,7 @@ pub(super) fn check(
         }
     }
     for (i, leaf) in package.leaves.iter().enumerate() {
+        *subject = Some(PackageSubject::Leaf(i as u64));
         package.category(&leaf.category)?;
         if leaf.kind.schema != package.schema || leaf.token_kind.schema != package.schema {
             return Err(PackageError::KindShape);
@@ -232,8 +240,12 @@ pub(super) fn check(
             return Err(PackageError::KindShape);
         }
     }
-    for mode in &package.modes {
-        for take in &mode.take {
+    for (mode_index, mode) in package.modes.iter().enumerate() {
+        for (index, take) in mode.take.iter().enumerate() {
+            *subject = Some(PackageSubject::ModeTake {
+                mode: mode_index as u64,
+                rule: index as u64,
+            });
             let expected = match &take.reader {
                 TokenReader::Builtin(reader) => builtin_type(*reader),
                 TokenReader::Rule(name) => package
