@@ -49,7 +49,7 @@ where
         return Err(Error::Unsupported { node: root.0 });
     };
     writer.emit("# ")?;
-    writer.sentence(title.0)?;
+    writer.sentence(title.0, None)?;
     writer.emit("\n\n")?;
     writer.body(body.0, 1)?;
     Ok(writer.output)
@@ -120,7 +120,7 @@ impl<'a> Writer<'a, '_> {
         }
         Ok(())
     }
-    fn sentence(&mut self, node: u64) -> Result<(), Error> {
+    fn sentence(&mut self, node: u64, continuation: Option<&str>) -> Result<(), Error> {
         self.budget.charge(Resource::Work, 1)?;
         let DocKind::Sentence { inlines } = self.kind(node) else {
             return Err(Error::Unsupported { node });
@@ -133,7 +133,7 @@ impl<'a> Writer<'a, '_> {
             return Err(Error::Text { node });
         }
         let mut previous_code = false;
-        for child in inlines {
+        for (index, child) in inlines.iter().enumerate() {
             let is_code = matches!(self.kind(child.0), DocKind::InlineCode { .. });
             if is_code && previous_code {
                 return Err(Error::Unsupported { node: child.0 });
@@ -142,19 +142,40 @@ impl<'a> Writer<'a, '_> {
             match self.kind(child.0) {
                 DocKind::Text { text } => self.text(child.0, text, false)?,
                 DocKind::InlineCode { text } => self.text(child.0, text, true)?,
+                DocKind::Break => {
+                    let Some(indent) = continuation else {
+                        return Err(Error::Unsupported { node: child.0 });
+                    };
+                    // CommonMark drops breaks at block edges; an empty physical
+                    // line terminates a paragraph. Refuse those lossy shapes.
+                    if index == 0 || index + 1 == inlines.len() {
+                        return Err(Error::Unsupported { node: child.0 });
+                    }
+                    let before = self.kind(inlines[index - 1].0);
+                    let after = self.kind(inlines[index + 1].0);
+                    if matches!(before, DocKind::Break)
+                        || matches!(after, DocKind::Break)
+                        || matches!(before, DocKind::Text { text } if text.ends_with(char::is_whitespace))
+                        || matches!(after, DocKind::Text { text } if text.starts_with(char::is_whitespace))
+                    {
+                        return Err(Error::Unsupported { node: child.0 });
+                    }
+                    self.emit("\\\n")?;
+                    self.emit(indent)?;
+                }
                 _ => return Err(Error::Unsupported { node: child.0 }),
             }
         }
         Ok(())
     }
-    fn paragraph(&mut self, node: u64) -> Result<(), Error> {
+    fn paragraph(&mut self, node: u64, continuation: &str) -> Result<(), Error> {
         let DocKind::Paragraph { items } = self.kind(node) else {
             return Err(Error::Unsupported { node });
         };
         if items.len() != 1 {
             return Err(Error::Unsupported { node });
         }
-        self.sentence(items[0].0)
+        self.sentence(items[0].0, Some(continuation))
     }
     fn body(&mut self, node: u64, level: usize) -> Result<(), Error> {
         self.budget.charge(Resource::Work, 1)?;
@@ -185,12 +206,12 @@ impl<'a> Writer<'a, '_> {
                         self.emit("#")?;
                     }
                     self.emit(" ")?;
-                    self.sentence(title.0)?;
+                    self.sentence(title.0, None)?;
                     self.emit("\n\n")?;
                     self.body(body.0, level + 1)?;
                 }
                 DocKind::Paragraph { .. } => {
-                    self.paragraph(child.0)?;
+                    self.paragraph(child.0, "")?;
                     self.emit("\n\n")?;
                 }
                 DocKind::List {
@@ -212,7 +233,7 @@ impl<'a> Writer<'a, '_> {
                             return Err(Error::Unsupported { node: body.0 });
                         }
                         self.emit("- ")?;
-                        self.paragraph(blocks[0].0)?;
+                        self.paragraph(blocks[0].0, "  ")?;
                         self.emit("\n")?;
                     }
                     self.emit("\n")?;
@@ -280,7 +301,7 @@ pub fn write(input: &std::path::Path, output: &std::path::Path) -> crate::Result
         .map(|b| format!("{b:02x}"))
         .collect();
     let provenance = format!(
-        "<!-- Generated from {escaped}; renderer nepl3-tools.markdown/1; source SHA-256 {digest}. Edit the Doc source. -->\n\n"
+        "<!-- Generated from {escaped}; renderer nepl3-tools.markdown/2; source SHA-256 {digest}. Edit the Doc source. -->\n\n"
     );
     let mut file = std::fs::OpenOptions::new()
         .write(true)
