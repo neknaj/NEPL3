@@ -63,6 +63,92 @@ impl FoundationValueCodec for FoundationCodec<'_> {
     fn source_admission(&mut self) -> &mut SourceAdmission {
         self.admission
     }
+    fn encode_fact_set(
+        &mut self,
+        value: &nepl3_core::facts::FactSet,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
+        crate::facts::set_value(value, self.registry, self.admission, budget)
+    }
+    fn decode_fact_set(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<nepl3_core::facts::FactSet, WireError> {
+        crate::facts::set_from(value, self.registry, self.admission, budget)
+    }
+    fn encode_fact_delta(
+        &mut self,
+        value: &nepl3_core::facts::FactDelta,
+        base: &nepl3_core::facts::CheckedFactSet<'_>,
+        authority: &nepl3_core::facts::FactAuthority,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
+        crate::facts::delta_value(
+            value,
+            base,
+            authority,
+            self.registry,
+            self.admission,
+            budget,
+        )
+    }
+    fn decode_fact_delta(
+        &mut self,
+        value: &NdfValue,
+        base: &nepl3_core::facts::CheckedFactSet<'_>,
+        authority: &nepl3_core::facts::FactAuthority,
+        budget: &mut Budget,
+    ) -> Result<nepl3_core::facts::FactDelta, WireError> {
+        crate::facts::delta_from(
+            value,
+            base,
+            authority,
+            self.registry,
+            self.admission,
+            budget,
+        )
+    }
+    fn encode_fact_authority(
+        &mut self,
+        value: &nepl3_core::facts::FactAuthority,
+        budget: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
+        use crate::boundary::typed::Codec;
+        let value = value.value(self.schema, budget)?;
+        self.validate(&value, "FactAuthority", budget)?;
+        Ok(value)
+    }
+    fn decode_fact_authority(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<nepl3_core::facts::FactAuthority, WireError> {
+        self.validate(value, "FactAuthority", budget)?;
+        crate::boundary::typed::Codec::from(value, self.schema, self.sources, budget)
+    }
+    fn encode_mappings(
+        &mut self,
+        value: &[nepl3_core::origin::Mapping],
+        budget: &mut Budget,
+    ) -> Result<NdfValue, WireError> {
+        nepl3_core::origin::SourceMap::validate_mappings(value, self.sources, budget)?;
+        crate::boundary::sequence(value, budget, |v, b| {
+            crate::origin::mapping_value(v, self.schema, b)
+        })
+    }
+    fn decode_mappings(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<Vec<nepl3_core::origin::Mapping>, WireError> {
+        let result = collect(list(value)?, budget, |v, b| {
+            self.validate(v, "SourceMapping", b)?;
+            crate::origin::mapping_from(v, self.schema, self.sources, b)
+        })?;
+        nepl3_core::origin::SourceMap::validate_mappings(&result, self.sources, budget)?;
+        Ok(result)
+    }
     fn scoped<'a>(
         &'a mut self,
         sources: &'a SourceStore,

@@ -1,5 +1,6 @@
 //! Engine-owned typed NDF adapters. The host composes these with a wire codec;
 //! production engine and wire never depend on one another.
+pub mod facts;
 pub mod tree;
 mod value;
 use nepl3_core::{
@@ -17,6 +18,23 @@ pub enum PortableError<E> {
     Canonical(CanonicalError),
     Shape,
     NonCanonical,
+    RequestMismatch,
+    Facts(crate::facts::FactsError),
+}
+impl<E> From<crate::facts::FactsError> for PortableError<E> {
+    fn from(v: crate::facts::FactsError) -> Self {
+        use crate::facts::FactsError;
+        match v {
+            FactsError::Stopped(r)
+            | FactsError::Fact(nepl3_core::facts::FactError::Stopped(r))
+            | FactsError::Source(nepl3_core::source::SourceError::Stopped(r))
+            | FactsError::Origin(nepl3_core::origin::OriginError::Stopped(r))
+            | FactsError::Report(
+                nepl3_core::diagnostic::validation::ReportValidationError::Stopped(r),
+            ) => Self::Stopped(r),
+            v => Self::Facts(v),
+        }
+    }
 }
 impl<E> From<StopReason> for PortableError<E> {
     fn from(v: StopReason) -> Self {

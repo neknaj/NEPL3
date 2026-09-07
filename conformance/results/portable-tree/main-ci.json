@@ -1,0 +1,37 @@
+{
+  "profile": "nepl3.ci-observation/1",
+  "commit": "e9693ba0d5215a854d9f9928ef3c795cf78aff36",
+  "reviewed_head": "648e9edab4e6418c56ce1f60231a63df57aa8658",
+  "pull_request": "https://github.com/neknaj/NEPL3/pull/11",
+  "run": "https://github.com/neknaj/NEPL3/actions/runs/34072800176",
+  "result": "success",
+  "tests": {
+    "x86_64-unknown-linux-gnu": 234,
+    "x86_64-pc-windows-msvc": 234,
+    "aarch64-apple-darwin": 234,
+    "wasm32-wasip2 (Wasmtime 44.0.1)": 165
+  },
+  "checks": [
+    "Normal full Grammar bootstrap and native allocation regression executed on all three native hosts.",
+    "Native, WASI, browser-Wasm compilation, required quality and source delivery succeeded."
+  ],
+  "artifact": {
+    "name": "NEPL3-source-e9693ba0d5215a854d9f9928ef3c795cf78aff36",
+    "sha256": "49b4f51da8d4ecbdf06eb00e893790ffd3448a3d491b904b75be4f86ce0ceb7c",
+    "kind": "source-foundation",
+    "tar_members": 488,
+    "files": 386,
+    "verification": "Downloaded original archive; checked SOURCE.txt and SHA256SUMS, only regular files/directories without .tmp, source/spec identity recomputed from bytes, all nested-continuation and portable-tree checkpoint log hashes matched."
+  },
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "f5b384806a75f7168500e080213d7e24af7f4ebb4ea0abab2d6963e929b5ea0d",
+    "spec_sha256": "07b0b17d4911f8cb68be861e47f90221934532d275ee3802f471549ed7d16565"
+  },
+  "retrieved_ci_log_sha256": "3cb205b029579e3c48032061d631888640bc5dfaf00c55e090a792e95a043e20",
+  "limits": [
+    "WASI tests production crates, not the tools-host full bootstrap driver.",
+    "No full required acceptance group, completed task or browser execution is claimed.",
+    "Facts envelopes and HeadProvider are later implementation scopes."
+  ]
+}

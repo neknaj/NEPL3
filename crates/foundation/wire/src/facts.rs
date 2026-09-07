@@ -125,6 +125,15 @@ pub fn encode_set(
     admission: &mut SourceAdmission,
     b: &mut Budget,
 ) -> Result<Vec<u8>, WireError> {
+    let value = set_value(set, registry, admission, b)?;
+    crate::encode_checked(&value, &expected("FactSet"), registry, b)
+}
+pub(crate) fn set_value(
+    set: &FactSet,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<NdfValue, WireError> {
     set.validate(registry, b, admission)?;
     let s = selected(registry)?;
     let value = record(
@@ -144,7 +153,8 @@ pub fn encode_set(
         ],
         b,
     )?;
-    crate::encode_checked(&value, &expected("FactSet"), registry, b)
+    registry.validate(&expected("FactSet"), &value, b)?;
+    Ok(value)
 }
 pub fn decode_set(
     bytes: &[u8],
@@ -152,9 +162,18 @@ pub fn decode_set(
     admission: &mut SourceAdmission,
     b: &mut Budget,
 ) -> Result<FactSet, WireError> {
-    let s = selected(registry)?;
     let value = crate::decode_checked(bytes, &expected("FactSet"), registry, b)?;
-    let f = fields(value.value(), s, "FactSet", 10)?;
+    set_from(value.value(), registry, admission, b)
+}
+pub(crate) fn set_from(
+    value: &NdfValue,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<FactSet, WireError> {
+    registry.validate(&expected("FactSet"), value, b)?;
+    let s = selected(registry)?;
+    let f = fields(value, s, "FactSet", 10)?;
     let sources = sources_from(&f[7], s, admission, b)?;
     let store = store(&sources, b)?;
     let value = FactSet {
@@ -180,6 +199,17 @@ pub fn encode_delta(
     admission: &mut SourceAdmission,
     b: &mut Budget,
 ) -> Result<Vec<u8>, WireError> {
+    let value = delta_value(delta, base, authority, registry, admission, b)?;
+    crate::encode_checked(&value, &expected("FactDelta"), registry, b)
+}
+pub(crate) fn delta_value(
+    delta: &FactDelta,
+    base: &CheckedFactSet<'_>,
+    authority: &FactAuthority,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<NdfValue, WireError> {
     let current_base = base.value().validate(registry, b, admission)?;
     delta.validate(&current_base, authority, b, admission)?;
     let s = selected(registry)?;
@@ -201,7 +231,8 @@ pub fn encode_delta(
         ],
         b,
     )?;
-    crate::encode_checked(&value, &expected("FactDelta"), registry, b)
+    registry.validate(&expected("FactDelta"), &value, b)?;
+    Ok(value)
 }
 pub fn decode_delta(
     bytes: &[u8],
@@ -211,10 +242,21 @@ pub fn decode_delta(
     admission: &mut SourceAdmission,
     b: &mut Budget,
 ) -> Result<FactDelta, WireError> {
+    let value = crate::decode_checked(bytes, &expected("FactDelta"), registry, b)?;
+    delta_from(value.value(), base, authority, registry, admission, b)
+}
+pub(crate) fn delta_from(
+    value: &NdfValue,
+    base: &CheckedFactSet<'_>,
+    authority: &FactAuthority,
+    registry: &SchemaRegistry,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<FactDelta, WireError> {
+    registry.validate(&expected("FactDelta"), value, b)?;
     let current_base = base.value().validate(registry, b, admission)?;
     let s = selected(registry)?;
-    let value = crate::decode_checked(bytes, &expected("FactDelta"), registry, b)?;
-    let f = fields(value.value(), s, "FactDelta", 11)?;
+    let f = fields(value, s, "FactDelta", 11)?;
     let sources = sources_from(&f[8], s, admission, b)?;
     let mut store = store(&base.value().sources, b)?;
     for source in &sources {

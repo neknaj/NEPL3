@@ -1,0 +1,11 @@
+first receiver: no sender state, 5 sticky stops, bad target/scope and ambient-only source rejected
+reply branch0 forged entity101: Some(Boundary(Facts(Reservation)))
+reply branch0: oldSourceMap field rejects/newSourceMapping passes, five stop reasons both directions preserved
+duplicate reply source native: Err(Source(IdentityConflict))
+duplicate reply source encode: Some(Facts(Source(IdentityConflict)))
+reply branch1: oldSourceMap field rejects/newSourceMapping passes, five stop reasons both directions preserved
+reply branch2 forged entity101: Some(Boundary(Facts(Reservation)))
+reply branch2: oldSourceMap field rejects/newSourceMapping passes, five stop reasons both directions preserved
+reply branch3: oldSourceMap field rejects/newSourceMapping passes, five stop reasons both directions preserved
+reply branch4 forged entity101: Some(Boundary(Facts(Reservation)))
+reply branch4: oldSourceMap field rejects/newSourceMapping passes, five stop reasons both directions preserved
