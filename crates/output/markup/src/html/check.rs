@@ -59,7 +59,11 @@ fn attr(
 ) -> Result<(), HtmlError> {
     use HtmlAttribute::*;
     let ok = match a {
-        Id { value } | DataId { value } | DataGroup { value } => {
+        Id { value } => {
+            text(value, r, b)?;
+            uri::anchor_id(value)
+        }
+        DataId { value } | DataGroup { value } => {
             text(value, r, b)?;
             uri::id(value)
         }
@@ -106,18 +110,18 @@ fn attr(
                         }
                         uri::path(source)
                             && uri::path(target)
-                            && fragment.as_ref().is_none_or(|s| uri::id(s))
+                            && fragment.as_ref().is_none_or(|s| uri::anchor_id(s))
                     }
                     HtmlHref::Fragment { id } => {
                         text(id, r, b)?;
-                        uri::id(id)
+                        uri::anchor_id(id)
                     }
                     HtmlHref::Artifact { path, fragment } => {
                         text(path, r, b)?;
                         if let Some(f) = fragment {
                             text(f, r, b)?
                         };
-                        uri::path(path) && fragment.as_ref().is_none_or(|s| uri::id(s))
+                        uri::path(path) && fragment.as_ref().is_none_or(|s| uri::anchor_id(s))
                     }
                     HtmlHref::External { uri: s } => {
                         text(s, r, b)?;

@@ -1,6 +1,6 @@
 {
   "package": "nepl3.markup",
-  "revision": 1,
+  "revision": 2,
   "types": {
     "HtmlTag": {
       "variant": {
@@ -167,7 +167,7 @@
             {
               "named": {
                 "package": "nepl3.markup",
-                "revision": 1,
+                "revision": 2,
                 "name": "HtmlRole"
               }
             }
@@ -179,7 +179,7 @@
             {
               "named": {
                 "package": "nepl3.markup",
-                "revision": 1,
+                "revision": 2,
                 "name": "HtmlHref"
               }
             }
@@ -221,7 +221,7 @@
             {
               "named": {
                 "package": "nepl3.markup",
-                "revision": 1,
+                "revision": 2,
                 "name": "CellScope"
               }
             }
@@ -244,7 +244,7 @@
             {
               "named": {
                 "package": "nepl3.markup",
-                "revision": 1,
+                "revision": 2,
                 "name": "HtmlTag"
               }
             }
@@ -255,7 +255,7 @@
               "list": {
                 "named": {
                   "package": "nepl3.markup",
-                  "revision": 1,
+                  "revision": 2,
                   "name": "HtmlAttribute"
                 }
               }
@@ -283,7 +283,7 @@
             "list": {
               "named": {
                 "package": "nepl3.markup",
-                "revision": 1,
+                "revision": 2,
                 "name": "HtmlNode"
               }
             }
@@ -310,7 +310,7 @@
           {
             "named": {
               "package": "nepl3.markup",
-              "revision": 1,
+              "revision": 2,
               "name": "HtmlFragment"
             }
           }
@@ -320,7 +320,7 @@
           {
             "named": {
               "package": "nepl3.markup",
-              "revision": 1,
+              "revision": 2,
               "name": "HtmlSlot"
             }
           }
@@ -330,7 +330,7 @@
           {
             "named": {
               "package": "nepl3.markup",
-              "revision": 1,
+              "revision": 2,
               "name": "HtmlPolicy"
             }
           }

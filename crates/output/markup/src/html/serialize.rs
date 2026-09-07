@@ -7,6 +7,34 @@ fn allocate(n: usize, b: &mut Budget) -> Result<(), HtmlError> {
     b.charge(Resource::AllocationUnits, n as u64)?;
     Ok(())
 }
+// Preserve the decoded identifier exactly. Encoding every non-unreserved byte
+// also prevents literal percent escapes or fragment directives being reinterpreted.
+fn fragment_id(s: &str, b: &mut Budget) -> Result<String, HtmlError> {
+    fn unreserved(c: u8) -> bool {
+        c.is_ascii_alphanumeric() || b"-._~".contains(&c)
+    }
+    b.charge(Resource::Work, s.len() as u64)?;
+    let mut len = 0usize;
+    for c in s.bytes() {
+        len = len
+            .checked_add(if unreserved(c) { 1 } else { 3 })
+            .filter(|n| *n <= isize::MAX as usize)
+            .ok_or_else(|| b.stop(StopReason::AllocationLimit))?;
+    }
+    allocate(len, b)?;
+    let mut result = String::with_capacity(len);
+    const HEX: &[u8; 16] = b"0123456789ABCDEF";
+    for c in s.bytes() {
+        if unreserved(c) {
+            result.push(c as char);
+        } else {
+            result.push('%');
+            result.push(HEX[(c >> 4) as usize] as char);
+            result.push(HEX[(c & 15) as usize] as char);
+        }
+    }
+    Ok(result)
+}
 fn value(a: &HtmlAttribute, b: &mut Budget) -> Result<String, HtmlError> {
     use HtmlAttribute::*;
     let borrowed = match a {
@@ -52,12 +80,14 @@ fn value(a: &HtmlAttribute, b: &mut Budget) -> Result<String, HtmlError> {
         Href {
             value: HtmlHref::Fragment { id },
         } => {
+            let id = fragment_id(id, b)?;
             allocate(id.len() + 1, b)?;
             Ok(format!("#{id}"))
         }
         Href {
             value: HtmlHref::Artifact { path, fragment },
         } => {
+            let fragment = fragment.as_deref().map(|s| fragment_id(s, b)).transpose()?;
             let n = path
                 .len()
                 .checked_add(fragment.as_ref().map_or(0, |f| f.len() + 1))
@@ -93,6 +123,8 @@ fn between_artifacts(
     fragment: Option<&str>,
     b: &mut Budget,
 ) -> Result<String, HtmlError> {
+    let encoded = fragment.map(|s| fragment_id(s, b)).transpose()?;
+    let fragment = encoded.as_deref();
     let work = (source.len() as u64)
         .checked_add(target.len() as u64)
         .and_then(|n| n.checked_mul(3))

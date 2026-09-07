@@ -1,14 +1,18 @@
 # 19. HTML fragmentの構造契約
 
+HTML idの拡張とfragmentの符号化規則は `nepl3.safe-markup/2` とする。
+値schemaも `nepl3.markup` revision 2へ進め、旧revisionの値を新しい検査proofとして
+受理しない。Doc HTMLのschema参照とportable receiverを同時に更新する。
+
 `interfaces/markup.json` を言語中立の値schema、`nepl3-markup` をnativeの検査・serializerとする。現段階の対象はHTML fragmentである。MathML/SVG/KaTeX専用profile、DocumentShell、assetのbyte列・MIME・license検査、Doc PreparedArticle、完全な操作Reportは後続実装であり、既存の最終要件から除かない。
 
 HtmlFragmentはroot U64と平坦なHtmlNode列を持つ。Textまたは固定HtmlTag・型付きattribute列・子U64列だけを許す。Rustのenum ordinalをwireへ保存しない。未知tag/attribute、RawHtml、style、event handler、script、任意namespaceを成功として受け入れない。木の深さは参照によって表し、深い入力のdropにRust call stackを使わない。
 
 rootのBlock slotはHTML flow要素またはText、Phrasing slotはphrasing要素またはTextを取る。P/span/見出し/em/strong/pre/code/aはphrasing子だけを持つ。aはphrasing子孫を通しても入れ子にできない。ul/olの直接子はli、tableはcaption最大一つ・thead最大一つ・tbody列の順、thead/tbodyはtr、trはth/tdである。tbodyを省略してHTML parserの自動挿入へ依存しない。caption内のtable、th内のsectioning/heading contentを子孫まで拒否する。figureのfigcaptionは最大一つで先頭または末尾。br/imgには子を置かない。imgはsrcとaltを必須にし、空altは装飾画像として表現できる。
 
-すべての参照を検査し、cycle・未到達nodeを拒否する。DAG共有は各表示出現を展開して検査し、同じnodeを二度使って同じidが二度出力される場合もDuplicateIdにする。id/data-nepl-id/data-nepl-groupはASCII `[a-z][a-z0-9-]*`。Fragment hrefは同じfragmentの実idへ到達する。attributeの名前重複を拒否する。
+すべての参照を検査し、cycle・未到達nodeを拒否する。DAG共有は各表示出現を展開して検査し、同じnodeを二度使って同じidが二度出力される場合もDuplicateIdにする。HTMLのidは非空のXML文字列で、U+0000〜0020およびU+007F〜009Fを含めない。日本語・先頭数字・大文字も保持し、Unicode正規化や大小文字変換をしない。DOMのid値はURL符号化前の値であり、percent escapeをdecodeしない。data-nepl-id/data-nepl-groupは従来のASCII `[a-z][a-z0-9-]*` を維持する。Fragment hrefは同じfragmentの実idへ完全一致で到達する。attributeの名前重複を拒否する。
 
-classはHtmlPolicyに列挙されたbackend登録名だけを許す。名前はidと同じ字句制約で、attribute内の空列・重複を拒否する。受信したHtmlPolicyの自己申告はstylesheetの信頼・実在・内容検査の証明ではない。実hostは独立した検査済みbackend資源と照合する。Langは共通RFC 5646字句検査を再利用する。roleはheading/img/group/note、aria-levelは正整数。画像width/heightは正整数、ol.startは0以上の符号付き32bit上限以内、th.scopeはrow/colだけ。
+classはHtmlPolicyに列挙されたbackend登録名だけを許す。名前はASCII `[a-z][a-z0-9-]*` で、attribute内の空列・重複を拒否する。受信したHtmlPolicyの自己申告はstylesheetの信頼・実在・内容検査の証明ではない。実hostは独立した検査済みbackend資源と照合する。Langは共通RFC 5646字句検査を再利用する。roleはheading/img/group/note、aria-levelは正整数。画像width/heightは正整数、ol.startは0以上の符号付き32bit上限以内、th.scopeはrow/colだけ。
 
 リンクはFragment・Artifact・Externalを分ける。Artifactと画像srcのpathは空でない相対segment列で、各segmentはASCII英数字と`-_.`、空segment/`.`/`..`を禁止する。これはhostが割り当てる配布pathであり、任意の著者pathをそのまま通す入口ではない。page/asset解決が非ASCII等の著者IDから配布pathへ変換し、その対応とbyte列を別途検査する。
 
@@ -31,3 +35,5 @@ RubyはHTML Standardのbase/annotation群を検査する。baseはRuby子孫を�
 入力長に比例するstate初期化や子enqueueに先立ってWorkを課金する。小さいWork上限で大量の処理待ちを確保し終えてから停止することを避け、同じ停止理由と単調なUsageを維持する。
 
 fragmentの内容モデルproofは、任意深度のbrowser DOM保持を保証しない。独立した実Chromium/Firefoxの検査で、Div鎖の深さ512/600は最大511へ平坦化された。H1の文書shellとpreviewでは包囲要素を含む出力深度profileを検査し、超過を黙って平坦化せず理由付きで扱う。coreの深い意味構造・反復処理・dropの要件と、各出力backend/閲覧環境の制約を分離する。
+
+Fragment・Artifact・BetweenArtifactsのfragmentは、同じdecoded HTML id契約に従う。serializerはUTF-8 byte列のASCII英数字および-._~以外を大文字hexのpercent escapeへ写し、その後HTML属性escapeを行う。元のpercent文字自体も%25へ写す。DOM id側はHTML属性escapeだけを行う。これにより識別値とURL表記を分離する。旧見出しaliasの対応表、実出力位置・URLの互換性検査、Doc正本切替は別工程であり、このID拡張だけから移行完了を推定しない。

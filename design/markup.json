@@ -1,7 +1,7 @@
 {
-  "contract": "nepl3.safe-markup/1",
+  "contract": "nepl3.safe-markup/2",
   "global_attributes": {
-    "id": "GeneratedId",
+    "id": "HtmlId",
     "class": "RegisteredClassList",
     "lang": "LanguageTag",
     "role": "Role",
@@ -22,7 +22,7 @@
     ],
     "PositiveDecimal": "ASCII unsigned integer > 0",
     "Text": "valid UTF-8 and XML 1.0 Char scalars; reject disallowed scalar with InvalidMarkupCharacter; escape according to doc/spec/13-reproducibility.md",
-    "FragmentHref": "# plus an existing generated id in the same output artifact",
+    "FragmentHref": "# plus UTF-8 percent encoding of a decoded HtmlId; preserve only ASCII alphanumeric and -._~; same-fragment target must exist",
     "Decimal": "finite base-10 number, no NaN/Infinity/exponent; canonical trailing zeros removed",
     "NonnegativeDecimal": "Decimal >= 0",
     "PositiveNumber": "Decimal > 0",
@@ -34,7 +34,8 @@
     "NonnegativeMathLength": "canonical nonnegative finite decimal followed by em; no sign, exponent, percentage, leading zeros or redundant trailing fractional zeros; zero is 0em",
     "HtmlHref": "typed Fragment/Artifact/BetweenArtifacts/External; lexical constraints and structural checks in doc/spec/19-html-fragment.md; source route binding and target availability remain separate preparation obligations",
     "ArtifactPath": "nonempty relative ASCII alphanumeric/-_. path; no empty, dot or parent segments; assigned by artifact preparation, not arbitrary author input",
-    "NonnegativeI32": "ASCII unsigned integer 0..2147483647"
+    "NonnegativeI32": "ASCII unsigned integer 0..2147483647",
+    "HtmlId": "Nonempty decoded XML character string excluding U+0000..0020 and U+007F..009F; no Unicode normalization or percent decoding; duplicate ids forbidden"
   },
   "namespaces": {
     "html": {

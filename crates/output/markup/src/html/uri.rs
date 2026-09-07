@@ -1,4 +1,12 @@
 // Deliberately constrained output URI profile, not a browser URL parser.
+// DOM identifiers are decoded values, never pre-encoded URL fragments.
+// XML validity is checked separately by the attribute validator.
+pub(super) fn anchor_id(s: &str) -> bool {
+    !s.is_empty()
+        && !s
+            .chars()
+            .any(|c| c <= '\u{20}' || ('\u{7f}'..='\u{9f}').contains(&c))
+}
 pub(super) fn id(s: &str) -> bool {
     s.as_bytes().first().is_some_and(u8::is_ascii_lowercase)
         && s.bytes()
