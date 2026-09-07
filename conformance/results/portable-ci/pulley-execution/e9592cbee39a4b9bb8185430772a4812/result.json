@@ -1,0 +1,38 @@
+{
+  "arguments": [
+    "--test-threads=1"
+  ],
+  "result": "passed",
+  "runs": [
+    {
+      "backend": "native",
+      "command": [
+        "C:\\Program Files\\Wasmtime\\bin\\wasmtime.EXE",
+        "run",
+        "C:\\projects\\NEPL3-rp2040\\target\\wasm32-wasip2\\debug\\deps\\stop-3f36bc1e098b75ad.wasm",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "stdout_sha256": "4ed53f21fbadd0d4d4eba8fa20075e5eee2be535132b87245c80eb551e055789",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "backend": "pulley64",
+      "command": [
+        "C:\\Program Files\\Wasmtime\\bin\\wasmtime.EXE",
+        "run",
+        "--target",
+        "pulley64",
+        "C:\\projects\\NEPL3-rp2040\\target\\wasm32-wasip2\\debug\\deps\\stop-3f36bc1e098b75ad.wasm",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "stdout_sha256": "78a2baea7e78dc1e47129a508add6204836a0c0a1b2ad2a3e3bcab3622fd9e2b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "artifact_sha256": "ed8cbbedf881b4a08b25d262ce46cd0a9f12c60ede3ed0180fba8b8cb0833610",
+  "wasmtime": "wasmtime 44.0.1 (f302ebd6b 2026-04-30)",
+  "runner_sha256": "8dc94e72bf2ec488770ee9ad0b4d97f9f29611eeeb16e53057fe6e8e332be58d",
+  "passed": 2
+}

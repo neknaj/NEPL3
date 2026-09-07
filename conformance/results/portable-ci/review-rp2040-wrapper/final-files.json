@@ -1,0 +1,74 @@
+[
+  {
+    "path": "tools/emulators/rp2040js/elf_to_uf2.py",
+    "sha256": "40aaa5b01d998da9f18ecab43847b427ae8f5088f54c24b5e8c38787768fcdc4",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040-wrapper\\final\\tools\\emulators\\rp2040js\\elf_to_uf2.py",
+    "bytes": 1992
+  },
+  {
+    "path": "tools/emulators/rp2040js/firmware.py",
+    "sha256": "bab29c4ba111642c032436ed494863a2dcc9259e88829da3b339b77e69880d0f",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040-wrapper\\final\\tools\\emulators\\rp2040js\\firmware.py",
+    "bytes": 4950
+  },
+  {
+    "path": "tools/emulators/rp2040js/package-lock.json",
+    "sha256": "5a0ff29e37cbb2c3a382a3a25e6f209c9d7dfc05bfa36c8987e1fb4da2eb08ee",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040-wrapper\\final\\tools\\emulators\\rp2040js\\package-lock.json",
+    "bytes": 654
+  },
+  {
+    "path": "tools/emulators/rp2040js/package.json",
+    "sha256": "c011d480291c055a9cc2e99ae18dce996a6acdd8373fda9b0eab5ff05148a6a7",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040-wrapper\\final\\tools\\emulators\\rp2040js\\package.json",
+    "bytes": 248
+  },
+  {
+    "path": "tools/emulators/rp2040js/protocol.mjs",
+    "sha256": "326554c62bf623adf89ce76148d233520fb61a7f55c165db46f6310e1a1a59a0",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040-wrapper\\final\\tools\\emulators\\rp2040js\\protocol.mjs",
+    "bytes": 1174
+  },
+  {
+    "path": "tools/emulators/rp2040js/run.mjs",
+    "sha256": "1f3ac6c13557a7b108955c3e21759feb32693d41b7c1f6c4351655e9ff9b3b3e",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040-wrapper\\final\\tools\\emulators\\rp2040js\\run.mjs",
+    "bytes": 2728
+  },
+  {
+    "path": "tools/emulators/rp2040js/test.mjs",
+    "sha256": "7bf6ce9a7aad04181c42550988da9b49b14d834c3507d8b2a3490073eda1fbcb",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040-wrapper\\final\\tools\\emulators\\rp2040js\\test.mjs",
+    "bytes": 2424
+  },
+  {
+    "path": "tools/emulators/rp2040js/test_converter.py",
+    "sha256": "4f035b715e620bd48cc57554d763ff291c9a08a617f5ff453fab01a5985cb659",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040-wrapper\\final\\tools\\emulators\\rp2040js\\test_converter.py",
+    "bytes": 2169
+  },
+  {
+    "path": "tools/emulators/rp2040js/test_wrapper.py",
+    "sha256": "e9b4dcdc2ea341b7055f2db6f16acd49cf27166fc4edd0e2ae21b7640195810c",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040-wrapper\\final\\tools\\emulators\\rp2040js\\test_wrapper.py",
+    "bytes": 3794
+  },
+  {
+    "path": "tools/emulators/rp2040js/uf2.mjs",
+    "sha256": "cef6f1a603368624e8f4adee7aab986faf43b00917e0a45bb2c614f6a1ff237c",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040-wrapper\\final\\tools\\emulators\\rp2040js\\uf2.mjs",
+    "bytes": 1498
+  },
+  {
+    "path": ".github/workflows/ci.yml",
+    "sha256": "33c8bce03bbd6ee9f79c91ac0e3798a190f39fcd4b6d8aba0854df9e92a453d1",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040-wrapper\\final\\.github\\workflows\\ci.yml",
+    "bytes": 10517
+  },
+  {
+    "path": "conformance/targets/rp2040/README.md",
+    "sha256": "f71212e616f37bfebc7364523a361d377cb7e6e80fb2e2d999995ad559708869",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040-wrapper\\final\\conformance\\targets\\rp2040\\README.md",
+    "bytes": 3698
+  }
+]

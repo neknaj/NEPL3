@@ -1,0 +1,92 @@
+[
+  {
+    "path": "conformance/targets/rp2040/build.rs",
+    "sha256": "8ce86d517797f172c4570e39fb24cfd422d3771c82b0261deca404c7131d7dce",
+    "bytes": 366,
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040\\original\\conformance\\targets\\rp2040\\build.rs"
+  },
+  {
+    "path": "conformance/targets/rp2040/Cargo.lock",
+    "sha256": "2ac75a86c26523b0a513f93bf40e2960cb3a0a9dba5e288100d7055ff0253935",
+    "bytes": 28968,
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040\\original\\conformance\\targets\\rp2040\\Cargo.lock"
+  },
+  {
+    "path": "conformance/targets/rp2040/Cargo.toml",
+    "sha256": "47d4cffd9edf2c5dbf7f291a06c43d42a34de16354998c6412f58ec64d03ddf9",
+    "bytes": 791,
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040\\original\\conformance\\targets\\rp2040\\Cargo.toml"
+  },
+  {
+    "path": "conformance/targets/rp2040/memory.x",
+    "sha256": "d44a563bb7a44cd4367b9ad5ac0aa11fbb891e99775e5d7766a7a91819ac3091",
+    "bytes": 272,
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040\\original\\conformance\\targets\\rp2040\\memory.x"
+  },
+  {
+    "path": "conformance/targets/rp2040/src/allocator.rs",
+    "sha256": "2e47ff10820e335aeb9dc1262742fd79f43f7281ea23bdcc819a4ef775a1a255",
+    "bytes": 1644,
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040\\original\\conformance\\targets\\rp2040\\src\\allocator.rs"
+  },
+  {
+    "path": "conformance/targets/rp2040/src/main.rs",
+    "sha256": "9342074b2c5015c7be895b08377cbc2aa770c42a67aeb44a43b5c31ca8b32b67",
+    "bytes": 1505,
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040\\original\\conformance\\targets\\rp2040\\src\\main.rs"
+  },
+  {
+    "path": "conformance/targets/rp2040/src/protocol.rs",
+    "sha256": "adc960c95b785f955ef89651b83b6eb8829f260c182f457d4e6e3011022d3e4f",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040\\firmware-source\\src\\protocol.rs",
+    "bytes": 562
+  },
+  {
+    "path": "conformance/targets/rp2040/src/tests.rs",
+    "sha256": "6c82558c59139ea9fa05e52a2594c2e6755b3332479f427b23f768378b16d05e",
+    "bytes": 1810,
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040\\original\\conformance\\targets\\rp2040\\src\\tests.rs"
+  },
+  {
+    "path": "tools/emulators/rp2040js/elf_to_uf2.py",
+    "sha256": "40aaa5b01d998da9f18ecab43847b427ae8f5088f54c24b5e8c38787768fcdc4",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040\\updated\\tools\\emulators\\rp2040js\\elf_to_uf2.py",
+    "bytes": 1992
+  },
+  {
+    "path": "tools/emulators/rp2040js/package-lock.json",
+    "sha256": "5a0ff29e37cbb2c3a382a3a25e6f209c9d7dfc05bfa36c8987e1fb4da2eb08ee",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040\\updated\\tools\\emulators\\rp2040js\\package-lock.json",
+    "bytes": 654
+  },
+  {
+    "path": "tools/emulators/rp2040js/package.json",
+    "sha256": "c011d480291c055a9cc2e99ae18dce996a6acdd8373fda9b0eab5ff05148a6a7",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040\\updated\\tools\\emulators\\rp2040js\\package.json",
+    "bytes": 248
+  },
+  {
+    "path": "tools/emulators/rp2040js/protocol.mjs",
+    "sha256": "326554c62bf623adf89ce76148d233520fb61a7f55c165db46f6310e1a1a59a0",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040\\updated\\tools\\emulators\\rp2040js\\protocol.mjs",
+    "bytes": 1174
+  },
+  {
+    "path": "tools/emulators/rp2040js/run.mjs",
+    "sha256": "1f3ac6c13557a7b108955c3e21759feb32693d41b7c1f6c4351655e9ff9b3b3e",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040\\updated\\tools\\emulators\\rp2040js\\run.mjs",
+    "bytes": 2728
+  },
+  {
+    "path": "tools/emulators/rp2040js/uf2.mjs",
+    "sha256": "cef6f1a603368624e8f4adee7aab986faf43b00917e0a45bb2c614f6a1ff237c",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040\\updated\\tools\\emulators\\rp2040js\\uf2.mjs",
+    "bytes": 1498
+  },
+  {
+    "path": "tools/emulators/rp2040js/test.mjs",
+    "sha256": "7bf6ce9a7aad04181c42550988da9b49b14d834c3507d8b2a3490073eda1fbcb",
+    "source_path": "C:\\projects\\NEPL3-rp2040\\.tmp\\review-rp2040\\updated\\tools\\emulators\\rp2040js\\test.mjs",
+    "bytes": 2424
+  }
+]
