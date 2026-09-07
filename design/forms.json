@@ -741,6 +741,19 @@
               "read": "@Text"
             }
           ]
+        },
+        "selection": {
+          "kind": "Selection",
+          "fields": [
+            {
+              "name": "selector",
+              "read": "Grammar/Selector"
+            },
+            {
+              "name": "priority",
+              "read": "@Nat"
+            }
+          ]
         }
       },
       "leaf": null

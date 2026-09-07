@@ -92,3 +92,11 @@ ForeignClosureはguest syntaxと選択owner環境・元Origin/source/map表を�
 管理対象はLetのinitializer除外、shadowing/free nameの捕捉拒否、同scope衝突、予約headの所有schema、Foreign独立Entity、Unicode/CRLF、Custom疎IDと更新後の最終resolution、位置なし、変換型/複数source/被覆穴の拒否を含む。隣接Exactを一意な連続被覆へ結合し、全区間・scalar分割・逆表順とUnicode長さ変更を実再parse→解析→accept→CBOR往復で比較する。完了proofのread/resume/reserve/resume_head入口は通常のraw結果・Report・Usageと比較し、非Complete枝からproofを発行しない。受信検査ではold digest・書込元・key・非重複・宣言source欠損をschema-valid変異で検査し、停止理由を保持する。
 
 このrename APIのReportはrename自体の観測Usageだけで、診断/eventは元parse/analyzeの正式Reportをcallerが保有する。全段階のReportを集約する汎用外部Rename operation包絡が完成したとの主張ではない。初回raw decoderは書込許可・parse実行・意味対応のproofを発行せず、独立processの認証済み実行/費用統合は後続に残る。任意の逆encoder、一般field/view region selector、増分再解析、T06全体の完成をこの範囲から推定しない。最終cross-targetと統括gateの結果は当該checkpoint記録を正本とする。
+
+## 次段: field/View/reader sidecarのregion選択
+
+Grammarの既存style arityを保ち、独立したselection宣言からU64 priorityを生成する。Form/Leaf/HeadShapeの型・package identity・source位置付き失敗を同期した。実元GrammarのP0/P1/P2と独立source変異を従来の10B Work上限内で検査する。
+
+prepared tree/Profileと明示ReaderFactBatchをRegionKeyへ束縛し、最小range・priority・包含深さ・宣言順で選択する実APIを追加した。field、token内部View、Capture/Presentation、Foreign、回復nodeを区別し、UnknownHeadのarityを捏造しない。表示用SourceMapはowner局所で、Exactの分割同値、部分被覆、Transformed、多義性を保持する。token.leadingTriviaの再掲とCaptureのmapped containmentは既存reader契約で検査する。
+
+管理対象は実parserからのfield priority、nested View、生成source Capture、消費範囲外の正式Presentation、改変trivia/owner/revision、Foreign/escaped Text/Unicodeの独立CBOR初回受信、要求/返信変異、回復・UTF-8境界・stale key・停止を含む。最終native/WASI/統括gateの実行結果はcheckpoint記録に分離する。現在の出力は元overlapとclassを保持したhighlight材料であり、LSP向け非重複・単行化、一般regionから既存definition/referencesへの接続、completion、増分解析は後続である。raw sidecarやRegionReplyからprovider実行や完了Bindingのproofを発行しない。

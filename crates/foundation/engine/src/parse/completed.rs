@@ -30,6 +30,9 @@ impl CompletedParse {
     pub fn report(&self) -> &Report {
         &self.report
     }
+    pub fn reader_facts(&self) -> &[ReaderFactBatch] {
+        &self.facts
+    }
     /// Taking raw data consumes the execution proof. There is intentionally no
     /// inverse constructor from ParseReply, ParseTree or a decoded wire value.
     pub fn into_reply(self) -> ParseReply {

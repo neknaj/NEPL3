@@ -260,6 +260,10 @@ Ok(NodeKind::Custom{provider:self.text(value,"provider")?})},
 self.head(value,"style")?;
 self.fields(value,&["selector","class"])?;
 Ok(NodeKind::Style{selector:self.node(value,"selector",Category::Selector)?,class:self.text(value,"class")?})},
+("Grammar/Style","Selection")=>{
+self.head(value,"selection")?;
+self.fields(value,&["selector","priority"])?;
+Ok(NodeKind::Selection{selector:self.node(value,"selector",Category::Selector)?,priority:self.nat(value,"priority")?})},
 ("Grammar/Selector","Head")=>{
 self.head(value,"head")?;
 self.fields(value,&[])?;

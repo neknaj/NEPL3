@@ -1,6 +1,6 @@
 //! Persistent parser choices, including dynamic heads, owned by the engine result.
 use crate::{
-    package::{BindingId, EntryContext, FieldSpec, ReadSpecId, StyleRule},
+    package::{BindingId, EntryContext, FieldSpec, ReadSpecId, SelectionRule, StyleRule},
     recovery::ForeignStep,
 };
 use alloc::{boxed::Box, vec::Vec};
@@ -22,6 +22,7 @@ pub struct HeadShape {
     pub fields: Vec<FieldSpec>,
     pub binding: BindingId,
     pub styles: Vec<StyleRule>,
+    pub selection_rules: Vec<SelectionRule>,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ShapeSelection {

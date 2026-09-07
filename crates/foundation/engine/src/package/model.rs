@@ -56,6 +56,7 @@ pub struct Form {
     pub fields: Vec<FieldSpec>,
     pub binding: BindingId,
     pub styles: Vec<StyleRule>,
+    pub selection_rules: Vec<SelectionRule>,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Leaf {
@@ -65,6 +66,7 @@ pub struct Leaf {
     pub payload: TypeDescriptor,
     pub binding: BindingId,
     pub styles: Vec<StyleRule>,
+    pub selection_rules: Vec<SelectionRule>,
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum NamespacePolicy {
@@ -123,6 +125,14 @@ pub enum StyleSelector {
 pub struct StyleRule {
     pub selector: StyleSelector,
     pub class: PresentationClass,
+}
+
+/// Higher priority wins only after the smallest containing source range.
+/// An owner with no matching declaration has the defined priority zero.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SelectionRule {
+    pub selector: StyleSelector,
+    pub priority: u64,
 }
 
 /// A versioned contract known to the compiler; this does not contain an executable callback.

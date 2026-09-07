@@ -329,24 +329,28 @@
             8853
           ],
           [
-            9007,
-            9011
+            9017,
+            9021
           ],
           [
-            9076,
-            9080
+            9175,
+            9179
           ],
           [
-            9145,
-            9149
+            9244,
+            9248
           ],
           [
-            9253,
-            9257
+            9313,
+            9317
           ],
           [
-            9365,
-            9368
+            9421,
+            9425
+          ],
+          [
+            9533,
+            9536
           ]
         ],
         "list": [
@@ -14452,12 +14456,12 @@
                   "plans": {
                     "heads": [
                       [
-                        8954,
-                        8958
+                        8964,
+                        8968
                       ],
                       [
-                        8974,
-                        8977
+                        8984,
+                        8987
                       ]
                     ],
                     "list": [
@@ -14468,61 +14472,61 @@
                             "literal": "Name",
                             "raw": "selector",
                             "span": [
-                              8965,
-                              8973
+                              8975,
+                              8983
                             ],
                             "value": "selector"
                           }
                         },
                         "head": [
-                          8959,
-                          8964
+                          8969,
+                          8974
                         ],
                         "kind": "Visit",
                         "span": [
-                          8959,
-                          8973
+                          8969,
+                          8983
                         ]
                       }
                     ],
                     "span": [
-                      8954,
-                      8977
+                      8964,
+                      8987
                     ]
                   }
                 },
                 "head": [
-                  8948,
-                  8953
+                  8958,
+                  8963
                 ],
                 "kind": "Group",
                 "span": [
-                  8948,
-                  8977
+                  8958,
+                  8987
                 ]
               },
               "category": {
                 "literal": "Name",
                 "raw": "Style",
                 "span": [
-                  8865,
-                  8870
+                  8869,
+                  8874
                 ],
                 "value": "Style"
               },
               "fields": {
                 "heads": [
                   [
-                    8879,
-                    8883
+                    8887,
+                    8891
                   ],
                   [
-                    8914,
-                    8918
+                    8922,
+                    8926
                   ],
                   [
-                    8944,
-                    8947
+                    8954,
+                    8957
                   ]
                 ],
                 "list": [
@@ -14533,8 +14537,8 @@
                         "literal": "Name",
                         "raw": "selector",
                         "span": [
-                          8890,
-                          8898
+                          8898,
+                          8906
                         ],
                         "value": "selector"
                       },
@@ -14545,31 +14549,31 @@
                             "literal": "Name",
                             "raw": "Selector",
                             "span": [
-                              8905,
-                              8913
+                              8913,
+                              8921
                             ],
                             "value": "Selector"
                           }
                         },
                         "head": [
-                          8899,
-                          8904
+                          8907,
+                          8912
                         ],
                         "kind": "Local",
                         "span": [
-                          8899,
-                          8913
+                          8907,
+                          8921
                         ]
                       }
                     },
                     "head": [
-                      8884,
-                      8889
+                      8892,
+                      8897
                     ],
                     "kind": "FieldDeclaration",
                     "span": [
-                      8884,
-                      8913
+                      8892,
+                      8921
                     ]
                   },
                   {
@@ -14577,80 +14581,80 @@
                     "fields": {
                       "name": {
                         "literal": "Name",
-                        "raw": "class",
+                        "raw": "priority",
                         "span": [
-                          8925,
-                          8930
+                          8933,
+                          8941
                         ],
-                        "value": "class"
+                        "value": "priority"
                       },
                       "read": {
                         "category": "Grammar/ReadSpec",
                         "fields": {
                           "reader": {
                             "literal": "Name",
-                            "raw": "Text",
+                            "raw": "Nat",
                             "span": [
-                              8939,
-                              8943
+                              8950,
+                              8953
                             ],
-                            "value": "Text"
+                            "value": "Nat"
                           }
                         },
                         "head": [
-                          8931,
-                          8938
+                          8942,
+                          8949
                         ],
                         "kind": "Builtin",
                         "span": [
-                          8931,
-                          8943
+                          8942,
+                          8953
                         ]
                       }
                     },
                     "head": [
-                      8919,
-                      8924
+                      8927,
+                      8932
                     ],
                     "kind": "FieldDeclaration",
                     "span": [
-                      8919,
-                      8943
+                      8927,
+                      8953
                     ]
                   }
                 ],
                 "span": [
-                  8879,
-                  8947
+                  8887,
+                  8957
                 ]
               },
               "kind": {
                 "literal": "Name",
-                "raw": "Style",
+                "raw": "Selection",
                 "span": [
                   8859,
-                  8864
+                  8868
                 ],
-                "value": "Style"
+                "value": "Selection"
               },
               "spelling": {
                 "literal": "Text",
-                "raw": "\"style\"",
+                "raw": "\"selection\"",
                 "span": [
-                  8871,
-                  8878
+                  8875,
+                  8886
                 ],
-                "value": "style"
+                "value": "selection"
               },
               "styles": {
                 "heads": [
                   [
-                    8978,
-                    8982
+                    8988,
+                    8992
                   ],
                   [
-                    9003,
-                    9006
+                    9013,
+                    9016
                   ]
                 ],
                 "list": [
@@ -14661,8 +14665,8 @@
                         "literal": "Text",
                         "raw": "\"marker\"",
                         "span": [
-                          8994,
-                          9002
+                          9004,
+                          9012
                         ],
                         "value": "marker"
                       },
@@ -14670,30 +14674,30 @@
                         "category": "Grammar/Selector",
                         "fields": {},
                         "head": [
-                          8989,
-                          8993
+                          8999,
+                          9003
                         ],
                         "kind": "Head",
                         "span": [
-                          8989,
-                          8993
+                          8999,
+                          9003
                         ]
                       }
                     },
                     "head": [
-                      8983,
-                      8988
+                      8993,
+                      8998
                     ],
                     "kind": "Style",
                     "span": [
-                      8983,
-                      9002
+                      8993,
+                      9012
                     ]
                   }
                 ],
                 "span": [
-                  8978,
-                  9006
+                  8988,
+                  9016
                 ]
               }
             },
@@ -14704,7 +14708,7 @@
             "kind": "Form",
             "span": [
               8854,
-              9006
+              9016
             ]
           },
           {
@@ -14712,92 +14716,117 @@
             "fields": {
               "bindings": {
                 "category": "Grammar/Binding",
-                "fields": {},
+                "fields": {
+                  "plans": {
+                    "heads": [
+                      [
+                        9122,
+                        9126
+                      ],
+                      [
+                        9142,
+                        9145
+                      ]
+                    ],
+                    "list": [
+                      {
+                        "category": "Grammar/Binding",
+                        "fields": {
+                          "child": {
+                            "literal": "Name",
+                            "raw": "selector",
+                            "span": [
+                              9133,
+                              9141
+                            ],
+                            "value": "selector"
+                          }
+                        },
+                        "head": [
+                          9127,
+                          9132
+                        ],
+                        "kind": "Visit",
+                        "span": [
+                          9127,
+                          9141
+                        ]
+                      }
+                    ],
+                    "span": [
+                      9122,
+                      9145
+                    ]
+                  }
+                },
                 "head": [
-                  9042,
-                  9046
+                  9116,
+                  9121
                 ],
-                "kind": "None",
+                "kind": "Group",
                 "span": [
-                  9042,
-                  9046
+                  9116,
+                  9145
                 ]
               },
               "category": {
                 "literal": "Name",
-                "raw": "Selector",
+                "raw": "Style",
                 "span": [
-                  9022,
-                  9030
+                  9033,
+                  9038
                 ],
-                "value": "Selector"
+                "value": "Style"
               },
               "fields": {
-                "heads": [
-                  [
-                    9038,
-                    9041
-                  ]
-                ],
-                "list": [],
-                "span": [
-                  9038,
-                  9041
-                ]
-              },
-              "kind": {
-                "literal": "Name",
-                "raw": "Head",
-                "span": [
-                  9017,
-                  9021
-                ],
-                "value": "Head"
-              },
-              "spelling": {
-                "literal": "Text",
-                "raw": "\"head\"",
-                "span": [
-                  9031,
-                  9037
-                ],
-                "value": "head"
-              },
-              "styles": {
                 "heads": [
                   [
                     9047,
                     9051
                   ],
                   [
-                    9072,
-                    9075
+                    9082,
+                    9086
+                  ],
+                  [
+                    9112,
+                    9115
                   ]
                 ],
                 "list": [
                   {
-                    "category": "Grammar/Style",
+                    "category": "Grammar/Field",
                     "fields": {
-                      "class": {
-                        "literal": "Text",
-                        "raw": "\"marker\"",
+                      "name": {
+                        "literal": "Name",
+                        "raw": "selector",
                         "span": [
-                          9063,
-                          9071
+                          9058,
+                          9066
                         ],
-                        "value": "marker"
+                        "value": "selector"
                       },
-                      "selector": {
-                        "category": "Grammar/Selector",
-                        "fields": {},
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "category": {
+                            "literal": "Name",
+                            "raw": "Selector",
+                            "span": [
+                              9073,
+                              9081
+                            ],
+                            "value": "Selector"
+                          }
+                        },
                         "head": [
-                          9058,
-                          9062
+                          9067,
+                          9072
                         ],
-                        "kind": "Head",
+                        "kind": "Local",
                         "span": [
-                          9058,
-                          9062
+                          9067,
+                          9081
                         ]
                       }
                     },
@@ -14805,27 +14834,145 @@
                       9052,
                       9057
                     ],
-                    "kind": "Style",
+                    "kind": "FieldDeclaration",
                     "span": [
                       9052,
-                      9071
+                      9081
+                    ]
+                  },
+                  {
+                    "category": "Grammar/Field",
+                    "fields": {
+                      "name": {
+                        "literal": "Name",
+                        "raw": "class",
+                        "span": [
+                          9093,
+                          9098
+                        ],
+                        "value": "class"
+                      },
+                      "read": {
+                        "category": "Grammar/ReadSpec",
+                        "fields": {
+                          "reader": {
+                            "literal": "Name",
+                            "raw": "Text",
+                            "span": [
+                              9107,
+                              9111
+                            ],
+                            "value": "Text"
+                          }
+                        },
+                        "head": [
+                          9099,
+                          9106
+                        ],
+                        "kind": "Builtin",
+                        "span": [
+                          9099,
+                          9111
+                        ]
+                      }
+                    },
+                    "head": [
+                      9087,
+                      9092
+                    ],
+                    "kind": "FieldDeclaration",
+                    "span": [
+                      9087,
+                      9111
                     ]
                   }
                 ],
                 "span": [
                   9047,
-                  9075
+                  9115
+                ]
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "Style",
+                "span": [
+                  9027,
+                  9032
+                ],
+                "value": "Style"
+              },
+              "spelling": {
+                "literal": "Text",
+                "raw": "\"style\"",
+                "span": [
+                  9039,
+                  9046
+                ],
+                "value": "style"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    9146,
+                    9150
+                  ],
+                  [
+                    9171,
+                    9174
+                  ]
+                ],
+                "list": [
+                  {
+                    "category": "Grammar/Style",
+                    "fields": {
+                      "class": {
+                        "literal": "Text",
+                        "raw": "\"marker\"",
+                        "span": [
+                          9162,
+                          9170
+                        ],
+                        "value": "marker"
+                      },
+                      "selector": {
+                        "category": "Grammar/Selector",
+                        "fields": {},
+                        "head": [
+                          9157,
+                          9161
+                        ],
+                        "kind": "Head",
+                        "span": [
+                          9157,
+                          9161
+                        ]
+                      }
+                    },
+                    "head": [
+                      9151,
+                      9156
+                    ],
+                    "kind": "Style",
+                    "span": [
+                      9151,
+                      9170
+                    ]
+                  }
+                ],
+                "span": [
+                  9146,
+                  9174
                 ]
               }
             },
             "head": [
-              9012,
-              9016
+              9022,
+              9026
             ],
             "kind": "Form",
             "span": [
-              9012,
-              9075
+              9022,
+              9174
             ]
           },
           {
@@ -14835,43 +14982,164 @@
                 "category": "Grammar/Binding",
                 "fields": {},
                 "head": [
-                  9111,
-                  9115
+                  9210,
+                  9214
                 ],
                 "kind": "None",
                 "span": [
-                  9111,
-                  9115
+                  9210,
+                  9214
                 ]
               },
               "category": {
                 "literal": "Name",
                 "raw": "Selector",
                 "span": [
-                  9091,
-                  9099
+                  9190,
+                  9198
                 ],
                 "value": "Selector"
               },
               "fields": {
                 "heads": [
                   [
-                    9107,
-                    9110
+                    9206,
+                    9209
                   ]
                 ],
                 "list": [],
                 "span": [
-                  9107,
-                  9110
+                  9206,
+                  9209
+                ]
+              },
+              "kind": {
+                "literal": "Name",
+                "raw": "Head",
+                "span": [
+                  9185,
+                  9189
+                ],
+                "value": "Head"
+              },
+              "spelling": {
+                "literal": "Text",
+                "raw": "\"head\"",
+                "span": [
+                  9199,
+                  9205
+                ],
+                "value": "head"
+              },
+              "styles": {
+                "heads": [
+                  [
+                    9215,
+                    9219
+                  ],
+                  [
+                    9240,
+                    9243
+                  ]
+                ],
+                "list": [
+                  {
+                    "category": "Grammar/Style",
+                    "fields": {
+                      "class": {
+                        "literal": "Text",
+                        "raw": "\"marker\"",
+                        "span": [
+                          9231,
+                          9239
+                        ],
+                        "value": "marker"
+                      },
+                      "selector": {
+                        "category": "Grammar/Selector",
+                        "fields": {},
+                        "head": [
+                          9226,
+                          9230
+                        ],
+                        "kind": "Head",
+                        "span": [
+                          9226,
+                          9230
+                        ]
+                      }
+                    },
+                    "head": [
+                      9220,
+                      9225
+                    ],
+                    "kind": "Style",
+                    "span": [
+                      9220,
+                      9239
+                    ]
+                  }
+                ],
+                "span": [
+                  9215,
+                  9243
+                ]
+              }
+            },
+            "head": [
+              9180,
+              9184
+            ],
+            "kind": "Form",
+            "span": [
+              9180,
+              9243
+            ]
+          },
+          {
+            "category": "Grammar/Declaration",
+            "fields": {
+              "bindings": {
+                "category": "Grammar/Binding",
+                "fields": {},
+                "head": [
+                  9279,
+                  9283
+                ],
+                "kind": "None",
+                "span": [
+                  9279,
+                  9283
+                ]
+              },
+              "category": {
+                "literal": "Name",
+                "raw": "Selector",
+                "span": [
+                  9259,
+                  9267
+                ],
+                "value": "Selector"
+              },
+              "fields": {
+                "heads": [
+                  [
+                    9275,
+                    9278
+                  ]
+                ],
+                "list": [],
+                "span": [
+                  9275,
+                  9278
                 ]
               },
               "kind": {
                 "literal": "Name",
                 "raw": "Self",
                 "span": [
-                  9086,
-                  9090
+                  9254,
+                  9258
                 ],
                 "value": "Self"
               },
@@ -14879,20 +15147,20 @@
                 "literal": "Text",
                 "raw": "\"self\"",
                 "span": [
-                  9100,
-                  9106
+                  9268,
+                  9274
                 ],
                 "value": "self"
               },
               "styles": {
                 "heads": [
                   [
-                    9116,
-                    9120
+                    9284,
+                    9288
                   ],
                   [
-                    9141,
-                    9144
+                    9309,
+                    9312
                   ]
                 ],
                 "list": [
@@ -14903,8 +15171,8 @@
                         "literal": "Text",
                         "raw": "\"marker\"",
                         "span": [
-                          9132,
-                          9140
+                          9300,
+                          9308
                         ],
                         "value": "marker"
                       },
@@ -14912,41 +15180,41 @@
                         "category": "Grammar/Selector",
                         "fields": {},
                         "head": [
-                          9127,
-                          9131
+                          9295,
+                          9299
                         ],
                         "kind": "Head",
                         "span": [
-                          9127,
-                          9131
+                          9295,
+                          9299
                         ]
                       }
                     },
                     "head": [
-                      9121,
-                      9126
+                      9289,
+                      9294
                     ],
                     "kind": "Style",
                     "span": [
-                      9121,
-                      9140
+                      9289,
+                      9308
                     ]
                   }
                 ],
                 "span": [
-                  9116,
-                  9144
+                  9284,
+                  9312
                 ]
               }
             },
             "head": [
-              9081,
-              9085
+              9249,
+              9253
             ],
             "kind": "Form",
             "span": [
-              9081,
-              9144
+              9249,
+              9312
             ]
           },
           {
@@ -14956,33 +15224,33 @@
                 "category": "Grammar/Binding",
                 "fields": {},
                 "head": [
-                  9219,
-                  9223
+                  9387,
+                  9391
                 ],
                 "kind": "None",
                 "span": [
-                  9219,
-                  9223
+                  9387,
+                  9391
                 ]
               },
               "category": {
                 "literal": "Name",
                 "raw": "Selector",
                 "span": [
-                  9169,
-                  9177
+                  9337,
+                  9345
                 ],
                 "value": "Selector"
               },
               "fields": {
                 "heads": [
                   [
-                    9186,
-                    9190
+                    9354,
+                    9358
                   ],
                   [
-                    9215,
-                    9218
+                    9383,
+                    9386
                   ]
                 ],
                 "list": [
@@ -14993,8 +15261,8 @@
                         "literal": "Name",
                         "raw": "name",
                         "span": [
-                          9197,
-                          9201
+                          9365,
+                          9369
                         ],
                         "value": "name"
                       },
@@ -15005,45 +15273,45 @@
                             "literal": "Name",
                             "raw": "Name",
                             "span": [
-                              9210,
-                              9214
+                              9378,
+                              9382
                             ],
                             "value": "Name"
                           }
                         },
                         "head": [
-                          9202,
-                          9209
+                          9370,
+                          9377
                         ],
                         "kind": "Builtin",
                         "span": [
-                          9202,
-                          9214
+                          9370,
+                          9382
                         ]
                       }
                     },
                     "head": [
-                      9191,
-                      9196
+                      9359,
+                      9364
                     ],
                     "kind": "FieldDeclaration",
                     "span": [
-                      9191,
-                      9214
+                      9359,
+                      9382
                     ]
                   }
                 ],
                 "span": [
-                  9186,
-                  9218
+                  9354,
+                  9386
                 ]
               },
               "kind": {
                 "literal": "Name",
                 "raw": "FieldSelector",
                 "span": [
-                  9155,
-                  9168
+                  9323,
+                  9336
                 ],
                 "value": "FieldSelector"
               },
@@ -15051,20 +15319,20 @@
                 "literal": "Text",
                 "raw": "\"field\"",
                 "span": [
-                  9178,
-                  9185
+                  9346,
+                  9353
                 ],
                 "value": "field"
               },
               "styles": {
                 "heads": [
                   [
-                    9224,
-                    9228
+                    9392,
+                    9396
                   ],
                   [
-                    9249,
-                    9252
+                    9417,
+                    9420
                   ]
                 ],
                 "list": [
@@ -15075,8 +15343,8 @@
                         "literal": "Text",
                         "raw": "\"marker\"",
                         "span": [
-                          9240,
-                          9248
+                          9408,
+                          9416
                         ],
                         "value": "marker"
                       },
@@ -15084,41 +15352,41 @@
                         "category": "Grammar/Selector",
                         "fields": {},
                         "head": [
-                          9235,
-                          9239
+                          9403,
+                          9407
                         ],
                         "kind": "Head",
                         "span": [
-                          9235,
-                          9239
+                          9403,
+                          9407
                         ]
                       }
                     },
                     "head": [
-                      9229,
-                      9234
+                      9397,
+                      9402
                     ],
                     "kind": "Style",
                     "span": [
-                      9229,
-                      9248
+                      9397,
+                      9416
                     ]
                   }
                 ],
                 "span": [
-                  9224,
-                  9252
+                  9392,
+                  9420
                 ]
               }
             },
             "head": [
-              9150,
-              9154
+              9318,
+              9322
             ],
             "kind": "Form",
             "span": [
-              9150,
-              9252
+              9318,
+              9420
             ]
           },
           {
@@ -15128,33 +15396,33 @@
                 "category": "Grammar/Binding",
                 "fields": {},
                 "head": [
-                  9331,
-                  9335
+                  9499,
+                  9503
                 ],
                 "kind": "None",
                 "span": [
-                  9331,
-                  9335
+                  9499,
+                  9503
                 ]
               },
               "category": {
                 "literal": "Name",
                 "raw": "Selector",
                 "span": [
-                  9279,
-                  9287
+                  9447,
+                  9455
                 ],
                 "value": "Selector"
               },
               "fields": {
                 "heads": [
                   [
-                    9298,
-                    9302
+                    9466,
+                    9470
                   ],
                   [
-                    9327,
-                    9330
+                    9495,
+                    9498
                   ]
                 ],
                 "list": [
@@ -15165,8 +15433,8 @@
                         "literal": "Name",
                         "raw": "name",
                         "span": [
-                          9309,
-                          9313
+                          9477,
+                          9481
                         ],
                         "value": "name"
                       },
@@ -15177,45 +15445,45 @@
                             "literal": "Name",
                             "raw": "Name",
                             "span": [
-                              9322,
-                              9326
+                              9490,
+                              9494
                             ],
                             "value": "Name"
                           }
                         },
                         "head": [
-                          9314,
-                          9321
+                          9482,
+                          9489
                         ],
                         "kind": "Builtin",
                         "span": [
-                          9314,
-                          9326
+                          9482,
+                          9494
                         ]
                       }
                     },
                     "head": [
-                      9303,
-                      9308
+                      9471,
+                      9476
                     ],
                     "kind": "FieldDeclaration",
                     "span": [
-                      9303,
-                      9326
+                      9471,
+                      9494
                     ]
                   }
                 ],
                 "span": [
-                  9298,
-                  9330
+                  9466,
+                  9498
                 ]
               },
               "kind": {
                 "literal": "Name",
                 "raw": "CaptureSelector",
                 "span": [
-                  9263,
-                  9278
+                  9431,
+                  9446
                 ],
                 "value": "CaptureSelector"
               },
@@ -15223,20 +15491,20 @@
                 "literal": "Text",
                 "raw": "\"capture\"",
                 "span": [
-                  9288,
-                  9297
+                  9456,
+                  9465
                 ],
                 "value": "capture"
               },
               "styles": {
                 "heads": [
                   [
-                    9336,
-                    9340
+                    9504,
+                    9508
                   ],
                   [
-                    9361,
-                    9364
+                    9529,
+                    9532
                   ]
                 ],
                 "list": [
@@ -15247,8 +15515,8 @@
                         "literal": "Text",
                         "raw": "\"marker\"",
                         "span": [
-                          9352,
-                          9360
+                          9520,
+                          9528
                         ],
                         "value": "marker"
                       },
@@ -15256,47 +15524,47 @@
                         "category": "Grammar/Selector",
                         "fields": {},
                         "head": [
-                          9347,
-                          9351
+                          9515,
+                          9519
                         ],
                         "kind": "Head",
                         "span": [
-                          9347,
-                          9351
+                          9515,
+                          9519
                         ]
                       }
                     },
                     "head": [
-                      9341,
-                      9346
+                      9509,
+                      9514
                     ],
                     "kind": "Style",
                     "span": [
-                      9341,
-                      9360
+                      9509,
+                      9528
                     ]
                   }
                 ],
                 "span": [
-                  9336,
-                  9364
+                  9504,
+                  9532
                 ]
               }
             },
             "head": [
-              9258,
-              9262
+              9426,
+              9430
             ],
             "kind": "Form",
             "span": [
-              9258,
-              9364
+              9426,
+              9532
             ]
           }
         ],
         "span": [
           24,
-          9368
+          9536
         ]
       },
       "name": {
@@ -15334,15 +15602,15 @@
     "kind": "Language",
     "span": [
       0,
-      9368
+      9536
     ]
   },
   "schema": "nepl3.grammar-seed-input/1",
   "source": {
-    "digest": "00700c15d6f88109a33953612e91ff50f529d40c905315d2becb44071a57db41",
+    "digest": "0c9d094ed711e024e529d41282133fa6dcd41c5c9edbf68ab204f6b8563d149b",
     "revision": 0,
     "sourceId": "languages/grammar/syntax.neplg",
-    "text": "language Grammar 1 Root\ncons extension BuiltinWord \"nepl3.reader/name-v1\" \"reader/v1\"\ncons extension BuiltinTrivia \"nepl3.reader/trivia-v1\" \"reader/v1\"\ncons reader word call \"nepl3.reader/name-v1\"\ncons reader trivia call \"nepl3.reader/trivia-v1\"\ncons mode Code\ncons skip trivia\ncons take Word word\nnil\ncons extension Facts \"grammar.facts/v1\" \"facts/v1\"\ncons category Root Code\ncons category Declaration Code\ncons category Policy Code\ncons category Field Code\ncons category ReadSpec Code\ncons category LexRule Code\ncons category ReaderExpr Code\ncons category CharClass Code\ncons category Binding Code\ncons category Style Code\ncons category Selector Code\ncons form Language Root \"language\"\ncons field name builtin Name\ncons field revision builtin Nat\ncons field root builtin Name\ncons field declarations listof local Declaration\nnil\ncustom \"grammar.facts/v1\"\ncons style head \"marker\" nil\ncons form Category Declaration \"category\"\ncons field name builtin Name\ncons field mode builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Namespace Declaration \"namespace\"\ncons field name builtin Name\ncons field policy local Policy\nnil\ngroup cons visit policy\nnil\ncons style head \"marker\" nil\ncons form Reader Declaration \"reader\"\ncons field name builtin Name\ncons field expression local ReaderExpr\nnil\ngroup cons visit expression\nnil\ncons style head \"marker\" nil\ncons form Mode Declaration \"mode\"\ncons field name builtin Name\ncons field rules listof local LexRule\nnil\ngroup cons visit rules\nnil\ncons style head \"marker\" nil\ncons form Form Declaration \"form\"\ncons field kind builtin Name\ncons field category builtin Name\ncons field spelling builtin Text\ncons field fields listof local Field\ncons field bindings local Binding\ncons field styles listof local Style\nnil\ngroup cons visit fields\ncons visit bindings\ncons visit styles\nnil\ncons style head \"marker\" nil\ncons form Leaf Declaration \"leaf\"\ncons field kind builtin Name\ncons field category builtin Name\ncons field token builtin Name\ncons field bindings local Binding\ncons field styles listof local Style\nnil\ngroup cons visit bindings\ncons visit styles\nnil\ncons style head \"marker\" nil\ncons form Extension Declaration \"extension\"\ncons field alias builtin Name\ncons field provider builtin Text\ncons field signature builtin Text\nnil\nnone\ncons style head \"marker\" nil\ncons form Lexical Policy \"lexical\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Global Policy \"global\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Open Policy \"open\"\nnil\nnone\ncons style head \"marker\" nil\ncons form FieldDeclaration Field \"field\"\ncons field name builtin Name\ncons field read local ReadSpec\nnil\ngroup cons visit read\nnil\ncons style head \"marker\" nil\ncons form Local ReadSpec \"local\"\ncons field category builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Foreign ReadSpec \"foreign\"\ncons field alias builtin Name\ncons field category builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form ListOf ReadSpec \"listof\"\ncons field element local ReadSpec\nnil\ngroup cons visit element\nnil\ncons style head \"marker\" nil\ncons form WithMode ReadSpec \"withmode\"\ncons field mode builtin Name\ncons field read local ReadSpec\nnil\ngroup cons visit read\nnil\ncons style head \"marker\" nil\ncons form Builtin ReadSpec \"builtin\"\ncons field reader builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Take LexRule \"take\"\ncons field kind builtin Name\ncons field reader builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Skip LexRule \"skip\"\ncons field reader builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Literal ReaderExpr \"literal\"\ncons field text builtin Text\nnil\nnone\ncons style head \"marker\" nil\ncons form Scalar ReaderExpr \"scalar\"\ncons field class local CharClass\nnil\ngroup cons visit class\nnil\ncons style head \"marker\" nil\ncons form Seq ReaderExpr \"seq\"\ncons field parts listof local ReaderExpr\nnil\ngroup cons visit parts\nnil\ncons style head \"marker\" nil\ncons form Choice ReaderExpr \"choice\"\ncons field alternatives listof local ReaderExpr\nnil\ngroup cons visit alternatives\nnil\ncons style head \"marker\" nil\ncons form Many ReaderExpr \"many\"\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Some ReaderExpr \"some\"\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Optional ReaderExpr \"optional\"\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Repeat ReaderExpr \"repeat\"\ncons field min builtin Nat\ncons field max builtin Nat\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Look ReaderExpr \"look\"\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Not ReaderExpr \"not\"\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Commit ReaderExpr \"commit\"\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Capture ReaderExpr \"capture\"\ncons field name builtin Name\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Region ReaderExpr \"region\"\ncons field role builtin Name\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Node ReaderExpr \"node\"\ncons field kind builtin Name\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Discard ReaderExpr \"discard\"\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Ref ReaderExpr \"ref\"\ncons field name builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Decode ReaderExpr \"decode\"\ncons field decoder builtin Text\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Map ReaderExpr \"map\"\ncons field provider builtin Text\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Then ReaderExpr \"then\"\ncons field first local ReaderExpr\ncons field provider builtin Text\nnil\ngroup cons visit first\nnil\ncons style head \"marker\" nil\ncons form Call ReaderExpr \"call\"\ncons field provider builtin Text\nnil\nnone\ncons style head \"marker\" nil\ncons form Eof ReaderExpr \"eof\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Takecount ReaderExpr \"takecount\"\ncons field count builtin Nat\nnil\nnone\ncons style head \"marker\" nil\ncons form Until ReaderExpr \"until\"\ncons field delimiter builtin Text\nnil\nnone\ncons style head \"marker\" nil\ncons form Any CharClass \"any\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Whitespace CharClass \"whitespace\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Identifierstart CharClass \"identifierStart\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Identifiercontinue CharClass \"identifierContinue\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Digit CharClass \"digit\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Asciiletter CharClass \"asciiLetter\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Chars CharClass \"chars\"\ncons field text builtin Text\nnil\nnone\ncons style head \"marker\" nil\ncons form Except CharClass \"except\"\ncons field text builtin Text\nnil\nnone\ncons style head \"marker\" nil\ncons form Range CharClass \"range\"\ncons field lo builtin Text\ncons field hi builtin Text\nnil\nnone\ncons style head \"marker\" nil\ncons form Visit Binding \"visit\"\ncons field child builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Import Binding \"import\"\ncons field child builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Propagate Binding \"propagate\"\ncons field child builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Scope Binding \"scope\"\ncons field plans listof local Binding\nnil\ngroup cons visit plans\nnil\ncons style head \"marker\" nil\ncons form Group Binding \"group\"\ncons field plans listof local Binding\nnil\ngroup cons visit plans\nnil\ncons style head \"marker\" nil\ncons form Bind Binding \"bind\"\ncons field namespace builtin Name\ncons field field builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Reference Binding \"reference\"\ncons field namespace builtin Name\ncons field field builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Export Binding \"export\"\ncons field namespace builtin Name\ncons field field builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Sequential Binding \"sequential\"\ncons field declarations builtin Name\ncons field body builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Recursive Binding \"recursive\"\ncons field declarations builtin Name\ncons field body builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form None Binding \"none\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Custom Binding \"custom\"\ncons field provider builtin Text\nnil\nnone\ncons style head \"marker\" nil\ncons form Style Style \"style\"\ncons field selector local Selector\ncons field class builtin Text\nnil\ngroup cons visit selector\nnil\ncons style head \"marker\" nil\ncons form Head Selector \"head\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Self Selector \"self\"\nnil\nnone\ncons style head \"marker\" nil\ncons form FieldSelector Selector \"field\"\ncons field name builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form CaptureSelector Selector \"capture\"\ncons field name builtin Name\nnil\nnone\ncons style head \"marker\" nil\nnil\n",
+    "text": "language Grammar 1 Root\ncons extension BuiltinWord \"nepl3.reader/name-v1\" \"reader/v1\"\ncons extension BuiltinTrivia \"nepl3.reader/trivia-v1\" \"reader/v1\"\ncons reader word call \"nepl3.reader/name-v1\"\ncons reader trivia call \"nepl3.reader/trivia-v1\"\ncons mode Code\ncons skip trivia\ncons take Word word\nnil\ncons extension Facts \"grammar.facts/v1\" \"facts/v1\"\ncons category Root Code\ncons category Declaration Code\ncons category Policy Code\ncons category Field Code\ncons category ReadSpec Code\ncons category LexRule Code\ncons category ReaderExpr Code\ncons category CharClass Code\ncons category Binding Code\ncons category Style Code\ncons category Selector Code\ncons form Language Root \"language\"\ncons field name builtin Name\ncons field revision builtin Nat\ncons field root builtin Name\ncons field declarations listof local Declaration\nnil\ncustom \"grammar.facts/v1\"\ncons style head \"marker\" nil\ncons form Category Declaration \"category\"\ncons field name builtin Name\ncons field mode builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Namespace Declaration \"namespace\"\ncons field name builtin Name\ncons field policy local Policy\nnil\ngroup cons visit policy\nnil\ncons style head \"marker\" nil\ncons form Reader Declaration \"reader\"\ncons field name builtin Name\ncons field expression local ReaderExpr\nnil\ngroup cons visit expression\nnil\ncons style head \"marker\" nil\ncons form Mode Declaration \"mode\"\ncons field name builtin Name\ncons field rules listof local LexRule\nnil\ngroup cons visit rules\nnil\ncons style head \"marker\" nil\ncons form Form Declaration \"form\"\ncons field kind builtin Name\ncons field category builtin Name\ncons field spelling builtin Text\ncons field fields listof local Field\ncons field bindings local Binding\ncons field styles listof local Style\nnil\ngroup cons visit fields\ncons visit bindings\ncons visit styles\nnil\ncons style head \"marker\" nil\ncons form Leaf Declaration \"leaf\"\ncons field kind builtin Name\ncons field category builtin Name\ncons field token builtin Name\ncons field bindings local Binding\ncons field styles listof local Style\nnil\ngroup cons visit bindings\ncons visit styles\nnil\ncons style head \"marker\" nil\ncons form Extension Declaration \"extension\"\ncons field alias builtin Name\ncons field provider builtin Text\ncons field signature builtin Text\nnil\nnone\ncons style head \"marker\" nil\ncons form Lexical Policy \"lexical\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Global Policy \"global\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Open Policy \"open\"\nnil\nnone\ncons style head \"marker\" nil\ncons form FieldDeclaration Field \"field\"\ncons field name builtin Name\ncons field read local ReadSpec\nnil\ngroup cons visit read\nnil\ncons style head \"marker\" nil\ncons form Local ReadSpec \"local\"\ncons field category builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Foreign ReadSpec \"foreign\"\ncons field alias builtin Name\ncons field category builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form ListOf ReadSpec \"listof\"\ncons field element local ReadSpec\nnil\ngroup cons visit element\nnil\ncons style head \"marker\" nil\ncons form WithMode ReadSpec \"withmode\"\ncons field mode builtin Name\ncons field read local ReadSpec\nnil\ngroup cons visit read\nnil\ncons style head \"marker\" nil\ncons form Builtin ReadSpec \"builtin\"\ncons field reader builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Take LexRule \"take\"\ncons field kind builtin Name\ncons field reader builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Skip LexRule \"skip\"\ncons field reader builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Literal ReaderExpr \"literal\"\ncons field text builtin Text\nnil\nnone\ncons style head \"marker\" nil\ncons form Scalar ReaderExpr \"scalar\"\ncons field class local CharClass\nnil\ngroup cons visit class\nnil\ncons style head \"marker\" nil\ncons form Seq ReaderExpr \"seq\"\ncons field parts listof local ReaderExpr\nnil\ngroup cons visit parts\nnil\ncons style head \"marker\" nil\ncons form Choice ReaderExpr \"choice\"\ncons field alternatives listof local ReaderExpr\nnil\ngroup cons visit alternatives\nnil\ncons style head \"marker\" nil\ncons form Many ReaderExpr \"many\"\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Some ReaderExpr \"some\"\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Optional ReaderExpr \"optional\"\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Repeat ReaderExpr \"repeat\"\ncons field min builtin Nat\ncons field max builtin Nat\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Look ReaderExpr \"look\"\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Not ReaderExpr \"not\"\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Commit ReaderExpr \"commit\"\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Capture ReaderExpr \"capture\"\ncons field name builtin Name\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Region ReaderExpr \"region\"\ncons field role builtin Name\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Node ReaderExpr \"node\"\ncons field kind builtin Name\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Discard ReaderExpr \"discard\"\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Ref ReaderExpr \"ref\"\ncons field name builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Decode ReaderExpr \"decode\"\ncons field decoder builtin Text\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Map ReaderExpr \"map\"\ncons field provider builtin Text\ncons field body local ReaderExpr\nnil\ngroup cons visit body\nnil\ncons style head \"marker\" nil\ncons form Then ReaderExpr \"then\"\ncons field first local ReaderExpr\ncons field provider builtin Text\nnil\ngroup cons visit first\nnil\ncons style head \"marker\" nil\ncons form Call ReaderExpr \"call\"\ncons field provider builtin Text\nnil\nnone\ncons style head \"marker\" nil\ncons form Eof ReaderExpr \"eof\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Takecount ReaderExpr \"takecount\"\ncons field count builtin Nat\nnil\nnone\ncons style head \"marker\" nil\ncons form Until ReaderExpr \"until\"\ncons field delimiter builtin Text\nnil\nnone\ncons style head \"marker\" nil\ncons form Any CharClass \"any\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Whitespace CharClass \"whitespace\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Identifierstart CharClass \"identifierStart\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Identifiercontinue CharClass \"identifierContinue\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Digit CharClass \"digit\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Asciiletter CharClass \"asciiLetter\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Chars CharClass \"chars\"\ncons field text builtin Text\nnil\nnone\ncons style head \"marker\" nil\ncons form Except CharClass \"except\"\ncons field text builtin Text\nnil\nnone\ncons style head \"marker\" nil\ncons form Range CharClass \"range\"\ncons field lo builtin Text\ncons field hi builtin Text\nnil\nnone\ncons style head \"marker\" nil\ncons form Visit Binding \"visit\"\ncons field child builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Import Binding \"import\"\ncons field child builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Propagate Binding \"propagate\"\ncons field child builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Scope Binding \"scope\"\ncons field plans listof local Binding\nnil\ngroup cons visit plans\nnil\ncons style head \"marker\" nil\ncons form Group Binding \"group\"\ncons field plans listof local Binding\nnil\ngroup cons visit plans\nnil\ncons style head \"marker\" nil\ncons form Bind Binding \"bind\"\ncons field namespace builtin Name\ncons field field builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Reference Binding \"reference\"\ncons field namespace builtin Name\ncons field field builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Export Binding \"export\"\ncons field namespace builtin Name\ncons field field builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Sequential Binding \"sequential\"\ncons field declarations builtin Name\ncons field body builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form Recursive Binding \"recursive\"\ncons field declarations builtin Name\ncons field body builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form None Binding \"none\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Custom Binding \"custom\"\ncons field provider builtin Text\nnil\nnone\ncons style head \"marker\" nil\ncons form Selection Style \"selection\"\ncons field selector local Selector\ncons field priority builtin Nat\nnil\ngroup cons visit selector\nnil\ncons style head \"marker\" nil\ncons form Style Style \"style\"\ncons field selector local Selector\ncons field class builtin Text\nnil\ngroup cons visit selector\nnil\ncons style head \"marker\" nil\ncons form Head Selector \"head\"\nnil\nnone\ncons style head \"marker\" nil\ncons form Self Selector \"self\"\nnil\nnone\ncons style head \"marker\" nil\ncons form FieldSelector Selector \"field\"\ncons field name builtin Name\nnil\nnone\ncons style head \"marker\" nil\ncons form CaptureSelector Selector \"capture\"\ncons field name builtin Name\nnil\nnone\ncons style head \"marker\" nil\nnil\n",
     "uri": "memory:grammar-grammar"
   }
 }

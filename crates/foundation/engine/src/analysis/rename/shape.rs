@@ -224,6 +224,14 @@ fn selection(a: &ShapeSelection, c: &ShapeSelection, b: &mut Budget) -> Result<b
                 for field in &shape.fields {
                     b.charge(Resource::Work, field.name.len() as u64 + 9)?;
                 }
+                for rule in &shape.selection_rules {
+                    let size = match &rule.selector {
+                        crate::package::StyleSelector::Field(v)
+                        | crate::package::StyleSelector::Capture(v) => v.len(),
+                        _ => 0,
+                    };
+                    b.charge(Resource::Work, size as u64 + 9)?;
+                }
                 for style in &shape.styles {
                     use crate::package::StyleSelector;
                     let size = match &style.selector {

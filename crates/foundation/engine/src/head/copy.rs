@@ -61,6 +61,12 @@ impl HeadShape {
                 bytes(v.len(), b)?;
             }
         }
+        for rule in &self.selection_rules {
+            slot::<crate::package::SelectionRule>(b)?;
+            if let StyleSelector::Field(v) | StyleSelector::Capture(v) = &rule.selector {
+                bytes(v.len(), b)?;
+            }
+        }
         Ok(())
     }
     pub(crate) fn clone_with_budget(&self, b: &mut Budget) -> Result<Self, HeadError> {

@@ -162,6 +162,7 @@ fn run_case(input: &str, case: Case, exercise_rejections: bool) -> Result<ParseR
         token_kind: compound_kind,
         payload: TypeDescriptor::List(Box::new(TypeDescriptor::NdfValue)),
         binding: BindingId(4),
+        selection_rules: vec![],
         styles: vec![],
     });
     let mut body_leaf = package.leaves[0].clone();
@@ -183,6 +184,7 @@ fn run_case(input: &str, case: Case, exercise_rejections: bool) -> Result<ParseR
             },
         ],
         binding: BindingId(6),
+        selection_rules: vec![],
         styles: vec![],
     };
     if case == Case::Foreign {

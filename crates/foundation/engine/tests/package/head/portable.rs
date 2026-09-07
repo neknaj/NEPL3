@@ -527,6 +527,7 @@ fn call(profile: &ResolvedParseProfile<'_>) -> Result<HeadCall, String> {
                 kind: form.kind.clone(),
                 fields: form.fields.clone(),
                 binding: form.binding,
+                selection_rules: vec![],
                 styles: form.styles.clone(),
             }),
             index: 1,

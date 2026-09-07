@@ -155,7 +155,7 @@ impl<'a> CheckedLanguagePackage<'a> {
             &shape.fields,
             None,
             shape.binding,
-            &shape.styles,
+            (&shape.styles, &shape.selection_rules),
             self.registry,
             budget,
         )

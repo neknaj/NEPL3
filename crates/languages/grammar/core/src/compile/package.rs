@@ -154,6 +154,9 @@ fn styles(
 ) -> Result<Vec<p::StyleRule>, CompileError> {
     let mut result = Vec::new();
     for id in &list.items {
+        if matches!(&doc.node(*id)?.kind, NodeKind::Selection { .. }) {
+            continue;
+        }
         let NodeKind::Style { selector: s, class } = &doc.node(*id)?.kind else {
             return Err(CompileError::WrongConstructor(*id));
         };
@@ -171,6 +174,50 @@ fn styles(
                 class: class.clone(),
             },
             budget,
+        )?;
+    }
+    Ok(result)
+}
+fn selections(
+    doc: &crate::model::Document,
+    list: &crate::model::NodeList,
+    b: &mut Budget,
+) -> Result<Vec<p::SelectionRule>, CompileError> {
+    let mut result: Vec<p::SelectionRule> = Vec::new();
+    for id in &list.items {
+        b.charge(Resource::Work, 1)?;
+        let NodeKind::Selection {
+            selector: at,
+            priority,
+        } = &doc.node(*id)?.kind
+        else {
+            continue;
+        };
+        let selected = selector(doc, *at, b)?;
+        for prior in &result {
+            let size = |v: &p::StyleSelector| match v {
+                p::StyleSelector::Field(s) | p::StyleSelector::Capture(s) => s.len(),
+                _ => 0,
+            };
+            b.charge(
+                Resource::Work,
+                (size(&prior.selector) + size(&selected)) as u64 + 1,
+            )?;
+            if prior.selector == selected {
+                return Err(issue(*id, DeclarationError::InvalidSelector).at(
+                    &doc.node(*id)?.span,
+                    None,
+                    b,
+                ));
+            }
+        }
+        push(
+            &mut result,
+            p::SelectionRule {
+                selector: selected,
+                priority: natural_u64(priority, b)?,
+            },
+            b,
         )?;
     }
     Ok(result)
@@ -582,6 +629,7 @@ fn assemble(
                     fields: fields(doc, f, &read_ids, budget)?,
                     binding: mapped(&binding_ids, *b)?,
                     styles: styles(doc, s, context, budget)?,
+                    selection_rules: selections(doc, s, budget)?,
                 },
                 budget,
             )?,
@@ -613,6 +661,7 @@ fn assemble(
                         payload,
                         binding: mapped(&binding_ids, *b)?,
                         styles: styles(doc, s, context, budget)?,
+                        selection_rules: selections(doc, s, budget)?,
                     },
                     budget,
                 )?;
@@ -701,6 +750,7 @@ fn assemble(
             declarations,
         },
     };
+    check_selection_locations(doc, &package, budget)?;
     if let Err(error) = package.check_detailed_with_admission(&registry, budget, admission) {
         return Err(diagnostic::locate(
             &package,
@@ -714,6 +764,53 @@ fn assemble(
         ));
     }
     Ok(CompiledLanguage { package, registry })
+}
+fn check_selection_locations(
+    doc: &crate::model::Document,
+    package: &p::LanguagePackage,
+    budget: &mut Budget,
+) -> Result<(), CompileError> {
+    let NodeKind::Language { declarations, .. } = &doc.node(doc.root)?.kind else {
+        return Err(CompileError::WrongConstructor(doc.root));
+    };
+    let (mut form, mut leaf) = (0, 0);
+    for id in &declarations.items {
+        budget.charge(Resource::Work, 1)?;
+        let (owner, list) = match &doc.node(*id)?.kind {
+            NodeKind::Form { styles, .. } => {
+                let owner = p::BindingOwner::Form(form);
+                form += 1;
+                (owner, styles)
+            }
+            NodeKind::Leaf { styles, .. } => {
+                let owner = p::BindingOwner::Leaf(leaf);
+                leaf += 1;
+                (owner, styles)
+            }
+            _ => continue,
+        };
+        for id in &list.items {
+            budget.charge(Resource::Work, 1)?;
+            if let NodeKind::Selection { selector: at, .. } = &doc.node(*id)?.kind {
+                let selected = selector(doc, *at, budget)?;
+                if let Err(error) = package.check_presentation_selector(owner, &selected, budget) {
+                    let node = doc.node(*at)?;
+                    let span = match &node.kind {
+                        NodeKind::FieldSelector { name } | NodeKind::CaptureSelector { name } => {
+                            &name.span
+                        }
+                        _ => &node.span,
+                    };
+                    return Err(CompileError::from(error).at(
+                        span,
+                        Some(&doc.node(*id)?.span),
+                        budget,
+                    ));
+                }
+            }
+        }
+    }
+    Ok(())
 }
 fn binding(
     doc: &crate::model::Document,

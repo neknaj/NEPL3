@@ -110,6 +110,17 @@ fn load(path: &str) -> Result<nepl3_grammar_core::model::Document, String> {
 }
 fn compile(path: &str) -> Result<Result<CompiledLanguage, compile::CompileError>, String> {
     let doc = load(path)?;
+    compile_document(&doc)
+}
+fn compile_document(
+    doc: &nepl3_grammar_core::model::Document,
+) -> Result<Result<CompiledLanguage, compile::CompileError>, String> {
+    compile_document_views(doc, &[])
+}
+fn compile_document_views(
+    doc: &nepl3_grammar_core::model::Document,
+    view_names: &[&str],
+) -> Result<Result<CompiledLanguage, compile::CompileError>, String> {
     let mut b = budget();
     let checked = doc
         .validate(&mut b, &mut SourceAdmission::default())
@@ -125,6 +136,37 @@ fn compile(path: &str) -> Result<Result<CompiledLanguage, compile::CompileError>
         registry
             .register(schema, descriptor, &mut b)
             .map_err(|e| format!("{e:?}"))?;
+    }
+    let mut views = Vec::new();
+    if !view_names.is_empty() {
+        let descriptor = SchemaDescriptor {
+            package: "test.region.views".into(),
+            revision: 1,
+            types: view_names
+                .iter()
+                .map(|name| NamedType {
+                    name: (*name).into(),
+                    shape: TypeShape::Record { fields: vec![] },
+                    constraints: vec![],
+                })
+                .collect(),
+            operations: vec![],
+        };
+        let schema = descriptor.reference(&mut b).map_err(|e| format!("{e:?}"))?;
+        registry
+            .register(schema.clone(), descriptor, &mut b)
+            .map_err(|e| format!("{e:?}"))?;
+        for name in view_names {
+            views.push(compile::NamedView {
+                name: (*name).into(),
+                kind: nepl3_core::value::KindRef {
+                    schema: schema.clone(),
+                    local_kind: registry
+                        .kind_id(&schema, name)
+                        .map_err(|e| format!("{e:?}"))?,
+                },
+            });
+        }
     }
     registry.finalize(&mut b).map_err(|e| format!("{e:?}"))?;
     let schema = registry
@@ -155,7 +197,7 @@ fn compile(path: &str) -> Result<Result<CompiledLanguage, compile::CompileError>
             reader_imports: &[],
             extensions: &[],
             classes: &classes,
-            views: &[],
+            views: &views,
         },
         registry,
         &mut b,
@@ -284,3 +326,5 @@ mod reader;
 
 #[path = "grammar/binding.rs"]
 mod binding;
+#[path = "grammar/region.rs"]
+mod region;
