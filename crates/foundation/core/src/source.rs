@@ -820,23 +820,36 @@ impl SourceStore {
     ) -> Result<Option<&SourceSnapshot>, StopReason> {
         budget.poll()?;
         let (mut low, mut high) = (0, self.index.len());
-        while low < high {
-            let mid = low + (high - low) / 2;
-            let snapshot = &self.snapshots[self.index[mid]];
+        let mut compare = |position: usize| {
+            let snapshot = &self.snapshots[self.index[position]];
             budget.charge(
                 Resource::Work,
                 (snapshot.storage.id.source.0.len() as u64)
                     .saturating_add(source.0.len() as u64)
                     .saturating_add(1),
             )?;
-            match snapshot
-                .storage
-                .id
-                .source
-                .cmp(source)
-                .then_with(|| snapshot.storage.id.revision.cmp(&revision))
-            {
-                core::cmp::Ordering::Equal => return Ok(Some(snapshot)),
+            Ok::<_, StopReason>(
+                snapshot
+                    .storage
+                    .id
+                    .source
+                    .cmp(source)
+                    .then_with(|| snapshot.storage.id.revision.cmp(&revision)),
+            )
+        };
+        // The insertion hint is only an index candidate. A complete, charged
+        // key comparison is still required, and read-only lookup never moves it.
+        if let Some(at) = self.insertion_hint.filter(|&at| at < high) {
+            match compare(at)? {
+                core::cmp::Ordering::Equal => return Ok(Some(&self.snapshots[self.index[at]])),
+                core::cmp::Ordering::Less => low = at + 1,
+                core::cmp::Ordering::Greater => high = at,
+            }
+        }
+        while low < high {
+            let mid = low + (high - low) / 2;
+            match compare(mid)? {
+                core::cmp::Ordering::Equal => return Ok(Some(&self.snapshots[self.index[mid]])),
                 core::cmp::Ordering::Less => low = mid + 1,
                 core::cmp::Ordering::Greater => high = mid,
             }

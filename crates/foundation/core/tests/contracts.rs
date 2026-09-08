@@ -711,6 +711,63 @@ fn ordered_source_insertion_has_linear_index_search_work() -> Result<(), SourceE
 }
 
 #[test]
+fn recent_source_revision_lookup_charges_full_key_without_allocating() -> Result<(), SourceError> {
+    let mut store = SourceStore::default();
+    for index in 0..512 {
+        store.insert(source(&format!("s{index:07}"), 0, "x")?)?;
+    }
+    let id = SourceId("s0000511".into());
+    let mut exact = Budget::new(Limits {
+        work: 17,
+        allocation_units: 0,
+        ..budget().limits()
+    });
+    assert_eq!(
+        store.get_revision_with_budget(&id, 0, &mut exact)?,
+        store.get_ref(store.snapshots()[511].identity())
+    );
+    // Full eight-byte stored/request names plus revision comparison, even for
+    // the recent entry. The index hint cannot bypass that charge.
+    assert_eq!(exact.usage().work, 17);
+    assert_eq!(exact.usage().allocation_units, 0);
+    let mut short = Budget::new(Limits {
+        work: 16,
+        ..budget().limits()
+    });
+    assert_eq!(
+        store.get_revision_with_budget(&id, 0, &mut short),
+        Err(StopReason::WorkLimit)
+    );
+    assert_eq!(
+        store.get_revision_with_budget(&id, 0, &mut short),
+        Err(StopReason::WorkLimit)
+    );
+    for index in [0, 255, 510, 511] {
+        assert_eq!(
+            store.get_revision_with_budget(&SourceId(format!("s{index:07}")), 0, &mut budget())?,
+            Some(&store.snapshots()[index])
+        );
+    }
+    for (name, revision) in [("", 0), ("s0000511", 1), ("z", 0)] {
+        assert_eq!(
+            store.get_revision_with_budget(&SourceId(name.into()), revision, &mut budget())?,
+            None
+        );
+    }
+    // Read-only misses and stopped requests must not move the insertion hint.
+    let mut again = Budget::new(Limits {
+        work: 17,
+        ..budget().limits()
+    });
+    assert!(
+        store
+            .get_revision_with_budget(&id, 0, &mut again)?
+            .is_some()
+    );
+    Ok(())
+}
+
+#[test]
 fn source_index_hint_checks_full_key_and_keeps_conflicts_atomic() -> Result<(), SourceError> {
     let originals = [
         source("a", 0, "x")?,
@@ -733,6 +790,24 @@ fn source_index_hint_checks_full_key_and_keeps_conflicts_atomic() -> Result<(), 
             store.insert_ref_with_budget(&originals[index], &mut budget())?;
         }
         assert_eq!(store.snapshots().len(), 3);
+        for original in &originals {
+            assert_eq!(
+                store.get_revision_with_budget(
+                    &original.identity().source,
+                    original.identity().revision,
+                    &mut budget()
+                )?,
+                Some(original)
+            );
+        }
+        assert_eq!(
+            store.get_revision_with_budget(&SourceId("a".into()), 2, &mut budget())?,
+            None
+        );
+        assert_eq!(
+            store.get_revision_with_budget(&SourceId("文".into()), 0, &mut budget())?,
+            None
+        );
         for (position, index) in order.into_iter().enumerate() {
             assert_eq!(&store.snapshots()[position], &originals[index]);
         }
