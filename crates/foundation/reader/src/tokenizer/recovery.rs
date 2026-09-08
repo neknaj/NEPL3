@@ -1,5 +1,8 @@
 //! Native collector recovery. Raw continuations cannot manufacture prefix marks.
-use super::{AcceptedTokenizationReport, TokenizationScope};
+use super::{
+    AcceptedTokenizationReply, AcceptedTokenizationReport, TokenizationHostReply,
+    TokenizationOutcome, TokenizationScope,
+};
 use crate::runtime::{AcceptedReport, ReaderError};
 use alloc::rc::Rc;
 use nepl3_core::{
@@ -25,6 +28,57 @@ pub enum AcceptedTokenizationFailure {
         original_error: ReaderError,
         observed_stop: Option<StopReason>,
     },
+}
+
+/// A host reply and its private entry mark. The mark cannot be applied to
+/// another reply. Callers either accept the owned boundary or reject its error.
+pub struct RecoverableHostReply {
+    pub(super) inner: TokenizationHostReply,
+    pub(super) prefix: Prefix,
+}
+impl RecoverableHostReply {
+    pub fn has_host_error(&self) -> bool {
+        self.inner.host_error.is_some()
+    }
+    pub fn accept(self) -> TokenizationHostReply {
+        self.inner
+    }
+    /// Reject a reader-side host error. The caller must discard the tokenizer's
+    /// pending slot; BrokenPrefix requires closing the enclosing session.
+    /// A valid resource stop retains its live collector instead of rolling back.
+    #[allow(clippy::result_large_err)]
+    pub fn reject(
+        self,
+        budget: &Budget,
+    ) -> Result<AcceptedTokenizationReply, AcceptedTokenizationFailure> {
+        let TokenizationHostReply { reply, host_error } = self.inner;
+        let Some(error) = host_error else {
+            return Ok(reply);
+        };
+        if self.prefix.limits != budget.limits()
+            || !crate::runtime::usage_at_least(budget.usage(), reply.accepted.report.usage)
+        {
+            return Err(AcceptedTokenizationFailure::BrokenPrefix {
+                original_error: error,
+                observed_stop: budget.poll().err(),
+            });
+        }
+        if matches!(reply.outcome, TokenizationOutcome::Stopped { .. }) {
+            return Ok(reply);
+        }
+        let (report, sources, source_maps) = reply.accepted.into_parts();
+        match self.prefix.restore(AcceptedReport {
+            report,
+            sources,
+            source_maps,
+        }) {
+            Ok(accepted) => Err(AcceptedTokenizationFailure::Recoverable { error, accepted }),
+            Err(()) => Err(AcceptedTokenizationFailure::BrokenPrefix {
+                original_error: error,
+                observed_stop: budget.poll().err(),
+            }),
+        }
+    }
 }
 impl AcceptedTokenizationFailure {
     pub fn into_error(self) -> ReaderError {

@@ -1365,6 +1365,80 @@ fn native_host_prefix_growth_reduces_measured_copy_work() -> TestResult {
 }
 
 #[test]
+fn native_collector_transfer_preserves_generated_sources_at_allocation_boundaries() -> TestResult {
+    let input = format!("{}y", "let \"x\\n\" ".repeat(6));
+    // The request already declares its primary source. Replies need only own
+    // additional sources; check the union, not the reply vector alone.
+    let primary = SourceSnapshot::new(
+        SourceId("input".into()),
+        0,
+        "memory:input".into(),
+        input.as_bytes().to_vec(),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let scenario = |cap| Scenario {
+        provider: true,
+        text: true,
+        cap,
+        native: Some(host::Action::Serve),
+        ..Scenario::default()
+    };
+    let complete = run_scenario(&input, true, scenario(None))?;
+    assert!(matches!(complete.outcome, ParseOutcome::Complete { .. }));
+    assert!(complete.sources.len() >= 6);
+    assert!(complete.source_maps.len() >= 12);
+    let needed = complete.report.usage.allocation_units;
+    for cap in (0..16)
+        .map(|part| needed * part / 16)
+        .chain([needed - 1, needed])
+    {
+        let result = run_scenario(&input, true, scenario(Some(cap)))?;
+        assert!(result.report.usage.allocation_units <= cap);
+        if cap < needed {
+            assert!(matches!(
+                result.outcome,
+                ParseOutcome::Stopped {
+                    reason: nepl3_core::budget::StopReason::AllocationLimit,
+                    ..
+                }
+            ));
+        } else {
+            assert_eq!(result.outcome, complete.outcome);
+        }
+        for span in result
+            .source_maps
+            .iter()
+            .flat_map(|map| [&map.source, &map.target])
+            .chain(
+                result
+                    .report
+                    .diagnostics
+                    .iter()
+                    .filter_map(|d| d.primary.as_ref()),
+            )
+            .chain(result.report.events.iter().filter_map(|e| e.span.as_ref()))
+        {
+            assert!(
+                result
+                    .sources
+                    .iter()
+                    .chain(core::iter::once(&primary))
+                    .any(|source| source.identity() == span.snapshot_ref()),
+                "cap={cap}, missing={:?}, sources={:?}",
+                span.snapshot_ref(),
+                result
+                    .sources
+                    .iter()
+                    .map(|s| s.identity())
+                    .collect::<Vec<_>>()
+            );
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn native_host_failure_keeps_generated_diagnostic_and_event_closure() -> TestResult {
     for action in [
         host::Action::GeneratedFailSecond,

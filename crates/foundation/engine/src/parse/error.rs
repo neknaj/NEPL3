@@ -12,6 +12,11 @@ pub enum ParseError {
     Source(SourceError),
     Syntax(SyntaxError),
     Reader(ReaderError),
+    /// Recovery failed an internal collector invariant; never publish progress.
+    BrokenCollector {
+        original_error: ReaderError,
+        observed_stop: Option<StopReason>,
+    },
     Tree(crate::tree::TreeError),
     Head(crate::head::HeadError),
     LimitsMismatch,

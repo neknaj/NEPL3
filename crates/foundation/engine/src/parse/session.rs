@@ -517,18 +517,13 @@ impl<'a> ParseSession<'a> {
                 facts: vec![],
                 trivia: vec![],
             };
-            let backup = machine
-                .accepted
-                .as_ref()
-                .ok_or(ParseError::Reference)?
-                .checkpoint(budget)?;
-            let accepted = machine.accepted.take().ok_or(ParseError::Reference)?;
-            machine.accepted = Some(backup);
             let active_depth = budget
                 .current_depth()
                 .checked_add(machine.progress.frames.len() as u64)
                 .ok_or_else(|| budget.stop(StopReason::DepthLimit))?;
             let result = budget.with_depth_at_least(active_depth, |budget| {
+                // Keep ownership in the machine until the depth preflight succeeds.
+                let accepted = machine.accepted.take().ok_or(ParseError::Reference)?;
                 let request = ScopedTokenizationRequest {
                     scope: &machine.progress.scope,
                     target,
@@ -541,29 +536,45 @@ impl<'a> ParseSession<'a> {
                         state: &state.state,
                     },
                 };
-                if let Some(host) = host.as_deref_mut() {
+                let result = if let Some(host) = host.as_deref_mut() {
                     let mut adapter = host::TokenizerHost {
                         host,
                         profile: self.profile,
                         error: host_error,
                     };
-                    let result = self.tokenizers[alias].read_accepted_with_host(
+                    match self.tokenizers[alias].read_accepted_with_host_deferred(
                         request,
                         sources,
                         budget,
                         admission,
                         accepted,
                         &mut adapter,
-                    )?;
-                    if host_error.is_none()
-                        && let Some(error) = result.host_error
-                    {
-                        return Err(error);
+                    ) {
+                        Ok(result) if host_error.is_none() && result.has_host_error() => {
+                            let result = result.reject(budget);
+                            self.tokenizers[alias].discard_pending();
+                            result
+                        }
+                        Ok(result) => Ok(result.accept().reply),
+                        Err(error) => Err(error),
                     }
-                    Ok::<_, nepl3_reader::runtime::ReaderError>(result.reply)
                 } else {
                     self.tokenizers[alias]
-                        .read_with_accepted(request, sources, budget, admission, accepted)
+                        .read_with_accepted_recover(request, sources, budget, admission, accepted)
+                };
+                match result {
+                    Ok(reply) => Ok(reply),
+                    Err(AcceptedTokenizationFailure::Recoverable { error, accepted }) => {
+                        machine.accepted = Some(accepted);
+                        Err(ParseError::Reader(error))
+                    }
+                    Err(AcceptedTokenizationFailure::BrokenPrefix {
+                        original_error,
+                        observed_stop,
+                    }) => Err(ParseError::BrokenCollector {
+                        original_error,
+                        observed_stop,
+                    }),
                 }
             })?;
             machine.progress.facts.push(batch);
@@ -1146,6 +1157,12 @@ impl<'a> ParseSession<'a> {
         depth_base: u64,
         budget: &mut Budget,
     ) -> Result<ParseReply, ParseError> {
+        // An incomplete collector cannot be published even if the same
+        // operation also exhausted a resource budget.
+        if let Err(error @ ParseError::BrokenCollector { .. }) = result {
+            self.close();
+            return Err(error);
+        }
         let halt = match result {
             Ok(v) => v,
             Err(error) => {

@@ -194,3 +194,14 @@ private prefixより実際の長さが短い場合は内部整合性の破損で
 不完全なcollectorにAccepted proofを付けず、呼出し側もその操作を終了する。
 この回収APIはnative所有権の補助契約であり、公開wire型・言語の意味・外部providerの
 検査済み条件を変更するものではない。既存のerrorのみを返すAPIも維持する。
+
+native hostの返信は、同じ呼出しのprivate prefix markを保持するRecoverableHostReplyとして
+一時的に受け取れる。parserは従来の条件でcallback輸送エラーとreader側の拒否を区別し、
+前者はowned Await/Reserveとして受理し、後者は元prefixへ戻して解析エラーにする。
+正常なStoppedのcollectorは巻き戻さず保持する。BudgetのLimits/Usage改変は別の整合性違反である。
+拒否した呼出しのpendingは破棄する。復元不能なBrokenCollectorはparserを閉じ、
+同時に予算が停止していても不完全なprogress付きStoppedへ変換しない。
+
+この経路ではtokenを読むたびのcollector退避コピーは不要となる。深さの事前検査が通るまで
+collectorをparserから移動せず、回収可能なエラーでは同じ所有値をparserへ戻す。
+外部へ公開するAwait/Reserve、再開可能なNeedMoreの所有checkpointは引き続き必要である。

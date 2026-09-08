@@ -351,6 +351,23 @@ impl<'a> TokenizationSession<'a> {
         )?;
         Ok(super::TokenizationHostReply { reply, host_error })
     }
+    /// Keep an unforgeable entry mark until the enclosing host decides whether
+    /// a callback transport error may suspend or a reader contract error rejects.
+    #[allow(clippy::result_large_err)]
+    pub fn read_accepted_with_host_deferred(
+        &mut self,
+        request: ScopedTokenizationRequest<'_, '_>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        accepted: AcceptedTokenizationReport,
+        host: &mut impl super::TokenizationHost,
+    ) -> Result<super::RecoverableHostReply, AcceptedTokenizationFailure> {
+        let prefix = Prefix::capture(&accepted);
+        let inner = self
+            .read_accepted_with_host_recover(request, sources, budget, admission, accepted, host)?;
+        Ok(super::RecoverableHostReply { inner, prefix })
+    }
     #[allow(clippy::too_many_arguments, clippy::result_large_err)]
     fn read_accepted_dispatch(
         &mut self,
