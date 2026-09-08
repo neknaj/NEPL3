@@ -1,0 +1,20 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-tools",
+    "--test",
+    "review_sentences",
+    "--",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-sentences\\workspace",
+  "target": "native",
+  "exit_code": 0,
+  "elapsed_seconds": 23.544901847839355,
+  "sha256": "064a78030a161367c8db7fd0e2ddf867003da6dc8c94d6c391fcf9a9e12b6949",
+  "process_deadline_seconds": 600
+}
