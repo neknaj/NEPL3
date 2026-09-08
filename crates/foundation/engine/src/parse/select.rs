@@ -68,20 +68,6 @@ pub(super) fn leaf<'a>(
     Ok(None)
 }
 
-pub(super) fn category<'a>(
-    package: &'a LanguagePackage,
-    entry: &EntryContext,
-    token: &Token,
-    source: &SourceSnapshot,
-    registry: &SchemaRegistry,
-    budget: &mut Budget,
-) -> Result<Option<Head<'a>>, PackageError> {
-    match form(package, entry, token, source, budget)? {
-        Some(head) => Ok(Some(head)),
-        None => leaf(package, entry, token, registry, budget),
-    }
-}
-
 pub(super) fn read(
     profile: &ResolvedParseProfile<'_>,
     parent: &EntryContext,
