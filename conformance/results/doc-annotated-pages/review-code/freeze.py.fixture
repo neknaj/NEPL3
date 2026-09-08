@@ -1,0 +1,17 @@
+from pathlib import Path
+import subprocess,hashlib,json
+R=Path(__file__).resolve().parents[2];O=Path(__file__).resolve().parent;W=O/'workspace';base=subprocess.check_output(['git','rev-parse','HEAD'],cwd=R).decode().strip()
+def save(p,b):p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b)
+def dump(p,v):save(p,(json.dumps(v,ensure_ascii=False,indent=2)+'\n').encode())
+paths=set(subprocess.check_output(['git','diff','HEAD','--name-only'],cwd=R).decode().splitlines())|set(subprocess.check_output(['git','ls-files','--others','--exclude-standard'],cwd=R).decode().splitlines())
+rows=[]
+for path in sorted(paths):
+    b=(R/path).read_bytes();save(O/'source'/path,b);rows.append(dict(path=path,bytes=len(b),sha256=hashlib.sha256(b).hexdigest()))
+dump(O/'snapshot.json',dict(base=base,files=rows));save(O/'source.patch',subprocess.check_output(['git','diff','HEAD','--binary'],cwd=R))
+selected=[p for p in subprocess.check_output(['git','ls-tree','-r','--name-only',base],cwd=R).decode().splitlines() if p.startswith(('crates/','tools/','doc/','interfaces/','design/','languages/','conformance/fixtures/','.cargo/','examples/')) or '/' not in p]
+proc=subprocess.Popen(['git','cat-file','--batch'],cwd=R,stdin=subprocess.PIPE,stdout=subprocess.PIPE);deps=[]
+for path in selected:
+    proc.stdin.write((base+':'+path+'\n').encode());proc.stdin.flush();h=proc.stdout.readline().decode().split();b=proc.stdout.read(int(h[2]));assert proc.stdout.read(1)==b'\n';save(W/path,b);deps.append(dict(path=path,bytes=len(b),sha256=hashlib.sha256(b).hexdigest()))
+proc.stdin.close();assert proc.wait()==0
+for row in rows:save(W/row['path'],(O/'source'/row['path']).read_bytes())
+dump(O/'dependencies.json',dict(base=base,files=deps));print(base,len(rows),len(deps))

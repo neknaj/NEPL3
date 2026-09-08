@@ -1,0 +1,29 @@
+{
+  "head": "197234b28095aebbe8306dd969cc9c1b420d8ba2",
+  "files": [
+    {
+      "path": "doc/migration/authored/21-doc-pages.nepld",
+      "match": true
+    },
+    {
+      "path": "doc/spec/21-doc-pages.md",
+      "match": true
+    },
+    {
+      "path": "tools/src/doc/projection/annotated.rs",
+      "match": true
+    },
+    {
+      "path": "tools/src/doc/projection/annotated/pages.rs",
+      "match": true
+    },
+    {
+      "path": "tools/tests/doc.rs",
+      "match": true
+    },
+    {
+      "path": "tools/tests/doc/annotated_pages.rs",
+      "match": true
+    }
+  ]
+}

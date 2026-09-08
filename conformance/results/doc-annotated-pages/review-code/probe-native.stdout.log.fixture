@@ -1,0 +1,94 @@
+[
+  {
+    "back": "a.md",
+    "case": "route",
+    "forward": "b.md#n-e7af80",
+    "source": "a.md",
+    "target": "b.md"
+  },
+  {
+    "back": "a.md",
+    "case": "route",
+    "forward": "b.md#n-e7af80",
+    "source": "docs/a.md",
+    "target": "docs/b.md"
+  },
+  {
+    "back": "../a.md",
+    "case": "route",
+    "forward": "nested/b.md#n-e7af80",
+    "source": "docs/a.md",
+    "target": "docs/nested/b.md"
+  },
+  {
+    "back": "nested/a.md",
+    "case": "route",
+    "forward": "../b.md#n-e7af80",
+    "source": "docs/nested/a.md",
+    "target": "docs/b.md"
+  },
+  {
+    "back": "../docs/a.md",
+    "case": "route",
+    "forward": "../other/b.md#n-e7af80",
+    "source": "docs/a.md",
+    "target": "other/b.md"
+  },
+  {
+    "back": "../docs/a.md",
+    "case": "route",
+    "forward": "../docs2/b.md#n-e7af80",
+    "source": "docs/docs/a.md",
+    "target": "docs/docs2/b.md"
+  },
+  {
+    "back": "../docs/a.md",
+    "case": "route",
+    "forward": "../doc/b.md#n-e7af80",
+    "source": "docs/a.md",
+    "target": "doc/b.md"
+  },
+  {
+    "case": "aliases affect output, set identity unchanged as specified"
+  },
+  {
+    "case": "first CBOR receiver equal; forged node in plan rejected",
+    "wire_bytes": 66188
+  },
+  {
+    "case": "sticky",
+    "resource": "work"
+  },
+  {
+    "case": "sticky",
+    "resource": "allocation"
+  },
+  {
+    "case": "sticky",
+    "resource": "output"
+  },
+  {
+    "case": "sticky",
+    "resource": "nodes"
+  },
+  {
+    "case": "sticky",
+    "resource": "source"
+  },
+  {
+    "case": "sticky",
+    "resource": "depth"
+  },
+  {
+    "case": "cancel and caller depth composition"
+  },
+  {
+    "case": "same snapshot ID conflicting native source rejected"
+  },
+  {
+    "case": "semantic inline Anchor does not imply representable output"
+  },
+  {
+    "case": "single article unchanged; all input bytes/models unchanged"
+  }
+]

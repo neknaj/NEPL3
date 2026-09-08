@@ -1,0 +1,39 @@
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-page-projection\.tmp\review-annotated-pages\workspace\tools)
+error[E0277]: expected a `FnOnce(&mut Budget)` closure, found `{integer}`
+   --> tools\src\bin\review-pages.rs:59:42
+    |
+ 59 |  let mut depth=budget();depth.with_depth(7,|b|run(&c,&set,b,&[&[],&[]])).map_err(err)?;assert!(depth.usage().depth>=usage.depth+7);...
+    |                               ---------- ^ expected an `FnOnce(&mut Budget)` closure, found `{integer}`
+    |                               |
+    |                               required by a bound introduced by this call
+    |
+    = help: the trait `for<'a> FnOnce(&'a mut Budget)` is not implemented for `{integer}`
+note: required by a bound in `Budget::with_depth`
+   --> crates\foundation\core\src\budget.rs:290:25
+    |
+288 |     pub fn with_depth<T, E: From<StopReason>>(
+    |            ---------- required by a bound in this associated function
+289 |         &mut self,
+290 |         operation: impl FnOnce(&mut Self) -> Result<T, E>,
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `Budget::with_depth`
+
+error[E0061]: this method takes 1 argument but 2 arguments were supplied
+   --> tools\src\bin\review-pages.rs:59:31
+    |
+ 59 |  let mut depth=budget();depth.with_depth(7,|b|run(&c,&set,b,&[&[],&[]])).map_err(err)?;assert!(depth.usage().depth>=usage.depth+7);...
+    |                               ^^^^^^^^^^   ---------------------------- unexpected argument #2 of type `{closure@tools\src\bin\review-pages.rs:59:44: 59:47}`
+    |
+note: method defined here
+   --> crates\foundation\core\src\budget.rs:288:12
+    |
+288 |     pub fn with_depth<T, E: From<StopReason>>(
+    |            ^^^^^^^^^^
+help: remove the extra argument
+    |
+ 59 -  let mut depth=budget();depth.with_depth(7,|b|run(&c,&set,b,&[&[],&[]])).map_err(err)?;assert!(depth.usage().depth>=usage.depth+7);assert_eq!(depth.current_depth(),0);
+ 59 +  let mut depth=budget();depth.with_depth(7).map_err(err)?;assert!(depth.usage().depth>=usage.depth+7);assert_eq!(depth.current_depth(),0);
+    |
+
+Some errors have detailed explanations: E0061, E0277.
+For more information about an error, try `rustc --explain E0061`.
+error: could not compile `nepl3-tools` (bin "review-pages") due to 2 previous errors
