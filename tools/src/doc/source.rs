@@ -392,12 +392,15 @@ pub fn parse_source_route(
     }
 }
 
+/// Desktop development-host allowance. `nodes` includes cumulative typed-value
+/// validation visits, not just the number of syntax nodes in the final tree.
+/// Every operation still keeps its own fixed, sticky Work/Allocation limits.
 pub fn budget() -> Budget {
     Budget::new(Limits {
         source_bytes: 10_000_000,
         work: 100_000_000,
         depth: 1000,
-        nodes: 1_000_000,
+        nodes: 10_000_000,
         allocation_units: 500_000_000,
         output_bytes: 10_000_000,
         diagnostics: 1000,
