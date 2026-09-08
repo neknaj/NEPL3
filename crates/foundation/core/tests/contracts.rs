@@ -845,6 +845,66 @@ fn indexed_admission_keeps_unique_bytes_and_checks_empty_cancel() -> Result<(), 
     );
     Ok(())
 }
+
+#[test]
+fn source_references_resolve_full_identity_after_mixed_insertions() -> Result<(), SourceError> {
+    let originals = [
+        source("文", u64::MAX, "日本語")?,
+        source("a", 7, "seven")?,
+        source("a", 0, "zero")?,
+        source("a-prefix", 7, "prefix")?,
+        source("文", 0, "old")?,
+    ];
+    let mut store = SourceStore::default();
+    assert!(store.get_ref(originals[0].identity()).is_none());
+    for (index, snapshot) in originals.iter().enumerate() {
+        match index % 3 {
+            0 => store.insert(snapshot.clone())?,
+            1 => store.insert_with_budget(snapshot.clone(), &mut budget())?,
+            _ => store.insert_ref_with_budget(snapshot, &mut budget())?,
+        }
+        // Expected identities come from the original insertion sequence, not
+        // the private index or another indexed lookup implementation.
+        for (position, expected) in originals.iter().enumerate() {
+            let found = (position <= index).then_some(expected);
+            assert_eq!(store.get_ref(expected.identity()), found);
+            assert_eq!(store.get(expected.identity().clone()), found);
+            assert_eq!(store.resolve(&expected.reference()), found);
+        }
+        assert_eq!(store.snapshots(), &originals[..=index]);
+    }
+    for expected in &originals {
+        let mut forged = expected.identity().clone();
+        forged.digest.0[0] ^= 1;
+        assert!(store.get_ref(&forged).is_none());
+        assert!(store.get(forged.clone()).is_none());
+        assert!(
+            store
+                .resolve(&SourceRef {
+                    source_id: forged.source,
+                    revision: forged.revision,
+                    digest: forged.digest,
+                })
+                .is_none()
+        );
+    }
+    for absent in [
+        source("0", 0, "x")?,
+        source("a", 8, "x")?,
+        source("zzz", 0, "x")?,
+    ] {
+        assert!(store.get_ref(absent.identity()).is_none());
+        assert!(store.resolve(&absent.reference()).is_none());
+    }
+    let conflict = source("a", 7, "changed")?;
+    assert_eq!(
+        store.insert(conflict.clone()),
+        Err(SourceError::IdentityConflict)
+    );
+    assert!(store.resolve(&conflict.reference()).is_none());
+    assert_eq!(store.snapshots(), &originals);
+    Ok(())
+}
 #[test]
 fn shared_admission_is_operation_local_and_independent_storage_still_checked()
 -> Result<(), SourceError> {
