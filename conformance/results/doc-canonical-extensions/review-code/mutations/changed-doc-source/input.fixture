@@ -1,0 +1,170 @@
+article ja "22. [外部言語/がいぶげんご]の[追加/ついか]とrepository[分離条件/ぶんりじょうけん]"
+body
+  cons section boundary "1. [目的/もくてき]と[境界/きょうかい]"
+  body
+    cons paragraph
+      cons "NEPL3のfoundationを、[個別言語/こべつげんご]の[追加/ついか]で[変更/へんこう]しないことをアーキテクチャの[不変条件/ふへんじょうけん]とする。"
+      cons "これは[既存/きそん]の[公開契約/こうかいけいやく]を[使/つか]う[拡張/かくちょう]についての[条件/じょうけん]であり、[共通機能/きょうつうきのう]の[欠陥修正/けっかんしゅうせい]や、[理由/りゆう]を[記録/きろく]した[互換性変更/ごかんせいへんこう]を[永久/えいきゅう]に[禁止/きんし]するものではない。"
+      cons "[現時点/げんじてん]ではMONOREPOを[維持/いじ]する。"
+      cons "[実際/じっさい]のrepository[作成/さくせい]、crate[公開/こうかい]、[権限変更/けんげんへんこう]はこの[仕様/しよう]だけで[実施/じっし]しない。"
+      nil
+    cons paragraph
+      cons "[責務/せきむ]は[次/つぎ]の[五層/ごそう]に[分/わ]ける。"
+      nil
+    cons table cons default cons default nil
+      some row cons "[層/そう]" cons "[所有/しょゆう]するもの" nil
+      cons row cons "Foundation" cons "source、Origin、[診断/しんだん]、schema、[値/あたい]、[予算/よさん]、[言語中立/げんごちゅうりつ]の[交換境界/こうかんきょうかい]" nil
+      cons row cons "Language infrastructure" cons "reader、prefix engine、[共通/きょうつう]エディタ[機構/きこう]" nil
+      cons row cons "Domain / Language package" cons "Grammar、Doc、Math、Circuitおよび[外部言語/がいぶげんご]の[意味/いみ]・[構文定義/こうぶんていぎ]" nil
+      cons row cons "Backend / Adapter" cons "HTML・MathML・SVG[等/とう]の[出力/しゅつりょく]、[任意/にんい]のdomain[間接続/かんせつぞく]" nil
+      cons row cons "Composition" cons "suite、CLI、provider host、LSP、Web[製品/せいひん]の[構成/こうせい]" nil
+      nil
+    cons paragraph
+      cons "Foundationとreader/engineのproduction・build[依存/いぞん]からdomain、[出力/しゅつりょく]backend、apps、toolsへの[逆依存/ぎゃくいぞん]を[禁止/きんし]する。"
+      cons sentence
+        cons text "Doc・Math・Circuit core"
+        cons ruby text "間" text "かん"
+        cons text "の"
+        cons ruby text "依存禁止" text "いぞんきんし"
+        cons text "と、"
+        cons code "no_std + alloc"
+        cons text "、hostへのI/O"
+        cons ruby text "集約" text "しゅうやく"
+        cons text "を"
+        cons ruby text "維持" text "いじ"
+        cons text "する。"
+        nil
+      cons "markupはDoc[固有/こゆう]の[意味/いみ]を[持/も]たず、[複数/ふくすう]backendが[共有/きょうゆう]する[検査済/けんさず]み[出力契約/しゅつりょくけいやく]を[所有/しょゆう]する。"
+      nil
+    cons paragraph
+      cons "[新/あたら]しい[構文/こうぶん]を[既存/きそん]の[意味/いみ]モデルへlowerすることと、[新/あたら]しい[意味領域/いみりょういき]を[作/つく]ることを[分/わ]ける。"
+      cons "[別/べつ]frontendやbackendの[接続可能性/せつぞくかのうせい]は、Markdown frontendやPDF backendの[実装済/じっそうず]み[宣言/せんげん]ではない。"
+      nil
+    nil
+  cons section units "2. [拡張単位/かくちょうたんい]"
+  body
+    cons paragraph
+      cons "[共通基盤/きょうつうきばん]へ[言語名/げんごめい]を[列挙/れっきょ]するenumや、[全言語/ぜんげんご]へcompile・evaluate・render[等/とう]を[強制/きょうせい]する[巨大/きょだい]traitを[設/もう]けない。"
+      cons "[各/かく]packageがschemaと[必要/ひつよう]な[操作/そうさ]を[所有/しょゆう]し、hostが[明示登録/めいじとうろく]したpackage・provider・[資源/しげん]からProfileを[解決/かいけつ]する。"
+      cons "[公式四言語/こうしきよんげんご]も[同/おな]じ[公開契約/こうかいけいやく]を[使/つか]うreference extensionとし、[言語名/げんごめい]による[特例/とくれい]をfoundationへ[入/い]れない。"
+      cons "[操作/そうさ]の[意味/いみ]、[能力不足/のうりょくぶそく]、[署名違反/しょめいいはん]、Invalid、Stopped、Awaitを[区別/くべつ]する。"
+      cons "[任意/にんい]の[未知/みち]operationを[成功/せいこう]として[扱/あつか]わず、[要求/ようきゅう]と[登録済/とうろくず]みschema/signatureを[照合/しょうごう]する。"
+      nil
+    cons paragraph
+      cons "Rust[内/ない]の[型付/かたつ]き[直接呼出/ちょくせつよびだ]しと、NDFを[使/つか]うportable provider[境界/きょうかい]を[維持/いじ]する。"
+      cons "Rustのpointer、allocator、メモリ[上/じょう]のenum[配置/はいち]、trait vtableを[外部/がいぶ]ABIにしない。"
+      cons "optionalなDoc/Math/Circuit[連携/れんけい]はadapterまたはsuiteが[接続/せつぞく]し、[構文/こうぶん]を[埋/う]め[込/こ]んだだけではguestを[評価/ひょうか]しない。"
+      nil
+    cons paragraph
+      cons "[現在/げんざい]の[実/じつ]コードにはLanguagePackage、SchemaRegistry、ParseProfile/RuntimeCatalog、reader providerとtyped adapterがある。"
+      cons "これだけから、LanguagePackage/Profileの[完全/かんぜん]な[交換/こうかん]・[動的/どうてき]ロードや、Invoke/Resume/Reply/Cancel/Closeを[通/とお]す[汎用/はんよう]process providerの[完成/かんせい]を[推定/すいてい]しない。"
+      cons "[未実装経路/みじっそうけいろ]はT26の[未達範囲/みたつはんい]として[実装/じっそう]する。"
+      nil
+    nil
+  cons section compatibility "3. [二/ふた]つの[互換性境界/ごかんせいきょうかい]"
+  body
+    cons paragraph
+      cons "Cargoのpackage versionはRust source APIの[互換性/ごかんせい]を[表/あらわ]す。"
+      cons "schemaのpackage/revision/digestはportable[契約/けいやく]の[識別/しきべつ]に[使/つか]う。"
+      cons "Rust APIだけの[非互換変更/ひごかんへんこう]とwire/schemaの[非互換変更/ひごかんへんこう]を[別々/べつべつ]に[検出/けんしゅつ]する。"
+      cons "すべての[変更/へんこう]で[両方/りょうほう]の[版/はん]を[上/あ]げる[規則/きそく]にはしない。"
+      cons "[両方/りょうほう]へ[影響/えいきょう]する[変更/へんこう]では[両方/りょうほう]の[移行条件/いこうじょうけん]を[記録/きろく]する。"
+      cons "digest[不一致/ふいっち]は[同一/どういつ]でないことの[検出/けんしゅつ]であり、[変更/へんこう]の[互換性/ごかんせい]や[意味/いみ]の[正/ただ]しさの[証明/しょうめい]ではない。"
+      cons "schemaを[変/か]えない[挙動/きょどう]の[回帰/かいき]もconformanceで[検査/けんさ]する。"
+      nil
+    cons paragraph
+      cons "[抽出前/ちゅうしゅつまえ]に、[固定旧版/こていきゅうはん]consumerのcompile[試験/しけん]、[変更/へんこう]したschema/signatureの[拒否試験/きょひしけん]、[互換更新/ごかんこうしん]の[正例/せいれい]を[用意/ようい]する。"
+      cons "path[依存/いぞん]や[固定/こてい]Git commitでの[成功/せいこう]を、[独立/どくりつ]SemVerリリースの[互換性検証/ごかんせいけんしょう]に[読/よ]み[替/か]えない。"
+      nil
+    nil
+  cons section stages "4. [段階/だんかい]と[分離/ぶんり]の[判定/はんてい]"
+  body
+    cons paragraph
+      cons "T26はT01〜T05とT12の[成果物/せいかぶつ]を[使/つか]う[横断的/おうだんてき]な[実装/じっそう]・[受入/うけいれ]タスクとする。"
+      cons "T01[等/とう]の[個別/こべつ]タスク[完了/かんりょう]をT26[完了/かんりょう]に[依存/いぞん]させず、foundationの[抽出可能性/ちゅうしゅつかのうせい]と[最終/さいしゅう]T16の[条件/じょうけん]にT26を[置/お]く。"
+      cons "Doc[移行/いこう]・HTML・Pagesの[先行作業/せんこうさぎょう]をT26へ[依存/いぞん]させない。"
+      nil
+    cons paragraph
+      cons sentence
+        cons ruby text "最初" text "さいしょ"
+        cons text "の"
+        cons ruby text "実装段階" text "じっそうだんかい"
+        cons text "では "
+        cons code "conformance/extensions/hello/"
+        cons text " の"
+        cons ruby text "独立" text "どくりつ"
+        cons text "Cargo workspaceをリポジトリ"
+        cons ruby text "外" text "がい"
+        cons text "へコピーし、"
+        cons ruby text "公開" text "こうかい"
+        cons text "foundation APIだけで"
+        cons ruby text "動" text "うご"
+        cons text "かす。"
+        nil
+      cons sentence
+        cons code "hello <name>"
+        cons text " のschema・reader"
+        cons ruby text "設定" text "せってい"
+        cons text "・formはconsumerが"
+        cons ruby text "定義" text "ていぎ"
+        cons text "する。"
+        nil
+      cons "[解析結果/かいせきけっか]の[独立/どくりつ]した[期待値/きたいち]、UTF-8 byte[位置/いち]、source revision、Origin、[診断/しんだん]、[未知/みち]head、NeedMore、[停止/ていし]、[不正/ふせい]NDF[拒否/きょひ]を[検査/けんさ]する。"
+      cons "typed ParseTreeをproduction wireで[交換/こうかん]し、canonicalな[意味値/いみち]の[一致/いっち]を[比較/ひかく]する。"
+      cons "これは[別/べつ]process providerの[比較/ひかく]ではない。"
+      nil
+    cons paragraph
+      cons sentence
+        cons code "python tools/extensions/run.py"
+        cons text " は"
+        cons ruby text "固定" text "こてい"
+        cons text "toolchainとconsumerのCargo.lockを"
+        cons ruby text "使" text "つか"
+        cons text "い、"
+        cons ruby text "外部" text "がいぶ"
+        cons text "workspaceのmember、foundation"
+        cons ruby text "依存" text "いぞん"
+        cons text "の"
+        cons ruby text "実" text "じつ"
+        cons text "path、"
+        cons ruby text "実行前後" text "じっこうぜんご"
+        cons text "のfoundation"
+        cons ruby text "内容" text "ないよう"
+        cons text "を"
+        cons ruby text "検査" text "けんさ"
+        cons text "する。"
+        nil
+      cons "format・Clippy・production API[試験/しけん]を[実行/じっこう]し、source hash、consumer hash、[版/はん]、command、[結果/けっか]、[生/なま]logを[保存/ほぞん]する。"
+      cons "[現段階/げんだんかい]では[依存先/いぞんさき]のfoundationはmonorepoのpathであり、[親/おや]workspaceから[切/き]り[離/はな]した[配布物/はいふぶつ]のbuildを[証明/しょうめい]しない。"
+      nil
+    cons paragraph
+      cons "[実際/じっさい]のrepository[分離/ぶんり]には、[次/つぎ]の[全条件/ぜんじょうけん]を[必要/ひつよう]とする。"
+      nil
+    cons list ordered 1
+      cons item none body cons paragraph
+        cons "foundation[四/よん]crateだけの[配布/はいふ]・build/test/conformanceが[成立/せいりつ]し、[親/おや]monorepoの[生成器/せいせいき]・domain・[私有/しゆう]fixtureを[要求/ようきゅう]しない。"
+        nil nil
+      cons item none body cons paragraph
+        cons "[別/べつ]workspaceおよび[独立/どくりつ]repositoryにある[新言語/しんげんご]が[公開契約/こうかいけいやく]だけでparse・schema・source/Origin・[診断/しんだん]・providerを[提供/ていきょう]する。"
+        cons "[追加時/ついかじ]にfoundation sourceを[変更/へんこう]しない。"
+        nil nil
+      cons item none body cons paragraph
+        cons "Rust[直接呼出/ちょくせつよびだ]し、NDF loopback、[実際/じっさい]の[別/べつ]process providerで、[意味結果/いみけっか]・[位置/いち]・[診断/しんだん]・[失敗/しっぱい]・[停止/ていし]が[一致/いっち]する。"
+        nil nil
+      cons item none body cons paragraph
+        cons "schema/package/Profileの[交換/こうかん]と[解決/かいけつ]、[署名/しょめい]/[版/はん]/digest[不一致/ふいっち]、[未知/みち]operation、[資源/しげん]・[取消/とりけ]し・[継続/けいぞく]の[境界/きょうかい]を[検証/けんしょう]する。"
+        nil nil
+      cons item none body cons paragraph
+        cons "Rust APIとportable[契約/けいやく]の[互換性検査/ごかんせいけんさ]が[別々/べつべつ]に[機能/きのう]する。"
+        nil nil
+      cons item none body cons paragraph
+        cons "[正式/せいしき]catalogのX01とX02に[実行/じっこう]・[独立/どくりつ]レビュー[証拠/しょうこ]がある。"
+        nil nil
+      nil
+    cons paragraph
+      cons "[条件成立後/じょうけんせいりつご]の[最初/さいしょ]の[抽出対象/ちゅうしゅつたいしょう]をDocとし、その[経験/けいけん]で[契約不足/けいやくぶそく]を[確認/かくにん]する。"
+      cons "Circuitは[条件/じょうけん]が[整/ととの]った[時点/じてん]で[別/べつ]repositoryで[開始/かいし]する[計画/けいかく]とするが、[条件待/じょうけんま]ちを[理由/りゆう]に[既存/きそん]のCircuit[実装目標/じっそうもくひょう]を[放棄/ほうき]しない。"
+      cons "[四言語/よんげんご]、CLI/WASI、provider、エディタ、TEA Playground、Pages、Doc[文書移行/ぶんしょいこう]の[最終範囲/さいしゅうはんい]は[維持/いじ]する。"
+      nil
+    nil
+  nil

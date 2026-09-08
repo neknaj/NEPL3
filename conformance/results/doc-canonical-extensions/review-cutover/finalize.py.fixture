@@ -1,0 +1,60 @@
+from pathlib import Path
+import json,hashlib,subprocess
+out=Path(__file__).parent;root=out.parents[1]
+def sha(b):return hashlib.sha256(b).hexdigest()
+def load(p):return json.loads(p.read_bytes())
+def write(p,v):p.write_text(json.dumps(v,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+original=load(out/'original-files.json')
+for row in original:
+    b=(out/row['path']).read_bytes();assert sha(b)==row['sha256'] and len(b)==row['bytes']
+code=load(out/'code-generation/generation.json')
+for row in code['files']:
+    b=(out/'independent-generated'/row['path']).read_bytes();assert sha(b)==row['sha256'] and len(b)==row['bytes']
+g=load(out/'independent-github/results.json');local=load(out/'independent-local/results.json');boot=load(out/'bootstrap.json')
+assert g['head']=='b13f395c3874c378911ee8b686f0a55033b20e68' and g['raw_lines_match'] and g['raw_bytes_match'] and len(g['rows'])==9
+assert all(r['passed'] and r['stable_samples']>=5 and abs(r['initial']['start']-r['final']['y'])>1 for r in g['rows'])
+assert len(local)==12 and {r['engine'] for r in local}=={'chromium','firefox','webkit'}
+assert all(r['passed'] and len(r['navigation'])==4 and not r['failed_requests'] for r in local)
+assert sum(len(r['navigation']) for r in local)==48
+assert len(boot['files'])==5 and len(boot['rows'])==3 and all(r['passed'] and not r['http_requests'] for r in boot['rows'])
+for name in ['github','local','bootstrap']:assert load(out/(name+'.command.json'))['exit_code']==0
+py='C:/projects/NEPL3-doc-canonical-preview/.tmp/browser-venv/Scripts/python.exe'
+cmd=[py,'-c','import importlib.metadata; print(importlib.metadata.version("playwright"))']
+p=subprocess.run(cmd,capture_output=True,timeout=20);assert p.returncode==0 and p.stdout.strip()==b'1.62.0'
+(out/'playwright-version.stdout.log').write_bytes(p.stdout);(out/'playwright-version.stderr.log').write_bytes(p.stderr)
+rootgithub=load(out/'original/github-canonical22/results.json');rootbrowser=load(out/'original/browser-canonical22/results.json')
+assert len(rootgithub['rows'])==9 and all(r['result']=='passed' and r['stable_samples']>=5 for r in rootgithub['rows'])
+# Root browser record shape is retained in full; direct independent measurements above are decisive.
+current=[]
+for name in ['doc/canonical.json','doc/spec/22-external-extensions.md','doc/spec/22-external-extensions.nepld','doc/migration/aliases/22-external-extensions.json']:
+    b=subprocess.check_output(['git','show','b13f395c3874c378911ee8b686f0a55033b20e68:'+name],cwd=root)
+    assert b==(out/'source'/name).read_bytes();current.append(dict(path=name,sha256=sha(b)))
+summary=dict(status='PASS',head=g['head'],github_navigation=9,github_raw_bytes_sha256=sha((out/'independent-github/actual-raw.md').read_bytes()),local_display=12,local_navigation=48,offline_file_browsers=3,restored_files=5,playwright='1.62.0',engine_versions={r['engine']:r['version'] for r in local},source_identities=current,code_manifest_sha256=sha((out/'code-generation/manifest.json').read_bytes()),readme_sha256=sha((out/'source/README.md').read_bytes()),scope='Actual generated fixed chapter22 GitHub and saved HTML, not deployment or full migration completion')
+write(out/'summary.json',summary)
+record='''# Chapter 22 independent cutover evidence
+
+No blocking finding in this fixed chapter scope. Source and generation are b13f395c3874c378911ee8b686f0a55033b20e68; the prior code/content review is separately frozen and referenced by exact manifest SHA in summary.json. This record adds actual public GitHub navigation, local browser display/navigation and compiler-free restoration. No production or manuscript edits were made.
+
+The earlier fresh independent native build checked all three canonical records and generated five artifacts twice. Both runs equal root's fresh artifacts. This folder copies those exact five outputs, commands, binary SHA and source identities. New chapter22 HTML is 44,041 bytes with SHA 08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8; chapter00, chapter13 and CSS remain exact prior independent outputs. The registered logical Markdown path, physical Doc source, route, source/document digests and finite per-phase limits are retained in manifest.json. Limits were not increased.
+
+I independently navigated the published commit URL in actual Chromium 151.0.7922.34. The embedded rawLines equal the selected generated Markdown, and a separate raw.githubusercontent.com response matches the entire UTF-8 file including the final LF. The five manually retained old GitHub anchors and four semantic n-UTF8hex anchors each exist once. For all nine, I moved first to the opposite end with the target outside the viewport, followed the real URL fragment, waited for five stable scroll samples, required movement greater than one pixel and exact decoded hash, and checked GitHub's 125px header offset or document-end clamp. These are movement/destination checks, not merely element existence or hash updates. Actual HTML, final screenshot, exact raw Markdown and per-anchor before/after measurements are saved. GitHub has JavaScript enabled; the following local tests explicitly disable it.
+
+I served the independent generated bytes under /NEPL3/ and /alternate/. Pinned Playwright 1.62.0 ran Chromium, Firefox 153.0 and WebKit 26.5 at 375 and 1280 pixels: 12 display cases and 48 semantic navigations passed. Each navigation starts outside the viewport at the opposite end, waits for five stable samples, and requires the document-coordinate target clamped to the scrollable end, movement and exact hash. Each display checks all five base headings, four exact InlineCode strings, six ordered conditions, a six-row/two-column table, 324 Ruby nodes, unique IDs, loaded CSS, Japanese article language, no script, no failed requests and no horizontal document overflow. ARIA snapshots contain X01/X02 and the literal hello code. I directly inspected WebKit 375 and Chromium 1280 opening screenshots: readings and bases are visible, heading/table content is retained, and there is no evident overlapping text in those viewports. Narrow table English words wrap inside their cells. This is not a complete visual audit of all scroll positions or human screen-reader testing.
+
+The root's then-current README and complete payload index are byte-frozen. I selected and hash-verified its five root-verification first/ payloads, copied them to an isolated sandbox, extracted the README's Python fence without editing it and executed that exact script there. It invokes no compiler, Node or network. All five restored files equal the independent generation. Opening the restored file:// chapter22 with page JavaScript disabled and all HTTP(S) blocked succeeded in all three engines; no HTTP request occurred. CSS dark background, Ruby, five headings, table and list were checked. The snapshot contains all three canonical HTML pages plus shared CSS and the generator manifest. Only these five archived payloads and the README restoration were verified here; this is not a final all-archive Git/index audit.
+
+Root raw browser/GitHub/bootstrap/generation records are preserved separately under original/ and their copied bytes rechecked by original-files.json. Root results support the same fixed input but do not substitute for the direct runs above. All three independent drivers completed within explicit 600-second process deadlines, with raw stdout/stderr and command records. The saved source, scripts and outputs permit replay without adopting later working-tree data.
+
+This verifies the named chapter's preserved links and actual generated reading view. It does not infer live Pages deployment, future GitHub UI stability, universal assistive-technology behavior, complete T21/T16/J01-J04 acceptance, new repository authorization, standalone SemVer release or actual process-provider conformance. Those qualifications remain in the source and README. Final code-head CI and subsequent evidence-archive integration are separate checks.
+'''
+(out/'record.md').write_text(record,encoding='utf8')
+files=[]
+for p in sorted(out.rglob('*')):
+    if not p.is_file():continue
+    rel=p.relative_to(out)
+    if rel.parts[0] in ('site','bootstrap-sandbox','__pycache__') or rel.as_posix()=='manifest.json':continue
+    b=p.read_bytes();files.append(dict(path=rel.as_posix(),bytes=len(b),sha256=sha(b)))
+# The five restore inputs already occur in original/verify-canonical22 and the index
+# binds their archive paths; sandbox is reproducible working state, not extra evidence.
+write(out/'manifest.json',dict(files=files,scope='Fixed chapter22 public/navigation/offline reading snapshot'))
+print('FROZEN',len(files),sum(r['bytes'] for r in files),max(r['bytes'] for r in files),sha((out/'manifest.json').read_bytes()))

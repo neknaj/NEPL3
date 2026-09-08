@@ -1,0 +1,80 @@
+# Chapter twenty-two canonical Doc cutover
+
+Implementation: `b13f395c3874c378911ee8b686f0a55033b20e68`.
+The reviewed manuscript moves unchanged to `doc/spec/22-external-extensions.nepld`
+and is registered in `doc/canonical.json`. Its source SHA-256 is
+`0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa`.
+The old Markdown path becomes a generated all-notes `/2` view. Five compatibility
+anchors were read from the actual old GitHub rendering, not guessed as slugs.
+
+Fresh canonical checks passed. Two HTML generations produced five identical
+files, including unchanged chapter-zero/chapter-thirteen HTML and shared CSS.
+Root browser checks used JavaScript-disabled Chromium, Firefox and WebKit at
+375/1280 pixels under two non-root paths: twelve display cases and 48 semantic
+anchor navigations passed. The five headings, five-layer table, six ordered
+conditions and four inline-code values were checked. All nine old/semantic
+anchors were navigated on the actual fixed GitHub source revision, with exact
+server rawLines matching the generated Markdown and stable visible destinations.
+The WebKit narrow/wide screenshots were inspected by the root agent.
+The exact README restoration below also passed in three engines using file URLs,
+JavaScript disabled and HTTP(S) requests blocked. All five restored files equal
+the fresh output bytes.
+
+An independent full meaning review compared all 37 heading/paragraph/table-cell
+texts and four code values, preserving the foundation boundary, failure modes,
+two compatibility dimensions, extraction conditions and all four-language goals.
+This is documentation migration, not actual repository separation, completed
+provider conformance, T21/T16 completion, live Pages deployment or human
+screen-reader testing. Final CI remains a separate merge gate.
+An independent fresh build also passed all three canonical checks and produced
+the same five HTML/CSS/manifest files twice. Source, projection and alias mutation
+probes each rejected stale generated Markdown. Existing chapter-zero/thirteen
+HTML and CSS stayed byte-identical.
+Independent cutover checks also passed: nine actual GitHub navigations, twelve
+local display cases and 48 semantic navigations under `/NEPL3/` and `/alternate/`,
+plus three browser file-URL checks of the verbatim README restoration. Destination
+scroll positions stabilized for at least five samples and matched the documented
+sticky-header or end-of-page clamp. These checks are separate from whole-archive
+integration verification.
+
+PR #89 was subsequently integrated at
+`e89a0c2f65f73a0e2fdadbe54f892f203411d7fb`. The four cutover source files remain
+unchanged from `b13f395`. Rebuilding after that integration passed all three
+canonical checks and produced five files byte-identical to the reviewed output.
+
+## Read the saved HTML without a compiler
+
+Run this exact code from the repository root. It restores checked bytes to a new
+directory; Rust, Node, network and Doc compilation are not invoked.
+
+```python
+from pathlib import Path
+import hashlib, json
+
+archive = Path("conformance/results/doc-canonical-extensions")
+output = Path("dist/canonical22-snapshot")
+entries = json.loads((archive / "payloads.json").read_text(encoding="utf-8"))["files"]
+selected = [e for e in entries if e["owner"] == "root-verification" and e["restore"].startswith("first/")]
+assert len(selected) == 5
+output.mkdir(parents=True, exist_ok=False)
+for entry in selected:
+    relative = Path(entry["restore"]).relative_to("first")
+    assert not relative.is_absolute() and ".." not in relative.parts
+    data = (archive / entry["file"]).read_bytes()
+    assert len(data) == entry["bytes"]
+    assert hashlib.sha256(data).hexdigest() == entry["sha256"]
+    destination = output / relative
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with destination.open("xb") as stream:
+        stream.write(data)
+```
+
+Open `dist/canonical22-snapshot/docs/spec/22-external-extensions.html` together
+with the adjacent `assets/doc.css`. Chapters zero and thirteen are also included.
+This reading snapshot does not replace source regeneration checks.
+
+`payloads.json` records source hashes and every payload's original name, byte
+length and digest. `.fixture` preserves exact bytes, including diagnostics and
+source whitespace. Reviewer payloads are selected only from their manifests;
+build caches and executable binaries are excluded. Reserved directory names
+are prefixed with `saved-` for storage, without changing the restore name.

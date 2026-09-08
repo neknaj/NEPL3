@@ -1,0 +1,67 @@
+[
+  {
+    "name": "rust-version",
+    "command": [
+      "rustc",
+      "-Vv"
+    ],
+    "cwd": "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-code\\workspace",
+    "target_dir": "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-code\\target",
+    "exit_code": 0,
+    "elapsed_seconds": 0.08322659996338189
+  },
+  {
+    "name": "cargo-version",
+    "command": [
+      "cargo",
+      "-V"
+    ],
+    "cwd": "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-code\\workspace",
+    "target_dir": "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-code\\target",
+    "exit_code": 0,
+    "elapsed_seconds": 0.06357639993075281
+  },
+  {
+    "name": "canonical-check",
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "--check"
+    ],
+    "cwd": "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-code\\workspace",
+    "target_dir": "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-code\\target",
+    "exit_code": 0,
+    "elapsed_seconds": 27.740669700084254
+  },
+  {
+    "name": "html-first",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-code\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "html",
+      "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-code\\html-first"
+    ],
+    "cwd": "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-code\\workspace",
+    "target_dir": "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-code\\target",
+    "exit_code": 0,
+    "elapsed_seconds": 9.030291800037958
+  },
+  {
+    "name": "html-second",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-code\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "html",
+      "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-code\\html-second"
+    ],
+    "cwd": "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-code\\workspace",
+    "target_dir": "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-code\\target",
+    "exit_code": 0,
+    "elapsed_seconds": 8.63627360004466
+  }
+]

@@ -1,0 +1,17 @@
+# Fixed Chapter 22 legacy anchors
+
+Read-only inspection of actual GitHub response for commit `889a53ab6d678d7c9673dc716878fcbb34b9d466`, `doc/spec/22-external-extensions.md`. Exact URL/status/response headers/hashes are in `fetch.json`; original response bytes are `github.html`.
+
+`check.py` extracts the server's application/json payload and actual rendered HTML. `codeViewBlobLayoutRoute.StyledBlob.rawLines` equals every source line. Joining with LF and restoring the source's final LF reconstructs all 6,403 source bytes exactly, SHA256 `d3ea5308c7d0d79d915e4c1fcbe971fb366f3ee1ebe5d7685dad5e0c8cb53a9a`; those bytes also equal the fixed Git blob. The five h1/h2 titles equal the source headings. The server-rendered anchor attributes and embedded richText anchor attributes agree exactly, with five unique IDs.
+
+Actual permalink hrefs, not computed slugs:
+
+- `#22-外部言語の追加とrepository分離条件`
+- `#1-目的と境界`
+- `#2-拡張単位`
+- `#3-二つの互換性境界`
+- `#4-段階と分離の判定`
+
+The corresponding DOM ids have the GitHub `user-content-` prefix. Full labels, ids, hrefs and parent heading text are preserved in `result.json`. The rawLines and embedded richText are separately saved to make the source/display correspondence reviewable.
+
+This PASS covers fixed GitHub server HTML, source identity and old heading/anchor extraction. It does not cover browser interaction, new generated Markdown anchors/collisions, future canonical HTML, cutover, or independent manuscript meaning review. I am the earlier Chapter 22 author and did not re-review its prose here. No production/draft/registry/Git modification or browser workaround was made. No Playwright run was necessary for this server-response check, and none is claimed.

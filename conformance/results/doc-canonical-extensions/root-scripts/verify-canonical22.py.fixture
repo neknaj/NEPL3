@@ -1,0 +1,27 @@
+from pathlib import Path
+import subprocess, json, hashlib
+root = Path(__file__).resolve().parent.parent
+out = root / '.tmp/verify-canonical22'
+out.mkdir(exist_ok=True)
+rows = []
+for name, args in [
+    ('canonical-check', ['doc-canonical', '--check']),
+    ('html-first', ['doc-canonical', 'html', '.tmp/verify-canonical22/first']),
+    ('html-second', ['doc-canonical', 'html', '.tmp/verify-canonical22/second']),
+]:
+    command = ['cargo', 'run', '--locked', '-p', 'nepl3-tools', '--'] + args
+    run = subprocess.run(command, cwd=root, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (out / (name + '.stdout.log')).write_bytes(run.stdout)
+    (out / (name + '.stderr.log')).write_bytes(run.stderr)
+    rows.append(dict(name=name, command=command, exit_code=run.returncode))
+    (out / 'commands.json').write_text(json.dumps(rows, indent=2)+'\n', encoding='utf-8')
+    assert run.returncode == 0, (name, run.stderr.decode('utf-8'))
+    print(name, 'passed', flush=True)
+def files(folder):
+    return {p.relative_to(folder).as_posix(): p.read_bytes() for p in folder.rglob('*') if p.is_file()}
+first, second = files(out/'first'), files(out/'second')
+assert first == second and len(first) == 5
+(out / 'files.json').write_text(json.dumps([
+    dict(path=name, bytes=len(data), sha256=hashlib.sha256(data).hexdigest())
+    for name, data in sorted(first.items())], indent=2)+'\n', encoding='utf-8')
+print('Five output files byte-identical', flush=True)
