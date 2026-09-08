@@ -1049,5 +1049,16 @@ body
       cons "[上記/じょうき]Custom9[件/けん]とquery6[件/けん]に[加/くわ]え、[既存/きそん]の[可視性/かしせい]・Global・AnalysisKey・portable[原因/げんいん]・[停止時閉包/ていしじへいほう]も[含/ふく]む。"
       cons sentence cons ruby text "実行" text "じっこう" cons text "は " cons code "cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 --target-dir .tmp/review-target -- --test-threads=1" cons text "、runnerは " cons code "wasmtime run" cons text "。" nil
       cons "host processを[起動/きどう]するseed[一致/いっち]だけは[従来/じゅうらい]どおりnativeへ[分離/ぶんり]されており、[通常解析回帰/つうじょうかいせきかいき]はWASIで[実行/じっこう]される。" nil
+    cons paragraph
+      cons sentence cons ruby text "次" text "つぎ" cons text "のRecursive Customは" cons ruby text "旧原文" text "きゅうげんぶん" cons text " " cons code "recursive cons customdef x nil x" cons text " のUnsupportedPlan・callback0・" cons ruby text "有効" text "ゆうこう" cons text "な" cons ruby text "部分" text "ぶぶん" cons text "FactSetを" cons ruby text "新" text "しん" cons text "API" cons ruby text "実装前" text "じっそうまえ" cons text "に" cons ruby text "独立再採取" text "どくりつさいさいしゅ" cons text "した。" nil
+      cons "spec04から[固定/こてい]した9[原文/げんぶん]を[新/あたら]しいFactsPhaseへ[接続/せつぞく]すると、Header[全収集後/ぜんしゅうしゅうご]のBody、[相互参照/そうごさんしょう]、static/custom[混合/こんごう]、Sequentialの[非前方可視性/ひぜんぽうかしせい]、[同/どう]plan[二回/にかい]の[別/べつ]Entity、[同名/どうめい]Ambiguous、Foreignの[同/どう]alias[独立/どくりつ]root、[日本語/にほんご]の[元/もと]byte[位置/いち]が[実解析/じつかいせき]で[一致/いっち]した。"
+      cons "headerで[受理/じゅり]したEntity[列/れつ]とbody receiptは[同/おな]じIDを[持/も]つ。"
+      cons sentence cons ruby text "補助" text "ほじょ" cons text "は " cons code ".tmp/recursive-custom-expectations.json" cons text "、" cons code "build_recursive_custom_probe.py" cons text " と " cons code "recursive_custom" cons text " である。" nil
+      cons "[同/おな]じ9[原文/げんぶん]を[最終差分/さいしゅうさぶん]でも[再実行/さいじっこう]した。"
+      cons sentence cons ruby text "別" text "べつ" cons text "の" cons ruby text "独立補助" text "どくりつほじょ" cons text " " cons code "recursive_boundary" cons text " はHeader Reference" cons ruby text "拒否" text "きょひ" cons text "、Bodyの" cons ruby text "受理済" text "じゅりず" cons text "みID" cons ruby text "再追加拒否" text "さいついかきょひ" cons text "、" cons ruby text "別" text "べつ" cons text "ID" cons ruby text "同名" text "どうめい" cons text "のBody" cons ruby text "内" text "ない" cons text "Ambiguousとexportされない" cons ruby text "宣言" text "せんげん" cons text "の" cons ruby text "外側非公開" text "そとがわひこうかい" cons text "、cancel" cons ruby text "後" text "ご" cons text "の" cons ruby text "受理済" text "じゅりず" cons text "みEntityと" cons ruby text "診断" text "しんだん" cons text "/event" cons ruby text "保持" text "ほじ" cons text "を" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "[管理対象/かんりたいしょう]4[件/けん]をnative/WASI[双方/そうほう]で[独立実行/どくりつじっこう]し、5[原文/げんぶん]の[実/じつ]request/reply CBOR・[同/どう]callbackによるFactSet/stage/history/report[一致/いっち]、[型正当/かたせいとう]なgroup/provider/target/ID[列改変/れつかいへん]の[拒否/きょひ]、7[資源/しげん]の[部分結果/ぶぶんけっか]と[通常/つうじょう]BindingReply codecを[確認/かくにん]した。"
+      cons "private memoはgroup/target/BindingIdと[受理順/じゅりじゅん]へ[束縛/そくばく]し、[使用済/しようず]みheaderを[再使用/さいしよう]しない。"
+      cons "[同期/どうき]transportは[同/おな]じBudget/Admissionを[共有/きょうゆう]する。"
+      cons "raw receiptだけの[実行認証/じっこうにんしょう]や、[別/べつ]processへのquota[貸出/かしだし]・[精算/せいさん]はこの[成功範囲/せいこうはんい]に[含/ふく]めない。" nil
     nil
   nil
