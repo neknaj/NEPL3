@@ -246,4 +246,72 @@ body
       cons "WASI/browser/[他/た]OS、Grammar bootstrap、portable operation/frame[全経路/ぜんけいろ]、[言語/げんご]・editor・UI・Pages・Doc[移行/いこう]の[受入/うけいれ]はこの[結果/けっか]から[推定/すいてい]しない。"
       cons "[入力/にゅうりょく]identityと[最終受入証拠/さいしゅううけいれしょうこ]は、[対応/たいおう]する[実装/じっそう]と[仕様/しよう]を[固定/こてい]したtreeで[別途記録/べっときろく]する。" nil
     nil
+  cons section builtins "[組込/くみこ]みreaderとSourceMap[接続/せつぞく]の[追加/ついか]レビュー" body
+    cons paragraph
+      cons sentence cons ruby text "次段" text "じだん" cons text " " cons code "feat/reader-builtins" cons text " はfirst sliceの " cons code "3bccd48d49ee1a7564335c4fa703960791ea4bc3" cons text " から" cons ruby text "継続" text "けいぞく" cons text "する。" nil
+      cons sentence cons text "R020では、1 byteのExact mappingと100,000 byteのSourceIdを" cons ruby text "使" text "つか" cons text "い、allocation_units=0の " cons code "SourceMap::insert" cons text " がStoppedを" cons ruby text "返" text "かえ" cons text "す" cons ruby text "前" text "まえ" cons text "に100,000 bytesを" cons ruby text "割" text "わ" cons text "り" cons ruby text "当" text "あ" cons text "てることを" cons ruby text "独立確認" text "どくりつかくにん" cons text "した。" nil
+      cons sentence cons ruby text "最初" text "さいしょ" cons text "のignored " cons code "--bin map_allocation" cons text " によるSystem allocator" cons ruby text "計測" text "けいそく" cons text "はinsert" cons ruby text "呼出" text "よびだ" cons text "し" cons ruby text "区間" text "くかん" cons text "だけを" cons ruby text "対象" text "たいしょう" cons text "とした。" nil
+      cons "SourceMapのpoint[構築/こうちく]がsnapshot identityを[複製/ふくせい]してからstackの[予算/よさん]を[検査/けんさ]する[経路/けいろ]であり、[前段/ぜんだん]R018の[訂正範囲/ていせいはんい]をこの[未検査経路/みけんさけいろ]へ[広/ひろ]げない。" nil
+    cons paragraph
+      cons "Pointを[借用/しゃくよう]identityへ[訂正後/ていせいご]、[同/おな]じ[測定/そくてい]は0 bytesとなった。"
+      cons "mapsの[管理対象/かんりたいしょう]2[試験/しけん]も[成功/せいこう]したが、[返却値/へんきゃくち]と[論理予算/ろんりよさん]だけの[試験/しけん]は[旧版/きゅうばん]でも[成功/せいこう]するため、この[先行/せんこう]heap allocationを[捕捉/ほそく]する[回帰/かいき]とは[呼/よ]ばない。"
+      cons sentence cons text "そこで " cons link relative "../tools/audit/allocation/run.py" none ruby text "独立計測器" text "どくりつけいそくき" cons text " を" cons ruby text "管理対象" text "かんりたいしょう" cons text "へ" cons ruby text "置" text "お" cons text "き、" cons link relative "development.md" none ruby text "開発文書" text "かいはつぶんしょ" cons text " でdev" cons ruby text "専用" text "せんよう" cons text "GlobalAlloc wrapperの" cons ruby text "限定的" text "げんていてき" cons text "unsafeを" cons ruby text "明示" text "めいじ" cons text "した。" nil
+      cons "production/workspaceのforbidは[変/か]えない。"
+      cons "[固定/こてい]Rust 1.97.0のCargo-selected rlibへリンクし、4,096 bytesのpositive controlを[通/とお]してから[測定/そくてい]する。"
+      cons "[同一計測器/どういつけいそくき]を[旧/きゅう]commitの[別/べつ]worktreeへ[適用/てきよう]すると100,000 bytes・[終了/しゅうりょう]1、[修正/しゅうせい]treeでは0 bytes・[終了/しゅうりょう]0となった。"
+      cons sentence cons link relative "../conformance/results/reader-builtins/allocation-baseline.log" none concat cons ruby text "旧版" text "きゅうばん" cons text "log" nil cons text " と " cons link relative "../conformance/results/reader-builtins/allocation-working.log" none concat cons ruby text "修正中" text "しゅうせいちゅう" cons text "treeのlog" nil cons text " を" cons ruby text "保存" text "ほぞん" cons text "した。" nil
+      cons "native CIへの[必須/ひっす]step[追加/ついか]も[確認/かくにん]し、この[具体的/ぐたいてき]な[先行割当/せんこうわりあて]をR020 correctedとする。"
+      cons "[後者/こうしゃ]のlogはfreeze[前/まえ]の[部分記録/ぶぶんきろく]であり、[最終/さいしゅう]treeの[証拠/しょうこ]は[統合時/とうごうじ]に[別途採取/べっとさいしゅ]する。" nil
+    cons paragraph
+      cons "R021は[別/べつ]のWork[計上不備/けいじょうふび]である。"
+      cons "[公開/こうかい]builtin Textへ3 byteの[入力/にゅうりょく]と100,007 byteの[予約/よやく]URIを[渡/わた]すと、Work[上限/じょうげん]1,000でもMatched、Usage.work=7となった。"
+      cons "URI[末尾/まつび]だけを[不正/ふせい]spaceにすると、[長/なが]いURIを[検査後/けんさご]にLocator、work=1となった。"
+      cons sentence cons code "--bin builtin_reservation" cons text " で" cons ruby text "再現" text "さいげん" cons text "し、builtin" cons ruby text "内部" text "ないぶ" cons text "の" cons ruby text "予約検査" text "よやくけんさ" cons text "と、Budget" cons ruby text "付" text "つ" cons text "きsource constructor/importのlocator" cons ruby text "再検査" text "さいけんさ" cons text "へ" cons ruby text "事前" text "じぜん" cons text "Work" cons ruby text "計上" text "けいじょう" cons text "を" cons ruby text "要求" text "ようきゅう" cons text "した。" nil
+      cons "[低水準/ていすいじゅん]の[所有値/しょゆうち]validatorの[責任/せきにん]と、Budgetを[受/う]け[取/と]る[操作内部/そうさないぶ]の[責任/せきにん]を[区別/くべつ]し、[先行/せんこう]heap allocationを[測/はか]るR020とは[別/べつ]に[追跡/ついせき]する。" nil
+    cons paragraph
+      cons "[訂正後/ていせいご]は[同/おな]じvalid/[末尾/まつび]space URIの[両入力/りょうにゅうりょく]がWorkLimitで[停止/ていし]した。"
+      cons sentence cons ruby text "管理対象" text "かんりたいしょう" cons text "の " cons code "generated_source_locator_scan_is_charged_before_validation" cons text " と " cons code "reservation_locator_validation_obeys_work_limit_before_scanning" cons text " を" cons ruby text "独立実行" text "どくりつじっこう" cons text "し" cons ruby text "成功" text "せいこう" cons text "を" cons ruby text "確認" text "かくにん" cons text "したため、このlocator" cons ruby text "経路" text "けいろ" cons text "をR021 correctedとする。" nil
+      cons "[任意長/にんいちょう]のidentity[比較全般/ひかくぜんぱん]を[検証済/けんしょうず]みとは[扱/あつか]わない。" nil
+    cons paragraph
+      cons "R022では、providerが[診断/しんだん]/eventを[各/かく]1[件生成/けんせいせい]してからAllocationLimitとなる[公開/こうかい]tokenizer[経路/けいろ]が[両方/りょうほう]を[捨/す]て、Usageだけ1を[残/のこ]す[不具合/ふぐあい]を[再現/さいげん]した。"
+      cons "またTriviaを[受理/じゅり]してText[予約/よやく]で[待機/たいき]した[後/あと]、[同/おな]じLimitsの[新/あたら]しいBudgetを[渡/わた]すとUsageが[減少/げんしょう]したままtokenを[返/かえ]した。"
+      cons "[訂正後/ていせいご]、[元/もと]のprobeは[診断/しんだん]/event[各/かく]1[件/けん]を[保持/ほじ]し、[新/しん]BudgetはContinuationとして[拒否/きょひ]した。" nil
+    cons paragraph
+      cons "Reportだけを[引/ひ]き[継/つ]ぐと、[生成/せいせい]source[上/じょう]のSpanに[必要/ひつよう]なsource/mapが[失/うしな]われるため、ReadReplyの[全/ぜん]terminalへ[正式/せいしき]artifactを[追加/ついか]する[契約/けいやく]も[確認中/かくにんちゅう]である。"
+      cons sentence cons ruby text "単独" text "たんどく" cons text "VMの" cons ruby text "管理対象" text "かんりたいしょう" cons text " " cons code "failed_stopped_and_rollback_results_have_their_exact_formal_source_closure" cons text " は" cons ruby text "独立実行" text "どくりつじっこう" cons text "で" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "Await[外包/がいほう]の[複製失敗/ふくせいしっぱい]を[追加/ついか]で[走査/そうさ]すると、allocation[上限/じょうげん]18,792/18,920/19,048でStoppedを[返/かえ]した[後/あと]に[内側/うちがわ]pendingが[残/のこ]り、[次/つぎ]のreadがBusyとなった。"
+      cons sentence cons code ".tmp/independent-core/" cons text " の " cons code "--bin tokenizer_pending" cons text " はこの" cons ruby text "公開" text "こうかい" cons text "API" cons ruby text "再現" text "さいげん" cons text "であり、" cons ruby text "管理対象回帰" text "かんりたいしょうかいき" cons text "と" cons ruby text "修正" text "しゅうせい" cons text "の" cons ruby text "確認" text "かくにん" cons text "まではR022をopenに" cons ruby text "保" text "たも" cons text "つ。" nil nil
+    cons paragraph
+      cons "この[後/あと]、[停止/ていし]で[返/かえ]せなくなったAwaitの[内側/うちがわ]slotを[破棄/はき]する[訂正/ていせい]を[確認/かくにん]し、[元/もと]probeの[全走査/ぜんそうさ]はfailures=0となった。"
+      cons "[管理対象/かんりたいしょう]のpending allocation sweep、[先行/せんこう]skipから[後続/こうぞく]NoMatch/NeedMore/Failed/Stoppedへの[正式/せいしき]source/report[保持/ほじ]、および[生成/せいせい]source[上/じょう]の[診断/しんだん]を[保/たも]った[停止/ていし]が[成功/せいこう]した。"
+      cons "reader[全/ぜん]44[試験/しけん]（builtin 13、context 1、portable request 2、runtime 28）を[独立実行/どくりつじっこう]した。"
+      cons "[最後/さいご]に[予約待機中/よやくたいきちゅう]cancelの[回帰/かいき]を[読/よ]み[再実行/さいじっこう]し、[正式/せいしき]trivia/cursor/state[保持/ほじ]、slot[消費/しょうひ]、[同/どう]sessionでの[新/しん]operation[再開/さいかい]を[確認/かくにん]した。"
+      cons "このnative[範囲/はんい]をR022 correctedとし、[全/ぜん]reply/continuationのcodecとprocess[交換/こうかん]はR017に[残/のこ]す。" nil
+    cons paragraph
+      cons "[新/あら]たなmapped containmentでは、source[表/ひょう]とmap[表/ひょう]が[存在/そんざい]するだけで[別/べつ]snapshotのviewを[受理/じゅり]してはならない。"
+      cons "[子/こ]の[全/ぜん]byteと[空/から]anchorがmapを[介/かい]して[親/おや]の[範囲/はんい]に[帰属/きぞく]すること、[穴/あな]や[外部/がいぶ]の[起源/きげん]を[隠/かく]さないことを[検査対象/けんさたいしょう]とする。"
+      cons "escapeの[生成/せいせい]source/mapは[失敗/しっぱい]choiceやlook[後/ご]に[正式結果/せいしきけっか]へ[混入/こんにゅう]せず、[消費済/しょうひず]み[予算/よさん]は[戻/もど]さない。" nil
+    cons paragraph
+      cons "[実装/じっそう]されたSourceMap[所有/しょゆう]tableとmapped containmentについては、core maps 2[件/けん]とwire syntax 6[件/けん]を[独立実行/どくりつじっこう]した。"
+      cons "host/guestそれぞれの[生成/せいせい]source、[別/べつ]snapshotのview、[空/から]anchorの[往復/おうふく]、およびmap[欠損/けっそん]・[無関係/むかんけい]range・Exact[偽装/ぎそう]・guest source[宣言不足/せんげんふそく]の[拒否/きょひ]を[確認/かくにん]した。"
+      cons "これは[全/ぜん]reader reply/continuationのportable[化/か]やprocess provider[比較/ひかく]の[完了/かんりょう]を[意味/いみ]しない。" nil
+    cons paragraph
+      cons sentence cons text "reader" cons ruby text "修正" text "しゅうせい" cons text "のfreeze" cons ruby text "後" text "ご" cons text "、" cons code "cargo test --locked -p nepl3-core -p nepl3-wire" cons text " も" cons ruby text "独立実行" text "どくりつじっこう" cons text "し、core 50" cons ruby text "件" text "けん" cons text "・wire 19" cons ruby text "件" text "けん" cons text "が" cons ruby text "全" text "すべ" cons text "て" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "ここでの[件数/けんすう]はproduction[回帰/かいき]の[実行範囲/じっこうはんい]であり、55[受入群/うけいれぐん]の[合格数/ごうかくすう]とは[異/こと]なる。" nil
+    cons paragraph
+      cons sentence cons text "engineの" cons ruby text "今回" text "こんかい" cons text "の" cons ruby text "範囲" text "はんい" cons text "は " cons code "LanguagePackage::check" cons text " の" cons ruby text "局所" text "きょくしょ" cons text "metadata/shape" cons ruby text "検査" text "けんさ" cons text "である。" nil
+      cons "4[件/けん]の[公開/こうかい]API[試験/しけん]を[独立実行/どくりつじっこう]し、field/selector/binding、[登録済/とうろくず]operationとの[署名相違/しょめいそうい]、provenanceの[未宣言/みせんげん]source・[不正/ふせい]OriginRef、ゼロWork/Depth、[直接/ちょくせつ]ReaderId cycleの[拒否/きょひ]を[確認/かくにん]した。"
+      cons "ListOfのforeign headをLocal NodeRefへ[潰/つぶ]す[草稿/そうこう]と、binding[退出/たいしゅつ]frameを1[段深/だんふか]く[計上/けいじょう]する[草稿/そうこう]を[指摘/してき]し、ForeignSyntax head/NodeRef tail、およびBinding::Noneの[深/ふか]さ1の[実回帰/じつかいき]で[訂正/ていせい]を[確認/かくにん]した。" nil
+    cons paragraph
+      cons "WithModeは[構文/こうぶん]rootのownerへ[適用/てきよう]し、hostのListOf spineとguest[要素/ようそ]を[分/わ]ける。"
+      cons "guestのmodeをhostの[同名/どうめい]modeで[検査済/けんさず]みにしないという[訂正文/ていせいぶん]と[局所検査/きょくしょけんさ]を[照合/しょうごう]した。"
+      cons "[文字化/もじば]けした[規範段落/きはんだんらく]も[修復後/しゅうふくご]に[再読/さいどく]した。"
+      cons "package[意味/いみ]digest、[解決済/かいけつず]EntryContext/Profile、prefix parse、Grammar compile/bootstrapはこの4[件/けん]の[範囲/はんい]に[含/ふく]まれない。"
+      cons "[特/とく]にsurface SchemaRefの[一致/いっち]だけで[挙動/きょどう]identityやcache[有効性/ゆうこうせい]を[保証/ほしょう]せず、R006/R009をopenに[保/たも]つ。" nil
+    cons paragraph
+      cons sentence cons text "Langの" cons ruby text "契約" text "けいやく" cons text "は " cons link external "https://www.rfc-editor.org/rfc/rfc5646.html#section-2.2.9" text "RFC 5646 §2.2.9" cons text " と" cons ruby text "照合" text "しょうごう" cons text "した。" nil
+      cons "well-formedはABNFへの[適合/てきごう]であり、[登録済/とうろくず]みsubtagやvariant/extensionの[重複拒否/ちょうふくきょひ]を[含/ふく]むvalidとは[異/こと]なる。"
+      cons "grandfatheredとprivate-useもABNFの[対象/たいしょう]に[含/ふく]む。"
+      cons "[文法/ぶんぽう]だけの[検査/けんさ]にnetwork[照会/しょうかい]や[未指定/みしてい]のvalid[制約/せいやく]を[追加/ついか]しない。" nil
+    nil
   nil
