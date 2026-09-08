@@ -1,0 +1,22 @@
+[
+  {
+    "name": "valid",
+    "exit": 0,
+    "output_exists": true
+  },
+  {
+    "name": "none",
+    "exit": 1,
+    "output_exists": false
+  },
+  {
+    "name": "empty",
+    "exit": 1,
+    "output_exists": false
+  },
+  {
+    "name": "missing",
+    "exit": 1,
+    "output_exists": false
+  }
+]

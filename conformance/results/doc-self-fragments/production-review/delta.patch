@@ -1,0 +1,111 @@
+diff --git a/crates/languages/doc/core/src/pages.rs b/crates/languages/doc/core/src/pages.rs
+index d18d2a6..af51e7f 100644
+--- a/crates/languages/doc/core/src/pages.rs
++++ b/crates/languages/doc/core/src/pages.rs
+@@ -352,8 +352,12 @@ pub fn resolve<'a, C: FoundationValueCodec>(
+             let (key, fragment, by_source) = match link_target {
+                 LinkTarget::Page { page: id, fragment } => (copy(id, b)?, fragment, false),
+                 LinkTarget::Relative { path, fragment } => (
+-                    relative(&set.pages[page_index].registration.source, path, b)?
+-                        .ok_or(PageError::InvalidRelative { page, node })?,
++                    if path.is_empty() && fragment.as_ref().is_some_and(|s| !s.is_empty()) {
++                        copy(&set.pages[page_index].registration.source, b)?
++                    } else {
++                        relative(&set.pages[page_index].registration.source, path, b)?
++                            .ok_or(PageError::InvalidRelative { page, node })?
++                    },
+                     fragment,
+                     true,
+                 ),
+diff --git a/crates/languages/doc/core/tests/pages.rs b/crates/languages/doc/core/tests/pages.rs
+index d5ffbd5..60c1ecf 100644
+--- a/crates/languages/doc/core/tests/pages.rs
++++ b/crates/languages/doc/core/tests/pages.rs
+@@ -123,6 +123,48 @@ fn run(set: &PageSet) -> Result<PageLinkPlan, String> {
+         .clone())
+ }
+ #[test]
++fn empty_relative_path_is_only_a_nonempty_self_fragment() -> Result<(), String> {
++    let mut input = set();
++    input.pages[0].document.value.nodes[7].kind = DocKind::Link {
++        target: LinkTarget::Relative {
++            path: String::new(),
++            fragment: Some("導入".into()),
++        },
++        label: InlineRef(2),
++    };
++    let plan = run(&input)?;
++    assert_eq!(plan.links[0].target, PageDestination::Page { index: 0 });
++    assert_eq!(plan.links[0].fragment.as_deref(), Some("導入"));
++    let r = registry()?;
++    let empty = SourceStore::default();
++    let mut admission = SourceAdmission::default();
++    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
++    let value = portable::pages::set_to_value(&input, &r, &mut codec, &mut b()).map_err(err)?;
++    let encoded = nepl3_wire::encode(&value, &mut b()).map_err(err)?;
++    let received = nepl3_wire::decode(&encoded, &mut b()).map_err(err)?;
++    let decoded =
++        portable::pages::set_from_value(&received, &r, &mut codec, &mut b()).map_err(err)?;
++    assert_eq!(decoded, input);
++    assert_eq!(run(&decoded)?, plan);
++    for fragment in [None, Some(String::new()), Some("未登録".into())] {
++        let expected = if fragment.as_ref().is_some_and(|s| !s.is_empty()) {
++            "MissingFragment"
++        } else {
++            "InvalidRelative"
++        };
++        input.pages[0].document.value.nodes[7].kind = DocKind::Link {
++            target: LinkTarget::Relative {
++                path: String::new(),
++                fragment,
++            },
++            label: InlineRef(2),
++        };
++        let error = run(&input).err().ok_or("unexpected success")?;
++        assert!(error.contains(expected), "{error}");
++    }
++    Ok(())
++}
++#[test]
+ fn registered_file_bytes_are_resolved_and_bound_to_the_portable_plan() -> Result<(), String> {
+     let r = registry()?;
+     let mut input = set();
+diff --git a/doc/spec/21-doc-pages.md b/doc/spec/21-doc-pages.md
+index c3e7360..8f3c684 100644
+--- a/doc/spec/21-doc-pages.md
++++ b/doc/spec/21-doc-pages.md
+@@ -121,6 +121,12 @@ manifestを付けない。この開発hostは静的文書生成までであり
+ 最寄りページへのfallbackは行わない。fragmentはリンク先DocのSection/Anchorの
+ 意味上のidと完全一致しなければならない。HTMLの `n-` hex IDへの変換はbackendの責務。
+ 
++`Relative` のpathが空でfragmentが非空の場合だけ、現在の登録Docのsourceを参照先とする。
++これは元文書の `#fragment` を保持するための自己参照であり、fileや親directoryの検索ではない。
++空pathとNone、空pathと空fragmentは `InvalidRelative` のままとする。自己参照でも
++明示IDの完全一致、未選択variantを含む意味検査、実際に出力されたanchorの検査を省略しない。
++リンク先Docを推測したり、見出し本文からslugを自動生成してfragmentを書き換えたりしない。
++
+ `PageLinkPlan` のidentityは `NEPL3.Doc.Pages.v1\0` とPageSetのcanonical NDF byte列
+ を連結したSHA-256。登録順、route、各documentのsource・origin・内容を含む。
+ linksはページ順、その中でDoc arenaのnode順。各linkに元page/node、先page、
+diff --git a/tools/tests/doc/resources.rs b/tools/tests/doc/resources.rs
+index f4754ac..f864762 100644
+--- a/tools/tests/doc/resources.rs
++++ b/tools/tests/doc/resources.rs
+@@ -11,6 +11,17 @@ fn entry(id: &str, source: &str, route: &str) -> Entry {
+     }
+ }
+ #[test]
++fn fragment_only_doc_source_generates_a_checked_self_href() -> Result<(), String> {
++    let compiled = source::compiled()?;
++    let inputs = vec![(entry("guide", "doc/guide.md", "docs/guide/index.html"),
++        "article en \"Guide\" body cons paragraph cons sentence cons link relative \"\" some \"local\" text \"Here\" cons anchor local text \"Target\" nil nil nil".into())];
++    let output = pages::generate(&compiled, &inputs)?;
++    let html = std::str::from_utf8(&output.files["docs/guide/index.html"]).map_err(super::err)?;
++    assert!(html.contains("href=\"index.html#n-6c6f63616c\""), "{html}");
++    assert!(html.contains("id=\"n-6c6f63616c\""), "{html}");
++    Ok(())
++}
++#[test]
+ fn actual_doc_links_to_exact_registered_file_bytes() -> Result<(), String> {
+     let compiled = source::compiled()?;
+     let inputs = vec![(entry("guide", "doc/guide.md", "docs/guide/index.html"),
