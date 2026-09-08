@@ -1,0 +1,28 @@
+{
+  "native.log": {
+    "tests": [
+      "test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s\r"
+    ],
+    "observation": [
+      "REVIEW_SUBJECT PackageFailure { error: Stopped(AllocationLimit), subject: None } usage=Usage { source_bytes: 7, work: 163, depth: 2, nodes: 1, allocation_units: 586, output_bytes: 0, diagnostics: 0, events: "
+    ]
+  },
+  "wasi.log": {
+    "tests": [
+      "test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.55s\r"
+    ],
+    "observation": [
+      "REVIEW_SUBJECT PackageFailure { error: Stopped(AllocationLimit), subject: None } usage=Usage { source_bytes: 7, work: 163, depth: 2, nodes: 1, allocation_units: 502, output_bytes: 0, diagnostics: 0, events: "
+    ]
+  },
+  "head": "abf9b4b608adeccb7a9bfb087afd276e7577c07d",
+  "base": "a20fae73a689290502f4f51983418be1239193d3",
+  "commands": [
+    "cargo test --locked -p nepl3-engine --test package -- --nocapture",
+    "cargo test --locked -p nepl3-engine --test package --target wasm32-wasip2 -- --nocapture; runner wasmtime run"
+  ],
+  "tools": {
+    "rustc": "1.97.0 (2d8144b78 2026-07-07)",
+    "wasmtime": "44.0.1 (f302ebd6b 2026-04-30)"
+  }
+}

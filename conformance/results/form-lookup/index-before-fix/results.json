@@ -1,0 +1,87 @@
+{
+  "native.log": {
+    "test_results": [
+      "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\r",
+      "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s\r",
+      "test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s\r",
+      "test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.92s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\r"
+    ],
+    "observations": []
+  },
+  "wasi.log": {
+    "test_results": [
+      "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\r",
+      "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.59s\r",
+      "test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.58s\r",
+      "test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.39s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\r"
+    ],
+    "observations": []
+  },
+  "probe-native.log": {
+    "test_results": [
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.00s\r",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 21 filtered out; finished in 0.02s\r",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 23 filtered out; finished in 0.19s\r"
+    ],
+    "observations": [
+      "REVIEW_CHECK Usage { source_bytes: 0, work: 1869, depth: 2, nodes: 0, allocation_units: 1088, output_bytes: 0, diagnostics: 0, events: 0 } identity=PackageIdentity { schema: SchemaRef { package: ",
+      "REVIEW_FORM beta index=1 usage=Usage { source_bytes: 8, work: 2756, depth: 6, nodes: 26, allocation_units: 21995, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_FORM 日本語 index=2 usage=Usage { source_bytes: 13, work: 2758, depth: 6, nodes: 26, allocation_units: 22005, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_FORM a index=3 usage=Usage { source_bytes: 5, work: 2743, depth: 6, nodes: 26, allocation_units: 21989, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_FORM aa index=4 usage=Usage { source_bytes: 6, work: 2740, depth: 6, nodes: 26, allocation_units: 21991, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_FORM café index=5 usage=Usage { source_bytes: 9, work: 2740, depth: 6, nodes: 26, allocation_units: 21997, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_FORM α index=6 usage=Usage { source_bytes: 6, work: 2747, depth: 6, nodes: 26, allocation_units: 21991, output_bytes: 0, diagnostics: 0, events: 0 }"
+    ]
+  },
+  "probe-before.log": {
+    "test_results": [
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.00s\r",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 21 filtered out; finished in 0.03s\r",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 23 filtered out; finished in 0.38s\r"
+    ],
+    "observations": [
+      "REVIEW_CHECK Usage { source_bytes: 0, work: 1395, depth: 2, nodes: 0, allocation_units: 992, output_bytes: 0, diagnostics: 0, events: 0 } identity=PackageIdentity { schema: SchemaRef { package: ",
+      "REVIEW_FORM beta index=1 usage=Usage { source_bytes: 8, work: 2788, depth: 6, nodes: 26, allocation_units: 21995, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_FORM 日本語 index=2 usage=Usage { source_bytes: 13, work: 2816, depth: 6, nodes: 26, allocation_units: 22005, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_FORM a index=3 usage=Usage { source_bytes: 5, work: 2788, depth: 6, nodes: 26, allocation_units: 21989, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_FORM aa index=4 usage=Usage { source_bytes: 6, work: 2801, depth: 6, nodes: 26, allocation_units: 21991, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_FORM café index=5 usage=Usage { source_bytes: 9, work: 2831, depth: 6, nodes: 26, allocation_units: 21997, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_FORM α index=6 usage=Usage { source_bytes: 6, work: 2814, depth: 6, nodes: 26, allocation_units: 21991, output_bytes: 0, diagnostics: 0, events: 0 }"
+    ]
+  },
+  "probe-wasi.log": {
+    "test_results": [
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.00s\r",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 21 filtered out; finished in 0.03s\r",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 23 filtered out; finished in 0.29s\r"
+    ],
+    "observations": [
+      "REVIEW_CHECK Usage { source_bytes: 0, work: 1869, depth: 2, nodes: 0, allocation_units: 824, output_bytes: 0, diagnostics: 0, events: 0 } identity=PackageIdentity { schema: SchemaRef { package: ",
+      "REVIEW_FORM beta index=1 usage=Usage { source_bytes: 8, work: 2756, depth: 6, nodes: 26, allocation_units: 16983, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_FORM 日本語 index=2 usage=Usage { source_bytes: 13, work: 2758, depth: 6, nodes: 26, allocation_units: 16993, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_FORM a index=3 usage=Usage { source_bytes: 5, work: 2743, depth: 6, nodes: 26, allocation_units: 16977, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_FORM aa index=4 usage=Usage { source_bytes: 6, work: 2740, depth: 6, nodes: 26, allocation_units: 16979, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_FORM café index=5 usage=Usage { source_bytes: 9, work: 2740, depth: 6, nodes: 26, allocation_units: 16985, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_FORM α index=6 usage=Usage { source_bytes: 6, work: 2747, depth: 6, nodes: 26, allocation_units: 16979, output_bytes: 0, diagnostics: 0, events: 0 }"
+    ]
+  },
+  "subject.log": {
+    "test_results": [
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.00s\r",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 22 filtered out; finished in 0.01s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 24 filtered out; finished in 0.00s\r"
+    ],
+    "observations": [
+      "REVIEW_SUBJECT PackageFailure { error: Stopped(AllocationLimit), subject: Some(Provenance(0)) } usage=Usage { source_bytes: 7, work: 163, depth: 2, nodes: 1, allocation_units: 586, output_bytes: 0, "
+    ]
+  },
+  "identity_equal_before_native_wasi": true,
+  "head": "9dbda463529d96039db4e8f71888ddf6bf1c5c36",
+  "base": "3f23aec87da9bef9e7ac02639d4bb08dafed2aab"
+}
