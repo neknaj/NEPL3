@@ -1,0 +1,19 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-doc-core",
+    "--test",
+    "portable",
+    "--target-dir",
+    "../target",
+    "--",
+    "--nocapture"
+  ],
+  "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-sentence-payload\\workspace",
+  "runner": "wasmtime run",
+  "exit_code": 0,
+  "seconds": 152.09084459999576
+}

@@ -61,12 +61,12 @@ pub fn compile(
     let signature = super::reader::signature(&registry, budget).map_err(|e| format!("{e:?}"))?;
     extensions.push(extension(
         &registry,
-        "doc.reader/sentence-v1",
+        "doc.reader/sentence-v2",
         "reader/v1",
         signature.operation.clone(),
     )?);
     imports.push(ReaderImport {
-        provider: "doc.reader/sentence-v1".into(),
+        provider: "doc.reader/sentence-v2".into(),
         signature,
     });
     let engine = registry

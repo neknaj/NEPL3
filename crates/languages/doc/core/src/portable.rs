@@ -3,6 +3,7 @@
 pub mod pages;
 pub mod prepare;
 pub mod print;
+pub mod sentence;
 pub mod text;
 mod value;
 use crate::{check::StructureError, model::DocumentSyntax};

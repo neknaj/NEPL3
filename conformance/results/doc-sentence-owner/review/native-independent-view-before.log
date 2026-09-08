@@ -1,0 +1,17 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.07s
+     Running tests\review_sentence_payload.rs (../target\debug\deps\review_sentence_payload-556b94f9e9deda21.exe)
+
+running 2 tests
+explicit owner: same payload bytes 16216 for owner lengths 2078 / 8222; 3 identity negatives; 12 stops
+test explicit_owner_fresh_receiver_identity_and_stop_matrix ... ok
+Error: "Structure(View(Cover))"
+test actual_parse_outer_cbor_lower_and_token_spoofs ... FAILED
+
+failures:
+
+failures:
+    actual_parse_outer_cbor_lower_and_token_spoofs
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+error: test failed, to rerun pass `-p nepl3-tools --test review_sentence_payload`

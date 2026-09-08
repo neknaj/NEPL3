@@ -31,7 +31,7 @@ pub fn signature(r: &SchemaRegistry, b: &mut Budget) -> Result<ProviderSignature
     let operation = descriptor
         .operations
         .iter()
-        .find(|op| op.name == "sentence")
+        .find(|op| op.name == "sentenceReferenced")
         .ok_or(ReaderError::ProviderContract)?;
     let envelope = |ty: &TypeDescriptor, name: &str| matches!(ty,TypeDescriptor::Named(t) if t.package=="nepl3.reader" && t.revision==1 && t.name==name);
     if !operation.pure
@@ -47,14 +47,14 @@ pub fn signature(r: &SchemaRegistry, b: &mut Budget) -> Result<ProviderSignature
     Ok(ProviderSignature {
         operation: OperationRef {
             schema: s.clone(),
-            name: "sentence".into(),
+            name: "sentenceReferenced".into(),
         },
         kind: ProviderKind::Read,
         value_input: TypeDescriptor::Unit,
         value_output: TypeDescriptor::Named(TypeRef {
             package: "nepl3.doc".into(),
             revision: 1,
-            name: "DocumentSyntax".into(),
+            name: "SentencePayload".into(),
         }),
         pure: true,
         state_type: TypeDescriptor::Unit,
@@ -140,13 +140,14 @@ pub fn read(
                 };
                 let mut codec =
                     FoundationCodec::new(registry, sources, a).map_err(|_| ReaderError::Context)?;
-                let value = nepl3_doc_core::portable::to_value(&doc, registry, &mut codec, b)
-                    .map_err(|e| match e {
-                        nepl3_doc_core::portable::PortableError::Stopped(s) => {
-                            ReaderError::Stopped(s)
-                        }
-                        _ => ReaderError::ProviderContract,
-                    })?;
+                let value =
+                    nepl3_doc_core::portable::sentence::to_value(&doc, registry, &mut codec, b)
+                        .map_err(|e| match e {
+                            nepl3_doc_core::portable::PortableError::Stopped(s) => {
+                                ReaderError::Stopped(s)
+                            }
+                            _ => ReaderError::ProviderContract,
+                        })?;
                 Ok(ReadReply::Matched {
                     value,
                     end,

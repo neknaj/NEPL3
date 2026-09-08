@@ -1,10 +1,10 @@
 language Doc 1 Article
 cons extension BuiltinWord "nepl3.reader/name-v1" "reader/v1"
 cons extension BuiltinTrivia "nepl3.reader/trivia-v1" "reader/v1"
-cons extension DocSentence "doc.reader/sentence-v1" "reader/v1"
+cons extension DocSentence "doc.reader/sentence-v2" "reader/v1"
 cons reader word call "nepl3.reader/name-v1"
 cons reader trivia call "nepl3.reader/trivia-v1"
-cons reader sentence call "doc.reader/sentence-v1"
+cons reader sentence call "doc.reader/sentence-v2"
 cons mode Code
 cons skip trivia
 cons take SentenceLiteral sentence

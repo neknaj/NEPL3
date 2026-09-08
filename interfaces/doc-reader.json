@@ -1,11 +1,45 @@
 {
   "package": "nepl3.doc.reader",
   "revision": 1,
-  "types": {"SentenceDiagnosticArguments":{"record":[],"constraints":[]}},
+  "types": {
+    "SentenceDiagnosticArguments": {
+      "record": [],
+      "constraints": []
+    }
+  },
   "operations": {
     "sentence": {
-      "input": {"named":{"package":"nepl3.reader","revision":1,"name":"ReadRequest"}},
-      "output": {"named":{"package":"nepl3.reader","revision":1,"name":"ReadReply"}},
+      "input": {
+        "named": {
+          "package": "nepl3.reader",
+          "revision": 1,
+          "name": "ReadRequest"
+        }
+      },
+      "output": {
+        "named": {
+          "package": "nepl3.reader",
+          "revision": 1,
+          "name": "ReadReply"
+        }
+      },
+      "pure": true
+    },
+    "sentenceReferenced": {
+      "input": {
+        "named": {
+          "package": "nepl3.reader",
+          "revision": 1,
+          "name": "ReadRequest"
+        }
+      },
+      "output": {
+        "named": {
+          "package": "nepl3.reader",
+          "revision": 1,
+          "name": "ReadReply"
+        }
+      },
       "pure": true
     }
   }
