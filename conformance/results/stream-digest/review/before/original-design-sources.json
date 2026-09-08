@@ -1,0 +1,55 @@
+{
+  "base": "3c42d75fcfb6703abcbdff185084f3a310a72041",
+  "files": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 7433,
+      "sha256": "41b7d0652555f23ec5bbe2ba98dc0a30ff7d4f1141ae7fddd426df56e4e65823"
+    },
+    {
+      "path": "conformance/targets/rp2040/Cargo.lock",
+      "bytes": 29301,
+      "sha256": "3e414d5d96c1ae1a3eac18a17053570488a3599f49118a96ca039d8ad6aac149"
+    },
+    {
+      "path": "crates/foundation/core/src/value_codec.rs",
+      "bytes": 7112,
+      "sha256": "09ad19cdf44e5dfd1366716b95ac799028f3ffdde7394648204e9178a12191c5"
+    },
+    {
+      "path": "crates/foundation/wire/Cargo.toml",
+      "bytes": 354,
+      "sha256": "2a8d8d62b016a3c69ec66baa13795b1c62e977e4433112ac8d0c14bdfe41ae47"
+    },
+    {
+      "path": "crates/foundation/wire/src/encode.rs",
+      "bytes": 7541,
+      "sha256": "97326754bc1b96d57d0fe40dc6f13368fc27adba367cca481707d69b4b373994"
+    },
+    {
+      "path": "crates/foundation/wire/src/foundation.rs",
+      "bytes": 13247,
+      "sha256": "50661e973ebffd87e732521926887f8cfb952358281f7d936f08f226fdc43a5d"
+    },
+    {
+      "path": "crates/foundation/wire/tests/codec.rs",
+      "bytes": 9529,
+      "sha256": "7c8f5be5d450e10dd7543ca081621b2e9a501f96fd6e8ea7edbda05b7785f732"
+    },
+    {
+      "path": "crates/foundation/wire/tests/digest.rs",
+      "bytes": 3376,
+      "sha256": "8250a137c8a66319ccbfdf78b5ef9d81a087675c2d09bfe072fe1d4f9ebfc3e1"
+    },
+    {
+      "path": "design/dependencies.json",
+      "bytes": 6431,
+      "sha256": "ada18c4fb6ca843184e500f9c826931679dc02998bfe05b8ce7e60b232ac65ec"
+    },
+    {
+      "path": "doc/spec/09-portability.md",
+      "bytes": 15165,
+      "sha256": "9c30f92245bfac0f94324b078884bd758def94bf00b9189cd3e6a656a843cf21"
+    }
+  ]
+}

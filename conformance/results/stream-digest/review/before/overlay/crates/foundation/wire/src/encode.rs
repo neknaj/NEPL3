@@ -90,7 +90,6 @@ fn push<'a>(
     depth: u64,
     budget: &mut Budget,
 ) -> Result<(), WireError> {
-    budget.charge(Resource::Work, 1)?;
     budget.charge(
         Resource::AllocationUnits,
         core::mem::size_of::<(&NdfValue, u64)>() as u64,
@@ -142,7 +141,6 @@ fn emit(item: &NdfValue, out: &mut impl Sink, budget: &mut Budget) -> Result<(),
                 head(out, 4, 3, budget)?;
                 head(out, 0, 4, budget)?;
                 integer(out, v.numerator(), budget)?;
-                budget.charge(Resource::Work, v.denominator().bits().div_ceil(8))?;
                 budget.charge(
                     Resource::AllocationUnits,
                     v.denominator().bits().div_ceil(8),
