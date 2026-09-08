@@ -319,7 +319,8 @@ fn static_fields(
     profile: &ResolvedParseProfile<'_>,
     budget: &mut Budget,
 ) -> Result<(), TreeError> {
-    let package = profile.language(&selected.entry.alias, budget)?;
+    let checked = profile.checked(&selected.entry.alias, budget)?;
+    let package = checked.package();
     let node = node(bundle, selected.node)?;
     match selected.shape {
         ShapeSelection::Form { index } => {
@@ -340,14 +341,11 @@ fn static_fields(
                 .ok_or(TreeError::Selection)?;
             let token = token(bundle, node)?;
             let raw = head_text(bundle, node, budget)?;
-            for form in &package.forms {
-                budget.charge(
-                    Resource::Work,
-                    (selected.entry.category.len() + raw.len()) as u64 + 1,
-                )?;
-                if form.category == selected.entry.category && form.spelling == raw {
-                    return Err(TreeError::Selection);
-                }
+            if checked
+                .form(&selected.entry.category, raw, budget)?
+                .is_some()
+            {
+                return Err(TreeError::Selection);
             }
             budget.charge(Resource::Work, token.kind.schema.package.len() as u64 + 41)?;
             if token.kind != leaf.token_kind {

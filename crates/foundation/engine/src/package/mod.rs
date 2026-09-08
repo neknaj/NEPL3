@@ -1,6 +1,7 @@
 //! Package metadata owns surface syntax; domain operations are separate registrations.
 mod bindings;
 mod check;
+mod forms;
 pub(crate) mod identity;
 mod model;
 mod reader;

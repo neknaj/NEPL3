@@ -664,12 +664,13 @@ impl<'a> ParseSession<'a> {
             .frames
             .last()
             .ok_or(ParseError::Reference)?;
-        let package = self.profile.language(&frame.entry.alias, budget)?;
+        let checked = self.profile.checked(&frame.entry.alias, budget)?;
+        let package = checked.package();
         let snapshot = sources
             .resolve(&machine.progress.request.snapshot)
             .ok_or(SourceError::MissingSnapshot)?;
         let static_form = if frame.read.is_none() {
-            select::form(package, &frame.entry, &token, snapshot, budget)?
+            select::form(checked, &frame.entry, &token, snapshot, budget)?
         } else {
             None
         };
