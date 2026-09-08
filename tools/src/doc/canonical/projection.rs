@@ -167,6 +167,7 @@ fn grouped(
     )
 }
 
+#[cfg(test)]
 pub(super) fn generate(root: &Path, manifest: &str, budget: &mut Budget) -> Result<Generated> {
     budget.poll().map_err(err)?;
     generate_from_registry(
@@ -184,6 +185,8 @@ pub(super) fn generate_from_registry(
     budget: &mut Budget,
 ) -> Result<Generated> {
     budget.poll().map_err(err)?;
+    let initial_usage = budget.usage();
+    let limits = budget.limits();
     let (raw, inputs, needs_group) = capture(root, raw)?;
     let compiled = crate::doc::source::compiled()?;
     let group = if needs_group {
@@ -303,14 +306,25 @@ pub(super) fn generate_from_registry(
         charge(budget, Resource::AllocationUnits, path.len() * 6 + 512)?;
         records.push(serde_json::json!({"path":path,"sha256":hex(Digest::of(text.as_bytes())),"bytes":text.len()}));
     }
+    // Reserve before json! copies the records and before serialization. Each
+    // portable path is <=4096 bytes; 32 KiB covers escaped path, fields, digest
+    // and pretty-print spacing. Both copies are included in this allowance.
+    let receipt_allowance = (files.len() * 32768 + 1024) * 2;
+    charge(budget, Resource::Work, receipt_allowance)?;
+    charge(budget, Resource::AllocationUnits, receipt_allowance)?;
     // This final receipt is not an input to the next generation.
+    let usage = |u: nepl3_core::budget::Usage| {
+        serde_json::json!({
+        "source_bytes":u.source_bytes,"work":u.work,"depth":u.depth,"nodes":u.nodes,
+        "allocation_units":u.allocation_units,"output_bytes":u.output_bytes,
+        "diagnostics":u.diagnostics,"events":u.events})
+    };
     let receipt = serde_json::json!({"format":"nepl3.canonical-markdown-stage/1",
-        "input_context":identity.map(hex),"files":records});
-    charge(
-        budget,
-        Resource::AllocationUnits,
-        files.len() * 32768 + 1024,
-    )?;
+        "input_context":identity.map(hex),"files":records,
+        "output_budget":{"limits":{"source_bytes":limits.source_bytes,"work":limits.work,
+            "depth":limits.depth,"nodes":limits.nodes,"allocation_units":limits.allocation_units,
+            "output_bytes":limits.output_bytes,"diagnostics":limits.diagnostics,"events":limits.events},
+            "initial_usage":usage(initial_usage),"usage_before_receipt_serialization":usage(budget.usage())}});
     let manifest = serde_json::to_string_pretty(&receipt)? + "\n";
     charge(budget, Resource::Work, manifest.len())?;
     charge(budget, Resource::OutputBytes, manifest.len())?;

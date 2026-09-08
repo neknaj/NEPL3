@@ -33,6 +33,9 @@ fn portable_path(name: &str) -> bool {
 pub struct Registry {
     pub version: u32,
     pub pages: Vec<Page>,
+    /// Batch allowance; old-only checks keep their per-page operation limits.
+    #[serde(default)]
+    pub output_limits: super::export::pages::resources::OutputLimits,
 }
 
 #[derive(Debug, Deserialize)]
@@ -154,8 +157,12 @@ pub fn check(root: &Path, manifest: &str) -> Result<()> {
         }
         return Ok(());
     }
-    let generated =
-        projection::generate_from_registry(root, manifest, raw, &mut super::source::budget())?;
+    let generated = projection::generate_from_registry(
+        root,
+        manifest,
+        raw,
+        &mut registry.output_limits.budget(),
+    )?;
     for (path, expected) in &generated.files {
         let actual = bounded(root, path, 2_097_152)?;
         if actual != expected.as_bytes() {
@@ -176,7 +183,14 @@ pub fn markdown(root: &Path, manifest: &str, output: &Path) -> Result<()> {
     if output.exists() {
         return Err("output directory already exists".into());
     }
-    let generated = projection::generate(root, manifest, &mut super::source::budget())?;
+    let raw = bounded(root, manifest, MAX_REGISTRY)?;
+    let registry = parse_registry(&raw)?;
+    let generated = projection::generate_from_registry(
+        root,
+        manifest,
+        raw,
+        &mut registry.output_limits.budget(),
+    )?;
     super::export::pages::write_generated(
         super::export::pages::GeneratedPages {
             files: generated

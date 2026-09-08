@@ -363,3 +363,90 @@ fn grouped_failures_and_sticky_limits_never_publish_partial_outputs() -> Result<
     assert!(!out.exists());
     Ok(())
 }
+
+#[test]
+fn real_architecture_draft_links_to_canonical_extensions_with_legacy_bytes_intact() -> Result<()> {
+    let repository = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .ok_or("repository")?;
+    let f = Fixture::new()?;
+    let mut value: serde_json::Value =
+        serde_json::from_slice(&fs::read(repository.join("doc/canonical.json"))?)?;
+    for page in value["pages"].as_array().ok_or("pages")? {
+        for field in ["source", "aliases", "projection"] {
+            let path = page[field].as_str().ok_or("path")?;
+            f.write(path, fs::read(repository.join(path))?)?;
+        }
+    }
+    value["pages"].as_array_mut().ok_or("pages")?.push(json!({
+        "id":"architecture","source":"doc/spec/01-architecture.nepld",
+        "projection":"doc/spec/01-architecture.md","aliases":"doc/architecture.json",
+        "route":"docs/spec/01-architecture.html","renderer":projection::RENDERER
+    }));
+    f.json("doc/canonical.json", &value)?;
+    f.write("doc/architecture.json", b"[]")?;
+    f.write(
+        "doc/spec/01-architecture.nepld",
+        fs::read(repository.join("doc/migration/authored/01-architecture.nepld"))?,
+    )?;
+    // Four real pages, including legacy body revalidation, share one output
+    // allowance chosen before execution. No retry on a stopped budget.
+    let limits = super::super::export::pages::resources::OutputLimits {
+        work: 300_000_000,
+        allocation_units: 750_000_000,
+        ..Default::default()
+    };
+    value["output_limits"] = serde_json::to_value(limits)?;
+    f.json("doc/canonical.json", &value)?;
+    let mut budget = limits.budget();
+    let result = projection::generate(f.root(), "doc/canonical.json", &mut budget)?;
+    eprintln!("real four-page output usage: {:?}", budget.usage());
+    for (path, text) in &result.files[..result.files.len() - 1] {
+        assert_eq!(text.as_bytes(), fs::read(repository.join(path))?, "{path}");
+    }
+    let architecture = &result.files.last().ok_or("architecture")?.1;
+    let links: Vec<_> = pulldown_cmark::Parser::new(architecture)
+        .filter_map(|event| {
+            if let pulldown_cmark::Event::Start(pulldown_cmark::Tag::Link { dest_url, .. }) = event
+            {
+                Some(dest_url.into_string())
+            } else {
+                None
+            }
+        })
+        .collect();
+    assert!(links.iter().any(|l| l == "22-external-extensions.md"));
+    Ok(())
+}
+
+#[test]
+fn staging_rejects_aggregate_alias_and_page_limits_before_creating_output() -> Result<()> {
+    let f = Fixture::new()?;
+    let value = mixed(&f)?;
+    // Each file is individually within its limit; the combined input is not.
+    let padded = " ".repeat(600_000) + "[]";
+    f.write("doc/aliases.json", &padded)?;
+    f.write("doc/target.json", &padded)?;
+    let output = f.root().join("over-limit");
+    assert!(markdown(f.root(), "doc/canonical.json", &output).is_err());
+    assert!(!output.exists());
+    let pages: Vec<_> = (0..129)
+        .map(|i| {
+            json!({
+                "id":format!("p{i}"),"source":format!("doc/p{i}.nepld"),
+                "projection":format!("doc/p{i}.md"),"aliases":format!("doc/p{i}.json"),
+                "route":format!("docs/p{i}.html"),"renderer":projection::RENDERER
+            })
+        })
+        .collect();
+    f.json(
+        "doc/canonical.json",
+        &json!({"version":value["version"],"pages":pages}),
+    )?;
+    let error = markdown(f.root(), "doc/canonical.json", &output)
+        .err()
+        .ok_or("expected failure")?;
+    assert_eq!(error.to_string(), "PageCountLimit");
+    assert!(!output.exists());
+    Ok(())
+}

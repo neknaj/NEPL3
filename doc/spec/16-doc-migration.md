@@ -94,7 +94,12 @@ alias合計1 MiB、registry 1 MiB、生成Markdownは1ページ2 MiBを上限と
 読み込むhost入力はこの上限で制約する。parseとlowerは各ページの独立した有限operationとし、
 resolve・render・anchor照合・digest・metadata・出力コピーには一つの消費済み状態を保持する
 出力Budgetを用いる。旧rendererの混在ページを再生成するときも、この出力Budgetを共有する。
-出力Budgetは既定のDoc host allowanceで開始し、停止後の再試行や別予算による継続はしない。
+registryの任意field `output_limits` は既存のOutputLimitsと同じ8資源の上限を持ち、
+集合の処理開始前に選択する。未指定なら既定のDoc host allowanceで開始する。
+停止後の再試行・暗黙の増額・別予算による継続はしない。旧rendererだけの検査では
+この集合設定を用いず従来のページ単位のoperationを維持する。出力manifestには実際に
+選択した上限と開始時usage、receipt serialize直前のusageを別fieldで記録する。
+最後のusageはreceipt自体のserialize・最終出力課金を含まない値として明示する。
 host JSON・文字列整形の計量は保守的な論理allocation allowanceであり、物理heapの計測ではない。
 
 互換aliasとGitHubの自動見出しIDは独立して発生するため、実際のGitHub表示で重複と移動先を確認する。13章では旧8見出しのうち6つを明示alias、`1-digest` と `3-normal-formとartifact` を同名の自動見出しで維持する。全7Sectionの明示IDも保持する。この判断は13章の実際の見出しに対する対応表であり、任意のMarkdownに対するslug推測をfoundationへ追加するものではない。
