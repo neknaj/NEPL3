@@ -3,7 +3,7 @@ body
   cons section policy "[方針/ほうしん]" body
     cons paragraph
       cons "[二値/にち]・[固定幅/こていはば]・[同期離散時間/どうきりさんじかん]の[回路/かいろ]を[正式/せいしき]な[意味領域/いみりょういき]とする。"
-      cons "[構文木/こうぶんぎ]と[回路/かいろ]graph、[回路生成/かいろせいせい]と[信号/しんごう]の[実行値/じっこうち]、[定義/ていぎ]の[再利用/さいりよう]と[状態/じょうたい]の[共有/きょうゆう]を[分離/ぶんり]する。"
+      cons "[構文木/こうぶんき]と[回路/かいろ]graph、[回路生成/かいろせいせい]と[信号/しんごう]の[実行値/じっこうち]、[定義/ていぎ]の[再利用/さいりよう]と[状態/じょうたい]の[共有/きょうゆう]を[分離/ぶんり]する。"
       nil
     nil
   cons section surface "1. surfaceと[型/かた]" body
@@ -34,22 +34,22 @@ body
   cons section declarations "2. [各宣言/かくせんげん]" body
     cons list unordered
       cons item none body cons paragraph
-        cons sentence cons code "wire name expr" cons text ": exprの値を共有する組合せ信号。" nil
+        cons sentence cons code "wire name expr" cons text ": exprの" cons ruby text "値" text "あたい" cons text "を" cons ruby text "共有" text "きょうゆう" cons text "する" cons ruby text "組合" text "くみあわ" cons text "せ" cons ruby text "信号" text "しんごう" cons text "。" nil
         cons "[宣言順/せんげんじゅん]に[依存/いぞん]せず[前方参照/ぜんぽうさんしょう]を[認/みと]める。" nil nil
       cons item none body cons paragraph
-        cons sentence cons code "state name width initial" cons text ": 初期値を持つ状態。" nil
+        cons sentence cons code "state name width initial" cons text ": " cons ruby text "初期値" text "しょきち" cons text "を" cons ruby text "持" text "も" cons text "つ" cons ruby text "状態" text "じょうたい" cons text "。" nil
         cons "initialはBitsのliteralで[幅/はば]が[一致/いっち]する[必要/ひつよう]がある。" nil nil
       cons item none body cons paragraph
-        cons sentence cons code "next name expr" cons text ": 次のtickのstate値。" nil
+        cons sentence cons code "next name expr" cons text ": " cons ruby text "次" text "つぎ" cons text "のtickのstate" cons ruby text "値" text "ち" cons text "。" nil
         cons "[対象/たいしょう]はstateに[限/かぎ]り、[各/かく]stateにちょうど[一/ひと]つ[必要/ひつよう]。"
         cons "[省略/しょうりゃく]を[暗黙/あんもく]の[保持/ほじ]としない。"
-        cons sentence cons text "保持は " cons code "next q q" cons text " と明示する。" nil nil nil
+        cons sentence cons ruby text "保持" text "ほじ" cons text "は " cons code "next q q" cons text " と" cons ruby text "明示" text "めいじ" cons text "する。" nil nil nil
       cons item none body cons paragraph
-        cons sentence cons code "inst name module arguments" cons text ": moduleの入力列の順に引数を接続する。" nil
+        cons sentence cons code "inst name module arguments" cons text ": moduleの" cons ruby text "入力列" text "にゅうりょくれつ" cons text "の" cons ruby text "順" text "じゅん" cons text "に" cons ruby text "引数" text "ひきすう" cons text "を" cons ruby text "接続" text "せつぞく" cons text "する。" nil
         cons "[毎回独立/まいかいどくりつ]したinstanceを[作/つく]る。"
         cons "[定義/ていぎ]の[構文/こうぶん]fragmentの[共有/きょうゆう]は[状態/じょうたい]の[共有/きょうゆう]を[意味/いみ]しない。" nil nil
       cons item none body cons paragraph
-        cons sentence cons code "output name width expr" cons text ": 外部出力。" nil
+        cons sentence cons code "output name width expr" cons text ": " cons ruby text "外部出力" text "がいぶしゅつりょく" cons text "。" nil
         cons "[明示幅/めいじはば]とexpr[幅/はば]の[一致/いっち]を[要求/ようきゅう]する。" nil nil
       nil
     nil
@@ -64,7 +64,7 @@ body
       cons "select=1ならyes。" nil
     cons paragraph cons "concat a bはaを[上位/じょうい]、bを[下位/かい]へ[置/お]き、[幅/はば]はwa+wb。" nil
     cons paragraph
-      cons sentence cons text "slice value lo widthはLSB=0として " cons code "[lo,lo+width)" cons text " を抜き出す。" nil
+      cons sentence cons text "slice value lo widthはLSB=0として " cons code "[lo,lo+width)" cons text " を" cons ruby text "抜" text "ぬ" cons text "き" cons ruby text "出" text "だ" cons text "す。" nil
       cons "width>0かつlo+width<=[入力幅/にゅうりょくはば]。"
       cons "[全加算/ぜんかさん]・index[計算/けいさん]をcheckedにする。" nil
     nil
@@ -102,10 +102,10 @@ body
       cons "[全/ぜん]stateは[同時更新/どうじこうしん]。"
       cons "stateを[逐次上書/ちくじうわが]きして[後続/こうぞく]のnext[計算/けいさん]へ[影響/えいきょう]させない。" nil
     cons paragraph
-      cons sentence cons code "initial(PreparedNetlist)" cons text " は、entryを選んでelaborateした全instanceのstate初期値をslot順に返す。" nil
+      cons sentence cons code "initial(PreparedNetlist)" cons text " は、entryを" cons ruby text "選" text "えら" cons text "んでelaborateした" cons ruby text "全" text "ぜん" cons text "instanceのstate" cons ruby text "初期値" text "しょきち" cons text "をslot" cons ruby text "順" text "じゅん" cons text "に" cons ruby text "返" text "かえ" cons text "す。" nil
       cons "CheckedDesignとentryはelaborateの[入力/にゅうりょく]であり、initialは[階層展開/かいそうてんかい]と[組合/くみあわ]せDAG・[幅/はば]の[検査/けんさ]を[済/す]ませた[値/あたい]だけを[受/う]ける。"
-      cons sentence cons code "step" cons text " は入力stateを変更せず新しい値を返す。" nil
-      cons sentence cons code "observe" cons text " は現在の出力だけを返す純粋操作。" nil
+      cons sentence cons code "step" cons text " は" cons ruby text "入力" text "にゅうりょく" cons text "stateを" cons ruby text "変更" text "へんこう" cons text "せず" cons ruby text "新" text "あたら" cons text "しい" cons ruby text "値" text "あたい" cons text "を" cons ruby text "返" text "かえ" cons text "す。" nil
+      cons sentence cons code "observe" cons text " は" cons ruby text "現在" text "げんざい" cons text "の" cons ruby text "出力" text "しゅつりょく" cons text "だけを" cons ruby text "返" text "かえ" cons text "す" cons ruby text "純粋操作" text "じゅんすいそうさ" cons text "。" nil
       cons "[入力列/にゅうりょくれつ]と[出力列/しゅつりょくれつ]の[順/じゅん]はmodule[宣言順/せんげんじゅん]。" nil
     cons paragraph
       cons "test name module ticksはそのtest[開始時/かいしじ]にinitial[状態/じょうたい]へ[戻/もど]す。"
@@ -116,7 +116,7 @@ body
     cons paragraph
       cons "この[仕様/しよう]は[非同期/ひどうき]latch、[伝播遅延/でんぱちえん]、X/Z、アナログ[挙動/きょどう]をモデル[化/か]しない。"
       cons "これらを[適当/てきとう]に[二値/にち]へ[潰/つぶ]す[変換/へんかん]は[許可/きょか]しない。"
-      cons "[別/べつ]modelを[導入/どうにゅう]するならschemaと[操作/そうさ]の[版/はん]を[分/わ]ける。" nil
+      cons "[別/べつ]modelを[導入/どうにゅう]するならschemaと[操作/そうさ]の[版/ばん]を[分/わ]ける。" nil
     nil
   cons section nor "6. NOR IR" body
     cons paragraph
