@@ -374,5 +374,28 @@ body
       cons sentence cons ruby text "最初" text "さいしょ" cons text "のprefix" cons ruby text "公開試験" text "こうかいしけん" cons text " " cons code "cargo test --locked -p nepl3-engine --test parse" cons text " の2" cons ruby text "件" text "けん" cons text "は" cons ruby text "独立成功" text "どくりつせいこう" cons text "した。" nil
       cons sentence cons ruby text "追加補助入力" text "ついかほじょにゅうりょく" cons text " " cons code "let" cons text " と " cons code "let x let" cons text " は、" cons ruby text "修正後" text "しゅうせいご" cons text "に" cons ruby text "同" text "おな" cons text "じbundleのMissing 2" cons ruby text "件" text "けん" cons text "を" cons ruby text "一" text "ひと" cons text "つのrecovery" cons ruby text "索引" text "さくいん" cons text "へまとめ、tree" cons ruby text "検査" text "けんさ" cons text "にも" cons ruby text "成功" text "せいこう" cons text "した。" nil
       cons "[修正前/しゅうせいまえ]の[重複索引/ちょうふくさくいん]の[動的失敗/どうてきしっぱい]は[独立実行/どくりつじっこう]していない。" nil
+    cons paragraph
+      cons sentence cons text "R026では、arity 2の " cons code "f(Name, Expr)" cons text " とCapture 20" cons ruby text "段" text "だん" cons text "のScalar readerを" cons ruby text "組" text "く" cons text "み" cons ruby text "合" text "あ" cons text "わせ、depth limit 25で " cons code "f x " cons text " の" cons ruby text "親" text "おや" cons text "を0/5/10/15" cons ruby text "個積" text "こつ" cons text "んでも" cons ruby text "全" text "すべ" cons text "てComplete・peak 23となることを" cons ruby text "本番" text "ほんばん" cons text "APIで" cons ruby text "再現" text "さいげん" cons text "した。" nil
+      cons sentence cons ruby text "補助実行" text "ほじょじっこう" cons text "は " cons code "cargo run --manifest-path .tmp/independent-engine/Cargo.toml --bin parse_depth" cons text "。" nil
+      cons "prefix frameのobserveだけでは[内側/うちがわ]readerのactive depthへ[加算/かさん]されず、[共有上限/きょうゆうじょうげん]を[満/み]たさない。"
+      cons "[修正/しゅうせい]と[管理対象/かんりたいしょう]の[複合境界回帰/ふくごうきょうかいかいき]を[要求/ようきゅう]している。" nil
+    cons paragraph
+      cons sentence cons text "R027では" cons ruby text "補助" text "ほじょ" cons text "probe " cons code "parse_trivia" cons text " から、final " cons code "let " cons text " のWhitespace[3,4)、final " cons code "let x # comment" cons text " のWhitespace[5,6)とComment[6,15)、" cons ruby text "同" text "どう" cons text "nonfinal" cons ruby text "入力" text "にゅうりょく" cons text "の" cons ruby text "確定" text "かくてい" cons text "Whitespace[5,6)が" cons ruby text "結果" text "けっか" cons text "/progressに" cons ruby text "保存" text "ほぞん" cons text "されないことを" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "[元/もと]snapshot bytesは[残/のこ]るが、tokenが[生成/せいせい]されない[終端/しゅうたん]でreaderが[確定/かくてい]したTriviaの[種別/しゅべつ]・[範囲/はんい]・[所属/しょぞく]を[捨/す]てている。"
+      cons "[修正草稿/しゅうせいそうこう]でR026の[元/もと]probeは[親/おや]0のみComplete、[親/おや]5/10/15でStopped DepthLimitへ[変化/へんか]し、R027の[元入力/もとにゅうりょく]もHost[付/つ]きbatchへ[各/かく]Whitespace/Commentを[保持/ほじ]することを[再確認/さいかくにん]した。"
+      cons "[最新/さいしん]のproduction parse 8[件/けん]は[独立成功/どくりつせいこう]したが、[停止/ていし]・[再開/さいかい]を[含/ふく]む[範囲/はんい]の[追加確認/ついかかくにん]までR026/R027はopenとする。" nil
+    cons paragraph
+      cons sentence cons text "R028として、Name tokenizerがtokenを" cons ruby text "読" text "よ" cons text "めるがform/leafが" cons ruby text "一致" text "いっち" cons text "しない " cons code "unknown" cons text "、" cons code "unknown tail" cons text "、" cons code "let x unknown tail" cons text " を" cons ruby text "補助" text "ほじょ" cons text "probe " cons code "parse_unknown" cons text " で" cons ruby text "解析" text "かいせき" cons text "し、" cons ruby text "全" text "すべ" cons text "てTree(Selection)となることを" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "unknown headのtoken[付/つ]きRecoveryUnparsedを[生成/せいせい]する[側/がわ]と、[通常/つうじょう]node tokenを[持/も]たないUnparsed[契約/けいやく]の[不整合/ふせいごう]である。"
+      cons "[原文/げんぶん]rangeと[認識済/にんしきず]tokenの[保存先/ほぞんさき]を[明確/めいかく]にし、[未知/みち]arityをleaf[成功/せいこう]へ[推測/すいそく]せず[回復結果/かいふくけっか]を[返/かえ]す[修正/しゅうせい]を[要求/ようきゅう]している。" nil
+    cons paragraph
+      cons sentence cons text "その" cons ruby text "後" text "ご" cons text "、" cons code "cargo test --locked -p nepl3-engine --test parse" cons text " の11" cons ruby text "件" text "けん" cons text "を" cons ruby text "独立" text "どくりつ" cons text "に" cons ruby text "再実行" text "さいじっこう" cons text "し" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "[途中/とちゅう]の10[件/けん]MissingSchemaはfixtureに[追加/ついか]したoperationの[参照/さんしょう]schemaをProfileへ[選択/せんたく]し[忘/わす]れた[同期不備/どうきふび]で、[成功/せいこう]へ[置/お]き[換/か]えて[記録/きろく]せず[修正後/しゅうせいご]に[再実行/さいじっこう]した。"
+      cons sentence cons ruby text "補助" text "ほじょ" cons text " " cons code "parse_boundary" cons text " でも、caller depth 7からText Reserveとprovider Awaitを" cons ruby text "再開" text "さいかい" cons text "して" cons ruby text "両方" text "りょうほう" cons text "peak 13で" cons ruby text "完了" text "かんりょう" cons text "し、" cons ruby text "第" text "だい" cons text "2Awaitのcancelで" cons ruby text "診断" text "しんだん" cons text "1" cons ruby text "件" text "けん" cons text "とTrivia[3,4),[5,6)を" cons ruby text "保持" text "ほじ" cons text "した。" nil
+      cons "[元/もと]のunknown 3[入力/にゅうりょく]は[全/すべ]てRecoveredとなり、headと[全/ぜん]Unparsed coverを[別々/べつべつ]に[保持/ほじ]する。"
+      cons sentence cons code "unknown tail" cons text " はhead[0,7)/cover[0,12)、" cons code "let x unknown tail" cons text " はhead[6,13)/cover[6,18)である。" nil
+      cons "spec04の[規則/きそく]、native[型/がた]、ReaderFactBatchのschemaを[照合/しょうごう]し、R026/R027/R028をこの[静的/せいてき]native[範囲/はんい]でcorrectedとした。"
+      cons "[動的/どうてき]HeadProvider、portable wrapper、[全/ぜん]bootstrapの[完成/かんせい]を[意味/いみ]しない。"
+      cons "[補助/ほじょ]probeはignoredであり、[再実行可能/さいじっこうかのう]な[管理対象/かんりたいしょう]production[試験/しけん]を[検証/けんしょう]の[中心/ちゅうしん]とする。" nil
     nil
   nil
