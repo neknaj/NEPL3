@@ -1,0 +1,858 @@
+[
+  {
+    "scripts": 0,
+    "article_language": "ja",
+    "headings": [
+      "13. 再現性さいげんせい・schema識別しきべつ・契約けいやくの判定はんてい",
+      "方針ほうしん",
+      "1. digest",
+      "Package意味正規形いみせいきけい",
+      "具体実行ぐたいじっこうidentity",
+      "2. native値ちとwire値ち",
+      "3. normal formとartifact",
+      "4. limitsとproviderの互換ごかん"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-646967657374",
+      "n-73656d616e746963",
+      "n-657865637574696f6e",
+      "n-77697265",
+      "n-617274696661637473",
+      "n-6c696d697473"
+    ],
+    "ruby": 674,
+    "styles": [
+      29
+    ],
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 375,
+    "prefix": "canonical-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "box": {
+          "x": 32,
+          "y": 0.265625,
+          "width": 311,
+          "height": 261.765625
+        }
+      },
+      {
+        "id": "n-646967657374",
+        "box": {
+          "x": 32,
+          "y": -0.0625,
+          "width": 311,
+          "height": 7423.890625
+        }
+      },
+      {
+        "id": "n-73656d616e746963",
+        "box": {
+          "x": 32,
+          "y": -0.359375,
+          "width": 311,
+          "height": 2631.796875
+        }
+      },
+      {
+        "id": "n-657865637574696f6e",
+        "box": {
+          "x": 32,
+          "y": 0.15625,
+          "width": 311,
+          "height": 1180.671875
+        }
+      },
+      {
+        "id": "n-77697265",
+        "box": {
+          "x": 32,
+          "y": -0.265625,
+          "width": 311,
+          "height": 5438.15625
+        }
+      },
+      {
+        "id": "n-617274696661637473",
+        "box": {
+          "x": 32,
+          "y": -0.203125,
+          "width": 311,
+          "height": 1420.515625
+        }
+      },
+      {
+        "id": "n-6c696d697473",
+        "box": {
+          "x": 32,
+          "y": 163.21875,
+          "width": 311,
+          "height": 705.125
+        }
+      }
+    ],
+    "focused": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "keyboard": "Tab after full reload",
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "article_language": "ja",
+    "headings": [
+      "13. 再現性さいげんせい・schema識別しきべつ・契約けいやくの判定はんてい",
+      "方針ほうしん",
+      "1. digest",
+      "Package意味正規形いみせいきけい",
+      "具体実行ぐたいじっこうidentity",
+      "2. native値ちとwire値ち",
+      "3. normal formとartifact",
+      "4. limitsとproviderの互換ごかん"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-646967657374",
+      "n-73656d616e746963",
+      "n-657865637574696f6e",
+      "n-77697265",
+      "n-617274696661637473",
+      "n-6c696d697473"
+    ],
+    "ruby": 674,
+    "styles": [
+      29
+    ],
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 1280,
+    "prefix": "canonical-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "box": {
+          "x": 32,
+          "y": -0.328125,
+          "width": 1216,
+          "height": 123.578125
+        }
+      },
+      {
+        "id": "n-646967657374",
+        "box": {
+          "x": 32,
+          "y": 0.15625,
+          "width": 1216,
+          "height": 2287.703125
+        }
+      },
+      {
+        "id": "n-73656d616e746963",
+        "box": {
+          "x": 32,
+          "y": -0.046875,
+          "width": 1216,
+          "height": 766.109375
+        }
+      },
+      {
+        "id": "n-657865637574696f6e",
+        "box": {
+          "x": 32,
+          "y": -0.21875,
+          "width": 1216,
+          "height": 386.078125
+        }
+      },
+      {
+        "id": "n-77697265",
+        "box": {
+          "x": 32,
+          "y": -0.234375,
+          "width": 1216,
+          "height": 1534.25
+        }
+      },
+      {
+        "id": "n-617274696661637473",
+        "box": {
+          "x": 32,
+          "y": 132.921875,
+          "width": 1216,
+          "height": 424.40625
+        }
+      },
+      {
+        "id": "n-6c696d697473",
+        "box": {
+          "x": 32,
+          "y": 577.234375,
+          "width": 1216,
+          "height": 290.5625
+        }
+      }
+    ],
+    "focused": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "keyboard": "Tab after full reload",
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "article_language": "ja",
+    "headings": [
+      "13. 再現性さいげんせい・schema識別しきべつ・契約けいやくの判定はんてい",
+      "方針ほうしん",
+      "1. digest",
+      "Package意味正規形いみせいきけい",
+      "具体実行ぐたいじっこうidentity",
+      "2. native値ちとwire値ち",
+      "3. normal formとartifact",
+      "4. limitsとproviderの互換ごかん"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-646967657374",
+      "n-73656d616e746963",
+      "n-657865637574696f6e",
+      "n-77697265",
+      "n-617274696661637473",
+      "n-6c696d697473"
+    ],
+    "ruby": 674,
+    "styles": [
+      29
+    ],
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 375,
+    "prefix": "canonical-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "box": {
+          "x": 32,
+          "y": 0.265625,
+          "width": 311,
+          "height": 261.765625
+        }
+      },
+      {
+        "id": "n-646967657374",
+        "box": {
+          "x": 32,
+          "y": -0.0625,
+          "width": 311,
+          "height": 7423.890625
+        }
+      },
+      {
+        "id": "n-73656d616e746963",
+        "box": {
+          "x": 32,
+          "y": -0.359375,
+          "width": 311,
+          "height": 2631.796875
+        }
+      },
+      {
+        "id": "n-657865637574696f6e",
+        "box": {
+          "x": 32,
+          "y": 0.15625,
+          "width": 311,
+          "height": 1180.671875
+        }
+      },
+      {
+        "id": "n-77697265",
+        "box": {
+          "x": 32,
+          "y": -0.265625,
+          "width": 311,
+          "height": 5438.15625
+        }
+      },
+      {
+        "id": "n-617274696661637473",
+        "box": {
+          "x": 32,
+          "y": -0.203125,
+          "width": 311,
+          "height": 1420.515625
+        }
+      },
+      {
+        "id": "n-6c696d697473",
+        "box": {
+          "x": 32,
+          "y": 163.21875,
+          "width": 311,
+          "height": 705.125
+        }
+      }
+    ],
+    "focused": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "keyboard": "Tab after full reload",
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "article_language": "ja",
+    "headings": [
+      "13. 再現性さいげんせい・schema識別しきべつ・契約けいやくの判定はんてい",
+      "方針ほうしん",
+      "1. digest",
+      "Package意味正規形いみせいきけい",
+      "具体実行ぐたいじっこうidentity",
+      "2. native値ちとwire値ち",
+      "3. normal formとartifact",
+      "4. limitsとproviderの互換ごかん"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-646967657374",
+      "n-73656d616e746963",
+      "n-657865637574696f6e",
+      "n-77697265",
+      "n-617274696661637473",
+      "n-6c696d697473"
+    ],
+    "ruby": 674,
+    "styles": [
+      29
+    ],
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 1280,
+    "prefix": "canonical-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "box": {
+          "x": 32,
+          "y": -0.328125,
+          "width": 1216,
+          "height": 123.578125
+        }
+      },
+      {
+        "id": "n-646967657374",
+        "box": {
+          "x": 32,
+          "y": 0.15625,
+          "width": 1216,
+          "height": 2287.703125
+        }
+      },
+      {
+        "id": "n-73656d616e746963",
+        "box": {
+          "x": 32,
+          "y": -0.046875,
+          "width": 1216,
+          "height": 766.109375
+        }
+      },
+      {
+        "id": "n-657865637574696f6e",
+        "box": {
+          "x": 32,
+          "y": -0.21875,
+          "width": 1216,
+          "height": 386.078125
+        }
+      },
+      {
+        "id": "n-77697265",
+        "box": {
+          "x": 32,
+          "y": -0.234375,
+          "width": 1216,
+          "height": 1534.25
+        }
+      },
+      {
+        "id": "n-617274696661637473",
+        "box": {
+          "x": 32,
+          "y": 132.921875,
+          "width": 1216,
+          "height": 424.40625
+        }
+      },
+      {
+        "id": "n-6c696d697473",
+        "box": {
+          "x": 32,
+          "y": 577.234375,
+          "width": 1216,
+          "height": 290.5625
+        }
+      }
+    ],
+    "focused": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "keyboard": "Tab after full reload",
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "article_language": "ja",
+    "headings": [
+      "13. 再現性さいげんせい・schema識別しきべつ・契約けいやくの判定はんてい",
+      "方針ほうしん",
+      "1. digest",
+      "Package意味正規形いみせいきけい",
+      "具体実行ぐたいじっこうidentity",
+      "2. native値ちとwire値ち",
+      "3. normal formとartifact",
+      "4. limitsとproviderの互換ごかん"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-646967657374",
+      "n-73656d616e746963",
+      "n-657865637574696f6e",
+      "n-77697265",
+      "n-617274696661637473",
+      "n-6c696d697473"
+    ],
+    "ruby": 674,
+    "styles": [
+      29
+    ],
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 375,
+    "prefix": "canonical-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "box": {
+          "x": 32,
+          "y": 0.2666666805744171,
+          "width": 311,
+          "height": 261.85000202059746
+        }
+      },
+      {
+        "id": "n-646967657374",
+        "box": {
+          "x": 32,
+          "y": 0,
+          "width": 311,
+          "height": 7483.43310546875
+        }
+      },
+      {
+        "id": "n-73656d616e746963",
+        "box": {
+          "x": 32,
+          "y": 0,
+          "width": 311,
+          "height": 2666.033447265625
+        }
+      },
+      {
+        "id": "n-657865637574696f6e",
+        "box": {
+          "x": 32,
+          "y": 0,
+          "width": 311,
+          "height": 1164.88330078125
+        }
+      },
+      {
+        "id": "n-77697265",
+        "box": {
+          "x": 32,
+          "y": 0,
+          "width": 311,
+          "height": 5402.11669921875
+        }
+      },
+      {
+        "id": "n-617274696661637473",
+        "box": {
+          "x": 32,
+          "y": 0,
+          "width": 311,
+          "height": 1427.13330078125
+        }
+      },
+      {
+        "id": "n-6c696d697473",
+        "box": {
+          "x": 32,
+          "y": 179.46665954589844,
+          "width": 311,
+          "height": 688.1166534423828
+        }
+      }
+    ],
+    "focused": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "keyboard": "Tab after full reload",
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "article_language": "ja",
+    "headings": [
+      "13. 再現性さいげんせい・schema識別しきべつ・契約けいやくの判定はんてい",
+      "方針ほうしん",
+      "1. digest",
+      "Package意味正規形いみせいきけい",
+      "具体実行ぐたいじっこうidentity",
+      "2. native値ちとwire値ち",
+      "3. normal formとartifact",
+      "4. limitsとproviderの互換ごかん"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-646967657374",
+      "n-73656d616e746963",
+      "n-657865637574696f6e",
+      "n-77697265",
+      "n-617274696661637473",
+      "n-6c696d697473"
+    ],
+    "ruby": 674,
+    "styles": [
+      29
+    ],
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 1280,
+    "prefix": "canonical-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "box": {
+          "x": 32,
+          "y": -0.3333333432674408,
+          "width": 1216,
+          "height": 123.59999594092369
+        }
+      },
+      {
+        "id": "n-646967657374",
+        "box": {
+          "x": 32,
+          "y": 0,
+          "width": 1216,
+          "height": 2300.63330078125
+        }
+      },
+      {
+        "id": "n-73656d616e746963",
+        "box": {
+          "x": 32,
+          "y": 0.2666666805744171,
+          "width": 1216,
+          "height": 773.4166829288006
+        }
+      },
+      {
+        "id": "n-657865637574696f6e",
+        "box": {
+          "x": 32,
+          "y": 0.4000000059604645,
+          "width": 1216,
+          "height": 387.23333129286766
+        }
+      },
+      {
+        "id": "n-77697265",
+        "box": {
+          "x": 32,
+          "y": 0,
+          "width": 1216,
+          "height": 1535.9000244140625
+        }
+      },
+      {
+        "id": "n-617274696661637473",
+        "box": {
+          "x": 32,
+          "y": 129.5500030517578,
+          "width": 1216,
+          "height": 427.58335876464844
+        }
+      },
+      {
+        "id": "n-6c696d697473",
+        "box": {
+          "x": 32,
+          "y": 577.0499877929688,
+          "width": 1216,
+          "height": 290.64996337890625
+        }
+      }
+    ],
+    "focused": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "keyboard": "Tab after full reload",
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "article_language": "ja",
+    "headings": [
+      "13. 再現性さいげんせい・schema識別しきべつ・契約けいやくの判定はんてい",
+      "方針ほうしん",
+      "1. digest",
+      "Package意味正規形いみせいきけい",
+      "具体実行ぐたいじっこうidentity",
+      "2. native値ちとwire値ち",
+      "3. normal formとartifact",
+      "4. limitsとproviderの互換ごかん"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-646967657374",
+      "n-73656d616e746963",
+      "n-657865637574696f6e",
+      "n-77697265",
+      "n-617274696661637473",
+      "n-6c696d697473"
+    ],
+    "ruby": 674,
+    "styles": [
+      29
+    ],
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 375,
+    "prefix": "canonical-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "box": {
+          "x": 32,
+          "y": 0.2666666805744171,
+          "width": 311,
+          "height": 261.85000202059746
+        }
+      },
+      {
+        "id": "n-646967657374",
+        "box": {
+          "x": 32,
+          "y": 0,
+          "width": 311,
+          "height": 7483.43310546875
+        }
+      },
+      {
+        "id": "n-73656d616e746963",
+        "box": {
+          "x": 32,
+          "y": 0,
+          "width": 311,
+          "height": 2666.033447265625
+        }
+      },
+      {
+        "id": "n-657865637574696f6e",
+        "box": {
+          "x": 32,
+          "y": 0,
+          "width": 311,
+          "height": 1164.88330078125
+        }
+      },
+      {
+        "id": "n-77697265",
+        "box": {
+          "x": 32,
+          "y": 0,
+          "width": 311,
+          "height": 5402.11669921875
+        }
+      },
+      {
+        "id": "n-617274696661637473",
+        "box": {
+          "x": 32,
+          "y": 0,
+          "width": 311,
+          "height": 1427.13330078125
+        }
+      },
+      {
+        "id": "n-6c696d697473",
+        "box": {
+          "x": 32,
+          "y": 179.46665954589844,
+          "width": 311,
+          "height": 688.1166534423828
+        }
+      }
+    ],
+    "focused": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "keyboard": "Tab after full reload",
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "article_language": "ja",
+    "headings": [
+      "13. 再現性さいげんせい・schema識別しきべつ・契約けいやくの判定はんてい",
+      "方針ほうしん",
+      "1. digest",
+      "Package意味正規形いみせいきけい",
+      "具体実行ぐたいじっこうidentity",
+      "2. native値ちとwire値ち",
+      "3. normal formとartifact",
+      "4. limitsとproviderの互換ごかん"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-646967657374",
+      "n-73656d616e746963",
+      "n-657865637574696f6e",
+      "n-77697265",
+      "n-617274696661637473",
+      "n-6c696d697473"
+    ],
+    "ruby": 674,
+    "styles": [
+      29
+    ],
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 1280,
+    "prefix": "canonical-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "box": {
+          "x": 32,
+          "y": -0.3333333432674408,
+          "width": 1216,
+          "height": 123.59999594092369
+        }
+      },
+      {
+        "id": "n-646967657374",
+        "box": {
+          "x": 32,
+          "y": 0,
+          "width": 1216,
+          "height": 2300.63330078125
+        }
+      },
+      {
+        "id": "n-73656d616e746963",
+        "box": {
+          "x": 32,
+          "y": 0.2666666805744171,
+          "width": 1216,
+          "height": 773.4166829288006
+        }
+      },
+      {
+        "id": "n-657865637574696f6e",
+        "box": {
+          "x": 32,
+          "y": 0.4000000059604645,
+          "width": 1216,
+          "height": 387.23333129286766
+        }
+      },
+      {
+        "id": "n-77697265",
+        "box": {
+          "x": 32,
+          "y": 0,
+          "width": 1216,
+          "height": 1535.9000244140625
+        }
+      },
+      {
+        "id": "n-617274696661637473",
+        "box": {
+          "x": 32,
+          "y": 129.5500030517578,
+          "width": 1216,
+          "height": 427.58335876464844
+        }
+      },
+      {
+        "id": "n-6c696d697473",
+        "box": {
+          "x": 32,
+          "y": 577.0499877929688,
+          "width": 1216,
+          "height": 290.64996337890625
+        }
+      }
+    ],
+    "focused": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "keyboard": "Tab after full reload",
+    "failed_requests": [],
+    "result": "passed"
+  }
+]

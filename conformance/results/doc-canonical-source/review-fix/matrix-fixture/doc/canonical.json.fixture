@@ -1,0 +1,1 @@
+{"pages":[{"aliases":"doc/aliases.json","id":"sample","projection":"doc/sample.md","renderer":"nepl3-tools.markdown-annotated/1","route":"docs/sample.html","source":"doc/sample.nepld"},{"aliases":"doc/second.json","id":"second","projection":"doc/second.md","renderer":"nepl3-tools.markdown-annotated/1","route":"docs/SAMPLE.html","source":"doc/second.nepld"}],"version":1}

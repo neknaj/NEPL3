@@ -1,0 +1,73 @@
+[
+  {
+    "case": "exact_generation",
+    "passed": true
+  },
+  {
+    "case": "stale_projection",
+    "error": "stale generated Markdown: doc/sample.md (edit doc/sample.nepld)"
+  },
+  {
+    "case": "source_only_change",
+    "error": "stale generated Markdown: doc/sample.md (edit doc/sample.nepld)"
+  },
+  {
+    "case": "aliases_byte_change",
+    "error": "stale generated Markdown: doc/sample.md (edit doc/sample.nepld)"
+  },
+  {
+    "case": "unknown_alias_section",
+    "error": "Invalid(\"missing compatibility section\")"
+  },
+  {
+    "case": "invalid_source",
+    "error": "candidate: Recovered { tree: ParseTree { profile_digest: Digest([118, 227, 18, 65, 150, 253, 175, 132, 188, 187, 115, 232, 137, 237, 52, 71, 90, 145, 98, 236, 109, 130, 75, 141, 17, 97, 173, 200, 204, 123, 188, 186]), bundle: SyntaxBundle { root: NodeRef(0), nodes: 1, sources: 1, origins: 1, source_maps: 0, environments: 4 }, recovery: [BundleRecovery { path: [], entries: [RecoveryEntry { node: NodeRef(0), kind: Unparsed { span: Span { snapshot: SnapshotId { source: SourceId(\"doc-input\"), revision: 0, digest: Digest([202, 205, 40, 173, 248, 57, 109, 241, 246, 116, 86, 125, 123, 42, 6, 24, 185, 190, 230, 67, 20, 59, 144, 226, 244, 71, 208, 172, 51, 147, 49, 191]) }, start: 0, end: 14 }, reason: UnknownHead } }] }], contexts: [BundleContext { path: [], nodes: [NodeSelection { node: NodeRef(0), entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: \"standard.doc\", revision: 1, digest: Digest([227, 237, 144, 231, 154, 242, 207, 53, 185, 113, 141, 50, 191, 128, 210, 62, 119, 170, 205, 119, 25, 222, 117, 106, 37, 83, 139, 111, 72, 76, 119, 237]) }, semantic_digest: Digest([97, 114, 230, 200, 113, 38, 149, 116, 113, 44, 34, 105, 144, 207, 3, 55, 221, 176, 249, 10, 32, 102, 177, 183, 202, 221, 138, 211, 192, 16, 78, 176]) }, alias: \"Doc\", category: \"Article\", mode: \"Code\" }, execution_digest: Digest([172, 73, 33, 140, 132, 152, 192, 223, 82, 138, 236, 122, 155, 168, 71, 3, 1, 42, 119, 106, 56, 59, 131, 223, 127, 6, 212, 103, 97, 177, 198, 192]), shape: Recovery }] }] }, cursor: 14, states: [LanguageReaderState { alias: \"Doc\", state: Unit }, LanguageReaderState { alias: \"Math\", state: Unit }, LanguageReaderState { alias: \"Circuit\", state: Unit }, LanguageReaderState { alias: \"Grammar\", state: Unit }], facts: [ReaderFactBatch { path: [], node: None, entry: EntryContext { package: PackageIdentity { schema: SchemaRef { package: \"standard.doc\", revision: 1, digest: Digest([227, 237, 144, 231, 154, 242, 207, 53, 185, 113, 141, 50, 191, 128, 210, 62, 119, 170, 205, 119, 25, 222, 117, 106, 37, 83, 139, 111, 72, 76, 119, 237]) }, semantic_digest: Digest([97, 114, 230, 200, 113, 38, 149, 116, 113, 44, 34, 105, 144, 207, 3, 55, 221, 176, 249, 10, 32, 102, 177, 183, 202, 221, 138, 211, 192, 16, 78, 176]) }, alias: \"Doc\", category: \"Article\", mode: \"Code\" }, facts: [], trivia: [] }] }"
+  },
+  {
+    "case": "duplicate_json",
+    "error": "duplicate object key version at line 1 column 22"
+  },
+  {
+    "case": "unknown_key",
+    "error": "unknown field `extra`, expected `version` or `pages` at line 1 column 31"
+  },
+  {
+    "case": "html_and_existing_output",
+    "passed": true
+  },
+  {
+    "accepted": false,
+    "case": "physical_alias",
+    "error": "invalid or repeated canonical file path: doc/hash#name.nepld",
+    "path": "doc/hash#name.nepld"
+  },
+  {
+    "accepted": true,
+    "case": "physical_alias",
+    "error": null,
+    "path": "doc/real/input.nepld"
+  },
+  {
+    "accepted": false,
+    "case": "physical_alias",
+    "error": "invalid or repeated canonical file path: doc/real./input.nepld",
+    "path": "doc/real./input.nepld"
+  },
+  {
+    "accepted": false,
+    "case": "physical_alias",
+    "error": "invalid or repeated canonical file path: doc/real /input.nepld",
+    "path": "doc/real /input.nepld"
+  },
+  {
+    "accepted": false,
+    "case": "physical_alias",
+    "error": "canonical path contains a symlink: doc/linked/input.nepld",
+    "path": "doc/linked/input.nepld"
+  },
+  {
+    "accepted": false,
+    "case": "hash_source_html",
+    "error": "invalid or repeated canonical file path: doc/hash#name.nepld"
+  }
+]

@@ -1,0 +1,218 @@
+{
+  "url": "https://github.com/neknaj/NEPL3/blob/152c7d485aeb7339b0bc8448bef09bca40837a03/doc/spec/13-reproducibility.md",
+  "status": 200,
+  "browser": "151.0.7922.34",
+  "method": "start with target outside viewport, then actual hash navigation, >=5 stable scroll samples",
+  "rows": [
+    {
+      "fragment": "13-再現性schema識別契約の判定",
+      "before": {
+        "top": -4293,
+        "scrollY": 4679
+      },
+      "after": {
+        "top": 125,
+        "scrollY": 261,
+        "hash": "#13-%E5%86%8D%E7%8F%BE%E6%80%A7schema%E8%AD%98%E5%88%A5%E5%A5%91%E7%B4%84%E3%81%AE%E5%88%A4%E5%AE%9A"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "方針",
+      "before": {
+        "top": -4162.40625,
+        "scrollY": 4679
+      },
+      "after": {
+        "top": 124.59375,
+        "scrollY": 392,
+        "hash": "#%E6%96%B9%E9%87%9D"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "1-digest",
+      "before": {
+        "top": -4003.925048828125,
+        "scrollY": 4679
+      },
+      "after": {
+        "top": 125.07499694824219,
+        "scrollY": 550,
+        "hash": "#1-digest"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "package意味正規形",
+      "before": {
+        "top": -2830.03125,
+        "scrollY": 4679
+      },
+      "after": {
+        "top": 124.96875,
+        "scrollY": 1724,
+        "hash": "#package%E6%84%8F%E5%91%B3%E6%AD%A3%E8%A6%8F%E5%BD%A2"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "具体実行identity",
+      "before": {
+        "top": -1981.03125,
+        "scrollY": 4679
+      },
+      "after": {
+        "top": 124.96875,
+        "scrollY": 2573,
+        "hash": "#%E5%85%B7%E4%BD%93%E5%AE%9F%E8%A1%8Cidentity"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "2-native値とwire値",
+      "before": {
+        "top": -1588.03125,
+        "scrollY": 4679
+      },
+      "after": {
+        "top": 124.96875,
+        "scrollY": 2966,
+        "hash": "#2-native%E5%80%A4%E3%81%A8wire%E5%80%A4"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "3-normal-formとartifact",
+      "before": {
+        "top": 4841.4501953125,
+        "scrollY": 0
+      },
+      "after": {
+        "top": 162.4499969482422,
+        "scrollY": 4679,
+        "hash": "#3-normal-form%E3%81%A8artifact"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "4-limitsとproviderの互換",
+      "before": {
+        "top": 5327.34375,
+        "scrollY": 0
+      },
+      "after": {
+        "top": 648.34375,
+        "scrollY": 4679,
+        "hash": "#4-limits%E3%81%A8provider%E3%81%AE%E4%BA%92%E6%8F%9B"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-706f6c696379",
+      "before": {
+        "top": -4162.40625,
+        "scrollY": 4679
+      },
+      "after": {
+        "top": 124.59375,
+        "scrollY": 392,
+        "hash": "#n-706f6c696379"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-646967657374",
+      "before": {
+        "top": -4012.21875,
+        "scrollY": 4679
+      },
+      "after": {
+        "top": 124.78125,
+        "scrollY": 542,
+        "hash": "#n-646967657374"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-73656d616e746963",
+      "before": {
+        "top": -2830.03125,
+        "scrollY": 4679
+      },
+      "after": {
+        "top": 124.96875,
+        "scrollY": 1724,
+        "hash": "#n-73656d616e746963"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-657865637574696f6e",
+      "before": {
+        "top": -1981.03125,
+        "scrollY": 4679
+      },
+      "after": {
+        "top": 124.96875,
+        "scrollY": 2573,
+        "hash": "#n-657865637574696f6e"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-77697265",
+      "before": {
+        "top": -1588.03125,
+        "scrollY": 4679
+      },
+      "after": {
+        "top": 124.96875,
+        "scrollY": 2966,
+        "hash": "#n-77697265"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-617274696661637473",
+      "before": {
+        "top": 4833.15625,
+        "scrollY": 0
+      },
+      "after": {
+        "top": 154.15625,
+        "scrollY": 4679,
+        "hash": "#n-617274696661637473"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-6c696d697473",
+      "before": {
+        "top": 5327.34375,
+        "scrollY": 0
+      },
+      "after": {
+        "top": 648.34375,
+        "scrollY": 4679,
+        "hash": "#n-6c696d697473"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    }
+  ]
+}

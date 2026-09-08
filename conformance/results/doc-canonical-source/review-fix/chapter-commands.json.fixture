@@ -1,0 +1,23 @@
+[
+  {
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-source\\.tmp\\review-canonical-path-fix\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "--check"
+    ],
+    "cwd": "C:\\projects\\NEPL3-doc-canonical-source\\.tmp\\review-canonical-path-fix\\workspace",
+    "exit_code": 0,
+    "seconds": 4.702225685119629
+  },
+  {
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-source\\.tmp\\review-canonical-path-fix\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "html",
+      "C:\\projects\\NEPL3-doc-canonical-source\\.tmp\\review-canonical-path-fix\\chapter13-output"
+    ],
+    "cwd": "C:\\projects\\NEPL3-doc-canonical-source\\.tmp\\review-canonical-path-fix\\workspace",
+    "exit_code": 0,
+    "seconds": 5.260153770446777
+  }
+]

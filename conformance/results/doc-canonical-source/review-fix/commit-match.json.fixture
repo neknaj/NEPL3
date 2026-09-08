@@ -1,0 +1,43 @@
+{
+  "commit": "152c7d485aeb7339b0bc8448bef09bca40837a03",
+  "explicit": [
+    {
+      "path": "tools/src/doc/canonical.rs",
+      "commit": "152c7d485aeb7339b0bc8448bef09bca40837a03",
+      "sha256": "c5a75d14944f27649d78d0cc39632dd4b72888721cfde578b4dfee5e7fd6fef3",
+      "matches_frozen": true
+    },
+    {
+      "path": "tools/src/doc/canonical/tests.rs",
+      "commit": "152c7d485aeb7339b0bc8448bef09bca40837a03",
+      "sha256": "c3bef32fdd36e577d59fd47fda2cc0b01c7ba00da697f38f361be7415f06421d",
+      "matches_frozen": true
+    },
+    {
+      "path": "tools/src/doc/projection/annotated/host.rs",
+      "commit": "152c7d485aeb7339b0bc8448bef09bca40837a03",
+      "sha256": "d3aaa3d5cd72f87bd7246881901c734734e0f744dd8e906e8dea581bff5d9058",
+      "matches_frozen": true
+    },
+    {
+      "path": "tools/tests/doc/annotated.rs",
+      "commit": "152c7d485aeb7339b0bc8448bef09bca40837a03",
+      "sha256": "f451244be3c5abc74f360bf03f91bf5f0417f8f9c4c215ba04eb8d7480edd36f",
+      "matches_frozen": true
+    },
+    {
+      "path": "doc/spec/13-reproducibility.md",
+      "commit": "152c7d485aeb7339b0bc8448bef09bca40837a03",
+      "sha256": "4a689172adad4ef28fc720bfdf85f23600bfcef8cc8b5eaaf1ed3d8ed6d3a4cc",
+      "matches_frozen": true
+    },
+    {
+      "path": "doc/spec/16-doc-migration.md",
+      "commit": "152c7d485aeb7339b0bc8448bef09bca40837a03",
+      "sha256": "6e0ed843c517e61d5a6ffbda701979736faa9075636e00561124e60367ca82a7",
+      "matches_frozen": true
+    }
+  ],
+  "production_checked": 441,
+  "mismatches": []
+}

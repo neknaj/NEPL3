@@ -1,0 +1,4 @@
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-canonical-source\.tmp\review-canonical-path-fix\workspace\tools)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.07s
+     Running `C:\projects\NEPL3-doc-canonical-source\.tmp\review-canonical-path-fix\target\debug\review-path-matrix.exe C:\projects\NEPL3-doc-canonical-source\.tmp\review-canonical-path-fix\matrix-fixture`
+114 independent matrix/LF cases passed

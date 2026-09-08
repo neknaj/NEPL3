@@ -1,0 +1,99 @@
+[
+  {
+    "command": [
+      "rustc",
+      "--version",
+      "--verbose"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--lib"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--test",
+      "doc"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "cargo",
+      "clippy",
+      "--workspace",
+      "--all-targets",
+      "--locked",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "cargo",
+      "build",
+      "--locked",
+      "-p",
+      "nepl3-tools"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-source\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "--check"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-source\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "html",
+      "dist/canonical-first"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-source\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "html",
+      "dist/canonical-second"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-source\\target\\debug\\nepl3-tools.exe",
+      "check"
+    ],
+    "exit_code": 1
+  }
+]

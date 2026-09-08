@@ -1,0 +1,63 @@
+--- doc/migration/authored/guide/development.nepld
++++ doc/migration/authored/guide/development.nepld
+@@ -20,6 +20,60 @@
+       cons "CIの[区切/くぎ]り[後/ご]はDoc[生成/せいせい]を[進/すす]め、[意味/いみ]・リンク・[安定/あんてい]IDの[対応/たいおう]を[検証/けんしょう]できたページからnepld[正本/せいほん]へ[移行/いこう]し、[検査済/けんさず]みの[同/おな]じsite artifactを[公開/こうかい]します。" nil
+     nil
+   cons section local "ローカル[環境/かんきょう]" body
++    cons paragraph
++      cons sentence
++        cons code "doc/canonical.json"
++        cons text " に"
++        cons ruby text "登録" text "とうろく"
++        cons text "された"
++        cons ruby text "仕様" text "しよう"
++        cons text "はnepldを"
++        cons ruby text "編集" text "へんしゅう"
++        cons text "します。"
++        nil
++      cons "[生成/せいせい]Markdownを[直接変更/ちょくせつへんこう]しないでください。"
++      cons sentence
++        cons code "cargo run --locked -p nepl3-tools -- doc-canonical --check"
++        cons text " はproduction APIで"
++        cons ruby text "再生成" text "さいせいせい"
++        cons text "して"
++        cons ruby text "差分" text "さぶん"
++        cons text "を"
++        cons ruby text "検査" text "けんさ"
++        cons text "します。"
++        nil
++      cons sentence
++        cons ruby text "更新時" text "こうしんじ"
++        cons text "は "
++        cons code "doc-markdown annotated"
++        cons text " で"
++        cons ruby text "新" text "あたら"
++        cons text "しい"
++        cons ruby text "一時" text "いちじ"
++        cons text "ファイルへ"
++        cons ruby text "生成" text "せいせい"
++        cons text "し、"
++        cons ruby text "差分" text "さぶん"
++        cons text "をレビューして"
++        cons ruby text "既存" text "きそん"
++        cons text "のprojectionへ"
++        cons ruby text "反映" text "はんえい"
++        cons text "します。"
++        nil
++      cons sentence
++        cons code "cargo run --locked -p nepl3-tools -- doc-canonical html dist/doc-canonical"
++        cons text " は、"
++        cons ruby text "同" text "おな"
++        cons text "じ"
++        cons ruby text "正本" text "せいほん"
++        cons text "からHTML"
++        cons ruby text "一式" text "いっしき"
++        cons text "を"
++        cons ruby text "新規出力" text "しんきしゅつりょく"
++        cons text "します。"
++        nil
++      cons "いずれも[文書/ぶんしょ]の[明示的/めいじてき]な[生成工程/せいせいこうてい]とし、Cargo build.rsへ[入/い]れません。"
++      nil
+     cons paragraph
+       cons "Doc HTMLの[配置/はいち]は、[固定版/こていばん]Playwrightと[対応/たいおう]するChromium・Firefox・WebKitでCI[実行/じっこう]します。"
+       cons "[実/じつ]NEPL3[入力/にゅうりょく]からproduction backendで[生成/せいせい]した13[例/れい]を、2[画面幅/がめんはば]・3[文字/もじ]サイズ・3[行高/ぎょうこう]で[表示/ひょうじ]し、Ruby/Annoのbaseline、[複数行/ふくすうぎょう]、[入/い]れ[子/こ]、[注釈/ちゅうしゃく]と[前後行/ぜんごぎょう]の[高/たか]さ[予約/よやく]を[検査/けんさ]します。"

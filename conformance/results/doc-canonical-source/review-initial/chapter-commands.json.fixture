@@ -1,0 +1,43 @@
+[
+  {
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-doc-canonical-source\\.tmp\\review-canonical-code\\workspace\\Cargo.toml",
+      "-p",
+      "nepl3-tools",
+      "--bin",
+      "nepl3-tools",
+      "--target-dir",
+      "C:\\projects\\NEPL3-doc-canonical-source\\.tmp\\review-canonical-code\\target",
+      "--",
+      "doc-canonical",
+      "--check"
+    ],
+    "exit": 0,
+    "log": "chapter-check.log"
+  },
+  {
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-doc-canonical-source\\.tmp\\review-canonical-code\\workspace\\Cargo.toml",
+      "-p",
+      "nepl3-tools",
+      "--bin",
+      "nepl3-tools",
+      "--target-dir",
+      "C:\\projects\\NEPL3-doc-canonical-source\\.tmp\\review-canonical-code\\target",
+      "--",
+      "doc-canonical",
+      "html",
+      "C:\\projects\\NEPL3-doc-canonical-source\\.tmp\\review-canonical-code\\chapter13-output"
+    ],
+    "exit": 0,
+    "log": "chapter-html.log"
+  }
+]

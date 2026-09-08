@@ -1,0 +1,156 @@
+{
+  "head": "152c7d485aeb7339b0bc8448bef09bca40837a03",
+  "url": "https://github.com/neknaj/NEPL3/blob/152c7d485aeb7339b0bc8448bef09bca40837a03/doc/spec/13-reproducibility.md",
+  "rows": [
+    {
+      "fragment": "13-再現性schema識別契約の判定",
+      "geometry": {
+        "top": 151,
+        "scrollY": 235,
+        "hash": "#13-%E5%86%8D%E7%8F%BE%E6%80%A7schema%E8%AD%98%E5%88%A5%E5%A5%91%E7%B4%84%E3%81%AE%E5%88%A4%E5%AE%9A",
+        "text": ""
+      },
+      "result": "passed"
+    },
+    {
+      "fragment": "方針",
+      "geometry": {
+        "top": 267.59375,
+        "scrollY": 249,
+        "hash": "#%E6%96%B9%E9%87%9D",
+        "text": ""
+      },
+      "result": "passed"
+    },
+    {
+      "fragment": "1-digest",
+      "geometry": {
+        "top": 426.07501220703125,
+        "scrollY": 249,
+        "hash": "#1-digest",
+        "text": ""
+      },
+      "result": "passed"
+    },
+    {
+      "fragment": "package意味正規形",
+      "geometry": {
+        "top": 938.96875,
+        "scrollY": 910,
+        "hash": "#package%E6%84%8F%E5%91%B3%E6%AD%A3%E8%A6%8F%E5%BD%A2",
+        "text": ""
+      },
+      "result": "passed"
+    },
+    {
+      "fragment": "具体実行identity",
+      "geometry": {
+        "top": 752.96875,
+        "scrollY": 1945,
+        "hash": "#%E5%85%B7%E4%BD%93%E5%AE%9F%E8%A1%8Cidentity",
+        "text": ""
+      },
+      "result": "passed"
+    },
+    {
+      "fragment": "2-native値とwire値",
+      "geometry": {
+        "top": 957.96875,
+        "scrollY": 2133,
+        "hash": "#2-native%E5%80%A4%E3%81%A8wire%E5%80%A4",
+        "text": ""
+      },
+      "result": "passed"
+    },
+    {
+      "fragment": "3-normal-formとartifact",
+      "geometry": {
+        "top": 977.4500122070312,
+        "scrollY": 3864,
+        "hash": "#3-normal-form%E3%81%A8artifact",
+        "text": ""
+      },
+      "result": "passed"
+    },
+    {
+      "fragment": "4-limitsとproviderの互換",
+      "geometry": {
+        "top": 901.34375,
+        "scrollY": 4426,
+        "hash": "#4-limits%E3%81%A8provider%E3%81%AE%E4%BA%92%E6%8F%9B",
+        "text": ""
+      },
+      "result": "passed"
+    },
+    {
+      "fragment": "n-706f6c696379",
+      "geometry": {
+        "top": 1.59375,
+        "scrollY": 515,
+        "hash": "#n-706f6c696379",
+        "text": ""
+      },
+      "result": "passed"
+    },
+    {
+      "fragment": "n-646967657374",
+      "geometry": {
+        "top": 181.78125,
+        "scrollY": 485,
+        "hash": "#n-646967657374",
+        "text": ""
+      },
+      "result": "passed"
+    },
+    {
+      "fragment": "n-73656d616e746963",
+      "geometry": {
+        "top": 976.96875,
+        "scrollY": 872,
+        "hash": "#n-73656d616e746963",
+        "text": ""
+      },
+      "result": "passed"
+    },
+    {
+      "fragment": "n-657865637574696f6e",
+      "geometry": {
+        "top": 882.96875,
+        "scrollY": 1815,
+        "hash": "#n-657865637574696f6e",
+        "text": ""
+      },
+      "result": "passed"
+    },
+    {
+      "fragment": "n-77697265",
+      "geometry": {
+        "top": 997.96875,
+        "scrollY": 2093,
+        "hash": "#n-77697265",
+        "text": ""
+      },
+      "result": "passed"
+    },
+    {
+      "fragment": "n-617274696661637473",
+      "geometry": {
+        "top": 951.15625,
+        "scrollY": 3882,
+        "hash": "#n-617274696661637473",
+        "text": ""
+      },
+      "result": "passed"
+    },
+    {
+      "fragment": "n-6c696d697473",
+      "geometry": {
+        "top": 964.34375,
+        "scrollY": 4363,
+        "hash": "#n-6c696d697473",
+        "text": ""
+      },
+      "result": "passed"
+    }
+  ]
+}
