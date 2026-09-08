@@ -1,0 +1,16 @@
+{
+  "url": "https://github.com/neknaj/NEPL3/blob/e8c396ada1e3d48d981f7a43276889e691e1be1b/doc/spec/19-html-fragment.md",
+  "rows": [
+    {
+      "fragment": "19-html-fragmentの構造契約",
+      "start": 2498,
+      "final": {
+        "top": 125,
+        "y": 261,
+        "hash": "#19-html-fragment%E3%81%AE%E6%A7%8B%E9%80%A0%E5%A5%91%E7%B4%84"
+      },
+      "result": "PASS"
+    }
+  ],
+  "complete": true
+}

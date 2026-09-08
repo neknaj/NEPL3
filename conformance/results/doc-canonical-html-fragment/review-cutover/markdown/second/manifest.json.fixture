@@ -1,0 +1,73 @@
+{
+  "files": [
+    {
+      "bytes": 10429,
+      "path": "doc/spec/00-contract.md",
+      "sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1"
+    },
+    {
+      "bytes": 26270,
+      "path": "doc/spec/13-reproducibility.md",
+      "sha256": "454ede4004f0022f8dedb0246ecb227fc36cb57456b9c57fe6614f7a3e512d8e"
+    },
+    {
+      "bytes": 12525,
+      "path": "doc/spec/22-external-extensions.md",
+      "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+    },
+    {
+      "bytes": 11492,
+      "path": "doc/spec/01-architecture.md",
+      "sha256": "5dca44149c4303da3e47edaa9ba3811c591a1ccbd582feb2a0bafb3aeb99e161"
+    },
+    {
+      "bytes": 10585,
+      "path": "doc/spec/18-html-delivery.md",
+      "sha256": "31e0a3af9c56766a737bc5c02a4072662f342a75b7816e7a8aad5da1afd525a5"
+    },
+    {
+      "bytes": 13472,
+      "path": "doc/spec/07-circuit.md",
+      "sha256": "e78ef88b70039ef7018516afed788cc092d58a6fe83aee413afbe97527f68c40"
+    },
+    {
+      "bytes": 16900,
+      "path": "doc/spec/19-html-fragment.md",
+      "sha256": "c4e5c48743d327a3b7e7a691151f452c3640deb32656f2097628aa2fa9683768"
+    }
+  ],
+  "format": "nepl3.canonical-markdown-stage/1",
+  "input_context": "109afd6803b32d13b227e855f8ee121daf805dee2d0fc1829087785485e2e65b",
+  "output_budget": {
+    "initial_usage": {
+      "allocation_units": 0,
+      "depth": 0,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 0,
+      "output_bytes": 0,
+      "source_bytes": 0,
+      "work": 0
+    },
+    "limits": {
+      "allocation_units": 1000000000,
+      "depth": 1000,
+      "diagnostics": 1000,
+      "events": 1000,
+      "nodes": 20000000,
+      "output_bytes": 10000000,
+      "source_bytes": 10000000,
+      "work": 400000000
+    },
+    "usage_before_receipt_serialization": {
+      "allocation_units": 862487830,
+      "depth": 14,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 13375139,
+      "output_bytes": 378560,
+      "source_bytes": 135534,
+      "work": 325596451
+    }
+  }
+}

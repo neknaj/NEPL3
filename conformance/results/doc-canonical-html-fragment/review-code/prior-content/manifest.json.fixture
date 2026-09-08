@@ -1,0 +1,55 @@
+{
+  "scope": "independent full manuscript meaning review; production unrun",
+  "files": [
+    {
+      "path": "check.py",
+      "bytes": 3506,
+      "sha256": "ea2ea4a644fe48c2155aa3ebb101a28015cf610d5704907b22f984c471760ac3"
+    },
+    {
+      "path": "context/AGENTS.md",
+      "bytes": 7729,
+      "sha256": "c26941e6dbf896a5e07b7c807789bc1f70bd740e4065092186be42e5ac4baf53"
+    },
+    {
+      "path": "context/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "context/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "context/tools/audit/structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    },
+    {
+      "path": "draft.nepld",
+      "bytes": 21631,
+      "sha256": "373a519dffc1cbbc2bbd2b6334eef8d4490aae6c62798bf26918a5f280bfe083"
+    },
+    {
+      "path": "original.md",
+      "bytes": 9097,
+      "sha256": "1ef8b987603ce307f0622f3bb7ce19bdd8f7f94b78b34dfb8f8784e17e2022bf"
+    },
+    {
+      "path": "paragraph-pairs.json",
+      "bytes": 19210,
+      "sha256": "9df0079c71cbec898fd7b3669a87d572d41c55ee729b1b4f73f3d57e98a04726"
+    },
+    {
+      "path": "record.md",
+      "bytes": 6786,
+      "sha256": "591d1b6e4aab1adece34a379910ebc967212dd040b73980f4525563cc8dbcf0f"
+    },
+    {
+      "path": "result.json",
+      "bytes": 1155,
+      "sha256": "a6a48b93a61634f3c443180f2634b706b53691cd929eb934eba20618c720e133"
+    }
+  ]
+}

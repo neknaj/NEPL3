@@ -1,0 +1,12 @@
+from pathlib import Path
+import json,hashlib,subprocess
+root=Path.cwd();tmp=root/'.tmp';tmp.mkdir(exist_ok=True)
+assert not subprocess.check_output(['git','status','--porcelain']).strip()
+source=root/'doc/migration/authored/19-html-fragment.nepld';original=root/'doc/spec/19-html-fragment.md'
+(tmp/'start.json').write_text(json.dumps(dict(commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),status='',source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),original_sha256=hashlib.sha256(original.read_bytes()).hexdigest(),purpose='Prepare chapter19 on pending independently reviewed chapter07; no runtime completion'),indent=2)+'\n',encoding='utf-8')
+(tmp/'original.md').write_bytes(original.read_bytes())
+source.rename(root/'doc/spec/19-html-fragment.nepld')
+(root/'doc/migration/aliases/19-html-fragment.json').write_text(json.dumps([dict(section=None,name='19-html-fragmentの構造契約')],ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
+path=root/'doc/canonical.json';registry=json.loads(path.read_bytes())
+registry['pages'].append(dict(id='html-fragment',source='doc/spec/19-html-fragment.nepld',projection='doc/spec/19-html-fragment.md',aliases='doc/migration/aliases/19-html-fragment.json',route='docs/spec/19-html-fragment.html',renderer='nepl3-tools.markdown-annotated/2'))
+path.write_text(json.dumps(registry,indent=2)+'\n',encoding='utf-8',newline='\n')

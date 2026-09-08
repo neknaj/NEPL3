@@ -1,0 +1,32 @@
+from pathlib import Path
+import re,json,hashlib,os
+from playwright.sync_api import sync_playwright
+ROOT=Path(__file__).resolve().parents[2];OUT=Path(__file__).parent;archive=ROOT/'conformance/results/doc-canonical-html-fragment'
+readme=(archive/'README.md').read_bytes();payload=(archive/'payloads.json').read_bytes()
+(OUT/'bootstrap-readme.md').write_bytes(readme);(OUT/'bootstrap-payloads.json').write_bytes(payload)
+snippets=re.findall(r'^```python\n(.*?)^```',readme.decode(),re.M|re.S);assert len(snippets)==1
+snippet=snippets[0];(OUT/'verbatim-restore.py').write_text(snippet,encoding='utf8',newline='\n')
+work=OUT/'bootstrap-workspace';dest=work/'conformance/results/doc-canonical-html-fragment';dest.mkdir(parents=True,exist_ok=True);(dest/'payloads.json').write_bytes(payload)
+selected=[e for e in json.loads(payload)['files'] if e['owner']=='root-html-first'];assert len(selected)==9
+for e in selected:
+    p=dest/e['file'];p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes((archive/e['file']).read_bytes())
+old=Path.cwd()
+try:os.chdir(work);exec(compile(snippet,'README verbatim snippet','exec'),{})
+finally:os.chdir(old)
+output=work/'dist/canonical19-snapshot';sha=lambda b:hashlib.sha256(b).hexdigest();files=[]
+for e in selected:
+    data=(output/e['restore']).read_bytes();assert data==(ROOT/'.tmp/html-budget-first'/e['restore']).read_bytes() and sha(data)==e['sha256'];files.append(dict(path=e['restore'],bytes=len(data),sha256=sha(data)))
+expected=json.loads((OUT/'expected.json').read_bytes());rows=[]
+try:
+  with sync_playwright() as p:
+    for engine in ['chromium','firefox','webkit']:
+      browser=getattr(p,engine).launch(headless=True);ctx=browser.new_context(java_script_enabled=False,viewport={'width':375,'height':900});attempts=[]
+      def block(route):attempts.append(route.request.url);route.abort()
+      ctx.route(re.compile(r'^https?://'),block);page=ctx.new_page();url=(output/'docs/spec/19-html-fragment.html').as_uri();page.goto(url,wait_until='networkidle')
+      actual=page.evaluate('''()=>{const base=n=>{const c=n.cloneNode(true);c.querySelectorAll('.nepl-reading,.nepl-notes').forEach(x=>x.remove());return c.textContent};return {headings:[...document.querySelectorAll('h1,h2')].map(base),paragraphs:[...document.querySelectorAll('article p')].map(base),codes:[...document.querySelectorAll('article code')].map(base),lists:[...document.querySelectorAll('ul,ol')].map(n=>({style:n.tagName==='UL'?'Unordered':'Ordered',items:[...n.children].map(base)})),hrefs:[...document.querySelectorAll('article a[href]')].map(n=>n.getAttribute('href')),scripts:document.scripts.length,sheets:[...document.querySelectorAll('link[rel=stylesheet]')].map(n=>!!n.sheet),ruby:document.querySelectorAll('.nepl-ruby').length,overflow:document.documentElement.scrollWidth-innerWidth}}''')
+      for key in ['headings','paragraphs','codes','lists','hrefs']:assert actual[key]==expected[key]
+      assert actual['scripts']==0 and actual['sheets']==[True] and actual['ruby']==463 and actual['overflow']<=1 and not attempts
+      style=page.locator('.nepl-doc').evaluate('n=>({background:getComputedStyle(n).backgroundColor,whiteSpace:getComputedStyle(n).whiteSpace})');assert style==dict(background='rgb(13, 17, 23)',whiteSpace='pre-wrap')
+      page.screenshot(path=str(OUT/f'offline-{engine}.png'));rows.append(dict(engine=engine,version=browser.version,url=url,scripts_enabled=False,http_https_blocked=True,attempts=attempts,actual=actual,style=style,result='PASS'));browser.close();print('offline '+engine+' PASS',flush=True)
+finally:
+    (OUT/'bootstrap-results.json').write_text(json.dumps(dict(snippet_sha256=sha(snippet.encode()),files=files,rows=rows,complete=len(rows)==3),ensure_ascii=False,indent=2)+'\n',encoding='utf8',newline='\n')

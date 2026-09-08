@@ -1,0 +1,590 @@
+[
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "19. HTML fragmentの構造契約こうぞうけいやく"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3.safe-markup/2",
+      "nepl3.markup",
+      "interfaces/markup.json",
+      "nepl3-markup",
+      "[a-z][a-z0-9-]*",
+      "[a-z][a-z0-9-]*",
+      "-_.",
+      ".",
+      "..",
+      "BetweenArtifacts(source,target,fragment)",
+      "../",
+      "#fragment",
+      "docs/a/index.html",
+      "docs/b/index.html",
+      "../b/index.html",
+      "../",
+      "BetweenArtifacts"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3",
+      "https://html.spec.whatwg.org/multipage/tables.html#the-table-element",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element",
+      "https://url.spec.whatwg.org/",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element"
+    ],
+    "codes": [],
+    "ids": [],
+    "ruby": 463,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 375,
+    "prefix": "html-budget-first",
+    "navigation": [],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "19. HTML fragmentの構造契約こうぞうけいやく"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3.safe-markup/2",
+      "nepl3.markup",
+      "interfaces/markup.json",
+      "nepl3-markup",
+      "[a-z][a-z0-9-]*",
+      "[a-z][a-z0-9-]*",
+      "-_.",
+      ".",
+      "..",
+      "BetweenArtifacts(source,target,fragment)",
+      "../",
+      "#fragment",
+      "docs/a/index.html",
+      "docs/b/index.html",
+      "../b/index.html",
+      "../",
+      "BetweenArtifacts"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3",
+      "https://html.spec.whatwg.org/multipage/tables.html#the-table-element",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element",
+      "https://url.spec.whatwg.org/",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element"
+    ],
+    "codes": [],
+    "ids": [],
+    "ruby": 463,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 1280,
+    "prefix": "html-budget-first",
+    "navigation": [],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "19. HTML fragmentの構造契約こうぞうけいやく"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3.safe-markup/2",
+      "nepl3.markup",
+      "interfaces/markup.json",
+      "nepl3-markup",
+      "[a-z][a-z0-9-]*",
+      "[a-z][a-z0-9-]*",
+      "-_.",
+      ".",
+      "..",
+      "BetweenArtifacts(source,target,fragment)",
+      "../",
+      "#fragment",
+      "docs/a/index.html",
+      "docs/b/index.html",
+      "../b/index.html",
+      "../",
+      "BetweenArtifacts"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3",
+      "https://html.spec.whatwg.org/multipage/tables.html#the-table-element",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element",
+      "https://url.spec.whatwg.org/",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element"
+    ],
+    "codes": [],
+    "ids": [],
+    "ruby": 463,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 375,
+    "prefix": "html-budget-second",
+    "navigation": [],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "19. HTML fragmentの構造契約こうぞうけいやく"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3.safe-markup/2",
+      "nepl3.markup",
+      "interfaces/markup.json",
+      "nepl3-markup",
+      "[a-z][a-z0-9-]*",
+      "[a-z][a-z0-9-]*",
+      "-_.",
+      ".",
+      "..",
+      "BetweenArtifacts(source,target,fragment)",
+      "../",
+      "#fragment",
+      "docs/a/index.html",
+      "docs/b/index.html",
+      "../b/index.html",
+      "../",
+      "BetweenArtifacts"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3",
+      "https://html.spec.whatwg.org/multipage/tables.html#the-table-element",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element",
+      "https://url.spec.whatwg.org/",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element"
+    ],
+    "codes": [],
+    "ids": [],
+    "ruby": 463,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 1280,
+    "prefix": "html-budget-second",
+    "navigation": [],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "19. HTML fragmentの構造契約こうぞうけいやく"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3.safe-markup/2",
+      "nepl3.markup",
+      "interfaces/markup.json",
+      "nepl3-markup",
+      "[a-z][a-z0-9-]*",
+      "[a-z][a-z0-9-]*",
+      "-_.",
+      ".",
+      "..",
+      "BetweenArtifacts(source,target,fragment)",
+      "../",
+      "#fragment",
+      "docs/a/index.html",
+      "docs/b/index.html",
+      "../b/index.html",
+      "../",
+      "BetweenArtifacts"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3",
+      "https://html.spec.whatwg.org/multipage/tables.html#the-table-element",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element",
+      "https://url.spec.whatwg.org/",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element"
+    ],
+    "codes": [],
+    "ids": [],
+    "ruby": 463,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 375,
+    "prefix": "html-budget-first",
+    "navigation": [],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "19. HTML fragmentの構造契約こうぞうけいやく"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3.safe-markup/2",
+      "nepl3.markup",
+      "interfaces/markup.json",
+      "nepl3-markup",
+      "[a-z][a-z0-9-]*",
+      "[a-z][a-z0-9-]*",
+      "-_.",
+      ".",
+      "..",
+      "BetweenArtifacts(source,target,fragment)",
+      "../",
+      "#fragment",
+      "docs/a/index.html",
+      "docs/b/index.html",
+      "../b/index.html",
+      "../",
+      "BetweenArtifacts"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3",
+      "https://html.spec.whatwg.org/multipage/tables.html#the-table-element",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element",
+      "https://url.spec.whatwg.org/",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element"
+    ],
+    "codes": [],
+    "ids": [],
+    "ruby": 463,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 1280,
+    "prefix": "html-budget-first",
+    "navigation": [],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "19. HTML fragmentの構造契約こうぞうけいやく"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3.safe-markup/2",
+      "nepl3.markup",
+      "interfaces/markup.json",
+      "nepl3-markup",
+      "[a-z][a-z0-9-]*",
+      "[a-z][a-z0-9-]*",
+      "-_.",
+      ".",
+      "..",
+      "BetweenArtifacts(source,target,fragment)",
+      "../",
+      "#fragment",
+      "docs/a/index.html",
+      "docs/b/index.html",
+      "../b/index.html",
+      "../",
+      "BetweenArtifacts"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3",
+      "https://html.spec.whatwg.org/multipage/tables.html#the-table-element",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element",
+      "https://url.spec.whatwg.org/",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element"
+    ],
+    "codes": [],
+    "ids": [],
+    "ruby": 463,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 375,
+    "prefix": "html-budget-second",
+    "navigation": [],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "19. HTML fragmentの構造契約こうぞうけいやく"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3.safe-markup/2",
+      "nepl3.markup",
+      "interfaces/markup.json",
+      "nepl3-markup",
+      "[a-z][a-z0-9-]*",
+      "[a-z][a-z0-9-]*",
+      "-_.",
+      ".",
+      "..",
+      "BetweenArtifacts(source,target,fragment)",
+      "../",
+      "#fragment",
+      "docs/a/index.html",
+      "docs/b/index.html",
+      "../b/index.html",
+      "../",
+      "BetweenArtifacts"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3",
+      "https://html.spec.whatwg.org/multipage/tables.html#the-table-element",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element",
+      "https://url.spec.whatwg.org/",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element"
+    ],
+    "codes": [],
+    "ids": [],
+    "ruby": 463,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 1280,
+    "prefix": "html-budget-second",
+    "navigation": [],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "19. HTML fragmentの構造契約こうぞうけいやく"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3.safe-markup/2",
+      "nepl3.markup",
+      "interfaces/markup.json",
+      "nepl3-markup",
+      "[a-z][a-z0-9-]*",
+      "[a-z][a-z0-9-]*",
+      "-_.",
+      ".",
+      "..",
+      "BetweenArtifacts(source,target,fragment)",
+      "../",
+      "#fragment",
+      "docs/a/index.html",
+      "docs/b/index.html",
+      "../b/index.html",
+      "../",
+      "BetweenArtifacts"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3",
+      "https://html.spec.whatwg.org/multipage/tables.html#the-table-element",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element",
+      "https://url.spec.whatwg.org/",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element"
+    ],
+    "codes": [],
+    "ids": [],
+    "ruby": 463,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 375,
+    "prefix": "html-budget-first",
+    "navigation": [],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "19. HTML fragmentの構造契約こうぞうけいやく"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3.safe-markup/2",
+      "nepl3.markup",
+      "interfaces/markup.json",
+      "nepl3-markup",
+      "[a-z][a-z0-9-]*",
+      "[a-z][a-z0-9-]*",
+      "-_.",
+      ".",
+      "..",
+      "BetweenArtifacts(source,target,fragment)",
+      "../",
+      "#fragment",
+      "docs/a/index.html",
+      "docs/b/index.html",
+      "../b/index.html",
+      "../",
+      "BetweenArtifacts"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3",
+      "https://html.spec.whatwg.org/multipage/tables.html#the-table-element",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element",
+      "https://url.spec.whatwg.org/",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element"
+    ],
+    "codes": [],
+    "ids": [],
+    "ruby": 463,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 1280,
+    "prefix": "html-budget-first",
+    "navigation": [],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "19. HTML fragmentの構造契約こうぞうけいやく"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3.safe-markup/2",
+      "nepl3.markup",
+      "interfaces/markup.json",
+      "nepl3-markup",
+      "[a-z][a-z0-9-]*",
+      "[a-z][a-z0-9-]*",
+      "-_.",
+      ".",
+      "..",
+      "BetweenArtifacts(source,target,fragment)",
+      "../",
+      "#fragment",
+      "docs/a/index.html",
+      "docs/b/index.html",
+      "../b/index.html",
+      "../",
+      "BetweenArtifacts"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3",
+      "https://html.spec.whatwg.org/multipage/tables.html#the-table-element",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element",
+      "https://url.spec.whatwg.org/",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element"
+    ],
+    "codes": [],
+    "ids": [],
+    "ruby": 463,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 375,
+    "prefix": "html-budget-second",
+    "navigation": [],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "19. HTML fragmentの構造契約こうぞうけいやく"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3.safe-markup/2",
+      "nepl3.markup",
+      "interfaces/markup.json",
+      "nepl3-markup",
+      "[a-z][a-z0-9-]*",
+      "[a-z][a-z0-9-]*",
+      "-_.",
+      ".",
+      "..",
+      "BetweenArtifacts(source,target,fragment)",
+      "../",
+      "#fragment",
+      "docs/a/index.html",
+      "docs/b/index.html",
+      "../b/index.html",
+      "../",
+      "BetweenArtifacts"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3",
+      "https://html.spec.whatwg.org/multipage/tables.html#the-table-element",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element",
+      "https://url.spec.whatwg.org/",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element"
+    ],
+    "codes": [],
+    "ids": [],
+    "ruby": 463,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 1280,
+    "prefix": "html-budget-second",
+    "navigation": [],
+    "failed_requests": [],
+    "result": "passed"
+  }
+]

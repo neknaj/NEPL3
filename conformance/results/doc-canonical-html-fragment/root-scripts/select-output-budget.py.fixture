@@ -1,0 +1,8 @@
+from pathlib import Path
+import json,hashlib,subprocess
+root=Path.cwd();path=root/'doc/canonical.json';before=path.read_bytes();registry=json.loads(before)
+assert registry['output_limits']['work']==300000000 and registry['output_limits']['allocation_units']==750000000
+registry['output_limits']['work']=400000000
+registry['output_limits']['allocation_units']=1000000000
+after=(json.dumps(registry,indent=2)+'\n').encode();path.write_bytes(after)
+(root/'.tmp/output-budget-selection.json').write_text(json.dumps(dict(source_commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),before_sha256=hashlib.sha256(before).hexdigest(),after_sha256=hashlib.sha256(after).hexdigest(),reason='Seven-page Markdown stopped AllocationLimit before output. Six-page observed Work267M/Allocation712M and additional21KiB manuscript motivate separate finite Work400M/Allocation1B profile before new invocation; this is an allowance, not a predicted usage or physical-memory cap. Nodes20M, other resources, HTML and phase/default limits unchanged.'),indent=2)+'\n',encoding='utf-8')

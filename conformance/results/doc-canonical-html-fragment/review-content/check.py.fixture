@@ -1,0 +1,52 @@
+from pathlib import Path
+import sys,json,re,hashlib,subprocess
+r=Path(__file__).resolve().parents[2];p=Path(__file__).parent;sys.path.insert(0,str(r))
+from tools.audit.structure import Parser,load_forms
+commit='6d391faed00c051d806421baf5b1b83026bb05a8'
+def git(*args):return subprocess.check_output(['git',*args],cwd=r)
+def sha(b):return hashlib.sha256(b).hexdigest()
+source=git('show',commit+'^:doc/spec/19-html-fragment.md');draft=git('show',commit+':doc/spec/19-html-fragment.nepld')
+assert source==(r/'.tmp/original.md').read_bytes() and draft==(r/'doc/spec/19-html-fragment.nepld').read_bytes()
+assert draft==git('show',commit+'^:doc/migration/authored/19-html-fragment.nepld')
+(p/'original.md').write_bytes(source);(p/'draft.nepld').write_bytes(draft)
+for name in ['doc/authoring.md','AGENTS.md','design/forms.json','tools/audit/structure.py']:
+ q=p/'context'/name;q.parent.mkdir(parents=True,exist_ok=True);q.write_bytes(git('show',commit+':'+name))
+tree=Parser(draft.decode(),load_forms(r)).complete('Doc/Article')
+def walk(x):
+ if isinstance(x,list):
+  for y in x:yield from walk(y)
+ elif isinstance(x,dict):
+  yield x
+  for y in x.get('fields',{}).values():yield from walk(y)
+def plain(x):
+ if isinstance(x,list):return ''.join(map(plain,x))
+ if not isinstance(x,dict):return ''
+ if x['kind']=='leaf':return re.sub(r'\[([^/\[\]]+)/[^\[\]]+\]',r'\1',json.loads(x['token']))
+ f=x['fields'];k=x['kind']
+ if k=='Ruby':return plain(f['base'])
+ if k in ('Text','InlineCode'):return f['text']
+ if k=='Link':return plain(f['label'])
+ return ''.join(plain(y) for y in f.values())
+nodes=list(walk(tree));paras=[plain(x) for x in nodes if x['kind']=='Paragraph'];assert len(paras)==18
+original=[x.replace('\n','') for x in source.decode().strip().split('\n\n')[1:]];assert len(original)==18
+codes=[x['fields']['text'] for x in nodes if x['kind']=='InlineCode'];assert codes==re.findall(r'`([^`]+)`',source.decode())
+links=[x['fields']['target'] for x in nodes if x['kind']=='Link'];expected=re.findall(r'\[[^]]+\]\((https://[^)]+)\)',source.decode());assert len(links)==len(expected)==5
+assert all(x['kind']=='ExternalTarget' and list(x['fields'].values())==[url] for x,url in zip(links,expected))
+assert not any(x['kind'] in ['RawCode','Table','Section','List','Parallel','Image'] for x in nodes)
+han=re.compile('[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\u3005]+')
+def audit(x,protected=False):
+ if isinstance(x,list):
+  for y in x:audit(y,protected)
+ elif isinstance(x,dict):
+  k=x['kind'];f=x.get('fields',{})
+  if k=='leaf':
+   text=json.loads(x['token']);pairs=re.findall(r'\[([^/\[\]]+)/([^\[\]]+)\]',text)
+   for base,reading in pairs:assert han.fullmatch(base) and reading
+   assert not han.search(re.sub(r'\[[^\[\]]+\]','',text))
+  elif k=='Ruby':assert han.fullmatch(plain(f['base']));audit(f['base'],True);audit(f['reading'],True)
+  elif k=='Text':assert protected or not han.search(f['text']),f['text']
+  else:
+   for y in f.values():audit(y,protected)
+audit(tree)
+(p/'paragraph-pairs.json').write_text(json.dumps([{'paragraph':i+1,'original':a,'draft_base':b} for i,(a,b) in enumerate(zip(original,paras))],ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+(p/'result.json').write_text(json.dumps({'commit':commit,'original_sha256':sha(source),'draft_sha256':sha(draft),'unchanged_move':True,'paragraphs':18,'inline_code':codes,'external_urls':expected,'formal_structure':'passed','kanji_only_ruby':'passed','runtime':'not-run'},ensure_ascii=False,indent=2)+'\n',encoding='utf8');print('PASS')

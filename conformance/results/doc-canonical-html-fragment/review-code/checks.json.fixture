@@ -1,0 +1,279 @@
+{
+  "source": {
+    "doc_sha256": "373a519dffc1cbbc2bbd2b6334eef8d4490aae6c62798bf26918a5f280bfe083",
+    "doc_bytes": 21631,
+    "original_md_sha256": "1ef8b987603ce307f0622f3bb7ce19bdd8f7f94b78b34dfb8f8784e17e2022bf",
+    "original_md_bytes": 9097,
+    "unchanged_move": true
+  },
+  "source_structure": {
+    "kinds": {
+      "Article": 1,
+      "leaf": 77,
+      "Body": 1,
+      "Paragraph": 18,
+      "Sentence": 14,
+      "Text": 225,
+      "Ruby": 64,
+      "InlineCode": 17,
+      "Link": 5,
+      "ExternalTarget": 5,
+      "Concat": 2
+    },
+    "codes": [
+      "nepl3.safe-markup/2",
+      "nepl3.markup",
+      "interfaces/markup.json",
+      "nepl3-markup",
+      "[a-z][a-z0-9-]*",
+      "[a-z][a-z0-9-]*",
+      "-_.",
+      ".",
+      "..",
+      "BetweenArtifacts(source,target,fragment)",
+      "../",
+      "#fragment",
+      "docs/a/index.html",
+      "docs/b/index.html",
+      "../b/index.html",
+      "../",
+      "BetweenArtifacts"
+    ],
+    "literal_ruby_not_expanded": true
+  },
+  "registry": {
+    "existing_six_entries_unchanged": true,
+    "only_selected_markdown_work_and_allocation_changed": true,
+    "html_limits_unchanged": true
+  },
+  "repeated_artifacts": {
+    "markdown": [
+      {
+        "path": "doc/spec/00-contract.md",
+        "sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1",
+        "bytes": 10429
+      },
+      {
+        "path": "doc/spec/01-architecture.md",
+        "sha256": "5dca44149c4303da3e47edaa9ba3811c591a1ccbd582feb2a0bafb3aeb99e161",
+        "bytes": 11492
+      },
+      {
+        "path": "doc/spec/07-circuit.md",
+        "sha256": "e78ef88b70039ef7018516afed788cc092d58a6fe83aee413afbe97527f68c40",
+        "bytes": 13472
+      },
+      {
+        "path": "doc/spec/13-reproducibility.md",
+        "sha256": "454ede4004f0022f8dedb0246ecb227fc36cb57456b9c57fe6614f7a3e512d8e",
+        "bytes": 26270
+      },
+      {
+        "path": "doc/spec/18-html-delivery.md",
+        "sha256": "31e0a3af9c56766a737bc5c02a4072662f342a75b7816e7a8aad5da1afd525a5",
+        "bytes": 10585
+      },
+      {
+        "path": "doc/spec/19-html-fragment.md",
+        "sha256": "c4e5c48743d327a3b7e7a691151f452c3640deb32656f2097628aa2fa9683768",
+        "bytes": 16900
+      },
+      {
+        "path": "doc/spec/22-external-extensions.md",
+        "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f",
+        "bytes": 12525
+      },
+      {
+        "path": "manifest.json",
+        "sha256": "ee60a92975f8d916e6000fdfacc625826f0dcd6b7422d81a54c3b2f082e677fc",
+        "bytes": 2031
+      }
+    ],
+    "html": [
+      {
+        "path": "docs/spec/00-contract.html",
+        "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815",
+        "bytes": 38595
+      },
+      {
+        "path": "docs/spec/01-architecture.html",
+        "sha256": "499aaa1e67781a52c2bc2f3faaa8fc0623b6a8e3c80282eb4a841da597c8936f",
+        "bytes": 32896
+      },
+      {
+        "path": "docs/spec/07-circuit.html",
+        "sha256": "11dedf2469c9c0a2e11c845b1167ffaaa56deeaeea51b76db7a7f484ab43caf5",
+        "bytes": 48369
+      },
+      {
+        "path": "docs/spec/13-reproducibility.html",
+        "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1",
+        "bytes": 91421
+      },
+      {
+        "path": "docs/spec/18-html-delivery.html",
+        "sha256": "7a2ed0088c71e0766ec304bcc59d2cccffa307a9742a66139eeea99f633b6355",
+        "bytes": 37232
+      },
+      {
+        "path": "docs/spec/19-html-fragment.html",
+        "sha256": "3a5cc5cb6d46262403340997c6ec08ead08362250e5ed90eec6a65993bfa95fc",
+        "bytes": 61432
+      },
+      {
+        "path": "docs/spec/22-external-extensions.html",
+        "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8",
+        "bytes": 44041
+      },
+      {
+        "path": "docs/spec/assets/doc.css",
+        "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b",
+        "bytes": 2255
+      },
+      {
+        "path": "manifest.json",
+        "sha256": "4fdc3b013ffb54e976dc4326ebdc08ed9678c13ef54fffd484ab40a8aec1c4aa",
+        "bytes": 18503
+      }
+    ]
+  },
+  "old_five_legacy_markdown": [
+    {
+      "path": "doc/spec/00-contract.md",
+      "sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1"
+    },
+    {
+      "path": "doc/spec/07-circuit.md",
+      "sha256": "e78ef88b70039ef7018516afed788cc092d58a6fe83aee413afbe97527f68c40"
+    },
+    {
+      "path": "doc/spec/13-reproducibility.md",
+      "sha256": "454ede4004f0022f8dedb0246ecb227fc36cb57456b9c57fe6614f7a3e512d8e"
+    },
+    {
+      "path": "doc/spec/18-html-delivery.md",
+      "sha256": "31e0a3af9c56766a737bc5c02a4072662f342a75b7816e7a8aad5da1afd525a5"
+    },
+    {
+      "path": "doc/spec/22-external-extensions.md",
+      "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+    }
+  ],
+  "old_six_html_and_css": [
+    {
+      "path": "docs/spec/00-contract.html",
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+    },
+    {
+      "path": "docs/spec/01-architecture.html",
+      "sha256": "499aaa1e67781a52c2bc2f3faaa8fc0623b6a8e3c80282eb4a841da597c8936f"
+    },
+    {
+      "path": "docs/spec/07-circuit.html",
+      "sha256": "11dedf2469c9c0a2e11c845b1167ffaaa56deeaeea51b76db7a7f484ab43caf5"
+    },
+    {
+      "path": "docs/spec/13-reproducibility.html",
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+    },
+    {
+      "path": "docs/spec/18-html-delivery.html",
+      "sha256": "7a2ed0088c71e0766ec304bcc59d2cccffa307a9742a66139eeea99f633b6355"
+    },
+    {
+      "path": "docs/spec/22-external-extensions.html",
+      "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8"
+    },
+    {
+      "path": "docs/spec/assets/doc.css",
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+    }
+  ],
+  "architecture_header": {
+    "only_pageset_and_context_changed": true,
+    "independently_recomputed_context": "109afd6803b32d13b227e855f8ee121daf805dee2d0fc1829087785485e2e65b",
+    "pageset_digest": "6f218ac70b571d96610b85fe86769b7bad37b51b19d0b855d3daa1f238eaf843"
+  },
+  "fragment_output": {
+    "markdown_aliases": [
+      "19-html-fragmentの構造契約"
+    ],
+    "html_semantic_ids": [],
+    "tags": {
+      "html": 1,
+      "head": 1,
+      "meta": 3,
+      "title": 1,
+      "link": 1,
+      "body": 1,
+      "article": 1,
+      "h1": 1,
+      "span": 1482,
+      "div": 18,
+      "p": 18,
+      "code": 17,
+      "a": 5
+    },
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3",
+      "https://html.spec.whatwg.org/multipage/tables.html#the-table-element",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element",
+      "https://url.spec.whatwg.org/",
+      "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element"
+    ],
+    "inline_codes": [
+      "nepl3.safe-markup/2",
+      "nepl3.markup",
+      "interfaces/markup.json",
+      "nepl3-markup",
+      "[a-z][a-z0-9-]*",
+      "[a-z][a-z0-9-]*",
+      "-_.",
+      ".",
+      "..",
+      "BetweenArtifacts(source,target,fragment)",
+      "../",
+      "#fragment",
+      "docs/a/index.html",
+      "docs/b/index.html",
+      "../b/index.html",
+      "../",
+      "BetweenArtifacts"
+    ]
+  },
+  "old_anchor_receipt": {
+    "rawlines_equal_original": true,
+    "old_title_name_equal_alias": true,
+    "new_navigation_not_tested_here": true
+  },
+  "receipts": {
+    "markdown_before_receipt_serialization_usage": {
+      "allocation_units": 862487830,
+      "depth": 14,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 13375139,
+      "output_bytes": 378560,
+      "source_bytes": 135534,
+      "work": 325596451
+    },
+    "html_output_usage": {
+      "allocation_units": 345354043,
+      "depth": 14,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 6274478,
+      "output_bytes": 370027,
+      "source_bytes": 135534,
+      "work": 166296729
+    },
+    "seven_input_identities": true,
+    "parse_lower_defaults_retained": true
+  },
+  "separate_finite_failures": {
+    "former_300m_750m": "nepl3-tools: Stopped(AllocationLimit)\n",
+    "work300m_allocation1b": "nepl3-tools: Stopped(WorkLimit)\n",
+    "no_output_directories": true
+  },
+  "fixed_dependencies_reverified": 678
+}

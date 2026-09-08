@@ -1,0 +1,22 @@
+[
+  {
+    "section": null,
+    "name": "18-htmlを先行利用する実装段階"
+  },
+  {
+    "section": "implementation_dependencies",
+    "name": "実装依存"
+  },
+  {
+    "section": "document_preparation",
+    "name": "h0h1の契約"
+  },
+  {
+    "section": "math_and_browser",
+    "name": "h2h3の契約と検証"
+  },
+  {
+    "section": "documentation_migration",
+    "name": "正式文書のdoc移行"
+  }
+]
