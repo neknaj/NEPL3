@@ -1,0 +1,9 @@
+from pathlib import Path
+import subprocess,os,json,hashlib
+O=Path(__file__).resolve().parent;W=O/'workspace';env=os.environ.copy();env['CARGO_TARGET_DIR']=str(O/'target');results=[]
+def run(name,cmd,timeout=900):
+ p=subprocess.run(cmd,cwd=W,env=env,capture_output=True,timeout=timeout);(O/(name+'.stdout.log')).write_bytes(p.stdout);(O/(name+'.stderr.log')).write_bytes(p.stderr);results.append(dict(name=name,command=cmd,cwd=str(W),exit_code=p.returncode));(O/'probe-commands.json').write_text(json.dumps(results,indent=2)+'\n',encoding='utf-8',newline='\n');print(name,p.returncode,flush=True);assert p.returncode==0,p.stderr[-1800:];return p
+p=run('probe-native',['cargo','run','--locked','-p','nepl3-tools','--bin','review-pages']);a=json.loads(p.stdout)
+run('probe-wasi-build',['cargo','build','--locked','-p','nepl3-tools','--bin','review-pages','--target','wasm32-wasip2'])
+p=run('probe-wasi',['wasmtime','run',str(O/'target/wasm32-wasip2/debug/review-pages.wasm')],180);b=json.loads(p.stdout);assert a==b
+files=[O/'target/debug/review-pages.exe',O/'target/wasm32-wasip2/debug/review-pages.wasm'];(O/'binaries.json').write_text(json.dumps([dict(path=str(p),bytes=p.stat().st_size,sha256=hashlib.sha256(p.read_bytes()).hexdigest()) for p in files],indent=2)+'\n',encoding='utf-8',newline='\n');print('native/WASI exact records',len(a))

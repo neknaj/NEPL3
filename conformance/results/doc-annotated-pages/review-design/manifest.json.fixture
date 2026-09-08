@@ -1,0 +1,125 @@
+{
+  "scope": "Read-only design review; existing actual 01 refusal only",
+  "files": [
+    {
+      "path": "check.py",
+      "bytes": 2124,
+      "sha256": "b36fa137c2d7deadd9edcac5f8602f482bb518be50ba25a22858a6ffa21fc086"
+    },
+    {
+      "path": "current-01.stderr.log",
+      "bytes": 29,
+      "sha256": "a4b615fd543f62aebcd27dff8e3ae705275e8ca2c90a1c2525379848169f728b"
+    },
+    {
+      "path": "current-01.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "empty-aliases.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "record.md",
+      "bytes": 13279,
+      "sha256": "454a38d8705e2c576952b8f401e10dd6a6d0de523835a673f9e099062507d0e3"
+    },
+    {
+      "path": "result.json",
+      "bytes": 877,
+      "sha256": "160eab6d039202879cdcb026ca679a57cc16f5c918c9c0f336f2aa9f2f576537"
+    },
+    {
+      "path": "source/crates/languages/doc/core/src/pages.rs",
+      "bytes": 15660,
+      "sha256": "737c084fad89c069c0b96a25f22dd8a55a891211dfb38b8419b7a804e16d24f0"
+    },
+    {
+      "path": "source/crates/languages/doc/core/src/portable/pages.rs",
+      "bytes": 3886,
+      "sha256": "221d4f025a6710154c4466414d7272119b7c69c76f3862efc51f9d6d310b5713"
+    },
+    {
+      "path": "source/crates/languages/doc/core/tests/pages.rs",
+      "bytes": 17182,
+      "sha256": "fd866e1e38901ada6c34a6f7dbae3c0588919a2fac4c27eaaa3ba1d6fd267c27"
+    },
+    {
+      "path": "source/crates/languages/doc/html/src/pages.rs",
+      "bytes": 7728,
+      "sha256": "8d8b96935726b6a8423ee4de46ceb72cf6256993fc89760c980876cb5e2113ca"
+    },
+    {
+      "path": "source/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "source/doc/canonical.json",
+      "bytes": 645,
+      "sha256": "aa5194390f21bedc5ada54eb34e17e5c3b5f203bdadc991ff80809fd85e1a67b"
+    },
+    {
+      "path": "source/doc/migration/authored/01-architecture.nepld",
+      "bytes": 14690,
+      "sha256": "8d338b3ce98f3030e503ecd0aea9374c439c606cfbeb48bcd6b777a3f45654b2"
+    },
+    {
+      "path": "source/doc/spec/16-doc-migration.md",
+      "bytes": 11630,
+      "sha256": "6e0ed843c517e61d5a6ffbda701979736faa9075636e00561124e60367ca82a7"
+    },
+    {
+      "path": "source/doc/spec/21-doc-pages.md",
+      "bytes": 29405,
+      "sha256": "03c74625aaac5d9023c70f58bf8316dd20ce800cad8fc2a764449e591b34f0a7"
+    },
+    {
+      "path": "source/doc/spec/22-external-extensions.md",
+      "bytes": 6403,
+      "sha256": "d3ea5308c7d0d79d915e4c1fcbe971fb366f3ee1ebe5d7685dad5e0c8cb53a9a"
+    },
+    {
+      "path": "source/tools/src/doc/canonical.rs",
+      "bytes": 6669,
+      "sha256": "a034546053e3a6956d20304ce956d5ef9f95a011741f40633e563ac408f79da7"
+    },
+    {
+      "path": "source/tools/src/doc/export/pages.rs",
+      "bytes": 15952,
+      "sha256": "8b52561c4468aaa6be61c12bf6431ed7e9a0c7fd250e1a5d3957cfa26826295b"
+    },
+    {
+      "path": "source/tools/src/doc/projection/annotated/blocks.rs",
+      "bytes": 5466,
+      "sha256": "4bbc48d80674d7a923e5fa3439b66b1352e8bf31cb933c1e6cf4fee9b5e1c694"
+    },
+    {
+      "path": "source/tools/src/doc/projection/annotated/host.rs",
+      "bytes": 3956,
+      "sha256": "66482b70f997edbd1bb0afe85165e03c7092fc6d9f3282990ebb4da9aded3412"
+    },
+    {
+      "path": "source/tools/src/doc/projection/annotated.rs",
+      "bytes": 19555,
+      "sha256": "14b95933b19aad89a39f5c40bfe17330a2a8519571cb095d5ab7980e2f9b8a08"
+    },
+    {
+      "path": "source/tools/src/doc/projection.rs",
+      "bytes": 14788,
+      "sha256": "aeaa3927da806eb0931d42cf0ba0923ad97406c4141595fe3dfff15eccfb1600"
+    },
+    {
+      "path": "source/tools/tests/doc/pages.rs",
+      "bytes": 9827,
+      "sha256": "4bda1ef92404c66f5873d79357c2ed94503386a49f504753c42f96e6c87b9bee"
+    },
+    {
+      "path": "sources.json",
+      "bytes": 2932,
+      "sha256": "d3d7a5396c9b92a0e2b79c4d67eb808d416b3f483ef9b71f850edb64bdb6ee8d"
+    }
+  ]
+}

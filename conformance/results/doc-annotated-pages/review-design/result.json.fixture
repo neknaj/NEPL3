@@ -1,0 +1,15 @@
+{
+  "command": [
+    "C:\\projects\\NEPL3-doc-canonical-contract\\.tmp\\review-canonical00-code\\target\\debug\\nepl3-tools.exe",
+    "doc-markdown",
+    "annotated",
+    "C:\\projects\\NEPL3-doc-canonical-contract\\.tmp\\review-annotated-page-context-design\\source\\doc\\migration\\authored\\01-architecture.nepld",
+    "C:\\projects\\NEPL3-doc-canonical-contract\\.tmp\\review-annotated-page-context-design\\empty-aliases.json",
+    "C:\\projects\\NEPL3-doc-canonical-contract\\.tmp\\review-annotated-page-context-design\\must-not-exist.md"
+  ],
+  "exit_code": 1,
+  "binary_sha256": "ac2aff96b2cf1fdb5632b4997ff2e1e4b41f5563366df80569a2cab0b58ff8bd",
+  "binary_code_review_manifest_sha256": "cd88bd8aecd08209692ee859e5bf4ffd621e467d6cbaee16628266344754dd6b",
+  "result": "Current actual 01 annotated /2 rejects NeedsResolution without output",
+  "new_API_executed": false
+}

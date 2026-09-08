@@ -1,0 +1,16 @@
+from pathlib import Path
+import hashlib,json,subprocess
+O=Path(__file__).resolve().parent;R=O.parents[1];head='6e7ab06197c412d28305a174a54deda355daa790'
+paths=['crates/languages/doc/core/src/pages.rs','crates/languages/doc/core/src/portable/pages.rs','crates/languages/doc/core/tests/pages.rs','crates/languages/doc/html/src/pages.rs','tools/src/doc/export/pages.rs','tools/src/doc/canonical.rs','tools/src/doc/projection/annotated.rs','tools/src/doc/projection/annotated/host.rs','tools/src/doc/projection/annotated/blocks.rs','tools/src/doc/projection.rs','tools/tests/doc/pages.rs','doc/spec/21-doc-pages.md','doc/spec/16-doc-migration.md','doc/spec/22-external-extensions.md','doc/migration/authored/01-architecture.nepld','doc/authoring.md','doc/canonical.json']
+rows=[]
+for path in paths:
+    b=subprocess.check_output(['git','show',head+':'+path],cwd=R);p=O/'source'/path;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b)
+    rows.append(dict(path=path,bytes=len(b),sha256=hashlib.sha256(b).hexdigest()))
+(O/'sources.json').write_text(json.dumps(dict(head=head,files=rows),indent=2)+'\n',encoding='utf-8',newline='\n')
+aliases=O/'empty-aliases.json';aliases.write_bytes(b'[]\n')
+exe=R/'.tmp/review-canonical00-code/target/debug/nepl3-tools.exe';cmd=[str(exe),'doc-markdown','annotated',str(O/'source/doc/migration/authored/01-architecture.nepld'),str(aliases),str(O/'must-not-exist.md')]
+p=subprocess.run(cmd,cwd=O,capture_output=True,timeout=180)
+(O/'current-01.stdout.log').write_bytes(p.stdout);(O/'current-01.stderr.log').write_bytes(p.stderr)
+assert p.returncode!=0 and b'NeedsResolution' in p.stderr and not (O/'must-not-exist.md').exists(),p.stderr
+result=dict(command=cmd,exit_code=p.returncode,binary_sha256=hashlib.sha256(exe.read_bytes()).hexdigest(),binary_code_review_manifest_sha256=hashlib.sha256((R/'.tmp/review-canonical00-code/manifest.json').read_bytes()).hexdigest(),result='Current actual 01 annotated /2 rejects NeedsResolution without output',new_API_executed=False)
+(O/'result.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8',newline='\n');print(result['result'])

@@ -1,0 +1,12 @@
+[
+  {
+    "path": "C:\\projects\\NEPL3-doc-page-projection\\.tmp\\review-annotated-pages\\target\\debug\\review-pages.exe",
+    "bytes": 9677312,
+    "sha256": "e98509e95283110c1cebb73ddc0ac5c069f6b672dfe3216876b3da03af881834"
+  },
+  {
+    "path": "C:\\projects\\NEPL3-doc-page-projection\\.tmp\\review-annotated-pages\\target\\wasm32-wasip2\\debug\\review-pages.wasm",
+    "bytes": 68173349,
+    "sha256": "31ea70d9abb9baa91124e304d8faf086105db29c8f64ead014425d58ff6ad5c6"
+  }
+]
