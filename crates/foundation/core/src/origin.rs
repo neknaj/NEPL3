@@ -571,14 +571,27 @@ fn snapshot_dag<'a>(
     // edges at each vertex. These are private indices, not source identities.
     let mut outgoing: Vec<Option<usize>> = Vec::new();
     let mut edges = Vec::new();
+    // Successive fragments often share one endpoint. Reuse only its index;
+    // compare the complete identity on every hit, within this one graph build.
+    let mut recent: [Option<usize>; 2] = [None, None];
     for mapping in input {
         budget.charge(Resource::Work, 1)?;
         let mut ids = [0usize; 2];
         for (slot, span) in [&mapping.source, &mapping.target].into_iter().enumerate() {
             let identity = span.snapshot_ref();
             let mut found = None;
+            if let Some(index) = recent[slot] {
+                let prior = nodes[index];
+                budget.charge(
+                    Resource::Work,
+                    prior.source.0.len().min(identity.source.0.len()) as u64 + 41,
+                )?;
+                if prior == identity {
+                    found = Some(index);
+                }
+            }
             let (mut low, mut high) = (0, ordered.len());
-            while low < high {
+            while found.is_none() && low < high {
                 let mid = low + (high - low) / 2;
                 let index = ordered[mid];
                 let prior = nodes[index];
@@ -618,6 +631,7 @@ fn snapshot_dag<'a>(
                     index
                 }
             };
+            recent[slot] = Some(ids[slot]);
         }
         budget.charge(
             Resource::AllocationUnits,

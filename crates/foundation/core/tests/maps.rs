@@ -91,8 +91,10 @@ fn wide_snapshot_dag_work_does_not_scan_all_edges_for_each_vertex() -> TestResul
             });
             sources.insert(leaf).map_err(|e| format!("{e:?}"))?;
         }
+        // Repeated root identities must not require a full indexed lookup per
+        // edge. The old uncached 2,048-edge star exceeds this operation budget.
         let mut b = Budget::new(Limits {
-            work: 20_000_000,
+            work: 1_500_000,
             ..budget().limits()
         });
         SourceMap::validate_mappings(&maps, &sources, &mut b).map_err(|e| format!("{e:?}"))?;
