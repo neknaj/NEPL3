@@ -294,27 +294,29 @@ pub fn from_source(compiled: &super::source::Compiled, source: &str) -> Result<S
     if source.len() as u64 > super::export::MAX_SOURCE_BYTES {
         return Err("SourceLimit".into());
     }
-    with_input_route(true, compiled, source, "Article", |tree, profile, b, a| {
-        let checked = tree
-            .tree()
-            .bundle
-            .validate_with_sources(profile.registry(), b, a)
+    with_input_route(
+        true,
+        compiled,
+        source,
+        "Article",
+        |tree, profile, _b, _a| {
+            let checked = tree.syntax();
+            let store = SourceStore::default();
+            let mut admission = SourceAdmission::default();
+            let mut codec =
+                FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
+            let document = lower::document(
+                checked,
+                &compiled.doc.package.schema,
+                Category::Article,
+                profile.registry(),
+                &mut budget(),
+                &mut codec,
+            )
             .map_err(err)?;
-        let store = SourceStore::default();
-        let mut admission = SourceAdmission::default();
-        let mut codec =
-            FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
-        let document = lower::document(
-            &checked,
-            &compiled.doc.package.schema,
-            Category::Article,
-            profile.registry(),
-            &mut budget(),
-            &mut codec,
-        )
-        .map_err(err)?;
-        markdown(&document, profile.registry(), &mut codec, &mut budget()).map_err(err)
-    })
+            markdown(&document, profile.registry(), &mut codec, &mut budget()).map_err(err)
+        },
+    )
 }
 
 pub fn write(input: &std::path::Path, output: &std::path::Path) -> crate::Result<()> {

@@ -1,0 +1,49 @@
+   Compiling autocfg v1.5.1
+   Compiling typenum v1.20.1
+   Compiling cfg-if v1.0.4
+   Compiling unicode-ident v1.0.18
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling memchr v2.8.3
+   Compiling pulldown-cmark v0.13.4
+   Compiling serde v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling unicase v2.9.0
+   Compiling itoa v1.0.18
+   Compiling bitflags v2.13.1
+   Compiling num-traits v0.2.19
+   Compiling hybrid-array v0.4.14
+   Compiling syn v3.0.5
+   Compiling crypto-common v0.2.2
+   Compiling block-buffer v0.12.1
+   Compiling num-integer v0.1.47
+   Compiling num-bigint v0.5.1
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-proof\workspace\crates\foundation\core)
+   Compiling serde_derive v1.0.229
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-proof\workspace\crates\foundation\reader)
+   Compiling nepl3-doc-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-proof\workspace\crates\languages\doc\core)
+   Compiling nepl3-markup v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-proof\workspace\crates\output\markup)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-proof\workspace\crates\foundation\wire)
+   Compiling nepl3-math-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-proof\workspace\crates\languages\math\core)
+   Compiling nepl3-engine v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-proof\workspace\crates\foundation\engine)
+   Compiling nepl3-doc-html v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-proof\workspace\crates\languages\doc\html)
+   Compiling nepl3-grammar-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-proof\workspace\crates\languages\grammar\core)
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-proof\workspace\tools)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5m 11s
+     Running tests\review_proof.rs (target\wasm32-wasip2\debug\deps\review_proof-d1fa7f6a0a929df4.wasm)
+
+running 1 test
+test retained_proof_preserves_fresh_boundaries_and_entrypoint_accounting ... proof source=Digest([99, 87, 3, 151, 116, 11, 195, 97, 116, 81, 125, 136, 145, 44, 137, 89, 218, 115, 79, 138, 80, 177, 136, 166, 221, 46, 10, 200, 31, 50, 44, 88]) native=false parse=Usage { source_bytes: 231, work: 476412, depth: 14, nodes: 987, allocation_units: 8777330, output_bytes: 6077, diagnostics: 0, events: 0 } lower=Usage { source_bytes: 120, work: 5685, depth: 9, nodes: 122, allocation_units: 33167, output_bytes: 0, diagnostics: 0, events: 0 }
+proof source=Digest([99, 87, 3, 151, 116, 11, 195, 97, 116, 81, 125, 136, 145, 44, 137, 89, 218, 115, 79, 138, 80, 177, 136, 166, 221, 46, 10, 200, 31, 50, 44, 88]) native=true parse=Usage { source_bytes: 231, work: 162889, depth: 14, nodes: 847, allocation_units: 530182, output_bytes: 6077, diagnostics: 0, events: 0 } lower=Usage { source_bytes: 120, work: 5685, depth: 9, nodes: 122, allocation_units: 33167, output_bytes: 0, diagnostics: 0, events: 0 }
+proof source=Digest([8, 191, 150, 59, 254, 190, 49, 58, 142, 185, 79, 202, 229, 40, 61, 89, 5, 67, 181, 202, 71, 58, 1, 28, 243, 226, 172, 241, 171, 123, 143, 40]) native=false parse=Usage { source_bytes: 160, work: 266367, depth: 20, nodes: 6656, allocation_units: 7071556, output_bytes: 3552, diagnostics: 0, events: 0 } lower=Usage { source_bytes: 80, work: 15310, depth: 17, nodes: 2315, allocation_units: 93181, output_bytes: 0, diagnostics: 0, events: 0 }
+proof source=Digest([8, 191, 150, 59, 254, 190, 49, 58, 142, 185, 79, 202, 229, 40, 61, 89, 5, 67, 181, 202, 71, 58, 1, 28, 243, 226, 172, 241, 171, 123, 143, 40]) native=true parse=Usage { source_bytes: 160, work: 131734, depth: 20, nodes: 6586, allocation_units: 618420, output_bytes: 3552, diagnostics: 0, events: 0 } lower=Usage { source_bytes: 80, work: 15310, depth: 17, nodes: 2315, allocation_units: 93181, output_bytes: 0, diagnostics: 0, events: 0 }
+proof source=Digest([76, 205, 210, 105, 118, 117, 207, 95, 129, 199, 157, 99, 190, 0, 157, 38, 236, 10, 93, 88, 127, 69, 105, 208, 174, 163, 12, 140, 146, 115, 183, 76]) native=false parse=Usage { source_bytes: 118, work: 237152, depth: 20, nodes: 4008, allocation_units: 5917913, output_bytes: 3552, diagnostics: 0, events: 0 } lower=Usage { source_bytes: 59, work: 9658, depth: 17, nodes: 1347, allocation_units: 56608, output_bytes: 0, diagnostics: 0, events: 0 }
+proof source=Digest([76, 205, 210, 105, 118, 117, 207, 95, 129, 199, 157, 99, 190, 0, 157, 38, 236, 10, 93, 88, 127, 69, 105, 208, 174, 163, 12, 140, 146, 115, 183, 76]) native=true parse=Usage { source_bytes: 118, work: 121351, depth: 20, nodes: 3938, allocation_units: 470537, output_bytes: 3552, diagnostics: 0, events: 0 } lower=Usage { source_bytes: 59, work: 9658, depth: 17, nodes: 1347, allocation_units: 56608, output_bytes: 0, diagnostics: 0, events: 0 }
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.05s
+

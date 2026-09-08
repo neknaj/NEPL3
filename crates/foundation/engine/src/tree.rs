@@ -61,8 +61,14 @@ impl From<ProfileError> for TreeError {
 }
 pub struct ValidatedParseTree<'a> {
     tree: &'a ParseTree,
+    syntax: nepl3_core::syntax::ValidatedSyntaxBundle<'a>,
 }
 impl ValidatedParseTree<'_> {
+    /// Borrow the syntax proof already established for this immutable tree.
+    /// This does not certify domain semantics or environment digest equality.
+    pub fn syntax(&self) -> &nepl3_core::syntax::ValidatedSyntaxBundle<'_> {
+        &self.syntax
+    }
     pub fn tree(&self) -> &ParseTree {
         self.tree
     }
@@ -443,7 +449,8 @@ impl ParseTree {
             return Err(TreeError::Selection);
         }
         let registry = profile.registry();
-        self.bundle
+        let syntax = self
+            .bundle
             .validate_with_sources(registry, budget, admission)?;
         let mut contexts: Vec<(&SyntaxBundle, &BundleContext)> = Vec::new();
         for context in &self.contexts {
@@ -664,6 +671,6 @@ impl ParseTree {
                 }
             }
         }
-        Ok(ValidatedParseTree { tree: self })
+        Ok(ValidatedParseTree { tree: self, syntax })
     }
 }
