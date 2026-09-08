@@ -1,0 +1,372 @@
+{
+  "start": "92d7cd2e49f31b8ae0a3702f764e1e8b3c844bdf",
+  "fixed": "0c583b7af13431afc2be8f78ba6a05aaa5a208a9",
+  "merged": "754158736724a01f27204a852e427a33fc3261a4",
+  "head": "f7efb1c224ac0ba001314eb8062ba2db473882ac",
+  "main": "67694208cc700042b5c7a6275d443b37eccaaaf7",
+  "patch": {
+    "bytes": 4999,
+    "sha256": "1f5bec155d667efbdccacdf32d5a47911527c60f9a633995e0ec05f9bb138021",
+    "paths": [
+      "crates/foundation/reader/src/runtime/mod.rs",
+      "crates/foundation/reader/tests/runtime/checkpoints.rs"
+    ]
+  },
+  "original_manifests": [
+    {
+      "path": "manifest-before.json",
+      "sha256": "55705ecce3606cd8e8f4dfbbb34371e23916173e3fc0794e22974fc39ca7a2e6"
+    },
+    {
+      "path": "after/manifest.json",
+      "sha256": "6904e1e23de4813f88ddd30b32bb834838f21a4295f3d8d6968e34398e6da84d"
+    }
+  ],
+  "archived": [
+    {
+      "path": "conformance/results/reader-checkpoints/review/manifest-before.json",
+      "bytes": 7295,
+      "sha256": "55705ecce3606cd8e8f4dfbbb34371e23916173e3fc0794e22974fc39ca7a2e6"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/before/freeze.py",
+      "bytes": 1279,
+      "sha256": "9f42279b4ffe343ba569e961650cea36de2293438735542a60a8aab05cb0b3aa"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/before/native-growing.json",
+      "bytes": 534,
+      "sha256": "3b7ff2bd02d64121a18d7a8d43c1846b1494be94eba2236d8de1bef74457ace7"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/before/native-growing.log",
+      "bytes": 1787,
+      "sha256": "f67d196423ae1f1a7e8e893dead16ba49366b19c1b770e3d8d5a2a93ac8b054a"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/before/run.py",
+      "bytes": 758,
+      "sha256": "2577be312bbf6ba82ca713b863f8c057aa7fce542477da2e96b0b1fc2d66a3e5"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/before/sources.json",
+      "bytes": 101279,
+      "sha256": "05ce18593285b66e1a0a541ade82bd0100906f242d221467d8ac5d006f69af51"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/before/wasi-growing.json",
+      "bytes": 576,
+      "sha256": "0f2261d3b070c39b88b8a3e52a058f3258a7109197a739d0b21e50a803fd87c0"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/before/wasi-growing.log",
+      "bytes": 4616,
+      "sha256": "1957ae167c9329046f40439de026cfe0b8fd898053244b1ff6f7dc2e1b37969a"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/evidence-before.json",
+      "bytes": 6584,
+      "sha256": "5ed70e4d117e5db651ea88625d6269e4a88c617fac4f65d31bf797b05748d012"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/finalize_before.py",
+      "bytes": 2913,
+      "sha256": "09789553d4cf488fbca2f1bb57eaa3d51266b73b9bc97ead4ede6e80b69f32d3"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/frame-probe-before-work-delta-observation.rs",
+      "bytes": 2312,
+      "sha256": "8dc298f0b7009577045133bf210ba1b562c4f7579ce3c4ed17a818fb8d8f9da4"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/freeze.py",
+      "bytes": 1135,
+      "sha256": "2842514ae4238263cd50e1020eeeb2c6afe2dcc8018e4c6771dc6599f1d913f3"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/native-all.json",
+      "bytes": 399,
+      "sha256": "42e574231618b5e6a1358325b470e134825aaef622587c834350827d5ca7a63b"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/native-all.log",
+      "bytes": 11339,
+      "sha256": "a4eedf5e66773e555791acd94c8ddfaef0174cb5ca0c5fd6c7578e35ad62ccaa"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/native-frame-work-before-final.json",
+      "bytes": 438,
+      "sha256": "2c72921b5ef20f1f17e52170b0317e6fd3b05963b0265960702bd806177ce417"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/native-frame-work-before-final.log",
+      "bytes": 1217,
+      "sha256": "a263ba1c7c5cda4443c35f63a0bc0ad4f0c14491482ecc8fa44d013466dfd4aa"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/native-frame-work-before.json",
+      "bytes": 439,
+      "sha256": "e52a509c421d714ad5db91bca268aef99641430b5349243044e96c2ef20e3e36"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/native-frame-work-before.log",
+      "bytes": 1211,
+      "sha256": "0c00bfd11561497f059968a2418aa12c1a916265da9cfebbc898f1006ddd642d"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/native-independent-compile-before.log",
+      "bytes": 2889,
+      "sha256": "3b1febf97cccdd49127533cde149ff88ab4a8d035b5f9c83cf1eb46d4e92ee85"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/native-independent-compile-before2.log",
+      "bytes": 1276,
+      "sha256": "25c5eb0522cf8a4147a02557c785c8b46cd351878ae3740432da918b2261a15b"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/native-independent.json",
+      "bytes": 440,
+      "sha256": "baef9e314ff223b76e4c2aff6f601b5b4b3317b75ca5da66e88a2c2cd7d07c0c"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/native-independent.log",
+      "bytes": 2784,
+      "sha256": "fee1fe428b2f501e59ed306f3d4e8153938f6d3b7a5c7be48a7b6bea9b13eb97"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/native-managed.json",
+      "bytes": 428,
+      "sha256": "947608afac081fef7bad9b3bf5e1680bc0ed92ade0e69e6828fbffd78c11a76b"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/native-managed.log",
+      "bytes": 4314,
+      "sha256": "cbeaa78855eb13f62cd19caf223b255b3e51d6195aaa8a8b754559964d388739"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/probe-before-api-fix.rs",
+      "bytes": 7587,
+      "sha256": "12ad4658fa7fc417141aeebde1bd5972a638e1a48e572559311020cb1898ddad"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/probes/review_checkpoints.rs",
+      "bytes": 13314,
+      "sha256": "9a2dfbfb760a963d46fe2b60a16fbd292085cc6be87dbd82dc8741e738bdc381"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/probes/review_frame_work.rs",
+      "bytes": 2383,
+      "sha256": "b21e4dac275558d728c3ee3617731fd3b8b6e395dba0cc62c07710defd50e913"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/probes/review_helpers.rs",
+      "bytes": 7923,
+      "sha256": "3f01800cf6ce3627b98b463cba5fb85e8cfa6f9416aa1c207e22da9bb0f226df"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/review.md",
+      "bytes": 7949,
+      "sha256": "c33e3aa3b1f56e47c9f2423bd165d920e72fde07874af6db654ef92214cb7a32"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/reviewed-source/crates/foundation/reader/src/portable/transform.rs",
+      "bytes": 5577,
+      "sha256": "2f7169beb3e96c7dba27f0d27cd6599bb6a5d79bddf675cda2110a81c2b4309f"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/reviewed-source/crates/foundation/reader/src/runtime/checkpoint.rs",
+      "bytes": 6173,
+      "sha256": "b97af86ed8b3653b8c9ac4e0eb361323a2504802e1c89d6d47aa6bc86f1fa1b4"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/reviewed-source/crates/foundation/reader/src/runtime/mod.rs",
+      "bytes": 58751,
+      "sha256": "b1c02258ce8dca208f2b30d19bde7e4580b1d82e9fcc33ae9120f022147a3472"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/reviewed-source/crates/foundation/reader/src/runtime/validate/provider.rs",
+      "bytes": 13461,
+      "sha256": "61131df84fb87f3cbfb97bf216bb534ec23c90c84a189afb213efd6419840500"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/reviewed-source/crates/foundation/reader/tests/runtime/checkpoints.rs",
+      "bytes": 5570,
+      "sha256": "d7bc3cb9c84adf7dc96dc4cf2bda29395e5b95e6626dd362b10dd7bf67a5acb2"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/reviewed-source/crates/foundation/reader/tests/runtime.rs",
+      "bytes": 95109,
+      "sha256": "e5c7df3753175387a0c60e3ffeaa9b6b558ac73ee3525d8ac944f34e83559972"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/reviewed-source/doc/spec/03-reader.md",
+      "bytes": 28612,
+      "sha256": "4d3ee1fbb97277ef3df6511a9a158bdb1caad5f0da70785052c29a02c02a42c7"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/root-probe-notes.md",
+      "bytes": 2056,
+      "sha256": "67a86f16fcf998a741fb18008423cb63e86363ec0e0b5e22e3c8e00c43c7b8c9"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/run.py",
+      "bytes": 758,
+      "sha256": "2577be312bbf6ba82ca713b863f8c057aa7fce542477da2e96b0b1fc2d66a3e5"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/sources.json",
+      "bytes": 101740,
+      "sha256": "65b3b81302b25d0c7f0e665f2dbc55718f93251da15dcf5c6df2b634150c9c56"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/wasi-all.json",
+      "bytes": 441,
+      "sha256": "0140ab3d9c0b3c6346dfc61366875cfacc6c1ce3d4348fc462ceedda04d1b232"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/wasi-all.log",
+      "bytes": 12096,
+      "sha256": "a55dfe420fc11a4067a3ed328cbbc7af3bc8c629c448da83d14d83800af1b69e"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/wasi-frame-work-before-final.json",
+      "bytes": 481,
+      "sha256": "f4d03b0a52c4a30e216d1f6c411b7e5aae3d35d8b49dd281577c2dd2d9198f5e"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/wasi-frame-work-before-final.log",
+      "bytes": 1237,
+      "sha256": "0727e583e2ebfe198c25016f936c3bf4e15284888e6a62a4892d8b22a7c32050"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/wasi-frame-work-before.json",
+      "bytes": 481,
+      "sha256": "f250b5361847202f43cbfc2c3af44be5dcb2c78af9db46f4acada5377ab49c62"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/wasi-frame-work-before.log",
+      "bytes": 1231,
+      "sha256": "bd6d614fa63f95082c409b66e94fe60db2c4d7228a3f69e83f18c668012b2062"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/manifest.json",
+      "bytes": 2847,
+      "sha256": "6904e1e23de4813f88ddd30b32bb834838f21a4295f3d8d6968e34398e6da84d"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/commit.json",
+      "bytes": 105,
+      "sha256": "ac5450570f219c5cc2cefe290a199c665fa9868340692c76b97e1b7aac104e1d"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/delta.json",
+      "bytes": 441,
+      "sha256": "814202a8256376f451113b25689423abe8114283a21757368ebfc00fa265e578"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/delta.patch",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/evidence.json",
+      "bytes": 2933,
+      "sha256": "e5f790d4990e73ffcc9a1ddecb07151603d4e83a45f054fe40772e8ccbdb6dc8"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/finalize.py",
+      "bytes": 3617,
+      "sha256": "ebc4c174b4c117e7435ee17c3ff9711c96efe0b44f0b006d6327e8ae9dc02713"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/freeze.py",
+      "bytes": 1019,
+      "sha256": "0a5f61b37d785395d0794b25f128f97f7c1461ec0ff06e49225b85ef90a6dc92"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/native-all-after.json",
+      "bytes": 412,
+      "sha256": "290c4e85ea62b010fbd87d705e5de81c1aef9df9f6681b3230bf5d0214e259e6"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/native-all-after.log",
+      "bytes": 12144,
+      "sha256": "1a0b39babd4da848b6952ea62be65f633a3e0c4bcf06691df85fba3329791e7b"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/native-frame-work-after.json",
+      "bytes": 450,
+      "sha256": "3b6437f975be25733206d6ff14c34e23f4ecbc821c4abe7bb634f7593563d100"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/native-frame-work-after.log",
+      "bytes": 1893,
+      "sha256": "ea9610fb125afc83e0a58ed68118c5ef08f4b62a7ff8ca95038fdecc14e9c3e8"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/review.md",
+      "bytes": 3568,
+      "sha256": "c6ed750bc5bbc01921f0ae603d321054272bf65fa2f2ba06ba9a4af2747dc09f"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/run.py",
+      "bytes": 758,
+      "sha256": "2577be312bbf6ba82ca713b863f8c057aa7fce542477da2e96b0b1fc2d66a3e5"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/snapshot/crates/foundation/reader/src/runtime/mod.rs",
+      "bytes": 59087,
+      "sha256": "c6dd18e12bee362795e987817e38a0c328d2023764bab38077bbd617d00171a5"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/snapshot/crates/foundation/reader/tests/runtime/checkpoints.rs",
+      "bytes": 9060,
+      "sha256": "37cc4746d64782027f97f8228a59c1168a579fa46e9154a897ae7c5a6f961790"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/sources.json",
+      "bytes": 101652,
+      "sha256": "7afa2ed41109fd6c8a5c980cb529c86f32aee685d12f029cd74ae2516ebd7a63"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/wasi-all-after.json",
+      "bytes": 454,
+      "sha256": "8a636bb8efa3f7e1687c78e06bf2eb96663782beb1e0bed08f10d6f485eee8fa"
+    },
+    {
+      "path": "conformance/results/reader-checkpoints/review/after/wasi-all-after.log",
+      "bytes": 12933,
+      "sha256": "40943437b55266a33e0143e68baf59e8f40a31546852ce5092b7585ca47a96d7"
+    }
+  ],
+  "archive_bytes": 744545,
+  "incoming_main_paths": [
+    ".gitattributes",
+    "conformance/results/doc-authoring-18/review/check.log",
+    "conformance/results/doc-authoring-18/review/check.py",
+    "conformance/results/doc-authoring-18/review/checks.json",
+    "conformance/results/doc-authoring-18/review/freeze.py",
+    "conformance/results/doc-authoring-18/review/manifest.json",
+    "conformance/results/doc-authoring-18/review/review.md",
+    "conformance/results/doc-authoring-18/review/snapshot/AGENTS.md",
+    "conformance/results/doc-authoring-18/review/snapshot/design/forms.json",
+    "conformance/results/doc-authoring-18/review/snapshot/doc/authoring.md",
+    "conformance/results/doc-authoring-18/review/snapshot/doc/migration/authored/18-html-delivery.nepld",
+    "conformance/results/doc-authoring-18/review/snapshot/doc/spec/18-html-delivery.md",
+    "conformance/results/doc-authoring-18/review/snapshot/languages/doc/syntax.neplg",
+    "conformance/results/doc-authoring-18/review/source_parser.py",
+    "conformance/results/doc-authoring-18/review/sources.json",
+    "doc/migration/authored/18-html-delivery.nepld"
+  ],
+  "unchanged_git_ids": {
+    "crates": "dd54b0f30a53e5a9683147e23da43cc336f6969f",
+    "tools": "bea43489e929ef03f7a616fea90db49b5d896790",
+    "interfaces": "797ebdfff3f2613b27af4558d488b4a07ebdb225",
+    "design": "da2f58329341d17564b12309d7a613d1fc360256",
+    "doc/spec": "b50a064baef1fd36386000cd19239b789769353b",
+    "implementation-status.json": "17dbe7a191820819a15227e7a5ff7eb01a08f89b",
+    "Cargo.toml": "4ce773bb5a202da6523cdcc8aa8c10aaca7d6b97",
+    "Cargo.lock": "f753708e6fac4f8d41b175d0c75cd96ea36e2b75",
+    ".github": "3801e7770bcfc8a1f44771a6331401403c6cb39a"
+  }
+}
