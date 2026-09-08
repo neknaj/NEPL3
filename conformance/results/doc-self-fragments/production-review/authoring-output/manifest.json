@@ -1,0 +1,207 @@
+{
+  "budget_scope": "Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
+  "execution_identity": "d6cb854c1b89cf26e6c25b92c741eafabb85eca58116657268816f92cfa89fe4",
+  "files": [
+    {
+      "license": "MIT",
+      "mime": "text/css; charset=utf-8",
+      "path": "docs/authoring/assets/doc.css",
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "docs/authoring/index.html",
+      "sha256": "a05c10ff091b8b67cbf68a41f4b33b8ec46a0e57e75b2a3eb2bb5a3a93b47f99"
+    },
+    {
+      "license": null,
+      "mime": "application/octet-stream",
+      "path": "raw/doc/spec/05-document.md",
+      "sha256": "c6b0878316fec5554402ef0f0c2f5edb66ffd36bb363e17e2033b77fb53f27be"
+    },
+    {
+      "license": null,
+      "mime": "application/octet-stream",
+      "path": "raw/doc/spec/16-doc-migration.md",
+      "sha256": "efa1351c80c5cb79e77162f84b521553038dfa30b8d0040237f3acd3c1375ea4"
+    },
+    {
+      "license": null,
+      "mime": "application/octet-stream",
+      "path": "raw/examples/document/line-break.nepld",
+      "sha256": "9e996abd04c676c817afafa1edff09dfaa614fb8ac6f6ae4ebe147739ad09569"
+    },
+    {
+      "license": null,
+      "mime": "application/octet-stream",
+      "path": "raw/examples/document/linear-combination.nepld",
+      "sha256": "9099bbbe48ed75a0768997789229188f53e43348fe930522b119908dfdb7a889"
+    }
+  ],
+  "format": "nepl3.local-doc-pages/1",
+  "identity": "8b403b7ed2b26a4dd6b6aa1202e7a57c04db7550a9de06867789c7fa27d2b093",
+  "options": {
+    "parallel": "Rows"
+  },
+  "output_budget": {
+    "contract": "nepl3.local-doc-pages.execution/1",
+    "initial_usage": {
+      "allocation_units": 0,
+      "depth": 0,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 0,
+      "output_bytes": 0,
+      "source_bytes": 0,
+      "work": 0
+    },
+    "limits": {
+      "allocation_units": 500000000,
+      "depth": 1000,
+      "diagnostics": 1000,
+      "events": 1000,
+      "nodes": 10000000,
+      "output_bytes": 10000000,
+      "source_bytes": 10000000,
+      "work": 100000000
+    },
+    "usage": {
+      "allocation_units": 38512112,
+      "depth": 14,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 686992,
+      "output_bytes": 100545,
+      "source_bytes": 19850,
+      "work": 20624839
+    }
+  },
+  "output_usage": {
+    "allocation_units": 38512112,
+    "output_bytes": 100545,
+    "work": 20624839
+  },
+  "packages": "compiled checked bootstrap fixtures",
+  "pages": [
+    {
+      "id": "authoring",
+      "input": "doc/migration/authored/guide/authoring.nepld",
+      "lower_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "lower_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "lower_usage": {
+        "allocation_units": 16939076,
+        "depth": 40,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 321022,
+        "output_bytes": 0,
+        "source_bytes": 19850,
+        "work": 6096062
+      },
+      "operation_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "parse_and_validate_usage": {
+        "allocation_units": 77142588,
+        "depth": 45,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 886961,
+        "output_bytes": 276878,
+        "source_bytes": 36326,
+        "work": 24326277
+      },
+      "parse_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "parse_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "profile_sha256": "76e3124196fdaf84bcbb73e889ed34475a9162ec6d824b8d1161adc8cc7bbcba",
+      "route": "docs/authoring/index.html",
+      "source": "doc/authoring.md",
+      "source_sha256": "2b49688708eaaf18c9eb66ff9d7146661ba6ac6b42335d9d6a2e004d3dbe8281"
+    }
+  ],
+  "phase_execution": {
+    "contract": "nepl3.local-doc-pages.phases/1",
+    "identity": "e795c0846f397999c6707ed3cee87328c2e5779aae56c1771167b418ea309f81"
+  },
+  "registered_files": [
+    {
+      "bytes": 29876,
+      "id": "f0",
+      "input": "doc/spec/05-document.md",
+      "route": "raw/doc/spec/05-document.md",
+      "sha256": "c6b0878316fec5554402ef0f0c2f5edb66ffd36bb363e17e2033b77fb53f27be",
+      "source": "doc/spec/05-document.md"
+    },
+    {
+      "bytes": 8435,
+      "id": "f1",
+      "input": "doc/spec/16-doc-migration.md",
+      "route": "raw/doc/spec/16-doc-migration.md",
+      "sha256": "efa1351c80c5cb79e77162f84b521553038dfa30b8d0040237f3acd3c1375ea4",
+      "source": "doc/spec/16-doc-migration.md"
+    },
+    {
+      "bytes": 456,
+      "id": "f2",
+      "input": "examples/document/line-break.nepld",
+      "route": "raw/examples/document/line-break.nepld",
+      "sha256": "9e996abd04c676c817afafa1edff09dfaa614fb8ac6f6ae4ebe147739ad09569",
+      "source": "examples/document/line-break.nepld"
+    },
+    {
+      "bytes": 13488,
+      "id": "f3",
+      "input": "examples/document/linear-combination.nepld",
+      "route": "raw/examples/document/linear-combination.nepld",
+      "sha256": "9099bbbe48ed75a0768997789229188f53e43348fe930522b119908dfdb7a889",
+      "source": "examples/document/linear-combination.nepld"
+    }
+  ],
+  "renderer": "nepl3-doc-html pages/3",
+  "scope": "Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Assets and foreign rendering remain unsupported. Not Pages deployment evidence.",
+  "viewer_scripts": false
+}

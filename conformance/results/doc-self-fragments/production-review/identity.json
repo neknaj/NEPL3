@@ -1,0 +1,24 @@
+{
+  "production_commit": "379c85bc95ba57fbc3187476c338ee9f8a44bf72",
+  "base": "721afd9205ef21855e4cfff8bd3431498bd52f3d",
+  "archive_sha256": "d989f94e53497c51a6c4f43ac5f5f59325bb344567d620e5c71add450c5ed343",
+  "archived_files_verified": 4405,
+  "old_design_manifest_sha256": "a0e20f7c5cf8810cfbc4eed2eba5474000815a31e15cdaee2d6be2ce30007aa6",
+  "command_native": [
+    "cargo test --locked -p nepl3-doc-core --test pages",
+    "cargo test --locked -p nepl3-tools --test doc fragment_only",
+    "cargo test --locked -p nepl3-tools --test self_review"
+  ],
+  "command_wasi": "same commands with --target wasm32-wasip2; runner=wasmtime run",
+  "tests": {
+    "native_core": 9,
+    "native_host": 1,
+    "native_independent": 1,
+    "wasi_core": 9,
+    "wasi_host": 1,
+    "wasi_independent": 1,
+    "cli_success": 1,
+    "cli_expected_failure": 3,
+    "real_authoring_export": 1
+  }
+}

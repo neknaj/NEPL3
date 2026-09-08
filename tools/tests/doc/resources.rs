@@ -11,6 +11,17 @@ fn entry(id: &str, source: &str, route: &str) -> Entry {
     }
 }
 #[test]
+fn fragment_only_doc_source_generates_a_checked_self_href() -> Result<(), String> {
+    let compiled = source::compiled()?;
+    let inputs = vec![(entry("guide", "doc/guide.md", "docs/guide/index.html"),
+        "article en \"Guide\" body cons paragraph cons sentence cons link relative \"\" some \"local\" text \"Here\" cons anchor local text \"Target\" nil nil nil".into())];
+    let output = pages::generate(&compiled, &inputs)?;
+    let html = std::str::from_utf8(&output.files["docs/guide/index.html"]).map_err(super::err)?;
+    assert!(html.contains("href=\"index.html#n-6c6f63616c\""), "{html}");
+    assert!(html.contains("id=\"n-6c6f63616c\""), "{html}");
+    Ok(())
+}
+#[test]
 fn actual_doc_links_to_exact_registered_file_bytes() -> Result<(), String> {
     let compiled = source::compiled()?;
     let inputs = vec![(entry("guide", "doc/guide.md", "docs/guide/index.html"),
