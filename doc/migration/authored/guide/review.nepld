@@ -1387,5 +1387,24 @@ body
       cons sentence cons text "4binary、" cons ruby text "全" text "ぜん" cons text "process log、" cons ruby text "元入力" text "もとにゅうりょく" cons text "、" cons ruby text "補助" text "ほじょ" cons text "source、" cons ruby text "固定" text "こてい" cons text "manifestと" cons ruby text "支持資料" text "しじしりょう" cons text "は " cons code ".tmp/review-math-fixed/manifest.json" cons text " に" cons ruby text "保存" text "ほぞん" cons text "する。" nil
       cons "[今回/こんかい]はarena/shape/lower/[初回/しょかい]CBORと[正確/せいかく]な[有理数演算/ゆうりすうえんざん]・[新規/しんき]notation constructorの[範囲/はんい]であり、Math binding、evaluate、print、render、HTML/KaTeX[方針/ほうしん]の[受入完了/うけいれかんりょう]を[主張/しゅちょう]しない。"
       cons "[今回/こんかい]の[独立試験/どくりつしけん]から[新/あたら]しいproduction[不一致/ふいっち]は[確認/かくにん]されず、[既存/きそん]review findingの[状態/じょうたい]は[変更/へんこう]しない。" nil
+    cons paragraph
+      cons "HTML fragmentの[固定差分/こていさぶん]は、[独立担当/どくりつたんとう]が[正式内容/せいしきないよう]モデル、[公開/こうかい]native/[初回/しょかい]CBOR[入口/いりぐち]、[反例/はんれい]と[実/じつ]browserのtreeを[確認/かくにん]した。"
+      cons "R049はWork[課金前/かきんまえ]の[幅比例割当/はばひれいわりあて]、R050は[不正/ふせい]Ruby/rp、R051は[符号付/ふごうつ]きportの[受理/じゅり]として[元/もと]probeを[保存/ほぞん]し、[同/おな]じ[入力/にゅうりょく]の[修正後/しゅうせいご]native/WASI[実行/じっこう]で[拒否/きょひ]または[一定予算停止/いっていよさんていし]を[確認/かくにん]した。"
+      cons "[管理/かんり]14[件/けん]＋[独立/どくりつ]6[件/けん]を[両/りょう]targetで[実行/じっこう]し、[最後/さいご]のport[差分/さぶん]は[管理/かんり]5[件/けん]＋[独立/どくりつ]2[件/けん]で[確認/かくにん]した。"
+      cons "[修正後/しゅうせいご]の660[個/こ]のHTML[構造/こうぞう]は[実/じつ]Chromium 151.0.7922.34とFirefox 153.0で[要素/ようそ]・[属性/ぞくせい]・[本文/ほんぶん]が[一致/いっち]した。"
+      cons "512/600[段/だん]のbrowser[平坦化/へいたんか]は[別/べつ]の[出力深度制約/しゅつりょくしんどせいやく]として19[章/しょう]と[後続/こうぞく]H1へ[保持/ほじ]する。"
+      cons "[完全/かんぜん]なDoc[準備/じゅんび]、[文書/ぶんしょ]shell、KaTeX、[視覚/しかく]・font・accessibilityやWeb[全受入/ぜんうけいれ]の[完了/かんりょう]ではない。" nil
+    cons paragraph
+      cons "Text escapeの[独立確認/どくりつかくにん]では[全/ぜん]1,112,064 Unicode scalar、XML[禁止文字/きんしもじ]、Content/Attribute[正規形/せいきけい]、CR/LF/TABの[実/じつ]XML[再/さい]parse、[境界予算/きょうかいよさん]とWASIの[実/じつ]isize[超過/ちょうか]を[確認/かくにん]した。"
+      cons "[初回/しょかい]のtext snapshotは[後/あと]のrustfmtと[空白差/くうはくさ]があるが、[最終整形済/さいしゅうせいけいず]みtextもHTML[固定/こてい]subsetに[含/ふく]まれ、root[全体/ぜんたい]gateで[再試験/さいしけん]した。"
+      cons sentence cons ruby text "実行前後" text "じっこうぜんご" cons text "のsource hash、" cons ruby text "元" text "もと" cons text "probe、full logとbrowser" cons ruby text "結果" text "けっか" cons text "は " cons code "conformance/results/markup-html/independent.json" cons text " の" cons ruby text "分割" text "ぶんかつ" cons text "archiveに" cons ruby text "保存" text "ほぞん" cons text "し、source" cons ruby text "未対応範囲" text "みたいおうはんい" cons text "を" cons ruby text "群全体成功" text "ぐんぜんたいせいこう" cons text "へ" cons ruby text "転用" text "てんよう" cons text "しない。" nil nil
+    cons paragraph
+      cons "Doc[準備要求/じゅんびようきゅう]の[独立/どくりつ]レビューはclean base 1e259d5と[固定/こてい]12fileに[限定/げんてい]し、[依存/いぞん]815fileのSHAを[実行前後/じっこうぜんご]で[照合/しょうごう]した。"
+      cons "[独自/どくじ]のParallelとCRLF/Unicodeの[実/じつ]Article[入力/にゅうりょく]で、[全/ぜん]variantのLink/Assetをarena[順/じゅん]、Foreignをowner[順/じゅん]に[列挙/れっきょ]すること、[共有/きょうゆう]nodeと[別/べつ]nodeの[区別/くべつ]、Codeの[不正/ふせい]root[次数/じすう]やMathのゼロ[分母/ぶんぼ]を[評価/ひょうか]しないことを[確認/かくにん]した。"
+      cons "[初回/しょかい]CBORでsource admissionはonce、owner[位置/いち]・Origin・Viewとcanonical[再/さい]encodeは[一致/いっち]した。"
+      cons "[型正当/かたせいとう]な[欠落/けつらく]/[追加/ついか]/[並/なら]べ[替/か]え/node[番号/ばんごう]/guest digestの[改変/かいへん]、[内容/ないよう]だけ[更新/こうしん]した[古/ふる]い[文書/ぶんしょ]、source[閉包不足/へいほうふそく]を[拒否/きょひ]し、7[種/しゅ]の[停止/ていし]とcaller[深/ふか]さも[保持/ほじ]した。"
+      cons "[独立/どくりつ]2[補助/ほじょ]と[管理/かんり]core3/tools[実/じつ]parse1をnative/WASI[両方/りょうほう]で[実行成功/じっこうせいこう]し、[限定範囲/げんていはんい]にblocking[指摘/してき]はない。"
+      cons sentence cons ruby text "元入力" text "もとにゅうりょく" cons text "・probe・" cons ruby text "全" text "ぜん" cons text "log・binary hash・815file inventoryは " cons code "conformance/results/doc-prepare/independent.json" cons text " に" cons ruby text "保存" text "ほぞん" cons text "する。" nil
+      cons "[文書全体/ぶんしょぜんたい]のPreparedArticle、asset/URI[解決/かいけつ]、render、[完全/かんぜん]Reportの[受入完成/うけいれかんせい]ではなく、これらの[未達状態/みたつじょうたい]は[維持/いじ]する。" nil
     nil
   nil
