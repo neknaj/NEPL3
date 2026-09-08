@@ -22,7 +22,7 @@
     "nepl3.reader/name-v1",
     "nepl3.reader/trivia-v1",
     "nepl3.reader/number-v1",
-    "doc.reader/sentence-v1",
+    "doc.reader/sentence-v2",
     "grammar.facts/v1",
     "doc.facts/v1",
     "circuit.facts/v1"

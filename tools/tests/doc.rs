@@ -534,8 +534,14 @@ fn doc_sentence_provider_payload_and_prefix_share_the_actual_normal_form() -> Re
                 .ok_or("literal token")?;
             let empty = SourceStore::default();
             let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
-            let value = nepl3_doc_core::portable::from_value(
+            let owner = bundle
+                .sources
+                .iter()
+                .find(|s| s.identity() == token.head.snapshot_ref())
+                .ok_or("owner source")?;
+            let value = nepl3_doc_core::portable::sentence::from_value(
                 &token.payload,
+                owner,
                 profile.registry(),
                 &mut codec,
                 b,

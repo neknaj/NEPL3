@@ -2288,6 +2288,45 @@
         ]
       ],
       "constraints": []
+    },
+    "SentencePayload": {
+      "record": [
+        [
+          "value",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "DocValue"
+            }
+          }
+        ],
+        [
+          "origins",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Origin"
+              }
+            }
+          }
+        ],
+        [
+          "view",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "DocView"
+            }
+          }
+        ]
+      ],
+      "constraints": [
+        "doc.sentence_owner_source"
+      ]
     }
   },
   "operations": {

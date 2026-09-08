@@ -98,12 +98,37 @@ impl<C: FoundationValueCodec> Decoder for Portable<'_, C> {
             .token
             .and_then(|id| bundle.tokens.get(id.0 as usize))
             .ok_or(LowerError::LiteralPayload { node: id })?;
-        crate::portable::from_value(&token.payload, registry, self.0, b).map_err(
-            |error| match error {
-                PortableError::Stopped(s) => DocumentLowerError::Stopped(s),
-                error => DocumentLowerError::Payload { node: id, error },
-            },
-        )
+        b.charge(Resource::Work, 1)?;
+        let referenced = match &token.payload {
+            nepl3_core::value::NdfValue::Record(record) => {
+                b.charge(Resource::Work, record.kind.len() as u64)?;
+                record.kind == "SentencePayload"
+            }
+            _ => false,
+        };
+        let decoded = if referenced {
+            let mut owner = None;
+            for source in &bundle.sources {
+                b.charge(
+                    Resource::Work,
+                    (source.identity().source.0.len() + token.head.snapshot_ref().source.0.len())
+                        as u64
+                        + 40,
+                )?;
+                if source.identity() == token.head.snapshot_ref() {
+                    owner = Some(source);
+                    break;
+                }
+            }
+            let owner = owner.ok_or(LowerError::LiteralPayload { node: id })?;
+            crate::portable::sentence::from_value(&token.payload, owner, registry, self.0, b)
+        } else {
+            crate::portable::from_value(&token.payload, registry, self.0, b)
+        };
+        decoded.map_err(|error| match error {
+            PortableError::Stopped(s) => DocumentLowerError::Stopped(s),
+            error => DocumentLowerError::Payload { node: id, error },
+        })
     }
 }
 pub(super) struct Presentation {

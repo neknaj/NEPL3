@@ -6,6 +6,112 @@ use nepl3_doc_core::{
 };
 
 #[test]
+fn referenced_sentence_payloads_cross_the_owned_syntax_boundary_without_source_copies()
+-> Result<(), String> {
+    let compiled = compiled()?;
+    let mut source = String::from("article en \"Title\" body cons paragraph ");
+    for i in 0..64 {
+        source.push_str(&format!("cons \"Sentence {i} [base/reading].\" "));
+    }
+    source.push_str("nil nil");
+    source.push_str(&" ".repeat(65_536));
+    {
+        nepl3_tools::doc::source::with_input_route(
+            true,
+            &compiled,
+            &source,
+            "Article",
+            |tree, profile, b, a| {
+                let bundle = &tree.tree().bundle;
+                let mut count = 0;
+                for node in &bundle.nodes {
+                    if node.kind != "Leaf:SentenceLiteral" {
+                        continue;
+                    }
+                    let token = &bundle.tokens[node.token.ok_or("token")?.0 as usize];
+                    let nepl3_core::value::NdfValue::Record(record) = &token.payload else {
+                        return Err("record".into());
+                    };
+                    assert_eq!(record.kind, "SentencePayload");
+                    // Independent of the surrounding 64 KiB source, a short
+                    // sentence must not serialize that source as its own payload.
+                    {
+                        assert!(
+                            nepl3_wire::encode(&token.payload, &mut budget())
+                                .map_err(err)?
+                                .len()
+                                < source.len()
+                        );
+                    }
+                    count += 1;
+                }
+                assert_eq!(count, 65);
+                let empty = SourceStore::default();
+                let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
+                let wire = codec.encode_syntax(bundle, b).map_err(err)?;
+                let wire = nepl3_wire::decode(
+                    &nepl3_wire::encode(&wire, &mut budget()).map_err(err)?,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                let mut fresh = SourceAdmission::default();
+                let mut receiver =
+                    FoundationCodec::new(profile.registry(), &empty, &mut fresh).map_err(err)?;
+                let raw = receiver.decode_syntax(&wire, &mut budget()).map_err(err)?;
+                let mut admitted = SourceAdmission::default();
+                let checked = raw
+                    .validate_with_sources(profile.registry(), &mut budget(), &mut admitted)
+                    .map_err(err)?;
+                let doc = lower::document(
+                    &checked,
+                    &compiled.doc.package.schema,
+                    Category::Article,
+                    profile.registry(),
+                    &mut budget(),
+                    &mut receiver,
+                )
+                .map_err(err)?;
+                use nepl3_doc_core::model::{DocKind, DocRoot};
+                let DocRoot::Article(root) = doc.value.root else {
+                    return Err("article".into());
+                };
+                let node = |id: u64| &doc.value.nodes[id as usize].kind;
+                let DocKind::Article { body, .. } = node(root.0) else {
+                    return Err("article node".into());
+                };
+                let DocKind::Body { blocks } = node(body.0) else {
+                    return Err("body".into());
+                };
+                assert_eq!(blocks.len(), 1);
+                let DocKind::Paragraph { items } = node(blocks[0].0) else {
+                    return Err("paragraph".into());
+                };
+                assert_eq!(items.len(), 64);
+                for (i, item) in items.iter().enumerate() {
+                    let DocKind::Sentence { inlines } = node(item.0) else {
+                        return Err("sentence".into());
+                    };
+                    assert_eq!(inlines.len(), 3);
+                    assert!(
+                        matches!(node(inlines[0].0), DocKind::Text { text } if text == &format!("Sentence {i} "))
+                    );
+                    let DocKind::Ruby { base, reading } = node(inlines[1].0) else {
+                        return Err("ruby".into());
+                    };
+                    assert!(matches!(node(base.0), DocKind::Text { text } if text == "base"));
+                    assert!(matches!(node(reading.0), DocKind::Text { text } if text == "reading"));
+                    assert!(matches!(node(inlines[2].0), DocKind::Text { text } if text == "."));
+                }
+                assert_eq!(doc.sources.len(), 1);
+                assert_eq!(doc.sources[0].text(), source);
+                Ok(())
+            },
+        )?;
+    }
+    Ok(())
+}
+
+#[test]
 fn literal_and_prefix_share_one_lower_with_source_and_local_view_retention() -> Result<(), String> {
     let compiled = compiled()?;
     let mixed = r#"article en "Title" body cons paragraph cons "Before [base/reading]" cons sentence cons text "after" nil nil nil"#;
@@ -103,8 +209,14 @@ fn mixed_lower_rejects_other_token_view_and_semantic_positions_without_mutation(
             for case in 0..8 {
                 let mut raw = original.clone_with_budget(b).map_err(err)?;
                 let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
-                let mut doc = nepl3_doc_core::portable::from_value(
+                let owner = original
+                    .sources
+                    .iter()
+                    .find(|s| s.identity() == raw.tokens[first].head.snapshot_ref())
+                    .ok_or("owner source")?;
+                let mut doc = nepl3_doc_core::portable::sentence::from_value(
                     &raw.tokens[first].payload,
+                    owner,
                     profile.registry(),
                     &mut codec,
                     b,

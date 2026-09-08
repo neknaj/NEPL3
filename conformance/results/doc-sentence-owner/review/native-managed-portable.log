@@ -1,0 +1,13 @@
+    Blocking waiting for file lock on build directory
+   Compiling nepl3-doc-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-sentence-payload\workspace\crates\languages\doc\core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 31s
+     Running tests\portable.rs (../target\debug\deps\portable-46e1ab51e5c14e8f.exe)
+
+running 4 tests
+test schema_valid_wrong_category_and_resource_stops_are_typed ... ok
+test document_ndf_and_cbor_first_receiver_preserve_source_view_and_meaning ... ok
+test sentence_payload_uses_only_the_explicit_owner_after_cbor ... ok
+test valid_document_decode_keeps_work_stop_causes_at_inner_boundaries ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+

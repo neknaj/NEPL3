@@ -47,3 +47,4 @@ dist/** export-ignore
 /conformance/results/doc-host-capacity/** -text -whitespace
 /conformance/results/doc-markdown-sentences/** -text -whitespace
 /conformance/results/doc-authoring-18/** -text -whitespace
+/conformance/results/doc-sentence-owner/** -text -whitespace

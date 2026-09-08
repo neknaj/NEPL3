@@ -1,0 +1,16 @@
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-sentence-payload\workspace\tools)
+error[E0509]: cannot move out of type `nepl3_core::value::NdfValue`, which implements the `Drop` trait
+  --> tools\tests\review_sentence_payload.rs:76:31
+   |
+76 |     let NdfValue::Record(old)=portable::to_value(doc,r,&mut c,&mut budget()).map_err(err)? else{return Err("legacy record".into())};
+   |                          ---  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot move out of here
+   |                          |
+   |                          data moved here because `old` has type `nepl3_core::value::Record`, which does not implement the `Copy` trait
+   |
+help: consider borrowing the pattern binding
+   |
+76 |     let NdfValue::Record(ref old)=portable::to_value(doc,r,&mut c,&mut budget()).map_err(err)? else{return Err("legacy record".into())};
+   |                          +++
+
+For more information about this error, try `rustc --explain E0509`.
+error: could not compile `nepl3-tools` (test "review_sentence_payload") due to 1 previous error
