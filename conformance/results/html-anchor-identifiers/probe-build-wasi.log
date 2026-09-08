@@ -1,0 +1,10 @@
+   Compiling zmij v1.0.23
+   Compiling serde_core v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling itoa v1.0.18
+   Compiling memchr v2.8.3
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-html-anchor-identifiers\workspace\crates\foundation\core)
+   Compiling nepl3-markup v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-html-anchor-identifiers\workspace\crates\output\markup)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-html-anchor-identifiers\workspace\crates\foundation\wire)
+   Compiling review-html-anchor-identifiers v0.0.0 (C:\projects\NEPL3-runtime\.tmp\review-html-anchor-identifiers\probe)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1m 10s

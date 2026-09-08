@@ -1,0 +1,48 @@
+{
+  "files": [
+    {
+      "path": "crates/output/markup/src/html/check.rs",
+      "sha256": "837c7907347c8a2badb4791c25c2b9fcde5761a8d913797b527229ebf2e41562"
+    },
+    {
+      "path": "crates/output/markup/src/html/mod.rs",
+      "sha256": "ad339f7b7bf3e9f28a0415e9ae00d1fb03793252941643e4e9da8cd4bf1c8b05"
+    },
+    {
+      "path": "crates/output/markup/src/html/uri.rs",
+      "sha256": "2506c3e3c982d613d63e13ad11d2f7c69bf73c84ae3a88ae34b885d0c210808f"
+    },
+    {
+      "path": "design/markup.json",
+      "sha256": "a5fe172fc66d1637c76a0c6e15bfdabfc403ffa3e982b9edf258d742b81d91f8"
+    },
+    {
+      "path": "doc/spec/12-model-invariants.md",
+      "sha256": "81b22608f80254f7d5979b754436b9d62da0bf25aefddf01a6fec772fdcf9cc5"
+    },
+    {
+      "path": "doc/spec/19-html-fragment.md",
+      "sha256": "1ef8b987603ce307f0622f3bb7ce19bdd8f7f94b78b34dfb8f8784e17e2022bf"
+    },
+    {
+      "path": "e775fca-attributes.txt",
+      "sha256": "efeb9ea2f6764c8c8a6ad02ed6e54a3b85df3cb2c77c1f55ac24bacffc91b94b"
+    },
+    {
+      "path": "e775fca-parent1-attributes.txt",
+      "sha256": "db0cf16e5ebc1444ce0d9be0eb411a80522906ee88cf521d3a50d4bd4967d8e9"
+    },
+    {
+      "path": "e775fca-parent2-attributes.txt",
+      "sha256": "b0b81b143f6f9a70a698d5b89fc33cb55b4507cea43b971fbc5b689b09765aef"
+    },
+    {
+      "path": "review.md",
+      "sha256": "434964a38b2ec0c05e0eb1e95109bd01897b78122ea76de9674bc76fc5c933f8"
+    },
+    {
+      "path": "sources.json",
+      "sha256": "742c047dbc1d1f56710be9427baf205eec735bf3e52eb370856ecb2e1d4c3ce4"
+    }
+  ]
+}
