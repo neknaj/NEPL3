@@ -1,0 +1,18 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-core",
+    "--target",
+    "wasm32-wasip2",
+    "--",
+    "--test-threads=1",
+    "--nocapture"
+  ],
+  "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace",
+  "runner": "wasmtime run",
+  "exit_code": 0,
+  "seconds": 41.611992400023155
+}

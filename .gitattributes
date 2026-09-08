@@ -51,6 +51,13 @@ dist/** export-ignore
 /conformance/results/doc-authoring-delivery/** -text -whitespace
 /conformance/results/reader-checkpoints/** -text -whitespace
 /conformance/results/stream-digest/** -text -whitespace
+/conformance/results/doc-authoring-progress/** -text -whitespace
 /conformance/results/doc-authoring-adrs/** -text -whitespace
 /conformance/results/source-map-adjacency/** -text -whitespace
+<<<<<<< HEAD
 /conformance/results/doc-signature-projection/** -text -whitespace
+=======
+/conformance/results/source-map-locality/** -text -whitespace
+/conformance/results/borrow-mapping-union/** -text -whitespace
+/conformance/results/doc-authoring-entries/** -text -whitespace
+>>>>>>> origin/main
