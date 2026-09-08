@@ -123,6 +123,48 @@ fn run(set: &PageSet) -> Result<PageLinkPlan, String> {
         .clone())
 }
 #[test]
+fn empty_relative_path_is_only_a_nonempty_self_fragment() -> Result<(), String> {
+    let mut input = set();
+    input.pages[0].document.value.nodes[7].kind = DocKind::Link {
+        target: LinkTarget::Relative {
+            path: String::new(),
+            fragment: Some("導入".into()),
+        },
+        label: InlineRef(2),
+    };
+    let plan = run(&input)?;
+    assert_eq!(plan.links[0].target, PageDestination::Page { index: 0 });
+    assert_eq!(plan.links[0].fragment.as_deref(), Some("導入"));
+    let r = registry()?;
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let value = portable::pages::set_to_value(&input, &r, &mut codec, &mut b()).map_err(err)?;
+    let encoded = nepl3_wire::encode(&value, &mut b()).map_err(err)?;
+    let received = nepl3_wire::decode(&encoded, &mut b()).map_err(err)?;
+    let decoded =
+        portable::pages::set_from_value(&received, &r, &mut codec, &mut b()).map_err(err)?;
+    assert_eq!(decoded, input);
+    assert_eq!(run(&decoded)?, plan);
+    for fragment in [None, Some(String::new()), Some("未登録".into())] {
+        let expected = if fragment.as_ref().is_some_and(|s| !s.is_empty()) {
+            "MissingFragment"
+        } else {
+            "InvalidRelative"
+        };
+        input.pages[0].document.value.nodes[7].kind = DocKind::Link {
+            target: LinkTarget::Relative {
+                path: String::new(),
+                fragment,
+            },
+            label: InlineRef(2),
+        };
+        let error = run(&input).err().ok_or("unexpected success")?;
+        assert!(error.contains(expected), "{error}");
+    }
+    Ok(())
+}
+#[test]
 fn registered_file_bytes_are_resolved_and_bound_to_the_portable_plan() -> Result<(), String> {
     let r = registry()?;
     let mut input = set();

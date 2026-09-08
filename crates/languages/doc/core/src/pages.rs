@@ -352,8 +352,12 @@ pub fn resolve<'a, C: FoundationValueCodec>(
             let (key, fragment, by_source) = match link_target {
                 LinkTarget::Page { page: id, fragment } => (copy(id, b)?, fragment, false),
                 LinkTarget::Relative { path, fragment } => (
-                    relative(&set.pages[page_index].registration.source, path, b)?
-                        .ok_or(PageError::InvalidRelative { page, node })?,
+                    if path.is_empty() && fragment.as_ref().is_some_and(|s| !s.is_empty()) {
+                        copy(&set.pages[page_index].registration.source, b)?
+                    } else {
+                        relative(&set.pages[page_index].registration.source, path, b)?
+                            .ok_or(PageError::InvalidRelative { page, node })?
+                    },
                     fragment,
                     true,
                 ),
