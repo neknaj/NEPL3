@@ -1,0 +1,114 @@
+{
+  "files": [
+    {
+      "path": "base/AGENTS.md",
+      "bytes": 7613,
+      "sha256": "849027165216a9a3adcb22ef58a44bc698c83e1707d2aa0727a1b73105282236"
+    },
+    {
+      "path": "base/CONTRIBUTING.md",
+      "bytes": 1357,
+      "sha256": "b0d30e3a223353c8baa9c61a5e1e1efb346a72cfd9f5eb59ca38a6310cd8ce65"
+    },
+    {
+      "path": "base/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "base/implementation-status.json",
+      "bytes": 7089,
+      "sha256": "e5d4de10f8e896ef731f9fee54cf469448d12818046c69bfac11e042a269f74d"
+    },
+    {
+      "path": "base/README.md",
+      "bytes": 2478,
+      "sha256": "8d20a7f25c73d12df87452f18586fb558ba55df6424eb59241717925bc179e4c"
+    },
+    {
+      "path": "base/SECURITY.md",
+      "bytes": 814,
+      "sha256": "92a2e28026329631c7fa6af158f0547ceb035275b7680f0407facbe180683d57"
+    },
+    {
+      "path": "before/CONTRIBUTING.md",
+      "bytes": 1576,
+      "sha256": "21e3c388b11cd40db4ca9fb61d6a15d9474b4a7283c58dbde68eecf84e2cf096"
+    },
+    {
+      "path": "before/doc/migration/authored/project/CONTRIBUTING.nepld",
+      "bytes": 5209,
+      "sha256": "9b3dac64a2735a08cac52a1a77deaef19c8da5302856872b98294bf78d0f8287"
+    },
+    {
+      "path": "before/doc/migration/authored/project/SECURITY.nepld",
+      "bytes": 2837,
+      "sha256": "5a86adebd49381b8b5f3e9da657ccae61b9857ed34ce10ecd13104811ef296e2"
+    },
+    {
+      "path": "check.py",
+      "bytes": 2295,
+      "sha256": "c07d878fbb5419c8501403967616593332f37c1a9c9a40202d5020e230af66d9"
+    },
+    {
+      "path": "checks.json",
+      "bytes": 1106,
+      "sha256": "d203ec7470339031310633149e669a80e5aea28d7b3c4a0cd26fb6c7f1e43b10"
+    },
+    {
+      "path": "commit.json",
+      "bytes": 233,
+      "sha256": "ff52a3c2f9653c2b95436f160f6d6002e4853ad0203c7cd28f884817b5f0c818"
+    },
+    {
+      "path": "CONTRIBUTING-paragraphs.txt",
+      "bytes": 1434,
+      "sha256": "f017da4fda29a9162825050dfab302f2aabb6f10f02a86ea582ac568282a5617"
+    },
+    {
+      "path": "CONTRIBUTING-readings.txt",
+      "bytes": 1811,
+      "sha256": "c0583172892ee6246f659e2dd5a1c4b80e6eef89fb94d62113587de147977a0b"
+    },
+    {
+      "path": "final-files.json",
+      "bytes": 644,
+      "sha256": "c98bb5ab86b37250618d7ae26441d9122aa4386925c37a34d8b74d1feab460b3"
+    },
+    {
+      "path": "import.py",
+      "bytes": 1246,
+      "sha256": "55298e63f2751dba27abbb0bf762dc6f266d94911a960b5dab1bab4f84b68f34"
+    },
+    {
+      "path": "inputs.json",
+      "bytes": 1900,
+      "sha256": "56340ff881afa99238dd7c07f646a693874ab1dbf2b0c8720efae16443080080"
+    },
+    {
+      "path": "notes.md",
+      "bytes": 2261,
+      "sha256": "57e6699bc1432e75381746f904c7dca56498adfc051b3dd4328a056542a68084"
+    },
+    {
+      "path": "SECURITY-paragraphs.txt",
+      "bytes": 661,
+      "sha256": "07b536f8b685e4d053f2591e1f862b1fdafd53d5f54fac4f17c9bbb454d96bbe"
+    },
+    {
+      "path": "SECURITY-readings.txt",
+      "bytes": 960,
+      "sha256": "34c58d624d92f0bd7badf6468de73a79717a5a67194d99eb092f3ccd0503910d"
+    },
+    {
+      "path": "structure-helper.py",
+      "bytes": 3581,
+      "sha256": "ee70cfc0703824b0c3b857145302837f78aac6bfecfbf886a143978b767403f2"
+    },
+    {
+      "path": "verify.py",
+      "bytes": 1059,
+      "sha256": "9a7c7421b5299e731d7fd14e8dc8cc92ae04b6a0d1ffe3b88339669da4c23055"
+    }
+  ]
+}

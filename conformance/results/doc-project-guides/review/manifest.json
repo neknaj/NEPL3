@@ -1,0 +1,79 @@
+{
+  "files": [
+    {
+      "path": "check.py",
+      "bytes": 4809,
+      "sha256": "bf256808d9d22c0a7ed0f6cfce7a9cf9031f910e46ec62d8f43622c147c49516"
+    },
+    {
+      "path": "checks.json",
+      "bytes": 13414,
+      "sha256": "c3b4f4c58b6110bbf0963e43917d7a0c7cc059ab07cff4d1873eaf8e2fd9726f"
+    },
+    {
+      "path": "delta.diff",
+      "bytes": 11101,
+      "sha256": "08b2e852ddf0a00a7fb83f967da8674c6a6e1d17da74e15cecd5fbc46d6b19bc"
+    },
+    {
+      "path": "finish.py",
+      "bytes": 3916,
+      "sha256": "82ce1fac46ab1e91c7e0817a496b5863fdfcf30961bab2a25a2ed0f38d96f1b2"
+    },
+    {
+      "path": "review.md",
+      "bytes": 2731,
+      "sha256": "ae484baf0ab706c1c74eaeeff3a397009b908ca9ca8a21cbe0ccecea88d4ec5d"
+    },
+    {
+      "path": "setup.py",
+      "bytes": 688,
+      "sha256": "e82daf8c052e5d034b68abc0bd40b23f2217017ca743e6d57a14d281088c71d2"
+    },
+    {
+      "path": "snapshot/AGENTS.md",
+      "bytes": 7613,
+      "sha256": "849027165216a9a3adcb22ef58a44bc698c83e1707d2aa0727a1b73105282236"
+    },
+    {
+      "path": "snapshot/CONTRIBUTING.md",
+      "bytes": 1576,
+      "sha256": "21e3c388b11cd40db4ca9fb61d6a15d9474b4a7283c58dbde68eecf84e2cf096"
+    },
+    {
+      "path": "snapshot/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "snapshot/doc/migration/authored/project/CONTRIBUTING.nepld",
+      "bytes": 5209,
+      "sha256": "9b3dac64a2735a08cac52a1a77deaef19c8da5302856872b98294bf78d0f8287"
+    },
+    {
+      "path": "snapshot/doc/migration/authored/project/SECURITY.nepld",
+      "bytes": 2880,
+      "sha256": "f6235a9521fabfa0a8437912ca9d85b030f33d47f0cc2c4f6e1fe5f06afe3ce4"
+    },
+    {
+      "path": "snapshot/implementation-status.json",
+      "bytes": 7089,
+      "sha256": "e5d4de10f8e896ef731f9fee54cf469448d12818046c69bfac11e042a269f74d"
+    },
+    {
+      "path": "snapshot/README.md",
+      "bytes": 2478,
+      "sha256": "8d20a7f25c73d12df87452f18586fb558ba55df6424eb59241717925bc179e4c"
+    },
+    {
+      "path": "snapshot/SECURITY.md",
+      "bytes": 827,
+      "sha256": "a97ad7e76b94adc5f302ea2d26c943643da806f47a1ab21f1cce30e8de9b5b07"
+    },
+    {
+      "path": "source.json",
+      "bytes": 1285,
+      "sha256": "13cca45fba5467626c098442b1c575fc794c9386fa52c7f7dfe19b22aabbf558"
+    }
+  ]
+}
