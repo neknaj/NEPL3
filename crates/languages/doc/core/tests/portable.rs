@@ -68,6 +68,95 @@ fn literal(r: &SchemaRegistry) -> Result<DocumentSyntax, String> {
         source_maps: vec![],
     })
 }
+
+#[test]
+fn sentence_payload_uses_only_the_explicit_owner_after_cbor() -> Result<(), String> {
+    let r = registry()?;
+    let source = SourceSnapshot::new(
+        SourceId("large".into()),
+        4,
+        "memory:large".into(),
+        format!("\"前{{[文/ぶん]/note}}後\"{}", " ".repeat(65_536)).into_bytes(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    let scan = sentence::read(
+        &source,
+        0,
+        source.text().len() as u64,
+        true,
+        &r,
+        &mut b(),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    let SentenceOutcome::Matched(lit) = scan.outcome else {
+        return Err("literal".into());
+    };
+    let doc = DocumentSyntax {
+        value: lit.value,
+        sources: vec![source.clone()],
+        origins: lit.origins,
+        views: vec![lit.view],
+        source_maps: vec![],
+    };
+    let mut ambient = SourceStore::default();
+    ambient.insert(source.clone()).map_err(err)?;
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &ambient, &mut admission).map_err(err)?;
+    let payload = portable::sentence::to_value(&doc, &r, &mut codec, &mut b()).map_err(err)?;
+    let bytes = nepl3_wire::encode(&payload, &mut b()).map_err(err)?;
+    // The owner has 64 KiB of unrelated source. The wire payload contains just
+    // this short sentence's semantic/view data and snapshot references.
+    assert!(bytes.len() < 16_384, "payload length {}", bytes.len());
+    let received = nepl3_wire::decode(&bytes, &mut b()).map_err(err)?;
+    let actual = portable::sentence::from_value(&received, &source, &r, &mut codec, &mut b())
+        .map_err(err)?;
+    assert_eq!(actual, doc);
+    let wrong = SourceSnapshot::new(
+        SourceId("large".into()),
+        5,
+        "memory:large".into(),
+        source.text().as_bytes().to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    // Even though the correct source exists in ambient, only the explicit
+    // owner may satisfy references at this first receiving boundary.
+    assert!(portable::sentence::from_value(&received, &wrong, &r, &mut codec, &mut b()).is_err());
+    let altered = SourceSnapshot::new(
+        SourceId("large".into()),
+        4,
+        "memory:large".into(),
+        b"different bytes".to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    assert!(portable::sentence::from_value(&received, &altered, &r, &mut codec, &mut b()).is_err());
+    for stop in [
+        StopReason::WorkLimit,
+        StopReason::AllocationLimit,
+        StopReason::Cancelled,
+    ] {
+        let mut limits = b().limits();
+        match stop {
+            StopReason::WorkLimit => limits.work = 0,
+            StopReason::AllocationLimit => limits.allocation_units = 0,
+            _ => (),
+        }
+        let mut limited = Budget::new(limits);
+        if stop == StopReason::Cancelled {
+            limited.cancel();
+        }
+        assert!(
+            matches!(portable::sentence::from_value(&received, &source, &r, &mut codec, &mut limited),
+            Err(PortableError::Stopped(s)) if s==stop)
+        );
+        assert_eq!(limited.poll(), Err(stop));
+    }
+    assert_eq!(doc.sources[0], source);
+    Ok(())
+}
 #[test]
 fn document_ndf_and_cbor_first_receiver_preserve_source_view_and_meaning() -> Result<(), String> {
     let r = registry()?;
