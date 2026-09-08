@@ -1,0 +1,166 @@
+article ja "NEPL3" body
+  cons paragraph
+    cons sentence
+      cons link external "https://github.com/neknaj/NEPL3/actions/workflows/ci.yml"
+        image asset "https://github.com/neknaj/NEPL3/actions/workflows/ci.yml/badge.svg" none "CI"
+      nil
+    nil
+  cons paragraph
+    cons "Grammar・Doc・Math・Circuitの4[言語/げんご]を、[共通/きょうつう]の[構文/こうぶん]・[位置/いち]・[診断/しんだん]・[操作契約/そうさけいやく]で[接続/せつぞく]するプロジェクトです。"
+    cons "[言語/げんご]の[意味/いみ]モデルと[出力/しゅつりょく]backend、[言語間/げんごかん]adapterを[分離/ぶんり]し、Rustの[型付/かたつ]きAPIと[他実装向/たじっそうむ]けの[交換経路/こうかんけいろ]を[設計/せっけい]しています。"
+    nil
+  cons paragraph
+    cons sentence
+      cons ruby text "現在" text "げんざい"
+      cons text "は"
+      cons strong concat
+        cons ruby text "共通" text "きょうつう"
+        cons text "runtimeの"
+        cons ruby text "実装段階" text "じっそうだんかい"
+        nil
+      cons text "です。"
+      nil
+    cons sentence
+      cons code "no_std"
+      cons text " のcoreとNDF codecを"
+      cons ruby text "実装" text "じっそう"
+      cons text "し、source・"
+      cons ruby text "値" text "あたい"
+      cons text "・schema・Origin・"
+      cons ruby text "予算" text "よさん"
+      cons text "の"
+      cons ruby text "検査" text "けんさ"
+      cons text "とnative/WASIでの"
+      cons ruby text "試験" text "しけん"
+      cons text "を"
+      cons ruby text "進" text "すす"
+      cons text "めています。"
+      nil
+    cons "4[言語/げんご]の[処理系/しょりけい]、CLI、LSP、Webアプリは[完成/かんせい]していません。"
+    cons "CI[成功/せいこう]から[全受入条件/ぜんうけいれじょうけん]の[達成/たっせい]を[推定/すいてい]しません。"
+    cons sentence
+      cons link relative "doc/progress/foundation-runtime.md" none ruby text "実装記録" text "じっそうきろく"
+      cons text " に"
+      cons ruby text "検査対象" text "けんさたいしょう"
+      cons text "と"
+      cons ruby text "残" text "のこ"
+      cons text "る"
+      cons ruby text "範囲" text "はんい"
+      cons text "を"
+      cons ruby text "記録" text "きろく"
+      cons text "します。"
+      nil
+    nil
+  cons paragraph
+    cons "[最終成果物/さいしゅうせいかぶつ]にはTEAによる4[言語/げんご]Web Playground、[文書/ぶんしょ]・[例/れい]の[静的/せいてき]サイトとGitHub Pages[配布/はいふ]を[含/ふく]めます。"
+    cons sentence
+      cons ruby text "現在" text "げんざい"
+      cons text "のMarkdown"
+      cons ruby text "文書" text "ぶんしょ"
+      cons text "は、"
+      cons ruby text "表現能力" text "ひょうげんのうりょく"
+      cons text "と"
+      cons ruby text "変換" text "へんかん"
+      cons text "の"
+      cons ruby text "受入" text "うけいれ"
+      cons text "を"
+      cons ruby text "満" text "み"
+      cons text "たしてからNEPL3 Doc DSLへ"
+      cons ruby text "移" text "うつ"
+      cons text "す"
+      cons link relative "doc/spec/16-doc-migration.md" none ruby text "必須計画" text "ひっすけいかく"
+      cons text "としています。"
+      nil
+    cons "DocのローカルHTML[生成/せいせい]と[移行原稿/いこうげんこう]の[作成/さくせい]を[進/すす]めています。"
+    cons "[正式文書/せいしきぶんしょ]の[正本切替/せいほんきりかえ]とWeb[公開/こうかい]は[未完了/みかんりょう]です。"
+    nil
+  cons table cons default cons default nil
+    some row cons "[入口/いりぐち]" cons "[内容/ないよう]" nil
+    cons row
+      cons sentence cons link relative "doc/README.md" none text "ドキュメント" nil
+      cons "[仕様/しよう]と[設計資料/せっけいしりょう]の[読/よ]み[順/じゅん]"
+      nil
+    cons row
+      cons sentence cons link relative "doc/development.md" none ruby text "開発手順" text "かいはつてじゅん" nil
+      cons "ツールチェーン、[検査/けんさ]、CI/CD"
+      nil
+    cons row
+      cons sentence cons link relative "implementation-status.json" none ruby text "実装状態" text "じっそうじょうたい" nil
+      cons "[実装/じっそう]タスクと[受入試験/うけいれしけん]の[実行状態/じっこうじょうたい]"
+      nil
+    cons row
+      cons sentence cons link relative "tasks/README.md" none concat cons text "タスク" cons ruby text "索引" text "さくいん" nil nil
+      cons "[依存順/いぞんじゅん]の[実装作業/じっそうさぎょう]"
+      nil
+    cons row
+      cons sentence cons link relative "CONTRIBUTING.md" none ruby text "貢献方針" text "こうけんほうしん" nil
+      cons "[実装/じっそう]・[独立/どくりつ]レビューと[変更/へんこう]の[進/すす]め[方/かた]"
+      nil
+    nil
+  cons rawcode some "sh" "git clone https://github.com/neknaj/NEPL3.git\ncd NEPL3\ncargo run --locked -p nepl3-tools -- check\ncargo run --locked -p nepl3-tools -- tasks --check\n"
+  cons paragraph
+    cons sentence
+      cons text "Rustの"
+      cons ruby text "版" text "ばん"
+      cons text "は "
+      cons link relative "rust-toolchain.toml" none text "rust-toolchain.toml"
+      cons text " で"
+      cons ruby text "固定" text "こてい"
+      cons text "しています。"
+      nil
+    cons sentence
+      cons text "20 crateは"
+      cons ruby text "目標構成" text "もくひょうこうせい"
+      cons text "であり、"
+      cons ruby text "実際" text "じっさい"
+      cons text "のworkspace memberは "
+      cons link relative "Cargo.toml" none text "Cargo.toml"
+      cons text " を"
+      cons ruby text "参照" text "さんしょう"
+      cons text "してください。"
+      nil
+    nil
+  cons paragraph
+    cons sentence
+      cons ruby text "設計識別子" text "せっけいしきべつし"
+      cons text "は "
+      cons code "nepl3-design-2026-09-06-r4"
+      cons text "。"
+      nil
+    cons sentence
+      cons link relative "doc/decisions/0005-foundation-runtime-contracts.md" none concat cons text "foundationの" cons ruby text "訂正" text "ていせい" nil
+      cons text "、"
+      cons link relative "doc/decisions/0003-web-tea-doc-migration.md" none concat cons text "Web・Doc" cons ruby text "移行" text "いこう" cons text "の" cons ruby text "判断" text "はんだん" nil
+      cons text "、"
+      cons link relative "doc/decisions/0002-design-contract-corrections.md" none concat cons text "r2の" cons ruby text "契約訂正" text "けいやくていせい" nil
+      cons text "、"
+      cons ruby text "未解消" text "みかいしょう"
+      cons text "の"
+      cons ruby text "課題" text "かだい"
+      cons text "は "
+      cons link relative "doc/review.md" none concat cons ruby text "独立" text "どくりつ" cons text "レビュー" nil
+      cons text " に"
+      cons ruby text "記録" text "きろく"
+      cons text "します。"
+      nil
+    cons sentence
+      cons ruby text "説明用" text "せつめいよう"
+      cons text "の "
+      cons code ".tmp/"
+      cons text " はGit"
+      cons ruby text "管理" text "かんり"
+      cons text "・CI・"
+      cons ruby text "配布" text "はいふ"
+      cons text "の"
+      cons ruby text "対象外" text "たいしょうがい"
+      cons text "です。"
+      nil
+    nil
+  cons paragraph
+    cons sentence
+      cons text "ライセンスは "
+      cons link relative "LICENSE" none text "MIT"
+      cons text " です。"
+      nil
+    nil
+  nil
