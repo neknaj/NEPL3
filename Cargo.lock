@@ -181,6 +181,7 @@ name = "nepl3-wire"
 version = "0.1.0"
 dependencies = [
  "nepl3-core",
+ "sha2",
 ]
 
 [[package]]

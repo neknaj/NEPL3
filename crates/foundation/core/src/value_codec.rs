@@ -23,6 +23,11 @@ pub trait FoundationValueCodec {
     /// value invariants; the operation owner validates its expected schema first.
     /// Encoding and hashing consume this operation's Budget. No source authority
     /// is inferred from records contained in the value.
+    /// A streaming implementation may feed canonical chunks directly into the
+    /// hash without materializing a CBOR buffer. It charges encoding and hashing
+    /// Work, traversal storage and the 32-byte digest output. If an implementation
+    /// materializes CBOR bytes, it must also account for that intermediate output
+    /// and storage; it cannot simply omit their charges.
     fn canonical_value_digest(
         &mut self,
         domain: &[u8],

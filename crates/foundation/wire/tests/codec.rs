@@ -4,8 +4,9 @@ use nepl3_core::{
         FieldDescriptor, NamedType, SchemaDescriptor, SchemaRegistry, TypeDescriptor, TypeRef,
         TypeShape,
     },
-    source::Digest,
+    source::{Digest, SourceAdmission, SourceStore},
     value::{Integer, NdfValue, Rational, Record, SchemaRef, Variant},
+    value_codec::FoundationValueCodec,
 };
 use nepl3_wire::{WireError, decode, decode_checked, encode, encode_checked};
 
@@ -85,9 +86,32 @@ fn all_twelve_tags_match_specified_cbor_bytes() -> TestResult {
             format!("850b{header}6154615680"),
         ),
     ];
+    let mut registry = SchemaRegistry::default();
+    let descriptor =
+        nepl3_core::schema::foundation::descriptor(&mut budget()).map_err(|e| format!("{e:?}"))?;
+    registry
+        .register(
+            descriptor
+                .reference(&mut budget())
+                .map_err(|e| format!("{e:?}"))?,
+            descriptor,
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+    registry
+        .finalize(&mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = nepl3_wire::foundation::FoundationCodec::new(&registry, &store, &mut admission)
+        .map_err(|e| format!("{e:?}"))?;
     for (value, expected) in vectors {
         let bytes = hex(&expected)?;
         assert_eq!(encode(&value, &mut budget()), Ok(bytes.clone()));
+        assert_eq!(
+            codec.canonical_value_digest(b"all-tags\0", &value, &mut budget()),
+            Ok(Digest::domain(b"all-tags\0", &bytes))
+        );
         assert_eq!(decode(&bytes, &mut budget()), Ok(value));
     }
     Ok(())

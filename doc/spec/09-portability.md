@@ -14,6 +14,8 @@
 
 ## 2. NDF/1
 
+canonical値digestは `SHA-256(domain || canonical NDF/1 CBOR(value))` とする。digest専用経路は通常のencoderと同じ符号化規則でbyte片を順次hashへ渡してよく、完全なCBOR bufferの作成を必須にしない。この場合も値の走査・整数の一時表現・stackの割当と、符号化およびhashの全byte処理を同じBudgetへ先行課金し、停止時はdigestを返さない。出力は32byteのdigestとして課金する。CBOR bufferを実際に作る経路ではその出力・割当も課金し、会計だけを省略してはならない。通常のNDF encodeは引き続き生成する全CBOR byteを出力として課金する。文書digestを得るための一時CBORを除去することと、HTMLの出力上限を変更することは別である。
+
 NDFは本仕様の型付き値をCBORで運ぶ符号化profile。RFC 8949のdefinite lengthと最短の整数/長さ表現を要求する。map、float、NaN、CBOR tag、null、indefinite lengthはNDFでは使用しない。CBORそのものの汎用機能を全部許可するわけではない。
 
 値は次のtagged arrayで表す。

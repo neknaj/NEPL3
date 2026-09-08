@@ -34,7 +34,7 @@
         "nepl3-core"
       ],
       "no_std": true,
-      "responsibility": "canonical CBOR codecと境界検査"
+      "responsibility": "canonical CBOR codecと境界検査; workspace固定no_std sha2でcanonical byte列をbuffer化せずdigestへ逐次入力"
     },
     {
       "name": "nepl3-grammar-core",

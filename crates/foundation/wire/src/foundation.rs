@@ -67,12 +67,7 @@ impl FoundationValueCodec for FoundationCodec<'_> {
         value: &NdfValue,
         budget: &mut Budget,
     ) -> Result<Digest, WireError> {
-        let bytes = crate::encode(value, budget)?;
-        budget.charge(
-            Resource::Work,
-            (domain.len() as u64).saturating_add(bytes.len() as u64),
-        )?;
-        Ok(Digest::domain(domain, &bytes))
+        crate::encode::digest(domain, value, budget)
     }
     fn encode_type_descriptor(
         &mut self,
