@@ -1,0 +1,12 @@
+{
+  "command": [
+    "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-phase\\debug\\nepl3-tools.exe",
+    "doc-html",
+    "pages",
+    "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\phase-input\\pages.json",
+    "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\phase-output-baseline"
+  ],
+  "exit_code": 1,
+  "seconds": 37.49419019999914,
+  "binary_sha256": "6412f12ab8387495ac407989dda8a6c4c99941f67c1fdcce5b096d2e9713c27d"
+}

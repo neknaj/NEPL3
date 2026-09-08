@@ -1,0 +1,154 @@
+{
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\debug\\deps\\nepl3_doc_core-e8993f7a17903ff8.exe": {
+    "bytes": 1258496,
+    "sha256": "8ff041bf9dae35f0075d32a794562779ea8d57b9700664f7a2ebd3a021c65c37"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\debug\\deps\\foreign-383e97ffa5ff853e.exe": {
+    "bytes": 3069952,
+    "sha256": "20fb541caa8da8bcde2212cbec6cdaacde5edea260cc2cfec8c9acb41420572e"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\debug\\deps\\pages-b41d53f5710238aa.exe": {
+    "bytes": 3380224,
+    "sha256": "9fc641e157191c14d3d7879432b0665a72eed00b5d5fa6369910b60eadfbb0c4"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\debug\\deps\\portable-007a0865904735ee.exe": {
+    "bytes": 3232768,
+    "sha256": "bb6992ded71788a6145fb6c843d5215b73c4de0b8d854daf60b494732725a77e"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\debug\\deps\\prepare-76b5163ffbe5f651.exe": {
+    "bytes": 3251712,
+    "sha256": "e6597876850c5ed610c8622712dd596161aa15e1161c0022d8c8c548f06a1d8d"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\debug\\deps\\sentence-327440f8215f1f47.exe": {
+    "bytes": 2514432,
+    "sha256": "ccf543420875bab739ab522fa67700cd58460eb4d970aa7ad6d5fef73a27ebc9"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\debug\\deps\\shape-a4b002c10d7e7375.exe": {
+    "bytes": 975360,
+    "sha256": "b509fb8b482f34e43e30ea936aa2c94493dd654501906f01d3d97c09384e1ff7"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\debug\\deps\\nepl3_doc_html-77ff5043da0ad34e.exe": {
+    "bytes": 723456,
+    "sha256": "94ef1118113277581ec020ab1977b88a9fc487f42836ed6420c9a4c47ce77e33"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\debug\\deps\\local-8fdeedf6c19a74bd.exe": {
+    "bytes": 4007936,
+    "sha256": "f18ee25cfcffb42681b828a3ee815f365611a40f16bfde6abad499d67f87dccd"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\wasm32-wasip2\\debug\\deps\\nepl3_doc_core-1f59c9b69bb65313.wasm": {
+    "bytes": 14769035,
+    "sha256": "640033a94f69be18f5d9d39edc120815f58b3746452ce8f9d915969d4a9ed97e"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\wasm32-wasip2\\debug\\deps\\foreign-4b6b31a55338188a.wasm": {
+    "bytes": 22107420,
+    "sha256": "651c99c863e23f3fdca11507fe89151193fafd241f15e883315d765c01ad2fc9"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\wasm32-wasip2\\debug\\deps\\pages-5ec866a45f610c96.wasm": {
+    "bytes": 23254846,
+    "sha256": "4087fe61e237fe741329277705dcf5c391aa8c11699841a322f956cdc8b008d2"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\wasm32-wasip2\\debug\\deps\\portable-f2787f3310ba4810.wasm": {
+    "bytes": 22423310,
+    "sha256": "77f22e33031a5cd9e6149104fd79729685d33b85c182e44a8cb6a1960f894c67"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\wasm32-wasip2\\debug\\deps\\prepare-d1dcfc6ef828f918.wasm": {
+    "bytes": 22655979,
+    "sha256": "09ae2260ed86db926e5ca78d6adb0d4d10da314aebacaee3933cf096fad29f40"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\wasm32-wasip2\\debug\\deps\\sentence-387518a2a71dc9c0.wasm": {
+    "bytes": 18724492,
+    "sha256": "5e1f6beb38b5b717b9c48894ee6b1c97ff6b08e5c79581feb1535577091a6417"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\wasm32-wasip2\\debug\\deps\\shape-935b82c207d921ad.wasm": {
+    "bytes": 16085970,
+    "sha256": "25b14ed0aebb0ef148cae1083af129675ca849a38ee7e32ab6d2b10359ba625f"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\wasm32-wasip2\\debug\\deps\\nepl3_doc_html-a269aab2670e0eb9.wasm": {
+    "bytes": 4940056,
+    "sha256": "894aa7174f054d54bb4434628d2a92204106787c065d97ccd9844891ed37bd47"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-before\\wasm32-wasip2\\debug\\deps\\local-3976f35ca2c94fd4.wasm": {
+    "bytes": 26655236,
+    "sha256": "9306739d3c3eba974abe0b0fe4630effe66fd91348fd074dba854a65c0955578"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\debug\\deps\\nepl3_doc_core-e8993f7a17903ff8.exe": {
+    "bytes": 1258496,
+    "sha256": "2e5f491058abf7ce50b3727c2ac607eee0a022398b86e049da73ecf656afd38c"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\debug\\deps\\foreign-383e97ffa5ff853e.exe": {
+    "bytes": 3069952,
+    "sha256": "d7f863e2d4eeb84a557bf9e2844abb7a084ac6e280a4407a37039b493b02452c"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\debug\\deps\\pages-b41d53f5710238aa.exe": {
+    "bytes": 3401216,
+    "sha256": "09dc2ce53dd523c4d9df12a4ec9e73f826d2783d6218b5e7072c0e7590337aaa"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\debug\\deps\\portable-007a0865904735ee.exe": {
+    "bytes": 3232768,
+    "sha256": "0ee5162a432eef91ab9d662e618b9f4128598e39b5ce179793bca9722db4a6ec"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\debug\\deps\\prepare-76b5163ffbe5f651.exe": {
+    "bytes": 3252736,
+    "sha256": "2ece8dfc79ec892c4e0fc037c24e939c7f776cc496c9008208a9cbec61bcc4d0"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\debug\\deps\\sentence-327440f8215f1f47.exe": {
+    "bytes": 2514432,
+    "sha256": "283dcf77a743e4adf08833724e896e2fdf0ec6ea5f62fe674f0aab5d75e8fcb8"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\debug\\deps\\shape-a4b002c10d7e7375.exe": {
+    "bytes": 975360,
+    "sha256": "1ff9ca0d12c4db791fc17fcc0ba907bc824e9955c040002952025f1e1dafe7cb"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\debug\\deps\\nepl3_doc_html-77ff5043da0ad34e.exe": {
+    "bytes": 723456,
+    "sha256": "f289006c11c878eeabc9ab74a15a7741cd951f4a83052d6558398814eebf006c"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\debug\\deps\\local-8fdeedf6c19a74bd.exe": {
+    "bytes": 4015104,
+    "sha256": "c19a736b6fc2a7c5437c991ae42946fc749d7f8d400d4b97900f4e81a7351476"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\wasm32-wasip2\\debug\\deps\\nepl3_doc_core-1f59c9b69bb65313.wasm": {
+    "bytes": 14768817,
+    "sha256": "619188b685c3b2825e53ab9c27a1d0c6d86413f45cc4e972bc76ff44dfae7fe7"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\wasm32-wasip2\\debug\\deps\\foreign-4b6b31a55338188a.wasm": {
+    "bytes": 22140478,
+    "sha256": "e5ab77234ac10802b726629877d6cbad9a4dec8be3ccf223715484f1a87cf378"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\wasm32-wasip2\\debug\\deps\\pages-5ec866a45f610c96.wasm": {
+    "bytes": 23343773,
+    "sha256": "7f78d8024509d293a4134de9224273f592b8926e72a218550465a516b1bd61bd"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\wasm32-wasip2\\debug\\deps\\portable-f2787f3310ba4810.wasm": {
+    "bytes": 22456359,
+    "sha256": "1195d708933bcf0e031bf0fb4a121a056095ad76aef30b98ef36863b897be91e"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\wasm32-wasip2\\debug\\deps\\prepare-d1dcfc6ef828f918.wasm": {
+    "bytes": 22694793,
+    "sha256": "f74e7cc76d5dd1aea55cd681d50e4894b563a6937f37f17b0a3b06ed2879e815"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\wasm32-wasip2\\debug\\deps\\sentence-387518a2a71dc9c0.wasm": {
+    "bytes": 18757648,
+    "sha256": "e442525aadae14a7bb978d40021245e78c7b09c66ef77780c654afbc7523014a"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\wasm32-wasip2\\debug\\deps\\shape-935b82c207d921ad.wasm": {
+    "bytes": 16119156,
+    "sha256": "f7ba4ffda1d0711f02ec292e41e804b0a3bb390f7d6cafee1d6cb6a72217a98b"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\wasm32-wasip2\\debug\\deps\\nepl3_doc_html-a269aab2670e0eb9.wasm": {
+    "bytes": 4940051,
+    "sha256": "21295cd35ed523ec74d471a1c7a579b98a1f5dbf8f10f1902943bc7d62727540"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\wasm32-wasip2\\debug\\deps\\local-3976f35ca2c94fd4.wasm": {
+    "bytes": 26716384,
+    "sha256": "3e6080d791637cf174059c737ebdf5016337bc4da5e168ccae3fb7db4f84e9d9"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\debug\\deps\\doc-3ca723e83baae99e.exe": {
+    "bytes": 14929408,
+    "sha256": "464d4d8e7176f2bedec7da6bfb6df6b661e5c641a476bcd74c170c1658f5b4ab"
+  },
+  "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after\\wasm32-wasip2\\debug\\deps\\doc-0c1efb7519b2b3cc.wasm": {
+    "bytes": 91511624,
+    "sha256": "ef30617a88589ac796854ba66373509c7fae7821f57fc579dee0b08329e6e447"
+  }
+}
