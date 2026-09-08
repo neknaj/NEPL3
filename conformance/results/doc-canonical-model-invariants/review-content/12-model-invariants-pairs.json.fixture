@@ -1,0 +1,162 @@
+[
+  {
+    "original": "`interfaces/model.json` はsourceのform表と別の、lower後の意味値・実行IRの構造を記述する。surfaceとmeaningのSchemaRefは別にする。Rustで型を分け、wireで両者を混同しない。",
+    "draft": "interfaces/model.json はsourceのform表と別の、lower後の意味値・実行IRの構造を記述する。surfaceとmeaningのSchemaRefは別にする。Rustで型を分け、wireで両者を混同しない。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "JSON内の `record` は `[fieldName, typeExpression]` の順序付きarrayであり、その順序をNDF recordのfield順とする。`sum` はvariant名をkeyとするmapで、各payloadも同じ順序付きfield array。空record/payloadは空arrayとする。field名は各array内で一意。`union` はvariant名からrecord型へのmap。sum/unionおよびcontractsのvariantsのkey順には意味を持たせず、NDFではVariantNameの文字列で識別する。数値ordinalをJSON objectの列挙順から割り当てない。List/OptionはNDFの対応tag。Naturalはnonnegative Integer。Name/LanguageTagはTextに対して各domainの制約を追加する。",
+    "draft": "JSON内の record は [fieldName, typeExpression] の順序付きarrayであり、その順序をNDF recordのfield順とする。sum はvariant名をkeyとするmapで、各payloadも同じ順序付きfield array。空record/payloadは空arrayとする。field名は各array内で一意。union はvariant名からrecord型へのmap。sum/unionおよびcontractsのvariantsのkey順には意味を持たせず、NDFではVariantNameの文字列で識別する。数値ordinalをJSON objectの列挙順から割り当てない。List/OptionはNDFの対応tag。Naturalはnonnegative Integer。Name/LanguageTagはTextに対して各domainの制約を追加する。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "Source由来の意味値はOriginを関連付けられる。各Recordが共有できるようにnative実装をarenaにしてもよいが、公開値の意味をpointerに依存させない。wireは参照table付きbundleを使い、全NodeRef/OriginRefが有効であることを検査する。意味上の構造木と回路graphのcycle制約は異なる。",
+    "draft": "Source由来の意味値はOriginを関連付けられる。各Recordが共有できるようにnative実装をarenaにしてもよいが、公開値の意味をpointerに依存させない。wireは参照table付きbundleを使い、全NodeRef/OriginRefが有効であることを検査する。意味上の構造木と回路graphのcycle制約は異なる。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "r4ではNodeRef/OriginRef、Origin、SyntaxNode/FieldValue、SyntaxBundle/ForeignSyntax、EnvironmentRefを共通foundation所有のcontractsへ移した。modelはexternal_typesから参照し、同じ名義型を二重定義しない。SyntaxBundleはsources、nodes、origins、root、environmentsを持つ。ForeignSyntax.rootとguest bundle.rootは等しくなければならず、guestのnode/origin IDはそのbundle内だけで解決する。ForeignSyntax.environmentはforeign slotを所有するhost bundleのEnvironmentEntryのid/digestへ一致させる。guestへの無条件の名前空間継承は行わない。",
+    "draft": "r4ではNodeRef/OriginRef、Origin、SyntaxNode/FieldValue、SyntaxBundle/ForeignSyntax、EnvironmentRefを共通foundation所有のcontractsへ移した。modelはexternal_typesから参照し、同じ名義型を二重定義しない。SyntaxBundleはsources、nodes、origins、root、environmentsを持つ。ForeignSyntax.rootとguest bundle.rootは等しくなければならず、guestのnode/origin IDはそのbundle内だけで解決する。ForeignSyntax.environmentはforeign slotを所有するhost bundleのEnvironmentEntryのid/digestへ一致させる。guestへの無条件の名前空間継承は行わない。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "EnvironmentEntryはid/digest/valueを持ち、Environmentは明示的なnamespace/name/value/originのbinding列とresource列を持つ。同じnamespace/nameのbindingとresource IDの重複を拒否する。bindingのOriginRefはそのentryの所属bundle内で解決する。entry digestはASCII `NEPL3-ENVIRONMENT-1`、zero byte、canonical NDFで符号化したEnvironment recordのSHA-256とする。型付きnative graph検査はentryの選択と参照を検査し、wire adapterはcanonical digestとresource元byte列のdigestも再検査する。",
+    "draft": "EnvironmentEntryはid/digest/valueを持ち、Environmentは明示的なnamespace/name/value/originのbinding列とresource列を持つ。同じnamespace/nameのbindingとresource IDの重複を拒否する。bindingのOriginRefはそのentryの所属bundle内で解決する。entry digestはASCII NEPL3-ENVIRONMENT-1、zero byte、canonical NDFで符号化したEnvironment recordのSHA-256とする。型付きnative graph検査はentryの選択と参照を検査し、wire adapterはcanonical digestとresource元byte列のdigestも再検査する。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "Doc/Math等の意味値が単体Foreignを保持する場合はForeignClosureを使う。syntaxのguest arenaとownerEnvironment/ownerOrigins/ownerSources/ownerSourceMapsのarenaは独立する。同じ数値の環境ID・OriginRefでも両者の値を置換しない。元ownerOrigin列を保持し、環境digestを変えない。ForeignClosure.captureは検査済みownerの実Foreign fieldだけを取り出し、ownerの構文nodeは所有化しない。受信時は外側schemaとguest rootのschema、root ID、選択したowner環境のid/digest、owner/guestそれぞれの閉包を検査し、portable adapterは両環境の内容digestを再計算する。raw閉包の成立から言語固有の意味lowerやhostによる環境授権を推定しない。",
+    "draft": "Doc/Math等の意味値が単体Foreignを保持する場合はForeignClosureを使う。syntaxのguest arenaとownerEnvironment/ownerOrigins/ownerSources/ownerSourceMapsのarenaは独立する。同じ数値の環境ID・OriginRefでも両者の値を置換しない。元ownerOrigin列を保持し、環境digestを変えない。ForeignClosure.captureは検査済みownerの実Foreign fieldだけを取り出し、ownerの構文nodeは所有化しない。受信時は外側schemaとguest rootのschema、root ID、選択したowner環境のid/digest、owner/guestそれぞれの閉包を検査し、portable adapterは両環境の内容digestを再計算する。raw閉包の成立から言語固有の意味lowerやhostによる環境授権を推定しない。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "portable境界の停止理由は型付き原因から取り出す。Schema、Source、Origin、View、Syntax、Fact、Reportに包まれたStoppedも元StopReasonを保持し、domain側の通常Invalidへ縮約しない。WireErrorの直接Stoppedだけを認識していた停止抽出を訂正する（R047）。意味エラーを、無関係に停止したBudgetの状態で上書きする規則ではない。",
+    "draft": "portable境界の停止理由は型付き原因から取り出す。Schema、Source、Origin、View、Syntax、Fact、Reportに包まれたStoppedも元StopReasonを保持し、domain側の通常Invalidへ縮約しない。WireErrorの直接Stoppedだけを認識していた停止抽出を訂正する（R047）。意味エラーを、無関係に停止したBudgetの状態で上書きする規則ではない。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "通常のsource nodeではheadはcover内、各子のcoverは親cover内かつhead.end以降で、子同士はfield順に重複しない。graph/位置検査だけでformのarity・引数category・各field型まで検査したことにはしない。surface LanguagePackageの検査を別に行う。生成nodeに架空のcoverを要求しない。",
+    "draft": "通常のsource nodeではheadはcover内、各子のcoverは親cover内かつhead.end以降で、子同士はfield順に重複しない。graph/位置検査だけでformのarity・引数category・各field型まで検査したことにはしない。surface LanguagePackageの検査を別に行う。生成nodeに架空のcoverを要求しない。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "SourceMapはsource/target SpanとExactまたはTransformedのMapping列を持つ。Exactは元と先のbyte列が等しく、局所逆写像はoffset差で求める。Transformedは対応するfragment間の関係だけを表し、任意の部分区間を逆変換できるとはしない。重なった複数の候補はAmbiguous、非可逆はIrreversibleとしてrename等へ返す。",
+    "draft": "SourceMapはsource/target SpanとExactまたはTransformedのMapping列を持つ。Exactは元と先のbyte列が等しく、局所逆写像はoffset差で求める。Transformedは対応するfragment間の関係だけを表し、任意の部分区間を逆変換できるとはしない。重なった複数の候補はAmbiguous、非可逆はIrreversibleとしてrename等へ返す。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "map循環の頂点はsnapshotとbyte位置である。非空範囲は半開区間内の各byte、空範囲はそのoffsetの独立したanchor頂点とし、同じoffsetの内容byteとanchorを混同しない。Exactはoffset差を保存するedge、Transformedは元fragmentの全頂点から先fragmentの全頂点への関係である。この有限graphのcycleを拒否する。同一snapshot内でも一方向へ進む重複Exact区間や、互いに接続しない範囲はcycleとしない。検査量の超過はStoppedであり、粗いsnapshot依存だけを根拠にCycleと返さない。",
+    "draft": "map循環の頂点はsnapshotとbyte位置である。非空範囲は半開区間内の各byte、空範囲はそのoffsetの独立したanchor頂点とし、同じoffsetの内容byteとanchorを混同しない。Exactはoffset差を保存するedge、Transformedは元fragmentの全頂点から先fragmentの全頂点への関係である。この有限graphのcycleを拒否する。同一snapshot内でも一方向へ進む重複Exact区間や、互いに接続しない範囲はcycleとしない。検査量の超過はStoppedであり、粗いsnapshot依存だけを根拠にCycleと返さない。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "constraint IDはstructural descriptorとともにdigestへ含める。共通Rust constructor・boundary adapterは次を検査する。descriptorにIDがあるだけで検査を実行したとは扱わない。",
+    "draft": "constraint IDはstructural descriptorとともにdigestへ含める。共通Rust constructor・boundary adapterは次を検査する。descriptorにIDがあるだけで検査を実行したとは扱わない。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "SyntaxBundleはtokensのtableを持ち、SyntaxNode.tokenは同じbundleのTokenRefを指す。Tokenはpayload、内部ViewBundle、leadingTriviaを保持する。ViewRefはそのTokenのViewBundle内だけ、TokenRefはそのSyntaxBundle内だけで解決する。ForeignSyntaxのguest bundleは自身のtableを持つため、同じ数値IDをhostへ解決しない。通常のsource由来nodeにはheadに対応するtokenをengineが要求し、synthetic/recovery nodeのtoken不在はOptionで明示する。graphの検査とformのarity・payload型の検査を区別する。",
+    "draft": "SyntaxBundleはtokensのtableを持ち、SyntaxNode.tokenは同じbundleのTokenRefを指す。Tokenはpayload、内部ViewBundle、leadingTriviaを保持する。ViewRefはそのTokenのViewBundle内だけ、TokenRefはそのSyntaxBundle内だけで解決する。ForeignSyntaxのguest bundleは自身のtableを持つため、同じ数値IDをhostへ解決しない。通常のsource由来nodeにはheadに対応するtokenをengineが要求し、synthetic/recovery nodeのtoken不在はOptionで明示する。graphの検査とformのarity・payload型の検査を区別する。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "sourceMapsはSyntaxBundleの所有列であり、全source/targetをそのbundleのsourcesで解決する。SourceMapの幾何・Exact内容一致・非循環を検査したproofだけをmapped view包含に使用する。standalone Token/ViewBundleのvalidateはmapを持たない直接包含の入口とし、変換viewはvalidate_with_mapsまたはSyntaxBundle境界を使う。包含は02章の全逆経路規則に従い、sourceがhost storeに偶然存在することを所有証明にしない。",
+    "draft": "sourceMapsはSyntaxBundleの所有列であり、全source/targetをそのbundleのsourcesで解決する。SourceMapの幾何・Exact内容一致・非循環を検査したproofだけをmapped view包含に使用する。standalone Token/ViewBundleのvalidateはmapを持たない直接包含の入口とし、変換viewはvalidate_with_mapsまたはSyntaxBundle境界を使う。包含は02章の全逆経路規則に従い、sourceがhost storeに偶然存在することを所有証明にしない。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "ValidatedSourceMapは不変なsnapshot identity上のmap関係のproofであり、任意の後続SourceStoreへの所属proofではない。Token/Viewのvalidate_with_mapsは使用時のstoreで全map端点の宣言閉包を再照合する。SourceMap.contains単体は関係上の包含計算であり、transport source tableの所属を検査する入口とは区別する。",
+    "draft": "ValidatedSourceMapは不変なsnapshot identity上のmap関係のproofであり、任意の後続SourceStoreへの所属proofではない。Token/Viewのvalidate_with_mapsは使用時のstoreで全map端点の宣言閉包を再照合する。SourceMap.contains単体は関係上の包含計算であり、transport source tableの所属を検査する入口とは区別する。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "内部viewは外側のchildrenやarityへ加算しない。SentenceLiteralの構造化payloadとview、Codeが保持するforeign syntaxのtoken・triviaはnativeとNDFの両経路で保存し、元sourceの再parseを情報保持の代替にしない。",
+    "draft": "内部viewは外側のchildrenやarityへ加算しない。SentenceLiteralの構造化payloadとview、Codeが保持するforeign syntaxのtoken・triviaはnativeとNDFの両経路で保存し、元sourceの再parseを情報保持の代替にしない。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "Token.payloadは、その型が所有する独立bundleまたは明示source参照を持つ。まだ構築されていない外側SyntaxBundleのNodeRefを暗黙に参照しない。payload内に現れる数値を外側node IDと推測して再採番しない。この所有契約により、outer nodeのcanonical再採番はopaque payloadを壊さず行える。",
+    "draft": "Token.payloadは、その型が所有する独立bundleまたは明示source参照を持つ。まだ構築されていない外側SyntaxBundleのNodeRefを暗黙に参照しない。payload内に現れる数値を外側node IDと推測して再採番しない。この所有契約により、outer nodeのcanonical再採番はopaque payloadを壊さず行える。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "DocのSentenceLiteralはlower後にDoc:Sentenceとなる。raw Textには注釈構文を再適用しない。MathのNumberは有限十進で表現できるRational（約分後の分母の素因数が2と5だけ）と元の表記範囲を持ち、SymbolNameはMath:Symbolへ統合する。違反はNonFiniteDecimalNumber。Numeric spellingを表示に使う場合は、そのsnapshotと値が一致していることを検査する。生成Numberはcanonicalな整数または有限十進でprintする。任意有理数からの式構築と著者のFracの保存はMath章の規則に従う。",
+    "draft": "DocのSentenceLiteralはlower後にDoc:Sentenceとなる。raw Textには注釈構文を再適用しない。MathのNumberは有限十進で表現できるRational（約分後の分母の素因数が2と5だけ）と元の表記範囲を持ち、SymbolNameはMath:Symbolへ統合する。違反はNonFiniteDecimalNumber。Numeric spellingを表示に使う場合は、そのsnapshotと値が一致していることを検査する。生成Numberはcanonicalな整数または有限十進でprintする。任意有理数からの式構築と著者のFracの保存はMath章の規則に従う。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "ForeignSyntaxはguestのopaque bundleを持ち、host coreはguestの意味型をimportしない。suiteで登録済みschemaに検査してからguest操作に渡す。Doc:DocGuestもForeignSyntaxを保持する。Codeの準備はbundleの安全性を検査してsourceとviewを表示し、guestのlower・意味check・evaluateを呼ばない。",
+    "draft": "ForeignSyntaxはguestのopaque bundleを持ち、host coreはguestの意味型をimportしない。suiteで登録済みschemaに検査してからguest操作に渡す。Doc:DocGuestもForeignSyntaxを保持する。Codeの準備はbundleの安全性を検査してsourceとviewを表示し、guestのlower・意味check・evaluateを呼ばない。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "Rust内部のChecked/Preparedのconstructorはprivateにする。wireでCheckedEnvelopeを受信しただけで検査済みと信用しない。外部providerからの結果にはschema検査・構造不変条件検査を行い、利用する操作に必要な意味検査を再実行する。digestは同一性の情報であって証明書ではない。",
+    "draft": "Rust内部のChecked/Preparedのconstructorはprivateにする。wireでCheckedEnvelopeを受信しただけで検査済みと信用しない。外部providerからの結果にはschema検査・構造不変条件検査を行い、利用する操作に必要な意味検査を再実行する。digestは同一性の情報であって証明書ではない。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "process/session内で検査結果を再利用する場合は、provider・input・schema・environmentを固定したhost所有handleを使える。別processへ生のpointerやprivateなhandleを送らない。",
+    "draft": "process/session内で検査結果を再利用する場合は、provider・input・schema・environmentを固定したhost所有handleを使える。別processへ生のpointerやprivateなhandleを送らない。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "NetNode.idはnodesのindexに一致し、orderは組合せDAGの全nodeを一度ずつ含む順序。Input/State/Constantのinputsは空、Not/Sliceは1、And/Or/Xor/Nor/Add/Concatは2、Muxは3。InputとStateは有効なport/slotを参照する。Slice/Mux/Concatのwidth条件はCircuit章の通り。",
+    "draft": "NetNode.idはnodesのindexに一致し、orderは組合せDAGの全nodeを一度ずつ含む順序。Input/State/Constantのinputsは空、Not/Sliceは1、And/Or/Xor/Nor/Add/Concatは2、Muxは3。InputとStateは有効なport/slotを参照する。Slice/Mux/Concatのwidth条件はCircuit章の通り。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "outputNodesの長さはoutputsと等しく、各nodeの幅がportと一致する。StateSlot.nextは有効nodeで同じ幅。初期値は幅内。state次値へのedgeを現在state readの依存へ戻さない。",
+    "draft": "outputNodesの長さはoutputsと等しく、各nodeの幅がportと一致する。StateSlot.nextは有効nodeで同じ幅。初期値は幅内。state次値へのedgeを現在state readの依存へ戻さない。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "NorNetlistはbit順をport宣言順、その中をLSB→MSBとする。stateもslot順、その中をLSB→MSB。nextBits/outputBitsの長さは対応幅の和。Nor2の参照はtopologicalに前のnodeだけ。InputBit/StateBitは有効範囲。originsはnodesと同じ長さ。",
+    "draft": "NorNetlistはbit順をport宣言順、その中をLSB→MSBとする。stateもslot順、その中をLSB→MSB。nextBits/outputBitsの長さは対応幅の和。Nor2の参照はtopologicalに前のnodeだけ。InputBit/StateBitは有効範囲。originsはnodesと同じ長さ。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "Markup modelがname/attributeをTextとして運べることは、任意のtagを許可することを意味しない。nepl3-markupは目的categoryに対して検査する。",
+    "draft": "Markup modelがname/attributeをTextとして運べることは、任意のtagを許可することを意味しない。nepl3-markupは目的categoryに対して検査する。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "HTMLでは文書構造・注釈・コード・リンクに加え、ul/ol/li、table/caption/thead/tbody/tr/th/td、imgを扱う。全要素の列挙は `design/markup.json` を正本とし、内容モデルと型付き属性は [HTML fragment契約](19-html-fragment.md) に従う。MathML: math, mrow, mi, mn, mo, mtext, mfrac, msqrt, mroot, msub, msup, msubsup, munder, mover, munderover, mtable, mtr, mtd, mspace。SVG: svg, g, rect, line, path, polyline, circle, text, title, desc。",
+    "draft": "HTMLでは文書構造・注釈・コード・リンクに加え、ul/ol/li、table/caption/thead/tbody/tr/th/td、imgを扱う。全要素の列挙は design/markup.json を正本とし、内容モデルと型付き属性は HTML fragment契約 に従う。MathML: math, mrow, mi, mn, mo, mtext, mfrac, msqrt, mroot, msub, msup, msubsup, munder, mover, munderover, mtable, mtr, mtd, mspace。SVG: svg, g, rect, line, path, polyline, circle, text, title, desc。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "全要素・属性・属性値制約の正本は `design/markup.json`。属性を受け入れる集合はglobal、namespace、elementの各allowlistの和とし、列挙されていない属性は拒否する。SVGのpath/points等は自由な文字列として受けず、記述した型付き構造からserializerが綴りを生成する。userから任意のon*、style、script、foreignObject、SVG image、任意のnamespace URLを受けない。HTMLのhrefは型付きFragment/Artifact/BetweenArtifacts/Externalを使い、URIの許可規則と内部targetの存在、文書間routeの対応をそれぞれ検査する。HTML imgのsrcは検査済みartifact内の相対pathであり、任意の外部画像URLを許可しない。字句検査だけでassetの存在・内容・権限を検証済みとせず、文書準備時の解決を別に要求する。CSSはbackendが所有する固定assetであり、本文文字列をCSSに埋め込まない。",
+    "draft": "全要素・属性・属性値制約の正本は design/markup.json。属性を受け入れる集合はglobal、namespace、elementの各allowlistの和とし、列挙されていない属性は拒否する。SVGのpath/points等は自由な文字列として受けず、記述した型付き構造からserializerが綴りを生成する。userから任意のon*、style、script、foreignObject、SVG image、任意のnamespace URLを受けない。HTMLのhrefは型付きFragment/Artifact/BetweenArtifacts/Externalを使い、URIの許可規則と内部targetの存在、文書間routeの対応をそれぞれ検査する。HTML imgのsrcは検査済みartifact内の相対pathであり、任意の外部画像URLを許可しない。字句検査だけでassetの存在・内容・権限を検証済みとせず、文書準備時の解決を別に要求する。CSSはbackendが所有する固定assetであり、本文文字列をCSSに埋め込まない。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "MathMLのmspaceのwidth/height/depthはNonnegativeMathLengthとする。非負のcanonical有限十進にemを付け、zeroは0em、百分率・指数表記・他単位・負値・冗長なzeroを拒否する。これはMathML Coreのlength-percentageのうち本profileが使用する部分集合であり、SVGの座標用Decimalとは区別する。違反はInvalidMarkupAttribute。",
+    "draft": "MathMLのmspaceのwidth/height/depthはNonnegativeMathLengthとする。非負のcanonical有限十進にemを付け、zeroは0em、百分率・指数表記・他単位・負値・冗長なzeroを拒否する。これはMathML Coreのlength-percentageのうち本profileが使用する部分集合であり、SVGの座標用Decimalとは区別する。違反はInvalidMarkupAttribute。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "MarkupのTextと属性値は、UTF-8の妥当性に加え、XML 1.0 Charの集合（U+0009、U+000A、U+000D、U+0020..D7FF、U+E000..FFFD、U+10000..10FFFF）を共通の許可集合とする。それ以外はInvalidMarkupCharacterで拒否し、削除や置換文字による黙殺をしない。Doc/Mathの一般Text値をこの出力用制約で狭めるのではなく、Markup構築・検査境界で適用する。",
+    "draft": "MarkupのTextと属性値は、UTF-8の妥当性に加え、XML 1.0 Charの集合（U+0009、U+000A、U+000D、U+0020..D7FF、U+E000..FFFD、U+10000..10FFFF）を共通の許可集合とする。それ以外はInvalidMarkupCharacterで拒否し、削除や置換文字による黙殺をしない。Doc/Mathの一般Text値をこの出力用制約で狭めるのではなく、Markup構築・検査境界で適用する。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "serializerはHTML5とXMLを区別し、namespace、void element、属性escapeを適切に出す。属性順は固定。Textと属性のescapeおよび改行保存は再現性章に従う。文書テキストを文字列置換でHTMLへ挿入しない。",
+    "draft": "serializerはHTML5とXMLを区別し、namespace、void element、属性escapeを適切に出す。属性順は固定。Textと属性のescapeおよび改行保存は再現性章に従う。文書テキストを文字列置換でHTMLへ挿入しない。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "`interfaces/contracts.json` のDomainSyntax/CheckedDomain等はoperationごとに本ファイルの対応domain型へ特殊化するための表記。例えばmath.lowerの結果はMath/Expr、circuit.elaborateの結果はCircuit:PreparedNetlist、doc.prepareの結果はDoc:PreparedArticle。異なるdomainのTypedValueを同じ入力として受け付けない。",
+    "draft": "interfaces/contracts.json のDomainSyntax/CheckedDomain等はoperationごとに本ファイルの対応domain型へ特殊化するための表記。例えばmath.lowerの結果はMath/Expr、circuit.elaborateの結果はCircuit:PreparedNetlist、doc.prepareの結果はDoc:PreparedArticle。異なるdomainのTypedValueを同じ入力として受け付けない。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "Grammar packageのReaderExpr/ReadSpec/Binding/StyleのpayloadはGrammarのschemaで定義したADTを使用できる。参照を解決した索引tableを追加してよいが、意味正規形は参照先の識別子と契約に従って比較する。無限再帰のRust型やSerde表現をwireへ押し付けない。",
+    "draft": "Grammar packageのReaderExpr/ReadSpec/Binding/StyleのpayloadはGrammarのschemaで定義したADTを使用できる。参照を解決した索引tableを追加してよいが、意味正規形は参照先の識別子と契約に従って比較する。無限再帰のRust型やSerde表現をwireへ押し付けない。",
+    "equal_ignoring_presentation_space": true
+  },
+  {
+    "original": "HTMLのdocument shell（html/head/meta/style/body）は固定のshell生成処理が作り、userが与えるMarkupFragmentの要素として受け取らない。内部のDoc/Math/SVG namespace遷移とphrasing/block制約もmarkup.jsonに従う。最適化や資源追加の都合でこのallowlistを迂回しない。",
+    "draft": "HTMLのdocument shell（html/head/meta/style/body）は固定のshell生成処理が作り、userが与えるMarkupFragmentの要素として受け取らない。内部のDoc/Math/SVG namespace遷移とphrasing/block制約もmarkup.jsonに従う。最適化や資源追加の都合でこのallowlistを迂回しない。",
+    "equal_ignoring_presentation_space": true
+  }
+]

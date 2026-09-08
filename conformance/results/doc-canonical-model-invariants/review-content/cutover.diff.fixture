@@ -1,0 +1,73 @@
+diff --git a/doc/canonical.json b/doc/canonical.json
+index 4f8986f..a9322fc 100644
+--- a/doc/canonical.json
++++ b/doc/canonical.json
+@@ -56,14 +56,22 @@
+       "aliases": "doc/migration/aliases/19-html-fragment.json",
+       "route": "docs/spec/19-html-fragment.html",
+       "renderer": "nepl3-tools.markdown-annotated/2"
++    },
++    {
++      "id": "model-invariants",
++      "source": "doc/spec/12-model-invariants.nepld",
++      "projection": "doc/spec/12-model-invariants.md",
++      "aliases": "doc/migration/aliases/12-model-invariants.json",
++      "route": "docs/spec/12-model-invariants.html",
++      "renderer": "nepl3-tools.markdown-annotated-pages/1"
+     }
+   ],
+   "output_limits": {
+     "source_bytes": 10000000,
+-    "work": 400000000,
++    "work": 600000000,
+     "depth": 1000,
+     "nodes": 20000000,
+-    "allocation_units": 1000000000,
++    "allocation_units": 1500000000,
+     "output_bytes": 10000000,
+     "diagnostics": 1000,
+     "events": 1000
+diff --git a/doc/migration/aliases/12-model-invariants.json b/doc/migration/aliases/12-model-invariants.json
+new file mode 100644
+index 0000000..9439f3e
+--- /dev/null
++++ b/doc/migration/aliases/12-model-invariants.json
+@@ -0,0 +1,34 @@
++[
++  {
++    "section": null,
++    "name": "12-意味モデル中間表現の補足不変条件"
++  },
++  {
++    "section": "policy",
++    "name": "方針"
++  },
++  {
++    "section": "values",
++    "name": "1-値と参照"
++  },
++  {
++    "section": "constraints",
++    "name": "11-foundation制約id"
++  },
++  {
++    "section": "checked",
++    "name": "2-checked値の境界"
++  },
++  {
++    "section": "circuit",
++    "name": "3-回路ir"
++  },
++  {
++    "section": "markup",
++    "name": "4-markup安全性"
++  },
++  {
++    "section": "operations",
++    "name": "5-operationの具体型"
++  }
++]
+diff --git a/doc/migration/authored/12-model-invariants.nepld b/doc/spec/12-model-invariants.nepld
+similarity index 100%
+rename from doc/migration/authored/12-model-invariants.nepld
+rename to doc/spec/12-model-invariants.nepld

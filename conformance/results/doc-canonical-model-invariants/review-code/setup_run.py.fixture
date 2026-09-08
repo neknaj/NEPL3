@@ -1,0 +1,6 @@
+from pathlib import Path
+p=Path(__file__).parent
+s=Path('C:/projects/NEPL3-doc-canonical-html-fragment/.tmp/review-canonical19-code/run.py').read_text(encoding='utf8')
+s=s.replace('e8c396ada1e3d48d981f7a43276889e691e1be1b','2b0bbf4b888ea18ef5e97eaabe2391008e86fe69')
+s=s.replace("v['output_limits']['work']=300000000;v['output_limits']['allocation_units']=750000000", "v['output_limits']['work']=400000000;v['output_limits']['allocation_units']=1000000000")
+(p/'run.py').write_text(s,encoding='utf8')

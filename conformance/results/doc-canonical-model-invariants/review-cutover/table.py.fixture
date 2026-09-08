@@ -1,0 +1,16 @@
+from pathlib import Path
+import json
+from playwright.sync_api import sync_playwright
+OUT=Path(__file__).parent;rows=[]
+with sync_playwright() as p:
+    for engine in ['chromium','firefox','webkit']:
+        browser=getattr(p,engine).launch(headless=True);ctx=browser.new_context(java_script_enabled=False,viewport={'width':375,'height':900});page=ctx.new_page()
+        page.goto((OUT/'served/independent/deep/first/docs/spec/12-model-invariants.html').resolve().as_uri(),wait_until='load')
+        result=page.locator('table').evaluate('''table=>{const out=[];for(const row of table.rows){for(const cell of row.cells){const box=cell.getBoundingClientRect(),walker=document.createTreeWalker(cell,NodeFilter.SHOW_TEXT);let n;while(n=walker.nextNode()){if(!n.textContent.trim())continue;const range=document.createRange();range.selectNodeContents(n);for(const r of range.getClientRects()){out.push({text:n.textContent,left:r.left,right:r.right,cellLeft:box.left,cellRight:box.right,within:r.left>=box.left-1&&r.right<=box.right+1})}}}}return {tableWidth:table.getBoundingClientRect().width,viewport:innerWidth,rects:out}}''')
+        assert all(x['within'] for x in result['rects']),(engine,[x for x in result['rects'] if not x['within']])
+        assert result['tableWidth']<=375
+        for index in [0,12,17]:
+            page.locator('tr').nth(index).evaluate('n=>scrollTo(0,n.getBoundingClientRect().top+scrollY-15)')
+            page.screenshot(path=str(OUT/f'table-{engine}-375-row{index}.png'))
+        rows.append(dict(engine=engine,version=browser.version,result='PASS',measurement=result));browser.close();print(engine+' cell text rectangles contained PASS',flush=True)
+(OUT/'table-boundaries.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2)+'\n',encoding='utf8',newline='\n')

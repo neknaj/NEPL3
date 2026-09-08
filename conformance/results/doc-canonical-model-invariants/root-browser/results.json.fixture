@@ -1,0 +1,1454 @@
+[
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "12. 意味いみモデル・中間表現ちゅうかんひょうげんの補足不変条件ほそくふへんじょうけん",
+      "方針ほうしん",
+      "1. 値あたいと参照さんしょう",
+      "1.1 foundation制約せいやくID",
+      "2. Checked値ちの境界きょうかい",
+      "3. 回路かいろIR",
+      "4. Markup安全性あんぜんせい",
+      "5. operationの具体型ぐたいけい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "interfaces/model.json",
+      "record",
+      "[fieldName, typeExpression]",
+      "sum",
+      "union",
+      "NEPL3-ENVIRONMENT-1",
+      "design/markup.json",
+      "design/markup.json",
+      "interfaces/contracts.json"
+    ],
+    "links": [
+      "19-html-fragment.html"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-76616c756573",
+      "n-636f6e73747261696e7473",
+      "n-636865636b6564",
+      "n-63697263756974",
+      "n-6d61726b7570",
+      "n-6f7065726174696f6e73"
+    ],
+    "ruby": 701,
+    "tables": [
+      {
+        "rows": 18,
+        "cells": 36
+      }
+    ],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 375,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 305.265625,
+          "start": 16612,
+          "max": 16612
+        },
+        "final": 305
+      },
+      {
+        "id": "n-76616c756573",
+        "initial": {
+          "desired": 633,
+          "start": 16612,
+          "max": 16612
+        },
+        "final": 633
+      },
+      {
+        "id": "n-636f6e73747261696e7473",
+        "initial": {
+          "desired": 5572.84375,
+          "start": 16612,
+          "max": 16612
+        },
+        "final": 5573
+      },
+      {
+        "id": "n-636865636b6564",
+        "initial": {
+          "desired": 11882.171875,
+          "start": 0,
+          "max": 16612
+        },
+        "final": 11882
+      },
+      {
+        "id": "n-63697263756974",
+        "initial": {
+          "desired": 12561.140625,
+          "start": 0,
+          "max": 16612
+        },
+        "final": 12561
+      },
+      {
+        "id": "n-6d61726b7570",
+        "initial": {
+          "desired": 13562.546875,
+          "start": 0,
+          "max": 16612
+        },
+        "final": 13563
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 16291.390625,
+          "start": 0,
+          "max": 16612
+        },
+        "final": 16291
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "12. 意味いみモデル・中間表現ちゅうかんひょうげんの補足不変条件ほそくふへんじょうけん",
+      "方針ほうしん",
+      "1. 値あたいと参照さんしょう",
+      "1.1 foundation制約せいやくID",
+      "2. Checked値ちの境界きょうかい",
+      "3. 回路かいろIR",
+      "4. Markup安全性あんぜんせい",
+      "5. operationの具体型ぐたいけい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "interfaces/model.json",
+      "record",
+      "[fieldName, typeExpression]",
+      "sum",
+      "union",
+      "NEPL3-ENVIRONMENT-1",
+      "design/markup.json",
+      "design/markup.json",
+      "interfaces/contracts.json"
+    ],
+    "links": [
+      "19-html-fragment.html"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-76616c756573",
+      "n-636f6e73747261696e7473",
+      "n-636865636b6564",
+      "n-63697263756974",
+      "n-6d61726b7570",
+      "n-6f7065726174696f6e73"
+    ],
+    "ruby": 701,
+    "tables": [
+      {
+        "rows": 18,
+        "cells": 36
+      }
+    ],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 1280,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.671875,
+          "start": 5144,
+          "max": 5144
+        },
+        "final": 152
+      },
+      {
+        "id": "n-76616c756573",
+        "initial": {
+          "desired": 341.21875,
+          "start": 5144,
+          "max": 5144
+        },
+        "final": 341
+      },
+      {
+        "id": "n-636f6e73747261696e7473",
+        "initial": {
+          "desired": 1866.578125,
+          "start": 5144,
+          "max": 5144
+        },
+        "final": 1867
+      },
+      {
+        "id": "n-636865636b6564",
+        "initial": {
+          "desired": 4156.6875,
+          "start": 0,
+          "max": 5144
+        },
+        "final": 4157
+      },
+      {
+        "id": "n-63697263756974",
+        "initial": {
+          "desired": 4438.359375,
+          "start": 0,
+          "max": 5144
+        },
+        "final": 4438
+      },
+      {
+        "id": "n-6d61726b7570",
+        "initial": {
+          "desired": 4812.15625,
+          "start": 0,
+          "max": 5144
+        },
+        "final": 4812
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 5144,
+          "start": 0,
+          "max": 5144
+        },
+        "final": 5144
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "12. 意味いみモデル・中間表現ちゅうかんひょうげんの補足不変条件ほそくふへんじょうけん",
+      "方針ほうしん",
+      "1. 値あたいと参照さんしょう",
+      "1.1 foundation制約せいやくID",
+      "2. Checked値ちの境界きょうかい",
+      "3. 回路かいろIR",
+      "4. Markup安全性あんぜんせい",
+      "5. operationの具体型ぐたいけい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "interfaces/model.json",
+      "record",
+      "[fieldName, typeExpression]",
+      "sum",
+      "union",
+      "NEPL3-ENVIRONMENT-1",
+      "design/markup.json",
+      "design/markup.json",
+      "interfaces/contracts.json"
+    ],
+    "links": [
+      "19-html-fragment.html"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-76616c756573",
+      "n-636f6e73747261696e7473",
+      "n-636865636b6564",
+      "n-63697263756974",
+      "n-6d61726b7570",
+      "n-6f7065726174696f6e73"
+    ],
+    "ruby": 701,
+    "tables": [
+      {
+        "rows": 18,
+        "cells": 36
+      }
+    ],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 375,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 305.265625,
+          "start": 16612,
+          "max": 16612
+        },
+        "final": 305
+      },
+      {
+        "id": "n-76616c756573",
+        "initial": {
+          "desired": 633,
+          "start": 16612,
+          "max": 16612
+        },
+        "final": 633
+      },
+      {
+        "id": "n-636f6e73747261696e7473",
+        "initial": {
+          "desired": 5572.84375,
+          "start": 16612,
+          "max": 16612
+        },
+        "final": 5573
+      },
+      {
+        "id": "n-636865636b6564",
+        "initial": {
+          "desired": 11882.171875,
+          "start": 0,
+          "max": 16612
+        },
+        "final": 11882
+      },
+      {
+        "id": "n-63697263756974",
+        "initial": {
+          "desired": 12561.140625,
+          "start": 0,
+          "max": 16612
+        },
+        "final": 12561
+      },
+      {
+        "id": "n-6d61726b7570",
+        "initial": {
+          "desired": 13562.546875,
+          "start": 0,
+          "max": 16612
+        },
+        "final": 13563
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 16291.390625,
+          "start": 0,
+          "max": 16612
+        },
+        "final": 16291
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "12. 意味いみモデル・中間表現ちゅうかんひょうげんの補足不変条件ほそくふへんじょうけん",
+      "方針ほうしん",
+      "1. 値あたいと参照さんしょう",
+      "1.1 foundation制約せいやくID",
+      "2. Checked値ちの境界きょうかい",
+      "3. 回路かいろIR",
+      "4. Markup安全性あんぜんせい",
+      "5. operationの具体型ぐたいけい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "interfaces/model.json",
+      "record",
+      "[fieldName, typeExpression]",
+      "sum",
+      "union",
+      "NEPL3-ENVIRONMENT-1",
+      "design/markup.json",
+      "design/markup.json",
+      "interfaces/contracts.json"
+    ],
+    "links": [
+      "19-html-fragment.html"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-76616c756573",
+      "n-636f6e73747261696e7473",
+      "n-636865636b6564",
+      "n-63697263756974",
+      "n-6d61726b7570",
+      "n-6f7065726174696f6e73"
+    ],
+    "ruby": 701,
+    "tables": [
+      {
+        "rows": 18,
+        "cells": 36
+      }
+    ],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 1280,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.671875,
+          "start": 5144,
+          "max": 5144
+        },
+        "final": 152
+      },
+      {
+        "id": "n-76616c756573",
+        "initial": {
+          "desired": 341.21875,
+          "start": 5144,
+          "max": 5144
+        },
+        "final": 341
+      },
+      {
+        "id": "n-636f6e73747261696e7473",
+        "initial": {
+          "desired": 1866.578125,
+          "start": 5144,
+          "max": 5144
+        },
+        "final": 1867
+      },
+      {
+        "id": "n-636865636b6564",
+        "initial": {
+          "desired": 4156.6875,
+          "start": 0,
+          "max": 5144
+        },
+        "final": 4157
+      },
+      {
+        "id": "n-63697263756974",
+        "initial": {
+          "desired": 4438.359375,
+          "start": 0,
+          "max": 5144
+        },
+        "final": 4438
+      },
+      {
+        "id": "n-6d61726b7570",
+        "initial": {
+          "desired": 4812.15625,
+          "start": 0,
+          "max": 5144
+        },
+        "final": 4812
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 5144,
+          "start": 0,
+          "max": 5144
+        },
+        "final": 5144
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "12. 意味いみモデル・中間表現ちゅうかんひょうげんの補足不変条件ほそくふへんじょうけん",
+      "方針ほうしん",
+      "1. 値あたいと参照さんしょう",
+      "1.1 foundation制約せいやくID",
+      "2. Checked値ちの境界きょうかい",
+      "3. 回路かいろIR",
+      "4. Markup安全性あんぜんせい",
+      "5. operationの具体型ぐたいけい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "interfaces/model.json",
+      "record",
+      "[fieldName, typeExpression]",
+      "sum",
+      "union",
+      "NEPL3-ENVIRONMENT-1",
+      "design/markup.json",
+      "design/markup.json",
+      "interfaces/contracts.json"
+    ],
+    "links": [
+      "19-html-fragment.html"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-76616c756573",
+      "n-636f6e73747261696e7473",
+      "n-636865636b6564",
+      "n-63697263756974",
+      "n-6d61726b7570",
+      "n-6f7065726174696f6e73"
+    ],
+    "ruby": 701,
+    "tables": [
+      {
+        "rows": 18,
+        "cells": 36
+      }
+    ],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 375,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 305.26666259765625,
+          "start": 16450,
+          "max": 16450
+        },
+        "final": 305
+      },
+      {
+        "id": "n-76616c756573",
+        "initial": {
+          "desired": 616.8333129882812,
+          "start": 16450,
+          "max": 16450
+        },
+        "final": 616.8333129882812
+      },
+      {
+        "id": "n-636f6e73747261696e7473",
+        "initial": {
+          "desired": 5552.2333984375,
+          "start": 16450,
+          "max": 16450
+        },
+        "final": 5552.2333984375
+      },
+      {
+        "id": "n-636865636b6564",
+        "initial": {
+          "desired": 11864.216796875,
+          "start": 0,
+          "max": 16450
+        },
+        "final": 11864
+      },
+      {
+        "id": "n-63697263756974",
+        "initial": {
+          "desired": 12543.4501953125,
+          "start": 0,
+          "max": 16450
+        },
+        "final": 12543.4501953125
+      },
+      {
+        "id": "n-6d61726b7570",
+        "initial": {
+          "desired": 13499.18359375,
+          "start": 0,
+          "max": 16450
+        },
+        "final": 13499.18359375
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 16219.5830078125,
+          "start": 0,
+          "max": 16450
+        },
+        "final": 16219.5830078125
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "12. 意味いみモデル・中間表現ちゅうかんひょうげんの補足不変条件ほそくふへんじょうけん",
+      "方針ほうしん",
+      "1. 値あたいと参照さんしょう",
+      "1.1 foundation制約せいやくID",
+      "2. Checked値ちの境界きょうかい",
+      "3. 回路かいろIR",
+      "4. Markup安全性あんぜんせい",
+      "5. operationの具体型ぐたいけい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "interfaces/model.json",
+      "record",
+      "[fieldName, typeExpression]",
+      "sum",
+      "union",
+      "NEPL3-ENVIRONMENT-1",
+      "design/markup.json",
+      "design/markup.json",
+      "interfaces/contracts.json"
+    ],
+    "links": [
+      "19-html-fragment.html"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-76616c756573",
+      "n-636f6e73747261696e7473",
+      "n-636865636b6564",
+      "n-63697263756974",
+      "n-6d61726b7570",
+      "n-6f7065726174696f6e73"
+    ],
+    "ruby": 701,
+    "tables": [
+      {
+        "rows": 18,
+        "cells": 36
+      }
+    ],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 1280,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.6666717529297,
+          "start": 5154,
+          "max": 5154
+        },
+        "final": 152
+      },
+      {
+        "id": "n-76616c756573",
+        "initial": {
+          "desired": 342.26666259765625,
+          "start": 5154,
+          "max": 5154
+        },
+        "final": 342.26666259765625
+      },
+      {
+        "id": "n-636f6e73747261696e7473",
+        "initial": {
+          "desired": 1871.2833251953125,
+          "start": 5154,
+          "max": 5154
+        },
+        "final": 1871.2833251953125
+      },
+      {
+        "id": "n-636865636b6564",
+        "initial": {
+          "desired": 4162.56689453125,
+          "start": 0,
+          "max": 5154
+        },
+        "final": 4163
+      },
+      {
+        "id": "n-63697263756974",
+        "initial": {
+          "desired": 4444.33349609375,
+          "start": 0,
+          "max": 5154
+        },
+        "final": 4444
+      },
+      {
+        "id": "n-6d61726b7570",
+        "initial": {
+          "desired": 4818.2666015625,
+          "start": 0,
+          "max": 5154
+        },
+        "final": 4818
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 5154,
+          "start": 0,
+          "max": 5154
+        },
+        "final": 5154
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "12. 意味いみモデル・中間表現ちゅうかんひょうげんの補足不変条件ほそくふへんじょうけん",
+      "方針ほうしん",
+      "1. 値あたいと参照さんしょう",
+      "1.1 foundation制約せいやくID",
+      "2. Checked値ちの境界きょうかい",
+      "3. 回路かいろIR",
+      "4. Markup安全性あんぜんせい",
+      "5. operationの具体型ぐたいけい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "interfaces/model.json",
+      "record",
+      "[fieldName, typeExpression]",
+      "sum",
+      "union",
+      "NEPL3-ENVIRONMENT-1",
+      "design/markup.json",
+      "design/markup.json",
+      "interfaces/contracts.json"
+    ],
+    "links": [
+      "19-html-fragment.html"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-76616c756573",
+      "n-636f6e73747261696e7473",
+      "n-636865636b6564",
+      "n-63697263756974",
+      "n-6d61726b7570",
+      "n-6f7065726174696f6e73"
+    ],
+    "ruby": 701,
+    "tables": [
+      {
+        "rows": 18,
+        "cells": 36
+      }
+    ],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 375,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 305.26666259765625,
+          "start": 16450,
+          "max": 16450
+        },
+        "final": 305
+      },
+      {
+        "id": "n-76616c756573",
+        "initial": {
+          "desired": 616.8333129882812,
+          "start": 16450,
+          "max": 16450
+        },
+        "final": 616.8333129882812
+      },
+      {
+        "id": "n-636f6e73747261696e7473",
+        "initial": {
+          "desired": 5552.2333984375,
+          "start": 16450,
+          "max": 16450
+        },
+        "final": 5552.2333984375
+      },
+      {
+        "id": "n-636865636b6564",
+        "initial": {
+          "desired": 11864.216796875,
+          "start": 0,
+          "max": 16450
+        },
+        "final": 11864
+      },
+      {
+        "id": "n-63697263756974",
+        "initial": {
+          "desired": 12543.4501953125,
+          "start": 0,
+          "max": 16450
+        },
+        "final": 12543.4501953125
+      },
+      {
+        "id": "n-6d61726b7570",
+        "initial": {
+          "desired": 13499.18359375,
+          "start": 0,
+          "max": 16450
+        },
+        "final": 13499.18359375
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 16219.5830078125,
+          "start": 0,
+          "max": 16450
+        },
+        "final": 16219.5830078125
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "12. 意味いみモデル・中間表現ちゅうかんひょうげんの補足不変条件ほそくふへんじょうけん",
+      "方針ほうしん",
+      "1. 値あたいと参照さんしょう",
+      "1.1 foundation制約せいやくID",
+      "2. Checked値ちの境界きょうかい",
+      "3. 回路かいろIR",
+      "4. Markup安全性あんぜんせい",
+      "5. operationの具体型ぐたいけい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "interfaces/model.json",
+      "record",
+      "[fieldName, typeExpression]",
+      "sum",
+      "union",
+      "NEPL3-ENVIRONMENT-1",
+      "design/markup.json",
+      "design/markup.json",
+      "interfaces/contracts.json"
+    ],
+    "links": [
+      "19-html-fragment.html"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-76616c756573",
+      "n-636f6e73747261696e7473",
+      "n-636865636b6564",
+      "n-63697263756974",
+      "n-6d61726b7570",
+      "n-6f7065726174696f6e73"
+    ],
+    "ruby": 701,
+    "tables": [
+      {
+        "rows": 18,
+        "cells": 36
+      }
+    ],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 1280,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.6666717529297,
+          "start": 5154,
+          "max": 5154
+        },
+        "final": 152
+      },
+      {
+        "id": "n-76616c756573",
+        "initial": {
+          "desired": 342.26666259765625,
+          "start": 5154,
+          "max": 5154
+        },
+        "final": 342.26666259765625
+      },
+      {
+        "id": "n-636f6e73747261696e7473",
+        "initial": {
+          "desired": 1871.2833251953125,
+          "start": 5154,
+          "max": 5154
+        },
+        "final": 1871.2833251953125
+      },
+      {
+        "id": "n-636865636b6564",
+        "initial": {
+          "desired": 4162.56689453125,
+          "start": 0,
+          "max": 5154
+        },
+        "final": 4163
+      },
+      {
+        "id": "n-63697263756974",
+        "initial": {
+          "desired": 4444.33349609375,
+          "start": 0,
+          "max": 5154
+        },
+        "final": 4444
+      },
+      {
+        "id": "n-6d61726b7570",
+        "initial": {
+          "desired": 4818.2666015625,
+          "start": 0,
+          "max": 5154
+        },
+        "final": 4818
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 5154,
+          "start": 0,
+          "max": 5154
+        },
+        "final": 5154
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "12. 意味いみモデル・中間表現ちゅうかんひょうげんの補足不変条件ほそくふへんじょうけん",
+      "方針ほうしん",
+      "1. 値あたいと参照さんしょう",
+      "1.1 foundation制約せいやくID",
+      "2. Checked値ちの境界きょうかい",
+      "3. 回路かいろIR",
+      "4. Markup安全性あんぜんせい",
+      "5. operationの具体型ぐたいけい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "interfaces/model.json",
+      "record",
+      "[fieldName, typeExpression]",
+      "sum",
+      "union",
+      "NEPL3-ENVIRONMENT-1",
+      "design/markup.json",
+      "design/markup.json",
+      "interfaces/contracts.json"
+    ],
+    "links": [
+      "19-html-fragment.html"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-76616c756573",
+      "n-636f6e73747261696e7473",
+      "n-636865636b6564",
+      "n-63697263756974",
+      "n-6d61726b7570",
+      "n-6f7065726174696f6e73"
+    ],
+    "ruby": 701,
+    "tables": [
+      {
+        "rows": 18,
+        "cells": 36
+      }
+    ],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 375,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 305.21875,
+          "start": 15069,
+          "max": 15069
+        },
+        "final": 305
+      },
+      {
+        "id": "n-76616c756573",
+        "initial": {
+          "desired": 615.65625,
+          "start": 15069,
+          "max": 15069
+        },
+        "final": 616
+      },
+      {
+        "id": "n-636f6e73747261696e7473",
+        "initial": {
+          "desired": 5083.3125,
+          "start": 15069,
+          "max": 15069
+        },
+        "final": 5083
+      },
+      {
+        "id": "n-636865636b6564",
+        "initial": {
+          "desired": 10857,
+          "start": 0,
+          "max": 15069
+        },
+        "final": 10857
+      },
+      {
+        "id": "n-63697263756974",
+        "initial": {
+          "desired": 11489.875,
+          "start": 0,
+          "max": 15069
+        },
+        "final": 11490
+      },
+      {
+        "id": "n-6d61726b7570",
+        "initial": {
+          "desired": 12353.0625,
+          "start": 0,
+          "max": 15069
+        },
+        "final": 12353
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 14886.09375,
+          "start": 0,
+          "max": 15069
+        },
+        "final": 14886
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "12. 意味いみモデル・中間表現ちゅうかんひょうげんの補足不変条件ほそくふへんじょうけん",
+      "方針ほうしん",
+      "1. 値あたいと参照さんしょう",
+      "1.1 foundation制約せいやくID",
+      "2. Checked値ちの境界きょうかい",
+      "3. 回路かいろIR",
+      "4. Markup安全性あんぜんせい",
+      "5. operationの具体型ぐたいけい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "interfaces/model.json",
+      "record",
+      "[fieldName, typeExpression]",
+      "sum",
+      "union",
+      "NEPL3-ENVIRONMENT-1",
+      "design/markup.json",
+      "design/markup.json",
+      "interfaces/contracts.json"
+    ],
+    "links": [
+      "19-html-fragment.html"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-76616c756573",
+      "n-636f6e73747261696e7473",
+      "n-636865636b6564",
+      "n-63697263756974",
+      "n-6d61726b7570",
+      "n-6f7065726174696f6e73"
+    ],
+    "ruby": 701,
+    "tables": [
+      {
+        "rows": 18,
+        "cells": 36
+      }
+    ],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 1280,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.65625,
+          "start": 4505,
+          "max": 4505
+        },
+        "final": 152
+      },
+      {
+        "id": "n-76616c756573",
+        "initial": {
+          "desired": 323.90625,
+          "start": 4505,
+          "max": 4505
+        },
+        "final": 324
+      },
+      {
+        "id": "n-636f6e73747261696e7473",
+        "initial": {
+          "desired": 1618.921875,
+          "start": 4505,
+          "max": 4505
+        },
+        "final": 1619
+      },
+      {
+        "id": "n-636865636b6564",
+        "initial": {
+          "desired": 3655.625,
+          "start": 0,
+          "max": 4505
+        },
+        "final": 3656
+      },
+      {
+        "id": "n-63697263756974",
+        "initial": {
+          "desired": 3891.203125,
+          "start": 0,
+          "max": 4505
+        },
+        "final": 3891
+      },
+      {
+        "id": "n-6d61726b7570",
+        "initial": {
+          "desired": 4218.90625,
+          "start": 0,
+          "max": 4505
+        },
+        "final": 4219
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 4505,
+          "start": 0,
+          "max": 4505
+        },
+        "final": 4505
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "12. 意味いみモデル・中間表現ちゅうかんひょうげんの補足不変条件ほそくふへんじょうけん",
+      "方針ほうしん",
+      "1. 値あたいと参照さんしょう",
+      "1.1 foundation制約せいやくID",
+      "2. Checked値ちの境界きょうかい",
+      "3. 回路かいろIR",
+      "4. Markup安全性あんぜんせい",
+      "5. operationの具体型ぐたいけい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "interfaces/model.json",
+      "record",
+      "[fieldName, typeExpression]",
+      "sum",
+      "union",
+      "NEPL3-ENVIRONMENT-1",
+      "design/markup.json",
+      "design/markup.json",
+      "interfaces/contracts.json"
+    ],
+    "links": [
+      "19-html-fragment.html"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-76616c756573",
+      "n-636f6e73747261696e7473",
+      "n-636865636b6564",
+      "n-63697263756974",
+      "n-6d61726b7570",
+      "n-6f7065726174696f6e73"
+    ],
+    "ruby": 701,
+    "tables": [
+      {
+        "rows": 18,
+        "cells": 36
+      }
+    ],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 375,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 305.21875,
+          "start": 15069,
+          "max": 15069
+        },
+        "final": 305
+      },
+      {
+        "id": "n-76616c756573",
+        "initial": {
+          "desired": 615.65625,
+          "start": 15069,
+          "max": 15069
+        },
+        "final": 616
+      },
+      {
+        "id": "n-636f6e73747261696e7473",
+        "initial": {
+          "desired": 5083.3125,
+          "start": 15069,
+          "max": 15069
+        },
+        "final": 5083
+      },
+      {
+        "id": "n-636865636b6564",
+        "initial": {
+          "desired": 10857,
+          "start": 0,
+          "max": 15069
+        },
+        "final": 10857
+      },
+      {
+        "id": "n-63697263756974",
+        "initial": {
+          "desired": 11489.875,
+          "start": 0,
+          "max": 15069
+        },
+        "final": 11490
+      },
+      {
+        "id": "n-6d61726b7570",
+        "initial": {
+          "desired": 12353.0625,
+          "start": 0,
+          "max": 15069
+        },
+        "final": 12353
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 14886.09375,
+          "start": 0,
+          "max": 15069
+        },
+        "final": 14886
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "12. 意味いみモデル・中間表現ちゅうかんひょうげんの補足不変条件ほそくふへんじょうけん",
+      "方針ほうしん",
+      "1. 値あたいと参照さんしょう",
+      "1.1 foundation制約せいやくID",
+      "2. Checked値ちの境界きょうかい",
+      "3. 回路かいろIR",
+      "4. Markup安全性あんぜんせい",
+      "5. operationの具体型ぐたいけい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "interfaces/model.json",
+      "record",
+      "[fieldName, typeExpression]",
+      "sum",
+      "union",
+      "NEPL3-ENVIRONMENT-1",
+      "design/markup.json",
+      "design/markup.json",
+      "interfaces/contracts.json"
+    ],
+    "links": [
+      "19-html-fragment.html"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-76616c756573",
+      "n-636f6e73747261696e7473",
+      "n-636865636b6564",
+      "n-63697263756974",
+      "n-6d61726b7570",
+      "n-6f7065726174696f6e73"
+    ],
+    "ruby": 701,
+    "tables": [
+      {
+        "rows": 18,
+        "cells": 36
+      }
+    ],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 1280,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.65625,
+          "start": 4505,
+          "max": 4505
+        },
+        "final": 152
+      },
+      {
+        "id": "n-76616c756573",
+        "initial": {
+          "desired": 323.90625,
+          "start": 4505,
+          "max": 4505
+        },
+        "final": 324
+      },
+      {
+        "id": "n-636f6e73747261696e7473",
+        "initial": {
+          "desired": 1618.921875,
+          "start": 4505,
+          "max": 4505
+        },
+        "final": 1619
+      },
+      {
+        "id": "n-636865636b6564",
+        "initial": {
+          "desired": 3655.625,
+          "start": 0,
+          "max": 4505
+        },
+        "final": 3656
+      },
+      {
+        "id": "n-63697263756974",
+        "initial": {
+          "desired": 3891.203125,
+          "start": 0,
+          "max": 4505
+        },
+        "final": 3891
+      },
+      {
+        "id": "n-6d61726b7570",
+        "initial": {
+          "desired": 4218.90625,
+          "start": 0,
+          "max": 4505
+        },
+        "final": 4219
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 4505,
+          "start": 0,
+          "max": 4505
+        },
+        "final": 4505
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  }
+]

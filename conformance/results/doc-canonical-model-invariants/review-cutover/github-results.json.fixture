@@ -1,0 +1,156 @@
+{
+  "url": "https://github.com/neknaj/NEPL3/blob/2b0bbf4b888ea18ef5e97eaabe2391008e86fe69/doc/spec/12-model-invariants.md",
+  "rows": [
+    {
+      "fragment": "12-意味モデル中間表現の補足不変条件",
+      "start": 5488,
+      "final": {
+        "top": 125,
+        "y": 261,
+        "hash": "#12-%E6%84%8F%E5%91%B3%E3%83%A2%E3%83%87%E3%83%AB%E4%B8%AD%E9%96%93%E8%A1%A8%E7%8F%BE%E3%81%AE%E8%A3%9C%E8%B6%B3%E4%B8%8D%E5%A4%89%E6%9D%A1%E4%BB%B6"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "方針",
+      "start": 5488,
+      "final": {
+        "top": 124.59375,
+        "y": 392,
+        "hash": "#%E6%96%B9%E9%87%9D"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "1-値と参照",
+      "start": 5488,
+      "final": {
+        "top": 124.78125,
+        "y": 542,
+        "hash": "#1-%E5%80%A4%E3%81%A8%E5%8F%82%E7%85%A7"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "11-foundation制約id",
+      "start": 5488,
+      "final": {
+        "top": 124.96875,
+        "y": 2068,
+        "hash": "#11-foundation%E5%88%B6%E7%B4%84id"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "2-checked値の境界",
+      "start": 0,
+      "final": {
+        "top": 125.15625,
+        "y": 4213,
+        "hash": "#2-checked%E5%80%A4%E3%81%AE%E5%A2%83%E7%95%8C"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "3-回路ir",
+      "start": 0,
+      "final": {
+        "top": 125.34375,
+        "y": 4499,
+        "hash": "#3-%E5%9B%9E%E8%B7%AFir"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "4-markup安全性",
+      "start": 0,
+      "final": {
+        "top": 124.53125,
+        "y": 4874,
+        "hash": "#4-markup%E5%AE%89%E5%85%A8%E6%80%A7"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "5-operationの具体型",
+      "start": 0,
+      "final": {
+        "top": 436.71875,
+        "y": 5488,
+        "hash": "#5-operation%E3%81%AE%E5%85%B7%E4%BD%93%E5%9E%8B"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-706f6c696379",
+      "start": 5488,
+      "final": {
+        "top": 124.59375,
+        "y": 392,
+        "hash": "#n-706f6c696379"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-76616c756573",
+      "start": 5488,
+      "final": {
+        "top": 124.78125,
+        "y": 542,
+        "hash": "#n-76616c756573"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-636f6e73747261696e7473",
+      "start": 5488,
+      "final": {
+        "top": 124.96875,
+        "y": 2068,
+        "hash": "#n-636f6e73747261696e7473"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-636865636b6564",
+      "start": 0,
+      "final": {
+        "top": 125.15625,
+        "y": 4213,
+        "hash": "#n-636865636b6564"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-63697263756974",
+      "start": 0,
+      "final": {
+        "top": 125.34375,
+        "y": 4499,
+        "hash": "#n-63697263756974"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-6d61726b7570",
+      "start": 0,
+      "final": {
+        "top": 124.53125,
+        "y": 4874,
+        "hash": "#n-6d61726b7570"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-6f7065726174696f6e73",
+      "start": 0,
+      "final": {
+        "top": 436.71875,
+        "y": 5488,
+        "hash": "#n-6f7065726174696f6e73"
+      },
+      "result": "PASS"
+    }
+  ],
+  "complete": true
+}

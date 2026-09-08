@@ -1,0 +1,33 @@
+{
+  "heads": [
+    "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+    "20caaf73c5a1d6a5157f50a2b5f23802d3a15c84"
+  ],
+  "files": [
+    {
+      "path": "doc/canonical.json",
+      "bytes": 3005,
+      "sha256": "1b2b7b3aee4bac78ef5908ea55539a7d347c27698f822bd8053f93732e7f47cd"
+    },
+    {
+      "path": "doc/spec/12-model-invariants.nepld",
+      "bytes": 30443,
+      "sha256": "f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8"
+    },
+    {
+      "path": "doc/spec/12-model-invariants.md",
+      "bytes": 27431,
+      "sha256": "da54f3c8d8fd4aff0f29d094b2662bb2f3d2c762af5a5d623446280505e9023f"
+    },
+    {
+      "path": "doc/spec/01-architecture.md",
+      "bytes": 11492,
+      "sha256": "4e98735f6253c9d47c85bb156cf7946e8b16db28429cb5d4a08a2bb3f78a552b"
+    },
+    {
+      "path": "doc/migration/aliases/12-model-invariants.json",
+      "bytes": 565,
+      "sha256": "0d428b3fec7161d2cd0f1b075771d0597505727c39f78e90c835840c638f4c4c"
+    }
+  ]
+}

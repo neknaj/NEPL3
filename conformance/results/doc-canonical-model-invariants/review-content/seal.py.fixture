@@ -1,0 +1,23 @@
+from pathlib import Path
+import json,hashlib,subprocess
+p=Path(__file__).parent;r=p.parents[1];old=r.parent/'NEPL3-doc-canonical-html-fragment/.tmp/preflight-after19'
+sha=lambda b:hashlib.sha256(b).hexdigest()
+git=lambda *x:subprocess.check_output(['git',*x],cwd=r)
+commit=git('rev-parse','7d6d3f1').decode().strip();base=git('rev-parse','3a1a80c^').decode().strip()
+doc=(r/'doc/spec/12-model-invariants.nepld').read_bytes();assert doc==git('show',base+':doc/migration/authored/12-model-invariants.nepld')==(old/'12-model-invariants.nepld').read_bytes()
+assert (p/'12-model-invariants.md').read_bytes()==git('show',base+':doc/spec/12-model-invariants.md')==(old/'12-model-invariants.md').read_bytes()
+registry=json.loads(git('show',commit+':doc/canonical.json'));before=json.loads(git('show',base+':doc/canonical.json'));assert registry['pages'][:-1]==before['pages']
+entry=registry['pages'][-1];assert entry['source']=='doc/spec/12-model-invariants.nepld' and entry['projection']=='doc/spec/12-model-invariants.md' and entry['renderer']=='nepl3-tools.markdown-annotated-pages/1'
+assert registry['html_output_limits']==before['html_output_limits']
+assert {k for k in before['output_limits'] if registry['output_limits'][k]!=before['output_limits'][k]}=={'work','allocation_units'}
+assert registry['output_limits']['work']==600000000 and registry['output_limits']['allocation_units']==1500000000
+assert [x for x in registry['pages'] if x['projection']=='doc/spec/19-html-fragment.md'][0]['source']=='doc/spec/19-html-fragment.nepld'
+aliases=json.loads(git('show',commit+':'+entry['aliases']));historical=json.loads((old/'aliases.json').read_text(encoding='utf8'))['12-model-invariants'];assert aliases==[{'section':x['section'],'name':x['old']} for x in historical]
+for name in ['github.json','12-model-invariants-github.html','12-model-invariants-rich.html']:(p/('historical-'+name)).write_bytes((old/name).read_bytes())
+sources=[]
+for name in ['AGENTS.md','doc/authoring.md','doc/spec/21-doc-pages.md','doc/canonical.json','doc/spec/12-model-invariants.nepld',entry['aliases'],'doc/spec/19-html-fragment.nepld','design/forms.json','tools/audit/structure.py']:
+ b=git('show',commit+':'+name);q=p/'context'/name;q.parent.mkdir(parents=True,exist_ok=True);q.write_bytes(b);sources.append({'path':name,'bytes':len(b),'sha256':sha(b)})
+(p/'cutover.diff').write_bytes(git('diff','--find-renames',base,commit))
+(p/'checks.json').write_text(json.dumps({'source_commit':commit,'base':base,'original_md_sha256':sha((p/'12-model-invariants.md').read_bytes()),'doc_sha256':sha(doc),'unchanged_move':True,'historical_source_bytes_unchanged':True,'aliases_exact_actual_historical_GitHub':8,'existing_entries_unchanged':7,'link_target_present':'doc/spec/19-html-fragment.nepld','output_only_changes':['work','allocation_units'],'html_and_phase_unchanged':True,'generation':'not-run','browser':'not-run'},indent=2)+'\n',encoding='utf8')
+files=[{'path':x.relative_to(p).as_posix(),'bytes':x.stat().st_size,'sha256':sha(x.read_bytes())} for x in sorted(p.rglob('*')) if x.is_file() and x.name!='manifest.json']
+(p/'manifest.json').write_text(json.dumps({'scope':'independent full manuscript meaning and cutover preparation review, not generation/browser','source_commit':commit,'sources':sources,'files':files},indent=2)+'\n',encoding='utf8');print(sha((p/'manifest.json').read_bytes()))

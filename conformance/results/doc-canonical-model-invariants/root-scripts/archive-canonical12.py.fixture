@@ -1,0 +1,47 @@
+from pathlib import Path
+import hashlib,json,subprocess,sys
+root=Path.cwd();out=root/'conformance/results/doc-canonical-model-invariants';out.mkdir(parents=True,exist_ok=True)
+rows=[];chunks=[]
+def save(owner,path,relative):
+    data=path.read_bytes()
+    if len(data)>1048576:
+        parts=[]
+        for ordinal,start in enumerate(range(0,len(data),524288)):
+            part=data[start:start+524288];part_relative=f'{relative}.parts/{ordinal:04d}'
+            name=f'{owner}/{part_relative}.fixture';destination=out/name
+            assert destination.resolve().is_relative_to(out.resolve())
+            destination.parent.mkdir(parents=True,exist_ok=True);destination.write_bytes(part)
+            rows.append(dict(owner=owner,file=name,restore=part_relative,bytes=len(part),sha256=hashlib.sha256(part).hexdigest()))
+            parts.append(name)
+        chunks.append(dict(owner=owner,restore=relative,bytes=len(data),sha256=hashlib.sha256(data).hexdigest(),parts=parts))
+        return
+    safe='/'.join('saved-'+p.lstrip('.') if p in {'.tmp','dist','target','.git','node_modules','__pycache__'} else p for p in relative.split('/'))
+    name=f'{owner}/{safe}.fixture';destination=out/name
+    assert destination.resolve().is_relative_to(out.resolve())
+    destination.parent.mkdir(parents=True,exist_ok=True);destination.write_bytes(data)
+    rows.append(dict(owner=owner,file=name,restore=relative,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+for owner,name in [('root-initial','generation-initial'),('root-generation','generation-budget'),('root-fixed','verification-integration'),('root-html-first','html-budget-first'),('root-html-second','html-budget-second'),('root-markdown-first','markdown-budget-first'),('root-markdown-second','markdown-budget-second'),('root-browser','browser-canonical12'),('root-github','github-canonical12')]:
+    directory=root/'.tmp'/name
+    for path in sorted(directory.rglob('*')):
+        if path.is_file():save(owner,path,path.relative_to(directory).as_posix())
+for name in ['start.json','original.md','prepare.py','generate-initial.py','select-budget.py','output-budget-selection.json','generate-budget.py','verify-integration.py','prepare-browser.py','browser-canonical12.py','github-canonical12.py','archive-canonical12.py','prepare-fixed.py']:
+    save('root-scripts',root/'.tmp'/name,name)
+directories={'review-preflight':Path('C:/projects/NEPL3-doc-canonical-html-fragment/.tmp/preflight-after19'),'review-content':root/'.tmp/review-canonical12-content'}
+if '--review' in sys.argv:
+    directories.update({'review-code':root/'.tmp/review-canonical12-code','review-cutover':root/'.tmp/review-canonical12-cutover'})
+if '--bootstrap' in sys.argv:
+    for path in sorted((root/'.tmp/bootstrap-canonical12').iterdir()):
+        if path.is_file():save('root-bootstrap',path,path.name)
+for owner,directory in directories.items():
+    manifest=json.loads((directory/'manifest.json').read_text(encoding='utf-8'));save(owner,directory/'manifest.json','manifest.json')
+    for row in manifest['files']:
+        path=directory/row['path'];data=path.read_bytes()
+        assert len(data)==row['bytes'] and hashlib.sha256(data).hexdigest()==row['sha256']
+        save(owner,path,row['path'])
+head='2b0bbf4b888ea18ef5e97eaabe2391008e86fe69';sources=[]
+for name in ['doc/canonical.json','doc/spec/01-architecture.md','doc/spec/12-model-invariants.md','doc/spec/12-model-invariants.nepld','doc/migration/aliases/12-model-invariants.json']:
+    data=(root/name).read_bytes();assert data==subprocess.check_output(['git','show',head+':'+name])
+    sources.append(dict(path=name,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+(out/'payloads.json').write_text(json.dumps(dict(implementation_commit=head,sources=sources,chunked_files=chunks,files=rows),indent=2)+'\n',encoding='utf-8',newline='\n')
+(out/'.gitattributes').write_text('*.fixture -text -whitespace\n',encoding='utf-8',newline='\n')
+print(len(rows),'payloads',sum(r['bytes'] for r in rows),'bytes')

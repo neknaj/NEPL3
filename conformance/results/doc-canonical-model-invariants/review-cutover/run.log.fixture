@@ -1,0 +1,28 @@
+﻿chromium-first-375 PASS
+chromium-first-1280 PASS
+chromium-second-375 PASS
+chromium-second-1280 PASS
+firefox-first-375 PASS
+firefox-first-1280 PASS
+firefox-second-375 PASS
+firefox-second-1280 PASS
+webkit-first-375 PASS
+webkit-first-1280 PASS
+webkit-second-375 PASS
+webkit-second-1280 PASS
+GitHub 12-意味モデル中間表現の補足不変条件 PASS
+GitHub 方針 PASS
+GitHub 1-値と参照 PASS
+GitHub 11-foundation制約id PASS
+GitHub 2-checked値の境界 PASS
+GitHub 3-回路ir PASS
+GitHub 4-markup安全性 PASS
+GitHub 5-operationの具体型 PASS
+GitHub n-706f6c696379 PASS
+GitHub n-76616c756573 PASS
+GitHub n-636f6e73747261696e7473 PASS
+GitHub n-636865636b6564 PASS
+GitHub n-63697263756974 PASS
+GitHub n-6d61726b7570 PASS
+GitHub n-6f7065726174696f6e73 PASS
+PASS 12 local cases / 84 semantic moves / 12 actual links to19; GitHub15; 32 paragraphs,36 cells,9 code exact

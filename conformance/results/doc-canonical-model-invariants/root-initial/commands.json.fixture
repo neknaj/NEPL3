@@ -1,0 +1,42 @@
+[
+  {
+    "source_commit": "3a1a80c09c72a8e1fea5eb656e60ec26df8bcff8",
+    "clean_tree": true,
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "markdown",
+      ".tmp/markdown-initial"
+    ],
+    "exit_code": 1,
+    "elapsed": 162.38183199998457,
+    "executable_sha256": "1b6416da14b13334c7b71405f1e966528e9690cc496cafeab86729bb11d640af",
+    "registry_sha256": "b960d6ccff4793531cbae7aa901608eda437f47331d06bd97625b5b89c5a7c9e",
+    "output_exists": false
+  },
+  {
+    "source_commit": "3a1a80c09c72a8e1fea5eb656e60ec26df8bcff8",
+    "clean_tree": true,
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "html",
+      ".tmp/html-initial"
+    ],
+    "exit_code": 0,
+    "elapsed": 56.59760759992059,
+    "executable_sha256": "1b6416da14b13334c7b71405f1e966528e9690cc496cafeab86729bb11d640af",
+    "registry_sha256": "b960d6ccff4793531cbae7aa901608eda437f47331d06bd97625b5b89c5a7c9e",
+    "output_exists": true
+  }
+]

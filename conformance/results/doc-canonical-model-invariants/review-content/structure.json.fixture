@@ -1,0 +1,75 @@
+{
+  "12-model-invariants": {
+    "sha_md": "81b22608f80254f7d5979b754436b9d62da0bf25aefddf01a6fec772fdcf9cc5",
+    "sha_doc": "f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8",
+    "counts": {
+      "Article": 1,
+      "leaf": 176,
+      "Body": 8,
+      "Section": 7,
+      "Paragraph": 32,
+      "Sentence": 8,
+      "InlineCode": 9,
+      "Text": 120,
+      "Ruby": 36,
+      "Table": 1,
+      "AlignmentDefault": 2,
+      "SomeRow": 1,
+      "Row": 18,
+      "Link": 1,
+      "RelativeTarget": 1,
+      "NoText": 1,
+      "Concat": 1
+    },
+    "headings": [
+      {
+        "id": "policy",
+        "title": "方針"
+      },
+      {
+        "id": "values",
+        "title": "1. 値と参照"
+      },
+      {
+        "id": "constraints",
+        "title": "1.1 foundation制約ID"
+      },
+      {
+        "id": "checked",
+        "title": "2. Checked値の境界"
+      },
+      {
+        "id": "circuit",
+        "title": "3. 回路IR"
+      },
+      {
+        "id": "markup",
+        "title": "4. Markup安全性"
+      },
+      {
+        "id": "operations",
+        "title": "5. operationの具体型"
+      }
+    ],
+    "links": [
+      {
+        "kind": "RelativeTarget",
+        "fields": {
+          "path": "19-html-fragment.md",
+          "fragment": {
+            "kind": "NoText",
+            "fields": {}
+          }
+        }
+      }
+    ],
+    "paragraph_count": [
+      32,
+      32
+    ],
+    "mismatches": [],
+    "inline_code_exact": true,
+    "table_rows_exact": true,
+    "ruby_lexical_issues": []
+  }
+}
