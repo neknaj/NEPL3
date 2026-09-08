@@ -1,0 +1,161 @@
+{
+  "rows": [
+    {
+      "language": "Grammar",
+      "categories": 11,
+      "forms": 69,
+      "fields": 94,
+      "leaves": [],
+      "sha256": "80cb27d4d9359df1b4dce15f4012866dbe1b9036ba6881ac514441cb2c74610e"
+    },
+    {
+      "language": "Doc",
+      "categories": 20,
+      "forms": 64,
+      "fields": 83,
+      "leaves": [
+        [
+          "Doc/Sentence",
+          "sentence"
+        ],
+        [
+          "Doc/Flow",
+          "sentence"
+        ]
+      ],
+      "sha256": "c24abdf64961161698de9cd80ce6914ce907533918baab2ebd44262459a0494e"
+    },
+    {
+      "language": "Math",
+      "categories": 3,
+      "forms": 29,
+      "fields": 54,
+      "leaves": [
+        [
+          "Math/Expr",
+          "math-number-or-name"
+        ]
+      ],
+      "sha256": "f4289f067c60dafac5e06d0dd9260a74d2963cc32efa13c9b7f83fd6c716241c"
+    },
+    {
+      "language": "Circuit",
+      "categories": 9,
+      "forms": 26,
+      "fields": 52,
+      "leaves": [
+        [
+          "Circuit/Expr",
+          "name"
+        ]
+      ],
+      "sha256": "45737f2cce7466aaba255ad1e78f056d7786e4476420a7c4ee8b4a20637f425c"
+    }
+  ],
+  "negative_read_types": [
+    "''",
+    "{}",
+    "1",
+    "False",
+    "{'list': None}",
+    "{'list': 'x', 'extra': 'y'}"
+  ],
+  "special_text": "'漢字\"\\\\\\n\\r\\t[]{} / <&> # % 😀'",
+  "commands": [
+    {
+      "label": "managed",
+      "args": [
+        "C:\\Users\\bem\\miniforge3\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/generate",
+        "-p",
+        "test_signatures.py"
+      ],
+      "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-signatures\\workspace",
+      "deadline_seconds": 60,
+      "exit_code": 0
+    },
+    {
+      "label": "stale-clean",
+      "args": [
+        "C:\\Users\\bem\\miniforge3\\python.exe",
+        "tools/generate/signatures.py"
+      ],
+      "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-signatures\\workspace",
+      "deadline_seconds": 60,
+      "exit_code": 0
+    },
+    {
+      "label": "write1",
+      "args": [
+        "C:\\Users\\bem\\miniforge3\\python.exe",
+        "tools/generate/signatures.py",
+        "--write"
+      ],
+      "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-signatures\\workspace",
+      "deadline_seconds": 60,
+      "exit_code": 0
+    },
+    {
+      "label": "write2",
+      "args": [
+        "C:\\Users\\bem\\miniforge3\\python.exe",
+        "tools/generate/signatures.py",
+        "--write"
+      ],
+      "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-signatures\\workspace",
+      "deadline_seconds": 60,
+      "exit_code": 0
+    },
+    {
+      "label": "stale-altered",
+      "args": [
+        "C:\\Users\\bem\\miniforge3\\python.exe",
+        "tools/generate/signatures.py"
+      ],
+      "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-signatures\\mutations",
+      "deadline_seconds": 60,
+      "exit_code": 1
+    },
+    {
+      "label": "stale-missing",
+      "args": [
+        "C:\\Users\\bem\\miniforge3\\python.exe",
+        "tools/generate/signatures.py"
+      ],
+      "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-signatures\\mutations",
+      "deadline_seconds": 60,
+      "exit_code": 1
+    },
+    {
+      "label": "repair",
+      "args": [
+        "C:\\Users\\bem\\miniforge3\\python.exe",
+        "tools/generate/signatures.py",
+        "--write"
+      ],
+      "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-signatures\\mutations",
+      "deadline_seconds": 60,
+      "exit_code": 0
+    },
+    {
+      "label": "duplicate-keys",
+      "args": [
+        "C:\\Users\\bem\\miniforge3\\python.exe",
+        "tools/generate/signatures.py",
+        "--write"
+      ],
+      "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-signatures\\mutations",
+      "deadline_seconds": 60,
+      "exit_code": 0
+    }
+  ],
+  "duplicate_key": {
+    "strict_loader_rejected": true,
+    "generator_exit": 0,
+    "replacement_generated": true
+  }
+}

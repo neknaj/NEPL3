@@ -53,3 +53,4 @@ dist/** export-ignore
 /conformance/results/stream-digest/** -text -whitespace
 /conformance/results/doc-authoring-adrs/** -text -whitespace
 /conformance/results/source-map-adjacency/** -text -whitespace
+/conformance/results/doc-signature-projection/** -text -whitespace
