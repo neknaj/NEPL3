@@ -1,0 +1,80 @@
+{
+  "head": "1fee084e3bff960525ac87cbf6180a0af0caa962",
+  "files": [
+    {
+      "path": "addition.md",
+      "sha256": "61021deee1b730893fd7a759ba06c662b2dede5cf57d8dec4c5a49d565ae5216",
+      "bytes": 3334
+    },
+    {
+      "path": "addition.nepld",
+      "sha256": "6e56e8d3adf1eda43510ae67f1c26bc7481f650485ae8a2766f4b29f535429b3",
+      "bytes": 7125
+    },
+    {
+      "path": "after.nepld",
+      "sha256": "162fe9ec7faf8c671ef3769fc27342209577db38084d0201220b7871c430bab3",
+      "bytes": 69199
+    },
+    {
+      "path": "before.nepld",
+      "sha256": "83b03d9f070d4a64e020ab5f0591026d22df6cdb17f530c79f877c2571eea8e9",
+      "bytes": 62074
+    },
+    {
+      "path": "change.diff",
+      "sha256": "1db5c8dda57d03e026f4838c31f4a7d6a9a7adc1bec368dbe27cde31738b0309",
+      "bytes": 7959
+    },
+    {
+      "path": "check.log",
+      "sha256": "12331bced6f323b2817a030c4ef218912c0599874eaa82e03d6e5560ddc3b70a",
+      "bytes": 862
+    },
+    {
+      "path": "check.py",
+      "sha256": "66db0fead95dbab689308a5b1cbca73f97ee02d6ec8a1b1fd127d1bff6f21870",
+      "bytes": 3015
+    },
+    {
+      "path": "finalize.py",
+      "sha256": "38f755477df38d19579e524d7dc679426da1d9522b2800d2a4544d0b4595988f",
+      "bytes": 996
+    },
+    {
+      "path": "original.md",
+      "sha256": "4a3b5da9462fc53b8000fb29c9a9a2f2de94ae09c29b86898c74befb3d1940cc",
+      "bytes": 31946
+    },
+    {
+      "path": "paragraphs.txt",
+      "sha256": "0497f476321a8b48234e0000d4ea61d9fe22c370a50629651cfd0e4e7c3ab2d4",
+      "bytes": 3303
+    },
+    {
+      "path": "previous-source.md",
+      "sha256": "4d3ee1fbb97277ef3df6511a9a158bdb1caad5f0da70785052c29a02c02a42c7",
+      "bytes": 28612
+    },
+    {
+      "path": "readings.txt",
+      "sha256": "426326969d97b41db710003f575a62a032f0dd2c36912b5d40ef0845218617a8",
+      "bytes": 2849
+    },
+    {
+      "path": "record.md",
+      "sha256": "cc232530a6cde82bddc63f24b847002c51342056c6fe6d3ea66b8261ea635801",
+      "bytes": 2004
+    },
+    {
+      "path": "result.json",
+      "sha256": "12331bced6f323b2817a030c4ef218912c0599874eaa82e03d6e5560ddc3b70a",
+      "bytes": 862
+    },
+    {
+      "path": "structure-helper.py",
+      "sha256": "8faa8c6a1e9f8a3653a8998efdadb0e237dacd1d490c4557c1c595ca82809703",
+      "bytes": 3579
+    }
+  ]
+}
