@@ -74,6 +74,99 @@ fn budget() -> Budget {
         events: 100,
     })
 }
+
+#[test]
+fn wide_snapshot_dag_work_does_not_scan_all_edges_for_each_vertex() -> TestResult {
+    fn measure(width: usize) -> Result<u64, String> {
+        let root = source("00000", "x")?;
+        let mut sources = SourceStore::default();
+        sources.insert(root.clone()).map_err(|e| format!("{e:?}"))?;
+        let mut maps = Vec::new();
+        for i in 1..=width {
+            let leaf = source(&format!("{i:05}"), "x")?;
+            maps.push(Mapping {
+                source: root.span(0, 1).map_err(|e| format!("{e:?}"))?,
+                target: leaf.span(0, 1).map_err(|e| format!("{e:?}"))?,
+                kind: MappingKind::Exact,
+            });
+            sources.insert(leaf).map_err(|e| format!("{e:?}"))?;
+        }
+        let mut b = Budget::new(Limits {
+            work: 20_000_000,
+            ..budget().limits()
+        });
+        SourceMap::validate_mappings(&maps, &sources, &mut b).map_err(|e| format!("{e:?}"))?;
+        assert_eq!(b.usage().nodes, width as u64 + 1);
+        assert_eq!(b.usage().depth, 2);
+        Ok(b.usage().work)
+    }
+    // A star has V-1 edges and no cycle. Doubling its leaves should cost
+    // approximately twice the work plus identity lookup growth, not four times.
+    let small = measure(1024)?;
+    let large = measure(2048)?;
+    eprintln!("wide DAG work: {small} -> {large}");
+    assert!(large * 10 < small * 27, "{small} -> {large}");
+    Ok(())
+}
+
+#[test]
+fn duplicate_edges_and_joins_preserve_longest_depth_and_sticky_stops() -> TestResult {
+    let mut sources = SourceStore::default();
+    let vertices = (0..5)
+        .map(|i| source(&format!("v{i}"), "x"))
+        .collect::<Result<Vec<_>, _>>()?;
+    for vertex in &vertices {
+        sources
+            .insert(vertex.clone())
+            .map_err(|e| format!("{e:?}"))?;
+    }
+    // 0->1->2->3 has depth four. The duplicate 0->1 and shorter 0->2
+    // must neither enqueue a vertex early nor leave an indegree outstanding.
+    // The independent 4->3 edge exercises a join across two roots.
+    let mut maps = Vec::new();
+    for (a, b) in [(0, 1), (0, 1), (1, 2), (0, 2), (2, 3), (4, 3)] {
+        maps.push(Mapping {
+            source: vertices[a].span(0, 1).map_err(|e| format!("{e:?}"))?,
+            target: vertices[b].span(0, 1).map_err(|e| format!("{e:?}"))?,
+            kind: MappingKind::Exact,
+        });
+    }
+    for _ in 0..2 {
+        let mut complete = budget();
+        SourceMap::validate_mappings(&maps, &sources, &mut complete)
+            .map_err(|e| format!("{e:?}"))?;
+        assert_eq!(complete.usage().depth, 4);
+        assert_eq!(complete.usage().nodes, 5);
+        for reason in [
+            StopReason::WorkLimit,
+            StopReason::AllocationLimit,
+            StopReason::NodeLimit,
+            StopReason::DepthLimit,
+        ] {
+            let mut limits = budget().limits();
+            let usage = complete.usage();
+            match reason {
+                StopReason::WorkLimit => limits.work = usage.work - 1,
+                StopReason::AllocationLimit => limits.allocation_units = usage.allocation_units - 1,
+                StopReason::NodeLimit => limits.nodes = usage.nodes - 1,
+                StopReason::DepthLimit => limits.depth = usage.depth - 1,
+                _ => unreachable!(),
+            }
+            let mut stopped = Budget::new(limits);
+            assert_eq!(
+                SourceMap::validate_mappings(&maps, &sources, &mut stopped).map(|_| ()),
+                Err(OriginError::Stopped(reason))
+            );
+            assert_eq!(stopped.poll(), Err(reason));
+            assert_eq!(
+                SourceMap::validate_mappings(&[], &sources, &mut stopped).map(|_| ()),
+                Err(OriginError::Stopped(reason))
+            );
+        }
+        maps.reverse();
+    }
+    Ok(())
+}
 fn source(id: &str, text: &str) -> Result<SourceSnapshot, String> {
     SourceSnapshot::new(
         SourceId(id.into()),

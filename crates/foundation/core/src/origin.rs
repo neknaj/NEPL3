@@ -567,8 +567,12 @@ fn snapshot_dag<'a>(
 ) -> Result<bool, OriginError> {
     let mut nodes: Vec<&'a SnapshotId> = Vec::new();
     let mut ordered: Vec<usize> = Vec::new();
+    // Linked adjacency lists retain duplicate edges without scanning unrelated
+    // edges at each vertex. These are private indices, not source identities.
+    let mut outgoing: Vec<Option<usize>> = Vec::new();
     let mut edges = Vec::new();
     for mapping in input {
+        budget.charge(Resource::Work, 1)?;
         let mut ids = [0usize; 2];
         for (slot, span) in [&mapping.source, &mapping.target].into_iter().enumerate() {
             let identity = span.snapshot_ref();
@@ -602,9 +606,14 @@ fn snapshot_dag<'a>(
                         Resource::AllocationUnits,
                         core::mem::size_of::<usize>() as u64,
                     )?;
+                    budget.charge(
+                        Resource::AllocationUnits,
+                        core::mem::size_of::<Option<usize>>() as u64,
+                    )?;
                     budget.charge(Resource::Work, (ordered.len() - low) as u64)?;
                     let index = nodes.len();
                     nodes.push(identity);
+                    outgoing.push(None);
                     ordered.insert(low, index);
                     index
                 }
@@ -612,9 +621,11 @@ fn snapshot_dag<'a>(
         }
         budget.charge(
             Resource::AllocationUnits,
-            core::mem::size_of::<(usize, usize)>() as u64,
+            core::mem::size_of::<(usize, Option<usize>)>() as u64,
         )?;
-        edges.push((ids[0], ids[1]));
+        let edge = edges.len();
+        edges.push((ids[1], outgoing[ids[0]]));
+        outgoing[ids[0]] = Some(edge);
     }
     budget.charge(
         Resource::AllocationUnits,
@@ -623,7 +634,7 @@ fn snapshot_dag<'a>(
     )?;
     let mut incoming = alloc::vec![0usize;nodes.len()];
     let mut depth = alloc::vec![1u64;nodes.len()];
-    for (_, target) in &edges {
+    for (target, _) in &edges {
         budget.charge(Resource::Work, 1)?;
         incoming[*target] = incoming[*target]
             .checked_add(1)
@@ -645,23 +656,23 @@ fn snapshot_dag<'a>(
         budget.charge(Resource::Nodes, 1)?;
         budget.observe_depth(depth[current])?;
         visited += 1;
-        for (source, target) in &edges {
+        let mut next = outgoing[current];
+        while let Some(edge) = next {
             budget.charge(Resource::Work, 1)?;
-            if *source != current {
-                continue;
-            }
-            incoming[*target] -= 1;
-            depth[*target] = depth[*target].max(
+            let (target, following) = edges[edge];
+            next = following;
+            incoming[target] -= 1;
+            depth[target] = depth[target].max(
                 depth[current]
                     .checked_add(1)
                     .ok_or(StopReason::DepthLimit)?,
             );
-            if incoming[*target] == 0 {
+            if incoming[target] == 0 {
                 budget.charge(
                     Resource::AllocationUnits,
                     core::mem::size_of::<usize>() as u64,
                 )?;
-                ready.push(*target);
+                ready.push(target);
             }
         }
     }
