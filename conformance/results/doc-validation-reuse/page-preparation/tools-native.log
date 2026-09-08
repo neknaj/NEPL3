@@ -1,0 +1,27 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling serde v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling pulldown-cmark v0.13.4
+   Compiling memchr v2.8.3
+   Compiling unicase v2.9.0
+   Compiling bitflags v2.13.1
+   Compiling itoa v1.0.18
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-page-reuse\after\crates\foundation\reader)
+   Compiling nepl3-math-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-page-reuse\after\crates\languages\math\core)
+   Compiling syn v3.0.5
+   Compiling nepl3-engine v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-page-reuse\after\crates\foundation\engine)
+   Compiling serde_derive v1.0.229
+   Compiling nepl3-grammar-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-page-reuse\after\crates\languages\grammar\core)
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-page-reuse\after\tools)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 23.38s
+     Running tests\doc.rs (C:\projects\NEPL3-runtime\.tmp\review-doc-page-reuse\target-after\debug\deps\doc-3ca723e83baae99e.exe)
+
+running 2 tests
+test pages::page_output_rejects_an_anchor_hidden_by_language_selection ... ok
+test pages::real_two_page_sources_resolve_without_ambient_documents ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 58 filtered out; finished in 0.58s
+

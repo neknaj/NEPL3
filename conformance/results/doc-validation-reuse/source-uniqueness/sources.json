@@ -1,0 +1,22 @@
+[
+  {
+    "path": "crates/languages/doc/core/src/check/document.rs",
+    "bytes": 9866,
+    "sha256": "ed82ebfa719f5ed854d469501347f748b7adcd650e89c613fa28b0197078c31c"
+  },
+  {
+    "path": "crates/languages/doc/core/tests/portable.rs",
+    "bytes": 13149,
+    "sha256": "104733611a7c8ef971bda1b70905f777766ff352d2f1b94c121956697a44167d"
+  },
+  {
+    "path": "crates/foundation/core/src/source.rs",
+    "bytes": 32562,
+    "sha256": "aca7c11194fabfccde8daacd237b2f7bb7e517f4ff4ce1a87a1efdff1a0c8c0d"
+  },
+  {
+    "path": "doc/spec/12-model-invariants.md",
+    "bytes": 15389,
+    "sha256": "81b22608f80254f7d5979b754436b9d62da0bf25aefddf01a6fec772fdcf9cc5"
+  }
+]

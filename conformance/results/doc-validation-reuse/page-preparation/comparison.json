@@ -1,0 +1,42 @@
+[
+  {
+    "mode": "before",
+    "target": "native",
+    "passed": 29,
+    "equal_lines": 14,
+    "usage": [
+      "REVIEW_USAGE false Usage { source_bytes: 0, work: 33931, depth: 11, nodes: 1290, allocation_units: 117279, output_bytes: 160, diagnostics: 0, events: 0 }",
+      "REVIEW_USAGE true Usage { source_bytes: 0, work: 70921, depth: 11, nodes: 2904, allocation_units: 232419, output_bytes: 160, diagnostics: 0, events: 0 }"
+    ]
+  },
+  {
+    "mode": "before",
+    "target": "wasi",
+    "passed": 29,
+    "equal_lines": 14,
+    "usage": [
+      "REVIEW_USAGE false Usage { source_bytes: 0, work: 33931, depth: 11, nodes: 1290, allocation_units: 87095, output_bytes: 160, diagnostics: 0, events: 0 }",
+      "REVIEW_USAGE true Usage { source_bytes: 0, work: 70921, depth: 11, nodes: 2904, allocation_units: 172211, output_bytes: 160, diagnostics: 0, events: 0 }"
+    ]
+  },
+  {
+    "mode": "after",
+    "target": "native",
+    "passed": 30,
+    "equal_lines": 14,
+    "usage": [
+      "REVIEW_USAGE false Usage { source_bytes: 0, work: 22235, depth: 11, nodes: 742, allocation_units: 55203, output_bytes: 96, diagnostics: 0, events: 0 }",
+      "REVIEW_USAGE true Usage { source_bytes: 0, work: 44699, depth: 11, nodes: 1570, allocation_units: 99151, output_bytes: 96, diagnostics: 0, events: 0 }"
+    ]
+  },
+  {
+    "mode": "after",
+    "target": "wasi",
+    "passed": 30,
+    "equal_lines": 14,
+    "usage": [
+      "REVIEW_USAGE false Usage { source_bytes: 0, work: 22235, depth: 11, nodes: 742, allocation_units: 41707, output_bytes: 96, diagnostics: 0, events: 0 }",
+      "REVIEW_USAGE true Usage { source_bytes: 0, work: 44699, depth: 11, nodes: 1570, allocation_units: 74719, output_bytes: 96, diagnostics: 0, events: 0 }"
+    ]
+  }
+]

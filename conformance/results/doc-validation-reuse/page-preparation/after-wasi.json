@@ -1,0 +1,22 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-doc-core",
+    "-p",
+    "nepl3-doc-html",
+    "--target-dir",
+    "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target-after",
+    "--target",
+    "wasm32-wasip2",
+    "--",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "workspace": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\after",
+  "target": "wasi",
+  "exit_code": 0,
+  "seconds": 42.5370270999847
+}
