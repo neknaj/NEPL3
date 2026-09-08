@@ -1044,4 +1044,69 @@ body
         cons "[旧/きゅう]anchor[対応/たいおう]・[正本/せいほん]registry[切替/きりかえ]・[人/ひと]の[意味/いみ]レビューは[別条件/べつじょうけん]であり、[限定/げんてい]projectionの[成功/せいこう]だけで[元/もと]Markdownを[削除/さくじょ]しない。"
         nil
       nil
+  cons section annotated "[注釈付/ちゅうしゃくつ]きMarkdown[閲覧/えつらん]projection" body
+    cons paragraph
+      cons sentence cons code "nepl3-tools doc-markdown annotated <source.nepld> <aliases.json> <new-file.md>" cons text " は、Doc" cons ruby text "正本" text "せいほん" cons text "の" cons ruby text "読" text "よ" cons text "み・" cons ruby text "注記" text "ちゅうき" cons text "をGitHub" cons ruby text "等" text "とう" cons text "の" cons ruby text "閲覧用" text "えつらんよう" cons text "Markdownへ" cons ruby text "明示" text "めいじ" cons text "する" cons ruby text "別" text "べつ" cons text "profileである。" nil
+      cons sentence cons ruby text "既存" text "きそん" cons text "の " cons code "doc-markdown" cons text " の" cons ruby text "互換規則" text "ごかんきそく" cons text "は" cons ruby text "変更" text "へんこう" cons text "しない。" nil
+      cons sentence cons text "renderer" cons ruby text "識別子" text "しきべつし" cons text "は " cons code "nepl3-tools.markdown-annotated/1" cons text " とする。" nil
+      nil
+    cons paragraph
+      cons sentence cons text "Rubyは " cons code "本体[読み]" cons text "、Annoは " cons code "本体{注記1/注記2}" cons text " の" cons ruby text "表示" text "ひょうじ" cons text "へ" cons ruby text "写" text "うつ" cons text "し、" cons ruby text "入" text "い" cons text "れ" cons ruby text "子" text "こ" cons text "も" cons ruby text "型付" text "かたつ" cons text "きの" cons ruby text "子要素" text "こようそ" cons text "を" cons ruby text "順" text "じゅん" cons text "に" cons ruby text "辿" text "たど" cons text "る。" nil
+      cons "[括弧等/かっことう]はMarkdownの[構文/こうぶん]として[解釈/かいしゃく]されないようescapeする。"
+      cons "これは[全注釈/ぜんちゅうしゃく]を[読/よ]めるようにする[表示上/ひょうじじょう]の[約束/やくそく]であり、[元/もと]から[同/おな]じ[括弧/かっこ]を[含/ふく]むTextと[一意/いちい]に[区別/くべつ]できる[符号化/ふごうか]ではない。"
+      cons "Docへ[復元/ふくげん]するroundtrip[形式/けいしき]や、Docの[構造/こうぞう]をすべて[保存/ほぞん]した[形式/けいしき]とは[扱/あつか]わない。"
+      cons "[正本/せいほん]のRuby・Anno・Sentenceの[境界/きょうかい]はDoc[側/がわ]に[保持/ほじ]する。"
+      nil
+    cons paragraph
+      cons sentence cons ruby text "通常" text "つうじょう" cons text "のparse/lowerと " cons code "prepare::inspect" cons text " を" cons ruby text "通" text "とお" cons text "したArticleを" cons ruby text "入力" text "にゅうりょく" cons text "とする。" nil
+      cons "Text、InlineCode、Concat、Ruby、Anno、Strong、Emphasis、[外部/がいぶ]Linkと[本文途中/ほんぶんとちゅう]のBreakを[扱/あつか]う。"
+      cons sentence cons text "Strong/Emphasisは" cons ruby text "固定" text "こてい" cons text "の " cons code "<strong>" cons text " / " cons code "<em>" cons text " の" cons ruby text "開始" text "かいし" cons text "・" cons ruby text "終了" text "しゅうりょう" cons text "tagを" cons ruby text "生成" text "せいせい" cons text "し、" cons ruby text "著者" text "ちょしゃ" cons text "が" cons ruby text "任意" text "にんい" cons text "のHTML・" cons ruby text "属性" text "ぞくせい" cons text "・styleを" cons ruby text "挿入" text "そうにゅう" cons text "する" cons ruby text "経路" text "けいろ" cons text "は" cons ruby text "設" text "もう" cons text "けない。" nil
+      cons "[外部/がいぶ]URIは[既存/きそん]Markupの[許可規則/きょかきそく]で[検査/けんさ]し、Markdown parserによるentity decodeでも[元/もと]URIが[変/か]わらないようescapeする。"
+      cons "[入/い]れ[子/こ]のLinkとLink[内/ない]のBreakは[拒否/きょひ]する。"
+      cons "URIへの[接続/せつぞく]や[到達性/とうたつせい]の[確認/かくにん]は[行/おこな]わない。"
+      nil
+    cons paragraph
+      cons "ParagraphはSentence[列/れつ]を[宣言順/せんげんじゅん]に[表示/ひょうじ]し、Sentence[境界/きょうかい]へ[空白/くうはく]や[句点/くてん]を[補/おぎな]わない。"
+      cons "Concatは[透明/とうめい]な[構造/こうぞう]として[扱/あつか]う。"
+      cons "[空/から]TextはDocの[意味正規化/いみせいきか]に[従/したが]い[表示文字/ひょうじもじ]を[追加/ついか]しない。"
+      cons "[見出/みだ]し・[段落/だんらく]の[可視内容全体/かしないようぜんたい]が[空/から]の[場合/ばあい]、[外端/がいたん]のText[空白/くうはく]、[隣接/りんせつ]するInlineCode、[端/はし]または[連続/れんぞく]するBreakとその[前後/ぜんご]のText[空白/くうはく]を[拒否/きょひ]する。"
+      cons "[透明/とうめい]なConcatや[装飾/そうしょく]でこの[検査/けんさ]を[回避/かいひ]できない。"
+      cons "[見出/みだ]しのBreakは[拒否/きょひ]し、Text[内/ない]のLFはBreakへ[置換/ちかん]しない。"
+      nil
+    cons paragraph
+      cons "Bodyには[導入/どうにゅう]のParagraph/RawCodeと、その[後/あと]にSection[列/れつ]を[置/お]ける。"
+      cons "SectionのBodyも[同/おな]じ[規則/きそく]で[再帰的/さいきてき]に[扱/あつか]い、Articleの[見出/みだ]しを[第/だい]1[段/だん]として[第/だい]6[段/だん]まで[生成/せいせい]する。"
+      cons "[同/おな]じBodyでSectionの[後/あと]に[通常/つうじょう]blockが[現/あらわ]れる[場合/ばあい]は、Markdownで[所属/しょぞく]が[変/か]わるため[拒否/きょひ]する。"
+      cons "RawCodeのbyte[列/れつ]・[末尾/まつび]LF・hint・fenceの[制約/せいやく]は[既存/きそん]projectionと[共通/きょうつう]である。"
+      cons "この[初期/しょき]profileはlist、table、Parallel、[画像/がぞう]、[参照/さんしょう]、inline Anchorを[扱/あつか]わない。"
+      cons "Relative/Page link、asset、foreignの[要求/ようきゅう]を[含/ふく]む[入力/にゅうりょく]はNeedsResolutionとし、[周辺/しゅうへん]fileの[探索/たんさく]や[仮/かり]のPageSet[登録/とうろく]で[成功/せいこう]させない。"
+      cons "Doc/HTML[側/がわ]の[対応範囲/たいおうはんい]を[狭/せば]めるものではない。"
+      nil
+    cons paragraph
+      cons sentence cons text "aliasesはJSONのrecord" cons ruby text "配列" text "はいれつ" cons text "で、" cons ruby text "各" text "かく" cons text "recordの " cons code "name" cons text " は" cons ruby text "必須" text "ひっす" cons text "、" cons code "section" cons text " はSectionの" cons ruby text "意味" text "いみ" cons text "ID、nullまたは" cons ruby text "省略" text "しょうりゃく" cons text "ならArticleを" cons ruby text "指" text "さ" cons text "す。" nil
+      cons "[未知/みち]field・[重複/じゅうふく]fieldは[拒否/きょひ]する。"
+      cons sentence cons text "nameは" cons ruby text "非空" text "ひくう" cons text "でUnicode" cons ruby text "英数字" text "えいすうじ" cons text "とASCIIの " cons code "-" cons text " / " cons code "_" cons text " のみを" cons ruby text "許" text "ゆる" cons text "す。" nil
+      cons "nameの[重複/じゅうふく]、[存在/そんざい]しないSection、[生成時/せいせいじ]に[到達/とうたつ]しないSectionを[拒否/きょひ]する。"
+      cons sentence cons text "SectionにはHTML backendと" cons ruby text "同" text "おな" cons text "じ " cons code "n-" cons text " とIDのUTF-8 byte" cons ruby text "列" text "れつ" cons text "の" cons ruby text "小文字" text "こもじ" cons text "hexからなるanchorを" cons ruby text "付" text "つ" cons text "ける。" nil
+      cons "[追加/ついか]aliasとこれらのanchorの[衝突/しょうとつ]も[拒否/きょひ]する。"
+      cons sentence cons ruby text "固定" text "こてい" cons text "の " cons code "<a name=\"...\">" cons text " を" cons ruby text "見出" text "みだ" cons text "し" cons ruby text "前" text "まえ" cons text "に" cons ruby text "生成" text "せいせい" cons text "する。" nil
+      nil
+    cons paragraph
+      cons "aliasは[移行担当/いこうたんとう]が[原文/げんぶん]と[対応付/たいおうづ]けて[指定/してい]する。"
+      cons "この[生成操作/せいせいそうさ]だけではGitHub[等/とう]が[自動/じどう]で[付/つ]ける[見出/みだ]しanchorとの[衝突/しょうとつ]や、[他/た]ページからの[旧/きゅう]URLの[互換性/ごかんせい]を[保証/ほしょう]しない。"
+      cons "[正本切替/せいほんきりかえ]には、[対象/たいしょう]プラットフォームの[生成結果/せいせいけっか]で[全/ぜん]anchorとリンクを[独立/どくりつ]に[照合/しょうごう]する。"
+      cons "[自動/じどう]slugを[推測/すいそく]して[旧/きゅう]fragmentを[置/お]き[換/か]えない。"
+      cons "[本文/ほんぶん]・コード・[注釈/ちゅうしゃく]の[対応確認/たいおうかくにん]と、[実/じつ]ブラウザでの[表示/ひょうじ]・[移動確認/いどうかくにん]も[別途必要/べっとひつよう]である。"
+      nil
+    cons paragraph
+      cons "[型付/かたつ]きrenderは[同/おな]じ[有限/ゆうげん]Budgetで[準備/じゅんび]・URI[検査/けんさ]・[注釈走査/ちゅうしゃくそうさ]・[出力/しゅつりょく]を[行/おこな]う。"
+      cons "Work、Nodes、Depth、AllocationUnits、OutputBytesの[停止/ていし]とcancelを[保持/ほじ]し、[部分/ぶぶん]Markdownや[予算/よさん]を[初期化/しょきか]した[再試行/さいしこう]を[成功/せいこう]として[返/かえ]さない。"
+      cons "[本文/ほんぶん]は1MiBまで。"
+      cons "CLIはsourceを10MB、aliases[入力/にゅうりょく]を1MiBまで[読/よ]み、[入力/にゅうりょく]pathをUTF-8・4096byte[以下/いか]に[制限/せいげん]する。"
+      cons "source byte[列/れつ]、aliasesの[元/もと]JSON byte[列/れつ]、Documentのdigestとrenderer[版/ばん]をcommentへ[記録/きろく]する。"
+      cons "すべての[生成検査/せいせいけんさ]の[後/あと]に[新/しん]fileだけを[作/つく]り、[既存/きそん]fileを[上書/うわが]きしない。"
+      cons "I/O[途中/とちゅう]の[失敗/しっぱい]は[未完成/みかんせい]fileを[残/のこ]す[場合/ばあい]がある。"
+      cons "[公開/こうかい]・[移行/いこう]registryの[切替/きりかえ]・[他/た]ページの[生成/せいせい]はこの[操作/そうさ]に[含/ふく]めない。"
+      nil
+    nil
   nil
