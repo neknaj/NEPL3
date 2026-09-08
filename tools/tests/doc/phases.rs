@@ -142,6 +142,13 @@ fn phase_manifest_requires_complete_finite_records() -> Result<(), String> {
         let raw =
             format!("{{\"version\":1,\"pages\":[],\"{field}\":{limits},\"{field}\":{limits}}}");
         assert!(serde_json::from_str::<pages::Manifest>(&raw).is_err());
+        let raw = format!("{{\"version\":1,\"pages\":[],\"{field}\":{limits}}}");
+        let work = format!("\"work\":{}", OperationLimits::default().work);
+        for replacement in ["\"work\":18446744073709551616", "\"work\":1,\"work\":2"] {
+            let invalid = raw.replace(&work, replacement);
+            assert_ne!(raw, invalid);
+            assert!(serde_json::from_str::<pages::Manifest>(&invalid).is_err());
+        }
     }
     Ok(())
 }
