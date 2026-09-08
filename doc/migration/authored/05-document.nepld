@@ -2,259 +2,259 @@ article ja "05. Doc[言語/げんご]"
 body
   cons section policy "[方針/ほうしん]" body
     cons paragraph
-      cons "本文の階層、文単位の翻訳対応、inlineの注釈を独立した構造として扱う。"
-      cons "sentence literalとprefix constructorを同じ意味モデルへlowerする。"
-      cons "source表記は別に保持する。" nil
+      cons "[本文/ほんぶん]の[階層/かいそう]、[文単位/ぶんたんい]の[翻訳対応/ほんやくたいおう]、inlineの[注釈/ちゅうしゃく]を[独立/どくりつ]した[構造/こうぞう]として[扱/あつか]う。"
+      cons "sentence literalとprefix constructorを[同/おな]じ[意味/いみ]モデルへlowerする。"
+      cons "source[表記/ひょうき]は[別/べつ]に[保持/ほじ]する。" nil
     nil
   cons section types "1. [主要/しゅよう]な[型/かた]" body
     cons paragraph
       cons "Article(language, title:Sentence, body:Body)。"
-      cons "BodyはBlockの列。"
+      cons "BodyはBlockの[列/れつ]。"
       cons "BlockはParagraph、Section、DisplayMath、CircuitFigure、Code、Table、List、RawCode、Image。"
-      cons "ParagraphはFlowの列。"
-      cons "FlowはSentence、ParallelとBlockの各variant。"
-      cons "したがってParagraphを再帰的に含められる。"
-      cons "SentenceはInlineの列。"
-      cons "Parallelは2個以上のVariant(language, sentence)の列。"
-      cons "VariantへParagraphやParallelは入れられない。"
+      cons "ParagraphはFlowの[列/れつ]。"
+      cons "FlowはSentence、ParallelとBlockの[各/かく]variant。"
+      cons "したがってParagraphを[再帰的/さいきてき]に[含/ふく]められる。"
+      cons "SentenceはInlineの[列/れつ]。"
+      cons "Parallelは2[個以上/こいじょう]のVariant(language, sentence)の[列/れつ]。"
+      cons "VariantへParagraphやParallelは[入/い]れられない。"
       cons "InlineはText、Concat、Ruby(base,reading)、Anno(base,notes)、InlineMath、Anchor(id,label)、Reference(target,label)、Emphasis、Strong、Break、Link、InlineCode、InlineImage。" nil
     cons paragraph
-      cons "全signatureはdoc-signaturesを参照。"
-      cons "bare quoted文字列をSentence/Flowの位置で読むとSentenceLiteralになる。"
-      cons sentence cons code "text" cons text " の子は通常Textであり、その内部の " cons code "[" cons text " や " cons code "{" cons text " を注釈と解釈しない。" nil nil
+      cons "[全/ぜん]signatureはdoc-signaturesを[参照/さんしょう]。"
+      cons "bare quoted[文字列/もじれつ]をSentence/Flowの[位置/いち]で[読/よ]むとSentenceLiteralになる。"
+      cons sentence cons code "text" cons text " の" cons ruby text "子" text "こ" cons text "は" cons ruby text "通常" text "つうじょう" cons text "Textであり、その" cons ruby text "内部" text "ないぶ" cons text "の " cons code "[" cons text " や " cons code "{" cons text " を" cons ruby text "注釈" text "ちゅうしゃく" cons text "と" cons ruby text "解釈" text "かいしゃく" cons text "しない。" nil nil
     cons section arena "1.1 [意味/いみ]モデルと[公開/こうかい]arena" body
       cons paragraph
-        cons sentence cons code "interfaces/model.json" cons text " の " cons code "Doc:*" cons text " recordと " cons code "Doc/*" cons text " unionはconstructorの論理的な意味展開であり、独立した再帰wire layoutではない。" nil
-        cons sentence cons text "Doc操作で送受信する値の正本は " cons code "interfaces/doc.json" cons text " の " cons code "DocumentSyntax" cons text " / " cons code "DocValue" cons text "。" nil
-        cons sentence cons code "DocValue.nodes" cons text " の各 " cons code "DocNode.kind" cons text " がconstructorを表し、子はカテゴリ別のindex参照を使う。" nil
-        cons "Rust enumの並びをwire tagへ転用せず、schemaの明示variant名とfield列を対応させる。" nil
+        cons sentence cons code "interfaces/model.json" cons text " の " cons code "Doc:*" cons text " recordと " cons code "Doc/*" cons text " unionはconstructorの" cons ruby text "論理的" text "ろんりてき" cons text "な" cons ruby text "意味展開" text "いみてんかい" cons text "であり、" cons ruby text "独立" text "どくりつ" cons text "した" cons ruby text "再帰" text "さいき" cons text "wire layoutではない。" nil
+        cons sentence cons text "Doc" cons ruby text "操作" text "そうさ" cons text "で" cons ruby text "送受信" text "そうじゅしん" cons text "する" cons ruby text "値" text "あたい" cons text "の" cons ruby text "正本" text "せいほん" cons text "は " cons code "interfaces/doc.json" cons text " の " cons code "DocumentSyntax" cons text " / " cons code "DocValue" cons text "。" nil
+        cons sentence cons code "DocValue.nodes" cons text " の" cons ruby text "各" text "かく" cons text " " cons code "DocNode.kind" cons text " がconstructorを" cons ruby text "表" text "あらわ" cons text "し、" cons ruby text "子" text "こ" cons text "はカテゴリ" cons ruby text "別" text "べつ" cons text "のindex" cons ruby text "参照" text "さんしょう" cons text "を" cons ruby text "使" text "つか" cons text "う。" nil
+        cons "Rust enumの[並/なら]びをwire tagへ[転用/てんよう]せず、schemaの[明示/めいじ]variant[名/めい]とfield[列/れつ]を[対応/たいおう]させる。" nil
       cons paragraph
-        cons sentence cons text "Article以外のBody、Block、Flow、Sentence、Inline、Variant、Row、ListItem、MathGuest、CircuitGuest、Guestも明示 " cons code "DocRoot" cons text " として単独のfragmentを構成できる。" nil
-        cons "Alignment、ListStyle、Check、LinkTarget、Asset、OptionalRow、OptionalSentence、OptionalTextは表層の固定arity補助constructorである。"
-        cons "単独lower時には対応するarena wrapperをrootとする。"
-        cons "親constructorのoperandである場合はAlignment、ListKind、Option、LinkTarget、AssetRefという型付き値へ取り込み、補助wrapperを意味的な子として残さない。"
-        cons "元operandのView、Origin、source byte宣言はこの取り込みで破棄しない。"
-        cons sentence cons text "Optionやlistの暗黙文法は導入せず、signatureにある " cons code "none" cons text " / " cons code "some" cons text "、" cons code "cons" cons text " / " cons code "nil" cons text " を読む。" nil nil
+        cons sentence cons text "Article" cons ruby text "以外" text "いがい" cons text "のBody、Block、Flow、Sentence、Inline、Variant、Row、ListItem、MathGuest、CircuitGuest、Guestも" cons ruby text "明示" text "めいじ" cons text " " cons code "DocRoot" cons text " として" cons ruby text "単独" text "たんどく" cons text "のfragmentを" cons ruby text "構成" text "こうせい" cons text "できる。" nil
+        cons "Alignment、ListStyle、Check、LinkTarget、Asset、OptionalRow、OptionalSentence、OptionalTextは[表層/ひょうそう]の[固定/こてい]arity[補助/ほじょ]constructorである。"
+        cons "[単独/たんどく]lower[時/じ]には[対応/たいおう]するarena wrapperをrootとする。"
+        cons "[親/おや]constructorのoperandである[場合/ばあい]はAlignment、ListKind、Option、LinkTarget、AssetRefという[型付/かたつ]き[値/あたい]へ[取/と]り[込/こ]み、[補助/ほじょ]wrapperを[意味的/いみてき]な[子/こ]として[残/のこ]さない。"
+        cons "[元/もと]operandのView、Origin、source byte[宣言/せんげん]はこの[取/と]り[込/こ]みで[破棄/はき]しない。"
+        cons sentence cons text "Optionやlistの" cons ruby text "暗黙文法" text "あんもくぶんぽう" cons text "は" cons ruby text "導入" text "どうにゅう" cons text "せず、signatureにある " cons code "none" cons text " / " cons code "some" cons text "、" cons code "cons" cons text " / " cons code "nil" cons text " を" cons ruby text "読" text "よ" cons text "む。" nil nil
       cons paragraph
-        cons "arenaの構造検査はroot/childカテゴリ、index範囲、循環、到達性、注釈内容、表の列数等を検査する。"
-        cons "共有DAGを許すが全経路の最大Depthを検査し、ForeignClosureの内側深さもその所有nodeまでの深さに合成する。"
-        cons "この構造proofはlabel解決、guest意味check、PreparedArticleを意味しない。"
-        cons sentence cons text "tokenごとのViewは " cons code "DocView.head" cons text " に束縛し、ViewRefとrelationのID空間をtoken間で混ぜない。" nil
-        cons "Text正規化後も元ViewとOriginを保存する。"
-        cons "sourceを持つTextとsource-less Textを結合する場合、後者を明示Synthetic OriginとしてCompositeに含め、既知spanを全体のspanに偽装しない。" nil
+        cons "arenaの[構造検査/こうぞうけんさ]はroot/childカテゴリ、index[範囲/はんい]、[循環/じゅんかん]、[到達性/とうたつせい]、[注釈内容/ちゅうしゃくないよう]、[表/ひょう]の[列数等/れつすうなど]を[検査/けんさ]する。"
+        cons "[共有/きょうゆう]DAGを[許/ゆる]すが[全経路/ぜんけいろ]の[最大/さいだい]Depthを[検査/けんさ]し、ForeignClosureの[内側深/うちがわふか]さもその[所有/しょゆう]nodeまでの[深/ふか]さに[合成/ごうせい]する。"
+        cons "この[構造/こうぞう]proofはlabel[解決/かいけつ]、guest[意味/いみ]check、PreparedArticleを[意味/いみ]しない。"
+        cons sentence cons text "tokenごとのViewは " cons code "DocView.head" cons text " に" cons ruby text "束縛" text "そくばく" cons text "し、ViewRefとrelationのID" cons ruby text "空間" text "くうかん" cons text "をtoken" cons ruby text "間" text "かん" cons text "で" cons ruby text "混" text "ま" cons text "ぜない。" nil
+        cons "Text[正規化後/せいきかご]も[元/もと]ViewとOriginを[保存/ほぞん]する。"
+        cons "sourceを[持/も]つTextとsource-less Textを[結合/けつごう]する[場合/ばあい]、[後者/こうしゃ]を[明示/めいじ]Synthetic OriginとしてCompositeに[含/ふく]め、[既知/きち]spanを[全体/ぜんたい]のspanに[偽装/ぎそう]しない。" nil
       nil
     cons section elements "1.2 [文書入力/ぶんしょにゅうりょく]に[必要/ひつよう]な[要素/ようそ]" body
       cons paragraph
-        cons "DG01のTableは列ごとのDefault/Left/Center/Right、任意header、順序付きRowを持つ。"
-        cons "全Rowのcell数は列数と一致する。"
-        cons "cellはSentenceであり空Sentenceも明示値として許す。"
-        cons "ゼロ列のTableは構造上の空表として表現可能で、内容のある列を補わない。" nil
+        cons "DG01のTableは[列/れつ]ごとのDefault/Left/Center/Right、[任意/にんい]header、[順序付/じゅんじょつ]きRowを[持/も]つ。"
+        cons "[全/ぜん]Rowのcell[数/すう]は[列数/れつすう]と[一致/いっち]する。"
+        cons "cellはSentenceであり[空/くう]Sentenceも[明示値/めいじち]として[許/ゆる]す。"
+        cons "ゼロ[列/れつ]のTableは[構造上/こうぞうじょう]の[空表/くうひょう]として[表現可能/ひょうげんかのう]で、[内容/ないよう]のある[列/れつ]を[補/おぎな]わない。" nil
       cons paragraph
-        cons "DG02のListはUnorderedまたはOrdered(start:Nat)を明示し、ListItemは任意のchecked状態とBodyを持つ。"
-        cons "Bodyを介した入れ子を保持する。"
-        cons "Orderedのstartは公開arenaのU64で表せる範囲をlower時に検査し、範囲外を丸めない。" nil
+        cons "DG02のListはUnorderedまたはOrdered(start:Nat)を[明示/めいじ]し、ListItemは[任意/にんい]のchecked[状態/じょうたい]とBodyを[持/も]つ。"
+        cons "Bodyを[介/かい]した[入/い]れ[子/こ]を[保持/ほじ]する。"
+        cons "Orderedのstartは[公開/こうかい]arenaのU64で[表/あらわ]せる[範囲/はんい]をlower[時/じ]に[検査/けんさ]し、[範囲外/はんいがい]を[丸/まる]めない。" nil
       cons paragraph
-        cons "DG03のLinkはPage(page,fragment)、Relative(path,fragment)、External(uri)を区別し、表示labelを保持する。"
-        cons "DG06のSection/Anchor/Referenceのarticle内IDとは区別し、ページ名、外部URI、相対pathを同じ名前空間で自動解決しない。"
-        cons "公開URIへの写像とリンク解決はcheck/prepare側の明示入力であり、構造値だけからファイル読出し権限や安全なHTML属性を得ない。" nil
+        cons "DG03のLinkはPage(page,fragment)、Relative(path,fragment)、External(uri)を[区別/くべつ]し、[表示/ひょうじ]labelを[保持/ほじ]する。"
+        cons "DG06のSection/Anchor/Referenceのarticle[内/ない]IDとは[区別/くべつ]し、ページ[名/めい]、[外部/がいぶ]URI、[相対/そうたい]pathを[同/おな]じ[名前空間/なまえくうかん]で[自動解決/じどうかいけつ]しない。"
+        cons "[公開/こうかい]URIへの[写像/しゃぞう]とリンク[解決/かいけつ]はcheck/prepare[側/がわ]の[明示入力/めいじにゅうりょく]であり、[構造値/こうぞうち]だけからファイル[読出/よみだ]し[権限/けんげん]や[安全/あんぜん]なHTML[属性/ぞくせい]を[得/え]ない。" nil
       cons paragraph
-        cons "DG04のInlineCodeとRawCodeは意味解析しないTextを保持する。"
-        cons "RawCodeのlanguageHintは任意の表示情報で、parserや評価器の自動実行要求ではない。"
-        cons "DG05のImage/InlineImageはAssetRef(id,任意digest)とaltを持ち、block画像は任意captionを持つ。"
-        cons "表層のdigestはOptionalTextの64桁hexを32byteのDigestへlowerし、無効な桁数・文字を拒否する。"
-        cons "assetの読出し、digest照合、表示準備は別の解決操作で行う。"
-        cons "RawHtmlは追加しない。" nil
+        cons "DG04のInlineCodeとRawCodeは[意味解析/いみかいせき]しないTextを[保持/ほじ]する。"
+        cons "RawCodeのlanguageHintは[任意/にんい]の[表示情報/ひょうじじょうほう]で、parserや[評価器/ひょうかき]の[自動実行要求/じどうじっこうようきゅう]ではない。"
+        cons "DG05のImage/InlineImageはAssetRef(id,[任意/にんい]digest)とaltを[持/も]ち、block[画像/がぞう]は[任意/にんい]captionを[持/も]つ。"
+        cons "[表層/ひょうそう]のdigestはOptionalTextの64[桁/けた]hexを32byteのDigestへlowerし、[無効/むこう]な[桁数/けたすう]・[文字/もじ]を[拒否/きょひ]する。"
+        cons "assetの[読出/よみだ]し、digest[照合/しょうごう]、[表示準備/ひょうじじゅんび]は[別/べつ]の[解決操作/かいけつそうさ]で[行/おこな]う。"
+        cons "RawHtmlは[追加/ついか]しない。" nil
       cons paragraph
-        cons sentence cons text "この要素選択はmain " cons code "b5295cef655aa59affffd6644f2902268d071953" cons text " の文書入力監査（inventory SHA-256 " cons code "daf94085913930f05c1655d2adbef4f56651864f9a97ac4d261400449c98499e" cons text "）に基づく。" nil
-        cons "61 Markdown、52表/1283cell、39list/233item、1134 inline code、12 code block、249link、1imageを含む。"
-        cons sentence cons text "監査は実装中差分やrustdocの意味監査の完了を示さず、実装済み操作は " cons code "implementation-status.json" cons text " と実行済み受入で区別する。" nil nil
+        cons sentence cons text "この" cons ruby text "要素選択" text "ようそせんたく" cons text "はmain " cons code "b5295cef655aa59affffd6644f2902268d071953" cons text " の" cons ruby text "文書入力監査" text "ぶんしょにゅうりょくかんさ" cons text "（inventory SHA-256 " cons code "daf94085913930f05c1655d2adbef4f56651864f9a97ac4d261400449c98499e" cons text "）に" cons ruby text "基" text "もと" cons text "づく。" nil
+        cons "61 Markdown、52[表/ひょう]/1283cell、39list/233item、1134 inline code、12 code block、249link、1imageを[含/ふく]む。"
+        cons sentence cons ruby text "監査" text "かんさ" cons text "は" cons ruby text "実装中差分" text "じっそうちゅうさぶん" cons text "やrustdocの" cons ruby text "意味監査" text "いみかんさ" cons text "の" cons ruby text "完了" text "かんりょう" cons text "を" cons ruby text "示" text "しめ" cons text "さず、" cons ruby text "実装済" text "じっそうず" cons text "み" cons ruby text "操作" text "そうさ" cons text "は " cons code "implementation-status.json" cons text " と" cons ruby text "実行済" text "じっこうず" cons text "み" cons ruby text "受入" text "うけいれ" cons text "で" cons ruby text "区別" text "くべつ" cons text "する。" nil nil
       nil
     cons section inspection "1.3 [文書準備/ぶんしょじゅんび]の[要求発見/ようきゅうはっけん]" body
       cons paragraph
-        cons sentence cons code "prepare::inspect" cons text " はArticleの構造・source閉包・article内labelを検査し、" cons code "DocPreparationPlan" cons text " を返す。" nil
-        cons "これは必要な外部入力の列挙であり、完全なPreparedArticleではない。"
-        cons "全Parallel variantを対象とし、表示言語の選択やguest操作を実行しない。" nil
+        cons sentence cons code "prepare::inspect" cons text " はArticleの" cons ruby text "構造" text "こうぞう" cons text "・source" cons ruby text "閉包" text "へいほう" cons text "・article" cons ruby text "内" text "ない" cons text "labelを" cons ruby text "検査" text "けんさ" cons text "し、" cons code "DocPreparationPlan" cons text " を" cons ruby text "返" text "かえ" cons text "す。" nil
+        cons "これは[必要/ひつよう]な[外部入力/がいぶにゅうりょく]の[列挙/れっきょ]であり、[完全/かんぜん]なPreparedArticleではない。"
+        cons "[全/ぜん]Parallel variantを[対象/たいしょう]とし、[表示言語/ひょうじげんご]の[選択/せんたく]やguest[操作/そうさ]を[実行/じっこう]しない。" nil
       cons paragraph
-        cons sentence cons text "planは " cons code "documentDigest" cons text " と順序付き " cons code "requirements" cons text " を持つ。" nil
-        cons "Linkは意味node indexと元LinkTarget、Assetは意味node indexと元AssetRef、ForeignはEmbedRef・EmbedKind・guestDigestを持つ。"
-        cons "Link/Assetはarena順に一度ずつ列挙し、その後owner embed表順にForeignを列挙する。"
-        cons "同じ資源を参照する別nodeは別の要求であり、共有nodeの表示出現ごとには増やさない。"
-        cons "Codeも構文のままForeignとして保持し、意味エラーを含む例の表示を可能にする。" nil
+        cons sentence cons text "planは " cons code "documentDigest" cons text " と" cons ruby text "順序付" text "じゅんじょつ" cons text "き " cons code "requirements" cons text " を" cons ruby text "持" text "も" cons text "つ。" nil
+        cons "Linkは[意味/いみ]node indexと[元/もと]LinkTarget、Assetは[意味/いみ]node indexと[元/もと]AssetRef、ForeignはEmbedRef・EmbedKind・guestDigestを[持/も]つ。"
+        cons "Link/Assetはarena[順/じゅん]に[一度/いちど]ずつ[列挙/れっきょ]し、その[後/ご]owner embed[表順/ひょうじゅん]にForeignを[列挙/れっきょ]する。"
+        cons "[同/おな]じ[資源/しげん]を[参照/さんしょう]する[別/べつ]nodeは[別/べつ]の[要求/ようきゅう]であり、[共有/きょうゆう]nodeの[表示出現/ひょうじしゅつげん]ごとには[増/ふ]やさない。"
+        cons "Codeも[構文/こうぶん]のままForeignとして[保持/ほじ]し、[意味/いみ]エラーを[含/ふく]む[例/れい]の[表示/ひょうじ]を[可能/かのう]にする。" nil
       cons paragraph
         cons sentence cons text "documentDigestは " cons code "SHA-256(\"NEPL3.Doc.Prepare.Document.v1\\0\" || canonical-NDF/1-CBOR(DocumentSyntax))" cons text "、guestDigestは " cons code "SHA-256(\"NEPL3.Doc.Prepare.Guest.v1\\0\" || canonical-NDF/1-CBOR(ForeignClosure))" cons text "。" nil
         cons sentence cons text "domainの " cons code "\\0" cons text " はゼロbyte、digestは32byte。" nil
-        cons "owner環境・source・Originを含め、型名やURIだけをidentityにしない。"
-        cons "Doc nodeとOrigin IDは保持し、共通codecのsource表順・guest NodeRef正準化に従う。" nil
+        cons "owner[環境/かんきょう]・source・Originを[含/ふく]め、[型名/かためい]やURIだけをidentityにしない。"
+        cons "Doc nodeとOrigin IDは[保持/ほじ]し、[共通/きょうつう]codecのsource[表順/ひょうじゅん]・guest NodeRef[正準化/せいじゅんか]に[従/したが]う。" nil
       cons paragraph
-        cons "portable planの送受信には対象DocumentSyntaxを明示し、同じ検査と要求列挙を再実行して全fieldを比較する。"
-        cons "schema-validでも古い文書、欠落/追加/重複/順序違い、異なるnode/guest/digestを拒否する。"
-        cons "source admissionとBudgetを操作内で共有し、停止は元StopReasonを保持する。"
-        cons "native helperのPreparationErrorは構造/label/boundary/停止を区別するが、完全なcheck/prepareのReport操作包絡として広告しない。" nil
+        cons "portable planの[送受信/そうじゅしん]には[対象/たいしょう]DocumentSyntaxを[明示/めいじ]し、[同/おな]じ[検査/けんさ]と[要求列挙/ようきゅうれっきょ]を[再実行/さいじっこう]して[全/ぜん]fieldを[比較/ひかく]する。"
+        cons "schema-validでも[古/ふる]い[文書/ぶんしょ]、[欠落/けつらく]/[追加/ついか]/[重複/じゅうふく]/[順序違/じゅんじょちが]い、[異/こと]なるnode/guest/digestを[拒否/きょひ]する。"
+        cons "source admissionとBudgetを[操作内/そうさない]で[共有/きょうゆう]し、[停止/ていし]は[元/もと]StopReasonを[保持/ほじ]する。"
+        cons "native helperのPreparationErrorは[構造/こうぞう]/label/boundary/[停止/ていし]を[区別/くべつ]するが、[完全/かんぜん]なcheck/prepareのReport[操作包絡/そうさほうらく]として[広告/こうこく]しない。" nil
       cons paragraph
-        cons "この発見段階はURIの安全性、page/fragmentの存在、asset byte列・MIME・digestの適合、guest生成物や表示言語の準備を証明しない。"
-        cons "後続prepareで明示資源・解決結果を同じdocument/guest identityへ束縛し、必要条件がすべて満たされてからHTML backendへ渡す。" nil
+        cons "この[発見段階/はっけんだんかい]はURIの[安全性/あんぜんせい]、page/fragmentの[存在/そんざい]、asset byte[列/れつ]・MIME・digestの[適合/てきごう]、guest[生成物/せいせいぶつ]や[表示言語/ひょうじげんご]の[準備/じゅんび]を[証明/しょうめい]しない。"
+        cons "[後続/こうぞく]prepareで[明示資源/めいじしげん]・[解決結果/かいけつけっか]を[同/おな]じdocument/guest identityへ[束縛/そくばく]し、[必要条件/ひつようじょうけん]がすべて[満/み]たされてからHTML backendへ[渡/わた]す。" nil
       nil
     nil
   cons section literal "2. sentence literalの[完全/かんぜん]な[規則/きそく]" body
-    cons paragraph cons "説明用EBNF:" nil
+    cons paragraph cons "[説明用/せつめいよう]EBNF:" nil
     cons rawcode some "text" "SentenceLiteral = '\"' InlineSequence '\"'\nInlineSequence  = InlineItem*\nInlineItem      = TextRun | Escape | Ruby | Anno\nRuby            = '[' NonemptySequence '/' NonemptySequence ']'\nAnno            = '{' NonemptySequence ('/' NonemptySequence)+ '}'\n"
     cons paragraph
-      cons "InlineSequenceの終端集合は呼出し位置で決まる。"
-      cons sentence cons text "topでは未escapeの " cons code "\"" cons text "、Rubyのbaseでは " cons code "/" cons text "、readingでは " cons code "]" cons text "、Annoの各fieldでは " cons code "/" cons text " または " cons code "}" cons text "。" nil
-      cons sentence cons text "入れ子のRuby/Annoは一つのInlineItemとして読むため、内側の " cons code "/" cons text " を外側の区切りにしない。" nil nil
+      cons "InlineSequenceの[終端集合/しゅうたんしゅうごう]は[呼出/よびだ]し[位置/いち]で[決/き]まる。"
+      cons sentence cons text "topでは" cons ruby text "未" text "み" cons text "escapeの " cons code "\"" cons text "、Rubyのbaseでは " cons code "/" cons text "、readingでは " cons code "]" cons text "、Annoの" cons ruby text "各" text "かく" cons text "fieldでは " cons code "/" cons text " または " cons code "}" cons text "。" nil
+      cons sentence cons ruby text "入" text "い" cons text "れ" cons ruby text "子" text "こ" cons text "のRuby/Annoは" cons ruby text "一" text "ひと" cons text "つのInlineItemとして" cons ruby text "読" text "よ" cons text "むため、" cons ruby text "内側" text "うちがわ" cons text "の " cons code "/" cons text " を" cons ruby text "外側" text "そとがわ" cons text "の" cons ruby text "区切" text "くぎ" cons text "りにしない。" nil nil
     cons paragraph
-      cons sentence cons text "未escapeの " cons code "[" cons text " と " cons code "{" cons text " は常に注釈開始。" nil
-      cons sentence cons text "対応しない " cons code "]" cons text " / " cons code "}" cons text " はエラー。" nil
-      cons sentence cons text "topの " cons code "/" cons text " は通常文字。" nil
-      cons sentence cons text "注釈field内のliteral " cons code "/" cons text " は " cons code "\\/" cons text " と書く。" nil
-      cons "Rubyはtop-level separatorがちょうど一つ。"
-      cons "Annoは一つ以上。" nil
+      cons sentence cons ruby text "未" text "み" cons text "escapeの " cons code "[" cons text " と " cons code "{" cons text " は" cons ruby text "常" text "つね" cons text "に" cons ruby text "注釈開始" text "ちゅうしゃくかいし" cons text "。" nil
+      cons sentence cons ruby text "対応" text "たいおう" cons text "しない " cons code "]" cons text " / " cons code "}" cons text " はエラー。" nil
+      cons sentence cons text "topの " cons code "/" cons text " は" cons ruby text "通常文字" text "つうじょうもじ" cons text "。" nil
+      cons sentence cons ruby text "注釈" text "ちゅうしゃく" cons text "field" cons ruby text "内" text "ない" cons text "のliteral " cons code "/" cons text " は " cons code "\\/" cons text " と" cons ruby text "書" text "か" cons text "く。" nil
+      cons "Rubyはtop-level separatorがちょうど[一/ひと]つ。"
+      cons "Annoは[一/ひと]つ[以上/いじょう]。" nil
     cons paragraph
-      cons sentence cons text "escapeは通常Textのものに加え " cons code "\\[" cons text "、" cons code "\\]" cons text "、" cons code "\\{" cons text "、" cons code "\\}" cons text "、" cons code "\\/" cons text "。" nil
-      cons "escapeの出力を改めて注釈開始として解析しない。"
-      cons sentence cons text "直接のCR/LFは禁止、" cons code "\\n" cons text " は内容の改行。" nil
-      cons "EOF・改行・終了引用符に達した時点で閉じていない注釈は、その開始位置をrelatedに持つUnclosedAnnotation。" nil
+      cons sentence cons text "escapeは" cons ruby text "通常" text "つうじょう" cons text "Textのものに" cons ruby text "加" text "くわ" cons text "え " cons code "\\[" cons text "、" cons code "\\]" cons text "、" cons code "\\{" cons text "、" cons code "\\}" cons text "、" cons code "\\/" cons text "。" nil
+      cons "escapeの[出力/しゅつりょく]を[改/あらた]めて[注釈開始/ちゅうしゃくかいし]として[解析/かいせき]しない。"
+      cons sentence cons ruby text "直接" text "ちょくせつ" cons text "のCR/LFは" cons ruby text "禁止" text "きんし" cons text "、" cons code "\\n" cons text " は" cons ruby text "内容" text "ないよう" cons text "の" cons ruby text "改行" text "かいぎょう" cons text "。" nil
+      cons "EOF・[改行/かいぎょう]・[終了引用符/しゅうりょういんようふ]に[達/たっ]した[時点/じてん]で[閉/と]じていない[注釈/ちゅうしゃく]は、その[開始位置/かいしいち]をrelatedに[持/も]つUnclosedAnnotation。" nil
     cons paragraph
-      cons "Nonemptyはlower後に可視内容が存在すること。"
-      cons "空Textや空Concatだけのbase/reading/noteはEmptyAnnotationPart。"
-      cons "Annoのnotesは非空。"
-      cons "Sentence自体は空を許す。" nil
+      cons "Nonemptyはlower[後/ご]に[可視内容/かしないよう]が[存在/そんざい]すること。"
+      cons "[空/くう]Textや[空/くう]Concatだけのbase/reading/noteはEmptyAnnotationPart。"
+      cons "Annoのnotesは[非空/ひくう]。"
+      cons "Sentence[自体/じたい]は[空/から]を[許/ゆる]す。" nil
     cons paragraph
-      cons "ここで可視内容はfontや描画幅に依存させず、保持する内容で判定する。"
-      cons "Text（および明示inline code）は非空なら内容を持ち、空白だけのTextやescapeで生成した改行も含める。"
-      cons "明示Break、InlineMath、inline画像は表示要素として内容を持つ。"
-      cons "Concatは子のいずれか、装飾・Anchor・Reference・Linkはlabel/子、Ruby/Annoはbaseの内容を用いる。"
-      cons "空要素を隠れた空白へ補うことはない。"
-      cons "literal、prefix、portable constructorは同じ判定を用いる。" nil
+      cons "ここで[可視内容/かしないよう]はfontや[描画幅/びょうがはば]に[依存/いぞん]させず、[保持/ほじ]する[内容/ないよう]で[判定/はんてい]する。"
+      cons "Text（および[明示/めいじ]inline code）は[非空/ひくう]なら[内容/ないよう]を[持/も]ち、[空白/くうはく]だけのTextやescapeで[生成/せいせい]した[改行/かいぎょう]も[含/ふく]める。"
+      cons "[明示/めいじ]Break、InlineMath、inline[画像/がぞう]は[表示要素/ひょうじようそ]として[内容/ないよう]を[持/も]つ。"
+      cons "Concatは[子/こ]のいずれか、[装飾/そうしょく]・Anchor・Reference・Linkはlabel/[子/こ]、Ruby/Annoはbaseの[内容/ないよう]を[用/もち]いる。"
+      cons "[空要素/くうようそ]を[隠/かく]れた[空白/くうはく]へ[補/おぎな]うことはない。"
+      cons "literal、prefix、portable constructorは[同/おな]じ[判定/はんてい]を[用/もち]いる。" nil
     cons paragraph
-      cons sentence cons text "例: " cons code "\"これは{[文書/ぶんしょ]/document}を記述する。\"" cons text " はText + Anno(Ruby(...),[Text]) + Text。" nil nil
+      cons sentence cons ruby text "例" text "れい" cons text ": " cons code "\"これは{[文書/ぶんしょ]/document}を記述する。\"" cons text " はText + Anno(Ruby(...),[Text]) + Text。" nil nil
     cons section linebreak "2.1. [文書構造/ぶんしょこうぞう]の[明示改行/めいじかいぎょう]" body
       cons paragraph
-        cons sentence cons text "前置構文の " cons code "break" cons text "（Doc/Inline、arity 0）はDoc.Breakを構築する。" nil
-        cons "同じSentence内の明示的な改行であり、新しいSentence・Paragraph・Parallel variantを作らない。"
-        cons sentence cons text "例えば " cons code "sentence cons text \"a\" cons break cons text \"b\" nil" cons text " と書く。" nil
-        cons sentence cons text "HTMLは" cons code "br" cons text "、plain_textはLFを出力し、source printerは" cons code "break" cons text "を保持する。" nil nil
+        cons sentence cons ruby text "前置構文" text "ぜんちこうぶん" cons text "の " cons code "break" cons text "（Doc/Inline、arity 0）はDoc.Breakを" cons ruby text "構築" text "こうちく" cons text "する。" nil
+        cons "[同/おな]じSentence[内/ない]の[明示的/めいじてき]な[改行/かいぎょう]であり、[新/あたら]しいSentence・Paragraph・Parallel variantを[作/つく]らない。"
+        cons sentence cons ruby text "例" text "たと" cons text "えば " cons code "sentence cons text \"a\" cons break cons text \"b\" nil" cons text " と" cons ruby text "書" text "か" cons text "く。" nil
+        cons sentence cons text "HTMLは" cons code "br" cons text "、plain_textはLFを" cons ruby text "出力" text "しゅつりょく" cons text "し、source printerは" cons code "break" cons text "を" cons ruby text "保持" text "ほじ" cons text "する。" nil nil
       cons paragraph
-        cons "著者が指定する文書の改行にはbreakを用いる。"
-        cons sentence cons text "Text中の" cons code "\\n" cons text "は文字データのLFとして保持する既存escapeであり、Break nodeを生成しない。" nil
-        cons "literalにはBreak constructorを追加せず、明示改行を含むSentenceは前置構築を使う。"
-        cons "TextのLF、明示Break、Paragraph境界、表示時の自動折返しを相互に推測変換しない。" nil
+        cons "[著者/ちょしゃ]が[指定/してい]する[文書/ぶんしょ]の[改行/かいぎょう]にはbreakを[用/もち]いる。"
+        cons sentence cons text "Text" cons ruby text "中" text "ちゅう" cons text "の" cons code "\\n" cons text "は" cons ruby text "文字" text "もじ" cons text "データのLFとして" cons ruby text "保持" text "ほじ" cons text "する" cons ruby text "既存" text "きそん" cons text "escapeであり、Break nodeを" cons ruby text "生成" text "せいせい" cons text "しない。" nil
+        cons "literalにはBreak constructorを[追加/ついか]せず、[明示改行/めいじかいぎょう]を[含/ふく]むSentenceは[前置構築/ぜんちこうちく]を[使/つか]う。"
+        cons "TextのLF、[明示/めいじ]Break、Paragraph[境界/きょうかい]、[表示時/ひょうじじ]の[自動折返/じどうおりかえ]しを[相互/そうご]に[推測変換/すいそくへんかん]しない。" nil
       nil
     nil
   cons section equivalence "3. prefix[経路/けいろ]との[等価性/とうかせい]" body
     cons rawcode some "text" "sentence\n  cons text \"これは\"\n  cons anno\n    ruby text \"文書\" text \"ぶんしょ\"\n    cons text \"document\" nil\n  cons text \"を記述する。\"\n  nil\n"
     cons paragraph
-      cons "上例と前節のliteralは、Origin/sourceを除いた意味正規形が等しい。"
-      cons "正規化はConcatの平坦化、空Textの除去、同じinline列内の隣接Textの結合だけ。"
-      cons "Ruby/Annoの境界、noteの順、明示Break、Math等の埋め込みは保存する。" nil
+      cons "[上例/じょうれい]と[前節/ぜんせつ]のliteralは、Origin/sourceを[除/のぞ]いた[意味正規形/いみせいきけい]が[等/ひと]しい。"
+      cons "[正規化/せいきか]はConcatの[平坦化/へいたんか]、[空/くう]Textの[除去/じょきょ]、[同/おな]じinline[列内/れつない]の[隣接/りんせつ]Textの[結合/けつごう]だけ。"
+      cons "Ruby/Annoの[境界/きょうかい]、noteの[順/じゅん]、[明示/めいじ]Break、Math[等/など]の[埋/う]め[込/こ]みは[保存/ほぞん]する。" nil
     cons paragraph
-      cons "受理済みSentenceLiteralとprefix constructorの混在lowerでは、literal payloadを明示DocumentSyntax schemaとpayload自身のsource宣言で検査する。"
-      cons "payloadの単一View owner/headと局所Viewは外tokenのものと一致し、意味nodeのSpanとOriginの位置は同じtoken head内、または明示SourceMapの全経路でその範囲内へ戻らなければならない。"
-      cons "別tokenのpayloadや、Viewだけを合わせて意味位置を別source・別範囲へ移した値は拒否する。"
-      cons "元テキストを再parseして意味値を推測し直さない。"
-      cons "外側構文のOrigin IDとtoken-local View IDは保持し、literal内のOrigin参照だけを結合後のarenaへ再配置する。"
-      cons "ForeignClosureのowner-local Originと環境digestにはこの再配置を適用しない。"
-      cons "source admissionは操作内で共有し、payload宣言の欠落をambient source storeから補わない。" nil
+      cons "[受理済/じゅりず]みSentenceLiteralとprefix constructorの[混在/こんざい]lowerでは、literal payloadを[明示/めいじ]DocumentSyntax schemaとpayload[自身/じしん]のsource[宣言/せんげん]で[検査/けんさ]する。"
+      cons "payloadの[単一/たんいつ]View owner/headと[局所/きょくしょ]Viewは[外/そと]tokenのものと[一致/いっち]し、[意味/いみ]nodeのSpanとOriginの[位置/いち]は[同/おな]じtoken head[内/ない]、または[明示/めいじ]SourceMapの[全経路/ぜんけいろ]でその[範囲内/はんいない]へ[戻/もど]らなければならない。"
+      cons "[別/べつ]tokenのpayloadや、Viewだけを[合/あ]わせて[意味位置/いみいち]を[別/べつ]source・[別範囲/べつはんい]へ[移/うつ]した[値/あたい]は[拒否/きょひ]する。"
+      cons "[元/もと]テキストを[再/さい]parseして[意味値/いみち]を[推測/すいそく]し[直/なお]さない。"
+      cons "[外側構文/そとがわこうぶん]のOrigin IDとtoken-local View IDは[保持/ほじ]し、literal[内/ない]のOrigin[参照/さんしょう]だけを[結合後/けつごうご]のarenaへ[再配置/さいはいち]する。"
+      cons "ForeignClosureのowner-local Originと[環境/かんきょう]digestにはこの[再配置/さいはいち]を[適用/てきよう]しない。"
+      cons "source admissionは[操作内/そうさない]で[共有/きょうゆう]し、payload[宣言/せんげん]の[欠落/けつらく]をambient source storeから[補/おぎな]わない。" nil
     cons paragraph
-      cons "意味値からliteralを出力するprinterはText/Ruby/Annoだけの表現ならescapeを行ってliteral化できる。"
-      cons "他のInlineがあればprefix構文を出力する。"
-      cons "内容を削除して無理にliteralにしない。"
-      cons "どちらでも再parse/lower後の意味が一致することを保証する。" nil
+      cons "[意味値/いみち]からliteralを[出力/しゅつりょく]するprinterはText/Ruby/Annoだけの[表現/ひょうげん]ならescapeを[行/おこな]ってliteral[化/か]できる。"
+      cons "[他/ほか]のInlineがあればprefix[構文/こうぶん]を[出力/しゅつりょく]する。"
+      cons "[内容/ないよう]を[削除/さくじょ]して[無理/むり]にliteralにしない。"
+      cons "どちらでも[再/さい]parse/lower[後/ご]の[意味/いみ]が[一致/いっち]することを[保証/ほしょう]する。" nil
     nil
   cons section parallel "4. parallelの[単位/たんい]" body
     cons paragraph
-      cons "Sentenceは著者が明示した対応単位であり、句読点を自動検出した自然言語学的な文ではない。"
-      cons "literal中に句点が二つあっても一つのSentence。"
-      cons "二つのSentenceに対応させたい場合は著者が別ノードにする。" nil
+      cons "Sentenceは[著者/ちょしゃ]が[明示/めいじ]した[対応単位/たいおうたんい]であり、[句読点/くとうてん]を[自動検出/じどうけんしゅつ]した[自然言語学的/しぜんげんごがくてき]な[文/ぶん]ではない。"
+      cons "literal[中/ちゅう]に[句点/くてん]が[二/ふた]つあっても[一/ひと]つのSentence。"
+      cons "[二/ふた]つのSentenceに[対応/たいおう]させたい[場合/ばあい]は[著者/ちょしゃ]が[別/べつ]ノードにする。" nil
     cons paragraph
-      cons "Parallelはvariantのlanguageがcase-insensitiveで重複しないこと、2variant以上であることを検査する。"
-      cons "空Sentenceは翻訳が空であるという明示値として許すが、missingと推測して他言語から補わない。"
-      cons "並び順はソース順。"
-      cons "各variantにCorrespondsTo relationを与え、名前束縛の同一性にはしない。" nil
+      cons "Parallelはvariantのlanguageがcase-insensitiveで[重複/じゅうふく]しないこと、2variant[以上/いじょう]であることを[検査/けんさ]する。"
+      cons "[空/くう]Sentenceは[翻訳/ほんやく]が[空/から]であるという[明示値/めいじち]として[許/ゆる]すが、missingと[推測/すいそく]して[他言語/たげんご]から[補/おぎな]わない。"
+      cons "[並/なら]び[順/じゅん]はソース[順/じゅん]。"
+      cons "[各/かく]variantにCorrespondsTo relationを[与/あた]え、[名前束縛/なまえそくばく]の[同一性/どういつせい]にはしない。" nil
     cons paragraph
-      cons "paragraphのネスト、節番号、HTMLの行折返しはこの対応を変更しない。"
-      cons "単一言語表示はRenderOptionsの指定languageに一致するvariantのみを選ぶ。"
-      cons "なければMissingVariantを返すか、明示されたFallbackLanguage順で選ぶ。"
-      cons "暗黙の先頭選択はしない。" nil
+      cons "paragraphのネスト、[節番号/せつばんごう]、HTMLの[行折返/ぎょうおりかえ]しはこの[対応/たいおう]を[変更/へんこう]しない。"
+      cons "[単一言語表示/たんいつげんごひょうじ]はRenderOptionsの[指定/してい]languageに[一致/いっち]するvariantのみを[選/えら]ぶ。"
+      cons "なければMissingVariantを[返/かえ]すか、[明示/めいじ]されたFallbackLanguage[順/じゅん]で[選/えら]ぶ。"
+      cons "[暗黙/あんもく]の[先頭選択/せんとうせんたく]はしない。" nil
     nil
   cons section labels "5. ラベルと[参照/さんしょう]" body
     cons paragraph
-      cons "Section.idとInline Anchor.idはarticleのDocLabel空間へ定義をexportする。"
-      cons "ネストしたparagraph/sectionも同じarticle内で集める。"
-      cons "重複はエラー。"
-      cons "Reference.targetはarticle内から解決し、前方参照を認める。"
-      cons "別articleやforeign言語へ暗黙にscopeを広げない。" nil
+      cons "Section.idとInline Anchor.idはarticleのDocLabel[空間/くうかん]へ[定義/ていぎ]をexportする。"
+      cons "ネストしたparagraph/sectionも[同/おな]じarticle[内/ない]で[集/あつ]める。"
+      cons "[重複/じゅうふく]はエラー。"
+      cons "Reference.targetはarticle[内/ない]から[解決/かいけつ]し、[前方参照/ぜんぽうさんしょう]を[認/みと]める。"
+      cons "[別/べつ]articleやforeign[言語/げんご]へ[暗黙/あんもく]にscopeを[広/ひろ]げない。" nil
     cons paragraph
-      cons "source上の名前の選択範囲と、定義全体の範囲を分ける。"
-      cons "Referenceは表示labelを持ち、参照先の見出し文字列を自動コピーしない。"
-      cons sentence cons text "HTML idは " cons code "n-" cons text " + UTF-8 byteの小文字hexとし、任意の名前から衝突なく生成する。" nil nil
+      cons "source[上/じょう]の[名前/なまえ]の[選択範囲/せんたくはんい]と、[定義全体/ていぎぜんたい]の[範囲/はんい]を[分/わ]ける。"
+      cons "Referenceは[表示/ひょうじ]labelを[持/も]ち、[参照先/さんしょうさき]の[見出/みだ]し[文字列/もじれつ]を[自動/じどう]コピーしない。"
+      cons sentence cons text "HTML idは " cons code "n-" cons text " + UTF-8 byteの" cons ruby text "小文字" text "こもじ" cons text "hexとし、" cons ruby text "任意" text "にんい" cons text "の" cons ruby text "名前" text "なまえ" cons text "から" cons ruby text "衝突" text "しょうとつ" cons text "なく" cons ruby text "生成" text "せいせい" cons text "する。" nil nil
     cons paragraph
-      cons sentence cons code "DocNode.locations" cons text " は名前operandの位置を " cons code "DocFieldLocation" cons text " として保持する。" nil
-      cons "fieldはDoc所有の閉じた種別SectionId / AnchorId / ReferenceTargetで、対応するDocKindだけに指定でき、同じfieldの重複を許さない。"
-      cons "lowerは元の型付きchild/tokenからSpanとOriginを取得し、意味Stringの綴りを本文から検索して位置を作らない。"
-      cons "source-less constructorでは空のlocationsまたはNoneの位置を保持する。"
-      cons "存在するSpan/Originは宣言済みsource/Origin arenaを参照し、Spanは指定された定義全体cover内へ明示SourceMapを通じて包含される必要がある。"
-      cons "Originも指定した場合は、その明示causeが選択Spanを支えることを検査する。"
-      cons "構造検査と初回NDF decodeに同じ条件を適用し、元tokenの局所Viewは変更しない。" nil
+      cons sentence cons code "DocNode.locations" cons text " は" cons ruby text "名前" text "なまえ" cons text "operandの" cons ruby text "位置" text "いち" cons text "を " cons code "DocFieldLocation" cons text " として" cons ruby text "保持" text "ほじ" cons text "する。" nil
+      cons "fieldはDoc[所有/しょゆう]の[閉/と]じた[種別/しゅべつ]SectionId / AnchorId / ReferenceTargetで、[対応/たいおう]するDocKindだけに[指定/してい]でき、[同/おな]じfieldの[重複/ちょうふく]を[許/ゆる]さない。"
+      cons "lowerは[元/もと]の[型付/かたつ]きchild/tokenからSpanとOriginを[取得/しゅとく]し、[意味/いみ]Stringの[綴/つづ]りを[本文/ほんぶん]から[検索/けんさく]して[位置/いち]を[作/つく]らない。"
+      cons "source-less constructorでは[空/から]のlocationsまたはNoneの[位置/いち]を[保持/ほじ]する。"
+      cons "[存在/そんざい]するSpan/Originは[宣言済/せんげんず]みsource/Origin arenaを[参照/さんしょう]し、Spanは[指定/してい]された[定義全体/ていぎぜんたい]cover[内/ない]へ[明示/めいじ]SourceMapを[通/つう]じて[包含/ほうがん]される[必要/ひつよう]がある。"
+      cons "Originも[指定/してい]した[場合/ばあい]は、その[明示/めいじ]causeが[選択/せんたく]Spanを[支/ささ]えることを[検査/けんさ]する。"
+      cons "[構造検査/こうぞうけんさ]と[初回/しょかい]NDF decodeに[同/おな]じ[条件/じょうけん]を[適用/てきよう]し、[元/もと]tokenの[局所/きょくしょ]Viewは[変更/へんこう]しない。" nil
     cons paragraph
-      cons "意味nodeの共有と表示上のanchorの一意性は別である。"
-      cons "同じSection/Anchor nodeへArticle rootから複数の表示経路がある場合はDuplicateOccurrenceとする。"
-      cons "直接同じ子を二度参照する場合と、共有parentを介する場合の双方を含む。"
-      cons "labelを含まないDAG共有は許容する。"
-      cons "暗黙のID複製・改名では回避しない。"
-      cons sentence cons text "経路数を2で飽和させる予算付き検査を行い、同じsource selectionを持つ二つの出現は、owner node・子の順序index・target nodeを並べた " cons code "LabelOccurrencePaths" cons text " で識別する。" nil
-      cons sentence cons text "この型付き経路を通常Diagnosticの " cons code "LabelDiagnosticArguments" cons text " に含め、架空のSpanを追加しない。" nil
-      cons "foreign guestの構造はこのArticleの表示経路として展開せず、そのlabelを暗黙に定義・参照へ取り込まない。" nil
+      cons "[意味/いみ]nodeの[共有/きょうゆう]と[表示上/ひょうじじょう]のanchorの[一意性/いちいせい]は[別/べつ]である。"
+      cons "[同/おな]じSection/Anchor nodeへArticle rootから[複数/ふくすう]の[表示経路/ひょうじけいろ]がある[場合/ばあい]はDuplicateOccurrenceとする。"
+      cons "[直接/ちょくせつ][同/おな]じ[子/こ]を[二度/にど][参照/さんしょう]する[場合/ばあい]と、[共有/きょうゆう]parentを[介/かい]する[場合/ばあい]の[双方/そうほう]を[含/ふく]む。"
+      cons "labelを[含/ふく]まないDAG[共有/きょうゆう]は[許容/きょよう]する。"
+      cons "[暗黙/あんもく]のID[複製/ふくせい]・[改名/かいめい]では[回避/かいひ]しない。"
+      cons sentence cons ruby text "経路数" text "けいろすう" cons text "を2で" cons ruby text "飽和" text "ほうわ" cons text "させる" cons ruby text "予算付" text "よさんつ" cons text "き" cons ruby text "検査" text "けんさ" cons text "を" cons ruby text "行" text "おこな" cons text "い、" cons ruby text "同" text "おな" cons text "じsource selectionを" cons ruby text "持" text "も" cons text "つ" cons ruby text "二" text "ふた" cons text "つの" cons ruby text "出現" text "しゅつげん" cons text "は、owner node・" cons ruby text "子" text "こ" cons text "の" cons ruby text "順序" text "じゅんじょ" cons text "index・target nodeを" cons ruby text "並" text "なら" cons text "べた " cons code "LabelOccurrencePaths" cons text " で" cons ruby text "識別" text "しきべつ" cons text "する。" nil
+      cons sentence cons text "この" cons ruby text "型付" text "かたつ" cons text "き" cons ruby text "経路" text "けいろ" cons text "を" cons ruby text "通常" text "つうじょう" cons text "Diagnosticの " cons code "LabelDiagnosticArguments" cons text " に" cons ruby text "含" text "ふく" cons text "め、" cons ruby text "架空" text "かくう" cons text "のSpanを" cons ruby text "追加" text "ついか" cons text "しない。" nil
+      cons "foreign guestの[構造/こうぞう]はこのArticleの[表示経路/ひょうじけいろ]として[展開/てんかい]せず、そのlabelを[暗黙/あんもく]に[定義/ていぎ]・[参照/さんしょう]へ[取/と]り[込/こ]まない。" nil
     nil
   cons section embedding "6. [埋/う]め[込/こ]み" body
     cons paragraph
-      cons "InlineMath / DisplayMath / CircuitFigure / Codeは、スロット種別とForeignClosureを保持する。"
-      cons "ForeignClosureはForeignSyntaxに選択済みowner環境、元Origin表、source/map宣言閉包を加えた共通型である。"
-      cons "環境digestに含まれる元Origin IDを保存し、guest自身のOrigin表と混同しない。"
-      cons "MathやCircuitの型をdoc-coreへimportしない。" nil
+      cons "InlineMath / DisplayMath / CircuitFigure / Codeは、スロット[種別/しゅべつ]とForeignClosureを[保持/ほじ]する。"
+      cons "ForeignClosureはForeignSyntaxに[選択済/せんたくず]みowner[環境/かんきょう]、[元/もと]Origin[表/ひょう]、source/map[宣言閉包/せんげんへいほう]を[加/くわ]えた[共通型/きょうつうがた]である。"
+      cons "[環境/かんきょう]digestに[含/ふく]まれる[元/もと]Origin IDを[保存/ほぞん]し、guest[自身/じしん]のOrigin[表/ひょう]と[混同/こんどう]しない。"
+      cons "MathやCircuitの[型/かた]をdoc-coreへimportしない。" nil
     cons paragraph
-      cons sentence cons text "suiteがMathの構造・bindingをcheckし、" cons link relative "17-math-html.md" none text "17章" cons text "の生成policyに従ってhostによるKaTeX生成、または独立math-mathmlの検査済みfragmentを準備する。" nil
-      cons "閲覧時にKaTeXを再実行しない。"
-      cons "CircuitFigureはcheck/elaborateとdiagramを使う。"
-      cons "Codeは元のguest sourceとviewの表示であり、guestのlower・意味check・compile・evaluateを実行しない。"
-      cons "guestがDoc自身の場合もDoc:DocGuest.syntaxはForeignClosure中のForeignSyntaxを保持し、Doc/Articleの意味値への変換を表示の前提にしない。"
-      cons "bundleのschema・参照・source範囲の安全性検査は省略しない。" nil
+      cons sentence cons text "suiteがMathの" cons ruby text "構造" text "こうぞう" cons text "・bindingをcheckし、" cons link relative "17-math-html.md" none concat cons text "17" cons ruby text "章" text "しょう" nil cons text "の" cons ruby text "生成" text "せいせい" cons text "policyに" cons ruby text "従" text "したが" cons text "ってhostによるKaTeX" cons ruby text "生成" text "せいせい" cons text "、または" cons ruby text "独立" text "どくりつ" cons text "math-mathmlの" cons ruby text "検査済" text "けんさず" cons text "みfragmentを" cons ruby text "準備" text "じゅんび" cons text "する。" nil
+      cons "[閲覧時/えつらんじ]にKaTeXを[再実行/さいじっこう]しない。"
+      cons "CircuitFigureはcheck/elaborateとdiagramを[使/つか]う。"
+      cons "Codeは[元/もと]のguest sourceとviewの[表示/ひょうじ]であり、guestのlower・[意味/いみ]check・compile・evaluateを[実行/じっこう]しない。"
+      cons "guestがDoc[自身/じしん]の[場合/ばあい]もDoc:DocGuest.syntaxはForeignClosure[中/ちゅう]のForeignSyntaxを[保持/ほじ]し、Doc/Articleの[意味値/いみち]への[変換/へんかん]を[表示/ひょうじ]の[前提/ぜんてい]にしない。"
+      cons "bundleのschema・[参照/さんしょう]・source[範囲/はんい]の[安全性検査/あんぜんせいけんさ]は[省略/しょうりゃく]しない。" nil
     cons paragraph
-      cons sentence cons text "標準Doc文法の " cons code "DocGuest.syntax" cons text " は " cons code "foreign Doc Article" cons text " を読む。" nil
-      cons sentence cons text "表層の " cons code "Doc article ..." cons text " は変わらないが、同aliasへの入れ子でも独立guest bundleと選択された環境を保持し、終了後はhostの読取contextへ復帰する。" nil
-      cons sentence cons text "Profileには標準alias " cons code "Doc" cons text " の登録が必要である。" nil
-      cons "hostを別aliasへ登録してもforeign先をそのaliasへ暗黙に置換しない。"
-      cons sentence cons text "同じpackageを " cons code "Doc" cons text " として明示登録するか、別名を指定する変更済み文法/packageを明示選択する。" nil
-      cons "Code用Doc guestが意味的に不正な注釈やlabelを含んでも、構文が成立している限り表示のためにguestのDoc lowerを呼んで拒否しない。" nil
+      cons sentence cons ruby text "標準" text "ひょうじゅん" cons text "Doc" cons ruby text "文法" text "ぶんぽう" cons text "の " cons code "DocGuest.syntax" cons text " は " cons code "foreign Doc Article" cons text " を" cons ruby text "読" text "よ" cons text "む。" nil
+      cons sentence cons ruby text "表層" text "ひょうそう" cons text "の " cons code "Doc article ..." cons text " は" cons ruby text "変" text "か" cons text "わらないが、" cons ruby text "同" text "どう" cons text "aliasへの" cons ruby text "入" text "い" cons text "れ" cons ruby text "子" text "こ" cons text "でも" cons ruby text "独立" text "どくりつ" cons text "guest bundleと" cons ruby text "選択" text "せんたく" cons text "された" cons ruby text "環境" text "かんきょう" cons text "を" cons ruby text "保持" text "ほじ" cons text "し、" cons ruby text "終了後" text "しゅうりょうご" cons text "はhostの" cons ruby text "読取" text "よみとり" cons text "contextへ" cons ruby text "復帰" text "ふっき" cons text "する。" nil
+      cons sentence cons text "Profileには" cons ruby text "標準" text "ひょうじゅん" cons text "alias " cons code "Doc" cons text " の" cons ruby text "登録" text "とうろく" cons text "が" cons ruby text "必要" text "ひつよう" cons text "である。" nil
+      cons "hostを[別/べつ]aliasへ[登録/とうろく]してもforeign[先/さき]をそのaliasへ[暗黙/あんもく]に[置換/ちかん]しない。"
+      cons sentence cons ruby text "同" text "おな" cons text "じpackageを " cons code "Doc" cons text " として" cons ruby text "明示登録" text "めいじとうろく" cons text "するか、" cons ruby text "別名" text "べつめい" cons text "を" cons ruby text "指定" text "してい" cons text "する" cons ruby text "変更済" text "へんこうず" cons text "み" cons ruby text "文法" text "ぶんぽう" cons text "/packageを" cons ruby text "明示選択" text "めいじせんたく" cons text "する。" nil
+      cons "Code[用/よう]Doc guestが[意味的/いみてき]に[不正/ふせい]な[注釈/ちゅうしゃく]やlabelを[含/ふく]んでも、[構文/こうぶん]が[成立/せいりつ]している[限/かぎ]り[表示/ひょうじ]のためにguestのDoc lowerを[呼/よ]んで[拒否/きょひ]しない。" nil
     cons paragraph
-      cons "Docのcheckは通常構造・注釈・labelを検査し、foreign slotにはRequirementを返す。"
-      cons sentence cons text "suiteが要求を解決した " cons code "PreparedArticle" cons text " だけをHTML backendへ渡す。" nil
-      cons "未解決slotの空表示や文字列化による偽成功は禁止。" nil
+      cons "Docのcheckは[通常構造/つうじょうこうぞう]・[注釈/ちゅうしゃく]・labelを[検査/けんさ]し、foreign slotにはRequirementを[返/かえ]す。"
+      cons sentence cons text "suiteが" cons ruby text "要求" text "ようきゅう" cons text "を" cons ruby text "解決" text "かいけつ" cons text "した " cons code "PreparedArticle" cons text " だけをHTML backendへ" cons ruby text "渡" text "わた" cons text "す。" nil
+      cons "[未解決/みかいけつ]slotの[空表示/からひょうじ]や[文字列化/もじれつか]による[偽成功/ぎせいこう]は[禁止/きんし]。" nil
     nil
   cons section html "7. HTML backend" body
     cons paragraph
-      cons "Articleはarticle要素、titleはh1。"
-      cons "Sectionはsection要素と適切な見出し。"
-      cons "深さ6超はrole=headingとaria-levelを持つ要素を使う。"
-      cons "Paragraphを機械的に入れ子のpへ変換しない。"
-      cons "Paragraphはdiv構造、連続したSentence/Parallelのrunをpへまとめ、子Blockはrunを閉じてから出す。" nil
+      cons "Articleはarticle[要素/ようそ]、titleはh1。"
+      cons "Sectionはsection[要素/ようそ]と[適切/てきせつ]な[見出/みだ]し。"
+      cons "[深/ふか]さ6[超/ちょう]はrole=headingとaria-levelを[持/も]つ[要素/ようそ]を[使/つか]う。"
+      cons "Paragraphを[機械的/きかいてき]に[入/い]れ[子/こ]のpへ[変換/へんかん]しない。"
+      cons "Paragraphはdiv[構造/こうぞう]、[連続/れんぞく]したSentence/Parallelのrunをpへまとめ、[子/こ]Blockはrunを[閉/と]じてから[出/だ]す。" nil
     cons paragraph
-      cons "Sentence間へ空白を勝手に挿入しない。"
-      cons "必要な空白はTextに含める。"
-      cons "white-space:pre-wrapで著者の空白と明示改行を尊重する。" nil
+      cons "Sentence[間/かん]へ[空白/くうはく]を[勝手/かって]に[挿入/そうにゅう]しない。"
+      cons "[必要/ひつよう]な[空白/くうはく]はTextに[含/ふく]める。"
+      cons "white-space:pre-wrapで[著者/ちょしゃ]の[空白/くうはく]と[明示改行/めいじかいぎょう]を[尊重/そんちょう]する。" nil
     cons paragraph
-      cons "Ruby/Annoはネスト可能なinline-gridのtyped span構造として描画し、base、上側のreading、下側のnotesを別セルへ置く。"
-      cons "単純RubyにはHTML ruby/rtを使用してもよいが、semantic HTML正規形のreference backendはinline-gridへ統一する。"
-      cons "CSSは配布asset、リモートfont/CDN/JSは不要。" nil
+      cons "Ruby/Annoはネスト[可能/かのう]なinline-gridのtyped span[構造/こうぞう]として[描画/びょうが]し、base、[上側/うえがわ]のreading、[下側/したがわ]のnotesを[別/べつ]セルへ[置/お]く。"
+      cons "[単純/たんじゅん]RubyにはHTML ruby/rtを[使用/しよう]してもよいが、semantic HTML[正規形/せいきけい]のreference backendはinline-gridへ[統一/とういつ]する。"
+      cons "CSSは[配布/はいふ]asset、リモートfont/CDN/JSは[不要/ふよう]。" nil
     cons paragraph
-      cons "Parallelは一つのalignment wrapperにlanguageごとのsentence spanを入れる。"
-      cons "横並び・縦並び・単一言語はRenderOptionsとして変える。"
-      cons "DOM上に対応関係IDを保存する。" nil
+      cons "Parallelは[一/ひと]つのalignment wrapperにlanguageごとのsentence spanを[入/い]れる。"
+      cons "[横並/よこなら]び・[縦並/たてなら]び・[単一言語/たんいつげんご]はRenderOptionsとして[変/か]える。"
+      cons "DOM[上/じょう]に[対応関係/たいおうかんけい]IDを[保存/ほぞん]する。" nil
     cons paragraph
-      cons "全Text/属性をmarkup serializerでescapeする。"
-      cons "RawHtml variantはDocに存在しない。"
-      cons "外部HTMLを表示するextensionは別の明示的なtrust契約を要求する。"
-      cons "token化されたHTMLをそのままinnerHTMLへ渡してはならない。" nil
+      cons "[全/ぜん]Text/[属性/ぞくせい]をmarkup serializerでescapeする。"
+      cons "RawHtml variantはDocに[存在/そんざい]しない。"
+      cons "[外部/がいぶ]HTMLを[表示/ひょうじ]するextensionは[別/べつ]の[明示的/めいじてき]なtrust[契約/けいやく]を[要求/ようきゅう]する。"
+      cons "token[化/か]されたHTMLをそのままinnerHTMLへ[渡/わた]してはならない。" nil
     nil
   cons section public "8. [公開操作/こうかいそうさ]" body
     cons paragraph
@@ -265,101 +265,101 @@ body
       cons "plain_text(PlainTextRequest) -> PlainTextReply。"
       cons "print(PrintRequest) -> PrintReply。" nil
     cons paragraph
-      cons "AnnotationPolicyはBaseOnly、WithReadings、WithAllNotesを明示する。"
-      cons "テキスト抽出時に隠れた翻訳選択を行わない。"
-      cons "各constructorはRust APIとportable record constructorの双方から呼べる。" nil
+      cons "AnnotationPolicyはBaseOnly、WithReadings、WithAllNotesを[明示/めいじ]する。"
+      cons "テキスト[抽出時/ちゅうしゅつじ]に[隠/かく]れた[翻訳選択/ほんやくせんたく]を[行/おこな]わない。"
+      cons "[各/かく]constructorはRust APIとportable record constructorの[双方/そうほう]から[呼/よ]べる。" nil
     cons section plaintext "8.1. plain_text の[実行契約/じっこうけいやく]" body
       cons paragraph
-        cons sentence cons text "実操作descriptorは " cons code "nepl3.doc@1" cons text " の " cons code "plainText: PlainTextRequest -> PlainTextReply" cons text "（pure）である。" nil
-        cons "要求は宣言source閉包を持つDocumentSyntax、対象SentenceRef、AnnotationPolicy、明示ResolvedInlineText列を所有する。"
-        cons "SentenceRefはそのdocument内のSentenceを指す必要があり、別categoryはExpectedSentenceとなる。"
-        cons "schemaとDocumentSyntax構造の不正は入力境界の型付きエラーである。"
-        cons "受理済み要求の名前付き失敗はPlainTextFailureで返し、停止は準備段階も含めStoppedと元StopReasonを返す。"
-        cons "成功時だけComplete.textを返す。"
-        cons "Reportは同一操作のUsageを持ち、その位置参照は元要求documentの宣言source閉包に限る。"
-        cons "独立返信codecにも元要求documentを明示して渡し、ambient sourceを補完しない。"
-        cons "非StoppedとtraceOverflowの組合せを拒否する。" nil
+        cons sentence cons ruby text "実操作" text "じっそうさ" cons text "descriptorは " cons code "nepl3.doc@1" cons text " の " cons code "plainText: PlainTextRequest -> PlainTextReply" cons text "（pure）である。" nil
+        cons "[要求/ようきゅう]は[宣言/せんげん]source[閉包/へいほう]を[持/も]つDocumentSyntax、[対象/たいしょう]SentenceRef、AnnotationPolicy、[明示/めいじ]ResolvedInlineText[列/れつ]を[所有/しょゆう]する。"
+        cons "SentenceRefはそのdocument[内/ない]のSentenceを[指/さ]す[必要/ひつよう]があり、[別/べつ]categoryはExpectedSentenceとなる。"
+        cons "schemaとDocumentSyntax[構造/こうぞう]の[不正/ふせい]は[入力境界/にゅうりょくきょうかい]の[型付/かたつ]きエラーである。"
+        cons "[受理済/じゅりず]み[要求/ようきゅう]の[名前付/なまえつ]き[失敗/しっぱい]はPlainTextFailureで[返/かえ]し、[停止/ていし]は[準備段階/じゅんびだんかい]も[含/ふく]めStoppedと[元/もと]StopReasonを[返/かえ]す。"
+        cons "[成功時/せいこうじ]だけComplete.textを[返/かえ]す。"
+        cons "Reportは[同一操作/どういつそうさ]のUsageを[持/も]ち、その[位置参照/いちさんしょう]は[元要求/もとようきゅう]documentの[宣言/せんげん]source[閉包/へいほう]に[限/かぎ]る。"
+        cons "[独立返信/どくりつへんしん]codecにも[元要求/もとようきゅう]documentを[明示/めいじ]して[渡/わた]し、ambient sourceを[補完/ほかん]しない。"
+        cons "[非/ひ]StoppedとtraceOverflowの[組合/くみあわ]せを[拒否/きょひ]する。" nil
       cons paragraph
-        cons "BaseOnlyはRubyとAnnoのbaseだけを投影する。"
-        cons sentence cons text "WithReadingsはRubyを " cons code "base[reading]" cons text " とし、Annoはbaseだけを投影する。" nil
-        cons sentence cons text "WithAllNotesはRubyも同じとし、Annoを " cons code "base{note1/note2}" cons text " とする。" nil
-        cons "入れ子にも同じpolicyを適用する。"
-        cons "TextとInlineCodeの文字は変更せず、BreakはLFを一つ出力する。"
-        cons "装飾は子inline、Anchor/Reference/Linkは明示label、InlineImageは明示alt Sentenceを投影する。"
-        cons "Sentence/Concatの子間に空白を追加しない。"
-        cons "この出力は再parse用sentence literalではなく、角括弧・波括弧・slashをescapeし直さない。"
-        cons "任意separatorのoptionsは設けない。" nil
+        cons "BaseOnlyはRubyとAnnoのbaseだけを[投影/とうえい]する。"
+        cons sentence cons text "WithReadingsはRubyを " cons code "base[reading]" cons text " とし、Annoはbaseだけを" cons ruby text "投影" text "とうえい" cons text "する。" nil
+        cons sentence cons text "WithAllNotesはRubyも" cons ruby text "同" text "おな" cons text "じとし、Annoを " cons code "base{note1/note2}" cons text " とする。" nil
+        cons "[入/い]れ[子/こ]にも[同/おな]じpolicyを[適用/てきよう]する。"
+        cons "TextとInlineCodeの[文字/もじ]は[変更/へんこう]せず、BreakはLFを[一/ひと]つ[出力/しゅつりょく]する。"
+        cons "[装飾/そうしょく]は[子/こ]inline、Anchor/Reference/Linkは[明示/めいじ]label、InlineImageは[明示/めいじ]alt Sentenceを[投影/とうえい]する。"
+        cons "Sentence/Concatの[子間/こかん]に[空白/くうはく]を[追加/ついか]しない。"
+        cons "この[出力/しゅつりょく]は[再/さい]parse[用/よう]sentence literalではなく、[角括弧/かくかっこ]・[波括弧/なみかっこ]・slashをescapeし[直/なお]さない。"
+        cons "[任意/にんい]separatorのoptionsは[設/もう]けない。" nil
       cons paragraph
-        cons "InlineMathは暗黙にlower・意味check・評価しない。"
-        cons sentence cons text "必要な表示textはhostが " cons code "ResolvedInlineText{documentDigest,embed,guestDigest,text}" cons text " として提供する。" nil
+        cons "InlineMathは[暗黙/あんもく]にlower・[意味/いみ]check・[評価/ひょうか]しない。"
+        cons sentence cons ruby text "必要" text "ひつよう" cons text "な" cons ruby text "表示" text "ひょうじ" cons text "textはhostが " cons code "ResolvedInlineText{documentDigest,embed,guestDigest,text}" cons text " として" cons ruby text "提供" text "ていきょう" cons text "する。" nil
         cons sentence cons text "documentDigestは " cons code "SHA-256(\"NEPL3.Doc.PlainText.Document.v1\\0\" || canonical-NDF/1-CBOR(DocumentSyntax))" cons text "、guestDigestは " cons code "SHA-256(\"NEPL3.Doc.PlainText.Guest.v1\\0\" || canonical-NDF/1-CBOR(ForeignClosure))" cons text " とする。" nil
-        cons sentence cons text "引用内の " cons code "\\0" cons text " は一つのゼロbyte、他はASCII byteである。" nil
-        cons "値はそれぞれDocの正式DocumentSyntax codecとfoundationの正式ForeignClosure codecが返すschema検査済み値であり、型を参照するSchemaRefのdigestもcanonical CBORへ含める。"
-        cons "guest側はowner環境・元Origin列・source/map閉包も含み、局所EmbedRefだけの一致で別guestや古い環境のtextを再利用しない。" nil
+        cons sentence cons ruby text "引用内" text "いんようない" cons text "の " cons code "\\0" cons text " は" cons ruby text "一" text "ひと" cons text "つのゼロbyte、" cons ruby text "他" text "ほか" cons text "はASCII byteである。" nil
+        cons "[値/あたい]はそれぞれDocの[正式/せいしき]DocumentSyntax codecとfoundationの[正式/せいしき]ForeignClosure codecが[返/かえ]すschema[検査済/けんさず]み[値/あたい]であり、[型/かた]を[参照/さんしょう]するSchemaRefのdigestもcanonical CBORへ[含/ふく]める。"
+        cons "guest[側/がわ]はowner[環境/かんきょう]・[元/もと]Origin[列/れつ]・source/map[閉包/へいほう]も[含/ふく]み、[局所/きょくしょ]EmbedRefだけの[一致/いっち]で[別/べつ]guestや[古/ふる]い[環境/かんきょう]のtextを[再利用/さいりよう]しない。" nil
       cons paragraph
-        cons "全提供entryについて32byte digest、対象InlineMath、重複EmbedRef、現在document/guest両identityとの一致を検査する。"
-        cons "policyがそのentryを表示しない場合も不正entryを黙殺しない。"
-        cons "一方、未提供textによるUnresolvedEmbedは選択policyで実際に投影するInlineMathだけに適用し、BaseOnlyで隠れるreading/notesのtextを要求しない。"
-        cons "hostのtextは明示データであり、guest意味checkが成功した証明ではない。" nil
+        cons "[全提供/ぜんていきょう]entryについて32byte digest、[対象/たいしょう]InlineMath、[重複/ちょうふく]EmbedRef、[現在/げんざい]document/guest[両/りょう]identityとの[一致/いっち]を[検査/けんさ]する。"
+        cons "policyがそのentryを[表示/ひょうじ]しない[場合/ばあい]も[不正/ふせい]entryを[黙殺/もくさつ]しない。"
+        cons "[一方/いっぽう]、[未提供/みていきょう]textによるUnresolvedEmbedは[選択/せんたく]policyで[実際/じっさい]に[投影/とうえい]するInlineMathだけに[適用/てきよう]し、BaseOnlyで[隠/かく]れるreading/notesのtextを[要求/ようきゅう]しない。"
+        cons "hostのtextは[明示/めいじ]データであり、guest[意味/いみ]checkが[成功/せいこう]した[証明/しょうめい]ではない。" nil
       cons paragraph
-        cons "identity取得のprepareは独立した操作であり、後の実行予算を支払い済みとするproofではない。"
-        cons "公開実行入口plain_textは毎回同一Budget/SourceAdmissionでdocument検査、canonical値生成とhash、entry検査、出力を合成する。"
-        cons "sourceは共有admissionで同snapshotを一度だけ計上し、出力byte、Work、Allocation、深さを計上する。"
-        cons "停止時は元要求を変更せず、不完全なTextをCompleteへ昇格させない。" nil
+        cons "identity[取得/しゅとく]のprepareは[独立/どくりつ]した[操作/そうさ]であり、[後/のち]の[実行予算/じっこうよさん]を[支払/しはら]い[済/ず]みとするproofではない。"
+        cons "[公開実行入口/こうかいじっこういりぐち]plain_textは[毎回同一/まいかいどういつ]Budget/SourceAdmissionでdocument[検査/けんさ]、canonical[値生成/ちせいせい]とhash、entry[検査/けんさ]、[出力/しゅつりょく]を[合成/ごうせい]する。"
+        cons "sourceは[共有/きょうゆう]admissionで[同/どう]snapshotを[一度/いちど]だけ[計上/けいじょう]し、[出力/しゅつりょく]byte、Work、Allocation、[深/ふか]さを[計上/けいじょう]する。"
+        cons "[停止時/ていしじ]は[元要求/もとようきゅう]を[変更/へんこう]せず、[不完全/ふかんぜん]なTextをCompleteへ[昇格/しょうかく]させない。" nil
       nil
     cons section print "8.2. print の[実行契約/じっこうけいやく]" body
       cons paragraph
-        cons sentence cons text "実descriptorは " cons code "nepl3.doc@1" cons text " の " cons code "print: PrintRequest -> PrintReply" cons text "（pure）。" nil
-        cons "PrintRequestはDocumentSyntax、PrintMode（Prefix / Compact）、明示GuestBinding列、PrintedGuest列を所有する。"
-        cons sentence cons text "Completeだけが " cons code "SourceArtifact{text,entry}" cons text " を返す。" nil
-        cons "entryは再parseする具体的なDoc表層categoryであり、hostがtext保存時のSourceId・revision・URIとSourceSnapshotを発行する。"
-        cons "printerが架空のsnapshotや元source位置を作ることはない。"
-        cons "再parse/lowerとの一致はsource/Originを除いた意味正規形について定め、未正規化のconstructor値を変更して入力へ書き戻さない。" nil
+        cons sentence cons ruby text "実" text "じつ" cons text "descriptorは " cons code "nepl3.doc@1" cons text " の " cons code "print: PrintRequest -> PrintReply" cons text "（pure）。" nil
+        cons "PrintRequestはDocumentSyntax、PrintMode（Prefix / Compact）、[明示/めいじ]GuestBinding[列/れつ]、PrintedGuest[列/れつ]を[所有/しょゆう]する。"
+        cons sentence cons text "Completeだけが " cons code "SourceArtifact{text,entry}" cons text " を" cons ruby text "返" text "かえ" cons text "す。" nil
+        cons "entryは[再/さい]parseする[具体的/ぐたいてき]なDoc[表層/ひょうそう]categoryであり、hostがtext[保存時/ほぞんじ]のSourceId・revision・URIとSourceSnapshotを[発行/はっこう]する。"
+        cons "printerが[架空/かくう]のsnapshotや[元/もと]source[位置/いち]を[作/つく]ることはない。"
+        cons "[再/さい]parse/lowerとの[一致/いっち]はsource/Originを[除/のぞ]いた[意味正規形/いみせいきけい]について[定/さだ]め、[未正規化/みせいきか]のconstructor[値/ち]を[変更/へんこう]して[入力/にゅうりょく]へ[書/か]き[戻/もど]さない。" nil
       cons paragraph
-        cons "Prefixは全constructorを正式なheadと引数順で出力する。"
-        cons "CompactはSentence内がText / Concat / Ruby / Annoだけで表せる場合にsentence literalへし、それ以外はprefixを保持する。"
-        cons "Textは引用符・backslash・CR・LF・tabをescapeし、literalでは注釈delimiterもescapeする。"
-        cons "escapeの生成文字を再び注釈と解釈しない。"
-        cons "明示BreakはTextの改行と異なる意味nodeなので、Breakを含むSentenceをliteralへ変換しない。"
-        cons "装飾・link・画像・Mathを省略してliteral化することもない。" nil
+        cons "Prefixは[全/ぜん]constructorを[正式/せいしき]なheadと[引数順/ひきすうじゅん]で[出力/しゅつりょく]する。"
+        cons "CompactはSentence[内/ない]がText / Concat / Ruby / Annoだけで[表/あらわ]せる[場合/ばあい]にsentence literalへし、それ[以外/いがい]はprefixを[保持/ほじ]する。"
+        cons "Textは[引用符/いんようふ]・backslash・CR・LF・tabをescapeし、literalでは[注釈/ちゅうしゃく]delimiterもescapeする。"
+        cons "escapeの[生成文字/せいせいもじ]を[再/ふたた]び[注釈/ちゅうしゃく]と[解釈/かいしゃく]しない。"
+        cons "[明示/めいじ]BreakはTextの[改行/かいぎょう]と[異/こと]なる[意味/いみ]nodeなので、Breakを[含/ふく]むSentenceをliteralへ[変換/へんかん]しない。"
+        cons "[装飾/そうしょく]・link・[画像/がぞう]・Mathを[省略/しょうりゃく]してliteral[化/か]することもない。" nil
       cons paragraph
-        cons "補助fragmentを含む表層entryは20種類である。"
-        cons "guestの具体entryはMathGuest / CircuitGuest / Guestの3種類、wrapperはMath / Circuit / Grammar / Docの4種類。"
-        cons sentence cons text "独立rootでは " cons code "DocKind.Guest{language,syntax}" cons text " とEmbedKind.Guestを保持し、MathGuest/CircuitGuestのrootはそのlanguageとの一致を検査する。" nil
-        cons "親の埋め込みoperandへ取り込む場合はwrapper nodeを別の意味子として残さず、元ForeignClosure・View・Originを保持する。"
-        cons "GrammarGuestとDocGuestはform kindであり、独立した文法category名ではない。" nil
+        cons "[補助/ほじょ]fragmentを[含/ふく]む[表層/ひょうそう]entryは20[種類/しゅるい]である。"
+        cons "guestの[具体/ぐたい]entryはMathGuest / CircuitGuest / Guestの3[種類/しゅるい]、wrapperはMath / Circuit / Grammar / Docの4[種類/しゅるい]。"
+        cons sentence cons ruby text "独立" text "どくりつ" cons text "rootでは " cons code "DocKind.Guest{language,syntax}" cons text " とEmbedKind.Guestを" cons ruby text "保持" text "ほじ" cons text "し、MathGuest/CircuitGuestのrootはそのlanguageとの" cons ruby text "一致" text "いっち" cons text "を" cons ruby text "検査" text "けんさ" cons text "する。" nil
+        cons "[親/おや]の[埋/う]め[込/こ]みoperandへ[取/と]り[込/こ]む[場合/ばあい]はwrapper nodeを[別/べつ]の[意味子/いみし]として[残/のこ]さず、[元/もと]ForeignClosure・View・Originを[保持/ほじ]する。"
+        cons "GrammarGuestとDocGuestはform kindであり、[独立/どくりつ]した[文法/ぶんぽう]category[名/めい]ではない。" nil
       cons paragraph
-        cons sentence cons text "NameとLangはreaderと共通の " cons code "nepl3_core::lexical" cons text " の規則で印字可能性を検査する。" nil
-        cons "NameはUnicode 16 XIDと先頭underscore、Langは既存readerのRFC 5646節2.1 ABNFでありregistry上の登録や重複variant/singletonの追加制約を意味しない。"
-        cons "source-less意味値の定義域をこの表層規則へ狭めず、表せない値をUnprintableName / UnprintableLanguageとして返す。"
-        cons "名前の正規化・置換・本文からの位置推測は行わない。" nil
+        cons sentence cons text "NameとLangはreaderと" cons ruby text "共通" text "きょうつう" cons text "の " cons code "nepl3_core::lexical" cons text " の" cons ruby text "規則" text "きそく" cons text "で" cons ruby text "印字可能性" text "いんじかのうせい" cons text "を" cons ruby text "検査" text "けんさ" cons text "する。" nil
+        cons "NameはUnicode 16 XIDと[先頭/せんとう]underscore、Langは[既存/きそん]readerのRFC 5646[節/せつ]2.1 ABNFでありregistry[上/じょう]の[登録/とうろく]や[重複/ちょうふく]variant/singletonの[追加制約/ついかせいやく]を[意味/いみ]しない。"
+        cons "source-less[意味値/いみち]の[定義域/ていぎいき]をこの[表層規則/ひょうそうきそく]へ[狭/せば]めず、[表/あらわ]せない[値/あたい]をUnprintableName / UnprintableLanguageとして[返/かえ]す。"
+        cons "[名前/なまえ]の[正規化/せいきか]・[置換/ちかん]・[本文/ほんぶん]からの[位置推測/いちすいそく]は[行/おこな]わない。" nil
       cons paragraph
         cons sentence cons text "GuestBindingは " cons code "{schema,category,language}" cons text "。" nil
-        cons "標準wrapperに対応するcategoryはMath→Expr、Circuit→Design、Grammar→Root、Doc→Articleとする。"
-        cons "schemaからaliasを推測しない。"
-        cons "同じschemaまたは同じlanguage（表層alias）への複数binding、カテゴリ不整合、使用するguestのbinding欠落を型付き失敗とする。"
-        cons "InlineMath/DisplayMath/CircuitFigureと独立guest rootではslot/languageの制約も検査する。"
-        cons "提供bindingは使用の有無によらず検査する。" nil
+        cons "[標準/ひょうじゅん]wrapperに[対応/たいおう]するcategoryはMath→Expr、Circuit→Design、Grammar→Root、Doc→Articleとする。"
+        cons "schemaからaliasを[推測/すいそく]しない。"
+        cons "[同/おな]じschemaまたは[同/おな]じlanguage（[表層/ひょうそう]alias）への[複数/ふくすう]binding、カテゴリ[不整合/ふせいごう]、[使用/しよう]するguestのbinding[欠落/けつらく]を[型付/かたつ]き[失敗/しっぱい]とする。"
+        cons "InlineMath/DisplayMath/CircuitFigureと[独立/どくりつ]guest rootではslot/languageの[制約/せいやく]も[検査/けんさ]する。"
+        cons "[提供/ていきょう]bindingは[使用/しよう]の[有無/うむ]によらず[検査/けんさ]する。" nil
       cons paragraph
         cons sentence cons text "PrintedGuestは " cons code "{documentDigest,embed,guestDigest,text}" cons text "。" nil
         cons sentence cons text "documentDigestは " cons code "SHA-256(\"NEPL3.Doc.Print.Document.v1\\0\" || canonical-NDF/1-CBOR(DocumentSyntax))" cons text "、guestDigestは " cons code "SHA-256(\"NEPL3.Doc.Print.Guest.v1\\0\" || canonical-NDF/1-CBOR(ForeignClosure))" cons text " とする。" nil
-        cons sentence cons code "\\0" cons text " はゼロbyte、他のdomain文字はASCIIで、正式Doc/foundation codecが返すschema検査済み値のSchemaRef digest、owner環境、元Origin表、source/map閉包を含める。" nil
-        cons "全提供entryの32byte digest、EmbedRefの存在、重複、両identityを検査し、必要な印字がなければUnresolvedGuestとする。" nil
+        cons sentence cons code "\\0" cons text " はゼロbyte、" cons ruby text "他" text "ほか" cons text "のdomain" cons ruby text "文字" text "もじ" cons text "はASCIIで、" cons ruby text "正式" text "せいしき" cons text "Doc/foundation codecが" cons ruby text "返" text "かえ" cons text "すschema" cons ruby text "検査済" text "けんさず" cons text "み" cons ruby text "値" text "あたい" cons text "のSchemaRef digest、owner" cons ruby text "環境" text "かんきょう" cons text "、" cons ruby text "元" text "もと" cons text "Origin" cons ruby text "表" text "ひょう" cons text "、source/map" cons ruby text "閉包" text "へいほう" cons text "を" cons ruby text "含" text "ふく" cons text "める。" nil
+        cons "[全提供/ぜんていきょう]entryの32byte digest、EmbedRefの[存在/そんざい]、[重複/ちょうふく]、[両/りょう]identityを[検査/けんさ]し、[必要/ひつよう]な[印字/いんじ]がなければUnresolvedGuestとする。" nil
       cons paragraph
-        cons "このdigestはtextがguest意味と一致することを証明しない。"
-        cons "通常printの意味roundtrip保証は、hostが同じguestを扱う実printerの正しい出力を供給することを前提とする。"
-        cons "raw受信やDoc coreはその意味proofを発行せず、guestのlower・意味check・評価も呼ばない。"
-        cons sentence cons text "原文取得helper " cons code "original_guest_source" cons text " はroot coverに対応する保持byteを返すだけであり、coverがなければNoneとなる。" nil
-        cons "構造検査済みForeignClosureにも構文と原文の一致proofはないため、通常printはこのhelperを自動fallbackとして使わない。"
-        cons "host側の統合試験では実guest parserとchecked tree、generic engine printerを通し、Doc→Docの意味不正なCodeもguest構文のまま保持する。" nil
+        cons "このdigestはtextがguest[意味/いみ]と[一致/いっち]することを[証明/しょうめい]しない。"
+        cons "[通常/つうじょう]printの[意味/いみ]roundtrip[保証/ほしょう]は、hostが[同/おな]じguestを[扱/あつか]う[実/じつ]printerの[正/ただ]しい[出力/しゅつりょく]を[供給/きょうきゅう]することを[前提/ぜんてい]とする。"
+        cons "raw[受信/じゅしん]やDoc coreはその[意味/いみ]proofを[発行/はっこう]せず、guestのlower・[意味/いみ]check・[評価/ひょうか]も[呼/よ]ばない。"
+        cons sentence cons ruby text "原文取得" text "げんぶんしゅとく" cons text "helper " cons code "original_guest_source" cons text " はroot coverに" cons ruby text "対応" text "たいおう" cons text "する" cons ruby text "保持" text "ほじ" cons text "byteを" cons ruby text "返" text "かえ" cons text "すだけであり、coverがなければNoneとなる。" nil
+        cons "[構造検査済/こうぞうけんさず]みForeignClosureにも[構文/こうぶん]と[原文/げんぶん]の[一致/いっち]proofはないため、[通常/つうじょう]printはこのhelperを[自動/じどう]fallbackとして[使/つか]わない。"
+        cons "host[側/がわ]の[統合試験/とうごうしけん]では[実/じつ]guest parserとchecked tree、generic engine printerを[通/とお]し、Doc→Docの[意味不正/いみふせい]なCodeもguest[構文/こうぶん]のまま[保持/ほじ]する。" nil
       cons paragraph
-        cons "公開identity取得はhost要求の準備データであり、実行予算を支払い済みにするproofではない。"
-        cons "公開printは同一Budget/SourceAdmissionでDocumentSyntax再検査、canonical値生成・digest、全entry検査と出力を合成する。"
-        cons "sourceの重複計上を避け、反復処理で共有DAGの各表示経路を出力し、そのWork・出力byte・Allocation・Depthを計上する。"
-        cons "停止時は元要求を変更せず、準備中も元StopReasonのStoppedとUsageを返し、途中textをCompleteへ昇格させない。"
-        cons "構造/schema不正は型付き入力境界エラー、受理後の不適合はPrintFailureとなる。"
-        cons "返信Reportの位置は明示要求documentの宣言source閉包だけを参照でき、独立reply codecにもそのdocumentを渡す。"
-        cons "ambient補完と非StoppedのtraceOverflowを拒否する。" nil
+        cons "[公開/こうかい]identity[取得/しゅとく]はhost[要求/ようきゅう]の[準備/じゅんび]データであり、[実行予算/じっこうよさん]を[支払/しはら]い[済/ず]みにするproofではない。"
+        cons "[公開/こうかい]printは[同一/どういつ]Budget/SourceAdmissionでDocumentSyntax[再検査/さいけんさ]、canonical[値生成/ちせいせい]・digest、[全/ぜん]entry[検査/けんさ]と[出力/しゅつりょく]を[合成/ごうせい]する。"
+        cons "sourceの[重複計上/ちょうふくけいじょう]を[避/さ]け、[反復処理/はんぷくしょり]で[共有/きょうゆう]DAGの[各表示経路/かくひょうじけいろ]を[出力/しゅつりょく]し、そのWork・[出力/しゅつりょく]byte・Allocation・Depthを[計上/けいじょう]する。"
+        cons "[停止時/ていしじ]は[元要求/もとようきゅう]を[変更/へんこう]せず、[準備中/じゅんびちゅう]も[元/もと]StopReasonのStoppedとUsageを[返/かえ]し、[途中/とちゅう]textをCompleteへ[昇格/しょうかく]させない。"
+        cons "[構造/こうぞう]/schema[不正/ふせい]は[型付/かたつ]き[入力境界/にゅうりょくきょうかい]エラー、[受理後/じゅりご]の[不適合/ふてきごう]はPrintFailureとなる。"
+        cons "[返信/へんしん]Reportの[位置/いち]は[明示要求/めいじようきゅう]documentの[宣言/せんげん]source[閉包/へいほう]だけを[参照/さんしょう]でき、[独立/どくりつ]reply codecにもそのdocumentを[渡/わた]す。"
+        cons "ambient[補完/ほかん]と[非/ひ]StoppedのtraceOverflowを[拒否/きょひ]する。" nil
       nil
     nil
   nil
