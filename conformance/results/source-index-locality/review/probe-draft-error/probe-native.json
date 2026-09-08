@@ -1,0 +1,18 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--manifest-path",
+    "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-source-locality\\source-probe\\Cargo.toml",
+    "--test",
+    "tail",
+    "--target-dir",
+    "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-source-locality\\probe-native-target",
+    "--",
+    "--test-threads=1",
+    "--nocapture"
+  ],
+  "cwd": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-source-locality",
+  "exit_code": 101,
+  "elapsed_seconds": 12.144043684005737
+}

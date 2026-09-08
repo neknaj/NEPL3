@@ -1,0 +1,96 @@
+{
+  "head": "03e9b1cc5826a1a3c05db484a25892d293c68978",
+  "base": "c39ed0a5098a0db4cb22321eb727e2eaa3d44090",
+  "changed": [
+    ".github/workflows/ci.yml",
+    "doc/migration/README.md",
+    "doc/migration/generated/circuit-signatures.nepld",
+    "doc/migration/generated/doc-signatures.nepld",
+    "doc/migration/generated/grammar-signatures.nepld",
+    "doc/migration/generated/math-signatures.nepld",
+    "tools/generate/signatures.py",
+    "tools/generate/test_signatures.py"
+  ],
+  "files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "bytes": 13001,
+      "sha256": "408a0d80e2bb5b7a0386b20b2390a983aad5debea8cffe12301776421549d0c6"
+    },
+    {
+      "path": "AGENTS.md",
+      "bytes": 7613,
+      "sha256": "849027165216a9a3adcb22ef58a44bc698c83e1707d2aa0727a1b73105282236"
+    },
+    {
+      "path": "design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "doc/migration/README.md",
+      "bytes": 4279,
+      "sha256": "db4f93a8c6477e4150af64b9f61a090d738284c8a0e655339cd2cdc7d44dcb8a"
+    },
+    {
+      "path": "doc/migration/generated/circuit-signatures.nepld",
+      "bytes": 8266,
+      "sha256": "45737f2cce7466aaba255ad1e78f056d7786e4476420a7c4ee8b4a20637f425c"
+    },
+    {
+      "path": "doc/migration/generated/doc-signatures.nepld",
+      "bytes": 17771,
+      "sha256": "c24abdf64961161698de9cd80ce6914ce907533918baab2ebd44262459a0494e"
+    },
+    {
+      "path": "doc/migration/generated/grammar-signatures.nepld",
+      "bytes": 15622,
+      "sha256": "80cb27d4d9359df1b4dce15f4012866dbe1b9036ba6881ac514441cb2c74610e"
+    },
+    {
+      "path": "doc/migration/generated/math-signatures.nepld",
+      "bytes": 6755,
+      "sha256": "f4289f067c60dafac5e06d0dd9260a74d2963cc32efa13c9b7f83fd6c716241c"
+    },
+    {
+      "path": "doc/spec/04-grammar.md",
+      "bytes": 40702,
+      "sha256": "795b825e3b33d01bf82043c40e9426ed16b8a3299b6c73c1b684bd3bc1ef1c49"
+    },
+    {
+      "path": "doc/spec/05-document.md",
+      "bytes": 29876,
+      "sha256": "c6b0878316fec5554402ef0f0c2f5edb66ffd36bb363e17e2033b77fb53f27be"
+    },
+    {
+      "path": "doc/spec/16-doc-migration.md",
+      "bytes": 8435,
+      "sha256": "efa1351c80c5cb79e77162f84b521553038dfa30b8d0040237f3acd3c1375ea4"
+    },
+    {
+      "path": "languages/doc/syntax.neplg",
+      "bytes": 10108,
+      "sha256": "407c7ad41cbf0e9f8a131225379e62e27443f8a266a8b439b803f3b52f1902d9"
+    },
+    {
+      "path": "tools/audit/structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    },
+    {
+      "path": "tools/generate/signatures.py",
+      "bytes": 4256,
+      "sha256": "2c51c1d251b7b2f6c4856ac39e4c5b323179d5c320be263b6d673ec7b006c47b"
+    },
+    {
+      "path": "tools/generate/test_signatures.py",
+      "bytes": 3254,
+      "sha256": "1b00b8d15d6be638e24f81df1464d86a97da6f5c14aeb28ea8852bbea284c001"
+    }
+  ]
+}

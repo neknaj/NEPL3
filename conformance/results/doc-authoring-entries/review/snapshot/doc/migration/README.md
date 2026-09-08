@@ -6,13 +6,6 @@
 
 原稿の作成・内容レビューと、実処理系によるHTML生成・リンク/旧anchor互換・正式な正本切替えは別の工程です。[移行条件](../spec/16-doc-migration.md)が満たされるまではMarkdownを削除しません。切替え後はDocを単一の正本とし、必要なMarkdown入口は生成projectionとして維持します。
 
-## 構文表の生成候補
-
-`generated/*-signatures.nepld` は `design/forms.json` から生成する4言語の構文表です。
-`python tools/generate/signatures.py --write` で更新し、引数なし実行で差分を検査します。
-通常本文の機械的な置換ではなく、規範データのカテゴリ・form・field順・読取カテゴリ・arity・葉の規則をDocのsectionとtableへ投影します。コードはInlineCodeで保持します。
-これらは手書きで保守せず、元のMarkdown構文表との正本切替えや旧anchor互換の完了とは区別します。
-
 ## 生成変換器の検証候補
 
 以下の `00-contract.nepld` と確認用索引は、限定した変換器と処理系の検証に使う生成物です。これらは原本から再生成して内容・構造を比較し、手書きで保守しません。`authored/` の執筆原稿とは用途と更新方法が異なります。

@@ -1,0 +1,91 @@
+# Generated from design/forms.json by tools/generate/signatures.py; do not edit.
+article ja "Circuit：[構文/こうぶん]signatureの[全表/ぜんぴょう]"
+body
+  cons paragraph
+    cons sentence cons text "この" cons ruby text "表" text "ひょう" cons text "は" cons code "design/forms.json" cons text "から" cons ruby text "生成" text "せいせい" cons text "した。" nil
+    cons sentence cons code "List<T>" cons text "は" cons code "cons T List<T>" cons text " / " cons code "nil" cons text "、" cons code "@" cons text "は" cons ruby text "基礎" text "きそ" cons text "readerの" cons ruby text "識別" text "しきべつ" cons text "である。" nil
+    nil
+  cons section category_436972637569742f44657369676e sentence cons code "Circuit/Design" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "design" nil cons sentence cons code "Circuit.Design" nil cons sentence cons code "modules: List<Circuit/Module>, entry: @Name, tests: List<Circuit/Test>" nil cons "3" nil
+        nil
+      nil
+  cons section category_436972637569742f4d6f64756c65 sentence cons code "Circuit/Module" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "module" nil cons sentence cons code "Circuit.Module" nil cons sentence cons code "name: @Name, inputs: List<Circuit/Input>, declarations: List<Circuit/Declaration>, outputs: List<Circuit/Output>" nil cons "4" nil
+        nil
+      nil
+  cons section category_436972637569742f496e707574 sentence cons code "Circuit/Input" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "input" nil cons sentence cons code "Circuit.Input" nil cons sentence cons code "name: @Name, width: @Nat" nil cons "2" nil
+        nil
+      nil
+  cons section category_436972637569742f4f7574707574 sentence cons code "Circuit/Output" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "output" nil cons sentence cons code "Circuit.Output" nil cons sentence cons code "name: @Name, width: @Nat, value: Circuit/Expr" nil cons "3" nil
+        nil
+      nil
+  cons section category_436972637569742f4465636c61726174696f6e sentence cons code "Circuit/Declaration" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "wire" nil cons sentence cons code "Circuit.Wire" nil cons sentence cons code "name: @Name, value: Circuit/Expr" nil cons "2" nil
+        cons row cons sentence cons code "state" nil cons sentence cons code "Circuit.State" nil cons sentence cons code "name: @Name, width: @Nat, initial: Circuit/Bits" nil cons "3" nil
+        cons row cons sentence cons code "next" nil cons sentence cons code "Circuit.Next" nil cons sentence cons code "name: @Name, value: Circuit/Expr" nil cons "2" nil
+        cons row cons sentence cons code "inst" nil cons sentence cons code "Circuit.Instance" nil cons sentence cons code "name: @Name, module: @Name, inputs: List<Circuit/Expr>" nil cons "3" nil
+        nil
+      nil
+  cons section category_436972637569742f45787072 sentence cons code "Circuit/Expr" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "and" nil cons sentence cons code "Circuit.And" nil cons sentence cons code "left: Circuit/Expr, right: Circuit/Expr" nil cons "2" nil
+        cons row cons sentence cons code "or" nil cons sentence cons code "Circuit.Or" nil cons sentence cons code "left: Circuit/Expr, right: Circuit/Expr" nil cons "2" nil
+        cons row cons sentence cons code "xor" nil cons sentence cons code "Circuit.Xor" nil cons sentence cons code "left: Circuit/Expr, right: Circuit/Expr" nil cons "2" nil
+        cons row cons sentence cons code "nor" nil cons sentence cons code "Circuit.Nor" nil cons sentence cons code "left: Circuit/Expr, right: Circuit/Expr" nil cons "2" nil
+        cons row cons sentence cons code "add" nil cons sentence cons code "Circuit.Add" nil cons sentence cons code "left: Circuit/Expr, right: Circuit/Expr" nil cons "2" nil
+        cons row cons sentence cons code "concat" nil cons sentence cons code "Circuit.Concat" nil cons sentence cons code "left: Circuit/Expr, right: Circuit/Expr" nil cons "2" nil
+        cons row cons sentence cons code "not" nil cons sentence cons code "Circuit.Not" nil cons sentence cons code "value: Circuit/Expr" nil cons "1" nil
+        cons row cons sentence cons code "mux" nil cons sentence cons code "Circuit.Mux" nil cons sentence cons code "select: Circuit/Expr, yes: Circuit/Expr, no: Circuit/Expr" nil cons "3" nil
+        cons row cons sentence cons code "slice" nil cons sentence cons code "Circuit.Slice" nil cons sentence cons code "value: Circuit/Expr, lo: @Nat, width: @Nat" nil cons "3" nil
+        cons row cons sentence cons code "at" nil cons sentence cons code "Circuit.At" nil cons sentence cons code "instance: @Name, output: @Name" nil cons "2" nil
+        cons row cons sentence cons code "bits" nil cons sentence cons code "Circuit.Bits" nil cons sentence cons code "width: @Nat, value: @Nat" nil cons "2" nil
+        cons row cons sentence cons code "true" nil cons sentence cons code "Circuit.True" nil cons "なし" cons "0" nil
+        cons row cons sentence cons code "false" nil cons sentence cons code "Circuit.False" nil cons "なし" cons "0" nil
+        nil
+      cons paragraph
+        cons sentence cons ruby text "葉" text "は" cons text "の" cons ruby text "認識規則" text "にんしききそく" cons text "：" cons code "name" cons text "。" nil
+        nil
+      nil
+  cons section category_436972637569742f42697473 sentence cons code "Circuit/Bits" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "bits" nil cons sentence cons code "Circuit.Bits" nil cons sentence cons code "width: @Nat, value: @Nat" nil cons "2" nil
+        cons row cons sentence cons code "true" nil cons sentence cons code "Circuit.True" nil cons "なし" cons "0" nil
+        cons row cons sentence cons code "false" nil cons sentence cons code "Circuit.False" nil cons "なし" cons "0" nil
+        nil
+      nil
+  cons section category_436972637569742f54657374 sentence cons code "Circuit/Test" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "test" nil cons sentence cons code "Circuit.Test" nil cons sentence cons code "name: @Name, module: @Name, ticks: List<Circuit/Tick>" nil cons "3" nil
+        nil
+      nil
+  cons section category_436972637569742f5469636b sentence cons code "Circuit/Tick" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "tick" nil cons sentence cons code "Circuit.Tick" nil cons sentence cons code "inputs: List<Circuit/Bits>, outputs: List<Circuit/Bits>" nil cons "2" nil
+        nil
+      nil
+  nil
