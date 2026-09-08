@@ -1,0 +1,26 @@
+[
+  {
+    "original": "bootstrap.raw.fixture",
+    "original_sha256": "171b83a5cd58ab7fcb9b0ab153cdead70be4209b6a01504781d70eac5405cf41",
+    "normalized": "bootstrap.log",
+    "normalized_sha256": "1406231e1d9aab2952684c7a338515ddbaeeb2a47e3b4ee3396ef7c61219d72e"
+  },
+  {
+    "original": "content-before.raw.fixture",
+    "original_sha256": "0a7b9a61541dba1560cda01ff204db80a3efb8d5bd9efb02d85cdd9869d3a0d7",
+    "normalized": "content-before.log",
+    "normalized_sha256": "d5202a7cd75a87698713ad3f43f52b32705f86490c58d3afa8fe5fbf9074b39e"
+  },
+  {
+    "original": "content.raw.fixture",
+    "original_sha256": "54351b7ac3804d7e81b0258efd8e160653e8e90a2d31c2968bb537930850aa8a",
+    "normalized": "content.log",
+    "normalized_sha256": "de4c576c1b999570567121f08b4f881d20da7a23b180a954803ea0fb865cbf91"
+  },
+  {
+    "original": "run.raw.fixture",
+    "original_sha256": "713e103256df8f4cc0c43bfb24c43cc8c2bafdb1e677dcff13ec70e44ae7b6b0",
+    "normalized": "run.log",
+    "normalized_sha256": "791f9b77a1c274c9ec492fa79e4ecc1cf47c909072e7c1eb39665f020633ca83"
+  }
+]

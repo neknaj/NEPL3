@@ -1,0 +1,1718 @@
+[
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "07. Circuit言語げんご",
+      "方針ほうしん",
+      "1. surfaceと型かた",
+      "2. 各宣言かくせんげん",
+      "3. 演算えんざん",
+      "4. 検査けんさとelaboration",
+      "5. stepと時間じかん",
+      "6. NOR IRへの変換へんかん",
+      "7. SVG backendの配置はいち",
+      "8. 公開操作こうかいそうさ"
+    ],
+    "lists": [
+      6
+    ],
+    "unordered": [
+      5
+    ],
+    "inlineCodes": [
+      "(width, unsigned value)",
+      "0 <= value < 2^width",
+      "wire name expr",
+      "state name width initial",
+      "next name expr",
+      "next q q",
+      "inst name module arguments",
+      "output name width expr",
+      "[lo,lo+width)",
+      "initial(PreparedNetlist)",
+      "step",
+      "observe"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-73757266616365",
+      "n-6465636c61726174696f6e73",
+      "n-6f7065726174696f6e73",
+      "n-656c61626f726174696f6e",
+      "n-74696d65",
+      "n-6e6f72",
+      "n-737667",
+      "n-7075626c6963"
+    ],
+    "ruby": 350,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 375,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.671875,
+          "start": 7481,
+          "max": 7481
+        },
+        "final": 152
+      },
+      {
+        "id": "n-73757266616365",
+        "initial": {
+          "desired": 433.34375,
+          "start": 7481,
+          "max": 7481
+        },
+        "final": 433
+      },
+      {
+        "id": "n-6465636c61726174696f6e73",
+        "initial": {
+          "desired": 1475.078125,
+          "start": 7481,
+          "max": 7481
+        },
+        "final": 1475
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 2438.71875,
+          "start": 7481,
+          "max": 7481
+        },
+        "final": 2439
+      },
+      {
+        "id": "n-656c61626f726174696f6e",
+        "initial": {
+          "desired": 2991.03125,
+          "start": 7481,
+          "max": 7481
+        },
+        "final": 2991
+      },
+      {
+        "id": "n-74696d65",
+        "initial": {
+          "desired": 4501.015625,
+          "start": 0,
+          "max": 7481
+        },
+        "final": 4501
+      },
+      {
+        "id": "n-6e6f72",
+        "initial": {
+          "desired": 5842.125,
+          "start": 0,
+          "max": 7481
+        },
+        "final": 5842
+      },
+      {
+        "id": "n-737667",
+        "initial": {
+          "desired": 7137.234375,
+          "start": 0,
+          "max": 7481
+        },
+        "final": 7137
+      },
+      {
+        "id": "n-7075626c6963",
+        "initial": {
+          "desired": 7481,
+          "start": 0,
+          "max": 7481
+        },
+        "final": 7481
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "07. Circuit言語げんご",
+      "方針ほうしん",
+      "1. surfaceと型かた",
+      "2. 各宣言かくせんげん",
+      "3. 演算えんざん",
+      "4. 検査けんさとelaboration",
+      "5. stepと時間じかん",
+      "6. NOR IRへの変換へんかん",
+      "7. SVG backendの配置はいち",
+      "8. 公開操作こうかいそうさ"
+    ],
+    "lists": [
+      6
+    ],
+    "unordered": [
+      5
+    ],
+    "inlineCodes": [
+      "(width, unsigned value)",
+      "0 <= value < 2^width",
+      "wire name expr",
+      "state name width initial",
+      "next name expr",
+      "next q q",
+      "inst name module arguments",
+      "output name width expr",
+      "[lo,lo+width)",
+      "initial(PreparedNetlist)",
+      "step",
+      "observe"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-73757266616365",
+      "n-6465636c61726174696f6e73",
+      "n-6f7065726174696f6e73",
+      "n-656c61626f726174696f6e",
+      "n-74696d65",
+      "n-6e6f72",
+      "n-737667",
+      "n-7075626c6963"
+    ],
+    "ruby": 350,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 1280,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.671875,
+          "start": 2540,
+          "max": 2540
+        },
+        "final": 152
+      },
+      {
+        "id": "n-73757266616365",
+        "initial": {
+          "desired": 295.15625,
+          "start": 2540,
+          "max": 2540
+        },
+        "final": 295
+      },
+      {
+        "id": "n-6465636c61726174696f6e73",
+        "initial": {
+          "desired": 715.015625,
+          "start": 2540,
+          "max": 2540
+        },
+        "final": 715
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 1097.109375,
+          "start": 2540,
+          "max": 2540
+        },
+        "final": 1097
+      },
+      {
+        "id": "n-656c61626f726174696f6e",
+        "initial": {
+          "desired": 1378.78125,
+          "start": 0,
+          "max": 2540
+        },
+        "final": 1379
+      },
+      {
+        "id": "n-74696d65",
+        "initial": {
+          "desired": 1921.453125,
+          "start": 0,
+          "max": 2540
+        },
+        "final": 1921
+      },
+      {
+        "id": "n-6e6f72",
+        "initial": {
+          "desired": 2433.4375,
+          "start": 0,
+          "max": 2540
+        },
+        "final": 2433
+      },
+      {
+        "id": "n-737667",
+        "initial": {
+          "desired": 2540,
+          "start": 0,
+          "max": 2540
+        },
+        "final": 2540
+      },
+      {
+        "id": "n-7075626c6963",
+        "initial": {
+          "desired": 2540,
+          "start": 0,
+          "max": 2540
+        },
+        "final": 2540
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "07. Circuit言語げんご",
+      "方針ほうしん",
+      "1. surfaceと型かた",
+      "2. 各宣言かくせんげん",
+      "3. 演算えんざん",
+      "4. 検査けんさとelaboration",
+      "5. stepと時間じかん",
+      "6. NOR IRへの変換へんかん",
+      "7. SVG backendの配置はいち",
+      "8. 公開操作こうかいそうさ"
+    ],
+    "lists": [
+      6
+    ],
+    "unordered": [
+      5
+    ],
+    "inlineCodes": [
+      "(width, unsigned value)",
+      "0 <= value < 2^width",
+      "wire name expr",
+      "state name width initial",
+      "next name expr",
+      "next q q",
+      "inst name module arguments",
+      "output name width expr",
+      "[lo,lo+width)",
+      "initial(PreparedNetlist)",
+      "step",
+      "observe"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-73757266616365",
+      "n-6465636c61726174696f6e73",
+      "n-6f7065726174696f6e73",
+      "n-656c61626f726174696f6e",
+      "n-74696d65",
+      "n-6e6f72",
+      "n-737667",
+      "n-7075626c6963"
+    ],
+    "ruby": 350,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 375,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.671875,
+          "start": 7481,
+          "max": 7481
+        },
+        "final": 152
+      },
+      {
+        "id": "n-73757266616365",
+        "initial": {
+          "desired": 433.34375,
+          "start": 7481,
+          "max": 7481
+        },
+        "final": 433
+      },
+      {
+        "id": "n-6465636c61726174696f6e73",
+        "initial": {
+          "desired": 1475.078125,
+          "start": 7481,
+          "max": 7481
+        },
+        "final": 1475
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 2438.71875,
+          "start": 7481,
+          "max": 7481
+        },
+        "final": 2439
+      },
+      {
+        "id": "n-656c61626f726174696f6e",
+        "initial": {
+          "desired": 2991.03125,
+          "start": 7481,
+          "max": 7481
+        },
+        "final": 2991
+      },
+      {
+        "id": "n-74696d65",
+        "initial": {
+          "desired": 4501.015625,
+          "start": 0,
+          "max": 7481
+        },
+        "final": 4501
+      },
+      {
+        "id": "n-6e6f72",
+        "initial": {
+          "desired": 5842.125,
+          "start": 0,
+          "max": 7481
+        },
+        "final": 5842
+      },
+      {
+        "id": "n-737667",
+        "initial": {
+          "desired": 7137.234375,
+          "start": 0,
+          "max": 7481
+        },
+        "final": 7137
+      },
+      {
+        "id": "n-7075626c6963",
+        "initial": {
+          "desired": 7481,
+          "start": 0,
+          "max": 7481
+        },
+        "final": 7481
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "07. Circuit言語げんご",
+      "方針ほうしん",
+      "1. surfaceと型かた",
+      "2. 各宣言かくせんげん",
+      "3. 演算えんざん",
+      "4. 検査けんさとelaboration",
+      "5. stepと時間じかん",
+      "6. NOR IRへの変換へんかん",
+      "7. SVG backendの配置はいち",
+      "8. 公開操作こうかいそうさ"
+    ],
+    "lists": [
+      6
+    ],
+    "unordered": [
+      5
+    ],
+    "inlineCodes": [
+      "(width, unsigned value)",
+      "0 <= value < 2^width",
+      "wire name expr",
+      "state name width initial",
+      "next name expr",
+      "next q q",
+      "inst name module arguments",
+      "output name width expr",
+      "[lo,lo+width)",
+      "initial(PreparedNetlist)",
+      "step",
+      "observe"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-73757266616365",
+      "n-6465636c61726174696f6e73",
+      "n-6f7065726174696f6e73",
+      "n-656c61626f726174696f6e",
+      "n-74696d65",
+      "n-6e6f72",
+      "n-737667",
+      "n-7075626c6963"
+    ],
+    "ruby": 350,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 1280,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.671875,
+          "start": 2540,
+          "max": 2540
+        },
+        "final": 152
+      },
+      {
+        "id": "n-73757266616365",
+        "initial": {
+          "desired": 295.15625,
+          "start": 2540,
+          "max": 2540
+        },
+        "final": 295
+      },
+      {
+        "id": "n-6465636c61726174696f6e73",
+        "initial": {
+          "desired": 715.015625,
+          "start": 2540,
+          "max": 2540
+        },
+        "final": 715
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 1097.109375,
+          "start": 2540,
+          "max": 2540
+        },
+        "final": 1097
+      },
+      {
+        "id": "n-656c61626f726174696f6e",
+        "initial": {
+          "desired": 1378.78125,
+          "start": 0,
+          "max": 2540
+        },
+        "final": 1379
+      },
+      {
+        "id": "n-74696d65",
+        "initial": {
+          "desired": 1921.453125,
+          "start": 0,
+          "max": 2540
+        },
+        "final": 1921
+      },
+      {
+        "id": "n-6e6f72",
+        "initial": {
+          "desired": 2433.4375,
+          "start": 0,
+          "max": 2540
+        },
+        "final": 2433
+      },
+      {
+        "id": "n-737667",
+        "initial": {
+          "desired": 2540,
+          "start": 0,
+          "max": 2540
+        },
+        "final": 2540
+      },
+      {
+        "id": "n-7075626c6963",
+        "initial": {
+          "desired": 2540,
+          "start": 0,
+          "max": 2540
+        },
+        "final": 2540
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "07. Circuit言語げんご",
+      "方針ほうしん",
+      "1. surfaceと型かた",
+      "2. 各宣言かくせんげん",
+      "3. 演算えんざん",
+      "4. 検査けんさとelaboration",
+      "5. stepと時間じかん",
+      "6. NOR IRへの変換へんかん",
+      "7. SVG backendの配置はいち",
+      "8. 公開操作こうかいそうさ"
+    ],
+    "lists": [
+      6
+    ],
+    "unordered": [
+      5
+    ],
+    "inlineCodes": [
+      "(width, unsigned value)",
+      "0 <= value < 2^width",
+      "wire name expr",
+      "state name width initial",
+      "next name expr",
+      "next q q",
+      "inst name module arguments",
+      "output name width expr",
+      "[lo,lo+width)",
+      "initial(PreparedNetlist)",
+      "step",
+      "observe"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-73757266616365",
+      "n-6465636c61726174696f6e73",
+      "n-6f7065726174696f6e73",
+      "n-656c61626f726174696f6e",
+      "n-74696d65",
+      "n-6e6f72",
+      "n-737667",
+      "n-7075626c6963"
+    ],
+    "ruby": 350,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 375,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.6666717529297,
+          "start": 7450,
+          "max": 7450
+        },
+        "final": 152
+      },
+      {
+        "id": "n-73757266616365",
+        "initial": {
+          "desired": 433.433349609375,
+          "start": 7450,
+          "max": 7450
+        },
+        "final": 433.4333190917969
+      },
+      {
+        "id": "n-6465636c61726174696f6e73",
+        "initial": {
+          "desired": 1460.2833251953125,
+          "start": 7450,
+          "max": 7450
+        },
+        "final": 1460.2833251953125
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 2430.333251953125,
+          "start": 7450,
+          "max": 7450
+        },
+        "final": 2430
+      },
+      {
+        "id": "n-656c61626f726174696f6e",
+        "initial": {
+          "desired": 2983.833251953125,
+          "start": 7450,
+          "max": 7450
+        },
+        "final": 2983.833251953125
+      },
+      {
+        "id": "n-74696d65",
+        "initial": {
+          "desired": 4494.4833984375,
+          "start": 0,
+          "max": 7450
+        },
+        "final": 4494.4833984375
+      },
+      {
+        "id": "n-6e6f72",
+        "initial": {
+          "desired": 5839.16650390625,
+          "start": 0,
+          "max": 7450
+        },
+        "final": 5839.16650390625
+      },
+      {
+        "id": "n-737667",
+        "initial": {
+          "desired": 7134.75,
+          "start": 0,
+          "max": 7450
+        },
+        "final": 7134
+      },
+      {
+        "id": "n-7075626c6963",
+        "initial": {
+          "desired": 7450,
+          "start": 0,
+          "max": 7450
+        },
+        "final": 7450
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "07. Circuit言語げんご",
+      "方針ほうしん",
+      "1. surfaceと型かた",
+      "2. 各宣言かくせんげん",
+      "3. 演算えんざん",
+      "4. 検査けんさとelaboration",
+      "5. stepと時間じかん",
+      "6. NOR IRへの変換へんかん",
+      "7. SVG backendの配置はいち",
+      "8. 公開操作こうかいそうさ"
+    ],
+    "lists": [
+      6
+    ],
+    "unordered": [
+      5
+    ],
+    "inlineCodes": [
+      "(width, unsigned value)",
+      "0 <= value < 2^width",
+      "wire name expr",
+      "state name width initial",
+      "next name expr",
+      "next q q",
+      "inst name module arguments",
+      "output name width expr",
+      "[lo,lo+width)",
+      "initial(PreparedNetlist)",
+      "step",
+      "observe"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-73757266616365",
+      "n-6465636c61726174696f6e73",
+      "n-6f7065726174696f6e73",
+      "n-656c61626f726174696f6e",
+      "n-74696d65",
+      "n-6e6f72",
+      "n-737667",
+      "n-7075626c6963"
+    ],
+    "ruby": 350,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 1280,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.6666717529297,
+          "start": 2568,
+          "max": 2568
+        },
+        "final": 151
+      },
+      {
+        "id": "n-73757266616365",
+        "initial": {
+          "desired": 295.183349609375,
+          "start": 2568,
+          "max": 2568
+        },
+        "final": 295
+      },
+      {
+        "id": "n-6465636c61726174696f6e73",
+        "initial": {
+          "desired": 716.2000122070312,
+          "start": 2568,
+          "max": 2568
+        },
+        "final": 716
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 1120.7333984375,
+          "start": 2568,
+          "max": 2568
+        },
+        "final": 1121
+      },
+      {
+        "id": "n-656c61626f726174696f6e",
+        "initial": {
+          "desired": 1403.5,
+          "start": 0,
+          "max": 2568
+        },
+        "final": 1404
+      },
+      {
+        "id": "n-74696d65",
+        "initial": {
+          "desired": 1946.4000244140625,
+          "start": 0,
+          "max": 2568
+        },
+        "final": 1946
+      },
+      {
+        "id": "n-6e6f72",
+        "initial": {
+          "desired": 2460.583251953125,
+          "start": 0,
+          "max": 2568
+        },
+        "final": 2461
+      },
+      {
+        "id": "n-737667",
+        "initial": {
+          "desired": 2568,
+          "start": 0,
+          "max": 2568
+        },
+        "final": 2568
+      },
+      {
+        "id": "n-7075626c6963",
+        "initial": {
+          "desired": 2568,
+          "start": 0,
+          "max": 2568
+        },
+        "final": 2568
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "07. Circuit言語げんご",
+      "方針ほうしん",
+      "1. surfaceと型かた",
+      "2. 各宣言かくせんげん",
+      "3. 演算えんざん",
+      "4. 検査けんさとelaboration",
+      "5. stepと時間じかん",
+      "6. NOR IRへの変換へんかん",
+      "7. SVG backendの配置はいち",
+      "8. 公開操作こうかいそうさ"
+    ],
+    "lists": [
+      6
+    ],
+    "unordered": [
+      5
+    ],
+    "inlineCodes": [
+      "(width, unsigned value)",
+      "0 <= value < 2^width",
+      "wire name expr",
+      "state name width initial",
+      "next name expr",
+      "next q q",
+      "inst name module arguments",
+      "output name width expr",
+      "[lo,lo+width)",
+      "initial(PreparedNetlist)",
+      "step",
+      "observe"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-73757266616365",
+      "n-6465636c61726174696f6e73",
+      "n-6f7065726174696f6e73",
+      "n-656c61626f726174696f6e",
+      "n-74696d65",
+      "n-6e6f72",
+      "n-737667",
+      "n-7075626c6963"
+    ],
+    "ruby": 350,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 375,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.6666717529297,
+          "start": 7450,
+          "max": 7450
+        },
+        "final": 152
+      },
+      {
+        "id": "n-73757266616365",
+        "initial": {
+          "desired": 433.433349609375,
+          "start": 7450,
+          "max": 7450
+        },
+        "final": 433.4333190917969
+      },
+      {
+        "id": "n-6465636c61726174696f6e73",
+        "initial": {
+          "desired": 1460.2833251953125,
+          "start": 7450,
+          "max": 7450
+        },
+        "final": 1460.2833251953125
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 2430.333251953125,
+          "start": 7450,
+          "max": 7450
+        },
+        "final": 2430
+      },
+      {
+        "id": "n-656c61626f726174696f6e",
+        "initial": {
+          "desired": 2983.833251953125,
+          "start": 7450,
+          "max": 7450
+        },
+        "final": 2983.833251953125
+      },
+      {
+        "id": "n-74696d65",
+        "initial": {
+          "desired": 4494.4833984375,
+          "start": 0,
+          "max": 7450
+        },
+        "final": 4494.4833984375
+      },
+      {
+        "id": "n-6e6f72",
+        "initial": {
+          "desired": 5839.16650390625,
+          "start": 0,
+          "max": 7450
+        },
+        "final": 5839.16650390625
+      },
+      {
+        "id": "n-737667",
+        "initial": {
+          "desired": 7134.75,
+          "start": 0,
+          "max": 7450
+        },
+        "final": 7134
+      },
+      {
+        "id": "n-7075626c6963",
+        "initial": {
+          "desired": 7450,
+          "start": 0,
+          "max": 7450
+        },
+        "final": 7450
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "07. Circuit言語げんご",
+      "方針ほうしん",
+      "1. surfaceと型かた",
+      "2. 各宣言かくせんげん",
+      "3. 演算えんざん",
+      "4. 検査けんさとelaboration",
+      "5. stepと時間じかん",
+      "6. NOR IRへの変換へんかん",
+      "7. SVG backendの配置はいち",
+      "8. 公開操作こうかいそうさ"
+    ],
+    "lists": [
+      6
+    ],
+    "unordered": [
+      5
+    ],
+    "inlineCodes": [
+      "(width, unsigned value)",
+      "0 <= value < 2^width",
+      "wire name expr",
+      "state name width initial",
+      "next name expr",
+      "next q q",
+      "inst name module arguments",
+      "output name width expr",
+      "[lo,lo+width)",
+      "initial(PreparedNetlist)",
+      "step",
+      "observe"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-73757266616365",
+      "n-6465636c61726174696f6e73",
+      "n-6f7065726174696f6e73",
+      "n-656c61626f726174696f6e",
+      "n-74696d65",
+      "n-6e6f72",
+      "n-737667",
+      "n-7075626c6963"
+    ],
+    "ruby": 350,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 1280,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.6666717529297,
+          "start": 2568,
+          "max": 2568
+        },
+        "final": 152
+      },
+      {
+        "id": "n-73757266616365",
+        "initial": {
+          "desired": 295.183349609375,
+          "start": 2568,
+          "max": 2568
+        },
+        "final": 295
+      },
+      {
+        "id": "n-6465636c61726174696f6e73",
+        "initial": {
+          "desired": 716.2000122070312,
+          "start": 2568,
+          "max": 2568
+        },
+        "final": 716
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 1120.7333984375,
+          "start": 2568,
+          "max": 2568
+        },
+        "final": 1121
+      },
+      {
+        "id": "n-656c61626f726174696f6e",
+        "initial": {
+          "desired": 1403.5,
+          "start": 0,
+          "max": 2568
+        },
+        "final": 1403
+      },
+      {
+        "id": "n-74696d65",
+        "initial": {
+          "desired": 1946.4000244140625,
+          "start": 0,
+          "max": 2568
+        },
+        "final": 1946
+      },
+      {
+        "id": "n-6e6f72",
+        "initial": {
+          "desired": 2460.583251953125,
+          "start": 0,
+          "max": 2568
+        },
+        "final": 2461
+      },
+      {
+        "id": "n-737667",
+        "initial": {
+          "desired": 2568,
+          "start": 0,
+          "max": 2568
+        },
+        "final": 2568
+      },
+      {
+        "id": "n-7075626c6963",
+        "initial": {
+          "desired": 2568,
+          "start": 0,
+          "max": 2568
+        },
+        "final": 2568
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "07. Circuit言語げんご",
+      "方針ほうしん",
+      "1. surfaceと型かた",
+      "2. 各宣言かくせんげん",
+      "3. 演算えんざん",
+      "4. 検査けんさとelaboration",
+      "5. stepと時間じかん",
+      "6. NOR IRへの変換へんかん",
+      "7. SVG backendの配置はいち",
+      "8. 公開操作こうかいそうさ"
+    ],
+    "lists": [
+      6
+    ],
+    "unordered": [
+      5
+    ],
+    "inlineCodes": [
+      "(width, unsigned value)",
+      "0 <= value < 2^width",
+      "wire name expr",
+      "state name width initial",
+      "next name expr",
+      "next q q",
+      "inst name module arguments",
+      "output name width expr",
+      "[lo,lo+width)",
+      "initial(PreparedNetlist)",
+      "step",
+      "observe"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-73757266616365",
+      "n-6465636c61726174696f6e73",
+      "n-6f7065726174696f6e73",
+      "n-656c61626f726174696f6e",
+      "n-74696d65",
+      "n-6e6f72",
+      "n-737667",
+      "n-7075626c6963"
+    ],
+    "ruby": 350,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 375,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.65625,
+          "start": 6674,
+          "max": 6674
+        },
+        "final": 152
+      },
+      {
+        "id": "n-73757266616365",
+        "initial": {
+          "desired": 433.296875,
+          "start": 6674,
+          "max": 6674
+        },
+        "final": 433
+      },
+      {
+        "id": "n-6465636c61726174696f6e73",
+        "initial": {
+          "desired": 1371.34375,
+          "start": 6674,
+          "max": 6674
+        },
+        "final": 1371
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 2260.09375,
+          "start": 6674,
+          "max": 6674
+        },
+        "final": 2260
+      },
+      {
+        "id": "n-656c61626f726174696f6e",
+        "initial": {
+          "desired": 2795.109375,
+          "start": 6674,
+          "max": 6674
+        },
+        "final": 2795
+      },
+      {
+        "id": "n-74696d65",
+        "initial": {
+          "desired": 4086.28125,
+          "start": 0,
+          "max": 6674
+        },
+        "final": 4086
+      },
+      {
+        "id": "n-6e6f72",
+        "initial": {
+          "desired": 5271.90625,
+          "start": 0,
+          "max": 6674
+        },
+        "final": 5272
+      },
+      {
+        "id": "n-737667",
+        "initial": {
+          "desired": 6451.796875,
+          "start": 0,
+          "max": 6674
+        },
+        "final": 6452
+      },
+      {
+        "id": "n-7075626c6963",
+        "initial": {
+          "desired": 6674,
+          "start": 0,
+          "max": 6674
+        },
+        "final": 6674
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "07. Circuit言語げんご",
+      "方針ほうしん",
+      "1. surfaceと型かた",
+      "2. 各宣言かくせんげん",
+      "3. 演算えんざん",
+      "4. 検査けんさとelaboration",
+      "5. stepと時間じかん",
+      "6. NOR IRへの変換へんかん",
+      "7. SVG backendの配置はいち",
+      "8. 公開操作こうかいそうさ"
+    ],
+    "lists": [
+      6
+    ],
+    "unordered": [
+      5
+    ],
+    "inlineCodes": [
+      "(width, unsigned value)",
+      "0 <= value < 2^width",
+      "wire name expr",
+      "state name width initial",
+      "next name expr",
+      "next q q",
+      "inst name module arguments",
+      "output name width expr",
+      "[lo,lo+width)",
+      "initial(PreparedNetlist)",
+      "step",
+      "observe"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-73757266616365",
+      "n-6465636c61726174696f6e73",
+      "n-6f7065726174696f6e73",
+      "n-656c61626f726174696f6e",
+      "n-74696d65",
+      "n-6e6f72",
+      "n-737667",
+      "n-7075626c6963"
+    ],
+    "ruby": 350,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 1280,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.65625,
+          "start": 2206,
+          "max": 2206
+        },
+        "final": 152
+      },
+      {
+        "id": "n-73757266616365",
+        "initial": {
+          "desired": 295.109375,
+          "start": 2206,
+          "max": 2206
+        },
+        "final": 295
+      },
+      {
+        "id": "n-6465636c61726174696f6e73",
+        "initial": {
+          "desired": 651.609375,
+          "start": 2206,
+          "max": 2206
+        },
+        "final": 652
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 1004.875,
+          "start": 2206,
+          "max": 2206
+        },
+        "final": 1005
+      },
+      {
+        "id": "n-656c61626f726174696f6e",
+        "initial": {
+          "desired": 1286.515625,
+          "start": 0,
+          "max": 2206
+        },
+        "final": 1287
+      },
+      {
+        "id": "n-74696d65",
+        "initial": {
+          "desired": 1754.296875,
+          "start": 0,
+          "max": 2206
+        },
+        "final": 1754
+      },
+      {
+        "id": "n-6e6f72",
+        "initial": {
+          "desired": 2128.0625,
+          "start": 0,
+          "max": 2206
+        },
+        "final": 2128
+      },
+      {
+        "id": "n-737667",
+        "initial": {
+          "desired": 2206,
+          "start": 0,
+          "max": 2206
+        },
+        "final": 2206
+      },
+      {
+        "id": "n-7075626c6963",
+        "initial": {
+          "desired": 2206,
+          "start": 0,
+          "max": 2206
+        },
+        "final": 2206
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "07. Circuit言語げんご",
+      "方針ほうしん",
+      "1. surfaceと型かた",
+      "2. 各宣言かくせんげん",
+      "3. 演算えんざん",
+      "4. 検査けんさとelaboration",
+      "5. stepと時間じかん",
+      "6. NOR IRへの変換へんかん",
+      "7. SVG backendの配置はいち",
+      "8. 公開操作こうかいそうさ"
+    ],
+    "lists": [
+      6
+    ],
+    "unordered": [
+      5
+    ],
+    "inlineCodes": [
+      "(width, unsigned value)",
+      "0 <= value < 2^width",
+      "wire name expr",
+      "state name width initial",
+      "next name expr",
+      "next q q",
+      "inst name module arguments",
+      "output name width expr",
+      "[lo,lo+width)",
+      "initial(PreparedNetlist)",
+      "step",
+      "observe"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-73757266616365",
+      "n-6465636c61726174696f6e73",
+      "n-6f7065726174696f6e73",
+      "n-656c61626f726174696f6e",
+      "n-74696d65",
+      "n-6e6f72",
+      "n-737667",
+      "n-7075626c6963"
+    ],
+    "ruby": 350,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 375,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.65625,
+          "start": 6674,
+          "max": 6674
+        },
+        "final": 152
+      },
+      {
+        "id": "n-73757266616365",
+        "initial": {
+          "desired": 433.296875,
+          "start": 6674,
+          "max": 6674
+        },
+        "final": 433
+      },
+      {
+        "id": "n-6465636c61726174696f6e73",
+        "initial": {
+          "desired": 1371.34375,
+          "start": 6674,
+          "max": 6674
+        },
+        "final": 1371
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 2260.09375,
+          "start": 6674,
+          "max": 6674
+        },
+        "final": 2260
+      },
+      {
+        "id": "n-656c61626f726174696f6e",
+        "initial": {
+          "desired": 2795.109375,
+          "start": 6674,
+          "max": 6674
+        },
+        "final": 2795
+      },
+      {
+        "id": "n-74696d65",
+        "initial": {
+          "desired": 4086.28125,
+          "start": 0,
+          "max": 6674
+        },
+        "final": 4086
+      },
+      {
+        "id": "n-6e6f72",
+        "initial": {
+          "desired": 5271.90625,
+          "start": 0,
+          "max": 6674
+        },
+        "final": 5272
+      },
+      {
+        "id": "n-737667",
+        "initial": {
+          "desired": 6451.796875,
+          "start": 0,
+          "max": 6674
+        },
+        "final": 6452
+      },
+      {
+        "id": "n-7075626c6963",
+        "initial": {
+          "desired": 6674,
+          "start": 0,
+          "max": 6674
+        },
+        "final": 6674
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "07. Circuit言語げんご",
+      "方針ほうしん",
+      "1. surfaceと型かた",
+      "2. 各宣言かくせんげん",
+      "3. 演算えんざん",
+      "4. 検査けんさとelaboration",
+      "5. stepと時間じかん",
+      "6. NOR IRへの変換へんかん",
+      "7. SVG backendの配置はいち",
+      "8. 公開操作こうかいそうさ"
+    ],
+    "lists": [
+      6
+    ],
+    "unordered": [
+      5
+    ],
+    "inlineCodes": [
+      "(width, unsigned value)",
+      "0 <= value < 2^width",
+      "wire name expr",
+      "state name width initial",
+      "next name expr",
+      "next q q",
+      "inst name module arguments",
+      "output name width expr",
+      "[lo,lo+width)",
+      "initial(PreparedNetlist)",
+      "step",
+      "observe"
+    ],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-73757266616365",
+      "n-6465636c61726174696f6e73",
+      "n-6f7065726174696f6e73",
+      "n-656c61626f726174696f6e",
+      "n-74696d65",
+      "n-6e6f72",
+      "n-737667",
+      "n-7075626c6963"
+    ],
+    "ruby": 350,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 1280,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.65625,
+          "start": 2206,
+          "max": 2206
+        },
+        "final": 152
+      },
+      {
+        "id": "n-73757266616365",
+        "initial": {
+          "desired": 295.109375,
+          "start": 2206,
+          "max": 2206
+        },
+        "final": 295
+      },
+      {
+        "id": "n-6465636c61726174696f6e73",
+        "initial": {
+          "desired": 651.609375,
+          "start": 2206,
+          "max": 2206
+        },
+        "final": 652
+      },
+      {
+        "id": "n-6f7065726174696f6e73",
+        "initial": {
+          "desired": 1004.875,
+          "start": 2206,
+          "max": 2206
+        },
+        "final": 1005
+      },
+      {
+        "id": "n-656c61626f726174696f6e",
+        "initial": {
+          "desired": 1286.515625,
+          "start": 0,
+          "max": 2206
+        },
+        "final": 1287
+      },
+      {
+        "id": "n-74696d65",
+        "initial": {
+          "desired": 1754.296875,
+          "start": 0,
+          "max": 2206
+        },
+        "final": 1754
+      },
+      {
+        "id": "n-6e6f72",
+        "initial": {
+          "desired": 2128.0625,
+          "start": 0,
+          "max": 2206
+        },
+        "final": 2128
+      },
+      {
+        "id": "n-737667",
+        "initial": {
+          "desired": 2206,
+          "start": 0,
+          "max": 2206
+        },
+        "final": 2206
+      },
+      {
+        "id": "n-7075626c6963",
+        "initial": {
+          "desired": 2206,
+          "start": 0,
+          "max": 2206
+        },
+        "final": 2206
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  }
+]

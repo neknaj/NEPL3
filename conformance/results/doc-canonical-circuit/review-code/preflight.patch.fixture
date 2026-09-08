@@ -1,0 +1,100 @@
+diff --git a/doc/canonical.json b/doc/canonical.json
+index ce1098e..125c850 100644
+--- a/doc/canonical.json
++++ b/doc/canonical.json
+@@ -40,13 +40,21 @@
+       "aliases": "doc/migration/aliases/18-html-delivery.json",
+       "route": "docs/spec/18-html-delivery.html",
+       "renderer": "nepl3-tools.markdown-annotated/2"
++    },
++    {
++      "id": "circuit",
++      "source": "doc/spec/07-circuit.nepld",
++      "projection": "doc/spec/07-circuit.md",
++      "aliases": "doc/migration/aliases/07-circuit.json",
++      "route": "docs/spec/07-circuit.html",
++      "renderer": "nepl3-tools.markdown-annotated/2"
+     }
+   ],
+   "output_limits": {
+     "source_bytes": 10000000,
+     "work": 300000000,
+     "depth": 1000,
+-    "nodes": 10000000,
++    "nodes": 20000000,
+     "allocation_units": 750000000,
+     "output_bytes": 10000000,
+     "diagnostics": 1000,
+diff --git a/doc/migration/aliases/07-circuit.json b/doc/migration/aliases/07-circuit.json
+new file mode 100644
+index 0000000..56b7966
+--- /dev/null
++++ b/doc/migration/aliases/07-circuit.json
+@@ -0,0 +1,42 @@
++[
++  {
++    "section": null,
++    "name": "07-circuit言語"
++  },
++  {
++    "section": "policy",
++    "name": "方針"
++  },
++  {
++    "section": "surface",
++    "name": "1-surfaceと型"
++  },
++  {
++    "section": "declarations",
++    "name": "2-各宣言"
++  },
++  {
++    "section": "operations",
++    "name": "3-演算"
++  },
++  {
++    "section": "elaboration",
++    "name": "4-検査とelaboration"
++  },
++  {
++    "section": "time",
++    "name": "5-stepと時間"
++  },
++  {
++    "section": "nor",
++    "name": "6-nor-ir"
++  },
++  {
++    "section": "svg",
++    "name": "7-svg-backend"
++  },
++  {
++    "section": "public",
++    "name": "8-公開操作"
++  }
++]
+diff --git a/doc/migration/authored/07-circuit.nepld b/doc/spec/07-circuit.nepld
+similarity index 99%
+rename from doc/migration/authored/07-circuit.nepld
+rename to doc/spec/07-circuit.nepld
+index a35f180..cd8f5d9 100644
+--- a/doc/migration/authored/07-circuit.nepld
++++ b/doc/spec/07-circuit.nepld
+@@ -118,7 +118,7 @@ body
+       cons "これらを[適当/てきとう]に[二値/にち]へ[潰/つぶ]す[変換/へんかん]は[許可/きょか]しない。"
+       cons "[別/べつ]modelを[導入/どうにゅう]するならschemaと[操作/そうさ]の[版/ばん]を[分/わ]ける。" nil
+     nil
+-  cons section nor "6. NOR IR" body
++  cons section nor "6. NOR IRへの[変換/へんかん]" body
+     cons paragraph
+       cons "[正式/せいしき]なlowering[先/さき]は4[種/しゅ]のnode（InputBit、StateBit、ConstBit、Nor2）と2[種/しゅ]のsink（nextBits、outputBits）から[成/な]るNorNetlist。"
+       cons "vector-level[演算/えんざん]をbit-levelへ[展開/てんかい]する。"
+@@ -141,7 +141,7 @@ body
+       cons "[比較試験/ひかくしけん]は[元/もと]のvector evaluatorとNOR evaluatorの[両方/りょうほう]で、[全小幅入力/ぜんしょうはばにゅうりょく]・[複数/ふくすう]tickを[比較/ひかく]する。"
+       cons "NOR evaluatorを[元/もと]のevaluatorと[同/おな]じコードへの[単/たん]なるaliasにしない。" nil
+     nil
+-  cons section svg "7. SVG backend" body
++  cons section svg "7. SVG backendの[配置/はいち]" body
+     cons paragraph
+       cons "elaborated vector-level graphを[対象/たいしょう]に、[入力/にゅうりょく]/stateをrank0、[各組合/かくくみあわ]せnodeを[前提/ぜんてい]nodeの[最大/さいだい]rank+1、[出力/しゅつりょく]を[最後/さいご]に[配置/はいち]する。"
+       cons "[同/どう]rank[内/ない]は[定義/ていぎ]/instance ordinal[順/じゅん]。"

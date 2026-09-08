@@ -1,0 +1,3 @@
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-canonical-circuit\tools)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 14.63s
+     Running unittests src\lib.rs (target\debug\deps\nepl3_tools-69244717011a8889.exe)

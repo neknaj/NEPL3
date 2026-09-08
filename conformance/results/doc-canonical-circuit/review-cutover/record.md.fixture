@@ -1,0 +1,37 @@
+# Independent chapter 07 canonical cutover browser review
+
+Fixed source `e600c9325193fce64e4c4a7116a8cecca31f6e75`, worktree NEPL3-doc-canonical-circuit. No blocking issue found in the tested scope. Only local review evidence was written; no source, manuscript, registry, production or Git changes.
+
+Expectations were derived from the complete fixed typed Doc manuscript using the formal source-form audit parser and manual reading, rather than copied from root browser test results. Earlier preflight verified the original GitHub headings against full original source bytes; those observed old targets were used here independently of the new aliases file. The separate two-heading review proved body/code/Section IDs unchanged and approved the clarified NOR-conversion and SVG-layout titles.
+
+## Artifact identity
+
+Two HTML bundles contain eight files each (six pages, stylesheet, manifest), all bytes equal across the two root output locations. Two Markdown stages contain seven files each, likewise byte-identical. Each listed artifact digest matches its manifest; every staged Markdown file equals the corresponding fixed Git blob. All six HTML manifest source digests match the fixed Git input `.nepld` bytes. These statements verify the supplied artifacts and receipts, not independent compiler regeneration. The copied HTML was served from new `/independent/deep/first/` and `/independent/deep/second/` prefixes.
+
+## Actual local browser execution
+
+Chromium, Firefox and WebKit, each at widths 375 and 1280 and both non-root prefixes: **12 JavaScript-disabled cases passed**. Nine semantic Section IDs per case: **108 real fragment moves** started deliberately away from the destination, then reached visible targets with five consecutive stable scroll observations.
+
+All 33 paragraph base texts, all ten heading base texts, all twelve InlineCode values and all eleven list-item base texts match the checked Doc tree exactly in order. Lists are unordered five declarations and ordered six elaboration steps. Original Markdown's seven inline-code values are preserved; the other five are the already reviewed declaration-signature presentation. No fabricated code block, table or link was introduced. Ruby count is 350 (previous 348 plus the two title readings); DOM IDs are unique, stylesheet loads, no document script or external HTTP request, no failed request and no horizontal viewport overflow. HTML intentionally has semantic `n-` anchors, not the ten legacy Markdown aliases.
+
+## Actual GitHub execution and contents
+
+The fixed public URL is https://github.com/neknaj/NEPL3/blob/e600c9325193fce64e4c4a7116a8cecca31f6e75/doc/spec/07-circuit.md . Saved live browser HTML contains rawLines reconstructing the full fixed Markdown Git bytes. All **19 targets** (ten old aliases and nine semantic anchors) are unique and passed actual navigation/visible stable-scroll checks.
+
+Observed automatic IDs for the changed headings are `user-content-6-nor-irへの変換へんかん` and `user-content-7-svg-backendの配置はいち`. The retained explicit names are separately `user-content-6-nor-ir` and `user-content-7-svg-backend`; neither duplicates its automatic heading target. This verifies the earlier predicted collision is avoided for the actual generated output, not just an inferred slug.
+
+An additional independent all-notes content check matches all 33 paragraph texts and ten heading texts, including every Ruby reading, against the actual GitHub DOM. The first version of that checker counted 19 empty compatibility-anchor paragraphs as body paragraphs (52 versus 33). Its original script/log are retained. The corrected check explicitly requires exactly those 19 empty paragraphs and compares all nonempty paragraphs; no production or generated output changed to obtain the pass. This is an all-notes Markdown viewing check, not Doc roundtrip or accessibility equivalence.
+
+## README reconstruction and offline browsers
+
+The archive README Python fence was copied verbatim and executed from a fresh independent scratch repository layout with only the frozen payload index and the eight `root-html-first` payloads. It restored a new `dist/canonical07-snapshot`; all eight outputs exactly match the original first HTML bundle in bytes and SHA-256. The verbatim code and its digest, frozen README/index, selected restored file hashes and execution results are included.
+
+Chromium/Firefox/WebKit each loaded the reconstructed chapter by file URL with JavaScript disabled and HTTP(S) intercepted/blocked. All three passed, with zero HTTP(S) attempts. All heading/paragraph/list/code values again match the typed Doc expectations, stylesheet is available, computed background is `rgb(13, 17, 23)`, whitespace is `pre-wrap`, Ruby count is 350 and there is no viewport overflow. This is compiler-free artifact reconstruction, not a new generation or deployment proof.
+
+## Visual inspection and limits
+
+Inspected WebKit 375px title and declaration-list screenshots and the 1280px declaration/ordered-list screenshot. Readings remain associated with their base text, the five declaration items stay visually separate, long inline code wraps within the narrow viewport, and no overlap or clipping of content was observed. The narrow layout is tall, as expected with full readings; no reading or body text was removed. Screenshot inspection is not a physical device, screen-reader or human acceptance test.
+
+The README retains the prior finite NodeLimit failure before operation output and describes the explicit pre-operation Markdown Nodes20M profile; this review does not erase that failure or infer Circuit runtime completion. Root's compiler/test suite is separate evidence. No formal all-task completion, Playground, KaTeX, live deployment or main-branch cutover completion is claimed here.
+
+Windows PowerShell produced UTF-16LE redirected execution logs. Their original bytes are retained as `.raw.fixture`, alongside normalized UTF-8 `.log` copies and a hash mapping. Full served/bootstrap scratch trees, Python caches and redundant full-page local screenshots are excluded from the evidence manifest; artifact hashes and selected viewport/offline screenshots remain. Exclusion is explicit, not a claim those scratch files were repository outputs.

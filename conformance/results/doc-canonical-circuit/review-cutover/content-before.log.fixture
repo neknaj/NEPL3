@@ -1,0 +1,11 @@
+python.exe : Traceback (most recent call last):
+At line:2 char:32
++ ... NG='utf-8'; & C:/projects/NEPL3-doc-canonical-preview/.tmp/browser-ve ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\projects\NEPL3-doc-canonical-circuit\.tmp\review-canonical07-cutover\content.py", line 28, in <module>
+    assert result['paragraphs']==paragraphs and result['headings']==headings,(len(result['paragraphs']),len(paragraphs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: (52, 33)

@@ -1,0 +1,374 @@
+{
+  "version": 1,
+  "source_commit": "e600c9325193fce64e4c4a7116a8cecca31f6e75",
+  "scope": "Independent actual browser, artifact identity and README offline reconstruction; no implementation edits",
+  "excluded": [
+    "served/**",
+    "bootstrap-workspace/**",
+    "**/__pycache__/**",
+    "webkit-first-*.png",
+    "webkit-second-*.png"
+  ],
+  "files": [
+    {
+      "path": "all-notes-content.json",
+      "bytes": 12008,
+      "sha256": "9cc55f1b3629939516e17e1a7043cd0631137e33bfddbfe0e16ff16724f782e6"
+    },
+    {
+      "path": "bootstrap-payloads.json",
+      "bytes": 39467,
+      "sha256": "0f76d3b173e573cbdfac1f0fb74a1697c826d75e4c1492bf85f837e7b7384c1f"
+    },
+    {
+      "path": "bootstrap-readme.md",
+      "bytes": 4176,
+      "sha256": "5974be04f5957f4de208347d33e310c454a5205d5e346042e22ba886286413d6"
+    },
+    {
+      "path": "bootstrap-results.json",
+      "bytes": 32648,
+      "sha256": "99e859212fca97fb06dc54bf14aef32b7f6ecc0acfde733ea71aea64f4fc36e0"
+    },
+    {
+      "path": "bootstrap.log",
+      "bytes": 63,
+      "sha256": "1406231e1d9aab2952684c7a338515ddbaeeb2a47e3b4ee3396ef7c61219d72e"
+    },
+    {
+      "path": "bootstrap.py",
+      "bytes": 3660,
+      "sha256": "b0f5df7350a9a1c439d584a64110ff1d3bd2420e5fc695980978e5a8e1ec2596"
+    },
+    {
+      "path": "bootstrap.raw.fixture",
+      "bytes": 134,
+      "sha256": "171b83a5cd58ab7fcb9b0ab153cdead70be4209b6a01504781d70eac5405cf41"
+    },
+    {
+      "path": "check.py",
+      "bytes": 10784,
+      "sha256": "c33a0a25a2e3fdc069941d2eebd6b9c8a5bc9320953a61a2a3adf52a5775a617"
+    },
+    {
+      "path": "chromium-first-1280.aria.txt",
+      "bytes": 13240,
+      "sha256": "589918f6f3c1d87decba48365676f8ae2ce37c1f7c2293776d93feb8cb93ccf6"
+    },
+    {
+      "path": "chromium-first-375.aria.txt",
+      "bytes": 13240,
+      "sha256": "589918f6f3c1d87decba48365676f8ae2ce37c1f7c2293776d93feb8cb93ccf6"
+    },
+    {
+      "path": "chromium-second-1280.aria.txt",
+      "bytes": 13240,
+      "sha256": "589918f6f3c1d87decba48365676f8ae2ce37c1f7c2293776d93feb8cb93ccf6"
+    },
+    {
+      "path": "chromium-second-375.aria.txt",
+      "bytes": 13240,
+      "sha256": "589918f6f3c1d87decba48365676f8ae2ce37c1f7c2293776d93feb8cb93ccf6"
+    },
+    {
+      "path": "content-before.log",
+      "bytes": 718,
+      "sha256": "d5202a7cd75a87698713ad3f43f52b32705f86490c58d3afa8fe5fbf9074b39e"
+    },
+    {
+      "path": "content-before.py",
+      "bytes": 2787,
+      "sha256": "5fa1aa0420e4d84984ef2028db7df8cc50f1507cddaa34d47034781beac5f7ad"
+    },
+    {
+      "path": "content-before.raw.fixture",
+      "bytes": 1460,
+      "sha256": "0a7b9a61541dba1560cda01ff204db80a3efb8d5bd9efb02d85cdd9869d3a0d7"
+    },
+    {
+      "path": "content.log",
+      "bytes": 97,
+      "sha256": "de4c576c1b999570567121f08b4f881d20da7a23b180a954803ea0fb865cbf91"
+    },
+    {
+      "path": "content.py",
+      "bytes": 2939,
+      "sha256": "fea44edebf001cde93800534878339299eda12ee45a301acace756e2125fd20f"
+    },
+    {
+      "path": "content.raw.fixture",
+      "bytes": 198,
+      "sha256": "54351b7ac3804d7e81b0258efd8e160653e8e90a2d31c2968bb537930850aa8a"
+    },
+    {
+      "path": "environment.json",
+      "bytes": 896,
+      "sha256": "8de015c39dcea88499b28f7c6aee8c9748acf513abf0d1e6f2dd4d2b8ad64664"
+    },
+    {
+      "path": "expected.json",
+      "bytes": 9954,
+      "sha256": "8955f6b92b2ca67c5d7b3dc91e3241b777b514c3bef8ac0cb3f1e7bc4e26d3e2"
+    },
+    {
+      "path": "finalize.py",
+      "bytes": 1703,
+      "sha256": "1091e362ec2e7ba7ae88cc72e5e57ce5bf69ada79eb28bdc5027e17758562994"
+    },
+    {
+      "path": "firefox-first-1280.aria.txt",
+      "bytes": 13240,
+      "sha256": "589918f6f3c1d87decba48365676f8ae2ce37c1f7c2293776d93feb8cb93ccf6"
+    },
+    {
+      "path": "firefox-first-375.aria.txt",
+      "bytes": 13240,
+      "sha256": "589918f6f3c1d87decba48365676f8ae2ce37c1f7c2293776d93feb8cb93ccf6"
+    },
+    {
+      "path": "firefox-second-1280.aria.txt",
+      "bytes": 13240,
+      "sha256": "589918f6f3c1d87decba48365676f8ae2ce37c1f7c2293776d93feb8cb93ccf6"
+    },
+    {
+      "path": "firefox-second-375.aria.txt",
+      "bytes": 13240,
+      "sha256": "589918f6f3c1d87decba48365676f8ae2ce37c1f7c2293776d93feb8cb93ccf6"
+    },
+    {
+      "path": "github-elements.json",
+      "bytes": 11959,
+      "sha256": "b528da07a6313aff495abc03a084d2466d76a5ed5a8281753869f5683cb95e72"
+    },
+    {
+      "path": "github-results.json",
+      "bytes": 4005,
+      "sha256": "d46fe427dc842ed51ce0cf0eecdf1c081c021e794cd24a727cbb1ff40740d730"
+    },
+    {
+      "path": "github-shape.json",
+      "bytes": 764,
+      "sha256": "280d167889f2122839cd44d4743deac32274795d11c269f36ca800a25ea91358"
+    },
+    {
+      "path": "github.html",
+      "bytes": 444125,
+      "sha256": "a5bff3bf4b51d5a7bff317bc5aebe81bb8e7069887d8ffd641f47bbba6113c2c"
+    },
+    {
+      "path": "github.png",
+      "bytes": 1093657,
+      "sha256": "247cbf82e378edc1ad33506b0daf4c22e36f9320a21e64e3260daf2e935c8a89"
+    },
+    {
+      "path": "helpers.py",
+      "bytes": 3299,
+      "sha256": "68315acfa40d0086e76b823cb464a4e76b9de12d8d9b9103c92277d6adb8ae13"
+    },
+    {
+      "path": "html-results.json",
+      "bytes": 143587,
+      "sha256": "f5beb56687a1e8b3190354f3669e0ec665f9786eee995e0a81177646deaf29f8"
+    },
+    {
+      "path": "input-hashes.json",
+      "bytes": 11117,
+      "sha256": "061b6b72a402c3b99e8f6a8f02699a341223e0cf8c415311c3ce40818692ae03"
+    },
+    {
+      "path": "log-normalization.json",
+      "bytes": 1069,
+      "sha256": "afd4205a1f404f2fc80e51b200a334e2d99d7b68c8774794cc9988f7842ef277"
+    },
+    {
+      "path": "markdown/first/doc/spec/00-contract.md",
+      "bytes": 10429,
+      "sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1"
+    },
+    {
+      "path": "markdown/first/doc/spec/01-architecture.md",
+      "bytes": 11492,
+      "sha256": "f2a68236a46d3fbfe43e7d64140ddea2acf839a2479ddbdebd602dc46d3d299e"
+    },
+    {
+      "path": "markdown/first/doc/spec/07-circuit.md",
+      "bytes": 13472,
+      "sha256": "e78ef88b70039ef7018516afed788cc092d58a6fe83aee413afbe97527f68c40"
+    },
+    {
+      "path": "markdown/first/doc/spec/13-reproducibility.md",
+      "bytes": 26270,
+      "sha256": "454ede4004f0022f8dedb0246ecb227fc36cb57456b9c57fe6614f7a3e512d8e"
+    },
+    {
+      "path": "markdown/first/doc/spec/18-html-delivery.md",
+      "bytes": 10585,
+      "sha256": "31e0a3af9c56766a737bc5c02a4072662f342a75b7816e7a8aad5da1afd525a5"
+    },
+    {
+      "path": "markdown/first/doc/spec/22-external-extensions.md",
+      "bytes": 12525,
+      "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+    },
+    {
+      "path": "markdown/first/manifest.json",
+      "bytes": 1866,
+      "sha256": "ff1d4191661ef6f5553808f62aaf17dd32369cb1373c816a9427891c5b2709b3"
+    },
+    {
+      "path": "markdown/second/doc/spec/00-contract.md",
+      "bytes": 10429,
+      "sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1"
+    },
+    {
+      "path": "markdown/second/doc/spec/01-architecture.md",
+      "bytes": 11492,
+      "sha256": "f2a68236a46d3fbfe43e7d64140ddea2acf839a2479ddbdebd602dc46d3d299e"
+    },
+    {
+      "path": "markdown/second/doc/spec/07-circuit.md",
+      "bytes": 13472,
+      "sha256": "e78ef88b70039ef7018516afed788cc092d58a6fe83aee413afbe97527f68c40"
+    },
+    {
+      "path": "markdown/second/doc/spec/13-reproducibility.md",
+      "bytes": 26270,
+      "sha256": "454ede4004f0022f8dedb0246ecb227fc36cb57456b9c57fe6614f7a3e512d8e"
+    },
+    {
+      "path": "markdown/second/doc/spec/18-html-delivery.md",
+      "bytes": 10585,
+      "sha256": "31e0a3af9c56766a737bc5c02a4072662f342a75b7816e7a8aad5da1afd525a5"
+    },
+    {
+      "path": "markdown/second/doc/spec/22-external-extensions.md",
+      "bytes": 12525,
+      "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+    },
+    {
+      "path": "markdown/second/manifest.json",
+      "bytes": 1866,
+      "sha256": "ff1d4191661ef6f5553808f62aaf17dd32369cb1373c816a9427891c5b2709b3"
+    },
+    {
+      "path": "offline-chromium.png",
+      "bytes": 56812,
+      "sha256": "2b7ac05abac3cb53b5ed71ccbca3ce9cbb2ee61404167950dbe5bb3a99ebbe35"
+    },
+    {
+      "path": "offline-firefox.png",
+      "bytes": 46480,
+      "sha256": "ddc3f025b0ea1eba39abade0112155745e47bb003ac6a27bc15e571cf91d6055"
+    },
+    {
+      "path": "offline-webkit.png",
+      "bytes": 53692,
+      "sha256": "c8d5d18605d2fda345cf5b843a2a3af931c5ca06071c11606c2447a9cc79185c"
+    },
+    {
+      "path": "old-source.md",
+      "bytes": 6876,
+      "sha256": "0005924591477574e490affa8df48d7446dfb41d81cd08beb55d03372a0dbfed"
+    },
+    {
+      "path": "page-source-hashes.json",
+      "bytes": 1363,
+      "sha256": "54f2b2beef7223255d091d5cd1166846bf3295ca4ecbf03dbf80f2f1d6b16fef"
+    },
+    {
+      "path": "record.md",
+      "bytes": 6264,
+      "sha256": "4e487a7aea19c8cab768cc7c229710cec89053004fdd2274da4c7456e238e47f"
+    },
+    {
+      "path": "run.log",
+      "bytes": 917,
+      "sha256": "791f9b77a1c274c9ec492fa79e4ecc1cf47c909072e7c1eb39665f020633ca83"
+    },
+    {
+      "path": "run.raw.fixture",
+      "bytes": 1816,
+      "sha256": "713e103256df8f4cc0c43bfb24c43cc8c2bafdb1e677dcff13ec70e44ae7b6b0"
+    },
+    {
+      "path": "source/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "source/doc/canonical.json",
+      "bytes": 2359,
+      "sha256": "5f3e80bd42ae158c578c098fbde80a288e2abc18d8df446e6d34011a44fc0073"
+    },
+    {
+      "path": "source/doc/migration/aliases/07-circuit.json",
+      "bytes": 625,
+      "sha256": "7c23dac644010c8dfb51fae2b60e7ac78510e84492dd442386ff3679536eb53a"
+    },
+    {
+      "path": "source/doc/spec/07-circuit.md",
+      "bytes": 13472,
+      "sha256": "e78ef88b70039ef7018516afed788cc092d58a6fe83aee413afbe97527f68c40"
+    },
+    {
+      "path": "source/doc/spec/07-circuit.nepld",
+      "bytes": 16459,
+      "sha256": "cf169539cb22eb1a7b21fc5c3f15d060975453e7fd72534126f894548c4fbe30"
+    },
+    {
+      "path": "source/tools/audit/structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    },
+    {
+      "path": "source/tools/src/doc/canonical.rs",
+      "bytes": 9696,
+      "sha256": "9524e5cb8b96059fae0e5c8312f5f9ba257da9cfb9b2e32bdcdb1a6aa0c0a3f1"
+    },
+    {
+      "path": "verbatim-restore.py",
+      "bytes": 819,
+      "sha256": "7ca86d0b88386414813f2f9c33bb11cbd285db381554553896d33517e1da066b"
+    },
+    {
+      "path": "visual-webkit-1280-list.png",
+      "bytes": 115409,
+      "sha256": "758ac1113bb758e056ae3616a4bc6dad8448ae1372afd654a530f33319bbbe92"
+    },
+    {
+      "path": "visual-webkit-1280-title.png",
+      "bytes": 110393,
+      "sha256": "feb47d67df5b20345a8d7c68c028588a7ee9c889272365ea32d5587716783804"
+    },
+    {
+      "path": "visual-webkit-375-list.png",
+      "bytes": 57883,
+      "sha256": "6f6a90c14c2020a04d99dc724120b15dbf76ab9a2042172bbdceeef497142698"
+    },
+    {
+      "path": "visual-webkit-375-title.png",
+      "bytes": 53692,
+      "sha256": "c8d5d18605d2fda345cf5b843a2a3af931c5ca06071c11606c2447a9cc79185c"
+    },
+    {
+      "path": "webkit-first-1280.aria.txt",
+      "bytes": 13240,
+      "sha256": "589918f6f3c1d87decba48365676f8ae2ce37c1f7c2293776d93feb8cb93ccf6"
+    },
+    {
+      "path": "webkit-first-375.aria.txt",
+      "bytes": 13240,
+      "sha256": "589918f6f3c1d87decba48365676f8ae2ce37c1f7c2293776d93feb8cb93ccf6"
+    },
+    {
+      "path": "webkit-second-1280.aria.txt",
+      "bytes": 13240,
+      "sha256": "589918f6f3c1d87decba48365676f8ae2ce37c1f7c2293776d93feb8cb93ccf6"
+    },
+    {
+      "path": "webkit-second-375.aria.txt",
+      "bytes": 13240,
+      "sha256": "589918f6f3c1d87decba48365676f8ae2ce37c1f7c2293776d93feb8cb93ccf6"
+    }
+  ]
+}
