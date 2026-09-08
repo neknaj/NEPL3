@@ -53,6 +53,10 @@ jobs:
         run: python tools/generate/grammar.py
       - name: Doc typed adapter projection
         run: python tools/generate/doc.py
+      - name: Doc signature reference projection
+        run: |
+          python tools/generate/signatures.py
+          python -m unittest discover -s tools/generate -p test_signatures.py
       - name: Check Math schema generation
         run: python tools/generate/math.py
       - name: Check Markup schema generation
