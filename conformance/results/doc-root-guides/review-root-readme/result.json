@@ -1,0 +1,97 @@
+{
+  "source_commit": "b83716cd14fe7d6d57579e9d6a9ec4ad2877dba2",
+  "draft_commit": "d022e9bf84003e7272df86147a7afbee9220d316",
+  "paragraphs": 7,
+  "sentence_counts": [
+    1,
+    2,
+    5,
+    4,
+    2,
+    3,
+    1
+  ],
+  "table": [
+    [
+      "入口",
+      "内容"
+    ],
+    [
+      "ドキュメント",
+      "仕様と設計資料の読み順"
+    ],
+    [
+      "開発手順",
+      "ツールチェーン、検査、CI/CD"
+    ],
+    [
+      "実装状態",
+      "実装タスクと受入試験の実行状態"
+    ],
+    [
+      "タスク索引",
+      "依存順の実装作業"
+    ],
+    [
+      "貢献方針",
+      "実装・独立レビューと変更の進め方"
+    ]
+  ],
+  "inline_code": [
+    "no_std",
+    "nepl3-design-2026-09-06-r4",
+    ".tmp/"
+  ],
+  "rawcode": {
+    "languageHint": {
+      "kind": "SomeText",
+      "fields": {
+        "text": "sh"
+      }
+    },
+    "text": "git clone https://github.com/neknaj/NEPL3.git\ncd NEPL3\ncargo run --locked -p nepl3-tools -- check\ncargo run --locked -p nepl3-tools -- tasks --check\n"
+  },
+  "links": [
+    "https://github.com/neknaj/NEPL3/actions/workflows/ci.yml",
+    "doc/progress/foundation-runtime.md",
+    "doc/spec/16-doc-migration.md",
+    "doc/README.md",
+    "doc/development.md",
+    "implementation-status.json",
+    "tasks/README.md",
+    "CONTRIBUTING.md",
+    "rust-toolchain.toml",
+    "Cargo.toml",
+    "doc/decisions/0005-foundation-runtime-contracts.md",
+    "doc/decisions/0003-web-tea-doc-migration.md",
+    "doc/decisions/0002-design-contract-corrections.md",
+    "doc/review.md",
+    "LICENSE"
+  ],
+  "badge": {
+    "kind": "InlineImage",
+    "fields": {
+      "asset": {
+        "kind": "AssetRef",
+        "fields": {
+          "id": "https://github.com/neknaj/NEPL3/actions/workflows/ci.yml/badge.svg",
+          "digest": {
+            "kind": "NoText",
+            "fields": {}
+          }
+        }
+      },
+      "alt": {
+        "kind": "leaf",
+        "token": "\"CI\""
+      }
+    }
+  },
+  "strong": [
+    "共通runtimeの実装段階"
+  ],
+  "source_sha256": "6f73257c8fa7995ec11328aedc6b487fc6f11f9f6e6299b0c17af9cd2d446176",
+  "draft_sha256": "6ba8e901529f97efb7da3ff80d69c28df37d4cd83a2efe8a346a195d94426f31",
+  "structure": true,
+  "production_execution": false
+}

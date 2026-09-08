@@ -1,0 +1,98 @@
+article ja "[実装作業/じっそうさぎょう]の[入口/いりぐち]"
+body
+  cons paragraph
+    cons sentence
+      cons text "まず "
+      cons link relative "AGENTS.md" none text "AGENTS.md"
+      cons text "、"
+      cons link relative "doc/README.md" none ruby text "文書索引" text "ぶんしょさくいん"
+      cons text "、"
+      cons link relative "doc/development.md" none ruby text "開発手順" text "かいはつてじゅん"
+      cons text " を"
+      cons ruby text "読" text "よ"
+      cons text "む。"
+      nil
+    nil
+  cons paragraph
+    cons sentence
+      cons text "Grammar・Doc・Math・Circuitと"
+      cons ruby text "共有基盤" text "きょうゆうきばん"
+      cons text "の"
+      cons ruby text "目標仕様" text "もくひょうしよう"
+      cons text "は "
+      cons code "nepl3-design-2026-09-06-r4"
+      cons text "。"
+      nil
+    cons sentence
+      cons code "design/tasks.json"
+      cons text " の"
+      cons ruby text "依存順" text "いぞんじゅん"
+      cons text "でT01から"
+      cons ruby text "実装" text "じっそう"
+      cons text "する。"
+      nil
+    cons "[今回/こんかい]のリポジトリ[基盤整備/きばんせいび]はT01やT16の[完成/かんせい]ではない。"
+    cons sentence
+      cons ruby text "現状" text "げんじょう"
+      cons text "は "
+      cons link relative "implementation-status.json" none text "implementation-status.json"
+      cons text " を"
+      cons ruby text "参照" text "さんしょう"
+      cons text "する。"
+      nil
+    nil
+  cons paragraph
+    cons "[実装/じっそう]・[試験/しけん]・[指摘修正/してきしゅうせい]はメインagentが[行/おこな]い、subagentは[独立/どくりつ]レビューを[担当/たんとう]する。"
+    cons "ユーザーが[明示許可/めいじきょか]したDoc[文書/ぶんしょ]の[書/か]き[直/なお]しに[限/かぎ]り、subagentによる[並行執筆/へいこうしっぴつ]と、[執筆者/しっぴつしゃ]とは[別/べつ]のsubagentによる[独立/どくりつ]レビューを[行/おこな]う。"
+    cons "[通常/つうじょう]の[処理系実装/しょりけいじっそう]はメインagentが[担当/たんとう]する。"
+    cons "[未/み]レビューの[変更/へんこう]と[検証済/けんしょうず]みの[変更/へんこう]を[区別/くべつ]し、[専用/せんよう]branchでこまめにcommit・pushする。"
+    nil
+  cons paragraph
+    cons "T17〜T20はTEA UI・4[言語/げんご]Playground・[静的文書/せいてきぶんしょ]\/[例/れい]サイト・Pages[受入/うけいれ]、T21は[正式文書/せいしきぶんしょ]のDoc DSL[移行/いこう]。"
+    cons "[番号順/ばんごうじゅん]ではなく[依存/いぞん]DAGで[進/すす]め、T16はこれらを[含/ふく]む[最終受入/さいしゅううけいれ]とする。"
+    cons "[現在/げんざい]Markdownの[正本/せいほん]を[維持/いじ]し、Doc[表現/ひょうげん]gap、[形式依存/けいしきいぞん]checker、[安定/あんてい]URLと[意味同等性/いみどうとうせい]を[解消/かいしょう]する[前/まえ]に[変換/へんかん]しない。"
+    nil
+  cons paragraph
+    cons "[実装/じっそう]では[型付/かたつ]きRust APIと[言語中立/げんごちゅうりつ]schema・[操作契約/そうさけいやく]を[並行/へいこう]して[整備/せいび]する。"
+    cons "[全/ぜん]constructorのparse\/lower\/check\/print\/render\/wire\/editor[対応/たいおう]を[追跡/ついせき]し、[埋/う]め[込/こ]みから[評価/ひょうか]を[自動実行/じどうじっこう]しない。"
+    cons sentence
+      cons ruby text "設計" text "せっけい"
+      cons text "に"
+      cons ruby text "問題" text "もんだい"
+      cons text "があれば"
+      cons ruby text "仕様" text "しよう"
+      cons text "・schema・"
+      cons ruby text "例" text "れい"
+      cons text "・"
+      cons ruby text "受入条件" text "うけいれじょうけん"
+      cons text "を"
+      cons ruby text "同時" text "どうじ"
+      cons text "に"
+      cons ruby text "修正" text "しゅうせい"
+      cons text "し、"
+      cons code "doc/decisions/"
+      cons text " に"
+      cons ruby text "理由" text "りゆう"
+      cons text "を"
+      cons ruby text "残" text "のこ"
+      cons text "す。"
+      nil
+    cons "task.acceptanceは[試験群/しけんぐん]へのcoverage[参照/さんしょう]である。"
+    cons "T16[以外/いがい]のタスクは[当該/とうがい]deliverableとscope[付/つ]き[検証証拠/けんしょうしょうこ]、[依存/いぞん]タスクの[完了/かんりょう]、[関連設計/かんれんせっけい]blockerの[解消/かいしょう]で[完了/かんりょう]を[判定/はんてい]する。"
+    cons "[参照群/さんしょうぐん]に[含/ふく]まれる[後続機能/こうぞくきのう]が[未実装/みじっそう]なら、その[群/ぐん]をpassedにしない。"
+    cons sentence
+      cons ruby text "最終" text "さいしゅう"
+      cons text "タスクT16と"
+      cons ruby text "処理系全体" text "しょりけいぜんたい"
+      cons text "の"
+      cons ruby text "完了" text "かんりょう"
+      cons text "には "
+      cons link relative "doc/spec/11-conformance.md" none concat cons ruby text "登録" text "とうろく" cons text "された" cons ruby text "受入条件" text "うけいれじょうけん" nil
+      cons text " すべての"
+      cons ruby text "実行証拠" text "じっこうしょうこ"
+      cons text "が"
+      cons ruby text "必要" text "ひつよう"
+      cons text "。"
+      nil
+    nil
+  nil

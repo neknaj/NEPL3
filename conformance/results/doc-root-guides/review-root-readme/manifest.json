@@ -1,0 +1,127 @@
+{
+  "scope": "Independent README content review only, CODEX excluded",
+  "draft_commit": "d022e9bf84003e7272df86147a7afbee9220d316",
+  "source_commit": "b83716cd14fe7d6d57579e9d6a9ec4ad2877dba2",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 7613,
+      "sha256": "849027165216a9a3adcb22ef58a44bc698c83e1707d2aa0727a1b73105282236"
+    },
+    {
+      "path": "author-manifest.json",
+      "bytes": 1639,
+      "sha256": "37961be863e2a0ad4096def668a9083d2050ca20dac0b067f96ec675552e5b3f"
+    },
+    {
+      "path": "authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "check.log",
+      "bytes": 2385,
+      "sha256": "d6b824d62017911f86494e794042edf04830d720ff067402ef35aa77c6fa8cba"
+    },
+    {
+      "path": "check.py",
+      "bytes": 5270,
+      "sha256": "1bacbcb0d456480d1a96a73ce3a6f305d17ae5f2d0cbc70c50dfe59daafdd5a7"
+    },
+    {
+      "path": "context/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "context/structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    },
+    {
+      "path": "diffcheck.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "draft.diff",
+      "bytes": 8509,
+      "sha256": "a3fdea5926ba5d0c326ee13f4e2cb9a04f511c0c85935374ae40710a70f4ae47"
+    },
+    {
+      "path": "draft.nepld",
+      "bytes": 7943,
+      "sha256": "6ba8e901529f97efb7da3ff80d69c28df37d4cd83a2efe8a346a195d94426f31"
+    },
+    {
+      "path": "implementation/export.rs",
+      "bytes": 7958,
+      "sha256": "72c30e2ab38500e4e26c649de1f9a91851186fd32f0f396abf72a8dd15ead48a"
+    },
+    {
+      "path": "implementation/main.rs",
+      "bytes": 3156,
+      "sha256": "e16c5774c8b8acc757e1d0a717004cc5630a9ff47973e92e42b4bb34328e6bbc"
+    },
+    {
+      "path": "implementation/migration.md",
+      "bytes": 8435,
+      "sha256": "efa1351c80c5cb79e77162f84b521553038dfa30b8d0040237f3acd3c1375ea4"
+    },
+    {
+      "path": "implementation/prepare.rs",
+      "bytes": 4465,
+      "sha256": "1f9a50dd42056b6db7c5f635dde73a9fa33ca575128e9a34d27e5a40189d24c0"
+    },
+    {
+      "path": "implementation/status.json",
+      "bytes": 7089,
+      "sha256": "e5d4de10f8e896ef731f9fee54cf469448d12818046c69bfac11e042a269f74d"
+    },
+    {
+      "path": "initial-check.py",
+      "bytes": 4933,
+      "sha256": "0929531b8e5bd44a34ce0ac23926ab0433893049613e639fce629ddc31487ba5"
+    },
+    {
+      "path": "initial-failure.log",
+      "bytes": 231,
+      "sha256": "80f674e452d34b4a76e035386e1d9078372e9433f0cf1d046c31e84b61a58b90"
+    },
+    {
+      "path": "paragraphs.txt",
+      "bytes": 1544,
+      "sha256": "c6624c2cc97777a968cd67cca3df25df2808093c4e79dd40788ec5ef9a12844d"
+    },
+    {
+      "path": "previous-source.md",
+      "bytes": 2478,
+      "sha256": "8d20a7f25c73d12df87452f18586fb558ba55df6424eb59241717925bc179e4c"
+    },
+    {
+      "path": "readings.json",
+      "bytes": 4990,
+      "sha256": "bd5d299ca4925a5899374df1f0b17093c76415d69209e6e5f811c104980a1c77"
+    },
+    {
+      "path": "record.md",
+      "bytes": 4248,
+      "sha256": "3e5181773e2bde25eeb995a1f7498f587a85872421424f7fac0ea32e195f2753"
+    },
+    {
+      "path": "result.json",
+      "bytes": 2385,
+      "sha256": "d6b824d62017911f86494e794042edf04830d720ff067402ef35aa77c6fa8cba"
+    },
+    {
+      "path": "source.diff",
+      "bytes": 1439,
+      "sha256": "35cb5cd4ed5e4acf26114cdf686690a387735fedad6bc37622a28a394a890706"
+    },
+    {
+      "path": "source.md",
+      "bytes": 2569,
+      "sha256": "6f73257c8fa7995ec11328aedc6b487fc6f11f9f6e6299b0c17af9cd2d446176"
+    }
+  ]
+}

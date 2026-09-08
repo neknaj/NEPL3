@@ -1,0 +1,43 @@
+{
+  "source_commit": "9ca3a7fd193d2965d1c513e01e6be6e48f693f70",
+  "binary_source_commit": "b84e9a3854dd23538154194054c28713714ba123",
+  "binary_sha256": "244a87a9ee457911d7c4f9a7a6d9f017c3f265c63b8d739566f5c89a93a493bd",
+  "runs": [
+    {
+      "name": "README",
+      "source_sha256": "6ba8e901529f97efb7da3ff80d69c28df37d4cd83a2efe8a346a195d94426f31",
+      "command": [
+        "C:\\projects\\NEPL3-doc-output-budget\\target\\debug\\nepl3-tools.exe",
+        "doc-html",
+        "C:\\projects\\NEPL3-doc-root-guides\\doc\\migration\\authored\\project\\README.nepld",
+        "C:\\projects\\NEPL3-doc-root-guides\\.tmp\\root-guides-generation\\README"
+      ],
+      "exit_code": 1,
+      "log_sha256": "b4086c66d6b99c60bbdff7b122d1139178faec5c0c670b2c4e067d79c9e9c94c"
+    },
+    {
+      "name": "CODEX",
+      "source_sha256": "a461bd509c5dbeceb6682a8793a2a938e4a8620cde52e07b30ffec12a7bc7435",
+      "command": [
+        "C:\\projects\\NEPL3-doc-output-budget\\target\\debug\\nepl3-tools.exe",
+        "doc-html",
+        "C:\\projects\\NEPL3-doc-root-guides\\doc\\migration\\authored\\project\\CODEX.nepld",
+        "C:\\projects\\NEPL3-doc-root-guides\\.tmp\\root-guides-generation\\CODEX"
+      ],
+      "exit_code": 1,
+      "log_sha256": "b4086c66d6b99c60bbdff7b122d1139178faec5c0c670b2c4e067d79c9e9c94c"
+    },
+    {
+      "name": "AGENTS",
+      "source_sha256": "35d047c89d04bfc51527aee7f818e17acabd327618f8dfea2ccf978359a22154",
+      "command": [
+        "C:\\projects\\NEPL3-doc-output-budget\\target\\debug\\nepl3-tools.exe",
+        "doc-html",
+        "C:\\projects\\NEPL3-doc-root-guides\\doc\\migration\\authored\\project\\AGENTS.nepld",
+        "C:\\projects\\NEPL3-doc-root-guides\\.tmp\\root-guides-generation\\AGENTS"
+      ],
+      "exit_code": 1,
+      "log_sha256": "b4086c66d6b99c60bbdff7b122d1139178faec5c0c670b2c4e067d79c9e9c94c"
+    }
+  ]
+}
