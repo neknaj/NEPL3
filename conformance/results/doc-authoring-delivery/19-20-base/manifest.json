@@ -1,0 +1,25 @@
+{
+  "scope": "review-doc-authoring-19-20-base",
+  "files": [
+    {
+      "path": "check.py",
+      "sha256": "98c7eee479d6612d6d0219857b6302b154b4215fff5bc32fb5564d420ec99233",
+      "bytes": 962
+    },
+    {
+      "path": "execution.json",
+      "sha256": "c27d1745edd49a49d5d55e7d6fd4d9d51ba2935bc77732ae27a66f6e1d249a8b",
+      "bytes": 157
+    },
+    {
+      "path": "result.json",
+      "sha256": "41bd2e71caf92258c846ed54c6faec541c7321ad6e3c547e12bdae67b816cead",
+      "bytes": 1138
+    },
+    {
+      "path": "run.log",
+      "sha256": "2e43f0d4d930a25e8b45e7248403077f2dfc626cc9147c22475270408fc8dc47",
+      "bytes": 97
+    }
+  ]
+}
