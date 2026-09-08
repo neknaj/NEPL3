@@ -1,0 +1,110 @@
+{
+  "main": "ff06696e4452ee4327d20d4c208ba1038adfaff2",
+  "integration": "e5be7d72b505040f2fd2de598e5ec7bcb1340fe1",
+  "unchanged_main_entries": 2827,
+  "changed_paths": [
+    "doc/migration/authored/00-contract.nepld",
+    "doc/migration/authored/01-architecture.nepld",
+    "doc/migration/authored/02-foundation.nepld",
+    "doc/migration/authored/03-reader.nepld",
+    "doc/migration/authored/04-grammar.nepld"
+  ],
+  "chapters": [
+    {
+      "path": "doc/spec/00-contract.md",
+      "baseline_commit": "bc1d5d3443d214457aa6527250d372ee1f2b5896",
+      "baseline_sha256": "4ca8d780d32696bf102774c346ffdf18d01452085f93a2daae9e49acf16b003f",
+      "current_commit": "ff06696e4452ee4327d20d4c208ba1038adfaff2",
+      "current_sha256": "4ca8d780d32696bf102774c346ffdf18d01452085f93a2daae9e49acf16b003f",
+      "draft_commit": "cd451bf5ec3b56eda9ebe33f451f075e69fc4c87",
+      "draft_path": "doc/migration/authored/00-contract.nepld",
+      "draft_sha256": "48c2b1696c7308ee43f26dbf06a6038b38f0199233c1da3ef15a04453f810e93",
+      "draft_bytes": 14026,
+      "source_drift": false,
+      "manual_update_required": false
+    },
+    {
+      "path": "doc/spec/01-architecture.md",
+      "baseline_commit": "bc1d5d3443d214457aa6527250d372ee1f2b5896",
+      "baseline_sha256": "b0f37a82a6d2d061b3842127a303849b43a12b58f94b750a48d680529269f51e",
+      "current_commit": "ff06696e4452ee4327d20d4c208ba1038adfaff2",
+      "current_sha256": "b0f37a82a6d2d061b3842127a303849b43a12b58f94b750a48d680529269f51e",
+      "draft_commit": "cd451bf5ec3b56eda9ebe33f451f075e69fc4c87",
+      "draft_path": "doc/migration/authored/01-architecture.nepld",
+      "draft_sha256": "d47439115ad572517c33ae17a49944ba18dccd54d3f4f5a7d0aec8f43a3feac7",
+      "draft_bytes": 13719,
+      "source_drift": false,
+      "manual_update_required": false
+    },
+    {
+      "path": "doc/spec/02-foundation.md",
+      "baseline_commit": "bc1d5d3443d214457aa6527250d372ee1f2b5896",
+      "baseline_sha256": "22452d3eaa8e628b8b64ece0a4c4314aafad4696d12713843ae8a544d3cc877e",
+      "current_commit": "ff06696e4452ee4327d20d4c208ba1038adfaff2",
+      "current_sha256": "22452d3eaa8e628b8b64ece0a4c4314aafad4696d12713843ae8a544d3cc877e",
+      "draft_commit": "af3b72be6bb24e50470a49da9f30f78135af2a92",
+      "draft_path": "doc/migration/authored/02-foundation.nepld",
+      "draft_sha256": "a995ce6dc28ad3d8470ee5c19276be0a631f14451466a1bd3d17e44290457e8e",
+      "draft_bytes": 45209,
+      "source_drift": false,
+      "manual_update_required": false
+    },
+    {
+      "path": "doc/spec/03-reader.md",
+      "baseline_commit": "bc1d5d3443d214457aa6527250d372ee1f2b5896",
+      "baseline_sha256": "9ceabc2c6a4ccb1125e7fb549078011665a82672afd6b1f400bd981a300ba453",
+      "current_commit": "ff06696e4452ee4327d20d4c208ba1038adfaff2",
+      "current_sha256": "4d3ee1fbb97277ef3df6511a9a158bdb1caad5f0da70785052c29a02c02a42c7",
+      "draft_commit": "80062fe55168757daa115787895bff693ebb74a8",
+      "draft_path": "doc/migration/authored/03-reader.nepld",
+      "draft_sha256": "83b03d9f070d4a64e020ab5f0591026d22df6cdb17f530c79f877c2571eea8e9",
+      "draft_bytes": 62074,
+      "source_drift": true,
+      "manual_update_required": false
+    },
+    {
+      "path": "doc/spec/04-grammar.md",
+      "baseline_commit": "bc1d5d3443d214457aa6527250d372ee1f2b5896",
+      "baseline_sha256": "0455f089ec0da190c6fc290a4b212092775b2f1342edc5755f46c35a1cf5b972",
+      "current_commit": "ff06696e4452ee4327d20d4c208ba1038adfaff2",
+      "current_sha256": "795b825e3b33d01bf82043c40e9426ed16b8a3299b6c73c1b684bd3bc1ef1c49",
+      "draft_commit": "07a5672aeb388041c6e1b3e3693099dd58723e21",
+      "draft_path": "doc/migration/authored/04-grammar.nepld",
+      "draft_sha256": "3090af2b349a8c044c733614da8019f20f237330c55efb942c79bfcef884e65a",
+      "draft_bytes": 86030,
+      "source_drift": true,
+      "manual_update_required": false
+    }
+  ],
+  "verified_review_manifests": [
+    {
+      "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-a",
+      "manifest_sha256": "5d38a2921080a6cdb820bf5127dc46c1dd5a41cde8c1c15282352f15a4eab5aa",
+      "files": 11
+    },
+    {
+      "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-a\\revision-cd451bf",
+      "manifest_sha256": "279b9b1816119744881a185384181ba9ae70be2aec94e66498a6254e43c32c9f",
+      "files": 5
+    },
+    {
+      "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-02",
+      "manifest_sha256": "a080b79576d075077ddf42d947897eebfbc8c1369f00bdcfb232821471433acb",
+      "files": 8
+    },
+    {
+      "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-04",
+      "manifest_sha256": "c6732e728f7d64390d96b467ebb622ee44e5d934fe59a30a28c8bc3a25070cf6",
+      "files": 14
+    },
+    {
+      "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-reader-portability-followup",
+      "manifest_sha256": "be3860e631778b56404f39e2965d0761b2ba12ba7f7d451111211764e6decaa4",
+      "files": 20
+    }
+  ],
+  "original03_review": "C:\\projects\\NEPL3-doc-authoring-b\\.tmp\\review-author-a-6318187",
+  "result": "passed",
+  "conclusion": "No unincorporated source drift for the selected drafts. 03 includes the checkpoint paragraph; 04 includes borrowed syntax proof paragraph. Integration adds only these exact five selected draft blobs.",
+  "limits": "Read-only source drift and review provenance audit. No new full semantic or runtime/browser/anchor review."
+}
