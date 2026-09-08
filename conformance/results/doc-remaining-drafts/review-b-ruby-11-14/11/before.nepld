@@ -1,0 +1,209 @@
+article ja "11. [受入条件/うけいれじょうけん]と[検証/けんしょう]"
+body
+  cons section policy "[方針/ほうしん]" body
+    cons paragraph
+      cons "仕様・データ・実装・実行結果を区別する。"
+      cons "schemaの形式整合だけで言語が完成したことにしない。"
+      cons "正例、誤例、境界、変換前後、異なる実装の比較を受入条件とする。" nil
+    nil
+  cons section required "1. [必須/ひっす]の[試験群/しけんぐん]" body
+    cons list unordered
+      cons item none body cons paragraph cons "G01: Grammar自身をseedで読み、compileしたpackageとseedの意味正規形が一致。" nil nil
+      cons item none body cons paragraph cons "G02: declarative readerとRust direct readerの結果・消費範囲・viewが一致。" nil nil
+      cons item none body cons paragraph cons "G03: 空反復、進捗なし再帰、未定義reader、shape衝突、provider署名違反を正しいcodeで拒否。" nil nil
+      cons item none body cons paragraph cons sentence cons text "G04: quoted属性内の " cons code ">" cons text " を含むAngleTag、動的delimiter、部分入力のNeedMore、commit/no-matchの差を検査。" nil nil nil
+      cons item none body cons paragraph cons "G05: native provider / NDF loopback / 別process providerから同じ結果。" nil nil
+      nil
+    cons list unordered
+      cons item none body cons paragraph
+        cons "P01: prefixのserialize/parseで木が同じ。"
+        cons "cons/nilを含む全constructorを網羅。"
+        cons "Numberの有限十進制約、任意有理数からの式構築、著者のFrac保存も検査する。" nil nil
+      cons item none body cons paragraph cons "P02: Doc→Math→DocとDoc→Circuitの復帰直後のhost tokenを読み過ぎない。" nil nil
+      cons item none body cons paragraph cons "P03: headのarityを既読の子の値で変更できない。" cons "局所schema更新providerは既読情報だけ利用。" nil nil
+      cons item none body cons paragraph cons "P04: Recover parseがMissing/Unparsedを保持し、未知arityを0としない。" nil nil
+      nil
+    cons list unordered
+      cons item none body cons paragraph cons "D01: sentence literalとprefix構築が意味正規形で等しい。" nil nil
+      cons item none body cons paragraph cons "D02: ネストしたruby/anno、多段note、全escape、空part、閉じ忘れを検査。" nil nil
+      cons item none body cons paragraph cons "D03: paragraphの深さとparallelのsentence対応が独立。" cons "重複languageとparagraph variantは拒否。" nil nil
+      cons item none body cons paragraph cons "D04: 前方label、重複label、未定義ref、renameの捕捉検査。" nil nil
+      cons item none body cons paragraph
+        cons "D05: HTMLにユーザー由来scriptが出ず、Doc paragraphのネストが正しい構造で出力される。"
+        cons sentence cons text "Markup文字集合違反の拒否、" cons code "]]>" cons text "のescape、CRと属性TAB/LF/CRの保存を検査する。" nil nil nil
+      nil
+    cons list unordered
+      cons item none body cons paragraph cons "M01: 1/2+1/3=5/6、0.1+0.2=3/10、大整数を丸めず計算。" nil nil
+      cons item none body cons paragraph cons "M02: matrix形状違反、次元不一致、0除算、非整数指数等を仕様通り分類。" nil nil
+      cons item none body cons paragraph cons "M03: let/sumのscope、外側と内側の同名、free symbol、notation-onlyのSymbolic。" nil nil
+      cons item none body cons paragraph
+        cons "M04: すべてのMath constructorをMathMLへ描画。"
+        cons "弱い子の括弧、sub/powの結合、source式保存。"
+        cons "mspaceの単位付き非負em長さと無効値、Markupの文字制約とXML escapeを検査する。"
+        cons sentence cons link relative "17-math-html.md" none text "17章" cons text "の純粋TeX変換の忠実性・escape、生成時KaTeX、独立MathML fallbackと診断、macro独立性、出力検査、資源上限とStopped保持も要求する。" nil
+        cons "host能力のないWASIでは明示的MathML経路を、対応hostでは実KaTeX経路を実行する。" nil nil
+      nil
+    cons list unordered
+      cons item none body cons paragraph cons "C01: half-adderを全4入力、adderは小幅の全入力で確認。" nil nil
+      cons item none body cons paragraph
+        cons "C02: 複数stateの同時更新、testごとのreset、pre-edge出力を検査。"
+        cons "initialはPreparedNetlistを受けてslot順の初期値を返す。" nil nil
+      cons item none body cons paragraph cons "C03: 未定義signal、重複driver、幅違反、組合せloop、再帰instantiationを拒否。" nil nil
+      cons item none body cons paragraph cons "C04: child moduleのstateを介したfeedbackを組合せloopとして誤拒否しない。" nil nil
+      cons item none body cons paragraph cons "C05: instanceを2個作ればstateが独立。" cons "wire参照は共有。" nil nil
+      cons item none body cons paragraph
+        cons "C06: vector evaluatorと独立したNOR evaluatorの複数tick一致。"
+        cons "4種のnodeとnextBits/outputBitsのsink参照、長さ・bit順を検査する。" nil nil
+      nil
+    cons list unordered
+      cons item none body cons paragraph cons "E01: 日本語/補助平面文字/CRLFにおけるUTF-8/16/32の位置変換。" nil nil
+      cons item none body cons paragraph cons "E02: SentenceLiteralの内部を正確にハイライトし、外側では1tokenを維持。" nil nil
+      cons item none body cons paragraph cons "E03: definitionの全範囲とname範囲、対応文関係とdefinitionの区別。" nil nil
+      cons item none body cons paragraph cons "E04: 更新後に古いdiagnostic/renameを適用しない。" nil nil
+      cons item none body cons paragraph cons "E05: 増分解析と全解析で意味・診断・参照・位置が一致。" nil nil
+      cons item none body cons paragraph
+        cons "E06: code表示が不正/非停止のguestをlower・意味check・evaluateしない。"
+        cons "Doc自身のCodeもForeignSyntaxのまま表示する。" nil nil
+      nil
+    cons list unordered
+      cons item none body cons paragraph
+        cons "W01: NDFの全variant roundtrip、未知tag、非canonical整数、負zero、分母0、壊れた参照の拒否。"
+        cons "field arrayの順序交換でschema digestが変わり、名前付きvariant mapのkey順だけの交換では変わらないことを検査する。" nil nil
+      cons item none body cons paragraph cons "W02: nativeとwire経路で一致。" cons "Complete/Invalid/Stopped/Awaitを網羅。" nil nil
+      cons item none body cons paragraph cons "W03: continuationの誤用、未知operation、schema mismatch、過大frameを拒否。" nil nil
+      nil
+    cons list unordered
+      cons item none body cons paragraph cons "A01: workspace DAG、依存許可集合、coreのno_stdを検査。" nil nil
+      cons item none body cons paragraph cons "A02: native x86_64/aarch64、wasm32-wasip2、wasm32-unknown-unknownでbuildし、利用可能なrunnerで同一goldenを実行。" nil nil
+      cons item none body cons paragraph cons "A03: runner不在を「テスト成功」にしない。" cons "CIの対応runnerを設定して完了にする。" nil nil
+      cons item none body cons paragraph
+        cons "A04: typed errorsのcatalog、診断stage/位置、resource上限とcancelを検査。"
+        cons "sourceBytes超過はUTF-8 byte数で判定しStopped(SourceLimit)を返す。" nil nil
+      nil
+    cons list unordered
+      cons item none body cons paragraph cons "U01: TEAのinit/update/view/subscriptionsが決定的で作用を直接実行せず、native/WASI/browserおよび別実装replayでModel/Cmd/Viewの意味が一致する。" nil nil
+      cons item none body cons paragraph cons "U02: 全要求identityの照合により応答逆転、close/reopen、profile/provider/options/resources変更後の旧結果を拒否する。" nil nil
+      cons item none body cons paragraph cons "U03: cancel、停止期限、Worker terminate/recreate、epoch更新と再準備を検査。" cons "終了後の完了応答を採用しない。" nil nil
+      cons item none body cons paragraph cons "U04: document閉鎖・再読込、worker/session epoch、listener/timer再登録と解除で旧処理や二重購読が漏れない。" nil nil
+      cons item none body cons paragraph cons "U05: 日本語IME、補助平面文字、CRLF、選択、undo/redo、format/rename transaction、programmatic edit feedbackとsnapshot競合で入力を失わない。" nil nil
+      cons item none body cons paragraph
+        cons "U06: Grammarと対象DSLの2editorを提供し、追加の文法・束縛・表示定義だけで共通highlight/definition等を得る。"
+        cons "TypeScript再実装を不要にし、外部provider不足は明示する。" nil nil
+      cons item none body cons paragraph cons "U07: preview隔離、未承認provider拒否、source表示からの非評価、保存・読込・downloadの成功/拒否/容量超過、未保存編集の保護を検査する。" nil nil
+      cons item none body cons paragraph cons "U08: UI/Worker型のschema closure、native/Wasm/codecと別実装replayの対応、core/domain/engineへのUI依存逆流がないことを検査する。" nil nil
+      nil
+    cons list unordered
+      cons item none body cons paragraph cons "S01: SiteConfigの /NEPL3/ と別の非root baseでトップ/docs/Playground/assets/Worker/Wasm/rustdoc/例manifestを生成・ロードし、deep linkと再読込を検査する。" nil nil
+      cons item none body cons paragraph
+        cons "S02: docs・例manifest・runtime・profile・assetsの版を照合する。"
+        cons "cache混在、欠けた例、digest不一致、版違いを検出し、同一入力buildの決定性を検査する。" nil nil
+      cons item none body cons paragraph
+        cons "S03: 配信予定artifactを実browserで開き、4言語の代表操作、入出力、診断選択、editor query、停止を実行する。"
+        cons "大きなsourceの応答性とkeyboard/focusも確認する。" nil nil
+      cons item none body cons paragraph
+        cons "S04: docs本文をJSなしで読み、4言語tutorial/reference/例から同じsourceをPlaygroundで開く。"
+        cons "page/anchor/検索/linkとaccessibilityを検査し、自動検査と手動確認を区別する。" nil nil
+      cons item none body cons paragraph cons "S05: 外部backend・localhost・CDNなしで基本4言語操作を行い、sourceの外部送信をせず、sandbox previewがscriptを実行しないことを検査する。" nil nil
+      cons item none body cons paragraph
+        cons "S06: 最小権限、同じ検査済みSHA/artifact、配信直列化とfreshness、失敗log保存を検査。"
+        cons "実Pages公開後のHTTPS smokeとasset/build identityを照合して記録する。"
+        cons "公開smoke失敗時は検証済みLKGへの有限復旧・再smoke・元run失敗保持を15章の契約で検査する。" nil nil
+      nil
+    cons paragraph cons "S06の失敗系には、次の場合を含める。" nil
+    cons list unordered
+      cons item none body cons paragraph cons "(a)最新candidateのpublic smokeだけが失敗し元tarを復旧できる。" nil nil
+      cons item none body cons paragraph cons "(b)後続の健康なdeploymentがあるため旧candidateの復旧を拒否する。" nil nil
+      cons item none body cons paragraph cons "(c)cache/API/journal不一致・timeout・外部writer疑いで書込みを停止する。" nil nil
+      cons item none body cons paragraph cons "(d)初回公開でLKGがない。" nil nil
+      cons item none body cons paragraph cons "(e)Actions artifact失効後も永続snapshotから復旧する。" nil nil
+      cons item none body cons paragraph cons "(f)復旧payload消失・改変。" nil nil
+      cons item none body cons paragraph cons "(g)復旧deploy・再smokeの失敗。" nil nil
+      cons item none body cons paragraph cons "(h)smoke合格後の保存/journal昇格失敗。" nil nil
+      cons item none body cons paragraph cons "(i)deploy後にrunが強制cancelされ次のwriterがreconcileを要求する。" nil nil
+      nil
+    cons paragraph
+      cons "自動復旧回数・時間上限、lock保持、失敗run/incident記録、現行LKGと前世代の保持も検証する。"
+      cons "模擬失敗系だけで実Pages公開/復旧のrunner要件を満たした扱いにしない。" nil
+    cons list unordered
+      cons item none body cons paragraph cons "J01: 全対象文書のinventoryとDoc表現gapを独立レビューし、表/list/link/汎用code/図の必要なschema・文法・backend・wire・conformanceを完成させる。" nil nil
+      cons item none body cons paragraph
+        cons "J02: 全移行ページを元の固定snapshotと比較し、意味・表・参照・数式・図・コードbyte列の同等性を独立に確認する。"
+        cons "一つの正本と生成Markdownの差分検査を行う。" nil nil
+      cons item none body cons paragraph cons "J03: Doc正本からの公開物で安定page ID/URL/anchor、検索、例revision、リンク、accessibilityを維持し、非root配信とbrowserで確認する。" nil nil
+      cons item none body cons paragraph cons "J04: 旧版の検証済みrendererによる明示的な文書buildと現行runtime受入を区別し、bootstrap循環がないこと、全ページのDoc正本への切替、決定的生成、欠落・未対応時の停止を検査する。" nil nil
+      nil
+    cons paragraph
+      cons sentence cons text "必須群と必須targetの正本は " cons code "design/acceptance.json" cons text "。" nil
+      cons "本文のID、catalog、implementation-statusの群集合を一致させ、T16は全required群を要求する。"
+      cons "r3は55群だが、この数をcheckerの完了条件へ固定しない。"
+      cons "nativeはLinux x86_64、Windows x86_64、macOS aarch64、WASIはwasm32-wasip2をWasmtimeで実行、browserは実Chromium/Firefox/WebKitを対象とし、正確な版をlogへ記録する。"
+      cons "native process固有群はnative targetで検査する。"
+      cons "WebKitの成功から実Safari device QAを推定しない。" nil
+    nil
+  cons section properties "2. propertyとfuzz" body
+    cons paragraph
+      cons "任意のvalidな有限prefix treeからprint→parse→lowerの意味一致。"
+      cons "任意のUTF-8入力でpanicしない。"
+      cons "case分割した入力streamと一括入力が同じ最終token列。"
+      cons "消費範囲の単調性。"
+      cons "Origin DAGの閉路なし。"
+      cons "可逆なSourceMapだけがrenameを許す。"
+      cons "小幅回路の原式とNORの一致。" nil
+    cons paragraph
+      cons "fuzz入力でも上限を共有する。"
+      cons "大量diagnosticを発生させる入力で無制限allocしない。"
+      cons "OOMを完全に回避できると虚偽の保証をしない。" nil
+    nil
+  cons section ci "3. [不変条件/ふへんじょうけん]のCI" body
+    cons paragraph cons sentence cons code "cargo fmt --check" cons text "、clippyの対象warningのdeny、workspace tests、doc tests、package生成の差分検査、dependency検査、target別check、conformance runner、fuzz smoke、license/asset/unsafe監査。" nil nil
+    cons paragraph
+      cons "一つのarchitecture boundaryごとにtestがあり、再設計時に未更新の依存を検出できる。"
+      cons "新しいconstructorを追加した際はparser、lower、check、print、render、wire、editorのcoverage表に行が増える。"
+      cons "None/unsupportedで黙って網羅扱いにしない。" nil
+    nil
+  cons section stages "4. [開発/かいはつ]の[段階/だんかい]" body
+    cons paragraph
+      cons "順序はtasksで管理する。"
+      cons "前段を先に完成させることは許可するが、未完の後段をその時点の「完成仕様」と呼ばない。"
+      cons "最終受入は全必須試験に対する実行証拠が揃った時点。" nil
+    cons paragraph
+      cons sentence cons code "design/tasks.json" cons text " の各task.acceptanceは、そのタスクが寄与する試験群のcoverage参照である。" nil
+      cons "試験群には後続タスクの責務も含むため、参照した群全体のpassedを前段タスクの完了条件にしない。"
+      cons "T16以外のタスクのcompleteには、当該deliverableの実装、scopeを限定した検証証拠、依存タスクのcomplete、および関連する未解消の設計blockerがないことを要求する。"
+      cons sentence cons text "証拠は " cons code "conformance/results/" cons text " 以下のJSONとし、" cons code "task_id" cons text "、" cons code "checks" cons text "（空でない文字列の非空list）、" cons code "commands" cons text "（同）、" cons code "targets" cons text "（同）、" cons code "result" cons text "（passed）、" cons code "excluded_acceptance_portions" cons text "（未検証範囲の文字列list、明示的な空listを許可）を持つ。" nil
+      cons "implementation-statusの当該タスクからファイルを参照する。"
+      cons "形だけの証拠ファイルではなく、記載したコマンドの実行結果をレビューする。" nil
+    cons paragraph
+      cons "例えばT01のsource契約試験を実行してT01をcompleteにしても、E03/E04のエディタ操作を実装・検査していなければ当該群はnot-runのままとする。"
+      cons "群全体のpassedは全要件の実行証拠がそろってから記録する。"
+      cons "T16のcompleteには依存タスクの完了に加えて、task.acceptanceに記載した一部の群だけでなく登録された全必須群のpassedとその証拠を必須とする。" nil
+    nil
+  cons section evidence "5. [群全体/ぐんぜんたい]の[型付/かたつ]き[証拠/しょうこ]" body
+    cons paragraph
+      cons "scope付きTaskEvidenceと群全体のAcceptanceEvidenceを分ける。"
+      cons sentence cons text "群の証拠schemaは " cons code "interfaces/acceptance-evidence.schema.json" cons text "、配置は " cons code "conformance/results/" cons text "。" nil
+      cons sentence cons code "schema" cons text "、" cons code "acceptance_id" cons text "、" cons code "design_revision" cons text "、" cons code "identity" cons text "、" cons code "result" cons text "、" cons code "runs" cons text " を必須とする。" nil
+      cons sentence cons text "identityはprofile " cons code "nepl3.repository-inputs/1" cons text " とsource_sha256/spec_sha256を持ち、現在の検査入力へ照合する。" nil
+      cons "source identityの収集・除外規則は開発toolsのidentity操作と開発手順で固定する。" nil
+    cons paragraph
+      cons "runはcatalogのtarget.kindに一致するtag付き型とする。"
+      cons sentence cons code "kind: command" cons text " はcommand、target、result、exit_code、非空checks、environment（runnerのname/versionとtoolsのname/version一覧）、log、log_sha256を持つ。" nil
+      cons sentence cons code "kind: review" cons text " はtarget、reviewer識別子、independent=true、decision（approved/rejected）、非空scope、log、log_sha256を持つ。" nil
+      cons "意味同等性レビューのために架空のshell commandや終了コードを作らない。" nil
+    cons paragraph
+      cons sentence cons text "logは " cons code "conformance/results/" cons text " 内の非空.txtまたは.logファイルとし、証拠JSON自身を実行logにしない。" nil
+      cons "実在logとdigestを検査し、別ID、古いsource/spec/design、未登録target、target種別不一致、改変logを拒否する。"
+      cons "passedには全command runがpassedかつexit_code=0、全reviewがapproved、全required targetの実行・レビューを要求する。"
+      cons "failedは少なくとも一つの非zero終了の失敗runまたはrejected reviewを含み、早期停止による未実行targetを許すがpassedへ変更できない。"
+      cons "未実行を空logやbuild成功で置き換えない。" nil
+    cons paragraph
+      cons "証拠の形式・hash検査は記述された挙動の正しさそのものを証明しない。"
+      cons "期待値の根拠、実行コマンドとlog、対象source、coverageを独立レビューする。"
+      cons "source/doc仕様を変更した後は古い証拠でcurrent passedを維持せず再実行する。"
+      cons "T16は全registered required群の型付き証拠を動的に確認する。" nil
+    cons paragraph
+      cons "この設計パッケージの検査は別扱い。"
+      cons sentence cons code "doc/history/design-validation.json" cons text " に、構文例の構造検査、依存DAG、task ID、JSON、例の独立算術/回路検算などの実施範囲を記録する。" nil
+      cons "Rust compiler/editor/browserが完成しているという証拠に使わない。" nil
+    nil
+  nil

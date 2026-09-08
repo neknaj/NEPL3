@@ -1,0 +1,86 @@
+[
+  {
+    "path": "05\\before.nepld",
+    "source_commit": "8ef40fd155d037d3b04556c08078da76d2560be3",
+    "source_path": "doc/migration/authored/05-document.nepld",
+    "sha256": "6f255de5e484cde311c20bdd94a2333749e4dded6726643a84faf5355485cf9b",
+    "bytes": 37038
+  },
+  {
+    "path": "05\\after.nepld",
+    "source_commit": "f840e5195973bb254eb06b9d30066dfa3dcf7a5d",
+    "source_path": "doc/migration/authored/05-document.nepld",
+    "sha256": "bf551886dc13949069995f74931dc4fbaa699755468224d445f6ac767b25e3f4",
+    "bytes": 60317
+  },
+  {
+    "path": "05\\original.md",
+    "source_commit": "f840e5195973bb254eb06b9d30066dfa3dcf7a5d",
+    "source_path": "doc/spec/05-document.md",
+    "sha256": "74beb5cb2ed1cd7b002fd5bf2e76597f540aa5109f1971145ced9128b5c96c9a",
+    "bytes": 27494
+  },
+  {
+    "path": "10\\before.nepld",
+    "source_commit": "f840e5195973bb254eb06b9d30066dfa3dcf7a5d",
+    "source_path": "doc/migration/authored/10-integration.nepld",
+    "sha256": "a5f9ca0439676716cfc4fa9120a409d64f5644459c3d9929812be4d19f505986",
+    "bytes": 13514
+  },
+  {
+    "path": "10\\after.nepld",
+    "source_commit": "e3a4de2b3ebc12834a47e51833a979da168f2275",
+    "source_path": "doc/migration/authored/10-integration.nepld",
+    "sha256": "ca5fe5f9a5435c99b778e2fd85d6a3b122d66e7c361c6dfdb4376fd807cafb0f",
+    "bytes": 21490
+  },
+  {
+    "path": "10\\original.md",
+    "source_commit": "e3a4de2b3ebc12834a47e51833a979da168f2275",
+    "source_path": "doc/spec/10-integration.md",
+    "sha256": "042382308ccbbd2deb615983aaed9906c17571c58aed5e4e11494d67cd4b717d",
+    "bytes": 9589
+  },
+  {
+    "path": "context\\AGENTS.md",
+    "source_commit": "e3a4de2",
+    "source_path": "AGENTS.md",
+    "sha256": "af97df38a46d8ccdc28f8c4e113bb29a09ce6ba3fd7736a882148d4d17c2a433",
+    "bytes": 7148
+  },
+  {
+    "path": "context\\doc\\authoring.md",
+    "source_commit": "e3a4de2",
+    "source_path": "doc/authoring.md",
+    "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08",
+    "bytes": 6478
+  },
+  {
+    "path": "context\\doc\\spec\\05-document.md",
+    "source_commit": "e3a4de2",
+    "source_path": "doc/spec/05-document.md",
+    "sha256": "74beb5cb2ed1cd7b002fd5bf2e76597f540aa5109f1971145ced9128b5c96c9a",
+    "bytes": 27494
+  },
+  {
+    "path": "context\\doc\\spec\\doc-signatures.md",
+    "source_commit": "e3a4de2",
+    "source_path": "doc/spec/doc-signatures.md",
+    "sha256": "8b8b3513a38a2147d8dcc2813c937fe03fbf8915e759bd3ecb5d7e1b23225680",
+    "bytes": 6053
+  },
+  {
+    "path": "context\\design\\forms.json",
+    "source_commit": "e3a4de2",
+    "source_path": "design/forms.json",
+    "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693",
+    "bytes": 48673
+  },
+  {
+    "path": "context\\tools\\audit\\structure.py",
+    "source_commit": "e3a4de2",
+    "source_path": "tools/audit/structure.py",
+    "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727",
+    "bytes": 6543
+  }
+]

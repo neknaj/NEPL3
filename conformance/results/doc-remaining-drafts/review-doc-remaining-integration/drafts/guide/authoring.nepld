@@ -1,0 +1,94 @@
+article ja "Doc[文書/ぶんしょ]の[執筆指針/しっぴつししん]"
+body
+  cons paragraph
+    cons "この[指針/ししん]は、NEPL3の[例/れい]・[仕様/しよう]・[解説/かいせつ]をDocで[書/か]くときの[表記選択/ひょうきせんたく]を[定/さだ]める。"
+    cons sentence cons link relative "spec/05-document.md" none concat cons text "Doc" cons ruby text "仕様" text "しよう" nil cons text "の" cons ruby text "構文" text "こうぶん" cons text "・" cons ruby text "意味" text "いみ" cons text "を" cons ruby text "変更" text "へんこう" cons text "するものではない。" nil
+    cons sentence cons ruby text "正式文書" text "せいしきぶんしょ" cons text "の" cons ruby text "正本切替" text "せいほんきりか" cons text "えは" cons link relative "spec/16-doc-migration.md" none ruby text "移行条件" text "いこうじょうけん" cons text "に" cons ruby text "従" text "したが" cons text "う。" nil nil
+  cons section literal "Sentence literalを[標準/ひょうじゅん]にする[場面/ばめん]" body
+    cons paragraph
+      cons "[本文/ほんぶん]がText・Ruby・Annoで[表/あらわ]せる[場合/ばあい]は、[読/よ]みやすいsentence literalを[基本/きほん]とする。"
+      cons "[通常/つうじょう]の[説明文/せつめいぶん]、[見出/みだ]し、[表/ひょう]のセル、[対応文/たいおうぶん]のvariantに[使/つか]える。"
+      cons "Ruby・Annoの[入/い]れ[子/こ]だけを[理由/りゆう]に[前置構築/ぜんちこうちく]へ[展開/てんかい]する[必要/ひつよう]はない。" nil
+    cons rawcode some "text" "\"これは{[文書/ぶんしょ]/document}の[例/れい]です。\"\n"
+    cons paragraph
+      cons "[一/ひと]つのliteralは[一/ひと]つのSentenceである。"
+      cons "[本文/ほんぶん]では[著者/ちょしゃ]が[対応/たいおう]させたい[文/ぶん]ごとに[分/わ]ける。"
+      cons "[見出/みだ]しや[表/ひょう]のセルは[短/みじか]い[語句/ごく]でもSentenceとしてよい。"
+      cons "[句点/くてん]の[数/かず]から[処理系/しょりけい]が[自動分割/じどうぶんかつ]する[規則/きそく]は[設/もう]けない。" nil
+    cons paragraph
+      cons "literal[内/ない]にソース[上/じょう]の[直接改行/ちょくせつかいぎょう]は[書/か]かない。"
+      cons sentence cons ruby text "文書" text "ぶんしょ" cons text "の" cons ruby text "明示的" text "めいじてき" cons text "な" cons ruby text "改行" text "かいぎょう" cons text "には" cons link relative "" some "明示的な改行はbreak" concat cons ruby text "明示的" text "めいじてき" cons text "な" cons ruby text "改行" text "かいぎょう" nil cons text "の" cons code "break" cons text "を" cons ruby text "使" text "つか" cons text "い、そのSentenceは" cons ruby text "前置構築" text "ぜんちこうちく" cons text "にする。" nil
+      cons sentence cons code "\\n" cons text "はTextのデータとしてLFを" cons ruby text "保持" text "ほじ" cons text "するescapeであり、" cons ruby text "文書構造" text "ぶんしょこうぞう" cons text "の" cons ruby text "改行" text "かいぎょう" cons text "を" cons ruby text "表" text "あらわ" cons text "す" cons ruby text "標準表記" text "ひょうじゅんひょうき" cons text "にはしない。" nil
+      cons sentence cons ruby text "引用符" text "いんようふ" cons text "は " cons code "\\\"" cons text "、backslashは " cons code "\\\\" cons text "、" cons ruby text "文字" text "もじ" cons text "としての" cons ruby text "注釈区切" text "ちゅうしゃくくぎ" cons text "りは " cons code "\\[" cons text " などでescapeする。" nil
+      cons "[画面幅/がめんはば]に[応/おう]じた[折返/おりかえ]しは[表示側/ひょうじがわ]に[任/まか]せる。"
+      cons "[長/なが]い[一文/いちぶん]は、それだけを[理由/りゆう]に[別/べつ]の[対応単位/たいおうたんい]へ[分割/ぶんかつ]せず、[編集/へんしゅう]しにくい[場合/ばあい]に[前置構築/ぜんちこうちく]を[選/えら]ぶ。" nil
+    nil
+  cons section prefix "[明示的/めいじてき]なsentence[構築/こうちく]を[選/えら]ぶ[場面/ばめん]" body
+    cons paragraph
+      cons sentence cons code "strong" cons text "・" cons code "em" cons text "・" cons code "ref" cons text "・" cons code "anchor" cons text "・" cons code "link" cons text "・Inline" cons ruby text "位置" text "いち" cons text "の" cons code "code" cons text "・" cons ruby text "画像" text "がぞう" cons text "・Mathなど、literalにないInlineを" cons ruby text "含" text "ふく" cons text "むSentenceは" cons ruby text "前置構築" text "ぜんちこうちく" cons text "で" cons ruby text "表" text "あらわ" cons text "す。" nil
+      cons "[明示/めいじ]Breakが[必要/ひつよう]な[場合/ばあい]も[同様/どうよう]で、Text[内/ない]のLFへ[置換/ちかん]しない。" nil
+    cons rawcode some "text" "sentence\n  cons anno ruby text \"係数\" text \"けいすう\" cons text \"coefficient\" nil\n  cons text \"の\"\n  cons strong text \"すべて\"\n  cons text \"の\"\n  cons ruby text \"可能性\" text \"かのうせい\"\n  cons text \"を\"\n  cons ruby text \"考\" text \"かんが\"\n  cons text \"えます。\"\n  nil\n"
+    cons paragraph
+      cons "[複雑/ふくざつ]な[注釈/ちゅうしゃく]の[各部分/かくぶぶん]を[編集/へんしゅう]・[比較/ひかく]したい[場合/ばあい]や、constructor API・[構文/こうぶん]の[解説/かいせつ]を[示/しめ]す[場合/ばあい]にも[前置構築/ぜんちこうちく]を[使/つか]える。"
+      cons "[機能/きのう]を[見/み]せるためだけに[通常/つうじょう]の[本文/ほんぶん]すべてを[展開/てんかい]する[必要/ひつよう]はない。"
+      cons "プログラムから[文書/ぶんしょ]を[生成/せいせい]するときは、[型付/かたつ]きconstructorで[意味構造/いみこうぞう]を[作/つく]り、ソース[文字列/もじれつ]の[連結/れんけつ]と[再解析/さいかいせき]を[前提/ぜんてい]にしない。" nil
+    cons paragraph
+      cons sentence cons code "text \"...\"" cons text " の" cons ruby text "引用部分" text "いんようぶぶん" cons text "は" cons ruby text "通常" text "つうじょう" cons text "Textであり、sentence literalの" cons ruby text "注釈構文" text "ちゅうしゃくこうぶん" cons text "を" cons ruby text "再解釈" text "さいかいしゃく" cons text "しない。" nil
+      cons "[前置構築/ぜんちこうちく]でRuby・Annoが[必要/ひつよう]なら、それぞれのconstructorを[使/つか]う。"
+      cons sentence cons text "Sentence literalはSentenceであってInlineではないため、" cons code "sentence" cons text "のInline" cons ruby text "列" text "れつ" cons text "へそのまま" cons ruby text "挿入" text "そうにゅう" cons text "しない。" nil nil
+    nil
+  cons section 明示的な改行はbreak "[明示的/めいじてき]な[改行/かいぎょう]はbreak" body
+    cons paragraph
+      cons sentence cons code "break" cons text "は" cons ruby text "引数" text "ひきすう" cons text "を" cons ruby text "持" text "も" cons text "たないInline constructorである。" nil
+      cons "[同/おな]じSentenceの[途中/とちゅう]で[改行/かいぎょう]するために[使/つか]い、Sentenceやparagraphの[境界/きょうかい]を[増/ふ]やさない。"
+      cons sentence cons text "HTMLでは" cons code "br" cons text "、plain text" cons ruby text "抽出" text "ちゅうしゅつ" cons text "ではLFになる。" nil
+      cons "[段落/だんらく]を[分/わ]けたい[場合/ばあい]はparagraphを[作/つく]る。"
+      cons "[空/から]の[段落/だんらく]や[複数/ふくすう]のbreakを[余白調整/よはくちょうせい]に[使/つか]わない。" nil
+    cons rawcode some "text" "sentence\n  cons text \"ここで\"\n  cons break\n  cons ruby text \"改行\" text \"かいぎょう\"\n  cons text \"します。\"\n  nil\n"
+    cons paragraph
+      cons "[既存/きそん]のText[内/ない]LFやRawCodeの[元/もと]の[改行/かいぎょう]は、[内容/ないよう]を[保/たも]つためにそのまま[保持/ほじ]する。"
+      cons sentence cons code "break" cons text "との" cons ruby text "自動相互変換" text "じどうそうごへんかん" cons text "はしない。" nil
+      cons "Compact printerも、breakを[含/ふく]むSentenceをliteralへ[押/お]し[込/こ]まない。"
+      cons sentence cons link relative "../examples/document/line-break.nepld" none concat cons ruby text "改行" text "かいぎょう" cons text "の" cons ruby text "例" text "れい" nil cons text "では、" cons ruby text "日英" text "にちえい" cons text "の" cons ruby text "対応文" text "たいおうぶん" cons text "それぞれにbreakを" cons ruby text "置" text "お" cons text "いている。" nil nil
+    nil
+  cons section parallel "sentenceとparallelの[使/つか]い[分/わ]け" body
+    cons paragraph
+      cons sentence cons ruby text "多言語" text "たげんご" cons text "の" cons ruby text "本文" text "ほんぶん" cons text "は" cons ruby text "文単位" text "ぶんたんい" cons text "で " cons code "parallel" cons text " を" cons ruby text "作" text "つく" cons text "り、" cons ruby text "各" text "かく" cons text " " cons code "variant" cons text " にその" cons ruby text "言語" text "げんご" cons text "のSentenceを" cons ruby text "置" text "お" cons text "く。" nil
+      cons "[段落全体/だんらくぜんたい]を[一/ひと]つの[対応文/たいおうぶん]に[詰/つ]め[込/こ]まない。"
+      cons "[各言語/かくげんご]は[意味/いみ]が[対応/たいおう]する[自然/しぜん]な[文/ぶん]にし、[語順/ごじゅん]や[単語数/たんごすう]の[一致/いっち]を[要求/ようきゅう]しない。" nil
+    cons rawcode some "text" "parallel\n  cons variant ja \"これは{[文書/ぶんしょ]/document}の[例/れい]です。\"\n  cons variant en \"This is an example of a document.\"\n  nil\n"
+    cons paragraph
+      cons "variantごとにliteralと[前置構築/ぜんちこうちく]を[選/えら]べる。"
+      cons "[一方/いっぽう]の[言語/げんご]に[構造/こうぞう]が[必要/ひつよう]でも、[他方/たほう]まで[機械的/きかいてき]に[同/おな]じ[表記/ひょうき]へ[変換/へんかん]しない。"
+      cons "[強調/きょうちょう]や[参照/さんしょう]を[付/つ]ける[場合/ばあい]は、[対応言語/たいおうげんご]でも[意味/いみ]と[参照先/さんしょうさき]が[一致/いっち]するか[確認/かくにん]する。"
+      cons "[翻訳/ほんやく]がない[場合/ばあい]を[空/から]Sentenceでごまかさず、[空/から]の[翻訳/ほんやく]を[意図/いと]する[場合/ばあい]だけ[空/から]Sentenceを[使/つか]う。" nil
+    cons paragraph
+      cons sentence cons link relative "../examples/document/linear-combination.nepld" none concat cons ruby text "線型結合" text "せんけいけつごう" cons text "の" cons ruby text "例" text "れい" nil cons text "は" cons ruby text "両経路" text "りょうけいろ" cons text "を" cons ruby text "学" text "まな" cons text "べる" cons ruby text "例" text "れい" cons text "として、" cons ruby text "最初" text "さいしょ" cons text "の" cons ruby text "対応文" text "たいおうぶん" cons text "にliteral、" cons ruby text "続" text "つづ" cons text "く" cons ruby text "対応文" text "たいおうぶん" cons text "に" cons ruby text "明示的" text "めいじてき" cons text "なsentence" cons ruby text "構築" text "こうちく" cons text "を" cons ruby text "残" text "のこ" cons text "す。" nil
+      cons "[本文/ほんぶん]の[対応単位/たいおうたんい]はどちらも[同/おな]じである。" nil
+    nil
+  cons section annotations "RubyとAnnoの[対象/たいしょう]" body
+    cons paragraph
+      cons sentence cons ruby text "日本語" text "にほんご" cons text "の" cons ruby text "振" text "ふ" cons text "り" cons ruby text "仮名" text "がな" cons text "は" cons link external "https://github.com/neknaj/gloss#ruby" concat cons text "GlossのRuby" cons ruby text "指針" text "ししん" nil cons text "に" cons ruby text "従" text "したが" cons text "い、" cons ruby text "漢字部分" text "かんじぶぶん" cons text "に" cons ruby text "付" text "つ" cons text "ける。" nil
+      cons "[送/おく]り[仮名/がな]・[助詞/じょし]・[片仮名/かたかな]・[数字/すうじ]・[記号/きごう]を[漢字/かんじ]と[一緒/いっしょ]にRubyの[本体/ほんたい]へ[包/つつ]まない。"
+      cons "[読/よ]みは[文脈/ぶんみゃく]に[合/あ]う[語/ご]・[漢字部分/かんじぶぶん]の[単位/たんい]で[付/つ]け、[漢字一文字/かんじひともじ]ずつへの[分割/ぶんかつ]を[強制/きょうせい]しない。" nil
+    cons paragraph
+      cons "[語句全体/ごくぜんたい]の[訳語/やくご]・[意味説明/いみせつめい]はAnnoに[置/お]く。"
+      cons sentence cons ruby text "例" text "たと" cons text "えば " cons code "{[原点/げんてん]を[通/とお]る[直線/ちょくせん]/a line through the origin}" cons text " とする。" nil
+      cons "[前置構築/ぜんちこうちく]ではAnnoのbaseをConcatで[組/く]み、その[子/こ]をRubyとTextに[分/わ]ける。"
+      cons sentence cons text "カタカナ" cons ruby text "語" text "ご" cons text "は " cons code "{ベクトル/vector}" cons text " のように" cons ruby text "意味注釈" text "いみちゅうしゃく" cons text "を" cons ruby text "付" text "つ" cons text "けられる。" nil nil
+    cons paragraph
+      cons "これは[日本語文書/にほんごぶんしょ]の[執筆指針/しっぴつししん]である。"
+      cons "[中国語/ちゅうごくご]のピンインや[他言語/たげんご]の[転写/てんしゃ]など、Rubyが[扱/あつか]える[一般的/いっぱんてき]な[音韻注釈/おんいんちゅうしゃく]をparserやschemaで[禁止/きんし]しない。" nil
+    nil
+  cons section validation "[構造/こうぞう]と[確認/かくにん]" body
+    cons paragraph
+      cons "[話題/わだい]のまとまりはsection、[連続/れんぞく]する[本文/ほんぶん]はparagraph、[列挙/れっきょ]はlist、[同/おな]じ[項目/こうもく]を[比較/ひかく]する[情報/じょうほう]はtableで[表/あらわ]す。"
+      cons "[参照/さんしょう]には[安定/あんてい]したsection/anchor IDを[使/つか]う。"
+      cons "[機能/きのう]の[使用数/しようすう]を[増/ふ]やすことを[目的/もくてき]に、[不要/ふよう]な[装飾/そうしょく]・[表/ひょう]・[埋/う]め[込/こ]みを[足/た]さない。" nil
+    cons paragraph
+      cons "[表記/ひょうき]を[変更/へんこう]したときは[本文/ほんぶん]・[読/よ]み・[注釈/ちゅうしゃく]・[対応文/たいおうぶん]・[強調/きょうちょう]・[参照/さんしょう]を[保/たも]つ。"
+      cons "literalと[前置構築/ぜんちこうちく]の[等価性/とうかせい]は[意味構造/いみこうぞう]で[確認/かくにん]し、[元/もと]ソースの[位置/いち]まで[同一/どういつ]だとは[扱/あつか]わない。"
+      cons "[構造/こうぞう]auditの[成功/せいこう]と、[実/じつ]parser・lower・HTML[生成/せいせい]の[成功/せいこう]も[区別/くべつ]する。"
+      cons "[資源停止/しげんていし]や[未対応機能/みたいおうきのう]が[残/のこ]っている[例/れい]は、[実行可能/じっこうかのう]と[広告/こうこく]せず[制約/せいやく]を[記録/きろく]する。" nil
+    nil
+  nil

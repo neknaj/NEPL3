@@ -1,0 +1,85 @@
+{
+  "exit_code": 0,
+  "files": [
+    {
+      "path": "check.log",
+      "bytes": 402,
+      "sha256": "15217a3854ca97c1794d782dd76295f2f1cd06ac34e5fa5ddd1601e15afb9dc9"
+    },
+    {
+      "path": "check.py",
+      "bytes": 3704,
+      "sha256": "5be87ca1a168be1fccb5dbd2c49d257e0f27ed0921a1607cf84f5fa823cf5366"
+    },
+    {
+      "path": "context/AGENTS.md",
+      "bytes": 7613,
+      "sha256": "849027165216a9a3adcb22ef58a44bc698c83e1707d2aa0727a1b73105282236"
+    },
+    {
+      "path": "context/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "context/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "context/doc/spec/05-document.md",
+      "bytes": 29876,
+      "sha256": "c6b0878316fec5554402ef0f0c2f5edb66ffd36bb363e17e2033b77fb53f27be"
+    },
+    {
+      "path": "context/doc/spec/doc-signatures.md",
+      "bytes": 6053,
+      "sha256": "8b8b3513a38a2147d8dcc2813c937fe03fbf8915e759bd3ecb5d7e1b23225680"
+    },
+    {
+      "path": "context/tools/audit/structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    },
+    {
+      "path": "draft.nepld",
+      "bytes": 15287,
+      "sha256": "a0166f02a01b60c914353e3b5d69a378fa4b66f701b3af7caddd819ccabef464"
+    },
+    {
+      "path": "normalized.json",
+      "bytes": 134149,
+      "sha256": "c9a193af564368ce017d121ffeefa3e56a0f022f13741419d3d9f10576820524"
+    },
+    {
+      "path": "original.md",
+      "bytes": 4979,
+      "sha256": "4e87bdd9154599be5b364755da38e5905c15c4cc87255802a06ed34b3d4fc978"
+    },
+    {
+      "path": "readings.txt",
+      "bytes": 3461,
+      "sha256": "88c5fbc6c35cf50807ad62260f7d4232372b533be86bc647d62d3353508b2f4c"
+    },
+    {
+      "path": "record.md",
+      "bytes": 2406,
+      "sha256": "d534d137a46ffff1d694070fc2e0ff2f78ca1628d05a1062f7645fa109dfd4ec"
+    },
+    {
+      "path": "results.json",
+      "bytes": 390,
+      "sha256": "4ca0ce462466eff8ba5d3527e170661b56872606950e429e540ac7463b3f3a9f"
+    },
+    {
+      "path": "sources.json",
+      "bytes": 2064,
+      "sha256": "9f24c4d5e73389ef8bd65cbc3734b55e3336053749bb5b0fed481fc49f35dc26"
+    },
+    {
+      "path": "structure-helper.py",
+      "bytes": 6647,
+      "sha256": "c77d47360ee7044a282165a568e99bd251283280217232e81eaad5653a394e2c"
+    }
+  ]
+}

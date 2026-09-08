@@ -1,0 +1,137 @@
+article ja "14. Web UI・TEA・Playground"
+body
+  cons section responsibilities "1. [責務/せきむ]と[実装範囲/じっそうはんい]" body
+    cons paragraph
+      cons "4[言語/げんご]の[操作/そうさ]をブラウザWasmから[利用/りよう]するPlaygroundを、[最終成果物/さいしゅうせいかぶつ]に[含/ふく]める。"
+      cons "[専用/せんよう]の[言語処理/げんごしょり]server、localhost LSP、WebSocketを[利用条件/りようじょうけん]にしない。"
+      cons "T15はWorker/Wasm[実行境界/じっこうきょうかい]、T17は[純粋/じゅんすい]UI core、T18はWeb editorと[操作画面/そうさがめん]を[所有/しょゆう]する。"
+      cons "[現在/げんざい]は[計画/けいかく]であり、[動/うご]く[画面/がめん]・Wasm・[完成/かんせい]したUI schemaを[提供/ていきょう]した[状態/じょうたい]ではない。" nil
+    cons paragraph
+      cons sentence cons code "nepl3-ui-core" cons text " は " cons code "no_std + alloc" cons text " とし、Model、Msg、Cmd、SubscriptionSet、ViewModelと" cons ruby text "純粋" text "じゅんすい" cons text "な" cons ruby text "状態遷移" text "じょうたいせんい" cons text "を" cons ruby text "所有" text "しょゆう" cons text "する。" nil
+      cons "[依存/いぞん]は、[共通/きょうつう]coreの[値/あたい]・source・[操作/そうさ]データ[契約/けいやく]に[限定/げんてい]する。"
+      cons "suite、[各言語実装/かくげんごじっそう]、DOM、Web API、LSP transportを[呼/よ]ばない。"
+      cons "[共通操作型/きょうつうそうさがた]を[閉/と]じるR006と、[解決済/かいけつず]みProfileを[型/かた]として[定/さだ]めるR009を[先/さき]に[解消/かいしょう]し、UI[型/がた]の[穴/あな]を[万能辞書/ばんのうじしょ]やRust pointerで[埋/う]めない。" nil
+    cons paragraph
+      cons sentence cons ruby text "概念上" text "がいねんじょう" cons text "の" cons ruby text "操作" text "そうさ" cons text "は " cons code "init(configuration) -> (Model, Commands)" cons text "、" cons code "update(Model, Msg) -> (Model, Commands)" cons text "、" cons code "view(Model) -> ViewModel" cons text "、" cons code "subscriptions(Model) -> SubscriptionSet" cons text " である。" nil
+      cons "これらは[責務/せきむ]のsignatureであり、[未確定/みかくてい]のpayloadを[実行可能/じっこうかのう]schemaとして[広告/こうこく]しない。"
+      cons sentence cons code "interfaces/ui/" cons text " に" cons ruby text "言語中立" text "げんごちゅうりつ" cons text "のfield・variant・" cons ruby text "不変条件" text "ふへんじょうけん" cons text "・" cons ruby text "失敗" text "しっぱい" cons text "を" cons ruby text "定義" text "ていぎ" cons text "し、Rust" cons ruby text "型" text "がた" cons text "とwire" cons ruby text "経路" text "けいろ" cons text "、" cons ruby text "別実装" text "べつじっそう" cons text "replayを" cons ruby text "同時" text "どうじ" cons text "に" cons ruby text "実装" text "じっそう" cons text "する。" nil nil
+    cons paragraph
+      cons "update/viewはclock、[乱数/らんすう]、DOM、I/O、Worker、GPUを[利用/りよう]しない。"
+      cons "[解析/かいせき]・[評価/ひょうか]・[回路/かいろ]stepも、Cmdでhostへ[委譲/いじょう]する。"
+      cons "hostは[実行結果/じっこうけっか]をMsgへ[変換/へんかん]する。"
+      cons "[保存要求/ほぞんようきゅう]の[発行/はっこう]だけで[保存済/ほぞんず]みにはせず、SaveFinished(Result)の[対象/たいしょう]snapshotを[照合/しょうごう]して[反映/はんえい]する。"
+      cons "timerなどのsubscriptionも[論理的/ろんりてき]な[要求/ようきゅう]であり、[登録/とうろく]・[解除/かいじょ]・[実時刻/じつじこく]の[取得/しゅとく]はhostが[行/おこな]う。"
+      cons "[同一/どういつ]Modelと[同一/どういつ]Msg[列/れつ]から、Model/Cmd/View/Subscriptionの[意味正規形/いみせいきけい]が[一致/いっち]することを[検証/けんしょう]する。" nil
+    cons paragraph
+      cons "Cmdに[任意/にんい]closureを[格納/かくのう]して、[作用/さよう]を[隠/かく]さない。"
+      cons "[局所/きょくしょ]mutationは、[外部状態/がいぶじょうたい]を[変/か]えなければ[許容/きょよう]する。"
+      cons "[子/こ]Model/Msgへ[分割/ぶんかつ]でき、[巨大/きょだい]な[一枚/いちまい]のupdateや[汎用/はんよう]widget frameworkの[自作/じさく]を[要求/ようきゅう]しない。"
+      cons "subscriptionはIDで[差分適用/さぶんてきよう]し、listener/Promise/timerからModelを[直接書/ちょくせつか]き[換/か]えない。"
+      cons "[入力/にゅうりょく]・[選択/せんたく]の[反映/はんえい]まで、[解析/かいせき]debounceに[巻/ま]き[込/こ]まない。" nil
+    nil
+  cons section layout "2. [配置/はいち]とhost" body
+    cons paragraph
+      cons sentence cons code "crates/ui/core/src/" cons text " はmodel/message/update/command/subscription/viewへ" cons ruby text "責務" text "せきむ" cons text "を" cons ruby text "分" text "わ" cons text "ける。" nil
+      cons sentence cons code "apps/web/" cons text " はRust/Wasm facade、" cons code "web/src/" cons text " はshell/editor/worker/preview/storage/bindingsの" cons ruby text "薄" text "うす" cons text "いTypeScript adapterを" cons ruby text "置" text "お" cons text "く。" nil
+      cons "[画面/がめん]の[状態遷移/じょうたいせんい]、parser、[束縛/そくばく]・[名前解決/なまえかいけつ]をTypeScriptへ[再実装/さいじっそう]しない。"
+      cons "[将来/しょうらい]のnative UIも[同/おな]じcoreを[使/つか]えるが、[専用/せんよう]native GUI[製品/せいひん]を[新/あたら]しい[必須成果物/ひっすせいかぶつ]にはしない。" nil
+    cons paragraph
+      cons "TypeScript[境界/きょうかい]はnull/undefined・[未知/みち]payloadを[検査/けんさ]し、Option/Resultへ[変換/へんかん]する。"
+      cons "[未検査/みけんさ]の[型/かた]assertionで、[公開/こうかい]schemaを[通過/つうか]させない。"
+      cons "editor/bundlerなどの[依存/いぞん]は[通常/つうじょう]のpackage manifestとlockfileで[固定/こてい]し、[生成/せいせい]bindingsとschemaの[一致/いっち]を[検査/けんさ]する。" nil
+    nil
+  cons section asynchronous "3. [非同期/ひどうき]の[同一性/どういつせい]と[停止/ていし]" body
+    cons paragraph
+      cons sentence cons ruby text "各要求" text "かくようきゅう" cons text "・" cons ruby text "応答" text "おうとう" cons text "は " cons code "sessionEpoch" cons text "、" cons code "workerEpoch" cons text "、" cons code "requestId" cons text "、" cons code "sourceSetIdentity" cons text "、" cons code "profileIdentity" cons text "、" cons code "operationIdentity" cons text "、" cons code "optionsAndResourcesIdentity" cons text " を" cons ruby text "照合" text "しょうごう" cons text "する。" nil
+      cons "source[集合/しゅうごう]には、document identityとsnapshot revision/digestを[含/ふく]める。"
+      cons "profileには、[実際/じっさい]のschema/package/provider revision・digestを[含/ふく]める。"
+      cons "[各結果/かくけっか]slotは、[現在待/げんざいま]っている[要求/ようきゅう]との[完全一致/かんぜんいっち]だけを[受理/じゅり]する。" nil
+    cons paragraph
+      cons "[応答逆転/おうとうぎゃくてん]、cancel[後/ご]の[成功応答/せいこうおうとう]、close/reopen、Worker[再作成/さいさくせい]、profile/provider/options/resources[変更/へんこう]で、[旧結果/きゅうけっか]を[採用/さいよう]しない。"
+      cons "[単一/たんいつ]のsource revisionだけで[比較/ひかく]しない。"
+      cons "[履歴/りれき]として[表示/ひょうじ]する[場合/ばあい]は、[対象/たいしょう]snapshotと[旧結果/きゅうけっか]であることを[明示/めいじ]し、[現在/げんざい]のrename・diagnostic・previewへ[適用/てきよう]しない。"
+      cons "request IDを[再利用/さいりよう]するときも、epochで[隔離/かくり]する。" nil
+    cons paragraph
+      cons "[協調/きょうちょう]cancelはbudget/pollで[処理/しょり]するが、[長/なが]い[同期/どうき]Wasm[実行中/じっこうちゅう]に[通常/つうじょう]のpostMessageが[直/ただ]ちに[処理/しょり]されるとは[仮定/かてい]しない。"
+      cons "hostは[定義済/ていぎず]みの[停止期限/ていしきげん]でWorkerをterminateし、epochを[進/すす]めて[再作成/さいさくせい]する。"
+      cons "[終了/しゅうりょう]したWorker[内/ない]の[状態/じょうたい]・continuationを[再利用/さいりよう]せず、[必要/ひつよう]なsnapshot/profileを[新/あたら]しいWorkerへ[送/おく]り[直/なお]す。"
+      cons "[破棄/はき]と[再起動/さいきどう]の[途中/とちゅう]も、UIの[処理状態/しょりじょうたい]を[失敗/しっぱい]・[停止/ていし]・[再準備/さいじゅんび]として[表/あらわ]し、[成功/せいこう]へ[置/お]き[換/か]えない。" nil
+    cons paragraph
+      cons "Workerだけで[完全/かんぜん]なsecurity sandboxが[成立/せいりつ]するとは[扱/あつか]わず、allowlist・[入力予算/にゅうりょくよさん]・resource[権限/けんげん]を[維持/いじ]する。"
+      cons "[標準利用/ひょうじゅんりよう]にSharedArrayBufferや[追加/ついか]server headerを[必須/ひっす]としない。"
+      cons "[終了/しゅうりょう]により[部分結果/ぶぶんけっか]も[失/うしな]った[場合/ばあい]は、その[事実/じじつ]を[表示/ひょうじ]する。" nil
+    nil
+  cons section editor "4. Editorのtransaction" body
+    cons paragraph
+      cons "editor widgetは、caret、IME composition、undo/redo、layout cacheという[局所状態/きょくしょじょうたい]を[持/も]ってよい。"
+      cons "[文書内容/ぶんしょないよう]の[正本/せいほん]は、snapshot[契約/けいやく]で[一/ひと]つにする。"
+      cons "adapterはtransaction ID、base snapshot、[変更/へんこう]byte range、[置換/ちかん]Text、[新/しん]snapshotを[照合/しょうごう]し、programmatic editの[再通知/さいつうち]を[同/おな]じtransactionとして[処理/しょり]する。" nil
+    cons paragraph
+      cons "IME[中/ちゅう]にpreview[更新/こうしん]でeditorを[再生成/さいせいせい]したり、[無条件/むじょうけん]の[全文置換/ぜんぶんちかん]をしたりしない。"
+      cons "composition[中/ちゅう]の[一時入力/いちじにゅうりょく]と[確定/かくてい]transactionを[区別/くべつ]し、[確定/かくてい]まで[安全/あんぜん]に[保留/ほりゅう]する[操作/そうさ]を[定義/ていぎ]する。"
+      cons "renameは[古/ふる]いsnapshotを[拒否/きょひ]し、[複数編集/ふくすうへんしゅう]を[一/ひと]つのundo transactionとして[適用/てきよう]する。"
+      cons "[選択範囲/せんたくはんい]のUTF-16と[内部/ないぶ]UTF-8 byte offsetの[変換/へんかん]はadapterで[行/おこな]い、[日本語/にほんご]・[補助平面文字/ほじょへいめんもじ]・CRLF・undo/redo・[外部読込/がいぶよみこ]みと[競合/きょうごう]する[編集/へんしゅう]を[検証/けんしょう]する。" nil
+    cons paragraph
+      cons "[毎/まい]eventで[巨大/きょだい]sourceやASTを[複製/ふくせい]しない。"
+      cons "[不変/ふへん]snapshot handle、[差分/さぶん]、[共有/きょうゆう]データを[使用/しよう]し、[公開/こうかい]wireではpointerを[運/はこ]ばない。"
+      cons "WidgetとModelに、[独立/どくりつ]したsource[正本/せいほん]を[持/も]たせない。" nil
+    nil
+  cons section operations "5. [四言語/よんげんご]の[操作/そうさ]" body
+    cons table
+      cons left cons left nil
+      some row cons "[言語/げんご]" cons "[必須操作/ひっすそうさ]と[表示/ひょうじ]" nil
+      cons row cons "Grammar" cons "[文法/ぶんぽう]の[編集/へんしゅう]・[検査/けんさ]・package[生成/せいせい]、[対象/たいしょう]DSL sourceの[別/べつ]editor、[生成/せいせい]した[文法/ぶんぽう]でparse、highlight、[定義/ていぎ]ジャンプ" nil
+      cons row cons "Doc" cons "sentence literal/prefix、Ruby/Anno、sentence[単位/たんい]parallel、HTML preview、artifact[取得/しゅとく]" nil
+      cons row cons "Math" cons "[元/もと]の[式/しき]、bindings[入力/にゅうりょく]、[明示評価/めいじひょうか]、Exact/Symbolic/Invalid/Stopped、HTML/MathML artifact、KaTeX[優先/ゆうせん]/MathMLのみの[設定/せってい]" nil
+      cons row cons "Circuit" cons "[接続/せつぞく]・[幅検査/はばけんさ]、[入力変更/にゅうりょくへんこう]、initial/step/reset、[現在/げんざい]state/output、test、SVG、NOR IR" nil
+      cons row cons "[共通/きょうつう]" cons "[例選択/れいせんたく]、source[入出力/にゅうしゅつりょく]、[診断一覧/しんだんいちらん]と[位置移動/いちいどう]、[処理状態/しょりじょうたい]/cancel、[成果物入出力/せいかぶつにゅうしゅつりょく]" nil
+      nil
+    cons paragraph
+      cons "[共通/きょうつう]editorは、highlight、definition、references、rename、completion、[対応文/たいおうぶん]・[生成元/せいせいもと]への[移動/いどう]も[提供/ていきょう]する。"
+      cons "[全文/ぜんぶん]sourceをdebug logへ[既定出力/きていしゅつりょく]しない。"
+      cons "ブラウザに[存在/そんざい]しないproviderは[能力不足/のうりょくぶそく]として[示/しめ]し、workspaceからnative pluginや[任意/にんい]JSを[自動生成/じどうせいせい]・[実行/じっこう]しない。" nil
+    cons paragraph
+      cons "[追加/ついか]DSLのeditor[支援/しえん]は、Grammarの[構文/こうぶん]・[束縛/そくばく]・[表示定義/ひょうじていぎ]と[共通/きょうつう]engineから[得/え]る。"
+      cons "[追加/ついか]ごとのTypeScript keyword[表/ひょう]や[名前解決器/なまえかいけつき]を[要求/ようきゅう]しない。"
+      cons "[言語固有/げんごこゆう]の[操作/そうさ]panelは[許/ゆる]すが、[未知/みち]DSLのsimulatorやrendererを[自動生成/じどうせいせい]した[扱/あつか]いにはしない。"
+      cons "[機能/きのう]のない[操作/そうさ]は、[選択肢/せんたくし]として[成功/せいこう]stubを[表示/ひょうじ]しない。" nil
+    nil
+  cons section preview "6. Previewとsourceの[保護/ほご]" body
+    cons paragraph
+      cons "source[表示/ひょうじ]からguest[評価/ひょうか]を[開始/かいし]しない。"
+      cons "Doc/Math/Circuitの[表示/ひょうじ]は[仕様/しよう]で[選/えら]んだ[操作/そうさ]だけを[実行/じっこう]し、Math[評価/ひょうか]・Circuit step・Grammar compileは[明示/めいじ]した[操作経路/そうさけいろ]に[置/お]く。"
+      cons "[例/れい]の[読/よ]み[込/こ]みやURLの[変更/へんこう]だけで、[危険/きけん]なproviderを[許可/きょか]しない。" nil
+    cons paragraph
+      cons "[自動更新/じどうこうしん]は、parse/analyzeと[明示的/めいじてき]に[許可/きょか]されたbounded previewに[限/かぎ]る。"
+      cons "[高負荷評価/こうふかひょうか]、[回路/かいろ]step/test、[外部作用/がいぶさよう]は[明示/めいじ]Msgから[開始/かいし]し、[例/れい]の[表示/ひょうじ]を[自動評価/じどうひょうか]の[同意/どうい]として[扱/あつか]わない。" nil
+    cons paragraph
+      cons "previewは[検査済/けんさず]みMarkup artifactだけを、scriptを[許/ゆる]さない[隔離/かくり]されたiframeへ[渡/わた]す。"
+      cons "top navigation、form[送信/そうしん]、[任意/にんい]network、[同/どう]origin[権限/けんげん]の[付与/ふよ]を[避/さ]け、hostとの[連携/れんけい]は[検証/けんしょう]したmessageと[明示/めいじ]したIDだけを[受/う]ける。"
+      cons "[例外的/れいがいてき]な[機能/きのう]を[必要/ひつよう]とするなら、trust[契約/けいやく]を[先/さき]に[変更/へんこう]する。"
+      cons "[外部/がいぶ]providerの[許可/きょか]とpreviewの[隔離/かくり]は、[別/べつ]に[検査/けんさ]する。" nil
+    cons paragraph
+      cons "sourceへの[移動/いどう]はhostの[診断/しんだん]・[構造/こうぞう]paneから[提供/ていきょう]でき、iframe[内/ない]のscriptやpostMessage[発行/はっこう]を[必要/ひつよう]としない。"
+      cons "hostが[受信/じゅしん]するその[他/ほか]の[連携/れんけい]messageにも、origin・payload・[要求/ようきゅう]identity[検査/けんさ]を[適用/てきよう]する。" nil
+    cons paragraph
+      cons sentence cons ruby text "数式" text "すうしき" cons text "は" cons link relative "17-math-html.md" none concat cons text "17" cons ruby text "章" text "しょう" nil cons text "に" cons ruby text "従" text "したが" cons text "いWorker" cons ruby text "内" text "ない" cons text "のKaTeX adapterで" cons ruby text "生成" text "せいせい" cons text "し、" cons ruby text "同" text "おな" cons text "じ" cons ruby text "完成" text "かんせい" cons text "artifactをpreviewと" cons ruby text "書出" text "かきだ" cons text "しへ" cons ruby text "渡" text "わた" cons text "す。" nil
+      cons "iframe[内/ない]でKaTeXを[再実行/さいじっこう]せず、CSS/fontもその[文書/ぶんしょ]に[適用/てきよう]する。"
+      cons "[完全要求/かんぜんようきゅう]identity・[停止/ていし]・[設定/せってい]・asset[診断/しんだん]を、TEAのMsg/Cmdへ[統合/とうごう]する。"
+      cons "JavaScript[無効時/むこうじ]の[対話生成不可/たいわせいせいふか]と、[書/か]き[出/だ]し[済/ず]み[文書/ぶんしょ]のJavaScript[不要/ふよう]な[閲覧/えつらん]を[区別/くべつ]する。" nil
+    cons paragraph
+      cons "[編集中/へんしゅうちゅう]sourceを、[無断/むだん]でnetwork[送信/そうしん]しない。"
+      cons "[読込/よみこ]み・[保存/ほぞん]・download・[共有/きょうゆう]はhostの[明示操作/めいじそうさ]とし、[失敗/しっぱい]、[保存容量上限/ほぞんようりょうじょうげん]、[権限拒否/けんげんきょひ]を[状態/じょうたい]に[反映/はんえい]する。"
+      cons "[未保存編集/みほぞんへんしゅう]を[例選択/れいせんたく]で[上書/うわが]きする[場合/ばあい]の[確認/かくにん]は、[実装契約/じっそうけいやく]として[設/もう]ける。" nil
+    cons paragraph
+      cons "[標準/ひょうじゅん]assetは[同/おな]じ[公開/こうかい]artifactから[取得/しゅとく]し、runtimeのCDN[取得/しゅとく]を[前提/ぜんてい]にしない。"
+      cons "local storageは、project/document/schema[版/ばん]でnamespaceを[分/わ]ける。"
+      cons "[例共有/れいきょうゆう]は[例/れい]IDを[基本/きほん]にし、ユーザーsourceをURL queryへ[自動追加/じどうついか]しない。"
+      cons "[明示共有/めいじきょうゆう]のfragment/importも、[容量/ようりょう]とdecode[予算/よさん]を[検査/けんさ]する。" nil
+    nil
+  cons section references "7. [根拠/こんきょ]" body
+    cons paragraph
+      cons sentence cons text "Model/View/Updateの" cons ruby text "分離" text "ぶんり" cons text "は " cons link external "https://guide.elm-lang.org/architecture/" concat cons text "Elm" cons ruby text "公式" text "こうしき" cons text "ガイド" nil cons text " に" cons ruby text "基" text "もと" cons text "づく。" nil
+      cons sentence cons text "Workerの" cons ruby text "終了" text "しゅうりょう" cons text "は " cons link external "https://html.spec.whatwg.org/multipage/workers.html#dom-worker-terminate" text "HTML Standard" cons text " と " cons link external "https://developer.mozilla.org/en-US/docs/Web/API/Worker/terminate" text "MDN" cons text " を" cons ruby text "参照" text "さんしょう" cons text "する。" nil
+      cons sentence cons ruby text "採用" text "さいよう" cons text "する" cons ruby text "型境界" text "かたきょうかい" cons text "とcross-platform" cons ruby text "検証" text "けんしょう" cons text "は " cons link external "https://zenn.dev/bem130/articles/1b352797de94e7" concat cons text "ユーザーの" cons ruby text "設計指針" text "せっけいししん" nil cons text " に" cons ruby text "合" text "あ" cons text "わせる。" nil
+      cons "Web[専用/せんよう]の[副作用/ふくさよう]を[純粋/じゅんすい]coreへ[混/ま]ぜず、[未検証/みけんしょう]の[対応環境/たいおうかんきょう]を[完成扱/かんせいあつか]いしない。" nil
+    nil
+  nil

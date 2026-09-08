@@ -1,0 +1,135 @@
+{
+  "scope": "independent chapter 13/14 Ruby repair review",
+  "files": [
+    {
+      "path": "13/change.patch",
+      "bytes": 48751,
+      "sha256": "1b396df11c9dc1f8562506a3875edfb0770ec7494d9d4179b84fe2226a4a4b70"
+    },
+    {
+      "path": "13/normalized.json",
+      "bytes": 120146,
+      "sha256": "c7068019ca71ae5e732d2fc9d3bc9575b9edc2754f9e43c9cf19e1621d2d141c"
+    },
+    {
+      "path": "13/readings.txt",
+      "bytes": 8397,
+      "sha256": "d1ef3f33b400e8759d87e86ead1fdd686ee273ceafcbdc2521d8f86079b16887"
+    },
+    {
+      "path": "13/after.nepld",
+      "bytes": 30905,
+      "sha256": "31486ad75e0776d55cc12b2a9b5af2840780ad7812456d9c222a90fd8ab495a8"
+    },
+    {
+      "path": "13/before.nepld",
+      "bytes": 19265,
+      "sha256": "5b80f427dc77b87360fe329fa556c88db1d1b1afc57f5baf9c3329837735dc28"
+    },
+    {
+      "path": "13/original.md",
+      "bytes": 14922,
+      "sha256": "81d032e6f04730fd4c52a15c11464bff0ed879c1030a059be19d10b4d8c9a16d"
+    },
+    {
+      "path": "14/change.patch",
+      "bytes": 10158,
+      "sha256": "b0741db71790fe2e5817c8943a99907d47e96d18ce49c3f4323a72912b159eb6"
+    },
+    {
+      "path": "14/normalized.json",
+      "bytes": 84985,
+      "sha256": "343dd7c68d7cabf1d1ed69b13f209a20806ff1cb6276c27412afaf54a2fd3edf"
+    },
+    {
+      "path": "14/readings.txt",
+      "bytes": 8098,
+      "sha256": "ea1f850a0a46af3d0865d98b3559cd33a02208280871088469d19b3d6d716b8d"
+    },
+    {
+      "path": "14/after.nepld",
+      "bytes": 22125,
+      "sha256": "7201521f0183c8ea4385ea161b8644ce9793ccd4046db19d1333536cd16ea2a3"
+    },
+    {
+      "path": "14/before.nepld",
+      "bytes": 20315,
+      "sha256": "5b92c022a62a3c053d5e8cca80963cb4eda66861f834b05c916b7c1fdb1e079c"
+    },
+    {
+      "path": "14/original.md",
+      "bytes": 9968,
+      "sha256": "276e2eef46c0ee67adc3cae08fcc431630abc50489de9d19844ab40aae7ed22a"
+    },
+    {
+      "path": "check.log",
+      "bytes": 1515,
+      "sha256": "2e0664bd222d4cd00407fd8b29465d7ef294ee7939e81cfdf89c1d14ee53a8c3"
+    },
+    {
+      "path": "check.py",
+      "bytes": 6996,
+      "sha256": "08dec9b9e7d4a93f91376227f866aa43f9d63040cbe2db4694eab8bfe1685a27"
+    },
+    {
+      "path": "context/AGENTS.md",
+      "bytes": 7148,
+      "sha256": "af97df38a46d8ccdc28f8c4e113bb29a09ce6ba3fd7736a882148d4d17c2a433"
+    },
+    {
+      "path": "context/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "context/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "context/doc/spec/05-document.md",
+      "bytes": 27494,
+      "sha256": "74beb5cb2ed1cd7b002fd5bf2e76597f540aa5109f1971145ced9128b5c96c9a"
+    },
+    {
+      "path": "context/doc/spec/doc-signatures.md",
+      "bytes": 6053,
+      "sha256": "8b8b3513a38a2147d8dcc2813c937fe03fbf8915e759bd3ecb5d7e1b23225680"
+    },
+    {
+      "path": "context/tools/audit/structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    },
+    {
+      "path": "execution.json",
+      "bytes": 125,
+      "sha256": "cf646bf9daa462a9dd91573ba70d940d5c9043acf14559f2fcd119006f689a76"
+    },
+    {
+      "path": "finalize.py",
+      "bytes": 1609,
+      "sha256": "4ce24846c354b60c23ff72fe6478034ab7e92c32c311ddc688708c311a6bb20d"
+    },
+    {
+      "path": "freeze.py",
+      "bytes": 1747,
+      "sha256": "68e4348e4296d0827deae51c641d66bff29b29c508a4a2926454f81c21dfac62"
+    },
+    {
+      "path": "record.md",
+      "bytes": 3611,
+      "sha256": "28892eac0c5fc1efb415a4ca7ffa45e996e8466b7c60a5679515ea08442142f0"
+    },
+    {
+      "path": "results.json",
+      "bytes": 1459,
+      "sha256": "7a30ac342727f27faf5d69e57f671cb5702ace97ae65aecfd9dd08f891f20b93"
+    },
+    {
+      "path": "sources.json",
+      "bytes": 2973,
+      "sha256": "a38cefa5ceed783a0fac01523e46fdb3e33f18c053c98e11cf36e8e4cb233a23"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+diff --git a/doc/migration/authored/14-web-ui.nepld b/doc/migration/authored/14-web-ui.nepld
+index 304de1c..36e21b5 100644
+--- a/doc/migration/authored/14-web-ui.nepld
++++ b/doc/migration/authored/14-web-ui.nepld
+@@ -12,9 +12,9 @@ body
+       cons "suite、[各言語実装/かくげんごじっそう]、DOM、Web API、LSP transportを[呼/よ]ばない。"
+       cons "[共通操作型/きょうつうそうさがた]を[閉/と]じるR006と、[解決済/かいけつず]みProfileを[型/かた]として[定/さだ]めるR009を[先/さき]に[解消/かいしょう]し、UI[型/がた]の[穴/あな]を[万能辞書/ばんのうじしょ]やRust pointerで[埋/う]めない。" nil
+     cons paragraph
+-      cons sentence cons text "概念上の操作は " cons code "init(configuration) -> (Model, Commands)" cons text "、" cons code "update(Model, Msg) -> (Model, Commands)" cons text "、" cons code "view(Model) -> ViewModel" cons text "、" cons code "subscriptions(Model) -> SubscriptionSet" cons text " である。" nil
++      cons sentence cons ruby text "概念上" text "がいねんじょう" cons text "の" cons ruby text "操作" text "そうさ" cons text "は " cons code "init(configuration) -> (Model, Commands)" cons text "、" cons code "update(Model, Msg) -> (Model, Commands)" cons text "、" cons code "view(Model) -> ViewModel" cons text "、" cons code "subscriptions(Model) -> SubscriptionSet" cons text " である。" nil
+       cons "これらは[責務/せきむ]のsignatureであり、[未確定/みかくてい]のpayloadを[実行可能/じっこうかのう]schemaとして[広告/こうこく]しない。"
+-      cons sentence cons code "interfaces/ui/" cons text " に言語中立のfield・variant・不変条件・失敗を定義し、Rust型とwire経路、別実装replayを同時に実装する。" nil nil
++      cons sentence cons code "interfaces/ui/" cons text " に" cons ruby text "言語中立" text "げんごちゅうりつ" cons text "のfield・variant・" cons ruby text "不変条件" text "ふへんじょうけん" cons text "・" cons ruby text "失敗" text "しっぱい" cons text "を" cons ruby text "定義" text "ていぎ" cons text "し、Rust" cons ruby text "型" text "がた" cons text "とwire" cons ruby text "経路" text "けいろ" cons text "、" cons ruby text "別実装" text "べつじっそう" cons text "replayを" cons ruby text "同時" text "どうじ" cons text "に" cons ruby text "実装" text "じっそう" cons text "する。" nil nil
+     cons paragraph
+       cons "update/viewはclock、[乱数/らんすう]、DOM、I/O、Worker、GPUを[利用/りよう]しない。"
+       cons "[解析/かいせき]・[評価/ひょうか]・[回路/かいろ]stepも、Cmdでhostへ[委譲/いじょう]する。"
+@@ -31,8 +31,8 @@ body
+     nil
+   cons section layout "2. [配置/はいち]とhost" body
+     cons paragraph
+-      cons sentence cons code "crates/ui/core/src/" cons text " はmodel/message/update/command/subscription/viewへ責務を分ける。" nil
+-      cons sentence cons code "apps/web/" cons text " はRust/Wasm facade、" cons code "web/src/" cons text " はshell/editor/worker/preview/storage/bindingsの薄いTypeScript adapterを置く。" nil
++      cons sentence cons code "crates/ui/core/src/" cons text " はmodel/message/update/command/subscription/viewへ" cons ruby text "責務" text "せきむ" cons text "を" cons ruby text "分" text "わ" cons text "ける。" nil
++      cons sentence cons code "apps/web/" cons text " はRust/Wasm facade、" cons code "web/src/" cons text " はshell/editor/worker/preview/storage/bindingsの" cons ruby text "薄" text "うす" cons text "いTypeScript adapterを" cons ruby text "置" text "お" cons text "く。" nil
+       cons "[画面/がめん]の[状態遷移/じょうたいせんい]、parser、[束縛/そくばく]・[名前解決/なまえかいけつ]をTypeScriptへ[再実装/さいじっそう]しない。"
+       cons "[将来/しょうらい]のnative UIも[同/おな]じcoreを[使/つか]えるが、[専用/せんよう]native GUI[製品/せいひん]を[新/あたら]しい[必須成果物/ひっすせいかぶつ]にはしない。" nil
+     cons paragraph
+@@ -42,7 +42,7 @@ body
+     nil
+   cons section asynchronous "3. [非同期/ひどうき]の[同一性/どういつせい]と[停止/ていし]" body
+     cons paragraph
+-      cons sentence cons text "各要求・応答は " cons code "sessionEpoch" cons text "、" cons code "workerEpoch" cons text "、" cons code "requestId" cons text "、" cons code "sourceSetIdentity" cons text "、" cons code "profileIdentity" cons text "、" cons code "operationIdentity" cons text "、" cons code "optionsAndResourcesIdentity" cons text " を照合する。" nil
++      cons sentence cons ruby text "各要求" text "かくようきゅう" cons text "・" cons ruby text "応答" text "おうとう" cons text "は " cons code "sessionEpoch" cons text "、" cons code "workerEpoch" cons text "、" cons code "requestId" cons text "、" cons code "sourceSetIdentity" cons text "、" cons code "profileIdentity" cons text "、" cons code "operationIdentity" cons text "、" cons code "optionsAndResourcesIdentity" cons text " を" cons ruby text "照合" text "しょうごう" cons text "する。" nil
+       cons "source[集合/しゅうごう]には、document identityとsnapshot revision/digestを[含/ふく]める。"
+       cons "profileには、[実際/じっさい]のschema/package/provider revision・digestを[含/ふく]める。"
+       cons "[各結果/かくけっか]slotは、[現在待/げんざいま]っている[要求/ようきゅう]との[完全一致/かんぜんいっち]だけを[受理/じゅり]する。" nil
+@@ -113,7 +113,7 @@ body
+       cons "sourceへの[移動/いどう]はhostの[診断/しんだん]・[構造/こうぞう]paneから[提供/ていきょう]でき、iframe[内/ない]のscriptやpostMessage[発行/はっこう]を[必要/ひつよう]としない。"
+       cons "hostが[受信/じゅしん]するその[他/ほか]の[連携/れんけい]messageにも、origin・payload・[要求/ようきゅう]identity[検査/けんさ]を[適用/てきよう]する。" nil
+     cons paragraph
+-      cons sentence cons ruby text "数式" text "すうしき" cons text "は" cons link relative "17-math-html.md" none text "17章" cons text "に従いWorker内のKaTeX adapterで生成し、同じ完成artifactをpreviewと書出しへ渡す。" nil
++      cons sentence cons ruby text "数式" text "すうしき" cons text "は" cons link relative "17-math-html.md" none concat cons text "17" cons ruby text "章" text "しょう" nil cons text "に" cons ruby text "従" text "したが" cons text "いWorker" cons ruby text "内" text "ない" cons text "のKaTeX adapterで" cons ruby text "生成" text "せいせい" cons text "し、" cons ruby text "同" text "おな" cons text "じ" cons ruby text "完成" text "かんせい" cons text "artifactをpreviewと" cons ruby text "書出" text "かきだ" cons text "しへ" cons ruby text "渡" text "わた" cons text "す。" nil
+       cons "iframe[内/ない]でKaTeXを[再実行/さいじっこう]せず、CSS/fontもその[文書/ぶんしょ]に[適用/てきよう]する。"
+       cons "[完全要求/かんぜんようきゅう]identity・[停止/ていし]・[設定/せってい]・asset[診断/しんだん]を、TEAのMsg/Cmdへ[統合/とうごう]する。"
+       cons "JavaScript[無効時/むこうじ]の[対話生成不可/たいわせいせいふか]と、[書/か]き[出/だ]し[済/ず]み[文書/ぶんしょ]のJavaScript[不要/ふよう]な[閲覧/えつらん]を[区別/くべつ]する。" nil
+@@ -129,9 +129,9 @@ body
+     nil
+   cons section references "7. [根拠/こんきょ]" body
+     cons paragraph
+-      cons sentence cons text "Model/View/Updateの分離は " cons link external "https://guide.elm-lang.org/architecture/" text "Elm公式ガイド" cons text " に基づく。" nil
+-      cons sentence cons text "Workerの終了は " cons link external "https://html.spec.whatwg.org/multipage/workers.html#dom-worker-terminate" text "HTML Standard" cons text " と " cons link external "https://developer.mozilla.org/en-US/docs/Web/API/Worker/terminate" text "MDN" cons text " を参照する。" nil
+-      cons sentence cons text "採用する型境界とcross-platform検証は " cons link external "https://zenn.dev/bem130/articles/1b352797de94e7" text "ユーザーの設計指針" cons text " に合わせる。" nil
++      cons sentence cons text "Model/View/Updateの" cons ruby text "分離" text "ぶんり" cons text "は " cons link external "https://guide.elm-lang.org/architecture/" concat cons text "Elm" cons ruby text "公式" text "こうしき" cons text "ガイド" nil cons text " に" cons ruby text "基" text "もと" cons text "づく。" nil
++      cons sentence cons text "Workerの" cons ruby text "終了" text "しゅうりょう" cons text "は " cons link external "https://html.spec.whatwg.org/multipage/workers.html#dom-worker-terminate" text "HTML Standard" cons text " と " cons link external "https://developer.mozilla.org/en-US/docs/Web/API/Worker/terminate" text "MDN" cons text " を" cons ruby text "参照" text "さんしょう" cons text "する。" nil
++      cons sentence cons ruby text "採用" text "さいよう" cons text "する" cons ruby text "型境界" text "かたきょうかい" cons text "とcross-platform" cons ruby text "検証" text "けんしょう" cons text "は " cons link external "https://zenn.dev/bem130/articles/1b352797de94e7" concat cons text "ユーザーの" cons ruby text "設計指針" text "せっけいししん" nil cons text " に" cons ruby text "合" text "あ" cons text "わせる。" nil
+       cons "Web[専用/せんよう]の[副作用/ふくさよう]を[純粋/じゅんすい]coreへ[混/ま]ぜず、[未検証/みけんしょう]の[対応環境/たいおうかんきょう]を[完成扱/かんせいあつか]いしない。" nil
+     nil
+   nil
