@@ -174,5 +174,29 @@ body
       cons sentence cons text "WASI CIの" cons ruby text "追加" text "ついか" cons text "は、native/WASIの" cons ruby text "両" text "りょう" cons text "job" cons ruby text "成功" text "せいこう" cons text "をquality" cons ruby text "条件" text "じょうけん" cons text "に" cons ruby text "含" text "ふく" cons text "むことと、Wasmtime Linux" cons ruby text "配布物" text "はいふぶつ" cons text "の" cons ruby text "固定" text "こてい" cons text "SHA-256が" cons link external "https://api.github.com/repos/bytecodealliance/wasmtime/releases/tags/v44.0.1" concat cons ruby text "公式" text "こうしき" cons text "release API" nil cons text "のasset digestに" cons ruby text "一致" text "いっち" cons text "することを" cons ruby text "独立確認" text "どくりつかくにん" cons text "した。" nil
       cons sentence cons link external "https://doc.rust-lang.org/rustc/platform-support/wasm32-wasip2.html" concat cons text "Rustの" cons ruby text "対象" text "たいしょう" cons text "platform" cons ruby text "資料" text "しりょう" nil cons text "とrunner" cons ruby text "指定" text "してい" cons text "も" cons ruby text "整合" text "せいごう" cons text "する。" nil
       cons "このworkflowレビュー[自体/じたい]をLinux jobの[実行証拠/じっこうしょうこ]とはしない。" nil
+    cons paragraph
+      cons "ReaderPlanへの[型接続/かたせつぞく]を[確認/かくにん]する[過程/かてい]で、R019に[別/べつ]の[経路/けいろ]を[追加/ついか]した。"
+      cons sentence cons text "100,000" cons ruby text "段" text "だん" cons text "のListを" cons ruby text "持" text "も" cons text "つTypeDescriptorをSchemaDescriptorへ" cons ruby text "入" text "い" cons text "れると、" cons code "reference" cons text " はdepth=128で" cons ruby text "正" text "ただ" cons text "しくDepthLimitを" cons ruby text "返" text "かえ" cons text "すが、その" cons ruby text "後" text "ご" cons text "の" cons ruby text "通常" text "つうじょう" cons text "dropがSTATUS_STACK_OVERFLOWとなった。" nil
+      cons sentence cons ruby text "隔離" text "かくり" cons text "した " cons code "--bin deep_descriptor" cons text " で" cons ruby text "再現" text "さいげん" cons text "し、descriptorのDrop/Clone/Eqを" cons ruby text "反復処理" text "はんぷくしょり" cons text "、Debugを" cons ruby text "上位構造" text "じょういこうぞう" cons text "の" cons ruby text "表示" text "ひょうじ" cons text "へ" cons ruby text "訂正" text "ていせい" cons text "した。" nil
+      cons "[元/もと]の[再現/さいげん]に[加/くわ]え100,000[段/だん]のList/Option[交互構造/こうごこうぞう]もclone/[比較/ひかく]/[表示/ひょうじ]/[失敗/しっぱい]cleanupに[成功/せいこう]した。"
+      cons sentence cons ruby text "管理対象" text "かんりたいしょう" cons text "の " cons code "rejected_deep_descriptor_is_safe_to_clone_compare_debug_and_drop" cons text " を" cons ruby text "含" text "ふく" cons text "むcore 45" cons ruby text "件" text "けん" cons text "を" cons ruby text "独立実行" text "どくりつじっこう" cons text "し、R019を" cons ruby text "再" text "ふたた" cons text "びcorrectedとした。" nil nil
+    cons paragraph
+      cons "TokenがViewBundleを[所有/しょゆう]する[変更/へんこう]では、head[外/がい]のviewをroot[以外/いがい]の[表要素/ひょうようそ]へ[置/お]くとnative/portable[双方/そうほう]で[受理/じゅり]される[漏/も]れを[発見/はっけん]した。"
+      cons sentence cons ruby text "全" text "ぜん" cons text "owned elementへ" cons ruby text "包含検査" text "ほうがんけんさ" cons text "を" cons ruby text "適用" text "てきよう" cons text "し、" cons code "token_owns_even_unreachable_view_elements" cons text " が" cons ruby text "追加" text "ついか" cons text "された。" nil
+      cons "[上記/じょうき]45[件/けん]と、[別入力/べつにゅうりょく]のnative validate・portable encode・[改変/かいへん]wireのdecodeがCoverで[拒否/きょひ]されることを[独立確認/どくりつかくにん]した。"
+      cons "これはSyntaxBundle[全体/ぜんたい]の[参照移送/さんしょういそう]の[完了/かんりょう]を[意味/いみ]しない。" nil
+    cons paragraph
+      cons "typed adapterではsource 3[件/けん]・view 2[件/けん]・syntax 5[件/けん]・origin 1[件/けん]とcodec 7[件/けん]、[計/けい]18[件/けん]を[独立実行/どくりつじっこう]した。"
+      cons "SourceBundleの[同一/どういつ]URI[別/べつ]ID、[元/もと]byte[列/れつ]、[偽/にせ]digest、canonical source[順/じゅん]、[部分失敗後/ぶぶんしっぱいご]の[一度/いちど]だけの[計上/けいじょう]、CBOR/UTF-8を[先/さき]に[検査/けんさ]する[失敗順/しっぱいじゅん]、Spanのscalar[境界/きょうかい]を[含/ふく]む。"
+      cons "foreign bundleのTokenRef/ViewRef/OriginRefと[構造化/こうぞうか]payloadの[保持/ほじ]、[環境/かんきょう]digest[偽装/ぎそう]・Origin cycle[拒否/きょひ]も[確認/かくにん]した。"
+      cons sentence cons ruby text "同" text "おな" cons text "じ2-node graphのnative" cons ruby text "配置" text "はいち" cons text "だけを" cons ruby text "変" text "か" cons text "えた " cons code "--bin canonical_syntax" cons text " は" cons ruby text "当初" text "とうしょ" cons text "wire bytes" cons ruby text "不一致" text "ふいっち" cons text "かつroot=1だったが、root-first" cons ruby text "再採番" text "さいさいばん" cons text "の" cons ruby text "訂正後" text "ていせいご" cons text "はroot=0とbyte" cons ruby text "一致" text "いっち" cons text "を" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "guest root/childの[独立再採番/どくりつさいさいばん]、[非/ひ]canonical[入力/にゅうりょく]と[未到達/みとうたつ]nodeの[拒否/きょひ]も[管理対象回帰/かんりたいしょうかいき]に[含/ふく]む。" nil
+    cons paragraph
+      cons "Environment[内容/ないよう]digestと[参照先/さんしょうさき]Origin[閉包/へいほう]のidentityは[別物/べつもの]であることを13[章/しょう]へ[明示/めいじ]した。"
+      cons "reader native[入口/いりぐち]はprivateなCheckedReaderContextを[要求/ようきゅう]し、[実際/じっさい]の[環境/かんきょう]digestとOriginが[参照/さんしょう]するsource[閉包/へいほう]を[検査/けんさ]する。"
+      cons sentence cons text "context 1" cons ruby text "件" text "けん" cons text "とportable request 2" cons ruby text "件" text "けん" cons text "を" cons ruby text "含" text "ふく" cons text "む " cons code "cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire" cons text " を" cons ruby text "独立実行" text "どくりつじっこう" cons text "し、core 45" cons ruby text "件" text "けん" cons text "・reader 26" cons ruby text "件" text "けん" cons text "・wire 18" cons ruby text "件" text "けん" cons text "が" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "requestのNDF loopbackでは[宣言/せんげん]source[表/ひょう]を[二段/にだん]で[復元/ふくげん]し、[同/おな]じReaderSessionのvalue/end/stateが[一致/いっち]する。"
+      cons "[宣言/せんげん]から[欠落/けつらく]したsourceをhostのglobal storeで[補/おぎな]っても[拒否/きょひ]する。"
+      cons "reply/continuation[全体/ぜんたい]のportable[化/か]と[別/べつ]process provider[比較/ひかく]は[未実装/みじっそう]であり、R017はopenのまま[維持/いじ]する。" nil
     nil
   nil
