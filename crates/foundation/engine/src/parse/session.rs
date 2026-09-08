@@ -1102,28 +1102,48 @@ impl<'a> ParseSession<'a> {
     }
     fn validate_completed(
         &self,
-        machine: &Machine,
+        machine: &mut Machine,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<(), ParseError> {
-        // Validate a budgeted snapshot before moving the formal arenas out of the machine.
-        // A stopped validation therefore leaves the original progress and report intact.
-        let mut progress = machine.progress.clone_with_budget(budget)?;
-        let mut arena = progress.arenas.pop().ok_or(ParseError::Reference)?;
+        let progress = &mut machine.progress;
+        let arena = progress.arenas.last_mut().ok_or(ParseError::Reference)?;
         let root = arena.root.ok_or(ParseError::Reference)?;
+        // Prepare the only new storage before moving any formal data. The tree
+        // validator borrows its input; after it returns every vector is moved
+        // back, including on a resource stop or validation error.
         build::slot::<BundleContext>(budget)?;
+        progress.contexts.reserve(1);
+        let context_index = progress.contexts.len();
+        let mut owned = core::mem::take(arena);
         progress.contexts.push(BundleContext {
-            path: core::mem::take(&mut arena.path),
-            nodes: core::mem::take(&mut arena.selections),
+            path: core::mem::take(&mut owned.path),
+            nodes: core::mem::take(&mut owned.selections),
         });
-        let tree = ParseTree {
+        let mut tree = ParseTree {
             profile_digest: self.profile.digest(),
-            bundle: arena.finish(root),
-            recovery: progress.recovery,
-            contexts: progress.contexts,
+            bundle: owned.finish(root),
+            recovery: core::mem::take(&mut progress.recovery),
+            contexts: core::mem::take(&mut progress.contexts),
         };
-        tree.validate(self.profile, budget, admission)?;
-        Ok(())
+        let result = tree.validate(self.profile, budget, admission).map(|_| ());
+        // This is the last element we just pushed. Immutable validation cannot
+        // remove it, so restoration has no fallible/allocating exit.
+        let context = tree.contexts.swap_remove(context_index);
+        *arena = ParseArena {
+            path: context.path,
+            selections: context.nodes,
+            root: Some(root),
+            sources: core::mem::take(&mut tree.bundle.sources),
+            nodes: core::mem::take(&mut tree.bundle.nodes),
+            origins: core::mem::take(&mut tree.bundle.origins),
+            tokens: core::mem::take(&mut tree.bundle.tokens),
+            source_maps: core::mem::take(&mut tree.bundle.source_maps),
+            environments: core::mem::take(&mut tree.bundle.environments),
+        };
+        progress.recovery = tree.recovery;
+        progress.contexts = tree.contexts;
+        result.map_err(ParseError::from)
     }
     fn discard_pending(&mut self) {
         for tokenizer in &mut self.tokenizers {
