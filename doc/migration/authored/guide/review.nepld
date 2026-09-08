@@ -513,4 +513,37 @@ body
       cons sentence cons ruby text "別" text "べつ" cons text "の" cons ruby text "補助" text "ほじょ" cons text "probe " cons code "parse_text" cons text " ではText" cons ruby text "予約" text "よやく" cons text "を" cons ruby text "実際" text "じっさい" cons text "にresumeし、" cons code "let \"ok\" y" cons text " がCompleteとdecoded sourceを" cons ruby text "返" text "かえ" cons text "し、" cons code "let \"a\\q\" y" cons text " がRecoveredで" cons ruby text "元" text "もと" cons text "InvalidEscape" cons ruby text "診断" text "しんだん" cons text "・" cons ruby text "位置" text "いち" cons text "を" cons ruby text "保持" text "ほじ" cons text "することを" cons ruby text "確認" text "かくにん" cons text "した。" nil
       cons "このbuiltinの[失敗経路/しっぱいけいろ]については[元診断/もとしんだん]の[消失/しょうしつ]を[再現/さいげん]していない。" nil
     nil
+  cons section initialCoverage "r1[初回/しょかい]レビューの[章/しょう]ごとの[確認範囲/かくにんはんい]" body
+    cons table cons default cons default cons default nil
+      some row cons "[章/しょう]" cons "[確認/かくにん]した[契約/けいやく]" cons "[結論/けつろん]・[残/のこ]る[検証/けんしょう]" nil
+      cons row cons "00 [対象/たいしょう]" cons "4[言語/げんご]、prefix arity、[構文/こうぶん]と[実行/じっこう]の[分離/ぶんり]、[完成/かんせい]の[定義/ていぎ]" cons "[境界/きょうかい]は[維持/いじ]。[公開交換契約/こうかいこうかんけいやく]の[完成表現/かんせいひょうげん]はR006に[従/したが]い[限定/げんてい]する。" nil
+      cons row cons "01 [構成/こうせい]" cons "18 crateの[責務/せきむ]、13 no_std、[依存方向/いぞんほうこう]、bootstrap[生成物/せいせいぶつ]" cons "[目標/もくひょう]と[現在/げんざい]のCargo memberを[分離/ぶんり]。[依存/いぞん]・targetの[実検査/じつけんさ]は[実装段階/じっそうだんかい]。" nil
+      cons row cons "02 [基盤/きばん]" cons "UTF-8 snapshot、Origin、[診断/しんだん]、[予算/よさん]、[結果/けっか]" cons "R001/R006/R007。[位置変換/いちへんかん]や[逆写像/ぎゃくしゃぞう]の[実試験/じつしけん]は[未実行/みじっこう]。" nil
+      cons row cons "03 Reader" cons "ordered choice、[巻戻/まきもど]し、NeedMore、commit、[入力境界/にゅうりょくきょうかい]" cons "[意味記述/いみきじゅつ]を[確認/かくにん]。[具体的/ぐたいてき]reader[値型/ちがた]・provider schemaはR006。" nil
+      cons row cons "04 Grammar" cons "form/leaf、binding、foreign、bootstrap" cons "4[文法/ぶんぽう]sourceの155 formのkind・field[順/じゅん]・[読取文脈/よみとりぶんみゃく]がforms.jsonと[一致/いっち]。compiler/bootstrapは[未実装/みじっそう]。" nil
+      cons row cons "05 Doc" cons "sentence、prefix、parallel、ラベル、Code" cons "R003。sentence[内部/ないぶ]の[意味等価性/いみとうかせい]は[今回/こんかい]の[構造検査/こうぞうけんさ]の[対象外/たいしょうがい]。" nil
+      cons row cons "06 Math" cons "exact/symbolic、[束縛/そくばく]、[表示/ひょうじ]と[計算/けいさん]、MathML" cons "R004/R005。[独立算術実行/どくりつさんじゅつじっこう]やpixel[描画/びょうが]の[合格/ごうかく]は[主張/しゅちょう]しない。" nil
+      cons row cons "07 Circuit" cons "[階層/かいそう]、[同時更新/どうじこうしん]、state feedback、NOR" cons "R002。NORの[論理式/ろんりしき]を[確認/かくにん]。vector/NOR evaluator[比較/ひかく]は[未実行/みじっこう]。" nil
+      cons row cons "08 Editor" cons "revision、UTF[位置/いち]、[回復/かいふく]、rename、trust" cons "[契約/けいやく]の[分離/ぶんり]を[確認/かくにん]。LSP[実行/じっこう]・[増分解析比較/ぞうぶんかいせきひかく]は[未実行/みじっこう]。" nil
+      cons row cons "09 [交換/こうかん]" cons "NDF、field[順/じゅん]、provider、frame" cons "R001/R006。CBORで[運/はこ]ぶことだけで[交換可能/こうかんかのう]とはしない。" nil
+      cons row cons "10 [統合/とうごう]" cons "bridge、[入/い]れ[子/こ]、[環境/かんきょう]、CLI、Wasm" cons "R003/R009。profile[解決/かいけつ]と[各/かく]runnerの[実行/じっこう]は[未実装/みじっそう]。" nil
+      cons row cons "11 [受入/うけいれ]" cons "37[群/ぐん]、property、runner[不在/ふざい]、[履歴/りれき]" cons "R010。[現在/げんざい]のmetadata CIとruntime[合格/ごうかく]は[別/べつ]。" nil
+      cons row cons "12 モデル" cons "surface/meaning、Checked、IR、markup" cons "R001/R003/R004/R006/R008。schemaに[未記述/みきじゅつ]の[型/かた]を[黙/だま]ってRust[型/がた]で[補/おぎな]わない。" nil
+      cons row cons "13 [再現性/さいげんせい]" cons "hash[循環回避/じゅんかんかいひ]、[順序/じゅんじょ]、source[表/ひょう]、markup byte[列/れつ]" cons "R001/R008。[正規化/せいきか]・digest・serializerの[実装試験/じっそうしけん]は[未実行/みじっこう]。" nil
+      nil
+    cons paragraph
+      cons "[独立/どくりつ]した[検査器/けんさき]で、4[文法/ぶんぽう]sourceと20[例/れい]のprefix[構造/こうぞう]を[確認/かくにん]した。"
+      cons "Grammar 68、Doc 32、Math 29、Circuit 26の[計/けい]155 formについて、source[宣言/せんげん]とforms.jsonのkind、field[名/めい]・[順序/じゅんじょ]、[読取/よみとり]category/list/builtinを[比較/ひかく]した。"
+      cons sentence cons ruby text "再現可能" text "さいげんかのう" cons text "な" cons ruby text "検査器" text "けんさき" cons text "を " cons link relative "../tools/audit/structure.py" none text "tools/audit/structure.py" cons text " として" cons ruby text "管理" text "かんり" cons text "し、" cons ruby text "字句" text "じく" cons text "の" cons ruby text "読" text "よ" cons text "み" cons ruby text "飛" text "と" cons text "ばし・" cons ruby text "未閉" text "みと" cons text "じ" cons ruby text "引用符" text "いんようふ" cons text "・" cons ruby text "重複" text "ちょうふく" cons text "form・" cons ruby text "過大" text "かだい" cons text "ネスト" cons ruby text "等" text "とう" cons text "の" cons ruby text "拒否" text "きょひ" cons text "を " cons link relative "../tools/audit/test.py" none text "test.py" cons text " で" cons ruby text "検査" text "けんさ" cons text "する。" nil
+      cons "[外側/そとがわ]の[構造/こうぞう]だけを[扱/あつか]い、[識別子/しきべつし]は[配布例/はいふれい]に[必要/ひつよう]なASCII[部分集合/ぶぶんしゅうごう]に[限定/げんてい]する。"
+      cons "Unicodeの[版別/はんべつ]XID[適合性/てきごうせい]、BCP47の[全条件/ぜんじょうけん]、sentence[内部/ないぶ]、binding、[意味計算/いみけいさん]、readerの[実行/じっこう]・[失敗回復/しっぱいかいふく]を[検証/けんしょう]したとはしない。" nil
+    cons paragraph
+      cons "[再配置/さいはいち]・[修正後/しゅうせいご]の[検査器/けんさき]を[独立/どくりつ]に[実行/じっこう]し、24 source・155 formの[照合/しょうごう]と6[件/けん]の[検査器試験/けんさきしけん]の[成功/せいこう]を[確認/かくにん]した。"
+      cons "R011についてはtask moduleの7[件/けん]のRust[試験/しけん]を[実行/じっこう]し、[前段/ぜんだん]タスクの[範囲付/はんいつ]き[完了/かんりょう]、T16の[全群要求/ぜんぐんようきゅう]、[空/から]の[証拠/しょうこ]・[別/べつ]タスクの[証拠/しょうこ]の[拒否/きょひ]を[確認/かくにん]した。"
+      cons "[元/もと]の43[件/けん]の[設計検証/せっけいけんしょう]を[再現/さいげん]したという[記録/きろく]ではない。" nil
+    cons paragraph
+      cons "CIと[開発/かいはつ]toolsも[独立/どくりつ]に[読/よ]んだ。"
+      cons "3 OSのnative[検査/けんさ]、[全/ぜん]jobの[成功/せいこう]を[要求/ようきゅう]するquality、mainの[検査済/けんさず]みSHAからのsource[配布/はいふ]、[読/よ]み[取/と]り[権限/けんげん]、[固定/こてい]action revision、workspaceと[設計依存表/せっけいいぞんひょう]、UTF-8・JSON[重複/ちょうふく]key・[参照/さんしょう]path・タスク[状態/じょうたい]の[検査/けんさ]を[確認/かくにん]した。"
+      cons "[公開/こうかい]APIの[未定義部分/みていぎぶぶん]や[外部/がいぶ]crateのcross-target[適合性/てきごうせい]まで、このmetadata[検査/けんさ]から[推定/すいてい]しない。" nil
+    nil
   nil
