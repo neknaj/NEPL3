@@ -111,7 +111,7 @@ fn annotated_view_rejects_hidden_boundaries_and_unresolved_content() -> Result<(
 
 #[test]
 fn authored_chapter_thirteen_generates_annotations_without_rewriting() -> Result<(), String> {
-    let source = include_str!("../../../doc/migration/authored/13-reproducibility.nepld");
+    let source = include_str!("../../../doc/spec/13-reproducibility.nepld");
     let aliases = [Alias {
         section: None,
         name: "13-再現性schema識別契約の判定".into(),
@@ -263,6 +263,8 @@ fn annotated_host_rejects_invalid_aliases_before_creating_output()
         assert_eq!(text.matches("-->").count(), 1);
         assert!(text.contains("renderer nepl3-tools.markdown-annotated/1"));
         assert!(text.contains("<a name=\"old-title\"></a>"));
+        assert!(text.ends_with('\n'));
+        assert!(!text.ends_with("\n\n"));
         assert!(write(&input, &aliases, &output).is_err());
         assert_eq!(fs::read(&output)?, original);
         let invalid_source_output = root.join("failed.md");

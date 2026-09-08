@@ -1,73 +1,101 @@
-# 13. 再現性・schema識別・契約の判定
+<!-- Generated from doc/spec/13&#45;reproducibility.nepld; renderer nepl3-tools.markdown-annotated/1; source SHA-256 31486ad75e0776d55cc12b2a9b5af2840780ad7812456d9c222a90fd8ab495a8; alias input SHA-256 76379923f595abb51c3566e585a4572da05b16fb8188f0fe618a0e64612301fc; document digest e528c5e71f009070a7958e1b42d6e8703496125c7737f60b3d903c8d88fe1d28. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
-## 方針
+<a name="13-再現性schema識別契約の判定"></a>
 
-共有する意味と実装固有のアルゴリズムを分ける。digestの自己参照、言語同士の相互埋め込みによるhash循環、source順と識別子順の混同を避ける。
+# 13\. 再現性\[さいげんせい\]・schema識別\[しきべつ\]・契約\[けいやく\]の判定\[はんてい\]
 
-## 1. digest
+<a name="n-706f6c696379"></a>
 
-Bytes32のdigest関数はSHA-256に固定する。sourceとresourceのcontent digestは元のbyte列にそのまま適用する。BOM、改行、空白も内容の一部であり、Unicode正規化を行わない。SourceContentのURIはhostが付ける論理的な絶対locatorであり、SourceRefの同一性とは別に保持する。coreはOS path canonicalizationをしない。
+<a name="方針"></a>
 
-このlocatorの字句profileはASCIIのscheme `[A-Za-z][A-Za-z0-9+.-]*:` と空でない後続文字列である。control・未escapeの空白を拒否し、`%` は2桁のASCII hexが続く場合だけ許す。scheme以降のUnicode文字を正規化しない。相対path・空文字をabsolute locatorとして受け付けない。これはhost内部locatorの境界であり、HTTPのauthorityなどscheme固有の妥当性や到達可能性を保証しない。外部URLとして使用するadapterはその用途のURI/IRI検査を行う。schemeの根拠は [RFC 3986 §3.1](https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1)、Unicodeを含む識別子とURIの区別は [RFC 3987](https://www.rfc-editor.org/rfc/rfc3987.html)。
+## 方針\[ほうしん\]
 
-SchemaRef.digestは、schemaの正規descriptorを対象とする。正規descriptorはpackage名、revision、kind/variant/field定義、意味上のoperation署名、局所制約識別を含み、source位置、documentation、cache、生成時刻を含まない。自己参照とforeign schemaは(package, revision, typeName)の記号的参照とし、このdescriptor内へ相互のdigestを再帰的に埋め込まない。実際に使用するforeign digestはProfileの解決済み一覧で固定して検査する。これによりDocとMathが互いの型を参照してもhashの固定点を計算する必要はない。
+共有\[きょうゆう\]する意味\[いみ\]と実装固有\[じっそうこゆう\]のアルゴリズムを分\[わ\]ける。digestの自己参照\[じこさんしょう\]、言語同士\[げんごどうし\]の相互埋\[そうごう\]め込\[こ\]みによるhash循環\[じゅんかん\]、source順\[じゅん\]と識別子順\[しきべつしじゅん\]の混同\[こんどう\]を避\[さ\]ける。
 
-型のconstraintsは実行順ではなく、名前で識別する局所制約の集合である。空・重複の識別子を拒否し、canonical descriptorへ変換するときにUnicode scalar順のarrayへ並べる。fieldやordered-choiceの意味順を持つarrayとは区別する。
+<a name="n-646967657374"></a>
 
-descriptorの正規化データはNull/Bool/非負Integer/Text/Array/Objectだけを使う。JSONをdigest入力として使う場合、object keyをUnicode scalar順にsortし、array順を維持し、空白なし、UTF-8、引用符とbackslashをescapeし、U+0000..001Fは小文字hexの\u00xxでescapeし、それ以外のscalarは直接UTF-8とする。整数は先頭zeroなし。float、負数、surrogate、重複keyは禁止。hash入力はASCII `NEPL3-SCHEMA-1` + 1byte zero + このcanonical JSON。
+## 1\. digest
 
-Grammar packageの意味digestはschema digestと、source位置を除いたreader/binding/style/shape/provider要件の正規descriptorに対して、同じ規則でdomain separatorを `NEPL3-PACKAGE-1` として計算する。局所kind IDはkind名のscalar順で割り当てる。field・宣言・ordered-choiceの意味上の順序はarrayとして保存する。名前で識別するsum/union/variantsのmap順には意味がなく、canonical JSONのkey sortで一致させる。variant payloadのfield順はarrayとして保存する。fieldの順序交換はdigestを変え、variant mapのkey順だけの交換は変えない。seedとcompile後のpackageは意味digestを比較し、provenanceの違いを意味不一致としない。source artifactのdigestは別に記録する。
+Bytes32のdigest関数\[かんすう\]はSHA\-256に固定\[こてい\]する。sourceとresourceのcontent digestは元\[もと\]のbyte列\[れつ\]にそのまま適用\[てきよう\]する。BOM、改行\[かいぎょう\]、空白\[くうはく\]も内容\[ないよう\]の一部\[いちぶ\]であり、Unicode正規化\[せいきか\]を行\[おこな\]わない。SourceContentのURIはhostが付\[つ\]ける論理的\[ろんりてき\]な絶対\[ぜったい\]locatorであり、SourceRefの同一性\[どういつせい\]とは別\[べつ\]に保持\[ほじ\]する。coreはOS path canonicalizationをしない。
 
-wireの操作要求は、解決済みProfileの全SchemaRefとprovider revisionを含めてcache keyを作る。URIやsnapshot所属を除いてよいのは明示的な意味値だけのcacheであり、診断/editor結果のcacheにはsource identityとrevisionが必要。
+このlocatorの字句\[じく\]profileはASCIIのscheme `[A-Za-z][A-Za-z0-9+.-]*:` と空\[から\]でない後続文字列\[こうぞくもじれつ\]である。control・未\[み\]escapeの空白\[くうはく\]を拒否\[きょひ\]し、`%` は2桁\[けた\]のASCII hexが続\[つづ\]く場合\[ばあい\]だけ許\[ゆる\]す。scheme以降\[いこう\]のUnicode文字\[もじ\]を正規化\[せいきか\]しない。相対\[そうたい\]path・空文字\[くうもじ\]をabsolute locatorとして受\[う\]け付\[つ\]けない。これはhost内部\[ないぶ\]locatorの境界\[きょうかい\]であり、HTTPのauthorityなどscheme固有\[こゆう\]の妥当性\[だとうせい\]や到達可能性\[とうたつかのうせい\]を保証\[ほしょう\]しない。外部\[がいぶ\]URLとして使用\[しよう\]するadapterはその用途\[ようと\]のURI\/IRI検査\[けんさ\]を行\[おこな\]う。schemeの根拠\[こんきょ\]は [RFC 3986 §3\.1](<https\:\/\/www\.rfc\-editor\.org\/rfc\/rfc3986\.html\#section\-3\.1>)、Unicodeを含\[ふく\]む識別子\[しきべつし\]とURIの区別\[くべつ\]は [RFC 3987](<https\:\/\/www\.rfc\-editor\.org\/rfc\/rfc3987\.html>)。
 
-### Package意味正規形
+SchemaRef\.digestは、schemaの正規\[せいき\]descriptorを対象\[たいしょう\]とする。正規\[せいき\]descriptorはpackage名\[めい\]、revision、kind\/variant\/field定義\[ていぎ\]、意味上\[いみじょう\]のoperation署名\[しょめい\]、局所制約識別\[きょくしょせいやくしきべつ\]を含\[ふく\]み、source位置\[いち\]、documentation、cache、生成時刻\[せいせいじこく\]を含\[ふく\]まない。自己参照\[じこさんしょう\]とforeign schemaは\(package\, revision\, typeName\)の記号的参照\[きごうてきさんしょう\]とし、このdescriptor内\[ない\]へ相互\[そうご\]のdigestを再帰的\[さいきてき\]に埋\[う\]め込\[こ\]まない。実際\[じっさい\]に使用\[しよう\]するforeign digestはProfileの解決済\[かいけつず\]み一覧\[いちらん\]で固定\[こてい\]して検査\[けんさ\]する。これによりDocとMathが互\[たが\]いの型\[かた\]を参照\[さんしょう\]してもhashの固定点\[こていてん\]を計算\[けいさん\]する必要\[ひつよう\]はない。
 
-実装の`CheckedLanguagePackage::semantic_json`はcategories、extensions、forms、leaves、modes、namespaces、payloadSchemas、reader、recovery、root、schemaのkeyを持つcanonical JSONを返す。Category/Mode/Namespace/Extensionは名前順、Formはcategoryとspelling順、Leafはcategoryとcanonical token-kind ID順、payloadSchemasはpackage/revision/digest順に並べる。重複するpayload SchemaRefは拒否する。各レコードのpayload field順は`interfaces/engine.json`の対応型に従う。ただしread/binding参照は下記の式へ展開し、provenanceとarenaそのものは含めない。styleにはschema/nameに加えてfallback roleも含める。
+型\[かた\]のconstraintsは実行順\[じっこうじゅん\]ではなく、名前\[なまえ\]で識別\[しきべつ\]する局所制約\[きょくしょせいやく\]の集合\[しゅうごう\]である。空\[から\]・重複\[ちょうふく\]の識別子\[しきべつし\]を拒否\[きょひ\]し、canonical descriptorへ変換\[へんかん\]するときにUnicode scalar順\[じゅん\]のarrayへ並\[なら\]べる。fieldやordered\-choiceの意味順\[いみじゅん\]を持\[も\]つarrayとは区別\[くべつ\]する。
 
-readとbindingの式はvariant名を先頭とするarrayで、variantのpayloadはnative公開型のfield順とする。ListOfは`["ListOf",cons,nil,element]`、Builtinは`["Builtin",reader,kind,tokenKind]`とする。kindは`[SchemaRef,localKind]`、operationは`[SchemaRef,name]`、styleは`[selector,SchemaRef,name,fallback]`である。modeは`[name,skipReaders,takePairs]`、formは`[category,spelling,kind,fields,binding,styles]`、leafは`[category,kind,tokenKind,payloadType,binding,styles]`とする。field、skip/take、choice/seq、bindingの子、styleの各列は意味順を保存する。
+descriptorの正規化\[せいきか\]データはNull\/Bool\/非負\[ひふ\]Integer\/Text\/Array\/Objectだけを使\[つか\]う。JSONをdigest入力\[にゅうりょく\]として使\[つか\]う場合\[ばあい\]、object keyをUnicode scalar順\[じゅん\]にsortし、array順\[じゅん\]を維持\[いじ\]し、空白\[くうはく\]なし、UTF\-8、引用符\[いんようふ\]とbackslashをescapeし、U\+0000\.\.001Fは小文字\[こもじ\]hexの`\u00xx`でescapeし、それ以外\[いがい\]のscalarは直接\[ちょくせつ\]UTF\-8とする。整数\[せいすう\]は先頭\[せんとう\]zeroなし。float、負数\[ふすう\]、surrogate、重複\[ちょうふく\]keyは禁止\[きんし\]。hash入力\[にゅうりょく\]はASCII `NEPL3-SCHEMA-1` \+ 1byte zero \+ このcanonical JSON。
 
-readerは全名前付きruleを名前順にたどり、直接DAGの共有を出現ごとに展開したpostorder arenaへ置換したうえで、ReaderPlanの既存canonical descriptor形式を使う。rule名でのRefは展開しない。名前付きruleは未使用でも公開宣言として残す。匿名の未到達arena entryは意味正規形に含めないが、package検査はその不正参照・cycleも拒否する。ReadSpec/Bindingも使用元から展開し、匿名entryの共有・配置・未到達収納の差を除く。巨大な展開は共通予算でStoppedを返し、recursive stackに依存しない。
+Grammar packageの意味\[いみ\]digestはschema digestと、source位置\[いち\]を除\[のぞ\]いたreader\/binding\/style\/shape\/provider要件\[ようけん\]の正規\[せいき\]descriptorに対\[たい\]して、同\[おな\]じ規則\[きそく\]でdomain separatorを `NEPL3-PACKAGE-1` として計算\[けいさん\]する。局所\[きょくしょ\]kind IDはkind名\[めい\]のscalar順\[じゅん\]で割\[わ\]り当\[あ\]てる。field・宣言\[せんげん\]・ordered\-choiceの意味上\[いみじょう\]の順序\[じゅんじょ\]はarrayとして保存\[ほぞん\]する。名前\[なまえ\]で識別\[しきべつ\]するsum\/union\/variantsのmap順\[じゅん\]には意味\[いみ\]がなく、canonical JSONのkey sortで一致\[いっち\]させる。variant payloadのfield順\[じゅん\]はarrayとして保存\[ほぞん\]する。fieldの順序交換\[じゅんじょこうかん\]はdigestを変\[か\]え、variant mapのkey順\[じゅん\]だけの交換\[こうかん\]は変\[か\]えない。seedとcompile後\[ご\]のpackageは意味\[いみ\]digestを比較\[ひかく\]し、provenanceの違\[ちが\]いを意味不一致\[いみふいっち\]としない。source artifactのdigestは別\[べつ\]に記録\[きろく\]する。
 
-この正規形は実行上の任意の等価性を証明するものではない。例えば異なるreader式への代数的書換えを同一視しない。providerの要求署名はpackageへ含めるが、hostの実装artifact identityは下記の解析Profileへ含める。packageの出自を持つeditor結果はこの意味digestだけでcacheしない。
+wireの操作要求\[そうさようきゅう\]は、解決済\[かいけつず\]みProfileの全\[ぜん\]SchemaRefとprovider revisionを含\[ふく\]めてcache keyを作\[つく\]る。URIやsnapshot所属\[しょぞく\]を除\[のぞ\]いてよいのは明示的\[めいじてき\]な意味値\[いみち\]だけのcacheであり、診断\[しんだん\]\/editor結果\[けっか\]のcacheにはsource identityとrevisionが必要\[ひつよう\]。
 
-recoveryは `[defaultUnexpected,rules]` とし、ruleはcategory順の `[category,unexpected,synchronization]`、同期列は宣言順の `[ancestorCategory,kind,spellingOrNull]` とする。回復方針も実行挙動であり、順序やstrategyの変更を意味identityへ反映する。
+<a name="n-73656d616e746963"></a>
 
-### 具体実行identity
+<a name="package意味正規形"></a>
 
-継続のarena indexと出自の参照先を固定するため、packageは意味identityとは別にexecutionDigestを持つ。hashは `NEPL3-PACKAGE-EXECUTION-1` + zero byte + 具体実行canonical JSON とする。意味正規形に加え、元のReaderPlan descriptor、ReadSpec/Bindingの全arenaと直接参照ID、form/leaf等の宣言配置、宣言のOrigin参照、全provenance source identity/URI、Origin/sourceMap tableを含める。sourceのbytesは検査済みsnapshot digestで固定する。意味上等しいarena再配置やgrammar source位置だけの変更でも、古いframeや診断originを再利用しない。
+### Package意味正規形\[いみせいきけい\]
 
-EntryContextはpackage意味identityに加えてProfile内のaliasを保持する。同じpackageを異なるcategory-mode overrideで複数登録できるため、packageから最初のaliasを逆引きしてはならない。NodeSelectionのform/leaf/read/binding indexはそのaliasが指すexecutionDigestの実tableに属する。再開および後段での利用時に具体digestを照合し、意味digestが一致する別配置へ勝手に差し替えない。
+実装\[じっそう\]の`CheckedLanguagePackage::semantic_json`はcategories、extensions、forms、leaves、modes、namespaces、payloadSchemas、reader、recovery、root、schemaのkeyを持\[も\]つcanonical JSONを返\[かえ\]す。Category\/Mode\/Namespace\/Extensionは名前順\[なまえじゅん\]、Formはcategoryとspelling順\[じゅん\]、Leafはcategoryとcanonical token\-kind ID順\[じゅん\]、payloadSchemasはpackage\/revision\/digest順\[じゅん\]に並\[なら\]べる。重複\[ちょうふく\]するpayload SchemaRefは拒否\[きょひ\]する。各\[かく\]レコードのpayload field順\[じゅん\]は`interfaces/engine.json`の対応型\[たいおうがた\]に従\[したが\]う。ただしread\/binding参照\[さんしょう\]は下記\[かき\]の式\[しき\]へ展開\[てんかい\]し、provenanceとarenaそのものは含\[ふく\]めない。styleにはschema\/nameに加\[くわ\]えてfallback roleも含\[ふく\]める。
 
-## 2. native値とwire値
+readとbindingの式\[しき\]はvariant名\[めい\]を先頭\[せんとう\]とするarrayで、variantのpayloadはnative公開型\[こうかいがた\]のfield順\[じゅん\]とする。ListOfは`["ListOf",cons,nil,element]`、Builtinは`["Builtin",reader,kind,tokenKind]`とする。kindは`[SchemaRef,localKind]`、operationは`[SchemaRef,name]`、styleは`[selector,SchemaRef,name,fallback]`である。modeは`[name,skipReaders,takePairs]`、formは`[category,spelling,kind,fields,binding,styles]`、leafは`[category,kind,tokenKind,payloadType,binding,styles]`とする。field、skip\/take、choice\/seq、bindingの子\[こ\]、styleの各列\[かくれつ\]は意味順\[いみじゅん\]を保存\[ほぞん\]する。
 
-型名中のU64/Bytes32等の有限primitiveと、任意精度Natural/Integerを区別する。wire sourceはopaque SourceId/revision/digestを使う。同じIDをbundle内・操作間の対応づけに使用し、URIやnative allocation addressへ置き換えない。同じURI/revision/byte列を持つ独立文書もSourceIdが異なれば別snapshotである。r3のURI-based bijectionは、この場合にspec02の宣言同一性を失うためr4で訂正した。
+readerは全名前付\[ぜんなまえつ\]きruleを名前順\[なまえじゅん\]にたどり、直接\[ちょくせつ\]DAGの共有\[きょうゆう\]を出現\[しゅつげん\]ごとに展開\[てんかい\]したpostorder arenaへ置換\[ちかん\]したうえで、ReaderPlanの既存\[きそん\]canonical descriptor形式\[けいしき\]を使\[つか\]う。rule名\[めい\]でのRefは展開\[てんかい\]しない。名前付\[なまえつ\]きruleは未使用\[みしよう\]でも公開宣言\[こうかいせんげん\]として残\[のこ\]す。匿名\[とくめい\]の未到達\[みとうたつ\]arena entryは意味正規形\[いみせいきけい\]に含\[ふく\]めないが、package検査\[けんさ\]はその不正参照\[ふせいさんしょう\]・cycleも拒否\[きょひ\]する。ReadSpec\/Bindingも使用元\[しようもと\]から展開\[てんかい\]し、匿名\[とくめい\]entryの共有\[きょうゆう\]・配置\[はいち\]・未到達収納\[みとうたつしゅうのう\]の差\[さ\]を除\[のぞ\]く。巨大\[きょだい\]な展開\[てんかい\]は共通予算\[きょうつうよさん\]でStoppedを返\[かえ\]し、recursive stackに依存\[いぞん\]しない。
 
-native node indexはallocationごとのIDでもよい。wire bundleではrootからfield順に訪問した最初の出現順で連番にする。shared nodeは二回目以降referenceを使う。source tableはSourceIdのUnicode scalar順、revisionの数値順、digestのbyte順とし、schema tableはpackage/revision/digest順。Originの親参照はDAGを検査し、payload nodeとorigin nodeのID空間を分ける。SourceIdはこのnode index再採番の対象にしない。
+この正規形\[せいきけい\]は実行上\[じっこうじょう\]の任意\[にんい\]の等価性\[とうかせい\]を証明\[しょうめい\]するものではない。例\[たと\]えば異\[こと\]なるreader式\[しき\]への代数的書換\[だいすうてきかきか\]えを同一視\[どういつし\]しない。providerの要求署名\[ようきゅうしょめい\]はpackageへ含\[ふく\]めるが、hostの実装\[じっそう\]artifact identityは下記\[かき\]の解析\[かいせき\]Profileへ含\[ふく\]める。packageの出自\[しゅつじ\]を持\[も\]つeditor結果\[けっか\]はこの意味\[いみ\]digestだけでcacheしない。
 
-NodeRefの訪問はdepth-firstで、Childをその位置、Childrenを列の順にたどる。rootは0となり、全NodeRefを書き換える。ForeignSyntaxはguest bundleで独立して再採番し、ForeignSyntax.rootもguestの0へ対応させる。wire bundleは単一rootの到達閉包を表すため、到達不能nodeはUnreachableNodeで拒否し、黙って破棄しない。native arenaの未使用slotは許せるが、出力対象bundleへ含めない。Missing/Unexpected/Unparsed等の回復構文もrootから参照して保持する。
+recoveryは `[defaultUnexpected,rules]` とし、ruleはcategory順\[じゅん\]の `[category,unexpected,synchronization]`、同期列\[どうきれつ\]は宣言順\[せんげんじゅん\]の `[ancestorCategory,kind,spellingOrNull]` とする。回復方針\[かいふくほうしん\]も実行挙動\[じっこうきょどう\]であり、順序\[じゅんじょ\]やstrategyの変更\[へんこう\]を意味\[いみ\]identityへ反映\[はんえい\]する。
 
-TokenRef、Token内のViewRef、OriginRef、EnvironmentEntry.idはそれぞれの所有tableで宣言されたslotを指し、このNodeRef再採番の対象ではない。これらのtableとbinding/resource/role/relation/triviaの列順は値の一部として保存する。生成側はsource順または明示した生成順でtableを作り、allocation address・hash map列挙順を宣言順へ使わない。したがって、node arenaだけを並べ替えた同じ値はwire byte一致を要求するが、別tableの宣言順まで異なるgraphの同型性をこの規則だけで証明したとは扱わない。
+<a name="n-657865637574696f6e"></a>
 
-ParseTreeのcontexts/recoveryも同じ所有bundleのNodeRef対応表で変換する。ForeignStep.nodeはそのstepをたどる直前のbundle、NodeSelection.nodeとRecoveryEntry.nodeはpathの終点bundleに属する。contextsはhostを先頭とし、各bundle内の正準node順・field順で出会うforeign bundleをdepth-firstでたどった順に置く。各contextのselectionsは正準node順とする。recoveryは同じbundle順の部分列で、各entriesは正準node順とする。受信側はこの順序と参照先の意味検査を両方行い、古いwrapper番号だけを残した値を拒否する。packageのform/leaf/read/binding index、executionDigest、FactSetのopaque IDは構文node再採番の対象ではない。
+<a name="具体実行identity"></a>
 
-coreのNodeMappingは所有bundleの参照範囲・到達閉包と正準番号の対応を計算する。これは単独ではschema・source・cycle・選択の検査済みproofではない。engineのParseTree型付きadapterは解決済みProfileによる静的選択・回復検査に加え、Dynamicの実provider登録・固定shape・保存childContextsの整合を検査し、core-owned FoundationValueCodecを介してwireの実SyntaxBundle変換を使う。wireからengineへの依存は追加しない。Dynamicのpackage indexやchildContextsを構文node番号として再配置しない。この検査はproviderの実行履歴の認証を代替せず、ParseTree codec成立からparse continuation全体のportable化を推定しない。Facts要求応答の型付き包絡はこの同じtree codecと、要求に束縛したfacts権限検査を使用する。
+### 具体実行\[ぐたいじっこう\]identity
 
-SyntaxBundle.sourceMapsも宣言順の列として保存する。そのSpanはopaque source identityとbyte rangeを持ち、NodeRef再採番で変化しない。foreign bundleは独自のsourceMaps/sourcesを持つ。生成snapshotの予約identityもhostが固定してからnative/portable比較へ渡し、別実装が独自にIDを発明して同一byte列を偽装しない。
+継続\[けいぞく\]のarena indexと出自\[しゅつじ\]の参照先\[さんしょうさき\]を固定\[こてい\]するため、packageは意味\[いみ\]identityとは別\[べつ\]にexecutionDigestを持\[も\]つ。hashは `NEPL3-PACKAGE-EXECUTION-1` \+ zero byte \+ 具体実行\[ぐたいじっこう\]canonical JSON とする。意味正規形\[いみせいきけい\]に加\[くわ\]え、元\[もと\]のReaderPlan descriptor、ReadSpec\/Bindingの全\[ぜん\]arenaと直接参照\[ちょくせつさんしょう\]ID、form\/leaf等\[とう\]の宣言配置\[せんげんはいち\]、宣言\[せんげん\]のOrigin参照\[さんしょう\]、全\[ぜん\]provenance source identity\/URI、Origin\/sourceMap tableを含\[ふく\]める。sourceのbytesは検査済\[けんさず\]みsnapshot digestで固定\[こてい\]する。意味上等\[いみじょうひと\]しいarena再配置\[さいはいち\]やgrammar source位置\[いち\]だけの変更\[へんこう\]でも、古\[ふる\]いframeや診断\[しんだん\]originを再利用\[さいりよう\]しない。
 
-EnvironmentEntry.digestは `NEPL3-ENVIRONMENT-1` + zero byte + canonical NDF(Environment record) のSHA-256とする。entry自身のid/digestはhashへ入れない。bindings/resourcesの列順とbinding中のbundle局所OriginRefはEnvironment値の一部である。Origin tableを再編するhostは参照とdigestを共に更新し、別bundleへ同じ数値OriginRefだけを移して同一環境とみなさない。環境digest一致はoriginの実在・domain bindingの意味検査を代替しない。
+EntryContextはpackage意味\[いみ\]identityに加\[くわ\]えてProfile内\[ない\]のaliasを保持\[ほじ\]する。同\[おな\]じpackageを異\[こと\]なるcategory\-mode overrideで複数登録\[ふくすうとうろく\]できるため、packageから最初\[さいしょ\]のaliasを逆引\[ぎゃくび\]きしてはならない。NodeSelectionのform\/leaf\/read\/binding indexはそのaliasが指\[さ\]すexecutionDigestの実\[じつ\]tableに属\[ぞく\]する。再開\[さいかい\]および後段\[こうだん\]での利用時\[りようじ\]に具体\[ぐたい\]digestを照合\[しょうごう\]し、意味\[いみ\]digestが一致\[いっち\]する別配置\[べつはいち\]へ勝手\[かって\]に差\[さ\]し替\[か\]えない。
 
-この値は局所table参照を含む内容digestであり、参照先Originの閉包digestではない。別のOrigin tableで同じ番号を使えば同じ内容digestになり得る。reader・editor・診断のcache keyはEnvironmentEntry.digestだけでなく、ReaderContextのOrigin table・選択Profile・source bundleのidentityを固定する。出自を持つ結果を別bundleへ再利用しない。originの再採番時はbindingとEnvironmentEntry.digestに加え、ForeignSyntax.environment.digestを同時に更新する。
+<a name="n-77697265"></a>
 
-## 3. normal formとartifact
+<a name="2-native値とwire値"></a>
 
-printの正規形は各言語のformal source表に従う。lossless再出力はoriginal SourceSnapshotの抽出であり、意味printerと同一視しない。sourceを持たない値にもprefix printerが使える。
+## 2\. native値\[ち\]とwire値\[ち\]
 
-HTML/XML出力はUTF-8、属性はnamespace URIとlocal nameのscalar順で出力する。モデル不変条件章の文字集合を検査後、Textと属性値の `&`、`<`、`>` を常に `&amp;`、`&lt;`、`&gt;` へescapeする。これによりXML文字データ中の `]]>` も直接出力されない。属性値は二重引用符で囲み、`"` は `&quot;` とする。TextのCRは `&#xD;`、属性値のTAB/LF/CRはそれぞれ `&#x9;`、`&#xA;`、`&#xD;` としてparse後の値を保持する。TextのTAB/LFはそのまま出す。HTMLのbrはvoid、XMLでは自己閉じを使う。外部から任意のnamespace URIを受け付けない。MathML/SVGのnamespaceはserializerが固定値を生成する。
+型名中\[かためいちゅう\]のU64\/Bytes32等\[とう\]の有限\[ゆうげん\]primitiveと、任意精度\[にんいせいど\]Natural\/Integerを区別\[くべつ\]する。wire sourceはopaque SourceId\/revision\/digestを使\[つか\]う。同\[おな\]じIDをbundle内\[ない\]・操作間\[そうさかん\]の対応\[たいおう\]づけに使用\[しよう\]し、URIやnative allocation addressへ置\[お\]き換\[か\]えない。同\[おな\]じURI\/revision\/byte列\[れつ\]を持\[も\]つ独立文書\[どくりつぶんしょ\]もSourceIdが異\[こと\]なれば別\[べつ\]snapshotである。r3のURI\-based bijectionは、この場合\[ばあい\]にspec02の宣言同一性\[せんげんどういつせい\]を失\[うしな\]うためr4で訂正\[ていせい\]した。
 
-pixelの完全一致はOS/font/browserに依存するため、このbackendの契約は安全なDOM内容・構造・宣言されたstyle/layout規則とする。同じbackend revisionの固定assetから生成するmarkup byte列は決定的。nativeとprocessの同実装経路ではbyte一致、異なる独立実装ではcanonical構造一致と定義済み表示規則を検査する。
+native node indexはallocationごとのIDでもよい。wire bundleではrootからfield順\[じゅん\]に訪問\[ほうもん\]した最初\[さいしょ\]の出現順\[しゅつげんじゅん\]で連番\[れんばん\]にする。shared nodeは二回目以降\[にかいめいこう\]referenceを使\[つか\]う。source tableはSourceIdのUnicode scalar順\[じゅん\]、revisionの数値順\[すうちじゅん\]、digestのbyte順\[じゅん\]とし、schema tableはpackage\/revision\/digest順\[じゅん\]。Originの親参照\[おやさんしょう\]はDAGを検査\[けんさ\]し、payload nodeとorigin nodeのID空間\[くうかん\]を分\[わ\]ける。SourceIdはこのnode index再採番\[さいさいばん\]の対象\[たいしょう\]にしない。
 
-## 4. limitsとproviderの互換
+NodeRefの訪問\[ほうもん\]はdepth\-firstで、Childをその位置\[いち\]、Childrenを列\[れつ\]の順\[じゅん\]にたどる。rootは0となり、全\[ぜん\]NodeRefを書\[か\]き換\[か\]える。ForeignSyntaxはguest bundleで独立\[どくりつ\]して再採番\[さいさいばん\]し、ForeignSyntax\.rootもguestの0へ対応\[たいおう\]させる。wire bundleは単一\[たんいつ\]rootの到達閉包\[とうたつへいほう\]を表\[あらわ\]すため、到達不能\[とうたつふのう\]nodeはUnreachableNodeで拒否\[きょひ\]し、黙\[だま\]って破棄\[はき\]しない。native arenaの未使用\[みしよう\]slotは許\[ゆる\]せるが、出力対象\[しゅつりょくたいしょう\]bundleへ含\[ふく\]めない。Missing\/Unexpected\/Unparsed等\[とう\]の回復構文\[かいふくこうぶん\]もrootから参照\[さんしょう\]して保持\[ほじ\]する。
 
-algorithmごとのwork消費量は異なってよい。十分な予算でCompleteになった同じ入力について、意味正規形・診断code/対象範囲・解決先が一致することを要求する。片方だけが予算不足の場合、値の不一致と同じ扱いをしない。ただしlimit違反の無視、partialをCompleteにすること、hostへ制御を返さないことは契約違反。
+TokenRef、Token内\[ない\]のViewRef、OriginRef、EnvironmentEntry\.idはそれぞれの所有\[しょゆう\]tableで宣言\[せんげん\]されたslotを指\[さ\]し、このNodeRef再採番\[さいさいばん\]の対象\[たいしょう\]ではない。これらのtableとbinding\/resource\/role\/relation\/triviaの列順\[れつじゅん\]は値\[あたい\]の一部\[いちぶ\]として保存\[ほぞん\]する。生成側\[せいせいがわ\]はsource順\[じゅん\]または明示\[めいじ\]した生成順\[せいせいじゅん\]でtableを作\[つく\]り、allocation address・hash map列挙順\[れっきょじゅん\]を宣言順\[せんげんじゅん\]へ使\[つか\]わない。したがって、node arenaだけを並\[なら\]べ替\[か\]えた同\[おな\]じ値\[あたい\]はwire byte一致\[いっち\]を要求\[ようきゅう\]するが、別\[べつ\]tableの宣言順\[せんげんじゅん\]まで異\[こと\]なるgraphの同型性\[どうけいせい\]をこの規則\[きそく\]だけで証明\[しょうめい\]したとは扱\[あつか\]わない。
 
-同じ入力・environment・source/resources・provider revision・budgetでの同じ実装の結果は決定的。外部clock、乱数、OS directory順などに意味を依存させない。
+ParseTreeのcontexts\/recoveryも同\[おな\]じ所有\[しょゆう\]bundleのNodeRef対応表\[たいおうひょう\]で変換\[へんかん\]する。ForeignStep\.nodeはそのstepをたどる直前\[ちょくぜん\]のbundle、NodeSelection\.nodeとRecoveryEntry\.nodeはpathの終点\[しゅうてん\]bundleに属\[ぞく\]する。contextsはhostを先頭\[せんとう\]とし、各\[かく\]bundle内\[ない\]の正準\[せいじゅん\]node順\[じゅん\]・field順\[じゅん\]で出会\[であ\]うforeign bundleをdepth\-firstでたどった順\[じゅん\]に置\[お\]く。各\[かく\]contextのselectionsは正準\[せいじゅん\]node順\[じゅん\]とする。recoveryは同\[おな\]じbundle順\[じゅん\]の部分列\[ぶぶんれつ\]で、各\[かく\]entriesは正準\[せいじゅん\]node順\[じゅん\]とする。受信側\[じゅしんがわ\]はこの順序\[じゅんじょ\]と参照先\[さんしょうさき\]の意味検査\[いみけんさ\]を両方行\[りょうほうおこな\]い、古\[ふる\]いwrapper番号\[ばんごう\]だけを残\[のこ\]した値\[あたい\]を拒否\[きょひ\]する。packageのform\/leaf\/read\/binding index、executionDigest、FactSetのopaque IDは構文\[こうぶん\]node再採番\[さいさいばん\]の対象\[たいしょう\]ではない。
+
+coreのNodeMappingは所有\[しょゆう\]bundleの参照範囲\[さんしょうはんい\]・到達閉包\[とうたつへいほう\]と正準番号\[せいじゅんばんごう\]の対応\[たいおう\]を計算\[けいさん\]する。これは単独\[たんどく\]ではschema・source・cycle・選択\[せんたく\]の検査済\[けんさず\]みproofではない。engineのParseTree型付\[かたつ\]きadapterは解決済\[かいけつず\]みProfileによる静的選択\[せいてきせんたく\]・回復検査\[かいふくけんさ\]に加\[くわ\]え、Dynamicの実\[じつ\]provider登録\[とうろく\]・固定\[こてい\]shape・保存\[ほぞん\]childContextsの整合\[せいごう\]を検査\[けんさ\]し、core\-owned FoundationValueCodecを介\[かい\]してwireの実\[じつ\]SyntaxBundle変換\[へんかん\]を使\[つか\]う。wireからengineへの依存\[いぞん\]は追加\[ついか\]しない。Dynamicのpackage indexやchildContextsを構文\[こうぶん\]node番号\[ばんごう\]として再配置\[さいはいち\]しない。この検査\[けんさ\]はproviderの実行履歴\[じっこうりれき\]の認証\[にんしょう\]を代替\[だいたい\]せず、ParseTree codec成立\[せいりつ\]からparse continuation全体\[ぜんたい\]のportable化\[か\]を推定\[すいてい\]しない。Facts要求応答\[ようきゅうおうとう\]の型付\[かたつ\]き包絡\[ほうらく\]はこの同\[おな\]じtree codecと、要求\[ようきゅう\]に束縛\[そくばく\]したfacts権限検査\[けんげんけんさ\]を使用\[しよう\]する。
+
+SyntaxBundle\.sourceMapsも宣言順\[せんげんじゅん\]の列\[れつ\]として保存\[ほぞん\]する。そのSpanはopaque source identityとbyte rangeを持\[も\]ち、NodeRef再採番\[さいさいばん\]で変化\[へんか\]しない。foreign bundleは独自\[どくじ\]のsourceMaps\/sourcesを持\[も\]つ。生成\[せいせい\]snapshotの予約\[よやく\]identityもhostが固定\[こてい\]してからnative\/portable比較\[ひかく\]へ渡\[わた\]し、別実装\[べつじっそう\]が独自\[どくじ\]にIDを発明\[はつめい\]して同一\[どういつ\]byte列\[れつ\]を偽装\[ぎそう\]しない。
+
+EnvironmentEntry\.digestは `NEPL3-ENVIRONMENT-1` \+ zero byte \+ canonical NDF\(Environment record\) のSHA\-256とする。entry自身\[じしん\]のid\/digestはhashへ入\[い\]れない。bindings\/resourcesの列順\[れつじゅん\]とbinding中\[ちゅう\]のbundle局所\[きょくしょ\]OriginRefはEnvironment値\[ち\]の一部\[いちぶ\]である。Origin tableを再編\[さいへん\]するhostは参照\[さんしょう\]とdigestを共\[とも\]に更新\[こうしん\]し、別\[べつ\]bundleへ同\[おな\]じ数値\[すうち\]OriginRefだけを移\[うつ\]して同一環境\[どういつかんきょう\]とみなさない。環境\[かんきょう\]digest一致\[いっち\]はoriginの実在\[じつざい\]・domain bindingの意味検査\[いみけんさ\]を代替\[だいたい\]しない。
+
+この値\[あたい\]は局所\[きょくしょ\]table参照\[さんしょう\]を含\[ふく\]む内容\[ないよう\]digestであり、参照先\[さんしょうさき\]Originの閉包\[へいほう\]digestではない。別\[べつ\]のOrigin tableで同\[おな\]じ番号\[ばんごう\]を使\[つか\]えば同\[おな\]じ内容\[ないよう\]digestになり得\[う\]る。reader・editor・診断\[しんだん\]のcache keyはEnvironmentEntry\.digestだけでなく、ReaderContextのOrigin table・選択\[せんたく\]Profile・source bundleのidentityを固定\[こてい\]する。出自\[しゅつじ\]を持\[も\]つ結果\[けっか\]を別\[べつ\]bundleへ再利用\[さいりよう\]しない。originの再採番時\[さいさいばんじ\]はbindingとEnvironmentEntry\.digestに加\[くわ\]え、ForeignSyntax\.environment\.digestを同時\[どうじ\]に更新\[こうしん\]する。
+
+<a name="n-617274696661637473"></a>
+
+## 3\. normal formとartifact
+
+printの正規形\[せいきけい\]は各言語\[かくげんご\]のformal source表\[ひょう\]に従\[したが\]う。lossless再出力\[さいしゅつりょく\]はoriginal SourceSnapshotの抽出\[ちゅうしゅつ\]であり、意味\[いみ\]printerと同一視\[どういつし\]しない。sourceを持\[も\]たない値\[あたい\]にもprefix printerが使\[つか\]える。
+
+HTML\/XML出力\[しゅつりょく\]はUTF\-8、属性\[ぞくせい\]はnamespace URIとlocal nameのscalar順\[じゅん\]で出力\[しゅつりょく\]する。モデル不変条件章\[ふへんじょうけんしょう\]の文字集合\[もじしゅうごう\]を検査後\[けんさご\]、Textと属性値\[ぞくせいち\]の `&`、`<`、`>` を常\[つね\]に `&amp;`、`&lt;`、`&gt;` へescapeする。これによりXML文字\[もじ\]データ中\[ちゅう\]の `]]>` も直接出力\[ちょくせつしゅつりょく\]されない。属性値\[ぞくせいち\]は二重引用符\[にじゅういんようふ\]で囲\[かこ\]み、`"` は `&quot;` とする。TextのCRは `&#xD;`、属性値\[ぞくせいち\]のTAB\/LF\/CRはそれぞれ `&#x9;`、`&#xA;`、`&#xD;` としてparse後\[ご\]の値\[あたい\]を保持\[ほじ\]する。TextのTAB\/LFはそのまま出\[だ\]す。HTMLのbrはvoid、XMLでは自己閉\[じこと\]じを使\[つか\]う。外部\[がいぶ\]から任意\[にんい\]のnamespace URIを受\[う\]け付\[つ\]けない。MathML\/SVGのnamespaceはserializerが固定値\[こていち\]を生成\[せいせい\]する。
+
+pixelの完全一致\[かんぜんいっち\]はOS\/font\/browserに依存\[いぞん\]するため、このbackendの契約\[けいやく\]は安全\[あんぜん\]なDOM内容\[ないよう\]・構造\[こうぞう\]・宣言\[せんげん\]されたstyle\/layout規則\[きそく\]とする。同\[おな\]じbackend revisionの固定\[こてい\]assetから生成\[せいせい\]するmarkup byte列\[れつ\]は決定的\[けっていてき\]。nativeとprocessの同実装経路\[どうじっそうけいろ\]ではbyte一致\[いっち\]、異\[こと\]なる独立実装\[どくりつじっそう\]ではcanonical構造一致\[こうぞういっち\]と定義済\[ていぎず\]み表示規則\[ひょうじきそく\]を検査\[けんさ\]する。
+
+<a name="n-6c696d697473"></a>
+
+<a name="4-limitsとproviderの互換"></a>
+
+## 4\. limitsとproviderの互換\[ごかん\]
+
+algorithmごとのwork消費量\[しょうひりょう\]は異\[こと\]なってよい。十分\[じゅうぶん\]な予算\[よさん\]でCompleteになった同\[おな\]じ入力\[にゅうりょく\]について、意味正規形\[いみせいきけい\]・診断\[しんだん\]code\/対象範囲\[たいしょうはんい\]・解決先\[かいけつさき\]が一致\[いっち\]することを要求\[ようきゅう\]する。片方\[かたほう\]だけが予算不足\[よさんふそく\]の場合\[ばあい\]、値\[あたい\]の不一致\[ふいっち\]と同\[おな\]じ扱\[あつか\]いをしない。ただしlimit違反\[いはん\]の無視\[むし\]、partialをCompleteにすること、hostへ制御\[せいぎょ\]を返\[かえ\]さないことは契約違反\[けいやくいはん\]。
+
+同\[おな\]じ入力\[にゅうりょく\]・environment・source\/resources・provider revision・budgetでの同\[おな\]じ実装\[じっそう\]の結果\[けっか\]は決定的\[けっていてき\]。外部\[がいぶ\]clock、乱数\[らんすう\]、OS directory順\[じゅん\]などに意味\[いみ\]を依存\[いぞん\]させない。

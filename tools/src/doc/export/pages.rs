@@ -377,6 +377,11 @@ pub fn write(manifest: &Path, output: &Path) -> crate::Result<()> {
         },
         &mut manifest_data.output_limits.budget(),
     )?;
+    write_generated(generated, output)
+}
+
+// Only call with the complete output of this module's checked generator.
+pub(crate) fn write_generated(generated: GeneratedPages, output: &Path) -> crate::Result<()> {
     fs::create_dir(output)?;
     for (path, bytes) in generated.files {
         let path = output.join(path);

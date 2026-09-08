@@ -13,6 +13,14 @@ fn run() -> nepl3_tools::Result<()> {
         .as_slice()
     {
         ["check"] => nepl3_tools::check(&root),
+        ["doc-canonical", "--check"] => {
+            nepl3_tools::doc::canonical::check(&root, "doc/canonical.json")
+        }
+        ["doc-canonical", "html", output] => nepl3_tools::doc::canonical::html(
+            &root,
+            "doc/canonical.json",
+            std::path::Path::new(output),
+        ),
         ["bootstrap", "seed-check"] => nepl3_tools::bootstrap::cli::seed_check(),
         ["foundation", "--write"] => nepl3_tools::foundation(&root),
         ["reader", "--write"] => nepl3_tools::reader(&root),
@@ -50,6 +58,8 @@ fn run() -> nepl3_tools::Result<()> {
         ["doc-inventory", "--check"] => nepl3_tools::doc_inventory(&root, None, false),
         ["doc-inventory", "--check-current"] => nepl3_tools::doc_inventory(&root, None, true),
         ["--help"] | ["-h"] => {
+            println!("nepl3-tools doc-canonical --check");
+            println!("nepl3-tools doc-canonical html <new-output-directory>");
             println!("nepl3-tools doc-markdown <input.nepld> <new-output.md>");
             println!(
                 "nepl3-tools doc-markdown annotated <input.nepld> <aliases.json> <new-output.md>"

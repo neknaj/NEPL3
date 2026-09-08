@@ -3,7 +3,21 @@ body
   cons section canonical_source "1. [最終成果物/さいしゅうせいかぶつ]と[移行前/いこうまえ]の[正本/せいほん]"
     body
       cons paragraph
-        cons "[現在/げんざい]のMarkdownは、[正式/せいしき]な[正本/せいほん]として[維持/いじ]する。"
+        cons "[未移行/みいこう]ページのMarkdownは[正式/せいしき]な[正本/せいほん]として[維持/いじ]する。"
+        cons sentence
+          cons ruby text "移行済" text "いこうず"
+          cons text "みページは "
+          cons code "doc/canonical.json"
+          cons text " にDoc"
+          cons ruby text "正本" text "せいほん"
+          cons text "と"
+          cons ruby text "生成" text "せいせい"
+          cons text "Markdownの"
+          cons ruby text "対応" text "たいおう"
+          cons text "を"
+          cons ruby text "登録" text "とうろく"
+          cons text "する。"
+          nil
         cons "[最終的/さいしゅうてき]には、[仕様/しよう]・[設計/せっけい]・[開発文書/かいはつぶんしょ]をNEPL3 Doc DSLへ[移行/いこう]し、[同/おな]じDoc core/backendで[公開文書/こうかいぶんしょ]を[生成/せいせい]する。"
         cons "[初回/しょかい]のWeb[公開/こうかい]を[全文書移行/ぜんぶんしょいこう]まで[待/ま]つ[必要/ひつよう]はないが、T21と[移行/いこう]の[受入/うけいれ]J01〜J04をT16の[必須条件/ひっすじょうけん]にする。"
         nil
@@ -150,7 +164,7 @@ body
         cons "[不足/ふそく]はR014の[設計/せっけい]blockerとする。"
         cons "schema・forms・syntax source・backend・wire・conformanceを[一/ひと]つの[変更/へんこう]で[整備/せいび]し、[独立/どくりつ]レビューで[解消/かいしょう]してから[該当/がいとう]ページを[変換/へんかん]する。"
         cons "ここでは[未定義/みていぎ]constructorを[追加/ついか]したふりをせず、[任意/にんい]RawHtmlを[抜/ぬ]け[道/みち]にしない。"
-        cons "[等価/とうか]な[既存表現/きそんひょうげん]を[選/えら]ぶ[場合/ばあい]も、[人/ひと]が[意味/いみ]とaccessibilityの[同等性/どうとうせい]を[確認/かくにん]する。"
+        cons "[等価/とうか]な[既存表現/きそんひょうげん]を[選/えら]ぶ[場合/ばあい]も、[意味/いみ]とaccessibilityの[同等性/どうとうせい]を[独立/どくりつ]に[確認/かくにん]する。"
         nil
       nil
   cons section page_switch "3. ページ[単位/たんい]の[切替/きりかえ]"
@@ -180,7 +194,7 @@ body
           cons "[同一/どういつ]page IDとURLを[持/も]つDoc sourceを[生成/せいせい]・[編集/へんしゅう]し、[内容/ないよう]の[落/お]ち、[表/ひょう]の[対応/たいおう]、リンク、anchor、コードbyte[列/れつ]、[数式構造/すうしきこうぞう]、[図/ず]の[説明/せつめい]を[独立/どくりつ]に[比較/ひかく]する。"
           nil nil
         cons item none body cons paragraph
-          cons "[人/ひと]による[意味同等性/いみどうとうせい]レビュー、HTML[構造/こうぞう]/accessibility、[全/ぜん]リンク、[同版例/どうはんれい]、[決定的/けっていてき]buildが[通/とお]ったページのregistry[正本/せいほん]を、Docへ[切/き]り[替/か]える。"
+          cons "[独立/どくりつ]した[意味同等性/いみどうとうせい]レビュー、HTML[構造/こうぞう]/accessibility、[全/ぜん]リンク、[同版例/どうはんれい]、[決定的/けっていてき]buildが[通/とお]ったページのregistry[正本/せいほん]をDocへ[切/き]り[替/か]える。"
           nil nil
         cons item none body cons paragraph
           cons "[旧/きゅう]Markdownは[削除/さくじょ]またはDocからの[生成/せいせい]artifactへ[変更/へんこう]し、[二重編集/にじゅうへんしゅう]を[検出/けんしゅつ]する。"
@@ -205,11 +219,129 @@ body
         cons "projectionだけを[手/て]で[修正/しゅうせい]した[場合/ばあい]は、[生成差分検査/せいせいさぶんけんさ]で[拒否/きょひ]する。"
         nil
       cons paragraph
+        cons "[意味同等性/いみどうとうせい]レビューは、[執筆者/しっぴつしゃ]とは[別/べつ]の[担当/たんとう]が[原文/げんぶん]・[執筆指針/しっぴつししん]・[変更原稿/へんこうげんこう]・[実行結果/じっこうけっか]を[読/よ]んで[行/おこな]う。"
+        cons "ユーザーが[許可/きょか]した[独立/どくりつ]subagentによるレビューも、この[条件/じょうけん]を[満/み]たす[方法/ほうほう]として[使用/しよう]する。"
+        cons "subagentによる[文面/ぶんめん]の[確認/かくにん]、[自動/じどう]accessibility tree[検査/けんさ]、[人/ひと]によるscreen reader[実操作/じつそうさ]を[別々/べつべつ]に[記録/きろく]し、[実施/じっし]していない[人/ひと]の[操作/そうさ]を[成功/せいこう]としない。"
+        nil
+      cons section registry "[正本/せいほん]registryと[生成物/せいせいぶつ]の[検査/けんさ]"
+      body
+      cons paragraph
+        cons sentence
+          cons code "doc/canonical.json"
+          cons text " のversion 1は、pageごとの"
+          cons ruby text "安定" text "あんてい"
+          cons text "したid、Doc source、"
+          cons ruby text "生成" text "せいせい"
+          cons text "projection、alias JSON、HTML route、renderer"
+          cons ruby text "識別" text "しきべつ"
+          cons text "を"
+          cons ruby text "持" text "も"
+          cons text "つ。"
+          nil
+        cons "[未登録/みとうろく]ページは[移行済/いこうず]みと[推定/すいてい]しない。"
+        cons "sourceは.nepld、projectionは[既存/きそん]の.mdの[場所/ばしょ]とし、JSON[自体/じたい]は[文書/ぶんしょ]の[内容/ないよう]を[所有/しょゆう]しない。"
+        cons "[旧原稿/きゅうげんこう]を[移動/いどう]した[後/あと]に、[同/おな]じDoc[本文/ほんぶん]の[手書/てが]き[複製/ふくせい]を[移行候補/いこうこうほ]ディレクトリへ[残/のこ]さない。"
+        nil
+      cons paragraph
+        cons "version 1のregistry pathとrouteはASCII[英数字/えいすうじ]・hyphen・underscore・dotを[持/も]つcomponentをslashで[結/むす]ぶ。"
+        cons "[空/から]component、[末尾/まつび]dot、Windows[予約名/よやくめい]を[拒否/きょひ]し、case-insensitiveに[重複/ちょうふく]を[検査/けんさ]する。"
+        cons "registryのファイルはdoc/[配下/はいか]とする。"
+        cons "これはrepositoryの[生成先/せいせいさき]と[入力名/にゅうりょくめい]を[複数/ふくすう]OSで[同/おな]じように[扱/あつか]うためのhost[側/がわ]の[制約/せいやく]であり、Doc[本文/ほんぶん]やfoundationのSource URIからUnicodeを[除/のぞ]く[規則/きそく]ではない。"
+        cons "fragment/percent[表記/ひょうき]をphysical inputへ[混/ま]ぜず、Markdown[検査/けんさ]だけ[成功/せいこう]して[同/おな]じsourceのHTML[生成/せいせい]がpath[違反/いはん]になる[不整合/ふせいごう]を[防/ふせ]ぐ。"
+        nil
+      cons paragraph
+        cons sentence
+          cons code "nepl3-tools doc-canonical --check"
+          cons text " は"
+          cons ruby text "実際" text "じっさい"
+          cons text "のDoc parser/lowerと"
+          cons ruby text "検査済" text "けんさず"
+          cons text "みannotated rendererでMarkdownを"
+          cons ruby text "再生成" text "さいせいせい"
+          cons text "し、source path・source digest・alias"
+          cons ruby text "入力" text "にゅうりょく"
+          cons text "digest・document digestを"
+          cons ruby text "含" text "ふく"
+          cons text "めたbyte"
+          cons ruby text "列" text "れつ"
+          cons text "を"
+          cons ruby text "既存" text "きそん"
+          cons text "projectionと"
+          cons ruby text "比較" text "ひかく"
+          cons text "する。"
+          nil
+        cons "[手編集/てへんしゅう]・[古/ふる]いsource・aliasの[変更/へんこう]・[異/こと]なる[改行/かいぎょう]を[黙/だま]って[正規化/せいきか]せず、[不一致/ふいっち]で[失敗/しっぱい]する。"
+        cons "[未知/みち]のrenderer、[重複/ちょうふく]identity/path、repository[外/がい]のpath、symlink、[過大入力/かだいにゅうりょく]も[拒否/きょひ]する。"
+        cons sentence
+          cons text "この"
+          cons ruby text "検査" text "けんさ"
+          cons text "は"
+          cons ruby text "明示的" text "めいじてき"
+          cons text "な"
+          cons ruby text "文書生成段階" text "ぶんしょせいせいだんかい"
+          cons text "であり、metadataだけを"
+          cons ruby text "検査" text "けんさ"
+          cons text "する "
+          cons code "nepl3-tools check"
+          cons text " やCargo build.rsへ"
+          cons ruby text "混" text "ま"
+          cons text "ぜない。"
+          nil
+        nil
+      cons paragraph
+        cons sentence
+          cons code "nepl3-tools doc-canonical html <new-directory>"
+          cons text " は"
+          cons ruby text "同" text "おな"
+          cons text "じregistryのDoc sourceを"
+          cons ruby text "既存" text "きそん"
+          cons text "のpage-set generatorへ"
+          cons ruby text "渡" text "わた"
+          cons text "し、"
+          cons ruby text "検査済" text "けんさず"
+          cons text "みHTML・CSS・manifestを"
+          cons ruby text "新" text "あたら"
+          cons text "しいディレクトリへ"
+          cons ruby text "書" text "か"
+          cons text "く。"
+          nil
+        cons "relative linkの[論理/ろんり]namespaceは[従来/じゅうらい]のMarkdown path、physical inputはDoc sourceとして[分/わ]けて[記録/きろく]する。"
+        cons "[生成/せいせい]MarkdownをHTML[生成/せいせい]の[入力/にゅうりょく]にしない。"
+        cons "[失敗後/しっぱいご]に[部分的/ぶぶんてき]な[成功/せいこう]を[返/かえ]さず、[既存/きそん]の[出力/しゅつりょく]も[上書/うわが]きしない。"
+        nil
+      cons paragraph
+        cons "[互換/ごかん]aliasとGitHubの[自動見出/じどうみだ]しIDは[独立/どくりつ]して[発生/はっせい]するため、[実際/じっさい]のGitHub[表示/ひょうじ]で[重複/ちょうふく]と[移動先/いどうさき]を[確認/かくにん]する。"
+        cons sentence
+          cons text "13"
+          cons ruby text "章" text "しょう"
+          cons text "では"
+          cons ruby text "旧" text "きゅう"
+          cons text "8"
+          cons ruby text "見出" text "みだ"
+          cons text "しのうち6つを"
+          cons ruby text "明示" text "めいじ"
+          cons text "alias、"
+          cons code "1-digest"
+          cons text " と "
+          cons code "3-normal-formとartifact"
+          cons text " を"
+          cons ruby text "同名" text "どうめい"
+          cons text "の"
+          cons ruby text "自動見出" text "じどうみだ"
+          cons text "しで"
+          cons ruby text "維持" text "いじ"
+          cons text "する。"
+          nil
+        cons "[全/ぜん]7Sectionの[明示/めいじ]IDも[保持/ほじ]する。"
+        cons "この[判断/はんだん]は13[章/しょう]の[実際/じっさい]の[見出/みだ]しに[対/たい]する[対応表/たいおうひょう]であり、[任意/にんい]のMarkdownに[対/たい]するslug[推測/すいそく]をfoundationへ[追加/ついか]するものではない。"
+        nil
+      cons paragraph
         cons "[文書/ぶんしょ]をrenderしただけで、[埋/う]め[込/こ]まれた[例/れい]を[評価/ひょうか]しない。"
         cons "[失敗/しっぱい]を[説明/せつめい]する[例/れい]や[注釈内/ちゅうしゃくない]のcodeは、source[表示/ひょうじ]のまま[保存/ほぞん]する。"
         cons "リンク[先/さき]の[例/れい]を[試/ため]す[操作/そうさ]も、[例/れい]ID・revision・profileを[照合/しょうごう]する。"
         cons "[新/あたら]しい[文法/ぶんぽう]の[受入/うけいれ]が[通/とお]る[前/まえ]に、[文書/ぶんしょ]を[新/しん]constructorへ[一括変換/いっかつへんかん]しない。"
         nil
+      nil
       nil
   cons section bootstrap "4. Bootstrapと[再現性/さいげんせい]"
     body
