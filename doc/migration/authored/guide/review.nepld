@@ -646,5 +646,21 @@ body
       cons "このremote[結果/けっか]は[統括/とうかつ]による[確認/かくにん]であり、[本/ほん]レビューのnativeローカル[成功/せいこう]へ[置/お]き[換/か]えない。"
       cons "[今回/こんかい]の[同期/どうき]host[経路/けいろ]は[通常/つうじょう]bootstrapの[上限/じょうげん]10BとCIでの[実行/じっこう]を[維持/いじ]し、owned[比較/ひかく]だけを[任意/にんい]の[追加測定/ついかそくてい]とする。"
       cons "[改善後/かいぜんご]のremote CIは[再検証待/さいけんしょうま]ちで、owned[経路/けいろ]の[高/たか]いコピー[費用/ひよう]は[未解決/みかいけつ]である。" nil
+    cons paragraph
+      cons sentence cons text "R037の" cons ruby text "修正後" text "しゅうせいご" cons text "、" cons ruby text "管理対象" text "かんりたいしょう" cons text "edit 5" cons ruby text "件" text "けん" cons text "と " cons code "python tools/audit/allocation/run.py" cons text " を" cons ruby text "独立実行" text "どくりつじっこう" cons text "し" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "[実/じつ]allocatorは4096 bytesの[正例/せいれい]に[反応/はんのう]し、AllocationUnits 0のSourceStore.applyは[実割当/じつわりあて]0 bytesで[停止/ていし]した。"
+      cons "[元/もと]の[全削除/ぜんさくじょ]probeもSourceLimitで[拒否/きょひ]され、[元/もと]storeのrevision 0が[維持/いじ]された。"
+      cons "borrowed[参照/さんしょう]の[並替/ならびか]え・snapshot/locator[比較/ひかく]・[出力準備/しゅつりょくじゅんび]の[前/まえ]に[資源/しげん]を[計上/けいじょう]し、[全出力/ぜんしゅつりょく]identityを[検査/けんさ]してから[生成/せいせい]admissionとstoreを[一緒/いっしょ]に[確定/かくてい]する[実/じつ]コードを[確認/かくにん]した。" nil
+    cons paragraph
+      cons sentence cons ruby text "追加" text "ついか" cons text "の" cons ruby text "独立" text "どくりつ" cons text " " cons code "edit_transaction" cons text " は、" cons ruby text "順不同" text "じゅんふどう" cons text "の" cons ruby text "隣接" text "りんせつ" cons text "Unicode" cons ruby text "編集" text "へんしゅう" cons text "、" cons ruby text "末尾挿入" text "まつびそうにゅう" cons text "、" cons ruby text "複数" text "ふくすう" cons text "SourceIdの" cons ruby text "返却順" text "へんきゃくじゅん" cons text "、" cons ruby text "入力" text "にゅうりょく" cons text "と" cons ruby text "生成" text "せいせい" cons text "snapshotのSourceBytes 25を" cons ruby text "検査" text "けんさ" cons text "して" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "[同/おな]じ[操作/そうさ]で[古/ふる]いrevisionと[重複/じゅうふく]anchorを[拒否/きょひ]した[後/あと]も[全/ぜん]storeが[不変/ふへん]で、[訂正/ていせい]した[編集/へんしゅう]は[成功/せいこう]する。"
+      cons sentence cons ruby text "初回補助" text "しょかいほじょ" cons text "sourceはPowerShell pipeで" cons ruby text "日本語" text "にほんご" cons text "が " cons code "?" cons text " へ" cons ruby text "変" text "か" cons text "わり、fixture" cons ruby text "構築時" text "こうちくじ" cons text "のBoundsで" cons ruby text "失敗" text "しっぱい" cons text "したため、Rust Unicode escapeで" cons ruby text "元" text "もと" cons text "の" cons ruby text "意図" text "いと" cons text "を" cons ruby text "保持" text "ほじ" cons text "して" cons ruby text "再実行" text "さいじっこう" cons text "した。" nil
+      cons "この[補助/ほじょ]fixtureの[失敗/しっぱい]を[実装不具合/じっそうふぐあい]とは[扱/あつか]わない。"
+      cons "[管理対象/かんりたいしょう]の[全/ぜん]allocation[上限走査/じょうげんそうさ]、[失敗後/しっぱいご]retry、[長/ちょう]ID/URI、[生成/せいせい]identity[衝突/しょうとつ]の[回帰/かいき]と[併/あわ]せてR037をcorrectedとした。" nil
+    cons paragraph
+      cons "[次/つぎ]のT05[実装入力/じっそうにゅうりょく]として、[短/みじか]いGrammar sourceからsource[位置/いち]を[失/うしな]うcompile[失敗/しっぱい]を3[件/けん][確認/かくにん]した。"
+      cons "[日本語/にほんご]commentとCRLFを[含/ふく]む[有効/ゆうこう]な[対照/たいしょう]sourceはcompileに[成功/せいこう]する。"
+      cons sentence cons code "ref absent" cons text " はMissingRule、" cons code "scalar range \"z\" \"a\"" cons text " はInvalidRange、Seq readerの" cons code "List<NdfValue>" cons text "をleafのreference selfで" cons ruby text "名前" text "なまえ" cons text "として" cons ruby text "扱" text "あつか" cons text "うsourceはPackage(InvalidBinding)を" cons ruby text "返" text "かえ" cons text "す。" nil
+      cons "いずれも[実/じつ]ASTにはLocatedのSpanがあるが、[返却/へんきゃく]errorには[該当/がいとう]NodeIdやSpanがない。" nil
     nil
   nil
