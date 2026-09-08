@@ -70,6 +70,91 @@ fn literal(r: &SchemaRegistry) -> Result<DocumentSyntax, String> {
 }
 
 #[test]
+fn source_uniqueness_uses_logical_revision_and_preserves_source_order() -> Result<(), String> {
+    use nepl3_doc_core::check::StructureError;
+    let r = registry()?;
+    let mut document = literal(&r)?;
+    let first = document.sources[0].clone();
+    let revision = SourceSnapshot::new(
+        SourceId("doc".into()),
+        4,
+        "memory:doc".into(),
+        b"later".to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    let other = SourceSnapshot::new(
+        SourceId("別".into()),
+        3,
+        "memory:other".into(),
+        b"other".to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    let sources = [first, revision, other];
+    for order in [
+        [0, 1, 2],
+        [0, 2, 1],
+        [1, 0, 2],
+        [1, 2, 0],
+        [2, 0, 1],
+        [2, 1, 0],
+    ] {
+        document.sources = order.iter().map(|i| sources[*i].clone()).collect();
+        let original = document.sources.clone();
+        document
+            .validate_structure(&r, &mut b(), &mut SourceAdmission::default())
+            .map_err(err)?;
+        assert_eq!(document.sources, original);
+        for duplicate in &sources {
+            document.sources.push(duplicate.clone());
+            assert!(matches!(
+                document.validate_structure(&r, &mut b(), &mut SourceAdmission::default()),
+                Err(StructureError::DuplicateSource)
+            ));
+            document.sources.pop();
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn many_source_revisions_fit_a_bounded_index_lookup_allowance() -> Result<(), String> {
+    let r = registry()?;
+    let mut document = literal(&r)?;
+    for index in 0..256 {
+        document.sources.push(
+            SourceSnapshot::new(
+                SourceId(format!("fixture/{index:04}")),
+                0,
+                "memory:fixture".into(),
+                Vec::new(),
+                &mut b(),
+            )
+            .map_err(err)?,
+        );
+    }
+    // Enough for charged index comparisons and unchanged source/view checks;
+    // not enough for comparing every source with every previous declaration.
+    let mut limited = Budget::new(Limits {
+        work: 500_000,
+        ..b().limits()
+    });
+    document
+        .validate_structure(&r, &mut limited, &mut SourceAdmission::default())
+        .map_err(err)?;
+    let mut cancelled = b();
+    cancelled.cancel();
+    assert!(matches!(
+        document.validate_structure(&r, &mut cancelled, &mut SourceAdmission::default()),
+        Err(nepl3_doc_core::check::StructureError::Stopped(
+            StopReason::Cancelled
+        ))
+    ));
+    Ok(())
+}
+
+#[test]
 fn sentence_payload_uses_only_the_explicit_owner_after_cbor() -> Result<(), String> {
     let r = registry()?;
     let source = SourceSnapshot::new(

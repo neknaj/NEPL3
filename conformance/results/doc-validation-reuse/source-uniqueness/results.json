@@ -1,0 +1,93 @@
+{
+  "native.log": {
+    "results": [
+      "test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s\r"
+    ],
+    "observations": [
+      "REVIEW_CONFLICT 0 front=false error=Some(DuplicateSource)",
+      "REVIEW_CONFLICT 0 front=true error=Some(DuplicateSource)",
+      "REVIEW_CONFLICT 1 front=false error=Some(Source(IdentityConflict))",
+      "REVIEW_CONFLICT 1 front=true error=Some(Source(IdentityConflict))",
+      "REVIEW_CONFLICT 2 front=false error=Some(Source(IdentityConflict))",
+      "REVIEW_CONFLICT 2 front=true error=Some(Source(IdentityConflict))",
+      "REVIEW_COST 0 Usage { source_bytes: 27, work: 569, depth: 5, nodes: 33, allocation_units: 2350, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_COST 16 Usage { source_bytes: 27, work: 7509, depth: 5, nodes: 33, allocation_units: 4814, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_COST 64 Usage { source_bytes: 27, work: 44467, depth: 5, nodes: 33, allocation_units: 12206, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_COST 256 Usage { source_bytes: 27, work: 268169, depth: 5, nodes: 33, allocation_units: 41774, output_bytes: 0, diagnostics: 0, events: 0 }"
+    ]
+  },
+  "before.log": {
+    "results": [
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.01s\r"
+    ],
+    "observations": [
+      "REVIEW_CONFLICT 0 front=false error=Some(DuplicateSource)",
+      "REVIEW_CONFLICT 0 front=true error=Some(DuplicateSource)",
+      "REVIEW_CONFLICT 1 front=false error=Some(Source(IdentityConflict))",
+      "REVIEW_CONFLICT 1 front=true error=Some(Source(IdentityConflict))",
+      "REVIEW_CONFLICT 2 front=false error=Some(Source(IdentityConflict))",
+      "REVIEW_CONFLICT 2 front=true error=Some(Source(IdentityConflict))",
+      "REVIEW_COST 0 Usage { source_bytes: 27, work: 569, depth: 5, nodes: 33, allocation_units: 2350, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_COST 16 Usage { source_bytes: 27, work: 15028, depth: 5, nodes: 33, allocation_units: 4814, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_COST 64 Usage { source_bytes: 27, work: 170270, depth: 5, nodes: 33, allocation_units: 12206, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_COST 256 Usage { source_bytes: 27, work: 2332368, depth: 5, nodes: 33, allocation_units: 41774, output_bytes: 0, diagnostics: 0, events: 0 }"
+    ]
+  },
+  "wasi.log": {
+    "results": [
+      "test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.31s\r"
+    ],
+    "observations": [
+      "REVIEW_CONFLICT 0 front=false error=Some(DuplicateSource)",
+      "REVIEW_CONFLICT 0 front=true error=Some(DuplicateSource)",
+      "REVIEW_CONFLICT 1 front=false error=Some(Source(IdentityConflict))",
+      "REVIEW_CONFLICT 1 front=true error=Some(Source(IdentityConflict))",
+      "REVIEW_CONFLICT 2 front=false error=Some(Source(IdentityConflict))",
+      "REVIEW_CONFLICT 2 front=true error=Some(Source(IdentityConflict))",
+      "REVIEW_COST 0 Usage { source_bytes: 27, work: 569, depth: 5, nodes: 33, allocation_units: 1786, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_COST 16 Usage { source_bytes: 27, work: 7509, depth: 5, nodes: 33, allocation_units: 3674, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_COST 64 Usage { source_bytes: 27, work: 44467, depth: 5, nodes: 33, allocation_units: 9338, output_bytes: 0, diagnostics: 0, events: 0 }",
+      "REVIEW_COST 256 Usage { source_bytes: 27, work: 268169, depth: 5, nodes: 33, allocation_units: 31994, output_bytes: 0, diagnostics: 0, events: 0 }"
+    ]
+  },
+  "long-native.log": {
+    "results": [
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.00s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s\r",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 59 filtered out; finished in 11.06s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 81 filtered out; finished in 0.00s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s\r"
+    ],
+    "observations": [
+      "REVIEW_HTML Usage { source_bytes: 0, work: 5952522, depth: 13, nodes: 130674, allocation_units: 11028678, output_bytes: 20470, diagnostics: 0, events: 0 } bytes=20438"
+    ]
+  },
+  "long-before.log": {
+    "results": [
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.00s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s\r",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 59 filtered out; finished in 6.80s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 81 filtered out; finished in 0.00s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s\r"
+    ],
+    "observations": [
+      "REVIEW_HTML Usage { source_bytes: 0, work: 13097468, depth: 13, nodes: 130674, allocation_units: 11028678, output_bytes: 20470, diagnostics: 0, events: 0 } bytes=20438"
+    ]
+  },
+  "output": {
+    "bytes": 20438,
+    "sha256": "969f5e944e132ba52982f7da8997c240ba11acdbfbeb289d39c327a83c319451",
+    "before_after_equal": true
+  },
+  "input": {
+    "path": "examples/document/linear-combination.nepld",
+    "bytes": 13488,
+    "sha256": "9099bbbe48ed75a0768997789229188f53e43348fe930522b119908dfdb7a889"
+  },
+  "head": "13b2155fe49faa598b2d197193c9af30c0539b48",
+  "base": "8b6088e0ff818fae5d8176bc2690dbba42ed43f5"
+}

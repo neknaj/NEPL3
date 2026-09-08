@@ -1,0 +1,20 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-doc-core",
+    "-p",
+    "nepl3-doc-html",
+    "--target-dir",
+    "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\target",
+    "--",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "workspace": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-page-reuse\\before",
+  "target": "native",
+  "exit_code": 0,
+  "seconds": 10.372625599964522
+}
