@@ -46,12 +46,11 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<RenderedPages, PagesRenderError<'a, C::Error>> {
-    let plan = pages::resolve(&request.set, r, c, b)
-        .map_err(|e| match e {
-            pages::PageError::Stopped(s) => PagesRenderError::Stopped(s),
-            e => PagesRenderError::Input(e),
-        })?
-        .into_plan();
+    let checked = pages::resolve(&request.set, r, c, b).map_err(|e| match e {
+        pages::PageError::Stopped(s) => PagesRenderError::Stopped(s),
+        e => PagesRenderError::Input(e),
+    })?;
+    let plan = checked.plan();
     let mut unresolved = false;
     for pending in &plan.remaining {
         b.charge(Resource::Work, 1)?;
@@ -71,23 +70,18 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
         }
     }
     if unresolved {
-        return Err(PagesRenderError::NeedsResolution(plan));
+        return Err(PagesRenderError::NeedsResolution(checked.into_plan()));
     }
     let mut fragments = Vec::new();
     for (page, input) in request.set.pages.iter().enumerate() {
         b.charge(Resource::Work, 1)?;
-        let inspected =
-            prepare::inspect(&input.document, r, c, b).map_err(|error| match error {
-                prepare::PreparationError::Stopped(s) => PagesRenderError::Stopped(s),
-                error => PagesRenderError::Input(pages::PageError::Input {
-                    page: page as u64,
-                    error,
-                }),
-            })?;
+        let document_digest = checked
+            .document_digest(page as u64)
+            .ok_or(PagesRenderError::Render(RenderError::InternalShape))?;
         let prepared = crate::prepare::prepare_rendering(
             &input.document,
             &request.options,
-            inspected.document_digest,
+            document_digest,
             b,
         )
         .map_err(|e| match e {

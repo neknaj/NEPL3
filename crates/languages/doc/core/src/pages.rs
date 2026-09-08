@@ -102,6 +102,7 @@ impl<E> From<portable::PortableError<E>> for PageError<'_, E> {
 pub struct CheckedPages<'a> {
     set: &'a PageSet,
     plan: PageLinkPlan,
+    document_digests: Vec<Digest>,
 }
 impl<'a> CheckedPages<'a> {
     pub fn set(&self) -> &'a PageSet {
@@ -112,6 +113,14 @@ impl<'a> CheckedPages<'a> {
     }
     pub fn into_plan(self) -> PageLinkPlan {
         self.plan
+    }
+    /// Digest of this exact borrowed set's document, in page order. This native
+    /// proof is constructed by resolve, never by decoding a supplied link plan.
+    pub fn document_digest(&self, page: u64) -> Option<Digest> {
+        usize::try_from(page)
+            .ok()
+            .and_then(|p| self.document_digests.get(p))
+            .copied()
     }
 }
 pub(crate) fn push<T>(v: &mut Vec<T>, item: T, b: &mut Budget) -> Result<(), StopReason> {
@@ -263,15 +272,8 @@ pub fn resolve<'a, C: FoundationValueCodec>(
         })?;
     let mut definitions = Vec::new();
     let mut plans = Vec::new();
+    let mut document_digests = Vec::new();
     for (page, input) in set.pages.iter().enumerate() {
-        let plan =
-            prepare::inspect(&input.document, registry, c, b).map_err(|error| match error {
-                PreparationError::Stopped(s) => PageError::Stopped(s),
-                error => PageError::Input {
-                    page: page as u64,
-                    error,
-                },
-            })?;
         let labels = labels::check(&input.document, registry, b, c.source_admission()).map_err(
             |e| match e {
                 labels::LabelError::Stopped(s) => PageError::Stopped(s),
@@ -281,6 +283,30 @@ pub fn resolve<'a, C: FoundationValueCodec>(
                 },
             },
         )?;
+        // set_to_value has already structurally validated and encoded every
+        // document. Hash the exact child value instead of constructing it again.
+        let document_value = portable::pages::document_value(&value, page, b)?;
+        let document_digest = c
+            .canonical_value_digest(prepare::DOCUMENT_DOMAIN, document_value, b)
+            .map_err(|e| match e.stop_reason() {
+                Some(s) => PageError::Stopped(s),
+                None => PageError::Input {
+                    page: page as u64,
+                    error: PreparationError::Boundary(portable::PortableError::Foundation(e)),
+                },
+            })?;
+        let requirements = prepare::requirements(&labels, c, b).map_err(|error| match error {
+            PreparationError::Stopped(s) => PageError::Stopped(s),
+            error => PageError::Input {
+                page: page as u64,
+                error,
+            },
+        })?;
+        let plan = prepare::DocPreparationPlan {
+            document_digest,
+            requirements,
+        };
+        push(&mut document_digests, document_digest, b)?;
         push(&mut definitions, labels, b)?;
         push(&mut plans, plan, b)?;
     }
@@ -359,6 +385,7 @@ pub fn resolve<'a, C: FoundationValueCodec>(
     }
     Ok(CheckedPages {
         set,
+        document_digests,
         plan: PageLinkPlan {
             identity,
             links,

@@ -114,11 +114,25 @@ pub fn inspect<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<DocPreparationPlan, PreparationError<'a, C::Error>> {
-    labels::check(document, registry, b, c.source_admission())?;
+    let checked = labels::check(document, registry, b, c.source_admission())?;
     let value = portable::to_value(document, registry, c, b)?;
     let document_digest = c
         .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
         .map_err(boundary)?;
+    Ok(DocPreparationPlan {
+        document_digest,
+        requirements: requirements(&checked, c, b)?,
+    })
+}
+
+/// Internal discovery from an Article-local proof. The caller separately owns
+/// the canonical boundary value and its digest; external plans are never proofs.
+pub(crate) fn requirements<'a, C: FoundationValueCodec>(
+    checked: &labels::CheckedLabels<'a>,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<Vec<DocRequirement>, PreparationError<'a, C::Error>> {
+    let document = checked.document();
     let mut requirements = Vec::new();
     for (index, node) in document.value.nodes.iter().enumerate() {
         b.charge(Resource::Work, 1)?;
@@ -160,8 +174,5 @@ pub fn inspect<'a, C: FoundationValueCodec>(
             b,
         )?;
     }
-    Ok(DocPreparationPlan {
-        document_digest,
-        requirements,
-    })
+    Ok(requirements)
 }

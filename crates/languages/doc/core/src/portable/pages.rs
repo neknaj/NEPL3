@@ -3,6 +3,29 @@ use super::*;
 use crate::pages::{self, PageDocument, PageLinkPlan, PageSet};
 use alloc::vec::Vec;
 
+/// Borrow a generated PageSet's document value. This shape accessor is private
+/// to the crate and does not grant validation to arbitrary incoming NDF values.
+pub(crate) fn document_value<'a, E>(
+    value: &'a NdfValue,
+    page: usize,
+    b: &mut Budget,
+) -> Result<&'a NdfValue, PortableError<E>> {
+    b.charge(Resource::Work, 1)?;
+    let NdfValue::Record(set) = value else {
+        return Err(PortableError::Shape);
+    };
+    let [NdfValue::List(pages)] = set.fields.as_slice() else {
+        return Err(PortableError::Shape);
+    };
+    let Some(NdfValue::Record(page)) = pages.get(page) else {
+        return Err(PortableError::Shape);
+    };
+    let [_, document] = page.fields.as_slice() else {
+        return Err(PortableError::Shape);
+    };
+    Ok(document)
+}
+
 pub fn set_to_value<C: FoundationValueCodec>(
     set: &PageSet,
     r: &SchemaRegistry,

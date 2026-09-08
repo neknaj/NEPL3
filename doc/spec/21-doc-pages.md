@@ -20,6 +20,13 @@ filesystem、URLへの接続、HTML生成、guest評価は行わない。
 source/revisionを別の内容へ置き換えることはできない。文書間で同じlabel名を使う
 ことは許す。未選択のParallel variantも含めて文書全体を検査する。
 
+同じ変更不能なPageSetの解決中は、検査済みのNDF表現とlabel検査結果を再利用できる。
+CheckedPagesは登録順の各document digestを保持し、同じ入力を描画するbackendへ渡す。
+PageSetとDocumentのdigestは、それぞれ既定のdomainとcanonical NDF byte列から求める。
+hashの合成への置換、外部から受信したplanの信用、別の入力への検査省略は行わない。
+全documentの構造・境界検査、PageSetのhash、各documentのlabel・hash・要求発見、
+全リンクの解決という順序を保ち、資源消費と停止は同じ操作へ累積する。
+
 開発用Doc source hostのdecode先IDは、元source IDのUTF-8 byte長、ID、revision、
 予約counterを `length:id:revision:counter` と連結する。同じsourceを同じ設定で
 読み直した場合は同じIDを生成し、別sourceのdecode結果を単独counterで衝突させない。

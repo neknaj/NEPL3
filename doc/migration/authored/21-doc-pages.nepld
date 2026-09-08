@@ -137,6 +137,13 @@ body
     cons "[未選択/みせんたく]のParallel variantも[含/ふく]めて、[文書全体/ぶんしょぜんたい]を[検査/けんさ]する。"
     nil
   cons paragraph
+    cons "[同/おな]じ[変更不能/へんこうふのう]なPageSetの[解決中/かいけつちゅう]は、[検査済/けんさず]みのNDF[表現/ひょうげん]とlabel[検査結果/けんさけっか]を[再利用/さいりよう]できる。"
+    cons "CheckedPagesは[登録順/とうろくじゅん]の[各/かく]document digestを[保持/ほじ]し、[同/おな]じ[入力/にゅうりょく]を[描画/びょうが]するbackendへ[渡/わた]す。"
+    cons "PageSetとDocumentのdigestは、それぞれ[既定/きてい]のdomainとcanonical NDF byte[列/れつ]から[求/もと]める。"
+    cons "hashの[合成/ごうせい]への[置換/ちかん]、[外部/がいぶ]から[受信/じゅしん]したplanの[信用/しんよう]、[別/べつ]の[入力/にゅうりょく]への[検査省略/けんさしょうりゃく]は[行/おこな]わない。"
+    cons "[全/ぜん]documentの[構造/こうぞう]・[境界検査/きょうかいけんさ]、PageSetのhash、[各/かく]documentのlabel・hash・[要求発見/ようきゅうはっけん]、[全/ぜん]リンクの[解決/かいけつ]という[順序/じゅんじょ]を[保/たも]ち、[資源消費/しげんしょうひ]と[停止/ていし]は[同/おな]じ[操作/そうさ]へ[累積/るいせき]する。"
+    nil
+  cons paragraph
     cons sentence
       cons ruby text "開発用" text "かいはつよう"
       cons text "Doc source hostのdecode"

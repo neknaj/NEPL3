@@ -122,6 +122,36 @@ fn run(set: &PageSet) -> Result<PageLinkPlan, String> {
         .clone())
 }
 #[test]
+fn page_boundary_validation_still_precedes_earlier_page_label_failures() -> Result<(), String> {
+    let r = registry()?;
+    let mut input = set();
+    input.pages[0].document.value.nodes[5].kind = DocKind::Sentence {
+        inlines: vec![InlineRef(6), InlineRef(6), InlineRef(7)],
+    };
+    let original = input.pages[1].document.value.nodes[0].kind.clone();
+    input.pages[1].document.value.nodes[0].kind = DocKind::Article {
+        language: "ja".into(),
+        title: SentenceRef(1),
+        body: BodyRef(u64::MAX),
+    };
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    assert!(matches!(
+        resolve(&input, &r, &mut codec, &mut b()),
+        Err(PageError::Boundary(portable::PortableError::Structure(_)))
+    ));
+    input.pages[1].document.value.nodes[0].kind = original;
+    assert!(matches!(
+        resolve(&input, &r, &mut codec, &mut b()),
+        Err(PageError::Input {
+            page: 0,
+            error: nepl3_doc_core::prepare::PreparationError::Label(_)
+        })
+    ));
+    Ok(())
+}
+#[test]
 fn pages_resolve_forward_and_relative_links_with_explicit_identity() -> Result<(), String> {
     let r = registry()?;
     let set = set();
@@ -152,6 +182,24 @@ fn pages_resolve_forward_and_relative_links_with_explicit_identity() -> Result<(
     let mut bytes = b"NEPL3.Doc.Pages.v1\0".to_vec();
     bytes.extend(nepl3_wire::encode(&value, &mut b()).map_err(err)?);
     assert_eq!(p.plan().identity, Digest::of(&bytes));
+    for (index, page) in set.pages.iter().enumerate() {
+        // Independently assemble the specified domain + canonical NDF bytes.
+        // A digest of digests or a PageSet child at the wrong index must differ.
+        let document = portable::to_value(&page.document, &r, &mut c, &mut b()).map_err(err)?;
+        let mut expected = nepl3_doc_core::prepare::DOCUMENT_DOMAIN.to_vec();
+        expected.extend(nepl3_wire::encode(&document, &mut b()).map_err(err)?);
+        assert_eq!(p.document_digest(index as u64), Some(Digest::of(&expected)));
+        assert_eq!(
+            p.document_digest(index as u64),
+            Some(
+                nepl3_doc_core::prepare::inspect(&page.document, &r, &mut c, &mut b())
+                    .map_err(err)?
+                    .document_digest
+            )
+        );
+    }
+    assert_eq!(p.document_digest(set.pages.len() as u64), None);
+    assert_eq!(p.document_digest(u64::MAX), None);
     assert_eq!(set, original);
     let mut changed = set.clone();
     changed.pages[1].registration.route = "other/index.html".into();
