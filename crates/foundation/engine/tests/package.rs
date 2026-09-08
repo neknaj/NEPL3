@@ -346,6 +346,49 @@ fn persistent_tree_checks_parent_reads_spelling_payload_and_concrete_owner() -> 
     };
     tree.validate(&resolved, &mut budget(), &mut SourceAdmission::default())
         .map_err(|e| format!("{e:?}"))?;
+    // Selection order is transport data, not the node-index order. All six
+    // permutations must retain the exact same concrete-owner validation.
+    for order in [
+        [0, 1, 2],
+        [0, 2, 1],
+        [1, 0, 2],
+        [1, 2, 0],
+        [2, 0, 1],
+        [2, 1, 0],
+    ] {
+        let mut reordered = tree.clone();
+        reordered.contexts[0].nodes = order
+            .iter()
+            .map(|index| tree.contexts[0].nodes[*index].clone())
+            .collect();
+        reordered
+            .validate(&resolved, &mut budget(), &mut SourceAdmission::default())
+            .map_err(|e| format!("selection permutation {order:?}: {e:?}"))?;
+    }
+    let mut duplicate = tree.clone();
+    duplicate.contexts[0].nodes = vec![
+        tree.contexts[0].nodes[1].clone(),
+        tree.contexts[0].nodes[1].clone(),
+        tree.contexts[0].nodes[0].clone(),
+    ];
+    assert!(matches!(
+        duplicate.validate(&resolved, &mut budget(), &mut SourceAdmission::default()),
+        Err(TreeError::Duplicate)
+    ));
+    for invalid in [tree.bundle.nodes.len() as u64, u64::MAX] {
+        let mut bad = tree.clone();
+        bad.contexts[0].nodes[0].node = NodeRef(invalid);
+        assert!(matches!(
+            bad.validate(&resolved, &mut budget(), &mut SourceAdmission::default()),
+            Err(TreeError::Path)
+        ));
+    }
+    let mut missing = tree.clone();
+    missing.contexts[0].nodes.pop();
+    assert!(matches!(
+        missing.validate(&resolved, &mut budget(), &mut SourceAdmission::default()),
+        Err(TreeError::Selection)
+    ));
     let mut bad = tree.clone();
     bad.contexts[0].nodes[1].entry = resolved
         .entry("B", None, &mut budget())

@@ -532,14 +532,17 @@ impl ParseTree {
             if context.nodes.len() != bundle.nodes.len() {
                 return Err(TreeError::Selection);
             }
-            for (index, selected) in context.nodes.iter().enumerate() {
-                budget.charge(Resource::Work, index as u64 + 1)?;
-                if context.nodes[..index]
-                    .iter()
-                    .any(|prior| prior.node == selected.node)
-                {
+            // Every node was reached above. Reuse that checked node-indexed
+            // storage to consume each selection exactly once, in input order.
+            // Selection order itself remains unrestricted.
+            for selected in &context.nodes {
+                budget.charge(Resource::Work, 1)?;
+                let index = usize::try_from(selected.node.0).map_err(|_| TreeError::Path)?;
+                let unselected = reached.get_mut(index).ok_or(TreeError::Path)?;
+                if !*unselected {
                     return Err(TreeError::Duplicate);
                 }
+                *unselected = false;
                 let node = node(bundle, selected.node)?;
                 let checked = profile.validate_entry(&selected.entry, budget)?;
                 if profile.execution_digest(&selected.entry.alias, budget)?
