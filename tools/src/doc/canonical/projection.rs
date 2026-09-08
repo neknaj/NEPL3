@@ -187,6 +187,7 @@ pub(super) fn generate_from_registry(
     budget.poll().map_err(err)?;
     let initial_usage = budget.usage();
     let limits = budget.limits();
+    charge(budget, Resource::Work, 1)?;
     let (raw, inputs, needs_group) = capture(root, raw)?;
     let compiled = crate::doc::source::compiled()?;
     let group = if needs_group {

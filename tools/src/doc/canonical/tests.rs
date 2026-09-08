@@ -327,9 +327,13 @@ fn grouped_failures_and_sticky_limits_never_publish_partial_outputs() -> Result<
     for kind in ["work", "allocation", "output", "nodes", "cancel"] {
         let mut limits = complete.limits();
         match kind {
-            "work" => limits.work = used.work - 1,
+            // The receipt includes selected limit values. Changing their digit
+            // counts changes serialization work/bytes; leave a gap larger than
+            // that bounded metadata difference instead of copying an exact
+            // counter as an invariant across different configurations.
+            "work" => limits.work = used.work - 1024,
             "allocation" => limits.allocation_units = used.allocation_units - 1,
-            "output" => limits.output_bytes = used.output_bytes - 1,
+            "output" => limits.output_bytes = used.output_bytes - 1024,
             "nodes" => limits.nodes = used.nodes - 1,
             _ => (),
         }
@@ -448,5 +452,102 @@ fn staging_rejects_aggregate_alias_and_page_limits_before_creating_output() -> R
         .ok_or("expected failure")?;
     assert_eq!(error.to_string(), "PageCountLimit");
     assert!(!output.exists());
+    Ok(())
+}
+
+#[test]
+fn batch_limits_are_selected_before_public_generation_and_recorded() -> Result<()> {
+    let f = Fixture::new()?;
+    let mut value = mixed(&f)?;
+    let limits = super::super::export::pages::resources::OutputLimits {
+        work: 0,
+        ..Default::default()
+    };
+    value["output_limits"] = serde_json::to_value(limits)?;
+    f.json("doc/canonical.json", &value)?;
+    let failed = f.root().join("failed");
+    assert!(markdown(f.root(), "doc/canonical.json", &failed).is_err());
+    assert!(!failed.exists());
+    let limits = super::super::export::pages::resources::OutputLimits {
+        work: 200_000_000,
+        ..Default::default()
+    };
+    value["output_limits"] = serde_json::to_value(limits)?;
+    f.json("doc/canonical.json", &value)?;
+    let output = f.root().join("complete");
+    markdown(f.root(), "doc/canonical.json", &output)?;
+    let receipt: serde_json::Value =
+        serde_json::from_slice(&fs::read(output.join("manifest.json"))?)?;
+    assert_eq!(
+        receipt["output_budget"]["limits"],
+        serde_json::to_value(limits)?
+    );
+    assert_eq!(receipt["output_budget"]["initial_usage"]["work"], 0);
+    for page in value["pages"].as_array().ok_or("pages")? {
+        let path = page["projection"].as_str().ok_or("projection")?;
+        f.write(path, fs::read(output.join(path))?)?;
+    }
+    check(f.root(), "doc/canonical.json")?;
+    Ok(())
+}
+
+#[test]
+fn synchronized_context_spec_drafts_parse_lower_and_check_labels() -> Result<()> {
+    use nepl3_core::source::{SourceAdmission, SourceStore};
+    use nepl3_wire::foundation::FoundationCodec;
+    let repository = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .ok_or("repository")?;
+    let compiled = super::super::source::compiled()?;
+    // Whole authoring drafts are larger than the small canonical pages. These
+    // finite per-phase allowances are selected before parsing, not on a retry.
+    let phase_limits = nepl3_core::budget::Limits {
+        work: 600_000_000,
+        allocation_units: 1_500_000_000,
+        ..super::super::source::budget().limits()
+    };
+    for name in ["16-doc-migration", "21-doc-pages"] {
+        let text =
+            fs::read_to_string(repository.join(format!("doc/migration/authored/{name}.nepld")))?;
+        super::super::source::with_named_input_limits(
+            true,
+            &compiled,
+            &text,
+            name,
+            "Article",
+            phase_limits,
+            |tree, profile, parse_budget, _| {
+                let store = SourceStore::default();
+                let mut admission = SourceAdmission::default();
+                let mut codec = FoundationCodec::new(profile.registry(), &store, &mut admission)
+                    .map_err(super::super::source::err)?;
+                let mut lower_budget = nepl3_core::budget::Budget::new(phase_limits);
+                let document = nepl3_doc_core::lower::document(
+                    tree.syntax(),
+                    &compiled.doc.package.schema,
+                    nepl3_doc_core::check::Category::Article,
+                    profile.registry(),
+                    &mut lower_budget,
+                    &mut codec,
+                )
+                .map_err(super::super::source::err)?;
+                let mut check_budget = nepl3_core::budget::Budget::new(phase_limits);
+                nepl3_doc_core::labels::check(
+                    &document,
+                    profile.registry(),
+                    &mut check_budget,
+                    &mut admission,
+                )
+                .map_err(super::super::source::err)?;
+                eprintln!(
+                    "{name}: parse={:?}; lower={:?}; labels={:?}",
+                    parse_budget.usage(),
+                    lower_budget.usage(),
+                    check_budget.usage()
+                );
+                Ok(())
+            },
+        )?;
+    }
     Ok(())
 }

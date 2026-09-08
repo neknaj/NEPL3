@@ -309,6 +309,60 @@ body
         cons "[生成/せいせい]MarkdownをHTML[生成/せいせい]の[入力/にゅうりょく]にしない。"
         cons "[失敗後/しっぱいご]に[部分的/ぶぶんてき]な[成功/せいこう]を[返/かえ]さず、[既存/きそん]の[出力/しゅつりょく]も[上書/うわが]きしない。"
         nil
+      nil
+      cons section page_projection "ページ[間参照/かんさんしょう]を[持/も]つMarkdown projection"
+        body
+      cons paragraph
+        cons sentence cons code "nepl3-tools.markdown-annotated-pages/1" cons text " は、" cons ruby text "登録" text "とうろく" cons text "されたDoc" cons ruby text "間" text "かん" cons text "の" cons ruby text "参照" text "さんしょう" cons text "を" cons ruby text "扱" text "あつか" cons text "う" cons ruby text "別" text "べつ" cons text "のrenderer" cons ruby text "識別子" text "しきべつし" cons text "とする。" nil
+        cons "registry[全体/ぜんたい]と[各/かく]source・aliasのbyte[列/れつ]を[一度読/いちどよ]み、[同/おな]じ[固定入力/こていにゅうりょく]から[全/ぜん]ページを[生成/せいせい]する。"
+        cons "page idを[解析/かいせき]sourceの[名前空間/なまえくうかん]へ[与/あた]え、[論理/ろんり]sourceとMarkdown[出力/しゅつりょく]routeにはprojection pathを[使/つか]う。"
+        cons "[全/ぜん]ページの[意味参照/いみさんしょう]と[実際/じっさい]に[出力/しゅつりょく]するanchorを[検査/けんさ]し、[全体/ぜんたい]が[成功/せいこう]するまで[成果物/せいかぶつ]を[返/かえ]さない。"
+        cons "[未登録/みとうろく]のMarkdownをfilesystemから[発見/はっけん]して[補完/ほかん]することはない。"
+        cons "この[入口/いりぐち]にpassive file[登録/とうろく]はない。"
+        nil
+      cons paragraph
+        cons sentence cons ruby text "旧" text "きゅう" cons text " " cons code "nepl3-tools.markdown-annotated/2" cons text " と" cons ruby text "混在" text "こんざい" cons text "できる。" nil
+        cons "[旧/きゅう]ページは[従来/じゅうらい]のsource[名前空間/なまえくうかん]と[生成処理/せいせいしょり]でmetadataを[含/ふく]めて[同/おな]じbyte[列/れつ]を[作/つく]り、ページ[集合/しゅうごう]からの[生成/せいせい]bodyとも[一致/いっち]することを[要求/ようきゅう]する。"
+        cons "この[照合/しょうごう]により、[新/あたら]しいページの[参照先/さんしょうさき]anchorは[旧/きゅう]ページの[実際/じっさい]のprojectionにも[存在/そんざい]する。"
+        cons sentence cons ruby text "旧" text "きゅう" cons text "rendererだけの " cons code "--check" cons text " は" cons ruby text "従来" text "じゅうらい" cons text "のページごとに" cons ruby text "独立" text "どくりつ" cons text "した" cons ruby text "処理" text "しょり" cons text "・" cons ruby text "予算" text "よさん" cons text "を" cons ruby text "維持" text "いじ" cons text "する。" nil
+        nil
+      cons paragraph
+        cons "[新/しん]rendererのmetadataにはページ[自身/じしん]のsource・alias・Document digestに[加/くわ]え、input PageSet digestとinput context digestを[記録/きろく]する。"
+        cons "[後者/こうしゃ]は[以下/いか]のfieldをこの[順/じゅん]に、[各/かく]fieldのbyte[長/ちょう]をu64 big-endianで[前置/ぜんち]して[連結/れんけつ]し、SHA-256を[求/もと]める。"
+        cons "[文字列/もじれつ]はUTF-8、digest fieldは32 byteの[値/あたい]とする。"
+        nil
+      cons list ordered 1
+        cons item none body cons paragraph cons sentence cons code "nepl3.canonical-input-context/1" cons text " と" cons ruby text "末尾" text "まつび" cons text "zero byte、renderer" cons ruby text "識別子" text "しきべつし" cons text "、registry path、registryの" cons ruby text "元" text "もと" cons text "byte" cons ruby text "列" text "れつ" cons text "。" nil nil nil
+        cons item none body cons paragraph cons "input PageSet digest、ページ[数/すう]を[表/あらわ]すu64 big-endianの8 byte。" nil nil
+        cons item none body cons paragraph cons "[登録順/とうろくじゅん]に[各/かく]ページのid、physical source path、projection path、alias path、HTML route、renderer[識別子/しきべつし]。" nil nil
+        cons item none body cons paragraph cons "[各/かく]ページの[直前/ちょくぜん]の6 fieldに[続/つづ]けて、sourceの[元/もと]byte[列/れつ]のSHA-256、aliasの[元/もと]byte[列/れつ]のSHA-256。" nil nil
+        nil
+      cons paragraph
+        cons "これは[入力/にゅうりょく]の[同一性/どういつせい]であり、[完成/かんせい]した[配布物/はいふぶつ]のdigestではない。"
+        cons "registryの[空白/くうはく]・[登録順/とうろくじゅん]・[別/べつ]ページのalias[入力/にゅうりょく]だけの[変更/へんこう]も、[新/しん]rendererの[生成物/せいせいぶつ]を[古/ふる]くする。"
+        cons "[生成/せいせい]Markdownのbyte[列/れつ]を[入力/にゅうりょく]digestへ[再帰的/さいきてき]に[含/ふく]めない。"
+        cons "[旧/きゅう]rendererのmetadataへ、この[新/あたら]しい[集合/しゅうごう]identityを[後付/あとづ]けしない。"
+        nil
+      cons paragraph
+        cons sentence cons code "nepl3-tools doc-canonical markdown <new-directory>" cons text " は、" cons ruby text "全" text "ぜん" cons text "ページの" cons ruby text "検証後" text "けんしょうご" cons text "にprojection pathを" cons ruby text "保" text "たも" cons text "った" cons ruby text "新" text "あたら" cons text "しい" cons ruby text "出力" text "しゅつりょく" cons text "ディレクトリへ" cons ruby text "書" text "か" cons text "き" cons ruby text "出" text "だ" cons text "す。" nil
+        cons "[最後/さいご]のmanifestには[出力/しゅつりょく]byte[数/すう]とdigestを[記録/きろく]する。"
+        cons sentence cons code "--check" cons text " と" cons ruby text "同" text "おな" cons text "じ" cons ruby text "生成経路" text "せいせいけいろ" cons text "を" cons ruby text "使" text "つか" cons text "い、repository" cons ruby text "内" text "ない" cons text "の" cons ruby text "正本" text "せいほん" cons text "や" cons ruby text "古" text "ふる" cons text "いprojectionを" cons ruby text "自動更新" text "じどうこうしん" cons text "しない。" nil
+        cons "[既存/きそん]ディレクトリを[拒否/きょひ]する。"
+        cons "[意味検査/いみけんさ]・[生成/せいせい]の[失敗/しっぱい]では[書込/かきこ]みを[開始/かいし]せず、OSの[書込/かきこ]み[失敗/しっぱい]では[不完全/ふかんぜん]な[新規/しんき]ディレクトリが[残/のこ]り[得/う]るが、[成功/せいこう]のcompletion manifestを[作/つく]らない。"
+        nil
+      cons paragraph
+        cons "[新/しん]rendererを[含/ふく]む[検査/けんさ]とMarkdownの[集合書出/しゅうごうかきだ]しは128ページ、source[合計/ごうけい]10,000,000 byte、alias[合計/ごうけい]1 MiB、registry 1 MiB、[生成/せいせい]Markdownは1ページ2 MiBを[上限/じょうげん]とする。"
+        cons "[読/よ]み[込/こ]むhost[入力/にゅうりょく]はこの[上限/じょうげん]で[制約/せいやく]する。"
+        cons "parseとlowerは[各/かく]ページの[独立/どくりつ]した[有限/ゆうげん]operationとし、resolve・render・anchor[照合/しょうごう]・digest・metadata・[出力/しゅつりょく]コピーには[一/ひと]つの[消費済/しょうひず]み[状態/じょうたい]を[保持/ほじ]する[出力/しゅつりょく]Budgetを[用/もち]いる。"
+        cons "[旧/きゅう]rendererの[混在/こんざい]ページを[再生成/さいせいせい]するときも、この[出力/しゅつりょく]Budgetを[共有/きょうゆう]する。"
+        cons sentence cons text "registryの" cons ruby text "任意" text "にんい" cons text "field " cons code "output_limits" cons text " は" cons ruby text "既存" text "きそん" cons text "のOutputLimitsと" cons ruby text "同" text "おな" cons text "じ8" cons ruby text "資源" text "しげん" cons text "の" cons ruby text "上限" text "じょうげん" cons text "を" cons ruby text "持" text "も" cons text "ち、" cons ruby text "集合" text "しゅうごう" cons text "の" cons ruby text "処理開始前" text "しょりかいしまえ" cons text "に" cons ruby text "選択" text "せんたく" cons text "する。" nil
+        cons "[未指定/みしてい]なら[既定/きてい]のDoc host allowanceで[開始/かいし]する。"
+        cons "[停止後/ていしご]の[再試行/さいしこう]・[暗黙/あんもく]の[増額/ぞうがく]・[別予算/べつよさん]による[継続/けいぞく]はしない。"
+        cons "[旧/きゅう]rendererだけの[検査/けんさ]ではこの[集合設定/しゅうごうせってい]を[用/もち]いず[従来/じゅうらい]のページ[単位/たんい]のoperationを[維持/いじ]する。"
+        cons "[出力/しゅつりょく]manifestには[実際/じっさい]に[選択/せんたく]した[上限/じょうげん]と[開始時/かいしじ]usage、receipt serialize[直前/ちょくぜん]のusageを[別/べつ]fieldで[記録/きろく]する。"
+        cons "[最後/さいご]のusageはreceipt[自体/じたい]のserialize・[最終出力課金/さいしゅうしゅつりょくかきん]を[含/ふく]まない[値/あたい]として[明示/めいじ]する。"
+        cons "host JSON・[文字列整形/もじれつせいけい]の[計量/けいりょう]は[保守的/ほしゅてき]な[論理/ろんり]allocation allowanceであり、[物理/ぶつり]heapの[計測/けいそく]ではない。"
+        nil
       cons paragraph
         cons "[互換/ごかん]aliasとGitHubの[自動見出/じどうみだ]しIDは[独立/どくりつ]して[発生/はっせい]するため、[実際/じっさい]のGitHub[表示/ひょうじ]で[重複/ちょうふく]と[移動先/いどうさき]を[確認/かくにん]する。"
         cons sentence
