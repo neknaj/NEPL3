@@ -1,0 +1,17 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-core",
+    "--target-dir",
+    "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-source-locality\\managed-native-target",
+    "--",
+    "--test-threads=1",
+    "--nocapture"
+  ],
+  "cwd": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-source-locality\\source",
+  "exit_code": 0,
+  "elapsed_seconds": 14.015994787216187
+}
