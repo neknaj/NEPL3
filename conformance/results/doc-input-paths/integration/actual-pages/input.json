@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "pages": [
+    {
+      "id": "12-model-invariants",
+      "source": "doc/spec/12-model-invariants.md",
+      "input": "drafts/12-model-invariants.nepld",
+      "route": "docs/12-model-invariants/index.html"
+    },
+    {
+      "id": "19-html-fragment",
+      "source": "doc/spec/19-html-fragment.md",
+      "input": "drafts/19-html-fragment.nepld",
+      "route": "docs/19-html-fragment/index.html"
+    }
+  ]
+}

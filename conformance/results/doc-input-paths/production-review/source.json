@@ -1,0 +1,40 @@
+{
+  "head": "a6e304cd02ebee9f279c05a9e26b9ce617e727d8",
+  "production": "a604864a16bb6db33036d019b2ee4d8a99404b78",
+  "base": "78311104501bf4a7f5efbfa5a619d813f96e7ad0",
+  "inputs": [
+    {
+      "path": "doc/spec/21-doc-pages.md",
+      "bytes": 16837,
+      "sha256": "4f272df61a8274ffe2cfb70bc2f43d70ed0cdc034cf9f6444925bed5a377d204"
+    },
+    {
+      "path": "tools/src/doc/export/pages.rs",
+      "bytes": 10627,
+      "sha256": "17edbe90c54d532dcaffabecf35dbf6aa212cea907b37e21fdd667b0ef2d265f"
+    },
+    {
+      "path": "tools/tests/doc.rs",
+      "bytes": 24266,
+      "sha256": "302ec8435453bdfded7ea6d7824422a3789de14acb34f18525a93ce27bff9616"
+    },
+    {
+      "path": "tools/tests/doc/export.rs",
+      "bytes": 12369,
+      "sha256": "e64557b6b3a553da8547382644107cff0a2da83679cb0dfde5274f5e2290d6d6"
+    },
+    {
+      "path": "tools/tests/doc/input.rs",
+      "bytes": 4760,
+      "sha256": "e2e93b04625550e1b0524d54c9a875f21d6640769cf83f2370c369b3b5461e7d"
+    }
+  ],
+  "results": {
+    "native.log": [
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.42s\r"
+    ],
+    "wasi.log": [
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 61 filtered out; finished in 0.58s\r"
+    ]
+  }
+}

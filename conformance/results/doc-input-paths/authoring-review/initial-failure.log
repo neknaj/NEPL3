@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "C:\projects\NEPL3-doc-input-paths\.tmp\review-input-paths-authoring\initial-check.py", line 33, in <module>
+    assert addition.endswith(line)
+           ~~~~~~~~~~~~~~~~~^^^^^^
+AssertionError

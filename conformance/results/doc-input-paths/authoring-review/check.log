@@ -1,0 +1,33 @@
+{
+  "head": "a6e304cd02ebee9f279c05a9e26b9ce617e727d8",
+  "base": "a604864a16bb6db33036d019b2ee4d8a99404b78",
+  "changed_paths": [
+    "doc/migration/authored/21-doc-pages.nepld"
+  ],
+  "before_sha256": "f42fc6f73bb460400ba5877f5b8a204651f0c002cb528cb57c54c846cb112597",
+  "after_sha256": "6a7b054a07d4e397ed1ff3ec60c95da8909167a3f799fe0813199afcc6d85414",
+  "source_sha256": "4f272df61a8274ffe2cfb70bc2f43d70ed0cdc034cf9f6444925bed5a377d204",
+  "addition_sha256": "16f6a3cb8c4cc56151adf5a7b61cf89a4c0471492b0a2c762b987d4e52ac0dfc",
+  "old_prefix_and_closing_exact": true,
+  "source_unchanged": true,
+  "paragraphs": 2,
+  "body_sentences": 13,
+  "inline_code": [
+    "input",
+    "source",
+    ".",
+    "..",
+    "\\ : ? # %",
+    "docs/intro.md",
+    "drafts/intro.nepld",
+    "guide.md",
+    "docs/guide.md",
+    ".md"
+  ],
+  "ruby_count": 69,
+  "ruby_unique": 56,
+  "author_manifest_entries_verified": 17,
+  "full_structure_audit": true,
+  "production_runtime_executed": false,
+  "canonical_switched": false
+}
