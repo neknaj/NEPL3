@@ -1,0 +1,23 @@
+from pathlib import Path
+import json,hashlib,subprocess
+root=Path.cwd(); archive=root/'conformance/results/doc-canonical-html-delivery'
+path=archive/'payloads.json'; data=json.loads(path.read_bytes())
+assert not any(r['owner']=='root-integration' for r in data['files'])
+for source in sorted((root/'.tmp/verification-integration').iterdir()):
+    assert source.is_file()
+    payload=source.read_bytes(); assert len(payload)<=1048576
+    name='root-integration/'+source.name+'.fixture'
+    dest=archive/name;dest.parent.mkdir(exist_ok=True);dest.write_bytes(payload)
+    data['files'].append(dict(owner='root-integration',file=name,restore=source.name,bytes=len(payload),sha256=hashlib.sha256(payload).hexdigest()))
+for name in ['verify-integration.py','archive-integration.py']:
+    payload=(root/'.tmp'/name).read_bytes();dest='root-integration/'+name+'.fixture';(archive/dest).write_bytes(payload)
+    data['files'].append(dict(owner='root-integration',file=dest,restore=name,bytes=len(payload),sha256=hashlib.sha256(payload).hexdigest()))
+head='5e3e71b7cd3cf3f664b869feb51e20d1ce945ebb'
+assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==head
+sources=[]
+for name in ['tools/src/doc/canonical/tests.rs','doc/migration/authored/guide/development.nepld']:
+    payload=(root/name).read_bytes();assert payload==subprocess.check_output(['git','show',head+':'+name])
+    sources.append(dict(path=name,bytes=len(payload),sha256=hashlib.sha256(payload).hexdigest()))
+data['integration']=dict(commit=head,sources=sources,reason='Merge independently reviewed HTML budget prerequisite; three-draft input unchanged from PR92 and excluded only from this repeat; historical 3abd test binding retained')
+path.write_text(json.dumps(data,indent=2)+'\n',encoding='utf-8',newline='\n')
+print(len(data['files']),'payloads')
