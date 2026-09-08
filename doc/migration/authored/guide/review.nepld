@@ -1354,5 +1354,38 @@ body
       cons "[関連管理/かんれんかんり]17[件/けん]も[各/かく]targetで[成功/せいこう]した。"
       cons sentence cons ruby text "全" text "ぜん" cons text "process log、8binary、" cons ruby text "元入力" text "もとにゅうりょく" cons text "・" cons ruby text "補助" text "ほじょ" cons text "source・" cons ruby text "固定" text "こてい" cons text "SHA・before" cons ruby text "参照" text "さんしょう" cons text "は " cons code ".tmp/review-region-query-fixed/manifest.json" cons text " に" cons ruby text "保存" text "ほぞん" cons text "する。" nil
       cons "[統括/とうかつ]の[全/ぜん]workspace/[品質/ひんしつ]gateは[別記録/べつきろく]であり、[今回/こんかい]の[限定検査/げんていけんさ]から[全/ぜん]T06、[外部実行認証/がいぶじっこうにんしょう]、Mathの[完了/かんりょう]を[推定/すいてい]しない。" nil
+    cons paragraph
+      cons "Mathの[最初/さいしょ]の[表示構造差分/ひょうじこうぞうさぶん]は、06[章/しょう]、[正式/せいしき]forms/syntax、Math schema、[生成/せいせい]adapter、[公開/こうかい]arena/check/lower/codecを[独立/どくりつ]に[照合/しょうごう]した。"
+      cons "Expr / Row / DocGuestの3カテゴリ、29 form、Numberを[加/くわ]えた30 MathKindと、bare SymbolNameを[含/ふく]む31[元入力/もとにゅうりょく]fixtureの[集合/しゅうごう]は[一致/いっち]した。"
+      cons "Math coreのproduction[依存/いぞん]はfoundation coreとno_std[数値/すうち]libraryであり、Docの[意味/いみ]coreやtoolsへ[依存/いぞん]しない。"
+      cons "Symbol/Let/Sum/Integralの[位置/いち]は[閉/と]じたfield[型/がた]、guestはowner[環境/かんきょう]を[含/ふく]むForeignClosureとして[保持/ほじ]し、[構造/こうぞう]proofをbinding/evaluate[済/ず]みのCheckedExpressionへ[読/よ]み[替/か]えない。" nil
+    cons paragraph
+      cons sentence cons ruby text "独立" text "どくりつ" cons text "10" cons ruby text "原文" text "げんぶん" cons text "は、" cons code "frac 2 4" cons text " の" cons ruby text "非簡約" text "ひかんやく" cons text "、" cons code "add 0.10 0.20" cons text " の" cons ruby text "正確" text "せいかく" cons text "な1/10と1/5および" cons ruby text "原綴" text "げんつづ" cons text "り、scriptsのbase/sub/sup" cons ruby text "順" text "じゅん" cons text "、Unicode" cons ruby text "名" text "めい" cons text "とCRLF、escapeしたSymbol、" cons ruby text "単独" text "たんどく" cons text "の" cons ruby text "空" text "から" cons text "Row、" cons ruby text "非" text "ひ" cons text "zeroの" cons ruby text "負" text "ふ" cons text "root" cons ruby text "次数" text "じすう" cons text "、" cons ruby text "片側" text "かたがわ" cons text "Unicode fence、" cons ruby text "意味上不正" text "いみじょうふせい" cons text "な" cons ruby text "空" text "から" cons text "Annoを" cons ruby text "含" text "ふく" cons text "むDoc Label、DocGuest literalを" cons ruby text "扱" text "あつか" cons text "った。" nil
+      cons sentence cons text "Let" cons ruby text "名" text "めい" cons text " " cons code "[4,7)" cons text " とbody" cons ruby text "名" text "めい" cons text " " cons code "[15,18)" cons text " の" cons ruby text "原" text "げん" cons text "byte" cons ruby text "位置" text "いち" cons text "を" cons ruby text "固定期待" text "こていきたい" cons text "として" cons ruby text "照合" text "しょうごう" cons text "し、" cons ruby text "元" text "もと" cons text "parse treeは" cons ruby text "不変" text "ふへん" cons text "だった。" nil
+      cons "root0と[不等列/ふとうれつ]Matrix・[空/から]rowを[取/と]り[込/こ]むMatrixの[独立/どくりつ]3[失敗/しっぱい]は、[破棄/はき]したMath arenaの[番号/ばんごう]でなく[元構文/もとこうぶん]NodeRefへ[帰属/きぞく]した。"
+      cons "[表示構造/ひょうじこうぞう]の[段階/だんかい]で[負/ふ]rootを[評価/ひょうか]domain[違反/いはん]にしたり、Doc annotationを[意味/いみ]lowerしたりしなかった。" nil
+    cons paragraph
+      cons "[元送信/もとそうしん]storeを[共有/きょうゆう]しない[初回/しょかい]CBOR[受信/じゅしん]では、Math node/field[位置/いち]・Origin・View・SourceMapを[保持/ほじ]し、guest[込/こ]みのcanonical CBOR[再/さい]encodeが[一致/いっち]した。"
+      cons "13[章/しょう]に[従/したが]いsource[表/ひょう]とguest[構文/こうぶん]は[正準化/せいじゅんか]されるため、nativeの[配列順全/はいれつじゅんぜん]Eqを[保証/ほしょう]とはせず、sourceのidentity/URI/bytes[集合/しゅうごう]と[位置列/いちれつ]のexact[一致/いっち]を[別/べつ]に[検査/けんさ]した。"
+      cons "escape[由来/ゆらい]sourceの[入場/にゅうじょう]もonceだった。"
+      cons "ambient sourceが[存在/そんざい]してもMath[宣言表/せんげんひょう]の[欠落/けつらく]は[拒否/きょひ]し、guestのowner source[表欠落/ひょうけつらく]とcategory[変更/へんこう]もnative/[初回/しょかい]CBORで[拒否/きょひ]した。" nil
+    cons paragraph
+      cons "[型/かた]が[正/ただ]しいNDFから、Numberの1/3、Let operand[位置/いち]のbody[側/がわ]への[差替/さしか]え、[異/こと]なるfield[型/がた]、[同/どう]field[重複/ちょうふく]を[拒否/きょひ]した。"
+      cons "[別/べつ]の[有限/ゆうげん]Number[意味値/いみち]と[元/もと]spelling[位置/いち]の[組/くみ]は[構造上受理/こうぞうじょうじゅり]される。"
+      cons "06[章/しょう]の[規範/きはん]どおり、spellingは[位置/いち]の[情報/じょうほう]であり、そのbyte[列/れつ]と[数値/すうち]payloadが[意味上一致/いみじょういっち]した[証明/しょうめい]ではない。"
+      cons "valid[入力/にゅうりょく]のWork sweepは[成功/せいこう]とWorkLimitの[両方/りょうほう]を[実行/じっこう]し、[他/ほか]の[意味/いみ]エラーへ[化/ば]けず、[消費量/しょうひりょう]はcap[以内/いない]だった。"
+      cons "Source/Work/Nodes/Allocation/Depthの0[上限/じょうげん]とCancelは[原停止理由/げんていしりゆう]とsticky Budgetを[保持/ほじ]した。" nil
+    cons paragraph
+      cons "[数値/すうち]helperは[小/ちい]さい[符号付/ふごうつ]き[有理数/ゆうりすう]100[演算/えんざん]を[独立/どくりつ]な[整数交差積/せいすうこうさせき]とgcdの[期待値/きたいち]へ[比較/ひかく]し、256bit[整数/せいすう]の[演算/えんざん]でも[切捨/きりす]てがなかった。"
+      cons "[約分後/やくぶんご]に2/5[以外/いがい]の[分母因子/ぶんぼいんし]が[残/のこ]るNumberは[拒否/きょひ]し、[明示/めいじ]constructorは[有限/ゆうげん]ならNumber、その[他/ほか]は[整数/せいすう]2[子/し]のFracを[生成/せいせい]した。"
+      cons "rootが[先/さき]に[実測/じっそく]・[修正/しゅうせい]したconstructor Depth0[不足/ふそく]について、[独立/どくりつ]に[必要深/ひつようふか]さ1/2とcaller7、[不足時/ふそくじ]の[原/げん]DepthLimit、[元値不変/もとちふへん]を[再確認/さいかくにん]した。"
+      cons "[修正前/しゅうせいまえ]logはroot[提供資料/ていきょうしりょう]であり、[独立/どくりつ]の[修正前実行/しゅうせいまえじっこう]とは[扱/あつか]わない。"
+      cons "MAX/32bit[超/ちょう]の[参照/さんしょう]、cycle、[未到達/みとうたつ]node、[共有/きょうゆう]DAGの[最長経路/さいちょうけいろ]、10[万段/まんだん]Negの[検査/けんさ]と[破棄/はき]もnative/WASIで[確認/かくにん]した。" nil
+    cons paragraph
+      cons "[最終固定/さいしゅうこてい]66file＋[追補/ついほ]8[行/ぎょう]は[重複/ちょうふく]を[除/のぞ]き68fileである。"
+      cons "[全/ぜん]SHAを[実行前後/じっこうぜんご]で[照合/しょうごう]し、[独立/どくりつ]2[補助/ほじょ]とMath core8[件/けん]・[実/じつ]parserを[使/つか]うtools Math2[件/けん]をnative/WASI[双方/そうほう]で[成功確認/せいこうかくにん]した。"
+      cons sentence cons text "4binary、" cons ruby text "全" text "ぜん" cons text "process log、" cons ruby text "元入力" text "もとにゅうりょく" cons text "、" cons ruby text "補助" text "ほじょ" cons text "source、" cons ruby text "固定" text "こてい" cons text "manifestと" cons ruby text "支持資料" text "しじしりょう" cons text "は " cons code ".tmp/review-math-fixed/manifest.json" cons text " に" cons ruby text "保存" text "ほぞん" cons text "する。" nil
+      cons "[今回/こんかい]はarena/shape/lower/[初回/しょかい]CBORと[正確/せいかく]な[有理数演算/ゆうりすうえんざん]・[新規/しんき]notation constructorの[範囲/はんい]であり、Math binding、evaluate、print、render、HTML/KaTeX[方針/ほうしん]の[受入完了/うけいれかんりょう]を[主張/しゅちょう]しない。"
+      cons "[今回/こんかい]の[独立試験/どくりつしけん]から[新/あたら]しいproduction[不一致/ふいっち]は[確認/かくにん]されず、[既存/きそん]review findingの[状態/じょうたい]は[変更/へんこう]しない。" nil
     nil
   nil
