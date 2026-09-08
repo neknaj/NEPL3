@@ -817,5 +817,20 @@ body
       cons "[親/おや]8544＋[子/こ]477666＝486210となり[共有上限内/きょうゆうじょうげんない]に[収/おさ]まった。"
       cons "settle[後/ご]のUsageは[実合計/じつごうけい]で、[二重精算/にじゅうせいさん]による[増加/ぞうか]はない。"
       cons "[別/べつ]の[補助/ほじょ]は[親/おや]transportのWorkLimit[後/ご]にも[完了子/かんりょうこ]の[観測実費/かんそくじっぴ]を[記録/きろく]して[元/もと]StopReasonを[維持/いじ]し、[未精算/みせいさん]proofのDropで[親/おや]をCancelledにすることを[確認/かくにん]した。" nil
+    cons paragraph
+      cons sentence cons text "coreの" cons ruby text "独立" text "どくりつ" cons text " " cons code "budget_reservation" cons text " はrecord_observed_usageの" cons ruby text "全" text "ぜん" cons text "8" cons ruby text "資源" text "しげん" cons text "について" cons ruby text "上限超過" text "じょうげんちょうか" cons text "を" cons ruby text "拒否" text "きょひ" cons text "しUsageを" cons ruby text "変更" text "へんこう" cons text "しないこと、" cons ruby text "既存" text "きそん" cons text "Cancelled" cons ruby text "後" text "ご" cons text "の" cons ruby text "合法実費記録" text "ごうほうじっぴきろく" cons text "、with_ceilingの" cons ruby text "入" text "い" cons text "れ" cons ruby text "子" text "こ" cons text "で" cons ruby text "上限" text "じょうげん" cons text "を" cons ruby text "増" text "ふ" cons text "やせないこと、" cons ruby text "既使用量" text "きしようりょう" cons text "を" cons ruby text "下回" text "したまわ" cons text "るceilingでclosureを" cons ruby text "実行" text "じっこう" cons text "せず" cons ruby text "元" text "もと" cons text "Limitsへ" cons ruby text "復帰" text "ふっき" cons text "することを" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "これは[入力許可/にゅうりょくきょか]を[与/あた]えるAPIではなく、hostが[実測済/じっそくず]み[費用/ひよう]を[記録/きろく]する[入口/いりぐち]である。"
+      cons "[修正後/しゅうせいご]のportable[管理対象/かんりたいしょう]4[件/けん]も[成功/せいこう]したが、この[時点/じてん]では[新/あたら]しい[予約/よやく]・[精算/せいさん]の[管理対象/かんりたいしょう]と[実/じつ]parser callback[往復/おうふく]の[追加確認/ついかかくにん]が[継続中/けいぞくちゅう]のため、R041はまだopenとしている。" nil
+    cons paragraph
+      cons "R041の[最終管理対象/さいしゅうかんりたいしょう]を[独立実行/どくりつじっこう]し、core Budget2[件/けん]、Head portable6[件/けん]、[実/じつ]ParseSession callback1[件/けん]が[成功/せいこう]した。"
+      cons "[元/もと]Work cap500000を[維持/いじ]した[実/じつ]CBOR/[投影反復/とうえいはんぷく]の[上限検査/じょうげんけんさ]、6[加算資源/かさんしげん]それぞれのtransport[停止後/ていしご]の[精算/せいさん]、[二重精算/にじゅうせいさん]、[未精算/みせいさん]Dropを[管理対象/かんりたいしょう]で[確認/かくにん]した。"
+      cons sentence cons text "callback" cons ruby text "試験" text "しけん" cons text "は " cons code "choose alt @let z x tail" cons text " の4" cons ruby text "回" text "かい" cons text "Head" cons ruby text "要求" text "ようきゅう" cons text "を" cons ruby text "初回" text "しょかい" cons text "raw" cons ruby text "受信" text "じゅしん" cons text "から" cons ruby text "同" text "おな" cons text "じanswerへ" cons ruby text "渡" text "わた" cons text "し、Deliveryの" cons ruby text "実" text "じつ" cons text "CBOR" cons ruby text "往復後" text "おうふくご" cons text "にresume_headする。" nil
+      cons "[子/こ]の[確定観測/かくていかんそく]を[親/おや]の[返信/へんしん]デコード[前/まえ]に[精算/せいさん]する[順序/じゅんじょ]へ[訂正/ていせい]し、[各呼出/かくよびだ]しでschema-valid callId[改変/かいへん]を[拒否後/きょひご]、[正/ただ]しい[返信/へんしん]でnativeと[完全/かんぜん][同/おな]じtree/cursor19へ[到達/とうたつ]した。"
+      cons "Dynamic tree[自身/じしん]もportable[正準再/せいじゅんさい]encodeが[一致/いっち]した。" nil
+    cons paragraph
+      cons sentence cons ruby text "別" text "べつ" cons text "の " cons code "head_callback" cons text " " cons ruby text "補助" text "ほじょ" cons text "では" cons ruby text "不正返信" text "ふせいへんしん" cons text "の" cons ruby text "拒否理由" text "きょひりゆう" cons text "をHeadError::Identityと" cons ruby text "明示" text "めいじ" cons text "して" cons ruby text "検査" text "けんさ" cons text "した。" nil
+      cons "[拒否/きょひ]に[要/よう]したWorkは[増/ふ]える[一方/いっぽう]、diagnostics/events/SourceBytesは[変化/へんか]せず、その[後/ご][同/おな]じpendingから[正常/せいじょう]に[完走/かんそう]した。"
+      cons "spec04の[予約/よやく]・[相対費用/そうたいひよう]・[絶対/ぜったい]depth・[窓免除/まどめんじょ]・[未精算破棄/みせいさんはき]・[受信認証責務/じゅしんにんしょうせきむ]の[同期/どうき]も[読/よ]み、R041をcorrectedとした。"
+      cons "この[結果/けっか]は[同/どう]process[内/ない]の[実/じつ]NDF/CBOR[交換/こうかん]とcallback[実行/じっこう]の[証拠/しょうこ]であり、[別/べつ]processの[通信認証/つうしんにんしょう]・[終了制御/しゅうりょうせいぎょ]・メータリング[実装/じっそう]や[全/ぜん]P03[受入条件/うけいれじょうけん]の[合格/ごうかく]まで[主張/しゅちょう]しない。" nil
     nil
   nil
