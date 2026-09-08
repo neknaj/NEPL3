@@ -1,0 +1,1187 @@
+{
+  "kind": "Article",
+  "fields": {
+    "language": "ja",
+    "title": {
+      "kind": "Sentence",
+      "fields": {
+        "inlines": [
+          {
+            "kind": "Text",
+            "fields": {
+              "text": "根拠と参照資料"
+            }
+          }
+        ]
+      }
+    },
+    "body": {
+      "kind": "Body",
+      "fields": {
+        "blocks": [
+          {
+            "kind": "Paragraph",
+            "fields": {
+              "items": [
+                {
+                  "kind": "Sentence",
+                  "fields": {
+                    "inlines": [
+                      {
+                        "kind": "Text",
+                        "fields": {
+                          "text": "取得日: 2026-09-06（Asia/Tokyo）。"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "Sentence",
+                  "fields": {
+                    "inlines": [
+                      {
+                        "kind": "Text",
+                        "fields": {
+                          "text": "外部仕様の説明とNEPL3自身の新規設計を区別する。"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "kind": "Section",
+            "fields": {
+              "id": "requirements",
+              "title": {
+                "kind": "Sentence",
+                "fields": {
+                  "inlines": [
+                    {
+                      "kind": "Text",
+                      "fields": {
+                        "text": "本人の要件"
+                      }
+                    }
+                  ]
+                }
+              },
+              "body": {
+                "kind": "Body",
+                "fields": {
+                  "blocks": [
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "本会話の最新指示: 4言語と共通基盤をRustで実装、後のNEPL3言語への置換、依存関係、sentence literal/prefix両経路、sentence単位parallel、汎用kind、editor支援、暫定設計を認めない。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "元の設計資料は、ChatGPTのLibraryに保存された2026-09-05の方針・構文基盤・意味論・API・検証計画・apply追補を参照したと記録している。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "それらのLibrary本文はこのリポジトリへ提供されていないため、本整備では直接確認していない。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "本リポジトリの契約は提供された会話と74ファイルの設計資料に基づく。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "来歴は "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "doc/history/README.md"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を参照。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "Section",
+            "fields": {
+              "id": "sources",
+              "title": {
+                "kind": "Sentence",
+                "fields": {
+                  "inlines": [
+                    {
+                      "kind": "Text",
+                      "fields": {
+                        "text": "公開資料"
+                      }
+                    }
+                  ]
+                }
+              },
+              "body": {
+                "kind": "Body",
+                "fields": {
+                  "blocks": [
+                    {
+                      "kind": "List",
+                      "fields": {
+                        "style": {
+                          "kind": "Unordered",
+                          "fields": {}
+                        },
+                        "items": [
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "本人の設計指針: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://zenn.dev/bem130/articles/1b352797de94e7"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://zenn.dev/bem130/articles/1b352797de94e7"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "Cargo feature設計: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://doc.rust-lang.org/cargo/reference/features.html"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://doc.rust-lang.org/cargo/reference/features.html"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "Rust edition 2024 / resolver 3: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://doc.rust-lang.org/edition-guide/rust-2024/cargo-resolver.html"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://doc.rust-lang.org/edition-guide/rust-2024/cargo-resolver.html"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "wasm32-wasip2 target: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://doc.rust-lang.org/rustc/platform-support/wasm32-wasip2.html"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://doc.rust-lang.org/rustc/platform-support/wasm32-wasip2.html"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "Langium grammar: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://langium.org/docs/reference/grammar-language/"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://langium.org/docs/reference/grammar-language/"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "Langium features: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://langium.org/docs/features/"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://langium.org/docs/features/"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "開発者による事例: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://www.typefox.io/blog/langium-1.0-a-mature-language-toolkit/"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://www.typefox.io/blog/langium-1.0-a-mature-language-toolkit/"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "Racket syntax-spec: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://docs.racket-lang.org/syntax-spec-v3/Specifying_languages.html"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://docs.racket-lang.org/syntax-spec-v3/Specifying_languages.html"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "LSP 3.17の参照契約: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "MathML Core: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://www.w3.org/TR/mathml-core/"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://www.w3.org/TR/mathml-core/"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "OpenType MATH（独自layout backendを追加する際の境界の参考）: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://learn.microsoft.com/en-us/typography/opentype/doc/spec/math"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://learn.microsoft.com/en-us/typography/opentype/doc/spec/math"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "HTML ruby: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://html.spec.whatwg.org/multipage/text-level-semantics.html"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://html.spec.whatwg.org/multipage/text-level-semantics.html"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "CBOR: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://www.rfc-editor.org/rfc/rfc8949.html"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://www.rfc-editor.org/rfc/rfc8949.html"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "WITの言語中立interface（本仕様のNDFと同一のABIではない）: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://component-model.bytecodealliance.org/design/wit.html"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://component-model.bytecodealliance.org/design/wit.html"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "num-bigint no_std: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://docs.rs/num-bigint"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://docs.rs/num-bigint"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "num-rational: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://crates.io/crates/num-rational"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://crates.io/crates/num-rational"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "Language tags RFC 5646: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://www.rfc-editor.org/rfc/rfc5646.html"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://www.rfc-editor.org/rfc/rfc5646.html"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "kind": "ListItem",
+                            "fields": {
+                              "checked": {
+                                "kind": "CheckNone",
+                                "fields": {}
+                              },
+                              "body": {
+                                "kind": "Body",
+                                "fields": {
+                                  "blocks": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "fields": {
+                                        "items": [
+                                          {
+                                            "kind": "Sentence",
+                                            "fields": {
+                                              "inlines": [
+                                                {
+                                                  "kind": "Text",
+                                                  "fields": {
+                                                    "text": "Unicode 16.0.0: "
+                                                  }
+                                                },
+                                                {
+                                                  "kind": "Link",
+                                                  "fields": {
+                                                    "target": {
+                                                      "kind": "ExternalTarget",
+                                                      "fields": {
+                                                        "uri": "https://www.unicode.org/versions/Unicode16.0.0/"
+                                                      }
+                                                    },
+                                                    "label": {
+                                                      "kind": "Text",
+                                                      "fields": {
+                                                        "text": "https://www.unicode.org/versions/Unicode16.0.0/"
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "設計のGrammar/Doc/Math/Circuitの具体的な表層文法、NDF profile、crate構成は、この成果物で定めた設計であり、これらの外部資料が採用を保証するものではない。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
