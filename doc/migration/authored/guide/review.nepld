@@ -1214,5 +1214,24 @@ body
       cons "[固定/こてい]labels24fileとmodule[順/じゅん]だけのfmt[追補/ついほ]へ[依存先/いぞんさき]を[束縛/そくばく]し、[独立/どくりつ]4[補助/ほじょ]と[管理対象/かんりたいしょう]labels7[件/けん]をnative/WASIで[成功確認/せいこうかくにん]した。"
       cons sentence cons ruby text "新" text "しん" cons text "buildしたsource/binary SHA、8" cons ruby text "本" text "ほん" cons text "のfull process log、" cons ruby text "固定" text "こてい" cons text "snapshot SHAは " cons code ".tmp/review-doc-labels-fixed/manifest.json" cons text " に" cons ruby text "保存" text "ほぞん" cons text "した。" nil
       cons "この[範囲/はんい]はArticle[内/ない]DocLabelとその[位置/いち]・[診断/しんだん]・DAG[出現/しゅつげん]の[検査/けんさ]であり、[外部/がいぶ]page/asset[解決/かいけつ]、Region selector、printer、CheckedArticle/PreparedArticle[全体/ぜんたい]の[完了/かんりょう]ではない。" nil
+    cons paragraph
+      cons "Doc plain_textは、[独立/どくりつ]3[原文/げんぶん]を[正式/せいしき]4[言語/げんご]packageの[実/じつ]compiler・ParseSession・[混在/こんざい]lowerへ[通/とお]し、[各/かく]3policyの9[出力/しゅつりょく]を[固定期待/こていきたい]と[比較/ひかく]した。"
+      cons sentence cons text "RubyのbaseにAnno、そのnoteに" cons ruby text "別" text "べつ" cons text "Rubyを" cons ruby text "置" text "お" cons text "いた" cons ruby text "例" text "れい" cons text "では" cons ruby text "入" text "い" cons text "れ" cons ruby text "子全体" text "こぜんたい" cons text "に" cons ruby text "同" text "おな" cons text "じpolicyが" cons ruby text "適用" text "てきよう" cons text "され、WithAllNotesの " cons code "漢{義[ぎ]}[かん]字{//注[ちゅう]}[x]{}" cons text " と" cons ruby text "末尾" text "まつび" cons text "LFを" cons ruby text "保持" text "ほじ" cons text "した。" nil
+      cons sentence cons text "slashを" cons ruby text "含" text "ふく" cons text "むnote、InlineCodeのdelimiter、hostが" cons ruby text "明示" text "めいじ" cons text "したMath" cons ruby text "表示値" text "ひょうじち" cons text " " cons code "七/[x]" cons text " をescape・" cons ruby text "再" text "さい" cons text "parseせず、" cons ruby text "空" text "から" cons text "Sentenceの" cons ruby text "出力" text "しゅつりょく" cons text "は" cons ruby text "全" text "ぜん" cons text "policyで" cons ruby text "空文字" text "からもじ" cons text "となる。" nil nil
+    cons paragraph
+      cons "identityは[公開定数/こうかいていすう]を[期待値/きたいち]として[流用/りゅうよう]せず、[仕様/しよう]のASCII domainと[単一/たんいつ]ゼロbyte、および[正式/せいしき]DocumentSyntax/ForeignClosure codecのcanonical CBORを[独立/どくりつ]に[連結/れんけつ]してSHA-256と[照合/しょうごう]した。"
+      cons "Mathのreading/notesを[隠/かく]すpolicyは[未提供値/みていきょうち]を[要求/ようきゅう]せず、[提供済/ていきょうず]みの[不正/ふせい]guest identityと[重複/じゅうふく]EmbedRefは[非表示/ひひょうじ]でも[拒否/きょひ]し、[表示対象/ひょうじたいしょう]の[未提供値/みていきょうち]だけUnresolvedEmbedとなった。"
+      cons "この[値/あたい]はhostが[供給/きょうきゅう]する[表示/ひょうじ]textであり、guestの[意味解析/いみかいせき]・[評価成功/ひょうかせいこう]の[認証/にんしょう]ではない。" nil
+    cons paragraph
+      cons "[元要求/もとようきゅう]をCBORへ[変換/へんかん]して[破棄/はき]し、[空/から]SourceStoreと[新/しん]admissionを[持/も]つ[受信/じゅしん]codecで[要求/ようきゅう]を[復元/ふくげん]して[公開/こうかい]plain_textを[実行/じっこう]した。"
+      cons "[元入力/もとにゅうりょく]へのambient[参照/さんしょう]を[用/もち]いず[同/おな]じ[出力/しゅつりょく]になり、decodeと[実行/じっこう]で[同/どう]snapshotを[二重計上/にじゅうけいじょう]しない。"
+      cons "[返信/へんしん]も[実/じつ]CBOR[往復/おうふく]でoutcomeと[正式/せいしき]Reportを[保持/ほじ]した。"
+      cons "[独立/どくりつ]の9[要求/ようきゅう]それぞれでSource[上限/じょうげん]0、Work/Allocation/Output/Depthの[実必要量直前/じつひつようりょうちょくぜん]を[試/ため]し、[元要求/もとようきゅう]を[変更/へんこう]せず[元停止理由/もとていしりゆう]・sticky Budget・[累積/るいせき]Usageを[保持/ほじ]した。"
+      cons "caller[深/ふか]さ7を[加/くわ]えた[実行/じっこう]のpeakは0の[場合/ばあい]からちょうど7[増/ふ]えた。" nil
+    cons paragraph
+      cons "[固定/こてい]plain_text15fileへ[依存先/いぞんさき]を[束縛/そくばく]した[独立補助/どくりつほじょ]と[管理対象/かんりたいしょう]text5[件/けん]はnative/WASI[双方/そうほう]で[成功/せいこう]した。"
+      cons "[管理対象/かんりたいしょう]の[別原文再/べつげんぶんさい]parse、guest[交換/こうかん]、owner[環境/かんきょう]resource[変更/へんこう]、[非/ひ]Stopped overflow、digest byte[長/ちょう]、32bitで[切/き]り[捨/す]てられ[得/う]るSentenceRefもコードと[実結果/じつけっか]を[確認/かくにん]した。"
+      cons sentence cons ruby text "固定" text "こてい" cons text "source SHA、" cons ruby text "元補助" text "もとほじょ" cons text "source、" cons ruby text "新" text "しん" cons text "buildした" cons ruby text "両" text "りょう" cons text "binary、2" cons ruby text "本" text "ほん" cons text "のfull process logは " cons code ".tmp/review-doc-text-fixed/manifest.json" cons text " に" cons ruby text "保存" text "ほぞん" cons text "した。" nil
+      cons "[今回/こんかい]の[範囲/はんい]はplain_text[操作/そうさ]の[明示/めいじ]policy・[入力閉包/にゅうりょくへいほう]・typed request/replyであり、[一般/いっぱん]printer、[外部/がいぶ]asset/page[解決/かいけつ]、Region/query、CheckedArticle/PreparedArticle[全体/ぜんたい]の[完成/かんせい]とは[扱/あつか]わない。" nil
     nil
   nil
