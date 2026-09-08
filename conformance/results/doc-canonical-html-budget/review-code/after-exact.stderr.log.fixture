@@ -1,0 +1,3 @@
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-canonical-html-budget\.tmp\review-canonical-html-budget\workspace\tools)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.03s
+     Running unittests src\lib.rs (C:\projects\NEPL3-doc-canonical-html-budget\.tmp\review-canonical-html-budget\target\debug\deps\nepl3_tools-69244717011a8889.exe)

@@ -1,0 +1,43 @@
+from pathlib import Path
+import json,re,hashlib,subprocess
+p=Path(__file__).parent.resolve()
+def sha(b):return hashlib.sha256(b).hexdigest()
+def events(phase,tag):
+    text=(p/(phase+'-exact.stdout.log')).read_text(encoding='utf8')
+    return [json.loads(m[1]) for m in re.finditer(r'^(?:test [A-Za-z0-9_:]+ \.\.\. )?'+tag+r' (\{.*\})$',text,re.M)]
+before=events('before','INDEPENDENT_HTML_DEFAULT');after=events('after','INDEPENDENT_HTML_DEFAULT');selected=events('after','INDEPENDENT_HTML_SELECTED')
+assert len(before)==len(after)==len(selected)==1 and before==after
+files=[]
+for name in ['site/a.html','site/assets/doc.css','manifest.json']:
+    b=(p/'default-before-exact'/name).read_bytes();assert all(b==(p/('default-'+phase)/name).read_bytes() for phase in ['after-exact','before','after']);files.append(dict(path=name,bytes=len(b),sha256=sha(b)))
+order=['source_bytes','work','depth','nodes','allocation_units','output_bytes','diagnostics','events']
+def record_bytes(record):return b''.join(record[k].to_bytes(8,'big') for k in order)
+for m in before+selected:
+    assert all(v==0 for v in m['output_budget']['initial_usage'].values())
+    raw=b'nepl3.local-doc-pages.execution/1\0'+bytes.fromhex(m['identity'])+record_bytes(m['output_budget']['limits'])+record_bytes(m['output_budget']['initial_usage'])
+    assert sha(raw)==m['execution_identity']
+    phase=b'nepl3.local-doc-pages.phases/1\0'+bytes.fromhex(m['execution_identity'])+len(m['pages']).to_bytes(8,'big')
+    for page in m['pages']:
+        phase+=bytes.fromhex(page['profile_sha256'])
+        for kind in ['parse','lower']:
+            assert all(v==0 for v in page[kind+'_initial_usage'].values())
+            assert page[kind+'_limits']['work']==100000000 and page[kind+'_limits']['allocation_units']==500000000
+            phase+=record_bytes(page[kind+'_limits'])+bytes(64)
+    assert sha(phase)==m['phase_execution']['identity']
+assert before[0]['pages']==selected[0]['pages'] and before[0]['files']==selected[0]['files']
+stops=events('after','INDEPENDENT_HTML_STOP');assert len(stops)==6
+assert {s['reason'] for s in stops}=={'WorkLimit','AllocationLimit','NodeLimit','DepthLimit','SourceLimit','OutputLimit'}
+assert all(s['output_exists'] is False for s in stops)
+negative=events('after','INDEPENDENT_HTML_NEGATIVES');assert negative==[dict(typed_invalid=11,raw_duplicate_or_overflow=2,late_no_output=2)]
+scope=events('after','INDEPENDENT_HTML_SCOPE');assert scope==[dict(new_markdown_body_equal=True,new_markdown_context_changed=True,html_work0_did_not_stop_markdown=True)]
+source='article ja "[文/ぶん]" body cons paragraph cons sentence cons text "<&>" cons break cons text "tail" nil nil nil'
+assert sha(source.encode())==after[0]['pages'][0]['source_sha256']
+rows=json.loads((p/'dependencies.json').read_bytes())
+for row in rows:
+    if row['path']=='tools/src/doc/canonical/tests.rs':continue
+    b=(p/'workspace'/row['path']).read_bytes();assert len(b)==row['bytes'] and sha(b)==row['sha256'],row['path']
+assert (p/'workspace/tools/src/doc/canonical/tests.rs').read_bytes()==(p/'source/tools/src/doc/canonical/tests.rs').read_bytes()+b'\n'+(p/'probe.rs').read_bytes()
+assert 'test result: ok. 4 passed; 0 failed;' in (p/'after-exact.stdout.log').read_text(encoding='utf8')
+result=dict(source=source,source_sha256=sha(source.encode()),default_before_after_exact=files,independent_output_and_phase_identities=True,parse_lower_limits_and_usage_equal=True,stops=stops,strict_invalid=negative[0],markdown_scope=scope[0],native_before=1,native_after=4,dependency_files=len(rows),runtime_cross_target='not independently run; native filesystem host scope',motivation='H raw log retained, not independently replayed or complete source/binary-bound benchmark')
+(p/'checks.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+print('PASS defaults3 exact, independently encoded identities,6stops,13invalid,2late errors and phase/Markdown separation')

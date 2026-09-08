@@ -1,0 +1,32 @@
+[
+  {
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "markdown",
+      ".tmp/markdown-first"
+    ],
+    "exit_code": 0,
+    "elapsed": 64.65458600001875
+  },
+  {
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "html",
+      ".tmp/html-first"
+    ],
+    "exit_code": 1,
+    "elapsed": 17.640298400074244
+  }
+]

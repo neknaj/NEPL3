@@ -1,0 +1,3 @@
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-canonical-architecture\tools)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 10.67s
+     Running tests\doc.rs (target\debug\deps\doc-3ca723e83baae99e.exe)

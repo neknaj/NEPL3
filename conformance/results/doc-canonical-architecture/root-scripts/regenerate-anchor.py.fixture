@@ -1,0 +1,28 @@
+import hashlib,json,pathlib,subprocess,time
+root=pathlib.Path.cwd();out=root/'.tmp/generation-anchor';out.mkdir(exist_ok=True)
+fixed=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+rows=[]
+for phase in ['first','second']:
+    for kind in ['markdown','html']:
+        dest=f'.tmp/{kind}-anchor-{phase}'
+        cmd=['cargo','run','--locked','-p','nepl3-tools','--','doc-canonical',kind,dest]
+        started=time.monotonic()
+        with (out/f'{kind}-{phase}.stdout.log').open('wb') as stdout,(out/f'{kind}-{phase}.stderr.log').open('wb') as stderr:
+            p=subprocess.run(cmd,stdout=stdout,stderr=stderr,timeout=900)
+        rows.append(dict(command=cmd,exit_code=p.returncode,elapsed=time.monotonic()-started,base_head=fixed,inputs={n:hashlib.sha256((root/n).read_bytes()).hexdigest() for n in ['doc/canonical.json','doc/spec/01-architecture.nepld','doc/migration/aliases/01-architecture.json']}))
+        (out/'commands.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf-8')
+        assert p.returncode==0
+        print(kind,phase,'PASS',flush=True)
+    if phase=='first':
+        registry=json.loads((root/'doc/canonical.json').read_bytes())
+        for page in registry['pages']:
+            generated=(root/'.tmp/markdown-anchor-first'/page['projection']).read_bytes()
+            if page['id']=='architecture':(root/page['projection']).write_bytes(generated)
+            else:assert generated==(root/page['projection']).read_bytes()
+for kind in ['markdown','html']:
+    a=root/f'.tmp/{kind}-anchor-first';b=root/f'.tmp/{kind}-anchor-second'
+    files={p.relative_to(a).as_posix():p.read_bytes() for p in a.rglob('*') if p.is_file()}
+    again={p.relative_to(b).as_posix():p.read_bytes() for p in b.rglob('*') if p.is_file()}
+    assert files==again
+    (out/f'{kind}-comparison.json').write_text(json.dumps([dict(path=n,bytes=len(v),sha256=hashlib.sha256(v).hexdigest()) for n,v in files.items()],indent=2)+'\n',encoding='utf-8')
+    print(kind,'all bytes identical',len(files),flush=True)

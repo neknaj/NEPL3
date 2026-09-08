@@ -1,0 +1,16 @@
+[
+  {
+    "original_length": 1388,
+    "html_length": 1389,
+    "original_tail": "'ask/\\n  examples/\\n  conformance/\\n  tasks/'",
+    "html_tail": "'sk/\\n  examples/\\n  conformance/\\n  tasks/\\n'",
+    "matches_with_fence_content_lf": true
+  },
+  {
+    "original_length": 509,
+    "html_length": 510,
+    "original_tail": "'tools -> grammar-core, suite, foundation'",
+    "html_tail": "'ools -> grammar-core, suite, foundation\\n'",
+    "matches_with_fence_content_lf": true
+  }
+]

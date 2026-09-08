@@ -1,0 +1,27 @@
+[
+  {
+    "path": "manifest.json",
+    "bytes": 1542,
+    "sha256": "f9525835e4e54066efd112b48e2579b919725ddaf3c79ffdc9477f6af6527507"
+  },
+  {
+    "path": "doc/spec/00-contract.md",
+    "bytes": 10429,
+    "sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1"
+  },
+  {
+    "path": "doc/spec/01-architecture.md",
+    "bytes": 11492,
+    "sha256": "894682f8b10159a4605902401af046096a6ea060b6ca4c2e92e5ef4939fa1ee2"
+  },
+  {
+    "path": "doc/spec/13-reproducibility.md",
+    "bytes": 26270,
+    "sha256": "454ede4004f0022f8dedb0246ecb227fc36cb57456b9c57fe6614f7a3e512d8e"
+  },
+  {
+    "path": "doc/spec/22-external-extensions.md",
+    "bytes": 12525,
+    "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+  }
+]

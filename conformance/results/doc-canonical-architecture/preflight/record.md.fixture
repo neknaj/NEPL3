@@ -1,0 +1,28 @@
+# Chapter 01 canonical-cutover preflight
+
+Fixed input commit: afeadcf70b120c7cf05e48ec2c282e0e4edd5e44 (PR90 main). This is read-only provenance, drift, structure and actual old GitHub anchor inspection. No draft, registry, canonical source or production file was edited. The original chapter 01 draft was authored by this reviewer; this is not a new independent full semantic review of that author's work. Prior independent full/Ruby reviews and the later independently reviewed Kepler extension delta remain the content evidence.
+
+The actual fixed GitHub blob URL is recorded in fetch.json. github.html contains both rendered server markup and the embedded richText/rawLines data. Eight rendered heading texts equal all original Markdown headings. Server DOM anchor elements and embedded richText anchors agree exactly, and joining rawLines with LF reconstructs the complete 6,430-byte Git source, including its trailing LF. IDs are observed, not inferred by a slug algorithm. No browser navigation, focus or new generated-Markdown display was exercised.
+
+Observed legacy fragment -> authored section correspondence:
+
+- 01-repositorycrate依存方向 -> null (Article title)
+- 方針 -> policy
+- 1-配置 -> layout
+- 2-主な依存方向 -> dependencies
+- 3-surface-descriptorとbootstrap -> bootstrap
+- 4-rust設定 -> rust
+- 5-許可集合の検査 -> allowed_dependencies
+- 現在の作業段階 -> current_stage
+
+All eight authored heading base texts match the original exactly. All legacy names are unique and none overlaps the generated n- namespace. mapping.json is a candidate preservation map, not an instruction to insert all eight aliases blindly. The bootstrap title has no Ruby and retains exactly the old wording; its generated automatic GitHub ID may already supply the old fragment. The other headings contain reading markup. Actual new GitHub rendering must determine which aliases are needed and check duplicate IDs/target ownership before cutover, just as chapter 13 did. This preflight verifies only the old IDs.
+
+No source drift remains after the reviewed extension delta: current canonical bytes exactly equal source at 75e73a7 and archived delta-review/01-source-after.txt. Current draft bytes equal 2bbac28 and archived 01-draft-after.txt. Git history contains no later change to either path through fixed afeadcf. The prior foundation integration selected cd451bf-equivalent chapter 01 bytes and established the old canonical baseline had not drifted. The only subsequent source addition was the external-extension paragraph, manually added by Kepler and independently reviewed before 2bbac28. Copies of both review scope records and the later result/manifest are retained here; this audit does not claim to revalidate every unrelated payload in those prior manifests.
+
+Directly reading the full source and draft found no new missing normative condition. The original author used natural paraphrases and sentence boundaries, for example ファイル名の階層化 -> ファイル名の階層, and explanatory Anno on dependency direction. Those preexisting wording choices are not renderer omissions or recent drift. Target 20 crates / 15 no_std+alloc, MSRV 1.85.0, edition 2024 / resolver 3, dependency prohibitions, seed/bootstrap rules, exact numeric substrate choices and current-target-versus-implemented distinction remain. Both RawCode blocks and text hints exactly match original bytes. All original inline-code values are present; the draft additionally marks existing no_std + alloc and build.rs as InlineCode, a prior presentation choice. There are no List or Table nodes.
+
+The only actual Link is Relative 22-external-extensions.md, without fragment. The extension paragraph and link label are unchanged from their independent review. Prior NeedsResolution for an unregistered chapter 22 is a historical receipt, not a current success/failure claim: chapter 22 is now canonical on main, but chapter 01 still requires the new explicit registered-page Markdown context and actual route/anchor checks. Plain references to Cargo.toml, implementation-status.json, doc/development.md and the decision record remain plain Text, as in the original; no implicit resource links should be invented.
+
+No required manuscript correction was identified in this preflight. Remaining cutover work: actual page-context generation and bounded failure checks, correct registry and stable aliases, new GitHub duplicate/ownership verification and browser navigation, independent final semantic acceptance, and explicit root cutover. These are not declared complete by source-hash or structure success.
+
+Check scripts ran successfully. The content helper initially used guessed AST RawCode hint field names and was corrected from hint/value to formal languageHint/text after inspecting forms; this was a scratch probe error, not a production or draft defect. The formal structure parser is not the production parser.

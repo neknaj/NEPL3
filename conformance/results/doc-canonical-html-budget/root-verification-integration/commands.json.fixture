@@ -1,0 +1,81 @@
+[
+  {
+    "source_commit": "49df9c709526cb1046a6f31d0c300f7c4b9274e7",
+    "unchanged_clean_tree": true,
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--lib",
+      "doc::canonical::",
+      "--",
+      "--test-threads=1",
+      "--skip",
+      "synchronized_context_spec_drafts_parse_lower_and_check_labels"
+    ],
+    "exit_code": 0,
+    "elapsed": 54.79217719996814
+  },
+  {
+    "source_commit": "49df9c709526cb1046a6f31d0c300f7c4b9274e7",
+    "unchanged_clean_tree": true,
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "--check"
+    ],
+    "exit_code": 0,
+    "elapsed": 32.00684260006528
+  },
+  {
+    "source_commit": "49df9c709526cb1046a6f31d0c300f7c4b9274e7",
+    "unchanged_clean_tree": true,
+    "command": [
+      "cargo",
+      "clippy",
+      "--locked",
+      "--workspace",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exit_code": 0,
+    "elapsed": 1.857593100052327
+  },
+  {
+    "source_commit": "49df9c709526cb1046a6f31d0c300f7c4b9274e7",
+    "unchanged_clean_tree": true,
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "check"
+    ],
+    "exit_code": 0,
+    "elapsed": 13.853410399984568
+  },
+  {
+    "source_commit": "49df9c709526cb1046a6f31d0c300f7c4b9274e7",
+    "unchanged_clean_tree": true,
+    "command": [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "exit_code": 0,
+    "elapsed": 3.060449799988419
+  }
+]

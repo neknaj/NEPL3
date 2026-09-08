@@ -1,0 +1,44 @@
+{
+  "source_commit": "afeadcf70b120c7cf05e48ec2c282e0e4edd5e44",
+  "source_sha256": "f5024444c85b45094874a961d52da111798ed37efa6c40fa0954c8caaf7c4170",
+  "draft_sha256": "8d338b3ce98f3030e503ecd0aea9374c439c606cfbeb48bcd6b777a3f45654b2",
+  "full_structure": "passed",
+  "raw_code_byte_and_hint_pairs": 2,
+  "source_inline_code": [
+    "NEPL3",
+    "design/dependencies.json",
+    "source_span_map.rs",
+    "source/map.rs",
+    "src",
+    "lib.rs",
+    "main.rs",
+    "consumer -> dependency",
+    "core",
+    "languages/*/syntax.neplg",
+    "cargo run -p nepl3-tools -- generate --check",
+    "rust-toolchain.toml",
+    "#![no_std]",
+    "num-bigint",
+    "num-rational",
+    "num-integer",
+    "num-traits",
+    "check --no-default-features"
+  ],
+  "draft_additional_code_presentation": [
+    "no_std + alloc",
+    "build.rs"
+  ],
+  "link": {
+    "kind": "RelativeTarget",
+    "fields": {
+      "path": "22-external-extensions.md",
+      "fragment": {
+        "kind": "NoText",
+        "fields": {}
+      }
+    }
+  },
+  "target_crates": 20,
+  "target_no_std": 15,
+  "runtime": "not-run"
+}

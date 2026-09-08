@@ -1,0 +1,3 @@
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-canonical-architecture\tools)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.90s
+     Running `target\debug\nepl3-tools.exe doc-canonical markdown .tmp/markdown-anchor-first`

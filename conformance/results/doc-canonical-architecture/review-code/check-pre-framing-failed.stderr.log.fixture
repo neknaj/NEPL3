@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "C:\projects\NEPL3-doc-canonical-architecture\.tmp\review-canonical01-code\check.py", line 75, in <module>
+    assert h.pre==[text for _,text in blocks]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
