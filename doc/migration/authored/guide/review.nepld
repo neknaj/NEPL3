@@ -222,5 +222,28 @@ body
       cons "[訂正後/ていせいご]はIdentityConflictを[返/かえ]し、[管理対象/かんりたいしょう]の[同名境界試験/どうめいきょうかいしけん]も[成功/せいこう]した。"
       cons sentence cons ruby text "末尾" text "まつび" cons text "に " cons code "-- missing" cons text " を" cons ruby text "付" text "つ" cons text "けてcaller storeから" cons ruby text "当該" text "とうがい" cons text "sourceを" cons ruby text "除" text "のぞ" cons text "くと、proofが" cons ruby text "保持" text "ほじ" cons text "する" cons ruby text "閉包" text "へいほう" cons text "から" cons ruby text "供給" text "きょうきゅう" cons text "してMatchedとなることも" cons ruby text "独立確認" text "どくりつかくにん" cons text "した。" nil
       cons "[不在/ふざい]と[衝突/しょうとつ]を[区別/くべつ]し、operationごとに[閉包/へいほう]のsource[予算/よさん]を[再計上/さいけいじょう]する。" nil
+    cons paragraph
+      cons "readerの26[件/けん]はnative VM、UTF-8[分割/ぶんかつ]、Unicode 16、[巻戻/まきもど]し、[消費/しょうひ]するprovider[反復/はんぷく]、[非進行/ひしんこう]・[隠/かく]れた[再帰/さいき]、state[復元/ふくげん]、[署名/しょめい]・session echo・[予算/よさん]の[検査/けんさ]を[含/ふく]む。"
+      cons sentence cons code "map_decode_and_then_use_typed_provider_envelopes" cons text " はprovider dispatchと" cons ruby text "値" text "あたい" cons text "の" cons ruby text "対応" text "たいおう" cons text "を" cons ruby text "検査" text "けんさ" cons text "する。" nil
+      cons "escape decodeによる[生成/せいせい]source/SourceMapの[意味/いみ]や、そこでのlook/choice[巻戻/まきもど]しの[証拠/しょうこ]とはしない。"
+      cons "SyntaxBundleには[現時点/げんじてん]でSourceMap[所有/しょゆう]tableがなく、readerの[生成/せいせい]source[対応/たいおう]をbundle[全体/ぜんたい]で[交換/こうかん]する[契約/けいやく]も[次段/じだん]へ[残/のこ]る。"
+      cons "[組込/くみこ]みreader、[完全/かんぜん]なprovider[交換/こうかん]、engineとGrammar bootstrapは[次/つぎ]の[実装/じっそう]・レビュー[範囲/はんい]である。" nil
+    cons paragraph
+      cons sentence cons ruby text "独立" text "どくりつ" cons text "probeはignoreされた " cons code ".tmp/independent-core/" cons text " から" cons ruby text "実際" text "じっさい" cons text "のcrateをpath" cons ruby text "依存" text "いぞん" cons text "で" cons ruby text "呼" text "よ" cons text "んだ。" nil
+      cons "この[補助/ほじょ]harnessはcloneに[含/ふく]まれず、[配布/はいふ]されたproduction[試験/しけん]として[再実行/さいじっこう]できるものではない。"
+      cons "[実行証拠/じっこうしょうこ]の[中心/ちゅうしん]は[上記/じょうき]の[管理対象/かんりたいしょう]の[回帰試験/かいきしけん]である。"
+      cons sentence cons code "cargo run --locked --manifest-path .tmp/independent-core/Cargo.toml --bin deep_wire" cons text " で100,000" cons ruby text "段" text "だん" cons text "のdecode→encode" cons ruby text "一致" text "いっち" cons text "→drop、およびListの" cons ruby text "第" text "だい" cons text "1" cons ruby text "子" text "し" cons text "に" cons ruby text "深" text "ふか" cons text "い" cons ruby text "正常値" text "せいじょうち" cons text "、" cons ruby text "第" text "だい" cons text "2" cons ruby text "子" text "し" cons text "に" cons ruby text "不正" text "ふせい" cons text "byteを" cons ruby text "置" text "お" cons text "いた" cons ruby text "失敗" text "しっぱい" cons text "cleanupを" cons ruby text "再実行" text "さいじっこう" cons text "し、" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons sentence cons code "--bin deep_traits" cons text "、" cons ruby text "同" text "どう" cons text "コマンド" cons ruby text "末尾" text "まつび" cons text "の " cons code "-- eq" cons text " と " cons code "-- debug" cons text " は、checked decodeの" cons ruby text "成功値" text "せいこうち" cons text "のClone/Eq/Debugを" cons ruby text "別" text "べつ" cons text "processで" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons sentence cons ruby text "旧版" text "きゅうばん" cons text "の" cons ruby text "終了" text "しゅうりょう" cons text "は " cons code "0xc00000fd" cons text "、" cons ruby text "訂正後" text "ていせいご" cons text "は" cons ruby text "全" text "すべ" cons text "て" cons ruby text "終了" text "しゅうりょう" cons text "コード0だった。" nil
+      cons "これらの[本質的/ほんしつてき]な[失敗条件/しっぱいじょうけん]は[管理対象/かんりたいしょう]のcore/wire[回帰試験/かいきしけん]にも[残/のこ]る。" nil
+    cons paragraph
+      cons sentence cons ruby text "追加" text "ついか" cons text "の " cons code "--bin wire_corpus" cons text " は、" cons ruby text "長" text "なが" cons text "さ0〜2の" cons ruby text "全" text "ぜん" cons text "byte" cons ruby text "列" text "れつ" cons text "65,793" cons ruby text "件" text "けん" cons text "と、seed " cons code "0x71921a13" cons text " の32-bit LCG（" cons code "state = state * 1664525 + 1013904223" cons text "、wrapし" cons ruby text "上位" text "じょうい" cons text "byteを" cons ruby text "使用" text "しよう" cons text "）による100,000" cons ruby text "列" text "れつ" cons text "を" cons ruby text "実行" text "じっこう" cons text "した。" nil
+      cons sentence cons ruby text "後半" text "こうはん" cons text "の" cons ruby text "長" text "なが" cons text "さは" cons ruby text "連番" text "れんばん" cons text " " cons code "n % 65" cons text "。" nil
+      cons "[計/けい]165,793[入力/にゅうりょく]でpanicはなく、[受理/じゅり]された2[件/けん]はencode[後/ご]もbyte[一致/いっち]だった。"
+      cons "この[短/みじか]い[不正入力/ふせいにゅうりょく]probeは[深/ふか]い[構造/こうぞう]や[全意味/ぜんいみ]のfuzz[網羅性/もうらせい]を[示/しめ]さず、[管理対象/かんりたいしょう]の[受入試験/うけいれしけん]・runnerの[代/か]わりにしない。" nil
+    cons paragraph
+      cons sentence cons ruby text "実行環境" text "じっこうかんきょう" cons text "はWindows " cons code "10.0.26200.0" cons text "、target " cons code "x86_64-pc-windows-msvc" cons text "、rustc " cons code "1.97.0 (2d8144b78 2026-07-07)" cons text "、" cons ruby text "通常" text "つうじょう" cons text "のCargo debug runner。" nil
+      cons "WASI/browser/[他/た]OS、Grammar bootstrap、portable operation/frame[全経路/ぜんけいろ]、[言語/げんご]・editor・UI・Pages・Doc[移行/いこう]の[受入/うけいれ]はこの[結果/けっか]から[推定/すいてい]しない。"
+      cons "[入力/にゅうりょく]identityと[最終受入証拠/さいしゅううけいれしょうこ]は、[対応/たいおう]する[実装/じっそう]と[仕様/しよう]を[固定/こてい]したtreeで[別途記録/べっときろく]する。" nil
     nil
   nil
