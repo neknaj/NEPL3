@@ -1,0 +1,27 @@
+   Compiling typenum v1.20.1
+   Compiling autocfg v1.5.1
+   Compiling cfg-if v1.0.4
+   Compiling unicode-ident v1.0.18
+   Compiling num-traits v0.2.19
+   Compiling hybrid-array v0.4.14
+   Compiling crypto-common v0.2.2
+   Compiling block-buffer v0.12.1
+   Compiling num-integer v0.1.47
+   Compiling num-bigint v0.5.1
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-source-map-adjacency\before\workspace\crates\foundation\core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 29.55s
+     Running tests\review_adjacency.rs (C:/projects/NEPL3-runtime/.tmp/review-source-map-adjacency/before/wasm-target\wasm32-wasip2\debug\deps\review_adjacency-82330967509aeb40.wasm)
+
+running 3 tests
+test dag_longest_depth_atomic_insert_and_stop_caps ... stop_caps=48 orders=3 caller_depth=5 longest_relative=5
+ok
+test observe_star_work_and_additional_storage ... star width=1024 usage=Usage { source_bytes: 0, work: 1855984, depth: 2, nodes: 1025, allocation_units: 32792, output_bytes: 0, diagnostics: 0, events: 0 } head_size=8 edge_delta=4
+star width=2048 usage=Usage { source_bytes: 0, work: 5996154, depth: 2, nodes: 2049, allocation_units: 65560, output_bytes: 0, diagnostics: 0, events: 0 } head_size=8 edge_delta=4
+ok
+test pointwise_oracle_duplicates_anchors_and_orders ... pointwise_oracle valid=504 cycles=264 permutations=3 masks=256
+ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.21s
+
