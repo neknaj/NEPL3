@@ -20,7 +20,7 @@ pub struct Artifact {
 
 /// Render one checked Article with external links. Cross-page links, assets
 /// and foreign operations still require a page-set/host preparation path.
-/// Ruby is displayed as base[reading], Anno as base{note1/note2}; nested
+/// Ruby is displayed as `base[reading]`, Anno as `base{note1/note2}`; nested
 /// content is walked structurally, including code and semantic decorations.
 pub fn render<C: FoundationValueCodec>(
     document: &DocumentSyntax,

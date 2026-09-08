@@ -1168,5 +1168,25 @@
     "path": "integration/section/section.nepld",
     "bytes": 11316,
     "sha256": "66abb1d1100054f8f383822ae2acd3e9dd3ee42ce2c9866c350c9cbefd3046ff"
+  },
+  {
+    "path": "integration/ci/comment-fix.patch",
+    "bytes": 710,
+    "sha256": "a30627fb18f1e6da389627e260b85003e9d51a0fb9fba55196799a84e532aab0"
+  },
+  {
+    "path": "integration/ci/failed-2e.log",
+    "bytes": 20562,
+    "sha256": "ef5ade0fac7a90051bdc1a7562cfe77ff2fee64a48cec6f3de5f44de39b2cb3c"
+  },
+  {
+    "path": "integration/ci/record.json",
+    "bytes": 554,
+    "sha256": "585223f34a60f91acab515233a1fcda34b7db7e71830d6fa3544b7351885bd30"
+  },
+  {
+    "path": "integration/ci/rustdoc-fixed.log",
+    "bytes": 1177,
+    "sha256": "f9315efa1f6d7fbe701d66d1b4cdc98fec235f6882fc08ba08862723789410aa"
   }
 ]
