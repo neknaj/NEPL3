@@ -132,4 +132,23 @@ body
       cons "これを[根拠/こんきょ]にR016をcorrectedとする。"
       cons "R006/R009/R014と[処理系/しょりけい]・[移行/いこう]の[未実行範囲/みじっこうはんい]は[維持/いじ]する。" nil
     nil
+  cons section intrinsic "r3でのNDF intrinsicと[型参照/かたさんしょう]の[部分訂正/ぶぶんていせい]" body
+    cons paragraph
+      cons "R006のうち、[未定義/みていぎ]だったNdfScalarと[説明/せつめい]のみだったTypedValueを、[既存/きそん]NDF/1の[論理/ろんり]constructorの[明示的/めいじてき]な[部分集合/ぶぶんしゅうごう]として[定義/ていぎ]した。"
+      cons sentence cons link relative "spec/09-portability.md" none ruby text "交換仕様" text "こうかんしよう" cons text " と " cons link relative "../tools/src/contract/intrinsic.rs" none concat cons text "intrinsic" cons ruby text "検査" text "けんさ" nil cons text " を" cons ruby text "照合" text "しょうごう" cons text "し、12" cons ruby text "種" text "しゅ" cons text "のtag、payload field" cons ruby text "順" text "じゅん" cons text "、" cons ruby text "部分集合" text "ぶぶんしゅうごう" cons text "を" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "これらは[通常/つうじょう]のdomain Variantとして[追加符号化/ついかふごうか]する[型/かた]ではない。"
+      cons "Integer/Rationalの[物理/ぶつり]payload、Record/Variantの[生/なま]array、headerのSchemaRef tupleを[論理/ろんり]field[表/ひょう]と[区別/くべつ]している。"
+      cons "[通常/つうじょう]のdomain fieldとしてのSchemaRefの[所有/しょゆう]schemaと[符号化/ふごうか]は、このr3[段階/だんかい]では[未解決/みかいけつ]だった。"
+      cons "r4ではnepl3.foundationの[通常/つうじょう]recordとして[定義/ていぎ]し、[下記/かき]の[実/じつ]codecで[確認/かくにん]している。" nil
+    cons paragraph
+      cons sentence cons link relative "../tools/src/contract/types.rs" none concat cons ruby text "共有" text "きょうゆう" cons text "の" cons ruby text "型参照検査" text "かたさんしょうけんさ" nil cons text " はName、List、Optionを" cons ruby text "解析" text "かいせき" cons text "し、modelとcontractsのrecord/sum field・union" cons ruby text "参照先" text "さんしょうさき" cons text "を" cons ruby text "照合" text "しょうごう" cons text "する。" nil
+      cons "modelは[自身/じしん]の[型/かた]と[明示的/めいじてき]にimportした[型/かた]だけを[使用/しよう]できる。"
+      cons "Unitを[含/ふく]む[組込/くみこ]み[型/がた]、[再帰型/さいきがた]の[参照/さんしょう]、[重複/ちょうふく]owner、import[漏/も]れ、[未知名/みちめい]、[不正/ふせい]generic、NDF tagとsubsetの[改変/かいへん]を[検査/けんさ]する。"
+      cons "operation[表/ひょう]の[説明用署名/せつめいようしょめい]をこの[検査/けんさ]が[解釈/かいしゃく]できるとはしていない。" nil
+    cons paragraph
+      cons "[訂正後/ていせいご]の52 Rust[試験/しけん]とrepository checkを[独立/どくりつ]に[実行/じっこう]して[成功/せいこう]した。"
+      cons "[実際/じっさい]のcontract[検査入口/けんさいりぐち]から、[未解決/みかいけつ]の[入/い]れ[子型/こがた]、intrinsicの[欠落/けつらく]、[使用中/しようちゅう]のimportの[削除/さくじょ]を[拒否/きょひ]する[回帰試験/かいきしけん]も[含/ふく]む。"
+      cons "これはdescriptorと[参照/さんしょう]の[検証/けんしょう]であり、codec、[任意精度値/にんいせいどち]の[正規化/せいきか]、schema digest、bundleの[値検査/ちけんさ]、[操作/そうさ]・frame・UI schemaの[完成/かんせい]を[示/しめ]さない。"
+      cons "R006/R009/R014はopen、21タスクと55[受入群/うけいれぐん]の[実装状態/じっそうじょうたい]は[変更/へんこう]しない。" nil
+    nil
   nil
