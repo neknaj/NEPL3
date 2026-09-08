@@ -1,0 +1,1 @@
+nepl3-tools: candidate stopped: WorkLimit; cursor=Some(37561); usage=Usage { source_bytes: 110375, work: 99999957, depth: 73, nodes: 1015087, allocation_units: 159082978, output_bytes: 621707, diagnostics: 0, events: 0 }

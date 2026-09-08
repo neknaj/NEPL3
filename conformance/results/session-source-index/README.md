@@ -1,0 +1,7 @@
+# Session source index validation
+
+Production 889c5a4 retains each arena's source index in private Machine state. The public ParseArena and portable continuation records remain unchanged. Original independent production and actual Doc comparison manifests and byte-identical payloads are preserved here. c15928a only merges main ancestry and has the same tree as 889c5a4.
+
+Production review runs native/WASI boundary cases, generated source closures and failure/retry checks. The actual Doc comparison uses separate build directories: the real linear-combination HTML/CSS, full tree, DocumentSyntax source/origin/view, and canonical CBOR are unchanged; parse Work falls from 26,623,968 to 20,345,157. Small operations pay 48 additional logical allocation units for the private sidecar. Physical OOM is not tested.
+
+Root workspace verification passes 521 tests with one ignored, formatting, Clippy and repository checks. Default large-input runs retain failures: site advances from parser WorkLimit to NeedsResolution; document/development/review still stop in parsing. A separate root three-page run renders unchanged site/math-HTML/delivery drafts with default per-page parse/lower and explicitly preselected output Work 400M, Allocation 1.5B, Nodes 20M. Output usage is Work 125,393,174, Allocation 249,347,245, Nodes 4,522,094. Its success is not a default-output success, canonical migration acceptance, browser check or Pages deployment.

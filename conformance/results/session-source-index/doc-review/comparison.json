@@ -1,0 +1,284 @@
+{
+  "sources": [
+    {
+      "name": "linear",
+      "bytes": 13488,
+      "sha256": "9099bbbe48ed75a0768997789229188f53e43348fe930522b119908dfdb7a889"
+    },
+    {
+      "name": "05",
+      "bytes": 66043,
+      "sha256": "ab4b59d22adb6d09c20ebfaa6734d1b108da9e30b2f5a5f6942ff85302063982"
+    },
+    {
+      "name": "15",
+      "bytes": 53293,
+      "sha256": "d936897af122a24df2957f1abea4d105142db69e24e76030d478cf13fa92ec7c"
+    },
+    {
+      "name": "development",
+      "bytes": 50842,
+      "sha256": "eb3fefe2e22ce0116a9827d08e724569e57efb186a8e7051a36b21e2e3287bbe"
+    },
+    {
+      "name": "review",
+      "bytes": 391627,
+      "sha256": "93219488d2b5b3c93d3b7c02a2f3598b5544d0fe61111b0537071b4354549bee"
+    }
+  ],
+  "semantic": [
+    {
+      "path": "tree.txt",
+      "bytes": 6428313,
+      "sha256": "271c904088ed8eb0e2350c603e34faf6d935da6808f3e2a1bda3f7732f4dc22a",
+      "equal": true
+    },
+    {
+      "path": "profile.txt",
+      "bytes": 155,
+      "sha256": "3120d3f0cd0fef464bb56ae5f3ced8f61e3074fef3661ff3f5bd262ded4f0ceb",
+      "equal": true
+    },
+    {
+      "path": "document.txt",
+      "bytes": 7663999,
+      "sha256": "156c05c837d07588ee3025501718d94078157edff2c7476e083021c11c0e6dce",
+      "equal": true
+    },
+    {
+      "path": "document-ndf.txt",
+      "bytes": 861,
+      "sha256": "eef054fb9756f8be55a8392df79b7c4436681a4fbdba56af46a1bca03e1e19c5",
+      "equal": true
+    },
+    {
+      "path": "document.cbor",
+      "bytes": 1393264,
+      "sha256": "464908e07234d334c658df6a1005127f1f99c3a62c7577ca07d625d4bc47a995",
+      "equal": true
+    }
+  ],
+  "runs": {
+    "before": {
+      "05": {
+        "stage": "parse candidate boundary",
+        "cursor": 39521,
+        "usage": {
+          "source_bytes": 137537,
+          "work": 99999963,
+          "depth": 57,
+          "nodes": 1419645,
+          "allocation_units": 181639268,
+          "output_bytes": 570959,
+          "diagnostics": 0,
+          "events": 0
+        },
+        "log": "nepl3-tools: candidate stopped: WorkLimit; cursor=Some(39521); usage=Usage { source_bytes: 137537, work: 99999963, depth: 57, nodes: 1419645, allocation_units: 181639268, output_bytes: 570959, diagnostics: 0, events: 0 }\n"
+      },
+      "15": {
+        "stage": "parse candidate boundary",
+        "cursor": 53292,
+        "usage": {
+          "source_bytes": 112673,
+          "work": 100000000,
+          "depth": 55,
+          "nodes": 1895187,
+          "allocation_units": 210897335,
+          "output_bytes": 588837,
+          "diagnostics": 0,
+          "events": 0
+        },
+        "log": "nepl3-tools: candidate stopped: WorkLimit; cursor=Some(53292); usage=Usage { source_bytes: 112673, work: 100000000, depth: 55, nodes: 1895187, allocation_units: 210897335, output_bytes: 588837, diagnostics: 0, events: 0 }\n"
+      },
+      "development": {
+        "stage": "parse candidate boundary",
+        "cursor": 37561,
+        "usage": {
+          "source_bytes": 110375,
+          "work": 99999957,
+          "depth": 73,
+          "nodes": 1015087,
+          "allocation_units": 159082978,
+          "output_bytes": 621707,
+          "diagnostics": 0,
+          "events": 0
+        },
+        "log": "nepl3-tools: candidate stopped: WorkLimit; cursor=Some(37561); usage=Usage { source_bytes: 110375, work: 99999957, depth: 73, nodes: 1015087, allocation_units: 159082978, output_bytes: 621707, diagnostics: 0, events: 0 }\n"
+      },
+      "review": {
+        "stage": "native host callback inside parse",
+        "cursor": 44224,
+        "usage": {
+          "source_bytes": 789222,
+          "work": 100000000,
+          "depth": 54,
+          "nodes": 1596726,
+          "allocation_units": 198810914,
+          "output_bytes": 600928,
+          "diagnostics": 0,
+          "events": 0
+        },
+        "log": "nepl3-tools: native host: Stopped(WorkLimit); cursor=Some(44224); usage=Usage { source_bytes: 789222, work: 100000000, depth: 54, nodes: 1596726, allocation_units: 198810914, output_bytes: 600928, diagnostics: 0, events: 0 }\n"
+      }
+    },
+    "after": {
+      "05": {
+        "stage": "parse candidate boundary",
+        "cursor": 45047,
+        "usage": {
+          "source_bytes": 138676,
+          "work": 99999978,
+          "depth": 57,
+          "nodes": 1575074,
+          "allocation_units": 210521878,
+          "output_bytes": 683690,
+          "diagnostics": 0,
+          "events": 0
+        },
+        "log": "nepl3-tools: candidate stopped: WorkLimit; cursor=Some(45047); usage=Usage { source_bytes: 138676, work: 99999978, depth: 57, nodes: 1575074, allocation_units: 210521878, output_bytes: 683690, diagnostics: 0, events: 0 }\n"
+      },
+      "15": {
+        "stage": "local preparation / NeedsResolution",
+        "cursor": null,
+        "usage": null,
+        "log": "nepl3-tools: NeedsResolution(DocPreparationPlan { document_digest: Digest([219, 254, 220, 198, 97, 77, 220, 144, 174, 161, 140, 255, 47, 1, 136, 131, 253, 90, 192, 242, 214, 2, 171, 149, 90, 155, 65, 144, 109, 120, 16, 192]), requirements: [Link { node: 4306, target: External { uri: \"https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages\" } }, Link { node: 4317, target: External { uri: \"https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages\" } }, Link { node: 4333, target: External { uri: \"https://docs.github.com/en/rest/pages/pages\" } }, Link { node: 4336, target: External { uri: \"https://github.com/actions/deploy-pages\" } }, Link { node: 4339, target: External { uri: \"https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#concurrency\" } }, Link { node: 4347, target: External { uri: \"https://docs.github.com/en/actions/how-tos/manage-workflow-runs/remove-workflow-artifacts\" } }, Link { node: 4350, target: External { uri: \"https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases\" } }, Link { node: 4417, target: Relative { path: \"17-math-html.md\", fragment: None } }] })\n"
+      },
+      "development": {
+        "stage": "parse candidate boundary",
+        "cursor": 44888,
+        "usage": {
+          "source_bytes": 111668,
+          "work": 99999998,
+          "depth": 73,
+          "nodes": 1241660,
+          "allocation_units": 197083303,
+          "output_bytes": 750576,
+          "diagnostics": 0,
+          "events": 0
+        },
+        "log": "nepl3-tools: candidate stopped: WorkLimit; cursor=Some(44888); usage=Usage { source_bytes: 111668, work: 99999998, depth: 73, nodes: 1241660, allocation_units: 197083303, output_bytes: 750576, diagnostics: 0, events: 0 }\n"
+      },
+      "review": {
+        "stage": "parse candidate boundary",
+        "cursor": 50965,
+        "usage": {
+          "source_bytes": 790831,
+          "work": 99999992,
+          "depth": 54,
+          "nodes": 1785184,
+          "allocation_units": 231854194,
+          "output_bytes": 723527,
+          "diagnostics": 0,
+          "events": 0
+        },
+        "log": "nepl3-tools: candidate stopped: WorkLimit; cursor=Some(50965); usage=Usage { source_bytes: 790831, work: 99999992, depth: 54, nodes: 1785184, allocation_units: 231854194, output_bytes: 723527, diagnostics: 0, events: 0 }\n"
+      }
+    }
+  },
+  "tracked_snapshots_verified": [
+    {
+      "label": "before",
+      "tracked_files": 4162,
+      "only_extra": "tools/examples/review_doc.rs"
+    },
+    {
+      "label": "after",
+      "tracked_files": 4162,
+      "only_extra": "tools/examples/review_doc.rs"
+    }
+  ],
+  "linear_operations": {
+    "before": {
+      "lower": {
+        "allocation_units": 3664612,
+        "depth": 37,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 24933,
+        "output_bytes": 0,
+        "source_bytes": 17025,
+        "work": 2984295
+      },
+      "parse_and_validate": {
+        "allocation_units": 43932508,
+        "depth": 42,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 94413,
+        "output_bytes": 339349,
+        "source_bytes": 30513,
+        "work": 26623968
+      },
+      "prepare_render_serialize": {
+        "allocation_units": 11050468,
+        "depth": 15,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 130674,
+        "output_bytes": 22674,
+        "source_bytes": 0,
+        "work": 5954286
+      }
+    },
+    "after": {
+      "lower": {
+        "allocation_units": 3664612,
+        "depth": 37,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 24933,
+        "output_bytes": 0,
+        "source_bytes": 17025,
+        "work": 2984295
+      },
+      "parse_and_validate": {
+        "allocation_units": 43534396,
+        "depth": 42,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 94413,
+        "output_bytes": 339349,
+        "source_bytes": 30513,
+        "work": 20345157
+      },
+      "prepare_render_serialize": {
+        "allocation_units": 11050468,
+        "depth": 15,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 130674,
+        "output_bytes": 22674,
+        "source_bytes": 0,
+        "work": 5954286
+      }
+    }
+  },
+  "linear_manifest_without_usage": {
+    "budget_scope": "Separate bounded operations; not a single end-to-end budget",
+    "doc_schema_sha256": "e3ed90e79af2cf35b9718d32bf80d23e77aacd7719de756a25538b6f484c77ed",
+    "files": [
+      {
+        "mime": "text/html; charset=utf-8",
+        "path": "document.html",
+        "sha256": "158cc157066c05a55cfa444a9e90a7bc12bf98054492f1df02fbfcb465f39ada"
+      },
+      {
+        "license": "MIT",
+        "mime": "text/css; charset=utf-8",
+        "path": "assets/doc.css",
+        "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+      }
+    ],
+    "format": "nepl3.local-doc-export/1",
+    "options": {
+      "parallel": "Rows"
+    },
+    "packages": "compiled checked bootstrap fixtures",
+    "profile_sha256": "3ff9838f5cc370b8a3e2d72d73c034aa084f67874938844390a730fee24a693e",
+    "renderer": "nepl3-doc-html local/1",
+    "scope": "local Doc only; external pages, assets and foreign rendering require resolution",
+    "source_sha256": "9099bbbe48ed75a0768997789229188f53e43348fe930522b119908dfdb7a889",
+    "viewer_scripts": false
+  },
+  "linear_other_operations_equal": true
+}
