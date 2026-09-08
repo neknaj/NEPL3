@@ -1,0 +1,35 @@
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-reader-failure\probe\crates\foundation\reader)
+warning: unused imports: `format` and `string::String`
+ --> crates\foundation\reader\src\..\tests\review_owned.rs:1:26
+  |
+1 | use alloc::{vec,vec::Vec,format,string::String,boxed::Box};
+  |                          ^^^^^^ ^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `nepl3-reader` (lib test) generated 1 warning (run `cargo fix --lib -p nepl3-reader --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.16s
+     Running unittests src\lib.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-reader-failure\probe-wasi-target\wasm32-wasip2\debug\deps\nepl3_reader-04a802f478b3bc26.wasm)
+
+running 3 tests
+test review_owned::independent_actual_accepted_prefix_survives_second_host_failure ... actual accepted first callback + second hard host error -> Await -> public resume: original and accepted new reports preserved
+ok
+test review_owned::independent_actual_preflight_owns_seed ... preflight mode=0 error=Closed seed moved intact
+preflight mode=1 error=Busy seed moved intact
+preflight mode=2 error=Plan(Reference) seed moved intact
+preflight mode=3 error=Schema(WrongType) seed moved intact
+preflight mode=4 error=Source(Bounds) seed moved intact
+ok
+test review_owned::independent_actual_stops_and_native_host_preserve_seed ... native host mode=0: retained seed diagnostics/events/source/map
+native host mode=1: retained seed diagnostics/events/source/map
+native host mode=2: retained seed diagnostics/events/source/map
+native host mode=3: retained seed diagnostics/events/source/map
+native host mode=4: retained seed diagnostics/events/source/map
+native host mode=5: retained seed diagnostics/events/source/map
+native host mode=6: retained seed diagnostics/events/source/map
+actual request stop sweep allocation=false preserved=47
+actual request stop sweep allocation=true preserved=59
+ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.05s
+
