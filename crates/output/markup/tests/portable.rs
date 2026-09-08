@@ -47,7 +47,7 @@ fn request() -> HtmlRequest {
                     attributes: vec![
                         HtmlAttribute::Lang { value: "ja".into() },
                         HtmlAttribute::Id {
-                            value: "n-a".into(),
+                            value: "1-日本%20".into(),
                         },
                     ],
                     children: vec![1],
@@ -80,7 +80,7 @@ fn first_cbor_receiver_revalidates_owned_markup_and_matches_native_output() -> R
     let proof = validate(&actual.fragment, actual.slot, &actual.policy, &mut b()).map_err(err)?;
     assert_eq!(
         serialize(&proof, &mut b()).map_err(err)?,
-        "<span id=\"n-a\" lang=\"ja\">あ🙂&lt;&amp;&#xD;\n</span>"
+        "<span id=\"1-日本%20\" lang=\"ja\">あ🙂&lt;&amp;&#xD;\n</span>"
     );
     assert_eq!(
         nepl3_wire::encode(

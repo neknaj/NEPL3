@@ -95,7 +95,7 @@
           {
             "named": {
               "package": "nepl3.markup",
-              "revision": 1,
+              "revision": 2,
               "name": "HtmlRequest"
             }
           }

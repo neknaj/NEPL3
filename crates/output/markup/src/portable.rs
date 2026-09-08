@@ -42,7 +42,7 @@ fn schema<E>(r: &SchemaRegistry) -> Result<&SchemaRef, PortableError<E>> {
     if !r.is_finalized() {
         return Err(SchemaError::Unfinalized.into());
     }
-    r.selected("nepl3.markup", 1)
+    r.selected("nepl3.markup", 2)
         .ok_or(SchemaError::UnknownSchema.into())
 }
 fn check<E>(r: &SchemaRegistry, v: &NdfValue, b: &mut Budget) -> Result<(), PortableError<E>> {
@@ -50,7 +50,7 @@ fn check<E>(r: &SchemaRegistry, v: &NdfValue, b: &mut Budget) -> Result<(), Port
     r.validate(
         &TypeDescriptor::Named(TypeRef {
             package: "nepl3.markup".into(),
-            revision: 1,
+            revision: 2,
             name: "HtmlRequest".into(),
         }),
         v,
