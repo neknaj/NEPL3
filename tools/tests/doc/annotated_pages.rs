@@ -244,7 +244,7 @@ fn architecture_draft_projects_with_explicit_current_markdown_dependency() -> Re
             "architecture",
             "doc/spec/01-architecture.md",
             "doc/spec/01-architecture.md",
-        include_str!("../../../doc/spec/01-architecture.nepld"),
+            include_str!("../../../doc/spec/01-architecture.nepld"),
         )?],
         files: vec![PageFile {
             registration: PageRegistration {
