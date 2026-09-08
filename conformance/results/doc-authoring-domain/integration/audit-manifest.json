@@ -1,0 +1,44 @@
+{
+  "files": [
+    {
+      "path": "05-document.diff",
+      "bytes": 3828,
+      "sha256": "4294e4ee95eeaa7814ba83a22271f0d6980648695db89b1667450e74c3051c3d"
+    },
+    {
+      "path": "06-math.diff",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "07-circuit.diff",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "08-editor.diff",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "09-portability.diff",
+      "bytes": 1355,
+      "sha256": "0d2de034d4cc7a2a22b891f12b698268cc114934e7c60da4c8cc7ba32c649b1f"
+    },
+    {
+      "path": "check.py",
+      "bytes": 2914,
+      "sha256": "e08562d0dd4b2dc927ef8476f9e159ae9dbe22f86793642694978e03fc45fd14"
+    },
+    {
+      "path": "result.json",
+      "bytes": 5548,
+      "sha256": "b1def59033ecd04f7c01b01f588d4396b76bec9cebc10a67e4a7ca7afcabe931"
+    },
+    {
+      "path": "review.md",
+      "bytes": 2162,
+      "sha256": "0d1bc8b5b57bbcb5c79696fa818fd63c3d9d0025d81b77a781fdbbf22779a40e"
+    }
+  ]
+}
