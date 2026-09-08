@@ -1,5 +1,7 @@
 //! Iterative transactional reader execution. Host calls are explicit suspension points.
 mod checkpoint;
+#[cfg(test)]
+mod ownership_tests;
 use checkpoint::{Frame, Saved};
 pub(crate) mod copy;
 pub(crate) mod validate;
@@ -89,6 +91,12 @@ pub(crate) struct AcceptedReport {
     pub report: Report,
     pub sources: Vec<SourceSnapshot>,
     pub source_maps: Vec<nepl3_core::origin::Mapping>,
+}
+/// An internal owned failure retains the collector for a containing tokenizer.
+/// It is not a provider reply or a portable operation result.
+pub(crate) struct ReadFailure {
+    pub error: ReaderError,
+    pub accepted: AcceptedReport,
 }
 struct Pending {
     continuation: ReaderContinuation,
@@ -180,16 +188,35 @@ impl<'a> ReaderSession<'a> {
         seed: AcceptedReport,
         native: Option<&mut NativeDispatch<'_>>,
     ) -> Result<ReadReply, ReaderError> {
-        let mut prefix = seed.report;
-        let mut seed_sources = seed.sources;
-        let mut seed_maps = seed.source_maps;
+        self.read_with_report_host_recover(rule, request, sources, budget, admission, seed, native)
+            .map_err(|failure| failure.error)
+    }
+    #[allow(clippy::too_many_arguments)]
+    // Returning an owned collector on failure must work with zero allocation budget.
+    #[allow(clippy::result_large_err)]
+    pub(crate) fn read_with_report_host_recover(
+        &mut self,
+        rule: &str,
+        request: ReadRequest<'_>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        seed: AcceptedReport,
+        native: Option<&mut NativeDispatch<'_>>,
+    ) -> Result<ReadReply, ReadFailure> {
         if self.closed {
-            return Err(ReaderError::Closed);
+            return Err(ReadFailure {
+                error: ReaderError::Closed,
+                accepted: seed,
+            });
         }
         if self.pending.is_some() {
-            return Err(ReaderError::Busy);
+            return Err(ReadFailure {
+                error: ReaderError::Busy,
+                accepted: seed,
+            });
         }
-        let result = (|| {
+        let prepared = (|| -> Result<_, ReaderError> {
             validate::request(
                 &request,
                 sources,
@@ -200,57 +227,60 @@ impl<'a> ReaderSession<'a> {
             )?;
             let root = self.checked.plan().rule(rule)?.root;
             let state = copy(request.state, budget)?;
-            let current = ReaderCheckpoint {
-                cursor: request.start,
-                state,
-                view: ViewBundle {
-                    elements: Vec::new(),
-                    roots: Vec::new(),
-                },
-                facts: Vec::new(),
-                diagnostics: core::mem::take(&mut prefix.diagnostics),
-                events: core::mem::take(&mut prefix.events),
-                trace_overflow: prefix.trace_overflow.take(),
-                sources: core::mem::take(&mut seed_sources),
-                source_maps: core::mem::take(&mut seed_maps),
+            Ok((root, state))
+        })();
+        let (root, state) = match prepared {
+            Ok(value) => value,
+            Err(error) => return owned_failure(error, seed, budget),
+        };
+        let current = ReaderCheckpoint {
+            cursor: request.start,
+            state,
+            view: ViewBundle {
+                elements: Vec::new(),
+                roots: Vec::new(),
+            },
+            facts: Vec::new(),
+            diagnostics: seed.report.diagnostics,
+            events: seed.report.events,
+            trace_overflow: seed.report.trace_overflow,
+            sources: seed.sources,
+            source_maps: seed.source_maps,
+        };
+        let mut machine = Machine {
+            limits: budget.limits(),
+            session_id: &self.session_id,
+            checked: self.checked,
+            registry: self.registry,
+            reader_schema: self.reader_schema,
+            foundation: self.foundation,
+            request,
+            current,
+            frames: Vec::new(),
+            base: budget.current_depth(),
+            next_call: &mut self.next_call,
+        };
+        if let Err(error) = machine.push(root, budget) {
+            return match stop_reason(&error) {
+                Some(reason) => Ok(checkpoint_stopped(machine.current, reason, budget)),
+                None => Err(ReadFailure {
+                    error,
+                    accepted: checkpoint_report(machine.current, budget),
+                }),
             };
-            let mut machine = Machine {
-                limits: budget.limits(),
-                session_id: &self.session_id,
-                checked: self.checked,
-                registry: self.registry,
-                reader_schema: self.reader_schema,
-                foundation: self.foundation,
-                request,
-                current,
-                frames: Vec::new(),
-                base: budget.current_depth(),
-                next_call: &mut self.next_call,
-            };
-            if let Err(error) = machine.push(root, budget) {
-                return match stop_reason(&error) {
-                    Some(reason) => Ok(checkpoint_stopped(machine.current, reason, budget)),
-                    None => Err(error),
-                };
-            }
+        }
+        let control = (|| -> Result<_, ReaderError> {
             let mut control = machine.drive(None, budget)?;
             if let Some(native) = native {
                 control = machine.dispatch_native(control, sources, budget, admission, native)?;
             }
-            Self::finish(machine, control, self.digest, &mut self.pending, budget)
+            Ok(control)
         })();
-        match result {
-            Err(error) if stop_reason(&error).is_some() => {
-                let reason = stop_reason(&error).ok_or(ReaderError::Context)?;
-                prefix.usage = budget.usage();
-                Ok(ReadReply::Stopped {
-                    reason,
-                    sources: seed_sources,
-                    source_maps: seed_maps,
-                    report: prefix,
-                })
+        match control {
+            Ok(control) => {
+                Self::finish_recover(machine, control, self.digest, &mut self.pending, budget)
             }
-            result => result,
+            Err(error) => owned_failure(error, checkpoint_report(machine.current, budget), budget),
         }
     }
     /// Echo must match the saved host slot byte-for-value. A successful resume consumes it once.
@@ -559,6 +589,18 @@ impl<'a> ReaderSession<'a> {
         pending: &mut Option<Pending>,
         budget: &mut Budget,
     ) -> Result<ReadReply, ReaderError> {
+        Self::finish_recover(machine, control, digest, pending, budget)
+            .map_err(|failure| failure.error)
+    }
+    // Returning an owned collector on failure must work with zero allocation budget.
+    #[allow(clippy::result_large_err)]
+    fn finish_recover(
+        machine: Machine<'_, '_>,
+        control: Control,
+        digest: Digest,
+        pending: &mut Option<Pending>,
+        budget: &mut Budget,
+    ) -> Result<ReadReply, ReadFailure> {
         match control {
             Control::Done(outcome) => Ok(machine.reply(outcome, budget)),
             Control::Suspend(call) => {
@@ -605,7 +647,10 @@ impl<'a> ReaderSession<'a> {
                             return if let Some(reason) = stop_reason(&error) {
                                 Ok(machine.reply(Outcome::Stopped(reason), budget))
                             } else {
-                                Err(error)
+                                Err(ReadFailure {
+                                    error,
+                                    accepted: checkpoint_report(machine.current, budget),
+                                })
                             };
                         }
                     };
@@ -635,6 +680,38 @@ impl<'a> ReaderSession<'a> {
                 })
             }
         }
+    }
+}
+fn checkpoint_report(current: ReaderCheckpoint, budget: &Budget) -> AcceptedReport {
+    AcceptedReport {
+        report: Report {
+            diagnostics: current.diagnostics,
+            events: current.events,
+            trace_overflow: current.trace_overflow,
+            usage: budget.usage(),
+        },
+        sources: current.sources,
+        source_maps: current.source_maps,
+    }
+}
+// Failure recovery must not allocate a box after its budget is exhausted.
+#[allow(clippy::result_large_err)]
+fn owned_failure(
+    error: ReaderError,
+    mut accepted: AcceptedReport,
+    budget: &Budget,
+) -> Result<ReadReply, ReadFailure> {
+    match stop_reason(&error) {
+        Some(reason) => {
+            accepted.report.usage = budget.usage();
+            Ok(ReadReply::Stopped {
+                reason,
+                sources: accepted.sources,
+                source_maps: accepted.source_maps,
+                report: accepted.report,
+            })
+        }
+        None => Err(ReadFailure { error, accepted }),
     }
 }
 fn checkpoint_stopped(current: ReaderCheckpoint, reason: StopReason, budget: &Budget) -> ReadReply {

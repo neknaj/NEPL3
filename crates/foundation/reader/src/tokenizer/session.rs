@@ -969,7 +969,7 @@ impl<'a> TokenizationSession<'a> {
                     let request = machine
                         .request
                         .request(machine.current.cursor, &machine.current.state);
-                    self.reader.read_with_report_host(
+                    match self.reader.read_with_report_host_recover(
                         name,
                         request,
                         sources,
@@ -981,7 +981,20 @@ impl<'a> TokenizationSession<'a> {
                             source_maps: retained_maps,
                         },
                         native.as_deref_mut(),
-                    )?
+                    ) {
+                        Ok(reply) => reply,
+                        Err(failure) => {
+                            // A rejected nested operation must return ownership
+                            // before the containing tokenizer handles the error.
+                            let accepted = failure.accepted;
+                            machine.current.diagnostics = accepted.report.diagnostics;
+                            machine.current.events = accepted.report.events;
+                            machine.current.trace_overflow = accepted.report.trace_overflow;
+                            machine.current.sources = accepted.sources;
+                            machine.current.source_maps = accepted.source_maps;
+                            return Err(failure.error);
+                        }
+                    }
                 }
                 TokenReader::Builtin(kind) => {
                     let request = machine
