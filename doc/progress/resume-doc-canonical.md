@@ -9,8 +9,9 @@
 - [PR98](https://github.com/neknaj/NEPL3/pull/98) は第08章の正本切替。
   最終headは `9985a3906ed455c6466ee5fd6daac4f13eca0ce1`。
   production生成、独立レビュー、browser、compiler不要の復元、archive監査まで完了。
-  休止時には必須CIが実行中のため未merge。再開時は最新headの全必須CIを確認する。
-- 第08章を含む正本は9章。main取り込み済みは8章。
+  追加の休止整理で同headの必須CI16件すべての成功を確認し、
+  mainの `f2cbf4fb95ec1d52c76df299d64bb376b98cb06e` へmerge済み。
+- 第08章を含む正本9章はmain取り込み済み。
   PR98の証拠は `conformance/results/doc-canonical-editor/`。
 
 ## 第20章の途中状態
@@ -36,6 +37,11 @@ HTMLはSource242,864 / Work299,999,987 / Nodes12,051,403 /
 Allocation639,833,274 / Output352 / Depth14、resolve/render段階の停止。
 この段階で上限は変更していない。
 
+休止checkpoint `0e6401097c26d1797d70b106b1d5c03d9637c0d7` の
+CI run `34287360823` も確認した。native3OSの既存canonical corpus testが
+AllocationLimitで失敗し、qualityも失敗している。検査を解除せず、
+第20章branchは未完了のまま保全する。この失敗をPR98/mainのCIと混同しない。
+
 先行する別worktreeのbinary流用は検証helperの誤りだった。
 toolsのrootはcwdでなくcompile-time CARGO_MANIFEST_DIRに基づくため、
 その2回の成功出力は第08章までの9章を読み、第20章の検証ではない。
@@ -44,7 +50,8 @@ toolsのrootはcwdでなくcompile-time CARGO_MANIFEST_DIRに基づくため、
 ## 再開する順序
 
 1. AGENTS/CODEX/authoringと現HEAD・全working treeを再確認する。
-2. PR98のexact-head必須CIを確認し、成功時だけ既存の許可・保護規則に従いmergeする。
+2. PR98のmerge後のmainを取得し、この途中branchへ取り込む。未完了の第20章を
+   先にmainへmergeしない。再開時にGitHubの最新状態も確認する。
 3. 第20章の正しい停止記録を基に、有限の集合出力予算を検討する。
    stopped Budgetのreset、core/parse/lower既定値の無根拠な変更はしない。
 4. 同じworktreeでbuildしたtoolにより、新規出力へMarkdown/HTMLを2回生成し、
