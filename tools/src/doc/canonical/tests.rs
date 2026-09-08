@@ -549,6 +549,9 @@ fn real_architecture_draft_links_to_canonical_extensions_with_legacy_bytes_intac
     let limits = super::super::export::pages::resources::OutputLimits {
         work: 300_000_000,
         allocation_units: 750_000_000,
+        // The six-page corpus exceeds the former 10M node allowance.
+        // Match its explicitly selected finite output profile before entry.
+        nodes: 20_000_000,
         ..Default::default()
     };
     value["output_limits"] = serde_json::to_value(limits)?;
