@@ -1,0 +1,49 @@
+[
+  {
+    "source_commit": "f071d09dd890423c8f5dc134bc0eeae38a0ccba1",
+    "unchanged_clean_tree": true,
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--lib",
+      "doc::canonical::tests::synchronized_context_spec_drafts_parse_lower_and_check_labels",
+      "--",
+      "--exact",
+      "--nocapture"
+    ],
+    "exit_code": 0,
+    "elapsed": 280.9122267999919
+  },
+  {
+    "source_commit": "f071d09dd890423c8f5dc134bc0eeae38a0ccba1",
+    "unchanged_clean_tree": true,
+    "command": [
+      "cargo",
+      "clippy",
+      "--locked",
+      "--workspace",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exit_code": 0,
+    "elapsed": 3.2908323999727145
+  },
+  {
+    "source_commit": "f071d09dd890423c8f5dc134bc0eeae38a0ccba1",
+    "unchanged_clean_tree": true,
+    "command": [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "exit_code": 0,
+    "elapsed": 3.102534000063315
+  }
+]

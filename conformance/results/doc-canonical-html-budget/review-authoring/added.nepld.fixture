@@ -1,0 +1,10 @@
+        cons sentence cons text "HTML" cons ruby text "集合書出" text "しゅうごうかきだ" cons text "しの" cons ruby text "予算" text "よさん" cons text "は、registryの" cons ruby text "任意" text "にんい" cons text "field " cons code "html_output_limits" cons text " で" cons ruby text "別" text "べつ" cons text "に" cons ruby text "選択" text "せんたく" cons text "する。" nil
+        cons "[指定時/していじ]はOutputLimitsの8[資源/しげん]をすべて[記述/きじゅつ]し、null・[部分指定/ぶぶんしてい]・[未知/みち]field・[負数/ふすう]は[拒否/きょひ]する。"
+        cons sentence cons ruby text "未指定" text "みしてい" cons text "なら" cons ruby text "既存" text "きそん" cons text "のHTML" cons ruby text "出力予算" text "しゅつりょくよさん" cons text "を" cons ruby text "維持" text "いじ" cons text "し、Markdown" cons ruby text "用" text "よう" cons text "の " cons code "output_limits" cons text " を" cons ruby text "流用" text "りゅうよう" cons text "しない。" nil
+        cons "[生成開始前/せいせいかいしまえ]に[選/えら]んだ[一/ひと]つのBudgetを、[既存/きそん]のPageSetのresolve・render・serializeへ[渡/わた]す。"
+        cons "[各/かく]ページのparse・lowerは[従来/じゅうらい]どおり[独立/どくりつ]した[有限/ゆうげん]operationであり、HTML[用設定/ようせってい]で[増額/ぞうがく]しない。"
+        cons "[停止後/ていしご]の[再生成/さいせいせい]やMarkdown[予算/よさん]へのfallbackは[行/おこな]わず、[書込/かきこ]み[開始前/かいしまえ]の[停止/ていし]では[出力先/しゅつりょくさき]を[作/つく]らない。"
+        cons "HTML manifestの[既存/きそん]execution identity・[選択上限/せんたくじょうげん]・[開始時/かいしじ]usageへ[実際/じっさい]の[設定/せってい]を[記録/きろく]する。"
+        cons "このfieldを[追加/ついか]したregistryの[元/もと]byte[列/れつ]は、[新/しん]Markdown profileのinput contextにも[反映/はんえい]される。"
+        nil
+      cons paragraph

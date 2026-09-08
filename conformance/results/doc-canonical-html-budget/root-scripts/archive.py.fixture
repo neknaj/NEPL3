@@ -1,0 +1,33 @@
+from pathlib import Path
+import hashlib,json,subprocess
+root=Path.cwd();out=root/'conformance/results/doc-canonical-html-budget';out.mkdir(parents=True,exist_ok=True)
+rows=[]
+def save(owner,path,relative):
+    data=path.read_bytes();assert len(data)<=1048576,path
+    safe='/'.join('saved-'+p.lstrip('.') if p in {'.tmp','dist','target','.git','node_modules','__pycache__'} else p for p in relative.split('/'))
+    name=f'{owner}/{safe}.fixture';dest=out/name
+    assert dest.resolve().is_relative_to(out.resolve())
+    dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(data)
+    rows.append(dict(file=name,owner=owner,restore=relative,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+for name in ['verification','verification-guide','verification-integration']:
+    for path in sorted((root/'.tmp'/name).iterdir()):
+        if path.is_file():save('root-'+name,path,path.name)
+for name in ['start.json','verify.py','verify-guide.py','verify-integration.py','archive.py']:
+    save('root-scripts',root/'.tmp'/name,name)
+observation=Path('C:/projects/NEPL3-doc-canonical-html-delivery/.tmp/generation')
+for name in ['commands.json','html-first.stdout.log','html-first.stderr.log']:
+    save('root-initial-observation',observation/name,name)
+for owner,directory in {'review-code':root/'.tmp/review-canonical-html-budget','review-authoring':root/'.tmp/review-html-budget-authoring'}.items():
+    manifest=json.loads((directory/'manifest.json').read_text(encoding='utf-8'))
+    save(owner,directory/'manifest.json','manifest.json')
+    for row in manifest['files']:
+        path=directory/row['path'];data=path.read_bytes()
+        assert len(data)==row['bytes'] and hashlib.sha256(data).hexdigest()==row['sha256'],path
+        save(owner,path,row['path'])
+head='f071d09dd890423c8f5dc134bc0eeae38a0ccba1';base='eee542f009a049ab054c3c57fe9218cc8f7cf84a';sources=[]
+for name in subprocess.check_output(['git','diff','--name-only',base,head],text=True).splitlines():
+    data=(root/name).read_bytes();assert data==subprocess.check_output(['git','show',head+':'+name])
+    sources.append(dict(path=name,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+(out/'payloads.json').write_text(json.dumps(dict(implementation_commit=head,base_commit=base,integration_commit='49df9c709526cb1046a6f31d0c300f7c4b9274e7',files=rows,sources=sources),indent=2)+'\n',encoding='utf-8',newline='\n')
+(out/'.gitattributes').write_text('*.fixture -text -whitespace\n',encoding='utf-8',newline='\n')
+print(len(rows),'payloads',sum(r['bytes'] for r in rows),'bytes')
