@@ -1,0 +1,28 @@
+from pathlib import Path
+import hashlib,json,subprocess
+root=Path.cwd();out=root/'conformance/results/doc-canonical-doc-html-checkpoint';out.mkdir(parents=True,exist_ok=False)
+rows=[]
+def save(owner,path,name):
+    data=path.read_bytes();assert len(data)<=1048576,(path,len(data))
+    relative=f'{owner}/{name}.fixture';dst=out/relative
+    assert dst.resolve().is_relative_to(out.resolve())
+    dst.parent.mkdir(parents=True,exist_ok=True);dst.write_bytes(data)
+    rows.append(dict(file=relative,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+for owner,d in [('generation-local',root/'.tmp/generation-local'),('invalid-reused-binary',root/'.tmp/generation-initial')]:
+    for p in sorted(d.iterdir()):
+        if p.is_file():save(owner,p,p.name)
+for kind in ['markdown','html']:
+    save('invalid-reused-binary',root/f'.tmp/{kind}-initial/manifest.json',kind+'-manifest.json')
+for name in ['start.json','original.md','prepare.py','scope-clarification.json','generate-initial.py','generate-local.py','save-pause.py']:
+    save('root',root/'.tmp'/name,name)
+for owner,d in [('prior-manuscript-review',Path('C:/projects/NEPL3-doc-canonical-editor/.tmp/preflight-after08')),('opening-delta-review',root/'.tmp/review-canonical20-content')]:
+    m=json.loads((d/'manifest.json').read_bytes());save(owner,d/'manifest.json','manifest.json')
+    for row in m['files']:
+        p=d/row['path'];b=p.read_bytes();assert len(b)==row['bytes'] and hashlib.sha256(b).hexdigest()==row['sha256'];save(owner,p,row['path'])
+source='10255b819296ba3c7eb786784779a67ac15740d7'
+sources=[]
+for name in ['doc/canonical.json','doc/spec/20-doc-html.nepld','doc/spec/20-doc-html.md','doc/migration/aliases/20-doc-html.json']:
+    b=(root/name).read_bytes();assert b==subprocess.check_output(['git','show',source+':'+name]);sources.append(dict(path=name,sha256=hashlib.sha256(b).hexdigest(),bytes=len(b)))
+(out/'payloads.json').write_text(json.dumps(dict(status='paused-incomplete',source_commit=source,sources=sources,files=rows),indent=2)+'\n',encoding='utf-8',newline='\n')
+(out/'.gitattributes').write_text('*.fixture -text -whitespace\n',encoding='utf-8',newline='\n')
+print(len(rows),'checkpoint payloads verified')

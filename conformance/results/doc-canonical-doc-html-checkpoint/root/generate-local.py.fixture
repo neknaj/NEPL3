@@ -1,0 +1,27 @@
+from pathlib import Path
+import subprocess,json,time,hashlib
+root=Path.cwd();out=root/'.tmp/generation-local';out.mkdir(exist_ok=False)
+head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip();rows=[]
+assert not subprocess.check_output(['git','status','--porcelain']).strip()
+def run(name,cmd):
+    row=dict(source_commit=head,command=cmd,registry_sha256=hashlib.sha256((root/'doc/canonical.json').read_bytes()).hexdigest());rows.append(row);start=time.monotonic()
+    with (out/(name+'.stdout.log')).open('wb') as stdout,(out/(name+'.stderr.log')).open('wb') as stderr:
+        p=subprocess.Popen(cmd,stdout=stdout,stderr=stderr);row['pid']=p.pid
+        try:row['exit_code']=p.wait(timeout=1200)
+        except subprocess.TimeoutExpired:p.kill();p.wait();row.update(exit_code=p.returncode,result='process-timeout')
+    row['elapsed_seconds']=time.monotonic()-start
+    (out/'commands.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf-8',newline='\n')
+    print(name,row['exit_code'],flush=True)
+    return row
+assert run('build',['cargo','build','--locked','-p','nepl3-tools'])['exit_code']==0
+binary=root/'target/debug/nepl3-tools.exe'
+for kind in ['markdown','html']:
+    row=run(kind,[str(binary),'doc-canonical',kind,f'.tmp/{kind}-local'])
+    row.update(executable_sha256=hashlib.sha256(binary.read_bytes()).hexdigest(),output_exists=(root/f'.tmp/{kind}-local').exists())
+    (out/'commands.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf-8',newline='\n')
+    if row['exit_code']==0:
+        manifest=json.loads((root/f'.tmp/{kind}-local/manifest.json').read_bytes())
+        assert any('20-doc-html' in str(f) for f in manifest['files'])
+    print((out/(kind+'.stderr.log')).read_text(encoding='utf-8')[-1300:],flush=True)
+    assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==head
+    assert not subprocess.check_output(['git','status','--porcelain']).strip()

@@ -1,0 +1,21 @@
+from pathlib import Path
+import json,subprocess,hashlib
+root=Path.cwd();out=root/'.tmp'
+head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+assert head=='8127b2ed9688cf7f05b6bf0a2bb432fe02b049f0'
+assert not subprocess.check_output(['git','status','--porcelain']).strip()
+(out/'start.json').write_text(json.dumps(dict(commit=head,clean_tree=True,branch='feat/doc-canonical-doc-html',preserved_worktree='C:/projects/NEPL3-doc-canonical-editor',preserved_changes='Untracked chapter08 review archive remains in its own worktree'),indent=2)+'\n',encoding='utf-8',newline='\n')
+(out/'original.md').write_bytes((root/'doc/spec/20-doc-html.md').read_bytes())
+old=root/'doc/migration/authored/20-doc-html.nepld';before=old.read_bytes();source=before.decode('utf-8')
+a='    cons "[現在/げんざい]のlocal[入口/いりぐち]は、[外部要求/がいぶようきゅう]が[一/ひと]つもないArticleをHTML fragmentへ[変換/へんかん]する[段階/だんかい]である。"\n    cons "[一般/いっぱん]page/asset/foreign[解決/かいけつ]、document shellと[配布/はいふ]asset、[完全/かんぜん]なReport[操作/そうさ]は、[引/ひ]き[続/つづ]きH1[以降/いこう]で[実装/じっそう]する。"'
+b='    cons "[本章/ほんしょう]のlocal[入口/いりぐち]は、[外部要求/がいぶようきゅう]が[一/ひと]つもないArticleをHTML fragmentへ[変換/へんかん]する[制約/せいやく]を[持/も]つ。"\n    cons "document shellと[固定/こてい]CSSの[配布/はいふ]は、[後述/こうじゅつ]の[開発/かいはつ]hostが[担当/たんとう]する。"\n    cons "[一般/いっぱん]page/asset/foreign[解決/かいけつ]と[完全/かんぜん]なReport[操作/そうさ]は、このlocal[入口/いりぐち]の[責務/せきむ]に[含/ふく]めず、[別/べつ]の[統合経路/とうごうけいろ]で[扱/あつか]う。"'
+assert source.count(a)==1
+source=source.replace(a,b)
+assert source.replace(b,a).encode()==before
+(root/'doc/spec/20-doc-html.nepld').write_bytes(source.encode());old.unlink()
+(out/'scope-clarification.json').write_text(json.dumps(dict(before=a,after=b,reason='Separate pure local fragment contract from implemented development-host shell/CSS export. Do not call existing export unimplemented, or imply local entry resolves external resources. Evidence: tools/src/doc/export.rs generate/shell and export/pages.rs; existing later section retained.',original_sha256=hashlib.sha256(before).hexdigest()),ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
+aliases=[dict(section=None,name='20-docのhtml変換'),dict(section='local_export',name='開発hostによるローカル文書の書き出し'),dict(section='baseline',name='固定cssのbaselineと対応範囲')]
+(root/'doc/migration/aliases/20-doc-html.json').write_text(json.dumps(aliases,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
+p=root/'doc/canonical.json';v=json.loads(p.read_bytes());assert len(v['pages'])==9
+v['pages'].append(dict(id='doc-html',source='doc/spec/20-doc-html.nepld',projection='doc/spec/20-doc-html.md',aliases='doc/migration/aliases/20-doc-html.json',route='docs/spec/20-doc-html.html',renderer='nepl3-tools.markdown-annotated/2'))
+p.write_text(json.dumps(v,indent=2)+'\n',encoding='utf-8',newline='\n')
