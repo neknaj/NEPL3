@@ -1161,5 +1161,22 @@ body
       cons "[候補/こうほ]parse・binding[後/ご]にWorkを[使/つか]い[切/き]る[場合/ばあい]とcancelする[場合/ばあい]は、acceptが[編集/へんしゅう]を[公開/こうかい]せずStoppedと[累積/るいせき]Usageを[保持/ほじ]する。"
       cons "[現在/げんざい]のrename ReportはUsageだけを[返/かえ]し、[各/かく]parse/analyzeの[正式/せいしき]Reportはcallerが[保持/ほじ]する[二段入口/にだんいりぐち]である。"
       cons "[全段共通/ぜんだんきょうつう]Report[包絡/ほうらく]、[任意/にんい]encoder、raw[外部実行/がいぶじっこう]の[認証/にんしょう]はこの[範囲/はんい]の[完了/かんりょう]に[含/ふく]めない。" nil
+    cons paragraph
+      cons sentence cons text "renameに" cons ruby text "付随" text "ふずい" cons text "して" cons ruby text "公開" text "こうかい" cons text "した " cons code "NdfValue::equal_with_budget" cons text " は" cons ruby text "旧" text "きゅう" cons text "private comparatorの" cons ruby text "算法" text "さんぽう" cons text "を" cons ruby text "引" text "ひ" cons text "き" cons ruby text "継" text "つ" cons text "いでおり、Work=1で100000" cons ruby text "子" text "こ" cons text "をqueueへ" cons ruby text "積" text "つ" cons text "んでから" cons ruby text "停止" text "ていし" cons text "することを" cons ruby text "実測" text "じっそく" cons text "した。" nil
+      cons "Allocation[自体/じたい]は[課金/かきん]されるが、[幅比例/はばひれい]の[走査/そうさ]が[次/つぎ]のWork[課金/かきん]より[前/まえ]に[起/お]き、native AllocationUnitsは2400024だった。"
+      cons "[子/こ]enqueue[前/まえ]のWork[課金修正後/かきんしゅうせいご]、[原/げん]probe[無変更/むへんこう]でWorkLimitを[保/たも]ち、queueはroot1[件/けん]の24bytes（WASI16bytes）だけとなった。"
+      cons "[追加課金/ついかかきん]により[元/もと]controlのWork=400000は[不足/ふそく]するため[停止/ていし]する。"
+      cons "[別/べつ]の[高予算/こうよさん]controlではWork=400001でtrueとなることもnative/WASIで[確認/かくにん]した。"
+      cons "[新規/しんき]rename[退行/たいこう]とは[断定/だんてい]せず、[保存前補修/ほぞんまえほしゅう]と[旧/きゅう]private[由来/ゆらい]を[分/わ]けて[記録/きろく]する。" nil
+    cons paragraph
+      cons sentence cons ruby text "独立" text "どくりつ" cons text "rename" cons ruby text "補助" text "ほじょ" cons text "11" cons ruby text "実行" text "じっこう" cons text "はnativeで" cons ruby text "成功" text "せいこう" cons text "し、" cons ruby text "原入力" text "げんにゅうりょく" cons text "・" cons ruby text "修正前後" text "しゅうせいぜんご" cons text "のfull process log・sourceとbinaryのSHAを " cons code ".tmp/review-rename-evidence/manifest.json" cons text " と " cons code ".tmp/review-compare-frontier/manifest.json" cons text " に" cons ruby text "保存" text "ほぞん" cons text "した。" nil
+      cons "[保存済/ほぞんず]みrename[補助/ほじょ]binaryは[各時点/かくじてん]の[成功/せいこう]buildであり、[全最終/ぜんさいしゅう]snapshotとのlink[対応/たいおう]は[未証明/みしょうめい]である。"
+      cons "[管理対象/かんりたいしょう]rename9[件/けん]はnative/WASIで[独立成功/どくりつせいこう]し、[比較境界/ひかくきょうかい]のcore value2[件/けん]も[両/りょう]targetで[独立成功/どくりつせいこう]した。"
+      cons "[元/もと]parse/head completionの[専用/せんよう]2[件/けん]と[全/ぜん]workspace[最終/さいしゅう]gateは[統括/とうかつ]の[固定/こてい]snapshot[検査範囲/けんさはんい]として[区別/くべつ]する。"
+      cons "[今回/こんかい]レビューはrenameと[付随比較/ふずいひかく]の[範囲/はんい]であり、[後続/こうぞく]Doc SentenceLiteral[混在/こんざい]lowerやR006[等/など]の[未達/みたつ]を[完了扱/かんりょうあつか]いにしない。" nil
+    cons paragraph
+      cons "[続/つづ]くDoc[混在/こんざい]lowerは、rename[保存後/ほぞんご]の[固定/こてい]baseと[凍結/とうけつ]8fileを[隔離/かくり]workspaceで[照合/しょうごう]し、その[固定依存先/こていいぞんさき]へ[独立補助/どくりつほじょ]をnative/WASIとも[新規/しんき]buildして[確認/かくにん]した。"
+      cons "[元/もと]の[独立入力/どくりつにゅうりょく]3[対/つい]は、CRLF/Unicodeを[含/ふく]む[入/い]れ[子/こ]Ruby/Annoとprefixの[混在/こんざい]、escapeで[得/え]た[括弧/かっこ]を[注釈/ちゅうしゃく]へ[再解釈/さいかいしゃく]しない[場合/ばあい]、[空/から]Sentenceである。"
+      cons sentence cons ruby text "実" text "じつ" cons text "compiler・ParseSession・" cons code "lower::document" cons text " の" cons ruby text "意味正規形" text "いみせいきけい" cons text "はそれぞれ" cons ruby text "明示" text "めいじ" cons text "prefixと" cons ruby text "一致" text "いっち" cons text "し、" cons ruby text "元" text "もと" cons text "host Origin" cons ruby text "列" text "れつ" cons text "、token-local View" cons ruby text "列" text "れつ" cons text "、" cons ruby text "操作内" text "そうさない" cons text "source bytes onceと" cons ruby text "初回" text "しょかい" cons text "CBOR" cons ruby text "後" text "ご" cons text "の" cons ruby text "保持" text "ほじ" cons text "を" cons ruby text "確認" text "かくにん" cons text "した。" nil nil
     nil
   nil
