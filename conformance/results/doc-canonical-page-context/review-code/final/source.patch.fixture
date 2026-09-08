@@ -1,0 +1,211 @@
+diff --git a/doc/spec/16-doc-migration.md b/doc/spec/16-doc-migration.md
+index a02e2ec..9d32a5d 100644
+--- a/doc/spec/16-doc-migration.md
++++ b/doc/spec/16-doc-migration.md
+@@ -94,7 +94,12 @@ alias合計1 MiB、registry 1 MiB、生成Markdownは1ページ2 MiBを上限と
+ 読み込むhost入力はこの上限で制約する。parseとlowerは各ページの独立した有限operationとし、
+ resolve・render・anchor照合・digest・metadata・出力コピーには一つの消費済み状態を保持する
+ 出力Budgetを用いる。旧rendererの混在ページを再生成するときも、この出力Budgetを共有する。
+-出力Budgetは既定のDoc host allowanceで開始し、停止後の再試行や別予算による継続はしない。
++registryの任意field `output_limits` は既存のOutputLimitsと同じ8資源の上限を持ち、
++集合の処理開始前に選択する。未指定なら既定のDoc host allowanceで開始する。
++停止後の再試行・暗黙の増額・別予算による継続はしない。旧rendererだけの検査では
++この集合設定を用いず従来のページ単位のoperationを維持する。出力manifestには実際に
++選択した上限と開始時usage、receipt serialize直前のusageを別fieldで記録する。
++最後のusageはreceipt自体のserialize・最終出力課金を含まない値として明示する。
+ host JSON・文字列整形の計量は保守的な論理allocation allowanceであり、物理heapの計測ではない。
+ 
+ 互換aliasとGitHubの自動見出しIDは独立して発生するため、実際のGitHub表示で重複と移動先を確認する。13章では旧8見出しのうち6つを明示alias、`1-digest` と `3-normal-formとartifact` を同名の自動見出しで維持する。全7Sectionの明示IDも保持する。この判断は13章の実際の見出しに対する対応表であり、任意のMarkdownに対するslug推測をfoundationへ追加するものではない。
+diff --git a/tools/src/doc/canonical.rs b/tools/src/doc/canonical.rs
+index 603716b..701d034 100644
+--- a/tools/src/doc/canonical.rs
++++ b/tools/src/doc/canonical.rs
+@@ -33,6 +33,9 @@ fn portable_path(name: &str) -> bool {
+ pub struct Registry {
+     pub version: u32,
+     pub pages: Vec<Page>,
++    /// Batch allowance; old-only checks keep their per-page operation limits.
++    #[serde(default)]
++    pub output_limits: super::export::pages::resources::OutputLimits,
+ }
+ 
+ #[derive(Debug, Deserialize)]
+@@ -154,8 +157,12 @@ pub fn check(root: &Path, manifest: &str) -> Result<()> {
+         }
+         return Ok(());
+     }
+-    let generated =
+-        projection::generate_from_registry(root, manifest, raw, &mut super::source::budget())?;
++    let generated = projection::generate_from_registry(
++        root,
++        manifest,
++        raw,
++        &mut registry.output_limits.budget(),
++    )?;
+     for (path, expected) in &generated.files {
+         let actual = bounded(root, path, 2_097_152)?;
+         if actual != expected.as_bytes() {
+@@ -176,7 +183,14 @@ pub fn markdown(root: &Path, manifest: &str, output: &Path) -> Result<()> {
+     if output.exists() {
+         return Err("output directory already exists".into());
+     }
+-    let generated = projection::generate(root, manifest, &mut super::source::budget())?;
++    let raw = bounded(root, manifest, MAX_REGISTRY)?;
++    let registry = parse_registry(&raw)?;
++    let generated = projection::generate_from_registry(
++        root,
++        manifest,
++        raw,
++        &mut registry.output_limits.budget(),
++    )?;
+     super::export::pages::write_generated(
+         super::export::pages::GeneratedPages {
+             files: generated
+diff --git a/tools/src/doc/canonical/projection.rs b/tools/src/doc/canonical/projection.rs
+index 050380f..f9ced83 100644
+--- a/tools/src/doc/canonical/projection.rs
++++ b/tools/src/doc/canonical/projection.rs
+@@ -167,6 +167,7 @@ fn grouped(
+     )
+ }
+ 
++#[cfg(test)]
+ pub(super) fn generate(root: &Path, manifest: &str, budget: &mut Budget) -> Result<Generated> {
+     budget.poll().map_err(err)?;
+     generate_from_registry(
+@@ -184,6 +185,8 @@ pub(super) fn generate_from_registry(
+     budget: &mut Budget,
+ ) -> Result<Generated> {
+     budget.poll().map_err(err)?;
++    let initial_usage = budget.usage();
++    let limits = budget.limits();
+     let (raw, inputs, needs_group) = capture(root, raw)?;
+     let compiled = crate::doc::source::compiled()?;
+     let group = if needs_group {
+@@ -303,14 +306,25 @@ pub(super) fn generate_from_registry(
+         charge(budget, Resource::AllocationUnits, path.len() * 6 + 512)?;
+         records.push(serde_json::json!({"path":path,"sha256":hex(Digest::of(text.as_bytes())),"bytes":text.len()}));
+     }
++    // Reserve before json! copies the records and before serialization. Each
++    // portable path is <=4096 bytes; 32 KiB covers escaped path, fields, digest
++    // and pretty-print spacing. Both copies are included in this allowance.
++    let receipt_allowance = (files.len() * 32768 + 1024) * 2;
++    charge(budget, Resource::Work, receipt_allowance)?;
++    charge(budget, Resource::AllocationUnits, receipt_allowance)?;
+     // This final receipt is not an input to the next generation.
++    let usage = |u: nepl3_core::budget::Usage| {
++        serde_json::json!({
++        "source_bytes":u.source_bytes,"work":u.work,"depth":u.depth,"nodes":u.nodes,
++        "allocation_units":u.allocation_units,"output_bytes":u.output_bytes,
++        "diagnostics":u.diagnostics,"events":u.events})
++    };
+     let receipt = serde_json::json!({"format":"nepl3.canonical-markdown-stage/1",
+-        "input_context":identity.map(hex),"files":records});
+-    charge(
+-        budget,
+-        Resource::AllocationUnits,
+-        files.len() * 32768 + 1024,
+-    )?;
++        "input_context":identity.map(hex),"files":records,
++        "output_budget":{"limits":{"source_bytes":limits.source_bytes,"work":limits.work,
++            "depth":limits.depth,"nodes":limits.nodes,"allocation_units":limits.allocation_units,
++            "output_bytes":limits.output_bytes,"diagnostics":limits.diagnostics,"events":limits.events},
++            "initial_usage":usage(initial_usage),"usage_before_receipt_serialization":usage(budget.usage())}});
+     let manifest = serde_json::to_string_pretty(&receipt)? + "\n";
+     charge(budget, Resource::Work, manifest.len())?;
+     charge(budget, Resource::OutputBytes, manifest.len())?;
+diff --git a/tools/src/doc/canonical/tests.rs b/tools/src/doc/canonical/tests.rs
+index 90c83e8..96d41ac 100644
+--- a/tools/src/doc/canonical/tests.rs
++++ b/tools/src/doc/canonical/tests.rs
+@@ -363,3 +363,90 @@ fn grouped_failures_and_sticky_limits_never_publish_partial_outputs() -> Result<
+     assert!(!out.exists());
+     Ok(())
+ }
++
++#[test]
++fn real_architecture_draft_links_to_canonical_extensions_with_legacy_bytes_intact() -> Result<()> {
++    let repository = Path::new(env!("CARGO_MANIFEST_DIR"))
++        .parent()
++        .ok_or("repository")?;
++    let f = Fixture::new()?;
++    let mut value: serde_json::Value =
++        serde_json::from_slice(&fs::read(repository.join("doc/canonical.json"))?)?;
++    for page in value["pages"].as_array().ok_or("pages")? {
++        for field in ["source", "aliases", "projection"] {
++            let path = page[field].as_str().ok_or("path")?;
++            f.write(path, fs::read(repository.join(path))?)?;
++        }
++    }
++    value["pages"].as_array_mut().ok_or("pages")?.push(json!({
++        "id":"architecture","source":"doc/spec/01-architecture.nepld",
++        "projection":"doc/spec/01-architecture.md","aliases":"doc/architecture.json",
++        "route":"docs/spec/01-architecture.html","renderer":projection::RENDERER
++    }));
++    f.json("doc/canonical.json", &value)?;
++    f.write("doc/architecture.json", b"[]")?;
++    f.write(
++        "doc/spec/01-architecture.nepld",
++        fs::read(repository.join("doc/migration/authored/01-architecture.nepld"))?,
++    )?;
++    // Four real pages, including legacy body revalidation, share one output
++    // allowance chosen before execution. No retry on a stopped budget.
++    let limits = super::super::export::pages::resources::OutputLimits {
++        work: 300_000_000,
++        allocation_units: 750_000_000,
++        ..Default::default()
++    };
++    value["output_limits"] = serde_json::to_value(limits)?;
++    f.json("doc/canonical.json", &value)?;
++    let mut budget = limits.budget();
++    let result = projection::generate(f.root(), "doc/canonical.json", &mut budget)?;
++    eprintln!("real four-page output usage: {:?}", budget.usage());
++    for (path, text) in &result.files[..result.files.len() - 1] {
++        assert_eq!(text.as_bytes(), fs::read(repository.join(path))?, "{path}");
++    }
++    let architecture = &result.files.last().ok_or("architecture")?.1;
++    let links: Vec<_> = pulldown_cmark::Parser::new(architecture)
++        .filter_map(|event| {
++            if let pulldown_cmark::Event::Start(pulldown_cmark::Tag::Link { dest_url, .. }) = event
++            {
++                Some(dest_url.into_string())
++            } else {
++                None
++            }
++        })
++        .collect();
++    assert!(links.iter().any(|l| l == "22-external-extensions.md"));
++    Ok(())
++}
++
++#[test]
++fn staging_rejects_aggregate_alias_and_page_limits_before_creating_output() -> Result<()> {
++    let f = Fixture::new()?;
++    let value = mixed(&f)?;
++    // Each file is individually within its limit; the combined input is not.
++    let padded = " ".repeat(600_000) + "[]";
++    f.write("doc/aliases.json", &padded)?;
++    f.write("doc/target.json", &padded)?;
++    let output = f.root().join("over-limit");
++    assert!(markdown(f.root(), "doc/canonical.json", &output).is_err());
++    assert!(!output.exists());
++    let pages: Vec<_> = (0..129)
++        .map(|i| {
++            json!({
++                "id":format!("p{i}"),"source":format!("doc/p{i}.nepld"),
++                "projection":format!("doc/p{i}.md"),"aliases":format!("doc/p{i}.json"),
++                "route":format!("docs/p{i}.html"),"renderer":projection::RENDERER
++            })
++        })
++        .collect();
++    f.json(
++        "doc/canonical.json",
++        &json!({"version":value["version"],"pages":pages}),
++    )?;
++    let error = markdown(f.root(), "doc/canonical.json", &output)
++        .err()
++        .ok_or("expected failure")?;
++    assert_eq!(error.to_string(), "PageCountLimit");
++    assert!(!output.exists());
++    Ok(())
++}

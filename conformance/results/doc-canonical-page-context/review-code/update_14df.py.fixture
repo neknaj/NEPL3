@@ -1,0 +1,14 @@
+from pathlib import Path
+import subprocess,json,hashlib
+p=Path(__file__).parent.resolve();root=p.parents[1]
+head='14df7e9d77faa86715c4605b28a853812980c4b0';old='819f0e9a7d983bb8b104f1dceb5681989e046369'
+def git(*a):return subprocess.check_output(['git',*a],cwd=root)
+allowed=['tools/src/doc/canonical.rs','tools/src/doc/canonical/tests.rs']
+assert sorted(git('diff','--name-only',old,head).decode().splitlines())==sorted(allowed)
+rows=[]
+for path in allowed:
+    b=git('show',head+':'+path);q=p/'final14df/source'/path;q.parent.mkdir(parents=True,exist_ok=True);q.write_bytes(b)
+    (p/'workspace-final'/path).write_bytes(b);rows.append(dict(path=path,bytes=len(b),sha256=hashlib.sha256(b).hexdigest()))
+(p/'final14df/source.patch').write_bytes(git('diff',old,head))
+(p/'final14df/snapshot.json').write_text(json.dumps(dict(previous=old,head=head,allowlist=allowed,files=rows),indent=2)+'\n',encoding='utf8')
+print('frozen two-file final prefix delta')

@@ -1,0 +1,13 @@
+from pathlib import Path
+import subprocess,json,hashlib,os
+p=Path(__file__).parent.resolve();ws=p/'workspace-final'
+names=['probe.rs','precharge_probe.rs','identity_probe.rs','prefix_probe.rs','prefix_boundary_probe.rs']
+probe=b'\n'.join((p/n).read_bytes() for n in names)
+(ws/'tools/src/doc/canonical/tests.rs').write_bytes((p/'final14df/source/tools/src/doc/canonical/tests.rs').read_bytes()+b'\n'+probe)
+env=dict(os.environ,CARGO_TARGET_DIR=str(p/'target-final'),NEPL3_REVIEW_CONTEXT_OUTPUT=str(p/'artifacts/native-14df'))
+cmd=['cargo','test','--locked','-p','nepl3-tools','--lib','independent_context','--','--nocapture','--test-threads=1']
+r=subprocess.run(cmd,cwd=ws,env=env,capture_output=True,timeout=900)
+(p/'native-14df.stdout.log').write_bytes(r.stdout);(p/'native-14df.stderr.log').write_bytes(r.stderr)
+bins=list((p/'target-final/debug/deps').glob('nepl3_tools-*.exe'))
+(p/'native-14df.command.json').write_text(json.dumps(dict(head='14df7e9d77faa86715c4605b28a853812980c4b0',command=cmd,cwd=str(ws),target_dir=env['CARGO_TARGET_DIR'],deadline_seconds=900,exit_code=r.returncode,probe_sha256=hashlib.sha256(probe).hexdigest(),probe_files=names,binaries=[dict(path=str(b),sha256=hashlib.sha256(b.read_bytes()).hexdigest(),bytes=b.stat().st_size) for b in bins]),indent=2)+'\n',encoding='utf8')
+print(r.stdout.decode('utf8')[-1200:].encode('ascii','backslashreplace').decode());print(r.stderr.decode('utf8'));assert r.returncode==0

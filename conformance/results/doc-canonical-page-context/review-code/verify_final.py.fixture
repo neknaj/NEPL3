@@ -1,0 +1,33 @@
+from pathlib import Path
+import hashlib,json,re,subprocess
+p=Path(__file__).parent.resolve();root=p.parents[1]
+def sha(b):return hashlib.sha256(b).hexdigest()
+expected={r['path']:r for r in json.loads((p/'final/dependencies.json').read_bytes())}
+for phase in ['final37','final819','final14df']:
+    for r in json.loads((p/phase/'snapshot.json').read_bytes())['files']:expected[r['path']]=r
+for name,r in expected.items():
+    if name=='tools/src/doc/canonical/tests.rs':continue
+    b=(p/'workspace-final'/name).read_bytes();assert len(b)==r['bytes'] and sha(b)==r['sha256'],name
+command=json.loads((p/'native-14df.command.json').read_bytes());assert command['exit_code']==0
+probe=b'\n'.join((p/n).read_bytes() for n in command['probe_files']);assert sha(probe)==command['probe_sha256']
+assert (p/'workspace-final/tools/src/doc/canonical/tests.rs').read_bytes()==(p/'final14df/source/tools/src/doc/canonical/tests.rs').read_bytes()+b'\n'+probe
+raw=(p/'native-14df.stdout.log').read_text(encoding='utf8')
+assert 'test result: ok. 11 passed; 0 failed; 0 ignored;' in raw
+def event(tag):
+    found=re.findall(r'(?:^|\.\.\. )'+re.escape(tag)+r' (\[.*\]|\{.*\})$',raw,re.M);assert len(found)==1,(tag,len(found));return json.loads(found[0])
+prefix=event('INDEPENDENT_PREFIX');assert prefix==dict(completion_exists=False,error='canonical file path used as directory: doc/a.md',first_file_exists=False,output_exists=False,registry_accepted=False)
+boundaries=event('INDEPENDENT_PREFIX_BOUNDARIES');assert boundaries==dict(rejected_before_io=10,shared_string_prefix_with_no_component_conflict=True)
+precharge=event('INDEPENDENT_PRECHARGE');assert precharge==[dict(allocation=256,width=16,work=1),dict(allocation=256,width=2048,work=1)]
+identity=event('INDEPENDENT_IDENTITY');oldraw=(p/'identity-819.stdout.log').read_text(encoding='utf8');old=json.loads(re.search(r'^INDEPENDENT_IDENTITY (\{.*\})$',oldraw,re.M)[1]);assert identity==old
+paths=['manifest.json','doc/spec/00-contract.md','doc/spec/01-architecture.md','doc/spec/13-reproducibility.md','doc/spec/22-external-extensions.md']
+artifacts=[]
+for name in paths:
+    b=(p/'artifacts/native-14df'/name).read_bytes();assert b==(p/'artifacts/native-819'/name).read_bytes(),name
+    artifacts.append(dict(path=name,bytes=len(b),sha256=sha(b)))
+delta=subprocess.check_output(['git','diff','--name-only','819f0e9a7d983bb8b104f1dceb5681989e046369','14df7e9d77faa86715c4605b28a853812980c4b0'],cwd=root).decode().splitlines();assert delta==['tools/src/doc/canonical.rs','tools/src/doc/canonical/tests.rs']
+result=dict(head=command['head'],independent_native_tests=11,dependency_files_verified=len(expected),production_matches_snapshot=True,exact_probe_overlay=True,prefix_before='prefix-819.stdout.log (partial file, error, no manifest)',prefix_after=prefix,boundaries=boundaries,precharge=precharge,identity_ten_mutations_equal_819=True,artifact_five_files_equal_819=artifacts,delta_paths=delta)
+(p/'final-verification.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf8')
+extra=['update_14df.py','run_14df.py','verify_final.py','final-verification.json','prefix_boundary_probe.rs','native-14df.command.json','native-14df.stdout.log','native-14df.stderr.log','native-14df.records.json','final14df/snapshot.json','final14df/source.patch','final14df/source/tools/src/doc/canonical.rs','final14df/source/tools/src/doc/canonical/tests.rs']
+extra.extend('artifacts/native-14df/'+n for n in paths)
+(p/'final-followup-allowlist.json').write_text(json.dumps(extra,indent=2)+'\n',encoding='utf8')
+print('PASS final11, unchanged original prefix repro now fails before output, 10 negative+1positive boundaries; all5 actual artifacts unchanged')

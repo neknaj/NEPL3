@@ -1,0 +1,14 @@
+from pathlib import Path
+import subprocess,json,hashlib
+out=Path(__file__).parent;root=out.parents[1]
+old='ce0b520850822e199178518f241785ca6c608d53';head='37cfaa88149191e1e066b08682720f5df471cf2d'
+allowed=['doc/migration/authored/16-doc-migration.nepld','doc/migration/authored/21-doc-pages.nepld','tools/src/doc/canonical/projection.rs','tools/src/doc/canonical/tests.rs']
+def git(*a):return subprocess.check_output(['git',*a],cwd=root)
+diff=git('diff','--name-only',old,head).decode().splitlines();assert sorted(diff)==sorted(allowed)
+rows=[]
+for n in allowed:
+    b=git('show',head+':'+n);p=out/'final37/source'/n;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b)
+    (out/'workspace-final'/n).write_bytes(b);rows.append(dict(path=n,bytes=len(b),sha256=hashlib.sha256(b).hexdigest()))
+(out/'final37/source.patch').write_bytes(git('diff','--binary',old,head))
+(out/'final37/snapshot.json').write_text(json.dumps(dict(head=head,previous=old,allowlist=allowed,files=rows,authored_review='Authoring reviewed separately, not this runtime review'),indent=2)+'\n',encoding='utf8')
+print('Exact four-file final delta; production one Work charge')

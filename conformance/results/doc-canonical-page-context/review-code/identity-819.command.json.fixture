@@ -1,0 +1,18 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-tools",
+    "--lib",
+    "independent_context_each_frozen_input_changes_context",
+    "--",
+    "--nocapture"
+  ],
+  "head": "819f0e9a7d983bb8b104f1dceb5681989e046369",
+  "deadline_seconds": 180,
+  "exit_code": 0,
+  "binary_sha256": "2eaf26843b4f3728d956017e4234cceff15199461b9d601547ab55d597d2843c",
+  "probe_sha256": "ba789827ce9da8493ad7b2b4ef56732c242c5d7165bf1fb03b8444ae2abcb896"
+}

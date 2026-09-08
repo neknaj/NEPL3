@@ -1,0 +1,19 @@
+# Independent canonical page-context review plan
+
+Base e45323ff136cbd7be488ab697af9b555a0d3df26. Initial read only, not a final source freeze. Root owns implementation and is addressing accounting and old-only compatibility before providing a fixed checkpoint. No production changes or successful execution are claimed here.
+
+Initial directly read scope: tools/src/doc/canonical.rs, canonical/projection.rs, canonical/tests.rs, main.rs; existing annotated/host.rs and annotated/pages.rs; spec16/21; AGENTS; Carson's design record under NEPL3-doc-page-projection/.tmp/review-canonical-page-context-design. No relevant memory registry entry was used.
+
+Reported initial implementation concerns (root acknowledged, fixes pending): appended-byte-only context Vec charging; header hyphen expansion in page id; repeated hash/hex/replace allocations; growing vectors; separate legacy render budget inside a purported shared group; old-only check capturing all files and introducing a shared output cap. These are initial WIP concerns, not claims against a future fixed checkpoint.
+
+Independent cases for fixed implementation:
+
+1. Three registered documents: two new-profile pages with mutual/self links, a legacy target with a Japanese Section ID and legacy alias, differing Markdown and HTML directory routes. Parse emitted Markdown links and compare to independent expected destinations. Legacy final bytes must equal original /2 host generation; its actual emitted n-hex and alias destinations must exist.
+2. Reconstruct the domain-separated input context bytes independently from the fixed raw manifest, specified order/framing, per-source and per-alias SHA-256, actual input PageSet identity and renderer. Compare the header digest. Test registry whitespace, reordering, registry path, target source whitespace, target alias whitespace/path, physical source path, page id, projection route and HTML route. Distinguish input PageSet from full raw context and per-page document/source identities.
+3. Same source bytes in two documents with different stable page ids must produce a valid shared PageSet and distinct source-dependent document digests. Source and target names are not guessed from physical filenames. Changing an id must not reuse another document's source admission.
+4. Missing registration despite an ambient Markdown file, missing/hidden semantic anchor, malformed late alias, unsupported late body, and invalid late source fail before the new output directory is created. Existing output directory and files remain unchanged. Corrupt the stored legacy MD and demonstrate generation uses the Doc; --check must reject the stale stored MD.
+5. Old-only registry greater than 128 small pages remains in its documented legacy check mode. Explicit staging/new context enforces its finite group cap. Unknown renderer, duplicate keys, path collisions and unreadable later inputs remain errors. No implicit passive-file registration.
+6. With the fixed internal group entry: caller Work sentinel, success-minus-one Work/Allocation/Output/Nodes, SourceBytes and Depth zero, all sticky reruns, cancellation and missing-root precedence. Stop during metadata must return no earlier page vector. Inspect capacity/isize and checked arithmetic separately; success-minus-one alone does not establish precharging correctness.
+7. Freeze only a declared allowlist of changed sources and relevant contract inputs. Build dependencies come from exact Git base blobs plus allowlisted overlay, with a unique target. Append probes only to the isolated copy, retain original probe source, raw logs, commands, tool versions, binary hashes and source checksums. Final manifest excludes workspace, build caches, binaries and undeclared material.
+
+Runtime/WASI scope will be selected after the fixed API arrives. No current tests, CLI staging, canonical cutover, deployment or human acceptance pass is inferred from this preparation.
