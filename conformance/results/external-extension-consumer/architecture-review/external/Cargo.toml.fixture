@@ -1,0 +1,11 @@
+[package]
+name="external-extension-audit"
+version="0.0.0"
+edition="2024"
+publish=false
+[workspace]
+[dependencies]
+nepl3-core = { path="../source/crates/foundation/core" }
+nepl3-reader = { path="../source/crates/foundation/reader" }
+nepl3-engine = { path="../source/crates/foundation/engine" }
+nepl3-wire = { path="../source/crates/foundation/wire" }

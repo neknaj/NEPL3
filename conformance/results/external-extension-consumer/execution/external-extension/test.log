@@ -1,0 +1,33 @@
+   Compiling typenum v1.20.1
+   Compiling cfg-if v1.0.4
+   Compiling cpufeatures v0.3.1
+   Compiling unicode-ident v1.0.18
+   Compiling num-traits v0.2.19
+   Compiling num-integer v0.1.47
+   Compiling num-bigint v0.5.1
+   Compiling hybrid-array v0.4.14
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-external-extensions\crates\foundation\core)
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-external-extensions\crates\foundation\reader)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-external-extensions\crates\foundation\wire)
+   Compiling nepl3-engine v0.1.0 (C:\projects\NEPL3-external-extensions\crates\foundation\engine)
+   Compiling external-hello-language v0.1.0 (C:\Users\bem\AppData\Local\Temp\nepl3-external-no5syiy8)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 28.21s
+     Running unittests src\lib.rs (target\debug\deps\external_hello_language-e4b0383e71ac5365.exe)
+
+running 3 tests
+test tests::unknown_head_is_recovery_not_invented_zero_arity ... ok
+test tests::unicode_source_and_external_kind_survive_native_and_ndf ... ok
+test tests::unfinished_source_and_cancellation_remain_distinct ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+   Doc-tests external_hello_language
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

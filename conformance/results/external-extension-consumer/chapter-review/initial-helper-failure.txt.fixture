@@ -1,0 +1,1 @@
+The initial helper stopped at check.py line 36 with KeyError: 'cells'. It accessed SomeRow.fields.cells instead of SomeRow.fields.row.fields.cells. No manuscript bytes were changed. The List shape was also corrected from assumed kind/start fields to the actual style Ordered(start='1').

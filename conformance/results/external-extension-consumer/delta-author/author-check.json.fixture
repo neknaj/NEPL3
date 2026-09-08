@@ -1,0 +1,43 @@
+{
+  "X01_X02_plain_text_exact": true,
+  "old_lines_unchanged": [
+    {
+      "path": "doc/migration/authored/guide/README.nepld",
+      "edits": [
+        [
+          "insert",
+          49,
+          49,
+          49,
+          50
+        ]
+      ]
+    },
+    {
+      "path": "doc/migration/authored/01-architecture.nepld",
+      "edits": [
+        [
+          "insert",
+          110,
+          110,
+          110,
+          117
+        ]
+      ]
+    },
+    {
+      "path": "doc/migration/authored/11-conformance.nepld",
+      "edits": [
+        [
+          "insert",
+          9,
+          9,
+          9,
+          19
+        ]
+      ]
+    }
+  ],
+  "utf8_lf_no_bom": true,
+  "scope": "author self-check, independent review pending"
+}

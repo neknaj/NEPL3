@@ -1,0 +1,246 @@
+use nepl3_core::{
+    budget::{Budget, Limits},
+    schema::*,
+    value::KindRef,
+};
+use nepl3_engine::package::*;
+use nepl3_reader::{
+    builtin::BuiltinReader,
+    plan::ReaderPlan,
+    tokenizer::{ReaderMode, TakeRule, TokenReader},
+};
+pub type TestResult = Result<(), Box<dyn std::error::Error>>;
+pub fn budget() -> Budget {
+    Budget::new(Limits {
+        source_bytes: 1_000_000,
+        work: 10_000_000,
+        depth: 1000,
+        nodes: 1_000_000,
+        allocation_units: 100_000_000,
+        output_bytes: 10_000_000,
+        diagnostics: 100,
+        events: 100,
+    })
+}
+fn field(name: &str, ty: TypeDescriptor) -> FieldDescriptor {
+    FieldDescriptor {
+        name: name.into(),
+        ty,
+    }
+}
+fn node_ref() -> TypeDescriptor {
+    TypeDescriptor::Named(TypeRef {
+        package: "nepl3.foundation".into(),
+        revision: 1,
+        name: "NodeRef".into(),
+    })
+}
+fn record(name: &str, fields: Vec<FieldDescriptor>) -> NamedType {
+    NamedType {
+        name: name.into(),
+        shape: TypeShape::Record { fields },
+        constraints: vec![],
+    }
+}
+pub fn fixture() -> Result<(LanguagePackage, SchemaRegistry), String> {
+    let mut budget = budget();
+    let mut registry = SchemaRegistry::default();
+    for descriptor in [
+        nepl3_core::schema::foundation::descriptor(&mut budget),
+        nepl3_reader::schema::descriptor(&mut budget),
+        nepl3_engine::schema::descriptor(&mut budget),
+    ] {
+        let descriptor = descriptor.map_err(|e| format!("{e:?}"))?;
+        let reference = descriptor
+            .reference(&mut budget)
+            .map_err(|e| format!("{e:?}"))?;
+        registry
+            .register(reference, descriptor, &mut budget)
+            .map_err(|e| format!("{e:?}"))?;
+    }
+    let descriptor = SchemaDescriptor {
+        package: "audit.external.syntax".into(),
+        revision: 1,
+        operations: vec![
+            OperationDescriptor {
+                name: "read".into(),
+                input: TypeDescriptor::Named(TypeRef {
+                    package: "nepl3.reader".into(),
+                    revision: 1,
+                    name: "ReadRequest".into(),
+                }),
+                output: TypeDescriptor::Named(TypeRef {
+                    package: "nepl3.reader".into(),
+                    revision: 1,
+                    name: "ReadReply".into(),
+                }),
+                pure: true,
+            },
+            OperationDescriptor {
+                name: "facts".into(),
+                input: TypeDescriptor::Text,
+                output: TypeDescriptor::Unit,
+                pure: true,
+            },
+        ],
+        types: vec![
+            record(
+                "Form:Let",
+                vec![field("name", node_ref()), field("body", node_ref())],
+            ),
+            record(
+                "Form:Pair",
+                vec![
+                    field(
+                        "first",
+                        TypeDescriptor::Named(TypeRef {
+                            package: "nepl3.foundation".into(),
+                            revision: 1,
+                            name: "ForeignSyntax".into(),
+                        }),
+                    ),
+                    field("second", node_ref()),
+                ],
+            ),
+            record("Form:Wrap", vec![field("value", node_ref())]),
+            record("Builtin:Name", vec![]),
+            record("Leaf:Name", vec![]),
+            record("Leaf:Compound", vec![]),
+            record("Token:Word", vec![field("payload", TypeDescriptor::Text)]),
+            record(
+                "Token:Compound",
+                vec![field(
+                    "payload",
+                    TypeDescriptor::List(Box::new(TypeDescriptor::NdfValue)),
+                )],
+            ),
+            record(
+                "List:Cons",
+                vec![
+                    field(
+                        "head",
+                        TypeDescriptor::Named(TypeRef {
+                            package: "nepl3.foundation".into(),
+                            revision: 1,
+                            name: "ForeignSyntax".into(),
+                        }),
+                    ),
+                    field("tail", node_ref()),
+                ],
+            ),
+            record("List:Nil", vec![]),
+            record(
+                "List:LocalCons",
+                vec![field("head", node_ref()), field("tail", node_ref())],
+            ),
+        ],
+    };
+    let schema = descriptor
+        .reference(&mut budget)
+        .map_err(|e| format!("{e:?}"))?;
+    registry
+        .register(schema.clone(), descriptor, &mut budget)
+        .map_err(|e| format!("{e:?}"))?;
+    registry
+        .finalize(&mut budget)
+        .map_err(|e| format!("{e:?}"))?;
+    let kind = |name: &str| -> Result<KindRef, String> {
+        Ok(KindRef {
+            schema: schema.clone(),
+            local_kind: registry
+                .kind_id(&schema, name)
+                .map_err(|e| format!("{e:?}"))?,
+        })
+    };
+    let package = LanguagePackage {
+        schema: schema.clone(),
+        payload_schemas: vec![],
+        root: "Expr".into(),
+        reader: ReaderPlan {
+            schema: schema.clone(),
+            state_type: TypeDescriptor::Unit,
+            expressions: vec![],
+            rules: vec![],
+            providers: vec![],
+        },
+        modes: vec![ReaderMode {
+            name: "Code".into(),
+            skip: vec![nepl3_reader::tokenizer::SkipRule {
+                reader: TokenReader::Builtin(BuiltinReader::Trivia),
+            }],
+            take: vec![TakeRule {
+                reader: TokenReader::Builtin(BuiltinReader::Name),
+                kind: kind("Token:Word")?,
+            }],
+        }],
+        categories: vec![Category {
+            name: "Expr".into(),
+            mode: "Code".into(),
+        }],
+        reads: vec![
+            ReadSpec::Builtin {
+                reader: BuiltinReader::Name,
+                kind: kind("Builtin:Name")?,
+                token_kind: kind("Token:Word")?,
+            },
+            ReadSpec::Local {
+                category: "Expr".into(),
+            },
+        ],
+        forms: vec![Form {
+            category: "Expr".into(),
+            kind: kind("Form:Let")?,
+            spelling: "let".into(),
+            fields: vec![
+                FieldSpec {
+                    name: "name".into(),
+                    read: ReadSpecId(0),
+                },
+                FieldSpec {
+                    name: "body".into(),
+                    read: ReadSpecId(1),
+                },
+            ],
+            binding: BindingId(2),
+            selection_rules: vec![],
+            styles: vec![],
+        }],
+        leaves: vec![Leaf {
+            category: "Expr".into(),
+            kind: kind("Leaf:Name")?,
+            token_kind: kind("Token:Word")?,
+            payload: TypeDescriptor::Text,
+            binding: BindingId(3),
+            selection_rules: vec![],
+            styles: vec![],
+        }],
+        namespaces: vec![Namespace {
+            name: "Value".into(),
+            policy: NamespacePolicy::Lexical,
+        }],
+        bindings: vec![
+            Binding::Bind {
+                namespace: "Value".into(),
+                name: NameSelector::Field("name".into()),
+            },
+            Binding::Visit("body".into()),
+            Binding::Group(vec![BindingId(0), BindingId(1)]),
+            Binding::Reference {
+                namespace: "Value".into(),
+                name: NameSelector::SelfValue,
+            },
+        ],
+        extensions: vec![],
+        recovery: nepl3_engine::recovery::RecoveryPlan {
+            default_unexpected: nepl3_engine::recovery::UnexpectedPolicy::PreserveRemainder,
+            rules: vec![],
+        },
+        provenance: PackageProvenance {
+            sources: vec![],
+            origins: vec![],
+            source_maps: vec![],
+            declarations: vec![],
+        },
+    };
+    Ok((package, registry))
+}

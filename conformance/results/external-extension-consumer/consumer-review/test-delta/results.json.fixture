@@ -1,0 +1,34 @@
+[
+  {
+    "command": [
+      "cargo",
+      "+1.97.0",
+      "test",
+      "--locked"
+    ],
+    "exit": 0,
+    "log": "run-0.log"
+  },
+  {
+    "command": [
+      "cargo",
+      "+1.97.0",
+      "test",
+      "--locked",
+      "--target",
+      "wasm32-wasip2"
+    ],
+    "exit": 0,
+    "log": "run-1.log"
+  },
+  {
+    "binary": "C:\\Users\\bem\\AppData\\Local\\Temp\\nepl3-independent-consumer-iv3iix5i\\target\\debug\\deps\\external_hello_language-e4b0383e71ac5365.exe",
+    "sha256": "1d04504005e12a4b14ee93633cd2cdd086f1d16a05c1969189d62a460efccf33",
+    "bytes": 5433856
+  },
+  {
+    "binary": "C:\\Users\\bem\\AppData\\Local\\Temp\\nepl3-independent-consumer-iv3iix5i\\target\\wasm32-wasip2\\debug\\deps\\external_hello_language-ac620173fc3115f4.wasm",
+    "sha256": "72b55af2ffbe0703d006974eab85fa99db5628f926633e0f64d6fff4bd762901",
+    "bytes": 36452713
+  }
+]

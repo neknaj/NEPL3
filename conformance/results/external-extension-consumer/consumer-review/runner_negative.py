@@ -1,0 +1,29 @@
+from pathlib import Path
+import importlib.util,subprocess,json,sys,unittest.mock,hashlib
+R=Path(__file__).resolve().parent;repo=R.parents[1]
+spec=importlib.util.spec_from_file_location('frozen_runner',R/'initial/tools/extensions/run.py');runner=importlib.util.module_from_spec(spec);spec.loader.exec_module(runner)
+runner.ROOT=repo;runner.FOUNDATION=repo/'crates/foundation';runner.PACKAGES={f'nepl3-{n}':runner.FOUNDATION/n for n in ['core','reader','engine','wire']}
+cases=[]
+for case in ['duplicate_nepl_package','changed_last_fingerprint','timeout_stdout']:
+ out=R/('negative-'+case);calls=[]
+ def fake_run(command,cwd,**kw):
+  calls.append(command)
+  if 'metadata' in command:
+   packages=[{'id':'external#0.1','name':'external-hello-language','manifest_path':str(Path(cwd)/'Cargo.toml')}]
+   if case=='duplicate_nepl_package':packages.append({'id':'registry-core#9.9','name':'nepl3-core','manifest_path':str(Path(cwd)/'unapproved-core/Cargo.toml')})
+   packages += [{'id':n+'#0.1','name':n,'manifest_path':str(p/'Cargo.toml')} for n,p in runner.PACKAGES.items()]
+   data={'packages':packages,'workspace_members':['external#0.1'],'workspace_root':str(cwd),'resolve':{'root':'external#0.1'}}
+   return subprocess.CompletedProcess(command,0,json.dumps(data).encode())
+  if case=='timeout_stdout' and 'test' in command:raise subprocess.TimeoutExpired(command,600,output=b'partial test output before timeout\n')
+  return subprocess.CompletedProcess(command,0,b'fixture tool result\n')
+ count=[0]
+ def fingerprint():
+  count[0]+=1
+  return {'source.rs':'changed' if case=='changed_last_fingerprint' and count[0]>=3 else 'original'}
+ with unittest.mock.patch.object(sys,'argv',['runner','--output',str(out)]),unittest.mock.patch.object(runner,'fingerprint',fingerprint),unittest.mock.patch.object(runner.subprocess,'run',fake_run):
+  error=None
+  try:runner.main()
+  except Exception as e:error=repr(e)
+ result=json.loads((out/'result.json').read_bytes())
+ cases.append({'case':case,'exception':error,'record_result':result['result'],'foundation_unchanged':result['foundation_unchanged'],'commands_recorded':len(result['commands']),'commands_attempted':len(calls),'partial_timeout_log_present':any(b'partial test output' in p.read_bytes() for p in out.glob('*.log'))})
+(R/'runner-negative-results.json').write_text(json.dumps({'scope':'orchestration fault injection, not production Cargo execution','cases':cases},indent=2)+'\n',encoding='utf-8',newline='\n');print(json.dumps(cases,indent=2))

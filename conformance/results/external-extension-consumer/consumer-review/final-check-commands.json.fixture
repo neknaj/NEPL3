@@ -1,0 +1,30 @@
+[
+  {
+    "command": [
+      "python",
+      "-m",
+      "unittest",
+      "tools.extensions.test_run"
+    ],
+    "exit": 0,
+    "log": "final-check-0.log"
+  },
+  {
+    "command": [
+      "wasmtime",
+      "--version"
+    ],
+    "exit": 0,
+    "log": "final-check-1.log"
+  },
+  {
+    "command": [
+      "rustc",
+      "+1.97.0",
+      "--version",
+      "--verbose"
+    ],
+    "exit": 0,
+    "log": "final-check-2.log"
+  }
+]

@@ -1,0 +1,21 @@
+{
+  "command": [
+    "target\\debug\\nepl3-tools.exe",
+    "doc-html",
+    "export",
+    "doc\\migration\\authored\\22-external-extensions.nepld",
+    "dist/chapter22-verified"
+  ],
+  "exit_code": 0,
+  "before": {
+    "binary": "5032038f96ba4ecb80edb6134a712070ea6c5e7e8c31ff62130c3ef40e435472",
+    "source": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa",
+    "spec": "d3ea5308c7d0d79d915e4c1fcbe971fb366f3ee1ebe5d7685dad5e0c8cb53a9a"
+  },
+  "after": {
+    "binary": "5032038f96ba4ecb80edb6134a712070ea6c5e7e8c31ff62130c3ef40e435472",
+    "source": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa"
+  },
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "scope": "production Doc source to checked HTML; browser viewing and canonical cutover not run"
+}

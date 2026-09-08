@@ -1,0 +1,6009 @@
+{
+  "operations": {
+    "bindingFacts": {
+      "input": {
+        "named": {
+          "package": "nepl3.engine",
+          "revision": 1,
+          "name": "FactsRequest"
+        }
+      },
+      "output": {
+        "named": {
+          "package": "nepl3.engine",
+          "revision": 1,
+          "name": "FactsReply"
+        }
+      },
+      "pure": true
+    },
+    "headShape": {
+      "input": {
+        "named": {
+          "name": "HeadCall",
+          "package": "nepl3.engine",
+          "revision": 1
+        }
+      },
+      "output": {
+        "named": {
+          "name": "HeadReply",
+          "package": "nepl3.engine",
+          "revision": 1
+        }
+      },
+      "pure": true
+    },
+    "headChildContext": {
+      "input": {
+        "named": {
+          "name": "HeadCall",
+          "package": "nepl3.engine",
+          "revision": 1
+        }
+      },
+      "output": {
+        "named": {
+          "name": "HeadReply",
+          "package": "nepl3.engine",
+          "revision": 1
+        }
+      },
+      "pure": true
+    }
+  },
+  "package": "nepl3.engine",
+  "revision": 1,
+  "types": {
+    "BindingDiagnosticArguments": {
+      "record": [
+        [
+          "namespace",
+          "Text"
+        ],
+        [
+          "name",
+          "Text"
+        ]
+      ],
+      "constraints": []
+    },
+    "Binding": {
+      "constraints": [
+        "engine.binding"
+      ],
+      "variant": {
+        "Bind": [
+          [
+            "namespace",
+            "Text"
+          ],
+          [
+            "name",
+            {
+              "named": {
+                "name": "NameSelector",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Custom": [
+          [
+            "operation",
+            {
+              "named": {
+                "name": "OperationRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Export": [
+          [
+            "namespace",
+            "Text"
+          ],
+          [
+            "name",
+            {
+              "named": {
+                "name": "NameSelector",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Group": [
+          [
+            "bindings",
+            {
+              "list": {
+                "named": {
+                  "name": "BindingId",
+                  "package": "nepl3.engine",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "Import": [
+          [
+            "field",
+            "Text"
+          ]
+        ],
+        "None": [],
+        "Propagate": [
+          [
+            "field",
+            "Text"
+          ]
+        ],
+        "Recursive": [
+          [
+            "declarations",
+            "Text"
+          ],
+          [
+            "body",
+            "Text"
+          ]
+        ],
+        "Reference": [
+          [
+            "namespace",
+            "Text"
+          ],
+          [
+            "name",
+            {
+              "named": {
+                "name": "NameSelector",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Scope": [
+          [
+            "bindings",
+            {
+              "list": {
+                "named": {
+                  "name": "BindingId",
+                  "package": "nepl3.engine",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "Sequential": [
+          [
+            "declarations",
+            "Text"
+          ],
+          [
+            "body",
+            "Text"
+          ]
+        ],
+        "Visit": [
+          [
+            "field",
+            "Text"
+          ]
+        ]
+      }
+    },
+    "BindingId": {
+      "constraints": [],
+      "record": [
+        [
+          "id",
+          "U64"
+        ]
+      ]
+    },
+    "BundleContext": {
+      "constraints": [
+        "engine.bundle-context"
+      ],
+      "record": [
+        [
+          "path",
+          {
+            "list": {
+              "named": {
+                "name": "ForeignStep",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "nodes",
+          {
+            "list": {
+              "named": {
+                "name": "NodeSelection",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "BundleRecovery": {
+      "constraints": [
+        "engine.recovery-index"
+      ],
+      "record": [
+        [
+          "path",
+          {
+            "list": {
+              "named": {
+                "name": "ForeignStep",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "entries",
+          {
+            "list": {
+              "named": {
+                "name": "RecoveryEntry",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "Category": {
+      "constraints": [],
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "mode",
+          "Text"
+        ]
+      ]
+    },
+    "CategoryMode": {
+      "constraints": [],
+      "record": [
+        [
+          "alias",
+          "Text"
+        ],
+        [
+          "category",
+          "Text"
+        ],
+        [
+          "mode",
+          "Text"
+        ]
+      ]
+    },
+    "DeclarationKind": {
+      "constraints": [],
+      "variant": {
+        "Category": [],
+        "Extension": [],
+        "Form": [],
+        "Leaf": [],
+        "Mode": [],
+        "Namespace": [],
+        "Reader": []
+      }
+    },
+    "DeclarationOrigin": {
+      "constraints": [],
+      "record": [
+        [
+          "kind",
+          {
+            "named": {
+              "name": "DeclarationKind",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "category",
+          {
+            "option": "Text"
+          }
+        ],
+        [
+          "origin",
+          {
+            "named": {
+              "name": "OriginRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "EngineDiagnosticArguments": {
+      "constraints": [
+        "engine.diagnostic"
+      ],
+      "record": [
+        [
+          "expected",
+          {
+            "named": {
+              "name": "EntryContext",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "offset",
+          "U64"
+        ]
+      ]
+    },
+    "EntryContext": {
+      "constraints": [
+        "engine.entry"
+      ],
+      "record": [
+        [
+          "package",
+          {
+            "named": {
+              "name": "PackageIdentity",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "alias",
+          "Text"
+        ],
+        [
+          "category",
+          "Text"
+        ],
+        [
+          "mode",
+          "Text"
+        ]
+      ]
+    },
+    "ExtensionRequirement": {
+      "constraints": [
+        "engine.extension"
+      ],
+      "record": [
+        [
+          "alias",
+          "Text"
+        ],
+        [
+          "provider",
+          "Text"
+        ],
+        [
+          "signature",
+          "Text"
+        ],
+        [
+          "operation",
+          {
+            "named": {
+              "name": "OperationRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "input",
+          {
+            "named": {
+              "name": "TypeDescriptor",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "output",
+          {
+            "named": {
+              "name": "TypeDescriptor",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "pure",
+          "Bool"
+        ]
+      ]
+    },
+    "FieldSpec": {
+      "constraints": [],
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "read",
+          {
+            "named": {
+              "name": "ReadSpecId",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "ForeignStep": {
+      "constraints": [],
+      "record": [
+        [
+          "node",
+          {
+            "named": {
+              "name": "NodeRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "field",
+          "Text"
+        ]
+      ]
+    },
+    "Form": {
+      "constraints": [
+        "engine.form"
+      ],
+      "record": [
+        [
+          "category",
+          "Text"
+        ],
+        [
+          "kind",
+          {
+            "named": {
+              "name": "KindRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "spelling",
+          "Text"
+        ],
+        [
+          "fields",
+          {
+            "list": {
+              "named": {
+                "name": "FieldSpec",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "binding",
+          {
+            "named": {
+              "name": "BindingId",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "styles",
+          {
+            "list": {
+              "named": {
+                "name": "StyleRule",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "selectionRules",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "SelectionRule"
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "HeadProviderRef": {
+      "constraints": [],
+      "record": [
+        [
+          "shape",
+          {
+            "named": {
+              "name": "OperationRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "childContext",
+          {
+            "named": {
+              "name": "OperationRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "HeadShape": {
+      "constraints": [
+        "engine.head-shape"
+      ],
+      "record": [
+        [
+          "kind",
+          {
+            "named": {
+              "name": "KindRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "fields",
+          {
+            "list": {
+              "named": {
+                "name": "FieldSpec",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "binding",
+          {
+            "named": {
+              "name": "BindingId",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "styles",
+          {
+            "list": {
+              "named": {
+                "name": "StyleRule",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "selectionRules",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "SelectionRule"
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "LanguageEnvironmentRef": {
+      "constraints": [
+        "parse.alias_environment"
+      ],
+      "record": [
+        [
+          "alias",
+          "Text"
+        ],
+        [
+          "environment",
+          {
+            "named": {
+              "name": "EnvironmentRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "LanguagePackage": {
+      "constraints": [
+        "engine.package"
+      ],
+      "record": [
+        [
+          "schema",
+          {
+            "named": {
+              "name": "SchemaRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "payloadSchemas",
+          {
+            "list": {
+              "named": {
+                "name": "SchemaRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "root",
+          "Text"
+        ],
+        [
+          "reader",
+          {
+            "named": {
+              "name": "ReaderPlan",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "modes",
+          {
+            "list": {
+              "named": {
+                "name": "ReaderMode",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "categories",
+          {
+            "list": {
+              "named": {
+                "name": "Category",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "reads",
+          {
+            "list": {
+              "named": {
+                "name": "ReadSpec",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "forms",
+          {
+            "list": {
+              "named": {
+                "name": "Form",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "leaves",
+          {
+            "list": {
+              "named": {
+                "name": "Leaf",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "namespaces",
+          {
+            "list": {
+              "named": {
+                "name": "Namespace",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "bindings",
+          {
+            "list": {
+              "named": {
+                "name": "Binding",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "extensions",
+          {
+            "list": {
+              "named": {
+                "name": "ExtensionRequirement",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "recovery",
+          {
+            "named": {
+              "name": "RecoveryPlan",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "provenance",
+          {
+            "named": {
+              "name": "PackageProvenance",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "LanguageReaderState": {
+      "constraints": [
+        "parse.alias_state"
+      ],
+      "record": [
+        [
+          "alias",
+          "Text"
+        ],
+        [
+          "state",
+          "NdfValue"
+        ]
+      ]
+    },
+    "LanguageRegistration": {
+      "constraints": [],
+      "record": [
+        [
+          "alias",
+          "Text"
+        ],
+        [
+          "package",
+          {
+            "named": {
+              "name": "PackageIdentity",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "defaultCategory",
+          "Text"
+        ]
+      ]
+    },
+    "Leaf": {
+      "constraints": [
+        "engine.leaf"
+      ],
+      "record": [
+        [
+          "category",
+          "Text"
+        ],
+        [
+          "kind",
+          {
+            "named": {
+              "name": "KindRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "tokenKind",
+          {
+            "named": {
+              "name": "KindRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "payload",
+          {
+            "named": {
+              "name": "TypeDescriptor",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "binding",
+          {
+            "named": {
+              "name": "BindingId",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "styles",
+          {
+            "list": {
+              "named": {
+                "name": "StyleRule",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "selectionRules",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "SelectionRule"
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "NameSelector": {
+      "constraints": [],
+      "variant": {
+        "Field": [
+          [
+            "name",
+            "Text"
+          ]
+        ],
+        "SelfValue": []
+      }
+    },
+    "Namespace": {
+      "constraints": [],
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "policy",
+          {
+            "named": {
+              "name": "NamespacePolicy",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "NamespacePolicy": {
+      "constraints": [],
+      "variant": {
+        "Global": [],
+        "Lexical": [],
+        "Open": []
+      }
+    },
+    "NodeSelection": {
+      "constraints": [
+        "engine.node-selection"
+      ],
+      "record": [
+        [
+          "node",
+          {
+            "named": {
+              "name": "NodeRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "entry",
+          {
+            "named": {
+              "name": "EntryContext",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "executionDigest",
+          "Bytes32"
+        ],
+        [
+          "shape",
+          {
+            "named": {
+              "name": "ShapeSelection",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "PackageIdentity": {
+      "constraints": [],
+      "record": [
+        [
+          "schema",
+          {
+            "named": {
+              "name": "SchemaRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "semanticDigest",
+          "Bytes32"
+        ]
+      ]
+    },
+    "PackageProvenance": {
+      "constraints": [
+        "engine.provenance"
+      ],
+      "record": [
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "name": "SourceContent",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "origins",
+          {
+            "list": {
+              "named": {
+                "name": "Origin",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "name": "SourceMapping",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "declarations",
+          {
+            "list": {
+              "named": {
+                "name": "DeclarationOrigin",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ParseArena": {
+      "constraints": [
+        "parse.partial_arena"
+      ],
+      "record": [
+        [
+          "path",
+          {
+            "list": {
+              "named": {
+                "name": "ForeignStep",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "name": "SourceContent",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "nodes",
+          {
+            "list": {
+              "named": {
+                "name": "SyntaxNode",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "origins",
+          {
+            "list": {
+              "named": {
+                "name": "Origin",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "tokens",
+          {
+            "list": {
+              "named": {
+                "name": "Token",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "name": "SourceMapping",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "environments",
+          {
+            "list": {
+              "named": {
+                "name": "EnvironmentEntry",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "selections",
+          {
+            "list": {
+              "named": {
+                "name": "NodeSelection",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "root",
+          {
+            "option": {
+              "named": {
+                "name": "NodeRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ParseContinuation": {
+      "constraints": [
+        "parse.private_slot"
+      ],
+      "record": [
+        [
+          "usage",
+          {
+            "named": {
+              "name": "Usage",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "depthBase",
+          "U64"
+        ],
+        [
+          "sessionId",
+          "Text"
+        ],
+        [
+          "progress",
+          {
+            "named": {
+              "name": "ParseProgress",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "tokenizer",
+          {
+            "named": {
+              "name": "TokenizationContinuation",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "ParseFrame": {
+      "constraints": [
+        "parse.fixed_frame"
+      ],
+      "record": [
+        [
+          "entry",
+          {
+            "named": {
+              "name": "EntryContext",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "read",
+          {
+            "option": {
+              "named": {
+                "name": "ReadSpecId",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "selection",
+          {
+            "option": {
+              "named": {
+                "name": "ShapeSelection",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "node",
+          {
+            "option": {
+              "named": {
+                "name": "NodeRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "arity",
+          "U64"
+        ],
+        [
+          "children",
+          {
+            "list": {
+              "named": {
+                "name": "FieldValue",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "nextChild",
+          "U64"
+        ],
+        [
+          "arena",
+          "U64"
+        ],
+        [
+          "foreign",
+          "Bool"
+        ]
+      ]
+    },
+    "ParseOutcome": {
+      "constraints": [
+        "parse.outcome"
+      ],
+      "variant": {
+        "Await": [
+          [
+            "call",
+            {
+              "named": {
+                "name": "ProviderCall",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "continuation",
+            {
+              "named": {
+                "name": "ParseContinuation",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Complete": [
+          [
+            "tree",
+            {
+              "named": {
+                "name": "ParseTree",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "cursor",
+            "U64"
+          ],
+          [
+            "states",
+            {
+              "list": {
+                "named": {
+                  "name": "LanguageReaderState",
+                  "package": "nepl3.engine",
+                  "revision": 1
+                }
+              }
+            }
+          ],
+          [
+            "facts",
+            {
+              "list": {
+                "named": {
+                  "name": "ReaderFactBatch",
+                  "package": "nepl3.engine",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "NeedMore": [
+          [
+            "expected",
+            {
+              "list": {
+                "named": {
+                  "name": "Expectation",
+                  "package": "nepl3.reader",
+                  "revision": 1
+                }
+              }
+            }
+          ],
+          [
+            "progress",
+            {
+              "named": {
+                "name": "ParseProgress",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Recovered": [
+          [
+            "tree",
+            {
+              "named": {
+                "name": "ParseTree",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "cursor",
+            "U64"
+          ],
+          [
+            "states",
+            {
+              "list": {
+                "named": {
+                  "name": "LanguageReaderState",
+                  "package": "nepl3.engine",
+                  "revision": 1
+                }
+              }
+            }
+          ],
+          [
+            "facts",
+            {
+              "list": {
+                "named": {
+                  "name": "ReaderFactBatch",
+                  "package": "nepl3.engine",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "Reserve": [
+          [
+            "request",
+            {
+              "named": {
+                "name": "ReservationRequest",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "continuation",
+            {
+              "named": {
+                "name": "ParseContinuation",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "name": "StopReason",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "progress",
+            {
+              "option": {
+                "named": {
+                  "name": "ParseProgress",
+                  "package": "nepl3.engine",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "AwaitHead": [
+          [
+            "call",
+            {
+              "named": {
+                "name": "HeadCall",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "continuation",
+            {
+              "named": {
+                "name": "HeadContinuation",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "ParseProfile": {
+      "constraints": [
+        "profile.parse-projection"
+      ],
+      "record": [
+        [
+          "id",
+          "Text"
+        ],
+        [
+          "languages",
+          {
+            "list": {
+              "named": {
+                "name": "LanguageRegistration",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "schemas",
+          {
+            "list": {
+              "named": {
+                "name": "SchemaRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "categoryModes",
+          {
+            "list": {
+              "named": {
+                "name": "CategoryMode",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "headProviders",
+          {
+            "list": {
+              "named": {
+                "name": "HeadRegistration",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "providers",
+          {
+            "list": {
+              "named": {
+                "name": "ProviderRequirement",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "allowlist",
+          {
+            "list": {
+              "named": {
+                "name": "OperationRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "resources",
+          {
+            "list": {
+              "named": {
+                "name": "ResourceIdentity",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "limits",
+          {
+            "named": {
+              "name": "Limits",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "ParseProgress": {
+      "constraints": [
+        "parse.progress"
+      ],
+      "record": [
+        [
+          "request",
+          {
+            "named": {
+              "name": "ParseRequest",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "scope",
+          {
+            "named": {
+              "name": "TokenizationScope",
+              "package": "nepl3.reader",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "cursor",
+          "U64"
+        ],
+        [
+          "states",
+          {
+            "list": {
+              "named": {
+                "name": "LanguageReaderState",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "arenas",
+          {
+            "list": {
+              "named": {
+                "name": "ParseArena",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "frames",
+          {
+            "list": {
+              "named": {
+                "name": "ParseFrame",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "facts",
+          {
+            "list": {
+              "named": {
+                "name": "ReaderFactBatch",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "recovery",
+          {
+            "list": {
+              "named": {
+                "name": "BundleRecovery",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "contexts",
+          {
+            "list": {
+              "named": {
+                "name": "BundleContext",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ParseReply": {
+      "constraints": [
+        "parse.result_closure"
+      ],
+      "record": [
+        [
+          "outcome",
+          {
+            "named": {
+              "name": "ParseOutcome",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "name": "Report",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "name": "SourceContent",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "name": "SourceMapping",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ParseRequest": {
+      "constraints": [
+        "parse.request",
+        "parse.source_closure"
+      ],
+      "record": [
+        [
+          "snapshot",
+          {
+            "named": {
+              "name": "SourceRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "start",
+          "U64"
+        ],
+        [
+          "limit",
+          "U64"
+        ],
+        [
+          "finalInput",
+          "Bool"
+        ],
+        [
+          "entry",
+          {
+            "named": {
+              "name": "EntryContext",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "states",
+          {
+            "list": {
+              "named": {
+                "name": "LanguageReaderState",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "environments",
+          {
+            "list": {
+              "named": {
+                "name": "LanguageEnvironmentRef",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "environmentEntries",
+          {
+            "list": {
+              "named": {
+                "name": "EnvironmentEntry",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "origins",
+          {
+            "list": {
+              "named": {
+                "name": "Origin",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "name": "SourceContent",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ParseTree": {
+      "constraints": [
+        "engine.parse-tree"
+      ],
+      "record": [
+        [
+          "profileDigest",
+          "Bytes32"
+        ],
+        [
+          "bundle",
+          {
+            "named": {
+              "name": "SyntaxBundle",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "recovery",
+          {
+            "list": {
+              "named": {
+                "name": "BundleRecovery",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "contexts",
+          {
+            "list": {
+              "named": {
+                "name": "BundleContext",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ProviderImplementation": {
+      "constraints": [
+        "profile.host-provider"
+      ],
+      "record": [
+        [
+          "provider",
+          "Text"
+        ],
+        [
+          "revision",
+          "U64"
+        ],
+        [
+          "implementationDigest",
+          "Bytes32"
+        ],
+        [
+          "operations",
+          {
+            "list": {
+              "named": {
+                "name": "OperationRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ProviderRequirement": {
+      "constraints": [
+        "profile.provider-requirement"
+      ],
+      "record": [
+        [
+          "provider",
+          "Text"
+        ],
+        [
+          "revision",
+          "U64"
+        ],
+        [
+          "implementationDigest",
+          "Bytes32"
+        ],
+        [
+          "operation",
+          {
+            "named": {
+              "name": "OperationRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "ReadSpec": {
+      "constraints": [
+        "engine.read-spec"
+      ],
+      "variant": {
+        "Builtin": [
+          [
+            "reader",
+            {
+              "named": {
+                "name": "BuiltinReader",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "kind",
+            {
+              "named": {
+                "name": "KindRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "tokenKind",
+            {
+              "named": {
+                "name": "KindRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Foreign": [
+          [
+            "alias",
+            "Text"
+          ],
+          [
+            "category",
+            "Text"
+          ]
+        ],
+        "ListOf": [
+          [
+            "element",
+            {
+              "named": {
+                "name": "ReadSpecId",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "cons",
+            {
+              "named": {
+                "name": "KindRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "nil",
+            {
+              "named": {
+                "name": "KindRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Local": [
+          [
+            "category",
+            "Text"
+          ]
+        ],
+        "WithMode": [
+          [
+            "mode",
+            "Text"
+          ],
+          [
+            "read",
+            {
+              "named": {
+                "name": "ReadSpecId",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "ReadSpecId": {
+      "constraints": [],
+      "record": [
+        [
+          "id",
+          "U64"
+        ]
+      ]
+    },
+    "ReaderFactBatch": {
+      "constraints": [
+        "parse.reader_facts"
+      ],
+      "record": [
+        [
+          "path",
+          {
+            "list": {
+              "named": {
+                "name": "ForeignStep",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "node",
+          {
+            "option": {
+              "named": {
+                "name": "NodeRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "entry",
+          {
+            "named": {
+              "name": "EntryContext",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "facts",
+          {
+            "list": {
+              "named": {
+                "name": "ReaderFact",
+                "package": "nepl3.reader",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "trivia",
+          {
+            "list": {
+              "named": {
+                "name": "Trivia",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "RecoveryEntry": {
+      "constraints": [],
+      "record": [
+        [
+          "node",
+          {
+            "named": {
+              "name": "NodeRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "kind",
+          {
+            "named": {
+              "name": "RecoveryKind",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "RecoveryKind": {
+      "constraints": [],
+      "variant": {
+        "Missing": [
+          [
+            "expected",
+            {
+              "named": {
+                "name": "EntryContext",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "anchor",
+            {
+              "named": {
+                "name": "Span",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Unexpected": [
+          [
+            "token",
+            {
+              "named": {
+                "name": "TokenRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Unparsed": [
+          [
+            "span",
+            {
+              "named": {
+                "name": "Span",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "reason",
+            {
+              "named": {
+                "name": "UnparsedReason",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "RecoveryMissing": {
+      "constraints": [
+        "engine.recovery-node"
+      ],
+      "record": []
+    },
+    "RecoveryPlan": {
+      "constraints": [
+        "engine.recovery-plan"
+      ],
+      "record": [
+        [
+          "defaultUnexpected",
+          {
+            "named": {
+              "name": "UnexpectedPolicy",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "rules",
+          {
+            "list": {
+              "named": {
+                "name": "RecoveryRule",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "RecoveryRule": {
+      "constraints": [],
+      "record": [
+        [
+          "category",
+          "Text"
+        ],
+        [
+          "unexpected",
+          {
+            "named": {
+              "name": "UnexpectedPolicy",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "synchronization",
+          {
+            "list": {
+              "named": {
+                "name": "SyncToken",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "RecoveryUnexpected": {
+      "constraints": [
+        "engine.recovery-node"
+      ],
+      "record": []
+    },
+    "RecoveryUnparsed": {
+      "constraints": [
+        "engine.recovery-node"
+      ],
+      "record": []
+    },
+    "ResourceIdentity": {
+      "constraints": [],
+      "record": [
+        [
+          "id",
+          "Text"
+        ],
+        [
+          "digest",
+          "Bytes32"
+        ]
+      ]
+    },
+    "ResourceSnapshot": {
+      "constraints": [
+        "profile.resource"
+      ],
+      "record": [
+        [
+          "id",
+          "Text"
+        ],
+        [
+          "bytes",
+          "Bytes"
+        ]
+      ]
+    },
+    "ShapeSelection": {
+      "constraints": [],
+      "variant": {
+        "Builtin": [
+          [
+            "read",
+            {
+              "named": {
+                "name": "ReadSpecId",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Dynamic": [
+          [
+            "provider",
+            {
+              "named": {
+                "name": "HeadProviderRef",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "shape",
+            {
+              "named": {
+                "name": "HeadShape",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "childContexts",
+            {
+              "list": {
+                "named": {
+                  "name": "EntryContext",
+                  "package": "nepl3.engine",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "Form": [
+          [
+            "index",
+            "U64"
+          ]
+        ],
+        "Leaf": [
+          [
+            "index",
+            "U64"
+          ]
+        ],
+        "List": [
+          [
+            "read",
+            {
+              "named": {
+                "name": "ReadSpecId",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "cons",
+            "Bool"
+          ]
+        ],
+        "Recovery": []
+      }
+    },
+    "StyleRule": {
+      "constraints": [
+        "engine.style"
+      ],
+      "record": [
+        [
+          "selector",
+          {
+            "named": {
+              "name": "StyleSelector",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "class",
+          {
+            "named": {
+              "name": "PresentationClass",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "StyleSelector": {
+      "constraints": [],
+      "variant": {
+        "Capture": [
+          [
+            "name",
+            "Text"
+          ]
+        ],
+        "Field": [
+          [
+            "name",
+            "Text"
+          ]
+        ],
+        "Head": [],
+        "SelfValue": []
+      }
+    },
+    "SyncToken": {
+      "constraints": [],
+      "record": [
+        [
+          "ancestorCategory",
+          "Text"
+        ],
+        [
+          "kind",
+          {
+            "named": {
+              "name": "KindRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "spelling",
+          {
+            "option": "Text"
+          }
+        ]
+      ]
+    },
+    "UnexpectedPolicy": {
+      "constraints": [],
+      "variant": {
+        "ConsumeToken": [],
+        "PreserveRemainder": []
+      }
+    },
+    "UnparsedReason": {
+      "constraints": [],
+      "variant": {
+        "CategoryMismatch": [],
+        "ProviderFailure": [],
+        "UnknownHead": []
+      }
+    },
+    "FactsRequest": {
+      "constraints": [
+        "engine.facts_request"
+      ],
+      "record": [
+        [
+          "tree",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "ParseTree"
+            }
+          }
+        ],
+        [
+          "path",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "ForeignStep"
+              }
+            }
+          }
+        ],
+        [
+          "node",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "NodeRef"
+            }
+          }
+        ],
+        [
+          "existing",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "FactSet"
+            }
+          }
+        ],
+        [
+          "authority",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "FactAuthority"
+            }
+          }
+        ],
+        [
+          "phase",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "FactsPhase"
+            }
+          }
+        ]
+      ]
+    },
+    "FactsReply": {
+      "constraints": [
+        "engine.facts_reply"
+      ],
+      "variant": {
+        "Complete": [
+          [
+            "delta",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "FactDelta"
+              }
+            }
+          ],
+          [
+            "report",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Report"
+              }
+            }
+          ],
+          [
+            "sources",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.foundation",
+                  "revision": 1,
+                  "name": "SourceContent"
+                }
+              }
+            }
+          ],
+          [
+            "sourceMaps",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.foundation",
+                  "revision": 1,
+                  "name": "SourceMapping"
+                }
+              }
+            }
+          ]
+        ],
+        "Invalid": [
+          [
+            "partial",
+            {
+              "option": {
+                "named": {
+                  "package": "nepl3.foundation",
+                  "revision": 1,
+                  "name": "FactDelta"
+                }
+              }
+            }
+          ],
+          [
+            "report",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Report"
+              }
+            }
+          ],
+          [
+            "sources",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.foundation",
+                  "revision": 1,
+                  "name": "SourceContent"
+                }
+              }
+            }
+          ],
+          [
+            "sourceMaps",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.foundation",
+                  "revision": 1,
+                  "name": "SourceMapping"
+                }
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ],
+          [
+            "partial",
+            {
+              "option": {
+                "named": {
+                  "package": "nepl3.foundation",
+                  "revision": 1,
+                  "name": "FactDelta"
+                }
+              }
+            }
+          ],
+          [
+            "report",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Report"
+              }
+            }
+          ],
+          [
+            "sources",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.foundation",
+                  "revision": 1,
+                  "name": "SourceContent"
+                }
+              }
+            }
+          ],
+          [
+            "sourceMaps",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.foundation",
+                  "revision": 1,
+                  "name": "SourceMapping"
+                }
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "HeadRegistration": {
+      "constraints": [
+        "profile.head-registration"
+      ],
+      "record": [
+        [
+          "alias",
+          "Text"
+        ],
+        [
+          "category",
+          "Text"
+        ],
+        [
+          "provider",
+          {
+            "named": {
+              "name": "HeadProviderRef",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "ProjectedSpan": {
+      "constraints": [
+        "head.projected-span"
+      ],
+      "record": [
+        [
+          "source",
+          {
+            "named": {
+              "name": "SourceRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "start",
+          "U64"
+        ],
+        [
+          "end",
+          "U64"
+        ]
+      ]
+    },
+    "SourceWindow": {
+      "constraints": [
+        "head.source-window"
+      ],
+      "record": [
+        [
+          "span",
+          {
+            "named": {
+              "name": "ProjectedSpan",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "bytes",
+          "Bytes"
+        ]
+      ]
+    },
+    "ProjectedToken": {
+      "constraints": [
+        "head.projected-token"
+      ],
+      "record": [
+        [
+          "kind",
+          {
+            "named": {
+              "name": "KindRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "head",
+          {
+            "named": {
+              "name": "ProjectedSpan",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "payload",
+          "NdfValue"
+        ]
+      ]
+    },
+    "ProjectedHead": {
+      "constraints": [
+        "head.projected-head"
+      ],
+      "record": [
+        [
+          "token",
+          {
+            "named": {
+              "name": "ProjectedToken",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "window",
+          {
+            "named": {
+              "name": "SourceWindow",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "ProjectedNodeRef": {
+      "constraints": [],
+      "record": [
+        [
+          "id",
+          "U64"
+        ]
+      ]
+    },
+    "ProjectedFieldValue": {
+      "constraints": [],
+      "variant": {
+        "Atom": [
+          [
+            "value",
+            "NdfScalar"
+          ]
+        ],
+        "Child": [
+          [
+            "node",
+            {
+              "named": {
+                "name": "ProjectedNodeRef",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Children": [
+          [
+            "nodes",
+            {
+              "list": {
+                "named": {
+                  "name": "ProjectedNodeRef",
+                  "package": "nepl3.engine",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "Foreign": [
+          [
+            "schema",
+            {
+              "named": {
+                "name": "SchemaRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "category",
+            "Text"
+          ],
+          [
+            "root",
+            {
+              "named": {
+                "name": "ProjectedNodeRef",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "environment",
+            {
+              "named": {
+                "name": "EnvironmentRef",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "ProjectedNode": {
+      "constraints": [],
+      "record": [
+        [
+          "schema",
+          {
+            "named": {
+              "name": "SchemaRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "kind",
+          "Text"
+        ],
+        [
+          "head",
+          {
+            "option": {
+              "named": {
+                "name": "ProjectedSpan",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "cover",
+          {
+            "option": {
+              "named": {
+                "name": "ProjectedSpan",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "token",
+          {
+            "option": {
+              "named": {
+                "name": "ProjectedToken",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "fields",
+          {
+            "list": {
+              "named": {
+                "name": "ProjectedFieldValue",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ProjectedSyntax": {
+      "constraints": [
+        "head.projected-syntax"
+      ],
+      "record": [
+        [
+          "nodes",
+          {
+            "list": {
+              "named": {
+                "name": "ProjectedNode",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "roots",
+          {
+            "list": {
+              "named": {
+                "name": "ProjectedNodeRef",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "windows",
+          {
+            "list": {
+              "named": {
+                "name": "SourceWindow",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "HeadCallIdentity": {
+      "constraints": [
+        "head.call-identity"
+      ],
+      "record": [
+        [
+          "sessionId",
+          "Text"
+        ],
+        [
+          "callId",
+          "U64"
+        ],
+        [
+          "operation",
+          {
+            "named": {
+              "name": "OperationRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "profileDigest",
+          "Bytes32"
+        ],
+        [
+          "executionDigest",
+          "Bytes32"
+        ]
+      ]
+    },
+    "HeadRequest": {
+      "constraints": [],
+      "variant": {
+        "Shape": [],
+        "ChildContext": [
+          [
+            "shape",
+            {
+              "named": {
+                "name": "HeadShape",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ],
+          [
+            "index",
+            "U64"
+          ],
+          [
+            "completed",
+            {
+              "named": {
+                "name": "ProjectedSyntax",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "HeadCall": {
+      "constraints": [
+        "head.call"
+      ],
+      "record": [
+        [
+          "identity",
+          {
+            "named": {
+              "name": "HeadCallIdentity",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "depthBase",
+          "U64"
+        ],
+        [
+          "entry",
+          {
+            "named": {
+              "name": "EntryContext",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "environment",
+          {
+            "named": {
+              "name": "EnvironmentRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "head",
+          {
+            "named": {
+              "name": "ProjectedHead",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "request",
+          {
+            "named": {
+              "name": "HeadRequest",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "HeadOutcome": {
+      "constraints": [],
+      "variant": {
+        "Shape": [
+          [
+            "shape",
+            {
+              "option": {
+                "named": {
+                  "name": "HeadShape",
+                  "package": "nepl3.engine",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "ChildContext": [
+          [
+            "context",
+            {
+              "named": {
+                "name": "EntryContext",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Failed": [
+          [
+            "diagnostic",
+            {
+              "named": {
+                "name": "ProjectedDiagnostic",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "name": "StopReason",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "HeadReply": {
+      "constraints": [
+        "head.reply"
+      ],
+      "record": [
+        [
+          "identity",
+          {
+            "named": {
+              "name": "HeadCallIdentity",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "outcome",
+          {
+            "named": {
+              "name": "HeadOutcome",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "name": "ProjectedReport",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "ProjectedRelated": {
+      "constraints": [],
+      "record": [
+        [
+          "span",
+          {
+            "option": {
+              "named": {
+                "name": "ProjectedSpan",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "code",
+          "Text"
+        ],
+        [
+          "arguments",
+          "TypedValue"
+        ]
+      ]
+    },
+    "ProjectedEdit": {
+      "constraints": [],
+      "record": [
+        [
+          "span",
+          {
+            "named": {
+              "name": "ProjectedSpan",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "expectedDigest",
+          "Bytes32"
+        ],
+        [
+          "replacement",
+          "Text"
+        ]
+      ]
+    },
+    "ProjectedFix": {
+      "constraints": [],
+      "record": [
+        [
+          "id",
+          "Text"
+        ],
+        [
+          "edits",
+          {
+            "list": {
+              "named": {
+                "name": "ProjectedEdit",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ProjectedDiagnostic": {
+      "constraints": [],
+      "record": [
+        [
+          "schema",
+          {
+            "named": {
+              "name": "SchemaRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "code",
+          "Text"
+        ],
+        [
+          "severity",
+          {
+            "named": {
+              "name": "Severity",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "stage",
+          "Text"
+        ],
+        [
+          "arguments",
+          "TypedValue"
+        ],
+        [
+          "primary",
+          {
+            "option": {
+              "named": {
+                "name": "ProjectedSpan",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "related",
+          {
+            "list": {
+              "named": {
+                "name": "ProjectedRelated",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "fixes",
+          {
+            "list": {
+              "named": {
+                "name": "ProjectedFix",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ProjectedEvent": {
+      "constraints": [],
+      "record": [
+        [
+          "schema",
+          {
+            "named": {
+              "name": "SchemaRef",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "kind",
+          "Text"
+        ],
+        [
+          "operationPath",
+          {
+            "list": "U64"
+          }
+        ],
+        [
+          "span",
+          {
+            "option": {
+              "named": {
+                "name": "ProjectedSpan",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "payload",
+          "TypedValue"
+        ]
+      ]
+    },
+    "ProjectedReport": {
+      "constraints": [
+        "head.projected-report"
+      ],
+      "record": [
+        [
+          "diagnostics",
+          {
+            "list": {
+              "named": {
+                "name": "ProjectedDiagnostic",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "events",
+          {
+            "list": {
+              "named": {
+                "name": "ProjectedEvent",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "traceOverflow",
+          {
+            "option": {
+              "named": {
+                "name": "TraceOverflow",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ],
+        [
+          "usage",
+          {
+            "named": {
+              "name": "Usage",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "HeadContinuation": {
+      "constraints": [
+        "head.continuation"
+      ],
+      "record": [
+        [
+          "sessionId",
+          "Text"
+        ],
+        [
+          "usage",
+          {
+            "named": {
+              "name": "Usage",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "depthBase",
+          "U64"
+        ],
+        [
+          "progress",
+          {
+            "named": {
+              "name": "ParseProgress",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "call",
+          {
+            "named": {
+              "name": "HeadCall",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "pendingToken",
+          {
+            "option": {
+              "named": {
+                "name": "Token",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "HeadDelegation": {
+      "constraints": [
+        "head.delegation"
+      ],
+      "record": [
+        [
+          "call",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "HeadCall"
+            }
+          }
+        ],
+        [
+          "limits",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Limits"
+            }
+          }
+        ]
+      ]
+    },
+    "HeadDelivery": {
+      "constraints": [
+        "head.delivery"
+      ],
+      "record": [
+        [
+          "reply",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "HeadReply"
+            }
+          }
+        ],
+        [
+          "usage",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Usage"
+            }
+          }
+        ]
+      ]
+    },
+    "StageId": {
+      "constraints": [],
+      "record": [
+        [
+          "id",
+          "U64"
+        ]
+      ]
+    },
+    "BindingStage": {
+      "constraints": [
+        "engine.binding-stage"
+      ],
+      "record": [
+        [
+          "scope",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "ScopeId"
+            }
+          }
+        ],
+        [
+          "previous",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "StageId"
+              }
+            }
+          }
+        ],
+        [
+          "introduced",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "EntityId"
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "OccurrenceStage": {
+      "constraints": [],
+      "record": [
+        [
+          "occurrence",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "OccurrenceId"
+            }
+          }
+        ],
+        [
+          "stage",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "StageId"
+            }
+          }
+        ],
+        [
+          "namespaceStage",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "StageId"
+            }
+          }
+        ]
+      ]
+    },
+    "BindingProgress": {
+      "constraints": [
+        "engine.binding-progress"
+      ],
+      "record": [
+        [
+          "facts",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "FactSet"
+              }
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceContent"
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceMapping"
+              }
+            }
+          }
+        ],
+        [
+          "stages",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingStage"
+              }
+            }
+          }
+        ],
+        [
+          "occurrenceStages",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "OccurrenceStage"
+              }
+            }
+          }
+        ],
+        [
+          "openInputs",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "OccurrenceId"
+              }
+            }
+          }
+        ],
+        [
+          "exports",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "EntityId"
+              }
+            }
+          }
+        ],
+        [
+          "resolutionHistory",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingResolutionBatch"
+              }
+            }
+          }
+        ],
+        [
+          "bundleScopes",
+          {
+            "list": {
+              "named": {
+                "name": "BindingBundleScope",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "BindingAnalysis": {
+      "constraints": [
+        "engine.binding-analysis"
+      ],
+      "record": [
+        [
+          "facts",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "FactSet"
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceContent"
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceMapping"
+              }
+            }
+          }
+        ],
+        [
+          "stages",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingStage"
+              }
+            }
+          }
+        ],
+        [
+          "occurrenceStages",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "OccurrenceStage"
+              }
+            }
+          }
+        ],
+        [
+          "openInputs",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "OccurrenceId"
+              }
+            }
+          }
+        ],
+        [
+          "exports",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "EntityId"
+              }
+            }
+          }
+        ],
+        [
+          "resolutionHistory",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingResolutionBatch"
+              }
+            }
+          }
+        ],
+        [
+          "bundleScopes",
+          {
+            "list": {
+              "named": {
+                "name": "BindingBundleScope",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "BindingFailure": {
+      "constraints": [],
+      "variant": {
+        "AnalysisId": [],
+        "Target": [],
+        "Name": [],
+        "MissingNamespace": [],
+        "NamespaceBoundary": [],
+        "RecoveredTree": [],
+        "MissingProvider": [],
+        "UnsupportedPlan": [],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ],
+        "Tree": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "TreeError"
+              }
+            }
+          ]
+        ],
+        "Profile": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "ProfileError"
+              }
+            }
+          ]
+        ],
+        "Fact": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "FactError"
+              }
+            }
+          ]
+        ],
+        "Source": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceError"
+              }
+            }
+          ]
+        ],
+        "Schema": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SchemaError"
+              }
+            }
+          ]
+        ],
+        "DuplicateGlobal": [],
+        "ProviderInvalid": [],
+        "Facts": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "FactsError"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "BindingOutcome": {
+      "constraints": [
+        "engine.binding-outcome"
+      ],
+      "variant": {
+        "Complete": [
+          [
+            "analysis",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingAnalysis"
+              }
+            }
+          ]
+        ],
+        "Invalid": [
+          [
+            "failure",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingFailure"
+              }
+            }
+          ],
+          [
+            "progress",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingProgress"
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ],
+          [
+            "progress",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingProgress"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "BindingReply": {
+      "constraints": [
+        "engine.binding-reply"
+      ],
+      "record": [
+        [
+          "outcome",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "BindingOutcome"
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Report"
+            }
+          }
+        ]
+      ]
+    },
+    "PackageError": {
+      "constraints": [],
+      "variant": {
+        "EmptyName": [],
+        "DuplicateName": [],
+        "MissingMode": [],
+        "MissingCategory": [],
+        "MissingReader": [],
+        "MissingNamespace": [],
+        "MissingExtension": [],
+        "SignatureMismatch": [],
+        "InvalidRead": [],
+        "InvalidBinding": [],
+        "DirectCycle": [],
+        "KindShape": [],
+        "InvalidSelector": [],
+        "UnvisitedField": [],
+        "Provenance": [],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ],
+        "Schema": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SchemaError"
+              }
+            }
+          ]
+        ],
+        "Reader": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.reader",
+                "revision": 1,
+                "name": "PlanError"
+              }
+            }
+          ]
+        ],
+        "Source": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceError"
+              }
+            }
+          ]
+        ],
+        "Origin": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "OriginError"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "ProfileError": {
+      "constraints": [],
+      "variant": {
+        "EmptyName": [],
+        "Duplicate": [],
+        "MissingPackage": [],
+        "PackageIdentity": [],
+        "MissingSchema": [],
+        "MissingAlias": [],
+        "MissingCategory": [],
+        "MissingMode": [],
+        "MissingProvider": [],
+        "ProviderIdentity": [],
+        "NotAllowed": [],
+        "MissingResource": [],
+        "ResourceIdentity": [],
+        "HeadSignature": [],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ],
+        "Package": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "PackageError"
+              }
+            }
+          ]
+        ],
+        "Schema": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SchemaError"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "TreeError": {
+      "constraints": [],
+      "variant": {
+        "Path": [],
+        "Duplicate": [],
+        "Selection": [],
+        "ExecutionIdentity": [],
+        "Recovery": [],
+        "Unreachable": [],
+        "UnvalidatedDynamic": [],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ],
+        "Syntax": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SyntaxError"
+              }
+            }
+          ]
+        ],
+        "Package": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "PackageError"
+              }
+            }
+          ]
+        ],
+        "Profile": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "ProfileError"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "BindingOptions": {
+      "constraints": [],
+      "record": []
+    },
+    "AnalysisKey": {
+      "constraints": [],
+      "record": [
+        [
+          "treeDigest",
+          "Bytes32"
+        ],
+        [
+          "profileDigest",
+          "Bytes32"
+        ],
+        [
+          "executionDigest",
+          "Bytes32"
+        ],
+        [
+          "requestDigest",
+          "Bytes32"
+        ]
+      ]
+    },
+    "AnalysisExecution": {
+      "constraints": [],
+      "record": [
+        [
+          "alias",
+          "Text"
+        ],
+        [
+          "executionDigest",
+          "Bytes32"
+        ]
+      ]
+    },
+    "BindingConditions": {
+      "constraints": [],
+      "record": [
+        [
+          "analysisId",
+          "Text"
+        ],
+        [
+          "options",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "BindingOptions"
+            }
+          }
+        ],
+        [
+          "limits",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Limits"
+            }
+          }
+        ]
+      ]
+    },
+    "BindingRequest": {
+      "constraints": [],
+      "record": [
+        [
+          "analysisId",
+          "Text"
+        ],
+        [
+          "tree",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "ParseTree"
+            }
+          }
+        ],
+        [
+          "options",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "BindingOptions"
+            }
+          }
+        ],
+        [
+          "limits",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Limits"
+            }
+          }
+        ],
+        [
+          "key",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "AnalysisKey"
+            }
+          }
+        ]
+      ]
+    },
+    "BoundBindingReply": {
+      "constraints": [],
+      "record": [
+        [
+          "key",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "AnalysisKey"
+            }
+          }
+        ],
+        [
+          "reply",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "BindingReply"
+            }
+          }
+        ]
+      ]
+    },
+    "BindingAccessError": {
+      "constraints": [],
+      "variant": {
+        "LimitsMismatch": [],
+        "StaleAnalysis": [],
+        "MissingSource": [],
+        "Incomplete": [],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "FactsError": {
+      "constraints": [],
+      "variant": {
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ],
+        "Target": [],
+        "Tree": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "TreeError"
+              }
+            }
+          ]
+        ],
+        "Fact": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "FactError"
+              }
+            }
+          ]
+        ],
+        "Source": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceError"
+              }
+            }
+          ]
+        ],
+        "Origin": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "OriginError"
+              }
+            }
+          ]
+        ],
+        "Report": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "ReportValidationError"
+              }
+            }
+          ]
+        ],
+        "Phase": []
+      }
+    },
+    "CanonicalBindingTarget": {
+      "constraints": [],
+      "record": [
+        [
+          "path",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "ForeignStep"
+              }
+            }
+          }
+        ],
+        [
+          "node",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "NodeRef"
+            }
+          }
+        ]
+      ]
+    },
+    "ResolutionTransition": {
+      "constraints": [],
+      "record": [
+        [
+          "occurrence",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "OccurrenceId"
+            }
+          }
+        ],
+        [
+          "before",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "ReferenceResolution"
+            }
+          }
+        ],
+        [
+          "after",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "ReferenceResolution"
+            }
+          }
+        ]
+      ]
+    },
+    "BindingResolutionBatch": {
+      "constraints": [],
+      "record": [
+        [
+          "provider",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "ProviderRequirement"
+            }
+          }
+        ],
+        [
+          "authority",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "FactAuthority"
+            }
+          }
+        ],
+        [
+          "target",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "CanonicalBindingTarget"
+            }
+          }
+        ],
+        [
+          "updates",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "ResolutionTransition"
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ReferenceOptions": {
+      "constraints": [],
+      "record": [
+        [
+          "includeDefinitions",
+          "Bool"
+        ],
+        [
+          "includeImports",
+          "Bool"
+        ],
+        [
+          "includeExports",
+          "Bool"
+        ],
+        [
+          "includeAmbiguous",
+          "Bool"
+        ]
+      ]
+    },
+    "QueryRequest": {
+      "constraints": [],
+      "record": [
+        [
+          "key",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "AnalysisKey"
+            }
+          }
+        ],
+        [
+          "source",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "SourceRef"
+            }
+          }
+        ],
+        [
+          "offset",
+          "U64"
+        ],
+        [
+          "kind",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "QueryKind"
+            }
+          }
+        ]
+      ]
+    },
+    "QuerySelection": {
+      "constraints": [],
+      "record": [
+        [
+          "occurrence",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "OccurrenceId"
+            }
+          }
+        ],
+        [
+          "span",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Span"
+            }
+          }
+        ],
+        [
+          "resolution",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "ReferenceResolution"
+            }
+          }
+        ],
+        [
+          "openInput",
+          "Bool"
+        ]
+      ]
+    },
+    "DefinitionLocation": {
+      "constraints": [],
+      "record": [
+        [
+          "uri",
+          "Text"
+        ],
+        [
+          "range",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Span"
+            }
+          }
+        ],
+        [
+          "selection",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Span"
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "DefinitionTarget": {
+      "constraints": [],
+      "record": [
+        [
+          "entity",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "EntityId"
+            }
+          }
+        ],
+        [
+          "location",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "DefinitionLocation"
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "ReferenceLocation": {
+      "constraints": [],
+      "record": [
+        [
+          "occurrence",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "OccurrenceId"
+            }
+          }
+        ],
+        [
+          "role",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "OccurrenceRole"
+            }
+          }
+        ],
+        [
+          "uri",
+          "Text"
+        ],
+        [
+          "span",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Span"
+            }
+          }
+        ],
+        [
+          "ambiguous",
+          "Bool"
+        ]
+      ]
+    },
+    "EntityReferences": {
+      "constraints": [],
+      "record": [
+        [
+          "entity",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "EntityId"
+            }
+          }
+        ],
+        [
+          "locations",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "ReferenceLocation"
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "QueryReply": {
+      "constraints": [],
+      "record": [
+        [
+          "key",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "AnalysisKey"
+            }
+          }
+        ],
+        [
+          "outcome",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "QueryOutcome"
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Report"
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceContent"
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "QueryKind": {
+      "constraints": [],
+      "variant": {
+        "Definition": [],
+        "References": [
+          [
+            "options",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "ReferenceOptions"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "QueryError": {
+      "constraints": [],
+      "variant": {
+        "Access": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingAccessError"
+              }
+            }
+          ]
+        ],
+        "Source": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceError"
+              }
+            }
+          ]
+        ],
+        "Facts": []
+      }
+    },
+    "QueryOutcome": {
+      "constraints": [],
+      "variant": {
+        "Definition": [
+          [
+            "selection",
+            {
+              "option": {
+                "named": {
+                  "package": "nepl3.engine",
+                  "revision": 1,
+                  "name": "QuerySelection"
+                }
+              }
+            }
+          ],
+          [
+            "targets",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.engine",
+                  "revision": 1,
+                  "name": "DefinitionTarget"
+                }
+              }
+            }
+          ]
+        ],
+        "References": [
+          [
+            "selection",
+            {
+              "option": {
+                "named": {
+                  "package": "nepl3.engine",
+                  "revision": 1,
+                  "name": "QuerySelection"
+                }
+              }
+            }
+          ],
+          [
+            "groups",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.engine",
+                  "revision": 1,
+                  "name": "EntityReferences"
+                }
+              }
+            }
+          ]
+        ],
+        "Invalid": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "QueryError"
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "FactsPhase": {
+      "variant": {
+        "Ordinary": [],
+        "Header": [
+          [
+            "group",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "ScopeId"
+              }
+            }
+          ]
+        ],
+        "Body": [
+          [
+            "header",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "FactsHeader"
+              }
+            }
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "FactsHeader": {
+      "record": [
+        [
+          "group",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "ScopeId"
+            }
+          }
+        ],
+        [
+          "provider",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "ProviderRequirement"
+            }
+          }
+        ],
+        [
+          "target",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "CanonicalBindingTarget"
+            }
+          }
+        ],
+        [
+          "entities",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "EntityId"
+              }
+            }
+          }
+        ],
+        [
+          "exports",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "EntityId"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "RenameRequest": {
+      "record": [
+        [
+          "key",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "AnalysisKey"
+            }
+          }
+        ],
+        [
+          "source",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "SourceRef"
+            }
+          }
+        ],
+        [
+          "offset",
+          "U64"
+        ],
+        [
+          "newName",
+          "Text"
+        ],
+        [
+          "writable",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceRef"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "RenameError": {
+      "constraints": [],
+      "variant": {
+        "NoOccurrence": [],
+        "Unresolved": [],
+        "Ambiguous": [],
+        "Deferred": [],
+        "NoLocation": [],
+        "InvalidName": [],
+        "NotWritable": [],
+        "RenameNotInvertible": [],
+        "RequestMismatch": [],
+        "ShapeChanged": [],
+        "ResolutionChanged": [],
+        "Collision": [],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ],
+        "Access": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingAccessError"
+              }
+            }
+          ]
+        ],
+        "Source": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceError"
+              }
+            }
+          ]
+        ],
+        "Origin": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "OriginError"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "RenameOutcome": {
+      "constraints": [],
+      "variant": {
+        "Complete": [
+          [
+            "newKey",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "AnalysisKey"
+              }
+            }
+          ],
+          [
+            "edits",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.foundation",
+                  "revision": 1,
+                  "name": "TextEdit"
+                }
+              }
+            }
+          ]
+        ],
+        "Invalid": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "RenameError"
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "RenameReply": {
+      "record": [
+        [
+          "key",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "AnalysisKey"
+            }
+          }
+        ],
+        [
+          "outcome",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "RenameOutcome"
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Report"
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceContent"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "SelectionRule": {
+      "record": [
+        [
+          "selector",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "StyleSelector"
+            }
+          }
+        ],
+        [
+          "priority",
+          "U64"
+        ]
+      ],
+      "constraints": [
+        "engine.selection-rule"
+      ]
+    },
+    "RegionKey": {
+      "constraints": [],
+      "record": [
+        [
+          "analysis",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "AnalysisKey"
+            }
+          }
+        ],
+        [
+          "readerFactsDigest",
+          "Bytes32"
+        ]
+      ]
+    },
+    "RegionSidecar": {
+      "constraints": [],
+      "record": [
+        [
+          "facts",
+          {
+            "option": {
+              "list": {
+                "named": {
+                  "package": "nepl3.engine",
+                  "revision": 1,
+                  "name": "ReaderFactBatch"
+                }
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "RegionRequest": {
+      "constraints": [],
+      "record": [
+        [
+          "key",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "RegionKey"
+            }
+          }
+        ],
+        [
+          "source",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "SourceRef"
+            }
+          }
+        ],
+        [
+          "offset",
+          "U64"
+        ]
+      ]
+    },
+    "RegionCapability": {
+      "constraints": [],
+      "variant": {
+        "SyntaxOnly": [],
+        "ReaderFacts": []
+      }
+    },
+    "ViewStep": {
+      "constraints": [],
+      "record": [
+        [
+          "field",
+          "U64"
+        ],
+        [
+          "child",
+          "U64"
+        ]
+      ]
+    },
+    "RegionPart": {
+      "constraints": [],
+      "variant": {
+        "Node": [],
+        "Head": [],
+        "Field": [
+          [
+            "field",
+            "U64"
+          ],
+          [
+            "element",
+            {
+              "option": "U64"
+            }
+          ]
+        ],
+        "View": [
+          [
+            "root",
+            "U64"
+          ],
+          [
+            "path",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.engine",
+                  "revision": 1,
+                  "name": "ViewStep"
+                }
+              }
+            }
+          ]
+        ],
+        "Capture": [
+          [
+            "batch",
+            "U64"
+          ],
+          [
+            "fact",
+            "U64"
+          ]
+        ],
+        "Presentation": [
+          [
+            "batch",
+            "U64"
+          ],
+          [
+            "fact",
+            "U64"
+          ]
+        ],
+        "Recovery": []
+      }
+    },
+    "RegionTarget": {
+      "constraints": [],
+      "record": [
+        [
+          "bundle",
+          "U64"
+        ],
+        [
+          "node",
+          {
+            "option": "U64"
+          }
+        ],
+        [
+          "part",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "RegionPart"
+            }
+          }
+        ]
+      ]
+    },
+    "RegionMapping": {
+      "constraints": [],
+      "variant": {
+        "Direct": [],
+        "Exact": [],
+        "ExactFragment": [],
+        "Transformed": []
+      }
+    },
+    "SourceRegion": {
+      "constraints": [],
+      "record": [
+        [
+          "target",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "RegionTarget"
+            }
+          }
+        ],
+        [
+          "span",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Span"
+            }
+          }
+        ],
+        [
+          "logicalSpan",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Span"
+            }
+          }
+        ],
+        [
+          "mapping",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "RegionMapping"
+            }
+          }
+        ],
+        [
+          "priority",
+          "U64"
+        ],
+        [
+          "depth",
+          "U64"
+        ],
+        [
+          "declarationOrder",
+          "U64"
+        ],
+        [
+          "classes",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "PresentationClass"
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "RegionError": {
+      "constraints": [],
+      "variant": {
+        "Access": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "BindingAccessError"
+              }
+            }
+          ]
+        ],
+        "Source": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceError"
+              }
+            }
+          ]
+        ],
+        "Owner": [],
+        "Sidecar": [],
+        "Mapping": []
+      }
+    },
+    "RegionOutcome": {
+      "constraints": [],
+      "variant": {
+        "Complete": [
+          [
+            "selection",
+            {
+              "option": "U64"
+            }
+          ],
+          [
+            "regions",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.engine",
+                  "revision": 1,
+                  "name": "SourceRegion"
+                }
+              }
+            }
+          ]
+        ],
+        "Invalid": [
+          [
+            "error",
+            {
+              "named": {
+                "package": "nepl3.engine",
+                "revision": 1,
+                "name": "RegionError"
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "RegionReply": {
+      "constraints": [],
+      "record": [
+        [
+          "key",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "RegionKey"
+            }
+          }
+        ],
+        [
+          "capability",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "RegionCapability"
+            }
+          }
+        ],
+        [
+          "outcome",
+          {
+            "named": {
+              "package": "nepl3.engine",
+              "revision": 1,
+              "name": "RegionOutcome"
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Report"
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceContent"
+              }
+            }
+          }
+        ]
+      ]
+    },
+    "BindingBundleScope": {
+      "constraints": [
+        "engine.binding-bundle-scope"
+      ],
+      "record": [
+        [
+          "bundle",
+          "U64"
+        ],
+        [
+          "scope",
+          {
+            "named": {
+              "name": "ScopeId",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "customSourceMaps",
+          {
+            "list": "U64"
+          }
+        ]
+      ]
+    },
+    "RegionQueryRequest": {
+      "constraints": [],
+      "record": [
+        [
+          "region",
+          {
+            "named": {
+              "name": "RegionRequest",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "kind",
+          {
+            "named": {
+              "name": "QueryKind",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ]
+      ]
+    },
+    "RegionQueryError": {
+      "constraints": [],
+      "variant": {
+        "Region": [
+          [
+            "error",
+            {
+              "named": {
+                "name": "RegionError",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Query": [
+          [
+            "error",
+            {
+              "named": {
+                "name": "QueryError",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "RegionQueryOutcome": {
+      "constraints": [
+        "engine.region-query-outcome"
+      ],
+      "variant": {
+        "Complete": [
+          [
+            "region",
+            {
+              "option": {
+                "named": {
+                  "name": "SourceRegion",
+                  "package": "nepl3.engine",
+                  "revision": 1
+                }
+              }
+            }
+          ],
+          [
+            "queries",
+            {
+              "list": {
+                "named": {
+                  "name": "QueryOutcome",
+                  "package": "nepl3.engine",
+                  "revision": 1
+                }
+              }
+            }
+          ]
+        ],
+        "Invalid": [
+          [
+            "error",
+            {
+              "named": {
+                "name": "RegionQueryError",
+                "package": "nepl3.engine",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "name": "StopReason",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
+    "RegionQueryReply": {
+      "constraints": [
+        "engine.region-query-reply"
+      ],
+      "record": [
+        [
+          "key",
+          {
+            "named": {
+              "name": "RegionKey",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "capability",
+          {
+            "named": {
+              "name": "RegionCapability",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "outcome",
+          {
+            "named": {
+              "name": "RegionQueryOutcome",
+              "package": "nepl3.engine",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "report",
+          {
+            "named": {
+              "name": "Report",
+              "package": "nepl3.foundation",
+              "revision": 1
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "name": "SourceContent",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          }
+        ]
+      ]
+    }
+  }
+}

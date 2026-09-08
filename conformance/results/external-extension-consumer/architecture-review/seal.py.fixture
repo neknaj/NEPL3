@@ -1,0 +1,26 @@
+﻿from pathlib import Path
+import hashlib,json,subprocess
+r=Path('.tmp/review-external-extension-api')
+def h(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def read(p):
+ b=p.read_bytes();return b.decode('utf-16') if b[:2] in [b'\xff\xfe',b'\xfe\xff'] else b.decode('utf-8-sig')
+assert 'PASS external native prefix parse' in read(r/'probe-native.log')
+assert 'PASS external native prefix parse' in read(r/'probe-wasi.log')
+assert '6 passed; 0 failed' in read(r/'external-host-native.log')
+assert '2 passed; 0 failed' in read(r/'external-reader-portable.log')
+assert 'Finished' in read(r/'external-thumb-check.log')
+(r/'environment.txt').write_bytes(subprocess.check_output(['rustc','--version'])+subprocess.check_output(['cargo','--version'])+subprocess.check_output(['wasmtime','--version']))
+binaries=[]
+for p in [r/'target/debug/external-extension-audit.exe',r/'target-wasi/wasm32-wasip2/debug/external-extension-audit.wasm']:
+ binaries.append({'path':str(p.resolve()),'bytes':p.stat().st_size,'sha256':h(p)})
+(r/'execution.json').write_text(json.dumps({'base':'8808c491b98142b591bc787cda42809ac8147e86','foundation_unchanged_at':'782309899fdc55aa9db05588f8cc0d9316ee8738','binaries':binaries,'commands':[{'cwd':'external','command':'cargo run --locked --offline','result':'PASS','log':'probe-native.log'},{'cwd':'external','command':'cargo run --locked --offline --target wasm32-wasip2','runner':'wasmtime run','result':'PASS','log':'probe-wasi.log'},{'cwd':'external','command':'cargo test --locked --offline --test parse native_host','result':'6 PASS inherited tests','log':'external-host-native.log'},{'cwd':'external','command':'cargo test --locked --offline --test reader_portable','result':'2 PASS inherited tests','log':'external-reader-portable.log'},{'cwd':'external','command':'cargo check --locked --offline --lib --target thumbv6m-none-eabi','result':'PASS compile only','log':'external-thumb-check.log'}],'initial_lock':'Copied fixed repository Cargo.lock, initial cargo run --offline updated consumer lock; all later commands --locked. Consumer lock retained.','excluded':'probe-first.log/probe-first.rs contain reviewer API spelling errors, not production failures or successful execution.'},indent=2),encoding='utf-8')
+files=[]
+for p in sorted(r.rglob('*')):
+ if not p.is_file():continue
+ rel=p.relative_to(r)
+ if rel.parts[0] in {'source','target','target-wasi','target-thumb'} or rel.name in {'source.tar','manifest.json'}:continue
+ files.append({'path':rel.as_posix(),'bytes':p.stat().st_size,'sha256':h(p)})
+m={'scope':'independent architecture audit and external-workspace public API probes','result':'static external registration available; loading/release/general provider remain incomplete','files':files,'source_archive_sha256':h(r/'source.tar'),'excluded_helpers':['probe-first.log','probe-first.rs'],'limits':'review.md'}
+p=r/'manifest.json';p.write_text(json.dumps(m,indent=2),encoding='utf-8')
+for f in files:assert h(r/f['path'])==f['sha256']
+print(p.resolve());print(h(p));print(len(files))

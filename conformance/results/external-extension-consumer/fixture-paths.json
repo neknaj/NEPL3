@@ -1,0 +1,126 @@
+[
+  {
+    "original": "consumer-review/archive-scope.json",
+    "stored": "consumer-review/archive-scope.json.fixture"
+  },
+  {
+    "original": "consumer-review/final/manifest.json",
+    "stored": "consumer-review/final/manifest.json.fixture"
+  },
+  {
+    "original": "consumer-review/final-check-commands.json",
+    "stored": "consumer-review/final-check-commands.json.fixture"
+  },
+  {
+    "original": "consumer-review/record.md",
+    "stored": "consumer-review/record.md.fixture"
+  },
+  {
+    "original": "consumer-review/runner_negative_after.py",
+    "stored": "consumer-review/runner_negative_after.py.fixture"
+  },
+  {
+    "original": "consumer-review/runner_negative_stderr.py",
+    "stored": "consumer-review/runner_negative_stderr.py.fixture"
+  },
+  {
+    "original": "consumer-review/test-delta/results.json",
+    "stored": "consumer-review/test-delta/results.json.fixture"
+  },
+  {
+    "original": "chapter-review/check.py",
+    "stored": "chapter-review/check.py.fixture"
+  },
+  {
+    "original": "chapter-review/comparison.json",
+    "stored": "chapter-review/comparison.json.fixture"
+  },
+  {
+    "original": "chapter-review/initial-helper-failure.txt",
+    "stored": "chapter-review/initial-helper-failure.txt.fixture"
+  },
+  {
+    "original": "chapter-review/readings.json",
+    "stored": "chapter-review/readings.json.fixture"
+  },
+  {
+    "original": "chapter-review/result.json",
+    "stored": "chapter-review/result.json.fixture"
+  },
+  {
+    "original": "architecture-review/cargo-metadata-final.json",
+    "stored": "architecture-review/cargo-metadata-final.json.fixture"
+  },
+  {
+    "original": "architecture-review/cargo-metadata.json",
+    "stored": "architecture-review/cargo-metadata.json.fixture"
+  },
+  {
+    "original": "architecture-review/closed-language-scan.json",
+    "stored": "architecture-review/closed-language-scan.json.fixture"
+  },
+  {
+    "original": "architecture-review/dependency-summary.json",
+    "stored": "architecture-review/dependency-summary.json.fixture"
+  },
+  {
+    "original": "architecture-review/execution.json",
+    "stored": "architecture-review/execution.json.fixture"
+  },
+  {
+    "original": "architecture-review/external/Cargo.toml",
+    "stored": "architecture-review/external/Cargo.toml.fixture"
+  },
+  {
+    "original": "architecture-review/external/src/lib.rs",
+    "stored": "architecture-review/external/src/lib.rs.fixture"
+  },
+  {
+    "original": "architecture-review/external/src/support.rs",
+    "stored": "architecture-review/external/src/support.rs.fixture"
+  },
+  {
+    "original": "architecture-review/probe-first.rs",
+    "stored": "architecture-review/probe-first.rs.fixture"
+  },
+  {
+    "original": "architecture-review/seal.py",
+    "stored": "architecture-review/seal.py.fixture"
+  },
+  {
+    "original": "architecture-review/manifest.json",
+    "stored": "architecture-review/manifest.json.fixture"
+  },
+  {
+    "original": "delta-author/author-check.json",
+    "stored": "delta-author/author-check.json.fixture"
+  },
+  {
+    "original": "delta-author/check.py",
+    "stored": "delta-author/check.py.fixture"
+  },
+  {
+    "original": "delta-author/run.py",
+    "stored": "delta-author/run.py.fixture"
+  },
+  {
+    "original": "delta-author/runtime.json",
+    "stored": "delta-author/runtime.json.fixture"
+  },
+  {
+    "original": "delta-author/manifest.json",
+    "stored": "delta-author/manifest.json.fixture"
+  },
+  {
+    "original": "delta-review/author-manifest.json",
+    "stored": "delta-review/author-manifest.json.fixture"
+  },
+  {
+    "original": "delta-review/author-runtime.json",
+    "stored": "delta-review/author-runtime.json.fixture"
+  },
+  {
+    "original": "verification/ci-initial-ubuntu/metadata.json",
+    "stored": "verification/ci-initial-ubuntu/metadata.json.fixture"
+  }
+]

@@ -1,0 +1,63 @@
+{
+  "scope": "Manual authored chapter 22, author self-check only",
+  "source": "doc/spec/22-external-extensions.md",
+  "draft": "doc/migration/authored/22-external-extensions.nepld",
+  "source_head_context": "782309899fdc55aa9db05588f8cc0d9316ee8738",
+  "source_uncommitted_at_capture": true,
+  "production_edited": false,
+  "independent_review": false,
+  "runtime": false,
+  "canonical_cutover": false,
+  "files": [
+    {
+      "path": "check.log",
+      "bytes": 860,
+      "sha256": "349b782fb9d4d58373c95b0aeb610b9aa433a7b43fd1c3e96ed5c3fdc9df9b08"
+    },
+    {
+      "path": "check.py",
+      "bytes": 2818,
+      "sha256": "1aafd5126411994ab9d9b0e9508f1fc2838f4edcd9d222f21c94126cf3691f5f"
+    },
+    {
+      "path": "draft.nepld",
+      "bytes": 14506,
+      "sha256": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa"
+    },
+    {
+      "path": "draft.patch",
+      "bytes": 14764,
+      "sha256": "d317d162ce01909ad6c32469f72f821e3e822bcbcbd13a5fceba829d80a86a06"
+    },
+    {
+      "path": "finalize.py",
+      "bytes": 1335,
+      "sha256": "0bdfecb7cf58cc9fa94325cde050802ce1653b226fb9000b81b5d3d3c3a8d887"
+    },
+    {
+      "path": "helpers.py",
+      "bytes": 3299,
+      "sha256": "68315acfa40d0086e76b823cb464a4e76b9de12d8d9b9103c92277d6adb8ae13"
+    },
+    {
+      "path": "readings.json",
+      "bytes": 13989,
+      "sha256": "89442f397481cb079beea0fc908681c05c34f43262bb1ed7549aaefc1b7aa38b"
+    },
+    {
+      "path": "record.md",
+      "bytes": 3192,
+      "sha256": "7fe39f618fd91b87d747f8e1c0a2c55326feef1d9074ab4021143b90b2649dff"
+    },
+    {
+      "path": "result.json",
+      "bytes": 983,
+      "sha256": "f5a5a83dbf032865ab8107e5f8cf1c306f7093eff2c802d30188c7f7c7331f3b"
+    },
+    {
+      "path": "source.md",
+      "bytes": 6403,
+      "sha256": "d3ea5308c7d0d79d915e4c1fcbe971fb366f3ee1ebe5d7685dad5e0c8cb53a9a"
+    }
+  ]
+}

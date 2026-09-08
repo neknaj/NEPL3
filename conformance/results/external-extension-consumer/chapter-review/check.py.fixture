@@ -1,0 +1,61 @@
+from pathlib import Path
+import json,re,hashlib,importlib.util
+R=Path(__file__).resolve().parent
+spec=importlib.util.spec_from_file_location('structural',R/'structure.py');s=importlib.util.module_from_spec(spec);spec.loader.exec_module(s)
+source=(R/'source.md').read_text(encoding='utf8');draft=(R/'draft.nepld').read_text(encoding='utf8')
+tree=s.Parser(draft,json.loads((R/'forms.json').read_bytes())['categories']).complete('Doc/Article')
+han=re.compile(r'[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\u3005]+');ruby=[];codes=[];sentences=[];kinds=[]
+def plain(n,protected=False):
+ if isinstance(n,list):return ''.join(plain(x,protected) for x in n)
+ if not isinstance(n,dict):return ''
+ k=n['kind'];kinds.append(k)
+ if k=='leaf':
+  text=json.loads(n['token']);pairs=re.findall(r'\[([^/\[\]]+)/([^\[\]]+)\]',text)
+  for b,r in pairs:assert han.fullmatch(b) and r;ruby.append([b,r])
+  remaining=re.sub(r'\[([^/\[\]]+)/([^\[\]]+)\]','',text);assert not han.search(remaining) and not any(c in remaining for c in '[{}]')
+  return re.sub(r'\[([^/\[\]]+)/([^\[\]]+)\]',r'\1',text)
+ f=n['fields']
+ if k=='Ruby':
+  b=plain(f['base'],True);r=plain(f['reading'],True);assert han.fullmatch(b) and r;ruby.append([b,r]);return b
+ if k=='Text':
+  if not protected:assert not han.search(f['text'])
+  return f['text']
+ if k=='InlineCode':codes.append(f['text']);return f['text']
+ assert k in ['Sentence','Concat'],k
+ return ''.join(plain(v,protected) for v in f.values())
+actual=[]
+def blocks(nodes):
+ for n in nodes:
+  k=n['kind'];f=n['fields']
+  if k=='Section':actual.append(('heading',plain(f['title'])));blocks(f['body']['fields']['blocks'])
+  elif k=='Paragraph':
+   items=[plain(x) for x in f['items']];sentences.extend(items)
+   assert all(x.count('。')==1 and x.endswith('。') for x in items),items
+   actual.append(('paragraph',''.join(items)))
+  elif k=='Table':
+   assert f['header']['kind']=='SomeRow' and len(f['columns'])==2;rows=[f['header']['fields']['row']]+f['rows'];actual.append(('table',[[plain(x) for x in row['fields']['cells']] for row in rows]))
+  elif k=='List':
+   assert f['style']=={'kind':'Ordered','fields':{'start':'1'}},f
+   start=len(actual)
+   for item in f['items']:blocks(item['fields']['body']['fields']['blocks'])
+   rows=[v for t,v in actual[start:]];del actual[start:];actual.append(('list',rows))
+  else:raise AssertionError(k)
+actual.append(('heading',plain(tree['fields']['title'])));blocks(tree['fields']['body']['fields']['blocks'])
+expected=[]
+for part in re.split(r'\n\s*\n',source.strip()):
+ lines=part.splitlines()
+ if lines[0].startswith('#'):expected.append(('heading',re.sub(r'^#+ ','',part)))
+ elif lines[0].startswith('|'):
+  expected.append(('table',[[x.strip() for x in l.strip('|').split('|')] for l in lines if not re.fullmatch(r'[| :\-]+',l)]))
+ elif re.match(r'1\. ',lines[0]):expected.append(('list',[re.sub(r'^\d+\. ','',l) for l in lines]))
+ else:expected.append(('paragraph',''.join(lines)))
+def no_code(x):
+ if isinstance(x,list):return [no_code(a) for a in x]
+ return re.sub(r'`([^`]+)`',r'\1',x)
+expected=[(k,no_code(v)) for k,v in expected]
+(R/'comparison.json').write_text(json.dumps({'actual':actual,'expected':expected},ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+assert actual==expected
+assert codes==re.findall(r'`([^`]+)`',source)
+(R/'readings.json').write_text(json.dumps(sorted(set(tuple(x) for x in ruby)),ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+result={'result':'PASS','source_sha256':hashlib.sha256((R/'source.md').read_bytes()).hexdigest(),'draft_sha256':hashlib.sha256((R/'draft.nepld').read_bytes()).hexdigest(),'blocks':len(actual),'sentences':len(sentences),'inline_codes':codes,'ruby_occurrences':len(ruby),'unique_ruby':len(set(tuple(x) for x in ruby)),'literal_count':kinds.count('leaf'),'prefix_sentence_count':kinds.count('Sentence'),'runtime_executed':False}
+(R/'result.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf8');print(json.dumps(result))

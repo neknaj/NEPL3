@@ -1,0 +1,1 @@
+nepl3-tools: NeedsResolution(DocPreparationPlan { document_digest: Digest([84, 54, 191, 141, 142, 194, 58, 181, 132, 218, 95, 205, 192, 105, 164, 89, 85, 109, 136, 217, 12, 61, 195, 29, 2, 181, 11, 193, 136, 75, 99, 149]), requirements: [Link { node: 912, target: Relative { path: "22-external-extensions.md", fragment: None } }] })

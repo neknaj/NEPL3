@@ -1,0 +1,80 @@
+{
+  "scope": "external workspace with public path dependencies; not an independent release or process provider",
+  "commit": "fixture tool result",
+  "foundation": {
+    "source.rs": "original"
+  },
+  "commands": [
+    {
+      "command": [
+        "rustc",
+        "+1.97.0",
+        "--version",
+        "--verbose"
+      ],
+      "exit_code": 0,
+      "log": "rustc.log",
+      "sha256": "ec672695a11bfca2ae718574da2ab5b88aa146f150d5cd9840e886c071b6a942"
+    },
+    {
+      "command": [
+        "cargo",
+        "+1.97.0",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "log": "format.log",
+      "sha256": "ec672695a11bfca2ae718574da2ab5b88aa146f150d5cd9840e886c071b6a942"
+    },
+    {
+      "command": [
+        "cargo",
+        "+1.97.0",
+        "metadata",
+        "--locked",
+        "--format-version",
+        "1"
+      ],
+      "exit_code": 0,
+      "log": "metadata.json",
+      "sha256": "84a883ebae33a7cc53a3b4dcaa667f1ef548e76442af2a0113996a55657ba5c7"
+    },
+    {
+      "command": [
+        "cargo",
+        "+1.97.0",
+        "clippy",
+        "--locked",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "log": "clippy.log",
+      "sha256": "ec672695a11bfca2ae718574da2ab5b88aa146f150d5cd9840e886c071b6a942"
+    },
+    {
+      "command": [
+        "cargo",
+        "+1.97.0",
+        "test",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "log": "test.log",
+      "sha256": "ec672695a11bfca2ae718574da2ab5b88aa146f150d5cd9840e886c071b6a942"
+    }
+  ],
+  "result": "failed",
+  "consumer": {
+    "Cargo.lock": "bc8cd7d18022a10a1ff73abbd7f7f9123cd8e430536ea5d1fc6260826fd63ace",
+    "Cargo.toml": "9a2f59e8aef70a49f04d1174d9ba2881fd134c860081ce8e2c0bb759b8d7693b",
+    "src\\lib.rs": "6a433d3102fdcb980637d17ba9a2df1172fb1fad9b870f96b95181ed583b46a5",
+    "src\\tests.rs": "62faa286df32e8da08e9d578c26dba91fb6acfa8790fd357fb2ec75d7fb5e1e6"
+  },
+  "foundation_unchanged": false
+}

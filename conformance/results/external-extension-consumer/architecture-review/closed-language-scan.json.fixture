@@ -1,0 +1,11 @@
+{
+  "tokens": [
+    "Doc",
+    "Math",
+    "Grammar",
+    "Circuit",
+    "standard.*"
+  ],
+  "production_hits": [],
+  "scope": "lexical scan, paired with direct architecture review; not an absence proof by itself"
+}

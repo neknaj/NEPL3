@@ -1,0 +1,39 @@
+diff --git a/conformance/extensions/hello/src/tests.rs b/conformance/extensions/hello/src/tests.rs
+index 7582585..d5cb78b 100644
+--- a/conformance/extensions/hello/src/tests.rs
++++ b/conformance/extensions/hello/src/tests.rs
+@@ -132,9 +132,16 @@ fn run(input: &str, final_input: bool, stopped: bool) -> Result<ParseReply, Stri
+             portable::tree::to_value(tree, &resolved, &mut codec, &mut transfer).map_err(error)?;
+         let bytes = nepl3_wire::encode(&value, &mut transfer).map_err(error)?;
+         let decoded = nepl3_wire::decode(&bytes, &mut transfer).map_err(error)?;
+-        let restored = portable::tree::from_value(&decoded, &resolved, &mut codec, &mut transfer)
+-            .map_err(error)?;
+-        let again = portable::tree::to_value(&restored, &resolved, &mut codec, &mut transfer)
++        // The receiver has no ambient access to the sender's source store.
++        let receiving_sources = SourceStore::default();
++        let mut receiving_admission = SourceAdmission::default();
++        let mut receiver =
++            FoundationCodec::new(&registry, &receiving_sources, &mut receiving_admission)
++                .map_err(error)?;
++        let restored =
++            portable::tree::from_value(&decoded, &resolved, &mut receiver, &mut transfer)
++                .map_err(error)?;
++        let again = portable::tree::to_value(&restored, &resolved, &mut receiver, &mut transfer)
+             .map_err(error)?;
+         assert_eq!(value, again);
+         assert_eq!(tree.bundle.sources, restored.bundle.sources);
+@@ -176,7 +183,13 @@ fn unicode_source_and_external_kind_survive_native_and_ndf() -> Result<(), Strin
+ #[test]
+ fn unknown_head_is_recovery_not_invented_zero_arity() -> Result<(), String> {
+     let reply = run("goodbye 世界", true, false)?;
+-    assert!(!reply.report.diagnostics.is_empty());
++    assert!(
++        reply
++            .report
++            .diagnostics
++            .iter()
++            .any(|diagnostic| diagnostic.code == "UnparsedInput" && diagnostic.stage == "parse")
++    );
+     assert!(matches!(reply.outcome, ParseOutcome::Recovered { .. }));
+     Ok(())
+ }

@@ -1,0 +1,15 @@
+# Chapter 22 manual authoring checkpoint
+
+Author: infrastructure. Worktree HEAD at source capture: 782309899fdc55aa9db05588f8cc0d9316ee8738. The canonical chapter was an uncommitted root-owned file; this HEAD is context, not a claim that the source exists in that commit. Exact captured source SHA-256: d3ea5308c7d0d79d915e4c1fcbe971fb366f3ee1ebe5d7685dad5e0c8cb53a9a. `source.md` preserves those input bytes. Later root technical changes require a separate delta reconciliation.
+
+Only `doc/migration/authored/22-external-extensions.nepld` was added outside `.tmp`. Canonical Markdown, schema, code, CI, and the root's other uncommitted changes were not edited. No commit or push by this author.
+
+The chapter was manually written after reading AGENTS, authoring.md, the complete original, and the formal Doc signatures. It preserves all four sections, the five-layer table (header plus five rows), six ordered separation conditions, and all four inline-code payloads. Ordinary sentences, headings and table cells use Sentence literals. Four sentences needing InlineCode use explicit Sentence/Ruby/Text construction. The 20 paragraphs retain original paragraph/list boundaries; the manuscript contains 69 total Sentence instances including headings/cells, of which 52 are body sentences. No new translation, Anno, external link, or claimed implementation was invented; the original has no external links or raw code block.
+
+Readings were chosen by meaning: 拡張=かくちょう, 汎用=はんよう, 互換性=ごかんせい, 抽出=ちゅうしゅつ, 横断的=おうだんてき, 生log=なまlog. The numerical four-language/four-crate phrases use よん; 五層 uses ごそう. Compound nouns retain whole-word readings, while 使う/設ける/読み替え/埋め込む/切り離す etc. keep kana outside Ruby. `readings.json` records all 324 reading pairs. English identifiers, code and numbers are not Ruby bases.
+
+The draft preserves the monorepo boundary and repository/publication non-authorization, no reverse dependencies, typed direct calls versus portable ABI, distinction between new syntax and new semantic domains, incomplete generic process-provider/package exchange, independent Rust and portable compatibility, T26 dependency boundaries, the limited external-workspace smoke proof, all six extraction gates, and the full remaining product scope. It does not turn the first smoke test into a separate-repository distribution or separate-process-provider success.
+
+Self-check executed: formal constructor structure audit, Ruby base/ordinary Text audit, exact ordered base-text comparison against all 26 original heading/paragraph/table/list units, all four code payloads, UTF-8/LF, and new-file diff inspection. The first writing draft's list constructor arities were corrected from the signature table before running the successful audit (`ordered 1`, `item none body`); no production failure was involved.
+
+This is author self-check, not independent review. Production parser/lower/HTML and browser checks were not run. This is a draft of a newly added document, not canonical cutover. Root will assign an independent reviewer and reconcile any later source amendment.

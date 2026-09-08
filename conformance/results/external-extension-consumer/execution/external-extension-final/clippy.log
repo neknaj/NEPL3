@@ -1,0 +1,19 @@
+    Checking typenum v1.20.1
+   Compiling autocfg v1.5.1
+    Checking cfg-if v1.0.4
+    Checking cpufeatures v0.3.1
+    Checking unicode-ident v1.0.18
+   Compiling num-traits v0.2.19
+    Checking hybrid-array v0.4.14
+    Checking block-buffer v0.12.1
+    Checking crypto-common v0.2.2
+    Checking num-integer v0.1.47
+    Checking digest v0.11.3
+    Checking sha2 v0.11.0
+    Checking num-bigint v0.5.1
+    Checking nepl3-core v0.1.0 (C:\projects\NEPL3-external-extensions\crates\foundation\core)
+    Checking nepl3-reader v0.1.0 (C:\projects\NEPL3-external-extensions\crates\foundation\reader)
+    Checking nepl3-wire v0.1.0 (C:\projects\NEPL3-external-extensions\crates\foundation\wire)
+    Checking nepl3-engine v0.1.0 (C:\projects\NEPL3-external-extensions\crates\foundation\engine)
+    Checking external-hello-language v0.1.0 (C:\Users\bem\AppData\Local\Temp\nepl3-external-iez32dsz)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 14.96s
