@@ -56,4 +56,6 @@ dist/** export-ignore
 /conformance/results/source-map-adjacency/** -text -whitespace
 /conformance/results/source-map-locality/** -text -whitespace
 /conformance/results/borrow-mapping-union/** -text -whitespace
+/conformance/results/doc-authoring-entries/** -text -whitespace
+/conformance/results/doc-authoring-inventory-references/** -text -whitespace
 /conformance/results/doc-authoring-review/** -text -whitespace
