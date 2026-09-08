@@ -1,0 +1,68 @@
+{
+  "08-editor": {
+    "sha_md": "1311cb50ce019ed53c733f9d8e414a7ea42b70f975fb0d60d01314762d79fa39",
+    "sha_doc": "d326323331b335da48a044e35a92d2bd89b64bc4fde794131af4ab17ad3f91b6",
+    "counts": {
+      "Article": 1,
+      "leaf": 239,
+      "Body": 11,
+      "Section": 10,
+      "Paragraph": 55,
+      "Sentence": 7,
+      "Text": 89,
+      "InlineCode": 11,
+      "Ruby": 25
+    },
+    "headings": [
+      {
+        "id": "policy",
+        "title": "方針"
+      },
+      {
+        "id": "snapshot",
+        "title": "1. AnalysisSnapshotの入力と同一性"
+      },
+      {
+        "id": "derived",
+        "title": "2. 自動で得られる機能"
+      },
+      {
+        "id": "region",
+        "title": "3. regionの選択"
+      },
+      {
+        "id": "relations",
+        "title": "4. definitionとrelationsの扱い"
+      },
+      {
+        "id": "recovery",
+        "title": "5. 不完全入力"
+      },
+      {
+        "id": "incremental",
+        "title": "6. 増分解析と取消し"
+      },
+      {
+        "id": "lsp",
+        "title": "7. LSP adapterの責務"
+      },
+      {
+        "id": "diagnostics",
+        "title": "8. 診断・ログの表示"
+      },
+      {
+        "id": "trust",
+        "title": "9. workspace trustの境界"
+      }
+    ],
+    "links": [],
+    "paragraph_count": [
+      55,
+      55
+    ],
+    "mismatches": [],
+    "inline_code_exact": true,
+    "table_rows_exact": true,
+    "ruby_lexical_issues": []
+  }
+}

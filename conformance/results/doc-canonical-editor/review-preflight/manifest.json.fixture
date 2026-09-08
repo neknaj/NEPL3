@@ -1,0 +1,54 @@
+{
+  "scope": "read-only heading collision preflight, no generation/navigation/cutover",
+  "source_commit": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+  "original_sha256": "1311cb50ce019ed53c733f9d8e414a7ea42b70f975fb0d60d01314762d79fa39",
+  "draft_sha256": "43c78b5f39b008a87b7a5eaf1719a0670f1b5f4992a2489a84549af7dd1241a7",
+  "historical_github_commit": "e8c396ada1e3d48d981f7a43276889e691e1be1b",
+  "files": [
+    {
+      "path": "authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "check.py",
+      "bytes": 2402,
+      "sha256": "dcf6f0ef19ccb56f5e48036449de82c3a38d337573f6f7083867f64b1c5baa27"
+    },
+    {
+      "path": "draft.nepld",
+      "bytes": 51115,
+      "sha256": "43c78b5f39b008a87b7a5eaf1719a0670f1b5f4992a2489a84549af7dd1241a7"
+    },
+    {
+      "path": "headings.json",
+      "bytes": 2869,
+      "sha256": "d049ed20239ec1803acc5161fa1762500cdb7af12c584b0bf5f72fad08a4583c"
+    },
+    {
+      "path": "old-github.json",
+      "bytes": 4415,
+      "sha256": "01521d007c15ee77ad3c5c240d184150d754a4a6867a5590043ff278941ad22b"
+    },
+    {
+      "path": "old-rich.html",
+      "bytes": 36711,
+      "sha256": "8cf61920cb877968030c4beb0d7a577af533f4e21c83af48311553a866de55ea"
+    },
+    {
+      "path": "original.md",
+      "bytes": 25396,
+      "sha256": "1311cb50ce019ed53c733f9d8e414a7ea42b70f975fb0d60d01314762d79fa39"
+    },
+    {
+      "path": "review.md",
+      "bytes": 1682,
+      "sha256": "5820ceba25cf322bc43454010cef6aee118409875c0a7173841eacda733d8ebf"
+    },
+    {
+      "path": "ruby-pairs.json",
+      "bytes": 28661,
+      "sha256": "5132c32b0fc3692e3f7097372feda95eee2946b3f1bddfa876cf52232d4b38f7"
+    }
+  ]
+}

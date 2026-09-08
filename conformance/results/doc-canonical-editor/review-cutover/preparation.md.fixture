@@ -1,0 +1,20 @@
+# Chapter 08 independent display preparation
+
+Fixed preparation source: f9b5a2f49f45dedf2b3345386c0eb51b3f0599e0. This is not the final generated-artifact/browser receipt.
+
+The original Markdown and full Doc manuscript were read. The formal structure probe independently derives 55 paragraphs, 11 InlineCode values matching the original Markdown exactly and in order, an article title plus 10 Section headings, 1,330 Ruby nodes, and no Table, List, Link, or RawCode. The complete paragraph, heading, code, reading-pair, and semantic-ID expectations are saved in prepared-expectations.json. This is a structure probe, not production parsing or browser execution.
+
+Reversing only the four new heading literals produces every byte of the pre-move manuscript at 20caaf7. No body sentence, code, existing reading, or Section ID was changed.
+
+The four clarifications preserve the original scope:
+
+- AnalysisSnapshot inputs and identity: the section specifies source/profile/package/resource/options inputs, digests, execution limits, and the distinction between raw identity and execution proof.
+- Handling definition and relations: the section covers query, RegionQuery, references and rename, including unresolved/ambiguous states, owner-local maps and actual completion authority. The wording does not assert these operations are universally complete.
+- LSP adapter responsibilities: the section assigns capability negotiation, position conversion, fallback, package selection and editor adapters to the host-facing layer.
+- Workspace trust boundary: the section excludes evaluation and automatic native plugin loading during ordinary analysis, and requires authorization/isolation or explicit failure plus resource bounds.
+
+The added Ruby bases are Kanji only; readings are 入力/にゅうりょく, 同一性/どういつせい, 扱/あつか followed by Text い, 責務/せきむ, 境界/きょうかい. Original legacy aliases remain explicit configuration. Their actual GitHub DOM and collision behavior have not yet been verified for the final generated page.
+
+After the root provides a fixed generated commit, execution will cover three engines, 375/1280 widths and two independent non-root paths (12 cases); all 55 base paragraphs/11 codes/headings/readings; no-script mode, local stylesheet/font visibility, no horizontal clipping; all 10 semantic targets per case (120 moves). The fixed GitHub page will require rawLines equality, 11 legacy plus 10 semantic unique targets and stable movement. Automatic heading IDs will be inspected separately for collisions with the four clarified headings. Local HTML is not required to expose legacy Markdown aliases.
+
+Repeated HTML/Markdown artifact bytes and source identities will be checked only when the final artifacts exist. The later README bootstrap will be executed verbatim in new scratch, with all 11 files verified and offline file-URL behavior tested in three engines with scripts disabled and HTTP(S) blocked. These checks are pending, not successful by inference from preparation or root measurements. No tracked source was edited.

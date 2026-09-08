@@ -1,0 +1,8 @@
+from pathlib import Path
+s=Path('C:/projects/NEPL3-doc-canonical-html-fragment/.tmp/browser-canonical19.py').read_text(encoding='utf-8')
+s=s.replace('canonical19','canonical08').replace('19-html-fragment.html','08-editor.html')
+s=s.replace('sections=[]', "sections=['policy','snapshot','derived','region','relations','recovery','incremental','lsp','diagnostics','trust']").replace('assert len(ids)==0','assert len(ids)==10')
+s=s.replace("len(result['headings'])==1", "len(result['headings'])==11")
+s=s.replace("assert 'nepl3.safe-markup/2' in snapshot and 'BetweenArtifacts(source,target,fragment)' in snapshot", "assert 'AnalysisKey' in snapshot and 'TrustRequired' in snapshot")
+s=s.replace(r"assert result['links']==re.findall(r'\[[^\]]+\]\((https://[^)]+)\)',original)", "assert result['links']==[]")
+Path('.tmp/browser-canonical08.py').write_text(s,encoding='utf-8',newline='\n')

@@ -1,0 +1,143 @@
+{
+  "scope": "independent heading/content and cutover preparation review; no execution",
+  "commit": "cce0e08f2f7fca278a246dad0054eb4eeaa88c5d",
+  "sources": [
+    {
+      "path": "doc/canonical.json",
+      "sha256": "4859e11a7c422adf5c72a0ce33a851b93aa4014c2f4ab768b10809dcaaeca942",
+      "bytes": 3282
+    },
+    {
+      "path": "doc/migration/aliases/08-editor.json",
+      "sha256": "0e85d24ed98a8e151b582442218b17d3d4f191755c9528582080443fca21746b",
+      "bytes": 774
+    },
+    {
+      "path": "doc/authoring.md",
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08",
+      "bytes": 6478
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "c26941e6dbf896a5e07b7c807789bc1f70bd740e4065092186be42e5ac4baf53",
+      "bytes": 7729
+    },
+    {
+      "path": "doc/spec/21-doc-pages.md",
+      "sha256": "fd16f3f6e2e8801be832960993f5649daca06d7e6ebaffb43969e9b77d80574c",
+      "bytes": 31845
+    },
+    {
+      "path": "design/forms.json",
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693",
+      "bytes": 48673
+    },
+    {
+      "path": "tools/audit/structure.py",
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727",
+      "bytes": 6543
+    }
+  ],
+  "files": [
+    {
+      "path": "08-editor-pairs.json",
+      "bytes": 55318,
+      "sha256": "c8eb254232488ea377983cf6af8e74a6e01f86a704c80af1d1383757fb6a9a3b"
+    },
+    {
+      "path": "08-editor-plain.txt",
+      "bytes": 25192,
+      "sha256": "ed998761210aa9d9766db942ccd7df66feb46f714be4b5835b2fdb591ad90665"
+    },
+    {
+      "path": "08-editor-units.json",
+      "bytes": 248929,
+      "sha256": "93736354d162b88dacb68839af6ae452d43bc5331df5d0336265d0de4b53a26d"
+    },
+    {
+      "path": "08-editor.md",
+      "bytes": 25396,
+      "sha256": "1311cb50ce019ed53c733f9d8e414a7ea42b70f975fb0d60d01314762d79fa39"
+    },
+    {
+      "path": "08-editor.nepld",
+      "bytes": 51247,
+      "sha256": "d326323331b335da48a044e35a92d2bd89b64bc4fde794131af4ab17ad3f91b6"
+    },
+    {
+      "path": "before.nepld",
+      "bytes": 51115,
+      "sha256": "43c78b5f39b008a87b7a5eaf1719a0670f1b5f4992a2489a84549af7dd1241a7"
+    },
+    {
+      "path": "check.py",
+      "bytes": 3897,
+      "sha256": "94f7b0564ad7e1de0aa49803af56440626294b1048109931838e6b31c1194044"
+    },
+    {
+      "path": "checks.json",
+      "bytes": 1061,
+      "sha256": "15dce34aae5a808884c6fee740888248690d92a0c1326e560c450b53ce0a41a5"
+    },
+    {
+      "path": "context/AGENTS.md",
+      "bytes": 7729,
+      "sha256": "c26941e6dbf896a5e07b7c807789bc1f70bd740e4065092186be42e5ac4baf53"
+    },
+    {
+      "path": "context/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "context/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "context/doc/canonical.json",
+      "bytes": 3282,
+      "sha256": "4859e11a7c422adf5c72a0ce33a851b93aa4014c2f4ab768b10809dcaaeca942"
+    },
+    {
+      "path": "context/doc/migration/aliases/08-editor.json",
+      "bytes": 774,
+      "sha256": "0e85d24ed98a8e151b582442218b17d3d4f191755c9528582080443fca21746b"
+    },
+    {
+      "path": "context/doc/spec/21-doc-pages.md",
+      "bytes": 31845,
+      "sha256": "fd16f3f6e2e8801be832960993f5649daca06d7e6ebaffb43969e9b77d80574c"
+    },
+    {
+      "path": "context/tools/audit/structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    },
+    {
+      "path": "diff.patch",
+      "bytes": 5445,
+      "sha256": "8a63aa5eb6bb365727755b9ec354d1e0d0b07f5305b12cad2797fe982b8a6512"
+    },
+    {
+      "path": "historical-github.json",
+      "bytes": 4415,
+      "sha256": "01521d007c15ee77ad3c5c240d184150d754a4a6867a5590043ff278941ad22b"
+    },
+    {
+      "path": "review.md",
+      "bytes": 2233,
+      "sha256": "894cf986c28de279165fcbc6a5bb0c06a06937289e03888c105c30efb7f5dd8e"
+    },
+    {
+      "path": "seal.py",
+      "bytes": 3373,
+      "sha256": "d671b8bd4ec3928a177d3cf42a46600baebdfee783d789d497e449d921499017"
+    },
+    {
+      "path": "structure.json",
+      "bytes": 1539,
+      "sha256": "9f5cb2d61e7cb85e7d71284dfdcf67632aef27d04099131e77ac884e1c82fbc4"
+    }
+  ]
+}

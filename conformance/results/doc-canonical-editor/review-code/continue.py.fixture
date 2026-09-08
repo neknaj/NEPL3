@@ -1,0 +1,41 @@
+from pathlib import Path
+import subprocess,json,os,time,hashlib,ctypes,datetime
+p=Path(__file__).parent.resolve();ws=p/'workspace';target=p/'target';binary=target/'debug/nepl3-tools.exe';rows=[]
+HEAD='5c4ce6184f6d5fa817f472d202101aaf86af3195'
+def sha(b):return hashlib.sha256(b).hexdigest()
+class FT(ctypes.Structure):_fields_=[('low',ctypes.c_uint32),('high',ctypes.c_uint32)]
+def cpu(proc):
+    a,b,c,d=FT(),FT(),FT(),FT()
+    ok=ctypes.windll.kernel32.GetProcessTimes(ctypes.c_void_p(int(proc._handle)),ctypes.byref(a),ctypes.byref(b),ctypes.byref(c),ctypes.byref(d))
+    return ((c.high<<32)+c.low+(d.high<<32)+d.low)/10000000 if ok else None
+def save():
+    (p/'continuation-commands.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf8',newline='\n')
+def run(name,cmd,success=True):
+    start=time.monotonic();row=dict(name=name,command=cmd,head=HEAD,registry_sha256=sha((ws/'doc/canonical.json').read_bytes()),binary_sha256=sha(binary.read_bytes()),deadline_seconds=900,started_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),expected_success=success,samples=[])
+    rows.append(row)
+    with (p/(name+'.stdout.log')).open('wb') as out,(p/(name+'.stderr.log')).open('wb') as err:
+        proc=subprocess.Popen(cmd,cwd=ws,env=dict(os.environ,CARGO_TARGET_DIR=str(target)),stdout=out,stderr=err);row['pid']=proc.pid;save()
+        while True:
+            elapsed=time.monotonic()-start;row['samples'].append(dict(elapsed_seconds=elapsed,cpu_seconds=cpu(proc)));save()
+            try:code=proc.wait(timeout=min(30,max(0.01,900-elapsed)))
+            except subprocess.TimeoutExpired:
+                if time.monotonic()-start<900:continue
+                proc.kill();proc.wait();row.update(result='process-timeout',exit_code=proc.returncode,elapsed_seconds=time.monotonic()-start);save();raise RuntimeError(name+' process timeout; own direct child terminated')
+            row.update(result='exited',exit_code=code,elapsed_seconds=time.monotonic()-start);save();break
+    print(name,row['exit_code'],row['elapsed_seconds'],flush=True)
+    assert (row['exit_code']==0)==success,(p/(name+'.stderr.log')).read_text(encoding='utf8')[-1500:]
+    return (p/(name+'.stderr.log')).read_bytes()
+h=sha(binary.read_bytes());original=(ws/'doc/canonical.json').read_bytes()
+run('canonical-check-second',[str(binary),'doc-canonical','--check'])
+for phase in ['first','second']:
+    for kind in ['markdown','html']:run(kind+'-'+phase,[str(binary),'doc-canonical',kind,str(p/(kind+'-'+phase))])
+v=json.loads(original);v['output_limits']['nodes']=20000000;v['html_output_limits']['nodes']=10000000;low=(json.dumps(v,ensure_ascii=False,indent=2)+'\n').encode();(p/'old-budget-registry.json').write_bytes(low)
+try:
+    (ws/'doc/canonical.json').write_bytes(low)
+    for kind in ['markdown','html']:
+        name=kind+'-old-budget';err=run(name,[str(binary),'doc-canonical',kind,str(p/name)],False)
+        assert b'NodeLimit' in err and not (p/name).exists()
+finally:(ws/'doc/canonical.json').write_bytes(original)
+assert sha(binary.read_bytes())==h
+(p/'binary.json').write_text(json.dumps(dict(head=HEAD,path=str(binary),bytes=binary.stat().st_size,sha256=h),indent=2)+'\n',encoding='utf8',newline='\n')
+print('Fixed generation and separate former-node stops complete',flush=True)

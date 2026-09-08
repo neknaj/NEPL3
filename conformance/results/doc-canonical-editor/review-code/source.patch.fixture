@@ -1,0 +1,397 @@
+diff --git a/doc/canonical.json b/doc/canonical.json
+index a9322fc..1fa9191 100644
+--- a/doc/canonical.json
++++ b/doc/canonical.json
+@@ -64,13 +64,21 @@
+       "aliases": "doc/migration/aliases/12-model-invariants.json",
+       "route": "docs/spec/12-model-invariants.html",
+       "renderer": "nepl3-tools.markdown-annotated-pages/1"
++    },
++    {
++      "id": "editor",
++      "source": "doc/spec/08-editor.nepld",
++      "projection": "doc/spec/08-editor.md",
++      "aliases": "doc/migration/aliases/08-editor.json",
++      "route": "docs/spec/08-editor.html",
++      "renderer": "nepl3-tools.markdown-annotated/2"
+     }
+   ],
+   "output_limits": {
+     "source_bytes": 10000000,
+     "work": 600000000,
+     "depth": 1000,
+-    "nodes": 20000000,
++    "nodes": 30000000,
+     "allocation_units": 1500000000,
+     "output_bytes": 10000000,
+     "diagnostics": 1000,
+@@ -80,7 +88,7 @@
+     "source_bytes": 10000000,
+     "work": 300000000,
+     "depth": 1000,
+-    "nodes": 10000000,
++    "nodes": 20000000,
+     "allocation_units": 750000000,
+     "output_bytes": 10000000,
+     "diagnostics": 1000,
+diff --git a/doc/migration/aliases/08-editor.json b/doc/migration/aliases/08-editor.json
+new file mode 100644
+index 0000000..f28b9d3
+--- /dev/null
++++ b/doc/migration/aliases/08-editor.json
+@@ -0,0 +1,46 @@
++[
++  {
++    "section": null,
++    "name": "08-共通editor-serviceと診断"
++  },
++  {
++    "section": "policy",
++    "name": "方針"
++  },
++  {
++    "section": "snapshot",
++    "name": "1-analysissnapshot"
++  },
++  {
++    "section": "derived",
++    "name": "2-自動で得られる機能"
++  },
++  {
++    "section": "region",
++    "name": "3-regionの選択"
++  },
++  {
++    "section": "relations",
++    "name": "4-definitionとrelations"
++  },
++  {
++    "section": "recovery",
++    "name": "5-不完全入力"
++  },
++  {
++    "section": "incremental",
++    "name": "6-増分解析と取消し"
++  },
++  {
++    "section": "lsp",
++    "name": "7-lsp-adapter"
++  },
++  {
++    "section": "diagnostics",
++    "name": "8-診断ログの表示"
++  },
++  {
++    "section": "trust",
++    "name": "9-workspace-trust"
++  }
++]
+diff --git a/doc/spec/01-architecture.md b/doc/spec/01-architecture.md
+index 550fe81..5438ded 100644
+--- a/doc/spec/01-architecture.md
++++ b/doc/spec/01-architecture.md
+@@ -1,4 +1,4 @@
+-<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page architecture; source SHA-256 7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 6fc06e6be4d2292a4f9d646035133ace7f2245e6c7f4ee4a1d2edbc8166333fe; input PageSet digest 786ae668c68b944b4601d90378972de0914cf30c49901a7d4db6d7d695b46fe9; input context SHA-256 38a832002660e9f2bb3f566bce96a2f0fe013658c4c059728e532e6c84dfaedd. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
++<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page architecture; source SHA-256 7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 6fc06e6be4d2292a4f9d646035133ace7f2245e6c7f4ee4a1d2edbc8166333fe; input PageSet digest 1fe033103f922bfd695ebafab864c58e92f4d3e3922c3ff2164cef439492da54; input context SHA-256 6451c6ba5b5b2d5afbee98f7071c869b8be4d569505e9d3b092cd19e0b6c21af. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+ 
+ <a name="01-repositorycrate依存方向"></a>
+ 
+diff --git a/doc/spec/08-editor.md b/doc/spec/08-editor.md
+index a5a3ded..402dd6a 100644
+--- a/doc/spec/08-editor.md
++++ b/doc/spec/08-editor.md
+@@ -1,131 +1,175 @@
+-# 08. 共通editor serviceと診断
++<!-- Generated from doc/spec/08&#45;editor.nepld; renderer nepl3-tools.markdown-annotated/2; source SHA-256 d326323331b335da48a044e35a92d2bd89b64bc4fde794131af4ab17ad3f91b6; alias input SHA-256 0e85d24ed98a8e151b582442218b17d3d4f191755c9528582080443fca21746b; document digest cc476675f363da36a8425749ddefd74e2799d2ec64bbc0c456d11af84b82752a. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+ 
+-## 方針
++<a name="08-共通editor-serviceと診断"></a>
+ 
+-一度宣言したgrammar/binding/style情報からeditor機能を導出する。専用parserも同じfactsを返して支援を受ける。共通分類をプログラミング言語の要素に限定しない。
++# 08\. 共通\[きょうつう\]editor serviceと診断\[しんだん\]
+ 
+-## 1. AnalysisSnapshot
++<a name="n-706f6c696379"></a>
+ 
+-入力はSourceSnapshot集合、profile/package revision集合、明示的なresource/schema環境、解析options。結果はParsed tree、内部views、Scope/Entity/Occurrence、typed Relations、Diagnostics、ExpectedAt、Dependencies。
++<a name="方針"></a>
+ 
+-全結果にSnapshotIdとanalysis keyを付ける。keyには言語/reader/providerのrevision、context、操作optionsを含む。spanのある結果を意味値だけのcacheから再利用しない。
++## 方針\[ほうしん\]
+ 
+-Binding の prepared request は AnalysisKey の treeDigest、profileDigest、executionDigest、requestDigest を固定する。treeDigest は局所nodeを正準化した完全な ParseTree の NDF/1 CBORに基づき、明示sourceのidentity・URI・元bytes、payload、環境、各選択contextを含む。profileDigest は解決済みProfileの意味identityで、選択schema、provider実装、resource、既定limitsを含む。executionDigest はalias名順の実package execution identity表に基づき、同じ意味でも異なるarena配置を区別する。requestDigest はanalysis ID、型付きBindingOptions、有効な操作Limitsを含む。現在のBindingOptionsは空recordであり、未実装の意味optionを黙って受け入れない。
++一度宣言\[いちどせんげん\]したgrammar\/binding\/style情報\[じょうほう\]からeditor機能\[きのう\]を導出\[どうしゅつ\]する。専用\[せんよう\]parserも同\[おな\]じfactsを返\[かえ\]して支援\[しえん\]を受\[う\]ける。共通分類\[きょうつうぶんるい\]をプログラミング言語\[げんご\]の要素\[ようそ\]に限定\[げんてい\]しない。
+ 
+-treeDigest・executionDigest・requestDigestは `SHA-256(domain || canonical NDF/1 CBOR(value))` とし、tree・execution・requestのdomainはそれぞれ `nepl3.analysis.tree/1`、`nepl3.analysis.execution/1`、`nepl3.analysis.request/1` に終端zero byteを付ける。profileDigestは既存の解決済みProfile identityアルゴリズムに従う。codecは正準化とhashのWork・割当・出力量を操作Budgetへ計上する。SourceSnapshotを内包した値のhash計算だけで新たなsource lookup権限を付与しない。
++<a name="n-736e617073686f74"></a>
+ 
+-prepareは明示的に渡されたBudgetとSourceAdmissionで要求を検査し、keyを算出する。実行LimitsはProfileの上限を超えられず、executeのBudgetのLimitsは要求と完全一致しなければならない。prepareと実行は独立した操作予算を使うことも、同一pipelineの累積Budget/SourceAdmissionを共有することもできるが、使用済み量を払い戻さない。keyは有効上限を保持し、開始時の残量やtransportの観測Usageを認証する値ではない。途中停止結果から完了proofを生成しない。
++<a name="1-analysissnapshot"></a>
+ 
+-初回BindingRequest decoderは元のRust要求を持たず、明示sourceを持つ受信treeと選択済みProfileからkeyを再計算する。自己申告keyやLimitsを通信認証・hostの実行許可へ昇格しない。受信raw要求のprepareでも再計算・一致検査を行い、その間に変更されたtree/contextや条件を拒否する。BoundBindingReplyは全結果枝のkeyと通常BindingReplyを保持する。raw返信decoderの一致検査は意味proofの発行ではなく、完了proofは実BindingPlanの実行からのみ得る。
++## 1\. AnalysisSnapshotの入力\[にゅうりょく\]と同一性\[どういつせい\]
+ 
+-BoundBindingReply.for_source はhostが現在要求しているAnalysisKeyとの完全一致とSourceRefのrevision/digestを検査してから、完了したBindingAnalysisを公開する。これは定義・参照検索の前提となる照合入口であり、positionからの対象選択、定義ジャンプ、参照検索、renameのアルゴリズム完成を意味しない。既存のunkeyed analyzeのFactSet.analysis_idだけを、editor用のstale判定として使わない。
++入力\[にゅうりょく\]はSourceSnapshot集合\[しゅうごう\]、profile\/package revision集合\[しゅうごう\]、明示的\[めいじてき\]なresource\/schema環境\[かんきょう\]、解析\[かいせき\]options。結果\[けっか\]はParsed tree、内部\[ないぶ\]views、Scope\/Entity\/Occurrence、typed Relations、Diagnostics、ExpectedAt、Dependencies。
+ 
+-## 2. 自動で得られる機能
++全結果\[ぜんけっか\]にSnapshotIdとanalysis keyを付\[つ\]ける。keyには言語\[げんご\]\/reader\/providerのrevision、context、操作\[そうさ\]optionsを含\[ふく\]む。spanのある結果\[けっか\]を意味値\[いみち\]だけのcacheから再利用\[さいりよう\]しない。
+ 
+-schemaのform/leaf/fieldとreader captureから構文ハイライト、構造的selection、expected categoryの補完を提供する。binding/reference/export/importから定義ジャンプ、参照検索、未定義/重複診断、scope内の候補補完を提供する。name fieldとenclosing rangeからoutlineを作る。ドキュメントfieldを宣言すればhoverに出す。
++Binding の prepared request は AnalysisKey の treeDigest、profileDigest、executionDigest、requestDigest を固定\[こてい\]する。treeDigest は局所\[きょくしょ\]nodeを正準化\[せいじゅんか\]した完全\[かんぜん\]な ParseTree の NDF\/1 CBORに基\[もと\]づき、明示\[めいじ\]sourceのidentity・URI・元\[もと\]bytes、payload、環境\[かんきょう\]、各選択\[かくせんたく\]contextを含\[ふく\]む。profileDigest は解決済\[かいけつず\]みProfileの意味\[いみ\]identityで、選択\[せんたく\]schema、provider実装\[じっそう\]、resource、既定\[きてい\]limitsを含\[ふく\]む。executionDigest はalias名順\[めいじゅん\]の実\[じつ\]package execution identity表\[ひょう\]に基\[もと\]づき、同\[おな\]じ意味\[いみ\]でも異\[こと\]なるarena配置\[はいち\]を区別\[くべつ\]する。requestDigest はanalysis ID、型付\[かたつ\]きBindingOptions、有効\[ゆうこう\]な操作\[そうさ\]Limitsを含\[ふく\]む。現在\[げんざい\]のBindingOptionsは空\[くう\]recordであり、未実装\[みじっそう\]の意味\[いみ\]optionを黙\[だま\]って受\[う\]け入\[い\]れない。
+ 
+-型推論、回路幅、数値計算結果等はdomain factsの追加で精度を上げる。grammarだけから任意domainの意味を推測したと主張しない。
++treeDigest・executionDigest・requestDigestは `SHA-256(domain || canonical NDF/1 CBOR(value))` とし、tree・execution・requestのdomainはそれぞれ `nepl3.analysis.tree/1`、`nepl3.analysis.execution/1`、`nepl3.analysis.request/1` に終端\[しゅうたん\]zero byteを付\[つ\]ける。profileDigestは既存\[きそん\]の解決済\[かいけつず\]みProfile identityアルゴリズムに従\[したが\]う。codecは正準化\[せいじゅんか\]とhashのWork・割当\[わりあて\]・出力量\[しゅつりょくりょう\]を操作\[そうさ\]Budgetへ計上\[けいじょう\]する。SourceSnapshotを内包\[ないほう\]した値\[あたい\]のhash計算\[けいさん\]だけで新\[あら\]たなsource lookup権限\[けんげん\]を付与\[ふよ\]しない。
+ 
+-手書きreaderにはview/factsの同じcontractを要求する。内部viewなしならtoken全体のfallbackだけ。すべてのcustom readerへ精密な内部支援を自動生成できるとはしない。
++prepareは明示的\[めいじてき\]に渡\[わた\]されたBudgetとSourceAdmissionで要求\[ようきゅう\]を検査\[けんさ\]し、keyを算出\[さんしゅつ\]する。実行\[じっこう\]LimitsはProfileの上限\[じょうげん\]を超\[こ\]えられず、executeのBudgetのLimitsは要求\[ようきゅう\]と完全一致\[かんぜんいっち\]しなければならない。prepareと実行\[じっこう\]は独立\[どくりつ\]した操作予算\[そうさよさん\]を使\[つか\]うことも、同一\[どういつ\]pipelineの累積\[るいせき\]Budget\/SourceAdmissionを共有\[きょうゆう\]することもできるが、使用済\[しようず\]み量\[りょう\]を払\[はら\]い戻\[もど\]さない。keyは有効上限\[ゆうこうじょうげん\]を保持\[ほじ\]し、開始時\[かいしじ\]の残量\[ざんりょう\]やtransportの観測\[かんそく\]Usageを認証\[にんしょう\]する値\[あたい\]ではない。途中停止結果\[とちゅうていしけっか\]から完了\[かんりょう\]proofを生成\[せいせい\]しない。
+ 
+-## 3. regionの選択
++初回\[しょかい\]BindingRequest decoderは元\[もと\]のRust要求\[ようきゅう\]を持\[も\]たず、明示\[めいじ\]sourceを持\[も\]つ受信\[じゅしん\]treeと選択済\[せんたくず\]みProfileからkeyを再計算\[さいけいさん\]する。自己申告\[じこしんこく\]keyやLimitsを通信認証\[つうしんにんしょう\]・hostの実行許可\[じっこうきょか\]へ昇格\[しょうかく\]しない。受信\[じゅしん\]raw要求\[ようきゅう\]のprepareでも再計算\[さいけいさん\]・一致検査\[いっちけんさ\]を行\[おこな\]い、その間\[あいだ\]に変更\[へんこう\]されたtree\/contextや条件\[じょうけん\]を拒否\[きょひ\]する。BoundBindingReplyは全結果枝\[ぜんけっかえだ\]のkeyと通常\[つうじょう\]BindingReplyを保持\[ほじ\]する。raw返信\[へんしん\]decoderの一致検査\[いっちけんさ\]は意味\[いみ\]proofの発行\[はっこう\]ではなく、完了\[かんりょう\]proofは実\[じつ\]BindingPlanの実行\[じっこう\]からのみ得\[え\]る。
+ 
+-source positionから、同一snapshot上で包含する最小のfield/elementを選ぶ。grammar priority、最内側、宣言順でtie-breakを固定する。sentence内のreadingを問い合わせたらsentence token全体よりreading viewを優先する。
++BoundBindingReply\.for\_source はhostが現在要求\[げんざいようきゅう\]しているAnalysisKeyとの完全一致\[かんぜんいっち\]とSourceRefのrevision\/digestを検査\[けんさ\]してから、完了\[かんりょう\]したBindingAnalysisを公開\[こうかい\]する。これは定義\[ていぎ\]・参照検索\[さんしょうけんさく\]の前提\[ぜんてい\]となる照合入口\[しょうごういりぐち\]であり、positionからの対象選択\[たいしょうせんたく\]、定義\[ていぎ\]ジャンプ、参照検索\[さんしょうけんさく\]、renameのアルゴリズム完成\[かんせい\]を意味\[いみ\]しない。既存\[きそん\]のunkeyed analyzeのFactSet\.analysis\_idだけを、editor用\[よう\]のstale判定\[はんてい\]として使\[つか\]わない。
+ 
+-現在の `analysis::region::regions` はprepared Binding入力の検査済みtree/Profileと、明示ReaderFactBatch sidecarを受ける。`RegionKey` は既存AnalysisKeyとsidecarのdigestの組である。sidecarは `RegionSidecar { facts: Option<List<ReaderFactBatch>> }` を正準NDF/1 CBORへ符号化し、`SHA-256("nepl3.region.reader-facts/1\0" || bytes)` で識別する。Foreign pathとnodeはtreeの正準DFS番号へ写し、batch/fact/triviaの順序は保存する。NoneはSyntaxOnly、Some（空列を含む）はReaderFactsとして区別し、入力しなかったCaptureをView名から推測しない。
++<a name="n-64657269766564"></a>
+ 
+-sidecarのentryは所有bundle/nodeの保存selectionと照合する。nodeのあるbatchのtriviaはToken.leadingTriviaの完全な再掲であり、別tokenをSkippedと名乗って混入できない。Captureは所有bundleの宣言SourceMapを使い、token headまたは正式なskip triviaへの包含を検査する。Presentation/Relationは通常reader契約どおり明示source/schemaの整合を検査し、消費範囲への包含条件を追加しない。所有bundleのsource/map不足をForeignの別表で補わない。これらは構造と出自参照の検査であり、raw sidecarが実providerから返されたことを認証しない。
++<a name="2-自動で得られる機能"></a>
+ 
+-RegionRequestはRegionKey、SourceRef、byte offsetを持つ。key/revision/digestとUTF-8 scalar境界を照合し、範囲は半開区間とする。返すSourceRegionは正準bundle/node、field/element番号またはtoken所有Viewのroot/field/child path、表示source span、元のlogical span、priority、depth、宣言順、PresentationClassを保持する。nodeなしの末尾/skip-only batchはnode=Noneであり、架空のroot所有nodeを作らない。通常node/field/headのdepthはその宣言ownerの深さ、Viewはそのownerに内部field/childの深さを加える。子nodeは親fieldより内側となる。
++## 2\. 自動\[じどう\]で得\[え\]られる機能\[きのう\]
+ 
+-同じ長さならpriority降順、depth降順、宣言順で選ぶ。宣言順はrootからfield順のDFSとViewの宣言順で、arenaの保存順とは区別する。共有DAGの同じ対象には最初の宣言順と実際の最深到達経路を保持する。回復nodeはRecoveryとして区別し、UnknownHeadのUnparsed範囲へ推測した子を追加しない。Missingの空anchorやEOFを直前の名前に吸着させない。
++schemaのform\/leaf\/fieldとreader captureから構文\[こうぶん\]ハイライト、構造的\[こうぞうてき\]selection、expected categoryの補完\[ほかん\]を提供\[ていきょう\]する。binding\/reference\/export\/importから定義\[ていぎ\]ジャンプ、参照検索\[さんしょうけんさく\]、未定義\[みていぎ\]\/重複診断\[じゅうふくしんだん\]、scope内\[ない\]の候補補完\[こうほほかん\]を提供\[ていきょう\]する。name fieldとenclosing rangeからoutlineを作\[つく\]る。ドキュメントfieldを宣言\[せんげん\]すればhoverに出\[だ\]す。
+ 
+-表示用SourceMap投影は領域ownerの明示表だけをたどる。隣接Exact区間は同じsourceとbyte変位の連続被覆として結合し、区間分割や表順で結果を変えない。完全Exact、部分被覆ExactFragment、保守的なTransformedを区別し、多義的な表示候補を保持する。この表示情報はrenameの一意逆写像や位置単位の名前解決を証明しない。Foreign fieldの子位置には子bundleの表を使い、guestだけにあるmapをhost nodeへ適用しない。map探索の深さは構文/View ownerの深さに合成して計量する。
++型推論\[かたすいろん\]、回路幅\[かいろはば\]、数値計算結果等\[すうちけいさんけっかなど\]はdomain factsの追加\[ついか\]で精度\[せいど\]を上\[あ\]げる。grammarだけから任意\[にんい\]domainの意味\[いみ\]を推測\[すいそく\]したと主張\[しゅちょう\]しない。
+ 
+-RegionReplyは全表示regionと選択index、またはtyped Invalid/Stopped、Usage-only Report、明示source閉包を返す。停止で候補途中列を公開しない。初回tree/sidecar/request復元は元Rust要求やambient sourceによる補完を必要としない。返信のCompleteは対応する準備入力から構造選択を予算付きで再計算して照合する。これはreader実行認証、Binding完了proof、別process費用計測の代わりではない。一般regionを用いるdefinition/references入口は次節のRegionQueryであり、既存のOccurrenceベース入口の動作を変更しない。
++手書\[てが\]きreaderにはview\/factsの同\[おな\]じcontractを要求\[ようきゅう\]する。内部\[ないぶ\]viewなしならtoken全体\[ぜんたい\]のfallbackだけ。すべてのcustom readerへ精密\[せいみつ\]な内部支援\[ないぶしえん\]を自動生成\[じどうせいせい\]できるとはしない。
+ 
+-型付きregion列の構築はWork・Nodes・Depth・AllocationUnitsとsource受入を計上し、まだ生成していないserializationのbyte数をOutputBytesへ推計加算しない。native返信のReportはその計算終了時点のUsageである。実NDF/1 CBOR encodeは同じ操作予算へ実出力のOutputBytesを生成前に課金する。従ってnativeのOutputBytes上限0で型付き結果が得られることと、実encodeがOutputLimitで停止することは別の境界であり、返信中のUsageをその後のserializationや外部transportまで含む総費用と扱わない。
++<a name="n-726567696f6e"></a>
+ 
+-highlightは内部regionへ分割し、leafに近い具体的classを優先する。overlapを持つ元データは保存するが、LSPへは非重複・source順・単一行に正規化したspan列を返す。色はthemeに委ねる。
++<a name="3-regionの選択"></a>
+ 
+-## 4. definitionとrelations
++## 3\. regionの選択\[せんたく\]
+ 
+-Occurrenceベースの `analysis::query::query` は、完了したBoundBindingReplyとQueryRequest(key, SourceRef, byte offset, kind)を受ける。SourceRefのrevision/digestと現在要求するkeyを照合し、UTF-8 scalar境界を検査する。範囲は半開区間で、終端byteや空白を直前の名前へ吸着させない。包含するOccurrence.spanのうち最小のものを選び、同長なら確定factsの発行順を使う。
++source positionから、同一\[どういつ\]snapshot上\[じょう\]で包含\[ほうがん\]する最小\[さいしょう\]のfield\/elementを選\[えら\]ぶ。grammar priority、最内側\[さいうちがわ\]、宣言順\[せんげんじゅん\]でtie\-breakを固定\[こてい\]する。sentence内\[ない\]のreadingを問\[と\]い合\[あ\]わせたらsentence token全体\[ぜんたい\]よりreading viewを優先\[ゆうせん\]する。
+ 
+-一般regionを使う `analysis::region::query::query` は、同じ準備入力と実Binding完了結果に対するRegionQueryRequest(region:RegionRequest, kind:QueryKind)を受ける。まず3節のpriorityを含む構造選択を実行し、選択したSourceRegionを保持する。確定BindingBundleScopeからそのbundleのrootを解決し、そのrootのOccurrenceだけを候補にする。Foreign fieldは宣言元のRegionTargetを保持したまま、内容のguest bundleに対応するrootと局所mapを用いる。単なるsource座標一致でhost/guestの名前を混ぜない。
++現在\[げんざい\]の `analysis::region::regions` はprepared Binding入力\[にゅうりょく\]の検査済\[けんさず\]みtree\/Profileと、明示\[めいじ\]ReaderFactBatch sidecarを受\[う\]ける。`RegionKey` は既存\[きそん\]AnalysisKeyとsidecarのdigestの組\[くみ\]である。sidecarは `RegionSidecar { facts: Option<List<ReaderFactBatch>> }` を正準\[せいじゅん\]NDF\/1 CBORへ符号化\[ふごうか\]し、`SHA-256("nepl3.region.reader-facts/1\0" || bytes)` で識別\[しきべつ\]する。Foreign pathとnodeはtreeの正準\[せいじゅん\]DFS番号\[ばんごう\]へ写\[うつ\]し、batch\/fact\/triviaの順序\[じゅんじょ\]は保存\[ほぞん\]する。NoneはSyntaxOnly、Some（空列\[くうれつ\]を含\[ふく\]む）はReaderFactsとして区別\[くべつ\]し、入力\[にゅうりょく\]しなかったCaptureをView名\[めい\]から推測\[すいそく\]しない。
+ 
+-要求位置の一Unicode scalar範囲と選択regionのlogical範囲を、所有bundleの宣言Exact/Transformed関係でOccurrenceのsourceへ対応付け、両者とOccurrence.spanが重なるものを残す。Exactはbyte差分と被覆区間、Transformedは宣言された範囲全体の対応である。query用の対応は双方向の関係であり、非一意なExactやTransformedの候補を黙って一つへ絞らず、rename用の一意な逆変換や編集権限とは区別する。source不足・古いrevision・不正scalar境界・停止は型付き失敗となる。
++sidecarのentryは所有\[しょゆう\]bundle\/nodeの保存\[ほぞん\]selectionと照合\[しょうごう\]する。nodeのあるbatchのtriviaはToken\.leadingTriviaの完全\[かんぜん\]な再掲\[さいけい\]であり、別\[べつ\]tokenをSkippedと名乗\[なの\]って混入\[こんにゅう\]できない。Captureは所有\[しょゆう\]bundleの宣言\[せんげん\]SourceMapを使\[つか\]い、token headまたは正式\[せいしき\]なskip triviaへの包含\[ほうがん\]を検査\[けんさ\]する。Presentation\/Relationは通常\[つうじょう\]reader契約\[けいやく\]どおり明示\[めいじ\]source\/schemaの整合\[せいごう\]を検査\[けんさ\]し、消費範囲\[しょうひはんい\]への包含条件\[ほうがんじょうけん\]を追加\[ついか\]しない。所有\[しょゆう\]bundleのsource\/map不足\[ふそく\]をForeignの別表\[べっぴょう\]で補\[おぎな\]わない。これらは構造\[こうぞう\]と出自参照\[しゅつじさんしょう\]の検査\[けんさ\]であり、raw sidecarが実\[じつ\]providerから返\[かえ\]されたことを認証\[にんしょう\]しない。
+ 
+-対応に使うmapはそのSyntaxBundleの局所表と、実BindingBundleScope.customSourceMapsが指すCustom受理行だけである。Customの生成sourceもBinding結果の明示source閉包で解決する。Binding全体の平坦なsourceMaps表を全bundleへ適用せず、同じ生成sourceをhost/guestが共有していても別ownerのmapによる候補追加を許さない。
++RegionRequestはRegionKey、SourceRef、byte offsetを持\[も\]つ。key\/revision\/digestとUTF\-8 scalar境界\[きょうかい\]を照合\[しょうごう\]し、範囲\[はんい\]は半開区間\[はんかいくかん\]とする。返\[かえ\]すSourceRegionは正準\[せいじゅん\]bundle\/node、field\/element番号\[ばんごう\]またはtoken所有\[しょゆう\]Viewのroot\/field\/child path、表示\[ひょうじ\]source span、元\[もと\]のlogical span、priority、depth、宣言順\[せんげんじゅん\]、PresentationClassを保持\[ほじ\]する。nodeなしの末尾\[まつび\]\/skip\-only batchはnode\=Noneであり、架空\[かくう\]のroot所有\[しょゆう\]nodeを作\[つく\]らない。通常\[つうじょう\]node\/field\/headのdepthはその宣言\[せんげん\]ownerの深\[ふか\]さ、Viewはそのownerに内部\[ないぶ\]field\/childの深\[ふか\]さを加\[くわ\]える。子\[こ\]nodeは親\[おや\]fieldより内側\[うちがわ\]となる。
+ 
+-RegionQueryReplyのCompleteは選択regionとOccurrenceごとのDefinition/References結果列を持つ。列は確定factsの発行順を保ち、各結果は保存された最終ResolutionのEntity IDを使う。region=None、regionはあるがOccurrenceがない、未解決/Open入力、複数Occurrence、Ambiguousの複数Entity、位置を持たないEntityを区別する。名前の再探索や発行時stageの書換えでCustomの更新を消さない。途中候補はInvalid/Stoppedで公開せず、使用済み資源を払い戻さない。ReportのUsageはnative処理終了時点であり、後続serializationの実出力課金とは分ける。
++同\[おな\]じ長\[なが\]さならpriority降順\[こうじゅん\]、depth降順\[こうじゅん\]、宣言順\[せんげんじゅん\]で選\[えら\]ぶ。宣言順\[せんげんじゅん\]はrootからfield順\[じゅん\]のDFSとViewの宣言順\[せんげんじゅん\]で、arenaの保存順\[ほぞんじゅん\]とは区別\[くべつ\]する。共有\[きょうゆう\]DAGの同\[おな\]じ対象\[たいしょう\]には最初\[さいしょ\]の宣言順\[せんげんじゅん\]と実際\[じっさい\]の最深到達経路\[さいしんとうたつけいろ\]を保持\[ほじ\]する。回復\[かいふく\]nodeはRecoveryとして区別\[くべつ\]し、UnknownHeadのUnparsed範囲\[はんい\]へ推測\[すいそく\]した子\[こ\]を追加\[ついか\]しない。Missingの空\[くう\]anchorやEOFを直前\[ちょくぜん\]の名前\[なまえ\]に吸着\[きゅうちゃく\]させない。
+ 
+-初回RegionQuery受信は、明示BindingRequest/ReaderFactBatch sidecarを復元して準備し、同じ選択Profileで実Bindingを実行した後に要求と返信を照合する。返信Completeのcodec検査はこの入力と完了結果からqueryを予算付きで再計算し、候補・選択・source閉包を比較する。raw BindingResultやbundleScopes行、自己申告RegionKeyから意味proof・通信認証・provider実行許可を発行しない。
++表示用\[ひょうじよう\]SourceMap投影\[とうえい\]は領域\[りょういき\]ownerの明示表\[めいじひょう\]だけをたどる。隣接\[りんせつ\]Exact区間\[くかん\]は同\[おな\]じsourceとbyte変位\[へんい\]の連続被覆\[れんぞくひふく\]として結合\[けつごう\]し、区間分割\[くかんぶんかつ\]や表順\[ひょうじゅん\]で結果\[けっか\]を変\[か\]えない。完全\[かんぜん\]Exact、部分被覆\[ぶぶんひふく\]ExactFragment、保守的\[ほしゅてき\]なTransformedを区別\[くべつ\]し、多義的\[たぎてき\]な表示候補\[ひょうじこうほ\]を保持\[ほじ\]する。この表示情報\[ひょうじじょうほう\]はrenameの一意逆写像\[いちいぎゃくしゃぞう\]や位置単位\[いちたんい\]の名前解決\[なまえかいけつ\]を証明\[しょうめい\]しない。Foreign fieldの子位置\[こいち\]には子\[こ\]bundleの表\[ひょう\]を使\[つか\]い、guestだけにあるmapをhost nodeへ適用\[てきよう\]しない。map探索\[たんさく\]の深\[ふか\]さは構文\[こうぶん\]\/View ownerの深\[ふか\]さに合成\[ごうせい\]して計量\[けいりょう\]する。
+ 
+-QuerySelectionは元のOccurrenceId・span・確定ReferenceResolutionとopenInputを保持する。対象なしはNone、未解決とOpen namespaceのfree inputはopenInputで区別し、DeferredもUnresolvedに潰さない。定義候補は確定resolutionのEntity ID列に従い、曖昧な全候補とその順序を維持する。位置を持たないEntityはIDとlocation=Noneを返し、仮のsource位置を作らない。locationがある場合はURI、定義全体range、任意の名前selectionを分離する。
++RegionReplyは全表示\[ぜんひょうじ\]regionと選択\[せんたく\]index、またはtyped Invalid\/Stopped、Usage\-only Report、明示\[めいじ\]source閉包\[へいほう\]を返\[かえ\]す。停止\[ていし\]で候補途中列\[こうほとちゅうれつ\]を公開\[こうかい\]しない。初回\[しょかい\]tree\/sidecar\/request復元\[ふくげん\]は元\[もと\]Rust要求\[ようきゅう\]やambient sourceによる補完\[ほかん\]を必要\[ひつよう\]としない。返信\[へんしん\]のCompleteは対応\[たいおう\]する準備入力\[じゅんびにゅうりょく\]から構造選択\[こうぞうせんたく\]を予算付\[よさんつ\]きで再計算\[さいけいさん\]して照合\[しょうごう\]する。これはreader実行認証\[じっこうにんしょう\]、Binding完了\[かんりょう\]proof、別\[べつ\]process費用計測\[ひようけいそく\]の代\[か\]わりではない。一般\[いっぱん\]regionを用\[もち\]いるdefinition\/references入口\[いりぐち\]は次節\[じせつ\]のRegionQueryであり、既存\[きそん\]のOccurrenceベース入口\[いりぐち\]の動作\[どうさ\]を変更\[へんこう\]しない。
+ 
+-Referencesは選択した各Entity IDごとに確定Occurrenceを検索する。既定ではResolvedのReferenceだけを返す。ReferenceOptionsはDefinition・Import・Export role、およびそのEntityをAmbiguous候補に含むOccurrenceをそれぞれ明示的に追加できる。曖昧な出現はambiguous=trueで区別し、同綴りの別Entityを混ぜない。通常BindingのImportが子のexport候補を可視にする操作と、providerが明示的に返すImport roleのOccurrenceは別であり、queryが新しいOccurrenceを捏造しない。Customの更新後も元stageから名前検索をやり直さず、確定resolutionを用いる。
++型付\[かたつ\]きregion列\[れつ\]の構築\[こうちく\]はWork・Nodes・Depth・AllocationUnitsとsource受入\[うけいれ\]を計上\[けいじょう\]し、まだ生成\[せいせい\]していないserializationのbyte数\[すう\]をOutputBytesへ推計加算\[すいけいかさん\]しない。native返信\[へんしん\]のReportはその計算終了時点\[けいさんしゅうりょうじてん\]のUsageである。実\[じつ\]NDF\/1 CBOR encodeは同\[おな\]じ操作予算\[そうさよさん\]へ実出力\[じつしゅつりょく\]のOutputBytesを生成前\[せいせいまえ\]に課金\[かきん\]する。従\[したが\]ってnativeのOutputBytes上限\[じょうげん\]0で型付\[かたつ\]き結果\[けっか\]が得\[え\]られることと、実\[じつ\]encodeがOutputLimitで停止\[ていし\]することは別\[べつ\]の境界\[きょうかい\]であり、返信中\[へんしんちゅう\]のUsageをその後\[ご\]のserializationや外部\[がいぶ\]transportまで含\[ふく\]む総費用\[そうひよう\]と扱\[あつか\]わない。
+ 
+-QueryReplyはDefinition/References/Invalid/StoppedとReport、参照位置に必要な宣言sourcesを持つ。現queryは新たな診断・eventを発行せず、解析診断は元BindingReplyに残す。query失敗はtyped原因または元StopReasonを保持し、候補途中列を成功結果として公開しない。使用済みBudgetとSourceAdmissionは払い戻さない。sourcesはsource ID・revision・digest順に正準化する。
++highlightは内部\[ないぶ\]regionへ分割\[ぶんかつ\]し、leafに近\[ちか\]い具体的\[ぐたいてき\]classを優先\[ゆうせん\]する。overlapを持\[も\]つ元\[もと\]データは保存\[ほぞん\]するが、LSPへは非重複\[ひじゅうふく\]・source順\[じゅん\]・単一行\[たんいつぎょう\]に正規化\[せいきか\]したspan列\[れつ\]を返\[かえ\]す。色\[いろ\]はthemeに委\[ゆだ\]ねる。
+ 
+-QueryRequestの初回decoderは元Rust要求を必要としないが、自己申告keyから完了したBindingAnalysisを作らない。実queryはhostが保持する同keyの意味proofを使う。返信decoderは対応する要求、role options、候補ID列、範囲・URIと明示source閉包を検査し、ambient sourceで欠損を埋めない。これはraw結果の構造検査であり、通信認証やリモートの解決結果の意味証明ではない。
++<a name="n-72656c6174696f6e73"></a>
+ 
+-Customを使うprepared実行にも同じkey/有効Limitsの検査を適用する。hostのauthorizeが参照する設定・権限方針・明示resourceを変えて結果が変わる場合、hostはその入力変更をProfile resourcesやschemaで宣言したrequest options等のidentityへ反映し、旧keyの結果を再利用してはならない。keyは実行時FactAuthorityそのものを認証せず、同じkeyのまま任意のhost設定変更を安全に許す値でもない。
++<a name="4-definitionとrelations"></a>
+ 
+-definition結果はoriginSelection、targetUri、targetRange、targetSelectionを分離する。entityのnameだけ選択しつつ定義全体も示せる。sourceが配布packageの場合は読み取り専用virtual documentとして公開できる。
++## 4\. definitionとrelationsの扱\[あつか\]い
+ 
+-CorrespondsToには「対応文へ移動」、Originには「生成元へ移動」を提供し、通常の定義ジャンプとは別relationとして扱う。多義的な解決は複数候補を返し、単語一致で一つに決めない。
++Occurrenceベースの `analysis::query::query` は、完了\[かんりょう\]したBoundBindingReplyとQueryRequest\(key\, SourceRef\, byte offset\, kind\)を受\[う\]ける。SourceRefのrevision\/digestと現在要求\[げんざいようきゅう\]するkeyを照合\[しょうごう\]し、UTF\-8 scalar境界\[きょうかい\]を検査\[けんさ\]する。範囲\[はんい\]は半開区間\[はんかいくかん\]で、終端\[しゅうたん\]byteや空白\[くうはく\]を直前\[ちょくぜん\]の名前\[なまえ\]へ吸着\[きゅうちゃく\]させない。包含\[ほうがん\]するOccurrence\.spanのうち最小\[さいしょう\]のものを選\[えら\]び、同長\[どうちょう\]なら確定\[かくてい\]factsの発行順\[はっこうじゅん\]を使\[つか\]う。
+ 
+-renameは同じEntityを指すOccurrenceだけを対象にする。新名の適格性、予約語、shadowing、scope内衝突、外側の参照の捕捉まで再検査する。SourceMapの逆変換が一意でない場所はRenameNotInvertible。全TextEditはrevision付きでatomicに返す。
++一般\[いっぱん\]regionを使\[つか\]う `analysis::region::query::query` は、同\[おな\]じ準備入力\[じゅんびにゅうりょく\]と実\[じつ\]Binding完了結果\[かんりょうけっか\]に対\[たい\]するRegionQueryRequest\(region\:RegionRequest\, kind\:QueryKind\)を受\[う\]ける。まず3節\[せつ\]のpriorityを含\[ふく\]む構造選択\[こうぞうせんたく\]を実行\[じっこう\]し、選択\[せんたく\]したSourceRegionを保持\[ほじ\]する。確定\[かくてい\]BindingBundleScopeからそのbundleのrootを解決\[かいけつ\]し、そのrootのOccurrenceだけを候補\[こうほ\]にする。Foreign fieldは宣言元\[せんげんもと\]のRegionTargetを保持\[ほじ\]したまま、内容\[ないよう\]のguest bundleに対応\[たいおう\]するrootと局所\[きょくしょ\]mapを用\[もち\]いる。単\[たん\]なるsource座標一致\[ざひょういっち\]でhost\/guestの名前\[なまえ\]を混\[ま\]ぜない。
+ 
+-現在の rename は `RenameRequest(key, source, offset, newName, writable)` に対する二段操作である。対象選択は上記の名前Occurrence規則を使う。writable はhostが許可した元snapshot集合であり、受信したSourceRefやURIだけから編集権限を発行しない。未選択・未解決・曖昧・Deferred・位置なしを型付きで区別して拒否する。予約headは対象EntityのFactNamespace.schemaを所有する選択済みpackageのForm.spellingと照合する。別schemaの言語だけに存在するheadを予約語へ加えない。最終的な名前のreader適格性と構文選択は実再parseで検査する。
++要求位置\[ようきゅういち\]の一\[いち\]Unicode scalar範囲\[はんい\]と選択\[せんたく\]regionのlogical範囲\[はんい\]を、所有\[しょゆう\]bundleの宣言\[せんげん\]Exact\/Transformed関係\[かんけい\]でOccurrenceのsourceへ対応付\[たいおうづ\]け、両者\[りょうしゃ\]とOccurrence\.spanが重\[かさ\]なるものを残\[のこ\]す。Exactはbyte差分\[さぶん\]と被覆区間\[ひふくくかん\]、Transformedは宣言\[せんげん\]された範囲全体\[はんいぜんたい\]の対応\[たいおう\]である。query用\[よう\]の対応\[たいおう\]は双方向\[そうほうこう\]の関係\[かんけい\]であり、非一意\[ひいちい\]なExactやTransformedの候補\[こうほ\]を黙\[だま\]って一\[ひと\]つへ絞\[しぼ\]らず、rename用\[よう\]の一意\[いちい\]な逆変換\[ぎゃくへんかん\]や編集権限\[へんしゅうけんげん\]とは区別\[くべつ\]する。source不足\[ふそく\]・古\[ふる\]いrevision・不正\[ふせい\]scalar境界\[きょうかい\]・停止\[ていし\]は型付\[かたつ\]き失敗\[しっぱい\]となる。
+ 
+-prepareは元の実parse完了結果と、その同じimmutable treeを借用するprepared Binding要求、同keyの完了解析を要求する。private RenameDraftには元revisionへの編集候補と候補snapshot集合を保持するが、成功transactionや編集列の公開入口を与えない。draftはrename操作専用SourceAdmissionを所有し、同じ有効LimitsのBudgetをprepare・再parse・再解析・acceptの間、排他的に借用する。失敗やdraft破棄で使用済み費用を払い戻さない。別候補は同じ元revisionから分岐でき、共有の元SourceStoreを候補作成時に変更しない。
++対応\[たいおう\]に使\[つか\]うmapはそのSyntaxBundleの局所表\[きょくしょひょう\]と、実\[じつ\]BindingBundleScope\.customSourceMapsが指\[さ\]すCustom受理行\[じゅりぎょう\]だけである。Customの生成\[せいせい\]sourceもBinding結果\[けっか\]の明示\[めいじ\]source閉包\[へいほう\]で解決\[かいけつ\]する。Binding全体\[ぜんたい\]の平坦\[へいたん\]なsourceMaps表\[ひょう\]を全\[ぜん\]bundleへ適用\[てきよう\]せず、同\[おな\]じ生成\[せいせい\]sourceをhost\/guestが共有\[きょうゆう\]していても別\[べつ\]ownerのmapによる候補追加\[こうほついか\]を許\[ゆる\]さない。
+ 
+-逆写像は宣言SourceMapを全探索し、同一source・revision・digest上の一意な連続範囲へ達するExact対応だけを使う。隣接するExact区間は同じbyte変位で穴なく全対象範囲を被覆するなら結合でき、表順や区間分割で結果を変えない。異なるsourceや変位への多義性、被覆穴、Transformed、Composite/Synthetic origin、cycleは拒否する。quoteやescapeから復号された意味名と元bytesが異なる場合、明示逆encoderがないままquoteを消す置換を行わない。探索・範囲比較・複製はWork/Depth/Nodes/Allocationの対象となる。
++RegionQueryReplyのCompleteは選択\[せんたく\]regionとOccurrenceごとのDefinition\/References結果列\[けっかれつ\]を持\[も\]つ。列\[れつ\]は確定\[かくてい\]factsの発行順\[はっこうじゅん\]を保\[たも\]ち、各結果\[かくけっか\]は保存\[ほぞん\]された最終\[さいしゅう\]ResolutionのEntity IDを使\[つか\]う。region\=None、regionはあるがOccurrenceがない、未解決\[みかいけつ\]\/Open入力\[にゅうりょく\]、複数\[ふくすう\]Occurrence、Ambiguousの複数\[ふくすう\]Entity、位置\[いち\]を持\[も\]たないEntityを区別\[くべつ\]する。名前\[なまえ\]の再探索\[さいたんさく\]や発行時\[はっこうじ\]stageの書換\[かきか\]えでCustomの更新\[こうしん\]を消\[け\]さない。途中候補\[とちゅうこうほ\]はInvalid\/Stoppedで公開\[こうかい\]せず、使用済\[しようず\]み資源\[しげん\]を払\[はら\]い戻\[もど\]さない。ReportのUsageはnative処理終了時点\[しょりしゅうりょうじてん\]であり、後続\[こうぞく\]serializationの実出力課金\[じつしゅつりょくかきん\]とは分\[わ\]ける。
+ 
+-ここで探索する宣言表は対象Entityまたは各Occurrenceのnamespace rootに対応する実bundleの局所mapと、そのbundleのcustomSourceMapsが指す受理mapに限る。平坦なFactSet.sourceMaps全体を編集先の根拠にしない。各Occurrenceは自分のownerで逆写像し、同じEntityを指すという理由だけで対象Entityのmapを流用しない。前向き導出も各元編集と対応ownerの組ごとに独立した閉包をたどり、最終的な編集列だけを統合する。再解析後のsource位置対応はold/newそれぞれのEntity・Occurrence owner、構文位置は各正準bundle ownerで検査する。guestだけが宣言したmapでhost名のwritable rootを置き換えることはできない。
++初回\[しょかい\]RegionQuery受信\[じゅしん\]は、明示\[めいじ\]BindingRequest\/ReaderFactBatch sidecarを復元\[ふくげん\]して準備\[じゅんび\]し、同\[おな\]じ選択\[せんたく\]Profileで実\[じつ\]Bindingを実行\[じっこう\]した後\[あと\]に要求\[ようきゅう\]と返信\[へんしん\]を照合\[しょうごう\]する。返信\[へんしん\]Completeのcodec検査\[けんさ\]はこの入力\[にゅうりょく\]と完了結果\[かんりょうけっか\]からqueryを予算付\[よさんつ\]きで再計算\[さいけいさん\]し、候補\[こうほ\]・選択\[せんたく\]・source閉包\[へいほう\]を比較\[ひかく\]する。raw BindingResultやbundleScopes行\[ぎょう\]、自己申告\[じこしんこく\]RegionKeyから意味\[いみ\]proof・通信認証\[つうしんにんしょう\]・provider実行許可\[じっこうきょか\]を発行\[はっこう\]しない。
+ 
+-元への編集からExact対応を前向きにも適用し、影響する派生snapshotの次revisionと内部編集を作る。派生側の未対応byteは保存する。再parseが返す全宣言sourceはdraftの指定snapshot集合と、ID・revision・digest・URI・全bytesで一致しなければならない。mapのtargetであることはsnapshot全体の照合免除にならない。hostがreaderの生成sourceを予約する場合も、この候補identityを使う。公開する編集は許可された元snapshotへの列だけで、派生側の内部編集を追加の書込権限として外部へ渡さない。
++QuerySelectionは元\[もと\]のOccurrenceId・span・確定\[かくてい\]ReferenceResolutionとopenInputを保持\[ほじ\]する。対象\[たいしょう\]なしはNone、未解決\[みかいけつ\]とOpen namespaceのfree inputはopenInputで区別\[くべつ\]し、DeferredもUnresolvedに潰\[つぶ\]さない。定義候補\[ていぎこうほ\]は確定\[かくてい\]resolutionのEntity ID列\[れつ\]に従\[したが\]い、曖昧\[あいまい\]な全候補\[ぜんこうほ\]とその順序\[じゅんじょ\]を維持\[いじ\]する。位置\[いち\]を持\[も\]たないEntityはIDとlocation\=Noneを返\[かえ\]し、仮\[かり\]のsource位置\[いち\]を作\[つく\]らない。locationがある場合\[ばあい\]はURI、定義全体\[ていぎぜんたい\]range、任意\[にんい\]の名前\[なまえ\]selectionを分離\[ぶんり\]する。
+ 
+-acceptは候補の実parse完了結果と同じimmutable treeに対するprepared要求・完了解析を照合する。Profileの意味identity、provider/package実行identity、options・analysis ID・有効Limitsを維持し、候補全source、構文kind/field/選択context、編集に対応する位置と意味payloadを検査する。Entityの対応は宣言位置・scope/namespace・意味名に基づき、opaque IDの数値一致だけで決めない。対象外の名前も含め、Resolved・全Ambiguous候補・Unresolved/free input・Deferred・Customの確定resolutionが対応していることを検査する。後続scopeで名前検索をやり直してCustomの判断を上書きしない。衝突・捕捉・構文変更・別要求との組替え・停止では編集列を一部も公開しない。
++Referencesは選択\[せんたく\]した各\[かく\]Entity IDごとに確定\[かくてい\]Occurrenceを検索\[けんさく\]する。既定\[きてい\]ではResolvedのReferenceだけを返\[かえ\]す。ReferenceOptionsはDefinition・Import・Export role、およびそのEntityをAmbiguous候補\[こうほ\]に含\[ふく\]むOccurrenceをそれぞれ明示的\[めいじてき\]に追加\[ついか\]できる。曖昧\[あいまい\]な出現\[しゅつげん\]はambiguous\=trueで区別\[くべつ\]し、同綴\[どうつづ\]りの別\[べつ\]Entityを混\[ま\]ぜない。通常\[つうじょう\]BindingのImportが子\[こ\]のexport候補\[こうほ\]を可視\[かし\]にする操作\[そうさ\]と、providerが明示的\[めいじてき\]に返\[かえ\]すImport roleのOccurrenceは別\[べつ\]であり、queryが新\[あたら\]しいOccurrenceを捏造\[ねつぞう\]しない。Customの更新後\[こうしんご\]も元\[もと\]stageから名前検索\[なまえけんさく\]をやり直\[なお\]さず、確定\[かくてい\]resolutionを用\[もち\]いる。
+ 
+-nativeのCompletedParseは実ParseSessionのread/resume/reserve/resume_headがCompleteを返した場合だけ発行する所有proofであり、待機・回復・停止は通常のParseReplyを保持する。元と候補のprepared treeがこのproofの同一immutable treeを借用する条件はnative内部の保証で、pointerやRust ABIを公開schemaへ露出しない。raw treeの取出しはproofを消費し、raw ParseTreeやNDF decodeから再発行できない。将来の別言語・別process parserも、認証された発行要求と実parse実行結果を結ぶ同等のhost境界を必要とする。現在のraw rename request/reply codecはschema、要求key、書込対象、old digest、編集非重複、元source閉包を検査するが、通信認証やparse実行証明を発行しない。
++QueryReplyはDefinition\/References\/Invalid\/StoppedとReport、参照位置\[さんしょういち\]に必要\[ひつよう\]な宣言\[せんげん\]sourcesを持\[も\]つ。現\[げん\]queryは新\[あら\]たな診断\[しんだん\]・eventを発行\[はっこう\]せず、解析診断\[かいせきしんだん\]は元\[もと\]BindingReplyに残\[のこ\]す。query失敗\[しっぱい\]はtyped原因\[げんいん\]または元\[もと\]StopReasonを保持\[ほじ\]し、候補途中列\[こうほとちゅうれつ\]を成功結果\[せいこうけっか\]として公開\[こうかい\]しない。使用済\[しようず\]みBudgetとSourceAdmissionは払\[はら\]い戻\[もど\]さない。sourcesはsource ID・revision・digest順\[じゅん\]に正準化\[せいじゅんか\]する。
+ 
+-RenameReplyのCompleteは新AnalysisKeyと全TextEdit、Invalid/Stoppedは編集なしを返す。Reportは実消費Usageを保持し、この操作自身は新規diagnostic/eventを発行しない。再parse/解析の正式Reportはそれぞれの返り値に保持する。受信したUsageの内部整合と外部処理費用の認証は別の責務である。最終適用は呼出側の元SourceStoreに対し、base revision・old digest付きのatomic applyで行う。一般region selector、任意encoderによる意味名の逆変換、増分再解析、外部parser実行の認証transportはこの段階の完成範囲に含めない。
++QueryRequestの初回\[しょかい\]decoderは元\[もと\]Rust要求\[ようきゅう\]を必要\[ひつよう\]としないが、自己申告\[じこしんこく\]keyから完了\[かんりょう\]したBindingAnalysisを作\[つく\]らない。実\[じつ\]queryはhostが保持\[ほじ\]する同\[どう\]keyの意味\[いみ\]proofを使\[つか\]う。返信\[へんしん\]decoderは対応\[たいおう\]する要求\[ようきゅう\]、role options、候補\[こうほ\]ID列\[れつ\]、範囲\[はんい\]・URIと明示\[めいじ\]source閉包\[へいほう\]を検査\[けんさ\]し、ambient sourceで欠損\[けっそん\]を埋\[う\]めない。これはraw結果\[けっか\]の構造検査\[こうぞうけんさ\]であり、通信認証\[つうしんにんしょう\]やリモートの解決結果\[かいけつけっか\]の意味証明\[いみしょうめい\]ではない。
+ 
+-## 5. 不完全入力
++Customを使\[つか\]うprepared実行\[じっこう\]にも同\[おな\]じkey\/有効\[ゆうこう\]Limitsの検査\[けんさ\]を適用\[てきよう\]する。hostのauthorizeが参照\[さんしょう\]する設定\[せってい\]・権限方針\[けんげんほうしん\]・明示\[めいじ\]resourceを変\[か\]えて結果\[けっか\]が変\[か\]わる場合\[ばあい\]、hostはその入力変更\[にゅうりょくへんこう\]をProfile resourcesやschemaで宣言\[せんげん\]したrequest options等\[など\]のidentityへ反映\[はんえい\]し、旧\[きゅう\]keyの結果\[けっか\]を再利用\[さいりよう\]してはならない。keyは実行時\[じっこうじ\]FactAuthorityそのものを認証\[にんしょう\]せず、同\[おな\]じkeyのまま任意\[にんい\]のhost設定変更\[せっていへんこう\]を安全\[あんぜん\]に許\[ゆる\]す値\[あたい\]でもない。
+ 
+-構文エラーで文書全体を失わない。treeにMissing(expected, anchor)、Unexpected(span)、Unparsed(range,reason)を持てる。通常の成功nodeと区別し、checked値へ混入させない。
++definition結果\[けっか\]はoriginSelection、targetUri、targetRange、targetSelectionを分離\[ぶんり\]する。entityのnameだけ選択\[せんたく\]しつつ定義全体\[ていぎぜんたい\]も示\[しめ\]せる。sourceが配布\[はいふ\]packageの場合\[ばあい\]は読\[よ\]み取\[と\]り専用\[せんよう\]virtual documentとして公開\[こうかい\]できる。
+ 
+-EOFで既知arityの子が不足するとMissingを作る。現在のcategoryに不適合だがancestorの明示的同期位置に適合するtokenは消費せずMissingを挿入できる。同期根拠がなければUnexpectedとして消費するか、その範囲をUnparsedとして残す。どちらを選ぶかはpackageのRecoveryPlanに固定する。
++CorrespondsToには「対応文\[たいおうぶん\]へ移動\[いどう\]」、Originには「生成元\[せいせいもと\]へ移動\[いどう\]」を提供\[ていきょう\]し、通常\[つうじょう\]の定義\[ていぎ\]ジャンプとは別\[べつ\]relationとして扱\[あつか\]う。多義的\[たぎてき\]な解決\[かいけつ\]は複数候補\[ふくすうこうほ\]を返\[かえ\]し、単語一致\[たんごいっち\]で一\[ひと\]つに決\[き\]めない。
+ 
+-arity不明のheadの子の数を推測しない。該当rangeをUnparsedにし、既に確定した周辺の情報だけを返す。prefix構文では誤り後の正しい境界が入力だけから復元できない場合がある。完全に復元できると広告しない。
++renameは同\[おな\]じEntityを指\[さ\]すOccurrenceだけを対象\[たいしょう\]にする。新名\[しんめい\]の適格性\[てきかくせい\]、予約語\[よやくご\]、shadowing、scope内衝突\[ないしょうとつ\]、外側\[そとがわ\]の参照\[さんしょう\]の捕捉\[ほそく\]まで再検査\[さいけんさ\]する。SourceMapの逆変換\[ぎゃくへんかん\]が一意\[いちい\]でない場所\[ばしょ\]はRenameNotInvertible。全\[ぜん\]TextEditはrevision付\[つ\]きでatomicに返\[かえ\]す。
+ 
+-SentenceLiteralでは改行/EOF/終了引用符が回復境界。注釈の不足括弧についてexpected tokenと開始位置を返す。期待する閉じ括弧を自動挿入するfixは提案であり、ユーザー操作なしにソースを書き換えない。
++現在\[げんざい\]の rename は `RenameRequest(key, source, offset, newName, writable)` に対\[たい\]する二段操作\[にだんそうさ\]である。対象選択\[たいしょうせんたく\]は上記\[じょうき\]の名前\[なまえ\]Occurrence規則\[きそく\]を使\[つか\]う。writable はhostが許可\[きょか\]した元\[もと\]snapshot集合\[しゅうごう\]であり、受信\[じゅしん\]したSourceRefやURIだけから編集権限\[へんしゅうけんげん\]を発行\[はっこう\]しない。未選択\[みせんたく\]・未解決\[みかいけつ\]・曖昧\[あいまい\]・Deferred・位置\[いち\]なしを型付\[かたつ\]きで区別\[くべつ\]して拒否\[きょひ\]する。予約\[よやく\]headは対象\[たいしょう\]EntityのFactNamespace\.schemaを所有\[しょゆう\]する選択済\[せんたくず\]みpackageのForm\.spellingと照合\[しょうごう\]する。別\[べつ\]schemaの言語\[げんご\]だけに存在\[そんざい\]するheadを予約語\[よやくご\]へ加\[くわ\]えない。最終的\[さいしゅうてき\]な名前\[なまえ\]のreader適格性\[てきかくせい\]と構文選択\[こうぶんせんたく\]は実再\[じっさい\]parseで検査\[けんさ\]する。
+ 
+-## 6. 増分解析と取消し
++prepareは元\[もと\]の実\[じつ\]parse完了結果\[かんりょうけっか\]と、その同\[おな\]じimmutable treeを借用\[しゃくよう\]するprepared Binding要求\[ようきゅう\]、同\[どう\]keyの完了解析\[かんりょうかいせき\]を要求\[ようきゅう\]する。private RenameDraftには元\[もと\]revisionへの編集候補\[へんしゅうこうほ\]と候補\[こうほ\]snapshot集合\[しゅうごう\]を保持\[ほじ\]するが、成功\[せいこう\]transactionや編集列\[へんしゅうれつ\]の公開入口\[こうかいいりぐち\]を与\[あた\]えない。draftはrename操作専用\[そうさせんよう\]SourceAdmissionを所有\[しょゆう\]し、同\[おな\]じ有効\[ゆうこう\]LimitsのBudgetをprepare・再\[さい\]parse・再解析\[さいかいせき\]・acceptの間\[あいだ\]、排他的\[はいたてき\]に借用\[しゃくよう\]する。失敗\[しっぱい\]やdraft破棄\[はき\]で使用済\[しようず\]み費用\[ひよう\]を払\[はら\]い戻\[もど\]さない。別候補\[べつこうほ\]は同\[おな\]じ元\[もと\]revisionから分岐\[ぶんき\]でき、共有\[きょうゆう\]の元\[もと\]SourceStoreを候補作成時\[こうほさくせいじ\]に変更\[へんこう\]しない。
+ 
+-編集はbaseRevision付きTextEdit列。編集後に新snapshotを作り、古いsnapshotは不変。編集に交差しないrangeは編集写像で新snapshotへ明示的に移せる。交差するtoken、子contextを変更する前方宣言、その依存下流を無効化する。
++逆写像\[ぎゃくしゃぞう\]は宣言\[せんげん\]SourceMapを全探索\[ぜんたんさく\]し、同一\[どういつ\]source・revision・digest上\[じょう\]の一意\[いちい\]な連続範囲\[れんぞくはんい\]へ達\[たっ\]するExact対応\[たいおう\]だけを使\[つか\]う。隣接\[りんせつ\]するExact区間\[くかん\]は同\[おな\]じbyte変位\[へんい\]で穴\[あな\]なく全対象範囲\[ぜんたいしょうはんい\]を被覆\[ひふく\]するなら結合\[けつごう\]でき、表順\[ひょうじゅん\]や区間分割\[くかんぶんかつ\]で結果\[けっか\]を変\[か\]えない。異\[こと\]なるsourceや変位\[へんい\]への多義性\[たぎせい\]、被覆穴\[ひふくあな\]、Transformed、Composite\/Synthetic origin、cycleは拒否\[きょひ\]する。quoteやescapeから復号\[ふくごう\]された意味名\[いみめい\]と元\[もと\]bytesが異\[こと\]なる場合\[ばあい\]、明示逆\[めいじぎゃく\]encoderがないままquoteを消\[け\]す置換\[ちかん\]を行\[おこな\]わない。探索\[たんさく\]・範囲比較\[はんいひかく\]・複製\[ふくせい\]はWork\/Depth\/Nodes\/Allocationの対象\[たいしょう\]となる。
+ 
+-再利用可能なnodeは、source内容、entry category、reader/context/provider digestが一致する場合に限る。独立な埋め込みや意味値は再利用できる。全再解析との出力比較をconformanceに含める。最悪時の全体再解析は正しい経路として残し、常に編集差分だけの計算量を保証しない。
++ここで探索\[たんさく\]する宣言表\[せんげんひょう\]は対象\[たいしょう\]Entityまたは各\[かく\]Occurrenceのnamespace rootに対応\[たいおう\]する実\[じつ\]bundleの局所\[きょくしょ\]mapと、そのbundleのcustomSourceMapsが指\[さ\]す受理\[じゅり\]mapに限\[かぎ\]る。平坦\[へいたん\]なFactSet\.sourceMaps全体\[ぜんたい\]を編集先\[へんしゅうさき\]の根拠\[こんきょ\]にしない。各\[かく\]Occurrenceは自分\[じぶん\]のownerで逆写像\[ぎゃくしゃぞう\]し、同\[おな\]じEntityを指\[さ\]すという理由\[りゆう\]だけで対象\[たいしょう\]Entityのmapを流用\[りゅうよう\]しない。前向\[まえむ\]き導出\[どうしゅつ\]も各元編集\[かくもとへんしゅう\]と対応\[たいおう\]ownerの組\[くみ\]ごとに独立\[どくりつ\]した閉包\[へいほう\]をたどり、最終的\[さいしゅうてき\]な編集列\[へんしゅうれつ\]だけを統合\[とうごう\]する。再解析後\[さいかいせきご\]のsource位置対応\[いちたいおう\]はold\/newそれぞれのEntity・Occurrence owner、構文位置\[こうぶんいち\]は各正準\[かくせいじゅん\]bundle ownerで検査\[けんさ\]する。guestだけが宣言\[せんげん\]したmapでhost名\[めい\]のwritable rootを置\[お\]き換\[か\]えることはできない。
+ 
+-LSP側はdebounceとcancelを担当する。coreは明示的budget/pollを使う。古いrevisionの結果は公開しない。cacheと統計は明示的session stateであり、隠れたglobalにはしない。
++元\[もと\]への編集\[へんしゅう\]からExact対応\[たいおう\]を前向\[まえむ\]きにも適用\[てきよう\]し、影響\[えいきょう\]する派生\[はせい\]snapshotの次\[つぎ\]revisionと内部編集\[ないぶへんしゅう\]を作\[つく\]る。派生側\[はせいがわ\]の未対応\[みたいおう\]byteは保存\[ほぞん\]する。再\[さい\]parseが返\[かえ\]す全宣言\[ぜんせんげん\]sourceはdraftの指定\[してい\]snapshot集合\[しゅうごう\]と、ID・revision・digest・URI・全\[ぜん\]bytesで一致\[いっち\]しなければならない。mapのtargetであることはsnapshot全体\[ぜんたい\]の照合免除\[しょうごうめんじょ\]にならない。hostがreaderの生成\[せいせい\]sourceを予約\[よやく\]する場合\[ばあい\]も、この候補\[こうほ\]identityを使\[つか\]う。公開\[こうかい\]する編集\[へんしゅう\]は許可\[きょか\]された元\[もと\]snapshotへの列\[れつ\]だけで、派生側\[はせいがわ\]の内部編集\[ないぶへんしゅう\]を追加\[ついか\]の書込権限\[かきこみけんげん\]として外部\[がいぶ\]へ渡\[わた\]さない。
+ 
+-## 7. LSP adapter
++acceptは候補\[こうほ\]の実\[じつ\]parse完了結果\[かんりょうけっか\]と同\[おな\]じimmutable treeに対\[たい\]するprepared要求\[ようきゅう\]・完了解析\[かんりょうかいせき\]を照合\[しょうごう\]する。Profileの意味\[いみ\]identity、provider\/package実行\[じっこう\]identity、options・analysis ID・有効\[ゆうこう\]Limitsを維持\[いじ\]し、候補全\[こうほぜん\]source、構文\[こうぶん\]kind\/field\/選択\[せんたく\]context、編集\[へんしゅう\]に対応\[たいおう\]する位置\[いち\]と意味\[いみ\]payloadを検査\[けんさ\]する。Entityの対応\[たいおう\]は宣言位置\[せんげんいち\]・scope\/namespace・意味名\[いみめい\]に基\[もと\]づき、opaque IDの数値一致\[すうちいっち\]だけで決\[き\]めない。対象外\[たいしょうがい\]の名前\[なまえ\]も含\[ふく\]め、Resolved・全\[ぜん\]Ambiguous候補\[こうほ\]・Unresolved\/free input・Deferred・Customの確定\[かくてい\]resolutionが対応\[たいおう\]していることを検査\[けんさ\]する。後続\[こうぞく\]scopeで名前検索\[なまえけんさく\]をやり直\[なお\]してCustomの判断\[はんだん\]を上書\[うわが\]きしない。衝突\[しょうとつ\]・捕捉\[ほそく\]・構文変更\[こうぶんへんこう\]・別要求\[べつようきゅう\]との組替\[くみか\]え・停止\[ていし\]では編集列\[へんしゅうれつ\]を一部\[いちぶ\]も公開\[こうかい\]しない。
+ 
+-3.17で定義された位置encoding/diagnostic/semantic token/definition等の契約を利用し、機能はcapabilityで交渉する。UTF-8/UTF-16/UTF-32の位置変換をLineIndexで行う。UTF-16をfallbackとして必ず扱う。日本語や補助平面文字のbyte数、UTF-16 code unit数、表示幅を混同しない。
++nativeのCompletedParseは実\[じつ\]ParseSessionのread\/resume\/reserve\/resume\_headがCompleteを返\[かえ\]した場合\[ばあい\]だけ発行\[はっこう\]する所有\[しょゆう\]proofであり、待機\[たいき\]・回復\[かいふく\]・停止\[ていし\]は通常\[つうじょう\]のParseReplyを保持\[ほじ\]する。元\[もと\]と候補\[こうほ\]のprepared treeがこのproofの同一\[どういつ\]immutable treeを借用\[しゃくよう\]する条件\[じょうけん\]はnative内部\[ないぶ\]の保証\[ほしょう\]で、pointerやRust ABIを公開\[こうかい\]schemaへ露出\[ろしゅつ\]しない。raw treeの取出\[とりだ\]しはproofを消費\[しょうひ\]し、raw ParseTreeやNDF decodeから再発行\[さいはっこう\]できない。将来\[しょうらい\]の別言語\[べつげんご\]・別\[べつ\]process parserも、認証\[にんしょう\]された発行要求\[はっこうようきゅう\]と実\[じつ\]parse実行結果\[じっこうけっか\]を結\[むす\]ぶ同等\[どうとう\]のhost境界\[きょうかい\]を必要\[ひつよう\]とする。現在\[げんざい\]のraw rename request\/reply codecはschema、要求\[ようきゅう\]key、書込対象\[かきこみたいしょう\]、old digest、編集非重複\[へんしゅうひじゅうふく\]、元\[もと\]source閉包\[へいほう\]を検査\[けんさ\]するが、通信認証\[つうしんにんしょう\]やparse実行証明\[じっこうしょうめい\]を発行\[はっこう\]しない。
+ 
+-一般的なDSL class名はsemantic token legendの独自typeとして出せる。クライアントが対応しない場合は表示fallbackを使うが、NEPL3内部kindを書き換えない。position/legendの変換はdomain crateに置かない。
++RenameReplyのCompleteは新\[しん\]AnalysisKeyと全\[ぜん\]TextEdit、Invalid\/Stoppedは編集\[へんしゅう\]なしを返\[かえ\]す。Reportは実消費\[じつしょうひ\]Usageを保持\[ほじ\]し、この操作自身\[そうさじしん\]は新規\[しんき\]diagnostic\/eventを発行\[はっこう\]しない。再\[さい\]parse\/解析\[かいせき\]の正式\[せいしき\]Reportはそれぞれの返\[かえ\]り値\[ち\]に保持\[ほじ\]する。受信\[じゅしん\]したUsageの内部整合\[ないぶせいごう\]と外部処理費用\[がいぶしょりひよう\]の認証\[にんしょう\]は別\[べつ\]の責務\[せきむ\]である。最終適用\[さいしゅうてきよう\]は呼出側\[よびだしがわ\]の元\[もと\]SourceStoreに対\[たい\]し、base revision・old digest付\[つ\]きのatomic applyで行\[おこな\]う。一般\[いっぱん\]region selector、任意\[にんい\]encoderによる意味名\[いみめい\]の逆変換\[ぎゃくへんかん\]、増分再解析\[ぞうぶんさいかいせき\]、外部\[がいぶ\]parser実行\[じっこう\]の認証\[にんしょう\]transportはこの段階\[だんかい\]の完成範囲\[かんせいはんい\]に含\[ふく\]めない。
+ 
+-nepl3-lspは一つの汎用server。workspace設定から拡張子とLanguagePackageを選択し、各DSLごとのserverの再実装は不要。VS Code/Neovimには接続と設定だけの薄いadapterを置く。packageを変更したらanalysisを無効化し、必要ならlegend登録も更新する。
++<a name="n-7265636f76657279"></a>
+ 
+-## 8. 診断・ログの表示
++<a name="5-不完全入力"></a>
+ 
+-同一DiagnosticをCLI、LSP、browserへrenderする。CLI stderrは表示adapter、stdoutは要求された成果物だけ。JSON/NDF診断出力と人間用表示を分離する。詳細traceは明示的に選択し、ソース全文や環境の機密値を既定では記録しない。
++## 5\. 不完全入力\[ふかんぜんにゅうりょく\]
+ 
+-情報が不足する場合はstage/requirementsとして表示し、存在しないsource位置を作らない。providerの内部エラーとユーザーの構文ミスを区別する。
++構文\[こうぶん\]エラーで文書全体\[ぶんしょぜんたい\]を失\[うしな\]わない。treeにMissing\(expected\, anchor\)、Unexpected\(span\)、Unparsed\(range\,reason\)を持\[も\]てる。通常\[つうじょう\]の成功\[せいこう\]nodeと区別\[くべつ\]し、checked値\[ち\]へ混入\[こんにゅう\]させない。
+ 
+-## 9. workspace trust
++EOFで既知\[きち\]arityの子\[こ\]が不足\[ふそく\]するとMissingを作\[つく\]る。現在\[げんざい\]のcategoryに不適合\[ふてきごう\]だがancestorの明示的同期位置\[めいじてきどうきいち\]に適合\[てきごう\]するtokenは消費\[しょうひ\]せずMissingを挿入\[そうにゅう\]できる。同期根拠\[どうきこんきょ\]がなければUnexpectedとして消費\[しょうひ\]するか、その範囲\[はんい\]をUnparsedとして残\[のこ\]す。どちらを選\[えら\]ぶかはpackageのRecoveryPlanに固定\[こてい\]する。
+ 
+-通常の解析と診断で対象プログラムをevaluateしない。Grammar reader providerはhostのallowlist・署名・schemaで制限する。workspaceからnative pluginを自動build/loadしない。untrusted providerには隔離runnerが必要で、ない環境ではTrustRequiredを返す。巨大入力/再帰/イベント/出力にも上限を設定する。
++arity不明\[ふめい\]のheadの子\[こ\]の数\[かず\]を推測\[すいそく\]しない。該当\[がいとう\]rangeをUnparsedにし、既\[すで\]に確定\[かくてい\]した周辺\[しゅうへん\]の情報\[じょうほう\]だけを返\[かえ\]す。prefix構文\[こうぶん\]では誤\[あやま\]り後\[ご\]の正\[ただ\]しい境界\[きょうかい\]が入力\[にゅうりょく\]だけから復元\[ふくげん\]できない場合\[ばあい\]がある。完全\[かんぜん\]に復元\[ふくげん\]できると広告\[こうこく\]しない。
++
++SentenceLiteralでは改行\[かいぎょう\]\/EOF\/終了引用符\[しゅうりょういんようふ\]が回復境界\[かいふくきょうかい\]。注釈\[ちゅうしゃく\]の不足括弧\[ふそくかっこ\]についてexpected tokenと開始位置\[かいしいち\]を返\[かえ\]す。期待\[きたい\]する閉\[と\]じ括弧\[かっこ\]を自動挿入\[じどうそうにゅう\]するfixは提案\[ていあん\]であり、ユーザー操作\[そうさ\]なしにソースを書\[か\]き換\[か\]えない。
++
++<a name="n-696e6372656d656e74616c"></a>
++
++<a name="6-増分解析と取消し"></a>
++
++## 6\. 増分解析\[ぞうぶんかいせき\]と取消\[とりけ\]し
++
++編集\[へんしゅう\]はbaseRevision付\[つ\]きTextEdit列\[れつ\]。編集後\[へんしゅうご\]に新\[しん\]snapshotを作\[つく\]り、古\[ふる\]いsnapshotは不変\[ふへん\]。編集\[へんしゅう\]に交差\[こうさ\]しないrangeは編集写像\[へんしゅうしゃぞう\]で新\[しん\]snapshotへ明示的\[めいじてき\]に移\[うつ\]せる。交差\[こうさ\]するtoken、子\[こ\]contextを変更\[へんこう\]する前方宣言\[ぜんぽうせんげん\]、その依存下流\[いぞんかりゅう\]を無効化\[むこうか\]する。
++
++再利用可能\[さいりようかのう\]なnodeは、source内容\[ないよう\]、entry category、reader\/context\/provider digestが一致\[いっち\]する場合\[ばあい\]に限\[かぎ\]る。独立\[どくりつ\]な埋\[う\]め込\[こ\]みや意味値\[いみち\]は再利用\[さいりよう\]できる。全再解析\[ぜんさいかいせき\]との出力比較\[しゅつりょくひかく\]をconformanceに含\[ふく\]める。最悪時\[さいあくじ\]の全体再解析\[ぜんたいさいかいせき\]は正\[ただ\]しい経路\[けいろ\]として残\[のこ\]し、常\[つね\]に編集差分\[へんしゅうさぶん\]だけの計算量\[けいさんりょう\]を保証\[ほしょう\]しない。
++
++LSP側\[がわ\]はdebounceとcancelを担当\[たんとう\]する。coreは明示的\[めいじてき\]budget\/pollを使\[つか\]う。古\[ふる\]いrevisionの結果\[けっか\]は公開\[こうかい\]しない。cacheと統計\[とうけい\]は明示的\[めいじてき\]session stateであり、隠\[かく\]れたglobalにはしない。
++
++<a name="n-6c7370"></a>
++
++<a name="7-lsp-adapter"></a>
++
++## 7\. LSP adapterの責務\[せきむ\]
++
++3\.17で定義\[ていぎ\]された位置\[いち\]encoding\/diagnostic\/semantic token\/definition等\[など\]の契約\[けいやく\]を利用\[りよう\]し、機能\[きのう\]はcapabilityで交渉\[こうしょう\]する。UTF\-8\/UTF\-16\/UTF\-32の位置変換\[いちへんかん\]をLineIndexで行\[おこな\]う。UTF\-16をfallbackとして必\[かなら\]ず扱\[あつか\]う。日本語\[にほんご\]や補助平面文字\[ほじょへいめんもじ\]のbyte数\[すう\]、UTF\-16 code unit数\[すう\]、表示幅\[ひょうじはば\]を混同\[こんどう\]しない。
++
++一般的\[いっぱんてき\]なDSL class名\[めい\]はsemantic token legendの独自\[どくじ\]typeとして出\[だ\]せる。クライアントが対応\[たいおう\]しない場合\[ばあい\]は表示\[ひょうじ\]fallbackを使\[つか\]うが、NEPL3内部\[ないぶ\]kindを書\[か\]き換\[か\]えない。position\/legendの変換\[へんかん\]はdomain crateに置\[お\]かない。
++
++nepl3\-lspは一\[ひと\]つの汎用\[はんよう\]server。workspace設定\[せってい\]から拡張子\[かくちょうし\]とLanguagePackageを選択\[せんたく\]し、各\[かく\]DSLごとのserverの再実装\[さいじっそう\]は不要\[ふよう\]。VS Code\/Neovimには接続\[せつぞく\]と設定\[せってい\]だけの薄\[うす\]いadapterを置\[お\]く。packageを変更\[へんこう\]したらanalysisを無効化\[むこうか\]し、必要\[ひつよう\]ならlegend登録\[とうろく\]も更新\[こうしん\]する。
++
++<a name="n-646961676e6f7374696373"></a>
++
++<a name="8-診断ログの表示"></a>
++
++## 8\. 診断\[しんだん\]・ログの表示\[ひょうじ\]
++
++同一\[どういつ\]DiagnosticをCLI、LSP、browserへrenderする。CLI stderrは表示\[ひょうじ\]adapter、stdoutは要求\[ようきゅう\]された成果物\[せいかぶつ\]だけ。JSON\/NDF診断出力\[しんだんしゅつりょく\]と人間用表示\[にんげんようひょうじ\]を分離\[ぶんり\]する。詳細\[しょうさい\]traceは明示的\[めいじてき\]に選択\[せんたく\]し、ソース全文\[ぜんぶん\]や環境\[かんきょう\]の機密値\[きみつち\]を既定\[きてい\]では記録\[きろく\]しない。
++
++情報\[じょうほう\]が不足\[ふそく\]する場合\[ばあい\]はstage\/requirementsとして表示\[ひょうじ\]し、存在\[そんざい\]しないsource位置\[いち\]を作\[つく\]らない。providerの内部\[ないぶ\]エラーとユーザーの構文\[こうぶん\]ミスを区別\[くべつ\]する。
++
++<a name="n-7472757374"></a>
++
++<a name="9-workspace-trust"></a>
++
++## 9\. workspace trustの境界\[きょうかい\]
++
++通常\[つうじょう\]の解析\[かいせき\]と診断\[しんだん\]で対象\[たいしょう\]プログラムをevaluateしない。Grammar reader providerはhostのallowlist・署名\[しょめい\]・schemaで制限\[せいげん\]する。workspaceからnative pluginを自動\[じどう\]build\/loadしない。untrusted providerには隔離\[かくり\]runnerが必要\[ひつよう\]で、ない環境\[かんきょう\]ではTrustRequiredを返\[かえ\]す。巨大入力\[きょだいにゅうりょく\]\/再帰\[さいき\]\/イベント\/出力\[しゅつりょく\]にも上限\[じょうげん\]を設定\[せってい\]する。
+diff --git a/doc/migration/authored/08-editor.nepld b/doc/spec/08-editor.nepld
+similarity index 99%
+rename from doc/migration/authored/08-editor.nepld
+rename to doc/spec/08-editor.nepld
+index 6fd7267..2b1c047 100644
+--- a/doc/migration/authored/08-editor.nepld
++++ b/doc/spec/08-editor.nepld
+@@ -6,7 +6,7 @@ body
+       cons "[専用/せんよう]parserも[同/おな]じfactsを[返/かえ]して[支援/しえん]を[受/う]ける。"
+       cons "[共通分類/きょうつうぶんるい]をプログラミング[言語/げんご]の[要素/ようそ]に[限定/げんてい]しない。" nil
+     nil
+-  cons section snapshot "1. AnalysisSnapshot" body
++  cons section snapshot "1. AnalysisSnapshotの[入力/にゅうりょく]と[同一性/どういつせい]" body
+     cons paragraph
+       cons "[入力/にゅうりょく]はSourceSnapshot[集合/しゅうごう]、profile/package revision[集合/しゅうごう]、[明示的/めいじてき]なresource/schema[環境/かんきょう]、[解析/かいせき]options。"
+       cons "[結果/けっか]はParsed tree、[内部/ないぶ]views、Scope/Entity/Occurrence、typed Relations、Diagnostics、ExpectedAt、Dependencies。" nil
+@@ -112,7 +112,7 @@ body
+       cons "overlapを[持/も]つ[元/もと]データは[保存/ほぞん]するが、LSPへは[非重複/ひじゅうふく]・source[順/じゅん]・[単一行/たんいつぎょう]に[正規化/せいきか]したspan[列/れつ]を[返/かえ]す。"
+       cons "[色/いろ]はthemeに[委/ゆだ]ねる。" nil
+     nil
+-  cons section relations "4. definitionとrelations" body
++  cons section relations "4. definitionとrelationsの[扱/あつか]い" body
+     cons paragraph
+       cons sentence cons text "Occurrenceベースの " cons code "analysis::query::query" cons text " は、" cons ruby text "完了" text "かんりょう" cons text "したBoundBindingReplyとQueryRequest(key, SourceRef, byte offset, kind)を" cons ruby text "受" text "う" cons text "ける。" nil
+       cons "SourceRefのrevision/digestと[現在要求/げんざいようきゅう]するkeyを[照合/しょうごう]し、UTF-8 scalar[境界/きょうかい]を[検査/けんさ]する。"
+@@ -276,7 +276,7 @@ body
+       cons "[古/ふる]いrevisionの[結果/けっか]は[公開/こうかい]しない。"
+       cons "cacheと[統計/とうけい]は[明示的/めいじてき]session stateであり、[隠/かく]れたglobalにはしない。" nil
+     nil
+-  cons section lsp "7. LSP adapter" body
++  cons section lsp "7. LSP adapterの[責務/せきむ]" body
+     cons paragraph
+       cons "3.17で[定義/ていぎ]された[位置/いち]encoding/diagnostic/semantic token/definition[等/など]の[契約/けいやく]を[利用/りよう]し、[機能/きのう]はcapabilityで[交渉/こうしょう]する。"
+       cons "UTF-8/UTF-16/UTF-32の[位置変換/いちへんかん]をLineIndexで[行/おこな]う。"
+@@ -302,7 +302,7 @@ body
+       cons "[情報/じょうほう]が[不足/ふそく]する[場合/ばあい]はstage/requirementsとして[表示/ひょうじ]し、[存在/そんざい]しないsource[位置/いち]を[作/つく]らない。"
+       cons "providerの[内部/ないぶ]エラーとユーザーの[構文/こうぶん]ミスを[区別/くべつ]する。" nil
+     nil
+-  cons section trust "9. workspace trust" body
++  cons section trust "9. workspace trustの[境界/きょうかい]" body
+     cons paragraph
+       cons "[通常/つうじょう]の[解析/かいせき]と[診断/しんだん]で[対象/たいしょう]プログラムをevaluateしない。"
+       cons "Grammar reader providerはhostのallowlist・[署名/しょめい]・schemaで[制限/せいげん]する。"
+diff --git a/doc/spec/12-model-invariants.md b/doc/spec/12-model-invariants.md
+index b70ecbc..f405c56 100644
+--- a/doc/spec/12-model-invariants.md
++++ b/doc/spec/12-model-invariants.md
+@@ -1,4 +1,4 @@
+-<!-- Generated from doc/spec/12&#45;model&#45;invariants.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page model&#45;invariants; source SHA-256 f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8; alias input SHA-256 0d428b3fec7161d2cd0f1b075771d0597505727c39f78e90c835840c638f4c4c; document digest 457cb69d9ed646ceeeaad89f5c9bda75139dc85a0831aa3b5577e562ae39118d; input PageSet digest 786ae668c68b944b4601d90378972de0914cf30c49901a7d4db6d7d695b46fe9; input context SHA-256 38a832002660e9f2bb3f566bce96a2f0fe013658c4c059728e532e6c84dfaedd. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
++<!-- Generated from doc/spec/12&#45;model&#45;invariants.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page model&#45;invariants; source SHA-256 f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8; alias input SHA-256 0d428b3fec7161d2cd0f1b075771d0597505727c39f78e90c835840c638f4c4c; document digest 457cb69d9ed646ceeeaad89f5c9bda75139dc85a0831aa3b5577e562ae39118d; input PageSet digest 1fe033103f922bfd695ebafab864c58e92f4d3e3922c3ff2164cef439492da54; input context SHA-256 6451c6ba5b5b2d5afbee98f7071c869b8be4d569505e9d3b092cd19e0b6c21af. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+ 
+ <a name="12-意味モデル中間表現の補足不変条件"></a>
+ 

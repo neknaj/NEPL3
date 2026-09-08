@@ -1,0 +1,17 @@
+from pathlib import Path
+import re,json
+p=Path(__file__).parent
+line=next(s for s in (p/'markdown-probe.stdout.log').read_text(encoding='utf8').splitlines() if s.startswith('EDITOR_GFM '))
+old,new=json.loads(line[len('EDITOR_GFM '):])
+norm=lambda s:re.sub(r'\s+','',s)
+base=lambda s:re.sub(r'\[[ぁ-ゖァ-ヺー]+\]','',s)
+assert len(old[1])==len(new[1])==55
+rows=[]
+for i,(a,b) in enumerate(zip(old[1],new[1])):
+    assert norm(a)==norm(base(b)),(i+1,a,b)
+    rows.append(dict(paragraph=i+1,original=a,annotated=b,base_equal_ignoring_whitespace=True))
+assert old[0]==new[0] and len(old[0])==11
+changed=[(i,a,base(b)) for i,(a,b) in enumerate(zip(old[2],new[2])) if a!=base(b)]
+assert changed==[(2,'1. AnalysisSnapshot','1. AnalysisSnapshotの入力と同一性'),(5,'4. definitionとrelations','4. definitionとrelationsの扱い'),(8,'7. LSP adapter','7. LSP adapterの責務'),(10,'9. workspace trust','9. workspace trustの境界')],changed
+(p/'body-checks.json').write_text(json.dumps(dict(scope='Independent GFM parse of fixed adopted Markdown; regeneration identity checked separately',paragraphs=rows,codes=old[0],four_heading_changes=changed),ensure_ascii=False,indent=2)+'\n',encoding='utf8',newline='\n')
+print('PASS55paragraph bases/11exactcode/four intended visible heading changes')

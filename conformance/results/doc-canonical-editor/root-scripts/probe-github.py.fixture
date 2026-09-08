@@ -1,0 +1,24 @@
+from pathlib import Path
+import shutil,json
+from playwright.sync_api import sync_playwright
+root=Path.cwd();old=root/'.tmp/github-canonical08';saved=root/'.tmp/github-canonical08-first'
+if not saved.exists():
+    shutil.copytree(old,saved)
+    shutil.copyfile(root/'.tmp/github-canonical08.py',saved/'github-canonical08.py')
+    (saved/'failure-note.md').write_text('Tool-reported initial probe failure (summary, not reconstructed raw stderr): before navigating 1-analysissnapshot, scroll-away precondition returned top=0, scrollY=8651, max=8651. Initial rawLines and first two targets had passed. Subsequent targets and final capture were not run.\n',encoding='utf-8',newline='\n')
+out=root/'.tmp/github-layout-probe';out.mkdir(exist_ok=True)
+url='https://github.com/neknaj/NEPL3/blob/5c4ce6184f6d5fa817f472d202101aaf86af3195/doc/spec/08-editor.md'
+with sync_playwright() as p:
+    browser=p.chromium.launch(headless=True)
+    page=browser.new_page(viewport={'width':1280,'height':1000},reduced_motion='reduce')
+    page.goto(url,wait_until='networkidle',timeout=90000)
+    target=page.locator('article.markdown-body [name="user-content-1-analysissnapshot"],article.markdown-body [id="user-content-1-analysissnapshot"]')
+    assert target.count()==1
+    samples=[]
+    for _ in range(8):
+        samples.append(target.evaluate('''n=>({html:n.outerHTML,parent:n.parentElement.outerHTML,rect:n.getBoundingClientRect().toJSON(),display:getComputedStyle(n).display,scrollY,max:document.documentElement.scrollHeight-innerHeight,connected:n.isConnected})'''))
+        page.wait_for_timeout(200)
+    (out/'samples.json').write_text(json.dumps(samples,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
+    page.screenshot(path=str(out/'top.png'))
+    print(json.dumps(samples[-1],ensure_ascii=False))
+    browser.close()

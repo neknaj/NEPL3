@@ -1,0 +1,21 @@
+from pathlib import Path
+import hashlib
+p=Path(__file__).parent
+assert hashlib.sha256((p/'manifest.json').read_bytes()).hexdigest()=='7e51b2c3956af0a88229c5a736b5f53d2dae661c75973930757e2bf1e579fb72'
+assert not (p/'initial-manifest.json').exists()
+(p/'initial-manifest.json').write_bytes((p/'manifest.json').read_bytes())
+(p/'initial-record.md').write_bytes((p/'record.md').read_bytes())
+s=Path('C:/projects/NEPL3-doc-canonical-model-invariants/.tmp/review-canonical12-cutover/bootstrap.py').read_text(encoding='utf8')
+s=s.replace('doc-canonical-model-invariants','doc-canonical-editor').replace('canonical12-snapshot','canonical08-snapshot').replace('12-model-invariants.html','08-editor.html').replace('len(selected)==10','len(selected)==11').replace("actual['ruby']==701","actual['ruby']==1330")
+start=s.index("      page.locator('tr').first.evaluate");end=s.index('      rows.append',start)
+s=s[:start]+'''      pairs=page.locator('.nepl-ruby').evaluate_all('ns=>ns.map(n=>[n.querySelector(".nepl-base").textContent,n.querySelector(".nepl-reading").textContent])')
+      prepared=json.loads((OUT/'prepared-expectations.json').read_bytes());assert sorted(pairs)==sorted(prepared['ruby_pairs'])
+      reading=page.locator('.nepl-reading').evaluate_all('ns=>ns.map(n=>({size:parseFloat(getComputedStyle(n).fontSize),visibility:getComputedStyle(n).visibility,width:n.getBoundingClientRect().width,height:n.getBoundingClientRect().height}))')
+      assert all(x['size']>0 and x['visibility']=='visible' and x['width']>0 and x['height']>0 for x in reading)
+      assert page.locator('article a[href],article table,article ul,article ol').count()==0
+      page.screenshot(path=str(OUT/f'offline-{engine}-title.png'))
+      page.locator('article p').nth(5).scroll_into_view_if_needed();page.screenshot(path=str(OUT/f'offline-{engine}-body.png'))
+      assert not attempts;actual['ruby_pairs_match']=True;actual['readings_visible']=True
+''' + s[end:]
+s=s.replace("dest.mkdir(parents=True,exist_ok=True)","dest.mkdir(parents=True,exist_ok=False)")
+(p/'bootstrap.py').write_text(s,encoding='utf8',newline='\n')

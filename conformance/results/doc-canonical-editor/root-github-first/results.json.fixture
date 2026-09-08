@@ -1,0 +1,39 @@
+{
+  "head": "5c4ce6184f6d5fa817f472d202101aaf86af3195",
+  "url": "https://github.com/neknaj/NEPL3/blob/5c4ce6184f6d5fa817f472d202101aaf86af3195/doc/spec/08-editor.md",
+  "rows": [
+    {
+      "fragment": "08-共通editor-serviceと診断",
+      "before": {
+        "top": -8265,
+        "scrollY": 8651,
+        "max": 8651
+      },
+      "after": {
+        "top": 125,
+        "scrollY": 261,
+        "hash": "#08-%E5%85%B1%E9%80%9Aeditor-service%E3%81%A8%E8%A8%BA%E6%96%AD"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "方針",
+      "before": {
+        "top": -8174.40625,
+        "scrollY": 8651,
+        "max": 8651
+      },
+      "after": {
+        "top": 124.59375,
+        "scrollY": 352,
+        "hash": "#%E6%96%B9%E9%87%9D"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    }
+  ],
+  "status": 200,
+  "browser": "151.0.7922.34",
+  "raw_lines_match": true
+}

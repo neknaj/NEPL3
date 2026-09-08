@@ -1,0 +1,378 @@
+{
+  "commit": "5c4ce6184f6d5fa817f472d202101aaf86af3195",
+  "git": [
+    {
+      "path": "doc/spec/08-editor.md",
+      "bytes": 47809,
+      "sha256": "1c2889b269b99c8be0a281c8bfcda275d38ea421f344fbe4f92a0a5a9c608c2a"
+    },
+    {
+      "path": "doc/spec/08-editor.nepld",
+      "bytes": 51247,
+      "sha256": "d326323331b335da48a044e35a92d2bd89b64bc4fde794131af4ab17ad3f91b6"
+    },
+    {
+      "path": "doc/migration/aliases/08-editor.json",
+      "bytes": 774,
+      "sha256": "0e85d24ed98a8e151b582442218b17d3d4f191755c9528582080443fca21746b"
+    },
+    {
+      "path": "doc/canonical.json",
+      "bytes": 3282,
+      "sha256": "45515a15eebb6c1d92b473651ca8ca5fa8adbfda0553f7a98a45465917efe6c2"
+    },
+    {
+      "path": "tools/src/doc/canonical.rs",
+      "bytes": 9696,
+      "sha256": "9524e5cb8b96059fae0e5c8312f5f9ba257da9cfb9b2e32bdcdb1a6aa0c0a3f1"
+    },
+    {
+      "path": "design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "tools/audit/structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    }
+  ],
+  "artifacts": [
+    {
+      "kind": "html",
+      "copy": "first",
+      "path": "docs/spec/00-contract.html",
+      "bytes": 38595,
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-first\\docs\\spec\\00-contract.html"
+    },
+    {
+      "kind": "html",
+      "copy": "second",
+      "path": "docs/spec/00-contract.html",
+      "bytes": 38595,
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-second\\docs\\spec\\00-contract.html"
+    },
+    {
+      "kind": "html",
+      "copy": "first",
+      "path": "docs/spec/01-architecture.html",
+      "bytes": 32896,
+      "sha256": "499aaa1e67781a52c2bc2f3faaa8fc0623b6a8e3c80282eb4a841da597c8936f",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-first\\docs\\spec\\01-architecture.html"
+    },
+    {
+      "kind": "html",
+      "copy": "second",
+      "path": "docs/spec/01-architecture.html",
+      "bytes": 32896,
+      "sha256": "499aaa1e67781a52c2bc2f3faaa8fc0623b6a8e3c80282eb4a841da597c8936f",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-second\\docs\\spec\\01-architecture.html"
+    },
+    {
+      "kind": "html",
+      "copy": "first",
+      "path": "docs/spec/07-circuit.html",
+      "bytes": 48369,
+      "sha256": "11dedf2469c9c0a2e11c845b1167ffaaa56deeaeea51b76db7a7f484ab43caf5",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-first\\docs\\spec\\07-circuit.html"
+    },
+    {
+      "kind": "html",
+      "copy": "second",
+      "path": "docs/spec/07-circuit.html",
+      "bytes": 48369,
+      "sha256": "11dedf2469c9c0a2e11c845b1167ffaaa56deeaeea51b76db7a7f484ab43caf5",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-second\\docs\\spec\\07-circuit.html"
+    },
+    {
+      "kind": "html",
+      "copy": "first",
+      "path": "docs/spec/08-editor.html",
+      "bytes": 175180,
+      "sha256": "42b7496ebf4d56eaeb6e59ded50022bf99a676766809459e5b931f25b06e4ff8",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-first\\docs\\spec\\08-editor.html"
+    },
+    {
+      "kind": "html",
+      "copy": "second",
+      "path": "docs/spec/08-editor.html",
+      "bytes": 175180,
+      "sha256": "42b7496ebf4d56eaeb6e59ded50022bf99a676766809459e5b931f25b06e4ff8",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-second\\docs\\spec\\08-editor.html"
+    },
+    {
+      "kind": "html",
+      "copy": "first",
+      "path": "docs/spec/12-model-invariants.html",
+      "bytes": 95429,
+      "sha256": "904a6dc8d6d7a4cce2d6f99c80654d4caafc75a80e1622a4308df2aeb3afbbdd",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-first\\docs\\spec\\12-model-invariants.html"
+    },
+    {
+      "kind": "html",
+      "copy": "second",
+      "path": "docs/spec/12-model-invariants.html",
+      "bytes": 95429,
+      "sha256": "904a6dc8d6d7a4cce2d6f99c80654d4caafc75a80e1622a4308df2aeb3afbbdd",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-second\\docs\\spec\\12-model-invariants.html"
+    },
+    {
+      "kind": "html",
+      "copy": "first",
+      "path": "docs/spec/13-reproducibility.html",
+      "bytes": 91421,
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-first\\docs\\spec\\13-reproducibility.html"
+    },
+    {
+      "kind": "html",
+      "copy": "second",
+      "path": "docs/spec/13-reproducibility.html",
+      "bytes": 91421,
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-second\\docs\\spec\\13-reproducibility.html"
+    },
+    {
+      "kind": "html",
+      "copy": "first",
+      "path": "docs/spec/18-html-delivery.html",
+      "bytes": 37232,
+      "sha256": "7a2ed0088c71e0766ec304bcc59d2cccffa307a9742a66139eeea99f633b6355",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-first\\docs\\spec\\18-html-delivery.html"
+    },
+    {
+      "kind": "html",
+      "copy": "second",
+      "path": "docs/spec/18-html-delivery.html",
+      "bytes": 37232,
+      "sha256": "7a2ed0088c71e0766ec304bcc59d2cccffa307a9742a66139eeea99f633b6355",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-second\\docs\\spec\\18-html-delivery.html"
+    },
+    {
+      "kind": "html",
+      "copy": "first",
+      "path": "docs/spec/19-html-fragment.html",
+      "bytes": 61432,
+      "sha256": "3a5cc5cb6d46262403340997c6ec08ead08362250e5ed90eec6a65993bfa95fc",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-first\\docs\\spec\\19-html-fragment.html"
+    },
+    {
+      "kind": "html",
+      "copy": "second",
+      "path": "docs/spec/19-html-fragment.html",
+      "bytes": 61432,
+      "sha256": "3a5cc5cb6d46262403340997c6ec08ead08362250e5ed90eec6a65993bfa95fc",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-second\\docs\\spec\\19-html-fragment.html"
+    },
+    {
+      "kind": "html",
+      "copy": "first",
+      "path": "docs/spec/22-external-extensions.html",
+      "bytes": 44041,
+      "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-first\\docs\\spec\\22-external-extensions.html"
+    },
+    {
+      "kind": "html",
+      "copy": "second",
+      "path": "docs/spec/22-external-extensions.html",
+      "bytes": 44041,
+      "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-second\\docs\\spec\\22-external-extensions.html"
+    },
+    {
+      "kind": "html",
+      "copy": "first",
+      "path": "docs/spec/assets/doc.css",
+      "bytes": 2255,
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-first\\docs\\spec\\assets\\doc.css"
+    },
+    {
+      "kind": "html",
+      "copy": "second",
+      "path": "docs/spec/assets/doc.css",
+      "bytes": 2255,
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-second\\docs\\spec\\assets\\doc.css"
+    },
+    {
+      "kind": "html",
+      "copy": "first",
+      "path": "manifest.json",
+      "bytes": 23217,
+      "sha256": "091d7965491e7d7947502243162a192f3736aa784cf1bab327e8dcf890419005",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-first\\manifest.json"
+    },
+    {
+      "kind": "html",
+      "copy": "second",
+      "path": "manifest.json",
+      "bytes": 23217,
+      "sha256": "091d7965491e7d7947502243162a192f3736aa784cf1bab327e8dcf890419005",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\html-budget-second\\manifest.json"
+    },
+    {
+      "kind": "markdown",
+      "copy": "first",
+      "path": "doc/spec/00-contract.md",
+      "bytes": 10429,
+      "sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-first\\doc\\spec\\00-contract.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "second",
+      "path": "doc/spec/00-contract.md",
+      "bytes": 10429,
+      "sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-second\\doc\\spec\\00-contract.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "first",
+      "path": "doc/spec/01-architecture.md",
+      "bytes": 11492,
+      "sha256": "ce2f1b13c0ad586a18d46ed9592490204f35b901f259619ac714d630469b4175",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-first\\doc\\spec\\01-architecture.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "second",
+      "path": "doc/spec/01-architecture.md",
+      "bytes": 11492,
+      "sha256": "ce2f1b13c0ad586a18d46ed9592490204f35b901f259619ac714d630469b4175",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-second\\doc\\spec\\01-architecture.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "first",
+      "path": "doc/spec/07-circuit.md",
+      "bytes": 13472,
+      "sha256": "e78ef88b70039ef7018516afed788cc092d58a6fe83aee413afbe97527f68c40",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-first\\doc\\spec\\07-circuit.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "second",
+      "path": "doc/spec/07-circuit.md",
+      "bytes": 13472,
+      "sha256": "e78ef88b70039ef7018516afed788cc092d58a6fe83aee413afbe97527f68c40",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-second\\doc\\spec\\07-circuit.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "first",
+      "path": "doc/spec/08-editor.md",
+      "bytes": 47809,
+      "sha256": "1c2889b269b99c8be0a281c8bfcda275d38ea421f344fbe4f92a0a5a9c608c2a",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-first\\doc\\spec\\08-editor.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "second",
+      "path": "doc/spec/08-editor.md",
+      "bytes": 47809,
+      "sha256": "1c2889b269b99c8be0a281c8bfcda275d38ea421f344fbe4f92a0a5a9c608c2a",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-second\\doc\\spec\\08-editor.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "first",
+      "path": "doc/spec/12-model-invariants.md",
+      "bytes": 27431,
+      "sha256": "e434f569fd1abf3f518fcb11cb0cae5a7a050623ee9098faf8f18314092392da",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-first\\doc\\spec\\12-model-invariants.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "second",
+      "path": "doc/spec/12-model-invariants.md",
+      "bytes": 27431,
+      "sha256": "e434f569fd1abf3f518fcb11cb0cae5a7a050623ee9098faf8f18314092392da",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-second\\doc\\spec\\12-model-invariants.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "first",
+      "path": "doc/spec/13-reproducibility.md",
+      "bytes": 26270,
+      "sha256": "454ede4004f0022f8dedb0246ecb227fc36cb57456b9c57fe6614f7a3e512d8e",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-first\\doc\\spec\\13-reproducibility.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "second",
+      "path": "doc/spec/13-reproducibility.md",
+      "bytes": 26270,
+      "sha256": "454ede4004f0022f8dedb0246ecb227fc36cb57456b9c57fe6614f7a3e512d8e",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-second\\doc\\spec\\13-reproducibility.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "first",
+      "path": "doc/spec/18-html-delivery.md",
+      "bytes": 10585,
+      "sha256": "31e0a3af9c56766a737bc5c02a4072662f342a75b7816e7a8aad5da1afd525a5",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-first\\doc\\spec\\18-html-delivery.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "second",
+      "path": "doc/spec/18-html-delivery.md",
+      "bytes": 10585,
+      "sha256": "31e0a3af9c56766a737bc5c02a4072662f342a75b7816e7a8aad5da1afd525a5",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-second\\doc\\spec\\18-html-delivery.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "first",
+      "path": "doc/spec/19-html-fragment.md",
+      "bytes": 16900,
+      "sha256": "c4e5c48743d327a3b7e7a691151f452c3640deb32656f2097628aa2fa9683768",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-first\\doc\\spec\\19-html-fragment.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "second",
+      "path": "doc/spec/19-html-fragment.md",
+      "bytes": 16900,
+      "sha256": "c4e5c48743d327a3b7e7a691151f452c3640deb32656f2097628aa2fa9683768",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-second\\doc\\spec\\19-html-fragment.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "first",
+      "path": "doc/spec/22-external-extensions.md",
+      "bytes": 12525,
+      "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-first\\doc\\spec\\22-external-extensions.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "second",
+      "path": "doc/spec/22-external-extensions.md",
+      "bytes": 12525,
+      "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-second\\doc\\spec\\22-external-extensions.md"
+    },
+    {
+      "kind": "markdown",
+      "copy": "first",
+      "path": "manifest.json",
+      "bytes": 2356,
+      "sha256": "8ffb3ad7b39e600d0833872e52e5804e47e97a1b9aaa4700ff2ef02adbf7d29c",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-first\\manifest.json"
+    },
+    {
+      "kind": "markdown",
+      "copy": "second",
+      "path": "manifest.json",
+      "bytes": 2356,
+      "sha256": "8ffb3ad7b39e600d0833872e52e5804e47e97a1b9aaa4700ff2ef02adbf7d29c",
+      "original": "C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\markdown-budget-second\\manifest.json"
+    }
+  ]
+}

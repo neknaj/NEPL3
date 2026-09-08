@@ -1,0 +1,60 @@
+{
+  "scope": "Preparation only, final browser and bootstrap pending",
+  "files": [
+    {
+      "path": "helpers.py",
+      "bytes": 3299,
+      "sha256": "68315acfa40d0086e76b823cb464a4e76b9de12d8d9b9103c92277d6adb8ae13"
+    },
+    {
+      "path": "preparation/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "preparation/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "preparation/doc/migration/aliases/08-editor.json",
+      "bytes": 774,
+      "sha256": "0e85d24ed98a8e151b582442218b17d3d4f191755c9528582080443fca21746b"
+    },
+    {
+      "path": "preparation/doc/spec/08-editor.md",
+      "bytes": 25396,
+      "sha256": "1311cb50ce019ed53c733f9d8e414a7ea42b70f975fb0d60d01314762d79fa39"
+    },
+    {
+      "path": "preparation/doc/spec/08-editor.nepld",
+      "bytes": 51247,
+      "sha256": "d326323331b335da48a044e35a92d2bd89b64bc4fde794131af4ab17ad3f91b6"
+    },
+    {
+      "path": "preparation/original-draft.nepld",
+      "bytes": 51115,
+      "sha256": "43c78b5f39b008a87b7a5eaf1719a0670f1b5f4992a2489a84549af7dd1241a7"
+    },
+    {
+      "path": "preparation/tools/audit/structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    },
+    {
+      "path": "preparation.md",
+      "bytes": 3096,
+      "sha256": "1f15cbb18470fcaed5aab539b4fb238e2cc4de06d78842b49b05895e5bdbf03d"
+    },
+    {
+      "path": "prepare.py",
+      "bytes": 3584,
+      "sha256": "d48b5d4c7c7783c8cd2251abaffe5ce98f8a0ba559a18958ce4d73ccb21cdb91"
+    },
+    {
+      "path": "prepared-expectations.json",
+      "bytes": 96310,
+      "sha256": "ab2632efeec4e9ee213c3eaf49713d2fb48678ae126976001023481b03ef9c11"
+    }
+  ]
+}

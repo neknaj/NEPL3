@@ -1,0 +1,20 @@
+# Local preparation note
+
+The first preparation wrote two JSON files with Python's Windows newline
+translation. Git stored LF, but the first local generation read CRLF. Its exact
+input bytes are retained in initial-input-bytes and its actual registry digest
+is recorded in generation-initial. Do not describe that invocation as using the
+exact Git blob bytes merely because Git considered the working tree clean.
+
+The first normalization copied the two Git blobs into the working tree, then
+stopped at its clean-status assertion: Git still reported cached file-stat
+changes, although the content diff was empty. The follow-on attempt to launch
+generate-lf.py failed because the stopped setup had not created that file. No
+production generation ran in that attempt. This paragraph summarizes tool
+diagnostics; it is not a reconstructed raw stderr log.
+
+Explicitly adding just those two files refreshed the index; the staged diff
+remained empty. The corrected setup retained the previously saved CRLF bytes,
+verified the actual LF blobs and clean status, then created a distinct LF run.
+Both LF generation commands reproduced NodeLimit with no output stage. That
+separate run is the fresh-checkout baseline for subsequent node-cap selection.

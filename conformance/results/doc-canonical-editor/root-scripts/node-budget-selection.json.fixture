@@ -1,0 +1,6 @@
+{
+  "source_commit": "cce0e08f2f7fca278a246dad0054eb4eeaa88c5d",
+  "before_sha256": "4859e11a7c422adf5c72a0ce33a851b93aa4014c2f4ab768b10809dcaaeca942",
+  "after_sha256": "45515a15eebb6c1d92b473651ca8ca5fa8adbfda0553f7a98a45465917efe6c2",
+  "reason": "Nine-page corpus stopped NodeLimit in separate Markdown and HTML generation operations, also reproduced with exact Git LF input bytes. HTML reported resolve/render node count10000000 after parsing/lowering. Select independent finite output Node caps30M Markdown/20M HTML. All other resources, core defaults and per-page parsing/lowering remain unchanged. These are declared allowances, not a measured minimum, physical heap cap, or a reset of either stopped Budget."
+}

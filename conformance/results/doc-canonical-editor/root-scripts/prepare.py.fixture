@@ -1,0 +1,28 @@
+from pathlib import Path
+import json,subprocess,hashlib
+root=Path.cwd();start=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+assert start=='20caaf73c5a1d6a5157f50a2b5f23802d3a15c84'
+assert not subprocess.check_output(['git','status','--porcelain']).strip()
+out=root/'.tmp'
+(out/'start.json').write_text(json.dumps(dict(commit=start,clean_tree=True,branch='feat/doc-canonical-editor',preserved_worktree='C:/projects/NEPL3-doc-canonical-model-invariants',preserved_status='untracked reviewed chapter12 archive; no changes copied or reset'),indent=2)+'\n',encoding='utf-8')
+(out/'original.md').write_bytes((root/'doc/spec/08-editor.md').read_bytes())
+old=root/'doc/migration/authored/08-editor.nepld';source=old.read_text(encoding='utf-8')
+changes=[('1. AnalysisSnapshot','1. AnalysisSnapshotの[入力/にゅうりょく]と[同一性/どういつせい]'),('4. definitionとrelations','4. definitionとrelationsの[扱/あつか]い'),('7. LSP adapter','7. LSP adapterの[責務/せきむ]'),('9. workspace trust','9. workspace trustの[境界/きょうかい]')]
+for before,after in changes:
+    assert source.count('"'+before+'"')==1
+    source=source.replace('"'+before+'"','"'+after+'"')
+restored=source
+for before,after in reversed(changes):restored=restored.replace('"'+after+'"','"'+before+'"')
+assert restored.encode()==old.read_bytes()
+(root/'doc/spec/08-editor.nepld').write_text(source,encoding='utf-8',newline='\n');old.unlink()
+sections=[None,'policy','snapshot','derived','region','relations','recovery','incremental','lsp','diagnostics','trust']
+names=['08-共通editor-serviceと診断','方針','1-analysissnapshot','2-自動で得られる機能','3-regionの選択','4-definitionとrelations','5-不完全入力','6-増分解析と取消し','7-lsp-adapter','8-診断ログの表示','9-workspace-trust']
+observed=json.loads(Path('C:/projects/NEPL3-doc-canonical-html-fragment/.tmp/preflight-after19/github.json').read_text(encoding='utf-8'))['08-editor']
+assert names==[a['id'].removeprefix('user-content-') for a in observed['anchors']]
+(root/'doc/migration/aliases/08-editor.json').write_text(json.dumps([dict(section=s,name=n) for s,n in zip(sections,names)],ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
+path=root/'doc/canonical.json';registry=json.loads(path.read_bytes());assert len(registry['pages'])==8
+registry['pages'].append(dict(id='editor',source='doc/spec/08-editor.nepld',projection='doc/spec/08-editor.md',aliases='doc/migration/aliases/08-editor.json',route='docs/spec/08-editor.html',renderer='nepl3-tools.markdown-annotated/2'))
+path.write_text(json.dumps(registry,indent=2)+'\n',encoding='utf-8',newline='\n')
+(out/'heading-changes.json').write_text(json.dumps(dict(changes=changes,reason='Keep original GitHub aliases distinct from generated heading IDs while clarifying section subjects. All body bytes unchanged after reversing four exact heading edits.',prior_source_commit=start),ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+s=Path('C:/projects/NEPL3-doc-canonical-model-invariants/.tmp/generate-initial.py').read_text(encoding='utf-8')
+(out/'generate-initial.py').write_text(s,encoding='utf-8')

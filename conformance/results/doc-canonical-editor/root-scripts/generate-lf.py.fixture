@@ -1,0 +1,17 @@
+from pathlib import Path
+import subprocess,json,time,hashlib
+root=Path.cwd();out=root/'.tmp/generation-lf';out.mkdir(exist_ok=False)
+head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+assert not subprocess.check_output(['git','status','--porcelain']).strip()
+rows=[]
+for kind in ['markdown','html']:
+    command=['cargo','run','--locked','-p','nepl3-tools','--','doc-canonical',kind,f'.tmp/{kind}-initial-lf']
+    started=time.monotonic()
+    with (out/(kind+'.stdout.log')).open('wb') as stdout,(out/(kind+'.stderr.log')).open('wb') as stderr:
+        result=subprocess.run(command,stdout=stdout,stderr=stderr,timeout=1200)
+    assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==head
+    assert not subprocess.check_output(['git','status','--porcelain']).strip()
+    exe=root/'target/debug/nepl3-tools.exe'
+    rows.append(dict(source_commit=head,clean_tree=True,command=command,exit_code=result.returncode,elapsed=time.monotonic()-started,executable_sha256=hashlib.sha256(exe.read_bytes()).hexdigest(),registry_sha256=hashlib.sha256((root/'doc/canonical.json').read_bytes()).hexdigest(),output_exists=(root/f'.tmp/{kind}-initial-lf').exists()))
+    (out/'commands.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf-8')
+    print(kind,result.returncode,(out/(kind+'.stderr.log')).read_text(encoding='utf-8')[-700:],flush=True)
