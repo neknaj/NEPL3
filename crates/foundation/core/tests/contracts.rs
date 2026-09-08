@@ -667,6 +667,75 @@ fn shared_copy_and_independent_comparison_have_separate_work_bounds() -> Result<
 }
 
 #[test]
+fn ordered_source_insertion_has_linear_index_search_work() -> Result<(), SourceError> {
+    let mut store = SourceStore::default();
+    let mut b = Budget::new(Limits {
+        work: 16_000,
+        ..budget().limits()
+    });
+    for index in 0..512 {
+        store.insert_with_budget(source(&format!("s{index:07}"), 0, "x")?, &mut b)?;
+    }
+    assert_eq!(store.snapshots().len(), 512);
+    // 511 comparisons of two eight-byte names plus one revision comparison:
+    // 8,687 Work. No index shifting is needed for ascending insertions.
+    assert_eq!(b.usage().work, 511 * 17);
+    for (index, snapshot) in store.snapshots().iter().enumerate() {
+        assert_eq!(snapshot.identity().source.0, format!("s{index:07}"));
+        assert_eq!(
+            store.get_revision_with_budget(&snapshot.identity().source, 0, &mut budget())?,
+            Some(snapshot)
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn source_index_tail_checks_full_key_and_keeps_conflicts_atomic() -> Result<(), SourceError> {
+    let originals = [
+        source("a", 0, "x")?,
+        source("a", 1, "y")?,
+        source("文", u64::MAX, "z")?,
+    ];
+    for order in [
+        [0, 1, 2],
+        [0, 2, 1],
+        [1, 0, 2],
+        [1, 2, 0],
+        [2, 0, 1],
+        [2, 1, 0],
+    ] {
+        let mut store = SourceStore::default();
+        for index in order {
+            store.insert_ref_with_budget(&originals[index], &mut budget())?;
+        }
+        for index in order {
+            store.insert_ref_with_budget(&originals[index], &mut budget())?;
+        }
+        assert_eq!(store.snapshots().len(), 3);
+        for (position, index) in order.into_iter().enumerate() {
+            assert_eq!(&store.snapshots()[position], &originals[index]);
+        }
+        let conflict = source("文", u64::MAX, "different")?;
+        assert_eq!(
+            store.insert_ref_with_budget(&conflict, &mut budget()),
+            Err(SourceError::IdentityConflict)
+        );
+        let mut stopped = Budget::new(Limits {
+            work: 0,
+            ..budget().limits()
+        });
+        assert_eq!(
+            store.insert_ref_with_budget(&originals[2], &mut stopped),
+            Err(SourceError::Stopped(StopReason::WorkLimit))
+        );
+        assert_eq!(store.snapshots().len(), 3);
+        assert_eq!(store.get_ref(originals[2].identity()), Some(&originals[2]));
+    }
+    Ok(())
+}
+
+#[test]
 fn indexed_source_insert_preserves_order_and_metered_duplicate_lookup() -> Result<(), SourceError> {
     let mut store = SourceStore::default();
     for index in (0..128).rev() {

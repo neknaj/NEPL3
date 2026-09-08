@@ -861,6 +861,24 @@ fn source_index_position<'a>(
     budget: &mut Budget,
 ) -> Result<Result<usize, usize>, SourceError> {
     let (mut low, mut high) = (0, index.len());
+    // Generated snapshots commonly arrive in key order. Check the last key
+    // once so appending a sorted source closure does not search its whole index.
+    // This is an ordering shortcut only; duplicate content is still checked by
+    // the caller and no source declaration or validation proof is cached.
+    if let Some(&last) = index.last() {
+        let prior = get(last);
+        budget.charge(
+            Resource::Work,
+            (prior.storage.id.source.0.len() as u64)
+                .saturating_add(snapshot.storage.id.source.0.len() as u64)
+                .saturating_add(1),
+        )?;
+        match source_key(prior, snapshot) {
+            core::cmp::Ordering::Equal => return Ok(Ok(high - 1)),
+            core::cmp::Ordering::Less => return Ok(Err(high)),
+            core::cmp::Ordering::Greater => high -= 1,
+        }
+    }
     while low < high {
         let mid = low + (high - low) / 2;
         let prior = get(index[mid]);
