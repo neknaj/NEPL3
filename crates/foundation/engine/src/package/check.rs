@@ -366,6 +366,8 @@ impl LanguagePackage {
                 _ => {}
             }
         }
+        // Index allocation/search setup is not a provenance declaration check.
+        *subject = None;
         Ok(CheckedLanguagePackage {
             forms: super::forms::FormIndex::new(&self.forms, budget)?,
             package: self,
