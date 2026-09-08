@@ -1,0 +1,38 @@
+{
+  "base": "2b05110490238656d088c33bbad601784777d657",
+  "original": "7b449ca2d1af3ed0ef135b8a0b9ca929e8a54569",
+  "fixed": "5a17041152323012641d9d1cb907ded7c6a7dc15",
+  "final": "2e8fafa8c07fdec95394fca04332c9a41342cd41",
+  "files": [
+    {
+      "path": "tools/src/doc/projection.rs",
+      "sha256": "aeaa3927da806eb0931d42cf0ba0923ad97406c4141595fe3dfff15eccfb1600",
+      "bytes": 14788
+    },
+    {
+      "path": "tools/src/doc/projection/annotated.rs",
+      "sha256": "eefd82c27f1db36eb10412048596b822a9503388baa34036777a9ea721e248f8",
+      "bytes": 18196
+    },
+    {
+      "path": "tools/src/doc/projection/annotated/host.rs",
+      "sha256": "48fe9999d23deb492c7432a53243637a69f2fe4e5d0ce4cc422b0d9475a400db",
+      "bytes": 3439
+    },
+    {
+      "path": "tools/src/main.rs",
+      "sha256": "7e8241fc16028816adeb889f05ea70de40ecc134836b78f9e6e9c09b0a155236",
+      "bytes": 3586
+    },
+    {
+      "path": "doc/spec/21-doc-pages.md",
+      "sha256": "243c4327c1f484536632395582bd1a923c109993ee31a8045857a28d9cf444b4",
+      "bytes": 27238
+    },
+    {
+      "path": "crates/foundation/core/src/source.rs",
+      "sha256": "0e2465e8e06482a942650f72bf3416894ee5d06c0b6dc1aff8d57e769abd1b8a",
+      "bytes": 33115
+    }
+  ]
+}

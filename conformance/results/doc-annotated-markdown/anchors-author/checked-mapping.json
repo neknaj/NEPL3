@@ -1,0 +1,144 @@
+{
+  "source_commit": "2b05110490238656d088c33bbad601784777d657",
+  "source_files": [
+    {
+      "path": "doc/spec/13-reproducibility.md",
+      "payload": "canonical.md",
+      "bytes": 14922,
+      "sha256": "81d032e6f04730fd4c52a15c11464bff0ed879c1030a059be19d10b4d8c9a16d"
+    },
+    {
+      "path": "doc/migration/authored/13-reproducibility.nepld",
+      "payload": "draft.nepld",
+      "bytes": 30905,
+      "sha256": "31486ad75e0776d55cc12b2a9b5af2840780ad7812456d9c222a90fd8ab495a8"
+    }
+  ],
+  "rows": [
+    {
+      "section_id": null,
+      "target_kind": "article-title",
+      "canonical_line": 1,
+      "canonical_excerpt": "# 13. 再現性・schema識別・契約の判定",
+      "draft_line": 1,
+      "draft_excerpt": "article ja \"13. [再現性/さいげんせい]・schema[識別/しきべつ]・[契約/けいやく]の[判定/はんてい]\"",
+      "observed": {
+        "level": 1,
+        "heading": "13. 再現性・schema識別・契約の判定",
+        "id": "user-content-13-再現性schema識別契約の判定",
+        "href": "#13-再現性schema識別契約の判定"
+      }
+    },
+    {
+      "section_id": "policy",
+      "target_kind": "section",
+      "canonical_line": 3,
+      "canonical_excerpt": "## 方針",
+      "draft_line": 3,
+      "draft_excerpt": "  cons section policy \"[方針/ほうしん]\" body",
+      "observed": {
+        "level": 2,
+        "heading": "方針",
+        "id": "user-content-方針",
+        "href": "#方針"
+      }
+    },
+    {
+      "section_id": "digest",
+      "target_kind": "section",
+      "canonical_line": 7,
+      "canonical_excerpt": "## 1. digest",
+      "draft_line": 8,
+      "draft_excerpt": "  cons section digest \"1. digest\" body",
+      "observed": {
+        "level": 2,
+        "heading": "1. digest",
+        "id": "user-content-1-digest",
+        "href": "#1-digest"
+      }
+    },
+    {
+      "section_id": "semantic",
+      "target_kind": "section",
+      "canonical_line": 23,
+      "canonical_excerpt": "### Package意味正規形",
+      "draft_line": 51,
+      "draft_excerpt": "    cons section semantic \"Package[意味正規形/いみせいきけい]\" body",
+      "observed": {
+        "level": 3,
+        "heading": "Package意味正規形",
+        "id": "user-content-package意味正規形",
+        "href": "#package意味正規形"
+      }
+    },
+    {
+      "section_id": "execution",
+      "target_kind": "section",
+      "canonical_line": 35,
+      "canonical_excerpt": "### 具体実行identity",
+      "draft_line": 81,
+      "draft_excerpt": "    cons section execution \"[具体実行/ぐたいじっこう]identity\" body",
+      "observed": {
+        "level": 3,
+        "heading": "具体実行identity",
+        "id": "user-content-具体実行identity",
+        "href": "#具体実行identity"
+      }
+    },
+    {
+      "section_id": "wire",
+      "target_kind": "section",
+      "canonical_line": 41,
+      "canonical_excerpt": "## 2. native値とwire値",
+      "draft_line": 95,
+      "draft_excerpt": "  cons section wire \"2. native[値/ち]とwire[値/ち]\" body",
+      "observed": {
+        "level": 2,
+        "heading": "2. native値とwire値",
+        "id": "user-content-2-native値とwire値",
+        "href": "#2-native値とwire値"
+      }
+    },
+    {
+      "section_id": "artifacts",
+      "target_kind": "section",
+      "canonical_line": 61,
+      "canonical_excerpt": "## 3. normal formとartifact",
+      "draft_line": 155,
+      "draft_excerpt": "  cons section artifacts \"3. normal formとartifact\" body",
+      "observed": {
+        "level": 2,
+        "heading": "3. normal formとartifact",
+        "id": "user-content-3-normal-formとartifact",
+        "href": "#3-normal-formとartifact"
+      }
+    },
+    {
+      "section_id": "limits",
+      "target_kind": "section",
+      "canonical_line": 69,
+      "canonical_excerpt": "## 4. limitsとproviderの互換",
+      "draft_line": 175,
+      "draft_excerpt": "  cons section limits \"4. limitsとproviderの[互換/ごかん]\" body",
+      "observed": {
+        "level": 2,
+        "heading": "4. limitsとproviderの互換",
+        "id": "user-content-4-limitsとproviderの互換",
+        "href": "#4-limitsとproviderの互換"
+      }
+    }
+  ],
+  "counts": {
+    "article_titles": 1,
+    "sections": 7,
+    "old_fragment_collisions": 0
+  },
+  "checks": {
+    "exact_old_heading_order": true,
+    "literal_bases_equal_original_heading": true,
+    "manual_candidates_equal_actual_github_hrefs": true,
+    "browser_click": false,
+    "production_parser": false,
+    "new_renderer": false
+  }
+}

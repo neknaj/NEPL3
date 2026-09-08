@@ -1,0 +1,32 @@
+[
+  {
+    "path": "cli/oversize.json",
+    "bytes": 1048577,
+    "sha256": "9d78de4e5b12fc166bed811cd230621ea1e1e353553fe31b92a73bfbf45d68ee"
+  },
+  {
+    "path": "cli/source-oversize.nepld",
+    "bytes": 10000001,
+    "sha256": "a867bf9077ba63b8b180c9670e6f04454961bec6bb823a6043df4a16ddaa8d82"
+  },
+  {
+    "path": "cli-final/oversize.json",
+    "bytes": 1048577,
+    "sha256": "9d78de4e5b12fc166bed811cd230621ea1e1e353553fe31b92a73bfbf45d68ee"
+  },
+  {
+    "path": "cli-final/source-oversize.nepld",
+    "bytes": 10000001,
+    "sha256": "a867bf9077ba63b8b180c9670e6f04454961bec6bb823a6043df4a16ddaa8d82"
+  },
+  {
+    "path": "cli-fixed/oversize.json",
+    "bytes": 1048577,
+    "sha256": "9d78de4e5b12fc166bed811cd230621ea1e1e353553fe31b92a73bfbf45d68ee"
+  },
+  {
+    "path": "cli-fixed/source-oversize.nepld",
+    "bytes": 10000001,
+    "sha256": "a867bf9077ba63b8b180c9670e6f04454961bec6bb823a6043df4a16ddaa8d82"
+  }
+]

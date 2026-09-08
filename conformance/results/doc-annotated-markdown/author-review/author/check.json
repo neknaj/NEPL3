@@ -1,0 +1,38 @@
+{
+  "paragraphs": 8,
+  "sentences": [
+    3,
+    5,
+    6,
+    6,
+    7,
+    7,
+    5,
+    8
+  ],
+  "sentence_total": 47,
+  "inline_codes": [
+    "nepl3-tools doc-markdown annotated <source.nepld> <aliases.json> <new-file.md>",
+    "doc-markdown",
+    "nepl3-tools.markdown-annotated/1",
+    "本体[読み]",
+    "本体{注記1/注記2}",
+    "prepare::inspect",
+    "<strong>",
+    "<em>",
+    "name",
+    "section",
+    "-",
+    "_",
+    "n-",
+    "<a name=\"...\">"
+  ],
+  "ruby_occurrences": 258,
+  "unrelated_bytes_unchanged": true,
+  "utf8_lf": true,
+  "formal_structure_audit": true,
+  "paragraph_base_text_equal_ignoring_whitespace": true,
+  "production_runtime": false,
+  "independent_review": false,
+  "after_sha256": "f0c7b1748fcce16d8f29786256a4f8cef80d6f7dc24ec6f4fe11c7da3308afb5"
+}

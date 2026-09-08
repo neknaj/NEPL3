@@ -1,0 +1,16 @@
+﻿#[test]
+fn independent_decorated_code_boundaries() -> Result<(), String> {
+    let c = compiled()?;
+    for inline in [
+      r#"concat cons code "a" cons strong code "b" nil"#,
+      r#"concat cons strong code "a" cons code "b" nil"#,
+      r#"concat cons code "a" cons strong concat nil cons code "b" nil"#,
+      r#"concat cons code "a" cons link external "https://example.org/" code "b" nil"#,
+    ] {
+      let source = format!("article en \"T\" body cons paragraph cons sentence cons {inline} nil nil nil");
+      let result = from_source(&c, &source, &[]);
+      eprintln!("INPUT {inline}; RESULT {result:?}");
+      assert!(result.is_err(), "decorations hid code adjacency: {inline}");
+    }
+    Ok(())
+}

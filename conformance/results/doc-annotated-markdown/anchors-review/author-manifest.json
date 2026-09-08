@@ -1,0 +1,51 @@
+{
+  "source_commit": "2b05110490238656d088c33bbad601784777d657",
+  "scope": "manual author mapping, independent review pending",
+  "files": [
+    {
+      "path": "canonical.md",
+      "bytes": 14922,
+      "sha256": "81d032e6f04730fd4c52a15c11464bff0ed879c1030a059be19d10b4d8c9a16d"
+    },
+    {
+      "path": "draft.nepld",
+      "bytes": 30905,
+      "sha256": "31486ad75e0776d55cc12b2a9b5af2840780ad7812456d9c222a90fd8ab495a8"
+    },
+    {
+      "path": "github-page.html",
+      "bytes": 300695,
+      "sha256": "6f43d6837100eb5a52df4ea0d530b085d79633bc80431870873fe5d73e8e3624"
+    },
+    {
+      "path": "observed-anchors.json",
+      "bytes": 1214,
+      "sha256": "b9eb682d17b865bb8fa4e02cb84948b686f11c1b61d5a3b5c725f56ccec1f9c5"
+    },
+    {
+      "path": "mapping.json",
+      "bytes": 5305,
+      "sha256": "d01c318a9a47bfe64ded21341b2bfa28496dd9964241d35b5c17728b3e374bbc"
+    },
+    {
+      "path": "checked-mapping.json",
+      "bytes": 4618,
+      "sha256": "1a94b7e4a43782401d090bb170ac70dc98618701305d1e7ed6d0df76aaad1e5e"
+    },
+    {
+      "path": "record.md",
+      "bytes": 6992,
+      "sha256": "b33b5ead69158d4b23a96991b4eadc94cff30813041b1c1cb3d1f91bd7d75636"
+    },
+    {
+      "path": "inspect.py",
+      "bytes": 657,
+      "sha256": "5f083d4ca2329b7e59ebbb8aa2a4ac934e192d6aa0dc688583026b54fdeb5307"
+    },
+    {
+      "path": "check.py",
+      "bytes": 3112,
+      "sha256": "6d20df5215ee3524a725722431a1be7ab616cd2cad5ea7fdd37473b0ede28e4b"
+    }
+  ]
+}

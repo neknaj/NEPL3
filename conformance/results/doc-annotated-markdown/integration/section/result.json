@@ -1,0 +1,17 @@
+{
+  "command": [
+    "target\\debug\\nepl3-tools.exe",
+    "doc-html",
+    "export",
+    ".tmp\\annotated-section-final\\section.nepld",
+    ".tmp\\annotated-section-final\\html"
+  ],
+  "exit_code": 0,
+  "elapsed": 2.6381424999563023,
+  "commit": "2e8fafa8c07fdec95394fca04332c9a41342cd41",
+  "binary_sha256": "8dfcdbb539d0de6a162f46b10e1c5c4355b14219a57e3d564f7e65901b03cf35",
+  "original_draft_sha256": "f0c7b1748fcce16d8f29786256a4f8cef80d6f7dc24ec6f4fe11c7da3308afb5",
+  "original_start_byte": 63743,
+  "wrapped_sha256": "66abb1d1100054f8f383822ae2acd3e9dd3ee42ce2c9866c350c9cbefd3046ff",
+  "scope": "Unchanged new Section suffix in an explicit test Article wrapper; not full chapter 21 parse or render evidence."
+}

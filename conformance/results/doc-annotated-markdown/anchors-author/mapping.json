@@ -1,0 +1,105 @@
+{
+  "kind": "manual-authoring-proposal-not-production-registry",
+  "commit": "2b05110490238656d088c33bbad601784777d657",
+  "canonical_path": "doc/spec/13-reproducibility.md",
+  "draft_path": "doc/migration/authored/13-reproducibility.nepld",
+  "github_url": "https://github.com/neknaj/NEPL3/blob/2b05110490238656d088c33bbad601784777d657/doc/spec/13-reproducibility.md",
+  "mappings": [
+    {
+      "target_kind": "article-title",
+      "section_id": null,
+      "parent_section_id": null,
+      "markdown_level": 1,
+      "original_heading": "13. 再現性・schema識別・契約の判定",
+      "authored_title_literal": "13. [再現性/さいげんせい]・schema[識別/しきべつ]・[契約/けいやく]の[判定/はんてい]",
+      "candidate_fragment": "13-再現性schema識別契約の判定",
+      "derivation": "ASCII period and both Japanese middle-dot punctuation marks are removed; the one space becomes a hyphen; existing lowercase schema and Japanese letters remain.",
+      "meaning": "Chapter-wide reproducibility, schema identity and contract evaluation. This is the Article title, not a Section; no artificial Section ID is assigned."
+    },
+    {
+      "target_kind": "section",
+      "section_id": "policy",
+      "parent_section_id": null,
+      "markdown_level": 2,
+      "original_heading": "方針",
+      "authored_title_literal": "[方針/ほうしん]",
+      "candidate_fragment": "方針",
+      "derivation": "No spaces, removable punctuation or uppercase ASCII; Japanese heading remains.",
+      "meaning": "Separates shared meaning from implementation algorithms and avoids digest/hash cycles and source-order confusion."
+    },
+    {
+      "target_kind": "section",
+      "section_id": "digest",
+      "parent_section_id": null,
+      "markdown_level": 2,
+      "original_heading": "1. digest",
+      "authored_title_literal": "1. digest",
+      "candidate_fragment": "1-digest",
+      "derivation": "Period removed and one space replaced by a hyphen.",
+      "meaning": "SHA-256, source/resource bytes, locator constraints, schema/package canonical descriptors and cache identities; contains both semantic and execution subsections."
+    },
+    {
+      "target_kind": "section",
+      "section_id": "semantic",
+      "parent_section_id": "digest",
+      "markdown_level": 3,
+      "original_heading": "Package意味正規形",
+      "authored_title_literal": "Package[意味正規形/いみせいきけい]",
+      "candidate_fragment": "package意味正規形",
+      "derivation": "Uppercase ASCII P becomes p; the Japanese suffix remains.",
+      "meaning": "Concrete package semantic canonical JSON, reader/binding normalization and recovery identity. It remains nested under digest."
+    },
+    {
+      "target_kind": "section",
+      "section_id": "execution",
+      "parent_section_id": "digest",
+      "markdown_level": 3,
+      "original_heading": "具体実行identity",
+      "authored_title_literal": "[具体実行/ぐたいじっこう]identity",
+      "candidate_fragment": "具体実行identity",
+      "derivation": "No removable punctuation or space; existing lowercase suffix remains.",
+      "meaning": "Separate executionDigest, concrete arena/provenance identity and alias-bound lookup/resume safety. It remains nested under digest."
+    },
+    {
+      "target_kind": "section",
+      "section_id": "wire",
+      "parent_section_id": null,
+      "markdown_level": 2,
+      "original_heading": "2. native値とwire値",
+      "authored_title_literal": "2. native[値/ち]とwire[値/ち]",
+      "candidate_fragment": "2-native値とwire値",
+      "derivation": "Period removed and one space replaced by a hyphen; lowercase ASCII and Japanese remain.",
+      "meaning": "Native/wire identities, deterministic renumbering and table ownership, Foreign closure and environment-digest constraints."
+    },
+    {
+      "target_kind": "section",
+      "section_id": "artifacts",
+      "parent_section_id": null,
+      "markdown_level": 2,
+      "original_heading": "3. normal formとartifact",
+      "authored_title_literal": "3. normal formとartifact",
+      "candidate_fragment": "3-normal-formとartifact",
+      "derivation": "Period removed; both spaces become hyphens.",
+      "meaning": "Meaning printers versus source extraction, HTML/XML byte normalization and reproducible structure versus platform-dependent pixels."
+    },
+    {
+      "target_kind": "section",
+      "section_id": "limits",
+      "parent_section_id": null,
+      "markdown_level": 2,
+      "original_heading": "4. limitsとproviderの互換",
+      "authored_title_literal": "4. limitsとproviderの[互換/ごかん]",
+      "candidate_fragment": "4-limitsとproviderの互換",
+      "derivation": "Period removed and one space replaced by a hyphen; existing lowercase ASCII and Japanese remain.",
+      "meaning": "Cross-implementation compatibility under sufficient budgets, honest resource stops and deterministic same-implementation execution."
+    }
+  ],
+  "status": {
+    "candidates_manually_authored": true,
+    "server_rendered_heading_hrefs_observed": true,
+    "browser_fragment_navigation_executed": false,
+    "new_projection_anchors_verified": false,
+    "independent_mapping_review_completed": false,
+    "canonical_cutover_approved": false
+  }
+}
