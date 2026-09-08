@@ -1,0 +1,23 @@
+.github/workflows/ci.yml:101:          cargo run --locked -p nepl3-tools -- doc-markdown doc/migration/00-contract.nepld dist/00-contract.view.md
+.github/workflows/ci.yml:115:          path: dist/00-contract.view.md
+design/doc-inventory.json:1531:            "destination": "spec/00-contract.md",
+design/doc-inventory.json:4521:        "path": "doc/spec/00-contract.md",
+design/doc-inventory.json:4526:      "canonical_source": "doc/spec/00-contract.md",
+doc/README.md:13:1. [対象範囲と共通契約](spec/00-contract.md)、[アーキテクチャ](spec/01-architecture.md)
+doc/migration/00-contract.json:2:  "canonical": "doc/spec/00-contract.md",
+doc/migration/00-contract.json:3:  "candidate": "doc/migration/00-contract.nepld",
+doc/migration/README.md:18:以下の `00-contract.nepld` と確認用索引は、限定した変換器と処理系の検証に使う生成物です。これらは原本から再生成して内容・構造を比較し、手書きで保守しません。`authored/` の執筆原稿とは用途と更新方法が異なります。
+doc/migration/README.md:20:最初の候補は [対象と設計上の決定](00-contract.nepld)。
+doc/migration/README.md:47:cargo run --locked -p nepl3-tools -- doc-markdown doc/migration/00-contract.nepld dist/00-contract.view.md
+doc/migration/authored/guide/README.nepld:50:        cons link relative "spec/00-contract.md" none concat cons ruby text "対象範囲" text "たいしょうはんい" cons text "と" cons ruby text "共通契約" text "きょうつうけいやく" nil
+doc/migration/authored/migration/README.nepld:31:        cons sentence cons ruby text "以下" text "いか" cons text "の " cons code "00-contract.nepld" cons text " と" cons ruby text "確認用索引" text "かくにんようさくいん" cons text "は、" cons ruby text "限定" text "げんてい" cons text "した" cons ruby text "変換器" text "へんかんき" cons text "と" cons ruby text "処理系" text "しょりけい" cons text "の" cons ruby text "検証" text "けんしょう" cons text "に" cons ruby text "使" text "つか" cons text "う" cons ruby text "生成物" text "せいせいぶつ" cons text "です。" nil
+doc/migration/authored/migration/README.nepld:36:        cons sentence cons ruby text "最初" text "さいしょ" cons text "の" cons ruby text "候補" text "こうほ" cons text "は " cons link relative "00-contract.nepld" none concat cons ruby text "対象" text "たいしょう" cons text "と" cons ruby text "設計上" text "せっけいじょう" cons text "の" cons ruby text "決定" text "けってい" nil cons text "。" nil
+doc/migration/authored/migration/README.nepld:57:      cons rawcode some "sh" "mkdir -p dist\ncargo run --locked -p nepl3-tools -- doc-markdown doc/migration/00-contract.nepld dist/00-contract.view.md\n"
+doc/migration/pages.json:5:    {"id": "contract", "source": "00-contract.nepld", "route": "reference/contract/index.html"}
+tools/migration/contract.py:1:"""Reproducible migration candidate for spec/00-contract.md, not a general Markdown converter.
+tools/migration/contract.py:14:SOURCE = ROOT / "doc/spec/00-contract.md"
+tools/migration/contract.py:15:TARGET = ROOT / "doc/migration/00-contract.nepld"
+tools/migration/contract.py:91:    audit = json.dumps({"canonical": "doc/spec/00-contract.md", "candidate": "doc/migration/00-contract.nepld",
+tools/tests/doc/projection.rs:215:        include_str!("../../../doc/migration/00-contract.nepld"),
+tools/tests/doc/projection.rs:238:        events(include_str!("../../../doc/spec/00-contract.md"))
+tools/tests/doc/projection.rs:244:            include_str!("../../../doc/migration/00-contract.nepld")

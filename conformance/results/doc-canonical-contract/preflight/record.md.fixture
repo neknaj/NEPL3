@@ -1,0 +1,43 @@
+# Chapter 00 canonical preflight — author-side, read-only
+
+Fixed worktree HEAD: `652d3b2476416a1ead7332f12055d1a18018cfb6`. No production, draft, registry or Git edits. All writes are scratch evidence.
+
+## Authorship, reviewed baseline and drift
+
+I am infrastructure/author A, the original manuscript author; this is not a new independent semantic review. The original independent review explicitly names infrastructure as author. It reviewed `8fd2512`, then independently verified the five Chapter 00 Ruby corrections in `cd451bf5ec3b56eda9ebe33f451f075e69fc4c87`. The earlier heading wording caveat remained open as a migration issue. The later foundation integration review verified the same draft and canonical source bytes. Copies of both earlier review reports/manifests and the tracked integration report/result are retained.
+
+Direct Git-blob comparison now proves canonical Markdown is still exactly the author baseline `bc1d5d3443d214457aa6527250d372ee1f2b5896` (SHA256 `4ca8d780d32696bf102774c346ffdf18d01452085f93a2daae9e49acf16b003f`, 4368 bytes). Current authored draft is exactly reviewed `cd451bf` (SHA256 `48c2b1696c7308ee43f26dbf06a6038b38f0199233c1da3ef15a04453f810e93`, 14026 bytes). No subsequent source-drift paragraph needs authoring. Existing natural-language rewriting is not literal byte equivalence and was covered by the prior independent content review; this preflight does not reconfirm its own prose independently.
+
+## Concrete cutover obstacles
+
+1. **Live canonical Markdown is also the old restricted-converter fixture input.** `tools/migration/contract.py:14` reads `doc/spec/00-contract.md`; its check compares the generated fixture and audit JSON. It rejects the added bracket annotations and explicit alias HTML of an annotated view. `tools/migration/test_contract.py:7` likewise reads this path and compares the old fixture. `.github/workflows/ci.yml:70` and `:71` run these checks. `tools/tests/doc/projection.rs:238` separately compares pulldown events from the old restricted fixture against this same Markdown. Authored annotated /2 output has deliberate Ruby/Anno display and different list structure, so replacing the Markdown in place cannot preserve those existing assertions. Minimal honest resolution is to freeze the old source as an explicitly historical regression fixture, bind the old converter/tests/audit metadata to that source, and keep the regression checks. Do not regenerate the old fixture from annotated output or remove correctness assertions. `doc/migration/README.md`, its authored counterpart, and developer command descriptions should accurately describe the resulting fixture provenance. CI's restricted view artifact can remain separate from canonical /2.
+
+2. **Legacy anchor mapping is not registered yet.** Current `doc/canonical.json` registers only Chapter 13. Chapter 00 needs its own stable page id, source path, unchanged logical projection path, alias manifest, route and /2 renderer. The existing `doc/migration/pages.json` id `contract` and route `reference/contract/index.html` belong to the generator test candidate; do not silently reuse that as proof of an established canonical route. The historical inventory explicitly leaves stable page id and published URL unassigned. Preserve the authored Section IDs and verify old anchors against actual newly generated GitHub HTML and deployed HTML, including collision/target checks. This review verifies only the old server-rendered anchors, not new browser navigation.
+
+3. **Move only the manual manuscript once.** Once accepted, move `doc/migration/authored/00-contract.nepld` to the chosen canonical source and do not retain a second hand-maintained copy. Keep the distinct generated `doc/migration/00-contract.nepld` regression fixture under its explicit fixture contract. Preserve the existing `doc/spec/00-contract.md` path as generated Markdown; deleting it would break guide links, the source inventory and tests. No direct Chapter 00 `task.spec`, operation.definition or acceptance-catalog references were found in the fixed tracked-reference scan; the specific old converter/test paths above are the actual machine dependency.
+
+## Headings and references
+
+The complete GitHub blob response for fixed commit 652d3b2 is in `github.html`, with its exact URL in `github-url.txt`. Its actual rendered anchors—not guessed slugs—map as follows:
+
+| Old GitHub fragment | Authored target |
+| --- | --- |
+| `00-対象と設計上の決定` | Article (`section: null`) |
+| `方針` | `policy` |
+| `1-実装対象` | `targets` |
+| `2-保存する意味上の境界` | `boundaries` |
+| `3-試作の扱い` | `prototypes` |
+| `4-不変条件` | `invariants` |
+| `5-具体的な綴り` | `spellings` |
+
+These seven old fragments are unique. The authored title is `00. 対象と設計の決定`, omitting the old title's 上; a title-based automatic anchor cannot be assumed compatible. All annotated headings contain Ruby readings in /2 display, so keep the old-anchor table explicit and inspect the new generated automatic IDs rather than copying Chapter 13's two-auto/six-alias decision. `result.json` also records the six distinct UTF-8-hex `n-` Section anchors. Old versus new automatic-anchor collisions have not been executed.
+
+The source and draft have zero links, zero code blocks and zero tables. Both contain the same ten ordered InlineCode values: cons, nil, v1, Fn, value, splice, call, map, then, design/forms.json. `design/forms.json` is code text, not a typed resource link. The 14–16 chapter reference is also plain text. Thus moving this page introduces no relative links inside it that require rewriting. The inbound guide README links to `spec/00-contract.md`; retaining the logical projection path preserves that target. Repository scan found no explicit inbound `00-contract.md#fragment` link, but externally bookmarked old anchors remain part of compatibility.
+
+The original Markdown has one six-item list. The manual draft has three nonempty flat unordered lists (4 language items, 6 semantic-boundary items, 14 invariant items), each with exactly one Paragraph per item. This is an intentional pre-existing authored structure, covered in earlier review; it is not an /2 renderer structural loss. It fits /2's current flat-list contract without adjacent independent lists, task states, nested items, tables or invented filler. Compare all 4/6/14 items, annotations and INV01–INV14 in the final view; do not require the old restricted fixture's exact Markdown event sequence for this authored view.
+
+`design/doc-inventory.json` and `doc/history/source-manifest.json` include the original path/hash as baseline evidence. Their historical bytes must not be silently updated into current-success receipts. Any current migration/registry record must distinguish preserved baseline from the newly registered source. Existing review archives remain historical and should not be rewritten when the draft moves.
+
+## Performed and unperformed checks
+
+`check.py` fixed the inputs, compared both to reviewed Git blobs, parsed complete Doc structure using existing formal forms, extracted exact InlineCode sequence and 4/6/14 list counts, verified absence of links/rawcode/table, and extracted seven anchors from actual GitHub server HTML. It retained the tracked-reference scan and original review records. This is not production parse/lower/render. Root reported current actual parse → annotated /2 success; I did not repeat or convert that report into independently executed evidence. New-view semantic review by a different author, actual GitHub/browser navigation, HTML accessibility, generated-byte determinism and full canonical check remain root's cutover gates. No broader T21 completion is claimed.

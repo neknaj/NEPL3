@@ -1,0 +1,27 @@
+[
+  {
+    "case": "changed-code",
+    "rejected_before_both_writes": true,
+    "input_sha256": "6f0e910b5d785d6ebdd00db818fa12fe18b43650371fbf3a65af5d8db0b68f2d"
+  },
+  {
+    "case": "extra-section",
+    "rejected_before_both_writes": true,
+    "input_sha256": "9b8cd1d43cf15923b605a8a9b77767f9b5419d76ef62461670c6f6a67fe256f4"
+  },
+  {
+    "case": "current-generated-md",
+    "rejected_before_both_writes": true,
+    "input_sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1"
+  },
+  {
+    "case": "BOM",
+    "rejected_before_both_writes": true,
+    "input_sha256": "f3770bf5adaa48e3a560e264e137f42bf7b3a5bbcf5df8bc121b222af8c340c9"
+  },
+  {
+    "case": "CRLF checkout",
+    "normalized_LF_hash_matches": true,
+    "generated_bytes_unchanged": true
+  }
+]

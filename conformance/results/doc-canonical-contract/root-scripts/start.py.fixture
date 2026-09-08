@@ -1,0 +1,19 @@
+from pathlib import Path
+import subprocess, hashlib, json
+
+root=Path(__file__).resolve().parent.parent
+base='652d3b2476416a1ead7332f12055d1a18018cfb6'
+assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip()==base
+assert not subprocess.check_output(['git','status','--porcelain'],cwd=root)
+record={'start_commit':base,'working_tree':'clean','branch':'feat/doc-canonical-contract'}
+(root/'.tmp/start.json').write_text(json.dumps(record,indent=2)+'\n',encoding='utf-8',newline='\n')
+raw=subprocess.check_output(['git','show','a163764e93e2809f8013d7bbe16721082f979143:doc/spec/00-contract.md'],cwd=root)
+assert hashlib.sha256(raw).hexdigest()=='4ca8d780d32696bf102774c346ffdf18d01452085f93a2daae9e49acf16b003f'
+fixture=root/'tools/migration/fixtures/00-contract.md'
+fixture.parent.mkdir(exist_ok=True)
+fixture.write_bytes(raw)
+source=root/'doc/migration/authored/00-contract.nepld'
+target=root/'doc/spec/00-contract.nepld'
+source.rename(target)
+record['doc_sha256']=hashlib.sha256(target.read_bytes()).hexdigest()
+(root/'.tmp/start.json').write_text(json.dumps(record,indent=2)+'\n',encoding='utf-8',newline='\n')

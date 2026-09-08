@@ -1,0 +1,11 @@
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
+import subprocess,json
+O=Path(__file__).resolve().parent;python='C:/projects/NEPL3-doc-canonical-preview/.tmp/browser-venv/Scripts/python.exe'
+def run(name):
+    cmd=[python,str(O/(name+'.py'))];p=subprocess.run(cmd,cwd=O,capture_output=True,timeout=300)
+    (O/(name+'.stdout.log')).write_bytes(p.stdout);(O/(name+'.stderr.log')).write_bytes(p.stderr)
+    return dict(name=name,command=cmd,exit_code=p.returncode)
+with ThreadPoolExecutor(max_workers=2) as pool: rows=list(pool.map(run,['github','local']))
+(O/'commands.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf-8',newline='\n');print(rows)
+assert all(r['exit_code']==0 for r in rows)

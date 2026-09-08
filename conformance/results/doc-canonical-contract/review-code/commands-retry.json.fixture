@@ -1,0 +1,36 @@
+[
+  {
+    "name": "historical-retry",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--test",
+      "doc",
+      "projection::historical_contract_projects_to_equivalent_markdown_events",
+      "--",
+      "--exact"
+    ],
+    "cwd": "C:\\projects\\NEPL3-doc-canonical-contract\\.tmp\\review-canonical00-code\\workspace",
+    "exit_code": 0,
+    "target_dir": "C:\\projects\\NEPL3-doc-canonical-contract\\.tmp\\review-canonical00-code\\target"
+  },
+  {
+    "name": "canonical",
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "--check"
+    ],
+    "cwd": "C:\\projects\\NEPL3-doc-canonical-contract\\.tmp\\review-canonical00-code\\workspace",
+    "exit_code": 0,
+    "target_dir": "C:\\projects\\NEPL3-doc-canonical-contract\\.tmp\\review-canonical00-code\\target"
+  }
+]

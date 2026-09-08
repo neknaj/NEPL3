@@ -1,0 +1,24 @@
+{
+  "checks": {
+    "source_move_exact": true,
+    "historical_source_exact": true,
+    "old_generated_fixture_unchanged": true,
+    "same_function_generate": true,
+    "same_function_sentence": true,
+    "same_function_quoted": true,
+    "test_only_name_and_input_changed": true,
+    "previous_registry_unchanged": true
+  },
+  "source": {
+    "bytes": 4368,
+    "sha256": "4ca8d780d32696bf102774c346ffdf18d01452085f93a2daae9e49acf16b003f"
+  },
+  "draft": {
+    "bytes": 14026,
+    "sha256": "48c2b1696c7308ee43f26dbf06a6038b38f0199233c1da3ef15a04453f810e93"
+  },
+  "historical_output": {
+    "bytes": 5636,
+    "sha256": "1ee46981e30e57e2c5965a21f3e1f318636178582faac645dfef780c60cfa520"
+  }
+}

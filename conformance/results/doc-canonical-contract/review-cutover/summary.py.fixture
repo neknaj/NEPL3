@@ -1,0 +1,21 @@
+from pathlib import Path
+import json,hashlib,subprocess
+O=Path(__file__).resolve().parent
+def load(p):return json.loads((O/p).read_bytes())
+manifest=load('independent-generated/manifest.json')
+expected={'allocation_units':500000000,'depth':1000,'diagnostics':1000,'events':1000,'nodes':10000000,'output_bytes':10000000,'source_bytes':10000000,'work':100000000}
+assert manifest['output_budget']['limits']==expected
+for p in manifest['pages']:
+    assert p['parse_limits']==expected and p['lower_limits']==expected
+    assert not any(p['parse_initial_usage'].values()) and not any(p['lower_initial_usage'].values())
+assert not any(manifest['output_budget']['initial_usage'].values())
+assert manifest['pages'][0]['input']=='doc/spec/00-contract.nepld' and manifest['pages'][0]['source']=='doc/spec/00-contract.md'
+github=load('independent-github/results.json');local=load('independent-local/results.json')
+assert len(github['rows'])==13 and all(r['passed'] for r in github['rows'])
+assert len(local)==12 and sum(len(r['navigation']) for r in local)==72 and all(r['passed'] for r in local)
+cmd=['C:/projects/NEPL3-doc-canonical-preview/.tmp/browser-venv/Scripts/python.exe','-m','pip','show','playwright'];p=subprocess.run(cmd,capture_output=True,timeout=30);assert p.returncode==0 and b'Version: 1.62.0' in p.stdout
+(O/'playwright-version.stdout.log').write_bytes(p.stdout);(O/'playwright-version.stderr.log').write_bytes(p.stderr)
+tools=(O/'original/verify-canonical00/tools-tests.stdout.log').read_bytes();assert b'70 passed; 0 failed; 1 ignored' in tools
+historical=(O/'original/verify-canonical00/historical-projection.stdout.log').read_bytes();assert b'1 passed; 0 failed' in historical
+record=dict(head='4895c1a6a94660a43e617ed86a21844838a7324d',github_navigation=13,local_display_configurations=12,local_navigation=72,versions={r['engine']:r['version'] for r in local},root_tools=dict(passed=70,ignored=1),root_historical=dict(passed=1),default_limits=expected,initial_usage_zero=True,source_and_input_distinct=True,independent_generation_all_four_files_equal=True,code_review_manifest_sha256=hashlib.sha256((O.parent/'review-canonical00-code/manifest.json').read_bytes()).hexdigest(),version_command=cmd)
+(O/'summary.json').write_text(json.dumps(record,indent=2)+'\n',encoding='utf-8',newline='\n');print(json.dumps(record))

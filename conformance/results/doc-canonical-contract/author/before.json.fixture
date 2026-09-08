@@ -1,0 +1,30 @@
+{
+  "head": "652d3b2476416a1ead7332f12055d1a18018cfb6",
+  "files": [
+    {
+      "path": "doc/migration/README.md",
+      "bytes": 4751,
+      "sha256": "3f408d5fdbed448c8fb8e0fd472117d0018fbf87732ce2d808dcb44e3bcc1d61"
+    },
+    {
+      "path": "doc/development.md",
+      "bytes": 23445,
+      "sha256": "b1f1e552a9a42c532789ca9f3a0c8d92ba0e9d2341363695f38adf5208d9ec34"
+    },
+    {
+      "path": "doc/migration/authored/migration/README.nepld",
+      "bytes": 10755,
+      "sha256": "e5bb2361b213ef9df9c3a69174e8608641a3dca4a132011ec174774f25063f03"
+    },
+    {
+      "path": "doc/migration/authored/guide/development.nepld",
+      "bytes": 55343,
+      "sha256": "1d373d204f064134fa70542268eddc2be998a263341331dc4871601d3594826c"
+    },
+    {
+      "path": "doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "source_matches_reviewed_bc1d5d3": true,
+  "draft_matches_reviewed_cd451bf": true,
+  "source_sha256": "4ca8d780d32696bf102774c346ffdf18d01452085f93a2daae9e49acf16b003f",
+  "draft_sha256": "48c2b1696c7308ee43f26dbf06a6038b38f0199233c1da3ef15a04453f810e93",
+  "headings": [
+    {
+      "legacy_actual_github": {
+        "id": "user-content-00-対象と設計上の決定",
+        "href": "#00-対象と設計上の決定",
+        "aria-label": "Permalink: 00. 対象と設計上の決定"
+      },
+      "draft_heading_base": "00. 対象と設計の決定",
+      "section": null,
+      "nepl3_anchor": null,
+      "verification": "old GitHub server-rendered HTML; new generated GitHub heading anchors/browser navigation not run"
+    },
+    {
+      "legacy_actual_github": {
+        "id": "user-content-方針",
+        "href": "#方針",
+        "aria-label": "Permalink: 方針"
+      },
+      "draft_heading_base": "方針",
+      "section": "policy",
+      "nepl3_anchor": "n-706f6c696379",
+      "verification": "old GitHub server-rendered HTML; new generated GitHub heading anchors/browser navigation not run"
+    },
+    {
+      "legacy_actual_github": {
+        "id": "user-content-1-実装対象",
+        "href": "#1-実装対象",
+        "aria-label": "Permalink: 1. 実装対象"
+      },
+      "draft_heading_base": "1. 実装対象",
+      "section": "targets",
+      "nepl3_anchor": "n-74617267657473",
+      "verification": "old GitHub server-rendered HTML; new generated GitHub heading anchors/browser navigation not run"
+    },
+    {
+      "legacy_actual_github": {
+        "id": "user-content-2-保存する意味上の境界",
+        "href": "#2-保存する意味上の境界",
+        "aria-label": "Permalink: 2. 保存する意味上の境界"
+      },
+      "draft_heading_base": "2. 保存する意味上の境界",
+      "section": "boundaries",
+      "nepl3_anchor": "n-626f756e646172696573",
+      "verification": "old GitHub server-rendered HTML; new generated GitHub heading anchors/browser navigation not run"
+    },
+    {
+      "legacy_actual_github": {
+        "id": "user-content-3-試作の扱い",
+        "href": "#3-試作の扱い",
+        "aria-label": "Permalink: 3. 試作の扱い"
+      },
+      "draft_heading_base": "3. 試作の扱い",
+      "section": "prototypes",
+      "nepl3_anchor": "n-70726f746f7479706573",
+      "verification": "old GitHub server-rendered HTML; new generated GitHub heading anchors/browser navigation not run"
+    },
+    {
+      "legacy_actual_github": {
+        "id": "user-content-4-不変条件",
+        "href": "#4-不変条件",
+        "aria-label": "Permalink: 4. 不変条件"
+      },
+      "draft_heading_base": "4. 不変条件",
+      "section": "invariants",
+      "nepl3_anchor": "n-696e76617269616e7473",
+      "verification": "old GitHub server-rendered HTML; new generated GitHub heading anchors/browser navigation not run"
+    },
+    {
+      "legacy_actual_github": {
+        "id": "user-content-5-具体的な綴り",
+        "href": "#5-具体的な綴り",
+        "aria-label": "Permalink: 5. 具体的な綴り"
+      },
+      "draft_heading_base": "5. 具体的な綴り",
+      "section": "spellings",
+      "nepl3_anchor": "n-7370656c6c696e6773",
+      "verification": "old GitHub server-rendered HTML; new generated GitHub heading anchors/browser navigation not run"
+    }
+  ],
+  "inline_codes": [
+    "cons",
+    "nil",
+    "v1",
+    "Fn",
+    "value",
+    "splice",
+    "call",
+    "map",
+    "then",
+    "design/forms.json"
+  ],
+  "doc_lists_item_counts": [
+    4,
+    6,
+    14
+  ],
+  "source_list_count": 1,
+  "source_list_items": 6,
+  "rawcode_count": 0,
+  "typed_link_count": 0,
+  "table_count": 0,
+  "ruby_count": 277,
+  "independent_meaning_review": false,
+  "production_execution": "root reported success; not rerun by author"
+}
