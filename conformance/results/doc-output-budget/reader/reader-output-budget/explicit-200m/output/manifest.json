@@ -1,0 +1,104 @@
+{
+  "budget_scope": "Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
+  "execution_identity": "d5d9510c224b3e8f6a7a98e2b1b8d0cab6c3c68be80c62082cf4fb11a088167a",
+  "files": [
+    {
+      "license": "MIT",
+      "mime": "text/css; charset=utf-8",
+      "path": "reference/reader/assets/doc.css",
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "reference/reader/index.html",
+      "sha256": "6b0b428902327d3bd0a7d5da43f0418bb7bfda98d13e4da45bf876530e2b24c6"
+    }
+  ],
+  "format": "nepl3.local-doc-pages/1",
+  "identity": "2a7efa464de87ffbfe2c20f259874ac8537cb81c9667a7999dcace7fc6e183df",
+  "options": {
+    "parallel": "Rows"
+  },
+  "output_budget": {
+    "contract": "nepl3.local-doc-pages.execution/1",
+    "initial_usage": {
+      "allocation_units": 0,
+      "depth": 0,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 0,
+      "output_bytes": 0,
+      "source_bytes": 0,
+      "work": 0
+    },
+    "limits": {
+      "allocation_units": 500000000,
+      "depth": 1000,
+      "diagnostics": 1000,
+      "events": 1000,
+      "nodes": 10000000,
+      "output_bytes": 10000000,
+      "source_bytes": 10000000,
+      "work": 200000000
+    },
+    "usage": {
+      "allocation_units": 216193605,
+      "depth": 14,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 3948072,
+      "output_bytes": 220035,
+      "source_bytes": 72485,
+      "work": 101271279
+    }
+  },
+  "output_usage": {
+    "allocation_units": 216193605,
+    "output_bytes": 220035,
+    "work": 101271279
+  },
+  "packages": "compiled checked bootstrap fixtures",
+  "pages": [
+    {
+      "id": "candidate",
+      "lower_usage": {
+        "allocation_units": 105903276,
+        "depth": 68,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 2259476,
+        "output_bytes": 0,
+        "source_bytes": 72485,
+        "work": 58484241
+      },
+      "operation_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "parse_and_validate_usage": {
+        "allocation_units": 375526026,
+        "depth": 71,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 6104330,
+        "output_bytes": 529796,
+        "source_bytes": 141684,
+        "work": 99523989
+      },
+      "profile_sha256": "3ff9838f5cc370b8a3e2d72d73c034aa084f67874938844390a730fee24a693e",
+      "route": "reference/reader/index.html",
+      "source": "03-reader.nepld",
+      "source_sha256": "162fe9ec7faf8c671ef3769fc27342209577db38084d0201220b7871c430bab3"
+    }
+  ],
+  "renderer": "nepl3-doc-html pages/2",
+  "scope": "Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Assets and foreign rendering remain unsupported. Not Pages deployment evidence.",
+  "viewer_scripts": false
+}

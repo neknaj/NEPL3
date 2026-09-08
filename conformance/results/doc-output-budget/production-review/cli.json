@@ -1,0 +1,37 @@
+[
+  {
+    "case": 0,
+    "exit": 1,
+    "stdout": "",
+    "stderr": "nepl3-tools: invalid type: null, expected struct OutputLimits at line 1 column 112\n",
+    "output_exists": false
+  },
+  {
+    "case": 1,
+    "exit": 1,
+    "stdout": "",
+    "stderr": "nepl3-tools: missing field `source_bytes` at line 1 column 110\n",
+    "output_exists": false
+  },
+  {
+    "case": 2,
+    "exit": 1,
+    "stdout": "",
+    "stderr": "nepl3-tools: missing field `source_bytes` at line 1 column 119\n",
+    "output_exists": false
+  },
+  {
+    "case": 3,
+    "exit": 1,
+    "stdout": "",
+    "stderr": "nepl3-tools: invalid value: integer `-1`, expected u64 at line 1 column 138\n",
+    "output_exists": false
+  },
+  {
+    "case": 4,
+    "exit": 1,
+    "stdout": "",
+    "stderr": "nepl3-tools: invalid type: floating point `1.5`, expected u64 at line 1 column 139\n",
+    "output_exists": false
+  }
+]
