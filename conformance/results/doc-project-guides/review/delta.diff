@@ -1,0 +1,204 @@
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+index e144a09..ebefb29 100644
+--- a/CONTRIBUTING.md
++++ b/CONTRIBUTING.md
+@@ -4,7 +4,7 @@
+ 
+ 変更は具体的な問題と受入条件に結び付け、必要最小限の範囲にします。設計の誤りが見つかった場合は、根拠を示して仕様・schema・文法・例・conformanceを整合させ、`doc/decisions/` に理由を記録します。ChatGPTが生成した設計も検証対象です。
+ 
+-agentによる開発では、メインagentが統括し、実装subagentと独立レビューsubagentを分けます。レビュー担当は契約と実際の差分・試験根拠を確認し、メインagentが指摘の解消と再検査を確認します。
++agentによる開発では、メインagentが設計具体化・実装・試験・指摘修正と統括を担当し、subagentには独立レビューを依頼します。ユーザーが明示許可したDoc文書の書き直しに限り、subagentによる並行執筆を行い、執筆者と別の担当が独立レビューします。レビュー担当は契約と実際の差分・試験根拠を確認し、メインagentが指摘の解消と再検査を確認します。
+ 
+ PRには変更後の動作、関連タスク・受入条件、実行した検査、未実行の範囲を記載してください。`doc/development.md` の検査とdiff確認を行います。タスク本文の直接編集、未実装の成功stub、golden更新だけによる正しさの主張は避けます。`.tmp/` や秘密情報をcommitしません。
+ 
+diff --git a/SECURITY.md b/SECURITY.md
+index f382627..dd73aa7 100644
+--- a/SECURITY.md
++++ b/SECURITY.md
+@@ -1,6 +1,6 @@
+ # セキュリティ
+ 
+-現在はリポジトリ基盤の整備段階で、サポート対象のruntime releaseはありません。セキュリティ修正はmainへ反映します。
++現在は共通runtimeを実装・検証している段階で、サポート対象のruntime releaseはありません。セキュリティ修正はmainへ反映します。
+ 
+ 未公開の脆弱性は [GitHubの非公開報告](https://github.com/neknaj/NEPL3/security/advisories/new) を利用してください。再現入力、対象commit、影響、実行環境を添えてください。秘密情報や悪用可能な詳細を公開Issueへ記載しないでください。
+ 
+diff --git a/doc/migration/authored/project/CONTRIBUTING.nepld b/doc/migration/authored/project/CONTRIBUTING.nepld
+new file mode 100644
+index 0000000..fcc1897
+--- /dev/null
++++ b/doc/migration/authored/project/CONTRIBUTING.nepld
+@@ -0,0 +1,101 @@
++article ja "[開発/かいはつ]への[参加/さんか]" body
++  cons paragraph
++    cons sentence
++      cons ruby text "最初" text "さいしょ"
++      cons text "に "
++      cons link relative "doc/README.md" none concat cons ruby text "仕様" text "しよう" cons text "の" cons ruby text "入口" text "いりぐち" nil
++      cons text "、"
++      cons link relative "AGENTS.md" none text "AGENTS.md"
++      cons text "、"
++      cons link relative "doc/development.md" none ruby text "開発手順" text "かいはつてじゅん"
++      cons text " を"
++      cons ruby text "読" text "よ"
++      cons text "んでください。"
++      nil
++    cons sentence
++      cons ruby text "実装対象" text "じっそうたいしょう"
++      cons text "は "
++      cons link relative "design/tasks.json" none concat cons text "タスク" cons ruby text "定義" text "ていぎ" nil
++      cons text " の"
++      cons ruby text "依存順" text "いぞんじゅん"
++      cons text "に"
++      cons ruby text "選" text "えら"
++      cons text "び、"
++      cons link relative "implementation-status.json" none ruby text "実装状態" text "じっそうじょうたい"
++      cons text " を"
++      cons ruby text "確認" text "かくにん"
++      cons text "します。"
++      nil
++    nil
++  cons paragraph
++    cons "[変更/へんこう]は[具体的/ぐたいてき]な[問題/もんだい]と[受入条件/うけいれじょうけん]に[結/むす]び[付/つ]け、[必要最小限/ひつようさいしょうげん]の[範囲/はんい]にします。"
++    cons sentence
++      cons ruby text "設計" text "せっけい"
++      cons text "の"
++      cons ruby text "誤" text "あやま"
++      cons text "りが"
++      cons ruby text "見" text "み"
++      cons text "つかった"
++      cons ruby text "場合" text "ばあい"
++      cons text "は、"
++      cons ruby text "根拠" text "こんきょ"
++      cons text "を"
++      cons ruby text "示" text "しめ"
++      cons text "して"
++      cons ruby text "仕様" text "しよう"
++      cons text "・schema・"
++      cons ruby text "文法" text "ぶんぽう"
++      cons text "・"
++      cons ruby text "例" text "れい"
++      cons text "・conformanceを"
++      cons ruby text "整合" text "せいごう"
++      cons text "させ、"
++      cons code "doc/decisions/"
++      cons text " に"
++      cons ruby text "理由" text "りゆう"
++      cons text "を"
++      cons ruby text "記録" text "きろく"
++      cons text "します。"
++      nil
++    cons "ChatGPTが[生成/せいせい]した[設計/せっけい]も[検証対象/けんしょうたいしょう]です。"
++    nil
++  cons paragraph
++    cons "agentによる[開発/かいはつ]では、メインagentが[設計具体化/せっけいぐたいか]・[実装/じっそう]・[試験/しけん]・[指摘修正/してきしゅうせい]と[統括/とうかつ]を[担当/たんとう]し、subagentには[独立/どくりつ]レビューを[依頼/いらい]します。"
++    cons "ユーザーが[明示許可/めいじきょか]したDoc[文書/ぶんしょ]の[書/か]き[直/なお]しに[限/かぎ]り、subagentによる[並行執筆/へいこうしっぴつ]を[行/おこな]い、[執筆者/しっぴつしゃ]と[別/べつ]の[担当/たんとう]が[独立/どくりつ]レビューします。"
++    cons "レビュー[担当/たんとう]は[契約/けいやく]と[実際/じっさい]の[差分/さぶん]・[試験根拠/しけんこんきょ]を[確認/かくにん]し、メインagentが[指摘/してき]の[解消/かいしょう]と[再検査/さいけんさ]を[確認/かくにん]します。"
++    nil
++  cons paragraph
++    cons "PRには[変更後/へんこうご]の[動作/どうさ]、[関連/かんれん]タスク・[受入条件/うけいれじょうけん]、[実行/じっこう]した[検査/けんさ]、[未実行/みじっこう]の[範囲/はんい]を[記載/きさい]してください。"
++    cons sentence
++      cons code "doc/development.md"
++      cons text " の"
++      cons ruby text "検査" text "けんさ"
++      cons text "とdiff"
++      cons ruby text "確認" text "かくにん"
++      cons text "を"
++      cons ruby text "行" text "おこな"
++      cons text "います。"
++      nil
++    cons "タスク[本文/ほんぶん]の[直接編集/ちょくせつへんしゅう]、[未実装/みじっそう]の[成功/せいこう]stub、golden[更新/こうしん]だけによる[正/ただ]しさの[主張/しゅちょう]は[避/さ]けます。"
++    cons sentence
++      cons code ".tmp/"
++      cons text " や"
++      cons ruby text "秘密情報" text "ひみつじょうほう"
++      cons text "をcommitしません。"
++      nil
++    nil
++  cons paragraph
++    cons sentence
++      cons ruby text "提供" text "ていきょう"
++      cons text "されるコードと"
++      cons ruby text "文書" text "ぶんしょ"
++      cons text "は、このリポジトリの "
++      cons link relative "LICENSE" none text "MIT License"
++      cons text " の"
++      cons ruby text "下" text "もと"
++      cons text "で"
++      cons ruby text "扱" text "あつか"
++      cons text "います。"
++      nil
++    nil
++  nil
+diff --git a/doc/migration/authored/project/SECURITY.nepld b/doc/migration/authored/project/SECURITY.nepld
+new file mode 100644
+index 0000000..00e28ad
+--- /dev/null
++++ b/doc/migration/authored/project/SECURITY.nepld
+@@ -0,0 +1,66 @@
++article ja "セキュリティ" body
++  cons paragraph
++    cons "[現在/げんざい]は[共通/きょうつう]runtimeを[実装/じっそう]・[検証/けんしょう]している[段階/だんかい]で、サポート[対象/たいしょう]のruntime releaseはありません。"
++    cons "セキュリティ[修正/しゅうせい]はmainへ[反映/はんえい]します。"
++    nil
++  cons paragraph
++    cons sentence
++      cons ruby text "未公開" text "みこうかい"
++      cons text "の"
++      cons ruby text "脆弱性" text "ぜいじゃくせい"
++      cons text "は "
++      cons link external "https://github.com/neknaj/NEPL3/security/advisories/new" concat
++        cons text "GitHubの"
++        cons ruby text "非公開報告" text "ひこうかいほうこく"
++        nil
++      cons text " を"
++      cons ruby text "利用" text "りよう"
++      cons text "してください。"
++      nil
++    cons "[再現入力/さいげんにゅうりょく]、[対象/たいしょう]commit、[影響/えいきょう]、[実行環境/じっこうかんきょう]を[添/そ]えてください。"
++    cons "[秘密情報/ひみつじょうほう]や[悪用可能/あくようかのう]な[詳細/しょうさい]を[公開/こうかい]Issueへ[記載/きさい]しないでください。"
++    nil
++  cons paragraph
++    cons sentence
++      cons ruby text "将来" text "しょうらい"
++      cons text "の"
++      cons ruby text "外部" text "がいぶ"
++      cons text "provider、"
++      cons ruby text "文法" text "ぶんぽう"
++      cons text "package、NDF"
++      cons ruby text "入力" text "にゅうりょく"
++      cons text "の"
++      cons ruby text "信頼境界" text "しんらいきょうかい"
++      cons text "は "
++      cons link relative "doc/spec/08-editor.md" none concat
++        cons text "エディタ"
++        cons ruby text "仕様" text "しよう"
++        nil
++      cons text " と "
++      cons link relative "doc/spec/09-portability.md" none concat
++        cons ruby text "交換仕様" text "こうかんしよう"
++        nil
++      cons text " に"
++      cons ruby text "従" text "したが"
++      cons text "います。"
++      nil
++    cons sentence
++      cons ruby text "設計上" text "せっけいじょう"
++      cons text "の"
++      cons ruby text "要件" text "ようけん"
++      cons text "と"
++      cons ruby text "実装済" text "じっそうず"
++      cons text "みの"
++      cons ruby text "防御" text "ぼうぎょ"
++      cons text "は"
++      cons ruby text "区別" text "くべつ"
++      cons text "し、"
++      cons ruby text "状態" text "じょうたい"
++      cons text "を "
++      cons link relative "implementation-status.json" none text "implementation-status.json"
++      cons text " に"
++      cons ruby text "記録" text "きろく"
++      cons text "します。"
++      nil
++    nil
++  nil

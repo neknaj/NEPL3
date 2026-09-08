@@ -1,0 +1,66 @@
+article ja "セキュリティ" body
+  cons paragraph
+    cons "[現在/げんざい]は[共通/きょうつう]runtimeを[実装/じっそう]・[検証/けんしょう]している[段階/だんかい]で、サポート[対象/たいしょう]のruntime releaseはありません。"
+    cons "セキュリティ[修正/しゅうせい]はmainへ[反映/はんえい]します。"
+    nil
+  cons paragraph
+    cons sentence
+      cons ruby text "未公開" text "みこうかい"
+      cons text "の"
+      cons ruby text "脆弱性" text "ぜいじゃくせい"
+      cons text "は "
+      cons link external "https://github.com/neknaj/NEPL3/security/advisories/new" concat
+        cons text "GitHubの"
+        cons ruby text "非公開報告" text "ひこうかいほうこく"
+        nil
+      cons text " を"
+      cons ruby text "利用" text "りよう"
+      cons text "してください。"
+      nil
+    cons "[再現入力/さいげんにゅうりょく]、[対象/たいしょう]commit、[影響/えいきょう]、[実行環境/じっこうかんきょう]を[添/そ]えてください。"
+    cons "[秘密情報/ひみつじょうほう]や[悪用可能/あくようかのう]な[詳細/しょうさい]を[公開/こうかい]Issueへ[記載/きさい]しないでください。"
+    nil
+  cons paragraph
+    cons sentence
+      cons ruby text "将来" text "しょうらい"
+      cons text "の"
+      cons ruby text "外部" text "がいぶ"
+      cons text "provider、"
+      cons ruby text "文法" text "ぶんぽう"
+      cons text "package、NDF"
+      cons ruby text "入力" text "にゅうりょく"
+      cons text "の"
+      cons ruby text "信頼境界" text "しんらいきょうかい"
+      cons text "は "
+      cons link relative "doc/spec/08-editor.md" none concat
+        cons text "エディタ"
+        cons ruby text "仕様" text "しよう"
+        nil
+      cons text " と "
+      cons link relative "doc/spec/09-portability.md" none concat
+        cons ruby text "交換仕様" text "こうかんしよう"
+        nil
+      cons text " に"
+      cons ruby text "従" text "したが"
+      cons text "います。"
+      nil
+    cons sentence
+      cons ruby text "設計上" text "せっけいじょう"
+      cons text "の"
+      cons ruby text "要件" text "ようけん"
+      cons text "と"
+      cons ruby text "実装済" text "じっそうず"
+      cons text "みの"
+      cons ruby text "防御" text "ぼうぎょ"
+      cons text "は"
+      cons ruby text "区別" text "くべつ"
+      cons text "し、"
+      cons ruby text "状態" text "じょうたい"
+      cons text "を "
+      cons link relative "implementation-status.json" none text "implementation-status.json"
+      cons text " に"
+      cons ruby text "記録" text "きろく"
+      cons text "します。"
+      nil
+    nil
+  nil
