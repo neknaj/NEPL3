@@ -6,7 +6,7 @@ body
       cons "[専用/せんよう]parserも[同/おな]じfactsを[返/かえ]して[支援/しえん]を[受/う]ける。"
       cons "[共通分類/きょうつうぶんるい]をプログラミング[言語/げんご]の[要素/ようそ]に[限定/げんてい]しない。" nil
     nil
-  cons section snapshot "1. AnalysisSnapshot" body
+  cons section snapshot "1. AnalysisSnapshotの[入力/にゅうりょく]と[同一性/どういつせい]" body
     cons paragraph
       cons "[入力/にゅうりょく]はSourceSnapshot[集合/しゅうごう]、profile/package revision[集合/しゅうごう]、[明示的/めいじてき]なresource/schema[環境/かんきょう]、[解析/かいせき]options。"
       cons "[結果/けっか]はParsed tree、[内部/ないぶ]views、Scope/Entity/Occurrence、typed Relations、Diagnostics、ExpectedAt、Dependencies。" nil
@@ -112,7 +112,7 @@ body
       cons "overlapを[持/も]つ[元/もと]データは[保存/ほぞん]するが、LSPへは[非重複/ひじゅうふく]・source[順/じゅん]・[単一行/たんいつぎょう]に[正規化/せいきか]したspan[列/れつ]を[返/かえ]す。"
       cons "[色/いろ]はthemeに[委/ゆだ]ねる。" nil
     nil
-  cons section relations "4. definitionとrelations" body
+  cons section relations "4. definitionとrelationsの[扱/あつか]い" body
     cons paragraph
       cons sentence cons text "Occurrenceベースの " cons code "analysis::query::query" cons text " は、" cons ruby text "完了" text "かんりょう" cons text "したBoundBindingReplyとQueryRequest(key, SourceRef, byte offset, kind)を" cons ruby text "受" text "う" cons text "ける。" nil
       cons "SourceRefのrevision/digestと[現在要求/げんざいようきゅう]するkeyを[照合/しょうごう]し、UTF-8 scalar[境界/きょうかい]を[検査/けんさ]する。"
@@ -276,7 +276,7 @@ body
       cons "[古/ふる]いrevisionの[結果/けっか]は[公開/こうかい]しない。"
       cons "cacheと[統計/とうけい]は[明示的/めいじてき]session stateであり、[隠/かく]れたglobalにはしない。" nil
     nil
-  cons section lsp "7. LSP adapter" body
+  cons section lsp "7. LSP adapterの[責務/せきむ]" body
     cons paragraph
       cons "3.17で[定義/ていぎ]された[位置/いち]encoding/diagnostic/semantic token/definition[等/など]の[契約/けいやく]を[利用/りよう]し、[機能/きのう]はcapabilityで[交渉/こうしょう]する。"
       cons "UTF-8/UTF-16/UTF-32の[位置変換/いちへんかん]をLineIndexで[行/おこな]う。"
@@ -302,7 +302,7 @@ body
       cons "[情報/じょうほう]が[不足/ふそく]する[場合/ばあい]はstage/requirementsとして[表示/ひょうじ]し、[存在/そんざい]しないsource[位置/いち]を[作/つく]らない。"
       cons "providerの[内部/ないぶ]エラーとユーザーの[構文/こうぶん]ミスを[区別/くべつ]する。" nil
     nil
-  cons section trust "9. workspace trust" body
+  cons section trust "9. workspace trustの[境界/きょうかい]" body
     cons paragraph
       cons "[通常/つうじょう]の[解析/かいせき]と[診断/しんだん]で[対象/たいしょう]プログラムをevaluateしない。"
       cons "Grammar reader providerはhostのallowlist・[署名/しょめい]・schemaで[制限/せいげん]する。"

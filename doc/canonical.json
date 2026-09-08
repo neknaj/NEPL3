@@ -64,6 +64,14 @@
       "aliases": "doc/migration/aliases/12-model-invariants.json",
       "route": "docs/spec/12-model-invariants.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/1"
+    },
+    {
+      "id": "editor",
+      "source": "doc/spec/08-editor.nepld",
+      "projection": "doc/spec/08-editor.md",
+      "aliases": "doc/migration/aliases/08-editor.json",
+      "route": "docs/spec/08-editor.html",
+      "renderer": "nepl3-tools.markdown-annotated/2"
     }
   ],
   "output_limits": {
