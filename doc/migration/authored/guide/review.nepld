@@ -1115,5 +1115,22 @@ body
       cons sentence cons ruby text "補助" text "ほじょ" cons text "sourceは " cons code ".tmp/independent-engine/src/bin/doc_prefix.rs" cons text "、" cons code "doc_boundaries.rs" cons text "、" cons code "doc_guest.rs" cons text "。" nil
       cons "この[新/あたら]しい[実/じつ]source[経路/けいろ]は[先/さき]の[型付/かたつ]きconstructorだけの[証拠/しょうこ]と[区別/くべつ]する。"
       cons "SentenceLiteral payloadをprefixへ[混在/こんざい]させるadapter、Articleのlabel/embed[意味解決/いみかいけつ]、[全/ぜん]formの[往復/おうふく]・[描画/びょうが]までを[完了/かんりょう]とはしていない。" nil
+    cons paragraph
+      cons "[非空/ひくう]の[環境/かんきょう]を[持/も]つDoc[埋/う]め[込/こ]み[閉包/へいほう]の[準備/じゅんび]では、[既存共通/きそんきょうつう]wireにR046を[実再現/じつさいげん]した。"
+      cons "core syntaxのNamespaceRefはschema/nameの[組/くみ]であるのに、environment encoderはfacts[用/よう]U64[参照/さんしょう]の[同名/どうめい]recordへ2fieldsを[出/だ]し、[実/じつ]Environment digest[計算/けいさん]がSchema(FieldCount)で[失敗/しっぱい]する。"
+      cons "[空環境/からかんきょう]の[従来試験/じゅうらいしけん]はこの[経路/けいろ]を[通/とお]っていなかった。"
+      cons "[環境側/かんきょうがわ]をEnvironmentNamespaceRefへ[分離後/ぶんりご]、[元補助/もとほじょ]を[変更/へんこう]せず[再実行/さいじっこう]して[成功/せいこう]した。"
+      cons sentence cons ruby text "実" text "じつ" cons text " " cons code "lambda x guest x" cons text " のowner Env9/Origin0はHOST＋" cons ruby text "専用" text "せんよう" cons text "source、guest" cons ruby text "側" text "がわ" cons text "の" cons ruby text "同番号" text "どうばんごう" cons text "はGUEST＋" cons ruby text "別" text "べつ" cons text "sourceとし、" cons ruby text "元" text "もと" cons text "owner" cons ruby text "破棄後" text "はきご" cons text "・ambient" cons ruby text "空" text "から" cons text "の" cons ruby text "実" text "じつ" cons text "CBOR" cons ruby text "受信" text "じゅしん" cons text "で" cons ruby text "両" text "りょう" cons text "arenaとdigestを" cons ruby text "保持" text "ほじ" cons text "、sourceを" cons ruby text "一度" text "いちど" cons text "だけ" cons ruby text "計上" text "けいじょう" cons text "した。" nil
+      cons "owner[環境/かんきょう]をguest[環境/かんきょう]へ[置/お]き[換/か]える、[外/そと]schemaとguest root schemaを[違/ちが]える、owner sourceを[消/け]す（guest[側/がわ]に[同/どう]snapshotがあっても[補/おぎな]えない）、[両/りょう]digestを[同/おな]じ[偽値/にせち]に[変/か]える、NDFのowner source[列/れつ]を[消/け]す[各負例/かくふれい]を[拒否/きょひ]した。"
+      cons "[管理対象/かんりたいしょう]wire syntax8[件/けん]（foreign2[件/けん]を[含/ふく]む）も[独立/どくりつ]native/WASI[成功/せいこう]し、この[具体範囲/ぐたいはんい]でR046をcorrectedとした。"
+      cons sentence cons ruby text "補助" text "ほじょ" cons text "は " cons code ".tmp/build_foreign_closure_probe.py" cons text " と " cons code "foreign_closure" cons text "。" nil
+      cons "ForeignClosureの[構造/こうぞう]・[所有/しょゆう]・digest[検査/けんさ]は、Doc/guestの[意味/いみ]lower・label[解決/かいけつ]・[表示許可/ひょうじきょか]の[証明/しょうめい]とは[別/べつ]である。" nil
+    cons paragraph
+      cons "R047は[新/しん]Doc decoderのWork[停止試験/ていししけん]から、[既存共通/きそんきょうつう]codecの[原因抽出不足/げんいんちゅうしゅつぶそく]として[切/き]り[分/わ]けた。"
+      cons sentence cons ruby text "旧" text "きゅう" cons text "validation" cons ruby text "依存" text "いぞん" cons text "の" cons ruby text "実" text "じつ" cons text " " cons code "encode_checked(Unit, Unit, Work0)" cons text " は " cons code "Schema(Stopped(WorkLimit))" cons text " を" cons ruby text "返" text "かえ" cons text "すが、" cons code "FoundationCodecError::stop_reason" cons text " はNoneとなる。" nil
+      cons "[修正前後/しゅうせいぜんご]で[同/おな]じ[補助/ほじょ]sourceを[実行/じっこう]し、[修正後/しゅうせいご]は[元/もと]nested payloadとBudgetの[停止/ていし]を[保持/ほじ]してSome(WorkLimit)を[取得/しゅとく]、[通常/つうじょう]WrongTypeはNoneのままであることを[確認/かくにん]した。"
+      cons "[管理対象/かんりたいしょう]wire stop2[件/けん]はnative/WASI[双方/そうほう]で[成功/せいこう]し、9[停止理由/ていしりゆう]の[各/かく]typed wrapperと[非停止原因/ひていしげんいん]を[区別/くべつ]した。"
+      cons sentence cons ruby text "補助" text "ほじょ" cons text "は " cons code ".tmp/run_r047_probe.py" cons text "、" cons ruby text "元全出力" text "もとぜんしゅつりょく" cons text "は " cons code ".tmp/r047-probe/before.log" cons text "、" cons ruby text "修正後" text "しゅうせいご" cons text "は " cons code "after.log" cons text "。" nil
+      cons "この[修正/しゅうせい]は[共通原因抽出/きょうつうげんいんちゅうしゅつ]だけの[証拠/しょうこ]であり、[後続/こうぞく]Doc[実装/じっそう]の[完成/かんせい]を[表/あらわ]さない。" nil
     nil
   nil
