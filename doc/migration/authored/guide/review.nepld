@@ -662,5 +662,25 @@ body
       cons "[日本語/にほんご]commentとCRLFを[含/ふく]む[有効/ゆうこう]な[対照/たいしょう]sourceはcompileに[成功/せいこう]する。"
       cons sentence cons code "ref absent" cons text " はMissingRule、" cons code "scalar range \"z\" \"a\"" cons text " はInvalidRange、Seq readerの" cons code "List<NdfValue>" cons text "をleafのreference selfで" cons ruby text "名前" text "なまえ" cons text "として" cons ruby text "扱" text "あつか" cons text "うsourceはPackage(InvalidBinding)を" cons ruby text "返" text "かえ" cons text "す。" nil
       cons "いずれも[実/じつ]ASTにはLocatedのSpanがあるが、[返却/へんきゃく]errorには[該当/がいとう]NodeIdやSpanがない。" nil
+    cons paragraph
+      cons "[補助/ほじょ]fixtureの[期待位置/きたいいち]は、[未定義名/みていぎめい]absentが\[88,94)、[逆転/ぎゃくてん]rangeのhiが\[101,104)とrelated lo\[97,100)、bindingのselfが\[227,231)とrelated reader[式/しき]\[84,108)である。"
+      cons "これは[後/あと]から[原文/げんぶん]を[検索/けんさく]して[診断位置/しんだんいち]を[捏造/ねつぞう]する[提案/ていあん]ではなく、[既/すで]に[保持/ほじ]するASTの[位置/いち]をtyped error/Diagnosticへ[渡/わた]すための[独立期待値/どくりつきたいち]である。"
+      cons sentence cons ruby text "実行" text "じっこう" cons text "はbootstrap::load・Document.validate・compile::package::compileを" cons ruby text "使" text "つか" cons text "った " cons code ".tmp/independent-engine/src/bin/compiler_diagnostics.rs" cons text " と " cons code ".tmp/compiler-diagnostics-review.log" cons text " に" cons ruby text "記録" text "きろく" cons text "した。" nil
+      cons "[初回/しょかい]range fixtureのNat[引数/ひきすう]は[正式文法/せいしきぶんぽう]がTextを[要求/ようきゅう]するため[訂正/ていせい]して[再実行/さいじっこう]した。"
+      cons "[途中/とちゅう]で[別担当/べつたんとう]のFacts adapter[接続/せつぞく]により[再/さい]buildが[未完/みかん]となったため、[成功/せいこう]build[時/じ]の[補助/ほじょ]executableを[用/もち]いて3[例/れい]を[実行/じっこう]した。"
+      cons "[未完成/みかんせい]adapterのcompile[失敗/しっぱい]を[製品不具合/せいひんふぐあい]とは[扱/あつか]わない。"
+      cons "この[診断位置/しんだんいち]の[未達/みたつ]はT05の[要件/ようけん]であり、binding[例/れい]の[型不一致/かたふいっち]R033の[解消/かいしょう]とは[別/べつ]である。" nil
+    cons paragraph
+      cons "Reader/Tokenizerのnested continuationコピー[削減/さくげん]は、reader runtime 31[件/けん]を[独立実行/どくりつじっこう]した。"
+      cons "[外側/そとがわ]TokenizationContinuationの[全量/ぜんりょう]echo[照合/しょうごう]は[残/のこ]り、[成功後/せいこうご]にprivate pending slotから[取/と]り[出/だ]した[内側/うちがわ]continuationだけを[唯一/ゆいいつ]のresume_from_tokenizer[呼出/よびだ]しへ[渡/わた]すことを[確認/かくにん]した。"
+      cons "[公開/こうかい]ReaderSession.resumeの[全量照合/ぜんりょうしょうごう]は[維持/いじ]される。"
+      cons sentence cons ruby text "管理対象" text "かんりたいしょう" cons text "9" cons ruby text "種類" text "しゅるい" cons text "に" cons ruby text "加" text "くわ" cons text "え、" cons ruby text "補助" text "ほじょ" cons text " " cons code "nested_continuation" cons text " では" cons ruby text "内側" text "うちがわ" cons text "の" cons ruby text "環境" text "かんきょう" cons text "digest・report.traceOverflow・frame.phaseも" cons ruby text "変" text "か" cons text "え、" cons ruby text "全" text "ぜん" cons text "12" cons ruby text "偽装" text "ぎそう" cons text "が" cons ruby text "拒否" text "きょひ" cons text "された。" nil
+      cons "[元/もと]echoで[正常再開/せいじょうさいかい]し、[二重再開/にじゅうさいかい]を[拒否/きょひ]した[後/あと]に[同/どう]sessionを[別操作/べつそうさ]で[再利用/さいりよう]できた。"
+      cons "[生成/せいせい]source[上/じょう]の[正式/せいしき]diagnostic/eventを[持/も]つ[停止/ていし]と、Await[構築中/こうちくちゅう]のallocation faultで[両/りょう]pending slotを[残/のこ]さない[既存回帰/きそんかいき]も[成功/せいこう]した。"
+      cons "[性能比較/せいのうひかく]やFacts[全包絡/ぜんほうらく]を[含/ふく]む[全/ぜん]workspace[検査/けんさ]は、この[境界確認/きょうかいかくにん]とは[別/べつ]に[行/おこな]う。" nil
+    cons paragraph
+      cons "[最終/さいしゅう]の1/4/8[段/だん]prefix[比較/ひかく]を[独立再実行/どくりつさいじっこう]した。"
+      cons "owned/nativeのWorkは11068/8510、48832/34727、135556/91663、AllocationUnitsは244688/150447、971108/542043、2589212/1352585で、[各段/かくだん]のoutcome・[診断/しんだん]の[一致/いっち]と[費用/ひよう]の[大小/だいしょう]を[確認/かくにん]した。"
+      cons "これらは[当該/とうがい]fixtureの[観測値/かんそくち]であり、[全入力/ぜんにゅうりょく]で[一定比率/いっていひりつ]の[高速化/こうそくか]を[保証/ほしょう]するものではない。" nil
     nil
   nil
