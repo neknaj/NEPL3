@@ -1,0 +1,360 @@
+{
+  "production_files_revalidated": 598,
+  "identical_independent_inputs": true,
+  "runs": [
+    {
+      "label": "native-all",
+      "passed": 84,
+      "commands": {
+        "command": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nepl3-core",
+          "--",
+          "--test-threads=1",
+          "--nocapture"
+        ],
+        "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace",
+        "runner": "wasmtime run",
+        "exit_code": 0,
+        "seconds": 7.924512600060552
+      },
+      "artifacts": [
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\debug\\deps\\nepl3_core-f04d54aaa1e6a7b6.exe",
+          "bytes": 723456,
+          "sha256": "773a1d29af721ee03a7cbefd868b04366789fa615e78bc0fc8d6d17d6a3cc9d9"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\debug\\deps\\budget-92272bcb7a56d2ac.exe",
+          "bytes": 757760,
+          "sha256": "d9d54eecd43ba4222ec1efb2a87ef15312f48e37e76e43e2cf5902e0cd385086"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\debug\\deps\\contracts-36c3bab039a112b9.exe",
+          "bytes": 1328640,
+          "sha256": "b3deafb12d78793339012e870eae1ff66a96ff6384ad91d6d9649f39adadea3f"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\debug\\deps\\decimal-add215233e4865b2.exe",
+          "bytes": 956928,
+          "sha256": "ce7a880ea42ea919605f0cc0edf24bf1ec1eec34b0a8847c542d67982950313b"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\debug\\deps\\edit-f3c6567523582070.exe",
+          "bytes": 1011712,
+          "sha256": "2ac2293ce3471c797715990e61e98392b4d61e15fbd50e5eeabe630930f344b0"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\debug\\deps\\facts-8ba91ee1f81d7fa6.exe",
+          "bytes": 1880064,
+          "sha256": "e5174f00cb4435583c7a488f227903444f431211eeff8cd54b015833a6bfb3b9"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\debug\\deps\\lexical-f7cc9788180f2f92.exe",
+          "bytes": 797696,
+          "sha256": "e1cf49b802f2bcd62addd0d2b4a632057ec2233ad847c39b3c7c320dbbb7c5d2"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\debug\\deps\\maps-b8c40905248383a5.exe",
+          "bytes": 1105920,
+          "sha256": "191d0709dc4003b0e43640e0904d5e2af373ce903535197a8c1f3197fb444cea"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\debug\\deps\\review_adjacency-765cf299c7a71e97.exe",
+          "bytes": 1089536,
+          "sha256": "82623985e804776a9fcefe50c275ddf3d3e442b2f65e1666985afe598aecce4b"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\debug\\deps\\review_locality-0b4d3286296f5d81.exe",
+          "bytes": 1063936,
+          "sha256": "9abdca2258ccd96c7ce9a6655769ba08cce158e812311959d6faeac711b3cfd4"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\debug\\deps\\structure-b369cb77884d8bf6.exe",
+          "bytes": 1647616,
+          "sha256": "0da177fc8a153eadfc7d4a816d84c38c13cede7385cd81f1b1b5e042827c6c20"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\debug\\deps\\syntax-14d9df9e34110420.exe",
+          "bytes": 1763328,
+          "sha256": "9eef68e22814ad4b375496cb9099a92328eb4be4e3a9ed1d3a1b719379005bb7"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\debug\\deps\\value-de47cfed8240bd08.exe",
+          "bytes": 809984,
+          "sha256": "b1060e96ad077e5f594851f510500a789ca9f20854138c2d7b7e56a091d35d07"
+        }
+      ],
+      "stars": [
+        [
+          "1024",
+          "478106",
+          "1025",
+          "81976"
+        ],
+        [
+          "2048",
+          "1049590",
+          "2049",
+          "163896"
+        ],
+        [
+          "1024",
+          "478106",
+          "1025",
+          "81976"
+        ],
+        [
+          "2048",
+          "1049590",
+          "2049",
+          "163896"
+        ]
+      ]
+    },
+    {
+      "label": "wasi-all",
+      "passed": 84,
+      "commands": {
+        "command": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nepl3-core",
+          "--target",
+          "wasm32-wasip2",
+          "--",
+          "--test-threads=1",
+          "--nocapture"
+        ],
+        "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace",
+        "runner": "wasmtime run",
+        "exit_code": 0,
+        "seconds": 41.611992400023155
+      },
+      "artifacts": [
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\wasm32-wasip2\\debug\\deps\\nepl3_core-25478cb0e3e1407f.wasm",
+          "bytes": 4939994,
+          "sha256": "94fb9e0cc39e81b9018aeded17bfa27e9e7f95dc89505c9c2c89aa44535a150f"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\wasm32-wasip2\\debug\\deps\\budget-9f6233f604fcfd82.wasm",
+          "bytes": 12777434,
+          "sha256": "a2deb2535b59c1e51c2fd548d3bb15fe97fe3d4676242120a6f15be7c5c7467a"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\wasm32-wasip2\\debug\\deps\\contracts-e51889d920ba1d57.wasm",
+          "bytes": 13928458,
+          "sha256": "060bf0c4695b4759431cb3449e878f4017271dc032edaa3eb767f0a78e8edced"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\wasm32-wasip2\\debug\\deps\\decimal-98812896ec32517e.wasm",
+          "bytes": 13095844,
+          "sha256": "fb22a582e6af81c6c148004de17de8b0f1946a6030818b0f5b5c729974105f46"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\wasm32-wasip2\\debug\\deps\\edit-2f6ee3c44179288d.wasm",
+          "bytes": 13227865,
+          "sha256": "4ed57222b4eaf0d928f374f66de6e41aea655402aadc82cd09ec9846d9401a6a"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\wasm32-wasip2\\debug\\deps\\facts-c2d890fce3cf5d9f.wasm",
+          "bytes": 14620955,
+          "sha256": "fc1eeb41b51ab4db4ed9adf8e47a60ffc1ca57da0310a834d89720984ffb2a14"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\wasm32-wasip2\\debug\\deps\\lexical-a723eb7494ff9e76.wasm",
+          "bytes": 12852940,
+          "sha256": "52a9e0eb3b002fe2882b9cb1168a1480a042021af8f4d6892d3aa625d6915bd3"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\wasm32-wasip2\\debug\\deps\\maps-33c7d21158e260b0.wasm",
+          "bytes": 13512024,
+          "sha256": "bb04b4e157ed07ad2439e7934fbeb86f5252335a2d1286b0018a31a9417ca714"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\wasm32-wasip2\\debug\\deps\\review_adjacency-82330967509aeb40.wasm",
+          "bytes": 13661147,
+          "sha256": "f23d9f5dbb74ca53bae3817d872046be0f32757fb6929a62c0954b81d80fa17e"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\wasm32-wasip2\\debug\\deps\\review_locality-1531e931cda9d05f.wasm",
+          "bytes": 13492796,
+          "sha256": "6f8cdd6139f4f054f84c035862d4809b4d3e8a6c58b92a3ff143373667acaf30"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\wasm32-wasip2\\debug\\deps\\structure-032402cf9af3bba7.wasm",
+          "bytes": 14354941,
+          "sha256": "bc4ce1479aa9a1ccbd304d30603970fdc4fd2d85fd39b834729afd5dc54e63b6"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\wasm32-wasip2\\debug\\deps\\syntax-6e18008859851c4f.wasm",
+          "bytes": 14435343,
+          "sha256": "9f4d38a5d06319364d93795a6b038c87e2ac768a8697926f98e0cbe709530feb"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\workspace\\target\\wasm32-wasip2\\debug\\deps\\value-3ccbc143a27da54c.wasm",
+          "bytes": 12877335,
+          "sha256": "74d0093c61d560cb86ed6df31e61f6cc21ab0526ff6bf7c11f1b3984545593c0"
+        }
+      ],
+      "stars": [
+        [
+          "1024",
+          "478106",
+          "1025",
+          "45088"
+        ],
+        [
+          "2048",
+          "1049590",
+          "2049",
+          "90144"
+        ],
+        [
+          "1024",
+          "478106",
+          "1025",
+          "45088"
+        ],
+        [
+          "2048",
+          "1049590",
+          "2049",
+          "90144"
+        ]
+      ]
+    },
+    {
+      "label": "before\\native-independent",
+      "passed": 6,
+      "commands": {
+        "command": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nepl3-core",
+          "--test",
+          "review_adjacency",
+          "--test",
+          "review_locality",
+          "--",
+          "--test-threads=1",
+          "--nocapture"
+        ],
+        "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\before\\workspace",
+        "runner": "wasmtime run",
+        "exit_code": 0,
+        "seconds": 6.7051352999405935
+      },
+      "artifacts": [
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\before\\workspace\\target\\debug\\deps\\review_adjacency-765cf299c7a71e97.exe",
+          "bytes": 1088000,
+          "sha256": "9baec904557b53b900223e6648cabf3373691c8ca2754433ac3b9909825f7d29"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\before\\workspace\\target\\debug\\deps\\review_locality-0b4d3286296f5d81.exe",
+          "bytes": 1063424,
+          "sha256": "568fcdd0b57bf0de396fe8095bf49880b6532d6e789c85b7971e57f402be5fe2"
+        }
+      ],
+      "stars": [
+        [
+          "1024",
+          "808432",
+          "1025",
+          "81976"
+        ],
+        [
+          "2048",
+          "1803898",
+          "2049",
+          "163896"
+        ],
+        [
+          "1024",
+          "808432",
+          "1025",
+          "81976"
+        ],
+        [
+          "2048",
+          "1803898",
+          "2049",
+          "163896"
+        ]
+      ]
+    },
+    {
+      "label": "before\\wasi-independent",
+      "passed": 6,
+      "commands": {
+        "command": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nepl3-core",
+          "--target",
+          "wasm32-wasip2",
+          "--test",
+          "review_adjacency",
+          "--test",
+          "review_locality",
+          "--",
+          "--test-threads=1",
+          "--nocapture"
+        ],
+        "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\before\\workspace",
+        "runner": "wasmtime run",
+        "exit_code": 0,
+        "seconds": 38.47347899992019
+      },
+      "artifacts": [
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\before\\workspace\\target\\wasm32-wasip2\\debug\\deps\\review_adjacency-82330967509aeb40.wasm",
+          "bytes": 13660022,
+          "sha256": "e4b0af0405860f0f263e6cd8bc412ab934e7b5c118601f58ba9f7ae9e1c88ccb"
+        },
+        {
+          "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\before\\workspace\\target\\wasm32-wasip2\\debug\\deps\\review_locality-1531e931cda9d05f.wasm",
+          "bytes": 13492290,
+          "sha256": "4ff9dd37a1f7031861da861a151c691a5ba216e24a0fed4c0bc77a6a9a03d3fe"
+        }
+      ],
+      "stars": [
+        [
+          "1024",
+          "808432",
+          "1025",
+          "45088"
+        ],
+        [
+          "2048",
+          "1803898",
+          "2049",
+          "90144"
+        ],
+        [
+          "1024",
+          "808432",
+          "1025",
+          "45088"
+        ],
+        [
+          "2048",
+          "1803898",
+          "2049",
+          "90144"
+        ]
+      ]
+    }
+  ]
+}

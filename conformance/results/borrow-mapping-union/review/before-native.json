@@ -1,0 +1,20 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "--manifest-path",
+    "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-borrow-mapping-union\\before-probe\\Cargo.toml",
+    "--test",
+    "union",
+    "independent_union",
+    "--target-dir",
+    "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-borrow-mapping-union\\before-native-target",
+    "--",
+    "--test-threads=1",
+    "--nocapture"
+  ],
+  "cwd": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-borrow-mapping-union",
+  "exit_code": 0,
+  "elapsed_seconds": 13.60278582572937
+}
