@@ -159,7 +159,7 @@ GitHub側ではdescription・topics・文書へのhomepageを設定し、Issues�
 
 開発はbranchとPRで進め、mainへ統合する前に独立レビューとCIを確認します。mainの保護設定は `quality` 必須・最新mainに対する検査必須（strict）、管理者にも適用、force push・削除は禁止とします。GitHubアカウントによる必須承認数は設定せず、agentの独立レビュー記録と区別します。
 
-WASI・ブラウザWasm・LSP・operation providerは目標仕様です。対応する実装とrunnerができた段階で、buildに加えてrunnerによる受入試験を必須jobとして追加します。現時点のnative開発toolsの検査からcross-target対応を推定しません。runtime releaseは該当するconformanceの実行証拠がそろってから設けます。
+共通基盤のWASI試験、ブラウザWasm向けbuild、ARMv6-M向けbuildとRP2040 emulator実行は、上記のPortable execution CIで検査します。これらの実行範囲と、WASI CLI・LSP・operation provider・Web Playgroundという製品入口の完成は区別します。各入口には実装した操作を実runnerで通す受入試験を追加し、foundationの試験やnative開発toolsの成功だけから製品全体のcross-target対応を推定しません。ブラウザ向けbuildも実ブラウザでの実行とは別の証拠です。runtime releaseは該当するconformanceの実行証拠がそろってから設けます。
 
 Web/TEA/siteとDoc移行の計画は [14章](spec/14-web-ui.md)〜[16章](spec/16-doc-migration.md) に従います。現在のCIはsource配布を維持し、Pages公開はT20の実装・受入後です。T21は初回公開とは別に最終完了へ必須で、移行前はMarkdownを正本とします。
 
