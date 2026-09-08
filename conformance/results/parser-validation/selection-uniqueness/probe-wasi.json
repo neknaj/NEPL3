@@ -1,0 +1,19 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--offline",
+    "-p",
+    "tree-selection-probe",
+    "--target-dir",
+    "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-tree-selection\\probe-wasi-target",
+    "--target",
+    "wasm32-wasip2",
+    "independent_",
+    "--",
+    "--test-threads=1",
+    "--nocapture"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 0.34459710121154785
+}

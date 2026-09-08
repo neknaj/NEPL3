@@ -1,0 +1,19 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--offline",
+    "-p",
+    "parse-merge-probe",
+    "--target-dir",
+    "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-parse-merge\\probe-wasi-target",
+    "--target",
+    "wasm32-wasip2",
+    "independent_",
+    "--",
+    "--test-threads=1",
+    "--nocapture"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 156.30719327926636
+}

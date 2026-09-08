@@ -1,0 +1,17 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--offline",
+    "-p",
+    "tree-head-probe",
+    "--target-dir",
+    "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-tree-head\\before-native-target",
+    "independent_",
+    "--",
+    "--test-threads=1",
+    "--nocapture"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 0.9569926261901855
+}

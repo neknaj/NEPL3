@@ -1,0 +1,19 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--offline",
+    "-p",
+    "nepl3-reader",
+    "--test",
+    "independent_recover",
+    "--target-dir",
+    "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-tokenizer-recovering\\fault-wasi-target",
+    "--target",
+    "wasm32-wasip2",
+    "--",
+    "--nocapture"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 41.14483070373535
+}

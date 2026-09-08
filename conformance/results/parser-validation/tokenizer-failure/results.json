@@ -1,0 +1,11 @@
+{
+  "counts": {
+    "managed-native": 63,
+    "managed-wasi": 63,
+    "before-native": 61,
+    "probe-native": 4,
+    "probe-wasi": 4
+  },
+  "source_hashes_verified": true,
+  "fix_verified": true
+}

@@ -1,0 +1,119 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+   Compiling autocfg v1.5.1
+   Compiling typenum v1.20.1
+   Compiling cpufeatures v0.3.1
+   Compiling cfg-if v1.0.4
+   Compiling unicode-ident v1.0.18
+   Compiling num-traits v0.2.19
+   Compiling hybrid-array v0.4.14
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling num-integer v0.1.47
+   Compiling num-bigint v0.5.1
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tokenizer-failure\source\crates\foundation\core)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tokenizer-failure\source\crates\foundation\wire)
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tokenizer-failure\source\crates\foundation\reader)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 15.04s
+     Running unittests src\lib.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tokenizer-failure\managed-native-target\debug\deps\nepl3_reader-8c326c989ce8e0d0.exe)
+
+running 4 tests
+test runtime::ownership_tests::hard_failure_returns_owned_collector_without_copying_or_new_budget ... ok
+test runtime::ownership_tests::stopped_owned_collector_retains_closure_and_original_stop ... ok
+test tokenizer::session::ownership_tests::rejected_budget_cannot_erase_previously_accepted_usage ... ok
+test tokenizer::session::ownership_tests::tokenizer_failure_moves_source_closure_with_exhausted_budget ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\builtin.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tokenizer-failure\managed-native-target\debug\deps\builtin-a5690bf0b8b6a445.exe)
+
+running 17 tests
+test builtin_budget_stops_are_typed_and_do_not_return_partial_tokens ... ok
+test committed_text_rejects_invalid_escapes_scalars_and_direct_lines ... ok
+test empty_skip_and_take_readers_are_nonprogress_failures ... ok
+test generated_source_admission_is_once_and_unsuccessful_text_has_no_source_charge ... ok
+test language_is_well_formed_abnf_not_registry_validity ... ok
+test maximal_lexemes_wait_at_every_nonfinal_scalar_boundary ... ok
+test mode_take_is_ordered_choice_and_does_not_consume_trailing_trivia ... ok
+test mode_text_reservation_is_lazy_and_echo_is_checked ... ok
+test names_preserve_unicode_spelling_and_read_maximal_identifier ... ok
+test naturals_and_finite_decimals_are_exact_and_boundary_checked ... ok
+test owned_tokenizer_resume_does_not_borrow_the_original_context_and_checks_all_echo_fields ... ok
+test reservation_locator_validation_obeys_work_limit_before_scanning ... ok
+test selected_standard_provider_dispatch_uses_builtin_values_and_rejects_forgery ... ok
+test text_decoding_retains_each_exact_or_transformed_source_range ... ok
+test text_exact_runs_preserve_utf8_offsets_and_escape_boundaries ... ok
+test tokenizer_configuration_identity_ignores_mode_declaration_order_but_retains_rule_order ... ok
+test trivia_keeps_ascii_line_boundaries_and_bom_position ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.71s
+
+     Running tests\context.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tokenizer-failure\managed-native-target\debug\deps\context-841a9507765a423b.exe)
+
+running 1 test
+test checked_context_uses_real_digest_and_exact_origin_source_closure ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\portable.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tokenizer-failure\managed-native-target\debug\deps\portable-4366c8ffda42ce68.exe)
+
+running 2 tests
+test host_global_source_cannot_fill_a_missing_request_declaration ... ok
+test native_request_and_checked_ndf_loopback_execute_with_identical_meaning ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\runtime.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tokenizer-failure\managed-native-target\debug\deps\runtime-9ef2171083ae2cb7.exe)
+
+running 39 tests
+test accepted_collector_crosses_language_sessions_only_in_its_original_operation ... ok
+test accepted_diagnostic_owns_primary_related_and_fix_source_closure_before_publication ... ok
+test allocation_faults_across_later_resumes_preserve_already_accepted_reports ... ok
+test bounded_repeat_zero_never_executes_nullable_body ... ok
+test cancellation_during_provider_wait_stops_and_consumes_the_pending_slot ... ok
+test checked_context_reuse_admits_exact_source_closure_in_each_operation ... ok
+test checked_context_reuse_rejects_same_id_revision_with_changed_content ... ok
+test checkpoints::lookahead_over_growing_view_keeps_prior_nodes_without_quadratic_rollback_copies ... rollback allocation units at 128/256: [1328906, 2648842]
+ok
+test checkpoints::owned_resume_charges_frame_traversal_before_allocating_the_frame_vector ... ok
+test checkpoints::suspended_lookahead_materializes_owned_prefixes_then_restores_the_visible_tree ... ok
+test choice_rewinds_captures_views_and_retains_work ... ok
+test commit_does_not_hide_failure_or_need_more_in_choice ... ok
+test direct_repeat_failure_and_streaming_shortage_rollback_all_prior_iteration_reports ... ok
+test every_utf8_prefix_split_is_need_more_and_final_truncation_is_no_match ... ok
+test failed_choice_restores_programmed_state_before_next_provider_call ... ok
+test failed_stopped_and_rollback_results_have_their_exact_formal_source_closure ... ok
+test fresh_budget_and_forged_call_or_source_cannot_resume_a_saved_slot ... ok
+test generated_sources_are_validated_transactionally_and_available_to_diagnostics ... ok
+test long_source_identity_is_not_copied_after_allocation_budget_is_exhausted ... ok
+test map_decode_and_then_use_typed_provider_envelopes ... ok
+test node_sidecar_and_look_not_optional_discard_have_independent_values ... ok
+test plan_identity_is_deterministic_but_distinguishes_arena_representation ... ok
+test programmed_repetition_requires_actual_consumption_and_accepts_consuming_calls ... ok
+test provider_overflow_rejects_read_failed_map_decode_without_consuming_slot ... ok
+test provider_signature_checks_operation_envelope_and_pure_decoder ... ok
+test retry::rejected_read_payload_state_end_source_and_view_preserve_formal_collector_and_pending ... ok
+test runtime_rejects_left_recursion_hidden_behind_empty_programmed_call ... ok
+test session_binds_call_source_plan_usage_and_closes_after_consumed_resume ... ok
+test static_plan_rejects_unknown_references_types_and_unproductive_recursion ... ok
+test stopped_reader_retains_committed_provider_reports ... ok
+test stopped_tokenizer_retains_reader_report_and_generated_source_closure ... ok
+test tokenizer_await_allocation_stops_clear_both_private_pending_slots ... ok
+test tokenizer_host::synchronous_text_reservation_preserves_decode_maps_and_fallback ... ok
+test tokenizer_host::synchronous_tokenizer_keeps_owned_fallback_and_validates_replies ... ok
+test tokenizer_outer_echo_validates_every_nested_reader_component_before_private_resume ... ok
+test tokenizer_preserves_accepted_skip_reports_and_sources_across_candidate_rollback ... ok
+test transform::transform_all_outcomes_keep_sources_reports_and_retry_after_rejected_native_or_ndf_reply ... ok
+test unicode_classes_use_pinned_unicode16_and_ascii_numeric_rules ... ok
+test until_leaves_delimiter_and_takecount_counts_scalars ... ok
+
+test result: ok. 39 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.70s
+
+   Doc-tests nepl3_reader
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

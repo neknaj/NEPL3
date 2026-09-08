@@ -1,0 +1,82 @@
+diff --git a/crates/foundation/engine/src/tree.rs b/crates/foundation/engine/src/tree.rs
+index d9bc28d..fe5858c 100644
+--- a/crates/foundation/engine/src/tree.rs
++++ b/crates/foundation/engine/src/tree.rs
+@@ -532,14 +532,17 @@ impl ParseTree {
+             if context.nodes.len() != bundle.nodes.len() {
+                 return Err(TreeError::Selection);
+             }
+-            for (index, selected) in context.nodes.iter().enumerate() {
+-                budget.charge(Resource::Work, index as u64 + 1)?;
+-                if context.nodes[..index]
+-                    .iter()
+-                    .any(|prior| prior.node == selected.node)
+-                {
++            // Every node was reached above. Reuse that checked node-indexed
++            // storage to consume each selection exactly once, in input order.
++            // Selection order itself remains unrestricted.
++            for selected in &context.nodes {
++                budget.charge(Resource::Work, 1)?;
++                let index = usize::try_from(selected.node.0).map_err(|_| TreeError::Path)?;
++                let unselected = reached.get_mut(index).ok_or(TreeError::Path)?;
++                if !*unselected {
+                     return Err(TreeError::Duplicate);
+                 }
++                *unselected = false;
+                 let node = node(bundle, selected.node)?;
+                 let checked = profile.validate_entry(&selected.entry, budget)?;
+                 if profile.execution_digest(&selected.entry.alias, budget)?
+diff --git a/crates/foundation/engine/tests/package.rs b/crates/foundation/engine/tests/package.rs
+index 108fc43..677e7ec 100644
+--- a/crates/foundation/engine/tests/package.rs
++++ b/crates/foundation/engine/tests/package.rs
+@@ -346,6 +346,49 @@ fn persistent_tree_checks_parent_reads_spelling_payload_and_concrete_owner() ->
+     };
+     tree.validate(&resolved, &mut budget(), &mut SourceAdmission::default())
+         .map_err(|e| format!("{e:?}"))?;
++    // Selection order is transport data, not the node-index order. All six
++    // permutations must retain the exact same concrete-owner validation.
++    for order in [
++        [0, 1, 2],
++        [0, 2, 1],
++        [1, 0, 2],
++        [1, 2, 0],
++        [2, 0, 1],
++        [2, 1, 0],
++    ] {
++        let mut reordered = tree.clone();
++        reordered.contexts[0].nodes = order
++            .iter()
++            .map(|index| tree.contexts[0].nodes[*index].clone())
++            .collect();
++        reordered
++            .validate(&resolved, &mut budget(), &mut SourceAdmission::default())
++            .map_err(|e| format!("selection permutation {order:?}: {e:?}"))?;
++    }
++    let mut duplicate = tree.clone();
++    duplicate.contexts[0].nodes = vec![
++        tree.contexts[0].nodes[1].clone(),
++        tree.contexts[0].nodes[1].clone(),
++        tree.contexts[0].nodes[0].clone(),
++    ];
++    assert!(matches!(
++        duplicate.validate(&resolved, &mut budget(), &mut SourceAdmission::default()),
++        Err(TreeError::Duplicate)
++    ));
++    for invalid in [tree.bundle.nodes.len() as u64, u64::MAX] {
++        let mut bad = tree.clone();
++        bad.contexts[0].nodes[0].node = NodeRef(invalid);
++        assert!(matches!(
++            bad.validate(&resolved, &mut budget(), &mut SourceAdmission::default()),
++            Err(TreeError::Path)
++        ));
++    }
++    let mut missing = tree.clone();
++    missing.contexts[0].nodes.pop();
++    assert!(matches!(
++        missing.validate(&resolved, &mut budget(), &mut SourceAdmission::default()),
++        Err(TreeError::Selection)
++    ));
+     let mut bad = tree.clone();
+     bad.contexts[0].nodes[1].entry = resolved
+         .entry("B", None, &mut budget())

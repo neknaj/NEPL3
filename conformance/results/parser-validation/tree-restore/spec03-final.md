@@ -1,0 +1,217 @@
+# 03. Reader / tokenizer
+
+## 方針
+
+Readerは通常の字句解析以上の再帰・状態・外部実装を許す。共通prefix parserに対しては一つのtokenを返す境界を保つ。正規表現だけを表現能力の上限にしない。
+
+## 1. 呼出し契約
+
+`ReadRequest = {snapshot, start, limit, finalInput, context, state, limits}`。
+`ReadReply = Matched(value, end, newState, view, facts, diagnostics) | NoMatch(expected, furthest) | NeedMore(expected) | Failed(diagnostic, recovery) | Stopped(reason) | Await(externalRequest, continuation)`。
+
+limitはこのreaderが参照できる入力末尾。start/end/limitは同一snapshotのUTF-8境界。通常tokenの成功は `start < end <= limit`。combinator内部のlook/optional等では空の成功を許すが、token化・skip・反復の反復単位では進捗を要求する。
+
+NoMatchとNeedMoreはstate/facts/確定診断を変更しない。Failedは形式を確定してからの不正入力。finalInput=trueで入力が終わる場合はNeedMoreを返さず、NoMatchまたはFailedにする。StoppedをNoMatchへ変えて別候補へ進んではならない。
+
+`Await`はプログラム製reader/transformの呼出し要求。engine/suiteがmanifestで許可したproviderだけを呼び、同じ予算で再開する。continuationはproviderとsnapshotに束縛される。対象ソースに書かれた任意コードを自動実行しない。
+
+## 2. combinatorの意味
+
+ReaderExprの全signatureはgrammar-signaturesを参照。
+
+- literal: 指定のUTF-8文字列に完全一致しUnitを返す。空literalを認めるが進捗検査の対象。
+- scalar: 一つのUnicode scalarが指定classに属すればTextとして返す。
+- seq: 順に実行し結果のListを返す。失敗時に状態とfactsをtransaction開始位置へ戻す。
+- choice: 順に試し、最初の成功を返す。NoMatchだけ次の候補を試す。NeedMore/Failed/Stoppedはそこで伝播する。全枝の成功値は同じ宣言型を持つ。境界認識だけが必要で枝ごとの値が異なる場合は、各枝に明示的なdiscardを適用してUnitへ揃える。seqのList値を暗黙にTextへ連結しない。
+- many/some: 0回以上/1回以上。NoMatchで終了。成功が入力を消費しなければNonProgress。NeedMoreは終了扱いにしない。
+- repeat min max p: 有限回のmany。0 <= min <= maxが必要。max到達後はそれ以上読まない。
+- optional: NoMatchをNoneにする。その他の失敗は伝播。成功はSome。
+- look/not: 元のcursor/state/factsを変更しない。lookは成功/不一致の結果だけ保持。notはMatchedとNoMatchを交換しUnitを返す。NeedMore/Failed/Stoppedは伝播。
+- commit p: pのNoMatchをFailedへ変換する。prefixを認識した後の残りを包む。例えば `seq [literal quote, commit bodyAndClose]`。
+- capture: 子の成功範囲にfield名を付ける。regionは表示roleを付ける。両者は意味値を変更しない。
+- node: 子のmatch treeを指定kindのViewElementで包む。kindは現在packageのschemaへ登録する。
+- discard: 成功値をUnitへ変える。sourceと確定診断は失わない。
+- ref: 同じpackageのreaderを呼ぶ。進捗のない再帰は静的検査できる範囲で拒否し、実行時にもcallsite+cursor+contextの再入を検出する。
+- decode: named pure decoderを成功後に適用し、元→decode後のSourceMapも返す。
+- map: named Transform providerを成功値とsource/viewへ適用する。結果は宣言済み型と一致しなければProviderContractViolation。
+- then: 最初のparserの値とendを依存parser providerへ渡す。providerが後続の読み取りを行う。返す値は後続parserの値、全体範囲は開始から後続end。前半のsource/factsは保持する。
+- call: named Reader providerへ要求全体を渡す。reader全体をRust等で実装できる。
+- eof: limitで成功。ただしfinalInput=falseならNeedMore。
+- takecount n: n個のUnicode scalarを読む。byte数と混同しない。
+- until d: 最初の非空delimiter dの直前までをTextとして読み、delimiterは消費しない。不在なら未確定入力ではNeedMore、確定入力ではNoMatch。
+
+choiceの途中の失敗診断は、最終的に全候補がNoMatchになった場合にだけ、最遠到達位置のexpected集合へ統合する。成功した別候補への誤ったエラーを残さない。work予算は巻き戻さない。
+
+native readerの内部checkpointは、追記済みcollectorの不変なprefixに対する長さ、cursor、state、trace overflowを保存してよい。viewの要素とroot、facts、診断、event、source、SourceMapは、それぞれ開始時のprefixを保つ。失敗やlookの復帰では追加部分を除去し、保存したstateへ戻す。Nodeによるrootの束ね直しやtransformによる置換は、そのframeが開始してから追加した範囲に限定する。外部へAwaitを公開するときは、各frameの完全な所有checkpointを予算内で具体化し、既存のReaderContinuation schemaを使用する。privateな長さやpointerだけを交換形式へ渡さず、再開時には従来どおり保存済みcontinuationと応答を検査する。これは実際のcollectorコピーを省く内部表現の変更であり、実施したコピーの課金を取り除く理由にはしない。
+
+## 3. 文字集合と基礎reader
+
+配布profileではUnicode 16.0.0のXID_Start / XID_Continueを使用し、underscoreを開始にも許す。識別子を勝手にNFC変換しない。比較はscalar列の完全一致。将来のUnicode版変更はpackage revisionに含める。
+
+Name の文字判定と全綴り検査、および Lang の全綴りABNF検査は共通 core の `lexical` 契約として reader と domain printer が共有する。現native実装のXID表は pinned `unicode-ident = 1.0.18` の [Unicode 16.0.0生成表](https://github.com/dtolnay/unicode-ident/blob/1.0.18/src/tables.rs)に従う。全綴り検査は予算付きで区切り・triviaを含まない一つの語だけを判定し、選択言語の予約head判定や正規化を代行しない。readerの最大一致・非final入力のNeedMore・境界診断はreader側に残し、この共通化で認識集合を変更しない。printerは不適合な意味値を型付き失敗として扱い、reader依存や別Unicode/BCP47規則の複製を導入しない。
+
+基礎 `Name`: 上記識別子一つ。`Nat`: `0` または `[1-9][0-9]*`。`Number`: optional `-`、Nat、optional `.` と1桁以上の数字。指数表記はこのsurfaceにはない。`Text`: 通常の二重引用符文字列。`Lang`: ASCIIのwell-formed BCP47 tag。BCP47のtag比較はASCII case-insensitive、元の綴りは保存。登録状況のnetwork照会は行わない。
+
+通常Textのescapeは `\\`、`\"`、`\n`、`\r`、`\t`、`\u{1〜6 hex}`。surrogateとU+10FFFF超は拒否する。未知escapeはエラー。Textではruby/annoを認識しない。
+
+Textも直接CR/LFを拒否し、開始引用符後はcommitする。閉じ引用符・escape・Unicode escapeの途中で入力が途切れればfinalInput=falseではNeedMore、trueではFailed。既に不正だと確定したescapeやscalarは追加入力を待たずFailedとする。Numberの小数点後は最低1桁を要求し、入力末尾での欠桁も非finalではNeedMore、finalではFailedとなる。
+
+基礎readerの値はName/Text/LangがText、Natが非負の任意精度Integer、Numberが正確なRational、TriviaがUnitである。Natからarity/revision等のU64へ変換するlowerは範囲を明示検査する。Langのwell-formedは[RFC 5646 §2.1/§2.2.9](https://www.rfc-editor.org/rfc/rfc5646.html#section-2.2.9)のABNF（26個のgrandfathered tagとprivate-useを含む）を意味する。登録状態、variant/singleton重複を含むvalid判定はこの操作の追加要件にしない。
+
+BuiltinRequestはkind、ReadRequest、`Option<SourceReservation>`を持つ。SourceReservationはhostが一つの生成snapshotへ予約するsourceId/revision/絶対URIで、digestは生成bytesから算出する。Textでのみ予約を必須とし、他のbuiltinへ渡した予約は契約違反。入力と同じsourceId/revisionの予約を拒否する。成功するまで生成sourceをadmitせず、NoMatch/NeedMore/Failedは生成物を確定しない。成功後のdecoded sourceと元→decoded SourceMapをReadReplyへ保持する。coreが乱数・時計・独自namespaceからIDを発明せず、tokenizer/hostが各呼出しの予約を供給する。再試行は同じ予約・同じ結果bytesなら同一snapshotとして扱い、異なるbytesへの使い回しはIdentityConflictとなる。
+
+standard triviaはASCII space/tab/CR/LFと `#` から行末直前までのcomment。literal内はtrivia処理を行わない。readerは前側のtriviaだけを処理する。子の最終tokenの後で子言語のtriviaを勝手に消費しない。
+
+これらは配布4言語のprofileであり、全NEPL3言語へ同じ字句規則を強制しない。新しいpackageは別modeとreaderを定義できる。
+
+## 4. modeとtoken決定
+
+modeのskip規則を宣言順に試し、成功して進捗したら最初から反復する。skipがどれも一致しなくなった位置で、take規則を宣言順に試す。NoMatch以外は決定を妨げるので上記に従って伝播する。
+
+Word reader自身が一つの識別子を最長で読む。`letx`を `let` と `x` に分割しない。自然数等の基本readerは後続がidentifierContinueならBoundaryMismatchとし、数値の途中でtokenを確定しない。headのspellingは元のlexemeで比較し、payloadの表示文字列から逆算しない。
+
+構文カテゴリごとのform照合はtokenを読んだ後で行う。同一category・同一spellingの異なるshapeはpackage compile時に拒否する。modeのordered choiceによる優先順位は明示的な仕様である。優先順位が欲しいケースで暗黙の最長一致へ切り替えない。
+
+## 5. Sentence reader
+
+Doc章の完全な再帰規則を参照する。最初の二重引用符を認識したらcommitする。終了引用符は未escapeのものだけ。LF/CRをliteral内に直接置くことは許可しない。明示的な `\n` は内容として許可する。これにより未閉じliteralが後続の文書全体を飲み込み続けることを防ぐ。
+
+sentence decoderはquoted範囲の生のescapeを保持して注釈を認識する。先に全escapeを展開してから `[` の意味を決めない。例えば `\u{5B}` は内容の `[` でありruby開始ではない。
+
+prefix側のarityは常に0。内部viewには本文・delimiter・base・reading・noteの位置を保持する。
+
+## 6. HTML相当の複雑なtoken
+
+conformance用のAngleTag readerは `<`、ASCIIの名前、引用符付き範囲を含む任意のtag内部、`>` の境界を一つのtokenとして認識する。引用符内の `>` で終了してはならない。これは開始tagの境界readerであり、属性の文法・HTMLのtree構築・full HTML適合性までは検査しない。
+
+任意HTML fragmentを扱うproviderは、明示的な入力上限またはheredoc delimiterを受け取り、その範囲内で独自parserを実行できる。外側prefix parserへDOMの子を渡す必要はない。HTMLの安全性検査と内容の解釈はprovider/domain側の操作であり、token化しただけでsafeとしない。
+
+## 7. 解析器の性質
+
+ReaderPlanの空成功・再帰・出力型・参照先を検査する。手書きproviderの停止性を一般に証明できるとは扱わない。trusted native providerは協調的なbudget pollを契約とし、untrusted providerはhostの隔離runnerへ限定する。隔離runnerがない環境ではTrustRequiredで拒否し、workspaceから勝手にnativeコードをbuild/loadしない。
+
+memoizationを使う場合はsnapshot、start、limit/finalInput、reader revision、context/state digest、provider digestをキーに含める。cacheの利用で現在のsourceに属さないspanを返してはならない。性能最適化は結果とdiagnostic codeを変えない。
+
+## 8. 型付き包絡と継続状態
+
+`interfaces/reader.json` は `nepl3.reader` revision 1 の実descriptorであり、`reader --write` でproductionの型付き登録コードを明示生成する。ReadRequest、ReadReply、TransformRequest/Reply、DependentRequest、ReaderPlan、ReaderContinuationを含む。nativeの借用ReadRequestと所有OwnedReadRequestは、wire上の同じReadRequestへ対応する。schema登録だけではVMの実行・resume・providerの意味検査が完成したことにはならない。
+
+ProviderSignatureのvalueInput/valueOutput/stateTypeはreaderが運ぶ値の型であり、operationのinput/outputとは別である。operation descriptorのinput/outputはReadでReadRequest/ReadReply、TransformでTransformRequest/TransformReply、DependentでDependentRequest/ReadReplyとなる。operationの存在、包絡型、pureを署名と照合する。ReadのvalueInputはUnit。包絡中のNdfValueはさらに署名の具体型で検査する。decode providerはpureを要求し、他の外部効果はhostの明示した権限と操作契約で扱う。
+
+TransformReplyはoutcome、sources、sourceMaps、reportを共通fieldとして持つ。outcomeはComplete(value, view, facts)、Failed(diagnostic, recovery)、Stopped(reason)である。Completeだけを署名のvalueOutputへ照合し、Failedのprimary診断はReport内に一度存在する診断の再掲とする。MapとDecodeのどちらもFailed/StoppedをそのままReaderの正式な失敗/停止へ伝播し、生成source上の診断・関連位置・mapを共通閉包に保存する。成功Unitへ置換しない。traceOverflowを持つ非Stopped返信は拒否し、Stoppedでは理由がEventLimit以外でも終了eventのoverflowを保持できる。
+
+provider返信は保存要求・署名・入力範囲・state・view・source/map・Reportを借用したまま先に検査し、受理後に正式collectorへ移動する。不正な非停止返信は待機要求を消費せず、同じcontinuationに訂正返信を返せる。Readerを包むTokenizerとparserも同じ待機状態を保つ。検査に使用したWorkやSourceAdmissionは返却しない。検査中の資源停止では、返信の未受理artifactを混ぜず、それまでの正式collectorをStoppedへ保持する。
+
+現在のTransform portable返信adapterは、ReaderSessionが発行する保存待機要求の借用proofに結び付く。nativeとNDFの両経路で同じ返信検査を使い、sourceの解決を保存要求・正式checkpoint・返信の明示tableへ閉じる。このproofは初回TransformRequestの独立provider受信decoderではなく、Report.usageも同じ操作で観測した累積Usageを要求する。freshな別操作へ任意のReportを再serializeする機能、通信の認証、remote Usageの吸収、Reader/Tokenizer全継続codecの完成とは区別する。
+
+ReaderPlanはReaderIdで参照するarenaと名前付きruleを持つ。seqは`List<NdfValue>`、lookは成功時Unitを返す。ExpectationはLiteral、CharClassを直接持つScalarClass、EndOfInput、TokenBoundary、型付きProvider要求を区別する。CharClass.Rangeの両端TextはUnicode scalarを一つだけ持ち、順序を検査する。Name/Nat等はfinalInput=falseの境界で後続判定が未確定ならNeedMoreとし、短いtokenを先に確定しない。
+
+expected集合の列は最初の宣言・試行で現れた順とし、同じtyped値の重複を除く。同一実装では列順まで決定的にし、別実装の意味比較ではtyped集合を比較する。provider argumentsを表示文字列へ変換して同一性を推測しない。
+
+checkpointはcursor/state/view/facts/diagnostics/events/source/sourceMapとtraceOverflowを保存する。失敗候補の結果は巻き戻すが、既に使用したwork・diagnostic/event counter・source admissionは返却しない。decodeの生成sourceと対応mapにも同じtransaction規則を適用する。Failed.diagnosticはreport.diagnosticsに含まれる同じprimary診断の再掲であり、診断件数は一度だけ計上する。
+
+ReadReplyの全terminal（Matched/NoMatch/NeedMore/Failed/Stopped）はsources/sourceMapsを所有し、巻戻し後の正式ReportのSpanを入力宣言と返却artifactから解決可能にする。生成source受理後の後段失敗でも、診断だけを残してsourceを捨てない。Awaitではcontinuation.request.sourcesとcontinuation.current.sources/sourceMapsが閉包の正本になる。内部でReportを別collectorへ引き継ぐ際も対応する正式source/mapsを一緒に扱い、hostのglobal SourceStoreへの先行commitで欠損を補わない。
+
+Reply.sourcesは生成/追加snapshotの差分tableであり、対応するReadRequest.sourcesと合成して閉じる。受信側は必ず対応するrequest/session slotにreplyを結び付け、異なるrequestのtableを混用しない。重複identityには同じbytes/digest/locatorだけを許し、Span・map端点・Report関連位置は合成した宣言tableからだけ解決する。追加sourceだけを単独保存して自己完結なreplyと扱わず、wire/providerの記録も対応requestを保持する。providerのNoMatch/NeedMoreはその候補の追加artifactを巻き戻して空にし、VM全体の結果は既に正式なprefixから引き継いだ閉包を保持できる。
+
+TokenizationReplyはoutcomeに加えcursor、newState、trivia、facts、sources、sourceMaps、reportを持つ。先行して成功したskipの成果物もEnd/NoMatch/NeedMore/Failed/Stoppedへ保持する。newState=Noneは開始checkpointを複製する予算がなくStoppedとなった場合だけで、通常はSome(実際の状態)。Token.leadingTriviaと共通triviaは同じ内容の再掲で、複製storageだけを計上する。各skip成功lexemeはBOM、ASCII whitespace、単一の#commentとして全体一致する場合にその種別を持ち、それ以外はSkippedとして無解釈の元範囲を保存する。既存Grammarのskip宣言に無い種別を捏造しない。
+
+Text予約が必要なtokenizerはReserveを返し、sessionId/requestId/snapshot/start/limitの要求とprivateなmode/context/candidateを固定する。hostから戻る予約をそのslotと照合し、入力がquoteに一致しない候補では予約を要求しない。native TokenizationRequestはsnapshot/contextとstateの借用期間を分けるが、所有ReadRequestと同じデータ契約である。tokenizer固有の継続全体のportable codecが完成するまでは、nativeのprivate session状態を汎用ReaderContinuationと同じと広告しない。
+
+TokenizationContinuationは所有ReadRequest、mode、TokenTarget、Skip/Takeの候補位置、checkpoint、trivia、expected/furthest、pending予約または内側ReaderContinuation、Usage/Reportを保持する。configurationDigestは名前順のmode宣言と順序を保つskip/take、および具体ReaderPlan identityを含む。TokenTargetは要求ごとに保存し、configurationだけから推測しない。再開では外側継続全体をprivate slotと照合してから内側readerを再開する。schema上の状態定義、nativeの所有継続、portable codecの実装範囲は区別する。
+
+TokenizationScopeはhostが割り当てるoperationId、profileDigest、入力snapshotを固定する。同じparse operationが複数aliasのtokenizerを呼ぶ場合も共通scopeと共有Budget/SourceAdmissionを使う。AcceptedTokenizationReportは既受理のReportとsource/mapsを移動して引き継ぐnativeのprivate proofであり、任意のraw Reportからは構築できない。scope、Limits、単調なUsageを照合し、異なる操作のcollectorを混用しない。これらの値をコピーしただけで同一のBudget実体が証明されるとは扱わず、operationIdの一意性と共有ledgerの維持はhost契約とする。停止時も既受理collectorを保持し、停止後のflattenや複製に失敗して診断だけを消さない。
+
+このproofのdiagnostic入口は、明示された宣言SourceStoreからprimary/related/fixの全snapshotを検査し、共有SourceAdmissionへ一度だけ受け入れ、予算内で所有source閉包と診断を同時追加する。単なるraw Reportのproof化ではない。未宣言source、identity/locator不一致、schema不一致を拒否し、追加準備が停止した場合は既受理collectorを保存する。失敗した準備のwork/admissionは返却しない。
+
+Repeat frameは元のstart/checkpointを維持したまま、最後の反復開始位置をiterationStartへ別に保存する。NeedMoreやmin未満の失敗で、最後の成功反復までを部分成功として確定しない。
+
+Awaitではpending ProviderCall、plan identity、snapshot、frame列、checkpoint、累積Usage/Reportを保存する。Await.reportとcontinuation.report、およびcontinuation.usageとreport.usageは一致する。callのdepthBaseを絶対的な停止中深さとして保持し、hostは現在の深さを下げず、そのbase以上の共有budgetでproviderを実行する。wireからの自己申告baseだけを信用せず、保存したpending slot/frameと照合する。providerがさらにAwaitした場合はhostがその依存呼出しを解決してから、終端replyを待機frameへ戻す。
+
+ProviderCallとReaderContinuationはhostが割り当てる空でないopaque sessionIdを持つ。callIdはそのsession内で一意とし、coreは乱数・時計でIDを生成しない。plan/source/stateが偶然同一の別sessionから届いた継続でも、保存されたsessionId/callIdと違えば拒否する。close済みsessionはresumeできない。これらは輸送上の要求identityであり、意味値の比較runnerは別実装間のsession対応を明示する。
+
+native providerは同じBudgetを使う。外部providerの累積Usageは保存時の使用量以上であることを検査し、その増分をhostの共有budgetへ計上してからresumeする。上限のresetや自己申告値の無検査代入をしない。VMは報告使用量がhostの現在使用量を超えず、正式diagnostic/event件数が計上済みcounterに収まることを確認する。転送・複製の割当は別途計上し、同じ診断/eventの件数は二重計上しない。
+
+現在のReaderPlan digestはarena indexを含む実行plan identityで、continuationの別planへの誤適用を防ぐ。Grammar packageの意味digestとは別であり、package比較ではruleの名前順、reader参照の解決と意味上の順序を正規化する。arena配置だけの差を意味の違いとして扱わない。context cacheはEnvironmentEntryの内容digestだけでなく、13章に従いOrigin/source bundle identityを含める。
+
+nativeのReadRequestはCheckedReaderContextを要求する。raw ReaderContextは、実際のEnvironment内容digest、選択schema、Origin、binding、resourceを検査してからprivate proofを得る。coreのFoundationValueCodec境界をwire実装が提供し、readerからwireへのproduction依存を作らない。環境の交換表現を検査するのはcontextの準備時であり、通常のVMがtokenごとにserializeする構成にはしない。
+
+検査済みcontextはOriginのDirect/callsite/anchorが参照するsnapshotの正確な閉包を持つ。portable ReadRequest.sourcesは入力snapshot、この閉包、現在の正式な生成sourceを重複なく含め、無関係なglobal SourceStore全件を転送しない。Span/Originの解決は要求が宣言したsource tableに閉じる。proofを別operationで再利用するときも、そのoperationのSourceAdmissionへ必要snapshotを改めて受け入れ、前のBudgetの計上を引き継いだとみなさない。resumeのprivate constructorは保存したsession slotの完全照合後にのみ使用でき、未検査の外部contextへproofを付けない。
+
+Local/WithModeのretargetは検査済みenvironmentとOriginを明示的に再利用し、schema/category/modeだけを変更する所有proofを予算付きで構成できる。利用先registryと正確なsource閉包を再照合し、元のraw contextの借用期間を延長する必要はない。Foreignの環境はProfileで指定した検査済みprojectionまたは明示的な空環境を境界で準備し、hostの環境を暗黙に継承しない。
+
+### 同期tokenizer host境界
+
+`read_accepted_with_host`は操作内の明示hostへproviderとText予約を依頼するnative接続である。
+成功した同期callでは外向けTokenizationContinuationを作らず、既存readerのreply検査・
+source閉包・候補巻戻しを通す。外部から継続を受け取る経路ではReaderContinuationのecho検査を維持する。
+同期callbackはProviderCallを借用するだけで継続を供給しないため、排他的に保持した
+readerのprivate slotを再開する。callのsignature・範囲・source・返却値・reportの検査は
+共通check_providerで行う。Read/Dependentの同期返信は元Machineの所有中に検査・適用し、
+外部待機か不正返信の場合だけ完全なReaderContinuationを生成する。
+Transformは既存の保存context経路を使う。callbackの前後で元LimitsとUsageの単調性を照合し、
+hostによるBudgetの交換を正常な応答として採用しない。
+単に同signatureの合法値である別call由来のreplyを、
+payloadだけから識別できるとは保証しない。呼出しの対応付けはhostの責務である。
+Noneは通常の所有Await/Reserveへ戻る。callbackの非停止エラーもその境界と元エラーを返す。
+不正なprovider replyはreaderで拒否され、tokenizer入口では所有Awaitを保持する。
+不正な予約値は通常のreserveと同じ検査エラーであり、callback輸送失敗とは区別する。
+停止原因を持つcallbackエラーはBudgetへ同じ理由で固定し、正常な待機へ置換しない。
+
+prefix engineのnative接続はProfileの選択済みProviderRequirementと実装catalogを照合して
+この経路を使用する。未対応callをその場で二重dispatchせず所有境界へ戻す。
+engineでの不正provider replyの扱いは従来どおり解析エラーである。
+公開wire型や別processの照合を省略する許可ではなく、同期呼出しで不要なコピーだけを避ける。
+
+providerの追加map・viewの要素とroot・factsがすべて空なら、新たな位置対応の検査対象はない。
+この場合だけ、private checkpointで保持する既存map列の複製とgraph再検査を省く。
+既存mapは受理済みprovider結果、または予約した新snapshotへ正しい対応を構成する組込みreaderに由来する。
+返却source、値・state、report、停止・失敗条件は従来どおり検査する。
+追加mapまたはview/factがあれば既存mapとの和集合を検査し、後から循環を作る追加も拒否する。
+外部から受け取ったraw mapにこの省略条件だけで検査済みproofを付けることはない。
+
+さらに返却source・map・view・facts・診断・eventがすべて空で、Failedでもない返信では、
+参照位置の解決に使うSourceStoreを再構築しない。reportのUsage・overflow、値・state・
+終端範囲・期待値などの検査は維持する。NoMatch/NeedMoreには従来どおり空の返却artifactを要求する。
+これは検査済みのprivate request/checkpointに対する処理であり、外部source宣言の検査省略ではない。
+
+tokenizerが受理済みprefixを次のreaderへ渡すときは、まず全sourceの競合と操作内admissionを検査する。
+診断・eventのないreportでは、この同じsource索引をreport検査用に再構築せずUsage/overflowを検査する。
+providerの適用へ渡すframeはprivate状態から取り出した所有値なので、NoMatch/NeedMoreの巻戻しは
+checkpointを再複製せず所有権を戻す。正式artifactの喪失や予算の払い戻しを伴わない。
+
+native tokenizerの`read_with_accepted_recover`と`read_accepted_with_host_recover`は、
+hard errorでも呼出し開始時の受理済みcollectorを所有値として返す。
+診断・event・source・SourceMapのprivate append-only prefixを四つの長さで記録し、
+hard error時だけ全長を検査して追加分を取り除き、開始時のtrace overflowへ戻す。
+scopeとLimitsは元の値を保持し、消費済みUsageは払い戻さない。
+不正なfresh Budgetや別Limitsの拒否では、そのBudgetのUsageで既受理の記録を上書きしない。
+正常なStoppedはこの巻戻しを行わずliveの正式collectorを返す。Await/Reserveは引き続き
+所有continuationを返し、wire境界の検査も維持する。
+
+private prefixより実際の長さが短い場合は内部整合性の破損であり、Recoverableと扱わない。
+この場合はBrokenPrefixとして元のerrorと観測済み停止理由を返し、tokenizerを閉じる。
+不完全なcollectorにAccepted proofを付けず、呼出し側もその操作を終了する。
+この回収APIはnative所有権の補助契約であり、公開wire型・言語の意味・外部providerの
+検査済み条件を変更するものではない。既存のerrorのみを返すAPIも維持する。
+
+native hostの返信は、同じ呼出しのprivate prefix markを保持するRecoverableHostReplyとして
+一時的に受け取れる。parserは従来の条件でcallback輸送エラーとreader側の拒否を区別し、
+前者はowned Await/Reserveとして受理し、後者は元prefixへ戻して解析エラーにする。
+正常なStoppedのcollectorは巻き戻さず保持する。BudgetのLimits/Usage改変は別の整合性違反である。
+各provider/reservation callbackの直前と直後でLimits・Usage・現在depth・既存停止を照合し、
+改変の検出は返信生成やcallback輸送エラーとは別に保持する。後からCancelledを付けたり
+Errを返したりしても正常な停止や再試行可能なAwaitに戻さない。
+拒否した呼出しのpendingは破棄する。復元不能なBrokenCollectorはparserを閉じ、
+同時に予算が停止していても不完全なprogress付きStoppedへ変換しない。
+
+この経路ではtokenを読むたびのcollector退避コピーは不要となる。深さの事前検査が通るまで
+collectorをparserから移動せず、回収可能なエラーでは同じ所有値をparserへ戻す。
+外部へ公開するAwait/Reserve、再開可能なNeedMoreの所有checkpointは引き続き必要である。
+
+parser内部で完成木を検査するときは、検査用に解析progress全体を複製しない。
+最後のarena、対応するcontext、recoveryを一時的に検査対象の木へ移し、同じ木検査を実行する。
+追加contextの領域とrootの存在は移動前に確認し、検査が成功・不正・資源停止のいずれで
+終わっても、source・Origin・token・SourceMap・environmentを含む所有値を元のprogressへ戻す。
+停止時の正式progressや診断のsource参照を欠落させず、消費した予算も払い戻さない。
+これはnative内部の所有権移動であり、外部から受け取った木の再検査を省略する根拠にはしない。
