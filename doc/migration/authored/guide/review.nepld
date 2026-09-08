@@ -456,5 +456,28 @@ body
       cons sentence cons ruby text "補助" text "ほじょ" cons text "source " cons code "shared-kind.neplg" cons text " は、AtomをA/Bの" cons ruby text "別" text "べつ" cons text "categoryで" cons ruby text "受" text "う" cons text "け" cons ruby text "入" text "い" cons text "れ、" cons ruby text "双方" text "そうほう" cons text "のfield schemaを" cons ruby text "同" text "おな" cons text "じ" cons ruby text "空列" text "くうれつ" cons text "にする。" nil
       cons "spec04が[明示的/めいじてき]に[認/みと]める[構成/こうせい]だが、[実/じつ]host import・package compilerは2つ[目/め]をDuplicateNameで[拒否/きょひ]した。"
       cons "category[内/ない]の[宣言重複/せんげんちょうふく]と、category[間/かん]で[共有/きょうゆう]するsurface kindのshape[一致/いっち]を[別々/べつべつ]に[検査/けんさ]し、[許可/きょか]された[構成/こうせい]を[受/う]け[入/い]れる[修正/しゅうせい]を[要求/ようきゅう]した。" nil
+    cons paragraph
+      cons "[修正後/しゅうせいご]の[元/もと]Atom A/B probeは[同/おな]じKindRefを[持/も]つ2つのformへcompileされた。"
+      cons sentence cons ruby text "管理対象" text "かんりたいしょう" cons text " " cons code "shared_kind_is_category_local_with_one_shape_and_distinct_provenance" cons text " を" cons ruby text "作業" text "さぎょう" cons text "treeと" cons ruby text "隔離" text "かくり" cons text "した " cons code "NEPL3-prefix-validation" cons text " の" cons ruby text "両方" text "りょうほう" cons text "で" cons ruby text "独立実行" text "どくりつじっこう" cons text "し" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "[宣言順/せんげんじゅん]の[反転/はんてん]でsemantic/schema identityが[一致/いっち]し、category[別/べつ]Originが[各宣言原文/かくせんげんげんぶん]を[指/さ]すこと、[同/どう]categoryの[重複/ちょうふく]と[異/こと]なるfield shapeを[拒否/きょひ]することを[確認/かくにん]したため、R034をcorrectedとした。"
+      cons "[別途見/べっとみ]つかったhost seed importerのnative main-thread stack overflowと、[標準/ひょうじゅん]bootstrapの[未達/みたつ]はこの[修正承認/しゅうせいしょうにん]に[含/ふく]めない。" nil
+    cons paragraph
+      cons "R035は、[実/じつ]Angle sourceをhost importerへ[渡/わた]す[通常/つうじょう]のnative executableで[再現/さいげん]した。"
+      cons sentence cons ruby text "補助" text "ほじょ" cons text " " cons code "seed_load_only" cons text " は " cons code "bootstrap::load" cons text " だけで main-thread stack overflowとなり、descriptor" cons ruby text "登録" text "とうろく" cons text "やreader" cons ruby text "実行" text "じっこう" cons text "へ" cons ruby text "到達" text "とうたつ" cons text "しなかった。" nil
+      cons "test thread[上/じょう]の[既存試験成功/きそんしけんせいこう]と、[通常/つうじょう]main threadで[安全/あんぜん]に[実行/じっこう]できることは[異/こと]なる。"
+      cons sentence cons ruby text "再帰" text "さいき" cons text "constructor" cons ruby text "呼出" text "よびだ" cons text "しをpostorder worklistと" cons ruby text "借用" text "しゃくよう" cons text "JSONの" cons ruby text "一時" text "いちじ" cons text "lookupへ" cons ruby text "置" text "お" cons text "き" cons ruby text "換" text "か" cons text "えた" cons ruby text "後" text "あと" cons text "、" cons ruby text "同" text "おな" cons text "じ " cons code "cargo run --quiet --manifest-path .tmp/independent-engine/Cargo.toml --features nepl3-tools,nepl3-grammar-core --bin seed_load_only" cons text " はstack" cons ruby text "設定" text "せってい" cons text "を" cons ruby text "変更" text "へんこう" cons text "せずexit 0・36 nodesとなった。" nil
+      cons "[管理対象/かんりたいしょう]の[別/べつ]process[回帰/かいき]が[確認/かくにん]できるまではopenを[維持/いじ]する。" nil
+    cons paragraph
+      cons sentence cons text "importer" cons ruby text "修正後" text "しゅうせいご" cons text "の" cons ruby text "補助" text "ほじょ" cons text " " cons code "grammar_angle_runtime" cons text " は" cons ruby text "正式" text "せいしき" cons text "Angle sourceのimport・package compile・ParseSessionを" cons ruby text "実行" text "じっこう" cons text "した。" nil
+      cons sentence cons ruby text "二重引用符" text "にじゅういんようふ" cons text "と" cons ruby text "単引用符" text "たんいんようふ" cons text "の" cons ruby text "中" text "なか" cons text "の " cons code ">" cons text " を" cons ruby text "含" text "ふく" cons text "む" cons ruby text "両入力" text "りょうにゅうりょく" cons text "はcursor 15・" cons ruby text "一" text "いち" cons text "tokenで" cons ruby text "成功" text "せいこう" cons text "し、" cons ruby text "途切" text "とぎ" cons text "れた" cons ruby text "引用符" text "いんようふ" cons text "はnonfinalでNeedMore、finalで" cons ruby text "診断付" text "しんだんつ" cons text "きRecoveredとなった。" nil
+      cons "これはR031の[実行期待/じっこうきたい]を[満/み]たす[独立確認/どくりつかくにん]であり、[管理対象/かんりたいしょう]の[同/おな]じsource[経路/けいろ]の[回帰/かいき]を[確認後/かくにんご]に[訂正/ていせい]を[確定/かくてい]する。"
+      cons "[上記補助/じょうきほじょ]probeはignoredであり、cloneから[再実行/さいじっこう]できる[管理対象試験/かんりたいしょうしけん]の[代/か]わりにはしない。" nil
+    cons paragraph
+      cons sentence cons text "R035の" cons ruby text "管理対象" text "かんりたいしょう" cons text " " cons code "seed_import_runs_on_main_thread_for_complete_sources_and_rejects_bad_input" cons text " を" cons ruby text "作業" text "さぎょう" cons text "treeと" cons ruby text "隔離" text "かくり" cons text " " cons code "NEPL3-prefix-validation" cons text " の" cons ruby text "両方" text "りょうほう" cons text "で" cons ruby text "独立実行" text "どくりつじっこう" cons text "し" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "[実/じつ]tools CLIを[別/べつ]processとして[通常/つうじょう]main threadで[起動/きどう]し、Angleと4[言語/げんご]の[正式/せいしき]grammarをimportする。"
+      cons "Angleの36 nodes、[空/から]JSON objectのShape[拒否/きょひ]と16MiB[超過/ちょうか]の[入口拒否/いりぐちきょひ]（exit 1）も[確認/かくにん]した。"
+      cons "[入力依存/にゅうりょくいぞん]の[再帰/さいき]constructor[呼出/よびだ]しは[明示/めいじ]worklistへ[置/お]き[換/か]わり、stack[設定/せってい]の[拡大/かくだい]がないため、この[不具合/ふぐあい]をcorrectedとした。"
+      cons "[空/から]objectの[負例/ふれい]は[深/ふか]い[不正/ふせい]JSON cleanupの[検証/けんしょう]とは[扱/あつか]わない。"
+      cons "bootstrap[全体/ぜんたい]の[完成条件/かんせいじょうけん]は[引/ひ]き[続/つづ]き[未達/みたつ]である。" nil
     nil
   nil
