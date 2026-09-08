@@ -1,0 +1,22 @@
+{
+  "commands": [
+    "cargo test --locked -p nepl3-tools --test doc phases::",
+    "cargo test --locked -p nepl3-tools --target wasm32-wasip2 --test doc phases::",
+    "cargo test --locked -p nepl3-tools --test phase_review",
+    "cargo test --locked -p nepl3-tools --target wasm32-wasip2 --test phase_review",
+    "cargo test --locked -p nepl3-tools --lib phase_digest_matches",
+    "python cli_check.py"
+  ],
+  "runner": "wasmtime run",
+  "rustc": "1.97.0 (2d8144b78 2026-07-07)",
+  "wasmtime": "44.0.1 (f302ebd6b 2026-04-30)",
+  "results": {
+    "native_managed": 3,
+    "wasi_managed": 3,
+    "native_independent": 1,
+    "wasi_independent": 1,
+    "native_vector": 1,
+    "cli_success": 3,
+    "cli_expected_failure": 12
+  }
+}
