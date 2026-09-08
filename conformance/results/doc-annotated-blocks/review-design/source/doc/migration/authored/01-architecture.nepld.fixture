@@ -1,0 +1,128 @@
+article ja "01. Repository・crate・[依存方向/いぞんほうこう]"
+body
+  cons section policy "[方針/ほうしん]"
+    body
+      cons paragraph
+        cons sentence cons concat cons ruby text "初期" text "しょき" cons text "repositoryは " nil cons code "NEPL3" cons text " のmonorepoとする。" nil
+        cons "[意味上/いみじょう]の[境界/きょうかい]とcrateの{[依存方向/いぞんほうこう]/consumerからdependencyへの[向/む]き}を[一致/いっち]させ、[言語/げんご]と[出力/しゅつりょく]backendを[分離/ぶんり]する。"
+        cons sentence cons concat cons text "crateの" cons ruby text "全一覧" text "ぜんいちらん" cons text "と、" cons ruby text "直接依存" text "ちょくせついぞん" cons text "の" cons ruby text "許可集合" text "きょかしゅうごう" cons text "は " nil cons code "design/dependencies.json" cons concat cons text " に" cons ruby text "記" text "しる" cons text "す。" nil nil
+        nil
+      nil
+  cons section layout "1. [配置/はいち]"
+    body
+      cons rawcode some "text" "NEPL3/\n  Cargo.toml\n  Cargo.lock\n  rust-toolchain.toml\n  AGENTS.md\n  doc/\n    spec/\n    decisions/\n    history/\n  design/\n  interfaces/\n  languages/\n    grammar/ syntax.neplg package.ndf\n    doc/     syntax.neplg package.ndf\n    math/    syntax.neplg package.ndf\n    circuit/ syntax.neplg package.ndf\n  crates/\n    foundation/\n      core/src/       source/ schema/ value/ syntax/ origin/ diagnostic/ budget/\n      reader/src/     plan/ combinator/ execution/ extension/\n      engine/src/     parse/ binding/ index/ query/ recovery/\n      wire/src/       cbor/ schema/ protocol/\n    languages/\n      grammar/core/src/ bootstrap/ model/ check/ compile/\n      doc/core/src/     model/ sentence/ lower/ check/ facts/\n      doc/html/src/     render/ style/\n      math/core/src/    model/ number/ lower/ check/ evaluate/ facts/\n      math/mathml/src/  render/ precedence/\n      circuit/core/src/ model/ lower/ check/ elaborate/ simulate/ nor/ facts/\n      circuit/svg/src/  layout/ render/\n    output/markup/src/  model/ validate/ serialize/\n    integration/suite/src/ profile/ bridge/ operation/ workspace/\n    ui/core/src/ model/ message/ update/ command/ subscription/ view/\n  apps/ cli/ lsp/ web/ provider/\n  web/src/ shell/ editor/ worker/ preview/ storage/ bindings/\n  site/\n  editors/ vscode/ neovim/\n  tools/src/ generate/ contract/ dependency/ task/\n  examples/\n  conformance/\n  tasks/\n"
+      cons paragraph
+        cons "ファイル[名/めい]の[階層/かいそう]は、ディレクトリで[表/あらわ]す。"
+        cons sentence cons concat cons ruby text "例" text "たと" cons text "えば " nil cons code "source_span_map.rs" cons concat cons text " を" cons ruby text "階層" text "かいそう" cons text "の" cons ruby text "代" text "か" cons text "わりに" cons ruby text "使" text "つか" cons text "わず、" nil cons code "source/map.rs" cons text " とする。" nil
+        cons sentence cons concat cons ruby text "各" text "かく" cons text " " nil cons code "src" cons concat cons text " の" cons ruby text "直下" text "ちょっか" cons text "には、" nil cons code "lib.rs" cons text " または " cons code "main.rs" cons concat cons text " を" cons ruby text "置" text "お" cons text "く。" nil nil
+        nil
+      nil
+  cons section dependencies "2. [主/おも]な[依存方向/いぞんほうこう]"
+    body
+      cons paragraph
+        cons sentence cons concat cons ruby text "依存" text "いぞん" cons text "の" cons ruby text "向" text "む" cons text "きは " nil cons code "consumer -> dependency" cons concat cons text " と" cons ruby text "表" text "あらわ" cons text "す。" nil nil
+        nil
+      cons rawcode some "text" "reader -> core\nengine -> core, reader\ngrammar-core -> core, reader, engine\ndoc-core -> core\nmath-core -> core\ncircuit-core -> core\nmarkup -> core\ndoc-html -> doc-core, markup, core\nmath-tex -> math-core, core\nmath-mathml -> math-core, markup, core\ncircuit-svg -> circuit-core, markup, core\nsuite -> engine, reader, grammar-core, domain cores, output backends, core\nwire -> core\nui-core -> core (公開操作のデータ契約のみ)\napps -> suite, core (+ wire where required, web -> ui-core)\ntools -> grammar-core, suite, foundation\n"
+      cons paragraph
+        cons sentence cons code "core" cons concat cons text " は、すべてのdomainのenumを" cons ruby text "持" text "も" cons text "つものではない。" nil nil
+        cons "typed schema、[位置/いち]、[診断/しんだん]、[公開値/こうかいち]を[所有/しょゆう]する。"
+        cons "domain coreは[共通/きょうつう]のParsed treeを[受/う]け[取/と]り、そのdomainのモデルへlowerする。"
+        cons "engineはDocやRubyなどの[意味/いみ]を[知/し]らない。"
+        nil
+      cons paragraph
+        cons "Doc[内/ない]のMathとMath[内/ない]のDocは、suiteのbridgeが[処理/しょり]する。"
+        cons "doc-coreはmath-coreをimportしない。"
+        cons "[出力/しゅつりょく]backend[同士/どうし]も、[相互/そうご]にimportしない。"
+        cons "suiteが[依存関係/いぞんかんけい]に[従/したが]って[埋/う]め[込/こ]みを[準備/じゅんび]し、backendsへ[型付/かたつ]きの[解決済/かいけつず]みfragmentを[渡/わた]す。"
+        nil
+      cons paragraph
+        cons "ui-coreは、[純粋/じゅんすい]なModel・Msg・update・viewと、commandおよびsubscriptionの[記述/きじゅつ]を[所有/しょゆう]する。"
+        cons "suiteやDOMを[実行/じっこう]してはならない。"
+        cons "[実行/じっこう]・Worker・editor widgetは、host adapterが[担当/たんとう]する。"
+        cons sentence cons concat cons ruby text "目標" text "もくひょう" cons text "は20 crateで、そのうち15 crateが " nil cons code "no_std + alloc" cons text " である。" nil
+        cons "この[目標/もくひょう]を、[実装済/じっそうず]みmemberの[数/かず]と[同一視/どういつし]してはならない。"
+        cons "[文書/ぶんしょ]とsiteの[生成/せいせい]は、toolsの[明示的/めいじてき]な[段階/だんかい]で[行/おこな]う。"
+        cons sentence cons code "build.rs" cons concat cons text " を" cons ruby text "通" text "とお" cons text "して、compilerと" cons ruby text "文書" text "ぶんしょ" cons text "rendererを" cons ruby text "循環依存" text "じゅんかんいぞん" cons text "させてはならない。" nil nil
+        nil
+      nil
+  cons section bootstrap "3. surface descriptorとbootstrap"
+    body
+      cons paragraph
+        cons sentence cons code "languages/*/syntax.neplg" cons concat cons text " は、" cons ruby text "各言語" text "かくげんご" cons text "のsurface" cons ruby text "定義" text "ていぎ" cons text "である。" nil nil
+        cons "Grammar compilerがpackageを[生成/せいせい]し、その[生成済/せいせいず]みpackageもcommitする。"
+        cons "[通常/つうじょう]のbuildで、toolsやgrammar compilerをbuild dependencyにしてはならない。"
+        cons sentence cons code "cargo run -p nepl3-tools -- generate --check" cons concat cons text " により、sourceとの" cons ruby text "一致" text "いっち" cons text "を" cons ruby text "検査" text "けんさ" cons text "する。" nil nil
+        nil
+      cons paragraph
+        cons "Grammar[自身/じしん]の[初期/しょき]packageは、[同一/どういつ]のGrammar syntaxを[表/あらわ]す[検査済/けんさず]みseedとする。"
+        cons "[別/べつ]の[小/ちい]さなGrammar dialectは[作/つく]らない。"
+        cons "seedで[自身/じしん]のsourceを[読/よ]み、compileしたdescriptorの[意味正規形/いみせいきけい]とseedを[比較/ひかく]する。"
+        cons "これは[自己/じこ]ホスト[前/まえ]の[永続的/えいぞくてき]なbootstrap[契約/けいやく]であり、[将来/しょうらい]の[実装/じっそう]でも[同/おな]じseedを[使/つか]える。"
+        nil
+      nil
+  cons section rust "4. Rust[設定/せってい]"
+    body
+      cons paragraph
+        cons "workspaceはedition 2024、resolver 3とする。"
+        cons sentence cons concat cons text "MSRVは1.85.0" cons ruby text "以上" text "いじょう" cons text "とし、" cons ruby text "実装開始時" text "じっそうかいしじ" cons text "に" cons ruby text "使" text "つか" cons text "う" cons ruby text "一" text "ひと" cons text "つのstable toolchainを " nil cons code "rust-toolchain.toml" cons concat cons text " に" cons ruby text "完全" text "かんぜん" cons text "な" cons ruby text "版番号" text "はんばんごう" cons text "で" cons ruby text "固定" text "こてい" cons text "する。" nil nil
+        cons "MSRVと[開発/かいはつ]toolchainは[同一視/どういつし]しない。"
+        cons "[外部依存/がいぶいぞん]はworkspace.dependenciesで[集中管理/しゅうちゅうかんり]し、Cargo.lockをcommitする。"
+        nil
+      cons paragraph
+        cons sentence cons concat cons text "core" cons ruby text "系" text "けい" cons text "crateは" cons ruby text "常" text "つね" cons text "に " nil cons code "#![no_std]" cons concat cons text " とし、allocを" cons ruby text "使" text "つか" cons text "う。" nil nil
+        cons "coreをstd[化/か]するfeatureは[設/もう]けない。"
+        cons "[標準/ひょうじゅん]ライブラリが[必要/ひつよう]なアダプタはappsへ[置/お]く。"
+        cons "native-only crateがcoreに[入/はい]り[込/こ]むことを、cargo metadataとtarget buildによって[検出/けんしゅつ]する。"
+        nil
+      cons paragraph
+        cons sentence
+          cons text "math-coreは "
+          cons code "num-bigint"
+          cons text " / "
+          cons code "num-rational"
+          cons text " / "
+          cons code "num-integer"
+          cons text " / "
+          cons code "num-traits"
+          cons concat cons text " を、default-features=falseで" cons ruby text "利用" text "りよう" cons text "してよい。" nil
+          nil
+        cons "[対応/たいおう]する[互換/ごかん]version[集合/しゅうごう]を[一度/いちど]resolveし、lockする。"
+        cons "[異/こと]なるBigIntの[版/はん]を、[言語間/げんごかん]で[露出/ろしゅつ]させてはならない。"
+        cons "[公開/こうかい]する[意味値/いみち]には、この[仕様/しよう]のcanonical integer・rational[型/がた]を[使/つか]う。"
+        nil
+      cons paragraph
+        cons "[安全/あんぜん]なRustを[原則/げんそく]とする。"
+        cons "FFIや[高速化/こうそくか]のためにunsafeが[必要/ひつよう]なら、[該当/がいとう]adapterの[内部/ないぶ]へ[局在/きょくざい]させ、unsafe[契約/けいやく]と[試験/しけん]を[添/そ]える。"
+        cons "domainからpointerを[外部/がいぶ]へ[公開/こうかい]してはならない。"
+        nil
+      nil
+  cons section allowed_dependencies "5. [許可集合/きょかしゅうごう]の[検査/けんさ]"
+    body
+      cons paragraph
+        cons "dependency checkerはproduction[依存/いぞん]とbuild[依存/いぞん]を[検査/けんさ]し、dev[依存/いぞん]を[別/べつ]の[集合/しゅうごう]として[出力/しゅつりょく]する。"
+        cons "productionからappsやtoolsへの[経路/けいろ]、domain core[同士/どうし]の[経路/けいろ]、[閉路/へいろ]、std[依存/いぞん]を[検出/けんしゅつ]する。"
+        cons "[外部/がいぶ]crateの[採用/さいよう]によって、coreへOS[機能/きのう]が[混入/こんにゅう]しないことを[確認/かくにん]する。"
+        nil
+      cons paragraph
+        cons sentence cons concat cons ruby text "単一" text "たんいつ" cons text "repositoryであっても、" cons ruby text "各" text "かく" cons text "coreは" cons ruby text "独立" text "どくりつ" cons text "して " nil cons code "check --no-default-features" cons text " できるものとする。" nil
+        cons "[将来/しょうらい]のrepository[分割/ぶんかつ]を、[現在/げんざい]の[依存環境/いぞんかんきょう]へ[強制/きょうせい]しない。"
+        cons "[公開/こうかい]schemaと[操作/そうさ]の[単位/たんい]で、[実装/じっそう]を[交換/こうかん]できるようにする。"
+        nil
+      cons paragraph
+        cons sentence
+          cons ruby text "外部言語" text "がいぶげんご" cons text "の" cons ruby text "追加" text "ついか" cons text "でfoundation sourceを" cons ruby text "変更" text "へんこう" cons text "しない" cons ruby text "条件" text "じょうけん" cons text "と、repository" cons ruby text "分離前" text "ぶんりまえ" cons text "の" cons ruby text "実証" text "じっしょう" cons text "は "
+          cons link relative "22-external-extensions.md" none ruby text "外部拡張契約" text "がいぶかくちょうけいやく"
+          cons text " に" cons ruby text "従" text "したが" cons text "う。" nil
+        cons "[現時点/げんじてん]ではmonorepoを[維持/いじ]し、[独立/どくりつ]workspaceの[公開/こうかい]API[利用/りよう]から、[配布/はいふ]・provider・[互換性試験/ごかんせいしけん]へ[進/すす]む。"
+        nil
+      nil
+  cons section current_stage "[現在/げんざい]の[作業段階/さぎょうだんかい]"
+    body
+      cons paragraph
+        cons "[以上/いじょう]は、[目標/もくひょう]とする[構成/こうせい]である。"
+        cons "[現在/げんざい]のworkspace memberはルートCargo.tomlを、[実装状態/じっそうじょうたい]はimplementation-status.jsonを[正本/せいほん]とする。"
+        cons "crateは、その[責務/せきむ]を[実装/じっそう]する[段階/だんかい]で[追加/ついか]する。"
+        cons "[開発/かいはつ]toolchainとMSRVの[選定理由/せんていりゆう]はdoc/development.mdを、リポジトリ[整備/せいび]の[判断/はんだん]はdoc/decisions/0001-repository-foundation.mdを[参照/さんしょう]する。"
+        nil
+      nil
+  nil

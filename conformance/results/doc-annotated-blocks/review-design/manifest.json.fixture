@@ -1,0 +1,95 @@
+{
+  "scope": "design review, fixed e6b05d3; independent parser17 observations, no production implementation",
+  "files": [
+    {
+      "path": "command.json",
+      "bytes": 236,
+      "sha256": "46aa3891b1e0cd601b5c616ff5d78f882e71dda1af9b7be544ad491f92aa74c7"
+    },
+    {
+      "path": "parser-locked.log",
+      "bytes": 3453,
+      "sha256": "b62474976508c56fdabcfb54a5aba5f4f421be45c637a23efc383b23ee43b2ea"
+    },
+    {
+      "path": "parser.log",
+      "bytes": 8590,
+      "sha256": "34316dfba8ee58592c32f753d51cf6333176a934be4648218243348c78101952"
+    },
+    {
+      "path": "probe/Cargo.lock",
+      "bytes": 1031,
+      "sha256": "3f3e3d4bced02e6f60eb10e3b123358295744de842605602ff02721ba73042a3"
+    },
+    {
+      "path": "probe/Cargo.toml",
+      "bytes": 162,
+      "sha256": "cec7f53b7aa2cb7fc9bee85569670c4ffb5eddeb8011aad2cc83568db4c4e137"
+    },
+    {
+      "path": "probe/src/main.rs",
+      "bytes": 997,
+      "sha256": "f0e7d378a3d17b4a46e312ae8f19bc8b4b69da9b45bc20622213f8c5ff3901f7"
+    },
+    {
+      "path": "record.md",
+      "bytes": 7777,
+      "sha256": "7cc3e123f8e434ff82ddc4215b4d1e5c3bf1e19e9566c2453cfd23582862f1c9"
+    },
+    {
+      "path": "snapshot.json",
+      "bytes": 1721,
+      "sha256": "f01746a3f42e1e07eddb61cfbe9cd1f2b88c4b6f9144314c54d30a55305a6e6d"
+    },
+    {
+      "path": "source/Cargo.lock",
+      "bytes": 7433,
+      "sha256": "41b7d0652555f23ec5bbe2ba98dc0a30ff7d4f1141ae7fddd426df56e4e65823"
+    },
+    {
+      "path": "source/Cargo.toml",
+      "bytes": 1582,
+      "sha256": "44dd5fc88145ed401717462c9e87d13d1ff8addc11920f91be2e3235964c2b95"
+    },
+    {
+      "path": "source/crates/languages/doc/core/src/model.rs",
+      "bytes": 7692,
+      "sha256": "ea58c81e610f7cd11cd4baabbe420629cf94cad40598b1098ce898fd8e332432"
+    },
+    {
+      "path": "source/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "source/doc/migration/authored/00-contract.nepld",
+      "bytes": 14026,
+      "sha256": "48c2b1696c7308ee43f26dbf06a6038b38f0199233c1da3ef15a04453f810e93"
+    },
+    {
+      "path": "source/doc/migration/authored/01-architecture.nepld",
+      "bytes": 14690,
+      "sha256": "8d338b3ce98f3030e503ecd0aea9374c439c606cfbeb48bcd6b777a3f45654b2"
+    },
+    {
+      "path": "source/doc/spec/05-document.md",
+      "bytes": 30046,
+      "sha256": "338c0f7ac1dc4f4cf8bf1eb537fa816524e2cadc7ebe73475e462ffd42082abf"
+    },
+    {
+      "path": "source/doc/spec/21-doc-pages.md",
+      "bytes": 27238,
+      "sha256": "243c4327c1f484536632395582bd1a923c109993ee31a8045857a28d9cf444b4"
+    },
+    {
+      "path": "source/tools/src/doc/projection/annotated.rs",
+      "bytes": 18200,
+      "sha256": "14b0b390a4dc7110759440f59df0459767438747784ff6738f6ed85bf4a0fa6c"
+    },
+    {
+      "path": "source/tools/src/doc/projection.rs",
+      "bytes": 14788,
+      "sha256": "aeaa3927da806eb0931d42cf0ba0923ad97406c4141595fe3dfff15eccfb1600"
+    }
+  ]
+}

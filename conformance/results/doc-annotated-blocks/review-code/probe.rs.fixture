@@ -1,0 +1,32 @@
+use nepl3_tools::doc::{source,projection::annotated::host};
+use pulldown_cmark::{Parser,Options,Event,Tag};
+use serde_json::json;
+use std::{fs,path::Path};
+fn main()->Result<(),Box<dyn std::error::Error>>{
+ let out=std::env::args().nth(1).ok_or("output")?;let out=Path::new(&out);fs::create_dir_all(out)?;let c=source::compiled()?;let mut rows=Vec::new();
+ let atoms=['a','|','\\','`',' '];
+ for a in atoms { for b in atoms {for d in atoms {
+  let text:String=[a,b,d].into_iter().collect();if !text.contains('|'){continue}
+  let quoted=serde_json::to_string(&text)?;
+  for wrapper in ["code", "strong code", "ruby text \"B\" code", "anno text \"B\" cons code"] {
+   let end=if wrapper.starts_with("anno"){" nil"}else{""};
+   let src=format!("article en \"T\" body cons table cons default nil some row cons \"H\" nil cons row cons sentence cons {wrapper} {quoted}{end} nil nil nil nil");
+   let md=host::from_source(&c,&src,&[])?.markdown;
+   let events:Vec<_>=Parser::new_ext(&md,Options::ENABLE_TABLES).collect();
+   let code:Vec<_>=events.iter().filter_map(|e|if let Event::Code(x)=e{Some(x.as_ref())}else{None}).collect();
+   assert_eq!(code,[text.as_str()],"{src}\n{md}");
+   assert_eq!(events.iter().filter(|e|matches!(e,Event::Start(Tag::TableCell))).count(),2);
+   rows.push(json!({"source":src,"markdown":md,"code":text,"result":"passed"}));
+  }
+ }}}
+ println!("{} code contexts passed",rows.len());
+ for start in [0u64,9,10,999999999] {
+  let src=format!("article en \"T\" body cons list ordered {start} cons item unchecked body cons paragraph cons sentence cons code \"a\" cons break cons text \"b\" nil cons \"c\" nil nil cons item none body cons paragraph cons sentence cons text \"[x] plain\" nil nil nil nil nil");
+  let md=host::from_source(&c,&src,&[])?.markdown;let e:Vec<_>=Parser::new_ext(&md,Options::ENABLE_TASKLISTS).collect();
+  assert_eq!(e.iter().filter_map(|e|if let Event::Start(Tag::List(s))=e{Some(*s)}else{None}).collect::<Vec<_>>(),[Some(start)]);
+  assert_eq!(e.iter().filter(|e|matches!(e,Event::HardBreak)).count(),1);
+  assert_eq!(e.iter().filter(|e|matches!(e,Event::TaskListMarker(_))).count(),1);
+  rows.push(json!({"source":src,"markdown":md,"result":"passed"}));
+ }
+ fs::write(out.join("results.json"),serde_json::to_vec_pretty(&rows)?)?;println!("{} actual Doc/GFM cases passed",rows.len());Ok(())
+}

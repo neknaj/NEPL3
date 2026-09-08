@@ -1,0 +1,26 @@
+[
+  {
+    "command": [
+      "wasmtime",
+      "run",
+      "--dir=.",
+      "C:\\projects\\NEPL3-doc-block-projection\\.tmp\\review-block-implementation\\target\\wasm32-wasip2\\debug\\review-blocks.wasm",
+      "wasi-property"
+    ],
+    "cwd": "C:\\projects\\NEPL3-doc-block-projection\\.tmp\\review-block-implementation",
+    "exit_code": 1,
+    "seconds": 0.07891607284545898
+  },
+  {
+    "command": [
+      "wasmtime",
+      "run",
+      "--dir=.",
+      "C:\\projects\\NEPL3-doc-block-projection\\.tmp\\review-block-implementation\\target\\wasm32-wasip2\\debug\\review-block-boundaries.wasm",
+      "wasi-boundaries"
+    ],
+    "cwd": "C:\\projects\\NEPL3-doc-block-projection\\.tmp\\review-block-implementation",
+    "exit_code": 1,
+    "seconds": 0.024447917938232422
+  }
+]

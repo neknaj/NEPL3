@@ -1,0 +1,16 @@
+{
+  "commit": "652d3b2",
+  "native_property_cases": 248,
+  "wasi_property_cases": 248,
+  "native_boundary_cases": 17,
+  "wasi_boundary_cases": 17,
+  "managed_native_tests": 5,
+  "property_output_byte_identical": true,
+  "boundary_semantic_results_equal_ignoring_usage": true,
+  "initial_attempts": [
+    "malformed reviewer literal corrected to explicit Text",
+    "WASI module requested before build completed; no test executed"
+  ],
+  "limits": "default production host limits; no increases",
+  "blocking": []
+}

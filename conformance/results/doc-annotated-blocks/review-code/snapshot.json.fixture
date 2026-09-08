@@ -1,0 +1,25 @@
+{
+  "base": "a163764e93e2809f8013d7bbe16721082f979143",
+  "files": [
+    {
+      "path": "tools/src/doc/projection/annotated.rs",
+      "sha256": "14b95933b19aad89a39f5c40bfe17330a2a8519571cb095d5ab7980e2f9b8a08",
+      "bytes": 19555
+    },
+    {
+      "path": "tools/src/doc/projection/annotated/blocks.rs",
+      "sha256": "19e9fe81f70db5d02be10870465126bc06716f28b47a6e533f88936ce31990e1",
+      "bytes": 5136
+    },
+    {
+      "path": "tools/tests/doc.rs",
+      "sha256": "b90cda9e70ab086e5613a6e99e7bd3f4a0f3d56afd2c316e0827840e0d201d12",
+      "bytes": 24450
+    },
+    {
+      "path": "tools/tests/doc/annotated_blocks.rs",
+      "sha256": "4513e2f29c822ce1893f1bcdec69cd521492e940257072eee56231ea733cfbc0",
+      "bytes": 8002
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "command": [
+    "cargo",
+    "run",
+    "--locked",
+    "-p",
+    "nepl3-tools",
+    "--bin",
+    "review-blocks",
+    "--target-dir",
+    "C:\\projects\\NEPL3-doc-block-projection\\.tmp\\review-block-implementation\\target",
+    "--",
+    "C:\\projects\\NEPL3-doc-block-projection\\.tmp\\review-block-implementation\\run"
+  ],
+  "cwd": "C:\\projects\\NEPL3-doc-block-projection\\.tmp\\review-block-implementation\\workspace",
+  "exit_code": 1,
+  "seconds": 41.95764112472534
+}

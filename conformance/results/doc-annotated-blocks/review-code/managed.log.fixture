@@ -1,0 +1,13 @@
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-block-projection\.tmp\review-block-implementation\workspace\tools)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.37s
+     Running tests\doc.rs (C:\projects\NEPL3-doc-block-projection\.tmp\review-block-implementation\target\debug\deps\doc-9685d9a1466318bc.exe)
+
+running 5 tests
+test annotated_blocks::annotated_lists_preserve_start_checks_notes_and_break_continuations ... ok
+test annotated_blocks::annotated_tables_preserve_cells_alignment_notes_and_literal_pipes ... ok
+test annotated_blocks::annotated_blocks_preserve_consumed_budget_and_sticky_stop ... ok
+test annotated_blocks::annotated_tables_keep_header_only_and_reject_unrepresentable_shapes ... ok
+test annotated_blocks::annotated_lists_reject_lossy_shapes_and_marker_overflow ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 76 filtered out; finished in 0.98s
+

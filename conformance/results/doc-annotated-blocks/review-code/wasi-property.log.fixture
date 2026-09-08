@@ -1,0 +1,5 @@
+Error: failed to open wasm module "C:\\projects\\NEPL3-doc-block-projection\\.tmp\\review-block-implementation\\target\\wasm32-wasip2\\debug\\review-blocks.wasm"
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
