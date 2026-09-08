@@ -198,5 +198,29 @@ body
       cons "requestのNDF loopbackでは[宣言/せんげん]source[表/ひょう]を[二段/にだん]で[復元/ふくげん]し、[同/おな]じReaderSessionのvalue/end/stateが[一致/いっち]する。"
       cons "[宣言/せんげん]から[欠落/けつらく]したsourceをhostのglobal storeで[補/おぎな]っても[拒否/きょひ]する。"
       cons "reply/continuation[全体/ぜんたい]のportable[化/か]と[別/べつ]process provider[比較/ひかく]は[未実装/みじっそう]であり、R017はopenのまま[維持/いじ]する。" nil
+    cons paragraph
+      cons sentence cons text "reader" cons ruby text "予算" text "よさん" cons text "の" cons ruby text "独立再現" text "どくりつさいげん" cons text "には " cons code "cargo run --locked --manifest-path .tmp/independent-core/Cargo.toml --bin reader_allocation" cons text " を" cons ruby text "使用" text "しよう" cons text "した。" nil
+      cons "100,000 byteのSourceIdを[持/も]つsnapshotを[準備/じゅんび]し、ReaderSession constructorの[消費分/しょうひぶん]だけを[上限/じょうげん]として[同/おな]じ[操作/そうさ]Budgetを[使/つか]い[切/き]る。"
+      cons "その[後/ご]のread[区間/くかん]だけをSystem allocator wrapperで[計測/けいそく]すると、Stopped(AllocationLimit)を[返/かえ]しながら200,000 bytesを[割/わ]り[当/あ]てた。"
+      cons "fixture[構築/こうちく]、session[構築/こうちく]、[結果/けっか]の[表示/ひょうじ]は[計測外/けいそくがい]である。"
+      cons "[借用/しゃくよう]による[位置/いち]・identity[検査/けんさ]へ[訂正後/ていせいご]、[同/おな]じread[区間/くかん]の[実/じつ]allocationは0になった。"
+      cons sentence cons ruby text "管理対象" text "かんりたいしょう" cons text "の " cons code "long_source_identity_is_not_copied_after_allocation_budget_is_exhausted" cons text " も" cons ruby text "上記" text "じょうき" cons text "reader" cons ruby text "試験" text "しけん" cons text "に" cons ruby text "含" text "ふく" cons text "む。" nil
+      cons "[計測用/けいそくよう]harnessはignoredの[補助証拠/ほじょしょうこ]であり、clone[可能/かのう]な[正式試験/せいしきしけん]の[代替/だいたい]とはしない。" nil
+    cons paragraph
+      cons sentence cons code "--bin reader_stopped_report" cons text " はchecked contextを" cons ruby text "構築" text "こうちく" cons text "し、Seqのproviderがdiagnostic/eventを" cons ruby text "各" text "かく" cons text "1" cons ruby text "件返" text "けんかえ" cons text "した" cons ruby text "後" text "あと" cons text "、" cons ruby text "長" text "なが" cons text "いliteral" cons ruby text "期待値" text "きたいち" cons text "のallocationで" cons ruby text "停止" text "ていし" cons text "させた。" nil
+      cons "[返却/へんきゃく]はStopped(AllocationLimit)だったが、Reportの[両列/りょうれつ]は0[件/けん]、Usageのdiagnostics/eventsは[各/かく]1となった。"
+      cons sentence cons text "drive/finishで" cons ruby text "現在" text "げんざい" cons text "の" cons ruby text "報告" text "ほうこく" cons text "を" cons ruby text "保持" text "ほじ" cons text "する" cons ruby text "訂正後" text "ていせいご" cons text "、" cons ruby text "元" text "もと" cons text "の" cons ruby text "再現" text "さいげん" cons text "と" cons ruby text "管理対象" text "かんりたいしょう" cons text "の " cons code "stopped_reader_retains_committed_provider_reports" cons text " は" cons ruby text "両列" text "りょうれつ" cons text "1" cons ruby text "件" text "けん" cons text "を" cons ruby text "保持" text "ほじ" cons text "した。" nil
+      cons sentence cons text "ただし" cons ruby text "追加" text "ついか" cons text "の " cons code "--bin reader_second_resume" cons text " ではSeq(Call, Call)の" cons ruby text "第" text "だい" cons text "2" cons ruby text "回" text "かい" cons text "resumeでallocation" cons ruby text "停止" text "ていし" cons text "すると、" cons ruby text "最初" text "さいしょ" cons text "のproviderの" cons ruby text "報告" text "ほうこく" cons text "が" cons ruby text "再" text "ふたた" cons text "び" cons ruby text "消" text "き" cons text "えた。" nil
+      cons "[上限/じょうげん]79,200、[使用量/しようりょう]79,169でStopped、diagnostics/events[使用量/しようりょう]は[各/かく]1、[返却列/へんきゃくれつ]は[各/かく]0だった。"
+      cons "resume[準備/じゅんび]ではcheckpoint、provider[検査後/けんさご]ではMachineの[報告/ほうこく]を[保持/ほじ]する[訂正後/ていせいご]、[同/おな]じ[補助/ほじょ]probeの10,000〜179,900を100[刻/きざ]みとする[全走査/ぜんそうさ]で[報告/ほうこく]を[保持/ほじ]した。"
+      cons sentence cons ruby text "管理対象" text "かんりたいしょう" cons text "の " cons code "allocation_faults_across_later_resumes_preserve_already_accepted_reports" cons text " は3" cons ruby text "回" text "かい" cons text "のCallを" cons ruby text "使" text "つか" cons text "い、" cons ruby text "後続" text "こうぞく" cons text "resumeの" cons ruby text "停止" text "ていし" cons text "と" cons ruby text "高予算" text "こうよさん" cons text "での" cons ruby text "完了" text "かんりょう" cons text "を" cons ruby text "確認" text "かくにん" cons text "する。" nil
+      cons "[追加後/ついかご]のruntime 24[件/けん]を[独立実行/どくりつじっこう]し[成功/せいこう]した（reader[合計/ごうけい]27[件/けん]）。"
+      cons "これらのfixture helperは[入力構築/にゅうりょくこうちく]だけに[使/つか]い、[実行/じっこう]VMはproduction APIを[呼/よ]んでいる。" nil
+    cons paragraph
+      cons sentence cons text "checked contextを" cons ruby text "別" text "べつ" cons text "operationで" cons ruby text "再利用" text "さいりよう" cons text "する " cons code "--bin reader_context_conflict" cons text " は、" cons ruby text "閉包" text "へいほう" cons text "sourceと" cons ruby text "同" text "おな" cons text "じID/revisionで" cons ruby text "内容" text "ないよう" cons text "が" cons ruby text "異" text "こと" cons text "なるsnapshotをcaller storeへ" cons ruby text "置" text "お" cons text "くと、" cons ruby text "訂正前" text "ていせいまえ" cons text "はMatchedを" cons ruby text "返" text "かえ" cons text "した。" nil
+      cons "digest[込/こ]みの[検索/けんさく]で[不一致/ふいっち]を[単/たん]なる[不在/ふざい]と[扱/あつか]ったためである。"
+      cons "[訂正後/ていせいご]はIdentityConflictを[返/かえ]し、[管理対象/かんりたいしょう]の[同名境界試験/どうめいきょうかいしけん]も[成功/せいこう]した。"
+      cons sentence cons ruby text "末尾" text "まつび" cons text "に " cons code "-- missing" cons text " を" cons ruby text "付" text "つ" cons text "けてcaller storeから" cons ruby text "当該" text "とうがい" cons text "sourceを" cons ruby text "除" text "のぞ" cons text "くと、proofが" cons ruby text "保持" text "ほじ" cons text "する" cons ruby text "閉包" text "へいほう" cons text "から" cons ruby text "供給" text "きょうきゅう" cons text "してMatchedとなることも" cons ruby text "独立確認" text "どくりつかくにん" cons text "した。" nil
+      cons "[不在/ふざい]と[衝突/しょうとつ]を[区別/くべつ]し、operationごとに[閉包/へいほう]のsource[予算/よさん]を[再計上/さいけいじょう]する。" nil
     nil
   nil
