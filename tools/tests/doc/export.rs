@@ -1,6 +1,61 @@
 use nepl3_tools::doc::{export, source::compiled};
 
 #[test]
+fn export_reuses_the_admitted_tree_proof_without_recharging_parse() -> Result<(), String> {
+    use nepl3_tools::doc::source::{budget, with_input_route};
+    let compiled = compiled()?;
+    let source = r#"article ja "[文書/ぶんしょ]" body cons paragraph cons "{[本文/ほんぶん]/body}。" cons sentence cons strong text "次の文。" nil nil nil"#;
+    let mut expected = None;
+    for native in [false, true] {
+        let usage = with_input_route(
+            native,
+            &compiled,
+            source,
+            "Article",
+            |tree, profile, b, _| {
+                let before = b.usage();
+                let proof = tree.syntax();
+                assert!(std::ptr::eq(proof.bundle(), &tree.tree().bundle));
+                assert_eq!(b.usage(), before);
+                // A changed copy cannot inherit the borrowed proof of the original.
+                let mut broken = tree.tree().clone();
+                broken.bundle.nodes.clear();
+                assert!(
+                    broken
+                        .validate(profile, &mut budget(), &mut Default::default())
+                        .is_err()
+                );
+                let mut cancelled = budget();
+                cancelled.cancel();
+                assert!(matches!(
+                    tree.tree()
+                        .validate(profile, &mut cancelled, &mut Default::default()),
+                    Err(nepl3_engine::tree::TreeError::Stopped(
+                        nepl3_core::budget::StopReason::Cancelled
+                    ))
+                ));
+                Ok(before)
+            },
+        )?;
+        if native {
+            expected = Some(usage);
+        }
+    }
+    let output = export::generate(&compiled, source)?;
+    let manifest: serde_json::Value = serde_json::from_str(&output.manifest).map_err(super::err)?;
+    let usage = expected.ok_or("native usage")?;
+    let parsed = &manifest["operations"]["parse_and_validate"];
+    // Compare independent production entrypoints, not a copied numeric golden.
+    assert_eq!(parsed["nodes"], usage.nodes);
+    assert_eq!(parsed["work"], usage.work);
+    assert_eq!(parsed["allocation_units"], usage.allocation_units);
+    assert!(output.html.contains("class=\"nepl-ruby\""));
+    assert!(output.html.contains("class=\"nepl-anno\""));
+    assert!(output.html.contains("<strong"));
+    Ok(())
+}
+
+#[test]
 fn export_preserves_content_and_binds_script_free_files() -> Result<(), String> {
     let compiled = compiled()?;
     let source = r#"article ja "[文書/ぶんしょ]" body cons paragraph cons "{[本文/ほんぶん]/body} & <tag>" nil nil"#;
