@@ -1,0 +1,16 @@
+# Chapter 08 heading collision preflight
+
+Four headings remain literally unchanged in the all-notes projection and therefore retain their original automatic GitHub slug. Adding the old slug as a separate explicit alias risks the same duplicate target as prior migrations:
+
+| Section | Old target | Minimal accurate clarification |
+| --- | --- | --- |
+| snapshot | 1-analysissnapshot | 1. AnalysisSnapshotの入力と同一性 |
+| relations | 4-definitionとrelations | 4. definitionとrelationsの扱い |
+| lsp | 7-lsp-adapter | 7. LSP adapterの責務 |
+| trust | 9-workspace-trust | 9. workspace trustの境界 |
+
+Use Han-only Ruby for the added Japanese terms, preserve Section IDs and old aliases, and record these as title clarifications. In particular `definitionとrelations` also has no Ruby: the Japanese particle does not distinguish its projected heading from the original.
+
+All remaining seven headings, including the Article title, contain Ruby. The all-notes spelling adds reading text and consequently does not repeat the unchanged original heading. No other direct same-heading collision found. The saved actual historical GitHub anchor set is exact-source bound; this is a collision-risk assessment, not an actual generated GitHub uniqueness/navigation test. Verify every old/semantic destination after generation.
+
+No clearly incorrect Ruby reading was identified in the heading check or the manuscript passages inspected. `既存/きそん` is an accepted reading and is not a defect to replace merely by preference. This limited follow-up is not a new exhaustive phonetic audit of every body annotation. No tracked files were changed and no generation was run.

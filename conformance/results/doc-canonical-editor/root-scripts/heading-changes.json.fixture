@@ -1,0 +1,22 @@
+{
+  "changes": [
+    [
+      "1. AnalysisSnapshot",
+      "1. AnalysisSnapshotの[入力/にゅうりょく]と[同一性/どういつせい]"
+    ],
+    [
+      "4. definitionとrelations",
+      "4. definitionとrelationsの[扱/あつか]い"
+    ],
+    [
+      "7. LSP adapter",
+      "7. LSP adapterの[責務/せきむ]"
+    ],
+    [
+      "9. workspace trust",
+      "9. workspace trustの[境界/きょうかい]"
+    ]
+  ],
+  "reason": "Keep original GitHub aliases distinct from generated heading IDs while clarifying section subjects. All body bytes unchanged after reversing four exact heading edits.",
+  "prior_source_commit": "20caaf73c5a1d6a5157f50a2b5f23802d3a15c84"
+}

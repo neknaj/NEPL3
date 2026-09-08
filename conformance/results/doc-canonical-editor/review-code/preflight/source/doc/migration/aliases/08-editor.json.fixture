@@ -1,0 +1,46 @@
+[
+  {
+    "section": null,
+    "name": "08-共通editor-serviceと診断"
+  },
+  {
+    "section": "policy",
+    "name": "方針"
+  },
+  {
+    "section": "snapshot",
+    "name": "1-analysissnapshot"
+  },
+  {
+    "section": "derived",
+    "name": "2-自動で得られる機能"
+  },
+  {
+    "section": "region",
+    "name": "3-regionの選択"
+  },
+  {
+    "section": "relations",
+    "name": "4-definitionとrelations"
+  },
+  {
+    "section": "recovery",
+    "name": "5-不完全入力"
+  },
+  {
+    "section": "incremental",
+    "name": "6-増分解析と取消し"
+  },
+  {
+    "section": "lsp",
+    "name": "7-lsp-adapter"
+  },
+  {
+    "section": "diagnostics",
+    "name": "8-診断ログの表示"
+  },
+  {
+    "section": "trust",
+    "name": "9-workspace-trust"
+  }
+]

@@ -1,0 +1,1175 @@
+{
+  "url": "https://github.com/neknaj/NEPL3/blob/5c4ce6184f6d5fa817f472d202101aaf86af3195/doc/spec/08-editor.md",
+  "rows": [
+    {
+      "fragment": "08-共通editor-serviceと診断",
+      "precondition_attempts": [
+        {
+          "top": -8365,
+          "y": 8751,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": -8365,
+        "y": 8751,
+        "height": 9651
+      },
+      "after": {
+        "top": 125,
+        "y": 261,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 125,
+          "y": 261,
+          "height": 9651
+        },
+        {
+          "top": 125,
+          "y": 261,
+          "height": 9651
+        },
+        {
+          "top": 125,
+          "y": 261,
+          "height": 9651
+        },
+        {
+          "top": 125,
+          "y": 261,
+          "height": 9651
+        },
+        {
+          "top": 125,
+          "y": 261,
+          "height": 9651
+        },
+        {
+          "top": 125,
+          "y": 261,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "方針",
+      "precondition_attempts": [
+        {
+          "top": -8274.40625,
+          "y": 8751,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": -8274.40625,
+        "y": 8751,
+        "height": 9651
+      },
+      "after": {
+        "top": 124.59375,
+        "y": 352,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 124.59375,
+          "y": 352,
+          "height": 9651
+        },
+        {
+          "top": 124.59375,
+          "y": 352,
+          "height": 9651
+        },
+        {
+          "top": 124.59375,
+          "y": 352,
+          "height": 9651
+        },
+        {
+          "top": 124.59375,
+          "y": 352,
+          "height": 9651
+        },
+        {
+          "top": 124.59375,
+          "y": 352,
+          "height": 9651
+        },
+        {
+          "top": 124.59375,
+          "y": 352,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "1-analysissnapshot",
+      "precondition_attempts": [
+        {
+          "top": -8124.21875,
+          "y": 8751,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": -8124.21875,
+        "y": 8751,
+        "height": 9651
+      },
+      "after": {
+        "top": 124.78125,
+        "y": 502,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 124.78125,
+          "y": 502,
+          "height": 9651
+        },
+        {
+          "top": 124.78125,
+          "y": 502,
+          "height": 9651
+        },
+        {
+          "top": 124.78125,
+          "y": 502,
+          "height": 9651
+        },
+        {
+          "top": 124.78125,
+          "y": 502,
+          "height": 9651
+        },
+        {
+          "top": 124.78125,
+          "y": 502,
+          "height": 9651
+        },
+        {
+          "top": 124.78125,
+          "y": 502,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "2-自動で得られる機能",
+      "precondition_attempts": [
+        {
+          "top": -6966.03125,
+          "y": 8751,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": -6966.03125,
+        "y": 8751,
+        "height": 9651
+      },
+      "after": {
+        "top": 124.96875,
+        "y": 1660,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 124.96875,
+          "y": 1660,
+          "height": 9651
+        },
+        {
+          "top": 124.96875,
+          "y": 1660,
+          "height": 9651
+        },
+        {
+          "top": 124.96875,
+          "y": 1660,
+          "height": 9651
+        },
+        {
+          "top": 124.96875,
+          "y": 1660,
+          "height": 9651
+        },
+        {
+          "top": 124.96875,
+          "y": 1660,
+          "height": 9651
+        },
+        {
+          "top": 124.96875,
+          "y": 1660,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "3-regionの選択",
+      "precondition_attempts": [
+        {
+          "top": -6591.84375,
+          "y": 8751,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": -6591.84375,
+        "y": 8751,
+        "height": 9651
+      },
+      "after": {
+        "top": 125.15625,
+        "y": 2034,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 125.15625,
+          "y": 2034,
+          "height": 9651
+        },
+        {
+          "top": 125.15625,
+          "y": 2034,
+          "height": 9651
+        },
+        {
+          "top": 125.15625,
+          "y": 2034,
+          "height": 9651
+        },
+        {
+          "top": 125.15625,
+          "y": 2034,
+          "height": 9651
+        },
+        {
+          "top": 125.15625,
+          "y": 2034,
+          "height": 9651
+        },
+        {
+          "top": 125.15625,
+          "y": 2034,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "4-definitionとrelations",
+      "precondition_attempts": [
+        {
+          "top": -5017.65625,
+          "y": 8751,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": -5017.65625,
+        "y": 8751,
+        "height": 9651
+      },
+      "after": {
+        "top": 125.34375,
+        "y": 3608,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 125.34375,
+          "y": 3608,
+          "height": 9651
+        },
+        {
+          "top": 125.34375,
+          "y": 3608,
+          "height": 9651
+        },
+        {
+          "top": 125.34375,
+          "y": 3608,
+          "height": 9651
+        },
+        {
+          "top": 125.34375,
+          "y": 3608,
+          "height": 9651
+        },
+        {
+          "top": 125.34375,
+          "y": 3608,
+          "height": 9651
+        },
+        {
+          "top": 125.34375,
+          "y": 3608,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "5-不完全入力",
+      "precondition_attempts": [
+        {
+          "top": 7891.53125,
+          "y": 0,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": 7891.53125,
+        "y": 0,
+        "height": 9651
+      },
+      "after": {
+        "top": 124.53125,
+        "y": 7767,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 124.53125,
+          "y": 7767,
+          "height": 9651
+        },
+        {
+          "top": 124.53125,
+          "y": 7767,
+          "height": 9651
+        },
+        {
+          "top": 124.53125,
+          "y": 7767,
+          "height": 9651
+        },
+        {
+          "top": 124.53125,
+          "y": 7767,
+          "height": 9651
+        },
+        {
+          "top": 124.53125,
+          "y": 7767,
+          "height": 9651
+        },
+        {
+          "top": 124.53125,
+          "y": 7767,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "6-増分解析と取消し",
+      "precondition_attempts": [
+        {
+          "top": 8377.71875,
+          "y": 0,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": 8377.71875,
+        "y": 0,
+        "height": 9651
+      },
+      "after": {
+        "top": 124.71875,
+        "y": 8253,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 8377.71875,
+          "y": 0,
+          "height": 9651
+        },
+        {
+          "top": 124.71875,
+          "y": 8253,
+          "height": 9651
+        },
+        {
+          "top": 124.71875,
+          "y": 8253,
+          "height": 9651
+        },
+        {
+          "top": 124.71875,
+          "y": 8253,
+          "height": 9651
+        },
+        {
+          "top": 124.71875,
+          "y": 8253,
+          "height": 9651
+        },
+        {
+          "top": 124.71875,
+          "y": 8253,
+          "height": 9651
+        },
+        {
+          "top": 124.71875,
+          "y": 8253,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "7-lsp-adapter",
+      "precondition_attempts": [
+        {
+          "top": 8775.90625,
+          "y": 0,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": 8775.90625,
+        "y": 0,
+        "height": 9651
+      },
+      "after": {
+        "top": 124.90625,
+        "y": 8651,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 8775.90625,
+          "y": 0,
+          "height": 9651
+        },
+        {
+          "top": 124.90625,
+          "y": 8651,
+          "height": 9651
+        },
+        {
+          "top": 124.90625,
+          "y": 8651,
+          "height": 9651
+        },
+        {
+          "top": 124.90625,
+          "y": 8651,
+          "height": 9651
+        },
+        {
+          "top": 124.90625,
+          "y": 8651,
+          "height": 9651
+        },
+        {
+          "top": 124.90625,
+          "y": 8651,
+          "height": 9651
+        },
+        {
+          "top": 124.90625,
+          "y": 8651,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "8-診断ログの表示",
+      "precondition_attempts": [
+        {
+          "top": 9150.09375,
+          "y": 0,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": 9150.09375,
+        "y": 0,
+        "height": 9651
+      },
+      "after": {
+        "top": 399.09375,
+        "y": 8751,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 9150.09375,
+          "y": 0,
+          "height": 9651
+        },
+        {
+          "top": 399.09375,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 399.09375,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 399.09375,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 399.09375,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 399.09375,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 399.09375,
+          "y": 8751,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "9-workspace-trust",
+      "precondition_attempts": [
+        {
+          "top": 9388.28125,
+          "y": 0,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": 9388.28125,
+        "y": 0,
+        "height": 9651
+      },
+      "after": {
+        "top": 637.28125,
+        "y": 8751,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 9388.28125,
+          "y": 0,
+          "height": 9651
+        },
+        {
+          "top": 637.28125,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 637.28125,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 637.28125,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 637.28125,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 637.28125,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 637.28125,
+          "y": 8751,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-706f6c696379",
+      "precondition_attempts": [
+        {
+          "top": -8274.40625,
+          "y": 8751,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": -8274.40625,
+        "y": 8751,
+        "height": 9651
+      },
+      "after": {
+        "top": 124.59375,
+        "y": 352,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 476.59375,
+          "y": 0,
+          "height": 9651
+        },
+        {
+          "top": 124.59375,
+          "y": 352,
+          "height": 9651
+        },
+        {
+          "top": 124.59375,
+          "y": 352,
+          "height": 9651
+        },
+        {
+          "top": 124.59375,
+          "y": 352,
+          "height": 9651
+        },
+        {
+          "top": 124.59375,
+          "y": 352,
+          "height": 9651
+        },
+        {
+          "top": 124.59375,
+          "y": 352,
+          "height": 9651
+        },
+        {
+          "top": 124.59375,
+          "y": 352,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-736e617073686f74",
+      "precondition_attempts": [
+        {
+          "top": -8124.21875,
+          "y": 8751,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": -8124.21875,
+        "y": 8751,
+        "height": 9651
+      },
+      "after": {
+        "top": 124.78125,
+        "y": 502,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 626.78125,
+          "y": 0,
+          "height": 9651
+        },
+        {
+          "top": 124.78125,
+          "y": 502,
+          "height": 9651
+        },
+        {
+          "top": 124.78125,
+          "y": 502,
+          "height": 9651
+        },
+        {
+          "top": 124.78125,
+          "y": 502,
+          "height": 9651
+        },
+        {
+          "top": 124.78125,
+          "y": 502,
+          "height": 9651
+        },
+        {
+          "top": 124.78125,
+          "y": 502,
+          "height": 9651
+        },
+        {
+          "top": 124.78125,
+          "y": 502,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-64657269766564",
+      "precondition_attempts": [
+        {
+          "top": -6966.03125,
+          "y": 8751,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": -6966.03125,
+        "y": 8751,
+        "height": 9651
+      },
+      "after": {
+        "top": 124.96875,
+        "y": 1660,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 124.96875,
+          "y": 1660,
+          "height": 9651
+        },
+        {
+          "top": 124.96875,
+          "y": 1660,
+          "height": 9651
+        },
+        {
+          "top": 124.96875,
+          "y": 1660,
+          "height": 9651
+        },
+        {
+          "top": 124.96875,
+          "y": 1660,
+          "height": 9651
+        },
+        {
+          "top": 124.96875,
+          "y": 1660,
+          "height": 9651
+        },
+        {
+          "top": 124.96875,
+          "y": 1660,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-726567696f6e",
+      "precondition_attempts": [
+        {
+          "top": -6591.84375,
+          "y": 8751,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": -6591.84375,
+        "y": 8751,
+        "height": 9651
+      },
+      "after": {
+        "top": 125.15625,
+        "y": 2034,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 2159.15625,
+          "y": 0,
+          "height": 9651
+        },
+        {
+          "top": 125.15625,
+          "y": 2034,
+          "height": 9651
+        },
+        {
+          "top": 125.15625,
+          "y": 2034,
+          "height": 9651
+        },
+        {
+          "top": 125.15625,
+          "y": 2034,
+          "height": 9651
+        },
+        {
+          "top": 125.15625,
+          "y": 2034,
+          "height": 9651
+        },
+        {
+          "top": 125.15625,
+          "y": 2034,
+          "height": 9651
+        },
+        {
+          "top": 125.15625,
+          "y": 2034,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-72656c6174696f6e73",
+      "precondition_attempts": [
+        {
+          "top": -5017.65625,
+          "y": 8751,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": -5017.65625,
+        "y": 8751,
+        "height": 9651
+      },
+      "after": {
+        "top": 125.34375,
+        "y": 3608,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 3733.34375,
+          "y": 0,
+          "height": 9651
+        },
+        {
+          "top": 125.34375,
+          "y": 3608,
+          "height": 9651
+        },
+        {
+          "top": 125.34375,
+          "y": 3608,
+          "height": 9651
+        },
+        {
+          "top": 125.34375,
+          "y": 3608,
+          "height": 9651
+        },
+        {
+          "top": 125.34375,
+          "y": 3608,
+          "height": 9651
+        },
+        {
+          "top": 125.34375,
+          "y": 3608,
+          "height": 9651
+        },
+        {
+          "top": 125.34375,
+          "y": 3608,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-7265636f76657279",
+      "precondition_attempts": [
+        {
+          "top": 7891.53125,
+          "y": 0,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": 7891.53125,
+        "y": 0,
+        "height": 9651
+      },
+      "after": {
+        "top": 124.53125,
+        "y": 7767,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 124.53125,
+          "y": 7767,
+          "height": 9651
+        },
+        {
+          "top": 124.53125,
+          "y": 7767,
+          "height": 9651
+        },
+        {
+          "top": 124.53125,
+          "y": 7767,
+          "height": 9651
+        },
+        {
+          "top": 124.53125,
+          "y": 7767,
+          "height": 9651
+        },
+        {
+          "top": 124.53125,
+          "y": 7767,
+          "height": 9651
+        },
+        {
+          "top": 124.53125,
+          "y": 7767,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-696e6372656d656e74616c",
+      "precondition_attempts": [
+        {
+          "top": 8377.71875,
+          "y": 0,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": 8377.71875,
+        "y": 0,
+        "height": 9651
+      },
+      "after": {
+        "top": 124.71875,
+        "y": 8253,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 8377.71875,
+          "y": 0,
+          "height": 9651
+        },
+        {
+          "top": 124.71875,
+          "y": 8253,
+          "height": 9651
+        },
+        {
+          "top": 124.71875,
+          "y": 8253,
+          "height": 9651
+        },
+        {
+          "top": 124.71875,
+          "y": 8253,
+          "height": 9651
+        },
+        {
+          "top": 124.71875,
+          "y": 8253,
+          "height": 9651
+        },
+        {
+          "top": 124.71875,
+          "y": 8253,
+          "height": 9651
+        },
+        {
+          "top": 124.71875,
+          "y": 8253,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-6c7370",
+      "precondition_attempts": [
+        {
+          "top": 8775.90625,
+          "y": 0,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": 8775.90625,
+        "y": 0,
+        "height": 9651
+      },
+      "after": {
+        "top": 124.90625,
+        "y": 8651,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 8775.90625,
+          "y": 0,
+          "height": 9651
+        },
+        {
+          "top": 124.90625,
+          "y": 8651,
+          "height": 9651
+        },
+        {
+          "top": 124.90625,
+          "y": 8651,
+          "height": 9651
+        },
+        {
+          "top": 124.90625,
+          "y": 8651,
+          "height": 9651
+        },
+        {
+          "top": 124.90625,
+          "y": 8651,
+          "height": 9651
+        },
+        {
+          "top": 124.90625,
+          "y": 8651,
+          "height": 9651
+        },
+        {
+          "top": 124.90625,
+          "y": 8651,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-646961676e6f7374696373",
+      "precondition_attempts": [
+        {
+          "top": 9150.09375,
+          "y": 0,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": 9150.09375,
+        "y": 0,
+        "height": 9651
+      },
+      "after": {
+        "top": 399.09375,
+        "y": 8751,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 399.09375,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 399.09375,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 399.09375,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 399.09375,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 399.09375,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 399.09375,
+          "y": 8751,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-7472757374",
+      "precondition_attempts": [
+        {
+          "top": 9388.28125,
+          "y": 0,
+          "height": 9651
+        }
+      ],
+      "before": {
+        "top": 9388.28125,
+        "y": 0,
+        "height": 9651
+      },
+      "after": {
+        "top": 637.28125,
+        "y": 8751,
+        "height": 9651
+      },
+      "stable_observations": [
+        {
+          "top": 9388.28125,
+          "y": 0,
+          "height": 9651
+        },
+        {
+          "top": 637.28125,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 637.28125,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 637.28125,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 637.28125,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 637.28125,
+          "y": 8751,
+          "height": 9651
+        },
+        {
+          "top": 637.28125,
+          "y": 8751,
+          "height": 9651
+        }
+      ],
+      "result": "PASS"
+    }
+  ],
+  "complete": true,
+  "scope": "Same loaded GitHub document, explicit stable offscreen precondition, then native fragment navigation; no requirement for an ambient-network-idle full reload before each move."
+}

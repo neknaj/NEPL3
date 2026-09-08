@@ -1,0 +1,23 @@
+from pathlib import Path
+import json,re,hashlib,subprocess,unicodedata
+p=Path(__file__).parent;r=p.parents[1];old=r.parent/'NEPL3-doc-canonical-html-fragment/.tmp/preflight-after19'
+sha=lambda b:hashlib.sha256(b).hexdigest()
+head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=r,text=True).strip()
+draft=(r/'doc/migration/authored/08-editor.nepld').read_bytes();md=(r/'doc/spec/08-editor.md').read_bytes()
+assert draft==(old/'08-editor.nepld').read_bytes() and md==(old/'08-editor.md').read_bytes()
+for name,b in [('original.md',md),('draft.nepld',draft),('authoring.md',(r/'doc/authoring.md').read_bytes()),('old-github.json',(old/'github.json').read_bytes()),('old-rich.html',(old/'08-editor-rich.html').read_bytes())]:(p/name).write_bytes(b)
+headers=[(None,re.match(r'article ja "(.*)"',draft.decode()).group(1))]+re.findall(r'cons section (\w+) "([^"\n]+)" body',draft.decode())
+anchors=json.loads((old/'github.json').read_text(encoding='utf8'))['08-editor']['anchors'];assert len(headers)==len(anchors)==11
+rows=[]
+for (identifier,title),anchor in zip(headers,anchors):
+ projected=re.sub(r'\[([^/\[\]]+)/([^\[\]]+)\]',r'\1[\2]',title)
+ # Only collision equality for headings without Ruby is asserted; no general
+ # GitHub slug reimplementation is claimed for rendered annotated headings.
+ unchanged=projected==title
+ rows.append({'section':identifier,'source_title':title,'all_notes_heading':projected,'old_anchor':anchor['href'][1:],'unchanged_heading_collision_risk':unchanged})
+assert [x['section'] for x in rows if x['unchanged_heading_collision_risk']]==['snapshot','relations','lsp','trust']
+(p/'headings.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+readings=sorted(set(re.findall(r'\[([^/\[\]]+)/([^\[\]]+)\]',draft.decode())))
+(p/'ruby-pairs.json').write_text(json.dumps(readings,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+files=[{'path':x.name,'bytes':x.stat().st_size,'sha256':sha(x.read_bytes())} for x in sorted(p.iterdir()) if x.is_file() and x.name!='manifest.json']
+(p/'manifest.json').write_text(json.dumps({'scope':'read-only heading collision preflight, no generation/navigation/cutover','source_commit':head,'original_sha256':sha(md),'draft_sha256':sha(draft),'historical_github_commit':'e8c396ada1e3d48d981f7a43276889e691e1be1b','files':files},indent=2)+'\n',encoding='utf8');print(sha((p/'manifest.json').read_bytes()))

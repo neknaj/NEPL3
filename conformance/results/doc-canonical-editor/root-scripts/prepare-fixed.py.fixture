@@ -1,0 +1,18 @@
+from pathlib import Path
+import subprocess,json,hashlib
+root=Path.cwd();fixed=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+assert not subprocess.check_output(['git','status','--porcelain']).strip()
+src=Path('C:/projects/NEPL3-doc-canonical-html-fragment/.tmp')
+s=(src/'verify-integration.py').read_text(encoding='utf-8').replace('e8c396ada1e3d48d981f7a43276889e691e1be1b',fixed).replace('All nine HTML','All eleven HTML')
+(root/'.tmp/verify-integration.py').write_text(s,encoding='utf-8',newline='\n')
+g=(src/'github-canonical19.py').read_text(encoding='utf-8').replace('e8c396ada1e3d48d981f7a43276889e691e1be1b',fixed).replace('canonical19','canonical08').replace('19-html-fragment','08-editor').replace('assert len(rows)==1','assert len(rows)==21')
+(root/'.tmp/github-canonical08.py').write_text(g,encoding='utf-8',newline='\n')
+prior=Path('C:/projects/NEPL3-doc-canonical-model-invariants/.tmp/html-budget-first');current=root/'.tmp/html-budget-first'
+rows=[]
+for p in sorted((prior/'docs').rglob('*')):
+    if not p.is_file():continue
+    name=p.relative_to(prior).as_posix();before=p.read_bytes();after=(current/name).read_bytes()
+    assert before==after,name
+    rows.append(dict(path=name,bytes=len(after),sha256=hashlib.sha256(after).hexdigest()))
+assert len(rows)==9
+(root/'.tmp/generation-budget/prior-html-preserved.json').write_bytes((json.dumps(dict(source_commit=fixed,prior_source_commit='2b0bbf4b888ea18ef5e97eaabe2391008e86fe69',files=rows,scope='Eight earlier HTML documents plus CSS are identical. The new manifest contains nine registrations and different selected limits; its bytes are not claimed unchanged.'),indent=2)+'\n').encode())

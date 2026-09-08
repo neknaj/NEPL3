@@ -1,0 +1,31 @@
+use pulldown_cmark::{Event,Options,Parser,Tag,TagEnd};
+
+#[test]
+fn actual_editor_chapter_keeps_body_code_and_block_ownership() -> Result<(),Box<dyn std::error::Error>> {
+    let root=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    fn inspect(text:&str)->(Vec<String>,Vec<String>,Vec<String>,usize) {
+        let mut codes=Vec::new();let mut paragraphs=Vec::new();let mut headings=Vec::new();
+        let mut para=None::<String>;let mut heading=None::<String>;let mut aliases=0;
+        for event in Parser::new_ext(text,Options::ENABLE_TABLES) {
+            match event {
+                Event::Start(Tag::Paragraph)=>para=Some(String::new()),
+                Event::End(TagEnd::Paragraph)=>{let value=para.take().expect("paragraph start");if value.is_empty(){aliases+=1}else{paragraphs.push(value)}},
+                Event::Start(Tag::Heading{..})=>heading=Some(String::new()),
+                Event::End(TagEnd::Heading(_))=>headings.push(heading.take().expect("heading start")),
+                Event::Code(value)=>{codes.push(value.to_string());if let Some(s)=&mut para{s.push_str(&value)}},
+                Event::Text(value)=>{if let Some(s)=&mut para{s.push_str(&value)}if let Some(s)=&mut heading{s.push_str(&value)}},
+                Event::SoftBreak=>if let Some(s)=&mut para{s.push(' ')},
+                Event::Start(Tag::Link{..}|Tag::Image{..}|Tag::List(_)|Tag::Table(_)|Tag::CodeBlock(_))=>panic!("unexpected block or reference"),
+                _=>{}
+            }
+        }
+        (codes,paragraphs,headings,aliases)
+    }
+    let old=inspect(&std::fs::read_to_string(root.join("before/doc/spec/08-editor.md"))?);
+    let new=inspect(&std::fs::read_to_string(root.join("source/doc/spec/08-editor.md"))?);
+    assert_eq!(old.0,new.0);
+    assert_eq!((old.0.len(),old.1.len(),old.2.len(),old.3),(11,55,11,0));
+    assert_eq!((new.0.len(),new.1.len(),new.2.len(),new.3),(11,55,11,21));
+    println!("EDITOR_GFM {}",serde_json::to_string(&(old,new))?);
+    Ok(())
+}

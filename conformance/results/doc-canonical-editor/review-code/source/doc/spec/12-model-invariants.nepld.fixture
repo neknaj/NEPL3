@@ -1,0 +1,209 @@
+article ja "12. [意味/いみ]モデル・[中間表現/ちゅうかんひょうげん]の[補足不変条件/ほそくふへんじょうけん]"
+body
+  cons section policy "[方針/ほうしん]" body
+    cons paragraph
+      cons sentence cons code "interfaces/model.json" cons text " はsourceのform" cons ruby text "表" text "ひょう" cons text "と" cons ruby text "別" text "べつ" cons text "の、lower" cons ruby text "後" text "ご" cons text "の" cons ruby text "意味値" text "いみち" cons text "・" cons ruby text "実行" text "じっこう" cons text "IRの" cons ruby text "構造" text "こうぞう" cons text "を" cons ruby text "記述" text "きじゅつ" cons text "する。" nil
+      cons "surfaceとmeaningのSchemaRefは[別/べつ]にする。"
+      cons "Rustで[型/かた]を[分/わ]け、wireで[両者/りょうしゃ]を[混同/こんどう]しない。" nil
+    nil
+  cons section values "1. [値/あたい]と[参照/さんしょう]" body
+    cons paragraph
+      cons sentence cons text "JSON" cons ruby text "内" text "ない" cons text "の " cons code "record" cons text " は " cons code "[fieldName, typeExpression]" cons text " の" cons ruby text "順序付" text "じゅんじょつ" cons text "きarrayであり、その" cons ruby text "順序" text "じゅんじょ" cons text "をNDF recordのfield" cons ruby text "順" text "じゅん" cons text "とする。" nil
+      cons sentence cons code "sum" cons text " はvariant" cons ruby text "名" text "めい" cons text "をkeyとするmapで、" cons ruby text "各" text "かく" cons text "payloadも" cons ruby text "同" text "おな" cons text "じ" cons ruby text "順序付" text "じゅんじょつ" cons text "きfield array。" nil
+      cons "[空/から]record/payloadは[空/から]arrayとする。"
+      cons "field[名/めい]は[各/かく]array[内/ない]で[一意/いちい]。"
+      cons sentence cons code "union" cons text " はvariant" cons ruby text "名" text "めい" cons text "からrecord" cons ruby text "型" text "がた" cons text "へのmap。" nil
+      cons "sum/unionおよびcontractsのvariantsのkey[順/じゅん]には[意味/いみ]を[持/も]たせず、NDFではVariantNameの[文字列/もじれつ]で[識別/しきべつ]する。"
+      cons "[数値/すうち]ordinalをJSON objectの[列挙順/れっきょじゅん]から[割/わ]り[当/あ]てない。"
+      cons "List/OptionはNDFの[対応/たいおう]tag。"
+      cons "Naturalはnonnegative Integer。"
+      cons "Name/LanguageTagはTextに[対/たい]して[各/かく]domainの[制約/せいやく]を[追加/ついか]する。" nil
+    cons paragraph
+      cons "Source[由来/ゆらい]の[意味値/いみち]はOriginを[関連付/かんれんづ]けられる。"
+      cons "[各/かく]Recordが[共有/きょうゆう]できるようにnative[実装/じっそう]をarenaにしてもよいが、[公開値/こうかいち]の[意味/いみ]をpointerに[依存/いぞん]させない。"
+      cons "wireは[参照/さんしょう]table[付/つ]きbundleを[使/つか]い、[全/ぜん]NodeRef/OriginRefが[有効/ゆうこう]であることを[検査/けんさ]する。"
+      cons "[意味上/いみじょう]の[構造木/こうぞうき]と[回路/かいろ]graphのcycle[制約/せいやく]は[異/こと]なる。" nil
+    cons paragraph
+      cons "r4ではNodeRef/OriginRef、Origin、SyntaxNode/FieldValue、SyntaxBundle/ForeignSyntax、EnvironmentRefを[共通/きょうつう]foundation[所有/しょゆう]のcontractsへ[移/うつ]した。"
+      cons "modelはexternal_typesから[参照/さんしょう]し、[同/おな]じ[名義型/めいぎがた]を[二重定義/にじゅうていぎ]しない。"
+      cons "SyntaxBundleはsources、nodes、origins、root、environmentsを[持/も]つ。"
+      cons "ForeignSyntax.rootとguest bundle.rootは[等/ひと]しくなければならず、guestのnode/origin IDはそのbundle[内/ない]だけで[解決/かいけつ]する。"
+      cons "ForeignSyntax.environmentはforeign slotを[所有/しょゆう]するhost bundleのEnvironmentEntryのid/digestへ[一致/いっち]させる。"
+      cons "guestへの[無条件/むじょうけん]の[名前空間継承/なまえくうかんけいしょう]は[行/おこな]わない。" nil
+    cons paragraph
+      cons "EnvironmentEntryはid/digest/valueを[持/も]ち、Environmentは[明示的/めいじてき]なnamespace/name/value/originのbinding[列/れつ]とresource[列/れつ]を[持/も]つ。"
+      cons "[同/おな]じnamespace/nameのbindingとresource IDの[重複/ちょうふく]を[拒否/きょひ]する。"
+      cons "bindingのOriginRefはそのentryの[所属/しょぞく]bundle[内/ない]で[解決/かいけつ]する。"
+      cons sentence cons text "entry digestはASCII " cons code "NEPL3-ENVIRONMENT-1" cons text "、zero byte、canonical NDFで" cons ruby text "符号化" text "ふごうか" cons text "したEnvironment recordのSHA-256とする。" nil
+      cons "[型付/かたつ]きnative graph[検査/けんさ]はentryの[選択/せんたく]と[参照/さんしょう]を[検査/けんさ]し、wire adapterはcanonical digestとresource[元/もと]byte[列/れつ]のdigestも[再検査/さいけんさ]する。" nil
+    cons paragraph
+      cons "Doc/Math[等/とう]の[意味値/いみち]が[単体/たんたい]Foreignを[保持/ほじ]する[場合/ばあい]はForeignClosureを[使/つか]う。"
+      cons "syntaxのguest arenaとownerEnvironment/ownerOrigins/ownerSources/ownerSourceMapsのarenaは[独立/どくりつ]する。"
+      cons "[同/おな]じ[数値/すうち]の[環境/かんきょう]ID・OriginRefでも[両者/りょうしゃ]の[値/あたい]を[置換/ちかん]しない。"
+      cons "[元/もと]ownerOrigin[列/れつ]を[保持/ほじ]し、[環境/かんきょう]digestを[変/か]えない。"
+      cons "ForeignClosure.captureは[検査済/けんさず]みownerの[実/じつ]Foreign fieldだけを[取/と]り[出/だ]し、ownerの[構文/こうぶん]nodeは[所有化/しょゆうか]しない。"
+      cons "[受信時/じゅしんじ]は[外側/そとがわ]schemaとguest rootのschema、root ID、[選択/せんたく]したowner[環境/かんきょう]のid/digest、owner/guestそれぞれの[閉包/へいほう]を[検査/けんさ]し、portable adapterは[両環境/りょうかんきょう]の[内容/ないよう]digestを[再計算/さいけいさん]する。"
+      cons "raw[閉包/へいほう]の[成立/せいりつ]から[言語固有/げんごこゆう]の[意味/いみ]lowerやhostによる[環境授権/かんきょうじゅけん]を[推定/すいてい]しない。" nil
+    cons paragraph
+      cons "portable[境界/きょうかい]の[停止理由/ていしりゆう]は[型付/かたつ]き[原因/げんいん]から[取/と]り[出/だ]す。"
+      cons "Schema、Source、Origin、View、Syntax、Fact、Reportに[包/つつ]まれたStoppedも[元/もと]StopReasonを[保持/ほじ]し、domain[側/がわ]の[通常/つうじょう]Invalidへ[縮約/しゅくやく]しない。"
+      cons "WireErrorの[直接/ちょくせつ]Stoppedだけを[認識/にんしき]していた[停止抽出/ていしちゅうしゅつ]を[訂正/ていせい]する（R047）。"
+      cons "[意味/いみ]エラーを、[無関係/むかんけい]に[停止/ていし]したBudgetの[状態/じょうたい]で[上書/うわが]きする[規則/きそく]ではない。" nil
+    cons paragraph
+      cons "[通常/つうじょう]のsource nodeではheadはcover[内/ない]、[各子/かくこ]のcoverは[親/おや]cover[内/ない]かつhead.end[以降/いこう]で、[子同士/こどうし]はfield[順/じゅん]に[重複/ちょうふく]しない。"
+      cons "graph/[位置検査/いちけんさ]だけでformのarity・[引数/ひきすう]category・[各/かく]field[型/がた]まで[検査/けんさ]したことにはしない。"
+      cons "surface LanguagePackageの[検査/けんさ]を[別/べつ]に[行/おこな]う。"
+      cons "[生成/せいせい]nodeに[架空/かくう]のcoverを[要求/ようきゅう]しない。" nil
+    cons paragraph
+      cons "SourceMapはsource/target SpanとExactまたはTransformedのMapping[列/れつ]を[持/も]つ。"
+      cons "Exactは[元/もと]と[先/さき]のbyte[列/れつ]が[等/ひと]しく、[局所逆写像/きょくしょぎゃくしゃぞう]はoffset[差/さ]で[求/もと]める。"
+      cons "Transformedは[対応/たいおう]するfragment[間/かん]の[関係/かんけい]だけを[表/あらわ]し、[任意/にんい]の[部分区間/ぶぶんくかん]を[逆変換/ぎゃくへんかん]できるとはしない。"
+      cons "[重/かさ]なった[複数/ふくすう]の[候補/こうほ]はAmbiguous、[非可逆/ひかぎゃく]はIrreversibleとしてrename[等/とう]へ[返/かえ]す。" nil
+    cons paragraph
+      cons "map[循環/じゅんかん]の[頂点/ちょうてん]はsnapshotとbyte[位置/いち]である。"
+      cons "[非空範囲/ひくうはんい]は[半開区間内/はんかいくかんない]の[各/かく]byte、[空範囲/くうはんい]はそのoffsetの[独立/どくりつ]したanchor[頂点/ちょうてん]とし、[同/おな]じoffsetの[内容/ないよう]byteとanchorを[混同/こんどう]しない。"
+      cons "Exactはoffset[差/さ]を[保存/ほぞん]するedge、Transformedは[元/もと]fragmentの[全頂点/ぜんちょうてん]から[先/さき]fragmentの[全頂点/ぜんちょうてん]への[関係/かんけい]である。"
+      cons "この[有限/ゆうげん]graphのcycleを[拒否/きょひ]する。"
+      cons "[同一/どういつ]snapshot[内/ない]でも[一方向/いちほうこう]へ[進/すす]む[重複/ちょうふく]Exact[区間/くかん]や、[互/たが]いに[接続/せつぞく]しない[範囲/はんい]はcycleとしない。"
+      cons "[検査量/けんさりょう]の[超過/ちょうか]はStoppedであり、[粗/あら]いsnapshot[依存/いぞん]だけを[根拠/こんきょ]にCycleと[返/かえ]さない。" nil
+    nil
+  cons section constraints "1.1 foundation[制約/せいやく]ID" body
+    cons paragraph
+      cons "constraint IDはstructural descriptorとともにdigestへ[含/ふく]める。"
+      cons "[共通/きょうつう]Rust constructor・boundary adapterは[次/つぎ]を[検査/けんさ]する。"
+      cons "descriptorにIDがあるだけで[検査/けんさ]を[実行/じっこう]したとは[扱/あつか]わない。" nil
+    cons table cons default cons default nil
+      some row cons "ID" cons "[検査/けんさ]する[不変条件/ふへんじょうけん]" nil
+      cons row cons "source.identity" cons "[空/から]でないopaque IDと[明示的/めいじてき]なrevision/content digest" nil
+      cons row cons "source.content" cons "locator profile、UTF-8[元/もと]byte[列/れつ]、content digestの[一致/いっち]" nil
+      cons row cons "source.bundle" cons "snapshot[宣言/せんげん]の[一意性/いちいせい]、[同/おな]じID/revisionの[矛盾拒否/むじゅんきょひ]、[共有操作/きょうゆうそうさ]での[入力予算/にゅうりょくよさん]" nil
+      cons row cons "source.span" cons "[指定/してい]snapshotの[範囲/はんい]・[半開順序/はんかいじゅんじょ]・UTF-8 scalar[境界/きょうかい]" nil
+      cons row cons "schema.reference / schema.type-reference" cons "[空/から]でないpackage/type[名/めい]と、[選択/せんたく]された[版/ばん]・digestまたは[記号的参照先/きごうてきさんしょうさき]" nil
+      cons row cons "schema.descriptor" cons "[重複宣言拒否/ちょうふくせんげんきょひ]、canonical descriptor、[全参照/ぜんさんしょう]のfinalize" nil
+      cons row cons "operation.reporting" cons "すべての[結果/けっか]の[累積/るいせき]Usage、[共有/きょうゆう]Limits、[停止理由/ていしりゆう]の[維持/いじ]、partialをCheckedとしない" nil
+      cons row cons "report.trace-overflow" cons "[実際/じっさい]の[未受理/みじゅり]event[件数/けんすう]が[正/せい]、[単一/たんいつ]の[報告/ほうこく]、EventLimitの[停止/ていし]" nil
+      cons row cons "namespace.reference" cons "[明示/めいじ]したschemaと[空/から]でないnamespace[名/めい]" nil
+      cons row cons "environment.bindings / environment.digest" cons "binding/resourceの[一意性/いちいせい]、[範囲/はんい]と[型/かた]、canonical entry digest" nil
+      cons row cons "syntax.graph / syntax.foreign" cons "bundle[局所参照/きょくしょさんしょう]、[有限/ゆうげん]graph、source geometry、host[環境/かんきょう]とguest rootの[一致/いっち]" nil
+      cons row cons "source.map / origin.graph" cons "[上記/じょうき]のmap[関係/かんけい]とOrigin DAG、[所属/しょぞく]snapshot・OperationRef・[参照先/さんしょうさき]" nil
+      cons row cons "source.reservation" cons "[空/から]でないhost[予約/よやく]SourceId、revision、[絶対/ぜったい]logical URI。[生成/せいせい]bytesからdigestを[計算/けいさん]し、[異/こと]なる[結果/けっか]への[予約再利用/よやくさいりよう]を[拒否/きょひ]" nil
+      cons row cons "schema.kind-id" cons "[選択/せんたく]schemaの[型名/かためい]scalar[順/じゅん]に[割/わ]り[当/あ]てたlocalKindとdescriptorの[対応/たいおう]" nil
+      cons row cons "view.graph" cons "Tokenごとに[局所的/きょくしょてき]なview[参照/さんしょう]、DAG、field[名/めい]の[一意性/いちいせい]、source[範囲/はんい]" nil
+      cons row cons "token.boundary" cons "token head・triviaのsnapshotと[境界/きょうかい]、[内部/ないぶ]viewの[包含/ほうがん]、payloadの[型/かた]はreader/form[契約/けいやく]で[検査/けんさ]" nil
+      cons row cons "view.presentation" cons "schemaが[所有/しょゆう]する[表示分類名/ひょうじぶんるいめい]と[明示/めいじ]されたfallback role" nil
+      nil
+    cons paragraph
+      cons "SyntaxBundleはtokensのtableを[持/も]ち、SyntaxNode.tokenは[同/おな]じbundleのTokenRefを[指/さ]す。"
+      cons "Tokenはpayload、[内部/ないぶ]ViewBundle、leadingTriviaを[保持/ほじ]する。"
+      cons "ViewRefはそのTokenのViewBundle[内/ない]だけ、TokenRefはそのSyntaxBundle[内/ない]だけで[解決/かいけつ]する。"
+      cons "ForeignSyntaxのguest bundleは[自身/じしん]のtableを[持/も]つため、[同/おな]じ[数値/すうち]IDをhostへ[解決/かいけつ]しない。"
+      cons "[通常/つうじょう]のsource[由来/ゆらい]nodeにはheadに[対応/たいおう]するtokenをengineが[要求/ようきゅう]し、synthetic/recovery nodeのtoken[不在/ふざい]はOptionで[明示/めいじ]する。"
+      cons "graphの[検査/けんさ]とformのarity・payload[型/がた]の[検査/けんさ]を[区別/くべつ]する。" nil
+    cons paragraph
+      cons "sourceMapsはSyntaxBundleの[所有列/しょゆうれつ]であり、[全/ぜん]source/targetをそのbundleのsourcesで[解決/かいけつ]する。"
+      cons "SourceMapの[幾何/きか]・Exact[内容一致/ないよういっち]・[非循環/ひじゅんかん]を[検査/けんさ]したproofだけをmapped view[包含/ほうがん]に[使用/しよう]する。"
+      cons "standalone Token/ViewBundleのvalidateはmapを[持/も]たない[直接包含/ちょくせつほうがん]の[入口/いりぐち]とし、[変換/へんかん]viewはvalidate_with_mapsまたはSyntaxBundle[境界/きょうかい]を[使/つか]う。"
+      cons "[包含/ほうがん]は02[章/しょう]の[全逆経路規則/ぜんぎゃくけいろきそく]に[従/したが]い、sourceがhost storeに[偶然存在/ぐうぜんそんざい]することを[所有証明/しょゆうしょうめい]にしない。" nil
+    cons paragraph
+      cons "ValidatedSourceMapは[不変/ふへん]なsnapshot identity[上/じょう]のmap[関係/かんけい]のproofであり、[任意/にんい]の[後続/こうぞく]SourceStoreへの[所属/しょぞく]proofではない。"
+      cons "Token/Viewのvalidate_with_mapsは[使用時/しようじ]のstoreで[全/ぜん]map[端点/たんてん]の[宣言閉包/せんげんへいほう]を[再照合/さいしょうごう]する。"
+      cons "SourceMap.contains[単体/たんたい]は[関係上/かんけいじょう]の[包含計算/ほうがんけいさん]であり、transport source tableの[所属/しょぞく]を[検査/けんさ]する[入口/いりぐち]とは[区別/くべつ]する。" nil
+    cons paragraph
+      cons "[内部/ないぶ]viewは[外側/そとがわ]のchildrenやarityへ[加算/かさん]しない。"
+      cons "SentenceLiteralの[構造化/こうぞうか]payloadとview、Codeが[保持/ほじ]するforeign syntaxのtoken・triviaはnativeとNDFの[両経路/りょうけいろ]で[保存/ほぞん]し、[元/もと]sourceの[再/さい]parseを[情報保持/じょうほうほじ]の[代替/だいたい]にしない。" nil
+    cons paragraph
+      cons "Token.payloadは、その[型/かた]が[所有/しょゆう]する[独立/どくりつ]bundleまたは[明示/めいじ]source[参照/さんしょう]を[持/も]つ。"
+      cons "まだ[構築/こうちく]されていない[外側/そとがわ]SyntaxBundleのNodeRefを[暗黙/あんもく]に[参照/さんしょう]しない。"
+      cons "payload[内/ない]に[現/あらわ]れる[数値/すうち]を[外側/そとがわ]node IDと[推測/すいそく]して[再採番/さいさいばん]しない。"
+      cons "この[所有契約/しょゆうけいやく]により、outer nodeのcanonical[再採番/さいさいばん]はopaque payloadを[壊/こわ]さず[行/おこな]える。" nil
+    cons paragraph
+      cons "DocのSentenceLiteralはlower[後/ご]にDoc:Sentenceとなる。"
+      cons "raw Textには[注釈構文/ちゅうしゃくこうぶん]を[再適用/さいてきよう]しない。"
+      cons "MathのNumberは[有限十進/ゆうげんじっしん]で[表現/ひょうげん]できるRational（[約分後/やくぶんご]の[分母/ぶんぼ]の[素因数/そいんすう]が2と5だけ）と[元/もと]の[表記範囲/ひょうきはんい]を[持/も]ち、SymbolNameはMath:Symbolへ[統合/とうごう]する。"
+      cons "[違反/いはん]はNonFiniteDecimalNumber。"
+      cons "Numeric spellingを[表示/ひょうじ]に[使/つか]う[場合/ばあい]は、そのsnapshotと[値/あたい]が[一致/いっち]していることを[検査/けんさ]する。"
+      cons "[生成/せいせい]Numberはcanonicalな[整数/せいすう]または[有限十進/ゆうげんじっしん]でprintする。"
+      cons "[任意有理数/にんいゆうりすう]からの[式構築/しきこうちく]と[著者/ちょしゃ]のFracの[保存/ほぞん]はMath[章/しょう]の[規則/きそく]に[従/したが]う。" nil
+    cons paragraph
+      cons "ForeignSyntaxはguestのopaque bundleを[持/も]ち、host coreはguestの[意味型/いみがた]をimportしない。"
+      cons "suiteで[登録済/とうろくず]みschemaに[検査/けんさ]してからguest[操作/そうさ]に[渡/わた]す。"
+      cons "Doc:DocGuestもForeignSyntaxを[保持/ほじ]する。"
+      cons "Codeの[準備/じゅんび]はbundleの[安全性/あんぜんせい]を[検査/けんさ]してsourceとviewを[表示/ひょうじ]し、guestのlower・[意味/いみ]check・evaluateを[呼/よ]ばない。" nil
+    nil
+  cons section checked "2. Checked[値/ち]の[境界/きょうかい]" body
+    cons paragraph
+      cons "Rust[内部/ないぶ]のChecked/Preparedのconstructorはprivateにする。"
+      cons "wireでCheckedEnvelopeを[受信/じゅしん]しただけで[検査済/けんさず]みと[信用/しんよう]しない。"
+      cons "[外部/がいぶ]providerからの[結果/けっか]にはschema[検査/けんさ]・[構造不変条件検査/こうぞうふへんじょうけんけんさ]を[行/おこな]い、[利用/りよう]する[操作/そうさ]に[必要/ひつよう]な[意味検査/いみけんさ]を[再実行/さいじっこう]する。"
+      cons "digestは[同一性/どういつせい]の[情報/じょうほう]であって[証明書/しょうめいしょ]ではない。" nil
+    cons paragraph
+      cons "process/session[内/ない]で[検査結果/けんさけっか]を[再利用/さいりよう]する[場合/ばあい]は、provider・input・schema・environmentを[固定/こてい]したhost[所有/しょゆう]handleを[使/つか]える。"
+      cons "[別/べつ]processへ[生/なま]のpointerやprivateなhandleを[送/おく]らない。" nil
+    nil
+  cons section circuit "3. [回路/かいろ]IR" body
+    cons paragraph
+      cons "NetNode.idはnodesのindexに[一致/いっち]し、orderは[組合/くみあわ]せDAGの[全/ぜん]nodeを[一度/いちど]ずつ[含/ふく]む[順序/じゅんじょ]。"
+      cons "Input/State/Constantのinputsは[空/から]、Not/Sliceは1、And/Or/Xor/Nor/Add/Concatは2、Muxは3。"
+      cons "InputとStateは[有効/ゆうこう]なport/slotを[参照/さんしょう]する。"
+      cons "Slice/Mux/Concatのwidth[条件/じょうけん]はCircuit[章/しょう]の[通/とお]り。" nil
+    cons paragraph
+      cons "outputNodesの[長/なが]さはoutputsと[等/ひと]しく、[各/かく]nodeの[幅/はば]がportと[一致/いっち]する。"
+      cons "StateSlot.nextは[有効/ゆうこう]nodeで[同/おな]じ[幅/はば]。"
+      cons "[初期値/しょきち]は[幅内/はばない]。"
+      cons "state[次値/じち]へのedgeを[現在/げんざい]state readの[依存/いぞん]へ[戻/もど]さない。" nil
+    cons paragraph
+      cons "NorNetlistはbit[順/じゅん]をport[宣言順/せんげんじゅん]、その[中/なか]をLSB→MSBとする。"
+      cons "stateもslot[順/じゅん]、その[中/なか]をLSB→MSB。"
+      cons "nextBits/outputBitsの[長/なが]さは[対応幅/たいおうはば]の[和/わ]。"
+      cons "Nor2の[参照/さんしょう]はtopologicalに[前/まえ]のnodeだけ。"
+      cons "InputBit/StateBitは[有効範囲/ゆうこうはんい]。"
+      cons "originsはnodesと[同/おな]じ[長/なが]さ。" nil
+    nil
+  cons section markup "4. Markup[安全性/あんぜんせい]" body
+    cons paragraph
+      cons "Markup modelがname/attributeをTextとして[運/はこ]べることは、[任意/にんい]のtagを[許可/きょか]することを[意味/いみ]しない。"
+      cons "nepl3-markupは[目的/もくてき]categoryに[対/たい]して[検査/けんさ]する。" nil
+    cons paragraph
+      cons "HTMLでは[文書構造/ぶんしょこうぞう]・[注釈/ちゅうしゃく]・コード・リンクに[加/くわ]え、ul/ol/li、table/caption/thead/tbody/tr/th/td、imgを[扱/あつか]う。"
+      cons sentence cons ruby text "全要素" text "ぜんようそ" cons text "の" cons ruby text "列挙" text "れっきょ" cons text "は " cons code "design/markup.json" cons text " を" cons ruby text "正本" text "せいほん" cons text "とし、" cons ruby text "内容" text "ないよう" cons text "モデルと" cons ruby text "型付" text "かたつ" cons text "き" cons ruby text "属性" text "ぞくせい" cons text "は " cons link relative "19-html-fragment.md" none concat cons text "HTML fragment" cons ruby text "契約" text "けいやく" nil cons text " に" cons ruby text "従" text "したが" cons text "う。" nil
+      cons "MathML: math, mrow, mi, mn, mo, mtext, mfrac, msqrt, mroot, msub, msup, msubsup, munder, mover, munderover, mtable, mtr, mtd, mspace。"
+      cons "SVG: svg, g, rect, line, path, polyline, circle, text, title, desc。" nil
+    cons paragraph
+      cons sentence cons ruby text "全要素" text "ぜんようそ" cons text "・" cons ruby text "属性" text "ぞくせい" cons text "・" cons ruby text "属性値制約" text "ぞくせいちせいやく" cons text "の" cons ruby text "正本" text "せいほん" cons text "は " cons code "design/markup.json" cons text "。" nil
+      cons "[属性/ぞくせい]を[受/う]け[入/い]れる[集合/しゅうごう]はglobal、namespace、elementの[各/かく]allowlistの[和/わ]とし、[列挙/れっきょ]されていない[属性/ぞくせい]は[拒否/きょひ]する。"
+      cons "SVGのpath/points[等/とう]は[自由/じゆう]な[文字列/もじれつ]として[受/う]けず、[記述/きじゅつ]した[型付/かたつ]き[構造/こうぞう]からserializerが[綴/つづ]りを[生成/せいせい]する。"
+      cons "userから[任意/にんい]のon*、style、script、foreignObject、SVG image、[任意/にんい]のnamespace URLを[受/う]けない。"
+      cons "HTMLのhrefは[型付/かたつ]きFragment/Artifact/BetweenArtifacts/Externalを[使/つか]い、URIの[許可規則/きょかきそく]と[内部/ないぶ]targetの[存在/そんざい]、[文書間/ぶんしょかん]routeの[対応/たいおう]をそれぞれ[検査/けんさ]する。"
+      cons "HTML imgのsrcは[検査済/けんさず]みartifact[内/ない]の[相対/そうたい]pathであり、[任意/にんい]の[外部画像/がいぶがぞう]URLを[許可/きょか]しない。"
+      cons "[字句検査/じくけんさ]だけでassetの[存在/そんざい]・[内容/ないよう]・[権限/けんげん]を[検証済/けんしょうず]みとせず、[文書準備時/ぶんしょじゅんびじ]の[解決/かいけつ]を[別/べつ]に[要求/ようきゅう]する。"
+      cons "CSSはbackendが[所有/しょゆう]する[固定/こてい]assetであり、[本文文字列/ほんぶんもじれつ]をCSSに[埋/う]め[込/こ]まない。" nil
+    cons paragraph
+      cons "MathMLのmspaceのwidth/height/depthはNonnegativeMathLengthとする。"
+      cons "[非負/ひふ]のcanonical[有限十進/ゆうげんじっしん]にemを[付/つ]け、zeroは0em、[百分率/ひゃくぶんりつ]・[指数表記/しすうひょうき]・[他単位/たたんい]・[負値/ふち]・[冗長/じょうちょう]なzeroを[拒否/きょひ]する。"
+      cons "これはMathML Coreのlength-percentageのうち[本/ほん]profileが[使用/しよう]する[部分集合/ぶぶんしゅうごう]であり、SVGの[座標用/ざひょうよう]Decimalとは[区別/くべつ]する。"
+      cons "[違反/いはん]はInvalidMarkupAttribute。" nil
+    cons paragraph
+      cons "MarkupのTextと[属性値/ぞくせいち]は、UTF-8の[妥当性/だとうせい]に[加/くわ]え、XML 1.0 Charの[集合/しゅうごう]（U+0009、U+000A、U+000D、U+0020..D7FF、U+E000..FFFD、U+10000..10FFFF）を[共通/きょうつう]の[許可集合/きょかしゅうごう]とする。"
+      cons "それ[以外/いがい]はInvalidMarkupCharacterで[拒否/きょひ]し、[削除/さくじょ]や[置換文字/ちかんもじ]による[黙殺/もくさつ]をしない。"
+      cons "Doc/Mathの[一般/いっぱん]Text[値/ち]をこの[出力用制約/しゅつりょくようせいやく]で[狭/せば]めるのではなく、Markup[構築/こうちく]・[検査境界/けんさきょうかい]で[適用/てきよう]する。" nil
+    cons paragraph
+      cons "serializerはHTML5とXMLを[区別/くべつ]し、namespace、void element、[属性/ぞくせい]escapeを[適切/てきせつ]に[出/だ]す。"
+      cons "[属性順/ぞくせいじゅん]は[固定/こてい]。"
+      cons "Textと[属性/ぞくせい]のescapeおよび[改行保存/かいぎょうほぞん]は[再現性章/さいげんせいしょう]に[従/したが]う。"
+      cons "[文書/ぶんしょ]テキストを[文字列置換/もじれつちかん]でHTMLへ[挿入/そうにゅう]しない。" nil
+    nil
+  cons section operations "5. operationの[具体型/ぐたいけい]" body
+    cons paragraph
+      cons sentence cons code "interfaces/contracts.json" cons text " のDomainSyntax/CheckedDomain" cons ruby text "等" text "とう" cons text "はoperationごとに" cons ruby text "本" text "ほん" cons text "ファイルの" cons ruby text "対応" text "たいおう" cons text "domain" cons ruby text "型" text "がた" cons text "へ" cons ruby text "特殊化" text "とくしゅか" cons text "するための" cons ruby text "表記" text "ひょうき" cons text "。" nil
+      cons "[例/たと]えばmath.lowerの[結果/けっか]はMath/Expr、circuit.elaborateの[結果/けっか]はCircuit:PreparedNetlist、doc.prepareの[結果/けっか]はDoc:PreparedArticle。"
+      cons "[異/こと]なるdomainのTypedValueを[同/おな]じ[入力/にゅうりょく]として[受/う]け[付/つ]けない。" nil
+    cons paragraph
+      cons "Grammar packageのReaderExpr/ReadSpec/Binding/StyleのpayloadはGrammarのschemaで[定義/ていぎ]したADTを[使用/しよう]できる。"
+      cons "[参照/さんしょう]を[解決/かいけつ]した[索引/さくいん]tableを[追加/ついか]してよいが、[意味正規形/いみせいきけい]は[参照先/さんしょうさき]の[識別子/しきべつし]と[契約/けいやく]に[従/したが]って[比較/ひかく]する。"
+      cons "[無限再帰/むげんさいき]のRust[型/がた]やSerde[表現/ひょうげん]をwireへ[押/お]し[付/つ]けない。" nil
+    cons paragraph
+      cons "HTMLのdocument shell（html/head/meta/style/body）は[固定/こてい]のshell[生成処理/せいせいしょり]が[作/つく]り、userが[与/あた]えるMarkupFragmentの[要素/ようそ]として[受/う]け[取/と]らない。"
+      cons "[内部/ないぶ]のDoc/Math/SVG namespace[遷移/せんい]とphrasing/block[制約/せいやく]もmarkup.jsonに[従/したが]う。"
+      cons "[最適化/さいてきか]や[資源追加/しげんついか]の[都合/つごう]でこのallowlistを[迂回/うかい]しない。" nil
+    nil
+  nil

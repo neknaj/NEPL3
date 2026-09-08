@@ -1,0 +1,22 @@
+{
+  "source_commit": "cce0e08f2f7fca278a246dad0054eb4eeaa88c5d",
+  "reason": "Initial preparation used Python Windows text newline translation for two JSON files. Git stores LF. Preserve those exact initial input bytes and identities, then select the actual Git blob bytes for fresh-checkout reproducibility. No semantic change, earlier run is retained, and later LF run uses distinct paths.",
+  "files": [
+    {
+      "path": "doc/canonical.json",
+      "working_sha256": "e243a3d7ed3040fd2b3f1b80eb4a4d1ada8186322607e09508bafdcc395f72da",
+      "git_blob_sha256": "4859e11a7c422adf5c72a0ce33a851b93aa4014c2f4ab768b10809dcaaeca942",
+      "working_bytes": 3379,
+      "git_bytes": 3282,
+      "saved": ".tmp/initial-input-bytes/canonical.json"
+    },
+    {
+      "path": "doc/migration/aliases/08-editor.json",
+      "working_sha256": "87f52233dbfd39525e33fda6fe3d3a8c0611936b204d2647ea2ecfb75c16c3e0",
+      "git_blob_sha256": "0e85d24ed98a8e151b582442218b17d3d4f191755c9528582080443fca21746b",
+      "working_bytes": 820,
+      "git_bytes": 774,
+      "saved": ".tmp/initial-input-bytes/08-editor.json"
+    }
+  ]
+}

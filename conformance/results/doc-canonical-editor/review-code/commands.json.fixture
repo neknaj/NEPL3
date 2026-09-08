@@ -1,0 +1,63 @@
+[
+  {
+    "name": "rust-version",
+    "command": [
+      "rustc",
+      "-Vv"
+    ],
+    "head": "5c4ce6184f6d5fa817f472d202101aaf86af3195",
+    "registry_sha256": "45515a15eebb6c1d92b473651ca8ca5fa8adbfda0553f7a98a45465917efe6c2",
+    "deadline_seconds": 900,
+    "elapsed_seconds": 0.36929639999289066,
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "cargo-version",
+    "command": [
+      "cargo",
+      "-V"
+    ],
+    "head": "5c4ce6184f6d5fa817f472d202101aaf86af3195",
+    "registry_sha256": "45515a15eebb6c1d92b473651ca8ca5fa8adbfda0553f7a98a45465917efe6c2",
+    "deadline_seconds": 900,
+    "elapsed_seconds": 0.6248921999940649,
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "build",
+    "command": [
+      "cargo",
+      "build",
+      "--locked",
+      "-p",
+      "nepl3-tools"
+    ],
+    "head": "5c4ce6184f6d5fa817f472d202101aaf86af3195",
+    "registry_sha256": "45515a15eebb6c1d92b473651ca8ca5fa8adbfda0553f7a98a45465917efe6c2",
+    "deadline_seconds": 900,
+    "elapsed_seconds": 109.75409409997519,
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "doc-compile",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--test",
+      "doc",
+      "--no-run"
+    ],
+    "head": "5c4ce6184f6d5fa817f472d202101aaf86af3195",
+    "registry_sha256": "45515a15eebb6c1d92b473651ca8ca5fa8adbfda0553f7a98a45465917efe6c2",
+    "deadline_seconds": 900,
+    "elapsed_seconds": 19.951292000012472,
+    "exit_code": 0,
+    "expected_success": true
+  }
+]

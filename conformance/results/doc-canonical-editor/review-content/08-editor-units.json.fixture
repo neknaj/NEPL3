@@ -1,0 +1,4379 @@
+[
+  {
+    "kind": "Section",
+    "text": "方針一度宣言したgrammar/binding/style情報からeditor機能を導出する。専用parserも同じfactsを返して支援を受ける。共通分類をプログラミング言語の要素に限定しない。",
+    "fields": {
+      "id": "policy",
+      "title": {
+        "kind": "leaf",
+        "token": "\"[方針/ほうしん]\""
+      },
+      "body": {
+        "kind": "Body",
+        "fields": {
+          "blocks": [
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[一度宣言/いちどせんげん]したgrammar/binding/style[情報/じょうほう]からeditor[機能/きのう]を[導出/どうしゅつ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[専用/せんよう]parserも[同/おな]じfactsを[返/かえ]して[支援/しえん]を[受/う]ける。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[共通分類/きょうつうぶんるい]をプログラミング[言語/げんご]の[要素/ようそ]に[限定/げんてい]しない。\""
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "一度宣言したgrammar/binding/style情報からeditor機能を導出する。専用parserも同じfactsを返して支援を受ける。共通分類をプログラミング言語の要素に限定しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[一度宣言/いちどせんげん]したgrammar/binding/style[情報/じょうほう]からeditor[機能/きのう]を[導出/どうしゅつ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[専用/せんよう]parserも[同/おな]じfactsを[返/かえ]して[支援/しえん]を[受/う]ける。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[共通分類/きょうつうぶんるい]をプログラミング[言語/げんご]の[要素/ようそ]に[限定/げんてい]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Section",
+    "text": "1. AnalysisSnapshotの入力と同一性入力はSourceSnapshot集合、profile/package revision集合、明示的なresource/schema環境、解析options。結果はParsed tree、内部views、Scope/Entity/Occurrence、typed Relations、Diagnostics、ExpectedAt、Dependencies。全結果にSnapshotIdとanalysis keyを付ける。keyには言語/reader/providerのrevision、context、操作optionsを含む。spanのある結果を意味値だけのcacheから再利用しない。Binding の prepared request は AnalysisKey の treeDigest、profileDigest、executionDigest、requestDigest を固定する。treeDigest は局所nodeを正準化した完全な ParseTree の NDF/1 CBORに基づき、明示sourceのidentity・URI・元bytes、payload、環境、各選択contextを含む。profileDigest は解決済みProfileの意味identityで、選択schema、provider実装、resource、既定limitsを含む。executionDigest はalias名順の実package execution identity表に基づき、同じ意味でも異なるarena配置を区別する。requestDigest はanalysis ID、型付きBindingOptions、有効な操作Limitsを含む。現在のBindingOptionsは空recordであり、未実装の意味optionを黙って受け入れない。treeDigest・executionDigest・requestDigestは SHA-256(domain || canonical NDF/1 CBOR(value)) とし、tree・execution・requestのdomainはそれぞれ nepl3.analysis.tree/1、nepl3.analysis.execution/1、nepl3.analysis.request/1 に終端zero byteを付ける。profileDigestは既存の解決済みProfile identityアルゴリズムに従う。codecは正準化とhashのWork・割当・出力量を操作Budgetへ計上する。SourceSnapshotを内包した値のhash計算だけで新たなsource lookup権限を付与しない。prepareは明示的に渡されたBudgetとSourceAdmissionで要求を検査し、keyを算出する。実行LimitsはProfileの上限を超えられず、executeのBudgetのLimitsは要求と完全一致しなければならない。prepareと実行は独立した操作予算を使うことも、同一pipelineの累積Budget/SourceAdmissionを共有することもできるが、使用済み量を払い戻さない。keyは有効上限を保持し、開始時の残量やtransportの観測Usageを認証する値ではない。途中停止結果から完了proofを生成しない。初回BindingRequest decoderは元のRust要求を持たず、明示sourceを持つ受信treeと選択済みProfileからkeyを再計算する。自己申告keyやLimitsを通信認証・hostの実行許可へ昇格しない。受信raw要求のprepareでも再計算・一致検査を行い、その間に変更されたtree/contextや条件を拒否する。BoundBindingReplyは全結果枝のkeyと通常BindingReplyを保持する。raw返信decoderの一致検査は意味proofの発行ではなく、完了proofは実BindingPlanの実行からのみ得る。BoundBindingReply.for_source はhostが現在要求しているAnalysisKeyとの完全一致とSourceRefのrevision/digestを検査してから、完了したBindingAnalysisを公開する。これは定義・参照検索の前提となる照合入口であり、positionからの対象選択、定義ジャンプ、参照検索、renameのアルゴリズム完成を意味しない。既存のunkeyed analyzeのFactSet.analysis_idだけを、editor用のstale判定として使わない。",
+    "fields": {
+      "id": "snapshot",
+      "title": {
+        "kind": "leaf",
+        "token": "\"1. AnalysisSnapshotの[入力/にゅうりょく]と[同一性/どういつせい]\""
+      },
+      "body": {
+        "kind": "Body",
+        "fields": {
+          "blocks": [
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[入力/にゅうりょく]はSourceSnapshot[集合/しゅうごう]、profile/package revision[集合/しゅうごう]、[明示的/めいじてき]なresource/schema[環境/かんきょう]、[解析/かいせき]options。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[結果/けっか]はParsed tree、[内部/ないぶ]views、Scope/Entity/Occurrence、typed Relations、Diagnostics、ExpectedAt、Dependencies。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[全結果/ぜんけっか]にSnapshotIdとanalysis keyを[付/つ]ける。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"keyには[言語/げんご]/reader/providerのrevision、context、[操作/そうさ]optionsを[含/ふく]む。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"spanのある[結果/けっか]を[意味値/いみち]だけのcacheから[再利用/さいりよう]しない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"Binding の prepared request は AnalysisKey の treeDigest、profileDigest、executionDigest、requestDigest を[固定/こてい]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"treeDigest は[局所/きょくしょ]nodeを[正準化/せいじゅんか]した[完全/かんぜん]な ParseTree の NDF/1 CBORに[基/もと]づき、[明示/めいじ]sourceのidentity・URI・[元/もと]bytes、payload、[環境/かんきょう]、[各選択/かくせんたく]contextを[含/ふく]む。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"profileDigest は[解決済/かいけつず]みProfileの[意味/いみ]identityで、[選択/せんたく]schema、provider[実装/じっそう]、resource、[既定/きてい]limitsを[含/ふく]む。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"executionDigest はalias[名順/めいじゅん]の[実/じつ]package execution identity[表/ひょう]に[基/もと]づき、[同/おな]じ[意味/いみ]でも[異/こと]なるarena[配置/はいち]を[区別/くべつ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"requestDigest はanalysis ID、[型付/かたつ]きBindingOptions、[有効/ゆうこう]な[操作/そうさ]Limitsを[含/ふく]む。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[現在/げんざい]のBindingOptionsは[空/くう]recordであり、[未実装/みじっそう]の[意味/いみ]optionを[黙/だま]って[受/う]け[入/い]れない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "Sentence",
+                    "fields": {
+                      "inlines": [
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "treeDigest・executionDigest・requestDigestは "
+                          }
+                        },
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "SHA-256(domain || canonical NDF/1 CBOR(value))"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": " とし、tree・execution・requestのdomainはそれぞれ "
+                          }
+                        },
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "nepl3.analysis.tree/1"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "、"
+                          }
+                        },
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "nepl3.analysis.execution/1"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "、"
+                          }
+                        },
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "nepl3.analysis.request/1"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": " に"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "終端"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "しゅうたん"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "zero byteを"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "付"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "つ"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "ける。"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"profileDigestは[既存/きそん]の[解決済/かいけつず]みProfile identityアルゴリズムに[従/したが]う。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"codecは[正準化/せいじゅんか]とhashのWork・[割当/わりあて]・[出力量/しゅつりょくりょう]を[操作/そうさ]Budgetへ[計上/けいじょう]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"SourceSnapshotを[内包/ないほう]した[値/あたい]のhash[計算/けいさん]だけで[新/あら]たなsource lookup[権限/けんげん]を[付与/ふよ]しない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"prepareは[明示的/めいじてき]に[渡/わた]されたBudgetとSourceAdmissionで[要求/ようきゅう]を[検査/けんさ]し、keyを[算出/さんしゅつ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[実行/じっこう]LimitsはProfileの[上限/じょうげん]を[超/こ]えられず、executeのBudgetのLimitsは[要求/ようきゅう]と[完全一致/かんぜんいっち]しなければならない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"prepareと[実行/じっこう]は[独立/どくりつ]した[操作予算/そうさよさん]を[使/つか]うことも、[同一/どういつ]pipelineの[累積/るいせき]Budget/SourceAdmissionを[共有/きょうゆう]することもできるが、[使用済/しようず]み[量/りょう]を[払/はら]い[戻/もど]さない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"keyは[有効上限/ゆうこうじょうげん]を[保持/ほじ]し、[開始時/かいしじ]の[残量/ざんりょう]やtransportの[観測/かんそく]Usageを[認証/にんしょう]する[値/あたい]ではない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[途中停止結果/とちゅうていしけっか]から[完了/かんりょう]proofを[生成/せいせい]しない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[初回/しょかい]BindingRequest decoderは[元/もと]のRust[要求/ようきゅう]を[持/も]たず、[明示/めいじ]sourceを[持/も]つ[受信/じゅしん]treeと[選択済/せんたくず]みProfileからkeyを[再計算/さいけいさん]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[自己申告/じこしんこく]keyやLimitsを[通信認証/つうしんにんしょう]・hostの[実行許可/じっこうきょか]へ[昇格/しょうかく]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[受信/じゅしん]raw[要求/ようきゅう]のprepareでも[再計算/さいけいさん]・[一致検査/いっちけんさ]を[行/おこな]い、その[間/あいだ]に[変更/へんこう]されたtree/contextや[条件/じょうけん]を[拒否/きょひ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"BoundBindingReplyは[全結果枝/ぜんけっかえだ]のkeyと[通常/つうじょう]BindingReplyを[保持/ほじ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"raw[返信/へんしん]decoderの[一致検査/いっちけんさ]は[意味/いみ]proofの[発行/はっこう]ではなく、[完了/かんりょう]proofは[実/じつ]BindingPlanの[実行/じっこう]からのみ[得/え]る。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"BoundBindingReply.for_source はhostが[現在要求/げんざいようきゅう]しているAnalysisKeyとの[完全一致/かんぜんいっち]とSourceRefのrevision/digestを[検査/けんさ]してから、[完了/かんりょう]したBindingAnalysisを[公開/こうかい]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"これは[定義/ていぎ]・[参照検索/さんしょうけんさく]の[前提/ぜんてい]となる[照合入口/しょうごういりぐち]であり、positionからの[対象選択/たいしょうせんたく]、[定義/ていぎ]ジャンプ、[参照検索/さんしょうけんさく]、renameのアルゴリズム[完成/かんせい]を[意味/いみ]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[既存/きそん]のunkeyed analyzeのFactSet.analysis_idだけを、editor[用/よう]のstale[判定/はんてい]として[使/つか]わない。\""
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "入力はSourceSnapshot集合、profile/package revision集合、明示的なresource/schema環境、解析options。結果はParsed tree、内部views、Scope/Entity/Occurrence、typed Relations、Diagnostics、ExpectedAt、Dependencies。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[入力/にゅうりょく]はSourceSnapshot[集合/しゅうごう]、profile/package revision[集合/しゅうごう]、[明示的/めいじてき]なresource/schema[環境/かんきょう]、[解析/かいせき]options。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[結果/けっか]はParsed tree、[内部/ないぶ]views、Scope/Entity/Occurrence、typed Relations、Diagnostics、ExpectedAt、Dependencies。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "全結果にSnapshotIdとanalysis keyを付ける。keyには言語/reader/providerのrevision、context、操作optionsを含む。spanのある結果を意味値だけのcacheから再利用しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[全結果/ぜんけっか]にSnapshotIdとanalysis keyを[付/つ]ける。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"keyには[言語/げんご]/reader/providerのrevision、context、[操作/そうさ]optionsを[含/ふく]む。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"spanのある[結果/けっか]を[意味値/いみち]だけのcacheから[再利用/さいりよう]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "Binding の prepared request は AnalysisKey の treeDigest、profileDigest、executionDigest、requestDigest を固定する。treeDigest は局所nodeを正準化した完全な ParseTree の NDF/1 CBORに基づき、明示sourceのidentity・URI・元bytes、payload、環境、各選択contextを含む。profileDigest は解決済みProfileの意味identityで、選択schema、provider実装、resource、既定limitsを含む。executionDigest はalias名順の実package execution identity表に基づき、同じ意味でも異なるarena配置を区別する。requestDigest はanalysis ID、型付きBindingOptions、有効な操作Limitsを含む。現在のBindingOptionsは空recordであり、未実装の意味optionを黙って受け入れない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"Binding の prepared request は AnalysisKey の treeDigest、profileDigest、executionDigest、requestDigest を[固定/こてい]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"treeDigest は[局所/きょくしょ]nodeを[正準化/せいじゅんか]した[完全/かんぜん]な ParseTree の NDF/1 CBORに[基/もと]づき、[明示/めいじ]sourceのidentity・URI・[元/もと]bytes、payload、[環境/かんきょう]、[各選択/かくせんたく]contextを[含/ふく]む。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"profileDigest は[解決済/かいけつず]みProfileの[意味/いみ]identityで、[選択/せんたく]schema、provider[実装/じっそう]、resource、[既定/きてい]limitsを[含/ふく]む。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"executionDigest はalias[名順/めいじゅん]の[実/じつ]package execution identity[表/ひょう]に[基/もと]づき、[同/おな]じ[意味/いみ]でも[異/こと]なるarena[配置/はいち]を[区別/くべつ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"requestDigest はanalysis ID、[型付/かたつ]きBindingOptions、[有効/ゆうこう]な[操作/そうさ]Limitsを[含/ふく]む。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[現在/げんざい]のBindingOptionsは[空/くう]recordであり、[未実装/みじっそう]の[意味/いみ]optionを[黙/だま]って[受/う]け[入/い]れない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "treeDigest・executionDigest・requestDigestは SHA-256(domain || canonical NDF/1 CBOR(value)) とし、tree・execution・requestのdomainはそれぞれ nepl3.analysis.tree/1、nepl3.analysis.execution/1、nepl3.analysis.request/1 に終端zero byteを付ける。profileDigestは既存の解決済みProfile identityアルゴリズムに従う。codecは正準化とhashのWork・割当・出力量を操作Budgetへ計上する。SourceSnapshotを内包した値のhash計算だけで新たなsource lookup権限を付与しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "treeDigest・executionDigest・requestDigestは "
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "SHA-256(domain || canonical NDF/1 CBOR(value))"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " とし、tree・execution・requestのdomainはそれぞれ "
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "nepl3.analysis.tree/1"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "、"
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "nepl3.analysis.execution/1"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "、"
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "nepl3.analysis.request/1"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " に"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "終端"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "しゅうたん"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "zero byteを"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "付"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "つ"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "ける。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "leaf",
+          "token": "\"profileDigestは[既存/きそん]の[解決済/かいけつず]みProfile identityアルゴリズムに[従/したが]う。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"codecは[正準化/せいじゅんか]とhashのWork・[割当/わりあて]・[出力量/しゅつりょくりょう]を[操作/そうさ]Budgetへ[計上/けいじょう]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"SourceSnapshotを[内包/ないほう]した[値/あたい]のhash[計算/けいさん]だけで[新/あら]たなsource lookup[権限/けんげん]を[付与/ふよ]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "prepareは明示的に渡されたBudgetとSourceAdmissionで要求を検査し、keyを算出する。実行LimitsはProfileの上限を超えられず、executeのBudgetのLimitsは要求と完全一致しなければならない。prepareと実行は独立した操作予算を使うことも、同一pipelineの累積Budget/SourceAdmissionを共有することもできるが、使用済み量を払い戻さない。keyは有効上限を保持し、開始時の残量やtransportの観測Usageを認証する値ではない。途中停止結果から完了proofを生成しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"prepareは[明示的/めいじてき]に[渡/わた]されたBudgetとSourceAdmissionで[要求/ようきゅう]を[検査/けんさ]し、keyを[算出/さんしゅつ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[実行/じっこう]LimitsはProfileの[上限/じょうげん]を[超/こ]えられず、executeのBudgetのLimitsは[要求/ようきゅう]と[完全一致/かんぜんいっち]しなければならない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"prepareと[実行/じっこう]は[独立/どくりつ]した[操作予算/そうさよさん]を[使/つか]うことも、[同一/どういつ]pipelineの[累積/るいせき]Budget/SourceAdmissionを[共有/きょうゆう]することもできるが、[使用済/しようず]み[量/りょう]を[払/はら]い[戻/もど]さない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"keyは[有効上限/ゆうこうじょうげん]を[保持/ほじ]し、[開始時/かいしじ]の[残量/ざんりょう]やtransportの[観測/かんそく]Usageを[認証/にんしょう]する[値/あたい]ではない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[途中停止結果/とちゅうていしけっか]から[完了/かんりょう]proofを[生成/せいせい]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "初回BindingRequest decoderは元のRust要求を持たず、明示sourceを持つ受信treeと選択済みProfileからkeyを再計算する。自己申告keyやLimitsを通信認証・hostの実行許可へ昇格しない。受信raw要求のprepareでも再計算・一致検査を行い、その間に変更されたtree/contextや条件を拒否する。BoundBindingReplyは全結果枝のkeyと通常BindingReplyを保持する。raw返信decoderの一致検査は意味proofの発行ではなく、完了proofは実BindingPlanの実行からのみ得る。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[初回/しょかい]BindingRequest decoderは[元/もと]のRust[要求/ようきゅう]を[持/も]たず、[明示/めいじ]sourceを[持/も]つ[受信/じゅしん]treeと[選択済/せんたくず]みProfileからkeyを[再計算/さいけいさん]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[自己申告/じこしんこく]keyやLimitsを[通信認証/つうしんにんしょう]・hostの[実行許可/じっこうきょか]へ[昇格/しょうかく]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[受信/じゅしん]raw[要求/ようきゅう]のprepareでも[再計算/さいけいさん]・[一致検査/いっちけんさ]を[行/おこな]い、その[間/あいだ]に[変更/へんこう]されたtree/contextや[条件/じょうけん]を[拒否/きょひ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"BoundBindingReplyは[全結果枝/ぜんけっかえだ]のkeyと[通常/つうじょう]BindingReplyを[保持/ほじ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"raw[返信/へんしん]decoderの[一致検査/いっちけんさ]は[意味/いみ]proofの[発行/はっこう]ではなく、[完了/かんりょう]proofは[実/じつ]BindingPlanの[実行/じっこう]からのみ[得/え]る。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "BoundBindingReply.for_source はhostが現在要求しているAnalysisKeyとの完全一致とSourceRefのrevision/digestを検査してから、完了したBindingAnalysisを公開する。これは定義・参照検索の前提となる照合入口であり、positionからの対象選択、定義ジャンプ、参照検索、renameのアルゴリズム完成を意味しない。既存のunkeyed analyzeのFactSet.analysis_idだけを、editor用のstale判定として使わない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"BoundBindingReply.for_source はhostが[現在要求/げんざいようきゅう]しているAnalysisKeyとの[完全一致/かんぜんいっち]とSourceRefのrevision/digestを[検査/けんさ]してから、[完了/かんりょう]したBindingAnalysisを[公開/こうかい]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"これは[定義/ていぎ]・[参照検索/さんしょうけんさく]の[前提/ぜんてい]となる[照合入口/しょうごういりぐち]であり、positionからの[対象選択/たいしょうせんたく]、[定義/ていぎ]ジャンプ、[参照検索/さんしょうけんさく]、renameのアルゴリズム[完成/かんせい]を[意味/いみ]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[既存/きそん]のunkeyed analyzeのFactSet.analysis_idだけを、editor[用/よう]のstale[判定/はんてい]として[使/つか]わない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Section",
+    "text": "2. 自動で得られる機能schemaのform/leaf/fieldとreader captureから構文ハイライト、構造的selection、expected categoryの補完を提供する。binding/reference/export/importから定義ジャンプ、参照検索、未定義/重複診断、scope内の候補補完を提供する。name fieldとenclosing rangeからoutlineを作る。ドキュメントfieldを宣言すればhoverに出す。型推論、回路幅、数値計算結果等はdomain factsの追加で精度を上げる。grammarだけから任意domainの意味を推測したと主張しない。手書きreaderにはview/factsの同じcontractを要求する。内部viewなしならtoken全体のfallbackだけ。すべてのcustom readerへ精密な内部支援を自動生成できるとはしない。",
+    "fields": {
+      "id": "derived",
+      "title": {
+        "kind": "leaf",
+        "token": "\"2. [自動/じどう]で[得/え]られる[機能/きのう]\""
+      },
+      "body": {
+        "kind": "Body",
+        "fields": {
+          "blocks": [
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"schemaのform/leaf/fieldとreader captureから[構文/こうぶん]ハイライト、[構造的/こうぞうてき]selection、expected categoryの[補完/ほかん]を[提供/ていきょう]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"binding/reference/export/importから[定義/ていぎ]ジャンプ、[参照検索/さんしょうけんさく]、[未定義/みていぎ]/[重複診断/じゅうふくしんだん]、scope[内/ない]の[候補補完/こうほほかん]を[提供/ていきょう]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"name fieldとenclosing rangeからoutlineを[作/つく]る。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"ドキュメントfieldを[宣言/せんげん]すればhoverに[出/だ]す。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[型推論/かたすいろん]、[回路幅/かいろはば]、[数値計算結果等/すうちけいさんけっかなど]はdomain factsの[追加/ついか]で[精度/せいど]を[上/あ]げる。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"grammarだけから[任意/にんい]domainの[意味/いみ]を[推測/すいそく]したと[主張/しゅちょう]しない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[手書/てが]きreaderにはview/factsの[同/おな]じcontractを[要求/ようきゅう]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[内部/ないぶ]viewなしならtoken[全体/ぜんたい]のfallbackだけ。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"すべてのcustom readerへ[精密/せいみつ]な[内部支援/ないぶしえん]を[自動生成/じどうせいせい]できるとはしない。\""
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "schemaのform/leaf/fieldとreader captureから構文ハイライト、構造的selection、expected categoryの補完を提供する。binding/reference/export/importから定義ジャンプ、参照検索、未定義/重複診断、scope内の候補補完を提供する。name fieldとenclosing rangeからoutlineを作る。ドキュメントfieldを宣言すればhoverに出す。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"schemaのform/leaf/fieldとreader captureから[構文/こうぶん]ハイライト、[構造的/こうぞうてき]selection、expected categoryの[補完/ほかん]を[提供/ていきょう]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"binding/reference/export/importから[定義/ていぎ]ジャンプ、[参照検索/さんしょうけんさく]、[未定義/みていぎ]/[重複診断/じゅうふくしんだん]、scope[内/ない]の[候補補完/こうほほかん]を[提供/ていきょう]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"name fieldとenclosing rangeからoutlineを[作/つく]る。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"ドキュメントfieldを[宣言/せんげん]すればhoverに[出/だ]す。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "型推論、回路幅、数値計算結果等はdomain factsの追加で精度を上げる。grammarだけから任意domainの意味を推測したと主張しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[型推論/かたすいろん]、[回路幅/かいろはば]、[数値計算結果等/すうちけいさんけっかなど]はdomain factsの[追加/ついか]で[精度/せいど]を[上/あ]げる。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"grammarだけから[任意/にんい]domainの[意味/いみ]を[推測/すいそく]したと[主張/しゅちょう]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "手書きreaderにはview/factsの同じcontractを要求する。内部viewなしならtoken全体のfallbackだけ。すべてのcustom readerへ精密な内部支援を自動生成できるとはしない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[手書/てが]きreaderにはview/factsの[同/おな]じcontractを[要求/ようきゅう]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[内部/ないぶ]viewなしならtoken[全体/ぜんたい]のfallbackだけ。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"すべてのcustom readerへ[精密/せいみつ]な[内部支援/ないぶしえん]を[自動生成/じどうせいせい]できるとはしない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Section",
+    "text": "3. regionの選択source positionから、同一snapshot上で包含する最小のfield/elementを選ぶ。grammar priority、最内側、宣言順でtie-breakを固定する。sentence内のreadingを問い合わせたらsentence token全体よりreading viewを優先する。現在の analysis::region::regions はprepared Binding入力の検査済みtree/Profileと、明示ReaderFactBatch sidecarを受ける。RegionKey は既存AnalysisKeyとsidecarのdigestの組である。sidecarは RegionSidecar { facts: Option<List<ReaderFactBatch>> } を正準NDF/1 CBORへ符号化し、SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes) で識別する。Foreign pathとnodeはtreeの正準DFS番号へ写し、batch/fact/triviaの順序は保存する。NoneはSyntaxOnly、Some（空列を含む）はReaderFactsとして区別し、入力しなかったCaptureをView名から推測しない。sidecarのentryは所有bundle/nodeの保存selectionと照合する。nodeのあるbatchのtriviaはToken.leadingTriviaの完全な再掲であり、別tokenをSkippedと名乗って混入できない。Captureは所有bundleの宣言SourceMapを使い、token headまたは正式なskip triviaへの包含を検査する。Presentation/Relationは通常reader契約どおり明示source/schemaの整合を検査し、消費範囲への包含条件を追加しない。所有bundleのsource/map不足をForeignの別表で補わない。これらは構造と出自参照の検査であり、raw sidecarが実providerから返されたことを認証しない。RegionRequestはRegionKey、SourceRef、byte offsetを持つ。key/revision/digestとUTF-8 scalar境界を照合し、範囲は半開区間とする。返すSourceRegionは正準bundle/node、field/element番号またはtoken所有Viewのroot/field/child path、表示source span、元のlogical span、priority、depth、宣言順、PresentationClassを保持する。nodeなしの末尾/skip-only batchはnode=Noneであり、架空のroot所有nodeを作らない。通常node/field/headのdepthはその宣言ownerの深さ、Viewはそのownerに内部field/childの深さを加える。子nodeは親fieldより内側となる。同じ長さならpriority降順、depth降順、宣言順で選ぶ。宣言順はrootからfield順のDFSとViewの宣言順で、arenaの保存順とは区別する。共有DAGの同じ対象には最初の宣言順と実際の最深到達経路を保持する。回復nodeはRecoveryとして区別し、UnknownHeadのUnparsed範囲へ推測した子を追加しない。Missingの空anchorやEOFを直前の名前に吸着させない。表示用SourceMap投影は領域ownerの明示表だけをたどる。隣接Exact区間は同じsourceとbyte変位の連続被覆として結合し、区間分割や表順で結果を変えない。完全Exact、部分被覆ExactFragment、保守的なTransformedを区別し、多義的な表示候補を保持する。この表示情報はrenameの一意逆写像や位置単位の名前解決を証明しない。Foreign fieldの子位置には子bundleの表を使い、guestだけにあるmapをhost nodeへ適用しない。map探索の深さは構文/View ownerの深さに合成して計量する。RegionReplyは全表示regionと選択index、またはtyped Invalid/Stopped、Usage-only Report、明示source閉包を返す。停止で候補途中列を公開しない。初回tree/sidecar/request復元は元Rust要求やambient sourceによる補完を必要としない。返信のCompleteは対応する準備入力から構造選択を予算付きで再計算して照合する。これはreader実行認証、Binding完了proof、別process費用計測の代わりではない。一般regionを用いるdefinition/references入口は次節のRegionQueryであり、既存のOccurrenceベース入口の動作を変更しない。型付きregion列の構築はWork・Nodes・Depth・AllocationUnitsとsource受入を計上し、まだ生成していないserializationのbyte数をOutputBytesへ推計加算しない。native返信のReportはその計算終了時点のUsageである。実NDF/1 CBOR encodeは同じ操作予算へ実出力のOutputBytesを生成前に課金する。従ってnativeのOutputBytes上限0で型付き結果が得られることと、実encodeがOutputLimitで停止することは別の境界であり、返信中のUsageをその後のserializationや外部transportまで含む総費用と扱わない。highlightは内部regionへ分割し、leafに近い具体的classを優先する。overlapを持つ元データは保存するが、LSPへは非重複・source順・単一行に正規化したspan列を返す。色はthemeに委ねる。",
+    "fields": {
+      "id": "region",
+      "title": {
+        "kind": "leaf",
+        "token": "\"3. regionの[選択/せんたく]\""
+      },
+      "body": {
+        "kind": "Body",
+        "fields": {
+          "blocks": [
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"source positionから、[同一/どういつ]snapshot[上/じょう]で[包含/ほうがん]する[最小/さいしょう]のfield/elementを[選/えら]ぶ。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"grammar priority、[最内側/さいうちがわ]、[宣言順/せんげんじゅん]でtie-breakを[固定/こてい]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"sentence[内/ない]のreadingを[問/と]い[合/あ]わせたらsentence token[全体/ぜんたい]よりreading viewを[優先/ゆうせん]する。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "Sentence",
+                    "fields": {
+                      "inlines": [
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "現在"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "げんざい"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "の "
+                          }
+                        },
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "analysis::region::regions"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": " はprepared Binding"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "入力"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "にゅうりょく"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "の"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "検査済"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "けんさず"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "みtree/Profileと、"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "明示"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "めいじ"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "ReaderFactBatch sidecarを"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "受"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "う"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "ける。"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "Sentence",
+                    "fields": {
+                      "inlines": [
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "RegionKey"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": " は"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "既存"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "きそん"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "AnalysisKeyとsidecarのdigestの"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "組"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "くみ"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "である。"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "Sentence",
+                    "fields": {
+                      "inlines": [
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "sidecarは "
+                          }
+                        },
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "RegionSidecar { facts: Option<List<ReaderFactBatch>> }"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": " を"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "正準"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "せいじゅん"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "NDF/1 CBORへ"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "符号化"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "ふごうか"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "し、"
+                          }
+                        },
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": " で"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "識別"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "しきべつ"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "する。"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"Foreign pathとnodeはtreeの[正準/せいじゅん]DFS[番号/ばんごう]へ[写/うつ]し、batch/fact/triviaの[順序/じゅんじょ]は[保存/ほぞん]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"NoneはSyntaxOnly、Some（[空列/くうれつ]を[含/ふく]む）はReaderFactsとして[区別/くべつ]し、[入力/にゅうりょく]しなかったCaptureをView[名/めい]から[推測/すいそく]しない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"sidecarのentryは[所有/しょゆう]bundle/nodeの[保存/ほぞん]selectionと[照合/しょうごう]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"nodeのあるbatchのtriviaはToken.leadingTriviaの[完全/かんぜん]な[再掲/さいけい]であり、[別/べつ]tokenをSkippedと[名乗/なの]って[混入/こんにゅう]できない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"Captureは[所有/しょゆう]bundleの[宣言/せんげん]SourceMapを[使/つか]い、token headまたは[正式/せいしき]なskip triviaへの[包含/ほうがん]を[検査/けんさ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"Presentation/Relationは[通常/つうじょう]reader[契約/けいやく]どおり[明示/めいじ]source/schemaの[整合/せいごう]を[検査/けんさ]し、[消費範囲/しょうひはんい]への[包含条件/ほうがんじょうけん]を[追加/ついか]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[所有/しょゆう]bundleのsource/map[不足/ふそく]をForeignの[別表/べっぴょう]で[補/おぎな]わない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"これらは[構造/こうぞう]と[出自参照/しゅつじさんしょう]の[検査/けんさ]であり、raw sidecarが[実/じつ]providerから[返/かえ]されたことを[認証/にんしょう]しない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"RegionRequestはRegionKey、SourceRef、byte offsetを[持/も]つ。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"key/revision/digestとUTF-8 scalar[境界/きょうかい]を[照合/しょうごう]し、[範囲/はんい]は[半開区間/はんかいくかん]とする。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[返/かえ]すSourceRegionは[正準/せいじゅん]bundle/node、field/element[番号/ばんごう]またはtoken[所有/しょゆう]Viewのroot/field/child path、[表示/ひょうじ]source span、[元/もと]のlogical span、priority、depth、[宣言順/せんげんじゅん]、PresentationClassを[保持/ほじ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"nodeなしの[末尾/まつび]/skip-only batchはnode=Noneであり、[架空/かくう]のroot[所有/しょゆう]nodeを[作/つく]らない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[通常/つうじょう]node/field/headのdepthはその[宣言/せんげん]ownerの[深/ふか]さ、Viewはそのownerに[内部/ないぶ]field/childの[深/ふか]さを[加/くわ]える。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[子/こ]nodeは[親/おや]fieldより[内側/うちがわ]となる。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[同/おな]じ[長/なが]さならpriority[降順/こうじゅん]、depth[降順/こうじゅん]、[宣言順/せんげんじゅん]で[選/えら]ぶ。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[宣言順/せんげんじゅん]はrootからfield[順/じゅん]のDFSとViewの[宣言順/せんげんじゅん]で、arenaの[保存順/ほぞんじゅん]とは[区別/くべつ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[共有/きょうゆう]DAGの[同/おな]じ[対象/たいしょう]には[最初/さいしょ]の[宣言順/せんげんじゅん]と[実際/じっさい]の[最深到達経路/さいしんとうたつけいろ]を[保持/ほじ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[回復/かいふく]nodeはRecoveryとして[区別/くべつ]し、UnknownHeadのUnparsed[範囲/はんい]へ[推測/すいそく]した[子/こ]を[追加/ついか]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"Missingの[空/くう]anchorやEOFを[直前/ちょくぜん]の[名前/なまえ]に[吸着/きゅうちゃく]させない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[表示用/ひょうじよう]SourceMap[投影/とうえい]は[領域/りょういき]ownerの[明示表/めいじひょう]だけをたどる。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[隣接/りんせつ]Exact[区間/くかん]は[同/おな]じsourceとbyte[変位/へんい]の[連続被覆/れんぞくひふく]として[結合/けつごう]し、[区間分割/くかんぶんかつ]や[表順/ひょうじゅん]で[結果/けっか]を[変/か]えない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[完全/かんぜん]Exact、[部分被覆/ぶぶんひふく]ExactFragment、[保守的/ほしゅてき]なTransformedを[区別/くべつ]し、[多義的/たぎてき]な[表示候補/ひょうじこうほ]を[保持/ほじ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"この[表示情報/ひょうじじょうほう]はrenameの[一意逆写像/いちいぎゃくしゃぞう]や[位置単位/いちたんい]の[名前解決/なまえかいけつ]を[証明/しょうめい]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"Foreign fieldの[子位置/こいち]には[子/こ]bundleの[表/ひょう]を[使/つか]い、guestだけにあるmapをhost nodeへ[適用/てきよう]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"map[探索/たんさく]の[深/ふか]さは[構文/こうぶん]/View ownerの[深/ふか]さに[合成/ごうせい]して[計量/けいりょう]する。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"RegionReplyは[全表示/ぜんひょうじ]regionと[選択/せんたく]index、またはtyped Invalid/Stopped、Usage-only Report、[明示/めいじ]source[閉包/へいほう]を[返/かえ]す。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[停止/ていし]で[候補途中列/こうほとちゅうれつ]を[公開/こうかい]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[初回/しょかい]tree/sidecar/request[復元/ふくげん]は[元/もと]Rust[要求/ようきゅう]やambient sourceによる[補完/ほかん]を[必要/ひつよう]としない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[返信/へんしん]のCompleteは[対応/たいおう]する[準備入力/じゅんびにゅうりょく]から[構造選択/こうぞうせんたく]を[予算付/よさんつ]きで[再計算/さいけいさん]して[照合/しょうごう]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"これはreader[実行認証/じっこうにんしょう]、Binding[完了/かんりょう]proof、[別/べつ]process[費用計測/ひようけいそく]の[代/か]わりではない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[一般/いっぱん]regionを[用/もち]いるdefinition/references[入口/いりぐち]は[次節/じせつ]のRegionQueryであり、[既存/きそん]のOccurrenceベース[入口/いりぐち]の[動作/どうさ]を[変更/へんこう]しない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[型付/かたつ]きregion[列/れつ]の[構築/こうちく]はWork・Nodes・Depth・AllocationUnitsとsource[受入/うけいれ]を[計上/けいじょう]し、まだ[生成/せいせい]していないserializationのbyte[数/すう]をOutputBytesへ[推計加算/すいけいかさん]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"native[返信/へんしん]のReportはその[計算終了時点/けいさんしゅうりょうじてん]のUsageである。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[実/じつ]NDF/1 CBOR encodeは[同/おな]じ[操作予算/そうさよさん]へ[実出力/じつしゅつりょく]のOutputBytesを[生成前/せいせいまえ]に[課金/かきん]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[従/したが]ってnativeのOutputBytes[上限/じょうげん]0で[型付/かたつ]き[結果/けっか]が[得/え]られることと、[実/じつ]encodeがOutputLimitで[停止/ていし]することは[別/べつ]の[境界/きょうかい]であり、[返信中/へんしんちゅう]のUsageをその[後/ご]のserializationや[外部/がいぶ]transportまで[含/ふく]む[総費用/そうひよう]と[扱/あつか]わない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"highlightは[内部/ないぶ]regionへ[分割/ぶんかつ]し、leafに[近/ちか]い[具体的/ぐたいてき]classを[優先/ゆうせん]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"overlapを[持/も]つ[元/もと]データは[保存/ほぞん]するが、LSPへは[非重複/ひじゅうふく]・source[順/じゅん]・[単一行/たんいつぎょう]に[正規化/せいきか]したspan[列/れつ]を[返/かえ]す。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[色/いろ]はthemeに[委/ゆだ]ねる。\""
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "source positionから、同一snapshot上で包含する最小のfield/elementを選ぶ。grammar priority、最内側、宣言順でtie-breakを固定する。sentence内のreadingを問い合わせたらsentence token全体よりreading viewを優先する。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"source positionから、[同一/どういつ]snapshot[上/じょう]で[包含/ほうがん]する[最小/さいしょう]のfield/elementを[選/えら]ぶ。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"grammar priority、[最内側/さいうちがわ]、[宣言順/せんげんじゅん]でtie-breakを[固定/こてい]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"sentence[内/ない]のreadingを[問/と]い[合/あ]わせたらsentence token[全体/ぜんたい]よりreading viewを[優先/ゆうせん]する。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "現在の analysis::region::regions はprepared Binding入力の検査済みtree/Profileと、明示ReaderFactBatch sidecarを受ける。RegionKey は既存AnalysisKeyとsidecarのdigestの組である。sidecarは RegionSidecar { facts: Option<List<ReaderFactBatch>> } を正準NDF/1 CBORへ符号化し、SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes) で識別する。Foreign pathとnodeはtreeの正準DFS番号へ写し、batch/fact/triviaの順序は保存する。NoneはSyntaxOnly、Some（空列を含む）はReaderFactsとして区別し、入力しなかったCaptureをView名から推測しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "現在"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "げんざい"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "の "
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "analysis::region::regions"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " はprepared Binding"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "入力"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "にゅうりょく"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "の"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "検査済"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "けんさず"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "みtree/Profileと、"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "明示"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "めいじ"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "ReaderFactBatch sidecarを"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "受"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "う"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "ける。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "RegionKey"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " は"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "既存"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "きそん"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "AnalysisKeyとsidecarのdigestの"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "組"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "くみ"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "である。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "sidecarは "
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "RegionSidecar { facts: Option<List<ReaderFactBatch>> }"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " を"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "正準"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "せいじゅん"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "NDF/1 CBORへ"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "符号化"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "ふごうか"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "し、"
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " で"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "識別"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "しきべつ"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "する。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Foreign pathとnodeはtreeの[正準/せいじゅん]DFS[番号/ばんごう]へ[写/うつ]し、batch/fact/triviaの[順序/じゅんじょ]は[保存/ほぞん]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"NoneはSyntaxOnly、Some（[空列/くうれつ]を[含/ふく]む）はReaderFactsとして[区別/くべつ]し、[入力/にゅうりょく]しなかったCaptureをView[名/めい]から[推測/すいそく]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "sidecarのentryは所有bundle/nodeの保存selectionと照合する。nodeのあるbatchのtriviaはToken.leadingTriviaの完全な再掲であり、別tokenをSkippedと名乗って混入できない。Captureは所有bundleの宣言SourceMapを使い、token headまたは正式なskip triviaへの包含を検査する。Presentation/Relationは通常reader契約どおり明示source/schemaの整合を検査し、消費範囲への包含条件を追加しない。所有bundleのsource/map不足をForeignの別表で補わない。これらは構造と出自参照の検査であり、raw sidecarが実providerから返されたことを認証しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"sidecarのentryは[所有/しょゆう]bundle/nodeの[保存/ほぞん]selectionと[照合/しょうごう]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"nodeのあるbatchのtriviaはToken.leadingTriviaの[完全/かんぜん]な[再掲/さいけい]であり、[別/べつ]tokenをSkippedと[名乗/なの]って[混入/こんにゅう]できない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Captureは[所有/しょゆう]bundleの[宣言/せんげん]SourceMapを[使/つか]い、token headまたは[正式/せいしき]なskip triviaへの[包含/ほうがん]を[検査/けんさ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Presentation/Relationは[通常/つうじょう]reader[契約/けいやく]どおり[明示/めいじ]source/schemaの[整合/せいごう]を[検査/けんさ]し、[消費範囲/しょうひはんい]への[包含条件/ほうがんじょうけん]を[追加/ついか]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[所有/しょゆう]bundleのsource/map[不足/ふそく]をForeignの[別表/べっぴょう]で[補/おぎな]わない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"これらは[構造/こうぞう]と[出自参照/しゅつじさんしょう]の[検査/けんさ]であり、raw sidecarが[実/じつ]providerから[返/かえ]されたことを[認証/にんしょう]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "RegionRequestはRegionKey、SourceRef、byte offsetを持つ。key/revision/digestとUTF-8 scalar境界を照合し、範囲は半開区間とする。返すSourceRegionは正準bundle/node、field/element番号またはtoken所有Viewのroot/field/child path、表示source span、元のlogical span、priority、depth、宣言順、PresentationClassを保持する。nodeなしの末尾/skip-only batchはnode=Noneであり、架空のroot所有nodeを作らない。通常node/field/headのdepthはその宣言ownerの深さ、Viewはそのownerに内部field/childの深さを加える。子nodeは親fieldより内側となる。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"RegionRequestはRegionKey、SourceRef、byte offsetを[持/も]つ。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"key/revision/digestとUTF-8 scalar[境界/きょうかい]を[照合/しょうごう]し、[範囲/はんい]は[半開区間/はんかいくかん]とする。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[返/かえ]すSourceRegionは[正準/せいじゅん]bundle/node、field/element[番号/ばんごう]またはtoken[所有/しょゆう]Viewのroot/field/child path、[表示/ひょうじ]source span、[元/もと]のlogical span、priority、depth、[宣言順/せんげんじゅん]、PresentationClassを[保持/ほじ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"nodeなしの[末尾/まつび]/skip-only batchはnode=Noneであり、[架空/かくう]のroot[所有/しょゆう]nodeを[作/つく]らない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[通常/つうじょう]node/field/headのdepthはその[宣言/せんげん]ownerの[深/ふか]さ、Viewはそのownerに[内部/ないぶ]field/childの[深/ふか]さを[加/くわ]える。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[子/こ]nodeは[親/おや]fieldより[内側/うちがわ]となる。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "同じ長さならpriority降順、depth降順、宣言順で選ぶ。宣言順はrootからfield順のDFSとViewの宣言順で、arenaの保存順とは区別する。共有DAGの同じ対象には最初の宣言順と実際の最深到達経路を保持する。回復nodeはRecoveryとして区別し、UnknownHeadのUnparsed範囲へ推測した子を追加しない。Missingの空anchorやEOFを直前の名前に吸着させない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[同/おな]じ[長/なが]さならpriority[降順/こうじゅん]、depth[降順/こうじゅん]、[宣言順/せんげんじゅん]で[選/えら]ぶ。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[宣言順/せんげんじゅん]はrootからfield[順/じゅん]のDFSとViewの[宣言順/せんげんじゅん]で、arenaの[保存順/ほぞんじゅん]とは[区別/くべつ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[共有/きょうゆう]DAGの[同/おな]じ[対象/たいしょう]には[最初/さいしょ]の[宣言順/せんげんじゅん]と[実際/じっさい]の[最深到達経路/さいしんとうたつけいろ]を[保持/ほじ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[回復/かいふく]nodeはRecoveryとして[区別/くべつ]し、UnknownHeadのUnparsed[範囲/はんい]へ[推測/すいそく]した[子/こ]を[追加/ついか]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Missingの[空/くう]anchorやEOFを[直前/ちょくぜん]の[名前/なまえ]に[吸着/きゅうちゃく]させない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "表示用SourceMap投影は領域ownerの明示表だけをたどる。隣接Exact区間は同じsourceとbyte変位の連続被覆として結合し、区間分割や表順で結果を変えない。完全Exact、部分被覆ExactFragment、保守的なTransformedを区別し、多義的な表示候補を保持する。この表示情報はrenameの一意逆写像や位置単位の名前解決を証明しない。Foreign fieldの子位置には子bundleの表を使い、guestだけにあるmapをhost nodeへ適用しない。map探索の深さは構文/View ownerの深さに合成して計量する。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[表示用/ひょうじよう]SourceMap[投影/とうえい]は[領域/りょういき]ownerの[明示表/めいじひょう]だけをたどる。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[隣接/りんせつ]Exact[区間/くかん]は[同/おな]じsourceとbyte[変位/へんい]の[連続被覆/れんぞくひふく]として[結合/けつごう]し、[区間分割/くかんぶんかつ]や[表順/ひょうじゅん]で[結果/けっか]を[変/か]えない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[完全/かんぜん]Exact、[部分被覆/ぶぶんひふく]ExactFragment、[保守的/ほしゅてき]なTransformedを[区別/くべつ]し、[多義的/たぎてき]な[表示候補/ひょうじこうほ]を[保持/ほじ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"この[表示情報/ひょうじじょうほう]はrenameの[一意逆写像/いちいぎゃくしゃぞう]や[位置単位/いちたんい]の[名前解決/なまえかいけつ]を[証明/しょうめい]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Foreign fieldの[子位置/こいち]には[子/こ]bundleの[表/ひょう]を[使/つか]い、guestだけにあるmapをhost nodeへ[適用/てきよう]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"map[探索/たんさく]の[深/ふか]さは[構文/こうぶん]/View ownerの[深/ふか]さに[合成/ごうせい]して[計量/けいりょう]する。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "RegionReplyは全表示regionと選択index、またはtyped Invalid/Stopped、Usage-only Report、明示source閉包を返す。停止で候補途中列を公開しない。初回tree/sidecar/request復元は元Rust要求やambient sourceによる補完を必要としない。返信のCompleteは対応する準備入力から構造選択を予算付きで再計算して照合する。これはreader実行認証、Binding完了proof、別process費用計測の代わりではない。一般regionを用いるdefinition/references入口は次節のRegionQueryであり、既存のOccurrenceベース入口の動作を変更しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"RegionReplyは[全表示/ぜんひょうじ]regionと[選択/せんたく]index、またはtyped Invalid/Stopped、Usage-only Report、[明示/めいじ]source[閉包/へいほう]を[返/かえ]す。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[停止/ていし]で[候補途中列/こうほとちゅうれつ]を[公開/こうかい]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[初回/しょかい]tree/sidecar/request[復元/ふくげん]は[元/もと]Rust[要求/ようきゅう]やambient sourceによる[補完/ほかん]を[必要/ひつよう]としない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[返信/へんしん]のCompleteは[対応/たいおう]する[準備入力/じゅんびにゅうりょく]から[構造選択/こうぞうせんたく]を[予算付/よさんつ]きで[再計算/さいけいさん]して[照合/しょうごう]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"これはreader[実行認証/じっこうにんしょう]、Binding[完了/かんりょう]proof、[別/べつ]process[費用計測/ひようけいそく]の[代/か]わりではない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[一般/いっぱん]regionを[用/もち]いるdefinition/references[入口/いりぐち]は[次節/じせつ]のRegionQueryであり、[既存/きそん]のOccurrenceベース[入口/いりぐち]の[動作/どうさ]を[変更/へんこう]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "型付きregion列の構築はWork・Nodes・Depth・AllocationUnitsとsource受入を計上し、まだ生成していないserializationのbyte数をOutputBytesへ推計加算しない。native返信のReportはその計算終了時点のUsageである。実NDF/1 CBOR encodeは同じ操作予算へ実出力のOutputBytesを生成前に課金する。従ってnativeのOutputBytes上限0で型付き結果が得られることと、実encodeがOutputLimitで停止することは別の境界であり、返信中のUsageをその後のserializationや外部transportまで含む総費用と扱わない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[型付/かたつ]きregion[列/れつ]の[構築/こうちく]はWork・Nodes・Depth・AllocationUnitsとsource[受入/うけいれ]を[計上/けいじょう]し、まだ[生成/せいせい]していないserializationのbyte[数/すう]をOutputBytesへ[推計加算/すいけいかさん]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"native[返信/へんしん]のReportはその[計算終了時点/けいさんしゅうりょうじてん]のUsageである。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[実/じつ]NDF/1 CBOR encodeは[同/おな]じ[操作予算/そうさよさん]へ[実出力/じつしゅつりょく]のOutputBytesを[生成前/せいせいまえ]に[課金/かきん]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[従/したが]ってnativeのOutputBytes[上限/じょうげん]0で[型付/かたつ]き[結果/けっか]が[得/え]られることと、[実/じつ]encodeがOutputLimitで[停止/ていし]することは[別/べつ]の[境界/きょうかい]であり、[返信中/へんしんちゅう]のUsageをその[後/ご]のserializationや[外部/がいぶ]transportまで[含/ふく]む[総費用/そうひよう]と[扱/あつか]わない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "highlightは内部regionへ分割し、leafに近い具体的classを優先する。overlapを持つ元データは保存するが、LSPへは非重複・source順・単一行に正規化したspan列を返す。色はthemeに委ねる。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"highlightは[内部/ないぶ]regionへ[分割/ぶんかつ]し、leafに[近/ちか]い[具体的/ぐたいてき]classを[優先/ゆうせん]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"overlapを[持/も]つ[元/もと]データは[保存/ほぞん]するが、LSPへは[非重複/ひじゅうふく]・source[順/じゅん]・[単一行/たんいつぎょう]に[正規化/せいきか]したspan[列/れつ]を[返/かえ]す。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[色/いろ]はthemeに[委/ゆだ]ねる。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Section",
+    "text": "4. definitionとrelationsの扱いOccurrenceベースの analysis::query::query は、完了したBoundBindingReplyとQueryRequest(key, SourceRef, byte offset, kind)を受ける。SourceRefのrevision/digestと現在要求するkeyを照合し、UTF-8 scalar境界を検査する。範囲は半開区間で、終端byteや空白を直前の名前へ吸着させない。包含するOccurrence.spanのうち最小のものを選び、同長なら確定factsの発行順を使う。一般regionを使う analysis::region::query::query は、同じ準備入力と実Binding完了結果に対するRegionQueryRequest(region:RegionRequest, kind:QueryKind)を受ける。まず3節のpriorityを含む構造選択を実行し、選択したSourceRegionを保持する。確定BindingBundleScopeからそのbundleのrootを解決し、そのrootのOccurrenceだけを候補にする。Foreign fieldは宣言元のRegionTargetを保持したまま、内容のguest bundleに対応するrootと局所mapを用いる。単なるsource座標一致でhost/guestの名前を混ぜない。要求位置の一Unicode scalar範囲と選択regionのlogical範囲を、所有bundleの宣言Exact/Transformed関係でOccurrenceのsourceへ対応付け、両者とOccurrence.spanが重なるものを残す。Exactはbyte差分と被覆区間、Transformedは宣言された範囲全体の対応である。query用の対応は双方向の関係であり、非一意なExactやTransformedの候補を黙って一つへ絞らず、rename用の一意な逆変換や編集権限とは区別する。source不足・古いrevision・不正scalar境界・停止は型付き失敗となる。対応に使うmapはそのSyntaxBundleの局所表と、実BindingBundleScope.customSourceMapsが指すCustom受理行だけである。Customの生成sourceもBinding結果の明示source閉包で解決する。Binding全体の平坦なsourceMaps表を全bundleへ適用せず、同じ生成sourceをhost/guestが共有していても別ownerのmapによる候補追加を許さない。RegionQueryReplyのCompleteは選択regionとOccurrenceごとのDefinition/References結果列を持つ。列は確定factsの発行順を保ち、各結果は保存された最終ResolutionのEntity IDを使う。region=None、regionはあるがOccurrenceがない、未解決/Open入力、複数Occurrence、Ambiguousの複数Entity、位置を持たないEntityを区別する。名前の再探索や発行時stageの書換えでCustomの更新を消さない。途中候補はInvalid/Stoppedで公開せず、使用済み資源を払い戻さない。ReportのUsageはnative処理終了時点であり、後続serializationの実出力課金とは分ける。初回RegionQuery受信は、明示BindingRequest/ReaderFactBatch sidecarを復元して準備し、同じ選択Profileで実Bindingを実行した後に要求と返信を照合する。返信Completeのcodec検査はこの入力と完了結果からqueryを予算付きで再計算し、候補・選択・source閉包を比較する。raw BindingResultやbundleScopes行、自己申告RegionKeyから意味proof・通信認証・provider実行許可を発行しない。QuerySelectionは元のOccurrenceId・span・確定ReferenceResolutionとopenInputを保持する。対象なしはNone、未解決とOpen namespaceのfree inputはopenInputで区別し、DeferredもUnresolvedに潰さない。定義候補は確定resolutionのEntity ID列に従い、曖昧な全候補とその順序を維持する。位置を持たないEntityはIDとlocation=Noneを返し、仮のsource位置を作らない。locationがある場合はURI、定義全体range、任意の名前selectionを分離する。Referencesは選択した各Entity IDごとに確定Occurrenceを検索する。既定ではResolvedのReferenceだけを返す。ReferenceOptionsはDefinition・Import・Export role、およびそのEntityをAmbiguous候補に含むOccurrenceをそれぞれ明示的に追加できる。曖昧な出現はambiguous=trueで区別し、同綴りの別Entityを混ぜない。通常BindingのImportが子のexport候補を可視にする操作と、providerが明示的に返すImport roleのOccurrenceは別であり、queryが新しいOccurrenceを捏造しない。Customの更新後も元stageから名前検索をやり直さず、確定resolutionを用いる。QueryReplyはDefinition/References/Invalid/StoppedとReport、参照位置に必要な宣言sourcesを持つ。現queryは新たな診断・eventを発行せず、解析診断は元BindingReplyに残す。query失敗はtyped原因または元StopReasonを保持し、候補途中列を成功結果として公開しない。使用済みBudgetとSourceAdmissionは払い戻さない。sourcesはsource ID・revision・digest順に正準化する。QueryRequestの初回decoderは元Rust要求を必要としないが、自己申告keyから完了したBindingAnalysisを作らない。実queryはhostが保持する同keyの意味proofを使う。返信decoderは対応する要求、role options、候補ID列、範囲・URIと明示source閉包を検査し、ambient sourceで欠損を埋めない。これはraw結果の構造検査であり、通信認証やリモートの解決結果の意味証明ではない。Customを使うprepared実行にも同じkey/有効Limitsの検査を適用する。hostのauthorizeが参照する設定・権限方針・明示resourceを変えて結果が変わる場合、hostはその入力変更をProfile resourcesやschemaで宣言したrequest options等のidentityへ反映し、旧keyの結果を再利用してはならない。keyは実行時FactAuthorityそのものを認証せず、同じkeyのまま任意のhost設定変更を安全に許す値でもない。definition結果はoriginSelection、targetUri、targetRange、targetSelectionを分離する。entityのnameだけ選択しつつ定義全体も示せる。sourceが配布packageの場合は読み取り専用virtual documentとして公開できる。CorrespondsToには「対応文へ移動」、Originには「生成元へ移動」を提供し、通常の定義ジャンプとは別relationとして扱う。多義的な解決は複数候補を返し、単語一致で一つに決めない。renameは同じEntityを指すOccurrenceだけを対象にする。新名の適格性、予約語、shadowing、scope内衝突、外側の参照の捕捉まで再検査する。SourceMapの逆変換が一意でない場所はRenameNotInvertible。全TextEditはrevision付きでatomicに返す。現在の rename は RenameRequest(key, source, offset, newName, writable) に対する二段操作である。対象選択は上記の名前Occurrence規則を使う。writable はhostが許可した元snapshot集合であり、受信したSourceRefやURIだけから編集権限を発行しない。未選択・未解決・曖昧・Deferred・位置なしを型付きで区別して拒否する。予約headは対象EntityのFactNamespace.schemaを所有する選択済みpackageのForm.spellingと照合する。別schemaの言語だけに存在するheadを予約語へ加えない。最終的な名前のreader適格性と構文選択は実再parseで検査する。prepareは元の実parse完了結果と、その同じimmutable treeを借用するprepared Binding要求、同keyの完了解析を要求する。private RenameDraftには元revisionへの編集候補と候補snapshot集合を保持するが、成功transactionや編集列の公開入口を与えない。draftはrename操作専用SourceAdmissionを所有し、同じ有効LimitsのBudgetをprepare・再parse・再解析・acceptの間、排他的に借用する。失敗やdraft破棄で使用済み費用を払い戻さない。別候補は同じ元revisionから分岐でき、共有の元SourceStoreを候補作成時に変更しない。逆写像は宣言SourceMapを全探索し、同一source・revision・digest上の一意な連続範囲へ達するExact対応だけを使う。隣接するExact区間は同じbyte変位で穴なく全対象範囲を被覆するなら結合でき、表順や区間分割で結果を変えない。異なるsourceや変位への多義性、被覆穴、Transformed、Composite/Synthetic origin、cycleは拒否する。quoteやescapeから復号された意味名と元bytesが異なる場合、明示逆encoderがないままquoteを消す置換を行わない。探索・範囲比較・複製はWork/Depth/Nodes/Allocationの対象となる。ここで探索する宣言表は対象Entityまたは各Occurrenceのnamespace rootに対応する実bundleの局所mapと、そのbundleのcustomSourceMapsが指す受理mapに限る。平坦なFactSet.sourceMaps全体を編集先の根拠にしない。各Occurrenceは自分のownerで逆写像し、同じEntityを指すという理由だけで対象Entityのmapを流用しない。前向き導出も各元編集と対応ownerの組ごとに独立した閉包をたどり、最終的な編集列だけを統合する。再解析後のsource位置対応はold/newそれぞれのEntity・Occurrence owner、構文位置は各正準bundle ownerで検査する。guestだけが宣言したmapでhost名のwritable rootを置き換えることはできない。元への編集からExact対応を前向きにも適用し、影響する派生snapshotの次revisionと内部編集を作る。派生側の未対応byteは保存する。再parseが返す全宣言sourceはdraftの指定snapshot集合と、ID・revision・digest・URI・全bytesで一致しなければならない。mapのtargetであることはsnapshot全体の照合免除にならない。hostがreaderの生成sourceを予約する場合も、この候補identityを使う。公開する編集は許可された元snapshotへの列だけで、派生側の内部編集を追加の書込権限として外部へ渡さない。acceptは候補の実parse完了結果と同じimmutable treeに対するprepared要求・完了解析を照合する。Profileの意味identity、provider/package実行identity、options・analysis ID・有効Limitsを維持し、候補全source、構文kind/field/選択context、編集に対応する位置と意味payloadを検査する。Entityの対応は宣言位置・scope/namespace・意味名に基づき、opaque IDの数値一致だけで決めない。対象外の名前も含め、Resolved・全Ambiguous候補・Unresolved/free input・Deferred・Customの確定resolutionが対応していることを検査する。後続scopeで名前検索をやり直してCustomの判断を上書きしない。衝突・捕捉・構文変更・別要求との組替え・停止では編集列を一部も公開しない。nativeのCompletedParseは実ParseSessionのread/resume/reserve/resume_headがCompleteを返した場合だけ発行する所有proofであり、待機・回復・停止は通常のParseReplyを保持する。元と候補のprepared treeがこのproofの同一immutable treeを借用する条件はnative内部の保証で、pointerやRust ABIを公開schemaへ露出しない。raw treeの取出しはproofを消費し、raw ParseTreeやNDF decodeから再発行できない。将来の別言語・別process parserも、認証された発行要求と実parse実行結果を結ぶ同等のhost境界を必要とする。現在のraw rename request/reply codecはschema、要求key、書込対象、old digest、編集非重複、元source閉包を検査するが、通信認証やparse実行証明を発行しない。RenameReplyのCompleteは新AnalysisKeyと全TextEdit、Invalid/Stoppedは編集なしを返す。Reportは実消費Usageを保持し、この操作自身は新規diagnostic/eventを発行しない。再parse/解析の正式Reportはそれぞれの返り値に保持する。受信したUsageの内部整合と外部処理費用の認証は別の責務である。最終適用は呼出側の元SourceStoreに対し、base revision・old digest付きのatomic applyで行う。一般region selector、任意encoderによる意味名の逆変換、増分再解析、外部parser実行の認証transportはこの段階の完成範囲に含めない。",
+    "fields": {
+      "id": "relations",
+      "title": {
+        "kind": "leaf",
+        "token": "\"4. definitionとrelationsの[扱/あつか]い\""
+      },
+      "body": {
+        "kind": "Body",
+        "fields": {
+          "blocks": [
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "Sentence",
+                    "fields": {
+                      "inlines": [
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "Occurrenceベースの "
+                          }
+                        },
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "analysis::query::query"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": " は、"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "完了"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "かんりょう"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "したBoundBindingReplyとQueryRequest(key, SourceRef, byte offset, kind)を"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "受"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "う"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "ける。"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"SourceRefのrevision/digestと[現在要求/げんざいようきゅう]するkeyを[照合/しょうごう]し、UTF-8 scalar[境界/きょうかい]を[検査/けんさ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[範囲/はんい]は[半開区間/はんかいくかん]で、[終端/しゅうたん]byteや[空白/くうはく]を[直前/ちょくぜん]の[名前/なまえ]へ[吸着/きゅうちゃく]させない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[包含/ほうがん]するOccurrence.spanのうち[最小/さいしょう]のものを[選/えら]び、[同長/どうちょう]なら[確定/かくてい]factsの[発行順/はっこうじゅん]を[使/つか]う。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "Sentence",
+                    "fields": {
+                      "inlines": [
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "一般"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "いっぱん"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "regionを"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "使"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "つか"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "う "
+                          }
+                        },
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "analysis::region::query::query"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": " は、"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "同"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "おな"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "じ"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "準備入力"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "じゅんびにゅうりょく"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "と"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "実"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "じつ"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "Binding"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "完了結果"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "かんりょうけっか"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "に"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "対"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "たい"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "するRegionQueryRequest(region:RegionRequest, kind:QueryKind)を"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "受"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "う"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "ける。"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"まず3[節/せつ]のpriorityを[含/ふく]む[構造選択/こうぞうせんたく]を[実行/じっこう]し、[選択/せんたく]したSourceRegionを[保持/ほじ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[確定/かくてい]BindingBundleScopeからそのbundleのrootを[解決/かいけつ]し、そのrootのOccurrenceだけを[候補/こうほ]にする。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"Foreign fieldは[宣言元/せんげんもと]のRegionTargetを[保持/ほじ]したまま、[内容/ないよう]のguest bundleに[対応/たいおう]するrootと[局所/きょくしょ]mapを[用/もち]いる。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[単/たん]なるsource[座標一致/ざひょういっち]でhost/guestの[名前/なまえ]を[混/ま]ぜない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[要求位置/ようきゅういち]の[一/いち]Unicode scalar[範囲/はんい]と[選択/せんたく]regionのlogical[範囲/はんい]を、[所有/しょゆう]bundleの[宣言/せんげん]Exact/Transformed[関係/かんけい]でOccurrenceのsourceへ[対応付/たいおうづ]け、[両者/りょうしゃ]とOccurrence.spanが[重/かさ]なるものを[残/のこ]す。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"Exactはbyte[差分/さぶん]と[被覆区間/ひふくくかん]、Transformedは[宣言/せんげん]された[範囲全体/はんいぜんたい]の[対応/たいおう]である。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"query[用/よう]の[対応/たいおう]は[双方向/そうほうこう]の[関係/かんけい]であり、[非一意/ひいちい]なExactやTransformedの[候補/こうほ]を[黙/だま]って[一/ひと]つへ[絞/しぼ]らず、rename[用/よう]の[一意/いちい]な[逆変換/ぎゃくへんかん]や[編集権限/へんしゅうけんげん]とは[区別/くべつ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"source[不足/ふそく]・[古/ふる]いrevision・[不正/ふせい]scalar[境界/きょうかい]・[停止/ていし]は[型付/かたつ]き[失敗/しっぱい]となる。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[対応/たいおう]に[使/つか]うmapはそのSyntaxBundleの[局所表/きょくしょひょう]と、[実/じつ]BindingBundleScope.customSourceMapsが[指/さ]すCustom[受理行/じゅりぎょう]だけである。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"Customの[生成/せいせい]sourceもBinding[結果/けっか]の[明示/めいじ]source[閉包/へいほう]で[解決/かいけつ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"Binding[全体/ぜんたい]の[平坦/へいたん]なsourceMaps[表/ひょう]を[全/ぜん]bundleへ[適用/てきよう]せず、[同/おな]じ[生成/せいせい]sourceをhost/guestが[共有/きょうゆう]していても[別/べつ]ownerのmapによる[候補追加/こうほついか]を[許/ゆる]さない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"RegionQueryReplyのCompleteは[選択/せんたく]regionとOccurrenceごとのDefinition/References[結果列/けっかれつ]を[持/も]つ。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[列/れつ]は[確定/かくてい]factsの[発行順/はっこうじゅん]を[保/たも]ち、[各結果/かくけっか]は[保存/ほぞん]された[最終/さいしゅう]ResolutionのEntity IDを[使/つか]う。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"region=None、regionはあるがOccurrenceがない、[未解決/みかいけつ]/Open[入力/にゅうりょく]、[複数/ふくすう]Occurrence、Ambiguousの[複数/ふくすう]Entity、[位置/いち]を[持/も]たないEntityを[区別/くべつ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[名前/なまえ]の[再探索/さいたんさく]や[発行時/はっこうじ]stageの[書換/かきか]えでCustomの[更新/こうしん]を[消/け]さない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[途中候補/とちゅうこうほ]はInvalid/Stoppedで[公開/こうかい]せず、[使用済/しようず]み[資源/しげん]を[払/はら]い[戻/もど]さない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"ReportのUsageはnative[処理終了時点/しょりしゅうりょうじてん]であり、[後続/こうぞく]serializationの[実出力課金/じつしゅつりょくかきん]とは[分/わ]ける。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[初回/しょかい]RegionQuery[受信/じゅしん]は、[明示/めいじ]BindingRequest/ReaderFactBatch sidecarを[復元/ふくげん]して[準備/じゅんび]し、[同/おな]じ[選択/せんたく]Profileで[実/じつ]Bindingを[実行/じっこう]した[後/あと]に[要求/ようきゅう]と[返信/へんしん]を[照合/しょうごう]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[返信/へんしん]Completeのcodec[検査/けんさ]はこの[入力/にゅうりょく]と[完了結果/かんりょうけっか]からqueryを[予算付/よさんつ]きで[再計算/さいけいさん]し、[候補/こうほ]・[選択/せんたく]・source[閉包/へいほう]を[比較/ひかく]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"raw BindingResultやbundleScopes[行/ぎょう]、[自己申告/じこしんこく]RegionKeyから[意味/いみ]proof・[通信認証/つうしんにんしょう]・provider[実行許可/じっこうきょか]を[発行/はっこう]しない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"QuerySelectionは[元/もと]のOccurrenceId・span・[確定/かくてい]ReferenceResolutionとopenInputを[保持/ほじ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[対象/たいしょう]なしはNone、[未解決/みかいけつ]とOpen namespaceのfree inputはopenInputで[区別/くべつ]し、DeferredもUnresolvedに[潰/つぶ]さない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[定義候補/ていぎこうほ]は[確定/かくてい]resolutionのEntity ID[列/れつ]に[従/したが]い、[曖昧/あいまい]な[全候補/ぜんこうほ]とその[順序/じゅんじょ]を[維持/いじ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[位置/いち]を[持/も]たないEntityはIDとlocation=Noneを[返/かえ]し、[仮/かり]のsource[位置/いち]を[作/つく]らない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"locationがある[場合/ばあい]はURI、[定義全体/ていぎぜんたい]range、[任意/にんい]の[名前/なまえ]selectionを[分離/ぶんり]する。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"Referencesは[選択/せんたく]した[各/かく]Entity IDごとに[確定/かくてい]Occurrenceを[検索/けんさく]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[既定/きてい]ではResolvedのReferenceだけを[返/かえ]す。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"ReferenceOptionsはDefinition・Import・Export role、およびそのEntityをAmbiguous[候補/こうほ]に[含/ふく]むOccurrenceをそれぞれ[明示的/めいじてき]に[追加/ついか]できる。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[曖昧/あいまい]な[出現/しゅつげん]はambiguous=trueで[区別/くべつ]し、[同綴/どうつづ]りの[別/べつ]Entityを[混/ま]ぜない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[通常/つうじょう]BindingのImportが[子/こ]のexport[候補/こうほ]を[可視/かし]にする[操作/そうさ]と、providerが[明示的/めいじてき]に[返/かえ]すImport roleのOccurrenceは[別/べつ]であり、queryが[新/あたら]しいOccurrenceを[捏造/ねつぞう]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"Customの[更新後/こうしんご]も[元/もと]stageから[名前検索/なまえけんさく]をやり[直/なお]さず、[確定/かくてい]resolutionを[用/もち]いる。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"QueryReplyはDefinition/References/Invalid/StoppedとReport、[参照位置/さんしょういち]に[必要/ひつよう]な[宣言/せんげん]sourcesを[持/も]つ。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[現/げん]queryは[新/あら]たな[診断/しんだん]・eventを[発行/はっこう]せず、[解析診断/かいせきしんだん]は[元/もと]BindingReplyに[残/のこ]す。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"query[失敗/しっぱい]はtyped[原因/げんいん]または[元/もと]StopReasonを[保持/ほじ]し、[候補途中列/こうほとちゅうれつ]を[成功結果/せいこうけっか]として[公開/こうかい]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[使用済/しようず]みBudgetとSourceAdmissionは[払/はら]い[戻/もど]さない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"sourcesはsource ID・revision・digest[順/じゅん]に[正準化/せいじゅんか]する。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"QueryRequestの[初回/しょかい]decoderは[元/もと]Rust[要求/ようきゅう]を[必要/ひつよう]としないが、[自己申告/じこしんこく]keyから[完了/かんりょう]したBindingAnalysisを[作/つく]らない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[実/じつ]queryはhostが[保持/ほじ]する[同/どう]keyの[意味/いみ]proofを[使/つか]う。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[返信/へんしん]decoderは[対応/たいおう]する[要求/ようきゅう]、role options、[候補/こうほ]ID[列/れつ]、[範囲/はんい]・URIと[明示/めいじ]source[閉包/へいほう]を[検査/けんさ]し、ambient sourceで[欠損/けっそん]を[埋/う]めない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"これはraw[結果/けっか]の[構造検査/こうぞうけんさ]であり、[通信認証/つうしんにんしょう]やリモートの[解決結果/かいけつけっか]の[意味証明/いみしょうめい]ではない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"Customを[使/つか]うprepared[実行/じっこう]にも[同/おな]じkey/[有効/ゆうこう]Limitsの[検査/けんさ]を[適用/てきよう]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"hostのauthorizeが[参照/さんしょう]する[設定/せってい]・[権限方針/けんげんほうしん]・[明示/めいじ]resourceを[変/か]えて[結果/けっか]が[変/か]わる[場合/ばあい]、hostはその[入力変更/にゅうりょくへんこう]をProfile resourcesやschemaで[宣言/せんげん]したrequest options[等/など]のidentityへ[反映/はんえい]し、[旧/きゅう]keyの[結果/けっか]を[再利用/さいりよう]してはならない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"keyは[実行時/じっこうじ]FactAuthorityそのものを[認証/にんしょう]せず、[同/おな]じkeyのまま[任意/にんい]のhost[設定変更/せっていへんこう]を[安全/あんぜん]に[許/ゆる]す[値/あたい]でもない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"definition[結果/けっか]はoriginSelection、targetUri、targetRange、targetSelectionを[分離/ぶんり]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"entityのnameだけ[選択/せんたく]しつつ[定義全体/ていぎぜんたい]も[示/しめ]せる。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"sourceが[配布/はいふ]packageの[場合/ばあい]は[読/よ]み[取/と]り[専用/せんよう]virtual documentとして[公開/こうかい]できる。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"CorrespondsToには「[対応文/たいおうぶん]へ[移動/いどう]」、Originには「[生成元/せいせいもと]へ[移動/いどう]」を[提供/ていきょう]し、[通常/つうじょう]の[定義/ていぎ]ジャンプとは[別/べつ]relationとして[扱/あつか]う。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[多義的/たぎてき]な[解決/かいけつ]は[複数候補/ふくすうこうほ]を[返/かえ]し、[単語一致/たんごいっち]で[一/ひと]つに[決/き]めない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"renameは[同/おな]じEntityを[指/さ]すOccurrenceだけを[対象/たいしょう]にする。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[新名/しんめい]の[適格性/てきかくせい]、[予約語/よやくご]、shadowing、scope[内衝突/ないしょうとつ]、[外側/そとがわ]の[参照/さんしょう]の[捕捉/ほそく]まで[再検査/さいけんさ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"SourceMapの[逆変換/ぎゃくへんかん]が[一意/いちい]でない[場所/ばしょ]はRenameNotInvertible。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[全/ぜん]TextEditはrevision[付/つ]きでatomicに[返/かえ]す。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "Sentence",
+                    "fields": {
+                      "inlines": [
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "現在"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "げんざい"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "の rename は "
+                          }
+                        },
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "RenameRequest(key, source, offset, newName, writable)"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": " に"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "対"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "たい"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "する"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "二段操作"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "にだんそうさ"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "である。"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[対象選択/たいしょうせんたく]は[上記/じょうき]の[名前/なまえ]Occurrence[規則/きそく]を[使/つか]う。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"writable はhostが[許可/きょか]した[元/もと]snapshot[集合/しゅうごう]であり、[受信/じゅしん]したSourceRefやURIだけから[編集権限/へんしゅうけんげん]を[発行/はっこう]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[未選択/みせんたく]・[未解決/みかいけつ]・[曖昧/あいまい]・Deferred・[位置/いち]なしを[型付/かたつ]きで[区別/くべつ]して[拒否/きょひ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[予約/よやく]headは[対象/たいしょう]EntityのFactNamespace.schemaを[所有/しょゆう]する[選択済/せんたくず]みpackageのForm.spellingと[照合/しょうごう]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[別/べつ]schemaの[言語/げんご]だけに[存在/そんざい]するheadを[予約語/よやくご]へ[加/くわ]えない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[最終的/さいしゅうてき]な[名前/なまえ]のreader[適格性/てきかくせい]と[構文選択/こうぶんせんたく]は[実再/じっさい]parseで[検査/けんさ]する。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"prepareは[元/もと]の[実/じつ]parse[完了結果/かんりょうけっか]と、その[同/おな]じimmutable treeを[借用/しゃくよう]するprepared Binding[要求/ようきゅう]、[同/どう]keyの[完了解析/かんりょうかいせき]を[要求/ようきゅう]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"private RenameDraftには[元/もと]revisionへの[編集候補/へんしゅうこうほ]と[候補/こうほ]snapshot[集合/しゅうごう]を[保持/ほじ]するが、[成功/せいこう]transactionや[編集列/へんしゅうれつ]の[公開入口/こうかいいりぐち]を[与/あた]えない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"draftはrename[操作専用/そうさせんよう]SourceAdmissionを[所有/しょゆう]し、[同/おな]じ[有効/ゆうこう]LimitsのBudgetをprepare・[再/さい]parse・[再解析/さいかいせき]・acceptの[間/あいだ]、[排他的/はいたてき]に[借用/しゃくよう]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[失敗/しっぱい]やdraft[破棄/はき]で[使用済/しようず]み[費用/ひよう]を[払/はら]い[戻/もど]さない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[別候補/べつこうほ]は[同/おな]じ[元/もと]revisionから[分岐/ぶんき]でき、[共有/きょうゆう]の[元/もと]SourceStoreを[候補作成時/こうほさくせいじ]に[変更/へんこう]しない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[逆写像/ぎゃくしゃぞう]は[宣言/せんげん]SourceMapを[全探索/ぜんたんさく]し、[同一/どういつ]source・revision・digest[上/じょう]の[一意/いちい]な[連続範囲/れんぞくはんい]へ[達/たっ]するExact[対応/たいおう]だけを[使/つか]う。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[隣接/りんせつ]するExact[区間/くかん]は[同/おな]じbyte[変位/へんい]で[穴/あな]なく[全対象範囲/ぜんたいしょうはんい]を[被覆/ひふく]するなら[結合/けつごう]でき、[表順/ひょうじゅん]や[区間分割/くかんぶんかつ]で[結果/けっか]を[変/か]えない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[異/こと]なるsourceや[変位/へんい]への[多義性/たぎせい]、[被覆穴/ひふくあな]、Transformed、Composite/Synthetic origin、cycleは[拒否/きょひ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"quoteやescapeから[復号/ふくごう]された[意味名/いみめい]と[元/もと]bytesが[異/こと]なる[場合/ばあい]、[明示逆/めいじぎゃく]encoderがないままquoteを[消/け]す[置換/ちかん]を[行/おこな]わない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[探索/たんさく]・[範囲比較/はんいひかく]・[複製/ふくせい]はWork/Depth/Nodes/Allocationの[対象/たいしょう]となる。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"ここで[探索/たんさく]する[宣言表/せんげんひょう]は[対象/たいしょう]Entityまたは[各/かく]Occurrenceのnamespace rootに[対応/たいおう]する[実/じつ]bundleの[局所/きょくしょ]mapと、そのbundleのcustomSourceMapsが[指/さ]す[受理/じゅり]mapに[限/かぎ]る。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[平坦/へいたん]なFactSet.sourceMaps[全体/ぜんたい]を[編集先/へんしゅうさき]の[根拠/こんきょ]にしない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[各/かく]Occurrenceは[自分/じぶん]のownerで[逆写像/ぎゃくしゃぞう]し、[同/おな]じEntityを[指/さ]すという[理由/りゆう]だけで[対象/たいしょう]Entityのmapを[流用/りゅうよう]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[前向/まえむ]き[導出/どうしゅつ]も[各元編集/かくもとへんしゅう]と[対応/たいおう]ownerの[組/くみ]ごとに[独立/どくりつ]した[閉包/へいほう]をたどり、[最終的/さいしゅうてき]な[編集列/へんしゅうれつ]だけを[統合/とうごう]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[再解析後/さいかいせきご]のsource[位置対応/いちたいおう]はold/newそれぞれのEntity・Occurrence owner、[構文位置/こうぶんいち]は[各正準/かくせいじゅん]bundle ownerで[検査/けんさ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"guestだけが[宣言/せんげん]したmapでhost[名/めい]のwritable rootを[置/お]き[換/か]えることはできない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[元/もと]への[編集/へんしゅう]からExact[対応/たいおう]を[前向/まえむ]きにも[適用/てきよう]し、[影響/えいきょう]する[派生/はせい]snapshotの[次/つぎ]revisionと[内部編集/ないぶへんしゅう]を[作/つく]る。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[派生側/はせいがわ]の[未対応/みたいおう]byteは[保存/ほぞん]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[再/さい]parseが[返/かえ]す[全宣言/ぜんせんげん]sourceはdraftの[指定/してい]snapshot[集合/しゅうごう]と、ID・revision・digest・URI・[全/ぜん]bytesで[一致/いっち]しなければならない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"mapのtargetであることはsnapshot[全体/ぜんたい]の[照合免除/しょうごうめんじょ]にならない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"hostがreaderの[生成/せいせい]sourceを[予約/よやく]する[場合/ばあい]も、この[候補/こうほ]identityを[使/つか]う。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[公開/こうかい]する[編集/へんしゅう]は[許可/きょか]された[元/もと]snapshotへの[列/れつ]だけで、[派生側/はせいがわ]の[内部編集/ないぶへんしゅう]を[追加/ついか]の[書込権限/かきこみけんげん]として[外部/がいぶ]へ[渡/わた]さない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"acceptは[候補/こうほ]の[実/じつ]parse[完了結果/かんりょうけっか]と[同/おな]じimmutable treeに[対/たい]するprepared[要求/ようきゅう]・[完了解析/かんりょうかいせき]を[照合/しょうごう]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"Profileの[意味/いみ]identity、provider/package[実行/じっこう]identity、options・analysis ID・[有効/ゆうこう]Limitsを[維持/いじ]し、[候補全/こうほぜん]source、[構文/こうぶん]kind/field/[選択/せんたく]context、[編集/へんしゅう]に[対応/たいおう]する[位置/いち]と[意味/いみ]payloadを[検査/けんさ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"Entityの[対応/たいおう]は[宣言位置/せんげんいち]・scope/namespace・[意味名/いみめい]に[基/もと]づき、opaque IDの[数値一致/すうちいっち]だけで[決/き]めない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[対象外/たいしょうがい]の[名前/なまえ]も[含/ふく]め、Resolved・[全/ぜん]Ambiguous[候補/こうほ]・Unresolved/free input・Deferred・Customの[確定/かくてい]resolutionが[対応/たいおう]していることを[検査/けんさ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[後続/こうぞく]scopeで[名前検索/なまえけんさく]をやり[直/なお]してCustomの[判断/はんだん]を[上書/うわが]きしない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[衝突/しょうとつ]・[捕捉/ほそく]・[構文変更/こうぶんへんこう]・[別要求/べつようきゅう]との[組替/くみか]え・[停止/ていし]では[編集列/へんしゅうれつ]を[一部/いちぶ]も[公開/こうかい]しない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"nativeのCompletedParseは[実/じつ]ParseSessionのread/resume/reserve/resume_headがCompleteを[返/かえ]した[場合/ばあい]だけ[発行/はっこう]する[所有/しょゆう]proofであり、[待機/たいき]・[回復/かいふく]・[停止/ていし]は[通常/つうじょう]のParseReplyを[保持/ほじ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[元/もと]と[候補/こうほ]のprepared treeがこのproofの[同一/どういつ]immutable treeを[借用/しゃくよう]する[条件/じょうけん]はnative[内部/ないぶ]の[保証/ほしょう]で、pointerやRust ABIを[公開/こうかい]schemaへ[露出/ろしゅつ]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"raw treeの[取出/とりだ]しはproofを[消費/しょうひ]し、raw ParseTreeやNDF decodeから[再発行/さいはっこう]できない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[将来/しょうらい]の[別言語/べつげんご]・[別/べつ]process parserも、[認証/にんしょう]された[発行要求/はっこうようきゅう]と[実/じつ]parse[実行結果/じっこうけっか]を[結/むす]ぶ[同等/どうとう]のhost[境界/きょうかい]を[必要/ひつよう]とする。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[現在/げんざい]のraw rename request/reply codecはschema、[要求/ようきゅう]key、[書込対象/かきこみたいしょう]、old digest、[編集非重複/へんしゅうひじゅうふく]、[元/もと]source[閉包/へいほう]を[検査/けんさ]するが、[通信認証/つうしんにんしょう]やparse[実行証明/じっこうしょうめい]を[発行/はっこう]しない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"RenameReplyのCompleteは[新/しん]AnalysisKeyと[全/ぜん]TextEdit、Invalid/Stoppedは[編集/へんしゅう]なしを[返/かえ]す。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"Reportは[実消費/じつしょうひ]Usageを[保持/ほじ]し、この[操作自身/そうさじしん]は[新規/しんき]diagnostic/eventを[発行/はっこう]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[再/さい]parse/[解析/かいせき]の[正式/せいしき]Reportはそれぞれの[返/かえ]り[値/ち]に[保持/ほじ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[受信/じゅしん]したUsageの[内部整合/ないぶせいごう]と[外部処理費用/がいぶしょりひよう]の[認証/にんしょう]は[別/べつ]の[責務/せきむ]である。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[最終適用/さいしゅうてきよう]は[呼出側/よびだしがわ]の[元/もと]SourceStoreに[対/たい]し、base revision・old digest[付/つ]きのatomic applyで[行/おこな]う。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[一般/いっぱん]region selector、[任意/にんい]encoderによる[意味名/いみめい]の[逆変換/ぎゃくへんかん]、[増分再解析/ぞうぶんさいかいせき]、[外部/がいぶ]parser[実行/じっこう]の[認証/にんしょう]transportはこの[段階/だんかい]の[完成範囲/かんせいはんい]に[含/ふく]めない。\""
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "Occurrenceベースの analysis::query::query は、完了したBoundBindingReplyとQueryRequest(key, SourceRef, byte offset, kind)を受ける。SourceRefのrevision/digestと現在要求するkeyを照合し、UTF-8 scalar境界を検査する。範囲は半開区間で、終端byteや空白を直前の名前へ吸着させない。包含するOccurrence.spanのうち最小のものを選び、同長なら確定factsの発行順を使う。",
+    "fields": {
+      "items": [
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "Occurrenceベースの "
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "analysis::query::query"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " は、"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "完了"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "かんりょう"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "したBoundBindingReplyとQueryRequest(key, SourceRef, byte offset, kind)を"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "受"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "う"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "ける。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "leaf",
+          "token": "\"SourceRefのrevision/digestと[現在要求/げんざいようきゅう]するkeyを[照合/しょうごう]し、UTF-8 scalar[境界/きょうかい]を[検査/けんさ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[範囲/はんい]は[半開区間/はんかいくかん]で、[終端/しゅうたん]byteや[空白/くうはく]を[直前/ちょくぜん]の[名前/なまえ]へ[吸着/きゅうちゃく]させない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[包含/ほうがん]するOccurrence.spanのうち[最小/さいしょう]のものを[選/えら]び、[同長/どうちょう]なら[確定/かくてい]factsの[発行順/はっこうじゅん]を[使/つか]う。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "一般regionを使う analysis::region::query::query は、同じ準備入力と実Binding完了結果に対するRegionQueryRequest(region:RegionRequest, kind:QueryKind)を受ける。まず3節のpriorityを含む構造選択を実行し、選択したSourceRegionを保持する。確定BindingBundleScopeからそのbundleのrootを解決し、そのrootのOccurrenceだけを候補にする。Foreign fieldは宣言元のRegionTargetを保持したまま、内容のguest bundleに対応するrootと局所mapを用いる。単なるsource座標一致でhost/guestの名前を混ぜない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "一般"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "いっぱん"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "regionを"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "使"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "つか"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "う "
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "analysis::region::query::query"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " は、"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "同"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "おな"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "じ"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "準備入力"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "じゅんびにゅうりょく"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "と"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "実"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "じつ"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "Binding"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "完了結果"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "かんりょうけっか"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "に"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "対"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "たい"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "するRegionQueryRequest(region:RegionRequest, kind:QueryKind)を"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "受"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "う"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "ける。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "leaf",
+          "token": "\"まず3[節/せつ]のpriorityを[含/ふく]む[構造選択/こうぞうせんたく]を[実行/じっこう]し、[選択/せんたく]したSourceRegionを[保持/ほじ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[確定/かくてい]BindingBundleScopeからそのbundleのrootを[解決/かいけつ]し、そのrootのOccurrenceだけを[候補/こうほ]にする。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Foreign fieldは[宣言元/せんげんもと]のRegionTargetを[保持/ほじ]したまま、[内容/ないよう]のguest bundleに[対応/たいおう]するrootと[局所/きょくしょ]mapを[用/もち]いる。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[単/たん]なるsource[座標一致/ざひょういっち]でhost/guestの[名前/なまえ]を[混/ま]ぜない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "要求位置の一Unicode scalar範囲と選択regionのlogical範囲を、所有bundleの宣言Exact/Transformed関係でOccurrenceのsourceへ対応付け、両者とOccurrence.spanが重なるものを残す。Exactはbyte差分と被覆区間、Transformedは宣言された範囲全体の対応である。query用の対応は双方向の関係であり、非一意なExactやTransformedの候補を黙って一つへ絞らず、rename用の一意な逆変換や編集権限とは区別する。source不足・古いrevision・不正scalar境界・停止は型付き失敗となる。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[要求位置/ようきゅういち]の[一/いち]Unicode scalar[範囲/はんい]と[選択/せんたく]regionのlogical[範囲/はんい]を、[所有/しょゆう]bundleの[宣言/せんげん]Exact/Transformed[関係/かんけい]でOccurrenceのsourceへ[対応付/たいおうづ]け、[両者/りょうしゃ]とOccurrence.spanが[重/かさ]なるものを[残/のこ]す。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Exactはbyte[差分/さぶん]と[被覆区間/ひふくくかん]、Transformedは[宣言/せんげん]された[範囲全体/はんいぜんたい]の[対応/たいおう]である。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"query[用/よう]の[対応/たいおう]は[双方向/そうほうこう]の[関係/かんけい]であり、[非一意/ひいちい]なExactやTransformedの[候補/こうほ]を[黙/だま]って[一/ひと]つへ[絞/しぼ]らず、rename[用/よう]の[一意/いちい]な[逆変換/ぎゃくへんかん]や[編集権限/へんしゅうけんげん]とは[区別/くべつ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"source[不足/ふそく]・[古/ふる]いrevision・[不正/ふせい]scalar[境界/きょうかい]・[停止/ていし]は[型付/かたつ]き[失敗/しっぱい]となる。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "対応に使うmapはそのSyntaxBundleの局所表と、実BindingBundleScope.customSourceMapsが指すCustom受理行だけである。Customの生成sourceもBinding結果の明示source閉包で解決する。Binding全体の平坦なsourceMaps表を全bundleへ適用せず、同じ生成sourceをhost/guestが共有していても別ownerのmapによる候補追加を許さない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[対応/たいおう]に[使/つか]うmapはそのSyntaxBundleの[局所表/きょくしょひょう]と、[実/じつ]BindingBundleScope.customSourceMapsが[指/さ]すCustom[受理行/じゅりぎょう]だけである。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Customの[生成/せいせい]sourceもBinding[結果/けっか]の[明示/めいじ]source[閉包/へいほう]で[解決/かいけつ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Binding[全体/ぜんたい]の[平坦/へいたん]なsourceMaps[表/ひょう]を[全/ぜん]bundleへ[適用/てきよう]せず、[同/おな]じ[生成/せいせい]sourceをhost/guestが[共有/きょうゆう]していても[別/べつ]ownerのmapによる[候補追加/こうほついか]を[許/ゆる]さない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "RegionQueryReplyのCompleteは選択regionとOccurrenceごとのDefinition/References結果列を持つ。列は確定factsの発行順を保ち、各結果は保存された最終ResolutionのEntity IDを使う。region=None、regionはあるがOccurrenceがない、未解決/Open入力、複数Occurrence、Ambiguousの複数Entity、位置を持たないEntityを区別する。名前の再探索や発行時stageの書換えでCustomの更新を消さない。途中候補はInvalid/Stoppedで公開せず、使用済み資源を払い戻さない。ReportのUsageはnative処理終了時点であり、後続serializationの実出力課金とは分ける。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"RegionQueryReplyのCompleteは[選択/せんたく]regionとOccurrenceごとのDefinition/References[結果列/けっかれつ]を[持/も]つ。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[列/れつ]は[確定/かくてい]factsの[発行順/はっこうじゅん]を[保/たも]ち、[各結果/かくけっか]は[保存/ほぞん]された[最終/さいしゅう]ResolutionのEntity IDを[使/つか]う。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"region=None、regionはあるがOccurrenceがない、[未解決/みかいけつ]/Open[入力/にゅうりょく]、[複数/ふくすう]Occurrence、Ambiguousの[複数/ふくすう]Entity、[位置/いち]を[持/も]たないEntityを[区別/くべつ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[名前/なまえ]の[再探索/さいたんさく]や[発行時/はっこうじ]stageの[書換/かきか]えでCustomの[更新/こうしん]を[消/け]さない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[途中候補/とちゅうこうほ]はInvalid/Stoppedで[公開/こうかい]せず、[使用済/しようず]み[資源/しげん]を[払/はら]い[戻/もど]さない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"ReportのUsageはnative[処理終了時点/しょりしゅうりょうじてん]であり、[後続/こうぞく]serializationの[実出力課金/じつしゅつりょくかきん]とは[分/わ]ける。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "初回RegionQuery受信は、明示BindingRequest/ReaderFactBatch sidecarを復元して準備し、同じ選択Profileで実Bindingを実行した後に要求と返信を照合する。返信Completeのcodec検査はこの入力と完了結果からqueryを予算付きで再計算し、候補・選択・source閉包を比較する。raw BindingResultやbundleScopes行、自己申告RegionKeyから意味proof・通信認証・provider実行許可を発行しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[初回/しょかい]RegionQuery[受信/じゅしん]は、[明示/めいじ]BindingRequest/ReaderFactBatch sidecarを[復元/ふくげん]して[準備/じゅんび]し、[同/おな]じ[選択/せんたく]Profileで[実/じつ]Bindingを[実行/じっこう]した[後/あと]に[要求/ようきゅう]と[返信/へんしん]を[照合/しょうごう]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[返信/へんしん]Completeのcodec[検査/けんさ]はこの[入力/にゅうりょく]と[完了結果/かんりょうけっか]からqueryを[予算付/よさんつ]きで[再計算/さいけいさん]し、[候補/こうほ]・[選択/せんたく]・source[閉包/へいほう]を[比較/ひかく]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"raw BindingResultやbundleScopes[行/ぎょう]、[自己申告/じこしんこく]RegionKeyから[意味/いみ]proof・[通信認証/つうしんにんしょう]・provider[実行許可/じっこうきょか]を[発行/はっこう]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "QuerySelectionは元のOccurrenceId・span・確定ReferenceResolutionとopenInputを保持する。対象なしはNone、未解決とOpen namespaceのfree inputはopenInputで区別し、DeferredもUnresolvedに潰さない。定義候補は確定resolutionのEntity ID列に従い、曖昧な全候補とその順序を維持する。位置を持たないEntityはIDとlocation=Noneを返し、仮のsource位置を作らない。locationがある場合はURI、定義全体range、任意の名前selectionを分離する。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"QuerySelectionは[元/もと]のOccurrenceId・span・[確定/かくてい]ReferenceResolutionとopenInputを[保持/ほじ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[対象/たいしょう]なしはNone、[未解決/みかいけつ]とOpen namespaceのfree inputはopenInputで[区別/くべつ]し、DeferredもUnresolvedに[潰/つぶ]さない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[定義候補/ていぎこうほ]は[確定/かくてい]resolutionのEntity ID[列/れつ]に[従/したが]い、[曖昧/あいまい]な[全候補/ぜんこうほ]とその[順序/じゅんじょ]を[維持/いじ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[位置/いち]を[持/も]たないEntityはIDとlocation=Noneを[返/かえ]し、[仮/かり]のsource[位置/いち]を[作/つく]らない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"locationがある[場合/ばあい]はURI、[定義全体/ていぎぜんたい]range、[任意/にんい]の[名前/なまえ]selectionを[分離/ぶんり]する。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "Referencesは選択した各Entity IDごとに確定Occurrenceを検索する。既定ではResolvedのReferenceだけを返す。ReferenceOptionsはDefinition・Import・Export role、およびそのEntityをAmbiguous候補に含むOccurrenceをそれぞれ明示的に追加できる。曖昧な出現はambiguous=trueで区別し、同綴りの別Entityを混ぜない。通常BindingのImportが子のexport候補を可視にする操作と、providerが明示的に返すImport roleのOccurrenceは別であり、queryが新しいOccurrenceを捏造しない。Customの更新後も元stageから名前検索をやり直さず、確定resolutionを用いる。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"Referencesは[選択/せんたく]した[各/かく]Entity IDごとに[確定/かくてい]Occurrenceを[検索/けんさく]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[既定/きてい]ではResolvedのReferenceだけを[返/かえ]す。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"ReferenceOptionsはDefinition・Import・Export role、およびそのEntityをAmbiguous[候補/こうほ]に[含/ふく]むOccurrenceをそれぞれ[明示的/めいじてき]に[追加/ついか]できる。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[曖昧/あいまい]な[出現/しゅつげん]はambiguous=trueで[区別/くべつ]し、[同綴/どうつづ]りの[別/べつ]Entityを[混/ま]ぜない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[通常/つうじょう]BindingのImportが[子/こ]のexport[候補/こうほ]を[可視/かし]にする[操作/そうさ]と、providerが[明示的/めいじてき]に[返/かえ]すImport roleのOccurrenceは[別/べつ]であり、queryが[新/あたら]しいOccurrenceを[捏造/ねつぞう]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Customの[更新後/こうしんご]も[元/もと]stageから[名前検索/なまえけんさく]をやり[直/なお]さず、[確定/かくてい]resolutionを[用/もち]いる。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "QueryReplyはDefinition/References/Invalid/StoppedとReport、参照位置に必要な宣言sourcesを持つ。現queryは新たな診断・eventを発行せず、解析診断は元BindingReplyに残す。query失敗はtyped原因または元StopReasonを保持し、候補途中列を成功結果として公開しない。使用済みBudgetとSourceAdmissionは払い戻さない。sourcesはsource ID・revision・digest順に正準化する。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"QueryReplyはDefinition/References/Invalid/StoppedとReport、[参照位置/さんしょういち]に[必要/ひつよう]な[宣言/せんげん]sourcesを[持/も]つ。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[現/げん]queryは[新/あら]たな[診断/しんだん]・eventを[発行/はっこう]せず、[解析診断/かいせきしんだん]は[元/もと]BindingReplyに[残/のこ]す。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"query[失敗/しっぱい]はtyped[原因/げんいん]または[元/もと]StopReasonを[保持/ほじ]し、[候補途中列/こうほとちゅうれつ]を[成功結果/せいこうけっか]として[公開/こうかい]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[使用済/しようず]みBudgetとSourceAdmissionは[払/はら]い[戻/もど]さない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"sourcesはsource ID・revision・digest[順/じゅん]に[正準化/せいじゅんか]する。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "QueryRequestの初回decoderは元Rust要求を必要としないが、自己申告keyから完了したBindingAnalysisを作らない。実queryはhostが保持する同keyの意味proofを使う。返信decoderは対応する要求、role options、候補ID列、範囲・URIと明示source閉包を検査し、ambient sourceで欠損を埋めない。これはraw結果の構造検査であり、通信認証やリモートの解決結果の意味証明ではない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"QueryRequestの[初回/しょかい]decoderは[元/もと]Rust[要求/ようきゅう]を[必要/ひつよう]としないが、[自己申告/じこしんこく]keyから[完了/かんりょう]したBindingAnalysisを[作/つく]らない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[実/じつ]queryはhostが[保持/ほじ]する[同/どう]keyの[意味/いみ]proofを[使/つか]う。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[返信/へんしん]decoderは[対応/たいおう]する[要求/ようきゅう]、role options、[候補/こうほ]ID[列/れつ]、[範囲/はんい]・URIと[明示/めいじ]source[閉包/へいほう]を[検査/けんさ]し、ambient sourceで[欠損/けっそん]を[埋/う]めない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"これはraw[結果/けっか]の[構造検査/こうぞうけんさ]であり、[通信認証/つうしんにんしょう]やリモートの[解決結果/かいけつけっか]の[意味証明/いみしょうめい]ではない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "Customを使うprepared実行にも同じkey/有効Limitsの検査を適用する。hostのauthorizeが参照する設定・権限方針・明示resourceを変えて結果が変わる場合、hostはその入力変更をProfile resourcesやschemaで宣言したrequest options等のidentityへ反映し、旧keyの結果を再利用してはならない。keyは実行時FactAuthorityそのものを認証せず、同じkeyのまま任意のhost設定変更を安全に許す値でもない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"Customを[使/つか]うprepared[実行/じっこう]にも[同/おな]じkey/[有効/ゆうこう]Limitsの[検査/けんさ]を[適用/てきよう]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"hostのauthorizeが[参照/さんしょう]する[設定/せってい]・[権限方針/けんげんほうしん]・[明示/めいじ]resourceを[変/か]えて[結果/けっか]が[変/か]わる[場合/ばあい]、hostはその[入力変更/にゅうりょくへんこう]をProfile resourcesやschemaで[宣言/せんげん]したrequest options[等/など]のidentityへ[反映/はんえい]し、[旧/きゅう]keyの[結果/けっか]を[再利用/さいりよう]してはならない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"keyは[実行時/じっこうじ]FactAuthorityそのものを[認証/にんしょう]せず、[同/おな]じkeyのまま[任意/にんい]のhost[設定変更/せっていへんこう]を[安全/あんぜん]に[許/ゆる]す[値/あたい]でもない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "definition結果はoriginSelection、targetUri、targetRange、targetSelectionを分離する。entityのnameだけ選択しつつ定義全体も示せる。sourceが配布packageの場合は読み取り専用virtual documentとして公開できる。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"definition[結果/けっか]はoriginSelection、targetUri、targetRange、targetSelectionを[分離/ぶんり]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"entityのnameだけ[選択/せんたく]しつつ[定義全体/ていぎぜんたい]も[示/しめ]せる。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"sourceが[配布/はいふ]packageの[場合/ばあい]は[読/よ]み[取/と]り[専用/せんよう]virtual documentとして[公開/こうかい]できる。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "CorrespondsToには「対応文へ移動」、Originには「生成元へ移動」を提供し、通常の定義ジャンプとは別relationとして扱う。多義的な解決は複数候補を返し、単語一致で一つに決めない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"CorrespondsToには「[対応文/たいおうぶん]へ[移動/いどう]」、Originには「[生成元/せいせいもと]へ[移動/いどう]」を[提供/ていきょう]し、[通常/つうじょう]の[定義/ていぎ]ジャンプとは[別/べつ]relationとして[扱/あつか]う。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[多義的/たぎてき]な[解決/かいけつ]は[複数候補/ふくすうこうほ]を[返/かえ]し、[単語一致/たんごいっち]で[一/ひと]つに[決/き]めない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "renameは同じEntityを指すOccurrenceだけを対象にする。新名の適格性、予約語、shadowing、scope内衝突、外側の参照の捕捉まで再検査する。SourceMapの逆変換が一意でない場所はRenameNotInvertible。全TextEditはrevision付きでatomicに返す。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"renameは[同/おな]じEntityを[指/さ]すOccurrenceだけを[対象/たいしょう]にする。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[新名/しんめい]の[適格性/てきかくせい]、[予約語/よやくご]、shadowing、scope[内衝突/ないしょうとつ]、[外側/そとがわ]の[参照/さんしょう]の[捕捉/ほそく]まで[再検査/さいけんさ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"SourceMapの[逆変換/ぎゃくへんかん]が[一意/いちい]でない[場所/ばしょ]はRenameNotInvertible。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[全/ぜん]TextEditはrevision[付/つ]きでatomicに[返/かえ]す。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "現在の rename は RenameRequest(key, source, offset, newName, writable) に対する二段操作である。対象選択は上記の名前Occurrence規則を使う。writable はhostが許可した元snapshot集合であり、受信したSourceRefやURIだけから編集権限を発行しない。未選択・未解決・曖昧・Deferred・位置なしを型付きで区別して拒否する。予約headは対象EntityのFactNamespace.schemaを所有する選択済みpackageのForm.spellingと照合する。別schemaの言語だけに存在するheadを予約語へ加えない。最終的な名前のreader適格性と構文選択は実再parseで検査する。",
+    "fields": {
+      "items": [
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "現在"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "げんざい"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "の rename は "
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "RenameRequest(key, source, offset, newName, writable)"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " に"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "対"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "たい"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "する"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "二段操作"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "にだんそうさ"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "である。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[対象選択/たいしょうせんたく]は[上記/じょうき]の[名前/なまえ]Occurrence[規則/きそく]を[使/つか]う。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"writable はhostが[許可/きょか]した[元/もと]snapshot[集合/しゅうごう]であり、[受信/じゅしん]したSourceRefやURIだけから[編集権限/へんしゅうけんげん]を[発行/はっこう]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[未選択/みせんたく]・[未解決/みかいけつ]・[曖昧/あいまい]・Deferred・[位置/いち]なしを[型付/かたつ]きで[区別/くべつ]して[拒否/きょひ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[予約/よやく]headは[対象/たいしょう]EntityのFactNamespace.schemaを[所有/しょゆう]する[選択済/せんたくず]みpackageのForm.spellingと[照合/しょうごう]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[別/べつ]schemaの[言語/げんご]だけに[存在/そんざい]するheadを[予約語/よやくご]へ[加/くわ]えない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[最終的/さいしゅうてき]な[名前/なまえ]のreader[適格性/てきかくせい]と[構文選択/こうぶんせんたく]は[実再/じっさい]parseで[検査/けんさ]する。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "prepareは元の実parse完了結果と、その同じimmutable treeを借用するprepared Binding要求、同keyの完了解析を要求する。private RenameDraftには元revisionへの編集候補と候補snapshot集合を保持するが、成功transactionや編集列の公開入口を与えない。draftはrename操作専用SourceAdmissionを所有し、同じ有効LimitsのBudgetをprepare・再parse・再解析・acceptの間、排他的に借用する。失敗やdraft破棄で使用済み費用を払い戻さない。別候補は同じ元revisionから分岐でき、共有の元SourceStoreを候補作成時に変更しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"prepareは[元/もと]の[実/じつ]parse[完了結果/かんりょうけっか]と、その[同/おな]じimmutable treeを[借用/しゃくよう]するprepared Binding[要求/ようきゅう]、[同/どう]keyの[完了解析/かんりょうかいせき]を[要求/ようきゅう]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"private RenameDraftには[元/もと]revisionへの[編集候補/へんしゅうこうほ]と[候補/こうほ]snapshot[集合/しゅうごう]を[保持/ほじ]するが、[成功/せいこう]transactionや[編集列/へんしゅうれつ]の[公開入口/こうかいいりぐち]を[与/あた]えない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"draftはrename[操作専用/そうさせんよう]SourceAdmissionを[所有/しょゆう]し、[同/おな]じ[有効/ゆうこう]LimitsのBudgetをprepare・[再/さい]parse・[再解析/さいかいせき]・acceptの[間/あいだ]、[排他的/はいたてき]に[借用/しゃくよう]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[失敗/しっぱい]やdraft[破棄/はき]で[使用済/しようず]み[費用/ひよう]を[払/はら]い[戻/もど]さない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[別候補/べつこうほ]は[同/おな]じ[元/もと]revisionから[分岐/ぶんき]でき、[共有/きょうゆう]の[元/もと]SourceStoreを[候補作成時/こうほさくせいじ]に[変更/へんこう]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "逆写像は宣言SourceMapを全探索し、同一source・revision・digest上の一意な連続範囲へ達するExact対応だけを使う。隣接するExact区間は同じbyte変位で穴なく全対象範囲を被覆するなら結合でき、表順や区間分割で結果を変えない。異なるsourceや変位への多義性、被覆穴、Transformed、Composite/Synthetic origin、cycleは拒否する。quoteやescapeから復号された意味名と元bytesが異なる場合、明示逆encoderがないままquoteを消す置換を行わない。探索・範囲比較・複製はWork/Depth/Nodes/Allocationの対象となる。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[逆写像/ぎゃくしゃぞう]は[宣言/せんげん]SourceMapを[全探索/ぜんたんさく]し、[同一/どういつ]source・revision・digest[上/じょう]の[一意/いちい]な[連続範囲/れんぞくはんい]へ[達/たっ]するExact[対応/たいおう]だけを[使/つか]う。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[隣接/りんせつ]するExact[区間/くかん]は[同/おな]じbyte[変位/へんい]で[穴/あな]なく[全対象範囲/ぜんたいしょうはんい]を[被覆/ひふく]するなら[結合/けつごう]でき、[表順/ひょうじゅん]や[区間分割/くかんぶんかつ]で[結果/けっか]を[変/か]えない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[異/こと]なるsourceや[変位/へんい]への[多義性/たぎせい]、[被覆穴/ひふくあな]、Transformed、Composite/Synthetic origin、cycleは[拒否/きょひ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"quoteやescapeから[復号/ふくごう]された[意味名/いみめい]と[元/もと]bytesが[異/こと]なる[場合/ばあい]、[明示逆/めいじぎゃく]encoderがないままquoteを[消/け]す[置換/ちかん]を[行/おこな]わない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[探索/たんさく]・[範囲比較/はんいひかく]・[複製/ふくせい]はWork/Depth/Nodes/Allocationの[対象/たいしょう]となる。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "ここで探索する宣言表は対象Entityまたは各Occurrenceのnamespace rootに対応する実bundleの局所mapと、そのbundleのcustomSourceMapsが指す受理mapに限る。平坦なFactSet.sourceMaps全体を編集先の根拠にしない。各Occurrenceは自分のownerで逆写像し、同じEntityを指すという理由だけで対象Entityのmapを流用しない。前向き導出も各元編集と対応ownerの組ごとに独立した閉包をたどり、最終的な編集列だけを統合する。再解析後のsource位置対応はold/newそれぞれのEntity・Occurrence owner、構文位置は各正準bundle ownerで検査する。guestだけが宣言したmapでhost名のwritable rootを置き換えることはできない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"ここで[探索/たんさく]する[宣言表/せんげんひょう]は[対象/たいしょう]Entityまたは[各/かく]Occurrenceのnamespace rootに[対応/たいおう]する[実/じつ]bundleの[局所/きょくしょ]mapと、そのbundleのcustomSourceMapsが[指/さ]す[受理/じゅり]mapに[限/かぎ]る。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[平坦/へいたん]なFactSet.sourceMaps[全体/ぜんたい]を[編集先/へんしゅうさき]の[根拠/こんきょ]にしない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[各/かく]Occurrenceは[自分/じぶん]のownerで[逆写像/ぎゃくしゃぞう]し、[同/おな]じEntityを[指/さ]すという[理由/りゆう]だけで[対象/たいしょう]Entityのmapを[流用/りゅうよう]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[前向/まえむ]き[導出/どうしゅつ]も[各元編集/かくもとへんしゅう]と[対応/たいおう]ownerの[組/くみ]ごとに[独立/どくりつ]した[閉包/へいほう]をたどり、[最終的/さいしゅうてき]な[編集列/へんしゅうれつ]だけを[統合/とうごう]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[再解析後/さいかいせきご]のsource[位置対応/いちたいおう]はold/newそれぞれのEntity・Occurrence owner、[構文位置/こうぶんいち]は[各正準/かくせいじゅん]bundle ownerで[検査/けんさ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"guestだけが[宣言/せんげん]したmapでhost[名/めい]のwritable rootを[置/お]き[換/か]えることはできない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "元への編集からExact対応を前向きにも適用し、影響する派生snapshotの次revisionと内部編集を作る。派生側の未対応byteは保存する。再parseが返す全宣言sourceはdraftの指定snapshot集合と、ID・revision・digest・URI・全bytesで一致しなければならない。mapのtargetであることはsnapshot全体の照合免除にならない。hostがreaderの生成sourceを予約する場合も、この候補identityを使う。公開する編集は許可された元snapshotへの列だけで、派生側の内部編集を追加の書込権限として外部へ渡さない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[元/もと]への[編集/へんしゅう]からExact[対応/たいおう]を[前向/まえむ]きにも[適用/てきよう]し、[影響/えいきょう]する[派生/はせい]snapshotの[次/つぎ]revisionと[内部編集/ないぶへんしゅう]を[作/つく]る。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[派生側/はせいがわ]の[未対応/みたいおう]byteは[保存/ほぞん]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[再/さい]parseが[返/かえ]す[全宣言/ぜんせんげん]sourceはdraftの[指定/してい]snapshot[集合/しゅうごう]と、ID・revision・digest・URI・[全/ぜん]bytesで[一致/いっち]しなければならない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"mapのtargetであることはsnapshot[全体/ぜんたい]の[照合免除/しょうごうめんじょ]にならない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"hostがreaderの[生成/せいせい]sourceを[予約/よやく]する[場合/ばあい]も、この[候補/こうほ]identityを[使/つか]う。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[公開/こうかい]する[編集/へんしゅう]は[許可/きょか]された[元/もと]snapshotへの[列/れつ]だけで、[派生側/はせいがわ]の[内部編集/ないぶへんしゅう]を[追加/ついか]の[書込権限/かきこみけんげん]として[外部/がいぶ]へ[渡/わた]さない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "acceptは候補の実parse完了結果と同じimmutable treeに対するprepared要求・完了解析を照合する。Profileの意味identity、provider/package実行identity、options・analysis ID・有効Limitsを維持し、候補全source、構文kind/field/選択context、編集に対応する位置と意味payloadを検査する。Entityの対応は宣言位置・scope/namespace・意味名に基づき、opaque IDの数値一致だけで決めない。対象外の名前も含め、Resolved・全Ambiguous候補・Unresolved/free input・Deferred・Customの確定resolutionが対応していることを検査する。後続scopeで名前検索をやり直してCustomの判断を上書きしない。衝突・捕捉・構文変更・別要求との組替え・停止では編集列を一部も公開しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"acceptは[候補/こうほ]の[実/じつ]parse[完了結果/かんりょうけっか]と[同/おな]じimmutable treeに[対/たい]するprepared[要求/ようきゅう]・[完了解析/かんりょうかいせき]を[照合/しょうごう]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Profileの[意味/いみ]identity、provider/package[実行/じっこう]identity、options・analysis ID・[有効/ゆうこう]Limitsを[維持/いじ]し、[候補全/こうほぜん]source、[構文/こうぶん]kind/field/[選択/せんたく]context、[編集/へんしゅう]に[対応/たいおう]する[位置/いち]と[意味/いみ]payloadを[検査/けんさ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Entityの[対応/たいおう]は[宣言位置/せんげんいち]・scope/namespace・[意味名/いみめい]に[基/もと]づき、opaque IDの[数値一致/すうちいっち]だけで[決/き]めない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[対象外/たいしょうがい]の[名前/なまえ]も[含/ふく]め、Resolved・[全/ぜん]Ambiguous[候補/こうほ]・Unresolved/free input・Deferred・Customの[確定/かくてい]resolutionが[対応/たいおう]していることを[検査/けんさ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[後続/こうぞく]scopeで[名前検索/なまえけんさく]をやり[直/なお]してCustomの[判断/はんだん]を[上書/うわが]きしない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[衝突/しょうとつ]・[捕捉/ほそく]・[構文変更/こうぶんへんこう]・[別要求/べつようきゅう]との[組替/くみか]え・[停止/ていし]では[編集列/へんしゅうれつ]を[一部/いちぶ]も[公開/こうかい]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "nativeのCompletedParseは実ParseSessionのread/resume/reserve/resume_headがCompleteを返した場合だけ発行する所有proofであり、待機・回復・停止は通常のParseReplyを保持する。元と候補のprepared treeがこのproofの同一immutable treeを借用する条件はnative内部の保証で、pointerやRust ABIを公開schemaへ露出しない。raw treeの取出しはproofを消費し、raw ParseTreeやNDF decodeから再発行できない。将来の別言語・別process parserも、認証された発行要求と実parse実行結果を結ぶ同等のhost境界を必要とする。現在のraw rename request/reply codecはschema、要求key、書込対象、old digest、編集非重複、元source閉包を検査するが、通信認証やparse実行証明を発行しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"nativeのCompletedParseは[実/じつ]ParseSessionのread/resume/reserve/resume_headがCompleteを[返/かえ]した[場合/ばあい]だけ[発行/はっこう]する[所有/しょゆう]proofであり、[待機/たいき]・[回復/かいふく]・[停止/ていし]は[通常/つうじょう]のParseReplyを[保持/ほじ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[元/もと]と[候補/こうほ]のprepared treeがこのproofの[同一/どういつ]immutable treeを[借用/しゃくよう]する[条件/じょうけん]はnative[内部/ないぶ]の[保証/ほしょう]で、pointerやRust ABIを[公開/こうかい]schemaへ[露出/ろしゅつ]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"raw treeの[取出/とりだ]しはproofを[消費/しょうひ]し、raw ParseTreeやNDF decodeから[再発行/さいはっこう]できない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[将来/しょうらい]の[別言語/べつげんご]・[別/べつ]process parserも、[認証/にんしょう]された[発行要求/はっこうようきゅう]と[実/じつ]parse[実行結果/じっこうけっか]を[結/むす]ぶ[同等/どうとう]のhost[境界/きょうかい]を[必要/ひつよう]とする。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[現在/げんざい]のraw rename request/reply codecはschema、[要求/ようきゅう]key、[書込対象/かきこみたいしょう]、old digest、[編集非重複/へんしゅうひじゅうふく]、[元/もと]source[閉包/へいほう]を[検査/けんさ]するが、[通信認証/つうしんにんしょう]やparse[実行証明/じっこうしょうめい]を[発行/はっこう]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "RenameReplyのCompleteは新AnalysisKeyと全TextEdit、Invalid/Stoppedは編集なしを返す。Reportは実消費Usageを保持し、この操作自身は新規diagnostic/eventを発行しない。再parse/解析の正式Reportはそれぞれの返り値に保持する。受信したUsageの内部整合と外部処理費用の認証は別の責務である。最終適用は呼出側の元SourceStoreに対し、base revision・old digest付きのatomic applyで行う。一般region selector、任意encoderによる意味名の逆変換、増分再解析、外部parser実行の認証transportはこの段階の完成範囲に含めない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"RenameReplyのCompleteは[新/しん]AnalysisKeyと[全/ぜん]TextEdit、Invalid/Stoppedは[編集/へんしゅう]なしを[返/かえ]す。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Reportは[実消費/じつしょうひ]Usageを[保持/ほじ]し、この[操作自身/そうさじしん]は[新規/しんき]diagnostic/eventを[発行/はっこう]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[再/さい]parse/[解析/かいせき]の[正式/せいしき]Reportはそれぞれの[返/かえ]り[値/ち]に[保持/ほじ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[受信/じゅしん]したUsageの[内部整合/ないぶせいごう]と[外部処理費用/がいぶしょりひよう]の[認証/にんしょう]は[別/べつ]の[責務/せきむ]である。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[最終適用/さいしゅうてきよう]は[呼出側/よびだしがわ]の[元/もと]SourceStoreに[対/たい]し、base revision・old digest[付/つ]きのatomic applyで[行/おこな]う。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[一般/いっぱん]region selector、[任意/にんい]encoderによる[意味名/いみめい]の[逆変換/ぎゃくへんかん]、[増分再解析/ぞうぶんさいかいせき]、[外部/がいぶ]parser[実行/じっこう]の[認証/にんしょう]transportはこの[段階/だんかい]の[完成範囲/かんせいはんい]に[含/ふく]めない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Section",
+    "text": "5. 不完全入力構文エラーで文書全体を失わない。treeにMissing(expected, anchor)、Unexpected(span)、Unparsed(range,reason)を持てる。通常の成功nodeと区別し、checked値へ混入させない。EOFで既知arityの子が不足するとMissingを作る。現在のcategoryに不適合だがancestorの明示的同期位置に適合するtokenは消費せずMissingを挿入できる。同期根拠がなければUnexpectedとして消費するか、その範囲をUnparsedとして残す。どちらを選ぶかはpackageのRecoveryPlanに固定する。arity不明のheadの子の数を推測しない。該当rangeをUnparsedにし、既に確定した周辺の情報だけを返す。prefix構文では誤り後の正しい境界が入力だけから復元できない場合がある。完全に復元できると広告しない。SentenceLiteralでは改行/EOF/終了引用符が回復境界。注釈の不足括弧についてexpected tokenと開始位置を返す。期待する閉じ括弧を自動挿入するfixは提案であり、ユーザー操作なしにソースを書き換えない。",
+    "fields": {
+      "id": "recovery",
+      "title": {
+        "kind": "leaf",
+        "token": "\"5. [不完全入力/ふかんぜんにゅうりょく]\""
+      },
+      "body": {
+        "kind": "Body",
+        "fields": {
+          "blocks": [
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[構文/こうぶん]エラーで[文書全体/ぶんしょぜんたい]を[失/うしな]わない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"treeにMissing(expected, anchor)、Unexpected(span)、Unparsed(range,reason)を[持/も]てる。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[通常/つうじょう]の[成功/せいこう]nodeと[区別/くべつ]し、checked[値/ち]へ[混入/こんにゅう]させない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"EOFで[既知/きち]arityの[子/こ]が[不足/ふそく]するとMissingを[作/つく]る。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[現在/げんざい]のcategoryに[不適合/ふてきごう]だがancestorの[明示的同期位置/めいじてきどうきいち]に[適合/てきごう]するtokenは[消費/しょうひ]せずMissingを[挿入/そうにゅう]できる。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[同期根拠/どうきこんきょ]がなければUnexpectedとして[消費/しょうひ]するか、その[範囲/はんい]をUnparsedとして[残/のこ]す。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"どちらを[選/えら]ぶかはpackageのRecoveryPlanに[固定/こてい]する。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"arity[不明/ふめい]のheadの[子/こ]の[数/かず]を[推測/すいそく]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[該当/がいとう]rangeをUnparsedにし、[既/すで]に[確定/かくてい]した[周辺/しゅうへん]の[情報/じょうほう]だけを[返/かえ]す。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"prefix[構文/こうぶん]では[誤/あやま]り[後/ご]の[正/ただ]しい[境界/きょうかい]が[入力/にゅうりょく]だけから[復元/ふくげん]できない[場合/ばあい]がある。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[完全/かんぜん]に[復元/ふくげん]できると[広告/こうこく]しない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"SentenceLiteralでは[改行/かいぎょう]/EOF/[終了引用符/しゅうりょういんようふ]が[回復境界/かいふくきょうかい]。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[注釈/ちゅうしゃく]の[不足括弧/ふそくかっこ]についてexpected tokenと[開始位置/かいしいち]を[返/かえ]す。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[期待/きたい]する[閉/と]じ[括弧/かっこ]を[自動挿入/じどうそうにゅう]するfixは[提案/ていあん]であり、ユーザー[操作/そうさ]なしにソースを[書/か]き[換/か]えない。\""
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "構文エラーで文書全体を失わない。treeにMissing(expected, anchor)、Unexpected(span)、Unparsed(range,reason)を持てる。通常の成功nodeと区別し、checked値へ混入させない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[構文/こうぶん]エラーで[文書全体/ぶんしょぜんたい]を[失/うしな]わない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"treeにMissing(expected, anchor)、Unexpected(span)、Unparsed(range,reason)を[持/も]てる。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[通常/つうじょう]の[成功/せいこう]nodeと[区別/くべつ]し、checked[値/ち]へ[混入/こんにゅう]させない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "EOFで既知arityの子が不足するとMissingを作る。現在のcategoryに不適合だがancestorの明示的同期位置に適合するtokenは消費せずMissingを挿入できる。同期根拠がなければUnexpectedとして消費するか、その範囲をUnparsedとして残す。どちらを選ぶかはpackageのRecoveryPlanに固定する。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"EOFで[既知/きち]arityの[子/こ]が[不足/ふそく]するとMissingを[作/つく]る。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[現在/げんざい]のcategoryに[不適合/ふてきごう]だがancestorの[明示的同期位置/めいじてきどうきいち]に[適合/てきごう]するtokenは[消費/しょうひ]せずMissingを[挿入/そうにゅう]できる。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[同期根拠/どうきこんきょ]がなければUnexpectedとして[消費/しょうひ]するか、その[範囲/はんい]をUnparsedとして[残/のこ]す。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"どちらを[選/えら]ぶかはpackageのRecoveryPlanに[固定/こてい]する。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "arity不明のheadの子の数を推測しない。該当rangeをUnparsedにし、既に確定した周辺の情報だけを返す。prefix構文では誤り後の正しい境界が入力だけから復元できない場合がある。完全に復元できると広告しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"arity[不明/ふめい]のheadの[子/こ]の[数/かず]を[推測/すいそく]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[該当/がいとう]rangeをUnparsedにし、[既/すで]に[確定/かくてい]した[周辺/しゅうへん]の[情報/じょうほう]だけを[返/かえ]す。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"prefix[構文/こうぶん]では[誤/あやま]り[後/ご]の[正/ただ]しい[境界/きょうかい]が[入力/にゅうりょく]だけから[復元/ふくげん]できない[場合/ばあい]がある。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[完全/かんぜん]に[復元/ふくげん]できると[広告/こうこく]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "SentenceLiteralでは改行/EOF/終了引用符が回復境界。注釈の不足括弧についてexpected tokenと開始位置を返す。期待する閉じ括弧を自動挿入するfixは提案であり、ユーザー操作なしにソースを書き換えない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"SentenceLiteralでは[改行/かいぎょう]/EOF/[終了引用符/しゅうりょういんようふ]が[回復境界/かいふくきょうかい]。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[注釈/ちゅうしゃく]の[不足括弧/ふそくかっこ]についてexpected tokenと[開始位置/かいしいち]を[返/かえ]す。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[期待/きたい]する[閉/と]じ[括弧/かっこ]を[自動挿入/じどうそうにゅう]するfixは[提案/ていあん]であり、ユーザー[操作/そうさ]なしにソースを[書/か]き[換/か]えない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Section",
+    "text": "6. 増分解析と取消し編集はbaseRevision付きTextEdit列。編集後に新snapshotを作り、古いsnapshotは不変。編集に交差しないrangeは編集写像で新snapshotへ明示的に移せる。交差するtoken、子contextを変更する前方宣言、その依存下流を無効化する。再利用可能なnodeは、source内容、entry category、reader/context/provider digestが一致する場合に限る。独立な埋め込みや意味値は再利用できる。全再解析との出力比較をconformanceに含める。最悪時の全体再解析は正しい経路として残し、常に編集差分だけの計算量を保証しない。LSP側はdebounceとcancelを担当する。coreは明示的budget/pollを使う。古いrevisionの結果は公開しない。cacheと統計は明示的session stateであり、隠れたglobalにはしない。",
+    "fields": {
+      "id": "incremental",
+      "title": {
+        "kind": "leaf",
+        "token": "\"6. [増分解析/ぞうぶんかいせき]と[取消/とりけ]し\""
+      },
+      "body": {
+        "kind": "Body",
+        "fields": {
+          "blocks": [
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[編集/へんしゅう]はbaseRevision[付/つ]きTextEdit[列/れつ]。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[編集後/へんしゅうご]に[新/しん]snapshotを[作/つく]り、[古/ふる]いsnapshotは[不変/ふへん]。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[編集/へんしゅう]に[交差/こうさ]しないrangeは[編集写像/へんしゅうしゃぞう]で[新/しん]snapshotへ[明示的/めいじてき]に[移/うつ]せる。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[交差/こうさ]するtoken、[子/こ]contextを[変更/へんこう]する[前方宣言/ぜんぽうせんげん]、その[依存下流/いぞんかりゅう]を[無効化/むこうか]する。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[再利用可能/さいりようかのう]なnodeは、source[内容/ないよう]、entry category、reader/context/provider digestが[一致/いっち]する[場合/ばあい]に[限/かぎ]る。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[独立/どくりつ]な[埋/う]め[込/こ]みや[意味値/いみち]は[再利用/さいりよう]できる。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[全再解析/ぜんさいかいせき]との[出力比較/しゅつりょくひかく]をconformanceに[含/ふく]める。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[最悪時/さいあくじ]の[全体再解析/ぜんたいさいかいせき]は[正/ただ]しい[経路/けいろ]として[残/のこ]し、[常/つね]に[編集差分/へんしゅうさぶん]だけの[計算量/けいさんりょう]を[保証/ほしょう]しない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"LSP[側/がわ]はdebounceとcancelを[担当/たんとう]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"coreは[明示的/めいじてき]budget/pollを[使/つか]う。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[古/ふる]いrevisionの[結果/けっか]は[公開/こうかい]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"cacheと[統計/とうけい]は[明示的/めいじてき]session stateであり、[隠/かく]れたglobalにはしない。\""
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "編集はbaseRevision付きTextEdit列。編集後に新snapshotを作り、古いsnapshotは不変。編集に交差しないrangeは編集写像で新snapshotへ明示的に移せる。交差するtoken、子contextを変更する前方宣言、その依存下流を無効化する。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[編集/へんしゅう]はbaseRevision[付/つ]きTextEdit[列/れつ]。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[編集後/へんしゅうご]に[新/しん]snapshotを[作/つく]り、[古/ふる]いsnapshotは[不変/ふへん]。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[編集/へんしゅう]に[交差/こうさ]しないrangeは[編集写像/へんしゅうしゃぞう]で[新/しん]snapshotへ[明示的/めいじてき]に[移/うつ]せる。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[交差/こうさ]するtoken、[子/こ]contextを[変更/へんこう]する[前方宣言/ぜんぽうせんげん]、その[依存下流/いぞんかりゅう]を[無効化/むこうか]する。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "再利用可能なnodeは、source内容、entry category、reader/context/provider digestが一致する場合に限る。独立な埋め込みや意味値は再利用できる。全再解析との出力比較をconformanceに含める。最悪時の全体再解析は正しい経路として残し、常に編集差分だけの計算量を保証しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[再利用可能/さいりようかのう]なnodeは、source[内容/ないよう]、entry category、reader/context/provider digestが[一致/いっち]する[場合/ばあい]に[限/かぎ]る。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[独立/どくりつ]な[埋/う]め[込/こ]みや[意味値/いみち]は[再利用/さいりよう]できる。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[全再解析/ぜんさいかいせき]との[出力比較/しゅつりょくひかく]をconformanceに[含/ふく]める。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[最悪時/さいあくじ]の[全体再解析/ぜんたいさいかいせき]は[正/ただ]しい[経路/けいろ]として[残/のこ]し、[常/つね]に[編集差分/へんしゅうさぶん]だけの[計算量/けいさんりょう]を[保証/ほしょう]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "LSP側はdebounceとcancelを担当する。coreは明示的budget/pollを使う。古いrevisionの結果は公開しない。cacheと統計は明示的session stateであり、隠れたglobalにはしない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"LSP[側/がわ]はdebounceとcancelを[担当/たんとう]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"coreは[明示的/めいじてき]budget/pollを[使/つか]う。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[古/ふる]いrevisionの[結果/けっか]は[公開/こうかい]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"cacheと[統計/とうけい]は[明示的/めいじてき]session stateであり、[隠/かく]れたglobalにはしない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Section",
+    "text": "7. LSP adapterの責務3.17で定義された位置encoding/diagnostic/semantic token/definition等の契約を利用し、機能はcapabilityで交渉する。UTF-8/UTF-16/UTF-32の位置変換をLineIndexで行う。UTF-16をfallbackとして必ず扱う。日本語や補助平面文字のbyte数、UTF-16 code unit数、表示幅を混同しない。一般的なDSL class名はsemantic token legendの独自typeとして出せる。クライアントが対応しない場合は表示fallbackを使うが、NEPL3内部kindを書き換えない。position/legendの変換はdomain crateに置かない。nepl3-lspは一つの汎用server。workspace設定から拡張子とLanguagePackageを選択し、各DSLごとのserverの再実装は不要。VS Code/Neovimには接続と設定だけの薄いadapterを置く。packageを変更したらanalysisを無効化し、必要ならlegend登録も更新する。",
+    "fields": {
+      "id": "lsp",
+      "title": {
+        "kind": "leaf",
+        "token": "\"7. LSP adapterの[責務/せきむ]\""
+      },
+      "body": {
+        "kind": "Body",
+        "fields": {
+          "blocks": [
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"3.17で[定義/ていぎ]された[位置/いち]encoding/diagnostic/semantic token/definition[等/など]の[契約/けいやく]を[利用/りよう]し、[機能/きのう]はcapabilityで[交渉/こうしょう]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"UTF-8/UTF-16/UTF-32の[位置変換/いちへんかん]をLineIndexで[行/おこな]う。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"UTF-16をfallbackとして[必/かなら]ず[扱/あつか]う。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[日本語/にほんご]や[補助平面文字/ほじょへいめんもじ]のbyte[数/すう]、UTF-16 code unit[数/すう]、[表示幅/ひょうじはば]を[混同/こんどう]しない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[一般的/いっぱんてき]なDSL class[名/めい]はsemantic token legendの[独自/どくじ]typeとして[出/だ]せる。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"クライアントが[対応/たいおう]しない[場合/ばあい]は[表示/ひょうじ]fallbackを[使/つか]うが、NEPL3[内部/ないぶ]kindを[書/か]き[換/か]えない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"position/legendの[変換/へんかん]はdomain crateに[置/お]かない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"nepl3-lspは[一/ひと]つの[汎用/はんよう]server。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"workspace[設定/せってい]から[拡張子/かくちょうし]とLanguagePackageを[選択/せんたく]し、[各/かく]DSLごとのserverの[再実装/さいじっそう]は[不要/ふよう]。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"VS Code/Neovimには[接続/せつぞく]と[設定/せってい]だけの[薄/うす]いadapterを[置/お]く。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"packageを[変更/へんこう]したらanalysisを[無効化/むこうか]し、[必要/ひつよう]ならlegend[登録/とうろく]も[更新/こうしん]する。\""
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "3.17で定義された位置encoding/diagnostic/semantic token/definition等の契約を利用し、機能はcapabilityで交渉する。UTF-8/UTF-16/UTF-32の位置変換をLineIndexで行う。UTF-16をfallbackとして必ず扱う。日本語や補助平面文字のbyte数、UTF-16 code unit数、表示幅を混同しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"3.17で[定義/ていぎ]された[位置/いち]encoding/diagnostic/semantic token/definition[等/など]の[契約/けいやく]を[利用/りよう]し、[機能/きのう]はcapabilityで[交渉/こうしょう]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"UTF-8/UTF-16/UTF-32の[位置変換/いちへんかん]をLineIndexで[行/おこな]う。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"UTF-16をfallbackとして[必/かなら]ず[扱/あつか]う。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[日本語/にほんご]や[補助平面文字/ほじょへいめんもじ]のbyte[数/すう]、UTF-16 code unit[数/すう]、[表示幅/ひょうじはば]を[混同/こんどう]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "一般的なDSL class名はsemantic token legendの独自typeとして出せる。クライアントが対応しない場合は表示fallbackを使うが、NEPL3内部kindを書き換えない。position/legendの変換はdomain crateに置かない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[一般的/いっぱんてき]なDSL class[名/めい]はsemantic token legendの[独自/どくじ]typeとして[出/だ]せる。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"クライアントが[対応/たいおう]しない[場合/ばあい]は[表示/ひょうじ]fallbackを[使/つか]うが、NEPL3[内部/ないぶ]kindを[書/か]き[換/か]えない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"position/legendの[変換/へんかん]はdomain crateに[置/お]かない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "nepl3-lspは一つの汎用server。workspace設定から拡張子とLanguagePackageを選択し、各DSLごとのserverの再実装は不要。VS Code/Neovimには接続と設定だけの薄いadapterを置く。packageを変更したらanalysisを無効化し、必要ならlegend登録も更新する。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"nepl3-lspは[一/ひと]つの[汎用/はんよう]server。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"workspace[設定/せってい]から[拡張子/かくちょうし]とLanguagePackageを[選択/せんたく]し、[各/かく]DSLごとのserverの[再実装/さいじっそう]は[不要/ふよう]。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"VS Code/Neovimには[接続/せつぞく]と[設定/せってい]だけの[薄/うす]いadapterを[置/お]く。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"packageを[変更/へんこう]したらanalysisを[無効化/むこうか]し、[必要/ひつよう]ならlegend[登録/とうろく]も[更新/こうしん]する。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Section",
+    "text": "8. 診断・ログの表示同一DiagnosticをCLI、LSP、browserへrenderする。CLI stderrは表示adapter、stdoutは要求された成果物だけ。JSON/NDF診断出力と人間用表示を分離する。詳細traceは明示的に選択し、ソース全文や環境の機密値を既定では記録しない。情報が不足する場合はstage/requirementsとして表示し、存在しないsource位置を作らない。providerの内部エラーとユーザーの構文ミスを区別する。",
+    "fields": {
+      "id": "diagnostics",
+      "title": {
+        "kind": "leaf",
+        "token": "\"8. [診断/しんだん]・ログの[表示/ひょうじ]\""
+      },
+      "body": {
+        "kind": "Body",
+        "fields": {
+          "blocks": [
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[同一/どういつ]DiagnosticをCLI、LSP、browserへrenderする。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"CLI stderrは[表示/ひょうじ]adapter、stdoutは[要求/ようきゅう]された[成果物/せいかぶつ]だけ。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"JSON/NDF[診断出力/しんだんしゅつりょく]と[人間用表示/にんげんようひょうじ]を[分離/ぶんり]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[詳細/しょうさい]traceは[明示的/めいじてき]に[選択/せんたく]し、ソース[全文/ぜんぶん]や[環境/かんきょう]の[機密値/きみつち]を[既定/きてい]では[記録/きろく]しない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[情報/じょうほう]が[不足/ふそく]する[場合/ばあい]はstage/requirementsとして[表示/ひょうじ]し、[存在/そんざい]しないsource[位置/いち]を[作/つく]らない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"providerの[内部/ないぶ]エラーとユーザーの[構文/こうぶん]ミスを[区別/くべつ]する。\""
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "同一DiagnosticをCLI、LSP、browserへrenderする。CLI stderrは表示adapter、stdoutは要求された成果物だけ。JSON/NDF診断出力と人間用表示を分離する。詳細traceは明示的に選択し、ソース全文や環境の機密値を既定では記録しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[同一/どういつ]DiagnosticをCLI、LSP、browserへrenderする。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"CLI stderrは[表示/ひょうじ]adapter、stdoutは[要求/ようきゅう]された[成果物/せいかぶつ]だけ。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"JSON/NDF[診断出力/しんだんしゅつりょく]と[人間用表示/にんげんようひょうじ]を[分離/ぶんり]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[詳細/しょうさい]traceは[明示的/めいじてき]に[選択/せんたく]し、ソース[全文/ぜんぶん]や[環境/かんきょう]の[機密値/きみつち]を[既定/きてい]では[記録/きろく]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "情報が不足する場合はstage/requirementsとして表示し、存在しないsource位置を作らない。providerの内部エラーとユーザーの構文ミスを区別する。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[情報/じょうほう]が[不足/ふそく]する[場合/ばあい]はstage/requirementsとして[表示/ひょうじ]し、[存在/そんざい]しないsource[位置/いち]を[作/つく]らない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"providerの[内部/ないぶ]エラーとユーザーの[構文/こうぶん]ミスを[区別/くべつ]する。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Section",
+    "text": "9. workspace trustの境界通常の解析と診断で対象プログラムをevaluateしない。Grammar reader providerはhostのallowlist・署名・schemaで制限する。workspaceからnative pluginを自動build/loadしない。untrusted providerには隔離runnerが必要で、ない環境ではTrustRequiredを返す。巨大入力/再帰/イベント/出力にも上限を設定する。",
+    "fields": {
+      "id": "trust",
+      "title": {
+        "kind": "leaf",
+        "token": "\"9. workspace trustの[境界/きょうかい]\""
+      },
+      "body": {
+        "kind": "Body",
+        "fields": {
+          "blocks": [
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"[通常/つうじょう]の[解析/かいせき]と[診断/しんだん]で[対象/たいしょう]プログラムをevaluateしない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"Grammar reader providerはhostのallowlist・[署名/しょめい]・schemaで[制限/せいげん]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"workspaceからnative pluginを[自動/じどう]build/loadしない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"untrusted providerには[隔離/かくり]runnerが[必要/ひつよう]で、ない[環境/かんきょう]ではTrustRequiredを[返/かえ]す。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[巨大入力/きょだいにゅうりょく]/[再帰/さいき]/イベント/[出力/しゅつりょく]にも[上限/じょうげん]を[設定/せってい]する。\""
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "通常の解析と診断で対象プログラムをevaluateしない。Grammar reader providerはhostのallowlist・署名・schemaで制限する。workspaceからnative pluginを自動build/loadしない。untrusted providerには隔離runnerが必要で、ない環境ではTrustRequiredを返す。巨大入力/再帰/イベント/出力にも上限を設定する。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"[通常/つうじょう]の[解析/かいせき]と[診断/しんだん]で[対象/たいしょう]プログラムをevaluateしない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Grammar reader providerはhostのallowlist・[署名/しょめい]・schemaで[制限/せいげん]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"workspaceからnative pluginを[自動/じどう]build/loadしない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"untrusted providerには[隔離/かくり]runnerが[必要/ひつよう]で、ない[環境/かんきょう]ではTrustRequiredを[返/かえ]す。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[巨大入力/きょだいにゅうりょく]/[再帰/さいき]/イベント/[出力/しゅつりょく]にも[上限/じょうげん]を[設定/せってい]する。\""
+        }
+      ]
+    }
+  }
+]

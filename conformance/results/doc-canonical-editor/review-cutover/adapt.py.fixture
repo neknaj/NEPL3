@@ -1,0 +1,27 @@
+from pathlib import Path
+p=Path(__file__).parent;prior=Path('C:/projects/NEPL3-doc-canonical-model-invariants/.tmp/review-canonical12-cutover')
+s=(prior/'check.py').read_text(encoding='utf8').replace('2b0bbf4b888ea18ef5e97eaabe2391008e86fe69','5c4ce6184f6d5fa817f472d202101aaf86af3195').replace('12-model-invariants','08-editor')
+s=s.replace("expected['table_cells']=prepared['table_cells'];expected['hrefs']=['19-html-fragment.html']","expected['table_cells']=[];expected['hrefs']=[]")
+s=s.replace("[('html',10),('markdown',9)]","[('html',11),('markdown',10)]").replace("actual['links']==1","actual['links']==0")
+start=s.index("        if engine=='webkit':");end=s.index('        assert not failed',start)
+s=s[:start]+'''        actual['readings']=page.locator('.nepl-reading').evaluate_all('ns=>ns.map(n=>({text:n.textContent,size:getComputedStyle(n).fontSize,visibility:getComputedStyle(n).visibility,display:getComputedStyle(n).display,width:n.getBoundingClientRect().width,height:n.getBoundingClientRect().height}))')
+        assert len(actual['readings'])==1330 and all(x['text'] and float(x['size'][:-2])>0 and x['visibility']=='visible' and x['display']!='none' and x['width']>0 and x['height']>0 for x in actual['readings'])
+        if prefix=='first':
+            page.screenshot(path=str(OUT/(label+'-title.png')))
+            page.locator('article p').nth(5).scroll_into_view_if_needed();page.screenshot(path=str(OUT/(label+'-body.png')))
+            page.locator('[id="n-72656c6174696f6e73"]').scroll_into_view_if_needed();page.screenshot(path=str(OUT/(label+'-relations.png')))
+''' + s[end:]
+s=s.replace('assert len(headings)==8','assert len(headings)==11')
+s=s.replace("assert article.locator('ul,ol').count()==0 and article.locator('table').count()==1 and article.locator('tr').count()==18","assert article.locator('ul,ol,table').count()==0")
+s=s.replace("assert len(hrefs)==1 and hrefs[0].endswith('/doc/spec/19-html-fragment.md')","assert hrefs==[]")
+s=s.replace('relative_hrefs=hrefs,table_rows=18','relative_hrefs=hrefs,table_rows=0')
+s=s.replace('len(gh)==15','len(gh)==21').replace('PASS 12 local cases / 84 semantic moves / 12 actual links to19; GitHub15; 32 paragraphs,36 cells,9 code exact','PASS 12 local cases / 120 semantic moves; GitHub21; 55 paragraphs,11 code,1330 visible Ruby exact')
+# DOM readiness is the bounded condition; external ambient requests are not a page-content requirement.
+s=s.replace("page.goto(url,wait_until='networkidle',timeout=90000)","page.goto(url,wait_until='domcontentloaded',timeout=90000)")
+(p/'check.py').write_text(s,encoding='utf8',newline='\n')
+s=(prior/'content.py').read_text(encoding='utf8').replace('2b0bbf4b888ea18ef5e97eaabe2391008e86fe69','5c4ce6184f6d5fa817f472d202101aaf86af3195').replace('12-model-invariants','08-editor').replace('empty_count==15','empty_count==21')
+start=s.index('    table=next(');end=s.index('    browser.close()',start);s=s[:start]+s[end:]
+s=s.replace("page.locator('table').scroll_into_view_if_needed();page.screenshot(path=str(OUT/f'visual-webkit-{width}-table.png'))","page.locator('article p').nth(5).scroll_into_view_if_needed();page.screenshot(path=str(OUT/f'visual-webkit-{width}-body.png'))")
+s=s.replace("page.goto(url,wait_until='networkidle',timeout=90000)","page.goto(url,wait_until='domcontentloaded',timeout=90000);page.locator('article.markdown-body').wait_for()")
+s=s.replace('all 32 paragraphs and 8 headings plus 36 table cells','all 55 paragraphs and 11 headings')
+(p/'content.py').write_text(s,encoding='utf8',newline='\n')

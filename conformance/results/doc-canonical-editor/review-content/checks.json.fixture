@@ -1,0 +1,34 @@
+{
+  "commit": "cce0e08f2f7fca278a246dad0054eb4eeaa88c5d",
+  "base": "20caaf73c5a1d6a5157f50a2b5f23802d3a15c84",
+  "original_sha256": "1311cb50ce019ed53c733f9d8e414a7ea42b70f975fb0d60d01314762d79fa39",
+  "old_doc_sha256": "43c78b5f39b008a87b7a5eaf1719a0670f1b5f4992a2489a84549af7dd1241a7",
+  "doc_sha256": "d326323331b335da48a044e35a92d2bd89b64bc4fde794131af4ab17ad3f91b6",
+  "heading_changes": [
+    [
+      "snapshot",
+      "1. AnalysisSnapshot",
+      "1. AnalysisSnapshotの[入力/にゅうりょく]と[同一性/どういつせい]"
+    ],
+    [
+      "relations",
+      "4. definitionとrelations",
+      "4. definitionとrelationsの[扱/あつか]い"
+    ],
+    [
+      "lsp",
+      "7. LSP adapter",
+      "7. LSP adapterの[責務/せきむ]"
+    ],
+    [
+      "trust",
+      "9. workspace trust",
+      "9. workspace trustの[境界/きょうかい]"
+    ]
+  ],
+  "four_reversed_exact_old_bytes": true,
+  "old_aliases": 11,
+  "no_other_registry_change": true,
+  "generation": "not-run",
+  "browser": "not-run"
+}

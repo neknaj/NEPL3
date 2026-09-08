@@ -1,0 +1,2337 @@
+{
+  "contract": "nepl3/design/1",
+  "date": "2026-09-06",
+  "roots": {
+    "Grammar": "Grammar/Root",
+    "Doc": "Doc/Article",
+    "Math": "Math/Expr",
+    "Circuit": "Circuit/Design"
+  },
+  "categories": {
+    "Grammar/Root": {
+      "forms": {
+        "language": {
+          "kind": "Language",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            },
+            {
+              "name": "revision",
+              "read": "@Nat"
+            },
+            {
+              "name": "root",
+              "read": "@Name"
+            },
+            {
+              "name": "declarations",
+              "read": {
+                "list": "Grammar/Declaration"
+              }
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Grammar/Declaration": {
+      "forms": {
+        "category": {
+          "kind": "Category",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            },
+            {
+              "name": "mode",
+              "read": "@Name"
+            }
+          ]
+        },
+        "namespace": {
+          "kind": "Namespace",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            },
+            {
+              "name": "policy",
+              "read": "Grammar/Policy"
+            }
+          ]
+        },
+        "reader": {
+          "kind": "Reader",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            },
+            {
+              "name": "expression",
+              "read": "Grammar/ReaderExpr"
+            }
+          ]
+        },
+        "mode": {
+          "kind": "Mode",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            },
+            {
+              "name": "rules",
+              "read": {
+                "list": "Grammar/LexRule"
+              }
+            }
+          ]
+        },
+        "form": {
+          "kind": "Form",
+          "fields": [
+            {
+              "name": "kind",
+              "read": "@Name"
+            },
+            {
+              "name": "category",
+              "read": "@Name"
+            },
+            {
+              "name": "spelling",
+              "read": "@Text"
+            },
+            {
+              "name": "fields",
+              "read": {
+                "list": "Grammar/Field"
+              }
+            },
+            {
+              "name": "bindings",
+              "read": "Grammar/Binding"
+            },
+            {
+              "name": "styles",
+              "read": {
+                "list": "Grammar/Style"
+              }
+            }
+          ]
+        },
+        "leaf": {
+          "kind": "Leaf",
+          "fields": [
+            {
+              "name": "kind",
+              "read": "@Name"
+            },
+            {
+              "name": "category",
+              "read": "@Name"
+            },
+            {
+              "name": "token",
+              "read": "@Name"
+            },
+            {
+              "name": "bindings",
+              "read": "Grammar/Binding"
+            },
+            {
+              "name": "styles",
+              "read": {
+                "list": "Grammar/Style"
+              }
+            }
+          ]
+        },
+        "extension": {
+          "kind": "Extension",
+          "fields": [
+            {
+              "name": "alias",
+              "read": "@Name"
+            },
+            {
+              "name": "provider",
+              "read": "@Text"
+            },
+            {
+              "name": "signature",
+              "read": "@Text"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Grammar/Policy": {
+      "forms": {
+        "lexical": {
+          "kind": "Lexical",
+          "fields": []
+        },
+        "global": {
+          "kind": "Global",
+          "fields": []
+        },
+        "open": {
+          "kind": "Open",
+          "fields": []
+        }
+      },
+      "leaf": null
+    },
+    "Grammar/Field": {
+      "forms": {
+        "field": {
+          "kind": "FieldDeclaration",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            },
+            {
+              "name": "read",
+              "read": "Grammar/ReadSpec"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Grammar/ReadSpec": {
+      "forms": {
+        "local": {
+          "kind": "Local",
+          "fields": [
+            {
+              "name": "category",
+              "read": "@Name"
+            }
+          ]
+        },
+        "foreign": {
+          "kind": "Foreign",
+          "fields": [
+            {
+              "name": "alias",
+              "read": "@Name"
+            },
+            {
+              "name": "category",
+              "read": "@Name"
+            }
+          ]
+        },
+        "listof": {
+          "kind": "ListOf",
+          "fields": [
+            {
+              "name": "element",
+              "read": "Grammar/ReadSpec"
+            }
+          ]
+        },
+        "withmode": {
+          "kind": "WithMode",
+          "fields": [
+            {
+              "name": "mode",
+              "read": "@Name"
+            },
+            {
+              "name": "read",
+              "read": "Grammar/ReadSpec"
+            }
+          ]
+        },
+        "builtin": {
+          "kind": "Builtin",
+          "fields": [
+            {
+              "name": "reader",
+              "read": "@Name"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Grammar/LexRule": {
+      "forms": {
+        "take": {
+          "kind": "Take",
+          "fields": [
+            {
+              "name": "kind",
+              "read": "@Name"
+            },
+            {
+              "name": "reader",
+              "read": "@Name"
+            }
+          ]
+        },
+        "skip": {
+          "kind": "Skip",
+          "fields": [
+            {
+              "name": "reader",
+              "read": "@Name"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Grammar/ReaderExpr": {
+      "forms": {
+        "literal": {
+          "kind": "Literal",
+          "fields": [
+            {
+              "name": "text",
+              "read": "@Text"
+            }
+          ]
+        },
+        "scalar": {
+          "kind": "Scalar",
+          "fields": [
+            {
+              "name": "class",
+              "read": "Grammar/CharClass"
+            }
+          ]
+        },
+        "seq": {
+          "kind": "Seq",
+          "fields": [
+            {
+              "name": "parts",
+              "read": {
+                "list": "Grammar/ReaderExpr"
+              }
+            }
+          ]
+        },
+        "choice": {
+          "kind": "Choice",
+          "fields": [
+            {
+              "name": "alternatives",
+              "read": {
+                "list": "Grammar/ReaderExpr"
+              }
+            }
+          ]
+        },
+        "many": {
+          "kind": "Many",
+          "fields": [
+            {
+              "name": "body",
+              "read": "Grammar/ReaderExpr"
+            }
+          ]
+        },
+        "some": {
+          "kind": "Some",
+          "fields": [
+            {
+              "name": "body",
+              "read": "Grammar/ReaderExpr"
+            }
+          ]
+        },
+        "optional": {
+          "kind": "Optional",
+          "fields": [
+            {
+              "name": "body",
+              "read": "Grammar/ReaderExpr"
+            }
+          ]
+        },
+        "repeat": {
+          "kind": "Repeat",
+          "fields": [
+            {
+              "name": "min",
+              "read": "@Nat"
+            },
+            {
+              "name": "max",
+              "read": "@Nat"
+            },
+            {
+              "name": "body",
+              "read": "Grammar/ReaderExpr"
+            }
+          ]
+        },
+        "look": {
+          "kind": "Look",
+          "fields": [
+            {
+              "name": "body",
+              "read": "Grammar/ReaderExpr"
+            }
+          ]
+        },
+        "not": {
+          "kind": "Not",
+          "fields": [
+            {
+              "name": "body",
+              "read": "Grammar/ReaderExpr"
+            }
+          ]
+        },
+        "commit": {
+          "kind": "Commit",
+          "fields": [
+            {
+              "name": "body",
+              "read": "Grammar/ReaderExpr"
+            }
+          ]
+        },
+        "capture": {
+          "kind": "Capture",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            },
+            {
+              "name": "body",
+              "read": "Grammar/ReaderExpr"
+            }
+          ]
+        },
+        "region": {
+          "kind": "Region",
+          "fields": [
+            {
+              "name": "role",
+              "read": "@Name"
+            },
+            {
+              "name": "body",
+              "read": "Grammar/ReaderExpr"
+            }
+          ]
+        },
+        "node": {
+          "kind": "Node",
+          "fields": [
+            {
+              "name": "kind",
+              "read": "@Name"
+            },
+            {
+              "name": "body",
+              "read": "Grammar/ReaderExpr"
+            }
+          ]
+        },
+        "discard": {
+          "kind": "Discard",
+          "fields": [
+            {
+              "name": "body",
+              "read": "Grammar/ReaderExpr"
+            }
+          ]
+        },
+        "ref": {
+          "kind": "Ref",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            }
+          ]
+        },
+        "decode": {
+          "kind": "Decode",
+          "fields": [
+            {
+              "name": "decoder",
+              "read": "@Text"
+            },
+            {
+              "name": "body",
+              "read": "Grammar/ReaderExpr"
+            }
+          ]
+        },
+        "map": {
+          "kind": "Map",
+          "fields": [
+            {
+              "name": "provider",
+              "read": "@Text"
+            },
+            {
+              "name": "body",
+              "read": "Grammar/ReaderExpr"
+            }
+          ]
+        },
+        "then": {
+          "kind": "Then",
+          "fields": [
+            {
+              "name": "first",
+              "read": "Grammar/ReaderExpr"
+            },
+            {
+              "name": "provider",
+              "read": "@Text"
+            }
+          ]
+        },
+        "call": {
+          "kind": "Call",
+          "fields": [
+            {
+              "name": "provider",
+              "read": "@Text"
+            }
+          ]
+        },
+        "eof": {
+          "kind": "Eof",
+          "fields": []
+        },
+        "takecount": {
+          "kind": "Takecount",
+          "fields": [
+            {
+              "name": "count",
+              "read": "@Nat"
+            }
+          ]
+        },
+        "until": {
+          "kind": "Until",
+          "fields": [
+            {
+              "name": "delimiter",
+              "read": "@Text"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Grammar/CharClass": {
+      "forms": {
+        "any": {
+          "kind": "Any",
+          "fields": []
+        },
+        "whitespace": {
+          "kind": "Whitespace",
+          "fields": []
+        },
+        "identifierStart": {
+          "kind": "Identifierstart",
+          "fields": []
+        },
+        "identifierContinue": {
+          "kind": "Identifiercontinue",
+          "fields": []
+        },
+        "digit": {
+          "kind": "Digit",
+          "fields": []
+        },
+        "asciiLetter": {
+          "kind": "Asciiletter",
+          "fields": []
+        },
+        "chars": {
+          "kind": "Chars",
+          "fields": [
+            {
+              "name": "text",
+              "read": "@Text"
+            }
+          ]
+        },
+        "except": {
+          "kind": "Except",
+          "fields": [
+            {
+              "name": "text",
+              "read": "@Text"
+            }
+          ]
+        },
+        "range": {
+          "kind": "Range",
+          "fields": [
+            {
+              "name": "lo",
+              "read": "@Text"
+            },
+            {
+              "name": "hi",
+              "read": "@Text"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Grammar/Binding": {
+      "forms": {
+        "visit": {
+          "kind": "Visit",
+          "fields": [
+            {
+              "name": "child",
+              "read": "@Name"
+            }
+          ]
+        },
+        "import": {
+          "kind": "Import",
+          "fields": [
+            {
+              "name": "child",
+              "read": "@Name"
+            }
+          ]
+        },
+        "propagate": {
+          "kind": "Propagate",
+          "fields": [
+            {
+              "name": "child",
+              "read": "@Name"
+            }
+          ]
+        },
+        "scope": {
+          "kind": "Scope",
+          "fields": [
+            {
+              "name": "plans",
+              "read": {
+                "list": "Grammar/Binding"
+              }
+            }
+          ]
+        },
+        "group": {
+          "kind": "Group",
+          "fields": [
+            {
+              "name": "plans",
+              "read": {
+                "list": "Grammar/Binding"
+              }
+            }
+          ]
+        },
+        "bind": {
+          "kind": "Bind",
+          "fields": [
+            {
+              "name": "namespace",
+              "read": "@Name"
+            },
+            {
+              "name": "field",
+              "read": "@Name"
+            }
+          ]
+        },
+        "reference": {
+          "kind": "Reference",
+          "fields": [
+            {
+              "name": "namespace",
+              "read": "@Name"
+            },
+            {
+              "name": "field",
+              "read": "@Name"
+            }
+          ]
+        },
+        "export": {
+          "kind": "Export",
+          "fields": [
+            {
+              "name": "namespace",
+              "read": "@Name"
+            },
+            {
+              "name": "field",
+              "read": "@Name"
+            }
+          ]
+        },
+        "sequential": {
+          "kind": "Sequential",
+          "fields": [
+            {
+              "name": "declarations",
+              "read": "@Name"
+            },
+            {
+              "name": "body",
+              "read": "@Name"
+            }
+          ]
+        },
+        "recursive": {
+          "kind": "Recursive",
+          "fields": [
+            {
+              "name": "declarations",
+              "read": "@Name"
+            },
+            {
+              "name": "body",
+              "read": "@Name"
+            }
+          ]
+        },
+        "none": {
+          "kind": "None",
+          "fields": []
+        },
+        "custom": {
+          "kind": "Custom",
+          "fields": [
+            {
+              "name": "provider",
+              "read": "@Text"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Grammar/Style": {
+      "forms": {
+        "style": {
+          "kind": "Style",
+          "fields": [
+            {
+              "name": "selector",
+              "read": "Grammar/Selector"
+            },
+            {
+              "name": "class",
+              "read": "@Text"
+            }
+          ]
+        },
+        "selection": {
+          "kind": "Selection",
+          "fields": [
+            {
+              "name": "selector",
+              "read": "Grammar/Selector"
+            },
+            {
+              "name": "priority",
+              "read": "@Nat"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Grammar/Selector": {
+      "forms": {
+        "head": {
+          "kind": "Head",
+          "fields": []
+        },
+        "self": {
+          "kind": "Self",
+          "fields": []
+        },
+        "field": {
+          "kind": "FieldSelector",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            }
+          ]
+        },
+        "capture": {
+          "kind": "CaptureSelector",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Math/Expr": {
+      "forms": {
+        "add": {
+          "kind": "Add",
+          "fields": [
+            {
+              "name": "left",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "right",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "sub": {
+          "kind": "Sub",
+          "fields": [
+            {
+              "name": "left",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "right",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "mul": {
+          "kind": "Mul",
+          "fields": [
+            {
+              "name": "left",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "right",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "frac": {
+          "kind": "Frac",
+          "fields": [
+            {
+              "name": "left",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "right",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "pow": {
+          "kind": "Pow",
+          "fields": [
+            {
+              "name": "left",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "right",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "equal": {
+          "kind": "Equal",
+          "fields": [
+            {
+              "name": "left",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "right",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "lt": {
+          "kind": "Lt",
+          "fields": [
+            {
+              "name": "left",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "right",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "le": {
+          "kind": "Le",
+          "fields": [
+            {
+              "name": "left",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "right",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "subscript": {
+          "kind": "Subscript",
+          "fields": [
+            {
+              "name": "left",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "right",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "superscript": {
+          "kind": "Superscript",
+          "fields": [
+            {
+              "name": "left",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "right",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "neg": {
+          "kind": "Neg",
+          "fields": [
+            {
+              "name": "value",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "sqrt": {
+          "kind": "Sqrt",
+          "fields": [
+            {
+              "name": "value",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "transpose": {
+          "kind": "Transpose",
+          "fields": [
+            {
+              "name": "value",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "det": {
+          "kind": "Det",
+          "fields": [
+            {
+              "name": "value",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "root": {
+          "kind": "Root",
+          "fields": [
+            {
+              "name": "degree",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "radicand",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "scripts": {
+          "kind": "Scripts",
+          "fields": [
+            {
+              "name": "base",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "sub",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "sup",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "fence": {
+          "kind": "Fence",
+          "fields": [
+            {
+              "name": "open",
+              "read": "@Text"
+            },
+            {
+              "name": "close",
+              "read": "@Text"
+            },
+            {
+              "name": "value",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "sequence": {
+          "kind": "Sequence",
+          "fields": [
+            {
+              "name": "values",
+              "read": {
+                "list": "Math/Expr"
+              }
+            }
+          ]
+        },
+        "symbol": {
+          "kind": "Symbol",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Text"
+            }
+          ]
+        },
+        "text": {
+          "kind": "Text",
+          "fields": [
+            {
+              "name": "text",
+              "read": "@Text"
+            }
+          ]
+        },
+        "vector": {
+          "kind": "Vector",
+          "fields": [
+            {
+              "name": "values",
+              "read": {
+                "list": "Math/Expr"
+              }
+            }
+          ]
+        },
+        "matrix": {
+          "kind": "Matrix",
+          "fields": [
+            {
+              "name": "rows",
+              "read": {
+                "list": "Math/Row"
+              }
+            }
+          ]
+        },
+        "let": {
+          "kind": "Let",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            },
+            {
+              "name": "init",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "body",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "sum": {
+          "kind": "Sum",
+          "fields": [
+            {
+              "name": "index",
+              "read": "@Name"
+            },
+            {
+              "name": "lower",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "upper",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "body",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "integral": {
+          "kind": "Integral",
+          "fields": [
+            {
+              "name": "index",
+              "read": "@Name"
+            },
+            {
+              "name": "lower",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "upper",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "body",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "call": {
+          "kind": "Call",
+          "fields": [
+            {
+              "name": "function",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "arguments",
+              "read": {
+                "list": "Math/Expr"
+              }
+            }
+          ]
+        },
+        "label": {
+          "kind": "Label",
+          "fields": [
+            {
+              "name": "value",
+              "read": "Math/Expr"
+            },
+            {
+              "name": "annotation",
+              "read": "Math/DocGuest"
+            }
+          ]
+        }
+      },
+      "leaf": "math-number-or-name"
+    },
+    "Math/Row": {
+      "forms": {
+        "row": {
+          "kind": "Row",
+          "fields": [
+            {
+              "name": "values",
+              "read": {
+                "list": "Math/Expr"
+              }
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Math/DocGuest": {
+      "forms": {
+        "Doc": {
+          "kind": "DocGuest",
+          "fields": [
+            {
+              "name": "syntax",
+              "read": "Doc/Sentence"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Circuit/Design": {
+      "forms": {
+        "design": {
+          "kind": "Design",
+          "fields": [
+            {
+              "name": "modules",
+              "read": {
+                "list": "Circuit/Module"
+              }
+            },
+            {
+              "name": "entry",
+              "read": "@Name"
+            },
+            {
+              "name": "tests",
+              "read": {
+                "list": "Circuit/Test"
+              }
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Circuit/Module": {
+      "forms": {
+        "module": {
+          "kind": "Module",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            },
+            {
+              "name": "inputs",
+              "read": {
+                "list": "Circuit/Input"
+              }
+            },
+            {
+              "name": "declarations",
+              "read": {
+                "list": "Circuit/Declaration"
+              }
+            },
+            {
+              "name": "outputs",
+              "read": {
+                "list": "Circuit/Output"
+              }
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Circuit/Input": {
+      "forms": {
+        "input": {
+          "kind": "Input",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            },
+            {
+              "name": "width",
+              "read": "@Nat"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Circuit/Output": {
+      "forms": {
+        "output": {
+          "kind": "Output",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            },
+            {
+              "name": "width",
+              "read": "@Nat"
+            },
+            {
+              "name": "value",
+              "read": "Circuit/Expr"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Circuit/Declaration": {
+      "forms": {
+        "wire": {
+          "kind": "Wire",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            },
+            {
+              "name": "value",
+              "read": "Circuit/Expr"
+            }
+          ]
+        },
+        "state": {
+          "kind": "State",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            },
+            {
+              "name": "width",
+              "read": "@Nat"
+            },
+            {
+              "name": "initial",
+              "read": "Circuit/Bits"
+            }
+          ]
+        },
+        "next": {
+          "kind": "Next",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            },
+            {
+              "name": "value",
+              "read": "Circuit/Expr"
+            }
+          ]
+        },
+        "inst": {
+          "kind": "Instance",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            },
+            {
+              "name": "module",
+              "read": "@Name"
+            },
+            {
+              "name": "inputs",
+              "read": {
+                "list": "Circuit/Expr"
+              }
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Circuit/Expr": {
+      "forms": {
+        "and": {
+          "kind": "And",
+          "fields": [
+            {
+              "name": "left",
+              "read": "Circuit/Expr"
+            },
+            {
+              "name": "right",
+              "read": "Circuit/Expr"
+            }
+          ]
+        },
+        "or": {
+          "kind": "Or",
+          "fields": [
+            {
+              "name": "left",
+              "read": "Circuit/Expr"
+            },
+            {
+              "name": "right",
+              "read": "Circuit/Expr"
+            }
+          ]
+        },
+        "xor": {
+          "kind": "Xor",
+          "fields": [
+            {
+              "name": "left",
+              "read": "Circuit/Expr"
+            },
+            {
+              "name": "right",
+              "read": "Circuit/Expr"
+            }
+          ]
+        },
+        "nor": {
+          "kind": "Nor",
+          "fields": [
+            {
+              "name": "left",
+              "read": "Circuit/Expr"
+            },
+            {
+              "name": "right",
+              "read": "Circuit/Expr"
+            }
+          ]
+        },
+        "add": {
+          "kind": "Add",
+          "fields": [
+            {
+              "name": "left",
+              "read": "Circuit/Expr"
+            },
+            {
+              "name": "right",
+              "read": "Circuit/Expr"
+            }
+          ]
+        },
+        "concat": {
+          "kind": "Concat",
+          "fields": [
+            {
+              "name": "left",
+              "read": "Circuit/Expr"
+            },
+            {
+              "name": "right",
+              "read": "Circuit/Expr"
+            }
+          ]
+        },
+        "not": {
+          "kind": "Not",
+          "fields": [
+            {
+              "name": "value",
+              "read": "Circuit/Expr"
+            }
+          ]
+        },
+        "mux": {
+          "kind": "Mux",
+          "fields": [
+            {
+              "name": "select",
+              "read": "Circuit/Expr"
+            },
+            {
+              "name": "yes",
+              "read": "Circuit/Expr"
+            },
+            {
+              "name": "no",
+              "read": "Circuit/Expr"
+            }
+          ]
+        },
+        "slice": {
+          "kind": "Slice",
+          "fields": [
+            {
+              "name": "value",
+              "read": "Circuit/Expr"
+            },
+            {
+              "name": "lo",
+              "read": "@Nat"
+            },
+            {
+              "name": "width",
+              "read": "@Nat"
+            }
+          ]
+        },
+        "at": {
+          "kind": "At",
+          "fields": [
+            {
+              "name": "instance",
+              "read": "@Name"
+            },
+            {
+              "name": "output",
+              "read": "@Name"
+            }
+          ]
+        },
+        "bits": {
+          "kind": "Bits",
+          "fields": [
+            {
+              "name": "width",
+              "read": "@Nat"
+            },
+            {
+              "name": "value",
+              "read": "@Nat"
+            }
+          ]
+        },
+        "true": {
+          "kind": "True",
+          "fields": []
+        },
+        "false": {
+          "kind": "False",
+          "fields": []
+        }
+      },
+      "leaf": "name"
+    },
+    "Circuit/Bits": {
+      "forms": {
+        "bits": {
+          "kind": "Bits",
+          "fields": [
+            {
+              "name": "width",
+              "read": "@Nat"
+            },
+            {
+              "name": "value",
+              "read": "@Nat"
+            }
+          ]
+        },
+        "true": {
+          "kind": "True",
+          "fields": []
+        },
+        "false": {
+          "kind": "False",
+          "fields": []
+        }
+      },
+      "leaf": null
+    },
+    "Circuit/Test": {
+      "forms": {
+        "test": {
+          "kind": "Test",
+          "fields": [
+            {
+              "name": "name",
+              "read": "@Name"
+            },
+            {
+              "name": "module",
+              "read": "@Name"
+            },
+            {
+              "name": "ticks",
+              "read": {
+                "list": "Circuit/Tick"
+              }
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Circuit/Tick": {
+      "forms": {
+        "tick": {
+          "kind": "Tick",
+          "fields": [
+            {
+              "name": "inputs",
+              "read": {
+                "list": "Circuit/Bits"
+              }
+            },
+            {
+              "name": "outputs",
+              "read": {
+                "list": "Circuit/Bits"
+              }
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Doc/Article": {
+      "forms": {
+        "article": {
+          "kind": "Article",
+          "fields": [
+            {
+              "name": "language",
+              "read": "@Lang"
+            },
+            {
+              "name": "title",
+              "read": "Doc/Sentence"
+            },
+            {
+              "name": "body",
+              "read": "Doc/Body"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Doc/Body": {
+      "forms": {
+        "body": {
+          "kind": "Body",
+          "fields": [
+            {
+              "name": "blocks",
+              "read": {
+                "list": "Doc/Block"
+              }
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Doc/Block": {
+      "forms": {
+        "paragraph": {
+          "kind": "Paragraph",
+          "fields": [
+            {
+              "name": "items",
+              "read": {
+                "list": "Doc/Flow"
+              }
+            }
+          ]
+        },
+        "section": {
+          "kind": "Section",
+          "fields": [
+            {
+              "name": "id",
+              "read": "@Name"
+            },
+            {
+              "name": "title",
+              "read": "Doc/Sentence"
+            },
+            {
+              "name": "body",
+              "read": "Doc/Body"
+            }
+          ]
+        },
+        "display": {
+          "kind": "DisplayMath",
+          "fields": [
+            {
+              "name": "syntax",
+              "read": "Doc/MathGuest"
+            }
+          ]
+        },
+        "circuit": {
+          "kind": "CircuitFigure",
+          "fields": [
+            {
+              "name": "caption",
+              "read": "Doc/Sentence"
+            },
+            {
+              "name": "syntax",
+              "read": "Doc/CircuitGuest"
+            }
+          ]
+        },
+        "code": {
+          "kind": "Code",
+          "fields": [
+            {
+              "name": "syntax",
+              "read": "Doc/Guest"
+            }
+          ]
+        },
+        "table": {
+          "kind": "Table",
+          "fields": [
+            {
+              "name": "columns",
+              "read": {
+                "list": "Doc/Alignment"
+              }
+            },
+            {
+              "name": "header",
+              "read": "Doc/OptionalRow"
+            },
+            {
+              "name": "rows",
+              "read": {
+                "list": "Doc/Row"
+              }
+            }
+          ]
+        },
+        "list": {
+          "kind": "List",
+          "fields": [
+            {
+              "name": "style",
+              "read": "Doc/ListStyle"
+            },
+            {
+              "name": "items",
+              "read": {
+                "list": "Doc/ListItem"
+              }
+            }
+          ]
+        },
+        "rawcode": {
+          "kind": "RawCode",
+          "fields": [
+            {
+              "name": "languageHint",
+              "read": "Doc/OptionalText"
+            },
+            {
+              "name": "text",
+              "read": "@Text"
+            }
+          ]
+        },
+        "image": {
+          "kind": "Image",
+          "fields": [
+            {
+              "name": "asset",
+              "read": "Doc/Asset"
+            },
+            {
+              "name": "alt",
+              "read": "Doc/Sentence"
+            },
+            {
+              "name": "caption",
+              "read": "Doc/OptionalSentence"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Doc/Sentence": {
+      "forms": {
+        "sentence": {
+          "kind": "Sentence",
+          "fields": [
+            {
+              "name": "inlines",
+              "read": {
+                "list": "Doc/Inline"
+              }
+            }
+          ]
+        }
+      },
+      "leaf": "sentence"
+    },
+    "Doc/Flow": {
+      "forms": {
+        "paragraph": {
+          "kind": "Paragraph",
+          "fields": [
+            {
+              "name": "items",
+              "read": {
+                "list": "Doc/Flow"
+              }
+            }
+          ]
+        },
+        "section": {
+          "kind": "Section",
+          "fields": [
+            {
+              "name": "id",
+              "read": "@Name"
+            },
+            {
+              "name": "title",
+              "read": "Doc/Sentence"
+            },
+            {
+              "name": "body",
+              "read": "Doc/Body"
+            }
+          ]
+        },
+        "display": {
+          "kind": "DisplayMath",
+          "fields": [
+            {
+              "name": "syntax",
+              "read": "Doc/MathGuest"
+            }
+          ]
+        },
+        "circuit": {
+          "kind": "CircuitFigure",
+          "fields": [
+            {
+              "name": "caption",
+              "read": "Doc/Sentence"
+            },
+            {
+              "name": "syntax",
+              "read": "Doc/CircuitGuest"
+            }
+          ]
+        },
+        "code": {
+          "kind": "Code",
+          "fields": [
+            {
+              "name": "syntax",
+              "read": "Doc/Guest"
+            }
+          ]
+        },
+        "sentence": {
+          "kind": "Sentence",
+          "fields": [
+            {
+              "name": "inlines",
+              "read": {
+                "list": "Doc/Inline"
+              }
+            }
+          ]
+        },
+        "parallel": {
+          "kind": "Parallel",
+          "fields": [
+            {
+              "name": "variants",
+              "read": {
+                "list": "Doc/Variant"
+              }
+            }
+          ]
+        },
+        "table": {
+          "kind": "Table",
+          "fields": [
+            {
+              "name": "columns",
+              "read": {
+                "list": "Doc/Alignment"
+              }
+            },
+            {
+              "name": "header",
+              "read": "Doc/OptionalRow"
+            },
+            {
+              "name": "rows",
+              "read": {
+                "list": "Doc/Row"
+              }
+            }
+          ]
+        },
+        "list": {
+          "kind": "List",
+          "fields": [
+            {
+              "name": "style",
+              "read": "Doc/ListStyle"
+            },
+            {
+              "name": "items",
+              "read": {
+                "list": "Doc/ListItem"
+              }
+            }
+          ]
+        },
+        "rawcode": {
+          "kind": "RawCode",
+          "fields": [
+            {
+              "name": "languageHint",
+              "read": "Doc/OptionalText"
+            },
+            {
+              "name": "text",
+              "read": "@Text"
+            }
+          ]
+        },
+        "image": {
+          "kind": "Image",
+          "fields": [
+            {
+              "name": "asset",
+              "read": "Doc/Asset"
+            },
+            {
+              "name": "alt",
+              "read": "Doc/Sentence"
+            },
+            {
+              "name": "caption",
+              "read": "Doc/OptionalSentence"
+            }
+          ]
+        }
+      },
+      "leaf": "sentence"
+    },
+    "Doc/Variant": {
+      "forms": {
+        "variant": {
+          "kind": "Variant",
+          "fields": [
+            {
+              "name": "language",
+              "read": "@Lang"
+            },
+            {
+              "name": "sentence",
+              "read": "Doc/Sentence"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Doc/Inline": {
+      "forms": {
+        "text": {
+          "kind": "Text",
+          "fields": [
+            {
+              "name": "text",
+              "read": "@Text"
+            }
+          ]
+        },
+        "concat": {
+          "kind": "Concat",
+          "fields": [
+            {
+              "name": "inlines",
+              "read": {
+                "list": "Doc/Inline"
+              }
+            }
+          ]
+        },
+        "ruby": {
+          "kind": "Ruby",
+          "fields": [
+            {
+              "name": "base",
+              "read": "Doc/Inline"
+            },
+            {
+              "name": "reading",
+              "read": "Doc/Inline"
+            }
+          ]
+        },
+        "anno": {
+          "kind": "Anno",
+          "fields": [
+            {
+              "name": "base",
+              "read": "Doc/Inline"
+            },
+            {
+              "name": "notes",
+              "read": {
+                "list": "Doc/Inline"
+              }
+            }
+          ]
+        },
+        "math": {
+          "kind": "InlineMath",
+          "fields": [
+            {
+              "name": "syntax",
+              "read": "Doc/MathGuest"
+            }
+          ]
+        },
+        "anchor": {
+          "kind": "Anchor",
+          "fields": [
+            {
+              "name": "id",
+              "read": "@Name"
+            },
+            {
+              "name": "label",
+              "read": "Doc/Inline"
+            }
+          ]
+        },
+        "ref": {
+          "kind": "Reference",
+          "fields": [
+            {
+              "name": "target",
+              "read": "@Name"
+            },
+            {
+              "name": "label",
+              "read": "Doc/Inline"
+            }
+          ]
+        },
+        "em": {
+          "kind": "Emphasis",
+          "fields": [
+            {
+              "name": "inline",
+              "read": "Doc/Inline"
+            }
+          ]
+        },
+        "strong": {
+          "kind": "Strong",
+          "fields": [
+            {
+              "name": "inline",
+              "read": "Doc/Inline"
+            }
+          ]
+        },
+        "break": {
+          "kind": "Break",
+          "fields": []
+        },
+        "link": {
+          "kind": "Link",
+          "fields": [
+            {
+              "name": "target",
+              "read": "Doc/LinkTarget"
+            },
+            {
+              "name": "label",
+              "read": "Doc/Inline"
+            }
+          ]
+        },
+        "code": {
+          "kind": "InlineCode",
+          "fields": [
+            {
+              "name": "text",
+              "read": "@Text"
+            }
+          ]
+        },
+        "image": {
+          "kind": "InlineImage",
+          "fields": [
+            {
+              "name": "asset",
+              "read": "Doc/Asset"
+            },
+            {
+              "name": "alt",
+              "read": "Doc/Sentence"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Doc/MathGuest": {
+      "forms": {
+        "Math": {
+          "kind": "MathGuest",
+          "fields": [
+            {
+              "name": "syntax",
+              "read": "Math/Expr"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Doc/CircuitGuest": {
+      "forms": {
+        "Circuit": {
+          "kind": "CircuitGuest",
+          "fields": [
+            {
+              "name": "syntax",
+              "read": "Circuit/Design"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Doc/Guest": {
+      "forms": {
+        "Grammar": {
+          "kind": "GrammarGuest",
+          "fields": [
+            {
+              "name": "syntax",
+              "read": "Grammar/Root"
+            }
+          ]
+        },
+        "Doc": {
+          "kind": "DocGuest",
+          "fields": [
+            {
+              "name": "syntax",
+              "read": "Doc/Article"
+            }
+          ]
+        },
+        "Math": {
+          "kind": "MathGuest",
+          "fields": [
+            {
+              "name": "syntax",
+              "read": "Math/Expr"
+            }
+          ]
+        },
+        "Circuit": {
+          "kind": "CircuitGuest",
+          "fields": [
+            {
+              "name": "syntax",
+              "read": "Circuit/Design"
+            }
+          ]
+        }
+      },
+      "leaf": null
+    },
+    "Doc/Alignment": {
+      "forms": {
+        "default": {
+          "kind": "AlignmentDefault",
+          "fields": []
+        },
+        "left": {
+          "kind": "AlignmentLeft",
+          "fields": []
+        },
+        "center": {
+          "kind": "AlignmentCenter",
+          "fields": []
+        },
+        "right": {
+          "kind": "AlignmentRight",
+          "fields": []
+        }
+      }
+    },
+    "Doc/ListStyle": {
+      "forms": {
+        "unordered": {
+          "kind": "Unordered",
+          "fields": []
+        },
+        "ordered": {
+          "kind": "Ordered",
+          "fields": [
+            {
+              "name": "start",
+              "read": "@Nat"
+            }
+          ]
+        }
+      }
+    },
+    "Doc/Check": {
+      "forms": {
+        "none": {
+          "kind": "CheckNone",
+          "fields": []
+        },
+        "checked": {
+          "kind": "Checked",
+          "fields": []
+        },
+        "unchecked": {
+          "kind": "Unchecked",
+          "fields": []
+        }
+      }
+    },
+    "Doc/OptionalRow": {
+      "forms": {
+        "none": {
+          "kind": "NoRow",
+          "fields": []
+        },
+        "some": {
+          "kind": "SomeRow",
+          "fields": [
+            {
+              "name": "row",
+              "read": "Doc/Row"
+            }
+          ]
+        }
+      }
+    },
+    "Doc/OptionalSentence": {
+      "forms": {
+        "none": {
+          "kind": "NoSentence",
+          "fields": []
+        },
+        "some": {
+          "kind": "SomeSentence",
+          "fields": [
+            {
+              "name": "sentence",
+              "read": "Doc/Sentence"
+            }
+          ]
+        }
+      }
+    },
+    "Doc/OptionalText": {
+      "forms": {
+        "none": {
+          "kind": "NoText",
+          "fields": []
+        },
+        "some": {
+          "kind": "SomeText",
+          "fields": [
+            {
+              "name": "text",
+              "read": "@Text"
+            }
+          ]
+        }
+      }
+    },
+    "Doc/LinkTarget": {
+      "forms": {
+        "page": {
+          "kind": "PageTarget",
+          "fields": [
+            {
+              "name": "page",
+              "read": "@Text"
+            },
+            {
+              "name": "fragment",
+              "read": "Doc/OptionalText"
+            }
+          ]
+        },
+        "relative": {
+          "kind": "RelativeTarget",
+          "fields": [
+            {
+              "name": "path",
+              "read": "@Text"
+            },
+            {
+              "name": "fragment",
+              "read": "Doc/OptionalText"
+            }
+          ]
+        },
+        "external": {
+          "kind": "ExternalTarget",
+          "fields": [
+            {
+              "name": "uri",
+              "read": "@Text"
+            }
+          ]
+        }
+      }
+    },
+    "Doc/Asset": {
+      "forms": {
+        "asset": {
+          "kind": "AssetRef",
+          "fields": [
+            {
+              "name": "id",
+              "read": "@Text"
+            },
+            {
+              "name": "digest",
+              "read": "Doc/OptionalText"
+            }
+          ]
+        }
+      }
+    },
+    "Doc/Row": {
+      "forms": {
+        "row": {
+          "kind": "Row",
+          "fields": [
+            {
+              "name": "cells",
+              "read": {
+                "list": "Doc/Sentence"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Doc/ListItem": {
+      "forms": {
+        "item": {
+          "kind": "ListItem",
+          "fields": [
+            {
+              "name": "checked",
+              "read": "Doc/Check"
+            },
+            {
+              "name": "body",
+              "read": "Doc/Body"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "design_revision": "nepl3-design-2026-09-06-r4"
+}

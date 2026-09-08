@@ -1,0 +1,79 @@
+[
+  {
+    "section": null,
+    "source_title": "08. [共通/きょうつう]editor serviceと[診断/しんだん]",
+    "all_notes_heading": "08. 共通[きょうつう]editor serviceと診断[しんだん]",
+    "old_anchor": "08-共通editor-serviceと診断",
+    "unchanged_heading_collision_risk": false
+  },
+  {
+    "section": "policy",
+    "source_title": "[方針/ほうしん]",
+    "all_notes_heading": "方針[ほうしん]",
+    "old_anchor": "方針",
+    "unchanged_heading_collision_risk": false
+  },
+  {
+    "section": "snapshot",
+    "source_title": "1. AnalysisSnapshot",
+    "all_notes_heading": "1. AnalysisSnapshot",
+    "old_anchor": "1-analysissnapshot",
+    "unchanged_heading_collision_risk": true
+  },
+  {
+    "section": "derived",
+    "source_title": "2. [自動/じどう]で[得/え]られる[機能/きのう]",
+    "all_notes_heading": "2. 自動[じどう]で得[え]られる機能[きのう]",
+    "old_anchor": "2-自動で得られる機能",
+    "unchanged_heading_collision_risk": false
+  },
+  {
+    "section": "region",
+    "source_title": "3. regionの[選択/せんたく]",
+    "all_notes_heading": "3. regionの選択[せんたく]",
+    "old_anchor": "3-regionの選択",
+    "unchanged_heading_collision_risk": false
+  },
+  {
+    "section": "relations",
+    "source_title": "4. definitionとrelations",
+    "all_notes_heading": "4. definitionとrelations",
+    "old_anchor": "4-definitionとrelations",
+    "unchanged_heading_collision_risk": true
+  },
+  {
+    "section": "recovery",
+    "source_title": "5. [不完全入力/ふかんぜんにゅうりょく]",
+    "all_notes_heading": "5. 不完全入力[ふかんぜんにゅうりょく]",
+    "old_anchor": "5-不完全入力",
+    "unchanged_heading_collision_risk": false
+  },
+  {
+    "section": "incremental",
+    "source_title": "6. [増分解析/ぞうぶんかいせき]と[取消/とりけ]し",
+    "all_notes_heading": "6. 増分解析[ぞうぶんかいせき]と取消[とりけ]し",
+    "old_anchor": "6-増分解析と取消し",
+    "unchanged_heading_collision_risk": false
+  },
+  {
+    "section": "lsp",
+    "source_title": "7. LSP adapter",
+    "all_notes_heading": "7. LSP adapter",
+    "old_anchor": "7-lsp-adapter",
+    "unchanged_heading_collision_risk": true
+  },
+  {
+    "section": "diagnostics",
+    "source_title": "8. [診断/しんだん]・ログの[表示/ひょうじ]",
+    "all_notes_heading": "8. 診断[しんだん]・ログの表示[ひょうじ]",
+    "old_anchor": "8-診断ログの表示",
+    "unchanged_heading_collision_risk": false
+  },
+  {
+    "section": "trust",
+    "source_title": "9. workspace trust",
+    "all_notes_heading": "9. workspace trust",
+    "old_anchor": "9-workspace-trust",
+    "unchanged_heading_collision_risk": true
+  }
+]

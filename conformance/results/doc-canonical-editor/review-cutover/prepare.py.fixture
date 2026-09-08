@@ -1,0 +1,44 @@
+from pathlib import Path
+import subprocess, hashlib, json, re, sys
+ROOT=Path.cwd(); OUT=ROOT/'.tmp/review-canonical08-cutover'
+HEAD='f9b5a2f49f45dedf2b3345386c0eb51b3f0599e0'
+def blob(path,rev=HEAD): return subprocess.check_output(['git','show',rev+':'+path])
+files=[]
+for path in ['doc/spec/08-editor.md','doc/spec/08-editor.nepld','doc/migration/aliases/08-editor.json','doc/authoring.md','design/forms.json','tools/audit/structure.py']:
+    data=blob(path); p=OUT/'preparation'/path;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data)
+    files.append(dict(path=path,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+old=blob('doc/migration/authored/08-editor.nepld','20caaf7')
+(OUT/'preparation/original-draft.nepld').write_bytes(old)
+current=blob('doc/spec/08-editor.nepld')
+changes=[('1. AnalysisSnapshot','1. AnalysisSnapshotの[入力/にゅうりょく]と[同一性/どういつせい]'),('4. definitionとrelations','4. definitionとrelationsの[扱/あつか]い'),('7. LSP adapter','7. LSP adapterの[責務/せきむ]'),('9. workspace trust','9. workspace trustの[境界/きょうかい]')]
+reverted=current
+for before,after in changes:
+    a=('"'+after+'"').encode();b=('"'+before+'"').encode()
+    assert reverted.count(a)==1
+    reverted=reverted.replace(a,b)
+assert reverted==old, 'Only the four heading changes are expected'
+helper=Path('C:/projects/NEPL3-doc-canonical-html-delivery/.tmp/preflight-after18/helpers.py').read_bytes()
+(OUT/'helpers.py').write_bytes(helper)
+sys.path.insert(0,str(OUT/'preparation'))
+from tools.audit.structure import Parser,load_forms
+exec(helper.decode())
+raw=Parser(current.decode(),load_forms(OUT/'preparation')).complete('Doc/Article')
+audit_text(raw);pairs.clear();doc=normalize(raw,True)
+sections=[n for n in walk(doc) if n['kind']=='Section']
+headings=[plain(doc['fields']['title'])]+[plain(n['fields']['title']) for n in sections]
+paragraphs=[plain(n) for n in walk(doc) if n['kind']=='Paragraph']
+codes=[n['fields']['text'] for n in walk(doc) if n['kind']=='InlineCode']
+source=blob('doc/spec/08-editor.md').decode()
+assert re.findall(r'`([^`]+)`',source)==codes and len(codes)==11
+assert len(paragraphs)==55 and len(sections)==10
+assert not [n for n in walk(doc) if n['kind'] in ('Table','List','Link','RawCode')]
+source_headings=[m[2] for m in re.finditer(r'^(#{1,6}) (.+)$',source,re.M)]
+assert len(source_headings)==11
+for idx,extra in {2:'の入力と同一性',5:'の扱い',8:'の責務',10:'の境界'}.items():
+    assert headings[idx]==source_headings[idx]+extra
+assert all(h==source_headings[i] for i,h in enumerate(headings) if i not in [2,5,8,10])
+aliases=json.loads(blob('doc/migration/aliases/08-editor.json'))
+expected=dict(preparation_commit=HEAD,source_hashes=files,headings=headings,original_headings=source_headings,paragraphs=paragraphs,codes=codes,section_ids=[n['fields']['id'] for n in sections],semantic_ids=['n-'+n['fields']['id'].encode().hex() for n in sections],ruby_count=len(pairs),ruby_pairs=pairs,aliases=aliases,heading_changes=changes,body_preserved_from='20caaf7:doc/migration/authored/08-editor.nepld',scope='Preparation only. No final generated artifact, browser execution, or cutover acceptance is claimed.')
+(OUT/'prepared-expectations.json').write_text(json.dumps(expected,ensure_ascii=False,indent=2)+'\n',encoding='utf8',newline='\n')
+print('PASS: 55 paragraphs, 11 original code values, 11 headings, 10 Sections, no links/tables/lists/rawcode; Ruby',len(pairs))
+print('PASS: reverting only the four specified heading literals yields every original draft byte')

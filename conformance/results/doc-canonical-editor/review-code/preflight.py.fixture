@@ -1,0 +1,81 @@
+import hashlib
+import json
+import re
+import subprocess
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+OUT = Path(__file__).resolve().parent / 'preflight'
+HEAD = 'f9b5a2f49f45dedf2b3345386c0eb51b3f0599e0'
+PREP = 'cce0e08f2f7fca278a246dad0054eb4eeaa88c5d'
+
+def git(*args):
+    return subprocess.check_output(['git', '-C', str(ROOT), *args])
+
+def blob(commit, path):
+    return git('show', commit + ':' + path)
+
+def save(path, data):
+    target = OUT / path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(data)
+    return {'path': path, 'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
+
+files = []
+base = git('rev-parse', PREP + '^').decode().strip()
+source_path = 'doc/spec/08-editor.nepld'
+source = blob(HEAD, source_path)
+old = blob(base, 'doc/migration/authored/08-editor.nepld')
+changes = [
+    ('1. AnalysisSnapshot', '1. AnalysisSnapshotの[入力/にゅうりょく]と[同一性/どういつせい]'),
+    ('4. definitionとrelations', '4. definitionとrelationsの[扱/あつか]い'),
+    ('7. LSP adapter', '7. LSP adapterの[責務/せきむ]'),
+    ('9. workspace trust', '9. workspace trustの[境界/きょうかい]'),
+]
+restored = source
+for before, after in changes:
+    a, b = ('"' + before + '"').encode(), ('"' + after + '"').encode()
+    assert restored.count(b) == 1
+    restored = restored.replace(b, a)
+assert restored == old
+for path in ['AGENTS.md', 'doc/authoring.md', 'doc/spec/16-doc-migration.md',
+             'doc/spec/21-doc-pages.md', source_path, 'doc/canonical.json',
+             'doc/migration/aliases/08-editor.json', 'tools/src/doc/canonical.rs',
+             'tools/src/doc/canonical/projection.rs']:
+    data = blob(HEAD, path)
+    assert b'\r' not in data
+    files.append(save('source/' + path, data))
+files.append(save('original/08-editor.md', blob(base, 'doc/spec/08-editor.md')))
+files.append(save('original/08-editor.nepld', old))
+files.append(save('source.patch', git('diff', base, HEAD, '--', 'doc')))
+previous = json.loads(blob(PREP, 'doc/canonical.json'))
+current = json.loads(blob(HEAD, 'doc/canonical.json'))
+assert previous['output_limits']['nodes'] == 20_000_000
+assert previous['html_output_limits']['nodes'] == 10_000_000
+assert current['output_limits']['nodes'] == 30_000_000
+assert current['html_output_limits']['nodes'] == 20_000_000
+previous['output_limits']['nodes'] = 30_000_000
+previous['html_output_limits']['nodes'] = 20_000_000
+assert previous == current
+text = source.decode()
+counts = {'paragraphs': len(re.findall(r'^\s*cons paragraph\s*$', text, re.M)),
+          'sections': len(re.findall(r'^\s*cons section ', text, re.M)),
+          'inline_codes': len(re.findall(r'\bcode "', text)),
+          'links': len(re.findall(r'\blink (?:relative|external|page)\b', text))}
+assert counts == {'paragraphs': 55, 'sections': 10, 'inline_codes': 11, 'links': 0}, counts
+aliases = json.loads(blob(HEAD, 'doc/migration/aliases/08-editor.json'))
+assert len(aliases) == 11
+assert len({a['name'] for a in aliases}) == 11
+section_ids = re.findall(r'^\s*cons section (\S+) ', text, re.M)
+assert [a['section'] for a in aliases] == [None, *section_ids]
+for path in ['.tmp/normalization-note.md', '.tmp/generation-lf/commands.json',
+             '.tmp/generation-lf/markdown.stderr.log', '.tmp/generation-lf/html.stderr.log']:
+    files.append(save('root-observations/' + Path(path).name, (ROOT / path).read_bytes()))
+record = {'scope': 'preliminary source/contract review only; final generation not yet fixed or independently executed',
+          'head': HEAD, 'preparation': PREP, 'base': base,
+          'four_heading_replacements_only': True, 'counts': counts,
+          'only_budget_delta': {'markdown_nodes': [20_000_000, 30_000_000], 'html_nodes': [10_000_000, 20_000_000]},
+          'root_failure_observations': 'LF NodeLimit logs copied as root observations; not independent execution',
+          'files': files}
+(OUT / 'manifest.json').write_text(json.dumps(record, ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline='\n')
+print(json.dumps({'pass': True, 'counts': counts, 'files': len(files), 'base': base}))

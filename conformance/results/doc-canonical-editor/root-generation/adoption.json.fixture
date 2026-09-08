@@ -1,0 +1,17 @@
+[
+  {
+    "path": "doc/spec/01-architecture.md",
+    "old_sha256": "4e98735f6253c9d47c85bb156cf7946e8b16db28429cb5d4a08a2bb3f78a552b",
+    "new_sha256": "ce2f1b13c0ad586a18d46ed9592490204f35b901f259619ac714d630469b4175"
+  },
+  {
+    "path": "doc/spec/12-model-invariants.md",
+    "old_sha256": "da54f3c8d8fd4aff0f29d094b2662bb2f3d2c762af5a5d623446280505e9023f",
+    "new_sha256": "e434f569fd1abf3f518fcb11cb0cae5a7a050623ee9098faf8f18314092392da"
+  },
+  {
+    "path": "doc/spec/08-editor.md",
+    "old_sha256": "1311cb50ce019ed53c733f9d8e414a7ea42b70f975fb0d60d01314762d79fa39",
+    "new_sha256": "1c2889b269b99c8be0a281c8bfcda275d38ea421f344fbe4f92a0a5a9c608c2a"
+  }
+]

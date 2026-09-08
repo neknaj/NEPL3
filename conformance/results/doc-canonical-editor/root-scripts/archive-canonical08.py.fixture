@@ -1,0 +1,47 @@
+from pathlib import Path
+import hashlib,json,subprocess,sys
+root=Path.cwd();out=root/'conformance/results/doc-canonical-editor';out.mkdir(parents=True,exist_ok=True)
+rows=[];chunks=[]
+def save(owner,path,relative):
+    data=path.read_bytes()
+    if len(data)>1048576:
+        parts=[]
+        for ordinal,start in enumerate(range(0,len(data),524288)):
+            part=data[start:start+524288];part_relative=f'{relative}.parts/{ordinal:04d}'
+            name=f'{owner}/{part_relative}.fixture';destination=out/name
+            assert destination.resolve().is_relative_to(out.resolve())
+            destination.parent.mkdir(parents=True,exist_ok=True);destination.write_bytes(part)
+            rows.append(dict(owner=owner,file=name,restore=part_relative,bytes=len(part),sha256=hashlib.sha256(part).hexdigest()))
+            parts.append(name)
+        chunks.append(dict(owner=owner,restore=relative,bytes=len(data),sha256=hashlib.sha256(data).hexdigest(),parts=parts))
+        return
+    safe='/'.join('saved-'+p.lstrip('.') if p in {'.tmp','dist','target','.git','node_modules','__pycache__'} else p for p in relative.split('/'))
+    name=f'{owner}/{safe}.fixture';destination=out/name
+    assert destination.resolve().is_relative_to(out.resolve())
+    destination.parent.mkdir(parents=True,exist_ok=True);destination.write_bytes(data)
+    rows.append(dict(owner=owner,file=name,restore=relative,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+for owner,name in [('root-initial','generation-initial'),('root-initial-lf','generation-lf'),('root-input-bytes','initial-input-bytes'),('root-generation','generation-budget'),('root-fixed','verification-integration'),('root-html-first','html-budget-first'),('root-html-second','html-budget-second'),('root-markdown-first','markdown-budget-first'),('root-markdown-second','markdown-budget-second'),('root-browser','browser-canonical08'),('root-github-first','github-canonical08-first'),('root-github-networkidle','github-canonical08-networkidle'),('root-github-probe','github-layout-probe'),('root-github','github-canonical08-stable')]:
+    directory=root/'.tmp'/name
+    for path in sorted(directory.rglob('*')):
+        if path.is_file():save(owner,path,path.relative_to(directory).as_posix())
+for name in ['start.json','original.md','prepare.py','generate-initial.py','select-node-budgets.py','node-budget-selection.json','normalize-inputs.py','normalization-note.md','generate-lf.py','heading-changes.json','generate-budget.py','verify-integration.py','prepare-browser.py','browser-canonical08.py','github-canonical08.py','fix-github-probe.py','probe-github.py','archive-canonical08.py','prepare-fixed.py']:
+    save('root-scripts',root/'.tmp'/name,name)
+directories={'review-preflight':Path('C:/projects/NEPL3-doc-canonical-model-invariants/.tmp/preflight-canonical08-headings'),'review-content':root/'.tmp/review-canonical08-content'}
+if '--review' in sys.argv:
+    directories.update({'review-code':root/'.tmp/review-canonical08-code','review-cutover':root/'.tmp/review-canonical08-cutover'})
+if '--bootstrap' in sys.argv:
+    for path in sorted((root/'.tmp/bootstrap-canonical08').iterdir()):
+        if path.is_file():save('root-bootstrap',path,path.name)
+for owner,directory in directories.items():
+    manifest=json.loads((directory/'manifest.json').read_text(encoding='utf-8'));save(owner,directory/'manifest.json','manifest.json')
+    for row in manifest['files']:
+        path=directory/row['path'];data=path.read_bytes()
+        assert len(data)==row['bytes'] and hashlib.sha256(data).hexdigest()==row['sha256']
+        save(owner,path,row['path'])
+head='5c4ce6184f6d5fa817f472d202101aaf86af3195';sources=[]
+for name in ['doc/canonical.json','doc/spec/01-architecture.md','doc/spec/12-model-invariants.md','doc/spec/08-editor.md','doc/spec/08-editor.nepld','doc/migration/aliases/08-editor.json']:
+    data=(root/name).read_bytes();assert data==subprocess.check_output(['git','show',head+':'+name])
+    sources.append(dict(path=name,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+(out/'payloads.json').write_text(json.dumps(dict(implementation_commit=head,sources=sources,chunked_files=chunks,files=rows),indent=2)+'\n',encoding='utf-8',newline='\n')
+(out/'.gitattributes').write_text('*.fixture -text -whitespace\n',encoding='utf-8',newline='\n')
+print(len(rows),'payloads',sum(r['bytes'] for r in rows),'bytes')

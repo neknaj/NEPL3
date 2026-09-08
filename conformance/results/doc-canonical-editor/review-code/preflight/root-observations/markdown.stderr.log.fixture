@@ -1,0 +1,4 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.16s
+     Running `target\debug\nepl3-tools.exe doc-canonical markdown .tmp/markdown-initial-lf`
+nepl3-tools: Stopped(NodeLimit)
+error: process didn't exit successfully: `target\debug\nepl3-tools.exe doc-canonical markdown .tmp/markdown-initial-lf` (exit code: 1)

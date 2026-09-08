@@ -1,0 +1,16 @@
+from pathlib import Path
+import hashlib,json
+OUT=Path(__file__).parent
+rows=json.loads((OUT/'html-results.json').read_bytes());gh=json.loads((OUT/'github-results.json').read_bytes());off=json.loads((OUT/'github-offscreen-results.json').read_bytes())
+assert len(rows)==12 and sum(len(r['navigation']) for r in rows)==120
+assert gh['complete'] and off['complete'] and len(gh['rows'])==len(off['rows'])==21
+e=json.loads((OUT/'github-elements.json').read_bytes());ids=[x['id'] for x in e if x['id']];names=[x['name'] for x in e if x['name']]
+assert len(ids)==len(set(ids)) and len(names)==len(set(names)) and not set(ids)&set(names)
+assert len([x for x in e if 'class="anchor"' in x['html']])==11
+files=[]
+for p in sorted(OUT.rglob('*')):
+ if p.is_file() and not any(x in p.relative_to(OUT).parts for x in ['served','__pycache__']) and p.name!='manifest.json':
+  data=p.read_bytes();files.append(dict(path=p.relative_to(OUT).as_posix(),bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+value=dict(commit='5c4ce6184f6d5fa817f472d202101aaf86af3195',scope='Independent generated content, local 12 cases/120 moves and GitHub21; bootstrap pending; no production edits',files=files,excluded=['served copies (input-hashes.json)','__pycache__'])
+dest=OUT/'manifest.json';dest.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n',encoding='utf8',newline='\n')
+print(hashlib.sha256(dest.read_bytes()).hexdigest(),len(files))

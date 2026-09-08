@@ -1,0 +1,1 @@
+Tool-reported initial probe failure (summary, not reconstructed raw stderr): before navigating 1-analysissnapshot, scroll-away precondition returned top=0, scrollY=8651, max=8651. Initial rawLines and first two targets had passed. Subsequent targets and final capture were not run.

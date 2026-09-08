@@ -1,0 +1,16 @@
+from pathlib import Path
+import subprocess,json,hashlib
+root=Path.cwd();out=root/'.tmp/initial-input-bytes';out.mkdir(exist_ok=True)
+rows=[]
+for name in ['doc/canonical.json','doc/migration/aliases/08-editor.json']:
+    path=root/name;saved=out/Path(name).name
+    before=saved.read_bytes() if saved.exists() else path.read_bytes()
+    expected=subprocess.check_output(['git','show','HEAD:'+name])
+    assert before.replace(b'\r\n',b'\n')==expected
+    saved.write_bytes(before)
+    rows.append(dict(path=name,working_sha256=hashlib.sha256(before).hexdigest(),git_blob_sha256=hashlib.sha256(expected).hexdigest(),working_bytes=len(before),git_bytes=len(expected),saved=saved.relative_to(root).as_posix()))
+    path.write_bytes(expected)
+assert not subprocess.check_output(['git','status','--porcelain']).strip()
+(out/'record.json').write_bytes((json.dumps(dict(source_commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),reason='Initial preparation used Python Windows text newline translation for two JSON files. Git stores LF. Preserve those exact initial input bytes and identities, then select the actual Git blob bytes for fresh-checkout reproducibility. No semantic change, earlier run is retained, and later LF run uses distinct paths.',files=rows),indent=2)+'\n').encode())
+s=(root/'.tmp/generate-initial.py').read_text(encoding='utf-8').replace('generation-initial','generation-lf').replace('-initial','-initial-lf')
+(root/'.tmp/generate-lf.py').write_text(s,encoding='utf-8',newline='\n')

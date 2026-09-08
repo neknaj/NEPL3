@@ -1,0 +1,16 @@
+from pathlib import Path
+import hashlib,json
+OUT=Path(__file__).parent;sha=lambda b:hashlib.sha256(b).hexdigest()
+initial=(OUT/'initial-manifest.json').read_bytes();assert sha(initial)=='7e51b2c3956af0a88229c5a736b5f53d2dae661c75973930757e2bf1e579fb72'
+old=json.loads(initial);assert len(old['files'])==104
+for e in old['files']:
+ p=OUT/('initial-record.md' if e['path']=='record.md' else e['path']);data=p.read_bytes()
+ assert len(data)==e['bytes'] and sha(data)==e['sha256'],e['path']
+r=json.loads((OUT/'bootstrap-results.json').read_bytes());assert r['complete'] and len(r['files'])==11 and len(r['rows'])==3
+assert all(x['result']=='PASS' and x['attempts']==[] for x in r['rows'])
+files=[]
+for p in sorted(OUT.rglob('*')):
+ if p.is_file() and not any(x in p.relative_to(OUT).parts for x in ['served','bootstrap-workspace','__pycache__']) and p.name!='manifest.json':
+  b=p.read_bytes();files.append(dict(path=p.relative_to(OUT).as_posix(),bytes=len(b),sha256=sha(b)))
+v=dict(commit='5c4ce6184f6d5fa817f472d202101aaf86af3195',scope='Independent local 12 cases/120 moves, GitHub21, and verbatim11-file/offline3-engine bootstrap; no production edits',history=dict(manifest='initial-manifest.json',sha256=sha(initial),payload_count=104,original_record='initial-record.md',all_original_payload_bytes_verified=True),files=files,excluded=['served copies (input-hashes.json)','bootstrap-workspace (bootstrap-results.json)','__pycache__'])
+p=OUT/'manifest.json';p.write_text(json.dumps(v,ensure_ascii=False,indent=2)+'\n',encoding='utf8',newline='\n');print(sha(p.read_bytes()),len(files))

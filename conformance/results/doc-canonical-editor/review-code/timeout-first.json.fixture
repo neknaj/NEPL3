@@ -1,0 +1,17 @@
+{
+  "scope": "Failed independent invocation; helper instrumentation gap retained",
+  "head": "5c4ce6184f6d5fa817f472d202101aaf86af3195",
+  "command": ["C:/projects/NEPL3-doc-canonical-editor/.tmp/review-canonical08-code/target/debug/nepl3-tools.exe", "doc-canonical", "--check"],
+  "process_deadline_seconds": 900,
+  "result": "subprocess.TimeoutExpired",
+  "success": false,
+  "typed_resource_failure": false,
+  "observed_exception": "subprocess.TimeoutExpired: Command '[C:\\projects\\NEPL3-doc-canonical-editor\\.tmp\\review-canonical08-code\\target\\debug\\nepl3-tools.exe, doc-canonical, --check]' timed out after 900 seconds",
+  "raw_child_logs_saved": false,
+  "raw_child_logs_note": "The initial run.py wrote captured bytes only after subprocess.run returned. Its uncaught TimeoutExpired bypassed log and failed-command-row persistence. The API traceback was visible, but this JSON is a narrative record, not reconstructed child stderr.",
+  "pid_and_cpu": "not captured by original helper",
+  "child_cleanup": "Direct executable, not Cargo. subprocess.run killed/waited its child on timeout. Subsequent Win32_Process query found no surviving executable/command under this review directory, other than the query itself.",
+  "post_timeout_observation": {"free_physical_memory_kib": 383808, "total_visible_memory_kib": 31217716},
+  "cause": "Not established; low available memory was observed afterward and is not proof of timeout cause.",
+  "next_invocation": "Separate recorded operation, unchanged finite resource limits; capture PID, CPU samples, elapsed time and logs even on timeout. Do not overwrite first failure."
+}

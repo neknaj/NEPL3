@@ -1,0 +1,11 @@
+{
+  "result": "PASS",
+  "width": 375,
+  "engine": "webkit",
+  "ruby_pairs": 1330,
+  "text_rectangles": {
+    "overflow": 0,
+    "bad": []
+  },
+  "scope": "Whole article text rectangles within viewport; four clarified heading viewport captures. Not a universal accessibility audit."
+}

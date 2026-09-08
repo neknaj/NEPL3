@@ -1,0 +1,27 @@
+from pathlib import Path
+import json,hashlib,subprocess,re
+p=Path(__file__).parent;r=p.parents[1];historical=r.parent/'NEPL3-doc-canonical-html-fragment/.tmp/preflight-after19'
+sha=lambda b:hashlib.sha256(b).hexdigest()
+git=lambda *x:subprocess.check_output(['git',*x],cwd=r)
+commit='cce0e08f2f7fca278a246dad0054eb4eeaa88c5d';base=git('rev-parse',commit+'^').decode().strip()
+before=git('show',base+':doc/migration/authored/08-editor.nepld');after=git('show',commit+':doc/spec/08-editor.nepld');assert after==(p/'08-editor.nepld').read_bytes()
+oldheads=re.findall(rb'cons section (\w+) "([^"\n]+)" body',before);newheads=re.findall(rb'cons section (\w+) "([^"\n]+)" body',after)
+changed=[(i.decode(),a.decode(),b.decode()) for (i,a),(j,b) in zip(oldheads,newheads) if a!=b];assert [x[0] for x in changed]==['snapshot','relations','lsp','trust']
+reversed=after
+for _,old,new in changed:
+ assert reversed.count(new.encode())==1
+ reversed=reversed.replace(new.encode(),old.encode())
+assert reversed==before==(historical/'08-editor.nepld').read_bytes()
+md=git('show',base+':doc/spec/08-editor.md');assert md==(historical/'08-editor.md').read_bytes()==(p/'08-editor.md').read_bytes()
+registry=json.loads(git('show',commit+':doc/canonical.json'));old=json.loads(git('show',base+':doc/canonical.json'));assert registry['pages'][:-1]==old['pages'];entry=registry['pages'].pop();assert registry==old and entry['renderer']=='nepl3-tools.markdown-annotated/2'
+aliases=json.loads(git('show',commit+':doc/migration/aliases/08-editor.json'));expected=json.loads((historical/'aliases.json').read_text(encoding='utf8'))['08-editor'];assert aliases==[{'section':x['section'],'name':x['old']} for x in expected]
+structure=json.loads((p/'structure.json').read_text(encoding='utf8'))['08-editor'];assert structure['counts']['Section']==10 and structure['counts']['Paragraph']==55 and structure['counts']['InlineCode']==11 and not structure['links']
+assert not any(k in structure['counts'] for k in ['Table','List','RawCode','Parallel','ForeignBlock','Image'])
+sources=[]
+for name in ['doc/canonical.json','doc/migration/aliases/08-editor.json','doc/authoring.md','AGENTS.md','doc/spec/21-doc-pages.md','design/forms.json','tools/audit/structure.py']:
+ b=git('show',commit+':'+name);q=p/'context'/name;q.parent.mkdir(parents=True,exist_ok=True);q.write_bytes(b);sources.append({'path':name,'sha256':sha(b),'bytes':len(b)})
+(p/'before.nepld').write_bytes(before);(p/'diff.patch').write_bytes(git('diff','--find-renames',base,commit))
+(p/'historical-github.json').write_bytes((historical/'github.json').read_bytes())
+(p/'checks.json').write_text(json.dumps({'commit':commit,'base':base,'original_sha256':sha(md),'old_doc_sha256':sha(before),'doc_sha256':sha(after),'heading_changes':changed,'four_reversed_exact_old_bytes':True,'old_aliases':11,'no_other_registry_change':True,'generation':'not-run','browser':'not-run'},ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+files=[{'path':x.relative_to(p).as_posix(),'bytes':x.stat().st_size,'sha256':sha(x.read_bytes())} for x in sorted(p.rglob('*')) if x.is_file() and x.name!='manifest.json']
+(p/'manifest.json').write_text(json.dumps({'scope':'independent heading/content and cutover preparation review; no execution','commit':commit,'sources':sources,'files':files},indent=2)+'\n',encoding='utf8');print(sha((p/'manifest.json').read_bytes()))

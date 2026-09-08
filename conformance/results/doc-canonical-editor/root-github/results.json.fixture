@@ -1,0 +1,324 @@
+{
+  "head": "5c4ce6184f6d5fa817f472d202101aaf86af3195",
+  "url": "https://github.com/neknaj/NEPL3/blob/5c4ce6184f6d5fa817f472d202101aaf86af3195/doc/spec/08-editor.md",
+  "rows": [
+    {
+      "fragment": "08-共通editor-serviceと診断",
+      "before": {
+        "top": -8265,
+        "scrollY": 8651,
+        "max": 8651
+      },
+      "after": {
+        "top": 125,
+        "scrollY": 261,
+        "hash": "#08-%E5%85%B1%E9%80%9Aeditor-service%E3%81%A8%E8%A8%BA%E6%96%AD"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "方針",
+      "before": {
+        "top": -8174.40625,
+        "scrollY": 8651,
+        "max": 8651
+      },
+      "after": {
+        "top": 124.59375,
+        "scrollY": 352,
+        "hash": "#%E6%96%B9%E9%87%9D"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "1-analysissnapshot",
+      "before": {
+        "top": -8024.21875,
+        "scrollY": 8651,
+        "max": 8651
+      },
+      "after": {
+        "top": 124.78125,
+        "scrollY": 502,
+        "hash": "#1-analysissnapshot"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "2-自動で得られる機能",
+      "before": {
+        "top": 1282.96875,
+        "scrollY": 502,
+        "max": 8651
+      },
+      "after": {
+        "top": 124.96875,
+        "scrollY": 1660,
+        "hash": "#2-%E8%87%AA%E5%8B%95%E3%81%A7%E5%BE%97%E3%82%89%E3%82%8C%E3%82%8B%E6%A9%9F%E8%83%BD"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "3-regionの選択",
+      "before": {
+        "top": -6491.84375,
+        "scrollY": 8651,
+        "max": 8651
+      },
+      "after": {
+        "top": 125.15625,
+        "scrollY": 2034,
+        "hash": "#3-region%E3%81%AE%E9%81%B8%E6%8A%9E"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "4-definitionとrelations",
+      "before": {
+        "top": 1699.34375,
+        "scrollY": 2034,
+        "max": 8651
+      },
+      "after": {
+        "top": 125.34375,
+        "scrollY": 3608,
+        "hash": "#4-definition%E3%81%A8relations"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "5-不完全入力",
+      "before": {
+        "top": 4283.53125,
+        "scrollY": 3608,
+        "max": 8651
+      },
+      "after": {
+        "top": 124.53125,
+        "scrollY": 7767,
+        "hash": "#5-%E4%B8%8D%E5%AE%8C%E5%85%A8%E5%85%A5%E5%8A%9B"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "6-増分解析と取消し",
+      "before": {
+        "top": 8377.71875,
+        "scrollY": 0,
+        "max": 8651
+      },
+      "after": {
+        "top": 124.71875,
+        "scrollY": 8253,
+        "hash": "#6-%E5%A2%97%E5%88%86%E8%A7%A3%E6%9E%90%E3%81%A8%E5%8F%96%E6%B6%88%E3%81%97"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "7-lsp-adapter",
+      "before": {
+        "top": 8775.90625,
+        "scrollY": 0,
+        "max": 8651
+      },
+      "after": {
+        "top": 124.90625,
+        "scrollY": 8651,
+        "hash": "#7-lsp-adapter"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "8-診断ログの表示",
+      "before": {
+        "top": 9150.09375,
+        "scrollY": 0,
+        "max": 8651
+      },
+      "after": {
+        "top": 499.09375,
+        "scrollY": 8651,
+        "hash": "#8-%E8%A8%BA%E6%96%AD%E3%83%AD%E3%82%B0%E3%81%AE%E8%A1%A8%E7%A4%BA"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "9-workspace-trust",
+      "before": {
+        "top": 9388.28125,
+        "scrollY": 0,
+        "max": 8651
+      },
+      "after": {
+        "top": 737.28125,
+        "scrollY": 8651,
+        "hash": "#9-workspace-trust"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-706f6c696379",
+      "before": {
+        "top": -8174.40625,
+        "scrollY": 8651,
+        "max": 8651
+      },
+      "after": {
+        "top": 124.59375,
+        "scrollY": 352,
+        "hash": "#n-706f6c696379"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-736e617073686f74",
+      "before": {
+        "top": -8024.21875,
+        "scrollY": 8651,
+        "max": 8651
+      },
+      "after": {
+        "top": 124.78125,
+        "scrollY": 502,
+        "hash": "#n-736e617073686f74"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-64657269766564",
+      "before": {
+        "top": 1282.96875,
+        "scrollY": 502,
+        "max": 8651
+      },
+      "after": {
+        "top": 124.96875,
+        "scrollY": 1660,
+        "hash": "#n-64657269766564"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-726567696f6e",
+      "before": {
+        "top": -6491.84375,
+        "scrollY": 8651,
+        "max": 8651
+      },
+      "after": {
+        "top": 125.15625,
+        "scrollY": 2034,
+        "hash": "#n-726567696f6e"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-72656c6174696f6e73",
+      "before": {
+        "top": 1699.34375,
+        "scrollY": 2034,
+        "max": 8651
+      },
+      "after": {
+        "top": 125.34375,
+        "scrollY": 3608,
+        "hash": "#n-72656c6174696f6e73"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-7265636f76657279",
+      "before": {
+        "top": 4283.53125,
+        "scrollY": 3608,
+        "max": 8651
+      },
+      "after": {
+        "top": 124.53125,
+        "scrollY": 7767,
+        "hash": "#n-7265636f76657279"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-696e6372656d656e74616c",
+      "before": {
+        "top": 8377.71875,
+        "scrollY": 0,
+        "max": 8651
+      },
+      "after": {
+        "top": 124.71875,
+        "scrollY": 8253,
+        "hash": "#n-696e6372656d656e74616c"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-6c7370",
+      "before": {
+        "top": 8775.90625,
+        "scrollY": 0,
+        "max": 8651
+      },
+      "after": {
+        "top": 124.90625,
+        "scrollY": 8651,
+        "hash": "#n-6c7370"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-646961676e6f7374696373",
+      "before": {
+        "top": 9150.09375,
+        "scrollY": 0,
+        "max": 8651
+      },
+      "after": {
+        "top": 499.09375,
+        "scrollY": 8651,
+        "hash": "#n-646961676e6f7374696373"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-7472757374",
+      "before": {
+        "top": 9388.28125,
+        "scrollY": 0,
+        "max": 8651
+      },
+      "after": {
+        "top": 737.28125,
+        "scrollY": 8651,
+        "hash": "#n-7472757374"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    }
+  ],
+  "status": 200,
+  "browser": "151.0.7922.34",
+  "raw_lines_match": true
+}

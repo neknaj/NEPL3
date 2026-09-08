@@ -1,0 +1,9 @@
+from pathlib import Path
+import subprocess,json,os,time,hashlib
+p=Path(__file__).parent.resolve();source=(p/'markdown_probe.rs').read_bytes()
+(p/'workspace/tools/tests/canonical08_review.rs').write_bytes(source)
+cmd=['cargo','test','--locked','-p','nepl3-tools','--test','canonical08_review','--','--nocapture'];start=time.monotonic()
+r=subprocess.run(cmd,cwd=p/'workspace',env=dict(os.environ,CARGO_TARGET_DIR=str(p/'target')),capture_output=True,timeout=300)
+(p/'markdown-probe.stdout.log').write_bytes(r.stdout);(p/'markdown-probe.stderr.log').write_bytes(r.stderr)
+(p/'markdown-probe-command.json').write_text(json.dumps(dict(command=cmd,deadline_seconds=300,elapsed_seconds=time.monotonic()-start,exit_code=r.returncode,probe_sha256=hashlib.sha256(source).hexdigest()),indent=2)+'\n',encoding='utf8',newline='\n')
+print('Independent GFM editor test exit',r.returncode);assert r.returncode==0,r.stderr.decode('utf8',errors='replace')

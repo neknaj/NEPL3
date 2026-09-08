@@ -1,0 +1,20 @@
+{
+  "result": "PASS",
+  "automatic_heading_ids": [
+    "user-content-08-共通きょうつうeditor-serviceと診断しんだん",
+    "user-content-方針ほうしん",
+    "user-content-1-analysissnapshotの入力にゅうりょくと同一性どういつせい",
+    "user-content-2-自動じどうで得えられる機能きのう",
+    "user-content-3-regionの選択せんたく",
+    "user-content-4-definitionとrelationsの扱あつかい",
+    "user-content-5-不完全入力ふかんぜんにゅうりょく",
+    "user-content-6-増分解析ぞうぶんかいせきと取消とりけし",
+    "user-content-7-lsp-adapterの責務せきむ",
+    "user-content-8-診断しんだんログの表示ひょうじ",
+    "user-content-9-workspace-trustの境界きょうかい"
+  ],
+  "id_count": 11,
+  "name_count": 21,
+  "shared_id_name": [],
+  "scope": "Actual fixed GitHub article DOM; aliases and auto permalink IDs are distinct."
+}
