@@ -16,6 +16,11 @@ fn run() -> nepl3_tools::Result<()> {
         ["doc-canonical", "--check"] => {
             nepl3_tools::doc::canonical::check(&root, "doc/canonical.json")
         }
+        ["doc-canonical", "markdown", output] => nepl3_tools::doc::canonical::markdown(
+            &root,
+            "doc/canonical.json",
+            std::path::Path::new(output),
+        ),
         ["doc-canonical", "html", output] => nepl3_tools::doc::canonical::html(
             &root,
             "doc/canonical.json",
@@ -59,6 +64,7 @@ fn run() -> nepl3_tools::Result<()> {
         ["doc-inventory", "--check-current"] => nepl3_tools::doc_inventory(&root, None, true),
         ["--help"] | ["-h"] => {
             println!("nepl3-tools doc-canonical --check");
+            println!("nepl3-tools doc-canonical markdown <new-output-directory>");
             println!("nepl3-tools doc-canonical html <new-output-directory>");
             println!("nepl3-tools doc-markdown <input.nepld> <new-output.md>");
             println!(

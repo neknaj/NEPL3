@@ -358,8 +358,10 @@ Page targetがDoc専用である規則を維持する。MarkdownをHTML routeへ
 分け、同じ集合のcodec admissionで異なる内容を同じsnapshotとして受理しない。
 
 返すidentityは既存のPageSet identityであり、原Doc・登録path・受動fileの実bytesに
-結び付く。aliasやrendererを含む配布artifact全体のidentityとは区別する。将来のhost
-metadataにはそれらも別途記録する。Doc間で生成Markdownのdigestを再帰的に含めない。
+結び付く。aliasやrendererを含む配布artifact全体のidentityとは区別する。canonical hostの
+新profileは、[16章](16-doc-migration.md) のinput context digestへそれらを別途記録する。
+Doc間で生成Markdownのdigestを再帰的に含めない。
 同じ有限Budgetで解決・生成・出力anchor検査を行い、停止後の再試行に新しい予算を与えない。
-この入口にはファイルI/O、CLIのcontext manifest、canonical registryへの接続、HTMLの
-依存ページ生成はまだ含めず、それらの完成を型付きprojectionの成功から推定しない。
+このtyped入口自体にはファイルI/Oを含めない。canonical registryからの明示的な接続と
+Markdownの集合書出しは16章のhostが担当する。HTMLは既存のPageSet backendへ接続し、
+Markdownの成功からHTML・Web・公開の全体受入を推定しない。

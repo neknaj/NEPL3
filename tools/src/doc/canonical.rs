@@ -4,6 +4,7 @@ use crate::{Result, doc::projection::annotated::host, repository};
 use serde::Deserialize;
 use std::{collections::BTreeSet, fs, io::Read, path::Path};
 
+mod projection;
 #[cfg(test)]
 mod tests;
 
@@ -73,7 +74,11 @@ fn bounded(root: &Path, relative: &str, limit: u64) -> Result<Vec<u8>> {
 /// Validate the source-selection manifest, without claiming semantic approval.
 pub fn load(root: &Path, manifest: &str) -> Result<Registry> {
     let raw = bounded(root, manifest, MAX_REGISTRY)?;
-    let text = std::str::from_utf8(&raw)?;
+    parse_registry(&raw)
+}
+
+fn parse_registry(raw: &[u8]) -> Result<Registry> {
+    let text = std::str::from_utf8(raw)?;
     repository::json::validate(text)?;
     let registry: Registry = serde_json::from_str(text)?;
     if registry.version != 1 || registry.pages.is_empty() || registry.pages.len() > 1000 {
@@ -89,7 +94,7 @@ pub fn load(root: &Path, manifest: &str) -> Result<Registry> {
                 .bytes()
                 .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'-')
             || !ids.insert(&page.id)
-            || page.renderer != RENDERER
+            || !matches!(page.renderer.as_str(), RENDERER | projection::RENDERER)
         {
             return Err("invalid canonical page identity or renderer".into());
         }
@@ -120,29 +125,69 @@ pub fn load(root: &Path, manifest: &str) -> Result<Registry> {
 /// Regenerate from the Doc source and compare exact bytes; never adopt or write
 /// a changed Markdown projection as a new expectation.
 pub fn check(root: &Path, manifest: &str) -> Result<()> {
-    let registry = load(root, manifest)?;
-    let compiled = super::source::compiled()?;
-    for page in registry.pages {
-        let source = bounded(root, &page.source, super::export::MAX_SOURCE_BYTES)?;
-        let aliases = bounded(root, &page.aliases, MAX_REGISTRY)?;
-        repository::json::validate(std::str::from_utf8(&aliases)?)?;
-        let expected = host::generate(
-            &compiled,
-            &page.source,
-            std::str::from_utf8(&source)?,
-            &aliases,
-        )?;
-        let actual = bounded(root, &page.projection, 2_097_152)?;
+    let raw = bounded(root, manifest, MAX_REGISTRY)?;
+    let registry = parse_registry(&raw)?;
+    // Keep the existing per-page operation and memory policy for old-only
+    // registries. A page-context profile explicitly opts into the batch limit.
+    if registry.pages.iter().all(|p| p.renderer == RENDERER) {
+        let compiled = super::source::compiled()?;
+        for page in &registry.pages {
+            let source = bounded(root, &page.source, super::export::MAX_SOURCE_BYTES)?;
+            let aliases = bounded(root, &page.aliases, MAX_REGISTRY)?;
+            repository::json::validate(std::str::from_utf8(&aliases)?)?;
+            let expected = host::generate(
+                &compiled,
+                &page.source,
+                std::str::from_utf8(&source)?,
+                &aliases,
+            )?;
+            if bounded(root, &page.projection, 2_097_152)? != expected.as_bytes() {
+                return Err(format!(
+                    "stale generated Markdown: {} (edit {})",
+                    page.projection, page.source
+                )
+                .into());
+            }
+        }
+        for page in registry.pages {
+            println!("Canonical Doc projection is current: {}", page.id);
+        }
+        return Ok(());
+    }
+    let generated =
+        projection::generate_from_registry(root, manifest, raw, &mut super::source::budget())?;
+    for (path, expected) in &generated.files {
+        let actual = bounded(root, path, 2_097_152)?;
         if actual != expected.as_bytes() {
             return Err(format!(
-                "stale generated Markdown: {} (edit {})",
-                page.projection, page.source
+                "stale generated Markdown: {path} (edit its registered Doc source)"
             )
             .into());
         }
-        println!("Canonical Doc projection is current: {}", page.id);
+    }
+    for (path, _) in &generated.files {
+        println!("Canonical Doc projection is current: {path}");
     }
     Ok(())
+}
+
+/// Stage the complete checked Markdown set without replacing repository files.
+pub fn markdown(root: &Path, manifest: &str, output: &Path) -> Result<()> {
+    if output.exists() {
+        return Err("output directory already exists".into());
+    }
+    let generated = projection::generate(root, manifest, &mut super::source::budget())?;
+    super::export::pages::write_generated(
+        super::export::pages::GeneratedPages {
+            files: generated
+                .files
+                .into_iter()
+                .map(|(p, s)| (p, s.into_bytes()))
+                .collect(),
+            manifest: generated.manifest,
+        },
+        output,
+    )
 }
 
 /// Export the registered Doc sources through the same prepared page-set backend.

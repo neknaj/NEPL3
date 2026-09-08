@@ -27,6 +27,10 @@ nepld正本へ移行し、検査済みの同じsite artifactを公開します�
 `doc/canonical.json` に登録された仕様はnepldを編集します。生成Markdownを直接変更しないでください。
 `cargo run --locked -p nepl3-tools -- doc-canonical --check` はproduction APIで再生成して差分を検査します。
 更新時は `doc-markdown annotated` で新しい一時ファイルへ生成し、差分をレビューして既存のprojectionへ反映します。
+ページ間リンクを持つ `nepl3-tools.markdown-annotated-pages/1` の登録後は、
+`cargo run --locked -p nepl3-tools -- doc-canonical markdown dist/canonical-markdown` で全登録ページを
+新規ディレクトリへ生成します。参照先・別ページのaliasも同じ入力集合に含め、旧rendererのページは
+既存byte列を維持します。成功した生成物の差分をレビューしてからprojectionへ反映してください。
 `cargo run --locked -p nepl3-tools -- doc-canonical html dist/doc-canonical` は、同じ正本からHTML一式を新規出力します。
 いずれも文書の明示的な生成工程とし、Cargo build.rsへ入れません。
 
