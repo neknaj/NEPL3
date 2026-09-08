@@ -909,5 +909,25 @@ body
       cons "[返却/へんきゃく]されたSome(partial FactSet)を[別/べつ]fresh validatorで[検査/けんさ]した[範囲/はんい]では[構造不正/こうぞうふせい]はなく、Occurrenceとstageの[片側/かたがわ]だけの[公開/こうかい]もなかった。"
       cons "この[構造検査成功/こうぞうけんさせいこう]をStopped/Invalid[分類/ぶんるい]の[成功/せいこう]とは[扱/あつか]わない。"
       cons sentence cons ruby text "実行" text "じっこう" cons text "コマンドは " cons code "cargo run --manifest-path .tmp/independent-engine/Cargo.toml --features nepl3-tools,nepl3-grammar-core --bin binding_stops --target-dir .tmp/review-target" cons text " である。" nil nil
+    cons paragraph
+      cons "R033の[元/もと]の[解消条件/かいしょうじょうけん]も[再検査/さいけんさ]した。"
+      cons "[正式/せいしき]binding.neplgは[明示的/めいじてき]なname-v1[呼出/よびだ]しからTextを[得/え]る。"
+      cons sentence cons ruby text "旧" text "きゅう" cons text "Seq/List" cons ruby text "版" text "ばん" cons text "を" cons ruby text "保存" text "ほぞん" cons text "した " cons code "binding-nontext-name.neplg" cons text " は" cons ruby text "実" text "じつ" cons text "package compilerで" cons ruby text "今" text "いま" cons text "もInvalidBindingとなり、" cons ruby text "管理対象" text "かんりたいしょう" cons text " " cons code "full_example_assembly_reaches_actual_plan_and_binding_validation" cons text " が" cons ruby text "独立成功" text "どくりつせいこう" cons text "した。" nil
+      cons sentence cons ruby text "訂正済" text "ていせいず" cons text "み" cons ruby text "正式原文" text "せいしきげんぶん" cons text "を" cons ruby text "実" text "じつ" cons text "compile・ParseSession・" cons ruby text "標準" text "ひょうじゅん" cons text "provider・analyzeへ" cons ruby text "通" text "とお" cons text "す " cons code "binding::official_binding_let_lambda_visibility_and_entity_identity" cons text " も" cons ruby text "独立成功" text "どくりつせいこう" cons text "し、Let/Lambda/" cons ruby text "兄弟復帰" text "きょうだいふっき" cons text "/Unicodeの" cons ruby text "参照先" text "さんしょうさき" cons text "を" cons ruby text "原位置" text "げんいち" cons text "に" cons ruby text "照合" text "しょうごう" cons text "しFactSet NDF" cons ruby text "往復" text "おうふく" cons text "を" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "[暗黙/あんもく]Seq-to-Text[連結/れんけつ]を[加/くわ]えず、[元/もと]の[型不一致/かたふいっち]と[要求/ようきゅう]したbinding[挙動/きょどう]が[是正/ぜせい]された[範囲/はんい]でR033をcorrectedとする。"
+      cons "T06の[全完成/ぜんかんせい]を[示/しめ]す[変更/へんこう]ではない。" nil
+    cons paragraph
+      cons "Sequential/Recursive[実装/じっそう]の[追加後/ついかご]、[同/おな]じ[固定期待値/こていきたいち]の[独立/どくりつ]24[解析/かいせき]はすべて[成功/せいこう]した。"
+      cons sentence cons text "ただし" cons ruby text "新" text "あら" cons text "たにbody ReadSpecをforeign B Exprとした" cons ruby text "合法" text "ごうほう" cons text "Grammarでは、" cons code "sequence cons define x 1 nil x" cons text " と " cons code "recursive cons define x 1 nil x" cons text " が" cons ruby text "実" text "じつ" cons text "compile・parse・tree.validateを" cons ruby text "通過後" text "つうかご" cons text "にInvalid(Fact(MissingNamespace))となった。" nil
+      cons "[通常/つうじょう]Childとは[異/こと]なりDeclaration actionが[親/おや]stageを[引継/ひきつ]ぎ、guestのnamespaceとhost[配下/はいか]のscopeを[組/く]み[合/あ]わせる。"
+      cons "[返却/へんきゃく]Some FactSetもnamespace-root[所属/しょぞく]を[満/み]たさない。"
+      cons "[既定/きてい]Foreign[分離/ぶんり]の[期待値/きたいち]はguest x[未解決/みかいけつ]と[別/べつ]root[維持/いじ]であり、[暗黙共有/あんもくきょうゆう]ではない。"
+      cons sentence cons code ".tmp/independent-engine/src/bin/binding_foreign_body.rs" cons text " と " cons code ".tmp/binding-review-foreign-body.neplg" cons text " の2" cons ruby text "実入力" text "じつにゅうりょく" cons text "をR044として" cons ruby text "修正" text "しゅうせい" cons text "へ" cons ruby text "戻" text "もど" cons text "した。" nil nil
+    cons paragraph
+      cons "R043[修正後/しゅうせいご]の[最初/さいしょ]の[独立走査/どくりつそうさ]では102[例/れい]から3[例/れい]へ[減/へ]ったが、Text Nodes11・Foreign Nodes18/19のSchema[由来停止/ゆらいていし]が[残/のこ]ったため[担当/たんとう]へ[戻/もど]した。"
+      cons "Tree[内/ない]の[明示/めいじ]wrapも[正規化経路/せいきかけいろ]へ[訂正後/ていせいご]、[同/おな]じ2[入力/にゅうりょく]・5[資源/しげん]の[走査/そうさ]は[誤分類/ごぶんるい]0となり、[各/かく]Stoppedの[理由/りゆう]が[制限資源/せいげんしげん]と[一致/いっち]することを[追加/ついか]assertして[成功/せいこう]した。"
+      cons "[管理対象/かんりたいしょう]coreの9[停止理由/ていしりゆう]・nested[変換/へんかん]・[普通/ふつう]のWrongType/Bounds[維持試験/いじしけん]と、[公開解析/こうかいかいせき]の6[資源停止/しげんていし]/Report[閉包/へいほう]/Occurrence-stage[同時保存/どうじほぞん]/caller depth[復帰/ふっき]を[含/ふく]むbinding5[試験/しけん]も[独立成功/どくりつせいこう]した。"
+      cons "R044の[元/もと]2[入力/にゅうりょく]もchild_frame[共通化後/きょうつうかご]にComplete・guest[未解決/みかいけつ]・root2・FactSet[構造成功/こうぞうせいこう]となり、[同/どう]alias[入/い]れ[子/こ]を[加/くわ]えた[管理対象回帰/かんりたいしょうかいき]が[独立成功/どくりつせいこう]した。"
+      cons "この[具体的/ぐたいてき]な[再現範囲/さいげんはんい]でR043/R044をcorrectedとする。" nil
     nil
   nil
