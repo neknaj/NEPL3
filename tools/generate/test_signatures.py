@@ -5,7 +5,7 @@ import sys
 import tempfile
 import unittest
 
-import signatures
+from tools.generate import signatures
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'audit'))
 from structure import Parser, load_forms

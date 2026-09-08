@@ -26,7 +26,7 @@
       "sha256": "cbb9e0d7d35ca0f62268b491853e719de7aa046f8e628d99579be18b87401ab1"
     },
     {
-      "path": "after/duplicate-forms.json",
+      "path": "after/duplicate-forms.json.fixture",
       "bytes": 21718,
       "sha256": "12c63b0f2556a963aee3a4ac1d40d262c532924269ca539a14d536d33174dc98"
     },
@@ -186,7 +186,7 @@
       "sha256": "cbb9e0d7d35ca0f62268b491853e719de7aa046f8e628d99579be18b87401ab1"
     },
     {
-      "path": "duplicate-forms.json",
+      "path": "duplicate-forms.json.fixture",
       "bytes": 21718,
       "sha256": "12c63b0f2556a963aee3a4ac1d40d262c532924269ca539a14d536d33174dc98"
     },
@@ -354,6 +354,11 @@
       "path": "write2.log",
       "bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "manifest-original.json",
+      "bytes": 11572,
+      "sha256": "379058aa971a44c7f0382abc6c39a661be23595420a09bc5304d11ec92ca0a39"
     }
   ]
 }
