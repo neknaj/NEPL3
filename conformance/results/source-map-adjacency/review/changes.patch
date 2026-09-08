@@ -1,0 +1,191 @@
+diff --git a/crates/foundation/core/src/origin.rs b/crates/foundation/core/src/origin.rs
+index 56fe4a0..29e7c83 100644
+--- a/crates/foundation/core/src/origin.rs
++++ b/crates/foundation/core/src/origin.rs
+@@ -567,8 +567,12 @@ fn snapshot_dag<'a>(
+ ) -> Result<bool, OriginError> {
+     let mut nodes: Vec<&'a SnapshotId> = Vec::new();
+     let mut ordered: Vec<usize> = Vec::new();
++    // Linked adjacency lists retain duplicate edges without scanning unrelated
++    // edges at each vertex. These are private indices, not source identities.
++    let mut outgoing: Vec<Option<usize>> = Vec::new();
+     let mut edges = Vec::new();
+     for mapping in input {
++        budget.charge(Resource::Work, 1)?;
+         let mut ids = [0usize; 2];
+         for (slot, span) in [&mapping.source, &mapping.target].into_iter().enumerate() {
+             let identity = span.snapshot_ref();
+@@ -602,9 +606,14 @@ fn snapshot_dag<'a>(
+                         Resource::AllocationUnits,
+                         core::mem::size_of::<usize>() as u64,
+                     )?;
++                    budget.charge(
++                        Resource::AllocationUnits,
++                        core::mem::size_of::<Option<usize>>() as u64,
++                    )?;
+                     budget.charge(Resource::Work, (ordered.len() - low) as u64)?;
+                     let index = nodes.len();
+                     nodes.push(identity);
++                    outgoing.push(None);
+                     ordered.insert(low, index);
+                     index
+                 }
+@@ -612,9 +621,11 @@ fn snapshot_dag<'a>(
+         }
+         budget.charge(
+             Resource::AllocationUnits,
+-            core::mem::size_of::<(usize, usize)>() as u64,
++            core::mem::size_of::<(usize, Option<usize>)>() as u64,
+         )?;
+-        edges.push((ids[0], ids[1]));
++        let edge = edges.len();
++        edges.push((ids[1], outgoing[ids[0]]));
++        outgoing[ids[0]] = Some(edge);
+     }
+     budget.charge(
+         Resource::AllocationUnits,
+@@ -623,7 +634,7 @@ fn snapshot_dag<'a>(
+     )?;
+     let mut incoming = alloc::vec![0usize;nodes.len()];
+     let mut depth = alloc::vec![1u64;nodes.len()];
+-    for (_, target) in &edges {
++    for (target, _) in &edges {
+         budget.charge(Resource::Work, 1)?;
+         incoming[*target] = incoming[*target]
+             .checked_add(1)
+@@ -645,23 +656,23 @@ fn snapshot_dag<'a>(
+         budget.charge(Resource::Nodes, 1)?;
+         budget.observe_depth(depth[current])?;
+         visited += 1;
+-        for (source, target) in &edges {
++        let mut next = outgoing[current];
++        while let Some(edge) = next {
+             budget.charge(Resource::Work, 1)?;
+-            if *source != current {
+-                continue;
+-            }
+-            incoming[*target] -= 1;
+-            depth[*target] = depth[*target].max(
++            let (target, following) = edges[edge];
++            next = following;
++            incoming[target] -= 1;
++            depth[target] = depth[target].max(
+                 depth[current]
+                     .checked_add(1)
+                     .ok_or(StopReason::DepthLimit)?,
+             );
+-            if incoming[*target] == 0 {
++            if incoming[target] == 0 {
+                 budget.charge(
+                     Resource::AllocationUnits,
+                     core::mem::size_of::<usize>() as u64,
+                 )?;
+-                ready.push(*target);
++                ready.push(target);
+             }
+         }
+     }
+diff --git a/crates/foundation/core/tests/maps.rs b/crates/foundation/core/tests/maps.rs
+index f2a87f0..a8b4732 100644
+--- a/crates/foundation/core/tests/maps.rs
++++ b/crates/foundation/core/tests/maps.rs
+@@ -74,6 +74,99 @@ fn budget() -> Budget {
+         events: 100,
+     })
+ }
++
++#[test]
++fn wide_snapshot_dag_work_does_not_scan_all_edges_for_each_vertex() -> TestResult {
++    fn measure(width: usize) -> Result<u64, String> {
++        let root = source("00000", "x")?;
++        let mut sources = SourceStore::default();
++        sources.insert(root.clone()).map_err(|e| format!("{e:?}"))?;
++        let mut maps = Vec::new();
++        for i in 1..=width {
++            let leaf = source(&format!("{i:05}"), "x")?;
++            maps.push(Mapping {
++                source: root.span(0, 1).map_err(|e| format!("{e:?}"))?,
++                target: leaf.span(0, 1).map_err(|e| format!("{e:?}"))?,
++                kind: MappingKind::Exact,
++            });
++            sources.insert(leaf).map_err(|e| format!("{e:?}"))?;
++        }
++        let mut b = Budget::new(Limits {
++            work: 20_000_000,
++            ..budget().limits()
++        });
++        SourceMap::validate_mappings(&maps, &sources, &mut b).map_err(|e| format!("{e:?}"))?;
++        assert_eq!(b.usage().nodes, width as u64 + 1);
++        assert_eq!(b.usage().depth, 2);
++        Ok(b.usage().work)
++    }
++    // A star has V-1 edges and no cycle. Doubling its leaves should cost
++    // approximately twice the work plus identity lookup growth, not four times.
++    let small = measure(1024)?;
++    let large = measure(2048)?;
++    eprintln!("wide DAG work: {small} -> {large}");
++    assert!(large * 10 < small * 27, "{small} -> {large}");
++    Ok(())
++}
++
++#[test]
++fn duplicate_edges_and_joins_preserve_longest_depth_and_sticky_stops() -> TestResult {
++    let mut sources = SourceStore::default();
++    let vertices = (0..5)
++        .map(|i| source(&format!("v{i}"), "x"))
++        .collect::<Result<Vec<_>, _>>()?;
++    for vertex in &vertices {
++        sources
++            .insert(vertex.clone())
++            .map_err(|e| format!("{e:?}"))?;
++    }
++    // 0->1->2->3 has depth four. The duplicate 0->1 and shorter 0->2
++    // must neither enqueue a vertex early nor leave an indegree outstanding.
++    // The independent 4->3 edge exercises a join across two roots.
++    let mut maps = Vec::new();
++    for (a, b) in [(0, 1), (0, 1), (1, 2), (0, 2), (2, 3), (4, 3)] {
++        maps.push(Mapping {
++            source: vertices[a].span(0, 1).map_err(|e| format!("{e:?}"))?,
++            target: vertices[b].span(0, 1).map_err(|e| format!("{e:?}"))?,
++            kind: MappingKind::Exact,
++        });
++    }
++    for _ in 0..2 {
++        let mut complete = budget();
++        SourceMap::validate_mappings(&maps, &sources, &mut complete)
++            .map_err(|e| format!("{e:?}"))?;
++        assert_eq!(complete.usage().depth, 4);
++        assert_eq!(complete.usage().nodes, 5);
++        for reason in [
++            StopReason::WorkLimit,
++            StopReason::AllocationLimit,
++            StopReason::NodeLimit,
++            StopReason::DepthLimit,
++        ] {
++            let mut limits = budget().limits();
++            let usage = complete.usage();
++            match reason {
++                StopReason::WorkLimit => limits.work = usage.work - 1,
++                StopReason::AllocationLimit => limits.allocation_units = usage.allocation_units - 1,
++                StopReason::NodeLimit => limits.nodes = usage.nodes - 1,
++                StopReason::DepthLimit => limits.depth = usage.depth - 1,
++                _ => unreachable!(),
++            }
++            let mut stopped = Budget::new(limits);
++            assert_eq!(
++                SourceMap::validate_mappings(&maps, &sources, &mut stopped).map(|_| ()),
++                Err(OriginError::Stopped(reason))
++            );
++            assert_eq!(stopped.poll(), Err(reason));
++            assert_eq!(
++                SourceMap::validate_mappings(&[], &sources, &mut stopped).map(|_| ()),
++                Err(OriginError::Stopped(reason))
++            );
++        }
++        maps.reverse();
++    }
++    Ok(())
++}
+ fn source(id: &str, text: &str) -> Result<SourceSnapshot, String> {
+     SourceSnapshot::new(
+         SourceId(id.into()),

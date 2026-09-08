@@ -1,0 +1,8 @@
+{
+  "command": [
+    "python",
+    "check.py"
+  ],
+  "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-21",
+  "exit_code": 0
+}

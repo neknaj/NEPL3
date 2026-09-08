@@ -1,0 +1,8 @@
+{
+  "command": [
+    "python",
+    "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-16\\check.py"
+  ],
+  "exit_code": 0,
+  "python_version": "Python 3.13.12"
+}
