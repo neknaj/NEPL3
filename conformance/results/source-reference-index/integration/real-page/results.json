@@ -1,0 +1,69 @@
+{
+  "scope": "Unchanged authored chapter 13 with registered page and external RFC links; default finite limits, no fallback/retry. Artifact equality is not canonical migration acceptance.",
+  "source_sha256": "31486ad75e0776d55cc12b2a9b5af2840780ad7812456d9c222a90fd8ab495a8",
+  "input_sha256": "d60aa7a4e5c84403c7e74b229b267e47ab2101b1683550440f8472c3e904d8e2",
+  "runs": [
+    {
+      "label": "before",
+      "commit": "76818219c8d9a6c1e5707b602eebc9eee61513ef",
+      "binary_sha256": "cc3879531d08f4d8047c61cc43e06b13c773a20548f8515bdd5be7c246f0a943",
+      "command": [
+        "C:\\projects\\NEPL3-source-reference-baseline\\target\\release\\nepl3-tools.exe",
+        "doc-html",
+        "pages",
+        "C:\\projects\\NEPL3-source-reference-index\\.tmp\\real-page\\input.json",
+        "C:\\projects\\NEPL3-source-reference-index\\.tmp\\real-page\\before-output"
+      ],
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": [
+        {
+          "path": "docs/reproducibility/assets/doc.css",
+          "bytes": 1860,
+          "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+        },
+        {
+          "path": "docs/reproducibility/index.html",
+          "bytes": 91421,
+          "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+        },
+        {
+          "path": "manifest.json",
+          "bytes": 4339,
+          "sha256": "004609dddb6c53378364f5cabe448e93688bc8051673ea39c890e8f98c2b190e"
+        }
+      ]
+    },
+    {
+      "label": "after",
+      "commit": "cf233ff45b2719a93277821d21d4beb326b73b2b",
+      "binary_sha256": "77883003d0fe626dfe70d96dddd7962851821747f560b8fbbdc6c0b675e51269",
+      "command": [
+        "C:\\projects\\NEPL3-source-reference-index\\target\\release\\nepl3-tools.exe",
+        "doc-html",
+        "pages",
+        "C:\\projects\\NEPL3-source-reference-index\\.tmp\\real-page\\input.json",
+        "C:\\projects\\NEPL3-source-reference-index\\.tmp\\real-page\\after-output"
+      ],
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": [
+        {
+          "path": "docs/reproducibility/assets/doc.css",
+          "bytes": 1860,
+          "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+        },
+        {
+          "path": "docs/reproducibility/index.html",
+          "bytes": 91421,
+          "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+        },
+        {
+          "path": "manifest.json",
+          "bytes": 4339,
+          "sha256": "004609dddb6c53378364f5cabe448e93688bc8051673ea39c890e8f98c2b190e"
+        }
+      ]
+    }
+  ]
+}

@@ -844,30 +844,19 @@ impl SourceStore {
         Ok(None)
     }
     pub fn get_ref(&self, id: &SnapshotId) -> Option<&SourceSnapshot> {
-        self.revision(&id.source, id.revision)
-            .filter(|snapshot| snapshot.identity() == id)
+        self.snapshots
+            .iter()
+            .find(|snapshot| snapshot.identity() == id)
     }
     pub fn get(&self, id: SnapshotId) -> Option<&SourceSnapshot> {
-        self.get_ref(&id)
+        self.snapshots.iter().find(|s| s.storage.id == id)
     }
     pub fn resolve(&self, reference: &SourceRef) -> Option<&SourceSnapshot> {
-        self.revision(&reference.source_id, reference.revision)
-            .filter(|snapshot| snapshot.storage.id.digest == reference.digest)
-    }
-    // The immutable index is keyed by source/revision. Callers still compare
-    // the digest: a matching key alone does not resolve a portable identity.
-    // These non-budgeted APIs retain their existing accounting contract.
-    fn revision(&self, source: &SourceId, revision: u64) -> Option<&SourceSnapshot> {
-        let at = self
-            .index
-            .binary_search_by(|&index| {
-                let id = &self.snapshots[index].storage.id;
-                id.source
-                    .cmp(source)
-                    .then_with(|| id.revision.cmp(&revision))
-            })
-            .ok()?;
-        Some(&self.snapshots[self.index[at]])
+        self.snapshots.iter().find(|s| {
+            s.storage.id.source == reference.source_id
+                && s.storage.id.revision == reference.revision
+                && s.storage.id.digest == reference.digest
+        })
     }
     pub fn latest(&self, source: &SourceId) -> Option<&SourceSnapshot> {
         self.snapshots

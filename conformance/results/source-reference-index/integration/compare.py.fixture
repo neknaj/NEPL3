@@ -1,0 +1,26 @@
+﻿import pathlib,subprocess,json,hashlib,time,shutil
+root=pathlib.Path(__file__).resolve().parents[1];base=pathlib.Path('C:/projects/NEPL3-source-reference-baseline')
+dest=root/'.tmp/comparison';dest.mkdir(exist_ok=True)
+sha=lambda b:hashlib.sha256(b).hexdigest()
+with (dest/'baseline-build.log').open('wb') as f:
+ r=subprocess.run(['cargo','build','--release','--locked','-p','nepl3-tools'],cwd=base,stdout=f,stderr=subprocess.STDOUT)
+assert r.returncode==0,r.returncode
+original=pathlib.Path('C:/projects/NEPL3-doc-phase-limits/.tmp/long-pages/guide--review')
+for name in ['input.json','source.nepld']:(dest/name).write_bytes((original/name).read_bytes())
+record={'scope':'Sequential release executions, unchanged real review draft and preselected finite limits. Wall time is observational; success is not inferred from a speed change.','input_sha256':sha((dest/'input.json').read_bytes()),'source_sha256':sha((dest/'source.nepld').read_bytes()),'runs':[]}
+for label,worktree in [('before',base),('after',root)]:
+ binary=worktree/'target/release/nepl3-tools.exe';output=dest/(label+'-output');log=dest/(label+'.log')
+ command=[str(binary),'doc-html','pages',str(dest/'input.json'),str(output)]
+ run={'label':label,'commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=worktree,text=True).strip(),'binary_sha256':sha(binary.read_bytes()),'command':command}
+ start=time.monotonic()
+ with log.open('wb') as f:
+  try:
+   r=subprocess.run(command,cwd=worktree,stdout=f,stderr=subprocess.STDOUT,timeout=300);run.update(exit_code=r.returncode,host_timeout=False)
+  except subprocess.TimeoutExpired:run.update(exit_code=None,host_timeout=True)
+ run.update(elapsed_seconds=time.monotonic()-start,log_sha256=sha(log.read_bytes()),output_exists=output.exists())
+ record['runs'].append(run)
+ (dest/'results.json').write_text(json.dumps(record,indent=2)+'\n',encoding='utf-8',newline='\n')
+ print(label,run,log.read_text(encoding='utf-8',errors='replace')[-1500:],flush=True)
+if not any(r['host_timeout'] for r in record['runs']):
+ assert (dest/'before.log').read_bytes()==(dest/'after.log').read_bytes(), 'Changed diagnostic or usage'
+ print('Exact diagnostic and usage equality confirmed',flush=True)

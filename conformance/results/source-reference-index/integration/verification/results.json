@@ -1,0 +1,57 @@
+{
+  "commit": "cf233ff45b2719a93277821d21d4beb326b73b2b",
+  "runs": [
+    {
+      "command": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "log": "0.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--workspace"
+      ],
+      "exit_code": 0,
+      "log": "1.log",
+      "sha256": "a03f0dce18f079e82e63f7268db105cb0181c4e4e9576f905371dcdc35fc566e"
+    },
+    {
+      "command": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "--workspace",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "log": "2.log",
+      "sha256": "607fb711af487af3d960c34c7d104fb033c5601b9f1cf916091d2cb8d6133d6d"
+    },
+    {
+      "command": [
+        "cargo",
+        "run",
+        "--locked",
+        "-p",
+        "nepl3-tools",
+        "--",
+        "check"
+      ],
+      "exit_code": 0,
+      "log": "3.log",
+      "sha256": "1f48bf61525586398c8d0b24fb7ee694033634155b3b48156c3cceb434096404"
+    }
+  ]
+}
