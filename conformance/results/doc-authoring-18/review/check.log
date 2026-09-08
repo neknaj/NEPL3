@@ -1,0 +1,14 @@
+{
+  "original_inline_code_count": 0,
+  "authored_inline_codes": 2,
+  "missing_inline_codes": [],
+  "raw_blocks": [],
+  "raw_contents_and_hints_equal": true,
+  "original_markdown_links": [],
+  "unannotated_prefix_candidates": [],
+  "unannotated_literal_candidates": [],
+  "ruby_count": 271,
+  "ruby_bases_kanji_only": true,
+  "full_source_subset_parsed": true,
+  "production_runtime_executed": false
+}
