@@ -1,4 +1,6 @@
 //! Iterative transactional reader execution. Host calls are explicit suspension points.
+mod checkpoint;
+use checkpoint::{Frame, Saved};
 pub(crate) mod copy;
 pub(crate) mod validate;
 use crate::{
@@ -387,9 +389,15 @@ impl<'a> ReaderSession<'a> {
             {
                 return Err(ReaderError::Continuation);
             }
-            Ok((snapshot, context, frame, depth_base))
+            slot::<Vec<Frame>>(budget)?;
+            checkpoint::storage::<Frame>(c.frames.len(), budget)?;
+            let mut frames = Vec::with_capacity(c.frames.len());
+            for frame in core::mem::take(&mut c.frames) {
+                frames.push(Frame::owned(frame));
+            }
+            Ok((snapshot, context, Frame::owned(frame), depth_base, frames))
         })();
-        let (snapshot, context, frame, depth_base) = match prepared {
+        let (snapshot, context, frame, depth_base, frames) = match prepared {
             Ok(values) => values,
             Err(error) => {
                 return if let Some(reason) = stop_reason(&error) {
@@ -416,7 +424,7 @@ impl<'a> ReaderSession<'a> {
             foundation: self.foundation,
             request,
             current: c.current,
-            frames: c.frames,
+            frames,
             base: c.depth_base,
             next_call: &mut self.next_call,
         };
@@ -492,7 +500,7 @@ impl<'a> ReaderSession<'a> {
         budget.with_depth_at_least(depth_base, |budget| {
             validate::check_provider(
                 &boundary,
-                frame,
+                frame.checkpoint.view.elements.len(),
                 &c.pending,
                 reply.into(),
                 c.usage,
@@ -565,24 +573,36 @@ impl<'a> ReaderSession<'a> {
                     session_id.charge_copy(budget)?;
                     plan_schema.charge_copy(budget)?;
                     request.charge_copy(budget)?;
-                    machine.frames.charge_copy(budget)?;
+                    checkpoint::storage::<ReaderFrame>(machine.frames.len(), budget)?;
+                    let mut frames = Vec::with_capacity(machine.frames.len());
+                    for frame in &machine.frames {
+                        frames.push(frame.materialize(&machine.current, budget)?);
+                    }
+                    frames.charge_copy(budget)?;
                     machine.current.charge_copy(budget)?;
                     call.charge_copy(budget)?;
                     report.charge_copy(budget)?;
                     report.charge_copy(budget)?;
-                    Ok((request, report, session_id, plan_schema, outward_call))
+                    Ok((
+                        request,
+                        report,
+                        session_id,
+                        plan_schema,
+                        outward_call,
+                        frames,
+                    ))
                 })();
-                let (request, mut report, session_id, plan_schema, outward_call) = match preparation
-                {
-                    Ok(values) => values,
-                    Err(error) => {
-                        return if let Some(reason) = stop_reason(&error) {
-                            Ok(machine.reply(Outcome::Stopped(reason), budget))
-                        } else {
-                            Err(error)
-                        };
-                    }
-                };
+                let (request, mut report, session_id, plan_schema, outward_call, frames) =
+                    match preparation {
+                        Ok(values) => values,
+                        Err(error) => {
+                            return if let Some(reason) = stop_reason(&error) {
+                                Ok(machine.reply(Outcome::Stopped(reason), budget))
+                            } else {
+                                Err(error)
+                            };
+                        }
+                    };
                 report.usage = budget.usage();
                 let continuation = ReaderContinuation {
                     session_id,
@@ -590,7 +610,7 @@ impl<'a> ReaderSession<'a> {
                     plan_schema,
                     plan_digest: digest,
                     request,
-                    frames: machine.frames,
+                    frames,
                     current: machine.current,
                     pending: call,
                     usage: budget.usage(),
@@ -692,7 +712,7 @@ struct Machine<'a, 'r> {
     foundation: &'a SchemaRef,
     request: ReadRequest<'r>,
     current: ReaderCheckpoint,
-    frames: Vec<ReaderFrame>,
+    frames: Vec<Frame>,
     base: u64,
     next_call: &'r mut u64,
 }
@@ -758,7 +778,7 @@ impl Machine<'_, '_> {
                 };
                 validate::check_provider(
                     &boundary,
-                    frame,
+                    frame.checkpoint.elements(),
                     call,
                     (&reply).into(),
                     saved,
@@ -795,24 +815,24 @@ impl Machine<'_, '_> {
             .checked_add(self.frames.len() as u64 + 1)
             .ok_or(StopReason::DepthLimit)?;
         budget.observe_depth(target - budget.current_depth())?;
-        slot::<ReaderFrame>(budget)?;
-        self.frames.push(ReaderFrame {
+        slot::<Frame>(budget)?;
+        self.frames.push(Frame {
             expression,
             start: self.current.cursor,
-            checkpoint: copy(&self.current, budget)?,
+            checkpoint: Saved::capture(&self.current, budget)?,
             phase: FramePhase::Enter,
         });
         Ok(())
     }
     fn child(
         &mut self,
-        mut frame: ReaderFrame,
+        mut frame: Frame,
         phase: FramePhase,
         child: ReaderId,
         budget: &mut Budget,
     ) -> Result<(), ReaderError> {
         frame.phase = phase;
-        slot::<ReaderFrame>(budget)?;
+        slot::<Frame>(budget)?;
         self.frames.push(frame);
         self.push(child, budget)
     }
@@ -862,7 +882,7 @@ impl Machine<'_, '_> {
                         })
                     }
                     Outcome::NeedMore(expected) => {
-                        self.current = frame.checkpoint;
+                        frame.checkpoint.restore(&mut self.current)?;
                         outcome = Some(Outcome::NeedMore(expected));
                     }
                     Outcome::NoMatch {
@@ -870,7 +890,7 @@ impl Machine<'_, '_> {
                         furthest,
                     } => {
                         if !matches!(&frame.phase, FramePhase::Repeat { .. }) {
-                            self.current = copy(&frame.checkpoint, budget)?;
+                            frame.checkpoint.restore_again(&mut self.current, budget)?;
                         }
                         match (expr, frame.phase) {
                             (
@@ -921,7 +941,7 @@ impl Machine<'_, '_> {
                                 if count >= min {
                                     outcome = Some(Outcome::Matched(NdfValue::List(values)));
                                 } else {
-                                    self.current = frame.checkpoint;
+                                    frame.checkpoint.restore(&mut self.current)?;
                                     outcome = Some(Outcome::NoMatch { expected, furthest });
                                 }
                             }
@@ -1011,11 +1031,11 @@ impl Machine<'_, '_> {
                             outcome = Some(Outcome::Matched(NdfValue::Some(Box::new(value))));
                         }
                         (ReaderExpr::Look(_), _) => {
-                            self.current = frame.checkpoint;
+                            frame.checkpoint.restore(&mut self.current)?;
                             outcome = Some(Outcome::Matched(NdfValue::Unit));
                         }
                         (ReaderExpr::Not(_), _) => {
-                            self.current = frame.checkpoint;
+                            frame.checkpoint.restore(&mut self.current)?;
                             outcome = Some(Outcome::NoMatch {
                                 expected: Vec::new(),
                                 furthest: frame.start,
@@ -1053,11 +1073,7 @@ impl Machine<'_, '_> {
                         (ReaderExpr::Node { kind, .. }, _) => {
                             slot::<ViewElement>(budget)?;
                             budget.charge(Resource::Nodes, 1)?;
-                            let roots = self
-                                .current
-                                .view
-                                .roots
-                                .split_off(frame.checkpoint.view.roots.len());
+                            let roots = self.current.view.roots.split_off(frame.checkpoint.roots());
                             let id = ViewRef(self.current.view.elements.len() as u64);
                             slot::<ViewRef>(budget)?;
                             slot::<ViewField>(budget)?;
@@ -1085,8 +1101,8 @@ impl Machine<'_, '_> {
                         ) => {
                             let view = fragment(
                                 &self.current.view,
-                                frame.checkpoint.view.elements.len(),
-                                frame.checkpoint.view.roots.len(),
+                                frame.checkpoint.elements(),
+                                frame.checkpoint.roots(),
                                 budget,
                             )?;
                             let request = TransformRequest {
@@ -1104,7 +1120,7 @@ impl Machine<'_, '_> {
                             frame.phase = FramePhase::Provider {
                                 call_id: call_identity(&call).0,
                             };
-                            slot::<ReaderFrame>(budget)?;
+                            slot::<Frame>(budget)?;
                             self.frames.push(frame);
                             slot::<ProviderCall>(budget)?;
                             return Ok(Control::Suspend(Box::new(call)));
@@ -1124,7 +1140,7 @@ impl Machine<'_, '_> {
                             frame.phase = FramePhase::Provider {
                                 call_id: call_identity(&call).0,
                             };
-                            slot::<ReaderFrame>(budget)?;
+                            slot::<Frame>(budget)?;
                             self.frames.push(frame);
                             slot::<ProviderCall>(budget)?;
                             return Ok(Control::Suspend(Box::new(call)));
@@ -1154,11 +1170,11 @@ impl Machine<'_, '_> {
                         Outcome::Matched(value)
                     }
                     Primitive::NoMatch { expected, furthest } => {
-                        self.current = frame.checkpoint;
+                        frame.checkpoint.restore(&mut self.current)?;
                         Outcome::NoMatch { expected, furthest }
                     }
                     Primitive::NeedMore { expected } => {
-                        self.current = frame.checkpoint;
+                        frame.checkpoint.restore(&mut self.current)?;
                         Outcome::NeedMore(expected)
                     }
                 });
@@ -1177,7 +1193,7 @@ impl Machine<'_, '_> {
                     }else{self.child(frame,FramePhase::AwaitChild,self.checked.plan().rule(name)?.root,budget)?;}
                 },
                 ReaderExpr::Call(provider)=>{
-                    let request=self.owned_request(self.current.cursor,&self.current.state,budget)?;let call=self.make_call(provider,CallRequest::Read(request),budget)?;frame.phase=FramePhase::Provider{call_id:call_identity(&call).0};slot::<ReaderFrame>(budget)?;self.frames.push(frame);slot::<ProviderCall>(budget)?;return Ok(Control::Suspend(Box::new(call)));
+                    let request=self.owned_request(self.current.cursor,&self.current.state,budget)?;let call=self.make_call(provider,CallRequest::Read(request),budget)?;frame.phase=FramePhase::Provider{call_id:call_identity(&call).0};slot::<Frame>(budget)?;self.frames.push(frame);slot::<ProviderCall>(budget)?;return Ok(Control::Suspend(Box::new(call)));
                 },
                 _=>return Err(ReaderError::Continuation),
             }

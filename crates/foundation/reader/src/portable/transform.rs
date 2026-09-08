@@ -77,7 +77,7 @@ impl TransformReplyContext<'_> {
         budget.with_depth_at_least(*depth_base, |budget| {
             check_provider(
                 &boundary,
-                frame,
+                frame.checkpoint.view.elements.len(),
                 &c.pending,
                 ProviderReplyRef::Transform(reply),
                 c.usage,

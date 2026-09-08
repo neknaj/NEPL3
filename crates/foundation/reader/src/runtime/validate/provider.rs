@@ -24,7 +24,7 @@ pub(crate) struct ProviderBoundary<'a> {
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn check_provider(
     machine: &ProviderBoundary<'_>,
-    frame: &ReaderFrame,
+    view_offset: usize,
     call: &ProviderCall,
     reply: ProviderReplyRef<'_>,
     saved: Usage,
@@ -66,7 +66,7 @@ pub(crate) fn check_provider(
                     machine
                         .registry
                         .validate(&signature.value_output, value, budget)?;
-                    check_view_offset(view, frame.checkpoint.view.elements.len())?;
+                    check_view_offset(view, view_offset)?;
                     (view, facts.as_slice())
                 }
                 _ => (&empty, &[][..]),
@@ -266,7 +266,7 @@ fn check_view_offset(view: &ViewBundle, offset: usize) -> Result<(), ReaderError
 /// precede this phase; allocation stops still preserve accepted artifacts.
 pub(in crate::runtime) fn apply_provider(
     machine: &mut Machine<'_, '_>,
-    frame: ReaderFrame,
+    frame: super::super::checkpoint::Frame,
     reply: ProviderReply,
     budget: &mut Budget,
 ) -> Result<Outcome, ReaderError> {
@@ -288,12 +288,12 @@ pub(in crate::runtime) fn apply_provider(
                         .current
                         .view
                         .elements
-                        .truncate(frame.checkpoint.view.elements.len());
+                        .truncate(frame.checkpoint.elements());
                     machine
                         .current
                         .view
                         .roots
-                        .truncate(frame.checkpoint.view.roots.len());
+                        .truncate(frame.checkpoint.roots());
                     append_view(&mut machine.current.view, &mut view, budget)?;
                     append_artifacts(machine, facts, sources, source_maps, report, budget)?;
                     Ok(Outcome::Matched(value))
@@ -334,11 +334,11 @@ pub(in crate::runtime) fn apply_provider(
             ReadReply::NoMatch {
                 expected, furthest, ..
             } => {
-                machine.current = frame.checkpoint;
+                frame.checkpoint.restore(&mut machine.current)?;
                 Ok(Outcome::NoMatch { expected, furthest })
             }
             ReadReply::NeedMore { expected, .. } => {
-                machine.current = frame.checkpoint;
+                frame.checkpoint.restore(&mut machine.current)?;
                 Ok(Outcome::NeedMore(expected))
             }
             ReadReply::Failed {
