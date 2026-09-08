@@ -949,5 +949,25 @@ body
       cons "[同意味/どういみ]でも[別/べつ]execution[配置/はいち]のProfileは[拒否/きょひ]される。"
       cons "Globalの[実解析/じつかいせき]はまだUnsupportedGlobalNamespace[診断/しんだん]とUnsupportedPlanで[明示拒否/めいじきょひ]され、lexical[成功/せいこう]で[代用/だいよう]しない。"
       cons "Custom facts provider[実行/じっこう]・[明示/めいじ]root[共有/きょうゆう]・[全/ぜん]T06[受入条件/うけいれじょうけん]は[未達/みたつ]として[維持/いじ]する。" nil
+    cons paragraph
+      cons "[最終追加/さいしゅうついか]のOrigin[前方参照回帰/ぜんぽうさんしょうかいき]もnativeで[独立成功/どくりつせいこう]し、binding[管理対象/かんりたいしょう]の[独立/どくりつ]native[確認/かくにん]は[計/けい]12[件/けん]となった。"
+      cons "[実/じつ]treeへ[合法/ごうほう]なComposite→[後方配置/こうほうはいち]Directを[加/くわ]え、[公開/こうかい]validate/analyzeのWork/Allocation[走査/そうさ]で[公開/こうかい]originsが[空/から]または[全/ぜん]graphのいずれかであること、[停止前後/ていしぜんご]のSome FactSetが[構造検査/こうぞうけんさ]を[通/とお]ることを[確/たし]かめる。"
+      cons sentence cons text "Wasmtimeの" cons ruby text "独立実行" text "どくりつじっこう" cons text "は11" cons ruby text "件" text "けん" cons text "すべて" cons ruby text "成功" text "せいこう" cons text "した（" cons code "cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 --target-dir .tmp/review-target -- --skip binding_seed_artifacts_match_original_source_and_host_adapter --test-threads=1" cons text "、runner=" cons code "wasmtime run" cons text "）。" nil
+      cons "Pythonを[起動/きどう]するseed[原文一致/げんぶんいっち]だけはnative[必須/ひっす]としてcfgで[区別/くべつ]され、[最終/さいしゅう]CIはWASIでbinding::[全対象/ぜんたいしょう]を[実行/じっこう]する。"
+      cons "[通常/つうじょう]の[解析/かいせき]・[停止/ていし]・portable[試験/しけん]を[任意実行/にんいじっこう]へ[外/はず]してはいない。" nil
+    cons paragraph
+      cons sentence cons ruby text "次" text "つぎ" cons text "のGlobal" cons ruby text "実装" text "じっそう" cons text "は、" cons ruby text "先" text "さき" cons text "に" cons ruby text "固定" text "こてい" cons text "した15" cons ruby text "原文" text "げんぶん" cons text "と" cons ruby text "追加" text "ついか" cons text "3" cons ruby text "入力" text "にゅうりょく" cons text "を" cons ruby text "独立" text "どくりつ" cons text " " cons code "binding_global" cons text " で" cons ruby text "実" text "じつ" cons text "compile・ParseSession・analyzeへ" cons ruby text "通" text "とお" cons text "して" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "[成功/せいこう]13[例/れい]は[原文位置/げんぶんいち]で[識別/しきべつ]したEntityへ[解決/かいけつ]し、[重複/じゅうふく]5[例/れい]はDuplicateGlobalとprimary/relatedを[保持/ほじ]する。"
+      cons "[先行/せんこう]bindはscope[復帰後/ふっきご]の[兄弟/きょうだい]にも[見/み]え、[先行/せんこう]referenceへ[後続/こうぞく]bindは[見/み]えない。"
+      cons "export[候補/こうほ]だけでは[公開/こうかい]せず、import[後/ご]に[可視/かし]となる。"
+      cons "sequentialの[順序/じゅんじょ]とrecursiveの[明示/めいじ]header[収集/しゅうしゅう]を[区別/くべつ]し、Foreignの[同名宣言/どうめいせんげん]は[別/べつ]rootへ[留/とど]まる。"
+      cons "escaped Unicode[名/めい]の[重複/じゅうふく]は[元/もと][綴/つづ]りが[異/こと]なっても[意味名/いみめい]で[検出/けんしゅつ]し、primary27..32・related8..18を[保持/ほじ]した。"
+      cons "この[例/れい]は[管理対象/かんりたいしょう]にも[追加/ついか]され、その[試験/しけん]を[独立再実行/どくりつさいじっこう]した。" nil
+    cons paragraph
+      cons "Occurrence.scopeと[既存/きそん]stageは[実発行/じつはっこう]のlexical[位置/いち]を[保/たも]ち、[追加/ついか]namespaceStageがGlobal rootの[発行時履歴/はっこうじりれき]を[捕捉/ほそく]する。"
+      cons "Global Entityの[配置先/はいちさき]だけをrootとし、[語彙位置/ごいいち]をrootへ[上書/うわが]きしない。"
+      cons "[独立補助/どくりつほじょ]は[各/かく]referenceについて[保存/ほぞん]namespaceStageから[過去/かこ]のintroduced[列/れつ]をたどり、[実際/じっさい]の[解決候補/かいけつこうほ]と[一致/いっち]することもassertした。"
+      cons "18[結果/けっか]すべてを[実/じつ]NDF/CBOR[往復/おうふく]し、NamespacePolicy・Entity・[両/りょう]stage・Report・[再/さい]encodeの[一致/いっち]を[確認/かくにん]した。"
+      cons sentence cons code "binding_global_stops" cons text " は" cons ruby text "重複入力" text "じゅうふくにゅうりょく" cons text "を6" cons ruby text "資源" text "しげん" cons text "で" cons ruby text "制限" text "せいげん" cons text "し、" cons ruby text "各" text "かく" cons text "partial resultをportable" cons ruby text "往復" text "おうふく" cons text "して、" cons ruby text "元" text "もと" cons text "StopReason・" cons ruby text "構造閉包" text "こうぞうへいほう" cons text "・Report" cons ruby text "保持" text "ほじ" cons text "を" cons ruby text "確認" text "かくにん" cons text "した。" nil nil
     nil
   nil
