@@ -1178,5 +1178,22 @@ body
       cons "[続/つづ]くDoc[混在/こんざい]lowerは、rename[保存後/ほぞんご]の[固定/こてい]baseと[凍結/とうけつ]8fileを[隔離/かくり]workspaceで[照合/しょうごう]し、その[固定依存先/こていいぞんさき]へ[独立補助/どくりつほじょ]をnative/WASIとも[新規/しんき]buildして[確認/かくにん]した。"
       cons "[元/もと]の[独立入力/どくりつにゅうりょく]3[対/つい]は、CRLF/Unicodeを[含/ふく]む[入/い]れ[子/こ]Ruby/Annoとprefixの[混在/こんざい]、escapeで[得/え]た[括弧/かっこ]を[注釈/ちゅうしゃく]へ[再解釈/さいかいしゃく]しない[場合/ばあい]、[空/から]Sentenceである。"
       cons sentence cons ruby text "実" text "じつ" cons text "compiler・ParseSession・" cons code "lower::document" cons text " の" cons ruby text "意味正規形" text "いみせいきけい" cons text "はそれぞれ" cons ruby text "明示" text "めいじ" cons text "prefixと" cons ruby text "一致" text "いっち" cons text "し、" cons ruby text "元" text "もと" cons text "host Origin" cons ruby text "列" text "れつ" cons text "、token-local View" cons ruby text "列" text "れつ" cons text "、" cons ruby text "操作内" text "そうさない" cons text "source bytes onceと" cons ruby text "初回" text "しょかい" cons text "CBOR" cons ruby text "後" text "ご" cons text "の" cons ruby text "保持" text "ほじ" cons text "を" cons ruby text "確認" text "かくにん" cons text "した。" nil nil
+    cons paragraph
+      cons "[追加/ついか]の[構造合法/こうぞうごうほう]payloadでは、Composite[内部/ないぶ]の[別/べつ]token Direct Origin、[別/べつ]tokenを[指/さ]すSynthetic anchor、[意味/いみ]nodeのSpan[欠落/けつらく]、[自/じ]tokenと[別/べつ]tokenの[両方/りょうほう]へ[戻/もど]るgenerated[位置/いち]を[拒否/きょひ]した。"
+      cons "[共通/きょうつう]SourceMapの[全経路包含/ぜんけいろほうがん]を[用/もち]い、Viewだけ[一致/いっち]させても[意味位置/いみいち]の[閉包/へいほう]を[省略/しょうりゃく]しない。"
+      cons "[位置/いち]とViewを[保/たも]ったままTextの[意味内容/いみないよう]だけを[変更/へんこう]する[正例/せいれい]は[受理/じゅり]される。"
+      cons "これは[受理済/じゅりず]みreader payloadの[位置契約/いちけいやく]を[検査/けんさ]する[入口/いりぐち]であり、[元文字列/もともじれつ]の[再/さい]parseによってreader[実行/じっこう]の[真正性/しんせいせい]を[証明/しょうめい]するものではない。" nil
+    cons paragraph
+      cons "[別/べつ]の[独立原文/どくりつげんぶん]で5[資源/しげん]それぞれの[実消費量/じつしょうひりょう]を[基準/きじゅん]に0・[必要量直前/ひつようりょうちょくぜん]・[必要量/ひつようりょう]ちょうどを[試/ため]し、[両/りょう]targetとも10[停止/ていし]/5[成功/せいこう]となった。"
+      cons "caller[深/ふか]さ0のpeak14がcaller7では21となり、[停止/ていし]・cancelでも[元/もと]の[構文木/こうぶんき]は[全/ぜん]Eqで[保持/ほじ]された。"
+      cons "Codeの[前後/ぜんご]にhost literalを[置/お]いた[追加例/ついかれい]は、guestを[単独/たんどく]lowerすればAnnotationNotesとなる[同言語/どうげんご]Articleを、hostの[意味値/いみち]へ[混/ま]ぜずForeignClosureの[構文/こうぶん]として[保持/ほじ]し、[元/もと]Origin/Viewと[初回/しょかい]CBOR[正準再/せいじゅんさい]encodeを[保/たも]った。"
+      cons "これら[独立/どくりつ]3[補助/ほじょ]と[管理対象/かんりたいしょう]mixed4[件/けん]はnative/WASIで[成功/せいこう]した。"
+      cons sentence cons text "source・" cons ruby text "固定" text "こてい" cons text "snapshot" cons ruby text "各" text "かく" cons text "SHA・" cons ruby text "新" text "しん" cons text "buildしたbinary・6" cons ruby text "本" text "ほん" cons text "のfull process logは " cons code ".tmp/review-doc-mixed-fixed/manifest.json" cons text " に" cons ruby text "保存" text "ほぞん" cons text "した。" nil
+      cons "Doc label[解決/かいけつ]、Region selector、printer、CheckedArticle/PreparedArticle、[正式/せいしき]lower[操作/そうさ]のReport[包絡/ほうらく]はこの[変更/へんこう]の[完了範囲/かんりょうはんい]に[含/ふく]めない。" nil
+    cons paragraph
+      cons sentence cons text "Doc labelsは" cons ruby text "独立" text "どくりつ" cons text "6" cons ruby text "原文" text "げんぶん" cons text "を" cons ruby text "実" text "じつ" cons text "compiler・ParseSession・" cons ruby text "混在" text "こんざい" cons text "lower・" cons code "labels::check" cons text "へ" cons ruby text "通" text "とお" cons text "し、" cons ruby text "前方" text "ぜんぽう" cons text "Reference、Unicode/CRLF、SectionとAnchorの" cons ruby text "同名重複" text "どうめいじゅうふく" cons text "、" cons ruby text "未知名" text "みちめい" cons text "、Foreign" cons ruby text "内" text "ない" cons text "だけにある" cons ruby text "定義" text "ていぎ" cons text "、hostとguestの" cons ruby text "同名" text "どうめい" cons text "を" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "[名前/なまえ]の[選択位置/せんたくいち]は[固定/こてい]UTF-8 byte[期待/きたい]と[一致/いっち]し、[表示/ひょうじ]labelや[見出/みだ]し[内/ない]に[同/おな]じ[綴/つづ]りがあっても[名前/なまえ]operandと[取/と]り[違/ちが]えない。"
+      cons "[初回/しょかい]CBOR[受信後/じゅしんご]の[再/さい]checkでも、[同/おな]じ[定義/ていぎ]ID・[参照先/さんしょうさき]・[位置/いち]と[型付/かたつ]き[失敗/しっぱい]を[保持/ほじ]した。"
+      cons "guest[内/ない]の[重複/じゅうふく]をhostのDocLabel[空間/くうかん]へ[持/も]ち[込/こ]まない。" nil
     nil
   nil
