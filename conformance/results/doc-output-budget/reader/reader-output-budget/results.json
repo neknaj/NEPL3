@@ -1,0 +1,32 @@
+{
+  "source_sha256": "162fe9ec7faf8c671ef3769fc27342209577db38084d0201220b7871c430bab3",
+  "source_bytes": 69199,
+  "binary_sha256": "244a87a9ee457911d7c4f9a7a6d9f017c3f265c63b8d739566f5c89a93a493bd",
+  "source_commit": "b84e9a3854dd23538154194054c28713714ba123",
+  "runs": [
+    {
+      "label": "default",
+      "command": [
+        "C:\\projects\\NEPL3-doc-output-budget\\target\\debug\\nepl3-tools.exe",
+        "doc-html",
+        "pages",
+        "C:\\projects\\NEPL3-doc-output-budget\\.tmp\\reader-output-budget\\default\\input.json",
+        "C:\\projects\\NEPL3-doc-output-budget\\.tmp\\reader-output-budget\\default\\output"
+      ],
+      "exit_code": 1,
+      "log_sha256": "77d2dcc4f80165037b7ef647df16ecd56dd1a90f81c24f0d8b3adb26e1f93e90"
+    },
+    {
+      "label": "explicit-200m",
+      "command": [
+        "C:\\projects\\NEPL3-doc-output-budget\\target\\debug\\nepl3-tools.exe",
+        "doc-html",
+        "pages",
+        "C:\\projects\\NEPL3-doc-output-budget\\.tmp\\reader-output-budget\\explicit-200m\\input.json",
+        "C:\\projects\\NEPL3-doc-output-budget\\.tmp\\reader-output-budget\\explicit-200m\\output"
+      ],
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "source_commit": "b84e9a3854dd23538154194054c28713714ba123",
+  "binary_sha256": "6bdf4475e02fedb2add55d4fb41320e0bb527930d8c13ea447421ddbc3f71cec",
+  "runs": [
+    {
+      "label": "default",
+      "command": [
+        "C:\\projects\\NEPL3-doc-output-budget\\.tmp\\review-output-budget\\target\\debug\\nepl3-tools.exe",
+        "doc-html",
+        "pages",
+        "C:\\projects\\NEPL3-doc-output-budget\\.tmp\\review-reader-output-budget\\default\\input.json",
+        "C:\\projects\\NEPL3-doc-output-budget\\.tmp\\review-reader-output-budget\\default\\output"
+      ],
+      "exit": 1,
+      "output_exists": false
+    },
+    {
+      "label": "explicit-200m",
+      "command": [
+        "C:\\projects\\NEPL3-doc-output-budget\\.tmp\\review-output-budget\\target\\debug\\nepl3-tools.exe",
+        "doc-html",
+        "pages",
+        "C:\\projects\\NEPL3-doc-output-budget\\.tmp\\review-reader-output-budget\\explicit-200m\\input.json",
+        "C:\\projects\\NEPL3-doc-output-budget\\.tmp\\review-reader-output-budget\\explicit-200m\\output"
+      ],
+      "exit": 0,
+      "output_exists": true
+    }
+  ],
+  "files": [
+    {
+      "path": "reference/reader/index.html",
+      "bytes": 218111,
+      "sha256": "6b0b428902327d3bd0a7d5da43f0418bb7bfda98d13e4da45bf876530e2b24c6",
+      "root_bytes_equal": true
+    },
+    {
+      "path": "reference/reader/assets/doc.css",
+      "bytes": 1860,
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2",
+      "root_bytes_equal": true
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 3099,
+      "sha256": "ca950b6bba122c63bf2b4fabcb6df1e46d5ed4d0b5313961767f587036818261",
+      "root_bytes_equal": true
+    }
+  ]
+}
