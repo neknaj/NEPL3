@@ -1,0 +1,94 @@
+{
+  "files": [
+    {
+      "path": "annotation_parser.py",
+      "bytes": 2857,
+      "sha256": "c9acc0c382a3586f379d95927630c9f35e0f32dc22fae3a125cc90a78ea9e0bb"
+    },
+    {
+      "path": "author-manifest.json",
+      "bytes": 1946,
+      "sha256": "8efbc586243523de3b56725e61760573095736a1f5ddff0635e342bfa9f08b7a"
+    },
+    {
+      "path": "check.py",
+      "bytes": 3319,
+      "sha256": "6c09f962ba50866cc5ef3adcd54ac7ff28f5a656b3ddc0d304a544f58798a07a"
+    },
+    {
+      "path": "execution.json",
+      "bytes": 334,
+      "sha256": "8c848fc14ff2bb48c7656c68d746405ab35658b34ea3031f82167789175c5317"
+    },
+    {
+      "path": "finalize.py",
+      "bytes": 844,
+      "sha256": "86fb9ed441ad3c15e01b37e5f0dc530892e216c0fb7aaa74e68b274eef815f57"
+    },
+    {
+      "path": "freeze.py",
+      "bytes": 1516,
+      "sha256": "e165660010007e398a533eda28689fd29c5f5cb1f09ea8f0522654d681a9f135"
+    },
+    {
+      "path": "result.json",
+      "bytes": 18996,
+      "sha256": "603b3f66d9dbfbcc6fa499f80c72679a643957379298c7ef0e2390965aeef4d4"
+    },
+    {
+      "path": "review.md",
+      "bytes": 3741,
+      "sha256": "8b05ad950118339c4f359e4964485f4f488155e56cb83e1b3ecc9b1056da69f0"
+    },
+    {
+      "path": "snapshot/AGENTS.md",
+      "bytes": 7613,
+      "sha256": "849027165216a9a3adcb22ef58a44bc698c83e1707d2aa0727a1b73105282236"
+    },
+    {
+      "path": "snapshot/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "snapshot/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "snapshot/doc/history/README.md",
+      "bytes": 1947,
+      "sha256": "2e8566d9c9b4366cde2b3c3659cde91e43fa7249e5f2f4b21e6e2a3923c43c9d"
+    },
+    {
+      "path": "snapshot/doc/migration/authored/history/README.nepld",
+      "bytes": 6204,
+      "sha256": "1260246764b430a8f5e9d3c5dc07c0376152975406064a9509b8b1c5200f2712"
+    },
+    {
+      "path": "snapshot/doc/migration/authored/migration/README.nepld",
+      "bytes": 9167,
+      "sha256": "2ea2113b35db29c2c6ce198c8ff57ae4da86ad174f2f108b1447991551214381"
+    },
+    {
+      "path": "snapshot/doc/migration/README.md",
+      "bytes": 3673,
+      "sha256": "87db9feb843ad5c160aded6a5edde600bf0177cc95a8632ff7d18870ddc94e19"
+    },
+    {
+      "path": "snapshot/doc/spec/16-doc-migration.md",
+      "bytes": 8435,
+      "sha256": "efa1351c80c5cb79e77162f84b521553038dfa30b8d0040237f3acd3c1375ea4"
+    },
+    {
+      "path": "snapshot/languages/doc/syntax.neplg",
+      "bytes": 10108,
+      "sha256": "407c7ad41cbf0e9f8a131225379e62e27443f8a266a8b439b803f3b52f1902d9"
+    },
+    {
+      "path": "sources.json",
+      "bytes": 1880,
+      "sha256": "290ab145a554de211cfdc514d81a058961829ea4a75410bd047bdbd44cc7ce72"
+    }
+  ]
+}
