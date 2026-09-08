@@ -1,0 +1,14 @@
+{
+  "source_commit": "a20fae73a689290502f4f51983418be1239193d3",
+  "command": [
+    "cargo",
+    "run",
+    "--locked",
+    "-p",
+    "nepl3-tools",
+    "--",
+    "check"
+  ],
+  "exit_code": 0,
+  "elapsed": 14.2885245999787
+}

@@ -1,0 +1,308 @@
+[
+  {
+    "source": "doc\\migration\\authored\\00-contract.nepld",
+    "source_sha256": "48c2b1696c7308ee43f26dbf06a6038b38f0199233c1da3ef15a04453f810e93",
+    "production_commit": "9dbda463529d96039db4e8f71888ddf6bf1c5c36",
+    "binary_sha256": "59f58f0e7fc0a734cc00c414149249036a45fc89c8b7e3b841a0433c9b78f432",
+    "command": [
+      "C:\\projects\\NEPL3-checked-form-index\\target\\debug\\nepl3-tools.exe",
+      "doc-html",
+      "export",
+      "C:\\projects\\NEPL3-doc-foundation-integration\\doc\\migration\\authored\\00-contract.nepld",
+      "C:\\projects\\NEPL3-checked-form-index\\.tmp\\exports-9dbda46\\00-contract"
+    ],
+    "exit_code": 0,
+    "manifest": {
+      "budget_scope": "Separate bounded operations; not a single end-to-end budget",
+      "doc_schema_sha256": "e3ed90e79af2cf35b9718d32bf80d23e77aacd7719de756a25538b6f484c77ed",
+      "files": [
+        {
+          "mime": "text/html; charset=utf-8",
+          "path": "document.html",
+          "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+        },
+        {
+          "license": "MIT",
+          "mime": "text/css; charset=utf-8",
+          "path": "assets/doc.css",
+          "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+        }
+      ],
+      "format": "nepl3.local-doc-export/1",
+      "operations": {
+        "lower": {
+          "allocation_units": 17070710,
+          "depth": 41,
+          "diagnostics": 0,
+          "events": 0,
+          "nodes": 348082,
+          "output_bytes": 0,
+          "source_bytes": 14766,
+          "work": 4458422
+        },
+        "parse_and_validate": {
+          "allocation_units": 66516538,
+          "depth": 44,
+          "diagnostics": 0,
+          "events": 0,
+          "nodes": 942938,
+          "output_bytes": 183372,
+          "source_bytes": 28792,
+          "work": 9102987
+        },
+        "prepare_render_serialize": {
+          "allocation_units": 30787452,
+          "depth": 14,
+          "diagnostics": 0,
+          "events": 0,
+          "nodes": 391899,
+          "output_bytes": 40487,
+          "source_bytes": 0,
+          "work": 9739210
+        }
+      },
+      "options": {
+        "parallel": "Rows"
+      },
+      "packages": "compiled checked bootstrap fixtures",
+      "profile_sha256": "3ff9838f5cc370b8a3e2d72d73c034aa084f67874938844390a730fee24a693e",
+      "renderer": "nepl3-doc-html local/1",
+      "scope": "local Doc only; external pages, assets and foreign rendering require resolution",
+      "source_sha256": "48c2b1696c7308ee43f26dbf06a6038b38f0199233c1da3ef15a04453f810e93",
+      "viewer_scripts": false
+    }
+  },
+  {
+    "source": "doc\\migration\\authored\\01-architecture.nepld",
+    "source_sha256": "d47439115ad572517c33ae17a49944ba18dccd54d3f4f5a7d0aec8f43a3feac7",
+    "production_commit": "9dbda463529d96039db4e8f71888ddf6bf1c5c36",
+    "binary_sha256": "59f58f0e7fc0a734cc00c414149249036a45fc89c8b7e3b841a0433c9b78f432",
+    "command": [
+      "C:\\projects\\NEPL3-checked-form-index\\target\\debug\\nepl3-tools.exe",
+      "doc-html",
+      "export",
+      "C:\\projects\\NEPL3-doc-foundation-integration\\doc\\migration\\authored\\01-architecture.nepld",
+      "C:\\projects\\NEPL3-checked-form-index\\.tmp\\exports-9dbda46\\01-architecture"
+    ],
+    "exit_code": 0,
+    "manifest": {
+      "budget_scope": "Separate bounded operations; not a single end-to-end budget",
+      "doc_schema_sha256": "e3ed90e79af2cf35b9718d32bf80d23e77aacd7719de756a25538b6f484c77ed",
+      "files": [
+        {
+          "mime": "text/html; charset=utf-8",
+          "path": "document.html",
+          "sha256": "293b0c8e07202bd63ee0a02b9eb7e067fa2caada2b9a8b4dcee0a44d0db8b365"
+        },
+        {
+          "license": "MIT",
+          "mime": "text/css; charset=utf-8",
+          "path": "assets/doc.css",
+          "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+        }
+      ],
+      "format": "nepl3.local-doc-export/1",
+      "operations": {
+        "lower": {
+          "allocation_units": 12845418,
+          "depth": 33,
+          "diagnostics": 0,
+          "events": 0,
+          "nodes": 251374,
+          "output_bytes": 0,
+          "source_bytes": 17215,
+          "work": 5056409
+        },
+        "parse_and_validate": {
+          "allocation_units": 57002659,
+          "depth": 38,
+          "diagnostics": 0,
+          "events": 0,
+          "nodes": 689500,
+          "output_bytes": 201446,
+          "source_bytes": 30934,
+          "work": 15825936
+        },
+        "prepare_render_serialize": {
+          "allocation_units": 24403013,
+          "depth": 14,
+          "diagnostics": 0,
+          "events": 0,
+          "nodes": 310854,
+          "output_bytes": 32650,
+          "source_bytes": 0,
+          "work": 10091831
+        }
+      },
+      "options": {
+        "parallel": "Rows"
+      },
+      "packages": "compiled checked bootstrap fixtures",
+      "profile_sha256": "3ff9838f5cc370b8a3e2d72d73c034aa084f67874938844390a730fee24a693e",
+      "renderer": "nepl3-doc-html local/1",
+      "scope": "local Doc only; external pages, assets and foreign rendering require resolution",
+      "source_sha256": "d47439115ad572517c33ae17a49944ba18dccd54d3f4f5a7d0aec8f43a3feac7",
+      "viewer_scripts": false
+    }
+  },
+  {
+    "source": "doc\\migration\\authored\\02-foundation.nepld",
+    "source_sha256": "a995ce6dc28ad3d8470ee5c19276be0a631f14451466a1bd3d17e44290457e8e",
+    "production_commit": "9dbda463529d96039db4e8f71888ddf6bf1c5c36",
+    "binary_sha256": "59f58f0e7fc0a734cc00c414149249036a45fc89c8b7e3b841a0433c9b78f432",
+    "command": [
+      "C:\\projects\\NEPL3-checked-form-index\\target\\debug\\nepl3-tools.exe",
+      "doc-html",
+      "export",
+      "C:\\projects\\NEPL3-doc-foundation-integration\\doc\\migration\\authored\\02-foundation.nepld",
+      "C:\\projects\\NEPL3-checked-form-index\\.tmp\\exports-9dbda46\\02-foundation"
+    ],
+    "exit_code": 0,
+    "manifest": {
+      "budget_scope": "Separate bounded operations; not a single end-to-end budget",
+      "doc_schema_sha256": "e3ed90e79af2cf35b9718d32bf80d23e77aacd7719de756a25538b6f484c77ed",
+      "files": [
+        {
+          "mime": "text/html; charset=utf-8",
+          "path": "document.html",
+          "sha256": "2b1913c546fcbb4a7a7fe5137a3c7d29112c198ca2584c36000d42885b8030ed"
+        },
+        {
+          "license": "MIT",
+          "mime": "text/css; charset=utf-8",
+          "path": "assets/doc.css",
+          "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+        }
+      ],
+      "format": "nepl3.local-doc-export/1",
+      "operations": {
+        "lower": {
+          "allocation_units": 70369922,
+          "depth": 40,
+          "diagnostics": 0,
+          "events": 0,
+          "nodes": 1505059,
+          "output_bytes": 0,
+          "source_bytes": 47204,
+          "work": 31022986
+        },
+        "parse_and_validate": {
+          "allocation_units": 242263101,
+          "depth": 44,
+          "diagnostics": 0,
+          "events": 0,
+          "nodes": 4048068,
+          "output_bytes": 321601,
+          "source_bytes": 92413,
+          "work": 40142687
+        },
+        "prepare_render_serialize": {
+          "allocation_units": 122262452,
+          "depth": 14,
+          "diagnostics": 0,
+          "events": 0,
+          "nodes": 1572982,
+          "output_bytes": 148454,
+          "source_bytes": 0,
+          "work": 37898878
+        }
+      },
+      "options": {
+        "parallel": "Rows"
+      },
+      "packages": "compiled checked bootstrap fixtures",
+      "profile_sha256": "3ff9838f5cc370b8a3e2d72d73c034aa084f67874938844390a730fee24a693e",
+      "renderer": "nepl3-doc-html local/1",
+      "scope": "local Doc only; external pages, assets and foreign rendering require resolution",
+      "source_sha256": "a995ce6dc28ad3d8470ee5c19276be0a631f14451466a1bd3d17e44290457e8e",
+      "viewer_scripts": false
+    }
+  },
+  {
+    "source": "doc\\migration\\authored\\03-reader.nepld",
+    "source_sha256": "83b03d9f070d4a64e020ab5f0591026d22df6cdb17f530c79f877c2571eea8e9",
+    "production_commit": "9dbda463529d96039db4e8f71888ddf6bf1c5c36",
+    "binary_sha256": "59f58f0e7fc0a734cc00c414149249036a45fc89c8b7e3b841a0433c9b78f432",
+    "command": [
+      "C:\\projects\\NEPL3-checked-form-index\\target\\debug\\nepl3-tools.exe",
+      "doc-html",
+      "export",
+      "C:\\projects\\NEPL3-doc-foundation-integration\\doc\\migration\\authored\\03-reader.nepld",
+      "C:\\projects\\NEPL3-checked-form-index\\.tmp\\exports-9dbda46\\03-reader"
+    ],
+    "exit_code": 1
+  },
+  {
+    "source": "doc\\migration\\authored\\04-grammar.nepld",
+    "source_sha256": "3090af2b349a8c044c733614da8019f20f237330c55efb942c79bfcef884e65a",
+    "production_commit": "9dbda463529d96039db4e8f71888ddf6bf1c5c36",
+    "binary_sha256": "59f58f0e7fc0a734cc00c414149249036a45fc89c8b7e3b841a0433c9b78f432",
+    "command": [
+      "C:\\projects\\NEPL3-checked-form-index\\target\\debug\\nepl3-tools.exe",
+      "doc-html",
+      "export",
+      "C:\\projects\\NEPL3-doc-foundation-integration\\doc\\migration\\authored\\04-grammar.nepld",
+      "C:\\projects\\NEPL3-checked-form-index\\.tmp\\exports-9dbda46\\04-grammar"
+    ],
+    "exit_code": 0,
+    "manifest": {
+      "budget_scope": "Separate bounded operations; not a single end-to-end budget",
+      "doc_schema_sha256": "e3ed90e79af2cf35b9718d32bf80d23e77aacd7719de756a25538b6f484c77ed",
+      "files": [
+        {
+          "mime": "text/html; charset=utf-8",
+          "path": "document.html",
+          "sha256": "7abbf868816bff9d1b7305df903750fc5bcbe12567e01641cff272db5b4d19d7"
+        },
+        {
+          "license": "MIT",
+          "mime": "text/css; charset=utf-8",
+          "path": "assets/doc.css",
+          "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+        }
+      ],
+      "format": "nepl3.local-doc-export/1",
+      "operations": {
+        "lower": {
+          "allocation_units": 136366217,
+          "depth": 50,
+          "diagnostics": 0,
+          "events": 0,
+          "nodes": 2925113,
+          "output_bytes": 0,
+          "source_bytes": 89641,
+          "work": 88413502
+        },
+        "parse_and_validate": {
+          "allocation_units": 469768938,
+          "depth": 55,
+          "diagnostics": 0,
+          "events": 0,
+          "nodes": 7867566,
+          "output_bytes": 576963,
+          "source_bytes": 175671,
+          "work": 95052307
+        },
+        "prepare_render_serialize": {
+          "allocation_units": 236730516,
+          "depth": 12,
+          "diagnostics": 0,
+          "events": 0,
+          "nodes": 3049586,
+          "output_bytes": 282769,
+          "source_bytes": 0,
+          "work": 77907343
+        }
+      },
+      "options": {
+        "parallel": "Rows"
+      },
+      "packages": "compiled checked bootstrap fixtures",
+      "profile_sha256": "3ff9838f5cc370b8a3e2d72d73c034aa084f67874938844390a730fee24a693e",
+      "renderer": "nepl3-doc-html local/1",
+      "scope": "local Doc only; external pages, assets and foreign rendering require resolution",
+      "source_sha256": "3090af2b349a8c044c733614da8019f20f237330c55efb942c79bfcef884e65a",
+      "viewer_scripts": false
+    }
+  }
+]

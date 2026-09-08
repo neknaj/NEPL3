@@ -1,0 +1,156 @@
+{
+  "candidate": "3f23aec87da9bef9e7ac02639d4bb08dafed2aab",
+  "base": "6f84a51b626de595fb73635ed4b116055edfb9e4",
+  "files": [
+    {
+      "path": "before-manifest.json",
+      "sha256": "52f4c19777ddadde338b048a4e55e848867407ecaa9cfe886ac681c1072afdf4",
+      "bytes": 39968
+    },
+    {
+      "path": "before-native.json",
+      "sha256": "f5f661cc32a6c82bd4268ede796544958dc752bb272dafcf6096baec4644b897",
+      "bytes": 371
+    },
+    {
+      "path": "before-native.log",
+      "sha256": "c44b5299b977b288ae962dbc23aad451f91f3b9cec0b02928235ed17d486f9cd",
+      "bytes": 191897
+    },
+    {
+      "path": "compare.py",
+      "sha256": "9a47bddaaf630cd966ac2cd32023aed5bfb8f3f8fe95d92ae4d876f6e46f71ad",
+      "bytes": 1331
+    },
+    {
+      "path": "comparison.json",
+      "sha256": "0467f7a70e157e903e0af8d191e14a4a56902c7456fb424b98949ffc378cf447",
+      "bytes": 6037
+    },
+    {
+      "path": "delta.diff",
+      "sha256": "4e4d030bdd322b011e7f16b94080de4c7d6e68cb92967614917db7d2d8838590",
+      "bytes": 2628
+    },
+    {
+      "path": "extra.rs",
+      "sha256": "effac4fce4643fa09a003c51f7db2a2a7ccb402b1dfe69d9abad5eab5ab65d72",
+      "bytes": 4001
+    },
+    {
+      "path": "finalize.py",
+      "sha256": "cd6fa4863e30f79f8bbda43f6c56efdecfd26d161ec8bed7657203af3ec84068",
+      "bytes": 2521
+    },
+    {
+      "path": "initial-compile.log",
+      "sha256": "b16d9e7a2d6e90caf42c87d6f9507a885c006f360ce9f7291cbc70d643af6944",
+      "bytes": 6573
+    },
+    {
+      "path": "initial-fixture.log",
+      "sha256": "667902300654f5700c13165ba7b3cc41f4152f383a1d9f3fdbeaa5e2d810ad8f",
+      "bytes": 35109
+    },
+    {
+      "path": "intermediate-wasi.log",
+      "sha256": "1f0552d761fd5890e8a1bc047784e204a7c1ff42c48e8d4b5cb74d9607b3e306",
+      "bytes": 165467
+    },
+    {
+      "path": "managed-native.json",
+      "sha256": "73cef8cab093c208ac51ed5fa744b755bc33b2eada63ab5efccc76a599fe7f5f",
+      "bytes": 344
+    },
+    {
+      "path": "managed-native.log",
+      "sha256": "22eedb8da4234c21651124cec18a24afa5b0c78d03a3d54af72ee355bee64e00",
+      "bytes": 8324
+    },
+    {
+      "path": "managed-wasi.json",
+      "sha256": "f39b34dced9018e147990ecc89b7b6d4c50b555b2993a39ecc12ae2b30a5d48e",
+      "bytes": 381
+    },
+    {
+      "path": "managed-wasi.log",
+      "sha256": "0d06f9459c8484d15f375b68adeffbdaa9dc3ee7535e4b019a8b8031cd540911",
+      "bytes": 8500
+    },
+    {
+      "path": "native.json",
+      "sha256": "7e0fb0f5ab878d7e89176e9cc235000719fdcaa974360317bc389fffa1500e80",
+      "bytes": 364
+    },
+    {
+      "path": "native.log",
+      "sha256": "79dab2cb82793609f58968b36a2216ab8bb197544a07d773ccdf36aa7101cc3e",
+      "bytes": 180838
+    },
+    {
+      "path": "record.md",
+      "sha256": "810e57be098d9b8bad0f585bba3a0aba708fad750ea66d3121ec3fe39140ab17",
+      "bytes": 6320
+    },
+    {
+      "path": "refresh.py",
+      "sha256": "2fd9b19e554596a13fa9427933a87b9295c20ce6bcf4c0d9eb0a8ee08dc46773",
+      "bytes": 1532
+    },
+    {
+      "path": "run.py",
+      "sha256": "a26be2a5be511d40bde5c9c9fbc20d5cff8a4ec7edebdd3e1f2f3e028989aa14",
+      "bytes": 942
+    },
+    {
+      "path": "setup.py",
+      "sha256": "f00fd9642468aeb4900377f1d5d93f2d1f5e4aca57bd77ae86926453b9815155",
+      "bytes": 5029
+    },
+    {
+      "path": "source-manifest.json",
+      "sha256": "0299238c9121803f1fcb5ec7c322ce8d14045e4f82ac737a411b429ec199ad3e",
+      "bytes": 39968
+    },
+    {
+      "path": "verification.json",
+      "sha256": "38d192371182b33e657c1c03c776a28d9881de7303c920199f08d710139b5ec3",
+      "bytes": 3983
+    },
+    {
+      "path": "versions.log",
+      "sha256": "1cfc3fc47ab877c2129d30257454a59e7acdd9bb146805e25ca0016572620825",
+      "bytes": 111
+    },
+    {
+      "path": "wasi.json",
+      "sha256": "86271bebfdde24c06a220ae375dbdab16d39eaab628426cd5c447347fd0fb176",
+      "bytes": 401
+    },
+    {
+      "path": "wasi.log",
+      "sha256": "889f0c0c36a378a35e257685ac47ee49702a073ead80368543ee23429d084cb1",
+      "bytes": 181003
+    },
+    {
+      "path": "probe/Cargo.toml",
+      "sha256": "1ae81521310780368272f8eab02f55f8c7ff65f8598a967e26d6076e97ec0419",
+      "bytes": 285
+    },
+    {
+      "path": "probe/tests/head/portable.rs",
+      "sha256": "5b52e74cb8fba3cfccfa903075dbe2ebd82d9c83c3ca52d45f4f018ae498aad2",
+      "bytes": 6246
+    },
+    {
+      "path": "probe/tests/head.rs",
+      "sha256": "e4b28fe8ef19b34c432960e8e26aea8c391fc935b0da3f830cd0edb4a34d31b9",
+      "bytes": 51034
+    },
+    {
+      "path": "probe/tests/parse/support.rs",
+      "sha256": "6026b571b7aa90c7922d50f794613ea5fea230a2662a64e19eb1f91dfee79512",
+      "bytes": 7993
+    }
+  ]
+}
