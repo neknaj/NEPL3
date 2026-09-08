@@ -1,0 +1,56 @@
+   Compiling autocfg v1.5.1
+   Compiling typenum v1.20.1
+   Compiling cfg-if v1.0.4
+   Compiling unicode-ident v1.0.18
+   Compiling num-traits v0.2.19
+   Compiling hybrid-array v0.4.14
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling num-integer v0.1.47
+   Compiling num-bigint v0.5.1
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-reader-checkpoints\before\workspace\crates\foundation\core)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-reader-checkpoints\before\workspace\crates\foundation\wire)
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-reader-checkpoints\before\workspace\crates\foundation\reader)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 37.51s
+     Running tests\runtime.rs (C:/projects/NEPL3-runtime/.tmp/review-reader-checkpoints/before/wasm-target\wasm32-wasip2\debug\deps\runtime-a949447e75487676.wasm)
+
+running 1 test
+test checkpoints::lookahead_over_growing_view_keeps_prior_nodes_without_quadratic_rollback_copies ... rollback allocation units at 128/256: [25843510, 100831030]
+
+thread 'main' (1) panicked at crates\foundation\reader\tests\runtime\checkpoints.rs:69:5:
+allocation growth: [25843510, 100831030]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+Error: failed to run main module `C:/projects/NEPL3-runtime/.tmp/review-reader-checkpoints/before/wasm-target\wasm32-wasip2\debug\deps\runtime-a949447e75487676.wasm`
+
+Caused by:
+    0: failed to invoke `run` function
+    1: error while executing at wasm backtrace:
+    0: 0x2a0869 - runtime-a949447e75487676.wasm!abort
+    1: 0x29bb71 - runtime-a949447e75487676.wasm!std[85c6cda83d22a5b5]::sys::pal::wasi::abort_internal
+    2: 0x297e36 - runtime-a949447e75487676.wasm!std[85c6cda83d22a5b5]::process::abort
+    3: 0x298411 - runtime-a949447e75487676.wasm!__rustc[6c289b9f9c454d21]::__rust_abort
+    4: 0x295d3d - runtime-a949447e75487676.wasm!__rustc[6c289b9f9c454d21]::__rust_start_panic
+    5: 0x29823c - runtime-a949447e75487676.wasm!__rustc[6c289b9f9c454d21]::rust_panic
+    6: 0x2973bd - runtime-a949447e75487676.wasm!std[85c6cda83d22a5b5]::panicking::panic_with_hook
+    7: 0x296e89 - runtime-a949447e75487676.wasm!std[85c6cda83d22a5b5]::panicking::panic_handler::{closure#0}
+    8: 0x296ddf - runtime-a949447e75487676.wasm!std[85c6cda83d22a5b5]::sys::backtrace::__rust_end_short_backtrace::<std[85c6cda83d22a5b5]::panicking::panic_handler::{closure#0}, !>
+    9: 0x2984f4 - runtime-a949447e75487676.wasm!__rustc[6c289b9f9c454d21]::rust_begin_unwind
+   10: 0x2ac921 - runtime-a949447e75487676.wasm!core[67bf7d663f0003c5]::panicking::panic_fmt
+   11:  0x149d4 - runtime-a949447e75487676.wasm!runtime[e99299051a5cc8fc]::checkpoints::lookahead_over_growing_view_keeps_prior_nodes_without_quadratic_rollback_copies
+   12:  0x3cfd3 - runtime-a949447e75487676.wasm!runtime[e99299051a5cc8fc]::checkpoints::lookahead_over_growing_view_keeps_prior_nodes_without_quadratic_rollback_copies::{closure#0}
+   13:  0x7b05e - runtime-a949447e75487676.wasm!<runtime[e99299051a5cc8fc]::checkpoints::lookahead_over_growing_view_keeps_prior_nodes_without_quadratic_rollback_copies::{closure#0} as core[67bf7d663f0003c5]::ops::function::FnOnce<()>>::call_once
+   14:  0x8f2e5 - runtime-a949447e75487676.wasm!test[76e3ad3c2726af43]::__rust_begin_short_backtrace::<core[67bf7d663f0003c5]::result::Result<(), alloc[9d21b2f1782ef760]::string::String>, fn() -> core[67bf7d663f0003c5]::result::Result<(), alloc[9d21b2f1782ef760]::string::String>>
+   15:  0xa6c7a - runtime-a949447e75487676.wasm!<test[76e3ad3c2726af43]::types::RunnableTest>::run
+   16:  0xa7d3e - runtime-a949447e75487676.wasm!test[76e3ad3c2726af43]::run_test
+   17:  0xa58f0 - runtime-a949447e75487676.wasm!test[76e3ad3c2726af43]::console::run_tests_console
+   18:  0xa0de7 - runtime-a949447e75487676.wasm!test[76e3ad3c2726af43]::test_main_static
+   19:  0x43366 - runtime-a949447e75487676.wasm!runtime[e99299051a5cc8fc]::main
+note: using the `WASMTIME_BACKTRACE_DETAILS=1` environment variable may show more debugging information
+    2: wasm trap: wasm `unreachable` instruction executed
+
+error: test failed, to rerun pass `-p nepl3-reader --test runtime`
+
+Caused by:
+  process didn't exit successfully: `wasmtime run C:/projects/NEPL3-runtime/.tmp/review-reader-checkpoints/before/wasm-target\wasm32-wasip2\debug\deps\runtime-a949447e75487676.wasm checkpoints::lookahead_over_growing_view_keeps_prior_nodes_without_quadratic_rollback_copies --exact --nocapture` (exit code: 3)

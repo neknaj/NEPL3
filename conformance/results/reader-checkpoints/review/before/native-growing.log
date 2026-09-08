@@ -1,0 +1,35 @@
+   Compiling typenum v1.20.1
+   Compiling autocfg v1.5.1
+   Compiling cpufeatures v0.3.1
+   Compiling cfg-if v1.0.4
+   Compiling unicode-ident v1.0.18
+   Compiling num-traits v0.2.19
+   Compiling hybrid-array v0.4.14
+   Compiling num-integer v0.1.47
+   Compiling crypto-common v0.2.2
+   Compiling block-buffer v0.12.1
+   Compiling num-bigint v0.5.1
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-reader-checkpoints\before\workspace\crates\foundation\core)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-reader-checkpoints\before\workspace\crates\foundation\wire)
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-reader-checkpoints\before\workspace\crates\foundation\reader)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.37s
+     Running tests\runtime.rs (C:/projects/NEPL3-runtime/.tmp/review-reader-checkpoints/before/target\debug\deps\runtime-fce96d929de39d3a.exe)
+
+running 1 test
+rollback allocation units at 128/256: [35281442, 137397794]
+
+thread 'checkpoints::lookahead_over_growing_view_keeps_prior_nodes_without_quadratic_rollback_copies' (36156) panicked at crates\foundation\reader\tests\runtime\checkpoints.rs:69:5:
+allocation growth: [35281442, 137397794]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test checkpoints::lookahead_over_growing_view_keeps_prior_nodes_without_quadratic_rollback_copies ... FAILED
+
+failures:
+
+failures:
+    checkpoints::lookahead_over_growing_view_keeps_prior_nodes_without_quadratic_rollback_copies
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 37 filtered out; finished in 0.24s
+
+error: test failed, to rerun pass `-p nepl3-reader --test runtime`

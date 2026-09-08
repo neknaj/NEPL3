@@ -389,13 +389,7 @@ impl<'a> ReaderSession<'a> {
             {
                 return Err(ReaderError::Continuation);
             }
-            // Moving owned frames still visits every entry. Charge the traversal
-            // before allocating or consuming the saved continuation's frames.
-            budget.charge(Resource::Work, c.frames.len() as u64 + 1)?;
-            budget.charge(
-                Resource::AllocationUnits,
-                core::mem::size_of::<Vec<Frame>>() as u64,
-            )?;
+            slot::<Vec<Frame>>(budget)?;
             checkpoint::storage::<Frame>(c.frames.len(), budget)?;
             let mut frames = Vec::with_capacity(c.frames.len());
             for frame in core::mem::take(&mut c.frames) {
