@@ -1,0 +1,20 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-reader",
+    "--target",
+    "wasm32-wasip2",
+    "--target-dir",
+    "C:/projects/NEPL3-runtime/.tmp/review-reader-checkpoints/after/wasm-target",
+    "--",
+    "--test-threads=1",
+    "--nocapture"
+  ],
+  "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-reader-checkpoints\\after\\workspace",
+  "runner": "wasmtime run",
+  "exit_code": 0,
+  "seconds": 52.74260650004726
+}

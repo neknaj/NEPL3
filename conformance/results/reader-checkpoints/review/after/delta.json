@@ -1,0 +1,15 @@
+{
+  "base": "92d7cd2e49f31b8ae0a3702f764e1e8b3c844bdf",
+  "files": [
+    {
+      "path": "crates/foundation/reader/src/runtime/mod.rs",
+      "sha256": "c6dd18e12bee362795e987817e38a0c328d2023764bab38077bbd617d00171a5",
+      "bytes": 59087
+    },
+    {
+      "path": "crates/foundation/reader/tests/runtime/checkpoints.rs",
+      "sha256": "37cc4746d64782027f97f8228a59c1168a579fa46e9154a897ae7c5a6f961790",
+      "bytes": 9060
+    }
+  ]
+}

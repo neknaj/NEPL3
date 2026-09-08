@@ -1,0 +1,62 @@
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-reader-checkpoints\workspace\crates\foundation\reader)
+warning: function `run` is never used
+   --> crates\foundation\reader\tests\review_helpers.rs:131:4
+    |
+131 | fn run(
+    |    ^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `nepl3-reader` (test "review_checkpoints") generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.90s
+     Running tests\review_checkpoints.rs (C:/projects/NEPL3-runtime/.tmp/review-reader-checkpoints/target\debug\deps\review_checkpoints-d65528a7f43d7af9.exe)
+
+running 2 tests
+test seven_collectors_state_and_nested_root_rollback_match_owned_transport ... mode=0 owned=false calls=2 work=5522 allocation=32518
+mode=0 owned=true calls=2 work=31147 allocation=728241
+mode=0 stop=1 owned=false calls=2
+mode=0 stop=1 owned=true calls=2
+mode=0 stop=2 owned=false calls=2
+mode=0 stop=2 owned=true calls=2
+mode=1 owned=false calls=2 work=5493 allocation=27144
+mode=1 owned=true calls=2 work=25342 allocation=573555
+mode=1 stop=1 owned=false calls=2
+mode=1 stop=1 owned=true calls=2
+mode=1 stop=2 owned=false calls=2
+mode=1 stop=2 owned=true calls=2
+mode=2 owned=false calls=2 work=5507 allocation=30783
+mode=2 owned=true calls=2 work=28325 allocation=653818
+mode=2 stop=1 owned=false calls=2
+mode=2 stop=1 owned=true calls=2
+mode=2 stop=2 owned=false calls=2
+mode=2 stop=2 owned=true calls=2
+mode=3 owned=false calls=3 work=5605 allocation=35407
+mode=3 owned=true calls=3 work=37442 allocation=897948
+mode=3 stop=1 owned=false calls=2
+mode=3 stop=1 owned=true calls=2
+mode=3 stop=2 owned=false calls=2
+mode=3 stop=2 owned=true calls=2
+mode=4 owned=false calls=3 work=7894 allocation=93418
+mode=4 owned=true calls=3 work=34562 allocation=810423
+mode=4 stop=1 owned=false calls=2
+mode=4 stop=1 owned=true calls=2
+mode=4 stop=2 owned=false calls=2
+mode=4 stop=2 owned=true calls=2
+mode=5 owned=false calls=3 work=7899 allocation=93423
+mode=5 owned=true calls=3 work=34567 allocation=810428
+mode=5 stop=1 owned=false calls=2
+mode=5 stop=1 owned=true calls=2
+mode=5 stop=2 owned=false calls=2
+mode=5 stop=2 owned=true calls=2
+mode=6 owned=false calls=2 work=5898 allocation=29541
+mode=6 owned=true calls=2 work=28378 allocation=644368
+mode=6 stop=1 owned=false calls=2
+mode=6 stop=1 owned=true calls=2
+mode=6 stop=2 owned=false calls=2
+mode=6 stop=2 owned=true calls=2
+ok
+test unicode_node_prefixes_keep_caller_depth_and_atomic_resource_stops ... resource stops=20; complete usage=Usage { source_bytes: 51, work: 1600, depth: 12, nodes: 35, allocation_units: 177145, output_bytes: 0, diagnostics: 0, events: 0 }
+ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+

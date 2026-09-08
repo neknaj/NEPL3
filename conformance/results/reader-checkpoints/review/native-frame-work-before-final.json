@@ -1,0 +1,20 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-reader",
+    "--test",
+    "review_frame_work",
+    "--target-dir",
+    "C:/projects/NEPL3-runtime/.tmp/review-reader-checkpoints/target",
+    "--",
+    "--test-threads=1",
+    "--nocapture"
+  ],
+  "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-reader-checkpoints\\workspace",
+  "runner": "wasmtime run",
+  "exit_code": 0,
+  "seconds": 2.035819899989292
+}
