@@ -256,6 +256,7 @@ impl SourceStore {
                     }
                 },
                 snapshot,
+                None,
                 budget,
             )?
             .map_or_else(Ok, |_| Err(SourceError::IdentityConflict))?;
@@ -293,6 +294,7 @@ impl SourceStore {
         admission.index = admission_index;
         self.snapshots.extend(prepared);
         self.index = index;
+        self.insertion_hint = None;
         Ok(ids)
     }
 }

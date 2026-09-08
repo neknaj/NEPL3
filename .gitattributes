@@ -58,3 +58,4 @@ dist/** export-ignore
 /conformance/results/borrow-mapping-union/** -text -whitespace
 /conformance/results/doc-authoring-entries/** -text -whitespace
 /conformance/results/doc-authoring-inventory-references/** -text -whitespace
+/conformance/results/source-index-locality/review/** -text -whitespace

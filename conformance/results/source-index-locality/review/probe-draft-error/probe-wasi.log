@@ -1,0 +1,55 @@
+    Blocking waiting for file lock on package cache
+    Updating crates.io index
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+   Compiling typenum v1.20.1
+   Compiling autocfg v1.5.1
+   Compiling cfg-if v1.0.4
+   Compiling unicode-ident v1.0.18
+   Compiling num-traits v0.2.19
+   Compiling hybrid-array v0.4.14
+   Compiling num-integer v0.1.47
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling num-bigint v0.5.1
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-source-locality\source\crates\foundation\core)
+   Compiling source-tail-probe v0.0.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-source-locality\source-probe)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 52.55s
+     Running tests\tail.rs (probe-wasi-target\wasm32-wasip2\debug\deps\tail-7c9491fde7bce218.wasm)
+
+running 6 tests
+test bounded_sorted_window_and_alternating_duplicate_costs ... window/hits mode=0 work=14319 allocation=4096
+window/hits mode=1 work=18073 allocation=0
+window/hits mode=2 work=91904 allocation=0
+ok
+test failed_insert_and_edit_do_not_move_hint ... all five rejected/stopped mutation modes preserve subsequent metered search behavior
+ok
+test metered_faults_are_atomic_and_sticky ... fault sweep 2640 attempts, 150 typed sticky atomic stops; cancellation empty/nonempty; 9000-byte Unicode ID comparison precharged
+ok
+test mixed_apis_hint_movement_missing_neighbors_and_edits ... Error: ExpectedDigest
+FAILED
+test permutations_revisions_content_uri_and_lookup ... all 240 permutation/owned/ref cases; independent equal snapshots and URI/digest conflicts preserved
+ok
+test workload_order_costs_and_16000_cap ... order=0 borrowed=false work=8687 allocation=4096
+order=1 borrowed=false work=139503 allocation=4096
+order=2 borrowed=false work=139168 allocation=4096
+order=0 borrowed=true work=9199 allocation=4096
+order=1 borrowed=true work=140015 allocation=4096
+order=2 borrowed=true work=139680 allocation=4096
+owned ascending cap16000 result=Ok(()) accepted=512 work=8687
+ok
+
+failures:
+
+failures:
+    mixed_apis_hint_movement_missing_neighbors_and_edits
+
+test result: FAILED. 5 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
+error: test failed, to rerun pass `--test tail`
+
+Caused by:
+  process didn't exit successfully: `wasmtime run C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-source-locality\probe-wasi-target\wasm32-wasip2\debug\deps\tail-7c9491fde7bce218.wasm --test-threads=1 --nocapture` (exit code: 1)
