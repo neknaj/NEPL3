@@ -1,0 +1,17 @@
+import json,pathlib,subprocess,sys,time
+out=pathlib.Path('.tmp/verify-prefix-context');out.mkdir(parents=True,exist_ok=True)
+def head(): return subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+def clean(): return not subprocess.check_output(['git','status','--porcelain']).strip()
+fixed=head();assert clean()
+commands=[('format',['cargo','fmt','--all','--','--check']),('canonical-tests',['cargo','test','--locked','-p','nepl3-tools','--lib','doc::canonical::','--','--test-threads=1','--skip','real_architecture_draft_links_to_canonical_extensions_with_legacy_bytes_intact','--skip','synchronized_context_spec_drafts_parse_lower_and_check_labels']),('clippy',['cargo','clippy','--locked','--workspace','--all-targets','--','-D','warnings']),('canonical-current',['cargo','run','--locked','-p','nepl3-tools','--','doc-canonical','--check']),('repository',['cargo','run','--locked','-p','nepl3-tools','--','check'])]
+results=[]
+for name,cmd in commands:
+    assert head()==fixed and clean();started=time.monotonic()
+    with (out/(name+'.stdout.log')).open('wb') as stdout,(out/(name+'.stderr.log')).open('wb') as stderr:
+        p=subprocess.run(cmd,stdout=stdout,stderr=stderr,timeout=1200)
+    unchanged=head()==fixed and clean()
+    results.append(dict(source_commit=fixed,unchanged_clean_tree=unchanged,name=name,command=cmd,exit_code=p.returncode,elapsed=time.monotonic()-started))
+    (out/'commands.json').write_text(json.dumps(results,indent=2),encoding='utf-8')
+    print(name,p.returncode,unchanged,flush=True)
+    assert unchanged
+    if p.returncode:sys.exit(p.returncode)

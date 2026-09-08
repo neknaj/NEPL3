@@ -1,0 +1,27 @@
+from pathlib import Path
+import subprocess,json,hashlib
+out=Path(__file__).parent;root=out.parents[1]
+HEAD='ce0b520850822e199178518f241785ca6c608d53';OLD='87ce544168a808918a01608b02a73f577a9f8caf'
+scope=json.loads((out/'snapshot.json').read_bytes())['allowlist']
+incoming=['doc/canonical.json','doc/migration/authored/22-external-extensions.nepld','doc/migration/aliases/22-external-extensions.json','doc/spec/22-external-extensions.md','doc/spec/22-external-extensions.nepld']
+def git(*a):return subprocess.check_output(['git',*a],cwd=root)
+def sha(b):return hashlib.sha256(b).hexdigest()
+def put(path,b):p=out/path;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b)
+def js(path,v):put(path,(json.dumps(v,ensure_ascii=False,indent=2)+'\n').encode())
+diff=git('diff','--no-renames','--name-only',OLD,HEAD).decode().splitlines()
+assert all(p in scope+incoming or p.startswith('conformance/results/doc-canonical-extensions/') for p in diff),diff
+allnames=git('ls-tree','-r','--name-only',HEAD).decode().splitlines()
+names=[x for x in allnames if '/' not in x or x.startswith(('crates/','tools/','doc/','interfaces/','design/','languages/','conformance/fixtures/','.cargo/','examples/'))]
+proc=subprocess.Popen(['git','cat-file','--batch'],cwd=root,stdin=subprocess.PIPE,stdout=subprocess.PIPE)
+deps=[];sources=[]
+for n in names:
+    proc.stdin.write((HEAD+':'+n+'\n').encode());proc.stdin.flush();h=proc.stdout.readline().split();assert h[1]==b'blob'
+    b=proc.stdout.read(int(h[2]));assert proc.stdout.read(1)==b'\n'
+    put(Path('workspace-final')/n,b);row=dict(path=n,bytes=len(b),sha256=sha(b));deps.append(row)
+    if n in scope:put(Path('final/source')/n,b);sources.append(row)
+    elif n in incoming:put(Path('final/incoming')/n,b)
+proc.stdin.close();assert proc.wait()==0
+put('final/source.patch',git('diff','--binary',OLD,HEAD,'--',*scope))
+js('final/snapshot.json',dict(head=HEAD,previous=OLD,allowlist=scope,files=sources,incoming_paths=[p for p in diff if p in incoming],incoming_archive_paths=len([p for p in diff if p.startswith('conformance/results/')]),archive_review='not part of this implementation review'))
+js('final/dependencies.json',deps)
+print('Frozen',len(deps),'exact final dependencies;',len(sources),'scope sources')

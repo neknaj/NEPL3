@@ -1,0 +1,24 @@
+from pathlib import Path
+import json,re,hashlib,sys
+out=Path(__file__).parent;name=sys.argv[1] if len(sys.argv)>1 else 'native-expanded-fixed'
+raw=(out/(name+'.stdout.log')).read_bytes();rows=[]
+for line in raw.decode('utf8').splitlines():
+    m=re.fullmatch(r'(?:test [A-Za-z0-9_:]+ \.\.\. )?INDEPENDENT_CONTEXT (\{.*\})',line)
+    if m:rows.append(json.loads(m[1]))
+assert len(rows)>=14,len(rows)
+r=next(r for r in rows if r['case']=='mutual-unicode')
+header=r['header'];registry=json.loads(r['manifest_raw'])
+fields=[b'nepl3.canonical-input-context/1\0',b'nepl3-tools.markdown-annotated-pages/1',r['manifest_path'].encode(),r['manifest_raw'].encode(),bytes.fromhex(re.search(r'input PageSet digest ([0-9a-f]{64})',header)[1]),len(registry['pages']).to_bytes(8,'big')]
+for page,inputs in zip(registry['pages'],r['inputs'],strict=True):
+    fields.extend(page[k].encode() for k in ['id','source','projection','aliases','route','renderer'])
+    fields.extend(hashlib.sha256(inputs[k].encode()).digest() for k in ['source','aliases'])
+framed=b''.join(len(f).to_bytes(8,'big')+f for f in fields)
+digest=hashlib.sha256(framed).hexdigest()
+assert digest==re.search(r'input context SHA-256 ([0-9a-f]{64})',header)[1]
+for label,key in [('source SHA-256','source'),('alias input SHA-256','aliases')]:
+    assert hashlib.sha256(r['inputs'][0][key].encode()).hexdigest()==re.search(label+r' ([0-9a-f]{64})',header)[1]
+sticky=[x for x in rows if x['case']=='sticky'];assert {x['reason'] for x in sticky}=={'WorkLimit','AllocationLimit','OutputLimit','NodeLimit','SourceLimit','DepthLimit','Cancelled'}
+assert len(sticky)==7
+assert {x['case'] for x in rows}>={'mutual-unicode','ambient','alias','source','unemitted','caller-depth','distinct-source-identities'}
+(out/(name+'.records.json')).write_text(json.dumps(dict(rows=rows,independent_context_digest=digest,fields=len(fields),framed_bytes=len(framed)),ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+print('PASS',len(rows),'records; independent framed SHA-256 and all seven sticky reasons')

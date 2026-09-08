@@ -1,0 +1,16 @@
+#[test]
+fn independent_context_observe_legacy_stage_prefix_conflict() -> Result<()> {
+    let f=Fixture::new()?;
+    let mut pages=Vec::new();
+    for (id,projection) in [("a","doc/a.md"),("b","doc/a.md/b.md")] {
+        let source=format!("doc/{id}.nepld");let aliases=format!("doc/{id}.json");
+        f.write(&source,r#"article en "P" body nil"#)?;f.write(&aliases,b"[]")?;
+        pages.push(json!({"id":id,"source":source,"projection":projection,"aliases":aliases,"route":format!("site/{id}.html"),"renderer":RENDERER}));
+    }
+    f.json("doc/canonical.json",&json!({"version":1,"pages":pages}))?;
+    let loaded=load(f.root(),"doc/canonical.json").is_ok();
+    let output=f.root().join("stage");
+    let error=markdown(f.root(),"doc/canonical.json",&output).err().ok_or("unexpected stage success")?;
+    println!("INDEPENDENT_PREFIX {}",json!({"registry_accepted":loaded,"output_exists":output.exists(),"first_file_exists":output.join("doc/a.md").is_file(),"completion_exists":output.join("manifest.json").exists(),"error":error.to_string()}));
+    Ok(())
+}

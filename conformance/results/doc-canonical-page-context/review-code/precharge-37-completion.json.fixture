@@ -1,0 +1,7 @@
+{
+  "chunk_id": "24c3a0",
+  "wall_time_seconds": 0.0000045,
+  "exit_code": 0,
+  "original_token_count": 127,
+  "output": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 8.73s\n     Running unittests src\\lib.rs (.tmp/review-canonical-context/target-final\\debug\\deps\\nepl3_tools-69244717011a8889.exe)\n\nrunning 1 test\nINDEPENDENT_PRECHARGE [{\"allocation\":520,\"width\":16,\"work\":1},{\"allocation\":2552,\"width\":2048,\"work\":1}]\ntest doc::canonical::tests::independent_context_observe_registration_clone_precharge ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 78 filtered out; finished in 0.82s\n\n"
+}

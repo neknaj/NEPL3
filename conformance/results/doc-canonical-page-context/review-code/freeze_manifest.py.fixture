@@ -1,0 +1,42 @@
+"""Explicit evidence allowlist; never recursively archive the scratch workspace."""
+from pathlib import Path
+import hashlib,json
+p=Path(__file__).parent
+names=set('''plan.md record.md freeze.py freeze_final.py update_37.py update_819.py
+snapshot.json dependencies.json source.patch probe-overlay.json
+probe.rs precharge_probe.rs prefix_probe.rs identity_probe.rs
+probe-87.rs probe-ce.rs probe-depth-compile-failed.rs probe-public-sparse-failed.rs
+run.py run_final.py run_identity.py check_records.py verify_evidence.py verified-evidence.json
+initial-native-completion.json precharge-37-completion.json precharge-37-identity.json
+898-tests.patch freeze_manifest.py design/manifest.json design/record.md design/sources.json
+'''.split())
+for phase in ['native-expanded','native-expanded-fixed','native-legacy-129','native-final','native-final-limits-fixed','native-37','native-819','prefix-819','identity-819']:
+    for suffix in ['command.json','stdout.log','stderr.log']:names.add(phase+'.'+suffix)
+for phase in ['native-expanded-fixed','native-37','native-819']:names.add(phase+'.records.json')
+for folder in ['', 'final/', 'final37/', 'final819/']:
+    snapshot=json.loads((p/folder/'snapshot.json').read_bytes())
+    if folder:names.update([folder+'snapshot.json',folder+'source.patch'])
+    for r in snapshot['files']:
+        name=folder+'source/'+r['path'];b=(p/name).read_bytes()
+        assert len(b)==r['bytes'] and hashlib.sha256(b).hexdigest()==r['sha256'],name
+        names.add(name)
+        if not folder and (p/'before'/r['path']).exists():names.add('before/'+r['path'])
+names.add('final/dependencies.json')
+for name in ['doc/canonical.json','doc/migration/aliases/22-external-extensions.json','doc/spec/22-external-extensions.md','doc/spec/22-external-extensions.nepld']:
+    names.add('final/incoming/'+name)
+for phase in ['native-37','native-819']:
+    folder='artifacts/'+phase+'/';names.add(folder+'manifest.json')
+    for r in json.loads((p/folder/'manifest.json').read_bytes())['files']:names.add(folder+r['path'])
+# Follow-up evidence is added only by an explicit list, never by a directory scan.
+if (p/'final-followup-allowlist.json').exists():
+    extra=json.loads((p/'final-followup-allowlist.json').read_bytes());assert isinstance(extra,list)
+    names.add('final-followup-allowlist.json');names.update(extra)
+for name in names:
+    assert not name.startswith('/') and '..' not in Path(name).parts
+    assert not any(x in Path(name).parts for x in ['workspace','workspace-final','target','target-final'])
+rows=[]
+for name in sorted(names):
+    b=(p/name).read_bytes();rows.append(dict(path=name,bytes=len(b),sha256=hashlib.sha256(b).hexdigest()))
+result=dict(scope='Independent canonical page-context host review; see record.md for exact phases and limitations',allowlist=True,files=rows)
+(p/'manifest.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf8')
+print(len(rows),'files',sum(r['bytes'] for r in rows),'bytes',hashlib.sha256((p/'manifest.json').read_bytes()).hexdigest())

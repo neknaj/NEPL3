@@ -1,0 +1,126 @@
+// Independent tests appended only to a fixed isolated canonical/tests.rs copy.
+fn review_context_fixture(f: &Fixture) -> Result<serde_json::Value> {
+    let value = json!({"version":1,"pages":[
+        {"id":"a","source":"doc/a.nepld","projection":"doc/nested/a.md","aliases":"doc/a.json","route":"site/a.html","renderer":projection::RENDERER},
+        {"id":"b","source":"doc/b.nepld","projection":"doc/b.md","aliases":"doc/b.json","route":"else/b.html","renderer":projection::RENDERER},
+        {"id":"legacy","source":"doc/legacy.nepld","projection":"doc/legacy.md","aliases":"doc/legacy.json","route":"legacy/l.html","renderer":RENDERER}
+    ]});
+    f.json("doc/canonical.json", &value)?;
+    f.write("doc/a.nepld", r#"article ja "A" body cons paragraph cons sentence cons link page "b" some "節" text "B" cons text " / " cons link relative "../legacy.md" some "old" text "L" cons text " / " cons link relative "a.md" none text "self" nil nil nil"#)?;
+    f.write("doc/b.nepld", r#"article ja "B" body cons section 節 "[節/せつ]" body cons paragraph cons sentence cons link page "a" none text "A" nil nil nil nil"#)?;
+    f.write("doc/legacy.nepld", r#"article en "L" body cons section old "Old" body cons paragraph cons "Legacy." nil nil nil"#)?;
+    f.write("doc/a.json", b"[]")?;
+    f.write("doc/b.json", b"[]")?;
+    f.write("doc/legacy.json", br#"[{"section":"old","name":"old-heading"}]"#)?;
+    Ok(value)
+}
+
+fn review_destinations(text: &str) -> Vec<String> {
+    pulldown_cmark::Parser::new(text).filter_map(|e| match e {
+        pulldown_cmark::Event::Start(pulldown_cmark::Tag::Link {dest_url,..}) => Some(dest_url.into_string()),
+        _ => None,
+    }).collect()
+}
+
+#[test]
+fn independent_context_mutual_unicode_legacy_and_actual_staging() -> Result<()> {
+    let f=Fixture::new()?;
+    let registry=review_context_fixture(&f)?;
+    let stage=f.root().join("staged");
+    markdown(f.root(),"doc/canonical.json",&stage)?;
+    let a=fs::read_to_string(stage.join("doc/nested/a.md"))?;
+    let b=fs::read_to_string(stage.join("doc/b.md"))?;
+    let l=fs::read_to_string(stage.join("doc/legacy.md"))?;
+    assert_eq!(review_destinations(&a),["../b.md#n-e7af80","../legacy.md#n-6f6c64","a.md"]);
+    assert_eq!(review_destinations(&b),["nested/a.md"]);
+    assert!(b.contains("<a name=\"n-e7af80\"></a>"));
+    assert!(l.contains("<a name=\"n-6f6c64\"></a>") && l.contains("<a name=\"old-heading\"></a>"));
+    let compiled=super::super::source::compiled()?;
+    let old=host::generate(&compiled,"doc/legacy.nepld",&fs::read_to_string(f.root().join("doc/legacy.nepld"))?,&fs::read(f.root().join("doc/legacy.json"))?)?;
+    assert_eq!(l,old);
+    for (path,text) in [("doc/nested/a.md",&a),("doc/b.md",&b),("doc/legacy.md",&l)] {f.write(path,text)?;}
+    check(f.root(),"doc/canonical.json")?;
+    assert!(markdown(f.root(),"doc/canonical.json",&stage).is_err());
+    assert_eq!(fs::read_to_string(stage.join("doc/nested/a.md"))?,a);
+    f.write("doc/legacy.md","corrupt stale view\n")?;
+    assert!(check(f.root(),"doc/canonical.json").is_err());
+    let fresh=f.root().join("fresh");markdown(f.root(),"doc/canonical.json",&fresh)?;
+    assert_eq!(fs::read_to_string(fresh.join("doc/legacy.md"))?,old);
+    let site=f.root().join("site");html(f.root(),"doc/canonical.json",&site)?;
+    let h=fs::read_to_string(site.join("site/a.html"))?;
+    assert!(h.contains("../else/b.html#n-e7af80"));
+    assert!(h.contains("../legacy/l.html#n-6f6c64"));
+    let mut inputs=Vec::new();
+    for p in registry["pages"].as_array().ok_or("pages")? {
+        inputs.push(json!({"source":fs::read_to_string(f.root().join(p["source"].as_str().ok_or("source")?))?,"aliases":fs::read_to_string(f.root().join(p["aliases"].as_str().ok_or("aliases")?))?}));
+    }
+    println!("INDEPENDENT_CONTEXT {}",json!({"case":"mutual-unicode","manifest_path":"doc/canonical.json","manifest_raw":fs::read_to_string(f.root().join("doc/canonical.json"))?,"inputs":inputs,"header":a.split_once("\n\n").ok_or("header")?.0,"legacy_exact":true,"html_hrefs_exact":true}));
+    Ok(())
+}
+
+#[test]
+fn independent_context_late_failures_leave_no_directory() -> Result<()> {
+    for kind in ["ambient","alias","source","unemitted"] {
+        let f=Fixture::new()?;let mut registry=review_context_fixture(&f)?;
+        match kind {
+            "ambient" => {registry["pages"].as_array_mut().ok_or("pages")?.remove(1);f.json("doc/canonical.json",&registry)?;f.write("doc/b.md","# 節\n")?;},
+            "alias" => f.write("doc/legacy.json",b"[{")?,
+            "source" => f.write("doc/legacy.nepld","not an article")?,
+            _ => f.write("doc/b.nepld",r#"article ja "B" body cons paragraph cons sentence cons anchor 節 text "B" nil nil nil"#)?,
+        }
+        let out=f.root().join("output");assert!(markdown(f.root(),"doc/canonical.json",&out).is_err(),"{kind}");assert!(!out.exists(),"{kind}");
+        println!("INDEPENDENT_CONTEXT {}",json!({"case":kind,"failed_without_output":true}));
+    }
+    Ok(())
+}
+
+#[test]
+fn independent_context_budget_caller_state_and_pre_stopped_root() -> Result<()> {
+    use nepl3_core::budget::{Budget,Resource,StopReason};
+    let f=Fixture::new()?;review_context_fixture(&f)?;
+    let mut success=super::super::source::budget();success.charge(Resource::Work,19).map_err(super::super::source::err)?;
+    let expected=projection::generate(f.root(),"doc/canonical.json",&mut success)?;
+    let used=success.usage();let default=success.limits();
+    for reason in [StopReason::WorkLimit,StopReason::AllocationLimit,StopReason::OutputLimit,StopReason::NodeLimit,StopReason::SourceLimit,StopReason::DepthLimit,StopReason::Cancelled] {
+        let mut limits=default;
+        match reason {
+            StopReason::WorkLimit=>limits.work=used.work-1,
+            StopReason::AllocationLimit=>limits.allocation_units=used.allocation_units-1,
+            StopReason::OutputLimit=>limits.output_bytes=used.output_bytes-1,
+            StopReason::NodeLimit=>limits.nodes=used.nodes-1,
+            StopReason::SourceLimit=>limits.source_bytes=0,
+            StopReason::DepthLimit=>limits.depth=0,
+            _=>(),
+        }
+        let mut b=Budget::new(limits);b.charge(Resource::Work,19).map_err(super::super::source::err)?;
+        if reason==StopReason::Cancelled {b.cancel();}
+        assert!(projection::generate(f.root(),"doc/canonical.json",&mut b).is_err());
+        assert_eq!(b.poll(),Err(reason));let stopped=b.usage();
+        assert!(projection::generate(f.root(),"doc/absent.json",&mut b).is_err());
+        assert_eq!(b.poll(),Err(reason));assert_eq!(b.usage(),stopped);assert!(stopped.work>=19);
+        println!("INDEPENDENT_CONTEXT {}",json!({"case":"sticky","reason":format!("{reason:?}"),"usage":format!("{stopped:?}")}));
+    }
+    let mut nested=Budget::new(default);nested.charge(Resource::Work,19).map_err(super::super::source::err)?;
+    let actual=nested.with_depth_at_least(7,|b| projection::generate(f.root(),"doc/canonical.json",b)).map_err(super::super::source::err)??;
+    assert_eq!(actual.files,expected.files);assert_eq!(actual.manifest,expected.manifest);assert_eq!(nested.current_depth(),0);
+    println!("INDEPENDENT_CONTEXT {}",json!({"case":"caller-depth","used":format!("{used:?}"),"nested":format!("{:?}",nested.usage())}));
+    Ok(())
+}
+
+#[test]
+fn independent_context_same_source_bytes_distinct_page_ids() -> Result<()> {
+    let f=Fixture::new()?;
+    let doc=r#"article en "Same" body cons paragraph cons "Same." nil nil"#;
+    let mut regs=Vec::new();
+    for name in ["first","second"] {
+        regs.push(json!({"id":name,"source":format!("doc/{name}.nepld"),"projection":format!("doc/{name}.md"),"aliases":format!("doc/{name}.json"),"route":format!("site/{name}.html"),"renderer":projection::RENDERER}));
+        f.write(&format!("doc/{name}.nepld"),doc)?;f.write(&format!("doc/{name}.json"),b"[]")?;
+    }
+    f.json("doc/canonical.json",&json!({"version":1,"pages":regs}))?;
+    let a=projection::generate(f.root(),"doc/canonical.json",&mut super::super::source::budget())?;
+    let digest=|s:&str|->Result<String>{Ok(s.split("document digest ").nth(1).ok_or("digest")?.split(';').next().ok_or("end")?.into())};
+    assert_ne!(digest(&a.files[0].1)?,digest(&a.files[1].1)?);
+    assert_eq!(a.files[0].1.split_once("\n\n").ok_or("body")?.1,a.files[1].1.split_once("\n\n").ok_or("body")?.1);
+    println!("INDEPENDENT_CONTEXT {}",json!({"case":"distinct-source-identities","digests":[digest(&a.files[0].1)?,digest(&a.files[1].1)?]}));
+    Ok(())
+}
