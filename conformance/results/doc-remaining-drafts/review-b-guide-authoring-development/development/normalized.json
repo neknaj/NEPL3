@@ -1,0 +1,3829 @@
+{
+  "kind": "Article",
+  "fields": {
+    "language": "ja",
+    "title": {
+      "kind": "Sentence",
+      "fields": {
+        "inlines": [
+          {
+            "kind": "Text",
+            "fields": {
+              "text": "開発と検査"
+            }
+          }
+        ]
+      }
+    },
+    "body": {
+      "kind": "Body",
+      "fields": {
+        "blocks": [
+          {
+            "kind": "Section",
+            "fields": {
+              "id": "portable",
+              "title": {
+                "kind": "Sentence",
+                "fields": {
+                  "inlines": [
+                    {
+                      "kind": "Text",
+                      "fields": {
+                        "text": "Portable execution CI"
+                      }
+                    }
+                  ]
+                }
+              },
+              "body": {
+                "kind": "Body",
+                "fields": {
+                  "blocks": [
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "WASI foundationは同じcomponentをWasmtime 44.0.1のnative codegenとPulley64で実行し、終了状態・試験数・elapsed以外の出力を比較します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "PulleyもCraneliftでbytecodeを生成するため、別compilerの検証とは扱いません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "空のlibrary test binaryはemptyとして記録し、集約では実試験の成功を要求します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "各processは180秒で停止・回収し、失敗ログもartifactへ保存します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "比較用componentは "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "cargo test --release"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " で最適化します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "通常のdebug WASI試験は別途維持します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "非最適化のengine parse全20件はCIのPulleyで180秒を超えたため、試験の削除やcoreの資源上限変更ではなく、配布時にも使う最適化コードを比較します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "../conformance/targets/rp2040/README.md",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "RP2040 adapter"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " は別workspaceのbare-metal harnessです。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "production core/reader/wire/engineの依存を使用し、HAL・UART・allocatorを外側へ置きます。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "ARMv6-M buildと固定版rp2040jsでのUF2実行は別job・別証拠です。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "初期実行範囲はsource位置・budget・NDFの4件で、Reader/Engine全受入や実機試験の代わりにはしません。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "実ブラウザ、RISC-V、big-endianの検査はそれぞれ独立した未達範囲です。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "このCI整備をDoc HTML・文書移行・Pages公開の完成へ読み替えません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "CIの区切り後はDoc生成を進め、意味・リンク・安定IDの対応を検証できたページからnepld正本へ移行し、検査済みの同じsite artifactを公開します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "Section",
+            "fields": {
+              "id": "local",
+              "title": {
+                "kind": "Sentence",
+                "fields": {
+                  "inlines": [
+                    {
+                      "kind": "Text",
+                      "fields": {
+                        "text": "ローカル環境"
+                      }
+                    }
+                  ]
+                }
+              },
+              "body": {
+                "kind": "Body",
+                "fields": {
+                  "blocks": [
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "../rust-toolchain.toml",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "rust-toolchain.toml"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " に固定したRustと、Gitを使用します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "rustupはworkspace内で指定toolchainを選びます。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "cargo"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " の各コマンドはリポジトリrootで実行してください。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "Cargo.lock"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " は管理対象で、CIでは "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "--locked"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を使います。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "Doc inventoryのbaseline検証は固定commitのGit objectを必要とするため、CI checkoutは全履歴を取得します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "shallow cloneではbaselineを取得してから検査し、object不在を監査成功としてskipしません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "source archive単体にはこの履歴が含まれません。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "開発toolchainは1.97.0、現時点で宣言・検査するMSRVは1.97です。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "元設計の「1.85以上」は選定可能な下限であり、1.85での実行証拠を意味しません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "初期段階では実際に検査するtoolchainとMSRVを一致させ、未検証の旧版対応を広告しない方針を採ります。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "将来MSRVを変更するときはCargo.toml、toolchainとCIの検査対象を合わせて見直します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "独立した構造監査にはPython 3.13を使用します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "これは標準ライブラリだけで動く開発host用の補助検査で、productionの依存ではありません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "Rustの共通parserの完成を示すものでもありません。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "テキストはUTF-8、通常はLFです。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "PowerShellのファイルI/Oでは "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "Get-Content -Encoding UTF8"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "、"
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "Set-Content -Encoding UTF8"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " など、encodingを明示します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "source位置試験のfixtureと取り込み元の証拠ファイルは元byte列を維持します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "RawCode",
+                      "fields": {
+                        "languageHint": {
+                          "kind": "SomeText",
+                          "fields": {
+                            "text": "sh"
+                          }
+                        },
+                        "text": "rustup show active-toolchain\ncargo fmt --all -- --check\ncargo clippy --workspace --all-targets --locked -- -D warnings\ncargo test --workspace --locked\ncargo run --locked -p nepl3-tools -- check\ncargo run --locked -p nepl3-tools -- tasks --check\npython tools/audit/structure.py\npython -m unittest discover -s tools/audit -p test.py\npython tools/audit/allocation/run.py\npython tools/generate/grammar.py\npython tools/generate/doc.py\npython tools/generate/math.py\npython -m unittest discover -s tools/bootstrap -p test_grammar.py\n"
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "allocation検査は "
+                                  }
+                                },
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "../tools/audit/allocation/probe.rs",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "単体probe"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " の呼出し区間で実際の割当を計測します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "SourceMapが予算ゼロを返す前にsource IDを複製したR020は、返却値と論理的な使用量だけの試験では捕捉できません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "このため計測器に限定したGlobalAlloc wrapperのunsafeを開発用途で監査します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "unsafeは同じpointer/layoutをSystem allocatorへ転送する箇所だけとし、計測counterは割当を伴わないatomic操作です。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "coreと通常workspaceの "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "unsafe_code = \"forbid\""
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " は維持し、productionへ計測器を依存させません。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "同じ計測器はR037のSourceStore.applyも検査します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "100000byteのSourceIdを持つ編集に対し、AllocationUnits=0で停止するまでに実割当がないことを要求します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "共有SourceAdmission、全削除の入力入場、複数sourceの原子性と再試行は別のproduction API試験で検証します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "古いapply署名はadmissionを受け取らないため、旧版の元反例と現行probeのAPI差を区別して記録します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "../tools/audit/allocation/run.py",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "driver"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " は固定toolchainの "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "cargo build --locked"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " が出力するJSONから対象coreのartifactを一意に取得し、同じtoolchainのrustcで一時実行ファイルを作ります。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "既存workspaceのlint設定を変更せず、この独立した開発計測器にだけ上記の範囲を適用します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "意図的な割当のpositive controlを先に検査し、入力構築・表示・返却値のdropを計測区間から外します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "失敗・runner不在・artifactの曖昧さは非0終了であり、未実行を成功へ読み替えません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "通常native CIでもこのコマンドを実行し、単なる任意の手元確認にはしません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "計測はこの具体的な先行割当の回帰を捕捉するもので、一般の物理メモリ上限やWASIでの実測を保証しません。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "APIドキュメントも警告をエラーとして検査します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "RawCode",
+                      "fields": {
+                        "languageHint": {
+                          "kind": "SomeText",
+                          "fields": {
+                            "text": "powershell"
+                          }
+                        },
+                        "text": "$env:RUSTDOCFLAGS = '-D warnings'\ncargo doc --workspace --no-deps --locked\nif ($LASTEXITCODE -ne 0) { throw 'cargo doc failed' }\n"
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "PowerShellではnative commandの失敗がスクリプトを自動停止させるとは限りません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "複数コマンドを自動化するときは、各終了コードを検査してください。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "POSIX shellでは "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "RUSTDOCFLAGS='-D warnings' cargo doc --workspace --no-deps --locked"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " と実行できます。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "タスクを変更したときは正本の "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "design/tasks.json"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を編集し、生成後の差分を確認します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "RawCode",
+                      "fields": {
+                        "languageHint": {
+                          "kind": "SomeText",
+                          "fields": {
+                            "text": "sh"
+                          }
+                        },
+                        "text": "cargo run --locked -p nepl3-tools -- tasks --write\ncargo run --locked -p nepl3-tools -- tasks --check\ngit diff --check\ngit diff\n"
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "check"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " はリポジトリ内の設計metadataと実際のworkspaceの整合を検査します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "言語処理系の代用ではなく、登録されたruntime受入試験を実行するコマンドでもありません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "implementation-status.json"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " の状態は実際の実行証拠に基づいて更新します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "共通型を変更したときは "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "cargo run --locked -p nepl3-tools -- foundation --write"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " で実際のpackage descriptorを生成します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "check"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " は正本との一致に加え、production core registryによるdigest照合・参照finalizeも行います。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "通常buildからschema生成を呼ぶbuild.rsは置きません。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "reader包絡の正本は "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "interfaces/reader.json"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " です。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "変更時は "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "cargo run --locked -p nepl3-tools -- reader --write"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " でproductionの登録コードを生成します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "参照するfoundation型と合わせたregistryのfinalizeを検査し、VMのstate・request・continuation型と同じ変更で同期します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "Grammarの型付きconstructor arenaは "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "design/forms.json"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " から "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "python tools/generate/grammar.py --write"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " で明示生成します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "この生成物は構文shapeの投影であり、reader/binding/style/extensionを含むLanguagePackageをforms表だけから作るものではありません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "初回seed入力adapterの "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "tools/bootstrap/grammar.py"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " は完全なsyntax.neplgを読み、元bytes/digest、constructor/literal/listのUTF-8 byte範囲と全metadataを保持したASTを出します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "ASCII識別子のseed用部分集合に限定し、TextではNEPL3のescapeを使いJSON固有escapeを拒否します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "これはproduction parserやbootstrap合格の代わりではなく、実Grammar compilerへの初期入力を用意する開発host処理です。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "P1/P2はproduction reader/engineで同じsourceを読み直して比較します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "CIのWASI jobはSHA-256を固定したWasmtime 44.0.1で実装済みcoreの実試験を実行し、browser向けWasmのcompileも行います。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "ローカルでは "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "CARGO_TARGET_WASM32_WASIP2_RUNNER"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "wasmtime run"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " とし、"
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup --target wasm32-wasip2 -- --test-threads=1"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を実行します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "browser targetのcompile成功はブラウザ上の実行・描画試験を意味しません。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "Binding の fixture と Python seed adapter の一致確認は子processを起動する native host 専用試験です。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "native の通常試験で実行し、Wasm target ではその host 試験だけを型条件で除外します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "同じ fixture を使う production compile・parse・analyze・portable codec の試験は "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " でも実行します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "host 試験を WASI へ誤って含めた初回失敗は対象選択の失敗として記録し、後の runtime 試験成功へ読み替えません。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "Doc は "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "cargo test --locked -p nepl3-doc-core"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " と "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "cargo test --locked -p nepl3-tools --test doc"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " で検査します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "後者は実4言語文法のcompile、ParseSession、Doc provider/prefix lowerを通します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "同じ試験は "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "cargo test --locked -p nepl3-tools --test doc --target wasm32-wasip2 -- --test-threads=1"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " で実行し、元sourceとPython seed adapterの一致確認1件だけをnative専用とします。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "Docの進行中の範囲と未接続操作は "
+                                  }
+                                },
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "progress/doc-runtime.md",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "段階実装"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を参照してください。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "Math は "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "cargo test --locked -p nepl3-math-core"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " と "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "cargo test --locked -p nepl3-tools --test math"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " で検査します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "後者は実文法のcompile・ParseSessionからMathの表記を保持するlowerを通し、同じ元入力でWASIも実行します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "構造検査と数値演算の個別試験から、式全体の評価・束縛・印字の完成を推定しません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "progress/math-runtime.md",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "段階実装"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "に検証済みの範囲と残りを記録します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "タスクのacceptance参照はcoverageを示します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "T16以外のタスクは自身の成果物・scope付き証拠・依存完了・設計blocker解消で判定し、後段を含む試験群全体の合格は別に記録します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "証拠にはtask ID、検査対象、コマンド、target、結果、未検証範囲を残します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "T16の完了には登録された全必須群のpassedが必要です。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "scope付き証拠は "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "conformance/results/"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " 以下へJSONで保存します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "次は形式を示す例で、実行済みの記録ではありません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "実際の検査名・コマンド・targetと未検証部分に置き換え、実行を確認してから状態を更新してください。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "RawCode",
+                      "fields": {
+                        "languageHint": {
+                          "kind": "SomeText",
+                          "fields": {
+                            "text": "json"
+                          }
+                        },
+                        "text": "{\n  \"task_id\": \"T01\",\n  \"checks\": [\"実際に検査したsource契約の条件\"],\n  \"commands\": [\"実際に成功した検査コマンド\"],\n  \"targets\": [\"実際のtarget triple\"],\n  \"result\": \"passed\",\n  \"excluded_acceptance_portions\": [\"E03/E04の未実装のエディタ操作\"]\n}\n"
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "群全体のpassedは別のAcceptanceEvidenceを使用します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "必須群・targetは "
+                                  }
+                                },
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "../design/acceptance.json",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "design/acceptance.json"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "、形式は "
+                                  }
+                                },
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "../interfaces/acceptance-evidence.schema.json",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "証拠schema"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " に従います。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "scope付きTaskEvidenceを群全体の成功証拠として流用しません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "現在の入力identityは次の操作で取得します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "RawCode",
+                      "fields": {
+                        "languageHint": {
+                          "kind": "SomeText",
+                          "fields": {
+                            "text": "sh"
+                          }
+                        },
+                        "text": "cargo run --locked -p nepl3-tools -- evidence identity\n"
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "identity profileは "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "nepl3.repository-inputs/1"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " です。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "Gitから見える非ignoreファイルをpathのUTF-8 byte順で並べ、implementation-status.json、conformance/results/、生成tasks/を除外します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "source digestはこの集合全体、spec digestはそのうちdoc/spec/、interfaces/、design/を対象にします。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "各入力はdomain文字列 "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "nepl3.repository-inputs/1"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "、zero byte、"
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "source"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " または "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "spec"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "、zero byteで開始し、各pathの長さ（u64 big-endian）・UTF-8 path・内容長（u64 big-endian）・元byte列を順にSHA-256へ入力します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "CIと同じ.gitattributesに従うfresh checkoutで通常ファイルをLFにそろえ、実際に検査したtreeからidentityを取得します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "digest処理自体は改行・BOM・Unicodeを正規化しません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "source位置fixtureや保存資料の元byte列を変えてdigestを合わせることは禁止です。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "証拠は同じdesign revisionとsource/spec digest、群ID、必須target、実行結果、log digestへ照合します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "改変した証拠・別ID・古い版・未実行targetをpassedとして受理しません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "形式検査だけで試験の正しさを証明した扱いにせず、期待値とlogの独立レビューを行います。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "実行証拠は "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "kind: command"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " としてコマンド、終了コード、runner/tool版を記録します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "人による意味レビューは "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "kind: review"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " としてreviewer、独立性、scope、approved/rejectedを記録し、架空のコマンドを作りません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "catalogのtarget種別と一致させ、非空の.txt/.log記録とSHA-256を添付します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "詳細な必須fieldは証拠schemaに従います。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "Section",
+            "fields": {
+              "id": "pages",
+              "title": {
+                "kind": "Sentence",
+                "fields": {
+                  "inlines": [
+                    {
+                      "kind": "Text",
+                      "fields": {
+                        "text": "ページ集合と移行候補"
+                      }
+                    }
+                  ]
+                }
+              },
+              "body": {
+                "kind": "Body",
+                "fields": {
+                  "blocks": [
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "内部のページ参照を含むDoc原稿は、"
+                                  }
+                                },
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "spec/21-doc-pages.md",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "21章"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " の登録manifestから一括生成できます。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "全ページの参照・表示anchor・出力pathを検査してから保存します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "RawCode",
+                      "fields": {
+                        "languageHint": {
+                          "kind": "SomeText",
+                          "fields": {
+                            "text": "sh"
+                          }
+                        },
+                        "text": "python tools/migration/contract.py\npython -m unittest discover -s tools/migration -p test_contract.py\nmkdir -p dist\ncargo run --locked -p nepl3-tools -- doc-html pages doc/migration/pages.json dist/doc-migration\n"
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "migration/README.md",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "最初の移行候補"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " は実際のDoc処理系でHTMLへ変換します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "CIは候補の原本との一致と生成を各native OSで検査し、Ubuntuの生成物をartifactへ保存します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "これは公開deployでも正本切替でもありません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "旧anchor・Markdown projection・意味審査の条件を満たしてから、ページ単位で正式文書を移行します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "Section",
+            "fields": {
+              "id": "distribution",
+              "title": {
+                "kind": "Sentence",
+                "fields": {
+                  "inlines": [
+                    {
+                      "kind": "Text",
+                      "fields": {
+                        "text": "CIと配布"
+                      }
+                    }
+                  ]
+                }
+              },
+              "body": {
+                "kind": "Body",
+                "fields": {
+                  "blocks": [
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "Doc単独の生成物は次で確認できます。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "出力先は存在しないディレクトリを指定してください。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "RawCode",
+                      "fields": {
+                        "languageHint": {
+                          "kind": "SomeText",
+                          "fields": {
+                            "text": "sh"
+                          }
+                        },
+                        "text": "cargo run --locked -p nepl3-tools -- doc-html export examples/document/linear-combination.nepld .tmp/linear-combination-html\n"
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "document.html"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " と "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "assets/"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を一緒に配布します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "数式・外部ページ・画像等の解決はまだこのlocal入口の対象外で、必要な場合は生成を拒否します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "正式文書の正本切替とPages公開は、リンク・意味同等性・配布検査を含む別の工程です。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "契約は "
+                                  }
+                                },
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "spec/20-doc-html.md",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "20章"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を参照してください。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "../.github/workflows/ci.yml",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "CI workflow"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " はpush・pull request・手動実行で起動し、Linux・Windows・macOSで上記のRust検査とリポジトリ検査を実行します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "文書だけの変更も対象です。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "すべてのmatrix jobの成功を集約する固定名 "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "quality"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を、mainの必須status checkとして使用します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "失敗・cancel・skipを成功へ読み替えません。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "main"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " へのpushで "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "quality"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " が成功した後、同じcommit SHAのGit管理対象をsource archiveとしてActions artifactへ保存します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "archiveにはLICENSE・仕様・schema・文法・例・開発toolsが入り、SHA-256とcommit識別情報を添付します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "保存期間は30日です。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "これは基盤整備段階の継続的な成果物配布であり、言語runtimeのbinary releaseではありません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": ".tmp/"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " はarchiveへ入りません。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "source archiveは内容の参照とbuildに使うsnapshotで、"
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": ".git/"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " は含みません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "nepl3-tools check"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " はGit管理対象も検査するため、完全なリポジトリ検査にはcloneしたcheckoutが必要です。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "artifact内の "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "SOURCE.txt"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " のcommit値を使って "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "git checkout <commit>"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " し、上記の検査を実行してください。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "Actionsの権限は読み取りに限定し、checkoutにcredentialを残しません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "外部actionはcommit SHAで固定し、DependabotがCargo依存とActionsの更新PRを作成します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "依存更新時も仕様と検査を確認します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "GitHub側ではdescription・topics・文書へのhomepageを設定し、Issuesを有効、Wiki・Projectsを無効にします。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "merge後のbranch削除、依存の脆弱性通知・修正PR、secret scanning・push protection、非公開の脆弱性報告を使用します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "mainの保護には必須check "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "quality"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を用い、設定後は実際のrepository状態を確認します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "開発はbranchとPRで進め、mainへ統合する前に独立レビューとCIを確認します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "mainの保護設定は "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "quality"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " 必須・最新mainに対する検査必須（strict）、管理者にも適用、force push・削除は禁止とします。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "GitHubアカウントによる必須承認数は設定せず、agentの独立レビュー記録と区別します。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "WASI・ブラウザWasm・LSP・operation providerは目標仕様です。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "対応する実装とrunnerができた段階で、buildに加えてrunnerによる受入試験を必須jobとして追加します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "現時点のnative開発toolsの検査からcross-target対応を推定しません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "runtime releaseは該当するconformanceの実行証拠がそろってから設けます。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "Web/TEA/siteとDoc移行の計画は "
+                                  }
+                                },
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "spec/14-web-ui.md",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "14章"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "〜"
+                                  }
+                                },
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "spec/16-doc-migration.md",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "16章"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " に従います。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "現在のCIはsource配布を維持し、Pages公開はT20の実装・受入後です。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "T21は初回公開とは別に最終完了へ必須で、移行前はMarkdownを正本とします。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "Pagesの実装では、公開後smokeが失敗したcandidateに対して "
+                                  }
+                                },
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "spec/15-site.md",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "15章の復旧契約"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を実行します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "public smoke済みLKGの元tarを通常のActions retentionとは別に保持し、同じpublisher lockで対象identityを確認して1回だけ復旧・再smokeします。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "新しい健康な公開や対象不明時は上書きせず停止します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "復旧できても元candidate/runはfailedです。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "現在はこの設計の整備であり、live Pagesの保存先・journal・復旧workflowは未実装です。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "workflowの構文・権限・依存jobの扱いは "
+                                  }
+                                },
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "ExternalTarget",
+                                      "fields": {
+                                        "uri": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax"
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "GitHub Actions公式仕様"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "、artifactの保存は "
+                                  }
+                                },
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "ExternalTarget",
+                                      "fields": {
+                                        "uri": "https://docs.github.com/en/actions/tutorials/store-and-share-data"
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "公式ガイド"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " に従います。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "Section",
+            "fields": {
+              "id": "review",
+              "title": {
+                "kind": "Sentence",
+                "fields": {
+                  "inlines": [
+                    {
+                      "kind": "Text",
+                      "fields": {
+                        "text": "実装と独立レビュー"
+                      }
+                    }
+                  ]
+                }
+              },
+              "body": {
+                "kind": "Body",
+                "fields": {
+                  "blocks": [
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "Doc関連の共通値・wire・文書意味APIを固定する前に、"
+                                  }
+                                },
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "doc-inventory.md",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "早期inventoryとgap audit"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を確認します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "cargo run --locked -p nepl3-tools -- doc-inventory --check"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " は固定commitの原本と照合し、現在の文書・契約の追加/変更/削除を報告します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "通常の "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "check"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " にも含まれます。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "現在の網羅性を主張する場合は新しいcommitを監査して "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "doc-inventory --check-current"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を通します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "現時点のbaselineと作業treeには差分があり、strict検査が失敗することを未移行/未監査の成功へ読み替えません。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "再生成方法と履歴要件は監査文書を参照してください。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "メインagentが設計具体化、実装、試験、指摘修正と統括を担当し、subagentには独立レビューだけを依頼します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "レビュー担当はメインagentの説明だけを根拠にせず、元の契約、実コード、失敗系、期待値の根拠、差分と実行結果を確認します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "メインagentが必要な修正・再レビュー・再検査を確認して統合します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "専用branchでこまめにcommit・pushし、未レビューのcheckpointと統合可能な変更を区別します。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "利用上限等で独立レビューが未実行の場合も成功にせず、独立して進められる作業を続けます。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "具体的な規範は "
+                                  }
+                                },
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "../AGENTS.md",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "AGENTS.md"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を参照してください。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "HTML fragmentの生成adapterは "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "python tools/generate/markup.py"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "、schema projectionは "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "cargo run --locked -p nepl3-tools -- markup --write"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を使用する。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "fragment単体の成功をDoc/asset/KaTeX/Web全体の受入へ拡張しない。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "Doc HTMLの値schemaは "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "cargo run --locked -p nepl3-tools -- doc-html --write"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "、型付きadapterは "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "python tools/generate/doc_html.py --write"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " で生成し、通常checkで照合する。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "cargo test --locked -p nepl3-doc-html"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " とtoolsのDoc試験でnative/実source経路を検査する。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "local-onlyのfragment成功を、資源解決・配布文書・T23全体の成功へ拡張しない。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+[
+  {
+    "path": "old.md",
+    "commit": "67694208cc700042b5c7a6275d443b37eccaaaf7",
+    "source_path": "doc/development.md",
+    "sha256": "9fd123a202fb3700af89aaaa46a6ef34b17a38312b1f10492ee4bfab8322ece2",
+    "bytes": 21137
+  },
+  {
+    "path": "new.md",
+    "commit": "337057d71838c85a6fb9a304e3ec4164436bb310",
+    "source_path": "doc/development.md",
+    "sha256": "f51f37998c2e606f3788ce892ef1f34f39b46e8a7533fbce5986087e6c634927",
+    "bytes": 21411
+  },
+  {
+    "path": "ci.yml",
+    "commit": "337057d71838c85a6fb9a304e3ec4164436bb310",
+    "source_path": ".github/workflows/ci.yml",
+    "sha256": "5b9f05004d488ab3174a2798948e9edffea935df790432675b7989fa14a4c6a7",
+    "bytes": 12813
+  },
+  {
+    "path": "old.nepld",
+    "commit": "446000e65619bf6ddad5032094bd747ddf330d8f",
+    "source_path": "doc/migration/authored/guide/development.nepld",
+    "sha256": "d9e5fd184ef664842ff14893b5b680608942fb0a308592d2deba7a3674c0ecad",
+    "bytes": 50332
+  },
+  {
+    "path": "new.nepld",
+    "commit": "3887fffc9fc08ae449a374bb97ff301db7786df1",
+    "source_path": "doc/migration/authored/guide/development.nepld",
+    "sha256": "eb3fefe2e22ce0116a9827d08e724569e57efb186a8e7051a36b21e2e3287bbe",
+    "bytes": 50842
+  },
+  {
+    "path": "context/design/forms.json",
+    "commit": "337057d71838c85a6fb9a304e3ec4164436bb310",
+    "source_path": "design/forms.json",
+    "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693",
+    "bytes": 48673
+  },
+  {
+    "path": "context/tools/audit/structure.py",
+    "commit": "337057d71838c85a6fb9a304e3ec4164436bb310",
+    "source_path": "tools/audit/structure.py",
+    "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727",
+    "bytes": 6543
+  }
+]

@@ -1,0 +1,147 @@
+article ja "10. Profile・[埋/う]め[込/こ]み・[実行入口/じっこういりぐち]"
+body
+  cons section policy "[方針/ほうしん]" body
+    cons paragraph
+      cons "ソース[上/じょう]の[相互埋/そうごう]め[込/こ]みとcrate[依存/いぞん]を[分離/ぶんり]する。"
+      cons "suiteが[登録済/とうろくず]みlanguage package、domain operation、output adapterを[接続/せつぞく]する。" nil
+    nil
+  cons section profile "1. Profile" body
+    cons paragraph
+      cons "Profileはlanguage alias→SchemaRef、category mode、provider allowlist、operation bridge、resource snapshot、Limitsを[持/も]つ[不変値/ふへんち]。"
+      cons "root languageはファイル[拡張子/かくちょうし]またはCLI[引数/ひきすう]で[選/えら]び、[全/ぜん]ソースを[一律/いちりつ]のlexerで[先/さき]にtoken[化/か]しない。" nil
+    cons paragraph
+      cons sentence cons code "design/profile.json" cons text " はsource manifestであり、" cons ruby text "解決済" text "かいけつず" cons text "みruntime Profileではない。" nil
+      cons "R009の[解消/かいしょう]では[生成結果/せいせいけっか]の[閉/と]じた[型/かた]、[各/かく]schema/package/provider digest、[許可/きょか]capability、resource identityと[整合検査/せいごうけんさ]を[先/さき]に[定/さだ]める。"
+      cons "T05/T11で[実際/じっさい]の[検査済/けんさず]みpackageから[生成/せいせい]・[差分検査/さぶんけんさ]し、UI/Workerはこの[値/あたい]を[利用/りよう]する。"
+      cons "R006の[操作/そうさ]・bundle[型/がた]の[未定義/みていぎ]を[文字列/もじれつ]signatureや[仮/かり]digestで[補/おぎな]わない。" nil
+    cons paragraph
+      cons sentence cons ruby text "解析" text "かいせき" cons text "の" cons ruby text "実入口" text "じついりぐち" cons text "はengineの" cons code "ParseProfile" cons text "とし、suite Profileから" cons ruby text "渡" text "わた" cons text "す" cons ruby text "不変" text "ふへん" cons text "なprojectionとして" cons ruby text "扱" text "あつか" cons text "う。" nil
+      cons sentence cons code "interfaces/engine.json" cons text "にlanguage" cons ruby text "登録" text "とうろく" cons text "、category mode、" cons ruby text "選択" text "せんたく" cons text "schema、provider" cons ruby text "要件" text "ようけん" cons text "、operation allowlist、resource identity、Limitsの" cons ruby text "型" text "かた" cons text "を" cons ruby text "置" text "お" cons text "く。" nil
+      cons sentence cons code "resolve" cons text "は" cons ruby text "独立" text "どくりつ" cons text "したhost RuntimeCatalogとfinalize" cons ruby text "済" text "ず" cons text "みregistryを" cons ruby text "使" text "つか" cons text "い、" cons ruby text "実" text "じつ" cons text "package" cons ruby text "意味" text "いみ" cons text "digest、schema" cons ruby text "参照閉包" text "さんしょうへいほう" cons text "、guest category/mode、host provider" cons ruby text "登録" text "とうろく" cons text "の" cons ruby text "実装" text "じっそう" cons text "identity、resourceの" cons ruby text "実" text "じつ" cons text "byte" cons ruby text "列" text "れつ" cons text "digestを" cons ruby text "照合" text "しょうごう" cons text "する。" nil
+      cons "[外部/がいぶ]Profileの[自己申告/じこしんこく]をそのままhost[登録/とうろく]へ[複写/ふくしゃ]して[検査済/けんさず]みとしない。" nil
+    cons paragraph
+      cons "provider identityはhostが[実/じつ]assetまたは[版管理/ばんかんり]された[実装/じっそう]manifestから[確定/かくてい]する。"
+      cons "coreはbinaryを[読/よ]み[込/こ]まず、binary[自身/じしん]のhashを[同/おな]じbinary[内/ない]の[定数/ていすう]へ[埋/う]める[自己/じこ]hash[循環/じゅんかん]も[要求/ようきゅう]しない。"
+      cons "operationのschema[署名/しょめい]が[既知/きち]でもcallbackが[登録/とうろく]されたことにはならない。"
+      cons "parseに[使/つか]うreader providerは[許可済/きょかず]み[実登録/じつとうろく]を[要求/ようきゅう]し、[未実行/みじっこう]のfacts[等/とう]のextensionは[署名/しょめい]を[検査/けんさ]するが[自動実行/じどうじっこう]しない。" nil
+    cons paragraph
+      cons sentence cons ruby text "解析" text "かいせき" cons text "Profileのidentityは" cons code "NEPL3-PARSE-PROFILE-1" cons text "、zero byte、canonical JSONのSHA-256。" nil
+      cons "id、language[登録/とうろく]、schema、category-mode[指定/してい]、providerの[実装/じっそう]identity、allowlist、resource identity、Limitsを[含/ふく]める。"
+      cons "[宣言/せんげん]はalias/idまたは[完全/かんぜん]OperationRef/SchemaRef[順/じゅん]、Limits[列/れつ]はsourceBytes/work/depth/nodes/allocationUnits/outputBytes/diagnostics/events[順/じゅん]とする。"
+      cons "[実/じつ]resource bytesはhash[照合/しょうごう]し、Profileへ[全文複製/ぜんぶんふくせい]しない。" nil
+    cons paragraph
+      cons "HeadProviderの[登録/とうろく]はheadProvidersのHeadRegistration(alias,category,provider)で[選/えら]ぶ。"
+      cons "[同/おな]じpackageを[登録/とうろく]した[別/べつ]aliasの[設定/せってい]を[共有/きょうゆう]したと[推定/すいてい]しない。"
+      cons "(alias,category)[重複/ちょうふく]を[拒否/きょひ]し、shape/childContextの[両/りょう]OperationRefについて[純粋/じゅんすい]なHeadCall→HeadReply[署名/しょめい]、allowlist、[独立/どくりつ]host catalogの[実装/じっそう]identityを[検査/けんさ]する。"
+      cons "[標準操作名/ひょうじゅんそうさめい]はheadShape/headChildContextだが、[登録済/とうろくず]みの[同署名操作/どうしょめいそうさ]も[選択/せんたく]できる。"
+      cons sentence cons text "Profile identityにはheadProviders keyを" cons ruby text "含" text "ふく" cons text "め、alias/category" cons ruby text "順" text "じゅん" cons text "の " cons code "[alias,category,shapeOperation,childContextOperation]" cons text " " cons ruby text "列" text "れつ" cons text "で" cons ruby text "記述" text "きじゅつ" cons text "する。" nil
+      cons "[列挙順/れっきょじゅん]だけの[変更/へんこう]はidentityを[変/か]えず、[操作/そうさ]の[役割/やくわり]・alias/categoryへの[割当変更/わりあてへんこう]は[変/か]える。" nil
+    cons paragraph
+      cons "ここでのallowlistはoperation[呼出可否/よびだしかひ]を[表/あらわ]す。"
+      cons "providerのtransport、[隔離/かくり]、ネットワーク[等/とう]の[権限/けんげん]、[強制停止方法/きょうせいていしほうほう]、bridge、EnvironmentProjectionを[含/ふく]むfull suite Profileの[契約/けいやく]は[引/ひ]き[続/つづ]き[実装対象/じっそうたいしょう]である。"
+      cons "この[解析/かいせき]projectionだけではR009[全体/ぜんたい]を[完了/かんりょう]しない。"
+      cons "hostは[実行環境/じっこうかんきょう]のcapabilityを[別途検査/べっとけんさ]し、[解析/かいせき]projectionはその[承認/しょうにん]を[代行/だいこう]しない。" nil
+    cons paragraph
+      cons sentence cons ruby text "配布拡張子" text "はいふかくちょうし" cons text "は " cons code ".neplg" cons text "、" cons code ".nepld" cons text "、" cons code ".neplm" cons text "、" cons code ".neplc" cons text "。" nil
+      cons sentence cons ruby text "汎用" text "はんよう" cons text " " cons code ".nepl" cons text " ではlanguage" cons ruby text "指定" text "してい" cons text "を" cons ruby text "必須" text "ひっす" cons text "にする。" nil
+      cons "[既存/きそん]NCGやGlossのファイルを[新言語/しんげんご]として[黙/だま]って[解釈/かいしゃく]しない。" nil
+    cons paragraph
+      cons "ParseProfile.limitsは[解析操作/かいせきそうさ]に[対/たい]するresource[別上限/べつじょうげん]であり、[単/たん]なる[既定値/きていち]ではない。"
+      cons "[操作開始時/そうさかいしじ]に[実/じつ]Budgetの[全/ぜん]LimitsがProfile[上限以下/じょうげんいか]であることを[照合/しょうごう]し、[超/こ]える[場合/ばあい]はLimitsMismatchで[拒否/きょひ]する。"
+      cons "[小/ちい]さい[操作予算/そうさよさん]を[使/つか]うことは[許/ゆる]す。"
+      cons "[既/すで]に[消費/しょうひ]したUsageはresetせず、[継続/けいぞく]も[同/おな]じ[操作/そうさ]Limitsと[単調/たんちょう]なUsageを[保持/ほじ]する。"
+      cons "Profileのresolve[自体/じたい]を[行/おこな]う[開発/かいはつ]・host[側/がわ]Budgetはこの[解析操作/かいせきそうさ]Budgetとは[別/べつ]であり、[解決時/かいけつじ]の[消費/しょうひ]を[解析/かいせき]へ[済/す]んだものとして[移/うつ]さない。" nil
+    cons paragraph
+      cons "EntryContextはaliasを[明示保存/めいじほぞん]する。"
+      cons "[同/おな]じpackage identityを[異/こと]なるaliasで[登録/とうろく]してcategory-mode overrideだけを[変/か]えることを[許/ゆる]し、[子/こ]のLocal[解決/かいけつ]も[親/おや]の[実/じつ]aliasを[使/つか]う。"
+      cons "Profileのlanguage[列/れつ]の[並/なら]び[順/じゅん]は[意味/いみ]に[含/ふく]めず、aliasから[選/えら]ぶ[対応/たいおう]を[継続/けいぞく]へ[保持/ほじ]する。"
+      cons "alias[別/べつ]のreader stateとenvironmentも[明示/めいじ]し、guest[不足/ふそく]をUnitやhost[環境/かんきょう]で[補/おぎな]わない。" nil
+    nil
+  cons section bridges "2. [標準/ひょうじゅん]bridge" body
+    cons table cons default cons default cons default cons default nil
+      some row cons "host slot" cons "source[入口/いりぐち]" cons "guest root" cons "[操作/そうさ]" nil
+      cons row cons "Doc InlineMath" cons "Math" cons "Math.Expr" cons "lower/check、17[章/しょう]の[生成/せいせい]policyによるrender" nil
+      cons row cons "Doc DisplayMath" cons "Math" cons "Math.Expr" cons "[同上/どうじょう]、display style" nil
+      cons row cons "Doc CircuitFigure" cons "Circuit" cons "Circuit.Design" cons "lower/check/elaborate/diagram" nil
+      cons row cons "Doc Code" cons "Grammar/Doc/Math/Circuit" cons "[対応/たいおう]する[根/ね]" cons "source/viewの[表示/ひょうじ]のみ" nil
+      cons row cons "Math Label" cons "Doc" cons "Doc.Sentence" cons "lower/check/render phrasing" nil
+      nil
+    cons paragraph
+      cons "MathのDoc[注記/ちゅうき]は[文書全体/ぶんしょぜんたい]やparagraphを[受/う]け[入/い]れない。"
+      cons "これでMathMLの[注記位置/ちゅうきいち]へblock[文書/ぶんしょ]が[混入/こんにゅう]しない。"
+      cons "Code[内/ない]の[不正/ふせい]なguestはRecover[構文/こうぶん]として[保持/ほじ]できる。"
+      cons "render[時/じ]にもevaluate/compileを[開始/かいし]しない。" nil
+    cons paragraph
+      cons "[言語/げんご]の[切替/きりか]えは[一/ひと]つの[引数/ひきすう]の[範囲/はんい]に[限定/げんてい]し、[終了時/しゅうりょうじ]にhostのmodeへ[戻/もど]る。"
+      cons "たとえばDoc/math/Math/add[内/ない]からDoc sentenceへ[戻/もど]っても、そのguestの[外側/そとがわ]のtriviaを[読/よ]み[過/す]ぎない。" nil
+    nil
+  cons section recursion "3. [相互依存/そうごいぞん]と[再帰/さいき]" body
+    cons paragraph
+      cons "ソース[上/じょう]の[有限/ゆうげん]な[入/い]れ[子/こ]は[許/ゆる]す。"
+      cons "ForeignSyntaxはroot node、language revision、originと[環境参照/かんきょうさんしょう]を[保持/ほじ]する。"
+      cons "[操作/そうさ]グラフは[対象/たいしょう]nodeとoperationの[組/くみ]を[頂点/ちょうてん]に[持/も]ち、suiteが[必要/ひつよう]な[依存順/いぞんじゅん]に[処理/しょり]する。" nil
+    cons paragraph
+      cons "Doc→Math→Docの[有限/ゆうげん]の[注記/ちゅうき]は[循環/じゅんかん]ではない。"
+      cons "[同/おな]じnodeのrenderが[再/ふたた]び[自分/じぶん]のrenderを[要求/ようきゅう]する[等/とう]の[循環/じゅんかん]はCyclicOperation。"
+      cons "[生成/せいせい]によって[構造/こうぞう]が[増/ふ]える[場合/ばあい]も[共通予算/きょうつうよさん]とoriginを[維持/いじ]する。" nil
+    nil
+  cons section environment "4. [環境/かんきょう]の[受渡/うけわた]し" body
+    cons paragraph
+      cons "[各/かく]guestの[名前空間/なまえくうかん]は[既定/きてい]で[新/あたら]しく[分離/ぶんり]する。"
+      cons "DocLabel、MathSymbol、CircuitSignalを[一/ひと]つの[名前辞書/なまえじしょ]へ[入/い]れない。"
+      cons sentence cons text "bridgeは" cons ruby text "必要" text "ひつよう" cons text "に" cons ruby text "応" text "おう" cons text "じて " cons code "EnvironmentProjection" cons text " として、どのnamespace/entityをどの" cons ruby text "型" text "かた" cons text "の" cons ruby text "外部値" text "がいぶち" cons text "として" cons ruby text "渡" text "わた" cons text "すかを" cons ruby text "明示" text "めいじ" cons text "する。" nil nil
+    cons paragraph
+      cons "[配布/はいふ]bridgeはMathのfree symbol[値/ち]をRenderContextから[明示的/めいじてき]に[受/う]け[取/と]り、DocLabelとCircuitSignalは[自動/じどう]exportしない。"
+      cons "Doc annotation[内/ない]のlabelはそのsentenceの[局所/きょくしょ]scopeで[検査/けんさ]する。"
+      cons "[呼出/よびだ]し[側/がわ]のlabel[参照/さんしょう]が[必要/ひつよう]ならprofileのprojectionで[明示/めいじ]する。" nil
+    nil
+  cons section artifacts "5. artifactの[準備/じゅんび]" body
+    cons paragraph
+      cons "backendsに[任意/にんい]raw HTML stringを[渡/わた]さない。"
+      cons "suiteがforeign subtreeをtyped MarkupFragmentへ[変換/へんかん]し、そのslotに[適合/てきごう]する[内容/ないよう]モデルを[検査/けんさ]する。"
+      cons "doc-htmlはPreparedEmbedsの[対応表/たいおうひょう]を[入力/にゅうりょく]として[受/う]け[取/と]る。"
+      cons "math-mathml/circuit-svgを[直接/ちょくせつ]importしない。" nil
+    cons paragraph
+      cons "asset[参照/さんしょう]は[固定内容/こていないよう]とdigestを[持/も]つResourceSnapshot。"
+      cons "coreがpathから[読/よ]んだりURLへ[接続/せつぞく]したりしない。"
+      cons "HTML[出力/しゅつりょく]は[既定/きてい]で[外部/がいぶ]network[無/な]しで[閲覧/えつらん]できる。"
+      cons "KaTeX[生成時/せいせいじ]は[同/おな]じ[固定版/こていばん]のCSS/fontをartifactへ[同梱/どうこん]し、[相対参照/そうたいさんしょう]とlicenseを[保持/ほじ]する。"
+      cons sentence cons text "host" cons ruby text "生成" text "せいせい" cons text "・" cons ruby text "独立" text "どくりつ" cons text "MathML fallback・" cons ruby text "出力検査" text "しゅつりょくけんさ" cons text "・asset identityは" cons link relative "17-math-html.md" none concat cons text "17" cons ruby text "章" text "しょう" nil cons text "に" cons ruby text "従" text "したが" cons text "う。" nil
+      cons "[全資源/ぜんしげん]を[明示的/めいじてき]なartifact dependencyとして[報告/ほうこく]する。" nil
+    nil
+  cons section cli "6. CLI" body
+    cons list unordered
+      cons item none body cons paragraph cons sentence cons code "nepl3 parse --language doc input.nepld --format ndf|json" cons text " はRecover treeと" cons ruby text "診断" text "しんだん" cons text "を" cons ruby text "出" text "だ" cons text "す。" nil nil nil
+      cons item none body cons paragraph cons sentence cons code "nepl3 check input.nepld" cons text " は" cons ruby text "必要" text "ひつよう" cons text "なdomain" cons ruby text "検査" text "けんさ" cons text "と" cons ruby text "参照検査" text "さんしょうけんさ" cons text "を" cons ruby text "行" text "おこな" cons text "う。" nil nil nil
+      cons item none body cons paragraph cons sentence cons code "nepl3 render input.nepld --output out.html" cons text " は" cons ruby text "埋" text "う" cons text "め" cons ruby text "込" text "こ" cons text "みをprepareしHTMLを" cons ruby text "出" text "だ" cons text "す。" nil nil nil
+      cons item none body cons paragraph
+        cons sentence cons code "nepl3 render input.neplm --output out.html" cons text " は" cons ruby text "生成済" text "せいせいず" cons text "み" cons ruby text "数式" text "すうしき" cons text "を" cons ruby text "含" text "ふく" cons text "むHTMLと" cons ruby text "必要" text "ひつよう" cons text "assetを" cons ruby text "出" text "だ" cons text "す。" nil
+        cons sentence cons text "Doc/Mathのrenderは " cons code "--math-renderer katex-preferred|mathml-only" cons text " を" cons ruby text "取" text "と" cons text "り、" cons ruby text "既定" text "きてい" cons text "はKaTeX" cons ruby text "優先" text "ゆうせん" cons text "。" nil
+        cons "[生成能力不足等/せいせいのうりょくふそくとう]のMathML fallbackは[診断/しんだん]を[保持/ほじ]する。" nil nil
+      cons item none body cons paragraph cons sentence cons code "nepl3 evaluate input.neplm --bindings bindings.ndf" cons text " はExact/Symbolic/Invalidを" cons ruby text "構造化出力" text "こうぞうかしゅつりょく" cons text "する。" nil nil nil
+      cons item none body cons paragraph cons sentence cons code "nepl3 grammar compile input.neplg --output out.ndf" cons text " はLanguagePackageを" cons ruby text "出" text "だ" cons text "す。" nil nil nil
+      cons item none body cons paragraph cons sentence cons code "nepl3 circuit test input.neplc" cons text " は" cons ruby text "全" text "ぜん" cons text "testを" cons ruby text "実行" text "じっこう" cons text "する。" nil nil nil
+      cons item none body cons paragraph cons sentence cons code "nepl3 circuit compile input.neplc --target nor --output out.ndf" cons text " はNOR IRを" cons ruby text "出" text "だ" cons text "す。" nil nil nil
+      cons item none body cons paragraph cons sentence cons code "nepl3 circuit diagram input.neplc --output out.svg" cons text " はSVGを" cons ruby text "出" text "だ" cons text "す。" nil nil nil
+      cons item none body cons paragraph
+        cons sentence cons code "nepl3 format input --style prefix|compact" cons text " は" cons ruby text "明示的" text "めいじてき" cons text "なformatter。" nil
+        cons "[既定/きてい]はstdoutで、--write[時/じ]だけファイルを[置換/ちかん]する。" nil nil
+      nil
+    cons paragraph
+      cons "[終了/しゅうりょう]code: 0 [成功/せいこう]（Symbolicは[操作/そうさ]が[許/ゆる]す[正常結果/せいじょうけっか]）、1 [入力/にゅうりょく]/[検査/けんさ]/テスト[失敗/しっぱい]、2 CLI/config/protocolエラー、3 limit/cancel、4 provider[内部違反/ないぶいはん]。"
+      cons "stdoutは[成果物/せいかぶつ]だけ。"
+      cons "sourceのdecode[失敗/しっぱい]を[成功空文書/せいこうからぶんしょ]にしない。" nil
+    nil
+  cons section hosts "7. browser/native/WASI" body
+    cons paragraph
+      cons "[同/おな]じsuite APIを[利用/りよう]する。"
+      cons "browserではWorkerで[計算/けいさん]し、[未応答時/みおうとうじ]はWorkerを[終了/しゅうりょう]できる。"
+      cons "ファイル/ネットワーク[権限/けんげん]はWeb shellに[限定/げんてい]する。"
+      cons "wasm-bindgenのJS undefined/nullは[境界/きょうかい]でOption/Resultへ[変換/へんかん]し、domainへ[流/なが]さない。" nil
+    cons paragraph
+      cons "wasm32-wasip2 CLIはWASI I/O adapterを[使/つか]う。"
+      cons "nativeのprocess provider[呼出/よびだ]しをbrowser/WASIへ[無条件/むじょうけん]に[持/も]ち[込/こ]まない。"
+      cons "[該当/がいとう]hostが[提供/ていきょう]するregistry/runnerのcapabilityを[検査/けんさ]する。"
+      cons "[組込/くみこ]み4[言語/げんご]の[基本操作/きほんそうさ]は[全/ぜん]targetで[使/つか]える。" nil
+    nil
+  nil

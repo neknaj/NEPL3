@@ -1,0 +1,101 @@
+{
+  "main": "58e3e969a6d55ff2470b6a125229da29af45f985",
+  "cases": [
+    {
+      "source": "doc/spec/10-integration.md",
+      "reviewed_source_commit": "e3a4de2b3ebc12834a47e51833a979da168f2275",
+      "current_source_sha256": "042382308ccbbd2deb615983aaed9906c17571c58aed5e4e11494d67cd4b717d",
+      "source_bytes": 9589,
+      "source_unchanged": true,
+      "draft": "doc/migration/authored/10-integration.nepld",
+      "draft_commit": "e3a4de2b3ebc12834a47e51833a979da168f2275",
+      "draft_sha256": "ca5fe5f9a5435c99b778e2fd85d6a3b122d66e7c361c6dfdb4376fd807cafb0f",
+      "review_manifest": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-b-ruby\\manifest.json",
+      "review_manifest_sha256": "4276483a0f0f61d83e55197094c8e6bbb0d164de56b05a99f26c071cc10d302c"
+    },
+    {
+      "source": "doc/spec/11-conformance.md",
+      "reviewed_source_commit": "ebac378083eff21051094685f148069ec0ccae68",
+      "current_source_sha256": "e8b3e4e8da02f3311541fef79121ed1b7c2cab7258dc7f2c38b2c65241426b2b",
+      "source_bytes": 14521,
+      "source_unchanged": true,
+      "draft": "doc/migration/authored/11-conformance.nepld",
+      "draft_commit": "ebac378083eff21051094685f148069ec0ccae68",
+      "draft_sha256": "dfa4b3ad2f57edce2ed6cac3f65bd35aa9a63092aa91dd6b5fd2bf932589fe68",
+      "review_manifest": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-b-ruby-11-14\\manifest.json",
+      "review_manifest_sha256": "ebb1856335761fe8c348e1f9c1c52b0e989bfa26217f4e936280b685d80fa5ff"
+    },
+    {
+      "source": "doc/spec/12-model-invariants.md",
+      "reviewed_source_commit": "5657677e9b4a1cc44830b9a365206822920983fe",
+      "current_source_sha256": "81b22608f80254f7d5979b754436b9d62da0bf25aefddf01a6fec772fdcf9cc5",
+      "source_bytes": 15389,
+      "source_unchanged": true,
+      "draft": "doc/migration/authored/12-model-invariants.nepld",
+      "draft_commit": "9dd5a5c14883bd375eca2813057e29e9835e9ac3",
+      "draft_sha256": "f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8",
+      "review_manifest": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-b-ruby-11-14\\manifest.json",
+      "review_manifest_sha256": "ebb1856335761fe8c348e1f9c1c52b0e989bfa26217f4e936280b685d80fa5ff"
+    },
+    {
+      "source": "doc/spec/13-reproducibility.md",
+      "reviewed_source_commit": "7e9e52ce53767a9c9a90650945dc091e6de65547",
+      "current_source_sha256": "81d032e6f04730fd4c52a15c11464bff0ed879c1030a059be19d10b4d8c9a16d",
+      "source_bytes": 14922,
+      "source_unchanged": true,
+      "draft": "doc/migration/authored/13-reproducibility.nepld",
+      "draft_commit": "7e9e52ce53767a9c9a90650945dc091e6de65547",
+      "draft_sha256": "31486ad75e0776d55cc12b2a9b5af2840780ad7812456d9c222a90fd8ab495a8",
+      "review_manifest": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-b-ruby-13-14\\manifest.json",
+      "review_manifest_sha256": "79e027ad790008173b5bae87b3bdfedfa7e283f2af6ce47f457117d8643c9aec"
+    },
+    {
+      "source": "doc/spec/14-web-ui.md",
+      "reviewed_source_commit": "d50f1688de44e70d027fa678e6d5b3bed3890196",
+      "current_source_sha256": "276e2eef46c0ee67adc3cae08fcc431630abc50489de9d19844ab40aae7ed22a",
+      "source_bytes": 9968,
+      "source_unchanged": true,
+      "draft": "doc/migration/authored/14-web-ui.nepld",
+      "draft_commit": "d50f1688de44e70d027fa678e6d5b3bed3890196",
+      "draft_sha256": "7201521f0183c8ea4385ea161b8644ce9793ccd4046db19d1333536cd16ea2a3",
+      "review_manifest": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-b-ruby-13-14\\manifest.json",
+      "review_manifest_sha256": "79e027ad790008173b5bae87b3bdfedfa7e283f2af6ce47f457117d8643c9aec"
+    },
+    {
+      "source": "doc/README.md",
+      "reviewed_source_commit": "90f4552d9d8de662bada4d76c688c8cf30afa595",
+      "current_source_sha256": "4e87bdd9154599be5b364755da38e5905c15c4cc87255802a06ed34b3d4fc978",
+      "source_bytes": 4979,
+      "source_unchanged": true,
+      "draft": "doc/migration/authored/guide/README.nepld",
+      "draft_commit": "ca6081affbee132a217d0e0bd327a96845ff5e95",
+      "draft_sha256": "a0166f02a01b60c914353e3b5d69a378fa4b66f701b3af7caddd819ccabef464",
+      "review_manifest": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-b-guide-readme\\manifest.json",
+      "review_manifest_sha256": "847b444935e98e45fdae42a42c9703b96db0f5c64225acbec344c1b33051a749"
+    },
+    {
+      "source": "doc/authoring.md",
+      "reviewed_source_commit": "90f4552d9d8de662bada4d76c688c8cf30afa595",
+      "current_source_sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08",
+      "source_bytes": 6478,
+      "source_unchanged": true,
+      "draft": "doc/migration/authored/guide/authoring.nepld",
+      "draft_commit": "98eb0c23fb10459d35c180bfe36746e25fcba571",
+      "draft_sha256": "2b49688708eaaf18c9eb66ff9d7146661ba6ac6b42335d9d6a2e004d3dbe8281",
+      "review_manifest": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-b-guide-authoring-development\\manifest.json",
+      "review_manifest_sha256": "1fddc6b755d290af32a3c9cf720a7a6ce5173997a3845d42523f4c8d9d86a453"
+    },
+    {
+      "source": "doc/development.md",
+      "reviewed_source_commit": "337057d71838c85a6fb9a304e3ec4164436bb310",
+      "current_source_sha256": "f51f37998c2e606f3788ce892ef1f34f39b46e8a7533fbce5986087e6c634927",
+      "source_bytes": 21411,
+      "source_unchanged": true,
+      "draft": "doc/migration/authored/guide/development.nepld",
+      "draft_commit": "3887fffc9fc08ae449a374bb97ff301db7786df1",
+      "draft_sha256": "eb3fefe2e22ce0116a9827d08e724569e57efb186a8e7051a36b21e2e3287bbe",
+      "review_manifest": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-b-guide-authoring-development\\manifest.json",
+      "review_manifest_sha256": "1fddc6b755d290af32a3c9cf720a7a6ce5173997a3845d42523f4c8d9d86a453"
+    }
+  ]
+}
