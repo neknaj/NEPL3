@@ -1,0 +1,20 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-core",
+    "--test",
+    "review_adjacency",
+    "--test",
+    "review_locality",
+    "--",
+    "--test-threads=1",
+    "--nocapture"
+  ],
+  "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-source-map-locality\\before\\workspace",
+  "runner": "wasmtime run",
+  "exit_code": 0,
+  "seconds": 6.7051352999405935
+}

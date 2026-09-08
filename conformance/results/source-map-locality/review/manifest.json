@@ -1,0 +1,134 @@
+{
+  "files": [
+    {
+      "path": "before/native-independent.json",
+      "bytes": 391,
+      "sha256": "6889a55ede6b0db5a9ad2f739c64e8459edbf59d87d89aabf9457ee456e449fa"
+    },
+    {
+      "path": "before/native-independent.log",
+      "bytes": 3267,
+      "sha256": "a4a3fac67d759899efa3403ae2e4fc334f0369d9011a6a46e7d7bd3464d1ffb1"
+    },
+    {
+      "path": "before/run.py",
+      "bytes": 758,
+      "sha256": "2577be312bbf6ba82ca713b863f8c057aa7fce542477da2e96b0b1fc2d66a3e5"
+    },
+    {
+      "path": "before/snapshot/crates/foundation/core/src/origin.rs",
+      "bytes": 24570,
+      "sha256": "315504fb6afc929fa42e075b2d6cab96e1b97891468ecdbdd432a484709348a0"
+    },
+    {
+      "path": "before/snapshot/crates/foundation/core/tests/maps.rs",
+      "bytes": 13115,
+      "sha256": "1bc27d31119dfd9f405279c8592f3bdfc63f974d3e5375239c999bacfbb1fcef"
+    },
+    {
+      "path": "before/sources.json",
+      "bytes": 494,
+      "sha256": "65deabc72eec015920a1af6828d4b4729e63c3c2d57aff91dc7fff38797cad32"
+    },
+    {
+      "path": "before/wasi-independent.json",
+      "bytes": 427,
+      "sha256": "cfefa766e177e07e0534c644c1af1a8bd61e045d0a8cfd06a049e37eb3bcc509"
+    },
+    {
+      "path": "before/wasi-independent.log",
+      "bytes": 3260,
+      "sha256": "17059903fe77cf893f64a73507517517e75458c4a54bcf2fd51b1bffee09dc3f"
+    },
+    {
+      "path": "changes.patch",
+      "bytes": 2602,
+      "sha256": "b3528b3d3d01be9977e738b8b5a8804775264a00a7d73f8dd72e9cfb58544c8c"
+    },
+    {
+      "path": "evidence.json",
+      "bytes": 12863,
+      "sha256": "25b4f6852b194f9b7666d4a6d5906ff2d196a9204732854bd11cf728d84db2bf"
+    },
+    {
+      "path": "finalize.py",
+      "bytes": 2991,
+      "sha256": "e9138db9d0fc99562163413911b66333c69afcf3c0b5427880ca8f211e606a46"
+    },
+    {
+      "path": "freeze.py",
+      "bytes": 2102,
+      "sha256": "28ae099a960d3df49e55a58e9378a317586cd10fb9afb1a224cbe0f2895313fe"
+    },
+    {
+      "path": "native-all.json",
+      "bytes": 307,
+      "sha256": "d5016959e05bbf717713742ee0d8afbf8d8c4b1044e54d33a9ec32a737843f65"
+    },
+    {
+      "path": "native-all.log",
+      "bytes": 11345,
+      "sha256": "d387bf624ea61c80be83c93c57096782f8bd22781fdf8afd5c309be653cd7d5c"
+    },
+    {
+      "path": "review.md",
+      "bytes": 4640,
+      "sha256": "b154843e5216408ead35ea2134fe25952ab535fcabaf090093ff2f99ed8170e8"
+    },
+    {
+      "path": "review_adjacency.rs",
+      "bytes": 6924,
+      "sha256": "c3f2b5bb4688a7bb6197f8c3b7474b1bdbcc70afe028b7fef72769f5162d2ee3"
+    },
+    {
+      "path": "review_locality.rs",
+      "bytes": 5973,
+      "sha256": "5810059f1d7f08e9c7c200eb7a87fdd4155649b9c36def2fb2e1472c49222cf5"
+    },
+    {
+      "path": "run.py",
+      "bytes": 758,
+      "sha256": "2577be312bbf6ba82ca713b863f8c057aa7fce542477da2e96b0b1fc2d66a3e5"
+    },
+    {
+      "path": "snapshot/crates/foundation/core/src/origin.rs",
+      "bytes": 25216,
+      "sha256": "1b6d9c05e9755b8ddd8846444ed9cf69aad281a5f598da01a6a770e16033e0ad"
+    },
+    {
+      "path": "snapshot/crates/foundation/core/tests/maps.rs",
+      "bytes": 13274,
+      "sha256": "7414a26f596f47959e00a5c37dbabe45932184b6630e54f96331f665352c47b2"
+    },
+    {
+      "path": "snapshot/doc/spec/02-foundation.md",
+      "bytes": 20659,
+      "sha256": "22452d3eaa8e628b8b64ece0a4c4314aafad4696d12713843ae8a544d3cc877e"
+    },
+    {
+      "path": "snapshot/doc/spec/12-model-invariants.md",
+      "bytes": 15389,
+      "sha256": "81b22608f80254f7d5979b754436b9d62da0bf25aefddf01a6fec772fdcf9cc5"
+    },
+    {
+      "path": "sources.json",
+      "bytes": 104592,
+      "sha256": "e65bb095dbc20a2857cb664f859b0268a72fb728cb0504a2ff28ff02e6557545"
+    },
+    {
+      "path": "versions.json",
+      "bytes": 340,
+      "sha256": "0d1ea81c8a15cba02621123682f8fdb7a4d4e5e1f3b9683b498a6a70eec9f817"
+    },
+    {
+      "path": "wasi-all.json",
+      "bytes": 345,
+      "sha256": "3aa0f441c9e9065d54a7274dd2bdcd8568d0917b14a8cb315db42aa7094e6fb3"
+    },
+    {
+      "path": "wasi-all.log",
+      "bytes": 11503,
+      "sha256": "742ec0bf413ab331350cf2c17461fca2f3287b2dddb28cafb694f15b7b865cd4"
+    }
+  ]
+}
