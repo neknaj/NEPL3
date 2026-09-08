@@ -969,5 +969,22 @@ body
       cons "[独立補助/どくりつほじょ]は[各/かく]referenceについて[保存/ほぞん]namespaceStageから[過去/かこ]のintroduced[列/れつ]をたどり、[実際/じっさい]の[解決候補/かいけつこうほ]と[一致/いっち]することもassertした。"
       cons "18[結果/けっか]すべてを[実/じつ]NDF/CBOR[往復/おうふく]し、NamespacePolicy・Entity・[両/りょう]stage・Report・[再/さい]encodeの[一致/いっち]を[確認/かくにん]した。"
       cons sentence cons code "binding_global_stops" cons text " は" cons ruby text "重複入力" text "じゅうふくにゅうりょく" cons text "を6" cons ruby text "資源" text "しげん" cons text "で" cons ruby text "制限" text "せいげん" cons text "し、" cons ruby text "各" text "かく" cons text "partial resultをportable" cons ruby text "往復" text "おうふく" cons text "して、" cons ruby text "元" text "もと" cons text "StopReason・" cons ruby text "構造閉包" text "こうぞうへいほう" cons text "・Report" cons ruby text "保持" text "ほじ" cons text "を" cons ruby text "確認" text "かくにん" cons text "した。" nil nil
+    cons paragraph
+      cons sentence cons text "Global" cons ruby text "追加後" text "ついかご" cons text "のbinding" cons ruby text "管理対象" text "かんりたいしょう" cons text "15" cons ruby text "件" text "けん" cons text "は" cons ruby text "独立" text "どくりつ" cons text "native" cons ruby text "成功" text "せいこう" cons text "し、process" cons ruby text "起動不要" text "きどうふよう" cons text "の14" cons ruby text "件" text "けん" cons text "もWASIで" cons ruby text "独立成功" text "どくりつせいこう" cons text "した（" cons code "cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 --target-dir .tmp/review-target -- --test-threads=1" cons text "、runner=" cons code "wasmtime run" cons text "）。" nil
+      cons "portableの[追加負例/ついかふれい]はnamespaceStageを[語彙/ごい]stageと[取/と]り[違/ちが]える[場合/ばあい]、policyに[合/あ]わないroot、[範囲外/はんいがい]IDをschema-valid NDFとして[拒否/きょひ]する。"
+      cons "[共通/きょうつう]codecは[構造/こうぞう]とroot[所属/しょぞく]を[検査/けんさ]し、[発行時点/はっこうじてん]の[履歴/りれき]であることや[導入権限/どうにゅうけんげん]を[受信値/じゅしんち]だけで[証明/しょうめい]しないというspec04の[区別/くべつ]も[照合/しょうごう]した。"
+      cons "Globalへの[従来/じゅうらい]のUnsupportedPlanはこの[実装範囲/じっそうはんい]で[解除/かいじょ]されたが、Custom facts callback・[明示/めいじ]root[共有/きょうゆう]・AnalysisKey/queryおよびT06[全条件/ぜんじょうけん]は[引/ひ]き[続/つづ]き[別/べつ]の[未完範囲/みかんはんい]である。" nil
+    cons paragraph
+      cons sentence cons text "AnalysisKeyの" cons ruby text "次段" text "じだん" cons text "レビューでは" cons ruby text "公開" text "こうかい" cons text "prepare・execute・request codec・for_sourceを" cons ruby text "独立入力" text "どくりつにゅうりょく" cons text " " cons code "let x x x" cons text " と " cons code "let y y y" cons text " で" cons ruby text "実行" text "じっこう" cons text "した。" nil
+      cons "source ID/revisionが[同/おな]じでも[内容変更/ないようへんこう]はtree digestを[変/か]え、4[種類/しゅるい]のkey digest[差替/さしか]え・[旧/きゅう]source revision・[異/こと]なる[実行/じっこう]Limitsは[拒否/きょひ]された。"
+      cons "[元/もと]requestやsource storeを[渡/わた]さず[実/じつ]CBORから[復元/ふくげん]・[再準備/さいじゅんび]・[再実行/さいじっこう]したFactSetはnativeと[一致/いっち]した。"
+      cons "さらにschema-valid NDFで[要求/ようきゅう]ID・Work[条件/じょうけん]・tokenのText payloadを[単独改変/たんどくかいへん]すると、source bytes[不変/ふへん]のpayload[変更/へんこう]も[元/もと]keyとのRequestMismatchとなった。" nil
+    cons paragraph
+      cons "[独立/どくりつ]GrammarのForm arenaの[先頭/せんとう]と[末尾/まつび]を[実交換/じつこうかん]すると、package[意味/いみ]identityとProfile digestは[不変/ふへん]だが、[旧/きゅう]treeはExecutionIdentityで[拒否/きょひ]される。"
+      cons "selection indexとexecution digestを[正/ただ]しく[再配置/さいはいち]したtreeでは、[実/じつ]analyzeのFactSetが[元/もと]と[一致/いっち]し、AnalysisKeyのexecution digestが[変/か]わり[旧結果/きゅうけっか]へのアクセスは[拒否/きょひ]された。"
+      cons sentence cons ruby text "補助" text "ほじょ" cons text "は " cons code ".tmp/build_analysis_execution_probe.py" cons text " と " cons code ".tmp/independent-engine/src/bin/binding_key_execution.rs" cons text "、" cons ruby text "実行" text "じっこう" cons text "は " cons code "cargo run --manifest-path .tmp/independent-engine/Cargo.toml --features nepl3-tools,nepl3-grammar-core --bin binding_key_execution --target-dir .tmp/review-target" cons text "。" nil
+      cons "これらignored[補助/ほじょ]は[管理対象回帰/かんりたいしょうかいき]の[代用/だいよう]ではない。"
+      cons "[現/げん]for_sourceはidentity[照合/しょうごう]によるnative[解析/かいせき]proofへのアクセス[入口/いりぐち]であり、definition/references/rename queryの[正/ただ]しさをまだ[示/しめ]していない。"
+      cons "Custom callbackの[実/じつ]analyze[経路/けいろ]もこの[時点/じてん]の[実行範囲外/じっこうはんいがい]である。" nil
     nil
   nil
