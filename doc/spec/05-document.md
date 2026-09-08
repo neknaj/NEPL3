@@ -97,6 +97,8 @@ sentence
 
 この追加型は、別生成sourceから明示SourceMapで戻す従来のDocumentSyntax payloadを置き換えない。providerは署名で返却型を明示し、lowerでは型ごとに検査する。SentencePayload単独の受信検査は指定source内のliteralデータを検査するものであり、特定tokenへの所属を証明しない。lowerが実際のowner bundleのsource宣言から対象を選び、外tokenのheadと局所Viewの完全一致を追加で要求する。元本文の省略、再parse、架空のsource位置、provider版の暗黙な切替えによって重複を減らしてはならない。
 
+標準文法は `doc.reader/sentence-v2` を明示して選択し、`nepl3.doc.reader` の `sentenceReferenced` 操作を呼ぶ。包絡はReadRequest/ReadReplyのままで、ProviderSignatureのvalue出力をSentencePayloadとする。従来の `sentence` 操作およびDocumentSyntaxの交換型とは識別を分け、Profileの解決済み署名・文法source・provider identityを更新する。lowerは受信recordの型を選んでから対応するcodecを一度だけ呼び、SentencePayloadの検査失敗を旧codecで再試行しない。
+
 意味値からliteralを出力するprinterはText/Ruby/Annoだけの表現ならescapeを行ってliteral化できる。他のInlineがあればprefix構文を出力する。内容を削除して無理にliteralにしない。どちらでも再parse/lower後の意味が一致することを保証する。
 
 ## 4. parallelの単位

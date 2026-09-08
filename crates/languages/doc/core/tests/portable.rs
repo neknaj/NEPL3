@@ -154,6 +154,16 @@ fn sentence_payload_uses_only_the_explicit_owner_after_cbor() -> Result<(), Stri
         );
         assert_eq!(limited.poll(), Err(stop));
     }
+    let mut limits = b().limits();
+    limits.source_bytes = 0;
+    let mut fresh_budget = Budget::new(limits);
+    let mut fresh_admission = SourceAdmission::default();
+    let mut fresh_codec = FoundationCodec::new(&r, &ambient, &mut fresh_admission).map_err(err)?;
+    assert!(matches!(
+        portable::sentence::from_value(&received, &source, &r, &mut fresh_codec, &mut fresh_budget),
+        Err(PortableError::Stopped(StopReason::SourceLimit))
+    ));
+    assert_eq!(fresh_budget.poll(), Err(StopReason::SourceLimit));
     assert_eq!(doc.sources[0], source);
     Ok(())
 }
