@@ -1,0 +1,25 @@
+   Compiling autocfg v1.5.1
+   Compiling typenum v1.20.1
+   Compiling cfg-if v1.0.4
+   Compiling unicode-ident v1.0.18
+   Compiling num-traits v0.2.19
+   Compiling hybrid-array v0.4.14
+   Compiling num-integer v0.1.47
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling num-bigint v0.5.1
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-stream-digest\before\workspace\crates\foundation\core)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-stream-digest\before\workspace\crates\foundation\wire)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 32.57s
+     Running tests\review_stream.rs (C:/projects/NEPL3-runtime/.tmp/review-stream-digest/before/wasm-target\wasm32-wasip2\debug\deps\review_stream-ff4e93672605c532.wasm)
+
+running 1 test
+test observe_original_frontier_and_denominator_caps ... frontier width=1000 usage=Usage { source_bytes: 0, work: 15, depth: 2, nodes: 3, allocation_units: 16016, output_bytes: 32, diagnostics: 0, events: 0 }
+frontier width=100000 usage=Usage { source_bytes: 0, work: 15, depth: 2, nodes: 2, allocation_units: 1600016, output_bytes: 32, diagnostics: 0, events: 0 }
+denominator bytes=1024 usage=Usage { source_bytes: 0, work: 21, depth: 1, nodes: 1, allocation_units: 1041, output_bytes: 32, diagnostics: 0, events: 0 }
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.03s
+

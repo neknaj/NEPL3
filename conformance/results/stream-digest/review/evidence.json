@@ -1,0 +1,156 @@
+{
+  "commit": "1de3e1c126103946d79592d3fee3ef20ea16407c",
+  "verified_production_files": 592,
+  "results": {
+    "native": {
+      "managed_passed": 31,
+      "independent_passed": 3,
+      "vectors": 60,
+      "domains": 3,
+      "boundary_stops": 20,
+      "caller_depth": 7,
+      "source_bytes": 0
+    },
+    "wasi": {
+      "managed_passed": 31,
+      "independent_passed": 3,
+      "vectors": 60,
+      "domains": 3,
+      "boundary_stops": 20,
+      "caller_depth": 7,
+      "source_bytes": 0
+    }
+  },
+  "artifacts": [
+    {
+      "path": "target/debug/deps/codec-cdb7d8a897dda542.exe",
+      "bytes": 1875456,
+      "sha256": "67d97efa2fbeff0fc3ec9bbc206244cf1ca9eebc64e64f2b21e570179c048cb0"
+    },
+    {
+      "path": "target/debug/deps/digest-90cb2b2dd2d39ad2.exe",
+      "bytes": 1656320,
+      "sha256": "86537eb2263011d6c76cea44c6efdf8bf50a87fec9483f0e5848e6ea93b9da1c"
+    },
+    {
+      "path": "target/debug/deps/facts-30822cb54eabccf7.exe",
+      "bytes": 2427904,
+      "sha256": "d03832b72b2198bbcb67bc95a788b4fd4816f4881c80c7cc9ed4b6193dd49774"
+    },
+    {
+      "path": "target/debug/deps/nepl3_wire-c9c688a1680522f8.exe",
+      "bytes": 723456,
+      "sha256": "74360c94e33c7963363897993fd6f0bea53de3c6ee41a72d41b64f5679913839"
+    },
+    {
+      "path": "target/debug/deps/origin-77dbcaefc1cc4d90.exe",
+      "bytes": 1849344,
+      "sha256": "8df9c2a4c44b97a92a2a56dbf4aeb7c386f7e88f5872faed96eb3f94a150f85d"
+    },
+    {
+      "path": "target/debug/deps/report-3e0e4471b4064487.exe",
+      "bytes": 2102784,
+      "sha256": "d27a95b7f8509be9f7408777920c624da27a437235faf455df79603bd1960924"
+    },
+    {
+      "path": "target/debug/deps/review_stream-b57ffb0a00fac366.exe",
+      "bytes": 2969088,
+      "sha256": "1e6b4f7ac68f070c576051dbcd888e4623a8f15a0456f8c0004df808ef475dcb"
+    },
+    {
+      "path": "target/debug/deps/source-1e26e45ce5b83020.exe",
+      "bytes": 1852928,
+      "sha256": "7ac0e4f59e8df25a311e56286dbc2a87833810be25127ab932bcdb211986946d"
+    },
+    {
+      "path": "target/debug/deps/stop-f48067cb1bc31d39.exe",
+      "bytes": 1792000,
+      "sha256": "9b7f7e10af5bcfd5477a661cf093d6378fae6733dbcb1d3d5359c0973591e6a3"
+    },
+    {
+      "path": "target/debug/deps/syntax-574754ce6003e66b.exe",
+      "bytes": 2697728,
+      "sha256": "e7dfe3ae46693eba7d758b2f6c0a1fa48b262fe828b8afa6782977c72ebd43bc"
+    },
+    {
+      "path": "target/debug/deps/types-4b98d8eed2a2ea90.exe",
+      "bytes": 1830400,
+      "sha256": "d7618b7c2bedcabc65abec236afe14da573b0b2f11c370a009a7259f498fad6d"
+    },
+    {
+      "path": "target/debug/deps/view-cec5b78c69d7e69d.exe",
+      "bytes": 2079232,
+      "sha256": "ef1d9bd9f055f3d89614667b0a909ae8a4d74f140f47aee0d822531aa5bddedc"
+    },
+    {
+      "path": "wasm-target/wasm32-wasip2/debug/deps/codec-f16956a794a25535.wasm",
+      "bytes": 16739847,
+      "sha256": "b9abceb84ed178be06e5a396bcd9bdddd2861d62d16fbe2ca3c121a54732f938"
+    },
+    {
+      "path": "wasm-target/wasm32-wasip2/debug/deps/digest-bc2cd6bdd612368e.wasm",
+      "bytes": 16279145,
+      "sha256": "a24902e4fdc6c9364d57d49e778ded5286aa29f180bcb85c4ebaf182883a2a83"
+    },
+    {
+      "path": "wasm-target/wasm32-wasip2/debug/deps/facts-b96dec0d6ba3398f.wasm",
+      "bytes": 17628058,
+      "sha256": "5a189fe372b9410e5f0bc96a662c64e0d4d21999091b71d516c3a85c080b9b66"
+    },
+    {
+      "path": "wasm-target/wasm32-wasip2/debug/deps/nepl3_wire-461bd200437be3fa.wasm",
+      "bytes": 4939964,
+      "sha256": "f87e7eccd6eaec58727a31d08b46ee37c0206e519d0867fbe14df714cac62ba9"
+    },
+    {
+      "path": "wasm-target/wasm32-wasip2/debug/deps/origin-f5bbfbffb019f4a6.wasm",
+      "bytes": 16531105,
+      "sha256": "99ff87062f2dfcffc503109e4381effcda3c5c062c9bfe387e533178428ce388"
+    },
+    {
+      "path": "wasm-target/wasm32-wasip2/debug/deps/report-83a314153e155c8d.wasm",
+      "bytes": 17064990,
+      "sha256": "cb9e721bac269e420cd5f1d3bd12503fe082399bb0fbf33eae0eebef80f9a2a4"
+    },
+    {
+      "path": "wasm-target/wasm32-wasip2/debug/deps/review_stream-ff4e93672605c532.wasm",
+      "bytes": 17635117,
+      "sha256": "429e068904dbfcd343548467681b3019f6394c8a895270c2869d4f263dbaceb2"
+    },
+    {
+      "path": "wasm-target/wasm32-wasip2/debug/deps/source-08fd4cc31e01ffab.wasm",
+      "bytes": 16638379,
+      "sha256": "11f69bf552b37fba0d766681876ed177083621e1f19353140f3fa5c897b1502b"
+    },
+    {
+      "path": "wasm-target/wasm32-wasip2/debug/deps/stop-123a881b00ab2f04.wasm",
+      "bytes": 16451762,
+      "sha256": "07a342f10919ffd26b1ea234d74810185b4a0d8064a644efa857371531fe923c"
+    },
+    {
+      "path": "wasm-target/wasm32-wasip2/debug/deps/syntax-24799875fcd4df95.wasm",
+      "bytes": 18406011,
+      "sha256": "bee949bda58717db7b09e16c23935a87a22f6d5190750ad9ce9f5e389be69374"
+    },
+    {
+      "path": "wasm-target/wasm32-wasip2/debug/deps/types-8f7ef85cd5e5b72b.wasm",
+      "bytes": 16508205,
+      "sha256": "eb9d21a2a70b88c77cec9048ab45de60b4d4cb9de5c566fb4d79f45332770f78"
+    },
+    {
+      "path": "wasm-target/wasm32-wasip2/debug/deps/view-07bcc9920c744388.wasm",
+      "bytes": 16875103,
+      "sha256": "d2f59d9643740f272ac346a30bcc3f0cfb846e6b2428f999a2a6ea66a446511e"
+    },
+    {
+      "path": "before/target/debug/deps/review_stream-b57ffb0a00fac366.exe",
+      "bytes": 2968576,
+      "sha256": "5af8b8e3936dcd54544a3dc6a5ea28976a15670af7cdf6ff189c6d1d6f308c27"
+    },
+    {
+      "path": "before/wasm-target/wasm32-wasip2/debug/deps/review_stream-ff4e93672605c532.wasm",
+      "bytes": 17636570,
+      "sha256": "a06c67036e593fee3e74c814927fe43b40dcaf634713fe3479e319c47ce6acfa"
+    }
+  ]
+}
