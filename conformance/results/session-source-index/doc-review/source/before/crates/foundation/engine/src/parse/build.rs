@@ -29,59 +29,30 @@ pub(super) fn span(value: &Span, budget: &mut Budget) -> Result<Span, StopReason
     )?;
     Ok(value.clone())
 }
-/// Private session-owned index, never accepted from a continuation or provider.
-pub(super) struct SourceIndex {
-    entries: Vec<usize>,
-    hint: Option<usize>,
-}
-impl SourceIndex {
-    pub(super) fn new(
-        sources: &[SourceSnapshot],
-        budget: &mut Budget,
-    ) -> Result<Self, SyntaxError> {
-        budget.poll()?;
-        let mut entries = Vec::new();
-        let mut hint = None;
-        for (i, source) in sources.iter().enumerate() {
-            let at = source_position(&entries, sources, source, hint, budget)?
-                .map_or_else(Ok, |_| Err(SourceError::IdentityConflict))?;
-            slot::<usize>(budget)?;
-            budget.charge(Resource::Work, (entries.len() - at) as u64)?;
-            entries.insert(at, i);
-            hint = Some(at);
-        }
-        Ok(Self { entries, hint })
-    }
-}
 impl ParseArena {
     /// Merge a complete accepted source closure with one temporary index. The
     /// public source list keeps insertion order and has no serialized cache.
-    #[cfg(test)]
     pub(super) fn extend_sources(
         &mut self,
         sources: &[SourceSnapshot],
-        budget: &mut Budget,
-    ) -> Result<(), SyntaxError> {
-        let mut index = SourceIndex::new(&self.sources, budget)?;
-        self.extend_sources_indexed(sources, &mut index, budget)
-    }
-    pub(super) fn extend_sources_indexed(
-        &mut self,
-        sources: &[SourceSnapshot],
-        cached: &mut SourceIndex,
         budget: &mut Budget,
     ) -> Result<(), SyntaxError> {
         budget.poll()?;
         if sources.is_empty() {
             return Ok(());
         }
-        // Both are owned by the same private Machine arena. No caller-provided
-        // vector or echoed continuation can replace either side of this pair.
-        debug_assert_eq!(cached.entries.len(), self.sources.len());
-        let index = &mut cached.entries;
-        let hint = &mut cached.hint;
+        let mut index = Vec::new();
+        let mut hint = None;
+        for (i, source) in self.sources.iter().enumerate() {
+            let at = source_position(&index, &self.sources, source, hint, budget)?
+                .map_or_else(Ok, |_| Err(SourceError::IdentityConflict))?;
+            slot::<usize>(budget)?;
+            budget.charge(Resource::Work, (index.len() - at) as u64)?;
+            index.insert(at, i);
+            hint = Some(at);
+        }
         for source in sources {
-            match source_position(index, &self.sources, source, *hint, budget)? {
+            match source_position(&index, &self.sources, source, hint, budget)? {
                 Ok(at) => {
                     let prior = &self.sources[index[at]];
                     budget.charge(
@@ -93,7 +64,7 @@ impl ParseArena {
                     if prior.identity() != source.identity() || prior.uri() != source.uri() {
                         return Err(SourceError::IdentityConflict.into());
                     }
-                    *hint = Some(at);
+                    hint = Some(at);
                 }
                 Err(at) => {
                     slot::<usize>(budget)?;
@@ -101,7 +72,7 @@ impl ParseArena {
                     let owned = source.clone_with_budget(budget)?;
                     index.insert(at, self.sources.len());
                     self.sources.push(owned);
-                    *hint = Some(at);
+                    hint = Some(at);
                 }
             }
         }

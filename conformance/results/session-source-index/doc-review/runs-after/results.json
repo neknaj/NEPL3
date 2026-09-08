@@ -1,0 +1,104 @@
+[
+  {
+    "command": [
+      "cargo",
+      "build",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--bin",
+      "nepl3-tools",
+      "--example",
+      "review_doc",
+      "--target-dir",
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\target-after"
+    ],
+    "cwd": "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\after",
+    "exit": 0,
+    "seconds": 37.386002699960954,
+    "log": "build.log",
+    "log_sha256": "89b8f42abc0d665a423c4a8bf7339ee072becf3ad4da15fb8852243c1a3aea3b"
+  },
+  {
+    "command": [
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\target-after\\debug\\nepl3-tools.exe",
+      "doc-html",
+      "export",
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\inputs\\linear.nepld",
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\runs-after\\linear-output"
+    ],
+    "cwd": "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\after",
+    "exit": 0,
+    "seconds": 7.392181199975312,
+    "log": "linear.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "command": [
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\target-after\\debug\\nepl3-tools.exe",
+      "doc-html",
+      "export",
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\inputs\\05.nepld",
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\runs-after\\05-output"
+    ],
+    "cwd": "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\after",
+    "exit": 1,
+    "seconds": 13.053519599954598,
+    "log": "05.log",
+    "log_sha256": "581091f2c90546f689f7cdad4932d06e6effa92f417279d359fce390ff97b0a3"
+  },
+  {
+    "command": [
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\target-after\\debug\\nepl3-tools.exe",
+      "doc-html",
+      "export",
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\inputs\\15.nepld",
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\runs-after\\15-output"
+    ],
+    "cwd": "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\after",
+    "exit": 1,
+    "seconds": 40.55950309999753,
+    "log": "15.log",
+    "log_sha256": "a034a40c3ad2bc0e7a447628222be2f87f8fd305e69bdf280a90cf4053ee1b1a"
+  },
+  {
+    "command": [
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\target-after\\debug\\nepl3-tools.exe",
+      "doc-html",
+      "export",
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\inputs\\development.nepld",
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\runs-after\\development-output"
+    ],
+    "cwd": "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\after",
+    "exit": 1,
+    "seconds": 18.23973210004624,
+    "log": "development.log",
+    "log_sha256": "e99fca65197b27226ebcbf331e4ec1d130a589771fbc0f8712841422d5cff324"
+  },
+  {
+    "command": [
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\target-after\\debug\\nepl3-tools.exe",
+      "doc-html",
+      "export",
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\inputs\\review.nepld",
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\runs-after\\review-output"
+    ],
+    "cwd": "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\after",
+    "exit": 1,
+    "seconds": 13.355596899986267,
+    "log": "review.log",
+    "log_sha256": "f7b0efedca9064a128a65f63ad66cd3a5f1574960e72075a1c8398eaebf09be4"
+  },
+  {
+    "command": [
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\target-after\\debug\\examples\\review_doc.exe",
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\inputs\\linear.nepld",
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\runs-after\\semantic"
+    ],
+    "cwd": "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\after",
+    "exit": 0,
+    "seconds": 5.855350699974224,
+    "log": "semantic.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]
