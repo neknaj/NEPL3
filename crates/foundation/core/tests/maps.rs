@@ -57,9 +57,132 @@ fn indexed_map_graphs_agree_with_transitive_closure_in_both_orders() -> TestResu
                 expected,
                 "graph {mask}"
             );
+            for split in 0..=mappings.len() {
+                assert_eq!(
+                    SourceMap::validate_mapping_parts(
+                        &mappings[..split],
+                        &mappings[split..],
+                        &sources,
+                        &mut budget()
+                    )
+                    .map(|_| ()),
+                    expected,
+                    "graph {mask}, split {split}"
+                );
+            }
             mappings.reverse();
         }
     }
+    Ok(())
+}
+
+#[test]
+fn borrowed_map_union_checks_containment_and_geometry_in_both_parts() -> TestResult {
+    let mut sources = SourceStore::default();
+    let vertices = [
+        source("a", "x")?,
+        source("b", "x")?,
+        source("c", "x")?,
+        source("other", "x")?,
+        source("bad", "y")?,
+    ];
+    for vertex in &vertices {
+        sources
+            .insert(vertex.clone())
+            .map_err(|e| format!("{e:?}"))?;
+    }
+    let span = |i: usize| vertices[i].span(0, 1).map_err(|e| format!("{e:?}"));
+    let maps = [
+        Mapping {
+            source: span(0)?,
+            target: span(1)?,
+            kind: MappingKind::Exact,
+        },
+        Mapping {
+            source: span(1)?,
+            target: span(2)?,
+            kind: MappingKind::Exact,
+        },
+        Mapping {
+            source: span(3)?,
+            target: span(2)?,
+            kind: MappingKind::Exact,
+        },
+    ];
+    for split in 0..=maps.len() {
+        let checked = SourceMap::validate_mapping_parts(
+            &maps[..split],
+            &maps[split..],
+            &sources,
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        assert!(
+            checked
+                .contains(&span(0)?, &span(1)?, &mut budget())
+                .map_err(|e| format!("{e:?}"))?
+        );
+        // One path to c reaches a, but another reaches the unrelated source.
+        assert!(
+            !checked
+                .contains(&span(0)?, &span(2)?, &mut budget())
+                .map_err(|e| format!("{e:?}"))?
+        );
+        let mut missing = SourceStore::default();
+        for vertex in &vertices[..3] {
+            missing
+                .insert(vertex.clone())
+                .map_err(|e| format!("{e:?}"))?;
+        }
+        assert!(matches!(
+            checked.validate_sources(&missing, &mut budget()),
+            Err(OriginError::Source(
+                nepl3_core::source::SourceError::MissingSnapshot
+            ))
+        ));
+    }
+    let bad = [Mapping {
+        source: span(0)?,
+        target: span(4)?,
+        kind: MappingKind::Exact,
+    }];
+    for (first, second) in [(&bad[..], &maps[..]), (&maps[..], &bad[..])] {
+        assert_eq!(
+            SourceMap::validate_mapping_parts(first, second, &sources, &mut budget()).map(|_| ()),
+            Err(OriginError::Irreversible)
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn borrowed_union_does_not_copy_source_id_payloads() -> TestResult {
+    let mut sources = SourceStore::default();
+    let mut vertices = Vec::new();
+    for suffix in ["a", "b", "c"] {
+        let vertex = source(&("long".repeat(2500) + suffix), "x")?;
+        sources
+            .insert(vertex.clone())
+            .map_err(|e| format!("{e:?}"))?;
+        vertices.push(vertex);
+    }
+    let mut maps = Vec::new();
+    for i in 0..2 {
+        maps.push(Mapping {
+            source: vertices[i].span(0, 1).map_err(|e| format!("{e:?}"))?,
+            target: vertices[i + 1].span(0, 1).map_err(|e| format!("{e:?}"))?,
+            kind: MappingKind::Exact,
+        });
+    }
+    // An owned union would require over 40 KiB for the four SourceIds alone.
+    // Only private graph traversal indices are needed for a borrowed proof.
+    let mut b = Budget::new(Limits {
+        allocation_units: 4096,
+        ..budget().limits()
+    });
+    SourceMap::validate_mapping_parts(&maps[..1], &maps[1..], &sources, &mut b)
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(b.usage().nodes, 3);
     Ok(())
 }
 fn budget() -> Budget {
