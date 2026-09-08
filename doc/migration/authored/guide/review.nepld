@@ -929,5 +929,25 @@ body
       cons "[管理対象/かんりたいしょう]coreの9[停止理由/ていしりゆう]・nested[変換/へんかん]・[普通/ふつう]のWrongType/Bounds[維持試験/いじしけん]と、[公開解析/こうかいかいせき]の6[資源停止/しげんていし]/Report[閉包/へいほう]/Occurrence-stage[同時保存/どうじほぞん]/caller depth[復帰/ふっき]を[含/ふく]むbinding5[試験/しけん]も[独立成功/どくりつせいこう]した。"
       cons "R044の[元/もと]2[入力/にゅうりょく]もchild_frame[共通化後/きょうつうかご]にComplete・guest[未解決/みかいけつ]・root2・FactSet[構造成功/こうぞうせいこう]となり、[同/どう]alias[入/い]れ[子/こ]を[加/くわ]えた[管理対象回帰/かんりたいしょうかいき]が[独立成功/どくりつせいこう]した。"
       cons "この[具体的/ぐたいてき]な[再現範囲/さいげんはんい]でR043/R044をcorrectedとする。" nil
+    cons paragraph
+      cons "Binding portableの[管理対象/かんりたいしょう]3[件/けん]も[独立成功/どくりつせいこう]した。"
+      cons "[完成/かんせい]した[実解析結果/じつかいせきけっか]をsenderの[値/あたい]から[実/じつ]CBORへ[変換/へんかん]し、[原/げん]source storeを[持/も]たないreceiverで[復元/ふくげん]する。"
+      cons "[再/さい]encodeの[一致/いっち]、[共有/きょうゆう]SourceBytesの1[回入場/かいにゅうじょう]、stage cycle・Occurrence[対応欠落/たいおうけつらく]・[宣言/せんげん]source[欠落/けつらく]、[型付/かたつ]きInvalid/Stoppedとdecoder[制限/せいげん]を[検査/けんさ]する。"
+      cons sentence cons ruby text "独立補助" text "どくりつほじょ" cons text " " cons code "binding_partial_wire" cons text " ではText/Foreignの" cons ruby text "各" text "かく" cons ruby text "低予算結果" text "ていよさんけっか" cons text "を、" cons ruby text "初期" text "しょき" cons text "facts=Noneだけでなく" cons ruby text "途中" text "とちゅう" cons text "facts=Someを" cons ruby text "含" text "ふく" cons text "め" cons ruby text "実" text "じつ" cons text "NDF/CBOR" cons ruby text "往復" text "おうふく" cons text "し、Reportと" cons ruby text "再" text "さい" cons text "encodeが" cons ruby text "全" text "すべ" cons text "て" cons ruby text "一致" text "いっち" cons text "した。" nil
+      cons sentence cons ruby text "別" text "べつ" cons text "の " cons code "binding_source_wire" cons text " はsource" cons ruby text "表" text "ひょう" cons text "の" cons ruby text "同" text "どう" cons text "identity" cons ruby text "別" text "べつ" cons text "URI・" cons ruby text "同表重複" text "どうひょうじゅうふく" cons text "をschema-validなまま" cons ruby text "加" text "くわ" cons text "えた4" cons ruby text "例" text "れい" cons text "でIdentityConflict" cons ruby text "拒否" text "きょひ" cons text "を" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "rawのDecodedBindingReplyは[意味的/いみてき]なBindingAnalysis proofを[生成/せいせい]しない。" nil
+    cons paragraph
+      cons "[失敗原因/しっぱいげんいん]をTree/Profile[等/など]の[大分類/だいぶんるい]だけへ[縮約/しゅくやく]する[草稿/そうこう]は、nativeの[全/ぜん]typed[原因/げんいん]を[保持/ほじ]するcodecへ[訂正/ていせい]された。"
+      cons "[独立補助/どくりつほじょ]の[静的照合/せいてきしょうごう]では11 Rust error enumの151variantについてJSON[正本/せいほん]と[名前集合/なまえしゅうごう]・payload[型順/かたじゅん]が[一致/いっち]した。"
+      cons "[既存/きそん]SyntaxErrorのView(ViewError)[枝欠落/しけつらく]も[補/おぎな]われた。"
+      cons "[管理対象/かんりたいしょう]は[実/じつ]variant pathとSourceError::DecodeのvalidUpTo/errorLen[順/じゅん]を[別/べつ]にassertし、[全/ぜん]unit/nested[原因/げんいん]および[全/ぜん]9StopReasonの[各層/かくそう]を[実/じつ]CBOR[往復/おうふく]する。"
+      cons "[単独/たんどく]failure[値/ち]は[原原因/げんげんいん]を[保持/ほじ]し、Binding Invalid[包絡/ほうらく]へ[直接/ちょくせつ]またはnested Stoppedを[入/い]れた[独立/どくりつ]2[例/れい]はShape[拒否/きょひ]だった。"
+      cons "これはR006の[具体的/ぐたいてき]な[型閉包/かたへいほう]の[前進/ぜんしん]であり、[全公開操作/ぜんこうかいそうさ]の[契約/けいやく]が[閉/と]じたとは[扱/あつか]わない。" nil
+    cons paragraph
+      cons sentence cons ruby text "追加" text "ついか" cons text "の" cons ruby text "管理対象" text "かんりたいしょう" cons text "を" cons ruby text "含" text "ふく" cons text "む " cons code "cargo test --locked -p nepl3-tools --test grammar binding:: --target-dir .tmp/review-target" cons text " は11" cons ruby text "件" text "けん" cons text "が" cons ruby text "独立成功" text "どくりつせいこう" cons text "した。" nil
+      cons "[繰/く]り[返/かえ]し[実行/じっこう]したrecursive planは[同/おな]じ[宣言/せんげん]Spanでも[別/べつ]の[実行/じっこう]scopeで[別/べつ]Entityを[持/も]ち、[各回/かくかい]のbodyは[自分/じぶん]のheader Entityを[再利用/さいりよう]する。"
+      cons "[同意味/どういみ]でも[別/べつ]execution[配置/はいち]のProfileは[拒否/きょひ]される。"
+      cons "Globalの[実解析/じつかいせき]はまだUnsupportedGlobalNamespace[診断/しんだん]とUnsupportedPlanで[明示拒否/めいじきょひ]され、lexical[成功/せいこう]で[代用/だいよう]しない。"
+      cons "Custom facts provider[実行/じっこう]・[明示/めいじ]root[共有/きょうゆう]・[全/ぜん]T06[受入条件/うけいれじょうけん]は[未達/みたつ]として[維持/いじ]する。" nil
     nil
   nil
