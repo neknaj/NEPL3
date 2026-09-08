@@ -365,6 +365,30 @@ fn browser_layout_corpus_from_real_doc_source() -> Result<(), String> {
             "list-ruby",
             r#"article en "Layout" body cons list unordered cons item none body cons paragraph cons "A[B/read]C" nil nil nil nil"#,
         ),
+        (
+            "ruby-multiline",
+            r#"article en "Layout" body cons paragraph cons sentence cons text "A" cons ruby concat cons text "D" cons break cons text "B" nil text "read" cons text "C" nil nil nil"#,
+        ),
+        (
+            "anno-multiline",
+            r#"article en "Layout" body cons paragraph cons sentence cons text "A" cons anno concat cons text "B" cons break cons text "D" nil cons text "note" nil cons text "C" nil nil nil"#,
+        ),
+        (
+            "reading-ruby",
+            r#"article en "Layout" body cons paragraph cons "A[B/[read/outer]]C" nil nil"#,
+        ),
+        (
+            "notes-ruby",
+            r#"article en "Layout" body cons paragraph cons "A{B/[note/read]/second}C" nil nil"#,
+        ),
+        (
+            "anno-anno",
+            r#"article en "Layout" body cons paragraph cons "A{{B/inner}/outer}C" nil nil"#,
+        ),
+        (
+            "line-reservation",
+            r#"article en "Layout" body cons paragraph cons sentence cons text "Z" cons break cons text "A" cons anno ruby text "B" ruby text "read" text "outer" cons ruby text "note" text "reading" cons text "second" nil cons text "C" cons break cons text "Y" nil nil nil"#,
+        ),
     ] {
         let out = html(
             source,
@@ -372,7 +396,7 @@ fn browser_layout_corpus_from_real_doc_source() -> Result<(), String> {
                 parallel: ParallelMode::Rows,
             },
         )?;
-        assert!(out.contains("class=\"nepl-base\">B</span>"));
+        assert!(out.contains("nepl-base"));
         let hex: String = out
             .as_bytes()
             .iter()

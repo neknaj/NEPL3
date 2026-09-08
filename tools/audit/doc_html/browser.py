@@ -1,78 +1,131 @@
-"""Check actual Doc HTML corpus output in explicitly supplied real browsers.
+"""Measure production Doc HTML in Chromium, Firefox and WebKit, without document JS.
 
-Install Playwright in the host environment, then supply the --nocapture log of
-doc::html::browser_layout_corpus_from_real_doc_source, the production stylesheet,
-and both browser executables. Missing browsers/cases are failures, not skips.
+Supply the --nocapture log of browser_layout_corpus_from_real_doc_source and the
+production stylesheet. By default use the pinned Playwright browser binaries;
+optional executable paths allow explicit local runners. Missing engines fail.
+This checks static document layout, not browser Wasm or Playground completion.
 """
 import argparse
 import hashlib
 import json
 import re
+from importlib.metadata import version
 from pathlib import Path
+
+CASES = {"ruby", "anno", "anno-ruby", "ruby-anno", "ruby-ruby", "table-ruby",
+         "list-ruby", "ruby-multiline", "anno-multiline", "reading-ruby",
+         "notes-ruby", "anno-anno", "line-reservation"}
+BROWSERS = ["chromium", "firefox", "webkit"]
+
 
 def extract_cases(corpus):
     cases = {}
     for line in corpus.decode("utf-8-sig").splitlines():
-        # libtest writes the test name before the first nocapture output when
-        # tests are serialized. Accept that exact harness prefix, not arbitrary
-        # log text containing a marker.
+        # libtest can put the serialized test name before the first marker.
         line = re.sub(r"^test [A-Za-z0-9_:]+ \.\.\. (?=DOC_HTML_CASE )", "", line)
         if line.startswith("DOC_HTML_CASE "):
             _, name, text = line.split()
             if name in cases:
                 raise ValueError("duplicate case: " + name)
             cases[name] = bytes.fromhex(text).decode("utf-8")
-    expected = {"ruby", "anno", "anno-ruby", "ruby-anno", "ruby-ruby", "table-ruby", "list-ruby"}
-    if cases.keys() != expected:
+    if cases.keys() != CASES:
         raise ValueError("missing or unexpected corpus cases")
     return cases
+
+
+# A and B use the same font and size: their text rectangle bottoms must match.
+# Multiline B is placed on Ruby's last / Anno's first line by the source corpus.
+# Property support is recorded, not assumed to prove correct layout.
+MEASURE = """() => {
+  const article = document.querySelector('article');
+  const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT);
+  const texts = []; while(walker.nextNode()) texts.push(walker.currentNode);
+  const one = text => {
+    const found = texts.filter(n => n.data === text);
+    if(found.length !== 1) throw Error('expected one original text: ' + text);
+    return found[0];
+  };
+  const rect = n => {const r = document.createRange();r.selectNodeContents(n);return r.getBoundingClientRect();};
+  const annotations = [...article.querySelectorAll('.nepl-ruby,.nepl-anno')];
+  const gaps = annotations.map(n => {
+    const base = n.querySelector(':scope > .nepl-base');
+    const reading = n.querySelector(':scope > .nepl-reading');
+    const notes = n.querySelector(':scope > .nepl-notes');
+    if(!base || (!reading && !notes)) throw Error('missing annotation structure');
+    const b = base.getBoundingClientRect();
+    return reading ? b.top - reading.getBoundingClientRect().bottom
+                   : notes.getBoundingClientRect().top - b.bottom;
+  });
+  let lineGaps = [];
+  if(texts.some(n => n.data === 'Z')) {
+    const annotation = annotations[0].getBoundingClientRect();
+    lineGaps = [annotation.top - rect(one('Z')).bottom,
+                rect(one('Y')).top - annotation.bottom];
+  }
+  return {difference: rect(one('B')).bottom - rect(one('A')).bottom,
+          baseline_source_supported: CSS.supports('baseline-source','first') && CSS.supports('baseline-source','last'),
+          annotation_gaps: gaps, line_gaps: lineGaps,
+          display: getComputedStyle(annotations[0]).display,
+          scripts: document.scripts.length};
+}"""
+
+
+def valid_measurement(row):
+    return (row["scripts"] == 0 and abs(row["difference"]) < .1
+            and bool(row["annotation_gaps"])
+            and all(gap >= -.1 for gap in row["annotation_gaps"])
+            and all(gap >= -.1 for gap in row["line_gaps"]))
 
 
 def main():
     from playwright.sync_api import sync_playwright
 
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ["corpus", "css", "chromium", "firefox", "output"]:
+    for name in ["corpus", "css", "output"]:
         parser.add_argument("--" + name, required=True, type=Path)
+    for name in BROWSERS:
+        parser.add_argument("--" + name, type=Path)
     args = parser.parse_args()
-    corpus = args.corpus.read_bytes()
-    css = args.css.read_bytes()
+    corpus, css = args.corpus.read_bytes(), args.css.read_bytes()
     cases = extract_cases(corpus)
     result = {"corpus_sha256": hashlib.sha256(corpus).hexdigest(),
-              "css_sha256": hashlib.sha256(css).hexdigest(), "browsers": {}}
-    with sync_playwright() as playwright:
-        for name in ["chromium", "firefox"]:
-            browser = getattr(playwright, name).launch(executable_path=str(getattr(args, name)), headless=True)
-            # The generated document runs no scripts. Playwright's inspection
-            # evaluates in its automation context, without changing the DOM.
-            context = browser.new_context(java_script_enabled=False)
-            page = context.new_page()
-            rows = []
-            for case, html in cases.items():
-                for size in [12, 20, 32]:
-                    for height in ["normal", "1.2", "2"]:
-                        page.set_content("<!DOCTYPE html><meta charset=utf-8><style>" + css.decode("utf-8")
-                                         + f".nepl-doc{{font-family:Arial,sans-serif;font-size:{size}px;line-height:{height}}}"
-                                         + "</style>" + html)
-                        measured = page.evaluate("""() => {
-                          const bases = [...document.querySelectorAll('.nepl-base')];
-                          const target = bases.find(n => n.childNodes.length === 1 && n.firstChild.nodeType === 3 && n.firstChild.data === 'B');
-                          const walker = document.createTreeWalker(document.querySelector('article'), NodeFilter.SHOW_TEXT);
-                          let reference; while(walker.nextNode()) if(walker.currentNode.data === 'A') {reference=walker.currentNode;break;}
-                          if(!target || !reference) throw Error('missing original A/B text');
-                          const rect = n => {const r=document.createRange();r.selectNodeContents(n);return r.getBoundingClientRect();};
-                          return {difference:rect(target.firstChild).bottom-rect(reference).bottom,
-                                  supported:CSS.supports('baseline-source','last') && CSS.supports('baseline-source','first'),
-                                  scripts:document.scripts.length};
-                        }""")
-                        rows.append({"case": case, "size": size, "line_height": height, **measured})
-            result["browsers"][name] = {"version": browser.version, "measurements": rows}
-            browser.close()
-    args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
-    for browser in result["browsers"].values():
-        if any(not r["supported"] or r["scripts"] or abs(r["difference"]) >= .1 for r in browser["measurements"]):
-            raise ValueError("baseline or scriptless document check failed; see output")
-    print("Doc HTML: 126 actual-output baseline checks passed in two browsers with document JavaScript disabled.")
+              "css_sha256": hashlib.sha256(css).hexdigest(),
+              "playwright": version("playwright"), "browsers": {}, "result": "failed"}
+    try:
+        with sync_playwright() as playwright:
+            for name in BROWSERS:
+                executable = getattr(args, name)
+                options = {"executable_path": str(executable)} if executable else {}
+                browser = getattr(playwright, name).launch(headless=True, **options)
+                rows = []
+                result["browsers"][name] = {"version": browser.version, "measurements": rows}
+                try:
+                    for width in [375, 1280]:
+                        context = browser.new_context(java_script_enabled=False,
+                                                      viewport={"width": width, "height": 900})
+                        page = context.new_page()
+                        for case, html in cases.items():
+                            for size in [12, 20, 32]:
+                                for height in ["normal", "1.2", "2"]:
+                                    page.set_content("<!DOCTYPE html><meta charset=utf-8><style>" + css.decode("utf-8")
+                                                     + f".nepl-doc{{font-family:Arial,sans-serif;font-size:{size}px;line-height:{height}}}"
+                                                     + "</style>" + html)
+                                    measured = page.evaluate(MEASURE)
+                                    rows.append({"case": case, "width": width, "size": size,
+                                                 "line_height": height, **measured})
+                        context.close()
+                finally:
+                    browser.close()
+        if any(not valid_measurement(row) for b in result["browsers"].values() for row in b["measurements"]):
+            raise ValueError("annotation layout or scriptless document check failed; see output")
+        result["result"] = "passed"
+    except Exception as error:
+        result["error"] = str(error)
+        raise
+    finally:
+        args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n")
+    count = sum(len(b["measurements"]) for b in result["browsers"].values())
+    print(f"Doc HTML: {count} actual-output layout checks passed in three browsers with document JavaScript disabled.")
 
 
 if __name__ == "__main__":

@@ -135,7 +135,7 @@ Articleはarticle要素、titleはh1。Sectionはsection要素と適切な見出
 
 Sentence間へ空白を勝手に挿入しない。必要な空白はTextに含める。white-space:pre-wrapで著者の空白と明示改行を尊重する。
 
-Ruby/Annoはネスト可能なinline-gridのtyped span構造として描画し、base、上側のreading、下側のnotesを別セルへ置く。単純RubyにはHTML ruby/rtを使用してもよいが、semantic HTML正規形のreference backendはinline-gridへ統一する。CSSは配布asset、リモートfont/CDN/JSは不要。
+Ruby/Annoはネスト可能なtyped span構造として描画し、base、上側のreading、下側のnotesを分離する。reference backendはinline-gridを基本とし、必要なbaseline指定に未対応のbrowserでは20章のinline-table配置へ切り替える。同じspan構造を維持するため、CSSの選択によってsemantic HTML正規形は変わらない。単純Rubyには別backendでHTML ruby/rtを使用してもよい。CSSは配布asset、リモートfont/CDN/JSは不要。
 
 Parallelは一つのalignment wrapperにlanguageごとのsentence spanを入れる。横並び・縦並び・単一言語はRenderOptionsとして変える。DOM上に対応関係IDを保存する。
 

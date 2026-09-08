@@ -251,10 +251,41 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  doc-browser:
+    name: Doc HTML browser layout
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - name: Install pinned browser automation and matching engines
+        run: |
+          python -m pip install -r tools/audit/doc_html/requirements.txt
+          python -m playwright install --with-deps chromium firefox webkit
+      - name: Generate actual Doc output corpus
+        run: |
+          mkdir -p dist/doc-browser
+          rustc --version --verbose > dist/doc-browser/rustc.txt
+          git rev-parse HEAD > dist/doc-browser/commit.txt
+          cargo test --locked -p nepl3-tools --test doc html::browser_layout_corpus_from_real_doc_source -- --exact --nocapture > dist/doc-browser/corpus.log 2> dist/doc-browser/corpus.stderr
+      - name: Check scriptless document layout in three real browsers
+        run: python tools/audit/doc_html/browser.py --corpus dist/doc-browser/corpus.log --css crates/languages/doc/html/assets/doc.css --output dist/doc-browser/results.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ always() }}
+        with:
+          name: doc-browser-${{ github.sha }}
+          path: dist/doc-browser/
+          if-no-files-found: error
+          retention-days: 14
+
   quality:
     name: quality
     if: ${{ always() }}
-    needs: [native, wasi, baremetal-build, baremetal-rp2040]
+    needs: [native, wasi, baremetal-build, baremetal-rp2040, doc-browser]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -264,11 +295,13 @@ jobs:
           WASI_RESULT: ${{ needs.wasi.result }}
           ARM_BUILD_RESULT: ${{ needs.baremetal-build.result }}
           RP2040_RESULT: ${{ needs.baremetal-rp2040.result }}
+          DOC_BROWSER_RESULT: ${{ needs.doc-browser.result }}
         run: |
           test "$NATIVE_RESULT" = success
           test "$WASI_RESULT" = success
           test "$ARM_BUILD_RESULT" = success
           test "$RP2040_RESULT" = success
+          test "$DOC_BROWSER_RESULT" = success
 
   deliver-source:
     name: deliver source

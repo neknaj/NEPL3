@@ -1,5 +1,5 @@
 import unittest
-from browser import extract_cases
+from browser import CASES, extract_cases, valid_measurement
 
 
 class Corpus(unittest.TestCase):
@@ -11,10 +11,15 @@ class Corpus(unittest.TestCase):
             b'DOC_HTML_CASE table-ruby 46\nDOC_HTML_CASE list-ruby 47\nok\n'
         )
 
+        old = {'ruby', 'anno', 'anno-ruby', 'ruby-anno', 'ruby-ruby', 'table-ruby', 'list-ruby'}
+        self.extra = {name: name for name in CASES - old}
+        self.raw += ''.join(f'DOC_HTML_CASE {name} {name.encode().hex()}\n' for name in sorted(self.extra)).encode()
+
     def test_raw_cargo_and_plain_logs_agree(self):
         plain = self.raw.split(b' ... ', 1)[1]
         expected = {'ruby': 'A', 'anno': 'B', 'anno-ruby': 'C', 'ruby-anno': 'D',
                     'ruby-ruby': 'E', 'table-ruby': 'F', 'list-ruby': 'G'}
+        expected.update(self.extra)
         self.assertEqual(extract_cases(self.raw), expected)
         self.assertEqual(extract_cases(plain), expected)
 
@@ -27,6 +32,16 @@ class Corpus(unittest.TestCase):
                     self.raw.replace(b'list-ruby 47', b'list-ruby ff')]:
             with self.subTest(raw=raw), self.assertRaises((ValueError, UnicodeError)):
                 extract_cases(raw)
+
+
+    def test_layout_checks_behavior_instead_of_property_support(self):
+        row = {'scripts': 0, 'difference': 0, 'baseline_source_supported': False,
+               'annotation_gaps': [0, 1], 'line_gaps': [0, 1]}
+        self.assertTrue(valid_measurement(row))
+        for change in [{'difference': 10}, {'scripts': 1}, {'annotation_gaps': []},
+                       {'annotation_gaps': [-1]}, {'line_gaps': [-1]}]:
+            with self.subTest(change=change):
+                self.assertFalse(valid_measurement(row | change))
 
 
 if __name__ == '__main__':

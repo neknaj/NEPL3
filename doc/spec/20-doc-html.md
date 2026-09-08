@@ -8,7 +8,7 @@ ParallelModeはRows、Columns、Single(language,fallbacks)のいずれか。Sing
 
 Articleはclass nepl-docと言語を持つarticle、titleはh1。SectionはUTF-8 byteの小文字hexにn-を付けたidと見出しを持ち、sectionの入れ子ごとにlevelを増やす。6を超える見出しはrole=heading/aria-levelのdiv。Anchor/Referenceも同じid写像を使用する。Paragraphはdiv、連続Sentence/Parallelをpへまとめ、子Blockは独立div内へ出し、前後のpを閉じる。子の元順と空白を保持する。
 
-Sentence/Concatはspan、Emphasis/Strongはem/strong、明示Breakはbr。Ruby/Annoは型付きspanと固定CSSのgridを使い、base/reading/全noteを別要素として保持する。Tableはheaderのthead、順序付きtbody/trとth/td、列alignmentの固定classを使う。空表は空tableのまま。Listはul/ol、itemはliとBody、明示checkboxは状態を持つ表示spanとする。HTMLのol.start範囲を超えるU64はListStartとして拒否し、丸めない。RawCodeはfigureの任意captionにlanguageHintを保持し、pre/codeには元Textを置く。hintをparser実行要求へ変えない。
+Sentence/Concatはspan、Emphasis/Strongはem/strong、明示Breakはbr。Ruby/Annoは型付きspanと固定CSSを使い、base/reading/全noteを別要素として保持する。Tableはheaderのthead、順序付きtbody/trとth/td、列alignmentの固定classを使う。空表は空tableのまま。Listはul/ol、itemはliとBody、明示checkboxは状態を持つ表示spanとする。HTMLのol.start範囲を超えるU64はListStartとして拒否し、丸めない。RawCodeはfigureの任意captionにlanguageHintを保持し、pre/codeには元Textを置く。hintをparser実行要求へ変えない。
 
 renderはHTML arenaを反復構築し、全生成node・属性・文字列・処理待ち・深さをBudgetへ計上する。全結果を共通markup validatorへ通す。本文/属性のXML不適合やHTML内容不適合は型付きMarkup失敗。これらを削除して成功にしない。出力fragmentの深さは256までとし、超過はOutputDepthとして元Doc nodeを示す。これはbrowser出力profileの限界であり、入力意味モデルを平坦化する規則ではない。文書shellは残りの閲覧側深度を含めて検査し、実browserで再確認する。
 
@@ -31,3 +31,7 @@ shellは固定HTMLと検査済みfragmentだけから作り、stylesheetはbacke
 Rubyはreadingを第1行、baseを第2行とし、`baseline-source:last`でbase側のbaselineを外へ公開する。Annoはbaseを第1行、notesを第2行とし、`baseline-source:first`を使う。空の先頭行を挟まない。これにより入れ子のbaseも内側要素が公開するbaselineで整列する。明示改行を含むbaseの場合、Rubyは最後の行、Annoは最初の行が整列基準になる。高さを仮定した固定offsetやJavaScriptで合わせない。
 
 この指定は [CSS Inline Layoutのbaseline-source](https://drafts.csswg.org/css-inline/#baseline-source) と [Gridのbaseline規則](https://www.w3.org/TR/css-grid-1/#grid-baselines) に基づく。Inline Layoutは草案であり、仕様の存在だけを全browserでの実装証拠にしない。生成文書の対応browserは固定CSSとの実試験で確認する。狭幅時にもRuby/Annoの内部を任意位置で分割せず、max-contentの一つのinline boxとして保持する。長いbase/reading/notesやpre内codeは横にはみ出し得るため、hostの閲覧・印刷profileはその表示と移動手段を別途検証する。
+
+`baseline-source:first/last`の両方を利用できないbrowserでは、同じspan構造にinline-tableの固定CSSを適用する。readingは上側、notesは下側のtable-captionとし、baseを持つ唯一の行からbaselineを公開する。Rubyのbaseはinline-blockとして最終行のbaselineを、Annoのbaseはtable-cellとして最初の行のbaselineを公開する。DOMの順序や注釈内容を変更せず、HTMLの表要素やJavaScriptを追加しない。この代替はWebKitで基底文字が本文より下がる不具合への対応であり、型付きmarkup・意味正規形は変更しない。
+
+代替の根拠は [CSS2のinline-block baseline](https://www.w3.org/TR/CSS2/visudet.html#leading) と [tableのbaseline規則](https://www.w3.org/TR/CSS2/tables.html#height-layout) である。対応propertyの有無だけで合否を決めず、実際のproduction HTMLとCSSをChromium・Firefox・WebKitで表示し、本文とのbaseline、読み・注釈の上下配置、複数行の基準、入れ子と前後行の高さ予約を検査する。文書内のJavaScriptは無効とする。この静的文書の検査はWasm・Playground・支援技術による実操作の受入を代行しない。

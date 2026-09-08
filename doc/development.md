@@ -17,12 +17,29 @@ HAL・UART・allocatorを外側へ置きます。ARMv6-M buildと固定版rp2040
 UF2実行は別job・別証拠です。初期実行範囲はsource位置・budget・NDFの4件で、
 Reader/Engine全受入や実機試験の代わりにはしません。
 
-実ブラウザ、RISC-V、big-endianの検査はそれぞれ独立した未達範囲です。
+実ブラウザのWasm・Playground、RISC-V、big-endianの検査はそれぞれ独立した未達範囲です。
 このCI整備をDoc HTML・文書移行・Pages公開の完成へ読み替えません。
 CIの区切り後はDoc生成を進め、意味・リンク・安定IDの対応を検証できたページから
 nepld正本へ移行し、検査済みの同じsite artifactを公開します。
 
 ## ローカル環境
+
+Doc HTMLの配置は、固定版Playwrightと対応するChromium・Firefox・WebKitでCI実行します。
+実NEPL3入力からproduction backendで生成した13例を、2画面幅・3文字サイズ・3行高で表示し、
+Ruby/Annoのbaseline、複数行、入れ子、注釈と前後行の高さ予約を検査します。
+文書のJavaScriptは無効です。これは静的HTMLの検査であり、Wasm実行や支援技術の操作試験ではありません。
+runner不在・例の欠落・配置不一致は失敗となり、quality jobも失敗します。
+
+```sh
+python -m pip install -r tools/audit/doc_html/requirements.txt
+python -m playwright install chromium firefox webkit
+mkdir -p dist/doc-browser
+cargo test --locked -p nepl3-tools --test doc html::browser_layout_corpus_from_real_doc_source -- --exact --nocapture > dist/doc-browser/corpus.log
+python tools/audit/doc_html/browser.py --corpus dist/doc-browser/corpus.log --css crates/languages/doc/html/assets/doc.css --output dist/doc-browser/results.json
+```
+
+Linuxではbrowser用のsystem libraryも必要なため、CIは`playwright install --with-deps`を使います。
+PowerShellで実行ログを保存する際は、後述のUTF-8の指針に従ってください。
 
 [rust-toolchain.toml](../rust-toolchain.toml) に固定したRustと、Gitを使用します。rustupはworkspace内で指定toolchainを選びます。`cargo` の各コマンドはリポジトリrootで実行してください。`Cargo.lock` は管理対象で、CIでは `--locked` を使います。
 
