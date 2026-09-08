@@ -130,6 +130,42 @@ fn canonical_file_access_is_bounded_and_regular() -> Result<()> {
     Ok(())
 }
 
+#[test]
+fn registered_file_parents_are_rejected_before_staging_any_output() -> Result<()> {
+    let f = Fixture::new()?;
+    for (field, path) in [
+        ("projection", "doc/sample.md/child.md"),
+        ("projection", "doc/SAMPLE.md/child.md"),
+        ("source", "doc/sample.nepld/child.nepld"),
+        ("aliases", "doc/aliases.json/child.json"),
+    ] {
+        let mut value = registry();
+        let mut second = json!({"id":"second","source":"doc/second.nepld",
+            "projection":"doc/second.md","aliases":"doc/second.json",
+            "route":"docs/second.html","renderer":RENDERER});
+        second[field] = json!(path);
+        value["pages"].as_array_mut().ok_or("pages")?.push(second);
+        // This sorts between the parent projection and its child; checking
+        // only adjacent sorted names would miss the actual conflict.
+        value["pages"].as_array_mut().ok_or("pages")?.push(json!({
+            "id":"third","source":"doc/third.nepld","aliases":"doc/third.json",
+            "projection":"doc/sample.md.other.md","route":"docs/third.html","renderer":RENDERER}));
+        f.json("doc/canonical.json", &value)?;
+        let output = f.root().join("stage");
+        let error = markdown(f.root(), "doc/canonical.json", &output)
+            .err()
+            .ok_or("expected failure")?;
+        assert!(
+            error
+                .to_string()
+                .starts_with("canonical file path used as directory:"),
+            "{field}: {error}"
+        );
+        assert!(!output.exists());
+    }
+    Ok(())
+}
+
 #[cfg(unix)]
 #[test]
 fn canonical_file_access_rejects_even_repository_internal_symlinks() -> Result<()> {

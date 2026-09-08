@@ -122,6 +122,19 @@ fn parse_registry(raw: &[u8]) -> Result<Registry> {
             return Err("invalid or repeated canonical page route".into());
         }
     }
+    // Every registered source, alias and projection is a file. Reject a known
+    // file/directory conflict before staging any output, including old-only
+    // registries that do not enter the PageSet resolver. Testing every ancestor
+    // avoids missing a parent when another lexicographic name falls between.
+    for path in &paths {
+        for (end, _) in path.match_indices('/') {
+            if paths.contains(&path[..end]) {
+                return Err(
+                    format!("canonical file path used as directory: {}", &path[..end]).into(),
+                );
+            }
+        }
+    }
     Ok(registry)
 }
 
