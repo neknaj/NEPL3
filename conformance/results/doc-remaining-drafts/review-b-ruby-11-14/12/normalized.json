@@ -1,0 +1,2979 @@
+{
+  "fields": {
+    "body": {
+      "fields": {
+        "blocks": [
+          {
+            "fields": {
+              "body": {
+                "fields": {
+                  "blocks": [
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "interfaces/model.json"
+                                  },
+                                  "kind": "InlineCode"
+                                },
+                                {
+                                  "fields": {
+                                    "text": " はsourceのform表と別の、lower後の意味値・実行IRの構造を記述する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "surfaceとmeaningのSchemaRefは別にする。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Rustで型を分け、wireで両者を混同しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    }
+                  ]
+                },
+                "kind": "Body"
+              },
+              "id": "policy",
+              "title": {
+                "fields": {
+                  "inlines": [
+                    {
+                      "fields": {
+                        "text": "方針"
+                      },
+                      "kind": "Text"
+                    }
+                  ]
+                },
+                "kind": "Sentence"
+              }
+            },
+            "kind": "Section"
+          },
+          {
+            "fields": {
+              "body": {
+                "fields": {
+                  "blocks": [
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "JSON内の "
+                                  },
+                                  "kind": "Text"
+                                },
+                                {
+                                  "fields": {
+                                    "text": "record"
+                                  },
+                                  "kind": "InlineCode"
+                                },
+                                {
+                                  "fields": {
+                                    "text": " は "
+                                  },
+                                  "kind": "Text"
+                                },
+                                {
+                                  "fields": {
+                                    "text": "[fieldName, typeExpression]"
+                                  },
+                                  "kind": "InlineCode"
+                                },
+                                {
+                                  "fields": {
+                                    "text": " の順序付きarrayであり、その順序をNDF recordのfield順とする。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "sum"
+                                  },
+                                  "kind": "InlineCode"
+                                },
+                                {
+                                  "fields": {
+                                    "text": " はvariant名をkeyとするmapで、各payloadも同じ順序付きfield array。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "空record/payloadは空arrayとする。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "field名は各array内で一意。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "union"
+                                  },
+                                  "kind": "InlineCode"
+                                },
+                                {
+                                  "fields": {
+                                    "text": " はvariant名からrecord型へのmap。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "sum/unionおよびcontractsのvariantsのkey順には意味を持たせず、NDFではVariantNameの文字列で識別する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "数値ordinalをJSON objectの列挙順から割り当てない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "List/OptionはNDFの対応tag。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Naturalはnonnegative Integer。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Name/LanguageTagはTextに対して各domainの制約を追加する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Source由来の意味値はOriginを関連付けられる。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "各Recordが共有できるようにnative実装をarenaにしてもよいが、公開値の意味をpointerに依存させない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "wireは参照table付きbundleを使い、全NodeRef/OriginRefが有効であることを検査する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "意味上の構造木と回路graphのcycle制約は異なる。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "r4ではNodeRef/OriginRef、Origin、SyntaxNode/FieldValue、SyntaxBundle/ForeignSyntax、EnvironmentRefを共通foundation所有のcontractsへ移した。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "modelはexternal_typesから参照し、同じ名義型を二重定義しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "SyntaxBundleはsources、nodes、origins、root、environmentsを持つ。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "ForeignSyntax.rootとguest bundle.rootは等しくなければならず、guestのnode/origin IDはそのbundle内だけで解決する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "ForeignSyntax.environmentはforeign slotを所有するhost bundleのEnvironmentEntryのid/digestへ一致させる。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "guestへの無条件の名前空間継承は行わない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "EnvironmentEntryはid/digest/valueを持ち、Environmentは明示的なnamespace/name/value/originのbinding列とresource列を持つ。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "同じnamespace/nameのbindingとresource IDの重複を拒否する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "bindingのOriginRefはそのentryの所属bundle内で解決する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "entry digestはASCII "
+                                  },
+                                  "kind": "Text"
+                                },
+                                {
+                                  "fields": {
+                                    "text": "NEPL3-ENVIRONMENT-1"
+                                  },
+                                  "kind": "InlineCode"
+                                },
+                                {
+                                  "fields": {
+                                    "text": "、zero byte、canonical NDFで符号化したEnvironment recordのSHA-256とする。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "型付きnative graph検査はentryの選択と参照を検査し、wire adapterはcanonical digestとresource元byte列のdigestも再検査する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Doc/Math等の意味値が単体Foreignを保持する場合はForeignClosureを使う。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "syntaxのguest arenaとownerEnvironment/ownerOrigins/ownerSources/ownerSourceMapsのarenaは独立する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "同じ数値の環境ID・OriginRefでも両者の値を置換しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "元ownerOrigin列を保持し、環境digestを変えない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "ForeignClosure.captureは検査済みownerの実Foreign fieldだけを取り出し、ownerの構文nodeは所有化しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "受信時は外側schemaとguest rootのschema、root ID、選択したowner環境のid/digest、owner/guestそれぞれの閉包を検査し、portable adapterは両環境の内容digestを再計算する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "raw閉包の成立から言語固有の意味lowerやhostによる環境授権を推定しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "portable境界の停止理由は型付き原因から取り出す。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Schema、Source、Origin、View、Syntax、Fact、Reportに包まれたStoppedも元StopReasonを保持し、domain側の通常Invalidへ縮約しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "WireErrorの直接Stoppedだけを認識していた停止抽出を訂正する（R047）。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "意味エラーを、無関係に停止したBudgetの状態で上書きする規則ではない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "通常のsource nodeではheadはcover内、各子のcoverは親cover内かつhead.end以降で、子同士はfield順に重複しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "graph/位置検査だけでformのarity・引数category・各field型まで検査したことにはしない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "surface LanguagePackageの検査を別に行う。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "生成nodeに架空のcoverを要求しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "SourceMapはsource/target SpanとExactまたはTransformedのMapping列を持つ。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Exactは元と先のbyte列が等しく、局所逆写像はoffset差で求める。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Transformedは対応するfragment間の関係だけを表し、任意の部分区間を逆変換できるとはしない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "重なった複数の候補はAmbiguous、非可逆はIrreversibleとしてrename等へ返す。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "map循環の頂点はsnapshotとbyte位置である。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "非空範囲は半開区間内の各byte、空範囲はそのoffsetの独立したanchor頂点とし、同じoffsetの内容byteとanchorを混同しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Exactはoffset差を保存するedge、Transformedは元fragmentの全頂点から先fragmentの全頂点への関係である。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "この有限graphのcycleを拒否する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "同一snapshot内でも一方向へ進む重複Exact区間や、互いに接続しない範囲はcycleとしない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "検査量の超過はStoppedであり、粗いsnapshot依存だけを根拠にCycleと返さない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    }
+                  ]
+                },
+                "kind": "Body"
+              },
+              "id": "values",
+              "title": {
+                "fields": {
+                  "inlines": [
+                    {
+                      "fields": {
+                        "text": "1. 値と参照"
+                      },
+                      "kind": "Text"
+                    }
+                  ]
+                },
+                "kind": "Sentence"
+              }
+            },
+            "kind": "Section"
+          },
+          {
+            "fields": {
+              "body": {
+                "fields": {
+                  "blocks": [
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "constraint IDはstructural descriptorとともにdigestへ含める。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "共通Rust constructor・boundary adapterは次を検査する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "descriptorにIDがあるだけで検査を実行したとは扱わない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "columns": [
+                          {
+                            "fields": {},
+                            "kind": "AlignmentDefault"
+                          },
+                          {
+                            "fields": {},
+                            "kind": "AlignmentDefault"
+                          }
+                        ],
+                        "header": {
+                          "fields": {
+                            "row": {
+                              "fields": {
+                                "cells": [
+                                  {
+                                    "fields": {
+                                      "inlines": [
+                                        {
+                                          "fields": {
+                                            "text": "ID"
+                                          },
+                                          "kind": "Text"
+                                        }
+                                      ]
+                                    },
+                                    "kind": "Sentence"
+                                  },
+                                  {
+                                    "fields": {
+                                      "inlines": [
+                                        {
+                                          "fields": {
+                                            "text": "検査する不変条件"
+                                          },
+                                          "kind": "Text"
+                                        }
+                                      ]
+                                    },
+                                    "kind": "Sentence"
+                                  }
+                                ]
+                              },
+                              "kind": "Row"
+                            }
+                          },
+                          "kind": "SomeRow"
+                        },
+                        "rows": [
+                          {
+                            "fields": {
+                              "cells": [
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "source.identity"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                },
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "空でないopaque IDと明示的なrevision/content digest"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                }
+                              ]
+                            },
+                            "kind": "Row"
+                          },
+                          {
+                            "fields": {
+                              "cells": [
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "source.content"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                },
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "locator profile、UTF-8元byte列、content digestの一致"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                }
+                              ]
+                            },
+                            "kind": "Row"
+                          },
+                          {
+                            "fields": {
+                              "cells": [
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "source.bundle"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                },
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "snapshot宣言の一意性、同じID/revisionの矛盾拒否、共有操作での入力予算"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                }
+                              ]
+                            },
+                            "kind": "Row"
+                          },
+                          {
+                            "fields": {
+                              "cells": [
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "source.span"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                },
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "指定snapshotの範囲・半開順序・UTF-8 scalar境界"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                }
+                              ]
+                            },
+                            "kind": "Row"
+                          },
+                          {
+                            "fields": {
+                              "cells": [
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "schema.reference / schema.type-reference"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                },
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "空でないpackage/type名と、選択された版・digestまたは記号的参照先"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                }
+                              ]
+                            },
+                            "kind": "Row"
+                          },
+                          {
+                            "fields": {
+                              "cells": [
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "schema.descriptor"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                },
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "重複宣言拒否、canonical descriptor、全参照のfinalize"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                }
+                              ]
+                            },
+                            "kind": "Row"
+                          },
+                          {
+                            "fields": {
+                              "cells": [
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "operation.reporting"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                },
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "すべての結果の累積Usage、共有Limits、停止理由の維持、partialをCheckedとしない"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                }
+                              ]
+                            },
+                            "kind": "Row"
+                          },
+                          {
+                            "fields": {
+                              "cells": [
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "report.trace-overflow"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                },
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "実際の未受理event件数が正、単一の報告、EventLimitの停止"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                }
+                              ]
+                            },
+                            "kind": "Row"
+                          },
+                          {
+                            "fields": {
+                              "cells": [
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "namespace.reference"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                },
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "明示したschemaと空でないnamespace名"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                }
+                              ]
+                            },
+                            "kind": "Row"
+                          },
+                          {
+                            "fields": {
+                              "cells": [
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "environment.bindings / environment.digest"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                },
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "binding/resourceの一意性、範囲と型、canonical entry digest"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                }
+                              ]
+                            },
+                            "kind": "Row"
+                          },
+                          {
+                            "fields": {
+                              "cells": [
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "syntax.graph / syntax.foreign"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                },
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "bundle局所参照、有限graph、source geometry、host環境とguest rootの一致"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                }
+                              ]
+                            },
+                            "kind": "Row"
+                          },
+                          {
+                            "fields": {
+                              "cells": [
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "source.map / origin.graph"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                },
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "上記のmap関係とOrigin DAG、所属snapshot・OperationRef・参照先"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                }
+                              ]
+                            },
+                            "kind": "Row"
+                          },
+                          {
+                            "fields": {
+                              "cells": [
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "source.reservation"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                },
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "空でないhost予約SourceId、revision、絶対logical URI。生成bytesからdigestを計算し、異なる結果への予約再利用を拒否"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                }
+                              ]
+                            },
+                            "kind": "Row"
+                          },
+                          {
+                            "fields": {
+                              "cells": [
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "schema.kind-id"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                },
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "選択schemaの型名scalar順に割り当てたlocalKindとdescriptorの対応"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                }
+                              ]
+                            },
+                            "kind": "Row"
+                          },
+                          {
+                            "fields": {
+                              "cells": [
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "view.graph"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                },
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "Tokenごとに局所的なview参照、DAG、field名の一意性、source範囲"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                }
+                              ]
+                            },
+                            "kind": "Row"
+                          },
+                          {
+                            "fields": {
+                              "cells": [
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "token.boundary"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                },
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "token head・triviaのsnapshotと境界、内部viewの包含、payloadの型はreader/form契約で検査"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                }
+                              ]
+                            },
+                            "kind": "Row"
+                          },
+                          {
+                            "fields": {
+                              "cells": [
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "view.presentation"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                },
+                                {
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "fields": {
+                                          "text": "schemaが所有する表示分類名と明示されたfallback role"
+                                        },
+                                        "kind": "Text"
+                                      }
+                                    ]
+                                  },
+                                  "kind": "Sentence"
+                                }
+                              ]
+                            },
+                            "kind": "Row"
+                          }
+                        ]
+                      },
+                      "kind": "Table"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "SyntaxBundleはtokensのtableを持ち、SyntaxNode.tokenは同じbundleのTokenRefを指す。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Tokenはpayload、内部ViewBundle、leadingTriviaを保持する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "ViewRefはそのTokenのViewBundle内だけ、TokenRefはそのSyntaxBundle内だけで解決する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "ForeignSyntaxのguest bundleは自身のtableを持つため、同じ数値IDをhostへ解決しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "通常のsource由来nodeにはheadに対応するtokenをengineが要求し、synthetic/recovery nodeのtoken不在はOptionで明示する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "graphの検査とformのarity・payload型の検査を区別する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "sourceMapsはSyntaxBundleの所有列であり、全source/targetをそのbundleのsourcesで解決する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "SourceMapの幾何・Exact内容一致・非循環を検査したproofだけをmapped view包含に使用する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "standalone Token/ViewBundleのvalidateはmapを持たない直接包含の入口とし、変換viewはvalidate_with_mapsまたはSyntaxBundle境界を使う。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "包含は02章の全逆経路規則に従い、sourceがhost storeに偶然存在することを所有証明にしない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "ValidatedSourceMapは不変なsnapshot identity上のmap関係のproofであり、任意の後続SourceStoreへの所属proofではない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Token/Viewのvalidate_with_mapsは使用時のstoreで全map端点の宣言閉包を再照合する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "SourceMap.contains単体は関係上の包含計算であり、transport source tableの所属を検査する入口とは区別する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "内部viewは外側のchildrenやarityへ加算しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "SentenceLiteralの構造化payloadとview、Codeが保持するforeign syntaxのtoken・triviaはnativeとNDFの両経路で保存し、元sourceの再parseを情報保持の代替にしない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Token.payloadは、その型が所有する独立bundleまたは明示source参照を持つ。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "まだ構築されていない外側SyntaxBundleのNodeRefを暗黙に参照しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "payload内に現れる数値を外側node IDと推測して再採番しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "この所有契約により、outer nodeのcanonical再採番はopaque payloadを壊さず行える。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "DocのSentenceLiteralはlower後にDoc:Sentenceとなる。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "raw Textには注釈構文を再適用しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "MathのNumberは有限十進で表現できるRational（約分後の分母の素因数が2と5だけ）と元の表記範囲を持ち、SymbolNameはMath:Symbolへ統合する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "違反はNonFiniteDecimalNumber。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Numeric spellingを表示に使う場合は、そのsnapshotと値が一致していることを検査する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "生成Numberはcanonicalな整数または有限十進でprintする。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "任意有理数からの式構築と著者のFracの保存はMath章の規則に従う。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "ForeignSyntaxはguestのopaque bundleを持ち、host coreはguestの意味型をimportしない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "suiteで登録済みschemaに検査してからguest操作に渡す。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Doc:DocGuestもForeignSyntaxを保持する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Codeの準備はbundleの安全性を検査してsourceとviewを表示し、guestのlower・意味check・evaluateを呼ばない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    }
+                  ]
+                },
+                "kind": "Body"
+              },
+              "id": "constraints",
+              "title": {
+                "fields": {
+                  "inlines": [
+                    {
+                      "fields": {
+                        "text": "1.1 foundation制約ID"
+                      },
+                      "kind": "Text"
+                    }
+                  ]
+                },
+                "kind": "Sentence"
+              }
+            },
+            "kind": "Section"
+          },
+          {
+            "fields": {
+              "body": {
+                "fields": {
+                  "blocks": [
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Rust内部のChecked/Preparedのconstructorはprivateにする。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "wireでCheckedEnvelopeを受信しただけで検査済みと信用しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "外部providerからの結果にはschema検査・構造不変条件検査を行い、利用する操作に必要な意味検査を再実行する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "digestは同一性の情報であって証明書ではない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "process/session内で検査結果を再利用する場合は、provider・input・schema・environmentを固定したhost所有handleを使える。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "別processへ生のpointerやprivateなhandleを送らない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    }
+                  ]
+                },
+                "kind": "Body"
+              },
+              "id": "checked",
+              "title": {
+                "fields": {
+                  "inlines": [
+                    {
+                      "fields": {
+                        "text": "2. Checked値の境界"
+                      },
+                      "kind": "Text"
+                    }
+                  ]
+                },
+                "kind": "Sentence"
+              }
+            },
+            "kind": "Section"
+          },
+          {
+            "fields": {
+              "body": {
+                "fields": {
+                  "blocks": [
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "NetNode.idはnodesのindexに一致し、orderは組合せDAGの全nodeを一度ずつ含む順序。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Input/State/Constantのinputsは空、Not/Sliceは1、And/Or/Xor/Nor/Add/Concatは2、Muxは3。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "InputとStateは有効なport/slotを参照する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Slice/Mux/Concatのwidth条件はCircuit章の通り。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "outputNodesの長さはoutputsと等しく、各nodeの幅がportと一致する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "StateSlot.nextは有効nodeで同じ幅。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "初期値は幅内。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "state次値へのedgeを現在state readの依存へ戻さない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "NorNetlistはbit順をport宣言順、その中をLSB→MSBとする。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "stateもslot順、その中をLSB→MSB。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "nextBits/outputBitsの長さは対応幅の和。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Nor2の参照はtopologicalに前のnodeだけ。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "InputBit/StateBitは有効範囲。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "originsはnodesと同じ長さ。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    }
+                  ]
+                },
+                "kind": "Body"
+              },
+              "id": "circuit",
+              "title": {
+                "fields": {
+                  "inlines": [
+                    {
+                      "fields": {
+                        "text": "3. 回路IR"
+                      },
+                      "kind": "Text"
+                    }
+                  ]
+                },
+                "kind": "Sentence"
+              }
+            },
+            "kind": "Section"
+          },
+          {
+            "fields": {
+              "body": {
+                "fields": {
+                  "blocks": [
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Markup modelがname/attributeをTextとして運べることは、任意のtagを許可することを意味しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "nepl3-markupは目的categoryに対して検査する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "HTMLでは文書構造・注釈・コード・リンクに加え、ul/ol/li、table/caption/thead/tbody/tr/th/td、imgを扱う。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "全要素の列挙は "
+                                  },
+                                  "kind": "Text"
+                                },
+                                {
+                                  "fields": {
+                                    "text": "design/markup.json"
+                                  },
+                                  "kind": "InlineCode"
+                                },
+                                {
+                                  "fields": {
+                                    "text": " を正本とし、内容モデルと型付き属性は "
+                                  },
+                                  "kind": "Text"
+                                },
+                                {
+                                  "fields": {
+                                    "label": {
+                                      "fields": {
+                                        "text": "HTML fragment契約"
+                                      },
+                                      "kind": "Text"
+                                    },
+                                    "target": {
+                                      "fields": {
+                                        "fragment": {
+                                          "fields": {},
+                                          "kind": "NoText"
+                                        },
+                                        "path": "19-html-fragment.md"
+                                      },
+                                      "kind": "RelativeTarget"
+                                    }
+                                  },
+                                  "kind": "Link"
+                                },
+                                {
+                                  "fields": {
+                                    "text": " に従う。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "MathML: math, mrow, mi, mn, mo, mtext, mfrac, msqrt, mroot, msub, msup, msubsup, munder, mover, munderover, mtable, mtr, mtd, mspace。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "SVG: svg, g, rect, line, path, polyline, circle, text, title, desc。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "全要素・属性・属性値制約の正本は "
+                                  },
+                                  "kind": "Text"
+                                },
+                                {
+                                  "fields": {
+                                    "text": "design/markup.json"
+                                  },
+                                  "kind": "InlineCode"
+                                },
+                                {
+                                  "fields": {
+                                    "text": "。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "属性を受け入れる集合はglobal、namespace、elementの各allowlistの和とし、列挙されていない属性は拒否する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "SVGのpath/points等は自由な文字列として受けず、記述した型付き構造からserializerが綴りを生成する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "userから任意のon*、style、script、foreignObject、SVG image、任意のnamespace URLを受けない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "HTMLのhrefは型付きFragment/Artifact/BetweenArtifacts/Externalを使い、URIの許可規則と内部targetの存在、文書間routeの対応をそれぞれ検査する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "HTML imgのsrcは検査済みartifact内の相対pathであり、任意の外部画像URLを許可しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "字句検査だけでassetの存在・内容・権限を検証済みとせず、文書準備時の解決を別に要求する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "CSSはbackendが所有する固定assetであり、本文文字列をCSSに埋め込まない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "MathMLのmspaceのwidth/height/depthはNonnegativeMathLengthとする。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "非負のcanonical有限十進にemを付け、zeroは0em、百分率・指数表記・他単位・負値・冗長なzeroを拒否する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "これはMathML Coreのlength-percentageのうち本profileが使用する部分集合であり、SVGの座標用Decimalとは区別する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "違反はInvalidMarkupAttribute。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "MarkupのTextと属性値は、UTF-8の妥当性に加え、XML 1.0 Charの集合（U+0009、U+000A、U+000D、U+0020..D7FF、U+E000..FFFD、U+10000..10FFFF）を共通の許可集合とする。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "それ以外はInvalidMarkupCharacterで拒否し、削除や置換文字による黙殺をしない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Doc/Mathの一般Text値をこの出力用制約で狭めるのではなく、Markup構築・検査境界で適用する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "serializerはHTML5とXMLを区別し、namespace、void element、属性escapeを適切に出す。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "属性順は固定。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Textと属性のescapeおよび改行保存は再現性章に従う。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "文書テキストを文字列置換でHTMLへ挿入しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    }
+                  ]
+                },
+                "kind": "Body"
+              },
+              "id": "markup",
+              "title": {
+                "fields": {
+                  "inlines": [
+                    {
+                      "fields": {
+                        "text": "4. Markup安全性"
+                      },
+                      "kind": "Text"
+                    }
+                  ]
+                },
+                "kind": "Sentence"
+              }
+            },
+            "kind": "Section"
+          },
+          {
+            "fields": {
+              "body": {
+                "fields": {
+                  "blocks": [
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "interfaces/contracts.json"
+                                  },
+                                  "kind": "InlineCode"
+                                },
+                                {
+                                  "fields": {
+                                    "text": " のDomainSyntax/CheckedDomain等はoperationごとに本ファイルの対応domain型へ特殊化するための表記。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "例えばmath.lowerの結果はMath/Expr、circuit.elaborateの結果はCircuit:PreparedNetlist、doc.prepareの結果はDoc:PreparedArticle。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "異なるdomainのTypedValueを同じ入力として受け付けない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "Grammar packageのReaderExpr/ReadSpec/Binding/StyleのpayloadはGrammarのschemaで定義したADTを使用できる。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "参照を解決した索引tableを追加してよいが、意味正規形は参照先の識別子と契約に従って比較する。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "無限再帰のRust型やSerde表現をwireへ押し付けない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    },
+                    {
+                      "fields": {
+                        "items": [
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "HTMLのdocument shell（html/head/meta/style/body）は固定のshell生成処理が作り、userが与えるMarkupFragmentの要素として受け取らない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "内部のDoc/Math/SVG namespace遷移とphrasing/block制約もmarkup.jsonに従う。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          },
+                          {
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "fields": {
+                                    "text": "最適化や資源追加の都合でこのallowlistを迂回しない。"
+                                  },
+                                  "kind": "Text"
+                                }
+                              ]
+                            },
+                            "kind": "Sentence"
+                          }
+                        ]
+                      },
+                      "kind": "Paragraph"
+                    }
+                  ]
+                },
+                "kind": "Body"
+              },
+              "id": "operations",
+              "title": {
+                "fields": {
+                  "inlines": [
+                    {
+                      "fields": {
+                        "text": "5. operationの具体型"
+                      },
+                      "kind": "Text"
+                    }
+                  ]
+                },
+                "kind": "Sentence"
+              }
+            },
+            "kind": "Section"
+          }
+        ]
+      },
+      "kind": "Body"
+    },
+    "language": "ja",
+    "title": {
+      "fields": {
+        "inlines": [
+          {
+            "fields": {
+              "text": "12. 意味モデル・中間表現の補足不変条件"
+            },
+            "kind": "Text"
+          }
+        ]
+      },
+      "kind": "Sentence"
+    }
+  },
+  "kind": "Article"
+}

@@ -1,0 +1,93 @@
+[
+  {
+    "path": "11\\before.nepld",
+    "source_commit": "e3a4de2b3ebc12834a47e51833a979da168f2275",
+    "source_path": "doc/migration/authored/11-conformance.nepld",
+    "sha256": "6da57698cea749711366cea2a985576334edfe436ea1f8e69a8f807d2f5f0a03",
+    "bytes": 21435
+  },
+  {
+    "path": "11\\after.nepld",
+    "source_commit": "ebac378083eff21051094685f148069ec0ccae68",
+    "source_path": "doc/migration/authored/11-conformance.nepld",
+    "sha256": "dfa4b3ad2f57edce2ed6cac3f65bd35aa9a63092aa91dd6b5fd2bf932589fe68",
+    "bytes": 35127
+  },
+  {
+    "path": "11\\original.md",
+    "source_commit": "ebac378083eff21051094685f148069ec0ccae68",
+    "source_path": "doc/spec/11-conformance.md",
+    "sha256": "e8b3e4e8da02f3311541fef79121ed1b7c2cab7258dc7f2c38b2c65241426b2b",
+    "bytes": 14521
+  },
+  {
+    "path": "12\\before.nepld",
+    "source_commit": "ebac378083eff21051094685f148069ec0ccae68",
+    "source_path": "doc/migration/authored/12-model-invariants.nepld",
+    "sha256": "5f38baf8459ea068f7bb5a48bea5ae449dd573a0810108881fa226905190e1a5",
+    "bytes": 19414
+  },
+  {
+    "path": "12\\after.nepld",
+    "source_commit": "9dd5a5c14883bd375eca2813057e29e9835e9ac3",
+    "source_path": "doc/migration/authored/12-model-invariants.nepld",
+    "sha256": "f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8",
+    "bytes": 30443
+  },
+  {
+    "path": "12\\original.md",
+    "source_commit": "9dd5a5c14883bd375eca2813057e29e9835e9ac3",
+    "source_path": "doc/spec/12-model-invariants.md",
+    "sha256": "9ff06dc714c2c789ae6c512a099d96dcd3a789b5d0ec190b42d3f32df5c687f4",
+    "bytes": 14878
+  },
+  {
+    "path": "context\\AGENTS.md",
+    "source_commit": "9dd5a5c",
+    "source_path": "AGENTS.md",
+    "sha256": "af97df38a46d8ccdc28f8c4e113bb29a09ce6ba3fd7736a882148d4d17c2a433",
+    "bytes": 7148
+  },
+  {
+    "path": "context\\doc\\authoring.md",
+    "source_commit": "9dd5a5c",
+    "source_path": "doc/authoring.md",
+    "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08",
+    "bytes": 6478
+  },
+  {
+    "path": "context\\doc\\spec\\05-document.md",
+    "source_commit": "9dd5a5c",
+    "source_path": "doc/spec/05-document.md",
+    "sha256": "74beb5cb2ed1cd7b002fd5bf2e76597f540aa5109f1971145ced9128b5c96c9a",
+    "bytes": 27494
+  },
+  {
+    "path": "context\\doc\\spec\\doc-signatures.md",
+    "source_commit": "9dd5a5c",
+    "source_path": "doc/spec/doc-signatures.md",
+    "sha256": "8b8b3513a38a2147d8dcc2813c937fe03fbf8915e759bd3ecb5d7e1b23225680",
+    "bytes": 6053
+  },
+  {
+    "path": "context\\design\\forms.json",
+    "source_commit": "9dd5a5c",
+    "source_path": "design/forms.json",
+    "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693",
+    "bytes": 48673
+  },
+  {
+    "path": "context\\tools\\audit\\structure.py",
+    "source_commit": "9dd5a5c",
+    "source_path": "tools/audit/structure.py",
+    "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727",
+    "bytes": 6543
+  },
+  {
+    "path": "12\\corrected-original.md",
+    "source_commit": "5657677e9b4a1cc44830b9a365206822920983fe",
+    "source_path": "doc/spec/12-model-invariants.md",
+    "sha256": "81b22608f80254f7d5979b754436b9d62da0bf25aefddf01a6fec772fdcf9cc5",
+    "bytes": 15389
+  }
+]
