@@ -1,0 +1,12 @@
+[
+  {
+    "original": "integration/compare.py",
+    "stored": "integration/compare.py.fixture",
+    "sha256": "86280262ac471b382c4725d4ea250da0b61127e52ae56b8532084721f9ba4ea3"
+  },
+  {
+    "original": "integration/real-page.py",
+    "stored": "integration/real-page.py.fixture",
+    "sha256": "b547337669390866deb9e41ab28cdc448fbc44e2c971d1687e484f7954b8e907"
+  }
+]

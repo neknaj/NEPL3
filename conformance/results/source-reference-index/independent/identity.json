@@ -1,0 +1,24 @@
+{
+  "commit": "cf233ff45b2719a93277821d21d4beb326b73b2b",
+  "base": "76818219c8d9a6c1e5707b602eebc9eee61513ef",
+  "archive_sha256": "8bf0361103ce238a8c796e008d77e9d617612bef4ee321533c934aba291ffa44",
+  "verified_files": 4589,
+  "compiler": "rustc 1.97.0 (2d8144b78 2026-07-07)",
+  "runner": "wasmtime 44.0.1 (f302ebd6b 2026-04-30)",
+  "commands": [
+    "cargo test --locked -p nepl3-core",
+    "cargo test --locked -p nepl3-core --target wasm32-wasip2",
+    "cargo test --locked -p nepl3-core --test reference_review (both targets)",
+    "cargo check --locked -p nepl3-core --no-default-features --target thumbv6m-none-eabi"
+  ],
+  "binary_hashes": [
+    {
+      "path": "reference_review-50970b45ffe2e566.exe",
+      "sha256": "8f720a16426c8f2854b10b85c8eeeff48924463aef1ed7a93da8d4ed003c09d3"
+    },
+    {
+      "path": "reference_review-c72f0317cfe9ac4a.wasm",
+      "sha256": "1d6292effca09880eb80024f11b8d6c3c6dfd0a8a4c2eb9d3ca3f5e67169080f"
+    }
+  ]
+}
