@@ -832,5 +832,22 @@ body
       cons "[拒否/きょひ]に[要/よう]したWorkは[増/ふ]える[一方/いっぽう]、diagnostics/events/SourceBytesは[変化/へんか]せず、その[後/ご][同/おな]じpendingから[正常/せいじょう]に[完走/かんそう]した。"
       cons "spec04の[予約/よやく]・[相対費用/そうたいひよう]・[絶対/ぜったい]depth・[窓免除/まどめんじょ]・[未精算破棄/みせいさんはき]・[受信認証責務/じゅしんにんしょうせきむ]の[同期/どうき]も[読/よ]み、R041をcorrectedとした。"
       cons "この[結果/けっか]は[同/どう]process[内/ない]の[実/じつ]NDF/CBOR[交換/こうかん]とcallback[実行/じっこう]の[証拠/しょうこ]であり、[別/べつ]processの[通信認証/つうしんにんしょう]・[終了制御/しゅうりょうせいぎょ]・メータリング[実装/じっそう]や[全/ぜん]P03[受入条件/うけいれじょうけん]の[合格/ごうかく]まで[主張/しゅちょう]しない。" nil
+    cons paragraph
+      cons "T05の[位置付/いちつ]きcompiler[診断/しんだん]は、[独立/どくりつ]した[日本語/にほんご]・emoji commentとCRLFを[含/ふく]む[原文/げんぶん]で[再検査/さいけんさ]した。"
+      cons "MissingRuleは[名前/なまえ]のbyte[範囲/はんい]104..110、[逆転/ぎゃくてん]rangeは[上限/じょうげん]122..125をprimary・escaped[下限/かげん]113..121をrelated、Choice[異型/いけい]は[後続/こうぞく]scalar129..147をprimary・[先行/せんこう]literal112..123をrelatedに[保持/ほじ]する。"
+      cons "Choiceの[期待/きたい]Unit・[実際/じっさい]Textも[一致/いっち]した。"
+      cons sentence cons ruby text "通常" text "つうじょう" cons text "DiagnosticをReportへ" cons ruby text "包" text "つつ" cons text "み、" cons ruby text "実" text "じつ" cons text "NDF/CBOR encode/decodeを" cons ruby text "通" text "とお" cons text "した" cons ruby text "独立補助" text "どくりつほじょ" cons text " " cons code "compiler_report" cons text " は3" cons ruby text "例" text "れい" cons text "すべてで" cons ruby text "構造全" text "こうぞうぜん" cons text "Eqとなり、SourceBytesは" cons ruby text "原文" text "げんぶん" cons text "198/213/239bytesの" cons ruby text "各" text "かく" cons text "1" cons ruby text "回" text "かい" cons text "、Diagnosticsは1だった。" nil
+      cons sentence cons ruby text "管理対象" text "かんりたいしょう" cons text " " cons code "cargo test --locked -p nepl3-tools --test grammar diagnostic --target-dir .tmp/review-target" cons text " の6" cons ruby text "件" text "けん" cons text "も" cons ruby text "独立成功" text "どくりつせいこう" cons text "し、fresh Source/Allocation/Diagnostics" cons ruby text "停止" text "ていし" cons text "・" cons ruby text "別" text "べつ" cons text "Documentへの" cons ruby text "流用拒否" text "りゅうようきょひ" cons text "・" cons ruby text "共有" text "きょうゆう" cons text "SourceAdmissionを" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons sentence cons ruby text "元" text "もと" cons text "fixtureは" cons ruby text "子" text "こ" cons text " " cons code ".gitattributes" cons text " の " cons code "*.neplg -text" cons text " によりCRLFを" cons ruby text "保持" text "ほじ" cons text "する" cons ruby text "設定" text "せってい" cons text "を" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "これを[全/ぜん]T05や[未実装/みじっそう]binding[挙動/きょどう]の[合格/ごうかく]とはせず、R033は[別/べつ]の[未達/みたつ]として[維持/いじ]する。" nil
+    cons paragraph
+      cons sentence cons text "TypeDescriptor encoderの" cons ruby text "管理対象" text "かんりたいしょう" cons text "1" cons ruby text "件" text "けん" cons text "に" cons ruby text "加" text "くわ" cons text "え、" cons ruby text "独立" text "どくりつ" cons text "main-thread" cons ruby text "補助" text "ほじょ" cons text " " cons code "type_descriptor_depth" cons text " は100000" cons ruby text "層" text "そう" cons text "ListをDepth1000で" cons ruby text "停止" text "ていし" cons text "し" cons ruby text "安全" text "あんぜん" cons text "に" cons ruby text "破棄" text "はき" cons text "できた。" nil
+      cons "2048[層/そう]のList/Optionと[未知/みち]packageのUnicode Named[参照/さんしょう]は[実/じつ]CBOR[往復/おうふく]と[各層/かくそう]の[照合/しょうごう]が[成功/せいこう]した。"
+      cons "Namedは[記号的/きごうてき]な[型記述/かたきじゅつ]なので、ここで[未知参照/みちさんしょう]を[実行可能型/じっこうかのうがた]として[登録/とうろく]・[承認/しょうにん]した[意味/いみ]ではない。"
+      cons "これらignored[補助/ほじょ]は[管理対象試験数/かんりたいしょうしけんすう]へ[含/ふく]めず、[位置付/いちつ]き[診断/しんだん]の[実行境界/じっこうきょうかい]の[追加検証/ついかけんしょう]として[記録/きろく]する。" nil
+    cons paragraph
+      cons sentence cons text "process" cons ruby text "起動不要" text "きどうふよう" cons text "の" cons ruby text "管理対象" text "かんりたいしょう" cons text " " cons code "diagnostic::compiler_report_boundary_without_host_process" cons text " は、wasm32-wasip2へbuildした" cons ruby text "実" text "じつ" cons text "tools" cons ruby text "試験" text "しけん" cons text "artifactをWasmtime44.0.1で" cons ruby text "直接実行" text "ちょくせつじっこう" cons text "し1" cons ruby text "件" text "けん" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "[初回/しょかい]cargo[実行/じっこう]はrunner[未設定/みせってい]により[試験未実行/しけんみじっこう]だったため[成功/せいこう]へ[数/かぞ]えず、[同/おな]じartifactの[明示/めいじ]runner[実行結果/じっこうけっか]を[根拠/こんきょ]とする。"
+      cons "これは[管理下/かんりか]seed[入力/にゅうりょく]からcompile/Diagnostic/Reportへ[至/いた]る[経路/けいろ]であり、Python adapter[自体/じたい]をWASI[上/じょう]で[動/うご]かした[意味/いみ]ではない。" nil
     nil
   nil
