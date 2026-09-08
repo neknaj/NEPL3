@@ -1,0 +1,44 @@
+from pathlib import Path
+from html.parser import HTMLParser
+import sys,json,subprocess,hashlib,re,urllib.request
+r=Path(__file__).resolve().parents[2];p=Path(__file__).parent;sys.path.insert(0,str(r))
+from tools.audit.structure import Parser,load_forms
+commit='afeadcf70b120c7cf05e48ec2c282e0e4edd5e44';source='doc/spec/18-html-delivery.md';draft='doc/migration/authored/18-html-delivery.nepld'
+for name in [source,draft,'doc/authoring.md','design/forms.json','design/tasks.json','tools/audit/structure.py','tools/src/doc/projection/annotated.rs','tools/src/doc/projection/annotated/blocks.rs']:
+ b=(r/name).read_bytes();q=p/'source'/name;q.parent.mkdir(parents=True,exist_ok=True);q.write_bytes(b)
+ if name in (source,draft):assert b==subprocess.check_output(['git','show',commit+':'+name],cwd=r)
+tree=Parser((r/draft).read_text(encoding='utf8'),load_forms(r)).complete('Doc/Article')
+def walk(x):
+ if isinstance(x,list):
+  for y in x:yield from walk(y)
+ elif isinstance(x,dict):
+  yield x
+  for y in x.get('fields',{}).values():yield from walk(y)
+nodes=list(walk(tree));kinds={k:sum(x['kind']==k for x in nodes) for k in sorted({x['kind'] for x in nodes})};assert kinds['Table']==1 and kinds['Row']==5
+assert not any(x['kind'] in ('RawCode','Link','Image','ForeignBlock','Parallel') for x in nodes)
+codes=[x['fields']['text'] for x in nodes if x['kind']=='InlineCode'];assert codes==['design/tasks.json','depends_on']
+class Scripts(HTMLParser):
+ def __init__(self):super().__init__();self.active=False;self.parts=[];self.scripts=[]
+ def handle_starttag(self,t,a):
+  if t=='script' and dict(a).get('type')=='application/json':self.active=True;self.parts=[]
+ def handle_data(self,s):
+  if self.active:self.parts.append(s)
+ def handle_endtag(self,t):
+  if t=='script' and self.active:self.scripts.append(''.join(self.parts));self.active=False
+class Heads(HTMLParser):
+ def __init__(self):super().__init__();self.anchors=[]
+ def handle_starttag(self,t,a):
+  a=dict(a)
+  if t=='a' and a.get('id','').startswith('user-content-'):self.anchors.append(a)
+url=f'https://github.com/neknaj/NEPL3/blob/{commit}/{source}'
+req=urllib.request.Request(url,headers={'User-Agent':'NEPL3-independent-review'})
+try:
+ with urllib.request.urlopen(req,timeout=60) as response:html=response.read();status=response.status
+ (p/'github.html').write_bytes(html);s=Scripts();s.feed(html.decode('utf8'));payload=next(x['payload'] for x in map(json.loads,s.scripts) if 'codeViewBlobRoute' in x.get('payload',{}))
+ raw=payload['codeViewBlobLayoutRoute.StyledBlob']['rawLines'];assert ('\n'.join(raw)+'\n').encode()==(r/source).read_bytes()
+ rich=payload['codeViewBlobRoute']['richText'];h=Heads();h.feed(rich);assert len(h.anchors)==5 and len({x['id'] for x in h.anchors})==5
+ (p/'richText.html').write_bytes(rich.encode());gh={'status':status,'url':url,'commit':commit,'raw_source_exact':True,'anchors':h.anchors,'navigation':'not-run'}
+except Exception as e:
+ gh={'url':url,'commit':commit,'error':repr(e),'verified':False};(p/'fetch.json').write_text(json.dumps(gh,ensure_ascii=False,indent=2),encoding='utf8');raise
+(p/'fetch.json').write_text(json.dumps(gh,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+(p/'result.json').write_text(json.dumps({'source_commit':commit,'source_sha256':hashlib.sha256((r/source).read_bytes()).hexdigest(),'draft_sha256':hashlib.sha256((r/draft).read_bytes()).hexdigest(),'structure':'passed','kinds':kinds,'inline_code':codes,'recommended_renderer':'nepl3-tools.markdown-annotated/2','production':'not-run','browser':'not-run'},indent=2)+'\n',encoding='utf8');print('PASS')

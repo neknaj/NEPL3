@@ -1,0 +1,16 @@
+{
+  "reason": "Prior five-page canonical HTML run stopped at the independent default Work100M. This is a separately selected new operation, not a continuation of that stopped budget.",
+  "head": "3d33a63cc39d1768a92800530ca248eab32b75dc",
+  "prior_registry_sha256": "81cb88ca682495300a173b8cb447e4bf3434c79089ef3043957227510fcd98ac",
+  "new_registry_sha256": "cf60513d4977577fac8104ccb1a235825d3d6233cccdcfcbc586e9ab5948398d",
+  "html_output_limits": {
+    "source_bytes": 10000000,
+    "work": 300000000,
+    "depth": 1000,
+    "nodes": 10000000,
+    "allocation_units": 750000000,
+    "output_bytes": 10000000,
+    "diagnostics": 1000,
+    "events": 1000
+  }
+}

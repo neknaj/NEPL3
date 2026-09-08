@@ -1,0 +1,12 @@
+[
+  {
+    "path": "doc/spec/01-architecture.md",
+    "old_sha256": "894682f8b10159a4605902401af046096a6ea060b6ca4c2e92e5ef4939fa1ee2",
+    "new_sha256": "2ae43d285872e2c194764fd2129d97bcba863d4198fd17d1b2b67f0e16b0177a"
+  },
+  {
+    "path": "doc/spec/18-html-delivery.md",
+    "old_sha256": "d084c6ac2b6855adc4cf7e4a8fd7e64e0f8982c7a2259ea6e248481414eb5e71",
+    "new_sha256": "31e0a3af9c56766a737bc5c02a4072662f342a75b7816e7a8aad5da1afd525a5"
+  }
+]

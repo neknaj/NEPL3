@@ -1,0 +1,47 @@
+use pulldown_cmark::{Alignment, Event, Options, Parser, Tag, TagEnd};
+
+#[test]
+fn actual_generated_chapter18_keeps_the_table_code_and_sections() -> Result<(), Box<dyn std::error::Error>> {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../markdown-first/doc/spec/18-html-delivery.md");
+    let markdown = std::fs::read_to_string(path)?;
+    let mut cells = Vec::new();
+    let mut cell = None::<String>;
+    let mut codes = Vec::new();
+    let mut tables = Vec::new();
+    let mut headings = 0;
+    let mut rows = 0;
+    let mut links = 0;
+    let mut code_blocks = 0;
+    for event in Parser::new_ext(&markdown, Options::ENABLE_TABLES) {
+        match event {
+            Event::Start(Tag::Table(align)) => tables.push(align),
+            Event::Start(Tag::TableRow) => rows += 1,
+            Event::Start(Tag::TableCell) => cell = Some(String::new()),
+            Event::End(TagEnd::TableCell) => cells.push(cell.take().ok_or("cell missing")?),
+            Event::Start(Tag::Heading { .. }) => headings += 1,
+            Event::Start(Tag::Link { .. }) => links += 1,
+            Event::Start(Tag::CodeBlock(_)) => code_blocks += 1,
+            Event::Text(text) => {
+                if let Some(cell) = &mut cell { cell.push_str(&text); }
+            }
+            Event::Code(text) => codes.push(text.into_string()),
+            _ => {}
+        }
+    }
+    // Expectations are from the original chapter: three columns, H0..H3 rows,
+    // one title plus four sections, and exactly the two named code tokens.
+    assert_eq!(tables, [vec![Alignment::Left; 3]]);
+    assert_eq!(rows, 4);
+    assert_eq!(cells.len(), 15);
+    assert_eq!(headings, 5);
+    assert_eq!(links, 0);
+    assert_eq!(code_blocks, 0);
+    assert_eq!(codes, ["design/tasks.json", "depends_on"]);
+    for (offset, task, stage) in [(3, "T22", "H0"), (6, "T23", "H1"), (9, "T24", "H2"), (12, "T25", "H3")] {
+        assert_eq!(cells[offset], task);
+        assert_eq!(cells[offset + 1], stage);
+    }
+    println!("CHAPTER18_TABLE {}", serde_json::to_string(&cells)?);
+    Ok(())
+}

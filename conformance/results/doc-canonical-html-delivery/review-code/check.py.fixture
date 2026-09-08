@@ -1,0 +1,149 @@
+from pathlib import Path
+import hashlib,json,re,html,collections,sys
+from html.parser import HTMLParser
+p=Path(__file__).parent.resolve()
+def raw(n):return (p/n).read_bytes()
+def read(n):return raw(n).decode('utf8')
+def js(n):return json.loads(raw(n))
+def sha(b):return hashlib.sha256(b).hexdigest()
+result={}
+source=raw('source/doc/spec/18-html-delivery.nepld')
+assert source==raw('before/doc/migration/authored/18-html-delivery.nepld')==raw('prior-content/source/doc/migration/authored/18-html-delivery.nepld')
+assert raw('before/doc/spec/18-html-delivery.md')==raw('prior-content/source/doc/spec/18-html-delivery.md')
+result['source']={'doc_sha256':sha(source),'doc_bytes':len(source),'original_md_sha256':sha(raw('before/doc/spec/18-html-delivery.md')),'unchanged_reviewed_doc':True}
+sys.path.insert(0,str(p/'workspace'))
+from tools.audit.structure import Parser,load_forms
+tree=Parser(source.decode('utf8'),load_forms(p/'workspace')).complete('Doc/Article')
+def walk(x):
+    if isinstance(x,list):
+        for v in x:yield from walk(v)
+    elif isinstance(x,dict):
+        yield x
+        for v in x.get('fields',{}).values():yield from walk(v)
+nodes=list(walk(tree));kinds=collections.Counter(n['kind'] for n in nodes)
+for k,v in [('Paragraph',11),('Section',4),('Table',1),('Row',5),('AlignmentLeft',3),('InlineCode',2)]:assert kinds[k]==v
+assert not any(kinds[k] for k in ['RawCode','Link','Image','ForeignBlock','Parallel'])
+result['independent_source_structure']={'kinds':dict(kinds),'literal_ruby_is_not_expanded_by_this_parser':True}
+reg=js('source/doc/canonical.json');before=js('before/doc/canonical.json')
+assert reg['pages'][:4]==before['pages'] and len(reg['pages'])==5
+assert reg['output_limits']==before['output_limits']
+assert {k:v for k,v in reg.items() if k not in ['pages','html_output_limits']}=={k:v for k,v in before.items() if k not in ['pages','html_output_limits']}
+assert reg['pages'][-1]==dict(id='html-delivery',source='doc/spec/18-html-delivery.nepld',projection='doc/spec/18-html-delivery.md',aliases='doc/migration/aliases/18-html-delivery.json',route='docs/spec/18-html-delivery.html',renderer='nepl3-tools.markdown-annotated/2')
+limits=dict(source_bytes=10000000,work=300000000,depth=1000,nodes=10000000,allocation_units=750000000,output_bytes=10000000,diagnostics=1000,events=1000)
+assert reg['html_output_limits']==limits
+result['registry']={'existing_four_entries_unchanged':True,'old_markdown_limits_unchanged':True,'html_limits':limits}
+result['repeated_artifacts']={}
+for kind,count in [('markdown',6),('html',7)]:
+    base=p/(kind+'-first');files=sorted(q.relative_to(base).as_posix() for q in base.rglob('*') if q.is_file())
+    second=p/(kind+'-second');assert files==sorted(q.relative_to(second).as_posix() for q in second.rglob('*') if q.is_file())
+    assert len(files)==count
+    rows=[]
+    for n in files:
+        b=raw(kind+'-first/'+n);assert b==raw(kind+'-second/'+n)
+        rows.append(dict(path=n,sha256=sha(b),bytes=len(b)))
+    for r in js(kind+'-first/manifest.json')['files']:
+        b=raw(kind+'-first/'+r['path']);assert sha(b)==r['sha256']
+        if 'bytes' in r:assert len(b)==r['bytes']
+    result['repeated_artifacts'][kind]=rows
+for page in reg['pages']:
+    assert raw('markdown-first/'+page['projection'])==raw('source/'+page['projection'])
+old_md=[]
+for name in ['00-contract','13-reproducibility','22-external-extensions']:
+    n='doc/spec/'+name+'.md';old_md.append(dict(path=n,sha256=sha(raw('markdown-first/'+n))))
+    # Fixed parent changes exactly six paths; these files are unchanged by H.
+    assert n not in js('snapshot.json')['changed']
+result['old_three_md']=old_md
+old_html=[]
+for n in ['00-contract.html','01-architecture.html','13-reproducibility.html','22-external-extensions.html','assets/doc.css']:
+    n='docs/spec/'+n;b=raw('html-first/'+n)
+    assert b==raw('prior-g/html-first/'+n)
+    index={r['path']:r for r in js('prior-g/manifest.json')['files']}
+    assert sha(b)==index['html-first/'+n]['sha256']
+    old_html.append(dict(path=n,sha256=sha(b)))
+result['old_four_html_and_css']=old_html
+old=read('before/doc/spec/01-architecture.md');new=read('markdown-first/doc/spec/01-architecture.md')
+assert old.split('\n',1)[1]==new.split('\n',1)[1]
+def strip_context(v):return re.sub(r'(input PageSet digest |input context SHA-256 )[0-9a-f]{64}',r'\1<DIGEST>',v)
+assert strip_context(old)==strip_context(new) and old!=new
+group=bytes.fromhex(re.search(r'input PageSet digest ([0-9a-f]{64})',new)[1])
+fields=[b'nepl3.canonical-input-context/1\0',b'nepl3-tools.markdown-annotated-pages/1',b'doc/canonical.json',raw('source/doc/canonical.json'),group,(5).to_bytes(8,'big')]
+for page in reg['pages']:
+    fields.extend(page[k].encode() for k in ['id','source','projection','aliases','route','renderer'])
+    fields.extend(hashlib.sha256(raw('source/'+page[k])).digest() for k in ['source','aliases'])
+context=sha(b''.join(len(v).to_bytes(8,'big')+v for v in fields))
+assert context==js('markdown-first/manifest.json')['input_context']
+assert 'input context SHA-256 '+context in new
+result['architecture_header']={'body_unchanged':True,'only_pageset_and_context_fields_changed':True,'independent_context_sha256':context,'pageset_digest':group.hex()}
+aliases=js('source/doc/migration/aliases/18-html-delivery.json')
+names=['18-htmlを先行利用する実装段階','実装依存','h0h1の契約','h2h3の契約と検証','正式文書のdoc移行']
+sections=['implementation_dependencies','document_preparation','math_and_browser','documentation_migration']
+assert aliases==[dict(section=section,name=name) for section,name in zip([None]+sections,names)]
+class Scripts(HTMLParser):
+    def __init__(self):super().__init__();self.active=False;self.parts=[];self.scripts=[]
+    def handle_starttag(self,t,a):
+        if t=='script' and dict(a).get('type')=='application/json':self.active=True;self.parts=[]
+    def handle_data(self,s):
+        if self.active:self.parts.append(s)
+    def handle_endtag(self,t):
+        if t=='script' and self.active:self.scripts.append(''.join(self.parts));self.active=False
+class OldAnchors(HTMLParser):
+    def __init__(self):super().__init__();self.ids=[]
+    def handle_starttag(self,t,a):
+        a=dict(a)
+        if t=='a' and a.get('id','').startswith('user-content-'):self.ids.append(a['id'][13:])
+s=Scripts();s.feed(read('prior-content/github.html'))
+payload=next(x['payload'] for x in map(json.loads,s.scripts) if 'codeViewBlobRoute' in x.get('payload',{}))
+assert ('\n'.join(payload['codeViewBlobLayoutRoute.StyledBlob']['rawLines'])+'\n').encode()==raw('before/doc/spec/18-html-delivery.md')
+a=OldAnchors();a.feed(payload['codeViewBlobRoute']['richText']);assert a.ids==names
+result['old_anchor_receipt']={'saved_fixed_github_rawlines_equal_original':True,'old_names_equal_aliases':True,'new_navigation_not_run_in_this_scope':True}
+semantic=['n-'+s.encode().hex() for s in sections]
+md=read('markdown-first/doc/spec/18-html-delivery.md')
+md_names=re.findall(r'<a name="([^"]+)"></a>',md)
+assert len(md_names)==9 and len(set(md_names))==9 and set(md_names)==set(names+semantic)
+header=html.unescape(md.splitlines()[0]);page=reg['pages'][-1]
+assert 'Generated from '+page['source']+';' in header and 'renderer '+page['renderer']+';' in header
+assert 'source SHA-256 '+sha(source) in header and 'alias input SHA-256 '+sha(raw('source/'+page['aliases'])) in header
+assert not re.search(r'^```',read('before/doc/spec/18-html-delivery.md'),re.M)
+assert not re.search(r'\bRawCode\b|\braw_code\b',source.decode())
+class Tags(HTMLParser):
+    def __init__(self):super().__init__();self.count=collections.Counter();self.ids=[];self.codes=[];self.cell_text=[];self.code=None;self.cell=None;self.ruby_depth=0
+    def handle_starttag(self,tag,attrs):
+        self.count[tag]+=1;attrs=dict(attrs)
+        if 'id' in attrs:self.ids.append(attrs['id'])
+        if tag=='code':self.code=''
+        if tag in ['td','th']:self.cell=''
+        # Exclude readings/notes for comparison to original semantic cell prose.
+        if tag in ['rt']:self.ruby_depth+=1
+    def handle_endtag(self,tag):
+        if tag=='code':self.codes.append(self.code);self.code=None
+        if tag in ['td','th']:self.cell_text.append(self.cell);self.cell=None
+        if tag=='rt':self.ruby_depth-=1
+    def handle_data(self,data):
+        if self.code is not None:self.code+=data
+        if self.cell is not None and not self.ruby_depth:self.cell+=data
+t=Tags();t.feed(read('html-first/docs/spec/18-html-delivery.html'))
+assert t.ids==semantic and not set(names)&set(t.ids)
+assert [t.count[k] for k in ['h1','h2','table','tr','th','td','script','pre']]==[1,4,1,5,3,12,0,0]
+assert t.codes==['design/tasks.json','depends_on']
+for i,task,stage in [(3,'T22','H0'),(6,'T23','H1'),(9,'T24','H2'),(12,'T25','H3')]:
+    assert t.cell_text[i]==task and t.cell_text[i+1]==stage
+result['chapter18_rendered']={'md_names':md_names,'html_semantic_ids':t.ids,'tags':dict(t.count),'inline_codes':t.codes,'table_cells':t.cell_text,'no_rawcode_source_or_output':True}
+hm=js('html-first/manifest.json');assert hm['output_budget']['limits']==limits
+assert not any(hm['output_budget']['initial_usage'].values())
+assert all(hm['output_budget']['usage'][k]<=limits[k] for k in limits)
+assert len(hm['pages'])==5 and hm['registered_files']==[] and hm['viewer_scripts'] is False
+for page,row in zip(reg['pages'],hm['pages']):
+    for k,expected in [('id',page['id']),('input',page['source']),('source',page['projection']),('route',page['route']),('source_sha256',sha(raw('source/'+page['source'])))]:assert row[k]==expected
+    for phase in ['parse','lower']:
+        assert not any(row[phase+'_initial_usage'].values())
+        assert row[phase+'_limits']['work']==100000000 and row[phase+'_limits']['allocation_units']==500000000
+result['html_receipt']={'output_usage':hm['output_budget']['usage'],'execution_identity':hm['execution_identity'],'phase_identity':hm['phase_execution']['identity'],'five_input_identities_and_routes':True,'parse_lower_defaults_unchanged':True}
+default=js('default-registry.json');assert default=={k:v for k,v in reg.items() if k!='html_output_limits'}
+assert 'resolve/render: Stopped(WorkLimit)' in read('html-default.stderr.log') and not (p/'html-default').exists()
+assert js('commands.json')[-1]['registry_sha256']==sha(raw('default-registry.json'))
+result['separate_default_operation']={'only_json_value_change':'html_output_limits omitted','registry_sha256':sha(raw('default-registry.json')),'stderr':read('html-default.stderr.log'),'no_output_directory':True}
+for row in js('dependencies.json'):
+    b=raw('workspace/'+row['path']);assert len(b)==row['bytes'] and sha(b)==row['sha256'],row['path']
+result['fixed_dependencies_reverified']=len(js('dependencies.json'))
+(p/'checks.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+print('PASS source / registry / 6+7 repeated outputs / old 3 MD and 4 HTML+CSS / context / table+code+anchors / phase receipts / default stop / 676 fixed dependencies')

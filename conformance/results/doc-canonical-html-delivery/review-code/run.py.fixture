@@ -1,0 +1,24 @@
+from pathlib import Path
+import subprocess,json,hashlib,os,time
+p=Path(__file__).parent.resolve();ws=p/'workspace';target=p/'target';rows=[]
+def sha(b):return hashlib.sha256(b).hexdigest()
+def run(name,cmd,success=True):
+    start=time.monotonic();r=subprocess.run(cmd,cwd=ws,env=dict(os.environ,CARGO_TARGET_DIR=str(target)),capture_output=True,timeout=900)
+    (p/(name+'.stdout.log')).write_bytes(r.stdout);(p/(name+'.stderr.log')).write_bytes(r.stderr)
+    rows.append(dict(name=name,command=cmd,head='799f00d6384d45e8160b51366d03fecb1dd2dfe1',registry_sha256=sha((ws/'doc/canonical.json').read_bytes()),deadline_seconds=900,elapsed_seconds=time.monotonic()-start,exit_code=r.returncode,expected_success=success))
+    (p/'commands.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf8');print(name,r.returncode,flush=True)
+    assert (r.returncode==0)==success,r.stderr[-1200:];return r
+for name,cmd in [('rust-version',['rustc','-Vv']),('cargo-version',['cargo','-V']),('build',['cargo','build','--locked','-p','nepl3-tools']),('doc-compile',['cargo','test','--locked','-p','nepl3-tools','--test','doc','--no-run'])]:run(name,cmd)
+binary=target/'debug/nepl3-tools.exe';h=sha(binary.read_bytes())
+run('canonical-check',[str(binary),'doc-canonical','--check'])
+for phase in ['first','second']:
+    for kind in ['markdown','html']:run(kind+'-'+phase,[str(binary),'doc-canonical',kind,str(p/(kind+'-'+phase))])
+original=(ws/'doc/canonical.json').read_bytes();v=json.loads(original);del v['html_output_limits'];default=(json.dumps(v,ensure_ascii=False,indent=2)+'\n').encode();(p/'default-registry.json').write_bytes(default)
+try:
+    (ws/'doc/canonical.json').write_bytes(default)
+    r=run('html-default',[str(binary),'doc-canonical','html',str(p/'html-default')],False)
+    assert b'Stopped(WorkLimit)' in r.stderr and not (p/'html-default').exists()
+finally:(ws/'doc/canonical.json').write_bytes(original)
+assert sha(binary.read_bytes())==h
+(p/'binary.json').write_text(json.dumps(dict(head='799f00d6384d45e8160b51366d03fecb1dd2dfe1',path=str(binary),bytes=binary.stat().st_size,sha256=h),indent=2)+'\n',encoding='utf8')
+print('All fixed generation passed; separate omitted HTML allowance stopped with no output',flush=True)

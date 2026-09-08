@@ -1,0 +1,9 @@
+[
+  { "section": null, "name": "00-対象と設計上の決定" },
+  { "section": "policy", "name": "方針" },
+  { "section": "targets", "name": "1-実装対象" },
+  { "section": "boundaries", "name": "2-保存する意味上の境界" },
+  { "section": "prototypes", "name": "3-試作の扱い" },
+  { "section": "invariants", "name": "4-不変条件" },
+  { "section": "spellings", "name": "5-具体的な綴り" }
+]
