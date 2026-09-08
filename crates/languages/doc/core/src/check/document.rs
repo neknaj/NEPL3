@@ -96,19 +96,13 @@ impl DocumentSyntax {
         }
         let shape = self.value.validate_shape(b)?;
         let mut store = SourceStore::default();
-        for (i, source) in self.sources.iter().enumerate() {
+        for source in &self.sources {
             admission.admit_existing(source, b)?;
-            for prior in &self.sources[..i] {
-                b.charge(
-                    Resource::Work,
-                    (prior.identity().source.0.len() + source.identity().source.0.len()) as u64
-                        + 40,
-                )?;
-                if prior.identity().source == source.identity().source
-                    && prior.identity().revision == source.identity().revision
-                {
-                    return Err(StructureError::DuplicateSource);
-                }
+            if store
+                .get_revision_with_budget(&source.identity().source, source.identity().revision, b)?
+                .is_some()
+            {
+                return Err(StructureError::DuplicateSource);
             }
             store.insert_with_budget(source.clone_with_budget(b)?, b)?;
         }
