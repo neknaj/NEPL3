@@ -1,0 +1,137 @@
+from pathlib import Path
+import hashlib,json,re,html,collections,sys
+from html.parser import HTMLParser
+p=Path(__file__).parent.resolve()
+def raw(n):return (p/n).read_bytes()
+def read(n):return raw(n).decode('utf8')
+def js(n):return json.loads(raw(n))
+def sha(b):return hashlib.sha256(b).hexdigest()
+def put(n,b):q=p/n;q.parent.mkdir(parents=True,exist_ok=True);q.write_bytes(b)
+result={}
+source=raw('source/doc/spec/19-html-fragment.nepld');old=raw('before/doc/migration/authored/19-html-fragment.nepld');assert source==old
+assert sha(source)==js('prior-content/result.json')['draft_sha256']
+assert sha(raw('before/doc/spec/19-html-fragment.md'))==js('prior-content/result.json')['original_sha256']
+result['source']={'doc_sha256':sha(source),'doc_bytes':len(source),'original_md_sha256':sha(raw('before/doc/spec/19-html-fragment.md')),'original_md_bytes':len(raw('before/doc/spec/19-html-fragment.md')),'unchanged_move':True}
+sys.path.insert(0,str(p/'workspace'))
+from tools.audit.structure import Parser,load_forms
+tree=Parser(source.decode(),load_forms(p/'workspace')).complete('Doc/Article')
+def walk(x):
+    if isinstance(x,list):
+        for v in x:yield from walk(v)
+    elif isinstance(x,dict):
+        yield x
+        for v in x.get('fields',{}).values():yield from walk(v)
+nodes=list(walk(tree));kinds=collections.Counter(n['kind'] for n in nodes)
+assert kinds['Paragraph']==18 and kinds['InlineCode']==17 and kinds['Link']==5
+assert not any(kinds[k] for k in ['Section','List','RawCode','Image','ForeignBlock','Parallel','Table'])
+codes=[n['fields']['text'] for n in nodes if n['kind']=='InlineCode']
+expected_codes=['nepl3.safe-markup/2','nepl3.markup','interfaces/markup.json','nepl3-markup','[a-z][a-z0-9-]*','[a-z][a-z0-9-]*','-_.','.','..','BetweenArtifacts(source,target,fragment)','../','#fragment','docs/a/index.html','docs/b/index.html','../b/index.html','../','BetweenArtifacts']
+assert codes==expected_codes
+links=['https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3','https://html.spec.whatwg.org/multipage/tables.html#the-table-element','https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element','https://url.spec.whatwg.org/','https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element']
+assert links==js('prior-content/result.json')['external_urls']
+result['source_structure']={'kinds':dict(kinds),'codes':codes,'literal_ruby_not_expanded':True}
+reg=js('source/doc/canonical.json');before=js('before/doc/canonical.json')
+assert reg['pages'][:6]==before['pages'] and len(reg['pages'])==7
+assert reg['html_output_limits']==before['html_output_limits']
+assert {k:v for k,v in reg.items() if k not in ['pages','output_limits']}=={k:v for k,v in before.items() if k not in ['pages','output_limits']}
+assert before['output_limits']['work']==300000000 and before['output_limits']['allocation_units']==750000000
+old_limits=before['output_limits'].copy();old_limits.update(work=400000000,allocation_units=1000000000);assert old_limits==reg['output_limits']
+assert reg['pages'][-1]==dict(id='html-fragment',source='doc/spec/19-html-fragment.nepld',projection='doc/spec/19-html-fragment.md',aliases='doc/migration/aliases/19-html-fragment.json',route='docs/spec/19-html-fragment.html',renderer='nepl3-tools.markdown-annotated/2')
+result['registry']={'existing_six_entries_unchanged':True,'only_selected_markdown_work_and_allocation_changed':True,'html_limits_unchanged':True}
+result['repeated_artifacts']={}
+for kind,count in [('markdown',8),('html',9)]:
+    folder=p/(kind+'-first');files=sorted(q.relative_to(folder).as_posix() for q in folder.rglob('*') if q.is_file());second=p/(kind+'-second')
+    assert len(files)==count and files==sorted(q.relative_to(second).as_posix() for q in second.rglob('*') if q.is_file())
+    rows=[]
+    for n in files:
+        b=raw(kind+'-first/'+n);assert b==raw(kind+'-second/'+n);rows.append(dict(path=n,sha256=sha(b),bytes=len(b)))
+    for r in js(kind+'-first/manifest.json')['files']:
+        b=raw(kind+'-first/'+r['path']);assert sha(b)==r['sha256']
+        if 'bytes' in r:assert len(b)==r['bytes']
+    result['repeated_artifacts'][kind]=rows
+for page in reg['pages']:assert raw('markdown-first/'+page['projection'])==raw('source/'+page['projection'])
+oldmd=[]
+for name in ['00-contract','07-circuit','13-reproducibility','18-html-delivery','22-external-extensions']:
+    n='doc/spec/'+name+'.md';b=raw('markdown-first/'+n);assert b==raw('prior-k/markdown-first/'+n);oldmd.append(dict(path=n,sha256=sha(b)))
+result['old_five_legacy_markdown']=oldmd
+oldhtml=[]
+for n in ['00-contract.html','01-architecture.html','07-circuit.html','13-reproducibility.html','18-html-delivery.html','22-external-extensions.html','assets/doc.css']:
+    n='docs/spec/'+n;b=raw('html-first/'+n);assert b==raw('prior-k/html-first/'+n);oldhtml.append(dict(path=n,sha256=sha(b)))
+result['old_six_html_and_css']=oldhtml
+old=read('before/doc/spec/01-architecture.md');new=read('markdown-first/doc/spec/01-architecture.md')
+assert old.split('\n',1)[1]==new.split('\n',1)[1] and old==read('prior-k/markdown-first/doc/spec/01-architecture.md')
+def strip_context(v):return re.sub(r'(input PageSet digest |input context SHA-256 )[0-9a-f]{64}',r'\1<DIGEST>',v)
+assert strip_context(old)==strip_context(new) and old!=new
+group=bytes.fromhex(re.search(r'input PageSet digest ([0-9a-f]{64})',new)[1])
+fields=[b'nepl3.canonical-input-context/1\0',b'nepl3-tools.markdown-annotated-pages/1',b'doc/canonical.json',raw('source/doc/canonical.json'),group,(7).to_bytes(8,'big')]
+for page in reg['pages']:
+    fields.extend(page[k].encode() for k in ['id','source','projection','aliases','route','renderer'])
+    fields.extend(hashlib.sha256(raw('source/'+page[k])).digest() for k in ['source','aliases'])
+context=sha(b''.join(len(v).to_bytes(8,'big')+v for v in fields))
+assert context==js('markdown-first/manifest.json')['input_context'] and 'input context SHA-256 '+context in new
+result['architecture_header']={'only_pageset_and_context_changed':True,'independently_recomputed_context':context,'pageset_digest':group.hex()}
+names=['19-html-fragmentの構造契約'];assert js('source/doc/migration/aliases/19-html-fragment.json')==[dict(section=None,name=names[0])]
+md=read('markdown-first/doc/spec/19-html-fragment.md');assert re.findall(r'<a name="([^"]+)"></a>',md)==names
+header=html.unescape(md.splitlines()[0]);page=reg['pages'][-1]
+assert 'Generated from '+page['source']+';' in header and 'renderer '+page['renderer']+';' in header
+assert 'source SHA-256 '+sha(source) in header and 'alias input SHA-256 '+sha(raw('source/'+page['aliases'])) in header
+class Tags(HTMLParser):
+    def __init__(self):super().__init__();self.count=collections.Counter();self.ids=[];self.codes=[];self.code=None;self.links=[]
+    def handle_starttag(self,tag,attrs):
+        self.count[tag]+=1;attrs=dict(attrs)
+        if 'id' in attrs:self.ids.append(attrs['id'])
+        if tag=='code':self.code=''
+        if tag=='a':self.links.append(attrs.get('href'))
+    def handle_endtag(self,tag):
+        if tag=='code':self.codes.append(self.code);self.code=None
+    def handle_data(self,data):
+        if self.code is not None:self.code+=data
+t=Tags();t.feed(read('html-first/docs/spec/19-html-fragment.html'))
+assert t.ids==[] and t.links==links and t.codes==codes
+assert [t.count[k] for k in ['h1','h2','p','a','table','ul','ol','script','pre']]==[1,0,18,5,0,0,0,0,0]
+result['fragment_output']={'markdown_aliases':names,'html_semantic_ids':t.ids,'tags':dict(t.count),'links':t.links,'inline_codes':t.codes}
+prior=Path('C:/projects/NEPL3-doc-canonical-html-delivery/.tmp/preflight-after18');m=(prior/'manifest.json').read_bytes();put('prior-anchors/manifest.json',m);index={r['path']:r for r in json.loads(m)['files']}
+for n in ['19-html-fragment/'+x for x in ['fetch.json','github.html','rawLines.json','result.json','richText.html']]:
+    b=(prior/n).read_bytes();r=index[n];assert len(b)==r['bytes'] and sha(b)==r['sha256'];put('prior-anchors/'+n,b)
+class Scripts(HTMLParser):
+    def __init__(self):super().__init__();self.active=False;self.parts=[];self.scripts=[]
+    def handle_starttag(self,t,a):
+        if t=='script' and dict(a).get('type')=='application/json':self.active=True;self.parts=[]
+    def handle_data(self,s):
+        if self.active:self.parts.append(s)
+    def handle_endtag(self,t):
+        if t=='script' and self.active:self.scripts.append(''.join(self.parts));self.active=False
+class OldAnchors(HTMLParser):
+    def __init__(self):super().__init__();self.ids=[]
+    def handle_starttag(self,t,a):
+        a=dict(a)
+        if t=='a' and a.get('id','').startswith('user-content-'):self.ids.append(a['id'][13:])
+s=Scripts();s.feed(read('prior-anchors/19-html-fragment/github.html'));payload=next(x['payload'] for x in map(json.loads,s.scripts) if 'codeViewBlobRoute' in x.get('payload',{}))
+assert ('\n'.join(payload['codeViewBlobLayoutRoute.StyledBlob']['rawLines'])+'\n').encode()==raw('before/doc/spec/19-html-fragment.md')
+a=OldAnchors();a.feed(payload['codeViewBlobRoute']['richText']);assert a.ids==names
+result['old_anchor_receipt']={'rawlines_equal_original':True,'old_title_name_equal_alias':True,'new_navigation_not_tested_here':True}
+hm=js('html-first/manifest.json');mm=js('markdown-first/manifest.json')
+assert hm['output_budget']['limits']==reg['html_output_limits'] and mm['output_budget']['limits']==reg['output_limits']
+for manifest in [hm,mm]:assert not any(manifest['output_budget']['initial_usage'].values())
+assert len(hm['pages'])==7 and hm['registered_files']==[] and hm['viewer_scripts'] is False
+for page,row in zip(reg['pages'],hm['pages']):
+    for k,expected in [('id',page['id']),('input',page['source']),('source',page['projection']),('route',page['route']),('source_sha256',sha(raw('source/'+page['source'])))]:assert row[k]==expected
+    for phase in ['parse','lower']:
+        assert not any(row[phase+'_initial_usage'].values())
+        assert row[phase+'_limits']['work']==100000000 and row[phase+'_limits']['allocation_units']==500000000 and row[phase+'_limits']['nodes']==10000000
+usage=mm['output_budget']['usage_before_receipt_serialization'];assert usage['work']>300000000 and usage['allocation_units']>750000000
+assert all(usage[k]<=reg['output_limits'][k] for k in reg['output_limits'])
+assert all(hm['output_budget']['usage'][k]<=reg['html_output_limits'][k] for k in reg['html_output_limits'])
+result['receipts']={'markdown_before_receipt_serialization_usage':usage,'html_output_usage':hm['output_budget']['usage'],'seven_input_identities':True,'parse_lower_defaults_retained':True}
+low=js('old-budget-registry.json');expected=json.loads(raw('source/doc/canonical.json'));expected['output_limits'].update(work=300000000,allocation_units=750000000);assert low==expected
+assert 'AllocationLimit' in read('markdown-old-budget.stderr.log') and not (p/'markdown-old-budget').exists()
+assert js('commands.json')[-1]['registry_sha256']==sha(raw('old-budget-registry.json'))
+worklow=js('work300m-registry.json');expected=json.loads(raw('source/doc/canonical.json'));expected['output_limits']['work']=300000000;assert worklow==expected
+assert 'WorkLimit' in read('work300m.stderr.log') and not (p/'markdown-work300m').exists()
+assert js('work300m-command.json')['registry_sha256']==sha(raw('work300m-registry.json'))
+result['separate_finite_failures']={'former_300m_750m':read('markdown-old-budget.stderr.log'),'work300m_allocation1b':read('work300m.stderr.log'),'no_output_directories':True}
+for row in js('dependencies.json'):
+    b=raw('workspace/'+row['path']);assert len(b)==row['bytes'] and sha(b)==row['sha256'],row['path']
+result['fixed_dependencies_reverified']=len(js('dependencies.json'))
+put('checks.json',(json.dumps(result,ensure_ascii=False,indent=2)+'\n').encode())
+print('PASS unchanged Doc / selected limits /8+9 repeated outputs /5 old MD +6 HTML+CSS /context /17code+5links+titlealias /prior GitHub /separate Allocation+Work stops /fixed hashes')

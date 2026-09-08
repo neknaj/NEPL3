@@ -1,0 +1,14 @@
+{
+  "command": [
+    "C:\\projects\\NEPL3-doc-canonical-html-fragment\\.tmp\\review-canonical19-code\\target\\debug\\nepl3-tools.exe",
+    "doc-canonical",
+    "markdown",
+    "C:\\projects\\NEPL3-doc-canonical-html-fragment\\.tmp\\review-canonical19-code\\markdown-work300m"
+  ],
+  "head": "e8c396ada1e3d48d981f7a43276889e691e1be1b",
+  "registry_sha256": "e629e8b7d2d81de8a83021c9a77c3c029a7312504b79838cb98890b7c1c1e4af",
+  "binary_sha256": "ffd6d202ae7804c92e7027592c41fef17955098291b2405b3dec98f8da7cc37d",
+  "exit_code": 1,
+  "deadline_seconds": 900,
+  "elapsed_seconds": 79.34315950004384
+}

@@ -1,0 +1,6 @@
+{
+  "result": "PASS",
+  "url": "https://github.com/neknaj/NEPL3/blob/e8c396ada1e3d48d981f7a43276889e691e1be1b/doc/spec/19-html-fragment.md",
+  "readiness": "domcontentloaded then visible fixed article/title",
+  "version": "151.0.7922.34"
+}

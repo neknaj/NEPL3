@@ -1,0 +1,16 @@
+from pathlib import Path
+import subprocess,json,hashlib,time
+p=Path(__file__).parent.resolve();ws=p/'workspace';reg=ws/'doc/canonical.json';original=reg.read_bytes()
+binary=p/'target/debug/nepl3-tools.exe';identity=hashlib.sha256(binary.read_bytes()).hexdigest()
+assert identity==json.loads((p/'binary.json').read_bytes())['sha256']
+v=json.loads(original);v['output_limits']['work']=300000000;low=(json.dumps(v,ensure_ascii=False,indent=2)+'\n').encode();(p/'work300m-registry.json').write_bytes(low)
+cmd=[str(binary),'doc-canonical','markdown',str(p/'markdown-work300m')];start=time.monotonic()
+try:
+    reg.write_bytes(low)
+    r=subprocess.run(cmd,cwd=ws,capture_output=True,timeout=900)
+    (p/'work300m.stdout.log').write_bytes(r.stdout);(p/'work300m.stderr.log').write_bytes(r.stderr)
+    (p/'work300m-command.json').write_text(json.dumps(dict(command=cmd,head='e8c396ada1e3d48d981f7a43276889e691e1be1b',registry_sha256=hashlib.sha256(low).hexdigest(),binary_sha256=identity,exit_code=r.returncode,deadline_seconds=900,elapsed_seconds=time.monotonic()-start),indent=2)+'\n',encoding='utf8')
+    assert r.returncode!=0 and b'WorkLimit' in r.stderr and not (p/'markdown-work300m').exists()
+finally:reg.write_bytes(original)
+assert hashlib.sha256(binary.read_bytes()).hexdigest()==identity
+print('Separate Work300M / Allocation1B operation stopped WorkLimit with no output')

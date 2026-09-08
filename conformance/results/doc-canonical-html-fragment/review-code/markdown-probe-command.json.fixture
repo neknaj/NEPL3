@@ -1,0 +1,17 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-tools",
+    "--test",
+    "canonical19_review",
+    "--",
+    "--nocapture"
+  ],
+  "deadline_seconds": 300,
+  "elapsed_seconds": 2.3019063000101596,
+  "exit_code": 0,
+  "probe_sha256": "c948b49a575ea32d720417fc5ff29bbed50656cd46fc1c471d7bf1e363375ddc"
+}

@@ -1,0 +1,11 @@
+from pathlib import Path
+s=Path('C:/projects/NEPL3-doc-canonical-html-delivery/.tmp/browser-canonical18.py').read_text(encoding='utf-8')
+s=s.replace('browser-canonical18','browser-canonical19').replace('18-html-delivery','19-html-fragment')
+s=s.replace("sections=['implementation_dependencies','document_preparation','math_and_browser','documentation_migration']","sections=[]").replace('assert len(ids)==4','assert len(ids)==0')
+s=s.replace("lists:[...document.querySelectorAll('ol')].map(n=>n.children.length),", "lists:[...document.querySelectorAll('ol')].map(n=>n.children.length), inlineCodes:[...document.querySelectorAll('code')].map(n=>n.textContent), links:[...document.querySelectorAll('article a[href]')].map(n=>n.getAttribute('href')),")
+s=s.replace("len(result['headings'])==5 and result['lists']==[] and result['tables']==[{'rows':5,'cells':15}]", "len(result['headings'])==1 and result['lists']==[] and result['tables']==[]")
+s=s.replace("assert 'design/tasks.json' in snapshot and 'depends_on' in snapshot", "assert 'nepl3.safe-markup/2' in snapshot and 'BetweenArtifacts(source,target,fragment)' in snapshot\n                    original=(root/'.tmp/original.md').read_text(encoding='utf-8')\n                    assert result['inlineCodes']==re.findall(r'`([^`]+)`',original)\n                    assert result['links']==re.findall(r'\\[[^\\]]+\\]\\((https://[^)]+)\\)',original)")
+Path('.tmp/browser-canonical19.py').write_text(s,encoding='utf-8')
+g=Path('C:/projects/NEPL3-doc-canonical-html-delivery/.tmp/github-canonical18-final.py').read_text(encoding='utf-8')
+g=g.replace('799f00d6384d45e8160b51366d03fecb1dd2dfe1','e8c396ada1e3d48d981f7a43276889e691e1be1b').replace('canonical18-final','canonical19').replace('18-html-delivery','19-html-fragment').replace('assert len(rows)==9','assert len(rows)==1')
+Path('.tmp/github-canonical19.py').write_text(g,encoding='utf-8')

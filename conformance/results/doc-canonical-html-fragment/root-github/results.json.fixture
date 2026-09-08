@@ -1,0 +1,24 @@
+{
+  "head": "e8c396ada1e3d48d981f7a43276889e691e1be1b",
+  "url": "https://github.com/neknaj/NEPL3/blob/e8c396ada1e3d48d981f7a43276889e691e1be1b/doc/spec/19-html-fragment.md",
+  "rows": [
+    {
+      "fragment": "19-html-fragmentの構造契約",
+      "before": {
+        "top": -2012,
+        "scrollY": 2398,
+        "max": 2398
+      },
+      "after": {
+        "top": 125,
+        "scrollY": 261,
+        "hash": "#19-html-fragment%E3%81%AE%E6%A7%8B%E9%80%A0%E5%A5%91%E7%B4%84"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    }
+  ],
+  "status": 200,
+  "browser": "151.0.7922.34",
+  "raw_lines_match": true
+}

@@ -1,0 +1,185 @@
+{
+  "commit": "3abd255d5a52eec41f741b6b17e4ec9e2213efdc",
+  "pages": [
+    {
+      "name": "07-circuit",
+      "source_bytes": 6876,
+      "draft_bytes": 16411,
+      "draft_kinds": {
+        "Article": 1,
+        "Sentence": 113,
+        "Text": 117,
+        "Body": 21,
+        "Section": 9,
+        "Paragraph": 33,
+        "InlineCode": 12,
+        "List": 2,
+        "Unordered": 1,
+        "ListItem": 11,
+        "CheckNone": 11,
+        "Ordered": 1
+      },
+      "ruby_count": 348,
+      "flat_lists": [
+        {
+          "style": {
+            "kind": "Unordered",
+            "fields": {}
+          },
+          "items": 5
+        },
+        {
+          "style": {
+            "kind": "Ordered",
+            "fields": {
+              "start": "1"
+            }
+          },
+          "items": 6
+        }
+      ],
+      "external_links": [],
+      "headings": [
+        {
+          "old_heading": "07. Circuit言語",
+          "observed_dom_id": "user-content-07-circuit言語",
+          "legacy_fragment": "07-circuit言語",
+          "section": null,
+          "semantic_fragment": null
+        },
+        {
+          "old_heading": "方針",
+          "observed_dom_id": "user-content-方針",
+          "legacy_fragment": "方針",
+          "section": "policy",
+          "semantic_fragment": "n-706f6c696379"
+        },
+        {
+          "old_heading": "1. surfaceと型",
+          "observed_dom_id": "user-content-1-surfaceと型",
+          "legacy_fragment": "1-surfaceと型",
+          "section": "surface",
+          "semantic_fragment": "n-73757266616365"
+        },
+        {
+          "old_heading": "2. 各宣言",
+          "observed_dom_id": "user-content-2-各宣言",
+          "legacy_fragment": "2-各宣言",
+          "section": "declarations",
+          "semantic_fragment": "n-6465636c61726174696f6e73"
+        },
+        {
+          "old_heading": "3. 演算",
+          "observed_dom_id": "user-content-3-演算",
+          "legacy_fragment": "3-演算",
+          "section": "operations",
+          "semantic_fragment": "n-6f7065726174696f6e73"
+        },
+        {
+          "old_heading": "4. 検査とelaboration",
+          "observed_dom_id": "user-content-4-検査とelaboration",
+          "legacy_fragment": "4-検査とelaboration",
+          "section": "elaboration",
+          "semantic_fragment": "n-656c61626f726174696f6e"
+        },
+        {
+          "old_heading": "5. stepと時間",
+          "observed_dom_id": "user-content-5-stepと時間",
+          "legacy_fragment": "5-stepと時間",
+          "section": "time",
+          "semantic_fragment": "n-74696d65"
+        },
+        {
+          "old_heading": "6. NOR IR",
+          "observed_dom_id": "user-content-6-nor-ir",
+          "legacy_fragment": "6-nor-ir",
+          "section": "nor",
+          "semantic_fragment": "n-6e6f72"
+        },
+        {
+          "old_heading": "7. SVG backend",
+          "observed_dom_id": "user-content-7-svg-backend",
+          "legacy_fragment": "7-svg-backend",
+          "section": "svg",
+          "semantic_fragment": "n-737667"
+        },
+        {
+          "old_heading": "8. 公開操作",
+          "observed_dom_id": "user-content-8-公開操作",
+          "legacy_fragment": "8-公開操作",
+          "section": "public",
+          "semantic_fragment": "n-7075626c6963"
+        }
+      ],
+      "prior_review_source_and_draft_hashes_unchanged": true,
+      "formal_structure": "PASS; audit parser only, not production execution",
+      "github_rawLines_exact": true,
+      "browser_navigation": "not run",
+      "generation": "not run in this preflight"
+    },
+    {
+      "name": "19-html-fragment",
+      "source_bytes": 9097,
+      "draft_bytes": 21631,
+      "draft_kinds": {
+        "Article": 1,
+        "Sentence": 91,
+        "Text": 116,
+        "Body": 1,
+        "Paragraph": 18,
+        "InlineCode": 17,
+        "Link": 5,
+        "ExternalTarget": 5
+      },
+      "ruby_count": 463,
+      "flat_lists": [],
+      "external_links": [
+        {
+          "kind": "ExternalTarget",
+          "fields": {
+            "uri": "https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3"
+          }
+        },
+        {
+          "kind": "ExternalTarget",
+          "fields": {
+            "uri": "https://html.spec.whatwg.org/multipage/tables.html#the-table-element"
+          }
+        },
+        {
+          "kind": "ExternalTarget",
+          "fields": {
+            "uri": "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element"
+          }
+        },
+        {
+          "kind": "ExternalTarget",
+          "fields": {
+            "uri": "https://url.spec.whatwg.org/"
+          }
+        },
+        {
+          "kind": "ExternalTarget",
+          "fields": {
+            "uri": "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element"
+          }
+        }
+      ],
+      "headings": [
+        {
+          "old_heading": "19. HTML fragmentの構造契約",
+          "observed_dom_id": "user-content-19-html-fragmentの構造契約",
+          "legacy_fragment": "19-html-fragmentの構造契約",
+          "section": null,
+          "semantic_fragment": null
+        }
+      ],
+      "prior_review_source_and_draft_hashes_unchanged": true,
+      "formal_structure": "PASS; audit parser only, not production execution",
+      "github_rawLines_exact": true,
+      "browser_navigation": "not run",
+      "generation": "not run in this preflight"
+    }
+  ],
+  "scope": "Read-only preflight; no cutover, no new independent meaning review of self-authored chapter 19"
+}

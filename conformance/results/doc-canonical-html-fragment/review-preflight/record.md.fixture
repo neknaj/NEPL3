@@ -1,0 +1,51 @@
+# Chapters 07 and 19: next canonical preflight
+
+Fixed source: `3abd255d5a52eec41f741b6b17e4ec9e2213efdc` in NEPL3-doc-canonical-html-delivery. This is read-only preparation, not canonical migration or a production generation result. Only this evidence directory was written. Both original Markdown chapters and complete authored drafts, current authoring policy, and relevant renderer branches were read directly.
+
+## Recommendation
+
+Choose **19-html-fragment** next. Its complete draft is 18 paragraphs, 91 Sentences, 17 InlineCode values and five External links, with no Sections, tables, lists, assets, foreign content, parallel variants or unresolved relative references. Its only legacy anchor is the article title. These structures are supported by the existing annotated `/2` and HTML page renderer; an explicit PageSet does not require a new resource registration for these external links. No production feature addition or manuscript shortening is justified by this preflight.
+
+The source and draft match the archived independent content-review hashes exactly: source `1ef8b987603ce307f0622f3bb7ce19bdd8f7f94b78b34dfb8f8784e17e2022bf`, draft `373a519dffc1cbbc2bbd2b6334eef8d4490aae6c62798bf26918a5f280bfe083`. That content review was by a different agent; this reviewer originally authored 19, so today's reading is NOT a new independent semantic acceptance of its own manuscript. No unreflected source change was found. The original discussion of future shell/asset/operation work is preserved historical/specification scope, not an assertion that all such work remains unimplemented today.
+
+## Exact legacy targets observed
+
+Actual fixed GitHub server HTML, embedded richText and rawLines were downloaded independently for both chapters. rawLines reconstruct each full fixed Git source byte-for-byte; server and richText permalink IDs agree. These are observed IDs, not generated slug guesses. Full URL, response, source and raw HTML are preserved per chapter.
+
+19: `19-html-fragmentの構造契約` → article (`section: null`). The native HTML output currently receives no compatibility alias input; it has no Section anchor for this chapter. Do not require this old Markdown fragment in the HTML document. The generated Markdown article title will include its Ruby reading; unique old-alias and automatic-heading placement must still be tested on the actual generated GitHub output.
+
+07 mappings:
+
+| Observed old fragment | Existing Section ID |
+| --- | --- |
+| `07-circuit言語` | article / null |
+| `方針` | `policy` |
+| `1-surfaceと型` | `surface` |
+| `2-各宣言` | `declarations` |
+| `3-演算` | `operations` |
+| `4-検査とelaboration` | `elaboration` |
+| `5-stepと時間` | `time` |
+| `6-nor-ir` | `nor` |
+| `7-svg-backend` | `svg` |
+| `8-公開操作` | `public` |
+
+The corresponding deterministic `n-` Section IDs are recorded in 07-circuit/result.json. They are derived from the checked Section IDs and current renderer encoding, not claimed as generated output already observed.
+
+## Chapter 07: supported, with an extra anchor decision
+
+07 has nine sibling Sections, 33 paragraphs, two nonadjacent flat lists (unordered five items; ordered start=1 six items), 11 unchecked ListItems each containing exactly one Paragraph. There are no links or assets. Paragraphs after a list are legal; no Body resumes ordinary content after a Section. There are no nested lists or unsupported table/foreign shapes. The source and draft hashes exactly match the previously integrated independent review: source `0005924591477574e490affa8df48d7446dfb41d81cd08beb55d03372a0dbfed`, draft `17618352d792b55cfa9436c029d1b5d09c916cc5af3b8123f4a33e053b963cae`.
+
+The unchanged headings `6. NOR IR` and `7. SVG backend` contain no Ruby or Anno. Their future generated heading text is therefore unchanged, and the observed current GitHub automatic targets are exactly `6-nor-ir` and `7-svg-backend`. Blindly adding explicit aliases of both names risks the same name/id ambiguity previously observed in chapter 01. This is a concrete expected collision risk, NOT a newly executed failure against generated 07. Before cutover, explicitly choose and review the compatibility strategy (for example a meaningful author-approved heading clarification while retaining all old fragments and Section IDs); then verify actual generated GitHub DOM uniqueness. Do not silently remove a required fragment or add fake Japanese readings to unchanged Latin headings. This extra decision makes 19 the smaller immediate candidate.
+
+## Renderer and registration boundary
+
+- `tools/src/doc/projection/annotated.rs:46` inspects the typed document and validates External URI spelling; other unresolved requirements remain failures. The five 19 targets match original Markdown in byte/order and are ASCII https links. No external resource was fetched to claim reachability or revision validity.
+- `annotated.rs:248` traverses Sentence/Concat, Ruby and InlineCode and Link labels; `body:462` supports these paragraphs and Sections with explicit ordering restrictions. `annotated/blocks.rs:76` supports 07's exact flat-list shape. Ruby readings are retained in the all-notes view, not a Doc roundtrip encoding.
+- Current `doc/canonical.json` contains five pages, neither candidate. Both candidates can use single-article `/2` for their own Markdown, even alongside the existing architecture page-context renderer. Canonical HTML still uses the real registered PageSet. Adding a page changes the explicit registry/context inputs; regenerate/check affected receipts and the full HTML set, rather than asserting old shared-budget results apply to six pages.
+- Incoming human links in `doc/README.md` and inventory records retain the same `spec/07-circuit.md` / `spec/19-html-fragment.md` paths because these Markdown paths become generated entrypoints. This bounded search found no direct production tools/test dependency on those Markdown source files. It is not a whole-repository migration-reference audit. Do not delete historical inventory data or treat generated-entrypoint references as stale merely because the source format changes.
+
+## Executed and still pending
+
+Executed: full manual source/draft reading; formal form-structure audit against frozen forms; Ruby-base and prefix Text audit; AST shapes/list containment/body ordering; original External link target/order comparison; source/draft byte-hash comparison with previous independent review records; actual fixed GitHub old heading/permalink enumeration and full rawLines byte reconstruction. 07 has 348 Ruby, 19 has 463; all checked bases are Kanji/々. Original 19 code values and all normative conditions remain covered by the unchanged prior independent content review.
+
+Not executed here: production parse/lower/inspect, annotated generation, enlarged PageSet generation under current finite limits, generated Markdown/GitHub DOM navigation, browser HTML layout or keyboard testing, six-file/seven-file artifact replay for a newly enlarged site, canonical cutover. No runtime/implementation completeness is inferred from this structural eligibility. Required next step is root's real generation and cutover evidence under explicitly selected existing budgets, preserving sticky stops and all manuscript text.

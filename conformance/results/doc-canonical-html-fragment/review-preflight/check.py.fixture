@@ -1,0 +1,94 @@
+from pathlib import Path
+from html.parser import HTMLParser
+import hashlib,json,re,subprocess,urllib.request,sys,collections
+root=Path.cwd(); out=root/'.tmp/preflight-after18'
+commit='3abd255d5a52eec41f741b6b17e4ec9e2213efdc'
+def put(path,data):
+    p=out/path;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data);return p
+def dump(path,data):return put(path,(json.dumps(data,ensure_ascii=False,indent=2)+'\n').encode())
+def git(path,rev=commit):return subprocess.check_output(['git','show',rev+':'+path])
+paths=['AGENTS.md','doc/authoring.md','design/forms.json','doc/canonical.json','tools/audit/structure.py','tools/src/doc/projection/annotated.rs','tools/src/doc/projection/annotated/blocks.rs','tools/src/doc/projection/annotated/pages.rs','tools/src/doc/canonical.rs','conformance/results/doc-authoring-domain/integration/result.json','conformance/results/doc-authoring-delivery/19/review.md','conformance/results/doc-authoring-delivery/19/sources.json']
+for name in ['07-circuit','19-html-fragment']:
+    paths+=['doc/spec/'+name+'.md','doc/migration/authored/'+name+'.nepld']
+sources=[]
+for path in paths:
+    b=git(path);put('sources/'+path,b)
+    sources.append(dict(path=path,commit=commit,bytes=len(b),sha256=hashlib.sha256(b).hexdigest()))
+dump('sources.json',sources)
+put('helpers.py',(root/'.tmp/review-canonical18-cutover/helpers.py').read_bytes())
+sys.path.insert(0,str(out/'sources'))
+from tools.audit.structure import Parser,load_forms
+exec((out/'helpers.py').read_text(encoding='utf8'))
+class Scripts(HTMLParser):
+    def __init__(self):super().__init__();self.active=False;self.parts=[];self.scripts=[]
+    def handle_starttag(self,t,a):
+        if t=='script' and dict(a).get('type')=='application/json':self.active=True;self.parts=[]
+    def handle_data(self,s):
+        if self.active:self.parts.append(s)
+    def handle_endtag(self,t):
+        if t=='script' and self.active:self.scripts.append(''.join(self.parts));self.active=False
+class Headings(HTMLParser):
+    def __init__(self):super().__init__();self.rows=[];self.active=None;self.anchors=[]
+    def handle_starttag(self,t,a):
+        a=dict(a)
+        if re.fullmatch('h[1-6]',t):self.active=dict(tag=t,text='')
+        if t=='a' and a.get('id','').startswith('user-content-'):
+            self.anchors.append({k:a[k] for k in ('id','href','aria-label')})
+    def handle_data(self,s):
+        if self.active is not None:self.active['text']+=s
+    def handle_endtag(self,t):
+        if self.active and self.active['tag']==t:self.rows.append(self.active);self.active=None
+results=[]
+for name in ['07-circuit','19-html-fragment']:
+    source=git('doc/spec/'+name+'.md');draft=git('doc/migration/authored/'+name+'.nepld')
+    ast=Parser(draft.decode(),load_forms(out/'sources')).complete('Doc/Article')
+    audit_text(ast);pairs.clear();tree=normalize(ast,True)
+    kinds=collections.Counter(n['kind'] for n in walk(tree)); links=[n['fields']['target'] for n in walk(tree) if n['kind']=='Link']
+    assert all(x['kind']=='ExternalTarget' for x in links)
+    expected_links=re.findall(r'\]\((https?://[^)]+)\)',source.decode())
+    assert [x['fields']['uri'] for x in links]==expected_links
+    titles=[dict(id=None,title=plain(tree['fields']['title']))]
+    titles += [dict(id=n['fields']['id'],title=plain(n['fields']['title'])) for n in walk(tree) if n['kind']=='Section']
+    lists=[]
+    for n in walk(tree):
+        if n['kind']=='List':
+            for item in n['fields']['items']:
+                blocks=item['fields']['body']['fields']['blocks']
+                assert len(blocks)==1 and blocks[0]['kind']=='Paragraph'
+            lists.append(dict(style=n['fields']['style'],items=len(n['fields']['items'])))
+        if n['kind']=='Body':
+            seen=False;previous=False
+            for block in n['fields']['blocks']:
+                if block['kind']=='Section':seen=True
+                else:assert not seen
+                is_list=block['kind']=='List';assert not(previous and is_list);previous=is_list
+    url=f'https://github.com/neknaj/NEPL3/blob/{commit}/doc/spec/{name}.md'
+    response=urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0'}),timeout=60)
+    html=response.read();put(name+'/github.html',html)
+    dump(name+'/fetch.json',dict(url=url,final_url=response.url,status=response.status,commit=commit))
+    p=Scripts();p.feed(html.decode()); payload=next(x['payload'] for x in map(json.loads,p.scripts) if 'codeViewBlobRoute' in x.get('payload',{}))
+    assert payload['codeViewLayoutRoute']['path']=='doc/spec/'+name+'.md'
+    lines=payload['codeViewBlobLayoutRoute.StyledBlob']['rawLines'];assert ('\n'.join(lines)+'\n').encode()==source
+    dump(name+'/rawLines.json',lines)
+    rich=payload['codeViewBlobRoute']['richText'];put(name+'/richText.html',rich.encode())
+    h=Headings();h.feed(rich);server=Headings();server.feed(html.decode());assert h.anchors==server.anchors
+    expected=[dict(tag='h'+str(len(m[1])),text=m[2]) for m in re.finditer(r'^(#{1,6}) (.+)$',source.decode(),re.M)]
+    assert h.rows==expected and len(titles)==len(h.rows)==len(h.anchors)
+    assert len({a['id'] for a in h.anchors})==len(h.anchors)
+    mappings=[]
+    for heading,a,title in zip(h.rows,h.anchors,titles):
+        assert heading['text']==title['title'] and a['aria-label']=='Permalink: '+heading['text']
+        mappings.append(dict(old_heading=heading['text'],observed_dom_id=a['id'],legacy_fragment=a['href'][1:],section=title['id'],semantic_fragment=None if title['id'] is None else 'n-'+title['id'].encode().hex()))
+    if name.startswith('07'):
+        old=json.loads(git('conformance/results/doc-authoring-domain/integration/result.json'))
+        prior=next(x for x in old['manuscripts'] if x['path'].endswith(name+'.nepld'))
+        assert hashlib.sha256(source).hexdigest()==prior['canonical_sha256'] and hashlib.sha256(draft).hexdigest()==prior['sha256']
+    else:
+        prior=json.loads(git('conformance/results/doc-authoring-delivery/19/sources.json'))
+        for path,b in [('doc/spec/'+name+'.md',source),('doc/migration/authored/'+name+'.nepld',draft)]:
+            assert hashlib.sha256(b).hexdigest()==next(x['sha256'] for x in prior if x['path']==path)
+    result=dict(name=name,source_bytes=len(source),draft_bytes=len(draft),draft_kinds=dict(kinds),ruby_count=len(pairs),flat_lists=lists,external_links=links,headings=mappings,prior_review_source_and_draft_hashes_unchanged=True,formal_structure='PASS; audit parser only, not production execution',github_rawLines_exact=True,browser_navigation='not run',generation='not run in this preflight')
+    dump(name+'/result.json',result);results.append(result)
+dump('result.json',dict(commit=commit,pages=results,scope='Read-only preflight; no cutover, no new independent meaning review of self-authored chapter 19'))
+put('git-status.txt',subprocess.check_output(['git','status','--short']))
+print(json.dumps(results,ensure_ascii=False,indent=2))
