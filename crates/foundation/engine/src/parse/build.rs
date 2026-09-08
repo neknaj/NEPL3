@@ -11,6 +11,8 @@ use nepl3_core::{
 };
 
 use super::model::ParseArena;
+#[cfg(test)]
+mod tests;
 pub(super) fn slot<T>(budget: &mut Budget) -> Result<(), StopReason> {
     budget.charge(Resource::AllocationUnits, core::mem::size_of::<T>() as u64)
 }
@@ -40,15 +42,17 @@ impl ParseArena {
             return Ok(());
         }
         let mut index = Vec::new();
+        let mut hint = None;
         for (i, source) in self.sources.iter().enumerate() {
-            let at = source_position(&index, &self.sources, source, budget)?
+            let at = source_position(&index, &self.sources, source, hint, budget)?
                 .map_or_else(Ok, |_| Err(SourceError::IdentityConflict))?;
             slot::<usize>(budget)?;
             budget.charge(Resource::Work, (index.len() - at) as u64)?;
             index.insert(at, i);
+            hint = Some(at);
         }
         for source in sources {
-            match source_position(&index, &self.sources, source, budget)? {
+            match source_position(&index, &self.sources, source, hint, budget)? {
                 Ok(at) => {
                     let prior = &self.sources[index[at]];
                     budget.charge(
@@ -60,6 +64,7 @@ impl ParseArena {
                     if prior.identity() != source.identity() || prior.uri() != source.uri() {
                         return Err(SourceError::IdentityConflict.into());
                     }
+                    hint = Some(at);
                 }
                 Err(at) => {
                     slot::<usize>(budget)?;
@@ -67,6 +72,7 @@ impl ParseArena {
                     let owned = source.clone_with_budget(budget)?;
                     index.insert(at, self.sources.len());
                     self.sources.push(owned);
+                    hint = Some(at);
                 }
             }
         }
@@ -186,12 +192,12 @@ fn source_position(
     index: &[usize],
     sources: &[SourceSnapshot],
     source: &SourceSnapshot,
+    hint: Option<usize>,
     budget: &mut Budget,
 ) -> Result<Result<usize, usize>, StopReason> {
     let (mut low, mut high) = (0, index.len());
-    while low < high {
-        let mid = low + (high - low) / 2;
-        let prior = sources[index[mid]].identity();
+    let mut compare = |at: usize| {
+        let prior = sources[index[at]].identity();
         let id = source.identity();
         budget.charge(
             Resource::Work,
@@ -199,11 +205,25 @@ fn source_position(
                 .saturating_add(id.source.0.len() as u64)
                 .saturating_add(1),
         )?;
-        match prior
-            .source
-            .cmp(&id.source)
-            .then_with(|| prior.revision.cmp(&id.revision))
-        {
+        Ok::<_, StopReason>(
+            prior
+                .source
+                .cmp(&id.source)
+                .then_with(|| prior.revision.cmp(&id.revision)),
+        )
+    };
+    // This position is local to one closure merge. Insertion updates it after
+    // index shifts; a hit only saves search work, never snapshot validation.
+    if let Some(at) = hint {
+        match compare(at)? {
+            core::cmp::Ordering::Equal => return Ok(Ok(at)),
+            core::cmp::Ordering::Less => low = at + 1,
+            core::cmp::Ordering::Greater => high = at,
+        }
+    }
+    while low < high {
+        let mid = low + (high - low) / 2;
+        match compare(mid)? {
             core::cmp::Ordering::Equal => return Ok(Ok(mid)),
             core::cmp::Ordering::Less => low = mid + 1,
             core::cmp::Ordering::Greater => high = mid,
