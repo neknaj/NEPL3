@@ -136,16 +136,46 @@ fn same_kind(
             .is_ok_and(|name| name == node.kind)
 }
 
+struct IndexedContext<'a> {
+    raw: &'a BundleContext,
+    by_node: Vec<Option<&'a NodeSelection>>,
+}
+impl<'a> IndexedContext<'a> {
+    fn new(raw: &'a BundleContext, count: usize, budget: &mut Budget) -> Result<Self, TreeError> {
+        let bytes = (count as u64)
+            .checked_mul(core::mem::size_of::<Option<&NodeSelection>>() as u64)
+            .ok_or(StopReason::AllocationLimit)?;
+        budget.charge(Resource::AllocationUnits, bytes)?;
+        budget.charge(Resource::Work, count as u64)?;
+        let mut by_node = alloc::vec![None; count];
+        for selected in &raw.nodes {
+            budget.charge(Resource::Work, 1)?;
+            if let Some(slot) = usize::try_from(selected.node.0)
+                .ok()
+                .and_then(|index| by_node.get_mut(index))
+            {
+                // Retain the first occurrence, just like the old linear find.
+                // The normal validation pass still rejects duplicates and
+                // out-of-range IDs in input order; this is no validity proof.
+                if slot.is_none() {
+                    *slot = Some(selected);
+                }
+            }
+        }
+        Ok(Self { raw, by_node })
+    }
+}
 fn selection<'a>(
-    context: &'a BundleContext,
+    context: &IndexedContext<'a>,
     id: NodeRef,
     budget: &mut Budget,
 ) -> Result<&'a NodeSelection, TreeError> {
-    budget.charge(Resource::Work, context.nodes.len() as u64 + 1)?;
-    context
-        .nodes
-        .iter()
-        .find(|v| v.node == id)
+    budget.charge(Resource::Work, 1)?;
+    usize::try_from(id.0)
+        .ok()
+        .and_then(|index| context.by_node.get(index))
+        .copied()
+        .flatten()
         .ok_or(TreeError::Selection)
 }
 fn token<'a>(
@@ -237,8 +267,8 @@ fn field(
     value: &FieldValue,
     expected: &ResolvedRead,
     bundle: &SyntaxBundle,
-    context: &BundleContext,
-    contexts: &[(&SyntaxBundle, &BundleContext)],
+    context: &IndexedContext<'_>,
+    contexts: &[(&SyntaxBundle, IndexedContext<'_>)],
     package: &LanguagePackage,
     budget: &mut Budget,
 ) -> Result<(), TreeError> {
@@ -262,7 +292,7 @@ fn field(
             let context = contexts
                 .iter()
                 .find(|(b, _)| core::ptr::eq(*b, &foreign.bundle))
-                .map(|(_, c)| *c)
+                .map(|(_, c)| c)
                 .ok_or(TreeError::Selection)?;
             target(
                 expected,
@@ -279,8 +309,8 @@ fn field(
 }
 fn static_fields(
     bundle: &SyntaxBundle,
-    context: &BundleContext,
-    contexts: &[(&SyntaxBundle, &BundleContext)],
+    context: &IndexedContext<'_>,
+    contexts: &[(&SyntaxBundle, IndexedContext<'_>)],
     selected: &NodeSelection,
     profile: &ResolvedParseProfile<'_>,
     budget: &mut Budget,
@@ -452,7 +482,7 @@ impl ParseTree {
         let syntax = self
             .bundle
             .validate_with_sources(registry, budget, admission)?;
-        let mut contexts: Vec<(&SyntaxBundle, &BundleContext)> = Vec::new();
+        let mut contexts: Vec<(&SyntaxBundle, IndexedContext<'_>)> = Vec::new();
         for context in &self.contexts {
             let bundle = path(&self.bundle, &context.path, registry, budget)?;
             budget.charge(Resource::Work, contexts.len() as u64 + 1)?;
@@ -462,7 +492,8 @@ impl ParseTree {
             {
                 return Err(TreeError::Duplicate);
             }
-            push(&mut contexts, (bundle, context), budget)?;
+            let indexed = IndexedContext::new(context, bundle.nodes.len(), budget)?;
+            push(&mut contexts, (bundle, indexed), budget)?;
         }
         let mut recoveries = Vec::new();
         for recovery in &self.recovery {
@@ -488,12 +519,12 @@ impl ParseTree {
             let context = contexts
                 .iter()
                 .find(|(b, _)| core::ptr::eq(*b, bundle))
-                .map(|(_, c)| *c)
+                .map(|(_, c)| c)
                 .ok_or(TreeError::Selection)?;
             let recovery = recoveries
                 .iter()
                 .find(|(b, _)| core::ptr::eq(*b, bundle))
-                .map(|(_, c)| *c);
+                .map(|(_, c)| c);
             budget.charge(Resource::AllocationUnits, bundle.nodes.len() as u64)?;
             let mut reached = alloc::vec![false;bundle.nodes.len()];
             let mut nodes = Vec::new();
@@ -529,13 +560,13 @@ impl ParseTree {
             if reached.iter().any(|v| !*v) {
                 return Err(TreeError::Unreachable);
             }
-            if context.nodes.len() != bundle.nodes.len() {
+            if context.raw.nodes.len() != bundle.nodes.len() {
                 return Err(TreeError::Selection);
             }
             // Every node was reached above. Reuse that checked node-indexed
             // storage to consume each selection exactly once, in input order.
             // Selection order itself remains unrestricted.
-            for selected in &context.nodes {
+            for selected in &context.raw.nodes {
                 budget.charge(Resource::Work, 1)?;
                 let index = usize::try_from(selected.node.0).map_err(|_| TreeError::Path)?;
                 let unselected = reached.get_mut(index).ok_or(TreeError::Path)?;
@@ -659,14 +690,14 @@ impl ParseTree {
             }
             if let Some(recovery) = recovery {
                 for (i, entry) in recovery.entries.iter().enumerate() {
-                    budget.charge(Resource::Work, (context.nodes.len() + i) as u64 + 1)?;
+                    budget.charge(Resource::Work, (context.raw.nodes.len() + i) as u64 + 1)?;
                     if recovery.entries[..i]
                         .iter()
                         .any(|prior| prior.node == entry.node)
                     {
                         return Err(TreeError::Duplicate);
                     }
-                    if !context.nodes.iter().any(|v| {
+                    if !context.raw.nodes.iter().any(|v| {
                         v.node == entry.node && matches!(v.shape, ShapeSelection::Recovery)
                     }) {
                         return Err(TreeError::Recovery);
