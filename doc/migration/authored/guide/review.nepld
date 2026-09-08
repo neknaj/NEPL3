@@ -1089,5 +1089,31 @@ body
       cons "[両補助/りょうほじょ]もnative/WASI[成功/せいこう]した。"
       cons sentence cons ruby text "補助" text "ほじょ" cons text "sourceは " cons code ".tmp/independent-doc/src/bin/" cons text " にある。" nil
       cons "これらは[型付/かたつ]きconstructorと[共通/きょうつう]syntax guestからの[検証/けんしょう]であり、[補助構文/ほじょこうぶん]やDocGuestの[実/じつ]source parse/lower、Articleラベル[解決/かいけつ]、[描画/びょうが]の[成功/せいこう]を[表/あらわ]さない。" nil
+    cons paragraph
+      cons "Doc[拡張表層/かくちょうひょうそう]の[独立構造監査/どくりつこうぞうかんさ]では、forms[正本/せいほん]と[元/もと]syntax.neplgの64 form、およびsignature[表/ひょう]のkind・field[順/じゅん]・[読取指定/よみとりしてい]・arityが[一致/いっち]した。"
+      cons "10[補助/ほじょ]categoryを[確認/かくにん]し、[元/もと]ASTのDocGuest.syntaxは[明示/めいじ]Foreign(alias Doc, category Article)である。"
+      cons "[生成/せいせい]signatureの[日本語/にほんご]が[実/じつ]byteで[疑問符/ぎもんふ]257[個/こ]へ[置換/ちかん]されていた[途中差分/とちゅうさぶん]は[担当/たんとう]へ[戻/もど]し、UTF-8の[正式生成器/せいしきせいせいき]と[元/もと][日本語/にほんご]へ[修復後/しゅうふくご]に[再監査/さいかんさ]した。"
+      cons "[実/じつ]Grammar AST validateは[成功/せいこう]し、[当時/とうじ]の[標準/ひょうじゅん]bootstrap catalogによるcompileは[未登録/みとうろく]DocSentence extensionの156..214を[持/も]つMissingExtensionとなった。"
+      cons "このcatalog[未接続/みせつぞく]をDoc[文法/ぶんぽう]の[実/じつ]parse/lower[成功/せいこう]へ[数/かぞ]えず、[正式/せいしき]adapter[接続後/せつぞくご]の[再検証点/さいけんしょうてん]とする。"
+      cons sentence cons ruby text "補助" text "ほじょ" cons text "は " cons code ".tmp/audit_doc_surface.py" cons text " と " cons code "doc_compile" cons text "。" nil nil
+    cons paragraph
+      cons "その[後/ご]のDoc[専用/せんよう]catalogでは、[正式/せいしき]syntax.neplgを[実/じつ]seed adapter・typed Documentからcompileし64 forms・20 categoriesを[得/え]た。"
+      cons "Doc/Math/Circuit/Grammarの4つの[管理下/かんりか]seedも[元/もと]source bytesと[全/ぜん]AST metadataを[実/じつ]adapter[出力/しゅつりょく]へ[照合/しょうごう]し[一致/いっち]した。"
+      cons sentence cons ruby text "独立補助" text "どくりつほじょ" cons text " " cons code "doc_prefix" cons text " はこれらの" cons ruby text "実" text "じつ" cons text "compiler、4 alias Profile、" cons ruby text "各" text "かく" cons text "checked" cons ruby text "環境" text "かんきょう" cons text "、ParseSessionのread/resume/reserve、" cons ruby text "公開" text "こうかい" cons text "lower::prefixへ" cons ruby text "接続" text "せつぞく" cons text "した。" nil
+      cons sentence cons ruby text "元" text "もと" cons text "prefix3" cons ruby text "入力" text "にゅうりょく" cons text "の " cons code "text \"[a/b]\"" cons text " は" cons ruby text "注釈" text "ちゅうしゃく" cons text "へ" cons ruby text "再解析" text "さいかいせき" cons text "せず" cons ruby text "単一" text "たんいつ" cons text "Text、" cons ruby text "空" text "から" cons text "ConcatをbaseにしたRubyはEmptyAnnotationPart、" cons ruby text "空" text "から" cons text "notesのAnnoはAnnotationNotesとして" cons ruby text "拒否" text "きょひ" cons text "した。" nil
+      cons "8[種類/しゅるい]の[補助/ほじょ]categoryを[実/じつ]sourceからstandalone rootへlowerし、Orderedのu64[最大値/さいだいち]を[保持/ほじ]した。"
+      cons "[別/べつ]の[静的/せいてき]branch[監査/かんさ]では64[宣言/せんげん]の[全/ぜん]kindに[対応/たいおう]する52[種類/しゅるい]のForm[名/めい]をlower[内/ない]で[確認/かくにん]したが、これは[全/ぜん]constructorを[実原文/じつげんぶん]で[通/とお]した[試験数/しけんすう]ではない。"
+      cons "[共通/きょうつう]descriptor[生成器/せいせいき]のstorage[関数/かんすう]は0[項/こう]・1[倍項/ばいこう]を[整理/せいり]しただけで、[各/かく]countとWork/Allocationの[算式/さんしき]を[変更/へんこう]しないことも[差分/さぶん]から[確認/かくにん]した。"
+      cons sentence cons ruby text "補助" text "ほじょ" cons text " " cons code "doc_boundaries" cons text " はNat" cons ruby text "上限超過" text "じょうげんちょうか" cons text "、" cons ruby text "短" text "みじか" cons text "い/nonhex asset digest、Table" cons ruby text "列数不一致" text "れつすうふいっち" cons text "を" cons ruby text "型付" text "かたつ" cons text "きで" cons ruby text "拒否" text "きょひ" cons text "し、64hexの" cons ruby text "正確" text "せいかく" cons text "な32byte digest、0" cons ruby text "列" text "れつ" cons text "・" cons ruby text "空" text "から" cons text "rowを" cons ruby text "受理" text "じゅり" cons text "した。" nil
+      cons "[実/じつ]Rubyのlowerではcaller7を[含/ふく]むpeakが[基準/きじゅん]+7となり、Depthの11[点/てん]は[元理由/もとりゆう]のsticky[停止/ていし]10・[全体一致/ぜんたいいっち]の[成功/せいこう]1であった。"
+      cons "これらはnative/WASI[双方/そうほう]で[独立実行/どくりつじっこう]した。" nil
+    cons paragraph
+      cons sentence cons ruby text "独立補助" text "どくりつほじょ" cons text " " cons code "doc_guest" cons text " では、" cons ruby text "空" text "から" cons text "notesのAnnoを" cons ruby text "持" text "も" cons text "つArticleは" cons ruby text "直接" text "ちょくせつ" cons text "lowerでShape" cons ruby text "失敗" text "しっぱい" cons text "する" cons ruby text "一方" text "いっぽう" cons text "、" cons ruby text "同" text "おな" cons text "じ" cons ruby text "原文" text "げんぶん" cons text "を " cons code "code Doc" cons text " へ" cons ruby text "入" text "い" cons text "れると" cons ruby text "意味" text "いみ" cons text "lowerせずCodeのForeignClosureへ" cons ruby text "保持" text "ほじ" cons text "した。" nil
+      cons "[同/どう]aliasの[二重入/にじゅうい]れ[子/こ]でも[後続/こうぞく]host Paragraphへ[復帰/ふっき]し、guest Articleは[別/べつ]SyntaxBundleのまま[残/のこ]り、Doc[意味/いみ]arenaへAnnoを[混入/こんにゅう]しなかった。"
+      cons "[実/じつ]CBORは[共通/きょうつう]wireのguest NodeRef[正準化/せいじゅんか]を[前提/ぜんてい]に[再/さい]encode[一致/いっち]を[検査/けんさ]し、Doc nodes/origins/views/mapsも[保持/ほじ]した。"
+      cons "native/WASI[双方/そうほう]で[成功/せいこう]した。"
+      cons sentence cons ruby text "補助" text "ほじょ" cons text "sourceは " cons code ".tmp/independent-engine/src/bin/doc_prefix.rs" cons text "、" cons code "doc_boundaries.rs" cons text "、" cons code "doc_guest.rs" cons text "。" nil
+      cons "この[新/あたら]しい[実/じつ]source[経路/けいろ]は[先/さき]の[型付/かたつ]きconstructorだけの[証拠/しょうこ]と[区別/くべつ]する。"
+      cons "SentenceLiteral payloadをprefixへ[混在/こんざい]させるadapter、Articleのlabel/embed[意味解決/いみかいけつ]、[全/ぜん]formの[往復/おうふく]・[描画/びょうが]までを[完了/かんりょう]とはしていない。" nil
     nil
   nil
