@@ -56,6 +56,14 @@
       "aliases": "doc/migration/aliases/19-html-fragment.json",
       "route": "docs/spec/19-html-fragment.html",
       "renderer": "nepl3-tools.markdown-annotated/2"
+    },
+    {
+      "id": "model-invariants",
+      "source": "doc/spec/12-model-invariants.nepld",
+      "projection": "doc/spec/12-model-invariants.md",
+      "aliases": "doc/migration/aliases/12-model-invariants.json",
+      "route": "docs/spec/12-model-invariants.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/1"
     }
   ],
   "output_limits": {
