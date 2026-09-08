@@ -1,0 +1,41 @@
+{
+  "scope": "Sequential release executions, unchanged real review draft and preselected finite limits. Wall time is observational; success is not inferred from a speed change.",
+  "input_sha256": "cb9b05f59a36934870d63f7f270e93124d0c250a6533394947010dbe3ccc278b",
+  "source_sha256": "93219488d2b5b3c93d3b7c02a2f3598b5544d0fe61111b0537071b4354549bee",
+  "runs": [
+    {
+      "label": "before",
+      "commit": "76818219c8d9a6c1e5707b602eebc9eee61513ef",
+      "binary_sha256": "cc3879531d08f4d8047c61cc43e06b13c773a20548f8515bdd5be7c246f0a943",
+      "command": [
+        "C:\\projects\\NEPL3-source-reference-baseline\\target\\release\\nepl3-tools.exe",
+        "doc-html",
+        "pages",
+        "C:\\projects\\NEPL3-source-reference-index\\.tmp\\comparison\\input.json",
+        "C:\\projects\\NEPL3-source-reference-index\\.tmp\\comparison\\before-output"
+      ],
+      "exit_code": 1,
+      "host_timeout": false,
+      "elapsed_seconds": 182.75654339999892,
+      "log_sha256": "5163080c3b9274ccd2ddc3c1401bb91641c76b823083ec49c7c34bd5f022ca1b",
+      "output_exists": false
+    },
+    {
+      "label": "after",
+      "commit": "cf233ff45b2719a93277821d21d4beb326b73b2b",
+      "binary_sha256": "77883003d0fe626dfe70d96dddd7962851821747f560b8fbbdc6c0b675e51269",
+      "command": [
+        "C:\\projects\\NEPL3-source-reference-index\\target\\release\\nepl3-tools.exe",
+        "doc-html",
+        "pages",
+        "C:\\projects\\NEPL3-source-reference-index\\.tmp\\comparison\\input.json",
+        "C:\\projects\\NEPL3-source-reference-index\\.tmp\\comparison\\after-output"
+      ],
+      "exit_code": 1,
+      "host_timeout": false,
+      "elapsed_seconds": 161.37193760008086,
+      "log_sha256": "5163080c3b9274ccd2ddc3c1401bb91641c76b823083ec49c7c34bd5f022ca1b",
+      "output_exists": false
+    }
+  ]
+}
