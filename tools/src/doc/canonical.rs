@@ -33,9 +33,12 @@ fn portable_path(name: &str) -> bool {
 pub struct Registry {
     pub version: u32,
     pub pages: Vec<Page>,
-    /// Batch allowance; old-only checks keep their per-page operation limits.
+    /// Markdown batch allowance; old-only checks keep per-page limits.
     #[serde(default)]
     pub output_limits: super::export::pages::resources::OutputLimits,
+    /// Separate HTML output allowance, selected before generating the PageSet.
+    #[serde(default)]
+    pub html_output_limits: super::export::pages::resources::OutputLimits,
 }
 
 #[derive(Debug, Deserialize)]
@@ -225,6 +228,7 @@ pub fn html(root: &Path, manifest: &str, output: &Path) -> Result<()> {
         return Err("output directory already exists".into());
     }
     let registry = load(root, manifest)?;
+    let mut output_budget = registry.html_output_limits.budget();
     let mut inputs = Vec::new();
     let mut total = 0u64;
     for page in registry.pages {
@@ -244,6 +248,10 @@ pub fn html(root: &Path, manifest: &str, output: &Path) -> Result<()> {
             source,
         ));
     }
-    let generated = super::export::pages::generate(&super::source::compiled()?, &inputs)?;
+    let generated = super::export::pages::generate_with_output_budget(
+        &super::source::compiled()?,
+        &inputs,
+        &mut output_budget,
+    )?;
     super::export::pages::write_generated(generated, output)
 }

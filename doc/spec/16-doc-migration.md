@@ -102,6 +102,15 @@ registryの任意field `output_limits` は既存のOutputLimitsと同じ8資源�
 最後のusageはreceipt自体のserialize・最終出力課金を含まない値として明示する。
 host JSON・文字列整形の計量は保守的な論理allocation allowanceであり、物理heapの計測ではない。
 
+HTML集合書出しの予算は、registryの任意field `html_output_limits` で別に選択する。
+指定時はOutputLimitsの8資源をすべて記述し、null・部分指定・未知field・負数は拒否する。
+未指定なら既存のHTML出力予算を維持し、Markdown用の `output_limits` を流用しない。
+生成開始前に選んだ一つのBudgetを、既存のPageSetのresolve・render・serializeへ渡す。
+各ページのparse・lowerは従来どおり独立した有限operationであり、HTML用設定で増額しない。
+停止後の再生成やMarkdown予算へのfallbackは行わず、書込み開始前の停止では出力先を作らない。
+HTML manifestの既存execution identity・選択上限・開始時usageへ実際の設定を記録する。
+このfieldを追加したregistryの元byte列は、新Markdown profileのinput contextにも反映される。
+
 互換aliasとGitHubの自動見出しIDは独立して発生するため、実際のGitHub表示で重複と移動先を確認する。13章では旧8見出しのうち6つを明示alias、`1-digest` と `3-normal-formとartifact` を同名の自動見出しで維持する。全7Sectionの明示IDも保持する。この判断は13章の実際の見出しに対する対応表であり、任意のMarkdownに対するslug推測をfoundationへ追加するものではない。
 
 文書をrenderしただけで埋め込まれた例を評価しない。失敗を説明する例や注釈内のcodeはsource表示のまま保存する。リンク先の例を試す操作も例ID・revision・profileを照合する。新しい文法の受入が通る前に文書を新constructorへ一括変換しない。

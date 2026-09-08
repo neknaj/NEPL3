@@ -202,6 +202,107 @@ fn html_uses_canonical_doc_and_never_overwrites_existing_output() -> Result<()> 
     Ok(())
 }
 
+#[test]
+fn html_output_allowance_is_explicit_independent_and_recorded() -> Result<()> {
+    let f = Fixture::new()?;
+    let original = registry();
+    f.json("doc/canonical.json", &original)?;
+    f.write(
+        "doc/sample.nepld",
+        r#"article ja "文" body cons paragraph cons "本文。" nil nil"#,
+    )?;
+    f.write("doc/aliases.json", "[]")?;
+    let omitted = f.root().join("omitted");
+    html(f.root(), "doc/canonical.json", &omitted)?;
+    let defaults =
+        serde_json::to_value(super::super::export::pages::resources::OutputLimits::default())?;
+    let mut explicit = original.clone();
+    explicit["html_output_limits"] = defaults.clone();
+    // A stopped Markdown budget must not replace the independent HTML budget.
+    explicit["output_limits"] = defaults.clone();
+    explicit["output_limits"]["work"] = json!(0);
+    f.json("doc/canonical.json", &explicit)?;
+    let selected = f.root().join("selected");
+    html(f.root(), "doc/canonical.json", &selected)?;
+    for path in ["docs/sample.html", "docs/assets/doc.css", "manifest.json"] {
+        assert_eq!(
+            fs::read(omitted.join(path))?,
+            fs::read(selected.join(path))?
+        );
+    }
+    let md = f.root().join("stopped-markdown");
+    assert!(markdown(f.root(), "doc/canonical.json", &md).is_err());
+    assert!(!md.exists());
+
+    explicit["html_output_limits"]["work"] = json!(200_000_000);
+    f.json("doc/canonical.json", &explicit)?;
+    let higher = f.root().join("higher");
+    html(f.root(), "doc/canonical.json", &higher)?;
+    let before: serde_json::Value =
+        serde_json::from_slice(&fs::read(selected.join("manifest.json"))?)?;
+    let after: serde_json::Value =
+        serde_json::from_slice(&fs::read(higher.join("manifest.json"))?)?;
+    assert_eq!(after["output_budget"]["limits"]["work"], 200_000_000);
+    assert_eq!(after["output_budget"]["initial_usage"]["work"], 0);
+    assert_ne!(before["execution_identity"], after["execution_identity"]);
+    assert_eq!(before["identity"], after["identity"]);
+    assert_eq!(
+        fs::read(selected.join("docs/sample.html"))?,
+        fs::read(higher.join("docs/sample.html"))?
+    );
+
+    for (field, reason) in [
+        ("work", "WorkLimit"),
+        ("nodes", "NodeLimit"),
+        ("depth", "DepthLimit"),
+        ("allocation_units", "AllocationLimit"),
+        ("output_bytes", "OutputLimit"),
+        ("source_bytes", "SourceLimit"),
+    ] {
+        let mut limited = original.clone();
+        limited["html_output_limits"] = defaults.clone();
+        limited["html_output_limits"][field] = json!(0);
+        f.json("doc/canonical.json", &limited)?;
+        let destination = f.root().join(format!("stopped-{field}"));
+        let error = html(f.root(), "doc/canonical.json", &destination)
+            .err()
+            .ok_or("expected stop")?;
+        assert!(error.to_string().contains(reason), "{field}: {error}");
+        assert!(!destination.exists());
+    }
+    // HTML configuration cannot stop an independently selected Markdown run.
+    let md = f.root().join("markdown-only");
+    markdown(f.root(), "doc/canonical.json", &md)?;
+    assert!(md.join("manifest.json").is_file());
+    Ok(())
+}
+
+#[test]
+fn malformed_html_allowances_fail_before_any_output() -> Result<()> {
+    let f = Fixture::new()?;
+    let defaults =
+        serde_json::to_value(super::super::export::pages::resources::OutputLimits::default())?;
+    let mut negative = defaults.clone();
+    negative["work"] = json!(-1);
+    let mut unknown = defaults.clone();
+    unknown["unlimited"] = json!(true);
+    for bad in [
+        serde_json::Value::Null,
+        json!({"work":1}),
+        json!("unlimited"),
+        negative,
+        unknown,
+    ] {
+        let mut value = registry();
+        value["html_output_limits"] = bad;
+        f.json("doc/canonical.json", &value)?;
+        let output = f.root().join("invalid");
+        assert!(html(f.root(), "doc/canonical.json", &output).is_err());
+        assert!(!output.exists());
+    }
+    Ok(())
+}
+
 fn mixed(fixture: &Fixture) -> Result<serde_json::Value> {
     let mut value = registry();
     value["pages"][0]["renderer"] = json!(projection::RENDERER);
