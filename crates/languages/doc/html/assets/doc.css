@@ -20,7 +20,7 @@
 .nepl-notes{grid-row:2;grid-column:1;font-size:.6em;text-align:center;color:var(--nepl-muted)}
 .nepl-note{display:block}
 @supports not ((baseline-source:first) and (baseline-source:last)){
-  .nepl-ruby,.nepl-anno{display:inline-table;width:max-content;border-collapse:collapse;border-spacing:0}
+  .nepl-ruby,.nepl-anno{display:inline-table;width:max-content;white-space:pre;border-collapse:collapse;border-spacing:0}
   .nepl-ruby>.nepl-base{display:inline-block}
   .nepl-anno>.nepl-base{display:table-cell}
   .nepl-reading{display:table-caption;caption-side:top}

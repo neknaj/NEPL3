@@ -36,12 +36,24 @@ class Corpus(unittest.TestCase):
 
     def test_layout_checks_behavior_instead_of_property_support(self):
         row = {'scripts': 0, 'difference': 0, 'baseline_source_supported': False,
-               'annotation_gaps': [0, 1], 'line_gaps': [0, 1]}
+               'annotation_gaps': [0, 1], 'line_gaps': [0, 1],
+               'case': 'line-reservation', 'multiline_gap': None,
+               'annotation_text_fragments': [1, 1]}
         self.assertTrue(valid_measurement(row))
         for change in [{'difference': 10}, {'scripts': 1}, {'annotation_gaps': []},
-                       {'annotation_gaps': [-1]}, {'line_gaps': [-1]}]:
+                       {'annotation_gaps': [-1]}, {'line_gaps': [-1]}, {'line_gaps': []},
+                       {'annotation_text_fragments': [2]}, {'annotation_text_fragments': []}]:
             with self.subTest(change=change):
                 self.assertFalse(valid_measurement(row | change))
+
+    def test_multiline_requires_actual_separate_lines(self):
+        row = {'case': 'ruby-multiline', 'scripts': 0, 'difference': 0,
+               'annotation_gaps': [0], 'line_gaps': [], 'multiline_gap': 20,
+               'annotation_text_fragments': [1, 1]}
+        for case in ['ruby-multiline', 'anno-multiline']:
+            self.assertTrue(valid_measurement(row | {'case': case}))
+            for gap in [None, 0, -20]:
+                self.assertFalse(valid_measurement(row | {'case': case, 'multiline_gap': gap}))
 
 
 if __name__ == '__main__':

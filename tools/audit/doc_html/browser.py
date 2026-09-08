@@ -36,7 +36,7 @@ def extract_cases(corpus):
 # A and B use the same font and size: their text rectangle bottoms must match.
 # Multiline B is placed on Ruby's last / Anno's first line by the source corpus.
 # Property support is recorded, not assumed to prove correct layout.
-MEASURE = """() => {
+MEASURE = """caseName => {
   const article = document.querySelector('article');
   const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT);
   const texts = []; while(walker.nextNode()) texts.push(walker.currentNode);
@@ -47,6 +47,11 @@ MEASURE = """() => {
   };
   const rect = n => {const r = document.createRange();r.selectNodeContents(n);return r.getBoundingClientRect();};
   const annotations = [...article.querySelectorAll('.nepl-ruby,.nepl-anno')];
+  // The corpus has no implicit breaks in individual annotation text nodes.
+  // Long readings must enlarge the atomic box instead of wrapping in captions.
+  const textFragments = texts.filter(n => n.parentElement.closest('.nepl-ruby,.nepl-anno')).map(n => {
+    const r = document.createRange();r.selectNodeContents(n);return r.getClientRects().length;
+  });
   const gaps = annotations.map(n => {
     const base = n.querySelector(':scope > .nepl-base');
     const reading = n.querySelector(':scope > .nepl-reading');
@@ -56,22 +61,39 @@ MEASURE = """() => {
     return reading ? b.top - reading.getBoundingClientRect().bottom
                    : notes.getBoundingClientRect().top - b.bottom;
   });
+  const breaks = article.querySelectorAll('br').length;
+  const multiline = caseName === 'ruby-multiline' || caseName === 'anno-multiline';
+  const expectedBreaks = multiline ? 1 : caseName === 'line-reservation' ? 2 : 0;
+  if(breaks !== expectedBreaks) throw Error('unexpected explicit break count');
+  let multilineGap = null;
+  if(multiline) {
+    const b = rect(one('B')), d = rect(one('D'));
+    multilineGap = caseName === 'ruby-multiline' ? b.top - d.top : d.top - b.top;
+  }
   let lineGaps = [];
-  if(texts.some(n => n.data === 'Z')) {
+  if(caseName === 'line-reservation') {
     const annotation = annotations[0].getBoundingClientRect();
     lineGaps = [annotation.top - rect(one('Z')).bottom,
                 rect(one('Y')).top - annotation.bottom];
   }
   return {difference: rect(one('B')).bottom - rect(one('A')).bottom,
           baseline_source_supported: CSS.supports('baseline-source','first') && CSS.supports('baseline-source','last'),
-          annotation_gaps: gaps, line_gaps: lineGaps,
+          annotation_gaps: gaps, line_gaps: lineGaps, multiline_gap: multilineGap,
+          annotation_text_fragments: textFragments,
           display: getComputedStyle(annotations[0]).display,
           scripts: document.scripts.length};
 }"""
 
 
 def valid_measurement(row):
+    if len(row["line_gaps"]) != (2 if row["case"] == "line-reservation" else 0):
+        return False
+    if row["case"] in {"ruby-multiline", "anno-multiline"}:
+        if row["multiline_gap"] is None or row["multiline_gap"] <= .1:
+            return False
     return (row["scripts"] == 0 and abs(row["difference"]) < .1
+            and bool(row["annotation_text_fragments"])
+            and all(count == 1 for count in row["annotation_text_fragments"])
             and bool(row["annotation_gaps"])
             and all(gap >= -.1 for gap in row["annotation_gaps"])
             and all(gap >= -.1 for gap in row["line_gaps"]))
@@ -110,7 +132,7 @@ def main():
                                     page.set_content("<!DOCTYPE html><meta charset=utf-8><style>" + css.decode("utf-8")
                                                      + f".nepl-doc{{font-family:Arial,sans-serif;font-size:{size}px;line-height:{height}}}"
                                                      + "</style>" + html)
-                                    measured = page.evaluate(MEASURE)
+                                    measured = page.evaluate(MEASURE, case)
                                     rows.append({"case": case, "width": width, "size": size,
                                                  "line_height": height, **measured})
                         context.close()
