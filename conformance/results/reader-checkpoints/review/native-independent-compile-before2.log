@@ -1,0 +1,23 @@
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-reader-checkpoints\workspace\crates\foundation\reader)
+error[E0308]: mismatched types
+  --> crates\foundation\reader\tests\review_checkpoints.rs:97:41
+   |
+97 |             assert_eq!(result.new_state,NdfValue::U64(1));
+   |                                         ^^^^^^^^^^^^^^^^ expected `Option<NdfValue>`, found `NdfValue`
+   |
+   = note: expected enum `std::option::Option<nepl3_core::value::NdfValue>`
+              found enum `nepl3_core::value::NdfValue`
+help: try wrapping the expression in `Some`
+   |
+97 |             assert_eq!(result.new_state,Some(NdfValue::U64(1)));
+   |                                         +++++                +
+
+error[E0609]: no field `facts` on type `nepl3_reader::model::ReaderFact`
+   --> crates\foundation\reader\tests\review_checkpoints.rs:103:73
+    |
+103 |             assert_eq!(result.facts.len(),1);assert_eq!(result.facts[0].facts.len(),1);
+    |                                                                         ^^^^^ unknown field
+
+Some errors have detailed explanations: E0308, E0609.
+For more information about an error, try `rustc --explain E0308`.
+error: could not compile `nepl3-reader` (test "review_checkpoints") due to 2 previous errors
