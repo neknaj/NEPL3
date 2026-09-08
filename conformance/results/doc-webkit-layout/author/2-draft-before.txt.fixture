@@ -15,33 +15,11 @@ body
       cons "ARMv6-M buildと[固定版/こていばん]rp2040jsでのUF2[実行/じっこう]は[別/べつ]job・[別証拠/べつしょうこ]です。"
       cons "[初期実行範囲/しょきじっこうはんい]はsource[位置/いち]・budget・NDFの4[件/けん]で、Reader/Engine[全受入/ぜんうけいれ]や[実機試験/じっきしけん]の[代/か]わりにはしません。" nil
     cons paragraph
-      cons "[実/じつ]ブラウザのWasm・Playground、RISC-V、big-endianの[検査/けんさ]はそれぞれ[独立/どくりつ]した[未達範囲/みたつはんい]です。"
+      cons "[実/じつ]ブラウザ、RISC-V、big-endianの[検査/けんさ]はそれぞれ[独立/どくりつ]した[未達範囲/みたつはんい]です。"
       cons "このCI[整備/せいび]をDoc HTML・[文書移行/ぶんしょいこう]・Pages[公開/こうかい]の[完成/かんせい]へ[読/よ]み[替/か]えません。"
       cons "CIの[区切/くぎ]り[後/ご]はDoc[生成/せいせい]を[進/すす]め、[意味/いみ]・リンク・[安定/あんてい]IDの[対応/たいおう]を[検証/けんしょう]できたページからnepld[正本/せいほん]へ[移行/いこう]し、[検査済/けんさず]みの[同/おな]じsite artifactを[公開/こうかい]します。" nil
     nil
   cons section local "ローカル[環境/かんきょう]" body
-    cons paragraph
-      cons "Doc HTMLの[配置/はいち]は、[固定版/こていばん]Playwrightと[対応/たいおう]するChromium・Firefox・WebKitでCI[実行/じっこう]します。"
-      cons "[実/じつ]NEPL3[入力/にゅうりょく]からproduction backendで[生成/せいせい]した13[例/れい]を、2[画面幅/がめんはば]・3[文字/もじ]サイズ・3[行高/ぎょうこう]で[表示/ひょうじ]し、Ruby/Annoのbaseline、[複数行/ふくすうぎょう]、[入/い]れ[子/こ]、[注釈/ちゅうしゃく]と[前後行/ぜんごぎょう]の[高/たか]さ[予約/よやく]を[検査/けんさ]します。"
-      cons "[文書/ぶんしょ]のJavaScriptは[無効/むこう]です。"
-      cons "これは[静的/せいてき]HTMLの[検査/けんさ]であり、Wasm[実行/じっこう]や[支援技術/しえんぎじゅつ]の[操作試験/そうさしけん]ではありません。"
-      cons "runner[不在/ふざい]・[例/れい]の[欠落/けつらく]・[配置不一致/はいちふいっち]は[失敗/しっぱい]となり、quality jobも[失敗/しっぱい]します。"
-      nil
-    cons rawcode some "sh" "python -m pip install -r tools/audit/doc_html/requirements.txt\npython -m playwright install chromium firefox webkit\nmkdir -p dist/doc-browser\ncargo test --locked -p nepl3-tools --test doc html::browser_layout_corpus_from_real_doc_source -- --exact --nocapture > dist/doc-browser/corpus.log\npython tools/audit/doc_html/browser.py --corpus dist/doc-browser/corpus.log --css crates/languages/doc/html/assets/doc.css --output dist/doc-browser/results.json\n"
-    cons paragraph
-      cons sentence
-        cons text "Linuxではbrowser"
-        cons ruby text "用" text "よう"
-        cons text "のsystem libraryも"
-        cons ruby text "必要" text "ひつよう"
-        cons text "なため、CIは"
-        cons code "playwright install --with-deps"
-        cons text "を"
-        cons ruby text "使" text "つか"
-        cons text "います。"
-        nil
-      cons "PowerShellで[実行/じっこう]ログを[保存/ほぞん]する[際/さい]は、[後述/こうじゅつ]のUTF-8の[指針/ししん]に[従/したが]ってください。"
-      nil
     cons paragraph
       cons sentence cons link relative "../rust-toolchain.toml" none text "rust-toolchain.toml" cons text " に" cons ruby text "固定" text "こてい" cons text "したRustと、Gitを" cons ruby text "使用" text "しよう" cons text "します。" nil
       cons "rustupはworkspace[内/ない]で[指定/してい]toolchainを[選/えら]びます。"

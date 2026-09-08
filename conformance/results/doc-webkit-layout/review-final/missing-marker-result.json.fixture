@@ -1,0 +1,17 @@
+{
+  "scope": "mutated real output missing required Z marker; should fail line-reservation coverage",
+  "row": {
+    "difference": 0.0078125,
+    "baseline_source_supported": false,
+    "annotation_gaps": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "line_gaps": [],
+    "display": "inline-table",
+    "scripts": 0
+  },
+  "accepted": true
+}

@@ -265,10 +265,8 @@ body
       cons "[必要/ひつよう]な[空白/くうはく]はTextに[含/ふく]める。"
       cons "white-space:pre-wrapで[著者/ちょしゃ]の[空白/くうはく]と[明示改行/めいじかいぎょう]を[尊重/そんちょう]する。" nil
     cons paragraph
-      cons "Ruby/Annoはネスト[可能/かのう]なtyped span[構造/こうぞう]として[描画/びょうが]し、base、[上側/うえがわ]のreading、[下側/したがわ]のnotesを[分離/ぶんり]する。"
-      cons "reference backendはinline-gridを[基本/きほん]とし、[必要/ひつよう]なbaseline[指定/してい]に[未対応/みたいおう]のbrowserでは20[章/しょう]のinline-table[配置/はいち]へ[切/き]り[替/か]える。"
-      cons "[同/おな]じspan[構造/こうぞう]を[維持/いじ]するため、CSSの[選択/せんたく]によってsemantic HTML[正規形/せいきけい]は[変/か]わらない。"
-      cons "[単純/たんじゅん]Rubyには[別/べつ]backendでHTML ruby/rtを[使用/しよう]してもよい。"
+      cons "Ruby/Annoはネスト[可能/かのう]なinline-gridのtyped span[構造/こうぞう]として[描画/びょうが]し、base、[上側/うえがわ]のreading、[下側/したがわ]のnotesを[別/べつ]セルへ[置/お]く。"
+      cons "[単純/たんじゅん]RubyにはHTML ruby/rtを[使用/しよう]してもよいが、semantic HTML[正規形/せいきけい]のreference backendはinline-gridへ[統一/とういつ]する。"
       cons "CSSは[配布/はいふ]asset、リモートfont/CDN/JSは[不要/ふよう]。" nil
     cons paragraph
       cons "Parallelは[一/ひと]つのalignment wrapperにlanguageごとのsentence spanを[入/い]れる。"

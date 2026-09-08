@@ -1,0 +1,32 @@
+Traceback (most recent call last):
+  File "C:\projects\NEPL3-doc-canonical-preview\.tmp\review-webkit-final\source\tools\audit\doc_html\browser.py", line 132, in <module>
+    main()
+    ~~~~^^
+  File "C:\projects\NEPL3-doc-canonical-preview\.tmp\review-webkit-final\source\tools\audit\doc_html\browser.py", line 99, in main
+    browser = getattr(playwright, name).launch(headless=True, **options)
+  File "C:\projects\NEPL3-doc-canonical-preview\.tmp\browser-venv\Lib\site-packages\playwright\sync_api\_generated.py", line 16702, in launch
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.launch(
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+        )
+        ^
+    )
+    ^
+  File "C:\projects\NEPL3-doc-canonical-preview\.tmp\browser-venv\Lib\site-packages\playwright\_impl\_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "C:\projects\NEPL3-doc-canonical-preview\.tmp\browser-venv\Lib\site-packages\playwright\_impl\_browser_type.py", line 97, in launch
+    await self._channel.send(
+        "launch", TimeoutSettings.launch_timeout, params
+    )
+  File "C:\projects\NEPL3-doc-canonical-preview\.tmp\browser-venv\Lib\site-packages\playwright\_impl\_connection.py", line 76, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "C:\projects\NEPL3-doc-canonical-preview\.tmp\browser-venv\Lib\site-packages\playwright\_impl\_connection.py", line 632, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.Error: BrowserType.launch: Failed to launch chromium because executable doesn't exist at C:\projects\NEPL3-doc-canonical-preview\.tmp\review-webkit-final\does-not-exist.exe

@@ -1,0 +1,29 @@
+from pathlib import Path
+import json,hashlib,importlib.util
+from playwright.sync_api import sync_playwright
+R=Path(__file__).resolve().parent
+spec=importlib.util.spec_from_file_location('corpus',R/'before/tools/audit/doc_html/browser.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+cases=m.extract_cases((R/'corpus.log').read_bytes());css=(R/'before/crates/languages/doc/html/assets/doc.css').read_text(encoding='utf8')
+# Extra cases are explicit CSS-only diagnostics derived from the real output.
+# They are not claimed as new production parser outputs.
+extras={n+'-multiline':h.replace('class="nepl-base">B</span>','class="nepl-base">B<br>D</span>') for n,h in cases.items() if n in ['ruby','anno','anno-ruby','ruby-anno']}
+results={}
+with sync_playwright() as p:
+ for engine in ['chromium','firefox','webkit']:
+  browser=getattr(p,engine).launch(headless=True);context=browser.new_context(java_script_enabled=False);page=context.new_page();rows=[]
+  for name,html in dict(cases,**extras).items():
+   for size in [12,20,32]:
+    for lh in ['normal','1.2','2']:
+     page.set_content('<!doctype html><meta charset="utf-8"><style>'+css+f'.nepl-doc{{font-family:Arial,sans-serif;font-size:{size}px;line-height:{lh}}}</style>'+html)
+     measure=page.evaluate('''() => {
+       const walker=document.createTreeWalker(document.querySelector('article'),NodeFilter.SHOW_TEXT), nodes=[];
+       while(walker.nextNode())nodes.push(walker.currentNode);
+       const rect=t=>{const r=document.createRange();r.selectNodeContents(t);return r.getBoundingClientRect();};
+       const a=nodes.find(t=>t.data==='A'), b=nodes.find(t=>t.data==='B'), d=nodes.find(t=>t.data==='D');
+       if(!a||!b)throw Error('missing original marker');
+       return {first:rect(b).bottom-rect(a).bottom,last:rect(d||b).bottom-rect(a).bottom,supportFirst:CSS.supports('baseline-source','first'),supportLast:CSS.supports('baseline-source','last'),scripts:document.scripts.length,text:document.querySelector('article').textContent};
+     }''')
+     rows.append({'case':name,'size':size,'lineHeight':lh,'scope':'real production corpus' if name in cases else 'CSS-only multiline diagnostic',**measure})
+  results[engine]={'version':browser.version,'rows':rows};browser.close()
+(R/'before-results.json').write_text(json.dumps(results,indent=2)+'\n',encoding='utf8')
+print(json.dumps({k:{'version':v['version'],'unsupported':sum(not x['supportLast'] for x in v['rows']),'real_failures':sum(abs(x['first'])>=.1 for x in v['rows'] if x['scope']=='real production corpus'),'rows':len(v['rows'])} for k,v in results.items()},indent=2))

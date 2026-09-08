@@ -1,0 +1,265 @@
+{
+  "base": "b29a420480b94d34876fe39a7451a446aadb240d",
+  "implementation_commit": "58f84716997b345dcda39746d3a6708a33b5ec41",
+  "design": "nepl3-design-2026-09-06-r4",
+  "target": "Windows host, Chromium 151.0.7922.34 / Firefox 153.0 / WebKit 26.5 via Playwright 1.62.0",
+  "commands": [
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "nepl3-tools",
+        "--test",
+        "doc",
+        "browser_layout_corpus_from_real_doc_source",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "log": "corpus.log"
+    },
+    {
+      "command": [
+        ".tmp/browser-venv/Scripts/python.exe",
+        "tools/audit/doc_html/browser.py",
+        "--corpus",
+        ".tmp/doc13/corpus-after.log",
+        "--css",
+        "crates/languages/doc/html/assets/doc.css",
+        "--output",
+        ".tmp/doc13/browser-nowrap.json"
+      ],
+      "exit_code": 0,
+      "result": "after.json",
+      "checks": 702
+    },
+    {
+      "command": [
+        ".tmp/browser-venv/Scripts/python.exe",
+        "tools/audit/doc_html/browser.py",
+        "--corpus",
+        ".tmp/doc13/corpus-after.log",
+        "--css",
+        ".tmp/doc13/caption-wrap.css",
+        "--output",
+        ".tmp/doc13/browser-caption-wrap.json"
+      ],
+      "exit_code": 1,
+      "result": "caption-wrap.json",
+      "purpose": "negative control before white-space preservation"
+    },
+    {
+      "command": [
+        "target/debug/nepl3-tools.exe",
+        "check"
+      ],
+      "exit_code": 0,
+      "log": "repository.stdout"
+    }
+  ],
+  "cli_sha256": "49db709cdcff2953912650a66e4a08d2367a1a1c169c3eb8227c6e635a270530",
+  "scope": "Static Doc CSS regression and chapter13 generated document inspection. No canonical cutover, no Wasm/Playground execution, no human screen-reader or Safari-on-Apple-device result, no Pages deployment, no aggregate acceptance status change.",
+  "limitations": [
+    "before-expanded.json used the earlier runner before case-marker/text-fragment checks; final negative mutations are recorded in the independent review",
+    "repository check preceded archiving these proof files; final archive check is recorded separately"
+  ],
+  "files": [
+    {
+      "path": "after.json",
+      "bytes": 347697,
+      "sha256": "6e35984e51ca99cb29b270cc04c6fdaf0eb5e36e89a319a18530a7c21027e599"
+    },
+    {
+      "path": "before-expanded.json",
+      "bytes": 255961,
+      "sha256": "5d7e75301a8779e7166fc56f858ce567f21b913bc1d9425869a4a947bc3130e4"
+    },
+    {
+      "path": "before.css",
+      "bytes": 1860,
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "path": "caption-wrap.css",
+      "bytes": 2239,
+      "sha256": "1f41012f2b444dd8ee9c46153c5424c0e1d377e4ba8757a2869661b108393b83"
+    },
+    {
+      "path": "caption-wrap.json",
+      "bytes": 347777,
+      "sha256": "5d0b53ce80979a0a113f2067259873aea2c5f844dce0eacfea6185c7e494c958"
+    },
+    {
+      "path": "chapter13/browser.json",
+      "bytes": 6878,
+      "sha256": "8302ae449b5469c1bd610126d15c030b23d54e8124936cb1ce4f767652b281f0"
+    },
+    {
+      "path": "chapter13/browser.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "chapter13/browser.stdout",
+      "bytes": 5113,
+      "sha256": "7701a268cdba85d20600b941ec1b6e6f31d687324ac2449147d4e726c2d69b1e"
+    },
+    {
+      "path": "chapter13/chromium-1280.png",
+      "bytes": 162749,
+      "sha256": "1730c4eba6e74f896528df063e9f7688d8f2ff3d92d3c6de3cb5627472f139c8"
+    },
+    {
+      "path": "chapter13/chromium-375.png",
+      "bytes": 57554,
+      "sha256": "79a1fe41c5987a923c2e09047fa9580035d73b224a50eaa5827db12ec2c428c8"
+    },
+    {
+      "path": "chapter13/doc.css",
+      "bytes": 2255,
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+    },
+    {
+      "path": "chapter13/document.html",
+      "bytes": 91421,
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+    },
+    {
+      "path": "chapter13/execution.json",
+      "bytes": 314,
+      "sha256": "25e25556a6ec25afd988e5a377d9374f1580d474e467e29785069faee52353be"
+    },
+    {
+      "path": "chapter13/firefox-1280.png",
+      "bytes": 129717,
+      "sha256": "496bb4150398b0e7be60e996c9282930e172eae9243a9b2bc9ae34ee84e58948"
+    },
+    {
+      "path": "chapter13/firefox-375.png",
+      "bytes": 43527,
+      "sha256": "0f3fd47559356349632e743f030683a1576715d0cd2756629af62ea00f752263"
+    },
+    {
+      "path": "chapter13/inspect.py",
+      "bytes": 2196,
+      "sha256": "19cb8de3ddae0717d16ab881da0f30f87542cd17909773c3481e26b3779b92ea"
+    },
+    {
+      "path": "chapter13/manifest.json",
+      "bytes": 4335,
+      "sha256": "9b57d286e5f7e9e30690316058337e9567d401199248e12ce3b63ea18733a9a3"
+    },
+    {
+      "path": "chapter13/pages.json",
+      "bytes": 215,
+      "sha256": "5c7b674ebcf10e2ac53077a2895551310774975d4cb555a878c57c4b3d1ba87f"
+    },
+    {
+      "path": "chapter13/source.nepld",
+      "bytes": 30905,
+      "sha256": "31486ad75e0776d55cc12b2a9b5af2840780ad7812456d9c222a90fd8ab495a8"
+    },
+    {
+      "path": "chapter13/webkit-1280.png",
+      "bytes": 168184,
+      "sha256": "5049d085f1222bbe8efd9fe2c00277c4bea157d8cc2595be27322742c7aeb964"
+    },
+    {
+      "path": "chapter13/webkit-375.png",
+      "bytes": 64406,
+      "sha256": "02ef4c8d45fca42e344316325bfc4d6bdb60f4319f372ea37de8a30bc2c2e70e"
+    },
+    {
+      "path": "checks.json",
+      "bytes": 348,
+      "sha256": "c1b1745c0fa0f8032dc1f5115670df541622e5035140c055dfea5754a03900e4"
+    },
+    {
+      "path": "clippy.stderr",
+      "bytes": 1825,
+      "sha256": "3a94d49ad031efb5869462ad7c2f4dc2d15ea515ee73dd7a1895023c0cb50cd3"
+    },
+    {
+      "path": "clippy.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "corpus.log",
+      "bytes": 9136,
+      "sha256": "d61bceddc2ac4ced366c91f01094efb6e9535be3309526547681e0ff396190b6"
+    },
+    {
+      "path": "corpus.stderr",
+      "bytes": 224,
+      "sha256": "e689d8b4fcc7d117afdc566842856e3bcc78dc83267a93a75e02f357d2cc0836"
+    },
+    {
+      "path": "doc-tests.stderr",
+      "bytes": 144,
+      "sha256": "f9392343a8a0ad0f727cdde41dae771fe4f8c499ea84884bb694fbdbd2c6ac4a"
+    },
+    {
+      "path": "doc-tests.stdout",
+      "bytes": 6512,
+      "sha256": "2ce3d81b590181aa2f442d0d33e073155b55ec070a3580073b6ce8aa9676c57c"
+    },
+    {
+      "path": "repository.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "repository.stdout",
+      "bytes": 74374,
+      "sha256": "6e8718f77da032203d51ac5154abb73849f95ec45ae0c5b6777ccec2c1c086f8"
+    },
+    {
+      "path": "source/.github/workflows/ci.yml",
+      "bytes": 15139,
+      "sha256": "a0a77c6a44fe44458d89f92a4fb5fa7c018cde181a65386eb37136fccbad502b"
+    },
+    {
+      "path": "source/crates/languages/doc/html/assets/doc.css",
+      "bytes": 2255,
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+    },
+    {
+      "path": "source/doc/development.md",
+      "bytes": 22681,
+      "sha256": "f450a403e83276b974206ba844c3247ba7c33c8c5660a032808ad4e9c505711e"
+    },
+    {
+      "path": "source/doc/spec/05-document.md",
+      "bytes": 30046,
+      "sha256": "338c0f7ac1dc4f4cf8bf1eb537fa816524e2cadc7ebe73475e462ffd42082abf"
+    },
+    {
+      "path": "source/doc/spec/20-doc-html.md",
+      "bytes": 8879,
+      "sha256": "301e208075a838537f5325c4a7ccbddccace1bb5e3d0877d4d4c9de2d6982a72"
+    },
+    {
+      "path": "source/tools/audit/doc_html/browser.py",
+      "bytes": 7814,
+      "sha256": "6c7423c3143a9324367341cdbdab3ea374c606727fa915c2ebd9fce8f2951bab"
+    },
+    {
+      "path": "source/tools/audit/doc_html/requirements.txt",
+      "bytes": 74,
+      "sha256": "8d8fe725654459eb2fcc04ae980e25f7a11d63c28fb3d4d8508d75f195e8dc68"
+    },
+    {
+      "path": "source/tools/audit/doc_html/test_corpus.py",
+      "bytes": 3141,
+      "sha256": "1b0800371a8181e8630afa2ee7942cd64244d522f980d4f5f6888de91ed7ca55"
+    },
+    {
+      "path": "source/tools/tests/doc/html.rs",
+      "bytes": 16102,
+      "sha256": "9d18bbec70c2372507f4854184c6bb1c3ac6d1299d2166f7fcfe9cf4d89aa38a"
+    }
+  ]
+}

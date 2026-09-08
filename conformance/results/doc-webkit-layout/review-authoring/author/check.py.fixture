@@ -1,0 +1,65 @@
+from pathlib import Path
+import sys,json,re,hashlib,difflib,subprocess
+import mistune
+from bs4 import BeautifulSoup
+p=Path(__file__).resolve().parent;root=p.parents[1]
+sys.path.insert(0,str(root))
+from tools.audit.structure import Parser,load_forms
+exec(compile((p/'helpers.py').read_text(encoding='utf-8'),'helpers.py','exec'))
+pairs_spec=[('doc/spec/05-document.md','doc/migration/authored/05-document.nepld'),('doc/spec/20-doc-html.md','doc/migration/authored/20-doc-html.nepld'),('doc/development.md','doc/migration/authored/guide/development.nepld')]
+def visible(n):
+    if isinstance(n,list):return ''.join(visible(x) for x in n)
+    if not isinstance(n,dict):return ''
+    k=n['kind'];f=n['fields']
+    if k=='Link':return visible(f['label'])
+    if k in ('Text','InlineCode','RawCode'):return f['text']
+    return ''.join(visible(x) for x in f.values())
+results=[]
+for i,(source,draft) in enumerate(pairs_spec):
+    old=(p/(str(i)+'-draft-before.txt')).read_bytes();new=(root/draft).read_bytes()
+    assert b'\r' not in new and not new.startswith(b'\xef\xbb\xbf')
+    tree=Parser(new.decode(),load_forms(root)).complete('Doc/Article')
+    audit_text(tree);pairs.clear();base=normalize(tree,True)
+    paragraphs=[visible(n) for n in walk(base) if n['kind']=='Paragraph']
+    src=(p/(str(i)+'-source-before.txt')).read_text(encoding='utf-8')
+    html=BeautifulSoup(mistune.create_markdown(escape=False)(src),'html.parser')
+    mparas=[n.get_text().replace('\n','') for n in html.find_all('p')]
+    markers=[['Ruby/Annoはネスト可能なtyped'],['Sentence/Concatはspan','baseline-source:first/last','代替の根拠は'],['実ブラウザのWasm','Doc HTMLの配置は','Linuxではbrowser用']][i]
+    checks=[]
+    for marker in markers:
+        expected=next(t for t in mparas if marker in t)
+        if i==1 and marker=='Sentence/Concatはspan':
+            sentence=next(t+'。' for t in expected.split('。') if t.startswith('Ruby/Anno'))
+            assert any(sentence in paragraph for paragraph in paragraphs)
+            checks.append({'scope':'changed sentence only; unrelated existing author phrasing retained','text':sentence})
+        else:
+            assert expected in paragraphs,(i,marker,expected,[x for x in paragraphs if marker in x])
+            checks.append(expected)
+    # Canonical/draft link and code additions are matched below separately.
+    oldtree=normalize(Parser(old.decode(),load_forms(root)).complete('Doc/Article'))
+    def codeitems(t):return [(n['kind'],n['fields']['text'],n['fields'].get('languageHint')) for n in walk(t) if n['kind'] in ('InlineCode','RawCode')]
+    beforecodes=codeitems(oldtree);aftercodes=codeitems(base)
+    addedcodes=list(aftercodes)
+    for c in beforecodes:addedcodes.remove(c)
+    sourceold=BeautifulSoup(mistune.create_markdown(escape=False)((p/(str(i)+'-source-base.md')).read_text(encoding='utf-8')),'html.parser')
+    originalcodes=[n.get_text() for n in sourceold.find_all('code')]
+    expectedcodes=[n.get_text() for n in html.find_all('code')]
+    for c in originalcodes:expectedcodes.remove(c)
+    assert [x[1] for x in addedcodes]==expectedcodes
+    def links(t):return [(n['fields']['target'],visible(n['fields']['label'])) for n in walk(t) if n['kind']=='Link']
+    addedlinks=links(base)
+    for link in links(oldtree):addedlinks.remove(link)
+    expectedlinks=[(a['href'],a.get_text()) for a in html.find_all('a')]
+    for a in sourceold.find_all('a'):expectedlinks.remove((a['href'],a.get_text()))
+    assert [(t['fields']['uri'],label) for t,label in addedlinks]==expectedlinks
+    changes=[]
+    aa=old.decode().splitlines(True);bb=new.decode().splitlines(True)
+    for tag,a,b,c,d in difflib.SequenceMatcher(None,aa,bb,autojunk=False).get_opcodes():
+        if tag!='equal':changes.append({'kind':tag,'before_lines':[a+1,b],'after_lines':[c+1,d],'removed':aa[a:b],'added':bb[c:d]})
+    assert [x['kind'] for x in changes]==[['replace'],['replace','insert'],['replace','insert']][i]
+    assert sum(len(x['removed']) for x in changes)==[2,1,1][i]
+    (p/(str(i)+'-draft-after.nepld')).write_bytes(new)
+    (p/(str(i)+'-draft.patch')).write_text(''.join(difflib.unified_diff(aa,bb,fromfile=draft,tofile=draft)),encoding='utf-8',newline='\n')
+    results.append({'source':source,'draft':draft,'source_sha256':hashlib.sha256(src.encode()).hexdigest(),'draft_before_sha256':hashlib.sha256(old).hexdigest(),'draft_after_sha256':hashlib.sha256(new).hexdigest(),'source_still_fixed':(root/source).read_bytes()==(p/(str(i)+'-source-before.txt')).read_bytes(),'matched_new_or_modified_paragraphs':checks,'added_code_payloads':expectedcodes,'added_links':expectedlinks,'changed_ranges':changes,'unrelated_lines_unchanged':True,'formal_structure':True,'ruby_ordinary_text_audit':True})
+(p/'result.json').write_text(json.dumps({'scope':'Author self-check, not independent review or runtime','files':results,'production_parser':False,'html':False,'canonical_cutover':False},ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
+print(json.dumps([{k:x[k] for k in ['source','draft','source_sha256','draft_after_sha256','source_still_fixed']} for x in results]))

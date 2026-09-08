@@ -1,0 +1,27 @@
+[
+  {
+    "command": [
+      "cargo",
+      "clippy",
+      "--workspace",
+      "--all-targets",
+      "--locked",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--test",
+      "doc"
+    ],
+    "exit_code": 0
+  }
+]

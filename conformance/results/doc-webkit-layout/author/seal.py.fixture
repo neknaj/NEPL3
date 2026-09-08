@@ -1,0 +1,13 @@
+from pathlib import Path
+import subprocess,sys,json,hashlib
+p=Path(__file__).resolve().parent;root=p.parents[1]
+r=subprocess.run([sys.executable,str(p/'check.py')],cwd=root,capture_output=True)
+(p/'check.log').write_bytes(r.stdout+r.stderr);assert r.returncode==0
+d=subprocess.run(['git','diff','--check'],cwd=root,capture_output=True)
+(p/'diff-check.log').write_bytes(d.stdout+d.stderr);assert d.returncode==0
+files=[]
+for f in sorted(p.iterdir()):
+    if f.is_file() and f.name!='manifest.json':
+        b=f.read_bytes();files.append({'path':f.name,'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest()})
+(p/'manifest.json').write_text(json.dumps({'scope':'Manual Doc synchronization of root WebKit/static browser specification deltas','drafts':['doc/migration/authored/05-document.nepld','doc/migration/authored/20-doc-html.nepld','doc/migration/authored/guide/development.nepld'],'production_edited':False,'independent_review':False,'runtime':False,'canonical_cutover':False,'files':files},indent=2)+'\n',encoding='utf-8',newline='\n')
+print(hashlib.sha256((p/'manifest.json').read_bytes()).hexdigest())

@@ -1,0 +1,154 @@
+"""Measure production Doc HTML in Chromium, Firefox and WebKit, without document JS.
+
+Supply the --nocapture log of browser_layout_corpus_from_real_doc_source and the
+production stylesheet. By default use the pinned Playwright browser binaries;
+optional executable paths allow explicit local runners. Missing engines fail.
+This checks static document layout, not browser Wasm or Playground completion.
+"""
+import argparse
+import hashlib
+import json
+import re
+from importlib.metadata import version
+from pathlib import Path
+
+CASES = {"ruby", "anno", "anno-ruby", "ruby-anno", "ruby-ruby", "table-ruby",
+         "list-ruby", "ruby-multiline", "anno-multiline", "reading-ruby",
+         "notes-ruby", "anno-anno", "line-reservation"}
+BROWSERS = ["chromium", "firefox", "webkit"]
+
+
+def extract_cases(corpus):
+    cases = {}
+    for line in corpus.decode("utf-8-sig").splitlines():
+        # libtest can put the serialized test name before the first marker.
+        line = re.sub(r"^test [A-Za-z0-9_:]+ \.\.\. (?=DOC_HTML_CASE )", "", line)
+        if line.startswith("DOC_HTML_CASE "):
+            _, name, text = line.split()
+            if name in cases:
+                raise ValueError("duplicate case: " + name)
+            cases[name] = bytes.fromhex(text).decode("utf-8")
+    if cases.keys() != CASES:
+        raise ValueError("missing or unexpected corpus cases")
+    return cases
+
+
+# A and B use the same font and size: their text rectangle bottoms must match.
+# Multiline B is placed on Ruby's last / Anno's first line by the source corpus.
+# Property support is recorded, not assumed to prove correct layout.
+MEASURE = """caseName => {
+  const article = document.querySelector('article');
+  const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT);
+  const texts = []; while(walker.nextNode()) texts.push(walker.currentNode);
+  const one = text => {
+    const found = texts.filter(n => n.data === text);
+    if(found.length !== 1) throw Error('expected one original text: ' + text);
+    return found[0];
+  };
+  const rect = n => {const r = document.createRange();r.selectNodeContents(n);return r.getBoundingClientRect();};
+  const annotations = [...article.querySelectorAll('.nepl-ruby,.nepl-anno')];
+  // The corpus has no implicit breaks in individual annotation text nodes.
+  // Long readings must enlarge the atomic box instead of wrapping in captions.
+  const textFragments = texts.filter(n => n.parentElement.closest('.nepl-ruby,.nepl-anno')).map(n => {
+    const r = document.createRange();r.selectNodeContents(n);return r.getClientRects().length;
+  });
+  const gaps = annotations.map(n => {
+    const base = n.querySelector(':scope > .nepl-base');
+    const reading = n.querySelector(':scope > .nepl-reading');
+    const notes = n.querySelector(':scope > .nepl-notes');
+    if(!base || (!reading && !notes)) throw Error('missing annotation structure');
+    const b = base.getBoundingClientRect();
+    return reading ? b.top - reading.getBoundingClientRect().bottom
+                   : notes.getBoundingClientRect().top - b.bottom;
+  });
+  const breaks = article.querySelectorAll('br').length;
+  const multiline = caseName === 'ruby-multiline' || caseName === 'anno-multiline';
+  const expectedBreaks = multiline ? 1 : caseName === 'line-reservation' ? 2 : 0;
+  if(breaks !== expectedBreaks) throw Error('unexpected explicit break count');
+  let multilineGap = null;
+  if(multiline) {
+    const b = rect(one('B')), d = rect(one('D'));
+    multilineGap = caseName === 'ruby-multiline' ? b.top - d.top : d.top - b.top;
+  }
+  let lineGaps = [];
+  if(caseName === 'line-reservation') {
+    const annotation = annotations[0].getBoundingClientRect();
+    lineGaps = [annotation.top - rect(one('Z')).bottom,
+                rect(one('Y')).top - annotation.bottom];
+  }
+  return {difference: rect(one('B')).bottom - rect(one('A')).bottom,
+          baseline_source_supported: CSS.supports('baseline-source','first') && CSS.supports('baseline-source','last'),
+          annotation_gaps: gaps, line_gaps: lineGaps, multiline_gap: multilineGap,
+          annotation_text_fragments: textFragments,
+          display: getComputedStyle(annotations[0]).display,
+          scripts: document.scripts.length};
+}"""
+
+
+def valid_measurement(row):
+    if len(row["line_gaps"]) != (2 if row["case"] == "line-reservation" else 0):
+        return False
+    if row["case"] in {"ruby-multiline", "anno-multiline"}:
+        if row["multiline_gap"] is None or row["multiline_gap"] <= .1:
+            return False
+    return (row["scripts"] == 0 and abs(row["difference"]) < .1
+            and bool(row["annotation_text_fragments"])
+            and all(count == 1 for count in row["annotation_text_fragments"])
+            and bool(row["annotation_gaps"])
+            and all(gap >= -.1 for gap in row["annotation_gaps"])
+            and all(gap >= -.1 for gap in row["line_gaps"]))
+
+
+def main():
+    from playwright.sync_api import sync_playwright
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    for name in ["corpus", "css", "output"]:
+        parser.add_argument("--" + name, required=True, type=Path)
+    for name in BROWSERS:
+        parser.add_argument("--" + name, type=Path)
+    args = parser.parse_args()
+    corpus, css = args.corpus.read_bytes(), args.css.read_bytes()
+    cases = extract_cases(corpus)
+    result = {"corpus_sha256": hashlib.sha256(corpus).hexdigest(),
+              "css_sha256": hashlib.sha256(css).hexdigest(),
+              "playwright": version("playwright"), "browsers": {}, "result": "failed"}
+    try:
+        with sync_playwright() as playwright:
+            for name in BROWSERS:
+                executable = getattr(args, name)
+                options = {"executable_path": str(executable)} if executable else {}
+                browser = getattr(playwright, name).launch(headless=True, **options)
+                rows = []
+                result["browsers"][name] = {"version": browser.version, "measurements": rows}
+                try:
+                    for width in [375, 1280]:
+                        context = browser.new_context(java_script_enabled=False,
+                                                      viewport={"width": width, "height": 900})
+                        page = context.new_page()
+                        for case, html in cases.items():
+                            for size in [12, 20, 32]:
+                                for height in ["normal", "1.2", "2"]:
+                                    page.set_content("<!DOCTYPE html><meta charset=utf-8><style>" + css.decode("utf-8")
+                                                     + f".nepl-doc{{font-family:Arial,sans-serif;font-size:{size}px;line-height:{height}}}"
+                                                     + "</style>" + html)
+                                    measured = page.evaluate(MEASURE, case)
+                                    rows.append({"case": case, "width": width, "size": size,
+                                                 "line_height": height, **measured})
+                        context.close()
+                finally:
+                    browser.close()
+        if any(not valid_measurement(row) for b in result["browsers"].values() for row in b["measurements"]):
+            raise ValueError("annotation layout or scriptless document check failed; see output")
+        result["result"] = "passed"
+    except Exception as error:
+        result["error"] = str(error)
+        raise
+    finally:
+        args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n")
+    count = sum(len(b["measurements"]) for b in result["browsers"].values())
+    print(f"Doc HTML: {count} actual-output layout checks passed in three browsers with document JavaScript disabled.")
+
+
+if __name__ == "__main__":
+    main()

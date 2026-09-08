@@ -1,0 +1,8 @@
+﻿from pathlib import Path
+import importlib.util,json
+from playwright.sync_api import sync_playwright
+r=Path(__file__).resolve().parent;s=importlib.util.spec_from_file_location('b',r/'source/tools/audit/doc_html/browser.py');m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+html=m.extract_cases((r/'corpus.log').read_bytes())['line-reservation'].replace('>Z<br>','>X<br>');(r/'missing-marker.html').write_text(html,encoding='utf8');css=(r/'source/crates/languages/doc/html/assets/doc.css').read_text(encoding='utf8')
+with sync_playwright() as p:
+ b=p.webkit.launch();page=b.new_page(java_script_enabled=False);page.set_content('<style>'+css+'</style>'+html);row=page.evaluate(m.MEASURE);b.close()
+out={'scope':'mutated real output missing required Z marker; should fail line-reservation coverage','row':row,'accepted':m.valid_measurement(row)};(r/'missing-marker-result.json').write_text(json.dumps(out,indent=2)+'\n',encoding='utf8');print(json.dumps(out))

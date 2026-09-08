@@ -1,0 +1,54 @@
+--- doc/migration/authored/20-doc-html.nepld
++++ doc/migration/authored/20-doc-html.nepld
+@@ -63,7 +63,7 @@
+     nil
+   cons paragraph
+     cons "Sentence/Concatはspan、Emphasis/Strongはem/strong、[明示/めいじ]Breakはbrとする。"
+-    cons "Ruby/Annoは[型付/かたつ]きspanと[固定/こてい]CSSのgridを[使/つか]い、base/reading/[全/ぜん]noteを[別要素/べつようそ]として[保持/ほじ]する。"
++    cons "Ruby/Annoは[型付/かたつ]きspanと[固定/こてい]CSSを[使/つか]い、base/reading/[全/ぜん]noteを[別要素/べつようそ]として[保持/ほじ]する。"
+     cons "Tableはheaderのthead、[順序付/じゅんじょつ]きtbody/trとth/td、[列/れつ]alignmentの[固定/こてい]classを[使/つか]う。"
+     cons "[空表/くうひょう]は、[空/から]tableのままにする。"
+     cons "Listはul/ol、itemはliとBody、[明示/めいじ]checkboxは[状態/じょうたい]を[持/も]つ[表示/ひょうじ]spanとする。"
+@@ -227,5 +227,42 @@
+         cons "[幅/はば]が[狭/せま]い[場合/ばあい]にもRuby/Annoの[内部/ないぶ]を[任意位置/にんいいち]で[分割/ぶんかつ]せず、max-contentの[一/ひと]つのinline boxとして[保持/ほじ]する。"
+         cons "[長/なが]いbase/reading/notesやpre[内/ない]codeは[横/よこ]にはみ[出/だ]し[得/う]るため、hostの[閲覧/えつらん]・[印刷/いんさつ]profileは、その[表示/ひょうじ]と[移動手段/いどうしゅだん]を[別途検証/べっとけんしょう]する。"
+         nil
++      cons paragraph
++        cons sentence
++          cons code "baseline-source:first/last"
++          cons text "の"
++          cons ruby text "両方" text "りょうほう"
++          cons text "を"
++          cons ruby text "利用" text "りよう"
++          cons text "できないbrowserでは、"
++          cons ruby text "同" text "おな"
++          cons text "じspan"
++          cons ruby text "構造" text "こうぞう"
++          cons text "にinline-tableの"
++          cons ruby text "固定" text "こてい"
++          cons text "CSSを"
++          cons ruby text "適用" text "てきよう"
++          cons text "する。"
++          nil
++        cons "readingは[上側/うえがわ]、notesは[下側/したがわ]のtable-captionとし、baseを[持/も]つ[唯一/ゆいいつ]の[行/ぎょう]からbaselineを[公開/こうかい]する。"
++        cons "Rubyのbaseはinline-blockとして[最終行/さいしゅうぎょう]のbaselineを、Annoのbaseはtable-cellとして[最初/さいしょ]の[行/ぎょう]のbaselineを[公開/こうかい]する。"
++        cons "DOMの[順序/じゅんじょ]や[注釈内容/ちゅうしゃくないよう]を[変更/へんこう]せず、HTMLの[表要素/ひょうようそ]やJavaScriptを[追加/ついか]しない。"
++        cons "この[代替/だいたい]はWebKitで[基底文字/きていもじ]が[本文/ほんぶん]より[下/さ]がる[不具合/ふぐあい]への[対応/たいおう]であり、[型付/かたつ]きmarkup・[意味正規形/いみせいきけい]は[変更/へんこう]しない。"
++        nil
++      cons paragraph
++        cons sentence
++          cons ruby text "代替" text "だいたい"
++          cons text "の"
++          cons ruby text "根拠" text "こんきょ"
++          cons text "は "
++          cons link external "https://www.w3.org/TR/CSS2/visudet.html#leading" text "CSS2のinline-block baseline"
++          cons text " と "
++          cons link external "https://www.w3.org/TR/CSS2/tables.html#height-layout" concat cons text "tableのbaseline" cons ruby text "規則" text "きそく" nil
++          cons text " である。"
++          nil
++        cons "[対応/たいおう]propertyの[有無/うむ]だけで[合否/ごうひ]を[決/き]めず、[実際/じっさい]のproduction HTMLとCSSをChromium・Firefox・WebKitで[表示/ひょうじ]し、[本文/ほんぶん]とのbaseline、[読/よ]み・[注釈/ちゅうしゃく]の[上下配置/じょうげはいち]、[複数行/ふくすうぎょう]の[基準/きじゅん]、[入/い]れ[子/こ]と[前後行/ぜんごぎょう]の[高/たか]さ[予約/よやく]を[検査/けんさ]する。"
++        cons "[文書内/ぶんしょない]のJavaScriptは[無効/むこう]とする。"
++        cons "この[静的文書/せいてきぶんしょ]の[検査/けんさ]はWasm・Playground・[支援技術/しえんぎじゅつ]による[実操作/じつそうさ]の[受入/うけいれ]を[代行/だいこう]しない。"
++        nil
+       nil
+   nil

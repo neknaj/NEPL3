@@ -1,0 +1,254 @@
+[
+  {
+    "title": "NEPL3 Doc",
+    "scripts": 0,
+    "language": "",
+    "headings": [
+      "13. 再現性さいげんせい・schema識別しきべつ・契約けいやくの判定はんてい",
+      "方針ほうしん",
+      "1. digest",
+      "Package意味正規形いみせいきけい",
+      "具体実行ぐたいじっこうidentity",
+      "2. native値ちとwire値ち",
+      "3. normal formとartifact",
+      "4. limitsとproviderの互換ごかん"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-646967657374",
+      "n-73656d616e746963",
+      "n-657865637574696f6e",
+      "n-77697265",
+      "n-617274696661637473",
+      "n-6c696d697473"
+    ],
+    "ruby": 674,
+    "css": [
+      {
+        "href": "http://127.0.0.1:53021/doc13-nowrap/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "overflow": false,
+    "background": "rgb(13, 17, 23)",
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 375,
+    "status": 200,
+    "failed_requests": []
+  },
+  {
+    "title": "NEPL3 Doc",
+    "scripts": 0,
+    "language": "",
+    "headings": [
+      "13. 再現性さいげんせい・schema識別しきべつ・契約けいやくの判定はんてい",
+      "方針ほうしん",
+      "1. digest",
+      "Package意味正規形いみせいきけい",
+      "具体実行ぐたいじっこうidentity",
+      "2. native値ちとwire値ち",
+      "3. normal formとartifact",
+      "4. limitsとproviderの互換ごかん"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-646967657374",
+      "n-73656d616e746963",
+      "n-657865637574696f6e",
+      "n-77697265",
+      "n-617274696661637473",
+      "n-6c696d697473"
+    ],
+    "ruby": 674,
+    "css": [
+      {
+        "href": "http://127.0.0.1:53021/doc13-nowrap/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "overflow": false,
+    "background": "rgb(13, 17, 23)",
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 1280,
+    "status": 200,
+    "failed_requests": []
+  },
+  {
+    "title": "NEPL3 Doc",
+    "scripts": 0,
+    "language": "",
+    "headings": [
+      "13. 再現性さいげんせい・schema識別しきべつ・契約けいやくの判定はんてい",
+      "方針ほうしん",
+      "1. digest",
+      "Package意味正規形いみせいきけい",
+      "具体実行ぐたいじっこうidentity",
+      "2. native値ちとwire値ち",
+      "3. normal formとartifact",
+      "4. limitsとproviderの互換ごかん"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-646967657374",
+      "n-73656d616e746963",
+      "n-657865637574696f6e",
+      "n-77697265",
+      "n-617274696661637473",
+      "n-6c696d697473"
+    ],
+    "ruby": 674,
+    "css": [
+      {
+        "href": "http://127.0.0.1:53021/doc13-nowrap/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "overflow": false,
+    "background": "rgb(13, 17, 23)",
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 375,
+    "status": 200,
+    "failed_requests": []
+  },
+  {
+    "title": "NEPL3 Doc",
+    "scripts": 0,
+    "language": "",
+    "headings": [
+      "13. 再現性さいげんせい・schema識別しきべつ・契約けいやくの判定はんてい",
+      "方針ほうしん",
+      "1. digest",
+      "Package意味正規形いみせいきけい",
+      "具体実行ぐたいじっこうidentity",
+      "2. native値ちとwire値ち",
+      "3. normal formとartifact",
+      "4. limitsとproviderの互換ごかん"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-646967657374",
+      "n-73656d616e746963",
+      "n-657865637574696f6e",
+      "n-77697265",
+      "n-617274696661637473",
+      "n-6c696d697473"
+    ],
+    "ruby": 674,
+    "css": [
+      {
+        "href": "http://127.0.0.1:53021/doc13-nowrap/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "overflow": false,
+    "background": "rgb(13, 17, 23)",
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 1280,
+    "status": 200,
+    "failed_requests": []
+  },
+  {
+    "title": "NEPL3 Doc",
+    "scripts": 0,
+    "language": "",
+    "headings": [
+      "13. 再現性さいげんせい・schema識別しきべつ・契約けいやくの判定はんてい",
+      "方針ほうしん",
+      "1. digest",
+      "Package意味正規形いみせいきけい",
+      "具体実行ぐたいじっこうidentity",
+      "2. native値ちとwire値ち",
+      "3. normal formとartifact",
+      "4. limitsとproviderの互換ごかん"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-646967657374",
+      "n-73656d616e746963",
+      "n-657865637574696f6e",
+      "n-77697265",
+      "n-617274696661637473",
+      "n-6c696d697473"
+    ],
+    "ruby": 674,
+    "css": [
+      {
+        "href": "http://127.0.0.1:53021/doc13-nowrap/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "overflow": false,
+    "background": "rgb(13, 17, 23)",
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 375,
+    "status": 200,
+    "failed_requests": []
+  },
+  {
+    "title": "NEPL3 Doc",
+    "scripts": 0,
+    "language": "",
+    "headings": [
+      "13. 再現性さいげんせい・schema識別しきべつ・契約けいやくの判定はんてい",
+      "方針ほうしん",
+      "1. digest",
+      "Package意味正規形いみせいきけい",
+      "具体実行ぐたいじっこうidentity",
+      "2. native値ちとwire値ち",
+      "3. normal formとartifact",
+      "4. limitsとproviderの互換ごかん"
+    ],
+    "links": [
+      "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+      "https://www.rfc-editor.org/rfc/rfc3987.html"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-646967657374",
+      "n-73656d616e746963",
+      "n-657865637574696f6e",
+      "n-77697265",
+      "n-617274696661637473",
+      "n-6c696d697473"
+    ],
+    "ruby": 674,
+    "css": [
+      {
+        "href": "http://127.0.0.1:53021/doc13-nowrap/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "overflow": false,
+    "background": "rgb(13, 17, 23)",
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 1280,
+    "status": 200,
+    "failed_requests": []
+  }
+]

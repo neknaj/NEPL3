@@ -1,0 +1,776 @@
+{
+  "chromium": {
+    "version": "151.0.7922.34",
+    "rows": [
+      {
+        "case": "line-reservation",
+        "mutation": "missing-Z",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": null,
+        "error": "Page.evaluate: error: expected one original text: Z"
+      },
+      {
+        "case": "line-reservation",
+        "mutation": "missing-Y",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": null,
+        "error": "Page.evaluate: error: expected one original text: Y"
+      },
+      {
+        "case": "ruby-multiline",
+        "mutation": "removed-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": null,
+        "error": "Page.evaluate: Error: unexpected explicit break count\n    at eval (eval at evaluate (:311:30), <anonymous>:29:39)\n    at UtilityScript.evaluate (<anonymous>:318:18)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)"
+      },
+      {
+        "case": "ruby-multiline",
+        "mutation": "hidden-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": true,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": 0,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1
+          ],
+          "display": "inline-grid",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "ruby-multiline",
+        "mutation": "original",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": true,
+        "accepted": true,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": true,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": 24,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1
+          ],
+          "display": "inline-grid",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "anno-multiline",
+        "mutation": "removed-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": null,
+        "error": "Page.evaluate: Error: unexpected explicit break count\n    at eval (eval at evaluate (:311:30), <anonymous>:29:39)\n    at UtilityScript.evaluate (<anonymous>:318:18)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)"
+      },
+      {
+        "case": "anno-multiline",
+        "mutation": "hidden-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": true,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": 0,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1
+          ],
+          "display": "inline-grid",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "anno-multiline",
+        "mutation": "original",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": true,
+        "accepted": true,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": true,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": 24,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1
+          ],
+          "display": "inline-grid",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "line-reservation",
+        "mutation": "removed-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": null,
+        "error": "Page.evaluate: Error: unexpected explicit break count\n    at eval (eval at evaluate (:311:30), <anonymous>:29:39)\n    at UtilityScript.evaluate (<anonymous>:318:18)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)"
+      },
+      {
+        "case": "line-reservation",
+        "mutation": "hidden-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": true,
+          "annotation_gaps": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "line_gaps": [
+            -46.03125,
+            -60.421875
+          ],
+          "multiline_gap": null,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "display": "inline-grid",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "line-reservation",
+        "mutation": "original",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": true,
+        "accepted": true,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": true,
+          "annotation_gaps": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "line_gaps": [
+            1,
+            1
+          ],
+          "multiline_gap": null,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "display": "inline-grid",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "ruby",
+        "mutation": "long-reading-before",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": true,
+        "accepted": true,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": true,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": null,
+          "annotation_text_fragments": [
+            1,
+            1
+          ],
+          "display": "inline-grid",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "ruby",
+        "mutation": "long-reading-after",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": true,
+        "accepted": true,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": true,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": null,
+          "annotation_text_fragments": [
+            1,
+            1
+          ],
+          "display": "inline-grid",
+          "scripts": 0
+        },
+        "error": null
+      }
+    ]
+  },
+  "firefox": {
+    "version": "153.0",
+    "rows": [
+      {
+        "case": "line-reservation",
+        "mutation": "missing-Z",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": null,
+        "error": "Page.evaluate: expected one original text: Z\none@debugger eval code line 311 > eval:7:34\n@debugger eval code line 311 > eval:38:39\nevaluate@debugger eval code:318:18\n@debugger eval code:1:44\n@debugger eval code:1:62\n"
+      },
+      {
+        "case": "line-reservation",
+        "mutation": "missing-Y",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": null,
+        "error": "Page.evaluate: expected one original text: Y\none@debugger eval code line 311 > eval:7:34\n@debugger eval code line 311 > eval:39:22\nevaluate@debugger eval code:318:18\n@debugger eval code:1:44\n@debugger eval code:1:62\n"
+      },
+      {
+        "case": "ruby-multiline",
+        "mutation": "removed-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": null,
+        "error": "Page.evaluate: unexpected explicit break count\n@debugger eval code line 311 > eval:29:39\nevaluate@debugger eval code:318:18\n@debugger eval code:1:44\n@debugger eval code:1:62\n"
+      },
+      {
+        "case": "ruby-multiline",
+        "mutation": "hidden-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": true,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": 0,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1
+          ],
+          "display": "inline-grid",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "ruby-multiline",
+        "mutation": "original",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": true,
+        "accepted": true,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": true,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": 24,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1
+          ],
+          "display": "inline-grid",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "anno-multiline",
+        "mutation": "removed-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": null,
+        "error": "Page.evaluate: unexpected explicit break count\n@debugger eval code line 311 > eval:29:39\nevaluate@debugger eval code:318:18\n@debugger eval code:1:44\n@debugger eval code:1:62\n"
+      },
+      {
+        "case": "anno-multiline",
+        "mutation": "hidden-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": true,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": 0,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1
+          ],
+          "display": "inline-grid",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "anno-multiline",
+        "mutation": "original",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": true,
+        "accepted": true,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": true,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": 24,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1
+          ],
+          "display": "inline-grid",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "line-reservation",
+        "mutation": "removed-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": null,
+        "error": "Page.evaluate: unexpected explicit break count\n@debugger eval code line 311 > eval:29:39\nevaluate@debugger eval code:318:18\n@debugger eval code:1:44\n@debugger eval code:1:62\n"
+      },
+      {
+        "case": "line-reservation",
+        "mutation": "hidden-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": true,
+          "annotation_gaps": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "line_gaps": [
+            -46.0333251953125,
+            -60.43333435058594
+          ],
+          "multiline_gap": null,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "display": "inline-grid",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "line-reservation",
+        "mutation": "original",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": true,
+        "accepted": true,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": true,
+          "annotation_gaps": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "line_gaps": [
+            1,
+            1
+          ],
+          "multiline_gap": null,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "display": "inline-grid",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "ruby",
+        "mutation": "long-reading-before",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": true,
+        "accepted": true,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": true,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": null,
+          "annotation_text_fragments": [
+            1,
+            1
+          ],
+          "display": "inline-grid",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "ruby",
+        "mutation": "long-reading-after",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": true,
+        "accepted": true,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": true,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": null,
+          "annotation_text_fragments": [
+            1,
+            1
+          ],
+          "display": "inline-grid",
+          "scripts": 0
+        },
+        "error": null
+      }
+    ]
+  },
+  "webkit": {
+    "version": "26.5",
+    "rows": [
+      {
+        "case": "line-reservation",
+        "mutation": "missing-Z",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": null,
+        "error": "Page.evaluate: error: expected one original text: Z"
+      },
+      {
+        "case": "line-reservation",
+        "mutation": "missing-Y",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": null,
+        "error": "Page.evaluate: error: expected one original text: Y"
+      },
+      {
+        "case": "ruby-multiline",
+        "mutation": "removed-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": null,
+        "error": "Page.evaluate: Error: unexpected explicit break count"
+      },
+      {
+        "case": "ruby-multiline",
+        "mutation": "hidden-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": false,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": 0,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1
+          ],
+          "display": "inline-table",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "ruby-multiline",
+        "mutation": "original",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": true,
+        "accepted": true,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": false,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": 24,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1
+          ],
+          "display": "inline-table",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "anno-multiline",
+        "mutation": "removed-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": null,
+        "error": "Page.evaluate: Error: unexpected explicit break count"
+      },
+      {
+        "case": "anno-multiline",
+        "mutation": "hidden-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": false,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": 0,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1
+          ],
+          "display": "inline-table",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "anno-multiline",
+        "mutation": "original",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": true,
+        "accepted": true,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": false,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": 24,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1
+          ],
+          "display": "inline-table",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "line-reservation",
+        "mutation": "removed-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": null,
+        "error": "Page.evaluate: Error: unexpected explicit break count"
+      },
+      {
+        "case": "line-reservation",
+        "mutation": "hidden-br",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": false,
+          "annotation_gaps": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "line_gaps": [
+            -46.015625,
+            -60.40625
+          ],
+          "multiline_gap": null,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "display": "inline-table",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "line-reservation",
+        "mutation": "original",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": true,
+        "accepted": true,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": false,
+          "annotation_gaps": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "line_gaps": [
+            1,
+            1
+          ],
+          "multiline_gap": null,
+          "annotation_text_fragments": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "display": "inline-table",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "ruby",
+        "mutation": "long-reading-before",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": false,
+        "accepted": false,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": false,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": null,
+          "annotation_text_fragments": [
+            1,
+            25
+          ],
+          "display": "inline-table",
+          "scripts": 0
+        },
+        "error": null
+      },
+      {
+        "case": "ruby",
+        "mutation": "long-reading-after",
+        "scope": "mutated real output / CSS failure diagnostic",
+        "expected": true,
+        "accepted": true,
+        "row": {
+          "difference": 0,
+          "baseline_source_supported": false,
+          "annotation_gaps": [
+            0
+          ],
+          "line_gaps": [],
+          "multiline_gap": null,
+          "annotation_text_fragments": [
+            1,
+            1
+          ],
+          "display": "inline-table",
+          "scripts": 0
+        },
+        "error": null
+      }
+    ]
+  }
+}
