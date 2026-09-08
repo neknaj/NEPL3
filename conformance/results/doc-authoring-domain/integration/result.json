@@ -1,0 +1,96 @@
+{
+  "head": "ce0e378aec36ce45a120171853e7cb38b6832120",
+  "base": "7f250ee6b6476733ec902ab14533612b49405106",
+  "result": "passed",
+  "manuscripts": [
+    {
+      "path": "doc/migration/authored/05-document.nepld",
+      "commit": "94de345ca2ab44edd5f276f642ed6fbb72006cd2",
+      "sha256": "ab4b59d22adb6d09c20ebfaa6734d1b108da9e30b2f5a5f6942ff85302063982",
+      "bytes": 66043,
+      "review_snapshot": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-b-sentence-payload\\after.nepld",
+      "canonical_sha256": "c6b0878316fec5554402ef0f0c2f5edb66ffd36bb363e17e2033b77fb53f27be",
+      "canonical_review_source": "90f4552"
+    },
+    {
+      "path": "doc/migration/authored/06-math.nepld",
+      "commit": "1ee60f1cfe1658f1b26dda78ceeca24e73d3c1b5",
+      "sha256": "3dd100604d59618d91149b4fc77ee536d43b37f7e6bcd468748aad7cd3d16fe7",
+      "bytes": 23658,
+      "review_snapshot": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-b-06-revision\\after.nepld",
+      "canonical_sha256": "c22ab7b0fae9acb9edecd3886fb641cefcf53c9b688dc8c5ffe7cba97eebd028",
+      "canonical_review_source": "bc1d5d3443d214457aa6527250d372ee1f2b5896"
+    },
+    {
+      "path": "doc/migration/authored/07-circuit.nepld",
+      "commit": "3f3cfba7964f26873159f3fb333e958f6922cc35",
+      "sha256": "17618352d792b55cfa9436c029d1b5d09c916cc5af3b8123f4a33e053b963cae",
+      "bytes": 16411,
+      "review_snapshot": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-b-07-revision\\after.nepld",
+      "canonical_sha256": "0005924591477574e490affa8df48d7446dfb41d81cd08beb55d03372a0dbfed",
+      "canonical_review_source": "bc1d5d3443d214457aa6527250d372ee1f2b5896"
+    },
+    {
+      "path": "doc/migration/authored/08-editor.nepld",
+      "commit": "8ef40fd155d037d3b04556c08078da76d2560be3",
+      "sha256": "43c78b5f39b008a87b7a5eaf1719a0670f1b5f4992a2489a84549af7dd1241a7",
+      "bytes": 51115,
+      "review_snapshot": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-b-08-revision\\after.nepld",
+      "canonical_sha256": "1311cb50ce019ed53c733f9d8e414a7ea42b70f975fb0d60d01314762d79fa39",
+      "canonical_review_source": "bc1d5d3443d214457aa6527250d372ee1f2b5896"
+    },
+    {
+      "path": "doc/migration/authored/09-portability.nepld",
+      "commit": "7d71068970ca6d0bfbd96fb121a90e2dc414ce9b",
+      "sha256": "b93662b46d833e25f4b57f2fc08c334bc7d9ac641d8c13ba0fc9439d1abe5827",
+      "bytes": 32280,
+      "review_snapshot": "C:\\projects\\NEPL3-runtime\\.tmp\\review-reader-portability-followup\\09-portability\\after.nepld",
+      "canonical_sha256": "9c30f92245bfac0f94324b078884bd758def94bf00b9189cd3e6a656a843cf21",
+      "canonical_review_source": "4e18cc1"
+    }
+  ],
+  "review_manifests": [
+    {
+      "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-b",
+      "sha256": "be73437638848b118742851cdae2bdcc27d38699375ac1e2deddccad9cdc7031",
+      "entries": 22
+    },
+    {
+      "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-b-06-revision",
+      "sha256": "44b3d829648a145fcdfecf8078f95b22f473e76df0b5618689673aae4e74d84f",
+      "entries": 8
+    },
+    {
+      "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-b-07-revision",
+      "sha256": "6847d54d358cff1f114a8390ed1c8e6927340b9fa47e478be61cd8e56a717b06",
+      "entries": 8
+    },
+    {
+      "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-b-08-revision",
+      "sha256": "a33d7b794a8cd4c9b3e0d18727b78095ad6679922dffba5e03576a417f6f8d29",
+      "entries": 10
+    },
+    {
+      "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-b-09-revision",
+      "sha256": "53c25fb1177b84ceb36dbdc0e54db41e91f3dd9a6ea7d645403ca528e1995454",
+      "entries": 7
+    },
+    {
+      "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-reader-portability-followup",
+      "sha256": "be3860e631778b56404f39e2965d0761b2ba12ba7f7d451111211764e6decaa4",
+      "entries": 20
+    },
+    {
+      "path": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-b-ruby",
+      "sha256": "4276483a0f0f61d83e55197094c8e6bbb0d164de56b05a99f26c071cc10d302c",
+      "entries": 27
+    },
+    {
+      "path": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-b-sentence-payload",
+      "sha256": "0d0a3096212f1e62718c8cdb4313491055058a65b11218d88017f6bcd5a6ea44",
+      "entries": 22
+    }
+  ],
+  "only_five_added_manuscripts": true,
+  "all_other_tree_paths_identical": true
+}
