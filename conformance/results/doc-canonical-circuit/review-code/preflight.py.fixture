@@ -1,0 +1,23 @@
+from pathlib import Path
+import subprocess,json,hashlib
+p=Path(__file__).parent.resolve();root=p.parents[1]
+head='d0e57a8043844e94284e6bd549128817949ef048'
+def git(*args):return subprocess.check_output(['git',*args],cwd=root)
+def put(n,b):q=p/n;q.parent.mkdir(parents=True,exist_ok=True);q.write_bytes(b)
+def sha(b):return hashlib.sha256(b).hexdigest()
+base=git('rev-parse','ba00264^').decode().strip()
+scope=['AGENTS.md','doc/authoring.md','doc/canonical.json','doc/spec/07-circuit.nepld','doc/migration/aliases/07-circuit.json','doc/spec/16-doc-migration.md','doc/spec/21-doc-pages.md','tools/src/doc/canonical.rs','tools/src/doc/canonical/projection.rs','tools/src/doc/projection/annotated/blocks.rs']
+rows=[]
+for n in scope:
+    b=git('show',head+':'+n);put('preflight-source/'+n,b);rows.append(dict(path=n,bytes=len(b),sha256=sha(b)))
+for n in ['doc/spec/07-circuit.md','doc/migration/authored/07-circuit.nepld','doc/canonical.json']:
+    put('preflight-before/'+n,git('show',base+':'+n))
+old=(p/'preflight-before/doc/migration/authored/07-circuit.nepld').read_bytes()
+expected=old.replace(b'"6. NOR IR"','"6. NOR IRへの[変換/へんかん]"'.encode()).replace(b'"7. SVG backend"','"7. SVG backendの[配置/はいち]"'.encode())
+assert expected==(p/'preflight-source/doc/spec/07-circuit.nepld').read_bytes()
+low=json.loads(git('show','ba00264:doc/canonical.json'));high=json.loads(git('show',head+':doc/canonical.json'))
+assert low['output_limits']['nodes']==10000000 and high['output_limits']['nodes']==20000000
+low['output_limits']['nodes']=20000000;assert low==high
+put('preflight.patch',git('diff','--binary',base,head))
+put('preflight.json',(json.dumps(dict(head=head,base=base,scope='Read-only preliminary source review; final generated projections and production executions pending fixed checkpoint',two_title_changes_only=True,only_selected_markdown_nodes_changed=True,files=rows),indent=2)+'\n').encode())
+print('Preflight fixed source and exact two heading / selected Nodes delta preserved')

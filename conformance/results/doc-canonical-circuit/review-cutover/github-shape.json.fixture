@@ -1,0 +1,31 @@
+{
+  "headings": [
+    "07. Circuit言語[げんご]",
+    "方針[ほうしん]",
+    "1. surfaceと型[かた]",
+    "2. 各宣言[かくせんげん]",
+    "3. 演算[えんざん]",
+    "4. 検査[けんさ]とelaboration",
+    "5. stepと時間[じかん]",
+    "6. NOR IRへの変換[へんかん]",
+    "7. SVG backendの配置[はいち]",
+    "8. 公開操作[こうかいそうさ]"
+  ],
+  "codes": [
+    "(width, unsigned value)",
+    "0 <= value < 2^width",
+    "wire name expr",
+    "state name width initial",
+    "next name expr",
+    "next q q",
+    "inst name module arguments",
+    "output name width expr",
+    "[lo,lo+width)",
+    "initial(PreparedNetlist)",
+    "step",
+    "observe"
+  ],
+  "ul": 5,
+  "ol": 6,
+  "rawLines_fixed_bytes": true
+}

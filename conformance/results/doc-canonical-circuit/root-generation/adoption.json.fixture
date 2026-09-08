@@ -1,0 +1,12 @@
+[
+  {
+    "path": "doc/spec/01-architecture.md",
+    "old_sha256": "2ae43d285872e2c194764fd2129d97bcba863d4198fd17d1b2b67f0e16b0177a",
+    "new_sha256": "f2a68236a46d3fbfe43e7d64140ddea2acf839a2479ddbdebd602dc46d3d299e"
+  },
+  {
+    "path": "doc/spec/07-circuit.md",
+    "old_sha256": "0005924591477574e490affa8df48d7446dfb41d81cd08beb55d03372a0dbfed",
+    "new_sha256": "e78ef88b70039ef7018516afed788cc092d58a6fe83aee413afbe97527f68c40"
+  }
+]

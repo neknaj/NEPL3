@@ -1,0 +1,32 @@
+chromium-first-375 PASS
+chromium-first-1280 PASS
+chromium-second-375 PASS
+chromium-second-1280 PASS
+firefox-first-375 PASS
+firefox-first-1280 PASS
+firefox-second-375 PASS
+firefox-second-1280 PASS
+webkit-first-375 PASS
+webkit-first-1280 PASS
+webkit-second-375 PASS
+webkit-second-1280 PASS
+GitHub 07-circuit言語 PASS
+GitHub 方針 PASS
+GitHub 1-surfaceと型 PASS
+GitHub 2-各宣言 PASS
+GitHub 3-演算 PASS
+GitHub 4-検査とelaboration PASS
+GitHub 5-stepと時間 PASS
+GitHub 6-nor-ir PASS
+GitHub 7-svg-backend PASS
+GitHub 8-公開操作 PASS
+GitHub n-706f6c696379 PASS
+GitHub n-73757266616365 PASS
+GitHub n-6465636c61726174696f6e73 PASS
+GitHub n-6f7065726174696f6e73 PASS
+GitHub n-656c61626f726174696f6e PASS
+GitHub n-74696d65 PASS
+GitHub n-6e6f72 PASS
+GitHub n-737667 PASS
+GitHub n-7075626c6963 PASS
+PASS 12 local cases, 108 semantic moves, 19 GitHub targets; all 33 paragraph base text and 12 code values exact

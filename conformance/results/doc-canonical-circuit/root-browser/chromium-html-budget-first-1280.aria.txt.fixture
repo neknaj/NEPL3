@@ -1,0 +1,83 @@
+- article:
+  - heading "07. Circuit 言語 げんご" [level=1]
+  - heading "方針 ほうしん" [level=2]
+  - paragraph: 二値 にち ・ 固定幅 こていはば ・ 同期離散時間 どうきりさんじかん の 回路 かいろ を 正式 せいしき な 意味領域 いみりょういき とする。 構文木 こうぶんき と 回路 かいろ graph、 回路生成 かいろせいせい と 信号 しんごう の 実行値 じっこうち 、 定義 ていぎ の 再利用 さいりよう と 状態 じょうたい の 共有 きょうゆう を 分離 ぶんり する。
+  - heading "1. surfaceと 型 かた" [level=2]
+  - paragraph: Designはmodules、entry 名 めい 、tests。Moduleはname、 入力列 にゅうりょくれつ 、 宣言列 せんげんれつ 、 出力列 しゅつりょくれつ 。 入力 にゅうりょく / 出力 しゅつりょく /stateの 幅 はば は 正 せい のNat。upper boundは 構成上 こうせいじょう のLimitsで 決 き まり、 暗黙 あんもく の32/64bitに 制限 せいげん しない。
+  - paragraph:
+    - text: bit-vectorは
+    - code: (width, unsigned value)
+    - text: 、
+    - code: 0 <= value < 2^width
+    - text: 。bits width valueの 範囲外 はんいがい はエラーで、literalの 切捨 きりす てをしない。true/falseは1bit。
+  - paragraph: 信号名 しんごうめい はinput/wire/stateの 共通空間 きょうつうくうかん 。instance 名 めい はInstance 空間 くうかん 、module 名 めい はDesign 内 ない のModule 空間 くうかん 、output 名 めい は 各 かく moduleのOutput 空間 くうかん 。 同 おな じ 空間 くうかん の 重複 ちょうふく はエラー。outputは 内部 ないぶ で 裸 はだか の 名前参照 なまえさんしょう として 再利用 さいりよう しない。 共有 きょうゆう したい 式 しき はwireで 宣言 せんげん する。
+  - paragraph: Name leafは 信号参照 しんごうさんしょう 。at instance outputは、そのinstanceが 参照 さんしょう するmoduleのoutputを 参照 さんしょう する。definition linkにはinstance siteとoutput definitionの 双方 そうほう を 提示 ていじ できる。
+  - heading "2. 各宣言 かくせんげん" [level=2]
+  - list:
+    - listitem:
+      - paragraph:
+        - code: wire name expr
+        - text: ": exprの 値 あたい を 共有 きょうゆう する 組合 くみあわ せ 信号 しんごう 。 宣言順 せんげんじゅん に 依存 いぞん せず 前方参照 ぜんぽうさんしょう を 認 みと める。"
+    - listitem:
+      - paragraph:
+        - code: state name width initial
+        - text: ": 初期値 しょきち を 持 も つ 状態 じょうたい 。initialはBitsのliteralで 幅 はば が 一致 いっち する 必要 ひつよう がある。"
+    - listitem:
+      - paragraph:
+        - code: next name expr
+        - text: ": 次 つぎ のtickのstate 値 ち 。 対象 たいしょう はstateに 限 かぎ り、 各 かく stateにちょうど 一 ひと つ 必要 ひつよう 。 省略 しょうりゃく を 暗黙 あんもく の 保持 ほじ としない。 保持 ほじ は"
+        - code: next q q
+        - text: と 明示 めいじ する。
+    - listitem:
+      - paragraph:
+        - code: inst name module arguments
+        - text: ": moduleの 入力列 にゅうりょくれつ の 順 じゅん に 引数 ひきすう を 接続 せつぞく する。 毎回独立 まいかいどくりつ したinstanceを 作 つく る。 定義 ていぎ の 構文 こうぶん fragmentの 共有 きょうゆう は 状態 じょうたい の 共有 きょうゆう を 意味 いみ しない。"
+    - listitem:
+      - paragraph:
+        - code: output name width expr
+        - text: ": 外部出力 がいぶしゅつりょく 。 明示幅 めいじはば とexpr 幅 はば の 一致 いっち を 要求 ようきゅう する。"
+  - heading "3. 演算 えんざん" [level=2]
+  - paragraph: notはbitwise。and/or/xor/nor/addは 等幅 とうはば の2 入力 にゅうりょく 。addはmod 2^widthの 加算 かさん 。 符号付 ふごうつ き 解釈 かいしゃく はしない。
+  - paragraph: muxは1bit selectと 等幅 とうはば のyes/no。select=1ならyes。
+  - paragraph: concat a bはaを 上位 じょうい 、bを 下位 かい へ 置 お き、 幅 はば はwa+wb。
+  - paragraph:
+    - text: slice value lo widthはLSB=0として
+    - code: "[lo,lo+width)"
+    - text: を 抜 ぬ き 出 だ す。width>0かつlo+width<= 入力幅 にゅうりょくはば 。 全加算 ぜんかさん ・index 計算 けいさん をcheckedにする。
+  - heading "4. 検査 けんさ とelaboration" [level=2]
+  - list:
+    - listitem:
+      - paragraph: Design 内 ない のmodule signatureを 収集 しゅうしゅう する。entryと 各 かく instanceのmoduleを 解決 かいけつ する。
+    - listitem:
+      - paragraph: module-instantiation graphがDAGであることを 検査 けんさ する。 再帰 さいき instantiationは 有限 ゆうげん な 回路 かいろ にならないので 拒否 きょひ する。
+    - listitem:
+      - paragraph: 各 かく instanceを 独立 どくりつ した 階層 かいそう pathへ 展開 てんかい し、 信号参照 しんごうさんしょう と 状態 じょうたい を 結 むす ぶ。 未使用 みしよう moduleも 単独 たんどく に 検査 けんさ し、 不正 ふせい な 定義 ていぎ を 放置 ほうち しない。
+    - listitem:
+      - paragraph: 各 かく state readを 組合 くみあわ せgraphの 入力 にゅうりょく として 扱 あつか い、next assignmentを 別 べつ のsinkにする。state readからnext exprへ 逆 ぎゃく の 依存 いぞん edgeを 加 くわ えない。
+    - listitem:
+      - paragraph: その 実際 じっさい のgraphで 組合 くみあわ せcycleを 検査 けんさ する。instanceの 全入力 ぜんにゅうりょく が 全出力 ぜんしゅつりょく に 依存 いぞん すると 近似 きんじ してはいけない。 内部 ないぶ stateで 遮断 しゃだん されるfeedbackを 誤拒否 ごきょひ しない。
+    - listitem:
+      - paragraph: DAGの 順序 じゅんじょ でwidthを 推論 すいろん ・ 検査 けんさ する。input/state/constantが 既知幅 きちはば のroot。 各 かく output/state-next/instance-inputの 要求幅 ようきゅうはば と 照合 しょうごう する。
+  - paragraph: 共有 きょうゆう wireは 同 おな じsignal identity。 再利用 さいりよう moduleは 異 こと なるinstance identity。instance pathはowner module instanceと 宣言 せんげん ordinalで 一意 いちい にし、 表示名 ひょうじめい の 連結 れんけつ だけでIDを 作 つく らない。
+  - heading "5. stepと 時間 じかん" [level=2]
+  - paragraph: "状態 じょうたい q_k、 入力 にゅうりょく u_kに 対 たい し、 組合 くみあわ せgraphからy_kとnext 値 ち を 計算 けいさん し、 結果 けっか として(q_{k+1},y_k)を 返 かえ す。 全 ぜん stateは 同時更新 どうじこうしん 。stateを 逐次上書 ちくじうわが きして 後続 こうぞく のnext 計算 けいさん へ 影響 えいきょう させない。"
+  - paragraph:
+    - code: initial(PreparedNetlist)
+    - text: は、entryを 選 えら んでelaborateした 全 ぜん instanceのstate 初期値 しょきち をslot 順 じゅん に 返 かえ す。CheckedDesignとentryはelaborateの 入力 にゅうりょく であり、initialは 階層展開 かいそうてんかい と 組合 くみあわ せDAG・ 幅 はば の 検査 けんさ を 済 す ませた 値 あたい だけを 受 う ける。
+    - code: step
+    - text: は 入力 にゅうりょく stateを 変更 へんこう せず 新 あたら しい 値 あたい を 返 かえ す。
+    - code: observe
+    - text: は 現在 げんざい の 出力 しゅつりょく だけを 返 かえ す 純粋操作 じゅんすいそうさ 。 入力列 にゅうりょくれつ と 出力列 しゅつりょくれつ の 順 じゅん はmodule 宣言順 せんげんじゅん 。
+  - paragraph: test name module ticksはそのtest 開始時 かいしじ にinitial 状態 じょうたい へ 戻 もど す。tick inputs expectedOutputsはpre-edgeのy_kを 比較 ひかく してからstateを 更新 こうしん する。 同 おな じtest 内 ない のticksは 連続時間 れんぞくじかん 。 別 べつ testでは 状態 じょうたい を 共有 きょうゆう しない。 期待列 きたいれつ の 数 かず / 幅 はば の 不一致 ふいっち はtest 失敗 しっぱい と 別 べつ のInvalidTestShape。
+  - paragraph: この 仕様 しよう は 非同期 ひどうき latch、 伝播遅延 でんぱちえん 、X/Z、アナログ 挙動 きょどう をモデル 化 か しない。これらを 適当 てきとう に 二値 にち へ 潰 つぶ す 変換 へんかん は 許可 きょか しない。 別 べつ modelを 導入 どうにゅう するならschemaと 操作 そうさ の 版 ばん を 分 わ ける。
+  - heading "6. NOR IRへの 変換 へんかん" [level=2]
+  - paragraph: 正式 せいしき なlowering 先 さき は4 種 しゅ のnode（InputBit、StateBit、ConstBit、Nor2）と2 種 しゅ のsink（nextBits、outputBits）から 成 な るNorNetlist。vector-level 演算 えんざん をbit-levelへ 展開 てんかい する。NextBit/OutputBitという 独立 どくりつ node variantは 作 つく らず、sink 配列 はいれつ の 各項 かくこう が 既存 きそん nodeのindexを 参照 さんしょう する。StateBitとnextBitsを 維持 いじ するので 順序回路 じゅんじょかいろ も 表現 ひょうげん できる。stateの 初期 しょき bit 列 れつ 、sinkの 長 なが さとLSBからの 順序 じゅんじょ はモデル 不変条件 ふへんじょうけん に 従 したが う。
+  - paragraph: not a = nor a a。or a b = not (nor a b)。and a b = nor (not a) (not b)。xor a b = nor (nor a b) (and a b)。mux = (select AND yes) OR ((NOT select) AND no)。addはLSBからcarryを 伝 つた えるfull-adderで 最終 さいしゅう carryを 捨 す てる。slice/concat/wireはbit 参照 さんしょう の 配線 はいせん になる。
+  - paragraph: 式 しき の 入力順 にゅうりょくじゅん 、bit 順 じゅん 、 生成 せいせい node ordinalを 固定 こてい し、 同 おな じ 入力 にゅうりょく から 同 おな じIRを 出 だ す。 任意最適化 にんいさいてきか をreference loweringへ 混在 こんざい させない。 最適化 さいてきか を 提供 ていきょう する 場合 ばあい は 別 べつ operationとして 同値 どうち テストとsource mapを 要求 ようきゅう する。
+  - paragraph: 比較試験 ひかくしけん は 元 もと のvector evaluatorとNOR evaluatorの 両方 りょうほう で、 全小幅入力 ぜんしょうはばにゅうりょく ・ 複数 ふくすう tickを 比較 ひかく する。NOR evaluatorを 元 もと のevaluatorと 同 おな じコードへの 単 たん なるaliasにしない。
+  - heading "7. SVG backendの 配置 はいち" [level=2]
+  - paragraph: elaborated vector-level graphを 対象 たいしょう に、 入力 にゅうりょく /stateをrank0、 各組合 かくくみあわ せnodeを 前提 ぜんてい nodeの 最大 さいだい rank+1、 出力 しゅつりょく を 最後 さいご に 配置 はいち する。 同 どう rank 内 ない は 定義 ていぎ /instance ordinal 順 じゅん 。 固定 こてい paddingとlabelのscalar 数 すう から 幅 はば を 決 き め、SVG textLengthを 使 つか って 描画幅 びょうがはば を 明示 めいじ する。font 依存 いぞん でSVG byte 列 れつ を 変 か えない。
+  - paragraph: edgeはrank 間 かん のlaneをordinalで 割 わ り 当 あ てた 直交線 ちょっこうせん 。stateへのnext edgeは 破線 はせん で 表示 ひょうじ し、 組合 くみあわ せedgeと 区別 くべつ する。node/edgeにはEntityIdとOriginを 対応付 たいおうづ け、クリックでソースに 戻 もど せる。 最小交差数 さいしょうこうさすう や 最適配置 さいてきはいち を 保証 ほしょう する 算法 さんぽう とはしない。
+  - paragraph: 全 ぜん ラベルはescapeし、 任意 にんい scriptやURLを 挿入 そうにゅう しない。
+  - heading "8. 公開操作 こうかいそうさ" [level=2]
+  - paragraph: lower、check、elaborate、initial、observe、step、run_tests、lower_nor、print、diagram。CheckedDesignは 必要 ひつよう なmodule 検査 けんさ を 含 ふく む。PreparedNetlistはinstance 展開 てんかい と 組合 くみあわ せDAG/ 幅検査済 はばけんさず み。sourceをparseしただけでsimulationを 開始 かいし しない。

@@ -1,0 +1,31 @@
+from pathlib import Path
+import subprocess,json,time,hashlib
+root=Path.cwd(); out=root/'.tmp/verification-integration'; out.mkdir(exist_ok=False)
+fixed='5e3e71b7cd3cf3f664b869feb51e20d1ce945ebb'
+def assert_source():
+    assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==fixed
+    assert not subprocess.check_output(['git','status','--porcelain']).strip()
+rows=[]
+commands=[
+ ('format',['cargo','fmt','--all','--','--check']),
+ ('canonical-tests',['cargo','test','--locked','-p','nepl3-tools','--lib','doc::canonical::tests::','--','--skip','synchronized_context_spec_drafts_parse_lower_and_check_labels']),
+ ('canonical',['cargo','run','--locked','-p','nepl3-tools','--','doc-canonical','--check']),
+ ('html',['cargo','run','--locked','-p','nepl3-tools','--','doc-canonical','html','.tmp/html-integration']),
+ ('clippy',['cargo','clippy','--workspace','--all-targets','--locked','--','-D','warnings']),
+ ('repository',['cargo','run','--locked','-p','nepl3-tools','--','check']),
+]
+for name,command in commands:
+    assert_source(); start=time.monotonic()
+    with (out/(name+'.stdout.log')).open('wb') as stdout,(out/(name+'.stderr.log')).open('wb') as stderr:
+        result=subprocess.run(command,stdout=stdout,stderr=stderr,timeout=1200)
+    assert_source()
+    rows.append(dict(source_commit=fixed,command=command,exit_code=result.returncode,elapsed=time.monotonic()-start,unchanged_clean_tree=True))
+    (out/'commands.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf-8')
+    assert result.returncode==0,name
+    print(name,'PASS',flush=True)
+a=root/'.tmp/html-integration'; b=root/'.tmp/html-budget-first'
+first={p.relative_to(a).as_posix():p.read_bytes() for p in a.rglob('*') if p.is_file()}
+prior={p.relative_to(b).as_posix():p.read_bytes() for p in b.rglob('*') if p.is_file()}
+assert first==prior
+(out/'html-comparison.json').write_text(json.dumps([dict(path=p,bytes=len(v),sha256=hashlib.sha256(v).hexdigest()) for p,v in first.items()],indent=2)+'\n',encoding='utf-8')
+print('All seven HTML files identical to reviewed bundle',flush=True)

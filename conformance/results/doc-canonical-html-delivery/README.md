@@ -60,6 +60,15 @@ The later `3abd255` change only corrects the canonical integration test's commen
 and diagnostic from a fixed four-page count to the actual registry size. Its
 production API test passes with five pages; it does not change resource limits.
 
+Integration checkpoint `5e3e71b7cd3cf3f664b869feb51e20d1ce945ebb` includes the
+independently reviewed HTML-budget prerequisite and its development guide. A
+guarded clean-tree run passed fourteen canonical tests, canonical regeneration
+checking, format, Clippy and repository checks. All seven regenerated HTML files
+remain byte-identical. The unchanged three-draft parse/lower test was excluded
+from this repeat; its full execution is recorded in the prerequisite's archive.
+The original `3abd255` test-source hash remains a historical binding, with the
+integrated test and guide hashes recorded separately in `payloads.json`.
+
 This is a page cutover, not completed HTML/KaTeX products,
 T21/T16, live Pages deployment, human accessibility or physical-browser testing.
 
