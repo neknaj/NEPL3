@@ -986,5 +986,31 @@ body
       cons "これらignored[補助/ほじょ]は[管理対象回帰/かんりたいしょうかいき]の[代用/だいよう]ではない。"
       cons "[現/げん]for_sourceはidentity[照合/しょうごう]によるnative[解析/かいせき]proofへのアクセス[入口/いりぐち]であり、definition/references/rename queryの[正/ただ]しさをまだ[示/しめ]していない。"
       cons "Custom callbackの[実/じつ]analyze[経路/けいろ]もこの[時点/じてん]の[実行範囲外/じっこうはんいがい]である。" nil
+    cons paragraph
+      cons sentence cons ruby text "同" text "おな" cons text "じ" cons ruby text "確認" text "かくにん" cons text "をForeign" cons ruby text "入力" text "にゅうりょく" cons text " " cons code "lambda x guest x" cons text " へ" cons ruby text "広" text "ひろ" cons text "げると、nativeと" cons ruby text "初回" text "しょかい" cons text "receiverのAnalysisKeyは" cons ruby text "完全一致" text "かんぜんいっち" cons text "するがFactSetのID" cons ruby text "対応" text "たいおう" cons text "が" cons ruby text "異" text "こと" cons text "なった。" nil
+      cons "nativeのhost[定義/ていぎ]はNamespaceRef(1)/OriginId(2)、receiverではNamespaceRef(0)/OriginId(1)となる。"
+      cons sentence cons text "nativeのcontext path" cons ruby text "長" text "ちょう" cons text "は " cons code "[1,0]" cons text "、wire" cons ruby text "正準化後" text "せいじゅんかご" cons text "は " cons code "[0,1]" cons text " であり、binding.prepareがその" cons ruby text "入力列順" text "にゅうりょくれつじゅん" cons text "にroot・namespace・Origin" cons ruby text "統合順" text "とうごうじゅん" cons text "を" cons ruby text "割" text "わ" cons text "り" cons ruby text "当" text "あ" cons text "てることが" cons ruby text "原因" text "げんいん" cons text "である。" nil
+      cons "[名前解決/なまえかいけつ]のhost/guest[分離自体/ぶんりじたい]は[保/たも]たれるが、[同/どう]keyの[結果/けっか]に[異/こと]なるID[対応/たいおう]を[生/う]むためR045としてopenで[記録/きろく]した。"
+      cons sentence cons ruby text "元補助" text "もとほじょ" cons text " " cons code ".tmp/build_analysis_guest_probe.py" cons text " / " cons code ".tmp/independent-engine/src/bin/binding_key_guest.rs" cons text " はこの" cons ruby text "相違" text "そうい" cons text "をexit 1で" cons ruby text "再現" text "さいげん" cons text "する。" nil
+      cons "guest[局所/きょくしょ]のsource[宣言/せんげん]と[環境/かんきょう]resourceを[個別追加/こべつついか]するとtree digestが[変/か]わり[古/ふる]いkeyを[拒否/きょひ]する[点/てん]は[同/おな]じ[補助/ほじょ]で[成功/せいこう]しており、この[成功/せいこう]とID[再現/さいげん]を[分/わ]ける。"
+      cons "[修正後/しゅうせいご]は[元入力/もとにゅうりょく]、context/selection[逆順/ぎゃくじゅん]、SourceMapとOriginの[保持/ほじ]を[検証/けんしょう]する。" nil
+    cons paragraph
+      cons "R045[修正/しゅうせい]は[共通/きょうつう]binding.prepareに[借用/しゃくよう]BundleMappingsを[接続/せつぞく]し、host[先頭/せんとう]のforeign DFS、[正準/せいじゅん]node[順位/じゅんい]でのnamespace[初登場/はつとうじょう]、[借用/しゃくよう]source identity[順/じゅん]を[用/もち]いる。"
+      cons "[全/ぜん]treeをNDFへ[複製/ふくせい]する[修正/しゅうせい]ではなく、[通常/つうじょう]unkeyed analyzeも[同/おな]じ[経路/けいろ]を[通/とお]る。"
+      cons "[元/もと]guest[補助/ほじょ]を[変更/へんこう]せず[再実行/さいじっこう]して2[入力/にゅうりょく]のnative/[初回/しょかい]receiver FactSet[全一致/ぜんいっち]を[確認/かくにん]した。"
+      cons sentence cons ruby text "追加補助" text "ついかほじょ" cons text " " cons code "binding_key_permutation" cons text " は " cons code "lambda x guest lettext \"\\u{78}\" x" cons text " とy" cons ruby text "版" text "ばん" cons text "についてcontext・selection・source" cons ruby text "表" text "ひょう" cons text "を" cons ruby text "個別反転" text "こべつはんてん" cons text "し、" cons ruby text "同" text "どう" cons text "keyかつ" cons ruby text "直接" text "ちょくせつ" cons text "analyzeの" cons ruby text "全" text "ぜん" cons text "BindingResult fields、Origin、SourceMap、stage、" cons ruby text "正式" text "せいしき" cons text "source/diagnostic/event" cons ruby text "内容" text "ないよう" cons text "の" cons ruby text "一致" text "いっち" cons text "を" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "source-only[逆順/ぎゃくじゅん]のText[入力/にゅうりょく]2[件/けん]も[成功/せいこう]した。"
+      cons "Originとmappingの[宣言順/せんげんじゅん]は[契約/けいやく]どおり[保存/ほぞん]する。"
+      cons "[最新/さいしん][管理対象/かんりたいしょう]AnalysisKey4[件/けん]はnative/WASIで[独立成功/どくりつせいこう]した。"
+      cons "[元/もと]guest・Text・[反転表/はんてんひょう]の[一致/いっち]に[加/くわ]え、Complete/Invalid DuplicateGlobal/Stopped Cancelledのkey[付/つ]き[返信/へんしん]と[全/ぜん]BindingAccessError[原因/げんいん]の[実/じつ]CBOR[往復/おうふく]を[確認/かくにん]し、この[具体範囲/ぐたいはんい]でR045をcorrectedとした。"
+      cons "[借用/しゃくよう]FactsRequestViewのmanaged1[件/けん]も[独立成功/どくりつせいこう]したが、[空/から]deltaによる[既存検査入口/きそんけんさいりぐち]の[比較/ひかく]であり、Custom callback[実行/じっこう]や[定義/ていぎ]・[参照/さんしょう]queryの[完成証拠/かんせいしょうこ]には[含/ふく]めない。" nil
+    cons paragraph
+      cons "[次/つぎ]のCustomレビューでは、[独立/どくりつ]Grammarの[原文/げんぶん]を[実/じつ]compiler・ParseSession・analyze_with_hostへ[通/とお]した。"
+      cons "[疎/そ]なEntity ID 100の[受理後/じゅりご]に[通常/つうじょう]bindが101を[割/わ]り[当/あ]て、MAX-1の[受理後/じゅりご]はMAXを[使/つか]い、さらに[必要/ひつよう]になったIDはFact(Reservation)で[拒否/きょひ]する。"
+      cons "どの[部分/ぶぶん]FactSetも[構造検査/こうぞうけんさ]を[通/とお]り、[入力/にゅうりょく]によるpanicはなかった。"
+      cons "Globalでは[以前/いぜん]の[同名/どうめい]Entityとの[重複/じゅうふく]をDuplicateGlobalで[拒否/きょひ]した。"
+      cons "[追加/ついか]Entityのdefinition/selectionがともにNoneでも、primaryを[捏造/ねつぞう]せず、[実在/じつざい]する[以前/いぜん]の[位置/いち]だけをrelatedへ[返/かえ]した。"
+      cons sentence cons ruby text "補助" text "ほじょ" cons text "は " cons code ".tmp/build_custom_review_probe.py" cons text "、" cons code "build_custom_sourceless_probe.py" cons text " と" cons ruby text "対応" text "たいおう" cons text "する " cons code "custom_review" cons text "、" cons code "custom_sourceless" cons text " の" cons ruby text "実行" text "じっこう" cons text "である。" nil
+      cons "これらはGit[管理外/かんりがい]の[独立測定/どくりつそくてい]であり、[管理対象回帰/かんりたいしょうかいき]の[代用/だいよう]にはしない。" nil
     nil
   nil
