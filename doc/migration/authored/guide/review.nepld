@@ -1012,5 +1012,27 @@ body
       cons "[追加/ついか]Entityのdefinition/selectionがともにNoneでも、primaryを[捏造/ねつぞう]せず、[実在/じつざい]する[以前/いぜん]の[位置/いち]だけをrelatedへ[返/かえ]した。"
       cons sentence cons ruby text "補助" text "ほじょ" cons text "は " cons code ".tmp/build_custom_review_probe.py" cons text "、" cons code "build_custom_sourceless_probe.py" cons text " と" cons ruby text "対応" text "たいおう" cons text "する " cons code "custom_review" cons text "、" cons code "custom_sourceless" cons text " の" cons ruby text "実行" text "じっこう" cons text "である。" nil
       cons "これらはGit[管理外/かんりがい]の[独立測定/どくりつそくてい]であり、[管理対象回帰/かんりたいしょうかいき]の[代用/だいよう]にはしない。" nil
+    cons paragraph
+      cons sentence cons text "Open" cons ruby text "原文" text "げんぶん" cons text " " cons code "early x z custom x x" cons text " では、" cons ruby text "明示" text "めいじ" cons text "grantを" cons ruby text "持" text "も" cons text "つCustom" cons ruby text "更新" text "こうしん" cons text "が" cons ruby text "過去" text "かこ" cons text "のxをEntity100へ" cons ruby text "解決" text "かいけつ" cons text "し、" cons ruby text "元" text "もと" cons text "OccurrenceStageとnamespaceStageの0を" cons ruby text "変更" text "へんこう" cons text "せずresolutionHistoryを" cons ruby text "追加" text "ついか" cons text "した。" nil
+      cons "grantを[除/のぞ]くと[元/もと]Unresolvedを[保持/ほじ]してFact(Authority)となり、[既受理/きじゅり]eventは[残/のこ]る。"
+      cons "[更新後/こうしんご]のopenInputsからそのOccurrenceは[除/のぞ]かれる。"
+      cons "[全/ぜん]history・FactSet・stageを[実/じつ]CBORで[初回受信/しょかいじゅしん]し、schema-valid NDFの[最終/さいしゅう]resolution[不一致/ふいっち]、grant[欠落/けつらく]、[重複/じゅうふく]transition、[未存在/みそんざい]Occurrenceを[拒否/きょひ]した。"
+      cons "raw[履歴/りれき]codecは[型/かた]・chain・[最終事実/さいしゅうじじつ]との[一致/いっち]を[検査/けんさ]するが、[元要求/もとようきゅう]なしでprovider[実行/じっこう]や[権限発行/けんげんはっこう]の[真正性/しんせいせい]を[証明/しょうめい]しない。" nil
+    cons paragraph
+      cons sentence cons ruby text "独立" text "どくりつ" cons text " " cons code "custom_stop" cons text " は289" cons ruby text "予算条件中" text "よさんじょうけんちゅう" cons text "68" cons ruby text "停止" text "ていし" cons text "を" cons ruby text "得" text "え" cons text "て、そのうち24" cons ruby text "件" text "けん" cons text "は" cons ruby text "診断" text "しんだん" cons text "・event" cons ruby text "受理後" text "じゅりご" cons text "だった。" nil
+      cons sentence cons ruby text "生成" text "せいせい" cons text "sourceとExact mapを" cons ruby text "正式" text "せいしき" cons text "emitterへ" cons ruby text "加" text "くわ" cons text "えた " cons code "custom_emitter" cons text " は" cons ruby text "同" text "おな" cons text "じ289" cons ruby text "条件" text "じょうけん" cons text "で71" cons ruby text "停止" text "ていし" cons text "、" cons ruby text "受理後停止" text "じゅりごていし" cons text "24" cons ruby text "件" text "けん" cons text "となった。" nil
+      cons "[後者/こうしゃ]では[受理済/じゅりず]みsource2[件/けん]・map1[件/けん]・[診断/しんだん]・eventと[原/げん]SourceBytes[一度分/いちどぶん]を[保持/ほじ]し、[全結果/ぜんけっか]を[実/じつ]CBOR[往復/おうふく]し、[全/ぜん]partial FactSetを[検査/けんさ]した。"
+      cons "[元/もと]StopReason、stickyなBudget.poll、[消費/しょうひ]Usageが[一致/いっち]する。"
+      cons "[停止後/ていしご]の[未検査/みけんさ]raw deltaは[正式事実/せいしきじじつ]へ[混/ま]ぜない。"
+      cons "[管理対象/かんりたいしょう]Custom9[件/けん]も[独立/どくりつ]nativeで[成功/せいこう]し、Foreign callbackの[専用/せんよう]namespace/root、[同/どう]batch Global[重複/じゅうふく]、delta source[上/じょう]の[重複診断/じゅうふくしんだん]、history[更新/こうしん]、[停止時閉包/ていしじへいほう]を[確認/かくにん]した。"
+      cons "Recursiveのheader[段階/だんかい]でCustomに[出会/であ]う[経路/けいろ]はUnsupportedPlanでcallbackを[呼/よ]ばず、[現段階/げんだんかい]の[明示的未対応/めいじてきみたいおう]として[残/のこ]す。"
+      cons "[外部/がいぶ]processの[費用認証/ひようにんしょう]・quota[貸出/かしだし]も、このnative callbackとraw codecの[成功/せいこう]から[推定/すいてい]しない。" nil
+    cons paragraph
+      cons "Definition/References queryは[先/さき]に[原文/げんぶん]から[固定/こてい]した7[入力/にゅうりょく]・11[参照位置/さんしょういち]を[公開/こうかい]prepare/execute/queryへ[通/とお]した。"
+      cons "Let initの[未解決/みかいけつ]、[入/い]れ[子/こ]と[兄弟/きょうだい]のshadowing、UnicodeのUTF-8 byte[位置/いち]、Foreign[独立/どくりつ]root、Ambiguous[両候補/りょうこうほ]、escaped Text[名/めい]の[元/もと][綴/つづ]り8..16を[確認/かくにん]した。"
+      cons "[同/どう][綴/つづ]りでも[異/い]Entityへの[参照/さんしょう]を[混/ま]ぜず、[候補順/こうほじゅん]を[勝手/かって]に[一件/いっけん]へ[縮/ちぢ]めない。"
+      cons "[各要求/かくようきゅう]・[返信/へんしん]の[実/じつ]CBOR[初回受信/しょかいじゅしん]は[空/から]のsource storeを[使/つか]い、[全結果/ぜんけっか]・SourceBytes[一度分/いちどぶん]・[再/さい]encodeが[一致/いっち]した。"
+      cons "EOFは[選択/せんたく]なし、scalar[内部/ないぶ]と[範囲外/はんいがい]はSourceエラー、[別/べつ]execution keyとsource revisionは[古/ふる]い[解析/かいせき]へのアクセスを[拒否/きょひ]し、[取消/とりけし]はStoppedと[空/から]の[候補閉包/こうほへいほう]を[返/かえ]す。"
+      cons sentence cons ruby text "補助" text "ほじょ" cons text "は " cons code ".tmp/prepare_query_expectations.py" cons text "、" cons code "build_query_runtime_probe.py" cons text "、" cons code "build_query_boundary_probe.py" cons text "、" cons code "build_query_portable_probe.py" cons text "、" cons ruby text "実行例" text "じっこうれい" cons text "は " cons code "cargo run --manifest-path .tmp/independent-engine/Cargo.toml --features nepl3-tools,nepl3-grammar-core --bin query_portable --target-dir .tmp/review-target" cons text " である。" nil nil
     nil
   nil
