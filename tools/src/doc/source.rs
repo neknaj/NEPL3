@@ -68,6 +68,33 @@ pub fn with_named_input<T>(
         &mut SourceAdmission,
     ) -> Result<T, String>,
 ) -> Result<T, String> {
+    with_named_input_limits(
+        native,
+        compiled,
+        input,
+        source_name,
+        category,
+        budget().limits(),
+        finish,
+    )
+}
+/// Configuration-only entry: select limits before creating this parse operation.
+/// The selected ceiling is also bound into its resolved ParseProfile.
+#[allow(clippy::too_many_arguments)]
+pub fn with_named_input_limits<T>(
+    native: bool,
+    compiled: &Compiled,
+    input: &str,
+    source_name: &str,
+    category: &str,
+    parse_limits: Limits,
+    finish: impl FnOnce(
+        &ValidatedParseTree<'_>,
+        &ResolvedParseProfile<'_>,
+        &mut Budget,
+        &mut SourceAdmission,
+    ) -> Result<T, String>,
+) -> Result<T, String> {
     let r = &compiled.doc.registry;
     let packages: Vec<_> = std::iter::once(&compiled.doc.package)
         .chain(compiled.others.iter())
@@ -152,7 +179,7 @@ pub fn with_named_input<T>(
         providers: requirements,
         allowlist: operations,
         resources: vec![],
-        limits: budget().limits(),
+        limits: parse_limits,
     };
     let resolved = profile
         .resolve(
@@ -165,7 +192,7 @@ pub fn with_named_input<T>(
             &mut budget(),
         )
         .map_err(err)?;
-    let mut b = budget();
+    let mut b = Budget::new(parse_limits);
     let mut a = SourceAdmission::default();
     let source = SourceSnapshot::new(
         SourceId(source_name.into()),
