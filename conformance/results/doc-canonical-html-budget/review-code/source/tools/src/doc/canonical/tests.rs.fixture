@@ -694,7 +694,7 @@ fn synchronized_context_spec_drafts_parse_lower_and_check_labels() -> Result<()>
         allocation_units: 1_500_000_000,
         ..super::super::source::budget().limits()
     };
-    for name in ["16-doc-migration", "21-doc-pages", "guide/development"] {
+    for name in ["16-doc-migration", "21-doc-pages"] {
         let text =
             fs::read_to_string(repository.join(format!("doc/migration/authored/{name}.nepld")))?;
         super::super::source::with_named_input_limits(

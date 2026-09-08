@@ -1,0 +1,26 @@
+{
+  "phase": "after",
+  "head": "4de46baf5f22f8dcb5e99d0312d9b61e36a44d6b",
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-tools",
+    "--lib",
+    "independent_html",
+    "--",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "deadline_seconds": 900,
+  "exit_code": 0,
+  "probe_sha256": "9b984352fd11c33edabf2e66d64c2f50d524e9288c21604351614f1f3f45c189",
+  "binaries": [
+    {
+      "path": "C:\\projects\\NEPL3-doc-canonical-html-budget\\.tmp\\review-canonical-html-budget\\target\\debug\\deps\\nepl3_tools-69244717011a8889.exe",
+      "sha256": "04d45e2c980dcf82e33b3f92c61ad30c62048f94a1f7268fb9fa4cdcee9f5eba",
+      "bytes": 14707712
+    }
+  ]
+}

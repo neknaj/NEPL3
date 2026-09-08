@@ -32,9 +32,6 @@ nepld正本へ移行し、検査済みの同じsite artifactを公開します�
 新規ディレクトリへ生成します。参照先・別ページのaliasも同じ入力集合に含め、旧rendererのページは
 既存byte列を維持します。成功した生成物の差分をレビューしてからprojectionへ反映してください。
 `cargo run --locked -p nepl3-tools -- doc-canonical html dist/doc-canonical` は、同じ正本からHTML一式を新規出力します。
-HTML集合の有限出力予算を明示する場合は、registryの `html_output_limits` に8資源をすべて指定します。
-Markdown用の `output_limits` とは別の設定であり、未指定時は従来のHTML既定値を維持します。
-停止した実行を成功として再試行せず、新しい設定での生成は別の実行として記録します。
 いずれも文書の明示的な生成工程とし、Cargo build.rsへ入れません。
 
 Doc HTMLの配置は、固定版Playwrightと対応するChromium・Firefox・WebKitでCI実行します。

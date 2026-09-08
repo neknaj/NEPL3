@@ -1,0 +1,14 @@
+from pathlib import Path
+import subprocess,json,time
+out=Path('.tmp/verification-guide');out.mkdir(exist_ok=True)
+fixed=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip();assert not subprocess.check_output(['git','status','--porcelain']).strip()
+rows=[]
+for name,cmd in [('drafts',['cargo','test','--locked','-p','nepl3-tools','--lib','doc::canonical::tests::synchronized_context_spec_drafts_parse_lower_and_check_labels','--','--exact','--nocapture']),('clippy',['cargo','clippy','--locked','--workspace','--all-targets','--','-D','warnings']),('format',['cargo','fmt','--all','--','--check'])]:
+    started=time.monotonic()
+    with (out/(name+'.stdout.log')).open('wb') as stdout,(out/(name+'.stderr.log')).open('wb') as stderr:
+        p=subprocess.run(cmd,stdout=stdout,stderr=stderr,timeout=1200)
+    unchanged=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==fixed and not subprocess.check_output(['git','status','--porcelain']).strip()
+    rows.append(dict(source_commit=fixed,unchanged_clean_tree=unchanged,command=cmd,exit_code=p.returncode,elapsed=time.monotonic()-started))
+    (out/'commands.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf-8')
+    print(name,p.returncode,flush=True)
+    assert unchanged and p.returncode==0

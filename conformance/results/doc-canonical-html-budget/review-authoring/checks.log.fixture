@@ -1,0 +1,3 @@
+PASS check.py: full structure, exact 8-sentence source paragraph, 2 code values, 49 Kanji Ruby, parent bytes unchanged by removal of one insertion.
+PASS git diff --check HEAD^ HEAD for three documentation files.
+Runtime not executed by reviewer.
