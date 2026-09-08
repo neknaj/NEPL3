@@ -1,0 +1,30 @@
+[
+  {
+    "command": [
+      "cargo",
+      "build",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--example",
+      "review_doc",
+      "--target-dir",
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\target-before"
+    ],
+    "cwd": "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\before",
+    "exit": 0,
+    "log": "cbor-0.log",
+    "log_sha256": "7e9c19468e6df3b93f01a16d8911e031aa228bb1af6fefd240d3c4a56afc116c"
+  },
+  {
+    "command": [
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\target-before\\debug\\examples\\review_doc.exe",
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\inputs\\linear.nepld",
+      "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\runs-before\\semantic-cbor"
+    ],
+    "cwd": "C:\\projects\\NEPL3-session-source-index\\.tmp\\review-session-index-doc\\before",
+    "exit": 0,
+    "log": "cbor-1.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]
