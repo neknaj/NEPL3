@@ -576,4 +576,17 @@ body
       cons "[実装/じっそう]タスクを[完了/かんりょう]へ[変更/へんこう]する[際/さい]は、[対応/たいおう]するopen findingを[解消/かいしょう]し、[独立/どくりつ]レビューを[受/う]ける。"
       cons "リポジトリ[検査/けんさ]の[成功/せいこう]だけでこの[手順/てじゅん]を[省略/しょうりゃく]しない。" nil
     nil
+  cons section external_specs "[外部仕様/がいぶしよう]との[照合/しょうごう]" body
+    cons paragraph
+      cons "JSON objectは[順序/じゅんじょ]を[持/も]つデータ[構造/こうぞう]として[規定/きてい]されておらず、arrayは[順序/じゅんじょ]を[保持/ほじ]する。"
+      cons sentence cons text "R001の" cons ruby text "対応根拠" text "たいおうこんきょ" cons text "は " cons link external "https://www.rfc-editor.org/rfc/rfc8259.html#section-4" text "RFC 8259 §4–5" cons text "。" nil nil
+    cons paragraph
+      cons "mspaceの[寸法属性/すんぽうぞくせい]はCSSのlength-percentageを[使/つか]う。"
+      cons sentence cons text "R005の" cons ruby text "対応根拠" text "たいおうこんきょ" cons text "は " cons link external "https://www.w3.org/TR/mathml-core/#space-mspace" text "MathML Core §3.2.5" cons text "。" nil
+      cons "[旧/きゅう]MathMLの[長/なが]さの[扱/あつか]いをMathML Coreへ[流用/りゅうよう]しない。" nil
+    cons paragraph
+      cons "XML 1.0は[許可/きょか]する[文字集合/もじしゅうごう]と[文字/もじ]データ[中/ちゅう]の\]\]>を[制限/せいげん]する。"
+      cons sentence cons text "R008の" cons ruby text "対応根拠" text "たいおうこんきょ" cons text "は " cons link external "https://www.w3.org/TR/xml/#charsets" text "XML 1.0 §2.2" cons text " と " cons link external "https://www.w3.org/TR/xml/#syntax" text "§2.4" cons text "。" nil
+      cons "UTF-8として[妥当/だとう]であるだけではXMLとして[妥当/だとう]とは[限/かぎ]らない。" nil
+    nil
   nil
