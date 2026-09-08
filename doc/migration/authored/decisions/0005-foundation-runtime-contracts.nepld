@@ -1,0 +1,38 @@
+article ja "0005: foundation[契約/けいやく]と[実装/じっそう]"
+body
+  cons paragraph
+    cons sentence cons ruby text "設計" text "せっけい" cons text "revisionを " cons code "nepl3-design-2026-09-06-r4" cons text " とする。" nil
+    cons "r3のメタデータ[検査/けんさ]から[実際/じっさい]の[共通/きょうつう]runtimeへ[進/すす]む[際/さい]、source[同一性/どういつせい]、[報告/ほうこく]と[予算/よさん]、descriptor、[値/あたい]と[参照/さんしょう]の[未定義部分/みていぎぶぶん]を[具体化/ぐたいか]した。"
+    cons "[履歴資料/りれきしりょう]と[過去/かこ]revisionの[判断/はんだん]は[書/か]き[換/か]えない。"
+    nil
+  cons paragraph
+    cons "URIをsource[同一性/どういつせい]として[使/つか]うと、[同/おな]じlocatorを[持/も]つ[独立/どくりつ]したmemory documentを[区別/くべつ]できない。"
+    cons "SourceRefはhost[指定/してい]のopaque ID/revision/digest、SourceContentは[別/べつ]のURIと[元/もと]byte[列/れつ]を[持/も]つ。"
+    cons "[共有操作/きょうゆうそうさ]は[受/う]け[入/い]れ[済/ず]みsnapshotを[一度/いちど]だけ[計上/けいじょう]し、nativeとwireで[入力予算/にゅうりょくよさん]の[意味/いみ]を[合/あ]わせる。"
+    nil
+  cons paragraph
+    cons "LimitsとUsageを[分離/ぶんり]し、[失敗/しっぱい]・[停止/ていし]・[中断/ちゅうだん]でも[消費済/しょうひず]み[予算/よさん]を[保持/ほじ]する。"
+    cons "traceの[件数超過/けんすうちょうか]はStopped(EventLimit)とし、[列外/れつがい]の[単一/たんいつ]のtruncation[報告/ほうこく]で[上限/じょうげん]0も[扱/あつか]う。"
+    cons "[既存/きそん]eventを[上書/うわが]きせず、[先/さき]に[確定/かくてい]した[停止理由/ていしりゆう]を[維持/いじ]する。"
+    nil
+  cons paragraph
+    cons "[実際/じっさい]のTypeDescriptor/SchemaDescriptor、canonical JSONとSHA-256、registryの[全参照/ぜんさんしょう]finalizeを[実装/じっそう]する。"
+    cons "[自己/じこ]・foreign[参照/さんしょう]は[記号/きごう]で[保持/ほじ]する。"
+    cons sentence cons code "nepl3.foundation" cons text " のdescriptorはcontractsから" cons ruby text "生成" text "せいせい" cons text "し、" cons ruby text "同" text "おな" cons text "じproduction registryで" cons ruby text "検査" text "けんさ" cons text "する。" nil
+    cons "[通常/つうじょう]fieldのSchemaRefはこのpackageのRecord、NDF headerのSchemaRefは[既定/きてい]の[裸/はだか]tupleとして[区別/くべつ]する。"
+    nil
+  cons paragraph
+    cons "[共通/きょうつう]syntax/view/Origin/environmentはそれぞれ[局所/きょくしょ]ID[空間/くうかん]とsourceの[対応/たいおう]を[持/も]つ。"
+    cons "graph[検査/けんさ]と、Grammarのform/categoryやdomain[意味/いみ]の[検査/けんさ]は[別/べつ]の[証明/しょうめい]とする。"
+    cons "SourceMapはbyte/anchorの[対応/たいおう]を[検査/けんさ]し、[粗/あら]いsnapshot[依存/いぞん]で[正/ただ]しい[写像/しゃぞう]をCycleとして[拒否/きょひ]しない。"
+    nil
+  cons paragraph
+    cons "NDF codecはすべてのintrinsic tag、canonical[整数/せいすう]・[有理数/ゆうりすう]、field[配列/はいれつ]とschema header、[制限/せいげん]されたCBOR、schema[照合/しょうごう]を[扱/あつか]う。"
+    cons "[深/ふか]い[値/あたい]の[走査/そうさ]・[後始末/あとしまつ]をnative[再帰/さいき]に[依存/いぞん]させず、shared Budgetへ[計上/けいじょう]する。"
+    cons "provider/reader/engineの[操作変換/そうさへんかん]、[全形式/ぜんけいしき]のconformanceと[最終製品/さいしゅうせいひん]は[引/ひ]き[続/つづ]き[実装/じっそう]する。"
+    nil
+  cons paragraph
+    cons sentence cons ruby text "実行" text "じっこう" cons text "した" cons ruby text "試験" text "しけん" cons text "と" cons ruby text "残課題" text "ざんかだい" cons text "は " cons link relative "../progress/foundation-runtime.md" none concat cons text "foundation" cons ruby text "実装記録" text "じっそうきろく" nil cons text " に" cons ruby text "残" text "のこ" cons text "す。" nil
+    cons "この[判断/はんだん]とcrateの[存在/そんざい]をT01/T02や[処理系全体/しょりけいぜんたい]の[完了証拠/かんりょうしょうこ]にしない。"
+    nil
+  nil

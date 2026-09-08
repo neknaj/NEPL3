@@ -1,0 +1,177 @@
+[
+  {
+    "path": "doc/migration/authored/decisions/0001-repository-foundation.nepld",
+    "sha256": "626bff12deac9e6b6eeccd980ceb79fd34a4414ad2be9634ffd8539886c89ef4",
+    "paragraphs_exact": 12,
+    "titles_exact": [
+      "0001: 設計の取り込みとリポジトリ基盤",
+      "問題",
+      "判断",
+      "影響と確認"
+    ],
+    "code_exact": [
+      "nepl3-design-2026-09-06-r1",
+      "doc/",
+      "doc/spec/",
+      "doc/README.md",
+      "design/",
+      "interfaces/",
+      ".tmp/",
+      "doc/history/",
+      "design/tasks.json",
+      "implementation-status.json"
+    ],
+    "links_exact": [],
+    "table_rows_exact": [],
+    "ruby_count": 146,
+    "uncovered_kanji": [],
+    "sections": [
+      "problem",
+      "decision",
+      "effects"
+    ]
+  },
+  {
+    "path": "doc/migration/authored/decisions/0002-design-contract-corrections.nepld",
+    "sha256": "b397f6dd4867ef5c91b2686a20b2408d4788943739f3a54ed4cc479d45a3616f",
+    "paragraphs_exact": 9,
+    "titles_exact": [
+      "0002: 独立レビューによる契約の訂正"
+    ],
+    "code_exact": [
+      "nepl3-design-2026-09-06-r1",
+      "nepl3-design-2026-09-06-r2"
+    ],
+    "links_exact": [
+      "../review.md",
+      "../../design/review.json",
+      "https://www.rfc-editor.org/rfc/rfc8259.html#section-4",
+      "https://www.w3.org/TR/mathml-core/#space-mspace",
+      "https://www.w3.org/TR/xml/#charsets"
+    ],
+    "table_rows_exact": [
+      [
+        "指摘",
+        "訂正"
+      ],
+      [
+        "R001",
+        "recordとvariant payloadのfieldを順序付きarrayに変更。variantはNDFの名前で識別し、map順に意味を持たせない。"
+      ],
+      [
+        "R002",
+        "initialの入力をPreparedNetlistに統一。NORは4種のnodeと2種のsink配列で表す。"
+      ],
+      [
+        "R003",
+        "Doc自身のCodeもForeignSyntaxを保持。表示のためにguestのlowerや意味検査を要求しない。"
+      ],
+      [
+        "R004",
+        "Numberは有限十進の有理数に限定。任意有理数からの式構築helperが必要に応じFracを作り、著者のFracは保存する。"
+      ],
+      [
+        "R005",
+        "mspaceの長さを非負のcanonical十進 + emに限定。SVG座標のDecimalと区別する。"
+      ],
+      [
+        "R007",
+        "sourceBytes超過の型付き停止理由SourceLimitを追加する。"
+      ],
+      [
+        "R008",
+        "Markupに出力可能な文字集合を設け、XMLで表せない文字を拒否。>とCR、属性内のTAB/LF/CRのescapeを固定する。"
+      ],
+      [
+        "R011",
+        "task.acceptanceをcoverage参照と定義。前段タスクは自身のscope付き証拠で判定し、群全体のpassedとT16の全37群合格を分離する。"
+      ]
+    ],
+    "ruby_count": 157,
+    "uncovered_kanji": [],
+    "sections": []
+  },
+  {
+    "path": "doc/migration/authored/decisions/0003-web-tea-doc-migration.nepld",
+    "sha256": "12fc8089bfaffe25a1e5fefb3b3f418a8668c6caa36c7e091f396cf627e324b8",
+    "paragraphs_exact": 12,
+    "titles_exact": [
+      "0003: Web・TEA・Doc DSL移行の必須計画"
+    ],
+    "code_exact": [
+      "nepl3-design-2026-09-06-r2",
+      "nepl3-design-2026-09-06-r3",
+      "nepl3-web-pages-tea-2026-09-06-r1",
+      "4324078d18b8258531c7b8a15c0f7927d4933f3e",
+      "nepl3-ui-core"
+    ],
+    "links_exact": [
+      "../history/web-tea-import.json",
+      "../../design/acceptance.json",
+      "../spec/14-web-ui.md",
+      "../spec/15-site.md",
+      "../spec/16-doc-migration.md"
+    ],
+    "table_rows_exact": [],
+    "ruby_count": 193,
+    "uncovered_kanji": [],
+    "sections": []
+  },
+  {
+    "path": "doc/migration/authored/decisions/0004-pages-recovery-doc-inventory.nepld",
+    "sha256": "197435331edd5013d54f6259bcb162b20eb477d5345b08b253816738da522153",
+    "paragraphs_exact": 10,
+    "titles_exact": [
+      "0004: Pages復旧とDoc設計前のinventory",
+      "Pages公開後の失敗",
+      "Doc schemaの設計前にinventoryを使う"
+    ],
+    "code_exact": [
+      "nepl3-design-2026-09-06-r3",
+      "25a096b"
+    ],
+    "links_exact": [
+      "../spec/15-site.md"
+    ],
+    "table_rows_exact": [],
+    "ruby_count": 158,
+    "uncovered_kanji": [],
+    "sections": [
+      "recovery",
+      "inventory"
+    ]
+  },
+  {
+    "path": "doc/migration/authored/decisions/0005-foundation-runtime-contracts.nepld",
+    "sha256": "3f45ee9e3cc0dd98f2721fbcf2f3bd6d5cfcb858b936aca9687152f5970f04d4",
+    "paragraphs_exact": 7,
+    "titles_exact": [
+      "0005: foundation契約と実装"
+    ],
+    "code_exact": [
+      "nepl3-design-2026-09-06-r4",
+      "nepl3.foundation"
+    ],
+    "links_exact": [
+      "../progress/foundation-runtime.md"
+    ],
+    "table_rows_exact": [],
+    "ruby_count": 118,
+    "uncovered_kanji": [],
+    "sections": []
+  },
+  {
+    "path": "doc/migration/authored/decisions/0006-html-generation.nepld",
+    "sha256": "60020db9b5bde75a57ec8c943862bc02a02e6d4074bfe83d77bdd758b5cfa10a",
+    "paragraphs_exact": 4,
+    "titles_exact": [
+      "HTML先行利用と生成時KaTeX"
+    ],
+    "code_exact": [],
+    "links_exact": [],
+    "table_rows_exact": [],
+    "ruby_count": 84,
+    "uncovered_kanji": [],
+    "sections": []
+  }
+]

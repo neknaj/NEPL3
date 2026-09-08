@@ -1,0 +1,144 @@
+{
+  "files": [
+    {
+      "path": "annotation_parser.py",
+      "bytes": 2857,
+      "sha256": "c9acc0c382a3586f379d95927630c9f35e0f32dc22fae3a125cc90a78ea9e0bb"
+    },
+    {
+      "path": "author-input-manifest.json",
+      "bytes": 5946,
+      "sha256": "70cd7fdb26af58920e49309054b11514ccff198a919f5cc176d55cbdd7a44eee"
+    },
+    {
+      "path": "check-before-table-kind-fix.log",
+      "bytes": 246,
+      "sha256": "ef2cacc90504eefc8c721eaa74391386b9dfce0ba0a46d8e0f63ee4730d53639"
+    },
+    {
+      "path": "check-before-table-kind-fix.py",
+      "bytes": 4850,
+      "sha256": "eff28fdacd8216e7499e9b6198f0bd92da63c16b8bef22c3e165720ed30e814e"
+    },
+    {
+      "path": "check.log",
+      "bytes": 5438,
+      "sha256": "9be49cd77d7cb622c1bc6c9306ea13000dd61ea752e0b029c0325a87df2b369a"
+    },
+    {
+      "path": "check.py",
+      "bytes": 4868,
+      "sha256": "c779aad60fa04ce57460a1241cd61fa9ab0984193abc41a0d48d1d6cc706321c"
+    },
+    {
+      "path": "checks.json",
+      "bytes": 55974,
+      "sha256": "8b30270c703dbc12a1711603f0e84b08c276eb3fdd7a1077f14f594d0c612b04"
+    },
+    {
+      "path": "execution.json",
+      "bytes": 177,
+      "sha256": "6f9c4f8770344b94e02ede9ff973184b3ac9c3a77a6c2676df6aede18622d56d"
+    },
+    {
+      "path": "inspect-table.py",
+      "bytes": 4830,
+      "sha256": "c3593a40622fe0e4392014c79388323523b8e6b84e4f4dd0521657a1dfd42194"
+    },
+    {
+      "path": "review.md",
+      "bytes": 6214,
+      "sha256": "750d6810f1d53c083a3bca3c3e69fcb9db37b963cdd5ce4a798f5b19ad877c22"
+    },
+    {
+      "path": "snapshot/AGENTS.md",
+      "bytes": 7613,
+      "sha256": "849027165216a9a3adcb22ef58a44bc698c83e1707d2aa0727a1b73105282236"
+    },
+    {
+      "path": "snapshot/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "snapshot/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "snapshot/doc/decisions/0001-repository-foundation.md",
+      "bytes": 2505,
+      "sha256": "0ff43a492e9628c1542d764d06b465dc8bf8c9523b8400f96f3098dcbf61843e"
+    },
+    {
+      "path": "snapshot/doc/decisions/0002-design-contract-corrections.md",
+      "bytes": 3169,
+      "sha256": "49a991cda470fb6843145797116d02cbcb62728e2b0b8fc298793d6f51aee5a8"
+    },
+    {
+      "path": "snapshot/doc/decisions/0003-web-tea-doc-migration.md",
+      "bytes": 3569,
+      "sha256": "942d7be23f728b2c52234996e4ef706cfa018a7b582bb43093aa83673535ffa4"
+    },
+    {
+      "path": "snapshot/doc/decisions/0004-pages-recovery-doc-inventory.md",
+      "bytes": 2640,
+      "sha256": "1c9e68a9f23c704b925a0b7b117891cc127f2a12a8031a484857bcc5bf4581e6"
+    },
+    {
+      "path": "snapshot/doc/decisions/0005-foundation-runtime-contracts.md",
+      "bytes": 2198,
+      "sha256": "c9e57e87206004a16088328b3cee9deccf84ac4117062275e8ed611e7dfadcb4"
+    },
+    {
+      "path": "snapshot/doc/decisions/0006-html-generation.md",
+      "bytes": 1523,
+      "sha256": "e4459f1be81146b8a6c5b75d82bdc24495172e9f501b4efeccf60cdf2ba8ef70"
+    },
+    {
+      "path": "snapshot/doc/migration/authored/decisions/0001-repository-foundation.nepld",
+      "bytes": 7177,
+      "sha256": "626bff12deac9e6b6eeccd980ceb79fd34a4414ad2be9634ffd8539886c89ef4"
+    },
+    {
+      "path": "snapshot/doc/migration/authored/decisions/0002-design-contract-corrections.nepld",
+      "bytes": 7453,
+      "sha256": "b397f6dd4867ef5c91b2686a20b2408d4788943739f3a54ed4cc479d45a3616f"
+    },
+    {
+      "path": "snapshot/doc/migration/authored/decisions/0003-web-tea-doc-migration.nepld",
+      "bytes": 8750,
+      "sha256": "12fc8089bfaffe25a1e5fefb3b3f418a8668c6caa36c7e091f396cf627e324b8"
+    },
+    {
+      "path": "snapshot/doc/migration/authored/decisions/0004-pages-recovery-doc-inventory.nepld",
+      "bytes": 6453,
+      "sha256": "197435331edd5013d54f6259bcb162b20eb477d5345b08b253816738da522153"
+    },
+    {
+      "path": "snapshot/doc/migration/authored/decisions/0005-foundation-runtime-contracts.nepld",
+      "bytes": 4747,
+      "sha256": "3f45ee9e3cc0dd98f2721fbcf2f3bd6d5cfcb858b936aca9687152f5970f04d4"
+    },
+    {
+      "path": "snapshot/doc/migration/authored/decisions/0006-html-generation.nepld",
+      "bytes": 3191,
+      "sha256": "60020db9b5bde75a57ec8c943862bc02a02e6d4074bfe83d77bdd758b5cfa10a"
+    },
+    {
+      "path": "snapshot/languages/doc/syntax.neplg",
+      "bytes": 10108,
+      "sha256": "c0dcfc3a2288ca53d62ff3c4042630726f87ec1b469379b263f83690ba1a01b8"
+    },
+    {
+      "path": "source_parser.py",
+      "bytes": 2833,
+      "sha256": "41fd1d44638152b15e545d69b9b5bb431bee176404bbce1be36edccef34d85e9"
+    },
+    {
+      "path": "sources.json",
+      "bytes": 3677,
+      "sha256": "3cef4468548f2fe36147f9cb3986d182c44295c4d4db7f25dc1e526ea7df2d9a"
+    }
+  ]
+}
