@@ -28,13 +28,18 @@ mod head;
 mod host;
 use head::HeadPending;
 
+struct Imported {
+    sources: usize,
+    mappings: usize,
+    index: build::SourceIndex,
+}
 struct Machine {
     progress: ParseProgress,
     accepted: Option<AcceptedTokenizationReport>,
     // The private accepted collector only appends across successful token reads.
     // Each open arena imports that prefix once. These cursors never come from
     // an echoed ParseProgress or a provider payload.
-    imported: Vec<[usize; 2]>,
+    imported: Vec<Imported>,
 }
 struct Incomplete {
     machine: Machine,
@@ -340,10 +345,15 @@ impl<'a> ParseSession<'a> {
             declared_sources.push(source.clone_with_budget(budget)?);
         }
         let declared_origins = environment::origins(&arena.origins, 0, budget)?;
-        build::slot::<[usize; 2]>(budget)?;
+        build::slot::<Imported>(budget)?;
+        let index = build::SourceIndex::new(&arena.sources, budget)?;
         Ok(Machine {
             accepted: Some(accepted),
-            imported: vec![[0, 0]],
+            imported: vec![Imported {
+                sources: 0,
+                mappings: 0,
+                index,
+            }],
             progress: ParseProgress {
                 request: OwnedParseRequest {
                     snapshot: request.snapshot.reference(),
@@ -768,16 +778,17 @@ impl<'a> ParseSession<'a> {
             .ok_or(ParseError::Reference)?;
         let accepted = machine.accepted.as_ref().ok_or(ParseError::Reference)?;
         let imported = machine.imported.last_mut().ok_or(ParseError::Reference)?;
-        arena.extend_sources(
+        arena.extend_sources_indexed(
             accepted
                 .sources()
-                .get(imported[0]..)
+                .get(imported.sources..)
                 .ok_or(ParseError::Reference)?,
+            &mut imported.index,
             budget,
         )?;
         for mapping in accepted
             .source_maps()
-            .get(imported[1]..)
+            .get(imported.mappings..)
             .ok_or(ParseError::Reference)?
         {
             if !arena.source_maps.contains(mapping) {
@@ -785,7 +796,8 @@ impl<'a> ParseSession<'a> {
                 arena.source_maps.push(mapping.clone_with_budget(budget)?);
             }
         }
-        *imported = [accepted.sources().len(), accepted.source_maps().len()];
+        imported.sources = accepted.sources().len();
+        imported.mappings = accepted.source_maps().len();
         build::slot::<NodeSelection>(budget)?;
         let node = arena.head(token, kind, self.profile.registry(), budget)?;
         let stored_selection = copy::selection(&selection, budget)?;
@@ -884,9 +896,14 @@ impl<'a> ParseSession<'a> {
                 .ok_or(SourceError::MissingSnapshot)?;
             let arena = self.arena(source, path, budget)?;
             build::slot::<ParseArena>(budget)?;
-            build::slot::<[usize; 2]>(budget)?;
+            build::slot::<Imported>(budget)?;
+            let index = build::SourceIndex::new(&arena.sources, budget)?;
             machine.progress.arenas.push(arena);
-            machine.imported.push([0, 0]);
+            machine.imported.push(Imported {
+                sources: 0,
+                mappings: 0,
+                index,
+            });
             machine.progress.arenas.len() as u64 - 1
         } else {
             parent.arena
