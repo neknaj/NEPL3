@@ -1,0 +1,69 @@
+{
+  "files": [
+    {
+      "path": "audit-manifest.json",
+      "bytes": 1195,
+      "sha256": "225d9d82eb9d2a32431c1429a7b463c59d85d8a11cbf81b7321e2a59468547d2"
+    },
+    {
+      "path": "audit-results.json",
+      "bytes": 5548,
+      "sha256": "b1def59033ecd04f7c01b01f588d4396b76bec9cebc10a67e4a7ca7afcabe931"
+    },
+    {
+      "path": "changed.txt",
+      "bytes": 211,
+      "sha256": "19dc188ad9fe341f8db3efed94f840318cd9a2a6f816f324dbf05c9cb0646348"
+    },
+    {
+      "path": "check.py",
+      "bytes": 3446,
+      "sha256": "dfcc2a9c1386fe06d051e9671a9a0af38b5c4ed206a7f38d45df610ac40a2275"
+    },
+    {
+      "path": "diff-check.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "result.json",
+      "bytes": 4424,
+      "sha256": "a1e2b4e99f1fe8035c622521c7d9362d4ea1c95b79ac29a6acd2ae583d49bb52"
+    },
+    {
+      "path": "review.md",
+      "bytes": 2635,
+      "sha256": "064cb5e12589d31704cf2265fe75ad20243cd7af0c06b463e082b9a45c902884"
+    },
+    {
+      "path": "run.log",
+      "bytes": 126,
+      "sha256": "394b887f83aa2d44641918ba59e934fb28497614754f2390718b870107939f07"
+    },
+    {
+      "path": "sources/05.diff",
+      "bytes": 3828,
+      "sha256": "4294e4ee95eeaa7814ba83a22271f0d6980648695db89b1667450e74c3051c3d"
+    },
+    {
+      "path": "sources/06.diff",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "sources/07.diff",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "sources/08.diff",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "sources/09.diff",
+      "bytes": 1355,
+      "sha256": "0d2de034d4cc7a2a22b891f12b698268cc114934e7c60da4c8cc7ba32c649b1f"
+    }
+  ]
+}

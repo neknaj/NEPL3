@@ -15,6 +15,16 @@ body
     cons sentence cons link relative "../spec/16-doc-migration.md" none ruby text "移行条件" text "いこうじょうけん" cons text "が" cons ruby text "満" text "み" cons text "たされるまではMarkdownを" cons ruby text "削除" text "さくじょ" cons text "しません。" nil
     cons "[切替/きりか]え[後/ご]はDocを[単一/たんいつ]の[正本/せいほん]とし、[必要/ひつよう]なMarkdown[入口/いりぐち]は[生成/せいせい]projectionとして[維持/いじ]します。"
     nil
+  cons section generated_signatures "[構文表/こうぶんひょう]の[生成候補/せいせいこうほ]"
+    body
+      cons paragraph
+        cons sentence cons code "generated/*-signatures.nepld" cons text " は " cons code "design/forms.json" cons text " から" cons ruby text "生成" text "せいせい" cons text "する4" cons ruby text "言語" text "げんご" cons text "の" cons ruby text "構文表" text "こうぶんひょう" cons text "です。" nil
+        cons sentence cons code "python tools/generate/signatures.py --write" cons text " で" cons ruby text "更新" text "こうしん" cons text "し、" cons ruby text "引数" text "ひきすう" cons text "なし" cons ruby text "実行" text "じっこう" cons text "で" cons ruby text "差分" text "さぶん" cons text "を" cons ruby text "検査" text "けんさ" cons text "します。" nil
+        cons "[通常本文/つうじょうほんぶん]の[機械的/きかいてき]な[置換/ちかん]ではなく、[規範/きはん]データのカテゴリ・form・field[順/じゅん]・[読取/よみとり]カテゴリ・arity・[葉/は]の[規則/きそく]をDocのsectionとtableへ[投影/とうえい]します。"
+        cons "コードはInlineCodeで[保持/ほじ]します。"
+        cons "これらは[手書/てが]きで[保守/ほしゅ]せず、[元/もと]のMarkdown[構文表/こうぶんひょう]との[正本切替/せいほんきりか]えや[旧/きゅう]anchor[互換/ごかん]の[完了/かんりょう]とは[区別/くべつ]します。"
+        nil
+      nil
   cons section generated_candidates "[生成変換器/せいせいへんかんき]の[検証候補/けんしょうこうほ]"
     body
       cons paragraph
