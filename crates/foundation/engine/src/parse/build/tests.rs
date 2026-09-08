@@ -25,6 +25,31 @@ fn source(name: &str, revision: u64, uri: &str, byte: u8) -> Result<SourceSnapsh
 }
 
 #[test]
+fn ordered_closure_duplicates_fit_linear_comparison_allowance() -> Result<(), String> {
+    let sources = (0..512)
+        .map(|i| source(&format!("s{i:07}"), 0, "mem:xx", b'x'))
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| format!("{e:?}"))?;
+    let mut arena = ParseArena {
+        sources: sources.clone(),
+        ..ParseArena::default()
+    };
+    // Eight-byte keys cost 17 per comparison. Rebuilding costs <512*17;
+    // sequential duplicate lookup needs at most two comparisons per entry
+    // plus the initial binary search. Every duplicate also pays 2*6+33 for
+    // URI/digest validation. 50,000 allows that complete linear traversal.
+    let mut bounded = Budget::new(Limits {
+        work: 50_000,
+        ..budget().limits()
+    });
+    arena
+        .extend_sources(&sources, &mut bounded)
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(arena.sources, sources);
+    Ok(())
+}
+
+#[test]
 fn closure_merge_preserves_source_order_full_identity_and_conflicts() -> Result<(), String> {
     let originals = [
         source("z", 0, "memory:z", b'z'),

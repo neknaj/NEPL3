@@ -217,8 +217,26 @@ fn source_position(
     if let Some(at) = hint {
         match compare(at)? {
             core::cmp::Ordering::Equal => return Ok(Ok(at)),
-            core::cmp::Ordering::Less => low = at + 1,
-            core::cmp::Ordering::Greater => high = at,
+            core::cmp::Ordering::Less => {
+                low = at + 1;
+                if low < high {
+                    match compare(low)? {
+                        core::cmp::Ordering::Equal => return Ok(Ok(low)),
+                        core::cmp::Ordering::Greater => return Ok(Err(low)),
+                        core::cmp::Ordering::Less => low += 1,
+                    }
+                }
+            }
+            core::cmp::Ordering::Greater => {
+                high = at;
+                if high > 0 {
+                    match compare(high - 1)? {
+                        core::cmp::Ordering::Equal => return Ok(Ok(high - 1)),
+                        core::cmp::Ordering::Less => return Ok(Err(high)),
+                        core::cmp::Ordering::Greater => high -= 1,
+                    }
+                }
+            }
         }
     }
     while low < high {
