@@ -597,5 +597,18 @@ body
       cons "spec02のFix[前提/ぜんてい]digestと[非重複編集/ひじゅうふくへんしゅう]の[不変条件/ふへんじょうけん]が[共通/きょうつう]validatorに[無/な]いためである。"
       cons "[診断内容/しんだんないよう]のdomain[上/じょう]の[真偽/しんぎ]の[証明/しょうめい]ではなく、[明示/めいじ]sourceに[対/たい]して[適用不能/てきようふのう]な[修正候補/しゅうせいこうほ]を[外部境界/がいぶきょうかい]で[拒否/きょひ]する[契約/けいやく]として[実装担当/じっそうたんとう]へ[戻/もど]した。"
       cons sentence cons ruby text "補助" text "ほじょ" cons text "probeは " cons code ".tmp/independent-core/src/bin/report_boundary.rs" cons text " であり、" cons ruby text "管理対象回帰" text "かんりたいしょうかいき" cons text "を" cons ruby text "追加後" text "ついかご" cons text "に" cons ruby text "再検証" text "さいけんしょう" cons text "する。" nil nil
+    cons paragraph
+      cons "R037は[統括/とうかつ]のallocator[再現/さいげん]を[独立/どくりつ][再実行/さいじっこう]して[確認/かくにん]した。"
+      cons sentence cons code ".tmp/root-edit-allocation.exe" cons text " は、1" cons ruby text "編集" text "へんしゅう" cons text "・100000 bytesのSourceId・AllocationUnits" cons ruby text "上限" text "じょうげん" cons text "0で" cons ruby text "実" text "じつ" cons text "SourceStore.applyを" cons ruby text "呼" text "よ" cons text "び、AllocationLimitを" cons ruby text "返" text "かえ" cons text "す" cons ruby text "前" text "まえ" cons text "に100008 bytesを" cons ruby text "割" text "わ" cons text "り" cons ruby text "当" text "あ" cons text "てる。" nil
+      cons "[報告/ほうこく]AllocationUnitsとWorkはともに0だった。"
+      cons "[同/おな]じ[測定器/そくていき]の4096 bytes[正例/せいれい]とSourceMapの[上限/じょうげん]0/[実割当/じつわりあて]0も[確認/かくにん]した。"
+      cons "source.rsには[予算検査前/よさんけんさまえ]のedit[参照/さんしょう]Vec[生成/せいせい]とsource identity cloneがあり、R020のSourceMap[修正範囲/しゅうせいはんい]とは[別/べつ]の[未検査経路/みけんさけいろ]である。"
+      cons "[入力/にゅうりょく]setup・[結果/けっか]cleanupは[計測外/けいそくがい]で、coreへunsafeを[追加/ついか]した[計測/けいそく]ではない。"
+      cons "[管理対象/かんりたいしょう]allocator[回帰/かいき]への[追加/ついか]と、snapshot[更新/こうしん]をatomicに[保/たも]つ[修正/しゅうせい]を[要求/ようきゅう]した。" nil
+    cons paragraph
+      cons "R036の[元/もと]2[反例/はんれい]は[修正後/しゅうせいご]にExpectedDigest/OverlappingEditsで[拒否/きょひ]され、[管理対象/かんりたいしょう]report 3[件/けん]も[独立/どくりつ][成功/せいこう]した。"
+      cons "[続/つづ]く[適用前提/てきようぜんてい]の[確認/かくにん]では、[同/おな]じSourceIdのrevision 0と1に[対/たい]する2[編集/へんしゅう]を[一/ひと]つのFixに[入/い]れるとReport.validateは[成功/せいこう]するが、SourceStore.applyはSnapshotMismatchになることを[再現/さいげん]した。"
+      cons "[双方/そうほう]のsource[宣言/せんげん]と[区間/くかん]digestが[正/ただ]しくても、[同/おな]じsourceを[同時/どうじ]に2つのbase revisionから[更新/こうしん]するatomic transactionにはならない。"
+      cons "Fixの[編集/へんしゅう]だけにSourceIdごと[一/ひと]つの[前提/ぜんてい]snapshotを[要求/ようきゅう]し、related spanの[履歴参照/りれきさんしょう]や[別/べつ]sourceへの[編集/へんしゅう]は[許可/きょか]する[追加修正/ついかしゅうせい]を[依頼/いらい]した。" nil
     nil
   nil
