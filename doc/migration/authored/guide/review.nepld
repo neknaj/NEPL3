@@ -682,5 +682,28 @@ body
       cons "[最終/さいしゅう]の1/4/8[段/だん]prefix[比較/ひかく]を[独立再実行/どくりつさいじっこう]した。"
       cons "owned/nativeのWorkは11068/8510、48832/34727、135556/91663、AllocationUnitsは244688/150447、971108/542043、2589212/1352585で、[各段/かくだん]のoutcome・[診断/しんだん]の[一致/いっち]と[費用/ひよう]の[大小/だいしょう]を[確認/かくにん]した。"
       cons "これらは[当該/とうがい]fixtureの[観測値/かんそくち]であり、[全入力/ぜんにゅうりょく]で[一定比率/いっていひりつ]の[高速化/こうそくか]を[保証/ほしょう]するものではない。" nil
+    cons paragraph
+      cons sentence cons text "releaseは、" cons ruby text "実装担当" text "じっそうたんとう" cons text "が" cons ruby text "最後" text "さいご" cons text "の" cons ruby text "同" text "どう" cons text "source buildと" cons ruby text "確認" text "かくにん" cons text "したtest executable（SHA-256 " cons code "39da4aaa9ef437d7f5dca11d955a4e724b581ba98169183ba27af07502c38edd" cons text "）を" cons ruby text "独立" text "どくりつ" cons text "に" cons ruby text "再実行" text "さいじっこう" cons text "した。" nil
+      cons "[通常/つうじょう]の[非/ひ]ignore bootstrapをexact[指定/してい]し、[上限/じょうげん]10BのままP0/P1/P2の[意味一致/いみいっち]・518 nodes、Work 7,287,412,952、AllocationUnits 8,045,061,614、Depth 96で[成功/せいこう]した。"
+      cons "3.30[秒/びょう]はこの[単回/たんかい]native[実行/じっこう]の[観測/かんそく]で、[以前/いぜん]の[別/べつ]source/buildやowned[経路/けいろ]との[速度比/そくどひ]には[使/つか]わない。"
+      cons sentence cons text "ログは " cons code ".tmp/review-nested-release.log" cons text "。" nil
+      cons sentence cons ruby text "実装担当" text "じっそうたんとう" cons text "の" cons ruby text "追加" text "ついか" cons text "owned/native" cons ruby text "比較" text "ひかく" cons text "ログ " cons code ".tmp/continuation-copy-after.log" cons text " も" cons ruby text "読" text "よ" cons text "み、owned" cons ruby text "側" text "がわ" cons text "は" cons ruby text "上限" text "じょうげん" cons text "20BでWork 10,597,852,458を" cons ruby text "要" text "よう" cons text "することを" cons ruby text "確認" text "かくにん" cons text "したが、そのowned" cons ruby text "比較" text "ひかく" cons text "を" cons ruby text "独立再実行" text "どくりつさいじっこう" cons text "したとは" cons ruby text "記録" text "きろく" cons text "しない。" nil nil
+    cons paragraph
+      cons "[追加/ついか]profilingは[実値/じっち]のcharge_cloneを[独立/どくりつ]Budgetで[計測/けいそく]し、その[内訳/うちわけ]は[重/かさ]なるためoperation Usageへ[足/た]さない。"
+      cons "[通常/つうじょう]bootstrapのCI[実行/じっこう]・10B[上限/じょうげん]は[維持/いじ]し、[追加/ついか]owned[比較/ひかく]だけをignoreの[任意測定/にんいそくてい]とする[構成/こうせい]を[確認/かくにん]した。"
+      cons "[動的/どうてき]head protocol、[全/ぜん]Facts[包絡/ほうらく]、[内部/ないぶ]コピーの[全解消/ぜんかいしょう]はこの[性能/せいのう]sliceの[承認範囲/しょうにんはんい]に[含/ふく]めない。" nil
+    cons paragraph
+      cons "ParseTreeのportable[下層/かそう]では、[管理対象/かんりたいしょう]2[件/けん]をruntimeと[隔離/かくり]したNEPL3-prefix-validationの[両方/りょうほう]で[独立実行/どくりつじっこう]し、[既存/きそん]wire syntax 6[件/けん]も[成功/せいこう]した。"
+      cons "host root 1とguest root 2を[別々/べつべつ]に0へ[変換/へんかん]し、[各/かく]context・ForeignStep・RecoveryEntryのNodeRefが[同/おな]じ[局所対応表/きょくしょたいおうひょう]に[従/したが]うこと、Environment id 9とToken/View/Originの[別/べつ]tableをnode[番号/ばんごう]へ[変換/へんかん]しないことを[確認/かくにん]した。"
+      cons "[受信時/じゅしんじ]は[構造/こうぞう]schema・[宣言/せんげん]source・[解決済/かいけつず]みProfileの[静的選択/せいてきせんたく]を[検査/けんさ]し、context/recoveryの[正準順/せいじゅんじゅん]も[検査/けんさ]する。"
+      cons "[元/もと]source 15 bytesのonce[計上/けいじょう]と、encode/decodeの[資源上限/しげんじょうげん]0・[取消/とりけし]による[停止理由/ていしりゆう]も[管理対象/かんりたいしょう]に[含/ふく]まれる。" nil
+    cons paragraph
+      cons sentence cons ruby text "追加" text "ついか" cons text "の" cons ruby text "独立" text "どくりつ" cons text " " cons code "portable_tree" cons text " は、schema" cons ruby text "検査" text "けんさ" cons text "が" cons ruby text "成功" text "せいこう" cons text "するNDFからcontext" cons ruby text "順" text "じゅん" cons text "・selection" cons ruby text "順" text "じゅん" cons text "・" cons ruby text "局所" text "きょくしょ" cons text "node" cons ruby text "重複" text "じゅうふく" cons text "・profile digest・execution digest・guest source" cons ruby text "宣言" text "せんげん" cons text "を" cons ruby text "個別" text "こべつ" cons text "に" cons ruby text "変更" text "へんこう" cons text "して、typed decodeがそれぞれ" cons ruby text "拒否" text "きょひ" cons text "することを" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "guest sourceをambient storeに[残/のこ]しても、そのbundle[内/ない]の[宣言不足/せんげんぶそく]は[補/おぎな]われない。"
+      cons "さらに、[正/ただ]しくencodeできるhostのSpanをguestのMissing recoveryへ[注入/ちゅうにゅう]した[値/あたい]も、guestに[属/ぞく]さないsourceとして[拒否/きょひ]された。"
+      cons "[正常値/せいじょうち]はdecode[後/ご]の[再/さい]encodeで[同/おな]じ[正準値/せいじゅんち]となる。"
+      cons "この7[種類/しゅるい]の[補助変異/ほじょへんい]はignoredであり、[管理対象試験/かんりたいしょうしけん]の[実行/じっこう]と[区別/くべつ]する。"
+      cons "core NodeMapping[単独/たんどく]は[参照範囲/さんしょうはんい]と[到達順/とうたつじゅん]の[計算/けいさん]で、schema/source/cycle/[選択/せんたく]の[検査済/けんさず]みproofではない。"
+      cons "Dynamicは[引/ひ]き[続/つづ]き[明示拒否/めいじきょひ]し、FactsRequest/Reply[全包絡/ぜんほうらく]やparse continuationのportable[化/か]は[今回/こんかい]の[下層/かそう]codec[成立/せいりつ]から[推定/すいてい]しない。" nil
     nil
   nil
