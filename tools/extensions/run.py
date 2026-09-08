@@ -35,18 +35,24 @@ def main():
 
     def run(command, cwd, name):
         try:
-            result = subprocess.run(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            result = subprocess.run(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                     timeout=600, check=False)
         except (subprocess.TimeoutExpired, OSError) as failure:
             partial = getattr(failure, "stdout", None) or b""
             log = partial + ("\n" + str(failure) + "\n").encode("utf-8")
             (output / name).write_bytes(log)
+            stderr = getattr(failure, "stderr", None) or b""
+            (output / (name + ".stderr.log")).write_bytes(stderr)
             record["commands"].append({"command": command, "exit_code": None, "error": type(failure).__name__,
-                                       "log": name, "sha256": hashlib.sha256(log).hexdigest()})
+                                       "log": name, "sha256": hashlib.sha256(log).hexdigest(),
+                                       "stderr": name + ".stderr.log", "stderr_sha256": hashlib.sha256(stderr).hexdigest()})
             raise
         (output / name).write_bytes(result.stdout)
+        stderr = result.stderr or b""
+        (output / (name + ".stderr.log")).write_bytes(stderr)
         record["commands"].append({"command": command, "exit_code": result.returncode, "log": name,
-                                   "sha256": hashlib.sha256(result.stdout).hexdigest()})
+                                   "sha256": hashlib.sha256(result.stdout).hexdigest(),
+                                   "stderr": name + ".stderr.log", "stderr_sha256": hashlib.sha256(stderr).hexdigest()})
         if result.returncode:
             raise RuntimeError(f"{name}: exit {result.returncode}; see {output}")
         return result.stdout

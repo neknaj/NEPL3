@@ -27,7 +27,10 @@ class RunnerFailures(unittest.TestCase):
                                 "resolve": {"root": "hello"}, "workspace_root": str(cwd)}
                     if fault == "wrong-workspace":
                         metadata["workspace_root"] = str(run.ROOT)
-                    return subprocess.CompletedProcess(args, 0, json.dumps(metadata).encode())
+                    stderr = b"Downloading crates ...\n" if fault == "metadata-stderr" else b""
+                    if kwargs["stderr"] == subprocess.STDOUT:
+                        return subprocess.CompletedProcess(args, 0, stderr + json.dumps(metadata).encode())
+                    return subprocess.CompletedProcess(args, 0, json.dumps(metadata).encode(), stderr)
                 if "test" in args and fault == "timeout":
                     raise subprocess.TimeoutExpired(args, 600, output=b"partial test output")
                 if "test" in args and fault == "failed-test":
@@ -39,10 +42,16 @@ class RunnerFailures(unittest.TestCase):
                     patch.object(run, "fingerprint", side_effect=fingerprints), \
                     patch.object(run.subprocess, "check_output", return_value=b"fixture-commit"), \
                     patch.object(run.subprocess, "run", side_effect=command):
-                with self.assertRaises((RuntimeError, subprocess.TimeoutExpired)):
+                if fault == "metadata-stderr":
                     run.main()
+                else:
+                    with self.assertRaises((RuntimeError, subprocess.TimeoutExpired)):
+                        run.main()
             record = json.loads((output / "result.json").read_text(encoding="utf-8"))
-            self.assertEqual(record["result"], "failed")
+            self.assertEqual(record["result"], "passed" if fault == "metadata-stderr" else "failed")
+            if fault == "metadata-stderr":
+                self.assertEqual((output / "metadata.json.stderr.log").read_bytes(), b"Downloading crates ...\n")
+                json.loads((output / "metadata.json").read_bytes())
             if fault == "timeout":
                 self.assertIn(b"partial test output", (output / "test.log").read_bytes())
                 self.assertEqual(record["commands"][-1]["error"], "TimeoutExpired")
@@ -64,6 +73,9 @@ class RunnerFailures(unittest.TestCase):
 
     def test_failed_test_cannot_publish_passed(self):
         self.exercise("failed-test")
+
+    def test_dependency_download_progress_does_not_corrupt_metadata(self):
+        self.exercise("metadata-stderr")
 
 
 if __name__ == "__main__":
