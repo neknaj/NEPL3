@@ -1,0 +1,8 @@
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-canonical-architecture\.tmp\review-canonical01-code\workspace\tools)
+error: couldn't read `tools\tests\doc\../../../doc/migration/authored/01-architecture.nepld`: The system cannot find the file specified. (os error 2)
+   --> tools\tests\doc\annotated_pages.rs:247:13
+    |
+247 |             include_str!("../../../doc/migration/authored/01-architecture.nepld"),
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: could not compile `nepl3-tools` (test "doc") due to 1 previous error

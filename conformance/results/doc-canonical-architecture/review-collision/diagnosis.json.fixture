@@ -1,0 +1,26 @@
+{
+  "head": "64deb4b080afba1872b4c33d371eeae8bc3f29c2",
+  "rawLines_exact_fixed_generated_bytes": true,
+  "matches": [
+    {
+      "tag": "A",
+      "id": "",
+      "name": "user-content-3-surface-descriptorとbootstrap",
+      "text": ""
+    },
+    {
+      "tag": "A",
+      "id": "user-content-3-surface-descriptorとbootstrap",
+      "name": null,
+      "text": ""
+    }
+  ],
+  "collisions": {
+    "user-content-3-surface-descriptorとbootstrap": 2
+  },
+  "adjacent_same_bootstrap_heading": true,
+  "stable_semantic_anchor_unique": true,
+  "root_navigation_successes_before_stop": 4,
+  "independent_browser_navigation": "not executed; saved actual DOM inspected",
+  "scope": "read-only independent diagnosis, not fixed-output verification"
+}
