@@ -727,5 +727,27 @@ body
       cons "[元要求/もとようきゅう]・source store・codec・admissionをscope[破棄/はき]した[後/あと]、selected profile/registryと[空/から]storeだけを[持/も]つ[受信側/じゅしんがわ]で[復元/ふくげん]する[管理対象/かんりたいしょう]が[成功/せいこう]した。"
       cons "[正/ただ]しい[参照/さんしょう]を[持/も]つ[異/こと]なるgrantのraw decodeは[許容/きょよう]するが、[認証/にんしょう]・[実行授権/じっこうじゅけん]を[与/あた]えたことにはならない。"
       cons "issueを[呼/よ]べるhostの[信頼境界/しんらいきょうかい]、[元/もと]proofとの[完全一致/かんぜんいっち]を[要求/ようきゅう]するecho[境界/きょうかい]を04[章/しょう]とrustdocで[分/わ]けたことを[確認/かくにん]した。" nil
+    cons paragraph
+      cons sentence cons ruby text "最終" text "さいしゅう" cons text "Facts snapshotの " cons code "C:/projects/NEPL3-prefix-validation" cons text " で" cons ruby text "管理対象" text "かんりたいしょう" cons text "3" cons ruby text "件" text "けん" cons text "を" cons ruby text "独立再実行" text "どくりつさいじっこう" cons text "して" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "[同/どう]snapshotへリンクした[補助/ほじょ]は、[新/あたら]しい[初回/しょかい]decodeの5[停止理由/ていしりゆう]とsticky[状態/じょうたい]、schema-validなtarget NodeRef999/current ScopeId999の[拒否/きょひ]、[欠落/けつらく]したtree sourceをambientに[残/のこ]しても[拒否/きょひ]することを[追加確認/ついかかくにん]した。"
+      cons "[補助/ほじょ]のsource[表/ひょう]を[変更/へんこう]する[最初/さいしょ]の[試行/しこう]ではParseTreeのfield[位置/いち]を[誤/あやま]ってrecord[取得/しゅとく]に[失敗/しっぱい]したため、[公開/こうかい]schemaのbundle[位置/いち]へ[訂正/ていせい]して[再実行/さいじっこう]した。"
+      cons "[元/もと]の[返信/へんしん]5[形/けい]・50[停止/ていし]・[予約外/よやくがい]delta・R038の[負例/ふれい]も[同/どう][実行/じっこう]で[成功/せいこう]した。"
+      cons "[型付/かたつ]きFacts[包絡/ほうらく]のこの[範囲/はんい]をレビュー[済/ず]みとするが、transport[認証/にんしょう]、callback[実行/じっこう]、[語彙/ごい]scope[解決/かいけつ]、Dynamic tree、[別/べつ]process/provider[比較/ひかく]の[完成/かんせい]は[含/ふく]めない。"
+      cons "Head[向/む]けDiagnosticSourceResolver[変更/へんこう]はこのsnapshotから[分離/ぶんり]されている。" nil
+    cons paragraph
+      cons "[次/つぎ]のHeadProvider[初稿/しょこう]は、profile[登録/とうろく]1[件/けん]、[投影/とうえい]unit2[件/けん]と[公開/こうかい]ParseSessionのdynamic[入力/にゅうりょく]1[件/けん]を[独立実行/どくりつじっこう]した。"
+      cons "[明示/めいじ]alias/categoryごとのproviderをprofile identityへ[含/ふく]め、[同/おな]じpackageの[別/べつ]aliasが[異/こと]なるoperationを[選択/せんたく]できる。"
+      cons sentence cons ruby text "補助" text "ほじょ" cons text " " cons code "head_profile" cons text " でこの" cons ruby text "差分" text "さぶん" cons text "と、languages/" cons ruby text "登録順交換" text "とうろくじゅんこうかん" cons text "によるidentity" cons ruby text "不変" text "ふへん" cons text "を" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "[既読/きどく]tokenのcompound NdfValueも[投影/とうえい]へ[保持/ほじ]するが、その[内部/ないぶ]の[値/あたい]をsource lookupやenvironment[権限/けんげん]として[自動解釈/じどうかいしゃく]しない。"
+      cons "SourceWindowは[全/ぜん]snapshotを[公開/こうかい]せず、[元位置/もといち]の[範囲/はんい]だけを[持/も]つ。"
+      cons sentence cons ruby text "補助" text "ほじょ" cons text " " cons code "head_window" cons text " は" cons ruby text "日本語" text "にほんご" cons text "・" cons ruby text "補助平面文字" text "ほじょへいめんもじ" cons text "・CRLF、" cons ruby text "別" text "べつ" cons text "ID/revision/digest・" cons ruby text "範囲外" text "はんいがい" cons text "・scalar" cons ruby text "途中" text "とちゅう" cons text "・" cons ruby text "不正" text "ふせい" cons text "UTF8/" cons ruby text "長" text "なが" cons text "さ/" cons ruby text "空" text "から" cons text "ID、fresh Source/Work" cons ruby text "上限" text "じょうげん" cons text "を" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "[部分/ぶぶん]windowの[形検査/かたちけんさ]をsnapshot[全体/ぜんたい]のdigest[認証/にんしょう]とは[扱/あつか]わない。" nil
+    cons paragraph
+      cons sentence cons ruby text "最初" text "さいしょ" cons text "のdynamic" cons ruby text "管理対象" text "かんりたいしょう" cons text "は " cons code "choose alt @let z x tail" cons text " を" cons ruby text "実" text "じつ" cons text "reader/parserへ" cons ruby text "渡" text "わた" cons text "し、arity2のshape、compound selector" cons ruby text "読了後" text "どくりょうご" cons text "のBody/Alt" cons ruby text "選択" text "せんたく" cons text "、" cons ruby text "内側" text "うちがわ" cons text "letの" cons ruby text "子" text "こ" cons text "でCodeへ" cons ruby text "戻" text "もど" cons text "ること、cursor19でtailを" cons ruby text "未読" text "みどく" cons text "に" cons ruby text "保" text "たも" cons text "つことを" cons ruby text "検査" text "けんさ" cons text "する。" nil
+      cons sentence cons ruby text "補助" text "ほじょ" cons text " " cons code "head_runtime" cons text " ではcall/session/execution/operation identity" cons ruby text "改変" text "かいへん" cons text "、fresh cancelled Budget、" cons ruby text "不正" text "ふせい" cons text "な" cons ruby text "未読" text "みどく" cons text "tail" cons ruby text "位置" text "いち" cons text "のProjectedReportを" cons ruby text "拒否" text "きょひ" cons text "した" cons ruby text "後" text "あと" cons text "、" cons ruby text "元" text "もと" cons text "pendingを" cons ruby text "再開" text "さいかい" cons text "できた。" nil
+      cons "[正式/せいしき]diagnostic1[件/けん]を[受/う]け[入/い]れた[次/つぎ]のAwaitで[取消/とりけし]してもdiagnostic/Usage[各/かく]1が[残/のこ]る。"
+      cons sentence cons text "caller" cons ruby text "深" text "ふか" cons text "さ7で" cons ruby text "開始" text "かいし" cons text "し" cons ruby text "深" text "ふか" cons text "さ0からHeadを" cons ruby text "再開" text "さいかい" cons text "した" cons ruby text "経路" text "けいろ" cons text "のpeakは" cons ruby text "基準" text "きじゅん" cons text "7から14へ" cons ruby text "増" text "ふ" cons text "え、" cons ruby text "外側" text "そとがわ" cons text "static parentを" cons ruby text "持" text "も" cons text "つ " cons code "let n choose alt @let z x tail" cons text " はcursor25へ" cons ruby text "復帰" text "ふっき" cons text "した。" nil
+      cons "これらの[補助/ほじょ]はignoredであり、[管理対象数/かんりたいしょうすう]に[含/ふく]めない。"
+      cons "[深/ふか]いFailed[返信/へんしん]、foreign/[生成/せいせい]sourceの[投影/とうえい]・[復元/ふくげん]、[全停止境界/ぜんていしきょうかい]、portable Head[操作/そうさ]は[引/ひ]き[続/つづ]き[検証範囲/けんしょうはんい]として[残/のこ]す。" nil
     nil
   nil
