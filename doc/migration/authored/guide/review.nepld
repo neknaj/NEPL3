@@ -397,5 +397,20 @@ body
       cons "spec04の[規則/きそく]、native[型/がた]、ReaderFactBatchのschemaを[照合/しょうごう]し、R026/R027/R028をこの[静的/せいてき]native[範囲/はんい]でcorrectedとした。"
       cons "[動的/どうてき]HeadProvider、portable wrapper、[全/ぜん]bootstrapの[完成/かんせい]を[意味/いみ]しない。"
       cons "[補助/ほじょ]probeはignoredであり、[再実行可能/さいじっこうかのう]な[管理対象/かんりたいしょう]production[試験/しけん]を[検証/けんしょう]の[中心/ちゅうしん]とする。" nil
+    cons paragraph
+      cons sentence cons ruby text "同" text "おな" cons text "じpackageをA/Bへ" cons ruby text "登録" text "とうろく" cons text "しrootを" cons ruby text "共通" text "きょうつう" cons text "Expr/Code、ChildだけB.Alternative（" cons code "~" cons text "をskip）へ" cons ruby text "変更" text "へんこう" cons text "した" cons ruby text "補助" text "ほじょ" cons text " " cons code "parse_alias" cons text " も" cons ruby text "実行" text "じっこう" cons text "した。" nil
+      cons sentence cons code "let x ~y" cons text " はAでRecovered/Child.Code、BでComplete/Child.Alternativeとなり、" cons ruby text "登録列" text "とうろくれつ" cons text "の" cons ruby text "順序" text "じゅんじょ" cons text "を" cons ruby text "反転" text "はんてん" cons text "しても" cons ruby text "結果" text "けっか" cons text "・Profile digestが" cons ruby text "変" text "か" cons text "わらない。" nil
+      cons "これは[先/さき]のentry APIだけの[照合/しょうごう]から、[実/じつ]ParseSessionとtree.validateまでの[確認/かくにん]を[追加/ついか]したものである。" nil
+    cons paragraph
+      cons sentence cons code "continue_input" cons text " の" cons ruby text "管理対象" text "かんりたいしょう" cons text "append" cons ruby text "回帰" text "かいき" cons text "2" cons ruby text "件" text "けん" cons text "も" cons ruby text "独立成功" text "どくりつせいこう" cons text "した。" nil
+      cons sentence cons ruby text "補助" text "ほじょ" cons text " " cons code "parse_append" cons text " はcaller depth 7で" cons ruby text "短" text "みじか" cons text "い " cons code "f x " cons text " をNeedMoreにした" cons ruby text "後" text "あと" cons text "、host depth 0から" cons ruby text "親" text "おや" cons text "8" cons ruby text "段" text "だん" cons text "の" cons ruby text "入力" text "にゅうりょく" cons text "へ" cons ruby text "伸" text "の" cons text "ばす。" nil
+      cons "Capture20[段/だん]と[合/あ]わせて、depth[上限/じょうげん]36/37/38は[直接解析/ちょくせつかいせき]・[再開/さいかい]ともStopped、39/40/80は[両方/りょうほう]Complete・peak39となった。"
+      cons "[元/もと]caller[深/ふか]さを[保持/ほじ]しながら、[新/あたら]しく[増/ふ]えた[親/おや]の[深/ふか]さも[計上/けいじょう]する。"
+      cons "これは[原状態/げんじょうたい]からの[全再解析/ぜんさいかいせき]であり、[増分再利用/ぞうぶんさいりよう]やproviderの[全経路/ぜんけいろ]の[完成/かんせい]を[証明/しょうめい]するものではない。" nil
+    cons paragraph
+      cons sentence cons text "Grammarの" cons ruby text "初期" text "しょき" cons text "reader loweringは " cons code "cargo test --locked -p nepl3-grammar-core" cons text " 1" cons ruby text "件" text "けん" cons text "、seed" cons ruby text "入力" text "にゅうりょく" cons text "adapterは " cons code "python -m unittest discover -s tools/bootstrap -p test_grammar.py" cons text " 3" cons ruby text "件" text "けん" cons text "を" cons ruby text "独立" text "どくりつ" cons text "に" cons ruby text "実行" text "じっこう" cons text "して" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "seed adapterは[元/もと]bytesとUTF-8 byte offsetsを[保持/ほじ]するhost[用入力変換/ようにゅうりょくへんかん]であり、production parser/seed/P1/P2のbootstrap[成功/せいこう]ではない。"
+      cons sentence cons text "R029では" cons ruby text "補助" text "ほじょ" cons text " " cons code "grammar_catalog" cons text " で、" cons ruby text "同名" text "どうめい" cons text "NamedClassを" cons ruby text "異" text "こと" cons text "なる" cons ruby text "実" text "じつ" cons text "classへ2" cons ruby text "件対応" text "けんたいおう" cons text "させると" cons ruby text "先頭" text "せんとう" cons text "だけで" cons ruby text "解決" text "かいけつ" cons text "し、" cons ruby text "順序反転" text "じゅんじょはんてん" cons text "で" cons ruby text "意味" text "いみ" cons text "が" cons ruby text "変化" text "へんか" cons text "することを" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "public ReaderContextの[名前付/なまえつ]きcatalogは[事前検査/じぜんけんさ]proofを[持/も]たないため、[同名/どうめい]/[空名/くうめい]を[明示拒否/めいじきょひ]する[入口検査/いりぐちけんさ]と[管理対象回帰/かんりたいしょうかいき]を[要求/ようきゅう]した。" nil
     nil
   nil
