@@ -11,6 +11,7 @@ fn page_output_budget_is_explicit_shared_and_sticky() -> Result<(), String> {
     let inputs = ["one", "two"].map(|id| {
         (
             Entry {
+                input: None,
                 id: id.into(),
                 source: format!("{id}.nepld"),
                 route: format!("{id}/index.html"),
@@ -251,9 +252,9 @@ fn page_export_shares_script_free_shell_and_verifies_every_file() -> Result<(), 
     use nepl3_tools::doc::export::pages::{self, Entry};
     let compiled = compiled()?;
     let inputs = vec![
-        (Entry { id: "intro".into(), source: "intro.nepld".into(), route: "docs/intro/index.html".into() },
+        (Entry { id: "intro".into(), source: "intro.nepld".into(), route: "docs/intro/index.html".into(), input: None },
             r#"article en "Intro" body cons paragraph cons sentence cons link page "guide" none text "Guide" nil nil nil"#.into()),
-        (Entry { id: "guide".into(), source: "guide.nepld".into(), route: "docs/guide/index.html".into() },
+        (Entry { id: "guide".into(), source: "guide.nepld".into(), route: "docs/guide/index.html".into(), input: None },
             r#"article en "Guide" body cons paragraph cons sentence cons link page "intro" none text "Back" nil nil nil"#.into()),
     ];
     let first = pages::generate(&compiled, &inputs)?;

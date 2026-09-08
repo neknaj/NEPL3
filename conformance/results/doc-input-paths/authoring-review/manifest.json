@@ -1,0 +1,116 @@
+{
+  "scope": "Independent authored21 physical input addition review only",
+  "commit": "a6e304cd02ebee9f279c05a9e26b9ce617e727d8",
+  "files": [
+    {
+      "path": "addition.md",
+      "bytes": 1321,
+      "sha256": "230ff8956593498c49c32ac443b0a4cc00be216cf70e6ff748a5435e22c955d6"
+    },
+    {
+      "path": "addition.nepld",
+      "bytes": 4364,
+      "sha256": "16f6a3cb8c4cc56151adf5a7b61cf89a4c0471492b0a2c762b987d4e52ac0dfc"
+    },
+    {
+      "path": "after.nepld",
+      "bytes": 47988,
+      "sha256": "6a7b054a07d4e397ed1ff3ec60c95da8909167a3f799fe0813199afcc6d85414"
+    },
+    {
+      "path": "AGENTS.md",
+      "bytes": 7613,
+      "sha256": "849027165216a9a3adcb22ef58a44bc698c83e1707d2aa0727a1b73105282236"
+    },
+    {
+      "path": "author-manifest.json",
+      "bytes": 2721,
+      "sha256": "9e105a02f276bd2f9dc23936dc8eec2fee1b2ca615e598a3b1f9a31f218f64da"
+    },
+    {
+      "path": "authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "before.nepld",
+      "bytes": 43624,
+      "sha256": "f42fc6f73bb460400ba5877f5b8a204651f0c002cb528cb57c54c846cb112597"
+    },
+    {
+      "path": "check.log",
+      "bytes": 1046,
+      "sha256": "f1546709f76768342655dd5783e6a2909becc40d64f288374c02ac5e200e4bb3"
+    },
+    {
+      "path": "check.py",
+      "bytes": 5931,
+      "sha256": "72a907fb13da5e3b13f8906c7d42207a67600591f0c4855bb5e560b461f16c8c"
+    },
+    {
+      "path": "context/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "context/structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    },
+    {
+      "path": "delta.diff",
+      "bytes": 5095,
+      "sha256": "44575d536199d3fcbc46f8114894ca970520fb79fa1190b28b840e7146d67c64"
+    },
+    {
+      "path": "diffcheck.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "initial-check.py",
+      "bytes": 5934,
+      "sha256": "9f1c6aec352334a90c1a071825b22475be735396844d99d13865f96aea6e99ea"
+    },
+    {
+      "path": "initial-failure.log",
+      "bytes": 241,
+      "sha256": "8ec238bd6c205a3b3a0166d417f318bbeff7ca2887fd6428f35ca1becff77e85"
+    },
+    {
+      "path": "paragraphs.txt",
+      "bytes": 1290,
+      "sha256": "6613ca85bd54b294e3932ef65fe361294f1dee32b16b08ab12e493be41fab77a"
+    },
+    {
+      "path": "previous-source.md",
+      "bytes": 15516,
+      "sha256": "845ca5262ba02fc7c56a2971507ead74a1375e631d984723fab931199fbd5616"
+    },
+    {
+      "path": "raw-insertion.nepld",
+      "bytes": 4364,
+      "sha256": "5b28de627f7033cba756fb1814fa62d110fcb62f647cd053e15a083a92ea8018"
+    },
+    {
+      "path": "readings.json",
+      "bytes": 2670,
+      "sha256": "a56fd5e5ff1784fdfe6bbd1422cdfd4fa2bd4b5d8f0b2b695cbccb14518e5f85"
+    },
+    {
+      "path": "record.md",
+      "bytes": 3977,
+      "sha256": "8bde8f01dc4c79fd92399ba2bee70386875513ce83dd3c50dcb6ef49170ea628"
+    },
+    {
+      "path": "result.json",
+      "bytes": 1013,
+      "sha256": "96dff083cf2ea99c46487c0cc80b4318ec949beb55d67d5c3f81b5ea9744feae"
+    },
+    {
+      "path": "source.md",
+      "bytes": 16837,
+      "sha256": "4f272df61a8274ffe2cfb70bc2f43d70ed0cdc034cf9f6444925bed5a377d204"
+    }
+  ]
+}

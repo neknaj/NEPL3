@@ -1,0 +1,155 @@
+{
+  "budget_scope": "Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
+  "execution_identity": "f0683fbc9768b37d94f6f5c3012211c9c3ba37664ab8a9dcd93ac83aaaa1827e",
+  "files": [
+    {
+      "license": "MIT",
+      "mime": "text/css; charset=utf-8",
+      "path": "pages/guide/assets/doc.css",
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "pages/guide/index.html",
+      "sha256": "431dab5ebd4ef0a4b17943d0b5574a70d572b236861716e7518b443fa56b70e6"
+    },
+    {
+      "license": "MIT",
+      "mime": "text/css; charset=utf-8",
+      "path": "pages/intro/assets/doc.css",
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "pages/intro/index.html",
+      "sha256": "0dc686b777983fee9ba876cbe15668c510f53b5288b4b6716b48ccca0fa30a73"
+    }
+  ],
+  "format": "nepl3.local-doc-pages/1",
+  "identity": "842f334e2571a7b090400ec93c1ccafe3ab956f7fdb9f26d76d94214bb9114af",
+  "options": {
+    "parallel": "Rows"
+  },
+  "output_budget": {
+    "contract": "nepl3.local-doc-pages.execution/1",
+    "initial_usage": {
+      "allocation_units": 0,
+      "depth": 0,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 0,
+      "output_bytes": 0,
+      "source_bytes": 0,
+      "work": 0
+    },
+    "limits": {
+      "allocation_units": 500000000,
+      "depth": 1000,
+      "diagnostics": 1000,
+      "events": 1000,
+      "nodes": 10000000,
+      "output_bytes": 10000000,
+      "source_bytes": 10000000,
+      "work": 100000000
+    },
+    "usage": {
+      "allocation_units": 285042,
+      "depth": 14,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 5003,
+      "output_bytes": 4743,
+      "source_bytes": 152,
+      "work": 134852
+    }
+  },
+  "output_usage": {
+    "allocation_units": 285042,
+    "output_bytes": 4743,
+    "work": 134852
+  },
+  "packages": "compiled checked bootstrap fixtures",
+  "pages": [
+    {
+      "id": "intro",
+      "input": "docs/intro.md",
+      "lower_usage": {
+        "allocation_units": 64760,
+        "depth": 12,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 730,
+        "output_bytes": 0,
+        "source_bytes": 125,
+        "work": 8462
+      },
+      "operation_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "parse_and_validate_usage": {
+        "allocation_units": 630128,
+        "depth": 15,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 2452,
+        "output_bytes": 5711,
+        "source_bytes": 237,
+        "work": 161243
+      },
+      "profile_sha256": "3ff9838f5cc370b8a3e2d72d73c034aa084f67874938844390a730fee24a693e",
+      "route": "pages/intro/index.html",
+      "source": "docs/intro.md",
+      "source_sha256": "72c1b7c250f692098d3e3ba77cf2fbe29b15c253c6d8194ee74089ce4f71e0b3"
+    },
+    {
+      "id": "guide",
+      "input": "docs/guide.md",
+      "lower_usage": {
+        "allocation_units": 37669,
+        "depth": 12,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 648,
+        "output_bytes": 0,
+        "source_bytes": 27,
+        "work": 4443
+      },
+      "operation_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "parse_and_validate_usage": {
+        "allocation_units": 260600,
+        "depth": 15,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 1919,
+        "output_bytes": 2146,
+        "source_bytes": 54,
+        "work": 66839
+      },
+      "profile_sha256": "3ff9838f5cc370b8a3e2d72d73c034aa084f67874938844390a730fee24a693e",
+      "route": "pages/guide/index.html",
+      "source": "docs/guide.md",
+      "source_sha256": "8a108032c76ab5cc3e0b54359bf0e1bb1458ff7f3e644514623a8d9679d153c4"
+    }
+  ],
+  "renderer": "nepl3-doc-html pages/2",
+  "scope": "Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Assets and foreign rendering remain unsupported. Not Pages deployment evidence.",
+  "viewer_scripts": false
+}

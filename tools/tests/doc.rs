@@ -6,6 +6,8 @@ mod export;
 mod external;
 #[path = "doc/html.rs"]
 mod html;
+#[path = "doc/input.rs"]
+mod input;
 #[path = "doc/labels.rs"]
 mod labels;
 #[path = "doc/mixed.rs"]

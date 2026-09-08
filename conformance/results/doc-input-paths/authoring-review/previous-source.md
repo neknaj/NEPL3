@@ -63,20 +63,6 @@ fragment集合であり、fileの保存完了や公開確認の証拠ではな�
 親directory移動、root外を指すsymlinkを拒否する。入力manifestは64KiB、ページ数は128、
 全入力UTF-8 byte合計は10MBまで。現在の表示はRowsに固定する。
 
-各pageには省略可能な `input` を指定できる。これはmanifestのdirectoryから実際に読む
-Doc原稿の相対file pathであり、リンク解決用の論理 `source` とは区別する。
-省略またはnullなら従来どおりsourceを読む。明示したinputは非空・4096 UTF-8 byte以下とし、
-空segment、`.`、`..`、制御文字、`\ : ? # %` を拒否する。絶対pathやroot外へ出るsymlinkも
-許さない。見つからないinputをsourceへfallbackせず、出力directoryを作る前に失敗する。
-
-例えばsourceを `docs/intro.md`、inputを `drafts/intro.nepld` とした場合、
-本文の `guide.md` は `docs/guide.md` の登録へ解決する。drafts directoryへ読み替えたり、
-原稿のリンク文字列や拡張子を書き換えたりしない。source名が `.md` でも、inputから読む
-本文はDoc DSLである。これはMarkdown parserを呼ぶ設定ではない。
-成功manifestは実際に選択したinputと論理sourceをともに記録し、読んだbyte列のdigestを結ぶ。
-物理的な配置名だけを変更して同じDoc byte列を渡した場合、PageSetの意味identityは変えない。
-未登録の論理ページ、非Doc fileへのリンク、未解決assetをこの設定だけで解決したとは扱わない。
-
 全pageを同じproduction APIで生成し、HTMLごとの相対 `assets/doc.css` を同梱する。
 同じdirectoryのCSSは共有し、byte列の異なる同名fileやfile/directory衝突を拒否する。
 WindowsとUnixで配置が変わるのを避けるため、共有path segmentの大小文字の不一致、
