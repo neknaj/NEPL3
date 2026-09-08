@@ -1,4 +1,8 @@
-use super::{AcceptedTokenizationReply, AcceptedTokenizationReport, model::*};
+use super::{
+    AcceptedTokenizationFailure, AcceptedTokenizationReply, AcceptedTokenizationReport,
+    model::*,
+    recovery::{Prefix, rejected},
+};
 use crate::{
     builtin::{self, BuiltinReader},
     model::*,
@@ -293,12 +297,9 @@ impl<'a> TokenizationSession<'a> {
         admission: &mut SourceAdmission,
         accepted: AcceptedTokenizationReport,
     ) -> Result<AcceptedTokenizationReply, ReaderError> {
-        self.read_accepted_dispatch(
-            request, sources, budget, admission, accepted, None, &mut None,
-        )
+        self.read_with_accepted_recover(request, sources, budget, admission, accepted)
+            .map_err(AcceptedTokenizationFailure::into_error)
     }
-    /// Complete synchronous calls before exporting a tokenizer checkpoint.
-    /// None or a rejected callback still publishes the regular owned boundary.
     pub fn read_accepted_with_host(
         &mut self,
         request: ScopedTokenizationRequest<'_, '_>,
@@ -308,6 +309,36 @@ impl<'a> TokenizationSession<'a> {
         accepted: AcceptedTokenizationReport,
         host: &mut impl super::TokenizationHost,
     ) -> Result<super::TokenizationHostReply, ReaderError> {
+        self.read_accepted_with_host_recover(request, sources, budget, admission, accepted, host)
+            .map_err(AcceptedTokenizationFailure::into_error)
+    }
+    /// Like `read_with_accepted`, retaining the original collector on a hard error.
+    /// Normal stops retain the live collector; suspension still exports owned state.
+    #[allow(clippy::result_large_err)]
+    pub fn read_with_accepted_recover(
+        &mut self,
+        request: ScopedTokenizationRequest<'_, '_>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        accepted: AcceptedTokenizationReport,
+    ) -> Result<AcceptedTokenizationReply, AcceptedTokenizationFailure> {
+        self.read_accepted_dispatch(
+            request, sources, budget, admission, accepted, None, &mut None,
+        )
+    }
+    /// Complete synchronous calls before exporting a tokenizer checkpoint.
+    /// None or a rejected callback still publishes the regular owned boundary.
+    #[allow(clippy::result_large_err)]
+    pub fn read_accepted_with_host_recover(
+        &mut self,
+        request: ScopedTokenizationRequest<'_, '_>,
+        sources: &SourceStore,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+        accepted: AcceptedTokenizationReport,
+        host: &mut impl super::TokenizationHost,
+    ) -> Result<super::TokenizationHostReply, AcceptedTokenizationFailure> {
         let mut host_error = None;
         let reply = self.read_accepted_dispatch(
             request,
@@ -320,7 +351,7 @@ impl<'a> TokenizationSession<'a> {
         )?;
         Ok(super::TokenizationHostReply { reply, host_error })
     }
-    #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::too_many_arguments, clippy::result_large_err)]
     fn read_accepted_dispatch(
         &mut self,
         request: ScopedTokenizationRequest<'_, '_>,
@@ -330,7 +361,7 @@ impl<'a> TokenizationSession<'a> {
         accepted: AcceptedTokenizationReport,
         host: Option<&mut dyn super::TokenizationHost>,
         host_error: &mut Option<ReaderError>,
-    ) -> Result<AcceptedTokenizationReply, ReaderError> {
+    ) -> Result<AcceptedTokenizationReply, AcceptedTokenizationFailure> {
         let ScopedTokenizationRequest {
             scope,
             target,
@@ -339,7 +370,7 @@ impl<'a> TokenizationSession<'a> {
         if accepted.limits != budget.limits()
             || !runtime::usage_at_least(budget.usage(), accepted.report.usage)
         {
-            return Err(ReaderError::Continuation);
+            return Err(rejected(ReaderError::Continuation, accepted, budget));
         }
         if let Err(reason) = budget.charge(
             Resource::Work,
@@ -360,15 +391,29 @@ impl<'a> TokenizationSession<'a> {
             || scope.snapshot.revision != request.snapshot.identity().revision
             || scope.snapshot.digest != request.snapshot.identity().digest
         {
-            return Err(ReaderError::Continuation);
+            return Err(rejected(ReaderError::Continuation, accepted, budget));
         }
         let scope = Rc::clone(&accepted.scope);
+        let prefix = Prefix::capture(&accepted);
         let result = self.read_seed(
             target, request, sources, budget, admission, accepted, host, host_error,
         );
-        result
-            .map(|reply| AcceptedTokenizationReply::from_native(reply, scope, budget))
-            .map_err(|failure| failure.error)
+        match result {
+            Ok(reply) => Ok(AcceptedTokenizationReply::from_native(reply, scope, budget)),
+            Err(failure) => match prefix.restore(failure.accepted) {
+                Ok(accepted) => Err(AcceptedTokenizationFailure::Recoverable {
+                    error: failure.error,
+                    accepted,
+                }),
+                Err(()) => {
+                    self.close();
+                    Err(AcceptedTokenizationFailure::BrokenPrefix {
+                        original_error: failure.error,
+                        observed_stop: budget.poll().err(),
+                    })
+                }
+            },
+        }
     }
     #[allow(clippy::too_many_arguments, clippy::result_large_err)]
     fn read_seed(

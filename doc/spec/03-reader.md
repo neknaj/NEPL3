@@ -179,3 +179,18 @@ tokenizerが受理済みprefixを次のreaderへ渡すときは、まず全sourc
 診断・eventのないreportでは、この同じsource索引をreport検査用に再構築せずUsage/overflowを検査する。
 providerの適用へ渡すframeはprivate状態から取り出した所有値なので、NoMatch/NeedMoreの巻戻しは
 checkpointを再複製せず所有権を戻す。正式artifactの喪失や予算の払い戻しを伴わない。
+
+native tokenizerの`read_with_accepted_recover`と`read_accepted_with_host_recover`は、
+hard errorでも呼出し開始時の受理済みcollectorを所有値として返す。
+診断・event・source・SourceMapのprivate append-only prefixを四つの長さで記録し、
+hard error時だけ全長を検査して追加分を取り除き、開始時のtrace overflowへ戻す。
+scopeとLimitsは元の値を保持し、消費済みUsageは払い戻さない。
+不正なfresh Budgetや別Limitsの拒否では、そのBudgetのUsageで既受理の記録を上書きしない。
+正常なStoppedはこの巻戻しを行わずliveの正式collectorを返す。Await/Reserveは引き続き
+所有continuationを返し、wire境界の検査も維持する。
+
+private prefixより実際の長さが短い場合は内部整合性の破損であり、Recoverableと扱わない。
+この場合はBrokenPrefixとして元のerrorと観測済み停止理由を返し、tokenizerを閉じる。
+不完全なcollectorにAccepted proofを付けず、呼出し側もその操作を終了する。
+この回収APIはnative所有権の補助契約であり、公開wire型・言語の意味・外部providerの
+検査済み条件を変更するものではない。既存のerrorのみを返すAPIも維持する。
