@@ -615,18 +615,18 @@ fn snapshot_dag<'a>(
                 }
             }
             let (mut low, mut high) = (0, ordered.len());
-            if found.is_none() {
-                if let Some(at) = ordered_hint {
-                    let prior = nodes[ordered[at]];
-                    budget.charge(
-                        Resource::Work,
-                        prior.source.0.len().min(identity.source.0.len()) as u64 + 41,
-                    )?;
-                    match prior.cmp(identity) {
-                        core::cmp::Ordering::Equal => found = Some(ordered[at]),
-                        core::cmp::Ordering::Less => low = at + 1,
-                        core::cmp::Ordering::Greater => high = at,
-                    }
+            if found.is_none()
+                && let Some(at) = ordered_hint
+            {
+                let prior = nodes[ordered[at]];
+                budget.charge(
+                    Resource::Work,
+                    prior.source.0.len().min(identity.source.0.len()) as u64 + 41,
+                )?;
+                match prior.cmp(identity) {
+                    core::cmp::Ordering::Equal => found = Some(ordered[at]),
+                    core::cmp::Ordering::Less => low = at + 1,
+                    core::cmp::Ordering::Greater => high = at,
                 }
             }
             while found.is_none() && low < high {
