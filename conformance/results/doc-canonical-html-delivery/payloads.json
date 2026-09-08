@@ -2154,6 +2154,134 @@
       "restore": "webkit-second-375.png",
       "bytes": 418865,
       "sha256": "70922ecc3cec2708e05a2af74e71b56046d832b09450450916a9822f7efa26a9"
+    },
+    {
+      "owner": "root-integration",
+      "file": "root-integration/canonical-tests.stderr.log.fixture",
+      "restore": "canonical-tests.stderr.log",
+      "bytes": 246,
+      "sha256": "b9807edfccb578b39423c7256a23d320b8bca033d2f544bf1f333aadeea60642"
+    },
+    {
+      "owner": "root-integration",
+      "file": "root-integration/canonical-tests.stdout.log.fixture",
+      "restore": "canonical-tests.stdout.log",
+      "bytes": 1464,
+      "sha256": "51ce4af76561f65916ba602dc1cd3b9e6cfffc466b4158b29f651f152acb07a4"
+    },
+    {
+      "owner": "root-integration",
+      "file": "root-integration/canonical.stderr.log.fixture",
+      "restore": "canonical.stderr.log",
+      "bytes": 138,
+      "sha256": "f6e05950747f18a9333e7e9fcc9092461b7e8a96e08cdd00cf65a6ae35684741"
+    },
+    {
+      "owner": "root-integration",
+      "file": "root-integration/canonical.stdout.log.fixture",
+      "restore": "canonical.stdout.log",
+      "bytes": 332,
+      "sha256": "395c38abbb734fd6adfb0e645d8c42deac0e8e8bd03f65c513b741951835b03e"
+    },
+    {
+      "owner": "root-integration",
+      "file": "root-integration/clippy.stderr.log.fixture",
+      "restore": "clippy.stderr.log",
+      "bytes": 1885,
+      "sha256": "74f9a301370acf037772c2b43e19f930418528711741fca3eb862a1033f97a4b"
+    },
+    {
+      "owner": "root-integration",
+      "file": "root-integration/clippy.stdout.log.fixture",
+      "restore": "clippy.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "owner": "root-integration",
+      "file": "root-integration/commands.json.fixture",
+      "restore": "commands.json",
+      "bytes": 2036,
+      "sha256": "5365f3fa690123e49e182db723e7facde3a116a2e247efaf558df9ce7863e4d7"
+    },
+    {
+      "owner": "root-integration",
+      "file": "root-integration/format.stderr.log.fixture",
+      "restore": "format.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "owner": "root-integration",
+      "file": "root-integration/format.stdout.log.fixture",
+      "restore": "format.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "owner": "root-integration",
+      "file": "root-integration/html-comparison.json.fixture",
+      "restore": "html-comparison.json",
+      "bytes": 1115,
+      "sha256": "dc2e4365adcbb020b066ea51765e1025ba01e6929b6c27c35c99efecfbc46d94"
+    },
+    {
+      "owner": "root-integration",
+      "file": "root-integration/html.stderr.log.fixture",
+      "restore": "html.stderr.log",
+      "bytes": 157,
+      "sha256": "590407ef75f36441f58321b7e6ca737a690a36eff245a743bc4bd46fecf60862"
+    },
+    {
+      "owner": "root-integration",
+      "file": "root-integration/html.stdout.log.fixture",
+      "restore": "html.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "owner": "root-integration",
+      "file": "root-integration/repository.stderr.log.fixture",
+      "restore": "repository.stderr.log",
+      "bytes": 122,
+      "sha256": "284b18f85562e633f050084e8f3fcc8fd60cafe56b941b2e6d9d47b30bf5ae93"
+    },
+    {
+      "owner": "root-integration",
+      "file": "root-integration/repository.stdout.log.fixture",
+      "restore": "repository.stdout.log",
+      "bytes": 75307,
+      "sha256": "b00b50274ee0a5fe88741768ea08d1e8e859a2798d6de320695053163d1e0e9a"
+    },
+    {
+      "owner": "root-integration",
+      "file": "root-integration/verify-integration.py.fixture",
+      "restore": "verify-integration.py",
+      "bytes": 2094,
+      "sha256": "006c85ae434e047c5fe00de87e75f285e726b57db2b26e5d8011fd1e31ae91b0"
+    },
+    {
+      "owner": "root-integration",
+      "file": "root-integration/archive-integration.py.fixture",
+      "restore": "archive-integration.py",
+      "bytes": 1833,
+      "sha256": "3d8af8d266ae355ace3ff523e1d4386204ce0bd829ad1c4183bfeef3d6be42b0"
     }
-  ]
+  ],
+  "integration": {
+    "commit": "5e3e71b7cd3cf3f664b869feb51e20d1ce945ebb",
+    "sources": [
+      {
+        "path": "tools/src/doc/canonical/tests.rs",
+        "bytes": 29744,
+        "sha256": "1d38393e230b1f0d8dc7b5b1b2fd4c87c2d0dfc1c4b2719cce6965b3a7b95f51"
+      },
+      {
+        "path": "doc/migration/authored/guide/development.nepld",
+        "bytes": 58427,
+        "sha256": "087e158a025d2543e22dc0e9d12950b37151f99c67bcaa28def60a4d734696df"
+      }
+    ],
+    "reason": "Merge independently reviewed HTML budget prerequisite; three-draft input unchanged from PR92 and excluded only from this repeat; historical 3abd test binding retained"
+  }
 }
