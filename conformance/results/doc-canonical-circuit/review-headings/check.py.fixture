@@ -1,0 +1,21 @@
+from pathlib import Path
+import subprocess,hashlib,json,difflib,sys
+r=Path('.tmp/review-circuit-headings');r.mkdir(parents=True,exist_ok=True)
+head=subprocess.check_output(['git','rev-parse','HEAD']).decode().strip()
+old=subprocess.check_output(['git','show','3abd255d5a52eec41f741b6b17e4ec9e2213efdc:doc/migration/authored/07-circuit.nepld'])
+new=subprocess.check_output(['git','show',head+':doc/spec/07-circuit.nepld'])
+source=subprocess.check_output(['git','show',head+':doc/spec/07-circuit.md'])
+aliases=subprocess.check_output(['git','show',head+':doc/migration/aliases/07-circuit.json'])
+a=b'6. NOR IR';b='6. NOR IRへの[変換/へんかん]'.encode();c=b'7. SVG backend';d='7. SVG backendの[配置/はいち]'.encode()
+assert old.count(a)==old.count(c)==new.count(b)==new.count(d)==1
+assert old==new.replace(b,a).replace(d,c)
+prior=Path('C:/projects/NEPL3-doc-canonical-html-delivery/.tmp/preflight-after18')
+observed=json.loads((prior/'07-circuit/result.json').read_bytes())['headings']
+assert json.loads(aliases)==[dict(section=x['section'],name=x['legacy_fragment']) for x in observed]
+sys.path.insert(0,str(prior/'sources'))
+from tools.audit.structure import Parser,load_forms
+Parser(new.decode(),load_forms(prior/'sources')).complete('Doc/Article')
+for name,data in [('before.nepld',old),('after.nepld',new),('source.md',source),('aliases.json',aliases)]: (r/name).write_bytes(data)
+(r/'diff.patch').write_text(''.join(difflib.unified_diff(old.decode().splitlines(True),new.decode().splitlines(True),fromfile='before',tofile='after')),encoding='utf8',newline='\n')
+(r/'result.json').write_text(json.dumps(dict(commit=head,result='PASS',exactly_two_heading_only_changes=True,body_all_other_bytes_unchanged=True,production_generation='not run',browser_collision_resolution='not run'),indent=2)+'\n',encoding='utf8',newline='\n')
+print(head,hashlib.sha256(new).hexdigest())

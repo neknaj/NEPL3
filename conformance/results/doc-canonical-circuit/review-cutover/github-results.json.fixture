@@ -1,0 +1,196 @@
+{
+  "url": "https://github.com/neknaj/NEPL3/blob/e600c9325193fce64e4c4a7116a8cecca31f6e75/doc/spec/07-circuit.md",
+  "rows": [
+    {
+      "fragment": "07-circuit言語",
+      "start": 2877,
+      "final": {
+        "top": 125,
+        "y": 261,
+        "hash": "#07-circuit%E8%A8%80%E8%AA%9E"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "方針",
+      "start": 2877,
+      "final": {
+        "top": 124.59375,
+        "y": 352,
+        "hash": "#%E6%96%B9%E9%87%9D"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "1-surfaceと型",
+      "start": 2877,
+      "final": {
+        "top": 124.78125,
+        "y": 502,
+        "hash": "#1-surface%E3%81%A8%E5%9E%8B"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "2-各宣言",
+      "start": 2877,
+      "final": {
+        "top": 124.96875,
+        "y": 892,
+        "hash": "#2-%E5%90%84%E5%AE%A3%E8%A8%80"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "3-演算",
+      "start": 2877,
+      "final": {
+        "top": 125.15625,
+        "y": 1274,
+        "hash": "#3-%E6%BC%94%E7%AE%97"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "4-検査とelaboration",
+      "start": 0,
+      "final": {
+        "top": 125.34375,
+        "y": 1544,
+        "hash": "#4-%E6%A4%9C%E6%9F%BB%E3%81%A8elaboration"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "5-stepと時間",
+      "start": 0,
+      "final": {
+        "top": 124.53125,
+        "y": 2067,
+        "hash": "#5-step%E3%81%A8%E6%99%82%E9%96%93"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "6-nor-ir",
+      "start": 0,
+      "final": {
+        "top": 124.71875,
+        "y": 2577,
+        "hash": "#6-nor-ir"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "7-svg-backend",
+      "start": 0,
+      "final": {
+        "top": 334.90625,
+        "y": 2877,
+        "hash": "#7-svg-backend"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "8-公開操作",
+      "start": 0,
+      "final": {
+        "top": 685.09375,
+        "y": 2877,
+        "hash": "#8-%E5%85%AC%E9%96%8B%E6%93%8D%E4%BD%9C"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-706f6c696379",
+      "start": 2877,
+      "final": {
+        "top": 124.59375,
+        "y": 352,
+        "hash": "#n-706f6c696379"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-73757266616365",
+      "start": 2877,
+      "final": {
+        "top": 124.78125,
+        "y": 502,
+        "hash": "#n-73757266616365"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-6465636c61726174696f6e73",
+      "start": 2877,
+      "final": {
+        "top": 124.96875,
+        "y": 892,
+        "hash": "#n-6465636c61726174696f6e73"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-6f7065726174696f6e73",
+      "start": 2877,
+      "final": {
+        "top": 125.15625,
+        "y": 1274,
+        "hash": "#n-6f7065726174696f6e73"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-656c61626f726174696f6e",
+      "start": 0,
+      "final": {
+        "top": 125.34375,
+        "y": 1544,
+        "hash": "#n-656c61626f726174696f6e"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-74696d65",
+      "start": 0,
+      "final": {
+        "top": 124.53125,
+        "y": 2067,
+        "hash": "#n-74696d65"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-6e6f72",
+      "start": 0,
+      "final": {
+        "top": 124.71875,
+        "y": 2577,
+        "hash": "#n-6e6f72"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-737667",
+      "start": 0,
+      "final": {
+        "top": 334.90625,
+        "y": 2877,
+        "hash": "#n-737667"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-7075626c6963",
+      "start": 0,
+      "final": {
+        "top": 685.09375,
+        "y": 2877,
+        "hash": "#n-7075626c6963"
+      },
+      "result": "PASS"
+    }
+  ],
+  "complete": true
+}

@@ -1,0 +1,33 @@
+from pathlib import Path
+import subprocess,json,hashlib
+p=Path(__file__).parent.resolve();root=p.parents[1]
+head='e600c9325193fce64e4c4a7116a8cecca31f6e75';base='5e3e71b7cd3cf3f664b869feb51e20d1ce945ebb'
+def git(*a):return subprocess.check_output(['git',*a],cwd=root)
+def sha(b):return hashlib.sha256(b).hexdigest()
+def put(n,b):q=p/n;q.parent.mkdir(parents=True,exist_ok=True);q.write_bytes(b)
+changed=['doc/canonical.json','doc/migration/aliases/07-circuit.json','doc/migration/authored/07-circuit.nepld','doc/spec/01-architecture.md','doc/spec/07-circuit.md','doc/spec/07-circuit.nepld','tools/src/doc/canonical/tests.rs']
+assert sorted(git('diff','--no-renames','--name-only',base,head).decode().splitlines())==sorted(changed)
+scope=changed+['AGENTS.md','doc/authoring.md','doc/spec/16-doc-migration.md','doc/spec/21-doc-pages.md','tools/src/doc/canonical.rs','tools/src/doc/canonical/projection.rs','tools/src/doc/export/pages.rs','tools/src/doc/projection/annotated/blocks.rs','tools/tests/doc/annotated_pages.rs','design/forms.json','tools/audit/structure.py']
+reg=json.loads(git('show',head+':doc/canonical.json'))
+for page in reg['pages']:scope.extend(page[k] for k in ['source','projection','aliases'])
+scope=list(dict.fromkeys(scope))
+names=git('ls-tree','-r','--name-only',head).decode().splitlines();names=[n for n in names if '/' not in n or n.startswith(('tools/','crates/','design/','interfaces/','languages/','doc/','conformance/fixtures/','examples/','.cargo/'))]
+proc=subprocess.Popen(['git','cat-file','--batch'],cwd=root,stdin=subprocess.PIPE,stdout=subprocess.PIPE);rows=[]
+for n in names:
+    proc.stdin.write((head+':'+n+'\n').encode());proc.stdin.flush();h=proc.stdout.readline().split();assert h[1]==b'blob';b=proc.stdout.read(int(h[2]));assert proc.stdout.read(1)==b'\n'
+    put('workspace/'+n,b);rows.append(dict(path=n,sha256=sha(b),bytes=len(b)))
+    if n in scope:put('source/'+n,b)
+proc.stdin.close();assert proc.wait()==0
+for n in changed:
+    r=subprocess.run(['git','show',base+':'+n],cwd=root,capture_output=True)
+    if r.returncode==0:put('before/'+n,r.stdout)
+put('source.patch',git('diff','--binary',base,head))
+prior=Path('C:/projects/NEPL3-doc-canonical-html-delivery/.tmp/review-canonical18-code');m=(prior/'manifest.json').read_bytes();put('prior-h/manifest.json',m);index={r['path']:r for r in json.loads(m)['files']}
+selected=['record.md']+['html-first/docs/spec/'+n for n in ['00-contract.html','01-architecture.html','07-circuit.html','13-reproducibility.html','18-html-delivery.html','22-external-extensions.html','assets/doc.css'] if n!='07-circuit.html']+['markdown-first/doc/spec/'+n+'.md' for n in ['00-contract','01-architecture','13-reproducibility','18-html-delivery','22-external-extensions']]
+for n in selected:
+    b=(prior/n).read_bytes();r=index[n];assert len(b)==r['bytes'] and sha(b)==r['sha256'];put('prior-h/'+n,b)
+for n in ['tools/src/doc/canonical.rs','tools/src/doc/canonical/projection.rs','tools/src/doc/projection/annotated/blocks.rs']:
+    assert git('show',head+':'+n)==git('show',base+':'+n)
+put('snapshot.json',(json.dumps(dict(head=head,base=base,changed=changed,scope=scope,prior_h_selected=selected,runtime_unchanged=True),indent=2)+'\n').encode())
+put('dependencies.json',(json.dumps(rows,indent=2)+'\n').encode())
+print('Frozen',len(rows),'Git dependencies; seven K source paths and verified H artifacts')

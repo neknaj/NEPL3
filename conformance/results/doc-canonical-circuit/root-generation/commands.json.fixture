@@ -1,0 +1,62 @@
+[
+  {
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "markdown",
+      ".tmp/markdown-budget-first"
+    ],
+    "exit_code": 0,
+    "elapsed": 41.47490889998153
+  },
+  {
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "html",
+      ".tmp/html-budget-first"
+    ],
+    "exit_code": 0,
+    "elapsed": 21.923340999986976
+  },
+  {
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "markdown",
+      ".tmp/markdown-budget-second"
+    ],
+    "exit_code": 0,
+    "elapsed": 41.1920298000332
+  },
+  {
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "html",
+      ".tmp/html-budget-second"
+    ],
+    "exit_code": 0,
+    "elapsed": 21.39797029993497
+  }
+]

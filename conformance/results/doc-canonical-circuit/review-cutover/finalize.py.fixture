@@ -1,0 +1,22 @@
+from pathlib import Path
+import json,hashlib
+p=Path(__file__).parent;sha=lambda b:hashlib.sha256(b).hexdigest();normal=[]
+for f in sorted(p.glob('*.log')):
+    b=f.read_bytes()
+    if b.startswith(b'\xff\xfe'):
+        raw=f.with_suffix('.raw.fixture');raw.write_bytes(b);n=b.decode('utf16').replace('\r\n','\n').encode('utf8');f.write_bytes(n);normal.append(dict(original=raw.name,original_sha256=sha(b),normalized=f.name,normalized_sha256=sha(n)))
+(p/'log-normalization.json').write_text(json.dumps(normal,indent=2)+'\n',encoding='utf8',newline='\n')
+assert len(json.loads((p/'html-results.json').read_bytes()))==12
+assert json.loads((p/'github-results.json').read_bytes())['complete']
+assert json.loads((p/'bootstrap-results.json').read_bytes())['complete']
+assert json.loads((p/'all-notes-content.json').read_bytes())['result']=='PASS'
+exclusions=['served/**','bootstrap-workspace/**','**/__pycache__/**','webkit-first-*.png','webkit-second-*.png']
+files=[]
+for f in sorted(p.rglob('*')):
+    rel=f.relative_to(p)
+    if not f.is_file() or f.name=='manifest.json' and f.parent==p:continue
+    if rel.parts[0] in ['served','bootstrap-workspace'] or '__pycache__' in rel.parts:continue
+    if f.name.startswith(('webkit-first-','webkit-second-')) and f.suffix=='.png':continue
+    b=f.read_bytes();files.append(dict(path=rel.as_posix(),bytes=len(b),sha256=sha(b)))
+b=(json.dumps(dict(version=1,source_commit='e600c9325193fce64e4c4a7116a8cecca31f6e75',scope='Independent actual browser, artifact identity and README offline reconstruction; no implementation edits',excluded=exclusions,files=files),ensure_ascii=False,indent=2)+'\n').encode();(p/'manifest.json').write_bytes(b)
+print(len(files),sha(b))

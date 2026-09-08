@@ -1,0 +1,293 @@
+diff --git a/doc/canonical.json b/doc/canonical.json
+index ce1098e..125c850 100644
+--- a/doc/canonical.json
++++ b/doc/canonical.json
+@@ -40,13 +40,21 @@
+       "aliases": "doc/migration/aliases/18-html-delivery.json",
+       "route": "docs/spec/18-html-delivery.html",
+       "renderer": "nepl3-tools.markdown-annotated/2"
++    },
++    {
++      "id": "circuit",
++      "source": "doc/spec/07-circuit.nepld",
++      "projection": "doc/spec/07-circuit.md",
++      "aliases": "doc/migration/aliases/07-circuit.json",
++      "route": "docs/spec/07-circuit.html",
++      "renderer": "nepl3-tools.markdown-annotated/2"
+     }
+   ],
+   "output_limits": {
+     "source_bytes": 10000000,
+     "work": 300000000,
+     "depth": 1000,
+-    "nodes": 10000000,
++    "nodes": 20000000,
+     "allocation_units": 750000000,
+     "output_bytes": 10000000,
+     "diagnostics": 1000,
+diff --git a/doc/migration/aliases/07-circuit.json b/doc/migration/aliases/07-circuit.json
+new file mode 100644
+index 0000000..56b7966
+--- /dev/null
++++ b/doc/migration/aliases/07-circuit.json
+@@ -0,0 +1,42 @@
++[
++  {
++    "section": null,
++    "name": "07-circuit言語"
++  },
++  {
++    "section": "policy",
++    "name": "方針"
++  },
++  {
++    "section": "surface",
++    "name": "1-surfaceと型"
++  },
++  {
++    "section": "declarations",
++    "name": "2-各宣言"
++  },
++  {
++    "section": "operations",
++    "name": "3-演算"
++  },
++  {
++    "section": "elaboration",
++    "name": "4-検査とelaboration"
++  },
++  {
++    "section": "time",
++    "name": "5-stepと時間"
++  },
++  {
++    "section": "nor",
++    "name": "6-nor-ir"
++  },
++  {
++    "section": "svg",
++    "name": "7-svg-backend"
++  },
++  {
++    "section": "public",
++    "name": "8-公開操作"
++  }
++]
+diff --git a/doc/spec/01-architecture.md b/doc/spec/01-architecture.md
+index 5bc6e82..785f47d 100644
+--- a/doc/spec/01-architecture.md
++++ b/doc/spec/01-architecture.md
+@@ -1,4 +1,4 @@
+-<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page architecture; source SHA-256 7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 6fc06e6be4d2292a4f9d646035133ace7f2245e6c7f4ee4a1d2edbc8166333fe; input PageSet digest d6b2619b6106493ad1c6e62181287f7e7d5b8188801a145d529379391d8c5357; input context SHA-256 1bd32194470725fd4fcea568b2f011d1220143c773e1e8d468f1e8ad7b8685c1. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
++<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page architecture; source SHA-256 7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 6fc06e6be4d2292a4f9d646035133ace7f2245e6c7f4ee4a1d2edbc8166333fe; input PageSet digest c258b0dbef245a02150ae7cf1e1444f2f288154742a7c57b83af636fe969a7a1; input context SHA-256 32eca4f1679fe4cc119a8f2fdbe49a0ecea185516c0b7c77cf17f4c2784ffe51. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+ 
+ <a name="01-repositorycrate依存方向"></a>
+ 
+diff --git a/doc/spec/07-circuit.md b/doc/spec/07-circuit.md
+index 389e895..9645eeb 100644
+--- a/doc/spec/07-circuit.md
++++ b/doc/spec/07-circuit.md
+@@ -1,78 +1,116 @@
+-# 07. Circuit言語
++<!-- Generated from doc/spec/07&#45;circuit.nepld; renderer nepl3-tools.markdown-annotated/2; source SHA-256 cf169539cb22eb1a7b21fc5c3f15d060975453e7fd72534126f894548c4fbe30; alias input SHA-256 7c23dac644010c8dfb51fae2b60e7ac78510e84492dd442386ff3679536eb53a; document digest 7a6f807d68ac693b1a1a50a2f0eacc930fbeb301ea2cae28f42014b123bff73e. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+ 
+-## 方針
++<a name="07-circuit言語"></a>
+ 
+-二値・固定幅・同期離散時間の回路を正式な意味領域とする。構文木と回路graph、回路生成と信号の実行値、定義の再利用と状態の共有を分離する。
++# 07\. Circuit言語\[げんご\]
+ 
+-## 1. surfaceと型
++<a name="n-706f6c696379"></a>
+ 
+-Designはmodules、entry名、tests。Moduleはname、入力列、宣言列、出力列。入力/出力/stateの幅は正のNat。upper boundは構成上のLimitsで決まり、暗黙の32/64bitに制限しない。
++<a name="方針"></a>
+ 
+-bit-vectorは `(width, unsigned value)`、`0 <= value < 2^width`。bits width valueの範囲外はエラーで、literalの切捨てをしない。true/falseは1bit。
++## 方針\[ほうしん\]
+ 
+-信号名はinput/wire/stateの共通空間。instance名はInstance空間、module名はDesign内のModule空間、output名は各moduleのOutput空間。同じ空間の重複はエラー。outputは内部で裸の名前参照として再利用しない。共有したい式はwireで宣言する。
++二値\[にち\]・固定幅\[こていはば\]・同期離散時間\[どうきりさんじかん\]の回路\[かいろ\]を正式\[せいしき\]な意味領域\[いみりょういき\]とする。構文木\[こうぶんき\]と回路\[かいろ\]graph、回路生成\[かいろせいせい\]と信号\[しんごう\]の実行値\[じっこうち\]、定義\[ていぎ\]の再利用\[さいりよう\]と状態\[じょうたい\]の共有\[きょうゆう\]を分離\[ぶんり\]する。
+ 
+-Name leafは信号参照。at instance outputは、そのinstanceが参照するmoduleのoutputを参照する。definition linkにはinstance siteとoutput definitionの双方を提示できる。
++<a name="n-73757266616365"></a>
+ 
+-## 2. 各宣言
++<a name="1-surfaceと型"></a>
+ 
+-wire name expr: exprの値を共有する組合せ信号。宣言順に依存せず前方参照を認める。
+-state name width initial: 初期値を持つ状態。initialはBitsのliteralで幅が一致する必要がある。
+-next name expr: 次のtickのstate値。対象はstateに限り、各stateにちょうど一つ必要。省略を暗黙の保持としない。保持は `next q q` と明示する。
+-inst name module arguments: moduleの入力列の順に引数を接続する。毎回独立したinstanceを作る。定義の構文fragmentの共有は状態の共有を意味しない。
+-output name width expr: 外部出力。明示幅とexpr幅の一致を要求する。
++## 1\. surfaceと型\[かた\]
+ 
+-## 3. 演算
++Designはmodules、entry名\[めい\]、tests。Moduleはname、入力列\[にゅうりょくれつ\]、宣言列\[せんげんれつ\]、出力列\[しゅつりょくれつ\]。入力\[にゅうりょく\]\/出力\[しゅつりょく\]\/stateの幅\[はば\]は正\[せい\]のNat。upper boundは構成上\[こうせいじょう\]のLimitsで決\[き\]まり、暗黙\[あんもく\]の32\/64bitに制限\[せいげん\]しない。
+ 
+-notはbitwise。and/or/xor/nor/addは等幅の2入力。addはmod 2^widthの加算。符号付き解釈はしない。
+-muxは1bit selectと等幅のyes/no。select=1ならyes。
+-concat a bはaを上位、bを下位へ置き、幅はwa+wb。
+-slice value lo widthはLSB=0として `[lo,lo+width)` を抜き出す。width>0かつlo+width<=入力幅。全加算・index計算をcheckedにする。
++bit\-vectorは `(width, unsigned value)`、`0 <= value < 2^width`。bits width valueの範囲外\[はんいがい\]はエラーで、literalの切捨\[きりす\]てをしない。true\/falseは1bit。
+ 
+-## 4. 検査とelaboration
++信号名\[しんごうめい\]はinput\/wire\/stateの共通空間\[きょうつうくうかん\]。instance名\[めい\]はInstance空間\[くうかん\]、module名\[めい\]はDesign内\[ない\]のModule空間\[くうかん\]、output名\[めい\]は各\[かく\]moduleのOutput空間\[くうかん\]。同\[おな\]じ空間\[くうかん\]の重複\[ちょうふく\]はエラー。outputは内部\[ないぶ\]で裸\[はだか\]の名前参照\[なまえさんしょう\]として再利用\[さいりよう\]しない。共有\[きょうゆう\]したい式\[しき\]はwireで宣言\[せんげん\]する。
+ 
+-1. Design内のmodule signatureを収集する。entryと各instanceのmoduleを解決する。
+-2. module-instantiation graphがDAGであることを検査する。再帰instantiationは有限な回路にならないので拒否する。
+-3. 各instanceを独立した階層pathへ展開し、信号参照と状態を結ぶ。未使用moduleも単独に検査し、不正な定義を放置しない。
+-4. 各state readを組合せgraphの入力として扱い、next assignmentを別のsinkにする。state readからnext exprへ逆の依存edgeを加えない。
+-5. その実際のgraphで組合せcycleを検査する。instanceの全入力が全出力に依存すると近似してはいけない。内部stateで遮断されるfeedbackを誤拒否しない。
+-6. DAGの順序でwidthを推論・検査する。input/state/constantが既知幅のroot。各output/state-next/instance-inputの要求幅と照合する。
++Name leafは信号参照\[しんごうさんしょう\]。at instance outputは、そのinstanceが参照\[さんしょう\]するmoduleのoutputを参照\[さんしょう\]する。definition linkにはinstance siteとoutput definitionの双方\[そうほう\]を提示\[ていじ\]できる。
+ 
+-共有wireは同じsignal identity。再利用moduleは異なるinstance identity。instance pathはowner module instanceと宣言ordinalで一意にし、表示名の連結だけでIDを作らない。
++<a name="n-6465636c61726174696f6e73"></a>
+ 
+-## 5. stepと時間
++<a name="2-各宣言"></a>
+ 
+-状態q_k、入力u_kに対し、組合せgraphからy_kとnext値を計算し、結果として(q_{k+1},y_k)を返す。全stateは同時更新。stateを逐次上書きして後続のnext計算へ影響させない。
++## 2\. 各宣言\[かくせんげん\]
+ 
+-`initial(PreparedNetlist)` は、entryを選んでelaborateした全instanceのstate初期値をslot順に返す。CheckedDesignとentryはelaborateの入力であり、initialは階層展開と組合せDAG・幅の検査を済ませた値だけを受ける。`step` は入力stateを変更せず新しい値を返す。`observe` は現在の出力だけを返す純粋操作。入力列と出力列の順はmodule宣言順。
++- `wire name expr`\: exprの値\[あたい\]を共有\[きょうゆう\]する組合\[くみあわ\]せ信号\[しんごう\]。宣言順\[せんげんじゅん\]に依存\[いぞん\]せず前方参照\[ぜんぽうさんしょう\]を認\[みと\]める。
++- `state name width initial`\: 初期値\[しょきち\]を持\[も\]つ状態\[じょうたい\]。initialはBitsのliteralで幅\[はば\]が一致\[いっち\]する必要\[ひつよう\]がある。
++- `next name expr`\: 次\[つぎ\]のtickのstate値\[ち\]。対象\[たいしょう\]はstateに限\[かぎ\]り、各\[かく\]stateにちょうど一\[ひと\]つ必要\[ひつよう\]。省略\[しょうりゃく\]を暗黙\[あんもく\]の保持\[ほじ\]としない。保持\[ほじ\]は `next q q` と明示\[めいじ\]する。
++- `inst name module arguments`\: moduleの入力列\[にゅうりょくれつ\]の順\[じゅん\]に引数\[ひきすう\]を接続\[せつぞく\]する。毎回独立\[まいかいどくりつ\]したinstanceを作\[つく\]る。定義\[ていぎ\]の構文\[こうぶん\]fragmentの共有\[きょうゆう\]は状態\[じょうたい\]の共有\[きょうゆう\]を意味\[いみ\]しない。
++- `output name width expr`\: 外部出力\[がいぶしゅつりょく\]。明示幅\[めいじはば\]とexpr幅\[はば\]の一致\[いっち\]を要求\[ようきゅう\]する。
+ 
+-test name module ticksはそのtest開始時にinitial状態へ戻す。tick inputs expectedOutputsはpre-edgeのy_kを比較してからstateを更新する。同じtest内のticksは連続時間。別testでは状態を共有しない。期待列の数/幅の不一致はtest失敗と別のInvalidTestShape。
++<a name="n-6f7065726174696f6e73"></a>
+ 
+-この仕様は非同期latch、伝播遅延、X/Z、アナログ挙動をモデル化しない。これらを適当に二値へ潰す変換は許可しない。別modelを導入するならschemaと操作の版を分ける。
++<a name="3-演算"></a>
+ 
+-## 6. NOR IR
++## 3\. 演算\[えんざん\]
+ 
+-正式なlowering先は4種のnode（InputBit、StateBit、ConstBit、Nor2）と2種のsink（nextBits、outputBits）から成るNorNetlist。vector-level演算をbit-levelへ展開する。NextBit/OutputBitという独立node variantは作らず、sink配列の各項が既存nodeのindexを参照する。StateBitとnextBitsを維持するので順序回路も表現できる。stateの初期bit列、sinkの長さとLSBからの順序はモデル不変条件に従う。
++notはbitwise。and\/or\/xor\/nor\/addは等幅\[とうはば\]の2入力\[にゅうりょく\]。addはmod 2\^widthの加算\[かさん\]。符号付\[ふごうつ\]き解釈\[かいしゃく\]はしない。
+ 
+-not a = nor a a。
+-or a b = not (nor a b)。
+-and a b = nor (not a) (not b)。
+-xor a b = nor (nor a b) (and a b)。
+-mux = (select AND yes) OR ((NOT select) AND no)。
+-addはLSBからcarryを伝えるfull-adderで最終carryを捨てる。slice/concat/wireはbit参照の配線になる。
++muxは1bit selectと等幅\[とうはば\]のyes\/no。select\=1ならyes。
+ 
+-式の入力順、bit順、生成node ordinalを固定し、同じ入力から同じIRを出す。任意最適化をreference loweringへ混在させない。最適化を提供する場合は別operationとして同値テストとsource mapを要求する。
++concat a bはaを上位\[じょうい\]、bを下位\[かい\]へ置\[お\]き、幅\[はば\]はwa\+wb。
+ 
+-比較試験は元のvector evaluatorとNOR evaluatorの両方で、全小幅入力・複数tickを比較する。NOR evaluatorを元のevaluatorと同じコードへの単なるaliasにしない。
++slice value lo widthはLSB\=0として `[lo,lo+width)` を抜\[ぬ\]き出\[だ\]す。width\>0かつlo\+width\<\=入力幅\[にゅうりょくはば\]。全加算\[ぜんかさん\]・index計算\[けいさん\]をcheckedにする。
+ 
+-## 7. SVG backend
++<a name="n-656c61626f726174696f6e"></a>
+ 
+-elaborated vector-level graphを対象に、入力/stateをrank0、各組合せnodeを前提nodeの最大rank+1、出力を最後に配置する。同rank内は定義/instance ordinal順。固定paddingとlabelのscalar数から幅を決め、SVG textLengthを使って描画幅を明示する。font依存でSVG byte列を変えない。
++<a name="4-検査とelaboration"></a>
+ 
+-edgeはrank間のlaneをordinalで割り当てた直交線。stateへのnext edgeは破線で表示し、組合せedgeと区別する。node/edgeにはEntityIdとOriginを対応付け、クリックでソースに戻せる。最小交差数や最適配置を保証する算法とはしない。
++## 4\. 検査\[けんさ\]とelaboration
+ 
+-全ラベルはescapeし、任意scriptやURLを挿入しない。
++1. Design内\[ない\]のmodule signatureを収集\[しゅうしゅう\]する。entryと各\[かく\]instanceのmoduleを解決\[かいけつ\]する。
++1. module\-instantiation graphがDAGであることを検査\[けんさ\]する。再帰\[さいき\]instantiationは有限\[ゆうげん\]な回路\[かいろ\]にならないので拒否\[きょひ\]する。
++1. 各\[かく\]instanceを独立\[どくりつ\]した階層\[かいそう\]pathへ展開\[てんかい\]し、信号参照\[しんごうさんしょう\]と状態\[じょうたい\]を結\[むす\]ぶ。未使用\[みしよう\]moduleも単独\[たんどく\]に検査\[けんさ\]し、不正\[ふせい\]な定義\[ていぎ\]を放置\[ほうち\]しない。
++1. 各\[かく\]state readを組合\[くみあわ\]せgraphの入力\[にゅうりょく\]として扱\[あつか\]い、next assignmentを別\[べつ\]のsinkにする。state readからnext exprへ逆\[ぎゃく\]の依存\[いぞん\]edgeを加\[くわ\]えない。
++1. その実際\[じっさい\]のgraphで組合\[くみあわ\]せcycleを検査\[けんさ\]する。instanceの全入力\[ぜんにゅうりょく\]が全出力\[ぜんしゅつりょく\]に依存\[いぞん\]すると近似\[きんじ\]してはいけない。内部\[ないぶ\]stateで遮断\[しゃだん\]されるfeedbackを誤拒否\[ごきょひ\]しない。
++1. DAGの順序\[じゅんじょ\]でwidthを推論\[すいろん\]・検査\[けんさ\]する。input\/state\/constantが既知幅\[きちはば\]のroot。各\[かく\]output\/state\-next\/instance\-inputの要求幅\[ようきゅうはば\]と照合\[しょうごう\]する。
+ 
+-## 8. 公開操作
++共有\[きょうゆう\]wireは同\[おな\]じsignal identity。再利用\[さいりよう\]moduleは異\[こと\]なるinstance identity。instance pathはowner module instanceと宣言\[せんげん\]ordinalで一意\[いちい\]にし、表示名\[ひょうじめい\]の連結\[れんけつ\]だけでIDを作\[つく\]らない。
+ 
+-lower、check、elaborate、initial、observe、step、run_tests、lower_nor、print、diagram。CheckedDesignは必要なmodule検査を含む。PreparedNetlistはinstance展開と組合せDAG/幅検査済み。sourceをparseしただけでsimulationを開始しない。
++<a name="n-74696d65"></a>
++
++<a name="5-stepと時間"></a>
++
++## 5\. stepと時間\[じかん\]
++
++状態\[じょうたい\]q\_k、入力\[にゅうりょく\]u\_kに対\[たい\]し、組合\[くみあわ\]せgraphからy\_kとnext値\[ち\]を計算\[けいさん\]し、結果\[けっか\]として\(q\_\{k\+1\}\,y\_k\)を返\[かえ\]す。全\[ぜん\]stateは同時更新\[どうじこうしん\]。stateを逐次上書\[ちくじうわが\]きして後続\[こうぞく\]のnext計算\[けいさん\]へ影響\[えいきょう\]させない。
++
++`initial(PreparedNetlist)` は、entryを選\[えら\]んでelaborateした全\[ぜん\]instanceのstate初期値\[しょきち\]をslot順\[じゅん\]に返\[かえ\]す。CheckedDesignとentryはelaborateの入力\[にゅうりょく\]であり、initialは階層展開\[かいそうてんかい\]と組合\[くみあわ\]せDAG・幅\[はば\]の検査\[けんさ\]を済\[す\]ませた値\[あたい\]だけを受\[う\]ける。`step` は入力\[にゅうりょく\]stateを変更\[へんこう\]せず新\[あたら\]しい値\[あたい\]を返\[かえ\]す。`observe` は現在\[げんざい\]の出力\[しゅつりょく\]だけを返\[かえ\]す純粋操作\[じゅんすいそうさ\]。入力列\[にゅうりょくれつ\]と出力列\[しゅつりょくれつ\]の順\[じゅん\]はmodule宣言順\[せんげんじゅん\]。
++
++test name module ticksはそのtest開始時\[かいしじ\]にinitial状態\[じょうたい\]へ戻\[もど\]す。tick inputs expectedOutputsはpre\-edgeのy\_kを比較\[ひかく\]してからstateを更新\[こうしん\]する。同\[おな\]じtest内\[ない\]のticksは連続時間\[れんぞくじかん\]。別\[べつ\]testでは状態\[じょうたい\]を共有\[きょうゆう\]しない。期待列\[きたいれつ\]の数\[かず\]\/幅\[はば\]の不一致\[ふいっち\]はtest失敗\[しっぱい\]と別\[べつ\]のInvalidTestShape。
++
++この仕様\[しよう\]は非同期\[ひどうき\]latch、伝播遅延\[でんぱちえん\]、X\/Z、アナログ挙動\[きょどう\]をモデル化\[か\]しない。これらを適当\[てきとう\]に二値\[にち\]へ潰\[つぶ\]す変換\[へんかん\]は許可\[きょか\]しない。別\[べつ\]modelを導入\[どうにゅう\]するならschemaと操作\[そうさ\]の版\[ばん\]を分\[わ\]ける。
++
++<a name="n-6e6f72"></a>
++
++<a name="6-nor-ir"></a>
++
++## 6\. NOR IRへの変換\[へんかん\]
++
++正式\[せいしき\]なlowering先\[さき\]は4種\[しゅ\]のnode（InputBit、StateBit、ConstBit、Nor2）と2種\[しゅ\]のsink（nextBits、outputBits）から成\[な\]るNorNetlist。vector\-level演算\[えんざん\]をbit\-levelへ展開\[てんかい\]する。NextBit\/OutputBitという独立\[どくりつ\]node variantは作\[つく\]らず、sink配列\[はいれつ\]の各項\[かくこう\]が既存\[きそん\]nodeのindexを参照\[さんしょう\]する。StateBitとnextBitsを維持\[いじ\]するので順序回路\[じゅんじょかいろ\]も表現\[ひょうげん\]できる。stateの初期\[しょき\]bit列\[れつ\]、sinkの長\[なが\]さとLSBからの順序\[じゅんじょ\]はモデル不変条件\[ふへんじょうけん\]に従\[したが\]う。
++
++not a \= nor a a。or a b \= not \(nor a b\)。and a b \= nor \(not a\) \(not b\)。xor a b \= nor \(nor a b\) \(and a b\)。mux \= \(select AND yes\) OR \(\(NOT select\) AND no\)。addはLSBからcarryを伝\[つた\]えるfull\-adderで最終\[さいしゅう\]carryを捨\[す\]てる。slice\/concat\/wireはbit参照\[さんしょう\]の配線\[はいせん\]になる。
++
++式\[しき\]の入力順\[にゅうりょくじゅん\]、bit順\[じゅん\]、生成\[せいせい\]node ordinalを固定\[こてい\]し、同\[おな\]じ入力\[にゅうりょく\]から同\[おな\]じIRを出\[だ\]す。任意最適化\[にんいさいてきか\]をreference loweringへ混在\[こんざい\]させない。最適化\[さいてきか\]を提供\[ていきょう\]する場合\[ばあい\]は別\[べつ\]operationとして同値\[どうち\]テストとsource mapを要求\[ようきゅう\]する。
++
++比較試験\[ひかくしけん\]は元\[もと\]のvector evaluatorとNOR evaluatorの両方\[りょうほう\]で、全小幅入力\[ぜんしょうはばにゅうりょく\]・複数\[ふくすう\]tickを比較\[ひかく\]する。NOR evaluatorを元\[もと\]のevaluatorと同\[おな\]じコードへの単\[たん\]なるaliasにしない。
++
++<a name="n-737667"></a>
++
++<a name="7-svg-backend"></a>
++
++## 7\. SVG backendの配置\[はいち\]
++
++elaborated vector\-level graphを対象\[たいしょう\]に、入力\[にゅうりょく\]\/stateをrank0、各組合\[かくくみあわ\]せnodeを前提\[ぜんてい\]nodeの最大\[さいだい\]rank\+1、出力\[しゅつりょく\]を最後\[さいご\]に配置\[はいち\]する。同\[どう\]rank内\[ない\]は定義\[ていぎ\]\/instance ordinal順\[じゅん\]。固定\[こてい\]paddingとlabelのscalar数\[すう\]から幅\[はば\]を決\[き\]め、SVG textLengthを使\[つか\]って描画幅\[びょうがはば\]を明示\[めいじ\]する。font依存\[いぞん\]でSVG byte列\[れつ\]を変\[か\]えない。
++
++edgeはrank間\[かん\]のlaneをordinalで割\[わ\]り当\[あ\]てた直交線\[ちょっこうせん\]。stateへのnext edgeは破線\[はせん\]で表示\[ひょうじ\]し、組合\[くみあわ\]せedgeと区別\[くべつ\]する。node\/edgeにはEntityIdとOriginを対応付\[たいおうづ\]け、クリックでソースに戻\[もど\]せる。最小交差数\[さいしょうこうさすう\]や最適配置\[さいてきはいち\]を保証\[ほしょう\]する算法\[さんぽう\]とはしない。
++
++全\[ぜん\]ラベルはescapeし、任意\[にんい\]scriptやURLを挿入\[そうにゅう\]しない。
++
++<a name="n-7075626c6963"></a>
++
++<a name="8-公開操作"></a>
++
++## 8\. 公開操作\[こうかいそうさ\]
++
++lower、check、elaborate、initial、observe、step、run\_tests、lower\_nor、print、diagram。CheckedDesignは必要\[ひつよう\]なmodule検査\[けんさ\]を含\[ふく\]む。PreparedNetlistはinstance展開\[てんかい\]と組合\[くみあわ\]せDAG\/幅検査済\[はばけんさず\]み。sourceをparseしただけでsimulationを開始\[かいし\]しない。
+diff --git a/doc/migration/authored/07-circuit.nepld b/doc/spec/07-circuit.nepld
+similarity index 99%
+rename from doc/migration/authored/07-circuit.nepld
+rename to doc/spec/07-circuit.nepld
+index a35f180..cd8f5d9 100644
+--- a/doc/migration/authored/07-circuit.nepld
++++ b/doc/spec/07-circuit.nepld
+@@ -118,7 +118,7 @@ body
+       cons "これらを[適当/てきとう]に[二値/にち]へ[潰/つぶ]す[変換/へんかん]は[許可/きょか]しない。"
+       cons "[別/べつ]modelを[導入/どうにゅう]するならschemaと[操作/そうさ]の[版/ばん]を[分/わ]ける。" nil
+     nil
+-  cons section nor "6. NOR IR" body
++  cons section nor "6. NOR IRへの[変換/へんかん]" body
+     cons paragraph
+       cons "[正式/せいしき]なlowering[先/さき]は4[種/しゅ]のnode（InputBit、StateBit、ConstBit、Nor2）と2[種/しゅ]のsink（nextBits、outputBits）から[成/な]るNorNetlist。"
+       cons "vector-level[演算/えんざん]をbit-levelへ[展開/てんかい]する。"
+@@ -141,7 +141,7 @@ body
+       cons "[比較試験/ひかくしけん]は[元/もと]のvector evaluatorとNOR evaluatorの[両方/りょうほう]で、[全小幅入力/ぜんしょうはばにゅうりょく]・[複数/ふくすう]tickを[比較/ひかく]する。"
+       cons "NOR evaluatorを[元/もと]のevaluatorと[同/おな]じコードへの[単/たん]なるaliasにしない。" nil
+     nil
+-  cons section svg "7. SVG backend" body
++  cons section svg "7. SVG backendの[配置/はいち]" body
+     cons paragraph
+       cons "elaborated vector-level graphを[対象/たいしょう]に、[入力/にゅうりょく]/stateをrank0、[各組合/かくくみあわ]せnodeを[前提/ぜんてい]nodeの[最大/さいだい]rank+1、[出力/しゅつりょく]を[最後/さいご]に[配置/はいち]する。"
+       cons "[同/どう]rank[内/ない]は[定義/ていぎ]/instance ordinal[順/じゅん]。"
+diff --git a/tools/src/doc/canonical/tests.rs b/tools/src/doc/canonical/tests.rs
+index 7fc8a16..d61ab38 100644
+--- a/tools/src/doc/canonical/tests.rs
++++ b/tools/src/doc/canonical/tests.rs
+@@ -549,6 +549,9 @@ fn real_architecture_draft_links_to_canonical_extensions_with_legacy_bytes_intac
+     let limits = super::super::export::pages::resources::OutputLimits {
+         work: 300_000_000,
+         allocation_units: 750_000_000,
++        // The six-page corpus exceeds the former 10M node allowance.
++        // Match its explicitly selected finite output profile before entry.
++        nodes: 20_000_000,
+         ..Default::default()
+     };
+     value["output_limits"] = serde_json::to_value(limits)?;
