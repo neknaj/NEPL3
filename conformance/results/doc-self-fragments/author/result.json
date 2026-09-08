@@ -1,0 +1,19 @@
+{
+  "scope": "author self-check only; no independent or runtime verification",
+  "source_commit": "379c85bc95ba57fbc3187476c338ee9f8a44bf72",
+  "source_sha256": "60df78c6fd62f9beb27a1459efff2d3b27448de90039821869535b3e26793a9f",
+  "before_sha256": "613ac46c179be2d562880f70f583dd6021c42ca35a1c467ca8084e2dcb00f781",
+  "draft_sha256": "4ef947ee78b12fb5398f8940f0241e8d8d36e7b68416bc80d188e4e28bd126a6",
+  "existing_bytes_unchanged": true,
+  "paragraphs": 1,
+  "sentences": 5,
+  "inline_codes": [
+    "Relative",
+    "#fragment",
+    "InvalidRelative"
+  ],
+  "ruby_count": 31,
+  "base_text_exact": true,
+  "full_form_and_ruby_check": true,
+  "utf8_lf": true
+}

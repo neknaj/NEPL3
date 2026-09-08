@@ -1,0 +1,24 @@
+{
+  "head": "3c67cc10246df1533f4185dd38e0b39a79801ac8",
+  "source": "379c85bc95ba57fbc3187476c338ee9f8a44bf72",
+  "before_sha256": "613ac46c179be2d562880f70f583dd6021c42ca35a1c467ca8084e2dcb00f781",
+  "after_sha256": "4ef947ee78b12fb5398f8940f0241e8d8d36e7b68416bc80d188e4e28bd126a6",
+  "source_sha256": "60df78c6fd62f9beb27a1459efff2d3b27448de90039821869535b3e26793a9f",
+  "addition_sha256": "26e1015165fba33e33eb2f496f67142a3b0f5f67fccb02eb57273399272f06fb",
+  "old_draft_exact_721afd9": true,
+  "all_old_bytes_preserved": true,
+  "sentences": 5,
+  "paragraphs": 1,
+  "inline_code": [
+    "Relative",
+    "#fragment",
+    "InvalidRelative"
+  ],
+  "prefix_sentences": 3,
+  "literal_sentences": 2,
+  "ruby": 31,
+  "ruby_unique": 27,
+  "author_payloads_verified": 17,
+  "full_structure_audit": true,
+  "runtime_executed": false
+}
