@@ -1,0 +1,3207 @@
+{
+  "kind": "Article",
+  "fields": {
+    "language": "ja",
+    "title": {
+      "kind": "Sentence",
+      "fields": {
+        "inlines": [
+          {
+            "kind": "Text",
+            "fields": {
+              "text": "文書inventoryとDoc表現能力の早期監査"
+            }
+          }
+        ]
+      }
+    },
+    "body": {
+      "kind": "Body",
+      "fields": {
+        "blocks": [
+          {
+            "kind": "Paragraph",
+            "fields": {
+              "items": [
+                {
+                  "kind": "Sentence",
+                  "fields": {
+                    "inlines": [
+                      {
+                        "kind": "Text",
+                        "fields": {
+                          "text": "この監査は、Docの意味モデルと交換schemaを設計する前に、実在する文書が必要とする情報を確定するための入力である。"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "kind": "Sentence",
+                  "fields": {
+                    "inlines": [
+                      {
+                        "kind": "Text",
+                        "fields": {
+                          "text": "Docへの変換やR014の解消、J01〜J04の受入成功を示すものではない。"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "kind": "Section",
+            "fields": {
+              "id": "sources",
+              "title": {
+                "kind": "Sentence",
+                "fields": {
+                  "inlines": [
+                    {
+                      "kind": "Text",
+                      "fields": {
+                        "text": "監査した原本と分類"
+                      }
+                    }
+                  ]
+                }
+              },
+              "body": {
+                "kind": "Body",
+                "fields": {
+                  "blocks": [
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "baselineは "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "25a096bc183c2b71200902884084cd4082d0aae3"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "全trackedファイルを列挙し、57 Markdownページ、10 Rust source、その他の機械入力・履歴・assetを包含理由または除外理由付きで分類した。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "各ページとRust sourceのpath・SHA-256・byte長、および5つのDoc関連契約のSHA-256は "
+                                  }
+                                },
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "RelativeTarget",
+                                      "fields": {
+                                        "path": "../design/doc-inventory.json",
+                                        "fragment": {
+                                          "kind": "NoText",
+                                          "fields": {}
+                                        }
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "design/doc-inventory.json"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " にある。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Table",
+                      "fields": {
+                        "columns": [
+                          {
+                            "kind": "AlignmentDefault",
+                            "fields": {}
+                          },
+                          {
+                            "kind": "AlignmentRight",
+                            "fields": {}
+                          },
+                          {
+                            "kind": "AlignmentDefault",
+                            "fields": {}
+                          }
+                        ],
+                        "header": {
+                          "kind": "SomeRow",
+                          "fields": {
+                            "row": {
+                              "kind": "Row",
+                              "fields": {
+                                "cells": [
+                                  {
+                                    "kind": "Sentence",
+                                    "fields": {
+                                      "inlines": [
+                                        {
+                                          "kind": "Text",
+                                          "fields": {
+                                            "text": "分類"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "kind": "Sentence",
+                                    "fields": {
+                                      "inlines": [
+                                        {
+                                          "kind": "Text",
+                                          "fields": {
+                                            "text": "件数"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "kind": "Sentence",
+                                    "fields": {
+                                      "inlines": [
+                                        {
+                                          "kind": "Text",
+                                          "fields": {
+                                            "text": "正本と扱い"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        },
+                        "rows": [
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "rootのGitHub/agent向け入口"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "5"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "README、AGENTS、CODEX、CONTRIBUTING、SECURITY。現在は著者が編集するMarkdown。将来も入口を維持し、Docから生成するには先に対応契約が必要"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "doc内の著者文書"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "25"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "InlineCode",
+                                        "fields": {
+                                          "text": "doc/history/README.md"
+                                        }
+                                      },
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": " も変更可能な説明文書として含む。履歴JSONと混同して除外しない"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "signature表"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "4"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "forms由来と宣言されているが、現在のtoolsに表の再生成器はない。再現可能な生成物として承認済みとは扱わない"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "taskの生成文書"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "22"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "21 taskと索引。正本はtasks/status JSONで、現行toolsの生成対象。Doc移行時もJSONからの生成を維持"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "GitHub PR template"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "1"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "checkboxとリンクを含む運用template。プラットフォーム入力としてMarkdownを維持する明示的な除外"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "Rust API解説の所有元"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "10 source"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "doc commentの正本はRust source。source digestを記録しただけで、rustdocの全API抽出・リンク・表示を検証したとはしない"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "doc/history/design-validation.json"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "、"
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "source-manifest.json"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "、"
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "web-tea-import.json"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " は元byte列を保存する履歴である。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "LICENSE、schema/config、言語source、例もMarkdown本文へ変換せず、元の契約とidentityを維持する。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": ".tmp/"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "、target、Git管理外の説明資料は監査入力にしない。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "Section",
+            "fields": {
+              "id": "observations",
+              "title": {
+                "kind": "Sentence",
+                "fields": {
+                  "inlines": [
+                    {
+                      "kind": "Text",
+                      "fields": {
+                        "text": "観測した要素"
+                      }
+                    }
+                  ]
+                }
+              },
+              "body": {
+                "kind": "Body",
+                "fields": {
+                  "blocks": [
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "固定したpulldown-cmark 0.13.4で、CommonMarkにtables、footnotes、strikethrough、tasklists、GFM alerts、mathを加えた設定を使う。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "独自Markdown parserではない。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "完全なGitHub表示互換、未定義reference link、裸URLの自動link、HTMLの意味、Rustdoc、将来のDoc rendererまで検査するものではない。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "ExternalTarget",
+                                      "fields": {
+                                        "uri": "https://docs.rs/pulldown-cmark/0.13.4/pulldown_cmark/struct.Parser.html"
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "parserの公式仕様"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " と "
+                                  }
+                                },
+                                {
+                                  "kind": "Link",
+                                  "fields": {
+                                    "target": {
+                                      "kind": "ExternalTarget",
+                                      "fields": {
+                                        "uri": "https://docs.rs/pulldown-cmark/0.13.4/pulldown_cmark/struct.Options.html"
+                                      }
+                                    },
+                                    "label": {
+                                      "kind": "Text",
+                                      "fields": {
+                                        "text": "拡張設定"
+                                      }
+                                    }
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " に従う。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Table",
+                      "fields": {
+                        "columns": [
+                          {
+                            "kind": "AlignmentDefault",
+                            "fields": {}
+                          },
+                          {
+                            "kind": "AlignmentRight",
+                            "fields": {}
+                          },
+                          {
+                            "kind": "AlignmentDefault",
+                            "fields": {}
+                          }
+                        ],
+                        "header": {
+                          "kind": "SomeRow",
+                          "fields": {
+                            "row": {
+                              "kind": "Row",
+                              "fields": {
+                                "cells": [
+                                  {
+                                    "kind": "Sentence",
+                                    "fields": {
+                                      "inlines": [
+                                        {
+                                          "kind": "Text",
+                                          "fields": {
+                                            "text": "要素"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "kind": "Sentence",
+                                    "fields": {
+                                      "inlines": [
+                                        {
+                                          "kind": "Text",
+                                          "fields": {
+                                            "text": "baselineでの観測"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "kind": "Sentence",
+                                    "fields": {
+                                      "inlines": [
+                                        {
+                                          "kind": "Text",
+                                          "fields": {
+                                            "text": "具体例"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        },
+                        "rows": [
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "見出し"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "278"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "全57ページ。見出し文字列から恒久IDを推測しない"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "表"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "44表・1089 cell"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "四言語signature、CLI/操作表、受入・状態の対応表"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "箇条書き"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "37 list・223 item"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "手順、禁止事項、受入条件。paragraphのネストだけではlistの意味を保てない"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "task checkbox"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "3"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "PR templateの運用確認"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "inline code"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "695"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "型、field名、path、CLI、例の断片"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "code block"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "11"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "sh 4、PowerShell 1、JSON 1、text 5。説明用文法・依存図を含む"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "link"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "203"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "root/doc間、例への参照、外部一次資料、badgeのリンク"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "image"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "1"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "READMEの外部CI badge。通常文書画像と運用projectionの方針を分けて判断する"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "strong"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "3"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "Doc.Strongが既に表現する範囲。ただし未実装"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "HTML comment"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "25"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "生成元表示など。任意RawHtmlをDoc coreへ追加する根拠にしない"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "HTMLとして読まれる断片"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "4"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "foundationの裸の"
+                                        }
+                                      },
+                                      {
+                                        "kind": "InlineCode",
+                                        "fields": {
+                                          "text": "<T>"
+                                        }
+                                      },
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "が2箇所、Mathの裸の"
+                                        }
+                                      },
+                                      {
+                                        "kind": "InlineCode",
+                                        "fields": {
+                                          "text": "<Q>"
+                                        }
+                                      },
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "が2箇所"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "最後の4箇所はgeneric型の説明であり、HTMLの意図ではない。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "現在の "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "02-foundation.md"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " と "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "06-math.md"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " をinline codeへ訂正した。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "baselineは元のまま保持し、訂正はcurrent deltaへ出る。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "blockquote、脚注、strikethrough、TeX mathはこのbaselineでは観測0。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "将来の候補を実在ページの必須要素として水増ししない。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "各code blockにはinfo文字列、raw source範囲とdigest、parserが返した内容のdigest/byte長を記録した。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "inline codeにもraw範囲とdigestがある。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "sourceはUTF-8 byte範囲であり、見た目の文字数ではない。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "JSONや説明用prefix例を評価せず、空白・改行や不完全例を保持する必要がある。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "リンク先の例もコピーせず元source identityを参照する。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "Section",
+            "fields": {
+              "id": "projection",
+              "title": {
+                "kind": "Sentence",
+                "fields": {
+                  "inlines": [
+                    {
+                      "kind": "Text",
+                      "fields": {
+                        "text": "見出し・リンク・画像altのinline投影契約"
+                      }
+                    }
+                  ]
+                }
+              },
+              "body": {
+                "kind": "Body",
+                "fields": {
+                  "blocks": [
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "inventory schemaは "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "nepl3.doc-inventory/2"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "、inline抽出profileは "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "nepl3.markdown-inline-projection/1"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " とする。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "従来の抽出ではlink labelの改行が失われて単語が結合し、見出しとlink labelからmathが欠落した。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "修正に伴いschemaを更新し、同じbaseline commitから明示的に再生成した。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "parser版・元ファイルのdigest・対象ページは変更していない。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "見出しの "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "text"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " とlink/imageの "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "label"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " は共通の投影処理で作る。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "それぞれに "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "inline_segments"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を保持し、各segmentは "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "content.kind"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "、必要な場合の "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "content.value"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "、元sourceのUTF-8半開byte範囲 "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "source_bytes"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を持つ。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "入れ子のimageに含まれる内容は、そのimage、外側のlink、包含する見出しへ同じ順序で一度ずつ反映する。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Table",
+                      "fields": {
+                        "columns": [
+                          {
+                            "kind": "AlignmentDefault",
+                            "fields": {}
+                          },
+                          {
+                            "kind": "AlignmentDefault",
+                            "fields": {}
+                          },
+                          {
+                            "kind": "AlignmentDefault",
+                            "fields": {}
+                          }
+                        ],
+                        "header": {
+                          "kind": "SomeRow",
+                          "fields": {
+                            "row": {
+                              "kind": "Row",
+                              "fields": {
+                                "cells": [
+                                  {
+                                    "kind": "Sentence",
+                                    "fields": {
+                                      "inlines": [
+                                        {
+                                          "kind": "Text",
+                                          "fields": {
+                                            "text": "kind"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "kind": "Sentence",
+                                    "fields": {
+                                      "inlines": [
+                                        {
+                                          "kind": "Text",
+                                          "fields": {
+                                            "text": "value"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "kind": "Sentence",
+                                    "fields": {
+                                      "inlines": [
+                                        {
+                                          "kind": "Text",
+                                          "fields": {
+                                            "text": "要約文字列への投影"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        },
+                        "rows": [
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "text / code"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "parserが返す内容"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "内容をそのまま追加。codeの元backtick等はsource範囲で保持"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "soft-break"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "なし"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "1個のspace"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "hard-break"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "なし"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "1個のLF。soft-breakと同一視しない"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "inline-math"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "delimiterを除くmath payload"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "InlineCode",
+                                        "fields": {
+                                          "text": "$payload$"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "display-math"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "delimiterを除くmath payload"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "InlineCode",
+                                        "fields": {
+                                          "text": "$$payload$$"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "footnote-reference"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "footnote label"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "InlineCode",
+                                        "fields": {
+                                          "text": "[^label]"
+                                        }
+                                      },
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "。表示番号を推測しない"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "typed segmentを持つため、要約文字列に同じ"
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "$"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "表記が現れても、通常Textとmathを混同せずに比較できる。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "CRLF、hard breakの2個のspaceやbackslash、非ASCII文字を含む元byte列はsegment範囲から取得できる。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "parserによるdecodeやcode内空白の正規化を、元sourceの書換えと見なさない。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "これはinventoryの要約投影であり、rendererのplain text抽出や完全なMarkdown ASTではない。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "emphasis等のstyleタグはここで再構築しない。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "inline HTML/tag/commentは要約文字列へ解釈して追加せず、既存の "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "html_fragments"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " にliteralとsource範囲を保持する。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "例えば"
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "<br>"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "をhard-breakへ推測変換しないため、HTMLを含むlabelの意味は要約だけでは判定できない。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "脚注解決、数式評価、altの実表示、リンクの有効性も別の監査対象である。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "Section",
+            "fields": {
+              "id": "gaps",
+              "title": {
+                "kind": "Sentence",
+                "fields": {
+                  "inlines": [
+                    {
+                      "kind": "Text",
+                      "fields": {
+                        "text": "既存Doc契約との差分"
+                      }
+                    }
+                  ]
+                }
+              },
+              "body": {
+                "kind": "Body",
+                "fields": {
+                  "blocks": [
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "監査の照合先はbaselineのforms、Doc syntax、model、contracts、markupである。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "以下の項目は必要情報と不足の記録であり、新constructorの承認済みsignatureではない。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Table",
+                      "fields": {
+                        "columns": [
+                          {
+                            "kind": "AlignmentDefault",
+                            "fields": {}
+                          },
+                          {
+                            "kind": "AlignmentDefault",
+                            "fields": {}
+                          },
+                          {
+                            "kind": "AlignmentDefault",
+                            "fields": {}
+                          }
+                        ],
+                        "header": {
+                          "kind": "SomeRow",
+                          "fields": {
+                            "row": {
+                              "kind": "Row",
+                              "fields": {
+                                "cells": [
+                                  {
+                                    "kind": "Sentence",
+                                    "fields": {
+                                      "inlines": [
+                                        {
+                                          "kind": "Text",
+                                          "fields": {
+                                            "text": "gap ID"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "kind": "Sentence",
+                                    "fields": {
+                                      "inlines": [
+                                        {
+                                          "kind": "Text",
+                                          "fields": {
+                                            "text": "観測と必要な情報"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "kind": "Sentence",
+                                    "fields": {
+                                      "inlines": [
+                                        {
+                                          "kind": "Text",
+                                          "fields": {
+                                            "text": "現在の不足・設計への影響"
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        },
+                        "rows": [
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "DG01"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "表の行/cell順、header、列対応・alignment、cell内inline/参照"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "Docにtable/cell型がなく、HTML allowlistにもtable/thead/th/tdがない。T01のtyped field/schema方針、T02の順序付き交換値、T07の文書型へ影響"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "DG02"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "ordered/unordered、開始番号、itemの入れ子、checkbox状態"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "Paragraphの再帰だけではlistやtaskの意味を保持できず、ol/ul/li/inputも未定義。運用templateをprojectionとして残す選択も明記する"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "DG03"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "page ID、相対/外部URI、fragment、表示label、許可scheme、存在検査"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "Doc.Referenceはarticle内のNameだけ。markupのhrefは同artifact内のFragmentHrefだけ。page registry・resource解決・安全なURI契約が必要"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "DG04"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "非評価のinline/block code、任意言語hint、元byte列、空白、Origin"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "Doc.Codeは四言語のForeignSyntax用。sh/PowerShell/JSON/図/EBNF/型断片をtokenizeや意味検査なしに表せる契約がない。T02のpayloadとT07のlower/printに影響"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "DG05"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "badge/画像assetのdigest、alt/caption、リンク先、許可入力"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "CircuitFigureで一般画像を代用できず、img/SVG外部資源の契約もない。badgeをGitHub専用projection metadataとして保持するか、一般画像を設計するかを先に決める。裸genericはinline code訂正で扱う"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "DG06"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "stable page ID、見出し階層、旧URL/anchorとの対応・衝突"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "現行Anchor/SectionのHTML idは"
+                                        }
+                                      },
+                                      {
+                                        "kind": "InlineCode",
+                                        "fields": {
+                                          "text": "n-"
+                                        }
+                                      },
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "+UTF-8 hexでGitHub見出しslugと異なる。各ページのID/公開URLは未割当として記録し、架空のURLや互換保証を作らない"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "DG07"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "数学的構造と元記述の対応"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "baselineのTeX math観測0。現行Math bridgeは存在する設計だが、将来のTeX→Math変換を暗黙に保証しない"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "DG08"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "strikethrough等の追加inline分類"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "baseline観測0。必要ページが追加されたときに再監査し、現在の必須constructorに勝手に追加しない"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Row",
+                            "fields": {
+                              "cells": [
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "DG09"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "生成元/renderer/schema版、正本path、生成済み表示"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "kind": "Sentence",
+                                  "fields": {
+                                    "inlines": [
+                                      {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "25 commentのうち意味本文と生成provenanceを分ける。メタ情報を消さず、RawHtmlや二重正本を導入せずgenerator/registryで扱う"
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "Doc.Text、Emphasis、Strong、Sentence、再帰Paragraph、Section、Ruby/Anno、parallelは既存の意味領域として利用できる。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "ただし「仕様に型がある」と「lower/check/print/wire/backendが検証済み」は別である。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "R006では上述の意味値、source/Origin/resource bundle、操作入出力、field順序・variant識別を閉じたschemaへ整合させる必要がある。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "R009では実際のschema digest・provider manifestを含む解決済みProfileと文書rendererの版を固定する必要がある。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "inventoryに新しいDoc型や架空のdigestを足すことで解消したことにはしない。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "T01/T02/T07はこの早期監査とcurrent deltaを読んでからDoc関連の公開契約を固定する。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "監査の確認はT21やT10 backendの完成を依存条件にしない。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "R014全体は、該当schema/forms/syntax/backend/wireと移行conformanceが同じ変更で整い、独立レビュー・実行検証が揃うまでopenである。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "Section",
+            "fields": {
+              "id": "reproduction",
+              "title": {
+                "kind": "Sentence",
+                "fields": {
+                  "inlines": [
+                    {
+                      "kind": "Text",
+                      "fields": {
+                        "text": "再現・更新と現在との差分"
+                      }
+                    }
+                  ]
+                }
+              },
+              "body": {
+                "kind": "Body",
+                "fields": {
+                  "blocks": [
+                    {
+                      "kind": "RawCode",
+                      "fields": {
+                        "languageHint": {
+                          "kind": "SomeText",
+                          "fields": {
+                            "text": "sh"
+                          }
+                        },
+                        "text": "cargo run --locked -p nepl3-tools -- doc-inventory --check\ncargo run --locked -p nepl3-tools -- doc-inventory --check-current\ncargo run --locked -p nepl3-tools -- doc-inventory --write --commit 25a096bc183c2b71200902884084cd4082d0aae3\n"
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "--check"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " は完全な40桁commitからGit blobを再読込し、ページ欠落、digest、構造、分類の変更を保存inventoryと照合する。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "その後、現在のGit-visible Markdown、Rust source、Doc関連契約について追加・変更・削除を出力する。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "baselineが正しければcurrent deltaがあっても成功するが、現在の網羅性は未確認と明記する。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "--check-current"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " はdeltaがあれば失敗する。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "通常のrepository "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "check"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " は前者を実行する。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "この変更で追加した監査文書、訂正した仕様、tools、生成taskはbaselineに存在しないか内容が異なるので、現在のstrict確認は失敗するのが正しい。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "新しいAPI判断で現在の網羅性を主張する前に、対象の文書・契約をcommitし、そのcommitで "
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "--write"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "、差分の独立レビュー、"
+                                  }
+                                },
+                                {
+                                  "kind": "InlineCode",
+                                  "fields": {
+                                    "text": "--check-current"
+                                  }
+                                },
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": " を実行する。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "新baselineを記録するJSON自身はMarkdown/Rust/API仕様のcurrent比較対象ではないため、自己hash更新を要求しない。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "生成taskは過去commitのbyte列を読み、現在のgeneratorを動かしてbaselineを書き換えない。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "fields": {
+                        "items": [
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "baseline commitを含む履歴が必要で、取得できない環境は失敗する。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "CIでは履歴を取得する。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "書き出したsource archiveだけでGit blob監査を実行したとは扱わない。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "抽出器の変更やparser版更新も新しい監査としてレビューする。"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "kind": "Sentence",
+                            "fields": {
+                              "inlines": [
+                                {
+                                  "kind": "Text",
+                                  "fields": {
+                                    "text": "見出しslug、文意、accessibility、将来Docの表示・wire等価性は別の手動/実行受入で確認する。"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

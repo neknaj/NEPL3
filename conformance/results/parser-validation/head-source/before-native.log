@@ -1,0 +1,115 @@
+   Compiling tree-head-probe v0.0.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tree-head\before\probe)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.82s
+     Running tests\foreign.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tree-head\before-native-target\debug\deps\foreign-6576d564ff685fe9.exe)
+
+running 1 test
+test independent_foreign_scope ... FOREIGN host_first=false guest_first=false Usage { source_bytes: 46, work: 2473, depth: 3, nodes: 14, allocation_units: 2429, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN host_first=false guest_first=true Usage { source_bytes: 46, work: 2473, depth: 3, nodes: 14, allocation_units: 2429, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN host_first=true guest_first=false Usage { source_bytes: 46, work: 2472, depth: 3, nodes: 14, allocation_units: 2429, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN host_first=true guest_first=true Usage { source_bytes: 46, work: 2472, depth: 3, nodes: 14, allocation_units: 2429, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN_ERROR missing_guest: Err(Syntax(Origin(Source(MissingSnapshot))))
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\selection.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tree-head\before-native-target\debug\deps\selection-7f7cd5b83fc5df39.exe)
+
+running 1 test
+test independent_selection_matrix ... COST count=1 position=0 Usage { source_bytes: 97, work: 12505, depth: 17, nodes: 100, allocation_units: 13832, output_bytes: 0, diagnostics: 0, events: 0 }
+COST count=1 position=0 Usage { source_bytes: 97, work: 12505, depth: 17, nodes: 100, allocation_units: 13832, output_bytes: 0, diagnostics: 0, events: 0 }
+COST count=1 position=0 Usage { source_bytes: 97, work: 12505, depth: 17, nodes: 100, allocation_units: 13832, output_bytes: 0, diagnostics: 0, events: 0 }
+COST count=2 position=0 Usage { source_bytes: 107, work: 13535, depth: 17, nodes: 100, allocation_units: 14008, output_bytes: 0, diagnostics: 0, events: 0 }
+COST count=2 position=1 Usage { source_bytes: 107, work: 13534, depth: 17, nodes: 100, allocation_units: 14008, output_bytes: 0, diagnostics: 0, events: 0 }
+COST count=2 position=1 Usage { source_bytes: 107, work: 13534, depth: 17, nodes: 100, allocation_units: 14008, output_bytes: 0, diagnostics: 0, events: 0 }
+COST count=8 position=0 Usage { source_bytes: 167, work: 20775, depth: 17, nodes: 100, allocation_units: 15064, output_bytes: 0, diagnostics: 0, events: 0 }
+COST count=8 position=4 Usage { source_bytes: 167, work: 20774, depth: 17, nodes: 100, allocation_units: 15064, output_bytes: 0, diagnostics: 0, events: 0 }
+COST count=8 position=7 Usage { source_bytes: 167, work: 20774, depth: 17, nodes: 100, allocation_units: 15064, output_bytes: 0, diagnostics: 0, events: 0 }
+COST count=32 position=0 Usage { source_bytes: 407, work: 55207, depth: 17, nodes: 100, allocation_units: 19288, output_bytes: 0, diagnostics: 0, events: 0 }
+COST count=32 position=16 Usage { source_bytes: 407, work: 55206, depth: 17, nodes: 100, allocation_units: 19288, output_bytes: 0, diagnostics: 0, events: 0 }
+COST count=32 position=31 Usage { source_bytes: 407, work: 55206, depth: 17, nodes: 100, allocation_units: 19288, output_bytes: 0, diagnostics: 0, events: 0 }
+STOP cap=0 result=Err(Stopped(WorkLimit)) work=0
+STOP cap=17 result=Err(Stopped(WorkLimit)) work=2
+STOP cap=34 result=Err(Stopped(WorkLimit)) work=2
+STOP cap=51 result=Err(Stopped(WorkLimit)) work=39
+STOP cap=68 result=Err(Stopped(WorkLimit)) work=39
+STOP cap=85 result=Err(Stopped(WorkLimit)) work=39
+STOP cap=102 result=Err(Stopped(WorkLimit)) work=95
+STOP cap=119 result=Err(Stopped(WorkLimit)) work=118
+STOP cap=136 result=Err(Stopped(WorkLimit)) work=118
+STOP cap=153 result=Err(Stopped(WorkLimit)) work=118
+STOP cap=170 result=Err(Stopped(WorkLimit)) work=118
+STOP cap=187 result=Err(Stopped(WorkLimit)) work=187
+STOP cap=204 result=Err(Stopped(WorkLimit)) work=204
+STOP cap=221 result=Err(Stopped(WorkLimit)) work=221
+STOP cap=238 result=Err(Stopped(WorkLimit)) work=221
+STOP cap=255 result=Err(Stopped(WorkLimit)) work=221
+STOP cap=272 result=Err(Stopped(WorkLimit)) work=221
+STOP cap=289 result=Err(Stopped(WorkLimit)) work=221
+STOP cap=306 result=Err(Stopped(WorkLimit)) work=306
+STOP cap=323 result=Err(Stopped(WorkLimit)) work=321
+STOP cap=340 result=Err(Stopped(WorkLimit)) work=321
+STOP cap=357 result=Err(Stopped(WorkLimit)) work=321
+STOP cap=374 result=Err(Stopped(WorkLimit)) work=321
+STOP cap=391 result=Err(Stopped(WorkLimit)) work=321
+STOP cap=408 result=Err(Stopped(WorkLimit)) work=321
+STOP cap=425 result=Err(Stopped(WorkLimit)) work=425
+STOP cap=442 result=Err(Stopped(WorkLimit)) work=438
+STOP cap=459 result=Err(Stopped(WorkLimit)) work=438
+STOP cap=476 result=Err(Stopped(WorkLimit)) work=438
+STOP cap=493 result=Err(Stopped(WorkLimit)) work=438
+STOP cap=510 result=Err(Stopped(WorkLimit)) work=438
+STOP cap=527 result=Err(Stopped(WorkLimit)) work=523
+STOP cap=544 result=Err(Stopped(WorkLimit)) work=539
+STOP cap=561 result=Err(Stopped(WorkLimit)) work=547
+STOP cap=578 result=Err(Stopped(WorkLimit)) work=547
+STOP cap=595 result=Err(Stopped(WorkLimit)) work=547
+STOP cap=612 result=Err(Stopped(WorkLimit)) work=547
+STOP cap=629 result=Err(Stopped(WorkLimit)) work=547
+STOP cap=646 result=Err(Stopped(WorkLimit)) work=644
+STOP cap=663 result=Err(Stopped(WorkLimit)) work=644
+STOP cap=680 result=Err(Stopped(WorkLimit)) work=644
+STOP cap=697 result=Err(Stopped(WorkLimit)) work=644
+STOP cap=714 result=Err(Stopped(WorkLimit)) work=644
+STOP cap=731 result=Err(Stopped(WorkLimit)) work=729
+STOP cap=748 result=Err(Stopped(WorkLimit)) work=745
+STOP cap=765 result=Err(Stopped(WorkLimit)) work=753
+STOP cap=782 result=Err(Stopped(WorkLimit)) work=753
+STOP cap=799 result=Err(Stopped(WorkLimit)) work=753
+STOP cap=816 result=Err(Stopped(WorkLimit)) work=753
+STOP cap=833 result=Err(Stopped(WorkLimit)) work=753
+STOP cap=850 result=Err(Stopped(WorkLimit)) work=846
+STOP cap=867 result=Err(Stopped(WorkLimit)) work=851
+STOP cap=884 result=Err(Stopped(WorkLimit)) work=851
+STOP cap=901 result=Err(Stopped(WorkLimit)) work=851
+STOP cap=918 result=Err(Stopped(WorkLimit)) work=851
+STOP cap=935 result=Err(Stopped(WorkLimit)) work=930
+STOP cap=952 result=Err(Stopped(WorkLimit)) work=951
+STOP cap=969 result=Err(Stopped(WorkLimit)) work=951
+STOP cap=986 result=Err(Stopped(WorkLimit)) work=951
+STOP cap=1003 result=Err(Stopped(WorkLimit)) work=951
+STOP cap=1020 result=Err(Stopped(WorkLimit)) work=1016
+STOP cap=1037 result=Err(Stopped(WorkLimit)) work=1016
+STOP cap=1054 result=Err(Stopped(WorkLimit)) work=1016
+STOP cap=1071 result=Err(Stopped(WorkLimit)) work=1016
+STOP cap=1088 result=Err(Stopped(WorkLimit)) work=1016
+STOP cap=1105 result=Err(Stopped(WorkLimit)) work=1101
+STOP cap=1122 result=Err(Stopped(WorkLimit)) work=1116
+STOP cap=1139 result=Err(Stopped(WorkLimit)) work=1116
+STOP cap=1156 result=Err(Stopped(WorkLimit)) work=1116
+STOP cap=1173 result=Err(Stopped(WorkLimit)) work=1116
+STOP cap=1190 result=Err(Stopped(WorkLimit)) work=1116
+STOP cap=1207 result=Err(Stopped(WorkLimit)) work=1116
+STOP cap=1224 result=Err(Stopped(WorkLimit)) work=1222
+STOP cap=1241 result=Err(Stopped(WorkLimit)) work=1228
+STOP cap=1258 result=Err(Stopped(WorkLimit)) work=1228
+STOP cap=1275 result=Err(Stopped(WorkLimit)) work=1228
+ERROR mode=0: Err(Syntax(Origin(Source(MissingSnapshot))))
+ERROR mode=1: Err(Syntax(Origin(Source(MissingSnapshot))))
+ERROR mode=2: Err(Syntax(Origin(Source(MissingSnapshot))))
+ERROR mode=3: Err(Syntax(Source(IdentityConflict)))
+ERROR mode=4: Err(Syntax(DuplicateSource))
+ERROR mode=5: Err(Syntax(Source(IdentityConflict)))
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+

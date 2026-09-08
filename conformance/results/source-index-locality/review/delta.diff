@@ -1,0 +1,261 @@
+diff --git a/crates/foundation/core/src/source.rs b/crates/foundation/core/src/source.rs
+index 038c3a7..8c7006a 100644
+--- a/crates/foundation/core/src/source.rs
++++ b/crates/foundation/core/src/source.rs
+@@ -709,6 +709,9 @@ pub struct SourceStore {
+     snapshots: Vec<SourceSnapshot>,
+     // Snapshot insertion order remains public; only this private index is sorted.
+     index: Vec<usize>,
++    // Position of the most recent successful insertion/duplicate in `index`.
++    // This is only a search hint, never an identity or validation proof.
++    insertion_hint: Option<usize>,
+ }
+ impl SourceStore {
+     pub fn snapshots(&self) -> &[SourceSnapshot] {
+@@ -721,6 +724,7 @@ impl SourceStore {
+         match position {
+             Ok(at) => {
+                 if self.snapshots[self.index[at]] == snapshot {
++                    self.insertion_hint = Some(at);
+                     Ok(())
+                 } else {
+                     Err(SourceError::IdentityConflict)
+@@ -729,6 +733,7 @@ impl SourceStore {
+             Err(at) => {
+                 self.index.insert(at, self.snapshots.len());
+                 self.snapshots.push(snapshot);
++                self.insertion_hint = Some(at);
+                 Ok(())
+             }
+         }
+@@ -739,11 +744,17 @@ impl SourceStore {
+         snapshot: SourceSnapshot,
+         budget: &mut Budget,
+     ) -> Result<(), SourceError> {
+-        let position =
+-            source_index_position(&self.index, |i| &self.snapshots[i], &snapshot, budget)?;
++        let position = source_index_position(
++            &self.index,
++            |i| &self.snapshots[i],
++            &snapshot,
++            self.insertion_hint,
++            budget,
++        )?;
+         match position {
+             Ok(at) => {
+                 if self.snapshots[self.index[at]].eq_with_budget(&snapshot, budget)? {
++                    self.insertion_hint = Some(at);
+                     Ok(())
+                 } else {
+                     Err(SourceError::IdentityConflict)
+@@ -757,6 +768,7 @@ impl SourceStore {
+                 )?;
+                 self.index.insert(at, self.snapshots.len());
+                 self.snapshots.push(snapshot);
++                self.insertion_hint = Some(at);
+                 Ok(())
+             }
+         }
+@@ -769,11 +781,17 @@ impl SourceStore {
+         budget: &mut Budget,
+     ) -> Result<(), SourceError> {
+         budget.poll()?;
+-        let position =
+-            source_index_position(&self.index, |i| &self.snapshots[i], snapshot, budget)?;
++        let position = source_index_position(
++            &self.index,
++            |i| &self.snapshots[i],
++            snapshot,
++            self.insertion_hint,
++            budget,
++        )?;
+         match position {
+             Ok(at) => {
+                 if self.snapshots[self.index[at]].eq_with_budget(snapshot, budget)? {
++                    self.insertion_hint = Some(at);
+                     Ok(())
+                 } else {
+                     Err(SourceError::IdentityConflict)
+@@ -788,6 +806,7 @@ impl SourceStore {
+                 let owned = snapshot.clone_with_budget(budget)?;
+                 self.index.insert(at, self.snapshots.len());
+                 self.snapshots.push(owned);
++                self.insertion_hint = Some(at);
+                 Ok(())
+             }
+         }
+@@ -858,19 +877,50 @@ fn source_index_position<'a>(
+     index: &[usize],
+     get: impl Fn(usize) -> &'a SourceSnapshot,
+     snapshot: &SourceSnapshot,
++    hint: Option<usize>,
+     budget: &mut Budget,
+ ) -> Result<Result<usize, usize>, SourceError> {
+     let (mut low, mut high) = (0, index.len());
+-    while low < high {
+-        let mid = low + (high - low) / 2;
+-        let prior = get(index[mid]);
++    let mut compare = |position: usize| {
++        let prior = get(index[position]);
+         budget.charge(
+             Resource::Work,
+             (prior.storage.id.source.0.len() as u64)
+                 .saturating_add(snapshot.storage.id.source.0.len() as u64)
+                 .saturating_add(1),
+         )?;
+-        match source_key(prior, snapshot) {
++        Ok::<_, SourceError>(source_key(prior, snapshot))
++    };
++    if let Some(at) = hint.filter(|&at| at < index.len()) {
++        match compare(at)? {
++            core::cmp::Ordering::Equal => return Ok(Ok(at)),
++            core::cmp::Ordering::Less => {
++                low = at + 1;
++                if low == high {
++                    return Ok(Err(low));
++                }
++                match compare(low)? {
++                    core::cmp::Ordering::Equal => return Ok(Ok(low)),
++                    core::cmp::Ordering::Greater => return Ok(Err(low)),
++                    core::cmp::Ordering::Less => low += 1,
++                }
++            }
++            core::cmp::Ordering::Greater => {
++                high = at;
++                if high == 0 {
++                    return Ok(Err(0));
++                }
++                match compare(high - 1)? {
++                    core::cmp::Ordering::Equal => return Ok(Ok(high - 1)),
++                    core::cmp::Ordering::Less => return Ok(Err(high)),
++                    core::cmp::Ordering::Greater => high -= 1,
++                }
++            }
++        }
++    }
++    while low < high {
++        let mid = low + (high - low) / 2;
++        match compare(mid)? {
+             core::cmp::Ordering::Equal => return Ok(Ok(mid)),
+             core::cmp::Ordering::Less => low = mid + 1,
+             core::cmp::Ordering::Greater => high = mid,
+diff --git a/crates/foundation/core/src/source/edit.rs b/crates/foundation/core/src/source/edit.rs
+index 2230fbd..bef2438 100644
+--- a/crates/foundation/core/src/source/edit.rs
++++ b/crates/foundation/core/src/source/edit.rs
+@@ -256,6 +256,7 @@ impl SourceStore {
+                     }
+                 },
+                 snapshot,
++                None,
+                 budget,
+             )?
+             .map_or_else(Ok, |_| Err(SourceError::IdentityConflict))?;
+@@ -293,6 +294,7 @@ impl SourceStore {
+         admission.index = admission_index;
+         self.snapshots.extend(prepared);
+         self.index = index;
++        self.insertion_hint = None;
+         Ok(ids)
+     }
+ }
+diff --git a/crates/foundation/core/tests/contracts.rs b/crates/foundation/core/tests/contracts.rs
+index 2517af0..7192869 100644
+--- a/crates/foundation/core/tests/contracts.rs
++++ b/crates/foundation/core/tests/contracts.rs
+@@ -666,6 +666,95 @@ fn shared_copy_and_independent_comparison_have_separate_work_bounds() -> Result<
+     Ok(())
+ }
+ 
++#[test]
++fn ordered_source_insertions_between_existing_bounds_use_neighbors() -> Result<(), SourceError> {
++    let mut store = SourceStore::default();
++    store.insert(source("z", 0, "upper bound")?)?;
++    let mut b = Budget::new(Limits {
++        work: 24_000,
++        ..budget().limits()
++    });
++    for index in 0..512 {
++        store.insert_with_budget(source(&format!("s{index:07}"), 0, "x")?, &mut b)?;
++    }
++    assert_eq!(store.snapshots().len(), 513);
++    // After the first comparison with z, each insertion checks the preceding
++    // eight-byte key (17 units) and z (10 units), not log(n) unrelated keys.
++    // Each of the 512 insertions also shifts the one upper-bound index.
++    assert_eq!(b.usage().work, 10 + 511 * 27 + 512);
++    assert_eq!(store.snapshots()[0].identity().source.0, "z");
++    Ok(())
++}
++
++#[test]
++fn ordered_source_insertion_has_linear_index_search_work() -> Result<(), SourceError> {
++    let mut store = SourceStore::default();
++    let mut b = Budget::new(Limits {
++        work: 16_000,
++        ..budget().limits()
++    });
++    for index in 0..512 {
++        store.insert_with_budget(source(&format!("s{index:07}"), 0, "x")?, &mut b)?;
++    }
++    assert_eq!(store.snapshots().len(), 512);
++    // 511 comparisons of two eight-byte names plus one revision comparison:
++    // 8,687 Work. No index shifting is needed for ascending insertions.
++    assert_eq!(b.usage().work, 511 * 17);
++    for (index, snapshot) in store.snapshots().iter().enumerate() {
++        assert_eq!(snapshot.identity().source.0, format!("s{index:07}"));
++        assert_eq!(
++            store.get_revision_with_budget(&snapshot.identity().source, 0, &mut budget())?,
++            Some(snapshot)
++        );
++    }
++    Ok(())
++}
++
++#[test]
++fn source_index_hint_checks_full_key_and_keeps_conflicts_atomic() -> Result<(), SourceError> {
++    let originals = [
++        source("a", 0, "x")?,
++        source("a", 1, "y")?,
++        source("文", u64::MAX, "z")?,
++    ];
++    for order in [
++        [0, 1, 2],
++        [0, 2, 1],
++        [1, 0, 2],
++        [1, 2, 0],
++        [2, 0, 1],
++        [2, 1, 0],
++    ] {
++        let mut store = SourceStore::default();
++        for index in order {
++            store.insert_ref_with_budget(&originals[index], &mut budget())?;
++        }
++        for index in order {
++            store.insert_ref_with_budget(&originals[index], &mut budget())?;
++        }
++        assert_eq!(store.snapshots().len(), 3);
++        for (position, index) in order.into_iter().enumerate() {
++            assert_eq!(&store.snapshots()[position], &originals[index]);
++        }
++        let conflict = source("文", u64::MAX, "different")?;
++        assert_eq!(
++            store.insert_ref_with_budget(&conflict, &mut budget()),
++            Err(SourceError::IdentityConflict)
++        );
++        let mut stopped = Budget::new(Limits {
++            work: 0,
++            ..budget().limits()
++        });
++        assert_eq!(
++            store.insert_ref_with_budget(&originals[2], &mut stopped),
++            Err(SourceError::Stopped(StopReason::WorkLimit))
++        );
++        assert_eq!(store.snapshots().len(), 3);
++        assert_eq!(store.get_ref(originals[2].identity()), Some(&originals[2]));
++    }
++    Ok(())
++}
++
+ #[test]
+ fn indexed_source_insert_preserves_order_and_metered_duplicate_lookup() -> Result<(), SourceError> {
+     let mut store = SourceStore::default();

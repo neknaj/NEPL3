@@ -1,0 +1,28 @@
+//! Prefix execution and operation-local continuation ownership.
+mod build;
+mod completed;
+mod copy;
+pub use completed::{CompletedParse, ParseCompletion};
+mod diagnostic;
+mod environment;
+mod error;
+mod host;
+mod model;
+pub mod print;
+mod select;
+mod session;
+pub use environment::{EnvironmentError, EnvironmentInput, ParseEnvironmentSet};
+pub use error::ParseError;
+pub use host::{ParseHost, ParseHostReply};
+pub use model::*;
+pub use session::ParseSession;
+
+// Scratch-only observation/fault hooks. No production Budget charges changed.
+pub static REVIEW_MODE: core::sync::atomic::AtomicUsize = core::sync::atomic::AtomicUsize::new(1);
+pub static REVIEW_OK: core::sync::atomic::AtomicUsize = core::sync::atomic::AtomicUsize::new(0);
+pub static REVIEW_STOP: core::sync::atomic::AtomicUsize = core::sync::atomic::AtomicUsize::new(0);
+pub static REVIEW_ERROR: core::sync::atomic::AtomicUsize = core::sync::atomic::AtomicUsize::new(0);
+pub static REVIEW_PHASE: core::sync::atomic::AtomicUsize = core::sync::atomic::AtomicUsize::new(0);
+pub static REVIEW_WORK: core::sync::atomic::AtomicU64 = core::sync::atomic::AtomicU64::new(0);
+pub static REVIEW_ALLOC: core::sync::atomic::AtomicU64 = core::sync::atomic::AtomicU64::new(0);
+pub fn review_phase(n:usize,b:&nepl3_core::budget::Budget) { REVIEW_PHASE.store(n,core::sync::atomic::Ordering::Relaxed); REVIEW_WORK.store(b.usage().work,core::sync::atomic::Ordering::Relaxed); REVIEW_ALLOC.store(b.usage().allocation_units,core::sync::atomic::Ordering::Relaxed); }

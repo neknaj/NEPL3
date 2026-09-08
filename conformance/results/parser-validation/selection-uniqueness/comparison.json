@@ -1,0 +1,146 @@
+{
+  "head": "b41cb039765cb97484a5e77121d552cb76592a70",
+  "base": "2681cc0e3ba2143be900463db6be9e03abe9cffe",
+  "tests": {
+    "managed-native": 61,
+    "managed-wasi": 61,
+    "probe-native": 2,
+    "probe-wasi": 2,
+    "before-native": 2
+  },
+  "outcome_matrix_equal": 125,
+  "source_bodies_verified": {
+    "source": 214,
+    "before": 214
+  },
+  "external_lock_versions_checksums_equal": true,
+  "probe_both_revisions_exact": true,
+  "performance": [
+    {
+      "nodes": 1,
+      "order": 0,
+      "before_work": 263,
+      "after_work": 263,
+      "allocation_unchanged": true
+    },
+    {
+      "nodes": 1,
+      "order": 1,
+      "before_work": 263,
+      "after_work": 263,
+      "allocation_unchanged": true
+    },
+    {
+      "nodes": 1,
+      "order": 2,
+      "before_work": 263,
+      "after_work": 263,
+      "allocation_unchanged": true
+    },
+    {
+      "nodes": 3,
+      "order": 0,
+      "before_work": 1033,
+      "after_work": 1030,
+      "allocation_unchanged": true
+    },
+    {
+      "nodes": 3,
+      "order": 1,
+      "before_work": 1033,
+      "after_work": 1030,
+      "allocation_unchanged": true
+    },
+    {
+      "nodes": 3,
+      "order": 2,
+      "before_work": 1033,
+      "after_work": 1030,
+      "allocation_unchanged": true
+    },
+    {
+      "nodes": 9,
+      "order": 0,
+      "before_work": 3415,
+      "after_work": 3379,
+      "allocation_unchanged": true
+    },
+    {
+      "nodes": 9,
+      "order": 1,
+      "before_work": 3415,
+      "after_work": 3379,
+      "allocation_unchanged": true
+    },
+    {
+      "nodes": 9,
+      "order": 2,
+      "before_work": 3415,
+      "after_work": 3379,
+      "allocation_unchanged": true
+    },
+    {
+      "nodes": 33,
+      "order": 0,
+      "before_work": 14023,
+      "after_work": 13495,
+      "allocation_unchanged": true
+    },
+    {
+      "nodes": 33,
+      "order": 1,
+      "before_work": 14023,
+      "after_work": 13495,
+      "allocation_unchanged": true
+    },
+    {
+      "nodes": 33,
+      "order": 2,
+      "before_work": 14023,
+      "after_work": 13495,
+      "allocation_unchanged": true
+    },
+    {
+      "nodes": 129,
+      "order": 0,
+      "before_work": 73735,
+      "after_work": 65479,
+      "allocation_unchanged": true
+    },
+    {
+      "nodes": 129,
+      "order": 1,
+      "before_work": 73735,
+      "after_work": 65479,
+      "allocation_unchanged": true
+    },
+    {
+      "nodes": 129,
+      "order": 2,
+      "before_work": 73735,
+      "after_work": 65479,
+      "allocation_unchanged": true
+    },
+    {
+      "nodes": 257,
+      "order": 0,
+      "before_work": 196359,
+      "after_work": 163463,
+      "allocation_unchanged": true
+    },
+    {
+      "nodes": 257,
+      "order": 1,
+      "before_work": 196359,
+      "after_work": 163463,
+      "allocation_unchanged": true
+    },
+    {
+      "nodes": 257,
+      "order": 2,
+      "before_work": 196359,
+      "after_work": 163463,
+      "allocation_unchanged": true
+    }
+  ]
+}

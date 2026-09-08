@@ -1,0 +1,20 @@
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tokenizer-recovering\fault\crates\foundation\reader)
+warning: function `terminal` is never used
+   --> crates\foundation\reader\tests\independent_recover.rs:164:4
+    |
+164 | fn terminal(value: &str, end: u64, budget: &mut Budget) -> Result<ProviderReply, StopReason> {
+    |    ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `nepl3-reader` (test "independent_recover") generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.29s
+     Running tests\independent_recover.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tokenizer-recovering\fault-native-target\debug\deps\independent_recover-6e402082f2b828ad.exe)
+
+running 1 test
+injected prefix corruption mode 0: original typed error retained, stop None, public session closed
+injected prefix corruption mode 1: original typed error retained, stop Some(Cancelled), public session closed
+test actual_prefix_hard_error_then_retry_and_live_stop ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

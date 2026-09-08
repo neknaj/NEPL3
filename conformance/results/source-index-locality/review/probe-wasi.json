@@ -1,0 +1,20 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--manifest-path",
+    "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-source-locality\\source-probe\\Cargo.toml",
+    "--test",
+    "tail",
+    "--target-dir",
+    "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-source-locality\\probe-wasi-target",
+    "--target",
+    "wasm32-wasip2",
+    "--",
+    "--test-threads=1",
+    "--nocapture"
+  ],
+  "cwd": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-source-locality",
+  "exit_code": 0,
+  "elapsed_seconds": 1.0510106086730957
+}

@@ -1,0 +1,8 @@
+import pathlib,subprocess,json,hashlib,shutil
+p=pathlib.Path(__file__).resolve().parent;repo='C:/projects/NEPL3-doc-authoring-b';draft='7c6f29b003c393cc19abef7d47b9104288046fb7';original='337057d71838c85a6fb9a304e3ec4164436bb310';current=subprocess.check_output(['git','-C',repo,'rev-parse','origin/main']).decode().strip();rows=[]
+def git(*a):return subprocess.check_output(['git','-C',repo,*a])
+for path,c,expected in [('doc/migration/authored/guide/review.nepld',draft,'d4d987c22c0549495f1646d83e7bf13e636b9cd89c646fff7b689324585e177d'),('doc/review.md',original,'5e69673b46bc5893b0d77f9833b34b34f8251e1243ee412a1438f48619727b6a'),('AGENTS.md',original,None),('doc/authoring.md',original,None),('design/forms.json',original,None),('languages/doc/syntax.neplg',original,None),('tools/audit/structure.py',original,None)]:
+ b=git('show',c+':'+path);sha=hashlib.sha256(b).hexdigest();assert expected is None or sha==expected;q=p/'snapshot'/path;q.parent.mkdir(parents=True,exist_ok=True);q.write_bytes(b);rows.append(dict(path=path,commit=c,bytes=len(b),sha256=sha))
+b=git('show',current+':doc/review.md');(p/'current-review.md').write_bytes(b);(p/'current-difference.patch').write_bytes(git('diff',original,current,'--','doc/review.md'))
+for name in ['guide-review-source.md','guide-review-checks.json','authoring-notes.md']:shutil.copyfile(pathlib.Path(repo)/'.tmp'/name,p/('author-'+name))
+(p/'sources.json').write_text(json.dumps(dict(draft=draft,original=original,current_local_origin_main=current,current_sha256=hashlib.sha256(b).hexdigest(),files=rows),indent=2)+'\n',encoding='utf-8',newline='\n');print([(r['path'],r['bytes']) for r in rows[:2]],current)

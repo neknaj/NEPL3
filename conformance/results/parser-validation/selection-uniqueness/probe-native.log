@@ -1,0 +1,170 @@
+   Compiling tree-selection-probe v0.0.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tree-selection\source\probe)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.57s
+     Running tests\foreign.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tree-selection\probe-native-target\debug\deps\foreign-500a1d6089b0f183.exe)
+
+running 1 test
+test independent_foreign_scope ... FOREIGN false false false Usage { source_bytes: 25, work: 1920, depth: 3, nodes: 14, allocation_units: 1946, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN false false true Usage { source_bytes: 25, work: 1920, depth: 3, nodes: 14, allocation_units: 1946, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN false true false Usage { source_bytes: 25, work: 1920, depth: 3, nodes: 14, allocation_units: 1946, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN false true true Usage { source_bytes: 25, work: 1920, depth: 3, nodes: 14, allocation_units: 1946, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN true false false Usage { source_bytes: 25, work: 1920, depth: 3, nodes: 14, allocation_units: 1946, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN true false true Usage { source_bytes: 25, work: 1920, depth: 3, nodes: 14, allocation_units: 1946, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN true true false Usage { source_bytes: 25, work: 1920, depth: 3, nodes: 14, allocation_units: 1946, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN true true true Usage { source_bytes: 25, work: 1920, depth: 3, nodes: 14, allocation_units: 1946, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN_ERROR guest=false: Err(Selection)
+FOREIGN_ERROR guest=true: Err(Selection)
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\selection.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tree-selection\probe-native-target\debug\deps\selection-9c8bf11c53a0c4fb.exe)
+
+running 1 test
+test independent_selection_matrix ... COST n=1 order=0 Usage { source_bytes: 1, work: 263, depth: 1, nodes: 4, allocation_units: 584, output_bytes: 0, diagnostics: 0, events: 0 }
+COST n=1 order=1 Usage { source_bytes: 1, work: 263, depth: 1, nodes: 4, allocation_units: 584, output_bytes: 0, diagnostics: 0, events: 0 }
+COST n=1 order=2 Usage { source_bytes: 1, work: 263, depth: 1, nodes: 4, allocation_units: 584, output_bytes: 0, diagnostics: 0, events: 0 }
+COST n=3 order=0 Usage { source_bytes: 7, work: 1030, depth: 2, nodes: 10, allocation_units: 1394, output_bytes: 0, diagnostics: 0, events: 0 }
+COST n=3 order=1 Usage { source_bytes: 7, work: 1030, depth: 2, nodes: 10, allocation_units: 1394, output_bytes: 0, diagnostics: 0, events: 0 }
+COST n=3 order=2 Usage { source_bytes: 7, work: 1030, depth: 2, nodes: 10, allocation_units: 1394, output_bytes: 0, diagnostics: 0, events: 0 }
+COST n=9 order=0 Usage { source_bytes: 25, work: 3379, depth: 5, nodes: 28, allocation_units: 3824, output_bytes: 0, diagnostics: 0, events: 0 }
+COST n=9 order=1 Usage { source_bytes: 25, work: 3379, depth: 5, nodes: 28, allocation_units: 3824, output_bytes: 0, diagnostics: 0, events: 0 }
+COST n=9 order=2 Usage { source_bytes: 25, work: 3379, depth: 5, nodes: 28, allocation_units: 3824, output_bytes: 0, diagnostics: 0, events: 0 }
+COST n=33 order=0 Usage { source_bytes: 97, work: 13495, depth: 17, nodes: 100, allocation_units: 13544, output_bytes: 0, diagnostics: 0, events: 0 }
+COST n=33 order=1 Usage { source_bytes: 97, work: 13495, depth: 17, nodes: 100, allocation_units: 13544, output_bytes: 0, diagnostics: 0, events: 0 }
+COST n=33 order=2 Usage { source_bytes: 97, work: 13495, depth: 17, nodes: 100, allocation_units: 13544, output_bytes: 0, diagnostics: 0, events: 0 }
+COST n=129 order=0 Usage { source_bytes: 385, work: 65479, depth: 65, nodes: 388, allocation_units: 52424, output_bytes: 0, diagnostics: 0, events: 0 }
+COST n=129 order=1 Usage { source_bytes: 385, work: 65479, depth: 65, nodes: 388, allocation_units: 52424, output_bytes: 0, diagnostics: 0, events: 0 }
+COST n=129 order=2 Usage { source_bytes: 385, work: 65479, depth: 65, nodes: 388, allocation_units: 52424, output_bytes: 0, diagnostics: 0, events: 0 }
+COST n=257 order=0 Usage { source_bytes: 769, work: 163463, depth: 129, nodes: 772, allocation_units: 104264, output_bytes: 0, diagnostics: 0, events: 0 }
+COST n=257 order=1 Usage { source_bytes: 769, work: 163463, depth: 129, nodes: 772, allocation_units: 104264, output_bytes: 0, diagnostics: 0, events: 0 }
+COST n=257 order=2 Usage { source_bytes: 769, work: 163463, depth: 129, nodes: 772, allocation_units: 104264, output_bytes: 0, diagnostics: 0, events: 0 }
+MATRIX 0,0,0: Err(Selection)
+MATRIX 0,0,1: Err(Selection)
+MATRIX 0,0,2: Err(Selection)
+MATRIX 0,0,3: Err(Selection)
+MATRIX 0,0,18446744073709551615: Err(Selection)
+MATRIX 0,1,0: Err(Selection)
+MATRIX 0,1,1: Err(Selection)
+MATRIX 0,1,2: Ok(())
+MATRIX 0,1,3: Err(Selection)
+MATRIX 0,1,18446744073709551615: Err(Selection)
+MATRIX 0,2,0: Err(Selection)
+MATRIX 0,2,1: Ok(())
+MATRIX 0,2,2: Err(Selection)
+MATRIX 0,2,3: Err(Selection)
+MATRIX 0,2,18446744073709551615: Err(Selection)
+MATRIX 0,3,0: Err(Selection)
+MATRIX 0,3,1: Err(Selection)
+MATRIX 0,3,2: Err(Selection)
+MATRIX 0,3,3: Err(Selection)
+MATRIX 0,3,18446744073709551615: Err(Selection)
+MATRIX 0,18446744073709551615,0: Err(Selection)
+MATRIX 0,18446744073709551615,1: Err(Selection)
+MATRIX 0,18446744073709551615,2: Err(Selection)
+MATRIX 0,18446744073709551615,3: Err(Selection)
+MATRIX 0,18446744073709551615,18446744073709551615: Err(Selection)
+MATRIX 1,0,0: Err(Selection)
+MATRIX 1,0,1: Err(Selection)
+MATRIX 1,0,2: Ok(())
+MATRIX 1,0,3: Err(Selection)
+MATRIX 1,0,18446744073709551615: Err(Selection)
+MATRIX 1,1,0: Err(Duplicate)
+MATRIX 1,1,1: Err(Duplicate)
+MATRIX 1,1,2: Err(Duplicate)
+MATRIX 1,1,3: Err(Duplicate)
+MATRIX 1,1,18446744073709551615: Err(Duplicate)
+MATRIX 1,2,0: Ok(())
+MATRIX 1,2,1: Err(Duplicate)
+MATRIX 1,2,2: Err(Duplicate)
+MATRIX 1,2,3: Err(Path)
+MATRIX 1,2,18446744073709551615: Err(Path)
+MATRIX 1,3,0: Err(Path)
+MATRIX 1,3,1: Err(Path)
+MATRIX 1,3,2: Err(Path)
+MATRIX 1,3,3: Err(Path)
+MATRIX 1,3,18446744073709551615: Err(Path)
+MATRIX 1,18446744073709551615,0: Err(Path)
+MATRIX 1,18446744073709551615,1: Err(Path)
+MATRIX 1,18446744073709551615,2: Err(Path)
+MATRIX 1,18446744073709551615,3: Err(Path)
+MATRIX 1,18446744073709551615,18446744073709551615: Err(Path)
+MATRIX 2,0,0: Err(Selection)
+MATRIX 2,0,1: Ok(())
+MATRIX 2,0,2: Err(Selection)
+MATRIX 2,0,3: Err(Selection)
+MATRIX 2,0,18446744073709551615: Err(Selection)
+MATRIX 2,1,0: Ok(())
+MATRIX 2,1,1: Err(Duplicate)
+MATRIX 2,1,2: Err(Duplicate)
+MATRIX 2,1,3: Err(Path)
+MATRIX 2,1,18446744073709551615: Err(Path)
+MATRIX 2,2,0: Err(Duplicate)
+MATRIX 2,2,1: Err(Duplicate)
+MATRIX 2,2,2: Err(Duplicate)
+MATRIX 2,2,3: Err(Duplicate)
+MATRIX 2,2,18446744073709551615: Err(Duplicate)
+MATRIX 2,3,0: Err(Path)
+MATRIX 2,3,1: Err(Path)
+MATRIX 2,3,2: Err(Path)
+MATRIX 2,3,3: Err(Path)
+MATRIX 2,3,18446744073709551615: Err(Path)
+MATRIX 2,18446744073709551615,0: Err(Path)
+MATRIX 2,18446744073709551615,1: Err(Path)
+MATRIX 2,18446744073709551615,2: Err(Path)
+MATRIX 2,18446744073709551615,3: Err(Path)
+MATRIX 2,18446744073709551615,18446744073709551615: Err(Path)
+MATRIX 3,0,0: Err(Path)
+MATRIX 3,0,1: Err(Path)
+MATRIX 3,0,2: Err(Path)
+MATRIX 3,0,3: Err(Path)
+MATRIX 3,0,18446744073709551615: Err(Path)
+MATRIX 3,1,0: Err(Path)
+MATRIX 3,1,1: Err(Path)
+MATRIX 3,1,2: Err(Path)
+MATRIX 3,1,3: Err(Path)
+MATRIX 3,1,18446744073709551615: Err(Path)
+MATRIX 3,2,0: Err(Path)
+MATRIX 3,2,1: Err(Path)
+MATRIX 3,2,2: Err(Path)
+MATRIX 3,2,3: Err(Path)
+MATRIX 3,2,18446744073709551615: Err(Path)
+MATRIX 3,3,0: Err(Path)
+MATRIX 3,3,1: Err(Path)
+MATRIX 3,3,2: Err(Path)
+MATRIX 3,3,3: Err(Path)
+MATRIX 3,3,18446744073709551615: Err(Path)
+MATRIX 3,18446744073709551615,0: Err(Path)
+MATRIX 3,18446744073709551615,1: Err(Path)
+MATRIX 3,18446744073709551615,2: Err(Path)
+MATRIX 3,18446744073709551615,3: Err(Path)
+MATRIX 3,18446744073709551615,18446744073709551615: Err(Path)
+MATRIX 18446744073709551615,0,0: Err(Path)
+MATRIX 18446744073709551615,0,1: Err(Path)
+MATRIX 18446744073709551615,0,2: Err(Path)
+MATRIX 18446744073709551615,0,3: Err(Path)
+MATRIX 18446744073709551615,0,18446744073709551615: Err(Path)
+MATRIX 18446744073709551615,1,0: Err(Path)
+MATRIX 18446744073709551615,1,1: Err(Path)
+MATRIX 18446744073709551615,1,2: Err(Path)
+MATRIX 18446744073709551615,1,3: Err(Path)
+MATRIX 18446744073709551615,1,18446744073709551615: Err(Path)
+MATRIX 18446744073709551615,2,0: Err(Path)
+MATRIX 18446744073709551615,2,1: Err(Path)
+MATRIX 18446744073709551615,2,2: Err(Path)
+MATRIX 18446744073709551615,2,3: Err(Path)
+MATRIX 18446744073709551615,2,18446744073709551615: Err(Path)
+MATRIX 18446744073709551615,3,0: Err(Path)
+MATRIX 18446744073709551615,3,1: Err(Path)
+MATRIX 18446744073709551615,3,2: Err(Path)
+MATRIX 18446744073709551615,3,3: Err(Path)
+MATRIX 18446744073709551615,3,18446744073709551615: Err(Path)
+MATRIX 18446744073709551615,18446744073709551615,0: Err(Path)
+MATRIX 18446744073709551615,18446744073709551615,1: Err(Path)
+MATRIX 18446744073709551615,18446744073709551615,2: Err(Path)
+MATRIX 18446744073709551615,18446744073709551615,3: Err(Path)
+MATRIX 18446744073709551615,18446744073709551615,18446744073709551615: Err(Path)
+PRECEDENCE Err(Profile(MissingAlias))
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+

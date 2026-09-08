@@ -1,0 +1,525 @@
+{
+  "commit": "ccafb1eb1ddd20e13d70a47de0f2ce02a334ff05",
+  "files": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "41b7d0652555f23ec5bbe2ba98dc0a30ff7d4f1141ae7fddd426df56e4e65823",
+      "bytes": 7433
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "44dd5fc88145ed401717462c9e87d13d1ff8addc11920f91be2e3235964c2b95",
+      "bytes": 1582
+    },
+    {
+      "path": "crates/foundation/core/Cargo.toml",
+      "sha256": "7bfc8f46f0836559fc366d977d6647c5852068d58f1f7a1fe577b8601941f690",
+      "bytes": 368
+    },
+    {
+      "path": "crates/foundation/core/src/budget.rs",
+      "sha256": "2dfd48edf2bb1fa304c1d9ea05a6e91406fd53a9681a830c1e144925be22b513",
+      "bytes": 10315
+    },
+    {
+      "path": "crates/foundation/core/src/diagnostic.rs",
+      "sha256": "35a7e495844b4a12980cd89015b260778cd5ea1f47cc3548981a25710d5b74ba",
+      "bytes": 4586
+    },
+    {
+      "path": "crates/foundation/core/src/diagnostic/validation.rs",
+      "sha256": "45a5ef3d1c8fe936e7d5f0b63b04858812cf3dbe25b96f3d26d1da76f4e5ea31",
+      "bytes": 12575
+    },
+    {
+      "path": "crates/foundation/core/src/facts.rs",
+      "sha256": "9488b300cdec850b54117594f8d96eca280f552a2d5dfeb75814dad758289f7a",
+      "bytes": 7936
+    },
+    {
+      "path": "crates/foundation/core/src/facts/check.rs",
+      "sha256": "8a9eab8d5e8be76757b8e3a95d5107c80b59e888494bf2dff905903934602b99",
+      "bytes": 25596
+    },
+    {
+      "path": "crates/foundation/core/src/lexical.rs",
+      "sha256": "71aaf3349e23adfcd93b1430ab4870beae1fb5336e51779de5ef08fd43c320e7",
+      "bytes": 1237
+    },
+    {
+      "path": "crates/foundation/core/src/lexical/language.rs",
+      "sha256": "247c3dcf57d894a08342e48e00f76d0aa474b4120e4cf56d40e8a0687cb24898",
+      "bytes": 2816
+    },
+    {
+      "path": "crates/foundation/core/src/lib.rs",
+      "sha256": "49958b47f828355f3294e95f973bdb0f0a0cb86dd2a523706118a577df8ea6db",
+      "bytes": 291
+    },
+    {
+      "path": "crates/foundation/core/src/origin.rs",
+      "sha256": "2e6e2e995739bb5a40729c29c2b29d1a772dfd47ba0b9d33f39634ca0fccc334",
+      "bytes": 26964
+    },
+    {
+      "path": "crates/foundation/core/src/schema.rs",
+      "sha256": "f62b702c9e635c3c60920ec7f800cdcacfbe90009ff1eca8514545bf4a0f7102",
+      "bytes": 31182
+    },
+    {
+      "path": "crates/foundation/core/src/schema/foundation.rs",
+      "sha256": "53924475ef9e78d6b86ec506206d6187740ac831c8f97ca5bacf5a4e70ee0bba",
+      "bytes": 76514
+    },
+    {
+      "path": "crates/foundation/core/src/source.rs",
+      "sha256": "aca7c11194fabfccde8daacd237b2f7bb7e517f4ff4ce1a87a1efdff1a0c8c0d",
+      "bytes": 32562
+    },
+    {
+      "path": "crates/foundation/core/src/source/edit.rs",
+      "sha256": "6b3b385c3eba2ff97c7fc46d3a6f8a819753ae325b78ca9f6d94795baf84d13c",
+      "bytes": 12437
+    },
+    {
+      "path": "crates/foundation/core/src/syntax.rs",
+      "sha256": "040f8f295c54f515419bba19abaf00f1bf997bafc3bc2c06465357ca174c13e2",
+      "bytes": 22772
+    },
+    {
+      "path": "crates/foundation/core/src/syntax/canonical.rs",
+      "sha256": "aa0ab776ce6509f62ac5181b986e16f36a16f0bab82d35e796812b15cda268d7",
+      "bytes": 4421
+    },
+    {
+      "path": "crates/foundation/core/src/syntax/copy.rs",
+      "sha256": "389afe3eb4cbd6418d9357c544ace97eebe4567124185c9f2206d841b0ac78fa",
+      "bytes": 11293
+    },
+    {
+      "path": "crates/foundation/core/src/syntax/foreign.rs",
+      "sha256": "e22ab801b32efd53eacef4bfaa47fb15f4d76c3023bcbb3b4b196fa2616585c6",
+      "bytes": 7966
+    },
+    {
+      "path": "crates/foundation/core/src/value.rs",
+      "sha256": "c34d65662d0cff876c065c0f74651b72bc2978999d63171772ec25108ed0fbd1",
+      "bytes": 14711
+    },
+    {
+      "path": "crates/foundation/core/src/value/compare.rs",
+      "sha256": "21c97952304f354890d2d29069a9dfd6615a5cb429da48ba953d517d9c6661ee",
+      "bytes": 3928
+    },
+    {
+      "path": "crates/foundation/core/src/value/decimal.rs",
+      "sha256": "d2f5b5caf65d580ecda8521c9747b75d69e43a7611a110b3cba47d6813e557f7",
+      "bytes": 3058
+    },
+    {
+      "path": "crates/foundation/core/src/value_codec.rs",
+      "sha256": "09ad19cdf44e5dfd1366716b95ac799028f3ffdde7394648204e9178a12191c5",
+      "bytes": 7112
+    },
+    {
+      "path": "crates/foundation/core/src/view.rs",
+      "sha256": "659930222e8d2c335ebff69d88d67ed66172e8c592863f8db1a732c0265172c4",
+      "bytes": 10802
+    },
+    {
+      "path": "crates/foundation/core/tests/budget.rs",
+      "sha256": "debfcb23219b104a1756daf3405a8842b0f83c1dab1ae9c65f895cd15a5b1e6c",
+      "bytes": 4236
+    },
+    {
+      "path": "crates/foundation/core/tests/contracts.rs",
+      "sha256": "8f95ab731ccb57963f09b25bb10d6ab8c49c914b833e30735c777d328fc98ebc",
+      "bytes": 30436
+    },
+    {
+      "path": "crates/foundation/core/tests/decimal.rs",
+      "sha256": "1a2298684d5061c5d877a2fac74b9c3984f73c262ddb268df4af449fd94bdc0d",
+      "bytes": 1945
+    },
+    {
+      "path": "crates/foundation/core/tests/edit.rs",
+      "sha256": "1d49ee029df42dcd204b56f35a036d5f2ec4cf6897962f0ef9333ada8e32488d",
+      "bytes": 8754
+    },
+    {
+      "path": "crates/foundation/core/tests/facts.rs",
+      "sha256": "978e2d7e78df1a4f53355fe4c429ea39cd1bb927418612a1b2f53a2501e38d93",
+      "bytes": 8941
+    },
+    {
+      "path": "crates/foundation/core/tests/lexical.rs",
+      "sha256": "b867c2e9aff04f2faa105616f0154cb4d2e2e07b9703c242fa616eef9197fdb4",
+      "bytes": 2538
+    },
+    {
+      "path": "crates/foundation/core/tests/maps.rs",
+      "sha256": "d6a665239a2ed3d21646d90da2f8a0a8e7485f67d634601e378504f4c33acd36",
+      "bytes": 19245
+    },
+    {
+      "path": "crates/foundation/core/tests/structure.rs",
+      "sha256": "3fb8ab7660bc2b7af49b413d5b8acf4172a7755922501f7fc4011c7b79a88615",
+      "bytes": 19315
+    },
+    {
+      "path": "crates/foundation/core/tests/syntax.rs",
+      "sha256": "81edac89b8d5c16412a19ac9fc4b40af0e5c6191d8ad6fd2238673c11117704f",
+      "bytes": 14349
+    },
+    {
+      "path": "crates/foundation/core/tests/value.rs",
+      "sha256": "efb52848a6053d01931ce44c75f5949171f4e52100e8f41720dd591ccfc34d4f",
+      "bytes": 2088
+    },
+    {
+      "path": "crates/foundation/reader/Cargo.toml",
+      "sha256": "af08f6d1019777af38ad3e631437421e242a9637f2f1642ee8db27f20f38ce42",
+      "bytes": 308
+    },
+    {
+      "path": "crates/foundation/reader/src/builtin/language.rs",
+      "sha256": "36e170eeaf079c0c253e08d815180bc3e225b4ec8be50252b5bb99b8660d98f9",
+      "bytes": 138
+    },
+    {
+      "path": "crates/foundation/reader/src/builtin/lexical.rs",
+      "sha256": "516166bc7338f7ce8cdc1828a2056ada038bc395a676fecacc42e5af484943c5",
+      "bytes": 4807
+    },
+    {
+      "path": "crates/foundation/reader/src/builtin/mod.rs",
+      "sha256": "08e6266163acca13235d69d4524a967f6addd65e93a244a71191641edfd46772",
+      "bytes": 8956
+    },
+    {
+      "path": "crates/foundation/reader/src/builtin/provider.rs",
+      "sha256": "918c94c08c1b9cdf1821b8709aa847638123e836ba6e0795a7ba353f9aa9440b",
+      "bytes": 4851
+    },
+    {
+      "path": "crates/foundation/reader/src/builtin/text.rs",
+      "sha256": "d016d90911981e66912f51e8f8d98b2af029f8ce5640befbb0ceeeadc5adf3e0",
+      "bytes": 9268
+    },
+    {
+      "path": "crates/foundation/reader/src/context.rs",
+      "sha256": "523e41f25ba49259afab05409877e3a5f660272cb24851adb6dd2587f2e96190",
+      "bytes": 12431
+    },
+    {
+      "path": "crates/foundation/reader/src/lib.rs",
+      "sha256": "c67873ca487760921d8de91ac2d4b614883ff147b03f01a46f86ff08df446787",
+      "bytes": 245
+    },
+    {
+      "path": "crates/foundation/reader/src/model.rs",
+      "sha256": "583ad1a870dae03b660007a4ea445a512cf376624918e4571ff538b3c63712ad",
+      "bytes": 5644
+    },
+    {
+      "path": "crates/foundation/reader/src/plan.rs",
+      "sha256": "bbf5563c4ef08e9ab9c8d521a7a8fd4f812183f9e93be609048a58a9d5634288",
+      "bytes": 23227
+    },
+    {
+      "path": "crates/foundation/reader/src/plan/identity.rs",
+      "sha256": "d63ecb49d59d5338c3c3a68d728159988229bc9fdee058d9da7674802927f2c9",
+      "bytes": 9391
+    },
+    {
+      "path": "crates/foundation/reader/src/portable.rs",
+      "sha256": "2be606d652e9e0c9127d6d88010c90c28c2ec45718ea87d2daee523d9e7d8773",
+      "bytes": 10336
+    },
+    {
+      "path": "crates/foundation/reader/src/portable/transform.rs",
+      "sha256": "2f7169beb3e96c7dba27f0d27cd6599bb6a5d79bddf675cda2110a81c2b4309f",
+      "bytes": 5577
+    },
+    {
+      "path": "crates/foundation/reader/src/portable/transform/operation.rs",
+      "sha256": "ac89a7a960a18743d255c426d255a3a8231cded063480ab9b78eebb0786e2917",
+      "bytes": 11654
+    },
+    {
+      "path": "crates/foundation/reader/src/portable/transform/value.rs",
+      "sha256": "2435ebcd4b0343facf344cdfefc964bd44680dc2896b7d08a9f2fbee538b571f",
+      "bytes": 12171
+    },
+    {
+      "path": "crates/foundation/reader/src/primitive.rs",
+      "sha256": "2fa1229e332a792150852c62a11e91fbb790ac595ec203e459fb41147328cc5d",
+      "bytes": 6427
+    },
+    {
+      "path": "crates/foundation/reader/src/runtime/checkpoint.rs",
+      "sha256": "b97af86ed8b3653b8c9ac4e0eb361323a2504802e1c89d6d47aa6bc86f1fa1b4",
+      "bytes": 6173
+    },
+    {
+      "path": "crates/foundation/reader/src/runtime/copy.rs",
+      "sha256": "9cbe21df0949216524018713d8a2dffce415e2eb205f1f5da7f236ad59a9b79e",
+      "bytes": 15302
+    },
+    {
+      "path": "crates/foundation/reader/src/runtime/mod.rs",
+      "sha256": "35a37a64481802363868784ae10808466754172814a12e24a324a949ce5fcc6b",
+      "bytes": 61678
+    },
+    {
+      "path": "crates/foundation/reader/src/runtime/ownership_tests.rs",
+      "sha256": "afed0af92547b7cdd64649ed611e5ecb3d89895a45f623db53aebfdc76302fd1",
+      "bytes": 3127
+    },
+    {
+      "path": "crates/foundation/reader/src/runtime/validate.rs",
+      "sha256": "f3d0c645ec14d350148e80aefea04eccd392c2243efc904a650056e467d6ece2",
+      "bytes": 12427
+    },
+    {
+      "path": "crates/foundation/reader/src/runtime/validate/provider.rs",
+      "sha256": "61131df84fb87f3cbfb97bf216bb534ec23c90c84a189afb213efd6419840500",
+      "bytes": 13461
+    },
+    {
+      "path": "crates/foundation/reader/src/schema.rs",
+      "sha256": "823b4ac0d27b115dba6c1f921a866ff8cdbe971da64732e44800925d2a0ce75f",
+      "bytes": 4826
+    },
+    {
+      "path": "crates/foundation/reader/src/schema/descriptor.rs",
+      "sha256": "0424c7cb7cc4ca3094fae09504413a7f1198db84a5f73a8a2c762500aaf0090f",
+      "bytes": 53063
+    },
+    {
+      "path": "crates/foundation/reader/src/tokenizer/accepted.rs",
+      "sha256": "6a753becad532c545843e34d08728ddc964cc4e8a150ce1ac31ec11fcaa42236",
+      "bytes": 11838
+    },
+    {
+      "path": "crates/foundation/reader/src/tokenizer/continuation.rs",
+      "sha256": "d2372abbabe6d218131f0b6a38de5d7c312c763cd076669c2ca3715b4fa7ad83",
+      "bytes": 2660
+    },
+    {
+      "path": "crates/foundation/reader/src/tokenizer/host.rs",
+      "sha256": "65f47129cff3d78fb16787167a4919bd32e70574680220ceb042aef7031781b5",
+      "bytes": 1239
+    },
+    {
+      "path": "crates/foundation/reader/src/tokenizer/identity.rs",
+      "sha256": "c920bac7a6168bac164232426f5cb20043f6481d3d18c564d7c8aab15757cf2c",
+      "bytes": 3368
+    },
+    {
+      "path": "crates/foundation/reader/src/tokenizer/mod.rs",
+      "sha256": "f3e3b57d790cf52ba6a52f09527912e62d88cc68ed691031e017648662b79835",
+      "bytes": 359
+    },
+    {
+      "path": "crates/foundation/reader/src/tokenizer/model.rs",
+      "sha256": "20bcaa5cfd3acc9e517701a65904670ca7ffb553ce9359073da23080bb812051",
+      "bytes": 3855
+    },
+    {
+      "path": "crates/foundation/reader/src/tokenizer/session.rs",
+      "sha256": "32d32b6834fed944f7a97821436d1cbe15cf9c930eface1d74b76f6fb3be4beb",
+      "bytes": 62416
+    },
+    {
+      "path": "crates/foundation/reader/src/tokenizer/session/ownership_tests.rs",
+      "sha256": "a00c6c9866044c85a1592f4907e52e70607d6207a7225544ef85211037979ca8",
+      "bytes": 2779
+    },
+    {
+      "path": "crates/foundation/reader/tests/builtin.rs",
+      "sha256": "688a8992aa72d92cf92b8e0ef7cce1899043c54f0e647d2096d597e5b4b60064",
+      "bytes": 39441
+    },
+    {
+      "path": "crates/foundation/reader/tests/context.rs",
+      "sha256": "e3d3e659eed0d60775eae5c6d94ec5c86da1bcd797fdee85a25be14616ba0af4",
+      "bytes": 4751
+    },
+    {
+      "path": "crates/foundation/reader/tests/portable.rs",
+      "sha256": "f2b83a746892fa2433f7c80168142029db05c2e475fe51866bba157ff44f76ff",
+      "bytes": 8729
+    },
+    {
+      "path": "crates/foundation/reader/tests/runtime.rs",
+      "sha256": "e5c7df3753175387a0c60e3ffeaa9b6b558ac73ee3525d8ac944f34e83559972",
+      "bytes": 95109
+    },
+    {
+      "path": "crates/foundation/reader/tests/runtime/checkpoints.rs",
+      "sha256": "37cc4746d64782027f97f8228a59c1168a579fa46e9154a897ae7c5a6f961790",
+      "bytes": 9060
+    },
+    {
+      "path": "crates/foundation/reader/tests/runtime/retry.rs",
+      "sha256": "38db25f225e57c63fccc52826ac29c6cdfca81cb56dd1f5b2f23e15ce531de1b",
+      "bytes": 4708
+    },
+    {
+      "path": "crates/foundation/reader/tests/runtime/tokenizer_host.rs",
+      "sha256": "47a86abff362d92a82cb3c23ebc2bfc4c9ef53f8df9bbc8dc802fb5c010e1660",
+      "bytes": 10029
+    },
+    {
+      "path": "crates/foundation/reader/tests/runtime/transform.rs",
+      "sha256": "bd2263ac1409f2cc905667b8c9e7766fbace6a18e36b48a19a6de1a22f3914b2",
+      "bytes": 22339
+    },
+    {
+      "path": "crates/foundation/wire/Cargo.toml",
+      "sha256": "2a8d8d62b016a3c69ec66baa13795b1c62e977e4433112ac8d0c14bdfe41ae47",
+      "bytes": 354
+    },
+    {
+      "path": "crates/foundation/wire/src/boundary.rs",
+      "sha256": "baa5a31c02dd92ebd197bf4478b3e5ca09f7e3fd1ceceb214c7724e360b19aa5",
+      "bytes": 3658
+    },
+    {
+      "path": "crates/foundation/wire/src/boundary/typed.rs",
+      "sha256": "4eeec3966358b34ba3fa05fef7d590b37827f80fce1392e83aaaf8b86052621b",
+      "bytes": 4781
+    },
+    {
+      "path": "crates/foundation/wire/src/decode.rs",
+      "sha256": "71167f298b15b955fd5498197a70cef880cff99f92379bf10cdb68c512cac5e0",
+      "bytes": 10166
+    },
+    {
+      "path": "crates/foundation/wire/src/encode.rs",
+      "sha256": "6b46d380bc4cf72bd5a28324e8ad8daa4083cf29672e032220186bea3009fa55",
+      "bytes": 7664
+    },
+    {
+      "path": "crates/foundation/wire/src/environment.rs",
+      "sha256": "572c4c42e7b92c694d76d651498ea0e8222ac6c90e72508199ae4547de8b5ee4",
+      "bytes": 6151
+    },
+    {
+      "path": "crates/foundation/wire/src/facts.rs",
+      "sha256": "0d183fd305527a75404866e3e132891cfd63faa3aa01c4080dc415ab4e1ce42f",
+      "bytes": 11169
+    },
+    {
+      "path": "crates/foundation/wire/src/foundation.rs",
+      "sha256": "50661e973ebffd87e732521926887f8cfb952358281f7d936f08f226fdc43a5d",
+      "bytes": 13247
+    },
+    {
+      "path": "crates/foundation/wire/src/foundation/types.rs",
+      "sha256": "ecb18148ad77afd539c747a76dd20989fb03fe28df7f08c02625e27b25b55c09",
+      "bytes": 3027
+    },
+    {
+      "path": "crates/foundation/wire/src/lib.rs",
+      "sha256": "83be218de18e4264cb2e0778d43d001cae8fda67894c55071851f41f316195d3",
+      "bytes": 6361
+    },
+    {
+      "path": "crates/foundation/wire/src/origin.rs",
+      "sha256": "18babf34d8de05ef8e87d1e0edc276e73e808d66e2f0c19d77795c13289e8c6b",
+      "bytes": 6471
+    },
+    {
+      "path": "crates/foundation/wire/src/report.rs",
+      "sha256": "52fde76b61ac85e06849be3ddccf8ca0f190934d095f202aa03a94b49bd31f4e",
+      "bytes": 4758
+    },
+    {
+      "path": "crates/foundation/wire/src/source.rs",
+      "sha256": "a9be1541d0b7554d10c54bf3e3b30becb99c523a50d7074b65ea162e4b6e5cb1",
+      "bytes": 9281
+    },
+    {
+      "path": "crates/foundation/wire/src/syntax.rs",
+      "sha256": "1417f4d9403ac8639d091466387e32fc56da0554deba834301d64abef41baf9d",
+      "bytes": 16718
+    },
+    {
+      "path": "crates/foundation/wire/src/syntax/foreign.rs",
+      "sha256": "02e72b227475e8d6d9b462b98282c111bcc3f4e83daef0ddee35783836e6ba6e",
+      "bytes": 3075
+    },
+    {
+      "path": "crates/foundation/wire/src/syntax/order.rs",
+      "sha256": "8ba69f5c3d0551b143bc90a7342e8d7a4f7da351be8f91cea08eefe660cb5321",
+      "bytes": 570
+    },
+    {
+      "path": "crates/foundation/wire/src/view.rs",
+      "sha256": "7617b5e170606827bd5422230947a30d71d3aea4dc20e430dffe0a38a1182e26",
+      "bytes": 12377
+    },
+    {
+      "path": "crates/foundation/wire/tests/codec.rs",
+      "sha256": "7c8f5be5d450e10dd7543ca081621b2e9a501f96fd6e8ea7edbda05b7785f732",
+      "bytes": 9529
+    },
+    {
+      "path": "crates/foundation/wire/tests/digest.rs",
+      "sha256": "4ea51faa13da03e115f2c21634bc5bd3992d2d291cec995ca4d528a805ab92c5",
+      "bytes": 4618
+    },
+    {
+      "path": "crates/foundation/wire/tests/facts.rs",
+      "sha256": "e6159cb67822a6571bec1ff04dc2a2be96b473068830b6036c8ee541098b327e",
+      "bytes": 8151
+    },
+    {
+      "path": "crates/foundation/wire/tests/origin.rs",
+      "sha256": "8376304e6a306e24d5ccea2ffb772560ce91a7c01e3c797078380fddb2de5513",
+      "bytes": 3318
+    },
+    {
+      "path": "crates/foundation/wire/tests/report.rs",
+      "sha256": "0c5938a781f9953d9572c1cf703c35b34a5214987557ddf37a62afb753057c57",
+      "bytes": 15620
+    },
+    {
+      "path": "crates/foundation/wire/tests/source.rs",
+      "sha256": "ca6e3ad41f183eec5082198a153e1026181464f9742e97b4e00d12396c3a4b88",
+      "bytes": 8669
+    },
+    {
+      "path": "crates/foundation/wire/tests/stop.rs",
+      "sha256": "87e6d41aaec92baeaeb0cf9d4895d348b6973a2e77ed7375b5dadef86b888020",
+      "bytes": 4601
+    },
+    {
+      "path": "crates/foundation/wire/tests/syntax.rs",
+      "sha256": "c5fd875e1dc943ed11e5a8d7ae614a45166361682060ff427eb999b61aa802df",
+      "bytes": 18899
+    },
+    {
+      "path": "crates/foundation/wire/tests/syntax/foreign.rs",
+      "sha256": "5af685151b71bba24074aba443e0315f79fae6e8314a9151e2d4476d4fd53432",
+      "bytes": 7675
+    },
+    {
+      "path": "crates/foundation/wire/tests/types.rs",
+      "sha256": "397974798324f4ed77c1e50ce47052addb066fd11fccd93b2024be49f0828007",
+      "bytes": 6964
+    },
+    {
+      "path": "crates/foundation/wire/tests/view.rs",
+      "sha256": "5da19b750c7bf4aae4c38f34643b196e0310697ac88170d0e3817f0737930486",
+      "bytes": 6112
+    },
+    {
+      "path": "rust-toolchain.toml",
+      "sha256": "174a086284d57e79557b62bc627e96257893375dfd37239e3c3e830ce2629b95",
+      "bytes": 86
+    }
+  ]
+}

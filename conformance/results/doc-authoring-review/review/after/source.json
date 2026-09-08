@@ -1,0 +1,26 @@
+{
+  "repo": "C:/projects/NEPL3-doc-review-integration",
+  "commit": "4b549f2953b78eadc6d10a694d43fbdbf713d65d",
+  "path": "doc/migration/authored/guide/review.nepld",
+  "bytes": 391627,
+  "sha256": "93219488d2b5b3c93d3b7c02a2f3598b5544d0fe61111b0537071b4354549bee",
+  "exact_delta": "One U+0020 in structure sentence final Text, draft line1086",
+  "unchanged_helpers": [
+    {
+      "path": "annotation_parser.py",
+      "sha256": "c9acc0c382a3586f379d95927630c9f35e0f32dc22fae3a125cc90a78ea9e0bb"
+    },
+    {
+      "path": "check.py",
+      "sha256": "90f2f69171c89dfc4ade8d94655fb759b5e7bb9faaf11a9d65c3aabcf8762f0b"
+    },
+    {
+      "path": "audit.py",
+      "sha256": "0589cf03ab9a32fe593de702e6f990cee83c61e2aaba90334a9bf8e48819dac8"
+    },
+    {
+      "path": "run.py",
+      "sha256": "47d180fecaee7d4c877bdc3b646f2911235694927e61f971b93717286fa3e391"
+    }
+  ]
+}

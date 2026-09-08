@@ -1,0 +1,40 @@
+[workspace]
+members = ["crates/foundation/core", "crates/foundation/wire", "crates/foundation/reader", "crates/foundation/engine", "probe"]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97"
+license = "MIT"
+repository = "https://github.com/neknaj/NEPL3"
+publish = false
+
+[workspace.dependencies]
+nepl3-core = { path = "crates/foundation/core" }
+nepl3-wire = { path = "crates/foundation/wire" }
+nepl3-reader = { path = "crates/foundation/reader" }
+nepl3-engine = { path = "crates/foundation/engine" }
+nepl3-grammar-core = { path = "crates/languages/grammar/core" }
+nepl3-doc-core = { path = "crates/languages/doc/core" }
+nepl3-math-core = { path = "crates/languages/math/core" }
+nepl3-markup = { path = "crates/output/markup" }
+nepl3-doc-html = { path = "crates/languages/doc/html" }
+unicode-ident = { version = "=1.0.18", default-features = false }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+sha2 = { version = "0.11.0", default-features = false }
+num-bigint = { version = "0.5", default-features = false }
+num-integer = { version = "0.1", default-features = false }
+num-traits = { version = "0.2", default-features = false }
+pulldown-cmark = { version = "=0.13.4", default-features = false }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"

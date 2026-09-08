@@ -1,0 +1,70 @@
+   Compiling autocfg v1.5.1
+   Compiling typenum v1.20.1
+   Compiling cfg-if v1.0.4
+   Compiling cpufeatures v0.3.1
+   Compiling unicode-ident v1.0.18
+   Compiling num-traits v0.2.19
+   Compiling hybrid-array v0.4.14
+   Compiling num-integer v0.1.47
+   Compiling crypto-common v0.2.2
+   Compiling block-buffer v0.12.1
+   Compiling num-bigint v0.5.1
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tokenizer-failure\probe\crates\foundation\core)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tokenizer-failure\probe\crates\foundation\wire)
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tokenizer-failure\probe\crates\foundation\reader)
+warning: unused imports: `format` and `string::String`
+ --> crates\foundation\reader\src\tokenizer\session\independent_review.rs:2:26
+  |
+2 | use alloc::{vec,vec::Vec,format,string::String,boxed::Box};
+  |                          ^^^^^^ ^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `budget::*` and `view::*`
+ --> crates\foundation\reader\src\tokenizer\session\independent_review.rs:4:18
+  |
+4 | use nepl3_core::{budget::*,diagnostic::*,schema::*,source::*,syntax::*,value::*,view::*};
+  |                  ^^^^^^^^^                                                      ^^^^^^^
+
+warning: unused import: `model::*`
+ --> crates\foundation\reader\src\tokenizer\session\independent_review.rs:5:13
+  |
+5 | use crate::{model::*,plan::*,runtime::*};
+  |             ^^^^^^^^
+
+warning: function `terminal` is never used
+   --> crates\foundation\reader\src\tokenizer\session\independent_review.rs:167:4
+    |
+167 | fn terminal(value: &str, end: u64, budget: &mut Budget) -> Result<ProviderReply, StopReason> {
+    |    ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `annotated_terminal` is never used
+   --> crates\foundation\reader\src\tokenizer\session\independent_review.rs:187:4
+    |
+187 | fn annotated_terminal(
+    |    ^^^^^^^^^^^^^^^^^^
+
+warning: `nepl3-reader` (lib test) generated 5 warnings (run `cargo fix --lib -p nepl3-reader --tests` to apply 3 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.33s
+     Running unittests src\lib.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tokenizer-failure\probe-native-target\debug\deps\nepl3_reader-8c326c989ce8e0d0.exe)
+
+running 1 test
+test tokenizer::session::independent_review::independent_read_seed_rejected_budget_must_not_erase_recorded_usage ... actual read_seed old work=124 allocation=120, rejected current=0 0, returned=0 0
+
+thread 'tokenizer::session::independent_review::independent_read_seed_rejected_budget_must_not_erase_recorded_usage' (612) panicked at crates\foundation\reader\src\tokenizer\session\independent_review.rs:247:2:
+rejected caller cannot refund accepted prefix work
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+FAILED
+
+failures:
+
+failures:
+    tokenizer::session::independent_review::independent_read_seed_rejected_budget_must_not_erase_recorded_usage
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p nepl3-reader --lib`

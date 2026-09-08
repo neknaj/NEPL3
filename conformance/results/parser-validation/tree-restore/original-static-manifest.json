@@ -1,0 +1,84 @@
+{
+  "files": [
+    {
+      "path": "freeze.log",
+      "bytes": 895,
+      "sha256": "0f6001e26722287cf4f55383508218247eb8374cf544c02de1a661216eb899a7"
+    },
+    {
+      "path": "freeze.py",
+      "bytes": 1714,
+      "sha256": "1d8a268f1f6b1d60b7bf28f89b9b3ca0fc52b4b06aa870c62e567f700839765d"
+    },
+    {
+      "path": "identity.json",
+      "bytes": 1195,
+      "sha256": "d2f285b5e161ef4080ae416b648c04edae1705e9767a65decfdcd992a3e281f8"
+    },
+    {
+      "path": "inputs/03-reader.nepld",
+      "bytes": 62074,
+      "sha256": "83b03d9f070d4a64e020ab5f0591026d22df6cdb17f530c79f877c2571eea8e9"
+    },
+    {
+      "path": "inputs/04-grammar.nepld",
+      "bytes": 86030,
+      "sha256": "3090af2b349a8c044c733614da8019f20f237330c55efb942c79bfcef884e65a"
+    },
+    {
+      "path": "logs/03-reader.log",
+      "bytes": 221,
+      "sha256": "9a08bf7165ad15d949339751f9bba8407377ed9160aa23a3e772575fc487f6c6"
+    },
+    {
+      "path": "logs/04-grammar.log",
+      "bytes": 227,
+      "sha256": "ce0435bf0ae142889aeafb153cd4117edb991323855f664e6709e8be604d595c"
+    },
+    {
+      "path": "logs/results.json",
+      "bytes": 9327,
+      "sha256": "9ecdfb320e3494b655c820853e98ca2f5ddbb928f6ee88a0718be4ffed5d435d"
+    },
+    {
+      "path": "review.md",
+      "bytes": 6447,
+      "sha256": "4c555e35f1cd443b8db2fa3c49ca0002361cb833c09d7ede49582c6ea53b32ed"
+    },
+    {
+      "path": "source/crates/foundation/core/src/budget.rs",
+      "bytes": 10315,
+      "sha256": "2dfd48edf2bb1fa304c1d9ea05a6e91406fd53a9681a830c1e144925be22b513"
+    },
+    {
+      "path": "source/crates/foundation/engine/src/parse/copy.rs",
+      "bytes": 10435,
+      "sha256": "df3fbe1195ae133ff6a7a8580e788969d5e7ae057733860724488d0a8b612a7b"
+    },
+    {
+      "path": "source/crates/foundation/engine/src/parse/model.rs",
+      "bytes": 4832,
+      "sha256": "87cb1410e92095eb29e4d027decfc7a82244d3aa6c3338c6032edee0a374df20"
+    },
+    {
+      "path": "source/crates/foundation/engine/src/parse/session.rs",
+      "bytes": 59099,
+      "sha256": "7aa4883ff26162300d82f1da9c257cf765ab73bfa802bcd75b72256babf14760"
+    },
+    {
+      "path": "source/crates/foundation/engine/src/tree.rs",
+      "bytes": 26764,
+      "sha256": "3dcbbd22a3fb313b46d76eb8b1372a83d9dcf70d5587a95ae977e88669751ce9"
+    },
+    {
+      "path": "source/tools/src/doc/export.rs",
+      "bytes": 7958,
+      "sha256": "72c30e2ab38500e4e26c649de1f9a91851186fd32f0f396abf72a8dd15ead48a"
+    },
+    {
+      "path": "source/tools/src/doc/source.rs",
+      "bytes": 16323,
+      "sha256": "6dee2e18380d55e2e4092cca14fdb4ca9b798d83b0daf153d8d948e4dde2fda1"
+    }
+  ]
+}
