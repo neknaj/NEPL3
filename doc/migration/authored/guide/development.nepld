@@ -191,9 +191,10 @@ body
       cons sentence cons text "mainの" cons ruby text "保護設定" text "ほごせってい" cons text "は " cons code "quality" cons text " " cons ruby text "必須" text "ひっす" cons text "・" cons ruby text "最新" text "さいしん" cons text "mainに" cons ruby text "対" text "たい" cons text "する" cons ruby text "検査必須" text "けんさひっす" cons text "（strict）、" cons ruby text "管理者" text "かんりしゃ" cons text "にも" cons ruby text "適用" text "てきよう" cons text "、force push・" cons ruby text "削除" text "さくじょ" cons text "は" cons ruby text "禁止" text "きんし" cons text "とします。" nil
       cons "GitHubアカウントによる[必須承認数/ひっすしょうにんすう]は[設定/せってい]せず、agentの[独立/どくりつ]レビュー[記録/きろく]と[区別/くべつ]します。" nil
     cons paragraph
-      cons "WASI・ブラウザWasm・LSP・operation providerは[目標仕様/もくひょうしよう]です。"
-      cons "[対応/たいおう]する[実装/じっそう]とrunnerができた[段階/だんかい]で、buildに[加/くわ]えてrunnerによる[受入試験/うけいれしけん]を[必須/ひっす]jobとして[追加/ついか]します。"
-      cons "[現時点/げんじてん]のnative[開発/かいはつ]toolsの[検査/けんさ]からcross-target[対応/たいおう]を[推定/すいてい]しません。"
+      cons "[共通基盤/きょうつうきばん]のWASI[試験/しけん]、ブラウザWasm[向/む]けbuild、ARMv6-M[向/む]けbuildとRP2040 emulator[実行/じっこう]は、[上記/じょうき]のPortable execution CIで[検査/けんさ]します。"
+      cons "これらの[実行範囲/じっこうはんい]と、WASI CLI・LSP・operation provider・Web Playgroundという[製品入口/せいひんいりぐち]の[完成/かんせい]は[区別/くべつ]します。"
+      cons "[各入口/かくいりぐち]には[実装/じっそう]した[操作/そうさ]を[実/じつ]runnerで[通/とお]す[受入試験/うけいれしけん]を[追加/ついか]し、foundationの[試験/しけん]やnative[開発/かいはつ]toolsの[成功/せいこう]だけから[製品全体/せいひんぜんたい]のcross-target[対応/たいおう]を[推定/すいてい]しません。"
+      cons "ブラウザ[向/む]けbuildも[実/じつ]ブラウザでの[実行/じっこう]とは[別/べつ]の[証拠/しょうこ]です。"
       cons "runtime releaseは[該当/がいとう]するconformanceの[実行証拠/じっこうしょうこ]がそろってから[設/もう]けます。" nil
     cons paragraph
       cons sentence cons text "Web/TEA/siteとDoc" cons ruby text "移行" text "いこう" cons text "の" cons ruby text "計画" text "けいかく" cons text "は " cons link relative "spec/14-web-ui.md" none concat cons text "14" cons ruby text "章" text "しょう" nil cons text "〜" cons link relative "spec/16-doc-migration.md" none concat cons text "16" cons ruby text "章" text "しょう" nil cons text " に" cons ruby text "従" text "したが" cons text "います。" nil
