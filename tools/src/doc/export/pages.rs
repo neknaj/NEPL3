@@ -43,18 +43,14 @@ pub fn generate(compiled: &Compiled, inputs: &[(Entry, String)]) -> Result<Gener
             input,
             &entry.id,
             "Article",
-            |tree, profile, b, a| {
-                let checked = tree
-                    .tree()
-                    .bundle
-                    .validate_with_sources(profile.registry(), b, a)
-                    .map_err(err)?;
+            |tree, profile, _b, _a| {
+                let checked = tree.syntax();
                 let empty = SourceStore::default();
                 let mut admission = SourceAdmission::default();
                 let mut c = FoundationCodec::new(profile.registry(), &empty, &mut admission)
                     .map_err(err)?;
                 let doc = lower::document(
-                    &checked,
+                    checked,
                     &compiled.doc.package.schema,
                     Category::Article,
                     profile.registry(),

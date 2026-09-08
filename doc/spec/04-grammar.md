@@ -199,6 +199,8 @@ Unparsedの先頭をtokenとして既に読んでいる場合は、そのTokenRe
 
 ## 8. Grammar自身のbootstrap
 
+検査済みParseTreeは、同じ不変なSyntaxBundleに対して成立したsource・型・参照の検査proofを借用で公開できる。Rustの`ValidatedParseTree::syntax`は`validate_with_sources`の結果を保持して返し、同じ操作内でのlower準備に再検査・再計上を要求しない。raw入力、変更したtree、別のsnapshotへこのproofを付け替えてはならない。環境内容digestの一致やDSLの意味検査まで証明したものとは扱わず、それらの検査は引き続き必要である。proofを使う下流操作自身の処理量とsource admissionは省略しない。
+
 完全な文法表からseed descriptorを生成し、通常engineで自分のlanguage定義を読む。seedのarity手書き表とsourceを独立に二重管理しない。生成した全表・source・seedの対応を機械検査する。
 
 Grammar packageの利用者が機能を拡張しても共通engineを書き換えない。編集対象の文法を変更したら依存package/queryを無効化し、schema digestの異なる結果を混用しない。

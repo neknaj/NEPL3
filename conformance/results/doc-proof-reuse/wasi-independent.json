@@ -1,0 +1,22 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-tools",
+    "--test",
+    "review_proof",
+    "--target",
+    "wasm32-wasip2",
+    "--",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-proof\\workspace",
+  "target": "wasi",
+  "exit_code": 0,
+  "elapsed_seconds": 326.15191078186035,
+  "sha256": "b6ff3c611f9dd398d28ae9d6c51666be0b08a215b707574d8e07f05c140a0924",
+  "process_deadline_seconds": 600
+}
