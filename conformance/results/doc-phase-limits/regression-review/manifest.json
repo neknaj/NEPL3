@@ -1,0 +1,29 @@
+{
+  "commit": "fc10fb776fd559da584622ca9d756266f521b0e6",
+  "parent": "38a76c57f2b1e2e4b1ec39b575d0c5848cb4b88b",
+  "production_baseline": "da40ffc",
+  "prior_manifest_sha256": "53a50f82be61dd580a4484e27cedef63f720bc6faa4fed617a53e27c3569efd6",
+  "result": "PASS bounded static regression review",
+  "files": [
+    {
+      "path": "after.rs",
+      "bytes": 5867,
+      "sha256": "297e615b49d574b6e8ef86f30d1a87886c10acaadd2da33e5a93674d3a0ee469"
+    },
+    {
+      "path": "before.rs",
+      "bytes": 5433,
+      "sha256": "6786eafa88cd321f0f628ebc744611008ce8ac77955801468885445733beb7df"
+    },
+    {
+      "path": "delta.patch",
+      "bytes": 913,
+      "sha256": "205ff67452045d0c448a478a6cb423ac4e6f1c3250ee0ad8ff9668d1ee1966a0"
+    },
+    {
+      "path": "review.md",
+      "bytes": 1230,
+      "sha256": "00ec1eab942817a52b0e63e2c5d58d02e0b9cb5682cfe901d324da75b3e390d3"
+    }
+  ]
+}

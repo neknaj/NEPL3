@@ -14,6 +14,8 @@ mod labels;
 mod mixed;
 #[path = "doc/pages.rs"]
 mod pages;
+#[path = "doc/phases.rs"]
+mod phases;
 #[path = "doc/prepare.rs"]
 mod prepare;
 #[path = "doc/print.rs"]

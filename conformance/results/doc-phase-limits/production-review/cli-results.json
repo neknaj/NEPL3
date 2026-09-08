@@ -1,0 +1,86 @@
+{
+  "binary_sha": "a16b0342c9b83b0e0689e4e3f0107dd1e58d83e5b77de0e36f7e9a713fcd9055",
+  "results": [
+    {
+      "name": "default",
+      "exit": 0,
+      "output_exists": true,
+      "phase_sha": "07ba363e4ed37a881b71a30a634da0f11e9eaf62739045efc9fb29b71ae3af04",
+      "html_sha": "85425692d054b92521850d6fd41199e7239ba02cb944c039fb4de09fcd95da57"
+    },
+    {
+      "name": "parse_limits-zero",
+      "exit": 1,
+      "output_exists": false
+    },
+    {
+      "name": "parse_limits-changed",
+      "exit": 0,
+      "output_exists": true,
+      "phase_sha": "3adf935771244d3238667a203b8bedd3dd8f17a9aa1a708592a0092a5500b6cb",
+      "html_sha": "85425692d054b92521850d6fd41199e7239ba02cb944c039fb4de09fcd95da57"
+    },
+    {
+      "name": "parse_limits-overflow",
+      "exit": 1,
+      "output_exists": false
+    },
+    {
+      "name": "parse_limits-duplicate",
+      "exit": 1,
+      "output_exists": false
+    },
+    {
+      "name": "parse_limits-float",
+      "exit": 1,
+      "output_exists": false
+    },
+    {
+      "name": "parse_limits-negative",
+      "exit": 1,
+      "output_exists": false
+    },
+    {
+      "name": "parse_limits-unknown",
+      "exit": 1,
+      "output_exists": false
+    },
+    {
+      "name": "lower_limits-zero",
+      "exit": 1,
+      "output_exists": false
+    },
+    {
+      "name": "lower_limits-changed",
+      "exit": 0,
+      "output_exists": true,
+      "phase_sha": "d5d87c728f4673f7237f803b2411948a715008c1e029c7b6a215b80c168fd98e",
+      "html_sha": "85425692d054b92521850d6fd41199e7239ba02cb944c039fb4de09fcd95da57"
+    },
+    {
+      "name": "lower_limits-overflow",
+      "exit": 1,
+      "output_exists": false
+    },
+    {
+      "name": "lower_limits-duplicate",
+      "exit": 1,
+      "output_exists": false
+    },
+    {
+      "name": "lower_limits-float",
+      "exit": 1,
+      "output_exists": false
+    },
+    {
+      "name": "lower_limits-negative",
+      "exit": 1,
+      "output_exists": false
+    },
+    {
+      "name": "lower_limits-unknown",
+      "exit": 1,
+      "output_exists": false
+    }
+  ]
+}

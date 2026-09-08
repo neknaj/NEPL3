@@ -1,0 +1,95 @@
+{
+  "scope": "manual author delta and self-check; no runtime/independent review",
+  "files": [
+    {
+      "path": "addition.nepld",
+      "sha256": "243d66fc6a50c150f7acde999c4854168fa271e996e07e2430587b9339e624a1",
+      "bytes": 6919
+    },
+    {
+      "path": "after.nepld",
+      "sha256": "9aac11d45576d1336f37c0b8e550c33ceedec75c1f82913e7a71c3aa31ebc4df",
+      "bytes": 54941
+    },
+    {
+      "path": "before.nepld",
+      "sha256": "6a7b054a07d4e397ed1ff3ec60c95da8909167a3f799fe0813199afcc6d85414",
+      "bytes": 47988
+    },
+    {
+      "path": "check.py",
+      "sha256": "190c7c8fac479926f91cfefc5efb74736c59fdcafbf5056f913e67e9aa8f8880",
+      "bytes": 4339
+    },
+    {
+      "path": "context/AGENTS.md",
+      "sha256": "849027165216a9a3adcb22ef58a44bc698c83e1707d2aa0727a1b73105282236",
+      "bytes": 7613
+    },
+    {
+      "path": "context/design/forms.json",
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693",
+      "bytes": 48673
+    },
+    {
+      "path": "context/doc/authoring.md",
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08",
+      "bytes": 6478
+    },
+    {
+      "path": "context/ruby-helpers.py",
+      "sha256": "2944d21280648e2372d8a5c839722ffc9380c7c7103d76e0ed144b0ec9b7780b",
+      "bytes": 3381
+    },
+    {
+      "path": "context/tools/audit/structure.py",
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727",
+      "bytes": 6543
+    },
+    {
+      "path": "draft.diff",
+      "sha256": "49ffe83f665247157a1861ca61eccb417b82942d172691fafc4e70057a6180e8",
+      "bytes": 9101
+    },
+    {
+      "path": "manifest.py",
+      "sha256": "83c05bdffcfdc7bc9fb89764fca5be14fb659b1badb56f03014aea9100cfe214",
+      "bytes": 524
+    },
+    {
+      "path": "paragraphs.txt",
+      "sha256": "ba57420893f29ced6841995525ab2b79f947e504a802d19ad37ebcd8f05439e6",
+      "bytes": 2991
+    },
+    {
+      "path": "readings.txt",
+      "sha256": "cafa1c1ea4baeebb86374064f8b18fcbd9b30cf64ae6a16f56ff16102d3eae19",
+      "bytes": 3435
+    },
+    {
+      "path": "record.md",
+      "sha256": "085cb1954ef7bdd6a0bf795cf2e915382a2f7b3d14703a52b5c6f3a50bd890ce",
+      "bytes": 2639
+    },
+    {
+      "path": "result.json",
+      "sha256": "d75572e4d3e5b5ecd61e749a4cd432705b256038b65317a982fc062232f7d2b9",
+      "bytes": 840
+    },
+    {
+      "path": "source-before.md",
+      "sha256": "4f272df61a8274ffe2cfb70bc2f43d70ed0cdc034cf9f6444925bed5a377d204",
+      "bytes": 16837
+    },
+    {
+      "path": "source.diff",
+      "sha256": "8018ceebf46e23def76d2cd8bec3b2da78ff2bd11bbbc65951c75d28f96aa987",
+      "bytes": 4400
+    },
+    {
+      "path": "source.md",
+      "sha256": "e764e4266ea2913421735cde2bc2f21d8324058bc43818308fb6ef3a5f2bcc34",
+      "bytes": 19763
+    }
+  ]
+}

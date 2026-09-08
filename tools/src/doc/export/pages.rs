@@ -15,6 +15,10 @@ pub struct Manifest {
     pub pages: Vec<Entry>,
     #[serde(default)]
     pub output_limits: resources::OutputLimits,
+    #[serde(default)]
+    pub parse_limits: resources::OperationLimits,
+    #[serde(default)]
+    pub lower_limits: resources::OperationLimits,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -58,6 +62,21 @@ pub fn generate_with_output_budget(
     inputs: &[(Entry, String)],
     output_budget: &mut Budget,
 ) -> Result<GeneratedPages, String> {
+    generate_with_phase_limits(
+        compiled,
+        inputs,
+        resources::PhaseLimits::default(),
+        output_budget,
+    )
+}
+/// Parse/lower are separate operations per page. Only output accepts an existing
+/// caller budget; its consumed usage and cancellation remain unchanged.
+pub fn generate_with_phase_limits(
+    compiled: &Compiled,
+    inputs: &[(Entry, String)],
+    phases: resources::PhaseLimits,
+    output_budget: &mut Budget,
+) -> Result<GeneratedPages, String> {
     output_budget.poll().map_err(err)?;
     let initial_usage = output_budget.usage();
     if inputs.is_empty() || inputs.len() > 128 {
@@ -66,37 +85,41 @@ pub fn generate_with_output_budget(
     let mut total = 0u64;
     let mut pages = Vec::new();
     let mut origins = Vec::new();
+    let mut profiles = Vec::new();
     for (entry, input) in inputs {
         let physical = input_path(entry)?;
         total = total.checked_add(input.len() as u64).ok_or("SourceLimit")?;
         if total > MAX_SOURCE_BYTES {
             return Err("SourceLimit".into());
         }
-        let (document, profile, parse_usage, lower_usage) = crate::doc::source::with_named_input(
-            true,
-            compiled,
-            input,
-            &entry.id,
-            "Article",
-            |tree, profile, b, _a| {
-                let checked = tree.syntax();
-                let empty = SourceStore::default();
-                let mut admission = SourceAdmission::default();
-                let mut c = FoundationCodec::new(profile.registry(), &empty, &mut admission)
-                    .map_err(err)?;
-                let mut lower_budget = budget();
-                let doc = lower::document(
-                    checked,
-                    &compiled.doc.package.schema,
-                    Category::Article,
-                    profile.registry(),
-                    &mut lower_budget,
-                    &mut c,
-                )
-                .map_err(err)?;
-                Ok((doc, profile.digest(), b.usage(), lower_budget.usage()))
-            },
-        )?;
+        let (document, profile, parse_usage, lower_usage) =
+            crate::doc::source::with_named_input_limits(
+                true,
+                compiled,
+                input,
+                &entry.id,
+                "Article",
+                phases.parse,
+                |tree, profile, b, _a| {
+                    let checked = tree.syntax();
+                    let empty = SourceStore::default();
+                    let mut admission = SourceAdmission::default();
+                    let mut c = FoundationCodec::new(profile.registry(), &empty, &mut admission)
+                        .map_err(err)?;
+                    let mut lower_budget = Budget::new(phases.lower);
+                    let doc = lower::document(
+                        checked,
+                        &compiled.doc.package.schema,
+                        Category::Article,
+                        profile.registry(),
+                        &mut lower_budget,
+                        &mut c,
+                    )
+                    .map_err(|e| format!("lower: {e:?}; usage={:?}", lower_budget.usage()))?;
+                    Ok((doc, profile.digest(), b.usage(), lower_budget.usage()))
+                },
+            )?;
+        profiles.push(profile);
         pages.push(PageDocument {
             registration: PageRegistration {
                 id: entry.id.clone(),
@@ -108,7 +131,9 @@ pub fn generate_with_output_budget(
         origins.push(serde_json::json!({"id":entry.id,"source":entry.source,"route":entry.route,
             "input":physical,
             "source_sha256":digest_hex(Digest::of(input.as_bytes())),"profile_sha256":digest_hex(profile),
-            "operation_limits":resources::limits(budget().limits()),
+            "operation_limits":if phases.parse==phases.lower {resources::limits(phases.parse)} else {serde_json::Value::Null},
+            "parse_limits":resources::limits(phases.parse),"lower_limits":resources::limits(phases.lower),
+            "parse_initial_usage":resources::usage(Default::default()),"lower_initial_usage":resources::usage(Default::default()),
             "parse_and_validate_usage":resources::usage(parse_usage),"lower_usage":resources::usage(lower_usage)}));
     }
     let request = PagesHtmlRequest {
@@ -152,9 +177,12 @@ pub fn generate_with_output_budget(
         "mime":file_kinds[path],"license":if path.ends_with(".css") {Some("MIT")} else {None}})
         })
         .collect::<Vec<_>>();
+    let output_identity =
+        resources::execution_identity(rendered.identity, output_budget.limits(), initial_usage);
     let manifest = serde_json::to_string_pretty(&serde_json::json!({
         "format":"nepl3.local-doc-pages/1","identity":digest_hex(rendered.identity),"pages":origins,"files":records,
-        "execution_identity":digest_hex(resources::execution_identity(rendered.identity,output_budget.limits(),initial_usage)),
+        "execution_identity":digest_hex(output_identity),
+        "phase_execution":{"contract":"nepl3.local-doc-pages.phases/1","identity":digest_hex(resources::phase_identity(output_identity,&profiles,phases))},
         "output_budget":{"contract":"nepl3.local-doc-pages.execution/1","limits":resources::limits(output_budget.limits()),
             "initial_usage":resources::usage(initial_usage),"usage":resources::usage(output_budget.usage())},
         "renderer":"nepl3-doc-html pages/2","options":{"parallel":"Rows"},"viewer_scripts":false,
@@ -244,9 +272,13 @@ pub fn write(manifest: &Path, output: &Path) -> crate::Result<()> {
         }
         inputs.push((entry, input));
     }
-    let generated = generate_with_output_budget(
+    let generated = generate_with_phase_limits(
         &compiled()?,
         &inputs,
+        resources::PhaseLimits {
+            parse: manifest_data.parse_limits.budget().limits(),
+            lower: manifest_data.lower_limits.budget().limits(),
+        },
         &mut manifest_data.output_limits.budget(),
     )?;
     fs::create_dir(output)?;
