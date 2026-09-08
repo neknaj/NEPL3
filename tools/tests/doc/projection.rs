@@ -2,6 +2,63 @@ use super::*;
 use nepl3_tools::doc::projection::from_source;
 
 #[test]
+fn sentence_sequences_preserve_one_paragraph_and_author_spacing() -> Result<(), String> {
+    use pulldown_cmark::{Event, Parser, Tag};
+    let compiled = compiled()?;
+    let source = r##"article ja "Title" body
+      cons paragraph cons "最初の文。" cons "次の文。"
+        cons "First. " cons "Second." cons sentence cons text " [x] " cons code "`a`" nil
+        cons sentence cons text " &amp; " cons code " both " nil nil
+      cons list unordered cons item none body cons paragraph
+        cons "One. " cons sentence cons text "Two" cons break cons text "# Three." nil
+        cons "Four." nil nil nil nil"##;
+    let output = from_source(&compiled, source)?;
+    let mut text = String::new();
+    let mut codes = Vec::new();
+    let (mut paragraphs, mut lists, mut items, mut breaks) = (0, 0, 0, 0);
+    for event in Parser::new(&output) {
+        match event {
+            Event::Text(t) => text.push_str(&t),
+            Event::Code(t) => codes.push(t.into_string()),
+            Event::Start(Tag::Paragraph) => paragraphs += 1,
+            Event::Start(Tag::List(_)) => lists += 1,
+            Event::Start(Tag::Item) => items += 1,
+            Event::HardBreak => breaks += 1,
+            Event::SoftBreak => return Err("sentence boundary became a soft break".into()),
+            Event::Html(_) | Event::InlineHtml(_) => return Err("unexpected HTML".into()),
+            _ => {}
+        }
+    }
+    assert_eq!(
+        text,
+        "Title最初の文。次の文。First. Second. [x]  &amp; One. Two# Three.Four."
+    );
+    assert_eq!(codes, ["`a`", " both "]);
+    assert_eq!((paragraphs, lists, items, breaks), (1, 1, 1, 1));
+    assert_eq!(output, from_source(&compiled, source)?);
+    Ok(())
+}
+
+#[test]
+fn sentence_boundaries_do_not_hide_unsupported_flow_or_code_collisions() -> Result<(), String> {
+    let compiled = compiled()?;
+    for items in [
+        r#"cons sentence cons code "a" nil cons sentence cons code "b" nil"#,
+        r#"cons "a" cons paragraph cons "nested" nil"#,
+        r#"cons "a" cons parallel cons variant en "b" nil"#,
+        r#"cons "a" cons """#,
+        r#"cons " leading" cons "b""#,
+        r#"cons "a" cons "trailing ""#,
+        r#"cons "a" cons sentence cons break cons text "b" nil"#,
+        r#"cons sentence cons text "a" cons break nil cons "b""#,
+    ] {
+        let source = format!("article en \"T\" body cons paragraph {items} nil nil");
+        assert!(from_source(&compiled, &source).is_err(), "{source}");
+    }
+    Ok(())
+}
+
+#[test]
 fn raw_code_projection_preserves_bytes_and_distinct_blocks() -> Result<(), String> {
     use pulldown_cmark::{CodeBlockKind, Event, Parser, Tag};
     let compiled = compiled()?;
@@ -199,7 +256,7 @@ fn projection_refuses_lossy_or_unsupported_doc_shapes() -> Result<(), String> {
         r#"cons paragraph cons "trailing " nil nil"#,
         r#"cons paragraph cons "[base/reading]" nil nil"#,
         r#"cons paragraph cons sentence cons break nil nil nil"#,
-        r#"cons paragraph cons "first" cons "second" nil nil"#,
+        r#"cons paragraph cons sentence cons code "a" nil cons sentence cons code "b" nil nil nil"#,
         r#"cons paragraph cons sentence cons text "x\ny" nil nil nil"#,
         r#"cons paragraph cons sentence cons code "a" cons code "b" nil nil nil"#,
         r#"cons section s "Section" body cons paragraph cons "inside" nil nil cons paragraph cons "outside" nil nil"#,
