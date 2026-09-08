@@ -364,8 +364,26 @@ impl<'a> TokenizationSession<'a> {
         host: &mut impl super::TokenizationHost,
     ) -> Result<super::RecoverableHostReply, AcceptedTokenizationFailure> {
         let prefix = Prefix::capture(&accepted);
-        let inner = self
-            .read_accepted_with_host_recover(request, sources, budget, admission, accepted, host)?;
+        let mut guarded = super::host::IntegrityHost {
+            inner: host,
+            violated: false,
+        };
+        let result = self.read_accepted_with_host_recover(
+            request,
+            sources,
+            budget,
+            admission,
+            accepted,
+            &mut guarded,
+        );
+        if guarded.violated {
+            self.close();
+            return Err(AcceptedTokenizationFailure::BrokenPrefix {
+                original_error: ReaderError::Continuation,
+                observed_stop: budget.poll().err(),
+            });
+        }
+        let inner = result?;
         Ok(super::RecoverableHostReply { inner, prefix })
     }
     #[allow(clippy::too_many_arguments, clippy::result_large_err)]

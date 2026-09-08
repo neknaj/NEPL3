@@ -26,6 +26,24 @@ fn usage(amount: u64) -> Usage {
 }
 
 #[test]
+fn depth_scope_restores_the_caller_even_after_callback_replaces_budget() {
+    let mut b = Budget::new(limits(100));
+    let result: Result<(), StopReason> = b.with_depth_at_least(7, |b| {
+        let inner: Result<(), StopReason> = b.with_depth(|b| {
+            assert_eq!(b.current_depth(), 8);
+            *b = Budget::new(limits(100));
+            b.cancel();
+            Err(StopReason::Cancelled)
+        });
+        assert_eq!(b.current_depth(), 7);
+        inner
+    });
+    assert_eq!(result, Err(StopReason::Cancelled));
+    assert_eq!(b.current_depth(), 0);
+    assert_eq!(b.poll(), Err(StopReason::Cancelled));
+}
+
+#[test]
 fn observed_delegated_cost_is_atomic_across_all_resources_and_preserves_stops() {
     for resource in 0..8 {
         let mut b = Budget::new(limits(10));

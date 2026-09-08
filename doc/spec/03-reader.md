@@ -199,6 +199,9 @@ native hostの返信は、同じ呼出しのprivate prefix markを保持するRe
 一時的に受け取れる。parserは従来の条件でcallback輸送エラーとreader側の拒否を区別し、
 前者はowned Await/Reserveとして受理し、後者は元prefixへ戻して解析エラーにする。
 正常なStoppedのcollectorは巻き戻さず保持する。BudgetのLimits/Usage改変は別の整合性違反である。
+各provider/reservation callbackの直前と直後でLimits・Usage・現在depth・既存停止を照合し、
+改変の検出は返信生成やcallback輸送エラーとは別に保持する。後からCancelledを付けたり
+Errを返したりしても正常な停止や再試行可能なAwaitに戻さない。
 拒否した呼出しのpendingは破棄する。復元不能なBrokenCollectorはparserを閉じ、
 同時に予算が停止していても不完全なprogress付きStoppedへ変換しない。
 
