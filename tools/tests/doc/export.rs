@@ -1,6 +1,135 @@
 use nepl3_tools::doc::{export, source::compiled};
 
 #[test]
+fn page_output_budget_is_explicit_shared_and_sticky() -> Result<(), String> {
+    use nepl3_core::budget::{Budget, Resource, StopReason};
+    use nepl3_tools::doc::{
+        export::pages::{self, Entry},
+        source::budget,
+    };
+    let compiled = compiled()?;
+    let inputs = ["one", "two"].map(|id| {
+        (
+            Entry {
+                id: id.into(),
+                source: format!("{id}.nepld"),
+                route: format!("{id}/index.html"),
+            },
+            "article en \"Example\" body cons paragraph cons \"A sentence.\" nil nil".into(),
+        )
+    });
+    let default = pages::generate(&compiled, &inputs)?;
+    let mut selected = budget();
+    selected.charge(Resource::Work, 7).map_err(super::err)?;
+    let first = pages::generate_with_output_budget(&compiled, &inputs, &mut selected)?;
+    assert_eq!(default.files, first.files);
+    let manifest: serde_json::Value = serde_json::from_str(&first.manifest).map_err(super::err)?;
+    assert_eq!(manifest["output_budget"]["initial_usage"]["work"], 7);
+    assert_eq!(
+        manifest["output_budget"]["usage"]["work"],
+        selected.usage().work
+    );
+    assert_eq!(manifest["output_budget"]["limits"]["work"], 100_000_000);
+    for page in manifest["pages"].as_array().ok_or("pages")? {
+        assert_eq!(page["operation_limits"]["work"], 100_000_000);
+        assert_eq!(
+            page["parse_and_validate_usage"]
+                .as_object()
+                .ok_or("parse usage")?
+                .len(),
+            8
+        );
+        assert_eq!(
+            page["lower_usage"].as_object().ok_or("lower usage")?.len(),
+            8
+        );
+    }
+    let mut limits = budget().limits();
+    limits.work += 1;
+    let changed = pages::generate_with_output_budget(&compiled, &inputs, &mut Budget::new(limits))?;
+    let changed_manifest: serde_json::Value =
+        serde_json::from_str(&changed.manifest).map_err(super::err)?;
+    assert_eq!(changed.files, first.files);
+    assert_eq!(changed_manifest["identity"], manifest["identity"]);
+    assert_ne!(
+        changed_manifest["execution_identity"],
+        manifest["execution_identity"]
+    );
+    assert_eq!(changed_manifest["pages"], manifest["pages"]);
+    let mut cancelled = budget();
+    cancelled.cancel();
+    let before = cancelled.usage();
+    assert!(
+        pages::generate_with_output_budget(&compiled, &[], &mut cancelled)
+            .is_err_and(|e| e == "Cancelled")
+    );
+    assert_eq!(cancelled.usage(), before);
+    for reason in [
+        StopReason::WorkLimit,
+        StopReason::AllocationLimit,
+        StopReason::NodeLimit,
+        StopReason::DepthLimit,
+        StopReason::OutputLimit,
+    ] {
+        let mut limits = budget().limits();
+        match reason {
+            StopReason::WorkLimit => limits.work = 1,
+            StopReason::AllocationLimit => limits.allocation_units = 1,
+            StopReason::NodeLimit => limits.nodes = 0,
+            StopReason::DepthLimit => limits.depth = 0,
+            StopReason::OutputLimit => limits.output_bytes = 0,
+            _ => unreachable!(),
+        }
+        let mut stopped = Budget::new(limits);
+        assert!(
+            pages::generate_with_output_budget(&compiled, &inputs, &mut stopped).is_err(),
+            "{reason:?}"
+        );
+        assert_eq!(stopped.poll(), Err(reason));
+        let before = stopped.usage();
+        assert!(pages::generate_with_output_budget(&compiled, &inputs, &mut stopped).is_err());
+        assert_eq!(stopped.usage(), before);
+    }
+    let mut one = budget();
+    pages::generate_with_output_budget(&compiled, &inputs[..1], &mut one)?;
+    let mut limits = budget().limits();
+    limits.work = one.usage().work;
+    let mut shared = Budget::new(limits);
+    assert!(pages::generate_with_output_budget(&compiled, &inputs, &mut shared).is_err());
+    assert_eq!(shared.poll(), Err(StopReason::WorkLimit));
+    Ok(())
+}
+
+#[test]
+fn page_manifest_requires_all_explicit_limit_fields() -> Result<(), String> {
+    use nepl3_tools::doc::export::pages::{Manifest, resources::OutputLimits};
+    let old = r#"{"version":1,"pages":[]}"#;
+    let default: Manifest = serde_json::from_str(old).map_err(super::err)?;
+    assert_eq!(default.output_limits.work, 100_000_000);
+    let mut value: serde_json::Value = serde_json::from_str(old).map_err(super::err)?;
+    value["output_limits"] = serde_json::to_value(OutputLimits::default()).map_err(super::err)?;
+    assert!(serde_json::from_value::<Manifest>(value.clone()).is_ok());
+    for bad in [
+        serde_json::Value::Null,
+        serde_json::json!({"work":200_000_000}),
+    ] {
+        let mut broken = value.clone();
+        broken["output_limits"] = bad;
+        assert!(serde_json::from_value::<Manifest>(broken).is_err());
+    }
+    for (name, bad) in [
+        ("work", serde_json::json!(-1)),
+        ("work", serde_json::json!(1.5)),
+        ("unlimited", serde_json::json!(true)),
+    ] {
+        let mut broken = value.clone();
+        broken["output_limits"][name] = bad;
+        assert!(serde_json::from_value::<Manifest>(broken).is_err());
+    }
+    Ok(())
+}
+
+#[test]
 fn export_reuses_the_admitted_tree_proof_without_recharging_parse() -> Result<(), String> {
     use nepl3_tools::doc::source::{budget, with_input_route};
     let compiled = compiled()?;
