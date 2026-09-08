@@ -336,3 +336,30 @@ CLIはsourceを10MB、aliases入力を1MiBまで読み、入力pathをUTF-8・40
 source byte列、aliasesの元JSON byte列、Documentのdigestとrenderer版をcommentへ記録する。
 すべての生成検査の後に新fileだけを作り、既存fileを上書きしない。I/O途中の失敗は
 未完成fileを残す場合がある。公開・移行registryの切替・他ページの生成はこの操作に含めない。
+
+### 明示したページ集合の注釈付きprojection
+
+開発hostの `projection::annotated::pages::render` は、明示したPageSetと各Docページの
+alias列を受け取る別の入口とする。単一Articleの `/2` 操作へ周辺file探索を追加しない。
+PageSetのsourceは論理的な原文path、routeは出力Markdownのpathとし、HTML routeから
+拡張子を推測して作らない。既存の `pages::resolve` が実際の不変な集合を検査し、
+署名済みという申告や受信したPageLinkPlanをnative proofとして使用しない。
+
+RelativeとPageの参照を解決し、出力元routeから出力先routeへの相対URIを生成する。
+Docへのsemantic fragmentには、意味上のlabelの存在に加え、そのページの実projectionに
+`n-` とUTF-8小文字hexのanchorが出力されたことを要求する。自己参照と相互参照は許し、
+再帰的に生成せず、全ページを一括検査・生成してから返す。既存profileで表せない後続
+ページがある場合も、先行ページだけを成功結果として返さない。
+
+未移行Markdown等は、呼出し側が実bytesを明示したPageFileとして扱える。このfileは
+parse・実行しない。Relativeのfragmentなし参照のみを許し、FileFragmentの拒否と
+Page targetがDoc専用である規則を維持する。MarkdownをHTML routeへ置き換えたり、
+架空のDocや見出しslugを補ったりしない。各Docのsource namespaceは一意なpage IDで
+分け、同じ集合のcodec admissionで異なる内容を同じsnapshotとして受理しない。
+
+返すidentityは既存のPageSet identityであり、原Doc・登録path・受動fileの実bytesに
+結び付く。aliasやrendererを含む配布artifact全体のidentityとは区別する。将来のhost
+metadataにはそれらも別途記録する。Doc間で生成Markdownのdigestを再帰的に含めない。
+同じ有限Budgetで解決・生成・出力anchor検査を行い、停止後の再試行に新しい予算を与えない。
+この入口にはファイルI/O、CLIのcontext manifest、canonical registryへの接続、HTMLの
+依存ページ生成はまだ含めず、それらの完成を型付きprojectionの成功から推定しない。

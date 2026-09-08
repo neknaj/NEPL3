@@ -1134,5 +1134,34 @@ body
       cons "I/O[途中/とちゅう]の[失敗/しっぱい]は[未完成/みかんせい]fileを[残/のこ]す[場合/ばあい]がある。"
       cons "[公開/こうかい]・[移行/いこう]registryの[切替/きりかえ]・[他/た]ページの[生成/せいせい]はこの[操作/そうさ]に[含/ふく]めない。"
       nil
+    cons section annotated_pages "[明示/めいじ]したページ[集合/しゅうごう]の[注釈付/ちゅうしゃくつ]きprojection" body
+      cons paragraph
+        cons sentence cons ruby text "開発" text "かいはつ" cons text "hostの " cons code "projection::annotated::pages::render" cons text " は、" cons ruby text "明示" text "めいじ" cons text "したPageSetと" cons ruby text "各" text "かく" cons text "Docページのalias" cons ruby text "列" text "れつ" cons text "を" cons ruby text "受" text "う" cons text "け" cons ruby text "取" text "と" cons text "る" cons ruby text "別" text "べつ" cons text "の" cons ruby text "入口" text "いりぐち" cons text "とする。" nil
+        cons sentence cons ruby text "単一" text "たんいつ" cons text "Articleの " cons code "/2" cons text " " cons ruby text "操作" text "そうさ" cons text "へ" cons ruby text "周辺" text "しゅうへん" cons text "file" cons ruby text "探索" text "たんさく" cons text "を" cons ruby text "追加" text "ついか" cons text "しない。" nil
+        cons "PageSetのsourceは[論理的/ろんりてき]な[原文/げんぶん]path、routeは[出力/しゅつりょく]Markdownのpathとし、HTML routeから[拡張子/かくちょうし]を[推測/すいそく]して[作/つく]らない。"
+        cons sentence cons ruby text "既存" text "きそん" cons text "の " cons code "pages::resolve" cons text " が" cons ruby text "実際" text "じっさい" cons text "の" cons ruby text "不変" text "ふへん" cons text "な" cons ruby text "集合" text "しゅうごう" cons text "を" cons ruby text "検査" text "けんさ" cons text "し、" cons ruby text "署名済" text "しょめいず" cons text "みという" cons ruby text "申告" text "しんこく" cons text "や" cons ruby text "受信" text "じゅしん" cons text "したPageLinkPlanをnative proofとして" cons ruby text "使用" text "しよう" cons text "しない。" nil
+        nil
+      cons paragraph
+        cons "RelativeとPageの[参照/さんしょう]を[解決/かいけつ]し、[出力元/しゅつりょくもと]routeから[出力先/しゅつりょくさき]routeへの[相対/そうたい]URIを[生成/せいせい]する。"
+        cons sentence cons text "Docへのsemantic fragmentには、" cons ruby text "意味上" text "いみじょう" cons text "のlabelの" cons ruby text "存在" text "そんざい" cons text "に" cons ruby text "加" text "くわ" cons text "え、そのページの" cons ruby text "実" text "じつ" cons text "projectionに " cons code "n-" cons text " とUTF-8" cons ruby text "小文字" text "こもじ" cons text "hexのanchorが" cons ruby text "出力" text "しゅつりょく" cons text "されたことを" cons ruby text "要求" text "ようきゅう" cons text "する。" nil
+        cons "[自己参照/じこさんしょう]と[相互参照/そうごさんしょう]は[許/ゆる]し、[再帰的/さいきてき]に[生成/せいせい]せず、[全/ぜん]ページを[一括検査/いっかつけんさ]・[生成/せいせい]してから[返/かえ]す。"
+        cons "[既存/きそん]profileで[表/あらわ]せない[後続/こうぞく]ページがある[場合/ばあい]も、[先行/せんこう]ページだけを[成功結果/せいこうけっか]として[返/かえ]さない。"
+        nil
+      cons paragraph
+        cons "[未移行/みいこう]Markdown[等/とう]は、[呼出/よびだ]し[側/がわ]が[実/じつ]bytesを[明示/めいじ]したPageFileとして[扱/あつか]える。"
+        cons "このfileはparse・[実行/じっこう]しない。"
+        cons "Relativeのfragmentなし[参照/さんしょう]のみを[許/ゆる]し、FileFragmentの[拒否/きょひ]とPage targetがDoc[専用/せんよう]である[規則/きそく]を[維持/いじ]する。"
+        cons "MarkdownをHTML routeへ[置/お]き[換/か]えたり、[架空/かくう]のDocや[見出/みだ]しslugを[補/おぎな]ったりしない。"
+        cons "[各/かく]Docのsource namespaceは[一意/いちい]なpage IDで[分/わ]け、[同/おな]じ[集合/しゅうごう]のcodec admissionで[異/こと]なる[内容/ないよう]を[同/おな]じsnapshotとして[受理/じゅり]しない。"
+        nil
+      cons paragraph
+        cons "[返/かえ]すidentityは[既存/きそん]のPageSet identityであり、[原/げん]Doc・[登録/とうろく]path・[受動/じゅどう]fileの[実/じつ]bytesに[結/むす]び[付/つ]く。"
+        cons "aliasやrendererを[含/ふく]む[配布/はいふ]artifact[全体/ぜんたい]のidentityとは[区別/くべつ]する。"
+        cons "[将来/しょうらい]のhost metadataにはそれらも[別途記録/べっときろく]する。"
+        cons "Doc[間/かん]で[生成/せいせい]Markdownのdigestを[再帰的/さいきてき]に[含/ふく]めない。"
+        cons "[同/おな]じ[有限/ゆうげん]Budgetで[解決/かいけつ]・[生成/せいせい]・[出力/しゅつりょく]anchor[検査/けんさ]を[行/おこな]い、[停止後/ていしご]の[再試行/さいしこう]に[新/あたら]しい[予算/よさん]を[与/あた]えない。"
+        cons "この[入口/いりぐち]にはファイルI/O、CLIのcontext manifest、canonical registryへの[接続/せつぞく]、HTMLの[依存/いぞん]ページ[生成/せいせい]はまだ[含/ふく]めず、それらの[完成/かんせい]を[型付/かたつ]きprojectionの[成功/せいこう]から[推定/すいてい]しない。"
+        nil
+      nil
     nil
   nil

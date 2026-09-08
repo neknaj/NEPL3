@@ -5,6 +5,7 @@ use nepl3_core::source::Digest;
 use serde::Deserialize;
 mod blocks;
 pub mod host;
+pub mod pages;
 
 /// An explicitly supplied compatibility anchor; None selects the article.
 #[derive(Debug, Deserialize)]
@@ -33,6 +34,21 @@ pub fn render<C: FoundationValueCodec>(
 where
     C::Error: core::fmt::Debug,
 {
+    Ok(render_resolved(document, registry, codec, budget, aliases, &[])?.0)
+}
+
+// Only this module's PageSet resolver can construct the non-external bindings.
+fn render_resolved<C: FoundationValueCodec>(
+    document: &DocumentSyntax,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+    aliases: &[Alias],
+    links: &[(u64, String)],
+) -> Result<(Artifact, Vec<String>), Error>
+where
+    C::Error: core::fmt::Debug,
+{
     let plan = prepare::inspect(document, registry, codec, budget).map_err(|e| match e {
         prepare::PreparationError::Stopped(s) => Error::Stopped(s),
         e => Error::Invalid(format!("{e:?}")),
@@ -46,6 +62,16 @@ where
             } => {
                 if !nepl3_markup::html::external_uri(uri, budget)? {
                     return Err(Error::Text { node: *node });
+                }
+            }
+            prepare::DocRequirement::Link { node, .. } => {
+                let mut found = false;
+                for (actual, _) in links {
+                    budget.charge(Resource::Work, 1)?;
+                    found |= actual == node;
+                }
+                if !found {
+                    return Err(Error::NeedsResolution);
                 }
             }
             _ => return Err(Error::NeedsResolution),
@@ -90,6 +116,7 @@ where
             output: String::new(),
         },
         aliases,
+        links,
         emitted: Vec::new(),
     };
     let DocKind::Article { title, body, .. } = writer.plain.kind(root.0) else {
@@ -121,15 +148,19 @@ where
             return Err(Error::Invalid("compatibility anchor not emitted".into()));
         }
     }
-    Ok(Artifact {
-        markdown: writer.plain.output,
-        document_digest: plan.document_digest,
-    })
+    Ok((
+        Artifact {
+            markdown: writer.plain.output,
+            document_digest: plan.document_digest,
+        },
+        writer.emitted,
+    ))
 }
 
 struct Annotated<'a, 'b> {
     plain: Writer<'a, 'b>,
     aliases: &'a [Alias],
+    links: &'a [(u64, String)],
     emitted: Vec<String>,
 }
 #[derive(Clone, Copy)]
@@ -293,10 +324,21 @@ impl<'a> Annotated<'a, '_> {
                                 self.plain.budget,
                             )?;
                         }
-                        DocKind::Link {
-                            target: LinkTarget::External { uri },
-                            label,
-                        } => {
+                        DocKind::Link { target, label } => {
+                            let uri = match target {
+                                LinkTarget::External { uri } => uri.as_str(),
+                                _ => {
+                                    let mut href = None;
+                                    for (actual, value) in self.links {
+                                        self.plain.budget.charge(Resource::Work, 1)?;
+                                        if *actual == node {
+                                            href = Some(value.as_str());
+                                            break;
+                                        }
+                                    }
+                                    href.ok_or(Error::NeedsResolution)?
+                                }
+                            };
                             push(
                                 &mut stack,
                                 Task::Piece(Piece::LinkEnd(node, uri)),

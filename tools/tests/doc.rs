@@ -4,6 +4,8 @@
 mod annotated;
 #[path = "doc/annotated_blocks.rs"]
 mod annotated_blocks;
+#[path = "doc/annotated_pages.rs"]
+mod annotated_pages;
 #[path = "doc/export.rs"]
 mod export;
 #[path = "doc/external.rs"]
