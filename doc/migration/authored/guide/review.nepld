@@ -1150,5 +1150,16 @@ body
       cons "[旧/きゅう]raw[入口/いりぐち]の[原/げん]probeとfull logを[保全/ほぜん]し、[新/しん]APIでは[補助/ほじょ]sourceを[実/じつ]provider[返信/へんしん]で[宣言/せんげん]するよう[適応/てきおう]した。"
       cons "[未改変/みかいへん][補助/ほじょ]sourceは[成功/せいこう]、[末尾改変/まつびかいへん]・triviaだけの[変更/へんこう]・URI[変更/へんこう]はRequestMismatchとなる。"
       cons "API[変更/へんこう]を[挟/はさ]んだため、[旧/きゅう]probeの[無変更再実行/むへんこうさいじっこう]とは[記録/きろく]しない。" nil
+    cons paragraph
+      cons sentence cons ruby text "隣接" text "りんせつ" cons text "Exactの" cons ruby text "独立入力" text "どくりつにゅうりょく" cons text " " cons code "lambda ab ab" cons text " は、" cons ruby text "補助" text "ほじょ" cons text "source " cons code "ab" cons text " の" cons ruby text "同一変位" text "どういつへんい" cons text "による" cons ruby text "連続" text "れんぞく" cons text "した1byte" cons ruby text "区間" text "くかん" cons text "を" cons ruby text "一意逆写像" text "いちいぎゃくしゃぞう" cons text "として" cons ruby text "扱" text "あつか" cons text "うべきだが、" cons ruby text "初稿" text "しょこう" cons text "は" cons ruby text "単一" text "たんいつ" cons text "mapだけを" cons ruby text "要求" text "ようきゅう" cons text "して" cons ruby text "拒否" text "きょひ" cons text "した。" nil
+      cons "[全区間/ぜんくかん]の[穴/あな]なし[被覆/ひふく]へ[修正/しゅうせい]した[後/あと]も、[実候補/じつこうほ]parse[後/ご]のacceptがShapeChangedを[返/かえ]す[別/べつ]の[不足/ふそく]を[検出/けんしゅつ]し、[公開/こうかい]root editに[加/くわ]えて[内部派生/ないぶはせい]editを[形状比較/けいじょうひかく]へ[接続/せつぞく]した。"
+      cons "[修正後/しゅうせいご]はwhole・split・[逆順/ぎゃくじゅん]のmap[表/ひょう]で[実/じつ]acceptまで[成功/せいこう]し、[穴/あな]・[異/い]source・[異変位/いへんい]・[曖昧/あいまい]な[逆写像/ぎゃくしゃぞう]・Transformed[混在/こんざい]は[拒否/きょひ]した。"
+      cons sentence cons code "ab→xyz" cons text "、" cons code "あい→漢" cons text "、" cons code "あい→漢字仮" cons text " のwhole/split" cons ruby text "計" text "けい" cons text "6" cons ruby text "例" text "れい" cons text "では、" cons ruby text "新" text "しん" cons text "readerが" cons ruby text "返" text "かえ" cons text "すsegment" cons ruby text "境界" text "きょうかい" cons text "と" cons ruby text "表順" text "ひょうじゅん" cons text "も" cons ruby text "変" text "か" cons text "えて" cons ruby text "成功" text "せいこう" cons text "し、" cons ruby text "公開編集" text "こうかいへんしゅう" cons text "は" cons ruby text "元補助" text "もとほじょ" cons text "sourceへの1" cons ruby text "件" text "けん" cons text "に" cons ruby text "限" text "かぎ" cons text "られる。" nil nil
+    cons paragraph
+      cons "[同/どう]6[例/れい]を[実/じつ]request/reply CBORで[初回受信/しょかいじゅしん]し、[元/もと]storeを[共有/きょうゆう]しないreceiverで[再/さい]encode[一致/いっち]とsource bytes onceを[確認/かくにん]した。"
+      cons "writable[除去/じょきょ]、source[宣言欠落/せんげんけつらく]、expectedDigest・replacement[改変/かいへん]は[拒否/きょひ]し、6[資源/しげん]のdecode[停止/ていし]は[元理由/もとりゆう]を[保持/ほじ]した。"
+      cons "[候補/こうほ]parse・binding[後/ご]にWorkを[使/つか]い[切/き]る[場合/ばあい]とcancelする[場合/ばあい]は、acceptが[編集/へんしゅう]を[公開/こうかい]せずStoppedと[累積/るいせき]Usageを[保持/ほじ]する。"
+      cons "[現在/げんざい]のrename ReportはUsageだけを[返/かえ]し、[各/かく]parse/analyzeの[正式/せいしき]Reportはcallerが[保持/ほじ]する[二段入口/にだんいりぐち]である。"
+      cons "[全段共通/ぜんだんきょうつう]Report[包絡/ほうらく]、[任意/にんい]encoder、raw[外部実行/がいぶじっこう]の[認証/にんしょう]はこの[範囲/はんい]の[完了/かんりょう]に[含/ふく]めない。" nil
     nil
   nil
