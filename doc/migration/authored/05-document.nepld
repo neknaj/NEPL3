@@ -156,6 +156,28 @@ body
       cons "ForeignClosureのowner-local Originと[環境/かんきょう]digestにはこの[再配置/さいはいち]を[適用/てきよう]しない。"
       cons "source admissionは[操作内/そうさない]で[共有/きょうゆう]し、payload[宣言/せんげん]の[欠落/けつらく]をambient source storeから[補/おぎな]わない。" nil
     cons paragraph
+      cons sentence cons ruby text "単一" text "たんいつ" cons text "source" cons ruby text "内" text "ない" cons text "で" cons ruby text "完結" text "かんけつ" cons text "するreader" cons ruby text "向" text "む" cons text "けには、" cons ruby text "追加" text "ついか" cons text "の" cons ruby text "交換型" text "こうかんがた" cons text " " cons code "SentencePayload" cons text " を" cons ruby text "用意" text "ようい" cons text "する。" nil
+      cons sentence cons text "field" cons ruby text "順" text "じゅん" cons text "は " cons code "value: DocValue" cons text "、" cons code "origins: List<Origin>" cons text "、" cons code "view: DocView" cons text " とし、" cons code "view.head" cons text " のSpanが" cons ruby text "元" text "もと" cons text "sourceの" cons ruby text "完全" text "かんぜん" cons text "なsnapshot" cons ruby text "参照" text "さんしょう" cons text "を" cons ruby text "保持" text "ほじ" cons text "する。" nil
+      cons "[本文/ほんぶん]byte[列/れつ]はpayloadへ[重複格納/ちょうふくかくのう]せず、[呼出/よびだ]し[元/もと]が[明示/めいじ]するowner sourceから[解決/かいけつ]する。"
+      cons "[受信/じゅしん]codecはその[一/ひと]つのsourceだけをscopeとし、[同/おな]じURIやsource[名/めい]だけが[一致/いっち]する[別/べつ]revision・[別/べつ]digest、ambientにしかないsourceで[参照/さんしょう]を[補/おぎな]わない。" nil
+    cons paragraph
+      cons "この[型/かた]はSentence root、Text・Concat・Ruby・Annoのみのnode、[単一/たんいつ]DocView、[単一/たんいつ]source、[空/から]のembeds・sourceMapsに[限定/げんてい]する。"
+      cons "[各意味/かくいみ]nodeはSpanとOriginを[持/も]ち、[位置/いち]はhead[内/ない]に[含/ふく]まれる。"
+      cons "Originの[合成/ごうせい]は[既存/きそん]の[非循環/ひじゅんかん]・[参照検査/さんしょうけんさ]に[従/したが]い、Direct・[生成呼出/せいせいよびだ]し[位置/いち]・Synthetic anchorの[実在/じつざい]Spanも[同/おな]じhead[内/ない]を[要求/ようきゅう]する。"
+      cons "[型/かた]・source[閉包/へいほう]・[位置/いち]の[検査/けんさ]と[資源計上/しげんけいじょう]はnative/portableで[共通/きょうつう]に[行/おこな]い、[停止理由/ていしりゆう]を[変更/へんこう]しない。"
+      cons "[対応/たいおう]するRustの[型付/かたつ]き[意味値/いみち]は[既存/きそん]のDocumentSyntaxであり、codec[受信時/じゅしんじ]に[明示/めいじ]owner sourceを[加/くわ]えて[構築/こうちく]する。" nil
+    cons paragraph
+      cons "この[追加型/ついかがた]は、[別生成/べつせいせい]sourceから[明示/めいじ]SourceMapで[戻/もど]す[従来/じゅうらい]のDocumentSyntax payloadを[置/お]き[換/か]えない。"
+      cons "providerは[署名/しょめい]で[返却型/へんきゃくがた]を[明示/めいじ]し、lowerでは[型/かた]ごとに[検査/けんさ]する。"
+      cons "SentencePayload[単独/たんどく]の[受信検査/じゅしんけんさ]は[指定/してい]source[内/ない]のliteralデータを[検査/けんさ]するものであり、[特定/とくてい]tokenへの[所属/しょぞく]を[証明/しょうめい]しない。"
+      cons "lowerが[実際/じっさい]のowner bundleのsource[宣言/せんげん]から[対象/たいしょう]を[選/えら]び、[外/そと]tokenのheadと[局所/きょくしょ]Viewの[完全一致/かんぜんいっち]を[追加/ついか]で[要求/ようきゅう]する。"
+      cons "[元本文/もとほんぶん]の[省略/しょうりゃく]、[再/さい]parse、[架空/かくう]のsource[位置/いち]、provider[版/ばん]の[暗黙/あんもく]な[切替/きりか]えによって[重複/ちょうふく]を[減/へ]らしてはならない。" nil
+    cons paragraph
+      cons sentence cons ruby text "標準文法" text "ひょうじゅんぶんぽう" cons text "は " cons code "doc.reader/sentence-v2" cons text " を" cons ruby text "明示" text "めいじ" cons text "して" cons ruby text "選択" text "せんたく" cons text "し、" cons code "nepl3.doc.reader" cons text " の " cons code "sentenceReferenced" cons text " " cons ruby text "操作" text "そうさ" cons text "を" cons ruby text "呼" text "よ" cons text "ぶ。" nil
+      cons "[包絡/ほうらく]はReadRequest/ReadReplyのままで、ProviderSignatureのvalue[出力/しゅつりょく]をSentencePayloadとする。"
+      cons sentence cons ruby text "従来" text "じゅうらい" cons text "の " cons code "sentence" cons text " " cons ruby text "操作" text "そうさ" cons text "およびDocumentSyntaxの" cons ruby text "交換型" text "こうかんがた" cons text "とは" cons ruby text "識別" text "しきべつ" cons text "を" cons ruby text "分" text "わ" cons text "け、Profileの" cons ruby text "解決済" text "かいけつず" cons text "み" cons ruby text "署名" text "しょめい" cons text "・" cons ruby text "文法" text "ぶんぽう" cons text "source・provider identityを" cons ruby text "更新" text "こうしん" cons text "する。" nil
+      cons "lowerは[受信/じゅしん]recordの[型/かた]を[選/えら]んでから[対応/たいおう]するcodecを[一度/いちど]だけ[呼/よ]び、SentencePayloadの[検査失敗/けんさしっぱい]を[旧/きゅう]codecで[再試行/さいしこう]しない。" nil
+    cons paragraph
       cons "[意味値/いみち]からliteralを[出力/しゅつりょく]するprinterはText/Ruby/Annoだけの[表現/ひょうげん]ならescapeを[行/おこな]ってliteral[化/か]できる。"
       cons "[他/ほか]のInlineがあればprefix[構文/こうぶん]を[出力/しゅつりょく]する。"
       cons "[内容/ないよう]を[削除/さくじょ]して[無理/むり]にliteralにしない。"
