@@ -479,5 +479,38 @@ body
       cons "[入力依存/にゅうりょくいぞん]の[再帰/さいき]constructor[呼出/よびだ]しは[明示/めいじ]worklistへ[置/お]き[換/か]わり、stack[設定/せってい]の[拡大/かくだい]がないため、この[不具合/ふぐあい]をcorrectedとした。"
       cons "[空/から]objectの[負例/ふれい]は[深/ふか]い[不正/ふせい]JSON cleanupの[検証/けんしょう]とは[扱/あつか]わない。"
       cons "bootstrap[全体/ぜんたい]の[完成条件/かんせいじょうけん]は[引/ひ]き[続/つづ]き[未達/みたつ]である。" nil
+    cons paragraph
+      cons sentence cons ruby text "続" text "つづ" cons text "く" cons ruby text "管理対象" text "かんりたいしょう" cons text " " cons code "compiled_angle_reader_keeps_quoted_delimiters_and_streaming_commit" cons text " も" cons ruby text "独立実行" text "どくりつじっこう" cons text "で" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "[訂正済/ていせいず]み[正式/せいしき]Angle sourceをimport・compileした[実/じつ]ReaderPlanをReaderSessionへ[渡/わた]し、[両引用符/りょういんようふ]のend 15、[閉/と]じdelimiter[前/まえ]の[全/ぜん]cutのNeedMore、final[未閉/みと]じ[入力/にゅうりょく]のFailedを[検査/けんさ]する。"
+      cons "[旧/きゅう]sourceのOutputType[拒否/きょひ]と[併/あわ]せてR031をcorrectedとした。"
+      cons "G04[全項目/ぜんこうもく]や[標準/ひょうじゅん]bootstrap[完了/かんりょう]へ[範囲/はんい]を[広/ひろ]げない。" nil
+    cons paragraph
+      cons "factsの[最初/さいしょ]の[境界/きょうかい]はnative[管理対象/かんりたいしょう]2[件/けん]とtyped wire[管理対象/かんりたいしょう]1[件/けん]を[独立実行/どくりつじっこう]した。"
+      cons "ID・namespace root・source[閉包/へいほう]・[予約範囲/よやくはんい]・[権限/けんげん]の[検査/けんさ]と、[正/ただ]しいNDF[構造内/こうぞうない]でのnamespace[偽装/ぎそう]、[未許可/みきょか]resolution[更新/こうしん]、fresh SourceLimitの[拒否/きょひ]を[確認/かくにん]した。"
+      cons "[補助/ほじょ]の[実/じつ]FactDelta.validateでは、Source spanをRelation.sourceにする[未許可追加/みきょかついか]は[拒否/きょひ]され、[同/おな]じspanへのhostの[明示/めいじ]grantは[成功/せいこう]する。"
+      cons "foreign namespace・[逆転予約範囲/ぎゃくてんよやくはんい]・MissingOriginも[拒否/きょひ]された。"
+      cons "CheckedFactSetは[構造整合/こうぞうせいごう]proofであり、[参照先/さんしょうさき]のlexical visibilityやT06の[名前解決/なまえかいけつ]アルゴリズム、FactsRequest/Reply[全包絡/ぜんほうらく]の[往復/おうふく]をこの[成功/せいこう]へ[含/ふく]めない。" nil
+    cons paragraph
+      cons "SourceMapのsnapshot DAG fastpathを[読/よ]み、coarse graphが[循環/じゅんかん]する[場合/ばあい]は[元/もと]のbyte-point[検査/けんさ]へ[戻/もど]ることを[確認/かくにん]した。"
+      cons "[管理対象/かんりたいしょう]maps 3[件/けん]と[既存/きそん]structureのmap[関連/かんれん]4[件/けん]を[独立実行/どくりつじっこう]し、[大/おお]きいTransformedの[低予算成功/ていよさんせいこう]、forward overlap・[区間/くかん]が[離/はな]れた[逆方向/ぎゃくほうこう]・[本当/ほんとう]の[循環/じゅんかん]の[既存判定/きそんはんてい]が[維持/いじ]されることを[確認/かくにん]した。"
+      cons "reader[側/がわ]のcandidate artifactはmapを[一/ひと]つずつ[再検査/さいけんさ]する[代/か]わりに[同/おな]じ[全列/ぜんれつ]を[一度検査/いちどけんさ]する[変更/へんこう]であり、SourceMapの[意味/いみ]をsnapshot[単位/たんい]のcycleへ[置/お]き[換/か]えたものではない。" nil
+    cons paragraph
+      cons sentence cons ruby text "標準" text "ひょうじゅん" cons text "Grammar bootstrapの" cons ruby text "管理対象" text "かんりたいしょう" cons text " " cons code "complete_grammar_bootstrap_uses_production_parser_lower_and_semantic_identity" cons text " をnativeで" cons ruby text "独立実行" text "どくりつじっこう" cons text "し" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "[完全/かんぜん]な9369 bytesの[原文/げんぶん]から[初期/しょき]typed seedを[作/つく]り、[実/じつ]compilerによるP0、[実/じつ]ParseSession・[標準/ひょうじゅん]reader・lower・compilerによるP1、[同/おな]じ[原文/げんぶん]をP1で[読/よ]むP2を[順/じゅん]に[構築/こうちく]する。"
+      cons "3つのsemantic identityが[一致/いっち]し、[各/かく]ASTは518 nodesとなった。"
+      cons "identity writerがreader[正準形/せいじゅんけい]・binding・styleを[含/ふく]む[実/じつ]metadataを[比較/ひかく]することも[確認/かくにん]した。"
+      cons "この[実行/じっこう]は116.11[秒/びょう]、Work 9,126,464,211、AllocationUnits 59,758,042,639、Depth 96を[消費/しょうひ]した。"
+      cons "AllocationUnitsは[累積/るいせき]の[論理計上量/ろんりけいじょうりょう]であり、[同時/どうじ]にその[容量/ようりょう]のheapを[保持/ほじ]したという[計測/けいそく]ではない。"
+      cons "[高/たか]い[処理/しょり]コストは[未改善/みかいぜん]で、これを[全受入群/ぜんうけいれぐん]やタスク[完成/かんせい]へ[拡張/かくちょう]しない。" nil
+    cons paragraph
+      cons sentence cons ruby text "管理対象" text "かんりたいしょう" cons text " " cons code "original_grammar_parser_compiles_independent_reader_binding_style_mutations" cons text " も" cons ruby text "独立実行" text "どくりつじっこう" cons text "した。" nil
+      cons "さらにignoredの[別/べつ]native main-thread executableでは、[元/もと]の[完全/かんぜん]Grammar seedを[保/たも]ったまま、[標準/ひょうじゅん]source[自身/じしん]のword readerへCommitを[追加/ついか]、NamespaceのbindingへScopeを[追加/ついか]、[最初/さいしょ]のhead styleをmarkerからcontentへ[変更/へんこう]する3[入力/にゅうりょく]を[個別/こべつ]にparse・lower・compileし、それぞれのsemantic identityが[変/か]わることを[確認/かくにん]した。"
+      cons "Styleの[初候補/しょこうほ]keywordは[未登録/みとうろく]classでMissingClassとなったため、[登録済/とうろくず]みcontentに[訂正/ていせい]して[再実行/さいじっこう]した。"
+      cons "この[拒否/きょひ]は[実装不具合/じっそうふぐあい]ではない。"
+      cons "[変異/へんい]ごとに[新/あたら]しいseedを[作/つく]って[比較/ひかく]したり、Rust ASTだけを[書/か]き[換/か]えてsource[解析/かいせき]を[省/はぶ]いたりはしていない。"
+      cons "[標準/ひょうじゅん]facts callbackの[実行/じっこう]、[全包絡/ぜんほうらく]codec、[別/べつ]process・WASI bootstrap、[配布/はいふ]seed artifactの[一致検査/いっちけんさ]は[別/べつ]の[未達範囲/みたつはんい]である。" nil
+    cons paragraph
+      cons sentence cons ruby text "別" text "べつ" cons text "の" cons ruby text "補助" text "ほじょ" cons text "probe " cons code "parse_text" cons text " ではText" cons ruby text "予約" text "よやく" cons text "を" cons ruby text "実際" text "じっさい" cons text "にresumeし、" cons code "let \"ok\" y" cons text " がCompleteとdecoded sourceを" cons ruby text "返" text "かえ" cons text "し、" cons code "let \"a\\q\" y" cons text " がRecoveredで" cons ruby text "元" text "もと" cons text "InvalidEscape" cons ruby text "診断" text "しんだん" cons text "・" cons ruby text "位置" text "いち" cons text "を" cons ruby text "保持" text "ほじ" cons text "することを" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "このbuiltinの[失敗経路/しっぱいけいろ]については[元診断/もとしんだん]の[消失/しょうしつ]を[再現/さいげん]していない。" nil
     nil
   nil
