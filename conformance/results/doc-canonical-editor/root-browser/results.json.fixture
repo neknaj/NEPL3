@@ -1,0 +1,1790 @@
+[
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "08. 共通きょうつうeditor serviceと診断しんだん",
+      "方針ほうしん",
+      "1. AnalysisSnapshotの入力にゅうりょくと同一性どういつせい",
+      "2. 自動じどうで得えられる機能きのう",
+      "3. regionの選択せんたく",
+      "4. definitionとrelationsの扱あつかい",
+      "5. 不完全入力ふかんぜんにゅうりょく",
+      "6. 増分解析ぞうぶんかいせきと取消とりけし",
+      "7. LSP adapterの責務せきむ",
+      "8. 診断しんだん・ログの表示ひょうじ",
+      "9. workspace trustの境界きょうかい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "SHA-256(domain || canonical NDF/1 CBOR(value))",
+      "nepl3.analysis.tree/1",
+      "nepl3.analysis.execution/1",
+      "nepl3.analysis.request/1",
+      "analysis::region::regions",
+      "RegionKey",
+      "RegionSidecar { facts: Option<List<ReaderFactBatch>> }",
+      "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)",
+      "analysis::query::query",
+      "analysis::region::query::query",
+      "RenameRequest(key, source, offset, newName, writable)"
+    ],
+    "links": [],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-736e617073686f74",
+      "n-64657269766564",
+      "n-726567696f6e",
+      "n-72656c6174696f6e73",
+      "n-7265636f76657279",
+      "n-696e6372656d656e74616c",
+      "n-6c7370",
+      "n-646961676e6f7374696373",
+      "n-7472757374"
+    ],
+    "ruby": 1330,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 375,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 228.46875,
+          "start": 26084,
+          "max": 26084
+        },
+        "final": 228
+      },
+      {
+        "id": "n-736e617073686f74",
+        "initial": {
+          "desired": 556.203125,
+          "start": 26084,
+          "max": 26084
+        },
+        "final": 556
+      },
+      {
+        "id": "n-64657269766564",
+        "initial": {
+          "desired": 4150.171875,
+          "start": 26084,
+          "max": 26084
+        },
+        "final": 4150
+      },
+      {
+        "id": "n-726567696f6e",
+        "initial": {
+          "desired": 5024.921875,
+          "start": 26084,
+          "max": 26084
+        },
+        "final": 5025
+      },
+      {
+        "id": "n-72656c6174696f6e73",
+        "initial": {
+          "desired": 10039.5625,
+          "start": 26084,
+          "max": 26084
+        },
+        "final": 10040
+      },
+      {
+        "id": "n-7265636f76657279",
+        "initial": {
+          "desired": 22586.984375,
+          "start": 0,
+          "max": 26084
+        },
+        "final": 22587
+      },
+      {
+        "id": "n-696e6372656d656e74616c",
+        "initial": {
+          "desired": 23830.234375,
+          "start": 0,
+          "max": 26084
+        },
+        "final": 23830
+      },
+      {
+        "id": "n-6c7370",
+        "initial": {
+          "desired": 24814.375,
+          "start": 0,
+          "max": 26084
+        },
+        "final": 24814
+      },
+      {
+        "id": "n-646961676e6f7374696373",
+        "initial": {
+          "desired": 25844.578125,
+          "start": 0,
+          "max": 26084
+        },
+        "final": 25845
+      },
+      {
+        "id": "n-7472757374",
+        "initial": {
+          "desired": 26084,
+          "start": 0,
+          "max": 26084
+        },
+        "final": 26084
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "08. 共通きょうつうeditor serviceと診断しんだん",
+      "方針ほうしん",
+      "1. AnalysisSnapshotの入力にゅうりょくと同一性どういつせい",
+      "2. 自動じどうで得えられる機能きのう",
+      "3. regionの選択せんたく",
+      "4. definitionとrelationsの扱あつかい",
+      "5. 不完全入力ふかんぜんにゅうりょく",
+      "6. 増分解析ぞうぶんかいせきと取消とりけし",
+      "7. LSP adapterの責務せきむ",
+      "8. 診断しんだん・ログの表示ひょうじ",
+      "9. workspace trustの境界きょうかい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "SHA-256(domain || canonical NDF/1 CBOR(value))",
+      "nepl3.analysis.tree/1",
+      "nepl3.analysis.execution/1",
+      "nepl3.analysis.request/1",
+      "analysis::region::regions",
+      "RegionKey",
+      "RegionSidecar { facts: Option<List<ReaderFactBatch>> }",
+      "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)",
+      "analysis::query::query",
+      "analysis::region::query::query",
+      "RenameRequest(key, source, offset, newName, writable)"
+    ],
+    "links": [],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-736e617073686f74",
+      "n-64657269766564",
+      "n-726567696f6e",
+      "n-72656c6174696f6e73",
+      "n-7265636f76657279",
+      "n-696e6372656d656e74616c",
+      "n-6c7370",
+      "n-646961676e6f7374696373",
+      "n-7472757374"
+    ],
+    "ruby": 1330,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 1280,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.671875,
+          "start": 7654,
+          "max": 7654
+        },
+        "final": 152
+      },
+      {
+        "id": "n-736e617073686f74",
+        "initial": {
+          "desired": 341.21875,
+          "start": 7654,
+          "max": 7654
+        },
+        "final": 341
+      },
+      {
+        "id": "n-64657269766564",
+        "initial": {
+          "desired": 1400.21875,
+          "start": 7654,
+          "max": 7654
+        },
+        "final": 1400
+      },
+      {
+        "id": "n-726567696f6e",
+        "initial": {
+          "desired": 1739.484375,
+          "start": 7654,
+          "max": 7654
+        },
+        "final": 1739
+      },
+      {
+        "id": "n-72656c6174696f6e73",
+        "initial": {
+          "desired": 3264.84375,
+          "start": 7654,
+          "max": 7654
+        },
+        "final": 3265
+      },
+      {
+        "id": "n-7265636f76657279",
+        "initial": {
+          "desired": 6920.609375,
+          "start": 0,
+          "max": 7654
+        },
+        "final": 6921
+      },
+      {
+        "id": "n-696e6372656d656e74616c",
+        "initial": {
+          "desired": 7386.53125,
+          "start": 0,
+          "max": 7654
+        },
+        "final": 7387
+      },
+      {
+        "id": "n-6c7370",
+        "initial": {
+          "desired": 7654,
+          "start": 0,
+          "max": 7654
+        },
+        "final": 7654
+      },
+      {
+        "id": "n-646961676e6f7374696373",
+        "initial": {
+          "desired": 7654,
+          "start": 0,
+          "max": 7654
+        },
+        "final": 7654
+      },
+      {
+        "id": "n-7472757374",
+        "initial": {
+          "desired": 7654,
+          "start": 0,
+          "max": 7654
+        },
+        "final": 7654
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "08. 共通きょうつうeditor serviceと診断しんだん",
+      "方針ほうしん",
+      "1. AnalysisSnapshotの入力にゅうりょくと同一性どういつせい",
+      "2. 自動じどうで得えられる機能きのう",
+      "3. regionの選択せんたく",
+      "4. definitionとrelationsの扱あつかい",
+      "5. 不完全入力ふかんぜんにゅうりょく",
+      "6. 増分解析ぞうぶんかいせきと取消とりけし",
+      "7. LSP adapterの責務せきむ",
+      "8. 診断しんだん・ログの表示ひょうじ",
+      "9. workspace trustの境界きょうかい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "SHA-256(domain || canonical NDF/1 CBOR(value))",
+      "nepl3.analysis.tree/1",
+      "nepl3.analysis.execution/1",
+      "nepl3.analysis.request/1",
+      "analysis::region::regions",
+      "RegionKey",
+      "RegionSidecar { facts: Option<List<ReaderFactBatch>> }",
+      "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)",
+      "analysis::query::query",
+      "analysis::region::query::query",
+      "RenameRequest(key, source, offset, newName, writable)"
+    ],
+    "links": [],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-736e617073686f74",
+      "n-64657269766564",
+      "n-726567696f6e",
+      "n-72656c6174696f6e73",
+      "n-7265636f76657279",
+      "n-696e6372656d656e74616c",
+      "n-6c7370",
+      "n-646961676e6f7374696373",
+      "n-7472757374"
+    ],
+    "ruby": 1330,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 375,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 228.46875,
+          "start": 26084,
+          "max": 26084
+        },
+        "final": 228
+      },
+      {
+        "id": "n-736e617073686f74",
+        "initial": {
+          "desired": 556.203125,
+          "start": 26084,
+          "max": 26084
+        },
+        "final": 556
+      },
+      {
+        "id": "n-64657269766564",
+        "initial": {
+          "desired": 4150.171875,
+          "start": 26084,
+          "max": 26084
+        },
+        "final": 4150
+      },
+      {
+        "id": "n-726567696f6e",
+        "initial": {
+          "desired": 5024.921875,
+          "start": 26084,
+          "max": 26084
+        },
+        "final": 5025
+      },
+      {
+        "id": "n-72656c6174696f6e73",
+        "initial": {
+          "desired": 10039.5625,
+          "start": 26084,
+          "max": 26084
+        },
+        "final": 10040
+      },
+      {
+        "id": "n-7265636f76657279",
+        "initial": {
+          "desired": 22586.984375,
+          "start": 0,
+          "max": 26084
+        },
+        "final": 22587
+      },
+      {
+        "id": "n-696e6372656d656e74616c",
+        "initial": {
+          "desired": 23830.234375,
+          "start": 0,
+          "max": 26084
+        },
+        "final": 23830
+      },
+      {
+        "id": "n-6c7370",
+        "initial": {
+          "desired": 24814.375,
+          "start": 0,
+          "max": 26084
+        },
+        "final": 24814
+      },
+      {
+        "id": "n-646961676e6f7374696373",
+        "initial": {
+          "desired": 25844.578125,
+          "start": 0,
+          "max": 26084
+        },
+        "final": 25845
+      },
+      {
+        "id": "n-7472757374",
+        "initial": {
+          "desired": 26084,
+          "start": 0,
+          "max": 26084
+        },
+        "final": 26084
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "08. 共通きょうつうeditor serviceと診断しんだん",
+      "方針ほうしん",
+      "1. AnalysisSnapshotの入力にゅうりょくと同一性どういつせい",
+      "2. 自動じどうで得えられる機能きのう",
+      "3. regionの選択せんたく",
+      "4. definitionとrelationsの扱あつかい",
+      "5. 不完全入力ふかんぜんにゅうりょく",
+      "6. 増分解析ぞうぶんかいせきと取消とりけし",
+      "7. LSP adapterの責務せきむ",
+      "8. 診断しんだん・ログの表示ひょうじ",
+      "9. workspace trustの境界きょうかい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "SHA-256(domain || canonical NDF/1 CBOR(value))",
+      "nepl3.analysis.tree/1",
+      "nepl3.analysis.execution/1",
+      "nepl3.analysis.request/1",
+      "analysis::region::regions",
+      "RegionKey",
+      "RegionSidecar { facts: Option<List<ReaderFactBatch>> }",
+      "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)",
+      "analysis::query::query",
+      "analysis::region::query::query",
+      "RenameRequest(key, source, offset, newName, writable)"
+    ],
+    "links": [],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-736e617073686f74",
+      "n-64657269766564",
+      "n-726567696f6e",
+      "n-72656c6174696f6e73",
+      "n-7265636f76657279",
+      "n-696e6372656d656e74616c",
+      "n-6c7370",
+      "n-646961676e6f7374696373",
+      "n-7472757374"
+    ],
+    "ruby": 1330,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 1280,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.671875,
+          "start": 7654,
+          "max": 7654
+        },
+        "final": 152
+      },
+      {
+        "id": "n-736e617073686f74",
+        "initial": {
+          "desired": 341.21875,
+          "start": 7654,
+          "max": 7654
+        },
+        "final": 341
+      },
+      {
+        "id": "n-64657269766564",
+        "initial": {
+          "desired": 1400.21875,
+          "start": 7654,
+          "max": 7654
+        },
+        "final": 1400
+      },
+      {
+        "id": "n-726567696f6e",
+        "initial": {
+          "desired": 1739.484375,
+          "start": 7654,
+          "max": 7654
+        },
+        "final": 1739
+      },
+      {
+        "id": "n-72656c6174696f6e73",
+        "initial": {
+          "desired": 3264.84375,
+          "start": 7654,
+          "max": 7654
+        },
+        "final": 3265
+      },
+      {
+        "id": "n-7265636f76657279",
+        "initial": {
+          "desired": 6920.609375,
+          "start": 0,
+          "max": 7654
+        },
+        "final": 6921
+      },
+      {
+        "id": "n-696e6372656d656e74616c",
+        "initial": {
+          "desired": 7386.53125,
+          "start": 0,
+          "max": 7654
+        },
+        "final": 7387
+      },
+      {
+        "id": "n-6c7370",
+        "initial": {
+          "desired": 7654,
+          "start": 0,
+          "max": 7654
+        },
+        "final": 7654
+      },
+      {
+        "id": "n-646961676e6f7374696373",
+        "initial": {
+          "desired": 7654,
+          "start": 0,
+          "max": 7654
+        },
+        "final": 7654
+      },
+      {
+        "id": "n-7472757374",
+        "initial": {
+          "desired": 7654,
+          "start": 0,
+          "max": 7654
+        },
+        "final": 7654
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "08. 共通きょうつうeditor serviceと診断しんだん",
+      "方針ほうしん",
+      "1. AnalysisSnapshotの入力にゅうりょくと同一性どういつせい",
+      "2. 自動じどうで得えられる機能きのう",
+      "3. regionの選択せんたく",
+      "4. definitionとrelationsの扱あつかい",
+      "5. 不完全入力ふかんぜんにゅうりょく",
+      "6. 増分解析ぞうぶんかいせきと取消とりけし",
+      "7. LSP adapterの責務せきむ",
+      "8. 診断しんだん・ログの表示ひょうじ",
+      "9. workspace trustの境界きょうかい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "SHA-256(domain || canonical NDF/1 CBOR(value))",
+      "nepl3.analysis.tree/1",
+      "nepl3.analysis.execution/1",
+      "nepl3.analysis.request/1",
+      "analysis::region::regions",
+      "RegionKey",
+      "RegionSidecar { facts: Option<List<ReaderFactBatch>> }",
+      "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)",
+      "analysis::query::query",
+      "analysis::region::query::query",
+      "RenameRequest(key, source, offset, newName, writable)"
+    ],
+    "links": [],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-736e617073686f74",
+      "n-64657269766564",
+      "n-726567696f6e",
+      "n-72656c6174696f6e73",
+      "n-7265636f76657279",
+      "n-696e6372656d656e74616c",
+      "n-6c7370",
+      "n-646961676e6f7374696373",
+      "n-7472757374"
+    ],
+    "ruby": 1330,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 375,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 228.46665954589844,
+          "start": 26053,
+          "max": 26053
+        },
+        "final": 228
+      },
+      {
+        "id": "n-736e617073686f74",
+        "initial": {
+          "desired": 556.316650390625,
+          "start": 26053,
+          "max": 26053
+        },
+        "final": 556.316650390625
+      },
+      {
+        "id": "n-64657269766564",
+        "initial": {
+          "desired": 4127.93310546875,
+          "start": 26053,
+          "max": 26053
+        },
+        "final": 4128
+      },
+      {
+        "id": "n-726567696f6e",
+        "initial": {
+          "desired": 5003.0166015625,
+          "start": 26053,
+          "max": 26053
+        },
+        "final": 5003.0166015625
+      },
+      {
+        "id": "n-72656c6174696f6e73",
+        "initial": {
+          "desired": 10054.6337890625,
+          "start": 26053,
+          "max": 26053
+        },
+        "final": 10054.6337890625
+      },
+      {
+        "id": "n-7265636f76657279",
+        "initial": {
+          "desired": 22599.966796875,
+          "start": 0,
+          "max": 26053
+        },
+        "final": 22599.966796875
+      },
+      {
+        "id": "n-696e6372656d656e74616c",
+        "initial": {
+          "desired": 23843.716796875,
+          "start": 0,
+          "max": 26053
+        },
+        "final": 23843.716796875
+      },
+      {
+        "id": "n-6c7370",
+        "initial": {
+          "desired": 24828.25,
+          "start": 0,
+          "max": 26053
+        },
+        "final": 24828.25
+      },
+      {
+        "id": "n-646961676e6f7374696373",
+        "initial": {
+          "desired": 25858.8671875,
+          "start": 0,
+          "max": 26053
+        },
+        "final": 25859
+      },
+      {
+        "id": "n-7472757374",
+        "initial": {
+          "desired": 26053,
+          "start": 0,
+          "max": 26053
+        },
+        "final": 26053
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "08. 共通きょうつうeditor serviceと診断しんだん",
+      "方針ほうしん",
+      "1. AnalysisSnapshotの入力にゅうりょくと同一性どういつせい",
+      "2. 自動じどうで得えられる機能きのう",
+      "3. regionの選択せんたく",
+      "4. definitionとrelationsの扱あつかい",
+      "5. 不完全入力ふかんぜんにゅうりょく",
+      "6. 増分解析ぞうぶんかいせきと取消とりけし",
+      "7. LSP adapterの責務せきむ",
+      "8. 診断しんだん・ログの表示ひょうじ",
+      "9. workspace trustの境界きょうかい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "SHA-256(domain || canonical NDF/1 CBOR(value))",
+      "nepl3.analysis.tree/1",
+      "nepl3.analysis.execution/1",
+      "nepl3.analysis.request/1",
+      "analysis::region::regions",
+      "RegionKey",
+      "RegionSidecar { facts: Option<List<ReaderFactBatch>> }",
+      "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)",
+      "analysis::query::query",
+      "analysis::region::query::query",
+      "RenameRequest(key, source, offset, newName, writable)"
+    ],
+    "links": [],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-736e617073686f74",
+      "n-64657269766564",
+      "n-726567696f6e",
+      "n-72656c6174696f6e73",
+      "n-7265636f76657279",
+      "n-696e6372656d656e74616c",
+      "n-6c7370",
+      "n-646961676e6f7374696373",
+      "n-7472757374"
+    ],
+    "ruby": 1330,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 1280,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.6666717529297,
+          "start": 7712,
+          "max": 7712
+        },
+        "final": 152
+      },
+      {
+        "id": "n-736e617073686f74",
+        "initial": {
+          "desired": 341.26666259765625,
+          "start": 7712,
+          "max": 7712
+        },
+        "final": 341.26666259765625
+      },
+      {
+        "id": "n-64657269766564",
+        "initial": {
+          "desired": 1448.7666015625,
+          "start": 7712,
+          "max": 7712
+        },
+        "final": 1449
+      },
+      {
+        "id": "n-726567696f6e",
+        "initial": {
+          "desired": 1788.13330078125,
+          "start": 7712,
+          "max": 7712
+        },
+        "final": 1788.13330078125
+      },
+      {
+        "id": "n-72656c6174696f6e73",
+        "initial": {
+          "desired": 3317.14990234375,
+          "start": 7712,
+          "max": 7712
+        },
+        "final": 3317.14990234375
+      },
+      {
+        "id": "n-7265636f76657279",
+        "initial": {
+          "desired": 6977.5166015625,
+          "start": 0,
+          "max": 7712
+        },
+        "final": 6978
+      },
+      {
+        "id": "n-696e6372656d656e74616c",
+        "initial": {
+          "desired": 7443.61669921875,
+          "start": 0,
+          "max": 7712
+        },
+        "final": 7444
+      },
+      {
+        "id": "n-6c7370",
+        "initial": {
+          "desired": 7712,
+          "start": 0,
+          "max": 7712
+        },
+        "final": 7712
+      },
+      {
+        "id": "n-646961676e6f7374696373",
+        "initial": {
+          "desired": 7712,
+          "start": 0,
+          "max": 7712
+        },
+        "final": 7712
+      },
+      {
+        "id": "n-7472757374",
+        "initial": {
+          "desired": 7712,
+          "start": 0,
+          "max": 7712
+        },
+        "final": 7712
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "08. 共通きょうつうeditor serviceと診断しんだん",
+      "方針ほうしん",
+      "1. AnalysisSnapshotの入力にゅうりょくと同一性どういつせい",
+      "2. 自動じどうで得えられる機能きのう",
+      "3. regionの選択せんたく",
+      "4. definitionとrelationsの扱あつかい",
+      "5. 不完全入力ふかんぜんにゅうりょく",
+      "6. 増分解析ぞうぶんかいせきと取消とりけし",
+      "7. LSP adapterの責務せきむ",
+      "8. 診断しんだん・ログの表示ひょうじ",
+      "9. workspace trustの境界きょうかい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "SHA-256(domain || canonical NDF/1 CBOR(value))",
+      "nepl3.analysis.tree/1",
+      "nepl3.analysis.execution/1",
+      "nepl3.analysis.request/1",
+      "analysis::region::regions",
+      "RegionKey",
+      "RegionSidecar { facts: Option<List<ReaderFactBatch>> }",
+      "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)",
+      "analysis::query::query",
+      "analysis::region::query::query",
+      "RenameRequest(key, source, offset, newName, writable)"
+    ],
+    "links": [],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-736e617073686f74",
+      "n-64657269766564",
+      "n-726567696f6e",
+      "n-72656c6174696f6e73",
+      "n-7265636f76657279",
+      "n-696e6372656d656e74616c",
+      "n-6c7370",
+      "n-646961676e6f7374696373",
+      "n-7472757374"
+    ],
+    "ruby": 1330,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 375,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 228.46665954589844,
+          "start": 26053,
+          "max": 26053
+        },
+        "final": 228
+      },
+      {
+        "id": "n-736e617073686f74",
+        "initial": {
+          "desired": 556.316650390625,
+          "start": 26053,
+          "max": 26053
+        },
+        "final": 556.316650390625
+      },
+      {
+        "id": "n-64657269766564",
+        "initial": {
+          "desired": 4127.93310546875,
+          "start": 26053,
+          "max": 26053
+        },
+        "final": 4128
+      },
+      {
+        "id": "n-726567696f6e",
+        "initial": {
+          "desired": 5003.0166015625,
+          "start": 26053,
+          "max": 26053
+        },
+        "final": 5003.0166015625
+      },
+      {
+        "id": "n-72656c6174696f6e73",
+        "initial": {
+          "desired": 10054.6337890625,
+          "start": 26053,
+          "max": 26053
+        },
+        "final": 10054.6337890625
+      },
+      {
+        "id": "n-7265636f76657279",
+        "initial": {
+          "desired": 22599.966796875,
+          "start": 0,
+          "max": 26053
+        },
+        "final": 22599.966796875
+      },
+      {
+        "id": "n-696e6372656d656e74616c",
+        "initial": {
+          "desired": 23843.716796875,
+          "start": 0,
+          "max": 26053
+        },
+        "final": 23843.716796875
+      },
+      {
+        "id": "n-6c7370",
+        "initial": {
+          "desired": 24828.25,
+          "start": 0,
+          "max": 26053
+        },
+        "final": 24828.25
+      },
+      {
+        "id": "n-646961676e6f7374696373",
+        "initial": {
+          "desired": 25858.8671875,
+          "start": 0,
+          "max": 26053
+        },
+        "final": 25859
+      },
+      {
+        "id": "n-7472757374",
+        "initial": {
+          "desired": 26053,
+          "start": 0,
+          "max": 26053
+        },
+        "final": 26053
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "08. 共通きょうつうeditor serviceと診断しんだん",
+      "方針ほうしん",
+      "1. AnalysisSnapshotの入力にゅうりょくと同一性どういつせい",
+      "2. 自動じどうで得えられる機能きのう",
+      "3. regionの選択せんたく",
+      "4. definitionとrelationsの扱あつかい",
+      "5. 不完全入力ふかんぜんにゅうりょく",
+      "6. 増分解析ぞうぶんかいせきと取消とりけし",
+      "7. LSP adapterの責務せきむ",
+      "8. 診断しんだん・ログの表示ひょうじ",
+      "9. workspace trustの境界きょうかい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "SHA-256(domain || canonical NDF/1 CBOR(value))",
+      "nepl3.analysis.tree/1",
+      "nepl3.analysis.execution/1",
+      "nepl3.analysis.request/1",
+      "analysis::region::regions",
+      "RegionKey",
+      "RegionSidecar { facts: Option<List<ReaderFactBatch>> }",
+      "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)",
+      "analysis::query::query",
+      "analysis::region::query::query",
+      "RenameRequest(key, source, offset, newName, writable)"
+    ],
+    "links": [],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-736e617073686f74",
+      "n-64657269766564",
+      "n-726567696f6e",
+      "n-72656c6174696f6e73",
+      "n-7265636f76657279",
+      "n-696e6372656d656e74616c",
+      "n-6c7370",
+      "n-646961676e6f7374696373",
+      "n-7472757374"
+    ],
+    "ruby": 1330,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 1280,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.6666717529297,
+          "start": 7712,
+          "max": 7712
+        },
+        "final": 152
+      },
+      {
+        "id": "n-736e617073686f74",
+        "initial": {
+          "desired": 341.26666259765625,
+          "start": 7712,
+          "max": 7712
+        },
+        "final": 341.26666259765625
+      },
+      {
+        "id": "n-64657269766564",
+        "initial": {
+          "desired": 1448.7666015625,
+          "start": 7712,
+          "max": 7712
+        },
+        "final": 1449
+      },
+      {
+        "id": "n-726567696f6e",
+        "initial": {
+          "desired": 1788.13330078125,
+          "start": 7712,
+          "max": 7712
+        },
+        "final": 1788.13330078125
+      },
+      {
+        "id": "n-72656c6174696f6e73",
+        "initial": {
+          "desired": 3317.14990234375,
+          "start": 7712,
+          "max": 7712
+        },
+        "final": 3317.14990234375
+      },
+      {
+        "id": "n-7265636f76657279",
+        "initial": {
+          "desired": 6977.5166015625,
+          "start": 0,
+          "max": 7712
+        },
+        "final": 6978
+      },
+      {
+        "id": "n-696e6372656d656e74616c",
+        "initial": {
+          "desired": 7443.61669921875,
+          "start": 0,
+          "max": 7712
+        },
+        "final": 7444
+      },
+      {
+        "id": "n-6c7370",
+        "initial": {
+          "desired": 7712,
+          "start": 0,
+          "max": 7712
+        },
+        "final": 7712
+      },
+      {
+        "id": "n-646961676e6f7374696373",
+        "initial": {
+          "desired": 7712,
+          "start": 0,
+          "max": 7712
+        },
+        "final": 7712
+      },
+      {
+        "id": "n-7472757374",
+        "initial": {
+          "desired": 7712,
+          "start": 0,
+          "max": 7712
+        },
+        "final": 7712
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "08. 共通きょうつうeditor serviceと診断しんだん",
+      "方針ほうしん",
+      "1. AnalysisSnapshotの入力にゅうりょくと同一性どういつせい",
+      "2. 自動じどうで得えられる機能きのう",
+      "3. regionの選択せんたく",
+      "4. definitionとrelationsの扱あつかい",
+      "5. 不完全入力ふかんぜんにゅうりょく",
+      "6. 増分解析ぞうぶんかいせきと取消とりけし",
+      "7. LSP adapterの責務せきむ",
+      "8. 診断しんだん・ログの表示ひょうじ",
+      "9. workspace trustの境界きょうかい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "SHA-256(domain || canonical NDF/1 CBOR(value))",
+      "nepl3.analysis.tree/1",
+      "nepl3.analysis.execution/1",
+      "nepl3.analysis.request/1",
+      "analysis::region::regions",
+      "RegionKey",
+      "RegionSidecar { facts: Option<List<ReaderFactBatch>> }",
+      "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)",
+      "analysis::query::query",
+      "analysis::region::query::query",
+      "RenameRequest(key, source, offset, newName, writable)"
+    ],
+    "links": [],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-736e617073686f74",
+      "n-64657269766564",
+      "n-726567696f6e",
+      "n-72656c6174696f6e73",
+      "n-7265636f76657279",
+      "n-696e6372656d656e74616c",
+      "n-6c7370",
+      "n-646961676e6f7374696373",
+      "n-7472757374"
+    ],
+    "ruby": 1330,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 375,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 228.4375,
+          "start": 23136,
+          "max": 23136
+        },
+        "final": 228
+      },
+      {
+        "id": "n-736e617073686f74",
+        "initial": {
+          "desired": 510.078125,
+          "start": 23136,
+          "max": 23136
+        },
+        "final": 510
+      },
+      {
+        "id": "n-64657269766564",
+        "initial": {
+          "desired": 3695.1875,
+          "start": 23136,
+          "max": 23136
+        },
+        "final": 3695
+      },
+      {
+        "id": "n-726567696f6e",
+        "initial": {
+          "desired": 4466.25,
+          "start": 23136,
+          "max": 23136
+        },
+        "final": 4466
+      },
+      {
+        "id": "n-72656c6174696f6e73",
+        "initial": {
+          "desired": 8974.171875,
+          "start": 23136,
+          "max": 23136
+        },
+        "final": 8974
+      },
+      {
+        "id": "n-7265636f76657279",
+        "initial": {
+          "desired": 20099.359375,
+          "start": 0,
+          "max": 23136
+        },
+        "final": 20099
+      },
+      {
+        "id": "n-696e6372656d656e74616c",
+        "initial": {
+          "desired": 21204.390625,
+          "start": 0,
+          "max": 23136
+        },
+        "final": 21204
+      },
+      {
+        "id": "n-6c7370",
+        "initial": {
+          "desired": 22067.578125,
+          "start": 0,
+          "max": 23136
+        },
+        "final": 22068
+      },
+      {
+        "id": "n-646961676e6f7374696373",
+        "initial": {
+          "desired": 23051.6875,
+          "start": 0,
+          "max": 23136
+        },
+        "final": 23052
+      },
+      {
+        "id": "n-7472757374",
+        "initial": {
+          "desired": 23136,
+          "start": 0,
+          "max": 23136
+        },
+        "final": 23136
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "08. 共通きょうつうeditor serviceと診断しんだん",
+      "方針ほうしん",
+      "1. AnalysisSnapshotの入力にゅうりょくと同一性どういつせい",
+      "2. 自動じどうで得えられる機能きのう",
+      "3. regionの選択せんたく",
+      "4. definitionとrelationsの扱あつかい",
+      "5. 不完全入力ふかんぜんにゅうりょく",
+      "6. 増分解析ぞうぶんかいせきと取消とりけし",
+      "7. LSP adapterの責務せきむ",
+      "8. 診断しんだん・ログの表示ひょうじ",
+      "9. workspace trustの境界きょうかい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "SHA-256(domain || canonical NDF/1 CBOR(value))",
+      "nepl3.analysis.tree/1",
+      "nepl3.analysis.execution/1",
+      "nepl3.analysis.request/1",
+      "analysis::region::regions",
+      "RegionKey",
+      "RegionSidecar { facts: Option<List<ReaderFactBatch>> }",
+      "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)",
+      "analysis::query::query",
+      "analysis::region::query::query",
+      "RenameRequest(key, source, offset, newName, writable)"
+    ],
+    "links": [],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-736e617073686f74",
+      "n-64657269766564",
+      "n-726567696f6e",
+      "n-72656c6174696f6e73",
+      "n-7265636f76657279",
+      "n-696e6372656d656e74616c",
+      "n-6c7370",
+      "n-646961676e6f7374696373",
+      "n-7472757374"
+    ],
+    "ruby": 1330,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 1280,
+    "prefix": "html-budget-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.65625,
+          "start": 6756,
+          "max": 6756
+        },
+        "final": 152
+      },
+      {
+        "id": "n-736e617073686f74",
+        "initial": {
+          "desired": 295.109375,
+          "start": 6756,
+          "max": 6756
+        },
+        "final": 295
+      },
+      {
+        "id": "n-64657269766564",
+        "initial": {
+          "desired": 1233.15625,
+          "start": 6756,
+          "max": 6756
+        },
+        "final": 1233
+      },
+      {
+        "id": "n-726567696f6e",
+        "initial": {
+          "desired": 1514.796875,
+          "start": 6756,
+          "max": 6756
+        },
+        "final": 1515
+      },
+      {
+        "id": "n-72656c6174696f6e73",
+        "initial": {
+          "desired": 2884.671875,
+          "start": 6756,
+          "max": 6756
+        },
+        "final": 2885
+      },
+      {
+        "id": "n-7265636f76657279",
+        "initial": {
+          "desired": 6097.046875,
+          "start": 0,
+          "max": 6756
+        },
+        "final": 6097
+      },
+      {
+        "id": "n-696e6372656d656e74616c",
+        "initial": {
+          "desired": 6516.875,
+          "start": 0,
+          "max": 6756
+        },
+        "final": 6517
+      },
+      {
+        "id": "n-6c7370",
+        "initial": {
+          "desired": 6756,
+          "start": 0,
+          "max": 6756
+        },
+        "final": 6756
+      },
+      {
+        "id": "n-646961676e6f7374696373",
+        "initial": {
+          "desired": 6756,
+          "start": 0,
+          "max": 6756
+        },
+        "final": 6756
+      },
+      {
+        "id": "n-7472757374",
+        "initial": {
+          "desired": 6756,
+          "start": 0,
+          "max": 6756
+        },
+        "final": 6756
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "08. 共通きょうつうeditor serviceと診断しんだん",
+      "方針ほうしん",
+      "1. AnalysisSnapshotの入力にゅうりょくと同一性どういつせい",
+      "2. 自動じどうで得えられる機能きのう",
+      "3. regionの選択せんたく",
+      "4. definitionとrelationsの扱あつかい",
+      "5. 不完全入力ふかんぜんにゅうりょく",
+      "6. 増分解析ぞうぶんかいせきと取消とりけし",
+      "7. LSP adapterの責務せきむ",
+      "8. 診断しんだん・ログの表示ひょうじ",
+      "9. workspace trustの境界きょうかい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "SHA-256(domain || canonical NDF/1 CBOR(value))",
+      "nepl3.analysis.tree/1",
+      "nepl3.analysis.execution/1",
+      "nepl3.analysis.request/1",
+      "analysis::region::regions",
+      "RegionKey",
+      "RegionSidecar { facts: Option<List<ReaderFactBatch>> }",
+      "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)",
+      "analysis::query::query",
+      "analysis::region::query::query",
+      "RenameRequest(key, source, offset, newName, writable)"
+    ],
+    "links": [],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-736e617073686f74",
+      "n-64657269766564",
+      "n-726567696f6e",
+      "n-72656c6174696f6e73",
+      "n-7265636f76657279",
+      "n-696e6372656d656e74616c",
+      "n-6c7370",
+      "n-646961676e6f7374696373",
+      "n-7472757374"
+    ],
+    "ruby": 1330,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 375,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 228.4375,
+          "start": 23136,
+          "max": 23136
+        },
+        "final": 228
+      },
+      {
+        "id": "n-736e617073686f74",
+        "initial": {
+          "desired": 510.078125,
+          "start": 23136,
+          "max": 23136
+        },
+        "final": 510
+      },
+      {
+        "id": "n-64657269766564",
+        "initial": {
+          "desired": 3695.1875,
+          "start": 23136,
+          "max": 23136
+        },
+        "final": 3695
+      },
+      {
+        "id": "n-726567696f6e",
+        "initial": {
+          "desired": 4466.25,
+          "start": 23136,
+          "max": 23136
+        },
+        "final": 4466
+      },
+      {
+        "id": "n-72656c6174696f6e73",
+        "initial": {
+          "desired": 8974.171875,
+          "start": 23136,
+          "max": 23136
+        },
+        "final": 8974
+      },
+      {
+        "id": "n-7265636f76657279",
+        "initial": {
+          "desired": 20099.359375,
+          "start": 0,
+          "max": 23136
+        },
+        "final": 20099
+      },
+      {
+        "id": "n-696e6372656d656e74616c",
+        "initial": {
+          "desired": 21204.390625,
+          "start": 0,
+          "max": 23136
+        },
+        "final": 21204
+      },
+      {
+        "id": "n-6c7370",
+        "initial": {
+          "desired": 22067.578125,
+          "start": 0,
+          "max": 23136
+        },
+        "final": 22068
+      },
+      {
+        "id": "n-646961676e6f7374696373",
+        "initial": {
+          "desired": 23051.6875,
+          "start": 0,
+          "max": 23136
+        },
+        "final": 23052
+      },
+      {
+        "id": "n-7472757374",
+        "initial": {
+          "desired": 23136,
+          "start": 0,
+          "max": 23136
+        },
+        "final": 23136
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "08. 共通きょうつうeditor serviceと診断しんだん",
+      "方針ほうしん",
+      "1. AnalysisSnapshotの入力にゅうりょくと同一性どういつせい",
+      "2. 自動じどうで得えられる機能きのう",
+      "3. regionの選択せんたく",
+      "4. definitionとrelationsの扱あつかい",
+      "5. 不完全入力ふかんぜんにゅうりょく",
+      "6. 増分解析ぞうぶんかいせきと取消とりけし",
+      "7. LSP adapterの責務せきむ",
+      "8. 診断しんだん・ログの表示ひょうじ",
+      "9. workspace trustの境界きょうかい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "SHA-256(domain || canonical NDF/1 CBOR(value))",
+      "nepl3.analysis.tree/1",
+      "nepl3.analysis.execution/1",
+      "nepl3.analysis.request/1",
+      "analysis::region::regions",
+      "RegionKey",
+      "RegionSidecar { facts: Option<List<ReaderFactBatch>> }",
+      "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)",
+      "analysis::query::query",
+      "analysis::region::query::query",
+      "RenameRequest(key, source, offset, newName, writable)"
+    ],
+    "links": [],
+    "codes": [],
+    "ids": [
+      "n-706f6c696379",
+      "n-736e617073686f74",
+      "n-64657269766564",
+      "n-726567696f6e",
+      "n-72656c6174696f6e73",
+      "n-7265636f76657279",
+      "n-696e6372656d656e74616c",
+      "n-6c7370",
+      "n-646961676e6f7374696373",
+      "n-7472757374"
+    ],
+    "ruby": 1330,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 1280,
+    "prefix": "html-budget-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.65625,
+          "start": 6756,
+          "max": 6756
+        },
+        "final": 152
+      },
+      {
+        "id": "n-736e617073686f74",
+        "initial": {
+          "desired": 295.109375,
+          "start": 6756,
+          "max": 6756
+        },
+        "final": 295
+      },
+      {
+        "id": "n-64657269766564",
+        "initial": {
+          "desired": 1233.15625,
+          "start": 6756,
+          "max": 6756
+        },
+        "final": 1233
+      },
+      {
+        "id": "n-726567696f6e",
+        "initial": {
+          "desired": 1514.796875,
+          "start": 6756,
+          "max": 6756
+        },
+        "final": 1515
+      },
+      {
+        "id": "n-72656c6174696f6e73",
+        "initial": {
+          "desired": 2884.671875,
+          "start": 6756,
+          "max": 6756
+        },
+        "final": 2885
+      },
+      {
+        "id": "n-7265636f76657279",
+        "initial": {
+          "desired": 6097.046875,
+          "start": 0,
+          "max": 6756
+        },
+        "final": 6097
+      },
+      {
+        "id": "n-696e6372656d656e74616c",
+        "initial": {
+          "desired": 6516.875,
+          "start": 0,
+          "max": 6756
+        },
+        "final": 6517
+      },
+      {
+        "id": "n-6c7370",
+        "initial": {
+          "desired": 6756,
+          "start": 0,
+          "max": 6756
+        },
+        "final": 6756
+      },
+      {
+        "id": "n-646961676e6f7374696373",
+        "initial": {
+          "desired": 6756,
+          "start": 0,
+          "max": 6756
+        },
+        "final": 6756
+      },
+      {
+        "id": "n-7472757374",
+        "initial": {
+          "desired": 6756,
+          "start": 0,
+          "max": 6756
+        },
+        "final": 6756
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  }
+]

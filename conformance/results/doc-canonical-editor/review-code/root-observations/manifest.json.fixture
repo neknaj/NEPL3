@@ -1,0 +1,75 @@
+{
+  "scope": "Root prior observations preserved as such; normalization note is a narrative summary, not raw diagnostics",
+  "files": [
+    {
+      "path": "normalization-note.md",
+      "bytes": 1396,
+      "sha256": "bfc41c3650872383612bf6901c7cb8c370770e79e1f4781645c54e744159f027"
+    },
+    {
+      "path": "initial-input-bytes/08-editor.json",
+      "bytes": 820,
+      "sha256": "87f52233dbfd39525e33fda6fe3d3a8c0611936b204d2647ea2ecfb75c16c3e0"
+    },
+    {
+      "path": "initial-input-bytes/canonical.json",
+      "bytes": 3379,
+      "sha256": "e243a3d7ed3040fd2b3f1b80eb4a4d1ada8186322607e09508bafdcc395f72da"
+    },
+    {
+      "path": "initial-input-bytes/record.json",
+      "bytes": 1118,
+      "sha256": "3276cc270dbb590c5fdc7e28f3132ca7abb724ea32b652112c9f0efe2c7f6bf1"
+    },
+    {
+      "path": "generation-initial/commands.json",
+      "bytes": 1135,
+      "sha256": "23fa7b62d08ddfe0a1e46496669e82a5ee4b20ddcf75cc1224d04234814ee14d"
+    },
+    {
+      "path": "generation-initial/html.stderr.log",
+      "bytes": 483,
+      "sha256": "6a1e63622357e04298d96c3c28b9fb40be4bd3bea19062abe081b46eee6c5580"
+    },
+    {
+      "path": "generation-initial/html.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "generation-initial/markdown.stderr.log",
+      "bytes": 2096,
+      "sha256": "27cd6b2018648c6312213dbdea1321d6a126b84e2bf64e6c6469be5823045acc"
+    },
+    {
+      "path": "generation-initial/markdown.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "generation-lf/commands.json",
+      "bytes": 1143,
+      "sha256": "90ce49b8e71caf20efaa497674c84bc4bb390f4997984b976fd216d8fc19784b"
+    },
+    {
+      "path": "generation-lf/html.stderr.log",
+      "bytes": 489,
+      "sha256": "25dcc2199afba392bb18ac094ac2cd0ce91438035a11c828746fab62645d85d5"
+    },
+    {
+      "path": "generation-lf/html.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "generation-lf/markdown.stderr.log",
+      "bytes": 331,
+      "sha256": "8473d3f266f86e962bea37ae419ae4dd1189d5871db144c87c6e1d3d6aca211c"
+    },
+    {
+      "path": "generation-lf/markdown.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

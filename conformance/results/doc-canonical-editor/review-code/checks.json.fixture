@@ -1,0 +1,347 @@
+{
+  "source": {
+    "doc_sha256": "d326323331b335da48a044e35a92d2bd89b64bc4fde794131af4ab17ad3f91b6",
+    "doc_bytes": 51247,
+    "old_doc_sha256": "43c78b5f39b008a87b7a5eaf1719a0670f1b5f4992a2489a84549af7dd1241a7",
+    "original_md_sha256": "1311cb50ce019ed53c733f9d8e414a7ea42b70f975fb0d60d01314762d79fa39",
+    "only_four_title_replacements": [
+      [
+        "snapshot",
+        "1. AnalysisSnapshot",
+        "1. AnalysisSnapshotの[入力/にゅうりょく]と[同一性/どういつせい]"
+      ],
+      [
+        "relations",
+        "4. definitionとrelations",
+        "4. definitionとrelationsの[扱/あつか]い"
+      ],
+      [
+        "lsp",
+        "7. LSP adapter",
+        "7. LSP adapterの[責務/せきむ]"
+      ],
+      [
+        "trust",
+        "9. workspace trust",
+        "9. workspace trustの[境界/きょうかい]"
+      ]
+    ]
+  },
+  "registry": {
+    "only_new_editor_registration_and_two_nodes_selectors": true,
+    "previous_eight_entries_exact": true,
+    "other_limits_exact": true
+  },
+  "repeated_artifacts": {
+    "markdown": [
+      {
+        "path": "doc/spec/00-contract.md",
+        "bytes": 10429,
+        "sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1"
+      },
+      {
+        "path": "doc/spec/01-architecture.md",
+        "bytes": 11492,
+        "sha256": "ce2f1b13c0ad586a18d46ed9592490204f35b901f259619ac714d630469b4175"
+      },
+      {
+        "path": "doc/spec/07-circuit.md",
+        "bytes": 13472,
+        "sha256": "e78ef88b70039ef7018516afed788cc092d58a6fe83aee413afbe97527f68c40"
+      },
+      {
+        "path": "doc/spec/08-editor.md",
+        "bytes": 47809,
+        "sha256": "1c2889b269b99c8be0a281c8bfcda275d38ea421f344fbe4f92a0a5a9c608c2a"
+      },
+      {
+        "path": "doc/spec/12-model-invariants.md",
+        "bytes": 27431,
+        "sha256": "e434f569fd1abf3f518fcb11cb0cae5a7a050623ee9098faf8f18314092392da"
+      },
+      {
+        "path": "doc/spec/13-reproducibility.md",
+        "bytes": 26270,
+        "sha256": "454ede4004f0022f8dedb0246ecb227fc36cb57456b9c57fe6614f7a3e512d8e"
+      },
+      {
+        "path": "doc/spec/18-html-delivery.md",
+        "bytes": 10585,
+        "sha256": "31e0a3af9c56766a737bc5c02a4072662f342a75b7816e7a8aad5da1afd525a5"
+      },
+      {
+        "path": "doc/spec/19-html-fragment.md",
+        "bytes": 16900,
+        "sha256": "c4e5c48743d327a3b7e7a691151f452c3640deb32656f2097628aa2fa9683768"
+      },
+      {
+        "path": "doc/spec/22-external-extensions.md",
+        "bytes": 12525,
+        "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+      },
+      {
+        "path": "manifest.json",
+        "bytes": 2356,
+        "sha256": "8ffb3ad7b39e600d0833872e52e5804e47e97a1b9aaa4700ff2ef02adbf7d29c"
+      }
+    ],
+    "html": [
+      {
+        "path": "docs/spec/00-contract.html",
+        "bytes": 38595,
+        "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+      },
+      {
+        "path": "docs/spec/01-architecture.html",
+        "bytes": 32896,
+        "sha256": "499aaa1e67781a52c2bc2f3faaa8fc0623b6a8e3c80282eb4a841da597c8936f"
+      },
+      {
+        "path": "docs/spec/07-circuit.html",
+        "bytes": 48369,
+        "sha256": "11dedf2469c9c0a2e11c845b1167ffaaa56deeaeea51b76db7a7f484ab43caf5"
+      },
+      {
+        "path": "docs/spec/08-editor.html",
+        "bytes": 175180,
+        "sha256": "42b7496ebf4d56eaeb6e59ded50022bf99a676766809459e5b931f25b06e4ff8"
+      },
+      {
+        "path": "docs/spec/12-model-invariants.html",
+        "bytes": 95429,
+        "sha256": "904a6dc8d6d7a4cce2d6f99c80654d4caafc75a80e1622a4308df2aeb3afbbdd"
+      },
+      {
+        "path": "docs/spec/13-reproducibility.html",
+        "bytes": 91421,
+        "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+      },
+      {
+        "path": "docs/spec/18-html-delivery.html",
+        "bytes": 37232,
+        "sha256": "7a2ed0088c71e0766ec304bcc59d2cccffa307a9742a66139eeea99f633b6355"
+      },
+      {
+        "path": "docs/spec/19-html-fragment.html",
+        "bytes": 61432,
+        "sha256": "3a5cc5cb6d46262403340997c6ec08ead08362250e5ed90eec6a65993bfa95fc"
+      },
+      {
+        "path": "docs/spec/22-external-extensions.html",
+        "bytes": 44041,
+        "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8"
+      },
+      {
+        "path": "docs/spec/assets/doc.css",
+        "bytes": 2255,
+        "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+      },
+      {
+        "path": "manifest.json",
+        "bytes": 23217,
+        "sha256": "091d7965491e7d7947502243162a192f3736aa784cf1bab327e8dcf890419005"
+      }
+    ]
+  },
+  "old_legacy_markdown": [
+    {
+      "path": "doc/spec/00-contract.md",
+      "sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1"
+    },
+    {
+      "path": "doc/spec/07-circuit.md",
+      "sha256": "e78ef88b70039ef7018516afed788cc092d58a6fe83aee413afbe97527f68c40"
+    },
+    {
+      "path": "doc/spec/13-reproducibility.md",
+      "sha256": "454ede4004f0022f8dedb0246ecb227fc36cb57456b9c57fe6614f7a3e512d8e"
+    },
+    {
+      "path": "doc/spec/18-html-delivery.md",
+      "sha256": "31e0a3af9c56766a737bc5c02a4072662f342a75b7816e7a8aad5da1afd525a5"
+    },
+    {
+      "path": "doc/spec/19-html-fragment.md",
+      "sha256": "c4e5c48743d327a3b7e7a691151f452c3640deb32656f2097628aa2fa9683768"
+    },
+    {
+      "path": "doc/spec/22-external-extensions.md",
+      "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+    }
+  ],
+  "old_eight_html_and_css": [
+    {
+      "path": "docs/spec/00-contract.html",
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+    },
+    {
+      "path": "docs/spec/01-architecture.html",
+      "sha256": "499aaa1e67781a52c2bc2f3faaa8fc0623b6a8e3c80282eb4a841da597c8936f"
+    },
+    {
+      "path": "docs/spec/07-circuit.html",
+      "sha256": "11dedf2469c9c0a2e11c845b1167ffaaa56deeaeea51b76db7a7f484ab43caf5"
+    },
+    {
+      "path": "docs/spec/12-model-invariants.html",
+      "sha256": "904a6dc8d6d7a4cce2d6f99c80654d4caafc75a80e1622a4308df2aeb3afbbdd"
+    },
+    {
+      "path": "docs/spec/13-reproducibility.html",
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+    },
+    {
+      "path": "docs/spec/18-html-delivery.html",
+      "sha256": "7a2ed0088c71e0766ec304bcc59d2cccffa307a9742a66139eeea99f633b6355"
+    },
+    {
+      "path": "docs/spec/19-html-fragment.html",
+      "sha256": "3a5cc5cb6d46262403340997c6ec08ead08362250e5ed90eec6a65993bfa95fc"
+    },
+    {
+      "path": "docs/spec/22-external-extensions.html",
+      "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8"
+    },
+    {
+      "path": "docs/spec/assets/doc.css",
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+    }
+  ],
+  "context": {
+    "both_existing_pages1_only_two_header_fields_changed": true,
+    "context_independently_recomputed": "6451c6ba5b5b2d5afbee98f7071c869b8be4d569505e9d3b092cd19e0b6c21af",
+    "pageset": "1fe033103f922bfd695ebafab864c58e92f4d3e3922c3ff2164cef439492da54"
+  },
+  "alias_receipt": {
+    "eleven_match_preserved_historical_receipt": true,
+    "new_github_navigation_not_executed": true
+  },
+  "editor_output": {
+    "markdown_aliases": [
+      "08-共通editor-serviceと診断",
+      "n-706f6c696379",
+      "方針",
+      "n-736e617073686f74",
+      "1-analysissnapshot",
+      "n-64657269766564",
+      "2-自動で得られる機能",
+      "n-726567696f6e",
+      "3-regionの選択",
+      "n-72656c6174696f6e73",
+      "4-definitionとrelations",
+      "n-7265636f76657279",
+      "5-不完全入力",
+      "n-696e6372656d656e74616c",
+      "6-増分解析と取消し",
+      "n-6c7370",
+      "7-lsp-adapter",
+      "n-646961676e6f7374696373",
+      "8-診断ログの表示",
+      "n-7472757374",
+      "9-workspace-trust"
+    ],
+    "html_semantic_ids": [
+      "n-706f6c696379",
+      "n-736e617073686f74",
+      "n-64657269766564",
+      "n-726567696f6e",
+      "n-72656c6174696f6e73",
+      "n-7265636f76657279",
+      "n-696e6372656d656e74616c",
+      "n-6c7370",
+      "n-646961676e6f7374696373",
+      "n-7472757374"
+    ],
+    "codes": [
+      "SHA-256(domain || canonical NDF/1 CBOR(value))",
+      "nepl3.analysis.tree/1",
+      "nepl3.analysis.execution/1",
+      "nepl3.analysis.request/1",
+      "analysis::region::regions",
+      "RegionKey",
+      "RegionSidecar { facts: Option<List<ReaderFactBatch>> }",
+      "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)",
+      "analysis::query::query",
+      "analysis::region::query::query",
+      "RenameRequest(key, source, offset, newName, writable)"
+    ],
+    "tags": {
+      "html": 1,
+      "head": 1,
+      "meta": 3,
+      "title": 1,
+      "link": 1,
+      "body": 1,
+      "article": 1,
+      "h1": 1,
+      "span": 4236,
+      "section": 10,
+      "h2": 10,
+      "div": 55,
+      "p": 55,
+      "code": 11
+    },
+    "no_links": true
+  },
+  "receipts": {
+    "markdown_before_receipt_serialization_usage": {
+      "allocation_units": 1485863605,
+      "depth": 14,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 23239293,
+      "output_bytes": 623324,
+      "source_bytes": 219832,
+      "work": 551648649
+    },
+    "html_output_usage": {
+      "allocation_units": 619413526,
+      "depth": 14,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 11289472,
+      "output_bytes": 645210,
+      "source_bytes": 219832,
+      "work": 291681123
+    },
+    "nine_input_identities": true,
+    "parse_lower_defaults_retained": true
+  },
+  "negative_operations": {
+    "markdown_old_nodes": "nepl3-tools: Stopped(NodeLimit)\n",
+    "html_old_nodes": "nepl3-tools: resolve/render: Stopped(NodeLimit); usage=Usage { source_bytes: 219832, work: 217292905, depth: 14, nodes: 10000000, allocation_units: 565174117, output_bytes: 256, diagnostics: 0, events: 0 }\n",
+    "both_no_output": true
+  },
+  "fixed_dependencies_reverified": 680,
+  "gfm": {
+    "all_55_paragraph_bases_equal_original_ignoring_whitespace": true,
+    "11_code_bytes_exact": true,
+    "old_headings": [
+      "08. 共通editor serviceと診断",
+      "方針",
+      "1. AnalysisSnapshot",
+      "2. 自動で得られる機能",
+      "3. regionの選択",
+      "4. definitionとrelations",
+      "5. 不完全入力",
+      "6. 増分解析と取消し",
+      "7. LSP adapter",
+      "8. 診断・ログの表示",
+      "9. workspace trust"
+    ],
+    "new_headings": [
+      "08. 共通[きょうつう]editor serviceと診断[しんだん]",
+      "方針[ほうしん]",
+      "1. AnalysisSnapshotの入力[にゅうりょく]と同一性[どういつせい]",
+      "2. 自動[じどう]で得[え]られる機能[きのう]",
+      "3. regionの選択[せんたく]",
+      "4. definitionとrelationsの扱[あつか]い",
+      "5. 不完全入力[ふかんぜんにゅうりょく]",
+      "6. 増分解析[ぞうぶんかいせき]と取消[とりけ]し",
+      "7. LSP adapterの責務[せきむ]",
+      "8. 診断[しんだん]・ログの表示[ひょうじ]",
+      "9. workspace trustの境界[きょうかい]"
+    ],
+    "alias_only_paragraphs": 21
+  }
+}

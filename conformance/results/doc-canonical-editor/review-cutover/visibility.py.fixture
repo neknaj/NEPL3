@@ -1,0 +1,18 @@
+from pathlib import Path
+import json
+from playwright.sync_api import sync_playwright
+OUT=Path(__file__).parent
+expected=json.loads((OUT/'prepared-expectations.json').read_bytes())
+with sync_playwright() as p:
+ b=p.webkit.launch(headless=True);c=b.new_context(java_script_enabled=False,viewport=dict(width=375,height=900));page=c.new_page()
+ page.goto((OUT/'served/independent/deep/first/docs/spec/08-editor.html').resolve().as_uri(),wait_until='load')
+ observed=page.locator('.nepl-ruby').evaluate_all('ns=>ns.map(n=>({base:n.querySelector(".nepl-base").textContent,reading:n.querySelector(".nepl-reading").textContent}))')
+ # Keep a byte-based multiset comparison: structural helper gathers nested nodes in its own order.
+ assert sorted((x['base'],x['reading']) for x in observed)==sorted(map(tuple,expected['ruby_pairs']))
+ for i in [2,5,8,10]:
+  heading=page.locator('article h1,article h2').nth(i);heading.scroll_into_view_if_needed();page.screenshot(path=str(OUT/f'webkit-375-heading-{i}.png'))
+ result=page.locator('article').evaluate('a=>{const bad=[];const w=document.createTreeWalker(a,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){if(!n.textContent.trim())continue;const r=document.createRange();r.selectNodeContents(n);for(const q of r.getClientRects()){if(q.width>0&&(q.left < -1 || q.right>innerWidth+1))bad.push({text:n.textContent,left:q.left,right:q.right});}}return {overflow:document.documentElement.scrollWidth-innerWidth,bad}}')
+ assert result['overflow']<=1 and not result['bad'],result
+ (OUT/'visibility.json').write_text(json.dumps(dict(result='PASS',width=375,engine='webkit',ruby_pairs=1330,text_rectangles=result,scope='Whole article text rectangles within viewport; four clarified heading viewport captures. Not a universal accessibility audit.'),ensure_ascii=False,indent=2)+'\n',encoding='utf8',newline='\n')
+ b.close()
+print('PASS all 1330 Ruby base/reading pairs and narrow whole-article text rectangles')

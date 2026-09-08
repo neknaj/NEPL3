@@ -1,0 +1,100 @@
+from pathlib import Path
+import hashlib,json,re,html,collections
+from html.parser import HTMLParser
+p=Path(__file__).parent.resolve()
+def raw(n):return (p/n).read_bytes()
+def read(n):return raw(n).decode('utf8')
+def js(n):return json.loads(raw(n))
+def sha(b):return hashlib.sha256(b).hexdigest()
+out={};chapter='08-editor'
+doc=raw('source/doc/spec/'+chapter+'.nepld');old=raw('before/doc/migration/authored/'+chapter+'.nepld')
+assert doc==raw('preflight/source/doc/spec/'+chapter+'.nepld')==raw('prior-content/'+chapter+'.nepld')
+changes=js('prior-content/checks.json')['heading_changes'];restored=doc
+for _,before,after in changes:
+    a,b=('"'+before+'"').encode(),('"'+after+'"').encode();assert restored.count(b)==1;restored=restored.replace(b,a)
+assert restored==old
+assert sha(raw('before/doc/spec/'+chapter+'.md'))==js('prior-content/checks.json')['original_sha256']
+out['source']={'doc_sha256':sha(doc),'doc_bytes':len(doc),'old_doc_sha256':sha(old),'original_md_sha256':sha(raw('before/doc/spec/'+chapter+'.md')),'only_four_title_replacements':changes}
+reg=js('source/doc/canonical.json');before=js('before/doc/canonical.json');expected=json.loads(raw('before/doc/canonical.json'))
+expected['pages'].append(dict(id='editor',source='doc/spec/'+chapter+'.nepld',projection='doc/spec/'+chapter+'.md',aliases='doc/migration/aliases/'+chapter+'.json',route='docs/spec/'+chapter+'.html',renderer='nepl3-tools.markdown-annotated/2'))
+expected['output_limits']['nodes']=30000000;expected['html_output_limits']['nodes']=20000000;assert expected==reg
+assert reg['pages'][:8]==before['pages'] and len(reg['pages'])==9
+out['registry']={'only_new_editor_registration_and_two_nodes_selectors':True,'previous_eight_entries_exact':True,'other_limits_exact':True}
+out['repeated_artifacts']={}
+for kind,count in [('markdown',10),('html',11)]:
+    folder=p/(kind+'-first');files=sorted(q.relative_to(folder).as_posix() for q in folder.rglob('*') if q.is_file());second=p/(kind+'-second');assert len(files)==count
+    assert files==sorted(q.relative_to(second).as_posix() for q in second.rglob('*') if q.is_file());rows=[]
+    for n in files:
+        b=raw(kind+'-first/'+n);assert b==raw(kind+'-second/'+n);rows.append(dict(path=n,bytes=len(b),sha256=sha(b)))
+    for r in js(kind+'-first/manifest.json')['files']:
+        b=raw(kind+'-first/'+r['path']);assert sha(b)==r['sha256']
+        if 'bytes' in r:assert len(b)==r['bytes']
+    out['repeated_artifacts'][kind]=rows
+for page in reg['pages']:assert raw('markdown-first/'+page['projection'])==raw('source/'+page['projection'])
+out['old_legacy_markdown']=[];out['old_eight_html_and_css']=[]
+for n in ['00-contract','07-circuit','13-reproducibility','18-html-delivery','19-html-fragment','22-external-extensions']:
+    n='doc/spec/'+n+'.md';b=raw('markdown-first/'+n);assert b==raw('prior-m/markdown-first/'+n);out['old_legacy_markdown'].append(dict(path=n,sha256=sha(b)))
+for n in ['00-contract.html','01-architecture.html','07-circuit.html','12-model-invariants.html','13-reproducibility.html','18-html-delivery.html','19-html-fragment.html','22-external-extensions.html','assets/doc.css']:
+    n='docs/spec/'+n;b=raw('html-first/'+n);assert b==raw('prior-m/html-first/'+n);out['old_eight_html_and_css'].append(dict(path=n,sha256=sha(b)))
+strip=lambda v:re.sub(r'(input PageSet digest |input context SHA-256 )[0-9a-f]{64}',r'\1<DIGEST>',v)
+for name in ['01-architecture','12-model-invariants']:
+    old=read('before/doc/spec/'+name+'.md');new=read('markdown-first/doc/spec/'+name+'.md');assert old==read('prior-m/markdown-first/doc/spec/'+name+'.md');assert strip(old)==strip(new) and old!=new
+group=bytes.fromhex(re.search(r'input PageSet digest ([0-9a-f]{64})',new)[1]);fields=[b'nepl3.canonical-input-context/1\0',b'nepl3-tools.markdown-annotated-pages/1',b'doc/canonical.json',raw('source/doc/canonical.json'),group,(9).to_bytes(8,'big')]
+for page in reg['pages']:
+    fields.extend(page[k].encode() for k in ['id','source','projection','aliases','route','renderer']);fields.extend(hashlib.sha256(raw('source/'+page[k])).digest() for k in ['source','aliases'])
+context=sha(b''.join(len(v).to_bytes(8,'big')+v for v in fields));assert context==js('markdown-first/manifest.json')['input_context']
+for name in ['01-architecture','12-model-invariants']:
+    header=html.unescape(read('markdown-first/doc/spec/'+name+'.md').splitlines()[0]);assert 'input context SHA-256 '+context in header and 'input PageSet digest '+group.hex() in header
+out['context']={'both_existing_pages1_only_two_header_fields_changed':True,'context_independently_recomputed':context,'pageset':group.hex()}
+sections=re.findall(r'^\s*cons section (\S+) ',doc.decode(),re.M);assert len(sections)==10
+aliases=js('source/doc/migration/aliases/'+chapter+'.json');assert [a['section'] for a in aliases]==[None,*sections]
+names=[a['name'] for a in aliases];semantic=['n-'+s.encode().hex() for s in sections]
+actual_aliases=re.findall(r'<a name="([^"]+)"></a>',read('markdown-first/doc/spec/'+chapter+'.md'));assert len(actual_aliases)==21 and len(set(actual_aliases))==21 and set(actual_aliases)==set(names+semantic)
+historical=js('prior-content/historical-github.json')[chapter];assert [a['id'][13:] for a in historical['anchors']]==names
+out['alias_receipt']={'eleven_match_preserved_historical_receipt':True,'new_github_navigation_not_executed':True}
+header=html.unescape(read('markdown-first/doc/spec/'+chapter+'.md').splitlines()[0]);assert 'renderer nepl3-tools.markdown-annotated/2;' in header
+assert 'source SHA-256 '+sha(doc) in header and 'alias input SHA-256 '+sha(raw('source/doc/migration/aliases/'+chapter+'.json')) in header
+assert 'input context SHA-256' not in header
+class Tags(HTMLParser):
+    def __init__(self):super().__init__();self.count=collections.Counter();self.ids=[];self.codes=[];self.code=None;self.links=[]
+    def handle_starttag(self,t,a):
+        self.count[t]+=1;a=dict(a)
+        if 'id' in a:self.ids.append(a['id'])
+        if t=='code':self.code=''
+        if t=='a':self.links.append(a.get('href'))
+    def handle_endtag(self,t):
+        if t=='code':self.codes.append(self.code);self.code=None
+    def handle_data(self,v):
+        if self.code is not None:self.code+=v
+t=Tags();t.feed(read('html-first/docs/spec/'+chapter+'.html'));assert t.ids==semantic and t.links==[]
+assert [t.count[k] for k in ['h1','h2','p','table','ul','ol','pre','script']]==[1,10,55,0,0,0,0,0]
+codes=re.findall(r'`([^`]+)`',read('before/doc/spec/'+chapter+'.md'));assert t.codes==codes and len(codes)==11
+out['editor_output']={'markdown_aliases':actual_aliases,'html_semantic_ids':t.ids,'codes':codes,'tags':dict(t.count),'no_links':True}
+hm=js('html-first/manifest.json');mm=js('markdown-first/manifest.json');assert hm['output_budget']['limits']==reg['html_output_limits'] and mm['output_budget']['limits']==reg['output_limits']
+for m in [hm,mm]:assert not any(m['output_budget']['initial_usage'].values())
+assert len(hm['pages'])==9 and hm['registered_files']==[] and hm['viewer_scripts'] is False
+for page,row in zip(reg['pages'],hm['pages']):
+    for k,expected in [('id',page['id']),('input',page['source']),('source',page['projection']),('route',page['route']),('source_sha256',sha(raw('source/'+page['source'])))]:assert row[k]==expected
+    for phase in ['parse','lower']:
+        assert not any(row[phase+'_initial_usage'].values());assert row[phase+'_limits']['work']==100000000 and row[phase+'_limits']['allocation_units']==500000000 and row[phase+'_limits']['nodes']==10000000
+usage=mm['output_budget']['usage_before_receipt_serialization'];assert usage['nodes']>20000000 and hm['output_budget']['usage']['nodes']>10000000
+assert all(usage[k]<=reg['output_limits'][k] for k in reg['output_limits']);assert all(hm['output_budget']['usage'][k]<=reg['html_output_limits'][k] for k in reg['html_output_limits'])
+out['receipts']={'markdown_before_receipt_serialization_usage':usage,'html_output_usage':hm['output_budget']['usage'],'nine_input_identities':True,'parse_lower_defaults_retained':True}
+low=js('old-budget-registry.json');expected=json.loads(raw('source/doc/canonical.json'));expected['output_limits']['nodes']=20000000;expected['html_output_limits']['nodes']=10000000;assert low==expected
+assert raw('old-budget-registry.json')==raw('root-observations/initial-input-bytes/canonical.json').replace(b'\r\n',b'\n')
+assert raw('source/doc/migration/aliases/08-editor.json')==raw('root-observations/initial-input-bytes/08-editor.json').replace(b'\r\n',b'\n')
+for kind in ['markdown','html']:
+    assert 'NodeLimit' in read(kind+'-old-budget.stderr.log') and not (p/(kind+'-old-budget')).exists()
+    command=next(r for r in js('continuation-commands.json') if r['name']==kind+'-old-budget');assert command['registry_sha256']==sha(raw('old-budget-registry.json'))
+out['negative_operations']={'markdown_old_nodes':read('markdown-old-budget.stderr.log'),'html_old_nodes':read('html-old-budget.stderr.log'),'both_no_output':True}
+for row in js('dependencies.json'):
+    b=raw('workspace/'+row['path']);assert len(b)==row['bytes'] and sha(b)==row['sha256'],row['path']
+out['fixed_dependencies_reverified']=len(js('dependencies.json'))
+line=next(s for s in read('markdown-probe.stdout.log').splitlines() if s.startswith('EDITOR_GFM '));old,new=json.loads(line[len('EDITOR_GFM '):])
+norm=lambda s:re.sub(r'\s+','',s)
+base=lambda s:re.sub(r'\[[ぁ-ゖァ-ヺー]+\]','',s)
+assert len(old[1])==len(new[1])==55
+for i,(a,b) in enumerate(zip(old[1],new[1])):assert norm(a)==norm(base(b)),(i+1,a,b)
+out['gfm']={'all_55_paragraph_bases_equal_original_ignoring_whitespace':True,'11_code_bytes_exact':old[0]==new[0],'old_headings':old[2],'new_headings':new[2],'alias_only_paragraphs':new[3]}
+(p/'checks.json').write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n',encoding='utf8',newline='\n')
+print('PASS fixed source / repeated 10+11 outputs / previous 6 MD+8 HTML+CSS / two context headers / 55 GFM paragraphs+11 code / 21 aliases / separate NodeLimit operations / 680 dependencies')

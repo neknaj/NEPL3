@@ -1,0 +1,37 @@
+from pathlib import Path
+from urllib.parse import quote
+import json,time
+from playwright.sync_api import sync_playwright
+OUT=Path(__file__).parent;HEAD='5c4ce6184f6d5fa817f472d202101aaf86af3195'
+URL=f'https://github.com/neknaj/NEPL3/blob/{HEAD}/doc/spec/08-editor.md'
+e=json.loads((OUT/'prepared-expectations.json').read_bytes());rows=[]
+try:
+ with sync_playwright() as p:
+  browser=p.chromium.launch(headless=True);page=browser.new_page(viewport=dict(width=1280,height=900),reduced_motion='reduce')
+  page.goto(URL,wait_until='domcontentloaded',timeout=90000);article=page.locator('article.markdown-body');article.wait_for();assert article.locator('h1,h2').count()==11
+  # Reuse the loaded document; per-fragment full reload is not a prerequisite for native anchor navigation.
+  for fragment in [a['name'] for a in e['aliases']]+e['semantic_ids']:
+   target=article.locator('[id="user-content-'+fragment+'"],[name="user-content-'+fragment+'"]');assert target.count()==1
+   attempts=[]
+   for _ in range(30):
+    page.evaluate('history.replaceState(null,"",location.pathname)')
+    target.evaluate('n=>{const y=n.getBoundingClientRect().top+scrollY,max=document.documentElement.scrollHeight-innerHeight;scrollTo(0,y<max/2?max:0)}')
+    time.sleep(.15)
+    before=target.evaluate('n=>({top:n.getBoundingClientRect().top,y:scrollY,height:document.documentElement.scrollHeight})');attempts.append(before)
+    time.sleep(.15);next_value=target.evaluate('n=>({top:n.getBoundingClientRect().top,y:scrollY,height:document.documentElement.scrollHeight})')
+    if before==next_value and (before['top'] < -1 or before['top']>900):break
+   else:raise AssertionError(('offscreen precondition not stable',fragment,attempts))
+   page.goto(URL+'#'+quote(fragment,safe='-'),wait_until='domcontentloaded')
+   stable=0;previous=None;observations=[]
+   for _ in range(100):
+    now=target.evaluate('n=>({top:n.getBoundingClientRect().top,y:scrollY,height:document.documentElement.scrollHeight})');observations.append(now)
+    stable=stable+1 if now==previous else 0;previous=now
+    if stable>=5 and -1<=now['top']<900:break
+    time.sleep(.1)
+   else:raise AssertionError(('target not stably visible',fragment,observations))
+   assert abs(now['y']-before['y'])>1 and target.count()==1
+   rows.append(dict(fragment=fragment,precondition_attempts=attempts,before=before,after=now,stable_observations=observations,result='PASS'));print(fragment+' PASS',flush=True)
+  browser.close()
+finally:
+ (OUT/'github-offscreen-results.json').write_text(json.dumps(dict(url=URL,rows=rows,complete=len(rows)==21,scope='Same loaded GitHub document, explicit stable offscreen precondition, then native fragment navigation; no requirement for an ambient-network-idle full reload before each move.'),ensure_ascii=False,indent=2)+'\n',encoding='utf8',newline='\n')
+assert len(rows)==21

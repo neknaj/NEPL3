@@ -1,0 +1,106 @@
+{
+  "scope": "preliminary source/contract review only; final generation not yet fixed or independently executed",
+  "head": "f9b5a2f49f45dedf2b3345386c0eb51b3f0599e0",
+  "preparation": "cce0e08f2f7fca278a246dad0054eb4eeaa88c5d",
+  "base": "20caaf73c5a1d6a5157f50a2b5f23802d3a15c84",
+  "four_heading_replacements_only": true,
+  "counts": {
+    "paragraphs": 55,
+    "sections": 10,
+    "inline_codes": 11,
+    "links": 0
+  },
+  "only_budget_delta": {
+    "markdown_nodes": [
+      20000000,
+      30000000
+    ],
+    "html_nodes": [
+      10000000,
+      20000000
+    ]
+  },
+  "root_failure_observations": "LF NodeLimit logs copied as root observations; not independent execution",
+  "files": [
+    {
+      "path": "source/AGENTS.md",
+      "bytes": 7729,
+      "sha256": "c26941e6dbf896a5e07b7c807789bc1f70bd740e4065092186be42e5ac4baf53"
+    },
+    {
+      "path": "source/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "source/doc/spec/16-doc-migration.md",
+      "bytes": 16698,
+      "sha256": "609d1f6e009410ce0494f09a2b0e896ee739d7917d68308d9d2f78231e80e93a"
+    },
+    {
+      "path": "source/doc/spec/21-doc-pages.md",
+      "bytes": 31845,
+      "sha256": "fd16f3f6e2e8801be832960993f5649daca06d7e6ebaffb43969e9b77d80574c"
+    },
+    {
+      "path": "source/doc/spec/08-editor.nepld",
+      "bytes": 51247,
+      "sha256": "d326323331b335da48a044e35a92d2bd89b64bc4fde794131af4ab17ad3f91b6"
+    },
+    {
+      "path": "source/doc/canonical.json",
+      "bytes": 3282,
+      "sha256": "45515a15eebb6c1d92b473651ca8ca5fa8adbfda0553f7a98a45465917efe6c2"
+    },
+    {
+      "path": "source/doc/migration/aliases/08-editor.json",
+      "bytes": 774,
+      "sha256": "0e85d24ed98a8e151b582442218b17d3d4f191755c9528582080443fca21746b"
+    },
+    {
+      "path": "source/tools/src/doc/canonical.rs",
+      "bytes": 9696,
+      "sha256": "9524e5cb8b96059fae0e5c8312f5f9ba257da9cfb9b2e32bdcdb1a6aa0c0a3f1"
+    },
+    {
+      "path": "source/tools/src/doc/canonical/projection.rs",
+      "bytes": 13078,
+      "sha256": "29a0302edb197e0f99dbd684893187a361dee541f5e1bcb8fc1a3a6c5bae2b18"
+    },
+    {
+      "path": "original/08-editor.md",
+      "bytes": 25396,
+      "sha256": "1311cb50ce019ed53c733f9d8e414a7ea42b70f975fb0d60d01314762d79fa39"
+    },
+    {
+      "path": "original/08-editor.nepld",
+      "bytes": 51115,
+      "sha256": "43c78b5f39b008a87b7a5eaf1719a0670f1b5f4992a2489a84549af7dd1241a7"
+    },
+    {
+      "path": "source.patch",
+      "bytes": 5897,
+      "sha256": "e28e63c23083ec3f0d6090da115594cb31061ff16aa10acbd804fd917bf99df2"
+    },
+    {
+      "path": "root-observations/normalization-note.md",
+      "bytes": 1240,
+      "sha256": "b4d5592a94abef2d7c1e2f182e0ec2ae98055e0252ea24d6ba8b161e2ca39456"
+    },
+    {
+      "path": "root-observations/commands.json",
+      "bytes": 1143,
+      "sha256": "90ce49b8e71caf20efaa497674c84bc4bb390f4997984b976fd216d8fc19784b"
+    },
+    {
+      "path": "root-observations/markdown.stderr.log",
+      "bytes": 331,
+      "sha256": "8473d3f266f86e962bea37ae419ae4dd1189d5871db144c87c6e1d3d6aca211c"
+    },
+    {
+      "path": "root-observations/html.stderr.log",
+      "bytes": 489,
+      "sha256": "25dcc2199afba392bb18ac094ac2cd0ce91438035a11c828746fab62645d85d5"
+    }
+  ]
+}

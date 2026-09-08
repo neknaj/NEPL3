@@ -1,0 +1,16 @@
+from pathlib import Path
+import subprocess,json,hashlib
+root=Path.cwd();path=root/'doc/canonical.json';before=path.read_bytes();data=json.loads(before)
+failures=json.loads((root/'.tmp/generation-lf/commands.json').read_bytes())
+assert len(failures)==2 and all(r['exit_code']!=0 and not r['output_exists'] for r in failures)
+assert all('Stopped(NodeLimit)' in (root/f'.tmp/generation-lf/{kind}.stderr.log').read_text(encoding='utf-8') for kind in ['markdown','html'])
+assert before==subprocess.check_output(['git','show','HEAD:doc/canonical.json'])
+assert data['output_limits']['nodes']==20000000 and data['html_output_limits']['nodes']==10000000
+data['output_limits']['nodes']=30000000
+data['html_output_limits']['nodes']=20000000
+after=(json.dumps(data,indent=2)+'\n').encode();path.write_bytes(after)
+(root/'.tmp/node-budget-selection.json').write_bytes((json.dumps(dict(source_commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),before_sha256=hashlib.sha256(before).hexdigest(),after_sha256=hashlib.sha256(after).hexdigest(),reason='Nine-page corpus stopped NodeLimit in separate Markdown and HTML generation operations, also reproduced with exact Git LF input bytes. HTML reported resolve/render node count10000000 after parsing/lowering. Select independent finite output Node caps30M Markdown/20M HTML. All other resources, core defaults and per-page parsing/lowering remain unchanged. These are declared allowances, not a measured minimum, physical heap cap, or a reset of either stopped Budget.'),indent=2)+'\n').encode())
+s=Path('C:/projects/NEPL3-doc-canonical-model-invariants/.tmp/generate-budget.py').read_text(encoding='utf-8')
+s=s.replace("page['id']=='architecture'", "page['id'] in {'architecture','model-invariants'}")
+s=s.replace("page['id']!='model-invariants'", "page['id']!='editor'")
+(root/'.tmp/generate-budget.py').write_text(s,encoding='utf-8',newline='\n')

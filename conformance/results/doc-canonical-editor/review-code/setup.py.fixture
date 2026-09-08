@@ -1,0 +1,15 @@
+from pathlib import Path
+p=Path(__file__).parent
+prior=Path('C:/projects/NEPL3-doc-canonical-model-invariants/.tmp/review-canonical12-code')
+s=(prior/'freeze.py').read_text(encoding='utf8')
+s=s.replace('2b0bbf4b888ea18ef5e97eaabe2391008e86fe69','5c4ce6184f6d5fa817f472d202101aaf86af3195').replace("'840a0e1'","'20caaf73'")
+s=s.replace("'doc/spec/12-model-invariants.md','doc/spec/12-model-invariants.nepld']", "'doc/spec/08-editor.md','doc/spec/08-editor.nepld','doc/spec/12-model-invariants.md']")
+s=s.replace("'doc/migration/aliases/12-model-invariants.json'","'doc/migration/aliases/08-editor.json'").replace("'doc/migration/authored/12-model-invariants.nepld'","'doc/migration/authored/08-editor.nepld'")
+s=s.replace('NEPL3-doc-canonical-html-fragment/.tmp/review-canonical19-code','NEPL3-doc-canonical-model-invariants/.tmp/review-canonical12-code').replace('prior-l','prior-m').replace('prior_l_selected','prior_m_selected')
+s=s.replace("'07-circuit','13-reproducibility'","'07-circuit','12-model-invariants','13-reproducibility'")
+s=s.replace(".tmp/review-canonical12-content",".tmp/review-canonical08-content").replace('six M source paths and verified L/content evidence','seven N paths and verified M/content evidence')
+(p/'freeze.py').write_text(s,encoding='utf8',newline='\n')
+s=(prior/'run.py').read_text(encoding='utf8').replace('2b0bbf4b888ea18ef5e97eaabe2391008e86fe69','5c4ce6184f6d5fa817f472d202101aaf86af3195')
+s=s.replace("v['output_limits']['work']=400000000;v['output_limits']['allocation_units']=1000000000", "v['output_limits']['nodes']=20000000;v['html_output_limits']['nodes']=10000000")
+s=s.replace("    r=run('markdown-old-budget',[str(binary),'doc-canonical','markdown',str(p/'markdown-old-budget')],False)\n    assert b'AllocationLimit' in r.stderr and not (p/'markdown-old-budget').exists()", "    for kind in ['markdown','html']:\n        name=kind+'-old-budget'\n        r=run(name,[str(binary),'doc-canonical',kind,str(p/name)],False)\n        assert b'NodeLimit' in r.stderr and not (p/name).exists()")
+(p/'run.py').write_text(s,encoding='utf8',newline='\n')

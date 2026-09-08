@@ -1,0 +1,33 @@
+{
+  "headings": [
+    "08. 共通[きょうつう]editor serviceと診断[しんだん]",
+    "方針[ほうしん]",
+    "1. AnalysisSnapshotの入力[にゅうりょく]と同一性[どういつせい]",
+    "2. 自動[じどう]で得[え]られる機能[きのう]",
+    "3. regionの選択[せんたく]",
+    "4. definitionとrelationsの扱[あつか]い",
+    "5. 不完全入力[ふかんぜんにゅうりょく]",
+    "6. 増分解析[ぞうぶんかいせき]と取消[とりけ]し",
+    "7. LSP adapterの責務[せきむ]",
+    "8. 診断[しんだん]・ログの表示[ひょうじ]",
+    "9. workspace trustの境界[きょうかい]"
+  ],
+  "codes": [
+    "SHA-256(domain || canonical NDF/1 CBOR(value))",
+    "nepl3.analysis.tree/1",
+    "nepl3.analysis.execution/1",
+    "nepl3.analysis.request/1",
+    "analysis::region::regions",
+    "RegionKey",
+    "RegionSidecar { facts: Option<List<ReaderFactBatch>> }",
+    "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)",
+    "analysis::query::query",
+    "analysis::region::query::query",
+    "RenameRequest(key, source, offset, newName, writable)"
+  ],
+  "ul": 0,
+  "ol": 0,
+  "relative_hrefs": [],
+  "table_rows": 0,
+  "rawLines_fixed_bytes": true
+}

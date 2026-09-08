@@ -1,0 +1,30 @@
+from pathlib import Path
+import shutil
+
+root=Path(__file__).resolve().parent
+old=root/'github-canonical08'
+saved=root/'github-canonical08-networkidle'
+assert not saved.exists()
+shutil.copytree(old,saved)
+script=root/'github-canonical08.py'
+shutil.copy2(script,saved/'executed-script.py')
+(saved/'failure-note.md').write_text('The second root GitHub invocation failed at per-fragment base navigation (line41): Page.goto timeout90000ms waiting for networkidle. This is a summary of the tool diagnostic, not reconstructed raw stderr. Partial results are retained. No successful completion is inferred. The next probe uses a single loaded document and observes stable geometry before and after native fragment navigation; GitHub network quiescence is not the semantic readiness condition.\n',encoding='utf-8',newline='\n')
+s=script.read_text(encoding='utf-8')
+s=s.replace("out=root/'.tmp/github-canonical08'", "out=root/'.tmp/github-canonical08-stable'")
+s=s.replace("wait_until='networkidle'", "wait_until='domcontentloaded'")
+s=s.replace("            page.goto(url,wait_until='domcontentloaded',timeout=90000)\n", "")
+start=s.index('            before=target.evaluate(')
+end=s.index("            page.goto(url+'#'",start)
+s=s[:start]+'''            before=None; stable=0
+            for _ in range(100):
+                current=target.evaluate('''+repr("""n=>{const absolute=n.getBoundingClientRect().top+scrollY,max=document.documentElement.scrollHeight-innerHeight;
+                  if (n.getBoundingClientRect().top>=0 && n.getBoundingClientRect().top<1000) scrollTo({top:absolute<max/2?max:0,behavior:'instant'});
+                  return {top:n.getBoundingClientRect().top,scrollY,max};}""")+''')
+                outside=current['top']<0 or current['top']>=1000
+                stable=stable+1 if outside and before and abs(current['top']-before['top'])<.1 and abs(current['scrollY']-before['scrollY'])<.1 else 0
+                before=current
+                if stable>=5:break
+                page.wait_for_timeout(100)
+            assert stable>=5 and (before['top']<0 or before['top']>=1000),(fragment,before)
+''' + s[end:]
+script.write_text(s,encoding='utf-8',newline='\n')

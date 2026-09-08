@@ -1,0 +1,121 @@
+from pathlib import Path
+from functools import partial
+from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
+from threading import Thread
+from urllib.parse import quote,urlparse
+from playwright.sync_api import sync_playwright
+import hashlib,json,subprocess,time,platform,importlib.metadata,sys,re
+ROOT=Path(__file__).resolve().parents[2];OUT=Path(__file__).parent
+HEAD='5c4ce6184f6d5fa817f472d202101aaf86af3195';SHA=lambda b:hashlib.sha256(b).hexdigest()
+def save(name,value):
+    p=OUT/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n',encoding='utf8',newline='\n')
+def git(path):return subprocess.check_output(['git','show',HEAD+':'+path],cwd=ROOT)
+frozen=[]
+for path in ['doc/spec/08-editor.md','doc/spec/08-editor.nepld','doc/migration/aliases/08-editor.json','doc/canonical.json','tools/src/doc/canonical.rs','design/forms.json','tools/audit/structure.py']:
+    data=git(path);dest=OUT/'source'/path;dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(data);frozen.append(dict(path=path,bytes=len(data),sha256=SHA(data)))
+helper=Path('C:/projects/NEPL3-doc-canonical-html-delivery/.tmp/preflight-after18/helpers.py').read_bytes();(OUT/'helpers.py').write_bytes(helper)
+sys.path.insert(0,str(OUT/'source'))
+from tools.audit.structure import Parser,load_forms
+exec(helper.decode())
+def plain(n):
+    if isinstance(n,list):return ''.join(map(plain,n))
+    if not isinstance(n,dict):return ''
+    f=n['fields'];k=n['kind']
+    if k in ('Text','InlineCode','RawCode'):return f['text']
+    if k=='Link':return plain(f['label'])
+    return ''.join(plain(x) for x in f.values())
+tree=normalize(Parser(git('doc/spec/08-editor.nepld').decode(),load_forms(OUT/'source')).complete('Doc/Article'))
+sections=[n for n in walk(tree) if n['kind']=='Section'];ids=['n-'+n['fields']['id'].encode().hex() for n in sections]
+expected=dict(headings=[plain(tree['fields']['title'])]+[plain(n['fields']['title']) for n in sections],paragraphs=[plain(n) for n in walk(tree) if n['kind']=='Paragraph'],codes=[n['fields']['text'] for n in walk(tree) if n['kind']=='InlineCode'],lists=[dict(style=n['fields']['style']['kind'],items=[plain(i['fields']['body']) for i in n['fields']['items']]) for n in walk(tree) if n['kind']=='List'])
+prepared=json.loads((OUT/'prepared-expectations.json').read_bytes())
+assert expected['headings']==prepared['headings'] and expected['paragraphs']==prepared['paragraphs'] and expected['codes']==prepared['codes']
+expected['table_cells']=[];expected['hrefs']=[]
+legacy=[a['name'] for a in prepared['aliases']]
+assert json.loads(git('doc/migration/aliases/08-editor.json'))==prepared['aliases']
+old=(OUT/'preparation/doc/spec/08-editor.md').read_bytes();(OUT/'old-source.md').write_bytes(old)
+oldcodes=re.findall(r'`([^`]+)`',old.decode());assert oldcodes==expected['codes']
+assert git('doc/spec/08-editor.nepld')==(OUT/'preparation/doc/spec/08-editor.nepld').read_bytes()
+save('expected.json',dict(**expected,original_codes=oldcodes,legacy=legacy,semantic=ids))
+artifacts=[]
+for kind,count in [('html',11),('markdown',10)]:
+    first=ROOT/'.tmp'/f'{kind}-budget-first';second=ROOT/'.tmp'/f'{kind}-budget-second'
+    paths=sorted(p.relative_to(first) for p in first.rglob('*') if p.is_file());assert len(paths)==count
+    assert paths==sorted(p.relative_to(second) for p in second.rglob('*') if p.is_file())
+    for path in paths:
+        data=(first/path).read_bytes();assert data==(second/path).read_bytes()
+        if kind=='markdown' and str(path)!='manifest.json':assert data==git(path.as_posix())
+        for label,base in [('first',first),('second',second)]:
+            dest=OUT/'served'/'independent'/'deep'/label/path if kind=='html' else OUT/'markdown'/label/path
+            dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(data)
+            artifacts.append(dict(kind=kind,copy=label,path=path.as_posix(),bytes=len(data),sha256=SHA(data),original=str(base/path)))
+    manifest=json.loads((first/'manifest.json').read_bytes())
+    for f in manifest['files']:assert SHA((first/f['path']).read_bytes())==f['sha256']
+    if kind=='html':
+        for page in manifest['pages']:assert SHA(git(page['input']))==page['source_sha256']
+save('input-hashes.json',dict(commit=HEAD,git=frozen,artifacts=artifacts))
+class Quiet(SimpleHTTPRequestHandler):
+    def log_message(self,*args):pass
+server=ThreadingHTTPServer(('127.0.0.1',0),partial(Quiet,directory=str(OUT/'served')));thread=Thread(target=server.serve_forever,daemon=True);thread.start()
+rows=[];gh=[];env=dict(platform=platform.platform(),python=platform.python_version(),playwright=importlib.metadata.version('playwright'),runner='existing project Playwright cross-engine environment; browser app unavailable in earlier session')
+def stable(page,target):
+    prev=None;count=0
+    for _ in range(100):
+        v=target.evaluate('n=>({top:n.getBoundingClientRect().top,y:scrollY,hash:location.hash})')
+        count=count+1 if prev and abs(v['y']-prev['y'])<.1 else 0;prev=v
+        if count>=5 and -1<=v['top']<900:return v
+        time.sleep(.1)
+    raise AssertionError(('unstable/invisible',v))
+try:
+  with sync_playwright() as p:
+    for engine in ['chromium','firefox','webkit']:
+      browser=getattr(p,engine).launch(headless=True);exe=Path(getattr(p,engine).executable_path);env[engine]=dict(version=browser.version,executable=str(exe),sha256=SHA(exe.read_bytes()))
+      for prefix in ['first','second']:
+       for width in [375,1280]:
+        context=browser.new_context(java_script_enabled=False,viewport={'width':width,'height':900},reduced_motion='reduce');page=context.new_page();requests=[];failed=[]
+        page.on('request',lambda q:requests.append(q.url));page.on('requestfailed',lambda q:failed.append(q.url))
+        url=f'http://127.0.0.1:{server.server_port}/independent/deep/{prefix}/docs/spec/08-editor.html'
+        assert page.goto(url,wait_until='networkidle').status==200
+        actual=page.evaluate('''()=>{const text=n=>{const x=n.cloneNode(true);x.querySelectorAll('.nepl-reading,.nepl-notes').forEach(e=>e.remove());return x.textContent};return {headings:[...document.querySelectorAll('h1,h2,h3')].map(text),paragraphs:[...document.querySelectorAll('article p')].map(text),codes:[...document.querySelectorAll('article code')].map(text),lists:[...document.querySelectorAll('article ul,article ol')].map(n=>({style:n.tagName==='UL'?'Unordered':'Ordered',items:[...n.children].map(text)})),ids:[...document.querySelectorAll('[id]')].map(n=>n.id),names:[...document.querySelectorAll('[name]')].map(n=>n.name),table_cells:[...document.querySelectorAll('tr')].map(n=>[...n.children].map(text)),hrefs:[...document.querySelectorAll('article a[href]')].map(n=>n.getAttribute('href')),scripts:document.scripts.length,links:document.querySelectorAll('article a[href]').length,lang:document.querySelector('article').lang,ruby:document.querySelectorAll('.nepl-ruby').length,overflow:document.documentElement.scrollWidth-innerWidth,styles:[...document.styleSheets].map(s=>s.cssRules.length)}}''')
+        for key in ['headings','paragraphs','codes','lists','hrefs','table_cells']:assert actual[key]==expected[key],(engine,key,actual[key],expected[key])
+        assert actual['scripts']==0 and actual['links']==0 and actual['lang']=='ja' and actual['ruby']==prepared['ruby_count'] and actual['overflow']<=1
+        assert actual['styles'] and min(actual['styles'])>0 and len(set(actual['ids']))==len(actual['ids']) and set(ids)<=set(actual['ids'])
+        assert not set(legacy)&(set(actual['ids'])|set(actual['names']))
+        nav=[]
+        for sid in ids:
+            page.goto(url,wait_until='load');target=page.locator('[id="'+sid+'"]');assert target.count()==1
+            start=target.evaluate('n=>{const y=n.getBoundingClientRect().top+scrollY,max=document.documentElement.scrollHeight-innerHeight;scrollTo(0,y<max/2?max:0);return scrollY}')
+            page.goto(url+'#'+sid,wait_until='load');final=stable(page,target);assert abs(final['y']-start)>1;nav.append(dict(id=sid,start=start,final=final))
+        page.goto(url,wait_until='networkidle');label=f'{engine}-{prefix}-{width}';(OUT/(label+'.aria.txt')).write_text(page.locator('article').aria_snapshot(),encoding='utf8',newline='\n')
+        actual['readings']=page.locator('.nepl-reading').evaluate_all('ns=>ns.map(n=>({text:n.textContent,size:getComputedStyle(n).fontSize,visibility:getComputedStyle(n).visibility,display:getComputedStyle(n).display,width:n.getBoundingClientRect().width,height:n.getBoundingClientRect().height}))')
+        assert len(actual['readings'])==1330 and all(x['text'] and float(x['size'][:-2])>0 and x['visibility']=='visible' and x['display']!='none' and x['width']>0 and x['height']>0 for x in actual['readings'])
+        if prefix=='first':
+            page.screenshot(path=str(OUT/(label+'-title.png')))
+            page.locator('article p').nth(5).scroll_into_view_if_needed();page.screenshot(path=str(OUT/(label+'-body.png')))
+            page.locator('[id="n-72656c6174696f6e73"]').scroll_into_view_if_needed();page.screenshot(path=str(OUT/(label+'-relations.png')))
+        assert not failed and all(urlparse(u).hostname=='127.0.0.1' for u in requests)
+        rows.append(dict(engine=engine,prefix=prefix,width=width,result='PASS',actual=actual,navigation=nav,failed=failed));print(label+' PASS',flush=True);context.close()
+      browser.close()
+    browser=p.chromium.launch(headless=True);context=browser.new_context(viewport={'width':1280,'height':900},reduced_motion='reduce');page=context.new_page()
+    url=f'https://github.com/neknaj/NEPL3/blob/{HEAD}/doc/spec/08-editor.md';assert page.goto(url,wait_until='domcontentloaded',timeout=90000).status==200
+    article=page.locator('article.markdown-body');article.wait_for();(OUT/'github.html').write_text(page.content(),encoding='utf8',newline='\n')
+    def raw(v):
+        if isinstance(v,dict):return any((k=='rawLines' and ('\n'.join(x)+'\n').encode()==git('doc/spec/08-editor.md')) or raw(x) for k,x in v.items())
+        if isinstance(v,list):return any(raw(x) for x in v)
+        return False
+    assert any(raw(json.loads(t)) for t in page.locator('script[type="application/json"]').all_text_contents())
+    elements=article.evaluate('a=>[...a.querySelectorAll("[id],[name]")].map(n=>({id:n.id,name:n.getAttribute("name"),html:n.outerHTML}))');save('github-elements.json',elements)
+    headings=article.locator('h1,h2').all_text_contents();assert len(headings)==11
+    assert article.locator('ul,ol,table').count()==0
+    hrefs=article.locator('a[href]').evaluate_all('nodes=>nodes.filter(n=>!n.classList.contains("anchor")).map(n=>n.getAttribute("href"))');assert hrefs==[]
+    assert article.locator('code').all_text_contents()==expected['codes']
+    save('github-shape.json',dict(headings=headings,codes=expected['codes'],ul=0,ol=0,relative_hrefs=hrefs,table_rows=0,rawLines_fixed_bytes=True))
+    for fragment in legacy+ids:
+        page.goto(url,wait_until='domcontentloaded');target=page.locator('article.markdown-body').locator('[id="user-content-'+fragment+'"],[name="user-content-'+fragment+'"]');assert target.count()==1,(fragment,target.count())
+        start=target.evaluate('n=>{const y=n.getBoundingClientRect().top+scrollY,max=document.documentElement.scrollHeight-innerHeight;scrollTo(0,y<max/2?max:0);return scrollY}')
+        page.goto(url+'#'+quote(fragment,safe='-'),wait_until='domcontentloaded');final=stable(page,target);assert abs(final['y']-start)>1
+        gh.append(dict(fragment=fragment,start=start,final=final,result='PASS'));print('GitHub '+fragment+' PASS',flush=True)
+    page.goto(url,wait_until='domcontentloaded');page.locator('article.markdown-body h1').scroll_into_view_if_needed();page.screenshot(path=str(OUT/'github.png'));browser.close()
+finally:
+    server.shutdown();server.server_close();thread.join();save('environment.json',env);save('html-results.json',rows);save('github-results.json',dict(url=f'https://github.com/neknaj/NEPL3/blob/{HEAD}/doc/spec/08-editor.md',rows=gh,complete=len(gh)==21))
+assert len(rows)==12 and len(gh)==21
+print('PASS 12 local cases / 120 semantic moves; GitHub21; 55 paragraphs,11 code,1330 visible Ruby exact',flush=True)

@@ -1,0 +1,8 @@
+from pathlib import Path
+import subprocess,json
+p=Path(__file__).parent.resolve();root=p.parents[1]
+old='5c4ce6184f6d5fa817f472d202101aaf86af3195';head='8127b2ed9688cf7f05b6bf0a2bb432fe02b049f0'
+paths=subprocess.check_output(['git','diff','--name-only',old,head],cwd=root).decode().splitlines()
+assert len(paths)==468 and all(n.startswith('conformance/results/doc-canonical-model-invariants/') for n in paths)
+(p/'ancestry-observation.json').write_text(json.dumps(dict(scope='Path-only incoming archive observation; this does not revalidate 468 payload contents',reviewed_source=old,later_head=head,all_source_code_and_registry_unchanged=True,incoming_paths=paths),indent=2)+'\n',encoding='utf8',newline='\n')
+print('PASS later head adds only468 M archive paths; fixed review execution remains5c')

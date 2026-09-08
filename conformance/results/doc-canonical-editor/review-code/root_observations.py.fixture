@@ -1,0 +1,21 @@
+from pathlib import Path
+import json,hashlib,subprocess
+p=Path(__file__).parent.resolve();root=p.parents[1];out=p/'root-observations';rows=[]
+def sha(b):return hashlib.sha256(b).hexdigest()
+paths=['.tmp/normalization-note.md']
+for folder in ['initial-input-bytes','generation-initial','generation-lf']:
+    paths.extend(q.relative_to(root).as_posix() for q in sorted((root/'.tmp'/folder).rglob('*')) if q.is_file())
+for path in paths:
+    b=(root/path).read_bytes();relative=path.removeprefix('.tmp/');q=out/relative;q.parent.mkdir(parents=True,exist_ok=True);q.write_bytes(b);rows.append(dict(path=relative,bytes=len(b),sha256=sha(b)))
+record=json.loads((out/'initial-input-bytes/record.json').read_bytes())
+for row in record['files']:
+    raw=(root/row['saved']).read_bytes();git=subprocess.check_output(['git','show',record['source_commit']+':'+row['path']],cwd=root)
+    assert sha(raw)==row['working_sha256'] and len(raw)==row['working_bytes']
+    assert sha(git)==row['git_blob_sha256'] and len(git)==row['git_bytes']
+    assert raw.replace(b'\r\n',b'\n')==git and b'\r\n' in raw and b'\r' not in git
+assert (out/'generation-lf/commands.json').is_file()
+for row in json.loads((out/'generation-lf/commands.json').read_bytes()):
+    assert row['exit_code']==1 and row['output_exists'] is False
+    assert row['registry_sha256']==record['files'][0]['git_blob_sha256']
+(out/'manifest.json').write_text(json.dumps(dict(scope='Root prior observations preserved as such; normalization note is a narrative summary, not raw diagnostics',files=rows),indent=2)+'\n',encoding='utf8',newline='\n')
+print('Preserved root observations',len(rows),'and verified both CRLF-to-Git-LF byte relationships')

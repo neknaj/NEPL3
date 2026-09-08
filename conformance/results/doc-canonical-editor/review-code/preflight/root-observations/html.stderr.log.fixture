@@ -1,0 +1,4 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.19s
+     Running `target\debug\nepl3-tools.exe doc-canonical html .tmp/html-initial-lf`
+nepl3-tools: resolve/render: Stopped(NodeLimit); usage=Usage { source_bytes: 219832, work: 217292905, depth: 14, nodes: 10000000, allocation_units: 565174117, output_bytes: 256, diagnostics: 0, events: 0 }
+error: process didn't exit successfully: `target\debug\nepl3-tools.exe doc-canonical html .tmp/html-initial-lf` (exit code: 1)
