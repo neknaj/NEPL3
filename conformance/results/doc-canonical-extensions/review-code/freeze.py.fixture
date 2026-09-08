@@ -1,0 +1,48 @@
+from pathlib import Path
+import subprocess, hashlib, json, shutil
+ROOT=Path(__file__).resolve().parents[2]
+OUT=Path(__file__).parent
+BASE='889a53ab6d678d7c9673dc716878fcbb34b9d466'
+FINAL='b13f395c3874c378911ee8b686f0a55033b20e68'
+def sha(b): return hashlib.sha256(b).hexdigest()
+def put(path,b):
+    p=OUT/path;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b)
+def js(path,v): put(path,(json.dumps(v,ensure_ascii=False,indent=2)+'\n').encode())
+def git(*args): return subprocess.check_output(['git',*args],cwd=ROOT)
+assert git('rev-parse','HEAD').decode().strip()==FINAL
+assert not git('status','--porcelain')
+names=git('ls-tree','-r','--name-only',BASE).decode().splitlines()
+names=[x for x in names if '/' not in x or x.startswith(('crates/','tools/','doc/','interfaces/','design/','languages/','conformance/fixtures/','.cargo/','examples/'))]
+# Git metadata itself and archived evidence are intentionally not build dependencies.
+proc=subprocess.Popen(['git','cat-file','--batch'],cwd=ROOT,stdin=subprocess.PIPE,stdout=subprocess.PIPE)
+deps=[]
+for name in names:
+    proc.stdin.write((BASE+':'+name+'\n').encode());proc.stdin.flush()
+    hdr=proc.stdout.readline().split();assert hdr[1]==b'blob',hdr
+    b=proc.stdout.read(int(hdr[2]));assert proc.stdout.read(1)==b'\n'
+    put(Path('workspace')/name,b);deps.append(dict(path=name,bytes=len(b),sha256=sha(b)))
+proc.stdin.close();assert proc.wait()==0
+changed=['doc/canonical.json','doc/migration/authored/22-external-extensions.nepld','doc/spec/22-external-extensions.md','doc/migration/aliases/22-external-extensions.json','doc/spec/22-external-extensions.nepld']
+scope=[]
+for name in changed:
+    if name in names: put(Path('before')/name,(OUT/'workspace'/name).read_bytes())
+    src=ROOT/name
+    if src.exists():
+        b=src.read_bytes();put(Path('workspace')/name,b);put(Path('source')/name,b)
+        scope.append(dict(path=name,bytes=len(b),sha256=sha(b)))
+    else:
+        (OUT/'workspace'/name).unlink();scope.append(dict(path=name,deleted=True))
+for name in ['doc/authoring.md','AGENTS.md','design/forms.json','tools/audit/structure.py','tools/src/doc/canonical.rs','tools/src/doc/projection/annotated/host.rs']:
+    put(Path('source')/name,(OUT/'workspace'/name).read_bytes())
+put(Path('source.patch'),git('diff','--binary',BASE,FINAL))
+js('snapshot.json',dict(base=BASE,final=FINAL,files=scope));js('dependencies.json',deps)
+prior_rows=[]
+for label,folder in [('legacy-anchors',ROOT/'.tmp/preflight-canonical22-anchors'),('content',Path('C:/projects/NEPL3-doc-page-projection/.tmp/review-external22-content'))]:
+    m=(folder/'manifest.json').read_bytes();manifest=json.loads(m);put(Path('prior')/label/'manifest.json',m)
+    rows=manifest['files']
+    for row in rows:
+        b=(folder/row['path']).read_bytes();assert sha(b)==row['sha256'];assert len(b)==row['bytes']
+        put(Path('prior')/label/row['path'],b)
+    prior_rows.append(dict(label=label,manifest_sha256=sha(m),files=len(rows)))
+js('prior-verified.json',prior_rows)
+print('FROZEN',len(deps),'Git blobs;',len(scope),'overlay paths;',prior_rows)

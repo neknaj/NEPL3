@@ -1,0 +1,10 @@
+{
+  "command": [
+    "C:\\projects\\NEPL3-doc-canonical-preview\\.tmp\\browser-venv\\Scripts\\python.exe",
+    "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-cutover\\bootstrap.py"
+  ],
+  "cwd": "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-cutover",
+  "deadline_seconds": 600,
+  "exit_code": 0,
+  "elapsed": 3.6471698000095785
+}

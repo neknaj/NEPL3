@@ -1,0 +1,41 @@
+[
+  {
+    "name": "old-markdown-is-stale",
+    "path": "doc/spec/22-external-extensions.md",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-code\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "--check"
+    ],
+    "exit_code": 1,
+    "before_sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f",
+    "altered_sha256": "d3ea5308c7d0d79d915e4c1fcbe971fb366f3ee1ebe5d7685dad5e0c8cb53a9a",
+    "input_not_rewritten": true
+  },
+  {
+    "name": "missing-legacy-alias",
+    "path": "doc/migration/aliases/22-external-extensions.json",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-code\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "--check"
+    ],
+    "exit_code": 1,
+    "before_sha256": "132807f48bf3acceac6beacff6fd690cac164b5d0701ac40b0f0a03c7abfc923",
+    "altered_sha256": "e611263e7ee632ba80734d819733426074485b0fa399fb88a590229162c4979d",
+    "input_not_rewritten": true
+  },
+  {
+    "name": "changed-doc-source",
+    "path": "doc/spec/22-external-extensions.nepld",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-extensions\\.tmp\\review-canonical22-code\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "--check"
+    ],
+    "exit_code": 1,
+    "before_sha256": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa",
+    "altered_sha256": "c7c16654ae3ae85a4d92fc20c090b7e190b8f99d72c65396e45d76d82508fba8",
+    "input_not_rewritten": true
+  }
+]

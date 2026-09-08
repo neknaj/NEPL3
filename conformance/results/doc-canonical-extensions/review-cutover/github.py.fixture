@@ -1,0 +1,49 @@
+from pathlib import Path
+from urllib.parse import quote,unquote
+import json
+from playwright.sync_api import sync_playwright
+O=Path(__file__).resolve().parent;out=O/'independent-github';out.mkdir(exist_ok=True)
+head='b13f395c3874c378911ee8b686f0a55033b20e68';url=f'https://github.com/neknaj/NEPL3/blob/{head}/doc/spec/22-external-extensions.md'
+aliases=json.loads((O/'source/doc/migration/aliases/22-external-extensions.json').read_bytes());names=[a['name'] for a in aliases]+['n-'+a['section'].encode().hex() for a in aliases if a['section']]
+expected=(O/'source/doc/spec/22-external-extensions.md').read_text(encoding='utf-8').splitlines()
+def rawlines(v):
+    if isinstance(v,dict):return any(k=='rawLines' and x==expected or rawlines(x) for k,x in v.items())
+    if isinstance(v,list):return any(rawlines(x) for x in v)
+    return False
+rows=[];record=dict(head=head,url=url,rows=rows)
+try:
+    with sync_playwright() as p:
+        b=p.chromium.launch();page=b.new_page(viewport={'width':1280,'height':1000},reduced_motion='reduce')
+        response=page.goto(url,wait_until='networkidle',timeout=90000);assert response.status==200
+        page.locator('article.markdown-body').wait_for()
+        found=False
+        for s in page.locator('script[type="application/json"]').all_text_contents():
+            try:found=found or rawlines(json.loads(s))
+            except ValueError:pass
+        assert found
+        record.update(browser=b.version,raw_lines_match=True,status=response.status)
+        rawurl=f'https://raw.githubusercontent.com/neknaj/NEPL3/{head}/doc/spec/22-external-extensions.md'
+        raw=page.request.get(rawurl,timeout=90000);assert raw.status==200
+        data=raw.body();assert data==(O/'source/doc/spec/22-external-extensions.md').read_bytes()
+        (out/'actual-raw.md').write_bytes(data);record['raw_bytes_match']=True
+        (out/'page.html').write_text(page.content(),encoding='utf-8',newline='\n')
+        for name in names:
+            page.goto(url,wait_until='domcontentloaded')
+            t=page.locator('article.markdown-body').locator('[id="user-content-'+name+'"], [name="user-content-'+name+'"]');assert t.count()==1
+            initial=t.evaluate('''n=>{const y=n.getBoundingClientRect().top+scrollY,m=document.documentElement.scrollHeight-innerHeight;scrollTo({top:y<m/2?m:0,behavior:'instant'});return {absolute:y,max:m,start:scrollY,top:n.getBoundingClientRect().top}}''')
+            assert initial['top']<0 or initial['top']>=1000
+            page.goto(url+'#'+quote(name,safe='-'),wait_until='domcontentloaded')
+            previous=None;stable=0
+            for _ in range(100):
+                v=t.evaluate('n=>({top:n.getBoundingClientRect().top,y:scrollY,max:document.documentElement.scrollHeight-innerHeight,hash:location.hash})')
+                stable=stable+1 if previous is not None and abs(v['y']-previous)<.1 else 0;previous=v['y']
+                if stable>=5 and 0<=v['top']<1000:break
+                page.wait_for_timeout(100)
+            assert stable>=5 and 0<=v['top']<1000 and abs(initial['start']-v['y'])>1
+            assert unquote(v['hash'][1:])==name
+            # GitHub sticky header positioning or scroll end, not just viewport intersection.
+            assert abs(v['top']-125)<2 or abs(v['y']-v['max'])<1,(name,v)
+            rows.append(dict(fragment=name,initial=initial,final=v,stable_samples=stable,passed=True))
+            print('fragment',len(rows),'passed',flush=True)
+        page.screenshot(path=str(out/'last.png'));b.close()
+finally:(out/'results.json').write_text(json.dumps(record,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')

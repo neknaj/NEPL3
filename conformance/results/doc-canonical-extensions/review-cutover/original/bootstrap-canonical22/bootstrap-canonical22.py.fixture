@@ -1,0 +1,33 @@
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+import hashlib,json
+root=Path(__file__).resolve().parent.parent
+artifact=root/'dist/canonical22-snapshot'
+original=root/'.tmp/verify-canonical22/first'
+files={p.relative_to(artifact).as_posix():p.read_bytes() for p in artifact.rglob('*') if p.is_file()}
+assert len(files)==5
+for name,data in files.items():assert data==(original/name).read_bytes()
+out=root/'.tmp/bootstrap-canonical22';out.mkdir(exist_ok=True)
+rows=[]
+with sync_playwright() as p:
+    for name in ['chromium','firefox','webkit']:
+        browser=getattr(p,name).launch(headless=True)
+        context=browser.new_context(java_script_enabled=False)
+        context.route("http://**", lambda route: route.abort())
+        context.route("https://**", lambda route: route.abort())
+        page=context.new_page()
+        page.goto((artifact/'docs/spec/22-external-extensions.html').as_uri(),wait_until='load')
+        row=page.evaluate('''()=>({scripts:document.scripts.length,
+          ruby:document.querySelectorAll('.nepl-ruby').length,
+          headings:document.querySelectorAll('h1,h2,h3').length,
+          lists:[...document.querySelectorAll('ol')].map(n=>n.children.length),
+          background:getComputedStyle(document.querySelector('article')).backgroundColor,
+          css:[...document.querySelectorAll('link[rel=stylesheet]')].map(n=>!!n.sheet)})''')
+        assert row['scripts']==0 and row['ruby']>0 and row['headings']==5
+        assert row['lists']==[6] and row['background']=='rgb(13, 17, 23)' and row['css']==[True]
+        row.update(browser=name,version=browser.version,result='passed')
+        rows.append(row)
+        context.close();browser.close()
+(out/'results.json').write_text(json.dumps(dict(scope='exact README restore script; original five bytes-identical files; file URLs and JavaScript disabled; no Rust/Node/network generation',files={n:hashlib.sha256(b).hexdigest() for n,b in files.items()},rows=rows),indent=2)+'\n',encoding='utf-8',newline='\n')
+for name in ['restore-canonical22.py','bootstrap-canonical22.py']:(out/name).write_bytes((root/'.tmp'/name).read_bytes())
+print('three-engine compiler-free snapshot passed')

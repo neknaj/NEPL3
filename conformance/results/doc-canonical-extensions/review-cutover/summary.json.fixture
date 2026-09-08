@@ -1,0 +1,37 @@
+{
+  "status": "PASS",
+  "head": "b13f395c3874c378911ee8b686f0a55033b20e68",
+  "github_navigation": 9,
+  "github_raw_bytes_sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f",
+  "local_display": 12,
+  "local_navigation": 48,
+  "offline_file_browsers": 3,
+  "restored_files": 5,
+  "playwright": "1.62.0",
+  "engine_versions": {
+    "chromium": "151.0.7922.34",
+    "firefox": "153.0",
+    "webkit": "26.5"
+  },
+  "source_identities": [
+    {
+      "path": "doc/canonical.json",
+      "sha256": "a2470f01492c40558d26ad709d49c410bf5ee0b3393834e8628a4250f18b8377"
+    },
+    {
+      "path": "doc/spec/22-external-extensions.md",
+      "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+    },
+    {
+      "path": "doc/spec/22-external-extensions.nepld",
+      "sha256": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa"
+    },
+    {
+      "path": "doc/migration/aliases/22-external-extensions.json",
+      "sha256": "132807f48bf3acceac6beacff6fd690cac164b5d0701ac40b0f0a03c7abfc923"
+    }
+  ],
+  "code_manifest_sha256": "ad3af0c1f7756aa984a689bcdbdb7c3a512d984c2ca28cc862cb8cd9b96c2af9",
+  "readme_sha256": "a032f77f5e6aa8aa6241331edde79c24a9c33490cff4df65c6aba0d3cfe6b595",
+  "scope": "Actual generated fixed chapter22 GitHub and saved HTML, not deployment or full migration completion"
+}

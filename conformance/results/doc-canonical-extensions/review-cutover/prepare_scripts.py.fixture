@@ -1,0 +1,27 @@
+from pathlib import Path
+import shutil
+out=Path(__file__).parent;old=Path('C:/projects/NEPL3-doc-canonical-contract/.tmp/review-canonical00-cutover')
+s=(old/'github.py').read_text(encoding='utf8')
+s=s.replace('4895c1a6a94660a43e617ed86a21844838a7324d','b13f395c3874c378911ee8b686f0a55033b20e68').replace('00-contract','22-external-extensions')
+s=s.replace("record.update(browser=b.version,raw_lines_match=True,status=response.status)","""record.update(browser=b.version,raw_lines_match=True,status=response.status)
+        rawurl=f'https://raw.githubusercontent.com/neknaj/NEPL3/{head}/doc/spec/22-external-extensions.md'
+        raw=page.request.get(rawurl,timeout=90000);assert raw.status==200
+        data=raw.body();assert data==(O/'source/doc/spec/22-external-extensions.md').read_bytes()
+        (out/'actual-raw.md').write_bytes(data);record['raw_bytes_match']=True""")
+(out/'github.py').write_text(s,encoding='utf8',newline='\n')
+s=(old/'local.py').read_text(encoding='utf8')
+s=s.replace("O/'original/verify-canonical00'","O/'site'").replace('00-contract.html','22-external-extensions.html')
+s=s.replace("['policy','targets','boundaries','prototypes','invariants','spellings']","['boundary','units','compatibility','stages']")
+s=s.replace("['00. 対象と設計の決定','方針','1. 実装対象','2. 保存する意味上の境界','3. 試作の扱い','4. 不変条件','5. 具体的な綴り']","['22. 外部言語の追加とrepository分離条件','1. 目的と境界','2. 拡張単位','3. 二つの互換性境界','4. 段階と分離の判定']")
+s=s.replace("['cons','nil','v1','Fn','value','splice','call','map','then','design/forms.json']","['no_std + alloc','conformance/extensions/hello/','hello <name>','python tools/extensions/run.py']")
+s=s.replace("['first','second']","['NEPL3','alternate']")
+s=s.replace("document.querySelectorAll('ul')","document.querySelectorAll('ol')")
+s=s.replace("value['lists']==[4,6,14]","value['lists']==[6]")
+s=s.replace("value['ruby']==277","value['ruby']==324")
+s=s.replace("assert 'INV01' in ax and 'INV14' in ax","assert 'X01' in ax and 'X02' in ax and 'hello <name>' in ax")
+s=s.replace("lang:document.querySelector('article').lang","lang:document.querySelector('article').lang,table:[...document.querySelectorAll('table tr')].map(n=>n.children.length)")
+s=s.replace("assert len(value['ids'])", "assert value['table']==[2,2,2,2,2,2]\n                    assert len(value['ids'])")
+(out/'local.py').write_text(s,encoding='utf8',newline='\n')
+for prefix in ['NEPL3','alternate']:
+    shutil.copytree(out/'independent-generated',out/'site'/prefix)
+print('Prepared independent scripts with explicit chapter22 expectations')
