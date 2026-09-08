@@ -1,0 +1,48 @@
+use pulldown_cmark::{Event, Parser, Tag, TagEnd};
+
+#[test]
+fn actual_fragment_chapter_keeps_all_five_external_targets_and_code() -> Result<(), Box<dyn std::error::Error>> {
+    let root=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let original=std::fs::read_to_string(root.join("before/doc/spec/19-html-fragment.md"))?;
+    let generated=std::fs::read_to_string(root.join("markdown-first/doc/spec/19-html-fragment.md"))?;
+    fn inspect(text:&str)->((Vec<String>,Vec<String>,usize,usize,usize),Vec<String>) {
+        let mut codes=Vec::new(); let mut links=Vec::new(); let mut paragraphs=0; let mut headings=0; let mut other_blocks=0;
+        let mut in_paragraph=false; let mut visible=false;let mut inline_html=String::new();let mut anchor_paragraphs=Vec::new();
+        for event in Parser::new(text) {
+            match event {
+                Event::Code(value)=>{visible=true;codes.push(value.into_string());},
+                Event::Text(value)=>{visible|=!value.is_empty();},
+                Event::InlineHtml(value) if in_paragraph=>inline_html.push_str(&value),
+                Event::Start(Tag::Paragraph)=>{in_paragraph=true;visible=false;inline_html.clear();},
+                Event::Start(Tag::Link {dest_url,..})=>links.push(dest_url.into_string()),
+                Event::Start(Tag::Heading {..})=>headings+=1,
+                Event::End(TagEnd::Paragraph)=>{
+                    if visible {paragraphs+=1;} else {anchor_paragraphs.push(inline_html.clone());}
+                    in_paragraph=false;
+                },
+                Event::Start(Tag::List(_) | Tag::Table(_) | Tag::CodeBlock(_))=>other_blocks+=1,
+                _=>{}
+            }
+        }
+        ((codes,links,paragraphs,headings,other_blocks),anchor_paragraphs)
+    }
+    let expected=inspect(&original);let actual=inspect(&generated);
+    assert_eq!(expected.0,actual.0);
+    assert!(expected.1.is_empty());
+    // The explicit compatibility alias is an HTML-only paragraph in CommonMark,
+    // separate from the original eighteen nonempty content paragraphs.
+    assert_eq!(actual.1,["<a name=\"19-html-fragmentの構造契約\"></a>"]);
+    let actual=actual.0;
+    assert_eq!(actual.0.len(),17);
+    assert_eq!(actual.1, [
+        "https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3",
+        "https://html.spec.whatwg.org/multipage/tables.html#the-table-element",
+        "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element",
+        "https://url.spec.whatwg.org/",
+        "https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element"
+    ]);
+    assert_eq!((actual.2,actual.3,actual.4),(18,1,0));
+    println!("FRAGMENT_CODES {}",serde_json::to_string(&actual.0)?);
+    println!("FRAGMENT_LINKS {}",serde_json::to_string(&actual.1)?);
+    Ok(())
+}

@@ -1,0 +1,6 @@
+{
+  "source_commit": "6d391faed00c051d806421baf5b1b83026bb05a8",
+  "before_sha256": "41aea35942d661c165c0406743839be1663eadabda8ee81938efdc5af3324c83",
+  "after_sha256": "6590cc3845a09c48be84e215640228340624c4710a5171cf05b82a31d82617db",
+  "reason": "Seven-page Markdown stopped AllocationLimit before output. Six-page observed Work267M/Allocation712M and additional21KiB manuscript motivate separate finite Work400M/Allocation1B profile before new invocation; this is an allowance, not a predicted usage or physical-memory cap. Nodes20M, other resources, HTML and phase/default limits unchanged."
+}

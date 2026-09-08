@@ -1,0 +1,8 @@
+from pathlib import Path
+p=Path(__file__).parent
+(p/'initial-manifest.json').write_bytes((p/'manifest.json').read_bytes());(p/'initial-record.md').write_bytes((p/'record.md').read_bytes())
+s=Path('C:/projects/NEPL3-doc-canonical-circuit/.tmp/review-canonical07-cutover/bootstrap.py').read_text(encoding='utf8')
+s=s.replace('doc-canonical-circuit','doc-canonical-html-fragment').replace('canonical07-snapshot','canonical19-snapshot').replace('07-circuit.html','19-html-fragment.html').replace('len(selected)==8','len(selected)==9').replace("actual['ruby']==350","actual['ruby']==463")
+s=s.replace("scripts:document.scripts.length,sheets:","hrefs:[...document.querySelectorAll('article a[href]')].map(n=>n.getAttribute('href')),scripts:document.scripts.length,sheets:")
+s=s.replace("['headings','paragraphs','codes','lists']:assert actual", "['headings','paragraphs','codes','lists','hrefs']:assert actual")
+(p/'bootstrap.py').write_text(s,encoding='utf8',newline='\n')

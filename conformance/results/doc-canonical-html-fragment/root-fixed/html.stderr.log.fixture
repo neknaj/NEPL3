@@ -1,0 +1,2 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.39s
+     Running `target\debug\nepl3-tools.exe doc-canonical html .tmp/html-integration`

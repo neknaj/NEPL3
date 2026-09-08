@@ -1,0 +1,77 @@
+- article:
+  - heading "19. HTML fragmentの 構造契約 こうぞうけいやく" [level=1]
+  - paragraph:
+    - text: HTML idの 拡張 かくちょう とfragmentの 符号化規則 ふごうかきそく は
+    - code: nepl3.safe-markup/2
+    - text: とする。 値 あたい schemaも
+    - code: nepl3.markup
+    - text: revision 2へ 進 すす め、 旧 きゅう revisionの 値 あたい を 新 あたら しい 検査 けんさ proofとして 受理 じゅり しない。Doc HTMLのschema 参照 さんしょう とportable receiverを 同時 どうじ に 更新 こうしん する。
+  - paragraph:
+    - code: interfaces/markup.json
+    - text: を 言語中立 げんごちゅうりつ の 値 あたい schema、
+    - code: nepl3-markup
+    - text: をnativeの 検査 けんさ ・serializerとする。 現段階 げんだんかい の 対象 たいしょう はHTML fragmentである。MathML/SVG/KaTeX 専用 せんよう profile、DocumentShell、assetのbyte 列 れつ ・MIME・license 検査 けんさ 、Doc PreparedArticle、 完全 かんぜん な 操作 そうさ Reportは 後続実装 こうぞくじっそう であり、 既存 きそん の 最終要件 さいしゅうようけん から 除 のぞ かない。
+  - paragraph: HtmlFragmentはroot U64と 平坦 へいたん なHtmlNode 列 れつ を 持 も つ。Text、または 固定 こてい HtmlTag・ 型付 かたつ きattribute 列 れつ ・ 子 こ U64 列 れつ だけを 許 ゆる す。Rustのenum ordinalをwireへ 保存 ほぞん しない。 未知 みち tag/attribute、RawHtml、style、event handler、script、 任意 にんい namespaceを 成功 せいこう として 受 う け 入 い れない。 木 き の 深 ふか さは 参照 さんしょう によって 表 あらわ し、 深 ふか い 入力 にゅうりょく のdropにRust call stackを 使 つか わない。
+  - paragraph: rootのBlock slotはHTML flow 要素 ようそ またはText、Phrasing slotはphrasing 要素 ようそ またはTextを 取 と る。P/span/ 見出 みだ し/em/strong/pre/code/aは、phrasing 子 こ だけを 持 も つ。aはphrasing 子孫 しそん を 通 とお しても 入 い れ 子 こ にできない。ul/olの 直接子 ちょくせつし はli、tableはcaption 最大一 さいだいひと つ・thead 最大一 さいだいひと つ・tbody 列 れつ の 順 じゅん 、thead/tbodyはtr、trはth/tdである。tbodyを 省略 しょうりゃく して、HTML parserの 自動挿入 じどうそうにゅう へ 依存 いぞん しない。caption 内 ない のtable、th 内 ない のsectioning/heading contentを 子孫 しそん まで 拒否 きょひ する。figureのfigcaptionは 最大一 さいだいひと つで、 先頭 せんとう または 末尾 まつび に 置 お く。br/imgには 子 こ を 置 お かない。imgはsrcとaltを 必須 ひっす にし、 空 から altは 装飾画像 そうしょくがぞう として 表現 ひょうげん できる。
+  - paragraph:
+    - text: すべての 参照 さんしょう を 検査 けんさ し、cycle・ 未到達 みとうたつ nodeを 拒否 きょひ する。DAG 共有 きょうゆう は 各表示出現 かくひょうじしゅつげん を 展開 てんかい して 検査 けんさ し、 同 おな じnodeを 二度使 にどつか って 同 おな じidが 二度出力 にどしゅつりょく される 場合 ばあい もDuplicateIdにする。HTMLのidは 非空 ひくう のXML 文字列 もじれつ で、U+0000〜0020およびU+007F〜009Fを 含 ふく めない。 日本語 にほんご ・ 先頭数字 せんとうすうじ ・ 大文字 おおもじ も 保持 ほじ し、Unicode 正規化 せいきか や 大小文字変換 だいしょうもじへんかん をしない。DOMのid 値 ち はURL 符号化前 ふごうかまえ の 値 あたい であり、percent escapeをdecodeしない。data-nepl-id/data-nepl-groupは、 従来 じゅうらい のASCII
+    - code: "[a-z][a-z0-9-]*"
+    - text: を 維持 いじ する。Fragment hrefは、 同 おな じfragmentの 実 じつ idへ 完全一致 かんぜんいっち で 到達 とうたつ する。attributeの 名前重複 なまえちょうふく を 拒否 きょひ する。
+  - paragraph:
+    - text: classは、HtmlPolicyに 列挙 れっきょ されたbackend 登録名 とうろくめい だけを 許 ゆる す。 名前 なまえ はASCII
+    - code: "[a-z][a-z0-9-]*"
+    - text: で、attribute 内 ない の 空列 くうれつ ・ 重複 ちょうふく を 拒否 きょひ する。 受信 じゅしん したHtmlPolicyの 自己申告 じこしんこく は、stylesheetの 信頼 しんらい ・ 実在 じつざい ・ 内容検査 ないようけんさ の 証明 しょうめい ではない。 実 じつ hostは、 独立 どくりつ した 検査済 けんさず みbackend 資源 しげん と 照合 しょうごう する。Langは 共通 きょうつう RFC 5646 字句検査 じくけんさ を 再利用 さいりよう する。roleはheading/img/group/note、aria-levelは 正整数 せいせいすう とする。 画像 がぞう width/heightは 正整数 せいせいすう 、ol.startは0 以上 いじょう の 符号付 ふごうつ き32bit 上限以内 じょうげんいない 、th.scopeはrow/colだけとする。
+  - paragraph:
+    - text: リンクはFragment・Artifact・Externalを 分 わ ける。Artifactと 画像 がぞう srcのpathは 空 から でない 相対 そうたい segment 列 れつ で、 各 かく segmentはASCII 英数字 えいすうじ と
+    - code: "-_."
+    - text: からなり、 空 くう segment/
+    - code: .
+    - text: /
+    - code: ..
+    - text: を 禁止 きんし する。これはhostが 割 わ り 当 あ てる 配布 はいふ pathであり、 任意 にんい の 著者 ちょしゃ pathをそのまま 通 とお す 入口 いりぐち ではない。page/asset 解決 かいけつ が 非 ひ ASCII 等 とう の 著者 ちょしゃ IDから 配布 はいふ pathへ 変換 へんかん し、その 対応 たいおう とbyte 列 れつ を 別途検査 べっとけんさ する。
+  - paragraph:
+    - text: 文書間 ぶんしょかん の 出力 しゅつりょく には
+    - code: BetweenArtifacts(source,target,fragment)
+    - text: を 追加 ついか する。sourceとtargetは 同 おな じartifact rootからのファイルpathであり、 両方 りょうほう に 上記 じょうき Artifact path 字句 じく を 要求 ようきゅう する。serializerはsourceの 親 おや directoryとtargetの 共通 きょうつう segmentを 取 と り 除 のぞ き、 残 のこ るsource directoryごとに
+    - code: ../
+    - text: を 一 ひと つ 出力 しゅつりょく し、targetの 残 のこ りと 任意 にんい の
+    - code: "#fragment"
+    - text: を 続 つづ ける。たとえば
+    - code: docs/a/index.html
+    - text: から
+    - code: docs/b/index.html
+    - text: へは
+    - code: ../b/index.html
+    - text: となる。 著者 ちょしゃ の
+    - code: ../
+    - text: を 未検査 みけんさ で 出力 しゅつりょく する 方式 ほうしき ではない。 固定 こてい origin・root 相対 そうたい URL・base 要素 ようそ を 追加 ついか せず、 配布 はいふ siteの 非 ひ root pathとオフラインのdirectory 配置 はいち を 保 たも つ。この 相対参照 そうたいさんしょう は
+    - link "RFC 3986のpath merge 規則 きそく":
+      - /url: https://www.rfc-editor.org/rfc/rfc3986#section-5.2.3
+    - text: に 従 したが って、 閲覧先 えつらんさき で 解決 かいけつ される。
+  - paragraph:
+    - text: 構造検査 こうぞうけんさ だけでは、sourceが 現在 げんざい のshellの 配置 はいち と 一致 いっち すること、target/fragmentの 実在 じつざい 、 同 おな じ 版 はん の 配布物 はいふぶつ であることを 保証 ほしょう しない。Doc/page 準備 じゅんび と 最終 さいしゅう Artifact 検査 けんさ は、 現在 げんざい の 公開 こうかい routeをsourceへ 結 むす び 付 つ け、targetの 登録 とうろく ・ 生成 せいせい ID・ 出力実在 しゅつりょくじつざい を 照合 しょうごう する。 受信値 じゅしんち の 自己申告 じこしんこく を、この 証拠 しょうこ にしない。
+    - code: BetweenArtifacts
+    - text: の 追加 ついか だけを、 文書 ぶんしょ registryやDocの 文書間 ぶんしょかん リンク 解決 かいけつ の 完成 かんせい として 扱 あつか わない。Fragment 型 がた は、 引 ひ き 続 つづ き 同 どう fragment 内 ない の 実在 じつざい IDを 検査 けんさ する。
+  - paragraph: Externalは、 現在 げんざい のconstrained URI profileでは 小文字 こもじ http/https/mailto scheme、ASCII、 正 ただ しいpercent escapeのみを 許 ゆる す。http(s)のauthorityは、ASCII DNS/punycodeまたはIPv4 表記 ひょうき のhostと、 省略可能 しょうりゃくかのう なASCII 数字列 すうじれつ のu16 port（ 符号 ふごう なし）であり、userinfoは 許 ゆる さない。 空白 くうはく ・backslash・ 不正 ふせい percent・network-path referenceを 拒否 きょひ する。これは 全 ぜん URL 標準 ひょうじゅん のparserではない。より 広 ひろ い 正当 せいとう URIの 扱 あつか いは、Doc preparation 時 じ の 正規化 せいきか またはprofile 拡張 かくちょう として 明示 めいじ する。リンクの 存在 そんざい 、アクセス 可否 かひ 、ページrevisionを 構造検査 こうぞうけんさ から 推測 すいそく しない。
+  - paragraph: serializerは 検査 けんさ proofを 借用 しゃくよう し、attributeをASCII 名前順 なまえじゅん に 出力 しゅつりょく する。13 章 しょう のXML 文字 もじ ・escapeを 保 たも ち、 属性 ぞくせい は 二重引用符 にじゅういんようふ で 囲 かこ み、void 要素 ようそ に 終端 しゅうたん tagを 付 つ けない。HTML parserがpre 開始直後 かいしちょくご のLFを 一 ひと つ 除去 じょきょ する 規則 きそく に 合 あ わせ、pre 開始 かいし tag 直後 ちょくご へ 固定 こてい LFを 一 ひと つ 追加 ついか して、 元本文 もとほんぶん の 先頭改行 せんとうかいぎょう を 保持 ほじ する。doctype/head/CSP/CSSは、DocumentShellの 別責務 べつせきむ である。
+  - paragraph: Budgetはすべての 処理 しょり で 同 おな じものを 使 つか い、 展開 てんかい した 表示出現 ひょうじしゅつげん 、callerを 含 ふく む 深 ふか さ、 仕事量 しごとりょう 、 割当 わりあて 、 出力 しゅつりょく を 課金 かきん する。Textのescapeはsemantic 値 ち を 受 う けるbyte 処理 しょり なので、SourceBytes/Nodes/Depthの 入場 にゅうじょう を 代行 だいこう しない。OutputBytesは 各生成片 かくせいせいへん の 生成許可量 せいせいきょかりょう であり、 後段 こうだん の 割当停止 わりあてていし でも、 先 さき に 課金 かきん した 値 あたい を 巻 ま き 戻 もど さない。 返却 へんきゃく できる 完全 かんぜん な 文字列 もじれつ だけを 成功 せいこう にする。 論理 ろんり AllocationUnitsは、 物理 ぶつり allocatorやOOMの 完全 かんぜん な 捕捉 ほそく ではない。
+  - paragraph: NDFのHtmlRequest 受信 じゅしん は、schema 検査 けんさ と 同 おな じnative 構造検査 こうぞうけんさ を 実行 じっこう する。ポインタ、 送信 そうしん processの 登録表 とうろくひょう 、 以前 いぜん のproofを 受信時 じゅしんじ の 根拠 こんきょ にしない。ただし、HtmlPolicyの 信頼 しんらい やasset availabilityを 確定 かくてい する 操作 そうさ は 未完 みかん であり、この 値 あたい boundaryを 完成 かんせい したrender/provider 操作 そうさ として 広告 こうこく しない。
+  - paragraph:
+    - text: 内容 ないよう モデルは
+    - link "HTML Standardのtable":
+      - /url: https://html.spec.whatwg.org/multipage/tables.html#the-table-element
+    - text: 、
+    - link "a":
+      - /url: https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element
+    - text: 、
+    - link "URL Standard":
+      - /url: https://url.spec.whatwg.org/
+    - text: と 照合 しょうごう する。 受入時 うけいれじ には 実 じつ HTML parser/ブラウザでserializer 結果 けっか の 構造 こうぞう も 照合 しょうごう し、 文字列一致 もじれついっち だけで 表示 ひょうじ の 適合 てきごう を 推定 すいてい しない。
+  - paragraph:
+    - text: RubyはHTML Standardのbase/annotation 群 ぐん を 検査 けんさ する。baseはRuby 子孫 しそん を 含 ふく まないphrasing 列 れつ 、またはRuby 子孫 しそん を 持 も たない 単一 たんいつ Ruby 要素 ようそ とする。 各 かく baseにはrt 列 れつ 、あるいはrp 開始 かいし ・rt/rp 交互列 こうごれつ を 必須 ひっす にし、 空 から Rubyやbaseだけを 拒否 きょひ する。rpの 子 こ はTextだけで、annotationの 直前 ちょくぜん ・ 直後 ちょくご に 置 お く。 表 ひょう の 全行 ぜんぎょう のcell 数 すう は 同一 どういつ とする。ゼロ 列 れつ は、Doc 意味 いみ モデルに 従 したが い 保存 ほぞん できる。これらは
+    - link "HTML Ruby 内容 ないよう モデル":
+      - /url: https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element
+    - text: に 従 したが い、ブラウザが 不正 ふせい markupを 補正 ほせい して 表示 ひょうじ できることを 合法性 ごうほうせい の 根拠 こんきょ にしない。
+  - paragraph: 入力長 にゅうりょくちょう に 比例 ひれい するstate 初期化 しょきか や 子 こ enqueueに 先立 さきだ って、Workを 課金 かきん する。 小 ちい さいWork 上限 じょうげん で 大量 たいりょう の 処理待 しょりま ちを 確保 かくほ し 終 お えてから 停止 ていし することを 避 さ け、 同 おな じ 停止理由 ていしりゆう と 単調 たんちょう なUsageを 維持 いじ する。
+  - paragraph: fragmentの 内容 ないよう モデルproofは、 任意深度 にんいしんど のbrowser DOM 保持 ほじ を 保証 ほしょう しない。 独立 どくりつ した 実 じつ Chromium/Firefoxの 検査 けんさ で、Div 鎖 くさり の 深 ふか さ512/600は 最大 さいだい 511へ 平坦化 へいたんか された。H1の 文書 ぶんしょ shellとpreviewでは 包囲要素 ほういようそ を 含 ふく む 出力深度 しゅつりょくしんど profileを 検査 けんさ し、 超過 ちょうか を 黙 だま って 平坦化 へいたんか せず、 理由付 りゆうつ きで 扱 あつか う。coreの 深 ふか い 意味構造 いみこうぞう ・ 反復処理 はんぷくしょり ・dropの 要件 ようけん と、 各出力 かくしゅつりょく backend/ 閲覧環境 えつらんかんきょう の 制約 せいやく を 分離 ぶんり する。
+  - paragraph: Fragment・Artifact・BetweenArtifactsのfragmentは、 同 おな じdecoded HTML id 契約 けいやく に 従 したが う。serializerはUTF-8 byte 列 れつ のASCII 英数字 えいすうじ および-._~ 以外 いがい を 大文字 おおもじ hexのpercent escapeへ 写 うつ し、その 後 あと HTML 属性 ぞくせい escapeを 行 おこな う。 元 もと のpercent 文字自体 もじじたい も%25へ 写 うつ す。DOM id 側 がわ はHTML 属性 ぞくせい escapeだけを 行 おこな う。これにより、 識別値 しきべつち とURL 表記 ひょうき を 分離 ぶんり する。 旧見出 きゅうみだ しaliasの 対応表 たいおうひょう 、 実出力位置 じつしゅつりょくいち ・URLの 互換性検査 ごかんせいけんさ 、Doc 正本切替 せいほんきりかえ は 別工程 べつこうてい であり、このID 拡張 かくちょう だけから 移行完了 いこうかんりょう を 推定 すいてい しない。

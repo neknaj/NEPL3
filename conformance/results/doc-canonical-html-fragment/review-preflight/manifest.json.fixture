@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "source_commit": "3abd255d5a52eec41f741b6b17e4ec9e2213efdc",
+  "scope": "read-only canonical preflight; no production generation or cutover",
+  "files": [
+    {
+      "path": "07-circuit/fetch.json",
+      "bytes": 308,
+      "sha256": "d9781b2a8c4deb9a5076493900353138b3133a00a1c375dfb9779d8cba1ab3f6"
+    },
+    {
+      "path": "07-circuit/github.html",
+      "bytes": 278468,
+      "sha256": "a2e264f3e2529fc0d60d05ba13adc3e8d7514ee927557c35286e407c8cae96a8"
+    },
+    {
+      "path": "07-circuit/rawLines.json",
+      "bytes": 7269,
+      "sha256": "41c89929f1adf0f8893440800e9943bc4bd35bf88d3548c54e53ca2b1c97bbf3"
+    },
+    {
+      "path": "07-circuit/result.json",
+      "bytes": 3101,
+      "sha256": "1c5aaee98593a2f86294dab3d4781c1cbb49d02656342a545df48ea9ddd889ee"
+    },
+    {
+      "path": "07-circuit/richText.html",
+      "bytes": 16401,
+      "sha256": "6834721deee8e14c24c52f2000d8d38a7e182df823960eb7c5c5beb12567f24a"
+    },
+    {
+      "path": "19-html-fragment/fetch.json",
+      "bytes": 320,
+      "sha256": "b36b9b6428e5fb30148b19b266ba02daa5744264155d34fec02e69990e080082"
+    },
+    {
+      "path": "19-html-fragment/github.html",
+      "bytes": 263932,
+      "sha256": "0c421f521e2a386bce84c78d5d26e06bcf1e56a8128aafa8b429b261bb86531f"
+    },
+    {
+      "path": "19-html-fragment/rawLines.json",
+      "bytes": 9295,
+      "sha256": "c10a85bb283b4999aacd45d3f9a7b92be3cc16dcd4f7f2c623c7872e66995bd4"
+    },
+    {
+      "path": "19-html-fragment/result.json",
+      "bytes": 1600,
+      "sha256": "3cd12e8dda40a01a2911612f2a7ed3d15c56c432069b4e5e1b6f98561e9f9f46"
+    },
+    {
+      "path": "19-html-fragment/richText.html",
+      "bytes": 10756,
+      "sha256": "c5e575bda1b03c58db2d4f28b0a085d856f5fe5253b85fea88016becc50db5e3"
+    },
+    {
+      "path": "check.log",
+      "bytes": 10180,
+      "sha256": "03f5c0d4cd0a1da692aa621dbd5ca888f4aec2fd56853275d6ef23a5d9f3e8c7"
+    },
+    {
+      "path": "check.py",
+      "bytes": 6963,
+      "sha256": "d0d6df2eaeb7b7e63a06f403acf33319a9fe1e891cdc678b2e78e2b4b3e9e51d"
+    },
+    {
+      "path": "git-status.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "helpers.py",
+      "bytes": 3299,
+      "sha256": "68315acfa40d0086e76b823cb464a4e76b9de12d8d9b9103c92277d6adb8ae13"
+    },
+    {
+      "path": "record.md",
+      "bytes": 7262,
+      "sha256": "743b623b1b1327e89c4c42b3db94f8d9f9d4d87b32f18b9013c036ad36fa7fd7"
+    },
+    {
+      "path": "result.json",
+      "bytes": 5604,
+      "sha256": "db2d2d11d62c6430793c64e800fcd268b698b2d94f1aec0c922e857285688474"
+    },
+    {
+      "path": "sources/AGENTS.md",
+      "bytes": 7729,
+      "sha256": "c26941e6dbf896a5e07b7c807789bc1f70bd740e4065092186be42e5ac4baf53"
+    },
+    {
+      "path": "sources/conformance/results/doc-authoring-delivery/19/review.md",
+      "bytes": 4238,
+      "sha256": "885d1d71be9ccba9fe40f8d41b047f20c383a097073c587b28ca967cc2e5aed9"
+    },
+    {
+      "path": "sources/conformance/results/doc-authoring-delivery/19/sources.json",
+      "bytes": 1035,
+      "sha256": "f2416d8db962aaea9ce9c63acc2217a64d76210a9dd5b7bc3c132663fa094e02"
+    },
+    {
+      "path": "sources/conformance/results/doc-authoring-domain/integration/result.json",
+      "bytes": 4424,
+      "sha256": "a1e2b4e99f1fe8035c622521c7d9362d4ea1c95b79ac29a6acd2ae583d49bb52"
+    },
+    {
+      "path": "sources/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "sources/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "sources/doc/canonical.json",
+      "bytes": 2077,
+      "sha256": "cf60513d4977577fac8104ccb1a235825d3d6233cccdcfcbc586e9ab5948398d"
+    },
+    {
+      "path": "sources/doc/migration/authored/07-circuit.nepld",
+      "bytes": 16411,
+      "sha256": "17618352d792b55cfa9436c029d1b5d09c916cc5af3b8123f4a33e053b963cae"
+    },
+    {
+      "path": "sources/doc/migration/authored/19-html-fragment.nepld",
+      "bytes": 21631,
+      "sha256": "373a519dffc1cbbc2bbd2b6334eef8d4490aae6c62798bf26918a5f280bfe083"
+    },
+    {
+      "path": "sources/doc/spec/07-circuit.md",
+      "bytes": 6876,
+      "sha256": "0005924591477574e490affa8df48d7446dfb41d81cd08beb55d03372a0dbfed"
+    },
+    {
+      "path": "sources/doc/spec/19-html-fragment.md",
+      "bytes": 9097,
+      "sha256": "1ef8b987603ce307f0622f3bb7ce19bdd8f7f94b78b34dfb8f8784e17e2022bf"
+    },
+    {
+      "path": "sources/tools/audit/structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    },
+    {
+      "path": "sources/tools/src/doc/canonical.rs",
+      "bytes": 9696,
+      "sha256": "9524e5cb8b96059fae0e5c8312f5f9ba257da9cfb9b2e32bdcdb1a6aa0c0a3f1"
+    },
+    {
+      "path": "sources/tools/src/doc/projection/annotated/blocks.rs",
+      "bytes": 5466,
+      "sha256": "4bbc48d80674d7a923e5fa3439b66b1352e8bf31cb933c1e6cf4fee9b5e1c694"
+    },
+    {
+      "path": "sources/tools/src/doc/projection/annotated/pages.rs",
+      "bytes": 5295,
+      "sha256": "442d1c827bb11ab7e241be93a0e19a1504dfdd6a579dd4e1fa907121fbe30311"
+    },
+    {
+      "path": "sources/tools/src/doc/projection/annotated.rs",
+      "bytes": 21168,
+      "sha256": "2fe65b9c37925deb977aaca65cf1b305b5602d1455a242f1ade3c3a8572cb742"
+    },
+    {
+      "path": "sources.json",
+      "bytes": 3480,
+      "sha256": "74bfef810b74fb161ee7f217ce2ba24b0fbdd9e1a9cfeec712e8c2e760fb4596"
+    }
+  ]
+}
