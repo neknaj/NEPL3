@@ -1,0 +1,82 @@
+[
+  {
+    "name": "before",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-source\\target\\debug\\nepl3-tools.exe",
+      "doc-markdown",
+      "annotated",
+      "C:\\projects\\NEPL3-doc-block-projection\\.tmp\\block-verification\\input.nepld",
+      "C:\\projects\\NEPL3-doc-block-projection\\.tmp\\block-verification\\aliases.json",
+      "C:\\projects\\NEPL3-doc-block-projection\\.tmp\\block-verification\\before.md"
+    ],
+    "exit_code": 1,
+    "expected_exit_code": 1
+  },
+  {
+    "name": "after",
+    "command": [
+      "C:\\projects\\NEPL3-doc-block-projection\\target\\debug\\nepl3-tools.exe",
+      "doc-markdown",
+      "annotated",
+      "C:\\projects\\NEPL3-doc-block-projection\\.tmp\\block-verification\\input.nepld",
+      "C:\\projects\\NEPL3-doc-block-projection\\.tmp\\block-verification\\aliases.json",
+      "C:\\projects\\NEPL3-doc-block-projection\\.tmp\\block-verification\\after.md"
+    ],
+    "exit_code": 0,
+    "expected_exit_code": 0
+  },
+  {
+    "name": "fmt",
+    "command": [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "exit_code": 0,
+    "expected_exit_code": 0
+  },
+  {
+    "name": "doc-tests",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--test",
+      "doc"
+    ],
+    "exit_code": 0,
+    "expected_exit_code": 0
+  },
+  {
+    "name": "tool-tests",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--lib"
+    ],
+    "exit_code": 0,
+    "expected_exit_code": 0
+  },
+  {
+    "name": "clippy",
+    "command": [
+      "cargo",
+      "clippy",
+      "--locked",
+      "--workspace",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exit_code": 101,
+    "expected_exit_code": 0
+  }
+]

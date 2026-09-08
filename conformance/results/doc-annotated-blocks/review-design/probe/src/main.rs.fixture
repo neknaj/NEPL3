@@ -1,0 +1,23 @@
+use pulldown_cmark::{Parser,Options};
+fn main(){
+ let cases=[
+ ("code raw pipe","| h |\n| --- |\n| `a|b` |\n"),
+ ("code escaped pipe","| h |\n| --- |\n| `a\\|b` |\n"),
+ ("code backslash pipe","| h |\n| --- |\n| `a\\\\|b` |\n"),
+ ("code two backslashes pipe","| h |\n| --- |\n| `a\\\\\\|b` |\n"),
+ ("empty cells","| | |\n| --- | --- |\n| | |\n"),
+ ("header only","| h |\n| --- |\n"),
+ ("empty table attempt","| |\n| |\n"),
+ ("adjacent same lists","- a\n\n- b\n"),
+ ("adjacent separated markers","- a\n\n* b\n"),
+ ("ordered start9","999999999. a\n"),
+ ("ordered start10","1000000000. a\n"),
+ ("ordered zero","0. a\n"),
+ ("check empty","- [ ]\n"),
+ ("check paragraph","- [ ] a\n"),
+ ("check code","- [x] `a`\n"),
+ ("check nested first","- [x]\n  - a\n"),
+ ("code indent and break","10. a\\\n    b\n\n    c\n"),
+ ];
+ for (name,md) in cases{println!("CASE {name}\nSOURCE {md:?}");for e in Parser::new_ext(md,Options::ENABLE_TABLES|Options::ENABLE_TASKLISTS){println!("{e:?}");}}
+}

@@ -1,0 +1,40 @@
+use nepl3_tools::doc::{source::{self,budget,err},projection::{Error,annotated::{host,render}}};
+use nepl3_core::{budget::{Budget,Resource,StopReason},source::{SourceStore,SourceAdmission}};
+use nepl3_doc_core::{lower,check::Category,portable};
+use nepl3_wire::foundation::FoundationCodec;
+use serde_json::json;
+use std::{fs,path::Path};
+fn main()->Result<(),Box<dyn std::error::Error>>{
+ let root=std::env::args().nth(1).ok_or("output")?;let root=Path::new(&root);fs::create_dir_all(root)?;let c=source::compiled()?;let mut rows=Vec::new();
+ for body in [
+ r#"cons table cons default nil none nil nil"#,
+ r#"cons table nil some row nil nil nil"#,
+ r#"cons table cons default nil some row cons "H" nil cons row cons sentence cons strong text "" nil nil nil nil"#,
+ r#"cons table cons default nil some row cons "H" nil cons row cons sentence cons strong code "a" cons code "b" nil nil nil nil"#,
+ r#"cons section s "S" body nil cons list unordered cons item none body cons paragraph cons "A" nil nil nil nil"#,
+ r#"cons section s "S" body nil cons table cons default nil some row cons "H" nil nil nil"#,
+ r#"cons list unordered cons item none body cons paragraph cons "A" nil nil nil cons list ordered 2 cons item none body cons paragraph cons "B" nil nil nil nil"#,
+ r#"cons list ordered 18446744073709551615 cons item none body cons paragraph cons "A" nil nil nil nil"#,
+ r#"cons list unordered cons item checked body cons paragraph cons sentence cons strong text "" nil nil nil nil nil"#,
+ ] {
+ let src=format!("article en \"T\" body {body}");let error=host::from_source(&c,&src,&[]).err().ok_or("invalid accepted")?;assert!(error.starts_with("Unsupported")||error.starts_with("Text"),"{src}: {error}");rows.push(json!({"source":src,"error":error}));
+ }
+ let src=r#"article en "T" body cons list ordered 10 cons item checked body cons paragraph cons "[A/a]" cons "B" nil nil nil cons table cons default nil some row cons "" nil cons row cons sentence cons anno text "N" cons code "a|b" nil nil nil nil nil"#;
+ source::with_input_route(true,&c,src,"Article",|tree,profile,_,_|{
+ let store=SourceStore::default();let mut admission=SourceAdmission::default();let mut codec=FoundationCodec::new(profile.registry(),&store,&mut admission).map_err(err)?;
+ let doc=lower::document(tree.syntax(),&c.doc.package.schema,Category::Article,profile.registry(),&mut budget(),&mut codec).map_err(err)?;let original=doc.clone();
+ let v=portable::to_value(&doc,profile.registry(),&mut codec,&mut budget()).map_err(err)?;let bytes=nepl3_wire::encode(&v,&mut budget()).map_err(err)?;let incoming=nepl3_wire::decode(&bytes,&mut budget()).map_err(err)?;
+ let recv_store=SourceStore::default();let mut recv_admission=SourceAdmission::default();let mut receiver=FoundationCodec::new(profile.registry(),&recv_store,&mut recv_admission).map_err(err)?;let received=portable::from_value(&incoming,profile.registry(),&mut receiver,&mut budget()).map_err(err)?;
+ let execute=|limits,cancel|->Result<_,String>{
+ let empty=SourceStore::default();let mut a=SourceAdmission::default();let mut codec=FoundationCodec::new(profile.registry(),&empty,&mut a).map_err(err)?;let mut b=Budget::new(limits);b.charge(Resource::Work,23).map_err(err)?;if cancel {b.cancel();}
+ let result=render(&received,profile.registry(),&mut codec,&mut b,&[]);if let Err(Error::Stopped(reason))=&result{let before=b.usage();assert!(matches!(render(&received,profile.registry(),&mut codec,&mut b,&[]),Err(Error::Stopped(again)) if &again==reason));assert_eq!(b.usage(),before);}
+ Ok((result,b.usage()))};
+ let (full,usage)=execute(budget().limits(),false)?;let artifact=full.map_err(err)?;assert!(usage.source_bytes>0);
+ for which in ["source","work","output","allocation","nodes","depth","cancel"] {
+ let mut limits=budget().limits();let reason=match which{"source"=>{limits.source_bytes=0;StopReason::SourceLimit},"work"=>{limits.work=usage.work-1;StopReason::WorkLimit},"output"=>{limits.output_bytes=usage.output_bytes-1;StopReason::OutputLimit},"allocation"=>{limits.allocation_units=usage.allocation_units-1;StopReason::AllocationLimit},"nodes"=>{limits.nodes=usage.nodes-1;StopReason::NodeLimit},"depth"=>{limits.depth=0;StopReason::DepthLimit},_=>StopReason::Cancelled};
+ let (result,stopped)=execute(limits,which=="cancel")?;assert!(matches!(result,Err(Error::Stopped(s)) if s==reason),"{which}: {result:?}");rows.push(json!({"case":which,"usage":format!("{stopped:?}"),"expected":format!("{reason:?}")}));
+ }
+ assert_eq!(doc,original);rows.push(json!({"source":src,"fresh_receiver_cbor_bytes":bytes.len(),"markdown":artifact.markdown,"usage":format!("{usage:?}")}));Ok(())
+ })?;
+ fs::write(root.join("results.json"),serde_json::to_vec_pretty(&rows)?)?;println!("{} negative/first-receiver/budget observations passed",rows.len());Ok(())
+}

@@ -1,0 +1,20 @@
+{
+  "command": [
+    "cargo",
+    "build",
+    "--locked",
+    "-p",
+    "nepl3-tools",
+    "--bin",
+    "review-blocks",
+    "--bin",
+    "review-block-boundaries",
+    "--target",
+    "wasm32-wasip2",
+    "--target-dir",
+    "C:\\projects\\NEPL3-doc-block-projection\\.tmp\\review-block-implementation\\target"
+  ],
+  "cwd": "C:\\projects\\NEPL3-doc-block-projection\\.tmp\\review-block-implementation\\workspace",
+  "exit_code": 0,
+  "seconds": 200.53738284111023
+}

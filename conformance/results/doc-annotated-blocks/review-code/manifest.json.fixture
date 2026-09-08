@@ -1,0 +1,240 @@
+{
+  "scope": "independent block projection implementation review at652d3b2; native/WASI265 each; no canonical migration inference",
+  "files": [
+    {
+      "path": "before-binary.json",
+      "bytes": 319,
+      "sha256": "d558b7e31ea95b7c00804a7a3fb7b1797ae0759f65d85595ebdb7222ff04cbb7"
+    },
+    {
+      "path": "binaries.json",
+      "bytes": 1365,
+      "sha256": "fbd9513c6bf7afe69410dc79789ea63437069aa155d661dd8c1874bc66532597"
+    },
+    {
+      "path": "boundaries-run/results.json",
+      "bytes": 3693,
+      "sha256": "c5567496044471b76b41bbb44b814b7c44da82226966ba8bd4ef86f2e52902f4"
+    },
+    {
+      "path": "boundaries.log",
+      "bytes": 463,
+      "sha256": "83871b3be9637ebbd5d11412fc7f2ed47ea37b45c41568c83f0a60fa06843c3f"
+    },
+    {
+      "path": "boundaries.rs",
+      "bytes": 4827,
+      "sha256": "ef88507e032e10702db46f4af93fcbe2bee888d69807407b1e99807fe64bf03f"
+    },
+    {
+      "path": "delta-source/doc/canonical.json",
+      "bytes": 358,
+      "sha256": "f90390baedecdedf01d37ff2f02dea3099aa9829de3eef1b6fd72e77c79fd606"
+    },
+    {
+      "path": "delta-source/doc/spec/21-doc-pages.md",
+      "bytes": 29405,
+      "sha256": "03c74625aaac5d9023c70f58bf8316dd20ce800cad8fc2a764449e591b34f0a7"
+    },
+    {
+      "path": "delta-source/tools/src/doc/canonical.rs",
+      "bytes": 6669,
+      "sha256": "a034546053e3a6956d20304ce956d5ef9f95a011741f40633e563ac408f79da7"
+    },
+    {
+      "path": "delta-source/tools/src/doc/projection/annotated/blocks.rs",
+      "bytes": 5466,
+      "sha256": "4bbc48d80674d7a923e5fa3439b66b1352e8bf31cb933c1e6cf4fee9b5e1c694"
+    },
+    {
+      "path": "delta-source/tools/src/doc/projection/annotated/host.rs",
+      "bytes": 3956,
+      "sha256": "66482b70f997edbd1bb0afe85165e03c7092fc6d9f3282990ebb4da9aded3412"
+    },
+    {
+      "path": "delta-source/tools/src/doc/projection/annotated.rs",
+      "bytes": 19555,
+      "sha256": "14b95933b19aad89a39f5c40bfe17330a2a8519571cb095d5ab7980e2f9b8a08"
+    },
+    {
+      "path": "delta-source/tools/tests/doc/annotated.rs",
+      "bytes": 11189,
+      "sha256": "ba5b03eaff5e16bda465f872db519d4a92c7189a337be8dc78e7f80fac29cfac"
+    },
+    {
+      "path": "delta-source/tools/tests/doc/annotated_blocks.rs",
+      "bytes": 11263,
+      "sha256": "33846e52e6bd8014d3292a3361c2db628c89b4675239bd6fcd6e8d20d5ad6623"
+    },
+    {
+      "path": "delta-source/tools/tests/doc.rs",
+      "bytes": 24450,
+      "sha256": "b90cda9e70ab086e5613a6e99e7bd3f4a0f3d56afd2c316e0827840e0d201d12"
+    },
+    {
+      "path": "delta.json",
+      "bytes": 1451,
+      "sha256": "06feb4089259e48a9fc297fbfd3c5d1ed3fc9d9089e747a081a11e4c00ba71d9"
+    },
+    {
+      "path": "final-commands.json",
+      "bytes": 1645,
+      "sha256": "b46cd2dec8232fb3f764e1666a4cdbd6303841de777cb32bcbe6fc193a5da810"
+    },
+    {
+      "path": "final-commit-match.json",
+      "bytes": 1629,
+      "sha256": "5a0278277d36d85409b9ac5e1efa24c804911651ca172c2090ec6fd7918c935e"
+    },
+    {
+      "path": "final-property.log",
+      "bytes": 451,
+      "sha256": "19c7dc24314f0d61914c50ce27ae1dd75a75e5ae0442cffdaa51dfb2c31ce3e1"
+    },
+    {
+      "path": "final-run/results.json",
+      "bytes": 70057,
+      "sha256": "762a9de2e3c967c0e0b7d433bfc0eadb894f949a1c4578a186f129960dc51ab4"
+    },
+    {
+      "path": "final-source.patch",
+      "bytes": 29770,
+      "sha256": "d242afc1914bcf4597d8ead1a617c3c2e47281123bf55d2412e8039f7fed62ae"
+    },
+    {
+      "path": "final-status.json",
+      "bytes": 530,
+      "sha256": "cc1b827db728633c7610ae9a9848f716007eb3b69bf915d689a36a2813f3a515"
+    },
+    {
+      "path": "managed.log",
+      "bytes": 918,
+      "sha256": "ff3628f8f1d089392041d87d0f2516a4332040ffa6379e3ef414594ac10bd394"
+    },
+    {
+      "path": "native-command.json",
+      "bytes": 501,
+      "sha256": "711f826794fd3c553b5b231b0f5d333f7c98584129dce0bd0275a86200c2b8bb"
+    },
+    {
+      "path": "native-corrected-command.json",
+      "bytes": 512,
+      "sha256": "000931bcf44c8be63f28d110e09e91308061a3fc3f065d466d495f925317ada8"
+    },
+    {
+      "path": "native-corrected.log",
+      "bytes": 455,
+      "sha256": "9d8b6c59805a327d38eba569328cc6c88cfd70e23de60f0b721e81ef406f9363"
+    },
+    {
+      "path": "native.log",
+      "bytes": 73375,
+      "sha256": "bcfa55536aa2ae7fb9ec6788131791dc66de0289f0262fd7d1800d390b57a6c2"
+    },
+    {
+      "path": "probe-initial.rs",
+      "bytes": 2298,
+      "sha256": "7d3cb9640fc6a1275d13fae373eda9fb4fcde7fd7f164766d74bc07aa8c03f3b"
+    },
+    {
+      "path": "probe.rs",
+      "bytes": 2371,
+      "sha256": "b2a7f4ef9dbf2578c0cf7a6e5e3002ad1a125c545252d4249d5b7745f5e95d0e"
+    },
+    {
+      "path": "production-match.json",
+      "bytes": 122,
+      "sha256": "cfa53e6b14c22bf169d57d26ac51908b7bf8e68a713b908cf12ec7060481f516"
+    },
+    {
+      "path": "property-before-after.json",
+      "bytes": 130,
+      "sha256": "efabaafd67bdbabafe4e48c0f085959e2c6f942bb1db3f25660d85aa94908069"
+    },
+    {
+      "path": "record.md",
+      "bytes": 4690,
+      "sha256": "7e54c8e84a4b53fe287e58750e258a7b9ffe568dcdaa4c2c6da2da9ef957e7b4"
+    },
+    {
+      "path": "run-corrected/results.json",
+      "bytes": 70057,
+      "sha256": "762a9de2e3c967c0e0b7d433bfc0eadb894f949a1c4578a186f129960dc51ab4"
+    },
+    {
+      "path": "snapshot.json",
+      "bytes": 775,
+      "sha256": "5948b92116fdc9f2a5d48b1539618585bd1cf5390ad432cd27abc8f2179a73c3"
+    },
+    {
+      "path": "source/tools/src/doc/projection/annotated/blocks.rs",
+      "bytes": 5136,
+      "sha256": "19e9fe81f70db5d02be10870465126bc06716f28b47a6e533f88936ce31990e1"
+    },
+    {
+      "path": "source/tools/src/doc/projection/annotated.rs",
+      "bytes": 19555,
+      "sha256": "14b95933b19aad89a39f5c40bfe17330a2a8519571cb095d5ab7980e2f9b8a08"
+    },
+    {
+      "path": "source/tools/tests/doc/annotated_blocks.rs",
+      "bytes": 8002,
+      "sha256": "4513e2f29c822ce1893f1bcdec69cd521492e940257072eee56231ea733cfbc0"
+    },
+    {
+      "path": "source/tools/tests/doc.rs",
+      "bytes": 24450,
+      "sha256": "b90cda9e70ab086e5613a6e99e7bd3f4a0f3d56afd2c316e0827840e0d201d12"
+    },
+    {
+      "path": "wasi-boundaries-final/results.json",
+      "bytes": 3693,
+      "sha256": "560179871870fd17739d847396192ebb59218726ad0fe96322a7c00a00b05f93"
+    },
+    {
+      "path": "wasi-boundaries-final.log",
+      "bytes": 54,
+      "sha256": "a7cc3a65871e51d8f293cb33b30d1922ba3bb13ddfecc41d015648f69626f82d"
+    },
+    {
+      "path": "wasi-boundaries.log",
+      "bytes": 245,
+      "sha256": "40c78c30e17ba484849793d835bc5e66282806f47d1d960334b77eb5839047c3"
+    },
+    {
+      "path": "wasi-build-command.json",
+      "bytes": 489,
+      "sha256": "ef6b9160cfcdb3390385bf55f38ee65b550da6555d246704f2b5e29f41698fad"
+    },
+    {
+      "path": "wasi-build.log",
+      "bytes": 2241,
+      "sha256": "d30f67aa1a332c65ee0a217403bd39ae1c4b94f5d3e8e979b1aa007f4682966c"
+    },
+    {
+      "path": "wasi-commands.json",
+      "bytes": 808,
+      "sha256": "b2404413afbbb62259f8b3086766bd1d841d832e152108efda5396e11efd385d"
+    },
+    {
+      "path": "wasi-final-commands.json",
+      "bytes": 816,
+      "sha256": "6e96e74d2f90e30bf10045eb16dff6e465ac94e42f13e304bb6157af1e78c977"
+    },
+    {
+      "path": "wasi-property-final/results.json",
+      "bytes": 70057,
+      "sha256": "762a9de2e3c967c0e0b7d433bfc0eadb894f949a1c4578a186f129960dc51ab4"
+    },
+    {
+      "path": "wasi-property-final.log",
+      "bytes": 57,
+      "sha256": "674d625908b3e84b3f34b7cfecd11686c024cb1bbc976ab5b220c920f0164ef1"
+    },
+    {
+      "path": "wasi-property.log",
+      "bytes": 235,
+      "sha256": "c261a9e7eccdeefa2afcdf6b8a2c171dfecdac0507f9558d8ef3215491bbee54"
+    }
+  ]
+}
