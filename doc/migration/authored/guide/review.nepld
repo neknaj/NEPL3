@@ -434,5 +434,27 @@ body
       cons "[各枝/かくえだ]を[明示/めいじ]Discardで[包/つつ]むtyped AST[候補/こうほ]は[同/おな]じcompilerで[成功/せいこう]した。"
       cons sentence cons text "R031として" cons ruby text "正式例" text "せいしきれい" cons text "source・" cons ruby text "契約説明" text "けいやくせつめい" cons text "・" cons ruby text "元不一致" text "もとふいっち" cons text "の" cons ruby text "負例" text "ふれい" cons text "・quoted " cons code ">" cons text " を" cons ruby text "含" text "ふく" cons text "むtoken" cons ruby text "境界" text "きょうかい" cons text "の" cons ruby text "実行試験" text "じっこうしけん" cons text "を" cons ruby text "併" text "あわ" cons text "せた" cons ruby text "訂正" text "ていせい" cons text "を" cons ruby text "要求" text "ようきゅう" cons text "した。" nil
       cons "まだ[候補/こうほ]ASTだけの[成功/せいこう]であり、[修正済/しゅうせいず]み[正式/せいしき]sourceやG04[合格/ごうかく]とは[扱/あつか]わない。" nil
+    cons paragraph
+      cons sentence cons text "R032では" cons ruby text "補助" text "ほじょ" cons text " " cons code "build_print_probe.py" cons text " / " cons code "print_source" cons text " を" cons ruby text "使" text "つか" cons text "い、setup Budgetで" cons ruby text "検査済" text "けんさず" cons text "みのtreeをfreshなsourceBytes" cons ruby text "上限" text "じょうげん" cons text "0のBudgetへ" cons ruby text "渡" text "わた" cons text "しても、" cons ruby text "公開" text "こうかい" cons text " " cons code "print::source_tree" cons text " がComplete(\"let x ~y\")・Usage.sourceBytes=0となることを" cons ruby text "再現" text "さいげん" cons text "した。" nil
+      cons "[構造/こうぞう]の[検査/けんさ]proofと[現在操作/げんざいそうさ]へのsource[受入/うけい]れは[別契約/べつけいやく]である。"
+      cons "printerにも[共有/きょうゆう]SourceAdmissionまたは[同等/どうとう]の[操作所属/そうさしょぞく]を[持/も]たせ、[別操作/べつそうさ]では[受/う]け[入/い]れ[直/なお]し、[同/おな]じ[操作/そうさ]では[二重計上/にじゅうけいじょう]しない[修正/しゅうせい]を[要求/ようきゅう]した。" nil
+    cons paragraph
+      cons "[共有/きょうゆう]SourceAdmission[引数/ひきすう]を[追加/ついか]した[修正後/しゅうせいご]、[元/もと]printer probeはStopped(SourceLimit)・[空出力/くうしゅつりょく]へ[変/か]わり、[先/さき]に[同/おな]じ8-byte snapshotを[受/う]け[入/い]れた[操作/そうさ]では[印字後/いんじご]もsourceBytes8だった。"
+      cons "[管理対象/かんりたいしょう]のfresh cap0/[同一操作/どういつそうさ]/OutputLimit[回帰/かいき]を[読/よ]み、parse[全/ぜん]13[件/けん]を[独立実行/どくりつじっこう]して[成功/せいこう]したためR032をcorrectedとした。"
+      cons "printerは[原綴/げんつづ]りを[保持/ほじ]する[静的/せいてき]tree[用/よう]であり、[任意/にんい]constructorの[意味/いみ]printerやportable[操作全体/そうさぜんたい]の[完成/かんせい]ではない。" nil
+    cons paragraph
+      cons "[区切/くぎ]り[保存前/ほぞんまえ]にhost seed importerの[実/じつ]Rust[試験/しけん]2[件/けん]を[独立成功確認/どくりつせいこうかくにん]した。"
+      cons "[全/ぜん]constructorの[型付/かたつ]きロードと、source digest・constructor・literal・list[境界/きょうかい]の[偽装拒否/ぎそうきょひ]を[検査/けんさ]する。"
+      cons "[実/じつ]package[組立/くみた]てのtools integration 1[件/けん]も[独立成功/どくりつせいこう]した。"
+      cons "Angle[正式/せいしき]sourceはdiscard[付/つ]きへ[訂正/ていせい]され、[旧/きゅう]bytesは[明示的/めいじてき]な[負例/ふれい]へ[保存/ほぞん]されている。"
+      cons sentence cons ruby text "元例" text "もとれい" cons text "はOutputType" cons ruby text "拒否" text "きょひ" cons text "、" cons ruby text "訂正例" text "ていせいれい" cons text "はpackage.checkまで" cons ruby text "成功" text "せいこう" cons text "したが、quoted " cons code ">" cons text " の" cons ruby text "実" text "じつ" cons text "reader" cons ruby text "境界" text "きょうかい" cons text "は" cons ruby text "未検証" text "みけんしょう" cons text "なのでR031はopenを" cons ruby text "維持" text "いじ" cons text "する。" nil
+      cons "[同/おな]じ[試験/しけん]でbinding[正式例/せいしきれい]がInvalidBindingとなることも[確認/かくにん]した。"
+      cons "wordのSeq[出力/しゅつりょく]Listと、leafのreference selfが[要求/ようきゅう]するTextが[合/あ]わないため、R033として[明示/めいじ]Text readerを[使/つか]う[訂正/ていせい]と[実/じつ]parse/binding[回帰/かいき]を[残/のこ]す。"
+      cons "[新/しん]Grammar lower[入口/いりぐち]では[提供/ていきょう]Profileへのtree.validate[再実行/さいじっこう]をコード[確認/かくにん]し、[意味/いみ]identityだけで[別/べつ]execution[配置/はいち]のindexを[解釈/かいしゃく]する[草稿/そうこう]の[懸念/けねん]は[解消方向/かいしょうほうこう]だが、lowerのproduction[正例/せいれい]・[変異試験/へんいしけん]はまだ[未実行/みじっこう]である。" nil
+    cons paragraph
+      cons "[次/つぎ]のbootstrap[段階/だんかい]ではR034を[再現/さいげん]した。"
+      cons sentence cons ruby text "補助" text "ほじょ" cons text "source " cons code "shared-kind.neplg" cons text " は、AtomをA/Bの" cons ruby text "別" text "べつ" cons text "categoryで" cons ruby text "受" text "う" cons text "け" cons ruby text "入" text "い" cons text "れ、" cons ruby text "双方" text "そうほう" cons text "のfield schemaを" cons ruby text "同" text "おな" cons text "じ" cons ruby text "空列" text "くうれつ" cons text "にする。" nil
+      cons "spec04が[明示的/めいじてき]に[認/みと]める[構成/こうせい]だが、[実/じつ]host import・package compilerは2つ[目/め]をDuplicateNameで[拒否/きょひ]した。"
+      cons "category[内/ない]の[宣言重複/せんげんちょうふく]と、category[間/かん]で[共有/きょうゆう]するsurface kindのshape[一致/いっち]を[別々/べつべつ]に[検査/けんさ]し、[許可/きょか]された[構成/こうせい]を[受/う]け[入/い]れる[修正/しゅうせい]を[要求/ようきゅう]した。" nil
     nil
   nil
