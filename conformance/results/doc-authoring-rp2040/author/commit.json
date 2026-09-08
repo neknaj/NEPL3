@@ -1,0 +1,8 @@
+{
+  "commit": "dd496b1d3a8f57b2cb4a7a818f75db35ddc46742",
+  "branch": "docs/rp2040-guide-current",
+  "only_changed_path": "doc/migration/authored/conformance/targets/rp2040/README.nepld",
+  "git_blob_sha256": "36a77de35753c12421843682754fb3c580623005e475e9fad3529ac354e0f81d",
+  "clean": true,
+  "pushed": false
+}
