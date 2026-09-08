@@ -1,0 +1,13 @@
+from pathlib import Path
+import subprocess,os,json,hashlib
+p=Path(__file__).parent.resolve()
+base=(p/'final819/source/tools/src/doc/canonical/tests.rs').read_bytes()
+probe=(p/'identity_probe.rs').read_bytes()
+(p/'workspace-final/tools/src/doc/canonical/tests.rs').write_bytes(base+b'\n'+probe)
+cmd=['cargo','test','--locked','-p','nepl3-tools','--lib','independent_context_each_frozen_input_changes_context','--','--nocapture']
+r=subprocess.run(cmd,cwd=p/'workspace-final',env=dict(os.environ,CARGO_TARGET_DIR=str(p/'target-final')),capture_output=True,timeout=180)
+(p/'identity-819.stdout.log').write_bytes(r.stdout)
+(p/'identity-819.stderr.log').write_bytes(r.stderr)
+b=p/'target-final/debug/deps/nepl3_tools-69244717011a8889.exe'
+(p/'identity-819.command.json').write_text(json.dumps(dict(command=cmd,head='819f0e9a7d983bb8b104f1dceb5681989e046369',deadline_seconds=180,exit_code=r.returncode,binary_sha256=hashlib.sha256(b.read_bytes()).hexdigest(),probe_sha256=hashlib.sha256(probe).hexdigest()),indent=2)+'\n',encoding='utf8')
+print(r.stdout.decode('utf8'));print(r.stderr.decode('utf8'));assert r.returncode==0

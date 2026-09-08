@@ -1,0 +1,19 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-tools",
+    "--lib",
+    "independent_context",
+    "--",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "cwd": "C:\\projects\\NEPL3-doc-canonical-page-context\\.tmp\\review-canonical-context\\workspace",
+  "target_dir": "C:\\projects\\NEPL3-doc-canonical-page-context\\.tmp\\review-canonical-context\\target",
+  "deadline_seconds": 900,
+  "exit_code": 0,
+  "probe_sha256": "3336d86ec960f6470d95c3be6afb98f0c40f1439dcb72c6b19b0a67a7880d2fc"
+}

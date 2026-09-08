@@ -1,0 +1,46 @@
+from pathlib import Path
+import hashlib,json,subprocess
+root=Path(__file__).resolve().parent.parent
+out=root/'conformance/results/doc-canonical-page-context'
+out.mkdir(parents=True,exist_ok=True)
+rows=[]
+def save(owner,path,relative):
+    data=path.read_bytes()
+    assert len(data)<=1048576,path
+    safe='/'.join('saved-'+p.lstrip('.') if p in {'.tmp','dist','target','.git','node_modules','__pycache__'} else p for p in relative.split('/'))
+    name=f'{owner}/{safe}.fixture'
+    dest=out/name
+    assert dest.resolve().is_relative_to(out.resolve())
+    dest.parent.mkdir(parents=True,exist_ok=True)
+    dest.write_bytes(data)
+    rows.append(dict(file=name,owner=owner,restore=relative,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+for name in ['verify-exact-context','verify-prefix-context','verify-final-context']:
+    directory=root/'.tmp'/name
+    for p in sorted(directory.iterdir()):
+        if p.is_file():save('root-'+name,p,p.name)
+for name in ['start.json','verify-exact-context.py','verify-prefix-context.py','verify-final-context.py','archive-context.py']:
+    save('root-scripts',root/'.tmp'/name,name)
+for p in sorted((root/'.tmp').glob('canonical-tests-*-failed.*.log')):
+    save('root-earlier-failures',p,p.name)
+for owner,directory in {
+    'review-code':root/'.tmp/review-canonical-context',
+    'author':root/'.tmp/author-canonical-context',
+    'review-authoring':root/'.tmp/review-canonical-context-authoring',
+    'review-design':Path('C:/projects/NEPL3-doc-page-projection/.tmp/review-canonical-page-context-design'),
+}.items():
+    manifest=json.loads((directory/'manifest.json').read_text(encoding='utf-8'))
+    save(owner,directory/'manifest.json','manifest.json')
+    for row in manifest.get('files',manifest.get('payloads',[])):
+        p=directory/row['path'];data=p.read_bytes()
+        assert len(data)==row['bytes'] and hashlib.sha256(data).hexdigest()==row['sha256'],p
+        save(owner,p,row['path'])
+head='14df7e9d77faa86715c4605b28a853812980c4b0'
+base='afeadcf70b120c7cf05e48ec2c282e0e4edd5e44'
+sources=[]
+for name in subprocess.check_output(['git','diff','--name-only',base,head],cwd=root,text=True).splitlines():
+    data=(root/name).read_bytes()
+    assert data==subprocess.check_output(['git','show',head+':'+name],cwd=root)
+    sources.append(dict(path=name,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+(out/'payloads.json').write_text(json.dumps(dict(implementation_commit=head,base_commit=base,files=rows,sources=sources),indent=2)+'\n',encoding='utf-8',newline='\n')
+(out/'.gitattributes').write_text('*.fixture -text -whitespace\n',encoding='utf-8',newline='\n')
+print(len(rows),'payloads',sum(r['bytes'] for r in rows),'bytes')

@@ -1,0 +1,33 @@
+{
+  "head": "37cfaa88149191e1e066b08682720f5df471cf2d",
+  "previous": "ce0b520850822e199178518f241785ca6c608d53",
+  "allowlist": [
+    "doc/migration/authored/16-doc-migration.nepld",
+    "doc/migration/authored/21-doc-pages.nepld",
+    "tools/src/doc/canonical/projection.rs",
+    "tools/src/doc/canonical/tests.rs"
+  ],
+  "files": [
+    {
+      "path": "doc/migration/authored/16-doc-migration.nepld",
+      "bytes": 39551,
+      "sha256": "ab1bc9a47c1b42e0501af952d4d29a122b9c38e7e1891cef97b42288b35d2ce2"
+    },
+    {
+      "path": "doc/migration/authored/21-doc-pages.nepld",
+      "bytes": 85676,
+      "sha256": "2b21eb20db88260c1bb749121abf00191d958263786a0c4951f3f1a6f272b7f5"
+    },
+    {
+      "path": "tools/src/doc/canonical/projection.rs",
+      "bytes": 12900,
+      "sha256": "bb1621339254d89ff484e5e3b7188790ec20e1d0c5763899c26d454dd9e6802f"
+    },
+    {
+      "path": "tools/src/doc/canonical/tests.rs",
+      "bytes": 22143,
+      "sha256": "64da0b5078c0b8929a4d3e75d96b003879a216893bbbfa3dfdba393f661624a4"
+    }
+  ],
+  "authored_review": "Authoring reviewed separately, not this runtime review"
+}

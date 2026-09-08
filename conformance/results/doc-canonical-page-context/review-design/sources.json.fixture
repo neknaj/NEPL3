@@ -1,0 +1,55 @@
+{
+  "head": "53597e08495770edd3e0c32ac785604ee70ddffa",
+  "files": [
+    {
+      "path": "tools/src/doc/canonical.rs",
+      "bytes": 6669,
+      "sha256": "a034546053e3a6956d20304ce956d5ef9f95a011741f40633e563ac408f79da7"
+    },
+    {
+      "path": "tools/src/doc/canonical/tests.rs",
+      "bytes": 6787,
+      "sha256": "c3bef32fdd36e577d59fd47fda2cc0b01c7ba00da697f38f361be7415f06421d"
+    },
+    {
+      "path": "tools/src/doc/projection/annotated.rs",
+      "bytes": 21168,
+      "sha256": "2fe65b9c37925deb977aaca65cf1b305b5602d1455a242f1ade3c3a8572cb742"
+    },
+    {
+      "path": "tools/src/doc/projection/annotated/pages.rs",
+      "bytes": 5295,
+      "sha256": "442d1c827bb11ab7e241be93a0e19a1504dfdd6a579dd4e1fa907121fbe30311"
+    },
+    {
+      "path": "tools/src/doc/projection/annotated/host.rs",
+      "bytes": 3956,
+      "sha256": "66482b70f997edbd1bb0afe85165e03c7092fc6d9f3282990ebb4da9aded3412"
+    },
+    {
+      "path": "tools/src/doc/source.rs",
+      "bytes": 17054,
+      "sha256": "d0e1c8735dceaea6709c3e58d7392a70b71b4c6167fb17edc6f56d358d97f5a0"
+    },
+    {
+      "path": "tools/src/doc/export/pages.rs",
+      "bytes": 15952,
+      "sha256": "8b52561c4468aaa6be61c12bf6431ed7e9a0c7fd250e1a5d3957cfa26826295b"
+    },
+    {
+      "path": "crates/languages/doc/core/src/pages.rs",
+      "bytes": 15660,
+      "sha256": "737c084fad89c069c0b96a25f22dd8a55a891211dfb38b8419b7a804e16d24f0"
+    },
+    {
+      "path": "doc/spec/16-doc-migration.md",
+      "bytes": 11630,
+      "sha256": "6e0ed843c517e61d5a6ffbda701979736faa9075636e00561124e60367ca82a7"
+    },
+    {
+      "path": "doc/spec/21-doc-pages.md",
+      "bytes": 31705,
+      "sha256": "ef40e0d6278e79680de8c064f5d99bb14ead4d97aa16197e930ec95df6d8a9cb"
+    }
+  ]
+}

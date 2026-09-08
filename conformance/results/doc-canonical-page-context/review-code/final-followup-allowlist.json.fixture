@@ -1,0 +1,20 @@
+[
+  "update_14df.py",
+  "run_14df.py",
+  "verify_final.py",
+  "final-verification.json",
+  "prefix_boundary_probe.rs",
+  "native-14df.command.json",
+  "native-14df.stdout.log",
+  "native-14df.stderr.log",
+  "native-14df.records.json",
+  "final14df/snapshot.json",
+  "final14df/source.patch",
+  "final14df/source/tools/src/doc/canonical.rs",
+  "final14df/source/tools/src/doc/canonical/tests.rs",
+  "artifacts/native-14df/manifest.json",
+  "artifacts/native-14df/doc/spec/00-contract.md",
+  "artifacts/native-14df/doc/spec/01-architecture.md",
+  "artifacts/native-14df/doc/spec/13-reproducibility.md",
+  "artifacts/native-14df/doc/spec/22-external-extensions.md"
+]
