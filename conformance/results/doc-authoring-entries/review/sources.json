@@ -1,0 +1,56 @@
+[
+  {
+    "commit": "06b871df975cda3c73c136db4aafc0d472654df1",
+    "path": "doc/migration/authored/history/README.nepld",
+    "bytes": 6204,
+    "sha256": "1260246764b430a8f5e9d3c5dc07c0376152975406064a9509b8b1c5200f2712"
+  },
+  {
+    "commit": "987504c5e3f61fc1ca42fbb4fba0cbf626ac22bf",
+    "path": "doc/history/README.md",
+    "bytes": 1947,
+    "sha256": "2e8566d9c9b4366cde2b3c3659cde91e43fa7249e5f2f4b21e6e2a3923c43c9d"
+  },
+  {
+    "commit": "c82bad320609ca29d6906c4e0d75afa09350df81",
+    "path": "doc/migration/authored/migration/README.nepld",
+    "bytes": 9167,
+    "sha256": "2ea2113b35db29c2c6ce198c8ff57ae4da86ad174f2f108b1447991551214381"
+  },
+  {
+    "commit": "987504c5e3f61fc1ca42fbb4fba0cbf626ac22bf",
+    "path": "doc/migration/README.md",
+    "bytes": 3673,
+    "sha256": "87db9feb843ad5c160aded6a5edde600bf0177cc95a8632ff7d18870ddc94e19"
+  },
+  {
+    "commit": "987504c5e3f61fc1ca42fbb4fba0cbf626ac22bf",
+    "path": "AGENTS.md",
+    "bytes": 7613,
+    "sha256": "849027165216a9a3adcb22ef58a44bc698c83e1707d2aa0727a1b73105282236"
+  },
+  {
+    "commit": "987504c5e3f61fc1ca42fbb4fba0cbf626ac22bf",
+    "path": "doc/authoring.md",
+    "bytes": 6478,
+    "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+  },
+  {
+    "commit": "987504c5e3f61fc1ca42fbb4fba0cbf626ac22bf",
+    "path": "doc/spec/16-doc-migration.md",
+    "bytes": 8435,
+    "sha256": "efa1351c80c5cb79e77162f84b521553038dfa30b8d0040237f3acd3c1375ea4"
+  },
+  {
+    "commit": "987504c5e3f61fc1ca42fbb4fba0cbf626ac22bf",
+    "path": "design/forms.json",
+    "bytes": 48673,
+    "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+  },
+  {
+    "commit": "987504c5e3f61fc1ca42fbb4fba0cbf626ac22bf",
+    "path": "languages/doc/syntax.neplg",
+    "bytes": 10108,
+    "sha256": "407c7ad41cbf0e9f8a131225379e62e27443f8a266a8b439b803f3b52f1902d9"
+  }
+]
