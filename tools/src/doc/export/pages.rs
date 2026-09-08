@@ -5,12 +5,16 @@ use nepl3_doc_core::pages::{PageDocument, PageRegistration, PageSet};
 use nepl3_doc_html::pages::{PagesHtmlRequest, render_pages};
 use serde::Deserialize;
 use std::{collections::BTreeMap, io::Write};
+pub mod resources;
+use nepl3_core::budget::Budget;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Manifest {
     pub version: u64,
     pub pages: Vec<Entry>,
+    #[serde(default)]
+    pub output_limits: resources::OutputLimits,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -26,6 +30,18 @@ pub struct GeneratedPages {
 
 /// In-memory host input pairs. Paths are logical names, not filesystem access.
 pub fn generate(compiled: &Compiled, inputs: &[(Entry, String)]) -> Result<GeneratedPages, String> {
+    generate_with_output_budget(compiled, inputs, &mut budget())
+}
+
+/// The caller selects the finite output allowance before generation. The same
+/// sticky budget covers the entire PageSet; parse/lower retain separate limits.
+pub fn generate_with_output_budget(
+    compiled: &Compiled,
+    inputs: &[(Entry, String)],
+    output_budget: &mut Budget,
+) -> Result<GeneratedPages, String> {
+    output_budget.poll().map_err(err)?;
+    let initial_usage = output_budget.usage();
     if inputs.is_empty() || inputs.len() > 128 {
         return Err("PageCountLimit".into());
     }
@@ -37,28 +53,29 @@ pub fn generate(compiled: &Compiled, inputs: &[(Entry, String)]) -> Result<Gener
         if total > MAX_SOURCE_BYTES {
             return Err("SourceLimit".into());
         }
-        let (document, profile) = crate::doc::source::with_named_input(
+        let (document, profile, parse_usage, lower_usage) = crate::doc::source::with_named_input(
             true,
             compiled,
             input,
             &entry.id,
             "Article",
-            |tree, profile, _b, _a| {
+            |tree, profile, b, _a| {
                 let checked = tree.syntax();
                 let empty = SourceStore::default();
                 let mut admission = SourceAdmission::default();
                 let mut c = FoundationCodec::new(profile.registry(), &empty, &mut admission)
                     .map_err(err)?;
+                let mut lower_budget = budget();
                 let doc = lower::document(
                     checked,
                     &compiled.doc.package.schema,
                     Category::Article,
                     profile.registry(),
-                    &mut budget(),
+                    &mut lower_budget,
                     &mut c,
                 )
                 .map_err(err)?;
-                Ok((doc, profile.digest()))
+                Ok((doc, profile.digest(), b.usage(), lower_budget.usage()))
             },
         )?;
         pages.push(PageDocument {
@@ -70,7 +87,9 @@ pub fn generate(compiled: &Compiled, inputs: &[(Entry, String)]) -> Result<Gener
             document,
         });
         origins.push(serde_json::json!({"id":entry.id,"source":entry.source,"route":entry.route,
-            "source_sha256":digest_hex(Digest::of(input.as_bytes())),"profile_sha256":digest_hex(profile)}));
+            "source_sha256":digest_hex(Digest::of(input.as_bytes())),"profile_sha256":digest_hex(profile),
+            "operation_limits":resources::limits(budget().limits()),
+            "parse_and_validate_usage":resources::usage(parse_usage),"lower_usage":resources::usage(lower_usage)}));
     }
     let request = PagesHtmlRequest {
         set: PageSet { pages },
@@ -82,8 +101,8 @@ pub fn generate(compiled: &Compiled, inputs: &[(Entry, String)]) -> Result<Gener
     let empty = SourceStore::default();
     let mut a = SourceAdmission::default();
     let mut c = FoundationCodec::new(r, &empty, &mut a).map_err(err)?;
-    let mut output_budget = budget();
-    let rendered = render_pages(&request, r, &mut c, &mut output_budget).map_err(err)?;
+    let rendered = render_pages(&request, r, &mut c, output_budget)
+        .map_err(|e| format!("resolve/render: {e:?}; usage={:?}", output_budget.usage()))?;
     let mut files = BTreeMap::new();
     let mut file_kinds = BTreeMap::new();
     for (page, fragment) in request.set.pages.iter().zip(&rendered.fragments) {
@@ -91,7 +110,8 @@ pub fn generate(compiled: &Compiled, inputs: &[(Entry, String)]) -> Result<Gener
         if !route.ends_with(".html") {
             return Err("HTML route must end in .html".into());
         }
-        let html = shell(fragment, &mut output_budget)?;
+        let html = shell(fragment, output_budget)
+            .map_err(|e| format!("serialize: {e}; usage={:?}", output_budget.usage()))?;
         insert(&mut files, route.clone(), html.into_bytes())?;
         file_kinds.insert(route.clone(), "text/html; charset=utf-8");
         let css = match route.rsplit_once('/') {
@@ -114,6 +134,9 @@ pub fn generate(compiled: &Compiled, inputs: &[(Entry, String)]) -> Result<Gener
         .collect::<Vec<_>>();
     let manifest = serde_json::to_string_pretty(&serde_json::json!({
         "format":"nepl3.local-doc-pages/1","identity":digest_hex(rendered.identity),"pages":origins,"files":records,
+        "execution_identity":digest_hex(resources::execution_identity(rendered.identity,output_budget.limits(),initial_usage)),
+        "output_budget":{"contract":"nepl3.local-doc-pages.execution/1","limits":resources::limits(output_budget.limits()),
+            "initial_usage":resources::usage(initial_usage),"usage":resources::usage(output_budget.usage())},
         "renderer":"nepl3-doc-html pages/2","options":{"parallel":"Rows"},"viewer_scripts":false,
         "packages":"compiled checked bootstrap fixtures","scope":"Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Assets and foreign rendering remain unsupported. Not Pages deployment evidence.",
         "budget_scope":"Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
@@ -201,7 +224,11 @@ pub fn write(manifest: &Path, output: &Path) -> crate::Result<()> {
         }
         inputs.push((entry, input));
     }
-    let generated = generate(&compiled()?, &inputs)?;
+    let generated = generate_with_output_budget(
+        &compiled()?,
+        &inputs,
+        &mut manifest_data.output_limits.budget(),
+    )?;
     fs::create_dir(output)?;
     for (path, bytes) in generated.files {
         let path = output.join(path);
