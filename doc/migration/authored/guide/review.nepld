@@ -1132,5 +1132,23 @@ body
       cons "[管理対象/かんりたいしょう]wire stop2[件/けん]はnative/WASI[双方/そうほう]で[成功/せいこう]し、9[停止理由/ていしりゆう]の[各/かく]typed wrapperと[非停止原因/ひていしげんいん]を[区別/くべつ]した。"
       cons sentence cons ruby text "補助" text "ほじょ" cons text "は " cons code ".tmp/run_r047_probe.py" cons text "、" cons ruby text "元全出力" text "もとぜんしゅつりょく" cons text "は " cons code ".tmp/r047-probe/before.log" cons text "、" cons ruby text "修正後" text "しゅうせいご" cons text "は " cons code "after.log" cons text "。" nil
       cons "この[修正/しゅうせい]は[共通原因抽出/きょうつうげんいんちゅうしゅつ]だけの[証拠/しょうこ]であり、[後続/こうぞく]Doc[実装/じっそう]の[完成/かんせい]を[表/あらわ]さない。" nil
+    cons paragraph
+      cons "[仕様/しよう]の[通読/つうどく]、[具体例/ぐたいれい]による[矛盾/むじゅん]の[確認/かくにん]、[公開規格/こうかいきかく]との[照合/しょうごう]を[行/おこな]った。"
+      cons "r4では[上記/じょうき]のcore/wire[公開/こうかい]APIとNDF intrinsic roundtripに[加/くわ]え、[標準/ひょうじゅん]Grammar[原文/げんぶん]のnative bootstrapを[実行/じっこう]した。"
+      cons "4[言語/げんご][全/ぜん]formのRust parse/lower、browser[描画/びょうが]、[回路実行/かいろじっこう]、LSP、portable operation provider、および[全要求/ぜんようきゅう]targetでのconformanceはまだこのレビューの[実行範囲/じっこうはんい]に[含/ふく]まれない。"
+      cons "[対応/たいおう]する[実装/じっそう]が[存在/そんざい]する[段階/だんかい]で、implementation-status.jsonの[未実行記録/みじっこうきろく]を[実行証拠/じっこうしょうこ]とともに[更新/こうしん]する。" nil
+    cons paragraph
+      cons "renameの[独立/どくりつ]レビューでは、[元/もと]Grammar[入力/にゅうりょく]を[実/じつ]compiler・CompletedParse・bindingへ[通/とお]し、[候補編集/こうほへんしゅう]をprivate draft[内/ない]で[実/じつ]parse・[再解析/さいかいせき]してから[受理/じゅり]した。"
+      cons "Letの[元/もと]byte[位置/いち]4..5/14..15/16..17、Lambdaのshadowing、Unicode[名/めい]、CRLFとForeign root[分離/ぶんり]を[照合/しょうごう]した。"
+      cons "[外側/そとがわ]の[自由参照捕捉/じゆうさんしょうほそく]・[内側宣言/うちがわせんげん]による[捕捉/ほそく]・[予約/よやく]headは[拒否/きょひ]され、[対象/たいしょう]namespaceと[関係/かんけい]しない[別言語/べつげんご]だけのheadは[拒否理由/きょひりゆう]にならない。"
+      cons "[別/べつ]の[実/じつ]parseが[完全/かんぜん][同/おな]じtreeを[返/かえ]しても、[元/もと]prepared proofと[異/こと]なるCompletedParseの[組合/くみあわ]せは[拒否/きょひ]される。"
+      cons "raw cloneや[受信/じゅしん]NDFから[完了/かんりょう]parse proofを[再発行/さいはっこう]する[入口/いりぐち]はない。" nil
+    cons paragraph
+      cons "[保存前/ほぞんまえ]の[独立入力/どくりつにゅうりょく]で、SourceMap.targetという[理由/りゆう]だけで[補助/ほじょ]source[全体/ぜんたい]を[比較/ひかく]から[除/のぞ]く[初稿/しょこう]を[検出/けんしゅつ]した。"
+      cons sentence cons code "lambda x x" cons text " のxをzへ" cons ruby text "変更" text "へんこう" cons text "し、" cons ruby text "部分" text "ぶぶん" cons text "Exactの" cons ruby text "外" text "そと" cons text "にある" cons ruby text "補助" text "ほじょ" cons text "source " cons code "l a" cons text " を " cons code "l b" cons text " へ" cons ruby text "改変" text "かいへん" cons text "しても" cons ruby text "旧入口" text "きゅういりぐち" cons text "が" cons ruby text "受理" text "じゅり" cons text "した。" nil
+      cons "[修正/しゅうせい]は[全宣言/ぜんせんげん]sourceのbytes・revision・URIを[比較/ひかく]し、[候補/こうほ]treeを[実/じつ]ParseSession[由来/ゆらい]のCompletedParseへ[限定/げんてい]する。"
+      cons "[旧/きゅう]raw[入口/いりぐち]の[原/げん]probeとfull logを[保全/ほぜん]し、[新/しん]APIでは[補助/ほじょ]sourceを[実/じつ]provider[返信/へんしん]で[宣言/せんげん]するよう[適応/てきおう]した。"
+      cons "[未改変/みかいへん][補助/ほじょ]sourceは[成功/せいこう]、[末尾改変/まつびかいへん]・triviaだけの[変更/へんこう]・URI[変更/へんこう]はRequestMismatchとなる。"
+      cons "API[変更/へんこう]を[挟/はさ]んだため、[旧/きゅう]probeの[無変更再実行/むへんこうさいじっこう]とは[記録/きろく]しない。" nil
     nil
   nil
