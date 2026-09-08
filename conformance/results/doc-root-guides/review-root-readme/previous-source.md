@@ -6,7 +6,7 @@ Grammar・Doc・Math・Circuitの4言語を、共通の構文・位置・診断�
 
 現在は**共通runtimeの実装段階**です。`no_std` のcoreとNDF codecを実装し、source・値・schema・Origin・予算の検査とnative/WASIでの試験を進めています。4言語の処理系、CLI、LSP、Webアプリは完成していません。CI成功から全受入条件の達成を推定しません。[実装記録](doc/progress/foundation-runtime.md) に検査対象と残る範囲を記録します。
 
-最終成果物にはTEAによる4言語Web Playground、文書・例の静的サイトとGitHub Pages配布を含めます。現在のMarkdown文書は、表現能力と変換の受入を満たしてからNEPL3 Doc DSLへ移す[必須計画](doc/spec/16-doc-migration.md)としています。DocのローカルHTML生成と移行原稿の作成を進めています。正式文書の正本切替とWeb公開は未完了です。
+最終成果物にはTEAによる4言語Web Playground、文書・例の静的サイトとGitHub Pages配布を含めます。現在のMarkdown文書は、表現能力と変換の受入を満たしてからNEPL3 Doc DSLへ移す[必須計画](doc/spec/16-doc-migration.md)としています。Web公開・文書変換は未実装です。
 
 | 入口 | 内容 |
 | --- | --- |

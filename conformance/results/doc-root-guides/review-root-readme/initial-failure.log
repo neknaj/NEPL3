@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "C:\projects\NEPL3-doc-root-guides\.tmp\review-root-readme\initial-check.py", line 52, in <module>
+    assert counts==[1,2,5,4,2,3,1]
+           ^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

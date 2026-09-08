@@ -1,0 +1,56 @@
+{
+  "source_commit": "b83716cd14fe7d6d57579e9d6a9ec4ad2877dba2",
+  "scope": "Manual author self-check; unresolved badge asset; no independent review or HTML",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 7613,
+      "sha256": "849027165216a9a3adcb22ef58a44bc698c83e1707d2aa0727a1b73105282236"
+    },
+    {
+      "path": "authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "check.py",
+      "bytes": 4044,
+      "sha256": "cf279e2691f8dc838284f3c4238ccb95c88000618e99df36b4daa28906cb6d65"
+    },
+    {
+      "path": "doc-signatures.md",
+      "bytes": 6053,
+      "sha256": "8b8b3513a38a2147d8dcc2813c937fe03fbf8915e759bd3ecb5d7e1b23225680"
+    },
+    {
+      "path": "draft.nepld",
+      "bytes": 7943,
+      "sha256": "6ba8e901529f97efb7da3ff80d69c28df37d4cd83a2efe8a346a195d94426f31"
+    },
+    {
+      "path": "paragraphs.txt",
+      "bytes": 1544,
+      "sha256": "c6624c2cc97777a968cd67cca3df25df2808093c4e79dd40788ec5ef9a12844d"
+    },
+    {
+      "path": "readings.txt",
+      "bytes": 2595,
+      "sha256": "857a756994bf8bf604722d6e737ff8ce8cfe89cf099061fe61ed6bc09fb8158a"
+    },
+    {
+      "path": "record.md",
+      "bytes": 3101,
+      "sha256": "2056ec0bb218ecb3a9777525c1b007707227e182d57c2278cc9298fb722c04d8"
+    },
+    {
+      "path": "result.json",
+      "bytes": 1051,
+      "sha256": "c69f2a00b517f6da9b9369885ca78f34be67943894c8883e2548b0caf53f06a5"
+    },
+    {
+      "path": "source.md",
+      "bytes": 2569,
+      "sha256": "6f73257c8fa7995ec11328aedc6b487fc6f11f9f6e6299b0c17af9cd2d446176"
+    }
+  ]
+}
