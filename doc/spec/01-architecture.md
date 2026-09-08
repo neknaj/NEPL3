@@ -1,10 +1,22 @@
-# 01. Repository・crate・依存方向
+<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page architecture; source SHA-256 8d338b3ce98f3030e503ecd0aea9374c439c606cfbeb48bcd6b777a3f45654b2; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 8528136458369fae27f505fec8d9d6105fb3f07f8084c0c7cabddaaa5f76ed1e; input PageSet digest 3507bd705a27cb5a4e7587f55cd9ba3c02cf55ce5d253c88a17d0067ae2b5337; input context SHA-256 93eb9eefb2e0a57e6ffb508b7fe9a7e59f3617e4dc32c66894f8797a9e433f60. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
-## 方針
+<a name="01-repositorycrate依存方向"></a>
 
-初期repositoryは `NEPL3` のmonorepoとする。意味上の境界とcrateの依存方向を一致させ、言語と出力backendを分離する。crateの全一覧・直接依存の許可集合は `design/dependencies.json` に記す。
+# 01\. Repository・crate・依存方向\[いぞんほうこう\]
 
-## 1. 配置
+<a name="n-706f6c696379"></a>
+
+<a name="方針"></a>
+
+## 方針\[ほうしん\]
+
+初期\[しょき\]repositoryは `NEPL3` のmonorepoとする。意味上\[いみじょう\]の境界\[きょうかい\]とcrateの依存方向\[いぞんほうこう\]\{consumerからdependencyへの向\[む\]き\}を一致\[いっち\]させ、言語\[げんご\]と出力\[しゅつりょく\]backendを分離\[ぶんり\]する。crateの全一覧\[ぜんいちらん\]と、直接依存\[ちょくせついぞん\]の許可集合\[きょかしゅうごう\]は `design/dependencies.json` に記\[しる\]す。
+
+<a name="n-6c61796f7574"></a>
+
+<a name="1-配置"></a>
+
+## 1\. 配置\[はいち\]
 
 ```text
 NEPL3/
@@ -50,11 +62,15 @@ NEPL3/
   tasks/
 ```
 
-ファイル名の階層化はディレクトリで表す。例えば `source_span_map.rs` を階層の代用にせず `source/map.rs` とする。各 `src` の直下には `lib.rs` または `main.rs` がある。
+ファイル名\[めい\]の階層\[かいそう\]は、ディレクトリで表\[あらわ\]す。例\[たと\]えば `source_span_map.rs` を階層\[かいそう\]の代\[か\]わりに使\[つか\]わず、`source/map.rs` とする。各\[かく\] `src` の直下\[ちょっか\]には、`lib.rs` または `main.rs` を置\[お\]く。
 
-## 2. 主な依存方向
+<a name="n-646570656e64656e63696573"></a>
 
-`consumer -> dependency` とする。
+<a name="2-主な依存方向"></a>
+
+## 2\. 主\[おも\]な依存方向\[いぞんほうこう\]
+
+依存\[いぞん\]の向\[む\]きは `consumer -> dependency` と表\[あらわ\]す。
 
 ```text
 reader -> core
@@ -75,36 +91,52 @@ apps -> suite, core (+ wire where required, web -> ui-core)
 tools -> grammar-core, suite, foundation
 ```
 
-`core`は全domainのenumを持たない。typed schema、位置、診断、公開値を所有する。domain coreは共通Parsed treeを受け取り、domainのモデルにlowerする。engineはDoc/Ruby等の意味を知らない。
+`core` は、すべてのdomainのenumを持\[も\]つものではない。typed schema、位置\[いち\]、診断\[しんだん\]、公開値\[こうかいち\]を所有\[しょゆう\]する。domain coreは共通\[きょうつう\]のParsed treeを受\[う\]け取\[と\]り、そのdomainのモデルへlowerする。engineはDocやRubyなどの意味\[いみ\]を知\[し\]らない。
 
-Doc内のMathとMath内のDocはsuiteのbridgeが処理する。doc-coreはmath-coreをimportしない。output backendも相互にimportしない。suiteが依存関係に従って埋め込みを準備し、backendsに型付きの解決済みfragmentを渡す。
+Doc内\[ない\]のMathとMath内\[ない\]のDocは、suiteのbridgeが処理\[しょり\]する。doc\-coreはmath\-coreをimportしない。出力\[しゅつりょく\]backend同士\[どうし\]も、相互\[そうご\]にimportしない。suiteが依存関係\[いぞんかんけい\]に従\[したが\]って埋\[う\]め込\[こ\]みを準備\[じゅんび\]し、backendsへ型付\[かたつ\]きの解決済\[かいけつず\]みfragmentを渡\[わた\]す。
 
-ui-coreは純粋なModel/Msg/update/viewとcommand/subscription記述を所有し、suiteやDOMを実行しない。実行・Worker・editor widgetはhost adapterが担当する。目標は20 crate（15 crateがno_std + alloc）であり、実装済みmember数と同一視しない。文書/site生成はtoolsの明示段階で行い、build.rsでcompilerと文書rendererを循環依存させない。
+ui\-coreは、純粋\[じゅんすい\]なModel・Msg・update・viewと、commandおよびsubscriptionの記述\[きじゅつ\]を所有\[しょゆう\]する。suiteやDOMを実行\[じっこう\]してはならない。実行\[じっこう\]・Worker・editor widgetは、host adapterが担当\[たんとう\]する。目標\[もくひょう\]は20 crateで、そのうち15 crateが `no_std + alloc` である。この目標\[もくひょう\]を、実装済\[じっそうず\]みmemberの数\[かず\]と同一視\[どういつし\]してはならない。文書\[ぶんしょ\]とsiteの生成\[せいせい\]は、toolsの明示的\[めいじてき\]な段階\[だんかい\]で行\[おこな\]う。`build.rs` を通\[とお\]して、compilerと文書\[ぶんしょ\]rendererを循環依存\[じゅんかんいぞん\]させてはならない。
 
-## 3. surface descriptorとbootstrap
+<a name="n-626f6f747374726170"></a>
 
-`languages/*/syntax.neplg` は各言語のsurface定義。Grammar compilerがpackageを生成し、生成済みpackageもcommitする。通常build時にtoolsやgrammar compilerをbuild dependencyにしない。`cargo run -p nepl3-tools -- generate --check` でsourceとの一致を検査する。
+<a name="3-surface-descriptorとbootstrap"></a>
 
-Grammar自身の初期packageは同一のGrammar syntaxを表す検査済みseed。別の小さなGrammar dialectは作らない。seedで自分のsourceを読み、compileしたdescriptorの意味正規形とseedを比較する。これは自己ホスト前の永続的なbootstrap契約であり、将来の実装でも同じseedを使える。
+## 3\. surface descriptorとbootstrap
 
-## 4. Rust設定
+`languages/*/syntax.neplg` は、各言語\[かくげんご\]のsurface定義\[ていぎ\]である。Grammar compilerがpackageを生成\[せいせい\]し、その生成済\[せいせいず\]みpackageもcommitする。通常\[つうじょう\]のbuildで、toolsやgrammar compilerをbuild dependencyにしてはならない。`cargo run -p nepl3-tools -- generate --check` により、sourceとの一致\[いっち\]を検査\[けんさ\]する。
 
-workspaceはedition 2024、resolver 3。MSRVは1.85.0以上、実装開始時に使用する一つのstable toolchainを `rust-toolchain.toml` に完全な版番号で固定する。MSRVと開発toolchainを同一視しない。外部依存はworkspace.dependenciesで集中管理し、Cargo.lockをcommitする。
+Grammar自身\[じしん\]の初期\[しょき\]packageは、同一\[どういつ\]のGrammar syntaxを表\[あらわ\]す検査済\[けんさず\]みseedとする。別\[べつ\]の小\[ちい\]さなGrammar dialectは作\[つく\]らない。seedで自身\[じしん\]のsourceを読\[よ\]み、compileしたdescriptorの意味正規形\[いみせいきけい\]とseedを比較\[ひかく\]する。これは自己\[じこ\]ホスト前\[まえ\]の永続的\[えいぞくてき\]なbootstrap契約\[けいやく\]であり、将来\[しょうらい\]の実装\[じっそう\]でも同\[おな\]じseedを使\[つか\]える。
 
-core系crateは常に `#![no_std]`。allocを使用する。coreをstd化するfeatureは設けない。標準ライブラリを要するアダプタはappsへ置く。native-only crateがcoreに入ることをcargo metadataとtarget buildで検出する。
+<a name="n-72757374"></a>
 
-math-coreは `num-bigint` / `num-rational` / `num-integer` / `num-traits` をdefault-features=falseで利用してよい。対応する互換version集合を一度resolveしてlockする。異なるBigIntの版を言語間で露出させない。公開意味値は本仕様のcanonical integer/rational型である。
+<a name="4-rust設定"></a>
 
-安全なRustを原則とする。FFIや高速化にunsafeが必要なら該当adapter内へ局在させ、unsafe契約と試験を添える。domainからpointerを外部へ公開しない。
+## 4\. Rust設定\[せってい\]
 
-## 5. 許可集合の検査
+workspaceはedition 2024、resolver 3とする。MSRVは1\.85\.0以上\[いじょう\]とし、実装開始時\[じっそうかいしじ\]に使\[つか\]う一\[ひと\]つのstable toolchainを `rust-toolchain.toml` に完全\[かんぜん\]な版番号\[はんばんごう\]で固定\[こてい\]する。MSRVと開発\[かいはつ\]toolchainは同一視\[どういつし\]しない。外部依存\[がいぶいぞん\]はworkspace\.dependenciesで集中管理\[しゅうちゅうかんり\]し、Cargo\.lockをcommitする。
 
-dependency checkerはproduction・build依存を検査し、dev依存は別集合として出力する。productionからapps/toolsへの経路、domain core同士の経路、閉路、std依存を検出する。外部crateの採用によりcoreへOS機能が混入しないことを確認する。
+core系\[けい\]crateは常\[つね\]に `#![no_std]` とし、allocを使\[つか\]う。coreをstd化\[か\]するfeatureは設\[もう\]けない。標準\[ひょうじゅん\]ライブラリが必要\[ひつよう\]なアダプタはappsへ置\[お\]く。native\-only crateがcoreに入\[はい\]り込\[こ\]むことを、cargo metadataとtarget buildによって検出\[けんしゅつ\]する。
 
-単一repositoryでも各coreは独立して `check --no-default-features` できる。将来のrepository分割を今の依存環境に強制せず、公開schemaと操作の単位で実装を交換する。
+math\-coreは `num-bigint` \/ `num-rational` \/ `num-integer` \/ `num-traits` を、default\-features\=falseで利用\[りよう\]してよい。対応\[たいおう\]する互換\[ごかん\]version集合\[しゅうごう\]を一度\[いちど\]resolveし、lockする。異\[こと\]なるBigIntの版\[はん\]を、言語間\[げんごかん\]で露出\[ろしゅつ\]させてはならない。公開\[こうかい\]する意味値\[いみち\]には、この仕様\[しよう\]のcanonical integer・rational型\[がた\]を使\[つか\]う。
 
-外部言語の追加でfoundation sourceを変更しない条件と、repository分離前の実証は [外部拡張契約](22-external-extensions.md) に従う。現時点ではmonorepoを維持し、独立workspaceの公開API利用から、配布・provider・互換性試験へ進む。
+安全\[あんぜん\]なRustを原則\[げんそく\]とする。FFIや高速化\[こうそくか\]のためにunsafeが必要\[ひつよう\]なら、該当\[がいとう\]adapterの内部\[ないぶ\]へ局在\[きょくざい\]させ、unsafe契約\[けいやく\]と試験\[しけん\]を添\[そ\]える。domainからpointerを外部\[がいぶ\]へ公開\[こうかい\]してはならない。
 
-## 現在の作業段階
+<a name="n-616c6c6f7765645f646570656e64656e63696573"></a>
 
-上記は目標構成。現在のworkspace memberはルートCargo.toml、実装状態はimplementation-status.jsonを正本とする。crateは責務を実装する段階で追加する。開発toolchainとMSRVの選定理由はdoc/development.md、リポジトリ整備の判断はdoc/decisions/0001-repository-foundation.mdを参照。
+<a name="5-許可集合の検査"></a>
+
+## 5\. 許可集合\[きょかしゅうごう\]の検査\[けんさ\]
+
+dependency checkerはproduction依存\[いぞん\]とbuild依存\[いぞん\]を検査\[けんさ\]し、dev依存\[いぞん\]を別\[べつ\]の集合\[しゅうごう\]として出力\[しゅつりょく\]する。productionからappsやtoolsへの経路\[けいろ\]、domain core同士\[どうし\]の経路\[けいろ\]、閉路\[へいろ\]、std依存\[いぞん\]を検出\[けんしゅつ\]する。外部\[がいぶ\]crateの採用\[さいよう\]によって、coreへOS機能\[きのう\]が混入\[こんにゅう\]しないことを確認\[かくにん\]する。
+
+単一\[たんいつ\]repositoryであっても、各\[かく\]coreは独立\[どくりつ\]して `check --no-default-features` できるものとする。将来\[しょうらい\]のrepository分割\[ぶんかつ\]を、現在\[げんざい\]の依存環境\[いぞんかんきょう\]へ強制\[きょうせい\]しない。公開\[こうかい\]schemaと操作\[そうさ\]の単位\[たんい\]で、実装\[じっそう\]を交換\[こうかん\]できるようにする。
+
+外部言語\[がいぶげんご\]の追加\[ついか\]でfoundation sourceを変更\[へんこう\]しない条件\[じょうけん\]と、repository分離前\[ぶんりまえ\]の実証\[じっしょう\]は [外部拡張契約\[がいぶかくちょうけいやく\]](<22\-external\-extensions\.md>) に従\[したが\]う。現時点\[げんじてん\]ではmonorepoを維持\[いじ\]し、独立\[どくりつ\]workspaceの公開\[こうかい\]API利用\[りよう\]から、配布\[はいふ\]・provider・互換性試験\[ごかんせいしけん\]へ進\[すす\]む。
+
+<a name="n-63757272656e745f7374616765"></a>
+
+<a name="現在の作業段階"></a>
+
+## 現在\[げんざい\]の作業段階\[さぎょうだんかい\]
+
+以上\[いじょう\]は、目標\[もくひょう\]とする構成\[こうせい\]である。現在\[げんざい\]のworkspace memberはルートCargo\.tomlを、実装状態\[じっそうじょうたい\]はimplementation\-status\.jsonを正本\[せいほん\]とする。crateは、その責務\[せきむ\]を実装\[じっそう\]する段階\[だんかい\]で追加\[ついか\]する。開発\[かいはつ\]toolchainとMSRVの選定理由\[せんていりゆう\]はdoc\/development\.mdを、リポジトリ整備\[せいび\]の判断\[はんだん\]はdoc\/decisions\/0001\-repository\-foundation\.mdを参照\[さんしょう\]する。
