@@ -705,5 +705,27 @@ body
       cons "この7[種類/しゅるい]の[補助変異/ほじょへんい]はignoredであり、[管理対象試験/かんりたいしょうしけん]の[実行/じっこう]と[区別/くべつ]する。"
       cons "core NodeMapping[単独/たんどく]は[参照範囲/さんしょうはんい]と[到達順/とうたつじゅん]の[計算/けいさん]で、schema/source/cycle/[選択/せんたく]の[検査済/けんさず]みproofではない。"
       cons "Dynamicは[引/ひ]き[続/つづ]き[明示拒否/めいじきょひ]し、FactsRequest/Reply[全包絡/ぜんほうらく]やparse continuationのportable[化/か]は[今回/こんかい]の[下層/かそう]codec[成立/せいりつ]から[推定/すいてい]しない。" nil
+    cons paragraph
+      cons sentence cons text "Facts" cons ruby text "操作包絡" text "そうさほうらく" cons text "の" cons ruby text "次段" text "じだん" cons text "では、" cons ruby text "管理対象" text "かんりたいしょう" cons text " " cons code "cargo test --locked -p nepl3-engine --test package portable::facts --target-dir .tmp/review-target" cons text " の2" cons ruby text "件" text "けん" cons text "を" cons ruby text "独立実行" text "どくりつじっこう" cons text "した。" nil
+      cons "host/guestのcanonical path/nodeとopaque ID、[元要求全体/もとようきゅうぜんたい]の7[種類/しゅるい]の[改変拒否/かいへんきょひ]、Complete・Invalid/Stoppedのpartial[有無/うむ]による[全/ぜん]5[返信形/へんしんけい]、[診断専用/しんだんせんよう]source/map、guest[上/じょう]のrelated/Fix、Source/Work/Depth/Allocation[各/かく]0と[取消/とりけし]のencode/decode[計/けい]50[境界/きょうかい]を[確認/かくにん]した。"
+      cons "Reportの[参照/さんしょう]をambient storeだけで[補/おぎな]う[入力/にゅうりょく]と、[予約外/よやくがい]Entity IDも[拒否/きょひ]する。"
+      cons "これはnative[値/ち]とNDF[包絡/ほうらく]の[検査/けんさ]であり、[別/べつ]processの[通信認証/つうしんにんしょう]や[名前解決/なまえかいけつ]アルゴリズムの[実行証拠/じっこうしょうこ]ではない。" nil
+    cons paragraph
+      cons sentence cons ruby text "独立補助" text "どくりつほじょ" cons text " " cons code "facts_envelopes" cons text " は" cons ruby text "実返信" text "じつへんしん" cons text "の" cons ruby text "非空" text "ひくう" cons text "mapping" cons ruby text "列" text "れつ" cons text "を" cons ruby text "旧" text "きゅう" cons text "field" cons ruby text "型" text "がた" cons text " " cons code "List<SourceMap>" cons text " と" cons ruby text "訂正型" text "ていせいがた" cons text " " cons code "List<SourceMapping>" cons text " にそれぞれ" cons ruby text "渡" text "わた" cons text "し、" cons ruby text "前者" text "ぜんしゃ" cons text "の" cons ruby text "型拒否" text "かたきょひ" cons text "と" cons ruby text "後者" text "こうしゃ" cons text "の" cons ruby text "受理" text "じゅり" cons text "を" cons ruby text "全" text "ぜん" cons text "5" cons ruby text "形" text "けい" cons text "で" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "[旧/きゅう]engine schema[全体/ぜんたい]を[現/げん]digestのまま[再現/さいげん]したとは[扱/あつか]わない。"
+      cons "[空列/くうれつ]だけの[検査/けんさ]では[発見/はっけん]できない[包絡/ほうらく]fieldの[不整合/ふせいごう]であり、04[章/しょう]・[正本/せいほん]・[生成/せいせい]descriptorの[訂正理由/ていせいりゆう]を[確認/かくにん]した。"
+      cons "[同/おな]じ[補助/ほじょ]はpartialを[含/ふく]む3[形/けい]でschema-validな[予約外/よやくがい]Entity101を[注入/ちゅうにゅう]し、[元/もと]host authorityによる[拒否/きょひ]と50[停止境界/ていしきょうかい]のsticky[状態/じょうたい]も[確認/かくにん]した。" nil
+    cons paragraph
+      cons sentence cons text "この" cons ruby text "補助" text "ほじょ" cons text "で、" cons ruby text "同" text "おな" cons text "じ" cons ruby text "返信" text "へんしん" cons text "source" cons ruby text "表" text "ひょう" cons text "に" cons ruby text "同一" text "どういつ" cons text "snapshotを2" cons ruby text "回" text "かい" cons ruby text "置" text "お" cons text "くとnative " cons code "FactsReply.validate" cons text " が" cons ruby text "成功" text "せいこう" cons text "する" cons ruby text "一方" text "いっぽう" cons text "、portable encodeがIdentityConflictで" cons ruby text "拒否" text "きょひ" cons text "するR038を" cons ruby text "実測" text "じっそく" cons text "した。" nil
+      cons "[修正後/しゅうせいご]は[元/もと]native/encodeの[両入口/りょういりぐち]がIdentityConflictを[返/かえ]し、[全/ぜん]5[形/けい]の[合法/ごうほう]NDFへ[同/おな]じ[重複/じゅうふく]を[加/くわ]えたdecodeも[拒否/きょひ]された。"
+      cons "[独立表間/どくりつひょうかん]の[正当/せいとう]なsource[共有/きょうゆう]と[一度/いちど]だけの[計上/けいじょう]は[維持/いじ]される。"
+      cons "[管理対象/かんりたいしょう]2[件/けん]の[再成功/さいせいこう]と[実/じつ]コードの[先行/せんこう]Work[計上/けいじょう]を[確認/かくにん]してR038をcorrectedとした。"
+      cons "ignored[補助/ほじょ]の[結果/けっか]を[管理対象回帰/かんりたいしょうかいき]の[数/かず]へ[加/くわ]えない。" nil
+    cons paragraph
+      cons sentence cons ruby text "要求" text "ようきゅう" cons text "の " cons code "request_from_value" cons text " は" cons ruby text "保存済" text "ほぞんず" cons text "み" cons ruby text "元要求" text "もとようきゅう" cons text "のproofと" cons ruby text "全" text "ぜん" cons text "canonical" cons ruby text "値" text "ち" cons text "を" cons ruby text "照合" text "しょうごう" cons text "するsender" cons ruby text "側" text "がわ" cons text "のecho/loopback" cons ruby text "境界" text "きょうかい" cons text "であり、" cons ruby text "元" text "もと" cons text "Rust" cons ruby text "要求" text "ようきゅう" cons text "をまだ" cons ruby text "持" text "も" cons text "たない" cons ruby text "外部" text "がいぶ" cons text "providerの" cons ruby text "初回" text "しょかい" cons text "decodeには" cons ruby text "使" text "つか" cons text "えないことも" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons sentence cons text "その" cons ruby text "後" text "ご" cons text "、" cons ruby text "型" text "かた" cons text "・" cons ruby text "参照整合" text "さんしょうせいごう" cons text "の" cons ruby text "検査" text "けんさ" cons text "だけを" cons ruby text "行" text "おこな" cons text "いraw FactsRequestを" cons ruby text "返" text "かえ" cons text "す " cons code "request_decode" cons text " が" cons ruby text "追加" text "ついか" cons text "された。" nil
+      cons "[元要求/もとようきゅう]・source store・codec・admissionをscope[破棄/はき]した[後/あと]、selected profile/registryと[空/から]storeだけを[持/も]つ[受信側/じゅしんがわ]で[復元/ふくげん]する[管理対象/かんりたいしょう]が[成功/せいこう]した。"
+      cons "[正/ただ]しい[参照/さんしょう]を[持/も]つ[異/こと]なるgrantのraw decodeは[許容/きょよう]するが、[認証/にんしょう]・[実行授権/じっこうじゅけん]を[与/あた]えたことにはならない。"
+      cons "issueを[呼/よ]べるhostの[信頼境界/しんらいきょうかい]、[元/もと]proofとの[完全一致/かんぜんいっち]を[要求/ようきゅう]するecho[境界/きょうかい]を04[章/しょう]とrustdocで[分/わ]けたことを[確認/かくにん]した。" nil
     nil
   nil
