@@ -589,4 +589,13 @@ body
       cons sentence cons text "R008の" cons ruby text "対応根拠" text "たいおうこんきょ" cons text "は " cons link external "https://www.w3.org/TR/xml/#charsets" text "XML 1.0 §2.2" cons text " と " cons link external "https://www.w3.org/TR/xml/#syntax" text "§2.4" cons text "。" nil
       cons "UTF-8として[妥当/だとう]であるだけではXMLとして[妥当/だとう]とは[限/かぎ]らない。" nil
     nil
+  cons section verification_limits "[検証/けんしょう]の[限界/げんかい]" body
+    cons paragraph
+      cons sentence cons code "d743c0b" cons text " から" cons ruby text "始" text "はじ" cons text "めた" cons ruby text "次" text "つぎ" cons text "のcheckpointでは、Report" cons ruby text "共通" text "きょうつう" cons text "validationとtyped codecの" cons ruby text "管理対象" text "かんりたいしょう" cons text "2" cons ruby text "件" text "けん" cons text "を" cons ruby text "独立成功確認" text "どくりつせいこうかくにん" cons text "した" cons ruby text "後" text "あと" cons text "、R036を" cons ruby text "追加" text "ついか" cons text "で" cons ruby text "再現" text "さいげん" cons text "した。" nil
+      cons "[既存/きそん]の[有効/ゆうこう]なFixのexpected_digestだけを[元/もと]sourceの[該当範囲/がいとうはんい]と[異/こと]なる[値/あたい]へ[変更/へんこう]しても、Report.validateとencode_report/decode_reportが[成功/せいこう]する。"
+      cons "[同/おな]じ[非空範囲/ひくうはんい]\[2,3)に[異/こと]なるreplacementを[置/お]く2[編集/へんしゅう]も[同様/どうよう]に[受理/じゅり]された。"
+      cons "spec02のFix[前提/ぜんてい]digestと[非重複編集/ひじゅうふくへんしゅう]の[不変条件/ふへんじょうけん]が[共通/きょうつう]validatorに[無/な]いためである。"
+      cons "[診断内容/しんだんないよう]のdomain[上/じょう]の[真偽/しんぎ]の[証明/しょうめい]ではなく、[明示/めいじ]sourceに[対/たい]して[適用不能/てきようふのう]な[修正候補/しゅうせいこうほ]を[外部境界/がいぶきょうかい]で[拒否/きょひ]する[契約/けいやく]として[実装担当/じっそうたんとう]へ[戻/もど]した。"
+      cons sentence cons ruby text "補助" text "ほじょ" cons text "probeは " cons code ".tmp/independent-core/src/bin/report_boundary.rs" cons text " であり、" cons ruby text "管理対象回帰" text "かんりたいしょうかいき" cons text "を" cons ruby text "追加後" text "ついかご" cons text "に" cons ruby text "再検証" text "さいけんしょう" cons text "する。" nil nil
+    nil
   nil
