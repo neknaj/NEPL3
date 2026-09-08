@@ -1,0 +1,85 @@
+      cons paragraph
+        cons sentence
+          cons ruby text "非" text "ひ"
+          cons text "Doc fileはmanifestの"
+          cons ruby text "省略可能" text "しょうりゃくかのう"
+          cons text "な "
+          cons code "files"
+          cons text " listへ、pageと"
+          cons ruby text "同" text "おな"
+          cons text "じid/source/route/inputで"
+          cons ruby text "明示登録" text "めいじとうろく"
+          cons text "する（"
+          cons ruby text "省略" text "しょうりゃく"
+          cons text "は"
+          cons ruby text "空" text "から"
+          cons text "、nullは"
+          cons ruby text "禁止" text "きんし"
+          cons text "）。"
+          nil
+        cons "[最大/さいだい]128[件/けん]で、Doc[原稿/げんこう]と[合/あ]わせた[実入力/じつにゅうりょく]byte[数/すう]は10MBまで。"
+        cons "[入力/にゅうりょく]path・root[境界/きょうかい]の[検査/けんさ]はpageと[共通/きょうつう]で、fileの[内容/ないよう]はUTF-8へ[変換/へんかん]せず[保持/ほじ]する。"
+        cons sentence
+          cons code "generate_with_resources"
+          cons text " も"
+          cons ruby text "明示" text "めいじ"
+          cons text "されたEntryとbyte"
+          cons ruby text "列" text "れつ"
+          cons text "だけを"
+          cons ruby text "受" text "う"
+          cons text "ける。"
+          nil
+        cons "linkを[根拠/こんきょ]に[周囲/しゅうい]のfileを[探索/たんさく]しない。"
+        cons "[返却/へんきゃく]HTMLが[参照/さんしょう]するfileを、hostは[同/おな]じ[出力集合/しゅつりょくしゅうごう]へbyte[完全一致/かんぜんいっち]で[保存/ほぞん]する。"
+        cons sentence
+          cons text "manifestには"
+          cons ruby text "登録元" text "とうろくもと"
+          cons text "・"
+          cons ruby text "実" text "じつ"
+          cons text "input・route・byte"
+          cons ruby text "数" text "すう"
+          cons text "・SHA-256を"
+          cons ruby text "記録" text "きろく"
+          cons text "し、fileのMIMEは"
+          cons code "application/octet-stream"
+          cons text " とする。"
+          nil
+        cons "これは[任意/にんい]fileを[検査済/けんさず]みHTML・CSS・[画像/がぞう]として[認定/にんてい]するAPIではない。"
+        cons "[公開/こうかい]host[側/がわ]のMIME[配信設定/はいしんせってい]や[内容実行/ないようじっこう]の[許可/きょか]は[別契約/べつけいやく]である。"
+        nil
+      cons paragraph
+        cons "[文書/ぶんしょ]とfileを[合/あ]わせてid/source/routeの[衝突/しょうとつ]を[検査/けんさ]する。"
+        cons "[衝突診断/しょうとつしんだん]のregistration indexはpagesの[後/あと]にfilesを[連結/れんけつ]した[順序/じゅんじょ]。"
+        cons sentence
+          cons code "LinkTarget.Page"
+          cons text " はDocだけを"
+          cons ruby text "検索" text "けんさく"
+          cons text "し、"
+          cons code "Relative"
+          cons text " は"
+          cons ruby text "正規化後" text "せいきかご"
+          cons text "のsourceが"
+          cons ruby text "一致" text "いっち"
+          cons text "するDocまたはfileを"
+          cons ruby text "検索" text "けんさく"
+          cons text "する。"
+          nil
+        cons sentence
+          cons text "fileにはDoc anchorがないため、fragment"
+          cons ruby text "付" text "つ"
+          cons text "きは "
+          cons code "FileFragment { page, node, file }"
+          cons text " として"
+          cons ruby text "拒否" text "きょひ"
+          cons text "する。"
+          nil
+        cons "fragmentの[文字列/もじれつ]を[勝手/かって]に[落/お]とさない。"
+        cons "fileへのHTML hrefは[実/じつ]route[間/かん]の[相対参照/そうたいさんしょう]となる。"
+        nil
+      cons paragraph
+        cons "PageSetのcanonical NDFはfileのregistrationと[実/じつ]byte[列/れつ]を[含/ふく]む。"
+        cons "byte[列/れつ]・route・[登録順/とうろくじゅん]が[変/か]わればidentityが[変/か]わり、portable receiverは[古/ふる]いplan/HTMLを[再利用/さいりよう]できない。"
+        cons "fileの[境界/きょうかい]codec・hash・[出力/しゅつりょく]コピーも[有限/ゆうげん]の[共通/きょうつう]output Budgetに[累積/るいせき]し、cancel/[停止/ていし]を[引/ひ]き[継/つ]ぐ。"
+        cons "[生成/せいせい]するHTML、stylesheet、[完了/かんりょう]manifestとのpath[衝突/しょうとつ]は[保存前/ほぞんまえ]に[拒否/きょひ]し、stylesheetとbyte[列/れつ]が[偶然一致/ぐうぜんいっち]してもfile[登録/とうろく]を[共有扱/きょうゆうあつか]いにしない。"
+        cons "この[拡張/かくちょう]はDoc schemaのdigestを[更新/こうしん]するため、[旧/きゅう]digestのPageSetを[新/あたら]しい2-field recordとしてdecodeしない。"
+        nil

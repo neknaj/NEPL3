@@ -1,0 +1,155 @@
+{
+  "profile": "nepl3.development-slice/1",
+  "scope": "Foundation core, strict NDF boundary, and resumable reader VM; partial T01/T02/T03",
+  "recorded_at_utc": "2026-09-06T15:51:51Z",
+  "start_commit": "6c9dd5f07376a3920a52ef61022d0adc011cca9f",
+  "branch": "feat/foundation-runtime",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "e1d2896a9cfdadfa166cbfcd3cabe720212c316e539539ff822f88fbfb4fda95",
+    "spec_sha256": "58d1218b8643e8da358de91a9bd020a4b9bbdee1172328846d11638b128b0b8d"
+  },
+  "result": "passed-within-recorded-scope",
+  "test_counts": {
+    "native": {
+      "core": 45,
+      "reader": 27,
+      "wire": 18,
+      "tools": 55,
+      "total": 145
+    },
+    "wasi": {
+      "core": 45,
+      "reader": 27,
+      "wire": 18,
+      "total": 90
+    }
+  },
+  "review": {
+    "reviewer": "independent subagent Huygens (/root/review)",
+    "implementation_authors": [
+      "Hooke (/root/implementation)",
+      "Carson (/root/infrastructure)"
+    ],
+    "method": "Independent source/specification inspection and production API reproductions, including allocation-limit fault injection and context source identity conflicts.",
+    "result": "No outstanding revision requests within this slice; open cross-task findings remain.",
+    "records": [
+      "doc/review.md",
+      "design/review.json"
+    ]
+  },
+  "checks": [
+    {
+      "name": "native",
+      "command": "cargo test --workspace --locked",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/foundation-slice/native.log",
+      "log_sha256": "2369efe106f810b338362a4208172ce4e5fe95ae9fd76e7f6425ae6ffe60174d"
+    },
+    {
+      "name": "wasi",
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER='wasmtime run'\ncargo test --locked -p nepl3-core -p nepl3-wire -p nepl3-reader --target wasm32-wasip2 -- --test-threads=1",
+      "target": "wasm32-wasip2",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/foundation-slice/wasi.log",
+      "log_sha256": "3f56cef6b71d6ba109337f2f125f624cbb3091d1d4dd1b8b116b22f32adfe16b"
+    },
+    {
+      "name": "clippy",
+      "command": "cargo clippy --workspace --all-targets --locked -- -D warnings",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/foundation-slice/clippy.log",
+      "log_sha256": "b00693c6481f92478a7bd6f1d7c9336d06ba5be79d4ca59f07a204e4b0327019"
+    },
+    {
+      "name": "docs",
+      "command": "$env:RUSTDOCFLAGS='-D warnings'\ncargo doc --workspace --no-deps --locked",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/foundation-slice/docs.log",
+      "log_sha256": "91ca5466469737073fc863508462c8f31e80353956219279f5489925b4f55646"
+    },
+    {
+      "name": "fmt",
+      "command": "cargo fmt --all -- --check",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/foundation-slice/fmt.log",
+      "log_sha256": "8905e15529e07dec46a4d13f8cba69d504b83110797c5b3c831986154f4acf52"
+    },
+    {
+      "name": "versions",
+      "command": "rustc --version --verbose\ncargo --version\nwasmtime --version\npython --version",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/foundation-slice/versions.log",
+      "log_sha256": "276009e7364eb0a01caa622cbf5bdd8932ebe9a070d1f3fc57ed26a8cc87e5fd"
+    },
+    {
+      "name": "contracts",
+      "command": "cargo run --locked -p nepl3-tools -- check",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/foundation-slice/contracts.log",
+      "log_sha256": "69a868d71860596d6338ec59536af32bf9bdda5cfeebfd74cf9095539babe4e0"
+    },
+    {
+      "name": "tasks",
+      "command": "cargo run --locked -p nepl3-tools -- tasks --check",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/foundation-slice/tasks.log",
+      "log_sha256": "e8bf7b0403d56e0d4558280a8bcbd75415cf4786998563a4f434dea5484c1eee"
+    },
+    {
+      "name": "audit",
+      "command": "python tools/audit/structure.py\nif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }\npython -m unittest discover -s tools/audit -p test.py",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/foundation-slice/audit.log",
+      "log_sha256": "9de47aa7b04afd2652965d965cd45068645929daa80a2c16f4a618e369b3ee04"
+    },
+    {
+      "name": "wasm",
+      "command": "cargo check --locked -p nepl3-core -p nepl3-wire -p nepl3-reader --no-default-features --target wasm32-unknown-unknown",
+      "target": "wasm32-unknown-unknown",
+      "result": "passed-compile-only",
+      "exit_code": 0,
+      "log": "conformance/results/foundation-slice/wasm.log",
+      "log_sha256": "c7fecc62c62140bebbd3b7e4739c0b9e3b8ab4352a62100f39031cb74255fa73"
+    },
+    {
+      "name": "bare",
+      "command": "cargo check --locked -p nepl3-core -p nepl3-wire -p nepl3-reader --no-default-features --target thumbv6m-none-eabi",
+      "target": "thumbv6m-none-eabi",
+      "result": "passed-compile-only",
+      "exit_code": 0,
+      "log": "conformance/results/foundation-slice/bare.log",
+      "log_sha256": "16b47309d3c3f22fa62ed67e6b7636219b018573828fb7164570fcc285be916c"
+    }
+  ],
+  "excluded_acceptance_portions": [
+    "This record completes no task and marks none of the 55 required acceptance groups passed.",
+    "Builtin Name/Nat/Number/Text/Lang readers and mode tokenization are not implemented.",
+    "Prefix engine, Grammar compiler and full Grammar bootstrap are not implemented.",
+    "SyntaxBundle ownership and portable representation of reader SourceMaps remain to be connected.",
+    "Reader request NDF loopback is tested; complete reply/continuation and separate-process provider paths remain unimplemented.",
+    "Operation/frame/Profile/UI contract closure, domain runtimes, editor integration and application products remain incomplete.",
+    "Browser-Wasm and bare-metal target checks are compile-only; no browser or physical device execution is claimed.",
+    "Native Linux/macOS execution is not claimed by the local Windows tests; branch CI is recorded separately when run.",
+    "Pages publication/recovery and formal documentation migration have not been executed.",
+    "The documentation inventory baseline is reproducible, but current completeness is not established."
+  ]
+}

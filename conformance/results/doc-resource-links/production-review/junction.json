@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:\\projects\\NEPL3-doc-resource-links\\.tmp\\review-resource-links-production\\target\\debug\\nepl3-tools.exe",
+    "doc-html",
+    "pages",
+    "C:\\projects\\NEPL3-doc-resource-links\\.tmp\\review-resource-links-production\\cli\\junction.json",
+    "C:\\projects\\NEPL3-doc-resource-links\\.tmp\\review-resource-links-production\\cli\\junction-out"
+  ],
+  "exit": 1,
+  "output_exists": false
+}

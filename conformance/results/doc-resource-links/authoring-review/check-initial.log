@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "C:\projects\NEPL3-doc-resource-links\.tmp\review-resource-links-authoring\check.py", line 11, in <module>
+    assert git('rev-parse',HEAD+'^').decode().strip()==BASE
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
