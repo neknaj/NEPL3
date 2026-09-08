@@ -22,6 +22,24 @@ pub struct Entry {
     pub id: String,
     pub source: String,
     pub route: String,
+    /// Optional physical file relative to the manifest directory. `source`
+    /// remains the logical namespace used by Doc links.
+    #[serde(default)]
+    pub input: Option<String>,
+}
+fn input_path(entry: &Entry) -> Result<&str, String> {
+    let Some(path) = entry.input.as_deref() else {
+        return Ok(&entry.source);
+    };
+    if path.len() > 4096
+        || path.chars().any(|c| c.is_control() || "\\:?#%".contains(c))
+        || path
+            .split('/')
+            .any(|p| p.is_empty() || p == "." || p == "..")
+    {
+        return Err("InvalidInputPath".into());
+    }
+    Ok(path)
 }
 pub struct GeneratedPages {
     pub files: BTreeMap<String, Vec<u8>>,
@@ -49,6 +67,7 @@ pub fn generate_with_output_budget(
     let mut pages = Vec::new();
     let mut origins = Vec::new();
     for (entry, input) in inputs {
+        let physical = input_path(entry)?;
         total = total.checked_add(input.len() as u64).ok_or("SourceLimit")?;
         if total > MAX_SOURCE_BYTES {
             return Err("SourceLimit".into());
@@ -87,6 +106,7 @@ pub fn generate_with_output_budget(
             document,
         });
         origins.push(serde_json::json!({"id":entry.id,"source":entry.source,"route":entry.route,
+            "input":physical,
             "source_sha256":digest_hex(Digest::of(input.as_bytes())),"profile_sha256":digest_hex(profile),
             "operation_limits":resources::limits(budget().limits()),
             "parse_and_validate_usage":resources::usage(parse_usage),"lower_usage":resources::usage(lower_usage)}));
@@ -216,7 +236,7 @@ pub fn write(manifest: &Path, output: &Path) -> crate::Result<()> {
     let mut inputs = Vec::new();
     let mut total = 0u64;
     for entry in manifest_data.pages {
-        let path = crate::repository::local_path(&root, &entry.source)?;
+        let path = crate::repository::local_path(&root, input_path(&entry)?)?;
         let input = read_source(&path)?;
         total = total.checked_add(input.len() as u64).ok_or("SourceLimit")?;
         if total > MAX_SOURCE_BYTES {
