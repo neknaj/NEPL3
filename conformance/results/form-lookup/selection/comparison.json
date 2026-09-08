@@ -1,0 +1,284 @@
+{
+  "cases": 46,
+  "outcomes_and_call_traces_equal": true,
+  "non_work_usage_equal": true,
+  "work": [
+    {
+      "case": "CASE|0|let n x trailing|",
+      "before": 6572,
+      "after": 6564,
+      "saved": 8
+    },
+    {
+      "case": "CASE|0|let let x trailing|",
+      "before": 6582,
+      "after": 6574,
+      "saved": 8
+    },
+    {
+      "case": "CASE|0|x trailing|",
+      "before": 4304,
+      "after": 4304,
+      "saved": 0
+    },
+    {
+      "case": "CASE|0|let n let z x trailing|",
+      "before": 8840,
+      "after": 8824,
+      "saved": 16
+    },
+    {
+      "case": "CASE|0|choose alt @let z x trailing|",
+      "before": 18828,
+      "after": 18788,
+      "saved": 40
+    },
+    {
+      "case": "CASE|8|let n x trailing|",
+      "before": 6796,
+      "after": 6724,
+      "saved": 72
+    },
+    {
+      "case": "CASE|8|let let x trailing|",
+      "before": 6806,
+      "after": 6734,
+      "saved": 72
+    },
+    {
+      "case": "CASE|8|x trailing|",
+      "before": 4400,
+      "after": 4400,
+      "saved": 0
+    },
+    {
+      "case": "CASE|8|let n let z x trailing|",
+      "before": 9192,
+      "after": 9048,
+      "saved": 144
+    },
+    {
+      "case": "CASE|8|choose alt @let z x trailing|",
+      "before": 19516,
+      "after": 19316,
+      "saved": 200
+    },
+    {
+      "case": "CASE|64|let n x trailing|",
+      "before": 8364,
+      "after": 7844,
+      "saved": 520
+    },
+    {
+      "case": "CASE|64|let let x trailing|",
+      "before": 8374,
+      "after": 7854,
+      "saved": 520
+    },
+    {
+      "case": "CASE|64|x trailing|",
+      "before": 5072,
+      "after": 5072,
+      "saved": 0
+    },
+    {
+      "case": "CASE|64|let n let z x trailing|",
+      "before": 11656,
+      "after": 10616,
+      "saved": 1040
+    },
+    {
+      "case": "CASE|64|choose alt @let z x trailing|",
+      "before": 24332,
+      "after": 23012,
+      "saved": 1320
+    },
+    {
+      "case": "NOHEAD|0|false|x trailing|",
+      "before": 2840,
+      "after": 2828,
+      "saved": 12
+    },
+    {
+      "case": "NOHEAD|0|true|x trailing|",
+      "before": 3008,
+      "after": 2996,
+      "saved": 12
+    },
+    {
+      "case": "NOHEAD|0|false|let n x trailing|",
+      "before": 4842,
+      "after": 4822,
+      "saved": 20
+    },
+    {
+      "case": "NOHEAD|0|true|let n x trailing|",
+      "before": 5012,
+      "after": 4992,
+      "saved": 20
+    },
+    {
+      "case": "NOHEAD|0|false|let n let z x trailing|",
+      "before": 6844,
+      "after": 6816,
+      "saved": 28
+    },
+    {
+      "case": "NOHEAD|0|true|let n let z x trailing|",
+      "before": 7016,
+      "after": 6988,
+      "saved": 28
+    },
+    {
+      "case": "NOHEAD|8|false|x trailing|",
+      "before": 2984,
+      "after": 2924,
+      "saved": 60
+    },
+    {
+      "case": "NOHEAD|8|true|x trailing|",
+      "before": 3104,
+      "after": 3044,
+      "saved": 60
+    },
+    {
+      "case": "NOHEAD|8|false|let n x trailing|",
+      "before": 5114,
+      "after": 4982,
+      "saved": 132
+    },
+    {
+      "case": "NOHEAD|8|true|let n x trailing|",
+      "before": 5236,
+      "after": 5104,
+      "saved": 132
+    },
+    {
+      "case": "NOHEAD|8|false|let n let z x trailing|",
+      "before": 7244,
+      "after": 7040,
+      "saved": 204
+    },
+    {
+      "case": "NOHEAD|8|true|let n let z x trailing|",
+      "before": 7368,
+      "after": 7164,
+      "saved": 204
+    },
+    {
+      "case": "NOHEAD|64|false|x trailing|",
+      "before": 3992,
+      "after": 3596,
+      "saved": 396
+    },
+    {
+      "case": "NOHEAD|64|true|x trailing|",
+      "before": 3776,
+      "after": 3380,
+      "saved": 396
+    },
+    {
+      "case": "NOHEAD|64|false|let n x trailing|",
+      "before": 7018,
+      "after": 6102,
+      "saved": 916
+    },
+    {
+      "case": "NOHEAD|64|true|let n x trailing|",
+      "before": 6804,
+      "after": 5888,
+      "saved": 916
+    },
+    {
+      "case": "NOHEAD|64|false|let n let z x trailing|",
+      "before": 10044,
+      "after": 8608,
+      "saved": 1436
+    },
+    {
+      "case": "NOHEAD|64|true|let n let z x trailing|",
+      "before": 9832,
+      "after": 8396,
+      "saved": 1436
+    },
+    {
+      "case": "UNKNOWN|Owned|",
+      "before": 6593,
+      "after": 6593,
+      "saved": 0
+    },
+    {
+      "case": "UNKNOWN|Native|",
+      "before": 4850,
+      "after": 4850,
+      "saved": 0
+    },
+    {
+      "case": "UNKNOWN|Portable|",
+      "before": 16651,
+      "after": 16651,
+      "saved": 0
+    },
+    {
+      "case": "LIST|0|let let cons x cons y nil trailing|",
+      "before": 12474,
+      "after": 12466,
+      "saved": 8
+    },
+    {
+      "case": "LIST|0|let n nil trailing|",
+      "before": 4678,
+      "after": 4670,
+      "saved": 8
+    },
+    {
+      "case": "LIST|0|let n bogus trailing|",
+      "before": 4970,
+      "after": 4962,
+      "saved": 8
+    },
+    {
+      "case": "LIST|8|let let cons x cons y nil trailing|",
+      "before": 12794,
+      "after": 12722,
+      "saved": 72
+    },
+    {
+      "case": "LIST|8|let n nil trailing|",
+      "before": 4806,
+      "after": 4734,
+      "saved": 72
+    },
+    {
+      "case": "LIST|8|let n bogus trailing|",
+      "before": 5098,
+      "after": 5026,
+      "saved": 72
+    },
+    {
+      "case": "LIST|64|let let cons x cons y nil trailing|",
+      "before": 15034,
+      "after": 14514,
+      "saved": 520
+    },
+    {
+      "case": "LIST|64|let n nil trailing|",
+      "before": 5702,
+      "after": 5182,
+      "saved": 520
+    },
+    {
+      "case": "LIST|64|let n bogus trailing|",
+      "before": 5994,
+      "after": 5474,
+      "saved": 520
+    },
+    {
+      "case": "CANCEL|",
+      "before": 11988,
+      "after": 11868,
+      "saved": 120
+    }
+  ],
+  "wasi_semantics_and_non_allocation_usage_equal": true
+}

@@ -111,8 +111,20 @@ pub struct CheckedLanguagePackage<'a> {
     pub(super) package: &'a LanguagePackage,
     pub(super) registry: &'a SchemaRegistry,
     pub(super) reader: CheckedPlan<'a>,
+    forms: super::forms::FormIndex,
 }
 impl<'a> CheckedLanguagePackage<'a> {
+    pub(crate) fn form(
+        &self,
+        category: &str,
+        spelling: &str,
+        budget: &mut Budget,
+    ) -> Result<Option<(usize, &'a Form)>, PackageError> {
+        Ok(self
+            .forms
+            .find(&self.package.forms, category, spelling, budget)?
+            .map(|index| (index, &self.package.forms[index])))
+    }
     pub fn package(&self) -> &'a LanguagePackage {
         self.package
     }
@@ -354,7 +366,10 @@ impl LanguagePackage {
                 _ => {}
             }
         }
+        // Index allocation/search setup is not a provenance declaration check.
+        *subject = None;
         Ok(CheckedLanguagePackage {
+            forms: super::forms::FormIndex::new(&self.forms, budget)?,
             package: self,
             registry,
             reader,

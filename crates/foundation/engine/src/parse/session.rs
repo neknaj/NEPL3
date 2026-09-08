@@ -664,13 +664,19 @@ impl<'a> ParseSession<'a> {
             .frames
             .last()
             .ok_or(ParseError::Reference)?;
-        let package = self.profile.language(&frame.entry.alias, budget)?;
+        let checked = self.profile.checked(&frame.entry.alias, budget)?;
+        let package = checked.package();
         let snapshot = sources
             .resolve(&machine.progress.request.snapshot)
             .ok_or(SourceError::MissingSnapshot)?;
+        let static_form = if frame.read.is_none() {
+            select::form(checked, &frame.entry, &token, snapshot, budget)?
+        } else {
+            None
+        };
         if !skip_head
             && frame.read.is_none()
-            && select::form(package, &frame.entry, &token, snapshot, budget)?.is_none()
+            && static_form.is_none()
             && self
                 .profile
                 .head_provider(&frame.entry.alias, &frame.entry.category, budget)?
@@ -687,14 +693,16 @@ impl<'a> ParseSession<'a> {
             return Ok(Some(Halt::Head(Box::new(call), Some(Box::new(token)))));
         }
         let chosen = match frame.read {
-            None => select::category(
-                package,
-                &frame.entry,
-                &token,
-                snapshot,
-                self.profile.registry(),
-                budget,
-            )?,
+            None => match static_form {
+                Some(head) => Some(head),
+                None => select::leaf(
+                    package,
+                    &frame.entry,
+                    &token,
+                    self.profile.registry(),
+                    budget,
+                )?,
+            },
             Some(id) => match package.read(id)? {
                 ReadSpec::Builtin { kind, .. } => Some(select::Head {
                     kind,

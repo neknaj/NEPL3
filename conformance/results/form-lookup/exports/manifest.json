@@ -1,0 +1,54 @@
+{
+  "files": [
+    {
+      "path": "00-contract/manifest.json",
+      "bytes": 1742,
+      "sha256": "6a93373f460e90bfeec554e9ab2d6495cbae314f5d97884b53f17ebf1f727c28"
+    },
+    {
+      "path": "00-contract.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "01-architecture/manifest.json",
+      "bytes": 1744,
+      "sha256": "db5c23b42d855f6ffb6ef7c89553e0625ff1240d157774bf11610ab09e8970d3"
+    },
+    {
+      "path": "01-architecture.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "02-foundation/manifest.json",
+      "bytes": 1751,
+      "sha256": "0b8291284ffc732bb5a0b3b8e7b7ae222c2f93f97b400c6451602820478a41ed"
+    },
+    {
+      "path": "02-foundation.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "03-reader.log",
+      "bytes": 461,
+      "sha256": "ebd2f8fdf9950ca4cafb436784acde45c237fb9935789ad7637f63002eb7f9d4"
+    },
+    {
+      "path": "04-grammar/manifest.json",
+      "bytes": 1753,
+      "sha256": "f9bd13d9b94f8e352dcd7a07ae40ccf2a812324e3ed80b367f7a16863028a2cd"
+    },
+    {
+      "path": "04-grammar.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "results.json",
+      "bytes": 11288,
+      "sha256": "120d12faf9fba02180dd9255c21847331964aadb08d7c3905c2dc85f029e38cf"
+    }
+  ]
+}

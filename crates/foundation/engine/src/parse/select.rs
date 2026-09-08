@@ -1,6 +1,6 @@
 //! Static head selection uses the original lexeme, never a reader's semantic payload as a spelling.
 use crate::{
-    package::{EntryContext, LanguagePackage, PackageError, ReadSpecId},
+    package::{CheckedLanguagePackage, EntryContext, LanguagePackage, PackageError, ReadSpecId},
     profile::{ProfileError, ResolvedParseProfile},
     selection::ShapeSelection,
 };
@@ -18,27 +18,21 @@ pub(super) struct Head<'a> {
     pub arity: u64,
 }
 pub(super) fn form<'a>(
-    package: &'a LanguagePackage,
+    package: &CheckedLanguagePackage<'a>,
     entry: &EntryContext,
     token: &Token,
     source: &SourceSnapshot,
     budget: &mut Budget,
 ) -> Result<Option<Head<'a>>, PackageError> {
     let raw = source.slice(&token.head)?;
-    for (index, form) in package.forms.iter().enumerate() {
-        budget.charge(
-            Resource::Work,
-            (entry.category.len() + raw.len()) as u64 + 1,
-        )?;
-        if form.category == entry.category && form.spelling == raw {
-            return Ok(Some(Head {
-                kind: &form.kind,
-                selection: ShapeSelection::Form {
-                    index: index as u64,
-                },
-                arity: form.fields.len() as u64,
-            }));
-        }
+    if let Some((index, form)) = package.form(&entry.category, raw, budget)? {
+        return Ok(Some(Head {
+            kind: &form.kind,
+            selection: ShapeSelection::Form {
+                index: index as u64,
+            },
+            arity: form.fields.len() as u64,
+        }));
     }
     Ok(None)
 }
@@ -66,20 +60,6 @@ pub(super) fn leaf<'a>(
         }
     }
     Ok(None)
-}
-
-pub(super) fn category<'a>(
-    package: &'a LanguagePackage,
-    entry: &EntryContext,
-    token: &Token,
-    source: &SourceSnapshot,
-    registry: &SchemaRegistry,
-    budget: &mut Budget,
-) -> Result<Option<Head<'a>>, PackageError> {
-    match form(package, entry, token, source, budget)? {
-        Some(head) => Ok(Some(head)),
-        None => leaf(package, entry, token, registry, budget),
-    }
 }
 
 pub(super) fn read(

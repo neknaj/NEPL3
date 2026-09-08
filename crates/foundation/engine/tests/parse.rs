@@ -44,6 +44,7 @@ fn run_options(
 }
 #[derive(Default)]
 struct Scenario {
+    forms: Option<&'static [&'static str]>,
     sealed: bool,
     work: Option<u64>,
     list: bool,
@@ -59,6 +60,7 @@ struct Scenario {
 }
 fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<ParseReply, String> {
     let Scenario {
+        forms,
         sealed,
         list,
         cap,
@@ -73,6 +75,17 @@ fn run_scenario(input: &str, final_input: bool, options: Scenario) -> Result<Par
         native,
     } = options;
     let (mut package, registry) = fixture()?;
+    if let Some(spellings) = forms {
+        let template = package.forms[0].clone();
+        package.forms = spellings
+            .iter()
+            .map(|spelling| {
+                let mut form = template.clone();
+                form.spelling = (*spelling).into();
+                form
+            })
+            .collect();
+    }
     if unknown {
         package.leaves.clear();
     }
@@ -842,6 +855,59 @@ fn static_form_keeps_builtin_children_and_token_payloads() -> TestResult {
     assert_eq!(tree.bundle.tokens[2].head.start(), 6);
     assert_eq!(tree.bundle.tokens[2].leading_trivia.len(), 1);
     assert_eq!(reply.report.usage.source_bytes, 16);
+    Ok(())
+}
+#[test]
+fn indexed_forms_keep_declared_indices_exact_lexemes_and_leaf_priority() -> TestResult {
+    use nepl3_engine::selection::ShapeSelection;
+    // Deliberately unsorted. Unicode and prefix-related spellings remain exact.
+    const FORMS: &[&str] = &["zebra", "日本語", "let", "a", "letter"];
+    for (index, spelling) in FORMS.iter().enumerate() {
+        let reply = run_scenario(
+            &format!("{spelling} let value"),
+            true,
+            Scenario {
+                forms: Some(FORMS),
+                ..Scenario::default()
+            },
+        )?;
+        let ParseOutcome::Complete { tree, .. } = reply.outcome else {
+            return Err(format!("{reply:?}").into());
+        };
+        assert_eq!(
+            tree.contexts[0].nodes[0].shape,
+            ShapeSelection::Form {
+                index: index as u64
+            }
+        );
+        assert_eq!(tree.bundle.nodes[1].kind, "Builtin:Name");
+        assert_eq!(tree.bundle.nodes[2].kind, "Leaf:Name");
+    }
+    for spelling in ["lett", "日本", "zzzz"] {
+        let reply = run_scenario(
+            spelling,
+            true,
+            Scenario {
+                forms: Some(FORMS),
+                ..Scenario::default()
+            },
+        )?;
+        let ParseOutcome::Complete { tree, .. } = reply.outcome else {
+            return Err(format!("{reply:?}").into());
+        };
+        assert_eq!(tree.bundle.nodes[0].kind, "Leaf:Name");
+    }
+    assert!(
+        run_scenario(
+            "let x y",
+            true,
+            Scenario {
+                forms: Some(&["let", "let"]),
+                ..Scenario::default()
+            }
+        )
+        .is_err()
+    );
     Ok(())
 }
 #[test]

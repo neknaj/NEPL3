@@ -719,9 +719,33 @@ fn package_boundary_checks_extension_provenance_and_resource_limits() -> TestRes
         Err(PackageError::Provenance)
     ));
     package.provenance.declarations[0].origin = OriginId(0);
+    let mut complete = budget();
     package
-        .check(&registry, &mut budget())
+        .check(&registry, &mut complete)
         .map_err(|e| format!("{e:?}"))?;
+    // The final derived index is package-wide. Its stop must not name the last
+    // successfully validated declaration as if that declaration were invalid.
+    for resource in ["work", "allocation"] {
+        let mut limits = budget().limits();
+        if resource == "work" {
+            limits.work = complete.usage().work - 1;
+        } else {
+            limits.allocation_units = complete.usage().allocation_units - 1;
+        }
+        let mut limited = Budget::new(limits);
+        let failure = match package.check_detailed(&registry, &mut limited) {
+            Err(failure) => failure,
+            Ok(_) => return Err("expected final index stop".into()),
+        };
+        let reason = if resource == "work" {
+            StopReason::WorkLimit
+        } else {
+            StopReason::AllocationLimit
+        };
+        assert_eq!(failure.error, PackageError::Stopped(reason));
+        assert_eq!(failure.subject, None);
+        assert_eq!(limited.poll(), Err(reason));
+    }
     let mut stopped = Budget::new(Limits {
         work: 0,
         ..budget().limits()
