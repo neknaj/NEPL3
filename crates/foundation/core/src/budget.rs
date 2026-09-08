@@ -291,11 +291,14 @@ impl Budget {
     ) -> Result<T, E> {
         self.poll()?;
         self.observe_depth(1)?;
-        let next = self.depth.checked_add(1).ok_or(StopReason::DepthLimit)?;
+        let previous = self.depth;
+        let next = previous.checked_add(1).ok_or(StopReason::DepthLimit)?;
         self.depth = next;
         self.usage.depth = self.usage.depth.max(next);
         let result = operation(self);
-        self.depth -= 1;
+        // A host callback can replace the budget. Restore the caller's depth
+        // rather than subtracting from an untrusted post-callback value.
+        self.depth = previous;
         result
     }
 }

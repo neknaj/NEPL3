@@ -1439,6 +1439,46 @@ fn native_collector_transfer_preserves_generated_sources_at_allocation_boundarie
 }
 
 #[test]
+fn replacing_a_callback_budget_cannot_be_hidden_by_cancel_or_transport_error() -> TestResult {
+    for reservation in [false, true] {
+        for cancel in [false, true] {
+            for fail in [false, true] {
+                let result = run_scenario(
+                    if reservation {
+                        "let \"x\\n\" y"
+                    } else {
+                        "let x y"
+                    },
+                    true,
+                    Scenario {
+                        provider: true,
+                        text: reservation,
+                        native: Some(if reservation {
+                            host::Action::ResetReservation { cancel, fail }
+                        } else {
+                            host::Action::ResetSecond { cancel, fail }
+                        }),
+                        ..Scenario::default()
+                    },
+                );
+                let Err(error) = result else {
+                    return Err(
+                        "budget replacement must terminate, not suspend or stop successfully"
+                            .into(),
+                    );
+                };
+                assert!(error.contains("BrokenCollector"), "{error}");
+                assert!(error.contains("Continuation"), "{error}");
+                if cancel {
+                    assert!(error.contains("Cancelled"), "{error}");
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn native_host_failure_keeps_generated_diagnostic_and_event_closure() -> TestResult {
     for action in [
         host::Action::GeneratedFailSecond,
