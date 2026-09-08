@@ -1034,5 +1034,20 @@ body
       cons "[各要求/かくようきゅう]・[返信/へんしん]の[実/じつ]CBOR[初回受信/しょかいじゅしん]は[空/から]のsource storeを[使/つか]い、[全結果/ぜんけっか]・SourceBytes[一度分/いちどぶん]・[再/さい]encodeが[一致/いっち]した。"
       cons "EOFは[選択/せんたく]なし、scalar[内部/ないぶ]と[範囲外/はんいがい]はSourceエラー、[別/べつ]execution keyとsource revisionは[古/ふる]い[解析/かいせき]へのアクセスを[拒否/きょひ]し、[取消/とりけし]はStoppedと[空/から]の[候補閉包/こうほへいほう]を[返/かえ]す。"
       cons sentence cons ruby text "補助" text "ほじょ" cons text "は " cons code ".tmp/prepare_query_expectations.py" cons text "、" cons code "build_query_runtime_probe.py" cons text "、" cons code "build_query_boundary_probe.py" cons text "、" cons code "build_query_portable_probe.py" cons text "、" cons ruby text "実行例" text "じっこうれい" cons text "は " cons code "cargo run --manifest-path .tmp/independent-engine/Cargo.toml --features nepl3-tools,nepl3-grammar-core --bin query_portable --target-dir .tmp/review-target" cons text " である。" nil nil
+    cons paragraph
+      cons "Customから[発行/はっこう]されたkey[付/つ]き[結果/けっか]でも、source-less Entity100とMAX-1の[定義先/ていぎさき]はlocation=Noneを[保/たも]ち、[実参照位置/じつさんしょういち]だけを[返/かえ]した。"
+      cons "[過去/かこ]stage0の[参照/さんしょう]は[明示更新後/めいじこうしんご]の[最終/さいしゅう]resolutionを[使/つか]い、[語彙検索/ごいけんさく]のやり[直/なお]しで[更新/こうしん]を[消/け]さない。"
+      cons sentence cons ruby text "追加" text "ついか" cons text "の" cons ruby text "合法" text "ごうほう" cons text "Import201/Export202を" cons ruby text "持" text "も" cons text "つdeltaを" cons ruby text "受理" text "じゅり" cons text "し、" cons ruby text "両" text "りょう" cons text "roleの" cons ruby text "包含" text "ほうがん" cons text "optionを" cons ruby text "独立" text "どくりつ" cons text "に" cons ruby text "切" text "き" cons text "り" cons ruby text "替" text "か" cons text "える4" cons ruby text "組" text "くみ" cons text "もnativeと" cons ruby text "実" text "じつ" cons text "CBORで" cons ruby text "一致" text "いっち" cons text "した（" cons code "query_roles" cons text "）。" nil
+      cons sentence cons ruby text "通常" text "つうじょう" cons text "の " cons code "import field" cons text " は" cons ruby text "子" text "こ" cons text "のexport" cons ruby text "候補" text "こうほ" cons text "を" cons ruby text "導入" text "どうにゅう" cons text "する" cons ruby text "操作" text "そうさ" cons text "であり、" cons ruby text "独立" text "どくりつ" cons text "な" cons ruby text "名前" text "なまえ" cons text "Occurrenceを" cons ruby text "増" text "ふ" cons text "やす" cons ruby text "契約" text "けいやく" cons text "ではない。" nil
+      cons "[追加管理対象/ついかかんりたいしょう]の3[件期待/けんきたい]をこの[原文/げんぶん]で2[件/けん]へ[訂正/ていせい]した[理由/りゆう]を[実/じつ]コードとspec04から[確認/かくにん]した。"
+      cons "query[管理対象/かんりたいしょう]6[件/けん]は[独立/どくりつ]native[成功/せいこう]し、URI/ID/key/[宣言/せんげん]source/openInputのschema-valid[変異/へんい]、[元範囲/もとはんい]・[全候補/ぜんこうほ]・role filter・typed[停止/ていし]を[照合/しょうごう]した。"
+      cons "[本物/ほんもの]のCustom Import occurrenceを[使/つか]うoption[正例/せいれい]も[管理対象/かんりたいしょう]へ[追加/ついか]され、[独立再実行/どくりつさいじっこう]した。"
+      cons "query raw[受信/じゅしん]は[構造/こうぞう]と[要求/ようきゅう]との[対応/たいおう]を[検査/けんさ]し、[結果/けっか]の[実行認証/じっこうにんしょう]やBindingAnalysisの[意味/いみ]proofを[発行/はっこう]しない。"
+      cons "rename・[全/ぜん]LSP[統合/とうごう]・T06[全受入条件/ぜんうけいれじょうけん]の[完成/かんせい]とは[区別/くべつ]する。" nil
+    cons paragraph
+      cons "[最終/さいしゅう]のWASI[独立実行/どくりつじっこう]はbinding[関連/かんれん]33[件/けん]すべて[成功/せいこう]した。"
+      cons "[上記/じょうき]Custom9[件/けん]とquery6[件/けん]に[加/くわ]え、[既存/きそん]の[可視性/かしせい]・Global・AnalysisKey・portable[原因/げんいん]・[停止時閉包/ていしじへいほう]も[含/ふく]む。"
+      cons sentence cons ruby text "実行" text "じっこう" cons text "は " cons code "cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 --target-dir .tmp/review-target -- --test-threads=1" cons text "、runnerは " cons code "wasmtime run" cons text "。" nil
+      cons "host processを[起動/きどう]するseed[一致/いっち]だけは[従来/じゅうらい]どおりnativeへ[分離/ぶんり]されており、[通常解析回帰/つうじょうかいせきかいき]はWASIで[実行/じっこう]される。" nil
     nil
   nil
