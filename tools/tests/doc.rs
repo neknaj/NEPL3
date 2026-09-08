@@ -1,5 +1,7 @@
 //! Actual standard Doc source compilation and prefix parsing. Facts signatures
 //! are compile-time declarations only; this parse-only host serves reader calls.
+#[path = "doc/annotated.rs"]
+mod annotated;
 #[path = "doc/export.rs"]
 mod export;
 #[path = "doc/external.rs"]

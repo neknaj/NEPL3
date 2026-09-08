@@ -3,6 +3,7 @@
 //! explicit unsupported inputs until their preservation contracts are defined.
 use nepl3_core::{budget::*, schema::SchemaRegistry, value_codec::FoundationValueCodec};
 use nepl3_doc_core::{model::*, prepare};
+pub mod annotated;
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum Error {
