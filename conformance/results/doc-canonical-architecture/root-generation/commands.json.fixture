@@ -1,0 +1,86 @@
+[
+  {
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "markdown",
+      ".tmp/markdown-anchor-first"
+    ],
+    "exit_code": 0,
+    "elapsed": 35.667772299959324,
+    "base_head": "84664c8ce5afa9dc76551a8439a2fb102c2c4ed2",
+    "inputs": {
+      "doc/canonical.json": "83a1afc090ec552b800f0dfb4ef948284e5dfb982e2d7adb1776957a4f8f38be",
+      "doc/spec/01-architecture.nepld": "7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d",
+      "doc/migration/aliases/01-architecture.json": "68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5"
+    }
+  },
+  {
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "html",
+      ".tmp/html-anchor-first"
+    ],
+    "exit_code": 0,
+    "elapsed": 16.33768090000376,
+    "base_head": "84664c8ce5afa9dc76551a8439a2fb102c2c4ed2",
+    "inputs": {
+      "doc/canonical.json": "83a1afc090ec552b800f0dfb4ef948284e5dfb982e2d7adb1776957a4f8f38be",
+      "doc/spec/01-architecture.nepld": "7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d",
+      "doc/migration/aliases/01-architecture.json": "68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5"
+    }
+  },
+  {
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "markdown",
+      ".tmp/markdown-anchor-second"
+    ],
+    "exit_code": 0,
+    "elapsed": 31.156374200014398,
+    "base_head": "84664c8ce5afa9dc76551a8439a2fb102c2c4ed2",
+    "inputs": {
+      "doc/canonical.json": "83a1afc090ec552b800f0dfb4ef948284e5dfb982e2d7adb1776957a4f8f38be",
+      "doc/spec/01-architecture.nepld": "7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d",
+      "doc/migration/aliases/01-architecture.json": "68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5"
+    }
+  },
+  {
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "html",
+      ".tmp/html-anchor-second"
+    ],
+    "exit_code": 0,
+    "elapsed": 16.604312899988145,
+    "base_head": "84664c8ce5afa9dc76551a8439a2fb102c2c4ed2",
+    "inputs": {
+      "doc/canonical.json": "83a1afc090ec552b800f0dfb4ef948284e5dfb982e2d7adb1776957a4f8f38be",
+      "doc/spec/01-architecture.nepld": "7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d",
+      "doc/migration/aliases/01-architecture.json": "68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5"
+    }
+  }
+]

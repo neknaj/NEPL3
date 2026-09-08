@@ -1,0 +1,156 @@
+{
+  "fixed_commit": "9c5883b555ebe5e09380ea4ab20ce275d0687259",
+  "rows": [
+    {
+      "fragment": "01-repositorycrate依存方向",
+      "start": 2968,
+      "final": {
+        "top": 125,
+        "y": 261,
+        "hash": "#01-repositorycrate%E4%BE%9D%E5%AD%98%E6%96%B9%E5%90%91"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "方針",
+      "start": 2968,
+      "final": {
+        "top": 124.59375,
+        "y": 352,
+        "hash": "#%E6%96%B9%E9%87%9D"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "1-配置",
+      "start": 2968,
+      "final": {
+        "top": 124.78125,
+        "y": 526,
+        "hash": "#1-%E9%85%8D%E7%BD%AE"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "2-主な依存方向",
+      "start": 0,
+      "final": {
+        "top": 124.796875,
+        "y": 1532,
+        "hash": "#2-%E4%B8%BB%E3%81%AA%E4%BE%9D%E5%AD%98%E6%96%B9%E5%90%91"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "3-surface-descriptorとbootstrap",
+      "start": 0,
+      "final": {
+        "top": 125.234375,
+        "y": 2333,
+        "hash": "#3-surface-descriptor%E3%81%A8bootstrap"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "4-rust設定",
+      "start": 0,
+      "final": {
+        "top": 125.421875,
+        "y": 2643,
+        "hash": "#4-rust%E8%A8%AD%E5%AE%9A"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "5-許可集合の検査",
+      "start": 0,
+      "final": {
+        "top": 262.609375,
+        "y": 2968,
+        "hash": "#5-%E8%A8%B1%E5%8F%AF%E9%9B%86%E5%90%88%E3%81%AE%E6%A4%9C%E6%9F%BB"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "現在の作業段階",
+      "start": 0,
+      "final": {
+        "top": 636.796875,
+        "y": 2968,
+        "hash": "#%E7%8F%BE%E5%9C%A8%E3%81%AE%E4%BD%9C%E6%A5%AD%E6%AE%B5%E9%9A%8E"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-706f6c696379",
+      "start": 2968,
+      "final": {
+        "top": 124.59375,
+        "y": 352,
+        "hash": "#n-706f6c696379"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-6c61796f7574",
+      "start": 2968,
+      "final": {
+        "top": 124.78125,
+        "y": 526,
+        "hash": "#n-6c61796f7574"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-646570656e64656e63696573",
+      "start": 0,
+      "final": {
+        "top": 124.796875,
+        "y": 1532,
+        "hash": "#n-646570656e64656e63696573"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-626f6f747374726170",
+      "start": 0,
+      "final": {
+        "top": 125.234375,
+        "y": 2333,
+        "hash": "#n-626f6f747374726170"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-72757374",
+      "start": 0,
+      "final": {
+        "top": 125.421875,
+        "y": 2643,
+        "hash": "#n-72757374"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-616c6c6f7765645f646570656e64656e63696573",
+      "start": 0,
+      "final": {
+        "top": 262.609375,
+        "y": 2968,
+        "hash": "#n-616c6c6f7765645f646570656e64656e63696573"
+      },
+      "result": "PASS"
+    },
+    {
+      "fragment": "n-63757272656e745f7374616765",
+      "start": 0,
+      "final": {
+        "top": 636.796875,
+        "y": 2968,
+        "hash": "#n-63757272656e745f7374616765"
+      },
+      "result": "PASS"
+    }
+  ],
+  "complete": true
+}

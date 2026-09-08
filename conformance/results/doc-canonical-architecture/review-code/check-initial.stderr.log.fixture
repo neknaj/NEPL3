@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "C:\projects\NEPL3-doc-canonical-architecture\.tmp\review-canonical01-code\check.py", line 58, in <module>
+    assert '[ŠO•”Šg’£Œ_–ñ\\[‚ª‚¢‚Ô‚©‚­‚¿‚å‚¤‚¯‚¢‚â‚­\\]](22-external-extensions.md)' in md
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

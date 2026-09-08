@@ -1,0 +1,222 @@
+{
+  "edge_direction": "consumer -> dependency",
+  "workspace": [
+    {
+      "name": "nepl3-core",
+      "path": "crates/foundation/core",
+      "dependencies": [],
+      "no_std": true,
+      "responsibility": "共通の値・schema・source・origin・diagnostic契約; Name Unicode 16.0 XID predicates use pinned no_std unicode-ident 1.0.18; Lang RFC 5646 ABNF is shared without reader dependency"
+    },
+    {
+      "name": "nepl3-reader",
+      "path": "crates/foundation/reader",
+      "dependencies": [
+        "nepl3-core"
+      ],
+      "no_std": true,
+      "responsibility": "reader計画・combinator・実行器; dev-only nepl3-wire for verified native/wire context and provider equivalence tests"
+    },
+    {
+      "name": "nepl3-engine",
+      "path": "crates/foundation/engine",
+      "dependencies": [
+        "nepl3-core",
+        "nepl3-reader"
+      ],
+      "no_std": true,
+      "responsibility": "共通prefix parser・束縛・editor query; dev-only nepl3-wire for real environment digest and native/portable parsing tests"
+    },
+    {
+      "name": "nepl3-wire",
+      "path": "crates/foundation/wire",
+      "dependencies": [
+        "nepl3-core"
+      ],
+      "no_std": true,
+      "responsibility": "canonical CBOR codecと境界検査; workspace固定no_std sha2でcanonical byte列をbuffer化せずdigestへ逐次入力"
+    },
+    {
+      "name": "nepl3-grammar-core",
+      "path": "crates/languages/grammar/core",
+      "dependencies": [
+        "nepl3-core",
+        "nepl3-reader",
+        "nepl3-engine"
+      ],
+      "no_std": true,
+      "responsibility": "Grammarの意味検査・schema/reader plan生成・bootstrap"
+    },
+    {
+      "name": "nepl3-doc-core",
+      "path": "crates/languages/doc/core",
+      "dependencies": [
+        "nepl3-core"
+      ],
+      "no_std": true,
+      "responsibility": "文書意味モデル・sentence decoder・構造/参照検査"
+    },
+    {
+      "name": "nepl3-math-core",
+      "path": "crates/languages/math/core",
+      "dependencies": [
+        "nepl3-core"
+      ],
+      "no_std": true,
+      "responsibility": "数式意味モデル・束縛・厳密計算; exact arithmetic uses no_std num-bigint and num-traits (default features disabled); mathematical DSL constraints remain Math-owned; dev-only nepl3-wire verifies actual CBOR roundtrips"
+    },
+    {
+      "name": "nepl3-circuit-core",
+      "path": "crates/languages/circuit/core",
+      "dependencies": [
+        "nepl3-core"
+      ],
+      "no_std": true,
+      "responsibility": "回路意味モデル・elaboration・simulation・NOR lowering"
+    },
+    {
+      "name": "nepl3-markup",
+      "path": "crates/output/markup",
+      "dependencies": [
+        "nepl3-core"
+      ],
+      "no_std": true,
+      "responsibility": "検査済みHTML/MathML/SVG treeと安全なserializer; dev-only nepl3-wire tests actual CBOR first receiver"
+    },
+    {
+      "name": "nepl3-doc-html",
+      "path": "crates/languages/doc/html",
+      "dependencies": [
+        "nepl3-core",
+        "nepl3-doc-core",
+        "nepl3-markup"
+      ],
+      "no_std": true,
+      "responsibility": "Docを構造化HTMLへ変換; dev-only nepl3-wire tests actual CBOR first receiver"
+    },
+    {
+      "name": "nepl3-math-tex",
+      "path": "crates/languages/math/tex",
+      "dependencies": [
+        "nepl3-core",
+        "nepl3-math-core"
+      ],
+      "no_std": true,
+      "responsibility": "検査済みMathから忠実なKaTeX用TeXまたは変換不能理由を返す純粋backend"
+    },
+    {
+      "name": "nepl3-math-mathml",
+      "path": "crates/languages/math/mathml",
+      "dependencies": [
+        "nepl3-core",
+        "nepl3-math-core",
+        "nepl3-markup"
+      ],
+      "no_std": true,
+      "responsibility": "MathをMathML Coreへ変換"
+    },
+    {
+      "name": "nepl3-circuit-svg",
+      "path": "crates/languages/circuit/svg",
+      "dependencies": [
+        "nepl3-core",
+        "nepl3-circuit-core",
+        "nepl3-markup"
+      ],
+      "no_std": true,
+      "responsibility": "回路を決定的なSVGへ変換"
+    },
+    {
+      "name": "nepl3-suite",
+      "path": "crates/integration/suite",
+      "dependencies": [
+        "nepl3-core",
+        "nepl3-reader",
+        "nepl3-engine",
+        "nepl3-grammar-core",
+        "nepl3-doc-core",
+        "nepl3-math-core",
+        "nepl3-circuit-core",
+        "nepl3-markup",
+        "nepl3-doc-html",
+        "nepl3-math-tex",
+        "nepl3-math-mathml",
+        "nepl3-circuit-svg"
+      ],
+      "no_std": true,
+      "responsibility": "4言語profile・typed adapter・operation dispatch"
+    },
+    {
+      "name": "nepl3-ui-core",
+      "path": "crates/ui/core",
+      "dependencies": [
+        "nepl3-core"
+      ],
+      "no_std": true,
+      "responsibility": "純粋TEA Model/Msg/update/viewと型付きcommand記述。DOM・Worker・suite実行はhostへ委譲する。"
+    },
+    {
+      "name": "nepl3-cli",
+      "path": "apps/cli",
+      "dependencies": [
+        "nepl3-core",
+        "nepl3-suite",
+        "nepl3-wire"
+      ],
+      "no_std": false,
+      "responsibility": "native/WASI CLIとI/O"
+    },
+    {
+      "name": "nepl3-lsp",
+      "path": "apps/lsp",
+      "dependencies": [
+        "nepl3-core",
+        "nepl3-suite"
+      ],
+      "no_std": false,
+      "responsibility": "汎用NEPL3 LSP server"
+    },
+    {
+      "name": "nepl3-web",
+      "path": "apps/web",
+      "dependencies": [
+        "nepl3-core",
+        "nepl3-suite",
+        "nepl3-wire",
+        "nepl3-ui-core"
+      ],
+      "no_std": false,
+      "responsibility": "browser worker/wasm-bindgen境界"
+    },
+    {
+      "name": "nepl3-provider",
+      "path": "apps/provider",
+      "dependencies": [
+        "nepl3-core",
+        "nepl3-suite",
+        "nepl3-wire"
+      ],
+      "no_std": false,
+      "responsibility": "native processでportable call protocolを公開"
+    },
+    {
+      "name": "nepl3-tools",
+      "path": "tools",
+      "dependencies": [
+        "nepl3-core",
+        "nepl3-reader",
+        "nepl3-engine",
+        "nepl3-wire",
+        "nepl3-grammar-core",
+        "nepl3-suite",
+        "nepl3-doc-core",
+        "nepl3-math-core",
+        "nepl3-doc-html",
+        "nepl3-markup"
+      ],
+      "no_std": false,
+      "responsibility": "Generation, conformance, dependency checks and local Doc artifact host"
+    }
+  ],
+  "design_revision": "nepl3-design-2026-09-06-r4"
+}

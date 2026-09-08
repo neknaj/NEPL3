@@ -1,0 +1,83 @@
+- article:
+  - heading "01. Repository・crate・ 依存方向 いぞんほうこう" [level=1]
+  - heading "方針 ほうしん" [level=2]
+  - paragraph:
+    - text: 初期 しょき repositoryは
+    - code: NEPL3
+    - text: のmonorepoとする。 意味上 いみじょう の 境界 きょうかい とcrateの 依存方向 いぞんほうこう consumerからdependencyへの 向 む き を 一致 いっち させ、 言語 げんご と 出力 しゅつりょく backendを 分離 ぶんり する。crateの 全一覧 ぜんいちらん と、 直接依存 ちょくせついぞん の 許可集合 きょかしゅうごう は
+    - code: design/dependencies.json
+    - text: に 記 しる す。
+  - heading "1. 配置 はいち" [level=2]
+  - figure "text":
+    - text: text
+    - code: NEPL3/ Cargo.toml Cargo.lock rust-toolchain.toml AGENTS.md doc/ spec/ decisions/ history/ design/ interfaces/ languages/ grammar/ syntax.neplg package.ndf doc/ syntax.neplg package.ndf math/ syntax.neplg package.ndf circuit/ syntax.neplg package.ndf crates/ foundation/ core/src/ source/ schema/ value/ syntax/ origin/ diagnostic/ budget/ reader/src/ plan/ combinator/ execution/ extension/ engine/src/ parse/ binding/ index/ query/ recovery/ wire/src/ cbor/ schema/ protocol/ languages/ grammar/core/src/ bootstrap/ model/ check/ compile/ doc/core/src/ model/ sentence/ lower/ check/ facts/ doc/html/src/ render/ style/ math/core/src/ model/ number/ lower/ check/ evaluate/ facts/ math/mathml/src/ render/ precedence/ circuit/core/src/ model/ lower/ check/ elaborate/ simulate/ nor/ facts/ circuit/svg/src/ layout/ render/ output/markup/src/ model/ validate/ serialize/ integration/suite/src/ profile/ bridge/ operation/ workspace/ ui/core/src/ model/ message/ update/ command/ subscription/ view/ apps/ cli/ lsp/ web/ provider/ web/src/ shell/ editor/ worker/ preview/ storage/ bindings/ site/ editors/ vscode/ neovim/ tools/src/ generate/ contract/ dependency/ task/ examples/ conformance/ tasks/
+  - paragraph:
+    - text: ファイル 名 めい の 階層 かいそう は、ディレクトリで 表 あらわ す。 例 たと えば
+    - code: source_span_map.rs
+    - text: を 階層 かいそう の 代 か わりに 使 つか わず、
+    - code: source/map.rs
+    - text: とする。 各 かく
+    - code: src
+    - text: の 直下 ちょっか には、
+    - code: lib.rs
+    - text: または
+    - code: main.rs
+    - text: を 置 お く。
+  - heading "2. 主 おも な 依存方向 いぞんほうこう" [level=2]
+  - paragraph:
+    - text: 依存 いぞん の 向 む きは
+    - code: consumer -> dependency
+    - text: と 表 あらわ す。
+  - figure "text":
+    - text: text
+    - code: reader -> core engine -> core, reader grammar-core -> core, reader, engine doc-core -> core math-core -> core circuit-core -> core markup -> core doc-html -> doc-core, markup, core math-tex -> math-core, core math-mathml -> math-core, markup, core circuit-svg -> circuit-core, markup, core suite -> engine, reader, grammar-core, domain cores, output backends, core wire -> core ui-core -> core (公開操作のデータ契約のみ) apps -> suite, core (+ wire where required, web -> ui-core) tools -> grammar-core, suite, foundation
+  - paragraph:
+    - code: core
+    - text: は、すべてのdomainのenumを 持 も つものではない。typed schema、 位置 いち 、 診断 しんだん 、 公開値 こうかいち を 所有 しょゆう する。domain coreは 共通 きょうつう のParsed treeを 受 う け 取 と り、そのdomainのモデルへlowerする。engineはDocやRubyなどの 意味 いみ を 知 し らない。
+  - paragraph: Doc 内 ない のMathとMath 内 ない のDocは、suiteのbridgeが 処理 しょり する。doc-coreはmath-coreをimportしない。 出力 しゅつりょく backend 同士 どうし も、 相互 そうご にimportしない。suiteが 依存関係 いぞんかんけい に 従 したが って 埋 う め 込 こ みを 準備 じゅんび し、backendsへ 型付 かたつ きの 解決済 かいけつず みfragmentを 渡 わた す。
+  - paragraph:
+    - text: ui-coreは、 純粋 じゅんすい なModel・Msg・update・viewと、commandおよびsubscriptionの 記述 きじゅつ を 所有 しょゆう する。suiteやDOMを 実行 じっこう してはならない。 実行 じっこう ・Worker・editor widgetは、host adapterが 担当 たんとう する。 目標 もくひょう は20 crateで、そのうち15 crateが
+    - code: no_std + alloc
+    - text: である。この 目標 もくひょう を、 実装済 じっそうず みmemberの 数 かず と 同一視 どういつし してはならない。 文書 ぶんしょ とsiteの 生成 せいせい は、toolsの 明示的 めいじてき な 段階 だんかい で 行 おこな う。
+    - code: build.rs
+    - text: を 通 とお して、compilerと 文書 ぶんしょ rendererを 循環依存 じゅんかんいぞん させてはならない。
+  - heading "3. surface descriptorとGrammarのbootstrap" [level=2]
+  - paragraph:
+    - code: languages/*/syntax.neplg
+    - text: は、 各言語 かくげんご のsurface 定義 ていぎ である。Grammar compilerがpackageを 生成 せいせい し、その 生成済 せいせいず みpackageもcommitする。 通常 つうじょう のbuildで、toolsやgrammar compilerをbuild dependencyにしてはならない。
+    - code: cargo run -p nepl3-tools -- generate --check
+    - text: により、sourceとの 一致 いっち を 検査 けんさ する。
+  - paragraph: Grammar 自身 じしん の 初期 しょき packageは、 同一 どういつ のGrammar syntaxを 表 あらわ す 検査済 けんさず みseedとする。 別 べつ の 小 ちい さなGrammar dialectは 作 つく らない。seedで 自身 じしん のsourceを 読 よ み、compileしたdescriptorの 意味正規形 いみせいきけい とseedを 比較 ひかく する。これは 自己 じこ ホスト 前 まえ の 永続的 えいぞくてき なbootstrap 契約 けいやく であり、 将来 しょうらい の 実装 じっそう でも 同 おな じseedを 使 つか える。
+  - heading "4. Rust 設定 せってい" [level=2]
+  - paragraph:
+    - text: workspaceはedition 2024、resolver 3とする。MSRVは1.85.0 以上 いじょう とし、 実装開始時 じっそうかいしじ に 使 つか う 一 ひと つのstable toolchainを
+    - code: rust-toolchain.toml
+    - text: に 完全 かんぜん な 版番号 はんばんごう で 固定 こてい する。MSRVと 開発 かいはつ toolchainは 同一視 どういつし しない。 外部依存 がいぶいぞん はworkspace.dependenciesで 集中管理 しゅうちゅうかんり し、Cargo.lockをcommitする。
+  - paragraph:
+    - text: core 系 けい crateは 常 つね に
+    - code: "#![no_std]"
+    - text: とし、allocを 使 つか う。coreをstd 化 か するfeatureは 設 もう けない。 標準 ひょうじゅん ライブラリが 必要 ひつよう なアダプタはappsへ 置 お く。native-only crateがcoreに 入 はい り 込 こ むことを、cargo metadataとtarget buildによって 検出 けんしゅつ する。
+  - paragraph:
+    - text: math-coreは
+    - code: num-bigint
+    - text: /
+    - code: num-rational
+    - text: /
+    - code: num-integer
+    - text: /
+    - code: num-traits
+    - text: を、default-features=falseで 利用 りよう してよい。 対応 たいおう する 互換 ごかん version 集合 しゅうごう を 一度 いちど resolveし、lockする。 異 こと なるBigIntの 版 はん を、 言語間 げんごかん で 露出 ろしゅつ させてはならない。 公開 こうかい する 意味値 いみち には、この 仕様 しよう のcanonical integer・rational 型 がた を 使 つか う。
+  - paragraph: 安全 あんぜん なRustを 原則 げんそく とする。FFIや 高速化 こうそくか のためにunsafeが 必要 ひつよう なら、 該当 がいとう adapterの 内部 ないぶ へ 局在 きょくざい させ、unsafe 契約 けいやく と 試験 しけん を 添 そ える。domainからpointerを 外部 がいぶ へ 公開 こうかい してはならない。
+  - heading "5. 許可集合 きょかしゅうごう の 検査 けんさ" [level=2]
+  - paragraph: dependency checkerはproduction 依存 いぞん とbuild 依存 いぞん を 検査 けんさ し、dev 依存 いぞん を 別 べつ の 集合 しゅうごう として 出力 しゅつりょく する。productionからappsやtoolsへの 経路 けいろ 、domain core 同士 どうし の 経路 けいろ 、 閉路 へいろ 、std 依存 いぞん を 検出 けんしゅつ する。 外部 がいぶ crateの 採用 さいよう によって、coreへOS 機能 きのう が 混入 こんにゅう しないことを 確認 かくにん する。
+  - paragraph:
+    - text: 単一 たんいつ repositoryであっても、 各 かく coreは 独立 どくりつ して
+    - code: check --no-default-features
+    - text: できるものとする。 将来 しょうらい のrepository 分割 ぶんかつ を、 現在 げんざい の 依存環境 いぞんかんきょう へ 強制 きょうせい しない。 公開 こうかい schemaと 操作 そうさ の 単位 たんい で、 実装 じっそう を 交換 こうかん できるようにする。
+  - paragraph:
+    - text: 外部言語 がいぶげんご の 追加 ついか でfoundation sourceを 変更 へんこう しない 条件 じょうけん と、repository 分離前 ぶんりまえ の 実証 じっしょう は
+    - link "外部拡張契約 がいぶかくちょうけいやく":
+      - /url: 22-external-extensions.html
+    - text: に 従 したが う。 現時点 げんじてん ではmonorepoを 維持 いじ し、 独立 どくりつ workspaceの 公開 こうかい API 利用 りよう から、 配布 はいふ ・provider・ 互換性試験 ごかんせいしけん へ 進 すす む。
+  - heading "現在 げんざい の 作業段階 さぎょうだんかい" [level=2]
+  - paragraph: 以上 いじょう は、 目標 もくひょう とする 構成 こうせい である。 現在 げんざい のworkspace memberはルートCargo.tomlを、 実装状態 じっそうじょうたい はimplementation-status.jsonを 正本 せいほん とする。crateは、その 責務 せきむ を 実装 じっそう する 段階 だんかい で 追加 ついか する。 開発 かいはつ toolchainとMSRVの 選定理由 せんていりゆう はdoc/development.mdを、リポジトリ 整備 せいび の 判断 はんだん はdoc/decisions/0001-repository-foundation.mdを 参照 さんしょう する。

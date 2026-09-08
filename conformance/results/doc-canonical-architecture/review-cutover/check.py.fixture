@@ -1,0 +1,114 @@
+from pathlib import Path
+from functools import partial
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+from threading import Thread
+from urllib.parse import quote,urlparse
+from playwright.sync_api import sync_playwright
+import hashlib,json,subprocess,time,platform,importlib.metadata
+
+ROOT=Path(__file__).resolve().parents[2];OUT=Path(__file__).parent
+HEAD='9c5883b555ebe5e09380ea4ab20ce275d0687259'
+SECTIONS=['policy','layout','dependencies','bootstrap','rust','allowed_dependencies','current_stage']
+LEGACY=['01-repositorycrate依存方向','方針','1-配置','2-主な依存方向','3-surface-descriptorとbootstrap','4-rust設定','5-許可集合の検査','現在の作業段階']
+SEMANTIC=['n-'+x.encode('utf8').hex() for x in SECTIONS]
+SHA=lambda b:hashlib.sha256(b).hexdigest()
+def save(name,value):
+    (OUT/name).write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n',encoding='utf8',newline='\n')
+def git(path):return subprocess.check_output(['git','show',HEAD+':'+path],cwd=ROOT)
+OUT.mkdir(exist_ok=True)
+frozen={}
+for path in ['doc/spec/01-architecture.md','doc/spec/01-architecture.nepld','doc/migration/aliases/01-architecture.json','doc/canonical.json','tools/src/doc/canonical.rs']:
+    raw=git(path);frozen[path]={'bytes':len(raw),'sha256':SHA(raw)}
+    (OUT/('git-'+path.replace('/','--'))).write_bytes(raw)
+markdown=git('doc/spec/01-architecture.md')
+assets=[]
+for old,prefix in [('html-anchor-first','first'),('html-anchor-second','second')]:
+    base=ROOT/'.tmp'/old
+    for p in sorted(base.rglob('*')):
+        if not p.is_file():continue
+        relative=p.relative_to(base);raw=p.read_bytes();dest=OUT/'served'/'independent'/'deep'/prefix/relative
+        dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(raw)
+        assets.append({'copy':str(dest.relative_to(OUT)).replace('\\','/'),'source':str(p),'bytes':len(raw),'sha256':SHA(raw)})
+    manifest=json.loads((base/'manifest.json').read_bytes())
+    for f in manifest['files']:assert SHA((base/f['path']).read_bytes())==f['sha256']
+save('input-hashes.json',{'commit':HEAD,'git':frozen,'copied_html_artifacts':assets})
+class Quiet(SimpleHTTPRequestHandler):
+    def log_message(self,*args):pass
+server=ThreadingHTTPServer(('127.0.0.1',0),partial(Quiet,directory=str(OUT/'served')))
+thread=Thread(target=server.serve_forever,daemon=True);thread.start()
+rows=[];gh=[];env={'platform':platform.platform(),'python':platform.python_version(),'playwright':importlib.metadata.version('playwright'),'connected_browser_runtime':'getForUrl: No browser is available; list=[]; existing cross-engine harness used'}
+def stable(page,locator):
+    previous=None;count=0
+    for _ in range(100):
+        value=locator.evaluate('n=>({top:n.getBoundingClientRect().top,y:scrollY,hash:location.hash})')
+        count=count+1 if previous and abs(value['y']-previous['y'])<0.1 else 0
+        previous=value
+        if count>=5 and -1<=value['top']<900:return value
+        time.sleep(.1)
+    raise AssertionError(('unstable or invisible',value))
+try:
+    with sync_playwright() as p:
+        for engine in ['chromium','firefox','webkit']:
+            browser=getattr(p,engine).launch(headless=True)
+            env[engine]={'version':browser.version,'executable':getattr(p,engine).executable_path,'executable_sha256':SHA(Path(getattr(p,engine).executable_path).read_bytes())}
+            for prefix in ['first','second']:
+                for width in [375,1280]:
+                    context=browser.new_context(java_script_enabled=False,viewport={'width':width,'height':900},reduced_motion='reduce')
+                    page=context.new_page();failed=[];requests=[]
+                    page.on('requestfailed',lambda req:failed.append(req.url))
+                    page.on('request',lambda req:requests.append(req.url))
+                    base=f'http://127.0.0.1:{server.server_port}/independent/deep/{prefix}/docs/spec/'
+                    url=base+'01-architecture.html';response=page.goto(url,wait_until='networkidle')
+                    assert response.status==200
+                    dom=page.evaluate('''()=>({scripts:document.scripts.length,ids:[...document.querySelectorAll('[id]')].map(n=>n.id),names:[...document.querySelectorAll('[name]')].map(n=>n.name),headings:[...document.querySelectorAll('h1,h2,h3')].map(n=>n.textContent),code:[...document.querySelectorAll('pre code')].map(n=>n.textContent),lang:document.querySelector('article').lang,styles:[...document.styleSheets].map(s=>s.cssRules.length),overflow:document.documentElement.scrollWidth-innerWidth,ruby:document.querySelectorAll('.nepl-ruby').length})''')
+                    assert dom['scripts']==0 and dom['lang']=='ja' and len(dom['headings'])==8
+                    assert len(set(dom['ids']))==len(dom['ids']) and set(SEMANTIC)<=set(dom['ids'])
+                    assert not set(LEGACY)&(set(dom['ids'])|set(dom['names']))
+                    assert '3. surface descriptorとGrammarのbootstrap' in dom['headings']
+                    assert dom['styles'] and min(dom['styles'])>0 and dom['ruby']>0 and dom['overflow']<=1
+                    import re
+                    original=subprocess.check_output(['git','show','afeadcf:doc/spec/01-architecture.md'],cwd=ROOT).decode('utf8')
+                    assert dom['code']==re.findall(r'^```text\n(.*?)^```',original,re.M|re.S)
+                    nav=[]
+                    for sid in SEMANTIC:
+                        page.goto(url,wait_until='load');target=page.locator('[id="'+sid+'"]');assert target.count()==1
+                        start=target.evaluate('''n=>{const abs=n.getBoundingClientRect().top+scrollY,max=document.documentElement.scrollHeight-innerHeight;scrollTo(0,abs<max/2?max:0);return scrollY}''')
+                        page.goto(url+'#'+sid,wait_until='load');final=stable(page,target)
+                        assert abs(final['y']-start)>1
+                        nav.append({'id':sid,'start':start,'final':final})
+                    page.goto(url,wait_until='networkidle');label=f'{engine}-{prefix}-{width}'
+                    (OUT/(label+'.aria.txt')).write_text(page.locator('article').aria_snapshot(),encoding='utf8',newline='\n')
+                    page.screenshot(path=str(OUT/(label+'.png')),full_page=True)
+                    link=page.locator('article a[href="22-external-extensions.html"]');assert link.count()==1
+                    link.click();page.wait_for_load_state('networkidle');assert page.url==base+'22-external-extensions.html' and page.locator('h1').count()==1
+                    assert not failed and all(urlparse(u).hostname=='127.0.0.1' for u in requests)
+                    rows.append({'engine':engine,'prefix':prefix,'width':width,'scripts_enabled':False,'dom':dom,'navigation':nav,'cross_page':page.url,'failed_requests':failed,'result':'PASS'})
+                    print(label+' PASS',flush=True);context.close()
+            browser.close()
+        browser=p.chromium.launch(headless=True);context=browser.new_context(viewport={'width':1280,'height':900},reduced_motion='reduce');page=context.new_page()
+        url=f'https://github.com/neknaj/NEPL3/blob/{HEAD}/doc/spec/01-architecture.md'
+        response=page.goto(url,wait_until='networkidle',timeout=90000);assert response.status==200
+        page.locator('article.markdown-body').wait_for()
+        (OUT/'github.html').write_text(page.content(),encoding='utf8',newline='\n')
+        def rawlines(v):
+            if isinstance(v,dict):
+                for k,x in v.items():
+                    if k=='rawLines' and ('\n'.join(x)+'\n').encode('utf8')==markdown:return True
+                    if rawlines(x):return True
+            if isinstance(v,list):return any(rawlines(x) for x in v)
+            return False
+        assert any(rawlines(json.loads(t)) for t in page.locator('script[type="application/json"]').all_text_contents())
+        targets=page.locator('article.markdown-body').evaluate('a=>[...a.querySelectorAll("[id],[name]")].map(n=>({id:n.id,name:n.getAttribute("name"),html:n.outerHTML}))')
+        save('github-elements.json',targets)
+        for fragment in LEGACY+SEMANTIC:
+            page.goto(url,wait_until='domcontentloaded')
+            target=page.locator('article.markdown-body').locator('[id="user-content-'+fragment+'"],[name="user-content-'+fragment+'"]');assert target.count()==1,(fragment,target.count())
+            start=target.evaluate('n=>{const abs=n.getBoundingClientRect().top+scrollY,max=document.documentElement.scrollHeight-innerHeight;scrollTo(0,abs<max/2?max:0);return scrollY}')
+            page.goto(url+'#'+quote(fragment,safe='-'),wait_until='domcontentloaded');final=stable(page,target);assert abs(final['y']-start)>1
+            gh.append({'fragment':fragment,'start':start,'final':final,'result':'PASS'});print('GitHub '+fragment+' PASS',flush=True)
+        page.goto(url,wait_until='networkidle');page.screenshot(path=str(OUT/'github.png'),full_page=True);browser.close()
+finally:
+    server.shutdown();server.server_close();thread.join()
+    save('environment.json',env);save('html-results.json',rows);save('github-results.json',{'fixed_commit':HEAD,'rows':gh,'complete':len(gh)==15})
+assert len(rows)==12 and len(gh)==15
+print('COMPLETE 12 HTML cases / 84 semantic navigations / 12 real links; GitHub 15 targets',flush=True)

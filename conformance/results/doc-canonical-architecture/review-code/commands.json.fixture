@@ -1,0 +1,94 @@
+[
+  {
+    "name": "rust-version",
+    "command": [
+      "rustc",
+      "-Vv"
+    ],
+    "deadline_seconds": 900,
+    "elapsed_seconds": 0.27535759995225817,
+    "exit_code": 0
+  },
+  {
+    "name": "cargo-version",
+    "command": [
+      "cargo",
+      "-V"
+    ],
+    "deadline_seconds": 900,
+    "elapsed_seconds": 0.1055174000794068,
+    "exit_code": 0
+  },
+  {
+    "name": "build",
+    "command": [
+      "cargo",
+      "build",
+      "--locked",
+      "-p",
+      "nepl3-tools"
+    ],
+    "deadline_seconds": 900,
+    "elapsed_seconds": 30.322296599973924,
+    "exit_code": 0
+  },
+  {
+    "name": "canonical-check",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-architecture\\.tmp\\review-canonical01-code\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "--check"
+    ],
+    "deadline_seconds": 900,
+    "elapsed_seconds": 30.12281830003485,
+    "exit_code": 0
+  },
+  {
+    "name": "markdown-first",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-architecture\\.tmp\\review-canonical01-code\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "markdown",
+      "C:\\projects\\NEPL3-doc-canonical-architecture\\.tmp\\review-canonical01-code\\markdown-first"
+    ],
+    "deadline_seconds": 900,
+    "elapsed_seconds": 30.05484019999858,
+    "exit_code": 0
+  },
+  {
+    "name": "html-first",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-architecture\\.tmp\\review-canonical01-code\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "html",
+      "C:\\projects\\NEPL3-doc-canonical-architecture\\.tmp\\review-canonical01-code\\html-first"
+    ],
+    "deadline_seconds": 900,
+    "elapsed_seconds": 16.214144200086594,
+    "exit_code": 0
+  },
+  {
+    "name": "markdown-second",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-architecture\\.tmp\\review-canonical01-code\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "markdown",
+      "C:\\projects\\NEPL3-doc-canonical-architecture\\.tmp\\review-canonical01-code\\markdown-second"
+    ],
+    "deadline_seconds": 900,
+    "elapsed_seconds": 30.310592000023462,
+    "exit_code": 0
+  },
+  {
+    "name": "html-second",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-architecture\\.tmp\\review-canonical01-code\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "html",
+      "C:\\projects\\NEPL3-doc-canonical-architecture\\.tmp\\review-canonical01-code\\html-second"
+    ],
+    "deadline_seconds": 900,
+    "elapsed_seconds": 16.608572399942204,
+    "exit_code": 0
+  }
+]

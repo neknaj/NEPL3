@@ -1,0 +1,68 @@
+[
+  {
+    "source_commit": "652347cb5a37ea341e5ee67887f61ccf11692cee",
+    "unchanged_head": true,
+    "command": [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "runner": "wasmtime run",
+    "exit_code": 0,
+    "elapsed": 2.5774389000143856
+  },
+  {
+    "source_commit": "652347cb5a37ea341e5ee67887f61ccf11692cee",
+    "unchanged_head": true,
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--test",
+      "doc"
+    ],
+    "runner": "wasmtime run",
+    "exit_code": 0,
+    "elapsed": 38.008810900035314
+  },
+  {
+    "source_commit": "652347cb5a37ea341e5ee67887f61ccf11692cee",
+    "unchanged_head": true,
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--test",
+      "doc",
+      "--target",
+      "wasm32-wasip2",
+      "annotated_pages::"
+    ],
+    "runner": "wasmtime run",
+    "exit_code": 0,
+    "elapsed": 249.55663480004296
+  },
+  {
+    "source_commit": "652347cb5a37ea341e5ee67887f61ccf11692cee",
+    "unchanged_head": true,
+    "command": [
+      "cargo",
+      "clippy",
+      "--locked",
+      "--workspace",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "runner": "wasmtime run",
+    "exit_code": 0,
+    "elapsed": 27.321919100009836
+  }
+]

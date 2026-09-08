@@ -1,0 +1,46 @@
+from pathlib import Path
+import subprocess,json,hashlib
+p=Path(__file__).parent.resolve();ws=p/'workspace'
+def sha(b):return hashlib.sha256(b).hexdigest()
+r=subprocess.run(['python',str(p/'check.py')],capture_output=True,timeout=60)
+(p/'check.stdout.log').write_bytes(r.stdout);(p/'check.stderr.log').write_bytes(r.stderr);assert r.returncode==0,r.stderr
+deps=json.loads((p/'dependencies.json').read_bytes());delta=json.loads((p/'fixture-delta/result.json').read_bytes())
+for row in deps:
+    b=(ws/row['path']).read_bytes()
+    if row['path']==delta['path']:assert sha(b)==delta['sha256']
+    else:assert sha(b)==row['sha256'] and len(b)==row['bytes'],row['path']
+binary=json.loads((p/'binary.json').read_bytes());assert sha(Path(binary['path']).read_bytes())==binary['sha256']
+assert all(row['exit_code']==0 for row in json.loads((p/'commands.json').read_bytes()))
+assert all(row['exit_code']==0 for row in delta['commands'])
+assert '5 passed; 0 failed; 0 ignored;' in (p/'fixture-tests.stdout.log').read_text(encoding='utf8')
+names=set('''freeze.py run.py check.py check-initial.py check-meta-name-failed.py check-pre-framing-failed.py record.md finalize.py
+snapshot.json dependencies.json source.patch original.md commands.json binary.json checks.json
+markdown_probe.rs run_markdown_probe.py markdown-probe.command.json markdown-probe.stdout.log markdown-probe.stderr.log
+old-include.command.json old-include.stdout.log old-include.stderr.log recheck_fixture.py
+fixture-delta/result.json fixture-delta/source.patch
+fixture-delta/before/tools/tests/doc/annotated_pages.rs fixture-delta/after/tools/tests/doc/annotated_pages.rs
+fixture-compile.stdout.log fixture-compile.stderr.log fixture-tests.stdout.log fixture-tests.stderr.log
+check.stdout.log check.stderr.log check-initial.stdout.log check-initial.stderr.log
+check-meta-name-failed.stdout.log check-meta-name-failed.stderr.log check-pre-framing-failed.stdout.log check-pre-framing-failed.stderr.log
+'''.split())
+for row in json.loads((p/'commands.json').read_bytes()):
+    names.update(row['name']+s for s in ['.stdout.log','.stderr.log'])
+snapshot=json.loads((p/'snapshot.json').read_bytes())
+for n in snapshot['review_scope']:
+    if (p/'source'/n).exists():names.add('source/'+n)
+for n in snapshot['changed']:
+    if (p/'before'/n).exists():names.add('before/'+n)
+for scope in ['content','collision']:
+    folder='prior/'+scope+'/';names.add(folder+'manifest.json')
+    for row in json.loads((p/folder/'manifest.json').read_bytes())['files']:
+        b=(p/folder/row['path']).read_bytes();assert sha(b)==row['sha256'] and len(b)==row['bytes'];names.add(folder+row['path'])
+for kind in ['markdown','html']:
+    for phase in ['first','second']:
+        folder=kind+'-'+phase+'/';names.add(folder+'manifest.json')
+        names.update(folder+row['path'] for row in json.loads((p/folder/'manifest.json').read_bytes())['files'])
+rows=[]
+for n in sorted(names):
+    assert not n.startswith('/') and '..' not in Path(n).parts and not any(v in Path(n).parts for v in ['workspace','target'])
+    b=(p/n).read_bytes();rows.append(dict(path=n,bytes=len(b),sha256=sha(b)))
+(p/'manifest.json').write_text(json.dumps(dict(scope='Independent chapter01 fixed source/code and actual generation review; browser/cutover acceptance remains separate',head=delta['head'],production_head=binary['head'],allowlist=True,files=rows),indent=2)+'\n',encoding='utf8')
+print('PASS',len(rows),'files',sum(row['bytes'] for row in rows),'bytes',sha((p/'manifest.json').read_bytes()))

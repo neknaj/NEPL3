@@ -1,0 +1,58 @@
+{
+  "files": [
+    {
+      "bytes": 10429,
+      "path": "doc/spec/00-contract.md",
+      "sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1"
+    },
+    {
+      "bytes": 26270,
+      "path": "doc/spec/13-reproducibility.md",
+      "sha256": "454ede4004f0022f8dedb0246ecb227fc36cb57456b9c57fe6614f7a3e512d8e"
+    },
+    {
+      "bytes": 12525,
+      "path": "doc/spec/22-external-extensions.md",
+      "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+    },
+    {
+      "bytes": 11492,
+      "path": "doc/spec/01-architecture.md",
+      "sha256": "894682f8b10159a4605902401af046096a6ea060b6ca4c2e92e5ef4939fa1ee2"
+    }
+  ],
+  "format": "nepl3.canonical-markdown-stage/1",
+  "input_context": "d865100fc92eecc3900fb1146146abde146ddfcfed4d3f94f06fc816d970d2b7",
+  "output_budget": {
+    "initial_usage": {
+      "allocation_units": 0,
+      "depth": 0,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 0,
+      "output_bytes": 0,
+      "source_bytes": 0,
+      "work": 0
+    },
+    "limits": {
+      "allocation_units": 750000000,
+      "depth": 1000,
+      "diagnostics": 1000,
+      "events": 1000,
+      "nodes": 10000000,
+      "output_bytes": 10000000,
+      "source_bytes": 10000000,
+      "work": 300000000
+    },
+    "usage_before_receipt_serialization": {
+      "allocation_units": 494258482,
+      "depth": 14,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 7679960,
+      "output_bytes": 217034,
+      "source_bytes": 82492,
+      "work": 188523101
+    }
+  }
+}

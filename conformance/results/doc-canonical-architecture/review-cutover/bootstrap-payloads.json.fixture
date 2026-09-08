@@ -1,0 +1,896 @@
+{
+  "implementation_commit": "9c5883b555ebe5e09380ea4ab20ce275d0687259",
+  "base_commit": "14df7e9d77faa86715c4605b28a853812980c4b0",
+  "sources": [
+    {
+      "path": "doc/canonical.json",
+      "bytes": 1530,
+      "sha256": "83a1afc090ec552b800f0dfb4ef948284e5dfb982e2d7adb1776957a4f8f38be"
+    },
+    {
+      "path": "doc/migration/aliases/01-architecture.json",
+      "bytes": 571,
+      "sha256": "68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5"
+    },
+    {
+      "path": "doc/spec/01-architecture.md",
+      "bytes": 11492,
+      "sha256": "894682f8b10159a4605902401af046096a6ea060b6ca4c2e92e5ef4939fa1ee2"
+    },
+    {
+      "path": "doc/spec/01-architecture.nepld",
+      "bytes": 14700,
+      "sha256": "7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d"
+    }
+  ],
+  "removed": [
+    {
+      "path": "doc/migration/authored/01-architecture.nepld",
+      "bytes": 14690,
+      "sha256": "8d338b3ce98f3030e503ecd0aea9374c439c606cfbeb48bcd6b777a3f45654b2"
+    }
+  ],
+  "files": [
+    {
+      "file": "root-generation/commands.json.fixture",
+      "owner": "root-generation",
+      "restore": "commands.json",
+      "bytes": 2718,
+      "sha256": "f713ed6adef54f17a8c64903b98ca22e86c579f875c963647becf5c06e75cde5"
+    },
+    {
+      "file": "root-generation/html-comparison.json.fixture",
+      "owner": "root-generation",
+      "restore": "html-comparison.json",
+      "bytes": 953,
+      "sha256": "ffd9988421be683f721099faf5c29438bba3711dbd862706d9cdcb452f6d163f"
+    },
+    {
+      "file": "root-generation/html-first.stderr.log.fixture",
+      "owner": "root-generation",
+      "restore": "html-first.stderr.log",
+      "bytes": 158,
+      "sha256": "be43a975cc8716dbf1e102f48d8d992a784f9c228ad7b3c0844a46f09d5eb207"
+    },
+    {
+      "file": "root-generation/html-first.stdout.log.fixture",
+      "owner": "root-generation",
+      "restore": "html-first.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "root-generation/html-second.stderr.log.fixture",
+      "owner": "root-generation",
+      "restore": "html-second.stderr.log",
+      "bytes": 159,
+      "sha256": "3dfb4360044a663b4504b3b94d6700032cf3d90ade1db4ff30911825ac938f09"
+    },
+    {
+      "file": "root-generation/html-second.stdout.log.fixture",
+      "owner": "root-generation",
+      "restore": "html-second.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "root-generation/markdown-comparison.json.fixture",
+      "owner": "root-generation",
+      "restore": "markdown-comparison.json",
+      "bytes": 786,
+      "sha256": "09664f5007661f040c5d1b69bbe49e97c3e052003e5b5248d19a86622daf42c3"
+    },
+    {
+      "file": "root-generation/markdown-first.stderr.log.fixture",
+      "owner": "root-generation",
+      "restore": "markdown-first.stderr.log",
+      "bytes": 251,
+      "sha256": "3ae0abd316dc4ebf9e71c93669ff0825bb49bb2464e65adfb5330c5451e26766"
+    },
+    {
+      "file": "root-generation/markdown-first.stdout.log.fixture",
+      "owner": "root-generation",
+      "restore": "markdown-first.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "root-generation/markdown-second.stderr.log.fixture",
+      "owner": "root-generation",
+      "restore": "markdown-second.stderr.log",
+      "bytes": 167,
+      "sha256": "5997e469d999b0b7e595620a5e33bff42be2b0e94b55306e39b0c9b22cbf839d"
+    },
+    {
+      "file": "root-generation/markdown-second.stdout.log.fixture",
+      "owner": "root-generation",
+      "restore": "markdown-second.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "root-browser/chromium-html-anchor-first-1280.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "chromium-html-anchor-first-1280.aria.txt",
+      "bytes": 10895,
+      "sha256": "93231e3c699e0c66b204963a90eeccc1d989bda664681b8b1d30d9c48fa41ce5"
+    },
+    {
+      "file": "root-browser/chromium-html-anchor-first-1280.png.fixture",
+      "owner": "root-browser",
+      "restore": "chromium-html-anchor-first-1280.png",
+      "bytes": 44056,
+      "sha256": "d7011c2e28b7c0e52a990a4194cd66be7570c23244dff3d7f627764034ca76a0"
+    },
+    {
+      "file": "root-browser/chromium-html-anchor-first-375.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "chromium-html-anchor-first-375.aria.txt",
+      "bytes": 10895,
+      "sha256": "93231e3c699e0c66b204963a90eeccc1d989bda664681b8b1d30d9c48fa41ce5"
+    },
+    {
+      "file": "root-browser/chromium-html-anchor-first-375.png.fixture",
+      "owner": "root-browser",
+      "restore": "chromium-html-anchor-first-375.png",
+      "bytes": 43343,
+      "sha256": "143a8fd6914f6d10d2945607dddbd8bc415ace73da9d8bf956a9f1b587c4e913"
+    },
+    {
+      "file": "root-browser/chromium-html-anchor-second-1280.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "chromium-html-anchor-second-1280.aria.txt",
+      "bytes": 10895,
+      "sha256": "93231e3c699e0c66b204963a90eeccc1d989bda664681b8b1d30d9c48fa41ce5"
+    },
+    {
+      "file": "root-browser/chromium-html-anchor-second-1280.png.fixture",
+      "owner": "root-browser",
+      "restore": "chromium-html-anchor-second-1280.png",
+      "bytes": 44056,
+      "sha256": "d7011c2e28b7c0e52a990a4194cd66be7570c23244dff3d7f627764034ca76a0"
+    },
+    {
+      "file": "root-browser/chromium-html-anchor-second-375.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "chromium-html-anchor-second-375.aria.txt",
+      "bytes": 10895,
+      "sha256": "93231e3c699e0c66b204963a90eeccc1d989bda664681b8b1d30d9c48fa41ce5"
+    },
+    {
+      "file": "root-browser/chromium-html-anchor-second-375.png.fixture",
+      "owner": "root-browser",
+      "restore": "chromium-html-anchor-second-375.png",
+      "bytes": 43343,
+      "sha256": "143a8fd6914f6d10d2945607dddbd8bc415ace73da9d8bf956a9f1b587c4e913"
+    },
+    {
+      "file": "root-browser/firefox-html-anchor-first-1280.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "firefox-html-anchor-first-1280.aria.txt",
+      "bytes": 10895,
+      "sha256": "93231e3c699e0c66b204963a90eeccc1d989bda664681b8b1d30d9c48fa41ce5"
+    },
+    {
+      "file": "root-browser/firefox-html-anchor-first-1280.png.fixture",
+      "owner": "root-browser",
+      "restore": "firefox-html-anchor-first-1280.png",
+      "bytes": 51626,
+      "sha256": "b46776ebc9a692ac40195192293a427c7fbd6e90c040e0ab7f57a3e93b6586a3"
+    },
+    {
+      "file": "root-browser/firefox-html-anchor-first-375.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "firefox-html-anchor-first-375.aria.txt",
+      "bytes": 10895,
+      "sha256": "93231e3c699e0c66b204963a90eeccc1d989bda664681b8b1d30d9c48fa41ce5"
+    },
+    {
+      "file": "root-browser/firefox-html-anchor-first-375.png.fixture",
+      "owner": "root-browser",
+      "restore": "firefox-html-anchor-first-375.png",
+      "bytes": 36652,
+      "sha256": "07556555c98ebb1e9a7194a1da436aeffa3bb3afd06770b605bd65cad2e584c9"
+    },
+    {
+      "file": "root-browser/firefox-html-anchor-second-1280.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "firefox-html-anchor-second-1280.aria.txt",
+      "bytes": 10895,
+      "sha256": "93231e3c699e0c66b204963a90eeccc1d989bda664681b8b1d30d9c48fa41ce5"
+    },
+    {
+      "file": "root-browser/firefox-html-anchor-second-1280.png.fixture",
+      "owner": "root-browser",
+      "restore": "firefox-html-anchor-second-1280.png",
+      "bytes": 51626,
+      "sha256": "b46776ebc9a692ac40195192293a427c7fbd6e90c040e0ab7f57a3e93b6586a3"
+    },
+    {
+      "file": "root-browser/firefox-html-anchor-second-375.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "firefox-html-anchor-second-375.aria.txt",
+      "bytes": 10895,
+      "sha256": "93231e3c699e0c66b204963a90eeccc1d989bda664681b8b1d30d9c48fa41ce5"
+    },
+    {
+      "file": "root-browser/firefox-html-anchor-second-375.png.fixture",
+      "owner": "root-browser",
+      "restore": "firefox-html-anchor-second-375.png",
+      "bytes": 36652,
+      "sha256": "07556555c98ebb1e9a7194a1da436aeffa3bb3afd06770b605bd65cad2e584c9"
+    },
+    {
+      "file": "root-browser/results.json.fixture",
+      "owner": "root-browser",
+      "restore": "results.json",
+      "bytes": 53525,
+      "sha256": "e235addd39f6dfa55f5f709748d2fd7bdcf74896c677135198e2326f54e7885d"
+    },
+    {
+      "file": "root-browser/webkit-html-anchor-first-1280.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "webkit-html-anchor-first-1280.aria.txt",
+      "bytes": 10895,
+      "sha256": "93231e3c699e0c66b204963a90eeccc1d989bda664681b8b1d30d9c48fa41ce5"
+    },
+    {
+      "file": "root-browser/webkit-html-anchor-first-1280.png.fixture",
+      "owner": "root-browser",
+      "restore": "webkit-html-anchor-first-1280.png",
+      "bytes": 52674,
+      "sha256": "8dbaa0eab22f8f838e3f3499cca4880348d095057f482b387ef8b9650942a117"
+    },
+    {
+      "file": "root-browser/webkit-html-anchor-first-375.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "webkit-html-anchor-first-375.aria.txt",
+      "bytes": 10895,
+      "sha256": "93231e3c699e0c66b204963a90eeccc1d989bda664681b8b1d30d9c48fa41ce5"
+    },
+    {
+      "file": "root-browser/webkit-html-anchor-first-375.png.fixture",
+      "owner": "root-browser",
+      "restore": "webkit-html-anchor-first-375.png",
+      "bytes": 42232,
+      "sha256": "3854831d1c1e914793cc46eb86a337e1af8c232ae058a95670b08ab9531107e4"
+    },
+    {
+      "file": "root-browser/webkit-html-anchor-second-1280.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "webkit-html-anchor-second-1280.aria.txt",
+      "bytes": 10895,
+      "sha256": "93231e3c699e0c66b204963a90eeccc1d989bda664681b8b1d30d9c48fa41ce5"
+    },
+    {
+      "file": "root-browser/webkit-html-anchor-second-1280.png.fixture",
+      "owner": "root-browser",
+      "restore": "webkit-html-anchor-second-1280.png",
+      "bytes": 52674,
+      "sha256": "8dbaa0eab22f8f838e3f3499cca4880348d095057f482b387ef8b9650942a117"
+    },
+    {
+      "file": "root-browser/webkit-html-anchor-second-375.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "webkit-html-anchor-second-375.aria.txt",
+      "bytes": 10895,
+      "sha256": "93231e3c699e0c66b204963a90eeccc1d989bda664681b8b1d30d9c48fa41ce5"
+    },
+    {
+      "file": "root-browser/webkit-html-anchor-second-375.png.fixture",
+      "owner": "root-browser",
+      "restore": "webkit-html-anchor-second-375.png",
+      "bytes": 42232,
+      "sha256": "3854831d1c1e914793cc46eb86a337e1af8c232ae058a95670b08ab9531107e4"
+    },
+    {
+      "file": "root-github/elements.json.fixture",
+      "owner": "root-github",
+      "restore": "elements.json",
+      "bytes": 2546,
+      "sha256": "79449cd30a25e45d0f1089d761ffd5404ab29d641bcb036fa582d1a6ce18dd0e"
+    },
+    {
+      "file": "root-github/github.png.fixture",
+      "owner": "root-github",
+      "restore": "github.png",
+      "bytes": 142686,
+      "sha256": "32506b57ba6fb45fe6c3f9a18667cd5b343fe7fc3d273a06418d889c2df95949"
+    },
+    {
+      "file": "root-github/page.html.fixture",
+      "owner": "root-github",
+      "restore": "page.html",
+      "bytes": 309840,
+      "sha256": "21e68f4a04808aa26d3dfdacaf5d229d8b3a2735320efe4037b1cfd8b0ddab10"
+    },
+    {
+      "file": "root-github/results.json.fixture",
+      "owner": "root-github",
+      "restore": "results.json",
+      "bytes": 5286,
+      "sha256": "a5a7c356e570dc69ca4f74663ea314ad9ab0a824f77749c2e989ff6aca9da777"
+    },
+    {
+      "file": "root-github-failure/elements.json.fixture",
+      "owner": "root-github-failure",
+      "restore": "elements.json",
+      "bytes": 2536,
+      "sha256": "4dc643571ddfef1eae9a86aadf64adafda364b3af794d20247e05346f2f88b0d"
+    },
+    {
+      "file": "root-github-failure/page.html.fixture",
+      "owner": "root-github-failure",
+      "restore": "page.html",
+      "bytes": 309518,
+      "sha256": "f66f951627a966c844449924003c91a687c8adb51096db2a01c4ec5dc27214b3"
+    },
+    {
+      "file": "root-github-failure/results.json.fixture",
+      "owner": "root-github-failure",
+      "restore": "results.json",
+      "bytes": 1596,
+      "sha256": "3fdf8228a204b88dc5815d0d10c989b1a73d228a88ab708d2db2f1d862065813"
+    },
+    {
+      "file": "root-html-first/docs/spec/00-contract.html.fixture",
+      "owner": "root-html-first",
+      "restore": "docs/spec/00-contract.html",
+      "bytes": 38595,
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+    },
+    {
+      "file": "root-html-first/docs/spec/01-architecture.html.fixture",
+      "owner": "root-html-first",
+      "restore": "docs/spec/01-architecture.html",
+      "bytes": 32896,
+      "sha256": "499aaa1e67781a52c2bc2f3faaa8fc0623b6a8e3c80282eb4a841da597c8936f"
+    },
+    {
+      "file": "root-html-first/docs/spec/13-reproducibility.html.fixture",
+      "owner": "root-html-first",
+      "restore": "docs/spec/13-reproducibility.html",
+      "bytes": 91421,
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+    },
+    {
+      "file": "root-html-first/docs/spec/22-external-extensions.html.fixture",
+      "owner": "root-html-first",
+      "restore": "docs/spec/22-external-extensions.html",
+      "bytes": 44041,
+      "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8"
+    },
+    {
+      "file": "root-html-first/docs/spec/assets/doc.css.fixture",
+      "owner": "root-html-first",
+      "restore": "docs/spec/assets/doc.css",
+      "bytes": 2255,
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+    },
+    {
+      "file": "root-html-first/manifest.json.fixture",
+      "owner": "root-html-first",
+      "restore": "manifest.json",
+      "bytes": 11442,
+      "sha256": "b2e18d49bdad60ff4ce099ea04c2f21525a1dccf8cc10371ed4b20b9d6c11820"
+    },
+    {
+      "file": "root-html-second/docs/spec/00-contract.html.fixture",
+      "owner": "root-html-second",
+      "restore": "docs/spec/00-contract.html",
+      "bytes": 38595,
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+    },
+    {
+      "file": "root-html-second/docs/spec/01-architecture.html.fixture",
+      "owner": "root-html-second",
+      "restore": "docs/spec/01-architecture.html",
+      "bytes": 32896,
+      "sha256": "499aaa1e67781a52c2bc2f3faaa8fc0623b6a8e3c80282eb4a841da597c8936f"
+    },
+    {
+      "file": "root-html-second/docs/spec/13-reproducibility.html.fixture",
+      "owner": "root-html-second",
+      "restore": "docs/spec/13-reproducibility.html",
+      "bytes": 91421,
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+    },
+    {
+      "file": "root-html-second/docs/spec/22-external-extensions.html.fixture",
+      "owner": "root-html-second",
+      "restore": "docs/spec/22-external-extensions.html",
+      "bytes": 44041,
+      "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8"
+    },
+    {
+      "file": "root-html-second/docs/spec/assets/doc.css.fixture",
+      "owner": "root-html-second",
+      "restore": "docs/spec/assets/doc.css",
+      "bytes": 2255,
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+    },
+    {
+      "file": "root-html-second/manifest.json.fixture",
+      "owner": "root-html-second",
+      "restore": "manifest.json",
+      "bytes": 11442,
+      "sha256": "b2e18d49bdad60ff4ce099ea04c2f21525a1dccf8cc10371ed4b20b9d6c11820"
+    },
+    {
+      "file": "root-markdown-first/doc/spec/00-contract.md.fixture",
+      "owner": "root-markdown-first",
+      "restore": "doc/spec/00-contract.md",
+      "bytes": 10429,
+      "sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1"
+    },
+    {
+      "file": "root-markdown-first/doc/spec/01-architecture.md.fixture",
+      "owner": "root-markdown-first",
+      "restore": "doc/spec/01-architecture.md",
+      "bytes": 11492,
+      "sha256": "894682f8b10159a4605902401af046096a6ea060b6ca4c2e92e5ef4939fa1ee2"
+    },
+    {
+      "file": "root-markdown-first/doc/spec/13-reproducibility.md.fixture",
+      "owner": "root-markdown-first",
+      "restore": "doc/spec/13-reproducibility.md",
+      "bytes": 26270,
+      "sha256": "454ede4004f0022f8dedb0246ecb227fc36cb57456b9c57fe6614f7a3e512d8e"
+    },
+    {
+      "file": "root-markdown-first/doc/spec/22-external-extensions.md.fixture",
+      "owner": "root-markdown-first",
+      "restore": "doc/spec/22-external-extensions.md",
+      "bytes": 12525,
+      "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+    },
+    {
+      "file": "root-markdown-first/manifest.json.fixture",
+      "owner": "root-markdown-first",
+      "restore": "manifest.json",
+      "bytes": 1542,
+      "sha256": "f9525835e4e54066efd112b48e2579b919725ddaf3c79ffdc9477f6af6527507"
+    },
+    {
+      "file": "root-markdown-second/doc/spec/00-contract.md.fixture",
+      "owner": "root-markdown-second",
+      "restore": "doc/spec/00-contract.md",
+      "bytes": 10429,
+      "sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1"
+    },
+    {
+      "file": "root-markdown-second/doc/spec/01-architecture.md.fixture",
+      "owner": "root-markdown-second",
+      "restore": "doc/spec/01-architecture.md",
+      "bytes": 11492,
+      "sha256": "894682f8b10159a4605902401af046096a6ea060b6ca4c2e92e5ef4939fa1ee2"
+    },
+    {
+      "file": "root-markdown-second/doc/spec/13-reproducibility.md.fixture",
+      "owner": "root-markdown-second",
+      "restore": "doc/spec/13-reproducibility.md",
+      "bytes": 26270,
+      "sha256": "454ede4004f0022f8dedb0246ecb227fc36cb57456b9c57fe6614f7a3e512d8e"
+    },
+    {
+      "file": "root-markdown-second/doc/spec/22-external-extensions.md.fixture",
+      "owner": "root-markdown-second",
+      "restore": "doc/spec/22-external-extensions.md",
+      "bytes": 12525,
+      "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+    },
+    {
+      "file": "root-markdown-second/manifest.json.fixture",
+      "owner": "root-markdown-second",
+      "restore": "manifest.json",
+      "bytes": 1542,
+      "sha256": "f9525835e4e54066efd112b48e2579b919725ddaf3c79ffdc9477f6af6527507"
+    },
+    {
+      "file": "root-scripts/start.json.fixture",
+      "owner": "root-scripts",
+      "restore": "start.json",
+      "bytes": 228,
+      "sha256": "fade86c7708657acd034875f9cfa587dc116ee27de94145810a71ecabe0d3eee"
+    },
+    {
+      "file": "root-scripts/original.md.fixture",
+      "owner": "root-scripts",
+      "restore": "original.md",
+      "bytes": 6430,
+      "sha256": "f5024444c85b45094874a961d52da111798ed37efa6c40fa0954c8caaf7c4170"
+    },
+    {
+      "file": "root-scripts/prepare.py.fixture",
+      "owner": "root-scripts",
+      "restore": "prepare.py",
+      "bytes": 2244,
+      "sha256": "b351968ed8d42a83f825398d30c3ed4b3f4d3ca8d4be0141b56ea37ed565e922"
+    },
+    {
+      "file": "root-scripts/regenerate-anchor.py.fixture",
+      "owner": "root-scripts",
+      "restore": "regenerate-anchor.py",
+      "bytes": 2037,
+      "sha256": "9bb1d05459667f308f409b372c8d76043fde639add9802aa114f4c8f4ffea952"
+    },
+    {
+      "file": "root-scripts/browser-canonical01-anchor.py.fixture",
+      "owner": "root-scripts",
+      "restore": "browser-canonical01-anchor.py",
+      "bytes": 5255,
+      "sha256": "5ff027dfee5e26e265e78d391b8e9599e95f22afb1e5c6957c9857f488fa27d8"
+    },
+    {
+      "file": "root-scripts/github-canonical01-anchor.py.fixture",
+      "owner": "root-scripts",
+      "restore": "github-canonical01-anchor.py",
+      "bytes": 3856,
+      "sha256": "1762649ef7cf7a2f7bf0c6bdfc0674a4576d9e9bb594ba3f4bf0b0241929209c"
+    },
+    {
+      "file": "root-scripts/github-canonical01.py.fixture",
+      "owner": "root-scripts",
+      "restore": "github-canonical01.py",
+      "bytes": 3849,
+      "sha256": "c1a8522f620f7a993060fc2984e7a3e298dcde03b668a716e7d4353ef87a896c"
+    },
+    {
+      "file": "root-scripts/browser-canonical01-initial.py.fixture",
+      "owner": "root-scripts",
+      "restore": "browser-canonical01-initial.py",
+      "bytes": 5120,
+      "sha256": "b38c3b2e21f44f18d50f690a4be11274e7a75aab1414ef776e88e13567d84b02"
+    },
+    {
+      "file": "root-scripts/browser-code-initial-mismatch.json.fixture",
+      "owner": "root-scripts",
+      "restore": "browser-code-initial-mismatch.json",
+      "bytes": 501,
+      "sha256": "bb1b1c52a20dd86c92632ddaa0c5c9362a9bb921da6da458516daddb34d6511f"
+    },
+    {
+      "file": "root-scripts/browser-canonical01-anchor-alias-assumption-failed.py.fixture",
+      "owner": "root-scripts",
+      "restore": "browser-canonical01-anchor-alias-assumption-failed.py",
+      "bytes": 5376,
+      "sha256": "2b79bb612474384b75f5c9d5d8c98fc8148ec0a1d59ad517a4ca979710eef945"
+    },
+    {
+      "file": "root-scripts/html-alias-scope-correction.md.fixture",
+      "owner": "root-scripts",
+      "restore": "html-alias-scope-correction.md",
+      "bytes": 585,
+      "sha256": "a463db70a89172f7dd2a3489c18639d2fff9207431af0d3290a2edb02aac1455"
+    },
+    {
+      "file": "root-scripts/archive-canonical01.py.fixture",
+      "owner": "root-scripts",
+      "restore": "archive-canonical01.py",
+      "bytes": 3656,
+      "sha256": "6e1798e74fb972d99f9f53a4edbc25fddb2c0c9f4acc8512855964b1eec1abe4"
+    },
+    {
+      "file": "root-bootstrap/bootstrap-canonical01.py.fixture",
+      "owner": "root-bootstrap",
+      "restore": "bootstrap-canonical01.py",
+      "bytes": 2544,
+      "sha256": "d0fbd1d38e68605a285f58a4395621871843620f6c596090cc029041c7121c98"
+    },
+    {
+      "file": "root-bootstrap/restore.py.fixture",
+      "owner": "root-bootstrap",
+      "restore": "restore.py",
+      "bytes": 824,
+      "sha256": "a84f3d4e7fce06945eacb1c2a4a3b0f1aaf08f18f076438f7c848f264d6ca701"
+    },
+    {
+      "file": "root-bootstrap/results.json.fixture",
+      "owner": "root-bootstrap",
+      "restore": "results.json",
+      "bytes": 1956,
+      "sha256": "342c22e377a5790f1122df700d337d627d663bfe7213059f21f752355eaa21e1"
+    },
+    {
+      "file": "preflight/manifest.json.fixture",
+      "owner": "preflight",
+      "restore": "manifest.json",
+      "bytes": 2990,
+      "sha256": "4ff685911ce4864774355b998caea38a1395273ce70d959c957bcb1ac26c3bc5"
+    },
+    {
+      "file": "preflight/check.py.fixture",
+      "owner": "preflight",
+      "restore": "check.py",
+      "bytes": 3078,
+      "sha256": "d9b456433c6017951273dfea9d2d36171ae900157f3c9db6f50b54bc295c75d1"
+    },
+    {
+      "file": "preflight/checks.log.fixture",
+      "owner": "preflight",
+      "restore": "checks.log",
+      "bytes": 238,
+      "sha256": "621fa838d1b987404c26a178d873589918da47c5113ad404b90d0d091fce39e1"
+    },
+    {
+      "file": "preflight/content.json.fixture",
+      "owner": "preflight",
+      "restore": "content.json",
+      "bytes": 1684,
+      "sha256": "ffaf774b4c0c903b5f4c208aa75fb6b1cca14b122fbf33c6d795ed71f559b634"
+    },
+    {
+      "file": "preflight/content.py.fixture",
+      "owner": "preflight",
+      "restore": "content.py",
+      "bytes": 3879,
+      "sha256": "209b5d7d92053fe31a63d1b4e769bc56649f99c55fbda9f4624beb9469dc417a"
+    },
+    {
+      "file": "preflight/draft.nepld.fixture",
+      "owner": "preflight",
+      "restore": "draft.nepld",
+      "bytes": 14690,
+      "sha256": "8d338b3ce98f3030e503ecd0aea9374c439c606cfbeb48bcd6b777a3f45654b2"
+    },
+    {
+      "file": "preflight/fetch.json.fixture",
+      "owner": "preflight",
+      "restore": "fetch.json",
+      "bytes": 197,
+      "sha256": "32a8746ebcd37b3ea2dfeab1da53d4baae913def3277e9631fd010522923c8e9"
+    },
+    {
+      "file": "preflight/git-history.txt.fixture",
+      "owner": "preflight",
+      "restore": "git-history.txt",
+      "bytes": 665,
+      "sha256": "8176fac15487d1a305cf98ea5b8ae60a4f8fac5febb5ca02aa937370c2f64844"
+    },
+    {
+      "file": "preflight/github.html.fixture",
+      "owner": "preflight",
+      "restore": "github.html",
+      "bytes": 279302,
+      "sha256": "cd4689c60d0483e7fb78036819b9c1c1407cf84ff80068afcab6dab9e4840094"
+    },
+    {
+      "file": "preflight/helpers.py.fixture",
+      "owner": "preflight",
+      "restore": "helpers.py",
+      "bytes": 3299,
+      "sha256": "68315acfa40d0086e76b823cb464a4e76b9de12d8d9b9103c92277d6adb8ae13"
+    },
+    {
+      "file": "preflight/mapping.json.fixture",
+      "owner": "preflight",
+      "restore": "mapping.json",
+      "bytes": 2399,
+      "sha256": "4745dd97c2c46eeb0281032aba6daf23f6ab97e699e880eabe884e632037241a"
+    },
+    {
+      "file": "preflight/prior-extension-manifest.json.fixture",
+      "owner": "preflight",
+      "restore": "prior-extension-manifest.json",
+      "bytes": 4233,
+      "sha256": "e482da8e5ae32ff00cfea0830562afe416eb0644b4288024e623afcea5b140e6"
+    },
+    {
+      "file": "preflight/prior-extension-record.md.fixture",
+      "owner": "preflight",
+      "restore": "prior-extension-record.md",
+      "bytes": 4798,
+      "sha256": "23ffb9106df94f1f627f8d7822963f23397b9ecf6022afe7dc0023663ef5174b"
+    },
+    {
+      "file": "preflight/prior-extension-result.json.fixture",
+      "owner": "preflight",
+      "restore": "prior-extension-result.json",
+      "bytes": 7054,
+      "sha256": "b8fa3f206385cd41e071badade7a466bd6d5e273f6a77cc99f27b29a88fec3c4"
+    },
+    {
+      "file": "preflight/prior-foundation-review.md.fixture",
+      "owner": "preflight",
+      "restore": "prior-foundation-review.md",
+      "bytes": 3554,
+      "sha256": "789741cedd7264de451b1d1e05c553a96f4e670fbeb70643b3f1fdb244ce2ac4"
+    },
+    {
+      "file": "preflight/rawLines.json.fixture",
+      "owner": "preflight",
+      "restore": "rawLines.json",
+      "bytes": 6983,
+      "sha256": "6e3938b3e007c6ed23d71cc169626dc74a67bcda3f5eb36c154063fcf2ede416"
+    },
+    {
+      "file": "preflight/record.md.fixture",
+      "owner": "preflight",
+      "restore": "record.md",
+      "bytes": 4934,
+      "sha256": "328403e4ac4ebe7f9c08affaca6d9252feb734cb5f9cad9b5641e86e2eb1da71"
+    },
+    {
+      "file": "preflight/result.json.fixture",
+      "owner": "preflight",
+      "restore": "result.json",
+      "bytes": 2435,
+      "sha256": "46f96badd0dbfdc7c56adbc5f8cc120ab3ea692f7aecc0cad661b2ee27940bf2"
+    },
+    {
+      "file": "preflight/richText.html.fixture",
+      "owner": "preflight",
+      "restore": "richText.html",
+      "bytes": 16752,
+      "sha256": "21db6da472d547efdbf2b944b549f11c74efe1e4ad694aff9ff28e296f1d078b"
+    },
+    {
+      "file": "preflight/source.md.fixture",
+      "owner": "preflight",
+      "restore": "source.md",
+      "bytes": 6430,
+      "sha256": "f5024444c85b45094874a961d52da111798ed37efa6c40fa0954c8caaf7c4170"
+    },
+    {
+      "file": "review-content/manifest.json.fixture",
+      "owner": "review-content",
+      "restore": "manifest.json",
+      "bytes": 1842,
+      "sha256": "501fafacecc80d2e049749097cc9f4a185a26a021683fd89a2e8faec6516a315"
+    },
+    {
+      "file": "review-content/check.py.fixture",
+      "owner": "review-content",
+      "restore": "check.py",
+      "bytes": 2708,
+      "sha256": "b5b73676f9ba237997d9f64051da2ea65a8923af06ac4269a6178e749ae3b09d"
+    },
+    {
+      "file": "review-content/preflight-manifest.json.fixture",
+      "owner": "review-content",
+      "restore": "preflight-manifest.json",
+      "bytes": 2990,
+      "sha256": "4ff685911ce4864774355b998caea38a1395273ce70d959c957bcb1ac26c3bc5"
+    },
+    {
+      "file": "review-content/record.md.fixture",
+      "owner": "review-content",
+      "restore": "record.md",
+      "bytes": 6025,
+      "sha256": "387355d24be5a6b18665b9221d2e673b3ef9f919eead466b796ba057d031c305"
+    },
+    {
+      "file": "review-content/result.json.fixture",
+      "owner": "review-content",
+      "restore": "result.json",
+      "bytes": 1134,
+      "sha256": "1036ed7b2a48fbcd3c8c70cf40ffc5b6822cd5b2a16de25053a77b0d6174b304"
+    },
+    {
+      "file": "review-content/source/AGENTS.md.fixture",
+      "owner": "review-content",
+      "restore": "source/AGENTS.md",
+      "bytes": 7729,
+      "sha256": "c26941e6dbf896a5e07b7c807789bc1f70bd740e4065092186be42e5ac4baf53"
+    },
+    {
+      "file": "review-content/source/design/dependencies.json.fixture",
+      "owner": "review-content",
+      "restore": "source/design/dependencies.json",
+      "bytes": 6431,
+      "sha256": "ada18c4fb6ca843184e500f9c826931679dc02998bfe05b8ce7e60b232ac65ec"
+    },
+    {
+      "file": "review-content/source/design/forms.json.fixture",
+      "owner": "review-content",
+      "restore": "source/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "file": "review-content/source/doc/authoring.md.fixture",
+      "owner": "review-content",
+      "restore": "source/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "file": "review-content/source/doc/migration/authored/01-architecture.nepld.fixture",
+      "owner": "review-content",
+      "restore": "source/doc/migration/authored/01-architecture.nepld",
+      "bytes": 14690,
+      "sha256": "8d338b3ce98f3030e503ecd0aea9374c439c606cfbeb48bcd6b777a3f45654b2"
+    },
+    {
+      "file": "review-content/source/doc/spec/01-architecture.md.fixture",
+      "owner": "review-content",
+      "restore": "source/doc/spec/01-architecture.md",
+      "bytes": 6430,
+      "sha256": "f5024444c85b45094874a961d52da111798ed37efa6c40fa0954c8caaf7c4170"
+    },
+    {
+      "file": "review-content/source/tools/audit/structure.py.fixture",
+      "owner": "review-content",
+      "restore": "source/tools/audit/structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    },
+    {
+      "file": "review-collision/manifest.json.fixture",
+      "owner": "review-collision",
+      "restore": "manifest.json",
+      "bytes": 1641,
+      "sha256": "d318bd9ab47f9b710801aa33248a2f7a8052de036c6eab0251b1b1ad2d6b618b"
+    },
+    {
+      "file": "review-collision/adjacent-dom.html.fixture",
+      "owner": "review-collision",
+      "restore": "adjacent-dom.html",
+      "bytes": 380,
+      "sha256": "0fa2ba5cd9ef77f7f7cef9c916b47858a3b56bdb6146fa6fe005dc57680db333"
+    },
+    {
+      "file": "review-collision/aliases.json.fixture",
+      "owner": "review-collision",
+      "restore": "aliases.json",
+      "bytes": 571,
+      "sha256": "68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5"
+    },
+    {
+      "file": "review-collision/check.py.fixture",
+      "owner": "review-collision",
+      "restore": "check.py",
+      "bytes": 3262,
+      "sha256": "7df3ebb58e8688f580c3553e491f4767da5b2d9ffe26a8f91f8ca4f4b7cc8d5c"
+    },
+    {
+      "file": "review-collision/diagnosis.json.fixture",
+      "owner": "review-collision",
+      "restore": "diagnosis.json",
+      "bytes": 745,
+      "sha256": "0cc575e83d9853547593b278ca1ad952ed28eff75f04ccf724f1cefd608edd27"
+    },
+    {
+      "file": "review-collision/elements.json.fixture",
+      "owner": "review-collision",
+      "restore": "elements.json",
+      "bytes": 2536,
+      "sha256": "4dc643571ddfef1eae9a86aadf64adafda364b3af794d20247e05346f2f88b0d"
+    },
+    {
+      "file": "review-collision/generated.md.fixture",
+      "owner": "review-collision",
+      "restore": "generated.md",
+      "bytes": 11482,
+      "sha256": "818b501d11a3ce5c24fb64bb6dd4cb9c6ee97993a00cc5cf4aa0b035ee3c49ef"
+    },
+    {
+      "file": "review-collision/original-probe.py.fixture",
+      "owner": "review-collision",
+      "restore": "original-probe.py",
+      "bytes": 3849,
+      "sha256": "c1a8522f620f7a993060fc2984e7a3e298dcde03b668a716e7d4353ef87a896c"
+    },
+    {
+      "file": "review-collision/page.html.fixture",
+      "owner": "review-collision",
+      "restore": "page.html",
+      "bytes": 309518,
+      "sha256": "f66f951627a966c844449924003c91a687c8adb51096db2a01c4ec5dc27214b3"
+    },
+    {
+      "file": "review-collision/record.md.fixture",
+      "owner": "review-collision",
+      "restore": "record.md",
+      "bytes": 4227,
+      "sha256": "c911209cb1c3cb5ce1f4aff5682c8e9f4d667f7ebcde61e215b321297374cef8"
+    },
+    {
+      "file": "review-collision/results.json.fixture",
+      "owner": "review-collision",
+      "restore": "results.json",
+      "bytes": 1596,
+      "sha256": "3fdf8228a204b88dc5815d0d10c989b1a73d228a88ab708d2db2f1d862065813"
+    }
+  ]
+}

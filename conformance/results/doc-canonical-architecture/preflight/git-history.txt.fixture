@@ -1,0 +1,6 @@
+2bbac2865bc0d9f33ead986510ae4fad3ecfc1fd Review external consumer boundaries and author extension documentation
+75e73a79022e238ac7355c37588c37b910759398 Add external language consumer and staged extension contract
+e5be7d72b505040f2fd2de598e5ec7bcb1340fe1 Integrate five manually authored foundation specification manuscripts
+2d8c1bedf3ddb9d7176634d50c622e09436623df Implement Math notation and portable source contracts with HTML delivery stages
+25a096bc183c2b71200902884084cd4082d0aae3 Define Web TEA and Doc migration plan and validate acceptance evidence (#2)
+4324078d18b8258531c7b8a15c0f7927d4933f3e Establish reviewed design, repository checks and CI delivery
