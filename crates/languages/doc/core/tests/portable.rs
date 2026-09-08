@@ -106,8 +106,8 @@ fn source_uniqueness_uses_logical_revision_and_preserves_source_order() -> Resul
             .validate_structure(&r, &mut b(), &mut SourceAdmission::default())
             .map_err(err)?;
         assert_eq!(document.sources, original);
-        for duplicate in 0..3 {
-            document.sources.push(sources[duplicate].clone());
+        for duplicate in &sources {
+            document.sources.push(duplicate.clone());
             assert!(matches!(
                 document.validate_structure(&r, &mut b(), &mut SourceAdmission::default()),
                 Err(StructureError::DuplicateSource)
