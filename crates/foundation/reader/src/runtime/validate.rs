@@ -199,15 +199,8 @@ fn artifacts(
         // including cycles introduced across old and new mappings.
         return Ok(());
     }
-    let mut source_maps = Vec::new();
-    for mapping in machine.current.source_maps.iter().chain(maps) {
-        budget.charge(
-            Resource::AllocationUnits,
-            core::mem::size_of::<nepl3_core::origin::Mapping>() as u64,
-        )?;
-        source_maps.push(copy(mapping, budget)?);
-    }
-    let mapped = SourceMap::validate_mappings(&source_maps, sources, budget)?;
+    let mapped =
+        SourceMap::validate_mapping_parts(&machine.current.source_maps, maps, sources, budget)?;
     view.validate_with_maps(sources, machine.registry, &mapped, budget)?;
     let consumed = machine.snapshot.span_with_budget(start, end, budget)?;
     for element in &view.elements {
