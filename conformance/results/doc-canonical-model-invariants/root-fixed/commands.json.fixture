@@ -1,0 +1,97 @@
+[
+  {
+    "source_commit": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+    "command": [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "exit_code": 0,
+    "elapsed": 5.468075699987821,
+    "unchanged_clean_tree": true
+  },
+  {
+    "source_commit": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--lib",
+      "doc::canonical::tests::",
+      "--",
+      "--skip",
+      "synchronized_context_spec_drafts_parse_lower_and_check_labels"
+    ],
+    "exit_code": 0,
+    "elapsed": 156.30589610000607,
+    "unchanged_clean_tree": true
+  },
+  {
+    "source_commit": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "--check"
+    ],
+    "exit_code": 0,
+    "elapsed": 126.18483529996593,
+    "unchanged_clean_tree": true
+  },
+  {
+    "source_commit": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "html",
+      ".tmp/html-integration"
+    ],
+    "exit_code": 0,
+    "elapsed": 61.40183829993475,
+    "unchanged_clean_tree": true
+  },
+  {
+    "source_commit": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+    "command": [
+      "cargo",
+      "clippy",
+      "--workspace",
+      "--all-targets",
+      "--locked",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exit_code": 0,
+    "elapsed": 53.21190259989817,
+    "unchanged_clean_tree": true
+  },
+  {
+    "source_commit": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "check"
+    ],
+    "exit_code": 0,
+    "elapsed": 63.22445159999188,
+    "unchanged_clean_tree": true
+  }
+]

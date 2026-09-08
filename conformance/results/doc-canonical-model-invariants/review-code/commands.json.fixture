@@ -1,0 +1,152 @@
+[
+  {
+    "name": "rust-version",
+    "command": [
+      "rustc",
+      "-Vv"
+    ],
+    "head": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+    "registry_sha256": "1b2b7b3aee4bac78ef5908ea55539a7d347c27698f822bd8053f93732e7f47cd",
+    "deadline_seconds": 900,
+    "elapsed_seconds": 0.4574309999588877,
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "cargo-version",
+    "command": [
+      "cargo",
+      "-V"
+    ],
+    "head": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+    "registry_sha256": "1b2b7b3aee4bac78ef5908ea55539a7d347c27698f822bd8053f93732e7f47cd",
+    "deadline_seconds": 900,
+    "elapsed_seconds": 0.37942520005162805,
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "build",
+    "command": [
+      "cargo",
+      "build",
+      "--locked",
+      "-p",
+      "nepl3-tools"
+    ],
+    "head": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+    "registry_sha256": "1b2b7b3aee4bac78ef5908ea55539a7d347c27698f822bd8053f93732e7f47cd",
+    "deadline_seconds": 900,
+    "elapsed_seconds": 67.91690919990651,
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "doc-compile",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--test",
+      "doc",
+      "--no-run"
+    ],
+    "head": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+    "registry_sha256": "1b2b7b3aee4bac78ef5908ea55539a7d347c27698f822bd8053f93732e7f47cd",
+    "deadline_seconds": 900,
+    "elapsed_seconds": 23.326946299988776,
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "canonical-check",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-model-invariants\\.tmp\\review-canonical12-code\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "--check"
+    ],
+    "head": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+    "registry_sha256": "1b2b7b3aee4bac78ef5908ea55539a7d347c27698f822bd8053f93732e7f47cd",
+    "deadline_seconds": 900,
+    "elapsed_seconds": 115.61613920005038,
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "markdown-first",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-model-invariants\\.tmp\\review-canonical12-code\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "markdown",
+      "C:\\projects\\NEPL3-doc-canonical-model-invariants\\.tmp\\review-canonical12-code\\markdown-first"
+    ],
+    "head": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+    "registry_sha256": "1b2b7b3aee4bac78ef5908ea55539a7d347c27698f822bd8053f93732e7f47cd",
+    "deadline_seconds": 900,
+    "elapsed_seconds": 114.51605689991266,
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "html-first",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-model-invariants\\.tmp\\review-canonical12-code\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "html",
+      "C:\\projects\\NEPL3-doc-canonical-model-invariants\\.tmp\\review-canonical12-code\\html-first"
+    ],
+    "head": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+    "registry_sha256": "1b2b7b3aee4bac78ef5908ea55539a7d347c27698f822bd8053f93732e7f47cd",
+    "deadline_seconds": 900,
+    "elapsed_seconds": 56.51995290000923,
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "markdown-second",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-model-invariants\\.tmp\\review-canonical12-code\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "markdown",
+      "C:\\projects\\NEPL3-doc-canonical-model-invariants\\.tmp\\review-canonical12-code\\markdown-second"
+    ],
+    "head": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+    "registry_sha256": "1b2b7b3aee4bac78ef5908ea55539a7d347c27698f822bd8053f93732e7f47cd",
+    "deadline_seconds": 900,
+    "elapsed_seconds": 102.88516980002169,
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "html-second",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-model-invariants\\.tmp\\review-canonical12-code\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "html",
+      "C:\\projects\\NEPL3-doc-canonical-model-invariants\\.tmp\\review-canonical12-code\\html-second"
+    ],
+    "head": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+    "registry_sha256": "1b2b7b3aee4bac78ef5908ea55539a7d347c27698f822bd8053f93732e7f47cd",
+    "deadline_seconds": 900,
+    "elapsed_seconds": 55.198757700040005,
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "markdown-old-budget",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-model-invariants\\.tmp\\review-canonical12-code\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "markdown",
+      "C:\\projects\\NEPL3-doc-canonical-model-invariants\\.tmp\\review-canonical12-code\\markdown-old-budget"
+    ],
+    "head": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+    "registry_sha256": "b960d6ccff4793531cbae7aa901608eda437f47331d06bd97625b5b89c5a7c9e",
+    "deadline_seconds": 900,
+    "elapsed_seconds": 112.16057439998258,
+    "exit_code": 1,
+    "expected_success": false
+  }
+]

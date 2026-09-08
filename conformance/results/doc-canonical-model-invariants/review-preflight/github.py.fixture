@@ -1,0 +1,25 @@
+from pathlib import Path
+import json,subprocess,urllib.request
+from html.parser import HTMLParser
+p=Path(__file__).parent;r=p.parents[1];commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=r,text=True).strip()
+class Scripts(HTMLParser):
+ def __init__(self):super().__init__();self.active=False;self.scripts=[]
+ def handle_starttag(self,t,a):self.active=t=='script' and dict(a).get('type')=='application/json'
+ def handle_data(self,d):
+  if self.active:self.scripts.append(d)
+ def handle_endtag(self,t):
+  if t=='script':self.active=False
+class Heads(HTMLParser):
+ def __init__(self):super().__init__();self.anchors=[]
+ def handle_starttag(self,t,a):
+  a=dict(a)
+  if t=='a' and a.get('id','').startswith('user-content-'):self.anchors.append(a)
+results={}
+for stem in ['08-editor','12-model-invariants']:
+ url=f'https://github.com/neknaj/NEPL3/blob/{commit}/doc/spec/{stem}.md'
+ with urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'NEPL3-independent-review'}),timeout=60) as response:b=response.read();status=response.status
+ (p/(stem+'-github.html')).write_bytes(b);s=Scripts();s.feed(b.decode());payload=next(x['payload'] for x in map(json.loads,s.scripts) if 'codeViewBlobRoute' in x.get('payload',{}))
+ assert ('\n'.join(payload['codeViewBlobLayoutRoute.StyledBlob']['rawLines'])+'\n').encode()==(p/(stem+'.md')).read_bytes()
+ rich=payload['codeViewBlobRoute']['richText'];(p/(stem+'-rich.html')).write_text(rich,encoding='utf8');h=Heads();h.feed(rich)
+ results[stem]={'commit':commit,'url':url,'status':status,'raw_exact':True,'anchors':h.anchors,'navigation':'not-run'}
+(p/'github.json').write_text(json.dumps(results,ensure_ascii=False,indent=2),encoding='utf8');print('PASS')

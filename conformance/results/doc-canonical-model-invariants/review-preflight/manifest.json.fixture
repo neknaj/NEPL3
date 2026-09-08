@@ -1,0 +1,205 @@
+{
+  "scope": "independent read-only content/shape preflight; no runtime or cutover",
+  "source_commit": "e8c396ada1e3d48d981f7a43276889e691e1be1b",
+  "sources": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "c26941e6dbf896a5e07b7c807789bc1f70bd740e4065092186be42e5ac4baf53"
+    },
+    {
+      "path": "doc/authoring.md",
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "doc/spec/21-doc-pages.md",
+      "sha256": "fd16f3f6e2e8801be832960993f5649daca06d7e6ebaffb43969e9b77d80574c"
+    },
+    {
+      "path": "tools/src/doc/projection/annotated.rs",
+      "sha256": "2fe65b9c37925deb977aaca65cf1b305b5602d1455a242f1ade3c3a8572cb742"
+    },
+    {
+      "path": "tools/src/doc/projection/annotated/pages.rs",
+      "sha256": "442d1c827bb11ab7e241be93a0e19a1504dfdd6a579dd4e1fa907121fbe30311"
+    },
+    {
+      "path": "tools/src/doc/projection/annotated/blocks.rs",
+      "sha256": "4bbc48d80674d7a923e5fa3439b66b1352e8bf31cb933c1e6cf4fee9b5e1c694"
+    },
+    {
+      "path": "design/forms.json",
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "tools/audit/structure.py",
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    },
+    {
+      "path": "doc/spec/08-editor.md",
+      "sha256": "1311cb50ce019ed53c733f9d8e414a7ea42b70f975fb0d60d01314762d79fa39",
+      "bytes": 25396
+    },
+    {
+      "path": "doc/migration/authored/08-editor.nepld",
+      "sha256": "43c78b5f39b008a87b7a5eaf1719a0670f1b5f4992a2489a84549af7dd1241a7",
+      "bytes": 51115
+    },
+    {
+      "path": "doc/spec/12-model-invariants.md",
+      "sha256": "81b22608f80254f7d5979b754436b9d62da0bf25aefddf01a6fec772fdcf9cc5",
+      "bytes": 15389
+    },
+    {
+      "path": "doc/migration/authored/12-model-invariants.nepld",
+      "sha256": "f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8",
+      "bytes": 30443
+    }
+  ],
+  "files": [
+    {
+      "path": "08-editor-github.html",
+      "bytes": 339797,
+      "sha256": "df2650364edf0cf41c3c09bab60267500d23a22c6ff064c4e1dc37a6f6e8d514"
+    },
+    {
+      "path": "08-editor-pairs.json",
+      "bytes": 55318,
+      "sha256": "c8eb254232488ea377983cf6af8e74a6e01f86a704c80af1d1383757fb6a9a3b"
+    },
+    {
+      "path": "08-editor-plain.txt",
+      "bytes": 25192,
+      "sha256": "ed998761210aa9d9766db942ccd7df66feb46f714be4b5835b2fdb591ad90665"
+    },
+    {
+      "path": "08-editor-rich.html",
+      "bytes": 36711,
+      "sha256": "8cf61920cb877968030c4beb0d7a577af533f4e21c83af48311553a866de55ea"
+    },
+    {
+      "path": "08-editor-units.json",
+      "bytes": 248749,
+      "sha256": "65d40bd48347f1f87ccda4a87f51b20214028013687662aad836844a99229db9"
+    },
+    {
+      "path": "08-editor.md",
+      "bytes": 25396,
+      "sha256": "1311cb50ce019ed53c733f9d8e414a7ea42b70f975fb0d60d01314762d79fa39"
+    },
+    {
+      "path": "08-editor.nepld",
+      "bytes": 51115,
+      "sha256": "43c78b5f39b008a87b7a5eaf1719a0670f1b5f4992a2489a84549af7dd1241a7"
+    },
+    {
+      "path": "12-model-invariants-github.html",
+      "bytes": 304398,
+      "sha256": "0c55118baff557b9c4e32c021aad4ef60656f9e25d67465e0bf8296f2fddaa68"
+    },
+    {
+      "path": "12-model-invariants-pairs.json",
+      "bytes": 29542,
+      "sha256": "4496dc3920cc2934277f8a9783eecef6753b0a59021b2022c51550e909a9493d"
+    },
+    {
+      "path": "12-model-invariants-plain.txt",
+      "bytes": 13321,
+      "sha256": "4b83f9c37391342bcf82e8c0cd583871cb257d4199c4154b0e949c8c7f4fa5b9"
+    },
+    {
+      "path": "12-model-invariants-rich.html",
+      "bytes": 24174,
+      "sha256": "7ecfd3ecfdd3f0b829063e0ac47bb3c078b140717d73e57159d61046d83a0427"
+    },
+    {
+      "path": "12-model-invariants-units.json",
+      "bytes": 196949,
+      "sha256": "966cbb5b3484be80533da0c8f11ef560952392a004e4f9379e766ae68d9e5d4d"
+    },
+    {
+      "path": "12-model-invariants.md",
+      "bytes": 15389,
+      "sha256": "81b22608f80254f7d5979b754436b9d62da0bf25aefddf01a6fec772fdcf9cc5"
+    },
+    {
+      "path": "12-model-invariants.nepld",
+      "bytes": 30443,
+      "sha256": "f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8"
+    },
+    {
+      "path": "aliases.json",
+      "bytes": 1603,
+      "sha256": "edc849cd7245e76e7d1e2c70db37f4069c84c2fc87aef4c2c5d28a7b746823ae"
+    },
+    {
+      "path": "assessment.md",
+      "bytes": 3760,
+      "sha256": "bbecc2348eebe965e373b0e30339ce2b99307efdc0cd19be617849a60010718e"
+    },
+    {
+      "path": "check.py",
+      "bytes": 3833,
+      "sha256": "f29b2fe78943655f4e396e7350cfe4f7a8e2a17ab7bbe2ef5429ce0ab61acd46"
+    },
+    {
+      "path": "context/AGENTS.md",
+      "bytes": 7729,
+      "sha256": "c26941e6dbf896a5e07b7c807789bc1f70bd740e4065092186be42e5ac4baf53"
+    },
+    {
+      "path": "context/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "context/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "context/doc/spec/21-doc-pages.md",
+      "bytes": 31845,
+      "sha256": "fd16f3f6e2e8801be832960993f5649daca06d7e6ebaffb43969e9b77d80574c"
+    },
+    {
+      "path": "context/tools/audit/structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    },
+    {
+      "path": "context/tools/src/doc/projection/annotated/blocks.rs",
+      "bytes": 5466,
+      "sha256": "4bbc48d80674d7a923e5fa3439b66b1352e8bf31cb933c1e6cf4fee9b5e1c694"
+    },
+    {
+      "path": "context/tools/src/doc/projection/annotated/pages.rs",
+      "bytes": 5295,
+      "sha256": "442d1c827bb11ab7e241be93a0e19a1504dfdd6a579dd4e1fa907121fbe30311"
+    },
+    {
+      "path": "context/tools/src/doc/projection/annotated.rs",
+      "bytes": 21168,
+      "sha256": "2fe65b9c37925deb977aaca65cf1b305b5602d1455a242f1ade3c3a8572cb742"
+    },
+    {
+      "path": "github.json",
+      "bytes": 4415,
+      "sha256": "01521d007c15ee77ad3c5c240d184150d754a4a6867a5590043ff278941ad22b"
+    },
+    {
+      "path": "github.py",
+      "bytes": 1718,
+      "sha256": "c158c402b1feac87fc2c9ad001d7dd1e43655db6b0b451a0fc09fbb0587634d1"
+    },
+    {
+      "path": "seal.py",
+      "bytes": 1767,
+      "sha256": "7289037ea634576589e724527ea0c24e834c0ca9d04e62b38232be59bc0ca14f"
+    },
+    {
+      "path": "structure.json",
+      "bytes": 3107,
+      "sha256": "564c1f9099be42b4b49e536a325863a1fe638e21e76f48537e1305c5dcdc66ac"
+    }
+  ]
+}

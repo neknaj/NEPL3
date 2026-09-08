@@ -1,0 +1,8 @@
+Reviewer setup failure, before any production build/generation:
+The inline PowerShell python -c command used backslash-escaped quotes incorrectly.
+Python reported SyntaxError: unterminated string literal (detected at line 1).
+PowerShell then parsed the semicolon-separated remainder as commands and reported CommandNotFoundException for the v[output_limits] assignments.
+The independently invoked freeze.py still completed: Frozen 679 Git dependencies; six M source paths and verified L/content evidence.
+The following python run.py failed with Errno 2 because that file had not been created.
+Tool exec session68789 exited1. The exact intended run script is then created by setup_run.py (ordinary file arguments, no inline shell quoting), and the separate successful execution begins with commands.json rust-version/cargo-version.
+This file is a diagnostic summary transcribed from tool outputs, not an original subprocess stdout/stderr capture. It makes no claim that the failed setup executed production generation.

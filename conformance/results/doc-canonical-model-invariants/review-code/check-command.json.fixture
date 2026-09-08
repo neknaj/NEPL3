@@ -1,0 +1,8 @@
+{
+  "command": [
+    "python",
+    "C:\\projects\\NEPL3-doc-canonical-model-invariants\\.tmp\\review-canonical12-code\\check.py"
+  ],
+  "deadline_seconds": 60,
+  "exit_code": 0
+}

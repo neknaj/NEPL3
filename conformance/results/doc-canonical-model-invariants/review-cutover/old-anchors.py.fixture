@@ -1,0 +1,26 @@
+from pathlib import Path
+import json,urllib.request,re,hashlib
+from html.parser import HTMLParser
+OUT=Path(__file__).parent
+class Scripts(HTMLParser):
+    def __init__(self):super().__init__();self.active=False;self.parts=[];self.scripts=[]
+    def handle_starttag(self,t,a):
+        if t=='script' and dict(a).get('type')=='application/json':self.active=True;self.parts=[]
+    def handle_data(self,s):
+        if self.active:self.parts.append(s)
+    def handle_endtag(self,t):
+        if t=='script' and self.active:self.scripts.append(''.join(self.parts));self.active=False
+class Anchors(HTMLParser):
+    def __init__(self):super().__init__();self.anchors=[]
+    def handle_starttag(self,t,a):
+        a=dict(a)
+        if t=='a' and a.get('id','').startswith('user-content-'):self.anchors.append(a)
+url='https://github.com/neknaj/NEPL3/blob/7d6d3f1ff77f9f83aac4e39b21f27008df67fbf3/doc/spec/12-model-invariants.md'
+response=urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0'}),timeout=60);data=response.read();(OUT/'old-github.html').write_bytes(data)
+p=Scripts();p.feed(data.decode());payload=next(x['payload'] for x in map(json.loads,p.scripts) if 'codeViewBlobRoute' in x.get('payload',{}))
+original=(OUT/'preparation/doc/spec/12-model-invariants.md').read_bytes();assert ('\n'.join(payload['codeViewBlobLayoutRoute.StyledBlob']['rawLines'])+'\n').encode()==original
+a=Anchors();a.feed(payload['codeViewBlobRoute']['richText']);server=Anchors();server.feed(data.decode());assert a.anchors==server.anchors
+expected=json.loads((OUT/'prepared-expectations.json').read_bytes());assert [x['href'][1:] for x in a.anchors]==[x['name'] for x in expected['aliases']] and len(a.anchors)==8
+assert [x['aria-label'][11:] for x in a.anchors]==expected['headings']
+(OUT/'old-anchors.json').write_text(json.dumps(dict(url=url,source_sha256=hashlib.sha256(original).hexdigest(),actual_anchors=a.anchors,rawLines_match=True,result='PASS'),ensure_ascii=False,indent=2)+'\n',encoding='utf8',newline='\n')
+print('PASS 8 observed original GitHub anchors and full source bytes')

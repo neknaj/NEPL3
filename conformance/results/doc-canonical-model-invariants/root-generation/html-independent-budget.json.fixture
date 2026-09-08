@@ -1,0 +1,6 @@
+{
+  "source_commit": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+  "files": 10,
+  "all_bytes_identical": true,
+  "scope": "Only Markdown output limits changed. HTML allowance, parse/lower defaults and artifact bytes unchanged."
+}

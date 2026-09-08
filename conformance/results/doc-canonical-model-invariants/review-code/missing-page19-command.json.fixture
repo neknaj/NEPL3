@@ -1,0 +1,14 @@
+{
+  "command": [
+    "C:\\projects\\NEPL3-doc-canonical-model-invariants\\.tmp\\review-canonical12-code\\target\\debug\\nepl3-tools.exe",
+    "doc-canonical",
+    "markdown",
+    "C:\\projects\\NEPL3-doc-canonical-model-invariants\\.tmp\\review-canonical12-code\\markdown-missing-page19"
+  ],
+  "head": "2b0bbf4b888ea18ef5e97eaabe2391008e86fe69",
+  "registry_sha256": "6affc30eb57e96ca5da9de18659708459b8043eb8920181802c7506792cb1fa6",
+  "binary_sha256": "0acbb735f5b6ca8a2c9ec7ebeacbd560bae9a18fafbcdea6ee29885348c31e37",
+  "exit_code": 1,
+  "deadline_seconds": 900,
+  "elapsed_seconds": 44.58403729996644
+}
