@@ -513,6 +513,36 @@ fn batch_limits_are_selected_before_public_generation_and_recorded() -> Result<(
 }
 
 #[test]
+fn registration_copy_work_is_admitted_before_its_allocation() -> Result<()> {
+    let f = Fixture::new()?;
+    f.write("doc/sample.nepld", r#"article en "A" body nil"#)?;
+    f.write("doc/aliases.json", b"[]")?;
+    let mut observed = Vec::new();
+    for width in [16, 2048] {
+        let mut value = registry();
+        value["pages"][0]["id"] = json!("a".repeat(width));
+        value["pages"][0]["renderer"] = json!(projection::RENDERER);
+        f.json("doc/canonical.json", &value)?;
+        let limits = nepl3_core::budget::Limits {
+            work: 1,
+            ..super::super::source::budget().limits()
+        };
+        let mut budget = nepl3_core::budget::Budget::new(limits);
+        assert!(projection::generate(f.root(), "doc/canonical.json", &mut budget).is_err());
+        assert_eq!(
+            budget.poll(),
+            Err(nepl3_core::budget::StopReason::WorkLimit)
+        );
+        assert_eq!(budget.usage().work, 1);
+        observed.push(budget.usage().allocation_units);
+    }
+    // Increasing a registration string cannot allocate its copy after Work
+    // has run out. The original bug grew this counter by the ID length delta.
+    assert_eq!(observed[0], observed[1]);
+    Ok(())
+}
+
+#[test]
 fn synchronized_context_spec_drafts_parse_lower_and_check_labels() -> Result<()> {
     use nepl3_core::source::{SourceAdmission, SourceStore};
     use nepl3_wire::foundation::FoundationCodec;
