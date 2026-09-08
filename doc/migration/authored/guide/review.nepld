@@ -151,4 +151,28 @@ body
       cons "これはdescriptorと[参照/さんしょう]の[検証/けんしょう]であり、codec、[任意精度値/にんいせいどち]の[正規化/せいきか]、schema digest、bundleの[値検査/ちけんさ]、[操作/そうさ]・frame・UI schemaの[完成/かんせい]を[示/しめ]さない。"
       cons "R006/R009/R014はopen、21タスクと55[受入群/うけいれぐん]の[実装状態/じっそうじょうたい]は[変更/へんこう]しない。" nil
     nil
+  cons section foundation "r4の[最初/さいしょ]のcore・wire[実装/じっそう]レビュー" body
+    cons paragraph
+      cons sentence cons ruby text "開始" text "かいし" cons text "commitは " cons code "6c9dd5f07376a3920a52ef61022d0adc011cca9f" cons text "。" nil
+      cons sentence cons ruby text "以下" text "いか" cons text "は " cons code "feat/foundation-runtime" cons text " の" cons ruby text "変更中" text "へんこうちゅう" cons text "の" cons ruby text "実装" text "じっそう" cons text "を" cons ruby text "対象" text "たいしょう" cons text "とする" cons ruby text "独立" text "どくりつ" cons text "レビューで、" cons ruby text "開始" text "かいし" cons text "commitそのものに" cons ruby text "実装" text "じっそう" cons text "が" cons ruby text "存在" text "そんざい" cons text "したという" cons ruby text "記録" text "きろく" cons text "ではない。" nil
+      cons "[実装担当/じっそうたんとう]へ[再現入力/さいげんにゅうりょく]を[戻/もど]し、[訂正/ていせい]された[公開/こうかい]APIとproduction[試験/しけん]を[再実行/さいじっこう]した。" nil
+    cons table cons default cons default cons default nil
+      some row cons "ID" cons "[観測/かんそく]した[失敗/しっぱい]" cons "[訂正/ていせい]と[残/のこ]る[範囲/はんい]" nil
+      cons row cons "R017" cons "URI-based SourceRefが[独立文書/どくりつぶんしょ]のSourceIdを[失/うしな]い、UsageがLimitsと[同型/どうけい]だった。" cons "r4でIDとlocator、[許容量/きょようりょう]と[使用量/しようりょう]を[分離/ぶんり]。nativeのURI[競合拒否/きょうごうきょひ]まで[確認/かくにん]した。portable source adapterとschema/nativeの[最終照合/さいしゅうしょうごう]は[継続/けいぞく]する。" nil
+      cons row cons "R018" cons "imported Originがnodes/depthゼロでも[成功/せいこう]、reportがallocationゼロでも[成功/せいこう]、SourceMapがdisjointな[逆方向対応/ぎゃくほうこうたいおう]をCycleと[誤判定/ごはんてい]、4[段/だん]のhost/guest[構造/こうぞう]がdepth 3で[成功/せいこう]した。" cons "[共通予算/きょうつうよさん]、[事前/じぜん]allocation[検査/けんさ]、byte/anchor[単位/たんい]の[対応/たいおう]graph、guestへ[引/ひ]き[継/つ]ぐnode[深/ふか]さを[訂正/ていせい]。unused schema[参照/さんしょう]もfinalize[時/じ]に[検査/けんさ]する。" nil
+      cons row cons "R019" cons "[約/やく]200 KBの[入力/にゅうりょく]に100,000[段/だん]のSomeを[入/い]れるとcodecがstack overflowした。codec[訂正後/ていせいご]も[返/かえ]されたStructuralValueのClone/Eq/Debugが[同様/どうよう]に[落/お]ちた。" cons "codec・cleanup・Clone/Eqを[反復処理/はんぷくしょり]に[変更/へんこう]。Debugはcontainerのheader/countを[示/しめ]す[明示的/めいじてき]な[要約/ようやく]とする。[完全/かんぜん]な[値/あたい]の[交換/こうかん]にはNDFを[使/つか]う。" nil
+      nil
+    cons paragraph
+      cons sentence cons code "cargo test --locked -p nepl3-core -p nepl3-wire" cons text " を" cons ruby text "独立実行" text "どくりつじっこう" cons text "し、core 42" cons ruby text "件" text "けん" cons text "とwire 7" cons ruby text "件" text "けん" cons text "が" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "source/[位置/いち]/atomic edit、schema digestと[参照/さんしょう]、Origin/View/[構文/こうぶん]graph、[共有予算/きょうゆうよさん]、NDF[全/ぜん]12tagの[既知/きち]byte[列/れつ]、[非/ひ]canonical[入力/にゅうりょく]と[切断/せつだん]、[深/ふか]い[値/あたい]の[所有/しょゆう]・[比較/ひかく]を[含/ふく]む。"
+      cons "R018/R019の[訂正範囲/ていせいはんい]はこれらの[実装/じっそう]であり、T01/T02[全成果物/ぜんせいかぶつ]やR006の[全操作契約/ぜんそうさけいやく]を[完了/かんりょう]とはしない。" nil
+    cons paragraph
+      cons "[後続/こうぞく]のsource adapterレビューでは、SourceAdmissionが10,007 byteのURIを[複製/ふくせい]する[際/さい]、allocationUnits=100でも65だけを[計上/けいじょう]して[成功/せいこう]する[不備/ふび]を[公開/こうかい]APIで[再現/さいげん]した。"
+      cons "[保存/ほぞん]するtupleとURI payloadの[事前計上/じぜんけいじょう]へ[訂正後/ていせいご]、[同/おな]じ[入力/にゅうりょく]はAllocationLimitで[停止/ていし]する。"
+      cons sentence cons ruby text "管理対象" text "かんりたいしょう" cons text "の " cons code "admission_accounts_for_copied_locator_payload" cons text " を" cons ruby text "含" text "ふく" cons text "む " cons code "cargo test --locked -p nepl3-core" cons text " の43" cons ruby text "件" text "けん" cons text "を" cons ruby text "独立再実行" text "どくりつさいじっこう" cons text "した。" nil nil
+    cons paragraph
+      cons sentence cons text "WASI CIの" cons ruby text "追加" text "ついか" cons text "は、native/WASIの" cons ruby text "両" text "りょう" cons text "job" cons ruby text "成功" text "せいこう" cons text "をquality" cons ruby text "条件" text "じょうけん" cons text "に" cons ruby text "含" text "ふく" cons text "むことと、Wasmtime Linux" cons ruby text "配布物" text "はいふぶつ" cons text "の" cons ruby text "固定" text "こてい" cons text "SHA-256が" cons link external "https://api.github.com/repos/bytecodealliance/wasmtime/releases/tags/v44.0.1" concat cons ruby text "公式" text "こうしき" cons text "release API" nil cons text "のasset digestに" cons ruby text "一致" text "いっち" cons text "することを" cons ruby text "独立確認" text "どくりつかくにん" cons text "した。" nil
+      cons sentence cons link external "https://doc.rust-lang.org/rustc/platform-support/wasm32-wasip2.html" concat cons text "Rustの" cons ruby text "対象" text "たいしょう" cons text "platform" cons ruby text "資料" text "しりょう" nil cons text "とrunner" cons ruby text "指定" text "してい" cons text "も" cons ruby text "整合" text "せいごう" cons text "する。" nil
+      cons "このworkflowレビュー[自体/じたい]をLinux jobの[実行証拠/じっこうしょうこ]とはしない。" nil
+    nil
   nil
