@@ -1,0 +1,10 @@
+{
+  "source": "eb6f712 plus recorded source.patch equals production commit 2e8fafa",
+  "final_commit": "2e8fafa8c07fdec95394fca04332c9a41342cd41",
+  "native": {
+    "passed": 538,
+    "failed": 0,
+    "ignored": 1
+  },
+  "scope": "Production annotated Doc projection and existing workspace tests. Required acceptance statuses unchanged; no browser/canonical migration completion claimed."
+}

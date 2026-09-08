@@ -1,0 +1,21 @@
+{
+  "api": "POST /markdown mode gfm context neknaj/NEPL3",
+  "sha256": "95fa3f5dadda7d3533beb87424596453498602f90f981c3a225db28e3cb0e086",
+  "all_eight_named_anchors": true,
+  "headings": [
+    "h1",
+    "h2",
+    "h2",
+    "h3",
+    "h3",
+    "h2",
+    "h2",
+    "h2"
+  ],
+  "links": [
+    "https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1",
+    "https://www.rfc-editor.org/rfc/rfc3987.html"
+  ],
+  "script_elements": 0,
+  "limitation": "API output has no automatic heading IDs. Does not establish blob-page collision freedom, browser navigation, accessibility, source equivalence, or canonical migration."
+}

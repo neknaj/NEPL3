@@ -1,0 +1,54 @@
+[
+  {
+    "command": [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "exit_code": 0,
+    "seconds": 3.1258640999440104,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "command": [
+      "cargo",
+      "clippy",
+      "--workspace",
+      "--all-targets",
+      "--locked",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exit_code": 0,
+    "seconds": 13.225879900041036,
+    "log_sha256": "fda47a61945b3d0449076d1dc14a2f286e16b4c9d5e5118e55c0cc921cd0d276"
+  },
+  {
+    "command": [
+      "cargo",
+      "test",
+      "--workspace",
+      "--locked"
+    ],
+    "exit_code": 0,
+    "seconds": 126.1651304999832,
+    "log_sha256": "f685a4177cd58d27970ee00f09e0d6e481d09fa76e1c9f30578f5d6a022a9ffc"
+  },
+  {
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "check"
+    ],
+    "exit_code": 0,
+    "seconds": 24.377299000043422,
+    "log_sha256": "ed9d13a8bb03a60ef01ca7d62902f77f5aa678066ce8d71264031eb22cc481af"
+  }
+]

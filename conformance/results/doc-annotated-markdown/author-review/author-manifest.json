@@ -1,0 +1,61 @@
+{
+  "scope": "manual author addition; independent review and runtime pending",
+  "head_at_capture": "7b449ca2d1af3ed0ef135b8a0b9ca929e8a54569",
+  "files": [
+    {
+      "path": "source.md",
+      "bytes": 27238,
+      "sha256": "243c4327c1f484536632395582bd1a923c109993ee31a8045857a28d9cf444b4"
+    },
+    {
+      "path": "before.nepld",
+      "bytes": 63749,
+      "sha256": "4ef947ee78b12fb5398f8940f0241e8d8d36e7b68416bc80d188e4e28bd126a6"
+    },
+    {
+      "path": "after.nepld",
+      "bytes": 75011,
+      "sha256": "f0c7b1748fcce16d8f29786256a4f8cef80d6f7dc24ec6f4fe11c7da3308afb5"
+    },
+    {
+      "path": "authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "addition.nepld",
+      "bytes": 11262,
+      "sha256": "67ad8ef2d7c17b0ab249e32201e60de9f3ff09147715b5b9c71ffd547fdda728"
+    },
+    {
+      "path": "draft.diff",
+      "bytes": 11739,
+      "sha256": "cac5948347c6e209c185a6017aa1206948343fc51753126967d05f06aa708566"
+    },
+    {
+      "path": "check.py",
+      "bytes": 2759,
+      "sha256": "c0b5b70bdb8a7fb2b3d7741f861a0dc0296fb7756658a76c39480afb8b92f7c9"
+    },
+    {
+      "path": "helpers.py",
+      "bytes": 3299,
+      "sha256": "68315acfa40d0086e76b823cb464a4e76b9de12d8d9b9103c92277d6adb8ae13"
+    },
+    {
+      "path": "check.json",
+      "bytes": 799,
+      "sha256": "e1815c8945a12b7e38e40b01edb42ea78c5dc2294f1c21f559b34d54efadf3d5"
+    },
+    {
+      "path": "readings.txt",
+      "bytes": 3879,
+      "sha256": "f24552de44f675ad5001317e01a3eba02a39006945f3a1a5673e492934d86d35"
+    },
+    {
+      "path": "record.md",
+      "bytes": 3786,
+      "sha256": "5e3020dc60118946b9740486ffebfcacfc6d21ef2619612e65da73d5c0659eb0"
+    }
+  ]
+}

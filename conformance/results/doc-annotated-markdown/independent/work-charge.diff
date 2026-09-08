@@ -1,0 +1,12 @@
+diff --git a/tools/src/doc/projection/annotated.rs b/tools/src/doc/projection/annotated.rs
+index 7ab9ffb..81acafa 100644
+--- a/tools/src/doc/projection/annotated.rs
++++ b/tools/src/doc/projection/annotated.rs
+@@ -327,6 +327,7 @@ impl<'a> Annotated<'a, '_> {
+             return Err(Error::Text { node: sentences[0] });
+         }
+         for pair in visible.windows(2) {
++            self.plain.budget.charge(Resource::Work, 1)?;
+             if matches!(pair[0], Piece::Code(_, _))
+                 && let Piece::Code(node, _) = pair[1]
+             {

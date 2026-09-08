@@ -1,0 +1,129 @@
+{
+  "result": "PASS",
+  "source_commit": "2b05110490238656d088c33bbad601784777d657",
+  "source_sha256": "81d032e6f04730fd4c52a15c11464bff0ed879c1030a059be19d10b4d8c9a16d",
+  "draft_sha256": "31486ad75e0776d55cc12b2a9b5af2840780ad7812456d9c222a90fd8ab495a8",
+  "author_manifest_sha256": "1a391a5580db30fbbc7433b2e00e631cf50002905d4d53bc307dc63b5c635c88",
+  "author_payloads": 9,
+  "heading_count": 8,
+  "section_count": 7,
+  "article_title_count": 1,
+  "structural_hierarchy_verified": true,
+  "rows": [
+    {
+      "target": null,
+      "parent": null,
+      "level": 1,
+      "heading": "13. 再現性・schema識別・契約の判定",
+      "fragment": "13-再現性schema識別契約の判定",
+      "observed": {
+        "level": 1,
+        "heading": "13. 再現性・schema識別・契約の判定",
+        "id": "user-content-13-再現性schema識別契約の判定",
+        "href": "#13-再現性schema識別契約の判定"
+      }
+    },
+    {
+      "target": "policy",
+      "parent": null,
+      "level": 2,
+      "heading": "方針",
+      "fragment": "方針",
+      "observed": {
+        "level": 2,
+        "heading": "方針",
+        "id": "user-content-方針",
+        "href": "#方針"
+      }
+    },
+    {
+      "target": "digest",
+      "parent": null,
+      "level": 2,
+      "heading": "1. digest",
+      "fragment": "1-digest",
+      "observed": {
+        "level": 2,
+        "heading": "1. digest",
+        "id": "user-content-1-digest",
+        "href": "#1-digest"
+      }
+    },
+    {
+      "target": "semantic",
+      "parent": "digest",
+      "level": 3,
+      "heading": "Package意味正規形",
+      "fragment": "package意味正規形",
+      "observed": {
+        "level": 3,
+        "heading": "Package意味正規形",
+        "id": "user-content-package意味正規形",
+        "href": "#package意味正規形"
+      }
+    },
+    {
+      "target": "execution",
+      "parent": "digest",
+      "level": 3,
+      "heading": "具体実行identity",
+      "fragment": "具体実行identity",
+      "observed": {
+        "level": 3,
+        "heading": "具体実行identity",
+        "id": "user-content-具体実行identity",
+        "href": "#具体実行identity"
+      }
+    },
+    {
+      "target": "wire",
+      "parent": null,
+      "level": 2,
+      "heading": "2. native値とwire値",
+      "fragment": "2-native値とwire値",
+      "observed": {
+        "level": 2,
+        "heading": "2. native値とwire値",
+        "id": "user-content-2-native値とwire値",
+        "href": "#2-native値とwire値"
+      }
+    },
+    {
+      "target": "artifacts",
+      "parent": null,
+      "level": 2,
+      "heading": "3. normal formとartifact",
+      "fragment": "3-normal-formとartifact",
+      "observed": {
+        "level": 2,
+        "heading": "3. normal formとartifact",
+        "id": "user-content-3-normal-formとartifact",
+        "href": "#3-normal-formとartifact"
+      }
+    },
+    {
+      "target": "limits",
+      "parent": null,
+      "level": 2,
+      "heading": "4. limitsとproviderの互換",
+      "fragment": "4-limitsとproviderの互換",
+      "observed": {
+        "level": 2,
+        "heading": "4. limitsとproviderの互換",
+        "id": "user-content-4-limitsとproviderの互換",
+        "href": "#4-limitsとproviderの互換"
+      }
+    }
+  ],
+  "fresh_retrieval": {
+    "attempted": true,
+    "url": "https://github.com/neknaj/NEPL3/blob/2b05110490238656d088c33bbad601784777d657/doc/spec/13-reproducibility.md",
+    "status": 200,
+    "final_url": "https://github.com/neknaj/NEPL3/blob/2b05110490238656d088c33bbad601784777d657/doc/spec/13-reproducibility.md",
+    "sha256": "ff8c864e79764a262dc7068adc0696c9936c660a387bdc591369e040a6a15555",
+    "bytes": 300711,
+    "same_heading_rows": true
+  },
+  "runtime_or_new_projection_test": false,
+  "browser_navigation_test": false
+}

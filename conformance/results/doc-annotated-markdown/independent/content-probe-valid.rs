@@ -1,0 +1,61 @@
+#[test]
+fn independent_visible_content_and_exact_budgets() -> Result<(), String> {
+    use nepl3_doc_core::{check::Category, lower};
+    use nepl3_tools::doc::projection::{Error, annotated::render};
+    let c = compiled()?;
+    let source = r##"article en "T" body cons paragraph cons sentence
+      cons text "<script>&amp; "
+      cons strong concat cons text "A" cons em text "B" nil
+      cons text " " cons ruby code "x`y" text "read"
+      cons text " " cons anno text "base" cons text "one" cons ruby text "X" text "ex" nil
+      cons text " " cons link external "https://example.org/a?x=&amp;#f" text "label"
+      cons break cons text "tail" nil nil nil"##;
+    let output = from_source(&c, source, &[])?;
+    let mut visible = String::new();
+    let mut links = vec![];
+    let mut html = vec![];
+    for event in Parser::new(&output.markdown) {
+      match event {
+        Event::Text(t) | Event::Code(t) => visible.push_str(&t),
+        Event::HardBreak => visible.push('\n'),
+        Event::Start(Tag::Link {dest_url, ..}) => links.push(dest_url.into_string()),
+        Event::InlineHtml(t) | Event::Html(t) => html.push(t.into_string()),
+        _ => ()
+      }
+    }
+    assert_eq!(visible, "T<script>&amp; AB x`y[read] base{one/X[ex]} label\ntail");
+    assert_eq!(links, ["https://example.org/a?x=&amp;#f"]);
+    assert_eq!(html, ["<strong>", "<em>", "</em>", "</strong>"]);
+    with_input(&c, source, "Article", |tree, profile, _, _| {
+      let store = SourceStore::default();
+      let mut admission = SourceAdmission::default();
+      let mut codec = FoundationCodec::new(profile.registry(), &store, &mut admission).map_err(err)?;
+      let document = lower::document(tree.syntax(), &c.doc.package.schema, Category::Article,
+        profile.registry(), &mut budget(), &mut codec).map_err(err)?;
+      let mut full = budget();
+      let result = render(&document, profile.registry(), &mut codec, &mut full, &[]).map_err(err)?;
+      assert_eq!(result.markdown, output.markdown);
+      let usage = full.usage();
+      eprintln!("INDEPENDENT_RENDER_USAGE {usage:?}");
+      for field in ["work", "nodes", "allocation", "output", "depth"] {
+        let mut limits = budget().limits();
+        match field {
+          "work" => limits.work = usage.work - 1,
+          "nodes" => limits.nodes = usage.nodes - 1,
+          "allocation" => limits.allocation_units = usage.allocation_units - 1,
+          "output" => limits.output_bytes = usage.output_bytes - 1,
+          "depth" => limits.depth = usage.depth - 1,
+          _ => unreachable!(),
+        }
+        let mut bounded = Budget::new(limits);
+        assert!(matches!(render(&document, profile.registry(), &mut codec, &mut bounded, &[]), Err(Error::Stopped(_))), "{field}");
+        let stopped = bounded.usage();
+        assert!(matches!(render(&document, profile.registry(), &mut codec, &mut bounded, &[]), Err(Error::Stopped(_))));
+        assert_eq!(bounded.usage(), stopped);
+      }
+      let mut malformed = document.clone();
+      malformed.value.root = nepl3_doc_core::model::DocRoot::Article(nepl3_doc_core::model::ArticleRef(u64::MAX));
+      assert!(matches!(render(&malformed, profile.registry(), &mut codec, &mut budget(), &[]), Err(Error::Invalid(_))));
+      Ok(())
+    })
+}

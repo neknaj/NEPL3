@@ -1,0 +1,164 @@
+[
+  {
+    "original": "independent/boundary-original.log",
+    "stored": "independent/boundary-original.log.fixture",
+    "sha256": "0fbc5d766fc273d7dc876305eba057b1a9d8f127367057b83add832b54e4a022",
+    "reason": "non-UTF8 original fixture"
+  },
+  {
+    "original": "independent/cli/duplicate.json",
+    "stored": "independent/cli/duplicate.json.fixture",
+    "sha256": "9f83d3dfc8b67d53ae76562e0254e9977d2e3be48547e9b8b77e4c98c2494e75",
+    "reason": "intentionally invalid JSON or original encoding"
+  },
+  {
+    "original": "independent/cli/source-utf8.nepld",
+    "stored": "independent/cli/source-utf8.nepld.fixture",
+    "sha256": "a8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89",
+    "reason": "non-UTF8 original fixture"
+  },
+  {
+    "original": "independent/cli/unsafe.json",
+    "stored": "independent/cli/unsafe.json.fixture",
+    "sha256": "3ffda9987c3227e107fbfa0a37688d9e8dccc42f7961c828552abb110188b759",
+    "reason": "intentionally invalid JSON or original encoding"
+  },
+  {
+    "original": "independent/cli/utf8.json",
+    "stored": "independent/cli/utf8.json.fixture",
+    "sha256": "a8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89",
+    "reason": "intentionally invalid JSON or original encoding"
+  },
+  {
+    "original": "independent/cli-final/duplicate.json",
+    "stored": "independent/cli-final/duplicate.json.fixture",
+    "sha256": "9f83d3dfc8b67d53ae76562e0254e9977d2e3be48547e9b8b77e4c98c2494e75",
+    "reason": "intentionally invalid JSON or original encoding"
+  },
+  {
+    "original": "independent/cli-final/source-utf8.nepld",
+    "stored": "independent/cli-final/source-utf8.nepld.fixture",
+    "sha256": "a8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89",
+    "reason": "non-UTF8 original fixture"
+  },
+  {
+    "original": "independent/cli-final/unsafe.json",
+    "stored": "independent/cli-final/unsafe.json.fixture",
+    "sha256": "3ffda9987c3227e107fbfa0a37688d9e8dccc42f7961c828552abb110188b759",
+    "reason": "intentionally invalid JSON or original encoding"
+  },
+  {
+    "original": "independent/cli-final/utf8.json",
+    "stored": "independent/cli-final/utf8.json.fixture",
+    "sha256": "a8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89",
+    "reason": "intentionally invalid JSON or original encoding"
+  },
+  {
+    "original": "independent/cli-fixed/duplicate.json",
+    "stored": "independent/cli-fixed/duplicate.json.fixture",
+    "sha256": "9f83d3dfc8b67d53ae76562e0254e9977d2e3be48547e9b8b77e4c98c2494e75",
+    "reason": "intentionally invalid JSON or original encoding"
+  },
+  {
+    "original": "independent/cli-fixed/source-utf8.nepld",
+    "stored": "independent/cli-fixed/source-utf8.nepld.fixture",
+    "sha256": "a8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89",
+    "reason": "non-UTF8 original fixture"
+  },
+  {
+    "original": "independent/cli-fixed/unsafe.json",
+    "stored": "independent/cli-fixed/unsafe.json.fixture",
+    "sha256": "3ffda9987c3227e107fbfa0a37688d9e8dccc42f7961c828552abb110188b759",
+    "reason": "intentionally invalid JSON or original encoding"
+  },
+  {
+    "original": "independent/cli-fixed/utf8.json",
+    "stored": "independent/cli-fixed/utf8.json.fixture",
+    "sha256": "a8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89",
+    "reason": "intentionally invalid JSON or original encoding"
+  },
+  {
+    "original": "independent/cli-probe.py",
+    "stored": "independent/cli-probe.py.fixture",
+    "sha256": "ceda9309dcb26cfa6c3beb88e320231a24c9004609faeae1f19a04583ce5478e",
+    "reason": "original UTF8 BOM"
+  },
+  {
+    "original": "independent/compat-native.log",
+    "stored": "independent/compat-native.log.fixture",
+    "sha256": "8aeb26a48ffa8625342e4490ed23f1076e2e3bd67efa3d7e7ce61ee6cafc032a",
+    "reason": "non-UTF8 original fixture"
+  },
+  {
+    "original": "independent/content-native-first.log",
+    "stored": "independent/content-native-first.log.fixture",
+    "sha256": "db23f79df09bc724b84c66448970306ba84c52e5d8024a6abd4d692662821203",
+    "reason": "non-UTF8 original fixture"
+  },
+  {
+    "original": "independent/content-native-valid.log",
+    "stored": "independent/content-native-valid.log.fixture",
+    "sha256": "637a39d883a6c0d6a0404df66864df806b29b37a905c2d31a20221db63350eb4",
+    "reason": "non-UTF8 original fixture"
+  },
+  {
+    "original": "independent/content-native.log",
+    "stored": "independent/content-native.log.fixture",
+    "sha256": "061976298bf647e107e3811e5657dc7994111dd62f7e6e8e72e8ac1e6976bf52",
+    "reason": "non-UTF8 original fixture"
+  },
+  {
+    "original": "independent/content-probe.rs",
+    "stored": "independent/content-probe.rs.fixture",
+    "sha256": "eeda4ee83b94a15b8fc07399bba760db401c86ad4f3015fb9425d90a140f48bf",
+    "reason": "original UTF8 BOM"
+  },
+  {
+    "original": "independent/final-native.log",
+    "stored": "independent/final-native.log.fixture",
+    "sha256": "bfffda778a248ca729080b4cf843effb7dc74aebf27a0f6bfe1c7a2a01fd53cd",
+    "reason": "non-UTF8 original fixture"
+  },
+  {
+    "original": "independent/final-wasi.log",
+    "stored": "independent/final-wasi.log.fixture",
+    "sha256": "c9dd6f7e6c891ee0e7d309fc3c8c31321e31f12dcf500e09e4156237e0064aa2",
+    "reason": "non-UTF8 original fixture"
+  },
+  {
+    "original": "independent/fixed-native.log",
+    "stored": "independent/fixed-native.log.fixture",
+    "sha256": "d6a749dddb8b58c9d2238f70db74a24cf95fe82f5dd821eb2c145140877f02b6",
+    "reason": "non-UTF8 original fixture"
+  },
+  {
+    "original": "independent/fixed-wasi.log",
+    "stored": "independent/fixed-wasi.log.fixture",
+    "sha256": "1a656e5d6f2c174f6f64838f76cdf291e2ea7d8dfe5d2e6d984d3cb066c12815",
+    "reason": "non-UTF8 original fixture"
+  },
+  {
+    "original": "independent/native.log",
+    "stored": "independent/native.log.fixture",
+    "sha256": "01c820a1505cd9ef7e043a778a0bcbe5ddcd95f35d4a2b3c499f468c7a1d0075",
+    "reason": "non-UTF8 original fixture"
+  },
+  {
+    "original": "independent/probe.rs",
+    "stored": "independent/probe.rs.fixture",
+    "sha256": "eb1faaab446645e9244906c30c4c09dab502aa81775817be2dfa3612a45d978e",
+    "reason": "original UTF8 BOM"
+  },
+  {
+    "original": "independent/seal.py",
+    "stored": "independent/seal.py.fixture",
+    "sha256": "dab2e731a745e8f6478cf5c006e7075cfa04c3070bdb2754a2f616c5d92aac9a",
+    "reason": "original UTF8 BOM"
+  },
+  {
+    "original": "independent/wasi.log",
+    "stored": "independent/wasi.log.fixture",
+    "sha256": "9d55cbcc0cef9da2fae8094ccd2f938d927949e461e17421d165b1780204c089",
+    "reason": "non-UTF8 original fixture"
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "path": "C:\\projects\\NEPL3-doc-annotated-markdown\\.tmp\\review-annotated-projection\\target\\debug\\nepl3-tools.exe",
+    "bytes": 12451840,
+    "sha256": "cd5e5173c4a69664bca85e5e6110cb74a2eed102ca1a39f2e98c579c27946a10"
+  },
+  {
+    "path": "C:\\projects\\NEPL3-doc-annotated-markdown\\.tmp\\review-annotated-projection\\target\\debug\\deps\\doc-3ca723e83baae99e.exe",
+    "bytes": 15759872,
+    "sha256": "59255c73ebf38fa3cdbe8dd77f2de7783a5c1fcca45098c1803588c46a0dc834"
+  },
+  {
+    "path": "C:\\projects\\NEPL3-doc-annotated-markdown\\.tmp\\review-annotated-projection\\target-wasi\\wasm32-wasip2\\debug\\deps\\doc-0c1efb7519b2b3cc.wasm",
+    "bytes": 95693185,
+    "sha256": "d8bb3a2c4b220885d2c7267a047896d9932599084099a1fbe59793e31fef74fa"
+  }
+]
