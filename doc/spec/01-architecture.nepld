@@ -45,7 +45,7 @@ body
         cons sentence cons code "build.rs" cons concat cons text " を" cons ruby text "通" text "とお" cons text "して、compilerと" cons ruby text "文書" text "ぶんしょ" cons text "rendererを" cons ruby text "循環依存" text "じゅんかんいぞん" cons text "させてはならない。" nil nil
         nil
       nil
-  cons section bootstrap "3. surface descriptorとbootstrap"
+  cons section bootstrap "3. surface descriptorとGrammarのbootstrap"
     body
       cons paragraph
         cons sentence cons code "languages/*/syntax.neplg" cons concat cons text " は、" cons ruby text "各言語" text "かくげんご" cons text "のsurface" cons ruby text "定義" text "ていぎ" cons text "である。" nil nil

@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page architecture; source SHA-256 8d338b3ce98f3030e503ecd0aea9374c439c606cfbeb48bcd6b777a3f45654b2; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 8528136458369fae27f505fec8d9d6105fb3f07f8084c0c7cabddaaa5f76ed1e; input PageSet digest 3507bd705a27cb5a4e7587f55cd9ba3c02cf55ce5d253c88a17d0067ae2b5337; input context SHA-256 93eb9eefb2e0a57e6ffb508b7fe9a7e59f3617e4dc32c66894f8797a9e433f60. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page architecture; source SHA-256 7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 6fc06e6be4d2292a4f9d646035133ace7f2245e6c7f4ee4a1d2edbc8166333fe; input PageSet digest 132e2758f7c736786624cdad8f502900ffc710621577c299a334a25bc561a4d8; input context SHA-256 d865100fc92eecc3900fb1146146abde146ddfcfed4d3f94f06fc816d970d2b7. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="01-repositorycrate依存方向"></a>
 
@@ -101,7 +101,7 @@ ui\-coreは、純粋\[じゅんすい\]なModel・Msg・update・viewと、comma
 
 <a name="3-surface-descriptorとbootstrap"></a>
 
-## 3\. surface descriptorとbootstrap
+## 3\. surface descriptorとGrammarのbootstrap
 
 `languages/*/syntax.neplg` は、各言語\[かくげんご\]のsurface定義\[ていぎ\]である。Grammar compilerがpackageを生成\[せいせい\]し、その生成済\[せいせいず\]みpackageもcommitする。通常\[つうじょう\]のbuildで、toolsやgrammar compilerをbuild dependencyにしてはならない。`cargo run -p nepl3-tools -- generate --check` により、sourceとの一致\[いっち\]を検査\[けんさ\]する。
 
