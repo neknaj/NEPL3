@@ -1216,7 +1216,13 @@ fn seed_failure(
     mut accepted: AcceptedTokenizationReport,
     budget: &Budget,
 ) -> runtime::ReadFailure {
-    accepted.report.usage = budget.usage();
+    // A rejected fresh or foreign budget is not an observation of this
+    // operation. Do not erase the accepted usage while returning its owner.
+    if accepted.limits == budget.limits()
+        && runtime::usage_at_least(budget.usage(), accepted.report.usage)
+    {
+        accepted.report.usage = budget.usage();
+    }
     runtime::ReadFailure {
         error,
         accepted: runtime::AcceptedReport {

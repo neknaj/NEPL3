@@ -33,7 +33,8 @@ fn tokenizer_failure_moves_source_closure_with_exhausted_budget() -> Result<(), 
         profile_digest: Digest([0; 32]),
         snapshot: source.reference(),
     };
-    let mut accepted = AcceptedTokenizationReport::empty(scope, &mut budget())?;
+    let mut b = budget();
+    let mut accepted = AcceptedTokenizationReport::empty(scope, &mut b)?;
     accepted.source_maps.push(Mapping {
         source: source.span(0, 1)?,
         target: source.span(1, 2)?,
@@ -43,7 +44,6 @@ fn tokenizer_failure_moves_source_closure_with_exhausted_budget() -> Result<(), 
     accepted.report.trace_overflow = Some(TraceOverflow { dropped: 7 });
     let sources = accepted.sources.as_ptr();
     let maps = accepted.source_maps.as_ptr();
-    let mut b = budget();
     b.charge(Resource::Work, 11)?;
     b.stop(StopReason::AllocationLimit);
     let before = b.usage();
@@ -82,5 +82,38 @@ fn tokenizer_failure_moves_source_closure_with_exhausted_budget() -> Result<(), 
     assert_eq!(failure.accepted.report.usage, before);
     assert_eq!(b.usage(), before);
     assert_eq!(b.poll(), Err(StopReason::AllocationLimit));
+    Ok(())
+}
+
+#[test]
+fn rejected_budget_cannot_erase_previously_accepted_usage() -> Result<(), ReaderError> {
+    let source = SourceSnapshot::new(
+        SourceId("input".into()),
+        0,
+        "memory:input".into(),
+        vec![b'x'],
+        &mut budget(),
+    )?;
+    for changed_limits in [false, true] {
+        let mut original = budget();
+        let accepted = AcceptedTokenizationReport::empty(
+            TokenizationScope {
+                operation_id: "operation".into(),
+                profile_digest: Digest([0; 32]),
+                snapshot: source.reference(),
+            },
+            &mut original,
+        )?;
+        let saved = accepted.report.usage;
+        let mut limits = original.limits();
+        if changed_limits {
+            limits.work += 1;
+        }
+        let foreign = Budget::new(limits);
+        let failure = seed_failure(ReaderError::Continuation, accepted, &foreign);
+        assert_eq!(failure.error, ReaderError::Continuation);
+        assert_eq!(failure.accepted.report.usage, saved);
+        assert_eq!(foreign.usage().allocation_units, 0);
+    }
     Ok(())
 }
