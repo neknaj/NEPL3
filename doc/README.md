@@ -19,6 +19,7 @@ Docで例や解説を書く際は、[文書の執筆指針](authoring.md)のsent
 11. [Doc runtime の実装範囲と残り](progress/doc-runtime.md)
 12. [Math runtime の実装範囲と残り](progress/math-runtime.md)
 13. [Doc・MathのHTML生成と数式表示](spec/17-math-html.md)
+14. [外部言語の追加とrepository分離条件](spec/22-external-extensions.md)
 
 ## 正本と派生資料
 

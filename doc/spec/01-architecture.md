@@ -103,6 +103,8 @@ dependency checkerはproduction・build依存を検査し、dev依存は別集�
 
 単一repositoryでも各coreは独立して `check --no-default-features` できる。将来のrepository分割を今の依存環境に強制せず、公開schemaと操作の単位で実装を交換する。
 
+外部言語の追加でfoundation sourceを変更しない条件と、repository分離前の実証は [外部拡張契約](22-external-extensions.md) に従う。現時点ではmonorepoを維持し、独立workspaceの公開API利用から、配布・provider・互換性試験へ進む。
+
 ## 現在の作業段階
 
 上記は目標構成。現在のworkspace memberはルートCargo.toml、実装状態はimplementation-status.jsonを正本とする。crateは責務を実装する段階で追加する。開発toolchainとMSRVの選定理由はdoc/development.md、リポジトリ整備の判断はdoc/decisions/0001-repository-foundation.mdを参照。

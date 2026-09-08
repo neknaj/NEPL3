@@ -2,6 +2,7 @@
 /.tmp/
 /target/
 /conformance/targets/rp2040/target/
+/conformance/extensions/hello/target/
 /tools/emulators/rp2040js/node_modules/
 /dist/
 **/*.rs.bk

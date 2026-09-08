@@ -126,6 +126,11 @@
       "id": "T25",
       "status": "not-implemented",
       "evidence": []
+    },
+    {
+      "id": "T26",
+      "status": "in-progress",
+      "evidence": []
     }
   ],
   "acceptance": [
@@ -401,6 +406,16 @@
     },
     {
       "id": "J04",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "X01",
+      "status": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "X02",
       "status": "not-run",
       "evidence": []
     }

@@ -6,6 +6,9 @@
 
 ## 1. 必須の試験群
 
+X01: 外部workspace/repositoryの新言語がfoundationを変更せず公開APIで解析・schema・source/Origin・診断を扱い、Rust/nativeとNDF/実process providerで意味結果・失敗・停止が一致する。foundation単独の配布/build/test/conformanceとdomainへのproduction/build逆依存不在を検査する。詳細は22章。
+X02: Rust source APIの互換性とportable schema/signatureの互換性を独立した旧版consumer・不正例・互換更新で検査する。単なるdigest差分やpath依存の成功を独立リリース検証へ読み替えない。詳細は22章。
+
 G01: Grammar自身をseedで読み、compileしたpackageとseedの意味正規形が一致。
 G02: declarative readerとRust direct readerの結果・消費範囲・viewが一致。
 G03: 空反復、進捗なし再帰、未定義reader、shape衝突、provider署名違反を正しいcodeで拒否。

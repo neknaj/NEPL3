@@ -61,6 +61,10 @@
     "semantic-review": {
       "description": "independent human-readable semantic review of every migrated page against recorded original and mapping",
       "kind": "review"
+    },
+    "architecture-review": {
+      "description": "Independent review of public extension contracts, external consumers, dependency boundaries and separate Rust/schema compatibility evidence",
+      "kind": "review"
     }
   },
   "groups": [
@@ -755,6 +759,28 @@
       "required": true,
       "required_targets": [
         "static-build-linux"
+      ]
+    },
+    {
+      "id": "X01",
+      "spec": "doc/spec/22-external-extensions.md",
+      "required": true,
+      "required_targets": [
+        "native-x86_64-linux",
+        "native-x86_64-windows",
+        "native-aarch64-macos",
+        "architecture-review"
+      ]
+    },
+    {
+      "id": "X02",
+      "spec": "doc/spec/22-external-extensions.md",
+      "required": true,
+      "required_targets": [
+        "native-x86_64-linux",
+        "native-x86_64-windows",
+        "native-aarch64-macos",
+        "architecture-review"
       ]
     }
   ]

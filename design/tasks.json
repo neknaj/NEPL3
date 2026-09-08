@@ -236,7 +236,8 @@
         "T15",
         "T20",
         "T21",
-        "T25"
+        "T25",
+        "T26"
       ],
       "acceptance": [
         "A01",
@@ -401,6 +402,24 @@
       ],
       "deliverable": "同じsuite/markupを使う純粋TEA、Wasm、言語Workerとoptional KaTeX Worker、script/same-origin権限なしpreview、同artifact exportを実装する。Node/実Worker比較、3 browserでCSP/font/旧返信/停止/JS無効の書出文書/視覚・アクセシビリティを検証する。4言語UI全体やPages公開済みとは扱わない。",
       "spec": "doc/spec/18-html-delivery.md"
+    },
+    {
+      "id": "T26",
+      "title": "External language contracts and extraction conformance",
+      "depends_on": [
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T05",
+        "T12"
+      ],
+      "acceptance": [
+        "X01",
+        "X02"
+      ],
+      "deliverable": "Implement the staged public API consumer, foundation-only distribution, portable package/Profile loading, external operation provider comparison, and separate Rust API/schema compatibility tests in spec22. Preserve Doc/HTML progress independently. Do not claim extraction readiness from a path-dependent consumer alone.",
+      "spec": "doc/spec/22-external-extensions.md"
     }
   ]
 }

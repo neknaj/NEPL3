@@ -23,7 +23,7 @@
 | [T13](T13.md) | Native/WASI CLI | not-implemented | T11, T12, T23, T24 |
 | [T14](T14.md) | 汎用LSP serverとeditor接続 | not-implemented | T06, T11 |
 | [T15](T15.md) | Browser workerとWasm API | not-implemented | T11, T02, T25 |
-| [T16](T16.md) | 全体受入・CI | not-implemented | T13, T14, T15, T20, T21, T25 |
+| [T16](T16.md) | 全体受入・CI | not-implemented | T13, T14, T15, T20, T21, T25, T26 |
 | [T17](T17.md) | 純粋TEA UI coreと操作境界 | not-implemented | T01, T02, T25 |
 | [T18](T18.md) | 4言語playgroundと共通editor | not-implemented | T15, T17, T25 |
 | [T19](T19.md) | 文書・例・参照の静的サイト | not-implemented | なし |
@@ -33,3 +33,4 @@
 | [T23](T23.md) | H1: Doc単独HTMLの実経路 | in-progress | T22 |
 | [T24](T24.md) | H2: Mathを含む生成済みHTML | not-implemented | T23 |
 | [T25](T25.md) | H3: Web生成・隔離preview・export | not-implemented | T24 |
+| [T26](T26.md) | External language contracts and extraction conformance | in-progress | T01, T02, T03, T04, T05, T12 |

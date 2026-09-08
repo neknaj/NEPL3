@@ -77,6 +77,18 @@ jobs:
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - name: Tests
         run: cargo test --workspace --locked
+      - name: External language public API consumer
+        run: |
+          python -m unittest tools.extensions.test_run
+          python tools/extensions/run.py
+      - name: Preserve external consumer evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: external-consumer-${{ matrix.os }}
+          path: dist/external-extension/
+          if-no-files-found: error
+          retention-days: 14
       - name: Export the real Doc example
         if: matrix.os == 'ubuntu-latest'
         run: |
