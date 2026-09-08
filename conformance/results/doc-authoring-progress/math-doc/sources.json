@@ -1,0 +1,50 @@
+[
+  {
+    "commit": "34954617d334732d972e695ef9c5fb6b64cff8a0",
+    "path": "doc/migration/authored/progress/math-runtime.nepld",
+    "bytes": 5543,
+    "sha256": "2c267cbd7239ebe344bad2a74d3180659956dc6c5e9a29897013d370416b5a98"
+  },
+  {
+    "commit": "dc7b4c00b9f21a3ae1a0715e0b3cbd6bbb12ae0c",
+    "path": "doc/progress/math-runtime.md",
+    "bytes": 2436,
+    "sha256": "242550bbfb19083c96ced13b54abe31c80ad567301d274b8ea974c17416be547"
+  },
+  {
+    "commit": "63905cdf137b70e8209ef5f429aba5cf41385a32",
+    "path": "doc/migration/authored/progress/doc-runtime.nepld",
+    "bytes": 25382,
+    "sha256": "c0e0a2f6ad09c4fadee1d3e0d19a44d872121afc7ff7066adad89266774f0c88"
+  },
+  {
+    "commit": "dc7b4c00b9f21a3ae1a0715e0b3cbd6bbb12ae0c",
+    "path": "doc/progress/doc-runtime.md",
+    "bytes": 10998,
+    "sha256": "6a3efe6ced1a53ec4f198536ae67824906de838512aae79d7db235f58ca66b85"
+  },
+  {
+    "commit": "63905cdf137b70e8209ef5f429aba5cf41385a32",
+    "path": "AGENTS.md",
+    "bytes": 7613,
+    "sha256": "849027165216a9a3adcb22ef58a44bc698c83e1707d2aa0727a1b73105282236"
+  },
+  {
+    "commit": "63905cdf137b70e8209ef5f429aba5cf41385a32",
+    "path": "doc/authoring.md",
+    "bytes": 6478,
+    "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+  },
+  {
+    "commit": "63905cdf137b70e8209ef5f429aba5cf41385a32",
+    "path": "design/forms.json",
+    "bytes": 48673,
+    "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+  },
+  {
+    "commit": "63905cdf137b70e8209ef5f429aba5cf41385a32",
+    "path": "languages/doc/syntax.neplg",
+    "bytes": 10108,
+    "sha256": "c0dcfc3a2288ca53d62ff3c4042630726f87ec1b469379b263f83690ba1a01b8"
+  }
+]
