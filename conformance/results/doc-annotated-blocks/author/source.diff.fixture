@@ -1,0 +1,49 @@
+diff --git a/doc/spec/21-doc-pages.md b/doc/spec/21-doc-pages.md
+index 0bc3984..0ecf2dd 100644
+--- a/doc/spec/21-doc-pages.md
++++ b/doc/spec/21-doc-pages.md
+@@ -265,7 +265,9 @@ Sectionの明示ID、source/origin対応、Doc固有のSentence境界をMarkdown
+ `nepl3-tools doc-markdown annotated <source.nepld> <aliases.json> <new-file.md>` は、
+ Doc正本の読み・注記をGitHub等の閲覧用Markdownへ明示する別profileである。
+ 既存の `doc-markdown` の互換規則は変更しない。renderer識別子は
+-`nepl3-tools.markdown-annotated/1` とする。
++`nepl3-tools.markdown-annotated/2` とする。版2はlistとtableの閲覧構造を追加する。
++版1から引き継ぐ構造の表示規則は変えず、正本registryのrendererと生成metadataを
++同じ版へ更新して再生成・差分検査する。古いrendererを新しい能力として広告しない。
+ 
+ Rubyは `本体[読み]`、Annoは `本体{注記1/注記2}` の表示へ写し、入れ子も型付きの
+ 子要素を順に辿る。括弧等はMarkdownの構文として解釈されないようescapeする。
+@@ -286,11 +288,31 @@ Concatは透明な構造として扱う。空TextはDocの意味正規化に従
+ 連続するBreakとその前後のText空白を拒否する。透明なConcatや装飾でこの検査を回避
+ できない。見出しのBreakは拒否し、Text内のLFはBreakへ置換しない。
+ 
+-Bodyには導入のParagraph/RawCodeと、その後にSection列を置ける。SectionのBodyも
++Bodyには導入のParagraph/RawCode/List/Tableと、その後にSection列を置ける。SectionのBodyも
+ 同じ規則で再帰的に扱い、Articleの見出しを第1段として第6段まで生成する。
+ 同じBodyでSectionの後に通常blockが現れる場合は、Markdownで所属が変わるため拒否する。
+ RawCodeのbyte列・末尾LF・hint・fenceの制約は既存projectionと共通である。
+-この初期profileはlist、table、Parallel、画像、参照、inline Anchorを扱わない。
++Listは非空のunordered/orderedを扱い、各itemは一つのParagraphからなるBodyを持つ。
++Paragraph内のSentenceは通常本文と同じ注釈付き規則で連結する。checked/uncheckedは
++GFMのtask markerへ写し、未指定はmarkerを追加しない。空のitem本文、複数段落、入れ子、
++Paragraph以外のblockは拒否し、平坦化や仮の本文補充は行わない。orderedの開始値は
++GFMの9桁以内（0〜999999999）に限り、各itemのmarkerへ同じ値を使う。以後の表示番号は
++Markdownのlist表示に委ね、開始値を丸めたり加算で桁を超えたりしない。
++Breakの継続行はmarker幅に合わせてindentする。隣接する独立ListはMarkdownで結合する
++ため拒否する。checkboxに似た通常Textはescapeし、意図しないtask markerにしない。
++
++Tableは非空のcolumnsと明示headerを持つ場合を扱う。headerなしの先頭rowを昇格したり、
++架空のheaderを追加したりしない。headerだけでrowsが空の場合は許す。元のrow/cell順、
++cell数とDefault/Left/Center/RightをGFM tableへ写す。空のSentence cellは空cellとして
++保持するが、空の見出し・段落・InlineCodeを許す規則には拡張しない。cell内の注釈・装飾・
++外部Link・InlineCodeは共通のinline処理を使う。Textとcodeにあるpipeをtable区切りにせず、
++codeではpipeごとに追加する一つのescapeだけがGFM処理で消費されるようにする。
++既存backslashやbacktickを含むcode内容も保持する。cell内のBreak、外端のText空白、
++複数blockはこのprofileでは扱わず、空白除去や改行の黙殺で成功させない。
++規則は [GFMの表](https://github.github.com/gfm/#tables-extension-) とlist/task listの
++契約に従い、別parserで構造・文字列・checkbox・開始値を検査する。
++
++このprofileはParallel、画像、参照、inline Anchorを扱わない。
+ Relative/Page link、asset、foreignの要求を含む入力はNeedsResolutionとし、
+ 周辺fileの探索や仮のPageSet登録で成功させない。Doc/HTML側の対応範囲を狭めるものではない。
+ 

@@ -1,0 +1,41 @@
+from pathlib import Path
+import hashlib, json, subprocess, sys
+
+root = Path(__file__).resolve().parent.parent
+evidence = root / '.tmp' / (sys.argv[1] if len(sys.argv) > 1 else 'block-verification')
+evidence.mkdir(exist_ok=True)
+results = []
+def run(name, args, expected=0):
+    result = subprocess.run(args, cwd=root, capture_output=True, timeout=900)
+    (evidence / (name+'.stdout.log')).write_bytes(result.stdout)
+    (evidence / (name+'.stderr.log')).write_bytes(result.stderr)
+    results.append(dict(name=name, command=args, exit_code=result.returncode, expected_exit_code=expected))
+    (evidence/'results.json').write_text(json.dumps(results, indent=2)+'\n', encoding='utf-8', newline='\n')
+    print(name, result.returncode, flush=True)
+    if result.returncode != expected:
+        raise SystemExit(result.stderr.decode('utf-8', errors='replace')[-5000:])
+
+source = 'article en "Blocks" body cons list ordered 7 cons item checked body cons paragraph cons "[Value/value]." nil nil nil cons table cons left nil some row cons "Header" nil cons row cons sentence cons code "a|b" nil nil nil nil\n'
+(evidence/'input.nepld').write_text(source, encoding='utf-8', newline='\n')
+(evidence/'aliases.json').write_text('[]\n', encoding='utf-8', newline='\n')
+old = Path('C:/projects/NEPL3-doc-canonical-source/target/debug/nepl3-tools.exe')
+run('before', [str(old), 'doc-markdown', 'annotated', str(evidence/'input.nepld'), str(evidence/'aliases.json'), str(evidence/'before.md')], 1)
+assert not (evidence/'before.md').exists()
+run('after', [str(root/'target/debug/nepl3-tools.exe'), 'doc-markdown', 'annotated', str(evidence/'input.nepld'), str(evidence/'aliases.json'), str(evidence/'after.md')])
+old_projection = (root/'doc/spec/13-reproducibility.md').read_bytes()
+new_projection = (root/'.tmp/chapter13-renderer2.md').read_bytes()
+assert old_projection.replace(b'markdown-annotated/1;', b'markdown-annotated/2;', 1) == new_projection
+(root/'doc/spec/13-reproducibility.md').write_bytes(new_projection)
+run('fmt', ['cargo','fmt','--all','--','--check'])
+run('doc-tests', ['cargo','test','--locked','-p','nepl3-tools','--test','doc'])
+run('tool-tests', ['cargo','test','--locked','-p','nepl3-tools','--lib'])
+run('clippy', ['cargo','clippy','--locked','--workspace','--all-targets','--','-D','warnings'])
+run('canonical-check', ['cargo','run','--locked','-p','nepl3-tools','--','doc-canonical','--check'])
+run('canonical-html', ['cargo','run','--locked','-p','nepl3-tools','--','doc-canonical','html',str(evidence/'canonical-html')])
+original = Path('C:/projects/NEPL3-doc-canonical-source/dist/canonical-first')
+generated = evidence/'canonical-html'
+for name in ['docs/spec/13-reproducibility.html', 'docs/spec/assets/doc.css']:
+    assert (original/name).read_bytes() == (generated/name).read_bytes(), name
+print('canonical HTML and CSS unchanged', flush=True)
+run('repository-check', ['cargo','run','--locked','-p','nepl3-tools','--','check'])
+run('diff-check', ['git','diff','--check'])

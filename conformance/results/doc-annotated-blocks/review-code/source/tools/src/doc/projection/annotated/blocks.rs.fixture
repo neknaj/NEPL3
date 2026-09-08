@@ -1,0 +1,132 @@
+//! Block projections whose Markdown shape preserves the defined viewing model.
+use super::*;
+
+impl Annotated<'_, '_> {
+    pub(super) fn table_code(&mut self, node: u64, text: &str) -> Result<(), Error> {
+        // GFM table splitting consumes one escape before every pipe even
+        // within code spans. Preserve existing backslashes, adding exactly
+        // one before each pipe; general Markdown backslash escaping would
+        // change the literal contents of the code span.
+        self.plain
+            .budget
+            .charge(Resource::Work, text.len() as u64)?;
+        let pipes = text.bytes().filter(|&b| b == b'|').count();
+        if pipes == 0 {
+            return self.plain.text(node, text, true);
+        }
+        let size = text
+            .len()
+            .checked_add(pipes)
+            .ok_or_else(|| self.plain.budget.stop(StopReason::AllocationLimit))?;
+        self.plain
+            .budget
+            .charge(Resource::AllocationUnits, size as u64)?;
+        let mut escaped = String::with_capacity(size);
+        for character in text.chars() {
+            if character == '|' {
+                escaped.push('\\');
+            }
+            escaped.push(character);
+        }
+        self.plain.text(node, &escaped, true)
+    }
+
+    pub(super) fn table(
+        &mut self,
+        node: u64,
+        columns: &[Alignment],
+        header: Option<RowRef>,
+        rows: &[RowRef],
+    ) -> Result<(), Error> {
+        let Some(header) = header.filter(|_| !columns.is_empty()) else {
+            return Err(Error::Unsupported { node });
+        };
+        self.table_row(header.0)?;
+        self.plain.emit("|")?;
+        for alignment in columns {
+            self.plain.emit(match alignment {
+                Alignment::Default => " --- |",
+                Alignment::Left => " :--- |",
+                Alignment::Center => " :---: |",
+                Alignment::Right => " ---: |",
+            })?;
+        }
+        self.plain.emit("\n")?;
+        for row in rows {
+            self.table_row(row.0)?;
+        }
+        self.plain.emit("\n")
+    }
+
+    fn table_row(&mut self, node: u64) -> Result<(), Error> {
+        self.plain.budget.charge(Resource::Work, 1)?;
+        let DocKind::Row { cells } = self.plain.kind(node) else {
+            return Err(Error::Unsupported { node });
+        };
+        self.plain.emit("|")?;
+        for cell in cells {
+            self.plain.emit(" ")?;
+            self.inline(&[cell.0], None, true)?;
+            self.plain.emit(" |")?;
+        }
+        self.plain.emit("\n")
+    }
+
+    pub(super) fn flat_list(
+        &mut self,
+        node: u64,
+        kind: ListKind,
+        items: &[ListItemRef],
+    ) -> Result<(), Error> {
+        if items.is_empty() {
+            return Err(Error::Unsupported { node });
+        }
+        // CommonMark ordered markers contain one to nine digits. Later marker
+        // values do not change numbering, so repeat the explicit start without
+        // risking arithmetic overflow or changing the semantic start value.
+        self.plain.budget.charge(Resource::AllocationUnits, 11)?;
+        let marker = match kind {
+            ListKind::Unordered => "- ".to_owned(),
+            ListKind::Ordered { start } if start <= 999_999_999 => format!("{start}. "),
+            _ => return Err(Error::Unsupported { node }),
+        };
+        self.plain
+            .budget
+            .charge(Resource::AllocationUnits, marker.len() as u64)?;
+        let continuation = " ".repeat(marker.len());
+        for item in items {
+            self.plain.budget.charge(Resource::Work, 1)?;
+            let DocKind::ListItem { checked, body } = self.plain.kind(item.0) else {
+                return Err(Error::Unsupported { node: item.0 });
+            };
+            let DocKind::Body { blocks } = self.plain.kind(body.0) else {
+                return Err(Error::Unsupported { node: body.0 });
+            };
+            // This initial list projection is deliberately flat. Nested lists,
+            // multiple paragraphs and other blocks require their own layout
+            // mapping; never flatten them or manufacture a label.
+            if blocks.len() != 1 {
+                return Err(Error::Unsupported { node: body.0 });
+            }
+            let DocKind::Paragraph { items: sentences } = self.plain.kind(blocks[0].0) else {
+                return Err(Error::Unsupported { node: blocks[0].0 });
+            };
+            let mut ids = Vec::new();
+            for sentence in sentences {
+                if !matches!(self.plain.kind(sentence.0), DocKind::Sentence { .. }) {
+                    return Err(Error::Unsupported { node: sentence.0 });
+                }
+                push(&mut ids, sentence.0, self.plain.budget)?;
+            }
+            self.plain.emit(&marker)?;
+            match checked {
+                Some(true) => self.plain.emit("[x] ")?,
+                Some(false) => self.plain.emit("[ ] ")?,
+                None => {}
+            }
+            self.sentences(&ids, Some(&continuation))?;
+            self.plain.emit("\n")?;
+        }
+        self.plain.emit("\n")
+    }
+}

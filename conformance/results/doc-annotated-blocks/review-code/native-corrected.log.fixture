@@ -1,0 +1,5 @@
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-block-projection\.tmp\review-block-implementation\workspace\tools)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.52s
+     Running `C:\projects\NEPL3-doc-block-projection\.tmp\review-block-implementation\target\debug\review-blocks.exe C:\projects\NEPL3-doc-block-projection\.tmp\review-block-implementation\run-corrected`
+244 code contexts passed
+248 actual Doc/GFM cases passed

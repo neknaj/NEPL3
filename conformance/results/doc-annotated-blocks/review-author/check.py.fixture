@@ -1,0 +1,35 @@
+from pathlib import Path
+import subprocess,json,hashlib,sys,re,difflib
+r=Path(__file__).resolve().parents[2];p=Path(__file__).parent;sys.path.insert(0,str(r))
+from tools.audit.structure import Parser,load_forms
+def sha(b):return hashlib.sha256(b).hexdigest()
+def git(*x):return subprocess.check_output(['git',*x],cwd=r)
+draft='doc/migration/authored/21-doc-pages.nepld';source='doc/spec/21-doc-pages.md'
+for kind,path in [('draft',draft),('source',source)]:
+ for when,b in [('before',git('show','a163764e93e2809f8013d7bbe16721082f979143:'+path)),('after',(r/path).read_bytes())]:(p/f'{kind}-{when}.txt').write_bytes(b)
+ (p/f'{kind}.diff').write_bytes(git('diff','a163764e93e2809f8013d7bbe16721082f979143','--',path))
+for path in ['AGENTS.md','doc/authoring.md','design/forms.json','tools/audit/structure.py']:
+ q=p/'context'/path;q.parent.mkdir(parents=True,exist_ok=True);q.write_bytes((r/path).read_bytes())
+b=(r/draft).read_bytes();assert sha(b)=='b6a0fe957adc6abeae3c3791e4f0fa7822a5184bdc08ba2e4cdf3eeaaf70ed1f';assert b'\r' not in b and not b.startswith(b'\xef\xbb\xbf')
+tree=Parser(b.decode(),load_forms(r)).complete('Doc/Article')
+before=(p/'draft-before.txt').read_text(encoding='utf8').splitlines(True);after=b.decode().splitlines(True)
+changes=[(tag,before[a:z],after[c:d]) for tag,a,z,c,d in difflib.SequenceMatcher(None,before,after,autojunk=False).get_opcodes() if tag!='equal']
+assert sum(len(old) for _,old,_ in changes)==3
+md=(r/source).read_text(encoding='utf8').replace('\n','')
+literal_checks=[];readings=[]
+for _,_,added in changes:
+ for line in added:
+  m=re.fullmatch(r'\s*cons "(.*)"\s*',line)
+  if not m:continue
+  text=m[1]
+  for base,reading in re.findall(r'\[([^/\[\]]+)/([^\[\]]+)\]',text):
+   assert re.fullmatch(r'[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\u3005]+',base);assert reading
+   readings.append([base,reading])
+  plain=re.sub(r'\[([^/\[\]]+)/[^\[\]]+\]',r'\1',text)
+  assert plain in md,plain
+  literal_checks.append(plain)
+raw=(r/'.tmp/author-block-projection/manifest.json').read_bytes();assert sha(raw)=='51e19b6ba93f96e8ff7330e2b17f3218addad1385c80b2f7f9b4fc466246d556';(p/'author-manifest.json').write_bytes(raw)
+for e in json.loads(raw)['files']:
+ b=(r/'.tmp/author-block-projection'/e['path']).read_bytes();assert sha(b)==e['sha256'] and len(b)==e['bytes']
+(p/'results.json').write_text(json.dumps({'base':git('rev-parse','HEAD').decode().strip(),'formal_structure':'pass','changed_literal_sentences_directly_matched':literal_checks,'readings':readings,'replaced_old_lines':3,'author_manifest_payloads':'pass','runtime':'not-run'},ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+print(len(literal_checks),len(readings))

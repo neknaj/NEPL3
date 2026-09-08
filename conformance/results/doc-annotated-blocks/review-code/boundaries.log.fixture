@@ -1,0 +1,4 @@
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-block-projection\.tmp\review-block-implementation\workspace\tools)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.40s
+     Running `C:\projects\NEPL3-doc-block-projection\.tmp\review-block-implementation\target\debug\review-block-boundaries.exe C:\projects\NEPL3-doc-block-projection\.tmp\review-block-implementation\boundaries-run`
+17 negative/first-receiver/budget observations passed

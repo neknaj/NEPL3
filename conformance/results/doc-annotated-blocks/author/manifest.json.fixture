@@ -1,0 +1,60 @@
+{
+  "scope": "Manual draft synchronization only; author self-check; no runtime or canonical claim",
+  "files": [
+    {
+      "path": "after.nepld",
+      "bytes": 79554,
+      "sha256": "b6a0fe957adc6abeae3c3791e4f0fa7822a5184bdc08ba2e4cdf3eeaaf70ed1f"
+    },
+    {
+      "path": "authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "before.json",
+      "bytes": 582,
+      "sha256": "f3423d8c48abc37ec738fba0e2faa41cf64cccb794a8673f3e886dac33001176"
+    },
+    {
+      "path": "before.nepld",
+      "bytes": 75011,
+      "sha256": "f0c7b1748fcce16d8f29786256a4f8cef80d6f7dc24ec6f4fe11c7da3308afb5"
+    },
+    {
+      "path": "check.py",
+      "bytes": 3802,
+      "sha256": "96aa769c58116f1c52e59bb66c55823857a99dac12c392bc46282a7a7af88e1a"
+    },
+    {
+      "path": "draft.diff",
+      "bytes": 8315,
+      "sha256": "8fed4a7d918639965a07ecd7861db7f806593b71df7d506b5f15efedb0102fb8"
+    },
+    {
+      "path": "helpers.py",
+      "bytes": 3299,
+      "sha256": "68315acfa40d0086e76b823cb464a4e76b9de12d8d9b9103c92277d6adb8ae13"
+    },
+    {
+      "path": "record.md",
+      "bytes": 3531,
+      "sha256": "60234b79fc20305dc45f50798ec06e745f513a293a8fa045017d51495589f905"
+    },
+    {
+      "path": "result.json",
+      "bytes": 7702,
+      "sha256": "1f4a51b7d27b1bdf57d91256ab4b49a0c3cd401f046f60ab50ea520262261599"
+    },
+    {
+      "path": "source.diff",
+      "bytes": 4263,
+      "sha256": "d4f011942775f05cd53536062223991e0c7a06d5bbbc8e228096eeaeef8721ba"
+    },
+    {
+      "path": "source.md",
+      "bytes": 29405,
+      "sha256": "03c74625aaac5d9023c70f58bf8316dd20ce800cad8fc2a764449e591b34f0a7"
+    }
+  ]
+}
