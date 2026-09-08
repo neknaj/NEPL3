@@ -544,18 +544,11 @@ fn real_architecture_draft_links_to_canonical_extensions_with_legacy_bytes_intac
         "doc/spec/01-architecture.nepld",
         fs::read(repository.join(architecture_source))?,
     )?;
-    // Registered real pages, including legacy body revalidation, share one output
-    // allowance chosen before execution. No retry on a stopped budget.
-    let limits = super::super::export::pages::resources::OutputLimits {
-        work: 300_000_000,
-        allocation_units: 750_000_000,
-        // The six-page corpus exceeds the former 10M node allowance.
-        // Match its explicitly selected finite output profile before entry.
-        nodes: 20_000_000,
-        ..Default::default()
-    };
-    value["output_limits"] = serde_json::to_value(limits)?;
-    f.json("doc/canonical.json", &value)?;
+    // The real corpus uses its explicitly selected finite registry allowance.
+    // Keep the fixture's resource policy in that one source; failure/boundary
+    // tests below exercise separate small budgets. Never retry a stopped budget.
+    let limits: super::super::export::pages::resources::OutputLimits =
+        serde_json::from_value(value["output_limits"].clone())?;
     let mut budget = limits.budget();
     let result = projection::generate(f.root(), "doc/canonical.json", &mut budget)?;
     eprintln!(
