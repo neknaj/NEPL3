@@ -1,6 +1,95 @@
 use super::*;
 
 #[test]
+fn owned_resume_charges_frame_traversal_before_allocating_the_frame_vector()
+-> Result<(), ReaderError> {
+    let (registry, schema) = registry()?;
+    for depth in [32u64, 128] {
+        let read = signature(&schema, ProviderKind::Read);
+        let mut expressions = vec![ReaderExpr::Call(read.operation.clone())];
+        for id in 0..depth {
+            expressions.push(ReaderExpr::Discard(ReaderId(id)));
+        }
+        let mut p = plan(&schema, expressions, depth, TypeDescriptor::Unit);
+        p.providers.push(read);
+        let checked = p.check(&registry, &mut budget())?;
+        let input = source("a")?;
+        let mut store = SourceStore::default();
+        store.insert(input.clone())?;
+        let raw = context(&schema, &registry)?;
+        let context = check_context(
+            &raw,
+            &store,
+            &registry,
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        )?;
+        let execute = |remaining: Option<u64>| -> Result<_, ReaderError> {
+            let mut b = budget();
+            let mut admission = SourceAdmission::default();
+            let mut session = ReaderSession::new("conversion".into(), &checked, &registry, &mut b)?;
+            let reply = session.read(
+                "entry",
+                ReadRequest {
+                    snapshot: &input,
+                    start: 0,
+                    limit: 1,
+                    final_input: true,
+                    context: &context,
+                    state: &NdfValue::Unit,
+                },
+                &store,
+                &mut b,
+                &mut admission,
+            )?;
+            let ReadReply::Await { continuation, .. } = reply else {
+                return Err(ReaderError::Context);
+            };
+            if let Some(remaining) = remaining {
+                b.charge(Resource::Work, b.limits().work - b.usage().work - remaining)?;
+            }
+            let before = b.usage();
+            let value = terminal("a", 1, &mut b)?;
+            let reply = session.resume(&continuation, value, &store, &mut b, &mut admission)?;
+            assert!(matches!(
+                reply,
+                ReadReply::Matched { .. }
+                    | ReadReply::Stopped {
+                        reason: StopReason::WorkLimit,
+                        ..
+                    }
+            ));
+            Ok((
+                b.usage().work - before.work,
+                b.usage().allocation_units - before.allocation_units,
+                matches!(reply, ReadReply::Matched { .. }),
+            ))
+        };
+        let full = execute(None)?;
+        assert!(full.2);
+        let mut previous = (0, 0);
+        let mut largest_jump = (0, 0);
+        // Sweep actual public resume boundaries, without a fixed implementation
+        // work count or target-specific Frame size. The largest allocation step
+        // is the saved frame vector: visiting it must consume at least depth Work.
+        for remaining in 1..=full.0 {
+            let (work, allocation, _) = execute(Some(remaining))?;
+            let jump = allocation.saturating_sub(previous.1);
+            if jump > largest_jump.0 {
+                largest_jump = (jump, work.saturating_sub(previous.0));
+            }
+            assert!(work <= remaining);
+            previous = (work, allocation);
+        }
+        assert!(
+            largest_jump.1 >= depth,
+            "depth={depth}, jump={largest_jump:?}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn lookahead_over_growing_view_keeps_prior_nodes_without_quadratic_rollback_copies()
 -> Result<(), ReaderError> {
     let (registry, schema) = registry()?;
