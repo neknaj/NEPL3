@@ -1,0 +1,22 @@
+[
+  {
+    "path": "CONTRIBUTING.md",
+    "bytes": 1576,
+    "sha256": "21e3c388b11cd40db4ca9fb61d6a15d9474b4a7283c58dbde68eecf84e2cf096"
+  },
+  {
+    "path": "SECURITY.md",
+    "bytes": 827,
+    "sha256": "a97ad7e76b94adc5f302ea2d26c943643da806f47a1ab21f1cce30e8de9b5b07"
+  },
+  {
+    "path": "doc/migration/authored/project/CONTRIBUTING.nepld",
+    "bytes": 5209,
+    "sha256": "9b3dac64a2735a08cac52a1a77deaef19c8da5302856872b98294bf78d0f8287"
+  },
+  {
+    "path": "doc/migration/authored/project/SECURITY.nepld",
+    "bytes": 2880,
+    "sha256": "f6235a9521fabfa0a8437912ca9d85b030f33d47f0cc2c4f6e1fe5f06afe3ce4"
+  }
+]
