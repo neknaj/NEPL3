@@ -193,16 +193,20 @@ fn head_text<'a>(
     budget: &mut Budget,
 ) -> Result<&'a str, TreeError> {
     let head = &token(bundle, node)?.head;
-    budget.charge(
-        Resource::Work,
-        (bundle.sources.len() as u64)
-            .saturating_mul(head.snapshot_ref().source.0.len() as u64 + 41),
-    )?;
-    let source = bundle
-        .sources
-        .iter()
-        .find(|s| s.identity() == head.snapshot_ref())
-        .ok_or(TreeError::Selection)?;
+    let comparison = head.snapshot_ref().source.0.len() as u64 + 41;
+    let (first, rest) = bundle.sources.split_first().ok_or(TreeError::Selection)?;
+    budget.charge(Resource::Work, comparison)?;
+    let source = if first.identity() == head.snapshot_ref() {
+        first
+    } else {
+        budget.charge(
+            Resource::Work,
+            (rest.len() as u64).saturating_mul(comparison),
+        )?;
+        rest.iter()
+            .find(|source| source.identity() == head.snapshot_ref())
+            .ok_or(TreeError::Selection)?
+    };
     let raw = source
         .slice(head)
         .map_err(|e| TreeError::from(SyntaxError::from(e)))?;

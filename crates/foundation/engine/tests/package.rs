@@ -346,6 +346,23 @@ fn persistent_tree_checks_parent_reads_spelling_payload_and_concrete_owner() -> 
     };
     tree.validate(&resolved, &mut budget(), &mut SourceAdmission::default())
         .map_err(|e| format!("{e:?}"))?;
+    // Source table order is unrestricted. An unrelated snapshot with the
+    // same source ID but a different revision must never supply a token head.
+    for position in [0, 1] {
+        let mut reordered = tree.clone();
+        let other = SourceSnapshot::new(
+            SourceId("tree".into()),
+            1,
+            "memory:other-revision".into(),
+            b"not x z".to_vec(),
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+        reordered.bundle.sources.insert(position, other);
+        reordered
+            .validate(&resolved, &mut budget(), &mut SourceAdmission::default())
+            .map_err(|e| format!("source position {position}: {e:?}"))?;
+    }
     // Selection order is transport data, not the node-index order. All six
     // permutations must retain the exact same concrete-owner validation.
     for order in [
