@@ -23,8 +23,9 @@ body
       cons ruby text "定義" text "ていぎ"
       cons text "する。"
       nil
-    cons "[現在/げんざい]のlocal[入口/いりぐち]は、[外部要求/がいぶようきゅう]が[一/ひと]つもないArticleをHTML fragmentへ[変換/へんかん]する[段階/だんかい]である。"
-    cons "[一般/いっぱん]page/asset/foreign[解決/かいけつ]、document shellと[配布/はいふ]asset、[完全/かんぜん]なReport[操作/そうさ]は、[引/ひ]き[続/つづ]きH1[以降/いこう]で[実装/じっそう]する。"
+    cons "[本章/ほんしょう]のlocal[入口/いりぐち]は、[外部要求/がいぶようきゅう]が[一/ひと]つもないArticleをHTML fragmentへ[変換/へんかん]する[制約/せいやく]を[持/も]つ。"
+    cons "document shellと[固定/こてい]CSSの[配布/はいふ]は、[後述/こうじゅつ]の[開発/かいはつ]hostが[担当/たんとう]する。"
+    cons "[一般/いっぱん]page/asset/foreign[解決/かいけつ]と[完全/かんぜん]なReport[操作/そうさ]は、このlocal[入口/いりぐち]の[責務/せきむ]に[含/ふく]めず、[別/べつ]の[統合経路/とうごうけいろ]で[扱/あつか]う。"
     nil
   cons paragraph
     cons sentence cons code "LocalHtmlRequest" cons text " はDocumentSyntaxとRenderOptionsを" cons ruby text "所有" text "しょゆう" cons text "する。" nil

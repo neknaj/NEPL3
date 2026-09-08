@@ -72,6 +72,14 @@
       "aliases": "doc/migration/aliases/08-editor.json",
       "route": "docs/spec/08-editor.html",
       "renderer": "nepl3-tools.markdown-annotated/2"
+    },
+    {
+      "id": "doc-html",
+      "source": "doc/spec/20-doc-html.nepld",
+      "projection": "doc/spec/20-doc-html.md",
+      "aliases": "doc/migration/aliases/20-doc-html.json",
+      "route": "docs/spec/20-doc-html.html",
+      "renderer": "nepl3-tools.markdown-annotated/2"
     }
   ],
   "output_limits": {
