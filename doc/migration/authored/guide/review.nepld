@@ -883,5 +883,31 @@ body
       cons "PackageSubjectの[追加/ついか]2[試験/しけん]は、[既存/きそん]checkerと[同/おな]じ[失敗/しっぱい]・[同/おな]じUsageを[保/たも]った[詳細帰属/しょうさいきぞく]と、6[種類/しゅるい]のcategory/mode[欠落/けつらく]の[元/もと]UTF-8 byte[位置/いち]を[確認/かくにん]し[独立成功/どくりつせいこう]した。"
       cons sentence cons ruby text "独立" text "どくりつ" cons text " " cons code "package_locations" cons text " は" cons ruby text "日本語" text "にほんご" cons text "emoji/CRLF" cons ruby text "原文" text "げんぶん" cons text "のcommentとliteralへ" cons ruby text "同" text "おな" cons text "じAbsentを" cons ruby text "先" text "さき" cons text "に" cons ruby text "置" text "お" cons text "き、nested WithModeの" cons ruby text "内側" text "うちがわ" cons text "LocalのAbsentだけをbyte255..261へ" cons ruby text "正" text "ただ" cons text "しく" cons ruby text "帰属" text "きぞく" cons text "させた。" nil
       cons "[位置/いち]は[保持/ほじ]AST[対応/たいおう]から[得/え]ており、[同/どう][綴/つづ]りのsubstring[探索/たんさく]による[代用/だいよう]ではない。" nil
+    cons paragraph
+      cons "ReaderExpr matrixは[正式/せいしき]Grammar[原文/げんぶん]を[実/じつ]seed[入力/にゅうりょく]adapterからtyped AST・production reader compiler・ReaderSessionへ[通/とお]す[管理対象/かんりたいしょう]4[件/けん]がnativeで[独立成功/どくりつせいこう]した。"
+      cons "23constructorの[値/あたい]/end/[捕捉/ほそく]・Region・Node、23[種類/しゅるい]の[失敗時/しっぱいじ]のOptional/Commit/[実/じつ]Transform Failed[診断/しんだん]、23nonfinal NeedMoreを[確認/かくにん]する。"
+      cons "[最初/さいしょ]のnonfinal18[例/れい]からScalar/Map/Decode/Thenと[明示/めいじ]provider NeedMoreを[追加/ついか]するよう[指摘/してき]し、[最終/さいしゅう]23[例/れい]を[確認/かくにん]した。"
+      cons sentence cons text "processを" cons ruby text "使" text "つか" cons text "わない3" cons ruby text "実行試験" text "じっこうしけん" cons text "はWasmtime44.0.1でも" cons ruby text "独立成功" text "どくりつせいこう" cons text "した（" cons code "cargo test --locked -p nepl3-tools --test grammar reader:: --target wasm32-wasip2 --target-dir .tmp/review-target -- --skip reader_matrix_seed_matches_the_real_adapter --test-threads=1" cons text "、runner=" cons code "wasmtime run" cons text "）。" nil
+      cons "[実/じつ]Python adapterとの[一致/いっち]はnativeの[別試験/べつしけん]で[確認/かくにん]する。"
+      cons "[新/しん]CI2[行/ぎょう]は[同/おな]じWASI runner[配下/はいか]でこの3[試験/しけん]を[実行/じっこう]し、[既存検査/きそんけんさ]を[維持/いじ]する。"
+      cons "[有限/ゆうげん]matrixを[全組合/ぜんくみあわ]せの[証明/しょうめい]やT05[全条件/ぜんじょうけん]の[完了/かんりょう]とはしない。" nil
+    cons paragraph
+      cons "T06の[独立入力/どくりつにゅうりょく]は[実装/じっそう]の[結果/けっか]を[読/よ]む[前/まえ]に[原文/げんぶん]とUTF-8 byte[位置/いち]から[期待/きたい]する[宣言/せんげん]・[参照対応/さんしょうたいおう]を[固定/こてい]した。"
+      cons sentence cons ruby text "補助" text "ほじょ" cons text " " cons code "binding_analyze" cons text " は" cons ruby text "実" text "じつ" cons text "Grammar compiler・ParseSession・tree.validate・" cons ruby text "公開" text "こうかい" cons text "analyzeを24" cons ruby text "入力" text "にゅうりょく" cons text "へ" cons ruby text "接続" text "せつぞく" cons text "し、" cons ruby text "対応済" text "たいおうず" cons text "み17" cons ruby text "入力" text "にゅうりょく" cons text "のEntity.selectionへの" cons ruby text "解決" text "かいけつ" cons text "が" cons ruby text "期待値" text "きたいち" cons text "と" cons ruby text "一致" text "いっち" cons text "した。" nil
+      cons "Let[初期化子/しょきかし]の[非再帰/ひさいき]、Lambda shadowingと[兄弟/きょうだい]へのscope[復帰/ふっき]、[同/どう]scopeの[宣言前後/せんげんぜんご]・[同名/どうめい]2[宣言/せんげん]のAmbiguous、Import/Export、[同/どう]aliasのForeign[内外/ないがい]の[分離/ぶんり]と[深/ふか]さ3の[独立/どくりつ]root、escaped Text[名/めい]の[意味比較/いみひかく]を[含/ふく]む。"
+      cons "Textの[名前/なまえ]が1[文字/もじ]でもselectionは[元/もと]の[引用/いんよう]token[全/ぜん]byte[範囲/はんい]を[保/たも]ち、SourceMapを[失/うしな]わない。"
+      cons "Open policyの[同入力/どうにゅうりょく]も17[解析/かいせき]が[成功/せいこう]し、[単独/たんどく]freeはEntityを[作/つく]らずopen[要求/ようきゅう]1[件/けん]・[診断/しんだん]0[件/けん]となった。"
+      cons "Sequential/Recursiveの7[入力/にゅうりょく]は[明示/めいじ]UnsupportedPlanであり、この[段階/だんかい]の[解析成功/かいせきせいこう]には[含/ふく]めない。"
+      cons "Global・Custom・[明示/めいじ]foreign[共有/きょうゆう]や[全/ぜん]portable[解析/かいせき]は[未検証/みけんしょう]である。"
+      cons sentence cons ruby text "補助原文" text "ほじょげんぶん" cons text "・" cons ruby text "期待値" text "きたいち" cons text "・" cons ruby text "実行器" text "じっこうき" cons text "はignored " cons code ".tmp/binding-review.neplg" cons text "、" cons code ".tmp/binding-expectations.json" cons text "、" cons code ".tmp/independent-engine/src/bin/binding_analyze.rs" cons text " であり、" cons ruby text "管理対象試験" text "かんりたいしょうしけん" cons text "の" cons ruby text "代用" text "だいよう" cons text "にはしない。" nil nil
+    cons paragraph
+      cons "R043は[同/おな]じ[公開入口/こうかいいりぐち]で[確認/かくにん]した。"
+      cons sentence cons code "binding_stops" cons text " はText escapeとForeignの2" cons ruby text "入力" text "にゅうりょく" cons text "を" cons ruby text "正常解析" text "せいじょうかいせき" cons text "した" cons ruby text "後" text "あと" cons text "、fresh BudgetのWork/Allocation/Nodes/Depth/SourceBytesを" cons ruby text "個別" text "こべつ" cons text "に" cons ruby text "走査" text "そうさ" cons text "する。" nil
+      cons "Text[入力/にゅうりょく]でSourceBytes=0はInvalid(Tree(Syntax(Source(Stopped(SourceLimit)))))、Nodes=5はInvalid(Tree(Syntax(View(Schema(Stopped(NodeLimit))))))、Work=51はSource[由来/ゆらい]のWorkLimitとなる。"
+      cons "Budget.pollは[対応/たいおう]する[停止理由/ていしりゆう]を[保持/ほじ]しており、[型付/かたつ]き[入力不正/にゅうりょくふせい]への[分類/ぶんるい]が[誤/あやま]っている。"
+      cons "2[入力/にゅうりょく]の[走査/そうさ]で102[例/れい]を[再現/さいげん]したためopenとして[修正/しゅうせい]を[依頼/いらい]した。"
+      cons "[返却/へんきゃく]されたSome(partial FactSet)を[別/べつ]fresh validatorで[検査/けんさ]した[範囲/はんい]では[構造不正/こうぞうふせい]はなく、Occurrenceとstageの[片側/かたがわ]だけの[公開/こうかい]もなかった。"
+      cons "この[構造検査成功/こうぞうけんさせいこう]をStopped/Invalid[分類/ぶんるい]の[成功/せいこう]とは[扱/あつか]わない。"
+      cons sentence cons ruby text "実行" text "じっこう" cons text "コマンドは " cons code "cargo run --manifest-path .tmp/independent-engine/Cargo.toml --features nepl3-tools,nepl3-grammar-core --bin binding_stops --target-dir .tmp/review-target" cons text " である。" nil nil
     nil
   nil
