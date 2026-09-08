@@ -1,0 +1,130 @@
+article ja "NEPL3 ドキュメント"
+body
+  cons paragraph
+    cons "[正式/せいしき]な[仕様/しよう]・[開発情報/かいはつじょうほう]の[入口/いりぐち]です。"
+    cons sentence cons ruby text "会話" text "かいわ" cons text "やローカルの " cons code ".tmp/" cons text " を" cons ruby text "参照" text "さんしょう" cons text "しなくても、ここから" cons ruby text "実装契約" text "じっそうけいやく" cons text "と" cons ruby text "現在" text "げんざい" cons text "の" cons ruby text "状態" text "じょうたい" cons text "を" cons ruby text "確認" text "かくにん" cons text "できます。" nil nil
+  cons paragraph
+    cons sentence
+      cons link relative "canonical.json" none concat cons ruby text "正本" text "せいほん" cons text "registry" nil
+      cons text "に"
+      cons ruby text "登録" text "とうろく"
+      cons text "したページはnepldを"
+      cons ruby text "編集" text "へんしゅう"
+      cons text "し、Markdownは"
+      cons ruby text "生成物" text "せいせいぶつ"
+      cons text "として"
+      cons ruby text "扱" text "あつか"
+      cons text "います。"
+      nil
+    cons sentence
+      cons link relative "spec/13-reproducibility.nepld" none concat cons ruby text "再現性" text "さいげんせい" cons text "の" cons ruby text "仕様" text "しよう" nil
+      cons text "はこの"
+      cons ruby text "方式" text "ほうしき"
+      cons text "へ"
+      cons ruby text "移行" text "いこう"
+      cons text "し、"
+      cons ruby text "既存" text "きそん"
+      cons text "のMarkdownのURLも"
+      cons ruby text "生成" text "せいせい"
+      cons text "projectionで"
+      cons ruby text "維持" text "いじ"
+      cons text "します。"
+      nil
+    cons "[未登録/みとうろく]ページは[引/ひ]き[続/つづ]きMarkdownが[正本/せいほん]です。"
+    cons sentence
+      cons code "migration/authored/"
+      cons text " の"
+      cons ruby text "原稿" text "げんこう"
+      cons text "が"
+      cons ruby text "存在" text "そんざい"
+      cons text "するだけでは"
+      cons ruby text "移行済" text "いこうず"
+      cons text "みとしません。"
+      nil
+    nil
+  cons paragraph
+    cons sentence cons text "Docで" cons ruby text "例" text "れい" cons text "や" cons ruby text "解説" text "かいせつ" cons text "を" cons ruby text "書" text "か" cons text "く" cons ruby text "際" text "さい" cons text "は、" cons link relative "authoring.md" none concat cons ruby text "文書" text "ぶんしょ" cons text "の" cons ruby text "執筆指針" text "しっぴつししん" nil cons text "のsentence literal・" cons ruby text "前置構築" text "ぜんちこうちく" cons text "・parallel・Ruby/Annoの" cons ruby text "使" text "つか" cons text "い" cons ruby text "分" text "わ" cons text "けに" cons ruby text "従" text "したが" cons text "ってください。" nil nil
+  cons section readingOrder "[読/よ]み[順/じゅん]" body
+    cons list ordered 1
+      cons item none body cons paragraph cons sentence
+        cons link relative "spec/00-contract.md" none concat cons ruby text "対象範囲" text "たいしょうはんい" cons text "と" cons ruby text "共通契約" text "きょうつうけいやく" nil
+        cons text "、" cons link relative "spec/01-architecture.md" none text "アーキテクチャ" nil nil nil
+      cons item none body cons paragraph cons sentence
+        cons link relative "spec/02-foundation.md" none ruby text "共通基盤" text "きょうつうきばん"
+        cons text "、" cons link relative "spec/03-reader.md" none text "reader"
+        cons text "、" cons link relative "spec/04-grammar.md" none text "Grammar" nil nil nil
+      cons item none body cons paragraph cons sentence
+        cons link relative "spec/05-document.md" none text "Doc"
+        cons text "、" cons link relative "spec/06-math.md" none text "Math"
+        cons text "、" cons link relative "spec/07-circuit.md" none text "Circuit" nil nil nil
+      cons item none body cons paragraph cons sentence
+        cons link relative "spec/08-editor.md" none concat cons text "エディタ" cons ruby text "支援" text "しえん" nil
+        cons text "、" cons link relative "spec/09-portability.md" none ruby text "交換契約" text "こうかんけいやく"
+        cons text "、" cons link relative "spec/10-integration.md" none ruby text "統合" text "とうごう" nil nil nil
+      cons item none body cons paragraph cons sentence
+        cons link relative "spec/11-conformance.md" none ruby text "受入条件" text "うけいれじょうけん"
+        cons text "、" cons link relative "spec/12-model-invariants.md" none concat cons text "モデル" cons ruby text "不変条件" text "ふへんじょうけん" nil
+        cons text "、" cons link relative "spec/13-reproducibility.md" none ruby text "再現性" text "さいげんせい" nil nil nil
+      cons item none body cons paragraph cons sentence
+        cons link relative "development.md" none ruby text "開発手順" text "かいはつてじゅん"
+        cons text "、" cons link relative "../tasks/README.md" none concat cons text "タスク" cons ruby text "索引" text "さくいん" nil
+        cons text "、" cons link relative "../implementation-status.json" none ruby text "実装状態" text "じっそうじょうたい" nil nil nil
+      cons item none body cons paragraph cons sentence
+        cons link relative "review.md" none concat cons ruby text "初期設計" text "しょきせっけい" cons text "の" cons ruby text "独立" text "どくりつ" cons text "レビュー" nil
+        cons text "、" cons link relative "decisions/0002-design-contract-corrections.md" none concat cons text "r2の" cons ruby text "契約訂正" text "けいやくていせい" nil nil nil nil
+      cons item none body cons paragraph cons sentence
+        cons link relative "spec/14-web-ui.md" none text "Web UI・TEA"
+        cons text "、" cons link relative "spec/15-site.md" none concat cons ruby text "静的" text "せいてき" cons text "サイト・Pages" nil
+        cons text "、" cons link relative "spec/16-doc-migration.md" none concat cons text "Doc DSL" cons ruby text "移行" text "いこう" nil
+        cons text "、" cons link relative "decisions/0003-web-tea-doc-migration.md" none concat cons text "r3の" cons ruby text "判断" text "はんだん" nil nil nil nil
+      cons item none body cons paragraph cons sentence
+        cons link relative "decisions/0004-pages-recovery-doc-inventory.md" none concat cons text "Pages" cons ruby text "復旧" text "ふっきゅう" cons text "と" cons ruby text "早期" text "そうき" cons text "Doc inventoryの" cons ruby text "判断" text "はんだん" nil
+        cons text "、" cons link relative "doc-inventory.md" none concat cons ruby text "文書" text "ぶんしょ" cons text "inventoryとgap audit" nil nil nil nil
+      cons item none body cons paragraph cons sentence
+        cons link relative "decisions/0005-foundation-runtime-contracts.md" none concat cons text "r4 foundation" cons ruby text "契約" text "けいやく" nil
+        cons text "、" cons link relative "progress/foundation-runtime.md" none concat cons ruby text "実装" text "じっそう" cons text "・" cons ruby text "検証" text "けんしょう" cons text "の" cons ruby text "進捗" text "しんちょく" nil nil nil nil
+      cons item none body cons paragraph cons sentence cons link relative "progress/doc-runtime.md" none concat cons text "Doc runtime の" cons ruby text "実装範囲" text "じっそうはんい" cons text "と" cons ruby text "残" text "のこ" cons text "り" nil nil nil nil
+      cons item none body cons paragraph cons sentence cons link relative "progress/math-runtime.md" none concat cons text "Math runtime の" cons ruby text "実装範囲" text "じっそうはんい" cons text "と" cons ruby text "残" text "のこ" cons text "り" nil nil nil nil
+      cons item none body cons paragraph cons sentence cons link relative "spec/17-math-html.md" none concat cons text "Doc・MathのHTML" cons ruby text "生成" text "せいせい" cons text "と" cons ruby text "数式表示" text "すうしきひょうじ" nil nil nil nil
+      cons item none body cons paragraph cons sentence cons link relative "spec/22-external-extensions.md" none concat cons ruby text "外部言語" text "がいぶげんご" cons text "の" cons ruby text "追加" text "ついか" cons text "とrepository" cons ruby text "分離条件" text "ぶんりじょうけん" nil nil nil nil
+      nil
+    nil
+  cons section authority "[正本/せいほん]と[派生資料/はせいしりょう]" body
+    cons table cons default cons default nil
+      some row cons "[場所/ばしょ]" cons "[責務/せきむ]" nil
+      cons row cons sentence cons code "doc/spec/" nil cons "[構文/こうぶん]・[意味/いみ]・[操作/そうさ]・[失敗条件/しっぱいじょうけん]・[受入条件/うけいれじょうけん]の[文章仕様/ぶんしょうしよう]" nil
+      cons row cons sentence cons link relative "../design/forms.json" none text "design/forms.json" nil cons "formの[構文/こうぶん]signature" nil
+      cons row cons sentence cons link relative "../design/dependencies.json" none text "design/dependencies.json" nil cons "crate[責務/せきむ]と[依存/いぞん]の[許可集合/きょかしゅうごう]" nil
+      cons row cons sentence cons link relative "../design/tasks.json" none text "design/tasks.json" nil cons "タスクID、[依存/いぞん]、[成果物/せいかぶつ]、[受入条件/うけいれじょうけん]の[正本/せいほん]" nil
+      cons row cons sentence cons link relative "../interfaces/model.json" none text "interfaces/model.json" cons text "、" cons link relative "../interfaces/contracts.json" none text "contracts.json" nil cons "[言語中立/げんごちゅうりつ]の[意味/いみ]モデル・[操作/そうさ]schema" nil
+      cons row cons sentence cons link relative "../interfaces/foundation.json" none text "interfaces/foundation.json" nil cons "contractsから[生成/せいせい]しproduction registryで[検査/けんさ]する[共通/きょうつう]package descriptor" nil
+      cons row cons sentence cons link relative "../interfaces/doc.json" none text "interfaces/doc.json" cons text "、" cons link relative "../interfaces/doc-reader.json" none text "doc-reader.json" nil cons "Doc arena[値/ち]と、domain coreから[分離/ぶんり]したsentence reader adapterの[実/じつ]schema" nil
+      cons row cons sentence cons link relative "../interfaces/math.json" none text "interfaces/math.json" nil cons "Mathの[表記/ひょうき]を[保持/ほじ]するarenaとsource[閉包/へいほう]の[実/じつ]schema。[構造/こうぞう]proofと[式/しき]の[評価/ひょうか]を[分離/ぶんり]する" nil
+      cons row cons sentence cons code "languages/*/syntax.neplg" nil cons "4[言語/げんご]の[文法/ぶんぽう]source" nil
+      cons row cons sentence cons link relative "../conformance/cases.json" none text "conformance/cases.json" cons text "、" cons link relative "../examples/" none text "examples/" nil cons "[受入条件/うけいれじょうけん]と[検証入力/けんしょうにゅうりょく]" nil
+      cons row cons sentence cons link relative "../implementation-status.json" none text "implementation-status.json" nil cons "[実装/じっそう]・[試験/しけん]の[実行状態/じっこうじょうたい]。[仕様定義/しようていぎ]と[分離/ぶんり]する" nil
+      cons row cons sentence cons link relative "../design/acceptance.json" none text "design/acceptance.json" nil cons "[必須受入群/ひっすうけいれぐん]と[必須/ひっす]targetのcatalog" nil
+      cons row cons sentence cons link relative "../design/ui.json" none text "design/ui.json" cons text "、" cons link relative "../design/site.json" none text "site.json" nil cons "UI/siteの[責務/せきむ]・[配置計画/はいちけいかく]。[実行可能/じっこうかのう]schemaではない" nil
+      cons row cons sentence cons link relative "../tasks/" none text "tasks/" nil cons "タスク[正本/せいほん]から[生成/せいせい]する[読/よ]み[物/もの]" nil
+      cons row cons sentence cons link relative "history/README.md" none text "history/" nil cons "[取/と]り[込/こ]み[元/もと]の[由来/ゆらい]と[当時/とうじ]の[検査報告/けんさほうこく]" nil
+      nil
+    cons paragraph
+      cons "[仕様間/しようかん]の[矛盾/むじゅん]は[実装/じっそう]の[都合/つごう]で[読/よ]み[替/か]えず、[影響/えいきょう]するschema・[文法/ぶんぽう]・[例/れい]・[受入条件/うけいれじょうけん]を[合/あ]わせて[修正/しゅうせい]します。"
+      cons sentence cons link relative "decisions/0001-repository-foundation.md" none ruby text "設計判断" text "せっけいはんだん" cons text " に" cons ruby text "理由" text "りゆう" cons text "と" cons ruby text "検証範囲" text "けんしょうはんい" cons text "を" cons ruby text "残" text "のこ" cons text "します。" nil
+      cons sentence cons ruby text "文法" text "ぶんぽう" cons text "の" cons ruby text "詳細表" text "しょうさいひょう" cons text "は " cons link relative "spec/grammar-signatures.md" none text "Grammar" cons text "、" cons link relative "spec/doc-signatures.md" none text "Doc" cons text "、" cons link relative "spec/math-signatures.md" none text "Math" cons text "、" cons link relative "spec/circuit-signatures.md" none text "Circuit" cons text " を" cons ruby text "参照" text "さんしょう" cons text "してください。" nil nil
+    cons paragraph
+      cons "[設計一式/せっけいいっしき]は[実装/じっそう]の[完成証拠/かんせいしょうこ]ではありません。"
+      cons "[取/と]り[込/こ]み[元/もと]の[検査報告/けんさほうこく]をruntimeの[受入試験結果/うけいれしけんけっか]へ[転記/てんき]しません。"
+      cons sentence cons ruby text "外部資料" text "がいぶしりょう" cons text "は " cons link relative "spec/references.md" none ruby text "参考文献" text "さんこうぶんけん" cons text " にまとめています。" nil nil
+    cons paragraph
+      cons sentence cons text "HTMLの" cons ruby text "先行利用" text "せんこうりよう" cons text "は " cons link relative "spec/18-html-delivery.md" none concat cons text "T22〜T25の" cons ruby text "実装段階" text "じっそうだんかい" nil cons text " に" cons ruby text "従" text "したが" cons text "います。" nil
+      cons "[既存/きそん]のDoc[処理/しょり]を[再利用/さいりよう]し、Doc[単独/たんどく]HTML、[数式/すうしき]HTML、Web preview/exportへ[接続/せつぞく]します。"
+      cons "[全体/ぜんたい]の[最終範囲/さいしゅうはんい]は[維持/いじ]します。" nil
+    cons paragraph
+      cons sentence cons ruby text "型付" text "かたつ" cons text "きHTML fragmentの" cons ruby text "入力" text "にゅうりょく" cons text "・" cons ruby text "検査" text "けんさ" cons text "・serializerは " cons link relative "spec/19-html-fragment.md" none concat cons text "19" cons ruby text "章" text "しょう" nil cons text " と " cons link relative "../interfaces/markup.json" none text "markup schema" cons text " を" cons ruby text "参照" text "さんしょう" cons text "してください。" nil nil
+    cons list unordered
+      cons item none body cons paragraph cons sentence cons link relative "spec/20-doc-html.md" none concat cons text "Doc HTML" cons ruby text "変換" text "へんかん" cons text "の" cons ruby text "契約" text "けいやく" nil cons text " — local" cons ruby text "準備" text "じゅんび" cons text "・" cons ruby text "表示" text "ひょうじ" cons text "・portable" cons ruby text "再検査" text "さいけんさ" cons text "と" cons ruby text "未解決資源" text "みかいけつしげん" cons text "の" cons ruby text "扱" text "あつか" cons text "い。" nil nil nil
+      cons item none body cons paragraph cons sentence cons link relative "spec/21-doc-pages.md" none concat cons text "Docページ" cons ruby text "集合" text "しゅうごう" cons text "とリンク" cons ruby text "解決" text "かいけつ" nil cons text " — " cons ruby text "明示" text "めいじ" cons text "された" cons ruby text "文書" text "ぶんしょ" cons text "と" cons ruby text "配置" text "はいち" cons text "を" cons ruby text "索引化" text "さくいんか" cons text "し、ページ・" cons ruby text "見出" text "みだ" cons text "しへの" cons ruby text "参照" text "さんしょう" cons text "を" cons ruby text "検査" text "けんさ" cons text "する。" nil nil nil
+      nil
+    nil
+  nil

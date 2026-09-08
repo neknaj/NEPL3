@@ -1,0 +1,11 @@
+from pathlib import Path
+import json
+from playwright.sync_api import sync_playwright
+r=Path(__file__).resolve().parent
+url=json.loads((r/'independent-github.json').read_text(encoding='utf-8'))['url']
+with sync_playwright() as p:
+ b=p.chromium.launch(headless=True);page=b.new_page(viewport={'width':1280,'height':1000},reduced_motion='reduce')
+ page.goto(url+'#n-6c696d697473',wait_until='networkidle',timeout=90000);page.wait_for_timeout(1500)
+ row=page.evaluate("""()=>({scrollY,scrollMax:document.scrollingElement.scrollHeight-innerHeight,top:document.getElementsByName('user-content-n-6c696d697473')[0].getBoundingClientRect().top,viewport:innerHeight})""")
+ assert abs(row['scrollY']-row['scrollMax'])<=1
+ (r/'github-end-limit.json').write_text(json.dumps(row,indent=2)+'\n',encoding='utf-8');print(row);b.close()

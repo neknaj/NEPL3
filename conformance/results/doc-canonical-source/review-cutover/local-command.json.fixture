@@ -1,0 +1,8 @@
+{
+  "command": [
+    "C:/projects/NEPL3-doc-canonical-preview/.tmp/browser-venv/Scripts/python.exe",
+    "C:\\projects\\NEPL3-doc-canonical-source\\.tmp\\review-canonical-cutover-evidence\\local-probe.py"
+  ],
+  "exit_code": 0,
+  "seconds": 24.683881521224976
+}

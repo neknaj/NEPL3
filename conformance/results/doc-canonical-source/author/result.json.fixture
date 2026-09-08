@@ -1,0 +1,463 @@
+{
+  "scope": "Author self-check only",
+  "files": [
+    {
+      "source": "doc/spec/16-doc-migration.md",
+      "draft": "doc/migration/authored/16-doc-migration.nepld",
+      "source_sha256": "6e0ed843c517e61d5a6ffbda701979736faa9075636e00561124e60367ca82a7",
+      "draft_before_sha256": "075fd67460cd1b4a48e1281dc03d9b75f09480c100f632fa2eba8df92ad4572e",
+      "draft_after_sha256": "5c062c94052c66bdcf7c6f5bc90c8ab682ecaea50640b43fddd6c5f11024045c",
+      "source_still_fixed": true,
+      "matched_text": [
+        "未移行ページのMarkdownは正式な正本として維持する。移行済みページは doc/canonical.json にDoc正本と生成Markdownの対応を登録する。",
+        "等価な既存表現を選ぶ場合も、意味とaccessibilityの同等性を独立に確認する。",
+        "独立した意味同等性レビュー、HTML構造/accessibility、全リンク、同版例、決定的buildが通ったページのregistry正本をDocへ切り替える。",
+        "意味同等性レビューは、執筆者とは別の担当が原文・執筆指針・変更原稿・実行結果を読んで行う。ユーザーが許可した独立subagentによるレビューも、この条件を満たす方法として使用する。subagentによる文面の確認、自動accessibility tree検査、人によるscreen reader実操作を別々に記録し、実施していない人の操作を成功としない。",
+        "doc/canonical.json のversion 1は、pageごとの安定したid、Doc source、生成projection、alias JSON、HTML route、renderer識別を持つ。未登録ページは移行済みと推定しない。sourceは.nepld、projectionは既存の.mdの場所とし、JSON自体は文書の内容を所有しない。旧原稿を移動した後に、同じDoc本文の手書き複製を移行候補ディレクトリへ残さない。",
+        "nepl3-tools doc-canonical --check は実際のDoc parser/lowerと検査済みannotated rendererでMarkdownを再生成し、source path・source digest・alias入力digest・document digestを含めたbyte列を既存projectionと比較する。手編集・古いsource・aliasの変更・異なる改行を黙って正規化せず、不一致で失敗する。未知のrenderer、重複identity/path、repository外のpath、symlink、過大入力も拒否する。この検査は明示的な文書生成段階であり、metadataだけを検査する nepl3-tools check やCargo build.rsへ混ぜない。",
+        "nepl3-tools doc-canonical html <new-directory> は同じregistryのDoc sourceを既存のpage-set generatorへ渡し、検査済みHTML・CSS・manifestを新しいディレクトリへ書く。relative linkの論理namespaceは従来のMarkdown path、physical inputはDoc sourceとして分けて記録する。生成MarkdownをHTML生成の入力にしない。失敗後に部分的な成功を返さず、既存の出力も上書きしない。",
+        "互換aliasとGitHubの自動見出しIDは独立して発生するため、実際のGitHub表示で重複と移動先を確認する。13章では旧8見出しのうち6つを明示alias、1-digest と 3-normal-formとartifact を同名の自動見出しで維持する。全7Sectionの明示IDも保持する。この判断は13章の実際の見出しに対する対応表であり、任意のMarkdownに対するslug推測をfoundationへ追加するものではない。",
+        "version 1のregistry pathとrouteはASCII英数字・hyphen・underscore・dotを持つcomponentをslashで結ぶ。空component、末尾dot、Windows予約名を拒否し、case-insensitiveに重複を検査する。registryのファイルはdoc/配下とする。これはrepositoryの生成先と入力名を複数OSで同じように扱うためのhost側の制約であり、Doc本文やfoundationのSource URIからUnicodeを除く規則ではない。fragment/percent表記をphysical inputへ混ぜず、Markdown検査だけ成功して同じsourceのHTML生成がpath違反になる不整合を防ぐ。"
+      ],
+      "added_code": [
+        "doc/canonical.json",
+        "doc/canonical.json",
+        "nepl3-tools doc-canonical --check",
+        "nepl3-tools check",
+        "nepl3-tools doc-canonical html <new-directory>",
+        "1-digest",
+        "3-normal-formとartifact"
+      ],
+      "added_links": [],
+      "changed_ranges": [
+        {
+          "kind": "replace",
+          "old_lines": [
+            6,
+            6
+          ],
+          "new_lines": [
+            6,
+            20
+          ],
+          "removed": [
+            "        cons \"[現在/げんざい]のMarkdownは、[正式/せいしき]な[正本/せいほん]として[維持/いじ]する。\"\n"
+          ],
+          "added": [
+            "        cons \"[未移行/みいこう]ページのMarkdownは[正式/せいしき]な[正本/せいほん]として[維持/いじ]する。\"\n",
+            "        cons sentence\n",
+            "          cons ruby text \"移行済\" text \"いこうず\"\n",
+            "          cons text \"みページは \"\n",
+            "          cons code \"doc/canonical.json\"\n",
+            "          cons text \" にDoc\"\n",
+            "          cons ruby text \"正本\" text \"せいほん\"\n",
+            "          cons text \"と\"\n",
+            "          cons ruby text \"生成\" text \"せいせい\"\n",
+            "          cons text \"Markdownの\"\n",
+            "          cons ruby text \"対応\" text \"たいおう\"\n",
+            "          cons text \"を\"\n",
+            "          cons ruby text \"登録\" text \"とうろく\"\n",
+            "          cons text \"する。\"\n",
+            "          nil\n"
+          ]
+        },
+        {
+          "kind": "replace",
+          "old_lines": [
+            153,
+            153
+          ],
+          "new_lines": [
+            167,
+            167
+          ],
+          "removed": [
+            "        cons \"[等価/とうか]な[既存表現/きそんひょうげん]を[選/えら]ぶ[場合/ばあい]も、[人/ひと]が[意味/いみ]とaccessibilityの[同等性/どうとうせい]を[確認/かくにん]する。\"\n"
+          ],
+          "added": [
+            "        cons \"[等価/とうか]な[既存表現/きそんひょうげん]を[選/えら]ぶ[場合/ばあい]も、[意味/いみ]とaccessibilityの[同等性/どうとうせい]を[独立/どくりつ]に[確認/かくにん]する。\"\n"
+          ]
+        },
+        {
+          "kind": "replace",
+          "old_lines": [
+            183,
+            183
+          ],
+          "new_lines": [
+            197,
+            197
+          ],
+          "removed": [
+            "          cons \"[人/ひと]による[意味同等性/いみどうとうせい]レビュー、HTML[構造/こうぞう]/accessibility、[全/ぜん]リンク、[同版例/どうはんれい]、[決定的/けっていてき]buildが[通/とお]ったページのregistry[正本/せいほん]を、Docへ[切/き]り[替/か]える。\"\n"
+          ],
+          "added": [
+            "          cons \"[独立/どくりつ]した[意味同等性/いみどうとうせい]レビュー、HTML[構造/こうぞう]/accessibility、[全/ぜん]リンク、[同版例/どうはんれい]、[決定的/けっていてき]buildが[通/とお]ったページのregistry[正本/せいほん]をDocへ[切/き]り[替/か]える。\"\n"
+          ]
+        },
+        {
+          "kind": "insert",
+          "old_lines": [
+            208,
+            207
+          ],
+          "new_lines": [
+            222,
+            338
+          ],
+          "removed": [],
+          "added": [
+            "        cons \"[意味同等性/いみどうとうせい]レビューは、[執筆者/しっぴつしゃ]とは[別/べつ]の[担当/たんとう]が[原文/げんぶん]・[執筆指針/しっぴつししん]・[変更原稿/へんこうげんこう]・[実行結果/じっこうけっか]を[読/よ]んで[行/おこな]う。\"\n",
+            "        cons \"ユーザーが[許可/きょか]した[独立/どくりつ]subagentによるレビューも、この[条件/じょうけん]を[満/み]たす[方法/ほうほう]として[使用/しよう]する。\"\n",
+            "        cons \"subagentによる[文面/ぶんめん]の[確認/かくにん]、[自動/じどう]accessibility tree[検査/けんさ]、[人/ひと]によるscreen reader[実操作/じつそうさ]を[別々/べつべつ]に[記録/きろく]し、[実施/じっし]していない[人/ひと]の[操作/そうさ]を[成功/せいこう]としない。\"\n",
+            "        nil\n",
+            "      cons section registry \"[正本/せいほん]registryと[生成物/せいせいぶつ]の[検査/けんさ]\"\n",
+            "      body\n",
+            "      cons paragraph\n",
+            "        cons sentence\n",
+            "          cons code \"doc/canonical.json\"\n",
+            "          cons text \" のversion 1は、pageごとの\"\n",
+            "          cons ruby text \"安定\" text \"あんてい\"\n",
+            "          cons text \"したid、Doc source、\"\n",
+            "          cons ruby text \"生成\" text \"せいせい\"\n",
+            "          cons text \"projection、alias JSON、HTML route、renderer\"\n",
+            "          cons ruby text \"識別\" text \"しきべつ\"\n",
+            "          cons text \"を\"\n",
+            "          cons ruby text \"持\" text \"も\"\n",
+            "          cons text \"つ。\"\n",
+            "          nil\n",
+            "        cons \"[未登録/みとうろく]ページは[移行済/いこうず]みと[推定/すいてい]しない。\"\n",
+            "        cons \"sourceは.nepld、projectionは[既存/きそん]の.mdの[場所/ばしょ]とし、JSON[自体/じたい]は[文書/ぶんしょ]の[内容/ないよう]を[所有/しょゆう]しない。\"\n",
+            "        cons \"[旧原稿/きゅうげんこう]を[移動/いどう]した[後/あと]に、[同/おな]じDoc[本文/ほんぶん]の[手書/てが]き[複製/ふくせい]を[移行候補/いこうこうほ]ディレクトリへ[残/のこ]さない。\"\n",
+            "        nil\n",
+            "      cons paragraph\n",
+            "        cons \"version 1のregistry pathとrouteはASCII[英数字/えいすうじ]・hyphen・underscore・dotを[持/も]つcomponentをslashで[結/むす]ぶ。\"\n",
+            "        cons \"[空/から]component、[末尾/まつび]dot、Windows[予約名/よやくめい]を[拒否/きょひ]し、case-insensitiveに[重複/ちょうふく]を[検査/けんさ]する。\"\n",
+            "        cons \"registryのファイルはdoc/[配下/はいか]とする。\"\n",
+            "        cons \"これはrepositoryの[生成先/せいせいさき]と[入力名/にゅうりょくめい]を[複数/ふくすう]OSで[同/おな]じように[扱/あつか]うためのhost[側/がわ]の[制約/せいやく]であり、Doc[本文/ほんぶん]やfoundationのSource URIからUnicodeを[除/のぞ]く[規則/きそく]ではない。\"\n",
+            "        cons \"fragment/percent[表記/ひょうき]をphysical inputへ[混/ま]ぜず、Markdown[検査/けんさ]だけ[成功/せいこう]して[同/おな]じsourceのHTML[生成/せいせい]がpath[違反/いはん]になる[不整合/ふせいごう]を[防/ふせ]ぐ。\"\n",
+            "        nil\n",
+            "      cons paragraph\n",
+            "        cons sentence\n",
+            "          cons code \"nepl3-tools doc-canonical --check\"\n",
+            "          cons text \" は\"\n",
+            "          cons ruby text \"実際\" text \"じっさい\"\n",
+            "          cons text \"のDoc parser/lowerと\"\n",
+            "          cons ruby text \"検査済\" text \"けんさず\"\n",
+            "          cons text \"みannotated rendererでMarkdownを\"\n",
+            "          cons ruby text \"再生成\" text \"さいせいせい\"\n",
+            "          cons text \"し、source path・source digest・alias\"\n",
+            "          cons ruby text \"入力\" text \"にゅうりょく\"\n",
+            "          cons text \"digest・document digestを\"\n",
+            "          cons ruby text \"含\" text \"ふく\"\n",
+            "          cons text \"めたbyte\"\n",
+            "          cons ruby text \"列\" text \"れつ\"\n",
+            "          cons text \"を\"\n",
+            "          cons ruby text \"既存\" text \"きそん\"\n",
+            "          cons text \"projectionと\"\n",
+            "          cons ruby text \"比較\" text \"ひかく\"\n",
+            "          cons text \"する。\"\n",
+            "          nil\n",
+            "        cons \"[手編集/てへんしゅう]・[古/ふる]いsource・aliasの[変更/へんこう]・[異/こと]なる[改行/かいぎょう]を[黙/だま]って[正規化/せいきか]せず、[不一致/ふいっち]で[失敗/しっぱい]する。\"\n",
+            "        cons \"[未知/みち]のrenderer、[重複/ちょうふく]identity/path、repository[外/がい]のpath、symlink、[過大入力/かだいにゅうりょく]も[拒否/きょひ]する。\"\n",
+            "        cons sentence\n",
+            "          cons text \"この\"\n",
+            "          cons ruby text \"検査\" text \"けんさ\"\n",
+            "          cons text \"は\"\n",
+            "          cons ruby text \"明示的\" text \"めいじてき\"\n",
+            "          cons text \"な\"\n",
+            "          cons ruby text \"文書生成段階\" text \"ぶんしょせいせいだんかい\"\n",
+            "          cons text \"であり、metadataだけを\"\n",
+            "          cons ruby text \"検査\" text \"けんさ\"\n",
+            "          cons text \"する \"\n",
+            "          cons code \"nepl3-tools check\"\n",
+            "          cons text \" やCargo build.rsへ\"\n",
+            "          cons ruby text \"混\" text \"ま\"\n",
+            "          cons text \"ぜない。\"\n",
+            "          nil\n",
+            "        nil\n",
+            "      cons paragraph\n",
+            "        cons sentence\n",
+            "          cons code \"nepl3-tools doc-canonical html <new-directory>\"\n",
+            "          cons text \" は\"\n",
+            "          cons ruby text \"同\" text \"おな\"\n",
+            "          cons text \"じregistryのDoc sourceを\"\n",
+            "          cons ruby text \"既存\" text \"きそん\"\n",
+            "          cons text \"のpage-set generatorへ\"\n",
+            "          cons ruby text \"渡\" text \"わた\"\n",
+            "          cons text \"し、\"\n",
+            "          cons ruby text \"検査済\" text \"けんさず\"\n",
+            "          cons text \"みHTML・CSS・manifestを\"\n",
+            "          cons ruby text \"新\" text \"あたら\"\n",
+            "          cons text \"しいディレクトリへ\"\n",
+            "          cons ruby text \"書\" text \"か\"\n",
+            "          cons text \"く。\"\n",
+            "          nil\n",
+            "        cons \"relative linkの[論理/ろんり]namespaceは[従来/じゅうらい]のMarkdown path、physical inputはDoc sourceとして[分/わ]けて[記録/きろく]する。\"\n",
+            "        cons \"[生成/せいせい]MarkdownをHTML[生成/せいせい]の[入力/にゅうりょく]にしない。\"\n",
+            "        cons \"[失敗後/しっぱいご]に[部分的/ぶぶんてき]な[成功/せいこう]を[返/かえ]さず、[既存/きそん]の[出力/しゅつりょく]も[上書/うわが]きしない。\"\n",
+            "        nil\n",
+            "      cons paragraph\n",
+            "        cons \"[互換/ごかん]aliasとGitHubの[自動見出/じどうみだ]しIDは[独立/どくりつ]して[発生/はっせい]するため、[実際/じっさい]のGitHub[表示/ひょうじ]で[重複/ちょうふく]と[移動先/いどうさき]を[確認/かくにん]する。\"\n",
+            "        cons sentence\n",
+            "          cons text \"13\"\n",
+            "          cons ruby text \"章\" text \"しょう\"\n",
+            "          cons text \"では\"\n",
+            "          cons ruby text \"旧\" text \"きゅう\"\n",
+            "          cons text \"8\"\n",
+            "          cons ruby text \"見出\" text \"みだ\"\n",
+            "          cons text \"しのうち6つを\"\n",
+            "          cons ruby text \"明示\" text \"めいじ\"\n",
+            "          cons text \"alias、\"\n",
+            "          cons code \"1-digest\"\n",
+            "          cons text \" と \"\n",
+            "          cons code \"3-normal-formとartifact\"\n",
+            "          cons text \" を\"\n",
+            "          cons ruby text \"同名\" text \"どうめい\"\n",
+            "          cons text \"の\"\n",
+            "          cons ruby text \"自動見出\" text \"じどうみだ\"\n",
+            "          cons text \"しで\"\n",
+            "          cons ruby text \"維持\" text \"いじ\"\n",
+            "          cons text \"する。\"\n",
+            "          nil\n",
+            "        cons \"[全/ぜん]7Sectionの[明示/めいじ]IDも[保持/ほじ]する。\"\n",
+            "        cons \"この[判断/はんだん]は13[章/しょう]の[実際/じっさい]の[見出/みだ]しに[対/たい]する[対応表/たいおうひょう]であり、[任意/にんい]のMarkdownに[対/たい]するslug[推測/すいそく]をfoundationへ[追加/ついか]するものではない。\"\n",
+            "        nil\n",
+            "      cons paragraph\n"
+          ]
+        },
+        {
+          "kind": "insert",
+          "old_lines": [
+            213,
+            212
+          ],
+          "new_lines": [
+            344,
+            344
+          ],
+          "removed": [],
+          "added": [
+            "      nil\n"
+          ]
+        }
+      ],
+      "unrelated_lines_unchanged": true,
+      "formal_structure": true,
+      "ruby_ordinary_text_audit": true
+    },
+    {
+      "source": "doc/README.md",
+      "draft": "doc/migration/authored/guide/README.nepld",
+      "source_sha256": "66d8b51c0174140b1f13add2523c8de68ab24ced6cbd6273bb87e7d1b64979ba",
+      "draft_before_sha256": "4664c8624235f18cc679d017399430201f8851ea34f95ef606831a648c8e6817",
+      "draft_after_sha256": "65a39fbbee0d6e977614b455e06f3eb042cec229bd6afe3bf2c0263921129e13",
+      "source_still_fixed": true,
+      "matched_text": [
+        "正本registryに登録したページはnepldを編集し、Markdownは生成物として扱います。再現性の仕様はこの方式へ移行し、既存のMarkdownのURLも生成projectionで維持します。未登録ページは引き続きMarkdownが正本です。migration/authored/ の原稿が存在するだけでは移行済みとしません。"
+      ],
+      "added_code": [
+        "migration/authored/"
+      ],
+      "added_links": [
+        [
+          "canonical.json",
+          "正本registry"
+        ],
+        [
+          "spec/13-reproducibility.nepld",
+          "再現性の仕様"
+        ]
+      ],
+      "changed_ranges": [
+        {
+          "kind": "insert",
+          "old_lines": [
+            6,
+            5
+          ],
+          "new_lines": [
+            6,
+            44
+          ],
+          "removed": [],
+          "added": [
+            "  cons paragraph\n",
+            "    cons sentence\n",
+            "      cons link relative \"canonical.json\" none concat cons ruby text \"正本\" text \"せいほん\" cons text \"registry\" nil\n",
+            "      cons text \"に\"\n",
+            "      cons ruby text \"登録\" text \"とうろく\"\n",
+            "      cons text \"したページはnepldを\"\n",
+            "      cons ruby text \"編集\" text \"へんしゅう\"\n",
+            "      cons text \"し、Markdownは\"\n",
+            "      cons ruby text \"生成物\" text \"せいせいぶつ\"\n",
+            "      cons text \"として\"\n",
+            "      cons ruby text \"扱\" text \"あつか\"\n",
+            "      cons text \"います。\"\n",
+            "      nil\n",
+            "    cons sentence\n",
+            "      cons link relative \"spec/13-reproducibility.nepld\" none concat cons ruby text \"再現性\" text \"さいげんせい\" cons text \"の\" cons ruby text \"仕様\" text \"しよう\" nil\n",
+            "      cons text \"はこの\"\n",
+            "      cons ruby text \"方式\" text \"ほうしき\"\n",
+            "      cons text \"へ\"\n",
+            "      cons ruby text \"移行\" text \"いこう\"\n",
+            "      cons text \"し、\"\n",
+            "      cons ruby text \"既存\" text \"きそん\"\n",
+            "      cons text \"のMarkdownのURLも\"\n",
+            "      cons ruby text \"生成\" text \"せいせい\"\n",
+            "      cons text \"projectionで\"\n",
+            "      cons ruby text \"維持\" text \"いじ\"\n",
+            "      cons text \"します。\"\n",
+            "      nil\n",
+            "    cons \"[未登録/みとうろく]ページは[引/ひ]き[続/つづ]きMarkdownが[正本/せいほん]です。\"\n",
+            "    cons sentence\n",
+            "      cons code \"migration/authored/\"\n",
+            "      cons text \" の\"\n",
+            "      cons ruby text \"原稿\" text \"げんこう\"\n",
+            "      cons text \"が\"\n",
+            "      cons ruby text \"存在\" text \"そんざい\"\n",
+            "      cons text \"するだけでは\"\n",
+            "      cons ruby text \"移行済\" text \"いこうず\"\n",
+            "      cons text \"みとしません。\"\n",
+            "      nil\n",
+            "    nil\n"
+          ]
+        }
+      ],
+      "unrelated_lines_unchanged": true,
+      "formal_structure": true,
+      "ruby_ordinary_text_audit": true
+    },
+    {
+      "source": "doc/development.md",
+      "draft": "doc/migration/authored/guide/development.nepld",
+      "source_sha256": "fb6075ab86fa95f27c202d37daac1701c988daab111a7a66671bdc5be51f4316",
+      "draft_before_sha256": "6291115cc0d6790b11d0bbc1a7c0e0061aa28eb90bb2c3eb5045ff7f456937d6",
+      "draft_after_sha256": "1d373d204f064134fa70542268eddc2be998a263341331dc4871601d3594826c",
+      "source_still_fixed": true,
+      "matched_text": [
+        "doc/canonical.json に登録された仕様はnepldを編集します。生成Markdownを直接変更しないでください。cargo run --locked -p nepl3-tools -- doc-canonical --check はproduction APIで再生成して差分を検査します。更新時は doc-markdown annotated で新しい一時ファイルへ生成し、差分をレビューして既存のprojectionへ反映します。cargo run --locked -p nepl3-tools -- doc-canonical html dist/doc-canonical は、同じ正本からHTML一式を新規出力します。いずれも文書の明示的な生成工程とし、Cargo build.rsへ入れません。"
+      ],
+      "added_code": [
+        "doc/canonical.json",
+        "cargo run --locked -p nepl3-tools -- doc-canonical --check",
+        "doc-markdown annotated",
+        "cargo run --locked -p nepl3-tools -- doc-canonical html dist/doc-canonical"
+      ],
+      "added_links": [],
+      "changed_ranges": [
+        {
+          "kind": "insert",
+          "old_lines": [
+            23,
+            22
+          ],
+          "new_lines": [
+            23,
+            76
+          ],
+          "removed": [],
+          "added": [
+            "    cons paragraph\n",
+            "      cons sentence\n",
+            "        cons code \"doc/canonical.json\"\n",
+            "        cons text \" に\"\n",
+            "        cons ruby text \"登録\" text \"とうろく\"\n",
+            "        cons text \"された\"\n",
+            "        cons ruby text \"仕様\" text \"しよう\"\n",
+            "        cons text \"はnepldを\"\n",
+            "        cons ruby text \"編集\" text \"へんしゅう\"\n",
+            "        cons text \"します。\"\n",
+            "        nil\n",
+            "      cons \"[生成/せいせい]Markdownを[直接変更/ちょくせつへんこう]しないでください。\"\n",
+            "      cons sentence\n",
+            "        cons code \"cargo run --locked -p nepl3-tools -- doc-canonical --check\"\n",
+            "        cons text \" はproduction APIで\"\n",
+            "        cons ruby text \"再生成\" text \"さいせいせい\"\n",
+            "        cons text \"して\"\n",
+            "        cons ruby text \"差分\" text \"さぶん\"\n",
+            "        cons text \"を\"\n",
+            "        cons ruby text \"検査\" text \"けんさ\"\n",
+            "        cons text \"します。\"\n",
+            "        nil\n",
+            "      cons sentence\n",
+            "        cons ruby text \"更新時\" text \"こうしんじ\"\n",
+            "        cons text \"は \"\n",
+            "        cons code \"doc-markdown annotated\"\n",
+            "        cons text \" で\"\n",
+            "        cons ruby text \"新\" text \"あたら\"\n",
+            "        cons text \"しい\"\n",
+            "        cons ruby text \"一時\" text \"いちじ\"\n",
+            "        cons text \"ファイルへ\"\n",
+            "        cons ruby text \"生成\" text \"せいせい\"\n",
+            "        cons text \"し、\"\n",
+            "        cons ruby text \"差分\" text \"さぶん\"\n",
+            "        cons text \"をレビューして\"\n",
+            "        cons ruby text \"既存\" text \"きそん\"\n",
+            "        cons text \"のprojectionへ\"\n",
+            "        cons ruby text \"反映\" text \"はんえい\"\n",
+            "        cons text \"します。\"\n",
+            "        nil\n",
+            "      cons sentence\n",
+            "        cons code \"cargo run --locked -p nepl3-tools -- doc-canonical html dist/doc-canonical\"\n",
+            "        cons text \" は、\"\n",
+            "        cons ruby text \"同\" text \"おな\"\n",
+            "        cons text \"じ\"\n",
+            "        cons ruby text \"正本\" text \"せいほん\"\n",
+            "        cons text \"からHTML\"\n",
+            "        cons ruby text \"一式\" text \"いっしき\"\n",
+            "        cons text \"を\"\n",
+            "        cons ruby text \"新規出力\" text \"しんきしゅつりょく\"\n",
+            "        cons text \"します。\"\n",
+            "        nil\n",
+            "      cons \"いずれも[文書/ぶんしょ]の[明示的/めいじてき]な[生成工程/せいせいこうてい]とし、Cargo build.rsへ[入/い]れません。\"\n",
+            "      nil\n"
+          ]
+        }
+      ],
+      "unrelated_lines_unchanged": true,
+      "formal_structure": true,
+      "ruby_ordinary_text_audit": true
+    },
+    {
+      "source": "AGENTS.md",
+      "draft": "doc/migration/authored/project/AGENTS.nepld",
+      "source_sha256": "c26941e6dbf896a5e07b7c807789bc1f70bd740e4065092186be42e5ac4baf53",
+      "draft_before_sha256": "35d047c89d04bfc51527aee7f818e17acabd327618f8dfea2ccf978359a22154",
+      "draft_after_sha256": "05d27ae9515d4eebf43553c20ad71534fc0d6b4556a2534abf6e0d7d6cc2962e",
+      "source_still_fixed": true,
+      "matched_text": [
+        "最終文書はNEPL3 Doc DSLへ移行する。未移行ページはMarkdownを正本とし、T21の表現gap監査・意味同等性・リンク/安定ID・bootstrap検査後にページ単位で切り替える。移行済みページの正本はdoc/canonical.jsonを参照し、生成Markdownを手編集しない。AGENTS等の必要なMarkdownはDoc正本からの生成projectionを許すが二重手書き保守は禁止。"
+      ],
+      "added_code": [],
+      "added_links": [],
+      "changed_ranges": [
+        {
+          "kind": "replace",
+          "old_lines": [
+            129,
+            129
+          ],
+          "new_lines": [
+            129,
+            130
+          ],
+          "removed": [
+            "          cons \"[現在/げんざい]はMarkdownを[正本/せいほん]とし、T21の[表現/ひょうげん]gap[監査/かんさ]・[意味同等性/いみどうとうせい]・リンク/[安定/あんてい]ID・bootstrap[検査後/けんさご]にページ[単位/たんい]で[切/き]り[替/か]える。\"\n"
+          ],
+          "added": [
+            "          cons \"[未移行/みいこう]ページはMarkdownを[正本/せいほん]とし、T21の[表現/ひょうげん]gap[監査/かんさ]・[意味同等性/いみどうとうせい]・リンク/[安定/あんてい]ID・bootstrap[検査後/けんさご]にページ[単位/たんい]で[切/き]り[替/か]える。\"\n",
+            "          cons \"[移行済/いこうず]みページの[正本/せいほん]はdoc/canonical.jsonを[参照/さんしょう]し、[生成/せいせい]Markdownを[手編集/てへんしゅう]しない。\"\n"
+          ]
+        }
+      ],
+      "unrelated_lines_unchanged": true,
+      "formal_structure": true,
+      "ruby_ordinary_text_audit": true
+    }
+  ],
+  "production_parser": false,
+  "html": false,
+  "independent_review": false,
+  "main_cutover": false
+}

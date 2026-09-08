@@ -1,0 +1,58 @@
+from pathlib import Path
+import subprocess,hashlib,json,sys,difflib,re
+r=Path(__file__).resolve().parents[2]; p=Path(__file__).parent
+sys.path.insert(0,str(r))
+from tools.audit.structure import Parser,load_forms
+pairs=[('doc/spec/16-doc-migration.md','doc/migration/authored/16-doc-migration.nepld'),('doc/README.md','doc/migration/authored/guide/README.nepld'),('doc/development.md','doc/migration/authored/guide/development.nepld'),('AGENTS.md','doc/migration/authored/project/AGENTS.nepld')]
+def git(*a):return subprocess.check_output(['git',*a],cwd=r)
+def sha(b):return hashlib.sha256(b).hexdigest()
+def walk(n):
+ if isinstance(n,dict):
+  yield n
+  for x in n.get('fields',{}).values():yield from walk(x)
+ elif isinstance(n,list):
+  for x in n:yield from walk(x)
+def base_literal(token):
+ s=token[1:-1];i=0
+ def read(ends=''):
+  nonlocal i
+  value=''
+  while i<len(s) and s[i] not in ends:
+   c=s[i];i+=1
+   if c=='\\':
+    c=s[i];i+=1;value+=dict(n='\n',t='\t',r='\r').get(c,c)
+   elif c in '[{':
+    closing=']' if c=='[' else '}';value+=read('/'+closing)
+    while s[i]!=closing:
+     i+=1;read('/'+closing)
+    i+=1
+   else:value+=c
+  return value
+ v=read();assert i==len(s);return v
+def visible(n):
+ if isinstance(n,list):return ''.join(map(visible,n))
+ if not isinstance(n,dict):return ''
+ k=n['kind'];f=n.get('fields',{})
+ if k=='leaf':return base_literal(n['token'])
+ if k in ('Ruby','Anno'):return visible(f['base'])
+ if k=='Link':return visible(f['label'])
+ if k in ('Text','InlineCode','RawCode'):return f['text']
+ return ''.join(visible(v) for v in f.values())
+results=[]
+for i,(src,draft) in enumerate(pairs):
+ for kind,path in [('source',src),('draft',draft)]:
+  before=git('show','HEAD:'+path);after=(r/path).read_bytes();(p/f'{i}-{kind}-before').write_bytes(before);(p/f'{i}-{kind}-after').write_bytes(after)
+  (p/f'{i}-{kind}.diff').write_bytes(git('diff','--',path))
+ b=(r/draft).read_bytes();assert b'\r' not in b and not b.startswith(b'\xef\xbb\xbf')
+ tree=Parser(b.decode(),load_forms(r)).complete('Doc/Article')
+ text=[visible(n) for n in walk(tree) if n['kind'] in ('Paragraph','Sentence','leaf')]
+ (p/f'{i}-visible.json').write_text(json.dumps(text,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+ results.append({'source':src,'source_sha256':sha((r/src).read_bytes()),'draft':draft,'draft_sha256':sha(b),'formal_structure':'pass'})
+for name in ['AGENTS.md','doc/authoring.md','design/forms.json']:
+ dest=p/'context'/name;dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes((r/name).read_bytes())
+raw=(r/'.tmp/author-canonical-deltas/manifest.json').read_bytes();assert sha(raw)=='03efc397d75ca683512480ef19bb770a7b2ec5d5588771142d253bdb81c0cc51'
+(p/'author-manifest.json').write_bytes(raw)
+for e in json.loads(raw)['files']:
+ b=(r/'.tmp/author-canonical-deltas'/e['path']).read_bytes();assert len(b)==e['bytes'] and sha(b)==e['sha256']
+(p/'results.json').write_text(json.dumps({'base':git('rev-parse','HEAD').decode().strip(),'files':results,'author_payload_hashes':'pass','runtime':'not-run'},indent=2)+'\n',encoding='utf8')
+print(json.dumps(results,indent=2))

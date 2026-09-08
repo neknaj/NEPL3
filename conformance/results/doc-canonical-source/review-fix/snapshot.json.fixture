@@ -1,0 +1,36 @@
+{
+  "base": "0d80fe6289346a1b8481b03b149d5b35af90d68d",
+  "prior_overlay": "C:\\projects\\NEPL3-doc-canonical-source\\.tmp\\review-canonical-code\\overlay-manifest.json",
+  "files": [
+    {
+      "path": "tools/src/doc/canonical.rs",
+      "sha256": "c5a75d14944f27649d78d0cc39632dd4b72888721cfde578b4dfee5e7fd6fef3",
+      "bytes": 6673
+    },
+    {
+      "path": "tools/src/doc/canonical/tests.rs",
+      "sha256": "c3bef32fdd36e577d59fd47fda2cc0b01c7ba00da697f38f361be7415f06421d",
+      "bytes": 6787
+    },
+    {
+      "path": "tools/src/doc/projection/annotated/host.rs",
+      "sha256": "d3aaa3d5cd72f87bd7246881901c734734e0f744dd8e906e8dea581bff5d9058",
+      "bytes": 3914
+    },
+    {
+      "path": "tools/tests/doc/annotated.rs",
+      "sha256": "f451244be3c5abc74f360bf03f91bf5f0417f8f9c4c215ba04eb8d7480edd36f",
+      "bytes": 11189
+    },
+    {
+      "path": "doc/spec/13-reproducibility.md",
+      "sha256": "4a689172adad4ef28fc720bfdf85f23600bfcef8cc8b5eaaf1ed3d8ed6d3a4cc",
+      "bytes": 26270
+    },
+    {
+      "path": "doc/spec/16-doc-migration.md",
+      "sha256": "6e0ed843c517e61d5a6ffbda701979736faa9075636e00561124e60367ca82a7",
+      "bytes": 11630
+    }
+  ]
+}

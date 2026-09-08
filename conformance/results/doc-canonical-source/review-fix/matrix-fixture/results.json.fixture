@@ -1,0 +1,572 @@
+[
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/real./sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/real /sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc//sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/./sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/../sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/CON/sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/con.any/sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/PrN/sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/AUX/sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/nul/sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/Com1/sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/COM9.more/sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/Lpt1/sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/LPT9/sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/hash#x/sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/percent%20/sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/?/sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/x\\y/sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/x:y/sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/x\ny/sample.nepld"
+  },
+  {
+    "accepted": false,
+    "field": "source",
+    "path": "doc/x?y/sample.nepld"
+  },
+  {
+    "accepted": true,
+    "field": "source",
+    "path": "doc/.hidden/sample.nepld"
+  },
+  {
+    "accepted": true,
+    "field": "source",
+    "path": "doc/Real.Name/sample.nepld"
+  },
+  {
+    "accepted": true,
+    "field": "source",
+    "path": "doc/COM0/sample.nepld"
+  },
+  {
+    "accepted": true,
+    "field": "source",
+    "path": "doc/COM10/sample.nepld"
+  },
+  {
+    "accepted": true,
+    "field": "source",
+    "path": "doc/CONSOLE/sample.nepld"
+  },
+  {
+    "accepted": true,
+    "field": "source",
+    "path": "doc/a-b_c.1/sample.nepld"
+  },
+  {
+    "case": "casefold_duplicate",
+    "field": "source",
+    "rejected": true
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/real./sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/real /sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc//sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/./sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/../sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/CON/sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/con.any/sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/PrN/sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/AUX/sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/nul/sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/Com1/sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/COM9.more/sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/Lpt1/sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/LPT9/sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/hash#x/sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/percent%20/sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/?/sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/x\\y/sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/x:y/sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/x\ny/sample.md"
+  },
+  {
+    "accepted": false,
+    "field": "projection",
+    "path": "doc/x?y/sample.md"
+  },
+  {
+    "accepted": true,
+    "field": "projection",
+    "path": "doc/.hidden/sample.md"
+  },
+  {
+    "accepted": true,
+    "field": "projection",
+    "path": "doc/Real.Name/sample.md"
+  },
+  {
+    "accepted": true,
+    "field": "projection",
+    "path": "doc/COM0/sample.md"
+  },
+  {
+    "accepted": true,
+    "field": "projection",
+    "path": "doc/COM10/sample.md"
+  },
+  {
+    "accepted": true,
+    "field": "projection",
+    "path": "doc/CONSOLE/sample.md"
+  },
+  {
+    "accepted": true,
+    "field": "projection",
+    "path": "doc/a-b_c.1/sample.md"
+  },
+  {
+    "case": "casefold_duplicate",
+    "field": "projection",
+    "rejected": true
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/real./sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/real /sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc//sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/./sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/../sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/CON/sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/con.any/sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/PrN/sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/AUX/sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/nul/sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/Com1/sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/COM9.more/sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/Lpt1/sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/LPT9/sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/hash#x/sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/percent%20/sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/?/sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/x\\y/sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/x:y/sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/x\ny/sample.json"
+  },
+  {
+    "accepted": false,
+    "field": "aliases",
+    "path": "doc/x?y/sample.json"
+  },
+  {
+    "accepted": true,
+    "field": "aliases",
+    "path": "doc/.hidden/sample.json"
+  },
+  {
+    "accepted": true,
+    "field": "aliases",
+    "path": "doc/Real.Name/sample.json"
+  },
+  {
+    "accepted": true,
+    "field": "aliases",
+    "path": "doc/COM0/sample.json"
+  },
+  {
+    "accepted": true,
+    "field": "aliases",
+    "path": "doc/COM10/sample.json"
+  },
+  {
+    "accepted": true,
+    "field": "aliases",
+    "path": "doc/CONSOLE/sample.json"
+  },
+  {
+    "accepted": true,
+    "field": "aliases",
+    "path": "doc/a-b_c.1/sample.json"
+  },
+  {
+    "case": "casefold_duplicate",
+    "field": "aliases",
+    "rejected": true
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/real./sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/real /sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc//sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/./sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/../sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/CON/sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/con.any/sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/PrN/sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/AUX/sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/nul/sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/Com1/sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/COM9.more/sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/Lpt1/sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/LPT9/sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/hash#x/sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/percent%20/sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/?/sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/x\\y/sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/x:y/sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/x\ny/sample.html"
+  },
+  {
+    "accepted": false,
+    "field": "route",
+    "path": "doc/x?y/sample.html"
+  },
+  {
+    "accepted": true,
+    "field": "route",
+    "path": "doc/.hidden/sample.html"
+  },
+  {
+    "accepted": true,
+    "field": "route",
+    "path": "doc/Real.Name/sample.html"
+  },
+  {
+    "accepted": true,
+    "field": "route",
+    "path": "doc/COM0/sample.html"
+  },
+  {
+    "accepted": true,
+    "field": "route",
+    "path": "doc/COM10/sample.html"
+  },
+  {
+    "accepted": true,
+    "field": "route",
+    "path": "doc/CONSOLE/sample.html"
+  },
+  {
+    "accepted": true,
+    "field": "route",
+    "path": "doc/a-b_c.1/sample.html"
+  },
+  {
+    "case": "casefold_duplicate",
+    "field": "route",
+    "rejected": true
+  },
+  {
+    "case": "one_final_lf_and_internal_bytes",
+    "passed": true,
+    "source": "article en \"Title\" body cons paragraph cons \"A\" nil nil"
+  },
+  {
+    "case": "one_final_lf_and_internal_bytes",
+    "passed": true,
+    "source": "article en \"Title\" body cons paragraph cons \"A\" nil cons paragraph cons \"B\" nil nil"
+  }
+]

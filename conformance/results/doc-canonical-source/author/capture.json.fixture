@@ -1,0 +1,71 @@
+{
+  "head": "0d80fe6289346a1b8481b03b149d5b35af90d68d",
+  "pairs": [
+    [
+      "doc/spec/16-doc-migration.md",
+      "doc/migration/authored/16-doc-migration.nepld"
+    ],
+    [
+      "doc/README.md",
+      "doc/migration/authored/guide/README.nepld"
+    ],
+    [
+      "doc/development.md",
+      "doc/migration/authored/guide/development.nepld"
+    ],
+    [
+      "AGENTS.md",
+      "doc/migration/authored/project/AGENTS.nepld"
+    ]
+  ],
+  "files": [
+    {
+      "path": "doc/spec/16-doc-migration.md",
+      "snapshot": "0-source-before.txt",
+      "bytes": 11630,
+      "sha256": "6e0ed843c517e61d5a6ffbda701979736faa9075636e00561124e60367ca82a7"
+    },
+    {
+      "path": "doc/migration/authored/16-doc-migration.nepld",
+      "snapshot": "0-draft-before.txt",
+      "bytes": 20977,
+      "sha256": "075fd67460cd1b4a48e1281dc03d9b75f09480c100f632fa2eba8df92ad4572e"
+    },
+    {
+      "path": "doc/README.md",
+      "snapshot": "1-source-before.txt",
+      "bytes": 5482,
+      "sha256": "66d8b51c0174140b1f13add2523c8de68ab24ced6cbd6273bb87e7d1b64979ba"
+    },
+    {
+      "path": "doc/migration/authored/guide/README.nepld",
+      "snapshot": "1-draft-before.txt",
+      "bytes": 15623,
+      "sha256": "4664c8624235f18cc679d017399430201f8851ea34f95ef606831a648c8e6817"
+    },
+    {
+      "path": "doc/development.md",
+      "snapshot": "2-source-before.txt",
+      "bytes": 23317,
+      "sha256": "fb6075ab86fa95f27c202d37daac1701c988daab111a7a66671bdc5be51f4316"
+    },
+    {
+      "path": "doc/migration/authored/guide/development.nepld",
+      "snapshot": "2-draft-before.txt",
+      "bytes": 53118,
+      "sha256": "6291115cc0d6790b11d0bbc1a7c0e0061aa28eb90bb2c3eb5045ff7f456937d6"
+    },
+    {
+      "path": "AGENTS.md",
+      "snapshot": "3-source-before.txt",
+      "bytes": 7729,
+      "sha256": "c26941e6dbf896a5e07b7c807789bc1f70bd740e4065092186be42e5ac4baf53"
+    },
+    {
+      "path": "doc/migration/authored/project/AGENTS.nepld",
+      "snapshot": "3-draft-before.txt",
+      "bytes": 21111,
+      "sha256": "35d047c89d04bfc51527aee7f818e17acabd327618f8dfea2ccf978359a22154"
+    }
+  ]
+}

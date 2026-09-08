@@ -1,0 +1,19 @@
+from pathlib import Path
+import hashlib, json
+
+source = Path("conformance/results/doc-canonical-source")
+output = Path("dist/canonical-snapshot")
+output.mkdir(parents=True)  # refuse an existing snapshot
+for item in json.loads((source / "payloads.json").read_text(encoding="utf-8"))["payloads"]:
+    prefix = "root/snapshot/"
+    if not item["restore"].startswith(prefix):
+        continue
+    data = (source / item["path"]).read_bytes()
+    assert len(data) == item["bytes"]
+    assert hashlib.sha256(data).hexdigest() == item["sha256"]
+    relative = Path(item["restore"][len(prefix):])
+    assert not relative.is_absolute() and ".." not in relative.parts
+    target = output / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open("xb") as stream:
+        stream.write(data)

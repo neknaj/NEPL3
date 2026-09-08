@@ -1,0 +1,48 @@
+from pathlib import Path
+from functools import partial
+from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
+from threading import Thread
+from playwright.sync_api import sync_playwright
+import hashlib,json,platform,sys,importlib.metadata
+p=Path(__file__).resolve().parent;root=p.parents[1]
+def freeze(src,dest):
+    q=p/dest;q.parent.mkdir(parents=True,exist_ok=True)
+    b=src.read_bytes()
+    if q.exists():assert q.read_bytes()==b
+    else:q.write_bytes(b)
+freeze(root/'dist/canonical-first/docs/spec/13-reproducibility.html','site/production.html')
+freeze(root/'dist/canonical-first/docs/spec/assets/doc.css','site/assets/doc.css')
+freeze(root/'.tmp/canonical-browser.py','root-canonical-browser.py')
+controls={'links':'<!doctype html><meta charset="utf-8"><title>Plain links</title><p><a href="#one">First link</a> <a href="#two">Second link</a></p><div id="one">One</div><div id="two">Two</div>', 'form':'<!doctype html><meta charset="utf-8"><title>Plain form and links</title><a href="#one">First link</a><input id="input"><button id="button">Button</button><a href="#two">Second link</a><div id="one">One</div><div id="two">Two</div>'}
+for name,html in controls.items():(p/'site'/f'{name}.html').write_text(html,encoding='utf-8',newline='\n')
+class Quiet(SimpleHTTPRequestHandler):
+    def log_message(self,*args):pass
+s=ThreadingHTTPServer(('127.0.0.1',0),partial(Quiet,directory=str(p/'site')));t=Thread(target=s.serve_forever,daemon=True);t.start()
+def active(page):return page.evaluate('''() => ({tag:document.activeElement.tagName,id:document.activeElement.id,href:document.activeElement.getAttribute('href'),tabIndex:document.activeElement.tabIndex,hasFocus:document.hasFocus()})''')
+rows=[];engines=[]
+try:
+    with sync_playwright() as pw:
+        for name in ['webkit','chromium','firefox']:
+            typ=getattr(pw,name);browser=typ.launch(headless=True)
+            exe=Path(typ.executable_path)
+            engines.append({'name':name,'version':browser.version,'executable':str(exe),'executable_sha256':hashlib.sha256(exe.read_bytes()).hexdigest()})
+            for document in ['links','form','production']:
+                for js in [False,True]:
+                    ctx=browser.new_context(java_script_enabled=js,viewport={'width':1280,'height':900});page=ctx.new_page()
+                    page.goto(f'http://127.0.0.1:{s.server_port}/{document}.html',wait_until='load')
+                    page.evaluate('''() => { window.observed=[]; for(const type of ['keydown','keypress','keyup','focusin']) document.addEventListener(type,e=>window.observed.push({type:e.type,key:e.key,code:e.code,keyCode:e.keyCode,defaultPrevented:e.defaultPrevented,trusted:e.isTrusted,target:e.target.tagName}),false); }''')
+                    before=active(page);tabs=[]
+                    for x in range(6):page.keyboard.press('Tab');tabs.append(active(page))
+                    events=page.evaluate('window.observed')
+                    page.reload(wait_until='load');alts=[]
+                    for x in range(3):page.keyboard.press('Alt+Tab');alts.append(active(page))
+                    # Diagnostic only: distinguish intrinsically focusable anchors
+                    # from sequential-key traversal. Never count as a Tab pass.
+                    page.locator('a').first.focus();explicit=active(page)
+                    row={'engine':name,'document':document,'javascript':js,'initial':before,'tab':tabs,'alt_tab_after_reload':alts,'events':events,'explicit_focus_diagnostic':explicit,'links':page.locator('a').evaluate_all('(nodes)=>nodes.map(n=>({href:n.getAttribute("href"),tabIndex:n.tabIndex,tabindexAttribute:n.getAttribute("tabindex")}))')}
+                    rows.append(row);print(json.dumps({'engine':name,'doc':document,'js':js,'tab':[x['tag']+':'+str(x['href'] or x['id']) for x in tabs],'alt':[x['tag'] for x in alts],'focus':explicit['tag']}),flush=True)
+                    ctx.close()
+            browser.close()
+finally:
+    s.shutdown();s.server_close();t.join()
+    (p/'results.json').write_text(json.dumps({'platform':platform.platform(),'python':sys.version,'playwright':importlib.metadata.version('playwright'),'engines':engines,'rows':rows,'production_modified':False,'tabindex_added':False},indent=2)+'\n',encoding='utf-8',newline='\n')

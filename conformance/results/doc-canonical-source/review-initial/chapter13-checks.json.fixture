@@ -1,0 +1,43 @@
+{
+  "source_move_exact": true,
+  "source_sha256": "31486ad75e0776d55cc12b2a9b5af2840780ad7812456d9c222a90fd8ab495a8",
+  "alias_input_sha256": "76379923f595abb51c3566e585a4572da05b16fb8188f0fe618a0e64612301fc",
+  "aliases": [
+    {
+      "section": null,
+      "name": "13-再現性schema識別契約の判定"
+    },
+    {
+      "section": "policy",
+      "name": "方針"
+    },
+    {
+      "section": "semantic",
+      "name": "package意味正規形"
+    },
+    {
+      "section": "execution",
+      "name": "具体実行identity"
+    },
+    {
+      "section": "wire",
+      "name": "2-native値とwire値"
+    },
+    {
+      "section": "limits",
+      "name": "4-limitsとproviderの互換"
+    }
+  ],
+  "headings": [
+    "# 13\\. 再現性\\[さいげんせい\\]・schema識別\\[しきべつ\\]・契約\\[けいやく\\]の判定\\[はんてい\\]",
+    "## 方針\\[ほうしん\\]",
+    "## 1\\. digest",
+    "### Package意味正規形\\[いみせいきけい\\]",
+    "### 具体実行\\[ぐたいじっこう\\]identity",
+    "## 2\\. native値\\[ち\\]とwire値\\[ち\\]",
+    "## 3\\. normal formとartifact",
+    "## 4\\. limitsとproviderの互換\\[ごかん\\]"
+  ],
+  "metadata": "<!-- Generated from doc/spec/13&#45;reproducibility.nepld; renderer nepl3-tools.markdown-annotated/1; source SHA-256 31486ad75e0776d55cc12b2a9b5af2840780ad7812456d9c222a90fd8ab495a8; alias input SHA-256 76379923f595abb51c3566e585a4572da05b16fb8188f0fe618a0e64612301fc; document digest e528c5e71f009070a7958e1b42d6e8703496125c7737f60b3d903c8d88fe1d28. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->",
+  "scope": "identity/move/metadata only; no new full content or GitHub anchor certification"
+}
