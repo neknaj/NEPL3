@@ -1,0 +1,25 @@
+{
+  "base": "d67e67546a0c928591e193289edb8ed702c1637e",
+  "source_sha256": "ef40e0d6278e79680de8c064f5d99bb14ead4d97aa16197e930ec95df6d8a9cb",
+  "draft_sha256": "8c3d488e0b215c18fb8dce15cb8a2023acefb08c3cf489a48f67dd97005b8577",
+  "earlier_content_identical": true,
+  "full_structure": "pass",
+  "matched_literals": [
+    "PageSetのsourceは論理的な原文path、routeは出力Markdownのpathとし、HTML routeから拡張子を推測して作らない。",
+    "RelativeとPageの参照を解決し、出力元routeから出力先routeへの相対URIを生成する。",
+    "自己参照と相互参照は許し、再帰的に生成せず、全ページを一括検査・生成してから返す。",
+    "既存profileで表せない後続ページがある場合も、先行ページだけを成功結果として返さない。",
+    "未移行Markdown等は、呼出し側が実bytesを明示したPageFileとして扱える。",
+    "このfileはparse・実行しない。",
+    "Relativeのfragmentなし参照のみを許し、FileFragmentの拒否とPage targetがDoc専用である規則を維持する。",
+    "MarkdownをHTML routeへ置き換えたり、架空のDocや見出しslugを補ったりしない。",
+    "各Docのsource namespaceは一意なpage IDで分け、同じ集合のcodec admissionで異なる内容を同じsnapshotとして受理しない。",
+    "返すidentityは既存のPageSet identityであり、原Doc・登録path・受動fileの実bytesに結び付く。",
+    "aliasやrendererを含む配布artifact全体のidentityとは区別する。",
+    "将来のhost metadataにはそれらも別途記録する。",
+    "Doc間で生成Markdownのdigestを再帰的に含めない。",
+    "同じ有限Budgetで解決・生成・出力anchor検査を行い、停止後の再試行に新しい予算を与えない。",
+    "この入口にはファイルI/O、CLIのcontext manifest、canonical registryへの接続、HTMLの依存ページ生成はまだ含めず、それらの完成を型付きprojectionの成功から推定しない。"
+  ],
+  "runtime": "not-run"
+}
