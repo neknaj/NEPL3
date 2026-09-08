@@ -1293,5 +1293,30 @@ body
       cons "[保持原文/ほじげんぶん]を[候補/こうほ]として[取得/しゅとく]した[後/あと]、[選択済/せんたくず]み[言語/げんご]の[実/じつ]parser・tree[検査/けんさ]・generic engine printerを[実行/じっこう]してからhost textを[提供/ていきょう]し、[両印字/りょういんじ]modeと[初回/しょかい]CBOR[受信後/じゅしんご]のguest[構文/こうぶん]を[照合/しょうごう]した。"
       cons "document/guestのdomain byte[列/れつ]とcanonical NDF CBORからdigestを[独立計算/どくりつけいさん]し、owner[閉包込/へいほうこ]みのidentityとの[一致/いっち]を[確認/かくにん]した。"
       cons "[異/い]schemaを[同/おな]じGuestLanguageへ[割/わ]り[当/あ]てるalias[競合/きょうごう]、[別/べつ]guest digest、32bitを[超/こ]えるEmbedRefは[型付/かたつ]き[拒否/きょひ]となった。" nil
+    cons paragraph
+      cons "PrintedGuest.textの[意味/いみ]は[両/りょう]digestで[認証/にんしょう]されない。"
+      cons sentence cons ruby text "同" text "おな" cons text "じidentityのままtextを " cons code "@" cons text " に" cons ruby text "変" text "か" cons text "えた" cons ruby text "初回受信要求" text "しょかいじゅしんようきゅう" cons text "はDoc" cons ruby text "組立" text "くみたて" cons text "ではCompleteとなるが、" cons ruby text "実" text "じつ" cons text "parserはその" cons ruby text "出力" text "しゅつりょく" cons text "を" cons ruby text "拒否" text "きょひ" cons text "した。" nil
+      cons "[別/べつ]の[合法/ごうほう]Math textもそのまま[採用/さいよう]された。"
+      cons "この[挙動/きょどう]は05[章/しょう]8.2に[明記/めいき]したhost assertionの[境界/きょうかい]であり、[通常/つうじょう]roundtrip[保証/ほしょう]には[同/どう]guestを[扱/あつか]う[実/じつ]printerの[正当出力/せいとうしゅつりょく]を[供給/きょうきゅう]する[前提/ぜんてい]がある。"
+      cons "raw[要求/ようきゅう]、Complete SourceArtifact、[原文取得/げんぶんしゅとく]helperをguest[実行/じっこう]proofへ[昇格/しょうかく]させず、Code[内/ない]Docの[意味/いみ]lowerを[保証/ほしょう]の[前提/ぜんてい]にしない。" nil
+    cons paragraph
+      cons "Source/Work/Nodes/Allocation/Depth/Outputの6[資源/しげん]を0・[必要量/ひつようりょう]−1・[必要量/ひつようりょう]で[検査/けんさ]し、[停止理由/ていしりゆう]、sticky Budget、Report Usage、[実返信/じつへんしん]CBORと[元要求不変/もとようきゅうふへん]を[確認/かくにん]した。"
+      cons "[元/もと]sourceの[合計/ごうけい]byte[数/すう]だけをSourceBytesへonce[計上/けいじょう]し、caller[深/ふか]さ7はpeakへ[合成/ごうせい]された。"
+      cons "source-lessの512[段/だん]Strongは[反復印字/はんぷくいんじ]で[全内容/ぜんないよう]を[保持/ほじ]し、Depth64で[型付/かたつ]き[停止/ていし]した。"
+      cons "source-less Nameの[空/から]・[先頭結合文字/せんとうけつごうもじ]・[数字/すうじ]・[空白/くうはく]は[置換/ちかん]せず[失敗/しっぱい]とし、Unicode[名/めい]と[予約/よやく]headのoperandは[保持/ほじ]した。" nil
+    cons paragraph
+      cons "Doc printer28fileと[対応表/たいおうひょう]1fileだけの[固定/こてい]snapshotに[依存先/いぞんさき]を[束縛/そくばく]し、[独立/どくりつ]3[補助/ほじょ]および[管理対象/かんりたいしょう]printer7[件/けん]をnative/WASI[双方/そうほう]で[成功確認/せいこうかくにん]した。"
+      cons "[管理対象/かんりたいしょう]には[全/ぜん]64form×2modeとguest6fragment、[共有/きょうゆう]DAG[出力停止/しゅつりょくていし]、[型正当/かたせいとう]なdigest[長/ちょう]/overflow[等/とう]の[受信境界/じゅしんきょうかい]を[含/ふく]む。"
+      cons sentence cons ruby text "固定" text "こてい" cons text "source、" cons ruby text "入力" text "にゅうりょく" cons text "、" cons ruby text "補助" text "ほじょ" cons text "、6binary、" cons ruby text "全" text "ぜん" cons text "process logとSHAは " cons code ".tmp/review-doc-print-fixed/manifest.json" cons text " に" cons ruby text "保存" text "ほぞん" cons text "した。" nil
+      cons "[今回/こんかい]の[範囲/はんい]はDoc printerの[明示/めいじ]guest[供給/きょうきゅう]を[伴/ともな]う[操作/そうさ]であり、render、PreparedArticle[全体/ぜんたい]、RegionQuery、[外部/がいぶ]guest[実行認証/じっこうにんしょう]の[完了/かんりょう]を[主張/しゅちょう]しない。" nil
+    cons paragraph
+      cons "R048は[後続/こうぞく]RegionQueryのowner[監査/かんさ]から[見/み]つかった[既存/きそん]renameの[別不具合/べつふぐあい]である。"
+      cons sentence cons ruby text "実" text "じつ" cons text " " cons code "lambda x guest x" cons text " のguest reader" cons ruby text "返信" text "へんしん" cons text "だけが" cons ruby text "補助" text "ほじょ" cons text "source " cons code "x" cons text " からhost" cons ruby text "宣言" text "せんげん" cons text " " cons code "[7,8)" cons text " へのExact mapを" cons ruby text "持" text "も" cons text "つ" cons ruby text "入力" text "にゅうりょく" cons text "を、" cons ruby text "通常" text "つうじょう" cons text "のParseSessionで" cons ruby text "受理" text "じゅり" cons text "させた。" nil
+      cons sentence cons text "host bundleのmapは0" cons ruby text "件" text "けん" cons text "、guestは1" cons ruby text "件" text "けん" cons text "なのに、" cons ruby text "補助" text "ほじょ" cons text "sourceだけをwritableとしてhost" cons ruby text "名" text "めい" cons text "を " cons code "z" cons text " へrenameすると、prepare・" cons ruby text "実候補" text "じつこうほ" cons text "parse・binding・acceptを" cons ruby text "経" text "へ" cons text "て" cons ruby text "補助" text "ほじょ" cons text "source " cons code "[0,1)" cons text " の" cons ruby text "編集" text "へんしゅう" cons text "がCompleteとして" cons ruby text "公開" text "こうかい" cons text "された。" nil
+      cons "mapなしcontrolは[正/ただ]しくhost[原文/げんぶん]を[編集/へんしゅう]した。"
+      cons "raw treeやsealの[書換/かきか]えはなく、renameが[平坦/へいたん]なfacts.source_mapsをinverse/[派生編集/はせいへんしゅう]/[比較/ひかく]に[使/つか]うことで[所有/しょゆう]を[失/うしな]う[実再現/じつさいげん]である。"
+      cons sentence cons ruby text "元" text "もと" cons text "probeとfull before" cons ruby text "出力" text "しゅつりょく" cons text "は " cons code ".tmp/review-rename-owner/before/" cons text " に" cons ruby text "保持" text "ほじ" cons text "する。" nil
+      cons "[初回/しょかい]の[全/ぜん]source[記録/きろく]は[後続/こうぞく]Query snapshot[取込/とりこ]み[後/ご]の[採取/さいしゅ]であり、[最初/さいしょ]のbinaryとその[全依存/ぜんいぞん]sourceが[一致/いっち]した[証拠/しょうこ]とは[扱/あつか]わない。"
+      cons "[修正後/しゅうせいご]の[元入力再試験/もとにゅうりょくさいしけん]が[済/す]むまではopenとし、[先/さき]に[保存済/ほぞんず]みのDoc printer[結果/けっか]へ[混/ま]ぜない。" nil
     nil
   nil
