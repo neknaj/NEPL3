@@ -1,0 +1,8 @@
+    Checking nepl3-core v0.1.0 (C:\projects\NEPL3-doc-resource-links\crates\foundation\core)
+    Checking nepl3-wire v0.1.0 (C:\projects\NEPL3-doc-resource-links\crates\foundation\wire)
+    Checking nepl3-math-core v0.1.0 (C:\projects\NEPL3-doc-resource-links\crates\languages\math\core)
+    Checking nepl3-engine v0.1.0 (C:\projects\NEPL3-doc-resource-links\crates\foundation\engine)
+    Checking nepl3-grammar-core v0.1.0 (C:\projects\NEPL3-doc-resource-links\crates\languages\grammar\core)
+    Checking nepl3-markup v0.1.0 (C:\projects\NEPL3-doc-resource-links\crates\output\markup)
+    Checking nepl3-reader v0.1.0 (C:\projects\NEPL3-doc-resource-links\crates\foundation\reader)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 7.49s

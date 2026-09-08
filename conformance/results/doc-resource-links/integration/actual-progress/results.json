@@ -1,0 +1,72 @@
+{
+  "source_commit": "721afd9205ef21855e4cfff8bd3431498bd52f3d",
+  "binary_sha256": "b6586766019e143c1e0753b3d41ae3a91679b1c73c6738570e07e6dd722685e1",
+  "inputs": [
+    {
+      "original": "doc/migration/authored/progress/foundation-runtime.nepld",
+      "stored": "progress.nepld",
+      "bytes": 50168,
+      "sha256": "d53533bf771e4d172331f7d1a38cd3392e5f775a75e1c5173e640779a8e677da"
+    },
+    {
+      "original": "conformance/results/foundation-slice/validation.json",
+      "stored": "file-0.json",
+      "bytes": 6726,
+      "sha256": "02da4086814724be4925219e2a161cce0fff4454be26b3f5f3edd3b72ade0481"
+    },
+    {
+      "original": "conformance/results/reader-builtins/validation.json",
+      "stored": "file-1.json",
+      "bytes": 7837,
+      "sha256": "20a38b974229a1c02c9072ff9235cb393097bfdc119f0af932212a3b540c83ec"
+    },
+    {
+      "original": "conformance/results/foundation-slice/main-ci.json",
+      "stored": "file-2.json",
+      "bytes": 3049,
+      "sha256": "5f8236caef435ec2b14fb8061cb74fdce50e43b55e1cbe50516591d27805ff39"
+    }
+  ],
+  "scope": "Actual unchanged authored draft and three registered original JSON files. Parse/lower defaults; explicitly preselected finite output allowance. Not canonical migration or browser/deploy acceptance.",
+  "command": [
+    "C:\\projects\\NEPL3-doc-resource-links\\target\\debug\\nepl3-tools.exe",
+    "doc-html",
+    "pages",
+    "C:\\projects\\NEPL3-doc-resource-links\\.tmp\\actual-progress\\input.json",
+    "C:\\projects\\NEPL3-doc-resource-links\\.tmp\\actual-progress\\output"
+  ],
+  "exit_code": 0,
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "files": [
+    {
+      "path": "manifest.json",
+      "bytes": 5756,
+      "sha256": "ec335ead78da36f89b473fb3bdd6d363ffea5b31fc83d452b890f3cad1fbcba6"
+    },
+    {
+      "path": "evidence/file-0.json",
+      "bytes": 6726,
+      "sha256": "02da4086814724be4925219e2a161cce0fff4454be26b3f5f3edd3b72ade0481"
+    },
+    {
+      "path": "evidence/file-1.json",
+      "bytes": 7837,
+      "sha256": "20a38b974229a1c02c9072ff9235cb393097bfdc119f0af932212a3b540c83ec"
+    },
+    {
+      "path": "evidence/file-2.json",
+      "bytes": 3049,
+      "sha256": "5f8236caef435ec2b14fb8061cb74fdce50e43b55e1cbe50516591d27805ff39"
+    },
+    {
+      "path": "docs/progress/index.html",
+      "bytes": 155517,
+      "sha256": "e3578aec94df56a674185527a914e17f8b5a312de63f5f32f6cf3fe86b7a7cc3"
+    },
+    {
+      "path": "docs/progress/assets/doc.css",
+      "bytes": 1860,
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    }
+  ]
+}
