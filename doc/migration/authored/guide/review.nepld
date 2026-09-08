@@ -1318,5 +1318,41 @@ body
       cons sentence cons ruby text "元" text "もと" cons text "probeとfull before" cons ruby text "出力" text "しゅつりょく" cons text "は " cons code ".tmp/review-rename-owner/before/" cons text " に" cons ruby text "保持" text "ほじ" cons text "する。" nil
       cons "[初回/しょかい]の[全/ぜん]source[記録/きろく]は[後続/こうぞく]Query snapshot[取込/とりこ]み[後/ご]の[採取/さいしゅ]であり、[最初/さいしょ]のbinaryとその[全依存/ぜんいぞん]sourceが[一致/いっち]した[証拠/しょうこ]とは[扱/あつか]わない。"
       cons "[修正後/しゅうせいご]の[元入力再試験/もとにゅうりょくさいしけん]が[済/す]むまではopenとし、[先/さき]に[保存済/ほぞんず]みのDoc printer[結果/けっか]へ[混/ま]ぜない。" nil
+    cons paragraph
+      cons "RegionQueryの[固定/こてい]27fileとR048[修正/しゅうせい]10file（[重複/ちょうふく]を[除/のぞ]き34file）を[独立/どくりつ]に[検査/けんさ]した。"
+      cons "[選択領域/せんたくりょういき]のlogical spanと[正準/せいじゅん]bundle[所有者/しょゆうしゃ]を、[実/じつ]Bindingが[発行/はっこう]したbundleScopesのrootへ[結/むす]び[付/つ]け、[名前文字列/なまえもじれつ]の[再検索/さいけんさく]でなく[最終/さいしゅう]Occurrence/Resolutionを[参照/さんしょう]する。"
+      cons "Foreign fieldの[子位置/こいち]はguest[所有/しょゆう]で[扱/あつか]い、[返却/へんきゃく]regionの[表示座標/ひょうじざひょう]をhost[定義/ていぎ]の[根拠/こんきょ]へ[流用/りゅうよう]しない。"
+      cons "mapはそのbundleの[局所表/きょくしょひょう]と、Custom[受理時/じゅりじ]に[同時公開/どうじこうかい]したcustomSourceMaps[行/ぎょう]に[限定/げんてい]される。" nil
+    cons paragraph
+      cons sentence cons ruby text "独立原文" text "どくりつげんぶん" cons text "の6" cons ruby text "位置" text "いち" cons text "では、" cons code "let x x apply x x" cons text " の" cons ruby text "初期化式" text "しょきかしき" cons text "を" cons ruby text "未解決" text "みかいけつ" cons text "、bodyの2" cons ruby text "参照" text "さんしょう" cons text "を" cons ruby text "宣言" text "せんげん" cons text " " cons code "[4,5)" cons text " へ、" cons ruby text "入" text "い" cons text "れ" cons ruby text "子" text "こ" cons text "Lambdaを" cons ruby text "内側宣言" text "うちがわせんげん" cons text " " cons code "[16,17)" cons text " へ" cons ruby text "対応" text "たいおう" cons text "させた。" nil
+      cons sentence cons ruby text "同" text "おな" cons text "じsource" cons ruby text "内" text "ない" cons text "のguest" cons ruby text "自由名" text "じゆうめい" cons text "へhost" cons ruby text "宣言" text "せんげん" cons text "は" cons ruby text "漏" text "も" cons text "れず、guest" cons ruby text "内" text "ない" cons text "Lambdaはguest" cons ruby text "宣言" text "せんげん" cons text " " cons code "[22,23)" cons text " へ" cons ruby text "対応" text "たいおう" cons text "した。" nil
+      cons sentence cons code "lambda あ apply あ あ" cons text " はUTF-8 byteの" cons ruby text "宣言" text "せんげん" cons text " " cons code "[7,10)" cons text " と" cons ruby text "参照" text "さんしょう" cons text "17/21を" cons ruby text "保持" text "ほじ" cons text "した。" nil
+      cons "[各入力/かくにゅうりょく]をBindingRequest/sidecar/RegionQueryRequestの[実/じつ]CBORへ[通/とお]し、[空/から]storeの[初回/しょかい]receiverで[実/じつ]Bindingを[再実行/さいじっこう]した[結果/けっか]ともDefinition/Referencesを[照合/しょうごう]した。"
+      cons "Unicode scalar[内部/ないぶ]はInvalid、[半開終端/はんかいしゅうたん]は[選択/せんたく]なしであり、5[資源/しげん]の0[上限/じょうげん]とCancelは[正式停止/せいしきていし]・[空/から]source[返信/へんしん]・[実/じつ]Usageを[保持/ほじ]した。" nil
+    cons paragraph
+      cons sentence cons ruby text "独立" text "どくりつ" cons text "Custom" cons ruby text "入力" text "にゅうりょく" cons text " " cons code "custom 名 guest custom 名 名" cons text " は、host/guestで" cons ruby text "同" text "おな" cons text "じ" cons ruby text "生成" text "せいせい" cons text "sourceを" cons ruby text "共有" text "きょうゆう" cons text "しながら" cons ruby text "疎" text "そ" cons text "Entity ID 5000/7000を" cons ruby text "発行" text "はっこう" cons text "した。" nil
+      cons "[元/もと]byte7はhost Entity、24/28はguest Entityへ[対応/たいおう]し、guestだけのmapをhost keywordへ[適用/てきよう]しなかった。"
+      cons "FactsEmitterと[検査済/けんさず]みdeltaの[両経路/りょうけいろ]、[初回/しょかい]CBOR[受信後/じゅしんご]の[実再/じつさい]binding、[正式返信/せいしきへんしん]CBORが[一致/いっち]した。"
+      cons "[生成/せいせい]map[受理後/じゅりご]の[取消/とりけし]ではmap・owner[行/ぎょう]・eventを[保持/ほじ]し、[未受理/みじゅり]deltaを[採用/さいよう]しなかった。"
+      cons "source-less[定義位置/ていぎいち]はNoneのまま[保持/ほじ]した。" nil
+    cons paragraph
+      cons "raw bundle ledgerの[番号範囲外/ばんごうはんいがい]、root[重複/ちょうふく]、map[範囲外/はんいがい]、[同/どう]owner[重複/ちょうふく]、owner[間/かん]の[同/どう]index[重複/ちょうふく]を[型正当/かたせいとう]CBORから[拒否/きょひ]した。"
+      cons "[一方/いっぽう]、[構造上合法/こうぞうじょうごうほう]なowner[行/ぎょう]の[交換/こうかん]と[空/から]の[所有/しょゆう]index[列/れつ]はrawデータとして[復元可能/ふくげんかのう]である。"
+      cons "04[章/しょう]の[規範/きはん]どおり、これだけで[実行済/じっこうず]みBindingAnalysisやBoundBindingReplyを[発行/はっこう]せず、[元要求/もとようきゅう]・Profileに[結/むす]び[付/つ]く[実/じつ]bindingが[意味/いみ]proofの[根拠/こんきょ]となる。"
+      cons "raw[構造検査/こうぞうけんさ]を[通信認証/つうしんにんしょう]やCustom[授権/じゅけん]へ[拡大/かくだい]して[主張/しゅちょう]しない。" nil
+    cons paragraph
+      cons "R048の[修正後/しゅうせいご]は、[各/かく]Entity/Occurrenceのnamespace rootからmap[所有者/しょゆうしゃ]を[選/えら]び、[前向/まえむ]き[導出/どうしゅつ]も[各元編集/かくもとへんしゅう]とownerの[組/くみ]ごとに[閉包/へいほう]をたどる。"
+      cons "[再解析比較/さいかいせきひかく]はold/newそれぞれの[所有者/しょゆうしゃ]、[構文位置/こうぶんいち]は[正準/せいじゅん]bundleを[用/もち]いる。"
+      cons "[元反例/もとはんれい]のprobe source SHAを[変/か]えず、guest mapしかない[補助/ほじょ]sourceへの[書込要求/かきこみようきゅう]がNotWritableとなることをnative/WASI[双方/そうほう]で[確認/かくにん]した。"
+      cons sentence cons text "mapなしcontrolの" cons ruby text "実" text "じつ" cons text "parse・binding・acceptは" cons ruby text "元" text "もと" cons text "host " cons code "[7,8)" cons text " " cons ruby text "編集" text "へんしゅう" cons text "として" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons sentence cons ruby text "別" text "べつ" cons text "の" cons ruby text "独立" text "どくりつ" cons text " " cons code "custom 名 名" cons text " はemitter/delta" cons ruby text "双方" text "そうほう" cons text "で" cons ruby text "同" text "どう" cons text "ownerのExact" cons ruby text "逆写像" text "ぎゃくしゃぞう" cons text "を" cons ruby text "保持" text "ほじ" cons text "し、" cons ruby text "元" text "もと" cons text "source2" cons ruby text "箇所" text "かしょ" cons text "を " cons code "字" cons text " へ" cons ruby text "変更" text "へんこう" cons text "、" cons ruby text "派生" text "はせい" cons text "source revision1を" cons ruby text "実再生成" text "じつさいせいせい" cons text "・sealed parse・binding" cons ruby text "後" text "ご" cons text "にacceptして" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "[関連管理/かんれんかんり]rename11[件/けん]も[両/りょう]targetで[成功/せいこう]しており、この[元所有混同/もとしょゆうこんどう]の[範囲/はんい]でR048をcorrectedとする。" nil
+    cons paragraph
+      cons "R048のbeforeはnative[実行/じっこう]である。"
+      cons sentence cons ruby text "初回採取" text "しょかいさいしゅ" cons text "の" cons ruby text "制限" text "せいげん" cons text "は" cons ruby text "前段落" text "ぜんだんらく" cons text "のまま" cons ruby text "残" text "のこ" cons text "し、" cons ruby text "別途" text "べっと" cons text " " cons code ".tmp/review-rename-owner/before-query27/manifest.json" cons text " に" cons ruby text "固定" text "こてい" cons text "Query27の" cons ruby text "全" text "ぜん" cons text "SHAを" cons ruby text "実行前後" text "じっこうぜんご" cons text "に" cons ruby text "確認" text "かくにん" cons text "した" cons ruby text "無変更" text "むへんこう" cons text "probeの" cons ruby text "失敗" text "しっぱい" cons text "（" cons ruby text "終了" text "しゅうりょう" cons text "1）を" cons ruby text "保存" text "ほぞん" cons text "した。" nil
+      cons "afterは[固定/こてい]34fileを[前後確認/ぜんごかくにん]し、[独立/どくりつ]4[補助/ほじょ]をnative/WASI[双方/そうほう]で[再/さい]build・[実行/じっこう]した。"
+      cons "[関連管理/かんれんかんり]17[件/けん]も[各/かく]targetで[成功/せいこう]した。"
+      cons sentence cons ruby text "全" text "ぜん" cons text "process log、8binary、" cons ruby text "元入力" text "もとにゅうりょく" cons text "・" cons ruby text "補助" text "ほじょ" cons text "source・" cons ruby text "固定" text "こてい" cons text "SHA・before" cons ruby text "参照" text "さんしょう" cons text "は " cons code ".tmp/review-region-query-fixed/manifest.json" cons text " に" cons ruby text "保存" text "ほぞん" cons text "する。" nil
+      cons "[統括/とうかつ]の[全/ぜん]workspace/[品質/ひんしつ]gateは[別記録/べつきろく]であり、[今回/こんかい]の[限定検査/げんていけんさ]から[全/ぜん]T06、[外部実行認証/がいぶじっこうにんしょう]、Mathの[完了/かんりょう]を[推定/すいてい]しない。" nil
     nil
   nil
