@@ -2,181 +2,181 @@ article ja "06. Math[言語/げんご]"
 body
   cons section policy "[方針/ほうしん]" body
     cons paragraph
-      cons "数式の表示対象を保ち、その一部に対する[厳密計算/げんみつけいさん]を独立した操作として公開する。"
-      cons "parse/renderが数式を簡約したり、等式の正しさを主張したりしない。" nil
+      cons "[数式/すうしき]の[表示対象/ひょうじたいしょう]を[保/たも]ち、その[一部/いちぶ]に[対/たい]する[厳密計算/げんみつけいさん]を[独立/どくりつ]した[操作/そうさ]として[公開/こうかい]する。"
+      cons "parse/renderが[数式/すうしき]を[簡約/かんやく]したり、[等式/とうしき]の[正/ただ]しさを[主張/しゅちょう]したりしない。" nil
     nil
   cons section expression "1. [表現/ひょうげん]" body
     cons paragraph
-      cons "全constructorはmath-signatures参照。"
-      cons "Numberは有限十進の原表記を持ち、意味値はBigRationalへ正確に変換する。"
-      cons "整数p、分母qはq>0、gcd(|p|,q)=1、zero=0/1へ正規化する。"
-      cons "Numberに格納できる値は、約分後のqの素因数が2と5だけの有理数に限る。"
-      cons "これ以外をNumberとして構築・decodeする場合はNonFiniteDecimalNumberで拒否する。"
-      cons "評価値のRationalはこの制限を持たない。" nil
+      cons "[全/ぜん]constructorはmath-signatures[参照/さんしょう]。"
+      cons "Numberは[有限十進/ゆうげんじっしん]の[原表記/げんひょうき]を[持/も]ち、[意味値/いみち]はBigRationalへ[正確/せいかく]に[変換/へんかん]する。"
+      cons "[整数/せいすう]p、[分母/ぶんぼ]qはq>0、gcd(|p|,q)=1、zero=0/1へ[正規化/せいきか]する。"
+      cons "Numberに[格納/かくのう]できる[値/あたい]は、[約分後/やくぶんご]のqの[素因数/そいんすう]が2と5だけの[有理数/ゆうりすう]に[限/かぎ]る。"
+      cons "これ[以外/いがい]をNumberとして[構築/こうちく]・decodeする[場合/ばあい]はNonFiniteDecimalNumberで[拒否/きょひ]する。"
+      cons "[評価値/ひょうかち]のRationalはこの[制限/せいげん]を[持/も]たない。" nil
     cons paragraph
-      cons sentence cons text "任意有理数から式を作るconstructor helper " cons code "expression_from_rational" cons text " は、有限十進ならNumber、それ以外なら整数Numberを子とするFrac(Number(p), Number(q))を返す。" nil
-      cons "元の構文をlowerするときにこのhelperで著者のFracを折り畳まない。"
-      cons sentence cons code "frac 1 2" cons text " はFracのまま保持する。" nil
-      cons "Numberのprintはcanonicalな整数または有限十進（指数表記なし、冗長な末尾zeroなし、zeroは0）で、意味値とsnapshotの一致を確認した場合には元lexemeを表示に利用できる。"
-      cons "Number(1/3)をprint時だけFracへ変換する設計にはしない。" nil
+      cons sentence cons ruby text "任意有理数" text "にんいゆうりすう" cons text "から" cons ruby text "式" text "しき" cons text "を" cons ruby text "作" text "つく" cons text "るconstructor helper " cons code "expression_from_rational" cons text " は、" cons ruby text "有限十進" text "ゆうげんじっしん" cons text "ならNumber、それ" cons ruby text "以外" text "いがい" cons text "なら" cons ruby text "整数" text "せいすう" cons text "Numberを" cons ruby text "子" text "こ" cons text "とするFrac(Number(p), Number(q))を" cons ruby text "返" text "かえ" cons text "す。" nil
+      cons "[元/もと]の[構文/こうぶん]をlowerするときにこのhelperで[著者/ちょしゃ]のFracを[折/お]り[畳/たた]まない。"
+      cons sentence cons code "frac 1 2" cons text " はFracのまま" cons ruby text "保持" text "ほじ" cons text "する。" nil
+      cons "Numberのprintはcanonicalな[整数/せいすう]または[有限十進/ゆうげんじっしん]（[指数表記/しすうひょうき]なし、[冗長/じょうちょう]な[末尾/まつび]zeroなし、zeroは0）で、[意味値/いみち]とsnapshotの[一致/いっち]を[確認/かくにん]した[場合/ばあい]には[元/もと]lexemeを[表示/ひょうじ]に[利用/りよう]できる。"
+      cons "Number(1/3)をprint[時/じ]だけFracへ[変換/へんかん]する[設計/せっけい]にはしない。" nil
     cons paragraph
-      cons "Identifier leafは数学記号。"
-      cons "{[自由記号/じゆうきごう]/free symbol}を許可する。"
-      cons "自由記号はUnresolvedNameのエラーにしない。"
-      cons "意味上の入力要求として列挙する。"
-      cons sentence cons code "symbol \"...\"" cons text " で予約語と同じ綴りや複数文字の名前を明示できる。" nil
-      cons "裸のNameとsymbolの同じ綴りは同じ名前解決規則を使う。" nil
+      cons "Identifier leafは[数学記号/すうがくきごう]。"
+      cons "{[自由記号/じゆうきごう]/free symbol}を[許可/きょか]する。"
+      cons "[自由記号/じゆうきごう]はUnresolvedNameのエラーにしない。"
+      cons "[意味上/いみじょう]の[入力要求/にゅうりょくようきゅう]として[列挙/れっきょ]する。"
+      cons sentence cons code "symbol \"...\"" cons text " で" cons ruby text "予約語" text "よやくご" cons text "と" cons ruby text "同" text "おな" cons text "じ" cons ruby text "綴" text "つづ" cons text "りや" cons ruby text "複数文字" text "ふくすうもじ" cons text "の" cons ruby text "名前" text "なまえ" cons text "を" cons ruby text "明示" text "めいじ" cons text "できる。" nil
+      cons "[裸/はだか]のNameとsymbolの[同/おな]じ[綴/つづ]りは[同/おな]じ[名前解決規則/なまえかいけつきそく]を[使/つか]う。" nil
     cons paragraph
-      cons "letはinitを外側、bodyを新しい記号scopeで読む。"
-      cons "sum/integralのindexはbodyだけで有効であり、lower/upperでは外側を参照する。"
-      cons "自由記号に架空の定義位置を与えない。" nil
+      cons "letはinitを[外側/そとがわ]、bodyを[新/あたら]しい[記号/きごう]scopeで[読/よ]む。"
+      cons "sum/integralのindexはbodyだけで[有効/ゆうこう]であり、lower/upperでは[外側/そとがわ]を[参照/さんしょう]する。"
+      cons "[自由記号/じゆうきごう]に[架空/かくう]の[定義位置/ていぎいち]を[与/あた]えない。" nil
     cons paragraph
-      cons "subscript/superscript/scriptsは表示構造。"
-      cons "一般の添字を配列アクセスや指数演算に暗黙変換しない。"
-      cons "代数的な累乗にはpowを使う。"
-      cons sentence cons code "call" cons text "は数学の関数適用表現で、任意のFnコード実行ではない。" nil nil
+      cons "subscript/superscript/scriptsは[表示構造/ひょうじこうぞう]。"
+      cons "[一般/いっぱん]の[添字/そえじ]を[配列/はいれつ]アクセスや[指数演算/しすうえんざん]に[暗黙変換/あんもくへんかん]しない。"
+      cons "[代数的/だいすうてき]な[累乗/るいじょう]にはpowを[使/つか]う。"
+      cons sentence cons code "call" cons text "は" cons ruby text "数学" text "すうがく" cons text "の" cons ruby text "関数適用表現" text "かんすうてきようひょうげん" cons text "で、" cons ruby text "任意" text "にんい" cons text "のFnコード" cons ruby text "実行" text "じっこう" cons text "ではない。" nil nil
     nil
   cons section structure "2. [構造検査/こうぞうけんさ]" body
     cons paragraph
-      cons "matrixは一つ以上のrow、各rowは同じ正の列数。"
-      cons "vectorは一つ以上の要素。"
-      cons "fenceは左右それぞれ0または1Unicode scalar。"
-      cons "空文字で片側だけの括弧を表せる。" nil
+      cons "matrixは[一/ひと]つ[以上/いじょう]のrow、[各/かく]rowは[同/おな]じ[正/せい]の[列数/れつすう]。"
+      cons "vectorは[一/ひと]つ[以上/いじょう]の[要素/ようそ]。"
+      cons "fenceは[左右/さゆう]それぞれ0または1Unicode scalar。"
+      cons "[空文字/くうもじ]で[片側/かたがわ]だけの[括弧/かっこ]を[表/あらわ]せる。" nil
     cons paragraph
-      cons "rootのdegreeが数値literalで0ならInvalidRootDegree。"
-      cons "その他の定義域はevaluate時にも検査する。"
-      cons "表示だけの式に実数/複素数の数値領域を勝手に割り当てない。" nil
-    cons paragraph cons "CheckedExpressionが保証するのは構造・binding・既知の局所制約であり、全記号の値や全演算の数値評価可能性ではない。" nil
+      cons "rootのdegreeが[数値/すうち]literalで0ならInvalidRootDegree。"
+      cons "その[他/ほか]の[定義域/ていぎいき]はevaluate[時/じ]にも[検査/けんさ]する。"
+      cons "[表示/ひょうじ]だけの[式/しき]に[実数/じっすう]/[複素数/ふくそすう]の[数値領域/すうちりょういき]を[勝手/かって]に[割/わ]り[当/あ]てない。" nil
+    cons paragraph cons "CheckedExpressionが[保証/ほしょう]するのは[構造/こうぞう]・binding・[既知/きち]の[局所制約/きょくしょせいやく]であり、[全記号/ぜんきごう]の[値/あたい]や[全演算/ぜんえんざん]の[数値評価可能性/すうちひょうかかのうせい]ではない。" nil
     nil
   cons section evaluate "3. evaluate" body
     cons paragraph
-      cons "入力はCheckedExpression、自由記号のBindingEnvironment、Limits。"
-      cons "出力はExact(Value)またはSymbolic(expression, Requirements)。"
-      cons "定義域違反・形状不一致は明確なEvalError。"
-      cons sentence cons text "値の種類はScalar(Q)、" cons code "Vector(List<Q>)" cons text "、" cons code "Matrix(rows,cols,List<Q>)" cons text "、Truth(Bool)。" nil nil
+      cons "[入力/にゅうりょく]はCheckedExpression、[自由記号/じゆうきごう]のBindingEnvironment、Limits。"
+      cons "[出力/しゅつりょく]はExact(Value)またはSymbolic(expression, Requirements)。"
+      cons "[定義域違反/ていぎいきいはん]・[形状不一致/けいじょうふいっち]は[明確/めいかく]なEvalError。"
+      cons sentence cons ruby text "値" text "あたい" cons text "の" cons ruby text "種類" text "しゅるい" cons text "はScalar(Q)、" cons code "Vector(List<Q>)" cons text "、" cons code "Matrix(rows,cols,List<Q>)" cons text "、Truth(Bool)。" nil nil
     cons paragraph
-      cons "評価はsource順の左から右、純粋。"
-      cons "letはinitを評価してからbodyを評価する。"
-      cons "未解決の記号に依存する部分はSymbolicとし、独立な数値subtreeの計算結果を保持できるが元の構文を上書きしない。" nil
-    cons paragraph cons "正確に評価する演算:" nil
+      cons "[評価/ひょうか]はsource[順/じゅん]の[左/ひだり]から[右/みぎ]、[純粋/じゅんすい]。"
+      cons "letはinitを[評価/ひょうか]してからbodyを[評価/ひょうか]する。"
+      cons "[未解決/みかいけつ]の[記号/きごう]に[依存/いぞん]する[部分/ぶぶん]はSymbolicとし、[独立/どくりつ]な[数値/すうち]subtreeの[計算結果/けいさんけっか]を[保持/ほじ]できるが[元/もと]の[構文/こうぶん]を[上書/うわが]きしない。" nil
+    cons paragraph cons "[正確/せいかく]に[評価/ひょうか]する[演算/えんざん]:" nil
     cons list unordered
-      cons item none body cons paragraph cons "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。" nil nil
-      cons item none body cons paragraph cons "neg: Scalar/Vector/Matrixの全要素の符号反転。" nil nil
+      cons item none body cons paragraph cons "add/sub: Scalar[同士/どうし]、[等/ひと]しい[長/なが]さのVector、[等/ひと]しい[形状/けいじょう]のMatrix。" nil nil
+      cons item none body cons paragraph cons "neg: Scalar/Vector/Matrixの[全要素/ぜんようそ]の[符号反転/ふごうはんてん]。" nil nil
       cons item none body cons paragraph
-        cons "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。"
-        cons "Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。" nil nil
-      cons item none body cons paragraph cons "frac: Scalar同士、分母0はDivisionByZero。" nil nil
+        cons "mul: Scalar×Scalar、ScalarとVector/Matrixの[両側/りょうがわ]、Matrix×Matrix、Matrix×Vector。"
+        cons "Vector×Vectorは[意味/いみ]が[曖昧/あいまい]なのでOperandShapeMismatch。" nil nil
+      cons item none body cons paragraph cons "frac: Scalar[同士/どうし]、[分母/ぶんぼ]0はDivisionByZero。" nil nil
       cons item none body cons paragraph
-        cons "pow: Scalarの整数指数。"
-        cons "0^0は空積として1。"
-        cons "0の負指数はDivisionByZero。"
-        cons "非整数指数はSymbolic(NonIntegralExponent)。" nil nil
+        cons "pow: Scalarの[整数指数/せいすうしすう]。"
+        cons "0^0は[空積/くうせき]として1。"
+        cons "0の[負指数/ふしすう]はDivisionByZero。"
+        cons "[非整数指数/ひせいすうしすう]はSymbolic(NonIntegralExponent)。" nil nil
       cons item none body cons paragraph
-        cons "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。"
-        cons "非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。" nil nil
+        cons "sqrt: [非負/ひふ]Scalarの[分子分母/ぶんしぶんぼ]がともに[完全平方/かんぜんへいほう]ならExact。"
+        cons "[非平方/ひへいほう]はSymbolic(AlgebraicValueRequired)、[負/ふ]ならSymbolic(ComplexValueRequired)。" nil nil
       cons item none body cons paragraph
-        cons "root: 正の整数次数だけExact候補。"
-        cons "奇数次数の負数を許し、分子分母が完全n乗ならExact。"
-        cons "次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。" nil nil
+        cons "root: [正/せい]の[整数次数/せいすうじすう]だけExact[候補/こうほ]。"
+        cons "[奇数次数/きすうじすう]の[負数/ふすう]を[許/ゆる]し、[分子分母/ぶんしぶんぼ]が[完全/かんぜん]n[乗/じょう]ならExact。"
+        cons "[次数/じすう]が[不正/ふせい]ならInvalidRootDegree、[非完全冪/ひかんぜんべき]ならSymbolic。" nil nil
       cons item none body cons paragraph
-        cons "equal: 同じ種類・形状のExact値の等値。"
-        cons "Scalar/配列の比較を混同しない。" nil nil
-      cons item none body cons paragraph cons "lt/le: Scalar同士だけ。" nil nil
+        cons "equal: [同/おな]じ[種類/しゅるい]・[形状/けいじょう]のExact[値/ち]の[等値/とうち]。"
+        cons "Scalar/[配列/はいれつ]の[比較/ひかく]を[混同/こんどう]しない。" nil nil
+      cons item none body cons paragraph cons "lt/le: Scalar[同士/どうし]だけ。" nil nil
       cons item none body cons paragraph
-        cons "transpose: Matrixの転置。"
+        cons "transpose: Matrixの[転置/てんち]。"
         cons "Vectorは1×nのMatrixにする。" nil nil
       cons item none body cons paragraph
-        cons "det: 正方Matrixだけ。"
-        cons "正確な有理数の消去法を用い、pivotは最初の非zero行。"
-        cons "形状不正はNotSquare。" nil nil
+        cons "det: [正方/せいほう]Matrixだけ。"
+        cons "[正確/せいかく]な[有理数/ゆうりすう]の[消去法/しょうきょほう]を[用/もち]い、pivotは[最初/さいしょ]の[非/ひ]zero[行/ぎょう]。"
+        cons "[形状不正/けいじょうふせい]はNotSquare。" nil nil
       cons item none body cons paragraph
-        cons "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。"
-        cons "inclusive区間。"
+        cons "sum: lower/upperが[整数/せいすう]で[有限/ゆうげん]、bodyがScalarとなる[場合/ばあい]をexact domainとする。"
+        cons "inclusive[区間/くかん]。"
         cons "upper<lowerならScalar 0。"
-        cons "各indexはその整数のScalar。"
-        cons "反復数はLimitsで制限。"
-        cons "Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。" nil nil
+        cons "[各/かく]indexはその[整数/せいすう]のScalar。"
+        cons "[反復数/はんぷくすう]はLimitsで[制限/せいげん]。"
+        cons "Vector/Matrix[値/ち]の[一般総和/いっぱんそうわ]はSymbolic(UnsupportedExactDomain)であり、[暗黙/あんもく]のscalar[化/か]はしない。" nil nil
       cons item none body cons paragraph
-        cons "fence/label: 数値意味は内部valueと等しい。"
-        cons "annotationは数値評価しない。" nil nil
+        cons "fence/label: [数値意味/すうちいみ]は[内部/ないぶ]valueと[等/ひと]しい。"
+        cons "annotationは[数値評価/すうちひょうか]しない。" nil nil
       nil
     cons paragraph
-      cons "integral、call、表示用text/sequence/subscript/superscript/scriptsは、評価専用規則がない限りSymbolic(NotationOnly)。"
-      cons "これらの表示は完全に対応する。"
-      cons "解析的な積分や任意関数評価を実装済みとしない。" nil
+      cons "integral、call、[表示用/ひょうじよう]text/sequence/subscript/superscript/scriptsは、[評価専用規則/ひょうかせんようきそく]がない[限/かぎ]りSymbolic(NotationOnly)。"
+      cons "これらの[表示/ひょうじ]は[完全/かんぜん]に[対応/たいおう]する。"
+      cons "[解析的/かいせきてき]な[積分/せきぶん]や[任意関数評価/にんいかんすうひょうか]を[実装済/じっそうず]みとしない。" nil
     nil
   cons section mathml "4. MathML backend" body
     cons paragraph
-      cons "MathML Coreの要素をtyped Markupで生成する。"
-      cons "Number=mn、Symbol=mi、表示Text=mtext、加減乗・比較=mrow+mo、frac=mfrac、sqrt=msqrt、root=mroot、sub/sup/scripts=msub/msup/msubsup、vector/matrix=mtable/mtr/mtd、総和と積分=munder/munderoverまたは対応するscript形をdisplay modeから決定する。" nil
+      cons "MathML Coreの[要素/ようそ]をtyped Markupで[生成/せいせい]する。"
+      cons "Number=mn、Symbol=mi、[表示/ひょうじ]Text=mtext、[加減乗/かげんじょう]・[比較/ひかく]=mrow+mo、frac=mfrac、sqrt=msqrt、root=mroot、sub/sup/scripts=msub/msup/msubsup、vector/matrix=mtable/mtr/mtd、[総和/そうわ]と[積分/せきぶん]=munder/munderoverまたは[対応/たいおう]するscript[形/けい]をdisplay modeから[決定/けってい]する。" nil
     cons paragraph
-      cons "暗黙のブラウザprecedence解釈へ依存しない。"
-      cons "binding powerは比較10、add/sub20、mul30、neg40、pow50、atomic60。"
-      cons "弱い子を強い親へ入れる際はmoによる可視括弧を挿入。"
-      cons "subの右側、powの左側等、同じprecedenceでも非結合な位置に括弧を入れる。"
-      cons "fracは分子分母の構造自体がgroupになる。" nil
+      cons "[暗黙/あんもく]のブラウザprecedence[解釈/かいしゃく]へ[依存/いぞん]しない。"
+      cons "binding powerは[比較/ひかく]10、add/sub20、mul30、neg40、pow50、atomic60。"
+      cons "[弱/よわ]い[子/こ]を[強/つよ]い[親/おや]へ[入/い]れる[際/さい]はmoによる[可視括弧/かしかっこ]を[挿入/そうにゅう]。"
+      cons "subの[右側/みぎがわ]、powの[左側等/ひだりがわなど]、[同/おな]じprecedenceでも[非結合/ひけつごう]な[位置/いち]に[括弧/かっこ]を[入/い]れる。"
+      cons "fracは[分子分母/ぶんしぶんぼ]の[構造自体/こうぞうじたい]がgroupになる。" nil
     cons paragraph
-      cons "数学表示の2項演算は元の順序を保持する。"
-      cons "mulのscalar/記号列でも、読み違いを避けるためreference backendは中央点を表示する。"
-      cons "callはfunctionと括弧付きarguments。"
-      cons "sequenceは指定順のmrowであり、勝手に演算を補わない。" nil
+      cons "[数学表示/すうがくひょうじ]の2[項演算/こうえんざん]は[元/もと]の[順序/じゅんじょ]を[保持/ほじ]する。"
+      cons "mulのscalar/[記号列/きごうれつ]でも、[読/よ]み[違/ちが]いを[避/さ]けるためreference backendは[中央点/ちゅうおうてん]を[表示/ひょうじ]する。"
+      cons "callはfunctionと[括弧付/かっこつ]きarguments。"
+      cons "sequenceは[指定順/していじゅん]のmrowであり、[勝手/かって]に[演算/えんざん]を[補/おぎな]わない。" nil
     cons paragraph
       cons "letは「name := init ; body」のmrow。"
-      cons "sumの下限は「index = lower」、上限はupper、bodyに必要な括弧を付ける。"
-      cons "integralは積分記号と上下限、body、微分記号dとindex。"
-      cons "equalは表示であって証明書ではない。" nil
+      cons "sumの[下限/かげん]は「index = lower」、[上限/じょうげん]はupper、bodyに[必要/ひつよう]な[括弧/かっこ]を[付/つ]ける。"
+      cons "integralは[積分記号/せきぶんきごう]と[上下限/じょうかげん]、body、[微分記号/びぶんきごう]dとindex。"
+      cons "equalは[表示/ひょうじ]であって[証明書/しょうめいしょ]ではない。" nil
     cons paragraph
-      cons "labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備し、mtextを介した注記として出力する。"
-      cons "MathMLの内容モデルに適合しないblock内容は受け入れない。" nil
+      cons "labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ[準備/じゅんび]し、mtextを[介/かい]した[注記/ちゅうき]として[出力/しゅつりょく]する。"
+      cons "MathMLの[内容/ないよう]モデルに[適合/てきごう]しないblock[内容/ないよう]は[受/う]け[入/い]れない。" nil
     nil
   cons section arena "4.1. [公開/こうかい]arenaと[原文保持/げんぶんほじ]" body
     cons paragraph
-      cons sentence cons code "interfaces/model.json" cons text " のMath record/unionはconstructorの論理的な意味展開であり、Rust enum順や別の再帰wire layoutではない。" nil
-      cons sentence cons text "実値のschemaは " cons code "interfaces/math.json" cons text " の " cons code "MathSyntax" cons text " / " cons code "MathValue" cons text " とする。" nil
-      cons "MathRootはExpr / Row / DocGuestの3種類。"
-      cons "MathKindは29 formとNumber leafに対応し、bare SymbolNameは明示Symbolと同じ意味kindへlowerする。"
-      cons "子はExprRef / RowRef / DocGuestRef、guestはEmbedRefで平坦なarenaを参照する。"
-      cons "schemaの明示variant名とfield列がwire tagであり、入力由来の深さをnativeの再帰所有へ転写しない。" nil
+      cons sentence cons code "interfaces/model.json" cons text " のMath record/unionはconstructorの" cons ruby text "論理的" text "ろんりてき" cons text "な" cons ruby text "意味展開" text "いみてんかい" cons text "であり、Rust enum" cons ruby text "順" text "じゅん" cons text "や" cons ruby text "別" text "べつ" cons text "の" cons ruby text "再帰" text "さいき" cons text "wire layoutではない。" nil
+      cons sentence cons ruby text "実値" text "じつち" cons text "のschemaは " cons code "interfaces/math.json" cons text " の " cons code "MathSyntax" cons text " / " cons code "MathValue" cons text " とする。" nil
+      cons "MathRootはExpr / Row / DocGuestの3[種類/しゅるい]。"
+      cons "MathKindは29 formとNumber leafに[対応/たいおう]し、bare SymbolNameは[明示/めいじ]Symbolと[同/おな]じ[意味/いみ]kindへlowerする。"
+      cons "[子/こ]はExprRef / RowRef / DocGuestRef、guestはEmbedRefで[平坦/へいたん]なarenaを[参照/さんしょう]する。"
+      cons "schemaの[明示/めいじ]variant[名/めい]とfield[列/れつ]がwire tagであり、[入力由来/にゅうりょくゆらい]の[深/ふか]さをnativeの[再帰所有/さいきしょゆう]へ[転写/てんしゃ]しない。" nil
     cons paragraph
-      cons "MathValueの構造検査はカテゴリ、参照、到達性、cycle、共有DAGの最大経路、Number有限十進制約、vector/matrix形状、fence幅、literal 0のroot degreeを検査する。"
-      cons "単独Rowは空を表せるが、Matrixに取り込むrowの列数は正で全row同一でなければならない。"
-      cons "この証明はsymbol解決済みCheckedExpressionや評価可能性の証明ではない。" nil
+      cons "MathValueの[構造検査/こうぞうけんさ]はカテゴリ、[参照/さんしょう]、[到達性/とうたつせい]、cycle、[共有/きょうゆう]DAGの[最大経路/さいだいけいろ]、Number[有限十進制約/ゆうげんじっしんせいやく]、vector/matrix[形状/けいじょう]、fence[幅/はば]、literal 0のroot degreeを[検査/けんさ]する。"
+      cons "[単独/たんどく]Rowは[空/から]を[表/あらわ]せるが、Matrixに[取/と]り[込/こ]むrowの[列数/れつすう]は[正/せい]で[全/ぜん]row[同一/どういつ]でなければならない。"
+      cons "この[証明/しょうめい]はsymbol[解決済/かいけつず]みCheckedExpressionや[評価可能性/ひょうかかのうせい]の[証明/しょうめい]ではない。" nil
     cons paragraph
-      cons "MathSyntaxはsource宣言、元Origin表、tokenごとのowner headを持つMathView、SourceMapを所有する。"
-      cons sentence cons text "Number.spellingは " cons code "Option<Span>" cons text " のまま保持し、存在する場合は宣言sourceとnode coverに整合する位置を指す。" nil
-      cons "意味Rationalと原lexemeの一致を証明したときだけ元表記をprintへ利用でき、位置構造検査だけをその証明とみなさない。"
-      cons "Symbol/Let/Sum/Integralの名前operandは閉じたMathFieldLocationで選択位置とOriginを保持する。"
-      cons "本文の名前検索で位置を再発見せず、source-lessの位置はNoneとする。" nil
+      cons "MathSyntaxはsource[宣言/せんげん]、[元/もと]Origin[表/ひょう]、tokenごとのowner headを[持/も]つMathView、SourceMapを[所有/しょゆう]する。"
+      cons sentence cons text "Number.spellingは " cons code "Option<Span>" cons text " のまま" cons ruby text "保持" text "ほじ" cons text "し、" cons ruby text "存在" text "そんざい" cons text "する" cons ruby text "場合" text "ばあい" cons text "は" cons ruby text "宣言" text "せんげん" cons text "sourceとnode coverに" cons ruby text "整合" text "せいごう" cons text "する" cons ruby text "位置" text "いち" cons text "を" cons ruby text "指" text "さ" cons text "す。" nil
+      cons "[意味/いみ]Rationalと[原/げん]lexemeの[一致/いっち]を[証明/しょうめい]したときだけ[元表記/もとひょうき]をprintへ[利用/りよう]でき、[位置構造検査/いちこうぞうけんさ]だけをその[証明/しょうめい]とみなさない。"
+      cons "Symbol/Let/Sum/Integralの[名前/なまえ]operandは[閉/と]じたMathFieldLocationで[選択位置/せんたくいち]とOriginを[保持/ほじ]する。"
+      cons "[本文/ほんぶん]の[名前検索/なまえけんさく]で[位置/いち]を[再発見/さいはっけん]せず、source-lessの[位置/いち]はNoneとする。" nil
     cons paragraph
-      cons "LabelのDoc annotationと独立DocGuestは、Doc SentenceのForeignClosureを保持する。"
-      cons "ownerの環境・Origin ID・source/map閉包とguest自身のID空間を混同せず、意味変換を行わない。"
-      cons "元構文に意味的に不正なDoc annotationがあっても、Mathのsource構造検査を理由にDoc lowerや評価を呼び出してはならない。"
-      cons "prepared表示へ渡す意味・内容モデル検査は別の要求として残す。" nil
+      cons "LabelのDoc annotationと[独立/どくりつ]DocGuestは、Doc SentenceのForeignClosureを[保持/ほじ]する。"
+      cons "ownerの[環境/かんきょう]・Origin ID・source/map[閉包/へいほう]とguest[自身/じしん]のID[空間/くうかん]を[混同/こんどう]せず、[意味変換/いみへんかん]を[行/おこな]わない。"
+      cons "[元構文/もとこうぶん]に[意味的/いみてき]に[不正/ふせい]なDoc annotationがあっても、Mathのsource[構造検査/こうぞうけんさ]を[理由/りゆう]にDoc lowerや[評価/ひょうか]を[呼/よ]び[出/だ]してはならない。"
+      cons "prepared[表示/ひょうじ]へ[渡/わた]す[意味/いみ]・[内容/ないよう]モデル[検査/けんさ]は[別/べつ]の[要求/ようきゅう]として[残/のこ]す。" nil
     cons paragraph
-      cons sentence cons code "lower::expression" cons text " はhostが選択済みparse/profileを確認したSyntaxBundleと明示Math表層SchemaRef/categoryを受け、現在のBudget/SourceAdmissionで再検査してMathSyntaxを返す。" nil
-      cons "共有sourceは一度だけ計上し、原Frac・表示scripts等を簡約しない。"
-      cons "局所constructor制約の失敗は元のsource NodeRefとShapeErrorへ帰属させ、破棄した出力arenaのindexだけを位置情報として返さない。"
-      cons "停止は原StopReasonを保持し、元構文木を変更しない。" nil
+      cons sentence cons code "lower::expression" cons text " はhostが" cons ruby text "選択済" text "せんたくず" cons text "みparse/profileを" cons ruby text "確認" text "かくにん" cons text "したSyntaxBundleと" cons ruby text "明示" text "めいじ" cons text "Math" cons ruby text "表層" text "ひょうそう" cons text "SchemaRef/categoryを" cons ruby text "受" text "う" cons text "け、" cons ruby text "現在" text "げんざい" cons text "のBudget/SourceAdmissionで" cons ruby text "再検査" text "さいけんさ" cons text "してMathSyntaxを" cons ruby text "返" text "かえ" cons text "す。" nil
+      cons "[共有/きょうゆう]sourceは[一度/いちど]だけ[計上/けいじょう]し、[原/げん]Frac・[表示/ひょうじ]scripts[等/など]を[簡約/かんやく]しない。"
+      cons "[局所/きょくしょ]constructor[制約/せいやく]の[失敗/しっぱい]は[元/もと]のsource NodeRefとShapeErrorへ[帰属/きぞく]させ、[破棄/はき]した[出力/しゅつりょく]arenaのindexだけを[位置情報/いちじょうほう]として[返/かえ]さない。"
+      cons "[停止/ていし]は[原/げん]StopReasonを[保持/ほじ]し、[元構文木/もとこうぶんき]を[変更/へんこう]しない。" nil
     cons paragraph
-      cons "初回NDF受信はschema検査後に同じsource/Origin/View/guest閉包とarena制約を検査する。"
-      cons "宣言sourceの欠落をreceiverのambient storeから補わない。"
-      cons "raw MathSyntaxの受信はbinding・free symbol要求・評価結果のproofを発行しない。"
-      cons "明示constructor helperは新しいsource-less式を作るためのもので、元式を置換する処理ではない。" nil
+      cons "[初回/しょかい]NDF[受信/じゅしん]はschema[検査後/けんさご]に[同/おな]じsource/Origin/View/guest[閉包/へいほう]とarena[制約/せいやく]を[検査/けんさ]する。"
+      cons "[宣言/せんげん]sourceの[欠落/けつらく]をreceiverのambient storeから[補/おぎな]わない。"
+      cons "raw MathSyntaxの[受信/じゅしん]はbinding・free symbol[要求/ようきゅう]・[評価結果/ひょうかけっか]のproofを[発行/はっこう]しない。"
+      cons "[明示/めいじ]constructor helperは[新/あたら]しいsource-less[式/しき]を[作/つく]るためのもので、[元式/もとしき]を[置換/ちかん]する[処理/しょり]ではない。" nil
     nil
   cons section resources "5. [出力/しゅつりょく]と[資源/しげん]" body
     cons paragraph
-      cons "MathMLは独立した正式portable出力であり、ブラウザがfont/layoutを担当する。"
-      cons sentence cons text "Doc・MathのHTML生成は" cons link relative "17-math-html.md" none text "17章" cons text "のKaTeXPreferredを標準とし、生成環境でKaTeXを実行してCSS/fontと配布する。" nil
-      cons "忠実変換不能・生成能力不足時はNEPL3 MathMLへ診断付きで切り替える。"
-      cons "閲覧時にKaTeXを再実行せず、CLIがpixel描画まで行うとも広告しない。" nil
+      cons "MathMLは[独立/どくりつ]した[正式/せいしき]portable[出力/しゅつりょく]であり、ブラウザがfont/layoutを[担当/たんとう]する。"
+      cons sentence cons text "Doc・MathのHTML" cons ruby text "生成" text "せいせい" cons text "は" cons link relative "17-math-html.md" none concat cons text "17" cons ruby text "章" text "しょう" nil cons text "のKaTeXPreferredを" cons ruby text "標準" text "ひょうじゅん" cons text "とし、" cons ruby text "生成環境" text "せいせいかんきょう" cons text "でKaTeXを" cons ruby text "実行" text "じっこう" cons text "してCSS/fontと" cons ruby text "配布" text "はいふ" cons text "する。" nil
+      cons "[忠実変換不能/ちゅうじつへんかんふのう]・[生成能力不足時/せいせいのうりょくぶそくじ]はNEPL3 MathMLへ[診断付/しんだんつ]きで[切/き]り[替/か]える。"
+      cons "[閲覧時/えつらんじ]にKaTeXを[再実行/さいじっこう]せず、CLIがpixel[描画/びょうが]まで[行/おこな]うとも[広告/こうこく]しない。" nil
     cons paragraph
-      cons "独自layout/rasterizerを追加する場合は、CheckedExpressionまたはMathLayout入力modelを受ける別backendとする。"
-      cons "OpenType MATH tableやglyph outlineの実装都合をMathの意味モデルへ持ち込まない。" nil
+      cons "[独自/どくじ]layout/rasterizerを[追加/ついか]する[場合/ばあい]は、CheckedExpressionまたはMathLayout[入力/にゅうりょく]modelを[受/う]ける[別/べつ]backendとする。"
+      cons "OpenType MATH tableやglyph outlineの[実装都合/じっそうつごう]をMathの[意味/いみ]モデルへ[持/も]ち[込/こ]まない。" nil
     nil
   cons section public "6. [公開操作/こうかいそうさ]" body
     cons paragraph
       cons "lower、check、free_symbols、evaluate、print、render_mathml。"
-      cons "評価結果、部分評価の新式、元の式を別値として返す。"
-      cons "文書側のrender要求がevaluateを自動で要求しない。" nil
+      cons "[評価結果/ひょうかけっか]、[部分評価/ぶぶんひょうか]の[新式/しんしき]、[元/もと]の[式/しき]を[別値/べつち]として[返/かえ]す。"
+      cons "[文書側/ぶんしょがわ]のrender[要求/ようきゅう]がevaluateを[自動/じどう]で[要求/ようきゅう]しない。" nil
     nil
   nil
