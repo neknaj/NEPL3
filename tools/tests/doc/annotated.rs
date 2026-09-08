@@ -63,6 +63,10 @@ fn annotated_view_rejects_hidden_boundaries_and_unresolved_content() -> Result<(
         r#"concat cons text " leading" nil"#,
         r#"concat cons text "trailing " nil"#,
         r#"concat cons code "a" cons concat nil cons code "b" nil"#,
+        r#"concat cons code "a" cons strong code "b" nil"#,
+        r#"concat cons em code "a" cons strong code "b" nil"#,
+        r#"concat cons code "a" cons link external "https://example.com/" code "b" nil"#,
+        r#"concat cons link external "https://example.com/" code "a" cons code "b" nil"#,
         r#"concat cons text "a " cons break cons text "b" nil"#,
         r#"concat cons break cons text "b" nil"#,
         r#"link external "javascript:alert(1)" text "bad""#,
@@ -216,4 +220,57 @@ fn annotated_projection_keeps_sticky_limits_and_heading_depth() -> Result<(), St
             Ok(())
         },
     )
+}
+
+#[cfg(not(target_os = "wasi"))]
+#[test]
+fn annotated_host_rejects_invalid_aliases_before_creating_output()
+-> Result<(), Box<dyn std::error::Error>> {
+    use nepl3_tools::doc::projection::annotated::host::write;
+    use std::fs;
+    let root = std::env::temp_dir().join(format!("nepl3-annotated-host-{}", std::process::id()));
+    // Own this newly created directory; never remove an existing caller path.
+    fs::create_dir(&root)?;
+    let result = (|| -> Result<(), Box<dyn std::error::Error>> {
+        let input = root.join("source--metadata.nepld");
+        let aliases = root.join("aliases.json");
+        let output = root.join("output.md");
+        fs::write(
+            &input,
+            r#"article en "Title" body cons paragraph cons "Body." nil nil"#,
+        )?;
+        for invalid in [
+            r#"[{"name":"a","name":"b"}]"#,
+            r#"[{"name":"a","extra":true}]"#,
+            r#"[{"section":"missing","name":"a"}]"#,
+            r#"[{"name":"bad<a"}]"#,
+            r#"[{"name":"same"},{"name":"same"}]"#,
+            r#"[{"name":null}]"#,
+        ] {
+            fs::write(&aliases, invalid)?;
+            assert!(write(&input, &aliases, &output).is_err());
+            assert!(!output.exists());
+        }
+        fs::write(&aliases, vec![b' '; 1_048_577])?;
+        assert!(write(&input, &aliases, &output).is_err());
+        assert!(!output.exists());
+        fs::write(&aliases, r#"[{"name":"old-title"}]"#)?;
+        write(&input, &aliases, &output)?;
+        let original = fs::read(&output)?;
+        let text = std::str::from_utf8(&original)?;
+        assert!(text.contains("source&#45;&#45;metadata.nepld"));
+        assert_eq!(text.matches("<!--").count(), 1);
+        assert_eq!(text.matches("-->").count(), 1);
+        assert!(text.contains("renderer nepl3-tools.markdown-annotated/1"));
+        assert!(text.contains("<a name=\"old-title\"></a>"));
+        assert!(write(&input, &aliases, &output).is_err());
+        assert_eq!(fs::read(&output)?, original);
+        let invalid_source_output = root.join("failed.md");
+        fs::write(&input, "not an article")?;
+        assert!(write(&input, &aliases, &invalid_source_output).is_err());
+        assert!(!invalid_source_output.exists());
+        Ok(())
+    })();
+    fs::remove_dir_all(&root)?;
+    result
 }
