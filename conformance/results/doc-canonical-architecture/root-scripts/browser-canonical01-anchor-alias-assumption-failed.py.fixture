@@ -1,0 +1,82 @@
+from pathlib import Path
+from functools import partial
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+from threading import Thread
+from playwright.sync_api import sync_playwright
+import json
+
+root=Path(__file__).resolve().parent.parent
+out=root/'.tmp/browser-canonical01-anchor'
+out.mkdir(exist_ok=True)
+sections=['policy','layout','dependencies','bootstrap','rust','allowed_dependencies','current_stage']
+ids=['n-'+s.encode().hex() for s in sections]
+ids += [a['name'] for a in json.loads((root/'doc/migration/aliases/01-architecture.json').read_text(encoding='utf-8'))]
+assert len(ids)==15
+import re
+codes=re.findall(r'```text\n(.*?\n)```', (root/'.tmp/original.md').read_text(encoding='utf-8'), re.S)
+assert len(codes)==2
+class Quiet(SimpleHTTPRequestHandler):
+    def log_message(self,*args): pass
+server=ThreadingHTTPServer(('127.0.0.1',0),partial(Quiet,directory=str(root/'.tmp')))
+thread=Thread(target=server.serve_forever,daemon=True)
+thread.start()
+rows=[]
+try:
+    with sync_playwright() as p:
+        for name in ['chromium','firefox','webkit']:
+            browser=getattr(p,name).launch(headless=True)
+            for prefix in ['html-anchor-first','html-anchor-second']:
+                for width in [375,1280]:
+                    context=browser.new_context(java_script_enabled=False,viewport={'width':width,'height':900})
+                    page=context.new_page()
+                    failures=[]
+                    page.on('requestfailed',lambda r:failures.append(r.url))
+                    url=f'http://127.0.0.1:{server.server_port}/{prefix}/docs/spec/01-architecture.html'
+                    response=page.goto(url,wait_until='networkidle')
+                    result=page.evaluate('''()=>({scripts:document.scripts.length,
+                      lang:document.querySelector('article').lang,
+                      headings:[...document.querySelectorAll('h1,h2,h3')].map(n=>n.textContent),
+                      lists:[...document.querySelectorAll('ol')].map(n=>n.children.length),
+                      codes:[...document.querySelectorAll('pre code')].map(n=>n.textContent),
+                      ids:[...document.querySelectorAll('[id]')].map(n=>n.id),
+                      ruby:document.querySelectorAll('.nepl-ruby').length, tables:[...document.querySelectorAll('table')].map(t=>({rows:t.querySelectorAll('tr').length,cells:t.querySelectorAll('th,td').length})),
+                      styles:[...document.styleSheets].map(s=>s.cssRules.length),
+                      overflow:document.documentElement.scrollWidth-innerWidth})''')
+                    assert response.status==200 and not failures
+                    assert result['scripts']==0 and result['lang']=='ja'
+                    assert '3. surface descriptorとGrammarのbootstrap' in result['headings']
+                    assert len(result['headings'])==8 and result['lists']==[] and result['tables']==[]
+                    assert result['codes']==codes and result['ruby']>0
+                    assert result['styles'] and all(result['styles']) and result['overflow']<=1
+                    assert len(result['ids'])==len(set(result['ids'])) and set(ids)<=set(result['ids'])
+                    navigation=[]
+                    for identity in ids:
+                        page.goto(url,wait_until='load')
+                        initial=page.evaluate('''id=>{const t=document.getElementById(id),max=document.documentElement.scrollHeight-innerHeight;
+                          const desired=Math.min(max,Math.max(0,t.getBoundingClientRect().top+scrollY));
+                          scrollTo(0,desired<max/2?max:0);return {desired,start:scrollY,max};}''',identity)
+                        page.goto(url+'#'+identity,wait_until='load')
+                        page.wait_for_function('''d=>Math.abs(scrollY-d.desired)<1&&Math.abs(scrollY-d.start)>1''',arg=initial)
+                        navigation.append(dict(id=identity,initial=initial,final=page.evaluate('scrollY')))
+                    page.goto(url,wait_until='load')
+                    stem=f'{name}-{prefix}-{width}'
+                    snapshot=page.locator('article').aria_snapshot()
+                    assert 'consumer -> dependency' in snapshot and 'no_std + alloc' in snapshot
+                    link=page.locator('article a[href="22-external-extensions.html"]')
+                    assert link.count()==1
+                    link.click()
+                    assert page.url.endswith('/docs/spec/22-external-extensions.html')
+                    assert page.locator('h1').count()==1
+                    result['cross_page_link']=page.url
+                    page.goto(url,wait_until='networkidle')
+                    (out/(stem+'.aria.txt')).write_text(snapshot,encoding='utf-8',newline='\n')
+                    page.screenshot(path=str(out/(stem+'.png')))
+                    result.update(browser=name,version=browser.version,width=width,prefix=prefix,
+                                  navigation=navigation,failed_requests=failures,result='passed')
+                    rows.append(result)
+                    print(stem,'passed',flush=True)
+                    context.close()
+            browser.close()
+finally:
+    server.shutdown(); server.server_close(); thread.join()
+    (out/'results.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')

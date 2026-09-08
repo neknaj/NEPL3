@@ -1,0 +1,9 @@
+from pathlib import Path
+import subprocess,os,json,hashlib
+p=Path(__file__).parent.resolve();ws=p/'workspace';b=(p/'markdown_probe.rs').read_bytes()
+(ws/'tools/tests/canonical01_review.rs').write_bytes(b)
+cmd=['cargo','test','--locked','-p','nepl3-tools','--test','canonical01_review','--','--nocapture']
+r=subprocess.run(cmd,cwd=ws,env=dict(os.environ,CARGO_TARGET_DIR=str(p/'target'),NEPL3_REVIEW_GENERATED=str(p/'markdown-first/doc/spec/01-architecture.md')),capture_output=True,timeout=300)
+(p/'markdown-probe.stdout.log').write_bytes(r.stdout);(p/'markdown-probe.stderr.log').write_bytes(r.stderr)
+(p/'markdown-probe.command.json').write_text(json.dumps(dict(command=cmd,deadline_seconds=300,head='9c5883b555ebe5e09380ea4ab20ce275d0687259',exit_code=r.returncode,probe_sha256=hashlib.sha256(b).hexdigest(),binaries=[dict(path=str(n),sha256=hashlib.sha256(n.read_bytes()).hexdigest()) for n in (p/'target/debug/deps').glob('canonical01_review-*.exe')]),indent=2)+'\n',encoding='utf8')
+print(r.stdout.decode('utf8').encode('ascii','backslashreplace').decode());print(r.stderr.decode('utf8'));assert r.returncode==0

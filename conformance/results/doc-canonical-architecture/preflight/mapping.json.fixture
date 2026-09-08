@@ -1,0 +1,66 @@
+[
+  {
+    "section": null,
+    "name": "01-repositorycrate依存方向",
+    "old_dom_id": "user-content-01-repositorycrate依存方向",
+    "heading": "01. Repository・crate・依存方向",
+    "evidence": "actual fixed GitHub server DOM; not slug inference",
+    "new_auto_id_collision": "not tested on generated Markdown"
+  },
+  {
+    "section": "policy",
+    "name": "方針",
+    "old_dom_id": "user-content-方針",
+    "heading": "方針",
+    "evidence": "actual fixed GitHub server DOM; not slug inference",
+    "new_auto_id_collision": "not tested on generated Markdown"
+  },
+  {
+    "section": "layout",
+    "name": "1-配置",
+    "old_dom_id": "user-content-1-配置",
+    "heading": "1. 配置",
+    "evidence": "actual fixed GitHub server DOM; not slug inference",
+    "new_auto_id_collision": "not tested on generated Markdown"
+  },
+  {
+    "section": "dependencies",
+    "name": "2-主な依存方向",
+    "old_dom_id": "user-content-2-主な依存方向",
+    "heading": "2. 主な依存方向",
+    "evidence": "actual fixed GitHub server DOM; not slug inference",
+    "new_auto_id_collision": "not tested on generated Markdown"
+  },
+  {
+    "section": "bootstrap",
+    "name": "3-surface-descriptorとbootstrap",
+    "old_dom_id": "user-content-3-surface-descriptorとbootstrap",
+    "heading": "3. surface descriptorとbootstrap",
+    "evidence": "actual fixed GitHub server DOM; not slug inference",
+    "new_auto_id_collision": "not tested on generated Markdown"
+  },
+  {
+    "section": "rust",
+    "name": "4-rust設定",
+    "old_dom_id": "user-content-4-rust設定",
+    "heading": "4. Rust設定",
+    "evidence": "actual fixed GitHub server DOM; not slug inference",
+    "new_auto_id_collision": "not tested on generated Markdown"
+  },
+  {
+    "section": "allowed_dependencies",
+    "name": "5-許可集合の検査",
+    "old_dom_id": "user-content-5-許可集合の検査",
+    "heading": "5. 許可集合の検査",
+    "evidence": "actual fixed GitHub server DOM; not slug inference",
+    "new_auto_id_collision": "not tested on generated Markdown"
+  },
+  {
+    "section": "current_stage",
+    "name": "現在の作業段階",
+    "old_dom_id": "user-content-現在の作業段階",
+    "heading": "現在の作業段階",
+    "evidence": "actual fixed GitHub server DOM; not slug inference",
+    "new_auto_id_collision": "not tested on generated Markdown"
+  }
+]

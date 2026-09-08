@@ -1,0 +1,43 @@
+from pathlib import Path
+from html.parser import HTMLParser
+import json,hashlib,subprocess,re
+root=Path(__file__).resolve().parents[2];out=Path(__file__).parent
+raw=root/'.tmp/github-canonical01'
+for filename in ['page.html','elements.json','results.json']:(out/filename).write_bytes((raw/filename).read_bytes())
+(out/'original-probe.py').write_bytes((root/'.tmp/github-canonical01.py').read_bytes())
+head='64deb4b080afba1872b4c33d371eeae8bc3f29c2'
+for path,name in [('doc/spec/01-architecture.md','generated.md'),('doc/migration/aliases/01-architecture.json','aliases.json')]:
+    (out/name).write_bytes(subprocess.check_output(['git','show',head+':'+path],cwd=root))
+class Reader(HTMLParser):
+    def __init__(self):super().__init__();self.scripts=[];self.active=False;self.parts=[]
+    def handle_starttag(self,t,a):
+        if t=='script' and dict(a).get('type')=='application/json':self.active=True;self.parts=[]
+    def handle_data(self,s):
+        if self.active:self.parts.append(s)
+    def handle_endtag(self,t):
+        if t=='script' and self.active:self.scripts.append(''.join(self.parts));self.active=False
+p=Reader();p.feed((out/'page.html').read_text(encoding='utf8'))
+payload=next(x['payload'] for x in map(json.loads,p.scripts) if 'codeViewBlobRoute' in x.get('payload',{}))
+lines=payload['codeViewBlobLayoutRoute.StyledBlob']['rawLines']
+assert ('\n'.join(lines)+'\n').encode()==(out/'generated.md').read_bytes()
+rich=payload['codeViewBlobRoute']['richText']
+elements=json.loads((out/'elements.json').read_text(encoding='utf8'))
+aliases=json.loads((out/'aliases.json').read_text(encoding='utf8'))
+alias=next(a for a in aliases if a['section']=='bootstrap');key='user-content-'+alias['name']
+matches=[e for e in elements if e.get('id')==key or e.get('name')==key]
+assert len(matches)==2
+assert matches[0]['name']==key and matches[0]['id']==''
+assert matches[1]['id']==key and matches[1]['name'] is None
+snippet=re.search(r'<p dir="auto"><a name="'+re.escape(key)+r'"></a></p>\s*<div class="markdown-heading"[^>]*><h2[^>]*>3\. surface descriptorとbootstrap</h2><a id="'+re.escape(key)+r'"[^>]*>',rich)
+assert snippet is not None
+(out/'adjacent-dom.html').write_text(snippet.group()+'\n',encoding='utf8',newline='\n')
+semantic='user-content-n-'+b'bootstrap'.hex()
+assert sum(e.get('id')==semantic or e.get('name')==semantic for e in elements)==1
+collisions={}
+for e in elements:
+    for key in set(filter(None,[e.get('id'),e.get('name')])):collisions[key]=collisions.get(key,0)+1
+collisions={k:v for k,v in collisions.items() if v>1}
+assert collisions=={'user-content-'+alias['name']:2}
+result={'head':head,'rawLines_exact_fixed_generated_bytes':True,'matches':matches,'collisions':collisions,'adjacent_same_bootstrap_heading':True,'stable_semantic_anchor_unique':True,'root_navigation_successes_before_stop':len(json.loads((out/'results.json').read_text(encoding='utf8'))['rows']),'independent_browser_navigation':'not executed; saved actual DOM inspected','scope':'read-only independent diagnosis, not fixed-output verification'}
+(out/'diagnosis.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf8',newline='\n')
+print('PASS: exact rawLines; unique n-bootstrap; one name/id collision adjacent to same heading')

@@ -1,0 +1,23 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-tools",
+    "--test",
+    "canonical01_review",
+    "--",
+    "--nocapture"
+  ],
+  "deadline_seconds": 300,
+  "head": "9c5883b555ebe5e09380ea4ab20ce275d0687259",
+  "exit_code": 0,
+  "probe_sha256": "a5b093d52753f436645fb78fb29a79669abbd00c0885af1bbbad0ad1c29e68da",
+  "binaries": [
+    {
+      "path": "C:\\projects\\NEPL3-doc-canonical-architecture\\.tmp\\review-canonical01-code\\target\\debug\\deps\\canonical01_review-1e7cc65a194973a4.exe",
+      "sha256": "4d417c261e07fd0b65cbd921ccaa64a25394d303f989f9081a835023bc9ced38"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "C:\projects\NEPL3-doc-canonical-architecture\.tmp\review-canonical01-code\check.py", line 73, in <module>
+    assert not h.names and not set(expected_names).intersection(h.ids)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

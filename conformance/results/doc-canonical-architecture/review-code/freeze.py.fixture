@@ -1,0 +1,33 @@
+from pathlib import Path
+import subprocess,hashlib,json
+p=Path(__file__).parent.resolve();root=p.parents[1]
+head='9c5883b555ebe5e09380ea4ab20ce275d0687259';base='14df7e9d77faa86715c4605b28a853812980c4b0'
+def git(*a):return subprocess.check_output(['git',*a],cwd=root)
+def sha(b):return hashlib.sha256(b).hexdigest()
+def put(n,b):q=p/n;q.parent.mkdir(parents=True,exist_ok=True);q.write_bytes(b)
+def js(n,v):put(n,(json.dumps(v,indent=2)+'\n').encode())
+changed=['doc/canonical.json','doc/migration/aliases/01-architecture.json','doc/migration/authored/01-architecture.nepld','doc/spec/01-architecture.md','doc/spec/01-architecture.nepld']
+assert sorted(git('diff','--no-renames','--name-only',base,head).decode().splitlines())==sorted(changed)
+names=git('ls-tree','-r','--name-only',head).decode().splitlines();names=[n for n in names if '/' not in n or n.startswith(('tools/','crates/','interfaces/','design/','doc/','languages/','conformance/fixtures/','examples/','.cargo/'))]
+proc=subprocess.Popen(['git','cat-file','--batch'],cwd=root,stdin=subprocess.PIPE,stdout=subprocess.PIPE)
+rows=[]
+for n in names:
+    proc.stdin.write((head+':'+n+'\n').encode());proc.stdin.flush();h=proc.stdout.readline().split();assert h[1]==b'blob'
+    b=proc.stdout.read(int(h[2]));assert proc.stdout.read(1)==b'\n';put('workspace/'+n,b);rows.append(dict(path=n,bytes=len(b),sha256=sha(b)))
+proc.stdin.close();assert proc.wait()==0
+scope=changed+['AGENTS.md','doc/authoring.md','doc/spec/16-doc-migration.md','doc/spec/21-doc-pages.md','tools/src/doc/canonical.rs','tools/src/doc/canonical/projection.rs','tools/src/doc/export/pages.rs','tools/src/doc/projection/annotated/pages.rs','design/forms.json','tools/audit/structure.py']
+for n in scope:
+    q=p/'workspace'/n
+    if q.exists():put('source/'+n,q.read_bytes())
+for n in changed:
+    r=subprocess.run(['git','show',base+':'+n],cwd=root,capture_output=True)
+    if r.returncode==0:put('before/'+n,r.stdout)
+put('source.patch',git('diff','--binary',base,head));put('original.md',(root/'.tmp/original.md').read_bytes())
+assert (p/'original.md').read_bytes()==(p/'before/doc/spec/01-architecture.md').read_bytes()
+prior=[]
+for label,folder in [('content',Path('C:/projects/NEPL3-doc-canonical-page-context/.tmp/review-canonical01-content')),('collision',root/'.tmp/review-canonical01-collision')]:
+    b=(folder/'manifest.json').read_bytes();put('prior/'+label+'/manifest.json',b);prior.append(dict(scope=label,manifest_sha256=sha(b)))
+    for r in json.loads(b)['files']:
+        b=(folder/r['path']).read_bytes();assert len(b)==r['bytes'] and sha(b)==r['sha256'];put('prior/'+label+'/'+r['path'],b)
+js('dependencies.json',rows);js('snapshot.json',dict(head=head,base=base,changed=changed,review_scope=scope,prior=prior))
+print('Frozen',len(rows),'Git dependencies, five exact changed paths and verified prior payloads')

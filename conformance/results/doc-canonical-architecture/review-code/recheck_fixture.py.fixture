@@ -1,0 +1,18 @@
+from pathlib import Path
+import subprocess,json,hashlib,os,time
+p=Path(__file__).parent.resolve();root=p.parents[1];ws=p/'workspace'
+def git(*a):return subprocess.check_output(['git',*a],cwd=root)
+head=git('rev-parse','652347c').decode().strip();base='9c5883b555ebe5e09380ea4ab20ce275d0687259';path='tools/tests/doc/annotated_pages.rs'
+assert git('diff','--name-only',base,head).decode().splitlines()==[path]
+before=git('show',base+':'+path);after=git('show',head+':'+path)
+assert before.replace(b'../../../doc/migration/authored/01-architecture.nepld',b'../../../doc/spec/01-architecture.nepld')==after
+for label,b in [('before',before),('after',after)]:q=p/'fixture-delta'/label/path;q.parent.mkdir(parents=True,exist_ok=True);q.write_bytes(b)
+(p/'fixture-delta/source.patch').write_bytes(git('diff',base,head));(ws/path).write_bytes(after)
+rows=[]
+for phase,args in [('compile',['--no-run']),('tests',['--','--nocapture'])]:
+    cmd=['cargo','test','--locked','-p','nepl3-tools','--test','doc','annotated_pages::']+args;start=time.monotonic()
+    r=subprocess.run(cmd,cwd=ws,env=dict(os.environ,CARGO_TARGET_DIR=str(p/'target')),capture_output=True,timeout=300)
+    (p/('fixture-'+phase+'.stdout.log')).write_bytes(r.stdout);(p/('fixture-'+phase+'.stderr.log')).write_bytes(r.stderr)
+    rows.append(dict(command=cmd,deadline_seconds=300,elapsed_seconds=time.monotonic()-start,exit_code=r.returncode))
+    (p/'fixture-delta/result.json').write_text(json.dumps(dict(head=head,base=base,path=path,sha256=hashlib.sha256(after).hexdigest(),bytes=len(after),commands=rows),indent=2)+'\n',encoding='utf8');print(phase,r.returncode,flush=True);assert r.returncode==0,r.stderr[-1500:]
+print(r.stdout.decode('utf8').encode('ascii','backslashreplace').decode(),flush=True)

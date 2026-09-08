@@ -1,0 +1,1274 @@
+[
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "01. Repository・crate・依存方向いぞんほうこう",
+      "方針ほうしん",
+      "1. 配置はいち",
+      "2. 主おもな依存方向いぞんほうこう",
+      "3. surface descriptorとGrammarのbootstrap",
+      "4. Rust設定せってい",
+      "5. 許可集合きょかしゅうごうの検査けんさ",
+      "現在げんざいの作業段階さぎょうだんかい"
+    ],
+    "lists": [],
+    "codes": [
+      "NEPL3/\n  Cargo.toml\n  Cargo.lock\n  rust-toolchain.toml\n  AGENTS.md\n  doc/\n    spec/\n    decisions/\n    history/\n  design/\n  interfaces/\n  languages/\n    grammar/ syntax.neplg package.ndf\n    doc/     syntax.neplg package.ndf\n    math/    syntax.neplg package.ndf\n    circuit/ syntax.neplg package.ndf\n  crates/\n    foundation/\n      core/src/       source/ schema/ value/ syntax/ origin/ diagnostic/ budget/\n      reader/src/     plan/ combinator/ execution/ extension/\n      engine/src/     parse/ binding/ index/ query/ recovery/\n      wire/src/       cbor/ schema/ protocol/\n    languages/\n      grammar/core/src/ bootstrap/ model/ check/ compile/\n      doc/core/src/     model/ sentence/ lower/ check/ facts/\n      doc/html/src/     render/ style/\n      math/core/src/    model/ number/ lower/ check/ evaluate/ facts/\n      math/mathml/src/  render/ precedence/\n      circuit/core/src/ model/ lower/ check/ elaborate/ simulate/ nor/ facts/\n      circuit/svg/src/  layout/ render/\n    output/markup/src/  model/ validate/ serialize/\n    integration/suite/src/ profile/ bridge/ operation/ workspace/\n    ui/core/src/ model/ message/ update/ command/ subscription/ view/\n  apps/ cli/ lsp/ web/ provider/\n  web/src/ shell/ editor/ worker/ preview/ storage/ bindings/\n  site/\n  editors/ vscode/ neovim/\n  tools/src/ generate/ contract/ dependency/ task/\n  examples/\n  conformance/\n  tasks/\n",
+      "reader -> core\nengine -> core, reader\ngrammar-core -> core, reader, engine\ndoc-core -> core\nmath-core -> core\ncircuit-core -> core\nmarkup -> core\ndoc-html -> doc-core, markup, core\nmath-tex -> math-core, core\nmath-mathml -> math-core, markup, core\ncircuit-svg -> circuit-core, markup, core\nsuite -> engine, reader, grammar-core, domain cores, output backends, core\nwire -> core\nui-core -> core (公開操作のデータ契約のみ)\napps -> suite, core (+ wire where required, web -> ui-core)\ntools -> grammar-core, suite, foundation\n"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-6c61796f7574",
+      "n-646570656e64656e63696573",
+      "n-626f6f747374726170",
+      "n-72757374",
+      "n-616c6c6f7765645f646570656e64656e63696573",
+      "n-63757272656e745f7374616765"
+    ],
+    "ruby": 216,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "cross_page_link": "http://127.0.0.1:54873/html-anchor-first/docs/spec/22-external-extensions.html",
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 375,
+    "prefix": "html-anchor-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 199.671875,
+          "start": 6239,
+          "max": 6239
+        },
+        "final": 200
+      },
+      {
+        "id": "n-6c61796f7574",
+        "initial": {
+          "desired": 601.53125,
+          "start": 6239,
+          "max": 6239
+        },
+        "final": 602
+      },
+      {
+        "id": "n-646570656e64656e63696573",
+        "initial": {
+          "desired": 1980.078125,
+          "start": 6239,
+          "max": 6239
+        },
+        "final": 1980
+      },
+      {
+        "id": "n-626f6f747374726170",
+        "initial": {
+          "desired": 3670.84375,
+          "start": 0,
+          "max": 6239
+        },
+        "final": 3671
+      },
+      {
+        "id": "n-72757374",
+        "initial": {
+          "desired": 4485.125,
+          "start": 0,
+          "max": 6239
+        },
+        "final": 4485
+      },
+      {
+        "id": "n-616c6c6f7765645f646570656e64656e63696573",
+        "initial": {
+          "desired": 5693.84375,
+          "start": 0,
+          "max": 6239
+        },
+        "final": 5694
+      },
+      {
+        "id": "n-63757272656e745f7374616765",
+        "initial": {
+          "desired": 6239,
+          "start": 0,
+          "max": 6239
+        },
+        "final": 6239
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "01. Repository・crate・依存方向いぞんほうこう",
+      "方針ほうしん",
+      "1. 配置はいち",
+      "2. 主おもな依存方向いぞんほうこう",
+      "3. surface descriptorとGrammarのbootstrap",
+      "4. Rust設定せってい",
+      "5. 許可集合きょかしゅうごうの検査けんさ",
+      "現在げんざいの作業段階さぎょうだんかい"
+    ],
+    "lists": [],
+    "codes": [
+      "NEPL3/\n  Cargo.toml\n  Cargo.lock\n  rust-toolchain.toml\n  AGENTS.md\n  doc/\n    spec/\n    decisions/\n    history/\n  design/\n  interfaces/\n  languages/\n    grammar/ syntax.neplg package.ndf\n    doc/     syntax.neplg package.ndf\n    math/    syntax.neplg package.ndf\n    circuit/ syntax.neplg package.ndf\n  crates/\n    foundation/\n      core/src/       source/ schema/ value/ syntax/ origin/ diagnostic/ budget/\n      reader/src/     plan/ combinator/ execution/ extension/\n      engine/src/     parse/ binding/ index/ query/ recovery/\n      wire/src/       cbor/ schema/ protocol/\n    languages/\n      grammar/core/src/ bootstrap/ model/ check/ compile/\n      doc/core/src/     model/ sentence/ lower/ check/ facts/\n      doc/html/src/     render/ style/\n      math/core/src/    model/ number/ lower/ check/ evaluate/ facts/\n      math/mathml/src/  render/ precedence/\n      circuit/core/src/ model/ lower/ check/ elaborate/ simulate/ nor/ facts/\n      circuit/svg/src/  layout/ render/\n    output/markup/src/  model/ validate/ serialize/\n    integration/suite/src/ profile/ bridge/ operation/ workspace/\n    ui/core/src/ model/ message/ update/ command/ subscription/ view/\n  apps/ cli/ lsp/ web/ provider/\n  web/src/ shell/ editor/ worker/ preview/ storage/ bindings/\n  site/\n  editors/ vscode/ neovim/\n  tools/src/ generate/ contract/ dependency/ task/\n  examples/\n  conformance/\n  tasks/\n",
+      "reader -> core\nengine -> core, reader\ngrammar-core -> core, reader, engine\ndoc-core -> core\nmath-core -> core\ncircuit-core -> core\nmarkup -> core\ndoc-html -> doc-core, markup, core\nmath-tex -> math-core, core\nmath-mathml -> math-core, markup, core\ncircuit-svg -> circuit-core, markup, core\nsuite -> engine, reader, grammar-core, domain cores, output backends, core\nwire -> core\nui-core -> core (公開操作のデータ契約のみ)\napps -> suite, core (+ wire where required, web -> ui-core)\ntools -> grammar-core, suite, foundation\n"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-6c61796f7574",
+      "n-646570656e64656e63696573",
+      "n-626f6f747374726170",
+      "n-72757374",
+      "n-616c6c6f7765645f646570656e64656e63696573",
+      "n-63757272656e745f7374616765"
+    ],
+    "ruby": 216,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "cross_page_link": "http://127.0.0.1:54873/html-anchor-first/docs/spec/22-external-extensions.html",
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 1280,
+    "prefix": "html-anchor-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.671875,
+          "start": 2988,
+          "max": 2988
+        },
+        "final": 152
+      },
+      {
+        "id": "n-6c61796f7574",
+        "initial": {
+          "desired": 369.28125,
+          "start": 2988,
+          "max": 2988
+        },
+        "final": 369
+      },
+      {
+        "id": "n-646570656e64656e63696573",
+        "initial": {
+          "desired": 1609.640625,
+          "start": 0,
+          "max": 2988
+        },
+        "final": 1610
+      },
+      {
+        "id": "n-626f6f747374726170",
+        "initial": {
+          "desired": 2557.609375,
+          "start": 0,
+          "max": 2988
+        },
+        "final": 2558
+      },
+      {
+        "id": "n-72757374",
+        "initial": {
+          "desired": 2817.671875,
+          "start": 0,
+          "max": 2988
+        },
+        "final": 2818
+      },
+      {
+        "id": "n-616c6c6f7765645f646570656e64656e63696573",
+        "initial": {
+          "desired": 2988,
+          "start": 0,
+          "max": 2988
+        },
+        "final": 2988
+      },
+      {
+        "id": "n-63757272656e745f7374616765",
+        "initial": {
+          "desired": 2988,
+          "start": 0,
+          "max": 2988
+        },
+        "final": 2988
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "01. Repository・crate・依存方向いぞんほうこう",
+      "方針ほうしん",
+      "1. 配置はいち",
+      "2. 主おもな依存方向いぞんほうこう",
+      "3. surface descriptorとGrammarのbootstrap",
+      "4. Rust設定せってい",
+      "5. 許可集合きょかしゅうごうの検査けんさ",
+      "現在げんざいの作業段階さぎょうだんかい"
+    ],
+    "lists": [],
+    "codes": [
+      "NEPL3/\n  Cargo.toml\n  Cargo.lock\n  rust-toolchain.toml\n  AGENTS.md\n  doc/\n    spec/\n    decisions/\n    history/\n  design/\n  interfaces/\n  languages/\n    grammar/ syntax.neplg package.ndf\n    doc/     syntax.neplg package.ndf\n    math/    syntax.neplg package.ndf\n    circuit/ syntax.neplg package.ndf\n  crates/\n    foundation/\n      core/src/       source/ schema/ value/ syntax/ origin/ diagnostic/ budget/\n      reader/src/     plan/ combinator/ execution/ extension/\n      engine/src/     parse/ binding/ index/ query/ recovery/\n      wire/src/       cbor/ schema/ protocol/\n    languages/\n      grammar/core/src/ bootstrap/ model/ check/ compile/\n      doc/core/src/     model/ sentence/ lower/ check/ facts/\n      doc/html/src/     render/ style/\n      math/core/src/    model/ number/ lower/ check/ evaluate/ facts/\n      math/mathml/src/  render/ precedence/\n      circuit/core/src/ model/ lower/ check/ elaborate/ simulate/ nor/ facts/\n      circuit/svg/src/  layout/ render/\n    output/markup/src/  model/ validate/ serialize/\n    integration/suite/src/ profile/ bridge/ operation/ workspace/\n    ui/core/src/ model/ message/ update/ command/ subscription/ view/\n  apps/ cli/ lsp/ web/ provider/\n  web/src/ shell/ editor/ worker/ preview/ storage/ bindings/\n  site/\n  editors/ vscode/ neovim/\n  tools/src/ generate/ contract/ dependency/ task/\n  examples/\n  conformance/\n  tasks/\n",
+      "reader -> core\nengine -> core, reader\ngrammar-core -> core, reader, engine\ndoc-core -> core\nmath-core -> core\ncircuit-core -> core\nmarkup -> core\ndoc-html -> doc-core, markup, core\nmath-tex -> math-core, core\nmath-mathml -> math-core, markup, core\ncircuit-svg -> circuit-core, markup, core\nsuite -> engine, reader, grammar-core, domain cores, output backends, core\nwire -> core\nui-core -> core (公開操作のデータ契約のみ)\napps -> suite, core (+ wire where required, web -> ui-core)\ntools -> grammar-core, suite, foundation\n"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-6c61796f7574",
+      "n-646570656e64656e63696573",
+      "n-626f6f747374726170",
+      "n-72757374",
+      "n-616c6c6f7765645f646570656e64656e63696573",
+      "n-63757272656e745f7374616765"
+    ],
+    "ruby": 216,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "cross_page_link": "http://127.0.0.1:54873/html-anchor-second/docs/spec/22-external-extensions.html",
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 375,
+    "prefix": "html-anchor-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 199.671875,
+          "start": 6239,
+          "max": 6239
+        },
+        "final": 200
+      },
+      {
+        "id": "n-6c61796f7574",
+        "initial": {
+          "desired": 601.53125,
+          "start": 6239,
+          "max": 6239
+        },
+        "final": 602
+      },
+      {
+        "id": "n-646570656e64656e63696573",
+        "initial": {
+          "desired": 1980.078125,
+          "start": 6239,
+          "max": 6239
+        },
+        "final": 1980
+      },
+      {
+        "id": "n-626f6f747374726170",
+        "initial": {
+          "desired": 3670.84375,
+          "start": 0,
+          "max": 6239
+        },
+        "final": 3671
+      },
+      {
+        "id": "n-72757374",
+        "initial": {
+          "desired": 4485.125,
+          "start": 0,
+          "max": 6239
+        },
+        "final": 4485
+      },
+      {
+        "id": "n-616c6c6f7765645f646570656e64656e63696573",
+        "initial": {
+          "desired": 5693.84375,
+          "start": 0,
+          "max": 6239
+        },
+        "final": 5694
+      },
+      {
+        "id": "n-63757272656e745f7374616765",
+        "initial": {
+          "desired": 6239,
+          "start": 0,
+          "max": 6239
+        },
+        "final": 6239
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "01. Repository・crate・依存方向いぞんほうこう",
+      "方針ほうしん",
+      "1. 配置はいち",
+      "2. 主おもな依存方向いぞんほうこう",
+      "3. surface descriptorとGrammarのbootstrap",
+      "4. Rust設定せってい",
+      "5. 許可集合きょかしゅうごうの検査けんさ",
+      "現在げんざいの作業段階さぎょうだんかい"
+    ],
+    "lists": [],
+    "codes": [
+      "NEPL3/\n  Cargo.toml\n  Cargo.lock\n  rust-toolchain.toml\n  AGENTS.md\n  doc/\n    spec/\n    decisions/\n    history/\n  design/\n  interfaces/\n  languages/\n    grammar/ syntax.neplg package.ndf\n    doc/     syntax.neplg package.ndf\n    math/    syntax.neplg package.ndf\n    circuit/ syntax.neplg package.ndf\n  crates/\n    foundation/\n      core/src/       source/ schema/ value/ syntax/ origin/ diagnostic/ budget/\n      reader/src/     plan/ combinator/ execution/ extension/\n      engine/src/     parse/ binding/ index/ query/ recovery/\n      wire/src/       cbor/ schema/ protocol/\n    languages/\n      grammar/core/src/ bootstrap/ model/ check/ compile/\n      doc/core/src/     model/ sentence/ lower/ check/ facts/\n      doc/html/src/     render/ style/\n      math/core/src/    model/ number/ lower/ check/ evaluate/ facts/\n      math/mathml/src/  render/ precedence/\n      circuit/core/src/ model/ lower/ check/ elaborate/ simulate/ nor/ facts/\n      circuit/svg/src/  layout/ render/\n    output/markup/src/  model/ validate/ serialize/\n    integration/suite/src/ profile/ bridge/ operation/ workspace/\n    ui/core/src/ model/ message/ update/ command/ subscription/ view/\n  apps/ cli/ lsp/ web/ provider/\n  web/src/ shell/ editor/ worker/ preview/ storage/ bindings/\n  site/\n  editors/ vscode/ neovim/\n  tools/src/ generate/ contract/ dependency/ task/\n  examples/\n  conformance/\n  tasks/\n",
+      "reader -> core\nengine -> core, reader\ngrammar-core -> core, reader, engine\ndoc-core -> core\nmath-core -> core\ncircuit-core -> core\nmarkup -> core\ndoc-html -> doc-core, markup, core\nmath-tex -> math-core, core\nmath-mathml -> math-core, markup, core\ncircuit-svg -> circuit-core, markup, core\nsuite -> engine, reader, grammar-core, domain cores, output backends, core\nwire -> core\nui-core -> core (公開操作のデータ契約のみ)\napps -> suite, core (+ wire where required, web -> ui-core)\ntools -> grammar-core, suite, foundation\n"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-6c61796f7574",
+      "n-646570656e64656e63696573",
+      "n-626f6f747374726170",
+      "n-72757374",
+      "n-616c6c6f7765645f646570656e64656e63696573",
+      "n-63757272656e745f7374616765"
+    ],
+    "ruby": 216,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "cross_page_link": "http://127.0.0.1:54873/html-anchor-second/docs/spec/22-external-extensions.html",
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 1280,
+    "prefix": "html-anchor-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.671875,
+          "start": 2988,
+          "max": 2988
+        },
+        "final": 152
+      },
+      {
+        "id": "n-6c61796f7574",
+        "initial": {
+          "desired": 369.28125,
+          "start": 2988,
+          "max": 2988
+        },
+        "final": 369
+      },
+      {
+        "id": "n-646570656e64656e63696573",
+        "initial": {
+          "desired": 1609.640625,
+          "start": 0,
+          "max": 2988
+        },
+        "final": 1610
+      },
+      {
+        "id": "n-626f6f747374726170",
+        "initial": {
+          "desired": 2557.609375,
+          "start": 0,
+          "max": 2988
+        },
+        "final": 2558
+      },
+      {
+        "id": "n-72757374",
+        "initial": {
+          "desired": 2817.671875,
+          "start": 0,
+          "max": 2988
+        },
+        "final": 2818
+      },
+      {
+        "id": "n-616c6c6f7765645f646570656e64656e63696573",
+        "initial": {
+          "desired": 2988,
+          "start": 0,
+          "max": 2988
+        },
+        "final": 2988
+      },
+      {
+        "id": "n-63757272656e745f7374616765",
+        "initial": {
+          "desired": 2988,
+          "start": 0,
+          "max": 2988
+        },
+        "final": 2988
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "01. Repository・crate・依存方向いぞんほうこう",
+      "方針ほうしん",
+      "1. 配置はいち",
+      "2. 主おもな依存方向いぞんほうこう",
+      "3. surface descriptorとGrammarのbootstrap",
+      "4. Rust設定せってい",
+      "5. 許可集合きょかしゅうごうの検査けんさ",
+      "現在げんざいの作業段階さぎょうだんかい"
+    ],
+    "lists": [],
+    "codes": [
+      "NEPL3/\n  Cargo.toml\n  Cargo.lock\n  rust-toolchain.toml\n  AGENTS.md\n  doc/\n    spec/\n    decisions/\n    history/\n  design/\n  interfaces/\n  languages/\n    grammar/ syntax.neplg package.ndf\n    doc/     syntax.neplg package.ndf\n    math/    syntax.neplg package.ndf\n    circuit/ syntax.neplg package.ndf\n  crates/\n    foundation/\n      core/src/       source/ schema/ value/ syntax/ origin/ diagnostic/ budget/\n      reader/src/     plan/ combinator/ execution/ extension/\n      engine/src/     parse/ binding/ index/ query/ recovery/\n      wire/src/       cbor/ schema/ protocol/\n    languages/\n      grammar/core/src/ bootstrap/ model/ check/ compile/\n      doc/core/src/     model/ sentence/ lower/ check/ facts/\n      doc/html/src/     render/ style/\n      math/core/src/    model/ number/ lower/ check/ evaluate/ facts/\n      math/mathml/src/  render/ precedence/\n      circuit/core/src/ model/ lower/ check/ elaborate/ simulate/ nor/ facts/\n      circuit/svg/src/  layout/ render/\n    output/markup/src/  model/ validate/ serialize/\n    integration/suite/src/ profile/ bridge/ operation/ workspace/\n    ui/core/src/ model/ message/ update/ command/ subscription/ view/\n  apps/ cli/ lsp/ web/ provider/\n  web/src/ shell/ editor/ worker/ preview/ storage/ bindings/\n  site/\n  editors/ vscode/ neovim/\n  tools/src/ generate/ contract/ dependency/ task/\n  examples/\n  conformance/\n  tasks/\n",
+      "reader -> core\nengine -> core, reader\ngrammar-core -> core, reader, engine\ndoc-core -> core\nmath-core -> core\ncircuit-core -> core\nmarkup -> core\ndoc-html -> doc-core, markup, core\nmath-tex -> math-core, core\nmath-mathml -> math-core, markup, core\ncircuit-svg -> circuit-core, markup, core\nsuite -> engine, reader, grammar-core, domain cores, output backends, core\nwire -> core\nui-core -> core (公開操作のデータ契約のみ)\napps -> suite, core (+ wire where required, web -> ui-core)\ntools -> grammar-core, suite, foundation\n"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-6c61796f7574",
+      "n-646570656e64656e63696573",
+      "n-626f6f747374726170",
+      "n-72757374",
+      "n-616c6c6f7765645f646570656e64656e63696573",
+      "n-63757272656e745f7374616765"
+    ],
+    "ruby": 216,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "cross_page_link": "http://127.0.0.1:54873/html-anchor-first/docs/spec/22-external-extensions.html",
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 375,
+    "prefix": "html-anchor-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 199.6666717529297,
+          "start": 6574,
+          "max": 6574
+        },
+        "final": 200
+      },
+      {
+        "id": "n-6c61796f7574",
+        "initial": {
+          "desired": 603.25,
+          "start": 6574,
+          "max": 6574
+        },
+        "final": 603.25
+      },
+      {
+        "id": "n-646570656e64656e63696573",
+        "initial": {
+          "desired": 2210.699951171875,
+          "start": 6574,
+          "max": 6574
+        },
+        "final": 2210.699951171875
+      },
+      {
+        "id": "n-626f6f747374726170",
+        "initial": {
+          "desired": 4012.7666015625,
+          "start": 0,
+          "max": 6574
+        },
+        "final": 4013
+      },
+      {
+        "id": "n-72757374",
+        "initial": {
+          "desired": 4813.08349609375,
+          "start": 0,
+          "max": 6574
+        },
+        "final": 4813.08349609375
+      },
+      {
+        "id": "n-616c6c6f7765645f646570656e64656e63696573",
+        "initial": {
+          "desired": 6027.2666015625,
+          "start": 0,
+          "max": 6574
+        },
+        "final": 6027.2666015625
+      },
+      {
+        "id": "n-63757272656e745f7374616765",
+        "initial": {
+          "desired": 6574,
+          "start": 0,
+          "max": 6574
+        },
+        "final": 6574
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "01. Repository・crate・依存方向いぞんほうこう",
+      "方針ほうしん",
+      "1. 配置はいち",
+      "2. 主おもな依存方向いぞんほうこう",
+      "3. surface descriptorとGrammarのbootstrap",
+      "4. Rust設定せってい",
+      "5. 許可集合きょかしゅうごうの検査けんさ",
+      "現在げんざいの作業段階さぎょうだんかい"
+    ],
+    "lists": [],
+    "codes": [
+      "NEPL3/\n  Cargo.toml\n  Cargo.lock\n  rust-toolchain.toml\n  AGENTS.md\n  doc/\n    spec/\n    decisions/\n    history/\n  design/\n  interfaces/\n  languages/\n    grammar/ syntax.neplg package.ndf\n    doc/     syntax.neplg package.ndf\n    math/    syntax.neplg package.ndf\n    circuit/ syntax.neplg package.ndf\n  crates/\n    foundation/\n      core/src/       source/ schema/ value/ syntax/ origin/ diagnostic/ budget/\n      reader/src/     plan/ combinator/ execution/ extension/\n      engine/src/     parse/ binding/ index/ query/ recovery/\n      wire/src/       cbor/ schema/ protocol/\n    languages/\n      grammar/core/src/ bootstrap/ model/ check/ compile/\n      doc/core/src/     model/ sentence/ lower/ check/ facts/\n      doc/html/src/     render/ style/\n      math/core/src/    model/ number/ lower/ check/ evaluate/ facts/\n      math/mathml/src/  render/ precedence/\n      circuit/core/src/ model/ lower/ check/ elaborate/ simulate/ nor/ facts/\n      circuit/svg/src/  layout/ render/\n    output/markup/src/  model/ validate/ serialize/\n    integration/suite/src/ profile/ bridge/ operation/ workspace/\n    ui/core/src/ model/ message/ update/ command/ subscription/ view/\n  apps/ cli/ lsp/ web/ provider/\n  web/src/ shell/ editor/ worker/ preview/ storage/ bindings/\n  site/\n  editors/ vscode/ neovim/\n  tools/src/ generate/ contract/ dependency/ task/\n  examples/\n  conformance/\n  tasks/\n",
+      "reader -> core\nengine -> core, reader\ngrammar-core -> core, reader, engine\ndoc-core -> core\nmath-core -> core\ncircuit-core -> core\nmarkup -> core\ndoc-html -> doc-core, markup, core\nmath-tex -> math-core, core\nmath-mathml -> math-core, markup, core\ncircuit-svg -> circuit-core, markup, core\nsuite -> engine, reader, grammar-core, domain cores, output backends, core\nwire -> core\nui-core -> core (公開操作のデータ契約のみ)\napps -> suite, core (+ wire where required, web -> ui-core)\ntools -> grammar-core, suite, foundation\n"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-6c61796f7574",
+      "n-646570656e64656e63696573",
+      "n-626f6f747374726170",
+      "n-72757374",
+      "n-616c6c6f7765645f646570656e64656e63696573",
+      "n-63757272656e745f7374616765"
+    ],
+    "ruby": 216,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "cross_page_link": "http://127.0.0.1:54873/html-anchor-first/docs/spec/22-external-extensions.html",
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 1280,
+    "prefix": "html-anchor-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.6666717529297,
+          "start": 3316,
+          "max": 3316
+        },
+        "final": 152
+      },
+      {
+        "id": "n-6c61796f7574",
+        "initial": {
+          "desired": 369.91668701171875,
+          "start": 3316,
+          "max": 3316
+        },
+        "final": 369.9166564941406
+      },
+      {
+        "id": "n-646570656e64656e63696573",
+        "initial": {
+          "desired": 1837.11669921875,
+          "start": 0,
+          "max": 3316
+        },
+        "final": 1837.11669921875
+      },
+      {
+        "id": "n-626f6f747374726170",
+        "initial": {
+          "desired": 2878.816650390625,
+          "start": 0,
+          "max": 3316
+        },
+        "final": 2879
+      },
+      {
+        "id": "n-72757374",
+        "initial": {
+          "desired": 3140.9833984375,
+          "start": 0,
+          "max": 3316
+        },
+        "final": 3141
+      },
+      {
+        "id": "n-616c6c6f7765645f646570656e64656e63696573",
+        "initial": {
+          "desired": 3316,
+          "start": 0,
+          "max": 3316
+        },
+        "final": 3316
+      },
+      {
+        "id": "n-63757272656e745f7374616765",
+        "initial": {
+          "desired": 3316,
+          "start": 0,
+          "max": 3316
+        },
+        "final": 3316
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "01. Repository・crate・依存方向いぞんほうこう",
+      "方針ほうしん",
+      "1. 配置はいち",
+      "2. 主おもな依存方向いぞんほうこう",
+      "3. surface descriptorとGrammarのbootstrap",
+      "4. Rust設定せってい",
+      "5. 許可集合きょかしゅうごうの検査けんさ",
+      "現在げんざいの作業段階さぎょうだんかい"
+    ],
+    "lists": [],
+    "codes": [
+      "NEPL3/\n  Cargo.toml\n  Cargo.lock\n  rust-toolchain.toml\n  AGENTS.md\n  doc/\n    spec/\n    decisions/\n    history/\n  design/\n  interfaces/\n  languages/\n    grammar/ syntax.neplg package.ndf\n    doc/     syntax.neplg package.ndf\n    math/    syntax.neplg package.ndf\n    circuit/ syntax.neplg package.ndf\n  crates/\n    foundation/\n      core/src/       source/ schema/ value/ syntax/ origin/ diagnostic/ budget/\n      reader/src/     plan/ combinator/ execution/ extension/\n      engine/src/     parse/ binding/ index/ query/ recovery/\n      wire/src/       cbor/ schema/ protocol/\n    languages/\n      grammar/core/src/ bootstrap/ model/ check/ compile/\n      doc/core/src/     model/ sentence/ lower/ check/ facts/\n      doc/html/src/     render/ style/\n      math/core/src/    model/ number/ lower/ check/ evaluate/ facts/\n      math/mathml/src/  render/ precedence/\n      circuit/core/src/ model/ lower/ check/ elaborate/ simulate/ nor/ facts/\n      circuit/svg/src/  layout/ render/\n    output/markup/src/  model/ validate/ serialize/\n    integration/suite/src/ profile/ bridge/ operation/ workspace/\n    ui/core/src/ model/ message/ update/ command/ subscription/ view/\n  apps/ cli/ lsp/ web/ provider/\n  web/src/ shell/ editor/ worker/ preview/ storage/ bindings/\n  site/\n  editors/ vscode/ neovim/\n  tools/src/ generate/ contract/ dependency/ task/\n  examples/\n  conformance/\n  tasks/\n",
+      "reader -> core\nengine -> core, reader\ngrammar-core -> core, reader, engine\ndoc-core -> core\nmath-core -> core\ncircuit-core -> core\nmarkup -> core\ndoc-html -> doc-core, markup, core\nmath-tex -> math-core, core\nmath-mathml -> math-core, markup, core\ncircuit-svg -> circuit-core, markup, core\nsuite -> engine, reader, grammar-core, domain cores, output backends, core\nwire -> core\nui-core -> core (公開操作のデータ契約のみ)\napps -> suite, core (+ wire where required, web -> ui-core)\ntools -> grammar-core, suite, foundation\n"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-6c61796f7574",
+      "n-646570656e64656e63696573",
+      "n-626f6f747374726170",
+      "n-72757374",
+      "n-616c6c6f7765645f646570656e64656e63696573",
+      "n-63757272656e745f7374616765"
+    ],
+    "ruby": 216,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "cross_page_link": "http://127.0.0.1:54873/html-anchor-second/docs/spec/22-external-extensions.html",
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 375,
+    "prefix": "html-anchor-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 199.6666717529297,
+          "start": 6574,
+          "max": 6574
+        },
+        "final": 200
+      },
+      {
+        "id": "n-6c61796f7574",
+        "initial": {
+          "desired": 603.25,
+          "start": 6574,
+          "max": 6574
+        },
+        "final": 603.25
+      },
+      {
+        "id": "n-646570656e64656e63696573",
+        "initial": {
+          "desired": 2210.699951171875,
+          "start": 6574,
+          "max": 6574
+        },
+        "final": 2210.699951171875
+      },
+      {
+        "id": "n-626f6f747374726170",
+        "initial": {
+          "desired": 4012.7666015625,
+          "start": 0,
+          "max": 6574
+        },
+        "final": 4013
+      },
+      {
+        "id": "n-72757374",
+        "initial": {
+          "desired": 4813.08349609375,
+          "start": 0,
+          "max": 6574
+        },
+        "final": 4813.08349609375
+      },
+      {
+        "id": "n-616c6c6f7765645f646570656e64656e63696573",
+        "initial": {
+          "desired": 6027.2666015625,
+          "start": 0,
+          "max": 6574
+        },
+        "final": 6027.2666015625
+      },
+      {
+        "id": "n-63757272656e745f7374616765",
+        "initial": {
+          "desired": 6574,
+          "start": 0,
+          "max": 6574
+        },
+        "final": 6574
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "01. Repository・crate・依存方向いぞんほうこう",
+      "方針ほうしん",
+      "1. 配置はいち",
+      "2. 主おもな依存方向いぞんほうこう",
+      "3. surface descriptorとGrammarのbootstrap",
+      "4. Rust設定せってい",
+      "5. 許可集合きょかしゅうごうの検査けんさ",
+      "現在げんざいの作業段階さぎょうだんかい"
+    ],
+    "lists": [],
+    "codes": [
+      "NEPL3/\n  Cargo.toml\n  Cargo.lock\n  rust-toolchain.toml\n  AGENTS.md\n  doc/\n    spec/\n    decisions/\n    history/\n  design/\n  interfaces/\n  languages/\n    grammar/ syntax.neplg package.ndf\n    doc/     syntax.neplg package.ndf\n    math/    syntax.neplg package.ndf\n    circuit/ syntax.neplg package.ndf\n  crates/\n    foundation/\n      core/src/       source/ schema/ value/ syntax/ origin/ diagnostic/ budget/\n      reader/src/     plan/ combinator/ execution/ extension/\n      engine/src/     parse/ binding/ index/ query/ recovery/\n      wire/src/       cbor/ schema/ protocol/\n    languages/\n      grammar/core/src/ bootstrap/ model/ check/ compile/\n      doc/core/src/     model/ sentence/ lower/ check/ facts/\n      doc/html/src/     render/ style/\n      math/core/src/    model/ number/ lower/ check/ evaluate/ facts/\n      math/mathml/src/  render/ precedence/\n      circuit/core/src/ model/ lower/ check/ elaborate/ simulate/ nor/ facts/\n      circuit/svg/src/  layout/ render/\n    output/markup/src/  model/ validate/ serialize/\n    integration/suite/src/ profile/ bridge/ operation/ workspace/\n    ui/core/src/ model/ message/ update/ command/ subscription/ view/\n  apps/ cli/ lsp/ web/ provider/\n  web/src/ shell/ editor/ worker/ preview/ storage/ bindings/\n  site/\n  editors/ vscode/ neovim/\n  tools/src/ generate/ contract/ dependency/ task/\n  examples/\n  conformance/\n  tasks/\n",
+      "reader -> core\nengine -> core, reader\ngrammar-core -> core, reader, engine\ndoc-core -> core\nmath-core -> core\ncircuit-core -> core\nmarkup -> core\ndoc-html -> doc-core, markup, core\nmath-tex -> math-core, core\nmath-mathml -> math-core, markup, core\ncircuit-svg -> circuit-core, markup, core\nsuite -> engine, reader, grammar-core, domain cores, output backends, core\nwire -> core\nui-core -> core (公開操作のデータ契約のみ)\napps -> suite, core (+ wire where required, web -> ui-core)\ntools -> grammar-core, suite, foundation\n"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-6c61796f7574",
+      "n-646570656e64656e63696573",
+      "n-626f6f747374726170",
+      "n-72757374",
+      "n-616c6c6f7765645f646570656e64656e63696573",
+      "n-63757272656e745f7374616765"
+    ],
+    "ruby": 216,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "cross_page_link": "http://127.0.0.1:54873/html-anchor-second/docs/spec/22-external-extensions.html",
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 1280,
+    "prefix": "html-anchor-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.6666717529297,
+          "start": 3316,
+          "max": 3316
+        },
+        "final": 152
+      },
+      {
+        "id": "n-6c61796f7574",
+        "initial": {
+          "desired": 369.91668701171875,
+          "start": 3316,
+          "max": 3316
+        },
+        "final": 369.9166564941406
+      },
+      {
+        "id": "n-646570656e64656e63696573",
+        "initial": {
+          "desired": 1837.11669921875,
+          "start": 0,
+          "max": 3316
+        },
+        "final": 1837.11669921875
+      },
+      {
+        "id": "n-626f6f747374726170",
+        "initial": {
+          "desired": 2878.816650390625,
+          "start": 0,
+          "max": 3316
+        },
+        "final": 2879
+      },
+      {
+        "id": "n-72757374",
+        "initial": {
+          "desired": 3140.9833984375,
+          "start": 0,
+          "max": 3316
+        },
+        "final": 3141
+      },
+      {
+        "id": "n-616c6c6f7765645f646570656e64656e63696573",
+        "initial": {
+          "desired": 3316,
+          "start": 0,
+          "max": 3316
+        },
+        "final": 3316
+      },
+      {
+        "id": "n-63757272656e745f7374616765",
+        "initial": {
+          "desired": 3316,
+          "start": 0,
+          "max": 3316
+        },
+        "final": 3316
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "01. Repository・crate・依存方向いぞんほうこう",
+      "方針ほうしん",
+      "1. 配置はいち",
+      "2. 主おもな依存方向いぞんほうこう",
+      "3. surface descriptorとGrammarのbootstrap",
+      "4. Rust設定せってい",
+      "5. 許可集合きょかしゅうごうの検査けんさ",
+      "現在げんざいの作業段階さぎょうだんかい"
+    ],
+    "lists": [],
+    "codes": [
+      "NEPL3/\n  Cargo.toml\n  Cargo.lock\n  rust-toolchain.toml\n  AGENTS.md\n  doc/\n    spec/\n    decisions/\n    history/\n  design/\n  interfaces/\n  languages/\n    grammar/ syntax.neplg package.ndf\n    doc/     syntax.neplg package.ndf\n    math/    syntax.neplg package.ndf\n    circuit/ syntax.neplg package.ndf\n  crates/\n    foundation/\n      core/src/       source/ schema/ value/ syntax/ origin/ diagnostic/ budget/\n      reader/src/     plan/ combinator/ execution/ extension/\n      engine/src/     parse/ binding/ index/ query/ recovery/\n      wire/src/       cbor/ schema/ protocol/\n    languages/\n      grammar/core/src/ bootstrap/ model/ check/ compile/\n      doc/core/src/     model/ sentence/ lower/ check/ facts/\n      doc/html/src/     render/ style/\n      math/core/src/    model/ number/ lower/ check/ evaluate/ facts/\n      math/mathml/src/  render/ precedence/\n      circuit/core/src/ model/ lower/ check/ elaborate/ simulate/ nor/ facts/\n      circuit/svg/src/  layout/ render/\n    output/markup/src/  model/ validate/ serialize/\n    integration/suite/src/ profile/ bridge/ operation/ workspace/\n    ui/core/src/ model/ message/ update/ command/ subscription/ view/\n  apps/ cli/ lsp/ web/ provider/\n  web/src/ shell/ editor/ worker/ preview/ storage/ bindings/\n  site/\n  editors/ vscode/ neovim/\n  tools/src/ generate/ contract/ dependency/ task/\n  examples/\n  conformance/\n  tasks/\n",
+      "reader -> core\nengine -> core, reader\ngrammar-core -> core, reader, engine\ndoc-core -> core\nmath-core -> core\ncircuit-core -> core\nmarkup -> core\ndoc-html -> doc-core, markup, core\nmath-tex -> math-core, core\nmath-mathml -> math-core, markup, core\ncircuit-svg -> circuit-core, markup, core\nsuite -> engine, reader, grammar-core, domain cores, output backends, core\nwire -> core\nui-core -> core (公開操作のデータ契約のみ)\napps -> suite, core (+ wire where required, web -> ui-core)\ntools -> grammar-core, suite, foundation\n"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-6c61796f7574",
+      "n-646570656e64656e63696573",
+      "n-626f6f747374726170",
+      "n-72757374",
+      "n-616c6c6f7765645f646570656e64656e63696573",
+      "n-63757272656e745f7374616765"
+    ],
+    "ruby": 216,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "cross_page_link": "http://127.0.0.1:54873/html-anchor-first/docs/spec/22-external-extensions.html",
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 375,
+    "prefix": "html-anchor-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 199.65625,
+          "start": 5685,
+          "max": 5685
+        },
+        "final": 200
+      },
+      {
+        "id": "n-6c61796f7574",
+        "initial": {
+          "desired": 560.8125,
+          "start": 5685,
+          "max": 5685
+        },
+        "final": 561
+      },
+      {
+        "id": "n-646570656e64656e63696573",
+        "initial": {
+          "desired": 1893.265625,
+          "start": 5685,
+          "max": 5685
+        },
+        "final": 1893
+      },
+      {
+        "id": "n-626f6f747374726170",
+        "initial": {
+          "desired": 3514.875,
+          "start": 0,
+          "max": 5685
+        },
+        "final": 3515
+      },
+      {
+        "id": "n-72757374",
+        "initial": {
+          "desired": 4237.03125,
+          "start": 0,
+          "max": 5685
+        },
+        "final": 4237
+      },
+      {
+        "id": "n-616c6c6f7765645f646570656e64656e63696573",
+        "initial": {
+          "desired": 5307.53125,
+          "start": 0,
+          "max": 5685
+        },
+        "final": 5308
+      },
+      {
+        "id": "n-63757272656e745f7374616765",
+        "initial": {
+          "desired": 5685,
+          "start": 0,
+          "max": 5685
+        },
+        "final": 5685
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "01. Repository・crate・依存方向いぞんほうこう",
+      "方針ほうしん",
+      "1. 配置はいち",
+      "2. 主おもな依存方向いぞんほうこう",
+      "3. surface descriptorとGrammarのbootstrap",
+      "4. Rust設定せってい",
+      "5. 許可集合きょかしゅうごうの検査けんさ",
+      "現在げんざいの作業段階さぎょうだんかい"
+    ],
+    "lists": [],
+    "codes": [
+      "NEPL3/\n  Cargo.toml\n  Cargo.lock\n  rust-toolchain.toml\n  AGENTS.md\n  doc/\n    spec/\n    decisions/\n    history/\n  design/\n  interfaces/\n  languages/\n    grammar/ syntax.neplg package.ndf\n    doc/     syntax.neplg package.ndf\n    math/    syntax.neplg package.ndf\n    circuit/ syntax.neplg package.ndf\n  crates/\n    foundation/\n      core/src/       source/ schema/ value/ syntax/ origin/ diagnostic/ budget/\n      reader/src/     plan/ combinator/ execution/ extension/\n      engine/src/     parse/ binding/ index/ query/ recovery/\n      wire/src/       cbor/ schema/ protocol/\n    languages/\n      grammar/core/src/ bootstrap/ model/ check/ compile/\n      doc/core/src/     model/ sentence/ lower/ check/ facts/\n      doc/html/src/     render/ style/\n      math/core/src/    model/ number/ lower/ check/ evaluate/ facts/\n      math/mathml/src/  render/ precedence/\n      circuit/core/src/ model/ lower/ check/ elaborate/ simulate/ nor/ facts/\n      circuit/svg/src/  layout/ render/\n    output/markup/src/  model/ validate/ serialize/\n    integration/suite/src/ profile/ bridge/ operation/ workspace/\n    ui/core/src/ model/ message/ update/ command/ subscription/ view/\n  apps/ cli/ lsp/ web/ provider/\n  web/src/ shell/ editor/ worker/ preview/ storage/ bindings/\n  site/\n  editors/ vscode/ neovim/\n  tools/src/ generate/ contract/ dependency/ task/\n  examples/\n  conformance/\n  tasks/\n",
+      "reader -> core\nengine -> core, reader\ngrammar-core -> core, reader, engine\ndoc-core -> core\nmath-core -> core\ncircuit-core -> core\nmarkup -> core\ndoc-html -> doc-core, markup, core\nmath-tex -> math-core, core\nmath-mathml -> math-core, markup, core\ncircuit-svg -> circuit-core, markup, core\nsuite -> engine, reader, grammar-core, domain cores, output backends, core\nwire -> core\nui-core -> core (公開操作のデータ契約のみ)\napps -> suite, core (+ wire where required, web -> ui-core)\ntools -> grammar-core, suite, foundation\n"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-6c61796f7574",
+      "n-646570656e64656e63696573",
+      "n-626f6f747374726170",
+      "n-72757374",
+      "n-616c6c6f7765645f646570656e64656e63696573",
+      "n-63757272656e745f7374616765"
+    ],
+    "ruby": 216,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "cross_page_link": "http://127.0.0.1:54873/html-anchor-first/docs/spec/22-external-extensions.html",
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 1280,
+    "prefix": "html-anchor-first",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.65625,
+          "start": 2872,
+          "max": 2872
+        },
+        "final": 152
+      },
+      {
+        "id": "n-6c61796f7574",
+        "initial": {
+          "desired": 374.625,
+          "start": 2872,
+          "max": 2872
+        },
+        "final": 375
+      },
+      {
+        "id": "n-646570656e64656e63696573",
+        "initial": {
+          "desired": 1568.890625,
+          "start": 0,
+          "max": 2872
+        },
+        "final": 1569
+      },
+      {
+        "id": "n-626f6f747374726170",
+        "initial": {
+          "desired": 2516.828125,
+          "start": 0,
+          "max": 2872
+        },
+        "final": 2517
+      },
+      {
+        "id": "n-72757374",
+        "initial": {
+          "desired": 2776.890625,
+          "start": 0,
+          "max": 2872
+        },
+        "final": 2777
+      },
+      {
+        "id": "n-616c6c6f7765645f646570656e64656e63696573",
+        "initial": {
+          "desired": 2872,
+          "start": 0,
+          "max": 2872
+        },
+        "final": 2872
+      },
+      {
+        "id": "n-63757272656e745f7374616765",
+        "initial": {
+          "desired": 2872,
+          "start": 0,
+          "max": 2872
+        },
+        "final": 2872
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "01. Repository・crate・依存方向いぞんほうこう",
+      "方針ほうしん",
+      "1. 配置はいち",
+      "2. 主おもな依存方向いぞんほうこう",
+      "3. surface descriptorとGrammarのbootstrap",
+      "4. Rust設定せってい",
+      "5. 許可集合きょかしゅうごうの検査けんさ",
+      "現在げんざいの作業段階さぎょうだんかい"
+    ],
+    "lists": [],
+    "codes": [
+      "NEPL3/\n  Cargo.toml\n  Cargo.lock\n  rust-toolchain.toml\n  AGENTS.md\n  doc/\n    spec/\n    decisions/\n    history/\n  design/\n  interfaces/\n  languages/\n    grammar/ syntax.neplg package.ndf\n    doc/     syntax.neplg package.ndf\n    math/    syntax.neplg package.ndf\n    circuit/ syntax.neplg package.ndf\n  crates/\n    foundation/\n      core/src/       source/ schema/ value/ syntax/ origin/ diagnostic/ budget/\n      reader/src/     plan/ combinator/ execution/ extension/\n      engine/src/     parse/ binding/ index/ query/ recovery/\n      wire/src/       cbor/ schema/ protocol/\n    languages/\n      grammar/core/src/ bootstrap/ model/ check/ compile/\n      doc/core/src/     model/ sentence/ lower/ check/ facts/\n      doc/html/src/     render/ style/\n      math/core/src/    model/ number/ lower/ check/ evaluate/ facts/\n      math/mathml/src/  render/ precedence/\n      circuit/core/src/ model/ lower/ check/ elaborate/ simulate/ nor/ facts/\n      circuit/svg/src/  layout/ render/\n    output/markup/src/  model/ validate/ serialize/\n    integration/suite/src/ profile/ bridge/ operation/ workspace/\n    ui/core/src/ model/ message/ update/ command/ subscription/ view/\n  apps/ cli/ lsp/ web/ provider/\n  web/src/ shell/ editor/ worker/ preview/ storage/ bindings/\n  site/\n  editors/ vscode/ neovim/\n  tools/src/ generate/ contract/ dependency/ task/\n  examples/\n  conformance/\n  tasks/\n",
+      "reader -> core\nengine -> core, reader\ngrammar-core -> core, reader, engine\ndoc-core -> core\nmath-core -> core\ncircuit-core -> core\nmarkup -> core\ndoc-html -> doc-core, markup, core\nmath-tex -> math-core, core\nmath-mathml -> math-core, markup, core\ncircuit-svg -> circuit-core, markup, core\nsuite -> engine, reader, grammar-core, domain cores, output backends, core\nwire -> core\nui-core -> core (公開操作のデータ契約のみ)\napps -> suite, core (+ wire where required, web -> ui-core)\ntools -> grammar-core, suite, foundation\n"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-6c61796f7574",
+      "n-646570656e64656e63696573",
+      "n-626f6f747374726170",
+      "n-72757374",
+      "n-616c6c6f7765645f646570656e64656e63696573",
+      "n-63757272656e745f7374616765"
+    ],
+    "ruby": 216,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "cross_page_link": "http://127.0.0.1:54873/html-anchor-second/docs/spec/22-external-extensions.html",
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 375,
+    "prefix": "html-anchor-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 199.65625,
+          "start": 5685,
+          "max": 5685
+        },
+        "final": 200
+      },
+      {
+        "id": "n-6c61796f7574",
+        "initial": {
+          "desired": 560.8125,
+          "start": 5685,
+          "max": 5685
+        },
+        "final": 561
+      },
+      {
+        "id": "n-646570656e64656e63696573",
+        "initial": {
+          "desired": 1893.265625,
+          "start": 5685,
+          "max": 5685
+        },
+        "final": 1893
+      },
+      {
+        "id": "n-626f6f747374726170",
+        "initial": {
+          "desired": 3514.875,
+          "start": 0,
+          "max": 5685
+        },
+        "final": 3515
+      },
+      {
+        "id": "n-72757374",
+        "initial": {
+          "desired": 4237.03125,
+          "start": 0,
+          "max": 5685
+        },
+        "final": 4237
+      },
+      {
+        "id": "n-616c6c6f7765645f646570656e64656e63696573",
+        "initial": {
+          "desired": 5307.53125,
+          "start": 0,
+          "max": 5685
+        },
+        "final": 5308
+      },
+      {
+        "id": "n-63757272656e745f7374616765",
+        "initial": {
+          "desired": 5685,
+          "start": 0,
+          "max": 5685
+        },
+        "final": 5685
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "01. Repository・crate・依存方向いぞんほうこう",
+      "方針ほうしん",
+      "1. 配置はいち",
+      "2. 主おもな依存方向いぞんほうこう",
+      "3. surface descriptorとGrammarのbootstrap",
+      "4. Rust設定せってい",
+      "5. 許可集合きょかしゅうごうの検査けんさ",
+      "現在げんざいの作業段階さぎょうだんかい"
+    ],
+    "lists": [],
+    "codes": [
+      "NEPL3/\n  Cargo.toml\n  Cargo.lock\n  rust-toolchain.toml\n  AGENTS.md\n  doc/\n    spec/\n    decisions/\n    history/\n  design/\n  interfaces/\n  languages/\n    grammar/ syntax.neplg package.ndf\n    doc/     syntax.neplg package.ndf\n    math/    syntax.neplg package.ndf\n    circuit/ syntax.neplg package.ndf\n  crates/\n    foundation/\n      core/src/       source/ schema/ value/ syntax/ origin/ diagnostic/ budget/\n      reader/src/     plan/ combinator/ execution/ extension/\n      engine/src/     parse/ binding/ index/ query/ recovery/\n      wire/src/       cbor/ schema/ protocol/\n    languages/\n      grammar/core/src/ bootstrap/ model/ check/ compile/\n      doc/core/src/     model/ sentence/ lower/ check/ facts/\n      doc/html/src/     render/ style/\n      math/core/src/    model/ number/ lower/ check/ evaluate/ facts/\n      math/mathml/src/  render/ precedence/\n      circuit/core/src/ model/ lower/ check/ elaborate/ simulate/ nor/ facts/\n      circuit/svg/src/  layout/ render/\n    output/markup/src/  model/ validate/ serialize/\n    integration/suite/src/ profile/ bridge/ operation/ workspace/\n    ui/core/src/ model/ message/ update/ command/ subscription/ view/\n  apps/ cli/ lsp/ web/ provider/\n  web/src/ shell/ editor/ worker/ preview/ storage/ bindings/\n  site/\n  editors/ vscode/ neovim/\n  tools/src/ generate/ contract/ dependency/ task/\n  examples/\n  conformance/\n  tasks/\n",
+      "reader -> core\nengine -> core, reader\ngrammar-core -> core, reader, engine\ndoc-core -> core\nmath-core -> core\ncircuit-core -> core\nmarkup -> core\ndoc-html -> doc-core, markup, core\nmath-tex -> math-core, core\nmath-mathml -> math-core, markup, core\ncircuit-svg -> circuit-core, markup, core\nsuite -> engine, reader, grammar-core, domain cores, output backends, core\nwire -> core\nui-core -> core (公開操作のデータ契約のみ)\napps -> suite, core (+ wire where required, web -> ui-core)\ntools -> grammar-core, suite, foundation\n"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-6c61796f7574",
+      "n-646570656e64656e63696573",
+      "n-626f6f747374726170",
+      "n-72757374",
+      "n-616c6c6f7765645f646570656e64656e63696573",
+      "n-63757272656e745f7374616765"
+    ],
+    "ruby": 216,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "cross_page_link": "http://127.0.0.1:54873/html-anchor-second/docs/spec/22-external-extensions.html",
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 1280,
+    "prefix": "html-anchor-second",
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.65625,
+          "start": 2872,
+          "max": 2872
+        },
+        "final": 152
+      },
+      {
+        "id": "n-6c61796f7574",
+        "initial": {
+          "desired": 374.625,
+          "start": 2872,
+          "max": 2872
+        },
+        "final": 375
+      },
+      {
+        "id": "n-646570656e64656e63696573",
+        "initial": {
+          "desired": 1568.890625,
+          "start": 0,
+          "max": 2872
+        },
+        "final": 1569
+      },
+      {
+        "id": "n-626f6f747374726170",
+        "initial": {
+          "desired": 2516.828125,
+          "start": 0,
+          "max": 2872
+        },
+        "final": 2517
+      },
+      {
+        "id": "n-72757374",
+        "initial": {
+          "desired": 2776.890625,
+          "start": 0,
+          "max": 2872
+        },
+        "final": 2777
+      },
+      {
+        "id": "n-616c6c6f7765645f646570656e64656e63696573",
+        "initial": {
+          "desired": 2872,
+          "start": 0,
+          "max": 2872
+        },
+        "final": 2872
+      },
+      {
+        "id": "n-63757272656e745f7374616765",
+        "initial": {
+          "desired": 2872,
+          "start": 0,
+          "max": 2872
+        },
+        "final": 2872
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  }
+]

@@ -1,0 +1,87 @@
+from pathlib import Path
+from html.parser import HTMLParser
+import sys,json,hashlib,re,html
+p=Path(__file__).parent.resolve();ws=p/'workspace';sys.path.insert(0,str(ws))
+from tools.audit.structure import Parser,load_forms
+def sha(b):return hashlib.sha256(b).hexdigest()
+source=(p/'source/doc/spec/01-architecture.nepld').read_bytes()
+old=(p/'prior/content/source/doc/migration/authored/01-architecture.nepld').read_bytes()
+before=b'3. surface descriptor\xe3\x81\xa8bootstrap';after=b'3. surface descriptor\xe3\x81\xa8Grammar\xe3\x81\xaebootstrap'
+assert old.count(before)==1 and old.replace(before,after)==source
+assert (p/'before/doc/migration/authored/01-architecture.nepld').read_bytes()==old
+original=(p/'original.md').read_bytes();assert original==(p/'prior/content/source/doc/spec/01-architecture.md').read_bytes()
+assert not (ws/'doc/migration/authored/01-architecture.nepld').exists()
+tree=Parser(source.decode(),load_forms(ws)).complete('Doc/Article')
+def walk(x):
+    if isinstance(x,list):
+        for n in x:yield from walk(n)
+    elif isinstance(x,dict):
+        yield x
+        for n in x.get('fields',{}).values():yield from walk(n)
+nodes=list(walk(tree));raw=[n['fields'] for n in nodes if n['kind']=='RawCode']
+blocks=re.findall(r'```([^\n]*)\n(.*?)```',original.decode(),re.S);assert len(raw)==len(blocks)==2
+for n,(hint,text) in zip(raw,blocks):assert n['text']==text and n['languageHint']['fields']['text']==hint
+sections=['policy','layout','dependencies','bootstrap','rust','allowed_dependencies','current_stage']
+aliases=json.loads((ws/'doc/migration/aliases/01-architecture.json').read_bytes())
+expected_names=['01-repositorycrate依存方向','方針','1-配置','2-主な依存方向','3-surface-descriptorとbootstrap','4-rust設定','5-許可集合の検査','現在の作業段階']
+assert [a['section'] for a in aliases]==[None]+sections and [a['name'] for a in aliases]==expected_names
+assert aliases==json.loads((p/'prior/collision/aliases.json').read_bytes())
+registry=json.loads((ws/'doc/canonical.json').read_bytes());oldreg=json.loads((p/'before/doc/canonical.json').read_bytes())
+assert registry['pages'][:3]==oldreg['pages'] and len(registry['pages'])==4
+assert registry['pages'][3]==dict(id='architecture',source='doc/spec/01-architecture.nepld',projection='doc/spec/01-architecture.md',aliases='doc/migration/aliases/01-architecture.json',route='docs/spec/01-architecture.html',renderer='nepl3-tools.markdown-annotated-pages/1')
+assert registry['output_limits']==dict(source_bytes=10000000,work=300000000,depth=1000,nodes=10000000,allocation_units=750000000,output_bytes=10000000,diagnostics=1000,events=1000)
+class HTML(HTMLParser):
+    def __init__(self):super().__init__();self.ids=[];self.names=[];self.hrefs=[];self.pre=[];self.current=None;self.script=0
+    def handle_starttag(self,t,a):
+        a=dict(a)
+        if a.get('id'):self.ids.append(a['id'])
+        if a.get('name'):self.names.append(a['name'])
+        if t=='a':self.hrefs.append(a.get('href'))
+        if t=='pre':self.current=''
+        if t=='script':self.script+=1
+    def handle_data(self,d):
+        if self.current is not None:self.current+=d
+    def handle_endtag(self,t):
+        if t=='pre':self.pre.append(self.current);self.current=None
+results={}
+for kind in ['markdown','html']:
+    folder=p/(kind+'-first');again=p/(kind+'-second');manifest=json.loads((folder/'manifest.json').read_bytes())
+    names=[r['path'] for r in manifest['files']]+['manifest.json'];assert len(names)==(5 if kind=='markdown' else 6)
+    rows=[]
+    for n in names:
+        b=(folder/n).read_bytes();assert b==(again/n).read_bytes();rows.append(dict(path=n,bytes=len(b),sha256=sha(b)))
+    for r in manifest['files']:assert sha((folder/r['path']).read_bytes())==r['sha256']
+    results[kind]=dict(files=rows)
+md=(p/'markdown-first/doc/spec/01-architecture.md').read_text(encoding='utf8');assert md.encode()==(ws/'doc/spec/01-architecture.md').read_bytes()
+mdnames=re.findall(r'<a name="([^"]+)"></a>',md);assert len(mdnames)==len(set(mdnames))==15
+assert set(mdnames)==set(expected_names+['n-'+s.encode().hex() for s in sections])
+assert '[外部拡張契約\\[がいぶかくちょうけいやく\\]](22-external-extensions.md)' in md
+assert '3\\. surface descriptorとGrammarのbootstrap' in md
+header=md.split('\n\n')[0]
+for label,b in [('source SHA-256',source),('alias input SHA-256',(ws/registry['pages'][3]['aliases']).read_bytes())]:assert re.search(label+r' ([0-9a-f]{64})',header)[1]==sha(b)
+assert 'Generated from doc/spec/01-architecture.nepld' in html.unescape(header)
+setdigest=bytes.fromhex(re.search(r'input PageSet digest ([0-9a-f]{64})',header)[1])
+fields=[b'nepl3.canonical-input-context/1\0',b'nepl3-tools.markdown-annotated-pages/1',b'doc/canonical.json',(ws/'doc/canonical.json').read_bytes(),setdigest,len(registry['pages']).to_bytes(8,'big')]
+for page in registry['pages']:
+    fields.extend(page[k].encode() for k in ['id','source','projection','aliases','route','renderer'])
+    fields.extend(hashlib.sha256((ws/page[k]).read_bytes()).digest() for k in ['source','aliases'])
+context=sha(b''.join(len(f).to_bytes(8,'big')+f for f in fields));assert context==re.search(r'input context SHA-256 ([0-9a-f]{64})',header)[1]
+for page in registry['pages'][:3]:assert (p/'markdown-first'/page['projection']).read_bytes()==(ws/page['projection']).read_bytes()
+h=HTML();h.feed((p/'html-first/docs/spec/01-architecture.html').read_text(encoding='utf8'))
+assert set(h.ids)==set('n-'+s.encode().hex() for s in sections) and len(h.ids)==7
+assert not h.names and not set(expected_names).intersection(h.ids)
+assert h.hrefs==['22-external-extensions.html'] and h.script==0
+assert h.pre==[text for _,text in blocks]
+hm=json.loads((p/'html-first/manifest.json').read_bytes())
+for page,entry in zip(registry['pages'],hm['pages'],strict=True):
+    assert all(entry[k]==page[k] for k in ['id','route']) and entry['source']==page['projection'] and entry['input']==page['source']
+    assert entry['source_sha256']==sha((ws/page['source']).read_bytes())
+    for key in ['parse_initial_usage','lower_initial_usage']:assert all(v==0 for v in entry[key].values())
+prior=Path('C:/projects/NEPL3-doc-canonical-extensions/.tmp/review-canonical22-code')
+prior_manifest=json.loads((prior/'manifest.json').read_bytes());prior_index={r['path']:r for r in prior_manifest['files']}
+prior_rows=[]
+for n in ['docs/spec/00-contract.html','docs/spec/13-reproducibility.html','docs/spec/22-external-extensions.html','docs/spec/assets/doc.css']:
+    r=prior_index['html-first/'+n];b=(prior/'html-first'/n).read_bytes();assert sha(b)==r['sha256'] and len(b)==r['bytes'];assert b==(p/'html-first'/n).read_bytes()
+    prior_rows.append(r)
+results.update(source_sha256=sha(source),original_sha256=sha(original),single_heading_delta_only=True,rawcode_bytes_preserved=2,markdown_explicit_targets=15,html_semantic_targets=7,html_has_no_legacy_aliases=True,relative_markdown_href='22-external-extensions.md',relative_html_href='22-external-extensions.html',context_sha256=context,prior_legacy_html_and_css_equal=prior_rows,prior_manifest_sha256=sha((prior/'manifest.json').read_bytes()),independent_browser='not run; separate reviewer scope')
+(p/'checks.json').write_text(json.dumps(results,ensure_ascii=False,indent=2)+'\n',encoding='utf8');print('PASS: exact move+single heading, two generations, identities/routes/rawcode and old3 HTML/MD/CSS')

@@ -1,0 +1,17 @@
+from pathlib import Path
+import hashlib,json,subprocess,time
+root=Path.cwd();out=root/'.tmp/verify-canonical01';out.mkdir(exist_ok=True)
+head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+names=['doc/canonical.json','doc/spec/01-architecture.nepld','doc/spec/01-architecture.md','doc/migration/aliases/01-architecture.json']
+def hashes():return {n:hashlib.sha256((root/n).read_bytes()).hexdigest() for n in names}
+fixed=hashes();rows=[]
+for name,cmd in [('format',['cargo','fmt','--all','--','--check']),('canonical',['cargo','run','--locked','-p','nepl3-tools','--','doc-canonical','--check']),('repository',['cargo','run','--locked','-p','nepl3-tools','--','check']),('diff',['git','diff','--check'])]:
+    assert hashes()==fixed and subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==head
+    started=time.monotonic()
+    with (out/(name+'.stdout.log')).open('wb') as stdout,(out/(name+'.stderr.log')).open('wb') as stderr:
+        p=subprocess.run(cmd,stdout=stdout,stderr=stderr,timeout=900)
+    unchanged=hashes()==fixed and subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==head
+    rows.append(dict(source_commit=head,source_hashes=fixed,source_unchanged=unchanged,command=cmd,exit_code=p.returncode,elapsed=time.monotonic()-started))
+    (out/'commands.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf-8')
+    assert unchanged and p.returncode==0
+    print(name,'PASS',flush=True)

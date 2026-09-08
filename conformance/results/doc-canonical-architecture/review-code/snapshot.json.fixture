@@ -1,0 +1,38 @@
+{
+  "head": "9c5883b555ebe5e09380ea4ab20ce275d0687259",
+  "base": "14df7e9d77faa86715c4605b28a853812980c4b0",
+  "changed": [
+    "doc/canonical.json",
+    "doc/migration/aliases/01-architecture.json",
+    "doc/migration/authored/01-architecture.nepld",
+    "doc/spec/01-architecture.md",
+    "doc/spec/01-architecture.nepld"
+  ],
+  "review_scope": [
+    "doc/canonical.json",
+    "doc/migration/aliases/01-architecture.json",
+    "doc/migration/authored/01-architecture.nepld",
+    "doc/spec/01-architecture.md",
+    "doc/spec/01-architecture.nepld",
+    "AGENTS.md",
+    "doc/authoring.md",
+    "doc/spec/16-doc-migration.md",
+    "doc/spec/21-doc-pages.md",
+    "tools/src/doc/canonical.rs",
+    "tools/src/doc/canonical/projection.rs",
+    "tools/src/doc/export/pages.rs",
+    "tools/src/doc/projection/annotated/pages.rs",
+    "design/forms.json",
+    "tools/audit/structure.py"
+  ],
+  "prior": [
+    {
+      "scope": "content",
+      "manifest_sha256": "501fafacecc80d2e049749097cc9f4a185a26a021683fd89a2e8faec6516a315"
+    },
+    {
+      "scope": "collision",
+      "manifest_sha256": "d318bd9ab47f9b710801aa33248a2f7a8052de036c6eab0251b1b1ad2d6b618b"
+    }
+  ]
+}

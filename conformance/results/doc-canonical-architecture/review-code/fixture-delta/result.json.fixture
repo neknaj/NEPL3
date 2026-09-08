@@ -1,0 +1,42 @@
+{
+  "head": "652347cb5a37ea341e5ee67887f61ccf11692cee",
+  "base": "9c5883b555ebe5e09380ea4ab20ce275d0687259",
+  "path": "tools/tests/doc/annotated_pages.rs",
+  "sha256": "f3f802d6b2fe33facdd6d9151f828cfc449a87ca726d55f6fed0a47e32238502",
+  "bytes": 11108,
+  "commands": [
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "nepl3-tools",
+        "--test",
+        "doc",
+        "annotated_pages::",
+        "--no-run"
+      ],
+      "deadline_seconds": 300,
+      "elapsed_seconds": 12.51956320006866,
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "nepl3-tools",
+        "--test",
+        "doc",
+        "annotated_pages::",
+        "--",
+        "--nocapture"
+      ],
+      "deadline_seconds": 300,
+      "elapsed_seconds": 5.495495299925096,
+      "exit_code": 0
+    }
+  ]
+}
