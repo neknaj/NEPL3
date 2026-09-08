@@ -610,5 +610,20 @@ body
       cons "[続/つづ]く[適用前提/てきようぜんてい]の[確認/かくにん]では、[同/おな]じSourceIdのrevision 0と1に[対/たい]する2[編集/へんしゅう]を[一/ひと]つのFixに[入/い]れるとReport.validateは[成功/せいこう]するが、SourceStore.applyはSnapshotMismatchになることを[再現/さいげん]した。"
       cons "[双方/そうほう]のsource[宣言/せんげん]と[区間/くかん]digestが[正/ただ]しくても、[同/おな]じsourceを[同時/どうじ]に2つのbase revisionから[更新/こうしん]するatomic transactionにはならない。"
       cons "Fixの[編集/へんしゅう]だけにSourceIdごと[一/ひと]つの[前提/ぜんてい]snapshotを[要求/ようきゅう]し、related spanの[履歴参照/りれきさんしょう]や[別/べつ]sourceへの[編集/へんしゅう]は[許可/きょか]する[追加修正/ついかしゅうせい]を[依頼/いらい]した。" nil
+    cons paragraph
+      cons sentence cons text "R037の" cons ruby text "同" text "おな" cons text "じapply" cons ruby text "入口" text "いりぐち" cons text "では、" cons ruby text "別" text "べつ" cons text "setupで" cons ruby text "構築" text "こうちく" cons text "した" cons ruby text "既存" text "きそん" cons text "source " cons code "abc" cons text " を" cons ruby text "全削除" text "ぜんさくじょ" cons text "する" cons ruby text "編集" text "へんしゅう" cons text "が、fresh SourceLimit 0でも" cons ruby text "成功" text "せいこう" cons text "しrevision 1を" cons ruby text "挿入" text "そうにゅう" cons text "することも" cons ruby text "独立再現" text "どくりつさいげん" cons text "した。" nil
+      cons "Usage.sourceBytesとAllocationUnitsはいずれも0だった。"
+      cons "[出力/しゅつりょく]が[空/から]でも[元/もと]の3 bytesは[操作/そうさ]が[読/よ]むsnapshotであり、[変更後/へんこうご]sourceとは[別/べつ]に[一度/いちど][受/う]け[入/い]れる[必要/ひつよう]がある。"
+      cons sentence cons ruby text "補助" text "ほじょ" cons text " " cons code "edit_source_limit" cons text " の" cons ruby text "実行" text "じっこう" cons text "を" cons ruby text "根拠" text "こんきょ" cons text "として、" cons ruby text "共有" text "きょうゆう" cons text "SourceAdmissionを" cons ruby text "使" text "つか" cons text "う" cons ruby text "元" text "もと" cons text "/" cons ruby text "生成" text "せいせい" cons text "snapshot" cons ruby text "計上" text "けいじょう" cons text "をR037の" cons ruby text "修正範囲" text "しゅうせいはんい" cons text "へ" cons ruby text "追加" text "ついか" cons text "した。" nil nil
+    cons paragraph
+      cons "R036の[追加修正後/ついかしゅうせいご]、[同一/どういつ]SourceIdの2 revisionを[持/も]つ[元/もと]Fix probeはSnapshotMismatchで[拒否/きょひ]された。"
+      cons "[管理対象/かんりたいしょう]report 4[件/けん]を[独立/どくりつ][実行/じっこう]し、[元/もと]のdigest/[重複編集/じゅうふくへんしゅう]の[拒否/きょひ]、schema[自体/じたい]は[正/ただ]しいNDF[改変/かいへん]からのdecode[拒否/きょひ]、[順不同/じゅんふどう]の[隣接編集/りんせつへんしゅう]、[挿入境界/そうにゅうきょうかい]、[異/こと]なるSourceIdへの[同時編集/どうじへんしゅう]、related spanの[履歴参照/りれきさんしょう]を[確認/かくにん]した。"
+      cons "codeはFixの[編集/へんしゅう]だけを[同一前提/どういつぜんてい]snapshotへ[制限/せいげん]し、[診断全体/しんだんぜんたい]の[履歴参照/りれきさんしょう]を[禁止/きんし]しないため、R036をcorrectedとした。"
+      cons "SourceStore.applyの[資源計上漏/しげんけいじょうも]れR037は[別/べつ]のopen[課題/かだい]として[残/のこ]す。" nil
+    cons paragraph
+      cons sentence cons ruby text "次" text "つぎ" cons text "の" cons ruby text "性能変更" text "せいのうへんこう" cons text "では、" cons code "ParseSession::read_with_host" cons text " の" cons ruby text "管理対象" text "かんりたいしょう" cons text "native_host 5" cons ruby text "件" text "けん" cons text "を" cons ruby text "独立" text "どくりつ" cons ruby text "実行" text "じっこう" cons text "し" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "[明示/めいじ]hostが[実/じつ]provider catalogの[要求/ようきゅう]を[照合/しょうごう]し、[同期応答/どうきおうとう]も[既存/きそん]reader/tokenizerの[再開検査/さいかいけんさ]を[通/とお]すことをコードで[確認/かくにん]した。"
+      cons "Noneまたは[通常/つうじょう]callback[失敗/しっぱい]はowned Await/Reserveへ[戻/もど]り、[停止時/ていしじ]は[正式/せいしき]diagnostic・event・source/map[閉包/へいほう]を[保持/ほじ]する。"
+      cons "dynamic head providerの[実装/じっそう]や[権限隔離/けんげんかくり]の[完成/かんせい]とは[扱/あつか]わない。" nil
     nil
   nil
