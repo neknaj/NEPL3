@@ -1,0 +1,45 @@
+- article:
+  - heading "18. HTMLを 先行利用 せんこうりよう する 実装段階 じっそうだんかい" [level=1]
+  - paragraph: 2026-09-07の 追加指示 ついかしじ により、Doc 入力 にゅうりょく からHTMLまでを 先行 せんこう して 利用可能 りようかのう にする。 基準 きじゅん として 提示 ていじ された933f0bbへ 戻 もど さず、 既存 きそん のlower::document・labels::check・plain_text・source printerを 再利用 さいりよう する。Mathのarena・shape・lower・codecは、 進行中 しんこうちゅう の 表示用 ひょうじよう 実装 じっそう を 利用 りよう する。source printerをHTML rendererへ 読 よ み 替 か えない。
+  - heading "実装依存 じっそういぞん" [level=2]
+  - table:
+    - rowgroup:
+      - row "正式 せいしき タスク 段階 だんかい 成果物 せいかぶつ と 終了範囲 しゅうりょうはんい":
+        - columnheader "正式 せいしき タスク"
+        - columnheader "段階 だんかい"
+        - columnheader "成果物 せいかぶつ と 終了範囲 しゅうりょうはんい"
+    - rowgroup:
+      - row "T22 H0 Doc 用 よう markup、 文書 ぶんしょ check・prepare、URI・asset、renderer、17 章 しょう の 型 かた ・codec・ 制約 せいやく を 具体化 ぐたいか し、 対応 たいおう する 公開 こうかい APIの 実装前提 じっそうぜんてい を 揃 そろ える。":
+        - cell "T22"
+        - cell "H0"
+        - cell "Doc 用 よう markup、 文書 ぶんしょ check・prepare、URI・asset、renderer、17 章 しょう の 型 かた ・codec・ 制約 せいやく を 具体化 ぐたいか し、 対応 たいおう する 公開 こうかい APIの 実装前提 じっそうぜんてい を 揃 そろ える。"
+      - row "T23 H1 既存 きそん のparser・lower・labelsを 使 つか うDoc 単独 たんどく HTML、 検査済 けんさず みpage・asset 解決 かいけつ 、markup・doc-html、 安全 あんぜん なserializer、suiteとCLIを 実際 じっさい に 利用 りよう する 入口 いりぐち 。":
+        - cell "T23"
+        - cell "H1"
+        - cell "既存 きそん のparser・lower・labelsを 使 つか うDoc 単独 たんどく HTML、 検査済 けんさず みpage・asset 解決 かいけつ 、markup・doc-html、 安全 あんぜん なserializer、suiteとCLIを 実際 じっさい に 利用 りよう する 入口 いりぐち 。"
+      - row "T24 H2 Math 表示用 ひょうじよう 構造 こうぞう とbinding、 独立 どくりつ MathML、 型付 かたつ きTeX、Node host KaTeX、 式 しき ごとのfallbackを、 実 じつ NEPL3 入力 にゅうりょく から 接続 せつぞく する。":
+        - cell "T24"
+        - cell "H2"
+        - cell "Math 表示用 ひょうじよう 構造 こうぞう とbinding、 独立 どくりつ MathML、 型付 かたつ きTeX、Node host KaTeX、 式 しき ごとのfallbackを、 実 じつ NEPL3 入力 にゅうりょく から 接続 せつぞく する。"
+      - row "T25 H3 純粋 じゅんすい TEA、 共通 きょうつう Wasm、Worker 生成 せいせい 、 隔離 かくり preview、 同 どう artifactのexportを、Nodeとの 比較 ひかく と3 browserで 検証 けんしょう する。":
+        - cell "T25"
+        - cell "H3"
+        - cell "純粋 じゅんすい TEA、 共通 きょうつう Wasm、Worker 生成 せいせい 、 隔離 かくり preview、 同 どう artifactのexportを、Nodeとの 比較 ひかく と3 browserで 検証 けんしょう する。"
+  - paragraph:
+    - text: 依存 いぞん はT22→T23→T24→T25の 順 じゅん に 成果物 せいかぶつ を 供給 きょうきゅう する。ここでの 矢印 やじるし は 実装順 じっそうじゅん を 表 あらわ す。
+    - code: design/tasks.json
+    - text: の
+    - code: depends_on
+    - text: では、 後段 こうだん が 前段 ぜんだん を 参照 さんしょう する。T22は 先行 せんこう foundation・Doc・Mathの 実 じつ APIを 検証 けんしょう して 利用 りよう するが、T01〜T09の 全体完了 ぜんたいかんりょう を 待 ま たせない。T23は 未対応 みたいおう embedを 型付 かたつ きで 拒否 きょひ し、T24でMathの 実解決 じつかいけつ を 追加 ついか する。 空 から のfragmentで 段階 だんかい をまたがない。
+  - paragraph: T10・T11・T13・T15・T17・T18は 先行経路 せんこうけいろ を 再利用 さいりよう して、 当初 とうしょ の 全責務 ぜんせきむ を 実装 じっそう する。Math evaluate、Circuit、LSP、 汎用 はんよう provider、4 言語 げんご UI 全体 ぜんたい 、Pages 全受入 ぜんうけいれ 、T21 文書移行 ぶんしょいこう は 残 のこ る。T16はT25と 既存 きそん の 最終依存 さいしゅういぞん 、すべてのrequired 受入条件 うけいれじょうけん を 要求 ようきゅう する。 先行利用 せんこうりよう の 成功 せいこう から、 既存 きそん タスクや 受入群全体 うけいれぐんぜんたい をpassedにしない。
+  - heading "H0/H1の 契約 けいやく" [level=2]
+  - paragraph: Docの 既存 きそん arenaは 表 ひょう ・list・page link・relative link・external link・imageなどを 保持 ほじ するが、 構造 こうぞう proofやCheckedLabelsは 完全 かんぜん なPreparedArticleではない。 文書検査 ぶんしょけんさ は、 表示対象 ひょうじたいしょう language・parallel policy、 外部 がいぶ page・asset・foreign requirementsを 明示 めいじ する。prepareは 対象 たいしょう documentのidentity、 全要求 ぜんようきゅう 、 解決結果 かいけつけっか の 型 かた ・ 位置 いち ・ 資源閉包 しげんへいほう resource closure を 照合 しょうごう する。backendへ 未解決 みかいけつ slotやhostの 任意 にんい HTMLを 渡 わた さない。
+  - paragraph: markupは、table・header・cell、ordered・unordered listとstart・checkbox、img・alt・caption、 一般 いっぱん linkに 必要 ひつよう な 要素 ようそ ・ 属性 ぞくせい ・ 内容 ないよう モデルを、 閉 と じた 型 かた として 持 も つ。 同 どう artifactのanchor、page ID、 相対 そうたい path、external URI、asset 参照 さんしょう を 区別 くべつ する。 危険 きけん scheme、path traversal、 重複 ちょうふく path、 未宣言 みせんげん asset、 偽 にせ digest、wrong slotを 拒否 きょひ し、I/O 権限 けんげん はhostに 残 のこ す。
+  - paragraph: Paragraphを 入 い れ 子 こ のpへ 機械変換 きかいへんかん せず、 文 ぶん のrunと 子 こ blockのwrapperを 使 つか う。Sentence 間 かん に 空白 くうはく を 追加 ついか しない。Ruby・Anno、Parallel、heading、 空 から の 表 ひょう 、list start、codeの 改行 かいぎょう 、 画像 がぞう の 代替説明 だいたいせつめい を 保持 ほじ し、ブラウザparserのtree 補正 ほせい で 意味 いみ が 変 か わっていないか 確認 かくにん する。 一般 いっぱん DocとKaTeXの 双方 そうほう を、 検査済 けんさず みmarkupとserializerへ 通 とお す。
+  - heading "H2/H3の 契約 けいやく と 検証 けんしょう" [level=2]
+  - paragraph: 17 章 しょう を 適用 てきよう する。 数式 すうしき の 正本 せいほん は 構造 こうぞう であり、 本文 ほんぶん のdollar 探索 たんさく 、MathMLからのTeX 推測 すいそく 、source printer 文字列 もじれつ を 数式 すうしき として 利用 りよう しない。 非結合 ひけつごう operand、 負号 ふごう と 累乗 るいじょう 、 多文字 たもじ Unicode 記号 きごう 、 片側 かたがわ fence、Doc 注記 ちゅうき の 忠実性 ちゅうじつせい を 共通試験 きょうつうしけん へ 結 むす び 付 つ ける。 表示 ひょうじ のためにevaluateを 実行 じっこう しない。
+  - paragraph: 実 じつ .nepldからHTMLまでのpositive・negative、MathML-only、KaTeX 不在 ふざい 、optional module 失敗 しっぱい 、 局所失敗 きょくしょしっぱい と 全体 ぜんたい Stopped、 安全性違反 あんぜんせいいはん 、asset 不足 ふそく を 検証 けんしょう する。NodeとDOMなしの 実 じつ Workerで、 固定版 こていばん ・ 入力 にゅうりょく ・ 設定 せってい が 同 おな じ 正準 せいじゅん markup・manifestを 生成 せいせい することを 比較 ひかく する。
+  - paragraph: Chromium・Firefox・WebKitで、script 禁止 きんし かつsame-origin 権限 けんげん なしのpreview、CSP・CORS・font・ 非 ひ root path、 古 ふる い 返信 へんしん の 拒否 きょひ 、 停止 ていし とepoch、 同 どう artifactのexportを 実行 じっこう する。 書 か き 出 だ し 済 ず みHTMLのJavaScript 無効表示 むこうひょうじ 、offline bundle、zoom・ 狭 せま い 幅 はば ・ 印刷 いんさつ ・アクセシビリティtreeを 確認 かくにん し、DOMの 存在 そんざい だけを 視覚組版 しかくくみはん の 成功 せいこう にしない。WebKit 自動試験 じどうしけん とSafari・iOSの 実機確認 じっきかくにん を 区別 くべつ する。
+  - paragraph: 各段階 かくだんかい は、 実 じつ API・command・source・spec・target・ログ・ 独立 どくりつ レビューと 未検証範囲 みけんしょうはんい を 記録 きろく する。 既存 きそん bootstrap、Doc source printer、source・Origin、 予算 よさん 、no_std・WASIの 回帰 かいき を 維持 いじ する。ローカルでの 成功 せいこう は、Pages 公開 こうかい の 証拠 しょうこ ではない。
+  - heading "正式文書 せいしきぶんしょ のDoc 移行 いこう" [level=2]
+  - paragraph: T23で 必要 ひつよう な 表現 ひょうげん が 使 つか えるページから、T21の 棚卸 たなおろ し・ 変換 へんかん を 進 すす める。 数式 すうしき を 含 ふく むspecは、T24の 実生成経路 じつせいせいけいろ を 使用 しよう する。T21の 完了依存 かんりょういぞん をT24・T19へ 接続 せつぞく し、Math 評価 ひょうか ・Circuit 全体 ぜんたい の 完成待 かんせいま ちでDoc 正本化 せいほんか を 遅 おく らせない。ページ 単位 たんい の 意味 いみ ・リンク・ 安定 あんてい ID・ 生成物対応 せいせいぶつたいおう とbootstrapの 条件 じょうけん は、16 章 しょう のまま 維持 いじ する。README・AGENTSなどのMarkdown 入口 いりぐち は、 必要 ひつよう に 応 おう じて.nepld 正本 せいほん から 生成 せいせい し、 二重 にじゅう 手書 てが き 保守 ほしゅ をしない。

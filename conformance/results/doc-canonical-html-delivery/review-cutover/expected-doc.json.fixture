@@ -1,0 +1,27 @@
+{
+  "headings": [
+    "18. HTMLを先行利用する実装段階",
+    "実装依存",
+    "H0/H1の契約",
+    "H2/H3の契約と検証",
+    "正式文書のDoc移行"
+  ],
+  "cells": [
+    "正式タスク",
+    "段階",
+    "成果物と終了範囲",
+    "T22",
+    "H0",
+    "Doc用markup、文書check・prepare、URI・asset、renderer、17章の型・codec・制約を具体化し、対応する公開APIの実装前提を揃える。",
+    "T23",
+    "H1",
+    "既存のparser・lower・labelsを使うDoc単独HTML、検査済みpage・asset解決、markup・doc-html、安全なserializer、suiteとCLIを実際に利用する入口。",
+    "T24",
+    "H2",
+    "Math表示用構造とbinding、独立MathML、型付きTeX、Node host KaTeX、式ごとのfallbackを、実NEPL3入力から接続する。",
+    "T25",
+    "H3",
+    "純粋TEA、共通Wasm、Worker生成、隔離preview、同artifactのexportを、Nodeとの比較と3 browserで検証する。"
+  ],
+  "draft_unchanged_from_afeadcf": true
+}

@@ -1,0 +1,79 @@
+# Chapter 18 canonical Doc source
+
+Fixed source checkpoint: `799f00d6384d45e8160b51366d03fecb1dd2dfe1`.
+The unchanged reviewed HTML delivery roadmap is moved from the authoring drafts
+to `doc/spec/18-html-delivery.nepld` and registered with annotated Markdown `/2`.
+The three earlier legacy Markdown files retain their exact bytes. The architecture
+page changes only its input-context metadata because the explicit registry has
+grown; its body is unchanged. Chapter 18 retains all requirements and distinctions
+between planned tasks and implemented behavior. Its table has a header and four
+rows with three explicitly left-aligned columns.
+
+The canonical registry now selects finite HTML output Work 300M / Allocation750M
+separately from the existing same-sized Markdown allowance. Other eight-resource
+fields keep their defaults. These are separate complete operations chosen before
+entry, not a reset or continuation of a stopped Budget. Global defaults and
+per-page parsing/lowering limits are unchanged.
+
+## Checks and limits
+
+An earlier five-page trial passed Markdown but HTML stopped at default Work100M,
+before creating the HTML output directory. The raw command/log is retained as an
+initial observation: it does not bind a firmware/executable hash or claim a
+fixed-commit differential benchmark. With the separately selected configuration,
+two six-file Markdown stages and two seven-file HTML bundles are byte-identical.
+A subsequent guarded run at fixed clean `799f00d` passed canonical checking and
+regenerated both formats; all six/seven files equal the earlier output bytes.
+
+Root browser checks passed in Chromium, Firefox and WebKit with JavaScript disabled
+at widths375/1280 under two non-root paths. Twelve displays retained the table,
+Ruby/Anno and both inline-code values; 48 real semantic fragment moves passed.
+Root inspected the narrow WebKit screenshot. Nine actual GitHub targets (five
+legacy plus four semantic) were individually navigated with exact server rawLines,
+unique targets and stable visible positions. HTML has semantic Section IDs, not
+the Markdown-only legacy alias names.
+
+The first GitHub script accidentally printed a copied message saying15; its JSON
+contains nine actual tests. The original script/results and correction are kept.
+The final script asserts and reports nine and passed again. No source, alias or
+expected target was changed to fix this reporting mistake.
+
+Independent manuscript review checked the entire original, table cells, code,
+Ruby and semantic boundaries before generation. The original source date and
+historical commit are preserved as context, not treated as the current HEAD.
+Code/generation, browser/cutover and archive integration reviews have separate
+records and scope. This is a page cutover, not completed HTML/KaTeX products,
+T21/T16, live Pages deployment, human accessibility or physical-browser testing.
+
+## Read checked HTML without building the compiler
+
+From the repository root, run this exact snippet to restore a new directory.
+It uses neither Rust nor Node nor network generation.
+
+```python
+from pathlib import Path
+import hashlib, json
+
+archive = Path("conformance/results/doc-canonical-html-delivery")
+output = Path("dist/canonical18-snapshot")
+entries = json.loads((archive / "payloads.json").read_text(encoding="utf-8"))["files"]
+selected = [e for e in entries if e["owner"] == "root-html-first"]
+assert len(selected) == 7
+output.mkdir(parents=True, exist_ok=False)
+for entry in selected:
+    relative = Path(entry["restore"])
+    assert not relative.is_absolute() and ".." not in relative.parts
+    data = (archive / entry["file"]).read_bytes()
+    assert len(data) == entry["bytes"]
+    assert hashlib.sha256(data).hexdigest() == entry["sha256"]
+    destination = output / relative
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with destination.open("xb") as stream:
+        stream.write(data)
+```
+
+Open `dist/canonical18-snapshot/docs/spec/18-html-delivery.html` with its adjacent
+assets and pages. This reading snapshot does not replace regeneration checks.
+The payload index preserves original paths, byte lengths and SHA-256. Reviewer
+files come from strict manifests, excluding build workspaces/caches/binaries.
+`.fixture` stores original bytes; reserved archive path components use `saved-*`.

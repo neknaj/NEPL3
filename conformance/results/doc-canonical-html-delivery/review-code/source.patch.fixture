@@ -1,0 +1,162 @@
+diff --git a/doc/canonical.json b/doc/canonical.json
+index a59dba3..ce1098e 100644
+--- a/doc/canonical.json
++++ b/doc/canonical.json
+@@ -32,6 +32,14 @@
+       "aliases": "doc/migration/aliases/01-architecture.json",
+       "route": "docs/spec/01-architecture.html",
+       "renderer": "nepl3-tools.markdown-annotated-pages/1"
++    },
++    {
++      "id": "html-delivery",
++      "source": "doc/spec/18-html-delivery.nepld",
++      "projection": "doc/spec/18-html-delivery.md",
++      "aliases": "doc/migration/aliases/18-html-delivery.json",
++      "route": "docs/spec/18-html-delivery.html",
++      "renderer": "nepl3-tools.markdown-annotated/2"
+     }
+   ],
+   "output_limits": {
+@@ -43,5 +51,15 @@
+     "output_bytes": 10000000,
+     "diagnostics": 1000,
+     "events": 1000
++  },
++  "html_output_limits": {
++    "source_bytes": 10000000,
++    "work": 300000000,
++    "depth": 1000,
++    "nodes": 10000000,
++    "allocation_units": 750000000,
++    "output_bytes": 10000000,
++    "diagnostics": 1000,
++    "events": 1000
+   }
+ }
+diff --git a/doc/migration/aliases/18-html-delivery.json b/doc/migration/aliases/18-html-delivery.json
+new file mode 100644
+index 0000000..8a37087
+--- /dev/null
++++ b/doc/migration/aliases/18-html-delivery.json
+@@ -0,0 +1,22 @@
++[
++  {
++    "section": null,
++    "name": "18-htmlを先行利用する実装段階"
++  },
++  {
++    "section": "implementation_dependencies",
++    "name": "実装依存"
++  },
++  {
++    "section": "document_preparation",
++    "name": "h0h1の契約"
++  },
++  {
++    "section": "math_and_browser",
++    "name": "h2h3の契約と検証"
++  },
++  {
++    "section": "documentation_migration",
++    "name": "正式文書のdoc移行"
++  }
++]
+diff --git a/doc/spec/01-architecture.md b/doc/spec/01-architecture.md
+index cfdfde1..5bc6e82 100644
+--- a/doc/spec/01-architecture.md
++++ b/doc/spec/01-architecture.md
+@@ -1,4 +1,4 @@
+-<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page architecture; source SHA-256 7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 6fc06e6be4d2292a4f9d646035133ace7f2245e6c7f4ee4a1d2edbc8166333fe; input PageSet digest 132e2758f7c736786624cdad8f502900ffc710621577c299a334a25bc561a4d8; input context SHA-256 d865100fc92eecc3900fb1146146abde146ddfcfed4d3f94f06fc816d970d2b7. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
++<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page architecture; source SHA-256 7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 6fc06e6be4d2292a4f9d646035133ace7f2245e6c7f4ee4a1d2edbc8166333fe; input PageSet digest d6b2619b6106493ad1c6e62181287f7e7d5b8188801a145d529379391d8c5357; input context SHA-256 1bd32194470725fd4fcea568b2f011d1220143c773e1e8d468f1e8ad7b8685c1. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+ 
+ <a name="01-repositorycrate依存方向"></a>
+ 
+diff --git a/doc/spec/18-html-delivery.md b/doc/spec/18-html-delivery.md
+index 2096039..255fc7a 100644
+--- a/doc/spec/18-html-delivery.md
++++ b/doc/spec/18-html-delivery.md
+@@ -1,38 +1,58 @@
+-# 18. HTMLを先行利用する実装段階
++<!-- Generated from doc/spec/18&#45;html&#45;delivery.nepld; renderer nepl3-tools.markdown-annotated/2; source SHA-256 90c02690b3b98e6c6d305c69750a65678d1ad81c7688042620a77b600babac73; alias input SHA-256 8cbc6c3d55e45caec8c46dd1fca71807673ada9181eafbee1d94c020a2b31556; document digest dcdec7de5dcdcd351c2e202b547c56884ae9b6862361dda8bbeef17a371a710a. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+ 
+-2026-09-07の追加指示により、Doc入力からHTMLまでを先行して利用可能にする。基準として提示された933f0bbへ戻さず、既存lower::document・labels::check・plain_text・source printerを再利用する。Mathのarena/shape/lower/codecは進行中の表示用実装を利用する。source printerをHTML rendererへ読み替えない。
++<a name="18-htmlを先行利用する実装段階"></a>
+ 
+-## 実装依存
++# 18\. HTMLを先行利用\[せんこうりよう\]する実装段階\[じっそうだんかい\]
+ 
+-| 正式タスク | 段階 | 成果物と終了範囲 |
+-| --- | --- | --- |
+-| T22 | H0 | Doc用markup、文書check/prepare、URI/asset、renderer、17章の型・codec・制約を具体化し、対応する公開APIの実装前提を揃える |
+-| T23 | H1 | 既存parser/lower/labelsを使うDoc単独HTML、検査済みpage/asset解決、markup/doc-html、安全なserializer、suiteとCLIの実入口 |
+-| T24 | H2 | Math表示用構造・binding、独立MathML、型付きTeX、Node host KaTeX、式ごとのfallbackを実NEPL3入力から接続 |
+-| T25 | H3 | 純粋TEA、共通Wasm、Worker生成、隔離preview、同artifact exportをNodeとの比較と3 browserで検証 |
++2026\-09\-07の追加指示\[ついかしじ\]により、Doc入力\[にゅうりょく\]からHTMLまでを先行\[せんこう\]して利用可能\[りようかのう\]にする。基準\[きじゅん\]として提示\[ていじ\]された933f0bbへ戻\[もど\]さず、既存\[きそん\]のlower\:\:document・labels\:\:check・plain\_text・source printerを再利用\[さいりよう\]する。Mathのarena・shape・lower・codecは、進行中\[しんこうちゅう\]の表示用\[ひょうじよう\]実装\[じっそう\]を利用\[りよう\]する。source printerをHTML rendererへ読\[よ\]み替\[か\]えない。
+ 
+-依存はT22→T23→T24→T25の順に成果物を供給する。ここでの矢印は実装順を表す。design/tasks.jsonのdepends_onでは後段が前段を参照する。T22は先行foundation/Doc/Mathの実APIを検証して利用するが、T01〜T09の全体完了を待たせない。T23は未対応embedを型付きで拒否し、T24でMathの実解決を追加する。空fragmentで段階をまたがない。
++<a name="n-696d706c656d656e746174696f6e5f646570656e64656e63696573"></a>
+ 
+-T10/T11/T13/T15/T17/T18は先行経路を再利用して当初の全責務を実装する。Math evaluate、Circuit、LSP、汎用provider、4言語UI全体、Pages全受入、T21文書移行は残る。T16はT25と既存最終依存、全required受入条件を要求する。先行利用の成功から既存タスクや受入群全体をpassedにしない。
++<a name="実装依存"></a>
+ 
+-## H0/H1の契約
++## 実装依存\[じっそういぞん\]
+ 
+-Docの既存arenaは表・list・page/relative/external link・image等を保持するが、構造proofやCheckedLabelsは完全なPreparedArticleではない。文書検査は表示対象language/parallel policy、外部page・asset・foreign requirementsを明示する。prepareは対象documentのidentity、全要求、解決結果の型・位置・資源閉包を照合する。backendへ未解決slotやhostの任意HTMLを渡さない。
++| 正式\[せいしき\]タスク | 段階\[だんかい\] | 成果物\[せいかぶつ\]と終了範囲\[しゅうりょうはんい\] |
++| :--- | :--- | :--- |
++| T22 | H0 | Doc用\[よう\]markup、文書\[ぶんしょ\]check・prepare、URI・asset、renderer、17章\[しょう\]の型\[かた\]・codec・制約\[せいやく\]を具体化\[ぐたいか\]し、対応\[たいおう\]する公開\[こうかい\]APIの実装前提\[じっそうぜんてい\]を揃\[そろ\]える。 |
++| T23 | H1 | 既存\[きそん\]のparser・lower・labelsを使\[つか\]うDoc単独\[たんどく\]HTML、検査済\[けんさず\]みpage・asset解決\[かいけつ\]、markup・doc\-html、安全\[あんぜん\]なserializer、suiteとCLIを実際\[じっさい\]に利用\[りよう\]する入口\[いりぐち\]。 |
++| T24 | H2 | Math表示用\[ひょうじよう\]構造\[こうぞう\]とbinding、独立\[どくりつ\]MathML、型付\[かたつ\]きTeX、Node host KaTeX、式\[しき\]ごとのfallbackを、実\[じつ\]NEPL3入力\[にゅうりょく\]から接続\[せつぞく\]する。 |
++| T25 | H3 | 純粋\[じゅんすい\]TEA、共通\[きょうつう\]Wasm、Worker生成\[せいせい\]、隔離\[かくり\]preview、同\[どう\]artifactのexportを、Nodeとの比較\[ひかく\]と3 browserで検証\[けんしょう\]する。 |
+ 
+-markupはtable/header/cell、ordered/unordered listとstart/checkbox、img/alt/caption、一般linkに必要な要素・属性・内容モデルを閉じた型として持つ。同artifact anchor、page ID、相対path、external URI、asset参照を区別する。危険scheme、path traversal、重複path、未宣言asset、偽digest、wrong slotを拒否し、I/O権限はhostに残す。
++依存\[いぞん\]はT22→T23→T24→T25の順\[じゅん\]に成果物\[せいかぶつ\]を供給\[きょうきゅう\]する。ここでの矢印\[やじるし\]は実装順\[じっそうじゅん\]を表\[あらわ\]す。`design/tasks.json`の`depends_on`では、後段\[こうだん\]が前段\[ぜんだん\]を参照\[さんしょう\]する。T22は先行\[せんこう\]foundation・Doc・Mathの実\[じつ\]APIを検証\[けんしょう\]して利用\[りよう\]するが、T01〜T09の全体完了\[ぜんたいかんりょう\]を待\[ま\]たせない。T23は未対応\[みたいおう\]embedを型付\[かたつ\]きで拒否\[きょひ\]し、T24でMathの実解決\[じつかいけつ\]を追加\[ついか\]する。空\[から\]のfragmentで段階\[だんかい\]をまたがない。
+ 
+-Paragraphを入れ子pへ機械変換せず、文のrunと子blockのwrapperを使う。Sentence間に空白を追加しない。Ruby/Anno、Parallel、heading、空表、list start、codeの改行、画像の代替説明を保持し、ブラウザparserのtree補正で意味が変わっていないか確認する。一般DocとKaTeX双方を検査済みmarkupとserializerへ通す。
++T10・T11・T13・T15・T17・T18は先行経路\[せんこうけいろ\]を再利用\[さいりよう\]して、当初\[とうしょ\]の全責務\[ぜんせきむ\]を実装\[じっそう\]する。Math evaluate、Circuit、LSP、汎用\[はんよう\]provider、4言語\[げんご\]UI全体\[ぜんたい\]、Pages全受入\[ぜんうけいれ\]、T21文書移行\[ぶんしょいこう\]は残\[のこ\]る。T16はT25と既存\[きそん\]の最終依存\[さいしゅういぞん\]、すべてのrequired受入条件\[うけいれじょうけん\]を要求\[ようきゅう\]する。先行利用\[せんこうりよう\]の成功\[せいこう\]から、既存\[きそん\]タスクや受入群全体\[うけいれぐんぜんたい\]をpassedにしない。
+ 
+-## H2/H3の契約と検証
++<a name="n-646f63756d656e745f7072657061726174696f6e"></a>
+ 
+-17章を適用する。数式の正本は構造であり、本文のdollar探索、MathMLからのTeX推測、source printer文字列を数式として利用しない。非結合operand、負号/累乗、多文字Unicode記号、片側fence、Doc注記の忠実性を共通試験へ結び付ける。表示のためにevaluateを実行しない。
++<a name="h0h1の契約"></a>
+ 
+-実.nepldからHTMLまでのpositive/negative、MathML-only、KaTeX不在、optional module失敗、局所失敗と全体Stopped、安全性違反、asset不足を検証する。NodeとDOMなし実Workerで固定版・入力・設定が同じ正準markup/manifestを生成することを比較する。
++## H0\/H1の契約\[けいやく\]
+ 
+-Chromium/Firefox/WebKitでscript禁止・same-origin権限なしのpreview、CSP/CORS・font・非root path、古い返信拒否、停止とepoch、同artifact exportを実行する。書出済みHTMLのJavaScript無効表示、offline bundle、zoom・狭幅・印刷・アクセシビリティtreeを確認し、DOM存在だけを視覚組版の成功にしない。WebKit自動試験とSafari/iOS実機確認を区別する。
++Docの既存\[きそん\]arenaは表\[ひょう\]・list・page link・relative link・external link・imageなどを保持\[ほじ\]するが、構造\[こうぞう\]proofやCheckedLabelsは完全\[かんぜん\]なPreparedArticleではない。文書検査\[ぶんしょけんさ\]は、表示対象\[ひょうじたいしょう\]language・parallel policy、外部\[がいぶ\]page・asset・foreign requirementsを明示\[めいじ\]する。prepareは対象\[たいしょう\]documentのidentity、全要求\[ぜんようきゅう\]、解決結果\[かいけつけっか\]の型\[かた\]・位置\[いち\]・資源閉包\[しげんへいほう\]\{resource closure\}を照合\[しょうごう\]する。backendへ未解決\[みかいけつ\]slotやhostの任意\[にんい\]HTMLを渡\[わた\]さない。
+ 
+-各段階は実API・command・source/spec・target・ログ・独立レビューと未検証範囲を記録する。既存bootstrap、Doc source printer、source/Origin、予算、no_std/WASIの回帰を維持する。ローカル成功はPages公開の証拠ではない。
++markupは、table・header・cell、ordered・unordered listとstart・checkbox、img・alt・caption、一般\[いっぱん\]linkに必要\[ひつよう\]な要素\[ようそ\]・属性\[ぞくせい\]・内容\[ないよう\]モデルを、閉\[と\]じた型\[かた\]として持\[も\]つ。同\[どう\]artifactのanchor、page ID、相対\[そうたい\]path、external URI、asset参照\[さんしょう\]を区別\[くべつ\]する。危険\[きけん\]scheme、path traversal、重複\[ちょうふく\]path、未宣言\[みせんげん\]asset、偽\[にせ\]digest、wrong slotを拒否\[きょひ\]し、I\/O権限\[けんげん\]はhostに残\[のこ\]す。
+ 
+-## 正式文書のDoc移行
++Paragraphを入\[い\]れ子\[こ\]のpへ機械変換\[きかいへんかん\]せず、文\[ぶん\]のrunと子\[こ\]blockのwrapperを使\[つか\]う。Sentence間\[かん\]に空白\[くうはく\]を追加\[ついか\]しない。Ruby・Anno、Parallel、heading、空\[から\]の表\[ひょう\]、list start、codeの改行\[かいぎょう\]、画像\[がぞう\]の代替説明\[だいたいせつめい\]を保持\[ほじ\]し、ブラウザparserのtree補正\[ほせい\]で意味\[いみ\]が変\[か\]わっていないか確認\[かくにん\]する。一般\[いっぱん\]DocとKaTeXの双方\[そうほう\]を、検査済\[けんさず\]みmarkupとserializerへ通\[とお\]す。
+ 
+-T23で必要表現が使えるページからT21の棚卸し・変換を進め、数式を含むspecはT24の実生成経路を使用する。T21の完了依存をT24/T19へ接続し、Math評価・Circuit全体の完成待ちでDoc正本化を遅らせない。ページ単位の意味・リンク・安定ID・生成物対応とbootstrap条件は16章のまま維持する。README/AGENTS等のMarkdown入口は必要に応じて.nepld正本から生成し、二重手書き保守をしない。
++<a name="n-6d6174685f616e645f62726f77736572"></a>
++
++<a name="h2h3の契約と検証"></a>
++
++## H2\/H3の契約\[けいやく\]と検証\[けんしょう\]
++
++17章\[しょう\]を適用\[てきよう\]する。数式\[すうしき\]の正本\[せいほん\]は構造\[こうぞう\]であり、本文\[ほんぶん\]のdollar探索\[たんさく\]、MathMLからのTeX推測\[すいそく\]、source printer文字列\[もじれつ\]を数式\[すうしき\]として利用\[りよう\]しない。非結合\[ひけつごう\]operand、負号\[ふごう\]と累乗\[るいじょう\]、多文字\[たもじ\]Unicode記号\[きごう\]、片側\[かたがわ\]fence、Doc注記\[ちゅうき\]の忠実性\[ちゅうじつせい\]を共通試験\[きょうつうしけん\]へ結\[むす\]び付\[つ\]ける。表示\[ひょうじ\]のためにevaluateを実行\[じっこう\]しない。
++
++実\[じつ\]\.nepldからHTMLまでのpositive・negative、MathML\-only、KaTeX不在\[ふざい\]、optional module失敗\[しっぱい\]、局所失敗\[きょくしょしっぱい\]と全体\[ぜんたい\]Stopped、安全性違反\[あんぜんせいいはん\]、asset不足\[ふそく\]を検証\[けんしょう\]する。NodeとDOMなしの実\[じつ\]Workerで、固定版\[こていばん\]・入力\[にゅうりょく\]・設定\[せってい\]が同\[おな\]じ正準\[せいじゅん\]markup・manifestを生成\[せいせい\]することを比較\[ひかく\]する。
++
++Chromium・Firefox・WebKitで、script禁止\[きんし\]かつsame\-origin権限\[けんげん\]なしのpreview、CSP・CORS・font・非\[ひ\]root path、古\[ふる\]い返信\[へんしん\]の拒否\[きょひ\]、停止\[ていし\]とepoch、同\[どう\]artifactのexportを実行\[じっこう\]する。書\[か\]き出\[だ\]し済\[ず\]みHTMLのJavaScript無効表示\[むこうひょうじ\]、offline bundle、zoom・狭\[せま\]い幅\[はば\]・印刷\[いんさつ\]・アクセシビリティtreeを確認\[かくにん\]し、DOMの存在\[そんざい\]だけを視覚組版\[しかくくみはん\]の成功\[せいこう\]にしない。WebKit自動試験\[じどうしけん\]とSafari・iOSの実機確認\[じっきかくにん\]を区別\[くべつ\]する。
++
++各段階\[かくだんかい\]は、実\[じつ\]API・command・source・spec・target・ログ・独立\[どくりつ\]レビューと未検証範囲\[みけんしょうはんい\]を記録\[きろく\]する。既存\[きそん\]bootstrap、Doc source printer、source・Origin、予算\[よさん\]、no\_std・WASIの回帰\[かいき\]を維持\[いじ\]する。ローカルでの成功\[せいこう\]は、Pages公開\[こうかい\]の証拠\[しょうこ\]ではない。
++
++<a name="n-646f63756d656e746174696f6e5f6d6967726174696f6e"></a>
++
++<a name="正式文書のdoc移行"></a>
++
++## 正式文書\[せいしきぶんしょ\]のDoc移行\[いこう\]
++
++T23で必要\[ひつよう\]な表現\[ひょうげん\]が使\[つか\]えるページから、T21の棚卸\[たなおろ\]し・変換\[へんかん\]を進\[すす\]める。数式\[すうしき\]を含\[ふく\]むspecは、T24の実生成経路\[じつせいせいけいろ\]を使用\[しよう\]する。T21の完了依存\[かんりょういぞん\]をT24・T19へ接続\[せつぞく\]し、Math評価\[ひょうか\]・Circuit全体\[ぜんたい\]の完成待\[かんせいま\]ちでDoc正本化\[せいほんか\]を遅\[おく\]らせない。ページ単位\[たんい\]の意味\[いみ\]・リンク・安定\[あんてい\]ID・生成物対応\[せいせいぶつたいおう\]とbootstrapの条件\[じょうけん\]は、16章\[しょう\]のまま維持\[いじ\]する。README・AGENTSなどのMarkdown入口\[いりぐち\]は、必要\[ひつよう\]に応\[おう\]じて\.nepld正本\[せいほん\]から生成\[せいせい\]し、二重\[にじゅう\]手書\[てが\]き保守\[ほしゅ\]をしない。
+diff --git a/doc/migration/authored/18-html-delivery.nepld b/doc/spec/18-html-delivery.nepld
+similarity index 100%
+rename from doc/migration/authored/18-html-delivery.nepld
+rename to doc/spec/18-html-delivery.nepld

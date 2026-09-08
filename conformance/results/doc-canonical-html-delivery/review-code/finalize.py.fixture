@@ -1,0 +1,36 @@
+from pathlib import Path
+import subprocess,json,hashlib
+p=Path(__file__).parent.resolve();root=p.parents[1]
+def sha(b):return hashlib.sha256(b).hexdigest()
+def put(n,b):q=p/n;q.parent.mkdir(parents=True,exist_ok=True);q.write_bytes(b)
+def git(*args):return subprocess.check_output(['git',*args],cwd=root)
+old='799f00d6384d45e8160b51366d03fecb1dd2dfe1';new='3abd255d5a52eec41f741b6b17e4ec9e2213efdc';name='tools/src/doc/canonical/tests.rs'
+assert git('diff','--name-only',old,new).decode().splitlines()==[name]
+put('logging-delta.patch',git('diff',old,new))
+put('delta-before/'+name,git('show',old+':'+name));put('delta-after/'+name,git('show',new+':'+name))
+put('final-head.json',(json.dumps(dict(executed_head=old,reviewed_delta_head=new,changed=[name],production_and_five_inputs_unchanged=True),indent=2)+'\n').encode())
+r=subprocess.run(['python',str(p/'check.py')],cwd=root,capture_output=True,timeout=60)
+put('check.stdout.log',r.stdout);put('check.stderr.log',r.stderr);assert r.returncode==0
+put('check-command.json',(json.dumps(dict(command=['python',str(p/'check.py')],deadline_seconds=60,exit_code=r.returncode),indent=2)+'\n').encode())
+allow=['freeze.py','run.py','run_probe.py','check.py','finalize.py','record.md','snapshot.json','dependencies.json','source.patch','binary.json','commands.json','default-registry.json','checks.json','markdown_probe.rs','markdown_probe-first.rs','markdown-probe-command.json','markdown-probe-first-command.json','markdown-probe.stdout.log','markdown-probe.stderr.log','markdown-probe-first.stdout.log','markdown-probe-first.stderr.log','logging-delta.patch','final-head.json','check.stdout.log','check.stderr.log','check-command.json','delta-before/'+name,'delta-after/'+name]
+for row in json.loads((p/'commands.json').read_bytes()):allow.extend(row['name']+'.'+stream+'.log' for stream in ['stdout','stderr'])
+snap=json.loads((p/'snapshot.json').read_bytes())
+allow.extend('source/'+n for n in snap['scope'] if (p/'source'/n).is_file())
+allow.extend('before/'+n for n in snap['changed'] if (p/'before'/n).is_file())
+allow.append('prior-content/manifest.json');allow.extend('prior-content/'+r['path'] for r in json.loads((p/'prior-content/manifest.json').read_bytes())['files'])
+allow.extend(['prior-g/manifest.json','prior-g/record.md'])
+allow.extend('prior-g/html-first/docs/spec/'+n for n in ['00-contract.html','01-architecture.html','13-reproducibility.html','22-external-extensions.html','assets/doc.css'])
+for kind in ['markdown','html']:
+    for phase in ['first','second']:
+        folder=kind+'-'+phase;allow.append(folder+'/manifest.json')
+        allow.extend(folder+'/'+r['path'] for r in json.loads((p/folder/'manifest.json').read_bytes())['files'])
+assert len(allow)==len(set(allow))
+rows=[]
+for n in sorted(allow):
+    assert not n.startswith(('workspace/','target/'))
+    b=(p/n).read_bytes();rows.append(dict(path=n,bytes=len(b),sha256=sha(b)))
+manifest=dict(scope='Independent fixed chapter18 code/content/canonical generation and separate default-budget failure; browser/cutover final acceptance excluded',head=old,tests_only_delta=new,strict_allowlist=True,files=rows)
+put('manifest.json',(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n').encode())
+for row in rows:
+    b=(p/row['path']).read_bytes();assert len(b)==row['bytes'] and sha(b)==row['sha256']
+print(json.dumps(dict(manifest=str(p/'manifest.json'),sha256=sha((p/'manifest.json').read_bytes()),payloads=len(rows),bytes=sum(r['bytes'] for r in rows),max_bytes=max(r['bytes'] for r in rows))))

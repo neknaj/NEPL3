@@ -1,0 +1,7 @@
+
+running 1 test
+CHAPTER18_TABLE ["正式[せいしき]タスク","段階[だんかい]","成果物[せいかぶつ]と終了範囲[しゅうりょうはんい]","T22","H0","Doc用[よう]markup、文書[ぶんしょ]check・prepare、URI・asset、renderer、17章[しょう]の型[かた]・codec・制約[せいやく]を具体化[ぐたいか]し、対応[たいおう]する公開[こうかい]APIの実装前提[じっそうぜんてい]を揃[そろ]える。","T23","H1","既存[きそん]のparser・lower・labelsを使[つか]うDoc単独[たんどく]HTML、検査済[けんさず]みpage・asset解決[かいけつ]、markup・doc-html、安全[あんぜん]なserializer、suiteとCLIを実際[じっさい]に利用[りよう]する入口[いりぐち]。","T24","H2","Math表示用[ひょうじよう]構造[こうぞう]とbinding、独立[どくりつ]MathML、型付[かたつ]きTeX、Node host KaTeX、式[しき]ごとのfallbackを、実[じつ]NEPL3入力[にゅうりょく]から接続[せつぞく]する。","T25","H3","純粋[じゅんすい]TEA、共通[きょうつう]Wasm、Worker生成[せいせい]、隔離[かくり]preview、同[どう]artifactのexportを、Nodeとの比較[ひかく]と3 browserで検証[けんしょう]する。"]
+test actual_generated_chapter18_keeps_the_table_code_and_sections ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

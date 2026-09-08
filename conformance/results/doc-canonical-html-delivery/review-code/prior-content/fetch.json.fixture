@@ -1,0 +1,39 @@
+{
+  "status": 200,
+  "url": "https://github.com/neknaj/NEPL3/blob/afeadcf70b120c7cf05e48ec2c282e0e4edd5e44/doc/spec/18-html-delivery.md",
+  "commit": "afeadcf70b120c7cf05e48ec2c282e0e4edd5e44",
+  "raw_source_exact": true,
+  "anchors": [
+    {
+      "id": "user-content-18-htmlを先行利用する実装段階",
+      "class": "anchor",
+      "aria-label": "Permalink: 18. HTMLを先行利用する実装段階",
+      "href": "#18-htmlを先行利用する実装段階"
+    },
+    {
+      "id": "user-content-実装依存",
+      "class": "anchor",
+      "aria-label": "Permalink: 実装依存",
+      "href": "#実装依存"
+    },
+    {
+      "id": "user-content-h0h1の契約",
+      "class": "anchor",
+      "aria-label": "Permalink: H0/H1の契約",
+      "href": "#h0h1の契約"
+    },
+    {
+      "id": "user-content-h2h3の契約と検証",
+      "class": "anchor",
+      "aria-label": "Permalink: H2/H3の契約と検証",
+      "href": "#h2h3の契約と検証"
+    },
+    {
+      "id": "user-content-正式文書のdoc移行",
+      "class": "anchor",
+      "aria-label": "Permalink: 正式文書のDoc移行",
+      "href": "#正式文書のdoc移行"
+    }
+  ],
+  "navigation": "not-run"
+}

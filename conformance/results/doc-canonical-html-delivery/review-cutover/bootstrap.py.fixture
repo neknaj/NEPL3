@@ -1,0 +1,48 @@
+from pathlib import Path
+import re,json,hashlib,os,subprocess
+from playwright.sync_api import sync_playwright
+ROOT=Path(__file__).resolve().parents[2];OUT=Path(__file__).parent
+archive=ROOT/'conformance/results/doc-canonical-html-delivery'
+readme=(archive/'README.md').read_bytes();payload=(archive/'payloads.json').read_bytes()
+(OUT/'bootstrap-readme.md').write_bytes(readme);(OUT/'bootstrap-payloads.json').write_bytes(payload)
+snippet=re.findall(r'^```python\n(.*?)^```',readme.decode('utf8'),re.M|re.S)
+assert len(snippet)==1
+(OUT/'verbatim-restore.py').write_text(snippet[0],encoding='utf8',newline='\n')
+work=OUT/'bootstrap-workspace-fixed';dest=work/'conformance/results/doc-canonical-html-delivery';dest.mkdir(parents=True,exist_ok=True)
+(dest/'payloads.json').write_bytes(payload)
+selected=[e for e in json.loads(payload)['files'] if e['owner']=='root-html-first'];assert len(selected)==7
+for e in selected:
+    p=dest/e['file'];p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes((archive/e['file']).read_bytes())
+old=Path.cwd()
+try:
+    os.chdir(work);exec(compile(snippet[0],'README verbatim snippet','exec'),{})
+finally:os.chdir(old)
+output=work/'dist/canonical18-snapshot'
+sha=lambda b:hashlib.sha256(b).hexdigest()
+files=[]
+for e in selected:
+    raw=(output/e['restore']).read_bytes();expected=(ROOT/'.tmp/html-budget-first'/e['restore']).read_bytes()
+    assert raw==expected and sha(raw)==e['sha256'];files.append({'restore':e['restore'],'bytes':len(raw),'sha256':sha(raw)})
+rows=[]
+try:
+    with sync_playwright() as p:
+        for name in ['chromium','firefox','webkit']:
+            browser=getattr(p,name).launch(headless=True);ctx=browser.new_context(java_script_enabled=False,viewport={'width':375,'height':900})
+            network=[]
+            def block(route):network.append(route.request.url);route.abort()
+            ctx.route(re.compile(r'^https?://'),block)
+            page=ctx.new_page();url=(output/'docs/spec/18-html-delivery.html').as_uri();page.goto(url,wait_until='networkidle')
+            assert page.evaluate('document.scripts.length')==0
+            assert page.locator('h1').count()==1 and page.locator('h2').count()==4
+            style=page.locator('.nepl-doc').evaluate('n=>({background:getComputedStyle(n).backgroundColor,whiteSpace:getComputedStyle(n).whiteSpace})')
+            assert style=={'background':'rgb(13, 17, 23)','whiteSpace':'pre-wrap'},style
+            page.screenshot(path=str(OUT/('offline-'+name+'.png')))
+            actual=page.evaluate('''()=>{const base=n=>{const c=n.cloneNode(true);c.querySelectorAll('.nepl-reading,.nepl-notes').forEach(x=>x.remove());return c.textContent};return {rows:document.querySelectorAll('tr').length,cells:[...document.querySelectorAll('th,td')].map(base),codes:[...document.querySelectorAll('article code')].map(n=>n.textContent),sheets:[...document.querySelectorAll('link[rel=stylesheet]')].map(n=>!!n.sheet),ruby:document.querySelectorAll('.nepl-ruby').length}}''')
+            expected=json.loads((OUT/'expected-doc.json').read_bytes())
+            assert actual['rows']==5 and actual['cells']==expected['cells'] and len(actual['cells'])==15
+            assert actual['codes']==['design/tasks.json','depends_on'] and actual['sheets']==[True] and actual['ruby']>0
+            assert not network and page.url==url
+            rows.append({'engine':name,'version':browser.version,'script_enabled':False,'http_https_blocked':True,'network_attempts':network,'computed_style':style,'actual':actual,'url':page.url,'result':'PASS'})
+            browser.close();print('offline '+name+' PASS',flush=True)
+finally:
+    (OUT/'bootstrap-results.json').write_text(json.dumps({'verbatim_snippet_sha256':sha(snippet[0].encode()),'restored_files':files,'browser_cases':rows,'all_completed':len(rows)==3},ensure_ascii=False,indent=2)+'\n',encoding='utf8',newline='\n')

@@ -1,0 +1,1 @@
+nepl3-tools: resolve/render: Stopped(WorkLimit); usage=Usage { source_bytes: 93933, work: 99999989, depth: 14, nodes: 4094852, allocation_units: 222601698, output_bytes: 160, diagnostics: 0, events: 0 }
