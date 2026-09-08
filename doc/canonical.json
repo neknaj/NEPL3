@@ -40,6 +40,14 @@
       "aliases": "doc/migration/aliases/18-html-delivery.json",
       "route": "docs/spec/18-html-delivery.html",
       "renderer": "nepl3-tools.markdown-annotated/2"
+    },
+    {
+      "id": "circuit",
+      "source": "doc/spec/07-circuit.nepld",
+      "projection": "doc/spec/07-circuit.md",
+      "aliases": "doc/migration/aliases/07-circuit.json",
+      "route": "docs/spec/07-circuit.html",
+      "renderer": "nepl3-tools.markdown-annotated/2"
     }
   ],
   "output_limits": {
