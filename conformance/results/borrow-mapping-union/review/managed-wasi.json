@@ -1,0 +1,21 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-core",
+    "-p",
+    "nepl3-reader",
+    "--target-dir",
+    "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-borrow-mapping-union\\target-wasi",
+    "--target",
+    "wasm32-wasip2",
+    "--",
+    "--test-threads=1",
+    "--nocapture"
+  ],
+  "cwd": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-borrow-mapping-union\\source",
+  "exit_code": 0,
+  "elapsed_seconds": 12.355191469192505
+}

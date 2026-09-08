@@ -1,0 +1,69 @@
+[
+  {
+    "path": "doc/migration/authored/progress/math-runtime.nepld",
+    "sha256": "2c267cbd7239ebe344bad2a74d3180659956dc6c5e9a29897013d370416b5a98",
+    "paragraphs_exact": 6,
+    "titles_exact": [
+      "Math runtime の段階実装"
+    ],
+    "code_exact": [
+      "doc/spec/06-math.md",
+      "design/forms.json",
+      "nepl3-math-core",
+      "construct::expression_from_rational",
+      "lower::expression"
+    ],
+    "links_exact": [],
+    "table_rows_exact": [],
+    "ruby_count": 116,
+    "uncovered_kanji": [],
+    "sections": []
+  },
+  {
+    "path": "doc/migration/authored/progress/doc-runtime.nepld",
+    "sha256": "c0e0a2f6ad09c4fadee1d3e0d19a44d872121afc7ff7066adad89266774f0c88",
+    "paragraphs_exact": 22,
+    "titles_exact": [
+      "Doc runtime の段階実装",
+      "同期host接続と文書移行までの残り",
+      "現在の実行経路",
+      "検証の境界",
+      "残り",
+      "Tokenizer同期接続の次段階"
+    ],
+    "code_exact": [
+      "doc/spec/05-document.md",
+      "design/forms.json",
+      "nepl3_tools::doc::host::NativeHost",
+      "ParseSession::read_with_host",
+      "linear-combination.nepld",
+      "nepl3-doc-core",
+      "no_std",
+      "alloc",
+      "nepl3-core",
+      "nepl3.doc.DocumentSyntax",
+      "lower::prefix",
+      "lower::document",
+      "lower::prefix",
+      "foreign Doc Article",
+      "labels::check",
+      "LabelError::diagnostic",
+      "text::plain_text",
+      "print::print",
+      "prepare::inspect",
+      "b5295cef655aa59affffd6644f2902268d071953",
+      "daf94085913930f05c1655d2adbef4f56651864f9a97ac4d261400449c98499e"
+    ],
+    "links_exact": [],
+    "table_rows_exact": [],
+    "ruby_count": 540,
+    "uncovered_kanji": [],
+    "sections": [
+      "native_host",
+      "execution",
+      "validation",
+      "remaining",
+      "tokenizer"
+    ]
+  }
+]

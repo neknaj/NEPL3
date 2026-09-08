@@ -1,0 +1,36 @@
+article ja "Math runtime の[段階実装/だんかいじっそう]"
+body
+  cons paragraph
+    cons "T08は[進行中/しんこうちゅう]。"
+    cons sentence cons code "doc/spec/06-math.md" cons text " と " cons code "design/forms.json" cons text " を" cons ruby text "最終契約" text "さいしゅうけいやく" cons text "とし、" cons ruby text "以下" text "いか" cons text "の" cons ruby text "構造" text "こうぞう" cons text "・" cons ruby text "数値" text "すうち" cons text "helperの" cons ruby text "実行" text "じっこう" cons text "を" cons ruby text "式" text "しき" cons text "evaluateやT08" cons ruby text "全体" text "ぜんたい" cons text "の" cons ruby text "完成" text "かんせい" cons text "へ" cons ruby text "読" text "よ" cons text "み" cons ruby text "替" text "か" cons text "えない。" nil
+    nil
+  cons paragraph
+    cons sentence cons code "nepl3-math-core" cons text " はno_std + alloc。" nil
+    cons "workspace production[依存/いぞん]は[共通/きょうつう]coreだけで、Doc coreやengineへ[依存/いぞん]しない。"
+    cons "[任意精度/にんいせいど]の[型付/かたつ]き[有理数/ゆうりすう]はcoreのInteger/Rationalを[使/つか]い、Math[側/がわ]のnum-bigint/num-traitsは[既定/きてい]featureを[無効/むこう]にした[明示外部依存/めいじがいぶいぞん]である。"
+    cons "Math[固有/こゆう]のNumber[有限十進制約/ゆうげんじっしんせいやく]と[予算付/よさんつ]き[算術/さんじゅつ]helperをMath[側/がわ]に[持/も]つ。"
+    nil
+  cons paragraph
+    cons "MathValueは[全/ぜん]constructorの[平坦/へいたん]なarena、MathSyntaxは[元/もと]source/Origin/token-local View/SourceMapとForeignClosureを[保持/ほじ]する。"
+    cons "[構造/こうぞう]proofは[自由記号/じゆうきごう]の[解決/かいけつ]やCheckedExpressionの[証明/しょうめい]ではない。"
+    cons "Number(1/3)は[拒否/きょひ]するが、[評価用/ひょうかよう]の[一般/いっぱん]Rational(1/3)は[合法/ごうほう]。"
+    cons sentence cons code "construct::expression_from_rational" cons text " は" cons ruby text "有限十進" text "ゆうげんじっしん" cons text "をNumber、それ" cons ruby text "以外" text "いがい" cons text "を" cons ruby text "整数" text "せいすう" cons text "Numberを" cons ruby text "子" text "こ" cons text "とするFracへ" cons ruby text "明示構築" text "めいじこうちく" cons text "する。" nil
+    cons "lowerはこのhelperで[著者/ちょしゃ]のFracを[折/お]り[畳/たた]まない。"
+    nil
+  cons paragraph
+    cons sentence cons code "lower::expression" cons text " は" cons ruby text "実" text "じつ" cons text "compilerが" cons ruby text "生成" text "せいせい" cons text "したMath" cons ruby text "表層" text "ひょうそう" cons text "schemaとchecked SyntaxBundleを" cons ruby text "受" text "う" cons text "け、" cons ruby text "同一" text "どういつ" cons text "Budget/SourceAdmissionで" cons ruby text "再検査" text "さいけんさ" cons text "・" cons ruby text "変換" text "へんかん" cons text "する。" nil
+    cons "[正式文法/せいしきぶんぽう]の29 formと2 leafを、process[不要/ふよう]の[保存/ほぞん]seedから[実/じつ]compile→ParseSession→lower→[初回/しょかい]CBOR[受信/じゅしん]へ[通/とお]す。"
+    cons "Mathに[埋/う]め[込/こ]むDoc Sentenceは[実/じつ]Doc readerで[構文/こうぶん]を[作/つく]り、[意味不正/いみふせい]な[注釈/ちゅうしゃく]もguest syntaxのまま[保持/ほじ]する。"
+    cons "[診断位置/しんだんいち]の[元/もと]になる[名前/なまえ]operandとconstructor NodeRefを[保持/ほじ]し、Spanを[本文検索/ほんぶんけんさく]で[作/つく]らない。"
+    nil
+  cons paragraph
+    cons "[管理対象/かんりたいしょう]の[数値/すうち]helperは1/2+1/3=5/6、0.1+0.2=3/10、128bitを[超/こ]える[整数/せいすう]、[除算/じょざん]ゼロと[先行予算停止/せんこうよさんていし]を[検査/けんさ]する。"
+    cons "これは[式/しき]のbinding、[左/ひだり]から[右/みぎ]の[評価順/ひょうかじゅん]、Exact/Symbolic[分類/ぶんるい]や[部分評価/ぶぶんひょうか]の[完成/かんせい]ではない。"
+    cons "[構造側/こうぞうがわ]はmatrix/vector/fence/root degree、100k[深/ふか]いarenaのClone/Eq/drop、[共有最長/きょうゆうさいちょう]Depth、source[閉包不足/へいほうぶそく]、first-receiver[停止/ていし]と[元入力不変/もとにゅうりょくふへん]を[検査/けんさ]する。"
+    nil
+  cons paragraph
+    cons "[残/のこ]りは[名前/なまえ]scopeとfree_symbols、CheckedExpression、[式/しき]evaluateの[全/ぜん]exact/symbolic[規則/きそく]と[部分結果/ぶぶんけっか]Report、Math[印字/いんじ]/MathML backend、Doc annotationのsuite[準備/じゅんび]、[各操作/かくそうさ]の[完全/かんぜん]な[要求/ようきゅう]/[返信包絡/へんしんほうらく]である。"
+    cons "MathValue/MathSyntaxの[値/あたい]schemaだけをこれらのoperation[実装済/じっそうず]みとしない。"
+    cons "M01/M02/M03の[全/ぜん]target[達成/たっせい]も[未宣言/みせんげん]のまま[保持/ほじ]する。"
+    nil
+  nil
