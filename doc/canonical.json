@@ -2,6 +2,14 @@
   "version": 1,
   "pages": [
     {
+      "id": "contract",
+      "source": "doc/spec/00-contract.nepld",
+      "projection": "doc/spec/00-contract.md",
+      "aliases": "doc/migration/aliases/00-contract.json",
+      "route": "docs/spec/00-contract.html",
+      "renderer": "nepl3-tools.markdown-annotated/2"
+    },
+    {
       "id": "reproducibility",
       "source": "doc/spec/13-reproducibility.nepld",
       "projection": "doc/spec/13-reproducibility.md",

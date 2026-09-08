@@ -208,7 +208,7 @@ fn markdown_projection_preserves_literal_punctuation_and_code_delimiters() -> Re
 }
 
 #[test]
-fn actual_contract_projects_to_equivalent_markdown_events() -> Result<(), String> {
+fn historical_contract_projects_to_equivalent_markdown_events() -> Result<(), String> {
     let compiled = compiled()?;
     let output = from_source(
         &compiled,
@@ -235,7 +235,7 @@ fn actual_contract_projects_to_equivalent_markdown_events() -> Result<(), String
     }
     assert_eq!(
         events(&output),
-        events(include_str!("../../../doc/spec/00-contract.md"))
+        events(include_str!("../../migration/fixtures/00-contract.md"))
     );
     assert_eq!(
         output,

@@ -1,8 +1,9 @@
-"""Reproducible migration candidate for spec/00-contract.md, not a general Markdown converter.
+"""Reproduce the fixed pre-migration chapter-zero converter fixture.
 
 Only this page's headings, paragraphs, flat lists and single-backtick code are
 accepted. A new Markdown feature is an error, never silently flattened.
-The Markdown page remains canonical until the migration acceptance is complete.
+The historical Markdown input is not the current specification. Current source
+ownership belongs to doc/canonical.json; this converter does not rewrite it.
 """
 import argparse
 import hashlib
@@ -11,7 +12,9 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT / "doc/spec/00-contract.md"
+SOURCE = ROOT / "tools/migration/fixtures/00-contract.md"
+SOURCE_COMMIT = "a163764e93e2809f8013d7bbe16721082f979143"
+SOURCE_SHA256 = "4ca8d780d32696bf102774c346ffdf18d01452085f93a2daae9e49acf16b003f"
 TARGET = ROOT / "doc/migration/00-contract.nepld"
 
 
@@ -87,11 +90,14 @@ def main():
     raw = SOURCE.read_bytes()
     # Git's canonical repository text uses LF, independent of checkout settings.
     text = raw.decode("utf-8").replace("\r\n", "\n")
+    if hashlib.sha256(text.encode()).hexdigest() != SOURCE_SHA256:
+        raise SystemExit("historical converter input changed; do not replace it with current spec")
     generated = generate(text)
-    audit = json.dumps({"canonical": "doc/spec/00-contract.md", "candidate": "doc/migration/00-contract.nepld",
-                       "canonical_lf_sha256": hashlib.sha256(text.encode()).hexdigest(),
+    audit = json.dumps({"source": "tools/migration/fixtures/00-contract.md", "candidate": "doc/migration/00-contract.nepld",
+                       "source_commit": SOURCE_COMMIT, "source_path_at_commit": "doc/spec/00-contract.md",
+                       "source_lf_sha256": SOURCE_SHA256,
                        "candidate_sha256": hashlib.sha256(generated.encode()).hexdigest(),
-                       "status": "candidate-not-canonical", "human_meaning_review": "not-run",
+                       "status": "historical-converter-fixture", "human_meaning_review": "not-run",
                        "markdown_projection": "restricted-candidate-view", "legacy_anchor_compatibility": "not-implemented"},
                       indent=2) + "\n"
     for path, data in [(TARGET, generated), (TARGET.with_suffix(".json"), audit)]:

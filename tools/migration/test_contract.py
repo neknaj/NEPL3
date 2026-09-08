@@ -1,9 +1,24 @@
 import unittest
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
 import contract
 
 
 class ContractMigration(unittest.TestCase):
-    def test_current_source_and_explicit_code(self):
+    def test_changed_historical_fixture_cannot_rewrite_expected_output(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source.md"
+            output = Path(temporary) / "output.nepld"
+            source.write_text(contract.SOURCE.read_text(encoding="utf-8") + "\nChanged.\n", encoding="utf-8")
+            output.write_bytes(b"preserved expected fixture")
+            with patch.object(contract, "SOURCE", source), patch.object(contract, "TARGET", output), patch("sys.argv", ["contract.py", "--write"]):
+                with self.assertRaisesRegex(SystemExit, "historical converter input changed"):
+                    contract.main()
+            self.assertEqual(output.read_bytes(), b"preserved expected fixture")
+            self.assertFalse(output.with_suffix(".json").exists())
+
+    def test_historical_source_and_explicit_code(self):
         source = contract.SOURCE.read_text(encoding="utf-8")
         result = contract.generate(source)
         self.assertEqual(result, contract.TARGET.read_text(encoding="utf-8"))
