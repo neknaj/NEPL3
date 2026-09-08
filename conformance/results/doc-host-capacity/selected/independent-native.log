@@ -1,0 +1,24 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.27s
+     Running unittests src\lib.rs (target-native\debug\deps\independent_doc_capacity-a2c95934688990c5.exe)
+
+running 2 tests
+test tests::distinct_authored_sentences_are_all_exported_in_order ... source_bytes=17815; html_bytes=71197; 512 distinct Ruby sentences retained in order
+ok
+test tests::old_and_new_caps_real_parser_and_sticky_other_limits ... case=old nodes; result=Err("candidate stopped: NodeLimit; cursor=Some(14231); usage=Usage { source_bytes: 28462, work: 18531219, depth: 150, nodes: 1000000, allocation_units: 154284519, output_bytes: 381026, diagnostics: 0, events: 0 }"); usage=Usage { source_bytes: 28462, work: 18531219, depth: 150, nodes: 1000000, allocation_units: 154284519, output_bytes: 381026, diagnostics: 0, events: 0 }
+case=new nodes; result=Ok(1413); usage=Usage { source_bytes: 28462, work: 26125095, depth: 150, nodes: 1441749, allocation_units: 165634269, output_bytes: 381026, diagnostics: 0, events: 0 }
+case=work; result=Err("Stopped(WorkLimit)"); usage=Usage { source_bytes: 14231, work: 24, depth: 0, nodes: 0, allocation_units: 0, output_bytes: 0, diagnostics: 0, events: 0 }
+case=allocation; result=Err("Boundary(Stopped(AllocationLimit))"); usage=Usage { source_bytes: 14231, work: 14509, depth: 2, nodes: 9, allocation_units: 992, output_bytes: 74, diagnostics: 0, events: 0 }
+case=source; result=Err("Stopped(SourceLimit)"); usage=Usage { source_bytes: 0, work: 0, depth: 0, nodes: 0, allocation_units: 0, output_bytes: 0, diagnostics: 0, events: 0 }
+case=depth; result=Err("Schema(Stopped(DepthLimit))"); usage=Usage { source_bytes: 14231, work: 14256, depth: 0, nodes: 1, allocation_units: 451, output_bytes: 0, diagnostics: 0, events: 0 }
+case=output; result=Err("Stopped(OutputLimit)"); usage=Usage { source_bytes: 14231, work: 14258, depth: 2, nodes: 4, allocation_units: 515, output_bytes: 0, diagnostics: 0, events: 0 }
+case=cancel; result=Err("Stopped(Cancelled)"); usage=Usage { source_bytes: 0, work: 0, depth: 0, nodes: 0, allocation_units: 0, output_bytes: 0, diagnostics: 0, events: 0 }
+ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.68s
+
+   Doc-tests independent_doc_capacity
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

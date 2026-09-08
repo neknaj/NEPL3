@@ -1,0 +1,200 @@
+{
+  "review": "Doc development-host cumulative Nodes allowance",
+  "production_commit": "0516d9fa245a201277f5abd684a69df5eda1ca53",
+  "ci_delta_commit": "521075b60aa266db25ce8ce7ad53f23a8864f57f",
+  "blocking_findings": [],
+  "fixed_findings": [
+    "New doc_capacity test absent from explicit WASI CI target selection; fixed in 521075b"
+  ],
+  "runs": [
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "nepl3-tools",
+        "--test",
+        "doc_capacity",
+        "--target-dir",
+        "C:\\projects\\NEPL3-doc-capacity\\.tmp\\review-doc-capacity\\target-native",
+        "--",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "C:\\projects\\NEPL3-doc-capacity\\.tmp\\review-doc-capacity\\fixed",
+      "exit_code": 0,
+      "elapsed_seconds": 2.7261583000654355,
+      "passed": 1
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--manifest-path",
+        "C:\\projects\\NEPL3-doc-capacity\\.tmp\\review-doc-capacity\\probe\\Cargo.toml",
+        "--target-dir",
+        "C:\\projects\\NEPL3-doc-capacity\\.tmp\\review-doc-capacity\\target-native",
+        "--",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "C:\\projects\\NEPL3-doc-capacity\\.tmp\\review-doc-capacity",
+      "exit_code": 0,
+      "elapsed_seconds": 14.44106920005288,
+      "passed": 2
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "nepl3-tools",
+        "--test",
+        "doc_capacity",
+        "--target-dir",
+        "C:\\projects\\NEPL3-doc-capacity\\.tmp\\review-doc-capacity\\target-wasi",
+        "--target",
+        "wasm32-wasip2",
+        "--",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "C:\\projects\\NEPL3-doc-capacity\\.tmp\\review-doc-capacity\\fixed",
+      "exit_code": 0,
+      "elapsed_seconds": 238.49534210003912,
+      "passed": 1
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--manifest-path",
+        "C:\\projects\\NEPL3-doc-capacity\\.tmp\\review-doc-capacity\\probe\\Cargo.toml",
+        "--target-dir",
+        "C:\\projects\\NEPL3-doc-capacity\\.tmp\\review-doc-capacity\\target-wasi",
+        "--target",
+        "wasm32-wasip2",
+        "--",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "cwd": "C:\\projects\\NEPL3-doc-capacity\\.tmp\\review-doc-capacity",
+      "exit_code": 0,
+      "elapsed_seconds": 298.4697269999888,
+      "passed": 2
+    }
+  ],
+  "logs": [
+    {
+      "path": "selected/managed-native.log",
+      "sha256": "2691a9035a00f2465bd43d828d92f36f6bfe0b61ce3eba96bcd5d53fafac0d8a",
+      "original_path": "managed-native-utf8.log",
+      "original_sha256": "2691a9035a00f2465bd43d828d92f36f6bfe0b61ce3eba96bcd5d53fafac0d8a",
+      "normalization": "UTF-8 preserved; CRLF/CR line endings to LF"
+    },
+    {
+      "path": "selected/independent-native.log",
+      "sha256": "bf72dd964dbbc4caecb5643d4938a38a595a71895ba774718c96b1c56d129c30",
+      "original_path": "independent-native-utf8.log",
+      "original_sha256": "bf72dd964dbbc4caecb5643d4938a38a595a71895ba774718c96b1c56d129c30",
+      "normalization": "UTF-8 preserved; CRLF/CR line endings to LF"
+    },
+    {
+      "path": "selected/managed-wasi.log",
+      "sha256": "3e606acd5b558352e928d1131c537fc6383328337ad77e9e2ad84113f2ba546d",
+      "original_path": "managed-wasi-utf8.log",
+      "original_sha256": "3e606acd5b558352e928d1131c537fc6383328337ad77e9e2ad84113f2ba546d",
+      "normalization": "UTF-8 preserved; CRLF/CR line endings to LF"
+    },
+    {
+      "path": "selected/independent-wasi.log",
+      "sha256": "ce8cca31b5a596e3f72d5b9a16781bf432456119afb9750e3c3d7a59a4716b6c",
+      "original_path": "independent-wasi-utf8.log",
+      "original_sha256": "ce8cca31b5a596e3f72d5b9a16781bf432456119afb9750e3c3d7a59a4716b6c",
+      "normalization": "UTF-8 preserved; CRLF/CR line endings to LF"
+    }
+  ],
+  "archive_files": [
+    {
+      "path": "record.md",
+      "sha256": "d9f366a94e2cef400f9875c796bb7310df09b0242c6005adfafb28d24abac9dd",
+      "bytes": 4718
+    },
+    {
+      "path": "reviewed-files.json",
+      "sha256": "3bc0e4078061168ea470b7b3eac5b94c1768670e7401edbb4a53ff1bf19be5bb",
+      "bytes": 1177
+    },
+    {
+      "path": "files.json",
+      "sha256": "c9cd7f04e6442535f6c731c14f7fc140a275071eee957eb4a75debe9c1fa822e",
+      "bytes": 462573
+    },
+    {
+      "path": "changes.patch",
+      "sha256": "9193dd602a30a6612699e188039ffe429f72dc450984cc547189ccda5b1ff6c2",
+      "bytes": 4585
+    },
+    {
+      "path": "ci-final.yml",
+      "sha256": "5b9f05004d488ab3174a2798948e9edffea935df790432675b7989fa14a4c6a7",
+      "bytes": 12813
+    },
+    {
+      "path": "probe/Cargo.toml",
+      "sha256": "284313623ff82fbcfd0cf61b139ba61012744c12daa8a54a065db15cf63b7708",
+      "bytes": 206
+    },
+    {
+      "path": "probe/Cargo.lock",
+      "sha256": "a6aca546e9cd03e20d59b226fe767a89362f4f560909ff70c47365bb0d466c69",
+      "bytes": 7449
+    },
+    {
+      "path": "probe/src/lib.rs",
+      "sha256": "cfd0354551670215d66c5a210de36e30181847a932cbff8528e13d67cffc5919",
+      "bytes": 5348
+    },
+    {
+      "path": "run.py",
+      "sha256": "e280bbdacb3f48d4c52826d36cea8b14796730d0baf3d27acfdeb478c65dd29a",
+      "bytes": 1025
+    },
+    {
+      "path": "audit.py",
+      "sha256": "c63137eb6d6ec24ad892758eecc8a67b6df8b95e4d89dc28655e0c024e5a4843",
+      "bytes": 2113
+    },
+    {
+      "path": "selected/managed-native.log",
+      "sha256": "2691a9035a00f2465bd43d828d92f36f6bfe0b61ce3eba96bcd5d53fafac0d8a",
+      "bytes": 901
+    },
+    {
+      "path": "selected/independent-native.log",
+      "sha256": "bf72dd964dbbc4caecb5643d4938a38a595a71895ba774718c96b1c56d129c30",
+      "bytes": 2366
+    },
+    {
+      "path": "selected/managed-wasi.log",
+      "sha256": "3e606acd5b558352e928d1131c537fc6383328337ad77e9e2ad84113f2ba546d",
+      "bytes": 969
+    },
+    {
+      "path": "selected/independent-wasi.log",
+      "sha256": "ce8cca31b5a596e3f72d5b9a16781bf432456119afb9750e3c3d7a59a4716b6c",
+      "bytes": 3754
+    }
+  ],
+  "unexecuted": [
+    "browser execution",
+    "physical bare-metal execution",
+    "full workspace regression repeated independently",
+    "all authored chapters independently exported"
+  ],
+  "separate_root_logs": "Read parent nodes-10m failures/successes; not counted as independent executions"
+}

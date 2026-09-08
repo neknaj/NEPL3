@@ -1,0 +1,84 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 5e85907..c093131 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -150,6 +150,7 @@ jobs:
+           cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1
+           cargo test --locked -p nepl3-tools --test grammar region:: --target wasm32-wasip2 -- --test-threads=1
+           cargo test --locked -p nepl3-tools --test doc --target wasm32-wasip2 -- --test-threads=1
++          cargo test --locked -p nepl3-tools --test doc_capacity --target wasm32-wasip2 -- --test-threads=1
+           cargo test --locked -p nepl3-tools --test math --target wasm32-wasip2 -- --test-threads=1
+       - name: Compile foundation for browser Wasm
+         run: cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html --no-default-features --target wasm32-unknown-unknown
+diff --git a/doc/spec/21-doc-pages.md b/doc/spec/21-doc-pages.md
+index 434f319..be577fa 100644
+--- a/doc/spec/21-doc-pages.md
++++ b/doc/spec/21-doc-pages.md
+@@ -138,6 +138,14 @@ CLIのrenderer識別子は `nepl3-tools.markdown/3` とする。
+ comment内のpathはdelimiterにならないようescapeする。I/O途中失敗は未完成fileを
+ 残す場合があり、既存fileを置換して成功扱いにはしない。
+ 
++開発hostのDoc操作はNodes上限を10,000,000とする。Nodesは最終ASTの大きさだけではなく、
++型付き交換値等の検査訪問も含む累積量である。従来の1,000,000では、短いRuby付き512文を
++128段落へ置いた約14KBの文書でも停止した。新上限はこの通常の文単位執筆を受け入れる
++desktop hostの設定であり、coreの資源会計を省く規則ではない。Work上限100,000,000、
++AllocationUnits上限500,000,000と他の上限は維持し、停止後の再試行でBudgetを増やさない。
++bare-metal等の別hostへこの設定を強制しない。全ての大きい文書が処理可能になったとはせず、
++残る資源停止と未解決リンクは区別して記録する。
++
+ Sectionの明示ID、source/origin対応、Doc固有のSentence境界をMarkdownから復元する
+ 一般的なroundtripではない。旧anchor対応・正本registry切替・人の意味レビューは別条件で、
+ 限定projectionの成功だけで元Markdownを削除しない。
+diff --git a/tools/src/doc/source.rs b/tools/src/doc/source.rs
+index d0f4914..bd3823c 100644
+--- a/tools/src/doc/source.rs
++++ b/tools/src/doc/source.rs
+@@ -392,12 +392,15 @@ pub fn parse_source_route(
+     }
+ }
+ 
++/// Desktop development-host allowance. `nodes` includes cumulative typed-value
++/// validation visits, not just the number of syntax nodes in the final tree.
++/// Every operation still keeps its own fixed, sticky Work/Allocation limits.
+ pub fn budget() -> Budget {
+     Budget::new(Limits {
+         source_bytes: 10_000_000,
+         work: 100_000_000,
+         depth: 1000,
+-        nodes: 1_000_000,
++        nodes: 10_000_000,
+         allocation_units: 500_000_000,
+         output_bytes: 10_000_000,
+         diagnostics: 1000,
+diff --git a/tools/tests/doc_capacity.rs b/tools/tests/doc_capacity.rs
+new file mode 100644
+index 0000000..f05d45b
+--- /dev/null
++++ b/tools/tests/doc_capacity.rs
+@@ -0,0 +1,26 @@
++//! Desktop Doc host capacity against an authored sequence of short sentences.
++use nepl3_tools::doc::{export, source::compiled};
++
++#[test]
++fn annotated_sentences_exceed_the_old_host_node_cap_without_losing_content() -> Result<(), String> {
++    let mut source = String::from("article ja \"T\" body ");
++    for _ in 0..128 {
++        source.push_str("cons paragraph ");
++        for _ in 0..4 {
++            source.push_str("cons \"[文/ぶん]。\" ");
++        }
++        source.push_str("nil ");
++    }
++    source.push_str("nil");
++    let output = export::generate(&compiled()?, &source)?;
++    assert_eq!(output.html.matches("class=\"nepl-ruby\"").count(), 512);
++    assert_eq!(output.html.matches("ぶん").count(), 512);
++    assert_eq!(output.html.matches('。').count(), 512);
++    assert!(!output.html.contains("<script"));
++    let manifest: serde_json::Value =
++        serde_json::from_str(&output.manifest).map_err(|e| e.to_string())?;
++    let parsed = &manifest["operations"]["parse_and_validate"];
++    println!("{}", manifest["operations"]);
++    assert!(parsed["nodes"].as_u64().ok_or("nodes")? > 1_000_000);
++    Ok(())
++}
