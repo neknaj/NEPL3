@@ -1,0 +1,34 @@
+[
+  {
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-preview\\.tmp\\browser-venv\\Scripts\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "C:\\projects\\NEPL3-doc-canonical-preview\\.tmp\\review-webkit-final\\source\\tools\\audit\\doc_html",
+      "-p",
+      "test_corpus.py"
+    ],
+    "exit": 0,
+    "expected": 0,
+    "log": "failure-check-0.log"
+  },
+  {
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-preview\\.tmp\\browser-venv\\Scripts\\python.exe",
+      "C:\\projects\\NEPL3-doc-canonical-preview\\.tmp\\review-webkit-final\\source\\tools\\audit\\doc_html\\browser.py",
+      "--corpus",
+      "C:\\projects\\NEPL3-doc-canonical-preview\\.tmp\\review-webkit-final\\corpus.log",
+      "--css",
+      "C:\\projects\\NEPL3-doc-canonical-preview\\.tmp\\review-webkit-final\\source\\crates\\languages\\doc\\html\\assets\\doc.css",
+      "--output",
+      "C:\\projects\\NEPL3-doc-canonical-preview\\.tmp\\review-webkit-final\\missing-engine.json",
+      "--chromium",
+      "C:\\projects\\NEPL3-doc-canonical-preview\\.tmp\\review-webkit-final\\does-not-exist.exe"
+    ],
+    "exit": 1,
+    "expected": 1,
+    "log": "failure-check-1.log"
+  }
+]

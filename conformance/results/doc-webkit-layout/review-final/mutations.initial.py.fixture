@@ -1,0 +1,23 @@
+from pathlib import Path
+import importlib.util,json
+from playwright.sync_api import sync_playwright
+R=Path(__file__).resolve().parent
+s=importlib.util.spec_from_file_location('b',R/'nowrap-fix/browser.py');m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+cases=m.extract_cases((R/'corpus.log').read_bytes());css=(R/'nowrap-fix/doc.css').read_text(encoding='utf8');oldcss=(R/'source/crates/languages/doc/html/assets/doc.css').read_text(encoding='utf8')
+results={}
+with sync_playwright() as p:
+ for engine in m.BROWSERS:
+  browser=getattr(p,engine).launch();page=browser.new_page(java_script_enabled=False);rows=[]
+  tests=[('line-reservation','missing-Z',cases['line-reservation'].replace('>Z<br>','>X<br>'),css,False),('line-reservation','missing-Y',cases['line-reservation'].replace('<br>Y<','<br>X<'),css,False)]
+  for case in ['ruby-multiline','anno-multiline','line-reservation']:
+   tests.extend([(case,'removed-br',cases[case].replace('<br>',''),css,False),(case,'hidden-br',cases[case],css+'br{display:none}',False),(case,'original',cases[case],css,True)])
+  for phase,c in [('before',oldcss),('after',css)]:
+   tests.append(('ruby','long-reading-'+phase,cases['ruby'].replace('read</span>','LONG READING WITH SEVERAL WORDS</span>'),c,phase=='after' or engine!='webkit'))
+  for case,label,html,style,expected in tests:
+   page.set_content('<!doctype html><style>'+style+'.nepl-doc{font:20px/1.2 Arial;width:80px}</style>'+html)
+   try:
+    row=page.evaluate(m.MEASURE,case);valid=m.valid_measurement({'case':case,**row});error=None
+   except Exception as e:row=None;valid=False;error=str(e)
+   rows.append({'case':case,'mutation':label,'scope':'mutated real output / CSS failure diagnostic','expected':expected,'accepted':valid,'row':row,'error':error});assert valid==expected,(engine,label,row)
+  results[engine]={'version':browser.version,'rows':rows};browser.close()
+(R/'mutation-results.json').write_text(json.dumps(results,indent=2)+'\n',encoding='utf8');print('39 independent original/negative browser checks passed')

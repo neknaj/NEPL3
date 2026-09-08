@@ -1,0 +1,30 @@
+{
+  "result": "PASS",
+  "changed_atoms": [
+    4,
+    10,
+    9
+  ],
+  "changed_sentences": 22,
+  "raw_code": 1,
+  "inline_codes": [
+    "baseline-source:first/last",
+    "playwright install --with-deps"
+  ],
+  "link_targets": [
+    {
+      "kind": "ExternalTarget",
+      "fields": {
+        "uri": "https://www.w3.org/TR/CSS2/visudet.html#leading"
+      }
+    },
+    {
+      "kind": "ExternalTarget",
+      "fields": {
+        "uri": "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+      }
+    }
+  ],
+  "ruby_occurrences": 134,
+  "ruby_unique": 98
+}

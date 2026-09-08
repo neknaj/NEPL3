@@ -1,0 +1,41 @@
+{
+  "head": "b29a420480b94d34876fe39a7451a446aadb240d",
+  "files": [
+    {
+      "path": "doc/spec/05-document.md",
+      "snapshot": "0-source-before.txt",
+      "sha256": "338c0f7ac1dc4f4cf8bf1eb537fa816524e2cadc7ebe73475e462ffd42082abf",
+      "bytes": 30046
+    },
+    {
+      "path": "doc/migration/authored/05-document.nepld",
+      "snapshot": "0-draft-before.txt",
+      "sha256": "ab4b59d22adb6d09c20ebfaa6734d1b108da9e30b2f5a5f6942ff85302063982",
+      "bytes": 66043
+    },
+    {
+      "path": "doc/spec/20-doc-html.md",
+      "snapshot": "1-source-before.txt",
+      "sha256": "301e208075a838537f5325c4a7ccbddccace1bb5e3d0877d4d4c9de2d6982a72",
+      "bytes": 8879
+    },
+    {
+      "path": "doc/migration/authored/20-doc-html.nepld",
+      "snapshot": "1-draft-before.txt",
+      "sha256": "356f41bf562251b730065bc6773024cc850cf36ef8d11b19cc96ac9ee16497b6",
+      "bytes": 17699
+    },
+    {
+      "path": "doc/development.md",
+      "snapshot": "2-source-before.txt",
+      "sha256": "f450a403e83276b974206ba844c3247ba7c33c8c5660a032808ad4e9c505711e",
+      "bytes": 22681
+    },
+    {
+      "path": "doc/migration/authored/guide/development.nepld",
+      "snapshot": "2-draft-before.txt",
+      "sha256": "eb3fefe2e22ce0116a9827d08e724569e57efb186a8e7051a36b21e2e3287bbe",
+      "bytes": 50842
+    }
+  ]
+}

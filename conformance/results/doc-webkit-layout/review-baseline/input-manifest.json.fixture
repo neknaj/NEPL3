@@ -1,0 +1,27 @@
+[
+  {
+    "path": "before\\crates\\languages\\doc\\html\\assets\\doc.css",
+    "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2",
+    "bytes": 1860
+  },
+  {
+    "path": "before\\doc\\spec\\20-doc-html.md",
+    "sha256": "4099cd8e010ba0e60ae6d4e447f56c4109f8b9988658844c73f89a10039744b1",
+    "bytes": 7649
+  },
+  {
+    "path": "before\\tools\\audit\\doc_html\\browser.py",
+    "sha256": "92905bcdc7f1d889126e8df9abb9b6c42d657d60607e9a9b70a52219379f2b7c",
+    "bytes": 4514
+  },
+  {
+    "path": "before\\tools\\tests\\doc\\html.rs",
+    "sha256": "c69eefde9e157140162a4f73851368ee9ccfa42d1427c135f44cf82582ca2b58",
+    "bytes": 14888
+  },
+  {
+    "path": "corpus.log",
+    "sha256": "c0cc94fd546eab46fe6ab69520b58bb23f08bd4093df71bdc31837f5146119e7",
+    "bytes": 422
+  }
+]
