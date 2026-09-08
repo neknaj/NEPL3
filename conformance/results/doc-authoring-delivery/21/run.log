@@ -1,0 +1,57 @@
+{
+  "authored_sha256": "e6afe2c852df1a3c8667426ca94f92cbe2885296f0f74fbd1a5ba099ebe1a3b5",
+  "inline_code_exact_multiset": [
+    "nepl3_doc_core::pages",
+    "interfaces/doc.json",
+    "PageRegistration",
+    "id",
+    "source",
+    "route",
+    "PageDocument",
+    "DocumentSyntax",
+    "PageSet",
+    "-_.",
+    ".",
+    "..",
+    ".",
+    "..",
+    "\\ : ? # %",
+    "docs/a",
+    "docs/a/index.html",
+    "resolve",
+    "length:id:revision:counter",
+    "nepl3_doc_html::pages::render_pages",
+    "InvalidExternalUri { page, node }",
+    "BetweenArtifacts",
+    "MissingOutputAnchor { page, node, target }",
+    "nepl3-tools doc-html pages <manifest.json> <new-directory>",
+    "assets/doc.css",
+    ".html",
+    "LinkTarget.Page",
+    "Relative",
+    ".",
+    "..",
+    "n-",
+    "PageLinkPlan",
+    "NEPL3.Doc.Pages.v1\\0",
+    "remaining",
+    "resolve",
+    "nepl3-tools doc-markdown <source.nepld> <new-file.md>",
+    "prepare::inspect",
+    "_+.-",
+    "nepl3-tools.markdown/4",
+    "markdown"
+  ],
+  "links_exact_in_order": [
+    "https://spec.commonmark.org/0.31.2/#code-spans",
+    "https://spec.commonmark.org/0.31.2/#fenced-code-blocks"
+  ],
+  "sections": [
+    "html_pages",
+    "pages_export",
+    "markdown_projection"
+  ],
+  "ruby_count": 690,
+  "scope": "Independent restricted source parser from fixed forms plus direct full-source review, not production runtime"
+}
+[]

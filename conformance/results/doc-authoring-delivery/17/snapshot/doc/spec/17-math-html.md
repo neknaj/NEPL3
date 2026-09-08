@@ -1,0 +1,90 @@
+# 17. Doc・MathのHTML生成と数式表示
+
+## 1. 生成と閲覧
+
+Doc・MathのHTML生成は `KaTeXPreferred` を標準とし、検査済み数式から忠実に変換できる場合に生成環境でKaTeXを実行する。生成済み文書はHTML・CSS・fontで表示し、閲覧時にKaTeXを実行しない。独立したNEPL3 MathML backendを残し、すべてのMath constructorを扱うportable出力とfallbackを提供する。表示は評価を暗黙に呼ばない。
+
+| 場面 | 生成環境 | 渡す成果物 |
+| --- | --- | --- |
+| CLI | host側の許可済みKaTeX adapter | 完成HTML・CSS・font |
+| Playground | ブラウザWorker内のJavaScript adapter | 完成した検査済みHTML artifact |
+| preview・書出し済み文書の閲覧 | KaTeXを実行しない | 同じ生成結果とassetを表示 |
+
+Workerでは `renderToString` を使用する。DOMへ描画する `render` を呼ばない。ブラウザ利用者にNode.jsや専用serverを要求しない。ユーザー編集後の生成は各preview表示前・書出し前に行い、サイトbuild時の生成だけで任意の編集内容を扱えるとはしない。
+
+KaTeXの取得をoptional capabilityとして分離し、module読込失敗でNEPL3 WasmやMathMLまで起動不能にしない。数式専用Workerを優先し、解析済み状態とMathMLを言語Worker側に保持する。その場合renderer側epochも要求identityに含める。Wasm自体が利用不能な環境で新規変換できるとはせず、外部serverへ原稿を送るfallbackも行わない。
+
+JavaScript無効時にはPlaygroundの対話的な編集・生成は利用できない。一方、既に書き出した文書の数式表示はJavaScriptを要求しない。MathMLへ切り替えた文書の閲覧にも閲覧環境のMathML対応が必要である。
+
+## 2. 所有と境界
+
+`math-core` は意味・表記構造を所有する。純粋な `nepl3-math-tex` は検査済み構造からTeX表現または忠実変換不能の理由を返し、`math-mathml` は独立したMathMLを生成する。両backendは `no_std + alloc`。KaTeX実行、module取得、ファイル、Worker、時計はhostに置く。suiteは操作と埋め込みの接続を担当し、各DSL coreと純粋UI coreへJavaScript実行を持ち込まない。
+
+TeXは構造から生成し、Symbol/Text/Doc注記の文字を適切にescapeする。入力文字を任意のTeX commandとして通さない。Ruby/AnnoなどのDoc注記を忠実に表現できない場合は内容を平坦化・削除せず、その数式全体をMathMLへ切り替える。
+
+host境界では生成要求、TeX、NEPL3 MathML、KaTeX返信、診断、asset列を区別する。公開前に言語中立schema・Rust型・codec・不変条件を対応させる。本章の責務名だけを実装済みschemaとして扱わない。
+
+## 3. 選択・失敗・停止
+
+Playgroundに `KaTeXPreferred` / `MathMlOnly` の表示設定を設ける。CLIは `--math-renderer katex-preferred|mathml-only` を提供する。後者はKaTeX実行を要求せず、比較・障害時の回避・検証に使える。
+
+| 条件 | 結果 |
+| --- | --- |
+| 忠実なTeX変換・KaTeX実行・出力検査が成功 | KaTeX生成済みHTMLを採用 |
+| 忠実に変換不能、host能力なし、module読込失敗 | 理由を診断として保持し、その数式をNEPL3 MathMLへ切替え |
+| KaTeX通常構文エラー | エラーを隠さず、その数式をNEPL3 MathMLへ切替え |
+| 偽identity・未要求資源・出力安全性違反 | provider違反を記録。正常な能力不足として扱わず、親操作が継続可能とする明示policyがある場合だけMathML代替を許す |
+| 文書全体の取消し・予算超過・期限、それによるWorker強制終了 | 元のStopped理由を保持。既に利用可能な同じ要求のMathMLだけを表示上の代替にできる |
+| 許容されたrenderer局所期限による専用Worker終了 | 親操作が継続可能で必要資源が残る場合だけ、局所失敗を診断として正式なMathML fallbackへ |
+| CSS・fontの欠落や遮断 | asset診断と明示的なMathMlOnlyへの再生成操作 |
+| 元Mathまたはfallback MathMLが不正 | 型付き失敗。空の成功fragmentを返さない |
+
+fallbackも同じ要求の累積予算を使う。StoppedをCompleteへ変更したり、新しいBudgetで処理を黙って再開したりしない。取消し後の代替表示は、操作や保存の成功証拠ではない。別の再生成は新しい要求として開始する。
+
+`htmlAndMathml` は視覚HTMLとアクセシビリティ用MathMLを含める出力modeであり、CSS・font障害の自動検出や自動切替えではない。このMathMLと、KaTeXなしで生成するNEPL3 MathMLを区別する。
+
+## 4. 再現性・非同期・資源
+
+KaTeXの実装・版・digest、TeX変換版、display mode、出力設定、初期macro環境、CSS/font資源を解決して要求identityに含める。14章のsessionEpoch・workerEpoch・requestId・source集合・Profile・operation・options/resourcesの照合をKaTeX返信にも適用する。設定変更、Worker再起動、close、cancel後の古い返信を採用しない。
+
+視覚HTMLは `output: html` を第一候補とし、NEPL3の独立MathMLをアクセシビリティ表現として合わせる。`throwOnError: true`、`trust: false` と明示strict policyを使用する。無限の `maxExpand` / `maxSize` を使わず、入力byte数、式数、出力byte数・asset総量・cache容量も制限する。KaTeXの上限を実時間の保証とは扱わない。停止期限を越えた同期処理はhostがWorkerを終了してepochを進める。
+
+KaTeXの `maxExpand` 超過は通常構文エラーと同じParseError型でも、adapterが版ごとの識別を検証して資源停止へ写像する。一般catchでfallback成功へ変換しない。`maxSize` は例外でなく寸法をclampするため、生成する寸法・unit変換が上限内と保証できない入力は忠実変換不能とする。例外なし・Markup合法だけで忠実成功を認定せず、制限で変わる表記を成功出力にしない。採用版変更時はこの識別と境界例を再検証する。
+
+KaTeX APIはNEPL3のWork/Allocation計量を返さない。adapterの入力・出力検査費用と観測できる使用量、hostの実時間制限を区別し、内部全計算の厳密計量を主張しない。Worker強制終了時はhostが所有する取消し/期限理由と最後の受信済みUsageを記録し、失われた未観測分を0や推計値で埋めた完全Reportを発行しない。外部操作schemaに観測不能と終了原因を明示し、共通coreの実測Reportを偽造しない。
+
+局所renderer期限による失敗と文書全体の期限・cancel・資源停止を分ける。親操作が継続可能で、予約・精算後にfallback資源が残る場合だけ局所失敗を診断付きMathMLへ切り替える。文書全体のStoppedは前節どおり維持する。Node/Worker入口は同じI/O・DOM非依存のKaTeX呼出moduleを共有し、例外・警告は構造化診断へ変換する。processへTeXを渡す際はshell文字列へ埋め込まない。
+
+macro環境は明示的な初期値から式ごとに新しく構築する。KaTeXがmacro objectを更新し得るため、前の式・再生成・別文書の変更を流用しない。将来共有macroを導入する場合は共有範囲・順序・identityを先に契約化する。
+
+## 5. 検査済みartifactと隔離preview
+
+KaTeX返信を任意RawHtmlとして信用しない。採用版の実出力を棚卸しし、必要なHTML/MathML/SVG要素、namespace、属性、ARIA、有限な計算styleを明示した専用検査を通してtyped Markup artifactにする。spanだけを許可したり、未知要素を削除して成功としたりしない。例外messageに含まれる入力文字もHTMLへ直接挿入しない。
+
+既存の `design/markup.json` はKaTeX出力全体を受理する定義ではない。必要なSVG path、MathML annotation、style等の契約を実装時に追加し、一般Docに任意のscript・CSS・外部URLを許可する形へ広げない。
+
+配置styleは検査済みproperty/valueから決定的なclassとstylesheetへ移し、`style-src-attr 'none'` を維持する方式を第一候補とする。CSSの適用順序と意味を保存し、文字列置換だけで処理しない。制限付きinline styleを選ぶ場合は、明示security profile・CSP・独立レビュー・負例と視覚試験を先に揃える。script権限を緩めない。
+
+KaTeX視覚HTMLは読み上げから除外し、NEPL3 MathMLは視覚的にのみ隠してアクセシビリティ上は残す。fallbackではMathMLを通常表示する。htmlAndMathmlを選ぶ別profileも二重読み上げを避け、実アクセシビリティtreeで確認する。KaTeX内部virtual DOMや独自forkを前提にしない。
+
+previewはscriptを許可しない隔離iframeを維持し、KaTeXはその外のWorkerで実行する。srcdoc previewとexportの両HTMLにHTML5 doctypeを付ける。必要なstyle・同梱CSS・fontとpreview/exportのCSPを対応させ、採用するKaTeX版・bundler・Worker形式を実browserで試験する。class/stylesheet方式ではその適用とstyle属性の拒否を検査する。inline方式を選んだ場合だけ承認済みstyle属性の適用を正例とし、外部CSSの許可だけで属性も適用できるとはしない。shellのworker-src、Worker自身のCSP、opaque originのiframeにおけるfont取得/CORSと非root pathも正例・遮断例の双方で確認する。
+
+previewと書出しは同じ生成artifactを用いる。保存要求でrendererを再実行しない。hostがpreview用URLを束縛する場合もfragment内容・設定・版・意味を変更せず、出力pathへの対応を明示する。保存済み状態は対象artifactの `SaveFinished` 成功後だけ更新する。
+
+KaTeX本体と同じ固定packageからCSS/fontを揃え、path・MIME・byte列・digest・licenseをartifact依存として保持する。CSSの相対font参照を保持し、preview文書にも独立にCSSを適用する。標準配布物は同一site artifactから取得し、runtimeのCDN取得を前提としない。書出しはHTMLと必要assetを一式として保存する。
+
+previewは検査済みartifactのCSS/font/imageを解決した自己完結HTMLを第一候補とする。data URLは検査済みMIME・digest・予算内の資源から生成し、任意CSS url()を認めない。親CSPをsrcdocで緩和できるとはしない。自己完結化はasset参照の束縛であり、数式再生成やiframe DOMからのexportではない。bundle配布時にHTML単一ファイルだけで完結するとは広告しない。
+
+## 6. 受入と実装順
+
+先行HTMLの実装順は[18章](18-html-delivery.md)のT22〜T25で定義する。T08の表示用構造を再利用し、Math評価・Circuit・汎用providerの全体完成を先行HTMLの前提にしない。後続T10/T11/T13/T15/T18/T20は同じ実装を育て、既存の全体責務とMathMLの必須条件を維持する。
+
+M04は全MathML constructorに加え、TeXの忠実性・escape・macro独立性・KaTeX失敗/fallback・出力検査・上限を要求する。U02/U03/U07はidentity、停止、同artifactのpreview/exportと隔離を、S01/S02/S03/S04/S05は非root path・asset一致・オフライン資源・JavaScript無効の書出し文書表示を検査する。ブラウザ3種で実行し、未実行を成功にしない。CLI/WASIでKaTeX hostがない場合の明示診断付きMathMLも検証する。
+
+## 7. 根拠
+
+- [KaTeX Node.js](https://katex.org/docs/node): 生成済みHTMLのCSS/fontと閲覧時JavaScript不要の条件。
+- [API](https://katex.org/docs/api)、[Options](https://katex.org/docs/options): renderToString、出力mode、macro更新、制限・失敗設定。
+- [Security](https://katex.org/docs/security)、[Browser](https://katex.org/docs/browser): 出力検査、SVG/MathML、ブラウザ条件。
+
+本章の追加だけではKaTeX adapter・MathML backend・Web実行の完成を示さない。
