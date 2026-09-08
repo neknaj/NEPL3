@@ -1,0 +1,57 @@
+{
+  "16-doc-migration": {
+    "draft_sha256": "ab1bc9a47c1b42e0501af952d4d29a122b9c38e7e1891cef97b42288b35d2ce2",
+    "full_structure": "passed",
+    "added_paragraphs_including_list": 10
+  },
+  "21-doc-pages": {
+    "draft_sha256": "2b21eb20db88260c1bb749121abf00191d958263786a0c4951f3f1a6f272b7f5",
+    "full_structure": "passed",
+    "new_link": {
+      "kind": "Link",
+      "fields": {
+        "target": {
+          "kind": "RelativeTarget",
+          "fields": {
+            "path": "16-doc-migration.md",
+            "fragment": {
+              "kind": "NoText",
+              "fields": {}
+            }
+          }
+        },
+        "label": {
+          "kind": "Concat",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "16"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "章"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "しょう"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "runtime": "not-run"
+}

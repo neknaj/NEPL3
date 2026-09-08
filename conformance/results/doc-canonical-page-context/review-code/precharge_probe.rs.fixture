@@ -1,0 +1,17 @@
+#[test]
+fn independent_context_observe_registration_clone_precharge() -> Result<()> {
+    use nepl3_core::budget::{Budget,StopReason};
+    let mut rows=Vec::new();
+    for width in [16usize,2048] {
+        let f=Fixture::new()?;let id="x".repeat(width);
+        f.json("doc/canonical.json",&json!({"version":1,"pages":[{"id":id,"source":"doc/a.nepld","projection":"doc/a.md","aliases":"doc/a.json","route":"site/a.html","renderer":projection::RENDERER}]}))?;
+        f.write("doc/a.nepld",r#"article en "A" body nil"#)?;f.write("doc/a.json",b"[]")?;
+        let mut limits=super::super::source::budget().limits();limits.work=1;
+        let mut budget=Budget::new(limits);
+        assert!(projection::generate(f.root(),"doc/canonical.json",&mut budget).is_err());
+        assert_eq!(budget.poll(),Err(StopReason::WorkLimit));
+        rows.push(json!({"width":width,"work":budget.usage().work,"allocation":budget.usage().allocation_units}));
+    }
+    println!("INDEPENDENT_PRECHARGE {}",json!(rows));
+    Ok(())
+}

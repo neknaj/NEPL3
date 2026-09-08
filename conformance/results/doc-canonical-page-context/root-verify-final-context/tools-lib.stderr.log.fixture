@@ -1,0 +1,246 @@
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-canonical-page-context\tools)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.25s
+     Running unittests src\lib.rs (target\debug\deps\nepl3_tools-69244717011a8889.exe)
+compile P0: 15.8341ms; work 997931; allocation 753458; source 0; nodes 617; output 0; depth peak 5
+parse P1 (includes host boundary/validation): 568.1034ms; work 70129026; allocation 40796379; source 20053; nodes 50291; output 298385; depth peak 97
+lower P1: 109.9987ms; work 1742844; allocation 1282243; source 0; nodes 5756; output 0; depth peak 97
+P1 driver metrics: Metrics {
+    inline_host: true,
+    probe_continuations: false,
+    reader_continuation_copy: Cost {
+        calls: 0,
+        elapsed: 0ns,
+        usage: Usage {
+            source_bytes: 0,
+            work: 0,
+            depth: 0,
+            nodes: 0,
+            allocation_units: 0,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    tokenizer_continuation_copy: Cost {
+        calls: 0,
+        elapsed: 0ns,
+        usage: Usage {
+            source_bytes: 0,
+            work: 0,
+            depth: 0,
+            nodes: 0,
+            allocation_units: 0,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    initial: Cost {
+        calls: 1,
+        elapsed: 445.8237ms,
+        usage: Usage {
+            source_bytes: 979,
+            work: 67738342,
+            depth: 97,
+            nodes: 45382,
+            allocation_units: 39733502,
+            output_bytes: 298015,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    provider_sources: Cost {
+        calls: 4014,
+        elapsed: 47.7007ms,
+        usage: Usage {
+            source_bytes: 0,
+            work: 52527134,
+            depth: 97,
+            nodes: 0,
+            allocation_units: 6742896,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    provider_context: Cost {
+        calls: 4014,
+        elapsed: 29.9871ms,
+        usage: Usage {
+            source_bytes: 0,
+            work: 618156,
+            depth: 97,
+            nodes: 24084,
+            allocation_units: 2043126,
+            output_bytes: 297036,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    provider_read: Cost {
+        calls: 4014,
+        elapsed: 7.4225ms,
+        usage: Usage {
+            source_bytes: 0,
+            work: 436524,
+            depth: 97,
+            nodes: 4014,
+            allocation_units: 1323738,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    resume: Cost {
+        calls: 0,
+        elapsed: 0ns,
+        usage: Usage {
+            source_bytes: 0,
+            work: 0,
+            depth: 0,
+            nodes: 0,
+            allocation_units: 0,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    reservation: Cost {
+        calls: 0,
+        elapsed: 0ns,
+        usage: Usage {
+            source_bytes: 0,
+            work: 0,
+            depth: 0,
+            nodes: 0,
+            allocation_units: 0,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+}
+compile P1: 16.3385ms; work 1034216; allocation 771273; source 0; nodes 617; output 0; depth peak 97
+parse P2 (includes host boundary/validation): 595.9377ms; work 70653484; allocation 40874894; source 21032; nodes 50291; output 298385; depth peak 97
+lower P2: 109.9169ms; work 1743140; allocation 1282243; source 0; nodes 5756; output 0; depth peak 97
+P2 driver metrics: Metrics {
+    inline_host: true,
+    probe_continuations: false,
+    reader_continuation_copy: Cost {
+        calls: 0,
+        elapsed: 0ns,
+        usage: Usage {
+            source_bytes: 0,
+            work: 0,
+            depth: 0,
+            nodes: 0,
+            allocation_units: 0,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    tokenizer_continuation_copy: Cost {
+        calls: 0,
+        elapsed: 0ns,
+        usage: Usage {
+            source_bytes: 0,
+            work: 0,
+            depth: 0,
+            nodes: 0,
+            allocation_units: 0,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    initial: Cost {
+        calls: 1,
+        elapsed: 445.5609ms,
+        usage: Usage {
+            source_bytes: 0,
+            work: 67757879,
+            depth: 97,
+            nodes: 45382,
+            allocation_units: 39709610,
+            output_bytes: 298015,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    provider_sources: Cost {
+        calls: 4014,
+        elapsed: 48.112ms,
+        usage: Usage {
+            source_bytes: 0,
+            work: 52527134,
+            depth: 97,
+            nodes: 0,
+            allocation_units: 6742896,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    provider_context: Cost {
+        calls: 4014,
+        elapsed: 30.64ms,
+        usage: Usage {
+            source_bytes: 0,
+            work: 618156,
+            depth: 97,
+            nodes: 24084,
+            allocation_units: 2043126,
+            output_bytes: 297036,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    provider_read: Cost {
+        calls: 4014,
+        elapsed: 7.7277ms,
+        usage: Usage {
+            source_bytes: 0,
+            work: 444518,
+            depth: 97,
+            nodes: 4014,
+            allocation_units: 1323738,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    resume: Cost {
+        calls: 0,
+        elapsed: 0ns,
+        usage: Usage {
+            source_bytes: 0,
+            work: 0,
+            depth: 0,
+            nodes: 0,
+            allocation_units: 0,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+    reservation: Cost {
+        calls: 0,
+        elapsed: 0ns,
+        usage: Usage {
+            source_bytes: 0,
+            work: 0,
+            depth: 0,
+            nodes: 0,
+            allocation_units: 0,
+            output_bytes: 0,
+            diagnostics: 0,
+            events: 0,
+        },
+    },
+}
+compile P2: 15.9936ms; work 1034660; allocation 771273; source 0; nodes 617; output 0; depth peak 97
+bootstrap actual usage: Usage { source_bytes: 81191, work: 148963528, depth: 97, nodes: 115263, allocation_units: 147449935, output_bytes: 596770, diagnostics: 0, events: 0 }; nodes 527
+real four-page output usage: Usage { source_bytes: 82482, work: 188404394, depth: 14, nodes: 7678688, allocation_units: 494155249, output_bytes: 217980, diagnostics: 0, events: 0 }
+16-doc-migration: parse=Usage { source_bytes: 82960, work: 65415197, depth: 57, nodes: 2768092, allocation_units: 195950500, output_bytes: 442234, diagnostics: 0, events: 0 }; lower=Usage { source_bytes: 43409, work: 20368455, depth: 52, nodes: 1017793, allocation_units: 50132661, output_bytes: 0, diagnostics: 0, events: 0 }; labels=Usage { source_bytes: 0, work: 2261674, depth: 13, nodes: 21594, allocation_units: 1832878, output_bytes: 0, diagnostics: 0, events: 0 }
+21-doc-pages: parse=Usage { source_bytes: 183044, work: 419222830, depth: 61, nodes: 5210590, allocation_units: 477965529, output_bytes: 1209604, diagnostics: 0, events: 0 }; lower=Usage { source_bytes: 97368, work: 85037525, depth: 56, nodes: 1853185, allocation_units: 94200972, output_bytes: 0, diagnostics: 0, events: 0 }; labels=Usage { source_bytes: 0, work: 15158812, depth: 12, nodes: 42019, allocation_units: 3564250, output_bytes: 0, diagnostics: 0, events: 0 }

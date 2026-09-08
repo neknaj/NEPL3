@@ -1,0 +1,1 @@
+PASS: structure both; 16 ten source units / 37 Sentences; 21 full paragraph and Relative link; Ruby and UTF8 LF; single insertion / two replacements. git diff --check exit 0. Production runtime not executed.

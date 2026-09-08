@@ -1,0 +1,65 @@
+{
+  "head": "ce0b520850822e199178518f241785ca6c608d53",
+  "previous": "87ce544168a808918a01608b02a73f577a9f8caf",
+  "allowlist": [
+    "doc/development.md",
+    "doc/spec/16-doc-migration.md",
+    "doc/spec/21-doc-pages.md",
+    "tools/src/doc/canonical.rs",
+    "tools/src/doc/canonical/projection.rs",
+    "tools/src/doc/canonical/tests.rs",
+    "tools/src/doc/projection/annotated/host.rs",
+    "tools/src/main.rs"
+  ],
+  "files": [
+    {
+      "path": "doc/development.md",
+      "bytes": 23916,
+      "sha256": "51aa13a7fe40227ca4cf12ee6c2b47a9387bb279d83aac5ed97ff5dc534ac715"
+    },
+    {
+      "path": "doc/spec/16-doc-migration.md",
+      "bytes": 15789,
+      "sha256": "0124578d59694c579d4643b6e1655263ed149c7f72c9c6d07882f81b21a3c286"
+    },
+    {
+      "path": "doc/spec/21-doc-pages.md",
+      "bytes": 31845,
+      "sha256": "fd16f3f6e2e8801be832960993f5649daca06d7e6ebaffb43969e9b77d80574c"
+    },
+    {
+      "path": "tools/src/doc/canonical.rs",
+      "bytes": 8782,
+      "sha256": "1f3f66a21d6d2782f62b11e4952d2d2f505b7f4d4d3ac857c9c64365386bce08"
+    },
+    {
+      "path": "tools/src/doc/canonical/projection.rs",
+      "bytes": 12860,
+      "sha256": "4c567471dd9a04313693384150db517870ab23e4006cc8e2e9f15a9b7763d85f"
+    },
+    {
+      "path": "tools/src/doc/canonical/tests.rs",
+      "bytes": 17920,
+      "sha256": "d545ca302e2c44f0c69a7b6fbe89b9356a26bdff4bf37379f7d3f36ebad25b1b"
+    },
+    {
+      "path": "tools/src/doc/projection/annotated/host.rs",
+      "bytes": 5565,
+      "sha256": "904a8d5fbbbc05d01a57e0577441c6b5e6b4012f51f3d12b74d14828fe537a30"
+    },
+    {
+      "path": "tools/src/main.rs",
+      "bytes": 4315,
+      "sha256": "b4c633a9e12267381b7d3667bd92b7e0afff42b3198b78db88c34d33c79c30b4"
+    }
+  ],
+  "incoming_paths": [
+    "doc/canonical.json",
+    "doc/migration/aliases/22-external-extensions.json",
+    "doc/migration/authored/22-external-extensions.nepld",
+    "doc/spec/22-external-extensions.md",
+    "doc/spec/22-external-extensions.nepld"
+  ],
+  "incoming_archive_paths": 305,
+  "archive_review": "not part of this implementation review"
+}

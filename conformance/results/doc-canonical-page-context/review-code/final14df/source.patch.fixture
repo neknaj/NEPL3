@@ -1,0 +1,108 @@
+diff --git a/tools/src/doc/canonical.rs b/tools/src/doc/canonical.rs
+index 701d034..9cdcafa 100644
+--- a/tools/src/doc/canonical.rs
++++ b/tools/src/doc/canonical.rs
+@@ -122,6 +122,19 @@ fn parse_registry(raw: &[u8]) -> Result<Registry> {
+             return Err("invalid or repeated canonical page route".into());
+         }
+     }
++    // Every registered source, alias and projection is a file. Reject a known
++    // file/directory conflict before staging any output, including old-only
++    // registries that do not enter the PageSet resolver. Testing every ancestor
++    // avoids missing a parent when another lexicographic name falls between.
++    for path in &paths {
++        for (end, _) in path.match_indices('/') {
++            if paths.contains(&path[..end]) {
++                return Err(
++                    format!("canonical file path used as directory: {}", &path[..end]).into(),
++                );
++            }
++        }
++    }
+     Ok(registry)
+ }
+ 
+diff --git a/tools/src/doc/canonical/tests.rs b/tools/src/doc/canonical/tests.rs
+index a2adf54..b2e2d88 100644
+--- a/tools/src/doc/canonical/tests.rs
++++ b/tools/src/doc/canonical/tests.rs
+@@ -130,6 +130,42 @@ fn canonical_file_access_is_bounded_and_regular() -> Result<()> {
+     Ok(())
+ }
+ 
++#[test]
++fn registered_file_parents_are_rejected_before_staging_any_output() -> Result<()> {
++    let f = Fixture::new()?;
++    for (field, path) in [
++        ("projection", "doc/sample.md/child.md"),
++        ("projection", "doc/SAMPLE.md/child.md"),
++        ("source", "doc/sample.nepld/child.nepld"),
++        ("aliases", "doc/aliases.json/child.json"),
++    ] {
++        let mut value = registry();
++        let mut second = json!({"id":"second","source":"doc/second.nepld",
++            "projection":"doc/second.md","aliases":"doc/second.json",
++            "route":"docs/second.html","renderer":RENDERER});
++        second[field] = json!(path);
++        value["pages"].as_array_mut().ok_or("pages")?.push(second);
++        // This sorts between the parent projection and its child; checking
++        // only adjacent sorted names would miss the actual conflict.
++        value["pages"].as_array_mut().ok_or("pages")?.push(json!({
++            "id":"third","source":"doc/third.nepld","aliases":"doc/third.json",
++            "projection":"doc/sample.md.other.md","route":"docs/third.html","renderer":RENDERER}));
++        f.json("doc/canonical.json", &value)?;
++        let output = f.root().join("stage");
++        let error = markdown(f.root(), "doc/canonical.json", &output)
++            .err()
++            .ok_or("expected failure")?;
++        assert!(
++            error
++                .to_string()
++                .starts_with("canonical file path used as directory:"),
++            "{field}: {error}"
++        );
++        assert!(!output.exists());
++    }
++    Ok(())
++}
++
+ #[cfg(unix)]
+ #[test]
+ fn canonical_file_access_rejects_even_repository_internal_symlinks() -> Result<()> {
+@@ -512,6 +548,36 @@ fn batch_limits_are_selected_before_public_generation_and_recorded() -> Result<(
+     Ok(())
+ }
+ 
++#[test]
++fn registration_copy_work_is_admitted_before_its_allocation() -> Result<()> {
++    let f = Fixture::new()?;
++    f.write("doc/sample.nepld", r#"article en "A" body nil"#)?;
++    f.write("doc/aliases.json", b"[]")?;
++    let mut observed = Vec::new();
++    for width in [16, 2048] {
++        let mut value = registry();
++        value["pages"][0]["id"] = json!("a".repeat(width));
++        value["pages"][0]["renderer"] = json!(projection::RENDERER);
++        f.json("doc/canonical.json", &value)?;
++        let limits = nepl3_core::budget::Limits {
++            work: 1,
++            ..super::super::source::budget().limits()
++        };
++        let mut budget = nepl3_core::budget::Budget::new(limits);
++        assert!(projection::generate(f.root(), "doc/canonical.json", &mut budget).is_err());
++        assert_eq!(
++            budget.poll(),
++            Err(nepl3_core::budget::StopReason::WorkLimit)
++        );
++        assert_eq!(budget.usage().work, 1);
++        observed.push(budget.usage().allocation_units);
++    }
++    // Increasing a registration string cannot allocate its copy after Work
++    // has run out. The original bug grew this counter by the ID length delta.
++    assert_eq!(observed[0], observed[1]);
++    Ok(())
++}
++
+ #[test]
+ fn synchronized_context_spec_drafts_parse_lower_and_check_labels() -> Result<()> {
+     use nepl3_core::source::{SourceAdmission, SourceStore};
