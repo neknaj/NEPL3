@@ -915,4 +915,30 @@ let f=fields(v,s,"PageLinkPlan",3)?;
 Ok(Self {identity:Value::read(&f[0],s,c,b)?,links:Value::read(&f[1],s,c,b)?,remaining:Value::read(&f[2],s,c,b)?})
 }
 }
+impl Value for PageFile {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"PageFile",[self.registration.put(s,c,b)?,self.content.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,40)?;
+let f=fields(v,s,"PageFile",2)?;
+Ok(Self {registration:Value::read(&f[0],s,c,b)?,content:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for PageDestination {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Page {index} => variant(s,"PageDestination","Page",[index.put(s,c,b)?],b),
+Self::File {index} => variant(s,"PageDestination","File",[index.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,47)?;
+let (tag,f)=case(v,s,"PageDestination")?;
+match (tag,f.len()) {
+("Page",1)=>Ok(Self::Page {index:Value::read(&f[0],s,c,b)?}),
+("File",1)=>Ok(Self::File {index:Value::read(&f[0],s,c,b)?}),
+_=>Err(PortableError::Shape),}
+}
+}
 }

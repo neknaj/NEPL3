@@ -29,12 +29,27 @@ pub struct PageDocument {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PageSet {
     pub pages: Vec<PageDocument>,
+    pub files: Vec<PageFile>,
+}
+/// Explicit non-Doc destination. Bytes are transported as NDF Bytes and never
+/// parsed or executed by the Doc core.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PageFile {
+    pub registration: PageRegistration,
+    pub content: FileBytes,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FileBytes(pub Vec<u8>);
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PageDestination {
+    Page { index: u64 },
+    File { index: u64 },
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PageLink {
     pub page: u64,
     pub node: u64,
-    pub target: u64,
+    pub target: PageDestination,
     pub fragment: Option<String>,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -84,6 +99,11 @@ pub enum PageError<'a, E> {
         page: u64,
         node: u64,
         target: u64,
+    },
+    FileFragment {
+        page: u64,
+        node: u64,
+        file: u64,
     },
 }
 impl<E> From<StopReason> for PageError<'_, E> {
@@ -167,8 +187,13 @@ pub(crate) fn registrations<E>(set: &PageSet, b: &mut Budget) -> Result<(), Page
     if set.pages.is_empty() {
         return Err(PageError::Empty);
     }
-    for (index, page) in set.pages.iter().enumerate() {
-        let r = &page.registration;
+    let registrations = || {
+        set.pages
+            .iter()
+            .map(|p| &p.registration)
+            .chain(set.files.iter().map(|f| &f.registration))
+    };
+    for (index, r) in registrations().enumerate() {
         for (field, text) in [
             (PageField::Id, &r.id),
             (PageField::Source, &r.source),
@@ -186,11 +211,11 @@ pub(crate) fn registrations<E>(set: &PageSet, b: &mut Budget) -> Result<(), Page
                     field,
                 });
             }
-            for (previous, other) in set.pages[..index].iter().enumerate() {
+            for (previous, other) in registrations().take(index).enumerate() {
                 let prior = match field {
-                    PageField::Id => &other.registration.id,
-                    PageField::Source => &other.registration.source,
-                    PageField::Route => &other.registration.route,
+                    PageField::Id => &other.id,
+                    PageField::Source => &other.source,
+                    PageField::Route => &other.route,
                 };
                 b.charge(Resource::Work, (text.len() + prior.len()) as u64 + 1)?;
                 if match field {
@@ -350,7 +375,44 @@ pub fn resolve<'a, C: FoundationValueCodec>(
                     break;
                 }
             }
-            let target = found.ok_or(PageError::MissingPage { page, node })?;
+            let Some(target) = found else {
+                // Page names denote Doc pages only. Relative source paths can
+                // name an explicitly registered passive file as well.
+                let mut file = None;
+                if by_source {
+                    for (index, candidate) in set.files.iter().enumerate() {
+                        b.charge(
+                            Resource::Work,
+                            (key.len() + candidate.registration.source.len()) as u64 + 1,
+                        )?;
+                        if candidate.registration.source == key {
+                            file = Some(index);
+                            break;
+                        }
+                    }
+                }
+                let index = file.ok_or(PageError::MissingPage { page, node })?;
+                if fragment.is_some() {
+                    return Err(PageError::FileFragment {
+                        page,
+                        node,
+                        file: index as u64,
+                    });
+                }
+                push(
+                    &mut links,
+                    PageLink {
+                        page,
+                        node,
+                        target: PageDestination::File {
+                            index: index as u64,
+                        },
+                        fragment: None,
+                    },
+                    b,
+                )?;
+                continue;
+            };
             if let Some(fragment) = fragment {
                 let mut found = false;
                 for definition in definitions[target].definitions() {
@@ -376,7 +438,9 @@ pub fn resolve<'a, C: FoundationValueCodec>(
                 PageLink {
                     page,
                     node,
-                    target: target as u64,
+                    target: PageDestination::Page {
+                        index: target as u64,
+                    },
                     fragment: fragment.as_ref().map(|s| copy(s, b)).transpose()?,
                 },
                 b,

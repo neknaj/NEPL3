@@ -2210,6 +2210,18 @@
               }
             }
           }
+        ],
+        [
+          "files",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.doc",
+                "revision": 1,
+                "name": "PageFile"
+              }
+            }
+          }
         ]
       ],
       "constraints": []
@@ -2226,7 +2238,13 @@
         ],
         [
           "target",
-          "U64"
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "PageDestination"
+            }
+          }
         ],
         [
           "fragment",
@@ -2327,6 +2345,42 @@
       "constraints": [
         "doc.sentence_owner_source"
       ]
+    },
+    "PageFile": {
+      "record": [
+        [
+          "registration",
+          {
+            "named": {
+              "package": "nepl3.doc",
+              "revision": 1,
+              "name": "PageRegistration"
+            }
+          }
+        ],
+        [
+          "content",
+          "Bytes"
+        ]
+      ],
+      "constraints": []
+    },
+    "PageDestination": {
+      "variant": {
+        "Page": [
+          [
+            "index",
+            "U64"
+          ]
+        ],
+        "File": [
+          [
+            "index",
+            "U64"
+          ]
+        ]
+      },
+      "constraints": []
     }
   },
   "operations": {

@@ -1,0 +1,193 @@
+{
+  "budget_scope": "Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
+  "execution_identity": "94cfc6c2c942b5f2adb59ce4ee9a118eb092f62b9a46f2199b8f3a0531dc4a83",
+  "files": [
+    {
+      "license": "MIT",
+      "mime": "text/css; charset=utf-8",
+      "path": "docs/progress/assets/doc.css",
+      "sha256": "95e1239989b6be84d51d5cbf23a0c48f655d43392fc1e1e0e3791d5235d413d2"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "docs/progress/index.html",
+      "sha256": "e3578aec94df56a674185527a914e17f8b5a312de63f5f32f6cf3fe86b7a7cc3"
+    },
+    {
+      "license": null,
+      "mime": "application/octet-stream",
+      "path": "evidence/file-0.json",
+      "sha256": "02da4086814724be4925219e2a161cce0fff4454be26b3f5f3edd3b72ade0481"
+    },
+    {
+      "license": null,
+      "mime": "application/octet-stream",
+      "path": "evidence/file-1.json",
+      "sha256": "20a38b974229a1c02c9072ff9235cb393097bfdc119f0af932212a3b540c83ec"
+    },
+    {
+      "license": null,
+      "mime": "application/octet-stream",
+      "path": "evidence/file-2.json",
+      "sha256": "5f8236caef435ec2b14fb8061cb74fdce50e43b55e1cbe50516591d27805ff39"
+    }
+  ],
+  "format": "nepl3.local-doc-pages/1",
+  "identity": "b10deeb143a3032e906306d589c10a8a9e466836c98daeef190ce8c69aeb73e2",
+  "options": {
+    "parallel": "Rows"
+  },
+  "output_budget": {
+    "contract": "nepl3.local-doc-pages.execution/1",
+    "initial_usage": {
+      "allocation_units": 0,
+      "depth": 0,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 0,
+      "output_bytes": 0,
+      "source_bytes": 0,
+      "work": 0
+    },
+    "limits": {
+      "allocation_units": 1500000000,
+      "depth": 1000,
+      "diagnostics": 1000,
+      "events": 1000,
+      "nodes": 20000000,
+      "output_bytes": 10000000,
+      "source_bytes": 10000000,
+      "work": 400000000
+    },
+    "usage": {
+      "allocation_units": 151173407,
+      "depth": 14,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 2757479,
+      "output_bytes": 175053,
+      "source_bytes": 54700,
+      "work": 72519019
+    }
+  },
+  "output_usage": {
+    "allocation_units": 151173407,
+    "output_bytes": 175053,
+    "work": 72519019
+  },
+  "packages": "compiled checked bootstrap fixtures",
+  "pages": [
+    {
+      "id": "progress",
+      "input": "progress.nepld",
+      "lower_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "lower_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "lower_usage": {
+        "allocation_units": 72813922,
+        "depth": 55,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 1537395,
+        "output_bytes": 0,
+        "source_bytes": 54700,
+        "work": 28766177
+      },
+      "operation_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "parse_and_validate_usage": {
+        "allocation_units": 268362132,
+        "depth": 60,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 4154140,
+        "output_bytes": 459928,
+        "source_bytes": 104868,
+        "work": 68099983
+      },
+      "parse_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "parse_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "profile_sha256": "76e3124196fdaf84bcbb73e889ed34475a9162ec6d824b8d1161adc8cc7bbcba",
+      "route": "docs/progress/index.html",
+      "source": "doc/progress/foundation-runtime.md",
+      "source_sha256": "d53533bf771e4d172331f7d1a38cd3392e5f775a75e1c5173e640779a8e677da"
+    }
+  ],
+  "phase_execution": {
+    "contract": "nepl3.local-doc-pages.phases/1",
+    "identity": "0c5fbe839a80234f190b7010823f433557d85ca9b09c75a0db220f2cdbb3f886"
+  },
+  "registered_files": [
+    {
+      "bytes": 6726,
+      "id": "file0",
+      "input": "file-0.json",
+      "route": "evidence/file-0.json",
+      "sha256": "02da4086814724be4925219e2a161cce0fff4454be26b3f5f3edd3b72ade0481",
+      "source": "conformance/results/foundation-slice/validation.json"
+    },
+    {
+      "bytes": 7837,
+      "id": "file1",
+      "input": "file-1.json",
+      "route": "evidence/file-1.json",
+      "sha256": "20a38b974229a1c02c9072ff9235cb393097bfdc119f0af932212a3b540c83ec",
+      "source": "conformance/results/reader-builtins/validation.json"
+    },
+    {
+      "bytes": 3049,
+      "id": "file2",
+      "input": "file-2.json",
+      "route": "evidence/file-2.json",
+      "sha256": "5f8236caef435ec2b14fb8061cb74fdce50e43b55e1cbe50516591d27805ff39",
+      "source": "conformance/results/foundation-slice/main-ci.json"
+    }
+  ],
+  "renderer": "nepl3-doc-html pages/3",
+  "scope": "Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Assets and foreign rendering remain unsupported. Not Pages deployment evidence.",
+  "viewer_scripts": false
+}

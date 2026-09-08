@@ -9,7 +9,7 @@ use nepl3_core::{
 };
 use nepl3_doc_core::{
     model::LinkTarget,
-    pages::{self, PageLinkPlan, PageSet},
+    pages::{self, PageDestination, PageLinkPlan, PageSet},
     prepare,
 };
 use nepl3_markup::html::{HtmlAttribute, HtmlHref, HtmlNode};
@@ -97,7 +97,14 @@ pub fn render_pages<'a, C: FoundationValueCodec>(
             let href = HtmlHref::BetweenArtifacts {
                 source: copy(&input.registration.route, b)?,
                 target: copy(
-                    &request.set.pages[link.target as usize].registration.route,
+                    match link.target {
+                        PageDestination::Page { index } => {
+                            &request.set.pages[index as usize].registration.route
+                        }
+                        PageDestination::File { index } => {
+                            &request.set.files[index as usize].registration.route
+                        }
+                    },
                     b,
                 )?,
                 fragment: link.fragment.as_ref().map(|s| hex_id(s, b)).transpose()?,

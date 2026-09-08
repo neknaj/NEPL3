@@ -14,7 +14,7 @@ pub(crate) fn document_value<'a, E>(
     let NdfValue::Record(set) = value else {
         return Err(PortableError::Shape);
     };
-    let [NdfValue::List(pages)] = set.fields.as_slice() else {
+    let [NdfValue::List(pages), _] = set.fields.as_slice() else {
         return Err(PortableError::Shape);
     };
     let Some(NdfValue::Record(page)) = pages.get(page) else {
@@ -41,7 +41,8 @@ pub fn set_to_value<C: FoundationValueCodec>(
         let value = record(s, "PageDocument", [registration, document], b)?;
         pages::push(&mut values, value, b)?;
     }
-    let value = record(s, "PageSet", [NdfValue::List(values)], b)?;
+    let files = set.files.put(s, c, b)?;
+    let value = record(s, "PageSet", [NdfValue::List(values), files], b)?;
     text::check_type(&value, "PageSet", r, b)?;
     Ok(value)
 }
@@ -55,7 +56,7 @@ pub fn set_from_value<C: FoundationValueCodec>(
 ) -> Result<PageSet, PortableError<C::Error>> {
     text::check_type(input, "PageSet", r, b)?;
     let s = schema(r)?;
-    let f = fields(input, s, "PageSet", 1)?;
+    let f = fields(input, s, "PageSet", 2)?;
     let NdfValue::List(items) = &f[0] else {
         return Err(PortableError::Shape);
     };
@@ -74,7 +75,8 @@ pub fn set_from_value<C: FoundationValueCodec>(
             b,
         )?;
     }
-    Ok(PageSet { pages })
+    let files = Value::read(&f[1], s, c, b)?;
+    Ok(PageSet { pages, files })
 }
 pub fn plan_to_value<'a, C: FoundationValueCodec>(
     plan: &PageLinkPlan,

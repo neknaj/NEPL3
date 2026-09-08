@@ -1,0 +1,177 @@
+{
+  "profile": "nepl3.development-slice/1",
+  "scope": "Builtin readers, ordered native tokenization, mapped syntax source closure and checked engine package metadata; partial T01/T02/T03/T04",
+  "recorded_at_utc": "2026-09-06T16:57:40Z",
+  "start_commit": "3bccd48d49ee1a7564335c4fa703960791ea4bc3",
+  "branch": "feat/reader-builtins",
+  "design_revision": "nepl3-design-2026-09-06-r4",
+  "identity": {
+    "profile": "nepl3.repository-inputs/1",
+    "source_sha256": "4a74dfd4bb0aa2049883aad50059e7423cf3563f184d8eedf186ce2e4510a819",
+    "spec_sha256": "dc1bbe026f16d9d86322a3e3cfbf1611f062b2ee75a248bbca0da9f6a7a0f7c4"
+  },
+  "result": "passed-within-recorded-scope",
+  "test_counts": {
+    "native": {
+      "core": 50,
+      "reader": 44,
+      "wire": 19,
+      "engine": 4,
+      "tools": 56,
+      "total": 173
+    },
+    "wasi": {
+      "core": 50,
+      "reader": 44,
+      "wire": 19,
+      "engine": 4,
+      "total": 117
+    }
+  },
+  "review": {
+    "reviewer": "independent subagent Huygens (/root/review)",
+    "implementation_authors": [
+      "Hooke (/root/implementation)",
+      "Carson (/root/infrastructure)"
+    ],
+    "method": "Independent specification and production API inspection/reproductions; native core/reader/wire/engine tests; old/new real-allocation probe; constraint canonicalization failure reproduced then 3 focused tests independently passed.",
+    "result": "No outstanding revision requests within this slice. R006/R009/R014/R017 remain open.",
+    "records": [
+      "doc/review.md",
+      "design/review.json"
+    ]
+  },
+  "checks": [
+    {
+      "name": "native",
+      "command": "cargo test --workspace --locked",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/reader-builtins/native.log",
+      "log_sha256": "f5d9f6dd4979bdd5a39b4cd4aea5d0e4cf529e4c9f03fa49c53cffde6f4e72de"
+    },
+    {
+      "name": "wasi",
+      "command": "$env:CARGO_TARGET_WASM32_WASIP2_RUNNER = 'wasmtime run'\ncargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine --target wasm32-wasip2 -- --test-threads=1",
+      "target": "wasm32-wasip2",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/reader-builtins/wasi.log",
+      "log_sha256": "832ea64c95abe10687333cc727df63dd79e112824c15d3e1864a36ee977200cf"
+    },
+    {
+      "name": "clippy",
+      "command": "cargo clippy --workspace --all-targets --locked -- -D warnings",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/reader-builtins/clippy.log",
+      "log_sha256": "25d1d5b1884e7a8321cbeef4f1013b3b34b8bba2e7cf1a86efb0b143b6f8f498"
+    },
+    {
+      "name": "docs",
+      "command": "$env:RUSTDOCFLAGS = '-D warnings'\ncargo doc --workspace --no-deps --locked",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/reader-builtins/docs.log",
+      "log_sha256": "f2adccba4179eace073005fc3346939c14aa1af358258222063c29a2b7cead9a"
+    },
+    {
+      "name": "fmt",
+      "command": "cargo fmt --all -- --check",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/reader-builtins/fmt.log",
+      "log_sha256": "74e295129a1b32f232a9f92cd1a35a783b8a7ac1a6dcc9583e8528e015f9b7de"
+    },
+    {
+      "name": "allocation",
+      "command": "python tools/audit/allocation/run.py",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/reader-builtins/allocation.log",
+      "log_sha256": "d0b8fe4a57c9ae9e7d708bd6e67cdbdcf2bc5a3025c8df1f5be81e6b3f2a23a7"
+    },
+    {
+      "name": "wasm",
+      "command": "cargo check --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine --no-default-features --target wasm32-unknown-unknown",
+      "target": "wasm32-unknown-unknown (compile only)",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/reader-builtins/wasm.log",
+      "log_sha256": "fe1ca5e3122b5bbe5c7d533e00ff5afe4d5c66d8ca069f2b2048635d4538a3ea"
+    },
+    {
+      "name": "audit",
+      "command": "python tools/audit/structure.py\npython -m unittest discover -s tools/audit -p test.py",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/reader-builtins/audit.log",
+      "log_sha256": "0e743c7baabb514d0e2ad7f1c034790dee10a9e6f81f3ceaa51823934a22807f"
+    },
+    {
+      "name": "versions",
+      "command": "rustc --version --verbose\ncargo --version\nwasmtime --version\npython --version",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/reader-builtins/versions.log",
+      "log_sha256": "f2e5fc1eb77207ed4051eb1d60a26490ff873b1f0c4c9e61d34c7b4b1283d144"
+    },
+    {
+      "name": "workflow",
+      "command": "actionlint 1.7.12",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/reader-builtins/workflow.log",
+      "log_sha256": "3594ccfe3b55d89e5a0c9ef8755cd98c7a47781ad7b39e166c77a82fc8c461d5"
+    },
+    {
+      "name": "contracts",
+      "command": "cargo run --locked -p nepl3-tools -- check",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/reader-builtins/contracts.log",
+      "log_sha256": "2146a63346b16a79b1ca0426cd62b49f43e79a2b21a311eba52df7e6f34cc6a1"
+    },
+    {
+      "name": "tasks",
+      "command": "cargo run --locked -p nepl3-tools -- tasks --check",
+      "target": "x86_64-pc-windows-msvc",
+      "result": "passed",
+      "exit_code": 0,
+      "log": "conformance/results/reader-builtins/tasks.log",
+      "log_sha256": "bf314828eac471958eba268b25bf8c158b2e3483ca4fd1ec75214d94d071ea4d"
+    }
+  ],
+  "regression": {
+    "r020": {
+      "baseline_commit": "3bccd48d49ee1a7564335c4fa703960791ea4bc3",
+      "baseline_exit_code": 1,
+      "baseline_log": "conformance/results/reader-builtins/allocation-baseline.log",
+      "baseline_log_sha256": "ec9c44bb64b98992336ee54f3156a473c685c9716d393498e5cef50ff7635d9c",
+      "baseline_allocated_bytes": 100000,
+      "fixed_allocated_bytes": 0,
+      "positive_control_bytes": 4096,
+      "limitation": "Native instrumentation for this allocation path only; no general physical-memory or WASI allocation guarantee."
+    },
+    "integration_fix": "The first workspace run failed because the host generator preserved constraint declaration order while the production canonical writer sorts this name set. The generator now sorts and rejects duplicate/non-text/empty IDs; declaration-order regression added. Field and choice order remain semantic."
+  },
+  "exclusions": [
+    "No task-complete or acceptance-passed state is established by this development-slice record.",
+    "Package semantic digest, resolved Profile, prefix parsing, Grammar compiler and bootstrap remain to be implemented.",
+    "Tokenizer continuation and complete ReadReply/provider-frame codecs and process-provider comparison remain incomplete.",
+    "No domain runtime, editor service, CLI, Web UI, Pages publication/recovery or Doc migration acceptance is claimed.",
+    "Browser Wasm is compilation only; actual browser execution is not covered.",
+    "Native Linux/macOS and remote CI for this new slice are not yet recorded here; main-ci.json under foundation-slice concerns an earlier commit.",
+    "Documentation baseline audit is reproducible; current documentation completeness and Doc schema gaps remain unresolved."
+  ],
+  "log_format": "UTF-8 LF; commands and exit codes plus captured output; terminal empty lines omitted."
+}

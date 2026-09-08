@@ -1,0 +1,12 @@
+[
+  {
+    "name": "output-limit",
+    "exit": 1,
+    "output_exists": false
+  },
+  {
+    "name": "aggregate-limit",
+    "exit": 1,
+    "output_exists": false
+  }
+]

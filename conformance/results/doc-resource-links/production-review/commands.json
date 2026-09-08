@@ -1,0 +1,29 @@
+{
+  "commands": [
+    "cargo test --locked -p nepl3-doc-core --test pages",
+    "cargo test --locked -p nepl3-tools --test doc resources::",
+    "cargo test --locked -p nepl3-doc-core --test resource_review independent_files",
+    "same3commands --target wasm32-wasip2; CARGO_TARGET_WASM32_WASIP2_RUNNER=wasmtime run",
+    "python cli.py",
+    "boundary and junction commands recorded in separate logs"
+  ],
+  "results": {
+    "native_core": 8,
+    "native_tools": 2,
+    "native_independent": 1,
+    "wasi_core": 8,
+    "wasi_tools": 2,
+    "wasi_independent": 1,
+    "cli_success": 2,
+    "cli_expected_failure": 19
+  },
+  "unrun": [
+    "Unix file-symlink test67c48dc",
+    "browser",
+    "bare-metal",
+    "physical allocation exhaustion",
+    "all-catalog acceptance"
+  ],
+  "compiler": "rustc 1.97.0 (2d8144b78 2026-07-07)",
+  "runner": "wasmtime 44.0.1 (f302ebd6b 2026-04-30)"
+}

@@ -22,6 +22,8 @@ mod prepare;
 mod print;
 #[path = "doc/projection.rs"]
 mod projection;
+#[path = "doc/resources.rs"]
+mod resources;
 #[path = "doc/text.rs"]
 mod text;
 use nepl3_core::{budget::*, source::*};

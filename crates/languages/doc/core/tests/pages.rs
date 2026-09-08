@@ -85,6 +85,7 @@ fn doc(target: LinkTarget) -> DocumentSyntax {
 }
 fn set() -> PageSet {
     PageSet {
+        files: vec![],
         pages: vec![
             PageDocument {
                 registration: PageRegistration {
@@ -120,6 +121,92 @@ fn run(set: &PageSet) -> Result<PageLinkPlan, String> {
         .map_err(err)?
         .plan()
         .clone())
+}
+#[test]
+fn registered_file_bytes_are_resolved_and_bound_to_the_portable_plan() -> Result<(), String> {
+    let r = registry()?;
+    let mut input = set();
+    input.pages[0].document.value.nodes[7].kind = DocKind::Link {
+        target: LinkTarget::Relative {
+            path: "../design/contracts.json".into(),
+            fragment: None,
+        },
+        label: InlineRef(2),
+    };
+    input.files.push(PageFile {
+        registration: PageRegistration {
+            id: "contracts".into(),
+            source: "design/contracts.json".into(),
+            route: "data/contracts.json".into(),
+        },
+        content: FileBytes(vec![0, 255, 13, 10]),
+    });
+    let plan = run(&input)?;
+    assert_eq!(plan.links[0].target, PageDestination::File { index: 0 });
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let encoded = portable::pages::set_to_value(&input, &r, &mut codec, &mut b()).map_err(err)?;
+    let bytes = nepl3_wire::encode(&encoded, &mut b()).map_err(err)?;
+    let received = nepl3_wire::decode(&bytes, &mut b()).map_err(err)?;
+    let decoded =
+        portable::pages::set_from_value(&received, &r, &mut codec, &mut b()).map_err(err)?;
+    assert_eq!(decoded, input);
+    assert_eq!(run(&decoded)?, plan);
+    let encoded_plan =
+        portable::pages::plan_to_value(&plan, &input, &r, &mut codec, &mut b()).map_err(err)?;
+    input.files[0].content.0[1] = 254;
+    assert_ne!(run(&input)?.identity, plan.identity);
+    assert!(
+        portable::pages::plan_from_value(&encoded_plan, &input, &r, &mut codec, &mut b()).is_err()
+    );
+    Ok(())
+}
+#[test]
+fn file_registration_cannot_shadow_pages_or_claim_doc_anchors() -> Result<(), String> {
+    let mut input = set();
+    let file = PageFile {
+        registration: PageRegistration {
+            id: "resource".into(),
+            source: "data/item".into(),
+            route: "download/item".into(),
+        },
+        content: FileBytes(vec![]),
+    };
+    input.files.push(file.clone());
+    for field in [PageField::Id, PageField::Source, PageField::Route] {
+        input.files[0] = file.clone();
+        match field {
+            PageField::Id => {
+                input.files[0].registration.id = input.pages[0].registration.id.clone()
+            }
+            PageField::Source => input.files[0].registration.source = "doc".into(),
+            PageField::Route => input.files[0].registration.route = "docs/first".into(),
+        }
+        assert!(run(&input).is_err());
+    }
+    input.files[0] = file;
+    for target in [
+        LinkTarget::Page {
+            page: "resource".into(),
+            fragment: None,
+        },
+        LinkTarget::Relative {
+            path: "../data/item".into(),
+            fragment: Some("anchor".into()),
+        },
+        LinkTarget::Relative {
+            path: "../data/unknown".into(),
+            fragment: None,
+        },
+    ] {
+        input.pages[0].document.value.nodes[7].kind = DocKind::Link {
+            target,
+            label: InlineRef(2),
+        };
+        assert!(run(&input).is_err());
+    }
+    Ok(())
 }
 #[test]
 fn page_boundary_validation_still_precedes_earlier_page_label_failures() -> Result<(), String> {
@@ -166,13 +253,13 @@ fn pages_resolve_forward_and_relative_links_with_explicit_identity() -> Result<(
             PageLink {
                 page: 0,
                 node: 7,
-                target: 1,
+                target: PageDestination::Page { index: 1 },
                 fragment: Some("導入".into())
             },
             PageLink {
                 page: 1,
                 node: 7,
-                target: 0,
+                target: PageDestination::Page { index: 0 },
                 fragment: Some("導入".into())
             }
         ]
@@ -260,7 +347,13 @@ fn registry_collisions_and_unknown_destinations_are_rejected() -> Result<(), Str
         }
         assert!(run(&s).is_err());
     }
-    assert!(run(&PageSet { pages: vec![] }).is_err());
+    assert!(
+        run(&PageSet {
+            pages: vec![],
+            files: vec![]
+        })
+        .is_err()
+    );
     Ok(())
 }
 #[test]
