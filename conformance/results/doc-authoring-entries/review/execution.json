@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:\\Users\\bem\\miniforge3\\python.exe",
+    "check.py"
+  ],
+  "python": "3.13.12 | packaged by conda-forge | (main, Feb  5 2026, 05:41:12) [MSC v.1944 64 bit (AMD64)]",
+  "timeout_seconds": 60,
+  "exit_code": 0,
+  "stdout": "PASS [('history', 6, 18, 91, 0), ('migration', 9, 31, 203, 2)]\r\n",
+  "stderr": ""
+}

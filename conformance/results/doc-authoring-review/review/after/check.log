@@ -1,0 +1,49 @@
+{
+  "draft_sha256": "93219488d2b5b3c93d3b7c02a2f3598b5544d0fe61111b0537071b4354549bee",
+  "paragraph_counts": [
+    227,
+    227
+  ],
+  "titles_equal": true,
+  "table_rows_equal": true,
+  "table_rows": 44,
+  "table_columns": [
+    3,
+    2,
+    3,
+    3
+  ],
+  "inline_code_equal": true,
+  "inline_codes": 349,
+  "links_equal": true,
+  "raw_code_equal": true,
+  "raw_codes": 0,
+  "ruby_count": 8477,
+  "ruby_unique": 2045,
+  "ruby_invalid": [],
+  "uncovered_kanji": [],
+  "sentence_count": 1239,
+  "sections_unique": true,
+  "kinds": {
+    "Article": 1,
+    "Sentence": 1239,
+    "Ruby": 8477,
+    "Text": 17854,
+    "Body": 18,
+    "Paragraph": 227,
+    "InlineCode": 349,
+    "Link": 32,
+    "Section": 12,
+    "Table": 4,
+    "AlignmentDefault": 11,
+    "SomeRow": 4,
+    "Row": 44,
+    "List": 1,
+    "Ordered": 1,
+    "ListItem": 5,
+    "CheckNone": 5
+  },
+  "anno_count": 0,
+  "utf8_lf": true
+}
+mismatch indexes [] multiple sentence candidates 38

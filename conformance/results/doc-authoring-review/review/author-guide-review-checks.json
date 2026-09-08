@@ -1,0 +1,16 @@
+{
+  "source_commit": "337057d71838c85a6fb9a304e3ec4164436bb310",
+  "source_path": "doc/review.md",
+  "source_sha256": "5e69673b46bc5893b0d77f9833b34b34f8251e1243ee412a1438f48619727b6a",
+  "draft_sha256": "d4d987c22c0549495f1646d83e7bf13e636b9cd89c646fff7b689324585e177d",
+  "checks": [
+    "outer parser",
+    "whitespace-normalized Markdown base text equality",
+    "raw and inline code exact value equality",
+    "link target and order equality",
+    "no unannotated narrative kanji"
+  ],
+  "limitations": "not production parser/lower/HTML, independent review or target resolution",
+  "full_source_sha256": "5e69673b46bc5893b0d77f9833b34b34f8251e1243ee412a1438f48619727b6a",
+  "source_scope": "whole page"
+}

@@ -1,0 +1,143 @@
+# Generated from design/forms.json by tools/generate/signatures.py; do not edit.
+article ja "Grammar：[構文/こうぶん]signatureの[全表/ぜんぴょう]"
+body
+  cons paragraph
+    cons sentence cons text "この" cons ruby text "表" text "ひょう" cons text "は" cons code "design/forms.json" cons text "から" cons ruby text "生成" text "せいせい" cons text "した。" nil
+    cons sentence cons code "List<T>" cons text "は" cons code "cons T List<T>" cons text " / " cons code "nil" cons text "、" cons code "@" cons text "は" cons ruby text "基礎" text "きそ" cons text "readerの" cons ruby text "識別" text "しきべつ" cons text "である。" nil
+    nil
+  cons section category_4772616d6d61722f526f6f74 sentence cons code "Grammar/Root" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "language" nil cons sentence cons code "Grammar.Language" nil cons sentence cons code "name: @Name, revision: @Nat, root: @Name, declarations: List<Grammar/Declaration>" nil cons "4" nil
+        nil
+      nil
+  cons section category_4772616d6d61722f4465636c61726174696f6e sentence cons code "Grammar/Declaration" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "category" nil cons sentence cons code "Grammar.Category" nil cons sentence cons code "name: @Name, mode: @Name" nil cons "2" nil
+        cons row cons sentence cons code "namespace" nil cons sentence cons code "Grammar.Namespace" nil cons sentence cons code "name: @Name, policy: Grammar/Policy" nil cons "2" nil
+        cons row cons sentence cons code "reader" nil cons sentence cons code "Grammar.Reader" nil cons sentence cons code "name: @Name, expression: Grammar/ReaderExpr" nil cons "2" nil
+        cons row cons sentence cons code "mode" nil cons sentence cons code "Grammar.Mode" nil cons sentence cons code "name: @Name, rules: List<Grammar/LexRule>" nil cons "2" nil
+        cons row cons sentence cons code "form" nil cons sentence cons code "Grammar.Form" nil cons sentence cons code "kind: @Name, category: @Name, spelling: @Text, fields: List<Grammar/Field>, bindings: Grammar/Binding, styles: List<Grammar/Style>" nil cons "6" nil
+        cons row cons sentence cons code "leaf" nil cons sentence cons code "Grammar.Leaf" nil cons sentence cons code "kind: @Name, category: @Name, token: @Name, bindings: Grammar/Binding, styles: List<Grammar/Style>" nil cons "5" nil
+        cons row cons sentence cons code "extension" nil cons sentence cons code "Grammar.Extension" nil cons sentence cons code "alias: @Name, provider: @Text, signature: @Text" nil cons "3" nil
+        nil
+      nil
+  cons section category_4772616d6d61722f506f6c696379 sentence cons code "Grammar/Policy" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "lexical" nil cons sentence cons code "Grammar.Lexical" nil cons "なし" cons "0" nil
+        cons row cons sentence cons code "global" nil cons sentence cons code "Grammar.Global" nil cons "なし" cons "0" nil
+        cons row cons sentence cons code "open" nil cons sentence cons code "Grammar.Open" nil cons "なし" cons "0" nil
+        nil
+      nil
+  cons section category_4772616d6d61722f4669656c64 sentence cons code "Grammar/Field" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "field" nil cons sentence cons code "Grammar.FieldDeclaration" nil cons sentence cons code "name: @Name, read: Grammar/ReadSpec" nil cons "2" nil
+        nil
+      nil
+  cons section category_4772616d6d61722f5265616453706563 sentence cons code "Grammar/ReadSpec" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "local" nil cons sentence cons code "Grammar.Local" nil cons sentence cons code "category: @Name" nil cons "1" nil
+        cons row cons sentence cons code "foreign" nil cons sentence cons code "Grammar.Foreign" nil cons sentence cons code "alias: @Name, category: @Name" nil cons "2" nil
+        cons row cons sentence cons code "listof" nil cons sentence cons code "Grammar.ListOf" nil cons sentence cons code "element: Grammar/ReadSpec" nil cons "1" nil
+        cons row cons sentence cons code "withmode" nil cons sentence cons code "Grammar.WithMode" nil cons sentence cons code "mode: @Name, read: Grammar/ReadSpec" nil cons "2" nil
+        cons row cons sentence cons code "builtin" nil cons sentence cons code "Grammar.Builtin" nil cons sentence cons code "reader: @Name" nil cons "1" nil
+        nil
+      nil
+  cons section category_4772616d6d61722f4c657852756c65 sentence cons code "Grammar/LexRule" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "take" nil cons sentence cons code "Grammar.Take" nil cons sentence cons code "kind: @Name, reader: @Name" nil cons "2" nil
+        cons row cons sentence cons code "skip" nil cons sentence cons code "Grammar.Skip" nil cons sentence cons code "reader: @Name" nil cons "1" nil
+        nil
+      nil
+  cons section category_4772616d6d61722f52656164657245787072 sentence cons code "Grammar/ReaderExpr" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "literal" nil cons sentence cons code "Grammar.Literal" nil cons sentence cons code "text: @Text" nil cons "1" nil
+        cons row cons sentence cons code "scalar" nil cons sentence cons code "Grammar.Scalar" nil cons sentence cons code "class: Grammar/CharClass" nil cons "1" nil
+        cons row cons sentence cons code "seq" nil cons sentence cons code "Grammar.Seq" nil cons sentence cons code "parts: List<Grammar/ReaderExpr>" nil cons "1" nil
+        cons row cons sentence cons code "choice" nil cons sentence cons code "Grammar.Choice" nil cons sentence cons code "alternatives: List<Grammar/ReaderExpr>" nil cons "1" nil
+        cons row cons sentence cons code "many" nil cons sentence cons code "Grammar.Many" nil cons sentence cons code "body: Grammar/ReaderExpr" nil cons "1" nil
+        cons row cons sentence cons code "some" nil cons sentence cons code "Grammar.Some" nil cons sentence cons code "body: Grammar/ReaderExpr" nil cons "1" nil
+        cons row cons sentence cons code "optional" nil cons sentence cons code "Grammar.Optional" nil cons sentence cons code "body: Grammar/ReaderExpr" nil cons "1" nil
+        cons row cons sentence cons code "repeat" nil cons sentence cons code "Grammar.Repeat" nil cons sentence cons code "min: @Nat, max: @Nat, body: Grammar/ReaderExpr" nil cons "3" nil
+        cons row cons sentence cons code "look" nil cons sentence cons code "Grammar.Look" nil cons sentence cons code "body: Grammar/ReaderExpr" nil cons "1" nil
+        cons row cons sentence cons code "not" nil cons sentence cons code "Grammar.Not" nil cons sentence cons code "body: Grammar/ReaderExpr" nil cons "1" nil
+        cons row cons sentence cons code "commit" nil cons sentence cons code "Grammar.Commit" nil cons sentence cons code "body: Grammar/ReaderExpr" nil cons "1" nil
+        cons row cons sentence cons code "capture" nil cons sentence cons code "Grammar.Capture" nil cons sentence cons code "name: @Name, body: Grammar/ReaderExpr" nil cons "2" nil
+        cons row cons sentence cons code "region" nil cons sentence cons code "Grammar.Region" nil cons sentence cons code "role: @Name, body: Grammar/ReaderExpr" nil cons "2" nil
+        cons row cons sentence cons code "node" nil cons sentence cons code "Grammar.Node" nil cons sentence cons code "kind: @Name, body: Grammar/ReaderExpr" nil cons "2" nil
+        cons row cons sentence cons code "discard" nil cons sentence cons code "Grammar.Discard" nil cons sentence cons code "body: Grammar/ReaderExpr" nil cons "1" nil
+        cons row cons sentence cons code "ref" nil cons sentence cons code "Grammar.Ref" nil cons sentence cons code "name: @Name" nil cons "1" nil
+        cons row cons sentence cons code "decode" nil cons sentence cons code "Grammar.Decode" nil cons sentence cons code "decoder: @Text, body: Grammar/ReaderExpr" nil cons "2" nil
+        cons row cons sentence cons code "map" nil cons sentence cons code "Grammar.Map" nil cons sentence cons code "provider: @Text, body: Grammar/ReaderExpr" nil cons "2" nil
+        cons row cons sentence cons code "then" nil cons sentence cons code "Grammar.Then" nil cons sentence cons code "first: Grammar/ReaderExpr, provider: @Text" nil cons "2" nil
+        cons row cons sentence cons code "call" nil cons sentence cons code "Grammar.Call" nil cons sentence cons code "provider: @Text" nil cons "1" nil
+        cons row cons sentence cons code "eof" nil cons sentence cons code "Grammar.Eof" nil cons "なし" cons "0" nil
+        cons row cons sentence cons code "takecount" nil cons sentence cons code "Grammar.Takecount" nil cons sentence cons code "count: @Nat" nil cons "1" nil
+        cons row cons sentence cons code "until" nil cons sentence cons code "Grammar.Until" nil cons sentence cons code "delimiter: @Text" nil cons "1" nil
+        nil
+      nil
+  cons section category_4772616d6d61722f43686172436c617373 sentence cons code "Grammar/CharClass" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "any" nil cons sentence cons code "Grammar.Any" nil cons "なし" cons "0" nil
+        cons row cons sentence cons code "whitespace" nil cons sentence cons code "Grammar.Whitespace" nil cons "なし" cons "0" nil
+        cons row cons sentence cons code "identifierStart" nil cons sentence cons code "Grammar.Identifierstart" nil cons "なし" cons "0" nil
+        cons row cons sentence cons code "identifierContinue" nil cons sentence cons code "Grammar.Identifiercontinue" nil cons "なし" cons "0" nil
+        cons row cons sentence cons code "digit" nil cons sentence cons code "Grammar.Digit" nil cons "なし" cons "0" nil
+        cons row cons sentence cons code "asciiLetter" nil cons sentence cons code "Grammar.Asciiletter" nil cons "なし" cons "0" nil
+        cons row cons sentence cons code "chars" nil cons sentence cons code "Grammar.Chars" nil cons sentence cons code "text: @Text" nil cons "1" nil
+        cons row cons sentence cons code "except" nil cons sentence cons code "Grammar.Except" nil cons sentence cons code "text: @Text" nil cons "1" nil
+        cons row cons sentence cons code "range" nil cons sentence cons code "Grammar.Range" nil cons sentence cons code "lo: @Text, hi: @Text" nil cons "2" nil
+        nil
+      nil
+  cons section category_4772616d6d61722f42696e64696e67 sentence cons code "Grammar/Binding" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "visit" nil cons sentence cons code "Grammar.Visit" nil cons sentence cons code "child: @Name" nil cons "1" nil
+        cons row cons sentence cons code "import" nil cons sentence cons code "Grammar.Import" nil cons sentence cons code "child: @Name" nil cons "1" nil
+        cons row cons sentence cons code "propagate" nil cons sentence cons code "Grammar.Propagate" nil cons sentence cons code "child: @Name" nil cons "1" nil
+        cons row cons sentence cons code "scope" nil cons sentence cons code "Grammar.Scope" nil cons sentence cons code "plans: List<Grammar/Binding>" nil cons "1" nil
+        cons row cons sentence cons code "group" nil cons sentence cons code "Grammar.Group" nil cons sentence cons code "plans: List<Grammar/Binding>" nil cons "1" nil
+        cons row cons sentence cons code "bind" nil cons sentence cons code "Grammar.Bind" nil cons sentence cons code "namespace: @Name, field: @Name" nil cons "2" nil
+        cons row cons sentence cons code "reference" nil cons sentence cons code "Grammar.Reference" nil cons sentence cons code "namespace: @Name, field: @Name" nil cons "2" nil
+        cons row cons sentence cons code "export" nil cons sentence cons code "Grammar.Export" nil cons sentence cons code "namespace: @Name, field: @Name" nil cons "2" nil
+        cons row cons sentence cons code "sequential" nil cons sentence cons code "Grammar.Sequential" nil cons sentence cons code "declarations: @Name, body: @Name" nil cons "2" nil
+        cons row cons sentence cons code "recursive" nil cons sentence cons code "Grammar.Recursive" nil cons sentence cons code "declarations: @Name, body: @Name" nil cons "2" nil
+        cons row cons sentence cons code "none" nil cons sentence cons code "Grammar.None" nil cons "なし" cons "0" nil
+        cons row cons sentence cons code "custom" nil cons sentence cons code "Grammar.Custom" nil cons sentence cons code "provider: @Text" nil cons "1" nil
+        nil
+      nil
+  cons section category_4772616d6d61722f5374796c65 sentence cons code "Grammar/Style" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "style" nil cons sentence cons code "Grammar.Style" nil cons sentence cons code "selector: Grammar/Selector, class: @Text" nil cons "2" nil
+        cons row cons sentence cons code "selection" nil cons sentence cons code "Grammar.Selection" nil cons sentence cons code "selector: Grammar/Selector, priority: @Nat" nil cons "2" nil
+        nil
+      nil
+  cons section category_4772616d6d61722f53656c6563746f72 sentence cons code "Grammar/Selector" nil
+    body
+      cons table cons left cons left cons left cons right nil
+        some row cons "[綴/つづ]り" cons "kind" cons "[子/こ]（[順序固定/じゅんじょこてい]）" cons "arity" nil
+        cons row cons sentence cons code "head" nil cons sentence cons code "Grammar.Head" nil cons "なし" cons "0" nil
+        cons row cons sentence cons code "self" nil cons sentence cons code "Grammar.Self" nil cons "なし" cons "0" nil
+        cons row cons sentence cons code "field" nil cons sentence cons code "Grammar.FieldSelector" nil cons sentence cons code "name: @Name" nil cons "1" nil
+        cons row cons sentence cons code "capture" nil cons sentence cons code "Grammar.CaptureSelector" nil cons sentence cons code "name: @Name" nil cons "1" nil
+        nil
+      nil
+  nil

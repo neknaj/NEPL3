@@ -1,0 +1,115 @@
+{
+  "main": "7f250ee6b6476733ec902ab14533612b49405106",
+  "chapters": [
+    {
+      "path": "doc/spec/05-document.md",
+      "baseline_commit": "bc1d5d3443d214457aa6527250d372ee1f2b5896",
+      "baseline_sha256": "74beb5cb2ed1cd7b002fd5bf2e76597f540aa5109f1971145ced9128b5c96c9a",
+      "current_commit": "7f250ee6b6476733ec902ab14533612b49405106",
+      "current_sha256": "c6b0878316fec5554402ef0f0c2f5edb66ffd36bb363e17e2033b77fb53f27be",
+      "draft_commit": "94de345ca2ab44edd5f276f642ed6fbb72006cd2",
+      "draft_path": "doc/migration/authored/05-document.nepld",
+      "draft_sha256": "ab4b59d22adb6d09c20ebfaa6734d1b108da9e30b2f5a5f6942ff85302063982",
+      "draft_bytes": 66043,
+      "source_drift": true,
+      "manual_update_required": false
+    },
+    {
+      "path": "doc/spec/06-math.md",
+      "baseline_commit": "bc1d5d3443d214457aa6527250d372ee1f2b5896",
+      "baseline_sha256": "c22ab7b0fae9acb9edecd3886fb641cefcf53c9b688dc8c5ffe7cba97eebd028",
+      "current_commit": "7f250ee6b6476733ec902ab14533612b49405106",
+      "current_sha256": "c22ab7b0fae9acb9edecd3886fb641cefcf53c9b688dc8c5ffe7cba97eebd028",
+      "draft_commit": "1ee60f1cfe1658f1b26dda78ceeca24e73d3c1b5",
+      "draft_path": "doc/migration/authored/06-math.nepld",
+      "draft_sha256": "3dd100604d59618d91149b4fc77ee536d43b37f7e6bcd468748aad7cd3d16fe7",
+      "draft_bytes": 23658,
+      "source_drift": false,
+      "manual_update_required": false
+    },
+    {
+      "path": "doc/spec/07-circuit.md",
+      "baseline_commit": "bc1d5d3443d214457aa6527250d372ee1f2b5896",
+      "baseline_sha256": "0005924591477574e490affa8df48d7446dfb41d81cd08beb55d03372a0dbfed",
+      "current_commit": "7f250ee6b6476733ec902ab14533612b49405106",
+      "current_sha256": "0005924591477574e490affa8df48d7446dfb41d81cd08beb55d03372a0dbfed",
+      "draft_commit": "3f3cfba7964f26873159f3fb333e958f6922cc35",
+      "draft_path": "doc/migration/authored/07-circuit.nepld",
+      "draft_sha256": "17618352d792b55cfa9436c029d1b5d09c916cc5af3b8123f4a33e053b963cae",
+      "draft_bytes": 16411,
+      "source_drift": false,
+      "manual_update_required": false
+    },
+    {
+      "path": "doc/spec/08-editor.md",
+      "baseline_commit": "bc1d5d3443d214457aa6527250d372ee1f2b5896",
+      "baseline_sha256": "1311cb50ce019ed53c733f9d8e414a7ea42b70f975fb0d60d01314762d79fa39",
+      "current_commit": "7f250ee6b6476733ec902ab14533612b49405106",
+      "current_sha256": "1311cb50ce019ed53c733f9d8e414a7ea42b70f975fb0d60d01314762d79fa39",
+      "draft_commit": "8ef40fd155d037d3b04556c08078da76d2560be3",
+      "draft_path": "doc/migration/authored/08-editor.nepld",
+      "draft_sha256": "43c78b5f39b008a87b7a5eaf1719a0670f1b5f4992a2489a84549af7dd1241a7",
+      "draft_bytes": 51115,
+      "source_drift": false,
+      "manual_update_required": false
+    },
+    {
+      "path": "doc/spec/09-portability.md",
+      "baseline_commit": "bc1d5d3443d214457aa6527250d372ee1f2b5896",
+      "baseline_sha256": "6a946ba4c8d01e8fbe022e641739f1a3d762ce94ac60b45e5cc37e64274683ca",
+      "current_commit": "7f250ee6b6476733ec902ab14533612b49405106",
+      "current_sha256": "9c30f92245bfac0f94324b078884bd758def94bf00b9189cd3e6a656a843cf21",
+      "draft_commit": "7d71068970ca6d0bfbd96fb121a90e2dc414ce9b",
+      "draft_path": "doc/migration/authored/09-portability.nepld",
+      "draft_sha256": "b93662b46d833e25f4b57f2fc08c334bc7d9ac641d8c13ba0fc9439d1abe5827",
+      "draft_bytes": 32280,
+      "source_drift": true,
+      "manual_update_required": false
+    }
+  ],
+  "verified_review_manifests": [
+    {
+      "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-b",
+      "manifest_sha256": "be73437638848b118742851cdae2bdcc27d38699375ac1e2deddccad9cdc7031",
+      "files": 22
+    },
+    {
+      "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-b-06-revision",
+      "manifest_sha256": "44b3d829648a145fcdfecf8078f95b22f473e76df0b5618689673aae4e74d84f",
+      "files": 8
+    },
+    {
+      "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-b-07-revision",
+      "manifest_sha256": "6847d54d358cff1f114a8390ed1c8e6927340b9fa47e478be61cd8e56a717b06",
+      "files": 8
+    },
+    {
+      "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-b-08-revision",
+      "manifest_sha256": "a33d7b794a8cd4c9b3e0d18727b78095ad6679922dffba5e03576a417f6f8d29",
+      "files": 10
+    },
+    {
+      "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-doc-authoring-b-09-revision",
+      "manifest_sha256": "53c25fb1177b84ceb36dbdc0e54db41e91f3dd9a6ea7d645403ca528e1995454",
+      "files": 7
+    },
+    {
+      "path": "C:\\projects\\NEPL3-runtime\\.tmp\\review-reader-portability-followup",
+      "manifest_sha256": "be3860e631778b56404f39e2965d0761b2ba12ba7f7d451111211764e6decaa4",
+      "files": 20
+    },
+    {
+      "path": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-b-ruby",
+      "manifest_sha256": "4276483a0f0f61d83e55197094c8e6bbb0d164de56b05a99f26c071cc10d302c",
+      "files": 27
+    },
+    {
+      "path": "C:\\projects\\NEPL3-doc-authoring-delivery\\.tmp\\review-b-sentence-payload",
+      "manifest_sha256": "0d0a3096212f1e62718c8cdb4313491055058a65b11218d88017f6bcd5a6ea44",
+      "files": 22
+    }
+  ],
+  "result": "passed",
+  "conclusion": "No unincorporated canonical drift in selected drafts. 05 includes SentencePayload addition, 09 includes digest metering addition.",
+  "limits": "Author performs provenance/drift only; this is not independent semantic review of own drafts or new runtime/canonical acceptance."
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "commit": "ee234a3b441ecf67463402d90398f92f0db7039e",
+    "path": "doc/migration/authored/progress/foundation-runtime.nepld",
+    "bytes": 50168,
+    "sha256": "d53533bf771e4d172331f7d1a38cd3392e5f775a75e1c5173e640779a8e677da"
+  },
+  {
+    "commit": "dc7b4c00b9f21a3ae1a0715e0b3cbd6bbb12ae0c",
+    "path": "doc/progress/foundation-runtime.md",
+    "bytes": 22711,
+    "sha256": "0f9b4babffcf9598bcf62ff97d379a03c52a91bff0d78bd75d10927c5ff45bc8"
+  },
+  {
+    "commit": "ee234a3b441ecf67463402d90398f92f0db7039e",
+    "path": "AGENTS.md",
+    "bytes": 7613,
+    "sha256": "849027165216a9a3adcb22ef58a44bc698c83e1707d2aa0727a1b73105282236"
+  },
+  {
+    "commit": "ee234a3b441ecf67463402d90398f92f0db7039e",
+    "path": "doc/authoring.md",
+    "bytes": 6478,
+    "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+  },
+  {
+    "commit": "ee234a3b441ecf67463402d90398f92f0db7039e",
+    "path": "design/forms.json",
+    "bytes": 48673,
+    "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+  },
+  {
+    "commit": "ee234a3b441ecf67463402d90398f92f0db7039e",
+    "path": "languages/doc/syntax.neplg",
+    "bytes": 10108,
+    "sha256": "c0dcfc3a2288ca53d62ff3c4042630726f87ec1b469379b263f83690ba1a01b8"
+  }
+]

@@ -1,0 +1,80 @@
+# Doc文書の執筆指針
+
+この指針は、NEPL3の例・仕様・解説をDocで書くときの表記選択を定める。[Doc仕様](spec/05-document.md)の構文・意味を変更するものではない。正式文書の正本切替えは[移行条件](spec/16-doc-migration.md)に従う。
+
+## Sentence literalを標準にする場面
+
+本文がText・Ruby・Annoで表せる場合は、読みやすいsentence literalを基本とする。通常の説明文、見出し、表のセル、対応文のvariantに使える。Ruby・Annoの入れ子だけを理由に前置構築へ展開する必要はない。
+
+```text
+"これは{[文書/ぶんしょ]/document}の[例/れい]です。"
+```
+
+一つのliteralは一つのSentenceである。本文では著者が対応させたい文ごとに分ける。見出しや表のセルは短い語句でもSentenceとしてよい。句点の数から処理系が自動分割する規則は設けない。
+
+literal内にソース上の直接改行は書かない。文書の明示的な改行には[明示的な改行](#明示的な改行はbreak)の`break`を使い、そのSentenceは前置構築にする。`\n`はTextのデータとしてLFを保持するescapeであり、文書構造の改行を表す標準表記にはしない。引用符は `\"`、backslashは `\\`、文字としての注釈区切りは `\[` などでescapeする。画面幅に応じた折返しは表示側に任せる。長い一文は、それだけを理由に別の対応単位へ分割せず、編集しにくい場合に前置構築を選ぶ。
+
+## 明示的なsentence構築を選ぶ場面
+
+`strong`・`em`・`ref`・`anchor`・`link`・Inline位置の`code`・画像・Mathなど、literalにないInlineを含むSentenceは前置構築で表す。明示Breakが必要な場合も同様で、Text内のLFへ置換しない。
+
+```text
+sentence
+  cons anno ruby text "係数" text "けいすう" cons text "coefficient" nil
+  cons text "の"
+  cons strong text "すべて"
+  cons text "の"
+  cons ruby text "可能性" text "かのうせい"
+  cons text "を"
+  cons ruby text "考" text "かんが"
+  cons text "えます。"
+  nil
+```
+
+複雑な注釈の各部分を編集・比較したい場合や、constructor API・構文の解説を示す場合にも前置構築を使える。機能を見せるためだけに通常の本文すべてを展開する必要はない。プログラムから文書を生成するときは、型付きconstructorで意味構造を作り、ソース文字列の連結と再解析を前提にしない。
+
+`text "..."` の引用部分は通常Textであり、sentence literalの注釈構文を再解釈しない。前置構築でRuby・Annoが必要なら、それぞれのconstructorを使う。Sentence literalはSentenceであってInlineではないため、`sentence`のInline列へそのまま挿入しない。
+
+## 明示的な改行はbreak
+
+`break`は引数を持たないInline constructorである。同じSentenceの途中で改行するために使い、Sentenceやparagraphの境界を増やさない。HTMLでは`br`、plain text抽出ではLFになる。段落を分けたい場合はparagraphを作る。空の段落や複数のbreakを余白調整に使わない。
+
+```text
+sentence
+  cons text "ここで"
+  cons break
+  cons ruby text "改行" text "かいぎょう"
+  cons text "します。"
+  nil
+```
+
+既存のText内LFやRawCodeの元の改行は、内容を保つためにそのまま保持する。`break`との自動相互変換はしない。Compact printerも、breakを含むSentenceをliteralへ押し込まない。[改行の例](../examples/document/line-break.nepld)では、日英の対応文それぞれにbreakを置いている。
+
+## sentenceとparallelの使い分け
+
+多言語の本文は文単位で `parallel` を作り、各 `variant` にその言語のSentenceを置く。段落全体を一つの対応文に詰め込まない。各言語は意味が対応する自然な文にし、語順や単語数の一致を要求しない。
+
+```text
+parallel
+  cons variant ja "これは{[文書/ぶんしょ]/document}の[例/れい]です。"
+  cons variant en "This is an example of a document."
+  nil
+```
+
+variantごとにliteralと前置構築を選べる。一方の言語に構造が必要でも、他方まで機械的に同じ表記へ変換しない。強調や参照を付ける場合は、対応言語でも意味と参照先が一致するか確認する。翻訳がない場合を空Sentenceでごまかさず、空の翻訳を意図する場合だけ空Sentenceを使う。
+
+[線型結合の例](../examples/document/linear-combination.nepld)は両経路を学べる例として、最初の対応文にliteral、続く対応文に明示的なsentence構築を残す。本文の対応単位はどちらも同じである。
+
+## RubyとAnnoの対象
+
+日本語の振り仮名は[GlossのRuby指針](https://github.com/neknaj/gloss#ruby)に従い、漢字部分に付ける。送り仮名・助詞・片仮名・数字・記号を漢字と一緒にRubyの本体へ包まない。読みは文脈に合う語・漢字部分の単位で付け、漢字一文字ずつへの分割を強制しない。
+
+語句全体の訳語・意味説明はAnnoに置く。例えば `{[原点/げんてん]を[通/とお]る[直線/ちょくせん]/a line through the origin}` とする。前置構築ではAnnoのbaseをConcatで組み、その子をRubyとTextに分ける。カタカナ語は `{ベクトル/vector}` のように意味注釈を付けられる。
+
+これは日本語文書の執筆指針である。中国語のピンインや他言語の転写など、Rubyが扱える一般的な音韻注釈をparserやschemaで禁止しない。
+
+## 構造と確認
+
+話題のまとまりはsection、連続する本文はparagraph、列挙はlist、同じ項目を比較する情報はtableで表す。参照には安定したsection/anchor IDを使う。機能の使用数を増やすことを目的に、不要な装飾・表・埋め込みを足さない。
+
+表記を変更したときは本文・読み・注釈・対応文・強調・参照を保つ。literalと前置構築の等価性は意味構造で確認し、元ソースの位置まで同一だとは扱わない。構造auditの成功と、実parser・lower・HTML生成の成功も区別する。資源停止や未対応機能が残っている例は、実行可能と広告せず制約を記録する。
