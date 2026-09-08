@@ -142,6 +142,14 @@ CLIのrenderer識別子は `nepl3-tools.markdown/4` とする。
 comment内のpathはdelimiterにならないようescapeする。I/O途中失敗は未完成fileを
 残す場合があり、既存fileを置換して成功扱いにはしない。
 
+開発hostのDoc操作はNodes上限を10,000,000とする。Nodesは最終ASTの大きさだけではなく、
+型付き交換値等の検査訪問も含む累積量である。従来の1,000,000では、短いRuby付き512文を
+128段落へ置いた約14KBの文書でも停止した。新上限はこの通常の文単位執筆を受け入れる
+desktop hostの設定であり、coreの資源会計を省く規則ではない。Work上限100,000,000、
+AllocationUnits上限500,000,000と他の上限は維持し、停止後の再試行でBudgetを増やさない。
+bare-metal等の別hostへこの設定を強制しない。全ての大きい文書が処理可能になったとはせず、
+残る資源停止と未解決リンクは区別して記録する。
+
 Sectionの明示ID、source/origin対応、Doc固有のSentence境界をMarkdownから復元する
 一般的なroundtripではない。旧anchor対応・正本registry切替・人の意味レビューは別条件で、
 限定projectionの成功だけで元Markdownを削除しない。
