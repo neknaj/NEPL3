@@ -709,6 +709,9 @@ pub struct SourceStore {
     snapshots: Vec<SourceSnapshot>,
     // Snapshot insertion order remains public; only this private index is sorted.
     index: Vec<usize>,
+    // Position of the most recent successful insertion/duplicate in `index`.
+    // This is only a search hint, never an identity or validation proof.
+    insertion_hint: Option<usize>,
 }
 impl SourceStore {
     pub fn snapshots(&self) -> &[SourceSnapshot] {
@@ -721,6 +724,7 @@ impl SourceStore {
         match position {
             Ok(at) => {
                 if self.snapshots[self.index[at]] == snapshot {
+                    self.insertion_hint = Some(at);
                     Ok(())
                 } else {
                     Err(SourceError::IdentityConflict)
@@ -729,6 +733,7 @@ impl SourceStore {
             Err(at) => {
                 self.index.insert(at, self.snapshots.len());
                 self.snapshots.push(snapshot);
+                self.insertion_hint = Some(at);
                 Ok(())
             }
         }
@@ -739,11 +744,17 @@ impl SourceStore {
         snapshot: SourceSnapshot,
         budget: &mut Budget,
     ) -> Result<(), SourceError> {
-        let position =
-            source_index_position(&self.index, |i| &self.snapshots[i], &snapshot, budget)?;
+        let position = source_index_position(
+            &self.index,
+            |i| &self.snapshots[i],
+            &snapshot,
+            self.insertion_hint,
+            budget,
+        )?;
         match position {
             Ok(at) => {
                 if self.snapshots[self.index[at]].eq_with_budget(&snapshot, budget)? {
+                    self.insertion_hint = Some(at);
                     Ok(())
                 } else {
                     Err(SourceError::IdentityConflict)
@@ -757,6 +768,7 @@ impl SourceStore {
                 )?;
                 self.index.insert(at, self.snapshots.len());
                 self.snapshots.push(snapshot);
+                self.insertion_hint = Some(at);
                 Ok(())
             }
         }
@@ -769,11 +781,17 @@ impl SourceStore {
         budget: &mut Budget,
     ) -> Result<(), SourceError> {
         budget.poll()?;
-        let position =
-            source_index_position(&self.index, |i| &self.snapshots[i], snapshot, budget)?;
+        let position = source_index_position(
+            &self.index,
+            |i| &self.snapshots[i],
+            snapshot,
+            self.insertion_hint,
+            budget,
+        )?;
         match position {
             Ok(at) => {
                 if self.snapshots[self.index[at]].eq_with_budget(snapshot, budget)? {
+                    self.insertion_hint = Some(at);
                     Ok(())
                 } else {
                     Err(SourceError::IdentityConflict)
@@ -788,6 +806,7 @@ impl SourceStore {
                 let owned = snapshot.clone_with_budget(budget)?;
                 self.index.insert(at, self.snapshots.len());
                 self.snapshots.push(owned);
+                self.insertion_hint = Some(at);
                 Ok(())
             }
         }
@@ -858,19 +877,50 @@ fn source_index_position<'a>(
     index: &[usize],
     get: impl Fn(usize) -> &'a SourceSnapshot,
     snapshot: &SourceSnapshot,
+    hint: Option<usize>,
     budget: &mut Budget,
 ) -> Result<Result<usize, usize>, SourceError> {
     let (mut low, mut high) = (0, index.len());
-    while low < high {
-        let mid = low + (high - low) / 2;
-        let prior = get(index[mid]);
+    let mut compare = |position: usize| {
+        let prior = get(index[position]);
         budget.charge(
             Resource::Work,
             (prior.storage.id.source.0.len() as u64)
                 .saturating_add(snapshot.storage.id.source.0.len() as u64)
                 .saturating_add(1),
         )?;
-        match source_key(prior, snapshot) {
+        Ok::<_, SourceError>(source_key(prior, snapshot))
+    };
+    if let Some(at) = hint.filter(|&at| at < index.len()) {
+        match compare(at)? {
+            core::cmp::Ordering::Equal => return Ok(Ok(at)),
+            core::cmp::Ordering::Less => {
+                low = at + 1;
+                if low == high {
+                    return Ok(Err(low));
+                }
+                match compare(low)? {
+                    core::cmp::Ordering::Equal => return Ok(Ok(low)),
+                    core::cmp::Ordering::Greater => return Ok(Err(low)),
+                    core::cmp::Ordering::Less => low += 1,
+                }
+            }
+            core::cmp::Ordering::Greater => {
+                high = at;
+                if high == 0 {
+                    return Ok(Err(0));
+                }
+                match compare(high - 1)? {
+                    core::cmp::Ordering::Equal => return Ok(Ok(high - 1)),
+                    core::cmp::Ordering::Less => return Ok(Err(high)),
+                    core::cmp::Ordering::Greater => high -= 1,
+                }
+            }
+        }
+    }
+    while low < high {
+        let mid = low + (high - low) / 2;
+        match compare(mid)? {
             core::cmp::Ordering::Equal => return Ok(Ok(mid)),
             core::cmp::Ordering::Less => low = mid + 1,
             core::cmp::Ordering::Greater => high = mid,
