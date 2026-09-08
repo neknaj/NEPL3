@@ -1,0 +1,39 @@
+article ja "[初期設計/しょきせっけい]の[独立/どくりつ]レビュー"
+body
+  cons paragraph
+    cons "このレビューは、[実装担当/じっそうたんとう]とは[別/べつ]のエージェントが2026-09-06に[行/おこな]った。"
+    cons "[対象/たいしょう]は[取/と]り[込/こ]んだr1[設計/せっけい]の14[章/しょう]、signature[表/ひょう]、[文法/ぶんぽう]source、[意味/いみ]モデル、[操作表/そうさひょう]、profile、[依存/いぞん]・タスク[表/ひょう]、[例/れい]とconformance[入力/にゅうりょく]。"
+    cons "[設計/せっけい]として[有用/ゆうよう]な[責務分割/せきむぶんかつ]は[維持/いじ]し、[以下/いか]の[矛盾/むじゅん]を[修正対象/しゅうせいたいしょう]とした。"
+    cons "[全仕様/ぜんしよう]の[正/ただ]しさや[処理系/しょりけい]の[完成/かんせい]を[認定/にんてい]するものではない。" nil
+  cons paragraph
+    cons sentence cons ruby text "同日" text "どうじつ" cons text "のr3" cons ruby text "追補" text "ついほ" cons text "では、ユーザーが" cons ruby text "提示" text "ていじ" cons text "したWeb/TEA/Pages" cons ruby text "要件" text "ようけん" cons text "と" cons ruby text "最終" text "さいしゅう" cons text "Doc" cons ruby text "移行" text "いこう" cons text "の" cons ruby text "指示" text "しじ" cons text "、および" cons ruby text "提供" text "ていきょう" cons text "された" cons ruby text "追補" text "ついほ" cons text " " cons code "nepl3-web-pages-tea-2026-09-06-r1" cons text " の" cons ruby text "展開済" text "てんかいず" cons text "み7ファイルを" cons ruby text "全" text "すべ" cons text "て" cons ruby text "読" text "よ" cons text "んだ。" nil
+    cons "[独立/どくりつ]にmanifestの6 payloadのSHA-256とUTF-8を[検査/けんさ]し[一致/いっち]した。"
+    cons "sandboxのZIPを[直接取得/ちょくせつしゅとく]したという[記録/きろく]ではない。"
+    cons "[元資料/もとしりょう]の[検査報告/けんさほうこく]はruntime[実行/じっこう]の[証拠/しょうこ]へ[転用/てんよう]しない。"
+    cons sentence cons ruby text "取" text "と" cons text "り" cons ruby text "込" text "こ" cons text "み" cons ruby text "元" text "もと" cons text "は " cons link relative "history/web-tea-import.json" none ruby text "記録" text "きろく" cons text "、" cons ruby text "仕様上" text "しようじょう" cons text "の" cons ruby text "訂正" text "ていせい" cons text "は " cons link relative "decisions/0003-web-tea-doc-migration.md" none concat cons ruby text "決定" text "けってい" cons text "0003" nil cons text " に" cons ruby text "残" text "のこ" cons text "す。" nil nil
+  cons paragraph
+    cons sentence cons ruby text "状態" text "じょうたい" cons text "の" cons ruby text "正本" text "せいほん" cons text "は " cons link relative "../design/review.json" none text "design/review.json" cons text "。" nil
+    cons sentence cons code "open" cons text " は" cons ruby text "影響" text "えいきょう" cons text "する" cons ruby text "実装" text "じっそう" cons text "を" cons ruby text "確定" text "かくてい" cons text "する" cons ruby text "前" text "まえ" cons text "に" cons ruby text "解消" text "かいしょう" cons text "すべき" cons ruby text "課題" text "かだい" cons text "、" cons code "corrected" cons text " は" cons ruby text "記載" text "きさい" cons text "された" cons ruby text "範囲" text "はんい" cons text "の" cons ruby text "訂正" text "ていせい" cons text "を" cons ruby text "独立" text "どくりつ" cons text "に" cons ruby text "確認" text "かくにん" cons text "した" cons ruby text "状態" text "じょうたい" cons text "である。" nil
+    cons "[初期/しょき]の[設計訂正/せっけいていせい]と、r4で[初/はじ]めて[実行/じっこう]したcore/wireの[試験/しけん]を[区別/くべつ]し、[必須受入群全体/ひっすうけいれぐんぜんたい]の[成功/せいこう]を[意味/いみ]させない。" nil
+  cons section findings "[確認/かくにん]した[問題/もんだい]" body
+    cons table cons default cons default cons default nil
+      some row cons "ID" cons "[問題/もんだい]と[再現根拠/さいげんこんきょ]" cons "[必要/ひつよう]な[対応/たいおう]" nil
+      cons row cons "R001" cons "modelのrecord/sumのfield[順/じゅん]がJSON objectの[列挙順/れっきょじゅん]に[依存/いぞん]する[一方/いっぽう]、NDFはfield[順固定/じゅんこてい]、digestはobject keyをsortする。[順序/じゅんじょ]を[変/か]えても[同/おな]じdigestになり[得/う]る。" cons "[意味上/いみじょう]の[順序/じゅんじょ]をarrayで[記述/きじゅつ]し、canonicalizationでも[保持/ほじ]する。" nil
+      cons row cons "R002" cons "Circuit[本文/ほんぶん]はinitial(CheckedDesign,entry)、[操作表/そうさひょう]はinitial(PreparedNetlist)。NOR[本文/ほんぶん]はNextBit/OutputBitをnodeのように[列挙/れっきょ]するがmodelはsink[配列/はいれつ]。" cons "initialの[前提/ぜんてい]をPreparedNetlistに[統一/とういつ]し、NORは4[種/しゅ]のnodeと2[種/しゅ]のsinkに[区別/くべつ]する。" nil
+      cons row cons "R003" cons "Doc:DocGuestだけがDoc/Article[意味値/いみち]を[保持/ほじ]する。Codeは[壊/こわ]れたguestも[構文/こうぶん]・[位置/いち]のまま[表示/ひょうじ]する[契約/けいやく]なので、この[型/かた]ではlowerに[失敗/しっぱい]する[入力/にゅうりょく]を[保存/ほぞん]できない。" cons "[同言語/どうげんご]のコード[表示/ひょうじ]もForeignSyntax bundleを[保持/ほじ]する。" nil
+      cons row cons "R004" cons "Math:Numberのvalueは[任意/にんい]RationalだがNumberのsurfaceは[有限十進数/ゆうげんじっしんすう]のみ。Number(1/3)をfrac 1 3とprintすると[別/べつ]constructorへlowerされる。" cons "Numberを[有限十進数/ゆうげんじっしんすう]に[制約/せいやく]し、[任意有理数/にんいゆうりすう]からの[式構築/しきこうちく]は[必要/ひつよう]に[応/おう]じFracを[返/かえ]す。[著者/ちょしゃ]のFracを[自動評価/じどうひょうか]しない。" nil
+      cons row cons "R005" cons "mspaceのwidth/height/depthはNonnegativeDecimalで、[非/ひ]zeroの[単位/たんい]なし[値/あたい]を[許/ゆる]す。MathML Coreのlength-percentage[契約/けいやく]に[適合/てきごう]しない。" cons "[型付/かたつ]きの[単位付/たんいつ]き[長/なが]さに[変更/へんこう]し、[正負/せいふ]・[単位/たんい]・[無効値/むこうち]の[試験入力/しけんにゅうりょく]を[加/くわ]える。" nil
+      cons row cons "R006" cons "[操作表/そうさひょう]の[入力/にゅうりょく]・[出力/しゅつりょく]は「ParsedTree + Profile」[等/とう]の[説明記法/せつめいきほう]であり、[閉/と]じた[型/かた]schemaではない。[初期状態/しょきじょうたい]ではNdfScalarが[未定義/みていぎ]だった。ReplyのrequestId envelope、Cancel、Closeのwire[定義/ていぎ]もない。" cons "NDF intrinsicとfield[型参照/かたさんしょう]の[部分訂正/ぶぶんていせい]は[下記参照/かきさんしょう]。T01/T02/T03/T12などの[確定前/かくていまえ]に[残/のこ]るschema、framing、cancel[競合/きょうごう]を[定義/ていぎ]する。[現段階/げんだんかい]のinterfaceを[完全/かんぜん]な[公開交換契約/こうかいこうかんけいやく]として[広告/こうこく]しない。" nil
+      cons row cons "R007" cons "Limits.sourceBytesに[対応/たいおう]するStopReasonがない。" cons "SourceLimitを[追加/ついか]し、[過大/かだい]sourceが[型付/かたつ]き[停止/ていし]になる[試験/しけん]を[定義/ていぎ]する。" nil
+      cons row cons "R008" cons "XMLのText escapingが&と<だけでは、[文字/もじ]データの\]\]>をそのまま[出/だ]す。Textはvalid UTF-8なのでXMLで[表/あらわ]せないU+0000[等/とう]も[入/はい]る。" cons "[出力先/しゅつりょくさき]の[文字制約/もじせいやく]を[検査/けんさ]し、[表/あらわ]せない[文字/もじ]を[明示的/めいじてき]に[拒否/きょひ]する。>やCR、[属性内/ぞくせいない]の[改行等/かいぎょうとう]の[保存規則/ほぞんきそく]を[固定/こてい]する。" nil
+      cons row cons "R009" cons "profileはaliasとsource path[中心/ちゅうしん]で、[解決済/かいけつず]みSchemaRef/digest/provider manifestを[持/も]たない。" cons "source[用/よう]manifestとruntimeの[解決済/かいけつず]みProfileを[区別/くべつ]し、T05/T11で[生成/せいせい]・[差分検査/さぶんけんさ]を[実装/じっそう]する。[値/あたい]を[仮/かり]digestで[埋/う]めない。" nil
+      cons row cons "R010" cons "[元/もと]の43[件/けん]の[設計検査/せっけいけんさ]には[実行可能/じっこうかのう]な[検査器/けんさき]のsourceが[同梱/どうこん]されていない。" cons "[履歴資料/りれきしりょう]として[保持/ほじ]し、[現在/げんざい]のCIや[言語処理系/げんごしょりけい]の[合格証拠/ごうかくしょうこ]へ[転用/てんよう]しない。" nil
+      cons row cons "R011" cons "T01の[参照/さんしょう]するE03/E04/A04を[群全体/ぐんぜんたい]の[合格/ごうかく]と[解/かい]すると、[後続/こうぞく]editor[実装/じっそう]が[必要/ひつよう]なのにT01[完了/かんりょう]を[前提/ぜんてい]とする[依存順/いぞんじゅん]で[進/すす]められない。" cons "タスク[単位/たんい]の[成果物/せいかぶつ]と[範囲/はんい]を[明示/めいじ]した[証拠/しょうこ]、[群全体/ぐんぜんたい]の[合格/ごうかく]を[分離/ぶんり]し、T16で[全群/ぜんぐん]を[要求/ようきゅう]する。" nil
+      cons row cons "R012" cons "acceptanceのpassedは[証拠/しょうこ]fileの[存在/そんざい]までしか[検査/けんさ]せず、[別群/べつぐん]・failed・[古/ふる]いsource/spec・[不足/ふそく]targetの[証拠/しょうこ]でも[通/とお]り[得/う]る。" cons "[群/ぐん]・[結果/けっか]・[版/はん]・[現在/げんざい]の[入力/にゅうりょく]inventory・[実行環境/じっこうかんきょう]・logを[型付/かたつ]きで[照合/しょうごう]し、[必須/ひっす]targetの[実行/じっこう]を[要求/ようきゅう]する。" nil
+      cons row cons "R013" cons "ordered_fieldsの[対象/たいしょう]がmodelだけで、contracts.recordsのfields/variantsはobjectへ[戻/もど]っても[検出/けんしゅつ]しない。" cons "[同/おな]じ[順序付/じゅんじょつ]きfield[検査/けんさ]を[両方/りょうほう]へ[適用/てきよう]し、[拒否例/きょひれい]を[入口/いりぐち]から[試験/しけん]する。" nil
+      cons row cons "R014" cons "[現行/げんこう]Docでは[全/すべ]ての[正式文書/せいしきぶんしょ]の[表/ひょう]・list・[一般/いっぱん]リンク・[汎用/はんよう]code・[図/ず]を[損失/そんしつ]なく[表/あらわ]す[契約/けいやく]がない。" cons "T21で[全/ぜん]inventoryと[不足/ふそく]を[確定/かくてい]し、schema・[文法/ぶんぽう]・[安全/あんぜん]なbackend・wire・conformanceを[実装/じっそう]してから[切/き]り[替/か]える。[計画/けいかく]を[追加/ついか]しただけではこの[不足/ふそく]を[解消済/かいしょうず]みにしない。" nil
+      cons row cons "R015" cons "[公開後/こうかいご]smoke[失敗/しっぱい]を[赤/あか]いstatusにしても、すでに[公開/こうかい]された[失敗候補/しっぱいこうほ]は[元/もと]に[戻/もど]らない。[最後/さいご]に[公開確認/こうかいかくにん]まで[通/とお]ったartifactの[保持/ほじ]・[条件付/じょうけんつ]き[復旧/ふっきゅう]が[未定義/みていぎ]だった。" cons "[成功/せいこう]artifactの[保管/ほかん]とidentity、[全/ぜん]writerの[直列化/ちょくれつか]、[失敗候補/しっぱいこうほ]が[現在版/げんざいばん]である[場合/ばあい]だけの[復旧/ふっきゅう]、[初回/しょかい]・[保管切/ほかんぎ]れ・[復旧失敗/ふっきゅうしっぱい]の[状態/じょうたい]を[定義/ていぎ]し、S06で[実検査/じつけんさ]する。" nil
+      cons row cons "R016" cons "inventory[抽出/ちゅうしゅつ]がlink[内/ない]のSoftBreak/HardBreakを[捨/す]てて[単語/たんご]を[結合/けつごう]し、heading/link[内/ない]のInlineMath/DisplayMath[本文/ほんぶん]も[落/お]としていた。" cons "[共通/きょうつう]のinline[投影/とうえい]で[区切/くぎ]りと[数式本文/すうしきほんぶん]・[種類/しゅるい]・source[範囲/はんい]を[保持/ほじ]し、[実/じつ]Markdown[入力/にゅうりょく]の[回帰試験/かいきしけん]とinventory[版更新/ばんこうしん]を[行/おこな]う。" nil
+      nil
+    nil
+  nil
