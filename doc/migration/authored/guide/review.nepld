@@ -749,5 +749,22 @@ body
       cons sentence cons text "caller" cons ruby text "深" text "ふか" cons text "さ7で" cons ruby text "開始" text "かいし" cons text "し" cons ruby text "深" text "ふか" cons text "さ0からHeadを" cons ruby text "再開" text "さいかい" cons text "した" cons ruby text "経路" text "けいろ" cons text "のpeakは" cons ruby text "基準" text "きじゅん" cons text "7から14へ" cons ruby text "増" text "ふ" cons text "え、" cons ruby text "外側" text "そとがわ" cons text "static parentを" cons ruby text "持" text "も" cons text "つ " cons code "let n choose alt @let z x tail" cons text " はcursor25へ" cons ruby text "復帰" text "ふっき" cons text "した。" nil
       cons "これらの[補助/ほじょ]はignoredであり、[管理対象数/かんりたいしょうすう]に[含/ふく]めない。"
       cons "[深/ふか]いFailed[返信/へんしん]、foreign/[生成/せいせい]sourceの[投影/とうえい]・[復元/ふくげん]、[全停止境界/ぜんていしきょうかい]、portable Head[操作/そうさ]は[引/ひ]き[続/つづ]き[検証範囲/けんしょうはんい]として[残/のこ]す。" nil
+    cons paragraph
+      cons "Head[管理対象/かんりたいしょう]が6[件/けん]になった[段階/だんかい]で[全件/ぜんけん]を[独立実行/どくりつじっこう]し、native/owned/fallback[比較/ひかく]、Foreign selector、Failed childの[固定/こてい]arity[保持/ほじ]、[取消/とりけし]と[長/なが]いFailed codeの[先行予算検査/せんこうよさんけんさ]を[確認/かくにん]した。"
+      cons "[補助/ほじょ]の100[段/だん]Someを[含/ふく]むFailed.argumentsはDepthLimitで[停止/ていし]し、[既受理/きじゅり]diagnostic/event[各/かく]1を[保持/ほじ]する。"
+      cons "[窓内/まどない]spanを[持/も]つがexpectedDigestが[違/ちが]うProjectedFixも[拒否後/きょひご]に[元/もと]pendingを[再開/さいかい]できた。"
+      cons "[別/べつ]の[補助/ほじょ]は[固定/こてい]Foreign/NodeRef slotsを[使/つか]い、Guest Selectorの[全/ぜん]windowを\[7,10)へ[限定/げんてい]してHost Body/Altへ[復帰/ふっき]する。"
+      cons "[最初/さいしょ]の[補助/ほじょ]の[結果検査/けっかけんさ]ではcontext[配列先頭/はいれつせんとう]をhostと[誤認/ごにん]したため、empty pathでownerを[選/えら]ぶよう[訂正/ていせい]した。" nil
+    cons paragraph
+      cons sentence cons text "その" cons ruby text "後" text "ご" cons text "の " cons code "head_runtime" cons text " scenario8でR039を" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "[正/ただ]しい[窓内/まどない]diagnosticを[返/かえ]す[際/さい]、caller storeだけ[同/どう]SourceId/revision/digest/bytes・[別/べつ]URIへ[変/か]えるとresumeはIdentityConflictで[拒否/きょひ]するが、[元/もと]storeで[同/おな]じecho/replyを[再試行/さいしこう]するとNoPendingとなる。"
+      cons "[保存/ほぞん]windowとのbytes[一致/いっち]を[検査/けんさ]した[後/あと]にslotを[取/と]り[出/だ]し、collectorへのappendでsource admissionがURI[不一致/ふいっち]を[発見/はっけん]する[順序/じゅんじょ]が[原因/げんいん]である。"
+      cons "[型付/かたつ]き[拒否/きょひ]だけでは[保持済/ほじず]みcollectorと[再試行可能性/さいしこうかのうせい]を[満/み]たさないため、[修正/しゅうせい]と[独立再検証/どくりつさいけんしょう]までR039をopenにした。" nil
+    cons paragraph
+      cons "appendをslot[取得前/しゅとくまえ]へ[移/うつ]した[途中修正/とちゅうしゅうせい]では、[空/から]Reportを[返/かえ]す2[回目/かいめ]のChildContextに[別/べつ]URIを[渡/わた]す[入力/にゅうりょく]は[拒否後/きょひご]に[再開/さいかい]できた。"
+      cons "[一方/いっぽう]、[同/おな]じ[入口/いりぐち]へ[空/から]SourceStoreを[渡/わた]すと[後続/こうぞく]driveでMissingSnapshotになり、[元/もと]storeでの[再試行/さいしこう]は[依然/いぜん]NoPendingとなった。"
+      cons sentence cons code "head_sources" cons text " はこの2" cons ruby text "結果" text "けっか" cons text "を" cons ruby text "個別" text "こべつ" cons text "に" cons ruby text "出力" text "しゅつりょく" cons text "する" cons ruby text "検証器" text "けんしょうき" cons text "であり、" cons ruby text "初回" text "しょかい" cons text "の" cons ruby text "終了" text "しゅうりょう" cons text "0を" cons ruby text "両例" text "りょうれい" cons text "の" cons ruby text "成功" text "せいこう" cons text "とは" cons ruby text "扱" text "あつか" cons text "わない。" nil
+      cons "[主/しゅ]parse[入力/にゅうりょく]をcaller storeから[読/よ]み[続/つづ]ける[現在/げんざい]のAPIに[合/あ]わせ、[存在/そんざい]・[内容/ないよう]・URIの[前提/ぜんてい]をslot[取得前/しゅとくまえ]に[検査/けんさ]する[必要/ひつよう]がある。"
+      cons "[既/すで]に[保存済/ほぞんず]みの[生成/せいせい]sourceや[環境/かんきょう]sourceを[一律/いちりつ]にcallerへ[再登録/さいとうろく]させる[制限/せいげん]を、この[修正/しゅうせい]から[推定/すいてい]しない。" nil
     nil
   nil
