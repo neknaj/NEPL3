@@ -1,0 +1,116 @@
+diff --git a/crates/foundation/core/src/origin.rs b/crates/foundation/core/src/origin.rs
+index bd43840..803177d 100644
+--- a/crates/foundation/core/src/origin.rs
++++ b/crates/foundation/core/src/origin.rs
+@@ -594,6 +594,10 @@ fn snapshot_dag<'a>(
+     // Successive fragments often share one endpoint. Reuse only its index;
+     // compare the complete identity on every hit, within this one graph build.
+     let mut recent: [Option<usize>; 2] = [None, None];
++    // Position of the last ordered lookup, local to this graph construction.
++    // Repeated endpoint hits do not move it. Any insertion replaces it with
++    // the inserted position, so index shifts cannot leave a stale position.
++    let mut ordered_hint: Option<usize> = None;
+     for mapping in input {
+         budget.charge(Resource::Work, 1)?;
+         let mut ids = [0usize; 2];
+@@ -611,6 +615,20 @@ fn snapshot_dag<'a>(
+                 }
+             }
+             let (mut low, mut high) = (0, ordered.len());
++            if found.is_none() {
++                if let Some(at) = ordered_hint {
++                    let prior = nodes[ordered[at]];
++                    budget.charge(
++                        Resource::Work,
++                        prior.source.0.len().min(identity.source.0.len()) as u64 + 41,
++                    )?;
++                    match prior.cmp(identity) {
++                        core::cmp::Ordering::Equal => found = Some(ordered[at]),
++                        core::cmp::Ordering::Less => low = at + 1,
++                        core::cmp::Ordering::Greater => high = at,
++                    }
++                }
++            }
+             while found.is_none() && low < high {
+                 let mid = low + (high - low) / 2;
+                 let index = ordered[mid];
+@@ -622,6 +640,7 @@ fn snapshot_dag<'a>(
+                 match prior.cmp(identity) {
+                     core::cmp::Ordering::Equal => {
+                         found = Some(index);
++                        ordered_hint = Some(mid);
+                         break;
+                     }
+                     core::cmp::Ordering::Less => low = mid + 1,
+@@ -648,6 +667,7 @@ fn snapshot_dag<'a>(
+                     nodes.push(identity);
+                     outgoing.push(None);
+                     ordered.insert(low, index);
++                    ordered_hint = Some(low);
+                     index
+                 }
+             };
+diff --git a/crates/foundation/core/tests/maps.rs b/crates/foundation/core/tests/maps.rs
+index 246764e..727da22 100644
+--- a/crates/foundation/core/tests/maps.rs
++++ b/crates/foundation/core/tests/maps.rs
+@@ -4,6 +4,59 @@ use nepl3_core::{
+     source::{SourceId, SourceSnapshot, SourceStore},
+ };
+ type TestResult = Result<(), Box<dyn std::error::Error>>;
++#[test]
++fn ordered_graph_hint_survives_insertions_before_and_after_cached_positions() -> TestResult {
++    let mut sources = SourceStore::default();
++    let mut vertices = Vec::new();
++    for name in ["z", "a", "m", "b", "日本語"] {
++        let snapshot = source(name, "x")?;
++        sources
++            .insert(snapshot.clone())
++            .map_err(|e| format!("{e:?}"))?;
++        vertices.push(snapshot);
++    }
++    let edge = |i: usize, j: usize| -> Result<Mapping, String> {
++        Ok(Mapping {
++            source: vertices[i].span(0, 1).map_err(|e| format!("{e:?}"))?,
++            target: vertices[j].span(0, 1).map_err(|e| format!("{e:?}"))?,
++            kind: MappingKind::Exact,
++        })
++    };
++    for a in 0..4 {
++        for b in 0..4 {
++            for c in 0..4 {
++                for d in 0..4 {
++                    let order = [a, b, c, d];
++                    if (0..4).any(|i| (0..i).any(|j| order[i] == order[j])) {
++                        continue;
++                    }
++                    let mut maps = order
++                        .into_iter()
++                        .map(|i| edge(i, i + 1))
++                        .collect::<Result<Vec<_>, _>>()?;
++                    // A five-vertex chain is acyclic in all 24 edge orders,
++                    // independently of source name order and index shifts.
++                    for split in 0..=4 {
++                        SourceMap::validate_mapping_parts(
++                            &maps[..split],
++                            &maps[split..],
++                            &sources,
++                            &mut budget(),
++                        )
++                        .map_err(|e| format!("{e:?}"))?;
++                    }
++                    maps.push(edge(4, 0)?);
++                    assert!(matches!(
++                        SourceMap::validate_mappings(&maps, &sources, &mut budget()),
++                        Err(OriginError::Cycle)
++                    ));
++                }
++            }
++        }
++    }
++    Ok(())
++}
++
+ #[test]
+ fn indexed_map_graphs_agree_with_transitive_closure_in_both_orders() -> TestResult {
+     // The oracle uses Boolean reachability, independently of the production
