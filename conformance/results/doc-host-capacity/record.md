@@ -1,0 +1,23 @@
+Independent Doc development-host capacity review. Production and Git were not modified.
+
+Reviewed body: 0516d9fa245a201277f5abd684a69df5eda1ca53, based on 16b471d. A Git archive of 2,317 tracked files was frozen under `fixed/`; `files.json` records every byte length and SHA-256. The later CI-only delta is 521075b60aa266db25ce8ce7ad53f23a8864f57f. `reviewed-files.json` records the four affected paths and tool versions.
+
+The production difference is confined to the development tools' Doc budget constructor: cumulative Nodes rises from 1,000,000 to 10,000,000. SourceBytes 10,000,000; Work 100,000,000; Depth 1,000; AllocationUnits 500,000,000; OutputBytes 10,000,000; Diagnostics and Events 1,000 remain unchanged. No foundation resource counter, no_std crate, bare-metal host, parser algorithm, or authored source is changed. The existing export pipeline continues to report separate bounded parse/validate, lower, and prepare/render/serialize operations; this is not a new end-to-end shared-budget guarantee.
+
+The increase is supported as a desktop-host allowance for normal sentence-level Ruby authoring. The same 14,231-byte source, containing 128 paragraphs and 512 Ruby sentences, reaches only 1,413 syntax nodes yet requires 1,441,749 cumulative parse/validation Nodes. At the old ceiling the actual public parser path stops with NodeLimit and publishes no Complete tree; at the new ceiling it completes and retains the exact original snapshot identity and text. This evidence does not establish that 10,000,000 is the smallest useful allowance, nor does it claim every document will fit.
+
+Independent tests are in `probe/src/lib.rs`, built against the frozen production paths. The external dependency versions and checksums in its lockfile match the frozen workspace lockfile. The tests use ASCII Rust Unicode escapes for the original Japanese text, avoiding PowerShell stdin encoding substitution.
+
+- The original-cap/new-cap comparison uses the same real compiled language/profile and public parse route. Work, Allocation, SourceBytes, Depth, OutputBytes and pre-entry cancellation each retain the original typed StopReason. Subsequent zero-node and work charges preserve stopped Usage and Limits. Diagnostic/Event ceilings are also retained. These checks do not broaden the remaining limits or retry using a larger Budget.
+- A distinct 17,815-byte input contains 512 separately numbered Ruby sentences. Actual export must retain every unique sentence exactly once and in order, retain all 512 readings/Ruby structures, and emit no script element. Native output is 71,197 bytes. This supplements the managed repeated-text fixture without changing production expectations.
+- The managed capacity fixture remains unchanged and is executed from the frozen workspace.
+
+One integration omission was found: a new `doc_capacity` test target was outside the CI lane that explicitly selects `--test doc`. Root corrected it in 521075b by adding `--test doc_capacity` under the same WASI runner, locked dependencies and single-threaded test conditions. The delta was directly reviewed; no existing lane or quality gate was removed.
+
+Root's `nodes-10m` logs were read separately, not independently re-executed here. They retain AllocationLimit for authored 02/03/05 and NeedsResolution for 06/09 relative links, while 07/08 export succeeded. The specification accurately keeps these failures distinct and does not claim all migration/rendering work is complete. No authored prose, Ruby, annotation, code or links were removed to meet a quota.
+
+Execution status is finalized in `evidence.json` only after the native and WASI subprocess runs report exit 0. Earlier PowerShell-redirection logs were UTF-16 and gave shell NativeCommandError decoration for ordinary Cargo stderr, despite successful test output. Those originals remain local for forensics. Final selected logs come from a direct Python subprocess wrapper, with exact process status, UTF-8 output and no inferred success from shell decoration. Archive copies normalize line endings to LF while recording the original log hash.
+
+Scope limitations: this review does not repeat all prior Doc/Markup/browser/security tests, measure physical peak memory, prove general termination, complete link registry migration, or treat agent review as human semantic approval. The independent WASI execution uses Wasmtime, not a browser or physical bare-metal board.
+
+Final result: three distinct tests passed on native and the same three passed on wasm32-wasip2 / Wasmtime 44.0.1. All four final Cargo subprocess invocations returned exit 0. The fixed 2,317 production files remained unchanged. No blocking finding remains in this bounded change after the CI correction.

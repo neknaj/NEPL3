@@ -44,3 +44,5 @@ dist/** export-ignore
 /conformance/results/doc-markdown-code/** -text -whitespace
 
 /conformance/results/doc-proof-reuse/** -text -whitespace
+/conformance/results/doc-host-capacity/** -text -whitespace
+/conformance/results/doc-markdown-sentences/** -text -whitespace
