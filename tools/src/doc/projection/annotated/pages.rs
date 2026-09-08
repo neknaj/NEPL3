@@ -5,6 +5,8 @@ use nepl3_doc_core::pages::{self as domain, PageDestination, PageSet};
 
 #[derive(Debug)]
 pub struct PagesArtifact {
+    /// The input PageSet identity, excluding aliases and renderer settings.
+    /// This is not a digest of the final distribution artifact.
     pub identity: Digest,
     pub pages: Vec<Artifact>,
 }
