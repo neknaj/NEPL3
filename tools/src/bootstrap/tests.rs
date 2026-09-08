@@ -598,11 +598,12 @@ fn file_driver_distinguishes_trailing_trivia_stop_from_extra_input() -> crate::R
             Err(runtime::RuntimeError::TrailingInput(_)) => {
                 return Err("valid trailing comment misreported as extra input".into());
             }
-            Ok(())
-            | Err(runtime::RuntimeError::PreparationStopped {
-                reason: StopReason::WorkLimit,
-                ..
-            }) => {}
+            Err(runtime::RuntimeError::PreparationStopped { reason, usage }) => {
+                assert_eq!(reason, StopReason::WorkLimit);
+                assert_eq!(usage, b.usage());
+                assert_eq!(b.poll(), Err(StopReason::WorkLimit));
+            }
+            Ok(()) => {}
             Err(error) => return Err(format!("unexpected sweep result: {error:?}").into()),
         }
     }
@@ -610,6 +611,25 @@ fn file_driver_distinguishes_trailing_trivia_stop_from_extra_input() -> crate::R
         stopped_after_parse > 0,
         "exercise stops after a formal complete parse, before file completion"
     );
+    // Call the lower-level entry too: it must classify preparation stops even
+    // without the parse() wrapper, before any formal parser reply exists.
+    let mut no_work = budget().limits();
+    no_work.work = 0;
+    let mut no_work = Budget::new(no_work);
+    assert!(matches!(
+        runtime::with_tree(
+            &source,
+            &compiled,
+            implementation,
+            &mut no_work,
+            &mut SourceAdmission::default(),
+            |_, _, _, _| Err::<(), _>(runtime::RuntimeError::TrailingInput(u64::MAX)),
+        ),
+        Err(runtime::RuntimeError::PreparationStopped {
+            reason: StopReason::WorkLimit,
+            usage,
+        }) if usage == no_work.usage()
+    ));
     let mut limits = budget().limits();
     limits.work = 0;
     assert!(matches!(

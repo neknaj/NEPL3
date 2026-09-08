@@ -90,6 +90,17 @@ impl core::fmt::Debug for RuntimeError {
 fn boundary(v: impl core::fmt::Debug) -> RuntimeError {
     RuntimeError::Boundary(format!("{v:?}"))
 }
+// Use only before the first parser invocation: no formal reply exists yet.
+// Once a reply exists the driver must retain it in RuntimeError::Stopped.
+fn preparation(error: RuntimeError, budget: &Budget) -> RuntimeError {
+    match budget.poll() {
+        Err(reason) => RuntimeError::PreparationStopped {
+            reason,
+            usage: budget.usage(),
+        },
+        Ok(()) => error,
+    }
+}
 /// Exact identity of the host executable implementing this driver and native providers.
 pub fn executable_identity() -> Result<Digest, RuntimeError> {
     let path = std::env::current_exe().map_err(boundary)?;
@@ -230,9 +241,9 @@ pub(super) fn with_tree_measured<T>(
     let package = &compiled.package;
     let identity = package
         .check(registry, budget)
-        .map_err(boundary)?
+        .map_err(|error| preparation(boundary(error), budget))?
         .semantic_identity(budget)
-        .map_err(boundary)?;
+        .map_err(|error| preparation(boundary(error), budget))?;
     let mut providers = Vec::new();
     let mut requirements = Vec::new();
     let mut allowlist = Vec::new();
@@ -243,7 +254,8 @@ pub(super) fn with_tree_measured<T>(
             "builtinNumber" => BuiltinReader::Number,
             _ => return Err(boundary("unsupported native standard provider")),
         };
-        let expected = provider::signature(kind, registry, budget).map_err(boundary)?;
+        let expected = provider::signature(kind, registry, budget)
+            .map_err(|error| preparation(boundary(error), budget))?;
         if signature != &expected {
             return Err(boundary("standard signature mismatch"));
         }
@@ -269,7 +281,7 @@ pub(super) fn with_tree_measured<T>(
             package: identity,
             default_category: package.root.clone(),
         }],
-        schemas: schemas(compiled, budget)?,
+        schemas: schemas(compiled, budget).map_err(|error| preparation(error, budget))?,
         head_providers: vec![],
         category_modes: vec![],
         providers: requirements,
@@ -288,11 +300,16 @@ pub(super) fn with_tree_measured<T>(
             registry,
             budget,
         )
-        .map_err(boundary)?;
+        .map_err(|error| preparation(boundary(error), budget))?;
     let mut sources = SourceStore::default();
     sources
-        .insert_with_budget(source.clone_with_budget(budget).map_err(boundary)?, budget)
-        .map_err(boundary)?;
+        .insert_with_budget(
+            source
+                .clone_with_budget(budget)
+                .map_err(|error| preparation(boundary(error), budget))?,
+            budget,
+        )
+        .map_err(|error| preparation(boundary(error), budget))?;
     let foundation = registry
         .selected("nepl3.foundation", 1)
         .ok_or_else(|| boundary("foundation"))?;
@@ -300,8 +317,11 @@ pub(super) fn with_tree_measured<T>(
         bindings: vec![],
         resources: vec![],
     };
-    let digest = environment_digest(&value, foundation, registry, budget).map_err(boundary)?;
-    let entry = resolved.entry("Grammar", None, budget).map_err(boundary)?;
+    let digest = environment_digest(&value, foundation, registry, budget)
+        .map_err(|error| preparation(boundary(error), budget))?;
+    let entry = resolved
+        .entry("Grammar", None, budget)
+        .map_err(|error| preparation(boundary(error), budget))?;
     let raw = ReaderContext {
         schema: package.schema.clone(),
         category: entry.category.clone(),
@@ -314,10 +334,11 @@ pub(super) fn with_tree_measured<T>(
         },
     };
     let environments = {
-        let mut codec = FoundationCodec::new(registry, &sources, admission).map_err(boundary)?;
+        let mut codec = FoundationCodec::new(registry, &sources, admission)
+            .map_err(|error| preparation(boundary(error), budget))?;
         let checked = raw
             .check(&mut codec, &sources, registry, budget)
-            .map_err(boundary)?;
+            .map_err(|error| preparation(boundary(error), budget))?;
         ParseEnvironmentSet::prepare(
             &resolved,
             &[EnvironmentInput {
@@ -328,11 +349,11 @@ pub(super) fn with_tree_measured<T>(
             &mut codec,
             budget,
         )
-        .map_err(boundary)?
+        .map_err(|error| preparation(boundary(error), budget))?
     };
     let mut parser =
         ParseSession::new("grammar-bootstrap".into(), &resolved, &environments, budget)
-            .map_err(boundary)?;
+            .map_err(|error| preparation(boundary(error), budget))?;
     let states = [LanguageReaderState {
         alias: "Grammar".into(),
         state: NdfValue::Unit,
