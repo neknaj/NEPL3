@@ -1,0 +1,34 @@
+{
+  "base": "652d3b2476416a1ead7332f12055d1a18018cfb6",
+  "files": [
+    {
+      "draft": "doc/migration/authored/migration/README.nepld",
+      "sha256": "e26779349a7fdea02d80b9a5562e58cf386ff2d915cd5b4dee39b814ac3e222f",
+      "structure": "pass",
+      "all_rawcode_and_links_unchanged": true,
+      "added_literal_matches": [
+        "未登録ページは元のMarkdownを正本とします。",
+        "commitとdigestは同じdirectoryのREADMEに記録しています。",
+        "現在の正式仕様やその生成Markdownを変換器の入力に戻さず、固定fixtureから再生成して内容・構造を比較します。",
+        "手書き保守はしません。",
+        "この生成fixture自体の人による意味同等性レビュー、旧anchor互換や正本切替を主張しません。",
+        "正式第0章の手動執筆・独立レビュー・annotated projectionとは別の検証経路です。",
+        "この変換器の成功をT21やPages公開の完了とは扱いません。",
+        "固定した移行前Markdownと、検証fixtureから生成したMarkdownを独立したMarkdown parserへ通し、本文とblock/codeのevent列を比較します。"
+      ],
+      "removed_line_count": 8
+    },
+    {
+      "draft": "doc/migration/authored/guide/development.nepld",
+      "sha256": "1eb55b52eb0e1f43b4bf31e44fc86d11beead6e8778ada4d78ad19968123ce8b",
+      "structure": "pass",
+      "all_rawcode_and_links_unchanged": true,
+      "added_literal_matches": [
+        "CIは限定変換器の固定した移行前fixtureとの一致と生成を各native OSで検査し、Ubuntuの生成物をartifactへ保存します。"
+      ],
+      "removed_line_count": 1
+    }
+  ],
+  "author_manifest_sha256": "ddbc00fa6d02e10b071cf643656c02b8773d868dca40f0c05d492ca2be0888f7",
+  "runtime": "not-run"
+}

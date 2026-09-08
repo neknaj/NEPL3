@@ -1,0 +1,46 @@
+from pathlib import Path
+from functools import partial
+from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
+from threading import Thread
+import json
+from playwright.sync_api import sync_playwright
+O=Path(__file__).resolve().parent;out=O/'independent-local';out.mkdir(exist_ok=True)
+class Quiet(SimpleHTTPRequestHandler):
+    def log_message(self,*a):pass
+server=ThreadingHTTPServer(('127.0.0.1',0),partial(Quiet,directory=str(O/'original/verify-canonical00')));thread=Thread(target=server.serve_forever,daemon=True);thread.start()
+names=['policy','targets','boundaries','prototypes','invariants','spellings'];ids=['n-'+s.encode().hex() for s in names]
+headings=['00. 対象と設計の決定','方針','1. 実装対象','2. 保存する意味上の境界','3. 試作の扱い','4. 不変条件','5. 具体的な綴り']
+codes=['cons','nil','v1','Fn','value','splice','call','map','then','design/forms.json'];rows=[]
+try:
+    with sync_playwright() as p:
+        for engine in ['chromium','firefox','webkit']:
+            browser=getattr(p,engine).launch()
+            for prefix in ['first','second']:
+                for width in [375,1280]:
+                    context=browser.new_context(java_script_enabled=False,viewport={'width':width,'height':900});page=context.new_page();fail=[];page.on('requestfailed',lambda r:fail.append(r.url))
+                    url=f'http://127.0.0.1:{server.server_port}/{prefix}/docs/spec/00-contract.html';response=page.goto(url,wait_until='networkidle')
+                    value=page.evaluate('''()=>{const base=n=>{let c=n.cloneNode(true);c.querySelectorAll('.nepl-reading,.nepl-notes').forEach(x=>x.remove());return c.textContent};return {headings:[...document.querySelectorAll('h1,h2')].map(base),codes:[...document.querySelectorAll('code')].map(n=>n.textContent),lists:[...document.querySelectorAll('ul')].map(n=>n.children.length),ids:[...document.querySelectorAll('[id]')].map(n=>n.id),ruby:document.querySelectorAll('.nepl-ruby').length,scripts:document.scripts.length,styles:[...document.styleSheets].map(s=>s.cssRules.length),overflow:document.documentElement.scrollWidth-innerWidth,lang:document.querySelector('article').lang}}''')
+                    assert response.status==200 and not fail and value['headings']==headings and value['codes']==codes and value['lists']==[4,6,14]
+                    assert value['ruby']==277 and value['scripts']==0 and value['lang']=='ja' and value['overflow']<=1 and all(value['styles']) and value['styles']
+                    assert len(value['ids'])==len(set(value['ids'])) and set(ids)<=set(value['ids'])
+                    nav=[]
+                    for identity in ids:
+                        page.goto(url,wait_until='load')
+                        initial=page.evaluate('''id=>{const t=document.getElementById(id),max=document.documentElement.scrollHeight-innerHeight,desired=Math.min(max,Math.max(0,t.getBoundingClientRect().top+scrollY));scrollTo(0,desired<max/2?max:0);return {desired,start:scrollY,max,top:t.getBoundingClientRect().top};}''',identity)
+                        assert initial['top']<0 or initial['top']>=900
+                        page.goto(url+'#'+identity,wait_until='load')
+                        previous=None;stable=0
+                        for _ in range(100):
+                            v=page.evaluate('({y:scrollY,hash:location.hash})');stable=stable+1 if previous is not None and abs(v['y']-previous)<.1 else 0;previous=v['y']
+                            if stable>=5 and abs(v['y']-initial['desired'])<1:break
+                            page.wait_for_timeout(50)
+                        assert stable>=5 and abs(v['y']-initial['desired'])<1 and abs(v['y']-initial['start'])>1 and v['hash']=='#'+identity
+                        nav.append(dict(id=identity,initial=initial,final=v,stable_samples=stable))
+                    page.goto(url,wait_until='load');stem=f'{engine}-{prefix}-{width}'
+                    ax=page.locator('article').aria_snapshot();assert 'INV01' in ax and 'INV14' in ax
+                    (out/(stem+'.aria.txt')).write_text(ax,encoding='utf-8',newline='\n');page.screenshot(path=str(out/(stem+'.png')))
+                    rows.append(dict(engine=engine,version=browser.version,prefix=prefix,width=width,structure=value,navigation=nav,failed_requests=fail,passed=True));print(stem,'passed',flush=True);context.close()
+            browser.close()
+finally:
+    server.shutdown();server.server_close();thread.join()
+    (out/'results.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')

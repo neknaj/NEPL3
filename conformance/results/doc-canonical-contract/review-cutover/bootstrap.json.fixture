@@ -1,0 +1,94 @@
+{
+  "command": [
+    "C:\\projects\\NEPL3-doc-canonical-preview\\.tmp\\browser-venv\\Scripts\\python.exe",
+    "C:\\projects\\NEPL3-doc-canonical-contract\\.tmp\\review-canonical00-cutover\\restore-exact-readme.py"
+  ],
+  "cwd": "C:\\projects\\NEPL3-doc-canonical-contract\\.tmp\\review-canonical00-cutover\\bootstrap-sandbox",
+  "exit_code": 0,
+  "readme_sha256": "66590ce07476b3a9d3193be6b6e829679ec3689195b21ef2bd6df73dcdbba598",
+  "payload_index_sha256": "67a92ef28e930069d78cd4797983289aac90957f75d52041e35e8f6720fef95d",
+  "files": [
+    {
+      "path": "manifest.json",
+      "bytes": 6693,
+      "sha256": "3a333e4292b30be56527198bdce51c03921285d099878716bcd4a7a6ef9ccd26"
+    },
+    {
+      "path": "docs/spec/00-contract.html",
+      "bytes": 38595,
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+    },
+    {
+      "path": "docs/spec/13-reproducibility.html",
+      "bytes": 91421,
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+    },
+    {
+      "path": "docs/spec/assets/doc.css",
+      "bytes": 2255,
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+    }
+  ],
+  "rows": [
+    {
+      "engine": "chromium",
+      "version": "151.0.7922.34",
+      "measurement": {
+        "scripts": 0,
+        "ruby": 277,
+        "headings": 7,
+        "lists": [
+          4,
+          6,
+          14
+        ],
+        "background": "rgb(13, 17, 23)",
+        "css": [
+          true
+        ]
+      },
+      "http_requests": [],
+      "passed": true
+    },
+    {
+      "engine": "firefox",
+      "version": "153.0",
+      "measurement": {
+        "scripts": 0,
+        "ruby": 277,
+        "headings": 7,
+        "lists": [
+          4,
+          6,
+          14
+        ],
+        "background": "rgb(13, 17, 23)",
+        "css": [
+          true
+        ]
+      },
+      "http_requests": [],
+      "passed": true
+    },
+    {
+      "engine": "webkit",
+      "version": "26.5",
+      "measurement": {
+        "scripts": 0,
+        "ruby": 277,
+        "headings": 7,
+        "lists": [
+          4,
+          6,
+          14
+        ],
+        "background": "rgb(13, 17, 23)",
+        "css": [
+          true
+        ]
+      },
+      "http_requests": [],
+      "passed": true
+    }
+  ]
+}

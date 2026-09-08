@@ -1,0 +1,79 @@
+{
+  "aliases": [
+    {
+      "section": null,
+      "name": "00-対象と設計上の決定"
+    },
+    {
+      "section": "policy",
+      "name": "方針"
+    },
+    {
+      "section": "targets",
+      "name": "1-実装対象"
+    },
+    {
+      "section": "boundaries",
+      "name": "2-保存する意味上の境界"
+    },
+    {
+      "section": "prototypes",
+      "name": "3-試作の扱い"
+    },
+    {
+      "section": "invariants",
+      "name": "4-不変条件"
+    },
+    {
+      "section": "spellings",
+      "name": "5-具体的な綴り"
+    }
+  ],
+  "old_github_heading_anchors": [
+    {
+      "id": "user-content-00-対象と設計上の決定",
+      "class": "anchor",
+      "aria-label": "Permalink: 00. 対象と設計上の決定",
+      "href": "#00-対象と設計上の決定"
+    },
+    {
+      "id": "user-content-方針",
+      "class": "anchor",
+      "aria-label": "Permalink: 方針",
+      "href": "#方針"
+    },
+    {
+      "id": "user-content-1-実装対象",
+      "class": "anchor",
+      "aria-label": "Permalink: 1. 実装対象",
+      "href": "#1-実装対象"
+    },
+    {
+      "id": "user-content-2-保存する意味上の境界",
+      "class": "anchor",
+      "aria-label": "Permalink: 2. 保存する意味上の境界",
+      "href": "#2-保存する意味上の境界"
+    },
+    {
+      "id": "user-content-3-試作の扱い",
+      "class": "anchor",
+      "aria-label": "Permalink: 3. 試作の扱い",
+      "href": "#3-試作の扱い"
+    },
+    {
+      "id": "user-content-4-不変条件",
+      "class": "anchor",
+      "aria-label": "Permalink: 4. 不変条件",
+      "href": "#4-不変条件"
+    },
+    {
+      "id": "user-content-5-具体的な綴り",
+      "class": "anchor",
+      "aria-label": "Permalink: 5. 具体的な綴り",
+      "href": "#5-具体的な綴り"
+    }
+  ],
+  "old_github_html_sha256": "a540c5412f2acc1627e13429540f5877a6c7f8a5d6d0c047b29db66d13f15e21",
+  "generated_exact_alias_tags": true,
+  "new_github_navigation": "not run in code review"
+}

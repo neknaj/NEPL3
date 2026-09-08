@@ -1,0 +1,1646 @@
+[
+  {
+    "engine": "chromium",
+    "version": "151.0.7922.34",
+    "prefix": "first",
+    "width": 375,
+    "structure": {
+      "headings": [
+        "00. 対象と設計の決定",
+        "方針",
+        "1. 実装対象",
+        "2. 保存する意味上の境界",
+        "3. 試作の扱い",
+        "4. 不変条件",
+        "5. 具体的な綴り"
+      ],
+      "codes": [
+        "cons",
+        "nil",
+        "v1",
+        "Fn",
+        "value",
+        "splice",
+        "call",
+        "map",
+        "then",
+        "design/forms.json"
+      ],
+      "lists": [
+        4,
+        6,
+        14
+      ],
+      "ids": [
+        "n-706f6c696379",
+        "n-74617267657473",
+        "n-626f756e646172696573",
+        "n-70726f746f7479706573",
+        "n-696e76617269616e7473",
+        "n-7370656c6c696e6773"
+      ],
+      "ruby": 277,
+      "scripts": 0,
+      "styles": [
+        29
+      ],
+      "overflow": 0,
+      "lang": "ja"
+    },
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 228.46875,
+          "start": 5637,
+          "max": 5637,
+          "top": -5408.53125
+        },
+        "final": {
+          "y": 228,
+          "hash": "#n-706f6c696379"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-74617267657473",
+        "initial": {
+          "desired": 636.796875,
+          "start": 5637,
+          "max": 5637,
+          "top": -5000.203125
+        },
+        "final": {
+          "y": 637,
+          "hash": "#n-74617267657473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-626f756e646172696573",
+        "initial": {
+          "desired": 2715.546875,
+          "start": 5637,
+          "max": 5637,
+          "top": -2921.453125
+        },
+        "final": {
+          "y": 2716,
+          "hash": "#n-626f756e646172696573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-70726f746f7479706573",
+        "initial": {
+          "desired": 3990.75,
+          "start": 0,
+          "max": 5637,
+          "top": 3990.75
+        },
+        "final": {
+          "y": 3991,
+          "hash": "#n-70726f746f7479706573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-696e76617269616e7473",
+        "initial": {
+          "desired": 4531.53125,
+          "start": 0,
+          "max": 5637,
+          "top": 4531.53125
+        },
+        "final": {
+          "y": 4532,
+          "hash": "#n-696e76617269616e7473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-7370656c6c696e6773",
+        "initial": {
+          "desired": 5637,
+          "start": 0,
+          "max": 5637,
+          "top": 5800.328125
+        },
+        "final": {
+          "y": 5637,
+          "hash": "#n-7370656c6c696e6773"
+        },
+        "stable_samples": 5
+      }
+    ],
+    "failed_requests": [],
+    "passed": true
+  },
+  {
+    "engine": "chromium",
+    "version": "151.0.7922.34",
+    "prefix": "first",
+    "width": 1280,
+    "structure": {
+      "headings": [
+        "00. 対象と設計の決定",
+        "方針",
+        "1. 実装対象",
+        "2. 保存する意味上の境界",
+        "3. 試作の扱い",
+        "4. 不変条件",
+        "5. 具体的な綴り"
+      ],
+      "codes": [
+        "cons",
+        "nil",
+        "v1",
+        "Fn",
+        "value",
+        "splice",
+        "call",
+        "map",
+        "then",
+        "design/forms.json"
+      ],
+      "lists": [
+        4,
+        6,
+        14
+      ],
+      "ids": [
+        "n-706f6c696379",
+        "n-74617267657473",
+        "n-626f756e646172696573",
+        "n-70726f746f7479706573",
+        "n-696e76617269616e7473",
+        "n-7370656c6c696e6773"
+      ],
+      "ruby": 277,
+      "scripts": 0,
+      "styles": [
+        29
+      ],
+      "overflow": 0,
+      "lang": "ja"
+    },
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.671875,
+          "start": 1956,
+          "max": 1956,
+          "top": -1804.328125
+        },
+        "final": {
+          "y": 152,
+          "hash": "#n-706f6c696379"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-74617267657473",
+        "initial": {
+          "desired": 375.75,
+          "start": 1956,
+          "max": 1956,
+          "top": -1580.25
+        },
+        "final": {
+          "y": 376,
+          "hash": "#n-74617267657473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-626f756e646172696573",
+        "initial": {
+          "desired": 1095.625,
+          "start": 0,
+          "max": 1956,
+          "top": 1095.625
+        },
+        "final": {
+          "y": 1096,
+          "hash": "#n-626f756e646172696573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-70726f746f7479706573",
+        "initial": {
+          "desired": 1501.375,
+          "start": 0,
+          "max": 1956,
+          "top": 1501.375
+        },
+        "final": {
+          "y": 1501,
+          "hash": "#n-70726f746f7479706573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-696e76617269616e7473",
+        "initial": {
+          "desired": 1736.984375,
+          "start": 0,
+          "max": 1956,
+          "top": 1736.984375
+        },
+        "final": {
+          "y": 1737,
+          "hash": "#n-696e76617269616e7473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-7370656c6c696e6773",
+        "initial": {
+          "desired": 1956,
+          "start": 0,
+          "max": 1956,
+          "top": 2562.359375
+        },
+        "final": {
+          "y": 1956,
+          "hash": "#n-7370656c6c696e6773"
+        },
+        "stable_samples": 5
+      }
+    ],
+    "failed_requests": [],
+    "passed": true
+  },
+  {
+    "engine": "chromium",
+    "version": "151.0.7922.34",
+    "prefix": "second",
+    "width": 375,
+    "structure": {
+      "headings": [
+        "00. 対象と設計の決定",
+        "方針",
+        "1. 実装対象",
+        "2. 保存する意味上の境界",
+        "3. 試作の扱い",
+        "4. 不変条件",
+        "5. 具体的な綴り"
+      ],
+      "codes": [
+        "cons",
+        "nil",
+        "v1",
+        "Fn",
+        "value",
+        "splice",
+        "call",
+        "map",
+        "then",
+        "design/forms.json"
+      ],
+      "lists": [
+        4,
+        6,
+        14
+      ],
+      "ids": [
+        "n-706f6c696379",
+        "n-74617267657473",
+        "n-626f756e646172696573",
+        "n-70726f746f7479706573",
+        "n-696e76617269616e7473",
+        "n-7370656c6c696e6773"
+      ],
+      "ruby": 277,
+      "scripts": 0,
+      "styles": [
+        29
+      ],
+      "overflow": 0,
+      "lang": "ja"
+    },
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 228.46875,
+          "start": 5637,
+          "max": 5637,
+          "top": -5408.53125
+        },
+        "final": {
+          "y": 228,
+          "hash": "#n-706f6c696379"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-74617267657473",
+        "initial": {
+          "desired": 636.796875,
+          "start": 5637,
+          "max": 5637,
+          "top": -5000.203125
+        },
+        "final": {
+          "y": 637,
+          "hash": "#n-74617267657473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-626f756e646172696573",
+        "initial": {
+          "desired": 2715.546875,
+          "start": 5637,
+          "max": 5637,
+          "top": -2921.453125
+        },
+        "final": {
+          "y": 2716,
+          "hash": "#n-626f756e646172696573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-70726f746f7479706573",
+        "initial": {
+          "desired": 3990.75,
+          "start": 0,
+          "max": 5637,
+          "top": 3990.75
+        },
+        "final": {
+          "y": 3991,
+          "hash": "#n-70726f746f7479706573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-696e76617269616e7473",
+        "initial": {
+          "desired": 4531.53125,
+          "start": 0,
+          "max": 5637,
+          "top": 4531.53125
+        },
+        "final": {
+          "y": 4532,
+          "hash": "#n-696e76617269616e7473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-7370656c6c696e6773",
+        "initial": {
+          "desired": 5637,
+          "start": 0,
+          "max": 5637,
+          "top": 5800.328125
+        },
+        "final": {
+          "y": 5637,
+          "hash": "#n-7370656c6c696e6773"
+        },
+        "stable_samples": 5
+      }
+    ],
+    "failed_requests": [],
+    "passed": true
+  },
+  {
+    "engine": "chromium",
+    "version": "151.0.7922.34",
+    "prefix": "second",
+    "width": 1280,
+    "structure": {
+      "headings": [
+        "00. 対象と設計の決定",
+        "方針",
+        "1. 実装対象",
+        "2. 保存する意味上の境界",
+        "3. 試作の扱い",
+        "4. 不変条件",
+        "5. 具体的な綴り"
+      ],
+      "codes": [
+        "cons",
+        "nil",
+        "v1",
+        "Fn",
+        "value",
+        "splice",
+        "call",
+        "map",
+        "then",
+        "design/forms.json"
+      ],
+      "lists": [
+        4,
+        6,
+        14
+      ],
+      "ids": [
+        "n-706f6c696379",
+        "n-74617267657473",
+        "n-626f756e646172696573",
+        "n-70726f746f7479706573",
+        "n-696e76617269616e7473",
+        "n-7370656c6c696e6773"
+      ],
+      "ruby": 277,
+      "scripts": 0,
+      "styles": [
+        29
+      ],
+      "overflow": 0,
+      "lang": "ja"
+    },
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.671875,
+          "start": 1956,
+          "max": 1956,
+          "top": -1804.328125
+        },
+        "final": {
+          "y": 152,
+          "hash": "#n-706f6c696379"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-74617267657473",
+        "initial": {
+          "desired": 375.75,
+          "start": 1956,
+          "max": 1956,
+          "top": -1580.25
+        },
+        "final": {
+          "y": 376,
+          "hash": "#n-74617267657473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-626f756e646172696573",
+        "initial": {
+          "desired": 1095.625,
+          "start": 0,
+          "max": 1956,
+          "top": 1095.625
+        },
+        "final": {
+          "y": 1096,
+          "hash": "#n-626f756e646172696573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-70726f746f7479706573",
+        "initial": {
+          "desired": 1501.375,
+          "start": 0,
+          "max": 1956,
+          "top": 1501.375
+        },
+        "final": {
+          "y": 1501,
+          "hash": "#n-70726f746f7479706573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-696e76617269616e7473",
+        "initial": {
+          "desired": 1736.984375,
+          "start": 0,
+          "max": 1956,
+          "top": 1736.984375
+        },
+        "final": {
+          "y": 1737,
+          "hash": "#n-696e76617269616e7473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-7370656c6c696e6773",
+        "initial": {
+          "desired": 1956,
+          "start": 0,
+          "max": 1956,
+          "top": 2562.359375
+        },
+        "final": {
+          "y": 1956,
+          "hash": "#n-7370656c6c696e6773"
+        },
+        "stable_samples": 5
+      }
+    ],
+    "failed_requests": [],
+    "passed": true
+  },
+  {
+    "engine": "firefox",
+    "version": "153.0",
+    "prefix": "first",
+    "width": 375,
+    "structure": {
+      "headings": [
+        "00. 対象と設計の決定",
+        "方針",
+        "1. 実装対象",
+        "2. 保存する意味上の境界",
+        "3. 試作の扱い",
+        "4. 不変条件",
+        "5. 具体的な綴り"
+      ],
+      "codes": [
+        "cons",
+        "nil",
+        "v1",
+        "Fn",
+        "value",
+        "splice",
+        "call",
+        "map",
+        "then",
+        "design/forms.json"
+      ],
+      "lists": [
+        4,
+        6,
+        14
+      ],
+      "ids": [
+        "n-706f6c696379",
+        "n-74617267657473",
+        "n-626f756e646172696573",
+        "n-70726f746f7479706573",
+        "n-696e76617269616e7473",
+        "n-7370656c6c696e6773"
+      ],
+      "ruby": 277,
+      "scripts": 0,
+      "styles": [
+        29
+      ],
+      "overflow": 0,
+      "lang": "ja"
+    },
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 228.46665954589844,
+          "start": 5646,
+          "max": 5646,
+          "top": -5417.533203125
+        },
+        "final": {
+          "y": 228,
+          "hash": "#n-706f6c696379"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-74617267657473",
+        "initial": {
+          "desired": 636.9666748046875,
+          "start": 5646,
+          "max": 5646,
+          "top": -5009.033203125
+        },
+        "final": {
+          "y": 636.9666748046875,
+          "hash": "#n-74617267657473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-626f756e646172696573",
+        "initial": {
+          "desired": 2716.61669921875,
+          "start": 5646,
+          "max": 5646,
+          "top": -2929.38330078125
+        },
+        "final": {
+          "y": 2716.61669921875,
+          "hash": "#n-626f756e646172696573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-70726f746f7479706573",
+        "initial": {
+          "desired": 3993.36669921875,
+          "start": 0,
+          "max": 5646,
+          "top": 3993.36669921875
+        },
+        "final": {
+          "y": 3993,
+          "hash": "#n-70726f746f7479706573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-696e76617269616e7473",
+        "initial": {
+          "desired": 4535.35009765625,
+          "start": 0,
+          "max": 5646,
+          "top": 4535.35009765625
+        },
+        "final": {
+          "y": 4535.35009765625,
+          "hash": "#n-696e76617269616e7473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-7370656c6c696e6773",
+        "initial": {
+          "desired": 5646,
+          "start": 0,
+          "max": 5646,
+          "top": 5804.68310546875
+        },
+        "final": {
+          "y": 5646,
+          "hash": "#n-7370656c6c696e6773"
+        },
+        "stable_samples": 5
+      }
+    ],
+    "failed_requests": [],
+    "passed": true
+  },
+  {
+    "engine": "firefox",
+    "version": "153.0",
+    "prefix": "first",
+    "width": 1280,
+    "structure": {
+      "headings": [
+        "00. 対象と設計の決定",
+        "方針",
+        "1. 実装対象",
+        "2. 保存する意味上の境界",
+        "3. 試作の扱い",
+        "4. 不変条件",
+        "5. 具体的な綴り"
+      ],
+      "codes": [
+        "cons",
+        "nil",
+        "v1",
+        "Fn",
+        "value",
+        "splice",
+        "call",
+        "map",
+        "then",
+        "design/forms.json"
+      ],
+      "lists": [
+        4,
+        6,
+        14
+      ],
+      "ids": [
+        "n-706f6c696379",
+        "n-74617267657473",
+        "n-626f756e646172696573",
+        "n-70726f746f7479706573",
+        "n-696e76617269616e7473",
+        "n-7370656c6c696e6773"
+      ],
+      "ruby": 277,
+      "scripts": 0,
+      "styles": [
+        29
+      ],
+      "overflow": 0,
+      "lang": "ja"
+    },
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.6666717529297,
+          "start": 1962,
+          "max": 1962,
+          "top": -1810.3333740234375
+        },
+        "final": {
+          "y": 152,
+          "hash": "#n-706f6c696379"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-74617267657473",
+        "initial": {
+          "desired": 375.83331298828125,
+          "start": 1962,
+          "max": 1962,
+          "top": -1586.1666259765625
+        },
+        "final": {
+          "y": 376,
+          "hash": "#n-74617267657473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-626f756e646172696573",
+        "initial": {
+          "desired": 1096.0333251953125,
+          "start": 0,
+          "max": 1962,
+          "top": 1096.0333251953125
+        },
+        "final": {
+          "y": 1096,
+          "hash": "#n-626f756e646172696573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-70726f746f7479706573",
+        "initial": {
+          "desired": 1502.9666748046875,
+          "start": 0,
+          "max": 1962,
+          "top": 1502.9666748046875
+        },
+        "final": {
+          "y": 1503,
+          "hash": "#n-70726f746f7479706573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-696e76617269616e7473",
+        "initial": {
+          "desired": 1739.6500244140625,
+          "start": 0,
+          "max": 1962,
+          "top": 1739.6500244140625
+        },
+        "final": {
+          "y": 1740,
+          "hash": "#n-696e76617269616e7473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-7370656c6c696e6773",
+        "initial": {
+          "desired": 1962,
+          "start": 0,
+          "max": 1962,
+          "top": 2565.449951171875
+        },
+        "final": {
+          "y": 1962,
+          "hash": "#n-7370656c6c696e6773"
+        },
+        "stable_samples": 5
+      }
+    ],
+    "failed_requests": [],
+    "passed": true
+  },
+  {
+    "engine": "firefox",
+    "version": "153.0",
+    "prefix": "second",
+    "width": 375,
+    "structure": {
+      "headings": [
+        "00. 対象と設計の決定",
+        "方針",
+        "1. 実装対象",
+        "2. 保存する意味上の境界",
+        "3. 試作の扱い",
+        "4. 不変条件",
+        "5. 具体的な綴り"
+      ],
+      "codes": [
+        "cons",
+        "nil",
+        "v1",
+        "Fn",
+        "value",
+        "splice",
+        "call",
+        "map",
+        "then",
+        "design/forms.json"
+      ],
+      "lists": [
+        4,
+        6,
+        14
+      ],
+      "ids": [
+        "n-706f6c696379",
+        "n-74617267657473",
+        "n-626f756e646172696573",
+        "n-70726f746f7479706573",
+        "n-696e76617269616e7473",
+        "n-7370656c6c696e6773"
+      ],
+      "ruby": 277,
+      "scripts": 0,
+      "styles": [
+        29
+      ],
+      "overflow": 0,
+      "lang": "ja"
+    },
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 228.46665954589844,
+          "start": 5646,
+          "max": 5646,
+          "top": -5417.533203125
+        },
+        "final": {
+          "y": 228,
+          "hash": "#n-706f6c696379"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-74617267657473",
+        "initial": {
+          "desired": 636.9666748046875,
+          "start": 5646,
+          "max": 5646,
+          "top": -5009.033203125
+        },
+        "final": {
+          "y": 636.9666748046875,
+          "hash": "#n-74617267657473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-626f756e646172696573",
+        "initial": {
+          "desired": 2716.61669921875,
+          "start": 5646,
+          "max": 5646,
+          "top": -2929.38330078125
+        },
+        "final": {
+          "y": 2716.61669921875,
+          "hash": "#n-626f756e646172696573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-70726f746f7479706573",
+        "initial": {
+          "desired": 3993.36669921875,
+          "start": 0,
+          "max": 5646,
+          "top": 3993.36669921875
+        },
+        "final": {
+          "y": 3993,
+          "hash": "#n-70726f746f7479706573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-696e76617269616e7473",
+        "initial": {
+          "desired": 4535.35009765625,
+          "start": 0,
+          "max": 5646,
+          "top": 4535.35009765625
+        },
+        "final": {
+          "y": 4535.35009765625,
+          "hash": "#n-696e76617269616e7473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-7370656c6c696e6773",
+        "initial": {
+          "desired": 5646,
+          "start": 0,
+          "max": 5646,
+          "top": 5804.68310546875
+        },
+        "final": {
+          "y": 5646,
+          "hash": "#n-7370656c6c696e6773"
+        },
+        "stable_samples": 5
+      }
+    ],
+    "failed_requests": [],
+    "passed": true
+  },
+  {
+    "engine": "firefox",
+    "version": "153.0",
+    "prefix": "second",
+    "width": 1280,
+    "structure": {
+      "headings": [
+        "00. 対象と設計の決定",
+        "方針",
+        "1. 実装対象",
+        "2. 保存する意味上の境界",
+        "3. 試作の扱い",
+        "4. 不変条件",
+        "5. 具体的な綴り"
+      ],
+      "codes": [
+        "cons",
+        "nil",
+        "v1",
+        "Fn",
+        "value",
+        "splice",
+        "call",
+        "map",
+        "then",
+        "design/forms.json"
+      ],
+      "lists": [
+        4,
+        6,
+        14
+      ],
+      "ids": [
+        "n-706f6c696379",
+        "n-74617267657473",
+        "n-626f756e646172696573",
+        "n-70726f746f7479706573",
+        "n-696e76617269616e7473",
+        "n-7370656c6c696e6773"
+      ],
+      "ruby": 277,
+      "scripts": 0,
+      "styles": [
+        29
+      ],
+      "overflow": 0,
+      "lang": "ja"
+    },
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.6666717529297,
+          "start": 1962,
+          "max": 1962,
+          "top": -1810.3333740234375
+        },
+        "final": {
+          "y": 152,
+          "hash": "#n-706f6c696379"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-74617267657473",
+        "initial": {
+          "desired": 375.83331298828125,
+          "start": 1962,
+          "max": 1962,
+          "top": -1586.1666259765625
+        },
+        "final": {
+          "y": 376,
+          "hash": "#n-74617267657473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-626f756e646172696573",
+        "initial": {
+          "desired": 1096.0333251953125,
+          "start": 0,
+          "max": 1962,
+          "top": 1096.0333251953125
+        },
+        "final": {
+          "y": 1096,
+          "hash": "#n-626f756e646172696573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-70726f746f7479706573",
+        "initial": {
+          "desired": 1502.9666748046875,
+          "start": 0,
+          "max": 1962,
+          "top": 1502.9666748046875
+        },
+        "final": {
+          "y": 1503,
+          "hash": "#n-70726f746f7479706573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-696e76617269616e7473",
+        "initial": {
+          "desired": 1739.6500244140625,
+          "start": 0,
+          "max": 1962,
+          "top": 1739.6500244140625
+        },
+        "final": {
+          "y": 1740,
+          "hash": "#n-696e76617269616e7473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-7370656c6c696e6773",
+        "initial": {
+          "desired": 1962,
+          "start": 0,
+          "max": 1962,
+          "top": 2565.449951171875
+        },
+        "final": {
+          "y": 1962,
+          "hash": "#n-7370656c6c696e6773"
+        },
+        "stable_samples": 5
+      }
+    ],
+    "failed_requests": [],
+    "passed": true
+  },
+  {
+    "engine": "webkit",
+    "version": "26.5",
+    "prefix": "first",
+    "width": 375,
+    "structure": {
+      "headings": [
+        "00. 対象と設計の決定",
+        "方針",
+        "1. 実装対象",
+        "2. 保存する意味上の境界",
+        "3. 試作の扱い",
+        "4. 不変条件",
+        "5. 具体的な綴り"
+      ],
+      "codes": [
+        "cons",
+        "nil",
+        "v1",
+        "Fn",
+        "value",
+        "splice",
+        "call",
+        "map",
+        "then",
+        "design/forms.json"
+      ],
+      "lists": [
+        4,
+        6,
+        14
+      ],
+      "ids": [
+        "n-706f6c696379",
+        "n-74617267657473",
+        "n-626f756e646172696573",
+        "n-70726f746f7479706573",
+        "n-696e76617269616e7473",
+        "n-7370656c6c696e6773"
+      ],
+      "ruby": 277,
+      "scripts": 0,
+      "styles": [
+        29
+      ],
+      "overflow": 0,
+      "lang": "ja"
+    },
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.65625,
+          "start": 4864,
+          "max": 4864,
+          "top": -4712.34375
+        },
+        "final": {
+          "y": 152,
+          "hash": "#n-706f6c696379"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-74617267657473",
+        "initial": {
+          "desired": 513.890625,
+          "start": 4864,
+          "max": 4864,
+          "top": -4350.109375
+        },
+        "final": {
+          "y": 514,
+          "hash": "#n-74617267657473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-626f756e646172696573",
+        "initial": {
+          "desired": 2379.5625,
+          "start": 4864,
+          "max": 4864,
+          "top": -2484.4375
+        },
+        "final": {
+          "y": 2380,
+          "hash": "#n-626f756e646172696573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-70726f746f7479706573",
+        "initial": {
+          "desired": 3470.484375,
+          "start": 0,
+          "max": 4864,
+          "top": 3470.484375
+        },
+        "final": {
+          "y": 3470,
+          "hash": "#n-70726f746f7479706573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-696e76617269616e7473",
+        "initial": {
+          "desired": 3936.375,
+          "start": 0,
+          "max": 4864,
+          "top": 3936.375
+        },
+        "final": {
+          "y": 3936,
+          "hash": "#n-696e76617269616e7473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-7370656c6c696e6773",
+        "initial": {
+          "desired": 4864,
+          "start": 0,
+          "max": 4864,
+          "top": 5072.6875
+        },
+        "final": {
+          "y": 4864,
+          "hash": "#n-7370656c6c696e6773"
+        },
+        "stable_samples": 5
+      }
+    ],
+    "failed_requests": [],
+    "passed": true
+  },
+  {
+    "engine": "webkit",
+    "version": "26.5",
+    "prefix": "first",
+    "width": 1280,
+    "structure": {
+      "headings": [
+        "00. 対象と設計の決定",
+        "方針",
+        "1. 実装対象",
+        "2. 保存する意味上の境界",
+        "3. 試作の扱い",
+        "4. 不変条件",
+        "5. 具体的な綴り"
+      ],
+      "codes": [
+        "cons",
+        "nil",
+        "v1",
+        "Fn",
+        "value",
+        "splice",
+        "call",
+        "map",
+        "then",
+        "design/forms.json"
+      ],
+      "lists": [
+        4,
+        6,
+        14
+      ],
+      "ids": [
+        "n-706f6c696379",
+        "n-74617267657473",
+        "n-626f756e646172696573",
+        "n-70726f746f7479706573",
+        "n-696e76617269616e7473",
+        "n-7370656c6c696e6773"
+      ],
+      "ruby": 277,
+      "scripts": 0,
+      "styles": [
+        29
+      ],
+      "overflow": 0,
+      "lang": "ja"
+    },
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.65625,
+          "start": 1847,
+          "max": 1847,
+          "top": -1695.34375
+        },
+        "final": {
+          "y": 152,
+          "hash": "#n-706f6c696379"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-74617267657473",
+        "initial": {
+          "desired": 358.4375,
+          "start": 1847,
+          "max": 1847,
+          "top": -1488.5625
+        },
+        "final": {
+          "y": 358,
+          "hash": "#n-74617267657473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-626f756e646172696573",
+        "initial": {
+          "desired": 986.15625,
+          "start": 0,
+          "max": 1847,
+          "top": 986.15625
+        },
+        "final": {
+          "y": 986,
+          "hash": "#n-626f756e646172696573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-70726f746f7479706573",
+        "initial": {
+          "desired": 1391.875,
+          "start": 0,
+          "max": 1847,
+          "top": 1391.875
+        },
+        "final": {
+          "y": 1392,
+          "hash": "#n-70726f746f7479706573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-696e76617269616e7473",
+        "initial": {
+          "desired": 1627.453125,
+          "start": 0,
+          "max": 1847,
+          "top": 1627.453125
+        },
+        "final": {
+          "y": 1627,
+          "hash": "#n-696e76617269616e7473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-7370656c6c696e6773",
+        "initial": {
+          "desired": 1847,
+          "start": 0,
+          "max": 1847,
+          "top": 2452.796875
+        },
+        "final": {
+          "y": 1847,
+          "hash": "#n-7370656c6c696e6773"
+        },
+        "stable_samples": 5
+      }
+    ],
+    "failed_requests": [],
+    "passed": true
+  },
+  {
+    "engine": "webkit",
+    "version": "26.5",
+    "prefix": "second",
+    "width": 375,
+    "structure": {
+      "headings": [
+        "00. 対象と設計の決定",
+        "方針",
+        "1. 実装対象",
+        "2. 保存する意味上の境界",
+        "3. 試作の扱い",
+        "4. 不変条件",
+        "5. 具体的な綴り"
+      ],
+      "codes": [
+        "cons",
+        "nil",
+        "v1",
+        "Fn",
+        "value",
+        "splice",
+        "call",
+        "map",
+        "then",
+        "design/forms.json"
+      ],
+      "lists": [
+        4,
+        6,
+        14
+      ],
+      "ids": [
+        "n-706f6c696379",
+        "n-74617267657473",
+        "n-626f756e646172696573",
+        "n-70726f746f7479706573",
+        "n-696e76617269616e7473",
+        "n-7370656c6c696e6773"
+      ],
+      "ruby": 277,
+      "scripts": 0,
+      "styles": [
+        29
+      ],
+      "overflow": 0,
+      "lang": "ja"
+    },
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.65625,
+          "start": 4864,
+          "max": 4864,
+          "top": -4712.34375
+        },
+        "final": {
+          "y": 152,
+          "hash": "#n-706f6c696379"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-74617267657473",
+        "initial": {
+          "desired": 513.890625,
+          "start": 4864,
+          "max": 4864,
+          "top": -4350.109375
+        },
+        "final": {
+          "y": 514,
+          "hash": "#n-74617267657473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-626f756e646172696573",
+        "initial": {
+          "desired": 2379.5625,
+          "start": 4864,
+          "max": 4864,
+          "top": -2484.4375
+        },
+        "final": {
+          "y": 2380,
+          "hash": "#n-626f756e646172696573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-70726f746f7479706573",
+        "initial": {
+          "desired": 3470.484375,
+          "start": 0,
+          "max": 4864,
+          "top": 3470.484375
+        },
+        "final": {
+          "y": 3470,
+          "hash": "#n-70726f746f7479706573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-696e76617269616e7473",
+        "initial": {
+          "desired": 3936.375,
+          "start": 0,
+          "max": 4864,
+          "top": 3936.375
+        },
+        "final": {
+          "y": 3936,
+          "hash": "#n-696e76617269616e7473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-7370656c6c696e6773",
+        "initial": {
+          "desired": 4864,
+          "start": 0,
+          "max": 4864,
+          "top": 5072.6875
+        },
+        "final": {
+          "y": 4864,
+          "hash": "#n-7370656c6c696e6773"
+        },
+        "stable_samples": 5
+      }
+    ],
+    "failed_requests": [],
+    "passed": true
+  },
+  {
+    "engine": "webkit",
+    "version": "26.5",
+    "prefix": "second",
+    "width": 1280,
+    "structure": {
+      "headings": [
+        "00. 対象と設計の決定",
+        "方針",
+        "1. 実装対象",
+        "2. 保存する意味上の境界",
+        "3. 試作の扱い",
+        "4. 不変条件",
+        "5. 具体的な綴り"
+      ],
+      "codes": [
+        "cons",
+        "nil",
+        "v1",
+        "Fn",
+        "value",
+        "splice",
+        "call",
+        "map",
+        "then",
+        "design/forms.json"
+      ],
+      "lists": [
+        4,
+        6,
+        14
+      ],
+      "ids": [
+        "n-706f6c696379",
+        "n-74617267657473",
+        "n-626f756e646172696573",
+        "n-70726f746f7479706573",
+        "n-696e76617269616e7473",
+        "n-7370656c6c696e6773"
+      ],
+      "ruby": 277,
+      "scripts": 0,
+      "styles": [
+        29
+      ],
+      "overflow": 0,
+      "lang": "ja"
+    },
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "initial": {
+          "desired": 151.65625,
+          "start": 1847,
+          "max": 1847,
+          "top": -1695.34375
+        },
+        "final": {
+          "y": 152,
+          "hash": "#n-706f6c696379"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-74617267657473",
+        "initial": {
+          "desired": 358.4375,
+          "start": 1847,
+          "max": 1847,
+          "top": -1488.5625
+        },
+        "final": {
+          "y": 358,
+          "hash": "#n-74617267657473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-626f756e646172696573",
+        "initial": {
+          "desired": 986.15625,
+          "start": 0,
+          "max": 1847,
+          "top": 986.15625
+        },
+        "final": {
+          "y": 986,
+          "hash": "#n-626f756e646172696573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-70726f746f7479706573",
+        "initial": {
+          "desired": 1391.875,
+          "start": 0,
+          "max": 1847,
+          "top": 1391.875
+        },
+        "final": {
+          "y": 1392,
+          "hash": "#n-70726f746f7479706573"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-696e76617269616e7473",
+        "initial": {
+          "desired": 1627.453125,
+          "start": 0,
+          "max": 1847,
+          "top": 1627.453125
+        },
+        "final": {
+          "y": 1627,
+          "hash": "#n-696e76617269616e7473"
+        },
+        "stable_samples": 5
+      },
+      {
+        "id": "n-7370656c6c696e6773",
+        "initial": {
+          "desired": 1847,
+          "start": 0,
+          "max": 1847,
+          "top": 2452.796875
+        },
+        "final": {
+          "y": 1847,
+          "hash": "#n-7370656c6c696e6773"
+        },
+        "stable_samples": 5
+      }
+    ],
+    "failed_requests": [],
+    "passed": true
+  }
+]

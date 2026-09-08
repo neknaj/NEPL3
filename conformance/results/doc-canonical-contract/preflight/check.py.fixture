@@ -1,0 +1,41 @@
+from pathlib import Path
+import json,re,hashlib,subprocess
+from html.parser import HTMLParser
+from tools.audit.structure import Parser,load_forms
+root=Path.cwd();r=root/'.tmp/preflight-canonical00'
+exec(Path('C:/projects/NEPL3-external-extensions/.tmp/author-external-extensions/helpers.py').read_text(encoding='utf8'))
+src=(r/'fixed/doc/spec/00-contract.md').read_bytes()
+draft=(r/'fixed/doc/migration/authored/00-contract.nepld').read_bytes()
+assert src==subprocess.check_output(['git','show','bc1d5d3:doc/spec/00-contract.md'])
+assert draft==subprocess.check_output(['git','show','cd451bf:doc/migration/authored/00-contract.nepld'])
+tree=Parser(draft.decode(),load_forms(root)).complete('Doc/Article')
+n=normalize(tree,True)
+codes=[x['fields']['text'] for x in walk(n) if x['kind']=='InlineCode']
+assert codes==re.findall(r'`([^`]+)`',src.decode())
+assert not [x for x in walk(n) if x['kind'] in ('Link','RawCode','Table')]
+lists=[len(x['fields']['items']) for x in walk(n) if x['kind']=='List']
+assert lists==[4,6,14]
+class Html(HTMLParser):
+    def __init__(self):super().__init__();self.anchors=[]
+    def handle_starttag(self,t,attrs):
+        a=dict(attrs)
+        if t=='a' and a.get('id','').startswith('user-content-'):
+            self.anchors.append({k:a[k] for k in ('id','href','aria-label')})
+h=Html();h.feed((r/'github.html').read_text(encoding='utf8'))
+assert len(h.anchors)==7
+sections=[x for x in walk(n) if x['kind']=='Section']
+headings=[plain(n['fields']['title'])]+[plain(x['fields']['title']) for x in sections]
+ids=[None]+[x['fields']['id'] for x in sections]
+mapping=[]
+for anchor,heading,identifier in zip(h.anchors,headings,ids):
+    mapping.append({'legacy_actual_github':anchor,'draft_heading_base':heading,'section':identifier,'nepl3_anchor':None if identifier is None else 'n-'+identifier.encode().hex(),'verification':'old GitHub server-rendered HTML; new generated GitHub heading anchors/browser navigation not run'})
+assert len({x['legacy_actual_github']['href'] for x in mapping})==7
+result={'source_matches_reviewed_bc1d5d3':True,'draft_matches_reviewed_cd451bf':True,'source_sha256':hashlib.sha256(src).hexdigest(),'draft_sha256':hashlib.sha256(draft).hexdigest(),'headings':mapping,'inline_codes':codes,'doc_lists_item_counts':lists,'source_list_count':1,'source_list_items':6,'rawcode_count':0,'typed_link_count':0,'table_count':0,'ruby_count':len(pairs),'independent_meaning_review':False,'production_execution':'root reported success; not rerun by author'}
+(r/'result.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf8',newline='\n')
+for name,base in [('initial-review','C:/projects/NEPL3-runtime/.tmp/review-doc-authoring-a'),('ruby-review','C:/projects/NEPL3-runtime/.tmp/review-doc-authoring-a/revision-cd451bf')]:
+    for f in ['review.md','manifest.json']:
+        p=Path(base)/f;(r/(name+'-'+f)).write_bytes(p.read_bytes())
+search=subprocess.run(['git','grep','-n','00-contract','--',':(exclude)conformance/results/**',':(exclude)doc/history/**'],capture_output=True)
+assert search.returncode==0
+(r/'references.txt').write_bytes(search.stdout)
+print('PASS: reviewed sources unchanged; 7 actual GitHub anchors; 10 exact code spans; list counts 4/6/14')

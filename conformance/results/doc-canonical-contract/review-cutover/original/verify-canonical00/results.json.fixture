@@ -1,0 +1,116 @@
+[
+  {
+    "name": "fmt",
+    "command": [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "converter",
+    "command": [
+      "python",
+      "tools/migration/contract.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "converter-tests",
+    "command": [
+      "python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/migration",
+      "-p",
+      "test_contract.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "historical-projection",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--test",
+      "doc",
+      "projection::historical_contract_projects_to_equivalent_markdown_events",
+      "--",
+      "--exact"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "canonical-check",
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "--check"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "html-first",
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "html",
+      "C:\\projects\\NEPL3-doc-canonical-contract\\.tmp\\verify-canonical00\\first"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "html-second",
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "html",
+      "C:\\projects\\NEPL3-doc-canonical-contract\\.tmp\\verify-canonical00\\second"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "tools-tests",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--lib"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "diff-check",
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exit_code": 0
+  }
+]

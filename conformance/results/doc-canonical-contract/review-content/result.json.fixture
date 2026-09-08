@@ -1,0 +1,55 @@
+{
+  "identities": {
+    "source": {
+      "path": "tools/migration/fixtures/00-contract.md",
+      "bytes": 4368,
+      "sha256": "4ca8d780d32696bf102774c346ffdf18d01452085f93a2daae9e49acf16b003f"
+    },
+    "draft": {
+      "path": "doc/spec/00-contract.nepld",
+      "bytes": 14026,
+      "sha256": "48c2b1696c7308ee43f26dbf06a6038b38f0199233c1da3ef15a04453f810e93"
+    },
+    "projection": {
+      "path": "doc/spec/00-contract.md",
+      "bytes": 10429,
+      "sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1"
+    },
+    "html": {
+      "path": ".tmp/verify-canonical00/first/docs/spec/00-contract.html",
+      "bytes": 38595,
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+    },
+    "aliases": {
+      "path": "doc/migration/aliases/00-contract.json",
+      "bytes": 421,
+      "sha256": "e272bc38006f1fc97f70928aa2963fe0245fa4575ddffadcc8d460b1f24a42cc"
+    },
+    "guidance": {
+      "path": "doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    }
+  },
+  "all_annotated_heading_paragraph_text_equal": true,
+  "inline_code": [
+    "cons",
+    "nil",
+    "v1",
+    "Fn",
+    "value",
+    "splice",
+    "call",
+    "map",
+    "then",
+    "design/forms.json"
+  ],
+  "list_counts": [
+    4,
+    6,
+    14
+  ],
+  "old_anchor_mappings": 7,
+  "new_GitHub_navigation": "not-checked",
+  "runtime_rerun": false
+}

@@ -1,0 +1,230 @@
+{
+  "head": "4895c1a6a94660a43e617ed86a21844838a7324d",
+  "url": "https://github.com/neknaj/NEPL3/blob/4895c1a6a94660a43e617ed86a21844838a7324d/doc/spec/00-contract.md",
+  "rows": [
+    {
+      "fragment": "00-対象と設計上の決定",
+      "initial": {
+        "absolute": 386,
+        "max": 1879,
+        "start": 1879,
+        "top": -1493
+      },
+      "final": {
+        "top": 125,
+        "y": 261,
+        "max": 1879,
+        "hash": "#00-%E5%AF%BE%E8%B1%A1%E3%81%A8%E8%A8%AD%E8%A8%88%E4%B8%8A%E3%81%AE%E6%B1%BA%E5%AE%9A"
+      },
+      "stable_samples": 5,
+      "passed": true
+    },
+    {
+      "fragment": "方針",
+      "initial": {
+        "absolute": 476.59375,
+        "max": 1879,
+        "start": 1879,
+        "top": -1402.40625
+      },
+      "final": {
+        "top": 124.59375,
+        "y": 352,
+        "max": 1879,
+        "hash": "#%E6%96%B9%E9%87%9D"
+      },
+      "stable_samples": 5,
+      "passed": true
+    },
+    {
+      "fragment": "1-実装対象",
+      "initial": {
+        "absolute": 674.78125,
+        "max": 1879,
+        "start": 1879,
+        "top": -1204.21875
+      },
+      "final": {
+        "top": 124.78125,
+        "y": 550,
+        "max": 1879,
+        "hash": "#1-%E5%AE%9F%E8%A3%85%E5%AF%BE%E8%B1%A1"
+      },
+      "stable_samples": 5,
+      "passed": true
+    },
+    {
+      "fragment": "2-保存する意味上の境界",
+      "initial": {
+        "absolute": 1388.96875,
+        "max": 1879,
+        "start": 0,
+        "top": 1388.96875
+      },
+      "final": {
+        "top": 124.96875,
+        "y": 1264,
+        "max": 1879,
+        "hash": "#2-%E4%BF%9D%E5%AD%98%E3%81%99%E3%82%8B%E6%84%8F%E5%91%B3%E4%B8%8A%E3%81%AE%E5%A2%83%E7%95%8C"
+      },
+      "stable_samples": 5,
+      "passed": true
+    },
+    {
+      "fragment": "3-試作の扱い",
+      "initial": {
+        "absolute": 1775.15625,
+        "max": 1879,
+        "start": 0,
+        "top": 1775.15625
+      },
+      "final": {
+        "top": 125.15625,
+        "y": 1650,
+        "max": 1879,
+        "hash": "#3-%E8%A9%A6%E4%BD%9C%E3%81%AE%E6%89%B1%E3%81%84"
+      },
+      "stable_samples": 5,
+      "passed": true
+    },
+    {
+      "fragment": "4-不変条件",
+      "initial": {
+        "absolute": 2037.34375,
+        "max": 1879,
+        "start": 0,
+        "top": 2037.34375
+      },
+      "final": {
+        "top": 158.34375,
+        "y": 1879,
+        "max": 1879,
+        "hash": "#4-%E4%B8%8D%E5%A4%89%E6%9D%A1%E4%BB%B6"
+      },
+      "stable_samples": 5,
+      "passed": true
+    },
+    {
+      "fragment": "5-具体的な綴り",
+      "initial": {
+        "absolute": 2503.53125,
+        "max": 1879,
+        "start": 0,
+        "top": 2503.53125
+      },
+      "final": {
+        "top": 624.53125,
+        "y": 1879,
+        "max": 1879,
+        "hash": "#5-%E5%85%B7%E4%BD%93%E7%9A%84%E3%81%AA%E7%B6%B4%E3%82%8A"
+      },
+      "stable_samples": 5,
+      "passed": true
+    },
+    {
+      "fragment": "n-706f6c696379",
+      "initial": {
+        "absolute": 476.59375,
+        "max": 1879,
+        "start": 1879,
+        "top": -1402.40625
+      },
+      "final": {
+        "top": 124.59375,
+        "y": 352,
+        "max": 1879,
+        "hash": "#n-706f6c696379"
+      },
+      "stable_samples": 5,
+      "passed": true
+    },
+    {
+      "fragment": "n-74617267657473",
+      "initial": {
+        "absolute": 674.78125,
+        "max": 1879,
+        "start": 1879,
+        "top": -1204.21875
+      },
+      "final": {
+        "top": 124.78125,
+        "y": 550,
+        "max": 1879,
+        "hash": "#n-74617267657473"
+      },
+      "stable_samples": 5,
+      "passed": true
+    },
+    {
+      "fragment": "n-626f756e646172696573",
+      "initial": {
+        "absolute": 1388.96875,
+        "max": 1879,
+        "start": 0,
+        "top": 1388.96875
+      },
+      "final": {
+        "top": 124.96875,
+        "y": 1264,
+        "max": 1879,
+        "hash": "#n-626f756e646172696573"
+      },
+      "stable_samples": 5,
+      "passed": true
+    },
+    {
+      "fragment": "n-70726f746f7479706573",
+      "initial": {
+        "absolute": 1775.15625,
+        "max": 1879,
+        "start": 0,
+        "top": 1775.15625
+      },
+      "final": {
+        "top": 125.15625,
+        "y": 1650,
+        "max": 1879,
+        "hash": "#n-70726f746f7479706573"
+      },
+      "stable_samples": 5,
+      "passed": true
+    },
+    {
+      "fragment": "n-696e76617269616e7473",
+      "initial": {
+        "absolute": 2037.34375,
+        "max": 1879,
+        "start": 0,
+        "top": 2037.34375
+      },
+      "final": {
+        "top": 158.34375,
+        "y": 1879,
+        "max": 1879,
+        "hash": "#n-696e76617269616e7473"
+      },
+      "stable_samples": 5,
+      "passed": true
+    },
+    {
+      "fragment": "n-7370656c6c696e6773",
+      "initial": {
+        "absolute": 2503.53125,
+        "max": 1879,
+        "start": 0,
+        "top": 2503.53125
+      },
+      "final": {
+        "top": 624.53125,
+        "y": 1879,
+        "max": 1879,
+        "hash": "#n-7370656c6c696e6773"
+      },
+      "stable_samples": 5,
+      "passed": true
+    }
+  ],
+  "browser": "151.0.7922.34",
+  "raw_lines_match": true,
+  "status": 200
+}

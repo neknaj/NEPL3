@@ -1,0 +1,12 @@
+{
+  "source": "tools/migration/fixtures/00-contract.md",
+  "candidate": "doc/migration/00-contract.nepld",
+  "source_commit": "a163764e93e2809f8013d7bbe16721082f979143",
+  "source_path_at_commit": "doc/spec/00-contract.md",
+  "source_lf_sha256": "4ca8d780d32696bf102774c346ffdf18d01452085f93a2daae9e49acf16b003f",
+  "candidate_sha256": "1ee46981e30e57e2c5965a21f3e1f318636178582faac645dfef780c60cfa520",
+  "status": "historical-converter-fixture",
+  "human_meaning_review": "not-run",
+  "markdown_projection": "restricted-candidate-view",
+  "legacy_anchor_compatibility": "not-implemented"
+}

@@ -1,0 +1,37 @@
+from pathlib import Path
+import subprocess,json,hashlib,sys,difflib,re
+r=Path(__file__).resolve().parents[2];p=Path(__file__).parent;sys.path.insert(0,str(r))
+from tools.audit.structure import Parser,load_forms
+base='652d3b2476416a1ead7332f12055d1a18018cfb6'
+def git(*x):return subprocess.check_output(['git',*x],cwd=r)
+def sha(b):return hashlib.sha256(b).hexdigest()
+pairs=[('doc/migration/README.md','doc/migration/authored/migration/README.nepld'),('doc/development.md','doc/migration/authored/guide/development.nepld')]
+def walk(n):
+ if isinstance(n,dict):
+  yield n
+  for x in n.get('fields',{}).values():yield from walk(x)
+ elif isinstance(n,list):
+  for x in n:yield from walk(x)
+results=[]
+for i,(src,draft) in enumerate(pairs):
+ for kind,path in [('source',src),('draft',draft)]:
+  (p/f'{i}-{kind}-before.txt').write_bytes(git('show',base+':'+path));(p/f'{i}-{kind}-after.txt').write_bytes((r/path).read_bytes());(p/f'{i}-{kind}.diff').write_bytes(git('diff',base,'--',path))
+ b=(r/draft).read_bytes();assert b'\r' not in b and not b.startswith(b'\xef\xbb\xbf')
+ before=(p/f'{i}-draft-before.txt').read_text(encoding='utf8');after=b.decode();oldtree=Parser(before,load_forms(r)).complete('Doc/Article');newtree=Parser(after,load_forms(r)).complete('Doc/Article')
+ def values(tree,kind):return [n['fields'] for n in walk(tree) if n['kind']==kind]
+ assert values(oldtree,'RawCode')==values(newtree,'RawCode')
+ assert values(oldtree,'Link')==values(newtree,'Link')
+ changes=[(tag,before.splitlines()[a:z],after.splitlines()[c:d]) for tag,a,z,c,d in difflib.SequenceMatcher(None,before.splitlines(),after.splitlines(),autojunk=False).get_opcodes() if tag!='equal']
+ literals=[];md=(r/src).read_text(encoding='utf8').replace('\n','')
+ for _,_,lines in changes:
+  for line in lines:
+   m=re.fullmatch(r'\s*cons "(.*)"\s*',line)
+   if m:
+    plain=re.sub(r'\[([^/\[\]]+)/[^\[\]]+\]',r'\1',m[1]);assert plain in md;literals.append(plain)
+ results.append({'draft':draft,'sha256':sha(b),'structure':'pass','all_rawcode_and_links_unchanged':True,'added_literal_matches':literals,'removed_line_count':sum(len(old) for _,old,_ in changes)})
+for path in ['AGENTS.md','doc/authoring.md','design/forms.json']:
+ dest=p/'context'/path;dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes((r/path).read_bytes())
+raw=(r/'.tmp/author-canonical00-deltas/manifest.json').read_bytes();assert sha(raw).startswith('ddbc00fa');(p/'author-manifest.json').write_bytes(raw)
+for e in json.loads(raw)['files']:
+ b=(r/'.tmp/author-canonical00-deltas'/e['path']).read_bytes();assert sha(b)==e['sha256'] and len(b)==e['bytes']
+(p/'results.json').write_text(json.dumps({'base':base,'files':results,'author_manifest_sha256':sha(raw),'runtime':'not-run'},ensure_ascii=False,indent=2)+'\n',encoding='utf8');print(json.dumps(results,ensure_ascii=False))

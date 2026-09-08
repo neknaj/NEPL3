@@ -1,0 +1,80 @@
+{
+  "scope": "Manual author synchronization; no production edits; no runtime claim",
+  "files": [
+    {
+      "path": "after/doc/migration/authored/guide/development.nepld",
+      "bytes": 55898,
+      "sha256": "1eb55b52eb0e1f43b4bf31e44fc86d11beead6e8778ada4d78ad19968123ce8b"
+    },
+    {
+      "path": "after/doc/migration/authored/migration/README.nepld",
+      "bytes": 12027,
+      "sha256": "e26779349a7fdea02d80b9a5562e58cf386ff2d915cd5b4dee39b814ac3e222f"
+    },
+    {
+      "path": "before/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "before/doc/development.md",
+      "bytes": 23445,
+      "sha256": "b1f1e552a9a42c532789ca9f3a0c8d92ba0e9d2341363695f38adf5208d9ec34"
+    },
+    {
+      "path": "before/doc/migration/authored/guide/development.nepld",
+      "bytes": 55343,
+      "sha256": "1d373d204f064134fa70542268eddc2be998a263341331dc4871601d3594826c"
+    },
+    {
+      "path": "before/doc/migration/authored/migration/README.nepld",
+      "bytes": 10755,
+      "sha256": "e5bb2361b213ef9df9c3a69174e8608641a3dca4a132011ec174774f25063f03"
+    },
+    {
+      "path": "before/doc/migration/README.md",
+      "bytes": 4751,
+      "sha256": "3f408d5fdbed448c8fb8e0fd472117d0018fbf87732ce2d808dcb44e3bcc1d61"
+    },
+    {
+      "path": "before.json",
+      "bytes": 930,
+      "sha256": "643d8d9c650a1b60b5343fc8fcac0528d3654a305fde6a3ebb527446526716a9"
+    },
+    {
+      "path": "check.py",
+      "bytes": 3718,
+      "sha256": "875959b39c82338de3fe0ca36d66cfabf025ab4564729dec2270990442ca6525"
+    },
+    {
+      "path": "development.diff",
+      "bytes": 2249,
+      "sha256": "93d8b6b0743cd711a2bd03f4f5838b6c2b6ad5f2281cee20a199a839ac2fc5aa"
+    },
+    {
+      "path": "helpers.py",
+      "bytes": 3299,
+      "sha256": "68315acfa40d0086e76b823cb464a4e76b9de12d8d9b9103c92277d6adb8ae13"
+    },
+    {
+      "path": "README.diff",
+      "bytes": 9864,
+      "sha256": "0af62bd9ebc05ec82c379d4deab10d22f2fa4da4a3d04cd59c3b7dda24b7ef63"
+    },
+    {
+      "path": "record.md",
+      "bytes": 2703,
+      "sha256": "e44a7b869ed6e15c3357011e58987a40e615166042a0e61d86a5508db7929ac2"
+    },
+    {
+      "path": "result.json",
+      "bytes": 6617,
+      "sha256": "773b620096418fa09bb1963c58358e962bfa4f4137609d9da99676c3764292c5"
+    },
+    {
+      "path": "source.diff",
+      "bytes": 5232,
+      "sha256": "3bb11238a370082549599776ba5f5b2dc11e33fe8b0b65d873d6a47a95d97a29"
+    }
+  ]
+}

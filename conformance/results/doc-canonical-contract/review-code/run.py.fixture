@@ -1,0 +1,18 @@
+from pathlib import Path
+import subprocess,json,os
+O=Path(__file__).resolve().parent;W=O/'workspace';results=[]
+env=os.environ.copy();env['CARGO_TARGET_DIR']=str(O/'target')
+def run(name,args):
+    p=subprocess.run(args,cwd=W,env=env,capture_output=True,timeout=900)
+    (O/(name+'.stdout.log')).write_bytes(p.stdout);(O/(name+'.stderr.log')).write_bytes(p.stderr)
+    results.append(dict(name=name,command=args,cwd=str(W),exit_code=p.returncode,target_dir=env['CARGO_TARGET_DIR']))
+    (O/'commands.json').write_text(json.dumps(results,indent=2)+'\n',encoding='utf-8',newline='\n')
+    print(name,p.returncode,flush=True)
+    assert p.returncode==0,p.stderr[-2000:]
+    return p
+run('versions',['rustc','-Vv'])
+run('python-tests',['python','-m','unittest','discover','-s','tools/migration','-p','test_contract.py'])
+run('converter',['python','tools/migration/contract.py'])
+p=run('historical',['cargo','test','--locked','-p','nepl3-tools','--test','doc','projection::historical_contract_projects_to_equivalent_markdown_events','--','--exact'])
+assert b'1 passed; 0 failed' in p.stdout
+run('canonical',['cargo','run','--locked','-p','nepl3-tools','--','doc-canonical','--check'])

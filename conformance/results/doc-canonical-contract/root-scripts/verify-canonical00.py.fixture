@@ -1,0 +1,28 @@
+from pathlib import Path
+import subprocess,json,hashlib
+root=Path(__file__).resolve().parent.parent
+out=root/'.tmp/verify-canonical00'
+out.mkdir(exist_ok=True)
+results=[]
+def run(name,args):
+    r=subprocess.run(args,cwd=root,capture_output=True,timeout=900)
+    (out/(name+'.stdout.log')).write_bytes(r.stdout)
+    (out/(name+'.stderr.log')).write_bytes(r.stderr)
+    results.append(dict(name=name,command=args,exit_code=r.returncode))
+    (out/'results.json').write_text(json.dumps(results,indent=2)+'\n',encoding='utf-8',newline='\n')
+    print(name,r.returncode,flush=True)
+    if r.returncode: raise SystemExit(r.stderr.decode('utf-8',errors='replace')[-3000:])
+run('fmt',['cargo','fmt','--all','--','--check'])
+run('converter',['python','tools/migration/contract.py'])
+run('converter-tests',['python','-m','unittest','discover','-s','tools/migration','-p','test_contract.py'])
+run('historical-projection',['cargo','test','--locked','-p','nepl3-tools','--test','doc','projection::historical_contract_projects_to_equivalent_markdown_events','--','--exact'])
+assert b'1 passed' in (out/'historical-projection.stdout.log').read_bytes()
+run('canonical-check',['cargo','run','--locked','-p','nepl3-tools','--','doc-canonical','--check'])
+for tag in ['first','second']:
+    run('html-'+tag,['cargo','run','--locked','-p','nepl3-tools','--','doc-canonical','html',str(out/tag)])
+files={p.relative_to(out/'first').as_posix():p.read_bytes() for p in (out/'first').rglob('*') if p.is_file()}
+other={p.relative_to(out/'second').as_posix():p.read_bytes() for p in (out/'second').rglob('*') if p.is_file()}
+assert files==other
+(out/'html-identity.json').write_text(json.dumps([dict(path=p,bytes=len(b),sha256=hashlib.sha256(b).hexdigest()) for p,b in files.items()],indent=2)+'\n',encoding='utf-8',newline='\n')
+run('tools-tests',['cargo','test','--locked','-p','nepl3-tools','--lib'])
+run('diff-check',['git','diff','--check'])

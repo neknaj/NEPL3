@@ -1,0 +1,64 @@
+{
+  "scope": "fixed authored 00/01 content review, not runtime or human acceptance",
+  "commit": "8fd25128e4d215a3ab5dff6e9e82634500e540fd",
+  "python": "3.13.12 | packaged by conda-forge | (main, Feb  5 2026, 05:41:12) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "command": "python C:/projects/NEPL3-runtime/.tmp/review-doc-authoring-a/check.py",
+  "files": [
+    {
+      "path": "check.log",
+      "sha256": "0f13688c861081a54238bd69e49bf5be6a482a202de568315085f307c2fc3117",
+      "bytes": 238
+    },
+    {
+      "path": "check.py",
+      "sha256": "336002c69f9aeb8eb8aa669b63b5b5d7e8cde5aebbfec760050c46147ce2f0fd",
+      "bytes": 2384
+    },
+    {
+      "path": "lexical-evidence.json",
+      "sha256": "4014e028231f639cc863e66c2d7023ce5c59493b3151a316c8bb0fc46303c18e",
+      "bytes": 3748
+    },
+    {
+      "path": "review.md",
+      "sha256": "beaee43a38ae22e45342dc28efb5a72502f8ae8aa71924cff900dd1428ccdbff",
+      "bytes": 3994
+    },
+    {
+      "path": "snapshot/AGENTS.md",
+      "sha256": "af97df38a46d8ccdc28f8c4e113bb29a09ce6ba3fd7736a882148d4d17c2a433",
+      "bytes": 7148
+    },
+    {
+      "path": "snapshot/doc/authoring.md",
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08",
+      "bytes": 6478
+    },
+    {
+      "path": "snapshot/doc/migration/authored/00-contract.nepld",
+      "sha256": "39ed3d281b3928c8800b23ecce0309604e51504dde5bd2ba631fb9f8ebc72eac",
+      "bytes": 13372
+    },
+    {
+      "path": "snapshot/doc/migration/authored/01-architecture.nepld",
+      "sha256": "58220a77a00f89a112c264b78a0215e61765d8c8545993521c591d1f6de49e43",
+      "bytes": 11583
+    },
+    {
+      "path": "snapshot/doc/spec/00-contract.md",
+      "sha256": "4ca8d780d32696bf102774c346ffdf18d01452085f93a2daae9e49acf16b003f",
+      "bytes": 4368
+    },
+    {
+      "path": "snapshot/doc/spec/01-architecture.md",
+      "sha256": "b0f37a82a6d2d061b3842127a303849b43a12b58f94b750a48d680529269f51e",
+      "bytes": 6138
+    },
+    {
+      "path": "sources.json",
+      "sha256": "8e72de51b3c1cbc6adbe79ae79bd94bbd5c011c334c2eef99397d39abc3239a7",
+      "bytes": 919
+    }
+  ]
+}

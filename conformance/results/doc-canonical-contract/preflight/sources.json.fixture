@@ -1,0 +1,40 @@
+{
+  "head": "652d3b2476416a1ead7332f12055d1a18018cfb6",
+  "files": [
+    {
+      "path": "doc/spec/00-contract.md",
+      "sha256": "4ca8d780d32696bf102774c346ffdf18d01452085f93a2daae9e49acf16b003f",
+      "bytes": 4368
+    },
+    {
+      "path": "doc/migration/authored/00-contract.nepld",
+      "sha256": "48c2b1696c7308ee43f26dbf06a6038b38f0199233c1da3ef15a04453f810e93",
+      "bytes": 14026
+    },
+    {
+      "path": "doc/canonical.json",
+      "sha256": "f90390baedecdedf01d37ff2f02dea3099aa9829de3eef1b6fd72e77c79fd606",
+      "bytes": 358
+    },
+    {
+      "path": "tools/migration/contract.py",
+      "sha256": "292d91f0db4038d2f031f8fb41e5b12fe7e8a5118a0406c6fee0435b000abaf8",
+      "bytes": 4831
+    },
+    {
+      "path": "tools/tests/doc/projection.rs",
+      "sha256": "2615c399b1c6cd83137ab7b2c1e4782a43599f21549fcb89dff309d3d1e35958",
+      "bytes": 13989
+    },
+    {
+      "path": "conformance/results/doc-authoring-foundation/integration/review.md",
+      "sha256": "789741cedd7264de451b1d1e05c553a96f4e670fbeb70643b3f1fdb244ce2ac4",
+      "bytes": 3554
+    },
+    {
+      "path": "conformance/results/doc-authoring-foundation/integration/result.json",
+      "sha256": "2cb4981f0f182c14070c2152bf8e147d6124619e7af716ad5708ce897d2cf0de",
+      "bytes": 5417
+    }
+  ]
+}

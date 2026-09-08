@@ -1,0 +1,16 @@
+from pathlib import Path
+import hashlib,json,subprocess
+O=Path(__file__).resolve().parent;code=O.parent/'review-canonical00-code';exe=code/'target/debug/nepl3-tools.exe';out=O/'independent-generated'
+cmd=[str(exe),'doc-canonical','html',str(out)]
+r=subprocess.run(cmd,cwd=code/'workspace',capture_output=True,timeout=180)
+(O/'generation.stdout.log').write_bytes(r.stdout);(O/'generation.stderr.log').write_bytes(r.stderr)
+record=dict(command=cmd,exit_code=r.returncode,binary_sha256=hashlib.sha256(exe.read_bytes()).hexdigest())
+try:
+    assert r.returncode==0,r.stderr
+    original=O/'original/verify-canonical00/first'
+    a={p.relative_to(original).as_posix():p.read_bytes() for p in original.rglob('*') if p.is_file()}
+    b={p.relative_to(out).as_posix():p.read_bytes() for p in out.rglob('*') if p.is_file()}
+    assert a==b
+    record.update(all_files_equal=True,files=[dict(path=p,bytes=len(v),sha256=hashlib.sha256(v).hexdigest()) for p,v in b.items()])
+finally:(O/'generation.json').write_text(json.dumps(record,indent=2)+'\n',encoding='utf-8',newline='\n')
+print('independently rebuilt generator: all four files exact')
