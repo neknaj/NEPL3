@@ -79,4 +79,57 @@ body
       cons "R006には、Source/Origin/Environmentのtableを[各操作/かくそうさ]がどのbundleで[受/う]け[渡/わた]すか、ReaderPlanとReadReplyの[具体型/ぐたいがた]、[診断/しんだん]・[失敗/しっぱい]codeのschema、Checked[値/ち]の[再検査条件/さいけんさじょうけん]も[含/ふく]む。"
       cons "[文章/ぶんしょう]で[責務/せきむ]が[説明/せつめい]されていることと、[別実装/べつじっそう]でdecodeできることは[別/べつ]の[検証対象/けんしょうたいしょう]である。" nil
     nil
+  cons section recovery "[公開失敗/こうかいしっぱい]からの[復旧/ふっきゅう]と[早期/そうき]Doc[監査/かんさ]の[追加/ついか]レビュー" body
+    cons paragraph
+      cons sentence cons text "commit " cons code "25a096b" cons text " に" cons ruby text "対" text "たい" cons text "する" cons ruby text "指摘" text "してき" cons text "を" cons ruby text "独立" text "どくりつ" cons text "に" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons "[公開後/こうかいご]smokeの[失敗/しっぱい]を[記録/きろく]するだけでは、[配信済/はいしんず]みのcandidateを[復旧/ふっきゅう]できない。"
+      cons "R015の[訂正/ていせい]では、[公開確認/こうかいかくにん]を[通/とお]った[元/もと]tarをimmutable recovery releaseに[保存/ほぞん]し、[取得検証後/しゅとくけんしょうご]にLKGへ[昇格/しょうかく]する[契約/けいやく]を[加/くわ]えた。"
+      cons "[元/もと]payloadのidentityと、[再/さい]deployで[変/か]わるartifact/deployment IDは[区別/くべつ]する。" nil
+    cons paragraph
+      cons "[通常公開/つうじょうこうかい]・[再実行/さいじっこう]・[復旧/ふっきゅう]・[保管整理/ほかんせいり]は[同/おな]じ[排他範囲/はいたはんい]を[使/つか]い、[変更前/へんこうまえ]intentをjournalへ[残/のこ]す。"
+      cons "[失敗/しっぱい]candidateが[現在/げんざい]の[公開物/こうかいぶつ]だと[確認/かくにん]できる[場合/ばあい]だけ[復旧/ふっきゅう]し、[後続/こうぞく]の[健康/けんこう]な[版/はん]や[対象不明時/たいしょうふめいじ]は[書/か]き[換/か]えない。"
+      cons "[初回/しょかい]のLKG[不在/ふざい]、[保管破損/ほかんはそん]、[復旧失敗/ふっきゅうしっぱい]、run[消失/しょうしつ]、[保存途中/ほぞんとちゅう]の[停止/ていし]を[明示/めいじ]し、[自動復旧/じどうふっきゅう]は[有限/ゆうげん]にする。"
+      cons "[中断/ちゅうだん]したLKG[昇格/しょうかく]には[新/あたら]しい[公開/こうかい]smokeを[要求/ようきゅう]し、[復旧成功後/ふっきゅうせいこうご]も[元/もと]candidate/runはfailedを[維持/いじ]する。"
+      cons "これらの[本文/ほんぶん]・site[計画/けいかく]・S06[失敗系/しっぱいけい]を[照合/しょうごう]してR015をcorrectedとした。"
+      cons "[実/じつ]Pagesの[公開/こうかい]・[復旧/ふっきゅう]を[検証済/けんしょうず]みという[意味/いみ]ではない。" nil
+    cons paragraph
+      cons sentence cons link external "https://docs.github.com/en/rest/pages/pages" text "Pages API" cons text " にはexpected-currentを" cons ruby text "指定" text "してい" cons text "した" cons ruby text "原子的" text "げんしてき" cons text "な" cons ruby text "切替契約" text "きりかえけいやく" cons text "がなく、" cons ruby text "特定" text "とくてい" cons text "deploymentの" cons ruby text "成功" text "せいこう" cons text "statusだけでは" cons ruby text "現在" text "げんざい" cons text "の" cons ruby text "配信対象" text "はいしんたいしょう" cons text "を" cons ruby text "証明" text "しょうめい" cons text "できない。" nil
+      cons sentence cons link external "https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/control-deployments" concat cons text "concurrencyとenvironmentは" cons ruby text "独立" text "どくりつ" nil cons text " であり、" cons ruby text "排他" text "はいた" cons text "を" cons ruby text "使" text "つか" cons text "わない" cons ruby text "別" text "べつ" cons text "writerまで" cons ruby text "保護" text "ほご" cons text "されない。" nil
+      cons "このため[単一/たんいつ]writer・journal・[公開/こうかい]identityを[合/あ]わせ、[不明時/ふめいじ]に[止/と]める[設計/せっけい]とした。"
+      cons sentence cons ruby text "通常" text "つうじょう" cons text "のActions artifactは " cons link external "https://docs.github.com/en/actions/how-tos/manage-workflow-runs/remove-workflow-artifacts" concat cons ruby text "期限切" text "きげんぎ" cons text "れやrun" cons ruby text "削除" text "さくじょ" cons text "で" cons ruby text "失" text "うしな" cons text "われる" nil cons text "。" nil
+      cons sentence cons link external "https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases" text "immutable release" cons text " のasset" cons ruby text "保護" text "ほご" cons text "を" cons ruby text "使" text "つか" cons text "いつつ、release" cons ruby text "全体" text "ぜんたい" cons text "の" cons ruby text "削除" text "さくじょ" cons text "や" cons ruby text "外部障害" text "がいぶしょうがい" cons text "まで" cons ruby text "防" text "ふせ" cons text "ぐ" cons ruby text "保証" text "ほしょう" cons text "はしない。" nil nil
+    cons paragraph
+      cons "Doc[監査/かんさ]は[全/ぜん]T21[完了/かんりょう]を[前提/ぜんてい]にせず、Docに[関係/かんけい]する[共通型/きょうつうがた]・wire・[意味/いみ]モデルを[確定/かくてい]する[前/まえ]の[設計作業/せっけいさぎょう]として[行/おこな]う。"
+      cons sentence cons ruby text "固定" text "こてい" cons text "baseline " cons code "25a096bc183c2b71200902884084cd4082d0aae3" cons text " の" cons ruby text "全" text "ぜん" cons text "124ファイルがinventoryで" cons ruby text "一度" text "いちど" cons text "ずつ" cons ruby text "分類" text "ぶんるい" cons text "されることを" cons ruby text "独立" text "どくりつ" cons text "に" cons ruby text "照合" text "しょうごう" cons text "した。" nil
+      cons "57 Markdownページ、10 Rust sourceと5[契約入力/けいやくにゅうりょく]のbyte[長/ちょう]・SHA-256がGitの[元/もと]blobと[一致/いっち]した。"
+      cons "root[入口/いりぐち]、GitHub checklist、[生成/せいせい]task/signature、[変化/へんか]するhistory README、[保存/ほぞん]byte[列/れつ]を[区別/くべつ]する。"
+      cons "[現在/げんざい]の[追加/ついか]・[変更/へんこう]をbaselineの[網羅性/もうらせい]と[取/と]り[違/ちが]えず、[移行時/いこうじ]には[最新/さいしん]の[監査/かんさ]を[要求/ようきゅう]する。"
+      cons "R014の[不足/ふそく]schemaとruntime[検証/けんしょう]はこの[棚卸/たなおろ]しだけでは[解消/かいしょう]しない。" nil
+    cons paragraph
+      cons sentence cons link relative "doc-inventory.md" none concat cons ruby text "具体的" text "ぐたいてき" cons text "な" cons ruby text "監査" text "かんさ" nil cons text " のDG01〜DG09を" cons ruby text "現行" text "げんこう" cons text "Docとmarkup" cons ruby text "契約" text "けいやく" cons text "へ" cons ruby text "照合" text "しょうごう" cons text "し、" cons ruby text "観測" text "かんそく" cons text "した" cons ruby text "表" text "ひょう" cons text "・list・link・code" cons ruby text "等" text "とう" cons text "と、" cons ruby text "観測" text "かんそく" cons text "0の" cons ruby text "将来候補" text "しょうらいこうほ" cons text "を" cons ruby text "区別" text "くべつ" cons text "した。" nil
+      cons "11 code block、695 inline code、204 link/image、278[見出/みだ]しの[範囲/はんい]が[元/もと]blobのUTF-8[境界内/きょうかいない]にあり、codeのraw[範囲/はんい]digestが[一致/いっち]することも[独立/どくりつ]に[確認/かくにん]した。"
+      cons "[裸/はだか]のgeneric[型/がた]がHTMLとして[読/よ]まれる4[箇所/かしょ]はinline codeへ[修正/しゅうせい]されている。" nil
+    cons paragraph
+      cons "[最終/さいしゅう]toolingの38 Rust[試験/しけん]を[独立/どくりつ]に[実行/じっこう]して[成功/せいこう]した。"
+      cons "ページの[欠落/けつらく]・digest/[構造/こうぞう]の[改変/かいへん]、[現在/げんざい]の[追加/ついか]・[変更/へんこう]・[削除/さくじょ]、[履歴不足/りれきふそく]、Gitのsymlink mode、[非通常/ひつうじょう]の[出力先/しゅつりょくさき]、[過大入力/かだいにゅうりょく]の[拒否/きょひ]を[含/ふく]む。"
+      cons sentence cons code "doc-inventory --check" cons text " は" cons ruby text "固定" text "こてい" cons text "baselineを" cons ruby text "再検証" text "さいけんしょう" cons text "して" cons ruby text "成功" text "せいこう" cons text "し、" cons code "--check-current" cons text " は" cons ruby text "現在" text "げんざい" cons text "との" cons ruby text "差分" text "さぶん" cons text "を" cons ruby text "表示" text "ひょうじ" cons text "して" cons ruby text "終了" text "しゅうりょう" cons text "コード1となった。" nil
+      cons "[後者/こうしゃ]は[意図/いと]した[拒否/きょひ]であり、[現在/げんざい]の[全/ぜん]ページを[監査済/かんさず]みとする[証拠/しょうこ]にはしていない。" nil
+    nil
+  cons section inlineProjection "Inline[投影/とうえい]の[欠落/けつらく]に[対/たい]する[追加/ついか]レビュー" body
+    cons paragraph
+      cons "R016は[旧/きゅう]Rust[抽出器/ちゅうしゅつき]を[独立/どくりつ]した[検証用/けんしょうよう]programから[呼/よ]んで[再現/さいげん]した。"
+      cons sentence cons ruby text "改行" text "かいぎょう" cons text "を" cons ruby text "含" text "ふく" cons text "むlink labelは" cons code "firstsecond" cons text "へ" cons ruby text "結合" text "けつごう" cons text "され、" cons code "# Energy $E=mc^2$" cons text "の" cons ruby text "見出" text "みだ" cons text "しは" cons code "Energy " cons text "へ、" cons ruby text "数式" text "すうしき" cons text "を" cons ruby text "含" text "ふく" cons text "むlinkも" cons ruby text "数式" text "すうしき" cons text "がないlabelへ" cons ruby text "変" text "か" cons text "わっていた。" nil
+      cons sentence cons link external "https://spec.commonmark.org/0.31.2/#soft-line-breaks" text "CommonMarkのsoft break" cons text " は" cons ruby text "区切" text "くぎ" cons text "りを" cons ruby text "残" text "のこ" cons text "し、" cons link external "https://spec.commonmark.org/0.31.2/#hard-line-breaks" text "hard break" cons text " はlink" cons ruby text "内" text "ない" cons text "でも" cons ruby text "改行" text "かいぎょう" cons text "として" cons ruby text "扱" text "あつか" cons text "う。" nil
+      cons "[数式/すうしき]payloadはparserのイベントに[存在/そんざい]しており、[欠落/けつらく]はinventory[側/がわ]の[処理/しょり]によるものだった。" nil
+    cons paragraph
+      cons "[訂正後/ていせいご]は[共通/きょうつう]の[投影/とうえい]でsoft breakをspace、hard breakをLFとし、[数式/すうしき]はinline/displayの[種類/しゅるい]とpayloadを[保持/ほじ]する。"
+      cons "[見出/みだ]し、link、[入/い]れ[子/こ]imageへ[同/おな]じtyped segmentをsource[範囲付/はんいつ]きで[反映/はんえい]する。"
+      cons "[脚注/きゃくちゅう]markerも[保存/ほぞん]し、[表示番号/ひょうじばんごう]を[推測/すいそく]しない。"
+      cons "HTMLは[別/べつ]のliteral[記録/きろく]に[残/のこ]す[方針/ほうしん]が[明記/めいき]されており、[要約文字列/ようやくもじれつ]だけでHTMLやstyleを[含/ふく]む[意味/いみ]の[完全同等性/かんぜんどうとうせい]を[判定/はんてい]できるとはしていない。" nil
+    cons paragraph
+      cons "45[件/けん]のRust[試験/しけん]を[独立実行/どくりつじっこう]し、CRLF・[補助平面文字/ほじょへいめんもじ]・[両/りょう]hard break[表記/ひょうき]・[両/りょう]math[種別/しゅべつ]・setext[見出/みだ]し・[入/い]れ[子/こ]image・code・[脚注/きゃくちゅう]の[回帰試験/かいきしけん]が[成功/せいこう]した。"
+      cons "[同/おな]じ57ページのbaselineからinventory schema /2を[生成/せいせい]したこと、[元/もと]page/Rust/[契約/けいやく]のidentityと[要素数/ようそすう]が[変/か]わらないこと、482のtyped segment[範囲/はんい]が[元/もと]blobのUTF-8[境界内/きょうかいない]にあることを[確認/かくにん]した。"
+      cons "これを[根拠/こんきょ]にR016をcorrectedとする。"
+      cons "R006/R009/R014と[処理系/しょりけい]・[移行/いこう]の[未実行範囲/みじっこうはんい]は[維持/いじ]する。" nil
+    nil
   nil
