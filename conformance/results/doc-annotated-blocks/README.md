@@ -67,6 +67,12 @@ inspect scripts or rerun the probes; fixed paths and tool installations in host
 scripts must be adapted to the local environment. Empty stdout/stderr files are
 preserved, not fabricated as nonempty acceptance logs.
 
+The `.fixture` files retain original CRLF, patch context whitespace and terminal
+log blank lines. Like the other evidence archives, their Git attributes disable
+text normalization and whitespace linting for those payloads only. The initial
+archive staging exposed these raw whitespace diagnostics; no payload bytes were
+normalized to silence them. Production source and tests retain normal linting.
+
 Author, independent design/code review, manuscript review, first failed checks
 and final root checks are separate owners. Their original manifests remain
 inside their payload groups. CI of the final PR head is an additional merge
