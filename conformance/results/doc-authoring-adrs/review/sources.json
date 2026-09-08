@@ -1,0 +1,98 @@
+[
+  {
+    "path": "doc/migration/authored/decisions/0001-repository-foundation.nepld",
+    "commit": "2f3026b2fcf60e3d93804a09593e15b8c24f3d19",
+    "sha256": "626bff12deac9e6b6eeccd980ceb79fd34a4414ad2be9634ffd8539886c89ef4",
+    "bytes": 7177
+  },
+  {
+    "path": "doc/decisions/0001-repository-foundation.md",
+    "commit": "67694208cc700042b5c7a6275d443b37eccaaaf7",
+    "sha256": "0ff43a492e9628c1542d764d06b465dc8bf8c9523b8400f96f3098dcbf61843e",
+    "bytes": 2505
+  },
+  {
+    "path": "doc/migration/authored/decisions/0002-design-contract-corrections.nepld",
+    "commit": "2f3026b2fcf60e3d93804a09593e15b8c24f3d19",
+    "sha256": "b397f6dd4867ef5c91b2686a20b2408d4788943739f3a54ed4cc479d45a3616f",
+    "bytes": 7453
+  },
+  {
+    "path": "doc/decisions/0002-design-contract-corrections.md",
+    "commit": "67694208cc700042b5c7a6275d443b37eccaaaf7",
+    "sha256": "49a991cda470fb6843145797116d02cbcb62728e2b0b8fc298793d6f51aee5a8",
+    "bytes": 3169
+  },
+  {
+    "path": "doc/migration/authored/decisions/0003-web-tea-doc-migration.nepld",
+    "commit": "2f3026b2fcf60e3d93804a09593e15b8c24f3d19",
+    "sha256": "12fc8089bfaffe25a1e5fefb3b3f418a8668c6caa36c7e091f396cf627e324b8",
+    "bytes": 8750
+  },
+  {
+    "path": "doc/decisions/0003-web-tea-doc-migration.md",
+    "commit": "67694208cc700042b5c7a6275d443b37eccaaaf7",
+    "sha256": "942d7be23f728b2c52234996e4ef706cfa018a7b582bb43093aa83673535ffa4",
+    "bytes": 3569
+  },
+  {
+    "path": "doc/migration/authored/decisions/0004-pages-recovery-doc-inventory.nepld",
+    "commit": "2f3026b2fcf60e3d93804a09593e15b8c24f3d19",
+    "sha256": "197435331edd5013d54f6259bcb162b20eb477d5345b08b253816738da522153",
+    "bytes": 6453
+  },
+  {
+    "path": "doc/decisions/0004-pages-recovery-doc-inventory.md",
+    "commit": "67694208cc700042b5c7a6275d443b37eccaaaf7",
+    "sha256": "1c9e68a9f23c704b925a0b7b117891cc127f2a12a8031a484857bcc5bf4581e6",
+    "bytes": 2640
+  },
+  {
+    "path": "doc/migration/authored/decisions/0005-foundation-runtime-contracts.nepld",
+    "commit": "2f3026b2fcf60e3d93804a09593e15b8c24f3d19",
+    "sha256": "3f45ee9e3cc0dd98f2721fbcf2f3bd6d5cfcb858b936aca9687152f5970f04d4",
+    "bytes": 4747
+  },
+  {
+    "path": "doc/decisions/0005-foundation-runtime-contracts.md",
+    "commit": "67694208cc700042b5c7a6275d443b37eccaaaf7",
+    "sha256": "c9e57e87206004a16088328b3cee9deccf84ac4117062275e8ed611e7dfadcb4",
+    "bytes": 2198
+  },
+  {
+    "path": "doc/migration/authored/decisions/0006-html-generation.nepld",
+    "commit": "2f3026b2fcf60e3d93804a09593e15b8c24f3d19",
+    "sha256": "60020db9b5bde75a57ec8c943862bc02a02e6d4074bfe83d77bdd758b5cfa10a",
+    "bytes": 3191
+  },
+  {
+    "path": "doc/decisions/0006-html-generation.md",
+    "commit": "67694208cc700042b5c7a6275d443b37eccaaaf7",
+    "sha256": "e4459f1be81146b8a6c5b75d82bdc24495172e9f501b4efeccf60cdf2ba8ef70",
+    "bytes": 1523
+  },
+  {
+    "path": "AGENTS.md",
+    "commit": "2f3026b2fcf60e3d93804a09593e15b8c24f3d19",
+    "sha256": "849027165216a9a3adcb22ef58a44bc698c83e1707d2aa0727a1b73105282236",
+    "bytes": 7613
+  },
+  {
+    "path": "doc/authoring.md",
+    "commit": "2f3026b2fcf60e3d93804a09593e15b8c24f3d19",
+    "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08",
+    "bytes": 6478
+  },
+  {
+    "path": "design/forms.json",
+    "commit": "2f3026b2fcf60e3d93804a09593e15b8c24f3d19",
+    "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693",
+    "bytes": 48673
+  },
+  {
+    "path": "languages/doc/syntax.neplg",
+    "commit": "2f3026b2fcf60e3d93804a09593e15b8c24f3d19",
+    "sha256": "c0dcfc3a2288ca53d62ff3c4042630726f87ec1b469379b263f83690ba1a01b8",
+    "bytes": 10108
+  }
+]

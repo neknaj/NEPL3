@@ -1,0 +1,9 @@
+# HTML先行利用と生成時KaTeX
+
+2026-09-07の直接指示により、4言語製品の最終範囲を保ったまま、文書HTMLを先行利用するT22〜T25を追加する。元のT10/T13全体依存を、Doc単独HTMLや表示用Mathの先行実装まで待たせる条件として使わない。既存parser・Doc処理・Math arenaを育て、toolsに別の利用者向け処理系を作らない。
+
+HTMLは生成環境でKaTeXを実行して完成HTMLとCSS/fontを配布する。CLIはhost、WebはWorkerを使用する。独立MathMLをfallbackとアクセシビリティ表現に残し、表示時の評価や閲覧時KaTeX実行を要求しない。このため10章のfont同梱禁止を訂正し、純粋Math→TeX backendを依存表へ追加した。空crateは作らない。
+
+CSSのclass化と自己完結previewを第一候補とし、script禁止・same-origin権限なしを維持する。独立レビューで確認したmaxExpandの例外分類、maxSizeのclamp、強制終了時の未観測Usage、doctype、CSP/CORSを17章へ反映した。局所renderer失敗と文書全体Stoppedを区別する。API/型/codecの具体化と実ブラウザ試験はH0〜H3の未完部分として残る。
+
+実装はメインagent、独立レビューはsubagentという最新の直接指示をAGENTS/CODEX/developmentへ反映する。補助指示書13節の以前の分担は再導入しない。T22〜T25や本判断の追加だけで、runtime受入・Pages公開・文書移行を完了しない。
