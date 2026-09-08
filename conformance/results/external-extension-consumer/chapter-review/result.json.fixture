@@ -1,0 +1,18 @@
+{
+  "result": "PASS",
+  "source_sha256": "d3ea5308c7d0d79d915e4c1fcbe971fb366f3ee1ebe5d7685dad5e0c8cb53a9a",
+  "draft_sha256": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa",
+  "blocks": 21,
+  "sentences": 52,
+  "inline_codes": [
+    "no_std + alloc",
+    "conformance/extensions/hello/",
+    "hello <name>",
+    "python tools/extensions/run.py"
+  ],
+  "ruby_occurrences": 324,
+  "unique_ruby": 227,
+  "literal_count": 65,
+  "prefix_sentence_count": 4,
+  "runtime_executed": false
+}

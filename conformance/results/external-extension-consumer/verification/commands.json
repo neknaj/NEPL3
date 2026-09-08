@@ -1,0 +1,51 @@
+[
+  {
+    "command": [
+      "python",
+      "-m",
+      "unittest",
+      "tools.extensions.test_run"
+    ],
+    "exit_code": 0,
+    "log": ".tmp/verification/verify-0.log",
+    "sha256": "e898a60721a2789def82f15a5cee3b528b3d0f17343ad76fb87a6f0fc44aa6c7"
+  },
+  {
+    "command": [
+      "python",
+      "tools/extensions/run.py",
+      "--output",
+      "dist/external-extension-6507b14"
+    ],
+    "exit_code": 0,
+    "log": ".tmp/verification/verify-1.log",
+    "sha256": "48be36eaff8c05cdb081abc7b5ae157dc368ae6018eae0e58c523ad20a4b93f6"
+  },
+  {
+    "command": [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "exit_code": 0,
+    "log": ".tmp/verification/verify-2.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "tasks",
+      "--check"
+    ],
+    "exit_code": 0,
+    "log": ".tmp/verification/verify-3.log",
+    "sha256": "0f1f5583b3183d623fc458e3cb69971ee0b4438e406005cb7f3862b3456cfab9"
+  }
+]

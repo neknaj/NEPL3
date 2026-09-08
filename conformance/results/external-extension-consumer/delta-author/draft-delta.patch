@@ -1,0 +1,51 @@
+diff --git a/doc/migration/authored/01-architecture.nepld b/doc/migration/authored/01-architecture.nepld
+index 363f1d8..4da7807 100644
+--- a/doc/migration/authored/01-architecture.nepld
++++ b/doc/migration/authored/01-architecture.nepld
+@@ -108,6 +108,13 @@ body
+         cons "[将来/しょうらい]のrepository[分割/ぶんかつ]を、[現在/げんざい]の[依存環境/いぞんかんきょう]へ[強制/きょうせい]しない。"
+         cons "[公開/こうかい]schemaと[操作/そうさ]の[単位/たんい]で、[実装/じっそう]を[交換/こうかん]できるようにする。"
+         nil
++      cons paragraph
++        cons sentence
++          cons ruby text "外部言語" text "がいぶげんご" cons text "の" cons ruby text "追加" text "ついか" cons text "でfoundation sourceを" cons ruby text "変更" text "へんこう" cons text "しない" cons ruby text "条件" text "じょうけん" cons text "と、repository" cons ruby text "分離前" text "ぶんりまえ" cons text "の" cons ruby text "実証" text "じっしょう" cons text "は "
++          cons link relative "22-external-extensions.md" none ruby text "外部拡張契約" text "がいぶかくちょうけいやく"
++          cons text " に" cons ruby text "従" text "したが" cons text "う。" nil
++        cons "[現時点/げんじてん]ではmonorepoを[維持/いじ]し、[独立/どくりつ]workspaceの[公開/こうかい]API[利用/りよう]から、[配布/はいふ]・provider・[互換性試験/ごかんせいしけん]へ[進/すす]む。"
++        nil
+       nil
+   cons section current_stage "[現在/げんざい]の[作業段階/さぎょうだんかい]"
+     body
+diff --git a/doc/migration/authored/11-conformance.nepld b/doc/migration/authored/11-conformance.nepld
+index 9e630ca..d584d1d 100644
+--- a/doc/migration/authored/11-conformance.nepld
++++ b/doc/migration/authored/11-conformance.nepld
+@@ -7,6 +7,16 @@ body
+       cons "[正例/せいれい]、[誤例/ごれい]、[境界/きょうかい]、[変換前後/へんかんぜんご]、[異/こと]なる[実装/じっそう]の[比較/ひかく]を[受入条件/うけいれじょうけん]とする。" nil
+     nil
+   cons section required "1. [必須/ひっす]の[試験群/しけんぐん]" body
++    cons list unordered
++      cons item none body cons paragraph
++        cons "X01: [外部/がいぶ]workspace/repositoryの[新言語/しんげんご]がfoundationを[変更/へんこう]せず[公開/こうかい]APIで[解析/かいせき]・schema・source/Origin・[診断/しんだん]を[扱/あつか]い、Rust/nativeとNDF/[実/じつ]process providerで[意味結果/いみけっか]・[失敗/しっぱい]・[停止/ていし]が[一致/いっち]する。"
++        cons "foundation[単独/たんどく]の[配布/はいふ]/build/test/conformanceとdomainへのproduction/build[逆依存不在/ぎゃくいぞんふざい]を[検査/けんさ]する。"
++        cons "[詳細/しょうさい]は22[章/しょう]。" nil nil
++      cons item none body cons paragraph
++        cons "X02: Rust source APIの[互換性/ごかんせい]とportable schema/signatureの[互換性/ごかんせい]を[独立/どくりつ]した[旧版/きゅうはん]consumer・[不正例/ふせいれい]・[互換更新/ごかんこうしん]で[検査/けんさ]する。"
++        cons "[単/たん]なるdigest[差分/さぶん]やpath[依存/いぞん]の[成功/せいこう]を[独立/どくりつ]リリース[検証/けんしょう]へ[読/よ]み[替/か]えない。"
++        cons "[詳細/しょうさい]は22[章/しょう]。" nil nil
++      nil
+     cons list unordered
+       cons item none body cons paragraph cons "G01: Grammar[自身/じしん]をseedで[読/よ]み、compileしたpackageとseedの[意味正規形/いみせいきけい]が[一致/いっち]。" nil nil
+       cons item none body cons paragraph cons "G02: declarative readerとRust direct readerの[結果/けっか]・[消費範囲/しょうひはんい]・viewが[一致/いっち]。" nil nil
+diff --git a/doc/migration/authored/guide/README.nepld b/doc/migration/authored/guide/README.nepld
+index b32abc3..e258002 100644
+--- a/doc/migration/authored/guide/README.nepld
++++ b/doc/migration/authored/guide/README.nepld
+@@ -47,6 +47,7 @@ body
+       cons item none body cons paragraph cons sentence cons link relative "progress/doc-runtime.md" none concat cons text "Doc runtime の" cons ruby text "実装範囲" text "じっそうはんい" cons text "と" cons ruby text "残" text "のこ" cons text "り" nil nil nil nil
+       cons item none body cons paragraph cons sentence cons link relative "progress/math-runtime.md" none concat cons text "Math runtime の" cons ruby text "実装範囲" text "じっそうはんい" cons text "と" cons ruby text "残" text "のこ" cons text "り" nil nil nil nil
+       cons item none body cons paragraph cons sentence cons link relative "spec/17-math-html.md" none concat cons text "Doc・MathのHTML" cons ruby text "生成" text "せいせい" cons text "と" cons ruby text "数式表示" text "すうしきひょうじ" nil nil nil nil
++      cons item none body cons paragraph cons sentence cons link relative "spec/22-external-extensions.md" none concat cons ruby text "外部言語" text "がいぶげんご" cons text "の" cons ruby text "追加" text "ついか" cons text "とrepository" cons ruby text "分離条件" text "ぶんりじょうけん" nil nil nil nil
+       nil
+     nil
+   cons section authority "[正本/せいほん]と[派生資料/はせいしりょう]" body

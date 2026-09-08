@@ -1,0 +1,32 @@
+{
+  "scope": "orchestration fault injection, not production Cargo execution",
+  "cases": [
+    {
+      "case": "duplicate_nepl_package",
+      "exception": "RuntimeError('unexpected or duplicate foundation packages')",
+      "record_result": "failed",
+      "foundation_unchanged": true,
+      "commands_recorded": 3,
+      "commands_attempted": 4,
+      "partial_timeout_log_present": false
+    },
+    {
+      "case": "changed_last_fingerprint",
+      "exception": "RuntimeError('foundation sources changed during extension execution')",
+      "record_result": "failed",
+      "foundation_unchanged": false,
+      "commands_recorded": 5,
+      "commands_attempted": 6,
+      "partial_timeout_log_present": false
+    },
+    {
+      "case": "timeout_stdout",
+      "exception": "TimeoutExpired(['cargo', '+1.97.0', 'test', '--locked'], 600)",
+      "record_result": "failed",
+      "foundation_unchanged": true,
+      "commands_recorded": 5,
+      "commands_attempted": 6,
+      "partial_timeout_log_present": true
+    }
+  ]
+}

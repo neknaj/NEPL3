@@ -1,0 +1,7 @@
+﻿#![no_std]
+extern crate alloc;
+/// Structural exchange helper; callers still own domain invariant checks.
+pub fn exchange(value: &nepl3_core::value::NdfValue, ty: &nepl3_core::schema::TypeDescriptor, registry: &nepl3_core::schema::SchemaRegistry, budget: &mut nepl3_core::budget::Budget) -> Result<nepl3_wire::StructuralValue, nepl3_wire::WireError> {
+ let bytes=nepl3_wire::encode_checked(value,ty,registry,budget)?;
+ nepl3_wire::decode_checked(&bytes,ty,registry,budget)
+}

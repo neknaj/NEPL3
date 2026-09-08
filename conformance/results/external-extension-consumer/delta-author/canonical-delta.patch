@@ -1,0 +1,39 @@
+diff --git a/doc/README.md b/doc/README.md
+index eafccf8..70e5aee 100644
+--- a/doc/README.md
++++ b/doc/README.md
+@@ -19,6 +19,7 @@ Docで例や解説を書く際は、[文書の執筆指針](authoring.md)のsent
+ 11. [Doc runtime の実装範囲と残り](progress/doc-runtime.md)
+ 12. [Math runtime の実装範囲と残り](progress/math-runtime.md)
+ 13. [Doc・MathのHTML生成と数式表示](spec/17-math-html.md)
++14. [外部言語の追加とrepository分離条件](spec/22-external-extensions.md)
+ 
+ ## 正本と派生資料
+ 
+diff --git a/doc/spec/01-architecture.md b/doc/spec/01-architecture.md
+index d0cafea..b27210f 100644
+--- a/doc/spec/01-architecture.md
++++ b/doc/spec/01-architecture.md
+@@ -103,6 +103,8 @@ dependency checkerはproduction・build依存を検査し、dev依存は別集
+ 
+ 単一repositoryでも各coreは独立して `check --no-default-features` できる。将来のrepository分割を今の依存環境に強制せず、公開schemaと操作の単位で実装を交換する。
+ 
++外部言語の追加でfoundation sourceを変更しない条件と、repository分離前の実証は [外部拡張契約](22-external-extensions.md) に従う。現時点ではmonorepoを維持し、独立workspaceの公開API利用から、配布・provider・互換性試験へ進む。
++
+ ## 現在の作業段階
+ 
+ 上記は目標構成。現在のworkspace memberはルートCargo.toml、実装状態はimplementation-status.jsonを正本とする。crateは責務を実装する段階で追加する。開発toolchainとMSRVの選定理由はdoc/development.md、リポジトリ整備の判断はdoc/decisions/0001-repository-foundation.mdを参照。
+diff --git a/doc/spec/11-conformance.md b/doc/spec/11-conformance.md
+index 797aa2c..b8f9d97 100644
+--- a/doc/spec/11-conformance.md
++++ b/doc/spec/11-conformance.md
+@@ -6,6 +6,9 @@
+ 
+ ## 1. 必須の試験群
+ 
++X01: 外部workspace/repositoryの新言語がfoundationを変更せず公開APIで解析・schema・source/Origin・診断を扱い、Rust/nativeとNDF/実process providerで意味結果・失敗・停止が一致する。foundation単独の配布/build/test/conformanceとdomainへのproduction/build逆依存不在を検査する。詳細は22章。
++X02: Rust source APIの互換性とportable schema/signatureの互換性を独立した旧版consumer・不正例・互換更新で検査する。単なるdigest差分やpath依存の成功を独立リリース検証へ読み替えない。詳細は22章。
++
+ G01: Grammar自身をseedで読み、compileしたpackageとseedの意味正規形が一致。
+ G02: declarative readerとRust direct readerの結果・消費範囲・viewが一致。
+ G03: 空反復、進捗なし再帰、未定義reader、shape衝突、provider署名違反を正しいcodeで拒否。

@@ -1,0 +1,11 @@
+﻿from pathlib import Path
+import subprocess,json,hashlib
+r=Path('.tmp/author-extension-deltas'); binary=Path('C:/projects/NEPL3-doc-annotated-markdown/.tmp/review-annotated-projection/target/debug/nepl3-tools.exe')
+results=[]
+for name,rel in [('guide','doc/migration/authored/guide/README.nepld'),('01','doc/migration/authored/01-architecture.nepld'),('11','doc/migration/authored/11-conformance.nepld')]:
+ src=Path(rel).resolve();out=(r/('output-'+name)).resolve();cmd=[str(binary),'doc-html','export',str(src),str(out)]
+ p=subprocess.run(cmd,capture_output=True,timeout=180)
+ raw=p.stdout+p.stderr;(r/(name+'.log')).write_bytes(raw)
+ results.append({'source':str(src),'command':cmd,'source_sha256':hashlib.sha256(src.read_bytes()).hexdigest(),'exit':p.returncode,'classification':'NeedsResolution after parse/lower' if b'NeedsResolution' in raw else 'HTML success' if p.returncode==0 else 'other failure','output_exists':out.exists()})
+(r/'runtime.json').write_text(json.dumps({'binary':str(binary),'binary_commit':'2e8fafa','binary_sha256':hashlib.sha256(binary.read_bytes()).hexdigest(),'results':results},indent=2),encoding='utf-8')
+print(json.dumps(results,indent=2))

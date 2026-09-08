@@ -1,0 +1,11 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "--manifest-path",
+    "conformance/extensions/hello/Cargo.toml"
+  ],
+  "exit_code": 0,
+  "test_source_sha256": "2b7960c0c06daa99f0e4f28ba01969eb272ab1046ac1c653cc6a44f988147ded"
+}

@@ -1,0 +1,10 @@
+--- 
++++ 
+@@ -47,6 +47,7 @@
+       cons item none body cons paragraph cons sentence cons link relative "progress/doc-runtime.md" none concat cons text "Doc runtime の" cons ruby text "実装範囲" text "じっそうはんい" cons text "と" cons ruby text "残" text "のこ" cons text "り" nil nil nil nil
+       cons item none body cons paragraph cons sentence cons link relative "progress/math-runtime.md" none concat cons text "Math runtime の" cons ruby text "実装範囲" text "じっそうはんい" cons text "と" cons ruby text "残" text "のこ" cons text "り" nil nil nil nil
+       cons item none body cons paragraph cons sentence cons link relative "spec/17-math-html.md" none concat cons text "Doc・MathのHTML" cons ruby text "生成" text "せいせい" cons text "と" cons ruby text "数式表示" text "すうしきひょうじ" nil nil nil nil
++      cons item none body cons paragraph cons sentence cons link relative "spec/22-external-extensions.md" none concat cons ruby text "外部言語" text "がいぶげんご" cons text "の" cons ruby text "追加" text "ついか" cons text "とrepository" cons ruby text "分離条件" text "ぶんりじょうけん" nil nil nil nil
+       nil
+     nil
+   cons section authority "[正本/せいほん]と[派生資料/はせいしりょう]" body

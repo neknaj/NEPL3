@@ -1,0 +1,40 @@
+{
+  "formal_structure": true,
+  "all_ordered_base_blocks_equal_original": true,
+  "block_count": 26,
+  "inline_codes": [
+    "no_std + alloc",
+    "conformance/extensions/hello/",
+    "hello <name>",
+    "python tools/extensions/run.py"
+  ],
+  "ruby_count": 324,
+  "ruby_kanji_only": true,
+  "prefix_text_ruby_audit": true,
+  "source_sha256": "d3ea5308c7d0d79d915e4c1fcbe971fb366f3ee1ebe5d7685dad5e0c8cb53a9a",
+  "draft_sha256": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa",
+  "original_unchanged_since_capture": true,
+  "counts_prefix": {
+    "Article": 1,
+    "leaf": 65,
+    "Body": 11,
+    "Section": 4,
+    "Paragraph": 20,
+    "Table": 1,
+    "AlignmentDefault": 2,
+    "SomeRow": 1,
+    "Row": 6,
+    "Sentence": 4,
+    "Text": 65,
+    "Ruby": 20,
+    "InlineCode": 4,
+    "List": 1,
+    "Ordered": 1,
+    "ListItem": 6,
+    "CheckNone": 6
+  },
+  "production_parser": false,
+  "html": false,
+  "independent_review": false,
+  "canonical_cutover": false
+}

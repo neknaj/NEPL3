@@ -1,0 +1,80 @@
+{
+  "scope": "Independent full chapter22 authoring review, structural evidence only",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 7613,
+      "sha256": "849027165216a9a3adcb22ef58a44bc698c83e1707d2aa0727a1b73105282236"
+    },
+    {
+      "path": "author-manifest.json",
+      "bytes": 1875,
+      "sha256": "657d81469a471966e628b162e01611da7d5e4ebe17c57c377b41d09cf69fc6f8"
+    },
+    {
+      "path": "authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "check.initial.py",
+      "bytes": 3862,
+      "sha256": "de99931ecc0232592437d3e75064a73ab4c08d8efa1ec8ec88a77d8a4fee3084"
+    },
+    {
+      "path": "check.log",
+      "bytes": 460,
+      "sha256": "a877d816849ce9d377b49e8a328c67c147c3aca1e03d6ecce5789a82a7cc1d67"
+    },
+    {
+      "path": "check.py",
+      "bytes": 4018,
+      "sha256": "fdb74e6c23f92f74d3dff97452e5997a7ecdd0ab19b0d1d92b66f7c220e1d971"
+    },
+    {
+      "path": "comparison.json",
+      "bytes": 15163,
+      "sha256": "72cadf5d89a26c5e0946ce64849e0545d00ed476035b86cd0d54c07f7a7d7693"
+    },
+    {
+      "path": "draft.nepld",
+      "bytes": 14506,
+      "sha256": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa"
+    },
+    {
+      "path": "forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "initial-helper-failure.txt",
+      "bytes": 288,
+      "sha256": "20f97508de7300e72bfc1b28b888fcfe8a91ebe29be3895be840a4b9922eb47c"
+    },
+    {
+      "path": "readings.json",
+      "bytes": 10975,
+      "sha256": "e3ba68f474a30d56e8eb36e251221035f02af67a481070f4efbd299eb8bc86f3"
+    },
+    {
+      "path": "record.md",
+      "bytes": 2913,
+      "sha256": "c90f99327d8bff5ef2de9338dae7cf97685f3f52a0cef1b6b06994b102cc1ebe"
+    },
+    {
+      "path": "result.json",
+      "bytes": 521,
+      "sha256": "836af7787f3867e5bef172192788c098ce6b626d60e4300939a435e70eabcb48"
+    },
+    {
+      "path": "source.md",
+      "bytes": 6403,
+      "sha256": "d3ea5308c7d0d79d915e4c1fcbe971fb366f3ee1ebe5d7685dad5e0c8cb53a9a"
+    },
+    {
+      "path": "structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    }
+  ]
+}

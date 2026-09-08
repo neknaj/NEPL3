@@ -1,0 +1,19 @@
+--- 
++++ 
+@@ -7,6 +7,16 @@
+       cons "[正例/せいれい]、[誤例/ごれい]、[境界/きょうかい]、[変換前後/へんかんぜんご]、[異/こと]なる[実装/じっそう]の[比較/ひかく]を[受入条件/うけいれじょうけん]とする。" nil
+     nil
+   cons section required "1. [必須/ひっす]の[試験群/しけんぐん]" body
++    cons list unordered
++      cons item none body cons paragraph
++        cons "X01: [外部/がいぶ]workspace/repositoryの[新言語/しんげんご]がfoundationを[変更/へんこう]せず[公開/こうかい]APIで[解析/かいせき]・schema・source/Origin・[診断/しんだん]を[扱/あつか]い、Rust/nativeとNDF/[実/じつ]process providerで[意味結果/いみけっか]・[失敗/しっぱい]・[停止/ていし]が[一致/いっち]する。"
++        cons "foundation[単独/たんどく]の[配布/はいふ]/build/test/conformanceとdomainへのproduction/build[逆依存不在/ぎゃくいぞんふざい]を[検査/けんさ]する。"
++        cons "[詳細/しょうさい]は22[章/しょう]。" nil nil
++      cons item none body cons paragraph
++        cons "X02: Rust source APIの[互換性/ごかんせい]とportable schema/signatureの[互換性/ごかんせい]を[独立/どくりつ]した[旧版/きゅうはん]consumer・[不正例/ふせいれい]・[互換更新/ごかんこうしん]で[検査/けんさ]する。"
++        cons "[単/たん]なるdigest[差分/さぶん]やpath[依存/いぞん]の[成功/せいこう]を[独立/どくりつ]リリース[検証/けんしょう]へ[読/よ]み[替/か]えない。"
++        cons "[詳細/しょうさい]は22[章/しょう]。" nil nil
++      nil
+     cons list unordered
+       cons item none body cons paragraph cons "G01: Grammar[自身/じしん]をseedで[読/よ]み、compileしたpackageとseedの[意味正規形/いみせいきけい]が[一致/いっち]。" nil nil
+       cons item none body cons paragraph cons "G02: declarative readerとRust direct readerの[結果/けっか]・[消費範囲/しょうひはんい]・viewが[一致/いっち]。" nil nil

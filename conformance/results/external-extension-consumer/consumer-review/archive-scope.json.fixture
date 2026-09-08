@@ -1,0 +1,6 @@
+{
+  "excluded_from_final_evidence": "initial/conformance/extensions/hello/target/**",
+  "reason": "Initial broad snapshot also copied author build cache. These binaries are not used by independent tests and are not part of the review source/log payload; all remain locally available. Original initial manifest preserved unchanged, including its cache hashes. Replay uses only its eight source/config files and the independent scripts.",
+  "excluded_entries": 939,
+  "excluded_bytes": 413896235
+}

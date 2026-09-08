@@ -1,0 +1,51 @@
+{
+  "base": "8808c491b98142b591bc787cda42809ac8147e86",
+  "foundation_unchanged_at": "782309899fdc55aa9db05588f8cc0d9316ee8738",
+  "binaries": [
+    {
+      "path": "C:\\projects\\NEPL3-source-reference-index\\.tmp\\review-external-extension-api\\target\\debug\\external-extension-audit.exe",
+      "bytes": 4977152,
+      "sha256": "aef2a88e1ac6ebbe9312eeca05ce334990414a64f1033ac1fb0cac6a2f4e28fa"
+    },
+    {
+      "path": "C:\\projects\\NEPL3-source-reference-index\\.tmp\\review-external-extension-api\\target-wasi\\wasm32-wasip2\\debug\\external-extension-audit.wasm",
+      "bytes": 35659996,
+      "sha256": "45f692e9b5e2e56080a9368a111964c7ea2957f984b5a9e88e93c53a263ee87e"
+    }
+  ],
+  "commands": [
+    {
+      "cwd": "external",
+      "command": "cargo run --locked --offline",
+      "result": "PASS",
+      "log": "probe-native.log"
+    },
+    {
+      "cwd": "external",
+      "command": "cargo run --locked --offline --target wasm32-wasip2",
+      "runner": "wasmtime run",
+      "result": "PASS",
+      "log": "probe-wasi.log"
+    },
+    {
+      "cwd": "external",
+      "command": "cargo test --locked --offline --test parse native_host",
+      "result": "6 PASS inherited tests",
+      "log": "external-host-native.log"
+    },
+    {
+      "cwd": "external",
+      "command": "cargo test --locked --offline --test reader_portable",
+      "result": "2 PASS inherited tests",
+      "log": "external-reader-portable.log"
+    },
+    {
+      "cwd": "external",
+      "command": "cargo check --locked --offline --lib --target thumbv6m-none-eabi",
+      "result": "PASS compile only",
+      "log": "external-thumb-check.log"
+    }
+  ],
+  "initial_lock": "Copied fixed repository Cargo.lock, initial cargo run --offline updated consumer lock; all later commands --locked. Consumer lock retained.",
+  "excluded": "probe-first.log/probe-first.rs contain reviewer API spelling errors, not production failures or successful execution."
+}

@@ -1,0 +1,32 @@
+{
+  "scope": "orchestration fault injection, not production Cargo execution",
+  "cases": [
+    {
+      "case": "duplicate_nepl_package",
+      "exception": null,
+      "record_result": "passed",
+      "foundation_unchanged": true,
+      "commands_recorded": 5,
+      "commands_attempted": 6,
+      "partial_timeout_log_present": false
+    },
+    {
+      "case": "changed_last_fingerprint",
+      "exception": null,
+      "record_result": "passed",
+      "foundation_unchanged": false,
+      "commands_recorded": 5,
+      "commands_attempted": 6,
+      "partial_timeout_log_present": false
+    },
+    {
+      "case": "timeout_stdout",
+      "exception": "TimeoutExpired(['cargo', '+1.97.0', 'test', '--locked'], 600)",
+      "record_result": "failed",
+      "foundation_unchanged": true,
+      "commands_recorded": 4,
+      "commands_attempted": 6,
+      "partial_timeout_log_present": false
+    }
+  ]
+}

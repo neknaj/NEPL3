@@ -1,0 +1,13 @@
+[package]
+name = "external-hello-language"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[dependencies]
+nepl3-core = { path = "C:/projects/NEPL3-external-extensions/crates/foundation/core" }
+nepl3-reader = { path = "C:/projects/NEPL3-external-extensions/crates/foundation/reader" }
+nepl3-engine = { path = "C:/projects/NEPL3-external-extensions/crates/foundation/engine" }
+nepl3-wire = { path = "C:/projects/NEPL3-external-extensions/crates/foundation/wire" }

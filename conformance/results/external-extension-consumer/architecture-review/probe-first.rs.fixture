@@ -1,0 +1,50 @@
+mod support;
+use support::*;
+use nepl3_core::{source::*,syntax::*,schema::*,value::*};
+use nepl3_engine::{parse::*,profile::*};
+use nepl3_reader::model::ReaderContext;
+use nepl3_wire::{foundation::FoundationCodec,environment::environment_digest};
+fn e(x:impl std::fmt::Debug)->String{format!("{x:?}")}
+fn main()->Result<(),String>{
+ let (mut package,registry)=fixture()?;
+ package.forms[0].spelling="declare".into();
+ let mut b=budget();
+ let identity=package.check(&registry,&mut b).map_err(e)?.semantic_identity(&mut b).map_err(e)?;
+ let foundation=registry.selected("nepl3.foundation",1).ok_or("foundation")?.clone();
+ let profile=ParseProfile{id:"external-independent".into(),languages:vec![LanguageRegistration{alias:"AuditExternal".into(),package:identity,default_category:"Expr".into()}],schemas:vec![package.schema.clone(),foundation.clone(),registry.selected("nepl3.reader",1).ok_or("reader")?.clone(),registry.selected("nepl3.engine",1).ok_or("engine")?.clone()],category_modes:vec![],head_providers:vec![],providers:vec![],allowlist:vec![],resources:vec![],limits:budget().limits()};
+ let packages=[&package];
+ let resolved=profile.resolve(&RuntimeCatalog{packages:&packages,providers:&[],resources:&[]},&registry,&mut b).map_err(e)?;
+ let input="declare alpha beta";
+ let source=SourceSnapshot::new(SourceId("external-input".into()),7,"memory:external".into(),input.as_bytes().to_vec(),&mut b).map_err(e)?;
+ let mut store=SourceStore::default();store.insert(source.clone()).map_err(e)?;
+ let env=Environment{bindings:vec![],resources:vec![]};
+ let digest=environment_digest(&env,&foundation,&registry,&mut b).map_err(e)?;
+ let context=ReaderContext{schema:package.schema.clone(),category:"Expr".into(),mode:"Code".into(),origins:vec![],environment:EnvironmentEntry{id:0,digest,value:env}};
+ let mut admission=SourceAdmission::default();
+ let mut codec=FoundationCodec::new(&registry,&store,&mut admission).map_err(e)?;
+ let context=context.check(&mut codec,&store,&registry,&mut b).map_err(e)?;
+ let envs=ParseEnvironmentSet::prepare(&resolved,&[EnvironmentInput{alias:"AuditExternal",context:&context}],&store,&mut codec,&mut b).map_err(e)?;
+ let entry=resolved.entry("AuditExternal",None,&mut b).map_err(e)?;
+ let mut session=ParseSession::new("external-operation".into(),&resolved,&envs,&mut b).map_err(e)?;
+ let mut runtime_admission=SourceAdmission::default();
+ let reply=session.read(ParseRequest{snapshot:&source,start:0,limit:input.len() as u64,final_input:true,entry:&entry,states:&[LanguageReaderState{alias:"AuditExternal".into(),state:NdfValue::Unit}]},&store,&mut budget(),&mut runtime_admission).map_err(e)?;
+ let ParseOutcome::Complete{tree,..}=reply.outcome else{return Err(format!("not complete: {:?}",reply.outcome))};
+ assert!(reply.report.diagnostics.is_empty());
+ assert_eq!(tree.bundle.nodes.len(),3);
+ assert_eq!(tree.bundle.nodes[tree.bundle.root.0 as usize].kind,"Form:Let");
+ assert_eq!(tree.bundle.nodes[tree.bundle.root.0 as usize].head.as_ref().ok_or("head")?.end,7);
+ assert_eq!(tree.bundle.sources[0].id.revision,7);
+ let value=nepl3_engine::portable::tree::to_value(&tree,&resolved,&mut codec,&mut budget()).map_err(e)?;
+ let expected=TypeDescriptor::Named(TypeRef{package:"nepl3.engine".into(),revision:1,name:"ParseTree".into()});
+ let bytes=nepl3_wire::encode_checked(&value,&expected,&registry,&mut budget()).map_err(e)?;
+ let decoded=nepl3_wire::decode_checked(&bytes,&expected,&registry,&mut budget()).map_err(e)?;
+ let restored=nepl3_engine::portable::tree::from_value(decoded.value(),&resolved,&mut codec,&mut budget()).map_err(e)?;
+ let again=nepl3_engine::portable::tree::to_value(&restored,&resolved,&mut codec,&mut budget()).map_err(e)?;
+ assert_eq!(bytes,nepl3_wire::encode_checked(&again,&expected,&registry,&mut budget()).map_err(e)?);
+ let wrong=TypeDescriptor::Text;
+ assert!(nepl3_wire::decode_checked(&bytes,&wrong,&registry,&mut budget()).is_err());
+ let bad=OperationRef{schema:package.schema.clone(),name:"not-registered".into()};
+ assert!(registry.operation(&bad).is_err());
+ println!("PASS external native prefix parse; source/revision/head/diagnostics; checked NDF tree roundtrip; wrong type and unknown operation rejected; wire bytes={}",bytes.len());
+ Ok(())
+}

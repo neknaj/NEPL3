@@ -1,0 +1,425 @@
+{
+  "design": "nepl3-design-2026-09-06-r4",
+  "tasks": [
+    {
+      "id": "T01",
+      "title": "共通モデルとsource契約",
+      "depends_on": [],
+      "acceptance": [
+        "E01",
+        "E03",
+        "E04",
+        "A04"
+      ],
+      "deliverable": "Doc関連の公開型・wire・意味モデルを確定する前に、固定baselineの全文書inventoryとgap reportを確認して必要表現を設計する。この早期監査はT21やbackend完成に依存しない。source/schema/diagnostic/origin/budgetとNDFに対応する型を実装。UTF-8境界とsnapshot不一致を拒否する。",
+      "spec": "doc/spec/02-foundation.md"
+    },
+    {
+      "id": "T02",
+      "title": "NDF codecとportable契約",
+      "depends_on": [
+        "T01"
+      ],
+      "acceptance": [
+        "W01"
+      ],
+      "deliverable": "Doc関連の公開型・wire・意味モデルを確定する前に、固定baselineの全文書inventoryとgap reportを確認して必要表現を設計する。この早期監査はT21やbackend完成に依存しない。全tag、canonical integer/rational、schema validation、参照検査を実装。",
+      "spec": "doc/spec/09-portability.md"
+    },
+    {
+      "id": "T03",
+      "title": "Readerと拡張provider",
+      "depends_on": [
+        "T01"
+      ],
+      "acceptance": [
+        "G02",
+        "G03",
+        "G04"
+      ],
+      "deliverable": "全ReaderExprとtransaction、NeedMore、Failed、Awaitを実装する。",
+      "spec": "doc/spec/03-reader.md"
+    },
+    {
+      "id": "T04",
+      "title": "共通prefix parser",
+      "depends_on": [
+        "T03"
+      ],
+      "acceptance": [
+        "P01",
+        "P02",
+        "P03",
+        "P04"
+      ],
+      "deliverable": "contextごとのtokenizer/shape/既読child transitionとRecover treeを実装。",
+      "spec": "doc/spec/02-foundation.md"
+    },
+    {
+      "id": "T05",
+      "title": "Grammar compilerとbootstrap",
+      "depends_on": [
+        "T04"
+      ],
+      "acceptance": [
+        "G01",
+        "G03"
+      ],
+      "deliverable": "全Grammar constructorのcheck/compileとseed再生成一致を実装。",
+      "spec": "doc/spec/04-grammar.md"
+    },
+    {
+      "id": "T06",
+      "title": "束縛と汎用editor query",
+      "depends_on": [
+        "T05"
+      ],
+      "acceptance": [
+        "E01",
+        "E02",
+        "E03",
+        "E04",
+        "E05"
+      ],
+      "deliverable": "BindingPlan、Entity/Occurrence、highlight/definition/references/rename/completionを実装。",
+      "spec": "doc/spec/08-editor.md"
+    },
+    {
+      "id": "T07",
+      "title": "Doc意味モデルとsentence reader",
+      "depends_on": [
+        "T04"
+      ],
+      "acceptance": [
+        "D01",
+        "D02",
+        "D03",
+        "D04"
+      ],
+      "deliverable": "Doc関連の公開型・wire・意味モデルを確定する前に、固定baselineの全文書inventoryとgap reportを確認して必要表現を設計する。この早期監査はT21やbackend完成に依存しない。literalとprefixの等価性、再帰paragraph、parallel、articleラベルを実装。",
+      "spec": "doc/spec/05-document.md"
+    },
+    {
+      "id": "T08",
+      "title": "Math意味モデルと厳密計算",
+      "depends_on": [
+        "T04"
+      ],
+      "acceptance": [
+        "M01",
+        "M02",
+        "M03"
+      ],
+      "deliverable": "全constructor、exact/symbolic、source式の保持とbindingを実装。",
+      "spec": "doc/spec/06-math.md"
+    },
+    {
+      "id": "T09",
+      "title": "Circuit checkerと実行",
+      "depends_on": [
+        "T04"
+      ],
+      "acceptance": [
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "C05",
+        "C06"
+      ],
+      "deliverable": "階層展開、正確なcausal graph、同時更新、NOR loweringと独立evaluatorを実装。",
+      "spec": "doc/spec/07-circuit.md"
+    },
+    {
+      "id": "T10",
+      "title": "安全な出力backend",
+      "depends_on": [
+        "T07",
+        "T08",
+        "T09",
+        "T24"
+      ],
+      "acceptance": [
+        "D05",
+        "M04"
+      ],
+      "deliverable": "typed Markup、HTML/MathML/SVGの全constructor coverageとorigin linkを実装。 17章に従い純粋Math→TeXと独立MathML、KaTeX返信の専用Markup検査、全constructorの忠実性・fallbackを実装する。",
+      "spec": "doc/spec/10-integration.md"
+    },
+    {
+      "id": "T11",
+      "title": "Suiteと埋め込みbridge",
+      "depends_on": [
+        "T05",
+        "T06",
+        "T10",
+        "T24"
+      ],
+      "acceptance": [
+        "P02",
+        "E06"
+      ],
+      "deliverable": "標準profile、operation dispatch、foreign requirements、environment projectionを実装。 17章の生成policy・完全identity・診断付きMathML fallbackをhost呼出しと接続し、Stoppedを成功へ変更しない。",
+      "spec": "doc/spec/10-integration.md"
+    },
+    {
+      "id": "T12",
+      "title": "別process provider",
+      "depends_on": [
+        "T02",
+        "T11"
+      ],
+      "acceptance": [
+        "G05",
+        "W02",
+        "W03"
+      ],
+      "deliverable": "framing、schema交渉、Await/resume、cancelとnative経路比較を実装。",
+      "spec": "doc/spec/09-portability.md"
+    },
+    {
+      "id": "T13",
+      "title": "Native/WASI CLI",
+      "depends_on": [
+        "T11",
+        "T12",
+        "T23",
+        "T24"
+      ],
+      "acceptance": [
+        "A02",
+        "A03",
+        "A04"
+      ],
+      "deliverable": "仕様の全CLI command、exit code、stdout/stderr分離を実装。 Doc/Math HTMLは17章のhost生成KaTeX優先/MathMLのみを選択でき、完成HTML・同版CSS/fontを出力する。",
+      "spec": "doc/spec/10-integration.md"
+    },
+    {
+      "id": "T14",
+      "title": "汎用LSP serverとeditor接続",
+      "depends_on": [
+        "T06",
+        "T11"
+      ],
+      "acceptance": [
+        "E01",
+        "E02",
+        "E03",
+        "E04",
+        "E05"
+      ],
+      "deliverable": "language packageの追加だけで標準機能を利用できる接続、encoding/legend変換を実装。",
+      "spec": "doc/spec/08-editor.md"
+    },
+    {
+      "id": "T15",
+      "title": "Browser workerとWasm API",
+      "depends_on": [
+        "T11",
+        "T02",
+        "T25"
+      ],
+      "acceptance": [
+        "A02",
+        "A03",
+        "E04"
+      ],
+      "deliverable": "suiteの同じ操作をWasmで呼び、cancel/stale revisionを処理する。 17章のKaTeX renderToStringをbrowser WorkerのJS adapterで実行し、版・macro・資源を固定して検査済みartifactを返す。",
+      "spec": "doc/spec/10-integration.md"
+    },
+    {
+      "id": "T16",
+      "title": "全体受入・CI",
+      "depends_on": [
+        "T13",
+        "T14",
+        "T15",
+        "T20",
+        "T21",
+        "T25",
+        "T26"
+      ],
+      "acceptance": [
+        "A01",
+        "A02",
+        "A03",
+        "A04",
+        "W02",
+        "E05"
+      ],
+      "deliverable": "登録された全必須受入群、cross-target、Web/Pages、Doc移行、fuzz、依存・生成差分・coverageを実行する。群数の固定値に依存せずdesign/acceptance.jsonを検査する。",
+      "spec": "doc/spec/11-conformance.md"
+    },
+    {
+      "id": "T17",
+      "title": "純粋TEA UI coreと操作境界",
+      "depends_on": [
+        "T01",
+        "T02",
+        "T25"
+      ],
+      "acceptance": [
+        "U01",
+        "U02",
+        "U03",
+        "U04",
+        "U07",
+        "U08"
+      ],
+      "deliverable": "nepl3-ui-coreのModel/Msg/update/viewと型付きCmdを、関連する操作schema・codecの具体化と並行して実装する。R006/R009の関連課題を解消し、公開契約を確定する前に純粋性・epoch/request/snapshot照合・失敗状態を検証する。",
+      "spec": "doc/spec/14-web-ui.md"
+    },
+    {
+      "id": "T18",
+      "title": "4言語playgroundと共通editor",
+      "depends_on": [
+        "T15",
+        "T17",
+        "T25"
+      ],
+      "acceptance": [
+        "U02",
+        "U03",
+        "U04",
+        "U05",
+        "U06",
+        "U07",
+        "U08",
+        "S03",
+        "S05"
+      ],
+      "deliverable": "4言語のeditor・操作選択・診断・previewとGrammar生成DSL editorを共通engineに接続。IME/undo、Worker停止、stale結果、入力保護とpreview隔離を検証する。 17章のKaTeX優先/MathMLのみ設定、asset診断、同一生成artifactのscript禁止previewと書出しを実装する。",
+      "spec": "doc/spec/14-web-ui.md"
+    },
+    {
+      "id": "T19",
+      "title": "文書・例・参照の静的サイト",
+      "depends_on": [],
+      "acceptance": [
+        "S01",
+        "S02",
+        "S04"
+      ],
+      "deliverable": "runtime/UIなしでbuildできるdocs-only静的サイト・4言語tutorial/reference・正本由来例manifest・rustdoc入口・SiteConfig/registryを実装。既存Markdown生成器を用い、実装のないPlayground/Wasmは能力状態で明示する。完全なinteractive版の受入はT20で統合する。 17章のKaTeX CSS/fontの同版・同artifact配布、相対path・digest・licenseを検査する。",
+      "spec": "doc/spec/15-site.md"
+    },
+    {
+      "id": "T20",
+      "title": "Web全体受入とGitHub Pages配布",
+      "depends_on": [
+        "T15",
+        "T18",
+        "T19"
+      ],
+      "acceptance": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S06"
+      ],
+      "deliverable": "T19の静的サイトへ同じcheckoutのUI/Wasm/Workerを統合し、全必須Web受入を実browserで実行。同じ検査済みartifactをPagesへ直列配布し、公開HTTPSとidentityを照合する。公開smoke失敗時のLKG永続保存・同一writer排他・identity条件付き1回復旧・再smoke・初回/復旧不能状態と元run失敗保持を実装し、S06で検証する。 17章の実Worker生成とfallback、3 browserでの隔離preview、同artifact書出し、JavaScript無効の書出済みHTML表示とasset検査も実行する。",
+      "spec": "doc/spec/15-site.md"
+    },
+    {
+      "id": "T21",
+      "title": "正式文書のNEPL3 Doc DSL移行",
+      "depends_on": [
+        "T24",
+        "T19"
+      ],
+      "acceptance": [
+        "J01",
+        "J02",
+        "J03",
+        "J04",
+        "D01",
+        "D05"
+      ],
+      "deliverable": "T01/T02/T07のDoc設計前に用意した固定baseline inventoryとgap reportを再検査・更新し、不足表現のschema・wire・backend・conformanceを完成させてからページ単位でDocへ損失なく移す。一正本、安定URL/anchor、例byte列、再現可能buildとbootstrap回避を検証し、Markdown二重保守を終了する。早期監査だけでR014解消やT21完了にしない。 T23で表現可能なページから準備し、数式ページはT24の実経路を用いてspec等の正本を.nepldへ移す。Math評価やCircuit全体完成を移行開始の前提にしない。",
+      "spec": "doc/spec/16-doc-migration.md"
+    },
+    {
+      "id": "T22",
+      "title": "H0: HTML公開契約の整合",
+      "depends_on": [],
+      "acceptance": [
+        "D05",
+        "M04",
+        "A01"
+      ],
+      "deliverable": "既存foundation/Doc/Mathの実APIを検証して再利用し、文書check/prepare、Doc要素のtyped markup、URI/asset、renderer capability、17章の失敗・資源・CSP契約を具体化する。型・codec・不変条件を対応させ、型名の解決だけで完了しない。",
+      "spec": "doc/spec/18-html-delivery.md"
+    },
+    {
+      "id": "T23",
+      "title": "H1: Doc単独HTMLの実経路",
+      "depends_on": [
+        "T22"
+      ],
+      "acceptance": [
+        "D05",
+        "E01",
+        "A01"
+      ],
+      "deliverable": "既存parser/lower::document/labelsを使い、完全な文書prepare、明示page/asset、markup/doc-html、安全なserializer、suiteとapps/cliの実入口を実装する。実文書の表/list/link/image/Ruby/Anno/Parallelをbrowserで検証し、未対応embedを型付き拒否する。",
+      "spec": "doc/spec/18-html-delivery.md"
+    },
+    {
+      "id": "T24",
+      "title": "H2: Mathを含む生成済みHTML",
+      "depends_on": [
+        "T23"
+      ],
+      "acceptance": [
+        "D05",
+        "M04",
+        "E06",
+        "A01"
+      ],
+      "deliverable": "Math表示用構造とbinding、独立MathML、純粋TeX、Node host KaTeXを接続し、実NEPL3入力から数式HTMLとassetを生成する。忠実性・式別backend・診断付きfallback・provider違反・Stopped・CSP・資源予約精算を検証する。Math evaluateやCircuit全体の完成を前提にしない。",
+      "spec": "doc/spec/18-html-delivery.md"
+    },
+    {
+      "id": "T25",
+      "title": "H3: Web生成・隔離preview・export",
+      "depends_on": [
+        "T24"
+      ],
+      "acceptance": [
+        "U01",
+        "U02",
+        "U03",
+        "U04",
+        "U07",
+        "U08",
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05"
+      ],
+      "deliverable": "同じsuite/markupを使う純粋TEA、Wasm、言語Workerとoptional KaTeX Worker、script/same-origin権限なしpreview、同artifact exportを実装する。Node/実Worker比較、3 browserでCSP/font/旧返信/停止/JS無効の書出文書/視覚・アクセシビリティを検証する。4言語UI全体やPages公開済みとは扱わない。",
+      "spec": "doc/spec/18-html-delivery.md"
+    },
+    {
+      "id": "T26",
+      "title": "External language contracts and extraction conformance",
+      "depends_on": [
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T05",
+        "T12"
+      ],
+      "acceptance": [
+        "X01",
+        "X02"
+      ],
+      "deliverable": "Implement the staged public API consumer, foundation-only distribution, portable package/Profile loading, external operation provider comparison, and separate Rust API/schema compatibility tests in spec22. Preserve Doc/HTML progress independently. Do not claim extraction readiness from a path-dependent consumer alone.",
+      "spec": "doc/spec/22-external-extensions.md"
+    }
+  ]
+}
