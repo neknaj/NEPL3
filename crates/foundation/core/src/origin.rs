@@ -244,12 +244,14 @@ pub struct SourceMap {
 /// Borrowed proof of source geometry and an acyclic pointwise mapping relation.
 pub struct ValidatedSourceMap<'a> {
     mappings: &'a [Mapping],
+    additional: &'a [Mapping],
 }
 impl SourceMap {
     /// Borrows a mapping table whose entries were admitted through `insert`.
     pub fn validated(&self) -> ValidatedSourceMap<'_> {
         ValidatedSourceMap {
             mappings: &self.mappings,
+            additional: &[],
         }
     }
     pub fn validate_mappings<'a>(
@@ -257,8 +259,23 @@ impl SourceMap {
         sources: &SourceStore,
         budget: &mut Budget,
     ) -> Result<ValidatedSourceMap<'a>, OriginError> {
+        Self::validate_mapping_parts(mappings, &[], sources, budget)
+    }
+    /// Validate the full ordered union of two borrowed tables without cloning
+    /// mappings or their source identities. Neither part is assumed valid:
+    /// source geometry and cycles spanning both parts are checked together.
+    pub fn validate_mapping_parts<'a>(
+        mappings: &'a [Mapping],
+        additional: &'a [Mapping],
+        sources: &SourceStore,
+        budget: &mut Budget,
+    ) -> Result<ValidatedSourceMap<'a>, OriginError> {
         budget.charge(Resource::Work, 1)?;
-        for mapping in mappings {
+        let mapped = ValidatedSourceMap {
+            mappings,
+            additional,
+        };
+        for mapping in mapped.iter() {
             budget.charge(Resource::Work, 1)?;
             let source = sources
                 .get_ref(mapping.source.snapshot_ref())
@@ -275,11 +292,14 @@ impl SourceMap {
                 }
             }
         }
-        check_map_cycles(mappings.iter(), budget)?;
-        Ok(ValidatedSourceMap { mappings })
+        check_map_cycles(mapped.iter(), budget)?;
+        Ok(mapped)
     }
 }
 impl ValidatedSourceMap<'_> {
+    fn iter(&self) -> impl Iterator<Item = &Mapping> + Clone {
+        self.mappings.iter().chain(self.additional)
+    }
     /// Rechecks the declaration closure when this proof is reused with another source store.
     pub fn validate_sources(
         &self,
@@ -287,7 +307,7 @@ impl ValidatedSourceMap<'_> {
         budget: &mut Budget,
     ) -> Result<(), OriginError> {
         budget.charge(Resource::Work, 1)?;
-        for mapping in self.mappings {
+        for mapping in self.iter() {
             for span in [&mapping.source, &mapping.target] {
                 budget.charge(Resource::Work, 1)?;
                 sources
@@ -321,7 +341,7 @@ impl ValidatedSourceMap<'_> {
                     continue;
                 }
                 let mut found = false;
-                for mapping in self.mappings {
+                for mapping in self.iter() {
                     budget.charge(Resource::Work, 1)?;
                     if !point_on(current, &mapping.target) {
                         continue;
