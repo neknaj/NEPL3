@@ -1,0 +1,10 @@
+{
+  "invalid_cases": 219,
+  "old_schema_rejected": true,
+  "stops": 18,
+  "successes": 6,
+  "cases": 48,
+  "native_wasi_all_fields_equal": true,
+  "source_files": 2283,
+  "source_changes": []
+}

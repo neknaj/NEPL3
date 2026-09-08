@@ -1,0 +1,50 @@
+[
+  {
+    "command": [
+      "cargo",
+      "build",
+      "--offline",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-html-anchor-identifiers\\probe\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-html-anchor-identifiers\\target",
+      "--bin",
+      "allocation-guard"
+    ],
+    "exit": 0,
+    "deadline": 180
+  },
+  {
+    "command": [
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-html-anchor-identifiers\\guard-native.exe"
+    ],
+    "exit": 0,
+    "deadline": 30
+  },
+  {
+    "command": [
+      "cargo",
+      "build",
+      "--offline",
+      "--manifest-path",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-html-anchor-identifiers\\probe\\Cargo.toml",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-html-anchor-identifiers\\target",
+      "--bin",
+      "allocation-guard",
+      "--target",
+      "wasm32-wasip2"
+    ],
+    "exit": 0,
+    "deadline": 180
+  },
+  {
+    "command": [
+      "wasmtime",
+      "run",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-html-anchor-identifiers\\guard-wasi.wasm"
+    ],
+    "exit": 0,
+    "deadline": 30
+  }
+]

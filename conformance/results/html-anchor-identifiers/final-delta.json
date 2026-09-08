@@ -1,0 +1,14 @@
+[
+  {
+    "path": "crates/output/markup/src/html/serialize.rs",
+    "sha256": "6cafc9b897a921ba825da8b0f0f94a63e592d0e38f07f5d56e7263ce2bcb4878"
+  },
+  {
+    "path": "doc/spec/19-html-fragment.md",
+    "sha256": "1ef8b987603ce307f0622f3bb7ce19bdd8f7f94b78b34dfb8f8784e17e2022bf"
+  },
+  {
+    "path": "AGENTS.md",
+    "sha256": "849027165216a9a3adcb22ef58a44bc698c83e1707d2aa0727a1b73105282236"
+  }
+]

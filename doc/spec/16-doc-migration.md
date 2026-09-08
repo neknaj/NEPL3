@@ -30,6 +30,13 @@ inventoryとgap auditはT21まで延期せず、Docに関係するT01の共通�
 
 ## 3. ページ単位の切替
 
+移行原稿は [執筆指針](../authoring.md) に従う。本文は著者が定めた文単位のSentenceを
+保ち、Text・Ruby・Annoだけで表せる文はsentence literal、参照・強調・code・break等を
+含む文は明示的なsentence構築を選ぶ。日本語Rubyは漢字部分、語句全体の訳注はAnnoへ
+置き、多言語の対応は文単位のparallelにする。変換器が段落を一つのSentenceへまとめた
+候補は、対応単位を確認するまで正本にしない。句点だけによる自動分割や、互換出力の
+未対応を理由とした注釈・Sentence境界の削除で移行を通さない。
+
 1. inventoryとgap auditを承認可能な差分として作り、変換元のcommit・path・byte digestを固定する。
 2. parser/meaning/backendの不足を埋め、失敗系・roundtrip・wire・表示の受入を実行する。
 3. 同一page IDとURLを持つDoc sourceを生成・編集し、内容の落ち、表の対応、リンク、anchor、コードbyte列、数式構造、図の説明を独立に比較する。

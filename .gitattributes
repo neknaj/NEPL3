@@ -40,6 +40,7 @@ dist/** export-ignore
 /conformance/results/doc-projection/** -text -whitespace
 /conformance/results/doc-external/** -text -whitespace
 /conformance/results/doc-markdown-breaks/** -text -whitespace
+/conformance/results/html-anchor-identifiers/** -text -whitespace
 /conformance/results/doc-markdown-code/** -text -whitespace
 
 /conformance/results/doc-proof-reuse/** -text -whitespace
