@@ -126,10 +126,12 @@ fn grouped(
                 .map_err(err)
             },
         )?;
+        let registration_bytes = page.id.len() + page.projection.len() * 2;
+        charge(budget, Resource::Work, registration_bytes)?;
         charge(
             budget,
             Resource::AllocationUnits,
-            page.id.len() + page.projection.len() * 2 + core::mem::size_of::<PageDocument>(),
+            registration_bytes + core::mem::size_of::<PageDocument>(),
         )?;
         pages.push(PageDocument {
             registration: PageRegistration {
@@ -289,6 +291,7 @@ pub(super) fn generate_from_registry(
             return Err("canonical per-page OutputLimit".into());
         }
         charge(budget, Resource::OutputBytes, text.len())?;
+        charge(budget, Resource::Work, page.projection.len())?;
         charge(
             budget,
             Resource::AllocationUnits,

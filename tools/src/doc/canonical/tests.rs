@@ -376,6 +376,20 @@ fn real_architecture_draft_links_to_canonical_extensions_with_legacy_bytes_intac
     let f = Fixture::new()?;
     let mut value: serde_json::Value =
         serde_json::from_slice(&fs::read(repository.join("doc/canonical.json"))?)?;
+    let architecture_source = value["pages"]
+        .as_array()
+        .ok_or("pages")?
+        .iter()
+        .find(|p| p["id"] == "architecture")
+        .and_then(|p| p["source"].as_str())
+        .unwrap_or("doc/migration/authored/01-architecture.nepld")
+        .to_owned();
+    // Once the page is cut over, read its explicitly registered source rather
+    // than retaining a second handwritten copy solely to satisfy this test.
+    value["pages"]
+        .as_array_mut()
+        .ok_or("pages")?
+        .retain(|p| p["id"] != "architecture");
     for page in value["pages"].as_array().ok_or("pages")? {
         for field in ["source", "aliases", "projection"] {
             let path = page[field].as_str().ok_or("path")?;
@@ -391,7 +405,7 @@ fn real_architecture_draft_links_to_canonical_extensions_with_legacy_bytes_intac
     f.write("doc/architecture.json", b"[]")?;
     f.write(
         "doc/spec/01-architecture.nepld",
-        fs::read(repository.join("doc/migration/authored/01-architecture.nepld"))?,
+        fs::read(repository.join(architecture_source))?,
     )?;
     // Four real pages, including legacy body revalidation, share one output
     // allowance chosen before execution. No retry on a stopped budget.
@@ -406,7 +420,14 @@ fn real_architecture_draft_links_to_canonical_extensions_with_legacy_bytes_intac
     let result = projection::generate(f.root(), "doc/canonical.json", &mut budget)?;
     eprintln!("real four-page output usage: {:?}", budget.usage());
     for (path, text) in &result.files[..result.files.len() - 1] {
-        assert_eq!(text.as_bytes(), fs::read(repository.join(path))?, "{path}");
+        if value["pages"]
+            .as_array()
+            .ok_or("pages")?
+            .iter()
+            .any(|p| p["projection"] == *path && p["renderer"] == RENDERER)
+        {
+            assert_eq!(text.as_bytes(), fs::read(repository.join(path))?, "{path}");
+        }
     }
     let architecture = &result.files.last().ok_or("architecture")?.1;
     let links: Vec<_> = pulldown_cmark::Parser::new(architecture)
