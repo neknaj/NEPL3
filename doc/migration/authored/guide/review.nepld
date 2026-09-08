@@ -412,5 +412,27 @@ body
       cons "seed adapterは[元/もと]bytesとUTF-8 byte offsetsを[保持/ほじ]するhost[用入力変換/ようにゅうりょくへんかん]であり、production parser/seed/P1/P2のbootstrap[成功/せいこう]ではない。"
       cons sentence cons text "R029では" cons ruby text "補助" text "ほじょ" cons text " " cons code "grammar_catalog" cons text " で、" cons ruby text "同名" text "どうめい" cons text "NamedClassを" cons ruby text "異" text "こと" cons text "なる" cons ruby text "実" text "じつ" cons text "classへ2" cons ruby text "件対応" text "けんたいおう" cons text "させると" cons ruby text "先頭" text "せんとう" cons text "だけで" cons ruby text "解決" text "かいけつ" cons text "し、" cons ruby text "順序反転" text "じゅんじょはんてん" cons text "で" cons ruby text "意味" text "いみ" cons text "が" cons ruby text "変化" text "へんか" cons text "することを" cons ruby text "確認" text "かくにん" cons text "した。" nil
       cons "public ReaderContextの[名前付/なまえつ]きcatalogは[事前検査/じぜんけんさ]proofを[持/も]たないため、[同名/どうめい]/[空名/くうめい]を[明示拒否/めいじきょひ]する[入口検査/いりぐちけんさ]と[管理対象回帰/かんりたいしょうかいき]を[要求/ようきゅう]した。" nil
+    cons paragraph
+      cons sentence cons ruby text "補助" text "ほじょ" cons text " " cons code "check_seed_positions.py" cons text " では4" cons ruby text "文法" text "ぶんぽう" cons text "へ" cons ruby text "日本語" text "にほんご" cons text "🙂commentを" cons ruby text "前置" text "ぜんち" cons text "しLFをCRLFへ" cons ruby text "変換" text "へんかん" cons text "した" cons ruby text "入力" text "にゅうりょく" cons text "で、" cons ruby text "全" text "ぜん" cons text "head/list/literalの" cons ruby text "範囲" text "はんい" cons text "を" cons ruby text "元" text "もと" cons text "bytesと" cons ruby text "照合" text "しょうごう" cons text "した。" nil
+      cons "[対象/たいしょう]はGrammar 1214、Doc 701、Math 722、Circuit 620[要素/ようそ]で、[未閉/みと]じ[引用符/いんようふ]・[不正/ふせい]escape・[末尾/まつび]lexical gap・[余剰/よじょう]tokenの4[入力/にゅうりょく]も[拒否/きょひ]を[確認/かくにん]した。"
+      cons "[初回/しょかい]の[検証器/けんしょうき]がkind[名/めい]とspellingを[同一/どういつ]と[仮定/かてい]して[失敗/しっぱい]したため、forms[正本/せいほん]のcategory[別対応/べつたいおう]へ[訂正/ていせい]して[再実行/さいじっこう]した。"
+      cons "[確認対象/かくにんたいしょう]は[位置/いち]と[構造/こうぞう]であり、[各/かく]DSLの[意味/いみ]ではない。" nil
+    cons paragraph
+      cons "R030では[同/おな]じGrammar[補助/ほじょ]probeで、5 nodeのDocumentをnodes=0でvalidateしてもOk・Usage.nodes=0となることを[確認/かくにん]した。"
+      cons "[他資源/たしげん]はsourceBytes67/work303/depth5/allocation598が[計上/けいじょう]されていた。"
+      cons "[共通/きょうつう]のNodes[上限/じょうげん]をGrammar arenaだけ[省略/しょうりゃく]する[理由/りゆう]はなく、[統括/とうかつ]ともこの[境界/きょうかい]を[修正対象/しゅうせいたいしょう]として[合意/ごうい]した。"
+      cons "[実/じつ]node[数/すう]とDAG[再訪時/さいほうじ]のwork/depthを[区別/くべつ]して[計上/けいじょう]し、zero/exact[境界/きょうかい]の[管理対象回帰/かんりたいしょうかいき]を[要求/ようきゅう]している。" nil
+    cons paragraph
+      cons "[修正後/しゅうせいご]のGrammar[試験/しけん]2[件/けん]を[独立実行/どくりつじっこう]して[成功/せいこう]した。"
+      cons "R029の[元/もと]probeは[両順/りょうじゅん]ともDuplicateCatalogName(Classes)、R030の[元/もと]probeはStopped(NodeLimit)へ[変化/へんか]した。"
+      cons "[各/かく]imports/classes/viewsのempty/duplicate 6ケースを[公開/こうかい]compile[入口/いりぐち]から[拒否/きょひ]する[管理対象試験/かんりたいしょうしけん]を[確認/かくにん]し、node[上限/じょうげん]4は[停止/ていし]、5はUsage.nodes=5で[成功/せいこう]する[追加/ついか]probeも[実行/じっこう]した。"
+      cons "R029/R030はこの[境界修正/きょうかいしゅうせい]としてcorrectedとした。"
+      cons "[全/ぜん]23 reader formの[実行/じっこう]、package[組立/くみた]て、production bootstrapは[別/べつ]の[未達範囲/みたつはんい]である。" nil
+    cons paragraph
+      cons sentence cons ruby text "統括" text "とうかつ" cons text "から" cons ruby text "指摘" text "してき" cons text "されたAngleTag" cons ruby text "例" text "れい" cons text "について、" cons ruby text "補助" text "ほじょ" cons text " " cons code "build_angle_probe.py" cons text " / " cons code "grammar_angle" cons text " で" cons ruby text "元" text "もと" cons text "sourceの" cons ruby text "全" text "ぜん" cons text "ASTとbyte spansを" cons ruby text "構築" text "こうちく" cons text "し、production reader compilerがReader(OutputType)で" cons ruby text "拒否" text "きょひ" cons text "することを" cons ruby text "独立実行" text "どくりつじっこう" cons text "で" cons ruby text "確認" text "かくにん" cons text "した。" nil
+      cons sentence cons text "ChoiceのSeq" cons ruby text "枝" text "えだ" cons text "2つは" cons code "List<NdfValue>" cons text "、Scalar" cons ruby text "枝" text "えだ" cons text "はTextとなり、" cons ruby text "同型" text "どうけい" cons text "の" cons ruby text "選択契約" text "せんたくけいやく" cons text "に" cons ruby text "合" text "あ" cons text "わない。" nil
+      cons "[各枝/かくえだ]を[明示/めいじ]Discardで[包/つつ]むtyped AST[候補/こうほ]は[同/おな]じcompilerで[成功/せいこう]した。"
+      cons sentence cons text "R031として" cons ruby text "正式例" text "せいしきれい" cons text "source・" cons ruby text "契約説明" text "けいやくせつめい" cons text "・" cons ruby text "元不一致" text "もとふいっち" cons text "の" cons ruby text "負例" text "ふれい" cons text "・quoted " cons code ">" cons text " を" cons ruby text "含" text "ふく" cons text "むtoken" cons ruby text "境界" text "きょうかい" cons text "の" cons ruby text "実行試験" text "じっこうしけん" cons text "を" cons ruby text "併" text "あわ" cons text "せた" cons ruby text "訂正" text "ていせい" cons text "を" cons ruby text "要求" text "ようきゅう" cons text "した。" nil
+      cons "まだ[候補/こうほ]ASTだけの[成功/せいこう]であり、[修正済/しゅうせいず]み[正式/せいしき]sourceやG04[合格/ごうかく]とは[扱/あつか]わない。" nil
     nil
   nil
