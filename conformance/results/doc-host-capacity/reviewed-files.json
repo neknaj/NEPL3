@@ -1,0 +1,35 @@
+{
+  "production": [
+    {
+      "path": "tools/src/doc/source.rs",
+      "commit": "0516d9fa245a201277f5abd684a69df5eda1ca53",
+      "sha256": "6dee2e18380d55e2e4092cca14fdb4ca9b798d83b0daf153d8d948e4dde2fda1",
+      "bytes": 16323
+    },
+    {
+      "path": "tools/tests/doc_capacity.rs",
+      "commit": "0516d9fa245a201277f5abd684a69df5eda1ca53",
+      "sha256": "5468ab5f4029ad15f457029f341cbdf3ab3619cf2074cfb50788b68b613b7081",
+      "bytes": 1123
+    },
+    {
+      "path": "doc/spec/21-doc-pages.md",
+      "commit": "0516d9fa245a201277f5abd684a69df5eda1ca53",
+      "sha256": "f4354e8d398364772c9172c4f7e65f45cb5291f2feda2e3dbd7f71daf8582a90",
+      "bytes": 12087
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "commit": "521075b60aa266db25ce8ce7ad53f23a8864f57f",
+      "sha256": "5b9f05004d488ab3174a2798948e9edffea935df790432675b7989fa14a4c6a7",
+      "bytes": 12813
+    }
+  ],
+  "fixed_files_unchanged": 2317,
+  "probe_external_packages_match_workspace_lock": true,
+  "versions": {
+    "rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)",
+    "cargo": "cargo 1.97.0 (c980f4866 2026-06-30)",
+    "wasmtime": "wasmtime 44.0.1 (f302ebd6b 2026-04-30)"
+  }
+}
