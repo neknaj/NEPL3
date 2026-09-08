@@ -1,0 +1,16 @@
+from pathlib import Path
+p=Path(__file__).parent
+assert not (p/'initial-manifest.json').exists()
+(p/'initial-manifest.json').write_bytes((p/'manifest.json').read_bytes());(p/'initial-record.md').write_bytes((p/'record.md').read_bytes())
+s=Path('C:/projects/NEPL3-doc-canonical-html-fragment/.tmp/review-canonical19-cutover/bootstrap.py').read_text(encoding='utf8')
+s=s.replace('doc-canonical-html-fragment','doc-canonical-model-invariants').replace('canonical19-snapshot','canonical12-snapshot').replace('19-html-fragment.html','12-model-invariants.html').replace('len(selected)==9','len(selected)==10')
+s=s.replace("actual['ruby']==463","actual['ruby']==701")
+s=s.replace("hrefs:[...document.querySelectorAll('article a[href]')].map", "table_cells:[...document.querySelectorAll('tr')].map(n=>[...n.children].map(base)),hrefs:[...document.querySelectorAll('article a[href]')].map")
+s=s.replace("['headings','paragraphs','codes','lists','hrefs']", "['headings','paragraphs','codes','lists','hrefs','table_cells']")
+s=s.replace("page.screenshot(path=str(OUT/f'offline-{engine}.png'));rows.append", """page.locator('tr').first.evaluate('n=>scrollTo(0,n.getBoundingClientRect().top+scrollY-15)');page.screenshot(path=str(OUT/f'offline-{engine}-table.png'))
+      page.locator('article a[href]').click();expected_url=(output/'docs/spec/19-html-fragment.html').as_uri();page.wait_for_url(expected_url)
+      assert page.locator('article p').count()==18 and page.evaluate('document.scripts.length')==0
+      title=page.locator('article h1').evaluate('n=>{const c=n.cloneNode(true);c.querySelectorAll(\".nepl-reading\").forEach(x=>x.remove());return c.textContent}');assert title=='19. HTML fragmentの構造契約'
+      assert not attempts;actual['clicked_link_destination']=page.url
+      rows.append""")
+(p/'bootstrap.py').write_text(s,encoding='utf8',newline='\n')

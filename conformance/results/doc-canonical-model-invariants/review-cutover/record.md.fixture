@@ -1,0 +1,45 @@
+# Independent chapter 12 cutover browser review
+
+Fixed final commit `2b0bbf4b888ea18ef5e97eaabe2391008e86fe69`. Worktree NEPL3-doc-canonical-model-invariants. No blocking issue in the tested display/content/navigation scope. No tracked file was edited and no production implementation was delegated.
+
+## Independently prepared expectations
+
+Read the complete original Markdown at preparation commit `7d6d3f1ff77f9f83aac4e39b21f27008df67fbf3` and complete moved Doc source. The first attempt to verify its preceding draft used the immediate parent, which had already moved the file; its failed preparation log is retained. Git history identified pre-move `840a0e1`, and exact byte comparison with its authored draft passed. The final Doc source also matches these prepared bytes. This correction affected only the review's historical lookup, not production or expectations.
+
+The checked source-form tree yields 32 paragraphs, 8 headings, 7 Section IDs, 9 InlineCode strings, one two-column table (17 data rows plus header, 36 cells), one RelativeTarget to `19-html-fragment.md` and 701 Ruby nodes. Original Markdown's complete heading sequence, all nine code values and all 36 table cell base strings equal the typed Doc values in order. Prefix Text/Ruby and full-Article formal structure were checked. This structural parser is not presented as an independent production parse/lower run.
+
+Old GitHub server HTML at the fixed preparation commit was independently fetched: rawLines reconstruct the original source bytes exactly and all eight observed permalink names equal the expected aliases. No slug guesses were used as observed evidence. The actual alias file and Section mapping were checked against these source-derived expectations. Original/source/draft files and hash manifest inputs remain frozen.
+
+## Repeated outputs
+
+Two supplied ten-file HTML bundles are byte-identical; two nine-file Markdown stages are byte-identical. All manifest-listed hashes match actual bytes. Every generated Markdown file equals its corresponding final Git blob, and every HTML receipt's physical Doc input digest matches the fixed Git source. Output copies were served from distinct independent `/independent/deep/first/` and `/independent/deep/second/` prefixes. This binds the supplied products to receipts/source; it does not independently rerun the compiler or review resource-profile selection.
+
+## Actual local browser checks
+
+Chromium, Firefox, WebKit × widths375/1280 × two non-root prefixes: all twelve document-JavaScript-disabled cases passed. Every heading, all32 paragraph base strings, nine code values and every18x2 table cell string match prepared expectations. Ruby count701, stylesheet loading, unique DOM IDs and no horizontal page overflow were checked. No document scripts, failed requests or nonlocal requests occurred.
+
+All seven semantic Section IDs are unique and passed real fragment navigation from an intentionally distant starting position with five stable visible scroll observations: **84 moves**. The sole article link's href is `19-html-fragment.html`; it was actually clicked in every case, reaching the same-prefix chapter19 output with the expected title and18 paragraphs: **12 cross-page clicks**. This uses the real linked page artifact, not an invented placeholder. HTML is not required to contain old Markdown aliases.
+
+## Table cell geometry and visual review
+
+At375px, additional independent file-URL probes in all three engines inspected every nonempty text-node client rectangle in all36 cells. Every rectangle stays within its owning cell's horizontal bounds (1px tolerance); table width stays within the viewport. First-row, long-ID/lower-row and final-row screenshots were saved separately from the page top. The first-column IDs wrap over multiple lines and are dense at this width, so global page overflow alone would not justify a readability claim.
+
+Inspected WebKit375 table middle, header and long-ID lower rows, and Chromium375 header/lower rows. Constraint IDs remain complete, the two columns and row associations remain visible, and no overlap or clipping into adjacent cells was found. Fine wrapping such as source.identity and schema.reference increases reading effort; this is observed layout density, not a content-loss defect or a universal usability guarantee. No CSS modification or annotation omission was used to obtain these results.
+
+## Actual GitHub output
+
+Fixed URL: https://github.com/neknaj/NEPL3/blob/2b0bbf4b888ea18ef5e97eaabe2391008e86fe69/doc/spec/12-model-invariants.md . Saved actual browser rawLines reconstruct the fixed generated Markdown bytes exactly. All eight legacy aliases plus seven semantic anchors are unique and passed actual navigation with stable visible positions: **15 targets**. The real GitHub link routes to this commit's `doc/spec/19-html-fragment.md`, while the local HTML route uses the HTML suffix.
+
+A separate all-notes content check compares all32 paragraphs, all8 headings and all36 table cells including each Ruby reading to the actual GitHub DOM; all match. Fifteen empty compatibility-anchor paragraphs are counted separately, not dropped as unknown content. All9 code values and the actual table18-row shape are preserved. This is an annotated viewing-profile check, not Doc roundtrip or full assistive-technology equivalence.
+
+## Boundaries
+
+Budget/phase API design, original full semantic acceptance, general runtime implementation, root CI/compiler test claims, physical devices, screen readers, main merge and deployment are outside this browser review. The local fixture links/clicks do not prove unrelated external resources are reachable. README bootstrap is pending in this initial record; its later execution will be appended separately. Scripts/environment/source hashes and raw logs are included. Served workspaces, Python caches and redundant whole-page screenshots are excluded explicitly from the strict manifest. The preparation lookup failure remains preserved; it was not an implementation failure.
+
+## README bootstrap follow-up
+
+The initial record and manifest are preserved verbatim as initial-record.md and initial-manifest.json (manifest SHA256 `f7b53fa18b46a37ed3a4d325393e53db39059e58d248852602776d1183197c7f`). The now available archive README and payloads.json were frozen. Its one Python fence was executed verbatim from a fresh independent scratch repository layout containing only the selected root-html-first payloads and index. It restored a new `dist/canonical12-snapshot`; all ten restored files exactly match the supplied first bundle in bytes and digest. The five relevant canonical source/registry/alias/generated-MD paths are also byte-identical between final source2b0bbf4 and current merge20caaf73; the browser evidence remains bound to source2b0bbf4.
+
+All three browsers loaded the restored12 page with file URLs, JavaScript disabled and an explicit HTTP(S) interception rule that blocks network access. All32 paragraph strings,8 headings,9 code values,18x2 cell strings,701 Ruby nodes, stylesheet/computed background/pre-wrap and sole href again matched. In every engine the real link was clicked and reached the restored local19 HTML page with its correct title and18 paragraphs. No HTTP(S) attempt occurred before or after navigation. Each engine's narrow table screenshot and actual destination URL are recorded. This confirms compiler-free reconstruction and file navigation, not new compiler generation or destination availability beyond the restored local artifact.
+
+The frozen README explicitly preserves the earlier AllocationLimit and separate finite-budget operation. Root may later append results prose; the exact executed fence/hash and frozen README remain the evidence input. This follow-up does not replace or broaden the previous browser/semantic/phase boundaries.

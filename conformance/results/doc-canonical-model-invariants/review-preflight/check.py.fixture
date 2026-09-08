@@ -1,0 +1,60 @@
+from pathlib import Path
+import sys,json,re,hashlib,subprocess,collections
+r=Path(__file__).resolve().parents[2];p=Path(__file__).parent;sys.path.insert(0,str(r))
+from tools.audit.structure import Parser,load_forms
+def walk(x):
+ if isinstance(x,list):
+  for y in x:yield from walk(y)
+ elif isinstance(x,dict):
+  yield x
+  for y in x.get('fields',{}).values():yield from walk(y)
+def plain(x):
+ if isinstance(x,list):return ''.join(map(plain,x))
+ if not isinstance(x,dict):return ''
+ if x['kind']=='leaf':return re.sub(r'\[([^/\[\]]+)/[^\[\]]+\]',r'\1',json.loads(x['token']))
+ f=x['fields'];k=x['kind']
+ if k=='Ruby':return plain(f['base'])
+ if k in ('Text','InlineCode'):return f['text']
+ if k=='Link':return plain(f['label'])
+ return ''.join(plain(y) for y in f.values())
+result={}
+for stem in ['08-editor','12-model-invariants']:
+ md=(r/f'doc/spec/{stem}.md').read_bytes();doc=(r/f'doc/migration/authored/{stem}.nepld').read_bytes()
+ (p/(stem+'.md')).write_bytes(md);(p/(stem+'.nepld')).write_bytes(doc)
+ tree=Parser(doc.decode(),load_forms(r)).complete('Doc/Article');nodes=list(walk(tree))
+ units=[{'kind':x['kind'],'text':plain(x),'fields':x['fields']} for x in nodes if x['kind'] in ['Section','Paragraph','Table','RawCode','Link']]
+ (p/(stem+'-units.json')).write_text(json.dumps(units,ensure_ascii=False,indent=2),encoding='utf8')
+ paras=[plain(x) for x in nodes if x['kind']=='Paragraph']
+ (p/(stem+'-plain.txt')).write_text('\n\n'.join(paras),encoding='utf8')
+ result[stem]={'sha_md':hashlib.sha256(md).hexdigest(),'sha_doc':hashlib.sha256(doc).hexdigest(),'counts':dict(collections.Counter(x['kind'] for x in nodes)),'headings':[{'id':x['fields']['id'],'title':plain(x['fields']['title'])} for x in nodes if x['kind']=='Section'],'links':[x['fields']['target'] for x in nodes if x['kind']=='Link']}
+ original=[x.replace('\n','') for x in md.decode().strip().split('\n\n') if not x.startswith(('#','|'))]
+ def norm(s):return re.sub(r'\s+','',re.sub(r'`([^`]+)`',r'\1',re.sub(r'\[([^]]+)\]\([^)]+\)',r'\1',s)))
+ pairs=[{'original':a,'draft':b,'equal_ignoring_presentation_space':norm(a)==norm(b)} for a,b in zip(original,paras)]
+ result[stem]['paragraph_count']=[len(original),len(paras)]
+ result[stem]['mismatches']=[i+1 for i,x in enumerate(pairs) if not x['equal_ignoring_presentation_space']]
+ codes=[x['fields']['text'] for x in nodes if x['kind']=='InlineCode']
+ result[stem]['inline_code_exact']=codes==re.findall(r'`([^`]+)`',md.decode())
+ rows=[list(map(plain,x['fields']['cells'])) for x in nodes if x['kind']=='Row']
+ mdrows=[[c.strip() for c in line.strip().strip('|').split('|')] for line in md.decode().splitlines() if line.startswith('|') and not re.fullmatch(r'[| :\-]+',line)]
+ result[stem]['table_rows_exact']=rows==mdrows
+ han=re.compile('[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\u3005]+');issues=[]
+ def audit(x,protected=False):
+  if isinstance(x,list):
+   for y in x:audit(y,protected)
+  elif isinstance(x,dict):
+   k=x['kind'];f=x.get('fields',{})
+   if k=='leaf':
+    text=json.loads(x['token'])
+    for base,reading in re.findall(r'\[([^/\[\]]+)/([^\[\]]+)\]',text):
+     if not han.fullmatch(base) or not reading:issues.append(text)
+    if han.search(re.sub(r'\[[^\[\]]+\]','',text)):issues.append(text)
+   elif k=='Ruby':
+    if not han.fullmatch(plain(f['base'])):issues.append(plain(f['base']))
+    audit(f['base'],True);audit(f['reading'],True)
+   elif k=='Text':
+    if not protected and han.search(f['text']):issues.append(f['text'])
+   else:
+    for y in f.values():audit(y,protected)
+ audit(tree);result[stem]['ruby_lexical_issues']=issues
+ (p/(stem+'-pairs.json')).write_text(json.dumps(pairs,ensure_ascii=False,indent=2),encoding='utf8')
+(p/'structure.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf8');print(json.dumps(result,ensure_ascii=False,indent=2))

@@ -1,0 +1,168 @@
+{
+  "scope": "independent full manuscript meaning and cutover preparation review, not generation/browser",
+  "source_commit": "7d6d3f1ff77f9f83aac4e39b21f27008df67fbf3",
+  "sources": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 7729,
+      "sha256": "c26941e6dbf896a5e07b7c807789bc1f70bd740e4065092186be42e5ac4baf53"
+    },
+    {
+      "path": "doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "doc/spec/21-doc-pages.md",
+      "bytes": 31845,
+      "sha256": "fd16f3f6e2e8801be832960993f5649daca06d7e6ebaffb43969e9b77d80574c"
+    },
+    {
+      "path": "doc/canonical.json",
+      "bytes": 3005,
+      "sha256": "1b2b7b3aee4bac78ef5908ea55539a7d347c27698f822bd8053f93732e7f47cd"
+    },
+    {
+      "path": "doc/spec/12-model-invariants.nepld",
+      "bytes": 30443,
+      "sha256": "f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8"
+    },
+    {
+      "path": "doc/migration/aliases/12-model-invariants.json",
+      "bytes": 565,
+      "sha256": "0d428b3fec7161d2cd0f1b075771d0597505727c39f78e90c835840c638f4c4c"
+    },
+    {
+      "path": "doc/spec/19-html-fragment.nepld",
+      "bytes": 21631,
+      "sha256": "373a519dffc1cbbc2bbd2b6334eef8d4490aae6c62798bf26918a5f280bfe083"
+    },
+    {
+      "path": "design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "tools/audit/structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    }
+  ],
+  "files": [
+    {
+      "path": "12-model-invariants-pairs.json",
+      "bytes": 29542,
+      "sha256": "4496dc3920cc2934277f8a9783eecef6753b0a59021b2022c51550e909a9493d"
+    },
+    {
+      "path": "12-model-invariants-plain.txt",
+      "bytes": 13321,
+      "sha256": "4b83f9c37391342bcf82e8c0cd583871cb257d4199c4154b0e949c8c7f4fa5b9"
+    },
+    {
+      "path": "12-model-invariants-units.json",
+      "bytes": 196949,
+      "sha256": "966cbb5b3484be80533da0c8f11ef560952392a004e4f9379e766ae68d9e5d4d"
+    },
+    {
+      "path": "12-model-invariants.md",
+      "bytes": 15389,
+      "sha256": "81b22608f80254f7d5979b754436b9d62da0bf25aefddf01a6fec772fdcf9cc5"
+    },
+    {
+      "path": "12-model-invariants.nepld",
+      "bytes": 30443,
+      "sha256": "f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8"
+    },
+    {
+      "path": "check.py",
+      "bytes": 3917,
+      "sha256": "08e6c58b2181de5ce801b31fc60dcf7bb4a1ad90ba3d546f6d3b9e56bcd66fd2"
+    },
+    {
+      "path": "checks.json",
+      "bytes": 681,
+      "sha256": "b2a2ce382513b0dca0ba1670ee44e69323b155cbff970a6b056d7f7f5790cda0"
+    },
+    {
+      "path": "context/AGENTS.md",
+      "bytes": 7729,
+      "sha256": "c26941e6dbf896a5e07b7c807789bc1f70bd740e4065092186be42e5ac4baf53"
+    },
+    {
+      "path": "context/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "context/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "context/doc/canonical.json",
+      "bytes": 3005,
+      "sha256": "1b2b7b3aee4bac78ef5908ea55539a7d347c27698f822bd8053f93732e7f47cd"
+    },
+    {
+      "path": "context/doc/migration/aliases/12-model-invariants.json",
+      "bytes": 565,
+      "sha256": "0d428b3fec7161d2cd0f1b075771d0597505727c39f78e90c835840c638f4c4c"
+    },
+    {
+      "path": "context/doc/spec/12-model-invariants.nepld",
+      "bytes": 30443,
+      "sha256": "f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8"
+    },
+    {
+      "path": "context/doc/spec/19-html-fragment.nepld",
+      "bytes": 21631,
+      "sha256": "373a519dffc1cbbc2bbd2b6334eef8d4490aae6c62798bf26918a5f280bfe083"
+    },
+    {
+      "path": "context/doc/spec/21-doc-pages.md",
+      "bytes": 31845,
+      "sha256": "fd16f3f6e2e8801be832960993f5649daca06d7e6ebaffb43969e9b77d80574c"
+    },
+    {
+      "path": "context/tools/audit/structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    },
+    {
+      "path": "cutover.diff",
+      "bytes": 2036,
+      "sha256": "e50fda78ea69f4ee97388b26fc15a2949ff34a5f0f52cd9dc4881430b7f2abb5"
+    },
+    {
+      "path": "historical-12-model-invariants-github.html",
+      "bytes": 304398,
+      "sha256": "0c55118baff557b9c4e32c021aad4ef60656f9e25d67465e0bf8296f2fddaa68"
+    },
+    {
+      "path": "historical-12-model-invariants-rich.html",
+      "bytes": 24174,
+      "sha256": "7ecfd3ecfdd3f0b829063e0ac47bb3c078b140717d73e57159d61046d83a0427"
+    },
+    {
+      "path": "historical-github.json",
+      "bytes": 4415,
+      "sha256": "01521d007c15ee77ad3c5c240d184150d754a4a6867a5590043ff278941ad22b"
+    },
+    {
+      "path": "review.md",
+      "bytes": 2695,
+      "sha256": "019eb82bd6f29804fc0147229162c16dcca00705fd1bbf80f46d7fea790f7616"
+    },
+    {
+      "path": "seal.py",
+      "bytes": 3371,
+      "sha256": "a2dbc4119831fc5cdeabab4d95190343758f1ab1100b86e508c1d2bb30df6a81"
+    },
+    {
+      "path": "structure.json",
+      "bytes": 1619,
+      "sha256": "df00020e89c44565710c31b536b1b19e83c413d2865f14a6370339910ccb0489"
+    }
+  ]
+}

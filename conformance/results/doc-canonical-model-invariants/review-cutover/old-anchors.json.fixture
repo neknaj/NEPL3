@@ -1,0 +1,56 @@
+{
+  "url": "https://github.com/neknaj/NEPL3/blob/7d6d3f1ff77f9f83aac4e39b21f27008df67fbf3/doc/spec/12-model-invariants.md",
+  "source_sha256": "81b22608f80254f7d5979b754436b9d62da0bf25aefddf01a6fec772fdcf9cc5",
+  "actual_anchors": [
+    {
+      "id": "user-content-12-意味モデル中間表現の補足不変条件",
+      "class": "anchor",
+      "aria-label": "Permalink: 12. 意味モデル・中間表現の補足不変条件",
+      "href": "#12-意味モデル中間表現の補足不変条件"
+    },
+    {
+      "id": "user-content-方針",
+      "class": "anchor",
+      "aria-label": "Permalink: 方針",
+      "href": "#方針"
+    },
+    {
+      "id": "user-content-1-値と参照",
+      "class": "anchor",
+      "aria-label": "Permalink: 1. 値と参照",
+      "href": "#1-値と参照"
+    },
+    {
+      "id": "user-content-11-foundation制約id",
+      "class": "anchor",
+      "aria-label": "Permalink: 1.1 foundation制約ID",
+      "href": "#11-foundation制約id"
+    },
+    {
+      "id": "user-content-2-checked値の境界",
+      "class": "anchor",
+      "aria-label": "Permalink: 2. Checked値の境界",
+      "href": "#2-checked値の境界"
+    },
+    {
+      "id": "user-content-3-回路ir",
+      "class": "anchor",
+      "aria-label": "Permalink: 3. 回路IR",
+      "href": "#3-回路ir"
+    },
+    {
+      "id": "user-content-4-markup安全性",
+      "class": "anchor",
+      "aria-label": "Permalink: 4. Markup安全性",
+      "href": "#4-markup安全性"
+    },
+    {
+      "id": "user-content-5-operationの具体型",
+      "class": "anchor",
+      "aria-label": "Permalink: 5. operationの具体型",
+      "href": "#5-operationの具体型"
+    }
+  ],
+  "rawLines_match": true,
+  "result": "PASS"
+}

@@ -1,0 +1,82 @@
+{
+  "08-editor": [
+    {
+      "old": "08-共通editor-serviceと診断",
+      "section": null
+    },
+    {
+      "old": "方針",
+      "section": "policy"
+    },
+    {
+      "old": "1-analysissnapshot",
+      "section": "snapshot"
+    },
+    {
+      "old": "2-自動で得られる機能",
+      "section": "derived"
+    },
+    {
+      "old": "3-regionの選択",
+      "section": "region"
+    },
+    {
+      "old": "4-definitionとrelations",
+      "section": "relations"
+    },
+    {
+      "old": "5-不完全入力",
+      "section": "recovery"
+    },
+    {
+      "old": "6-増分解析と取消し",
+      "section": "incremental"
+    },
+    {
+      "old": "7-lsp-adapter",
+      "section": "lsp"
+    },
+    {
+      "old": "8-診断ログの表示",
+      "section": "diagnostics"
+    },
+    {
+      "old": "9-workspace-trust",
+      "section": "trust"
+    }
+  ],
+  "12-model-invariants": [
+    {
+      "old": "12-意味モデル中間表現の補足不変条件",
+      "section": null
+    },
+    {
+      "old": "方針",
+      "section": "policy"
+    },
+    {
+      "old": "1-値と参照",
+      "section": "values"
+    },
+    {
+      "old": "11-foundation制約id",
+      "section": "constraints"
+    },
+    {
+      "old": "2-checked値の境界",
+      "section": "checked"
+    },
+    {
+      "old": "3-回路ir",
+      "section": "circuit"
+    },
+    {
+      "old": "4-markup安全性",
+      "section": "markup"
+    },
+    {
+      "old": "5-operationの具体型",
+      "section": "operations"
+    }
+  ]
+}

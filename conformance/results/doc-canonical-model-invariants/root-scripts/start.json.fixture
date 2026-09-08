@@ -1,0 +1,7 @@
+{
+  "commit": "840a0e16c6d22894a0379d6cb172ea3f9f437316",
+  "status": "",
+  "source_sha256": "f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8",
+  "original_sha256": "81b22608f80254f7d5979b754436b9d62da0bf25aefddf01a6fec772fdcf9cc5",
+  "purpose": "Prepare chapter12 with real page-context reference to pending canonical19; no completed acceptance claim"
+}
