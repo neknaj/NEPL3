@@ -546,4 +546,34 @@ body
       cons "3 OSのnative[検査/けんさ]、[全/ぜん]jobの[成功/せいこう]を[要求/ようきゅう]するquality、mainの[検査済/けんさず]みSHAからのsource[配布/はいふ]、[読/よ]み[取/と]り[権限/けんげん]、[固定/こてい]action revision、workspaceと[設計依存表/せっけいいぞんひょう]、UTF-8・JSON[重複/ちょうふく]key・[参照/さんしょう]path・タスク[状態/じょうたい]の[検査/けんさ]を[確認/かくにん]した。"
       cons "[公開/こうかい]APIの[未定義部分/みていぎぶぶん]や[外部/がいぶ]crateのcross-target[適合性/てきごうせい]まで、このmetadata[検査/けんさ]から[推定/すいてい]しない。" nil
     nil
+  cons section next_contracts "[次/つぎ]の[実装前/じっそうまえ]に[閉/と]じる[設計課題/せっけいかだい]" body
+    cons paragraph
+      cons "R006はリポジトリ[整備/せいび]を[止/と]める[理由/りゆう]にはしないが、[影響/えいきょう]する[公開/こうかい]APIやportable[経路/けいろ]の[完成/かんせい]を[止/と]める。"
+      cons "[次/つぎ]の[作業/さぎょう]を[仕様/しよう]・schema・conformanceの[一/ひと]つの[変更/へんこう]として[行/おこな]う。" nil
+    cons list ordered 1
+      cons item none body cons paragraph
+        cons "T01: [型参照/かたさんしょう]・intrinsicに[続/つづ]き、r4ではSource/Origin/Environment/Usageと[構造検査/こうぞうけんさ]の[実装/じっそう]・[交換試験/こうかんしけん]を[追加/ついか]した。"
+        cons "[上記/じょうき][部分実装/ぶぶんじっそう]と[残/のこ]る[操作/そうさ]ごとのresource/schema table、Diagnostic code catalog、[意味検査済/いみけんさず]み[条件/じょうけん]を[区別/くべつ]し、[未実装型/みじっそうがた]を[同/おな]じ[検査/けんさ]へ[接続/せつぞく]する。" nil nil
+      cons item none body cons paragraph
+        cons "T02: NDF[全/ぜん]12tag、[通常/つうじょう]SchemaRef record、foundation bundle[内/ない]の[局所/きょくしょ]IDとcanonical node[番号/ばんごう]を[実装/じっそう]した。"
+        cons "[今後/こんご]のdomain・[操作型/そうさがた]もwire field[順/じゅん]・[値/あたい]の[不変条件/ふへんじょうけん]・[既知/きち]byte[列/れつ]へ[対応/たいおう]させる。"
+        cons "[特/とく]にSourceMapを[含/ふく]む[構文/こうぶん]bundleと[全操作/ぜんそうさ]reply/continuationの[往復/おうふく]は[残/のこ]る。" nil nil
+      cons item none body cons paragraph
+        cons "T03: ReadRequestとReaderPlan、state/facts/view、Read/Transform/DependentReaderのnative envelopeはr4で[具体化/ぐたいか]した。"
+        cons "request[以外/いがい]の[全/ぜん]variantのportable adapter、[完全/かんぜん]なprovider manifestとの[照合/しょうごう]、builtins、[文字/もじ]escapeとSourceMapの[意味/いみ]・[巻戻/まきもど]し、および[実/じつ]process[経路/けいろ]を[引/ひ]き[続/つづ]き[実装/じっそう]・[検証/けんしょう]する。" nil nil
+      cons item none body cons paragraph
+        cons "T12: Invoke/Resume/Reply/Cancel/Closeを[一/ひと]つのFrame schemaへ[定義/ていぎ]する。"
+        cons "ReplyはrequestIdで[対応/たいおう]づけ、cancelとcompleteの[競合/きょうごう]、close[後/ご]、[重複/じゅうふく]ID、[切断途中/せつだんとちゅう]frame、unknown continuationの[失敗/しっぱい]と[再開予算/さいかいよさん]を[固定/こてい]する。" nil nil
+      cons item none body cons paragraph
+        cons sentence cons ruby text "各" text "かく" cons text "domain" cons ruby text "実装" text "じっそう" cons text ": " cons code "DomainSyntax" cons text " " cons ruby text "等" text "など" cons text "の" cons ruby text "説明用名" text "せつめいようめい" cons text "を" cons ruby text "操作" text "そうさ" cons text "ごとの" cons ruby text "入出力" text "にゅうしゅつりょく" cons text "recordに" cons ruby text "置" text "お" cons text "き" cons ruby text "換" text "か" cons text "える。" nil
+        cons "Docのlower/check/prepare/render/plain_text、Mathのlower/check/evaluate/free_symbols/render、Circuitのlower/check/elaborate/initial/observe/step/run_tests/lower_nor/diagram、[各/かく]print、Grammar compile、engine parse/analyze/queryの[署名/しょめい]とschemaを[閉/と]じる。" nil nil
+      nil
+    cons paragraph
+      cons "R009は、T05の[検査済/けんさず]みpackageとT11の[標準/ひょうじゅん]profile[生成時/せいせいじ]に[解消/かいしょう]する。"
+      cons "source[用/よう]manifestを[読/よ]み、[実際/じっさい]のSchemaRef、provider[版/ばん]と[署名/しょめい]、bridge、resources、Limitsを[含/ふく]む[解決済/かいけつず]みProfileを[生成/せいせい]する。"
+      cons "[仮/かり]のdigestや[空/から]のprovider[結果/けっか]を[成功値/せいこうち]にしない。" nil
+    cons paragraph
+      cons "[実装/じっそう]タスクを[完了/かんりょう]へ[変更/へんこう]する[際/さい]は、[対応/たいおう]するopen findingを[解消/かいしょう]し、[独立/どくりつ]レビューを[受/う]ける。"
+      cons "リポジトリ[検査/けんさ]の[成功/せいこう]だけでこの[手順/てじゅん]を[省略/しょうりゃく]しない。" nil
+    nil
   nil
