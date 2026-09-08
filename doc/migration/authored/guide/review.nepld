@@ -1269,5 +1269,29 @@ body
       cons sentence cons text "Name reader、Number/Langの" cons ruby text "識別子境界" text "しきべつしきょうかい" cons text "、Reader CharClassの" cons ruby text "差分" text "さぶん" cons text "は" cons ruby text "同" text "おな" cons text "じcore" cons ruby text "文字述語" text "もじじゅつご" cons text "への" cons ruby text "委譲" text "いじょう" cons text "であり、pinned " cons code "unicode-ident = 1.0.18" cons text " の" cons ruby text "依存" text "いぞん" cons text "ownerをreaderからcoreへ" cons ruby text "移" text "うつ" cons text "した。" nil
       cons sentence cons ruby text "固定" text "こてい" cons text "crateの" cons ruby text "実生成表" text "じつせいせいひょう" cons text "headerがUnicode 16.0.0を" cons ruby text "参照" text "さんしょう" cons text "することと " cons code "default-features = false" cons text "、coreのno_stdを" cons ruby text "確認" text "かくにん" cons text "した。" nil
       cons "[内部/ないぶ]workspace[依存/いぞん]の[逆流/ぎゃくりゅう]やdomain[同士/どうし]の[依存/いぞん]は[加/くわ]えていない。" nil
+    cons paragraph
+      cons "[独立補助/どくりつほじょ]では[全/ぜん]1,112,064 Unicode scalarについて[旧/きゅう]pinned[述語/じゅつご]・[新/しん]core・CharClassの[開始/かいし]/[継続判定/けいぞくはんてい]を[照合/しょうごう]した。"
+      cons "source-lessの[全/ぜん]Name[正負入力/せいふにゅうりょく]と4scalarのWork[境界/きょうかい]は、SourceBytesや[割当/わりあて]を[要求/ようきゅう]せず[型付/かたつ]き[停止/ていし]を[保/たも]った。"
+      cons "Langは14[固定正負入力/こていせいふにゅうりょく]×6[予算/よさん]で[旧関数/きゅうかんすう]とのResult・Usage・sticky[停止/ていし]の[全一致/ぜんいっち]を[確認/かくにん]した。"
+      cons "[登録/とうろく]を[伴/ともな]わない8[字言語名/じげんごめい]や[重複/ちょうふく]extension singletonもABNF[上/じょう]のwell-formedとして[扱/あつか]い、registry-validや[重複禁止/ちょうふくきんし]の[別条件/べつじょうけん]を[暗黙/あんもく]に[追加/ついか]しない。"
+      cons "[実/じつ]ReaderではName/Langの[各/かく]scalar[切断位置/せつだんいち]でNeedMore、finalと[区切/くぎ]りで[元綴/もとつづ]り・byte[終端/しゅうたん]の[最大一致/さいだいいっち]、Number/Langの[直後/ちょくご]のUnicode[識別子文字/しきべつしもじ]でBoundaryMismatchを[確認/かくにん]した。" nil
+    cons paragraph
+      cons "[固定/こてい]lexical12fileへ[依存/いぞん]を[束縛/そくばく]した[独立補助/どくりつほじょ]、[管理対象/かんりたいしょう]core lexical3[件/けん]、[既存/きそん]reader builtin17[件/けん]はnative/WASI[双方/そうほう]で[成功/せいこう]した。"
+      cons sentence cons ruby text "原" text "げん" cons text "Lang source、" cons ruby text "比較用補助" text "ひかくようほじょ" cons text "、" cons ruby text "固定" text "こてい" cons text "Unicode" cons ruby text "表" text "ひょう" cons text "とsnapshotのSHA、" cons ruby text "新" text "しん" cons text "buildした" cons ruby text "両" text "りょう" cons text "binaryと2" cons ruby text "本" text "ほん" cons text "のfull process logは " cons code ".tmp/review-lexical-fixed/manifest.json" cons text " に" cons ruby text "保存" text "ほぞん" cons text "した。" nil
+      cons "[全綴/ぜんつづ]り[検査/けんさ]は[正規化/せいきか]、[選択言語/せんたくげんご]の[予約/よやく]head[判定/はんてい]、BCP47 registry[照会/しょうかい]を[行/おこな]わず、readerの[非/ひ]final/[最大一致契約/さいだいいっちけいやく]を[置/お]き[換/か]えない。"
+      cons "Doc printerやRegion queryの[後続実装/こうぞくじっそう]はこの[抽出/ちゅうしゅつ]の[完成範囲/かんせいはんい]に[含/ふく]めない。" nil
+    cons paragraph
+      cons "Doc printerの[固定差分/こていさぶん]は、design/forms.json、[正式/せいしき]syntax.neplg、[手書/てが]きprint fixtureの(category, kind)[集合/しゅうごう]を[独立/どくりつ]に[照合/しょうごう]し、20 category・64 formの[過不足/かふそく]がないことを[確認/かくにん]した。"
+      cons "[補助/ほじょ]fragmentも[具体的/ぐたいてき]な[再/さい]parse entryを[返/かえ]し、guestはMathGuest / CircuitGuest / Guestの3[入口/いりぐち]とMath / Circuit / Grammar / Docの4 wrapperを[保持/ほじ]する。"
+      cons "MathGuest/CircuitGuestのtyped rootには[言語制約/げんごせいやく]があり、GrammarGuest/DocGuestを[架空/かくう]のcategoryへ[拡張/かくちょう]しない。" nil
+    cons paragraph
+      cons "[独立/どくりつ]9[原文/げんぶん]×Prefix/Compactでは、[空/から]Sentence、[角括弧/かくかっこ]・[波括弧/なみかっこ]・slash・[引用符/いんようふ]・backslash・CRLF・tabを[含/ふく]むText、Rubyのreading[内/ない]Anno、BreakとStrongによるprefix[保持/ほじ]、Inline/Flow root、RawCode、Someの[空/から]Text、[予約/よやく]headと[同綴/どうつづ]りのName operandを[実/じつ]parse→lower→print→[再/さい]parse/lowerで[照合/しょうごう]した。"
+      cons "[初回/しょかい]CBOR[受信/じゅしん]は[新/あたら]しい[空/から]SourceStore/admissionで[行/おこな]い、[印字/いんじ]outcomeと[正式返信/せいしきへんしん]CBORの[全値/ぜんち]を[保持/ほじ]した。"
+      cons "Compactの[出力/しゅつりょく]を[再/ふたた]び[注釈/ちゅうしゃく]として[解釈/かいしゃく]して[内容/ないよう]を[変/か]えたり、InlineをSentence entryへ[置換/ちかん]したりしなかった。" nil
+    cons paragraph
+      cons "guestの[独立/どくりつ]5[入力/にゅうりょく]は、Sentence[内/ない]Mathと[後続/こうぞく]host Text、MathGuest、CircuitGuest、Grammar wrapper、[意味的/いみてき]に[不正/ふせい]な[注釈/ちゅうしゃく]を[含/ふく]むDoc wrapperを[扱/あつか]った。"
+      cons "[保持原文/ほじげんぶん]を[候補/こうほ]として[取得/しゅとく]した[後/あと]、[選択済/せんたくず]み[言語/げんご]の[実/じつ]parser・tree[検査/けんさ]・generic engine printerを[実行/じっこう]してからhost textを[提供/ていきょう]し、[両印字/りょういんじ]modeと[初回/しょかい]CBOR[受信後/じゅしんご]のguest[構文/こうぶん]を[照合/しょうごう]した。"
+      cons "document/guestのdomain byte[列/れつ]とcanonical NDF CBORからdigestを[独立計算/どくりつけいさん]し、owner[閉包込/へいほうこ]みのidentityとの[一致/いっち]を[確認/かくにん]した。"
+      cons "[異/い]schemaを[同/おな]じGuestLanguageへ[割/わ]り[当/あ]てるalias[競合/きょうごう]、[別/べつ]guest digest、32bitを[超/こ]えるEmbedRefは[型付/かたつ]き[拒否/きょひ]となった。" nil
     nil
   nil
