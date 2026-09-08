@@ -52,3 +52,4 @@ dist/** export-ignore
 /conformance/results/reader-checkpoints/** -text -whitespace
 /conformance/results/stream-digest/** -text -whitespace
 /conformance/results/source-map-adjacency/** -text -whitespace
+/conformance/results/borrow-mapping-union/** -text -whitespace
