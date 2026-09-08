@@ -25,6 +25,14 @@ pub enum Action {
     NestedStopSecond,
     GeneratedFailSecond,
     GeneratedCancelSecond,
+    ResetSecond {
+        cancel: bool,
+        fail: bool,
+    },
+    ResetReservation {
+        cancel: bool,
+        fail: bool,
+    },
 }
 pub struct Host {
     pub action: Action,
@@ -58,6 +66,17 @@ impl ParseHost for Host {
         self.calls += 1;
         if self.calls == 2 {
             match self.action {
+                Action::ResetSecond { cancel, fail } => {
+                    *budget = Budget::new(budget.limits());
+                    if cancel {
+                        budget.cancel();
+                    }
+                    return if fail {
+                        Err(ParseError::Context)
+                    } else {
+                        Ok(None)
+                    };
+                }
                 Action::DeclineSecond | Action::CloseAfterDecline => return Ok(None),
                 Action::FailSecond | Action::GeneratedFailSecond => {
                     return Err(ParseError::Context);
@@ -91,7 +110,7 @@ impl ParseHost for Host {
                         },
                     }))));
                 }
-                Action::Serve => {}
+                Action::Serve | Action::ResetReservation { .. } => {}
             }
         }
         let snapshot = request
@@ -175,9 +194,20 @@ impl ParseHost for Host {
     fn reservation(
         &mut self,
         _: &ReservationRequest,
-        _: &mut Budget,
+        budget: &mut Budget,
         _: &mut SourceAdmission,
     ) -> Result<Option<SourceReservation>, ParseError> {
+        if let Action::ResetReservation { cancel, fail } = self.action {
+            *budget = Budget::new(budget.limits());
+            if cancel {
+                budget.cancel();
+            }
+            return if fail {
+                Err(ParseError::Context)
+            } else {
+                Ok(None)
+            };
+        }
         Ok(Some(SourceReservation {
             source_id: SourceId("decoded".into()),
             revision: 0,

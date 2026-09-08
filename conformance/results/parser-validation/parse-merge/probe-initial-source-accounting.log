@@ -1,0 +1,23 @@
+   Compiling parse-merge-probe v0.0.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-parse-merge\source\probe)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.86s
+     Running tests\probe.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-parse-merge\probe-native-target\debug\deps\probe-c9e29b7aa6f6e530.exe)
+
+running 2 tests
+test independent_actual_closure_orders_duplicates_and_retry ... 
+thread 'independent_actual_closure_orders_duplicates_and_retry' (29940) panicked at probe\tests\probe.rs:1552:13:
+assertion `left == right` failed
+  left: 300
+ right: 108
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+FAILED
+test independent_actual_closure_stops_and_recovery ... public cancel, five unchanged Work caps, missing-field recovery
+ok
+
+failures:
+
+failures:
+    independent_actual_closure_orders_duplicates_and_retry
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.13s
+
+error: test failed, to rerun pass `-p parse-merge-probe --test probe`

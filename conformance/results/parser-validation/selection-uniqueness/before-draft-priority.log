@@ -1,0 +1,45 @@
+   Compiling typenum v1.20.1
+   Compiling autocfg v1.5.1
+   Compiling cfg-if v1.0.4
+   Compiling cpufeatures v0.3.1
+   Compiling unicode-ident v1.0.18
+   Compiling num-traits v0.2.19
+   Compiling hybrid-array v0.4.14
+   Compiling num-integer v0.1.47
+   Compiling crypto-common v0.2.2
+   Compiling block-buffer v0.12.1
+   Compiling num-bigint v0.5.1
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tree-selection\before\crates\foundation\core)
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tree-selection\before\crates\foundation\reader)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tree-selection\before\crates\foundation\wire)
+   Compiling nepl3-engine v0.1.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tree-selection\before\crates\foundation\engine)
+   Compiling tree-selection-probe v0.0.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tree-selection\before\probe)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 14.45s
+     Running tests\foreign.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-tree-selection\before-native-target\debug\deps\foreign-500a1d6089b0f183.exe)
+
+running 1 test
+test independent_foreign_scope ... FOREIGN false false false Usage { source_bytes: 25, work: 1922, depth: 3, nodes: 14, allocation_units: 1946, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN false false true Usage { source_bytes: 25, work: 1922, depth: 3, nodes: 14, allocation_units: 1946, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN false true false Usage { source_bytes: 25, work: 1922, depth: 3, nodes: 14, allocation_units: 1946, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN false true true Usage { source_bytes: 25, work: 1922, depth: 3, nodes: 14, allocation_units: 1946, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN true false false Usage { source_bytes: 25, work: 1922, depth: 3, nodes: 14, allocation_units: 1946, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN true false true Usage { source_bytes: 25, work: 1922, depth: 3, nodes: 14, allocation_units: 1946, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN true true false Usage { source_bytes: 25, work: 1922, depth: 3, nodes: 14, allocation_units: 1946, output_bytes: 0, diagnostics: 0, events: 0 }
+FOREIGN true true true Usage { source_bytes: 25, work: 1922, depth: 3, nodes: 14, allocation_units: 1946, output_bytes: 0, diagnostics: 0, events: 0 }
+
+thread 'independent_foreign_scope' (60364) panicked at probe\tests\foreign.rs:278:9:
+assertion failed: matches!(bad.validate(&resolved,&mut budget(),&mut
+    SourceAdmission::default()),Err(TreeError::Duplicate))
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+FAILED
+
+failures:
+
+failures:
+    independent_foreign_scope
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p tree-selection-probe --test foreign`

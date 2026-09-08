@@ -1,0 +1,72 @@
+{
+  "head": "9b11ed30dd797d8a9fad8bf3b1765d91299de5d5",
+  "base": "5c7f4f3b087c0147fda0be9c8db7e9d6bae1e0f3",
+  "source_archive_sha256": "963bafe2747d0f6a3905cac0132e4143bc3cde2f50b4529ebee98b1efd90d4b1",
+  "all_pristine_files_verified": 2776,
+  "changed_sources": [
+    {
+      "path": "crates/foundation/core/src/budget.rs",
+      "bytes": 10506,
+      "sha256": "893b252bb05e1f21a8288f3038832941c9339e9cbd39670369df9360709f9c62"
+    },
+    {
+      "path": "crates/foundation/core/tests/budget.rs",
+      "bytes": 4871,
+      "sha256": "5ddc68c7783b08e695547f4dc227de0c0b9447fa8171f526a56566b8a50f2968"
+    },
+    {
+      "path": "crates/foundation/engine/tests/parse.rs",
+      "bytes": 57091,
+      "sha256": "0ad339530ca0212e6d84033c6ea75b7c8b8c920230d39f65a20b75d4da5efa2f"
+    },
+    {
+      "path": "crates/foundation/engine/tests/parse/host.rs",
+      "bytes": 7327,
+      "sha256": "42e027d4778e521258f80059313d8b004fcf8f0320889f3e0d4b0b93731d7cd1"
+    },
+    {
+      "path": "crates/foundation/reader/src/tokenizer/host.rs",
+      "bytes": 2845,
+      "sha256": "70ce2a6af2e6e49d53fa65710fc586b8c3835eb971aa6483bf80043f4108a690"
+    },
+    {
+      "path": "crates/foundation/reader/src/tokenizer/session.rs",
+      "bytes": 66040,
+      "sha256": "fbeb1ff4064d48ff706232d6121afa3d53b0e50fac415cff9bcf0f2a977b07ef"
+    },
+    {
+      "path": "doc/spec/03-reader.md",
+      "bytes": 31232,
+      "sha256": "0aa43b21f560c2d39037dfca9674ea98093d5a9820d44924794cbe98119ae997"
+    }
+  ],
+  "results": {
+    "native": {
+      "exit_code": 0,
+      "passed": 212
+    },
+    "wasi": {
+      "exit_code": 0,
+      "passed": 212
+    },
+    "probe-native": {
+      "exit_code": 0,
+      "passed": 5
+    },
+    "probe-wasi": {
+      "exit_code": 0,
+      "passed": 5
+    }
+  },
+  "toolchain": "rustc 1.97.0 (2d8144b78 2026-07-07)",
+  "runner": "wasmtime 44.0.1 (f302ebd6b 2026-04-30)",
+  "verdict": "no new blocking findings; previous integrity finding corrected",
+  "commands": [
+    "cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-engine",
+    "cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-engine --target wasm32-wasip2",
+    "cargo test --locked -p nepl3-reader -p nepl3-engine reviewer_ -- --nocapture",
+    "cargo test --locked -p nepl3-reader -p nepl3-engine reviewer_ --target wasm32-wasip2 -- --nocapture"
+  ],
+  "wasi_runner": "wasmtime run",
+  "production_mutation_by_reviewer": false
+}

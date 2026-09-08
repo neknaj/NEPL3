@@ -1,6 +1,107 @@
 use super::*;
 use nepl3_reader::tokenizer::*;
 
+#[test]
+fn recovering_tokenizer_returns_the_prior_native_collector() -> Result<(), ReaderError> {
+    let (registry, schema) = registry()?;
+    let plan = provider_plan(&schema);
+    let checked = plan.check(&registry, &mut budget())?;
+    let input = source("\"a\\n\"")?;
+    let mut store = SourceStore::default();
+    store.insert(input.clone())?;
+    let raw = context(&schema, &registry)?;
+    let modes = vec![ReaderMode {
+        name: "test".into(),
+        skip: vec![],
+        take: vec![],
+    }];
+    for failure_kind in 0..4 {
+        let mut b = budget();
+        let mut admission = SourceAdmission::default();
+        let context = check_context(&raw, &store, &registry, &mut b, &mut admission)?;
+        let mut session =
+            TokenizationSession::new("recover".into(), &modes, &checked, &registry, &mut b)?;
+        let scope = TokenizationScope {
+            operation_id: "operation".into(),
+            profile_digest: Digest([3; 32]),
+            snapshot: input.reference(),
+        };
+        let accepted = AcceptedTokenizationReport::empty(scope.clone(), &mut b)?;
+        let state = NdfValue::Unit;
+        let request = || TokenizationRequest {
+            snapshot: &input,
+            start: 0,
+            limit: 5,
+            final_input: true,
+            context: &context,
+            state: &state,
+        };
+        let target = |local_kind| TokenTarget::Builtin {
+            reader: nepl3_reader::builtin::BuiltinReader::Text,
+            token_kind: KindRef {
+                schema: schema.clone(),
+                local_kind,
+            },
+        };
+        let original = session
+            .read_accepted_with_host(
+                ScopedTokenizationRequest {
+                    scope: &scope,
+                    target: target(0),
+                    input: request(),
+                },
+                &store,
+                &mut b,
+                &mut admission,
+                accepted,
+                &mut Host { mode: 0, calls: 0 },
+            )?
+            .reply
+            .accepted;
+        assert_eq!(original.sources().len(), 1);
+        assert_eq!(original.source_maps().len(), 2);
+        let sources = original.sources().as_ptr();
+        let maps = original.source_maps().as_ptr();
+        let usage = original.report().usage;
+        let mut request_scope = scope.clone();
+        match failure_kind {
+            0 => session.close(),
+            2 => request_scope.operation_id.push('x'),
+            3 => b = Budget::new(b.limits()),
+            _ => {}
+        }
+        let result = session.read_with_accepted_recover(
+            ScopedTokenizationRequest {
+                scope: &request_scope,
+                target: target(if failure_kind == 1 { u64::MAX } else { 0 }),
+                input: request(),
+            },
+            &store,
+            &mut b,
+            &mut admission,
+            original,
+        );
+        let Err(AcceptedTokenizationFailure::Recoverable { error, accepted }) = result else {
+            return Err(ReaderError::ProviderContract);
+        };
+        match failure_kind {
+            0 => assert_eq!(error, ReaderError::Closed),
+            1 => assert!(matches!(error, ReaderError::Schema(_))),
+            _ => assert_eq!(error, ReaderError::Continuation),
+        }
+        assert_eq!(accepted.scope(), &scope);
+        assert_eq!(accepted.sources().as_ptr(), sources);
+        assert_eq!(accepted.source_maps().as_ptr(), maps);
+        assert_eq!(accepted.sources()[0].text(), "a\n");
+        if failure_kind == 3 {
+            assert_eq!(accepted.report().usage, usage);
+        } else {
+            assert_eq!(accepted.report().usage, b.usage());
+        }
+    }
+    Ok(())
+}
+
 struct Host {
     mode: u8,
     calls: usize,

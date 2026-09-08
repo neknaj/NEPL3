@@ -1,0 +1,122 @@
+{
+  "head": "6f84a51b626de595fb73635ed4b116055edfb9e4",
+  "base": "e7124f9c8ad5a50d0ff5331b954e96f0f054016d",
+  "tests": {
+    "managed-native": 61,
+    "managed-wasi": 61,
+    "probe-native": 2,
+    "probe-wasi": 2,
+    "before-native": 2
+  },
+  "typed_error_cases_equal": 7,
+  "common_stop_caps": 76,
+  "stopped_work_granularity_changes": [
+    {
+      "cap": 374,
+      "before_charged_work": 321,
+      "after_charged_work": 373,
+      "outcome": "Err(Stopped(WorkLimit))"
+    },
+    {
+      "cap": 391,
+      "before_charged_work": 321,
+      "after_charged_work": 373,
+      "outcome": "Err(Stopped(WorkLimit))"
+    },
+    {
+      "cap": 408,
+      "before_charged_work": 321,
+      "after_charged_work": 373,
+      "outcome": "Err(Stopped(WorkLimit))"
+    },
+    {
+      "cap": 1173,
+      "before_charged_work": 1116,
+      "after_charged_work": 1168,
+      "outcome": "Err(Stopped(WorkLimit))"
+    },
+    {
+      "cap": 1190,
+      "before_charged_work": 1116,
+      "after_charged_work": 1168,
+      "outcome": "Err(Stopped(WorkLimit))"
+    },
+    {
+      "cap": 1207,
+      "before_charged_work": 1116,
+      "after_charged_work": 1168,
+      "outcome": "Err(Stopped(WorkLimit))"
+    }
+  ],
+  "source_bodies_verified": {
+    "source": 214,
+    "before": 214
+  },
+  "external_lock_versions_checksums_equal": true,
+  "probe_both_revisions_exact": true,
+  "performance": [
+    {
+      "sources": 1,
+      "position": 0,
+      "before_work": 12505,
+      "after_work": 12505,
+      "allocation_unchanged": true
+    },
+    {
+      "sources": 2,
+      "position": 0,
+      "before_work": 13535,
+      "after_work": 12651,
+      "allocation_unchanged": true
+    },
+    {
+      "sources": 2,
+      "position": 1,
+      "before_work": 13534,
+      "after_work": 13534,
+      "allocation_unchanged": true
+    },
+    {
+      "sources": 8,
+      "position": 0,
+      "before_work": 20775,
+      "after_work": 14587,
+      "allocation_unchanged": true
+    },
+    {
+      "sources": 8,
+      "position": 4,
+      "before_work": 20774,
+      "after_work": 20774,
+      "allocation_unchanged": true
+    },
+    {
+      "sources": 8,
+      "position": 7,
+      "before_work": 20774,
+      "after_work": 20774,
+      "allocation_unchanged": true
+    },
+    {
+      "sources": 32,
+      "position": 0,
+      "before_work": 55207,
+      "after_work": 27803,
+      "allocation_unchanged": true
+    },
+    {
+      "sources": 32,
+      "position": 16,
+      "before_work": 55206,
+      "after_work": 55206,
+      "allocation_unchanged": true
+    },
+    {
+      "sources": 32,
+      "position": 31,
+      "before_work": 55206,
+      "after_work": 55206,
+      "allocation_unchanged": true
+    }
+  ]
+}

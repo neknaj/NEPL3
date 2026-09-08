@@ -1,0 +1,100 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-parse-merge\source\crates\foundation\core)
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-parse-merge\source\crates\foundation\reader)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-parse-merge\source\crates\foundation\wire)
+   Compiling nepl3-engine v0.1.0 (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-parse-merge\source\crates\foundation\engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.68s
+     Running unittests src\lib.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-parse-merge\managed-wasi-target\wasm32-wasip2\debug\deps\nepl3_engine-1ef28d163b559b9e.wasm)
+
+running 4 tests
+test head::tests::completed_projection_preserves_compound_values_without_unread_siblings_or_tables ... ok
+test head::tests::window_preserves_exact_utf8_and_requires_admission_in_each_operation ... ok
+test parse::build::tests::closure_merge_preserves_source_order_full_identity_and_conflicts ... ok
+test parse::build::tests::ordered_closure_duplicates_fit_linear_comparison_allowance ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\head.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-parse-merge\managed-wasi-target\wasm32-wasip2\debug\deps\head-b12896bd37bf9128.wasm)
+
+running 14 tests
+test completed_head_wrapper_preserves_owned_execution_and_pending_boundaries ... ok
+test deep_failed_payload_respects_saved_call_depth_and_keeps_prior_report ... ok
+test dynamic_head_uses_compound_completed_child_and_restores_normal_child_context ... ok
+test failed_child_context_preserves_known_parent_arity_and_formal_primary_once ... ok
+test foreign_completed_selector_uses_local_projection_ids_and_returns_to_host_body ... ok
+test head_cancel_keeps_accepted_diagnostic_event_and_fixed_parent_progress ... ok
+test head_resume_source_uri_conflict_and_missing_primary_preserve_the_original_slot ... ok
+test head_resume_uses_saved_auxiliary_context_and_rejects_caller_conflicts_before_consumption ... ok
+test head_trace_overflow_requires_stopped_and_invalid_success_keeps_pending ... ok
+test long_failed_reply_is_charged_before_primary_equality_and_keeps_prior_report ... ok
+test portable::portable_callback_and_dynamic_tree_match_owned_native_execution ... ok
+test shape_provider_failure_keeps_unknown_arity_unparsed_and_primary_once ... ok
+test synchronous_head_host_and_owned_fallback_keep_the_same_tree_and_positions ... ok
+test synchronous_head_reader_head_dispatch_matches_owned_interleaving ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.75s
+
+     Running tests\package.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-parse-merge\managed-wasi-target\wasm32-wasip2\debug\deps\package-87bcec33723e5e98.wasm)
+
+running 21 tests
+test head::head_registrations_bind_alias_signature_host_identity_and_profile_digest ... ok
+test head::portable::delegated_grant_and_real_framing_share_the_original_work_cap ... ok
+test head::portable::head_all_reply_branches_preserve_projected_report_and_reject_invalid_fixes_and_graphs ... ok
+test head::portable::head_delegation_accounts_window_reception_once_and_merges_relative_costs_with_absolute_depth ... ok
+test head::portable::head_first_receiver_preserves_compound_projection_and_rejects_schema_valid_corruption ... ok
+test head::portable::projected_shared_payload_depth_includes_the_deeper_graph_path ... ok
+test head::portable::stopped_transport_records_child_cost_and_unsettled_drop_blocks_parent_reuse ... ok
+test listof_foreign_has_foreign_head_and_local_tail_without_losing_its_selector ... ok
+test package_boundary_checks_extension_provenance_and_resource_limits ... ok
+test package_checks_real_surface_shapes_modes_selectors_and_binding_coverage ... ok
+test package_rejects_direct_reader_cycles_and_counts_binding_entry_depth ... ok
+test persistent_tree_checks_parent_reads_spelling_payload_and_concrete_owner ... ok
+test portable::facts::facts_all_reply_branches_keep_report_only_sources_and_request_relative_grants ... ok
+test portable::facts::facts_first_receiver_decodes_without_the_senders_request_or_source_store ... ok
+test portable::facts::facts_request_binds_complete_host_authority_and_canonical_target ... ok
+test portable::typed_tree_recovery_uses_the_guest_source_table_and_canonical_node_reference ... ok
+test portable::typed_tree_roundtrip_remaps_every_local_owner_and_rejects_stale_wrapper_indices ... ok
+test recovery_strategy_and_sync_order_are_part_of_package_behavior ... ok
+test resolved_profile_pins_real_package_host_providers_resources_and_foreign_modes ... ok
+test semantic_identity_preserves_ordered_behavior_and_presentation_fallback ... ok
+test semantic_identity_removes_arena_layout_sharing_and_provenance ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.66s
+
+     Running tests\parse.rs (C:\projects\NEPL3-doc-authoring-delivery\.tmp\review-parse-merge\managed-wasi-target\wasm32-wasip2\debug\deps\parse-11744a5bfc5f4b64.wasm)
+
+running 20 tests
+test accepted_trivia_without_a_token_survives_eof_and_need_more ... ok
+test allocation_stop_preserves_actual_usage_and_never_invents_a_root ... ok
+test append_retry_reparses_every_scalar_split_and_keeps_cumulative_usage ... ok
+test append_retry_retains_original_caller_depth_when_host_resumes_at_zero ... ok
+test completed_parse_wrappers_preserve_raw_outcomes_reports_and_costs ... ok
+test explicit_list_spine_preserves_declared_head_and_tail_children ... ok
+test foreign::foreign_root_mode_is_guest_owned_and_normal_child_and_host_restore_defaults ... ok
+test missing_children_share_one_bundle_recovery_table ... ok
+test missing_final_child_and_nonfinal_input_are_distinct ... ok
+test native_host_cancel_and_invalid_reply_keep_boundary_semantics ... ok
+test native_host_failure_keeps_generated_diagnostic_and_event_closure ... ok
+test native_host_mixed_text_provider_fallback_preserves_decoded_sources ... ok
+test native_host_nested_stop_is_sticky_without_host_mutating_budget ... ok
+test native_host_prefix_growth_reduces_measured_copy_work ... parents 1: owned Usage { source_bytes: 7, work: 9844, depth: 6, nodes: 38, allocation_units: 174918, output_bytes: 0, diagnostics: 2, events: 0 }, native Usage { source_bytes: 7, work: 3598, depth: 6, nodes: 34, allocation_units: 34272, output_bytes: 0, diagnostics: 2, events: 0 }
+parents 4: owned Usage { source_bytes: 25, work: 45001, depth: 9, nodes: 119, allocation_units: 708867, output_bytes: 0, diagnostics: 5, events: 0 }, native Usage { source_bytes: 25, work: 12223, depth: 9, nodes: 109, allocation_units: 105723, output_bytes: 0, diagnostics: 5, events: 0 }
+parents 8: owned Usage { source_bytes: 49, work: 127213, depth: 13, nodes: 255, allocation_units: 1908279, output_bytes: 0, diagnostics: 9, events: 0 }, native Usage { source_bytes: 49, work: 27111, depth: 13, nodes: 237, allocation_units: 220843, output_bytes: 0, diagnostics: 9, events: 0 }
+ok
+test native_host_preserves_tree_reports_maps_and_owned_fallback ... ok
+test prefix_depth_composes_with_nested_reader_frames ... ok
+test provider_resume_keeps_prefix_frames_report_and_caller_depth ... ok
+test static_form_keeps_builtin_children_and_token_payloads ... ok
+test text_reservation_preserves_prefix_identity_and_composed_caller_depth ... ok
+test unknown_heads_preserve_remainder_without_inventing_a_leaf_arity ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.86s
+
+   Doc-tests nepl3_engine
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

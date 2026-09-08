@@ -1,0 +1,348 @@
+diff --git a/crates/foundation/reader/src/tokenizer/session.rs b/crates/foundation/reader/src/tokenizer/session.rs
+index 1c9caa2..31bf0a2 100644
+--- a/crates/foundation/reader/src/tokenizer/session.rs
++++ b/crates/foundation/reader/src/tokenizer/session.rs
+@@ -16,6 +16,8 @@ use nepl3_core::{
+     source::{Digest, SourceAdmission, SourceError, SourceReservation, SourceStore},
+     view::{Token, Trivia, TriviaKind, ViewBundle},
+ };
++#[cfg(test)]
++mod ownership_tests;
+ 
+ enum Resume<'a> {
+     Reservation(&'a SourceReservation),
+@@ -364,9 +366,11 @@ impl<'a> TokenizationSession<'a> {
+         let result = self.read_seed(
+             target, request, sources, budget, admission, accepted, host, host_error,
+         );
+-        result.map(|reply| AcceptedTokenizationReply::from_native(reply, scope, budget))
++        result
++            .map(|reply| AcceptedTokenizationReply::from_native(reply, scope, budget))
++            .map_err(|failure| failure.error)
+     }
+-    #[allow(clippy::too_many_arguments)]
++    #[allow(clippy::too_many_arguments, clippy::result_large_err)]
+     fn read_seed(
+         &mut self,
+         target: TokenTarget,
+@@ -377,28 +381,33 @@ impl<'a> TokenizationSession<'a> {
+         accepted: AcceptedTokenizationReport,
+         host: Option<&mut dyn super::TokenizationHost>,
+         host_error: &mut Option<ReaderError>,
+-    ) -> Result<TokenizationReply, ReaderError> {
++    ) -> Result<TokenizationReply, runtime::ReadFailure> {
+         if accepted.limits != budget.limits()
+             || !runtime::usage_at_least(budget.usage(), accepted.report.usage)
+         {
+-            return Err(ReaderError::Continuation);
++            return Err(seed_failure(ReaderError::Continuation, accepted, budget));
+         }
+-        if let TokenTarget::Builtin { token_kind, .. } = &target {
+-            self.registry
+-                .kind_name(&token_kind.schema, token_kind.local_kind)?;
++        if let TokenTarget::Builtin { token_kind, .. } = &target
++            && let Err(error) = self
++                .registry
++                .kind_name(&token_kind.schema, token_kind.local_kind)
++        {
++            return Err(seed_failure(error.into(), accepted, budget));
+         }
+         if self.closed {
+-            return Err(ReaderError::Closed);
++            return Err(seed_failure(ReaderError::Closed, accepted, budget));
+         }
+         if self.pending.is_some() {
+-            return Err(ReaderError::Busy);
++            return Err(seed_failure(ReaderError::Busy, accepted, budget));
+         }
+         self.scope = Some(Rc::clone(&accepted.scope));
+-        let mode = self
++        let Some(mode) = self
+             .modes
+             .iter()
+             .find(|mode| mode.name == request.context.mode)
+-            .ok_or(ReaderError::Context)?;
++        else {
++            return Err(seed_failure(ReaderError::Context, accepted, budget));
++        };
+         // Validation precedes owned checkpoint copies, including long SourceIds and state values.
+         if let Err(error) = runtime::validate::request(
+             &ReadRequest {
+@@ -417,7 +426,7 @@ impl<'a> TokenizationSession<'a> {
+         ) {
+             return match runtime::stop_reason(&error) {
+                 Some(reason) => Ok(empty_stop(request.start, reason, accepted, budget)),
+-                None => Err(error),
++                None => Err(seed_failure(error, accepted, budget)),
+             };
+         }
+         let accepted_check = (|| -> Result<(), ReaderError> {
+@@ -457,13 +466,21 @@ impl<'a> TokenizationSession<'a> {
+         if let Err(error) = accepted_check {
+             return match runtime::stop_reason(&error) {
+                 Some(reason) => Ok(empty_stop(request.start, reason, accepted, budget)),
+-                None => Err(error),
++                None => Err(seed_failure(error, accepted, budget)),
+             };
+         }
+         let state = match request.state.clone_with_budget(budget) {
+             Ok(state) => state,
+             Err(reason) => return Ok(empty_stop(request.start, reason, accepted, budget)),
+         };
++        // Check before moving the accepted collector into the machine.
++        let depth_base = match budget.current_depth().checked_add(1) {
++            Some(depth) => depth,
++            None => {
++                let reason = budget.stop(StopReason::DepthLimit);
++                return Ok(empty_stop(request.start, reason, accepted, budget));
++            }
++        };
+         let mut machine = Machine {
+             request: Input {
+                 snapshot: request.snapshot,
+@@ -495,10 +512,7 @@ impl<'a> TokenizationSession<'a> {
+             expected: vec![],
+             furthest: request.start,
+             limits: budget.limits(),
+-            depth_base: budget
+-                .current_depth()
+-                .checked_add(1)
+-                .ok_or_else(|| budget.stop(StopReason::DepthLimit))?,
++            depth_base,
+         };
+         let outcome = budget.with_depth(|budget| match host {
+             Some(host) => {
+@@ -506,7 +520,7 @@ impl<'a> TokenizationSession<'a> {
+             }
+             None => self.drive(&mut machine, None, sources, budget, admission),
+         });
+-        self.finish(machine, outcome, budget)
++        self.finish_recover(machine, outcome, budget)
+     }
+     pub fn reserve(
+         &mut self,
+@@ -1084,10 +1098,21 @@ impl<'a> TokenizationSession<'a> {
+     }
+     fn finish(
+         &mut self,
+-        mut machine: Machine<'a, '_>,
++        machine: Machine<'a, '_>,
+         result: Result<Outcome, ReaderError>,
+         budget: &mut Budget,
+     ) -> Result<TokenizationReply, ReaderError> {
++        self.finish_recover(machine, result, budget)
++            .map_err(|failure| failure.error)
++    }
++    // Recovery must work with an exhausted allocation budget; do not box its collector.
++    #[allow(clippy::result_large_err)]
++    fn finish_recover(
++        &mut self,
++        mut machine: Machine<'a, '_>,
++        result: Result<Outcome, ReaderError>,
++        budget: &mut Budget,
++    ) -> Result<TokenizationReply, runtime::ReadFailure> {
+         let outcome = match result {
+             Ok(outcome) => outcome,
+             Err(error) => match runtime::stop_reason(&error) {
+@@ -1097,7 +1122,7 @@ impl<'a> TokenizationSession<'a> {
+                 }
+                 None => {
+                     self.reader.discard_pending();
+-                    return Err(error);
++                    return Err(current_failure(error, machine.current, budget));
+                 }
+             },
+         };
+@@ -1173,20 +1198,60 @@ impl<'a> TokenizationSession<'a> {
+                             machine.trivia,
+                             budget,
+                         )),
+-                        None => Err(error),
++                        None => Err(current_failure(error, machine.current, budget)),
+                     };
+                 }
+             }
+         }
+         self.reader.discard_pending();
+-        Ok(reply(
+-            outcome.public(None)?,
+-            machine.current,
+-            machine.trivia,
+-            budget,
+-        ))
++        let public = match outcome.public(None) {
++            Ok(public) => public,
++            Err(error) => return Err(current_failure(error, machine.current, budget)),
++        };
++        Ok(reply(public, machine.current, machine.trivia, budget))
+     }
+ }
++fn seed_failure(
++    error: ReaderError,
++    mut accepted: AcceptedTokenizationReport,
++    budget: &Budget,
++) -> runtime::ReadFailure {
++    // A rejected fresh or foreign budget is not an observation of this
++    // operation. Do not erase the accepted usage while returning its owner.
++    if accepted.limits == budget.limits()
++        && runtime::usage_at_least(budget.usage(), accepted.report.usage)
++    {
++        accepted.report.usage = budget.usage();
++    }
++    runtime::ReadFailure {
++        error,
++        accepted: runtime::AcceptedReport {
++            report: accepted.report,
++            sources: accepted.sources,
++            source_maps: accepted.source_maps,
++        },
++    }
++}
++fn current_failure(
++    error: ReaderError,
++    current: ReaderCheckpoint,
++    budget: &Budget,
++) -> runtime::ReadFailure {
++    runtime::ReadFailure {
++        error,
++        accepted: runtime::AcceptedReport {
++            report: Report {
++                diagnostics: current.diagnostics,
++                events: current.events,
++                trace_overflow: current.trace_overflow,
++                usage: budget.usage(),
++            },
++            sources: current.sources,
++            source_maps: current.source_maps,
++        },
++    }
++}
++
+ fn owned_request(
+     machine: &Machine<'_, '_>,
+     budget: &mut Budget,
+diff --git a/crates/foundation/reader/src/tokenizer/session/ownership_tests.rs b/crates/foundation/reader/src/tokenizer/session/ownership_tests.rs
+new file mode 100644
+index 0000000..123570b
+--- /dev/null
++++ b/crates/foundation/reader/src/tokenizer/session/ownership_tests.rs
+@@ -0,0 +1,119 @@
++use super::*;
++use nepl3_core::{
++    diagnostic::TraceOverflow,
++    origin::{Mapping, MappingKind},
++    source::{SourceId, SourceSnapshot},
++    value::NdfValue,
++};
++
++fn budget() -> Budget {
++    Budget::new(Limits {
++        source_bytes: 10000,
++        work: 100000,
++        depth: 100,
++        nodes: 10000,
++        allocation_units: 100000,
++        output_bytes: 10000,
++        diagnostics: 10,
++        events: 10,
++    })
++}
++
++#[test]
++fn tokenizer_failure_moves_source_closure_with_exhausted_budget() -> Result<(), ReaderError> {
++    let source = SourceSnapshot::new(
++        SourceId("original".into()),
++        7,
++        "memory:original".into(),
++        vec![b'x', b'y'],
++        &mut budget(),
++    )?;
++    let scope = TokenizationScope {
++        operation_id: "operation".into(),
++        profile_digest: Digest([0; 32]),
++        snapshot: source.reference(),
++    };
++    let mut b = budget();
++    let mut accepted = AcceptedTokenizationReport::empty(scope, &mut b)?;
++    accepted.source_maps.push(Mapping {
++        source: source.span(0, 1)?,
++        target: source.span(1, 2)?,
++        kind: MappingKind::Transformed,
++    });
++    accepted.sources.push(source);
++    accepted.report.trace_overflow = Some(TraceOverflow { dropped: 7 });
++    let sources = accepted.sources.as_ptr();
++    let maps = accepted.source_maps.as_ptr();
++    b.charge(Resource::Work, 11)?;
++    b.stop(StopReason::AllocationLimit);
++    let before = b.usage();
++    let seed = seed_failure(ReaderError::ProviderContract, accepted, &b);
++    assert_eq!(seed.error, ReaderError::ProviderContract);
++    assert_eq!(seed.accepted.sources.as_ptr(), sources);
++    assert_eq!(seed.accepted.source_maps.as_ptr(), maps);
++    let runtime::AcceptedReport {
++        report,
++        sources: owned,
++        source_maps,
++    } = seed.accepted;
++    let current = ReaderCheckpoint {
++        cursor: 1,
++        state: NdfValue::Unit,
++        view: ViewBundle {
++            elements: vec![],
++            roots: vec![],
++        },
++        facts: vec![],
++        diagnostics: report.diagnostics,
++        events: report.events,
++        trace_overflow: report.trace_overflow,
++        sources: owned,
++        source_maps,
++    };
++    let failure = current_failure(ReaderError::Continuation, current, &b);
++    assert_eq!(failure.error, ReaderError::Continuation);
++    assert_eq!(failure.accepted.sources.as_ptr(), sources);
++    assert_eq!(failure.accepted.source_maps.as_ptr(), maps);
++    assert_eq!(failure.accepted.sources[0].identity().revision, 7);
++    assert_eq!(
++        failure.accepted.report.trace_overflow,
++        Some(TraceOverflow { dropped: 7 })
++    );
++    assert_eq!(failure.accepted.report.usage, before);
++    assert_eq!(b.usage(), before);
++    assert_eq!(b.poll(), Err(StopReason::AllocationLimit));
++    Ok(())
++}
++
++#[test]
++fn rejected_budget_cannot_erase_previously_accepted_usage() -> Result<(), ReaderError> {
++    let source = SourceSnapshot::new(
++        SourceId("input".into()),
++        0,
++        "memory:input".into(),
++        vec![b'x'],
++        &mut budget(),
++    )?;
++    for changed_limits in [false, true] {
++        let mut original = budget();
++        let accepted = AcceptedTokenizationReport::empty(
++            TokenizationScope {
++                operation_id: "operation".into(),
++                profile_digest: Digest([0; 32]),
++                snapshot: source.reference(),
++            },
++            &mut original,
++        )?;
++        let saved = accepted.report.usage;
++        let mut limits = original.limits();
++        if changed_limits {
++            limits.work += 1;
++        }
++        let foreign = Budget::new(limits);
++        let failure = seed_failure(ReaderError::Continuation, accepted, &foreign);
++        assert_eq!(failure.error, ReaderError::Continuation);
++        assert_eq!(failure.accepted.report.usage, saved);
++        assert_eq!(foreign.usage().allocation_units, 0);
++    }
++    Ok(())
++}

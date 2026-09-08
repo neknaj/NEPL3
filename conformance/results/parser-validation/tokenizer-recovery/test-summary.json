@@ -1,0 +1,8 @@
+{
+  "managed-native": 66,
+  "managed-wasi": 66,
+  "probe-native": 1,
+  "probe-wasi": 1,
+  "fault-native": 1,
+  "fault-wasi": 1
+}

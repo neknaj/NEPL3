@@ -1,0 +1,62 @@
+[
+  {
+    "label": "before-native",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-engine",
+      "--test",
+      "package",
+      "review_indexed_context",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-tree-selection-lookup\\target-before",
+      "--",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "exit_code": 0,
+    "seconds": 2.796819799928926
+  },
+  {
+    "label": "after-native",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-engine",
+      "--test",
+      "package",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-tree-selection-lookup\\target-after",
+      "--",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "exit_code": 0,
+    "seconds": 2.9058224000036716
+  },
+  {
+    "label": "after-wasi",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-engine",
+      "--test",
+      "package",
+      "--target-dir",
+      "C:\\projects\\NEPL3-runtime\\.tmp\\review-tree-selection-lookup\\target-after",
+      "--target",
+      "wasm32-wasip2",
+      "--",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "exit_code": 0,
+    "seconds": 180.79593440005556
+  }
+]

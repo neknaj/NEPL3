@@ -10,3 +10,5 @@ pub use session::TokenizationSession;
 
 mod accepted;
 pub use accepted::{AcceptedTokenizationReply, AcceptedTokenizationReport};
+mod recovery;
+pub use recovery::{AcceptedTokenizationFailure, RecoverableHostReply};

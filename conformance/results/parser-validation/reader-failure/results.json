@@ -1,0 +1,13 @@
+{
+  "counts": {
+    "managed-native": 61,
+    "managed-wasi": 61,
+    "before-native": 59,
+    "probe-native": 3,
+    "probe-wasi": 3
+  },
+  "source_hashes_unchanged": true,
+  "instrumentation_only_test_module": true,
+  "source_files": 103,
+  "base_files": 102
+}
