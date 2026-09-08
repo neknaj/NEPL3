@@ -1181,12 +1181,17 @@
   },
   {
     "path": "integration/ci/record.json",
-    "bytes": 554,
-    "sha256": "585223f34a60f91acab515233a1fcda34b7db7e71830d6fa3544b7351885bd30"
+    "bytes": 537,
+    "sha256": "cef654eb3bb088c2aefefa66c2ca291742b39ed00b52a7f07e1c143167c47bb2"
   },
   {
     "path": "integration/ci/rustdoc-fixed.log",
     "bytes": 1177,
     "sha256": "f9315efa1f6d7fbe701d66d1b4cdc98fec235f6882fc08ba08862723789410aa"
+  },
+  {
+    "path": "integration/ci/jobs-2e.json",
+    "bytes": 24258,
+    "sha256": "46d61a381c1df7ca873b6d9543dec16d590ea3723a80364115c87ac743414854"
   }
 ]
