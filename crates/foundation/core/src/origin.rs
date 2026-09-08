@@ -594,6 +594,10 @@ fn snapshot_dag<'a>(
     // Successive fragments often share one endpoint. Reuse only its index;
     // compare the complete identity on every hit, within this one graph build.
     let mut recent: [Option<usize>; 2] = [None, None];
+    // Position of the last ordered lookup, local to this graph construction.
+    // Repeated endpoint hits do not move it. Any insertion replaces it with
+    // the inserted position, so index shifts cannot leave a stale position.
+    let mut ordered_hint: Option<usize> = None;
     for mapping in input {
         budget.charge(Resource::Work, 1)?;
         let mut ids = [0usize; 2];
@@ -611,6 +615,20 @@ fn snapshot_dag<'a>(
                 }
             }
             let (mut low, mut high) = (0, ordered.len());
+            if found.is_none()
+                && let Some(at) = ordered_hint
+            {
+                let prior = nodes[ordered[at]];
+                budget.charge(
+                    Resource::Work,
+                    prior.source.0.len().min(identity.source.0.len()) as u64 + 41,
+                )?;
+                match prior.cmp(identity) {
+                    core::cmp::Ordering::Equal => found = Some(ordered[at]),
+                    core::cmp::Ordering::Less => low = at + 1,
+                    core::cmp::Ordering::Greater => high = at,
+                }
+            }
             while found.is_none() && low < high {
                 let mid = low + (high - low) / 2;
                 let index = ordered[mid];
@@ -622,6 +640,7 @@ fn snapshot_dag<'a>(
                 match prior.cmp(identity) {
                     core::cmp::Ordering::Equal => {
                         found = Some(index);
+                        ordered_hint = Some(mid);
                         break;
                     }
                     core::cmp::Ordering::Less => low = mid + 1,
@@ -648,6 +667,7 @@ fn snapshot_dag<'a>(
                     nodes.push(identity);
                     outgoing.push(None);
                     ordered.insert(low, index);
+                    ordered_hint = Some(low);
                     index
                 }
             };

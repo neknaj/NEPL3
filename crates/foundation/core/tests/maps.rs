@@ -5,6 +5,59 @@ use nepl3_core::{
 };
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 #[test]
+fn ordered_graph_hint_survives_insertions_before_and_after_cached_positions() -> TestResult {
+    let mut sources = SourceStore::default();
+    let mut vertices = Vec::new();
+    for name in ["z", "a", "m", "b", "日本語"] {
+        let snapshot = source(name, "x")?;
+        sources
+            .insert(snapshot.clone())
+            .map_err(|e| format!("{e:?}"))?;
+        vertices.push(snapshot);
+    }
+    let edge = |i: usize, j: usize| -> Result<Mapping, String> {
+        Ok(Mapping {
+            source: vertices[i].span(0, 1).map_err(|e| format!("{e:?}"))?,
+            target: vertices[j].span(0, 1).map_err(|e| format!("{e:?}"))?,
+            kind: MappingKind::Exact,
+        })
+    };
+    for a in 0..4 {
+        for b in 0..4 {
+            for c in 0..4 {
+                for d in 0..4 {
+                    let order = [a, b, c, d];
+                    if (0..4).any(|i| (0..i).any(|j| order[i] == order[j])) {
+                        continue;
+                    }
+                    let mut maps = order
+                        .into_iter()
+                        .map(|i| edge(i, i + 1))
+                        .collect::<Result<Vec<_>, _>>()?;
+                    // A five-vertex chain is acyclic in all 24 edge orders,
+                    // independently of source name order and index shifts.
+                    for split in 0..=4 {
+                        SourceMap::validate_mapping_parts(
+                            &maps[..split],
+                            &maps[split..],
+                            &sources,
+                            &mut budget(),
+                        )
+                        .map_err(|e| format!("{e:?}"))?;
+                    }
+                    maps.push(edge(4, 0)?);
+                    assert!(matches!(
+                        SourceMap::validate_mappings(&maps, &sources, &mut budget()),
+                        Err(OriginError::Cycle)
+                    ));
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn indexed_map_graphs_agree_with_transitive_closure_in_both_orders() -> TestResult {
     // The oracle uses Boolean reachability, independently of the production
     // topological/pointwise algorithm. Distinct revisions remain distinct nodes.
