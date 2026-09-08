@@ -1195,5 +1195,24 @@ body
       cons "[名前/なまえ]の[選択位置/せんたくいち]は[固定/こてい]UTF-8 byte[期待/きたい]と[一致/いっち]し、[表示/ひょうじ]labelや[見出/みだ]し[内/ない]に[同/おな]じ[綴/つづ]りがあっても[名前/なまえ]operandと[取/と]り[違/ちが]えない。"
       cons "[初回/しょかい]CBOR[受信後/じゅしんご]の[再/さい]checkでも、[同/おな]じ[定義/ていぎ]ID・[参照先/さんしょうさき]・[位置/いち]と[型付/かたつ]き[失敗/しっぱい]を[保持/ほじ]した。"
       cons "guest[内/ない]の[重複/じゅうふく]をhostのDocLabel[空間/くうかん]へ[持/も]ち[込/こ]まない。" nil
+    cons paragraph
+      cons "[共有/きょうゆう]DAGの[契約/けいやく]は[単一/たんいつ]nodeの[共有/きょうゆう]と[表示上/ひょうじじょう]のanchor[出現/しゅつげん]を[区別/くべつ]する。"
+      cons "[独立/どくりつ]のsource-less Doc arenaで、1[層/そう]および200[層/そう]の[二重参照/にじゅうさんしょう]parentを[構成/こうせい]し、[共有/きょうゆう]AnchorをDuplicateOccurrenceとすること、[返/かえ]された[二/ふた]つのowner/child/target[経路/けいろ]が[実際/じっさい]のArticleからAnchorへの[辺列/へんれつ]であることを[検証/けんしょう]した。"
+      cons sentence cons text "1" cons ruby text "層" text "そう" cons text "の" cons ruby text "経路" text "けいろ" cons text "は" cons ruby text "固定" text "こてい" cons ruby text "子" text "こ" cons text "index" cons ruby text "列" text "れつ" cons text " " cons code "[1,0,0,0]" cons text " と " cons code "[1,0,1,0]" cons text " に" cons ruby text "一致" text "いっち" cons text "した。" nil
+      cons "[名前/なまえ]のない[同/おな]じDAGは[受理/じゅり]される。"
+      cons "200[層/そう]も[指数的/しすうてき]な[表示展開/ひょうじてんかい]を[作/つく]らず、[原/げん]node ID・[二経路/にけいろ]を[通常/つうじょう]Diagnostic[引数/ひきすう]とCBOR Reportに[保/たも]ち、source-less[診断/しんだん]のprimary/related[位置/いち]を[捏造/ねつぞう]しない。" nil
+    cons paragraph
+      cons "operand[位置/いち]の[独立/どくりつ]native/NDF[負例/ふれい]は、[別/べつ]constructorのDocField、[重複/じゅうふく]field、cover[外/がい]のSpan、[無関係/むかんけい]なOrigin、[範囲外/はんいがい]Originを[構造検査/こうぞうけんさ]と[初回/しょかい]CBORの[両入口/りょういりぐち]で[拒否/きょひ]した。"
+      cons "Originを[指定/してい]しない[合法位置/ごうほういち]、および[明示/めいじ]Exactで[生成/せいせい]sourceへ[写像/しゃぞう]した[位置/いち]は[受理/じゅり]される。"
+      cons "[複数/ふくすう]のOrigin[寄与/きよ]のうち[正当/せいとう]なcauseが[選択範囲/せんたくはんい]を[支/ささ]えるCompositeも[保持/ほじ]する。"
+      cons "[一方/いっぽう]、[別範囲/べつはんい]へ[戻/もど]る[追加/ついか]mapと、ambient storeにsourceがあってもpayload[宣言/せんげん]を[欠/か]く[値/あたい]は[拒否/きょひ]した。"
+      cons "fieldの[寄与関係/きよかんけい]とSentenceLiteralの[全/ぜん]token[内包含/ないほうがん]は[別/べつ]の[契約/けいやく]として[照合/しょうごう]し、raw[位置情報/いちじょうほう]を[元/もと]reader[実行/じっこう]の[認証/にんしょう]proofとは[扱/あつか]わない。" nil
+    cons paragraph
+      cons "[独立/どくりつ]の5[資源境界/しげんきょうかい]は[実必要量/じつひつようりょう]の0・[直前/ちょくぜん]・ちょうどで10[停止/ていし]/5[成功/せいこう]となり、caller[深/ふか]さ0のpeak6がcaller7では13になった。"
+      cons "[元/もと]DocumentSyntaxは[不変/ふへん]だった。"
+      cons "[通常/つうじょう]DuplicateLabel[診断/しんだん]でも[元/もと]primary/relatedの[名前/なまえ]operand[位置/いち]を[確認/かくにん]し、4[資源/しげん]の[必要量直前/ひつようりょうちょくぜん]で[停止/ていし]しても[借用元/しゃくようもと]の[型付/かたつ]き[失敗/しっぱい]を[保持/ほじ]した。"
+      cons "[固定/こてい]labels24fileとmodule[順/じゅん]だけのfmt[追補/ついほ]へ[依存先/いぞんさき]を[束縛/そくばく]し、[独立/どくりつ]4[補助/ほじょ]と[管理対象/かんりたいしょう]labels7[件/けん]をnative/WASIで[成功確認/せいこうかくにん]した。"
+      cons sentence cons ruby text "新" text "しん" cons text "buildしたsource/binary SHA、8" cons ruby text "本" text "ほん" cons text "のfull process log、" cons ruby text "固定" text "こてい" cons text "snapshot SHAは " cons code ".tmp/review-doc-labels-fixed/manifest.json" cons text " に" cons ruby text "保存" text "ほぞん" cons text "した。" nil
+      cons "この[範囲/はんい]はArticle[内/ない]DocLabelとその[位置/いち]・[診断/しんだん]・DAG[出現/しゅつげん]の[検査/けんさ]であり、[外部/がいぶ]page/asset[解決/かいけつ]、Region selector、printer、CheckedArticle/PreparedArticle[全体/ぜんたい]の[完了/かんりょう]ではない。" nil
     nil
   nil
