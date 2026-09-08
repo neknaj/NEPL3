@@ -1,0 +1,440 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index f753708..6df9194 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -181,6 +181,7 @@ name = "nepl3-wire"
+ version = "0.1.0"
+ dependencies = [
+  "nepl3-core",
++ "sha2",
+ ]
+ 
+ [[package]]
+diff --git a/conformance/targets/rp2040/Cargo.lock b/conformance/targets/rp2040/Cargo.lock
+index d4f230e..cffa197 100644
+--- a/conformance/targets/rp2040/Cargo.lock
++++ b/conformance/targets/rp2040/Cargo.lock
+@@ -575,6 +575,7 @@ name = "nepl3-wire"
+ version = "0.1.0"
+ dependencies = [
+  "nepl3-core",
++ "sha2",
+ ]
+ 
+ [[package]]
+diff --git a/crates/foundation/core/src/value_codec.rs b/crates/foundation/core/src/value_codec.rs
+index 4a8ed7d..5758881 100644
+--- a/crates/foundation/core/src/value_codec.rs
++++ b/crates/foundation/core/src/value_codec.rs
+@@ -23,6 +23,11 @@ pub trait FoundationValueCodec {
+     /// value invariants; the operation owner validates its expected schema first.
+     /// Encoding and hashing consume this operation's Budget. No source authority
+     /// is inferred from records contained in the value.
++    /// A streaming implementation may feed canonical chunks directly into the
++    /// hash without materializing a CBOR buffer. It charges encoding and hashing
++    /// Work, traversal storage and the 32-byte digest output. If an implementation
++    /// materializes CBOR bytes, it must also account for that intermediate output
++    /// and storage; it cannot simply omit their charges.
+     fn canonical_value_digest(
+         &mut self,
+         domain: &[u8],
+diff --git a/crates/foundation/wire/Cargo.toml b/crates/foundation/wire/Cargo.toml
+index 990c2eb..be321bd 100644
+--- a/crates/foundation/wire/Cargo.toml
++++ b/crates/foundation/wire/Cargo.toml
+@@ -10,6 +10,7 @@ publish.workspace = true
+ 
+ [dependencies]
+ nepl3-core.workspace = true
++sha2.workspace = true
+ 
+ [lints]
+ workspace = true
+diff --git a/crates/foundation/wire/src/encode.rs b/crates/foundation/wire/src/encode.rs
+index 890b572..acf805f 100644
+--- a/crates/foundation/wire/src/encode.rs
++++ b/crates/foundation/wire/src/encode.rs
+@@ -2,19 +2,43 @@ use crate::WireError;
+ use alloc::vec::Vec;
+ use nepl3_core::{
+     budget::{Budget, Resource},
++    source::Digest,
+     value::{Integer, NdfValue, SchemaRef},
+ };
+ 
+-fn bytes(out: &mut Vec<u8>, value: &[u8], budget: &mut Budget) -> Result<(), WireError> {
+-    let length = u64::try_from(value.len()).map_err(|_| WireError::InvalidLength)?;
+-    budget.charge(Resource::OutputBytes, length)?;
+-    budget.charge(Resource::AllocationUnits, length)?;
+-    budget.charge(Resource::Work, length)?;
+-    out.extend_from_slice(value);
+-    Ok(())
++use sha2::{Digest as _, Sha256};
++
++// Both destinations consume the same canonical encoding traversal. Only the
++// byte-vector destination materializes the encoded output.
++trait Sink {
++    fn write(&mut self, value: &[u8], budget: &mut Budget) -> Result<(), WireError>;
++}
++impl Sink for Vec<u8> {
++    fn write(&mut self, value: &[u8], budget: &mut Budget) -> Result<(), WireError> {
++        let length = u64::try_from(value.len()).map_err(|_| WireError::InvalidLength)?;
++        budget.charge(Resource::OutputBytes, length)?;
++        budget.charge(Resource::AllocationUnits, length)?;
++        budget.charge(Resource::Work, length)?;
++        self.extend_from_slice(value);
++        Ok(())
++    }
++}
++impl Sink for Sha256 {
++    fn write(&mut self, value: &[u8], budget: &mut Budget) -> Result<(), WireError> {
++        let length = u64::try_from(value.len()).map_err(|_| WireError::InvalidLength)?;
++        // Retain both encoding and hashing work, without allocating or returning
++        // a temporary CBOR byte vector. Each charge precedes processing the bytes.
++        budget.charge(Resource::Work, length)?;
++        budget.charge(Resource::Work, length)?;
++        self.update(value);
++        Ok(())
++    }
++}
++fn bytes(out: &mut impl Sink, value: &[u8], budget: &mut Budget) -> Result<(), WireError> {
++    out.write(value, budget)
+ }
+ 
+-fn head(out: &mut Vec<u8>, major: u8, value: u64, budget: &mut Budget) -> Result<(), WireError> {
++fn head(out: &mut impl Sink, major: u8, value: u64, budget: &mut Budget) -> Result<(), WireError> {
+     let mut data = [0; 9];
+     let length;
+     if value < 24 {
+@@ -37,12 +61,12 @@ fn head(out: &mut Vec<u8>, major: u8, value: u64, budget: &mut Budget) -> Result
+     bytes(out, &data[..length], budget)
+ }
+ 
+-fn raw(out: &mut Vec<u8>, major: u8, value: &[u8], budget: &mut Budget) -> Result<(), WireError> {
++fn raw(out: &mut impl Sink, major: u8, value: &[u8], budget: &mut Budget) -> Result<(), WireError> {
+     head(out, major, value.len() as u64, budget)?;
+     bytes(out, value, budget)
+ }
+ 
+-fn integer(out: &mut Vec<u8>, value: &Integer, budget: &mut Budget) -> Result<(), WireError> {
++fn integer(out: &mut impl Sink, value: &Integer, budget: &mut Budget) -> Result<(), WireError> {
+     let magnitude_length = value.as_bigint().bits().div_ceil(8);
+     budget.charge(Resource::AllocationUnits, magnitude_length)?;
+     budget.charge(Resource::Work, magnitude_length)?;
+@@ -53,7 +77,7 @@ fn integer(out: &mut Vec<u8>, value: &Integer, budget: &mut Budget) -> Result<()
+     raw(out, 2, &magnitude, budget)
+ }
+ 
+-fn schema(out: &mut Vec<u8>, schema: &SchemaRef, budget: &mut Budget) -> Result<(), WireError> {
++fn schema(out: &mut impl Sink, schema: &SchemaRef, budget: &mut Budget) -> Result<(), WireError> {
+     head(out, 4, 3, budget)?;
+     raw(out, 3, schema.package.as_bytes(), budget)?;
+     head(out, 0, schema.revision, budget)?;
+@@ -66,6 +90,7 @@ fn push<'a>(
+     depth: u64,
+     budget: &mut Budget,
+ ) -> Result<(), WireError> {
++    budget.charge(Resource::Work, 1)?;
+     budget.charge(
+         Resource::AllocationUnits,
+         core::mem::size_of::<(&NdfValue, u64)>() as u64,
+@@ -75,7 +100,7 @@ fn push<'a>(
+ }
+ 
+ fn children<'a>(
+-    out: &mut Vec<u8>,
++    out: &mut impl Sink,
+     stack: &mut Vec<(&'a NdfValue, u64)>,
+     values: &'a [NdfValue],
+     depth: u64,
+@@ -91,8 +116,7 @@ fn children<'a>(
+     Ok(())
+ }
+ 
+-pub(super) fn encode(item: &NdfValue, budget: &mut Budget) -> Result<Vec<u8>, WireError> {
+-    let mut out = Vec::new();
++fn emit(item: &NdfValue, out: &mut impl Sink, budget: &mut Budget) -> Result<(), WireError> {
+     let mut pending = Vec::new();
+     push(&mut pending, item, 1, budget)?;
+     while let Some((item, depth)) = pending.pop() {
+@@ -100,52 +124,53 @@ pub(super) fn encode(item: &NdfValue, budget: &mut Budget) -> Result<Vec<u8>, Wi
+         budget.charge(Resource::Nodes, 1)?;
+         match item {
+             NdfValue::Unit => {
+-                head(&mut out, 4, 1, budget)?;
+-                head(&mut out, 0, 0, budget)?;
++                head(out, 4, 1, budget)?;
++                head(out, 0, 0, budget)?;
+             }
+             NdfValue::Bool(v) => {
+-                head(&mut out, 4, 2, budget)?;
+-                head(&mut out, 0, 1, budget)?;
+-                bytes(&mut out, &[if *v { 0xf5 } else { 0xf4 }], budget)?;
++                head(out, 4, 2, budget)?;
++                head(out, 0, 1, budget)?;
++                bytes(out, &[if *v { 0xf5 } else { 0xf4 }], budget)?;
+             }
+             NdfValue::U64(v) => {
+-                head(&mut out, 4, 2, budget)?;
+-                head(&mut out, 0, 2, budget)?;
+-                head(&mut out, 0, *v, budget)?;
++                head(out, 4, 2, budget)?;
++                head(out, 0, 2, budget)?;
++                head(out, 0, *v, budget)?;
+             }
+-            NdfValue::Integer(v) => integer(&mut out, v, budget)?,
++            NdfValue::Integer(v) => integer(out, v, budget)?,
+             NdfValue::Rational(v) => {
+-                head(&mut out, 4, 3, budget)?;
+-                head(&mut out, 0, 4, budget)?;
+-                integer(&mut out, v.numerator(), budget)?;
++                head(out, 4, 3, budget)?;
++                head(out, 0, 4, budget)?;
++                integer(out, v.numerator(), budget)?;
++                budget.charge(Resource::Work, v.denominator().bits().div_ceil(8))?;
+                 budget.charge(
+                     Resource::AllocationUnits,
+                     v.denominator().bits().div_ceil(8),
+                 )?;
+-                raw(&mut out, 2, &v.denominator_bytes(), budget)?;
++                raw(out, 2, &v.denominator_bytes(), budget)?;
+             }
+             NdfValue::Text(v) => {
+-                head(&mut out, 4, 2, budget)?;
+-                head(&mut out, 0, 5, budget)?;
+-                raw(&mut out, 3, v.as_bytes(), budget)?;
++                head(out, 4, 2, budget)?;
++                head(out, 0, 5, budget)?;
++                raw(out, 3, v.as_bytes(), budget)?;
+             }
+             NdfValue::Bytes(v) => {
+-                head(&mut out, 4, 2, budget)?;
+-                head(&mut out, 0, 6, budget)?;
+-                raw(&mut out, 2, v, budget)?;
++                head(out, 4, 2, budget)?;
++                head(out, 0, 6, budget)?;
++                raw(out, 2, v, budget)?;
+             }
+             NdfValue::List(v) => {
+-                head(&mut out, 4, 2, budget)?;
+-                head(&mut out, 0, 7, budget)?;
+-                children(&mut out, &mut pending, v, depth, budget)?;
++                head(out, 4, 2, budget)?;
++                head(out, 0, 7, budget)?;
++                children(out, &mut pending, v, depth, budget)?;
+             }
+             NdfValue::None => {
+-                head(&mut out, 4, 1, budget)?;
+-                head(&mut out, 0, 8, budget)?;
++                head(out, 4, 1, budget)?;
++                head(out, 0, 8, budget)?;
+             }
+             NdfValue::Some(v) => {
+-                head(&mut out, 4, 2, budget)?;
+-                head(&mut out, 0, 9, budget)?;
++                head(out, 4, 2, budget)?;
++                head(out, 0, 9, budget)?;
+                 push(
+                     &mut pending,
+                     v,
+@@ -156,21 +181,40 @@ pub(super) fn encode(item: &NdfValue, budget: &mut Budget) -> Result<Vec<u8>, Wi
+                 )?;
+             }
+             NdfValue::Record(v) => {
+-                head(&mut out, 4, 4, budget)?;
+-                head(&mut out, 0, 10, budget)?;
+-                schema(&mut out, &v.schema, budget)?;
+-                raw(&mut out, 3, v.kind.as_bytes(), budget)?;
+-                children(&mut out, &mut pending, &v.fields, depth, budget)?;
++                head(out, 4, 4, budget)?;
++                head(out, 0, 10, budget)?;
++                schema(out, &v.schema, budget)?;
++                raw(out, 3, v.kind.as_bytes(), budget)?;
++                children(out, &mut pending, &v.fields, depth, budget)?;
+             }
+             NdfValue::Variant(v) => {
+-                head(&mut out, 4, 5, budget)?;
+-                head(&mut out, 0, 11, budget)?;
+-                schema(&mut out, &v.schema, budget)?;
+-                raw(&mut out, 3, v.type_name.as_bytes(), budget)?;
+-                raw(&mut out, 3, v.variant.as_bytes(), budget)?;
+-                children(&mut out, &mut pending, &v.fields, depth, budget)?;
++                head(out, 4, 5, budget)?;
++                head(out, 0, 11, budget)?;
++                schema(out, &v.schema, budget)?;
++                raw(out, 3, v.type_name.as_bytes(), budget)?;
++                raw(out, 3, v.variant.as_bytes(), budget)?;
++                children(out, &mut pending, &v.fields, depth, budget)?;
+             }
+         }
+     }
++    Ok(())
++}
++
++pub(super) fn encode(item: &NdfValue, budget: &mut Budget) -> Result<Vec<u8>, WireError> {
++    let mut out = Vec::new();
++    emit(item, &mut out, budget)?;
+     Ok(out)
+ }
++
++pub(super) fn digest(
++    domain: &[u8],
++    item: &NdfValue,
++    budget: &mut Budget,
++) -> Result<Digest, WireError> {
++    budget.charge(Resource::OutputBytes, 32)?;
++    budget.charge(Resource::Work, domain.len() as u64)?;
++    let mut hash = Sha256::new();
++    hash.update(domain);
++    emit(item, &mut hash, budget)?;
++    Ok(Digest(hash.finalize().into()))
++}
+diff --git a/crates/foundation/wire/src/foundation.rs b/crates/foundation/wire/src/foundation.rs
+index 40839b4..270ed2c 100644
+--- a/crates/foundation/wire/src/foundation.rs
++++ b/crates/foundation/wire/src/foundation.rs
+@@ -67,12 +67,7 @@ impl FoundationValueCodec for FoundationCodec<'_> {
+         value: &NdfValue,
+         budget: &mut Budget,
+     ) -> Result<Digest, WireError> {
+-        let bytes = crate::encode(value, budget)?;
+-        budget.charge(
+-            Resource::Work,
+-            (domain.len() as u64).saturating_add(bytes.len() as u64),
+-        )?;
+-        Ok(Digest::domain(domain, &bytes))
++        crate::encode::digest(domain, value, budget)
+     }
+     fn encode_type_descriptor(
+         &mut self,
+diff --git a/crates/foundation/wire/tests/codec.rs b/crates/foundation/wire/tests/codec.rs
+index 2e5fb00..0001be2 100644
+--- a/crates/foundation/wire/tests/codec.rs
++++ b/crates/foundation/wire/tests/codec.rs
+@@ -4,8 +4,9 @@ use nepl3_core::{
+         FieldDescriptor, NamedType, SchemaDescriptor, SchemaRegistry, TypeDescriptor, TypeRef,
+         TypeShape,
+     },
+-    source::Digest,
++    source::{Digest, SourceAdmission, SourceStore},
+     value::{Integer, NdfValue, Rational, Record, SchemaRef, Variant},
++    value_codec::FoundationValueCodec,
+ };
+ use nepl3_wire::{WireError, decode, decode_checked, encode, encode_checked};
+ 
+@@ -85,9 +86,32 @@ fn all_twelve_tags_match_specified_cbor_bytes() -> TestResult {
+             format!("850b{header}6154615680"),
+         ),
+     ];
++    let mut registry = SchemaRegistry::default();
++    let descriptor =
++        nepl3_core::schema::foundation::descriptor(&mut budget()).map_err(|e| format!("{e:?}"))?;
++    registry
++        .register(
++            descriptor
++                .reference(&mut budget())
++                .map_err(|e| format!("{e:?}"))?,
++            descriptor,
++            &mut budget(),
++        )
++        .map_err(|e| format!("{e:?}"))?;
++    registry
++        .finalize(&mut budget())
++        .map_err(|e| format!("{e:?}"))?;
++    let store = SourceStore::default();
++    let mut admission = SourceAdmission::default();
++    let mut codec = nepl3_wire::foundation::FoundationCodec::new(&registry, &store, &mut admission)
++        .map_err(|e| format!("{e:?}"))?;
+     for (value, expected) in vectors {
+         let bytes = hex(&expected)?;
+         assert_eq!(encode(&value, &mut budget()), Ok(bytes.clone()));
++        assert_eq!(
++            codec.canonical_value_digest(b"all-tags\0", &value, &mut budget()),
++            Ok(Digest::domain(b"all-tags\0", &bytes))
++        );
+         assert_eq!(decode(&bytes, &mut budget()), Ok(value));
+     }
+     Ok(())
+diff --git a/crates/foundation/wire/tests/digest.rs b/crates/foundation/wire/tests/digest.rs
+index 1b09aec..d599c24 100644
+--- a/crates/foundation/wire/tests/digest.rs
++++ b/crates/foundation/wire/tests/digest.rs
+@@ -46,6 +46,52 @@ fn canonical_digest_uses_ndf_tagged_cbor_and_keeps_budget_stops() -> Result<(),
+             .map_err(err)?,
+         expected
+     );
++    // NDF Text is [5, text]. Its canonical CBOR header for 100000 ASCII
++    // bytes is 82 05 7a 00 01 86 a0, independently derived from RFC8949.
++    let text = "x".repeat(100_000);
++    let mut encoded = vec![0x82, 0x05, 0x7a, 0x00, 0x01, 0x86, 0xa0];
++    encoded.extend_from_slice(text.as_bytes());
++    let expected = Digest::domain(b"large\0", &encoded);
++    let mut limits = budget().limits();
++    limits.output_bytes = 32;
++    limits.allocation_units = 4096;
++    let mut streamed = Budget::new(limits);
++    assert_eq!(
++        codec
++            .canonical_value_digest(b"large\0", &NdfValue::Text(text), &mut streamed)
++            .map_err(err)?,
++        expected
++    );
++    assert_eq!(streamed.usage().output_bytes, 32);
++    assert!(streamed.usage().work >= 2 * encoded.len() as u64 + 6);
++    // A broad list must not construct its entire frontier under only enough
++    // Work for the parent's CBOR headers. Input construction is outside Budget.
++    let broad = NdfValue::List(vec![NdfValue::Unit; 100_000]);
++    let mut limits = budget().limits();
++    limits.work = 15;
++    let mut bounded = Budget::new(limits);
++    assert_eq!(
++        codec.canonical_value_digest(b"", &broad, &mut bounded),
++        Err(WireError::Stopped(StopReason::WorkLimit))
++    );
++    assert!(bounded.usage().allocation_units <= 128);
++    // Big rational denominators need conversion Work before allocating bytes,
++    // even when their numerator and encoding headers are small.
++    let mut denominator = vec![0; 1024];
++    denominator[0] = 0x80;
++    let rational = nepl3_core::value::Rational::from_canonical(
++        nepl3_core::value::Integer::from(1_i64),
++        &denominator,
++    )
++    .map_err(err)?;
++    let mut limits = budget().limits();
++    limits.work = 128;
++    let mut bounded = Budget::new(limits);
++    assert_eq!(
++        codec.canonical_value_digest(b"", &NdfValue::Rational(rational), &mut bounded),
++        Err(WireError::Stopped(StopReason::WorkLimit))
++    );
++    assert!(bounded.usage().allocation_units < denominator.len() as u64);
+     for resource in 0..5 {
+         let mut limits = budget().limits();
+         let reason = match resource {
+diff --git a/design/dependencies.json b/design/dependencies.json
+index 600400c..ec5b197 100644
+--- a/design/dependencies.json
++++ b/design/dependencies.json
+@@ -34,7 +34,7 @@
+         "nepl3-core"
+       ],
+       "no_std": true,
+-      "responsibility": "canonical CBOR codecと境界検査"
++      "responsibility": "canonical CBOR codecと境界検査; workspace固定no_std sha2でcanonical byte列をbuffer化せずdigestへ逐次入力"
+     },
+     {
+       "name": "nepl3-grammar-core",
+diff --git a/doc/spec/09-portability.md b/doc/spec/09-portability.md
+index 7fa2d1e..62155e5 100644
+--- a/doc/spec/09-portability.md
++++ b/doc/spec/09-portability.md
+@@ -14,6 +14,8 @@
+ 
+ ## 2. NDF/1
+ 
++canonical値digestは `SHA-256(domain || canonical NDF/1 CBOR(value))` とする。digest専用経路は通常のencoderと同じ符号化規則でbyte片を順次hashへ渡してよく、完全なCBOR bufferの作成を必須にしない。この場合も値の走査・整数の一時表現・stackの割当と、符号化およびhashの全byte処理を同じBudgetへ先行課金し、停止時はdigestを返さない。出力は32byteのdigestとして課金する。CBOR bufferを実際に作る経路ではその出力・割当も課金し、会計だけを省略してはならない。通常のNDF encodeは引き続き生成する全CBOR byteを出力として課金する。文書digestを得るための一時CBORを除去することと、HTMLの出力上限を変更することは別である。
++
+ NDFは本仕様の型付き値をCBORで運ぶ符号化profile。RFC 8949のdefinite lengthと最短の整数/長さ表現を要求する。map、float、NaN、CBOR tag、null、indefinite lengthはNDFでは使用しない。CBORそのものの汎用機能を全部許可するわけではない。
+ 
+ 値は次のtagged arrayで表す。

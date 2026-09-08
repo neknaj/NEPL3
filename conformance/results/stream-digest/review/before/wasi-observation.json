@@ -1,0 +1,23 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-wire",
+    "--test",
+    "review_stream",
+    "--target",
+    "wasm32-wasip2",
+    "--target-dir",
+    "C:/projects/NEPL3-runtime/.tmp/review-stream-digest/before/wasm-target",
+    "observe_original_frontier_and_denominator_caps",
+    "--",
+    "--exact",
+    "--nocapture"
+  ],
+  "cwd": "C:\\projects\\NEPL3-runtime\\.tmp\\review-stream-digest\\before\\workspace",
+  "runner": "wasmtime run",
+  "exit_code": 0,
+  "seconds": 33.04028279997874
+}

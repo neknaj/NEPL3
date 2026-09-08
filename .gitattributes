@@ -50,3 +50,4 @@ dist/** export-ignore
 /conformance/results/doc-sentence-owner/** -text -whitespace
 /conformance/results/doc-authoring-delivery/** -text -whitespace
 /conformance/results/reader-checkpoints/** -text -whitespace
+/conformance/results/stream-digest/** -text -whitespace
