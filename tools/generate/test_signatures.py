@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 import sys
+import tempfile
 import unittest
 
 import signatures
@@ -29,6 +30,21 @@ def cell_text(cell):
 
 
 class SignatureTests(unittest.TestCase):
+    def test_duplicate_keys_are_rejected_at_every_object_depth(self):
+        samples = [
+            '{"categories":{},"categories":{}}',
+            '{"categories":{"Math/Expr":{},"Math/Expr":{}}}',
+            '{"categories":{"Math/Expr":{"forms":{"add":{},"add":{}}}}}',
+            '{"categories":{"Math/Expr":{"forms":{"add":{"fields":[{"name":"x","name":"y"}]}}}}}',
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'forms.json'
+            for text in samples:
+                with self.subTest(text=text):
+                    path.write_text(text, encoding='utf-8')
+                    with self.assertRaisesRegex(ValueError, 'Duplicate'):
+                        signatures.load_categories(path)
+
     def test_known_fields_order_nested_list_and_escapes(self):
         categories = {'Doc/Example': {'leaf': 'sentence', 'forms': {
             'q"\\\n[]': {'kind': 'Quoted', 'fields': [

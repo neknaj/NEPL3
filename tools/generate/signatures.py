@@ -7,6 +7,20 @@ ROOT = Path(__file__).resolve().parents[2]
 LANGUAGES = ("Grammar", "Doc", "Math", "Circuit")
 
 
+def unique_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"Duplicate form-table JSON key: {key}")
+        result[key] = value
+    return result
+
+
+def load_categories(path):
+    return json.loads(path.read_text(encoding='utf-8'),
+                      object_pairs_hook=unique_object)['categories']
+
+
 def quoted(text):
     """NEPL Text escapes, independent of JSON's Unicode escape syntax."""
     if any(ord(c) < 32 and c not in "\n\r\t" for c in text):
@@ -75,7 +89,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--write', action='store_true')
     args = parser.parse_args()
-    categories = json.loads((ROOT/'design/forms.json').read_text(encoding='utf-8'))['categories']
+    categories = load_categories(ROOT/'design/forms.json')
     for language in LANGUAGES:
         output = ROOT/'doc/migration/generated'/f'{language.lower()}-signatures.nepld'
         data = generate(categories, language).encode('utf-8')
