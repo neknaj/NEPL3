@@ -1,0 +1,2143 @@
+{
+  "implementation_commit": "b13f395c3874c378911ee8b686f0a55033b20e68",
+  "integration_commit": "e89a0c2f65f73a0e2fdadbe54f892f203411d7fb",
+  "base_commit": "889a53ab6d678d7c9673dc716878fcbb34b9d466",
+  "files": [
+    {
+      "file": "root-verification/after-merge/docs/spec/00-contract.html.fixture",
+      "owner": "root-verification",
+      "restore": "after-merge/docs/spec/00-contract.html",
+      "bytes": 38595,
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+    },
+    {
+      "file": "root-verification/after-merge/docs/spec/13-reproducibility.html.fixture",
+      "owner": "root-verification",
+      "restore": "after-merge/docs/spec/13-reproducibility.html",
+      "bytes": 91421,
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+    },
+    {
+      "file": "root-verification/after-merge/docs/spec/22-external-extensions.html.fixture",
+      "owner": "root-verification",
+      "restore": "after-merge/docs/spec/22-external-extensions.html",
+      "bytes": 44041,
+      "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8"
+    },
+    {
+      "file": "root-verification/after-merge/docs/spec/assets/doc.css.fixture",
+      "owner": "root-verification",
+      "restore": "after-merge/docs/spec/assets/doc.css",
+      "bytes": 2255,
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+    },
+    {
+      "file": "root-verification/after-merge/manifest.json.fixture",
+      "owner": "root-verification",
+      "restore": "after-merge/manifest.json",
+      "bytes": 9085,
+      "sha256": "0f6bc6bd338e3e1253756be4ca9301dc0d2db73cea0fcb9b66b99d6efd07b87f"
+    },
+    {
+      "file": "root-verification/after-merge-check.stderr.log.fixture",
+      "owner": "root-verification",
+      "restore": "after-merge-check.stderr.log",
+      "bytes": 221,
+      "sha256": "459b2d5bf9a580c4827a10a877216c0d0821ce9d16cf875553a6f6d18ac32942"
+    },
+    {
+      "file": "root-verification/after-merge-check.stdout.log.fixture",
+      "owner": "root-verification",
+      "restore": "after-merge-check.stdout.log",
+      "bytes": 156,
+      "sha256": "4d3f95ea627f1d97eaa94073ff3d668da77d20a7c09da880a084a56d5b57928b"
+    },
+    {
+      "file": "root-verification/after-merge-html.stderr.log.fixture",
+      "owner": "root-verification",
+      "restore": "after-merge-html.stderr.log",
+      "bytes": 171,
+      "sha256": "22f1b2e1f37704eab94e501cffa88b8b4f1b3a50bfb33064fac421ab159b6f96"
+    },
+    {
+      "file": "root-verification/after-merge-html.stdout.log.fixture",
+      "owner": "root-verification",
+      "restore": "after-merge-html.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "root-verification/after-merge.json.fixture",
+      "owner": "root-verification",
+      "restore": "after-merge.json",
+      "bytes": 602,
+      "sha256": "307fd57608e3d57a93da5a1491c6a6a8b17fa238020f44a84f39722f9997629f"
+    },
+    {
+      "file": "root-verification/canonical-check.stderr.log.fixture",
+      "owner": "root-verification",
+      "restore": "canonical-check.stderr.log",
+      "bytes": 1949,
+      "sha256": "1dfeb2e523663ef9c3dc7c8e6bb2190d2f44b4d54eb4ac05b6208f16273e58e4"
+    },
+    {
+      "file": "root-verification/canonical-check.stdout.log.fixture",
+      "owner": "root-verification",
+      "restore": "canonical-check.stdout.log",
+      "bytes": 156,
+      "sha256": "4d3f95ea627f1d97eaa94073ff3d668da77d20a7c09da880a084a56d5b57928b"
+    },
+    {
+      "file": "root-verification/commands.json.fixture",
+      "owner": "root-verification",
+      "restore": "commands.json",
+      "bytes": 752,
+      "sha256": "6fca5536ba0ddb0f8adc5837fe075572e7f0ea36dba0be1de7057a34ff8f050a"
+    },
+    {
+      "file": "root-verification/files.json.fixture",
+      "owner": "root-verification",
+      "restore": "files.json",
+      "bytes": 791,
+      "sha256": "4fc57411aab04f88f1a3393845591a7dca56bb07d4a16efc7a0d5b4913fb4026"
+    },
+    {
+      "file": "root-verification/first/docs/spec/00-contract.html.fixture",
+      "owner": "root-verification",
+      "restore": "first/docs/spec/00-contract.html",
+      "bytes": 38595,
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+    },
+    {
+      "file": "root-verification/first/docs/spec/13-reproducibility.html.fixture",
+      "owner": "root-verification",
+      "restore": "first/docs/spec/13-reproducibility.html",
+      "bytes": 91421,
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+    },
+    {
+      "file": "root-verification/first/docs/spec/22-external-extensions.html.fixture",
+      "owner": "root-verification",
+      "restore": "first/docs/spec/22-external-extensions.html",
+      "bytes": 44041,
+      "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8"
+    },
+    {
+      "file": "root-verification/first/docs/spec/assets/doc.css.fixture",
+      "owner": "root-verification",
+      "restore": "first/docs/spec/assets/doc.css",
+      "bytes": 2255,
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+    },
+    {
+      "file": "root-verification/first/manifest.json.fixture",
+      "owner": "root-verification",
+      "restore": "first/manifest.json",
+      "bytes": 9085,
+      "sha256": "0f6bc6bd338e3e1253756be4ca9301dc0d2db73cea0fcb9b66b99d6efd07b87f"
+    },
+    {
+      "file": "root-verification/html-first.stderr.log.fixture",
+      "owner": "root-verification",
+      "restore": "html-first.stderr.log",
+      "bytes": 165,
+      "sha256": "66bf090957a119a2287d2918845fdddfbdce901d477b3e6474286b3e8b817048"
+    },
+    {
+      "file": "root-verification/html-first.stdout.log.fixture",
+      "owner": "root-verification",
+      "restore": "html-first.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "root-verification/html-second.stderr.log.fixture",
+      "owner": "root-verification",
+      "restore": "html-second.stderr.log",
+      "bytes": 166,
+      "sha256": "4c299d38c63b83558b118e0f1107e8776dd6f60e5a6d1c7cfa462a43e977f4e3"
+    },
+    {
+      "file": "root-verification/html-second.stdout.log.fixture",
+      "owner": "root-verification",
+      "restore": "html-second.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "root-verification/second/docs/spec/00-contract.html.fixture",
+      "owner": "root-verification",
+      "restore": "second/docs/spec/00-contract.html",
+      "bytes": 38595,
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+    },
+    {
+      "file": "root-verification/second/docs/spec/13-reproducibility.html.fixture",
+      "owner": "root-verification",
+      "restore": "second/docs/spec/13-reproducibility.html",
+      "bytes": 91421,
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+    },
+    {
+      "file": "root-verification/second/docs/spec/22-external-extensions.html.fixture",
+      "owner": "root-verification",
+      "restore": "second/docs/spec/22-external-extensions.html",
+      "bytes": 44041,
+      "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8"
+    },
+    {
+      "file": "root-verification/second/docs/spec/assets/doc.css.fixture",
+      "owner": "root-verification",
+      "restore": "second/docs/spec/assets/doc.css",
+      "bytes": 2255,
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+    },
+    {
+      "file": "root-verification/second/manifest.json.fixture",
+      "owner": "root-verification",
+      "restore": "second/manifest.json",
+      "bytes": 9085,
+      "sha256": "0f6bc6bd338e3e1253756be4ca9301dc0d2db73cea0fcb9b66b99d6efd07b87f"
+    },
+    {
+      "file": "root-verification/unchanged.json.fixture",
+      "owner": "root-verification",
+      "restore": "unchanged.json",
+      "bytes": 480,
+      "sha256": "adccf34824ff0653dc2ed34ad60b6c5f0b8d5132e63fdc0c4aa500aa7994c96e"
+    },
+    {
+      "file": "root-browser/chromium-first-1280.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "chromium-first-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "root-browser/chromium-first-1280.png.fixture",
+      "owner": "root-browser",
+      "restore": "chromium-first-1280.png",
+      "bytes": 122957,
+      "sha256": "51917680f2cc727ee710560d626583651ff62ad3e1d3a2b7b49fb2cadf0d53f2"
+    },
+    {
+      "file": "root-browser/chromium-first-375.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "chromium-first-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "root-browser/chromium-first-375.png.fixture",
+      "owner": "root-browser",
+      "restore": "chromium-first-375.png",
+      "bytes": 70234,
+      "sha256": "c0e9ea2d8d7f782546cb37f592b8675897daeab7d472e52839d90f48ef28daf1"
+    },
+    {
+      "file": "root-browser/chromium-second-1280.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "chromium-second-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "root-browser/chromium-second-1280.png.fixture",
+      "owner": "root-browser",
+      "restore": "chromium-second-1280.png",
+      "bytes": 122957,
+      "sha256": "51917680f2cc727ee710560d626583651ff62ad3e1d3a2b7b49fb2cadf0d53f2"
+    },
+    {
+      "file": "root-browser/chromium-second-375.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "chromium-second-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "root-browser/chromium-second-375.png.fixture",
+      "owner": "root-browser",
+      "restore": "chromium-second-375.png",
+      "bytes": 70234,
+      "sha256": "c0e9ea2d8d7f782546cb37f592b8675897daeab7d472e52839d90f48ef28daf1"
+    },
+    {
+      "file": "root-browser/firefox-first-1280.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "firefox-first-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "root-browser/firefox-first-1280.png.fixture",
+      "owner": "root-browser",
+      "restore": "firefox-first-1280.png",
+      "bytes": 97082,
+      "sha256": "c9377127911de18b2520f39ce0d185c3f8c42082db21d26bd89ff15eaf437b4b"
+    },
+    {
+      "file": "root-browser/firefox-first-375.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "firefox-first-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "root-browser/firefox-first-375.png.fixture",
+      "owner": "root-browser",
+      "restore": "firefox-first-375.png",
+      "bytes": 51484,
+      "sha256": "1b01a24fab15a80aeb3ce63c2606d5d923a07e106b1ca8dc2006cffa417053e2"
+    },
+    {
+      "file": "root-browser/firefox-second-1280.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "firefox-second-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "root-browser/firefox-second-1280.png.fixture",
+      "owner": "root-browser",
+      "restore": "firefox-second-1280.png",
+      "bytes": 97082,
+      "sha256": "c9377127911de18b2520f39ce0d185c3f8c42082db21d26bd89ff15eaf437b4b"
+    },
+    {
+      "file": "root-browser/firefox-second-375.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "firefox-second-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "root-browser/firefox-second-375.png.fixture",
+      "owner": "root-browser",
+      "restore": "firefox-second-375.png",
+      "bytes": 51484,
+      "sha256": "1b01a24fab15a80aeb3ce63c2606d5d923a07e106b1ca8dc2006cffa417053e2"
+    },
+    {
+      "file": "root-browser/results.json.fixture",
+      "owner": "root-browser",
+      "restore": "results.json",
+      "bytes": 21683,
+      "sha256": "64892d3f2473709eea3c45f0bb3095c3f81b7f293654459046fe677136db0aa5"
+    },
+    {
+      "file": "root-browser/webkit-first-1280.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "webkit-first-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "root-browser/webkit-first-1280.png.fixture",
+      "owner": "root-browser",
+      "restore": "webkit-first-1280.png",
+      "bytes": 129506,
+      "sha256": "56c024ac030fe64ae8645025816c14156d2932f8a2d52d276d4f4549a6b31e9e"
+    },
+    {
+      "file": "root-browser/webkit-first-375.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "webkit-first-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "root-browser/webkit-first-375.png.fixture",
+      "owner": "root-browser",
+      "restore": "webkit-first-375.png",
+      "bytes": 74033,
+      "sha256": "8cb60ffd5e774eedfa3fdf677014173a84934ba86d54583f0a429ebfd17c24fc"
+    },
+    {
+      "file": "root-browser/webkit-second-1280.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "webkit-second-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "root-browser/webkit-second-1280.png.fixture",
+      "owner": "root-browser",
+      "restore": "webkit-second-1280.png",
+      "bytes": 129506,
+      "sha256": "56c024ac030fe64ae8645025816c14156d2932f8a2d52d276d4f4549a6b31e9e"
+    },
+    {
+      "file": "root-browser/webkit-second-375.aria.txt.fixture",
+      "owner": "root-browser",
+      "restore": "webkit-second-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "root-browser/webkit-second-375.png.fixture",
+      "owner": "root-browser",
+      "restore": "webkit-second-375.png",
+      "bytes": 74033,
+      "sha256": "8cb60ffd5e774eedfa3fdf677014173a84934ba86d54583f0a429ebfd17c24fc"
+    },
+    {
+      "file": "root-github/elements.json.fixture",
+      "owner": "root-github",
+      "restore": "elements.json",
+      "bytes": 1682,
+      "sha256": "9a78d2abc19be22ed716415dcdbc3da12114b914e13f8922a39c97a3419dae69"
+    },
+    {
+      "file": "root-github/github.png.fixture",
+      "owner": "root-github",
+      "restore": "github.png",
+      "bytes": 217441,
+      "sha256": "7eb1f456b6e1f6c3d90ebad6214cc736ed3201a2414768916c126a04a1142985"
+    },
+    {
+      "file": "root-github/page.html.fixture",
+      "owner": "root-github",
+      "restore": "page.html",
+      "bytes": 296678,
+      "sha256": "ab6585d287b86b2924dd1575a35963bbb43faca617d9f506aa67e08a59d01fda"
+    },
+    {
+      "file": "root-github/results.json.fixture",
+      "owner": "root-github",
+      "restore": "results.json",
+      "bytes": 3419,
+      "sha256": "e98b9db28943fdc8e1200538fdd2941526e6804b933cbd3f710278898a344c91"
+    },
+    {
+      "file": "root-scripts/start.json.fixture",
+      "owner": "root-scripts",
+      "restore": "start.json",
+      "bytes": 77,
+      "sha256": "2f79e5488b5baa75314bc2c547c07e892252ab0f50aee9331f645712e7459e3d"
+    },
+    {
+      "file": "root-scripts/verify-canonical22.py.fixture",
+      "owner": "root-scripts",
+      "restore": "verify-canonical22.py",
+      "bytes": 1455,
+      "sha256": "7b5c60f45b5dc03328af6b870fec4cee0649be2f1b3a6ef06b7369d6f2d54895"
+    },
+    {
+      "file": "root-scripts/verify-after-merge.py.fixture",
+      "owner": "root-scripts",
+      "restore": "verify-after-merge.py",
+      "bytes": 1162,
+      "sha256": "a31293973b6a99b0cdd32c9b602408392317b91fda60d1274b7691bafb2a6ce3"
+    },
+    {
+      "file": "root-scripts/browser-canonical22.py.fixture",
+      "owner": "root-scripts",
+      "restore": "browser-canonical22.py",
+      "bytes": 4627,
+      "sha256": "f796b91e67d98f401e93275b2ecadc0e69f4d15e469229ba910927af3340fc65"
+    },
+    {
+      "file": "root-scripts/github-canonical22.py.fixture",
+      "owner": "root-scripts",
+      "restore": "github-canonical22.py",
+      "bytes": 3869,
+      "sha256": "485267163483e03b99fb025c12c320a607116ce1f2ac8ef9b47f635b4ab30dee"
+    },
+    {
+      "file": "root-bootstrap/bootstrap-canonical22.py.fixture",
+      "owner": "root-bootstrap",
+      "restore": "bootstrap-canonical22.py",
+      "bytes": 2198,
+      "sha256": "9a61766592c82b6378a86c7c1006c258af53ea710d8cb439e0dde70b3a5ce0d8"
+    },
+    {
+      "file": "root-bootstrap/restore-canonical22.py.fixture",
+      "owner": "root-bootstrap",
+      "restore": "restore-canonical22.py",
+      "bytes": 883,
+      "sha256": "fb89bc1f7723b2617a0f490e3656187a85516002facf748323b5211c8ead13c4"
+    },
+    {
+      "file": "root-bootstrap/results.json.fixture",
+      "owner": "root-bootstrap",
+      "restore": "results.json",
+      "bytes": 1495,
+      "sha256": "87cda6979dfaa5e82346f0b0b7c8e272373b40be372446b6879943bf41eeff0b"
+    },
+    {
+      "file": "preflight/manifest.json.fixture",
+      "owner": "preflight",
+      "restore": "manifest.json",
+      "bytes": 1299,
+      "sha256": "109335af6a00733b1363a252ac69c4a317ff6ef23bbf00b95727143543b15cdb"
+    },
+    {
+      "file": "preflight/check.py.fixture",
+      "owner": "preflight",
+      "restore": "check.py",
+      "bytes": 3100,
+      "sha256": "55a60350cfdbd76d09430e7e3e59550e334545c079f6d8e2e782518e60b96700"
+    },
+    {
+      "file": "preflight/fetch.json.fixture",
+      "owner": "preflight",
+      "restore": "fetch.json",
+      "bytes": 5728,
+      "sha256": "4a95a964697bffc683c86fd213cedd8388b030190cac3703bb4df03b49339d67"
+    },
+    {
+      "file": "preflight/github.html.fixture",
+      "owner": "preflight",
+      "restore": "github.html",
+      "bytes": 266110,
+      "sha256": "3bf99057aad692684996a6dc8d8c577ec5ac61efe348edd3ab6729d4fcd2636b"
+    },
+    {
+      "file": "preflight/rawLines.json.fixture",
+      "owner": "preflight",
+      "restore": "rawLines.json",
+      "bytes": 6806,
+      "sha256": "2fc35d0bdaa374f72757f52ffbda3f2b348f41884ad000029f2db623df965ca9"
+    },
+    {
+      "file": "preflight/record.md.fixture",
+      "owner": "preflight",
+      "restore": "record.md",
+      "bytes": 1768,
+      "sha256": "486dc8993972cf7ff5d6a371552d2a2a564af8458f8a9bf23298e436c599805c"
+    },
+    {
+      "file": "preflight/result.json.fixture",
+      "owner": "preflight",
+      "restore": "result.json",
+      "bytes": 1916,
+      "sha256": "fb406127eaf53b0bdde5a8b427ec81a1a9f1e38be1e54c11cbfabb64994e97b0"
+    },
+    {
+      "file": "preflight/richText.html.fixture",
+      "owner": "preflight",
+      "restore": "richText.html",
+      "bytes": 11748,
+      "sha256": "afd578bfeee252df285ef67b072e424f029f111b4ff0a3b8e0c8a40f904f6361"
+    },
+    {
+      "file": "preflight/source.md.fixture",
+      "owner": "preflight",
+      "restore": "source.md",
+      "bytes": 6403,
+      "sha256": "d3ea5308c7d0d79d915e4c1fcbe971fb366f3ee1ebe5d7685dad5e0c8cb53a9a"
+    },
+    {
+      "file": "review-content/manifest.json.fixture",
+      "owner": "review-content",
+      "restore": "manifest.json",
+      "bytes": 1784,
+      "sha256": "c8f2ffca29a6904ef8418c3b531f1088205bc82cdda3e1742b414f4f1a4e7ab3"
+    },
+    {
+      "file": "review-content/check.py.fixture",
+      "owner": "review-content",
+      "restore": "check.py",
+      "bytes": 2957,
+      "sha256": "9fe5b89b628c249ef06e5850c0fa485ae9e427e1178b2fee008fe9a67366c1cf"
+    },
+    {
+      "file": "review-content/record.md.fixture",
+      "owner": "review-content",
+      "restore": "record.md",
+      "bytes": 4873,
+      "sha256": "e84919ff03f87b03c6a8e05c9acc3b4f23af7d7404c31933a5ad21c2d2b8e722"
+    },
+    {
+      "file": "review-content/result.json.fixture",
+      "owner": "review-content",
+      "restore": "result.json",
+      "bytes": 19562,
+      "sha256": "8f2cae7300769836c812387e335fa9843676aeababfd15787aafdd49de66b4b6"
+    },
+    {
+      "file": "review-content/source/AGENTS.md.fixture",
+      "owner": "review-content",
+      "restore": "source/AGENTS.md",
+      "bytes": 7729,
+      "sha256": "c26941e6dbf896a5e07b7c807789bc1f70bd740e4065092186be42e5ac4baf53"
+    },
+    {
+      "file": "review-content/source/design/acceptance.json.fixture",
+      "owner": "review-content",
+      "restore": "source/design/acceptance.json",
+      "bytes": 20266,
+      "sha256": "de50812b44e00d0ca8e8429e92664b0b25c40abe539bfe548e0a59a62e8e4391"
+    },
+    {
+      "file": "review-content/source/design/dependencies.json.fixture",
+      "owner": "review-content",
+      "restore": "source/design/dependencies.json",
+      "bytes": 6431,
+      "sha256": "ada18c4fb6ca843184e500f9c826931679dc02998bfe05b8ce7e60b232ac65ec"
+    },
+    {
+      "file": "review-content/source/design/forms.json.fixture",
+      "owner": "review-content",
+      "restore": "source/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "file": "review-content/source/design/tasks.json.fixture",
+      "owner": "review-content",
+      "restore": "source/design/tasks.json",
+      "bytes": 14338,
+      "sha256": "c151cfcfabad2b72ae3722fe892301b6e6a0fc1ce40dba07ebd468132dce31a9"
+    },
+    {
+      "file": "review-content/source/doc/authoring.md.fixture",
+      "owner": "review-content",
+      "restore": "source/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "file": "review-content/source/doc/migration/authored/22-external-extensions.nepld.fixture",
+      "owner": "review-content",
+      "restore": "source/doc/migration/authored/22-external-extensions.nepld",
+      "bytes": 14506,
+      "sha256": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa"
+    },
+    {
+      "file": "review-content/source/doc/spec/22-external-extensions.md.fixture",
+      "owner": "review-content",
+      "restore": "source/doc/spec/22-external-extensions.md",
+      "bytes": 6403,
+      "sha256": "d3ea5308c7d0d79d915e4c1fcbe971fb366f3ee1ebe5d7685dad5e0c8cb53a9a"
+    },
+    {
+      "file": "review-code/manifest.json.fixture",
+      "owner": "review-code",
+      "restore": "manifest.json",
+      "bytes": 13991,
+      "sha256": "ad3af0c1f7756aa984a689bcdbdb7c3a512d984c2ca28cc862cb8cd9b96c2af9"
+    },
+    {
+      "file": "review-code/before/doc/canonical.json.fixture",
+      "owner": "review-code",
+      "restore": "before/doc/canonical.json",
+      "bytes": 645,
+      "sha256": "aa5194390f21bedc5ada54eb34e17e5c3b5f203bdadc991ff80809fd85e1a67b"
+    },
+    {
+      "file": "review-code/before/doc/migration/authored/22-external-extensions.nepld.fixture",
+      "owner": "review-code",
+      "restore": "before/doc/migration/authored/22-external-extensions.nepld",
+      "bytes": 14506,
+      "sha256": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa"
+    },
+    {
+      "file": "review-code/before/doc/spec/22-external-extensions.md.fixture",
+      "owner": "review-code",
+      "restore": "before/doc/spec/22-external-extensions.md",
+      "bytes": 6403,
+      "sha256": "d3ea5308c7d0d79d915e4c1fcbe971fb366f3ee1ebe5d7685dad5e0c8cb53a9a"
+    },
+    {
+      "file": "review-code/boundaries.json.fixture",
+      "owner": "review-code",
+      "restore": "boundaries.json",
+      "bytes": 1579,
+      "sha256": "6514977363ff92027d5a0e9e579330cbf9856617ae13198e484e45ca05330419"
+    },
+    {
+      "file": "review-code/boundaries.py.fixture",
+      "owner": "review-code",
+      "restore": "boundaries.py",
+      "bytes": 1551,
+      "sha256": "0bfb73f8ce12911d1cb6df4c611e165882d62fb33867da8328afa77dd3d7e598"
+    },
+    {
+      "file": "review-code/canonical-check.stderr.log.fixture",
+      "owner": "review-code",
+      "restore": "canonical-check.stderr.log",
+      "bytes": 2411,
+      "sha256": "96680e7cff3295fb94c90532cd20902bf6992e609169fd10864bcc2d60e127c2"
+    },
+    {
+      "file": "review-code/canonical-check.stdout.log.fixture",
+      "owner": "review-code",
+      "restore": "canonical-check.stdout.log",
+      "bytes": 156,
+      "sha256": "4d3f95ea627f1d97eaa94073ff3d668da77d20a7c09da880a084a56d5b57928b"
+    },
+    {
+      "file": "review-code/cargo-version.stderr.log.fixture",
+      "owner": "review-code",
+      "restore": "cargo-version.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-code/cargo-version.stdout.log.fixture",
+      "owner": "review-code",
+      "restore": "cargo-version.stdout.log",
+      "bytes": 36,
+      "sha256": "f4f564f8936fa8eb53bca8bbe50666489252bbcbeaae0cb0dd54682444697e52"
+    },
+    {
+      "file": "review-code/check-initial.py.fixture",
+      "owner": "review-code",
+      "restore": "check-initial.py",
+      "bytes": 5980,
+      "sha256": "be1a4a9c02c4414058e075f10f4b623749a4267ca346fa1584bad03a4622e1a5"
+    },
+    {
+      "file": "review-code/check.py.fixture",
+      "owner": "review-code",
+      "restore": "check.py",
+      "bytes": 6007,
+      "sha256": "8022d452531e1a3b3ba6064e7ef7b6d7a54b37652ad49c8f42e57b8a8a46d7b1"
+    },
+    {
+      "file": "review-code/commands.json.fixture",
+      "owner": "review-code",
+      "restore": "commands.json",
+      "bytes": 2399,
+      "sha256": "8da20aafc084a7e44d0df585deebc6f016b0036f5e2acf4a1e71ae2649d0c163"
+    },
+    {
+      "file": "review-code/comparison.json.fixture",
+      "owner": "review-code",
+      "restore": "comparison.json",
+      "bytes": 19607,
+      "sha256": "5ece8992f37c01b2c1b6e0144255ae73203d9c6542e39cc7f7a9affd26b4d683"
+    },
+    {
+      "file": "review-code/dependencies.json.fixture",
+      "owner": "review-code",
+      "restore": "dependencies.json",
+      "bytes": 110270,
+      "sha256": "d8ddcc66b7c78765ba1dfc0f312ccd4b840664776033024595b89cdd2e5c2a28"
+    },
+    {
+      "file": "review-code/diff-check.stderr.log.fixture",
+      "owner": "review-code",
+      "restore": "diff-check.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-code/diff-check.stdout.log.fixture",
+      "owner": "review-code",
+      "restore": "diff-check.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-code/final-checks.json.fixture",
+      "owner": "review-code",
+      "restore": "final-checks.json",
+      "bytes": 516,
+      "sha256": "0973c82f28209262aff5853af532f372d53e53909e52816d459f0fbda0437ba0"
+    },
+    {
+      "file": "review-code/finalize.py.fixture",
+      "owner": "review-code",
+      "restore": "finalize.py",
+      "bytes": 7022,
+      "sha256": "29ca54b0d70d43dc99fe13600d697e3dbb4fe214ffe1e0669ce43a4642d1f036"
+    },
+    {
+      "file": "review-code/freeze.py.fixture",
+      "owner": "review-code",
+      "restore": "freeze.py",
+      "bytes": 3090,
+      "sha256": "5aea7f405032d3d5aa59fccd5261a399b1f85e206c6ffd5a0d0b21166797cf4c"
+    },
+    {
+      "file": "review-code/generation.json.fixture",
+      "owner": "review-code",
+      "restore": "generation.json",
+      "bytes": 1006,
+      "sha256": "30a69736d12a3f7d6678300ae064416887faef498b3c1202cd1f6cc1ae8543d0"
+    },
+    {
+      "file": "review-code/html-content.json.fixture",
+      "owner": "review-code",
+      "restore": "html-content.json",
+      "bytes": 659,
+      "sha256": "6fbc02c71639eeea106f8bcbd34ab8f97e890fa8bd4f5bfaba6fffed612e148e"
+    },
+    {
+      "file": "review-code/html-first/docs/spec/00-contract.html.fixture",
+      "owner": "review-code",
+      "restore": "html-first/docs/spec/00-contract.html",
+      "bytes": 38595,
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+    },
+    {
+      "file": "review-code/html-first/docs/spec/13-reproducibility.html.fixture",
+      "owner": "review-code",
+      "restore": "html-first/docs/spec/13-reproducibility.html",
+      "bytes": 91421,
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+    },
+    {
+      "file": "review-code/html-first/docs/spec/22-external-extensions.html.fixture",
+      "owner": "review-code",
+      "restore": "html-first/docs/spec/22-external-extensions.html",
+      "bytes": 44041,
+      "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8"
+    },
+    {
+      "file": "review-code/html-first/docs/spec/assets/doc.css.fixture",
+      "owner": "review-code",
+      "restore": "html-first/docs/spec/assets/doc.css",
+      "bytes": 2255,
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+    },
+    {
+      "file": "review-code/html-first/manifest.json.fixture",
+      "owner": "review-code",
+      "restore": "html-first/manifest.json",
+      "bytes": 9085,
+      "sha256": "0f6bc6bd338e3e1253756be4ca9301dc0d2db73cea0fcb9b66b99d6efd07b87f"
+    },
+    {
+      "file": "review-code/html-first.stderr.log.fixture",
+      "owner": "review-code",
+      "restore": "html-first.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-code/html-first.stdout.log.fixture",
+      "owner": "review-code",
+      "restore": "html-first.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-code/html-second/docs/spec/00-contract.html.fixture",
+      "owner": "review-code",
+      "restore": "html-second/docs/spec/00-contract.html",
+      "bytes": 38595,
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+    },
+    {
+      "file": "review-code/html-second/docs/spec/13-reproducibility.html.fixture",
+      "owner": "review-code",
+      "restore": "html-second/docs/spec/13-reproducibility.html",
+      "bytes": 91421,
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+    },
+    {
+      "file": "review-code/html-second/docs/spec/22-external-extensions.html.fixture",
+      "owner": "review-code",
+      "restore": "html-second/docs/spec/22-external-extensions.html",
+      "bytes": 44041,
+      "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8"
+    },
+    {
+      "file": "review-code/html-second/docs/spec/assets/doc.css.fixture",
+      "owner": "review-code",
+      "restore": "html-second/docs/spec/assets/doc.css",
+      "bytes": 2255,
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+    },
+    {
+      "file": "review-code/html-second/manifest.json.fixture",
+      "owner": "review-code",
+      "restore": "html-second/manifest.json",
+      "bytes": 9085,
+      "sha256": "0f6bc6bd338e3e1253756be4ca9301dc0d2db73cea0fcb9b66b99d6efd07b87f"
+    },
+    {
+      "file": "review-code/html-second.stderr.log.fixture",
+      "owner": "review-code",
+      "restore": "html-second.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-code/html-second.stdout.log.fixture",
+      "owner": "review-code",
+      "restore": "html-second.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-code/mutations/changed-doc-source/input.fixture",
+      "owner": "review-code",
+      "restore": "mutations/changed-doc-source/input",
+      "bytes": 14506,
+      "sha256": "c7c16654ae3ae85a4d92fc20c090b7e190b8f99d72c65396e45d76d82508fba8"
+    },
+    {
+      "file": "review-code/mutations/changed-doc-source/stderr.log.fixture",
+      "owner": "review-code",
+      "restore": "mutations/changed-doc-source/stderr.log",
+      "bytes": 119,
+      "sha256": "c07b4b1c38a50b0fbd35b92e5b9a25187e3f4e2f078c236ac3c90a94f371bf5b"
+    },
+    {
+      "file": "review-code/mutations/changed-doc-source/stdout.log.fixture",
+      "owner": "review-code",
+      "restore": "mutations/changed-doc-source/stdout.log",
+      "bytes": 99,
+      "sha256": "befec8dec5ded74aa03199d89e5b5373ce0c0c6f05c7bc6fbf0a8ad48562ae9f"
+    },
+    {
+      "file": "review-code/mutations/missing-legacy-alias/input.fixture",
+      "owner": "review-code",
+      "restore": "mutations/missing-legacy-alias/input",
+      "bytes": 251,
+      "sha256": "e611263e7ee632ba80734d819733426074485b0fa399fb88a590229162c4979d"
+    },
+    {
+      "file": "review-code/mutations/missing-legacy-alias/stderr.log.fixture",
+      "owner": "review-code",
+      "restore": "mutations/missing-legacy-alias/stderr.log",
+      "bytes": 119,
+      "sha256": "c07b4b1c38a50b0fbd35b92e5b9a25187e3f4e2f078c236ac3c90a94f371bf5b"
+    },
+    {
+      "file": "review-code/mutations/missing-legacy-alias/stdout.log.fixture",
+      "owner": "review-code",
+      "restore": "mutations/missing-legacy-alias/stdout.log",
+      "bytes": 99,
+      "sha256": "befec8dec5ded74aa03199d89e5b5373ce0c0c6f05c7bc6fbf0a8ad48562ae9f"
+    },
+    {
+      "file": "review-code/mutations/old-markdown-is-stale/input.fixture",
+      "owner": "review-code",
+      "restore": "mutations/old-markdown-is-stale/input",
+      "bytes": 6403,
+      "sha256": "d3ea5308c7d0d79d915e4c1fcbe971fb366f3ee1ebe5d7685dad5e0c8cb53a9a"
+    },
+    {
+      "file": "review-code/mutations/old-markdown-is-stale/stderr.log.fixture",
+      "owner": "review-code",
+      "restore": "mutations/old-markdown-is-stale/stderr.log",
+      "bytes": 119,
+      "sha256": "c07b4b1c38a50b0fbd35b92e5b9a25187e3f4e2f078c236ac3c90a94f371bf5b"
+    },
+    {
+      "file": "review-code/mutations/old-markdown-is-stale/stdout.log.fixture",
+      "owner": "review-code",
+      "restore": "mutations/old-markdown-is-stale/stdout.log",
+      "bytes": 99,
+      "sha256": "befec8dec5ded74aa03199d89e5b5373ce0c0c6f05c7bc6fbf0a8ad48562ae9f"
+    },
+    {
+      "file": "review-code/prior/content/check.py.fixture",
+      "owner": "review-code",
+      "restore": "prior/content/check.py",
+      "bytes": 2957,
+      "sha256": "9fe5b89b628c249ef06e5850c0fa485ae9e427e1178b2fee008fe9a67366c1cf"
+    },
+    {
+      "file": "review-code/prior/content/manifest.json.fixture",
+      "owner": "review-code",
+      "restore": "prior/content/manifest.json",
+      "bytes": 1784,
+      "sha256": "c8f2ffca29a6904ef8418c3b531f1088205bc82cdda3e1742b414f4f1a4e7ab3"
+    },
+    {
+      "file": "review-code/prior/content/record.md.fixture",
+      "owner": "review-code",
+      "restore": "prior/content/record.md",
+      "bytes": 4873,
+      "sha256": "e84919ff03f87b03c6a8e05c9acc3b4f23af7d7404c31933a5ad21c2d2b8e722"
+    },
+    {
+      "file": "review-code/prior/content/result.json.fixture",
+      "owner": "review-code",
+      "restore": "prior/content/result.json",
+      "bytes": 19562,
+      "sha256": "8f2cae7300769836c812387e335fa9843676aeababfd15787aafdd49de66b4b6"
+    },
+    {
+      "file": "review-code/prior/content/source/AGENTS.md.fixture",
+      "owner": "review-code",
+      "restore": "prior/content/source/AGENTS.md",
+      "bytes": 7729,
+      "sha256": "c26941e6dbf896a5e07b7c807789bc1f70bd740e4065092186be42e5ac4baf53"
+    },
+    {
+      "file": "review-code/prior/content/source/design/acceptance.json.fixture",
+      "owner": "review-code",
+      "restore": "prior/content/source/design/acceptance.json",
+      "bytes": 20266,
+      "sha256": "de50812b44e00d0ca8e8429e92664b0b25c40abe539bfe548e0a59a62e8e4391"
+    },
+    {
+      "file": "review-code/prior/content/source/design/dependencies.json.fixture",
+      "owner": "review-code",
+      "restore": "prior/content/source/design/dependencies.json",
+      "bytes": 6431,
+      "sha256": "ada18c4fb6ca843184e500f9c826931679dc02998bfe05b8ce7e60b232ac65ec"
+    },
+    {
+      "file": "review-code/prior/content/source/design/forms.json.fixture",
+      "owner": "review-code",
+      "restore": "prior/content/source/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "file": "review-code/prior/content/source/design/tasks.json.fixture",
+      "owner": "review-code",
+      "restore": "prior/content/source/design/tasks.json",
+      "bytes": 14338,
+      "sha256": "c151cfcfabad2b72ae3722fe892301b6e6a0fc1ce40dba07ebd468132dce31a9"
+    },
+    {
+      "file": "review-code/prior/content/source/doc/authoring.md.fixture",
+      "owner": "review-code",
+      "restore": "prior/content/source/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "file": "review-code/prior/content/source/doc/migration/authored/22-external-extensions.nepld.fixture",
+      "owner": "review-code",
+      "restore": "prior/content/source/doc/migration/authored/22-external-extensions.nepld",
+      "bytes": 14506,
+      "sha256": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa"
+    },
+    {
+      "file": "review-code/prior/content/source/doc/spec/22-external-extensions.md.fixture",
+      "owner": "review-code",
+      "restore": "prior/content/source/doc/spec/22-external-extensions.md",
+      "bytes": 6403,
+      "sha256": "d3ea5308c7d0d79d915e4c1fcbe971fb366f3ee1ebe5d7685dad5e0c8cb53a9a"
+    },
+    {
+      "file": "review-code/prior/legacy-anchors/check.py.fixture",
+      "owner": "review-code",
+      "restore": "prior/legacy-anchors/check.py",
+      "bytes": 3100,
+      "sha256": "55a60350cfdbd76d09430e7e3e59550e334545c079f6d8e2e782518e60b96700"
+    },
+    {
+      "file": "review-code/prior/legacy-anchors/fetch.json.fixture",
+      "owner": "review-code",
+      "restore": "prior/legacy-anchors/fetch.json",
+      "bytes": 5728,
+      "sha256": "4a95a964697bffc683c86fd213cedd8388b030190cac3703bb4df03b49339d67"
+    },
+    {
+      "file": "review-code/prior/legacy-anchors/github.html.fixture",
+      "owner": "review-code",
+      "restore": "prior/legacy-anchors/github.html",
+      "bytes": 266110,
+      "sha256": "3bf99057aad692684996a6dc8d8c577ec5ac61efe348edd3ab6729d4fcd2636b"
+    },
+    {
+      "file": "review-code/prior/legacy-anchors/manifest.json.fixture",
+      "owner": "review-code",
+      "restore": "prior/legacy-anchors/manifest.json",
+      "bytes": 1299,
+      "sha256": "109335af6a00733b1363a252ac69c4a317ff6ef23bbf00b95727143543b15cdb"
+    },
+    {
+      "file": "review-code/prior/legacy-anchors/rawLines.json.fixture",
+      "owner": "review-code",
+      "restore": "prior/legacy-anchors/rawLines.json",
+      "bytes": 6806,
+      "sha256": "2fc35d0bdaa374f72757f52ffbda3f2b348f41884ad000029f2db623df965ca9"
+    },
+    {
+      "file": "review-code/prior/legacy-anchors/record.md.fixture",
+      "owner": "review-code",
+      "restore": "prior/legacy-anchors/record.md",
+      "bytes": 1768,
+      "sha256": "486dc8993972cf7ff5d6a371552d2a2a564af8458f8a9bf23298e436c599805c"
+    },
+    {
+      "file": "review-code/prior/legacy-anchors/result.json.fixture",
+      "owner": "review-code",
+      "restore": "prior/legacy-anchors/result.json",
+      "bytes": 1916,
+      "sha256": "fb406127eaf53b0bdde5a8b427ec81a1a9f1e38be1e54c11cbfabb64994e97b0"
+    },
+    {
+      "file": "review-code/prior/legacy-anchors/richText.html.fixture",
+      "owner": "review-code",
+      "restore": "prior/legacy-anchors/richText.html",
+      "bytes": 11748,
+      "sha256": "afd578bfeee252df285ef67b072e424f029f111b4ff0a3b8e0c8a40f904f6361"
+    },
+    {
+      "file": "review-code/prior/legacy-anchors/source.md.fixture",
+      "owner": "review-code",
+      "restore": "prior/legacy-anchors/source.md",
+      "bytes": 6403,
+      "sha256": "d3ea5308c7d0d79d915e4c1fcbe971fb366f3ee1ebe5d7685dad5e0c8cb53a9a"
+    },
+    {
+      "file": "review-code/prior-verified.json.fixture",
+      "owner": "review-code",
+      "restore": "prior-verified.json",
+      "bytes": 289,
+      "sha256": "0d13b73cc562566c95329bcd2392b00a675545531d79c3782a75008c014b9dcc"
+    },
+    {
+      "file": "review-code/record.md.fixture",
+      "owner": "review-code",
+      "restore": "record.md",
+      "bytes": 4078,
+      "sha256": "b6d7ab2b5156a3f95987849534601467dddfabe37fb2c6497713c6cb81fc8966"
+    },
+    {
+      "file": "review-code/run.py.fixture",
+      "owner": "review-code",
+      "restore": "run.py",
+      "bytes": 1828,
+      "sha256": "f417345c454a4a77e5472ed6b8fff287c3bde8217a8a90b62be28d0d4a6798f8"
+    },
+    {
+      "file": "review-code/rust-version.stderr.log.fixture",
+      "owner": "review-code",
+      "restore": "rust-version.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-code/rust-version.stdout.log.fixture",
+      "owner": "review-code",
+      "restore": "rust-version.stdout.log",
+      "bytes": 194,
+      "sha256": "f3c960598a5e9037c4cf8e4aa06c018171abf07c381d165c3986c6a954dea1bb"
+    },
+    {
+      "file": "review-code/snapshot.json.fixture",
+      "owner": "review-code",
+      "restore": "snapshot.json",
+      "bytes": 911,
+      "sha256": "fccb7b61929c51ee52fd0e2d937efc6cccc9cbff45948a6389dfd67844fcb2db"
+    },
+    {
+      "file": "review-code/source/AGENTS.md.fixture",
+      "owner": "review-code",
+      "restore": "source/AGENTS.md",
+      "bytes": 7729,
+      "sha256": "c26941e6dbf896a5e07b7c807789bc1f70bd740e4065092186be42e5ac4baf53"
+    },
+    {
+      "file": "review-code/source/design/forms.json.fixture",
+      "owner": "review-code",
+      "restore": "source/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "file": "review-code/source/doc/authoring.md.fixture",
+      "owner": "review-code",
+      "restore": "source/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "file": "review-code/source/doc/canonical.json.fixture",
+      "owner": "review-code",
+      "restore": "source/doc/canonical.json",
+      "bytes": 987,
+      "sha256": "a2470f01492c40558d26ad709d49c410bf5ee0b3393834e8628a4250f18b8377"
+    },
+    {
+      "file": "review-code/source/doc/migration/aliases/22-external-extensions.json.fixture",
+      "owner": "review-code",
+      "restore": "source/doc/migration/aliases/22-external-extensions.json",
+      "bytes": 334,
+      "sha256": "132807f48bf3acceac6beacff6fd690cac164b5d0701ac40b0f0a03c7abfc923"
+    },
+    {
+      "file": "review-code/source/doc/spec/22-external-extensions.md.fixture",
+      "owner": "review-code",
+      "restore": "source/doc/spec/22-external-extensions.md",
+      "bytes": 12525,
+      "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+    },
+    {
+      "file": "review-code/source/doc/spec/22-external-extensions.nepld.fixture",
+      "owner": "review-code",
+      "restore": "source/doc/spec/22-external-extensions.nepld",
+      "bytes": 14506,
+      "sha256": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa"
+    },
+    {
+      "file": "review-code/source/tools/audit/structure.py.fixture",
+      "owner": "review-code",
+      "restore": "source/tools/audit/structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    },
+    {
+      "file": "review-code/source/tools/src/doc/canonical.rs.fixture",
+      "owner": "review-code",
+      "restore": "source/tools/src/doc/canonical.rs",
+      "bytes": 6669,
+      "sha256": "a034546053e3a6956d20304ce956d5ef9f95a011741f40633e563ac408f79da7"
+    },
+    {
+      "file": "review-code/source/tools/src/doc/projection/annotated/host.rs.fixture",
+      "owner": "review-code",
+      "restore": "source/tools/src/doc/projection/annotated/host.rs",
+      "bytes": 3956,
+      "sha256": "66482b70f997edbd1bb0afe85165e03c7092fc6d9f3282990ebb4da9aded3412"
+    },
+    {
+      "file": "review-code/source.patch.fixture",
+      "owner": "review-code",
+      "restore": "source.patch",
+      "bytes": 20788,
+      "sha256": "582598c3e3963c9c17b7c0a6e94c16263230e1e5ebeb6d612e215ca44a26f0d1"
+    },
+    {
+      "file": "review-cutover/manifest.json.fixture",
+      "owner": "review-cutover",
+      "restore": "manifest.json",
+      "bytes": 23705,
+      "sha256": "e1147acbeb55d6846b83092a28109ff8a22775de6cb69d2ac45130dabb5affb4"
+    },
+    {
+      "file": "review-cutover/bootstrap.command.json.fixture",
+      "owner": "review-cutover",
+      "restore": "bootstrap.command.json",
+      "bytes": 391,
+      "sha256": "48ba4bfe9f2389974e72a8a8da1507b6c6bca3d7bc5431ea0041de808bceb548"
+    },
+    {
+      "file": "review-cutover/bootstrap.json.fixture",
+      "owner": "review-cutover",
+      "restore": "bootstrap.json",
+      "bytes": 2737,
+      "sha256": "3cdc2ee9204743a303ff0fb1a6079cb0f4badc85a1ed4efec643c73e26d8d437"
+    },
+    {
+      "file": "review-cutover/bootstrap.py.fixture",
+      "owner": "review-cutover",
+      "restore": "bootstrap.py",
+      "bytes": 2454,
+      "sha256": "b2a3a1b986d21319e2dc006887a9020d17d9809afae7915515c4567ad442352f"
+    },
+    {
+      "file": "review-cutover/bootstrap.stderr.log.fixture",
+      "owner": "review-cutover",
+      "restore": "bootstrap.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-cutover/bootstrap.stdout.log.fixture",
+      "owner": "review-cutover",
+      "restore": "bootstrap.stdout.log",
+      "bytes": 73,
+      "sha256": "3fe0eef6bb9f00f0adbbbd41754ab8611a6c7c36796a5832cb74818d6a775bd3"
+    },
+    {
+      "file": "review-cutover/code-generation/canonical-check.stderr.log.fixture",
+      "owner": "review-cutover",
+      "restore": "code-generation/canonical-check.stderr.log",
+      "bytes": 2411,
+      "sha256": "96680e7cff3295fb94c90532cd20902bf6992e609169fd10864bcc2d60e127c2"
+    },
+    {
+      "file": "review-cutover/code-generation/canonical-check.stdout.log.fixture",
+      "owner": "review-cutover",
+      "restore": "code-generation/canonical-check.stdout.log",
+      "bytes": 156,
+      "sha256": "4d3f95ea627f1d97eaa94073ff3d668da77d20a7c09da880a084a56d5b57928b"
+    },
+    {
+      "file": "review-cutover/code-generation/cargo-version.stdout.log.fixture",
+      "owner": "review-cutover",
+      "restore": "code-generation/cargo-version.stdout.log",
+      "bytes": 36,
+      "sha256": "f4f564f8936fa8eb53bca8bbe50666489252bbcbeaae0cb0dd54682444697e52"
+    },
+    {
+      "file": "review-cutover/code-generation/commands.json.fixture",
+      "owner": "review-cutover",
+      "restore": "code-generation/commands.json",
+      "bytes": 2399,
+      "sha256": "8da20aafc084a7e44d0df585deebc6f016b0036f5e2acf4a1e71ae2649d0c163"
+    },
+    {
+      "file": "review-cutover/code-generation/comparison.json.fixture",
+      "owner": "review-cutover",
+      "restore": "code-generation/comparison.json",
+      "bytes": 19607,
+      "sha256": "5ece8992f37c01b2c1b6e0144255ae73203d9c6542e39cc7f7a9affd26b4d683"
+    },
+    {
+      "file": "review-cutover/code-generation/generation.json.fixture",
+      "owner": "review-cutover",
+      "restore": "code-generation/generation.json",
+      "bytes": 1006,
+      "sha256": "30a69736d12a3f7d6678300ae064416887faef498b3c1202cd1f6cc1ae8543d0"
+    },
+    {
+      "file": "review-cutover/code-generation/html-content.json.fixture",
+      "owner": "review-cutover",
+      "restore": "code-generation/html-content.json",
+      "bytes": 659,
+      "sha256": "6fbc02c71639eeea106f8bcbd34ab8f97e890fa8bd4f5bfaba6fffed612e148e"
+    },
+    {
+      "file": "review-cutover/code-generation/html-first.stderr.log.fixture",
+      "owner": "review-cutover",
+      "restore": "code-generation/html-first.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-cutover/code-generation/html-first.stdout.log.fixture",
+      "owner": "review-cutover",
+      "restore": "code-generation/html-first.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-cutover/code-generation/html-second.stderr.log.fixture",
+      "owner": "review-cutover",
+      "restore": "code-generation/html-second.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-cutover/code-generation/html-second.stdout.log.fixture",
+      "owner": "review-cutover",
+      "restore": "code-generation/html-second.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-cutover/code-generation/manifest.json.fixture",
+      "owner": "review-cutover",
+      "restore": "code-generation/manifest.json",
+      "bytes": 13991,
+      "sha256": "ad3af0c1f7756aa984a689bcdbdb7c3a512d984c2ca28cc862cb8cd9b96c2af9"
+    },
+    {
+      "file": "review-cutover/code-generation/record.md.fixture",
+      "owner": "review-cutover",
+      "restore": "code-generation/record.md",
+      "bytes": 4078,
+      "sha256": "b6d7ab2b5156a3f95987849534601467dddfabe37fb2c6497713c6cb81fc8966"
+    },
+    {
+      "file": "review-cutover/code-generation/rust-version.stdout.log.fixture",
+      "owner": "review-cutover",
+      "restore": "code-generation/rust-version.stdout.log",
+      "bytes": 194,
+      "sha256": "f3c960598a5e9037c4cf8e4aa06c018171abf07c381d165c3986c6a954dea1bb"
+    },
+    {
+      "file": "review-cutover/code-generation/snapshot.json.fixture",
+      "owner": "review-cutover",
+      "restore": "code-generation/snapshot.json",
+      "bytes": 911,
+      "sha256": "fccb7b61929c51ee52fd0e2d937efc6cccc9cbff45948a6389dfd67844fcb2db"
+    },
+    {
+      "file": "review-cutover/finalize.py.fixture",
+      "owner": "review-cutover",
+      "restore": "finalize.py",
+      "bytes": 8743,
+      "sha256": "b96562715b9b4d45f21c6f75c92c1aeb9627ccf7be477046767c1b08d46d50db"
+    },
+    {
+      "file": "review-cutover/freeze.py.fixture",
+      "owner": "review-cutover",
+      "restore": "freeze.py",
+      "bytes": 2447,
+      "sha256": "5906433299cfaa3c493e30c0257a0841a23a65d8a71b6b2198349795abcc405e"
+    },
+    {
+      "file": "review-cutover/github.command.json.fixture",
+      "owner": "review-cutover",
+      "restore": "github.command.json",
+      "bytes": 388,
+      "sha256": "f398cfc0cfb882e7361b3a824e0e59e7167917e6cba0994ffcb720b63b386afe"
+    },
+    {
+      "file": "review-cutover/github.py.fixture",
+      "owner": "review-cutover",
+      "restore": "github.py",
+      "bytes": 3642,
+      "sha256": "a4baafdc48b2053091a19642b0db485246feb9811de6c8ea4898fd1392062d3e"
+    },
+    {
+      "file": "review-cutover/github.stderr.log.fixture",
+      "owner": "review-cutover",
+      "restore": "github.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-cutover/github.stdout.log.fixture",
+      "owner": "review-cutover",
+      "restore": "github.stdout.log",
+      "bytes": 171,
+      "sha256": "15b3e36ca3d166ea12b8748483b3fdcbdb35f29b275fb522c2426dabec139c5c"
+    },
+    {
+      "file": "review-cutover/independent-generated/docs/spec/00-contract.html.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-generated/docs/spec/00-contract.html",
+      "bytes": 38595,
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+    },
+    {
+      "file": "review-cutover/independent-generated/docs/spec/13-reproducibility.html.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-generated/docs/spec/13-reproducibility.html",
+      "bytes": 91421,
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+    },
+    {
+      "file": "review-cutover/independent-generated/docs/spec/22-external-extensions.html.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-generated/docs/spec/22-external-extensions.html",
+      "bytes": 44041,
+      "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8"
+    },
+    {
+      "file": "review-cutover/independent-generated/docs/spec/assets/doc.css.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-generated/docs/spec/assets/doc.css",
+      "bytes": 2255,
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+    },
+    {
+      "file": "review-cutover/independent-generated/manifest.json.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-generated/manifest.json",
+      "bytes": 9085,
+      "sha256": "0f6bc6bd338e3e1253756be4ca9301dc0d2db73cea0fcb9b66b99d6efd07b87f"
+    },
+    {
+      "file": "review-cutover/independent-github/actual-raw.md.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-github/actual-raw.md",
+      "bytes": 12525,
+      "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+    },
+    {
+      "file": "review-cutover/independent-github/last.png.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-github/last.png",
+      "bytes": 371093,
+      "sha256": "aaf34ca8fde91e933474966df3c93ee6b8c036a2fb7b73582dc5172a5d13eac3"
+    },
+    {
+      "file": "review-cutover/independent-github/page.html.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-github/page.html",
+      "bytes": 418496,
+      "sha256": "ef7c19c6be9e90a5d3f24de05a934dc589a87cda7742230a2c1670729360fece"
+    },
+    {
+      "file": "review-cutover/independent-github/results.json.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-github/results.json",
+      "bytes": 3815,
+      "sha256": "8efec8812b50c6889f7bd47c1a69b84cdaee5074cb40982d8de17d97144f9413"
+    },
+    {
+      "file": "review-cutover/independent-local/chromium-alternate-1280.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/chromium-alternate-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/independent-local/chromium-alternate-1280.png.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/chromium-alternate-1280.png",
+      "bytes": 122957,
+      "sha256": "51917680f2cc727ee710560d626583651ff62ad3e1d3a2b7b49fb2cadf0d53f2"
+    },
+    {
+      "file": "review-cutover/independent-local/chromium-alternate-375.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/chromium-alternate-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/independent-local/chromium-alternate-375.png.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/chromium-alternate-375.png",
+      "bytes": 70234,
+      "sha256": "c0e9ea2d8d7f782546cb37f592b8675897daeab7d472e52839d90f48ef28daf1"
+    },
+    {
+      "file": "review-cutover/independent-local/chromium-NEPL3-1280.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/chromium-NEPL3-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/independent-local/chromium-NEPL3-1280.png.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/chromium-NEPL3-1280.png",
+      "bytes": 122957,
+      "sha256": "51917680f2cc727ee710560d626583651ff62ad3e1d3a2b7b49fb2cadf0d53f2"
+    },
+    {
+      "file": "review-cutover/independent-local/chromium-NEPL3-375.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/chromium-NEPL3-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/independent-local/chromium-NEPL3-375.png.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/chromium-NEPL3-375.png",
+      "bytes": 70234,
+      "sha256": "c0e9ea2d8d7f782546cb37f592b8675897daeab7d472e52839d90f48ef28daf1"
+    },
+    {
+      "file": "review-cutover/independent-local/firefox-alternate-1280.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/firefox-alternate-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/independent-local/firefox-alternate-1280.png.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/firefox-alternate-1280.png",
+      "bytes": 97082,
+      "sha256": "c9377127911de18b2520f39ce0d185c3f8c42082db21d26bd89ff15eaf437b4b"
+    },
+    {
+      "file": "review-cutover/independent-local/firefox-alternate-375.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/firefox-alternate-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/independent-local/firefox-alternate-375.png.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/firefox-alternate-375.png",
+      "bytes": 51484,
+      "sha256": "1b01a24fab15a80aeb3ce63c2606d5d923a07e106b1ca8dc2006cffa417053e2"
+    },
+    {
+      "file": "review-cutover/independent-local/firefox-NEPL3-1280.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/firefox-NEPL3-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/independent-local/firefox-NEPL3-1280.png.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/firefox-NEPL3-1280.png",
+      "bytes": 97082,
+      "sha256": "c9377127911de18b2520f39ce0d185c3f8c42082db21d26bd89ff15eaf437b4b"
+    },
+    {
+      "file": "review-cutover/independent-local/firefox-NEPL3-375.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/firefox-NEPL3-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/independent-local/firefox-NEPL3-375.png.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/firefox-NEPL3-375.png",
+      "bytes": 51484,
+      "sha256": "1b01a24fab15a80aeb3ce63c2606d5d923a07e106b1ca8dc2006cffa417053e2"
+    },
+    {
+      "file": "review-cutover/independent-local/results.json.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/results.json",
+      "bytes": 26911,
+      "sha256": "b2b3e10cf8ce8731c124fc93ff3eeeafec82005aca4560bd0539682b24a07f99"
+    },
+    {
+      "file": "review-cutover/independent-local/webkit-alternate-1280.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/webkit-alternate-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/independent-local/webkit-alternate-1280.png.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/webkit-alternate-1280.png",
+      "bytes": 129506,
+      "sha256": "56c024ac030fe64ae8645025816c14156d2932f8a2d52d276d4f4549a6b31e9e"
+    },
+    {
+      "file": "review-cutover/independent-local/webkit-alternate-375.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/webkit-alternate-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/independent-local/webkit-alternate-375.png.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/webkit-alternate-375.png",
+      "bytes": 74033,
+      "sha256": "8cb60ffd5e774eedfa3fdf677014173a84934ba86d54583f0a429ebfd17c24fc"
+    },
+    {
+      "file": "review-cutover/independent-local/webkit-NEPL3-1280.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/webkit-NEPL3-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/independent-local/webkit-NEPL3-1280.png.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/webkit-NEPL3-1280.png",
+      "bytes": 129506,
+      "sha256": "56c024ac030fe64ae8645025816c14156d2932f8a2d52d276d4f4549a6b31e9e"
+    },
+    {
+      "file": "review-cutover/independent-local/webkit-NEPL3-375.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/webkit-NEPL3-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/independent-local/webkit-NEPL3-375.png.fixture",
+      "owner": "review-cutover",
+      "restore": "independent-local/webkit-NEPL3-375.png",
+      "bytes": 74033,
+      "sha256": "8cb60ffd5e774eedfa3fdf677014173a84934ba86d54583f0a429ebfd17c24fc"
+    },
+    {
+      "file": "review-cutover/local.command.json.fixture",
+      "owner": "review-cutover",
+      "restore": "local.command.json",
+      "bytes": 387,
+      "sha256": "bb0ec596ef267f8638431973f463ffa50580f4730a3517a0ebbd4be738bb7d25"
+    },
+    {
+      "file": "review-cutover/local.py.fixture",
+      "owner": "review-cutover",
+      "restore": "local.py",
+      "bytes": 4725,
+      "sha256": "7b4a0c87d2b143057c8fd8b0136c3114259094d21be5058b9ec031bde3c23d48"
+    },
+    {
+      "file": "review-cutover/local.stderr.log.fixture",
+      "owner": "review-cutover",
+      "restore": "local.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-cutover/local.stdout.log.fixture",
+      "owner": "review-cutover",
+      "restore": "local.stdout.log",
+      "bytes": 342,
+      "sha256": "29fad6e540f429f9be512c1e744fb3f6360827aaeaea394223942c96de3112ac"
+    },
+    {
+      "file": "review-cutover/original/bootstrap-canonical22/bootstrap-canonical22.py.fixture",
+      "owner": "review-cutover",
+      "restore": "original/bootstrap-canonical22/bootstrap-canonical22.py",
+      "bytes": 2198,
+      "sha256": "9a61766592c82b6378a86c7c1006c258af53ea710d8cb439e0dde70b3a5ce0d8"
+    },
+    {
+      "file": "review-cutover/original/bootstrap-canonical22/restore-canonical22.py.fixture",
+      "owner": "review-cutover",
+      "restore": "original/bootstrap-canonical22/restore-canonical22.py",
+      "bytes": 883,
+      "sha256": "fb89bc1f7723b2617a0f490e3656187a85516002facf748323b5211c8ead13c4"
+    },
+    {
+      "file": "review-cutover/original/bootstrap-canonical22/results.json.fixture",
+      "owner": "review-cutover",
+      "restore": "original/bootstrap-canonical22/results.json",
+      "bytes": 1495,
+      "sha256": "87cda6979dfaa5e82346f0b0b7c8e272373b40be372446b6879943bf41eeff0b"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/chromium-first-1280.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/chromium-first-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/chromium-first-1280.png.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/chromium-first-1280.png",
+      "bytes": 122957,
+      "sha256": "51917680f2cc727ee710560d626583651ff62ad3e1d3a2b7b49fb2cadf0d53f2"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/chromium-first-375.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/chromium-first-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/chromium-first-375.png.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/chromium-first-375.png",
+      "bytes": 70234,
+      "sha256": "c0e9ea2d8d7f782546cb37f592b8675897daeab7d472e52839d90f48ef28daf1"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/chromium-second-1280.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/chromium-second-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/chromium-second-1280.png.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/chromium-second-1280.png",
+      "bytes": 122957,
+      "sha256": "51917680f2cc727ee710560d626583651ff62ad3e1d3a2b7b49fb2cadf0d53f2"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/chromium-second-375.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/chromium-second-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/chromium-second-375.png.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/chromium-second-375.png",
+      "bytes": 70234,
+      "sha256": "c0e9ea2d8d7f782546cb37f592b8675897daeab7d472e52839d90f48ef28daf1"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/firefox-first-1280.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/firefox-first-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/firefox-first-1280.png.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/firefox-first-1280.png",
+      "bytes": 97082,
+      "sha256": "c9377127911de18b2520f39ce0d185c3f8c42082db21d26bd89ff15eaf437b4b"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/firefox-first-375.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/firefox-first-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/firefox-first-375.png.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/firefox-first-375.png",
+      "bytes": 51484,
+      "sha256": "1b01a24fab15a80aeb3ce63c2606d5d923a07e106b1ca8dc2006cffa417053e2"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/firefox-second-1280.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/firefox-second-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/firefox-second-1280.png.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/firefox-second-1280.png",
+      "bytes": 97082,
+      "sha256": "c9377127911de18b2520f39ce0d185c3f8c42082db21d26bd89ff15eaf437b4b"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/firefox-second-375.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/firefox-second-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/firefox-second-375.png.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/firefox-second-375.png",
+      "bytes": 51484,
+      "sha256": "1b01a24fab15a80aeb3ce63c2606d5d923a07e106b1ca8dc2006cffa417053e2"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/results.json.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/results.json",
+      "bytes": 21683,
+      "sha256": "64892d3f2473709eea3c45f0bb3095c3f81b7f293654459046fe677136db0aa5"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/webkit-first-1280.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/webkit-first-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/webkit-first-1280.png.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/webkit-first-1280.png",
+      "bytes": 129506,
+      "sha256": "56c024ac030fe64ae8645025816c14156d2932f8a2d52d276d4f4549a6b31e9e"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/webkit-first-375.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/webkit-first-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/webkit-first-375.png.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/webkit-first-375.png",
+      "bytes": 74033,
+      "sha256": "8cb60ffd5e774eedfa3fdf677014173a84934ba86d54583f0a429ebfd17c24fc"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/webkit-second-1280.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/webkit-second-1280.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/webkit-second-1280.png.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/webkit-second-1280.png",
+      "bytes": 129506,
+      "sha256": "56c024ac030fe64ae8645025816c14156d2932f8a2d52d276d4f4549a6b31e9e"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/webkit-second-375.aria.txt.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/webkit-second-375.aria.txt",
+      "bytes": 12990,
+      "sha256": "a159022542d0ddf31669c3df2ee98f4fd2c0d2f5e571423d7e925b31d580084c"
+    },
+    {
+      "file": "review-cutover/original/browser-canonical22/webkit-second-375.png.fixture",
+      "owner": "review-cutover",
+      "restore": "original/browser-canonical22/webkit-second-375.png",
+      "bytes": 74033,
+      "sha256": "8cb60ffd5e774eedfa3fdf677014173a84934ba86d54583f0a429ebfd17c24fc"
+    },
+    {
+      "file": "review-cutover/original/github-canonical22/elements.json.fixture",
+      "owner": "review-cutover",
+      "restore": "original/github-canonical22/elements.json",
+      "bytes": 1682,
+      "sha256": "9a78d2abc19be22ed716415dcdbc3da12114b914e13f8922a39c97a3419dae69"
+    },
+    {
+      "file": "review-cutover/original/github-canonical22/github.png.fixture",
+      "owner": "review-cutover",
+      "restore": "original/github-canonical22/github.png",
+      "bytes": 217441,
+      "sha256": "7eb1f456b6e1f6c3d90ebad6214cc736ed3201a2414768916c126a04a1142985"
+    },
+    {
+      "file": "review-cutover/original/github-canonical22/page.html.fixture",
+      "owner": "review-cutover",
+      "restore": "original/github-canonical22/page.html",
+      "bytes": 296678,
+      "sha256": "ab6585d287b86b2924dd1575a35963bbb43faca617d9f506aa67e08a59d01fda"
+    },
+    {
+      "file": "review-cutover/original/github-canonical22/results.json.fixture",
+      "owner": "review-cutover",
+      "restore": "original/github-canonical22/results.json",
+      "bytes": 3419,
+      "sha256": "e98b9db28943fdc8e1200538fdd2941526e6804b933cbd3f710278898a344c91"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/canonical-check.stderr.log.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/canonical-check.stderr.log",
+      "bytes": 1949,
+      "sha256": "1dfeb2e523663ef9c3dc7c8e6bb2190d2f44b4d54eb4ac05b6208f16273e58e4"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/canonical-check.stdout.log.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/canonical-check.stdout.log",
+      "bytes": 156,
+      "sha256": "4d3f95ea627f1d97eaa94073ff3d668da77d20a7c09da880a084a56d5b57928b"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/commands.json.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/commands.json",
+      "bytes": 752,
+      "sha256": "6fca5536ba0ddb0f8adc5837fe075572e7f0ea36dba0be1de7057a34ff8f050a"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/files.json.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/files.json",
+      "bytes": 791,
+      "sha256": "4fc57411aab04f88f1a3393845591a7dca56bb07d4a16efc7a0d5b4913fb4026"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/first/docs/spec/00-contract.html.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/first/docs/spec/00-contract.html",
+      "bytes": 38595,
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/first/docs/spec/13-reproducibility.html.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/first/docs/spec/13-reproducibility.html",
+      "bytes": 91421,
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/first/docs/spec/22-external-extensions.html.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/first/docs/spec/22-external-extensions.html",
+      "bytes": 44041,
+      "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/first/docs/spec/assets/doc.css.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/first/docs/spec/assets/doc.css",
+      "bytes": 2255,
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/first/manifest.json.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/first/manifest.json",
+      "bytes": 9085,
+      "sha256": "0f6bc6bd338e3e1253756be4ca9301dc0d2db73cea0fcb9b66b99d6efd07b87f"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/html-first.stderr.log.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/html-first.stderr.log",
+      "bytes": 165,
+      "sha256": "66bf090957a119a2287d2918845fdddfbdce901d477b3e6474286b3e8b817048"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/html-first.stdout.log.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/html-first.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/html-second.stderr.log.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/html-second.stderr.log",
+      "bytes": 166,
+      "sha256": "4c299d38c63b83558b118e0f1107e8776dd6f60e5a6d1c7cfa462a43e977f4e3"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/html-second.stdout.log.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/html-second.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/second/docs/spec/00-contract.html.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/second/docs/spec/00-contract.html",
+      "bytes": 38595,
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/second/docs/spec/13-reproducibility.html.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/second/docs/spec/13-reproducibility.html",
+      "bytes": 91421,
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/second/docs/spec/22-external-extensions.html.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/second/docs/spec/22-external-extensions.html",
+      "bytes": 44041,
+      "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/second/docs/spec/assets/doc.css.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/second/docs/spec/assets/doc.css",
+      "bytes": 2255,
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/second/manifest.json.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/second/manifest.json",
+      "bytes": 9085,
+      "sha256": "0f6bc6bd338e3e1253756be4ca9301dc0d2db73cea0fcb9b66b99d6efd07b87f"
+    },
+    {
+      "file": "review-cutover/original/verify-canonical22/unchanged.json.fixture",
+      "owner": "review-cutover",
+      "restore": "original/verify-canonical22/unchanged.json",
+      "bytes": 480,
+      "sha256": "adccf34824ff0653dc2ed34ad60b6c5f0b8d5132e63fdc0c4aa500aa7994c96e"
+    },
+    {
+      "file": "review-cutover/original-files.json.fixture",
+      "owner": "review-cutover",
+      "restore": "original-files.json",
+      "bytes": 25270,
+      "sha256": "de35e017da046525ebb31bf1694c0dcdcf136db16387af8474698ab19d1befbb"
+    },
+    {
+      "file": "review-cutover/playwright-version.stderr.log.fixture",
+      "owner": "review-cutover",
+      "restore": "playwright-version.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-cutover/playwright-version.stdout.log.fixture",
+      "owner": "review-cutover",
+      "restore": "playwright-version.stdout.log",
+      "bytes": 8,
+      "sha256": "424f063152487a0458813670b175f5856a6c391862bf1358c5e3df2588f751b3"
+    },
+    {
+      "file": "review-cutover/prepare_scripts.py.fixture",
+      "owner": "review-cutover",
+      "restore": "prepare_scripts.py",
+      "bytes": 2680,
+      "sha256": "6bb0b8110d03bb358868e1f7619e77c3aacd4f0333a0fd748ab3cc63056964d6"
+    },
+    {
+      "file": "review-cutover/record.md.fixture",
+      "owner": "review-cutover",
+      "restore": "record.md",
+      "bytes": 4780,
+      "sha256": "aef5bd2689ee09ed4b9fb2a601e03fbbff88e5749e35275ffe9bafb861f92042"
+    },
+    {
+      "file": "review-cutover/restore-exact-readme.py.fixture",
+      "owner": "review-cutover",
+      "restore": "restore-exact-readme.py",
+      "bytes": 883,
+      "sha256": "fb89bc1f7723b2617a0f490e3656187a85516002facf748323b5211c8ead13c4"
+    },
+    {
+      "file": "review-cutover/restore.stderr.log.fixture",
+      "owner": "review-cutover",
+      "restore": "restore.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-cutover/restore.stdout.log.fixture",
+      "owner": "review-cutover",
+      "restore": "restore.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "review-cutover/run.py.fixture",
+      "owner": "review-cutover",
+      "restore": "run.py",
+      "bytes": 868,
+      "sha256": "bd364ed72c4a64960113629e8a7738220cfd02633a76f2beef97345bf42ea640"
+    },
+    {
+      "file": "review-cutover/source/doc/canonical.json.fixture",
+      "owner": "review-cutover",
+      "restore": "source/doc/canonical.json",
+      "bytes": 987,
+      "sha256": "a2470f01492c40558d26ad709d49c410bf5ee0b3393834e8628a4250f18b8377"
+    },
+    {
+      "file": "review-cutover/source/doc/migration/aliases/22-external-extensions.json.fixture",
+      "owner": "review-cutover",
+      "restore": "source/doc/migration/aliases/22-external-extensions.json",
+      "bytes": 334,
+      "sha256": "132807f48bf3acceac6beacff6fd690cac164b5d0701ac40b0f0a03c7abfc923"
+    },
+    {
+      "file": "review-cutover/source/doc/spec/22-external-extensions.md.fixture",
+      "owner": "review-cutover",
+      "restore": "source/doc/spec/22-external-extensions.md",
+      "bytes": 12525,
+      "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+    },
+    {
+      "file": "review-cutover/source/doc/spec/22-external-extensions.nepld.fixture",
+      "owner": "review-cutover",
+      "restore": "source/doc/spec/22-external-extensions.nepld",
+      "bytes": 14506,
+      "sha256": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa"
+    },
+    {
+      "file": "review-cutover/source/payloads.json.fixture",
+      "owner": "review-cutover",
+      "restore": "source/payloads.json",
+      "bytes": 20209,
+      "sha256": "0d247a58f20aa63f110e44948c6b42eb37f55446523e1af6dd71833965cb17d0"
+    },
+    {
+      "file": "review-cutover/source/README.md.fixture",
+      "owner": "review-cutover",
+      "restore": "source/README.md",
+      "bytes": 3350,
+      "sha256": "a032f77f5e6aa8aa6241331edde79c24a9c33490cff4df65c6aba0d3cfe6b595"
+    },
+    {
+      "file": "review-cutover/summary.json.fixture",
+      "owner": "review-cutover",
+      "restore": "summary.json",
+      "bytes": 1389,
+      "sha256": "f3e2d28162f84298055155306d395ede01677a989265a4f75e95daceb0dc4644"
+    }
+  ],
+  "sources": [
+    {
+      "path": "doc/canonical.json",
+      "bytes": 987,
+      "sha256": "a2470f01492c40558d26ad709d49c410bf5ee0b3393834e8628a4250f18b8377"
+    },
+    {
+      "path": "doc/migration/aliases/22-external-extensions.json",
+      "bytes": 334,
+      "sha256": "132807f48bf3acceac6beacff6fd690cac164b5d0701ac40b0f0a03c7abfc923"
+    },
+    {
+      "path": "doc/spec/22-external-extensions.md",
+      "bytes": 12525,
+      "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+    },
+    {
+      "path": "doc/spec/22-external-extensions.nepld",
+      "bytes": 14506,
+      "sha256": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa"
+    }
+  ]
+}

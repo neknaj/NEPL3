@@ -1,0 +1,57 @@
+{
+  "scope": "exact README restore script; original five bytes-identical files; file URLs and JavaScript disabled; no Rust/Node/network generation",
+  "files": {
+    "manifest.json": "0f6bc6bd338e3e1253756be4ca9301dc0d2db73cea0fcb9b66b99d6efd07b87f",
+    "docs/spec/00-contract.html": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815",
+    "docs/spec/13-reproducibility.html": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1",
+    "docs/spec/22-external-extensions.html": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8",
+    "docs/spec/assets/doc.css": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+  },
+  "rows": [
+    {
+      "scripts": 0,
+      "ruby": 324,
+      "headings": 5,
+      "lists": [
+        6
+      ],
+      "background": "rgb(13, 17, 23)",
+      "css": [
+        true
+      ],
+      "browser": "chromium",
+      "version": "151.0.7922.34",
+      "result": "passed"
+    },
+    {
+      "scripts": 0,
+      "ruby": 324,
+      "headings": 5,
+      "lists": [
+        6
+      ],
+      "background": "rgb(13, 17, 23)",
+      "css": [
+        true
+      ],
+      "browser": "firefox",
+      "version": "153.0",
+      "result": "passed"
+    },
+    {
+      "scripts": 0,
+      "ruby": 324,
+      "headings": 5,
+      "lists": [
+        6
+      ],
+      "background": "rgb(13, 17, 23)",
+      "css": [
+        true
+      ],
+      "browser": "webkit",
+      "version": "26.5",
+      "result": "passed"
+    }
+  ]
+}

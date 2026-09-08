@@ -1,0 +1,15 @@
+{
+  "final": "b13f395c3874c378911ee8b686f0a55033b20e68",
+  "base": "889a53ab6d678d7c9673dc716878fcbb34b9d466",
+  "diff_paths": [
+    "doc/canonical.json",
+    "doc/migration/aliases/22-external-extensions.json",
+    "doc/migration/authored/22-external-extensions.nepld",
+    "doc/spec/22-external-extensions.md",
+    "doc/spec/22-external-extensions.nepld"
+  ],
+  "production_logic_changes": false,
+  "workspace_files_rechecked": 671,
+  "mutation_inputs_restored": true,
+  "diff_check_exit_code": 0
+}

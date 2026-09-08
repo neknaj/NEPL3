@@ -1,0 +1,19 @@
+from pathlib import Path
+import hashlib, json
+
+archive = Path("conformance/results/doc-canonical-extensions")
+output = Path("dist/canonical22-snapshot")
+entries = json.loads((archive / "payloads.json").read_text(encoding="utf-8"))["files"]
+selected = [e for e in entries if e["owner"] == "root-verification" and e["restore"].startswith("first/")]
+assert len(selected) == 5
+output.mkdir(parents=True, exist_ok=False)
+for entry in selected:
+    relative = Path(entry["restore"]).relative_to("first")
+    assert not relative.is_absolute() and ".." not in relative.parts
+    data = (archive / entry["file"]).read_bytes()
+    assert len(data) == entry["bytes"]
+    assert hashlib.sha256(data).hexdigest() == entry["sha256"]
+    destination = output / relative
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with destination.open("xb") as stream:
+        stream.write(data)
