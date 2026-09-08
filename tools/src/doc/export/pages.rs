@@ -1,7 +1,7 @@
 //! Bounded local multi-page export. Files are created only after the complete
 //! page set renders; the final manifest is the completion marker, not a deploy.
 use super::*;
-use nepl3_doc_core::pages::{PageDocument, PageRegistration, PageSet};
+use nepl3_doc_core::pages::{FileBytes, PageDocument, PageFile, PageRegistration, PageSet};
 use nepl3_doc_html::pages::{PagesHtmlRequest, render_pages};
 use serde::Deserialize;
 use std::{collections::BTreeMap, io::Write};
@@ -13,6 +13,8 @@ use nepl3_core::budget::Budget;
 pub struct Manifest {
     pub version: u64,
     pub pages: Vec<Entry>,
+    #[serde(default)]
+    pub files: Vec<Entry>,
     #[serde(default)]
     pub output_limits: resources::OutputLimits,
     #[serde(default)]
@@ -77,6 +79,17 @@ pub fn generate_with_phase_limits(
     phases: resources::PhaseLimits,
     output_budget: &mut Budget,
 ) -> Result<GeneratedPages, String> {
+    generate_with_resources(compiled, inputs, &[], phases, output_budget)
+}
+/// File bytes are explicitly supplied by the host, never discovered by link
+/// resolution. The same output budget covers their identity and serialization.
+pub fn generate_with_resources(
+    compiled: &Compiled,
+    inputs: &[(Entry, String)],
+    resources: &[(Entry, Vec<u8>)],
+    phases: resources::PhaseLimits,
+    output_budget: &mut Budget,
+) -> Result<GeneratedPages, String> {
     output_budget.poll().map_err(err)?;
     let initial_usage = output_budget.usage();
     if inputs.is_empty() || inputs.len() > 128 {
@@ -86,6 +99,40 @@ pub fn generate_with_phase_limits(
     let mut pages = Vec::new();
     let mut origins = Vec::new();
     let mut profiles = Vec::new();
+    if resources.len() > 128 {
+        return Err("FileCountLimit".into());
+    }
+    let mut registered_files = Vec::new();
+    let mut file_origins = Vec::new();
+    for (entry, bytes) in resources {
+        let physical = input_path(entry)?;
+        total = total.checked_add(bytes.len() as u64).ok_or("SourceLimit")?;
+        if total > MAX_SOURCE_BYTES {
+            return Err("SourceLimit".into());
+        }
+        output_budget
+            .charge(nepl3_core::budget::Resource::Work, bytes.len() as u64)
+            .map_err(err)?;
+        output_budget
+            .charge(
+                nepl3_core::budget::Resource::AllocationUnits,
+                (bytes.len()
+                    + entry.id.len()
+                    + entry.source.len()
+                    + entry.route.len()
+                    + core::mem::size_of::<PageFile>()) as u64,
+            )
+            .map_err(err)?;
+        registered_files.push(PageFile {
+            registration: PageRegistration {
+                id: entry.id.clone(),
+                source: entry.source.clone(),
+                route: entry.route.clone(),
+            },
+            content: FileBytes(bytes.clone()),
+        });
+        file_origins.push(serde_json::json!({"id":entry.id,"source":entry.source,"route":entry.route,"input":physical,"sha256":digest_hex(Digest::of(bytes)),"bytes":bytes.len()}));
+    }
     for (entry, input) in inputs {
         let physical = input_path(entry)?;
         total = total.checked_add(input.len() as u64).ok_or("SourceLimit")?;
@@ -137,7 +184,10 @@ pub fn generate_with_phase_limits(
             "parse_and_validate_usage":resources::usage(parse_usage),"lower_usage":resources::usage(lower_usage)}));
     }
     let request = PagesHtmlRequest {
-        set: PageSet { pages },
+        set: PageSet {
+            pages,
+            files: registered_files,
+        },
         options: RenderOptions {
             parallel: ParallelMode::Rows,
         },
@@ -150,6 +200,26 @@ pub fn generate_with_phase_limits(
         .map_err(|e| format!("resolve/render: {e:?}; usage={:?}", output_budget.usage()))?;
     let mut files = BTreeMap::new();
     let mut file_kinds = BTreeMap::new();
+    for file in &request.set.files {
+        output_budget
+            .charge(
+                nepl3_core::budget::Resource::OutputBytes,
+                file.content.0.len() as u64,
+            )
+            .map_err(err)?;
+        output_budget
+            .charge(
+                nepl3_core::budget::Resource::AllocationUnits,
+                file.content.0.len() as u64,
+            )
+            .map_err(err)?;
+        insert(
+            &mut files,
+            file.registration.route.clone(),
+            file.content.0.clone(),
+        )?;
+        file_kinds.insert(file.registration.route.clone(), "application/octet-stream");
+    }
     for (page, fragment) in request.set.pages.iter().zip(&rendered.fragments) {
         let route = &page.registration.route;
         if !route.ends_with(".html") {
@@ -163,6 +233,14 @@ pub fn generate_with_phase_limits(
             Some((parent, _)) => format!("{parent}/assets/doc.css"),
             None => "assets/doc.css".into(),
         };
+        if request
+            .set
+            .files
+            .iter()
+            .any(|file| conflict(&file.registration.route, &css))
+        {
+            return Err("registered file conflicts with generated stylesheet".into());
+        }
         insert(&mut files, css.clone(), CSS.as_bytes().to_vec())?;
         file_kinds.insert(css, "text/css; charset=utf-8");
     }
@@ -185,7 +263,8 @@ pub fn generate_with_phase_limits(
         "phase_execution":{"contract":"nepl3.local-doc-pages.phases/1","identity":digest_hex(resources::phase_identity(output_identity,&profiles,phases))},
         "output_budget":{"contract":"nepl3.local-doc-pages.execution/1","limits":resources::limits(output_budget.limits()),
             "initial_usage":resources::usage(initial_usage),"usage":resources::usage(output_budget.usage())},
-        "renderer":"nepl3-doc-html pages/2","options":{"parallel":"Rows"},"viewer_scripts":false,
+        "registered_files":file_origins,
+        "renderer":"nepl3-doc-html pages/3","options":{"parallel":"Rows"},"viewer_scripts":false,
         "packages":"compiled checked bootstrap fixtures","scope":"Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Assets and foreign rendering remain unsupported. Not Pages deployment evidence.",
         "budget_scope":"Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
         "output_usage":{"work":output_budget.usage().work,"allocation_units":output_budget.usage().allocation_units,"output_bytes":output_budget.usage().output_bytes}
@@ -253,6 +332,7 @@ pub fn write(manifest: &Path, output: &Path) -> crate::Result<()> {
     if manifest_data.version != 1
         || manifest_data.pages.is_empty()
         || manifest_data.pages.len() > 128
+        || manifest_data.files.len() > 128
     {
         return Err("invalid page manifest version/count".into());
     }
@@ -272,9 +352,25 @@ pub fn write(manifest: &Path, output: &Path) -> crate::Result<()> {
         }
         inputs.push((entry, input));
     }
-    let generated = generate_with_phase_limits(
+    let mut resources = Vec::new();
+    for entry in manifest_data.files {
+        let path = crate::repository::local_path(&root, input_path(&entry)?)?;
+        let mut content = Vec::new();
+        fs::File::open(path)?
+            .take(MAX_SOURCE_BYTES + 1)
+            .read_to_end(&mut content)?;
+        total = total
+            .checked_add(content.len() as u64)
+            .ok_or("SourceLimit")?;
+        if total > MAX_SOURCE_BYTES {
+            return Err("SourceLimit".into());
+        }
+        resources.push((entry, content));
+    }
+    let generated = generate_with_resources(
         &compiled()?,
         &inputs,
+        &resources,
         resources::PhaseLimits {
             parse: manifest_data.parse_limits.budget().limits(),
             lower: manifest_data.lower_limits.budget().limits(),

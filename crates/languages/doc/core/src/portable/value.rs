@@ -16,6 +16,31 @@ use nepl3_core::{
     view::ViewBundle,
 };
 mod generated;
+impl Value for FileBytes {
+    fn put<C: FoundationValueCodec>(
+        &self,
+        _: &SchemaRef,
+        _: &mut C,
+        b: &mut Budget,
+    ) -> Result<NdfValue, PortableError<C::Error>> {
+        b.charge(Resource::Work, self.0.len() as u64)?;
+        b.charge(Resource::AllocationUnits, self.0.len() as u64)?;
+        Ok(NdfValue::Bytes(self.0.clone()))
+    }
+    fn read<C: FoundationValueCodec>(
+        v: &NdfValue,
+        _: &SchemaRef,
+        _: &mut C,
+        b: &mut Budget,
+    ) -> Result<Self, PortableError<C::Error>> {
+        let NdfValue::Bytes(bytes) = v else {
+            return Err(PortableError::Shape);
+        };
+        b.charge(Resource::Work, bytes.len() as u64)?;
+        b.charge(Resource::AllocationUnits, bytes.len() as u64)?;
+        Ok(Self(bytes.clone()))
+    }
+}
 pub(super) trait Value: Sized {
     fn put<C: FoundationValueCodec>(
         &self,

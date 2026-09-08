@@ -44,6 +44,7 @@ fn request(source: &str) -> Result<(Compiled, PagesHtmlRequest), String> {
         compiled,
         PagesHtmlRequest {
             set: PageSet {
+                files: vec![],
                 pages: vec![PageDocument {
                     registration: PageRegistration {
                         id: "external".into(),

@@ -77,7 +77,10 @@ cons link relative "../intro.nepld" some "start" text "入門へ戻る" nil nil 
             document,
         });
     }
-    let set = PageSet { pages };
+    let set = PageSet {
+        pages,
+        files: vec![],
+    };
     let r = &compiled.doc.registry;
     let empty = SourceStore::default();
     let mut a = SourceAdmission::default();
@@ -91,7 +94,18 @@ cons link relative "../intro.nepld" some "start" text "入門へ戻る" nil nil 
             .iter()
             .map(|l| (l.page, l.target, l.fragment.as_deref()))
             .collect::<Vec<_>>(),
-        vec![(0, 1, Some("usage")), (1, 0, Some("start"))]
+        vec![
+            (
+                0,
+                nepl3_doc_core::pages::PageDestination::Page { index: 1 },
+                Some("usage")
+            ),
+            (
+                1,
+                nepl3_doc_core::pages::PageDestination::Page { index: 0 },
+                Some("start")
+            )
+        ]
     );
     assert!(plan.remaining.is_empty());
     let request = nepl3_doc_html::pages::PagesHtmlRequest {
@@ -234,7 +248,10 @@ fn page_output_rejects_an_anchor_hidden_by_language_selection() -> Result<(), St
     let mut a = SourceAdmission::default();
     let mut c = FoundationCodec::new(r, &empty, &mut a).map_err(err)?;
     let mut request = nepl3_doc_html::pages::PagesHtmlRequest {
-        set: PageSet { pages },
+        set: PageSet {
+            pages,
+            files: vec![],
+        },
         options: nepl3_doc_html::RenderOptions {
             parallel: nepl3_doc_html::ParallelMode::Rows,
         },
