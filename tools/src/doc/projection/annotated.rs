@@ -3,6 +3,7 @@
 use super::*;
 use nepl3_core::source::Digest;
 use serde::Deserialize;
+mod blocks;
 pub mod host;
 
 /// An explicitly supplied compatibility anchor; None selects the article.
@@ -209,6 +210,14 @@ impl<'a> Annotated<'a, '_> {
         self.aliases(Some(id))
     }
     fn sentences(&mut self, sentences: &[u64], continuation: Option<&str>) -> Result<(), Error> {
+        self.inline(sentences, continuation, false)
+    }
+    fn inline(
+        &mut self,
+        sentences: &[u64],
+        continuation: Option<&str>,
+        table_cell: bool,
+    ) -> Result<(), Error> {
         let mut pieces = Vec::new();
         let mut stack = Vec::new();
         for &sentence in sentences.iter().rev() {
@@ -317,6 +326,11 @@ impl<'a> Annotated<'a, '_> {
         // Boundary validation uses the flattened visible stream, so transparent
         // containers cannot hide whitespace, adjacent code or an edge break.
         if visible.is_empty() {
+            // An empty table cell is representable. Do not generalize this to
+            // empty headings/paragraphs or silently drop empty decorations.
+            if table_cell && pieces.is_empty() {
+                return Ok(());
+            }
             return Err(Error::Unsupported {
                 node: sentences.first().copied().unwrap_or(0),
             });
@@ -359,7 +373,11 @@ impl<'a> Annotated<'a, '_> {
                     if previous_code {
                         return Err(Error::Unsupported { node });
                     }
-                    self.plain.text(node, text, true)?;
+                    if table_cell {
+                        self.table_code(node, text)?;
+                    } else {
+                        self.plain.text(node, text, true)?;
+                    }
                     previous_code = true;
                 }
                 Piece::Tag(tag) => {
@@ -405,8 +423,16 @@ impl<'a> Annotated<'a, '_> {
             return Err(Error::Unsupported { node });
         };
         let mut section_seen = false;
+        let mut previous_list = false;
         for child in blocks {
             self.plain.budget.charge(Resource::Work, 1)?;
+            let is_list = matches!(self.plain.kind(child.0), DocKind::List { .. });
+            // Blank lines alone do not separate two Markdown lists. Do not
+            // collapse distinct Doc blocks into one apparent list.
+            if previous_list && is_list {
+                return Err(Error::Unsupported { node: child.0 });
+            }
+            previous_list = is_list;
             match self.plain.kind(child.0) {
                 DocKind::Section { id, title, body } if level < 6 => {
                     section_seen = true;
@@ -437,6 +463,14 @@ impl<'a> Annotated<'a, '_> {
                 } => self
                     .plain
                     .raw_code(child.0, language_hint.as_deref(), text)?,
+                DocKind::List { kind, items } => self.flat_list(child.0, *kind, items)?,
+                DocKind::Table {
+                    columns,
+                    header,
+                    rows,
+                } => {
+                    self.table(child.0, columns, *header, rows)?;
+                }
                 _ => return Err(Error::Unsupported { node: child.0 }),
             }
         }

@@ -261,7 +261,7 @@ fn annotated_host_rejects_invalid_aliases_before_creating_output()
         assert!(text.contains("source&#45;&#45;metadata.nepld"));
         assert_eq!(text.matches("<!--").count(), 1);
         assert_eq!(text.matches("-->").count(), 1);
-        assert!(text.contains("renderer nepl3-tools.markdown-annotated/1"));
+        assert!(text.contains("renderer nepl3-tools.markdown-annotated/2"));
         assert!(text.contains("<a name=\"old-title\"></a>"));
         assert!(text.ends_with('\n'));
         assert!(!text.ends_with("\n\n"));

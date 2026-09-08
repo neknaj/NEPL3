@@ -2,6 +2,8 @@
 //! are compile-time declarations only; this parse-only host serves reader calls.
 #[path = "doc/annotated.rs"]
 mod annotated;
+#[path = "doc/annotated_blocks.rs"]
+mod annotated_blocks;
 #[path = "doc/export.rs"]
 mod export;
 #[path = "doc/external.rs"]

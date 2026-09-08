@@ -9,6 +9,8 @@ use std::{
     path::Path,
 };
 
+pub const RENDERER: &str = "nepl3-tools.markdown-annotated/2";
+
 pub fn from_source(
     compiled: &Compiled,
     source: &str,
@@ -102,7 +104,7 @@ pub fn generate(
         .replace('>', "&gt;")
         .replace('-', "&#45;");
     let metadata = format!(
-        "<!-- Generated from {path}; renderer nepl3-tools.markdown-annotated/1; source SHA-256 {source_digest}; alias input SHA-256 {options_digest}; document digest {document_digest}. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->\n\n"
+        "<!-- Generated from {path}; renderer {RENDERER}; source SHA-256 {source_digest}; alias input SHA-256 {options_digest}; document digest {document_digest}. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->\n\n"
     );
     // Block separators belong between blocks; a file ends with one LF.
     Ok(metadata + artifact.markdown.trim_end_matches('\n') + "\n")

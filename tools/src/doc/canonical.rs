@@ -7,7 +7,7 @@ use std::{collections::BTreeSet, fs, io::Read, path::Path};
 #[cfg(test)]
 mod tests;
 
-const RENDERER: &str = "nepl3-tools.markdown-annotated/1";
+use crate::doc::projection::annotated::host::RENDERER;
 const MAX_REGISTRY: u64 = 1_048_576;
 
 fn portable_path(name: &str) -> bool {
