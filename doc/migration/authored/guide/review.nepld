@@ -625,5 +625,26 @@ body
       cons "[明示/めいじ]hostが[実/じつ]provider catalogの[要求/ようきゅう]を[照合/しょうごう]し、[同期応答/どうきおうとう]も[既存/きそん]reader/tokenizerの[再開検査/さいかいけんさ]を[通/とお]すことをコードで[確認/かくにん]した。"
       cons "Noneまたは[通常/つうじょう]callback[失敗/しっぱい]はowned Await/Reserveへ[戻/もど]り、[停止時/ていしじ]は[正式/せいしき]diagnostic・event・source/map[閉包/へいほう]を[保持/ほじ]する。"
       cons "dynamic head providerの[実装/じっそう]や[権限隔離/けんげんかくり]の[完成/かんせい]とは[扱/あつか]わない。" nil
+    cons paragraph
+      cons sentence cons ruby text "独立" text "どくりつ" cons text "の" cons ruby text "補助" text "ほじょ" cons text " " cons code "native_host_boundary" cons text " では、caller" cons ruby text "深" text "ふか" cons text "さ7で " cons code "let \"x\\n\" y tail" cons text " を" cons ruby text "読" text "よ" cons text "み、Text" cons ruby text "予約" text "よやく" cons text "とproviderが" cons ruby text "交互" text "こうご" cons text "に" cons ruby text "現" text "あらわ" cons text "れる" cons ruby text "経路" text "けいろ" cons text "を" cons ruby text "検査" text "けんさ" cons text "した。" nil
+      cons "[全同期/ぜんどうき]、2[回目/かいめ]None、2[回目/かいめ][通常失敗/つうじょうしっぱい]の[各結果/かくけっか]がowned[経路/けいろ]とtree・source/map・diagnostic・depthで[一致/いっち]した。"
+      cons "decoded Text[受理後/じゅりご]の[取消/とりけし]はdiagnostic 1・source 1・map 2を[保持/ほじ]した。"
+      cons "Allocation[上限/じょうげん]100000から2000000を32768[刻/きざ]みで[振/ふ]ると、Text[受理後/じゅりご]の[停止/ていし]6ケースと[完了/かんりょう]51ケースを[確認/かくにん]し、[停止/ていし]でsource/map[閉包/へいほう]が[欠落/けつらく]せず、[使用量/しようりょう]が[上限/じょうげん]を[超/こ]えないことを[検査/けんさ]した。"
+      cons sentence cons text "この" cons ruby text "補助" text "ほじょ" cons text "probeはignoredであり、" cons ruby text "同" text "おな" cons text "じ" cons ruby text "交互経路" text "こうごけいろ" cons text "と" cons ruby text "取消" text "とりけし" cons text "を" cons ruby text "扱" text "あつか" cons text "う" cons ruby text "管理対象" text "かんりたいしょう" cons text " " cons code "native_host_mixed_text_provider_fallback_preserves_decoded_sources" cons text " の" cons ruby text "独立成功" text "どくりつせいこう" cons text "と" cons ruby text "区別" text "くべつ" cons text "して" cons ruby text "記録" text "きろく" cons text "する。" nil nil
+    cons paragraph
+      cons "[変更後/へんこうご]の[通常/つうじょう]bootstrap[試験/しけん]もログ[保存付/ほぞんつ]きで[独立再実行/どくりつさいじっこう]し、[完全/かんぜん]な[原/げん]GrammarからP0/P1/P2のsemantic identity[一致/いっち]を[確認/かくにん]した。"
+      cons sentence cons code "cargo test --locked -p nepl3-tools complete_grammar_bootstrap -- --nocapture" cons text " は" cons ruby text "必須" text "ひっす" cons text "の" cons ruby text "通常試験" text "つうじょうしけん" cons text "1" cons ruby text "件" text "けん" cons text "が" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "[任意/にんい]のowned[性能比較/せいのうひかく]1[件/けん]はignoreのままであり、この[実行/じっこう]で[比較試験/ひかくしけん]も[通/とお]したとはしない。"
+      cons "[今回/こんかい]のnative debug[実行/じっこう]は25.29[秒/びょう]、Work 8,073,006,166、AllocationUnits 10,333,383,050、Depth 96、AST 518 nodesだった。"
+      cons "[実行時間/じっこうじかん]は[並行処理/へいこうしょり]の[影響/えいきょう]を[含/ふく]む[単回観測/たんかいかんそく]で、releaseの[速度比/そくどひ]を[独立証明/どくりつしょうめい]する[値/あたい]ではない。"
+      cons "[累積/るいせき]コピー[計上量/けいじょうりょう]は[以前/いぜん]のbootstrapより[減/へ]ったが、[標準予算/ひょうじゅんよさん]での[完了/かんりょう]や[内部/ないぶ]コピーの[全解消/ぜんかいしょう]、[全/ぜん]targetでの[性能要件達成/せいのうようけんたっせい]は[未検証/みけんしょう]のままである。" nil
+    cons paragraph
+      cons "この25.29[秒/びょう]の[計測対象/けいそくたいしょう]は[共用/きょうよう]runtimeの[変更中/へんこうちゅう]treeであり、R037のadmission[比較/ひかく]Work[計上/けいじょう]も[含/ふく]む。"
+      cons "native host[差分/さぶん]だけを[隔離/かくり]したcheckpointのsource identityや[速度比較/そくどひかく]と[同一視/どういつし]しない。" nil
+    cons paragraph
+      cons "[統括/とうかつ]の[報告/ほうこく]では、Reportだけを[保存/ほぞん]したcheckpoint 267c531のCI 34070506992は、3 OSともP2 byte 9223でWork[上限/じょうげん]10Bに[達/たっ]して[失敗/しっぱい]した。"
+      cons "このremote[結果/けっか]は[統括/とうかつ]による[確認/かくにん]であり、[本/ほん]レビューのnativeローカル[成功/せいこう]へ[置/お]き[換/か]えない。"
+      cons "[今回/こんかい]の[同期/どうき]host[経路/けいろ]は[通常/つうじょう]bootstrapの[上限/じょうげん]10BとCIでの[実行/じっこう]を[維持/いじ]し、owned[比較/ひかく]だけを[任意/にんい]の[追加測定/ついかそくてい]とする。"
+      cons "[改善後/かいぜんご]のremote CIは[再検証待/さいけんしょうま]ちで、owned[経路/けいろ]の[高/たか]いコピー[費用/ひよう]は[未解決/みかいけつ]である。" nil
     nil
   nil
