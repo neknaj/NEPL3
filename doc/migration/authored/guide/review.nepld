@@ -314,4 +314,24 @@ body
       cons "grandfatheredとprivate-useもABNFの[対象/たいしょう]に[含/ふく]む。"
       cons "[文法/ぶんぽう]だけの[検査/けんさ]にnetwork[照会/しょうかい]や[未指定/みしてい]のvalid[制約/せいやく]を[追加/ついか]しない。" nil
     nil
+  cons section prefixEngine "prefix engineへ[向/む]けた[追加/ついか]レビュー" body
+    cons paragraph
+      cons sentence cons code "8416e1f7b130012abcd0a6d5c79fe544ec7dcbfe" cons text " の" cons ruby text "組込" text "くみこ" cons text "みreader" cons ruby text "区切" text "くぎ" cons text "り" cons ruby text "後" text "ご" cons text "、" cons code "feat/prefix-engine" cons text " でowned TokenizationContinuationのnative" cons ruby text "境界" text "きょうかい" cons text "を" cons ruby text "検査" text "けんさ" cons text "した。" nil
+      cons "[既存/きそん]のreader 46[試験/しけん]は[独立実行/どくりつじっこう]で[成功/せいこう]した。"
+      cons "[一方/いっぽう]、R023として[停止済/ていしず]みの[新/しん]Budgetを[使/つか]う[組合/くみあわ]せを[再現/さいげん]した。"
+      cons "[入力/にゅうりょく]はspaceと[引用/いんよう]されたaの4 bytes。"
+      cons "Triviaを[受理/じゅり]してReserveとなった[時点/じてん]のUsageはsource 4/work 1,231/allocation 12,012だったが、[同/おな]じLimitsの[新品/しんぴん]Budgetをcancelしてreserveへ[渡/わた]すと、Stopped(Cancelled)としてslotを[消費/しょうひ]しUsageを[全/ぜん]0で[返/かえ]した。" nil
+    cons paragraph
+      cons "[原因/げんいん]はprivate slotのLimits/[累積/るいせき]Usage[照合/しょうごう]より[先/さき]にpollと[停止結果/ていしけっか]を[返/かえ]す[処理/しょり]を[置/お]いたことだった。"
+      cons sentence cons ruby text "独立補助" text "どくりつほじょ" cons text "probeは " cons code ".tmp/independent-core/" cons text " の " cons code "--bin tokenizer_cancel_reset" cons text " で" cons ruby text "本番" text "ほんばん" cons text "APIを" cons ruby text "呼" text "よ" cons text "び、" cons ruby text "修正後" text "しゅうせいご" cons text "はContinuation" cons ruby text "拒否" text "きょひ" cons text "となった。" nil
+      cons "[履歴/りれき]sourceを[比較/ひかく]すると、8416e1fのtokenizer reserveは[照合/しょうごう]をpollより[先/さき]に[行/おこな]い、ReaderSession resumeは[既/すで]にpollが[先/さき]だった。"
+      cons "[後者/こうしゃ]の[旧版/きゅうばん]での[動的再現/どうてきさいげん]は[実行/じっこう]していないため、3[経路全/けいろすべ]てを[今回導入/こんかいどうにゅう]された[不具合/ふぐあい]とは[扱/あつか]わない。" nil
+    cons paragraph
+      cons "tokenizer reserve・tokenizer resume・ReaderSession resumeの3[公開入口/こうかいいりぐち]で、cancel[済/ず]みの[新/しん]Budgetを[拒否/きょひ]した[後/あと]も[元/もと]slotで[正式/せいしき]に[再開/さいかい]できる[管理対象回帰/かんりたいしょうかいき]を[実/じつ]コードで[照合/しょうごう]した。"
+      cons "[修正後/しゅうせいご]のreader 46[試験/しけん]は[独立実行/どくりつじっこう]で[成功/せいこう]した。"
+      cons sentence cons text "その" cons ruby text "後" text "ご" cons text "に" cons ruby text "強化" text "きょうか" cons text "された " cons code "mode_text_reservation_is_lazy_and_echo_is_checked" cons text "、" cons code "cancellation_during_provider_wait_stops_and_consumes_the_pending_slot" cons text "、" cons code "tokenizer_preserves_accepted_skip_reports_and_sources_across_candidate_rollback" cons text " も " cons code "cargo test --locked -p nepl3-reader <試験名>" cons text " で" cons ruby text "個別" text "こべつ" cons text "に" cons ruby text "再実行" text "さいじっこう" cons text "し" cons ruby text "成功" text "せいこう" cons text "した。" nil
+      cons "[正規/せいき]Budgetのcancelでは、[先/さき]に[受理/じゅり]した[診断/しんだん]・event・[累積/るいせき]Usageを[保持/ほじ]し、tokenizerでは[生成/せいせい]source・Triviaも[保持/ほじ]する。"
+      cons "R023はこのnative[境界/きょうかい]についてcorrectedとし、[前段/ぜんだん]R022の[検証範囲/けんしょうはんい]と[区別/くべつ]する。"
+      cons "[完全/かんぜん]なcontinuation codecとprefix[実行/じっこう]はこの[訂正/ていせい]の[完成条件/かんせいじょうけん]に[含/ふく]めていない。" nil
+    nil
   nil
