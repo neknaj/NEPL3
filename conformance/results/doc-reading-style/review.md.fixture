@@ -1,0 +1,24 @@
+# Independent Doc CSS review
+
+Scope: uncommitted `crates/languages/doc/html/assets/doc.css` in the conformance worktree; review evidence and generated-HTML test copies only, no production edits by reviewer.
+
+Read project AGENTS, authoring guidance, current Doc/HTML requirements, the CSS diff and `build/inline.rs` parallel rendering. Independently visited the requested reference at https://study.bem130.com/lecture/math/linear-algebra/vector-spaces-and-bases.lecture/ and captured `reference.png`. The reference is visual inspiration; its larger language panels do not override the user's explicit sentence-level correspondence requirement.
+
+## Findings and disposition
+
+1. The new 72rem limit exposed white standalone body gutters. Confirmed visually in initial 1280px captures and reported to root. Root added `body:has(>.nepl-doc){margin:0;background:#0d1117;color-scheme:dark}`. Revised wide capture shows the intended continuous dark background. Independent scope probes in all three engines confirm direct standalone Article gives dark body/zero margin, while Article nested in a host main element leaves the host's body background and margin untouched.
+2. The supplemental linear-combination generated document has a three-column table wider than the 375px viewport. This is pre-existing: old HEAD CSS produces scrollWidth 600/601/525 in Chromium/Firefox/WebKit. The first revised CSS produces 514px. The overflowing elements are the table and its descendants, not Parallel. Evidence: `before-table-overflow.json`, `overflow-analysis.json`. Root explicitly deferred table output improvement and retained table semantics. Do not claim universal narrow-screen overflow freedom for all Doc documents.
+
+## Independent validation
+
+`check.py` applies a byte copy of production CSS to existing generated HTML copies, served by a local HTTP server. The 14 canonical pages are copied without HTML edits. Scriptless Chromium, Firefox and WebKit are each tested at 375 and 1280px: 84 page cases per CSS revision. Initial result: all 84 have no document horizontal overflow, no Ruby reading/base or Anno note/base overlap. Counts of headings/content remain in the original HTML; CSS does not change source or correspondence semantics.
+
+The supplemental actual generated linear-combination HTML contains ten independently identified sentence correspondence groups. Each group has Japanese/English Sentence spans and no paragraph/div/section children. The review changes only each group's CSS class for rows/columns, and removes the unselected variant for the single-language CSS probe. This tests display modes using actual sentence markup; it is not a new acceptance claim about the renderer's selection code. All three modes retain ten groups with unique original group IDs. At 375px all group boxes fit within the content width. The table caveat above is independent of those groups. Eighteen mode cases per revision cover three engines, two widths and three modes. Representative screenshots cover each mode and engine.
+
+`default-font.json` adds 78 independent tests using the production real-source 13-case annotation corpus with the new CSS's actual default font, three engines and two widths. All pass baseline, reading/note placement, multiline Break spacing, annotation text fragment and scriptless checks. No CSS font/line-height override was used. This complements, without substituting for, root's separately reported 702 corpus checks at explicit fonts/sizes/line heights.
+
+`final-check.py` repeats the 102 page/mode cases with root's body-background fix; `final/results.json` records the tested CSS SHA-256. Initial results/captures remain preserved. Test bundle copies are under `bundle/` and `final/bundle/`; production files are untouched.
+
+## Review conclusion
+
+The typography, heading hierarchy, paragraph spacing, code treatment and bounded width preserve the existing colors and document meaning. Sentence-level parallel remains sentence-level in rows, columns and single-language display. Ruby and Anno retain correct vertical placement including the WebKit fallback. The standalone white-gutter regression was corrected. Acceptance is limited by the explicitly retained pre-existing narrow-table overflow; this review does not approve site routing/build changes or claim new runtime/conformance acceptance.

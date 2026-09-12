@@ -1,0 +1,14 @@
+[
+  {
+    "browser": "chromium",
+    "old_scrollWidth": 600
+  },
+  {
+    "browser": "firefox",
+    "old_scrollWidth": 601
+  },
+  {
+    "browser": "webkit",
+    "old_scrollWidth": 525
+  }
+]
