@@ -140,6 +140,12 @@ sourceはGit commitとpath/hashで指す。未保存変更を検証する場合�
 
 ## 8. 完了条件
 
+通常のrepository source検査は保全archive refに依存しない。残存する旧source
+342pathだけを `tools/src/repository/legacy-evidence-sources.txt` へ列挙する。
+これは旧pathの移行例外であり、内容の正当性や現在の受入合格を表さない。
+新規review sourceの許可には使用しない。歴史資料の調査だけで旧revisionを取得する。
+Doc inventoryの過去baseline監査は別の操作・契約として残る。
+
 通常main pushの `deliver-source` はGit管理sourceを再archiveするだけで、検査や
 runtime配布を所有しないため廃止する。CIのcommit参照と全検査gateは維持する。
 [GitHubのsource archive契約](https://docs.github.com/en/repositories/working-with-files/using-files/downloading-source-code-archives)
