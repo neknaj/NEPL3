@@ -1,0 +1,28 @@
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+import json
+ROOT=Path('.tmp/html-expanded-first').resolve();OUT=Path(__file__).parent
+url=(ROOT/'docs/spec/17-math-html.html').as_uri()
+rows=[]
+with sync_playwright() as p:
+ for name in ['chromium','firefox','webkit']:
+  browser=getattr(p,name).launch(headless=True)
+  ctx=browser.new_context(java_script_enabled=False,offline=name!='webkit',viewport={'width':375,'height':900})
+  if name=='webkit':
+   ctx.route('https://offline.test/**',lambda route: route.fulfill(path=str(ROOT / route.request.url.split('offline.test/',1)[1].split('#',1)[0])))
+   url='https://offline.test/docs/spec/17-math-html.html'
+  page=ctx.new_page();requests=[];page.on('request',lambda r:requests.append(r.url))
+  page.goto(url,wait_until='load')
+  row=page.evaluate('''()=>({css:[...document.styleSheets].map(s=>s.href),background:getComputedStyle(document.querySelector('article')).backgroundColor,scripts:document.scripts.length,overflow:document.documentElement.scrollWidth>innerWidth,ruby:document.querySelectorAll('.nepl-ruby').length,ids:[...document.querySelectorAll('[id]')].map(n=>n.id)})''')
+  row.update(browser=name,navigation=[])
+  for ident in row['ids']:
+   page.goto(url+'#'+ident,wait_until='load')
+   row['navigation'].append(page.evaluate('''id=>{let n=document.getElementById(id);return {id,count:document.querySelectorAll('#'+id).length,top:n.getBoundingClientRect().top,scroll:scrollY,heading:n.querySelector('h2')?.textContent||n.textContent.slice(0,90)}}''',ident))
+  page.screenshot(path=str(OUT/f'offline-{name}.png'))
+  row['network_requests']=[u for u in requests if u.startswith('http') and not u.startswith('https://offline.test/')]
+  row['delivery']='exact local file bytes fulfilled via route; WebKit file navigation internal error' if name=='webkit' else 'file URI with offline=True'
+  page.goto('https://offline.test/docs/spec/18-html-delivery.html' if name=='webkit' else (ROOT/'docs/spec/18-html-delivery.html').as_uri(),wait_until='load')
+  row['chapter18_heading']=page.locator('h1').inner_text()
+  rows.append(row);browser.close()
+(OUT/'navigation-offline.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps([{k:r[k] for k in ['browser','css','ruby','overflow','network_requests']} for r in rows]))

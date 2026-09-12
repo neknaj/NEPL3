@@ -1,0 +1,69 @@
+﻿cargo :    Compiling autocfg v1.5.1
+At line:4 char:1
++ cargo test --locked -p nepl3-tools --test doc annotated -- --nocaptur ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (   Compiling autocfg v1.5.1:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+   Compiling unicode-ident v1.0.18
+   Compiling typenum v1.20.1
+   Compiling cfg-if v1.0.4
+   Compiling cpufeatures v0.3.1
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling pulldown-cmark v0.13.4
+   Compiling serde v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling memchr v2.8.3
+   Compiling unicase v2.9.0
+   Compiling bitflags v2.13.1
+   Compiling itoa v1.0.18
+   Compiling num-traits v0.2.19
+   Compiling hybrid-array v0.4.14
+   Compiling syn v3.0.5
+   Compiling num-integer v0.1.47
+   Compiling crypto-common v0.2.2
+   Compiling block-buffer v0.12.1
+   Compiling num-bigint v0.5.1
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-doc-adjacent-list\crates\foundation\core)
+   Compiling serde_derive v1.0.229
+   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-doc-adjacent-list\crates\foundation\reader)
+   Compiling nepl3-doc-core v0.1.0 (C:\projects\NEPL3-doc-adjacent-list\crates\languages\doc\core)
+   Compiling nepl3-markup v0.1.0 (C:\projects\NEPL3-doc-adjacent-list\crates\output\markup)
+   Compiling nepl3-math-core v0.1.0 (C:\projects\NEPL3-doc-adjacent-list\crates\languages\math\core)
+   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-doc-adjacent-list\crates\foundation\wire)
+   Compiling nepl3-engine v0.1.0 (C:\projects\NEPL3-doc-adjacent-list\crates\foundation\engine)
+   Compiling nepl3-doc-html v0.1.0 (C:\projects\NEPL3-doc-adjacent-list\crates\languages\doc\html)
+   Compiling nepl3-grammar-core v0.1.0 (C:\projects\NEPL3-doc-adjacent-list\crates\languages\grammar\core)
+   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-adjacent-list\tools)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 17s
+     Running tests\doc.rs (.tmp/review-target\debug\deps\doc-3ca723e83baae99e.exe)
+
+running 19 tests
+test annotated_pages::annotated_page_set_keeps_stops_sticky_and_returns_no_partial_output ... ok
+test annotated_blocks::annotated_lists_preserve_start_checks_notes_and_break_continuations ... ok
+test annotated_pages::annotated_page_set_rejects_partial_render_and_ambiguous_registration ... ok
+test annotated::annotated_projection_keeps_sticky_limits_and_heading_depth ... ok
+test annotated_blocks::list_separators_follow_body_boundaries_without_visible_padding ... ok
+test annotated_blocks::annotated_tables_preserve_cells_alignment_notes_and_literal_pipes ... ok
+test annotated_pages::adjacent_lists_in_page_set_keep_links_and_separate_numbering ... ok
+test annotated_blocks::annotated_tables_keep_header_only_and_reject_unrepresentable_shapes ... ok
+test annotated_pages::annotated_page_set_rejects_missing_file_fragments_and_unsafe_targets ... ok
+test annotated_blocks::annotated_blocks_preserve_consumed_budget_and_sticky_stop ... ok
+test annotated_pages::annotated_page_set_resolves_mutual_self_and_passive_file_links ... ok
+test annotated::annotated_view_preserves_typed_notes_code_and_nested_sections ... ok
+test annotated_blocks::adjacent_lists_preserve_distinct_blocks_and_numbering ... ok
+test annotated_blocks::annotated_lists_reject_lossy_shapes_and_marker_overflow ... ok
+test annotated::annotated_host_rejects_invalid_aliases_before_creating_output ... ok
+test annotated_pages::architecture_draft_projects_with_explicit_current_markdown_dependency ... ok
+test html::annotated_linear_combination_document_reaches_real_html ... ok
+test annotated::annotated_view_rejects_hidden_boundaries_and_unresolved_content ... ok
+test annotated::authored_chapter_thirteen_generates_annotations_without_rewriting ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 70 filtered out; finished in 17.48s
+
+

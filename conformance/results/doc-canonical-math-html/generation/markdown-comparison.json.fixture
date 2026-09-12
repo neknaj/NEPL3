@@ -1,0 +1,62 @@
+[
+  {
+    "path": "manifest.json",
+    "bytes": 2675,
+    "sha256": "1d5701c4981bba6f719261f56d864616c97cbf59d6d2ae4be84acec788a3b844"
+  },
+  {
+    "path": "doc/spec/00-contract.md",
+    "bytes": 10429,
+    "sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1"
+  },
+  {
+    "path": "doc/spec/01-architecture.md",
+    "bytes": 11492,
+    "sha256": "40a4613c71faffd082c0eb8046253ed32f08afd4ed3e7cd852d81cb007fbc640"
+  },
+  {
+    "path": "doc/spec/07-circuit.md",
+    "bytes": 13472,
+    "sha256": "e78ef88b70039ef7018516afed788cc092d58a6fe83aee413afbe97527f68c40"
+  },
+  {
+    "path": "doc/spec/08-editor.md",
+    "bytes": 47809,
+    "sha256": "1c2889b269b99c8be0a281c8bfcda275d38ea421f344fbe4f92a0a5a9c608c2a"
+  },
+  {
+    "path": "doc/spec/12-model-invariants.md",
+    "bytes": 27431,
+    "sha256": "8ba4e274d4086c03372dbef638ef2e13a96991efd37a2a66402ddbb78f3a45a0"
+  },
+  {
+    "path": "doc/spec/13-reproducibility.md",
+    "bytes": 26270,
+    "sha256": "454ede4004f0022f8dedb0246ecb227fc36cb57456b9c57fe6614f7a3e512d8e"
+  },
+  {
+    "path": "doc/spec/17-math-html.md",
+    "bytes": 25557,
+    "sha256": "cf222dabae4fc233a28b304aef32e2d7f57a956c0e07f5d91a570ffc4efa8010"
+  },
+  {
+    "path": "doc/spec/18-html-delivery.md",
+    "bytes": 10585,
+    "sha256": "31e0a3af9c56766a737bc5c02a4072662f342a75b7816e7a8aad5da1afd525a5"
+  },
+  {
+    "path": "doc/spec/19-html-fragment.md",
+    "bytes": 16900,
+    "sha256": "c4e5c48743d327a3b7e7a691151f452c3640deb32656f2097628aa2fa9683768"
+  },
+  {
+    "path": "doc/spec/20-doc-html.md",
+    "bytes": 16779,
+    "sha256": "d1ba121eec5b9facb658b55c03fe8bd88d361ac308ac3503db702c463b3d5529"
+  },
+  {
+    "path": "doc/spec/22-external-extensions.md",
+    "bytes": 12525,
+    "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+  }
+]

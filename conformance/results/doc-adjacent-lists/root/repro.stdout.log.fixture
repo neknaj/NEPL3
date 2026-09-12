@@ -1,0 +1,11 @@
+
+running 1 test
+test annotated_blocks::adjacent_lists_preserve_distinct_blocks_and_numbering ... FAILED
+
+failures:
+
+failures:
+    annotated_blocks::adjacent_lists_preserve_distinct_blocks_and_numbering
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 86 filtered out; finished in 0.52s
+

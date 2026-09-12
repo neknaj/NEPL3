@@ -1,0 +1,11 @@
+from pathlib import Path
+import subprocess,os,json,time
+out=Path('.tmp/wasi');out.mkdir(exist_ok=True)
+env=os.environ.copy();env['PATH']=r'C:\Program Files\Wasmtime\bin'+os.pathsep+env['PATH']
+env['CARGO_TARGET_WASM32_WASIP2_RUNNER']='wasmtime run'
+cmd=['cargo','test','--locked','-p','nepl3-tools','--test','doc','--target','wasm32-wasip2','annotated','--','--test-threads=1']
+head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip();start=time.monotonic()
+with (out/'stdout.log').open('wb') as stdout,(out/'stderr.log').open('wb') as stderr:
+    child=subprocess.Popen(cmd,env=env,stdout=stdout,stderr=stderr);code=child.wait()
+(out/'result.json').write_text(json.dumps(dict(source_commit=head,command=cmd,pid=child.pid,exit_code=code,elapsed_seconds=time.monotonic()-start,runner=subprocess.check_output(['wasmtime','--version'],env=env,text=True).strip()),indent=2)+'\n',encoding='utf-8',newline='\n')
+print('WASI exit',code,flush=True);raise SystemExit(code)

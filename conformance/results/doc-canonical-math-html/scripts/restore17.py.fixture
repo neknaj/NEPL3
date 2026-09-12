@@ -1,0 +1,17 @@
+from pathlib import Path
+import hashlib,json,sys
+archive=Path(sys.argv[1]).resolve();dest=Path(sys.argv[2]).resolve()
+assert not dest.exists(), 'Restoration destination must be fresh'
+index=json.loads((archive/'payloads.json').read_text(encoding='utf-8'))
+rows=[r for r in index['files'] if r['owner']=='html'];assert len(rows)==13
+for row in rows:
+    source=(archive/row['file']).resolve();assert source.is_relative_to(archive)
+    data=source.read_bytes();assert len(data)==row['bytes'] and hashlib.sha256(data).hexdigest()==row['sha256']
+    path=(dest/row['restore']).resolve();assert path.is_relative_to(dest)
+    path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(data)
+manifest=json.loads((dest/'manifest.json').read_text(encoding='utf-8'))
+assert len(manifest['files'])==12
+for row in manifest['files']:
+    path=(dest/row['path']).resolve();assert path.is_relative_to(dest)
+    assert hashlib.sha256(path.read_bytes()).hexdigest()==row['sha256']
+print('Restored 13 files; all 12 HTML/CSS payload hashes match; no compiler invoked.')
