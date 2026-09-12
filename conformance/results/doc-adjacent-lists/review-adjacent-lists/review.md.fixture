@@ -1,0 +1,18 @@
+﻿# Independent review: adjacent annotated Doc lists
+
+Reviewed commit: 6e47d57c874e53a894154b4a349132c34526b9b9
+Base: 994526e04c5d711aca06d6eefe6b11f3f175bcba
+Reviewer: adjacent_list_review subagent (no implementation edits)
+
+Result: no blocking findings in the scoped implementation.
+
+Inspected AGENTS.md, authoring.md, spec16 and spec21, annotated renderer/body and flat-list implementation, Writer.emit resource accounting, all six changed files, and related regression tests. Independently verified CommonMark 0.31.2 example308 and GFM example288 support a blank HTML comment as a list boundary. The fixed generated comment admits no source-controlled raw HTML and is emitted by the existing metered writer. State is local to each Body; existing Section ownership guard and unsupported list-shape validation remain intact. Contract Markdown and authored Doc changes express the same rule; Doc uses explicit Sentence where code/link require it and preserves annotation boundaries.
+
+The tests cover same/different ordered starts, unordered/mixed lists, zero/nine-digit starts, task markers, hard breaks, escaped comment-looking Text, triple adjacency, Paragraph/Table/Section boundaries, page-set links, invalid second empty list, consumed budgets, exact OutputBytes, limit-minus-one failure and sticky retry. Read the baseline failing-test logs in .tmp/repro.stdout.log and .tmp/repro.stderr.log; these show Unsupported node27 before implementation.
+
+Independent execution (isolated CARGO_TARGET_DIR=.tmp/review-target):
+- cargo test --locked -p nepl3-tools --test doc annotated -- --nocapture
+- Result: 19 passed, 0 failed, 70 filtered; exit0. See native-tests.log and native-exit.txt.
+- git diff --check 994526e HEAD: passed.
+
+Scope exclusions: no independent GitHub UI/API run, WASI/provider comparison, whole-workspace tests, canonical registry switch, semantic review of chapter11, or broader Doc migration completion. Root is responsible for remaining mandatory CI and live compatibility evidence. This review approves only the adjacent-list implementation checkpoint; it is not evidence that T21/J01-J04 passed.

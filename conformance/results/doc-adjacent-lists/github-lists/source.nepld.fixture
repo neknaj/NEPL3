@@ -1,0 +1,8 @@
+article en "Lists" body
+cons list unordered cons item checked body cons paragraph cons "[A/a]" nil nil nil
+cons list unordered cons item unchecked body cons paragraph cons "B" nil nil nil
+cons list ordered 7 cons item none body cons paragraph cons "C" nil nil nil
+cons list ordered 7 cons item none body cons paragraph cons "D" nil nil nil
+cons list ordered 42 cons item none body cons paragraph cons sentence
+  cons text "E" cons break cons code "x" nil nil nil nil
+cons list unordered cons item none body cons paragraph cons "<!-- -->" nil nil nil nil

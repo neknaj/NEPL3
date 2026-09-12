@@ -1,0 +1,16 @@
+from pathlib import Path
+import hashlib,json,subprocess
+root=Path.cwd();out=root/'conformance/results/doc-adjacent-lists';out.mkdir(parents=True,exist_ok=True);rows=[]
+def save(path,relative):
+    data=path.read_bytes();assert len(data)<=1048576
+    target=out/(relative+'.fixture');target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(data)
+    rows.append(dict(path=target.relative_to(out).as_posix(),bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+for name in ['verification','wasi','github-lists','review-adjacent-lists']:
+    for p in sorted((root/'.tmp'/name).iterdir()):
+        if p.is_file():save(p,name+'/'+p.name)
+for name in ['repro.stdout.log','repro.stderr.log','start.json','verify.py','wasi.py','github-lists.py','archive.py']:
+    save(root/'.tmp'/name,'root/'+name)
+head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip();assert head=='6e47d57c874e53a894154b4a349132c34526b9b9'
+(out/'manifest.json').write_text(json.dumps(dict(source_commit=head,files=rows),indent=2)+'\n',encoding='utf-8',newline='\n')
+(out/'.gitattributes').write_text('*.fixture -text -whitespace\n',encoding='utf-8',newline='\n')
+print(len(rows),sum(x['bytes'] for x in rows))

@@ -1,0 +1,70 @@
+{
+  "source_commit": "6e47d57c874e53a894154b4a349132c34526b9b9",
+  "generation_command": [
+    "C:\\projects\\NEPL3-doc-adjacent-list\\target\\debug\\nepl3-tools.exe",
+    "doc-markdown",
+    "annotated",
+    "C:\\projects\\NEPL3-doc-adjacent-list\\.tmp\\github-lists\\source.nepld",
+    "C:\\projects\\NEPL3-doc-adjacent-list\\.tmp\\github-lists\\aliases.json",
+    "C:\\projects\\NEPL3-doc-adjacent-list\\.tmp\\github-lists\\view.md"
+  ],
+  "github_command": [
+    "gh",
+    "api",
+    "markdown",
+    "--input",
+    "-"
+  ],
+  "generation_exit": 0,
+  "github_exit": 0,
+  "elapsed_seconds": 1.4024950999883004,
+  "lists": [
+    [
+      "ul",
+      null
+    ],
+    [
+      "ul",
+      null
+    ],
+    [
+      "ol",
+      "7"
+    ],
+    [
+      "ol",
+      "7"
+    ],
+    [
+      "ol",
+      "42"
+    ],
+    [
+      "ul",
+      null
+    ]
+  ],
+  "items": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "checks": [
+    true,
+    false
+  ],
+  "breaks": 1,
+  "scope": "Real production Doc source to annotated Markdown to GitHub GFM API HTML; not browser, accessibility or canonical migration acceptance",
+  "files": {
+    "aliases.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "generation.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "generation.stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "github.html": "94ebb78dc901a2aafbaaddc88bd95030a85b5fe3aa8137614cd01aea4ecfbb5f",
+    "github.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source.nepld": "2b847c16c580c5cccaecf9648aea3fabb9c246def76dd7d6038e976b0f1274fe",
+    "view.md": "4ddba8aa1c591b85bc8a7b1bb724323985b7f9d356c317ec6f8443070fdc876a"
+  }
+}

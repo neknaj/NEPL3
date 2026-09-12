@@ -1,0 +1,19 @@
+from pathlib import Path
+import subprocess,json,time
+root=Path.cwd(); out=root/'.tmp/verification';out.mkdir(exist_ok=True)
+head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip();rows=[]
+commands=[('format',['cargo','fmt','--all','--','--check']),
+('annotated',['cargo','test','--locked','-p','nepl3-tools','--test','doc','annotated','--','--nocapture']),
+('canonical',['cargo','run','--locked','-p','nepl3-tools','--','doc-canonical','--check']),
+('clippy',['cargo','clippy','--workspace','--all-targets','--locked','--','-D','warnings']),
+('repository',['cargo','run','--locked','-p','nepl3-tools','--','check'])]
+for name,cmd in commands:
+    assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==head
+    assert not subprocess.check_output(['git','status','--porcelain'],text=True).strip()
+    start=time.monotonic()
+    with (out/f'{name}.stdout.log').open('wb') as stdout,(out/f'{name}.stderr.log').open('wb') as stderr:
+        child=subprocess.Popen(cmd,stdout=stdout,stderr=stderr);code=child.wait()
+    rows.append(dict(source_commit=head,command=cmd,cwd=str(root),pid=child.pid,exit_code=code,elapsed_seconds=time.monotonic()-start))
+    (out/'commands.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf-8',newline='\n')
+    print(name,code,flush=True)
+    if code: raise SystemExit(code)
