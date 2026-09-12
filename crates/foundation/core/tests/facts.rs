@@ -11,6 +11,178 @@ fn budget() -> Budget {
         events: 100,
     })
 }
+
+fn scope_chain(count: u64) -> Result<(FactSet, SchemaRegistry), String> {
+    let (mut set, _, _, registry) = fixture()?;
+    set.namespaces.clear();
+    set.entities.clear();
+    set.occurrences.clear();
+    set.sources.clear();
+    set.relations.clear();
+    set.edges.clear();
+    set.scopes = (0..count)
+        .map(|i| Scope {
+            id: ScopeId(u64::MAX - i * 7),
+            parent: (i > 0).then(|| ScopeId(u64::MAX - (i - 1) * 7)),
+            origin: None,
+        })
+        .collect();
+    Ok((set, registry))
+}
+
+#[test]
+fn sparse_scope_chain_uses_subquadratic_work_and_preserves_order() -> Result<(), String> {
+    let mut previous = 0;
+    for count in [256, 512, 1024] {
+        let (set, registry) = scope_chain(count)?;
+        let before = set.clone();
+        let mut limits = budget().limits();
+        limits.work = 1_000_000;
+        limits.depth = 2048;
+        let mut b = Budget::new(limits);
+        set.validate(&registry, &mut b, &mut SourceAdmission::default())
+            .map_err(|e| format!("{e:?}"))?;
+        assert_eq!(set, before);
+        assert_eq!(b.usage().depth, count - 1);
+        // Doubling a chain must not quadruple work. The previous independent
+        // ancestry walks with linear ID lookup exceed this fixed work cap.
+        if previous > 0 {
+            assert!(b.usage().work < previous * 3);
+        }
+        previous = b.usage().work;
+    }
+    Ok(())
+}
+
+#[test]
+fn indexed_scopes_reject_duplicates_missing_parents_cycles_and_depth() -> Result<(), String> {
+    let (set, registry) = scope_chain(12)?;
+    for case in 0..3 {
+        let mut invalid = set.clone();
+        let expected = match case {
+            0 => {
+                invalid.scopes[4].id = invalid.scopes[0].id;
+                FactError::DuplicateId
+            }
+            1 => {
+                invalid.scopes[4].parent = Some(ScopeId(123));
+                FactError::MissingScope
+            }
+            _ => {
+                invalid.scopes[0].parent = Some(invalid.scopes[11].id);
+                FactError::Cycle
+            }
+        };
+        assert_eq!(
+            invalid
+                .validate(&registry, &mut budget(), &mut SourceAdmission::default())
+                .err(),
+            Some(expected)
+        );
+    }
+    for cap in [0, 10, 11] {
+        let mut limits = budget().limits();
+        limits.depth = cap;
+        let mut b = Budget::new(limits);
+        let result = set.validate(&registry, &mut b, &mut SourceAdmission::default());
+        if cap == 11 {
+            assert!(result.is_ok());
+        } else {
+            assert_eq!(
+                result.err(),
+                Some(FactError::Stopped(StopReason::DepthLimit))
+            );
+            assert_eq!(b.poll(), Err(StopReason::DepthLimit));
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn cached_scope_suffix_keeps_depth_and_stops_before_missing_parent() -> Result<(), String> {
+    let (mut set, registry) = scope_chain(12)?;
+    // Parent IDs sort before children: each child reuses an already checked suffix.
+    for (i, scope) in set.scopes.iter_mut().enumerate() {
+        scope.id = ScopeId(i as u64 * 7);
+        scope.parent = (i > 0).then(|| ScopeId((i as u64 - 1) * 7));
+    }
+    for cap in [10, 11] {
+        let mut limits = budget().limits();
+        limits.depth = cap;
+        let mut b = Budget::new(limits);
+        let result = set.validate(&registry, &mut b, &mut SourceAdmission::default());
+        if cap == 11 {
+            assert!(result.is_ok());
+            assert_eq!(b.usage().depth, 11);
+        } else {
+            assert_eq!(
+                result.err(),
+                Some(FactError::Stopped(StopReason::DepthLimit))
+            );
+        }
+    }
+    set.scopes[0].parent = Some(ScopeId(999));
+    let mut limits = budget().limits();
+    limits.depth = 0;
+    let mut b = Budget::new(limits);
+    assert_eq!(
+        set.validate(&registry, &mut b, &mut SourceAdmission::default())
+            .err(),
+        Some(FactError::Stopped(StopReason::DepthLimit))
+    );
+    assert_eq!(b.poll(), Err(StopReason::DepthLimit));
+    Ok(())
+}
+
+#[test]
+fn checked_view_reuse_avoids_rebuilding_but_admits_fresh_sources() -> Result<(), String> {
+    let (set, registry) = scope_chain(256)?;
+    let checked = set
+        .validate(&registry, &mut budget(), &mut SourceAdmission::default())
+        .map_err(|e| format!("{e:?}"))?;
+    let mut limits = budget().limits();
+    limits.allocation_units = 0;
+    limits.nodes = 0;
+    limits.work = 1;
+    // No source closure and no queries: retaining a checked view must not sort
+    // or clone all 256 scopes again, even under a fresh tiny operation budget.
+    checked
+        .validate_resolutions(
+            [],
+            &mut Budget::new(limits),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+    let (set, authority, _, registry) = fixture()?;
+    let checked = set
+        .validate(&registry, &mut budget(), &mut SourceAdmission::default())
+        .map_err(|e| format!("{e:?}"))?;
+    let resolution = ReferenceResolution::Resolved(EntityId(1));
+    checked
+        .validate_resolutions(
+            [(OccurrenceId(1), &resolution)],
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+    let mut limits = budget().limits();
+    limits.source_bytes = 0;
+    for authority_check in [false, true] {
+        let mut b = Budget::new(limits);
+        let result = if authority_check {
+            authority.validate(&checked, &mut b, &mut SourceAdmission::default())
+        } else {
+            checked.validate_resolutions(
+                [(OccurrenceId(1), &resolution)],
+                &mut b,
+                &mut SourceAdmission::default(),
+            )
+        };
+        assert_eq!(result, Err(FactError::Stopped(StopReason::SourceLimit)));
+        assert_eq!(b.poll(), Err(StopReason::SourceLimit));
+    }
+    Ok(())
+}
 fn fixture() -> Result<(FactSet, FactAuthority, FactDelta, SchemaRegistry), String> {
     let mut b = budget();
     let descriptor =
