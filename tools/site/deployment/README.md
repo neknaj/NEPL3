@@ -31,3 +31,34 @@ freshness, payload identity, public smoke or immutable LKG storage. Publisher
 state transitions and transport are subsequent implementation work.
 
 Run `python -m unittest discover -s tools/site -p test_deployment.py`.
+
+## Status transport
+
+`transport.status` runs a single authenticated GET in an isolated Python child.
+The validated receipt determines a path under the fixed `api.github.com` host;
+HTTPS uses standard certificate/hostname verification, with no proxy, cookies,
+redirect following or alternate-host configuration. GitHub API version is pinned
+to `2026-03-10`. Credentials pass through stdin, never process arguments or
+error output. Only a bounded original response crosses back as base64 and is
+validated again by the parent.
+
+The parent terminates and waits for the child if the request exceeds its
+configured wait (at most ten seconds after subprocess creation). This bounds
+slow headers, trickling bodies and DNS as well as normal I/O timeouts. Process
+creation itself is not interruptible on every platform, and termination/wait
+plus scheduling can add overhead; this is not a strict end-to-end realtime
+guarantee. The
+publisher still owns its total 600-second status-wait and transaction budgets;
+this transport does not retry, cancel, deploy or assume unknown means success.
+
+Only HTTP 200 with JSON MIME and identity content encoding is accepted. Bodies
+are bounded to 64 KiB. Duplicate lengths, invalid lengths, conflicting transfer
+framing and short declared bodies fail. A chunked body must be valid HTTP
+chunk framing. HTTP/network/parse errors are sanitized and contain no token or
+server body; failed requests cannot produce an Observation.
+
+Transport tests use real loopback HTTP with only the HTTPS socket factory
+replaced, and a real child killed at deadline. They prove HTTP parsing and
+process termination, not live GitHub authentication or TLS interoperability.
+Default TLS behavior follows the [Python HTTPSConnection contract](https://docs.python.org/3/library/http.client.html#http.client.HTTPSConnection).
+Run `python -m unittest discover -s tools/site -p test_transport.py`.
