@@ -10,6 +10,7 @@ pub(super) fn ids(text: &str) -> Result<BTreeSet<String>> {
     let mut excluded = 0;
     let mut prefix = String::with_capacity(4);
     let mut line_start = false;
+    let mut inline_html = false;
     let options = Options::ENABLE_TABLES | Options::ENABLE_FOOTNOTES;
     for event in Parser::new_ext(text, options) {
         match event {
@@ -17,6 +18,9 @@ pub(super) fn ids(text: &str) -> Result<BTreeSet<String>> {
                 let allowed = matches!(tag, Tag::Paragraph | Tag::List(_) | Tag::Item);
                 stack.push(!allowed);
                 excluded += usize::from(!allowed);
+                if matches!(tag, Tag::Paragraph | Tag::Item) {
+                    inline_html = false;
+                }
                 prefix.clear();
                 line_start = excluded == 0 && matches!(tag, Tag::Paragraph | Tag::Item);
             }
@@ -29,7 +33,15 @@ pub(super) fn ids(text: &str) -> Result<BTreeSet<String>> {
             }
             Event::SoftBreak | Event::HardBreak => {
                 prefix.clear();
-                line_start = excluded == 0;
+                line_start = excluded == 0 && !inline_html;
+            }
+            Event::InlineHtml(_) => {
+                // Do not treat text on a later line of an inline HTML fragment
+                // (including hidden spans) as a plain Markdown definition.
+                // The next independent paragraph/item establishes a new scope.
+                inline_html = true;
+                prefix.clear();
+                line_start = false;
             }
             Event::Text(value) if excluded == 0 && line_start => {
                 // Escapes and entities can split the ID/colon across Text events.
@@ -94,5 +106,22 @@ mod tests {
     fn duplicate_definitions_across_presentations_are_rejected() {
         assert!(ids("A01: original\n\n- A01\\: duplicate\n").is_err());
         assert!(ids("- A01: original\n\n<!-- -->\n\n- A&#48;1: duplicate\n").is_err());
+    }
+
+    #[test]
+    fn inline_html_cannot_reenable_definitions_at_a_line_break() -> Result<()> {
+        for fragment in [
+            "intro <span hidden>\nA01: hidden definition\n</span>\n",
+            "<span hidden>intro\nA01: hidden definition</span>\n",
+        ] {
+            assert!(ids(fragment)?.is_empty());
+            assert_eq!(
+                ids(&format!("{fragment}\nW02: independent paragraph\n"))?,
+                BTreeSet::from(["W02".into()])
+            );
+        }
+        let text = "- G01\\: <ruby>文法<rt>ぶんぽう</rt></ruby>\n  A01: continued HTML paragraph\n- G02\\: next item\n";
+        assert_eq!(ids(text)?, BTreeSet::from(["G01".into(), "G02".into()]));
+        Ok(())
     }
 }
