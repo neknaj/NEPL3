@@ -240,6 +240,12 @@ body
       cons "cancel・[資源停止/しげんていし]・[内部不変条件違反/ないぶふへんじょうけんいはん]はFailureに[変換/へんかん]せず、[操作/そうさ]のErrとして[返/かえ]す。"
       cons "providerの[通信失敗/つうしんしっぱい]や[要求/ようきゅう]identityの[照合/しょうごう]は、この[数値評価/すうちひょうか]の[結果型/けっかがた]とは[別/べつ]の[境界契約/きょうかいけいやく]である。" nil
     cons paragraph
+      cons "MathSourceArtifactはtextとMathCategoryを[持/も]ち、Expr・Row・DocGuestの[再/さい]parse[入口/いりぐち]を[区別/くべつ]する。"
+      cons "portableのencode/decodeはschema[適合/てきごう]dataを[扱/あつか]うだけで、[生成元/せいせいもと]の[証明/しょうめい]ではない。"
+      cons "verifyは[要求/ようきゅう]の[不変/ふへん]Mathと[選択/せんたく]hostから[同/おな]じBudgetでprefixを[再生成/さいせいせい]し、textとcategoryの[完全一致/かんぜんいっち]を[検査/けんさ]する。"
+      cons "[不一致/ふいっち]をMismatchとして[拒否/きょひ]し、[成功時/せいこうじ]も[返/かえ]すのは[局所生成/きょくしょせいせい]したartifactである。"
+      cons "guestの[意味同等性/いみどうとうせい]、provider[要求/ようきゅう]identity、[保存先/ほぞんさき]snapshot、[失敗応答/しっぱいおうとう]のtransportは[別/べつ]の[契約/けいやく]として[検査/けんさ]する。" nil
+    cons paragraph
       cons "lower、check、free_symbols、evaluate、print、render_mathml。"
       cons "[評価結果/ひょうかけっか]、[部分評価/ぶぶんひょうか]の[新式/しんしき]、[元/もと]の[式/しき]を[別値/べつち]として[返/かえ]す。"
       cons "[文書側/ぶんしょがわ]のrender[要求/ようきゅう]がevaluateを[自動/じどう]で[要求/ようきゅう]しない。" nil

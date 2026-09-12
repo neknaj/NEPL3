@@ -71,6 +71,106 @@ fn notation(value: &MathValue) -> Vec<MathKind> {
 }
 
 #[test]
+fn portable_source_artifacts_recheck_the_requested_input() -> Result<(), String> {
+    use nepl3_math_core::portable::{PortableError, printing as portable};
+    let compiled = compiled()?;
+    let registry = &compiled.doc.registry;
+    let empty = SourceStore::default();
+    for (source, entry, expected) in [
+        ("frac 1 0", "Expr", "frac 1 0"),
+        ("row cons 1 cons -2 nil", "Row", "row cons 1 cons -2 nil"),
+        ("Doc \"note\"", "DocGuest", "Doc \"note\""),
+    ] {
+        let value = lower_value(&compiled, source, entry)?;
+        let shape = value.validate_shape(&mut budget()).map_err(err)?;
+        let mut guest = FixtureGuest {
+            expected: value.embeds.first(),
+            text: "\"note\"",
+            calls: 0,
+        };
+        let artifact = print::prefix(&shape, &mut guest, &mut budget()).map_err(err)?;
+        assert_eq!(artifact.text, expected);
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
+        let raw =
+            portable::to_value(&artifact, registry, &mut codec, &mut budget()).map_err(err)?;
+        let bytes = nepl3_wire::encode(&raw, &mut budget()).map_err(err)?;
+        let raw = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+        assert_eq!(
+            portable::from_value(&raw, registry, &mut codec, &mut budget()).map_err(err)?,
+            artifact
+        );
+        let mut full = budget();
+        assert_eq!(
+            portable::verify(&raw, &shape, &mut guest, registry, &mut codec, &mut full)
+                .map_err(err)?,
+            artifact
+        );
+        for mutate_entry in [false, true] {
+            let mut forged = artifact.clone();
+            if mutate_entry {
+                forged.entry = if forged.entry == MathCategory::Expr {
+                    MathCategory::Row
+                } else {
+                    MathCategory::Expr
+                };
+            } else {
+                forged.text.push(' ');
+            }
+            let forged =
+                portable::to_value(&forged, registry, &mut codec, &mut budget()).map_err(err)?;
+            assert!(matches!(
+                portable::verify(
+                    &forged,
+                    &shape,
+                    &mut guest,
+                    registry,
+                    &mut codec,
+                    &mut budget()
+                ),
+                Err(portable::Error::Mismatch)
+            ));
+        }
+        let before = guest.calls;
+        assert!(matches!(
+            portable::verify(
+                &NdfValue::Bool(false),
+                &shape,
+                &mut guest,
+                registry,
+                &mut codec,
+                &mut budget()
+            ),
+            Err(portable::Error::Boundary(PortableError::Schema(_)))
+        ));
+        assert_eq!(guest.calls, before);
+        let mut limits = budget().limits();
+        limits.work = full.usage().work - 1;
+        let mut stopped = Budget::new(limits);
+        assert!(
+            portable::verify(&raw, &shape, &mut guest, registry, &mut codec, &mut stopped).is_err()
+        );
+        assert_eq!(stopped.poll(), Err(StopReason::WorkLimit));
+        let mut cancelled = budget();
+        cancelled.cancel();
+        assert!(matches!(
+            portable::verify(
+                &raw,
+                &shape,
+                &mut guest,
+                registry,
+                &mut codec,
+                &mut cancelled
+            ),
+            Err(portable::Error::Boundary(PortableError::Stopped(
+                StopReason::Cancelled
+            )))
+        ));
+    }
+    Ok(())
+}
+
+#[test]
 fn doc_guest_depths_follow_deepest_shared_occurrence() -> Result<(), String> {
     use nepl3_doc_core::{
         model::{DocKind, DocNode, InlineRef},

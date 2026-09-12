@@ -1,5 +1,6 @@
 //! Explicit Math NDF schema adapters. Decoding produces raw data followed by the
 //! same source/category/graph checks used by native callers, not a evaluation proof.
+pub mod printing;
 mod value;
 use crate::{check::StructureError, model::MathSyntax};
 use nepl3_core::{

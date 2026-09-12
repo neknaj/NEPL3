@@ -1209,6 +1209,33 @@
         ]
       },
       "constraints": []
+    },
+    "MathCategory": {
+      "variant": {
+        "Expr": [],
+        "Row": [],
+        "DocGuest": []
+      },
+      "constraints": []
+    },
+    "MathSourceArtifact": {
+      "record": [
+        [
+          "text",
+          "Text"
+        ],
+        [
+          "entry",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "MathCategory"
+            }
+          }
+        ]
+      ],
+      "constraints": []
     }
   },
   "operations": {}

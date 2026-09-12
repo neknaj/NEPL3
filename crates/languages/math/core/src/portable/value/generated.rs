@@ -379,4 +379,32 @@ match (tag,f.len()) {
 _=>Err(PortableError::Shape),}
 }
 }
+impl Value for MathCategory {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Expr => variant(s,"MathCategory","Expr",[],b),
+Self::Row => variant(s,"MathCategory","Row",[],b),
+Self::DocGuest => variant(s,"MathCategory","DocGuest",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,44)?;
+let (tag,f)=case(v,s,"MathCategory")?;
+match (tag,f.len()) {
+("Expr",0)=>Ok(Self::Expr),
+("Row",0)=>Ok(Self::Row),
+("DocGuest",0)=>Ok(Self::DocGuest),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for MathSourceArtifact {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathSourceArtifact",[self.text.put(s,c,b)?,self.entry.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,50)?;
+let f=fields(v,s,"MathSourceArtifact",2)?;
+Ok(Self {text:Value::read(&f[0],s,c,b)?,entry:Value::read(&f[1],s,c,b)?})
+}
+}
 }

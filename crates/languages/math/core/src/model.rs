@@ -295,3 +295,17 @@ pub enum MathEvaluationResult {
     Success { outcome: MathEvaluationOutcome },
     Failure { failure: MathEvaluationFailure },
 }
+/// Exact Math surface category used by shape checking and source reparsing.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum MathCategory {
+    Expr,
+    Row,
+    DocGuest,
+}
+
+/// Generated source without an invented saved source identity.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathSourceArtifact {
+    pub text: alloc::string::String,
+    pub entry: MathCategory,
+}
