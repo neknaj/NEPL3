@@ -80,6 +80,14 @@
       "aliases": "doc/migration/aliases/20-doc-html.json",
       "route": "docs/spec/20-doc-html.html",
       "renderer": "nepl3-tools.markdown-annotated/2"
+    },
+    {
+      "id": "math-html",
+      "source": "doc/spec/17-math-html.nepld",
+      "projection": "doc/spec/17-math-html.md",
+      "aliases": "doc/migration/aliases/17-math-html.json",
+      "route": "docs/spec/17-math-html.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/1"
     }
   ],
   "output_limits": {
