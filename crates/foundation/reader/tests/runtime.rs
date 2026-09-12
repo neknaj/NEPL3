@@ -492,6 +492,63 @@ fn provider_signature_checks_operation_envelope_and_pure_decoder() -> Result<(),
     Ok(())
 }
 
+#[test]
+fn linked_provider_survives_table_reordering_and_rejects_wrong_identity() -> Result<(), ReaderError>
+{
+    let (registry, schema) = registry()?;
+    let mut p = provider_plan(&schema);
+    p.providers
+        .push(signature(&schema, ProviderKind::Transform));
+    let digest = p.digest(&mut budget())?;
+    for _ in 0..2 {
+        assert_eq!(p.digest(&mut budget())?, digest);
+        let checked = p.check(&registry, &mut budget())?;
+        let mut b = budget();
+        let mut session = ReaderSession::new("linked".into(), &checked, &registry, &mut b)?;
+        let input = source("a")?;
+        let mut store = SourceStore::default();
+        store.insert(input.clone())?;
+        let mut admission = SourceAdmission::default();
+        let raw_context = context(&schema, &registry)?;
+        let context = check_context(&raw_context, &store, &registry, &mut b, &mut admission)?;
+        let reply = session.read(
+            "entry",
+            ReadRequest {
+                snapshot: &input,
+                start: 0,
+                limit: 1,
+                final_input: true,
+                context: &context,
+                state: &NdfValue::Unit,
+            },
+            &store,
+            &mut b,
+            &mut admission,
+        )?;
+        let ReadReply::Await { continuation, .. } = reply else {
+            return Err(ReaderError::Context);
+        };
+        let reply = terminal("a", 1, &mut b)?;
+        assert!(
+            matches!(session.resume(&continuation, reply, &store, &mut b, &mut admission)?,
+            ReadReply::Matched { value: NdfValue::Text(ref value), end: 1, .. } if value == "a")
+        );
+        p.providers.reverse();
+    }
+    // Same operation spelling with a different schema digest is not the same
+    // provider. A Transform signature cannot satisfy a Read call either.
+    let mut wrong = p.providers[0].operation.clone();
+    wrong.schema.digest = Digest([255; 32]);
+    for operation in [wrong, signature(&schema, ProviderKind::Transform).operation] {
+        p.expressions[0] = ReaderExpr::Call(operation);
+        assert!(matches!(
+            p.check(&registry, &mut budget()),
+            Err(PlanError::ProviderSignature)
+        ));
+    }
+    Ok(())
+}
+
 fn annotated_terminal(
     schema: &SchemaRef,
     span: Span,
@@ -1483,6 +1540,53 @@ fn plan_identity_is_deterministic_but_distinguishes_arena_representation() -> Re
         ReaderSession::new("other".into(), &checked, &other_registry, &mut budget()),
         Err(ReaderError::Context)
     ));
+    Ok(())
+}
+
+#[test]
+fn linked_rules_preserve_shared_roots_repeated_refs_and_table_order() -> Result<(), ReaderError> {
+    let (registry, schema) = registry()?;
+    let mut p = plan(
+        &schema,
+        vec![
+            ReaderExpr::Literal("a".into()),
+            ReaderExpr::Ref("left".into()),
+            ReaderExpr::Ref("right".into()),
+            ReaderExpr::Seq(vec![ReaderId(1), ReaderId(2), ReaderId(1)]),
+        ],
+        3,
+        TypeDescriptor::List(Box::new(TypeDescriptor::NdfValue)),
+    );
+    for name in ["left", "right"] {
+        p.rules.push(ReaderRule {
+            name: name.into(),
+            root: ReaderId(0),
+            output: TypeDescriptor::Unit,
+        });
+    }
+    let digest = p.digest(&mut budget())?;
+    // Each reference consumes one literal, including a repeated Ref expression.
+    // Rule-table order is absent from portable identity, so rebuilding links
+    // after reordering must preserve both successful and failing input behavior.
+    for _ in 0..2 {
+        assert_eq!(p.digest(&mut budget())?, digest);
+        assert!(matches!(
+            run(&p, &registry, "aaa", true)?.0,
+            ReadReply::Matched { end: 3, .. }
+        ));
+        assert!(matches!(
+            run(&p, &registry, "aab", true)?.0,
+            ReadReply::NoMatch { .. }
+        ));
+        p.rules.reverse();
+    }
+    p.expressions[2] = ReaderExpr::Ref("missing".into());
+    let failure = p
+        .check_detailed(&registry, &mut budget())
+        .err()
+        .ok_or(ReaderError::Context)?;
+    assert_eq!(failure.error, PlanError::Reference);
+    assert_eq!(failure.expression, Some(ReaderId(2)));
     Ok(())
 }
 

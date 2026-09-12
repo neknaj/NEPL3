@@ -14,7 +14,7 @@ impl<'a> From<&'a ProviderReply> for ProviderReplyRef<'a> {
     }
 }
 pub(crate) struct ProviderBoundary<'a> {
-    pub plan: &'a crate::plan::ReaderPlan,
+    pub signature: &'a crate::plan::ProviderSignature,
     pub registry: &'a SchemaRegistry,
     pub snapshot: &'a SourceSnapshot,
     pub declared: &'a [SourceSnapshot],
@@ -54,7 +54,10 @@ pub(crate) fn check_provider(
         ProviderCall::Transform { operation, .. } => (operation, ProviderKind::Transform),
         ProviderCall::Dependent { operation, .. } => (operation, ProviderKind::Dependent),
     };
-    let signature = machine.plan.provider(operation, kind)?;
+    let signature = machine.signature;
+    if &signature.operation != operation || signature.kind != kind {
+        return Err(ReaderError::ProviderContract);
+    }
     let empty = ViewBundle {
         elements: Vec::new(),
         roots: Vec::new(),
