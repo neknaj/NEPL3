@@ -273,7 +273,7 @@ taskの段階着手には利用する前段成果物が必要。`depends_on` の
 依存先や全受入が完成したことにはならない。過去の段階証拠への参照は索引として扱い、
 現HEADの実行証拠や正式な受入認定へ読み替えない。
 
-証拠の保存は [共通収集手順](../tools/conformance/README.md) に従う。
+証拠の保存は [共通収集手順](../tools/evidence/README.md) に従う。
 実行test、レビュー文章、公開記録は異なる証拠種別である。保存場所の名前に関わらず、
 review成功からconformance合格、uploadから公開済み、公開済みからLKGを推定しない。
 新しい保存script・sourceコピーを結果配下に作らず、再現に必要なcommit/path、宣言入力、

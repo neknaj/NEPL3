@@ -40,7 +40,7 @@ def main():
     parser.add_argument('output', type=Path)
     for option in ('owner', 'repository', 'source-commit', 'expected-tar', 'expected-manifest'):
         parser.add_argument('--' + option, required=True)
-    for option in ('artifact-id', 'run-id', 'attempt', 'repository-id'):
+    for option in ('artifact-id', 'run-id', 'repository-id'):
         parser.add_argument('--' + option, required=True, type=int)
     args = vars(parser.parse_args())
     try:

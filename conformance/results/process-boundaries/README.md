@@ -1,15 +1,18 @@
 # Evidence/process boundary correction
 
 Tested source: `1f8b7d6b0587ac54254f42afb38af981a0fe7b2a`.
-The two command manifests record exact arguments, source revision, Python/host
-environment, raw stdout/stderr, exit codes and SHA-256. No source copies or
-review-specific executable scripts are included. Collection and verification use
-`tools/conformance/runner.py` at the tested revision.
+Command manifests and raw logs were collected under `dist/repository-after-archive`
+and `dist/site-tests-after-archive`, using `tools/conformance/runner.py` at the
+tested revision. They record exact arguments, revision, environment, outcomes and
+SHA-256. Raw logs are not retained as permanent Git source. CI stores the site
+collector package as an artifact with an explicit retention period; its expiry
+must not be mistaken for permanent archival. No source copies or review-specific
+executable scripts are included in this record.
 
-- `repository/manifest.json`: native Windows format, Clippy, workspace tests,
+- Native Windows format, Clippy, workspace tests,
   repository contracts and task projection checks passed. Rust harness summaries:
   578 passed, 0 failed, 1 existing ignored. rustc and Cargo versions are raw logs.
-- `site-tests/manifest.json`: 114 host regression tests passed after archive
+- 114 host regression tests passed after archive
   removal, including the unchanged real-Doc payload input.
 
 Independent reviews (separate agents; implementation by root):
@@ -37,3 +40,7 @@ inconsistency, not authorship or independent proof of execution. These results
 do not mark any complete acceptance group, live Pages publication or LKG passed.
 CI provides the separate native-OS/WASI/browser/bare-metal checks; consult the
 run attached to the PR rather than infer them from this Windows execution.
+
+The publisher additions from unmerged PRs #120/#121 were subsequently deferred
+so that this correction can target main independently. The counts above describe
+the explicitly identified intermediate revision, not the final publisher suite.

@@ -13,11 +13,11 @@ from payload import digest
 class ArtifactTests(unittest.TestCase):
     def fixture(self, extra=None, receipt_change=None):
         root = Path(__file__).resolve().parents[2]
-        tar = gzip.decompress((root / 'conformance/fixtures/site/pages.tar.gz.fixture').read_bytes())
+        tar = gzip.decompress((root / 'tools/site/fixtures/pages.tar.gz.fixture').read_bytes())
         with tarfile.open(fileobj=io.BytesIO(tar)) as source:
             commit = json.load(source.extractfile('build.json'))['source_commit']
         # Both expected hashes predate this implementation (14 real Doc chapters).
-        kwargs = dict(owner='neknaj', repository='NEPL3', artifact_id=7, run_id=8, attempt=1, repository_id=9,
+        kwargs = dict(owner='neknaj', repository='NEPL3', artifact_id=7, run_id=8, repository_id=9,
                       source_commit=commit, expected_tar='cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9',
                       expected_manifest='39000dd5b7aad48deae97741c5b077b44a242a0badb7b30e81b3c1c26f301446')
         receipt = dict(version=1, kind='pages-tar', publication_verified=False, tar_sha256=kwargs['expected_tar'],
@@ -30,7 +30,7 @@ class ArtifactTests(unittest.TestCase):
             if extra: bundle.writestr(*extra)
         archive = buffer.getvalue()
         url = 'https://api.github.com/repos/neknaj/NEPL3/actions/artifacts/7'
-        meta = dict(id=7, name='doc-browser-'+commit+'-8-1', url=url, archive_download_url=url+'/zip', expired=False,
+        meta = dict(id=7, name='doc-browser-'+commit, url=url, archive_download_url=url+'/zip', expired=False,
                     size_in_bytes=len(archive), digest='sha256:'+digest(archive),
                     workflow_run=dict(id=8, repository_id=9, head_repository_id=9, head_sha=commit))
         return meta, archive, kwargs, tar
@@ -71,7 +71,7 @@ class ArtifactTests(unittest.TestCase):
     def test_matching_metadata_does_not_change_payload_source(self):
         meta, archive, kwargs, _ = self.fixture()
         kwargs['source_commit'] = '0'*40
-        meta['name'] = 'doc-browser-'+'0'*40+'-8-1'
+        meta['name'] = 'doc-browser-'+'0'*40
         meta['workflow_run']['head_sha'] = '0'*40
         with self.assertRaisesRegex(ValueError, 'payload source'):
             selected(json.dumps(meta).encode(), archive, **kwargs)

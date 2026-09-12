@@ -18,40 +18,10 @@ MAX_ARCHIVE = 256 * 1024 * 1024
 MAX_ENTRIES = 8192
 
 
-def selected(raw, archive, *, owner, repository, artifact_id, run_id, attempt,
+def selected(raw, archive, *, owner, repository, artifact_id, run_id,
              repository_id, source_commit, expected_tar, expected_manifest):
     """Return the original checked raw tar, never extract or rebuild files."""
-    return _select(raw, archive, owner=owner, repository=repository, artifact_id=artifact_id,
-                   run_id=run_id, attempt=attempt, repository_id=repository_id,
-                   source_commit=source_commit, expected_tar=expected_tar,
-                   expected_manifest=expected_manifest, kind='doc-browser')
-
-
-def uploaded(raw, archive, upload_receipt, *, owner, repository, artifact_id, run_id,
-             attempt, repository_id, source_commit, expected_tar, expected_manifest):
-    """Validate the separately uploaded single tar against its producer receipt.
-
-    The receipt must come from the already authenticated diagnostic artifact.
-    A self-supplied receipt is not proof of an upload by the successful CI job.
-    """
-    checked(isinstance(archive, bytes) and 0 < len(archive) <= MAX_ARCHIVE, 'artifact archive limit')
-    checked(isinstance(upload_receipt, bytes) and len(upload_receipt) <= 65536, 'upload receipt limit')
-    receipt = decode(upload_receipt)
-    checked(isinstance(receipt, dict) and set(receipt) == {'version', 'artifact_id',
-            'artifact_digest', 'run_id', 'attempt', 'publication_verified'}, 'upload receipt shape')
-    for key, value in [('version', 1), ('artifact_id', artifact_id), ('run_id', run_id), ('attempt', attempt)]:
-        checked(type(receipt.get(key)) is int and receipt[key] == value, 'upload receipt identity mismatch')
-    checked(receipt['publication_verified'] is False and receipt['artifact_digest'] == digest(archive),
-            'upload receipt digest mismatch')
-    return _select(raw, archive, owner=owner, repository=repository, artifact_id=artifact_id,
-                   run_id=run_id, attempt=attempt, repository_id=repository_id,
-                   source_commit=source_commit, expected_tar=expected_tar,
-                   expected_manifest=expected_manifest, kind='github-pages')
-
-
-def _select(raw, archive, *, owner, repository, artifact_id, run_id, attempt,
-            repository_id, source_commit, expected_tar, expected_manifest, kind):
-    for value in (artifact_id, run_id, attempt, repository_id):
+    for value in (artifact_id, run_id, repository_id):
         checked(type(value) is int and 0 < value < 2**53, 'invalid artifact/run/repository ID')
     hex_id(source_commit, 40)
     checked(isinstance(raw, bytes) and len(raw) <= 65536, 'artifact metadata limit')
@@ -63,8 +33,7 @@ def _select(raw, archive, *, owner, repository, artifact_id, run_id, attempt,
     checked(isinstance(meta, dict), 'invalid artifact metadata')
     checked(type(meta.get('id')) is int and meta['id'] == artifact_id, 'artifact ID mismatch')
     checked(meta.get('url') == prefix and meta.get('archive_download_url') == prefix + '/zip', 'artifact URL mismatch')
-    checked(meta.get('name') == f'{kind}-{source_commit}-{run_id}-{attempt}'
-            and meta.get('expired') is False, 'artifact name or expiry mismatch')
+    checked(meta.get('name') == 'doc-browser-' + source_commit and meta.get('expired') is False, 'artifact name or expiry mismatch')
     checked(type(meta.get('size_in_bytes')) is int and meta['size_in_bytes'] == len(archive), 'archive size mismatch')
     checked(meta.get('digest') == 'sha256:' + digest(archive), 'archive digest mismatch')
     run = meta.get('workflow_run')
@@ -101,20 +70,16 @@ def _select(raw, archive, *, owner, repository, artifact_id, run_id, attempt,
                 data = stream.read(limit + 1)
             checked(len(data) == member.file_size, 'selected member length mismatch')
             return data
-        if kind == 'github-pages':
-            checked(len(members) == 1 and members[0].filename == 'artifact.tar', 'Pages upload must contain one tar')
-            payload = verify_payload(read('artifact.tar', 40 * 1024 * 1024), expected_tar, expected_manifest)
-        else:
-            receipt = decode(read('pages-receipt.json', 65536))
-            checked(isinstance(receipt, dict) and type(receipt.get('version')) is int and receipt['version'] == 1,
-                    'invalid payload receipt')
-            checked(receipt.get('kind') == 'pages-tar' and receipt.get('publication_verified') is False,
-                    'invalid payload receipt kind')
-            checked(receipt.get('tar_sha256') == expected_tar and receipt.get('manifest_sha256') == expected_manifest,
-                    'payload receipt identity mismatch')
-            payload = verify_payload(read('pages.tar', 40 * 1024 * 1024), expected_tar, expected_manifest)
-            for key, value in [('tar_bytes', len(payload.data)), ('files', payload.files)]:
-                checked(type(receipt.get(key)) is int and receipt[key] == value, 'payload receipt count mismatch')
+        receipt = decode(read('pages-receipt.json', 65536))
+        checked(isinstance(receipt, dict) and type(receipt.get('version')) is int and receipt['version'] == 1,
+                'invalid payload receipt')
+        checked(receipt.get('kind') == 'pages-tar' and receipt.get('publication_verified') is False,
+                'invalid payload receipt kind')
+        checked(receipt.get('tar_sha256') == expected_tar and receipt.get('manifest_sha256') == expected_manifest,
+                'payload receipt identity mismatch')
+        payload = verify_payload(read('pages.tar', 40 * 1024 * 1024), expected_tar, expected_manifest)
+        for key, value in [('tar_bytes', len(payload.data)), ('files', payload.files)]:
+            checked(type(receipt.get(key)) is int and receipt[key] == value, 'payload receipt count mismatch')
     with tarfile.open(fileobj=io.BytesIO(payload.data), mode='r:') as tar:
         with tar.extractfile('build.json') as stream:
             build = decode(stream.read())

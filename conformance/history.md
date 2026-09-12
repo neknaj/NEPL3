@@ -1,6 +1,6 @@
 # Historical evidence in Git
 
-Archive revision: `d87ca8c4ba18e74bc71efb0e2958af87ac971e1b`. Permanent ref: `archive/evidence-2026-09-13`.
+Archive revision: `d87ca8c4ba18e74bc71efb0e2958af87ac971e1b`. Preservation ref: `archive/evidence-2026-09-13`.
 
 These closed review archives are retained in Git rather than copied into the current source tree.
 They are historical observations, not current acceptance, publication or LKG assertions.
@@ -15,6 +15,9 @@ git worktree add --detach ../NEPL3-history d87ca8c4ba18e74bc71efb0e2958af87ac971
 
 Keep the archival ref when removing unused worktrees. The original bytes and root .gitattributes,
 source snapshots, raw logs and manifests remain available without rewriting their seals.
+This shrinks the working tree, **not Git history or full-clone size**. The ref is
+temporary protection until an external archive has been verified and any shared
+history rewrite/ref removal has been explicitly approved. Do not delete it first.
 
 | Archive | Original Git tree |
 | --- | --- |

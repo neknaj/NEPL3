@@ -47,12 +47,11 @@ jobs:
           python-version: '3.13'
       - name: Host file and process portability tests
         run: |
-          python -m unittest discover -s tools/site -p test_stage.py
           python -m unittest discover -s tools/site -p test_transport.py
           python -m unittest discover -s tools/site -p test_payload.py
           python -m unittest discover -s tools/site -p test_smoke.py
           python -m unittest discover -s tools/site -p test_record_smoke.py
-          python -m unittest tools.conformance.test_runner
+          python -m unittest tools.evidence.test_runner
       - name: Format
         run: cargo fmt --all -- --check
       - name: Clippy
@@ -183,7 +182,7 @@ jobs:
         with:
           python-version: '3.13'
       - name: Collect publication unit and boundary results
-        run: python -m tools.conformance.runner run conformance/specs/site-tests.json dist/site-tests
+        run: python -m tools.evidence.runner run tools/evidence/specs/site-tests.json dist/site-tests
       - name: Preserve raw results (not a publication proof)
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -346,32 +345,10 @@ jobs:
         run: |
           SITE_MANIFEST=$(python -c 'import json; print(json.load(open("dist/doc-browser/site-results.json"))["manifest_sha256"])')
           python tools/site/payload.py dist/doc-browser/site dist/doc-browser/pages.tar --manifest-sha256 "$SITE_MANIFEST" > dist/doc-browser/pages-receipt.json
-      - name: Stage the original Pages tar without rebuilding
-        run: |
-          mkdir -p dist/pages-payload
-          TAR_SHA=$(python -c 'import json; print(json.load(open("dist/doc-browser/pages-receipt.json"))["tar_sha256"])')
-          MANIFEST_SHA=$(python -c 'import json; print(json.load(open("dist/doc-browser/pages-receipt.json"))["manifest_sha256"])')
-          python -I tools/site/stage.py dist/doc-browser/pages.tar dist/pages-payload/artifact.tar --expected-tar "$TAR_SHA" --expected-manifest "$MANIFEST_SHA" > dist/doc-browser/pages-stage.json
-      - name: Upload the single original Pages payload
-        id: pages-payload
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: github-pages-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: dist/pages-payload/artifact.tar
-          if-no-files-found: error
-          retention-days: 14
-      - name: Preserve Pages upload identity
-        env:
-          PAGES_ARTIFACT_ID: ${{ steps.pages-payload.outputs.artifact-id }}
-          PAGES_ARTIFACT_DIGEST: ${{ steps.pages-payload.outputs.artifact-digest }}
-          PAGES_RUN_ID: ${{ github.run_id }}
-          PAGES_RUN_ATTEMPT: ${{ github.run_attempt }}
-        run: |
-          python -c 'import json,os,pathlib; pathlib.Path("dist/doc-browser/pages-upload.json").write_text(json.dumps({"version":1,"artifact_id":int(os.environ["PAGES_ARTIFACT_ID"]),"artifact_digest":os.environ["PAGES_ARTIFACT_DIGEST"],"run_id":int(os.environ["PAGES_RUN_ID"]),"attempt":int(os.environ["PAGES_RUN_ATTEMPT"]),"publication_verified":False},sort_keys=True)+"\n",encoding="utf-8")'
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ always() }}
         with:
-          name: doc-browser-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: doc-browser-${{ github.sha }}
           path: dist/doc-browser/
           include-hidden-files: true
           if-no-files-found: error

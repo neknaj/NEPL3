@@ -20,7 +20,7 @@ class ReleaseTests(unittest.TestCase):
 
     def test_recover_returns_original_real_doc_tar_after_both_checks(self):
         root = Path(__file__).resolve().parents[2]
-        data = gzip.decompress((root / "conformance/fixtures/site/pages.tar.gz.fixture").read_bytes())
+        data = gzip.decompress((root / "tools/site/fixtures/pages.tar.gz.fixture").read_bytes())
         raw, kwargs = self.stored_payload(data)
         # Previously archived 14-chapter site; identity predates this adapter.
         manifest = "39000dd5b7aad48deae97741c5b077b44a242a0badb7b30e81b3c1c26f301446"

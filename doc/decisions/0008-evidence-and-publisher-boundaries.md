@@ -13,7 +13,7 @@ Python本体と `.py.fixture` は1,061ファイル、3,236,358 bytesである。
 証拠全体の容量をpublisherだけの問題として扱わない。
 
 全Python一覧はGit blobから採取し、実行せず内容・定義・複合責務・同一hashを
-調査した。詳細一覧は `python -m tools.conformance.inventory <基準commit> <出力path>`
+調査した。詳細一覧は `python -m tools.evidence.inventory <基準commit> <出力path>`
 で必要時に生成し、repositoryへ再複製しない。初回の内容分類では
 95件が要確認となった。追加の独立内容監査で、この95件は次の責務へ分類した。
 これは歴史的な全反例の再実行や現行testへの移植完了を意味しない。
@@ -39,6 +39,12 @@ sourceのコピー、全ファイルのhash列挙を兼ねる。同名のdownloa
 PR #120/#121は未統合。CLIの未commit追加2ファイルは元worktreeに保全し、
 この是正へ含めない。公開issueは0件。26タスクの多数が未完で、T11のsuiteも
 未実装。publisherの細分化されたhelper完了を本体の進捗に代用していた。
+
+最終差分はmain `b8bae3fd65440f5e48fbec67cbcbfac083b5f291` から独立して統合する。
+未統合PR #120/#121のcandidate/download/observations/stage追加は元branchと
+保全refに残し、この是正の最終treeへ含めない。既存mainのpublisher本体を維持し、
+そのfixture参照・試験配置・責務文書だけを整理する。未導入機能を同時導入して
+「整理が完了した」としない。移行途中の1f8b7d6試験と最終treeの試験は分けて記録する。
 
 ## 2. 合理的な部分
 
@@ -86,8 +92,8 @@ repository側の採用拒否まで自動保証されるとは扱わない。
 
 ## 5. 統合・停止する機構
 
-通常command実行、原log保存、manifest作成とhash検査を `tools/conformance/`
-へ集約する。対象command・scopeは `conformance/specs/` の小さなJSONで指定する。
+通常command実行、原log保存、manifest作成とhash検査を `tools/evidence/`
+へ集約する。対象command・scopeは `tools/evidence/specs/` の小さなJSONで指定する。
 独自の式、plugin、callback、実行言語、複雑なテンプレートは導入しない。
 初期APIはargv/cwd/期限、原stdout/stderr、終了状態、revision/environmentとhashの
 収集・照合に限定する。受入判定、probeの生成、レビュー文章の生成は担当しない。
@@ -101,9 +107,15 @@ sourceはGit commitとpath/hashで指す。未保存変更を検証する場合�
 - `tools/generate/`: code generator。
 - `tools/src/site/`, Doc/markup crates: 文書生成。
 - `tools/site/`: 配布payloadとpublisher。通常testはtest領域へ分離する。
-- `tools/conformance/`: 共通の実行/証拠収集/照合。受入判定は既存Rust tools。
-- `conformance/specs/`: 宣言した実行・review入力。
-- `conformance/results/`: 結果・log・必要なdata。新しい実行source置場にしない。
+- `tools/evidence/`: 共通の実行/証拠収集/照合。受入判定は既存Rust tools。
+- `tools/evidence/specs/`: 収集するcommandとscope。仕様適合ケースでもレビュー本文でもない。
+- `conformance/`: 共通仕様への適合を検査する入力・期待値・不変条件・target adapter。
+  native、portable、別実装の意味比較を維持する。
+- `conformance/results/`: 既存の参照が必要な歴史記録と小さな結果参照。
+  今後の汎用レビュー、CI log、deployment journalの保管先にはしない。
+- 独立レビューは対象commitとscopeを明記してPRへ残す。実行logはCI artifact、
+  公開attempt・journal・LKGはpublisherの永続状態として管理する。
+  必要な長期保全は外部archiveへ行い、Gitの中へsource履歴を複製しない。
 - 通常回帰testへ移す固有probeはtest sourceへ。一時的実験は `.tmp/`。
   特殊reproducerを残すときだけ保存理由と対象revisionをmanifestへ記す。
 
@@ -170,3 +182,11 @@ baselineを `archive/evidence-2026-09-13` refとしてremoteにも保全した�
 原manifestや原ログの内容は変更していない。過去の相互参照とbyte属性を検査する際は
 baseline全体を別checkoutへ復元し、現在treeへの部分復元と混ぜない。
 既存task/review台帳から参照される記録と現行fixtureは今回の削除対象ではない。
+
+この削減は作業treeの削減であり、Git objectやfresh full cloneの容量削減ではない。
+保全refを同じrepositoryに置く限り旧blobは到達可能なままである。次工程では
+外部archive・復元検査・除去path/ref・commit参照の移行を準備してから履歴rewriteを
+別途判断する。共有historyのforce-pushとremote ref削除は明示承認を要する。
+今後のraw実行log・大きな証拠はCI artifact/承認済み外部archiveへ置き、Gitには
+小さな参照・scope・manifestを残す。今回の途中区切りで追加したraw logも最終tree
+から外し、local distの原manifest/logは外部退避の準備用に保全する。

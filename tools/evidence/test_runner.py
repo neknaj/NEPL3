@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 import unittest
 
-from tools.conformance.runner import run,verify,specification
+from tools.evidence.runner import run,verify,specification
 
 
 class RunnerTests(unittest.TestCase):

@@ -4,13 +4,20 @@
 環境とhashを保存する。実行結果を判定するtestと、受入群を判定するRustの
 `tools/src/evidence/` は別の責務である。レビュー本文を生成しない。
 
+これは開発commandの実行記録収集器であり、仕様適合試験そのものではない。
+適合ケース・期待値・targetは `conformance/`、独立レビューはPR、公開journalは
+publisherへ分離する。保存とhash照合だけで適合・公開・LKGへ昇格させない。
+
 ```sh
-python -m tools.conformance.runner run conformance/specs/evidence-tools.json dist/evidence-tools
-python -m tools.conformance.runner verify dist/evidence-tools
+python -m tools.evidence.runner run tools/evidence/specs/evidence-tools.json dist/evidence-tools
+python -m tools.evidence.runner verify dist/evidence-tools
 ```
 
 新規の出力先のみを使用する。sourceは先にcommitし、そのcommit/pathで参照する。
 実行specとlogはdataとして保存し、runnerやrepositoryを結果配下にコピーしない。
+生成したraw log・大きな証拠は `dist/` とCI artifactへ保存し、Gitへ恒久追加しない。
+Gitには小さなscope・source参照・必要なmanifestを残す。Actions artifactの保存期限を
+永久保存と扱わず、長期保全が必要な証拠は期限前に承認済みの外部保存先へ退避する。
 再利用する回帰probeは通常のtestへ置く。例外的な外部入力や再構成できない資料には
 保存理由を記す。独立レビューは対象commit・scope・指摘・未検証範囲を文章で残す。
 通常のrepository checkは固定archive baselineの取得を必要とする（CIはfull checkout）。

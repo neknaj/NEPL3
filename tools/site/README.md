@@ -12,27 +12,6 @@ creating a new transaction is not reconciliation. Having a receipt only proves
 that the creation response was recorded. Completion, current publication,
 recovery eligibility and LKG persistence remain separate publisher requirements.
 
-`deployment.candidate.verify` checks authenticated run and attempt-specific job
-observations against a separately selected current main commit, repository ID,
-workflow ID, run ID and attempt. The workflow path is `.github/workflows/ci.yml`;
-only main push/manual runs are accepted. All required CI job names must be
-unique and successful in a complete job listing. Optional source delivery may
-be skipped, but contradictory failed/running jobs are rejected. Listings above
-100 jobs are rejected rather than silently accepting a partial page.
-
-`deployment.candidate.prepare` connects those checks directly to the downloaded
-artifact's run, source and attempt-qualified name, then validates its original
-tar. A successful tar alone cannot bypass failed CI. Legacy commit-only artifact
-names are not eligible inputs to this path; historical archived evidence remains
-historical and is not relabeled as a current upload.
-
-The caller obtains these observations through the authenticated API and rechecks
-main immediately before publication under the writer lock. A Candidate value
-does not prove the uploaded artifact belongs to that attempt or confer mutation
-permission. The artifact/upload-attempt binding remains a separate prerequisite.
-API contracts: [workflow runs](https://docs.github.com/en/rest/actions/workflow-runs)
-and [workflow jobs](https://docs.github.com/en/rest/actions/workflow-jobs).
-
 ## Select the original tar from an Actions download
 
 After authenticating and saving Actions artifact metadata and its ZIP download,
@@ -40,7 +19,7 @@ use `python -I tools/site/artifact.py --help` for the input contract. Supply the
 metadata path, archive path and a new output path, followed by all of:
 
 - `--owner`, `--repository`, `--repository-id`
-- `--artifact-id`, `--run-id`, `--attempt`, `--source-commit`
+- `--artifact-id`, `--run-id`, `--source-commit`
 - `--expected-tar`, `--expected-manifest` (lowercase SHA-256 values)
 
 Select those identities from the publisher's trusted verification context, not
@@ -53,7 +32,7 @@ must not already exist. Successful stdout is a JSON packaging receipt with
 write can leave an incomplete output file; it must not be uploaded or treated as
 a successful artifact. A subsequent invocation will refuse to overwrite it.
 
-The containing `doc-browser-<commit>-<run-id>-<attempt>` artifact includes diagnostic material and
+The containing `doc-browser-<commit>` artifact includes diagnostic material and
 is **not** the Pages artifact ID. The selected tar must be uploaded unchanged in
 the format required by Pages, with the new upload identity separately verified.
 The publisher must verify workflow/run attempt and required checks, own the
@@ -70,37 +49,6 @@ The command accepts bounded local inputs; it does not download credentials or
 enforce an OS process memory/time limit. Execute it within the bounded publishing
 job. Formal acceptance and actual Pages deployment remain separate.
 
-## Upload the already frozen tar
-
-CI runs `stage.py` after site/browser checks and deterministic packaging. It
-validates the raw tar and manifest pins, then writes the original bytes to the
-new `dist/pages-payload/artifact.tar`. Existing outputs are refused. A write
-failure is nonzero and may leave a partial file, which must never be uploaded.
-No HTML generation, filesystem extraction or replacement tar serialization is
-used for the output. Only this file enters the separate pinned upload action.
-
-The Pages upload is named `github-pages-<commit>-<run-id>-<attempt>`. Its upload
-ID and outer archive digest are saved in `pages-upload.json` in the diagnostic
-artifact. The outer upload digest differs from the original tar digest; preserve
-both. The upload remains a candidate until authenticated download verification,
-all required CI, freshness, writer state and publication prerequisites pass.
-Uploading from a PR has no Pages mutation permission and does not deploy it.
-
-The staging shape follows the official
-[upload-pages-artifact action](https://github.com/actions/upload-pages-artifact/blob/main/action.yml),
-which uploads a single `artifact.tar` with `actions/upload-artifact`. NEPL3 stages
-its previously verified tar instead of invoking the action's tar rebuild step.
-
-`deployment.candidate.prepare_upload` validates the CI observations and diagnostic
-artifact first, reads `pages-upload.json` from those same checked ZIP bytes, and
-then verifies the separately downloaded Pages upload. Its API metadata, upload
-receipt, run/attempt-qualified name and ZIP digest must agree; its only member
-must be `artifact.tar`, with exactly the original verified tar/manifest identity.
-The diagnostic and Pages artifact IDs must differ. It returns the checked
-candidate and payload; it does not submit a deployment. API responses and both
-downloads must be authenticated by the host, and freshness/writer-state gates
-still apply immediately before mutation.
-
 ## Responsibility and current limits
 
 The failure-mode/ownership decision is [ADR 0008](../../doc/decisions/0008-evidence-and-publisher-boundaries.md).
@@ -108,10 +56,10 @@ Payload validation owns content/byte identity; Actions owns the job graph,
 artifact transfer and same-group execution scheduling. Neither an artifact
 upload nor a deployment receipt proves public health or LKG. This directory's
 `test_*.py` are host regression tests, not publication commands or review evidence.
-Their managed real-document fixture is in `conformance/fixtures/site/`.
+Their managed real-document fixture is in `tools/site/fixtures/`.
 
 Full protocol tests run once in `site-publication`; native jobs retain the
-filesystem staging and isolated-process portability tests. Browser jobs retain
+filesystem, socket and isolated-process portability tests. Browser jobs retain
 real rendering and payload integration. `quality` requires every lane. These
 are scoped implementation checks, not T20/S06 acceptance or a live deployment.
 Use the common command collector for new review/test records. Do not add

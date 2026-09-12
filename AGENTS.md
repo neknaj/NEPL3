@@ -51,4 +51,4 @@ Doc/Mathの数式HTMLは `doc/spec/17-math-html.md` に従い生成時KaTeX優�
 - 統合と必要な証拠の保全が済み、使用しなくなったworktreeは適宜削除する。削除直前に絶対path・HEAD・未保存変更・進行中process・他作業からの参照を確認し、Gitのworktree登録とディレクトリを整理する。必要な資料は現在の作業場所または保存済みartifactへ移し、未保存変更とbranch/commitを無断で失わない。
 - ChatGPT作成の設計や過去の検証記録を無条件に採用しない。各契約を本文・schema・文法・例・受入条件および必要な公式資料と照合し、訂正理由と影響範囲を残す。
 
-証拠収集は `tools/conformance/README.md` に従う。reviewごとに保存scriptやtracked source snapshotを `conformance/results/` へ追加しない。過去の記録を保全し、新しい実行logicは管理されたtools/testへ、結果はdataへ分離する。
+証拠収集は `tools/evidence/README.md` に従う。reviewごとに保存scriptやtracked source snapshotを `conformance/results/` へ追加しない。過去の記録を保全し、新しい実行logicは管理されたtools/testへ、結果はdataへ分離する。

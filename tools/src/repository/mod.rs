@@ -204,7 +204,7 @@ mod tests {
         for name in [
             "conformance/results/new/manifest.json",
             "conformance/results/new/stdout.log",
-            "tools/conformance/test_runner.py",
+            "tools/evidence/test_runner.py",
             "conformance/fixtures/source/test.rs",
         ] {
             assert!(!evidence_source(name));
