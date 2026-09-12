@@ -970,6 +970,38 @@
         ]
       ],
       "constraints": []
+    },
+    "MathFreeSymbol": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "occurrences",
+          {
+            "list": "U64"
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathFreeSymbols": {
+      "record": [
+        [
+          "symbols",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathFreeSymbol"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
     }
   },
   "operations": {}

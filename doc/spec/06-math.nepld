@@ -188,6 +188,17 @@ body
       cons "NDF[境界/きょうかい]では[入力/にゅうりょく]を[指定/してい]して[再解析/さいかいせき]し、[参照先/さんしょうさき]・[出現順/しゅつげんじゅん]・[過不足/かふそく]の[不一致/ふいっち]をBindingMismatchとして[拒否/きょひ]する。"
       cons "[全出現/ぜんしゅつげん]と[名前比較/なまえひかく]に[共通予算/きょうつうよさん]を[適用/てきよう]し、[停止/ていし]した[結果/けっか]を[部分成功/ぶぶんせいこう]として[返/かえ]さない。" nil
     nil
+  cons section freeinputs "6.1. [自由記号/じゆうきごう]の[入力要求/にゅうりょくようきゅう]" body
+    cons paragraph
+      cons "free_symbolsはCheckedExpressionからMathFreeSymbolsを[生成/せいせい]する。"
+      cons "symbolsの[各要素/かくようそ]MathFreeSymbolはnameとoccurrencesを[持/も]ち、[束縛/そくばく]されていない[出現/しゅつげん]だけを[同/おな]じ[名前/なまえ]にまとめる。"
+      cons "nameはUTF-8の[辞書順/じしょじゅん]、occurrencesは[先行順/せんこうじゅん]とし、[重複/じゅうふく]・[欠落/けつらく]を[認/みと]めない。" nil
+    cons paragraph
+      cons "[名前/なまえ]は[完全一致/かんぜんいっち]で[比較/ひかく]し、[大文字/おおもじ]と[小文字/こもじ]の[同一視/どういつし]やUnicode[正規化/せいきか]は[行/おこな]わない。"
+      cons "[定義位置/ていぎいち]や[評価値/ひょうかち]を[補/おぎな]わず、guestの[内部/ないぶ]も[解析/かいせき]しない。"
+      cons "NDFの[受信/じゅしん]では[指定/してい]された[入力/にゅうりょく]から[再計算/さいけいさん]し、[不一致/ふいっち]をFreeSymbolsMismatchとして[拒否/きょひ]する。"
+      cons "[共通予算/きょうつうよさん]の[停止/ていし]は[部分成功/ぶぶんせいこう]へ[変/か]えない。" nil
+    nil
   cons section public "7. [公開操作/こうかいそうさ]" body
     cons paragraph
       cons "lower、check、free_symbols、evaluate、print、render_mathml。"

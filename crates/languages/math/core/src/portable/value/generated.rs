@@ -223,4 +223,24 @@ let f=fields(v,s,"MathBindings",2)?;
 Ok(Self {definitions:Value::read(&f[0],s,c,b)?,uses:Value::read(&f[1],s,c,b)?})
 }
 }
+impl Value for MathFreeSymbol {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathFreeSymbol",[self.name.put(s,c,b)?,self.occurrences.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,46)?;
+let f=fields(v,s,"MathFreeSymbol",2)?;
+Ok(Self {name:Value::read(&f[0],s,c,b)?,occurrences:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for MathFreeSymbols {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathFreeSymbols",[self.symbols.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,47)?;
+let f=fields(v,s,"MathFreeSymbols",1)?;
+Ok(Self {symbols:Value::read(&f[0],s,c,b)?})
+}
+}
 }

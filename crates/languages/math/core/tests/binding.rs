@@ -30,6 +30,98 @@ fn symbol(name: &str) -> MathKind {
 }
 
 #[test]
+fn free_requirements_group_exact_names_and_exclude_bound_occurrences() -> Result<(), String> {
+    let v = value(vec![
+        MathKind::Let {
+            name: "x".into(),
+            init: ExprRef(1),
+            body: ExprRef(2),
+        },
+        symbol("x"),
+        MathKind::Add {
+            left: ExprRef(1),
+            right: ExprRef(3),
+        },
+        MathKind::Add {
+            left: ExprRef(4),
+            right: ExprRef(4),
+        },
+        symbol("A"),
+    ]);
+    let input =
+        nepl3_math_core::check::expression(&v, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    let report =
+        nepl3_math_core::free::symbols(&input, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        report.symbols,
+        vec![
+            MathFreeSymbol {
+                name: "A".into(),
+                occurrences: vec![5, 6]
+            },
+            MathFreeSymbol {
+                name: "x".into(),
+                occurrences: vec![1]
+            },
+        ]
+    );
+    for allocation in [true, false] {
+        let mut limits = budget().limits();
+        if allocation {
+            limits.allocation_units = 0;
+        } else {
+            limits.work = 0;
+        }
+        let mut b = Budget::new(limits);
+        let reason = if allocation {
+            StopReason::AllocationLimit
+        } else {
+            StopReason::WorkLimit
+        };
+        assert!(matches!(nepl3_math_core::free::symbols(&input, &mut b),
+            Err(nepl3_math_core::check::ShapeError::Stopped(actual)) if actual == reason));
+        assert_eq!(b.poll(), Err(reason));
+    }
+    Ok(())
+}
+
+#[test]
+fn free_names_sort_without_normalization_and_stop_inside_sort() -> Result<(), String> {
+    let names = ["z", "é", "e\u{301}", "a", "A", "z"];
+    let mut kinds = vec![MathKind::Vector {
+        values: (1..=names.len()).map(|i| ExprRef(i as u64)).collect(),
+    }];
+    kinds.extend(names.into_iter().map(symbol));
+    let v = value(kinds);
+    let input =
+        nepl3_math_core::check::expression(&v, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    let mut full = budget();
+    let report = nepl3_math_core::free::symbols(&input, &mut full).map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        report
+            .symbols
+            .iter()
+            .map(|s| s.name.as_str())
+            .collect::<Vec<_>>(),
+        vec!["A", "a", "e\u{301}", "z", "é"]
+    );
+    assert_eq!(report.symbols[3].occurrences, vec![1, 6]);
+    for cap in 0..full.usage().work {
+        let mut limits = budget().limits();
+        limits.work = cap;
+        let mut b = Budget::new(limits);
+        assert!(matches!(
+            nepl3_math_core::free::symbols(&input, &mut b),
+            Err(nepl3_math_core::check::ShapeError::Stopped(
+                StopReason::WorkLimit
+            ))
+        ));
+        assert_eq!(b.poll(), Err(StopReason::WorkLimit));
+    }
+    Ok(())
+}
+
+#[test]
 fn non_binding_depth_does_not_multiply_symbol_lookup_work() -> Result<(), String> {
     let mut previous = None;
     for count in [64, 128, 256] {
