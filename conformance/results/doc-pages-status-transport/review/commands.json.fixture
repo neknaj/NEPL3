@@ -1,0 +1,55 @@
+[
+  {
+    "name": "normal",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_transport.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "optimized",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_transport.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "truncated-final",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      ".tmp\\pages-transport-review\\truncated-final.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "worker-probe",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      ".tmp\\pages-transport-review\\worker-probe.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "framing-probe",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      ".tmp\\pages-transport-review\\framing-probe.py"
+    ],
+    "exit_code": 0
+  }
+]

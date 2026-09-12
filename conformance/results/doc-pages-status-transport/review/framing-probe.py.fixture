@@ -1,0 +1,22 @@
+﻿from pathlib import Path
+import sys,json,threading,socketserver
+from http.client import HTTPConnection
+from unittest.mock import patch
+sys.path.insert(0,str(Path('tools/site').resolve()))
+from deployment.receipt import Receipt
+from deployment.transport import _status,TransportError
+body=b'{"status":"succeed"}';r=Receipt('123','https://api.github.com/repos/neknaj/NEPL3/pages/deployments/123','a'*64)
+exact=body+b' '*(65536-len(body));cases=[('chunked',b'Transfer-Encoding: chunked\r\n',b'14\r\n'+body+b'\r\n0\r\n\r\n',True),('short-chunk',b'Transfer-Encoding: chunked\r\n',b'14\r\n'+body+b'\r\n',False),('duplicate-te',b'Transfer-Encoding: chunked\r\nTransfer-Encoding: chunked\r\n',b'',False),('unknown-te',b'Transfer-Encoding: gzip\r\n',body,False),('exact-limit',b'Content-Length: 65536\r\n',exact,True),('over-limit',b'Content-Length: 65537\r\n',exact+b' ',False)]
+results=[]
+for name,headers,data,expected in cases:
+ class H(socketserver.BaseRequestHandler):
+  def handle(self):
+   self.request.recv(10000);self.request.sendall(b'HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n'+headers+b'Connection: close\r\n\r\n'+data)
+ server=socketserver.TCPServer(('127.0.0.1',0),H);thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+ try:
+  with patch('deployment.transport.HTTPSConnection',lambda host,timeout:HTTPConnection('127.0.0.1',server.server_address[1],timeout=timeout)):
+   try:result=_status(r,'test-token');accepted=True;reason=result.observation.phase.value
+   except TransportError as ex:accepted=False;reason=str(ex)
+ finally:server.shutdown();server.server_close();thread.join()
+ results.append(dict(case=name,accepted=accepted,expected=expected,reason=reason));assert accepted==expected,name
+p=Path('.tmp/pages-transport-review');(p/'framing-probe.json').write_text(json.dumps(results,indent=2)+'\n',encoding='utf8');print(json.dumps(results,indent=2))
