@@ -1,0 +1,8 @@
+{
+  "original_head": "893fef62a6ebf7bb64b4c1f3448732f4476fb89a",
+  "rewritten_head": "6615598ab70799cb024be56fb6fae766b490ac33",
+  "rewrite_parent": "893fef62a6ebf7bb64b4c1f3448732f4476fb89a",
+  "load_accepted_old_entry_rewrite": true,
+  "append_accepted_rewritten_prefix": true,
+  "scope": "Structural append-only prefix violation; no state transition or network/remote proof simulated"
+}

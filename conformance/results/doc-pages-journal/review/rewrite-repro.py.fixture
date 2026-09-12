@@ -1,0 +1,22 @@
+﻿from pathlib import Path
+import sys,tempfile,json,subprocess
+r=Path.cwd();sys.path.insert(0,str(r/'tools/site'))
+from journal import Event,append,load
+from journal import store
+from journal.model import encode
+from payload import digest
+out=r/'.tmp/journal-ci-review'
+with tempfile.TemporaryDirectory(dir=out) as d:
+ repo=Path(d)/'mirror.git';subprocess.run(['git','init','--bare','--quiet',str(repo)],check=True)
+ e=Event('DeployIntent','original',123,1,'a'*40,'b'*64)
+ first=append(repo,None,e,b'{"intent":"original"}')
+ rewritten=Event('DeployIntent','rewritten',123,1,'a'*40,'b'*64);proof=b'{"intent":"changed"}'
+ record=encode(rewritten.record(1,digest(proof)));items=[]
+ for name,data in [('00000001.event.json',record),('00000001.evidence.json',proof)]:
+  oid=store.git(repo,'hash-object','-w','--stdin',data=data).decode().strip();items.append((name,oid))
+ tree=store.git(repo,'mktree','-z',data=b''.join(f'100644 blob {oid}\t{name}\0'.encode() for name,oid in items)).decode().strip()
+ corrupt=store.git(repo,'commit-tree',tree,'-p',first,data=b'Rewrite old entry on fast-forward\n').decode().strip()
+ store.git(repo,'update-ref','--no-deref',store.REF,corrupt,first)
+ snapshot=load(repo);after=append(repo,corrupt,e,b'{}')
+ result=dict(original_head=first,rewritten_head=corrupt,rewrite_parent=store.git(repo,'rev-parse',corrupt+'^').decode().strip(),load_accepted_old_entry_rewrite=snapshot.events[0].transaction=='rewritten',append_accepted_rewritten_prefix=load(repo).head==after,scope='Structural append-only prefix violation; no state transition or network/remote proof simulated')
+ (out/'rewrite-repro.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf8');print(json.dumps(result,indent=2))

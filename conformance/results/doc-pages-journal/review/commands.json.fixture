@@ -1,0 +1,47 @@
+[
+  {
+    "name": "tests",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_journal.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "tests-optimized",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_journal.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "rewrite-final",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      ".tmp\\journal-ci-review\\rewrite-final.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "shallow-final",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      ".tmp\\journal-ci-review\\shallow-final.py"
+    ],
+    "exit_code": 0
+  }
+]
