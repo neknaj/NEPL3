@@ -1,0 +1,68 @@
+[
+  {
+    "name": "release-normal",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_release.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "release-optimized",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_release.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "recovery-normal",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_recovery.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "recovery-optimized",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_recovery.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "probe",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      ".tmp\\stored-payload-review\\probe.py"
+    ],
+    "exit_code": 0
+  }
+]
