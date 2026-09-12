@@ -406,3 +406,32 @@ fn transpose_and_determinant_preserve_exact_matrix_semantics() -> Result<(), Str
     assert_eq!(source, before);
     Ok(())
 }
+
+#[test]
+fn determinant_matches_independent_three_by_three_expansion() -> Result<(), String> {
+    // Enumerate every 3x3 matrix over {-1, 0, 1}. The oracle is the six-term
+    // Leibniz formula, independent of production pivoting and elimination.
+    // This covers singular matrices and pivots needed after the first column.
+    for code in 0..19683_u32 {
+        let mut digits = code;
+        let mut a = [0_i64; 9];
+        for value in &mut a {
+            *value = i64::from(digits % 3) - 1;
+            digits /= 3;
+        }
+        let expected = a[0] * a[4] * a[8] + a[1] * a[5] * a[6] + a[2] * a[3] * a[7]
+            - a[2] * a[4] * a[6]
+            - a[1] * a[3] * a[8]
+            - a[0] * a[5] * a[7];
+        let value = matrix(3, 3, &a)?;
+        let checked = exact::check(&value, &mut budget()).map_err(err)?;
+        assert_eq!(
+            arithmetic::determinant(&checked, &mut budget()).map_err(err)?,
+            Value::Scalar {
+                value: q(expected)?
+            },
+            "matrix={a:?}"
+        );
+    }
+    Ok(())
+}
