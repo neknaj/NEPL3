@@ -1,0 +1,21 @@
+{
+  "source_commit": "6e47d57c874e53a894154b4a349132c34526b9b9",
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "nepl3-tools",
+    "--test",
+    "doc",
+    "--target",
+    "wasm32-wasip2",
+    "annotated",
+    "--",
+    "--test-threads=1"
+  ],
+  "pid": 5756,
+  "exit_code": 0,
+  "elapsed_seconds": 253.4669075999991,
+  "runner": "wasmtime 44.0.1 (f302ebd6b 2026-04-30)"
+}

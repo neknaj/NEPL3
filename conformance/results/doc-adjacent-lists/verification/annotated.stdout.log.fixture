@@ -1,0 +1,24 @@
+
+running 19 tests
+test annotated_blocks::annotated_lists_preserve_start_checks_notes_and_break_continuations ... ok
+test annotated_pages::annotated_page_set_keeps_stops_sticky_and_returns_no_partial_output ... ok
+test annotated_pages::annotated_page_set_rejects_partial_render_and_ambiguous_registration ... ok
+test annotated::annotated_projection_keeps_sticky_limits_and_heading_depth ... ok
+test annotated_blocks::list_separators_follow_body_boundaries_without_visible_padding ... ok
+test annotated_blocks::annotated_tables_keep_header_only_and_reject_unrepresentable_shapes ... ok
+test annotated_blocks::adjacent_lists_preserve_distinct_blocks_and_numbering ... ok
+test annotated_blocks::annotated_tables_preserve_cells_alignment_notes_and_literal_pipes ... ok
+test annotated_pages::adjacent_lists_in_page_set_keep_links_and_separate_numbering ... ok
+test annotated_pages::annotated_page_set_rejects_missing_file_fragments_and_unsafe_targets ... ok
+test annotated::annotated_view_preserves_typed_notes_code_and_nested_sections ... ok
+test annotated_blocks::annotated_blocks_preserve_consumed_budget_and_sticky_stop ... ok
+test annotated_pages::annotated_page_set_resolves_mutual_self_and_passive_file_links ... ok
+test annotated_blocks::annotated_lists_reject_lossy_shapes_and_marker_overflow ... ok
+test annotated_pages::architecture_draft_projects_with_explicit_current_markdown_dependency ... ok
+test annotated::annotated_view_rejects_hidden_boundaries_and_unresolved_content ... ok
+test annotated::annotated_host_rejects_invalid_aliases_before_creating_output ... ok
+test html::annotated_linear_combination_document_reaches_real_html ... ok
+test annotated::authored_chapter_thirteen_generates_annotations_without_rewriting ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 70 filtered out; finished in 23.47s
+

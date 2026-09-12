@@ -1,0 +1,85 @@
+[
+  {
+    "source_commit": "6e47d57c874e53a894154b4a349132c34526b9b9",
+    "command": [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "cwd": "C:\\projects\\NEPL3-doc-adjacent-list",
+    "pid": 35352,
+    "exit_code": 0,
+    "elapsed_seconds": 4.618851200008066
+  },
+  {
+    "source_commit": "6e47d57c874e53a894154b4a349132c34526b9b9",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--test",
+      "doc",
+      "annotated",
+      "--",
+      "--nocapture"
+    ],
+    "cwd": "C:\\projects\\NEPL3-doc-adjacent-list",
+    "pid": 32128,
+    "exit_code": 0,
+    "elapsed_seconds": 23.955791300017154
+  },
+  {
+    "source_commit": "6e47d57c874e53a894154b4a349132c34526b9b9",
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "--check"
+    ],
+    "cwd": "C:\\projects\\NEPL3-doc-adjacent-list",
+    "pid": 4216,
+    "exit_code": 0,
+    "elapsed_seconds": 179.659855099977
+  },
+  {
+    "source_commit": "6e47d57c874e53a894154b4a349132c34526b9b9",
+    "command": [
+      "cargo",
+      "clippy",
+      "--workspace",
+      "--all-targets",
+      "--locked",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "cwd": "C:\\projects\\NEPL3-doc-adjacent-list",
+    "pid": 34180,
+    "exit_code": 0,
+    "elapsed_seconds": 198.1445623000036
+  },
+  {
+    "source_commit": "6e47d57c874e53a894154b4a349132c34526b9b9",
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "check"
+    ],
+    "cwd": "C:\\projects\\NEPL3-doc-adjacent-list",
+    "pid": 27848,
+    "exit_code": 0,
+    "elapsed_seconds": 17.653415300010238
+  }
+]
