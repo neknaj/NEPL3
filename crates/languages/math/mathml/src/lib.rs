@@ -1,9 +1,11 @@
 #![no_std]
 //! Structural display, never evaluation. Foreign annotations require separately
-//! prepared phrasing content; this stage reports that requirement explicitly.
+//! prepared phrasing content from an explicitly supplied host renderer.
 extern crate alloc;
 use alloc::{string::String, vec::Vec};
 use nepl3_core::budget::{Budget, Resource, StopReason};
+use nepl3_core::syntax::ForeignClosure;
+use nepl3_markup::html::{self, HtmlRequest, HtmlSlot};
 use nepl3_markup::mathml::{self, Attribute, Display, Fragment, Node, Tag};
 use nepl3_math_core::{
     check::CheckedExpression,
@@ -18,6 +20,32 @@ pub enum Error {
     Markup(mathml::Error),
     AnnotationRequiresPreparation(u64),
     Reference(u64),
+    AnnotationSlot(u64),
+}
+/// Host failures retain their original type; resource stops remain terminal.
+#[derive(Debug)]
+pub enum AnnotationFailure<E> {
+    Render(Error),
+    Guest(E),
+    Stopped(StopReason),
+}
+impl<E> From<Error> for AnnotationFailure<E> {
+    fn from(e: Error) -> Self {
+        match e {
+            Error::Stopped(s) => Self::Stopped(s),
+            e => Self::Render(e),
+        }
+    }
+}
+impl<E> From<StopReason> for AnnotationFailure<E> {
+    fn from(s: StopReason) -> Self {
+        Self::Stopped(s)
+    }
+}
+impl<E> From<mathml::Error> for AnnotationFailure<E> {
+    fn from(e: mathml::Error) -> Self {
+        Error::from(e).into()
+    }
 }
 impl From<StopReason> for Error {
     fn from(s: StopReason) -> Self {
@@ -145,7 +173,45 @@ pub fn render(
     display: Display,
     b: &mut Budget,
 ) -> Result<Rendered, Error> {
+    type NoRenderer =
+        fn(&ForeignClosure, &mut Budget) -> Result<HtmlRequest, core::convert::Infallible>;
+    build::<core::convert::Infallible, NoRenderer>(input, display, None, b).map_err(|e| match e {
+        AnnotationFailure::Render(e) => e,
+        AnnotationFailure::Stopped(s) => Error::Stopped(s),
+        AnnotationFailure::Guest(never) => match never {},
+    })
+}
+/// The host selects the annotation operation and receives the exact retained
+/// ForeignClosure. It must lower/check/render that closure; Math never evaluates
+/// it or guesses text. Returned markup must be phrasing and is revalidated here.
+/// The callback uses the same sticky budget; its policy grants only CSS class
+/// names, never raw HTML, scripts or unrestricted attributes. Final validation
+/// checks identities across every expanded occurrence of all annotations.
+/// In addition to ordinary rendering and callback costs, class policy merging
+/// takes O(C² * L) work for C class entries of maximum length L. Mixed-markup
+/// validation visits expanded occurrences under the same finite budget.
+pub fn render_with_annotations<E, F>(
+    input: &CheckedExpression<'_>,
+    display: Display,
+    renderer: &mut F,
+    b: &mut Budget,
+) -> Result<Rendered, AnnotationFailure<E>>
+where
+    F: FnMut(&ForeignClosure, &mut Budget) -> Result<HtmlRequest, E>,
+{
+    build(input, display, Some(renderer), b)
+}
+fn build<E, F>(
+    input: &CheckedExpression<'_>,
+    display: Display,
+    mut renderer: Option<&mut F>,
+    b: &mut Budget,
+) -> Result<Rendered, AnnotationFailure<E>>
+where
+    F: FnMut(&ForeignClosure, &mut Budget) -> Result<HtmlRequest, E>,
+{
     b.poll()?;
+    let mut classes = Vec::new();
     let value = input.value();
     b.charge(Resource::Work, value.nodes.len() as u64)?;
     b.charge(
@@ -369,23 +435,70 @@ pub fn render(
                 let args = out.fence("(", ")", args)?;
                 out.element(Tag::Row, &[f, args])?
             }
-            K::DocGuest { .. } | K::Label { .. } => {
-                return Err(Error::AnnotationRequiresPreparation(i as u64));
+            K::DocGuest { syntax } => {
+                let render = renderer
+                    .as_mut()
+                    .ok_or(Error::AnnotationRequiresPreparation(i as u64))?;
+                let guest = value
+                    .embeds
+                    .get(syntax.0 as usize)
+                    .ok_or(Error::Reference(syntax.0))?;
+                let result = render(guest, out.b);
+                out.b.poll()?;
+                let request = result.map_err(AnnotationFailure::Guest)?;
+                if request.slot != HtmlSlot::Phrasing {
+                    return Err(Error::AnnotationSlot(i as u64).into());
+                }
+                html::validate(&request.fragment, request.slot, &request.policy, out.b).map_err(
+                    |e| match e {
+                        html::HtmlError::Stopped(s) => mathml::Error::Stopped(s),
+                        e => mathml::Error::Html(e),
+                    },
+                )?;
+                for class in request.policy.classes {
+                    let mut present = false;
+                    for prior in &classes {
+                        out.b.charge(
+                            Resource::Work,
+                            (class.len() as u64)
+                                .saturating_add(String::len(prior) as u64)
+                                .saturating_add(1),
+                        )?;
+                        if prior == &class {
+                            present = true;
+                            break;
+                        }
+                    }
+                    if !present {
+                        push(&mut classes, class, out.b)?;
+                    }
+                }
+                let html = out.add(Node::Html {
+                    fragment: request.fragment,
+                })?;
+                out.element(Tag::Text, &[html])?
+            }
+            K::Label { value, annotation } => {
+                let base = out.grouped(
+                    root(&map, value.0)?,
+                    &input.value().nodes[value.0 as usize].kind,
+                    60,
+                    false,
+                )?;
+                out.element(Tag::Under, &[base, root(&map, annotation.0)?])?
             }
         };
         map[i] = id;
     }
     let MathRoot::Expr(expr) = value.root else {
-        return Err(Error::Reference(u64::MAX));
+        return Err(Error::Reference(u64::MAX).into());
     };
     let root = out.element(Tag::Math, &[root(&map, expr.0)?])?;
     if let Node::Element { attributes, .. } = &mut out.nodes[root as usize] {
         push(attributes, Attribute::Display(display), out.b)?;
     }
     let fragment = Fragment {
-        html_policy: nepl3_markup::html::HtmlPolicy {
-            classes: Vec::new(),
-        },
+        html_policy: nepl3_markup::html::HtmlPolicy { classes },
         nodes: out.nodes,
         root,
     };

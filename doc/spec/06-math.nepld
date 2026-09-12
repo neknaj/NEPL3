@@ -141,6 +141,8 @@ body
       cons "equalは[表示/ひょうじ]であって[証明書/しょうめいしょ]ではない。" nil
     cons paragraph
       cons "labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ[準備/じゅんび]し、mtextを[介/かい]した[注記/ちゅうき]として[出力/しゅつりょく]する。"
+      cons "MathMLではlabelをmunderで[表/あらわ]し、[最初/さいしょ]の[子要素/こようそ]に[数式/すうしき]、[次/つぎ]の[子要素/こようそ]にDocのXHTML phrasingを[含/ふく]むmtextを[置/お]く。[複合演算/ふくごうえんざん]を[注記/ちゅうき]する[場合/ばあい]はbaseを[括弧/かっこ]で[囲/かこ]み、[注記/ちゅうき]の[対象範囲/たいしょうはんい]と[周囲/しゅうい]の[演算順序/えんざんじゅんじょ]を[保/たも]つ。"
+      cons "hostは[選択済/せんたくず]みのDoc rendererへ[元/もと]のForeignClosureを[渡/わた]し、[同/おな]じBudgetで[準備/じゅんび]と[変換/へんかん]を[行/おこな]う。Docの[型/かた]・source・[局所/きょくしょ]labelを[検査/けんさ]し、[未解決/みかいけつ]の[外部要求/がいぶようきゅう]を[保持/ほじ]する。Math backendは[返/かえ]されたphrasingと[結合後/けつごうご]の[全表示経路/ぜんひょうじけいろ]を[検査/けんさ]し、[重複/じゅうふく]するHTML IDやblock[内容/ないよう]を[拒否/きょひ]する。"
       cons "MathMLの[内容/ないよう]モデルに[適合/てきごう]しないblock[内容/ないよう]は[受/う]け[入/い]れない。" nil
     nil
   cons section arena "4.1. [公開/こうかい]arenaと[原文保持/げんぶんほじ]" body

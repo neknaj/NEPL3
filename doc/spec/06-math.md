@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/06&#45;math.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page math; source SHA-256 5cfade0e79ffdf309286e88bc1f530ad7f66a71d67f15a939beb0f7cc3232a1a; alias input SHA-256 cae137023719df65f4fdf356ff25c6fac5c3aaa15c90b6b91c82b313d5078aaf; document digest 707ec71b3d5b812d59805a32d4680d9a400f024783bf3a3eaec78e7e177c3160; input PageSet digest 53bc108d1671c49a5e6e372a46fd2cd314c4a61b0420a3debe3bbec480ee1832; input context SHA-256 fb7e7c0d230941c133749bb7b3866f8cf0027519279b74983157ac33318bd56a. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/06&#45;math.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page math; source SHA-256 d6f1a36644ac8e905434039f7b119c9ecc19617cc57ff84e4525a5a80b3bbdc8; alias input SHA-256 cae137023719df65f4fdf356ff25c6fac5c3aaa15c90b6b91c82b313d5078aaf; document digest faadd4cecdba916550075985543d90c8b36f374374f74d64bd4c74e967a0cc07; input PageSet digest 22f81dc66f8ad99b942e862d401da5f27f564277740ec2f2c69be699bca50e66; input context SHA-256 3240b2ae5e387eda3c0cb753ff1e281426431e6749c9c848569a974f4f178775. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="06-math言語"></a>
 
@@ -82,7 +82,7 @@ MathML Coreの要素\[ようそ\]をtyped Markupで生成\[せいせい\]する�
 
 letは「name \:\= init \; body」のmrow。sumの下限\[かげん\]は「index \= lower」、上限\[じょうげん\]はupper、bodyに必要\[ひつよう\]な括弧\[かっこ\]を付\[つ\]ける。integralは積分記号\[せきぶんきごう\]と上下限\[じょうかげん\]、body、微分記号\[びぶんきごう\]dとindex。equalは表示\[ひょうじ\]であって証明書\[しょうめいしょ\]ではない。
 
-labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備\[じゅんび\]し、mtextを介\[かい\]した注記\[ちゅうき\]として出力\[しゅつりょく\]する。MathMLの内容\[ないよう\]モデルに適合\[てきごう\]しないblock内容\[ないよう\]は受\[う\]け入\[い\]れない。
+labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備\[じゅんび\]し、mtextを介\[かい\]した注記\[ちゅうき\]として出力\[しゅつりょく\]する。MathMLではlabelをmunderで表\[あらわ\]し、最初\[さいしょ\]の子要素\[こようそ\]に数式\[すうしき\]、次\[つぎ\]の子要素\[こようそ\]にDocのXHTML phrasingを含\[ふく\]むmtextを置\[お\]く。複合演算\[ふくごうえんざん\]を注記\[ちゅうき\]する場合\[ばあい\]はbaseを括弧\[かっこ\]で囲\[かこ\]み、注記\[ちゅうき\]の対象範囲\[たいしょうはんい\]と周囲\[しゅうい\]の演算順序\[えんざんじゅんじょ\]を保\[たも\]つ。hostは選択済\[せんたくず\]みのDoc rendererへ元\[もと\]のForeignClosureを渡\[わた\]し、同\[おな\]じBudgetで準備\[じゅんび\]と変換\[へんかん\]を行\[おこな\]う。Docの型\[かた\]・source・局所\[きょくしょ\]labelを検査\[けんさ\]し、未解決\[みかいけつ\]の外部要求\[がいぶようきゅう\]を保持\[ほじ\]する。Math backendは返\[かえ\]されたphrasingと結合後\[けつごうご\]の全表示経路\[ぜんひょうじけいろ\]を検査\[けんさ\]し、重複\[じゅうふく\]するHTML IDやblock内容\[ないよう\]を拒否\[きょひ\]する。MathMLの内容\[ないよう\]モデルに適合\[てきごう\]しないblock内容\[ないよう\]は受\[う\]け入\[い\]れない。
 
 <a name="n-6172656e61"></a>
 
