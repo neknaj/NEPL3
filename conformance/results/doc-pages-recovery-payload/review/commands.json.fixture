@@ -1,0 +1,134 @@
+[
+  {
+    "name": "recovery",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_recovery.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "recovery-optimized",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_recovery.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "payload",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_payload.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "payload-optimized",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_payload.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "prefix-final",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      ".tmp\\recovery-payload-review\\prefix-final.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "real-final",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      ".tmp\\recovery-payload-review\\real-check.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "final-six",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_recovery.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "final-six-optimized",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_recovery.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "final-seven-payload",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_payload.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "final-seven-payload-optimized",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_payload.py"
+    ],
+    "exit_code": 0
+  }
+]

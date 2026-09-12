@@ -1,0 +1,13 @@
+﻿from pathlib import Path
+import sys,json,gzip,io,tarfile
+sys.path.insert(0,str(Path('tools/site').resolve()))
+from recovery import verify
+from payload import digest
+p=Path('.tmp/recovery-payload-review')
+data=gzip.decompress(Path('conformance/results/doc-pages-payload/final-review/identical-tars.tar.gz.fixture').read_bytes())
+expected='cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9'
+manifest='39000dd5b7aad48deae97741c5b077b44a242a0badb7b30e81b3c1c26f301446'
+value=verify(data,expected,manifest)
+result={'raw_tar_bytes':len(data),'files':value.files,'tar_sha256':digest(data),'returned_original_object':value.data is data}
+assert result['returned_original_object'] and value.files==22
+(p/'real-result.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf8');print(json.dumps(result))
