@@ -10,9 +10,12 @@ non-integer manifest versions. Seven local tests passed normally and with Python
 optimization. Earlier independently reproduced junction and scandir failures,
 their rejected rechecks, and version acceptance repro are retained.
 
-Remove only the `.fixture` suffix to restore original bytes. The final reviewer
-manifest seals all 16 original review files, including three byte-identical raw
-tars. Each tar has 22 regular members, 1,177,600 bytes, SHA-256
+Remove the `.fixture` suffix to restore ordinary evidence files. The three
+identical raw tars are stored once as `final-review/identical-tars.tar.gz.fixture`
+to stay within the repository review-size limit. Decompress it with Python
+`gzip.decompress` and write the same resulting bytes to `final.tar`, `first.tar`
+and `second.tar`. The final reviewer manifest seals all 16 restored originals.
+No tar was rebuilt during compression. Each tar has 22 regular members, 1,177,600 bytes, SHA-256
 `cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9`.
 The initial review reports historical open findings, subsequently corrected.
 
