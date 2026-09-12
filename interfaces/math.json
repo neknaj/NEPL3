@@ -1236,7 +1236,224 @@
         ]
       ],
       "constraints": []
+    },
+    "MathPrintedGuest": {
+      "record": [
+        [
+          "syntaxDigest",
+          "Bytes"
+        ],
+        [
+          "guestDigest",
+          "Bytes"
+        ],
+        [
+          "embed",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "EmbedRef"
+            }
+          }
+        ],
+        [
+          "text",
+          "Text"
+        ]
+      ],
+      "constraints": []
+    },
+    "MathPrintIdentity": {
+      "record": [
+        [
+          "syntaxDigest",
+          "Bytes"
+        ],
+        [
+          "guests",
+          {
+            "list": "Bytes"
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathPrintRequest": {
+      "record": [
+        [
+          "syntax",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "MathSyntax"
+            }
+          }
+        ],
+        [
+          "docSchema",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SchemaRef"
+              }
+            }
+          }
+        ],
+        [
+          "guests",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathPrintedGuest"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathPrintFailure": {
+      "variant": {
+        "InvalidGuestIdentity": [
+          [
+            "entry",
+            "U64"
+          ]
+        ],
+        "DuplicateGuest": [
+          [
+            "embed",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "MissingBinding": [
+          [
+            "embed",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "GuestCategory": [
+          [
+            "embed",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "UnresolvedGuest": [
+          [
+            "embed",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "EmptyGuest": [
+          [
+            "embed",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "UnprintableName": [
+          [
+            "node",
+            "U64"
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "MathPrintResult": {
+      "variant": {
+        "Complete": [
+          [
+            "artifact",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathSourceArtifact"
+              }
+            }
+          ]
+        ],
+        "Invalid": [
+          [
+            "failure",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathPrintFailure"
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ]
+      },
+      "constraints": []
     }
   },
-  "operations": {}
+  "operations": {
+    "print": {
+      "input": {
+        "named": {
+          "package": "nepl3.math",
+          "revision": 1,
+          "name": "MathPrintRequest"
+        }
+      },
+      "output": {
+        "named": {
+          "package": "nepl3.math",
+          "revision": 1,
+          "name": "MathPrintResult"
+        }
+      },
+      "pure": true
+    }
+  }
 }

@@ -28,6 +28,9 @@ impl GuestPrinter for FixtureGuest<'_> {
     }
 }
 fn lower_value(compiled: &Compiled, source: &str, entry: &str) -> Result<MathValue, String> {
+    Ok(lower_syntax(compiled, source, entry)?.value)
+}
+fn lower_syntax(compiled: &Compiled, source: &str, entry: &str) -> Result<MathSyntax, String> {
     let mut output = None;
     with_input(compiled, source, entry, |tree, profile, b, a| {
         let syntax = tree
@@ -49,8 +52,7 @@ fn lower_value(compiled: &Compiled, source: &str, entry: &str) -> Result<MathVal
                 &mut budget(),
                 &mut SourceAdmission::default(),
             )
-            .map_err(err)?
-            .value,
+            .map_err(err)?,
         );
         Ok(())
     })?;
@@ -68,6 +70,207 @@ fn notation(value: &MathValue) -> Vec<MathKind> {
             other => other.clone(),
         })
         .collect()
+}
+
+#[test]
+fn explicit_print_requests_bind_guest_assertions_and_preserve_stops() -> Result<(), String> {
+    use nepl3_math_core::{portable::printing as wire, print::request as op};
+    let compiled = compiled()?;
+    let registry = &compiled.doc.registry;
+    let empty = SourceStore::default();
+    let syntax = lower_syntax(&compiled, "label frac 1 0 Doc \"note\"", "Expr")?;
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
+    let identity = op::identity(&syntax, registry, &mut codec, &mut budget()).map_err(err)?;
+    let raw =
+        wire::identity_to_value(&identity, registry, &mut codec, &mut budget()).map_err(err)?;
+    assert_eq!(
+        wire::identity_from_value(&raw, registry, &mut codec, &mut budget()).map_err(err)?,
+        identity
+    );
+    let mut host = nepl3_tools::doc::printing::DocGuestPrinter {
+        registry,
+        surface: &compiled.doc.package.schema,
+        math_surface: None,
+        codec: &mut codec,
+    };
+    let text = host
+        .print(&syntax.value.embeds[0], &mut budget())
+        .map_err(err)?;
+    let request = MathPrintRequest {
+        syntax,
+        doc_schema: Some(compiled.doc.package.schema.clone()),
+        guests: vec![MathPrintedGuest {
+            syntax_digest: identity.syntax_digest,
+            guest_digest: identity.guests[0],
+            embed: EmbedRef(0),
+            text,
+        }],
+    };
+    let expected = MathPrintResult::Complete {
+        artifact: MathSourceArtifact {
+            text: "label frac 1 0 Doc sentence cons text \"note\" nil".into(),
+            entry: MathCategory::Expr,
+        },
+    };
+    let mut full = budget();
+    // Fresh admission makes the baseline comparable to each bounded execution.
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
+    assert_eq!(
+        op::execute(&request, registry, &mut codec, &mut full).map_err(err)?,
+        expected
+    );
+    let raw = wire::request_to_value(&request, registry, &mut codec, &mut budget()).map_err(err)?;
+    let bytes = nepl3_wire::encode(&raw, &mut budget()).map_err(err)?;
+    let raw = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+    let mut receive_admission = SourceAdmission::default();
+    let mut receiver =
+        FoundationCodec::new(registry, &empty, &mut receive_admission).map_err(err)?;
+    let mut receive_budget = budget();
+    let received = wire::request_from_value(&raw, registry, &mut receiver, &mut receive_budget)
+        .map_err(err)?;
+    assert_eq!(
+        op::execute(&received, registry, &mut receiver, &mut receive_budget).map_err(err)?,
+        expected
+    );
+    for case in 0..8 {
+        let mut bad = request.clone();
+        let failure = match case {
+            0 => {
+                bad.guests[0].syntax_digest.0[0] ^= 1;
+                MathPrintFailure::InvalidGuestIdentity { entry: 0 }
+            }
+            1 => {
+                bad.guests[0].guest_digest.0[0] ^= 1;
+                MathPrintFailure::InvalidGuestIdentity { entry: 0 }
+            }
+            2 => {
+                bad.guests[0].embed = EmbedRef(u64::MAX);
+                MathPrintFailure::InvalidGuestIdentity { entry: 0 }
+            }
+            3 => {
+                bad.guests.push(bad.guests[0].clone());
+                MathPrintFailure::DuplicateGuest { embed: EmbedRef(0) }
+            }
+            4 => {
+                bad.doc_schema = None;
+                MathPrintFailure::MissingBinding { embed: EmbedRef(0) }
+            }
+            5 => {
+                bad.doc_schema = Some(compiled.others[0].schema.clone());
+                MathPrintFailure::GuestCategory { embed: EmbedRef(0) }
+            }
+            6 => {
+                bad.guests.clear();
+                MathPrintFailure::UnresolvedGuest { embed: EmbedRef(0) }
+            }
+            _ => {
+                bad.guests[0].text = " \n".into();
+                MathPrintFailure::EmptyGuest { embed: EmbedRef(0) }
+            }
+        };
+        let result = op::execute(&bad, registry, &mut codec, &mut budget()).map_err(err)?;
+        assert_eq!(result, MathPrintResult::Invalid { failure });
+        let raw =
+            wire::result_to_value(&result, registry, &mut codec, &mut budget()).map_err(err)?;
+        let bytes = nepl3_wire::encode(&raw, &mut budget()).map_err(err)?;
+        let raw = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+        assert_eq!(
+            wire::result_from_value(&raw, registry, &mut codec, &mut budget()).map_err(err)?,
+            result
+        );
+    }
+    let used = full.usage();
+    let complete =
+        wire::result_to_value(&expected, registry, &mut codec, &mut budget()).map_err(err)?;
+    let bytes = nepl3_wire::encode(&complete, &mut budget()).map_err(err)?;
+    let complete = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+    assert_eq!(
+        wire::result_from_value(&complete, registry, &mut codec, &mut budget()).map_err(err)?,
+        expected
+    );
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert_eq!(
+        op::execute(&request, registry, &mut codec, &mut cancelled).map_err(err)?,
+        MathPrintResult::Stopped {
+            reason: StopReason::Cancelled
+        }
+    );
+    assert_eq!(cancelled.poll(), Err(StopReason::Cancelled));
+    let mut invalid = request.clone();
+    invalid.syntax.value.root = MathRoot::Expr(ExprRef(u64::MAX));
+    assert!(matches!(
+        op::execute(&invalid, registry, &mut codec, &mut budget()),
+        Err(nepl3_math_core::portable::PortableError::Structure(_))
+    ));
+    let mut named = lower_syntax(&compiled, "let x 1 x", "Expr")?;
+    let node = named
+        .value
+        .nodes
+        .iter()
+        .position(|n| matches!(n.kind, MathKind::Let { .. }))
+        .ok_or("let")?;
+    if let MathKind::Let { name, .. } = &mut named.value.nodes[node].kind {
+        *name = "bad name".into();
+    }
+    let named = MathPrintRequest {
+        syntax: named,
+        doc_schema: None,
+        guests: vec![],
+    };
+    let mut named_admission = SourceAdmission::default();
+    let mut named_codec =
+        FoundationCodec::new(registry, &empty, &mut named_admission).map_err(err)?;
+    let failure = op::execute(&named, registry, &mut named_codec, &mut budget()).map_err(err)?;
+    assert_eq!(
+        failure,
+        MathPrintResult::Invalid {
+            failure: MathPrintFailure::UnprintableName { node: node as u64 }
+        }
+    );
+    let raw_failure =
+        wire::result_to_value(&failure, registry, &mut named_codec, &mut budget()).map_err(err)?;
+    assert_eq!(
+        wire::result_from_value(&raw_failure, registry, &mut named_codec, &mut budget())
+            .map_err(err)?,
+        failure
+    );
+    for (reason, amount) in [
+        (StopReason::WorkLimit, used.work),
+        (StopReason::AllocationLimit, used.allocation_units),
+        (StopReason::NodeLimit, used.nodes),
+        (StopReason::OutputLimit, used.output_bytes),
+        (StopReason::DepthLimit, used.depth),
+    ] {
+        let mut limits = budget().limits();
+        match reason {
+            StopReason::WorkLimit => limits.work = amount - 1,
+            StopReason::AllocationLimit => limits.allocation_units = amount - 1,
+            StopReason::NodeLimit => limits.nodes = amount - 1,
+            StopReason::OutputLimit => limits.output_bytes = amount - 1,
+            _ => limits.depth = amount - 1,
+        }
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
+        let mut b = Budget::new(limits);
+        let result = op::execute(&request, registry, &mut codec, &mut b).map_err(err)?;
+        assert_eq!(result, MathPrintResult::Stopped { reason });
+        assert_eq!(b.poll(), Err(reason));
+        assert_eq!(b.current_depth(), 0);
+        // Transport encoding has its own budget; decoding a stop is data and
+        // cannot claim remote usage or stop a receiving operation implicitly.
+        let raw =
+            wire::result_to_value(&result, registry, &mut codec, &mut budget()).map_err(err)?;
+        let mut receive = budget();
+        assert_eq!(
+            wire::result_from_value(&raw, registry, &mut codec, &mut receive).map_err(err)?,
+            result
+        );
+        assert!(receive.poll().is_ok());
+    }
+    Ok(())
 }
 
 #[test]

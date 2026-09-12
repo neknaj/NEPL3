@@ -240,6 +240,15 @@ body
       cons "cancel・[資源停止/しげんていし]・[内部不変条件違反/ないぶふへんじょうけんいはん]はFailureに[変換/へんかん]せず、[操作/そうさ]のErrとして[返/かえ]す。"
       cons "providerの[通信失敗/つうしんしっぱい]や[要求/ようきゅう]identityの[照合/しょうごう]は、この[数値評価/すうちひょうか]の[結果型/けっかがた]とは[別/べつ]の[境界契約/きょうかいけいやく]である。" nil
     cons paragraph
+      cons "printの[具体的/ぐたいてき]な[要求型/ようきゅうがた]はMathPrintRequest、[結果型/けっかがた]はMathPrintResultである。"
+      cons "[要求/ようきゅう]は[閉包/へいほう]を[含/ふく]むMathSyntax、[明示選択/めいじせんたく]したDoc schema、MathPrintedGuest[列/れつ]を[持/も]つ。"
+      cons "guest[応答/おうとう]は[全体/ぜんたい]syntaxのdigest、guest[閉包/へいほう]のdigest、EmbedRef、textを[含/ふく]む。"
+      cons "identity[取得/しゅとく]とprint[実行/じっこう]はcanonical[値/ち]から[別々/べつべつ]にdigestを[求/もと]め、[過去/かこ]の[検査/けんさ]で[予算/よさん]を[支払済/しはらいず]みとはしない。"
+      cons "[未選択/みせんたく]、[異/こと]なるschemaやSentence[以外/いがい]のcategory、[欠落/けつらく]・[重複/じゅうふく]・[空/から]のguest、digest[不一致/ふいっち]をInvalidで[拒否/きょひ]する。"
+      cons "Completeだけが[完全/かんぜん]なartifactを[返/かえ]し、[停止/ていし]は[元/もと]のStopReasonを[保持/ほじ]したStoppedとなる。"
+      cons "[構造不正/こうぞうふせい]は[入力境界/にゅうりょくきょうかい]のErrであり、[受信/じゅしん]した[結果/けっか]dataだけから[実行/じっこう]proofや[遠隔/えんかく]Usageを[信用/しんよう]しない。"
+      cons "[生成/せいせい]と[停止後/ていしご]のtransport encodeは[別/べつ]の[処理/しょり]であり、print[途中/とちゅう]のBudgetを[交換/こうかん]して[成功/せいこう]させない。" nil
+    cons paragraph
       cons "MathSourceArtifactはtextとMathCategoryを[持/も]ち、Expr・Row・DocGuestの[再/さい]parse[入口/いりぐち]を[区別/くべつ]する。"
       cons "portableのencode/decodeはschema[適合/てきごう]dataを[扱/あつか]うだけで、[生成元/せいせいもと]の[証明/しょうめい]ではない。"
       cons "verifyは[要求/ようきゅう]の[不変/ふへん]Mathと[選択/せんたく]hostから[同/おな]じBudgetでprefixを[再生成/さいせいせい]し、textとcategoryの[完全一致/かんぜんいっち]を[検査/けんさ]する。"
