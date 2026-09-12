@@ -1,7 +1,0 @@
-
-running 2 tests
-test head::tests::completed_projection_preserves_compound_values_without_unread_siblings_or_tables ... ok
-test head::tests::window_preserves_exact_utf8_and_requires_admission_in_each_operation ... ok
-
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-

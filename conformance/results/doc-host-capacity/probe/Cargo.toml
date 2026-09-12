@@ -1,8 +1,0 @@
-[package]
-name = "independent-doc-capacity"
-version = "0.0.0"
-edition = "2024"
-[workspace]
-[dependencies]
-nepl3-tools = { path = "../fixed/tools" }
-nepl3-core = { path = "../fixed/crates/foundation/core" }

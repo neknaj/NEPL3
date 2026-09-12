@@ -1,9 +1,0 @@
-{
-  "base": "903b2abb573140a02c3e5fb4fae1cf21702f265a",
-  "files": [
-    {
-      "path": "crates/foundation/reader/src/runtime/validate/provider.rs",
-      "sha256": "2f558720d8c42236688ebb82a4b2ecaefa0b55c4ae40a91456122adf00f201f1"
-    }
-  ]
-}

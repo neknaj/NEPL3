@@ -1,7 +1,0 @@
-[package]
-name="review-block-markdown"
-version="0.1.0"
-edition="2024"
-[workspace]
-[dependencies]
-pulldown-cmark={version="=0.13.4",default-features=false}

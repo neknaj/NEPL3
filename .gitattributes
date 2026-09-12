@@ -13,6 +13,11 @@
 *.png binary
 *.zip binary
 
+# Command evidence retains the original bytes, including Windows line endings.
+conformance/results/**/*.stdout -text -whitespace
+conformance/results/**/*.stderr -text -whitespace
+conformance/results/**/spec.json -text -whitespace
+
 # 取り込み元の証拠とsource位置試験は元byte列を保つ。
 doc/history/source-manifest.json -text
 doc/history/design-validation.json -text
@@ -20,42 +25,10 @@ conformance/fixtures/source/** -text
 
 # 取得したCIログの元の空白・制御文字を、整形対象のソースとして変更しない。
 conformance/results/foundation-slice/main-ci.log -text -whitespace
-conformance/results/doc-native-host/** -text -whitespace
 # Hash-bound raw execution and independent review records retain original bytes.
-conformance/results/portable-ci/** -text -whitespace
 
 .tmp/** export-ignore
 target/** export-ignore
 dist/** export-ignore
 
-/conformance/results/tokenizer-native-host/** -text -whitespace
-/conformance/results/source-lookup-indexes/** -text -whitespace
-/conformance/results/reader-source-prefix/** -text -whitespace
-
-/conformance/results/native-reader-storage/** -text -whitespace
-
-/conformance/results/doc-local-html/** -text -whitespace
-/conformance/results/markup-routes/** -text -whitespace
 /conformance/results/doc-pages/** -text -whitespace
-/conformance/results/doc-projection/** -text -whitespace
-/conformance/results/doc-external/** -text -whitespace
-/conformance/results/doc-markdown-breaks/** -text -whitespace
-/conformance/results/html-anchor-identifiers/** -text -whitespace
-/conformance/results/doc-markdown-code/** -text -whitespace
-
-/conformance/results/doc-proof-reuse/** -text -whitespace
-/conformance/results/doc-host-capacity/** -text -whitespace
-/conformance/results/doc-markdown-sentences/** -text -whitespace
-/conformance/results/doc-authoring-18/** -text -whitespace
-/conformance/results/doc-sentence-owner/** -text -whitespace
-/conformance/results/doc-authoring-delivery/** -text -whitespace
-/conformance/results/reader-checkpoints/** -text -whitespace
-/conformance/results/stream-digest/** -text -whitespace
-/conformance/results/doc-authoring-progress/** -text -whitespace
-/conformance/results/doc-authoring-adrs/** -text -whitespace
-/conformance/results/source-map-adjacency/** -text -whitespace
-/conformance/results/source-map-locality/** -text -whitespace
-/conformance/results/borrow-mapping-union/** -text -whitespace
-/conformance/results/doc-authoring-entries/** -text -whitespace
-/conformance/results/doc-authoring-inventory-references/** -text -whitespace
-/conformance/results/source-index-locality/review/** -text -whitespace

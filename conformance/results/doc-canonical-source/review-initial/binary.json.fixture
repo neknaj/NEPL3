@@ -1,6 +1,0 @@
-{
-  "path": "C:\\projects\\NEPL3-doc-canonical-source\\.tmp\\review-canonical-code\\target\\debug\\review-canonical.exe",
-  "sha256": "b00c28d3ebb2bae651389c2b8cd9ca6e9c6afc1459ef49d693571465aa3466e0",
-  "bytes": 9607680,
-  "producer": "native-extra-command.json; latest probe with hash-source test"
-}

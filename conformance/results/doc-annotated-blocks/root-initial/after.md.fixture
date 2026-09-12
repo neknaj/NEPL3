@@ -1,9 +1,0 @@
-<!-- Generated from C:\projects\NEPL3&#45;doc&#45;block&#45;projection\.tmp\block&#45;verification\input.nepld; renderer nepl3-tools.markdown-annotated/2; source SHA-256 575eb5a2cc29804e4cf5da7d572a86653bb222af0c1ceb72f3913ce30c67cfd1; alias input SHA-256 37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570; document digest 738d06731ea943ea0b2912aaf062a658105a7ce66166a02f61bef852e3704035. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
-
-# Blocks
-
-7. [x] Value\[value\]\.
-
-| Header |
-| :--- |
-| `a\|b` |

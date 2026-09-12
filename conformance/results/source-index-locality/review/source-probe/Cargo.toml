@@ -1,7 +1,0 @@
-[package]
-name="source-tail-probe"
-version="0.0.0"
-edition="2024"
-[workspace]
-[dependencies]
-nepl3-core={path="../source/crates/foundation/core"}

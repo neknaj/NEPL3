@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "scope": "Site host unit and integration tests; not live publication or formal acceptance",
+  "commands": [
+    {
+      "id": "site-tests",
+      "argv": ["python", "-m", "unittest", "discover", "-s", "tools/site", "-p", "test_*.py", "-v"],
+      "cwd": ".",
+      "timeout_seconds": 1200
+    }
+  ]
+}

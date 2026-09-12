@@ -97,6 +97,34 @@ fn text_file(path: &str) -> bool {
         .is_some_and(|s| s.starts_with('.') || matches!(s, "LICENSE" | "CODEOWNERS" | "NOTICE"))
 }
 
+// Historical evidence remains reconstructible from Git. New executable copies
+// belong in managed tests/tools, not another snapshot under results.
+const EVIDENCE_BASELINE: &str = "d87ca8c4ba18e74bc71efb0e2958af87ac971e1b";
+
+fn evidence_source(path: &str) -> bool {
+    let Some(relative) = path.strip_prefix("conformance/results/") else {
+        return false;
+    };
+    let name = relative.strip_suffix(".fixture").unwrap_or(relative);
+    relative
+        .split('/')
+        .any(|part| matches!(part, "source" | "sources" | "snapshot" | "context"))
+        || matches!(
+            Path::new(name).extension().and_then(|s| s.to_str()),
+            Some("py" | "rs" | "js" | "mjs" | "ts" | "ps1" | "sh")
+        )
+        || matches!(
+            Path::new(name).file_name().and_then(|s| s.to_str()),
+            Some(
+                "AGENTS.md"
+                    | "CODEX.md"
+                    | "Cargo.toml"
+                    | "Cargo.lock"
+                    | "implementation-status.json"
+            )
+        )
+}
+
 pub(crate) fn check(root: &Path) -> Result<usize> {
     let files = paths(&command(
         root,
@@ -109,7 +137,23 @@ pub(crate) fn check(root: &Path) -> Result<usize> {
             "-z",
         ],
     )?)?;
+    let historical = paths(&command(
+        root,
+        "git",
+        &[
+            "ls-tree",
+            "-r",
+            "--name-only",
+            "-z",
+            EVIDENCE_BASELINE,
+            "--",
+            "conformance/results/",
+        ],
+    )?)?;
     for name in &files {
+        if evidence_source(name) && !historical.contains(name) {
+            return Err(format!("new evidence source copy: {name}; put reusable logic in tools/tests and reference its Git revision").into());
+        }
         if forbidden(name) {
             return Err(format!("forbidden repository file: {name}").into());
         }
@@ -147,6 +191,25 @@ pub(crate) fn check(root: &Path) -> Result<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn evidence_data_and_managed_tests_are_separate() {
+        for name in [
+            "conformance/results/new/seal.py.fixture",
+            "conformance/results/new/source/design/tasks.json",
+            "conformance/results/new/AGENTS.md",
+        ] {
+            assert!(evidence_source(name));
+        }
+        for name in [
+            "conformance/results/new/manifest.json",
+            "conformance/results/new/stdout.log",
+            "tools/evidence/test_runner.py",
+            "conformance/fixtures/source/test.rs",
+        ] {
+            assert!(!evidence_source(name));
+        }
+    }
 
     #[test]
     fn nul_paths_keep_spaces_and_non_ascii() -> Result<()> {

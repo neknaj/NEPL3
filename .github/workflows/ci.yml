@@ -45,34 +45,13 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.13'
-      - name: Independent structure audit
-        run: python tools/audit/structure.py
-      - name: Structure audit tests
-        run: python -m unittest discover -s tools/audit -p test.py
-      - name: Grammar constructor projection
-        run: python tools/generate/grammar.py
-      - name: Doc typed adapter projection
-        run: python tools/generate/doc.py
-      - name: Doc signature reference projection
+      - name: Host file and process portability tests
         run: |
-          python tools/generate/signatures.py
-          python -m unittest tools.generate.test_signatures
-      - name: Check Math schema generation
-        run: python tools/generate/math.py
-      - name: Check Markup schema generation
-        run: python tools/generate/markup.py
-      - name: Check Doc HTML schema generation
-        run: python tools/generate/doc_html.py
-      - name: Doc browser corpus audit input tests
-        run: python -m unittest discover -s tools/audit/doc_html -p 'test_*.py'
-      - name: Pages payload and HTTP boundary tests
-        run: python -m unittest discover -s tools/site -p 'test_*.py'
-      - name: Doc migration candidate and rejection tests
-        run: |
-          python tools/migration/contract.py
-          python -m unittest discover -s tools/migration -p test_contract.py
-      - name: Initial seed input adapter tests
-        run: python -m unittest discover -s tools/bootstrap -p test_grammar.py
+          python -m unittest discover -s tools/site -p test_transport.py
+          python -m unittest discover -s tools/site -p test_payload.py
+          python -m unittest discover -s tools/site -p test_smoke.py
+          python -m unittest discover -s tools/site -p test_record_smoke.py
+          python -m unittest tools.evidence.test_runner
       - name: Format
         run: cargo fmt --all -- --check
       - name: Clippy
@@ -131,8 +110,6 @@ jobs:
         run: cargo doc --workspace --no-deps --locked
       - name: Repository contracts
         run: cargo run --locked -p nepl3-tools -- check
-      - name: Generated tasks
-        run: cargo run --locked -p nepl3-tools -- tasks --check
       - name: Canonical Doc Markdown projections
         run: cargo run --locked -p nepl3-tools -- doc-canonical --check
       - name: Export canonical Doc pages
@@ -147,6 +124,73 @@ jobs:
           retention-days: 14
       - name: Verify clean tracked files
         run: git diff --exit-code
+
+  repository-contract:
+    name: repository and generated contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - name: Independent structure audit
+        run: python tools/audit/structure.py
+      - name: Structure audit tests
+        run: python -m unittest discover -s tools/audit -p test.py
+      - name: Grammar constructor projection
+        run: python tools/generate/grammar.py
+      - name: Doc typed adapter projection
+        run: python tools/generate/doc.py
+      - name: Doc signature reference projection
+        run: |
+          python tools/generate/signatures.py
+          python -m unittest tools.generate.test_signatures
+      - name: Check Math schema generation
+        run: python tools/generate/math.py
+      - name: Check Markup schema generation
+        run: python tools/generate/markup.py
+      - name: Check Doc HTML schema generation
+        run: python tools/generate/doc_html.py
+      - name: Doc browser corpus audit input tests
+        run: python -m unittest discover -s tools/audit/doc_html -p 'test_*.py'
+      - name: Doc migration candidate and rejection tests
+        run: |
+          python tools/migration/contract.py
+          python -m unittest discover -s tools/migration -p test_contract.py
+      - name: Initial seed input adapter tests
+        run: python -m unittest discover -s tools/bootstrap -p test_grammar.py
+      - name: Generated tasks
+        run: cargo run --locked -p nepl3-tools -- tasks --check
+      - name: Check repository contracts
+        run: cargo run --locked -p nepl3-tools -- check
+      - name: Verify generated source is unchanged
+        run: git diff --exit-code
+
+  site-publication:
+    name: site publication host tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - name: Collect publication unit and boundary results
+        run: python -m tools.evidence.runner run tools/evidence/specs/site-tests.json dist/site-tests
+      - name: Preserve raw results (not a publication proof)
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: site-host-tests-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dist/site-tests/
+          if-no-files-found: error
+          retention-days: 14
 
   wasi:
     name: wasi and wasm compilation
@@ -299,7 +343,6 @@ jobs:
           python tools/audit/site/check.py dist/doc-browser/site-alternate dist/doc-browser/site-alternate-results.json --config conformance/inputs/site/alternate.json --renderer target/debug/nepl3-tools
       - name: Freeze the checked site as a deterministic Pages payload
         run: |
-          python -m unittest discover -s tools/site -p 'test_*.py'
           SITE_MANIFEST=$(python -c 'import json; print(json.load(open("dist/doc-browser/site-results.json"))["manifest_sha256"])')
           python tools/site/payload.py dist/doc-browser/site dist/doc-browser/pages.tar --manifest-sha256 "$SITE_MANIFEST" > dist/doc-browser/pages-receipt.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -314,18 +357,22 @@ jobs:
   quality:
     name: quality
     if: ${{ always() }}
-    needs: [native, wasi, baremetal-build, baremetal-rp2040, doc-browser]
+    needs: [native, repository-contract, site-publication, wasi, baremetal-build, baremetal-rp2040, doc-browser]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Require native and WASI checks to pass
         env:
+          REPOSITORY_RESULT: ${{ needs.repository-contract.result }}
+          SITE_RESULT: ${{ needs.site-publication.result }}
           NATIVE_RESULT: ${{ needs.native.result }}
           WASI_RESULT: ${{ needs.wasi.result }}
           ARM_BUILD_RESULT: ${{ needs.baremetal-build.result }}
           RP2040_RESULT: ${{ needs.baremetal-rp2040.result }}
           DOC_BROWSER_RESULT: ${{ needs.doc-browser.result }}
         run: |
+          test "$REPOSITORY_RESULT" = success
+          test "$SITE_RESULT" = success
           test "$NATIVE_RESULT" = success
           test "$WASI_RESULT" = success
           test "$ARM_BUILD_RESULT" = success

@@ -1,9 +1,0 @@
-{
-  "command": [
-    "python",
-    ".tmp\\review-doc-authoring-adrs\\check.py"
-  ],
-  "cwd": "C:\\projects\\NEPL3-runtime",
-  "exit_code": 0,
-  "seconds": 0.08695507049560547
-}

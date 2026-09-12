@@ -48,3 +48,21 @@ python -O -m unittest discover -s tools/site -p 'test_artifact*.py' -v
 The command accepts bounded local inputs; it does not download credentials or
 enforce an OS process memory/time limit. Execute it within the bounded publishing
 job. Formal acceptance and actual Pages deployment remain separate.
+
+## Responsibility and current limits
+
+The failure-mode/ownership decision is [ADR 0008](../../doc/decisions/0008-evidence-and-publisher-boundaries.md).
+Payload validation owns content/byte identity; Actions owns the job graph,
+artifact transfer and same-group execution scheduling. Neither an artifact
+upload nor a deployment receipt proves public health or LKG. This directory's
+`test_*.py` are host regression tests, not publication commands or review evidence.
+Their managed real-document fixture is in `tools/site/fixtures/`.
+
+Full protocol tests run once in `site-publication`; native jobs retain the
+filesystem, socket and isolated-process portability tests. Browser jobs retain
+real rendering and payload integration. `quality` requires every lane. These
+are scoped implementation checks, not T20/S06 acceptance or a live deployment.
+Use the common command collector for new review/test records. Do not add
+per-review runners, source snapshots, or new transport layers to this subsystem.
+Publisher expansion is paused while core/language work resumes after the
+boundary correction; outstanding publication and recovery requirements remain.

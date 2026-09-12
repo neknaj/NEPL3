@@ -1,9 +1,0 @@
-   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-snapshot-storage\.tmp\review-native-reader-drive\workspace\crates\foundation\reader)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.37s
-     Running tests\runtime.rs (target\wasm32-wasip2\debug\deps\runtime-f0c2aed585cbf63b.wasm)
-
-running 1 test
-test tokenizer_host::synchronous_tokenizer_keeps_owned_fallback_and_validates_replies ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 37 filtered out; finished in 0.01s
-

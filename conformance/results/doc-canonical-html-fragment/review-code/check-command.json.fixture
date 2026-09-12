@@ -1,8 +1,0 @@
-{
-  "command": [
-    "python",
-    "C:\\projects\\NEPL3-doc-canonical-html-fragment\\.tmp\\review-canonical19-code\\check.py"
-  ],
-  "deadline_seconds": 60,
-  "exit_code": 0
-}

@@ -1,9 +1,0 @@
-{
-  "command": [
-    "python",
-    ".tmp\\review-reader-checkpoints-integration\\check.py"
-  ],
-  "cwd": "C:\\projects\\NEPL3-runtime",
-  "exit_code": 0,
-  "seconds": 2.70375394821167
-}

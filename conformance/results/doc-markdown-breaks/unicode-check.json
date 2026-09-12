@@ -1,8 +1,0 @@
-{
-  "probe_ascii_only": true,
-  "source_uses_rust_unicode_escapes": true,
-  "native_log_contains_utf8_scalars": [
-    "U+65E5",
-    "U+672C"
-  ]
-}

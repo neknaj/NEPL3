@@ -251,3 +251,30 @@ Doc関連の共通値・wire・文書意味APIを固定する前に、[早期inv
 HTML fragmentの生成adapterは `python tools/generate/markup.py`、schema projectionは `cargo run --locked -p nepl3-tools -- markup --write` を使用する。fragment単体の成功をDoc/asset/KaTeX/Web全体の受入へ拡張しない。
 
 Doc HTMLの値schemaは `cargo run --locked -p nepl3-tools -- doc-html --write`、型付きadapterは `python tools/generate/doc_html.py --write` で生成し、通常checkで照合する。`cargo test --locked -p nepl3-doc-html` とtoolsのDoc試験でnative/実source経路を検査する。local-onlyのfragment成功を、資源解決・配布文書・T23全体の成功へ拡張しない。
+# 正本と観測記録の境界
+
+意味の規範は `doc/spec/`、構文・依存・値と操作の機械契約は
+`design/forms.json`、`design/dependencies.json`、`interfaces/` が所有する。
+これらは優先順位で矛盾を隠すための階層ではなく、異なる責務の正本である。
+同じ契約が食い違ったときは仕様・schema・生成物・試験を一緒に訂正する。
+
+`design/tasks.json` は計画、`design/acceptance.json` は受入定義、
+`implementation-status.json` は観測状態と証拠参照を所有する。`design/review.json`
+は課題台帳であり、correctedはruntime合格を意味しない。`tasks/*.md` は生成表示。
+Docページの正本とMarkdown projectionは `doc/canonical.json` の対応に従う。
+生成adapterはgeneratorの入力から再生成し、JSONという拡張子だけで全てを正本としない。
+
+`design/doc-inventory.json` は固定された過去commitの派生監査であり、現在の全文書
+一覧ではない。保存によりbaseline改変を差分と再生成検査で検出するため管理を維持する。
+script inventoryは必要時に生成する派生監査資料であり、仕様の新しい正本として保存しない。
+
+taskの段階着手には利用する前段成果物が必要。`depends_on` の全タスク完了は
+当該taskをcompleteにする条件である。部分的な実装・監査をin-progressで記録しても、
+依存先や全受入が完成したことにはならない。過去の段階証拠への参照は索引として扱い、
+現HEADの実行証拠や正式な受入認定へ読み替えない。
+
+証拠の保存は [共通収集手順](../tools/evidence/README.md) に従う。
+実行test、レビュー文章、公開記録は異なる証拠種別である。保存場所の名前に関わらず、
+review成功からconformance合格、uploadから公開済み、公開済みからLKGを推定しない。
+新しい保存script・sourceコピーを結果配下に作らず、再現に必要なcommit/path、宣言入力、
+command、環境、原出力とhashを使用する。

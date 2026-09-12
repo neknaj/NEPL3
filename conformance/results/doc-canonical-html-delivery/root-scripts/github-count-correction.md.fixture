@@ -1,1 +1,0 @@
-The initial chapter18 script reused a literal success message saying 15 from chapter01. Its actual JSON has nine tested fragments (five legacy plus four semantic); it did not execute fifteen. The original script/result are retained. The final script explicitly asserts nine and prints the actual count. Production and expected anchors are unchanged.

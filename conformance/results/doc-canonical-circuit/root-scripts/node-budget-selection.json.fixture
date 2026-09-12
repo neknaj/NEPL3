@@ -1,6 +1,0 @@
-{
-  "source_commit": "ba00264c3e4cf0cdba48a5346f366cb3371c4a3d",
-  "before_sha256": "265a2ecff3f5f11ff94164873a794885ecb6cc5a64c99b9e75e88b3277a1b8d4",
-  "after_sha256": "5f3e80bd42ae158c578c098fbde80a288e2abc18d8df446e6d34011a44fc0073",
-  "change": "Only canonical Markdown output Nodes: 10M to 20M. Six-page baseline stopped NodeLimit before output; independent HTML generation succeeded with existing limits. New operation before entry, no Budget reset, no global or parsing/lowering change."
-}

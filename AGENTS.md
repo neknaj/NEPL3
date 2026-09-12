@@ -18,7 +18,7 @@ core内の公開データはstruct/enumで表す。schemaの動的境界を除�
 
 ## 作業の順序
 
-`design/tasks.json` の依存順に実装する。段階ごとにbuildできることと、最終仕様を縮小することは別である。後段の未実装を成功Resultやダミー成果物で覆わない。実装状態は `implementation-status.json` で仕様状態と分離する。
+`design/tasks.json` の依存順に、利用する前段成果物が成立した範囲を実装する。`depends_on` は全タスクの完了条件でもあり、全依存がcompleteになるまでは当該タスクをcompleteにしない。段階着手を依存先全体の完成と混同しない。段階ごとにbuildできることと、最終仕様を縮小することは別である。後段の未実装を成功Resultやダミー成果物で覆わない。実装状態は `implementation-status.json` で仕様状態と分離する。
 
 Rust以外によるcore実装への置換では、同じ操作schemaとconformanceを使用する。公開契約をRust型のABI、serdeのデフォルトenum表現、ネイティブpointerに依存させない。
 
@@ -50,3 +50,5 @@ Doc/Mathの数式HTMLは `doc/spec/17-math-html.md` に従い生成時KaTeX優�
 - 専用branch/worktreeで未保存変更を保全し、区切りごとにcommit・pushする。未レビューのcheckpointはその状態を明記し、mainへの統合には独立レビューと必須CIを要求する。
 - 統合と必要な証拠の保全が済み、使用しなくなったworktreeは適宜削除する。削除直前に絶対path・HEAD・未保存変更・進行中process・他作業からの参照を確認し、Gitのworktree登録とディレクトリを整理する。必要な資料は現在の作業場所または保存済みartifactへ移し、未保存変更とbranch/commitを無断で失わない。
 - ChatGPT作成の設計や過去の検証記録を無条件に採用しない。各契約を本文・schema・文法・例・受入条件および必要な公式資料と照合し、訂正理由と影響範囲を残す。
+
+証拠収集は `tools/evidence/README.md` に従う。reviewごとに保存scriptやtracked source snapshotを `conformance/results/` へ追加しない。過去の記録を保全し、新しい実行logicは管理されたtools/testへ、結果はdataへ分離する。

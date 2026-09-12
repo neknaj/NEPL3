@@ -1,5 +1,0 @@
-{
-  "before_sha256": "b245e2130032c86fab136ca6f450819c751e305fbe9766abe23a57092fba1485",
-  "after_sha256": "4a689172adad4ef28fc720bfdf85f23600bfcef8cc8b5eaaf1ed3d8ed6d3a4cc",
-  "change": "exact removal of one trailing LF; every preceding byte unchanged"
-}

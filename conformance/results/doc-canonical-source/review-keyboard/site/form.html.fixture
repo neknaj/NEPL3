@@ -1,1 +1,0 @@
-<!doctype html><meta charset="utf-8"><title>Plain form and links</title><a href="#one">First link</a><input id="input"><button id="button">Button</button><a href="#two">Second link</a><div id="one">One</div><div id="two">Two</div>

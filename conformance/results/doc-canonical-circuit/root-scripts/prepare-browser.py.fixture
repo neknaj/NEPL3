@@ -1,9 +1,0 @@
-from pathlib import Path
-source=Path('C:/projects/NEPL3-doc-canonical-html-delivery/.tmp/browser-canonical18.py').read_text(encoding='utf-8')
-source=source.replace('browser-canonical18','browser-canonical07').replace('18-html-delivery','07-circuit')
-source=source.replace("sections=['implementation_dependencies','document_preparation','math_and_browser','documentation_migration']", "sections=['policy','surface','declarations','operations','elaboration','time','nor','svg','public']")
-source=source.replace('assert len(ids)==4','assert len(ids)==9')
-source=source.replace("lists:[...document.querySelectorAll('ol')].map(n=>n.children.length),", "lists:[...document.querySelectorAll('ol')].map(n=>n.children.length), unordered:[...document.querySelectorAll('ul')].map(n=>n.children.length), inlineCodes:[...document.querySelectorAll('code')].map(n=>n.textContent),")
-source=source.replace("len(result['headings'])==5 and result['lists']==[] and result['tables']==[{'rows':5,'cells':15}]", "len(result['headings'])==10 and result['lists']==[6] and result['unordered']==[5] and result['tables']==[]")
-source=source.replace("assert 'design/tasks.json' in snapshot and 'depends_on' in snapshot", "assert 'initial(PreparedNetlist)' in snapshot and 'InvalidTestShape' in snapshot\n                    original_codes=re.findall(r'`([^`]+)`', (root/'.tmp/original.md').read_text(encoding='utf-8'))\n                    assert all(c in result['inlineCodes'] for c in original_codes)")
-Path('.tmp/browser-canonical07.py').write_text(source,encoding='utf-8')

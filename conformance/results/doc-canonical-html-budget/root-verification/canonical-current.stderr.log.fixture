@@ -1,3 +1,0 @@
-   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-doc-canonical-html-budget\tools)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 12.24s
-     Running `target\debug\nepl3-tools.exe doc-canonical --check`

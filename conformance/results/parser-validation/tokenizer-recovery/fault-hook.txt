@@ -1,7 +1,0 @@
-Err(mut failure) => match prefix.restore({
-                // REVIEW-ONLY fault: shorten one accepted prefix vector immediately
-                // before the real public dispatch recovery. Not a legitimate input.
-                if self.session_id == "fault-0" { failure.accepted.sources.clear(); }
-                if self.session_id == "fault-1" { failure.accepted.source_maps.clear(); budget.cancel(); }
-                failure.accepted
-            }) {

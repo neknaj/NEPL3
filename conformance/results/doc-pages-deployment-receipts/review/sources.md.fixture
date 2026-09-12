@@ -1,7 +1,0 @@
-# Primary-source checks (2026-09-12)
-
-- [GitHub REST Pages](https://docs.github.com/en/rest/pages/pages#create-a-github-pages-deployment): creation example uses a string id and status_url with /status; the status GET route omits that suffix and the documented response example contains only status. Thus deployment identity must come from the trusted request context rather than an assumed ID field in the status body.
-- [deploy-pages API client](https://github.com/actions/deploy-pages/blob/main/src/internal/api-client.js): constructs the GET route from owner, repository and deploymentId.
-- [deploy-pages state processing](https://github.com/actions/deploy-pages/blob/main/src/internal/deployment.js): succeed ends polling; failed/content-failed/cancelled/lost are final errors. Attempt-error, not-found and unknown-status are treated as temporary by the action. This repository's conservative UNKNOWN treatment requires reconciliation instead of copying automatic polling; its README explicitly distinguishes lost state.
-
-These live primary sources were independently browsed. No live authenticated Pages deployment or status request was made.

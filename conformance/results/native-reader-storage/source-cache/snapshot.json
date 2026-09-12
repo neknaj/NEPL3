@@ -1,9 +1,0 @@
-{
-  "base": "beac8220a61bc00ba31255e9a567518d3dce6a50",
-  "files": [
-    {
-      "path": "crates/foundation/core/src/source.rs",
-      "sha256": "e2d301f1640bba50c99991feba9836ca84f032be174877d8383928f153f707da"
-    }
-  ]
-}

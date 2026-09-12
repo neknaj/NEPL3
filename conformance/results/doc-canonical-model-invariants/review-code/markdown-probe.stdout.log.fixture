@@ -1,7 +1,0 @@
-
-running 1 test
-MODEL_CONSTRAINTS ["source.identity","source.content","source.bundle","source.span","schema.reference / schema.type-reference","schema.descriptor","operation.reporting","report.trace-overflow","namespace.reference","environment.bindings / environment.digest","syntax.graph / syntax.foreign","source.map / origin.graph","source.reservation","schema.kind-id","view.graph","token.boundary","view.presentation"]
-test actual_model_chapter_preserves_constraints_and_resolves_real_page19 ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
-

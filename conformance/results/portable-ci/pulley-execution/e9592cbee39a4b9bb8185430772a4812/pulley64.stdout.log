@@ -1,7 +1,0 @@
-
-running 2 tests
-test actual_checked_codec_schema_work_stop_is_extractable ... ok
-test codec_stop_extraction_preserves_every_typed_nested_cause ... ok
-
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
-

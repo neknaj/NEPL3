@@ -1,8 +1,0 @@
-
-running 3 tests
-test malformed_source_declarations_reject_without_committing_and_retry_does_not_refund ... ok
-test native_and_wire_admission_reject_zero_source_limit_and_span_scalar_interior ... ok
-test source_and_span_roundtrip_preserve_identity_bytes_and_shared_admission ... ok
-
-test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
-

@@ -1,0 +1,6 @@
+{
+  "source_revision": "d87ca8c4ba18e74bc71efb0e2958af87ac971e1b",
+  "source_path": "conformance/results/doc-pages-payload/final-review/identical-tars.tar.gz.fixture",
+  "sha256": "762bb0d6c2a1f2c9314df03495f75b7ccbe696ac5c75cc5c24e55741c1be5acc",
+  "reason": "Existing real Doc tar regression input; managed test data decoupled from historical review archives. Expected tar and manifest hashes are unchanged."
+}

@@ -201,6 +201,9 @@ fn generate(root: &Path, commit: &str) -> Result<Inventory> {
         exclusions: Vec::new(),
     };
     for path in &paths {
+        if path.starts_with("conformance/results/") {
+            continue;
+        }
         if path.ends_with(".md") {
             let bytes = blob(root, commit, path)?;
             let source =
@@ -230,7 +233,8 @@ fn generate(root: &Path, commit: &str) -> Result<Inventory> {
 }
 
 fn scoped_path(path: &str) -> bool {
-    path.ends_with(".md") || path.ends_with(".rs") || CONTRACTS.contains(&path)
+    !path.starts_with("conformance/results/")
+        && (path.ends_with(".md") || path.ends_with(".rs") || CONTRACTS.contains(&path))
 }
 
 fn delta(root: &Path, baseline: &Inventory) -> Result<Delta> {
@@ -349,6 +353,14 @@ pub(crate) fn check(root: &Path, require_current: bool) -> Result<()> {
 mod tests {
     use super::*;
     use crate::testing::Fixture;
+
+    #[test]
+    fn historical_review_source_is_not_a_documentation_migration_target() {
+        assert!(!scoped_path("conformance/results/review/AGENTS.md"));
+        assert!(!scoped_path("conformance/results/review/source/lib.rs"));
+        assert!(scoped_path("doc/development.md"));
+        assert!(scoped_path("crates/foundation/core/src/lib.rs"));
+    }
 
     fn fixture() -> Result<(Fixture, String)> {
         let files = Fixture::new()?;

@@ -1,6 +1,0 @@
-{
-  "boot2_crc": "0x5d4c22ea",
-  "result": "matches Pico SDK pad_checksum with CMake -s 0xffffffff",
-  "runtime_bootrom_tested": false,
-  "initial_probe_error": "First probe used pad_checksum default seed 0; SDK actual CMake passes 0xffffffff. Initial comparison failed due to reviewer parameter selection, not firmware defect."
-}

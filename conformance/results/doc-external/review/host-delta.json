@@ -1,8 +1,0 @@
-[
-  {
-    "path": "tools/src/doc/export/pages.rs",
-    "sha256": "bfd09b6c1017ea8bc285051117edd7f7db72a80ebfc71d10041e39936cadefdb",
-    "bytes": 8630,
-    "validation": "static two-line manifest metadata delta; no independent rerun"
-  }
-]

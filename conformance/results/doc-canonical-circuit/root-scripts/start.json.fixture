@@ -1,7 +1,0 @@
-{
-  "commit": "5e3e71b7cd3cf3f664b869feb51e20d1ce945ebb",
-  "status": "",
-  "source_sha256": "17618352d792b55cfa9436c029d1b5d09c916cc5af3b8123f4a33e053b963cae",
-  "original_sha256": "0005924591477574e490affa8df48d7446dfb41d81cd08beb55d03372a0dbfed",
-  "purpose": "Chapter07 migration on pending independently reviewed chapter18; no acceptance completion"
-}

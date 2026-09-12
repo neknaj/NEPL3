@@ -34,3 +34,5 @@
 | [T24](T24.md) | H2: Mathを含む生成済みHTML | not-implemented | T23 |
 | [T25](T25.md) | H3: Web生成・隔離preview・export | not-implemented | T24 |
 | [T26](T26.md) | External language contracts and extraction conformance | in-progress | T01, T02, T03, T04, T05, T12 |
+
+段階着手には利用する前段成果物が必要。依存一覧はタスク全体の完了条件であり、in-progressは依存先全体の完成を意味しない。証拠参照は保存時点のscopeを指す索引で、現在のsourceで再実行したことを意味しない。

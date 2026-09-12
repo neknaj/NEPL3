@@ -1,8 +1,0 @@
-{
-  "corpus_sha256": "d61bceddc2ac4ced366c91f01094efb6e9535be3309526547681e0ff396190b6",
-  "css_sha256": "1f41012f2b444dd8ee9c46153c5424c0e1d377e4ba8757a2869661b108393b83",
-  "playwright": "1.62.0",
-  "browsers": {},
-  "result": "failed",
-  "error": "BrowserType.launch: Failed to launch chromium because executable doesn't exist at C:\\projects\\NEPL3-doc-canonical-preview\\.tmp\\review-webkit-final\\does-not-exist.exe"
-}

@@ -1,9 +1,0 @@
-[package]
-name="form-selection-probe"
-version="0.0.0"
-edition="2024"
-[dependencies]
-nepl3-core={path="../crates/foundation/core"}
-nepl3-reader={path="../crates/foundation/reader"}
-nepl3-engine={path="../crates/foundation/engine"}
-nepl3-wire={path="../crates/foundation/wire"}

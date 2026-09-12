@@ -1,6 +1,0 @@
-{
-  "command": "python check.py",
-  "exit_code": 0,
-  "source_git_blob_checks": 13,
-  "production_runtime_executed": false
-}

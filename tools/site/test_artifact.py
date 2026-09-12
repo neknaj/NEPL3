@@ -13,7 +13,7 @@ from payload import digest
 class ArtifactTests(unittest.TestCase):
     def fixture(self, extra=None, receipt_change=None):
         root = Path(__file__).resolve().parents[2]
-        tar = gzip.decompress((root / 'conformance/results/doc-pages-payload/final-review/identical-tars.tar.gz.fixture').read_bytes())
+        tar = gzip.decompress((root / 'tools/site/fixtures/pages.tar.gz.fixture').read_bytes())
         with tarfile.open(fileobj=io.BytesIO(tar)) as source:
             commit = json.load(source.extractfile('build.json'))['source_commit']
         # Both expected hashes predate this implementation (14 real Doc chapters).

@@ -15,7 +15,7 @@ import test_payload
 class RecoveryTests(unittest.TestCase):
     def test_preserved_real_doc_tar_keeps_its_original_identity(self):
         root = Path(__file__).resolve().parents[2]
-        data = gzip.decompress((root / 'conformance/results/doc-pages-payload/final-review/identical-tars.tar.gz.fixture').read_bytes())
+        data = gzip.decompress((root / 'tools/site/fixtures/pages.tar.gz.fixture').read_bytes())
         # Identities were independently recorded for the actual 14-chapter
         # site before this recovery implementation existed (PR105/PR106).
         result = verify(data, 'cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9',

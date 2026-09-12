@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "scope": "Evidence collector regression tests; no acceptance or independent review decision",
+  "commands": [
+    {
+      "id": "evidence-tools",
+      "argv": ["python", "-m", "unittest", "tools.evidence.test_runner", "-v"],
+      "cwd": ".",
+      "timeout_seconds": 120
+    }
+  ]
+}

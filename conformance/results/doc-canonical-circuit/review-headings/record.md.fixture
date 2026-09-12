@@ -1,9 +1,0 @@
-# Independent review of two chapter 07 heading changes
-
-Fixed `ba00264c3e4cf0cdba48a5346f366cb3371c4a3d`, compared directly against the prior reviewed manuscript in `3abd255d5a52eec41f741b6b17e4ec9e2213efdc` and original Markdown chapter. This is a two-heading content review, not a review of the whole canonical cutover implementation.
-
-No blocking semantic issue found. `6. NOR IRへの[変換/へんかん]` describes the section's explicit reference lowering from vector operations to the four-node/two-sink NOR representation, deterministic generation and comparative evaluator validation. It does not add permission to optimize or weaken state/sink preservation. `7. SVG backendの[配置/はいち]` describes the section's explicit rank/ordinal layout, edge lanes and labels; it does not change the existing escape, source correspondence or nonoptimal-layout requirements. Both readings are normal and attach only to Kanji; Latin text and particles remain Text. The sentence literals remain valid Sentence titles.
-
-The independent byte check proves only these two title substrings changed; every other manuscript byte, including both Section IDs, all code, body and order, is unchanged. Formal full-Article structure audit passes. The ten registered aliases equal the independently observed old GitHub headings from preflight-after18 in both order and Section correspondence, including `6-nor-ir` and `7-svg-backend`.
-
-The new visible heading text differs from the unchanged old Markdown headings and therefore addresses the reason for the predicted alias/permalink collision. Actual regenerated GitHub target uniqueness/navigation is still untested here and must not be inferred from this semantic approval. Native HTML only guarantees its existing semantic Section IDs, not these legacy Markdown aliases. No production/source/manuscript edits were made by this reviewer.

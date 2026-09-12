@@ -1,7 +1,0 @@
-{
-  "http_budget": 300,
-  "simulated_http_elapsed": 301,
-  "event_kind": "SmokePassed",
-  "deadline_exceeded": false,
-  "returned_pass": true
-}

@@ -1,8 +1,0 @@
-{
-  "commit": "ba00264c3e4cf0cdba48a5346f366cb3371c4a3d",
-  "result": "PASS",
-  "exactly_two_heading_only_changes": true,
-  "body_all_other_bytes_unchanged": true,
-  "production_generation": "not run",
-  "browser_collision_resolution": "not run"
-}

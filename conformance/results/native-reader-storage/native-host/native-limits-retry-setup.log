@@ -1,9 +1,0 @@
-   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-snapshot-storage\.tmp\review-native-reader-drive\workspace\crates\foundation\reader)
-error[E0614]: type `nepl3_core::budget::Budget` cannot be dereferenced
-  --> crates\foundation\reader\tests\runtime\review_native.rs:21:207
-   |
-21 | ...=b.usage();let mut limits=b.limits();limits.work-=1;*b=Budget::new(limits);b.record_observed_usage(used)?;}let mut result=result....
-   |                                                        ^^ can't be dereferenced
-
-For more information about this error, try `rustc --explain E0614`.
-error: could not compile `nepl3-reader` (test "runtime") due to 1 previous error

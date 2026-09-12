@@ -1,9 +1,0 @@
-# Independent unresolved creation gate review
-
-Reviewed the changes on base 5b9a749 against spec15-site.md:67/87, existing journal loading/receipt pairing and submission ordering. No implementation edits or actual API actions.
-
-No blocking finding within the stated creation-receipt gate scope. submit invokes the new full-history check after loading the expected local head and before remote validation, append or POST. Every DeployIntent/RecoveryIntent requires its immediately following fully matching typed receipt, and every receipt is independently checked for an adjacent intent. The existing _created parser revalidates original response bytes and owner/repository. Later events, a renamed transaction or switching intent kind cannot hide a missing receipt. Event identity comparison includes run, attempt, source and payload.
-
-Independent validation: 2 unit tests passed normally and under python -O; the targeted real-Git lost-response/replay test passed (8.313 seconds), including new transaction names and both intent kinds, with no new POST or remote head change. Additional independent probes rejected mismatched run_id, attempt, source_commit and evidence count. Raw logs and command exits are retained.
-
-The README correctly limits this gate: a recorded creation response is not completion, current publication identity, eligibility, smoke or LKG. Other unresolved status/recovery states still require the future publisher protocol. This implementation deliberately stops histories with non-adjacent unresolved intents; it does not implement administrative reconciliation or authorize a new transaction. The parent's wider 7-test submission suite and CI results are separate evidence, not claimed as independently rerun here.
