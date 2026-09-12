@@ -1,0 +1,28 @@
+[
+  {
+    "command": [
+      "C:/projects/NEPL3-doc-canonical-preview/.tmp/browser-venv/Scripts/python.exe",
+      "tools/audit/site/check.py",
+      ".tmp/site-final-primary",
+      ".tmp/site-primary-final-audit.json",
+      "--config",
+      "site/config.json",
+      "--renderer",
+      "target/debug/nepl3-tools.exe"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "C:/projects/NEPL3-doc-canonical-preview/.tmp/browser-venv/Scripts/python.exe",
+      "tools/audit/site/check.py",
+      ".tmp/site-final-alternate",
+      ".tmp/site-alternate-final-audit.json",
+      "--config",
+      "conformance/inputs/site/alternate.json",
+      "--renderer",
+      "target/debug/nepl3-tools.exe"
+    ],
+    "exit_code": 0
+  }
+]

@@ -1,0 +1,111 @@
+{
+  "files": [
+    {
+      "bytes": 0,
+      "path": ".nojekyll",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 335,
+      "path": "assets/site.css",
+      "sha256": "949f4b145fcd3f2bc2f5534baa0956f269ef6e62bce283e0e1f554a3dd30eb46"
+    },
+    {
+      "bytes": 3833,
+      "path": "build.json",
+      "sha256": "e87d3d67d15d6ca8c72d676874b502610dfd4a41fecd9ae236cee9c3737d5211"
+    },
+    {
+      "bytes": 34933,
+      "path": "doc-manifest.json",
+      "sha256": "bd37dc1ecd83dc3d262de2033d6a87671e86a33549841ea0fd69f95534df5e7f"
+    },
+    {
+      "bytes": 1853,
+      "path": "docs/index.html",
+      "sha256": "dd079643727b576bb84d8eaa14a2c8ba22f24648a6c377c2aabfbaf676ad3821"
+    },
+    {
+      "bytes": 38595,
+      "path": "docs/spec/00-contract.html",
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+    },
+    {
+      "bytes": 32896,
+      "path": "docs/spec/01-architecture.html",
+      "sha256": "499aaa1e67781a52c2bc2f3faaa8fc0623b6a8e3c80282eb4a841da597c8936f"
+    },
+    {
+      "bytes": 146562,
+      "path": "docs/spec/02-foundation.html",
+      "sha256": "2b1913c546fcbb4a7a7fe5137a3c7d29112c198ca2584c36000d42885b8030ed"
+    },
+    {
+      "bytes": 70579,
+      "path": "docs/spec/06-math.html",
+      "sha256": "46a7db5d3683c987997d3f4f782e5dedbb71a0d18c1fd1648881afaadb2492b8"
+    },
+    {
+      "bytes": 48369,
+      "path": "docs/spec/07-circuit.html",
+      "sha256": "11dedf2469c9c0a2e11c845b1167ffaaa56deeaeea51b76db7a7f484ab43caf5"
+    },
+    {
+      "bytes": 175180,
+      "path": "docs/spec/08-editor.html",
+      "sha256": "42b7496ebf4d56eaeb6e59ded50022bf99a676766809459e5b931f25b06e4ff8"
+    },
+    {
+      "bytes": 105667,
+      "path": "docs/spec/11-conformance.html",
+      "sha256": "faf98443e21d37df8e0b40c1610ab4661f7563abaa6ee1b493adadada4fd749c"
+    },
+    {
+      "bytes": 95429,
+      "path": "docs/spec/12-model-invariants.html",
+      "sha256": "904a6dc8d6d7a4cce2d6f99c80654d4caafc75a80e1622a4308df2aeb3afbbdd"
+    },
+    {
+      "bytes": 91421,
+      "path": "docs/spec/13-reproducibility.html",
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+    },
+    {
+      "bytes": 93408,
+      "path": "docs/spec/17-math-html.html",
+      "sha256": "3020fb36299144108db052e4eb39f7b1d63caf1477818219c6dd2271f70abb07"
+    },
+    {
+      "bytes": 37232,
+      "path": "docs/spec/18-html-delivery.html",
+      "sha256": "7a2ed0088c71e0766ec304bcc59d2cccffa307a9742a66139eeea99f633b6355"
+    },
+    {
+      "bytes": 61432,
+      "path": "docs/spec/19-html-fragment.html",
+      "sha256": "3a5cc5cb6d46262403340997c6ec08ead08362250e5ed90eec6a65993bfa95fc"
+    },
+    {
+      "bytes": 61453,
+      "path": "docs/spec/20-doc-html.html",
+      "sha256": "e57ec3c9fec3dc104735c603ad79cf37769945acad818ff69f29a13efcfdb224"
+    },
+    {
+      "bytes": 44041,
+      "path": "docs/spec/22-external-extensions.html",
+      "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8"
+    },
+    {
+      "bytes": 3233,
+      "path": "docs/spec/assets/doc.css",
+      "sha256": "cd76fb7ecf7c451f002df80add05c64a274c5b379dde7f012fb12690affac74e"
+    },
+    {
+      "bytes": 1853,
+      "path": "index.html",
+      "sha256": "dd079643727b576bb84d8eaa14a2c8ba22f24648a6c377c2aabfbaf676ad3821"
+    }
+  ],
+  "source_commit": "2390e31127b4d8173c872f61abc48689a24c3cc4",
+  "version": 1
+}

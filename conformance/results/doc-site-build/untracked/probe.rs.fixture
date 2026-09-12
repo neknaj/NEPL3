@@ -1,0 +1,1 @@
+fn main() { let root=std::env::args().nth(1).expect("root"); let result=nepl3_tools::site::build(std::path::Path::new(&root), "site/config.json", &std::path::Path::new(&root).join("output")); match result { Ok(())=>{eprintln!("unexpected success");std::process::exit(2)},Err(error)=>println!("{error}") } }

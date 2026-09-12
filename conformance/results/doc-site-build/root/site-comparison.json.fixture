@@ -1,0 +1,12 @@
+{
+  "primary_repeat_byte_identical": true,
+  "file_count": 22,
+  "total_bytes": 1151754,
+  "alternate_changed_only": [
+    "build.json",
+    "index.html",
+    "manifest.json",
+    "docs/index.html"
+  ],
+  "source_commit": "2390e31127b4d8173c872f61abc48689a24c3cc4"
+}

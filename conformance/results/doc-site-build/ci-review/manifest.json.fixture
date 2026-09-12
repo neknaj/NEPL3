@@ -1,0 +1,66 @@
+{
+  "result": "approved-after-correction",
+  "scope": "CI/static generated-site identity and192 real browser cases; no deploy or whole runtime acceptance",
+  "files": [
+    {
+      "path": "alternate.json",
+      "bytes": 23168,
+      "sha256": "5a105af1871b2cac8d548c0d42f153690bc780ffd64fd75fb9d383e135836a57"
+    },
+    {
+      "path": "initial-check.py",
+      "bytes": 5282,
+      "sha256": "a05074b8badc755025cbf7125ee3587860f4e89591239310ff3c0298daf96c77"
+    },
+    {
+      "path": "initial-test-check.py",
+      "bytes": 1469,
+      "sha256": "995016f241fedea9437e20f56690cb6fb6372f5108426fbb009b1e34369c90b2"
+    },
+    {
+      "path": "primary.json",
+      "bytes": 23155,
+      "sha256": "f77c0c3b08676aa1015ed3d99d784a0b9019e39f27ed04b27e0eb926a49c7426"
+    },
+    {
+      "path": "repro.json",
+      "bytes": 746,
+      "sha256": "3d59de7495af5295c1a2a8197351870e1b6ea77dee8b1f25c87659a9a38ca2d0"
+    },
+    {
+      "path": "repro.py",
+      "bytes": 1841,
+      "sha256": "4fd3e2c4bea063d91c922f3257c4f35eb2292d9f9d9a17490320ecda935316fa"
+    },
+    {
+      "path": "review.md",
+      "bytes": 4044,
+      "sha256": "4c7a19c5408b3e15e36b60ab9522e4aa0b43406b9385ac7835229d59a5be7066"
+    },
+    {
+      "path": "reviewed-check.py",
+      "bytes": 8371,
+      "sha256": "684cd907408450fbedd9c03a1fe8acb8dd5d1077aaa416baab253ea38a484549"
+    },
+    {
+      "path": "reviewed-ci.yml",
+      "bytes": 16582,
+      "sha256": "26e2a814161e51bceaf4af04e76611d21a4d096db76ee6292f0ded35c5b626f3"
+    },
+    {
+      "path": "reviewed-test_check.py",
+      "bytes": 5299,
+      "sha256": "41233d8a9b9c3b74e1c390e0d3f4090db384e43b11a318e239a9c3515ea79a48"
+    },
+    {
+      "path": "revised-identities.json",
+      "bytes": 590,
+      "sha256": "cdcb2a180ae6d327661f818e7d64437617efacab9df6eddb5d41cbd11cbeb557"
+    },
+    {
+      "path": "revised-identities.py",
+      "bytes": 1488,
+      "sha256": "e15f8707cef9080df0cf6adfd32c2c16d0fa787c121f01512dbdee417595ffc2"
+    }
+  ]
+}

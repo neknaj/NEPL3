@@ -13,6 +13,9 @@ fn run() -> nepl3_tools::Result<()> {
         .as_slice()
     {
         ["check"] => nepl3_tools::check(&root),
+        ["site", "build", config, output] => {
+            nepl3_tools::site::build(&root, config, std::path::Path::new(output))
+        }
         ["doc-canonical", "--check"] => {
             nepl3_tools::doc::canonical::check(&root, "doc/canonical.json")
         }
@@ -63,6 +66,7 @@ fn run() -> nepl3_tools::Result<()> {
         ["doc-inventory", "--check"] => nepl3_tools::doc_inventory(&root, None, false),
         ["doc-inventory", "--check-current"] => nepl3_tools::doc_inventory(&root, None, true),
         ["--help"] | ["-h"] => {
+            println!("nepl3-tools site build <site-config.json> <new-output-directory>");
             println!("nepl3-tools doc-canonical --check");
             println!("nepl3-tools doc-canonical markdown <new-output-directory>");
             println!("nepl3-tools doc-canonical html <new-output-directory>");

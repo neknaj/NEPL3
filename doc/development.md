@@ -24,6 +24,17 @@ nepld正本へ移行し、検査済みの同じsite artifactを公開します�
 
 ## ローカル環境
 
+`cargo run --locked -p nepl3-tools -- site build site/config.json dist/site` は、
+登録済みDoc正本のHTMLに静的な索引を付け、新規ディレクトリへ一式を生成します。
+追跡済みの設定とcleanな入力checkoutを要求し、生成中にHEADや入力の変更を検出した場合は出力しません。
+`build.json` のsource commitは入力checkout、rendererは実行したbinaryのSHA-256と
+そのbuild時のrustcを別々に記録します。binaryのsource commitを入力checkoutから推定しません。
+CIでは同じcheckoutからbuildしたbinaryと生成ログを結び付けて保管します。
+埋込template・CSSとcheckoutの不一致も拒否します。toolsのbuild.rsはcompiler識別のみを行い、
+文書生成やGrammar compileを実行しません。
+現在の入口は登録済みページのdocs-only生成です。未移行文書・rustdoc・例のサイト統合、
+公開後smokeと復旧を含むPages配信、T19/T20全体の完了は別途検証します。
+
 受入群の文書検査は、Markdownの本文・箇条書きの行頭にあるplainな `A01:` 型の定義を読みます。
 escapeや文字参照をdecodeした表示上のprefixを使うため、nepldから生成した `- A01\:` も
 同じ定義として扱います。見出し・引用・code・HTML・表・脚注や文中の単なる言及は定義にしません。

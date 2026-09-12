@@ -1,0 +1,33 @@
+# Independent generated site review
+
+Reviewed source commit `2390e31127b4d8173c872f61abc48689a24c3cc4`, production primary/alternate/repeat bundles, `doc/spec/15-site.md`, `tools/src/site/mod.rs`, template/CSS, canonical registry and root's `.tmp/site_verify.py`. Reviewer made no production or metadata edits.
+
+## Scope and identity
+
+The output explicitly declares `capability: docs-only`, `runtime_identity: null`, and registered canonical Doc pages only. It does not claim a functional Playground, full T19/T20 acceptance, Pages deployment, interactive runtime or recovery receipt. This matches the scoped work; it is not the complete final site described by specification 15.
+
+Independently recomputed every declared output hash/size in all three bundles. Primary and repeat have 22 identical files; alternate changes only `index.html`, `docs/index.html`, `build.json`, `manifest.json`. All 14 generated document HTML files and CSS are identical across bases. Evidence: `artifact-check.json`.
+
+Verified `build.source_commit` against current HEAD; all 14 page `input` paths match their bytes at that fixed Git commit and each manifest `source_sha256`. The `source` field is the Markdown display/projection path, whereas the digest describes `input` (canonical NEPLD); these must not be confused. `target/debug/nepl3-tools.exe` SHA-256 independently matches `build.renderer.executable_sha256`, `d6ef8b8608bfaf903d15f644c6970328ec1e4cd01b8a995f747ed2d2a12c2f12`. The build explicitly separates input checkout identity from executable identity. No runtime/package resolution success is inferred from these document generation identities.
+
+## Independent browser journeys
+
+`check.py` uses an independent local HTTP server for each actual bundle and its configured base, `/NEPL3/` and `/acceptance/project/`. It does not import or rerun root's verifier as its review result. Chromium, Firefox and WebKit run with document JavaScript disabled at 375px. Root separately covered all page loads at 375/1280px; this review adds interactions rather than copying those metrics.
+
+For each engine and base, the test opens directory root, performs actual clicks on all 14 index links, verifies the target Article, reloads it and requires identical full article text. Both HTTP 200 and valid cache revalidation 304 are accepted. The docs directory index is loaded separately; keyboard Enter activates its first link after explicit focus. First-Tab focus is recorded separately in `results.json`: Chromium/Firefox reach the first link, whereas WebKit's observed Tab behavior must not be advertised as a successful Tab traversal test.
+
+A direct nested section fragment in chapter 02 is navigated to and reloaded after initial resource/anchor positioning has completed. Actual hash, target position and nonzero scrolling are recorded. Unknown local route and an out-of-base `/assets/site.css` both return 404 under the review server; neither silently falls back to an index. This establishes local static routing behavior, not deployed GitHub Pages 404 behavior.
+
+No journey makes an external request. In a separate JavaScript-enabled context, an injected inline script is blocked by the actual index CSP, confirming that absence of script execution in the main journeys is not the sole CSP check. Browser screenshots preserve representative nested fragment results for both bases and all engines.
+
+## Review runner findings retained
+
+Initial attempts exposed test synchronization assumptions, documented in `initial-run-failure.txt`: URL changes after keyboard Enter require navigation waiting; Firefox reload legitimately returns 304; WebKit does not satisfy the same first-Tab expectation; and immediately reloading a deep link before initial anchor positioning settles can preserve scroll zero. These failures were not counted as passes.
+
+The last case was independently investigated in `webkit-fragment-probe.json`: fresh WebKit contexts with JS disabled/enabled and load/networkidle waits all positioned the initial section and reloaded at scroll 10424, target top -0.5. The full journey then waits for initial positioning before triggering reload. No production workaround or injected navigation script was added.
+
+## Review conclusion and limits
+
+No generated-source identity mismatch or newly introduced rendering/navigation defect was found in the scoped docs-only site. Exact document links, JS-disabled reading, real click/reload, CSP and both configured bases were checked independently. Previous CSS review already records the pre-existing narrow-table overflow in the supplemental linear-combination example, which is not among these 14 registered pages.
+
+Full keyboard accessibility, Japanese IME, devices/screen readers, search/rustdoc/examples, interactive Wasm/Worker and public HTTPS deployment remain outside this scoped review. The generated bundle and local HTTP evidence must not be presented as Pages publication or full T19/T20 completion.

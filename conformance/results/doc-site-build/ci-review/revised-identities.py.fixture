@@ -1,0 +1,17 @@
+﻿from pathlib import Path
+import sys,json,copy,importlib.util
+root=Path.cwd();s=importlib.util.spec_from_file_location('sitecheck',root/'tools/audit/site/check.py');m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+a=root/'.tmp/site-final-primary';build=json.loads((a/'build.json').read_bytes());manifest=json.loads((a/'manifest.json').read_bytes());doc=json.loads((a/'doc-manifest.json').read_bytes());docs={p.relative_to(a).as_posix():None for p in a.rglob('*.html')};exe=root/'target/debug/nepl3-tools.exe'
+m.expected_inputs(build,manifest,doc,docs,root,'site/config.json',exe)
+results=[{'case':'real expected-input identity','result':'passed'}]
+for name in ['stale','wrong-base','missing-page','source-digest','wrong-renderer']:
+ b,f,d,p=copy.deepcopy(build),copy.deepcopy(manifest),copy.deepcopy(doc),docs.copy();binary=exe
+ if name=='stale':b['source_commit']=f['source_commit']='0'*40
+ if name=='wrong-base':b['base_path']='/wrong/'
+ if name=='missing-page':p.pop(next(iter(p)))
+ if name=='source-digest':d['pages'][0]['source_sha256']='0'*64
+ if name=='wrong-renderer':binary=root/'site/config.json'
+ try:m.expected_inputs(b,f,d,p,root,'site/config.json',binary)
+ except AssertionError as e:results.append({'case':name,'result':'rejected','reason':str(e)})
+ else:raise AssertionError('unexpected acceptance '+name)
+(root/'.tmp/site-ci-review/revised-identities.json').write_text(json.dumps(results,indent=2)+'\n',encoding='utf8');print(json.dumps(results,indent=2))

@@ -1,0 +1,1722 @@
+{
+  "measurements": [
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "ruby",
+      "engine": "chromium",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "anno",
+      "engine": "chromium",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "anno-ruby",
+      "engine": "chromium",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "ruby-anno",
+      "engine": "chromium",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "ruby-ruby",
+      "engine": "chromium",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "table-ruby",
+      "engine": "chromium",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "list-ruby",
+      "engine": "chromium",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": 28.796875,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "ruby-multiline",
+      "engine": "chromium",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": 28.796875,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "anno-multiline",
+      "engine": "chromium",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "reading-ruby",
+      "engine": "chromium",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "notes-ruby",
+      "engine": "chromium",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "anno-anno",
+      "engine": "chromium",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "line_gaps": [
+        4.796875,
+        3
+      ],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "line-reservation",
+      "engine": "chromium",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "ruby",
+      "engine": "chromium",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "anno",
+      "engine": "chromium",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "anno-ruby",
+      "engine": "chromium",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "ruby-anno",
+      "engine": "chromium",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "ruby-ruby",
+      "engine": "chromium",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "table-ruby",
+      "engine": "chromium",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "list-ruby",
+      "engine": "chromium",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": 28.796875,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "ruby-multiline",
+      "engine": "chromium",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": 28.796875,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "anno-multiline",
+      "engine": "chromium",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "reading-ruby",
+      "engine": "chromium",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "notes-ruby",
+      "engine": "chromium",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "anno-anno",
+      "engine": "chromium",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "line_gaps": [
+        4.796875,
+        3
+      ],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "line-reservation",
+      "engine": "chromium",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "ruby",
+      "engine": "firefox",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "anno",
+      "engine": "firefox",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "anno-ruby",
+      "engine": "firefox",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "ruby-anno",
+      "engine": "firefox",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "ruby-ruby",
+      "engine": "firefox",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "table-ruby",
+      "engine": "firefox",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "list-ruby",
+      "engine": "firefox",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": 28.800003051757812,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "ruby-multiline",
+      "engine": "firefox",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": 28.79998779296875,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "anno-multiline",
+      "engine": "firefox",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "reading-ruby",
+      "engine": "firefox",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "notes-ruby",
+      "engine": "firefox",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "anno-anno",
+      "engine": "firefox",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "line_gaps": [
+        3.899993896484375,
+        3.9000091552734375
+      ],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "line-reservation",
+      "engine": "firefox",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "ruby",
+      "engine": "firefox",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "anno",
+      "engine": "firefox",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "anno-ruby",
+      "engine": "firefox",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "ruby-anno",
+      "engine": "firefox",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "ruby-ruby",
+      "engine": "firefox",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "table-ruby",
+      "engine": "firefox",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "list-ruby",
+      "engine": "firefox",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": 28.800003051757812,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "ruby-multiline",
+      "engine": "firefox",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": 28.79998779296875,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "anno-multiline",
+      "engine": "firefox",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "reading-ruby",
+      "engine": "firefox",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "notes-ruby",
+      "engine": "firefox",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "anno-anno",
+      "engine": "firefox",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": true,
+      "annotation_gaps": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "line_gaps": [
+        3.899993896484375,
+        3.9000091552734375
+      ],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "display": "inline-grid",
+      "scripts": 0,
+      "case": "line-reservation",
+      "engine": "firefox",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "ruby",
+      "engine": "webkit",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "anno",
+      "engine": "webkit",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "anno-ruby",
+      "engine": "webkit",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "ruby-anno",
+      "engine": "webkit",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "ruby-ruby",
+      "engine": "webkit",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "table-ruby",
+      "engine": "webkit",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "list-ruby",
+      "engine": "webkit",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": 28.796875,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "ruby-multiline",
+      "engine": "webkit",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": 28.796875,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "anno-multiline",
+      "engine": "webkit",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "reading-ruby",
+      "engine": "webkit",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "notes-ruby",
+      "engine": "webkit",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "anno-anno",
+      "engine": "webkit",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "line_gaps": [
+        3.8984375,
+        3.8984375
+      ],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "line-reservation",
+      "engine": "webkit",
+      "width": 375,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "ruby",
+      "engine": "webkit",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "anno",
+      "engine": "webkit",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "anno-ruby",
+      "engine": "webkit",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "ruby-anno",
+      "engine": "webkit",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "ruby-ruby",
+      "engine": "webkit",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "table-ruby",
+      "engine": "webkit",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "list-ruby",
+      "engine": "webkit",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": 28.796875,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "ruby-multiline",
+      "engine": "webkit",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": 28.796875,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "anno-multiline",
+      "engine": "webkit",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "reading-ruby",
+      "engine": "webkit",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "notes-ruby",
+      "engine": "webkit",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0,
+        0
+      ],
+      "line_gaps": [],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "anno-anno",
+      "engine": "webkit",
+      "width": 1280,
+      "valid": true
+    },
+    {
+      "difference": 0.0078125,
+      "baseline_source_supported": false,
+      "annotation_gaps": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "line_gaps": [
+        3.8984375,
+        3.8984375
+      ],
+      "multiline_gap": null,
+      "annotation_text_fragments": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "display": "inline-table",
+      "scripts": 0,
+      "case": "line-reservation",
+      "engine": "webkit",
+      "width": 1280,
+      "valid": true
+    }
+  ],
+  "bodyScope": [
+    {
+      "background": "rgb(13, 17, 23)",
+      "margin": "0px",
+      "engine": "chromium",
+      "width": 375,
+      "nested": false
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "margin": "8px",
+      "engine": "chromium",
+      "width": 375,
+      "nested": true
+    },
+    {
+      "background": "rgb(13, 17, 23)",
+      "margin": "0px",
+      "engine": "chromium",
+      "width": 1280,
+      "nested": false
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "margin": "8px",
+      "engine": "chromium",
+      "width": 1280,
+      "nested": true
+    },
+    {
+      "background": "rgb(13, 17, 23)",
+      "margin": "0px",
+      "engine": "firefox",
+      "width": 375,
+      "nested": false
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "margin": "8px",
+      "engine": "firefox",
+      "width": 375,
+      "nested": true
+    },
+    {
+      "background": "rgb(13, 17, 23)",
+      "margin": "0px",
+      "engine": "firefox",
+      "width": 1280,
+      "nested": false
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "margin": "8px",
+      "engine": "firefox",
+      "width": 1280,
+      "nested": true
+    },
+    {
+      "background": "rgb(13, 17, 23)",
+      "margin": "0px",
+      "engine": "webkit",
+      "width": 375,
+      "nested": false
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "margin": "8px",
+      "engine": "webkit",
+      "width": 375,
+      "nested": true
+    },
+    {
+      "background": "rgb(13, 17, 23)",
+      "margin": "0px",
+      "engine": "webkit",
+      "width": 1280,
+      "nested": false
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "margin": "8px",
+      "engine": "webkit",
+      "width": 1280,
+      "nested": true
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "case": "no-html",
+    "result": "passed",
+    "browser_rows": 0,
+    "reported_commit": "0000000000000000000000000000000000000000",
+    "scope": "Browser stub isolates pre-browser integrity checks; no real browser claim."
+  },
+  {
+    "case": "stale-head",
+    "result": "passed",
+    "browser_rows": 6,
+    "reported_commit": "0000000000000000000000000000000000000000",
+    "scope": "Browser stub isolates pre-browser integrity checks; no real browser claim."
+  },
+  {
+    "case": "duplicate-record",
+    "result": "passed",
+    "browser_rows": 6,
+    "reported_commit": "0000000000000000000000000000000000000000",
+    "scope": "Browser stub isolates pre-browser integrity checks; no real browser claim."
+  }
+]

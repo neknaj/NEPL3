@@ -1,6 +1,19 @@
 # Doc移行の休止・再開地点
 
-## 2026年9月12日の再開（現在）
+## 2026年9月12日の静的サイト生成（現在）
+
+第06章はPR #103、第02章はPR #104で、独立レビューと必須CIを確認して統合済み。
+mainは14章をnepld正本として管理する。文単位parallelを維持する文書CSSと、
+登録済みDocから索引付きdocs-onlyサイトを組み立てる実装をPR #105で進めている。
+入力2390e31の生成は22ファイル、1,151,754 bytes。同じ設定の再生成はbyte一致し、
+別baseでは索引とmanifestのみが変わる。最終検査器で両base計192ブラウザcaseが成功。
+workspace試験576成功・既存ignored 1、repository検査・Clippy・formatが成功した。
+独立した実装・表示・CIレビューと修正は `conformance/results/doc-site-build/` に保存。
+WebKitのTab操作と既存の狭幅table overflow、公開HTTPS・復旧は未達範囲として残る。
+T19はin-progressであり、全体完了やPages配信の成功を示すものではない。
+次は最終HEADのCIを確認し、配信経路・未移行文書/例/API文書の統合へ進む。
+
+## 第02章統合前のcheckpoint
 
 第02章を含む14章集合は選択した予算内で2回生成に成功し、Markdown15・HTML16ファイルが
 すべてbyte一致した。既存13章HTML/CSSとMarkdown本文を保ち、第02章とcontext headerを採用。

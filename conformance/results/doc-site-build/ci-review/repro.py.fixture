@@ -1,0 +1,21 @@
+﻿from pathlib import Path
+import sys,json,hashlib,tempfile,importlib.util
+from unittest.mock import patch,MagicMock
+root=Path.cwd();spec=importlib.util.spec_from_file_location('sitecheck',root/'tools/audit/site/check.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+results=[]
+for case in ['no-html','stale-head','duplicate-record']:
+ with tempfile.TemporaryDirectory(dir=root/'.tmp/site-ci-review') as d:
+  d=Path(d);build={'base_path':'/NEPL3/','source_commit':'0'*40}
+  payload={'build.json':json.dumps(build).encode()}
+  if case!='no-html':payload.update({'index.html':b'<link rel="stylesheet" href="style.css"><h1>old page</h1>','style.css':b'h1{color:red}'})
+  rows=[]
+  for name,b in payload.items():(d/name).write_bytes(b);rows.append(dict(path=name,bytes=len(b),sha256=hashlib.sha256(b).hexdigest()))
+  if case=='duplicate-record':rows.append(rows[0].copy())
+  (d/'manifest.json').write_text(json.dumps({'files':rows,'source_commit':'f'*40}),encoding='utf8')
+  runner=MagicMock();page=runner.__enter__.return_value.chromium.launch.return_value.new_context.return_value.new_page.return_value
+  for engine in ['chromium','firefox','webkit']:
+   page=getattr(runner.__enter__.return_value,engine).launch.return_value.new_context.return_value.new_page.return_value
+   page.goto.return_value.status=200;page.evaluate.return_value={'scripts':0,'styles':1,'overflow':False,'title':'fixture'}
+  with patch.object(m,'sync_playwright',return_value=runner):
+   r=m.verify(d);results.append({'case':case,'result':r['result'],'browser_rows':len(r['cases']),'reported_commit':r['source_commit'],'scope':'Browser stub isolates pre-browser integrity checks; no real browser claim.'})
+(root/'.tmp/site-ci-review/repro.json').write_text(json.dumps(results,indent=2)+'\n',encoding='utf8');print(json.dumps(results,indent=2))

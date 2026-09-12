@@ -1,0 +1,15 @@
+{
+  "files": 22,
+  "primary_repeat_exact": true,
+  "alternate_changed": [
+    "build.json",
+    "index.html",
+    "manifest.json",
+    "docs/index.html"
+  ],
+  "exe_sha256": "d6ef8b8608bfaf903d15f644c6970328ec1e4cd01b8a995f747ed2d2a12c2f12",
+  "renderer_digest_matches": true,
+  "source_commit": "2390e31127b4d8173c872f61abc48689a24c3cc4",
+  "head": "2390e31127b4d8173c872f61abc48689a24c3cc4",
+  "manifest_files_all_hash_bytes_verified": true
+}
