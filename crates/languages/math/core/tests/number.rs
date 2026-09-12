@@ -198,3 +198,105 @@ fn powers_and_comparison_stop_without_mutation() -> Result<(), ArithmeticError> 
     assert_eq!((base, exponent), before);
     Ok(())
 }
+
+#[test]
+fn rational_roots_distinguish_exact_algebraic_and_complex() -> Result<(), ArithmeticError> {
+    use number::RootValue::{AlgebraicValueRequired, ComplexValueRequired, Exact};
+    // An independent small-integer oracle enumerates possible roots; it does
+    // not use the production bisection or rational exponentiation routines.
+    for degree in 2_u32..=6 {
+        for value in 0_i64..=64 {
+            let root = (0_i64..=value)
+                .find(|candidate| i128::from(*candidate).pow(degree) == i128::from(value));
+            let expected = match root {
+                Some(v) => Exact(q(v, 1)?),
+                None => AlgebraicValueRequired,
+            };
+            assert_eq!(
+                number::root_integer(
+                    &q(value, 1)?,
+                    &Integer::from(u64::from(degree)),
+                    &mut budget()
+                )?,
+                expected,
+                "value={value} degree={degree}"
+            );
+        }
+    }
+    for (n, d, degree, expected) in [
+        (4, 9, 2_i64, Exact(q(2, 3)?)),
+        (-8, 27, 3, Exact(q(-2, 3)?)),
+        (2, 9, 2, AlgebraicValueRequired),
+        (4, 3, 2, AlgebraicValueRequired),
+        (-4, 9, 2, ComplexValueRequired),
+        (-2, 1, 3, AlgebraicValueRequired),
+        (-13, 17, 1, Exact(q(-13, 17)?)),
+    ] {
+        assert_eq!(
+            number::root_integer(&q(n, d)?, &Integer::from(degree), &mut budget())?,
+            expected
+        );
+    }
+    for degree in [0_i64, -1, -2] {
+        assert_eq!(
+            number::root_integer(&q(0, 1)?, &Integer::from(degree), &mut budget()),
+            Err(ArithmeticError::InvalidRootDegree)
+        );
+    }
+    let huge = num_bigint::BigInt::from(1_u64) << 100_usize;
+    for (n, degree, expected) in [
+        (0, huge.clone(), Exact(q(0, 1)?)),
+        (1, huge.clone(), Exact(q(1, 1)?)),
+        (2, huge.clone(), AlgebraicValueRequired),
+        (-1, huge.clone(), ComplexValueRequired),
+        (-1, huge + 1_u32, Exact(q(-1, 1)?)),
+    ] {
+        assert_eq!(
+            number::root_integer(&q(n, 1)?, &Integer::from_bigint(degree), &mut budget())?,
+            expected
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn root_resource_stop_is_never_a_symbolic_result() -> Result<(), ArithmeticError> {
+    let value = q(81, 625)?;
+    let degree = Integer::from(4_i64);
+    let originals = (value.clone(), degree.clone());
+    let mut measured = budget();
+    assert_eq!(
+        number::root_integer(&value, &degree, &mut measured)?,
+        number::RootValue::Exact(q(3, 5)?)
+    );
+    for (reason, used) in [
+        (StopReason::WorkLimit, measured.usage().work),
+        (
+            StopReason::AllocationLimit,
+            measured.usage().allocation_units,
+        ),
+    ] {
+        for cap in [0, used / 2, used - 1] {
+            let mut limits = budget().limits();
+            if reason == StopReason::WorkLimit {
+                limits.work = cap;
+            } else {
+                limits.allocation_units = cap;
+            }
+            let mut b = Budget::new(limits);
+            assert_eq!(
+                number::root_integer(&value, &degree, &mut b),
+                Err(ArithmeticError::Stopped(reason))
+            );
+            assert_eq!(b.poll(), Err(reason));
+        }
+    }
+    let mut b = budget();
+    b.cancel();
+    assert_eq!(
+        number::root_integer(&q(-1, 1)?, &Integer::from(2_i64), &mut b),
+        Err(ArithmeticError::Stopped(StopReason::Cancelled))
+    );
+    assert_eq!((value, degree), originals);
+    Ok(())
+}

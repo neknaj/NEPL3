@@ -10,6 +10,7 @@ use num_traits::{One, Zero};
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ArithmeticError {
     DivisionByZero,
+    InvalidRootDegree,
     Stopped(StopReason),
 }
 impl From<StopReason> for ArithmeticError {
@@ -230,4 +231,124 @@ pub fn pow_integer(
         }
     }
     Ok(result)
+}
+
+/// Exact rational root or the numeric domain needed to represent it.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum RootValue {
+    Exact(Rational),
+    AlgebraicValueRequired,
+    ComplexValueRequired,
+}
+
+/// Positive integer degree only. Odd roots preserve a negative sign; even roots
+/// of negative values require the complex domain. Canonical numerator and
+/// denominator must both be perfect powers for an exact rational result.
+/// Bisection uses O(B) probes for B-bit integers, each with O(log degree)
+/// bounded-size multiplications. Budget stops are errors, never symbolic values.
+pub fn root_integer(
+    value: &Rational,
+    degree: &Integer,
+    b: &mut Budget,
+) -> Result<RootValue, ArithmeticError> {
+    b.charge(Resource::Work, 1)?;
+    let degree = degree.as_bigint();
+    if degree <= &BigInt::zero() {
+        return Err(ArithmeticError::InvalidRootDegree);
+    }
+    charge(bytes(value).saturating_add(degree.bits().div_ceil(8)), b)?;
+    let negative = value.numerator().as_bigint() < &BigInt::zero();
+    if negative && (degree % 2_u32).is_zero() {
+        return Ok(RootValue::ComplexValueRequired);
+    }
+    if degree.is_one() {
+        return Ok(RootValue::Exact(clone_with_budget(value, b)?));
+    }
+    let numerator = if negative {
+        -value.numerator().as_bigint()
+    } else {
+        value.numerator().as_bigint().clone()
+    };
+    let denominator = BigInt::from(value.denominator().clone());
+    let Some(numerator) = perfect_root(&numerator, degree, b)? else {
+        return Ok(RootValue::AlgebraicValueRequired);
+    };
+    let Some(denominator) = perfect_root(&denominator, degree, b)? else {
+        return Ok(RootValue::AlgebraicValueRequired);
+    };
+    charge(
+        numerator
+            .bits()
+            .saturating_add(denominator.bits())
+            .div_ceil(8),
+        b,
+    )?;
+    let numerator = if negative { -numerator } else { numerator };
+    let exact =
+        Rational::new(numerator, denominator).map_err(|_| ArithmeticError::DivisionByZero)?;
+    Ok(RootValue::Exact(exact))
+}
+
+fn perfect_root(
+    value: &BigInt,
+    degree: &BigInt,
+    b: &mut Budget,
+) -> Result<Option<BigInt>, StopReason> {
+    charge(value.bits().saturating_add(degree.bits()).div_ceil(8), b)?;
+    if value.is_zero() || value.is_one() {
+        return Ok(Some(value.clone()));
+    }
+    // For a >= 2, a^degree has at least degree+1 bits. This also avoids any
+    // narrowing of arbitrary-precision degree to a native integer.
+    if degree >= &BigInt::from(value.bits()) {
+        return Ok(None);
+    }
+    let mut low = BigInt::one();
+    let mut high = value.clone();
+    while low <= high {
+        charge(value.bits().div_ceil(8).saturating_mul(3), b)?;
+        let mid = (&low + &high) / 2_u32;
+        match power_compare(&mid, degree, value, b)? {
+            core::cmp::Ordering::Equal => return Ok(Some(mid)),
+            core::cmp::Ordering::Less => low = mid + 1_u32,
+            core::cmp::Ordering::Greater => high = mid - 1_u32,
+        }
+    }
+    Ok(None)
+}
+
+fn power_compare(
+    base: &BigInt,
+    degree: &BigInt,
+    limit: &BigInt,
+    b: &mut Budget,
+) -> Result<core::cmp::Ordering, StopReason> {
+    charge(base.bits().saturating_add(degree.bits()).div_ceil(8), b)?;
+    let mut power = base.clone();
+    let mut remaining = degree.clone();
+    let mut result = BigInt::one();
+    while !remaining.is_zero() {
+        charge(
+            limit
+                .bits()
+                .saturating_mul(4)
+                .saturating_add(remaining.bits())
+                .div_ceil(8),
+            b,
+        )?;
+        if !(&remaining % 2_u32).is_zero() {
+            result *= &power;
+            if &result > limit {
+                return Ok(core::cmp::Ordering::Greater);
+            }
+        }
+        remaining /= 2_u32;
+        if !remaining.is_zero() {
+            power = &power * &power;
+            if &power > limit {
+                return Ok(core::cmp::Ordering::Greater);
+            }
+        }
+    }
+    Ok(result.cmp(limit))
 }
