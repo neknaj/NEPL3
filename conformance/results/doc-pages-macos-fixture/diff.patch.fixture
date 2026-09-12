@@ -1,0 +1,14 @@
+diff --git a/tools/site/test_record_smoke.py b/tools/site/test_record_smoke.py
+index b818967..27ca519 100644
+--- a/tools/site/test_record_smoke.py
++++ b/tools/site/test_record_smoke.py
+@@ -14,6 +14,9 @@ from test_receipt_journal import RAW
+ 
+ class RecordSmokeTests(unittest.TestCase):
+     def prepare(self, directory):
++        # macOS temporary roots can have symlink ancestors (/var -> /private/var).
++        # Resolve the host fixture location, not the production payload input.
++        directory = Path(directory).resolve(strict=True)
+         server, (mirror, _) = test_journal_remote.RemoteJournalTests().setup_repositories(directory)
+         root = Path(directory) / 'site'; root.mkdir()
+         files = {'index.html': b'<h1>Doc</h1>', 'build.json': encode(dict(source_commit='a'*40,
