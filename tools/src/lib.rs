@@ -6,6 +6,7 @@ pub mod doc;
 mod documentation;
 mod evidence;
 mod repository;
+pub mod site;
 mod task;
 
 #[cfg(test)]

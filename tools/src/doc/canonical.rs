@@ -52,7 +52,7 @@ pub struct Page {
     pub renderer: String,
 }
 
-fn bounded(root: &Path, relative: &str, limit: u64) -> Result<Vec<u8>> {
+pub(crate) fn bounded(root: &Path, relative: &str, limit: u64) -> Result<Vec<u8>> {
     // Require real regular repository files; aliases or platform links cannot
     // turn a canonical record into a write/read outside its declared path.
     let path = repository::local_path(root, relative)?;
@@ -227,6 +227,14 @@ pub fn html(root: &Path, manifest: &str, output: &Path) -> Result<()> {
     if output.exists() {
         return Err("output directory already exists".into());
     }
+    super::export::pages::write_generated(generate_html(root, manifest)?, output)
+}
+
+/// Generate the complete checked set for host composition before any writes.
+pub(crate) fn generate_html(
+    root: &Path,
+    manifest: &str,
+) -> Result<super::export::pages::GeneratedPages> {
     let registry = load(root, manifest)?;
     let mut output_budget = registry.html_output_limits.budget();
     let mut inputs = Vec::new();
@@ -253,5 +261,5 @@ pub fn html(root: &Path, manifest: &str, output: &Path) -> Result<()> {
         &inputs,
         &mut output_budget,
     )?;
-    super::export::pages::write_generated(generated, output)
+    Ok(generated)
 }
