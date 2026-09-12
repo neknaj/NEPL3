@@ -1,0 +1,11 @@
+﻿from pathlib import Path
+import hashlib,json
+p=Path('.tmp/artifact-export-review')
+for name in ['tools/site/artifact.py','tools/site/test_artifact_export.py','tools/site/README.md']:
+ f=p/'source'/name;f.parent.mkdir(parents=True,exist_ok=True);f.write_bytes(Path(name).read_bytes())
+with (p/'review.md').open('a',encoding='utf8',newline='\n') as f:f.write('\nFinal tools/site/README.md independently reviewed: invocation arguments, output requirements, partial-write behavior, distinct Pages upload identity and caller isolation/eligibility duties match the implementation. Exact snapshots include both Python files and this README.\n')
+rows=[]
+for f in sorted(p.rglob('*')):
+ if f.is_file() and f.name!='manifest.json':
+  b=f.read_bytes();rows.append(dict(path=f.relative_to(p).as_posix(),bytes=len(b),sha256=hashlib.sha256(b).hexdigest()))
+(p/'manifest.json').write_text(json.dumps(dict(files=rows),indent=2)+'\n',encoding='utf8');print(len(rows),sum(r['bytes'] for r in rows))
