@@ -1,0 +1,11 @@
+# Independent review: Pages deployment receipt/status parser
+
+Verdict: no remaining blocking finding in the scoped host parser. Exact reviewed source bytes are under source/.
+
+Independently checked the chapter 15 distinction between a deployment result and current publication, the new parser and tests, GitHub's REST Pages documentation, and actions/deploy-pages API/state processing. sources.md records primary-source links and the endpoint/status comparison. The creation example's /status suffix differs from the documented GET route; the parser appropriately validates either matching receipt spelling and locally constructs the GET endpoint. The documented GET body contains only status, so its deployment attribution must come from the verified request.
+
+Resolved finding: a manually constructed Receipt could initially pair one deployment ID with another deployment's endpoint and an invalid digest; observed accepted it and misattributed SUCCEEDED. receipt-repro.py/json preserve the original acceptance. The owner added construction-time validation and revalidation at the observation boundary. The independent final probe rejects inconsistent IDs, invalid digests and a receipt tampered after construction.
+
+Five tests independently passed normally and with Python -O; raw output and exit codes are preserved. A separate probe checks all implemented pending/failure states, succeed, the known lost/temporary states and a future state, response-byte digest retention, the exact 65,536-byte limit and rejection at 65,537, plus Receipt invariant revalidation. Creation without the optional /status suffix also passes. Final-probe evidence is preserved separately from the initial failing counterexample.
+
+The README correctly states that known lost/temporary states conservatively become UNKNOWN and require reconciliation; this intentionally does not reproduce deploy-pages automatic retry. The parser performs no HTTP calls. HTTP success, authenticated TLS, redirect/endpoint handling and response attribution remain transport responsibilities. Neither created receipts nor status succeed prove current publication, journal freshness, payload identity, smoke success or immutable LKG storage. No live deployment, authenticated status request, publisher transition or LKG acceptance was executed by this reviewer. Production code was not edited.

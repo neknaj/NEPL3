@@ -1,0 +1,13 @@
+# Independent review: polling with per-response journal recording
+
+Verdict: no remaining blocking finding in the reviewed recorded-wait scope. Exact final source snapshots are under source/.
+
+Reviewed the diff after 766b064, the poll response callback, wait_recorded bridge, integration tests and README against chapter 15's bounded status observation and journal evidence requirements. Each fetched response reaches the persistence callback before the next fetch or successful return. Persist/replay/CAS exceptions propagate without another request. The bridge returns the last successfully recorded head and poll report, and rejects terminal/unknown history before fetching. Default poll behavior remains available without a callback.
+
+Resolved independent finding: the initial journal history read was outside the supplied remaining budget, permitting a fresh five-second fetch after a simulated six-second read despite only five seconds remaining at entry. initial-budget-repro.py/json preserve this original acceptance. The owner now validates the budget and captures an absolute deadline before loading, rejects an exhausted budget without fetching, and passes that same absolute deadline into polling. initial-budget-final records zero fetches and DEADLINE for the same case.
+
+Independent final tests: eight real-Git receipt/status/recorded-wait tests and five existing poll tests passed normally and under Python -O. These include recording the first response before the next request, two-response success with exact final head, and a competing writer causing the append to fail with no further fetch and preservation of the winner. An additional deterministic probe spends two of five seconds on initial validation, verifies a three-second fetch budget, then spends four seconds persisting success: the response and updated head are retained, but the report is DEADLINE. commands.json and raw outputs preserve executions.
+
+The host must provide its actual remaining deployment budget; this bridge cannot establish elapsed time across restarts from API response bytes. Journal I/O and subprocess startup/cleanup may overrun a wall-clock deadline, but no late success becomes a successful wait or a fresh request budget. The callback establishes local recording only, not protected-remote durability or authenticated response provenance. No live API, remote journal publication, publisher authorization/state transition, public identity/smoke or LKG promotion was performed. The reviewer made no implementation edits.
+
+All four source snapshots match final commit 5704a7c byte-for-byte. This review makes no assertion about current GitHub Pages settings or the public URL; separately performed host preflight is outside these local test results.

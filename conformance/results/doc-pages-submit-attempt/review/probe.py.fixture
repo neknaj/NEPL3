@@ -1,0 +1,39 @@
+﻿from pathlib import Path
+import sys,json,tempfile
+from dataclasses import replace
+from unittest.mock import patch
+sys.path.insert(0,str(Path('tools/site').resolve()))
+from test_submit import SubmitTests
+from test_receipt_journal import RAW
+from deployment.submit import submit,_submit
+from deployment.create import CreationUnknown
+from deployment.journal import latest_created
+from journal import load,remote
+p=Path('.tmp/submit-attempt-review');t=SubmitTests();records=[]
+with tempfile.TemporaryDirectory() as d:
+ server,mirror,intent,kwargs=t.setup(d);original=remote.publish;pushes=[]
+ def publish(*a,**k):
+  pushes.append(a)
+  if len(pushes)==2:raise ValueError('simulated receipt push failure')
+  return original(*a,**k)
+ with patch.object(remote,'publish',publish),patch('deployment.submit.create',return_value=(None,RAW)) as send:
+  try:submit(mirror,None,intent,**kwargs);raise AssertionError('receipt failure accepted')
+  except ValueError as ex:reason=str(ex)
+  assert send.call_count==1
+  local=load(mirror);server_state=load(server)
+  assert local.events[-1].kind=='DeployReceipt' and server_state.events[-1].kind=='DeployIntent'
+  assert latest_created(mirror,owner='neknaj',repository='NEPL3')[3]==RAW
+  try:submit(mirror,local.head,intent,**kwargs);raise AssertionError('resubmitted receipt failure')
+  except ValueError:pass
+  assert send.call_count==1
+ records.append(dict(case='receipt push failure',post_calls=1,local_receipt_preserved=True,remote_intent_preserved=True,replay_rejected=True,error=reason))
+with tempfile.TemporaryDirectory() as d:
+ server,mirror,intent,kwargs=t.setup(d);intent=replace(intent,kind='RecoveryIntent')
+ with patch('deployment.submit.create',return_value=(None,RAW)) as send:
+  try:_submit(mirror,None,intent,**kwargs,clock=iter([0,5,61]).__next__,send=send);raise AssertionError('late receipt accepted')
+  except CreationUnknown as ex:reason=str(ex)
+  assert send.call_count==1 and send.call_args.kwargs['timeout']==10
+ assert load(server).head==load(mirror).head and load(server).events[-1].kind=='RecoveryReceipt'
+ assert latest_created(server,owner='neknaj',repository='NEPL3')[3]==RAW
+ records.append(dict(case='late RecoveryReceipt',post_calls=1,remote_receipt_preserved=True,successful_return=False,error=reason))
+(p/'probe-results.json').write_text(json.dumps(records,indent=2)+'\n',encoding='utf8');print(json.dumps(records,indent=2))

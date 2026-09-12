@@ -1,0 +1,24 @@
+[
+  {
+    "case": "reordered pins/metadata",
+    "result": "original bytes retained"
+  },
+  {
+    "case": "compressed wrapper",
+    "storage": "valid",
+    "recovery": "rejected",
+    "error": "invalid header"
+  },
+  {
+    "case": "trailing zero block",
+    "storage": "valid",
+    "recovery": "rejected",
+    "error": "noncanonical saved tar"
+  },
+  {
+    "case": "truncated archive",
+    "storage": "valid",
+    "recovery": "rejected",
+    "error": "missing manifest"
+  }
+]

@@ -1,0 +1,20 @@
+﻿from pathlib import Path
+import sys,json,tempfile
+from unittest.mock import patch
+sys.path.insert(0,str(Path('tools/site').resolve()))
+from test_remote_wait import RemoteWaitTests
+from deployment.journal import status_history
+from deployment.receipt import observed
+from deployment.transport import Result
+from journal import load,remote
+p=Path('.tmp/remote-wait-review');t=RemoteWaitTests();now=[0.0]
+with tempfile.TemporaryDirectory() as d:
+ server,mirror,head,receipt=t.prepare(d);raw=b'{"status":"succeed"}';result=Result(observed(raw,receipt=receipt,request_url=receipt.status_endpoint),raw);original=remote.publish
+ def delayed_ack(*args,**kwargs):
+  confirmation=original(*args,**kwargs);now[0]=61.0;return confirmation
+ with patch('time.monotonic',side_effect=lambda:now[0]),patch('deployment.transport.status',return_value=result) as fetch,patch.object(remote,'publish',side_effect=delayed_ack):
+  final,report=t.run_wait(server,mirror,head)
+ assert report.stop.value=='deadline' and fetch.call_count==1 and load(server).head==final==load(mirror).head
+ assert status_history(server,owner='neknaj',repository='NEPL3').observations[0].raw_response==raw
+ record={'stop':report.stop.value,'fetches':fetch.call_count,'remote_and_local_acknowledged_head_equal':True,'raw_success_retained':True,'scope':'real Git push and ack; deterministic simulated ack elapsed time'}
+(p/'late-ack-results.json').write_text(json.dumps(record,indent=2)+'\n',encoding='utf8');print(json.dumps(record,indent=2))

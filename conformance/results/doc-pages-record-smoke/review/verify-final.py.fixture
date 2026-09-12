@@ -1,0 +1,39 @@
+﻿from pathlib import Path
+import subprocess,json,sys,tempfile,hashlib
+from concurrent.futures import ThreadPoolExecutor
+from unittest.mock import patch
+p=Path('.tmp/record-smoke-review');p.mkdir(exist_ok=True)
+sources=['tools/site/deployment/smoke.py','tools/site/test_record_smoke.py','tools/site/deployment/README.md','tools/site/smoke.py']
+for name in sources:
+ out=p/'source'/name;out.parent.mkdir(parents=True,exist_ok=True);out.write_bytes(Path(name).read_bytes())
+def run(opt):
+ cmd=[sys.executable]+opt+['-m','unittest','discover','-s','tools/site','-p','test_record_smoke.py'];r=subprocess.run(cmd,capture_output=True);label='optimized' if opt else 'normal';(p/(label+'.stdout')).write_bytes(r.stdout);(p/(label+'.stderr')).write_bytes(r.stderr);return dict(command=cmd,exit_code=r.returncode)
+with ThreadPoolExecutor(2) as pool: results=list(pool.map(run,[[],['-O']]))
+(p/'commands.json').write_text(json.dumps(results,indent=2)+'\n',encoding='utf8')
+sys.path.insert(0,str(Path('tools/site').resolve()))
+from test_record_smoke import RecordSmokeTests
+from deployment.smoke import _record
+from journal import load,remote
+from journal.model import decode
+checks=[]
+for mode in ['cap','exact-cap','late-push']:
+ with tempfile.TemporaryDirectory() as d:
+  server,args,kwargs,report=RecordSmokeTests().prepare(d);now=[0];calls=[]
+  if mode!='late-push':kwargs['remaining_seconds']=3600
+  def observe(*a,**k):
+   calls.append(k['timeout']);now[0]=301 if mode=='cap' else (300 if mode=='exact-cap' else 1);return report
+  original=remote.publish
+  def publish(*a,**k):
+   result=original(*a,**k)
+   if mode=='late-push':now[0]=61
+   return result
+  rejected=False
+  with patch('deployment.smoke.remote.publish',side_effect=publish):
+   try:_record(*args,**kwargs,clock=lambda:now[0],observe=observe)
+   except ValueError as e:rejected='deadline' in str(e)
+  state=load(server);evidence=decode(state.evidence[-1]);expected='SmokePassed' if mode=='late-push' else 'SmokeFailed'
+  assert rejected and state.events[-1].kind==expected and evidence['report']==report
+  checks.append(dict(case=mode,rejected=rejected,remote_kind=state.events[-1].kind,deadline_exceeded=evidence['deadline_exceeded'],http_budget=calls[0],raw_report_preserved=True))
+(p/'recheck.json').write_text(json.dumps(checks,indent=2)+'\n',encoding='utf8')
+print(json.dumps(dict(tests=results,probes=checks),indent=2))
+assert all(r['exit_code']==0 for r in results)

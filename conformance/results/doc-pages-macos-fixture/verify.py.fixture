@@ -1,0 +1,24 @@
+﻿from pathlib import Path
+import os,sys,tempfile,subprocess,json
+from unittest.mock import patch
+p=Path('.tmp/macos-fixture-review');sys.path.insert(0,str(Path('tools/site').resolve()))
+from test_record_smoke import RecordSmokeTests
+from deployment.smoke import record
+from payload import real_directory
+from journal import load
+with tempfile.TemporaryDirectory() as d:
+ parent=Path(d).resolve();target=parent/'real';target.mkdir();link=parent/'alias'
+ subprocess.run(['powershell','-NoProfile','-Command','New-Item -ItemType Junction -Path $env:NEPL_LINK -Target $env:NEPL_TARGET | Out-Null'],env={**os.environ,'NEPL_LINK':str(link),'NEPL_TARGET':str(target)},check=True)
+ try:
+  rejected=False
+  try:real_directory(link)
+  except ValueError as e:rejected='linked or non-directory ancestor' in str(e)
+  if not rejected:raise ValueError('production accepted alias')
+  server,args,kw,report=RecordSmokeTests().prepare(link)
+  if args[2]!=target/'site':raise ValueError('fixture did not canonicalize')
+  with patch('deployment.smoke.http_smoke.run',return_value=report):head,result=record(*args,**kw)
+  if load(server).head!=head:raise ValueError('remote mismatch')
+  outcome=dict(production_alias_rejected=rejected,resolved_fixture_passed=True,remote_smoke_passed=load(server).events[-1].kind=='SmokePassed')
+ finally:os.rmdir(link)
+(p/'probe.json').write_text(json.dumps(outcome,indent=2)+'\n',encoding='utf8');print(json.dumps(outcome))
+cmd=[sys.executable,'-m','unittest','discover','-s','tools/site','-p','test_payload.py'];r=subprocess.run(cmd,capture_output=True);(p/'payload.stdout').write_bytes(r.stdout);(p/'payload.stderr').write_bytes(r.stderr);(p/'commands.json').write_text(json.dumps([dict(command=cmd,exit_code=r.returncode)],indent=2)+'\n',encoding='utf8');sys.exit(r.returncode)

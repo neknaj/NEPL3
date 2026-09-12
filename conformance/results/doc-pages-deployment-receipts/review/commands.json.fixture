@@ -1,0 +1,39 @@
+[
+  {
+    "name": "normal",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_deployment.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "optimized",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_deployment.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "final-probe",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      ".tmp\\deployment-receipt-review\\final-probe.py"
+    ],
+    "exit_code": 0
+  }
+]

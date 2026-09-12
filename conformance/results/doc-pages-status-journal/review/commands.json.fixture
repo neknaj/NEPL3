@@ -1,0 +1,31 @@
+[
+  {
+    "name": "normal",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_receipt_journal.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "optimized",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_receipt_journal.py"
+    ],
+    "exit_code": 0
+  }
+]

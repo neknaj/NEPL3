@@ -1,0 +1,9 @@
+{
+  "elapsed_before_first_fetch": 6,
+  "supplied_remaining_seconds": 5,
+  "fetch_budgets": [
+    5
+  ],
+  "stop": "succeeded",
+  "scope": "deterministic simulated initial history-load cost"
+}

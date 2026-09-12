@@ -1,0 +1,10 @@
+[
+  {
+    "command": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      ".tmp\\deployment-integration-review\\verify.py"
+    ],
+    "exit_code": 0
+  }
+]

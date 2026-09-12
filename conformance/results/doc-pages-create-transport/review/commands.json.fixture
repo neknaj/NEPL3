@@ -1,0 +1,68 @@
+[
+  {
+    "name": "create-normal",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_create.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "create-optimized",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_create.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "transport-normal",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_transport.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "transport-optimized",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_transport.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "worker-http",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      ".tmp\\create-transport-review\\worker-http-probe.py"
+    ],
+    "exit_code": 0
+  }
+]

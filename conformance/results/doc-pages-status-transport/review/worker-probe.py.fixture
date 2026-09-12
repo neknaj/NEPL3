@@ -1,0 +1,13 @@
+﻿from pathlib import Path
+import subprocess,sys,json,base64
+p=Path('.tmp/pages-transport-review');root=Path.cwd();site=root/'tools/site'
+code="import sys,runpy; sys.path.insert(0,sys.argv[1]); import deployment.transport as t; from types import SimpleNamespace; t._status=lambda *a,**k: SimpleNamespace(raw_response=b'{\"status\":\"succeed\"}'); runpy.run_path(sys.argv[2],run_name='__main__')"
+request={'receipt':{'deployment_id':'123','status_endpoint':'https://api.github.com/repos/neknaj/NEPL3/pages/deployments/123','response_sha256':'a'*64},'token':'private-test-token','timeout':1}
+results=[]
+for name,data,expected in [('valid',json.dumps(request).encode(),0),('malformed',b'{private-test-token',1),('oversized',b'x'*12001,1)]:
+ r=subprocess.run([sys.executable,'-I','-c',code,str(site),str(site/'deployment/worker.py')],input=data,capture_output=True,timeout=5)
+ assert r.returncode==expected and not r.stderr and b'private-test-token' not in r.stdout
+ if name=='valid':assert base64.b64decode(r.stdout,validate=True)==b'{"status":"succeed"}'
+ else:assert not r.stdout
+ results.append({'case':name,'exit_code':r.returncode,'stdout':r.stdout.decode(),'stderr':r.stderr.decode()})
+(p/'worker-probe.json').write_text(json.dumps(results,indent=2)+'\n',encoding='utf8');print(json.dumps(results))
