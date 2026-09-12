@@ -1,4 +1,6 @@
 use crate::{Result, evidence, json, read, repository::local_path};
+mod acceptance;
+use acceptance::ids as acceptance_ids;
 use serde::Deserialize;
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -198,20 +200,6 @@ pub(crate) fn dag(graph: &BTreeMap<&str, Vec<&str>>, context: &str) -> Result<()
     }
 }
 
-fn acceptance_ids(text: &str) -> Result<BTreeSet<&str>> {
-    unique(
-        text.lines().filter_map(|line| {
-            let (id, _) = line.split_once(':')?;
-            let bytes = id.as_bytes();
-            (bytes.len() == 3
-                && bytes[0].is_ascii_uppercase()
-                && bytes[1..].iter().all(u8::is_ascii_digit))
-            .then_some(id)
-        }),
-        "acceptance specification",
-    )
-}
-
 fn states(
     root: &Path,
     entries: &[State],
@@ -274,7 +262,8 @@ pub(crate) fn load(root: &Path) -> Result<(TaskFile, StatusFile)> {
         }
     }
     let acceptance_text = read(root, "doc/spec/11-conformance.md")?;
-    let acceptance = acceptance_ids(&acceptance_text)?;
+    let acceptance_owned = acceptance_ids(&acceptance_text)?;
+    let acceptance: BTreeSet<&str> = acceptance_owned.iter().map(String::as_str).collect();
     if acceptance.is_empty() {
         return Err("acceptance catalog is empty".into());
     }
@@ -547,9 +536,19 @@ mod tests {
     }
 
     #[test]
+    fn acceptance_ids_read_annotated_list_definitions() -> Result<()> {
+        let ids = acceptance_ids(
+            "- X01\\: [外部](guide.md)\n\n<!-- -->\n\n- G01\\: <ruby>文法<rt>ぶんぽう</rt></ruby>\n- G02\\: second\n",
+        )?;
+        assert_eq!(ids.len(), 3);
+        assert!(ids.contains("X01") && ids.contains("G01") && ids.contains("G02"));
+        Ok(())
+    }
+
+    #[test]
     fn acceptance_ids_are_spec_definitions_only() -> Result<()> {
         let ids = acceptance_ids("# A01\nA01: first\nW03: second\nsee A02: elsewhere\n")?;
-        assert_eq!(ids, BTreeSet::from(["A01", "W03"]));
+        assert_eq!(ids, BTreeSet::from(["A01".into(), "W03".into()]));
         assert!(acceptance_ids("A01: one\nA01: duplicate").is_err());
         Ok(())
     }

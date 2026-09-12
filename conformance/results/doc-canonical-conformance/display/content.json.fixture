@@ -1,0 +1,87 @@
+{
+  "required_catalog_count": 57,
+  "required_content_count": 57,
+  "required_id_set_equal": true,
+  "all_required_item_plain_text_exact": true,
+  "list_lengths": [
+    2,
+    5,
+    4,
+    5,
+    4,
+    6,
+    6,
+    3,
+    4,
+    8,
+    6,
+    9,
+    4
+  ],
+  "s06_cases": [
+    "(a)最新candidateのpublic smokeだけが失敗し元tarを復旧できる。",
+    "(b)後続の健康なdeploymentがあるため旧candidateの復旧を拒否する。",
+    "(c)cache/API/journal不一致・timeout・外部writer疑いで書込みを停止する。",
+    "(d)初回公開でLKGがない。",
+    "(e)Actions artifact失効後も永続snapshotから復旧する。",
+    "(f)復旧payload消失・改変。",
+    "(g)復旧deploy・再smokeの失敗。",
+    "(h)smoke合格後の保存/journal昇格失敗。",
+    "(i)deploy後にrunが強制cancelされ次のwriterがreconcileを要求する。"
+  ],
+  "separators": [
+    {
+      "before": "- X02\\: Rust source APIの互換性\\[ごかんせい\\",
+      "after": "- G01\\: Grammar自身\\[じしん\\]をseedで読\\[よ\\",
+      "between_items": true
+    },
+    {
+      "before": "- G05\\: native provider \\/ NDF loop",
+      "after": "- P01\\: prefixのserialize\\/parseで木\\[",
+      "between_items": true
+    },
+    {
+      "before": "- P04\\: Recover parseがMissing\\/Unpa",
+      "after": "- D01\\: sentence literalとprefix構築\\[",
+      "between_items": true
+    },
+    {
+      "before": "- D05\\: HTMLにユーザー由来\\[ゆらい\\]scriptが出\\",
+      "after": "- M01\\: 1\\/2\\+1\\/3\\=5\\/6、0\\.1\\+0\\.2",
+      "between_items": true
+    },
+    {
+      "before": "- M04\\: すべてのMath constructorをMathML",
+      "after": "- C01\\: half\\-adderを全\\[ぜん\\]4入力\\[にゅう",
+      "between_items": true
+    },
+    {
+      "before": "- C06\\: vector evaluatorと独立\\[どくりつ\\]",
+      "after": "- E01\\: 日本語\\[にほんご\\]\\/補助平面文字\\[ほじょへいめ",
+      "between_items": true
+    },
+    {
+      "before": "- E06\\: code表示\\[ひょうじ\\]が不正\\[ふせい\\]\\/非",
+      "after": "- W01\\: NDFの全\\[ぜん\\]variant roundtri",
+      "between_items": true
+    },
+    {
+      "before": "- W03\\: continuationの誤用\\[ごよう\\]、未知\\[",
+      "after": "- A01\\: workspace DAG、依存許可集合\\[いぞんきょ",
+      "between_items": true
+    },
+    {
+      "before": "- A04\\: typed errorsのcatalog、診断\\[しん",
+      "after": "- U01\\: TEAのinit\\/update\\/view\\/sub",
+      "between_items": true
+    },
+    {
+      "before": "- U08\\: UI\\/Worker型\\[がた\\]のschema cl",
+      "after": "- S01\\: SiteConfigの \\/NEPL3\\/ と別\\[べ",
+      "between_items": true
+    }
+  ],
+  "original_code_count": 24,
+  "generated_code_count": 25,
+  "extra_inline_code": "]]>"
+}

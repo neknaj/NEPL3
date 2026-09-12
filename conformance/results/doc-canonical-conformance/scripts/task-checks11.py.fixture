@@ -1,0 +1,7 @@
+﻿from pathlib import Path
+import subprocess,json,time
+out=Path('.tmp/task-checks11');out.mkdir(exist_ok=False);head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip();start=time.monotonic();cmd=['cargo','test','--locked','-p','nepl3-tools','--lib','task::']
+with (out/'stdout.log').open('wb') as a,(out/'stderr.log').open('wb') as b:
+ p=subprocess.Popen(cmd,stdout=a,stderr=b);code=p.wait(timeout=180)
+(out/'result.json').write_text(json.dumps(dict(head=head,command=cmd,pid=p.pid,exit_code=code,elapsed_seconds=time.monotonic()-start),indent=2)+'\n',encoding='utf-8')
+print('task checker tests',code);raise SystemExit(code)

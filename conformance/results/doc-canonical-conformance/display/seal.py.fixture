@@ -1,0 +1,8 @@
+from pathlib import Path
+import json,hashlib
+OUT=Path(__file__).parent
+checks={'adopted_md_matches_resolved':Path('doc/spec/11-conformance.md').read_bytes()==Path('.tmp/markdown-resolved-first/doc/spec/11-conformance.md').read_bytes(),'head':'c0d4d126e9ac0a9f0872d2528344c743b70bc473'}
+(OUT/'adopted.json').write_text(json.dumps(checks,indent=2),encoding='utf-8')
+files=[{'path':p.relative_to(OUT).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in OUT.rglob('*') if p.is_file() and p.name!='seal.json']
+(OUT/'seal.json').write_text(json.dumps(files,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps({'files':len(files),'max_bytes':max(x['bytes'] for x in files),'total_bytes':sum(x['bytes'] for x in files),**checks}))

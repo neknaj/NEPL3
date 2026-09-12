@@ -1,0 +1,29 @@
+from pathlib import Path
+import hashlib,json,subprocess
+root=Path.cwd();out=root/'.tmp/archive11';out.mkdir(exist_ok=False);rows=[]
+def save(owner,p,relative):
+    data=p.read_bytes();assert len(data)<1048576
+    name=f'{owner}/{relative}.fixture';dest=out/name
+    assert dest.resolve().is_relative_to(out.resolve())
+    dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(data)
+    rows.append(dict(owner=owner,file=name,restore=relative,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+for owner,directory in [('node-stop','generation'),('initial-generation','generation-expanded'),('generation','generation-resolved'),('checks','checks11'),('task-checks','task-checks11'),('html','html-resolved-first'),('markdown','markdown-resolved-first'),('preflight','preflight11')]:
+    d=root/'.tmp'/directory
+    for p in sorted(d.rglob('*')):
+        if p.is_file():save(owner,p,p.relative_to(d).as_posix())
+for name in ['generate11.py','generate11-expanded.py','generate11-resolved.py','check11.py','task-checks11.py','adopt11.py','restore11.py','archive11.py']:
+    save('scripts',root/'.tmp'/name,name)
+for name in ['original.md','original.nepld','acceptance-repro.stdout.log','acceptance-repro.stderr.log','acceptance-review-probe.rs','acceptance-fixed-probe.rs','review11-preliminary.md','review11-checker-b0072db.md','review11-final.md']:
+    save('review',root/'.tmp'/name,name)
+display=root/'.tmp/review11-display'
+seal=json.loads((display/'seal.json').read_text(encoding='utf-8'));save('display',display/'seal.json','seal.json')
+for row in seal:
+    p=display/row['path'];assert len(p.read_bytes())==row['bytes'] and hashlib.sha256(p.read_bytes()).hexdigest()==row['sha256']
+    save('display',p,row['path'])
+head='c0d4d126e9ac0a9f0872d2528344c743b70bc473';sources=[]
+for name in ['AGENTS.md','tools/src/task/mod.rs','tools/src/task/acceptance.rs','doc/development.md','doc/canonical.json','doc/spec/11-conformance.nepld','doc/spec/11-conformance.md','doc/spec/01-architecture.md','doc/spec/12-model-invariants.md','doc/spec/17-math-html.md','doc/migration/aliases/11-conformance.json']:
+    data=(root/name).read_bytes();assert data==subprocess.check_output(['git','show',head+':'+name])
+    sources.append(dict(path=name,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+(out/'payloads.json').write_text(json.dumps(dict(implementation_commit=head,sources=sources,files=rows),indent=2)+'\n',encoding='utf-8',newline='\n')
+(out/'.gitattributes').write_text('*.fixture -text -whitespace\n',encoding='utf-8',newline='\n')
+print(len(rows),'payloads',sum(r['bytes'] for r in rows),'bytes')

@@ -1,0 +1,75 @@
+[
+  {
+    "head": "c0d4d126e9ac0a9f0872d2528344c743b70bc473",
+    "command": [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 1.1896420999837574
+  },
+  {
+    "head": "c0d4d126e9ac0a9f0872d2528344c743b70bc473",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--lib",
+      "doc::canonical::tests::",
+      "--",
+      "--skip",
+      "synchronized_context_spec_drafts_parse_lower_and_check_labels"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 86.01276409998536
+  },
+  {
+    "head": "c0d4d126e9ac0a9f0872d2528344c743b70bc473",
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "--check"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 90.64473860000726
+  },
+  {
+    "head": "c0d4d126e9ac0a9f0872d2528344c743b70bc473",
+    "command": [
+      "cargo",
+      "clippy",
+      "--workspace",
+      "--all-targets",
+      "--locked",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 17.562062999990303
+  },
+  {
+    "head": "c0d4d126e9ac0a9f0872d2528344c743b70bc473",
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "check"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 15.470798000023933
+  }
+]

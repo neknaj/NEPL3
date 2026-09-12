@@ -1,0 +1,18 @@
+
+running 13 tests
+test task::tests::scoped_evidence_rejects_empty_checks_or_wrong_task ... ok
+test task::tests::acceptance_ids_read_annotated_list_definitions ... ok
+test task::acceptance::tests::duplicate_definitions_across_presentations_are_rejected ... ok
+test task::acceptance::tests::prose_lists_escapes_and_entities_have_the_same_visible_prefixes ... ok
+test task::tests::acceptance_ids_are_spec_definitions_only ... ok
+test task::tests::executed_status_requires_evidence ... ok
+test task::acceptance::tests::examples_quotes_tables_and_inline_markup_are_not_definitions ... ok
+test task::tests::final_completion_requires_all_global_acceptance_passed ... ok
+test task::tests::status_cannot_omit_an_acceptance_group ... ok
+test task::tests::scoped_task_completion_does_not_pretend_global_editor_acceptance_passed ... ok
+test task::acceptance::tests::inline_html_cannot_reenable_definitions_at_a_line_break ... ok
+test task::tests::terminal_task_uses_new_required_groups_and_not_optional_groups ... ok
+test task::tests::dependency_graph_rejects_cycle_missing_and_duplicate_edges ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 74 filtered out; finished in 0.00s
+

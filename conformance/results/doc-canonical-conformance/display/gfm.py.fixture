@@ -1,0 +1,25 @@
+from pathlib import Path
+import json,subprocess,sys
+from html.parser import HTMLParser
+OUT=Path(__file__).parent
+source=Path(sys.argv[1]);tag=sys.argv[2]
+payload=OUT/f'{tag}-request.json';payload.write_text(json.dumps({'text':source.read_text(encoding='utf-8'),'mode':'gfm','context':'neknaj/NEPL3'}),encoding='utf-8')
+r=subprocess.run(['gh','api','markdown','--input',str(payload)],capture_output=True)
+(OUT/f'{tag}.html').write_bytes(r.stdout);(OUT/f'{tag}.stderr.log').write_bytes(r.stderr)
+class P(HTMLParser):
+ def __init__(self):super().__init__();self.anchors=[];self.lists=[];self.stack=[];self.codes=[];self.incode=False
+ def handle_starttag(self,tag,attrs):
+  d=dict(attrs)
+  if 'id' in d or 'name' in d:self.anchors.append({'tag':tag,**d})
+  if tag in ('ul','ol'):self.lists.append(0);self.stack.append(len(self.lists)-1)
+  if tag=='li' and self.stack:self.lists[self.stack[-1]]+=1
+  if tag=='code':self.incode=True;self.codes.append('')
+ def handle_endtag(self,tag):
+  if tag in ('ul','ol'):self.stack.pop()
+  if tag=='code':self.incode=False
+ def handle_data(self,data):
+  if self.incode:self.codes[-1]+=data
+p=P();p.feed(r.stdout.decode('utf-8'))
+result={'exit':r.returncode,'anchors':p.anchors,'list_counts':p.lists,'codes':p.codes,'properties_matching':[x for x in p.anchors if '2-propertyとfuzz' in x.values()]}
+(OUT/f'{tag}.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps({'exit':r.returncode,'list_counts':p.lists,'codes':len(p.codes),'properties_matching':[x for x in p.anchors if any('2-propertyとfuzz' in str(v) for v in x.values())]},ensure_ascii=False))

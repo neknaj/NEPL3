@@ -1,0 +1,9 @@
+from pathlib import Path
+import json,hashlib,re
+OUT=Path(__file__).parent;first=Path('.tmp/html-expanded-first');resolved=Path('.tmp/html-resolved-first');second=Path('.tmp/html-resolved-second')
+comparison=lambda a,b:[{'path':p.relative_to(a).as_posix(),'same':p.read_bytes()==b.joinpath(p.relative_to(a)).read_bytes()} for p in a.rglob('*') if p.is_file()]
+a=Path('.tmp/markdown-expanded-first/doc/spec/11-conformance.md').read_text(encoding='utf-8');b=Path('.tmp/markdown-resolved-first/doc/spec/11-conformance.md').read_text(encoding='utf-8')
+normalize=lambda s:re.sub(r'\s+',' ',re.sub(r'<a name="[^"]+"></a>\s*','',re.sub(r'^<!-- Generated.*?-->\s*','',s))).strip()
+result={'resolved_vs_first_html':comparison(first,resolved),'resolved_repeat_html':comparison(resolved,second) if second.exists() else 'pending','md_visible_annotated_body_unchanged':normalize(a)==normalize(b),'resolved_markdown_separators':b.count('<!-- -->'),'resolved_manifest':json.loads((resolved/'manifest.json').read_text(encoding='utf-8'))['output_budget']}
+(OUT/'final-checks.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps({k:v for k,v in result.items() if k!='resolved_manifest'}))

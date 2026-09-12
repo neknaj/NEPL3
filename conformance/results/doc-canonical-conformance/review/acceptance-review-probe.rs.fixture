@@ -1,0 +1,9 @@
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+#[path = "../tools/src/task/acceptance.rs"]
+mod acceptance;
+fn main() {
+    for text in ["intro <span hidden>\nA01: hidden definition\n</span>\n", "<span hidden>intro\nA01: hidden definition</span>\n", "A01: valid\n\n- W02\\: valid\n"] {
+        println!("INPUT {text:?} RESULT {:?}", acceptance::ids(text));
+        println!("EVENTS {:?}", pulldown_cmark::Parser::new(text).collect::<Vec<_>>());
+    }
+}

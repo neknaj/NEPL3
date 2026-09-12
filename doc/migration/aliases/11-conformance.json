@@ -1,0 +1,26 @@
+[
+  {
+    "section": null,
+    "name": "11-受入条件と検証"
+  },
+  {
+    "section": "policy",
+    "name": "方針"
+  },
+  {
+    "section": "required",
+    "name": "1-必須の試験群"
+  },
+  {
+    "section": "ci",
+    "name": "3-不変条件のci"
+  },
+  {
+    "section": "stages",
+    "name": "4-開発の段階"
+  },
+  {
+    "section": "evidence",
+    "name": "5-群全体の型付き証拠"
+  }
+]

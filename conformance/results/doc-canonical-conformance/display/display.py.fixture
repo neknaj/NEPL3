@@ -1,0 +1,44 @@
+from pathlib import Path
+from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
+from threading import Thread
+from playwright.sync_api import sync_playwright
+import json,re,sys
+ROOT=Path(sys.argv[1]).resolve();OUT=Path(__file__).parent/sys.argv[2];OUT.mkdir(exist_ok=True)
+original=Path('.tmp/original.md').read_text(encoding='utf-8'); original_requirements=re.findall(r'^([A-Z][0-9]{2}): (.+)$',original,re.M)
+expected_ids=[x[0] for x in original_requirements]
+expected_codes=re.findall(r'`([^`]+)`',original);expected_codes.insert(1,']]>')
+class Handler(SimpleHTTPRequestHandler):
+ def log_message(self,*a):pass
+ def translate_path(self,path):
+  prefix=next((base for base in ['/NEPL3/','/review/nested/'] if path.startswith(base)),None)
+  if prefix is None:return str(ROOT/'missing')
+  return str(ROOT/path[len(prefix):].split('?',1)[0])
+server=ThreadingHTTPServer(('127.0.0.1',0),Handler);Thread(target=server.serve_forever,daemon=True).start()
+rows=[]
+try:
+ with sync_playwright() as p:
+  for name in ['chromium','firefox','webkit']:
+   browser=getattr(p,name).launch(headless=True)
+   for base in ['/NEPL3/','/review/nested/']:
+    for width in [375,1280]:
+     ctx=browser.new_context(java_script_enabled=False,viewport={'width':width,'height':900});page=ctx.new_page();failed=[]
+     page.on('requestfailed',lambda r:failed.append(r.url))
+     url=f'http://127.0.0.1:{server.server_port}{base}docs/spec/11-conformance.html';response=page.goto(url,wait_until='networkidle')
+     row=page.evaluate('''()=>{let plain=n=>{let c=n.cloneNode(true);c.querySelectorAll('.nepl-reading,.nepl-notes').forEach(x=>x.remove());return c.textContent};return {headings:[...document.querySelectorAll('h1,h2')].map(plain),codes:[...document.querySelectorAll('code')].map(n=>n.textContent),lists:[...document.querySelectorAll('article ul,article ol')].map(n=>[...n.children].map(plain)),ids:[...document.querySelectorAll('[id]')].map(n=>n.id),ruby:document.querySelectorAll('.nepl-ruby').length,css:[...document.styleSheets].map(s=>({href:s.href,rules:s.cssRules.length})),background:getComputedStyle(document.querySelector('article')).backgroundColor,scripts:document.scripts.length,overflow:document.documentElement.scrollWidth>innerWidth,links:[...document.querySelectorAll('a[href]')].map(n=>({href:n.getAttribute('href'),label:plain(n)}))}}''')
+     allitems=[x for group in row['lists'] for x in group];ids=[m.group(1) for s in allitems if (m:=re.match(r'^([A-Z][0-9]{2}):',s))]
+     row.update(browser=name,version=browser.version,base=base,width=width,status=response.status,failed=failed,codes_exact=row['codes']==expected_codes,required_ids_exact=ids==expected_ids)
+     row['requirement_text_differences']=[{'id':ident,'original':text,'rendered':next((s[len(ident)+2:] for s in allitems if s.startswith(ident+': ')),None)} for ident,text in original_requirements if next((s[len(ident)+2:] for s in allitems if s.startswith(ident+': ')),None)!=text]
+     if base=='/NEPL3/':
+      page.screenshot(path=str(OUT/f'{name}-{width}.png'))
+      page.locator('article ul').nth(11).scroll_into_view_if_needed();page.screenshot(path=str(OUT/f'{name}-{width}-s06.png'))
+     row['navigation']=[]
+     for ident in row['ids']:
+      page.goto(url+'#'+ident,wait_until='load')
+      row['navigation'].append(page.evaluate('''id=>({id,count:document.querySelectorAll('#'+id).length,top:document.getElementById(id).getBoundingClientRect().top,scroll:scrollY})''',ident))
+     page.goto(url,wait_until='load');page.locator('a[href="17-math-html.html"]').click();row['chapter17_target']=page.locator('h1').inner_text()
+     page.reload(wait_until='load');row['reload_target']=page.url
+     rows.append(row);ctx.close()
+   browser.close()
+finally:server.shutdown();server.server_close()
+(OUT/'results.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps([{k:r[k] for k in ['browser','base','width','status','overflow','codes_exact','required_ids_exact','failed']} for r in rows]))

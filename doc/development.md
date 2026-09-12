@@ -24,6 +24,14 @@ nepld正本へ移行し、検査済みの同じsite artifactを公開します�
 
 ## ローカル環境
 
+受入群の文書検査は、Markdownの本文・箇条書きの行頭にあるplainな `A01:` 型の定義を読みます。
+escapeや文字参照をdecodeした表示上のprefixを使うため、nepldから生成した `- A01\:` も
+同じ定義として扱います。見出し・引用・code・HTML・表・脚注や文中の単なる言及は定義にしません。
+ID自体をlinkや強調で組み立てず、説明部分に必要な注釈・code・linkを配置してください。
+inline HTMLを含む段落では、タグの後の改行から定義の抽出を再開しません。
+次の独立した段落・list itemから再開し、非表示span中のIDを定義と誤認するのを避けます。
+重複定義を拒否し、catalogとの集合一致と全required条件の検査は維持します。
+
 `doc/canonical.json` に登録された仕様はnepldを編集します。生成Markdownを直接変更しないでください。
 `cargo run --locked -p nepl3-tools -- doc-canonical --check` はproduction APIで再生成して差分を検査します。
 更新時は `doc-markdown annotated` で新しい一時ファイルへ生成し、差分をレビューして既存のprojectionへ反映します。

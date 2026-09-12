@@ -1,0 +1,20 @@
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+#[path = "../tools/src/task/acceptance.rs"]
+mod acceptance;
+fn main() -> Result<()> {
+    for fragment in ["intro <span hidden>\nA01: hidden definition\n</span>\n", "<span hidden>intro\nA01: hidden definition</span>\n", "intro <span hidden>  \nA01: hidden definition</span>\n", "intro <span hidden>\\\nA01: hidden definition</span>\n"] {
+        assert!(acceptance::ids(fragment)?.is_empty(), "{fragment:?}");
+        assert_eq!(acceptance::ids(&format!("{fragment}\nW02: independent\n"))?.into_iter().collect::<Vec<_>>(), ["W02"]);
+    }
+    let old = std::process::Command::new("git").args(["show", "bbc8e00:doc/spec/11-conformance.md"]).output()?;
+    assert!(old.status.success());
+    let old = String::from_utf8(old.stdout)?;
+    let new = std::fs::read_to_string("doc/spec/11-conformance.md")?;
+    let before=acceptance::ids(&old)?;
+    let after=acceptance::ids(&new)?;
+    assert_eq!(before, after);
+    assert_eq!(after.len(),57);
+    println!("PASS: four inline HTML/soft/hard-break cases excluded; next-paragraph recovery; original and generated IDs identical57");
+    println!("IDS={}", after.into_iter().collect::<Vec<_>>().join(","));
+    Ok(())
+}

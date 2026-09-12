@@ -1,0 +1,23 @@
+﻿from pathlib import Path
+import json,hashlib,subprocess
+root=Path.cwd();r=json.loads((root/'doc/canonical.json').read_bytes());changes=[];assert len(r['pages'])==12
+assert not subprocess.check_output(['git','status','--porcelain']).strip()
+for kind,count in [('markdown',13),('html',14)]:
+ def files(phase):
+  d=root/f'.tmp/{kind}-resolved-{phase}';return {p.relative_to(d).as_posix():p.read_bytes() for p in d.rglob('*') if p.is_file()}
+ a,b=files('first'),files('second');assert len(a)==count and a==b
+prior=root/'.tmp/prior17';preserved=[]
+for p in prior.rglob('*'):
+ if p.is_file() and p.name!='manifest.json':
+  n=p.relative_to(prior);assert p.read_bytes()==(root/'.tmp/html-resolved-first'/n).read_bytes();preserved.append(n.as_posix())
+assert len(preserved)==12
+pending=[]
+for page in r['pages']:
+ dest=root/page['projection'];old=dest.read_bytes();new=(root/'.tmp/markdown-resolved-first'/page['projection']).read_bytes()
+ if page['id'] in ['architecture','model-invariants','math-html']:assert old.split(b'\n\n',1)[1]==new.split(b'\n\n',1)[1]
+ elif page['id']!='conformance':assert old==new
+ if old!=new:changes.append(dict(path=page['projection'],old_sha256=hashlib.sha256(old).hexdigest(),new_sha256=hashlib.sha256(new).hexdigest()));pending.append((dest,new))
+assert len(changes)==4
+for dest,new in pending:dest.write_bytes(new)
+(root/'.tmp/generation-resolved/adoption.json').write_text(json.dumps(dict(changes=changes,prior_eleven_html_and_css_byte_identical=preserved),indent=2)+'\n',encoding='utf-8')
+print('Adopted chapter11 and three context headers; all prior11 HTML pages and CSS unchanged.')
