@@ -39,6 +39,34 @@ fn with_document<T>(
 }
 
 #[test]
+fn nested_labels_keep_declaration_order_and_pending_siblings() -> Result<(), String> {
+    let compiled = compiled()?;
+    let source = r#"article en "Title" body cons section z "First" body cons section a "Nested" body nil nil cons section m "Last" body cons paragraph cons sentence cons ref a text "nested" cons ref z text "first" cons ref m text "last" nil nil nil nil"#;
+    with_document(&compiled, source, |doc, r, b, a| {
+        let proof = labels::check(doc, r, b, a).map_err(err)?;
+        // Constructor preorder, neither name sorting nor arena index order:
+        // nested a is visited before the already queued sibling m.
+        assert_eq!(
+            proof
+                .definitions()
+                .iter()
+                .map(|s| s.name)
+                .collect::<Vec<_>>(),
+            vec!["z", "a", "m"]
+        );
+        assert_eq!(
+            proof
+                .references()
+                .iter()
+                .map(|s| s.target.0)
+                .collect::<Vec<_>>(),
+            vec![1, 0, 2]
+        );
+        Ok(())
+    })
+}
+
+#[test]
 fn article_labels_resolve_forward_names_and_keep_operand_selection() -> Result<(), String> {
     let compiled = compiled()?;
     let source = r#"article en "Title" body cons paragraph cons sentence cons ref later text "shown" nil nil cons section later "Heading" body nil nil"#;

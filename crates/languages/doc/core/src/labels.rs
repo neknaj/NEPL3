@@ -135,16 +135,17 @@ pub fn check<'a>(
         }
         // Preserve constructor/child order, not arena storage order. Charge
         // each queued child before allocation even for a very wide paragraph.
-        let mut children = Vec::new();
+        let start = pending.len();
         let mut next = 0;
         while let Some((child, _)) = edges::edge(&node.kind, next) {
             b.charge(Resource::Work, 1)?;
-            push(&mut children, child as usize, b)?;
+            push(&mut pending, child as usize, b)?;
             next += 1;
         }
-        for child in children.into_iter().rev() {
-            push(&mut pending, child, b)?;
-        }
+        // Reverse only this node's children, leaving queued siblings in place.
+        // The frontier owns each child once; no per-node scratch Vec is needed.
+        b.charge(Resource::Work, next as u64)?;
+        pending[start..].reverse();
     }
     let mut references = Vec::new();
     for reference in unresolved {
