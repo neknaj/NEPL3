@@ -1,4 +1,4 @@
-﻿# Independent archive review
+# Independent archive review
 
 Reviewed implementation checkpoint 6e47d57c874e53a894154b4a349132c34526b9b9 and the untracked conformance/results/doc-adjacent-lists archive prepared for PR100. No tracked diff exists beyond that checkpoint; all35 untracked paths are the32 fixture payloads plus manifest.json, README.md and local .gitattributes.
 
