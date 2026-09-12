@@ -193,4 +193,34 @@ let f=fields(v,s,"MathView",2)?;
 Ok(Self {head:Value::read(&f[0],s,c,b)?,view:Value::read(&f[1],s,c,b)?})
 }
 }
+impl Value for MathBinding {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathBinding",[self.occurrence.put(s,c,b)?,self.node.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,43)?;
+let f=fields(v,s,"MathBinding",2)?;
+Ok(Self {occurrence:Value::read(&f[0],s,c,b)?,node:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for MathSymbolUse {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathSymbolUse",[self.occurrence.put(s,c,b)?,self.node.put(s,c,b)?,self.binding.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,45)?;
+let f=fields(v,s,"MathSymbolUse",3)?;
+Ok(Self {occurrence:Value::read(&f[0],s,c,b)?,node:Value::read(&f[1],s,c,b)?,binding:Value::read(&f[2],s,c,b)?})
+}
+}
+impl Value for MathBindings {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathBindings",[self.definitions.put(s,c,b)?,self.uses.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,44)?;
+let f=fields(v,s,"MathBindings",2)?;
+Ok(Self {definitions:Value::read(&f[0],s,c,b)?,uses:Value::read(&f[1],s,c,b)?})
+}
+}
 }

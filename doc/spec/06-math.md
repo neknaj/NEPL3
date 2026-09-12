@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/06&#45;math.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page math; source SHA-256 0c469ae880473c47044cdb4d9d916ad7c0416a7632b3bbce1d7002d2b651525e; alias input SHA-256 cae137023719df65f4fdf356ff25c6fac5c3aaa15c90b6b91c82b313d5078aaf; document digest 3ef90005f4cc27f6de5561a4c2522e683cdaff726d5f893d4c974aaa8390b066; input PageSet digest fd6243f93762260623f00dab496f89cbf65e45ce20431682a0b7afa77831056d; input context SHA-256 4986b81eec90eb0942cc352c4783e4c27d260d01ccbab38383ecdaa45a3df44a. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/06&#45;math.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page math; source SHA-256 f0f0668ed2aba457ab8905f869ebaffeffca4ecdc6f4d4bbf5150c28efdef610; alias input SHA-256 cae137023719df65f4fdf356ff25c6fac5c3aaa15c90b6b91c82b313d5078aaf; document digest 1ac0fdc9ddd775de8f472f06276fb630f0c149a508bd9ed406ccaa17fc754ad5; input PageSet digest 81a57d7f4d0c89df2c97a7ef91f3b401c152035a6cfe805221c9c57166af2116; input context SHA-256 3a5bc7b2e8d8505c91fa329fabe2e087da06c869b0433e4e13308050ca79e220. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="06-math言語"></a>
 
@@ -108,10 +108,20 @@ MathMLは独立\[どくりつ\]した正式\[せいしき\]portable出力\[し�
 
 独自\[どくじ\]layout\/rasterizerを追加\[ついか\]する場合\[ばあい\]は、CheckedExpressionまたはMathLayout入力\[にゅうりょく\]modelを受\[う\]ける別\[べつ\]backendとする。OpenType MATH tableやglyph outlineの実装都合\[じっそうつごう\]をMathの意味\[いみ\]モデルへ持\[も\]ち込\[こ\]まない。
 
+<a name="n-62696e64696e6773"></a>
+
+## 6\. 束縛解析\[そくばくかいせき\]の交換値\[こうかんち\]
+
+MathBindingsは構造検査後\[こうぞうけんさご\]のMathValueに対\[たい\]する束縛解析\[そくばくかいせき\]であり、CheckedExpression全体\[ぜんたい\]の証明\[しょうめい\]ではない。MathBindingは束縛\[そくばく\]するformのoccurrenceとnodeを、MathSymbolUseは記号\[きごう\]のoccurrence・node・bindingを保持\[ほじ\]する。bindingがNoneなら自由記号\[じゆうきごう\]であり、Someなら最\[もっと\]も近\[ちか\]い束縛\[そくばく\]formのoccurrenceを指\[さ\]す。
+
+occurrenceはrootを0として、意味\[いみ\]field順\[じゅん\]に子\[こ\]をたどる先行順\[せんこうじゅん\]の番号\[ばんごう\]である。共有\[きょうゆう\]nodeも経路\[けいろ\]ごとに別\[べつ\]のoccurrenceを持\[も\]ち、RowとDocGuestにも番号\[ばんごう\]を割\[わ\]り当\[あ\]てる。DocGuestの内部\[ないぶ\]は走査\[そうさ\]せず、名前\[なまえ\]は文字列\[もじれつ\]の完全一致\[かんぜんいっち\]で比較\[ひかく\]する。
+
+definitionsとusesはそれぞれoccurrence順\[じゅん\]である。sourceとOriginは入力\[にゅうりょく\]nodeのfield locationを参照\[さんしょう\]し、自由記号\[じゆうきごう\]に定義位置\[ていぎいち\]を作\[つく\]らない。NDF境界\[きょうかい\]では入力\[にゅうりょく\]を指定\[してい\]して再解析\[さいかいせき\]し、参照先\[さんしょうさき\]・出現順\[しゅつげんじゅん\]・過不足\[かふそく\]の不一致\[ふいっち\]をBindingMismatchとして拒否\[きょひ\]する。全出現\[ぜんしゅつげん\]と名前比較\[なまえひかく\]に共通予算\[きょうつうよさん\]を適用\[てきよう\]し、停止\[ていし\]した結果\[けっか\]を部分成功\[ぶぶんせいこう\]として返\[かえ\]さない。
+
 <a name="n-7075626c6963"></a>
 
 <a name="6-公開操作"></a>
 
-## 6\. 公開操作\[こうかいそうさ\]
+## 7\. 公開操作\[こうかいそうさ\]
 
 lower、check、free\_symbols、evaluate、print、render\_mathml。評価結果\[ひょうかけっか\]、部分評価\[ぶぶんひょうか\]の新式\[しんしき\]、元\[もと\]の式\[しき\]を別値\[べつち\]として返\[かえ\]す。文書側\[ぶんしょがわ\]のrender要求\[ようきゅう\]がevaluateを自動\[じどう\]で要求\[ようきゅう\]しない。
