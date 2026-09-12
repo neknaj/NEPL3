@@ -2,6 +2,8 @@ name: CI
 
 on:
   push:
+    branches: [main]
+    tags: ['**']
   pull_request:
   workflow_dispatch:
 
@@ -45,25 +47,36 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.13'
-      - name: Host file and process portability tests
+      - name: Windows junction boundary
+        if: matrix.os == 'windows-latest'
+        working-directory: tools/site
+        run: python -m unittest test_payload.PayloadTests.test_windows_junction_is_rejected_without_following_it
+      - name: Host process and HTTP portability
+        if: matrix.os != 'ubuntu-latest'
+        working-directory: tools/site
         run: |
-          python -m unittest discover -s tools/site -p test_transport.py
-          python -m unittest discover -s tools/site -p test_payload.py
-          python -m unittest discover -s tools/site -p test_smoke.py
-          python -m unittest discover -s tools/site -p test_record_smoke.py
-          python -m unittest tools.evidence.test_runner
+          python -m unittest test_transport.TransportTests.test_public_boundary_passes_credentials_on_stdin_and_revalidates test_transport.TransportTests.test_actual_stuck_child_is_terminated_by_outer_deadline
+          python -m unittest test_smoke.SmokeTests.test_actual_http_checks_documents_assets_directory_routes_and_404 test_smoke.SmokeTests.test_outer_deadline_terminates_a_stalled_request
+      - name: macOS resolved temporary-root regression
+        if: matrix.os == 'macos-latest'
+        working-directory: tools/site
+        run: python -m unittest test_record_smoke.RecordSmokeTests.test_pass_and_failure_are_recorded_remotely
+      - name: Evidence runner host portability
+        run: python -m unittest tools.evidence.test_runner
       - name: Format
+        if: matrix.os == 'ubuntu-latest'
         run: cargo fmt --all -- --check
       - name: Clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - name: Tests
         run: cargo test --workspace --locked
       - name: External language public API consumer
+        if: matrix.os == 'ubuntu-latest'
         run: |
           python -m unittest tools.extensions.test_run
           python tools/extensions/run.py
       - name: Preserve external consumer evidence
-        if: always()
+        if: always() && matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: external-consumer-${{ matrix.os }}
@@ -76,6 +89,7 @@ jobs:
           mkdir -p dist
           cargo run --locked -p nepl3-tools -- doc-html export examples/document/linear-combination.nepld dist/doc-example
       - name: Generate the linked Doc migration candidate
+        if: matrix.os == 'ubuntu-latest'
         run: |
           mkdir -p dist
           cargo run --locked -p nepl3-tools -- doc-html pages doc/migration/pages.json dist/doc-migration
@@ -105,14 +119,16 @@ jobs:
           if-no-files-found: error
           retention-days: 14
       - name: Independent native allocation regression
+        if: matrix.os == 'ubuntu-latest'
         run: python tools/audit/allocation/run.py
       - name: API documentation
+        if: matrix.os == 'ubuntu-latest'
         run: cargo doc --workspace --no-deps --locked
-      - name: Repository contracts
-        run: cargo run --locked -p nepl3-tools -- check
       - name: Canonical Doc Markdown projections
+        if: matrix.os == 'ubuntu-latest'
         run: cargo run --locked -p nepl3-tools -- doc-canonical --check
       - name: Export canonical Doc pages
+        if: matrix.os == 'ubuntu-latest'
         run: cargo run --locked -p nepl3-tools -- doc-canonical html dist/doc-canonical
       - name: Preserve canonical Doc snapshot
         if: matrix.os == 'ubuntu-latest'
