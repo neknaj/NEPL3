@@ -231,3 +231,25 @@ budget and caps status waiting at 600 seconds. Unknown or failed submission neve
 starts status polling. The resulting head/report contain remotely recorded API
 observations; even Succeeded is not public smoke or LKG promotion. Neither this
 entry nor submit can be retried as a substitute for resuming recorded state.
+
+## Public smoke evidence journal
+
+`deployment.smoke.record` requires the expected remotely confirmed successful
+API status history. Before HTTP, it checks the local site's exact manifest/file
+closure, reconstructs only its canonical tar identity for comparison with the
+submitted payload digest, and checks source commit and HTTPS base path. It does
+not replace or upload a rebuilt payload. The public byte checker uses at most
+300 seconds of the same remaining transaction budget.
+
+The report must match manifest, source (on pass), URL and HTTPS transport. Its
+publication_verified flag must remain false: byte smoke is not current Pages
+identity or LKG proof. Passed/failed results are appended as SmokePassed or
+SmokeFailed and remotely confirmed. A late HTTP pass is preserved but recorded
+as SmokeFailed with deadline_exceeded. A late push cannot return success; its
+journal evidence remains available to reconciliation. Invalid/oversized reports
+or CAS/push errors are not truncated or turned into a successful smoke.
+
+Call only after successful execute and publisher current-state eligibility
+checks. These adapters do not infer that a recorded late status permits a new
+budget, decide rollback, or promote LKG. Tests inject HTTP reports into this
+connection; the standalone smoke tests cover HTTP byte checking separately.
