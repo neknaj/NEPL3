@@ -99,7 +99,26 @@ fn text_file(path: &str) -> bool {
 
 // Historical evidence remains reconstructible from Git. New executable copies
 // belong in managed tests/tools, not another snapshot under results.
-const EVIDENCE_BASELINE: &str = "d87ca8c4ba18e74bc71efb0e2958af87ac971e1b";
+const LEGACY_EVIDENCE_SOURCES: &str = include_str!("legacy-evidence-sources.txt");
+
+fn legacy_sources(text: &str) -> Result<BTreeSet<String>> {
+    let mut result = BTreeSet::new();
+    let mut previous = "";
+    for name in text.lines() {
+        if name <= previous
+            || !evidence_source(name)
+            || name.contains('\\')
+            || Path::new(name)
+                .components()
+                .any(|c| !matches!(c, Component::Normal(_)))
+        {
+            return Err("invalid or unsorted legacy evidence source exception".into());
+        }
+        result.insert(name.to_owned());
+        previous = name;
+    }
+    Ok(result)
+}
 
 fn evidence_source(path: &str) -> bool {
     let Some(relative) = path.strip_prefix("conformance/results/") else {
@@ -137,19 +156,7 @@ pub(crate) fn check(root: &Path) -> Result<usize> {
             "-z",
         ],
     )?)?;
-    let historical = paths(&command(
-        root,
-        "git",
-        &[
-            "ls-tree",
-            "-r",
-            "--name-only",
-            "-z",
-            EVIDENCE_BASELINE,
-            "--",
-            "conformance/results/",
-        ],
-    )?)?;
+    let historical = legacy_sources(LEGACY_EVIDENCE_SOURCES)?;
     for name in &files {
         if evidence_source(name) && !historical.contains(name) {
             return Err(format!("new evidence source copy: {name}; put reusable logic in tools/tests and reference its Git revision").into());
@@ -191,6 +198,46 @@ pub(crate) fn check(root: &Path) -> Result<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn repository_check_needs_no_historical_commit() -> Result<()> {
+        let root = std::env::temp_dir().join(format!(
+            "nepl3-no-history-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)?
+                .as_nanos()
+        ));
+        fs::create_dir(&root)?;
+        let result = (|| -> Result<()> {
+            command(&root, "git", &["init", "--quiet"])?;
+            fs::write(root.join("README.md"), "No commits or archive refs.\n")?;
+            assert_eq!(check(&root)?, 1);
+            let source = root.join("conformance/results/new/run.py");
+            fs::create_dir_all(source.parent().ok_or("missing parent")?)?;
+            fs::write(source, "pass\n")?;
+            assert!(check(&root).is_err());
+            Ok(())
+        })();
+        fs::remove_dir_all(&root)?;
+        result
+    }
+
+    #[test]
+    fn legacy_exceptions_require_exact_safe_sorted_source_paths() -> Result<()> {
+        let names = legacy_sources("conformance/results/old/run.py\n")?;
+        assert!(names.contains("conformance/results/old/run.py"));
+        assert!(!names.contains("conformance/results/old/new.py"));
+        for input in [
+            "conformance/results/old/run.py\nconformance/results/old/run.py\n",
+            "conformance/results/old/../run.py\n",
+            "conformance/results/old/manifest.json\n",
+        ] {
+            assert!(legacy_sources(input).is_err());
+        }
+        legacy_sources(LEGACY_EVIDENCE_SOURCES)?;
+        Ok(())
+    }
 
     #[test]
     fn evidence_data_and_managed_tests_are_separate() {
