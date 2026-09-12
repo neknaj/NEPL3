@@ -134,6 +134,18 @@ fn explicit_print_requests_bind_guest_assertions_and_preserve_stops() -> Result<
         op::execute(&received, registry, &mut receiver, &mut receive_budget).map_err(err)?,
         expected
     );
+    // Math's structural contract requires Sentence before identities or reply
+    // selection can run. This differs from a valid closure's schema mismatch.
+    let mut bad_category = request.clone();
+    bad_category.syntax.value.embeds[0].syntax.category = "Article".into();
+    assert!(matches!(
+        op::execute(&bad_category, registry, &mut codec, &mut budget()),
+        Err(nepl3_math_core::portable::PortableError::Structure(
+            nepl3_math_core::check::StructureError::Shape(
+                nepl3_math_core::check::ShapeError::GuestCategory(_)
+            )
+        ))
+    ));
     for case in 0..8 {
         let mut bad = request.clone();
         let failure = match case {
