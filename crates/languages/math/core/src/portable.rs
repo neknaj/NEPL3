@@ -1,5 +1,6 @@
 //! Explicit Math NDF schema adapters. Decoding produces raw data followed by the
 //! same source/category/graph checks used by native callers, not a evaluation proof.
+pub mod printing;
 mod value;
 use crate::{check::StructureError, model::MathSyntax};
 use nepl3_core::{
@@ -18,6 +19,248 @@ pub enum PortableError<E> {
     Structure(StructureError),
     Shape,
     BindingMismatch,
+    FreeSymbolsMismatch,
+    Expression(crate::check::ShapeError),
+    ExactValue(crate::exact::ExactValueError),
+    Environment(crate::environment::EnvironmentError),
+    Evaluation(crate::evaluation::Error),
+    EvaluationMismatch,
+}
+
+/// Evaluate against the supplied environment, then encode the neutral result.
+pub fn evaluation_to_value<C: FoundationValueCodec>(
+    input: &crate::check::CheckedExpression<'_>,
+    environment: &crate::environment::CheckedEnvironment<'_>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    let result =
+        crate::evaluation::evaluate(input, environment, budget).map_err(evaluation_error)?;
+    let raw = result.outcome.put(schema(registry)?, codec, budget)?;
+    check_report(registry, &raw, "MathEvaluationOutcome", budget)?;
+    Ok(raw)
+}
+
+/// A remote result cannot establish a proof: recompute with the exact requested
+/// expression/environment and current budget. Return the locally bound result.
+pub fn evaluation_from_value<'a, C: FoundationValueCodec>(
+    raw: &NdfValue,
+    input: &'a crate::check::CheckedExpression<'a>,
+    environment: &crate::environment::CheckedEnvironment<'_>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<crate::evaluation::Evaluation<'a>, PortableError<C::Error>> {
+    use crate::evaluation::Outcome;
+    check_report(registry, raw, "MathEvaluationOutcome", budget)?;
+    let received =
+        crate::model::MathEvaluationOutcome::read(raw, schema(registry)?, codec, budget)?;
+    if let Outcome::Exact(value) = &received {
+        crate::exact::check(value, budget).map_err(exact_error)?;
+    }
+    let expected =
+        crate::evaluation::evaluate(input, environment, budget).map_err(evaluation_error)?;
+    if !same_outcome(&received, &expected.outcome, budget)? {
+        return Err(PortableError::EvaluationMismatch);
+    }
+    Ok(expected)
+}
+fn same_outcome<E>(
+    received: &crate::evaluation::Outcome,
+    expected: &crate::evaluation::Outcome,
+    budget: &mut Budget,
+) -> Result<bool, PortableError<E>> {
+    use crate::evaluation::Outcome;
+    Ok(match (received, expected) {
+        (Outcome::Symbolic(a), Outcome::Symbolic(b)) => {
+            budget.charge(
+                Resource::Work,
+                (a.len() as u64)
+                    .saturating_add(b.len() as u64)
+                    .saturating_add(1),
+            )?;
+            a == b
+        }
+        (Outcome::Exact(a), Outcome::Exact(b)) => {
+            use crate::exact::{self, arithmetic};
+            let a = exact::check(a, budget).map_err(exact_error)?;
+            let b = exact::check(b, budget).map_err(exact_error)?;
+            match arithmetic::compare(&a, &b, arithmetic::Comparison::Equal, budget) {
+                Ok(crate::model::MathExactValue::Truth { value }) => value,
+                Err(arithmetic::Error::Stopped(reason)) => {
+                    return Err(PortableError::Stopped(reason));
+                }
+                Err(arithmetic::Error::OperandShapeMismatch) => false,
+                _ => return Err(PortableError::Shape),
+            }
+        }
+        _ => false,
+    })
+}
+
+/// Encode either a successful evaluation or its located semantic failure.
+/// Cancellation/resource stops remain errors; encoding cannot reset a budget.
+pub fn evaluation_result_to_value<C: FoundationValueCodec>(
+    input: &crate::check::CheckedExpression<'_>,
+    environment: &crate::environment::CheckedEnvironment<'_>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    let result = crate::evaluation::report(input, environment, budget).map_err(evaluation_error)?;
+    let raw = result.result.put(schema(registry)?, codec, budget)?;
+    check_report(registry, &raw, "MathEvaluationResult", budget)?;
+    Ok(raw)
+}
+
+/// Recompute both successes and failures against the requested immutable input.
+/// A remote failure is not authoritative, even when it names a valid node.
+pub fn evaluation_result_from_value<'a, C: FoundationValueCodec>(
+    raw: &NdfValue,
+    input: &'a crate::check::CheckedExpression<'a>,
+    environment: &crate::environment::CheckedEnvironment<'_>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<crate::evaluation::EvaluationReport<'a>, PortableError<C::Error>> {
+    use crate::model::{MathEvaluationOutcome, MathEvaluationResult as ResultValue};
+    check_report(registry, raw, "MathEvaluationResult", budget)?;
+    let received = ResultValue::read(raw, schema(registry)?, codec, budget)?;
+    if let ResultValue::Success {
+        outcome: MathEvaluationOutcome::Exact(value),
+    } = &received
+    {
+        crate::exact::check(value, budget).map_err(exact_error)?;
+    }
+    let expected =
+        crate::evaluation::report(input, environment, budget).map_err(evaluation_error)?;
+    budget.charge(Resource::Work, 1)?;
+    let equal = match (&received, &expected.result) {
+        (ResultValue::Success { outcome: a }, ResultValue::Success { outcome: b }) => {
+            same_outcome(a, b, budget)?
+        }
+        (ResultValue::Failure { failure: a }, ResultValue::Failure { failure: b }) => a == b,
+        _ => false,
+    };
+    if !equal {
+        return Err(PortableError::EvaluationMismatch);
+    }
+    Ok(expected)
+}
+fn evaluation_error<E>(error: crate::evaluation::Error) -> PortableError<E> {
+    match error {
+        crate::evaluation::Error::Stopped(reason) => PortableError::Stopped(reason),
+        other => PortableError::Evaluation(other),
+    }
+}
+
+/// Validate every assignment before crossing the portable boundary.
+pub fn environment_to_value<C: FoundationValueCodec>(
+    input: &crate::model::BindingEnvironment,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    crate::environment::check(input, budget).map_err(environment_error)?;
+    let raw = input.put(schema(registry)?, codec, budget)?;
+    check_report(registry, &raw, "BindingEnvironment", budget)?;
+    Ok(raw)
+}
+/// Schema validation alone is insufficient: recheck order and all value shapes.
+pub fn environment_from_value<C: FoundationValueCodec>(
+    raw: &NdfValue,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<crate::model::BindingEnvironment, PortableError<C::Error>> {
+    check_report(registry, raw, "BindingEnvironment", budget)?;
+    let input = crate::model::BindingEnvironment::read(raw, schema(registry)?, codec, budget)?;
+    crate::environment::check(&input, budget).map_err(environment_error)?;
+    Ok(input)
+}
+fn environment_error<E>(error: crate::environment::EnvironmentError) -> PortableError<E> {
+    match error {
+        crate::environment::EnvironmentError::Stopped(reason) => PortableError::Stopped(reason),
+        other => PortableError::Environment(other),
+    }
+}
+
+/// Encode an exact value after checking its container shape.
+pub fn exact_to_value<C: FoundationValueCodec>(
+    input: &crate::model::MathExactValue,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    crate::exact::check(input, budget).map_err(exact_error)?;
+    let raw = input.put(schema(registry)?, codec, budget)?;
+    check_report(registry, &raw, "MathExactValue", budget)?;
+    Ok(raw)
+}
+
+/// Decode canonical rationals and recheck dimensions; no serialized proof is trusted.
+pub fn exact_from_value<C: FoundationValueCodec>(
+    raw: &NdfValue,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<crate::model::MathExactValue, PortableError<C::Error>> {
+    check_report(registry, raw, "MathExactValue", budget)?;
+    let value = crate::model::MathExactValue::read(raw, schema(registry)?, codec, budget)?;
+    crate::exact::check(&value, budget).map_err(exact_error)?;
+    Ok(value)
+}
+fn exact_error<E>(error: crate::exact::ExactValueError) -> PortableError<E> {
+    match error {
+        crate::exact::ExactValueError::Stopped(reason) => PortableError::Stopped(reason),
+        other => PortableError::ExactValue(other),
+    }
+}
+
+/// Generate the report from a checked input, then encode its neutral schema.
+pub fn free_symbols_to_value<C: FoundationValueCodec>(
+    input: &crate::check::CheckedExpression<'_>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    let report = crate::free::symbols(input, budget).map_err(expression_error)?;
+    let raw = report.put(schema(registry)?, codec, budget)?;
+    check_report(registry, &raw, "MathFreeSymbols", budget)?;
+    Ok(raw)
+}
+
+/// Recompute input requirements; reordered, omitted or forged occurrences fail.
+pub fn free_symbols_from_value<C: FoundationValueCodec>(
+    raw: &NdfValue,
+    input: &crate::check::CheckedExpression<'_>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<crate::model::MathFreeSymbols, PortableError<C::Error>> {
+    check_report(registry, raw, "MathFreeSymbols", budget)?;
+    let report = crate::model::MathFreeSymbols::read(raw, schema(registry)?, codec, budget)?;
+    let expected = crate::free::symbols(input, budget).map_err(expression_error)?;
+    for symbol in &report.symbols {
+        budget.charge(
+            Resource::Work,
+            (symbol.name.len() as u64)
+                .saturating_add(symbol.occurrences.len() as u64)
+                .saturating_add(1),
+        )?;
+    }
+    if report != expected {
+        return Err(PortableError::FreeSymbolsMismatch);
+    }
+    Ok(report)
+}
+
+fn expression_error<E>(error: crate::check::ShapeError) -> PortableError<E> {
+    match error {
+        crate::check::ShapeError::Stopped(reason) => PortableError::Stopped(reason),
+        other => PortableError::Expression(other),
+    }
 }
 
 /// Encode a binding report only after comparing it to its declared input shape.
@@ -66,12 +309,20 @@ fn check_bindings<E>(
     raw: &NdfValue,
     budget: &mut Budget,
 ) -> Result<(), PortableError<E>> {
-    budget.charge(Resource::AllocationUnits, 22)?;
+    check_report(registry, raw, "MathBindings", budget)
+}
+fn check_report<E>(
+    registry: &SchemaRegistry,
+    raw: &NdfValue,
+    name: &str,
+    budget: &mut Budget,
+) -> Result<(), PortableError<E>> {
+    budget.charge(Resource::AllocationUnits, 10 + name.len() as u64)?;
     registry.validate(
         &TypeDescriptor::Named(TypeRef {
             package: "nepl3.math".into(),
             revision: 1,
-            name: "MathBindings".into(),
+            name: name.into(),
         }),
         raw,
         budget,

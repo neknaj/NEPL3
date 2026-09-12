@@ -166,6 +166,19 @@ identity取得のprepareは独立した操作であり、後の実行予算を�
 
 ### 8.2. print の実行契約
 
+hostがguest sourceを先に生成する場合も、Doc内の埋め込み位置をDepthへ引き継ぐ。
+`print::guest_depths` は検査済みDoc DAGからEmbedRefごとの最大owner深さを求める。
+rootを1とし、共有guestは最初の出現ではなく最も深い表示経路を採用する。
+これはO(nodes + edges + embeds)の準備であり、guestの意味検査やdigest照合を代替しない。
+hostは現在の深さへそのoffsetを加え、同じBudgetで選択済みguest printerを呼ぶ。
+生成結果は既存のdocument/guest digest付きPrintedGuestとして通常printへ渡す。
+
+開発hostのDoc/Math source adapterは、明示選択したMath ExprとDoc Sentenceを相互に
+lower/printし、評価を実行しない。同期再帰adapterのhost上限は合計Depth 64とし、
+呼出元のより小さい上限を維持する。上限超過・cancelを元のStoppedとして返し、
+別Budgetや原文コピーで成功へ切り替えない。このhost上限はDoc/Mathの意味型の制限ではない。
+Circuitなど未選択のguestをMathとして解釈せず、選択不一致または未解決として拒否する。
+
 実descriptorは `nepl3.doc@1` の `print: PrintRequest -> PrintReply`（pure）。PrintRequestはDocumentSyntax、PrintMode（Prefix / Compact）、明示GuestBinding列、PrintedGuest列を所有する。Completeだけが `SourceArtifact{text,entry}` を返す。entryは再parseする具体的なDoc表層categoryであり、hostがtext保存時のSourceId・revision・URIとSourceSnapshotを発行する。printerが架空のsnapshotや元source位置を作ることはない。再parse/lowerとの一致はsource/Originを除いた意味正規形について定め、未正規化のconstructor値を変更して入力へ書き戻さない。
 
 Prefixは全constructorを正式なheadと引数順で出力する。CompactはSentence内がText / Concat / Ruby / Annoだけで表せる場合にsentence literalへし、それ以外はprefixを保持する。Textは引用符・backslash・CR・LF・tabをescapeし、literalでは注釈delimiterもescapeする。escapeの生成文字を再び注釈と解釈しない。明示BreakはTextの改行と異なる意味nodeなので、Breakを含むSentenceをliteralへ変換しない。装飾・link・画像・Mathを省略してliteral化することもない。

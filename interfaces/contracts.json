@@ -1882,8 +1882,8 @@
     },
     {
       "operation": "math.print",
-      "input": "DomainSyntax + PrintOptions",
-      "output": "SourceArtifact",
+      "input": "MathPrintRequest",
+      "output": "MathPrintResult",
       "definition": "doc/spec/06-math.md",
       "pure": true
     },
@@ -1932,14 +1932,14 @@
     {
       "operation": "math.evaluate",
       "input": "CheckedExpression + BindingEnvironment + Limits",
-      "output": "Exact | Symbolic | EvalError",
+      "output": "MathEvaluationResult",
       "definition": "doc/spec/06-math.md",
       "pure": true
     },
     {
       "operation": "math.free_symbols",
       "input": "CheckedExpression",
-      "output": "List<FreeSymbol>",
+      "output": "MathFreeSymbols",
       "definition": "doc/spec/06-math.md",
       "pure": true
     },
