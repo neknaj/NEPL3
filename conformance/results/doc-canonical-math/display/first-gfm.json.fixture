@@ -1,0 +1,83 @@
+{
+  "exit": 0,
+  "anchors": [
+    {
+      "tag": "a",
+      "name": "user-content-06-math言語"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-706f6c696379"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-方針"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-65787072657373696f6e"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-1-表現"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-737472756374757265"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-2-構造検査"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-6576616c75617465"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-6d6174686d6c"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-6172656e61"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-41-公開arenaと原文保持"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-7265736f7572636573"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-5-出力と資源"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-7075626c6963"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-6-公開操作"
+    }
+  ],
+  "list_counts": [
+    13
+  ],
+  "codes": [
+    "expression_from_rational",
+    "frac 1 2",
+    "symbol \"...\"",
+    "call",
+    "Vector(List<Q>)",
+    "Matrix(rows,cols,List<Q>)",
+    "interfaces/model.json",
+    "interfaces/math.json",
+    "MathSyntax",
+    "MathValue",
+    "Option<Span>",
+    "lower::expression"
+  ],
+  "properties_matching": []
+}

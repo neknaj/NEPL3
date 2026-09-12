@@ -1,0 +1,29 @@
+from pathlib import Path
+import json,hashlib,subprocess
+root=Path.cwd();out=root/'.tmp/archive06';out.mkdir(exist_ok=False);rows=[]
+def save(owner,p,relative):
+ data=p.read_bytes();assert len(data)<1048576
+ name=f'{owner}/{relative}.fixture';dest=out/name
+ assert dest.resolve().is_relative_to(out.resolve())
+ dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(data)
+ rows.append(dict(owner=owner,file=name,restore=relative,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+for owner,directory in [('generation','generation06'),('checks','checks06'),('html','html-chapter06-first'),('markdown','markdown-chapter06-first'),('preflight','preflight06')]:
+ d=root/'.tmp'/directory
+ for p in sorted(d.rglob('*')):
+  if p.is_file():save(owner,p,p.relative_to(d).as_posix())
+for name in ['prepare06.py','generate06.py','check06.py','adopt06.py','restore06.py','archive06.py']:
+ save('scripts',root/'.tmp'/name,name)
+for name in ['original.md','original.nepld']:save('review',root/'.tmp/chapter06'/name,name)
+save('review',root/'.tmp/review06-final.md','independent.md')
+display=root/'.tmp/review06-display';seal=json.loads((display/'seal.json').read_text(encoding='utf-8'))
+save('display',display/'seal.json','seal.json')
+for row in seal:
+ p=display/row['path'];assert len(p.read_bytes())==row['bytes'] and hashlib.sha256(p.read_bytes()).hexdigest()==row['sha256']
+ save('display',p,row['path'])
+head='cd883dea39d47deacffa928e67933ff5a8707a27';sources=[]
+for name in ['doc/canonical.json','doc/spec/06-math.nepld','doc/spec/06-math.md','doc/spec/01-architecture.md','doc/spec/12-model-invariants.md','doc/spec/17-math-html.md','doc/spec/11-conformance.md','doc/migration/aliases/06-math.json']:
+ data=(root/name).read_bytes();assert data==subprocess.check_output(['git','show',head+':'+name])
+ sources.append(dict(path=name,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+(out/'payloads.json').write_text(json.dumps(dict(implementation_commit=head,sources=sources,files=rows),indent=2)+'\n',encoding='utf-8',newline='\n')
+(out/'.gitattributes').write_text('*.fixture -text -whitespace\n',encoding='utf-8',newline='\n')
+print(len(rows),'payloads',sum(r['bytes'] for r in rows),'bytes')

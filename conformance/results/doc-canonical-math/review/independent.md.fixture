@@ -1,0 +1,17 @@
+# Chapter 06 final cutover independent review
+
+Reviewed cd883de against 6d325d4 in C:/projects/NEPL3-doc-canonical-conformance. No tracked edits. Result: no remaining source/adoption blocker found in this bounded review. Canonical recheck, CI, display and archive gates remain separately owned and are not inferred passed here.
+
+Independently compared Git blob bytes: moved doc/spec/06-math.nepld equals the original authored source with only the preferred reading くうもじ -> からもじ changed; the old candidate path is absent. Prior full-content/authoring review is .tmp/preflight06/review.md. This preserves normative meaning, all twelve inline-code payloads, thirteen exact-operation list items, eight sibling Sections, free-symbol Anno and chapter17 Relative link. Source, alias and registry metadata remain separate from generated body ownership.
+
+Registry changes append exactly one Math registration to the prior twelve. Every earlier page registration and both output limit objects remain equal to the base. The seven aliases preserve changed title/heading destinations; unchanged evaluate and MathML headings correctly lack redundant explicit aliases. Actual GitHub navigation remains a separate display check.
+
+Independently walked the generated directories and compared byte maps: all 14 Markdown files (13 pages plus manifest) and all 15 HTML files (13 pages, CSS, manifest) equal their second run. Recomputed each comparison-record size/hash and each manifest file hash from disk. All 13 current tracked Markdown projections exactly equal first-run output. Four preexisting pages (architecture, model-invariants, math-html and conformance) change only the metadata header; their bodies remain base-byte-identical. Other preexisting Markdown pages remain fully identical.
+
+Independently compared .tmp/html-resolved-first against .tmp/html-chapter06-first: all twelve preexisting HTML pages and CSS (13 files) are byte-identical. New 06 HTML SHA-256: 46a7db5d3683c987997d3f4f782e5dedbb71a0d18c1fd1648881afaadb2492b8. Adopted 06 Markdown SHA-256: b0feb179137dfe9d74c9ae1d1821b87464dfd678cee55ad31af1e30f356bcf2d.
+
+All five generation command records report exit 0 and the current registry SHA-256 89068c784656e16a8413105e99abbebb66167163adf23be6d96f7fa20918934d. Generation fixed source checkpoint c2cdfa7 precedes the adoption-only commit; no production code or generator-input change is hidden by this difference. No new compiler/render invocation was necessary for this independent byte audit.
+
+Receipts start output usage at zero and retain declared unchanged limits. Markdown usage BEFORE RECEIPT SERIALIZATION: allocation 2,091,201,847 / 2,500,000,000; nodes 33,028,622 / 40,000,000; work 800,208,745 / 1,000,000,000; output 837,222 / 10,000,000; depth 14 / 1,000. Do not label this field a post-serialization total. HTML usage: allocation 937,205,778 / 1,000,000,000; nodes 17,068,520 / 20,000,000; work 448,252,208 / 500,000,000; output 985,465 / 10,000,000; depth 14 / 1,000. Both source usage 345,957 / 10,000,000 and diagnostics/events zero. The remaining HTML allocation headroom is finite; these successful runs do not authorize silent increases or promise further pages fit.
+
+Final diff contains only the moved/corrected source, appended registry entry, seven aliases, generated 06 Markdown and four context headers. Git diff --check against base passed; worktree was clean at inspection. This review supports proceeding through the remaining cutover gates, not marking Math runtime, all Doc migration, T16/T21 or DG01-DG06 acceptance complete.

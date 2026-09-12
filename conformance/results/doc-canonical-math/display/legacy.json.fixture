@@ -1,0 +1,124 @@
+{
+  "url": "https://github.com/neknaj/NEPL3/blob/2d8c1bedf3ddb9d7176634d50c622e09436623df/doc/spec/06-math.md",
+  "status": 200,
+  "original_bytes_match": true,
+  "rows": [
+    {
+      "heading": "06. Math言語",
+      "nodes": [
+        {
+          "id": "user-content-06-math言語",
+          "href": "#06-math言語"
+        }
+      ],
+      "movement": {
+        "top": 125.49687194824219,
+        "scroll": 267
+      }
+    },
+    {
+      "heading": "方針",
+      "nodes": [
+        {
+          "id": "user-content-方針",
+          "href": "#方針"
+        }
+      ],
+      "movement": {
+        "top": 124.88749694824219,
+        "scroll": 336
+      }
+    },
+    {
+      "heading": "1. 表現",
+      "nodes": [
+        {
+          "id": "user-content-1-表現",
+          "href": "#1-表現"
+        }
+      ],
+      "movement": {
+        "top": 125.07499694824219,
+        "scroll": 462
+      }
+    },
+    {
+      "heading": "2. 構造検査",
+      "nodes": [
+        {
+          "id": "user-content-2-構造検査",
+          "href": "#2-構造検査"
+        }
+      ],
+      "movement": {
+        "top": 125.26249694824219,
+        "scroll": 988
+      }
+    },
+    {
+      "heading": "3. evaluate",
+      "nodes": [
+        {
+          "id": "user-content-3-evaluate",
+          "href": "#3-evaluate"
+        }
+      ],
+      "movement": {
+        "top": 125.44999694824219,
+        "scroll": 1242
+      }
+    },
+    {
+      "heading": "4. MathML backend",
+      "nodes": [
+        {
+          "id": "user-content-4-mathml-backend",
+          "href": "#4-mathml-backend"
+        }
+      ],
+      "movement": {
+        "top": 124.63749694824219,
+        "scroll": 2081
+      }
+    },
+    {
+      "heading": "4.1. 公開arenaと原文保持",
+      "nodes": [
+        {
+          "id": "user-content-41-公開arenaと原文保持",
+          "href": "#41-公開arenaと原文保持"
+        }
+      ],
+      "movement": {
+        "top": 124.82499694824219,
+        "scroll": 2535
+      }
+    },
+    {
+      "heading": "5. 出力と資源",
+      "nodes": [
+        {
+          "id": "user-content-5-出力と資源",
+          "href": "#5-出力と資源"
+        }
+      ],
+      "movement": {
+        "top": 503.01251220703125,
+        "scroll": 2891
+      }
+    },
+    {
+      "heading": "6. 公開操作",
+      "nodes": [
+        {
+          "id": "user-content-6-公開操作",
+          "href": "#6-公開操作"
+        }
+      ],
+      "movement": {
+        "top": 717.2000122070312,
+        "scroll": 2891
+      }
+    }
+  ]
+}

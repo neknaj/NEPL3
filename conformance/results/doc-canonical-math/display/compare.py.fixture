@@ -1,0 +1,9 @@
+from pathlib import Path
+import re,json,hashlib
+OUT=Path(__file__).parent;old=Path('.tmp/html-resolved-first');new=Path('.tmp/html-chapter06-first');second=Path('.tmp/html-chapter06-second')
+comparison=lambda a,b,manifest:[{'path':p.relative_to(a).as_posix(),'same':p.read_bytes()==b.joinpath(p.relative_to(a)).read_bytes()} for p in a.rglob('*') if p.is_file() and (manifest or p.name!='manifest.json')]
+md=Path('.tmp/markdown-chapter06-first/doc/spec/06-math.md').read_text(encoding='utf-8');original=Path('.tmp/chapter06/original.md').read_text(encoding='utf-8')
+gfm=json.loads((OUT/'first-gfm.json').read_text(encoding='utf-8'))
+result={'prior_twelve_html_and_css':comparison(old,new,False),'html_repeat':comparison(new,second,True) if second.exists() else 'pending','codes_exact':gfm['codes']==re.findall(r'`([^`]+)`',original),'original_code_count':len(re.findall(r'`([^`]+)`',original)),'generated_list_lengths':gfm['list_counts'],'md_separators':md.count('<!-- -->'),'html_budget':json.loads((new/'manifest.json').read_text(encoding='utf-8'))['output_budget']}
+(OUT/'compare.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps({k:v for k,v in result.items() if k!='html_budget'}))

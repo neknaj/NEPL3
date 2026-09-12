@@ -1,0 +1,323 @@
+{
+  "codes": [
+    "expression_from_rational",
+    "frac 1 2",
+    "symbol \"...\"",
+    "call",
+    "Vector(List<Q>)",
+    "Matrix(rows,cols,List<Q>)",
+    "interfaces/model.json",
+    "interfaces/math.json",
+    "MathSyntax",
+    "MathValue",
+    "Option<Span>",
+    "lower::expression"
+  ],
+  "lists": [
+    [
+      "add/sub: Scalar同士[どうし]、等[ひと]しい長[なが]さのVector、等[ひと]しい形状[けいじょう]のMatrix。",
+      "neg: Scalar/Vector/Matrixの全要素[ぜんようそ]の符号反転[ふごうはんてん]。",
+      "mul: Scalar×Scalar、ScalarとVector/Matrixの両側[りょうがわ]、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味[いみ]が曖昧[あいまい]なのでOperandShapeMismatch。",
+      "frac: Scalar同士[どうし]、分母[ぶんぼ]0はDivisionByZero。",
+      "pow: Scalarの整数指数[せいすうしすう]。0^0は空積[くうせき]として1。0の負指数[ふしすう]はDivisionByZero。非整数指数[ひせいすうしすう]はSymbolic(NonIntegralExponent)。",
+      "sqrt: 非負[ひふ]Scalarの分子分母[ぶんしぶんぼ]がともに完全平方[かんぜんへいほう]ならExact。非平方[ひへいほう]はSymbolic(AlgebraicValueRequired)、負[ふ]ならSymbolic(ComplexValueRequired)。",
+      "root: 正[せい]の整数次数[せいすうじすう]だけExact候補[こうほ]。奇数次数[きすうじすう]の負数[ふすう]を許[ゆる]し、分子分母[ぶんしぶんぼ]が完全[かんぜん]n乗[じょう]ならExact。次数[じすう]が不正[ふせい]ならInvalidRootDegree、非完全冪[ひかんぜんべき]ならSymbolic。",
+      "equal: 同[おな]じ種類[しゅるい]・形状[けいじょう]のExact値[ち]の等値[とうち]。Scalar/配列[はいれつ]の比較[ひかく]を混同[こんどう]しない。",
+      "lt/le: Scalar同士[どうし]だけ。",
+      "transpose: Matrixの転置[てんち]。Vectorは1×nのMatrixにする。",
+      "det: 正方[せいほう]Matrixだけ。正確[せいかく]な有理数[ゆうりすう]の消去法[しょうきょほう]を用[もち]い、pivotは最初[さいしょ]の非[ひ]zero行[ぎょう]。形状不正[けいじょうふせい]はNotSquare。",
+      "sum: lower/upperが整数[せいすう]で有限[ゆうげん]、bodyがScalarとなる場合[ばあい]をexact domainとする。inclusive区間[くかん]。upper<lowerならScalar 0。各[かく]indexはその整数[せいすう]のScalar。反復数[はんぷくすう]はLimitsで制限[せいげん]。Vector/Matrix値[ち]の一般総和[いっぱんそうわ]はSymbolic(UnsupportedExactDomain)であり、暗黙[あんもく]のscalar化[か]はしない。",
+      "fence/label: 数値意味[すうちいみ]は内部[ないぶ]valueと等[ひと]しい。annotationは数値評価[すうちひょうか]しない。"
+    ]
+  ],
+  "links": [
+    {
+      "href": "#06-math言語げんご",
+      "text": ""
+    },
+    {
+      "href": "#方針ほうしん",
+      "text": ""
+    },
+    {
+      "href": "#1-表現ひょうげん",
+      "text": ""
+    },
+    {
+      "href": "#2-構造検査こうぞうけんさ",
+      "text": ""
+    },
+    {
+      "href": "#3-evaluate",
+      "text": ""
+    },
+    {
+      "href": "#4-mathml-backend",
+      "text": ""
+    },
+    {
+      "href": "#41-公開こうかいarenaと原文保持げんぶんほじ",
+      "text": ""
+    },
+    {
+      "href": "#5-出力しゅつりょくと資源しげん",
+      "text": ""
+    },
+    {
+      "href": "/neknaj/NEPL3/blob/cd883dea39d47deacffa928e67933ff5a8707a27/doc/spec/17-math-html.md",
+      "text": "17章[しょう]"
+    },
+    {
+      "href": "#6-公開操作こうかいそうさ",
+      "text": ""
+    }
+  ],
+  "ids": [
+    "user-content-06-math言語げんご",
+    "user-content-方針ほうしん",
+    "user-content-1-表現ひょうげん",
+    "user-content-2-構造検査こうぞうけんさ",
+    "user-content-3-evaluate",
+    "user-content-4-mathml-backend",
+    "user-content-41-公開こうかいarenaと原文保持げんぶんほじ",
+    "user-content-5-出力しゅつりょくと資源しげん",
+    "user-content-6-公開操作こうかいそうさ"
+  ],
+  "headings": [
+    "06. Math言語[げんご]",
+    "方針[ほうしん]",
+    "1. 表現[ひょうげん]",
+    "2. 構造検査[こうぞうけんさ]",
+    "3. evaluate",
+    "4. MathML backend",
+    "4.1. 公開[こうかい]arenaと原文保持[げんぶんほじ]",
+    "5. 出力[しゅつりょく]と資源[しげん]",
+    "6. 公開操作[こうかいそうさ]"
+  ],
+  "url": "https://github.com/neknaj/NEPL3/blob/cd883dea39d47deacffa928e67933ff5a8707a27/doc/spec/06-math.md",
+  "status": 200,
+  "codes_exact": true,
+  "navigation": [
+    {
+      "name": "06-math言語",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-06-math言語",
+          "top": 125,
+          "parent": "",
+          "next": "06. Math言語[げんご]"
+        }
+      ],
+      "scroll": 261
+    },
+    {
+      "name": "方針",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-方針",
+          "top": 124.59375,
+          "parent": "",
+          "next": "方針[ほうしん]"
+        }
+      ],
+      "scroll": 352
+    },
+    {
+      "name": "1-表現",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-1-表現",
+          "top": 124.78125,
+          "parent": "",
+          "next": "1. 表現[ひょうげん]"
+        }
+      ],
+      "scroll": 502
+    },
+    {
+      "name": "2-構造検査",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-2-構造検査",
+          "top": 124.96875,
+          "parent": "",
+          "next": "2. 構造検査[こうぞうけんさ]"
+        }
+      ],
+      "scroll": 1244
+    },
+    {
+      "name": "3-evaluate",
+      "nodes": [
+        {
+          "id": "user-content-3-evaluate",
+          "name": null,
+          "top": 125.44999694824219,
+          "parent": "3. evaluate",
+          "next": "入力[にゅうりょく]はCheckedExpression、自由記号[じゆうきごう]のBindingEnvironment、Limits。出力[しゅつりょく]はExact(Value)またはSymbolic(expression, Requi"
+        }
+      ],
+      "scroll": 1554
+    },
+    {
+      "name": "4-mathml-backend",
+      "nodes": [
+        {
+          "id": "user-content-4-mathml-backend",
+          "name": null,
+          "top": 124.63749694824219,
+          "parent": "4. MathML backend",
+          "next": "MathML Coreの要素[ようそ]をtyped Markupで生成[せいせい]する。Number=mn、Symbol=mi、表示[ひょうじ]Text=mtext、加減乗[かげんじょう]・比較[ひかく]=mrow+mo、frac=mfra"
+        }
+      ],
+      "scroll": 2609
+    },
+    {
+      "name": "41-公開arenaと原文保持",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-41-公開arenaと原文保持",
+          "top": 124.53125,
+          "parent": "",
+          "next": "4.1. 公開[こうかい]arenaと原文保持[げんぶんほじ]"
+        }
+      ],
+      "scroll": 3199
+    },
+    {
+      "name": "5-出力と資源",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-5-出力と資源",
+          "top": 398.71875,
+          "parent": "",
+          "next": "5. 出力[しゅつりょく]と資源[しげん]"
+        }
+      ],
+      "scroll": 3971
+    },
+    {
+      "name": "6-公開操作",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-6-公開操作",
+          "top": 684.90625,
+          "parent": "",
+          "next": "6. 公開操作[こうかいそうさ]"
+        }
+      ],
+      "scroll": 3971
+    },
+    {
+      "name": "n-706f6c696379",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-706f6c696379",
+          "top": 124.59375,
+          "parent": "",
+          "next": ""
+        }
+      ],
+      "scroll": 352
+    },
+    {
+      "name": "n-65787072657373696f6e",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-65787072657373696f6e",
+          "top": 124.78125,
+          "parent": "",
+          "next": ""
+        }
+      ],
+      "scroll": 502
+    },
+    {
+      "name": "n-737472756374757265",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-737472756374757265",
+          "top": 124.96875,
+          "parent": "",
+          "next": ""
+        }
+      ],
+      "scroll": 1244
+    },
+    {
+      "name": "n-6576616c75617465",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-6576616c75617465",
+          "top": 125.15625,
+          "parent": "",
+          "next": "3. evaluate"
+        }
+      ],
+      "scroll": 1546
+    },
+    {
+      "name": "n-6d6174686d6c",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-6d6174686d6c",
+          "top": 125.34375,
+          "parent": "",
+          "next": "4. MathML backend"
+        }
+      ],
+      "scroll": 2600
+    },
+    {
+      "name": "n-6172656e61",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-6172656e61",
+          "top": 124.53125,
+          "parent": "",
+          "next": ""
+        }
+      ],
+      "scroll": 3199
+    },
+    {
+      "name": "n-7265736f7572636573",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-7265736f7572636573",
+          "top": 398.71875,
+          "parent": "",
+          "next": ""
+        }
+      ],
+      "scroll": 3971
+    },
+    {
+      "name": "n-7075626c6963",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-7075626c6963",
+          "top": 684.90625,
+          "parent": "",
+          "next": ""
+        }
+      ],
+      "scroll": 3971
+    }
+  ]
+}

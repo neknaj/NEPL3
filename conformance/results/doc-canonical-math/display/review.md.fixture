@@ -1,0 +1,20 @@
+# Independent chapter 06 display and cutover review
+
+Reviewed original .tmp/chapter06/original.md, current Doc source, authoring.md, configured aliases, and the existing specs 16/21 migration contracts.
+
+Initial source checkpoint c2cdfa7cebb5a6e08d083f7ba5ca54b69ce3cca6:
+
+- Original bytes exactly match actual Git blob 2d8c1bedf3ddb9d7176634d50c622e09436623df:doc/spec/06-math.md. Actual GitHub rendering yields nine unique original heading IDs with correct movement. Seven are explicitly retained aliases; 3-evaluate and 4-mathml-backend retain their unchanged headings and must be verified as automatic destinations after adoption.
+- Generated HTML independently exercised in Chromium, Firefox, and WebKit at 375 and 1280 pixels under /NEPL3/ and /review/nested/: all twelve JavaScript-disabled cases return HTTP 200, no failed requests, no horizontal document overflow, supplied CSS applied, eight stable semantic Section IDs and section navigation correct. Chapter 17 relative link and reload work.
+- All thirteen operation list items exactly preserve original base text. All twelve inline code spans exactly preserve original characters, order, and angle-bracket content, including Vector(List<Q>), Matrix(rows,cols,List<Q>), and Option<Span>. GitHub GFM API independently renders one list with thirteen items and the same twelve code spans.
+- Ruby count is 515. The single Anno retains base 自由記号 and note free symbol, with the note below the base in all twelve cases. Narrow Anno and wide operation-list screenshots were visually inspected. The rewritten free-symbol explanation preserves the original distinction between an allowed free symbol and an UnresolvedName error.
+- Prior twelve HTML pages and shared CSS remain byte-identical to .tmp/html-resolved-first. This is thirteen unchanged content files, excluding the necessarily changed collection manifest.
+- Direct file viewing succeeds in all three engines, JavaScript disabled, no HTTP(S) requests. Chromium/Firefox use offline=True; WebKit uses normal context with both HTTP and HTTPS blocked. The local chapter 17 file can be opened from the link. Viewing does not require a compiler or server.
+
+Initial legacy probe used a selector assuming anchors were children of h1/h2 and raised IndexError at row['nodes'][0]. GitHub places the heading and anchor inside a .markdown-heading container. The corrected probe records actual nine heading IDs and movement; the first probe failure is not treated as a missing document anchor.
+
+Final adopted checkpoint cd883dea39d47deacffa928e67933ff5a8707a27: approved for chapter 06 content/display/cutover scope, with no blocking finding. Actual GitHub blob rendering retains all nine legacy destinations and eight semantic anchors uniquely. Seven legacy aliases are explicit; evaluate and MathML backend use their unchanged automatic heading IDs. Settled navigation reaches their correct sections; the last two sections stop at the document bottom. The chapter 17 link points to the same adopted commit. Actual GitHub rendering retains one thirteen-item list and twelve exact code spans.
+
+All fifteen HTML output files, including the collection manifest, are byte-identical across the two generation runs. All fourteen Markdown generation files are also byte-identical, and adopted chapter 06 Markdown equals the generated projection. The prior twelve HTML pages and CSS remain unchanged. No generation budget adjustment was required by this chapter.
+
+This is a specification-page migration review, not evidence that Math evaluation or MathML/KaTeX runtime acceptance is complete. Human screen-reader and real Safari device operations were not performed. No tracked source was edited by this reviewer; local evidence hashes are sealed in seal.json.

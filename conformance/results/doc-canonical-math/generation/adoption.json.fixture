@@ -1,0 +1,44 @@
+{
+  "changes": [
+    {
+      "path": "doc/spec/01-architecture.md",
+      "old_sha256": "784ab8d5f93754c653ce2581c532da556ace57765b03886086067167b4f0dd3b",
+      "new_sha256": "ebf57a78ff2fc6715ae160f8b48d580fde9da1c4d0335efda0caacbbea912eef"
+    },
+    {
+      "path": "doc/spec/12-model-invariants.md",
+      "old_sha256": "24b523d62d388d6e2214effccf5c8e4ab9aaafe9109d60b69605909c6b9d8957",
+      "new_sha256": "39fd303767a41f4d20d20bfc6667be8b587217227c2202281fb19cc243d5c053"
+    },
+    {
+      "path": "doc/spec/17-math-html.md",
+      "old_sha256": "20b2cb5edfd196f895cf77049c04580c436f6dfbdc8db06e4121d3cd8322b800",
+      "new_sha256": "6cc943859b6344fc135cf2c670c703e48903edcf056e1c57452d3f1f293e48f7"
+    },
+    {
+      "path": "doc/spec/11-conformance.md",
+      "old_sha256": "db0f085e43ab0aa8c51f85e070e187308f2250ffd376c75f3b6faa0ebde5d864",
+      "new_sha256": "8348455cd8132dab6fea2d8518ccaf6e7985bfb3f75dd618bf26e77ef7e43f65"
+    },
+    {
+      "path": "doc/spec/06-math.md",
+      "old_sha256": "c22ab7b0fae9acb9edecd3886fb641cefcf53c9b688dc8c5ffe7cba97eebd028",
+      "new_sha256": "b0feb179137dfe9d74c9ae1d1821b87464dfd678cee55ad31af1e30f356bcf2d"
+    }
+  ],
+  "previous_html_and_css_byte_identical": [
+    "docs/spec/00-contract.html",
+    "docs/spec/01-architecture.html",
+    "docs/spec/07-circuit.html",
+    "docs/spec/08-editor.html",
+    "docs/spec/11-conformance.html",
+    "docs/spec/12-model-invariants.html",
+    "docs/spec/13-reproducibility.html",
+    "docs/spec/17-math-html.html",
+    "docs/spec/18-html-delivery.html",
+    "docs/spec/19-html-fragment.html",
+    "docs/spec/20-doc-html.html",
+    "docs/spec/22-external-extensions.html",
+    "docs/spec/assets/doc.css"
+  ]
+}

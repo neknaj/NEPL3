@@ -1,0 +1,17 @@
+from pathlib import Path
+import json, subprocess
+root=Path.cwd()
+assert not subprocess.check_output(['git','status','--porcelain']).strip()
+out=root/'.tmp/chapter06';out.mkdir(exist_ok=False)
+draft=root/'doc/migration/authored/06-math.nepld'
+(out/'original.nepld').write_bytes(draft.read_bytes())
+(out/'original.md').write_bytes((root/'doc/spec/06-math.md').read_bytes())
+draft.rename(root/'doc/spec/06-math.nepld')
+registry=root/'doc/canonical.json';data=json.loads(registry.read_text(encoding='utf-8'))
+assert len(data['pages'])==12
+data['pages'].append(dict(id='math',source='doc/spec/06-math.nepld',projection='doc/spec/06-math.md',aliases='doc/migration/aliases/06-math.json',route='docs/spec/06-math.html',renderer='nepl3-tools.markdown-annotated-pages/1'))
+registry.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
+# Unchanged evaluate and MathML headings retain their automatic GitHub IDs.
+aliases=[(None,'06-math言語'),('policy','方針'),('expression','1-表現'),('structure','2-構造検査'),('arena','41-公開arenaと原文保持'),('resources','5-出力と資源'),('public','6-公開操作')]
+(root/'doc/migration/aliases/06-math.json').write_text(json.dumps([dict(section=s,name=n) for s,n in aliases],ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
+print('Prepared chapter06; projection still needs generation, review, and adoption.')

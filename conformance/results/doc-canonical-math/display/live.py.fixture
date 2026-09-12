@@ -1,0 +1,20 @@
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+import json,re,sys
+OUT=Path(__file__).parent;sha=sys.argv[1]
+URL=f'https://github.com/neknaj/NEPL3/blob/{sha}/doc/spec/06-math.md'
+legacy=json.loads((OUT/'legacy.json').read_text(encoding='utf-8'))
+names=[r['nodes'][0]['href'][1:] for r in legacy['rows']]+['n-'+s.encode().hex() for s in re.findall(r'cons section (\w+) ',Path('doc/spec/06-math.nepld').read_text(encoding='utf-8'))]
+original=Path('.tmp/chapter06/original.md').read_text(encoding='utf-8');expected_codes=re.findall(r'`([^`]+)`',original)
+with sync_playwright() as p:
+ b=p.chromium.launch(headless=True);page=b.new_page(viewport={'width':1280,'height':900})
+ response=page.goto(URL,wait_until='domcontentloaded',timeout=60000);page.locator('article.markdown-body').wait_for(timeout=60000)
+ result=page.locator('article.markdown-body').evaluate('''article=>({codes:[...article.querySelectorAll('code')].map(n=>n.textContent),lists:[...article.querySelectorAll('ul,ol')].map(n=>[...n.children].map(x=>x.textContent)),links:[...article.querySelectorAll('a[href]')].map(n=>({href:n.getAttribute('href'),text:n.textContent})),ids:[...article.querySelectorAll('[id]')].map(n=>n.id),headings:[...article.querySelectorAll('h1,h2')].map(n=>n.textContent)})''')
+ result.update(url=URL,status=response.status,codes_exact=result['codes']==expected_codes,navigation=[])
+ page.screenshot(path=str(OUT/'live-github-top.png'))
+ for name in names:
+  page.goto(URL+'#'+name,wait_until='domcontentloaded',timeout=60000);page.wait_for_timeout(1500)
+  result['navigation'].append(page.evaluate('''name=>{let nodes=[...document.querySelectorAll('article.markdown-body [id],article.markdown-body [name]')].filter(n=>n.id==='user-content-'+name||n.id===name||n.getAttribute('name')===name||n.getAttribute('name')==='user-content-'+name);return {name,nodes:nodes.map(n=>({id:n.id,name:n.getAttribute('name'),top:n.getBoundingClientRect().top,parent:n.parentElement.textContent.slice(0,120),next:n.parentElement.nextElementSibling?.textContent.slice(0,120)})),scroll:scrollY}}''',name))
+ page.screenshot(path=str(OUT/'live-github-final.png'))
+ (OUT/'live-github.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8');b.close()
+print(json.dumps({'status':result['status'],'codes_exact':result['codes_exact'],'lists':[len(x) for x in result['lists']],'anchor_counts':[len(x['nodes']) for x in result['navigation']]}))

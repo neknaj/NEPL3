@@ -1,0 +1,17 @@
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+import json,subprocess
+OUT=Path(__file__).parent
+sha='2d8c1bedf3ddb9d7176634d50c622e09436623df';url=f'https://github.com/neknaj/NEPL3/blob/{sha}/doc/spec/06-math.md'
+old=subprocess.run(['git','show',f'{sha}:doc/spec/06-math.md'],capture_output=True,check=True).stdout
+original=Path('.tmp/chapter06/original.md').read_bytes()
+with sync_playwright() as p:
+ b=p.chromium.launch(headless=True);page=b.new_page(viewport={'width':1280,'height':900})
+ response=page.goto(url,wait_until='domcontentloaded',timeout=60000);page.locator('article.markdown-body').wait_for(timeout=60000)
+ rows=page.locator('article.markdown-body').evaluate('''a=>[...a.querySelectorAll('.markdown-heading')].map(h=>({heading:h.textContent,nodes:[...h.querySelectorAll('a[id]')].map(a=>({id:a.id,href:a.getAttribute('href')}))}))''')
+ for row in rows:
+  page.goto(url+row['nodes'][0]['href'],wait_until='domcontentloaded');page.wait_for_timeout(1500)
+  row['movement']=page.evaluate('''id=>({top:document.getElementById(id).getBoundingClientRect().top,scroll:scrollY})''',row['nodes'][0]['id'])
+ (OUT/'legacy.json').write_text(json.dumps({'url':url,'status':response.status,'original_bytes_match':old==original,'rows':rows},ensure_ascii=False,indent=2),encoding='utf-8')
+ page.screenshot(path=str(OUT/'legacy.png'));b.close()
+print(json.dumps({'status':response.status,'headings':len(rows),'original_bytes_match':old==original}))

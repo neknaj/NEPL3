@@ -1,0 +1,103 @@
+{
+  "files": [
+    {
+      "bytes": 10429,
+      "path": "doc/spec/00-contract.md",
+      "sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1"
+    },
+    {
+      "bytes": 26270,
+      "path": "doc/spec/13-reproducibility.md",
+      "sha256": "454ede4004f0022f8dedb0246ecb227fc36cb57456b9c57fe6614f7a3e512d8e"
+    },
+    {
+      "bytes": 12525,
+      "path": "doc/spec/22-external-extensions.md",
+      "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+    },
+    {
+      "bytes": 11492,
+      "path": "doc/spec/01-architecture.md",
+      "sha256": "ebf57a78ff2fc6715ae160f8b48d580fde9da1c4d0335efda0caacbbea912eef"
+    },
+    {
+      "bytes": 10585,
+      "path": "doc/spec/18-html-delivery.md",
+      "sha256": "31e0a3af9c56766a737bc5c02a4072662f342a75b7816e7a8aad5da1afd525a5"
+    },
+    {
+      "bytes": 13472,
+      "path": "doc/spec/07-circuit.md",
+      "sha256": "e78ef88b70039ef7018516afed788cc092d58a6fe83aee413afbe97527f68c40"
+    },
+    {
+      "bytes": 16900,
+      "path": "doc/spec/19-html-fragment.md",
+      "sha256": "c4e5c48743d327a3b7e7a691151f452c3640deb32656f2097628aa2fa9683768"
+    },
+    {
+      "bytes": 27431,
+      "path": "doc/spec/12-model-invariants.md",
+      "sha256": "39fd303767a41f4d20d20bfc6667be8b587217227c2202281fb19cc243d5c053"
+    },
+    {
+      "bytes": 47809,
+      "path": "doc/spec/08-editor.md",
+      "sha256": "1c2889b269b99c8be0a281c8bfcda275d38ea421f344fbe4f92a0a5a9c608c2a"
+    },
+    {
+      "bytes": 16779,
+      "path": "doc/spec/20-doc-html.md",
+      "sha256": "d1ba121eec5b9facb658b55c03fe8bd88d361ac308ac3503db702c463b3d5529"
+    },
+    {
+      "bytes": 25557,
+      "path": "doc/spec/17-math-html.md",
+      "sha256": "6cc943859b6344fc135cf2c670c703e48903edcf056e1c57452d3f1f293e48f7"
+    },
+    {
+      "bytes": 29120,
+      "path": "doc/spec/11-conformance.md",
+      "sha256": "8348455cd8132dab6fea2d8518ccaf6e7985bfb3f75dd618bf26e77ef7e43f65"
+    },
+    {
+      "bytes": 19937,
+      "path": "doc/spec/06-math.md",
+      "sha256": "b0feb179137dfe9d74c9ae1d1821b87464dfd678cee55ad31af1e30f356bcf2d"
+    }
+  ],
+  "format": "nepl3.canonical-markdown-stage/1",
+  "input_context": "9b96bdd23f7ed1452c7e02a5c38a1f27dd5eb54c3963e2eddffe918ea1e41035",
+  "output_budget": {
+    "initial_usage": {
+      "allocation_units": 0,
+      "depth": 0,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 0,
+      "output_bytes": 0,
+      "source_bytes": 0,
+      "work": 0
+    },
+    "limits": {
+      "allocation_units": 2500000000,
+      "depth": 1000,
+      "diagnostics": 1000,
+      "events": 1000,
+      "nodes": 40000000,
+      "output_bytes": 10000000,
+      "source_bytes": 10000000,
+      "work": 1000000000
+    },
+    "usage_before_receipt_serialization": {
+      "allocation_units": 2091201847,
+      "depth": 14,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 33028622,
+      "output_bytes": 837222,
+      "source_bytes": 345957,
+      "work": 800208745
+    }
+  }
+}

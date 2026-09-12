@@ -1,0 +1,62 @@
+{
+  "head": "cd883dea39d47deacffa928e67933ff5a8707a27",
+  "markdown_repeat": [
+    {
+      "path": "manifest.json",
+      "same": true
+    },
+    {
+      "path": "doc/spec/00-contract.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/01-architecture.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/06-math.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/07-circuit.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/08-editor.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/11-conformance.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/12-model-invariants.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/13-reproducibility.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/17-math-html.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/18-html-delivery.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/19-html-fragment.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/20-doc-html.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/22-external-extensions.md",
+      "same": true
+    }
+  ],
+  "adopted_md_matches": true
+}

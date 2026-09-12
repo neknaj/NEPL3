@@ -1,0 +1,2162 @@
+[
+  {
+    "headings": [
+      "06. Math言語",
+      "方針",
+      "1. 表現",
+      "2. 構造検査",
+      "3. evaluate",
+      "4. MathML backend",
+      "4.1. 公開arenaと原文保持",
+      "5. 出力と資源",
+      "6. 公開操作"
+    ],
+    "codes": [
+      "expression_from_rational",
+      "frac 1 2",
+      "symbol \"...\"",
+      "call",
+      "Vector(List<Q>)",
+      "Matrix(rows,cols,List<Q>)",
+      "interfaces/model.json",
+      "interfaces/math.json",
+      "MathSyntax",
+      "MathValue",
+      "Option<Span>",
+      "lower::expression"
+    ],
+    "lists": [
+      [
+        "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+        "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+        "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+        "frac: Scalar同士、分母0はDivisionByZero。",
+        "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+        "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+        "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+        "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+        "lt/le: Scalar同士だけ。",
+        "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+        "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+        "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+        "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。"
+      ]
+    ],
+    "paragraphs": [
+      "数式の表示対象を保ち、その一部に対する厳密計算を独立した操作として公開する。parse/renderが数式を簡約したり、等式の正しさを主張したりしない。",
+      "全constructorはmath-signatures参照。Numberは有限十進の原表記を持ち、意味値はBigRationalへ正確に変換する。整数p、分母qはq>0、gcd(|p|,q)=1、zero=0/1へ正規化する。Numberに格納できる値は、約分後のqの素因数が2と5だけの有理数に限る。これ以外をNumberとして構築・decodeする場合はNonFiniteDecimalNumberで拒否する。評価値のRationalはこの制限を持たない。",
+      "任意有理数から式を作るconstructor helper expression_from_rational は、有限十進ならNumber、それ以外なら整数Numberを子とするFrac(Number(p), Number(q))を返す。元の構文をlowerするときにこのhelperで著者のFracを折り畳まない。frac 1 2 はFracのまま保持する。Numberのprintはcanonicalな整数または有限十進（指数表記なし、冗長な末尾zeroなし、zeroは0）で、意味値とsnapshotの一致を確認した場合には元lexemeを表示に利用できる。Number(1/3)をprint時だけFracへ変換する設計にはしない。",
+      "Identifier leafは数学記号。自由記号を許可する。自由記号はUnresolvedNameのエラーにしない。意味上の入力要求として列挙する。symbol \"...\" で予約語と同じ綴りや複数文字の名前を明示できる。裸のNameとsymbolの同じ綴りは同じ名前解決規則を使う。",
+      "letはinitを外側、bodyを新しい記号scopeで読む。sum/integralのindexはbodyだけで有効であり、lower/upperでは外側を参照する。自由記号に架空の定義位置を与えない。",
+      "subscript/superscript/scriptsは表示構造。一般の添字を配列アクセスや指数演算に暗黙変換しない。代数的な累乗にはpowを使う。callは数学の関数適用表現で、任意のFnコード実行ではない。",
+      "matrixは一つ以上のrow、各rowは同じ正の列数。vectorは一つ以上の要素。fenceは左右それぞれ0または1Unicode scalar。空文字で片側だけの括弧を表せる。",
+      "rootのdegreeが数値literalで0ならInvalidRootDegree。その他の定義域はevaluate時にも検査する。表示だけの式に実数/複素数の数値領域を勝手に割り当てない。",
+      "CheckedExpressionが保証するのは構造・binding・既知の局所制約であり、全記号の値や全演算の数値評価可能性ではない。",
+      "入力はCheckedExpression、自由記号のBindingEnvironment、Limits。出力はExact(Value)またはSymbolic(expression, Requirements)。定義域違反・形状不一致は明確なEvalError。値の種類はScalar(Q)、Vector(List<Q>)、Matrix(rows,cols,List<Q>)、Truth(Bool)。",
+      "評価はsource順の左から右、純粋。letはinitを評価してからbodyを評価する。未解決の記号に依存する部分はSymbolicとし、独立な数値subtreeの計算結果を保持できるが元の構文を上書きしない。",
+      "正確に評価する演算:",
+      "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+      "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+      "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+      "frac: Scalar同士、分母0はDivisionByZero。",
+      "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+      "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+      "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+      "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+      "lt/le: Scalar同士だけ。",
+      "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+      "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+      "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+      "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。",
+      "integral、call、表示用text/sequence/subscript/superscript/scriptsは、評価専用規則がない限りSymbolic(NotationOnly)。これらの表示は完全に対応する。解析的な積分や任意関数評価を実装済みとしない。",
+      "MathML Coreの要素をtyped Markupで生成する。Number=mn、Symbol=mi、表示Text=mtext、加減乗・比較=mrow+mo、frac=mfrac、sqrt=msqrt、root=mroot、sub/sup/scripts=msub/msup/msubsup、vector/matrix=mtable/mtr/mtd、総和と積分=munder/munderoverまたは対応するscript形をdisplay modeから決定する。",
+      "暗黙のブラウザprecedence解釈へ依存しない。binding powerは比較10、add/sub20、mul30、neg40、pow50、atomic60。弱い子を強い親へ入れる際はmoによる可視括弧を挿入。subの右側、powの左側等、同じprecedenceでも非結合な位置に括弧を入れる。fracは分子分母の構造自体がgroupになる。",
+      "数学表示の2項演算は元の順序を保持する。mulのscalar/記号列でも、読み違いを避けるためreference backendは中央点を表示する。callはfunctionと括弧付きarguments。sequenceは指定順のmrowであり、勝手に演算を補わない。",
+      "letは「name := init ; body」のmrow。sumの下限は「index = lower」、上限はupper、bodyに必要な括弧を付ける。integralは積分記号と上下限、body、微分記号dとindex。equalは表示であって証明書ではない。",
+      "labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備し、mtextを介した注記として出力する。MathMLの内容モデルに適合しないblock内容は受け入れない。",
+      "interfaces/model.json のMath record/unionはconstructorの論理的な意味展開であり、Rust enum順や別の再帰wire layoutではない。実値のschemaは interfaces/math.json の MathSyntax / MathValue とする。MathRootはExpr / Row / DocGuestの3種類。MathKindは29 formとNumber leafに対応し、bare SymbolNameは明示Symbolと同じ意味kindへlowerする。子はExprRef / RowRef / DocGuestRef、guestはEmbedRefで平坦なarenaを参照する。schemaの明示variant名とfield列がwire tagであり、入力由来の深さをnativeの再帰所有へ転写しない。",
+      "MathValueの構造検査はカテゴリ、参照、到達性、cycle、共有DAGの最大経路、Number有限十進制約、vector/matrix形状、fence幅、literal 0のroot degreeを検査する。単独Rowは空を表せるが、Matrixに取り込むrowの列数は正で全row同一でなければならない。この証明はsymbol解決済みCheckedExpressionや評価可能性の証明ではない。",
+      "MathSyntaxはsource宣言、元Origin表、tokenごとのowner headを持つMathView、SourceMapを所有する。Number.spellingは Option<Span> のまま保持し、存在する場合は宣言sourceとnode coverに整合する位置を指す。意味Rationalと原lexemeの一致を証明したときだけ元表記をprintへ利用でき、位置構造検査だけをその証明とみなさない。Symbol/Let/Sum/Integralの名前operandは閉じたMathFieldLocationで選択位置とOriginを保持する。本文の名前検索で位置を再発見せず、source-lessの位置はNoneとする。",
+      "LabelのDoc annotationと独立DocGuestは、Doc SentenceのForeignClosureを保持する。ownerの環境・Origin ID・source/map閉包とguest自身のID空間を混同せず、意味変換を行わない。元構文に意味的に不正なDoc annotationがあっても、Mathのsource構造検査を理由にDoc lowerや評価を呼び出してはならない。prepared表示へ渡す意味・内容モデル検査は別の要求として残す。",
+      "lower::expression はhostが選択済みparse/profileを確認したSyntaxBundleと明示Math表層SchemaRef/categoryを受け、現在のBudget/SourceAdmissionで再検査してMathSyntaxを返す。共有sourceは一度だけ計上し、原Frac・表示scripts等を簡約しない。局所constructor制約の失敗は元のsource NodeRefとShapeErrorへ帰属させ、破棄した出力arenaのindexだけを位置情報として返さない。停止は原StopReasonを保持し、元構文木を変更しない。",
+      "初回NDF受信はschema検査後に同じsource/Origin/View/guest閉包とarena制約を検査する。宣言sourceの欠落をreceiverのambient storeから補わない。raw MathSyntaxの受信はbinding・free symbol要求・評価結果のproofを発行しない。明示constructor helperは新しいsource-less式を作るためのもので、元式を置換する処理ではない。",
+      "MathMLは独立した正式portable出力であり、ブラウザがfont/layoutを担当する。Doc・MathのHTML生成は17章のKaTeXPreferredを標準とし、生成環境でKaTeXを実行してCSS/fontと配布する。忠実変換不能・生成能力不足時はNEPL3 MathMLへ診断付きで切り替える。閲覧時にKaTeXを再実行せず、CLIがpixel描画まで行うとも広告しない。",
+      "独自layout/rasterizerを追加する場合は、CheckedExpressionまたはMathLayout入力modelを受ける別backendとする。OpenType MATH tableやglyph outlineの実装都合をMathの意味モデルへ持ち込まない。",
+      "lower、check、free_symbols、evaluate、print、render_mathml。評価結果、部分評価の新式、元の式を別値として返す。文書側のrender要求がevaluateを自動で要求しない。"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-65787072657373696f6e",
+      "n-737472756374757265",
+      "n-6576616c75617465",
+      "n-6d6174686d6c",
+      "n-6172656e61",
+      "n-7265736f7572636573",
+      "n-7075626c6963"
+    ],
+    "ruby": 515,
+    "annos": [
+      {
+        "base": "自由記号",
+        "note": "free symbol",
+        "baseTop": 1610.625,
+        "noteTop": 1656.6875
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:56889/NEPL3/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "links": [
+      {
+        "href": "17-math-html.html",
+        "label": "17章"
+      }
+    ],
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "base": "/NEPL3/",
+    "width": 375,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "items_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": -0.328125,
+        "scroll": 152
+      },
+      {
+        "id": "n-65787072657373696f6e",
+        "count": 1,
+        "top": 0.140625,
+        "scroll": 462
+      },
+      {
+        "id": "n-737472756374757265",
+        "count": 1,
+        "top": -0.34375,
+        "scroll": 2460
+      },
+      {
+        "id": "n-6576616c75617465",
+        "count": 1,
+        "top": 0.359375,
+        "scroll": 3121
+      },
+      {
+        "id": "n-6d6174686d6c",
+        "count": 1,
+        "top": 0,
+        "scroll": 6064
+      },
+      {
+        "id": "n-6172656e61",
+        "count": 1,
+        "top": 0.34375,
+        "scroll": 7602
+      },
+      {
+        "id": "n-7265736f7572636573",
+        "count": 1,
+        "top": -0.046875,
+        "scroll": 10763
+      },
+      {
+        "id": "n-7075626c6963",
+        "count": 1,
+        "top": 577.578125,
+        "scroll": 10968
+      }
+    ],
+    "chapter17_target": "17. Doc・MathのHTML\n生成\nせいせい\nと\n数式表示\nすうしきひょうじ",
+    "reload_target": "http://127.0.0.1:56889/NEPL3/docs/spec/17-math-html.html"
+  },
+  {
+    "headings": [
+      "06. Math言語",
+      "方針",
+      "1. 表現",
+      "2. 構造検査",
+      "3. evaluate",
+      "4. MathML backend",
+      "4.1. 公開arenaと原文保持",
+      "5. 出力と資源",
+      "6. 公開操作"
+    ],
+    "codes": [
+      "expression_from_rational",
+      "frac 1 2",
+      "symbol \"...\"",
+      "call",
+      "Vector(List<Q>)",
+      "Matrix(rows,cols,List<Q>)",
+      "interfaces/model.json",
+      "interfaces/math.json",
+      "MathSyntax",
+      "MathValue",
+      "Option<Span>",
+      "lower::expression"
+    ],
+    "lists": [
+      [
+        "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+        "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+        "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+        "frac: Scalar同士、分母0はDivisionByZero。",
+        "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+        "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+        "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+        "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+        "lt/le: Scalar同士だけ。",
+        "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+        "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+        "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+        "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。"
+      ]
+    ],
+    "paragraphs": [
+      "数式の表示対象を保ち、その一部に対する厳密計算を独立した操作として公開する。parse/renderが数式を簡約したり、等式の正しさを主張したりしない。",
+      "全constructorはmath-signatures参照。Numberは有限十進の原表記を持ち、意味値はBigRationalへ正確に変換する。整数p、分母qはq>0、gcd(|p|,q)=1、zero=0/1へ正規化する。Numberに格納できる値は、約分後のqの素因数が2と5だけの有理数に限る。これ以外をNumberとして構築・decodeする場合はNonFiniteDecimalNumberで拒否する。評価値のRationalはこの制限を持たない。",
+      "任意有理数から式を作るconstructor helper expression_from_rational は、有限十進ならNumber、それ以外なら整数Numberを子とするFrac(Number(p), Number(q))を返す。元の構文をlowerするときにこのhelperで著者のFracを折り畳まない。frac 1 2 はFracのまま保持する。Numberのprintはcanonicalな整数または有限十進（指数表記なし、冗長な末尾zeroなし、zeroは0）で、意味値とsnapshotの一致を確認した場合には元lexemeを表示に利用できる。Number(1/3)をprint時だけFracへ変換する設計にはしない。",
+      "Identifier leafは数学記号。自由記号を許可する。自由記号はUnresolvedNameのエラーにしない。意味上の入力要求として列挙する。symbol \"...\" で予約語と同じ綴りや複数文字の名前を明示できる。裸のNameとsymbolの同じ綴りは同じ名前解決規則を使う。",
+      "letはinitを外側、bodyを新しい記号scopeで読む。sum/integralのindexはbodyだけで有効であり、lower/upperでは外側を参照する。自由記号に架空の定義位置を与えない。",
+      "subscript/superscript/scriptsは表示構造。一般の添字を配列アクセスや指数演算に暗黙変換しない。代数的な累乗にはpowを使う。callは数学の関数適用表現で、任意のFnコード実行ではない。",
+      "matrixは一つ以上のrow、各rowは同じ正の列数。vectorは一つ以上の要素。fenceは左右それぞれ0または1Unicode scalar。空文字で片側だけの括弧を表せる。",
+      "rootのdegreeが数値literalで0ならInvalidRootDegree。その他の定義域はevaluate時にも検査する。表示だけの式に実数/複素数の数値領域を勝手に割り当てない。",
+      "CheckedExpressionが保証するのは構造・binding・既知の局所制約であり、全記号の値や全演算の数値評価可能性ではない。",
+      "入力はCheckedExpression、自由記号のBindingEnvironment、Limits。出力はExact(Value)またはSymbolic(expression, Requirements)。定義域違反・形状不一致は明確なEvalError。値の種類はScalar(Q)、Vector(List<Q>)、Matrix(rows,cols,List<Q>)、Truth(Bool)。",
+      "評価はsource順の左から右、純粋。letはinitを評価してからbodyを評価する。未解決の記号に依存する部分はSymbolicとし、独立な数値subtreeの計算結果を保持できるが元の構文を上書きしない。",
+      "正確に評価する演算:",
+      "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+      "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+      "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+      "frac: Scalar同士、分母0はDivisionByZero。",
+      "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+      "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+      "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+      "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+      "lt/le: Scalar同士だけ。",
+      "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+      "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+      "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+      "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。",
+      "integral、call、表示用text/sequence/subscript/superscript/scriptsは、評価専用規則がない限りSymbolic(NotationOnly)。これらの表示は完全に対応する。解析的な積分や任意関数評価を実装済みとしない。",
+      "MathML Coreの要素をtyped Markupで生成する。Number=mn、Symbol=mi、表示Text=mtext、加減乗・比較=mrow+mo、frac=mfrac、sqrt=msqrt、root=mroot、sub/sup/scripts=msub/msup/msubsup、vector/matrix=mtable/mtr/mtd、総和と積分=munder/munderoverまたは対応するscript形をdisplay modeから決定する。",
+      "暗黙のブラウザprecedence解釈へ依存しない。binding powerは比較10、add/sub20、mul30、neg40、pow50、atomic60。弱い子を強い親へ入れる際はmoによる可視括弧を挿入。subの右側、powの左側等、同じprecedenceでも非結合な位置に括弧を入れる。fracは分子分母の構造自体がgroupになる。",
+      "数学表示の2項演算は元の順序を保持する。mulのscalar/記号列でも、読み違いを避けるためreference backendは中央点を表示する。callはfunctionと括弧付きarguments。sequenceは指定順のmrowであり、勝手に演算を補わない。",
+      "letは「name := init ; body」のmrow。sumの下限は「index = lower」、上限はupper、bodyに必要な括弧を付ける。integralは積分記号と上下限、body、微分記号dとindex。equalは表示であって証明書ではない。",
+      "labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備し、mtextを介した注記として出力する。MathMLの内容モデルに適合しないblock内容は受け入れない。",
+      "interfaces/model.json のMath record/unionはconstructorの論理的な意味展開であり、Rust enum順や別の再帰wire layoutではない。実値のschemaは interfaces/math.json の MathSyntax / MathValue とする。MathRootはExpr / Row / DocGuestの3種類。MathKindは29 formとNumber leafに対応し、bare SymbolNameは明示Symbolと同じ意味kindへlowerする。子はExprRef / RowRef / DocGuestRef、guestはEmbedRefで平坦なarenaを参照する。schemaの明示variant名とfield列がwire tagであり、入力由来の深さをnativeの再帰所有へ転写しない。",
+      "MathValueの構造検査はカテゴリ、参照、到達性、cycle、共有DAGの最大経路、Number有限十進制約、vector/matrix形状、fence幅、literal 0のroot degreeを検査する。単独Rowは空を表せるが、Matrixに取り込むrowの列数は正で全row同一でなければならない。この証明はsymbol解決済みCheckedExpressionや評価可能性の証明ではない。",
+      "MathSyntaxはsource宣言、元Origin表、tokenごとのowner headを持つMathView、SourceMapを所有する。Number.spellingは Option<Span> のまま保持し、存在する場合は宣言sourceとnode coverに整合する位置を指す。意味Rationalと原lexemeの一致を証明したときだけ元表記をprintへ利用でき、位置構造検査だけをその証明とみなさない。Symbol/Let/Sum/Integralの名前operandは閉じたMathFieldLocationで選択位置とOriginを保持する。本文の名前検索で位置を再発見せず、source-lessの位置はNoneとする。",
+      "LabelのDoc annotationと独立DocGuestは、Doc SentenceのForeignClosureを保持する。ownerの環境・Origin ID・source/map閉包とguest自身のID空間を混同せず、意味変換を行わない。元構文に意味的に不正なDoc annotationがあっても、Mathのsource構造検査を理由にDoc lowerや評価を呼び出してはならない。prepared表示へ渡す意味・内容モデル検査は別の要求として残す。",
+      "lower::expression はhostが選択済みparse/profileを確認したSyntaxBundleと明示Math表層SchemaRef/categoryを受け、現在のBudget/SourceAdmissionで再検査してMathSyntaxを返す。共有sourceは一度だけ計上し、原Frac・表示scripts等を簡約しない。局所constructor制約の失敗は元のsource NodeRefとShapeErrorへ帰属させ、破棄した出力arenaのindexだけを位置情報として返さない。停止は原StopReasonを保持し、元構文木を変更しない。",
+      "初回NDF受信はschema検査後に同じsource/Origin/View/guest閉包とarena制約を検査する。宣言sourceの欠落をreceiverのambient storeから補わない。raw MathSyntaxの受信はbinding・free symbol要求・評価結果のproofを発行しない。明示constructor helperは新しいsource-less式を作るためのもので、元式を置換する処理ではない。",
+      "MathMLは独立した正式portable出力であり、ブラウザがfont/layoutを担当する。Doc・MathのHTML生成は17章のKaTeXPreferredを標準とし、生成環境でKaTeXを実行してCSS/fontと配布する。忠実変換不能・生成能力不足時はNEPL3 MathMLへ診断付きで切り替える。閲覧時にKaTeXを再実行せず、CLIがpixel描画まで行うとも広告しない。",
+      "独自layout/rasterizerを追加する場合は、CheckedExpressionまたはMathLayout入力modelを受ける別backendとする。OpenType MATH tableやglyph outlineの実装都合をMathの意味モデルへ持ち込まない。",
+      "lower、check、free_symbols、evaluate、print、render_mathml。評価結果、部分評価の新式、元の式を別値として返す。文書側のrender要求がevaluateを自動で要求しない。"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-65787072657373696f6e",
+      "n-737472756374757265",
+      "n-6576616c75617465",
+      "n-6d6174686d6c",
+      "n-6172656e61",
+      "n-7265736f7572636573",
+      "n-7075626c6963"
+    ],
+    "ruby": 515,
+    "annos": [
+      {
+        "base": "自由記号",
+        "note": "free symbol",
+        "baseTop": 695.109375,
+        "noteTop": 741.171875
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:56889/NEPL3/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "links": [
+      {
+        "href": "17-math-html.html",
+        "label": "17章"
+      }
+    ],
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "base": "/NEPL3/",
+    "width": 1280,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "items_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": -0.328125,
+        "scroll": 152
+      },
+      {
+        "id": "n-65787072657373696f6e",
+        "count": 1,
+        "top": 0.15625,
+        "scroll": 295
+      },
+      {
+        "id": "n-737472756374757265",
+        "count": 1,
+        "top": -0.34375,
+        "scroll": 1009
+      },
+      {
+        "id": "n-6576616c75617465",
+        "count": 1,
+        "top": 0.265625,
+        "scroll": 1244
+      },
+      {
+        "id": "n-6d6174686d6c",
+        "count": 1,
+        "top": 0.078125,
+        "scroll": 2396
+      },
+      {
+        "id": "n-6172656e61",
+        "count": 1,
+        "top": -0.484375,
+        "scroll": 2933
+      },
+      {
+        "id": "n-7265736f7572636573",
+        "count": 1,
+        "top": 370.1875,
+        "scroll": 3581
+      },
+      {
+        "id": "n-7075626c6963",
+        "count": 1,
+        "top": 697.921875,
+        "scroll": 3581
+      }
+    ],
+    "chapter17_target": "17. Doc・MathのHTML\n生成\nせいせい\nと\n数式表示\nすうしきひょうじ",
+    "reload_target": "http://127.0.0.1:56889/NEPL3/docs/spec/17-math-html.html"
+  },
+  {
+    "headings": [
+      "06. Math言語",
+      "方針",
+      "1. 表現",
+      "2. 構造検査",
+      "3. evaluate",
+      "4. MathML backend",
+      "4.1. 公開arenaと原文保持",
+      "5. 出力と資源",
+      "6. 公開操作"
+    ],
+    "codes": [
+      "expression_from_rational",
+      "frac 1 2",
+      "symbol \"...\"",
+      "call",
+      "Vector(List<Q>)",
+      "Matrix(rows,cols,List<Q>)",
+      "interfaces/model.json",
+      "interfaces/math.json",
+      "MathSyntax",
+      "MathValue",
+      "Option<Span>",
+      "lower::expression"
+    ],
+    "lists": [
+      [
+        "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+        "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+        "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+        "frac: Scalar同士、分母0はDivisionByZero。",
+        "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+        "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+        "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+        "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+        "lt/le: Scalar同士だけ。",
+        "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+        "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+        "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+        "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。"
+      ]
+    ],
+    "paragraphs": [
+      "数式の表示対象を保ち、その一部に対する厳密計算を独立した操作として公開する。parse/renderが数式を簡約したり、等式の正しさを主張したりしない。",
+      "全constructorはmath-signatures参照。Numberは有限十進の原表記を持ち、意味値はBigRationalへ正確に変換する。整数p、分母qはq>0、gcd(|p|,q)=1、zero=0/1へ正規化する。Numberに格納できる値は、約分後のqの素因数が2と5だけの有理数に限る。これ以外をNumberとして構築・decodeする場合はNonFiniteDecimalNumberで拒否する。評価値のRationalはこの制限を持たない。",
+      "任意有理数から式を作るconstructor helper expression_from_rational は、有限十進ならNumber、それ以外なら整数Numberを子とするFrac(Number(p), Number(q))を返す。元の構文をlowerするときにこのhelperで著者のFracを折り畳まない。frac 1 2 はFracのまま保持する。Numberのprintはcanonicalな整数または有限十進（指数表記なし、冗長な末尾zeroなし、zeroは0）で、意味値とsnapshotの一致を確認した場合には元lexemeを表示に利用できる。Number(1/3)をprint時だけFracへ変換する設計にはしない。",
+      "Identifier leafは数学記号。自由記号を許可する。自由記号はUnresolvedNameのエラーにしない。意味上の入力要求として列挙する。symbol \"...\" で予約語と同じ綴りや複数文字の名前を明示できる。裸のNameとsymbolの同じ綴りは同じ名前解決規則を使う。",
+      "letはinitを外側、bodyを新しい記号scopeで読む。sum/integralのindexはbodyだけで有効であり、lower/upperでは外側を参照する。自由記号に架空の定義位置を与えない。",
+      "subscript/superscript/scriptsは表示構造。一般の添字を配列アクセスや指数演算に暗黙変換しない。代数的な累乗にはpowを使う。callは数学の関数適用表現で、任意のFnコード実行ではない。",
+      "matrixは一つ以上のrow、各rowは同じ正の列数。vectorは一つ以上の要素。fenceは左右それぞれ0または1Unicode scalar。空文字で片側だけの括弧を表せる。",
+      "rootのdegreeが数値literalで0ならInvalidRootDegree。その他の定義域はevaluate時にも検査する。表示だけの式に実数/複素数の数値領域を勝手に割り当てない。",
+      "CheckedExpressionが保証するのは構造・binding・既知の局所制約であり、全記号の値や全演算の数値評価可能性ではない。",
+      "入力はCheckedExpression、自由記号のBindingEnvironment、Limits。出力はExact(Value)またはSymbolic(expression, Requirements)。定義域違反・形状不一致は明確なEvalError。値の種類はScalar(Q)、Vector(List<Q>)、Matrix(rows,cols,List<Q>)、Truth(Bool)。",
+      "評価はsource順の左から右、純粋。letはinitを評価してからbodyを評価する。未解決の記号に依存する部分はSymbolicとし、独立な数値subtreeの計算結果を保持できるが元の構文を上書きしない。",
+      "正確に評価する演算:",
+      "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+      "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+      "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+      "frac: Scalar同士、分母0はDivisionByZero。",
+      "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+      "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+      "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+      "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+      "lt/le: Scalar同士だけ。",
+      "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+      "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+      "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+      "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。",
+      "integral、call、表示用text/sequence/subscript/superscript/scriptsは、評価専用規則がない限りSymbolic(NotationOnly)。これらの表示は完全に対応する。解析的な積分や任意関数評価を実装済みとしない。",
+      "MathML Coreの要素をtyped Markupで生成する。Number=mn、Symbol=mi、表示Text=mtext、加減乗・比較=mrow+mo、frac=mfrac、sqrt=msqrt、root=mroot、sub/sup/scripts=msub/msup/msubsup、vector/matrix=mtable/mtr/mtd、総和と積分=munder/munderoverまたは対応するscript形をdisplay modeから決定する。",
+      "暗黙のブラウザprecedence解釈へ依存しない。binding powerは比較10、add/sub20、mul30、neg40、pow50、atomic60。弱い子を強い親へ入れる際はmoによる可視括弧を挿入。subの右側、powの左側等、同じprecedenceでも非結合な位置に括弧を入れる。fracは分子分母の構造自体がgroupになる。",
+      "数学表示の2項演算は元の順序を保持する。mulのscalar/記号列でも、読み違いを避けるためreference backendは中央点を表示する。callはfunctionと括弧付きarguments。sequenceは指定順のmrowであり、勝手に演算を補わない。",
+      "letは「name := init ; body」のmrow。sumの下限は「index = lower」、上限はupper、bodyに必要な括弧を付ける。integralは積分記号と上下限、body、微分記号dとindex。equalは表示であって証明書ではない。",
+      "labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備し、mtextを介した注記として出力する。MathMLの内容モデルに適合しないblock内容は受け入れない。",
+      "interfaces/model.json のMath record/unionはconstructorの論理的な意味展開であり、Rust enum順や別の再帰wire layoutではない。実値のschemaは interfaces/math.json の MathSyntax / MathValue とする。MathRootはExpr / Row / DocGuestの3種類。MathKindは29 formとNumber leafに対応し、bare SymbolNameは明示Symbolと同じ意味kindへlowerする。子はExprRef / RowRef / DocGuestRef、guestはEmbedRefで平坦なarenaを参照する。schemaの明示variant名とfield列がwire tagであり、入力由来の深さをnativeの再帰所有へ転写しない。",
+      "MathValueの構造検査はカテゴリ、参照、到達性、cycle、共有DAGの最大経路、Number有限十進制約、vector/matrix形状、fence幅、literal 0のroot degreeを検査する。単独Rowは空を表せるが、Matrixに取り込むrowの列数は正で全row同一でなければならない。この証明はsymbol解決済みCheckedExpressionや評価可能性の証明ではない。",
+      "MathSyntaxはsource宣言、元Origin表、tokenごとのowner headを持つMathView、SourceMapを所有する。Number.spellingは Option<Span> のまま保持し、存在する場合は宣言sourceとnode coverに整合する位置を指す。意味Rationalと原lexemeの一致を証明したときだけ元表記をprintへ利用でき、位置構造検査だけをその証明とみなさない。Symbol/Let/Sum/Integralの名前operandは閉じたMathFieldLocationで選択位置とOriginを保持する。本文の名前検索で位置を再発見せず、source-lessの位置はNoneとする。",
+      "LabelのDoc annotationと独立DocGuestは、Doc SentenceのForeignClosureを保持する。ownerの環境・Origin ID・source/map閉包とguest自身のID空間を混同せず、意味変換を行わない。元構文に意味的に不正なDoc annotationがあっても、Mathのsource構造検査を理由にDoc lowerや評価を呼び出してはならない。prepared表示へ渡す意味・内容モデル検査は別の要求として残す。",
+      "lower::expression はhostが選択済みparse/profileを確認したSyntaxBundleと明示Math表層SchemaRef/categoryを受け、現在のBudget/SourceAdmissionで再検査してMathSyntaxを返す。共有sourceは一度だけ計上し、原Frac・表示scripts等を簡約しない。局所constructor制約の失敗は元のsource NodeRefとShapeErrorへ帰属させ、破棄した出力arenaのindexだけを位置情報として返さない。停止は原StopReasonを保持し、元構文木を変更しない。",
+      "初回NDF受信はschema検査後に同じsource/Origin/View/guest閉包とarena制約を検査する。宣言sourceの欠落をreceiverのambient storeから補わない。raw MathSyntaxの受信はbinding・free symbol要求・評価結果のproofを発行しない。明示constructor helperは新しいsource-less式を作るためのもので、元式を置換する処理ではない。",
+      "MathMLは独立した正式portable出力であり、ブラウザがfont/layoutを担当する。Doc・MathのHTML生成は17章のKaTeXPreferredを標準とし、生成環境でKaTeXを実行してCSS/fontと配布する。忠実変換不能・生成能力不足時はNEPL3 MathMLへ診断付きで切り替える。閲覧時にKaTeXを再実行せず、CLIがpixel描画まで行うとも広告しない。",
+      "独自layout/rasterizerを追加する場合は、CheckedExpressionまたはMathLayout入力modelを受ける別backendとする。OpenType MATH tableやglyph outlineの実装都合をMathの意味モデルへ持ち込まない。",
+      "lower、check、free_symbols、evaluate、print、render_mathml。評価結果、部分評価の新式、元の式を別値として返す。文書側のrender要求がevaluateを自動で要求しない。"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-65787072657373696f6e",
+      "n-737472756374757265",
+      "n-6576616c75617465",
+      "n-6d6174686d6c",
+      "n-6172656e61",
+      "n-7265736f7572636573",
+      "n-7075626c6963"
+    ],
+    "ruby": 515,
+    "annos": [
+      {
+        "base": "自由記号",
+        "note": "free symbol",
+        "baseTop": 1610.625,
+        "noteTop": 1656.6875
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:56889/review/nested/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "links": [
+      {
+        "href": "17-math-html.html",
+        "label": "17章"
+      }
+    ],
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "base": "/review/nested/",
+    "width": 375,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "items_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": -0.328125,
+        "scroll": 152
+      },
+      {
+        "id": "n-65787072657373696f6e",
+        "count": 1,
+        "top": 0.140625,
+        "scroll": 462
+      },
+      {
+        "id": "n-737472756374757265",
+        "count": 1,
+        "top": -0.34375,
+        "scroll": 2460
+      },
+      {
+        "id": "n-6576616c75617465",
+        "count": 1,
+        "top": 0.359375,
+        "scroll": 3121
+      },
+      {
+        "id": "n-6d6174686d6c",
+        "count": 1,
+        "top": 0,
+        "scroll": 6064
+      },
+      {
+        "id": "n-6172656e61",
+        "count": 1,
+        "top": 0.34375,
+        "scroll": 7602
+      },
+      {
+        "id": "n-7265736f7572636573",
+        "count": 1,
+        "top": -0.046875,
+        "scroll": 10763
+      },
+      {
+        "id": "n-7075626c6963",
+        "count": 1,
+        "top": 577.578125,
+        "scroll": 10968
+      }
+    ],
+    "chapter17_target": "17. Doc・MathのHTML\n生成\nせいせい\nと\n数式表示\nすうしきひょうじ",
+    "reload_target": "http://127.0.0.1:56889/review/nested/docs/spec/17-math-html.html"
+  },
+  {
+    "headings": [
+      "06. Math言語",
+      "方針",
+      "1. 表現",
+      "2. 構造検査",
+      "3. evaluate",
+      "4. MathML backend",
+      "4.1. 公開arenaと原文保持",
+      "5. 出力と資源",
+      "6. 公開操作"
+    ],
+    "codes": [
+      "expression_from_rational",
+      "frac 1 2",
+      "symbol \"...\"",
+      "call",
+      "Vector(List<Q>)",
+      "Matrix(rows,cols,List<Q>)",
+      "interfaces/model.json",
+      "interfaces/math.json",
+      "MathSyntax",
+      "MathValue",
+      "Option<Span>",
+      "lower::expression"
+    ],
+    "lists": [
+      [
+        "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+        "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+        "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+        "frac: Scalar同士、分母0はDivisionByZero。",
+        "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+        "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+        "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+        "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+        "lt/le: Scalar同士だけ。",
+        "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+        "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+        "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+        "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。"
+      ]
+    ],
+    "paragraphs": [
+      "数式の表示対象を保ち、その一部に対する厳密計算を独立した操作として公開する。parse/renderが数式を簡約したり、等式の正しさを主張したりしない。",
+      "全constructorはmath-signatures参照。Numberは有限十進の原表記を持ち、意味値はBigRationalへ正確に変換する。整数p、分母qはq>0、gcd(|p|,q)=1、zero=0/1へ正規化する。Numberに格納できる値は、約分後のqの素因数が2と5だけの有理数に限る。これ以外をNumberとして構築・decodeする場合はNonFiniteDecimalNumberで拒否する。評価値のRationalはこの制限を持たない。",
+      "任意有理数から式を作るconstructor helper expression_from_rational は、有限十進ならNumber、それ以外なら整数Numberを子とするFrac(Number(p), Number(q))を返す。元の構文をlowerするときにこのhelperで著者のFracを折り畳まない。frac 1 2 はFracのまま保持する。Numberのprintはcanonicalな整数または有限十進（指数表記なし、冗長な末尾zeroなし、zeroは0）で、意味値とsnapshotの一致を確認した場合には元lexemeを表示に利用できる。Number(1/3)をprint時だけFracへ変換する設計にはしない。",
+      "Identifier leafは数学記号。自由記号を許可する。自由記号はUnresolvedNameのエラーにしない。意味上の入力要求として列挙する。symbol \"...\" で予約語と同じ綴りや複数文字の名前を明示できる。裸のNameとsymbolの同じ綴りは同じ名前解決規則を使う。",
+      "letはinitを外側、bodyを新しい記号scopeで読む。sum/integralのindexはbodyだけで有効であり、lower/upperでは外側を参照する。自由記号に架空の定義位置を与えない。",
+      "subscript/superscript/scriptsは表示構造。一般の添字を配列アクセスや指数演算に暗黙変換しない。代数的な累乗にはpowを使う。callは数学の関数適用表現で、任意のFnコード実行ではない。",
+      "matrixは一つ以上のrow、各rowは同じ正の列数。vectorは一つ以上の要素。fenceは左右それぞれ0または1Unicode scalar。空文字で片側だけの括弧を表せる。",
+      "rootのdegreeが数値literalで0ならInvalidRootDegree。その他の定義域はevaluate時にも検査する。表示だけの式に実数/複素数の数値領域を勝手に割り当てない。",
+      "CheckedExpressionが保証するのは構造・binding・既知の局所制約であり、全記号の値や全演算の数値評価可能性ではない。",
+      "入力はCheckedExpression、自由記号のBindingEnvironment、Limits。出力はExact(Value)またはSymbolic(expression, Requirements)。定義域違反・形状不一致は明確なEvalError。値の種類はScalar(Q)、Vector(List<Q>)、Matrix(rows,cols,List<Q>)、Truth(Bool)。",
+      "評価はsource順の左から右、純粋。letはinitを評価してからbodyを評価する。未解決の記号に依存する部分はSymbolicとし、独立な数値subtreeの計算結果を保持できるが元の構文を上書きしない。",
+      "正確に評価する演算:",
+      "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+      "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+      "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+      "frac: Scalar同士、分母0はDivisionByZero。",
+      "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+      "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+      "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+      "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+      "lt/le: Scalar同士だけ。",
+      "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+      "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+      "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+      "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。",
+      "integral、call、表示用text/sequence/subscript/superscript/scriptsは、評価専用規則がない限りSymbolic(NotationOnly)。これらの表示は完全に対応する。解析的な積分や任意関数評価を実装済みとしない。",
+      "MathML Coreの要素をtyped Markupで生成する。Number=mn、Symbol=mi、表示Text=mtext、加減乗・比較=mrow+mo、frac=mfrac、sqrt=msqrt、root=mroot、sub/sup/scripts=msub/msup/msubsup、vector/matrix=mtable/mtr/mtd、総和と積分=munder/munderoverまたは対応するscript形をdisplay modeから決定する。",
+      "暗黙のブラウザprecedence解釈へ依存しない。binding powerは比較10、add/sub20、mul30、neg40、pow50、atomic60。弱い子を強い親へ入れる際はmoによる可視括弧を挿入。subの右側、powの左側等、同じprecedenceでも非結合な位置に括弧を入れる。fracは分子分母の構造自体がgroupになる。",
+      "数学表示の2項演算は元の順序を保持する。mulのscalar/記号列でも、読み違いを避けるためreference backendは中央点を表示する。callはfunctionと括弧付きarguments。sequenceは指定順のmrowであり、勝手に演算を補わない。",
+      "letは「name := init ; body」のmrow。sumの下限は「index = lower」、上限はupper、bodyに必要な括弧を付ける。integralは積分記号と上下限、body、微分記号dとindex。equalは表示であって証明書ではない。",
+      "labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備し、mtextを介した注記として出力する。MathMLの内容モデルに適合しないblock内容は受け入れない。",
+      "interfaces/model.json のMath record/unionはconstructorの論理的な意味展開であり、Rust enum順や別の再帰wire layoutではない。実値のschemaは interfaces/math.json の MathSyntax / MathValue とする。MathRootはExpr / Row / DocGuestの3種類。MathKindは29 formとNumber leafに対応し、bare SymbolNameは明示Symbolと同じ意味kindへlowerする。子はExprRef / RowRef / DocGuestRef、guestはEmbedRefで平坦なarenaを参照する。schemaの明示variant名とfield列がwire tagであり、入力由来の深さをnativeの再帰所有へ転写しない。",
+      "MathValueの構造検査はカテゴリ、参照、到達性、cycle、共有DAGの最大経路、Number有限十進制約、vector/matrix形状、fence幅、literal 0のroot degreeを検査する。単独Rowは空を表せるが、Matrixに取り込むrowの列数は正で全row同一でなければならない。この証明はsymbol解決済みCheckedExpressionや評価可能性の証明ではない。",
+      "MathSyntaxはsource宣言、元Origin表、tokenごとのowner headを持つMathView、SourceMapを所有する。Number.spellingは Option<Span> のまま保持し、存在する場合は宣言sourceとnode coverに整合する位置を指す。意味Rationalと原lexemeの一致を証明したときだけ元表記をprintへ利用でき、位置構造検査だけをその証明とみなさない。Symbol/Let/Sum/Integralの名前operandは閉じたMathFieldLocationで選択位置とOriginを保持する。本文の名前検索で位置を再発見せず、source-lessの位置はNoneとする。",
+      "LabelのDoc annotationと独立DocGuestは、Doc SentenceのForeignClosureを保持する。ownerの環境・Origin ID・source/map閉包とguest自身のID空間を混同せず、意味変換を行わない。元構文に意味的に不正なDoc annotationがあっても、Mathのsource構造検査を理由にDoc lowerや評価を呼び出してはならない。prepared表示へ渡す意味・内容モデル検査は別の要求として残す。",
+      "lower::expression はhostが選択済みparse/profileを確認したSyntaxBundleと明示Math表層SchemaRef/categoryを受け、現在のBudget/SourceAdmissionで再検査してMathSyntaxを返す。共有sourceは一度だけ計上し、原Frac・表示scripts等を簡約しない。局所constructor制約の失敗は元のsource NodeRefとShapeErrorへ帰属させ、破棄した出力arenaのindexだけを位置情報として返さない。停止は原StopReasonを保持し、元構文木を変更しない。",
+      "初回NDF受信はschema検査後に同じsource/Origin/View/guest閉包とarena制約を検査する。宣言sourceの欠落をreceiverのambient storeから補わない。raw MathSyntaxの受信はbinding・free symbol要求・評価結果のproofを発行しない。明示constructor helperは新しいsource-less式を作るためのもので、元式を置換する処理ではない。",
+      "MathMLは独立した正式portable出力であり、ブラウザがfont/layoutを担当する。Doc・MathのHTML生成は17章のKaTeXPreferredを標準とし、生成環境でKaTeXを実行してCSS/fontと配布する。忠実変換不能・生成能力不足時はNEPL3 MathMLへ診断付きで切り替える。閲覧時にKaTeXを再実行せず、CLIがpixel描画まで行うとも広告しない。",
+      "独自layout/rasterizerを追加する場合は、CheckedExpressionまたはMathLayout入力modelを受ける別backendとする。OpenType MATH tableやglyph outlineの実装都合をMathの意味モデルへ持ち込まない。",
+      "lower、check、free_symbols、evaluate、print、render_mathml。評価結果、部分評価の新式、元の式を別値として返す。文書側のrender要求がevaluateを自動で要求しない。"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-65787072657373696f6e",
+      "n-737472756374757265",
+      "n-6576616c75617465",
+      "n-6d6174686d6c",
+      "n-6172656e61",
+      "n-7265736f7572636573",
+      "n-7075626c6963"
+    ],
+    "ruby": 515,
+    "annos": [
+      {
+        "base": "自由記号",
+        "note": "free symbol",
+        "baseTop": 695.109375,
+        "noteTop": 741.171875
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:56889/review/nested/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "links": [
+      {
+        "href": "17-math-html.html",
+        "label": "17章"
+      }
+    ],
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "base": "/review/nested/",
+    "width": 1280,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "items_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": -0.328125,
+        "scroll": 152
+      },
+      {
+        "id": "n-65787072657373696f6e",
+        "count": 1,
+        "top": 0.15625,
+        "scroll": 295
+      },
+      {
+        "id": "n-737472756374757265",
+        "count": 1,
+        "top": -0.34375,
+        "scroll": 1009
+      },
+      {
+        "id": "n-6576616c75617465",
+        "count": 1,
+        "top": 0.265625,
+        "scroll": 1244
+      },
+      {
+        "id": "n-6d6174686d6c",
+        "count": 1,
+        "top": 0.078125,
+        "scroll": 2396
+      },
+      {
+        "id": "n-6172656e61",
+        "count": 1,
+        "top": -0.484375,
+        "scroll": 2933
+      },
+      {
+        "id": "n-7265736f7572636573",
+        "count": 1,
+        "top": 370.1875,
+        "scroll": 3581
+      },
+      {
+        "id": "n-7075626c6963",
+        "count": 1,
+        "top": 697.921875,
+        "scroll": 3581
+      }
+    ],
+    "chapter17_target": "17. Doc・MathのHTML\n生成\nせいせい\nと\n数式表示\nすうしきひょうじ",
+    "reload_target": "http://127.0.0.1:56889/review/nested/docs/spec/17-math-html.html"
+  },
+  {
+    "headings": [
+      "06. Math言語",
+      "方針",
+      "1. 表現",
+      "2. 構造検査",
+      "3. evaluate",
+      "4. MathML backend",
+      "4.1. 公開arenaと原文保持",
+      "5. 出力と資源",
+      "6. 公開操作"
+    ],
+    "codes": [
+      "expression_from_rational",
+      "frac 1 2",
+      "symbol \"...\"",
+      "call",
+      "Vector(List<Q>)",
+      "Matrix(rows,cols,List<Q>)",
+      "interfaces/model.json",
+      "interfaces/math.json",
+      "MathSyntax",
+      "MathValue",
+      "Option<Span>",
+      "lower::expression"
+    ],
+    "lists": [
+      [
+        "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+        "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+        "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+        "frac: Scalar同士、分母0はDivisionByZero。",
+        "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+        "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+        "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+        "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+        "lt/le: Scalar同士だけ。",
+        "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+        "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+        "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+        "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。"
+      ]
+    ],
+    "paragraphs": [
+      "数式の表示対象を保ち、その一部に対する厳密計算を独立した操作として公開する。parse/renderが数式を簡約したり、等式の正しさを主張したりしない。",
+      "全constructorはmath-signatures参照。Numberは有限十進の原表記を持ち、意味値はBigRationalへ正確に変換する。整数p、分母qはq>0、gcd(|p|,q)=1、zero=0/1へ正規化する。Numberに格納できる値は、約分後のqの素因数が2と5だけの有理数に限る。これ以外をNumberとして構築・decodeする場合はNonFiniteDecimalNumberで拒否する。評価値のRationalはこの制限を持たない。",
+      "任意有理数から式を作るconstructor helper expression_from_rational は、有限十進ならNumber、それ以外なら整数Numberを子とするFrac(Number(p), Number(q))を返す。元の構文をlowerするときにこのhelperで著者のFracを折り畳まない。frac 1 2 はFracのまま保持する。Numberのprintはcanonicalな整数または有限十進（指数表記なし、冗長な末尾zeroなし、zeroは0）で、意味値とsnapshotの一致を確認した場合には元lexemeを表示に利用できる。Number(1/3)をprint時だけFracへ変換する設計にはしない。",
+      "Identifier leafは数学記号。自由記号を許可する。自由記号はUnresolvedNameのエラーにしない。意味上の入力要求として列挙する。symbol \"...\" で予約語と同じ綴りや複数文字の名前を明示できる。裸のNameとsymbolの同じ綴りは同じ名前解決規則を使う。",
+      "letはinitを外側、bodyを新しい記号scopeで読む。sum/integralのindexはbodyだけで有効であり、lower/upperでは外側を参照する。自由記号に架空の定義位置を与えない。",
+      "subscript/superscript/scriptsは表示構造。一般の添字を配列アクセスや指数演算に暗黙変換しない。代数的な累乗にはpowを使う。callは数学の関数適用表現で、任意のFnコード実行ではない。",
+      "matrixは一つ以上のrow、各rowは同じ正の列数。vectorは一つ以上の要素。fenceは左右それぞれ0または1Unicode scalar。空文字で片側だけの括弧を表せる。",
+      "rootのdegreeが数値literalで0ならInvalidRootDegree。その他の定義域はevaluate時にも検査する。表示だけの式に実数/複素数の数値領域を勝手に割り当てない。",
+      "CheckedExpressionが保証するのは構造・binding・既知の局所制約であり、全記号の値や全演算の数値評価可能性ではない。",
+      "入力はCheckedExpression、自由記号のBindingEnvironment、Limits。出力はExact(Value)またはSymbolic(expression, Requirements)。定義域違反・形状不一致は明確なEvalError。値の種類はScalar(Q)、Vector(List<Q>)、Matrix(rows,cols,List<Q>)、Truth(Bool)。",
+      "評価はsource順の左から右、純粋。letはinitを評価してからbodyを評価する。未解決の記号に依存する部分はSymbolicとし、独立な数値subtreeの計算結果を保持できるが元の構文を上書きしない。",
+      "正確に評価する演算:",
+      "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+      "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+      "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+      "frac: Scalar同士、分母0はDivisionByZero。",
+      "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+      "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+      "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+      "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+      "lt/le: Scalar同士だけ。",
+      "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+      "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+      "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+      "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。",
+      "integral、call、表示用text/sequence/subscript/superscript/scriptsは、評価専用規則がない限りSymbolic(NotationOnly)。これらの表示は完全に対応する。解析的な積分や任意関数評価を実装済みとしない。",
+      "MathML Coreの要素をtyped Markupで生成する。Number=mn、Symbol=mi、表示Text=mtext、加減乗・比較=mrow+mo、frac=mfrac、sqrt=msqrt、root=mroot、sub/sup/scripts=msub/msup/msubsup、vector/matrix=mtable/mtr/mtd、総和と積分=munder/munderoverまたは対応するscript形をdisplay modeから決定する。",
+      "暗黙のブラウザprecedence解釈へ依存しない。binding powerは比較10、add/sub20、mul30、neg40、pow50、atomic60。弱い子を強い親へ入れる際はmoによる可視括弧を挿入。subの右側、powの左側等、同じprecedenceでも非結合な位置に括弧を入れる。fracは分子分母の構造自体がgroupになる。",
+      "数学表示の2項演算は元の順序を保持する。mulのscalar/記号列でも、読み違いを避けるためreference backendは中央点を表示する。callはfunctionと括弧付きarguments。sequenceは指定順のmrowであり、勝手に演算を補わない。",
+      "letは「name := init ; body」のmrow。sumの下限は「index = lower」、上限はupper、bodyに必要な括弧を付ける。integralは積分記号と上下限、body、微分記号dとindex。equalは表示であって証明書ではない。",
+      "labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備し、mtextを介した注記として出力する。MathMLの内容モデルに適合しないblock内容は受け入れない。",
+      "interfaces/model.json のMath record/unionはconstructorの論理的な意味展開であり、Rust enum順や別の再帰wire layoutではない。実値のschemaは interfaces/math.json の MathSyntax / MathValue とする。MathRootはExpr / Row / DocGuestの3種類。MathKindは29 formとNumber leafに対応し、bare SymbolNameは明示Symbolと同じ意味kindへlowerする。子はExprRef / RowRef / DocGuestRef、guestはEmbedRefで平坦なarenaを参照する。schemaの明示variant名とfield列がwire tagであり、入力由来の深さをnativeの再帰所有へ転写しない。",
+      "MathValueの構造検査はカテゴリ、参照、到達性、cycle、共有DAGの最大経路、Number有限十進制約、vector/matrix形状、fence幅、literal 0のroot degreeを検査する。単独Rowは空を表せるが、Matrixに取り込むrowの列数は正で全row同一でなければならない。この証明はsymbol解決済みCheckedExpressionや評価可能性の証明ではない。",
+      "MathSyntaxはsource宣言、元Origin表、tokenごとのowner headを持つMathView、SourceMapを所有する。Number.spellingは Option<Span> のまま保持し、存在する場合は宣言sourceとnode coverに整合する位置を指す。意味Rationalと原lexemeの一致を証明したときだけ元表記をprintへ利用でき、位置構造検査だけをその証明とみなさない。Symbol/Let/Sum/Integralの名前operandは閉じたMathFieldLocationで選択位置とOriginを保持する。本文の名前検索で位置を再発見せず、source-lessの位置はNoneとする。",
+      "LabelのDoc annotationと独立DocGuestは、Doc SentenceのForeignClosureを保持する。ownerの環境・Origin ID・source/map閉包とguest自身のID空間を混同せず、意味変換を行わない。元構文に意味的に不正なDoc annotationがあっても、Mathのsource構造検査を理由にDoc lowerや評価を呼び出してはならない。prepared表示へ渡す意味・内容モデル検査は別の要求として残す。",
+      "lower::expression はhostが選択済みparse/profileを確認したSyntaxBundleと明示Math表層SchemaRef/categoryを受け、現在のBudget/SourceAdmissionで再検査してMathSyntaxを返す。共有sourceは一度だけ計上し、原Frac・表示scripts等を簡約しない。局所constructor制約の失敗は元のsource NodeRefとShapeErrorへ帰属させ、破棄した出力arenaのindexだけを位置情報として返さない。停止は原StopReasonを保持し、元構文木を変更しない。",
+      "初回NDF受信はschema検査後に同じsource/Origin/View/guest閉包とarena制約を検査する。宣言sourceの欠落をreceiverのambient storeから補わない。raw MathSyntaxの受信はbinding・free symbol要求・評価結果のproofを発行しない。明示constructor helperは新しいsource-less式を作るためのもので、元式を置換する処理ではない。",
+      "MathMLは独立した正式portable出力であり、ブラウザがfont/layoutを担当する。Doc・MathのHTML生成は17章のKaTeXPreferredを標準とし、生成環境でKaTeXを実行してCSS/fontと配布する。忠実変換不能・生成能力不足時はNEPL3 MathMLへ診断付きで切り替える。閲覧時にKaTeXを再実行せず、CLIがpixel描画まで行うとも広告しない。",
+      "独自layout/rasterizerを追加する場合は、CheckedExpressionまたはMathLayout入力modelを受ける別backendとする。OpenType MATH tableやglyph outlineの実装都合をMathの意味モデルへ持ち込まない。",
+      "lower、check、free_symbols、evaluate、print、render_mathml。評価結果、部分評価の新式、元の式を別値として返す。文書側のrender要求がevaluateを自動で要求しない。"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-65787072657373696f6e",
+      "n-737472756374757265",
+      "n-6576616c75617465",
+      "n-6d6174686d6c",
+      "n-6172656e61",
+      "n-7265736f7572636573",
+      "n-7075626c6963"
+    ],
+    "ruby": 515,
+    "annos": [
+      {
+        "base": "自由記号",
+        "note": "free symbol",
+        "baseTop": 1613.183349609375,
+        "noteTop": 1659.2666015625
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:56889/NEPL3/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "links": [
+      {
+        "href": "17-math-html.html",
+        "label": "17章"
+      }
+    ],
+    "browser": "firefox",
+    "version": "153.0",
+    "base": "/NEPL3/",
+    "width": 375,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "items_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": 0.149993896484375,
+        "scroll": 151.51666259765625
+      },
+      {
+        "id": "n-65787072657373696f6e",
+        "count": 1,
+        "top": 0,
+        "scroll": 462.23333740234375
+      },
+      {
+        "id": "n-737472756374757265",
+        "count": 1,
+        "top": 0.366668701171875,
+        "scroll": 2464.2333984375
+      },
+      {
+        "id": "n-6576616c75617465",
+        "count": 1,
+        "top": 0,
+        "scroll": 3126.550048828125
+      },
+      {
+        "id": "n-6d6174686d6c",
+        "count": 1,
+        "top": 0,
+        "scroll": 6089.66650390625
+      },
+      {
+        "id": "n-6172656e61",
+        "count": 1,
+        "top": 0,
+        "scroll": 7628.63330078125
+      },
+      {
+        "id": "n-7265736f7572636573",
+        "count": 1,
+        "top": 0.76666259765625,
+        "scroll": 10823.6337890625
+      },
+      {
+        "id": "n-7075626c6963",
+        "count": 1,
+        "top": 577.316650390625,
+        "scroll": 11030
+      }
+    ],
+    "chapter17_target": "17. Doc・MathのHTML\n生成\nせいせい\nと\n数式表示\nすうしきひょうじ",
+    "reload_target": "http://127.0.0.1:56889/NEPL3/docs/spec/17-math-html.html"
+  },
+  {
+    "headings": [
+      "06. Math言語",
+      "方針",
+      "1. 表現",
+      "2. 構造検査",
+      "3. evaluate",
+      "4. MathML backend",
+      "4.1. 公開arenaと原文保持",
+      "5. 出力と資源",
+      "6. 公開操作"
+    ],
+    "codes": [
+      "expression_from_rational",
+      "frac 1 2",
+      "symbol \"...\"",
+      "call",
+      "Vector(List<Q>)",
+      "Matrix(rows,cols,List<Q>)",
+      "interfaces/model.json",
+      "interfaces/math.json",
+      "MathSyntax",
+      "MathValue",
+      "Option<Span>",
+      "lower::expression"
+    ],
+    "lists": [
+      [
+        "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+        "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+        "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+        "frac: Scalar同士、分母0はDivisionByZero。",
+        "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+        "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+        "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+        "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+        "lt/le: Scalar同士だけ。",
+        "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+        "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+        "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+        "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。"
+      ]
+    ],
+    "paragraphs": [
+      "数式の表示対象を保ち、その一部に対する厳密計算を独立した操作として公開する。parse/renderが数式を簡約したり、等式の正しさを主張したりしない。",
+      "全constructorはmath-signatures参照。Numberは有限十進の原表記を持ち、意味値はBigRationalへ正確に変換する。整数p、分母qはq>0、gcd(|p|,q)=1、zero=0/1へ正規化する。Numberに格納できる値は、約分後のqの素因数が2と5だけの有理数に限る。これ以外をNumberとして構築・decodeする場合はNonFiniteDecimalNumberで拒否する。評価値のRationalはこの制限を持たない。",
+      "任意有理数から式を作るconstructor helper expression_from_rational は、有限十進ならNumber、それ以外なら整数Numberを子とするFrac(Number(p), Number(q))を返す。元の構文をlowerするときにこのhelperで著者のFracを折り畳まない。frac 1 2 はFracのまま保持する。Numberのprintはcanonicalな整数または有限十進（指数表記なし、冗長な末尾zeroなし、zeroは0）で、意味値とsnapshotの一致を確認した場合には元lexemeを表示に利用できる。Number(1/3)をprint時だけFracへ変換する設計にはしない。",
+      "Identifier leafは数学記号。自由記号を許可する。自由記号はUnresolvedNameのエラーにしない。意味上の入力要求として列挙する。symbol \"...\" で予約語と同じ綴りや複数文字の名前を明示できる。裸のNameとsymbolの同じ綴りは同じ名前解決規則を使う。",
+      "letはinitを外側、bodyを新しい記号scopeで読む。sum/integralのindexはbodyだけで有効であり、lower/upperでは外側を参照する。自由記号に架空の定義位置を与えない。",
+      "subscript/superscript/scriptsは表示構造。一般の添字を配列アクセスや指数演算に暗黙変換しない。代数的な累乗にはpowを使う。callは数学の関数適用表現で、任意のFnコード実行ではない。",
+      "matrixは一つ以上のrow、各rowは同じ正の列数。vectorは一つ以上の要素。fenceは左右それぞれ0または1Unicode scalar。空文字で片側だけの括弧を表せる。",
+      "rootのdegreeが数値literalで0ならInvalidRootDegree。その他の定義域はevaluate時にも検査する。表示だけの式に実数/複素数の数値領域を勝手に割り当てない。",
+      "CheckedExpressionが保証するのは構造・binding・既知の局所制約であり、全記号の値や全演算の数値評価可能性ではない。",
+      "入力はCheckedExpression、自由記号のBindingEnvironment、Limits。出力はExact(Value)またはSymbolic(expression, Requirements)。定義域違反・形状不一致は明確なEvalError。値の種類はScalar(Q)、Vector(List<Q>)、Matrix(rows,cols,List<Q>)、Truth(Bool)。",
+      "評価はsource順の左から右、純粋。letはinitを評価してからbodyを評価する。未解決の記号に依存する部分はSymbolicとし、独立な数値subtreeの計算結果を保持できるが元の構文を上書きしない。",
+      "正確に評価する演算:",
+      "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+      "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+      "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+      "frac: Scalar同士、分母0はDivisionByZero。",
+      "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+      "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+      "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+      "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+      "lt/le: Scalar同士だけ。",
+      "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+      "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+      "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+      "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。",
+      "integral、call、表示用text/sequence/subscript/superscript/scriptsは、評価専用規則がない限りSymbolic(NotationOnly)。これらの表示は完全に対応する。解析的な積分や任意関数評価を実装済みとしない。",
+      "MathML Coreの要素をtyped Markupで生成する。Number=mn、Symbol=mi、表示Text=mtext、加減乗・比較=mrow+mo、frac=mfrac、sqrt=msqrt、root=mroot、sub/sup/scripts=msub/msup/msubsup、vector/matrix=mtable/mtr/mtd、総和と積分=munder/munderoverまたは対応するscript形をdisplay modeから決定する。",
+      "暗黙のブラウザprecedence解釈へ依存しない。binding powerは比較10、add/sub20、mul30、neg40、pow50、atomic60。弱い子を強い親へ入れる際はmoによる可視括弧を挿入。subの右側、powの左側等、同じprecedenceでも非結合な位置に括弧を入れる。fracは分子分母の構造自体がgroupになる。",
+      "数学表示の2項演算は元の順序を保持する。mulのscalar/記号列でも、読み違いを避けるためreference backendは中央点を表示する。callはfunctionと括弧付きarguments。sequenceは指定順のmrowであり、勝手に演算を補わない。",
+      "letは「name := init ; body」のmrow。sumの下限は「index = lower」、上限はupper、bodyに必要な括弧を付ける。integralは積分記号と上下限、body、微分記号dとindex。equalは表示であって証明書ではない。",
+      "labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備し、mtextを介した注記として出力する。MathMLの内容モデルに適合しないblock内容は受け入れない。",
+      "interfaces/model.json のMath record/unionはconstructorの論理的な意味展開であり、Rust enum順や別の再帰wire layoutではない。実値のschemaは interfaces/math.json の MathSyntax / MathValue とする。MathRootはExpr / Row / DocGuestの3種類。MathKindは29 formとNumber leafに対応し、bare SymbolNameは明示Symbolと同じ意味kindへlowerする。子はExprRef / RowRef / DocGuestRef、guestはEmbedRefで平坦なarenaを参照する。schemaの明示variant名とfield列がwire tagであり、入力由来の深さをnativeの再帰所有へ転写しない。",
+      "MathValueの構造検査はカテゴリ、参照、到達性、cycle、共有DAGの最大経路、Number有限十進制約、vector/matrix形状、fence幅、literal 0のroot degreeを検査する。単独Rowは空を表せるが、Matrixに取り込むrowの列数は正で全row同一でなければならない。この証明はsymbol解決済みCheckedExpressionや評価可能性の証明ではない。",
+      "MathSyntaxはsource宣言、元Origin表、tokenごとのowner headを持つMathView、SourceMapを所有する。Number.spellingは Option<Span> のまま保持し、存在する場合は宣言sourceとnode coverに整合する位置を指す。意味Rationalと原lexemeの一致を証明したときだけ元表記をprintへ利用でき、位置構造検査だけをその証明とみなさない。Symbol/Let/Sum/Integralの名前operandは閉じたMathFieldLocationで選択位置とOriginを保持する。本文の名前検索で位置を再発見せず、source-lessの位置はNoneとする。",
+      "LabelのDoc annotationと独立DocGuestは、Doc SentenceのForeignClosureを保持する。ownerの環境・Origin ID・source/map閉包とguest自身のID空間を混同せず、意味変換を行わない。元構文に意味的に不正なDoc annotationがあっても、Mathのsource構造検査を理由にDoc lowerや評価を呼び出してはならない。prepared表示へ渡す意味・内容モデル検査は別の要求として残す。",
+      "lower::expression はhostが選択済みparse/profileを確認したSyntaxBundleと明示Math表層SchemaRef/categoryを受け、現在のBudget/SourceAdmissionで再検査してMathSyntaxを返す。共有sourceは一度だけ計上し、原Frac・表示scripts等を簡約しない。局所constructor制約の失敗は元のsource NodeRefとShapeErrorへ帰属させ、破棄した出力arenaのindexだけを位置情報として返さない。停止は原StopReasonを保持し、元構文木を変更しない。",
+      "初回NDF受信はschema検査後に同じsource/Origin/View/guest閉包とarena制約を検査する。宣言sourceの欠落をreceiverのambient storeから補わない。raw MathSyntaxの受信はbinding・free symbol要求・評価結果のproofを発行しない。明示constructor helperは新しいsource-less式を作るためのもので、元式を置換する処理ではない。",
+      "MathMLは独立した正式portable出力であり、ブラウザがfont/layoutを担当する。Doc・MathのHTML生成は17章のKaTeXPreferredを標準とし、生成環境でKaTeXを実行してCSS/fontと配布する。忠実変換不能・生成能力不足時はNEPL3 MathMLへ診断付きで切り替える。閲覧時にKaTeXを再実行せず、CLIがpixel描画まで行うとも広告しない。",
+      "独自layout/rasterizerを追加する場合は、CheckedExpressionまたはMathLayout入力modelを受ける別backendとする。OpenType MATH tableやglyph outlineの実装都合をMathの意味モデルへ持ち込まない。",
+      "lower、check、free_symbols、evaluate、print、render_mathml。評価結果、部分評価の新式、元の式を別値として返す。文書側のrender要求がevaluateを自動で要求しない。"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-65787072657373696f6e",
+      "n-737472756374757265",
+      "n-6576616c75617465",
+      "n-6d6174686d6c",
+      "n-6172656e61",
+      "n-7265736f7572636573",
+      "n-7075626c6963"
+    ],
+    "ruby": 515,
+    "annos": [
+      {
+        "base": "自由記号",
+        "note": "free symbol",
+        "baseTop": 697.2833251953125,
+        "noteTop": 743.36669921875
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:56889/NEPL3/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "links": [
+      {
+        "href": "17-math-html.html",
+        "label": "17章"
+      }
+    ],
+    "browser": "firefox",
+    "version": "153.0",
+    "base": "/NEPL3/",
+    "width": 1280,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "items_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": 0.6666717529296875,
+        "scroll": 151
+      },
+      {
+        "id": "n-65787072657373696f6e",
+        "count": 1,
+        "top": 0.1833343505859375,
+        "scroll": 295
+      },
+      {
+        "id": "n-737472756374757265",
+        "count": 1,
+        "top": 0.98333740234375,
+        "scroll": 1011
+      },
+      {
+        "id": "n-6576616c75617465",
+        "count": 1,
+        "top": 0,
+        "scroll": 1247.6666259765625
+      },
+      {
+        "id": "n-6d6174686d6c",
+        "count": 1,
+        "top": 0.383331298828125,
+        "scroll": 2400.666748046875
+      },
+      {
+        "id": "n-6172656e61",
+        "count": 1,
+        "top": 0,
+        "scroll": 2937.716552734375
+      },
+      {
+        "id": "n-7265736f7572636573",
+        "count": 1,
+        "top": 370.816650390625,
+        "scroll": 3590
+      },
+      {
+        "id": "n-7075626c6963",
+        "count": 1,
+        "top": 698.6666870117188,
+        "scroll": 3590
+      }
+    ],
+    "chapter17_target": "17. Doc・MathのHTML\n生成\nせいせい\nと\n数式表示\nすうしきひょうじ",
+    "reload_target": "http://127.0.0.1:56889/NEPL3/docs/spec/17-math-html.html"
+  },
+  {
+    "headings": [
+      "06. Math言語",
+      "方針",
+      "1. 表現",
+      "2. 構造検査",
+      "3. evaluate",
+      "4. MathML backend",
+      "4.1. 公開arenaと原文保持",
+      "5. 出力と資源",
+      "6. 公開操作"
+    ],
+    "codes": [
+      "expression_from_rational",
+      "frac 1 2",
+      "symbol \"...\"",
+      "call",
+      "Vector(List<Q>)",
+      "Matrix(rows,cols,List<Q>)",
+      "interfaces/model.json",
+      "interfaces/math.json",
+      "MathSyntax",
+      "MathValue",
+      "Option<Span>",
+      "lower::expression"
+    ],
+    "lists": [
+      [
+        "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+        "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+        "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+        "frac: Scalar同士、分母0はDivisionByZero。",
+        "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+        "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+        "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+        "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+        "lt/le: Scalar同士だけ。",
+        "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+        "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+        "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+        "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。"
+      ]
+    ],
+    "paragraphs": [
+      "数式の表示対象を保ち、その一部に対する厳密計算を独立した操作として公開する。parse/renderが数式を簡約したり、等式の正しさを主張したりしない。",
+      "全constructorはmath-signatures参照。Numberは有限十進の原表記を持ち、意味値はBigRationalへ正確に変換する。整数p、分母qはq>0、gcd(|p|,q)=1、zero=0/1へ正規化する。Numberに格納できる値は、約分後のqの素因数が2と5だけの有理数に限る。これ以外をNumberとして構築・decodeする場合はNonFiniteDecimalNumberで拒否する。評価値のRationalはこの制限を持たない。",
+      "任意有理数から式を作るconstructor helper expression_from_rational は、有限十進ならNumber、それ以外なら整数Numberを子とするFrac(Number(p), Number(q))を返す。元の構文をlowerするときにこのhelperで著者のFracを折り畳まない。frac 1 2 はFracのまま保持する。Numberのprintはcanonicalな整数または有限十進（指数表記なし、冗長な末尾zeroなし、zeroは0）で、意味値とsnapshotの一致を確認した場合には元lexemeを表示に利用できる。Number(1/3)をprint時だけFracへ変換する設計にはしない。",
+      "Identifier leafは数学記号。自由記号を許可する。自由記号はUnresolvedNameのエラーにしない。意味上の入力要求として列挙する。symbol \"...\" で予約語と同じ綴りや複数文字の名前を明示できる。裸のNameとsymbolの同じ綴りは同じ名前解決規則を使う。",
+      "letはinitを外側、bodyを新しい記号scopeで読む。sum/integralのindexはbodyだけで有効であり、lower/upperでは外側を参照する。自由記号に架空の定義位置を与えない。",
+      "subscript/superscript/scriptsは表示構造。一般の添字を配列アクセスや指数演算に暗黙変換しない。代数的な累乗にはpowを使う。callは数学の関数適用表現で、任意のFnコード実行ではない。",
+      "matrixは一つ以上のrow、各rowは同じ正の列数。vectorは一つ以上の要素。fenceは左右それぞれ0または1Unicode scalar。空文字で片側だけの括弧を表せる。",
+      "rootのdegreeが数値literalで0ならInvalidRootDegree。その他の定義域はevaluate時にも検査する。表示だけの式に実数/複素数の数値領域を勝手に割り当てない。",
+      "CheckedExpressionが保証するのは構造・binding・既知の局所制約であり、全記号の値や全演算の数値評価可能性ではない。",
+      "入力はCheckedExpression、自由記号のBindingEnvironment、Limits。出力はExact(Value)またはSymbolic(expression, Requirements)。定義域違反・形状不一致は明確なEvalError。値の種類はScalar(Q)、Vector(List<Q>)、Matrix(rows,cols,List<Q>)、Truth(Bool)。",
+      "評価はsource順の左から右、純粋。letはinitを評価してからbodyを評価する。未解決の記号に依存する部分はSymbolicとし、独立な数値subtreeの計算結果を保持できるが元の構文を上書きしない。",
+      "正確に評価する演算:",
+      "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+      "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+      "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+      "frac: Scalar同士、分母0はDivisionByZero。",
+      "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+      "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+      "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+      "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+      "lt/le: Scalar同士だけ。",
+      "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+      "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+      "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+      "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。",
+      "integral、call、表示用text/sequence/subscript/superscript/scriptsは、評価専用規則がない限りSymbolic(NotationOnly)。これらの表示は完全に対応する。解析的な積分や任意関数評価を実装済みとしない。",
+      "MathML Coreの要素をtyped Markupで生成する。Number=mn、Symbol=mi、表示Text=mtext、加減乗・比較=mrow+mo、frac=mfrac、sqrt=msqrt、root=mroot、sub/sup/scripts=msub/msup/msubsup、vector/matrix=mtable/mtr/mtd、総和と積分=munder/munderoverまたは対応するscript形をdisplay modeから決定する。",
+      "暗黙のブラウザprecedence解釈へ依存しない。binding powerは比較10、add/sub20、mul30、neg40、pow50、atomic60。弱い子を強い親へ入れる際はmoによる可視括弧を挿入。subの右側、powの左側等、同じprecedenceでも非結合な位置に括弧を入れる。fracは分子分母の構造自体がgroupになる。",
+      "数学表示の2項演算は元の順序を保持する。mulのscalar/記号列でも、読み違いを避けるためreference backendは中央点を表示する。callはfunctionと括弧付きarguments。sequenceは指定順のmrowであり、勝手に演算を補わない。",
+      "letは「name := init ; body」のmrow。sumの下限は「index = lower」、上限はupper、bodyに必要な括弧を付ける。integralは積分記号と上下限、body、微分記号dとindex。equalは表示であって証明書ではない。",
+      "labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備し、mtextを介した注記として出力する。MathMLの内容モデルに適合しないblock内容は受け入れない。",
+      "interfaces/model.json のMath record/unionはconstructorの論理的な意味展開であり、Rust enum順や別の再帰wire layoutではない。実値のschemaは interfaces/math.json の MathSyntax / MathValue とする。MathRootはExpr / Row / DocGuestの3種類。MathKindは29 formとNumber leafに対応し、bare SymbolNameは明示Symbolと同じ意味kindへlowerする。子はExprRef / RowRef / DocGuestRef、guestはEmbedRefで平坦なarenaを参照する。schemaの明示variant名とfield列がwire tagであり、入力由来の深さをnativeの再帰所有へ転写しない。",
+      "MathValueの構造検査はカテゴリ、参照、到達性、cycle、共有DAGの最大経路、Number有限十進制約、vector/matrix形状、fence幅、literal 0のroot degreeを検査する。単独Rowは空を表せるが、Matrixに取り込むrowの列数は正で全row同一でなければならない。この証明はsymbol解決済みCheckedExpressionや評価可能性の証明ではない。",
+      "MathSyntaxはsource宣言、元Origin表、tokenごとのowner headを持つMathView、SourceMapを所有する。Number.spellingは Option<Span> のまま保持し、存在する場合は宣言sourceとnode coverに整合する位置を指す。意味Rationalと原lexemeの一致を証明したときだけ元表記をprintへ利用でき、位置構造検査だけをその証明とみなさない。Symbol/Let/Sum/Integralの名前operandは閉じたMathFieldLocationで選択位置とOriginを保持する。本文の名前検索で位置を再発見せず、source-lessの位置はNoneとする。",
+      "LabelのDoc annotationと独立DocGuestは、Doc SentenceのForeignClosureを保持する。ownerの環境・Origin ID・source/map閉包とguest自身のID空間を混同せず、意味変換を行わない。元構文に意味的に不正なDoc annotationがあっても、Mathのsource構造検査を理由にDoc lowerや評価を呼び出してはならない。prepared表示へ渡す意味・内容モデル検査は別の要求として残す。",
+      "lower::expression はhostが選択済みparse/profileを確認したSyntaxBundleと明示Math表層SchemaRef/categoryを受け、現在のBudget/SourceAdmissionで再検査してMathSyntaxを返す。共有sourceは一度だけ計上し、原Frac・表示scripts等を簡約しない。局所constructor制約の失敗は元のsource NodeRefとShapeErrorへ帰属させ、破棄した出力arenaのindexだけを位置情報として返さない。停止は原StopReasonを保持し、元構文木を変更しない。",
+      "初回NDF受信はschema検査後に同じsource/Origin/View/guest閉包とarena制約を検査する。宣言sourceの欠落をreceiverのambient storeから補わない。raw MathSyntaxの受信はbinding・free symbol要求・評価結果のproofを発行しない。明示constructor helperは新しいsource-less式を作るためのもので、元式を置換する処理ではない。",
+      "MathMLは独立した正式portable出力であり、ブラウザがfont/layoutを担当する。Doc・MathのHTML生成は17章のKaTeXPreferredを標準とし、生成環境でKaTeXを実行してCSS/fontと配布する。忠実変換不能・生成能力不足時はNEPL3 MathMLへ診断付きで切り替える。閲覧時にKaTeXを再実行せず、CLIがpixel描画まで行うとも広告しない。",
+      "独自layout/rasterizerを追加する場合は、CheckedExpressionまたはMathLayout入力modelを受ける別backendとする。OpenType MATH tableやglyph outlineの実装都合をMathの意味モデルへ持ち込まない。",
+      "lower、check、free_symbols、evaluate、print、render_mathml。評価結果、部分評価の新式、元の式を別値として返す。文書側のrender要求がevaluateを自動で要求しない。"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-65787072657373696f6e",
+      "n-737472756374757265",
+      "n-6576616c75617465",
+      "n-6d6174686d6c",
+      "n-6172656e61",
+      "n-7265736f7572636573",
+      "n-7075626c6963"
+    ],
+    "ruby": 515,
+    "annos": [
+      {
+        "base": "自由記号",
+        "note": "free symbol",
+        "baseTop": 1613.183349609375,
+        "noteTop": 1659.2666015625
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:56889/review/nested/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "links": [
+      {
+        "href": "17-math-html.html",
+        "label": "17章"
+      }
+    ],
+    "browser": "firefox",
+    "version": "153.0",
+    "base": "/review/nested/",
+    "width": 375,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "items_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": 0.6666717529296875,
+        "scroll": 151
+      },
+      {
+        "id": "n-65787072657373696f6e",
+        "count": 1,
+        "top": 0,
+        "scroll": 462.23333740234375
+      },
+      {
+        "id": "n-737472756374757265",
+        "count": 1,
+        "top": 0.366668701171875,
+        "scroll": 2464.2333984375
+      },
+      {
+        "id": "n-6576616c75617465",
+        "count": 1,
+        "top": 0,
+        "scroll": 3126.550048828125
+      },
+      {
+        "id": "n-6d6174686d6c",
+        "count": 1,
+        "top": 0,
+        "scroll": 6089.66650390625
+      },
+      {
+        "id": "n-6172656e61",
+        "count": 1,
+        "top": 0,
+        "scroll": 7628.63330078125
+      },
+      {
+        "id": "n-7265736f7572636573",
+        "count": 1,
+        "top": 0.76666259765625,
+        "scroll": 10823.6337890625
+      },
+      {
+        "id": "n-7075626c6963",
+        "count": 1,
+        "top": 577.316650390625,
+        "scroll": 11030
+      }
+    ],
+    "chapter17_target": "17. Doc・MathのHTML\n生成\nせいせい\nと\n数式表示\nすうしきひょうじ",
+    "reload_target": "http://127.0.0.1:56889/review/nested/docs/spec/17-math-html.html"
+  },
+  {
+    "headings": [
+      "06. Math言語",
+      "方針",
+      "1. 表現",
+      "2. 構造検査",
+      "3. evaluate",
+      "4. MathML backend",
+      "4.1. 公開arenaと原文保持",
+      "5. 出力と資源",
+      "6. 公開操作"
+    ],
+    "codes": [
+      "expression_from_rational",
+      "frac 1 2",
+      "symbol \"...\"",
+      "call",
+      "Vector(List<Q>)",
+      "Matrix(rows,cols,List<Q>)",
+      "interfaces/model.json",
+      "interfaces/math.json",
+      "MathSyntax",
+      "MathValue",
+      "Option<Span>",
+      "lower::expression"
+    ],
+    "lists": [
+      [
+        "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+        "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+        "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+        "frac: Scalar同士、分母0はDivisionByZero。",
+        "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+        "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+        "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+        "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+        "lt/le: Scalar同士だけ。",
+        "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+        "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+        "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+        "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。"
+      ]
+    ],
+    "paragraphs": [
+      "数式の表示対象を保ち、その一部に対する厳密計算を独立した操作として公開する。parse/renderが数式を簡約したり、等式の正しさを主張したりしない。",
+      "全constructorはmath-signatures参照。Numberは有限十進の原表記を持ち、意味値はBigRationalへ正確に変換する。整数p、分母qはq>0、gcd(|p|,q)=1、zero=0/1へ正規化する。Numberに格納できる値は、約分後のqの素因数が2と5だけの有理数に限る。これ以外をNumberとして構築・decodeする場合はNonFiniteDecimalNumberで拒否する。評価値のRationalはこの制限を持たない。",
+      "任意有理数から式を作るconstructor helper expression_from_rational は、有限十進ならNumber、それ以外なら整数Numberを子とするFrac(Number(p), Number(q))を返す。元の構文をlowerするときにこのhelperで著者のFracを折り畳まない。frac 1 2 はFracのまま保持する。Numberのprintはcanonicalな整数または有限十進（指数表記なし、冗長な末尾zeroなし、zeroは0）で、意味値とsnapshotの一致を確認した場合には元lexemeを表示に利用できる。Number(1/3)をprint時だけFracへ変換する設計にはしない。",
+      "Identifier leafは数学記号。自由記号を許可する。自由記号はUnresolvedNameのエラーにしない。意味上の入力要求として列挙する。symbol \"...\" で予約語と同じ綴りや複数文字の名前を明示できる。裸のNameとsymbolの同じ綴りは同じ名前解決規則を使う。",
+      "letはinitを外側、bodyを新しい記号scopeで読む。sum/integralのindexはbodyだけで有効であり、lower/upperでは外側を参照する。自由記号に架空の定義位置を与えない。",
+      "subscript/superscript/scriptsは表示構造。一般の添字を配列アクセスや指数演算に暗黙変換しない。代数的な累乗にはpowを使う。callは数学の関数適用表現で、任意のFnコード実行ではない。",
+      "matrixは一つ以上のrow、各rowは同じ正の列数。vectorは一つ以上の要素。fenceは左右それぞれ0または1Unicode scalar。空文字で片側だけの括弧を表せる。",
+      "rootのdegreeが数値literalで0ならInvalidRootDegree。その他の定義域はevaluate時にも検査する。表示だけの式に実数/複素数の数値領域を勝手に割り当てない。",
+      "CheckedExpressionが保証するのは構造・binding・既知の局所制約であり、全記号の値や全演算の数値評価可能性ではない。",
+      "入力はCheckedExpression、自由記号のBindingEnvironment、Limits。出力はExact(Value)またはSymbolic(expression, Requirements)。定義域違反・形状不一致は明確なEvalError。値の種類はScalar(Q)、Vector(List<Q>)、Matrix(rows,cols,List<Q>)、Truth(Bool)。",
+      "評価はsource順の左から右、純粋。letはinitを評価してからbodyを評価する。未解決の記号に依存する部分はSymbolicとし、独立な数値subtreeの計算結果を保持できるが元の構文を上書きしない。",
+      "正確に評価する演算:",
+      "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+      "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+      "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+      "frac: Scalar同士、分母0はDivisionByZero。",
+      "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+      "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+      "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+      "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+      "lt/le: Scalar同士だけ。",
+      "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+      "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+      "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+      "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。",
+      "integral、call、表示用text/sequence/subscript/superscript/scriptsは、評価専用規則がない限りSymbolic(NotationOnly)。これらの表示は完全に対応する。解析的な積分や任意関数評価を実装済みとしない。",
+      "MathML Coreの要素をtyped Markupで生成する。Number=mn、Symbol=mi、表示Text=mtext、加減乗・比較=mrow+mo、frac=mfrac、sqrt=msqrt、root=mroot、sub/sup/scripts=msub/msup/msubsup、vector/matrix=mtable/mtr/mtd、総和と積分=munder/munderoverまたは対応するscript形をdisplay modeから決定する。",
+      "暗黙のブラウザprecedence解釈へ依存しない。binding powerは比較10、add/sub20、mul30、neg40、pow50、atomic60。弱い子を強い親へ入れる際はmoによる可視括弧を挿入。subの右側、powの左側等、同じprecedenceでも非結合な位置に括弧を入れる。fracは分子分母の構造自体がgroupになる。",
+      "数学表示の2項演算は元の順序を保持する。mulのscalar/記号列でも、読み違いを避けるためreference backendは中央点を表示する。callはfunctionと括弧付きarguments。sequenceは指定順のmrowであり、勝手に演算を補わない。",
+      "letは「name := init ; body」のmrow。sumの下限は「index = lower」、上限はupper、bodyに必要な括弧を付ける。integralは積分記号と上下限、body、微分記号dとindex。equalは表示であって証明書ではない。",
+      "labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備し、mtextを介した注記として出力する。MathMLの内容モデルに適合しないblock内容は受け入れない。",
+      "interfaces/model.json のMath record/unionはconstructorの論理的な意味展開であり、Rust enum順や別の再帰wire layoutではない。実値のschemaは interfaces/math.json の MathSyntax / MathValue とする。MathRootはExpr / Row / DocGuestの3種類。MathKindは29 formとNumber leafに対応し、bare SymbolNameは明示Symbolと同じ意味kindへlowerする。子はExprRef / RowRef / DocGuestRef、guestはEmbedRefで平坦なarenaを参照する。schemaの明示variant名とfield列がwire tagであり、入力由来の深さをnativeの再帰所有へ転写しない。",
+      "MathValueの構造検査はカテゴリ、参照、到達性、cycle、共有DAGの最大経路、Number有限十進制約、vector/matrix形状、fence幅、literal 0のroot degreeを検査する。単独Rowは空を表せるが、Matrixに取り込むrowの列数は正で全row同一でなければならない。この証明はsymbol解決済みCheckedExpressionや評価可能性の証明ではない。",
+      "MathSyntaxはsource宣言、元Origin表、tokenごとのowner headを持つMathView、SourceMapを所有する。Number.spellingは Option<Span> のまま保持し、存在する場合は宣言sourceとnode coverに整合する位置を指す。意味Rationalと原lexemeの一致を証明したときだけ元表記をprintへ利用でき、位置構造検査だけをその証明とみなさない。Symbol/Let/Sum/Integralの名前operandは閉じたMathFieldLocationで選択位置とOriginを保持する。本文の名前検索で位置を再発見せず、source-lessの位置はNoneとする。",
+      "LabelのDoc annotationと独立DocGuestは、Doc SentenceのForeignClosureを保持する。ownerの環境・Origin ID・source/map閉包とguest自身のID空間を混同せず、意味変換を行わない。元構文に意味的に不正なDoc annotationがあっても、Mathのsource構造検査を理由にDoc lowerや評価を呼び出してはならない。prepared表示へ渡す意味・内容モデル検査は別の要求として残す。",
+      "lower::expression はhostが選択済みparse/profileを確認したSyntaxBundleと明示Math表層SchemaRef/categoryを受け、現在のBudget/SourceAdmissionで再検査してMathSyntaxを返す。共有sourceは一度だけ計上し、原Frac・表示scripts等を簡約しない。局所constructor制約の失敗は元のsource NodeRefとShapeErrorへ帰属させ、破棄した出力arenaのindexだけを位置情報として返さない。停止は原StopReasonを保持し、元構文木を変更しない。",
+      "初回NDF受信はschema検査後に同じsource/Origin/View/guest閉包とarena制約を検査する。宣言sourceの欠落をreceiverのambient storeから補わない。raw MathSyntaxの受信はbinding・free symbol要求・評価結果のproofを発行しない。明示constructor helperは新しいsource-less式を作るためのもので、元式を置換する処理ではない。",
+      "MathMLは独立した正式portable出力であり、ブラウザがfont/layoutを担当する。Doc・MathのHTML生成は17章のKaTeXPreferredを標準とし、生成環境でKaTeXを実行してCSS/fontと配布する。忠実変換不能・生成能力不足時はNEPL3 MathMLへ診断付きで切り替える。閲覧時にKaTeXを再実行せず、CLIがpixel描画まで行うとも広告しない。",
+      "独自layout/rasterizerを追加する場合は、CheckedExpressionまたはMathLayout入力modelを受ける別backendとする。OpenType MATH tableやglyph outlineの実装都合をMathの意味モデルへ持ち込まない。",
+      "lower、check、free_symbols、evaluate、print、render_mathml。評価結果、部分評価の新式、元の式を別値として返す。文書側のrender要求がevaluateを自動で要求しない。"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-65787072657373696f6e",
+      "n-737472756374757265",
+      "n-6576616c75617465",
+      "n-6d6174686d6c",
+      "n-6172656e61",
+      "n-7265736f7572636573",
+      "n-7075626c6963"
+    ],
+    "ruby": 515,
+    "annos": [
+      {
+        "base": "自由記号",
+        "note": "free symbol",
+        "baseTop": 697.2833251953125,
+        "noteTop": 743.36669921875
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:56889/review/nested/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "links": [
+      {
+        "href": "17-math-html.html",
+        "label": "17章"
+      }
+    ],
+    "browser": "firefox",
+    "version": "153.0",
+    "base": "/review/nested/",
+    "width": 1280,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "items_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": -0.3333282470703125,
+        "scroll": 152
+      },
+      {
+        "id": "n-65787072657373696f6e",
+        "count": 1,
+        "top": 0.1833343505859375,
+        "scroll": 295
+      },
+      {
+        "id": "n-737472756374757265",
+        "count": 1,
+        "top": 0.98333740234375,
+        "scroll": 1011
+      },
+      {
+        "id": "n-6576616c75617465",
+        "count": 1,
+        "top": 0,
+        "scroll": 1247.6666259765625
+      },
+      {
+        "id": "n-6d6174686d6c",
+        "count": 1,
+        "top": 0.383331298828125,
+        "scroll": 2400.666748046875
+      },
+      {
+        "id": "n-6172656e61",
+        "count": 1,
+        "top": 0,
+        "scroll": 2937.716552734375
+      },
+      {
+        "id": "n-7265736f7572636573",
+        "count": 1,
+        "top": 370.816650390625,
+        "scroll": 3590
+      },
+      {
+        "id": "n-7075626c6963",
+        "count": 1,
+        "top": 698.6666870117188,
+        "scroll": 3590
+      }
+    ],
+    "chapter17_target": "17. Doc・MathのHTML\n生成\nせいせい\nと\n数式表示\nすうしきひょうじ",
+    "reload_target": "http://127.0.0.1:56889/review/nested/docs/spec/17-math-html.html"
+  },
+  {
+    "headings": [
+      "06. Math言語",
+      "方針",
+      "1. 表現",
+      "2. 構造検査",
+      "3. evaluate",
+      "4. MathML backend",
+      "4.1. 公開arenaと原文保持",
+      "5. 出力と資源",
+      "6. 公開操作"
+    ],
+    "codes": [
+      "expression_from_rational",
+      "frac 1 2",
+      "symbol \"...\"",
+      "call",
+      "Vector(List<Q>)",
+      "Matrix(rows,cols,List<Q>)",
+      "interfaces/model.json",
+      "interfaces/math.json",
+      "MathSyntax",
+      "MathValue",
+      "Option<Span>",
+      "lower::expression"
+    ],
+    "lists": [
+      [
+        "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+        "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+        "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+        "frac: Scalar同士、分母0はDivisionByZero。",
+        "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+        "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+        "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+        "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+        "lt/le: Scalar同士だけ。",
+        "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+        "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+        "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+        "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。"
+      ]
+    ],
+    "paragraphs": [
+      "数式の表示対象を保ち、その一部に対する厳密計算を独立した操作として公開する。parse/renderが数式を簡約したり、等式の正しさを主張したりしない。",
+      "全constructorはmath-signatures参照。Numberは有限十進の原表記を持ち、意味値はBigRationalへ正確に変換する。整数p、分母qはq>0、gcd(|p|,q)=1、zero=0/1へ正規化する。Numberに格納できる値は、約分後のqの素因数が2と5だけの有理数に限る。これ以外をNumberとして構築・decodeする場合はNonFiniteDecimalNumberで拒否する。評価値のRationalはこの制限を持たない。",
+      "任意有理数から式を作るconstructor helper expression_from_rational は、有限十進ならNumber、それ以外なら整数Numberを子とするFrac(Number(p), Number(q))を返す。元の構文をlowerするときにこのhelperで著者のFracを折り畳まない。frac 1 2 はFracのまま保持する。Numberのprintはcanonicalな整数または有限十進（指数表記なし、冗長な末尾zeroなし、zeroは0）で、意味値とsnapshotの一致を確認した場合には元lexemeを表示に利用できる。Number(1/3)をprint時だけFracへ変換する設計にはしない。",
+      "Identifier leafは数学記号。自由記号を許可する。自由記号はUnresolvedNameのエラーにしない。意味上の入力要求として列挙する。symbol \"...\" で予約語と同じ綴りや複数文字の名前を明示できる。裸のNameとsymbolの同じ綴りは同じ名前解決規則を使う。",
+      "letはinitを外側、bodyを新しい記号scopeで読む。sum/integralのindexはbodyだけで有効であり、lower/upperでは外側を参照する。自由記号に架空の定義位置を与えない。",
+      "subscript/superscript/scriptsは表示構造。一般の添字を配列アクセスや指数演算に暗黙変換しない。代数的な累乗にはpowを使う。callは数学の関数適用表現で、任意のFnコード実行ではない。",
+      "matrixは一つ以上のrow、各rowは同じ正の列数。vectorは一つ以上の要素。fenceは左右それぞれ0または1Unicode scalar。空文字で片側だけの括弧を表せる。",
+      "rootのdegreeが数値literalで0ならInvalidRootDegree。その他の定義域はevaluate時にも検査する。表示だけの式に実数/複素数の数値領域を勝手に割り当てない。",
+      "CheckedExpressionが保証するのは構造・binding・既知の局所制約であり、全記号の値や全演算の数値評価可能性ではない。",
+      "入力はCheckedExpression、自由記号のBindingEnvironment、Limits。出力はExact(Value)またはSymbolic(expression, Requirements)。定義域違反・形状不一致は明確なEvalError。値の種類はScalar(Q)、Vector(List<Q>)、Matrix(rows,cols,List<Q>)、Truth(Bool)。",
+      "評価はsource順の左から右、純粋。letはinitを評価してからbodyを評価する。未解決の記号に依存する部分はSymbolicとし、独立な数値subtreeの計算結果を保持できるが元の構文を上書きしない。",
+      "正確に評価する演算:",
+      "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+      "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+      "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+      "frac: Scalar同士、分母0はDivisionByZero。",
+      "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+      "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+      "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+      "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+      "lt/le: Scalar同士だけ。",
+      "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+      "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+      "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+      "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。",
+      "integral、call、表示用text/sequence/subscript/superscript/scriptsは、評価専用規則がない限りSymbolic(NotationOnly)。これらの表示は完全に対応する。解析的な積分や任意関数評価を実装済みとしない。",
+      "MathML Coreの要素をtyped Markupで生成する。Number=mn、Symbol=mi、表示Text=mtext、加減乗・比較=mrow+mo、frac=mfrac、sqrt=msqrt、root=mroot、sub/sup/scripts=msub/msup/msubsup、vector/matrix=mtable/mtr/mtd、総和と積分=munder/munderoverまたは対応するscript形をdisplay modeから決定する。",
+      "暗黙のブラウザprecedence解釈へ依存しない。binding powerは比較10、add/sub20、mul30、neg40、pow50、atomic60。弱い子を強い親へ入れる際はmoによる可視括弧を挿入。subの右側、powの左側等、同じprecedenceでも非結合な位置に括弧を入れる。fracは分子分母の構造自体がgroupになる。",
+      "数学表示の2項演算は元の順序を保持する。mulのscalar/記号列でも、読み違いを避けるためreference backendは中央点を表示する。callはfunctionと括弧付きarguments。sequenceは指定順のmrowであり、勝手に演算を補わない。",
+      "letは「name := init ; body」のmrow。sumの下限は「index = lower」、上限はupper、bodyに必要な括弧を付ける。integralは積分記号と上下限、body、微分記号dとindex。equalは表示であって証明書ではない。",
+      "labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備し、mtextを介した注記として出力する。MathMLの内容モデルに適合しないblock内容は受け入れない。",
+      "interfaces/model.json のMath record/unionはconstructorの論理的な意味展開であり、Rust enum順や別の再帰wire layoutではない。実値のschemaは interfaces/math.json の MathSyntax / MathValue とする。MathRootはExpr / Row / DocGuestの3種類。MathKindは29 formとNumber leafに対応し、bare SymbolNameは明示Symbolと同じ意味kindへlowerする。子はExprRef / RowRef / DocGuestRef、guestはEmbedRefで平坦なarenaを参照する。schemaの明示variant名とfield列がwire tagであり、入力由来の深さをnativeの再帰所有へ転写しない。",
+      "MathValueの構造検査はカテゴリ、参照、到達性、cycle、共有DAGの最大経路、Number有限十進制約、vector/matrix形状、fence幅、literal 0のroot degreeを検査する。単独Rowは空を表せるが、Matrixに取り込むrowの列数は正で全row同一でなければならない。この証明はsymbol解決済みCheckedExpressionや評価可能性の証明ではない。",
+      "MathSyntaxはsource宣言、元Origin表、tokenごとのowner headを持つMathView、SourceMapを所有する。Number.spellingは Option<Span> のまま保持し、存在する場合は宣言sourceとnode coverに整合する位置を指す。意味Rationalと原lexemeの一致を証明したときだけ元表記をprintへ利用でき、位置構造検査だけをその証明とみなさない。Symbol/Let/Sum/Integralの名前operandは閉じたMathFieldLocationで選択位置とOriginを保持する。本文の名前検索で位置を再発見せず、source-lessの位置はNoneとする。",
+      "LabelのDoc annotationと独立DocGuestは、Doc SentenceのForeignClosureを保持する。ownerの環境・Origin ID・source/map閉包とguest自身のID空間を混同せず、意味変換を行わない。元構文に意味的に不正なDoc annotationがあっても、Mathのsource構造検査を理由にDoc lowerや評価を呼び出してはならない。prepared表示へ渡す意味・内容モデル検査は別の要求として残す。",
+      "lower::expression はhostが選択済みparse/profileを確認したSyntaxBundleと明示Math表層SchemaRef/categoryを受け、現在のBudget/SourceAdmissionで再検査してMathSyntaxを返す。共有sourceは一度だけ計上し、原Frac・表示scripts等を簡約しない。局所constructor制約の失敗は元のsource NodeRefとShapeErrorへ帰属させ、破棄した出力arenaのindexだけを位置情報として返さない。停止は原StopReasonを保持し、元構文木を変更しない。",
+      "初回NDF受信はschema検査後に同じsource/Origin/View/guest閉包とarena制約を検査する。宣言sourceの欠落をreceiverのambient storeから補わない。raw MathSyntaxの受信はbinding・free symbol要求・評価結果のproofを発行しない。明示constructor helperは新しいsource-less式を作るためのもので、元式を置換する処理ではない。",
+      "MathMLは独立した正式portable出力であり、ブラウザがfont/layoutを担当する。Doc・MathのHTML生成は17章のKaTeXPreferredを標準とし、生成環境でKaTeXを実行してCSS/fontと配布する。忠実変換不能・生成能力不足時はNEPL3 MathMLへ診断付きで切り替える。閲覧時にKaTeXを再実行せず、CLIがpixel描画まで行うとも広告しない。",
+      "独自layout/rasterizerを追加する場合は、CheckedExpressionまたはMathLayout入力modelを受ける別backendとする。OpenType MATH tableやglyph outlineの実装都合をMathの意味モデルへ持ち込まない。",
+      "lower、check、free_symbols、evaluate、print、render_mathml。評価結果、部分評価の新式、元の式を別値として返す。文書側のrender要求がevaluateを自動で要求しない。"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-65787072657373696f6e",
+      "n-737472756374757265",
+      "n-6576616c75617465",
+      "n-6d6174686d6c",
+      "n-6172656e61",
+      "n-7265736f7572636573",
+      "n-7075626c6963"
+    ],
+    "ruby": 515,
+    "annos": [
+      {
+        "base": "自由記号",
+        "note": "free symbol",
+        "baseTop": 1478.09375,
+        "noteTop": 1524.15625
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:56889/NEPL3/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "links": [
+      {
+        "href": "17-math-html.html",
+        "label": "17章"
+      }
+    ],
+    "browser": "webkit",
+    "version": "26.5",
+    "base": "/NEPL3/",
+    "width": 375,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "items_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": -0.34375,
+        "scroll": 152
+      },
+      {
+        "id": "n-65787072657373696f6e",
+        "count": 1,
+        "top": 0.296875,
+        "scroll": 433
+      },
+      {
+        "id": "n-737472756374757265",
+        "count": 1,
+        "top": 0.203125,
+        "scroll": 2206
+      },
+      {
+        "id": "n-6576616c75617465",
+        "count": 1,
+        "top": 0.28125,
+        "scroll": 2810
+      },
+      {
+        "id": "n-6d6174686d6c",
+        "count": 1,
+        "top": 0.40625,
+        "scroll": 5597
+      },
+      {
+        "id": "n-6172656e61",
+        "count": 1,
+        "top": -0.03125,
+        "scroll": 6940
+      },
+      {
+        "id": "n-7265736f7572636573",
+        "count": 1,
+        "top": 0.4375,
+        "scroll": 9841
+      },
+      {
+        "id": "n-7075626c6963",
+        "count": 1,
+        "top": 623.640625,
+        "scroll": 9914
+      }
+    ],
+    "chapter17_target": "17. Doc・MathのHTML 生成\nせいせい\n と 数式表示\nすうしきひょうじ\n ",
+    "reload_target": "http://127.0.0.1:56889/NEPL3/docs/spec/17-math-html.html"
+  },
+  {
+    "headings": [
+      "06. Math言語",
+      "方針",
+      "1. 表現",
+      "2. 構造検査",
+      "3. evaluate",
+      "4. MathML backend",
+      "4.1. 公開arenaと原文保持",
+      "5. 出力と資源",
+      "6. 公開操作"
+    ],
+    "codes": [
+      "expression_from_rational",
+      "frac 1 2",
+      "symbol \"...\"",
+      "call",
+      "Vector(List<Q>)",
+      "Matrix(rows,cols,List<Q>)",
+      "interfaces/model.json",
+      "interfaces/math.json",
+      "MathSyntax",
+      "MathValue",
+      "Option<Span>",
+      "lower::expression"
+    ],
+    "lists": [
+      [
+        "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+        "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+        "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+        "frac: Scalar同士、分母0はDivisionByZero。",
+        "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+        "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+        "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+        "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+        "lt/le: Scalar同士だけ。",
+        "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+        "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+        "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+        "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。"
+      ]
+    ],
+    "paragraphs": [
+      "数式の表示対象を保ち、その一部に対する厳密計算を独立した操作として公開する。parse/renderが数式を簡約したり、等式の正しさを主張したりしない。",
+      "全constructorはmath-signatures参照。Numberは有限十進の原表記を持ち、意味値はBigRationalへ正確に変換する。整数p、分母qはq>0、gcd(|p|,q)=1、zero=0/1へ正規化する。Numberに格納できる値は、約分後のqの素因数が2と5だけの有理数に限る。これ以外をNumberとして構築・decodeする場合はNonFiniteDecimalNumberで拒否する。評価値のRationalはこの制限を持たない。",
+      "任意有理数から式を作るconstructor helper expression_from_rational は、有限十進ならNumber、それ以外なら整数Numberを子とするFrac(Number(p), Number(q))を返す。元の構文をlowerするときにこのhelperで著者のFracを折り畳まない。frac 1 2 はFracのまま保持する。Numberのprintはcanonicalな整数または有限十進（指数表記なし、冗長な末尾zeroなし、zeroは0）で、意味値とsnapshotの一致を確認した場合には元lexemeを表示に利用できる。Number(1/3)をprint時だけFracへ変換する設計にはしない。",
+      "Identifier leafは数学記号。自由記号を許可する。自由記号はUnresolvedNameのエラーにしない。意味上の入力要求として列挙する。symbol \"...\" で予約語と同じ綴りや複数文字の名前を明示できる。裸のNameとsymbolの同じ綴りは同じ名前解決規則を使う。",
+      "letはinitを外側、bodyを新しい記号scopeで読む。sum/integralのindexはbodyだけで有効であり、lower/upperでは外側を参照する。自由記号に架空の定義位置を与えない。",
+      "subscript/superscript/scriptsは表示構造。一般の添字を配列アクセスや指数演算に暗黙変換しない。代数的な累乗にはpowを使う。callは数学の関数適用表現で、任意のFnコード実行ではない。",
+      "matrixは一つ以上のrow、各rowは同じ正の列数。vectorは一つ以上の要素。fenceは左右それぞれ0または1Unicode scalar。空文字で片側だけの括弧を表せる。",
+      "rootのdegreeが数値literalで0ならInvalidRootDegree。その他の定義域はevaluate時にも検査する。表示だけの式に実数/複素数の数値領域を勝手に割り当てない。",
+      "CheckedExpressionが保証するのは構造・binding・既知の局所制約であり、全記号の値や全演算の数値評価可能性ではない。",
+      "入力はCheckedExpression、自由記号のBindingEnvironment、Limits。出力はExact(Value)またはSymbolic(expression, Requirements)。定義域違反・形状不一致は明確なEvalError。値の種類はScalar(Q)、Vector(List<Q>)、Matrix(rows,cols,List<Q>)、Truth(Bool)。",
+      "評価はsource順の左から右、純粋。letはinitを評価してからbodyを評価する。未解決の記号に依存する部分はSymbolicとし、独立な数値subtreeの計算結果を保持できるが元の構文を上書きしない。",
+      "正確に評価する演算:",
+      "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+      "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+      "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+      "frac: Scalar同士、分母0はDivisionByZero。",
+      "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+      "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+      "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+      "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+      "lt/le: Scalar同士だけ。",
+      "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+      "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+      "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+      "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。",
+      "integral、call、表示用text/sequence/subscript/superscript/scriptsは、評価専用規則がない限りSymbolic(NotationOnly)。これらの表示は完全に対応する。解析的な積分や任意関数評価を実装済みとしない。",
+      "MathML Coreの要素をtyped Markupで生成する。Number=mn、Symbol=mi、表示Text=mtext、加減乗・比較=mrow+mo、frac=mfrac、sqrt=msqrt、root=mroot、sub/sup/scripts=msub/msup/msubsup、vector/matrix=mtable/mtr/mtd、総和と積分=munder/munderoverまたは対応するscript形をdisplay modeから決定する。",
+      "暗黙のブラウザprecedence解釈へ依存しない。binding powerは比較10、add/sub20、mul30、neg40、pow50、atomic60。弱い子を強い親へ入れる際はmoによる可視括弧を挿入。subの右側、powの左側等、同じprecedenceでも非結合な位置に括弧を入れる。fracは分子分母の構造自体がgroupになる。",
+      "数学表示の2項演算は元の順序を保持する。mulのscalar/記号列でも、読み違いを避けるためreference backendは中央点を表示する。callはfunctionと括弧付きarguments。sequenceは指定順のmrowであり、勝手に演算を補わない。",
+      "letは「name := init ; body」のmrow。sumの下限は「index = lower」、上限はupper、bodyに必要な括弧を付ける。integralは積分記号と上下限、body、微分記号dとindex。equalは表示であって証明書ではない。",
+      "labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備し、mtextを介した注記として出力する。MathMLの内容モデルに適合しないblock内容は受け入れない。",
+      "interfaces/model.json のMath record/unionはconstructorの論理的な意味展開であり、Rust enum順や別の再帰wire layoutではない。実値のschemaは interfaces/math.json の MathSyntax / MathValue とする。MathRootはExpr / Row / DocGuestの3種類。MathKindは29 formとNumber leafに対応し、bare SymbolNameは明示Symbolと同じ意味kindへlowerする。子はExprRef / RowRef / DocGuestRef、guestはEmbedRefで平坦なarenaを参照する。schemaの明示variant名とfield列がwire tagであり、入力由来の深さをnativeの再帰所有へ転写しない。",
+      "MathValueの構造検査はカテゴリ、参照、到達性、cycle、共有DAGの最大経路、Number有限十進制約、vector/matrix形状、fence幅、literal 0のroot degreeを検査する。単独Rowは空を表せるが、Matrixに取り込むrowの列数は正で全row同一でなければならない。この証明はsymbol解決済みCheckedExpressionや評価可能性の証明ではない。",
+      "MathSyntaxはsource宣言、元Origin表、tokenごとのowner headを持つMathView、SourceMapを所有する。Number.spellingは Option<Span> のまま保持し、存在する場合は宣言sourceとnode coverに整合する位置を指す。意味Rationalと原lexemeの一致を証明したときだけ元表記をprintへ利用でき、位置構造検査だけをその証明とみなさない。Symbol/Let/Sum/Integralの名前operandは閉じたMathFieldLocationで選択位置とOriginを保持する。本文の名前検索で位置を再発見せず、source-lessの位置はNoneとする。",
+      "LabelのDoc annotationと独立DocGuestは、Doc SentenceのForeignClosureを保持する。ownerの環境・Origin ID・source/map閉包とguest自身のID空間を混同せず、意味変換を行わない。元構文に意味的に不正なDoc annotationがあっても、Mathのsource構造検査を理由にDoc lowerや評価を呼び出してはならない。prepared表示へ渡す意味・内容モデル検査は別の要求として残す。",
+      "lower::expression はhostが選択済みparse/profileを確認したSyntaxBundleと明示Math表層SchemaRef/categoryを受け、現在のBudget/SourceAdmissionで再検査してMathSyntaxを返す。共有sourceは一度だけ計上し、原Frac・表示scripts等を簡約しない。局所constructor制約の失敗は元のsource NodeRefとShapeErrorへ帰属させ、破棄した出力arenaのindexだけを位置情報として返さない。停止は原StopReasonを保持し、元構文木を変更しない。",
+      "初回NDF受信はschema検査後に同じsource/Origin/View/guest閉包とarena制約を検査する。宣言sourceの欠落をreceiverのambient storeから補わない。raw MathSyntaxの受信はbinding・free symbol要求・評価結果のproofを発行しない。明示constructor helperは新しいsource-less式を作るためのもので、元式を置換する処理ではない。",
+      "MathMLは独立した正式portable出力であり、ブラウザがfont/layoutを担当する。Doc・MathのHTML生成は17章のKaTeXPreferredを標準とし、生成環境でKaTeXを実行してCSS/fontと配布する。忠実変換不能・生成能力不足時はNEPL3 MathMLへ診断付きで切り替える。閲覧時にKaTeXを再実行せず、CLIがpixel描画まで行うとも広告しない。",
+      "独自layout/rasterizerを追加する場合は、CheckedExpressionまたはMathLayout入力modelを受ける別backendとする。OpenType MATH tableやglyph outlineの実装都合をMathの意味モデルへ持ち込まない。",
+      "lower、check、free_symbols、evaluate、print、render_mathml。評価結果、部分評価の新式、元の式を別値として返す。文書側のrender要求がevaluateを自動で要求しない。"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-65787072657373696f6e",
+      "n-737472756374757265",
+      "n-6576616c75617465",
+      "n-6d6174686d6c",
+      "n-6172656e61",
+      "n-7265736f7572636573",
+      "n-7075626c6963"
+    ],
+    "ruby": 515,
+    "annos": [
+      {
+        "base": "自由記号",
+        "note": "free symbol",
+        "baseTop": 648.96875,
+        "noteTop": 695.03125
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:56889/NEPL3/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "links": [
+      {
+        "href": "17-math-html.html",
+        "label": "17章"
+      }
+    ],
+    "browser": "webkit",
+    "version": "26.5",
+    "base": "/NEPL3/",
+    "width": 1280,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "items_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": -0.34375,
+        "scroll": 152
+      },
+      {
+        "id": "n-65787072657373696f6e",
+        "count": 1,
+        "top": 0.109375,
+        "scroll": 295
+      },
+      {
+        "id": "n-737472756374757265",
+        "count": 1,
+        "top": 0.1875,
+        "scroll": 899
+      },
+      {
+        "id": "n-6576616c75617465",
+        "count": 1,
+        "top": -0.234375,
+        "scroll": 1135
+      },
+      {
+        "id": "n-6d6174686d6c",
+        "count": 1,
+        "top": -0.421875,
+        "scroll": 2287
+      },
+      {
+        "id": "n-6172656e61",
+        "count": 1,
+        "top": -0.046875,
+        "scroll": 2777
+      },
+      {
+        "id": "n-7265736f7572636573",
+        "count": 1,
+        "top": 462.40625,
+        "scroll": 3195
+      },
+      {
+        "id": "n-7075626c6963",
+        "count": 1,
+        "top": 744.046875,
+        "scroll": 3195
+      }
+    ],
+    "chapter17_target": "17. Doc・MathのHTML 生成\nせいせい\n と 数式表示\nすうしきひょうじ\n ",
+    "reload_target": "http://127.0.0.1:56889/NEPL3/docs/spec/17-math-html.html"
+  },
+  {
+    "headings": [
+      "06. Math言語",
+      "方針",
+      "1. 表現",
+      "2. 構造検査",
+      "3. evaluate",
+      "4. MathML backend",
+      "4.1. 公開arenaと原文保持",
+      "5. 出力と資源",
+      "6. 公開操作"
+    ],
+    "codes": [
+      "expression_from_rational",
+      "frac 1 2",
+      "symbol \"...\"",
+      "call",
+      "Vector(List<Q>)",
+      "Matrix(rows,cols,List<Q>)",
+      "interfaces/model.json",
+      "interfaces/math.json",
+      "MathSyntax",
+      "MathValue",
+      "Option<Span>",
+      "lower::expression"
+    ],
+    "lists": [
+      [
+        "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+        "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+        "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+        "frac: Scalar同士、分母0はDivisionByZero。",
+        "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+        "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+        "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+        "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+        "lt/le: Scalar同士だけ。",
+        "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+        "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+        "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+        "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。"
+      ]
+    ],
+    "paragraphs": [
+      "数式の表示対象を保ち、その一部に対する厳密計算を独立した操作として公開する。parse/renderが数式を簡約したり、等式の正しさを主張したりしない。",
+      "全constructorはmath-signatures参照。Numberは有限十進の原表記を持ち、意味値はBigRationalへ正確に変換する。整数p、分母qはq>0、gcd(|p|,q)=1、zero=0/1へ正規化する。Numberに格納できる値は、約分後のqの素因数が2と5だけの有理数に限る。これ以外をNumberとして構築・decodeする場合はNonFiniteDecimalNumberで拒否する。評価値のRationalはこの制限を持たない。",
+      "任意有理数から式を作るconstructor helper expression_from_rational は、有限十進ならNumber、それ以外なら整数Numberを子とするFrac(Number(p), Number(q))を返す。元の構文をlowerするときにこのhelperで著者のFracを折り畳まない。frac 1 2 はFracのまま保持する。Numberのprintはcanonicalな整数または有限十進（指数表記なし、冗長な末尾zeroなし、zeroは0）で、意味値とsnapshotの一致を確認した場合には元lexemeを表示に利用できる。Number(1/3)をprint時だけFracへ変換する設計にはしない。",
+      "Identifier leafは数学記号。自由記号を許可する。自由記号はUnresolvedNameのエラーにしない。意味上の入力要求として列挙する。symbol \"...\" で予約語と同じ綴りや複数文字の名前を明示できる。裸のNameとsymbolの同じ綴りは同じ名前解決規則を使う。",
+      "letはinitを外側、bodyを新しい記号scopeで読む。sum/integralのindexはbodyだけで有効であり、lower/upperでは外側を参照する。自由記号に架空の定義位置を与えない。",
+      "subscript/superscript/scriptsは表示構造。一般の添字を配列アクセスや指数演算に暗黙変換しない。代数的な累乗にはpowを使う。callは数学の関数適用表現で、任意のFnコード実行ではない。",
+      "matrixは一つ以上のrow、各rowは同じ正の列数。vectorは一つ以上の要素。fenceは左右それぞれ0または1Unicode scalar。空文字で片側だけの括弧を表せる。",
+      "rootのdegreeが数値literalで0ならInvalidRootDegree。その他の定義域はevaluate時にも検査する。表示だけの式に実数/複素数の数値領域を勝手に割り当てない。",
+      "CheckedExpressionが保証するのは構造・binding・既知の局所制約であり、全記号の値や全演算の数値評価可能性ではない。",
+      "入力はCheckedExpression、自由記号のBindingEnvironment、Limits。出力はExact(Value)またはSymbolic(expression, Requirements)。定義域違反・形状不一致は明確なEvalError。値の種類はScalar(Q)、Vector(List<Q>)、Matrix(rows,cols,List<Q>)、Truth(Bool)。",
+      "評価はsource順の左から右、純粋。letはinitを評価してからbodyを評価する。未解決の記号に依存する部分はSymbolicとし、独立な数値subtreeの計算結果を保持できるが元の構文を上書きしない。",
+      "正確に評価する演算:",
+      "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+      "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+      "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+      "frac: Scalar同士、分母0はDivisionByZero。",
+      "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+      "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+      "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+      "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+      "lt/le: Scalar同士だけ。",
+      "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+      "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+      "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+      "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。",
+      "integral、call、表示用text/sequence/subscript/superscript/scriptsは、評価専用規則がない限りSymbolic(NotationOnly)。これらの表示は完全に対応する。解析的な積分や任意関数評価を実装済みとしない。",
+      "MathML Coreの要素をtyped Markupで生成する。Number=mn、Symbol=mi、表示Text=mtext、加減乗・比較=mrow+mo、frac=mfrac、sqrt=msqrt、root=mroot、sub/sup/scripts=msub/msup/msubsup、vector/matrix=mtable/mtr/mtd、総和と積分=munder/munderoverまたは対応するscript形をdisplay modeから決定する。",
+      "暗黙のブラウザprecedence解釈へ依存しない。binding powerは比較10、add/sub20、mul30、neg40、pow50、atomic60。弱い子を強い親へ入れる際はmoによる可視括弧を挿入。subの右側、powの左側等、同じprecedenceでも非結合な位置に括弧を入れる。fracは分子分母の構造自体がgroupになる。",
+      "数学表示の2項演算は元の順序を保持する。mulのscalar/記号列でも、読み違いを避けるためreference backendは中央点を表示する。callはfunctionと括弧付きarguments。sequenceは指定順のmrowであり、勝手に演算を補わない。",
+      "letは「name := init ; body」のmrow。sumの下限は「index = lower」、上限はupper、bodyに必要な括弧を付ける。integralは積分記号と上下限、body、微分記号dとindex。equalは表示であって証明書ではない。",
+      "labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備し、mtextを介した注記として出力する。MathMLの内容モデルに適合しないblock内容は受け入れない。",
+      "interfaces/model.json のMath record/unionはconstructorの論理的な意味展開であり、Rust enum順や別の再帰wire layoutではない。実値のschemaは interfaces/math.json の MathSyntax / MathValue とする。MathRootはExpr / Row / DocGuestの3種類。MathKindは29 formとNumber leafに対応し、bare SymbolNameは明示Symbolと同じ意味kindへlowerする。子はExprRef / RowRef / DocGuestRef、guestはEmbedRefで平坦なarenaを参照する。schemaの明示variant名とfield列がwire tagであり、入力由来の深さをnativeの再帰所有へ転写しない。",
+      "MathValueの構造検査はカテゴリ、参照、到達性、cycle、共有DAGの最大経路、Number有限十進制約、vector/matrix形状、fence幅、literal 0のroot degreeを検査する。単独Rowは空を表せるが、Matrixに取り込むrowの列数は正で全row同一でなければならない。この証明はsymbol解決済みCheckedExpressionや評価可能性の証明ではない。",
+      "MathSyntaxはsource宣言、元Origin表、tokenごとのowner headを持つMathView、SourceMapを所有する。Number.spellingは Option<Span> のまま保持し、存在する場合は宣言sourceとnode coverに整合する位置を指す。意味Rationalと原lexemeの一致を証明したときだけ元表記をprintへ利用でき、位置構造検査だけをその証明とみなさない。Symbol/Let/Sum/Integralの名前operandは閉じたMathFieldLocationで選択位置とOriginを保持する。本文の名前検索で位置を再発見せず、source-lessの位置はNoneとする。",
+      "LabelのDoc annotationと独立DocGuestは、Doc SentenceのForeignClosureを保持する。ownerの環境・Origin ID・source/map閉包とguest自身のID空間を混同せず、意味変換を行わない。元構文に意味的に不正なDoc annotationがあっても、Mathのsource構造検査を理由にDoc lowerや評価を呼び出してはならない。prepared表示へ渡す意味・内容モデル検査は別の要求として残す。",
+      "lower::expression はhostが選択済みparse/profileを確認したSyntaxBundleと明示Math表層SchemaRef/categoryを受け、現在のBudget/SourceAdmissionで再検査してMathSyntaxを返す。共有sourceは一度だけ計上し、原Frac・表示scripts等を簡約しない。局所constructor制約の失敗は元のsource NodeRefとShapeErrorへ帰属させ、破棄した出力arenaのindexだけを位置情報として返さない。停止は原StopReasonを保持し、元構文木を変更しない。",
+      "初回NDF受信はschema検査後に同じsource/Origin/View/guest閉包とarena制約を検査する。宣言sourceの欠落をreceiverのambient storeから補わない。raw MathSyntaxの受信はbinding・free symbol要求・評価結果のproofを発行しない。明示constructor helperは新しいsource-less式を作るためのもので、元式を置換する処理ではない。",
+      "MathMLは独立した正式portable出力であり、ブラウザがfont/layoutを担当する。Doc・MathのHTML生成は17章のKaTeXPreferredを標準とし、生成環境でKaTeXを実行してCSS/fontと配布する。忠実変換不能・生成能力不足時はNEPL3 MathMLへ診断付きで切り替える。閲覧時にKaTeXを再実行せず、CLIがpixel描画まで行うとも広告しない。",
+      "独自layout/rasterizerを追加する場合は、CheckedExpressionまたはMathLayout入力modelを受ける別backendとする。OpenType MATH tableやglyph outlineの実装都合をMathの意味モデルへ持ち込まない。",
+      "lower、check、free_symbols、evaluate、print、render_mathml。評価結果、部分評価の新式、元の式を別値として返す。文書側のrender要求がevaluateを自動で要求しない。"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-65787072657373696f6e",
+      "n-737472756374757265",
+      "n-6576616c75617465",
+      "n-6d6174686d6c",
+      "n-6172656e61",
+      "n-7265736f7572636573",
+      "n-7075626c6963"
+    ],
+    "ruby": 515,
+    "annos": [
+      {
+        "base": "自由記号",
+        "note": "free symbol",
+        "baseTop": 1478.09375,
+        "noteTop": 1524.15625
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:56889/review/nested/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "links": [
+      {
+        "href": "17-math-html.html",
+        "label": "17章"
+      }
+    ],
+    "browser": "webkit",
+    "version": "26.5",
+    "base": "/review/nested/",
+    "width": 375,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "items_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": -0.34375,
+        "scroll": 152
+      },
+      {
+        "id": "n-65787072657373696f6e",
+        "count": 1,
+        "top": 0.296875,
+        "scroll": 433
+      },
+      {
+        "id": "n-737472756374757265",
+        "count": 1,
+        "top": 0.203125,
+        "scroll": 2206
+      },
+      {
+        "id": "n-6576616c75617465",
+        "count": 1,
+        "top": 0.28125,
+        "scroll": 2810
+      },
+      {
+        "id": "n-6d6174686d6c",
+        "count": 1,
+        "top": 0.40625,
+        "scroll": 5597
+      },
+      {
+        "id": "n-6172656e61",
+        "count": 1,
+        "top": -0.03125,
+        "scroll": 6940
+      },
+      {
+        "id": "n-7265736f7572636573",
+        "count": 1,
+        "top": 0.4375,
+        "scroll": 9841
+      },
+      {
+        "id": "n-7075626c6963",
+        "count": 1,
+        "top": 623.640625,
+        "scroll": 9914
+      }
+    ],
+    "chapter17_target": "17. Doc・MathのHTML 生成\nせいせい\n と 数式表示\nすうしきひょうじ\n ",
+    "reload_target": "http://127.0.0.1:56889/review/nested/docs/spec/17-math-html.html"
+  },
+  {
+    "headings": [
+      "06. Math言語",
+      "方針",
+      "1. 表現",
+      "2. 構造検査",
+      "3. evaluate",
+      "4. MathML backend",
+      "4.1. 公開arenaと原文保持",
+      "5. 出力と資源",
+      "6. 公開操作"
+    ],
+    "codes": [
+      "expression_from_rational",
+      "frac 1 2",
+      "symbol \"...\"",
+      "call",
+      "Vector(List<Q>)",
+      "Matrix(rows,cols,List<Q>)",
+      "interfaces/model.json",
+      "interfaces/math.json",
+      "MathSyntax",
+      "MathValue",
+      "Option<Span>",
+      "lower::expression"
+    ],
+    "lists": [
+      [
+        "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+        "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+        "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+        "frac: Scalar同士、分母0はDivisionByZero。",
+        "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+        "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+        "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+        "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+        "lt/le: Scalar同士だけ。",
+        "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+        "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+        "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+        "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。"
+      ]
+    ],
+    "paragraphs": [
+      "数式の表示対象を保ち、その一部に対する厳密計算を独立した操作として公開する。parse/renderが数式を簡約したり、等式の正しさを主張したりしない。",
+      "全constructorはmath-signatures参照。Numberは有限十進の原表記を持ち、意味値はBigRationalへ正確に変換する。整数p、分母qはq>0、gcd(|p|,q)=1、zero=0/1へ正規化する。Numberに格納できる値は、約分後のqの素因数が2と5だけの有理数に限る。これ以外をNumberとして構築・decodeする場合はNonFiniteDecimalNumberで拒否する。評価値のRationalはこの制限を持たない。",
+      "任意有理数から式を作るconstructor helper expression_from_rational は、有限十進ならNumber、それ以外なら整数Numberを子とするFrac(Number(p), Number(q))を返す。元の構文をlowerするときにこのhelperで著者のFracを折り畳まない。frac 1 2 はFracのまま保持する。Numberのprintはcanonicalな整数または有限十進（指数表記なし、冗長な末尾zeroなし、zeroは0）で、意味値とsnapshotの一致を確認した場合には元lexemeを表示に利用できる。Number(1/3)をprint時だけFracへ変換する設計にはしない。",
+      "Identifier leafは数学記号。自由記号を許可する。自由記号はUnresolvedNameのエラーにしない。意味上の入力要求として列挙する。symbol \"...\" で予約語と同じ綴りや複数文字の名前を明示できる。裸のNameとsymbolの同じ綴りは同じ名前解決規則を使う。",
+      "letはinitを外側、bodyを新しい記号scopeで読む。sum/integralのindexはbodyだけで有効であり、lower/upperでは外側を参照する。自由記号に架空の定義位置を与えない。",
+      "subscript/superscript/scriptsは表示構造。一般の添字を配列アクセスや指数演算に暗黙変換しない。代数的な累乗にはpowを使う。callは数学の関数適用表現で、任意のFnコード実行ではない。",
+      "matrixは一つ以上のrow、各rowは同じ正の列数。vectorは一つ以上の要素。fenceは左右それぞれ0または1Unicode scalar。空文字で片側だけの括弧を表せる。",
+      "rootのdegreeが数値literalで0ならInvalidRootDegree。その他の定義域はevaluate時にも検査する。表示だけの式に実数/複素数の数値領域を勝手に割り当てない。",
+      "CheckedExpressionが保証するのは構造・binding・既知の局所制約であり、全記号の値や全演算の数値評価可能性ではない。",
+      "入力はCheckedExpression、自由記号のBindingEnvironment、Limits。出力はExact(Value)またはSymbolic(expression, Requirements)。定義域違反・形状不一致は明確なEvalError。値の種類はScalar(Q)、Vector(List<Q>)、Matrix(rows,cols,List<Q>)、Truth(Bool)。",
+      "評価はsource順の左から右、純粋。letはinitを評価してからbodyを評価する。未解決の記号に依存する部分はSymbolicとし、独立な数値subtreeの計算結果を保持できるが元の構文を上書きしない。",
+      "正確に評価する演算:",
+      "add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。",
+      "neg: Scalar/Vector/Matrixの全要素の符号反転。",
+      "mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。",
+      "frac: Scalar同士、分母0はDivisionByZero。",
+      "pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。",
+      "sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。",
+      "root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。",
+      "equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。",
+      "lt/le: Scalar同士だけ。",
+      "transpose: Matrixの転置。Vectorは1×nのMatrixにする。",
+      "det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。",
+      "sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。",
+      "fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。",
+      "integral、call、表示用text/sequence/subscript/superscript/scriptsは、評価専用規則がない限りSymbolic(NotationOnly)。これらの表示は完全に対応する。解析的な積分や任意関数評価を実装済みとしない。",
+      "MathML Coreの要素をtyped Markupで生成する。Number=mn、Symbol=mi、表示Text=mtext、加減乗・比較=mrow+mo、frac=mfrac、sqrt=msqrt、root=mroot、sub/sup/scripts=msub/msup/msubsup、vector/matrix=mtable/mtr/mtd、総和と積分=munder/munderoverまたは対応するscript形をdisplay modeから決定する。",
+      "暗黙のブラウザprecedence解釈へ依存しない。binding powerは比較10、add/sub20、mul30、neg40、pow50、atomic60。弱い子を強い親へ入れる際はmoによる可視括弧を挿入。subの右側、powの左側等、同じprecedenceでも非結合な位置に括弧を入れる。fracは分子分母の構造自体がgroupになる。",
+      "数学表示の2項演算は元の順序を保持する。mulのscalar/記号列でも、読み違いを避けるためreference backendは中央点を表示する。callはfunctionと括弧付きarguments。sequenceは指定順のmrowであり、勝手に演算を補わない。",
+      "letは「name := init ; body」のmrow。sumの下限は「index = lower」、上限はupper、bodyに必要な括弧を付ける。integralは積分記号と上下限、body、微分記号dとindex。equalは表示であって証明書ではない。",
+      "labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備し、mtextを介した注記として出力する。MathMLの内容モデルに適合しないblock内容は受け入れない。",
+      "interfaces/model.json のMath record/unionはconstructorの論理的な意味展開であり、Rust enum順や別の再帰wire layoutではない。実値のschemaは interfaces/math.json の MathSyntax / MathValue とする。MathRootはExpr / Row / DocGuestの3種類。MathKindは29 formとNumber leafに対応し、bare SymbolNameは明示Symbolと同じ意味kindへlowerする。子はExprRef / RowRef / DocGuestRef、guestはEmbedRefで平坦なarenaを参照する。schemaの明示variant名とfield列がwire tagであり、入力由来の深さをnativeの再帰所有へ転写しない。",
+      "MathValueの構造検査はカテゴリ、参照、到達性、cycle、共有DAGの最大経路、Number有限十進制約、vector/matrix形状、fence幅、literal 0のroot degreeを検査する。単独Rowは空を表せるが、Matrixに取り込むrowの列数は正で全row同一でなければならない。この証明はsymbol解決済みCheckedExpressionや評価可能性の証明ではない。",
+      "MathSyntaxはsource宣言、元Origin表、tokenごとのowner headを持つMathView、SourceMapを所有する。Number.spellingは Option<Span> のまま保持し、存在する場合は宣言sourceとnode coverに整合する位置を指す。意味Rationalと原lexemeの一致を証明したときだけ元表記をprintへ利用でき、位置構造検査だけをその証明とみなさない。Symbol/Let/Sum/Integralの名前operandは閉じたMathFieldLocationで選択位置とOriginを保持する。本文の名前検索で位置を再発見せず、source-lessの位置はNoneとする。",
+      "LabelのDoc annotationと独立DocGuestは、Doc SentenceのForeignClosureを保持する。ownerの環境・Origin ID・source/map閉包とguest自身のID空間を混同せず、意味変換を行わない。元構文に意味的に不正なDoc annotationがあっても、Mathのsource構造検査を理由にDoc lowerや評価を呼び出してはならない。prepared表示へ渡す意味・内容モデル検査は別の要求として残す。",
+      "lower::expression はhostが選択済みparse/profileを確認したSyntaxBundleと明示Math表層SchemaRef/categoryを受け、現在のBudget/SourceAdmissionで再検査してMathSyntaxを返す。共有sourceは一度だけ計上し、原Frac・表示scripts等を簡約しない。局所constructor制約の失敗は元のsource NodeRefとShapeErrorへ帰属させ、破棄した出力arenaのindexだけを位置情報として返さない。停止は原StopReasonを保持し、元構文木を変更しない。",
+      "初回NDF受信はschema検査後に同じsource/Origin/View/guest閉包とarena制約を検査する。宣言sourceの欠落をreceiverのambient storeから補わない。raw MathSyntaxの受信はbinding・free symbol要求・評価結果のproofを発行しない。明示constructor helperは新しいsource-less式を作るためのもので、元式を置換する処理ではない。",
+      "MathMLは独立した正式portable出力であり、ブラウザがfont/layoutを担当する。Doc・MathのHTML生成は17章のKaTeXPreferredを標準とし、生成環境でKaTeXを実行してCSS/fontと配布する。忠実変換不能・生成能力不足時はNEPL3 MathMLへ診断付きで切り替える。閲覧時にKaTeXを再実行せず、CLIがpixel描画まで行うとも広告しない。",
+      "独自layout/rasterizerを追加する場合は、CheckedExpressionまたはMathLayout入力modelを受ける別backendとする。OpenType MATH tableやglyph outlineの実装都合をMathの意味モデルへ持ち込まない。",
+      "lower、check、free_symbols、evaluate、print、render_mathml。評価結果、部分評価の新式、元の式を別値として返す。文書側のrender要求がevaluateを自動で要求しない。"
+    ],
+    "ids": [
+      "n-706f6c696379",
+      "n-65787072657373696f6e",
+      "n-737472756374757265",
+      "n-6576616c75617465",
+      "n-6d6174686d6c",
+      "n-6172656e61",
+      "n-7265736f7572636573",
+      "n-7075626c6963"
+    ],
+    "ruby": 515,
+    "annos": [
+      {
+        "base": "自由記号",
+        "note": "free symbol",
+        "baseTop": 648.96875,
+        "noteTop": 695.03125
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:56889/review/nested/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "links": [
+      {
+        "href": "17-math-html.html",
+        "label": "17章"
+      }
+    ],
+    "browser": "webkit",
+    "version": "26.5",
+    "base": "/review/nested/",
+    "width": 1280,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "items_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": -0.34375,
+        "scroll": 152
+      },
+      {
+        "id": "n-65787072657373696f6e",
+        "count": 1,
+        "top": 0.109375,
+        "scroll": 295
+      },
+      {
+        "id": "n-737472756374757265",
+        "count": 1,
+        "top": 0.1875,
+        "scroll": 899
+      },
+      {
+        "id": "n-6576616c75617465",
+        "count": 1,
+        "top": -0.234375,
+        "scroll": 1135
+      },
+      {
+        "id": "n-6d6174686d6c",
+        "count": 1,
+        "top": -0.421875,
+        "scroll": 2287
+      },
+      {
+        "id": "n-6172656e61",
+        "count": 1,
+        "top": -0.046875,
+        "scroll": 2777
+      },
+      {
+        "id": "n-7265736f7572636573",
+        "count": 1,
+        "top": 462.40625,
+        "scroll": 3195
+      },
+      {
+        "id": "n-7075626c6963",
+        "count": 1,
+        "top": 744.046875,
+        "scroll": 3195
+      }
+    ],
+    "chapter17_target": "17. Doc・MathのHTML 生成\nせいせい\n と 数式表示\nすうしきひょうじ\n ",
+    "reload_target": "http://127.0.0.1:56889/review/nested/docs/spec/17-math-html.html"
+  }
+]
