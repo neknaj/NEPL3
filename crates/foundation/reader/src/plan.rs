@@ -154,12 +154,15 @@ impl From<StopReason> for PlanError {
         Self::Stopped(e)
     }
 }
+/// Validated plan with operation-local rule links. Portable plan identities and
+/// expressions remain unchanged; links are meaningful only in this borrowed plan.
 #[derive(Debug)]
 pub struct CheckedPlan<'a> {
     registry: &'a SchemaRegistry,
     plan: &'a ReaderPlan,
     nullable: Vec<bool>,
     outputs: Vec<TypeDescriptor>,
+    rule_links: Vec<Option<usize>>,
 }
 impl<'a> CheckedPlan<'a> {
     pub fn registry(&self) -> &'a SchemaRegistry {
@@ -176,6 +179,13 @@ impl<'a> CheckedPlan<'a> {
     }
     pub fn output(&self, id: ReaderId) -> Option<&TypeDescriptor> {
         usize::try_from(id.0).ok().and_then(|i| self.outputs.get(i))
+    }
+    /// O(1) internal Ref lookup. Keep the rule index as well as its root:
+    /// distinct named rules may share the same expression root.
+    pub(crate) fn linked_rule(&self, id: ReaderId) -> Option<(usize, &'a ReaderRule)> {
+        let index = *self.rule_links.get(usize::try_from(id.0).ok()?)?;
+        let index = index?;
+        Some((index, self.plan.rules.get(index)?))
     }
 }
 impl ReaderPlan {
@@ -277,6 +287,13 @@ impl ReaderPlan {
                 return Err(PlanError::ProviderSignature);
             }
         }
+        budget.charge(Resource::Work, self.expressions.len() as u64)?;
+        budget.charge(
+            Resource::AllocationUnits,
+            (self.expressions.len() as u64)
+                .saturating_mul(core::mem::size_of::<Option<usize>>() as u64),
+        )?;
+        let mut rule_links = alloc::vec![None; self.expressions.len()];
         for (index, expr) in self.expressions.iter().enumerate() {
             *at = Some(ReaderId(index as u64));
             budget.charge(Resource::Nodes, 1)?;
@@ -298,7 +315,17 @@ impl ReaderPlan {
                     return Err(PlanError::EmptyName);
                 }
                 ReaderExpr::Ref(name) => {
-                    self.rule(name)?;
+                    for (rule_index, rule) in self.rules.iter().enumerate() {
+                        budget
+                            .charge(Resource::Work, 1 + name.len().min(rule.name.len()) as u64)?;
+                        if rule.name == *name {
+                            rule_links[index] = Some(rule_index);
+                            break;
+                        }
+                    }
+                    if rule_links[index].is_none() {
+                        return Err(PlanError::Reference);
+                    }
                 }
                 ReaderExpr::Call(operation) => {
                     self.provider(operation, ProviderKind::Read)?;
@@ -369,6 +396,7 @@ impl ReaderPlan {
             plan: self,
             nullable,
             outputs,
+            rule_links,
         })
     }
     fn nullable(&self, expr: &ReaderExpr, nullable: &[bool]) -> Result<bool, PlanError> {

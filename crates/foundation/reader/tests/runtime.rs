@@ -1487,6 +1487,53 @@ fn plan_identity_is_deterministic_but_distinguishes_arena_representation() -> Re
 }
 
 #[test]
+fn linked_rules_preserve_shared_roots_repeated_refs_and_table_order() -> Result<(), ReaderError> {
+    let (registry, schema) = registry()?;
+    let mut p = plan(
+        &schema,
+        vec![
+            ReaderExpr::Literal("a".into()),
+            ReaderExpr::Ref("left".into()),
+            ReaderExpr::Ref("right".into()),
+            ReaderExpr::Seq(vec![ReaderId(1), ReaderId(2), ReaderId(1)]),
+        ],
+        3,
+        TypeDescriptor::List(Box::new(TypeDescriptor::NdfValue)),
+    );
+    for name in ["left", "right"] {
+        p.rules.push(ReaderRule {
+            name: name.into(),
+            root: ReaderId(0),
+            output: TypeDescriptor::Unit,
+        });
+    }
+    let digest = p.digest(&mut budget())?;
+    // Each reference consumes one literal, including a repeated Ref expression.
+    // Rule-table order is absent from portable identity, so rebuilding links
+    // after reordering must preserve both successful and failing input behavior.
+    for _ in 0..2 {
+        assert_eq!(p.digest(&mut budget())?, digest);
+        assert!(matches!(
+            run(&p, &registry, "aaa", true)?.0,
+            ReadReply::Matched { end: 3, .. }
+        ));
+        assert!(matches!(
+            run(&p, &registry, "aab", true)?.0,
+            ReadReply::NoMatch { .. }
+        ));
+        p.rules.reverse();
+    }
+    p.expressions[2] = ReaderExpr::Ref("missing".into());
+    let failure = p
+        .check_detailed(&registry, &mut budget())
+        .err()
+        .ok_or(ReaderError::Context)?;
+    assert_eq!(failure.error, PlanError::Reference);
+    assert_eq!(failure.expression, Some(ReaderId(2)));
+    Ok(())
+}
+
+#[test]
 fn allocation_faults_across_later_resumes_preserve_already_accepted_reports()
 -> Result<(), ReaderError> {
     let (registry, schema) = registry()?;

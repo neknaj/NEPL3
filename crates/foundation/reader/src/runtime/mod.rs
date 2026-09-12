@@ -1263,22 +1263,97 @@ impl Machine<'_, '_> {
                 });
                 continue;
             }
-            match expr{
-                ReaderExpr::Seq(parts)=>if let Some(child)=parts.first(){self.child(frame,FramePhase::Seq{next:1,values:Vec::new()},*child,budget)?;}else{outcome=Some(Outcome::Matched(NdfValue::List(Vec::new())));},
-                ReaderExpr::Choice(parts)=>if let Some(child)=parts.first(){let start=frame.start;self.child(frame,FramePhase::Choice{next:1,furthest:start,expected:Vec::new()},*child,budget)?;}else{outcome=Some(Outcome::NoMatch{expected:Vec::new(),furthest:frame.start});},
-                ReaderExpr::Repeat{max:0,..}=>outcome=Some(Outcome::Matched(NdfValue::List(Vec::new()))),
-                ReaderExpr::Many(body)|ReaderExpr::Some(body)|ReaderExpr::Repeat{body,..}=>{let iteration_start=self.current.cursor;self.child(frame,FramePhase::Repeat{count:0,iteration_start,values:Vec::new()},*body,budget)?},
-                ReaderExpr::Optional(body)|ReaderExpr::Look(body)|ReaderExpr::Not(body)|ReaderExpr::Commit(body)|ReaderExpr::Capture{body,..}|ReaderExpr::Region{body,..}|ReaderExpr::Node{body,..}|ReaderExpr::Discard(body)|ReaderExpr::Decode{body,..}|ReaderExpr::Map{body,..}=>self.child(frame,FramePhase::AwaitChild,*body,budget)?,
-                ReaderExpr::Then{first,..}=>self.child(frame,FramePhase::AwaitChild,*first,budget)?,
-                ReaderExpr::Ref(name)=>{
-                    if self.frames.iter().any(|parent|parent.start==frame.start&&matches!(self.checked.plan().expression(parent.expression),Ok(ReaderExpr::Ref(other)) if other==name)){
+            match expr {
+                ReaderExpr::Seq(parts) => {
+                    if let Some(child) = parts.first() {
+                        self.child(
+                            frame,
+                            FramePhase::Seq {
+                                next: 1,
+                                values: Vec::new(),
+                            },
+                            *child,
+                            budget,
+                        )?;
+                    } else {
+                        outcome = Some(Outcome::Matched(NdfValue::List(Vec::new())));
+                    }
+                }
+                ReaderExpr::Choice(parts) => {
+                    if let Some(child) = parts.first() {
+                        let start = frame.start;
+                        self.child(
+                            frame,
+                            FramePhase::Choice {
+                                next: 1,
+                                furthest: start,
+                                expected: Vec::new(),
+                            },
+                            *child,
+                            budget,
+                        )?;
+                    } else {
+                        outcome = Some(Outcome::NoMatch {
+                            expected: Vec::new(),
+                            furthest: frame.start,
+                        });
+                    }
+                }
+                ReaderExpr::Repeat { max: 0, .. } => {
+                    outcome = Some(Outcome::Matched(NdfValue::List(Vec::new())))
+                }
+                ReaderExpr::Many(body)
+                | ReaderExpr::Some(body)
+                | ReaderExpr::Repeat { body, .. } => {
+                    let iteration_start = self.current.cursor;
+                    self.child(
+                        frame,
+                        FramePhase::Repeat {
+                            count: 0,
+                            iteration_start,
+                            values: Vec::new(),
+                        },
+                        *body,
+                        budget,
+                    )?
+                }
+                ReaderExpr::Optional(body)
+                | ReaderExpr::Look(body)
+                | ReaderExpr::Not(body)
+                | ReaderExpr::Commit(body)
+                | ReaderExpr::Capture { body, .. }
+                | ReaderExpr::Region { body, .. }
+                | ReaderExpr::Node { body, .. }
+                | ReaderExpr::Discard(body)
+                | ReaderExpr::Decode { body, .. }
+                | ReaderExpr::Map { body, .. } => {
+                    self.child(frame, FramePhase::AwaitChild, *body, budget)?
+                }
+                ReaderExpr::Then { first, .. } => {
+                    self.child(frame, FramePhase::AwaitChild, *first, budget)?
+                }
+                ReaderExpr::Ref(_) => {
+                    let (rule_index, rule) = self
+                        .checked
+                        .linked_rule(frame.expression)
+                        .ok_or(PlanError::Reference)?;
+                    if self.frames.iter().any(|parent|parent.start==frame.start&&matches!(self.checked.linked_rule(parent.expression),Some((other, _)) if other==rule_index)){
                         outcome=Some(self.failure("NonProgressRecursion",&[],frame.start,budget)?);
-                    }else{self.child(frame,FramePhase::AwaitChild,self.checked.plan().rule(name)?.root,budget)?;}
-                },
-                ReaderExpr::Call(provider)=>{
-                    let request=self.owned_request(self.current.cursor,&self.current.state,budget)?;let call=self.make_call(provider,CallRequest::Read(request),budget)?;frame.phase=FramePhase::Provider{call_id:call_identity(&call).0};slot::<Frame>(budget)?;self.frames.push(frame);slot::<ProviderCall>(budget)?;return Ok(Control::Suspend(Box::new(call)));
-                },
-                _=>return Err(ReaderError::Continuation),
+                    }else{self.child(frame,FramePhase::AwaitChild,rule.root,budget)?;}
+                }
+                ReaderExpr::Call(provider) => {
+                    let request =
+                        self.owned_request(self.current.cursor, &self.current.state, budget)?;
+                    let call = self.make_call(provider, CallRequest::Read(request), budget)?;
+                    frame.phase = FramePhase::Provider {
+                        call_id: call_identity(&call).0,
+                    };
+                    slot::<Frame>(budget)?;
+                    self.frames.push(frame);
+                    slot::<ProviderCall>(budget)?;
+                    return Ok(Control::Suspend(Box::new(call)));
+                }
+                _ => return Err(ReaderError::Continuation),
             }
         }
     }
