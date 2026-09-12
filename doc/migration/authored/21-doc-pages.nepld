@@ -1088,7 +1088,42 @@ body
       cons "orderedの[開始値/かいしち]はGFMの9[桁以内/けたいない]（0〜999999999）に[限/かぎ]り、[各/かく]itemのmarkerへ[同/おな]じ[値/あたい]を[使/つか]う。"
       cons "[以後/いご]の[表示番号/ひょうじばんごう]はMarkdownのlist[表示/ひょうじ]に[委/ゆだ]ね、[開始値/かいしち]を[丸/まる]めたり[加算/かさん]で[桁/けた]を[超/こ]えたりしない。"
       cons "Breakの[継続行/けいぞくぎょう]はmarker[幅/はば]に[合/あ]わせてindentする。"
-      cons "[隣接/りんせつ]する[独立/どくりつ]ListはMarkdownで[結合/けつごう]するため[拒否/きょひ]する。"
+      cons sentence
+        cons ruby text "隣接" text "りんせつ"
+        cons text "する"
+        cons ruby text "独立" text "どくりつ"
+        cons text "Listの"
+        cons ruby text "間" text "あいだ"
+        cons text "には、"
+        cons ruby text "前後" text "ぜんご"
+        cons text "を"
+        cons ruby text "空行" text "くうぎょう"
+        cons text "で"
+        cons ruby text "区切" text "くぎ"
+        cons text "った"
+        cons ruby text "固定" text "こてい"
+        cons text "コメント "
+        cons code "<!-- -->"
+        cons text " を"
+        cons ruby text "生成" text "せいせい"
+        cons text "し、"
+        cons ruby text "別々" text "べつべつ"
+        cons text "のlistと"
+        cons ruby text "開始値" text "かいしち"
+        cons text "を"
+        cons ruby text "保持" text "ほじ"
+        cons text "する。"
+        nil
+      cons "[同/おな]じBodyの[連続/れんぞく]したListごとに[適用/てきよう]し、Paragraph・Table・Sectionを[挟/はさ]む[場合/ばあい]は[追加/ついか]しない。"
+      cons "コメントは[通常/つうじょう]のwriterを[通/つう]じて[資源/しげん]を[計上/けいじょう]し、[本文由来/ほんぶんゆらい]の[任意/にんい]HTMLを[挿入/そうにゅう]しない。"
+      cons "これは[既存/きそん]rendererの[受理範囲/じゅりはんい]の[拡張/かくちょう]であり、[従来受理/じゅうらいじゅり]した[入力/にゅうりょく]の[出力/しゅつりょく]byte[列/れつ]は[変更/へんこう]しない。"
+      cons sentence
+        cons link external "https://spec.commonmark.org/0.31.2/#example-308"
+          concat cons text "CommonMarkの" cons ruby text "例" text "れい" cons text "308" nil
+        cons text "に"
+        cons ruby text "従" text "したが"
+        cons text "う。"
+        nil
       cons "checkboxに[似/に]た[通常/つうじょう]Textはescapeし、[意図/いと]しないtask markerにしない。"
       nil
     cons paragraph

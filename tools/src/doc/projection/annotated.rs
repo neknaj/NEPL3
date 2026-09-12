@@ -469,10 +469,11 @@ impl<'a> Annotated<'a, '_> {
         for child in blocks {
             self.plain.budget.charge(Resource::Work, 1)?;
             let is_list = matches!(self.plain.kind(child.0), DocKind::List { .. });
-            // Blank lines alone do not separate two Markdown lists. Do not
-            // collapse distinct Doc blocks into one apparent list.
+            // CommonMark example308: blank lines alone merge same-kind lists.
+            // A fixed block comment preserves the boundary without adding
+            // visible content or admitting source-controlled raw HTML.
             if previous_list && is_list {
-                return Err(Error::Unsupported { node: child.0 });
+                self.plain.emit("<!-- -->\n\n")?;
             }
             previous_list = is_list;
             match self.plain.kind(child.0) {

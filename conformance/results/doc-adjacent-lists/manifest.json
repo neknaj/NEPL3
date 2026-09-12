@@ -1,0 +1,165 @@
+{
+  "source_commit": "6e47d57c874e53a894154b4a349132c34526b9b9",
+  "files": [
+    {
+      "path": "verification/annotated.stderr.log.fixture",
+      "bytes": 144,
+      "sha256": "22f5455d9dfc4f81da5eacdd5dca0230cda26d4bb19eeb4b9509621845a34740"
+    },
+    {
+      "path": "verification/annotated.stdout.log.fixture",
+      "bytes": 1836,
+      "sha256": "6c8547aab6a7c75e7196578140cea76ae26770b3fdbeedac40074dc225ac5113"
+    },
+    {
+      "path": "verification/canonical.stderr.log.fixture",
+      "bytes": 138,
+      "sha256": "2882b318ae46e3a44894e956bb18274170a57053aa0d9ed89481963b7ca21f33"
+    },
+    {
+      "path": "verification/canonical.stdout.log.fixture",
+      "bytes": 647,
+      "sha256": "2a3ec077b0f3d20c7530a59cf6cce7e4460d7b314c81910b3b590b75dd635c3a"
+    },
+    {
+      "path": "verification/clippy.stderr.log.fixture",
+      "bytes": 1839,
+      "sha256": "e9b1245a0499e4bf8b13b662ffa0a722ffb1021f362ec01c17df2fed59543dcd"
+    },
+    {
+      "path": "verification/clippy.stdout.log.fixture",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "verification/commands.json.fixture",
+      "bytes": 1748,
+      "sha256": "6052746cf995b0655e0ffc0d8d0e5240662955152ca09fcdafb7faefbc88de59"
+    },
+    {
+      "path": "verification/format.stderr.log.fixture",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "verification/format.stdout.log.fixture",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "verification/repository.stderr.log.fixture",
+      "bytes": 122,
+      "sha256": "c627fd3d98969d993f6c8f6546d77f86a2581b0ea68fa5df99b5936e2a88fdaa"
+    },
+    {
+      "path": "verification/repository.stdout.log.fixture",
+      "bytes": 75656,
+      "sha256": "c6bc16b1b320ef8245b930a300d20d1b61ccc0628d2a3e0a031133077ba1ba14"
+    },
+    {
+      "path": "wasi/result.json.fixture",
+      "bytes": 395,
+      "sha256": "ddd05db8f1fcd96db6f19af110a1e847ebfa1603999e4613c91936d7f67f3cca"
+    },
+    {
+      "path": "wasi/stderr.log.fixture",
+      "bytes": 1868,
+      "sha256": "d946973508888d1ec2ee5846349d6bca8fe76596f20ddb0bbb51a6900e8f16c9"
+    },
+    {
+      "path": "wasi/stdout.log.fixture",
+      "bytes": 1751,
+      "sha256": "a332db66fa21d5966ea56c4e002e7beebb73ea97a9745b5de7a4a273126f4470"
+    },
+    {
+      "path": "github-lists/aliases.json.fixture",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "github-lists/generation.stderr.log.fixture",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "github-lists/generation.stdout.log.fixture",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "github-lists/github.html.fixture",
+      "bytes": 609,
+      "sha256": "94ebb78dc901a2aafbaaddc88bd95030a85b5fe3aa8137614cd01aea4ecfbb5f"
+    },
+    {
+      "path": "github-lists/github.stderr.log.fixture",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "github-lists/result.json.fixture",
+      "bytes": 1756,
+      "sha256": "9b98c0ac1fa374223cd7e749e2595f34544254e177294863e572b41cab407db5"
+    },
+    {
+      "path": "github-lists/source.nepld.fixture",
+      "bytes": 554,
+      "sha256": "2b847c16c580c5cccaecf9648aea3fabb9c246def76dd7d6038e976b0f1274fe"
+    },
+    {
+      "path": "github-lists/view.md.fixture",
+      "bytes": 607,
+      "sha256": "4ddba8aa1c591b85bc8a7b1bb724323985b7f9d356c317ec6f8443070fdc876a"
+    },
+    {
+      "path": "review-adjacent-lists/native-exit.txt.fixture",
+      "bytes": 6,
+      "sha256": "9585fbece5c402088f2d6a2def7e60d1c7ffecc24b16d32d5823a064b008935b"
+    },
+    {
+      "path": "review-adjacent-lists/native-tests.log.fixture",
+      "bytes": 4131,
+      "sha256": "a7b89596eaf5f90343f9a72e749d0fb72eeb1adcd04da7a1c7d621c9e714982d"
+    },
+    {
+      "path": "review-adjacent-lists/review.md.fixture",
+      "bytes": 2124,
+      "sha256": "413960557087a6c2188b719bceb603f2e1b4434dad3f11f1486f37e4de3919d4"
+    },
+    {
+      "path": "root/repro.stdout.log.fixture",
+      "bytes": 303,
+      "sha256": "6a467ca2e58fc96c989c99de7b29bbd34d63fdf98d8ce440b08d69b776d0d61e"
+    },
+    {
+      "path": "root/repro.stderr.log.fixture",
+      "bytes": 1981,
+      "sha256": "a0346f27d010dbb9a6b031de9be6cfcd6d59a0b900463fd9a2ede29afcf76e85"
+    },
+    {
+      "path": "root/start.json.fixture",
+      "bytes": 230,
+      "sha256": "14f41258f0d0cbdac4759e9353f137c258ae0d35e6e96d7041ff2d46ee585783"
+    },
+    {
+      "path": "root/verify.py.fixture",
+      "bytes": 1356,
+      "sha256": "7758081d7456de13463d7aa6bbe18f6e8fcf0c977f5dda48ec4d480dcd89af61"
+    },
+    {
+      "path": "root/wasi.py.fixture",
+      "bytes": 982,
+      "sha256": "492641aa3ee72dcdfb734d4fb8ccb784a6c35f7316613dd8e6cd888e835eae05"
+    },
+    {
+      "path": "root/github-lists.py.fixture",
+      "bytes": 3414,
+      "sha256": "f059c14780c8bce7b81f06b036c280d29cfa651b47d6b86c655b11085cf0f057"
+    },
+    {
+      "path": "root/archive.py.fixture",
+      "bytes": 1209,
+      "sha256": "acd10b48a9079c56319eef9b694f1c2d5324ca381ac0af0ceab3571e9a6448a5"
+    }
+  ]
+}
