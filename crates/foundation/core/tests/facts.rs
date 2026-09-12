@@ -133,6 +133,56 @@ fn cached_scope_suffix_keeps_depth_and_stops_before_missing_parent() -> Result<(
     assert_eq!(b.poll(), Err(StopReason::DepthLimit));
     Ok(())
 }
+
+#[test]
+fn checked_view_reuse_avoids_rebuilding_but_admits_fresh_sources() -> Result<(), String> {
+    let (set, registry) = scope_chain(256)?;
+    let checked = set
+        .validate(&registry, &mut budget(), &mut SourceAdmission::default())
+        .map_err(|e| format!("{e:?}"))?;
+    let mut limits = budget().limits();
+    limits.allocation_units = 0;
+    limits.nodes = 0;
+    limits.work = 1;
+    // No source closure and no queries: retaining a checked view must not sort
+    // or clone all 256 scopes again, even under a fresh tiny operation budget.
+    checked
+        .validate_resolutions(
+            [],
+            &mut Budget::new(limits),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+    let (set, authority, _, registry) = fixture()?;
+    let checked = set
+        .validate(&registry, &mut budget(), &mut SourceAdmission::default())
+        .map_err(|e| format!("{e:?}"))?;
+    let resolution = ReferenceResolution::Resolved(EntityId(1));
+    checked
+        .validate_resolutions(
+            [(OccurrenceId(1), &resolution)],
+            &mut budget(),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+    let mut limits = budget().limits();
+    limits.source_bytes = 0;
+    for authority_check in [false, true] {
+        let mut b = Budget::new(limits);
+        let result = if authority_check {
+            authority.validate(&checked, &mut b, &mut SourceAdmission::default())
+        } else {
+            checked.validate_resolutions(
+                [(OccurrenceId(1), &resolution)],
+                &mut b,
+                &mut SourceAdmission::default(),
+            )
+        };
+        assert_eq!(result, Err(FactError::Stopped(StopReason::SourceLimit)));
+        assert_eq!(b.poll(), Err(StopReason::SourceLimit));
+    }
+    Ok(())
+}
 fn fixture() -> Result<(FactSet, FactAuthority, FactDelta, SchemaRegistry), String> {
     let mut b = budget();
     let descriptor =

@@ -6,9 +6,13 @@ use crate::{
 };
 /// Proves source/ID/type/namespace-root integrity. It does not run lexical name
 /// resolution or prove that a claimed resolved entity is visible at an occurrence.
+/// Retains borrowed ID indexes and the validated source/origin closure for this
+/// immutable set. Reuse does not rebuild them; each operation still admits the
+/// input sources to its own budget and admission ledger.
 pub struct CheckedFactSet<'a> {
     value: &'a FactSet,
     registry: &'a SchemaRegistry,
+    view: View<'a>,
 }
 impl CheckedFactSet<'_> {
     pub fn value(&self) -> &FactSet {
@@ -16,16 +20,33 @@ impl CheckedFactSet<'_> {
     }
     /// Check alternate resolutions against this set's entity/namespace/source
     /// closure. This does not prove lexical visibility or permission to update.
+    /// ID lookups take O(log N) for N indexed facts, without rebuilding indexes.
+    /// Source admission, ancestry and individual resolution checks retain their
+    /// separate costs; the checked closure remains borrowed for this operation.
     pub fn validate_resolutions<'r>(
         &self,
         resolutions: impl IntoIterator<Item = (OccurrenceId, &'r ReferenceResolution)>,
         budget: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<(), FactError> {
-        let view = View::new(self.value, None, budget, admission)?;
+        self.admit_sources(budget, admission)?;
+        let view = &self.view;
         for (id, resolution) in resolutions {
             let occurrence = view.occurrence(id, budget)?;
             view.resolution(occurrence, resolution, self.registry, budget)?;
+        }
+        Ok(())
+    }
+    // Cached structure is immutable, but every operation must admit its input
+    // sources to that operation's budget/admission ledger.
+    fn admit_sources(
+        &self,
+        budget: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<(), FactError> {
+        budget.poll()?;
+        for source in &self.value.sources {
+            admission.admit_existing(source, budget)?;
         }
         Ok(())
     }
@@ -487,10 +508,12 @@ impl FactSet {
         admission: &mut SourceAdmission,
     ) -> Result<CheckedFactSet<'a>, FactError> {
         budget.charge(Resource::Work, 1)?;
-        View::new(self, None, budget, admission)?.validate(registry, budget)?;
+        let view = View::new(self, None, budget, admission)?;
+        view.validate(registry, budget)?;
         Ok(CheckedFactSet {
             value: self,
             registry,
+            view,
         })
     }
 }
@@ -512,7 +535,8 @@ impl FactAuthority {
         if self.analysis_id != base.value.analysis_id {
             return Err(FactError::Analysis);
         }
-        let view = View::new(base.value, None, budget, admission)?;
+        base.admit_sources(budget, admission)?;
+        let view = &base.view;
         view.scope(self.current_scope, budget)?;
         for (i, ns) in self.namespaces.iter().enumerate() {
             if has(&self.namespaces[..i], ns, budget)? {
