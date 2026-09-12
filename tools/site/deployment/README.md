@@ -200,3 +200,27 @@ limitations rather than a hard real-time guarantee.
 
 The request follows the [Pages creation REST contract](https://docs.github.com/en/rest/pages/pages#create-a-github-pages-deployment).
 Tests exercise local HTTP and subprocess boundaries, not live API authorization.
+
+## Intent-to-receipt submission
+
+`submit.submit` connects an already authorized attempt to the remote journal:
+validate request and expected local/remote heads, reject an already used
+transaction/kind pair, append the intent with repository/artifact/build/environment
+identity, confirm its remote push, issue one POST, append the original validated
+receipt, and confirm that remote push before returning. Credentials are not
+recorded in intent evidence. Recovery uses the same ordering with RecoveryIntent.
+
+A failure after local append retains the evidence. Lost API response leaves a
+remote intent; failed receipt push leaves the local receipt for reconciliation.
+Calling submit again with that intent is rejected, even with an updated expected
+head. The caller must not evade reconciliation by choosing a new transaction ID.
+Eligibility, current-publication reconciliation, artifact provenance, remote
+protection and the single-writer lock remain the publisher's prerequisites.
+These storage operations cannot establish those facts from an Event alone.
+
+The caller supplies the transaction's remaining budget, at most 3600 seconds.
+Recording and push time consume it; no POST begins after the intent confirmation
+has exhausted it. A received receipt is recorded even if time expires afterward,
+and expiration still prevents a successful return. Each Git subprocess has its
+existing bounded timeout; total wall time is not a hard real-time guarantee.
+No public smoke, recovery decision or LKG promotion is inferred from submission.
