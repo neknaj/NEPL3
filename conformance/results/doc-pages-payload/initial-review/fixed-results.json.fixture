@@ -1,0 +1,14 @@
+[
+  {
+    "case": "junction",
+    "error": "ValueError",
+    "message": "linked directory",
+    "output_absent": true
+  },
+  {
+    "case": "scan-error",
+    "error": "PermissionError",
+    "message": "independent injected scandir denial",
+    "output_absent": true
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "result": "passed",
+  "receipt": {
+    "version": 1,
+    "kind": "pages-tar",
+    "manifest_sha256": "39000dd5b7aad48deae97741c5b077b44a242a0badb7b30e81b3c1c26f301446",
+    "tar_sha256": "cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9",
+    "tar_bytes": 1177600,
+    "files": 22,
+    "publication_verified": false
+  },
+  "twice_identical": true,
+  "regular_exact_files": 22,
+  "browser_report_manifest_matched": true
+}
