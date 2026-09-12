@@ -1,0 +1,84 @@
+{
+  "files": [
+    {
+      "path": "boundary.json",
+      "bytes": 316,
+      "sha256": "20d8822406efae4596557e57f645bc8f4d9df4b56d21d2545d3097259324499f"
+    },
+    {
+      "path": "commands.json",
+      "bytes": 778,
+      "sha256": "f5a10f049b5e6f0c876406f5b2f377131dbf122b560f393322f2b3587a1fbb7e"
+    },
+    {
+      "path": "normal.stderr",
+      "bytes": 105,
+      "sha256": "6db5414056f12ab722eda33f0dbe6e60d33e9778d8f882a7dfcf8ecfb9e4c93b"
+    },
+    {
+      "path": "normal.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "optimized.stderr",
+      "bytes": 105,
+      "sha256": "6db5414056f12ab722eda33f0dbe6e60d33e9778d8f882a7dfcf8ecfb9e4c93b"
+    },
+    {
+      "path": "optimized.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "real-git.stderr",
+      "bytes": 103,
+      "sha256": "c30e5dd1f470d0ee57bd00c2b95e1aa89b787bc0eb755816530c1aa0f57a96af"
+    },
+    {
+      "path": "real-git.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "review.md",
+      "bytes": 1742,
+      "sha256": "805ab3c3579df2e28584f0c68b93e050b9b52c92be118cf762243197177c5997"
+    },
+    {
+      "path": "seal.py",
+      "bytes": 2505,
+      "sha256": "400e3b1c6e8ae9ccff4c7fef52d17f38a7eacf273a1d50d01775cfb2cd4de364"
+    },
+    {
+      "path": "source/tools/site/deployment/journal.py",
+      "bytes": 8456,
+      "sha256": "d774bb6a51c4acbe596524a611b34768ddd5ed3e13b56d731b01aae5f6250e75"
+    },
+    {
+      "path": "source/tools/site/deployment/submit.py",
+      "bytes": 4919,
+      "sha256": "837626228aef7497a7fa0368ad32f821d9ceb1244135d406e0e788ab339044bb"
+    },
+    {
+      "path": "source/tools/site/README.md",
+      "bytes": 2756,
+      "sha256": "dfb8b33e5fe2de2cac7f605339e83e7d6433984dc1c36c15aa31b81580169baf"
+    },
+    {
+      "path": "source/tools/site/test_creation_gate.py",
+      "bytes": 1939,
+      "sha256": "e736e63e5eb88c5f51a7c7387744cd507968211ac1bcebf5d3b85305a9c79503"
+    },
+    {
+      "path": "source/tools/site/test_submit.py",
+      "bytes": 7875,
+      "sha256": "f6b63d8e31ee35e31483d3ddddeac8a9f66127a4bbe4a7a55e12c4527275c723"
+    },
+    {
+      "path": "verify.py",
+      "bytes": 1826,
+      "sha256": "531fd482fcd8255bcdc1b6b2455ac35bcf4035e919679555b448f220878cda24"
+    }
+  ]
+}
