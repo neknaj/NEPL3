@@ -1,5 +1,0 @@
-# Physical input path validation
-
-Production a604864 and authored guide a6e304c separate physical input selection from logical Doc source paths. Original author and independent review manifests and their byte-identical payloads are retained under the corresponding directories. Prior failed review-helper attempts and unavailable Windows file-symlink checks remain identified in their original records.
-
-Root integration ran 64 production Doc tests, format, Clippy, and repository checks at a6e304c. The actual-pages receipt builds the unchanged model-invariants and HTML-fragment authored specifications together using default limits. Their relative .md link resolves to the generated HTML route while physical inputs remain under drafts/. This exercises the production parser, lowering, page resolution, renderer and file exporter; it does not establish full document equivalence, browser display, canonical cutover, or Pages deployment. Windows junction containment was independently exercised; Unix file symlink execution is left to native Unix CI.

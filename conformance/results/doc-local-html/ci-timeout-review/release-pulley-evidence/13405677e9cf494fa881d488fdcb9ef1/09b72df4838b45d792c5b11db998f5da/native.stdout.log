@@ -1,9 +1,0 @@
-
-running 4 tests
-test fix_preconditions_reject_digest_and_overlap_in_native_and_structural_wire_values ... ok
-test one_fix_uses_one_snapshot_per_source_but_allows_multiple_sources_and_historical_related ... ok
-test report_boundary_rejects_payload_count_and_source_forgery_and_preserves_stops ... ok
-test report_roundtrip_preserves_diagnostics_events_fixes_and_declared_sources ... ok
-
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-

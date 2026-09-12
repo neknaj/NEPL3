@@ -1,6 +1,0 @@
-import sys,runpy
-from pathlib import Path
-sys.path.insert(0,'C:\\projects\\NEPL3-doc-canonical-conformance\\tools\\site')
-import deployment.observations as o
-o.request=lambda *a,**k: b'{ "id": 7 }'
-runpy.run_path('C:\\projects\\NEPL3-doc-canonical-conformance\\tools\\site\\deployment\\observations\\worker.py',run_name="__main__")

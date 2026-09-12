@@ -1,9 +1,0 @@
-[package]
-name="independent-markup-routes"
-version="0.0.0"
-edition="2024"
-[workspace]
-[dependencies]
-nepl3-core={path="C:/projects/NEPL3-runtime/.tmp/review-markup-routes/workspace/crates/foundation/core"}
-nepl3-wire={path="C:/projects/NEPL3-runtime/.tmp/review-markup-routes/workspace/crates/foundation/wire"}
-nepl3-markup={path="C:/projects/NEPL3-runtime/.tmp/review-markup-routes/workspace/crates/output/markup"}

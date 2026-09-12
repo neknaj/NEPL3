@@ -1,7 +1,0 @@
-
-running 2 tests
-test budgeted_equality_keeps_values_and_composes_caller_depth ... ok
-test equality_charges_frontier_before_queueing_wide_input ... ok
-
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
-

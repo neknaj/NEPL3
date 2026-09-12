@@ -1,3 +1,0 @@
-Wrote immutable documentation baseline b5295cef655aa59affffd6644f2902268d071953: 61 Markdown pages, 231 Rust source files. This is not a current-tree or Doc migration acceptance claim.
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.09s
-     Running `target\debug\nepl3-tools.exe doc-inventory --write --commit b5295cef655aa59affffd6644f2902268d071953`

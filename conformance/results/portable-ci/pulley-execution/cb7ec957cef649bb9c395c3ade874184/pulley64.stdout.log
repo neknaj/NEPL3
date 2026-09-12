@@ -1,7 +1,0 @@
-
-running 2 tests
-test exact_decimal_constructor_is_independent_of_lexical_leading_zero_policy ... ok
-test invalid_digits_and_resource_stops_precede_numeric_allocation ... ok
-
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-

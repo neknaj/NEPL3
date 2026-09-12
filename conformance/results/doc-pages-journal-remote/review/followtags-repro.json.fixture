@@ -1,8 +1,0 @@
-{
-  "remote_refs": [
-    "refs/heads/pages-state",
-    "refs/tags/unrelated-tag"
-  ],
-  "unrequested_tag_pushed": true,
-  "publication_verified": false
-}

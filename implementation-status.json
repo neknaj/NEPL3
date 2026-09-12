@@ -115,7 +115,8 @@
       "id": "T19",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/doc-site-build/seal.json"
+        "conformance/results/doc-site-build/seal.json",
+        "conformance/results/doc-site-build/README.md"
       ]
     },
     {
@@ -127,7 +128,8 @@
       "id": "T21",
       "status": "in-progress",
       "evidence": [
-        "conformance/results/doc-canonical-conformance/payloads.json"
+        "conformance/results/doc-canonical-conformance/payloads.json",
+        "conformance/results/doc-canonical-conformance/README.md"
       ]
     },
     {

@@ -1,1 +1,0 @@
-[{"case": "valid", "exit_code": 0, "stdout": "eyJzdGF0dXMiOiJzdWNjZWVkIn0=", "stderr": ""}, {"case": "malformed", "exit_code": 1, "stdout": "", "stderr": ""}, {"case": "oversized", "exit_code": 1, "stdout": "", "stderr": ""}]

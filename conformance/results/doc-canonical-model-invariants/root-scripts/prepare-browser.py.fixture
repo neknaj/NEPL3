@@ -1,9 +1,0 @@
-from pathlib import Path
-root=Path.cwd()
-s=Path('C:/projects/NEPL3-doc-canonical-html-fragment/.tmp/browser-canonical19.py').read_text(encoding='utf-8')
-s=s.replace('canonical19','canonical12').replace('19-html-fragment.html','12-model-invariants.html')
-s=s.replace('sections=[]', "sections=['policy','values','constraints','checked','circuit','markup','operations']").replace('assert len(ids)==0','assert len(ids)==7')
-s=s.replace("len(result['headings'])==1 and result['lists']==[] and result['tables']==[]", "len(result['headings'])==8 and result['lists']==[] and result['tables']==[{'rows':18,'cells':36}]")
-s=s.replace("assert 'nepl3.safe-markup/2' in snapshot and 'BetweenArtifacts(source,target,fragment)' in snapshot", "assert 'source.identity' in snapshot and 'schema.type-reference' in snapshot")
-s=s.replace("assert result['links']==re.findall(r'\[[^\]]+\]\((https://[^)]+)\)',original)", "assert result['links']==['19-html-fragment.html']\n                    destination=page.locator('article a[href]').get_attribute('href')\n                    page.locator('article a[href]').click()\n                    assert page.url.endswith('/19-html-fragment.html')\n                    assert 'nepl3.safe-markup/2' in page.locator('article').inner_text()\n                    page.goto(url,wait_until='load')")
-(root/'.tmp/browser-canonical12.py').write_text(s,encoding='utf-8')

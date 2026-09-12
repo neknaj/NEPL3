@@ -41,7 +41,8 @@ def specification(value):
         if any('conformance/results/' in arg.replace('\\','/') for arg in argv): raise ValueError('do not execute historical evidence')
         cwd=command['cwd']
         if not isinstance(cwd,str) or Path(cwd).is_absolute() or '..' in Path(cwd).parts: raise ValueError('invalid cwd')
-        if cwd.replace('\\','/').strip('/').startswith('conformance/results'): raise ValueError('historical evidence is not an execution directory')
+        normalized='/'.join(Path(cwd).parts).replace('\\','/').lower()
+        if normalized=='conformance/results' or normalized.startswith('conformance/results/'): raise ValueError('historical evidence is not an execution directory')
         timeout=command['timeout_seconds']
         if type(timeout) is not int or not 0 < timeout <= 3600: raise ValueError('invalid timeout')
     return value
@@ -61,6 +62,7 @@ def run(root,spec_path,output):
     for command in spec['commands']:
         cwd=(root/command['cwd']).resolve(strict=True)
         if not cwd.is_relative_to(root) or not cwd.is_dir(): raise ValueError('cwd escapes repository')
+        if cwd.is_relative_to((root/'conformance/results').resolve()): raise ValueError('historical evidence is not an execution directory')
     output.mkdir(parents=True,exist_ok=False)
     (output/'spec.json').write_bytes(spec_raw)
     rows=[]

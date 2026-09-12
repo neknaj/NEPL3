@@ -1,7 +1,0 @@
-   Compiling nepl3-core v0.1.0 (C:\projects\NEPL3-runtime\crates\foundation\core)
-   Compiling nepl3-wire v0.1.0 (C:\projects\NEPL3-runtime\crates\foundation\wire)
-   Compiling r047-review v0.0.0 (C:\projects\NEPL3-runtime\.tmp\r047-probe)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.66s
-     Running `.tmp\r047-probe\target\debug\r047-review.exe`
-actual error=Schema(Stopped(WorkLimit)); extracted=Some(WorkLimit); budget=Err(WorkLimit)
-semantic control=Schema(WrongType)

@@ -1,8 +1,0 @@
-from pathlib import Path
-import subprocess,os,json
-O=Path(__file__).resolve().parent;W=O/'workspace';env=os.environ.copy();env['CARGO_TARGET_DIR']=str(O/'target')
-cmd=['cargo','test','--locked','-p','nepl3-tools','--test','doc','annotated_pages::']
-p=subprocess.run(cmd,cwd=W,env=env,capture_output=True,timeout=900)
-(O/'managed.stdout.log').write_bytes(p.stdout);(O/'managed.stderr.log').write_bytes(p.stderr)
-(O/'managed.json').write_text(json.dumps(dict(command=cmd,cwd=str(W),target_dir=env['CARGO_TARGET_DIR'],exit_code=p.returncode),indent=2)+'\n',encoding='utf-8',newline='\n')
-print(p.returncode,p.stdout.decode(errors='replace')[-400:]);assert p.returncode==0

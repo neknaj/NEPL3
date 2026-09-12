@@ -1,2 +1,0 @@
-# Preserve the exact independent probe source used by the before/after runs.
-r047-probe.rs.txt -text whitespace=cr-at-eol

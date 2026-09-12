@@ -1,7 +1,0 @@
-
-running 1 test
-INDEPENDENT_PREFIX {"completion_exists":false,"error":"Cannot create a file when that file already exists. (os error 183)","first_file_exists":true,"output_exists":true,"registry_accepted":true}
-test doc::canonical::tests::independent_context_observe_legacy_stage_prefix_conflict ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 78 filtered out; finished in 0.49s
-

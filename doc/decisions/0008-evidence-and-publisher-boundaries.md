@@ -17,7 +17,7 @@ Python本体と `.py.fixture` は1,061ファイル、3,236,358 bytesである。
 で必要時に生成し、repositoryへ再複製しない。初回の内容分類では
 95件が要確認であり、これを人による全件精査完了とはしない。
 
-直近の `doc-pages-acquire/review/seal.py.fixture` はレビュー本文の作成、
+直近の [acquireのseal](https://github.com/neknaj/NEPL3/blob/d87ca8c4ba18e74bc71efb0e2958af87ac971e1b/conformance/results/doc-pages-acquire/review/seal.py.fixture) はレビュー本文の作成、
 sourceのコピー、全ファイルのhash列挙を兼ねる。同名のdownload reviewにも
 同じ保存算法がある。`verify.py.fixture` は通常・`-O`試験の実行とlog保存に
 加え、個別の期限probeを含む。保存算法と検証対象の論理が混ざっている。
@@ -149,3 +149,11 @@ Gitへ戻す。現行fixtureと正式schemaは意味と利用者を確認して�
 CIはnativeのproduction/API・OS境界試験を残し、一度で足りる生成物一致・索引・
 publication protocol試験を独立host jobへ移す。必要なWindows/macOSのpath/process
 境界試験は選択して残す。qualityは新jobも要求し、必要な検査を解除しない。
+
+独立した参照監査後、無参照91単位とルートgitattributes指定のみの29単位を
+作業treeから取り除き、[Git履歴索引](../../conformance/history.md)へ移した。
+計8,406ファイル、154,303,564 bytes、JSON/JSON fixture 876,848行を参照化する。
+baselineを `archive/evidence-2026-09-13` refとしてremoteにも保全した。
+原manifestや原ログの内容は変更していない。過去の相互参照とbyte属性を検査する際は
+baseline全体を別checkoutへ復元し、現在treeへの部分復元と混ぜない。
+既存task/review台帳から参照される記録と現行fixtureは今回の削除対象ではない。

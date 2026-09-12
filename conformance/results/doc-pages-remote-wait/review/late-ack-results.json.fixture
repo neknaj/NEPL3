@@ -1,7 +1,0 @@
-{
-  "stop": "deadline",
-  "fetches": 1,
-  "remote_and_local_acknowledged_head_equal": true,
-  "raw_success_retained": true,
-  "scope": "real Git push and ack; deterministic simulated ack elapsed time"
-}

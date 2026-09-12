@@ -1,9 +1,0 @@
-   Compiling nepl3-reader v0.1.0 (C:\projects\NEPL3-snapshot-storage\.tmp\review-native-reader-drive\workspace\crates\foundation\reader)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.58s
-     Running tests\runtime.rs (target\debug\deps\runtime-66fa20415fd05493.exe)
-
-running 1 test
-test review_native::review_owned_frame_native_choice_and_need_more_preserve_checkpoint ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 37 filtered out; finished in 0.01s
-

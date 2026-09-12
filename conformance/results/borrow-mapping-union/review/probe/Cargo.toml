@@ -1,9 +1,0 @@
-[package]
-name="independent-map-union"
-version="0.0.0"
-edition="2024"
-[workspace]
-[dependencies]
-nepl3-core={path="../source/crates/foundation/core"}
-nepl3-reader={path="../source/crates/foundation/reader"}
-nepl3-wire={path="../source/crates/foundation/wire"}

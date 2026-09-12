@@ -1,9 +1,0 @@
-   Compiling nepl3-tools v0.1.0 (C:\projects\NEPL3-runtime\.tmp\review-doc-export\workspace\tools)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.97s
-     Running tests\doc.rs (C:\projects\NEPL3-runtime\.tmp\review-fixed-target\debug\deps\doc-e0a7226c393ababd.exe)
-
-running 1 test
-test export::export_preserves_content_and_binds_script_free_files ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 41 filtered out; finished in 0.34s
-

@@ -1,4 +1,0 @@
-from pathlib import Path
-r=Path(__file__).parent;w=r/'workspace'
-p=w/'tools/src/bootstrap/runtime.rs';s=p.read_text(encoding='utf-8');s=s.replace('    let mut reply = if metrics.inline_host {','    eprintln!("REVIEW_PARSER_START {:?}",budget.usage());\n    let mut reply = if metrics.inline_host {');s=s.replace('    metrics.initial = initial;','    eprintln!("REVIEW_FORMAL {:?} usage={:?}",core::mem::discriminant(&reply.outcome),budget.usage());\n    metrics.initial = initial;');p.write_text(s,encoding='utf-8',newline='\n')
-p=w/'tools/src/bootstrap/tests.rs';s=p.read_text(encoding='utf-8');old='            Err(error) => return Err(format!("unexpected sweep result: {error:?}").into()),';assert s.count(old)==1;s=s.replace(old,'            Err(error) => eprintln!("REVIEW_SWEEP_ERROR cap={cap} error={error:?} usage={:?}",b.usage()),');p.write_text(s,encoding='utf-8',newline='\n')

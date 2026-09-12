@@ -1,8 +1,0 @@
-{
-  "executed_head": "799f00d6384d45e8160b51366d03fecb1dd2dfe1",
-  "reviewed_delta_head": "3abd255d5a52eec41f741b6b17e4ec9e2213efdc",
-  "changed": [
-    "tools/src/doc/canonical/tests.rs"
-  ],
-  "production_and_five_inputs_unchanged": true
-}

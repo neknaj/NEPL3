@@ -13,6 +13,9 @@ python -m tools.conformance.runner verify dist/evidence-tools
 実行specとlogはdataとして保存し、runnerやrepositoryを結果配下にコピーしない。
 再利用する回帰probeは通常のtestへ置く。例外的な外部入力や再構成できない資料には
 保存理由を記す。独立レビューは対象commit・scope・指摘・未検証範囲を文章で残す。
+通常のrepository checkは固定archive baselineの取得を必要とする（CIはfull checkout）。
+浅いcloneでは `git fetch origin archive/evidence-2026-09-13` を先に実行する。
+保存済みの過去記録は [履歴索引](../../conformance/history.md) を参照する。
 
 このツールは信頼した開発commandの収集器でありsandboxではない。historicalな
 結果directoryを実行先にする記述は拒否するが、任意プログラムの作用は解析しない。

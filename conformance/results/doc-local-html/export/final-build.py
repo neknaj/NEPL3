@@ -1,6 +1,0 @@
-from pathlib import Path
-import shutil,hashlib,json,subprocess,time
-D=Path('C:/projects/NEPL3-runtime/.tmp/review-doc-export');R=Path('C:/projects/NEPL3-doc-html-export');W=D/'workspace-final';shutil.copytree(D/'workspace-fixed',W);rows=[]
-for name in ['tools/src/doc/host.rs','tools/src/main.rs']:
- data=(R/name).read_bytes();p=D/'identity-delta'/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data);(W/name).write_bytes(data);rows.append({'path':name,'source_path':str(p),'sha256':hashlib.sha256(data).hexdigest()})
-(D/'identity-delta.json').write_text(json.dumps(rows,indent=2),encoding='utf-8');cmd=['cargo','build','--offline','--locked','--manifest-path',str(W/'Cargo.toml'),'--target-dir',str(D.parent/'review-fixed-target'),'-p','nepl3-tools','--bin','nepl3-tools'];p=subprocess.run(cmd,cwd=W,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=600);(D/'final-cli-build.log').write_bytes(p.stdout);(D/'final-cli-build-run.json').write_text(json.dumps({'command':cmd,'exit':p.returncode,'deadline':600},indent=2),encoding='utf-8');assert p.returncode==0,p.stdout.decode(errors='replace');shutil.copyfile(D.parent/'review-fixed-target/debug/nepl3-tools.exe',D/'final-nepl3-tools.exe');print('final identity delta native CLI built',flush=True)

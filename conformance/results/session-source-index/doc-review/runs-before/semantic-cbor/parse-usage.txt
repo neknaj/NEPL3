@@ -1,1 +1,0 @@
-Usage { source_bytes: 30513, work: 26623968, depth: 42, nodes: 94413, allocation_units: 43932508, output_bytes: 339349, diagnostics: 0, events: 0 }

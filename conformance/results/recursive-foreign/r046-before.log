@@ -1,9 +1,0 @@
-R046 original independent failure: retained excerpt, not a complete process log.
-Source: tool result 8a3a97, before EnvironmentNamespaceRef schema separation.
-Command: cargo run --manifest-path .tmp/independent-engine/Cargo.toml --features nepl3-tools,nepl3-grammar-core --bin foreign_closure --target-dir .tmp/review-target -- .tmp/binding-review.neplg
-Observed exit code: 1.
-The nonempty EnvironmentBinding payload in this run was the registered engine BindingDiagnosticArguments record with fields Value/HOST or Value/GUEST.
-
-     Running `.tmp/review-target\debug\foreign_closure.exe .tmp/binding-review.neplg`
-Error: "Schema(FieldCount)"
-error: process didn't exit successfully: `.tmp/review-target\debug\foreign_closure.exe .tmp/binding-review.neplg` (exit code: 1)

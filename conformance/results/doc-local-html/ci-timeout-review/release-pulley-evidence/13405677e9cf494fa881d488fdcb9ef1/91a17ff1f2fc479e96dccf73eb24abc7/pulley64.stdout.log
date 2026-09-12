@@ -1,7 +1,0 @@
-
-running 2 tests
-test host_global_source_cannot_fill_a_missing_request_declaration ... ok
-test native_request_and_checked_ndf_loopback_execute_with_identical_meaning ... ok
-
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
-

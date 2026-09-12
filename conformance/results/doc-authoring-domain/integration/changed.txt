@@ -1,5 +1,0 @@
-A	doc/migration/authored/05-document.nepld
-A	doc/migration/authored/06-math.nepld
-A	doc/migration/authored/07-circuit.nepld
-A	doc/migration/authored/08-editor.nepld
-A	doc/migration/authored/09-portability.nepld

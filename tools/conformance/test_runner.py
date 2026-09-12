@@ -55,7 +55,9 @@ class RunnerTests(unittest.TestCase):
 
     def test_historical_working_directory_is_not_executable(self):
         value=dict(version=1,scope='boundary',commands=[dict(id='probe',argv=['python','seal.py.fixture'],cwd='conformance/results/old',timeout_seconds=5)])
-        with self.assertRaises(ValueError): specification(value)
+        for cwd in ['conformance/results/old','./conformance/results/old','CONFORMANCE/RESULTS/old']:
+            value['commands'][0]['cwd']=cwd
+            with self.subTest(cwd=cwd),self.assertRaises(ValueError): specification(value)
 
     def test_timeout_is_unknown_and_does_not_run_next_command(self):
         with tempfile.TemporaryDirectory() as directory:

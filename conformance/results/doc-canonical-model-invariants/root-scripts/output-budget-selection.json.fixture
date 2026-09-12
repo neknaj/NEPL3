@@ -1,6 +1,0 @@
-{
-  "source_commit": "3a1a80c09c72a8e1fea5eb656e60ec26df8bcff8",
-  "before_sha256": "b960d6ccff4793531cbae7aa901608eda437f47331d06bd97625b5b89c5a7c9e",
-  "after_sha256": "1b2b7b3aee4bac78ef5908ea55539a7d347c27698f822bd8053f93732e7f47cd",
-  "reason": "Eight-page Markdown stopped AllocationLimit before writing any output. The same fixed executable completed HTML, including parsing/lowering the added page. Prior seven-page Markdown consumed Work325596451 and Allocation862487830 before receipt serialization. Select a separate finite aggregate Markdown allowance Work600M/Allocation1.5B for eight pages; these are operation accounting units, not physical heap or predicted usage. All other limits, core defaults, parse/lower and HTML allowances remain unchanged. Preserve the initial failure; no sticky stopped budget is reused."
-}

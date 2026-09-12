@@ -1,6 +1,0 @@
-{
-  "path": "tools/src/doc/projection/annotated/pages.rs",
-  "before_sha256": "3ec0f881ead64c0b928397244f6ad47a0c7528f4149b371dc690514c423a5fb2",
-  "after_sha256": "442d1c827bb11ab7e241be93a0e19a1504dfdd6a579dd4e1fa907121fbe30311",
-  "only_two_rustdoc_lines": true
-}

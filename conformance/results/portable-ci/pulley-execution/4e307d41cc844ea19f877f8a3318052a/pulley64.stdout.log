@@ -1,8 +1,0 @@
-
-running 3 tests
-test map_admission_never_copies_long_identity_before_zero_allocation_budget ... ok
-test mapped_containment_requires_every_byte_and_every_reverse_path ... ok
-test snapshot_dag_proves_large_transforms_without_enumerating_the_point_product ... ok
-
-test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
-

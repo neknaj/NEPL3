@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "C:\projects\NEPL3-runtime\.tmp\review-doc-authoring-adrs\check.py", line 67, in <module>
-    assert table[1]==[['Default'],['Default']]
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError
