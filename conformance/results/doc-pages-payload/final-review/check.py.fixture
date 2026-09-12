@@ -1,0 +1,14 @@
+﻿from pathlib import Path
+import json,sys,tarfile,hashlib
+r=Path.cwd();sys.path.insert(0,str(r/'tools/site'));from payload import pack
+site=r/'.tmp/site-final-primary';report=json.loads((r/'.tmp/site-ci-review/primary.json').read_bytes());out=r/'.tmp/payload-ci-review'
+a=pack(site,report['manifest_sha256'],out/'first.tar');b=pack(site,report['manifest_sha256'],out/'second.tar');assert a==b and (out/'first.tar').read_bytes()==(out/'second.tar').read_bytes()
+files={p.relative_to(site).as_posix():p.read_bytes() for p in site.rglob('*') if p.is_file()}
+with tarfile.open(out/'first.tar','r:') as t:
+ assert t.getnames()==sorted(files)
+ for m in t:
+  assert m.isfile() and not m.issym() and not m.islnk()
+  assert m.mode==0o644 and m.uid==m.gid==m.mtime==0 and m.uname==m.gname==''
+  assert t.extractfile(m).read()==files[m.name]
+assert a['manifest_sha256']==report['manifest_sha256'] and a['tar_sha256']==hashlib.sha256((out/'first.tar').read_bytes()).hexdigest() and a['publication_verified'] is False
+(out/'results.json').write_text(json.dumps(dict(result='passed',receipt=a,twice_identical=True,regular_exact_files=len(files),browser_report_manifest_matched=True),indent=2)+'\n',encoding='utf8');print(json.dumps(a))

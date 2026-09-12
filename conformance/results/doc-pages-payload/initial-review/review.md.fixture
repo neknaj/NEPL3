@@ -1,0 +1,23 @@
+# Pages tar payload independent review
+
+Scope: tools/site/payload.py and test_payload.py, feat/doc-pages-payload, read-only. Standard-library tarfile is appropriate; explicit TarInfo plus BytesIO captures regular bytes without deriving link/type/mtime/owner from the filesystem. Packaging a manifest digest is not publication, authentication or LKG proof. publication_verified=false correctly retains that boundary.
+
+Open findings:
+1. Windows directory junctions are accepted. Independent real filesystem repro created .tmp/pages-payload-review/fixture/linked-dir pointing to .tmp/pages-payload-review/outside: is_symlink false, is_junction true. pack accepted it and silently omitted the empty linked directory. The contract's real-directory/link rejection must include junction/reparse directories at root and child/ancestor boundaries, not only symbolic-link flags. Captured junction-accepted.tar and initial-results.json prove current acceptance.
+2. os.walk silently ignores scandir errors by default. Injected PermissionError for scan-fixture/unreadable while using actual os.walk; pack still succeeded and wrote scan-error-accepted.tar. Missing/unreadable input must fail closed; supply an onerror handler that propagates failure. Add focused negative tests. Primary reference: https://docs.python.org/3/library/os.html#os.walk.
+
+Independent validation: ran python -m unittest discover -s tools/site -p test_payload.py -v: all 3 tests passed. These cover deterministic fixed metadata, content/digest/unlisted/missing/duplicate/traversal, preexisting output and hardlinks, but do not test directory junctions, traversal errors, or count/byte/entry limits. Root subsequently added output-inside-input rejection and case-consistent path-prefix checks; those are sensible and inspected.
+
+Actual checked site .tmp/site-final-primary was packed twice independently. All 22 regular members match every source byte, mode 0644, mtime/uid/gid zero and empty linkname. Tar bytes identical, length 1,177,600, SHA-256 cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9. Bound manifest SHA-256 39000dd5b7aad48deae97741c5b077b44a242a0badb7b30e81b3c1c26f301446. real-a.tar and real-b.tar are independent artifacts in this review directory, and initial-results.json records identities.
+
+Source bytes (including manifest) are limited to32MiB and files to4096, with a separate finite tar overhead bound. Output is exclusive new-file creation after validation; OS write failures may still leave a partial file and no success receipt. The caller supplies the independently checked manifest digest; this package step cannot prove that caller's previous browser/quality checks occurred. It does check every declared payload digest/size and exact file closure. It neither rebuilds source nor changes HTML. Fixed ASCII paths and explicit PAX format avoid locale-dependent filename encoding; extended PAX records are metadata, not links. Primary tarfile reference: https://docs.python.org/3/library/tarfile.html.
+
+The receipt binds tar bytes and manifest but does not claim a GitHub artifact/deployment ID, Pages smoke, immutable release or LKG. This is intentionally a transfer preparation step. No publisher-completeness objection is raised. Approval pending findings1–2 and focused boundary/negative re-review; production code edits remain root-owned.
+
+## Independent rejection recheck after root fixes
+
+Re-read linked()/real_directory() and os.walk(onerror=walk_error). Root, all ancestors, child directories, file lstat and opened descriptor metadata now reject symbolic/reparse links. Reused the existing exact Windows junction fixture: ValueError linked directory, no junction-fixed.tar. Reused actual os.walk plus injected subtree scandir PermissionError: original PermissionError propagates, no scan-error-fixed.tar. Structured results: fixed-results.json. No production edits were made.
+
+Repacked the actual 22-file checked site after fixes into real-fixed.tar; bytes exactly equal prior real-a.tar, retaining SHA-256 cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9 and 1,177,600 bytes. real-fixed-result.json retains receipt. Both concrete review findings are corrected in implementation. Root owns adding/running regression/boundary tests; this scoped recheck does not claim those tests are present or cross-platform CI passed.
+
+Portability note sent to root: strict all-ancestor link rejection also rejects normal macOS /var -> /private/var temporary-directory aliases. Canonicalize ordinary no-link test fixture roots before use, while preserving unresolved link paths in negative tests. This is fixture setup guidance rather than permission to relax link rejection silently.

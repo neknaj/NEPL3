@@ -1,0 +1,129 @@
+{
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 16,
+      "sha256": "109c335ccc45c5e25b7ba68292d6373b2ac6d5d18a9d0959f4bce0fdfcf39984"
+    },
+    {
+      "path": "final-review/check.py.fixture",
+      "bytes": 1225,
+      "sha256": "f5c189710eb471c1b845f304d6f576f45cbb80aac65bd736028ac641af357b15"
+    },
+    {
+      "path": "final-review/commands.json.fixture",
+      "bytes": 565,
+      "sha256": "42b47b5c6d505f9eaf2e97b4d64b016465f43f808a43ff00bb9baa91e6a9af5e"
+    },
+    {
+      "path": "final-review/final.tar.fixture",
+      "bytes": 1177600,
+      "sha256": "cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9"
+    },
+    {
+      "path": "final-review/first.tar.fixture",
+      "bytes": 1177600,
+      "sha256": "cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9"
+    },
+    {
+      "path": "final-review/manifest.json.fixture",
+      "bytes": 2560,
+      "sha256": "9cde32ec41a278299dd87f1703ae65f5e091304cc57a06dd9369a31a63598212"
+    },
+    {
+      "path": "final-review/normal.stderr.log.fixture",
+      "bytes": 110,
+      "sha256": "9242fa5c9cf1848d68e1f3d68198d2753721dd8057659a73d3d31bc1e8155627"
+    },
+    {
+      "path": "final-review/normal.stdout.log.fixture",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "final-review/optimized.stderr.log.fixture",
+      "bytes": 110,
+      "sha256": "97751c4b45ad1d1c6e43784754382ba8e723565a16d7b98286615dcdbfb53771"
+    },
+    {
+      "path": "final-review/optimized.stdout.log.fixture",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "final-review/results.json.fixture",
+      "bytes": 456,
+      "sha256": "d131aea3bd3266a646330803c1e41a239e8c340ddd127628d775d5fe081dca65"
+    },
+    {
+      "path": "final-review/review.md.fixture",
+      "bytes": 4631,
+      "sha256": "12c8b7ebfaa23f4ccc0bbf40e12251b3cf0b36c493299b55fdae9080ac57d974"
+    },
+    {
+      "path": "final-review/reviewed-ci.yml.fixture",
+      "bytes": 17141,
+      "sha256": "86d4f377cd523ec39a8619d4705e98bf7730de9e4af0db0330dad0725055d4ff"
+    },
+    {
+      "path": "final-review/reviewed-development.md.fixture",
+      "bytes": 26958,
+      "sha256": "cd73d6f097908bee02b05ed90c9f417756039823e7a9f92c5867dd2e00884ede"
+    },
+    {
+      "path": "final-review/reviewed-payload.py.fixture",
+      "bytes": 6402,
+      "sha256": "f7a1926bb92ec475618416fc0845265aaf8e207b95ac125b15021b942213ee96"
+    },
+    {
+      "path": "final-review/reviewed-test_payload.py.fixture",
+      "bytes": 7728,
+      "sha256": "3fb6c6bd7910df9a56983df97eb15d3f7ac0f54225a0265ff8c231c6e8edefa6"
+    },
+    {
+      "path": "final-review/second.tar.fixture",
+      "bytes": 1177600,
+      "sha256": "cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9"
+    },
+    {
+      "path": "final-review/version-repro.json.fixture",
+      "bytes": 114,
+      "sha256": "aef62b1afac00a9dae16e9f7b322ff0e273a9da9d5f46395c52fc796540f2135"
+    },
+    {
+      "path": "initial-review/fixed-results.json.fixture",
+      "bytes": 285,
+      "sha256": "66132989a53f9c06d825bd4480e6a80b63f826cb8fc32284490238cd59179e34"
+    },
+    {
+      "path": "initial-review/initial-results.json.fixture",
+      "bytes": 665,
+      "sha256": "fba40d3d0db249a1dec99476d5f3921ec07bb2cd4ab42943c6ad68297164246a"
+    },
+    {
+      "path": "initial-review/junction-accepted.tar.fixture",
+      "bytes": 10240,
+      "sha256": "9a5b73a16765b4d613f9e8e45f6ea8cd64c665a2ab6fef5a60cf55d35660553a"
+    },
+    {
+      "path": "initial-review/real-fixed-result.json.fixture",
+      "bytes": 296,
+      "sha256": "d2c73871709490b863e91a5e1b91570bb43b54fe35b1616bf67bc3d2d70dd36e"
+    },
+    {
+      "path": "initial-review/review.md.fixture",
+      "bytes": 4703,
+      "sha256": "42fb4e3dbf0010fb8ba68aa6176b3e5882fe0ba48f4d4b949666a86ff25b5362"
+    },
+    {
+      "path": "initial-review/scan-error-accepted.tar.fixture",
+      "bytes": 10240,
+      "sha256": "9a5b73a16765b4d613f9e8e45f6ea8cd64c665a2ab6fef5a60cf55d35660553a"
+    },
+    {
+      "path": "README.md",
+      "bytes": 1242,
+      "sha256": "9e2e89479d6f6da3b926d381844d5821b08e1773178888a1d21aef67ed7c18af"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+[
+  {
+    "command": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_*.py"
+    ],
+    "exit_code": 0,
+    "source_commit": "0c12e9c596a549e2edb9a0585211146673f6e660"
+  },
+  {
+    "command": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_*.py"
+    ],
+    "exit_code": 0,
+    "source_commit": "0c12e9c596a549e2edb9a0585211146673f6e660"
+  }
+]

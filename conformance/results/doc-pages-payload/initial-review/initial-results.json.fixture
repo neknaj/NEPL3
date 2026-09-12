@@ -1,0 +1,20 @@
+{
+  "junction_accepted": {
+    "version": 1,
+    "kind": "pages-tar",
+    "manifest_sha256": "9e487aea76b0cef441b50d539e78ac2a12b62a6aa01689db0056c83150b74d41",
+    "tar_sha256": "9a5b73a16765b4d613f9e8e45f6ea8cd64c665a2ab6fef5a60cf55d35660553a",
+    "tar_bytes": 10240,
+    "files": 4,
+    "publication_verified": false
+  },
+  "real_tar": {
+    "version": 1,
+    "kind": "pages-tar",
+    "manifest_sha256": "39000dd5b7aad48deae97741c5b077b44a242a0badb7b30e81b3c1c26f301446",
+    "tar_sha256": "cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9",
+    "tar_bytes": 1177600,
+    "files": 22,
+    "publication_verified": false
+  }
+}
