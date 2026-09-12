@@ -62,20 +62,42 @@ fn find<'a, T>(
     key: impl Fn(&T) -> u64,
     budget: &mut Budget,
 ) -> Result<Option<&'a T>, FactError> {
-    for value in values {
+    let (mut lo, mut hi) = (0, values.len());
+    while lo < hi {
         budget.charge(Resource::Work, 1)?;
-        if key(value) == id {
-            return Ok(Some(value));
+        let mid = lo + (hi - lo) / 2;
+        match key(values[mid]).cmp(&id) {
+            core::cmp::Ordering::Less => lo = mid + 1,
+            core::cmp::Ordering::Greater => hi = mid,
+            core::cmp::Ordering::Equal => return Ok(Some(values[mid])),
         }
     }
     Ok(None)
 }
 fn unique<T>(values: &[&T], key: impl Fn(&T) -> u64, budget: &mut Budget) -> Result<(), FactError> {
-    for (i, value) in values.iter().enumerate() {
-        if find(&values[..i], key(value), &key, budget)?.is_some() {
+    for pair in values.windows(2) {
+        budget.charge(Resource::Work, 1)?;
+        if key(pair[0]) == key(pair[1]) {
             return Err(FactError::DuplicateId);
         }
     }
+    Ok(())
+}
+// Private borrowed indexes: the portable FactSet and its declaration order do
+// not change. Sorting is allocation-free after Vec construction. Precharge a
+// conservative logical O(n log n) allowance before the uninterrupted sort.
+fn index<T>(
+    values: &mut [&T],
+    key: impl Fn(&T) -> u64,
+    budget: &mut Budget,
+) -> Result<(), FactError> {
+    let n = values.len() as u64;
+    let levels = u64::BITS - n.leading_zeros();
+    budget.charge(
+        Resource::Work,
+        n.saturating_mul(u64::from(levels)).saturating_mul(64),
+    )?;
+    values.sort_unstable_by_key(|value| key(value));
     Ok(())
 }
 impl<'a> View<'a> {
@@ -156,6 +178,10 @@ impl<'a> View<'a> {
             push(&mut mappings, map.clone_with_budget(budget)?, budget)?;
         }
         SourceMap::validate_mappings(&mappings, &v.sources, budget)?;
+        index(&mut v.scopes, |v| v.id.0, budget)?;
+        index(&mut v.entities, |v| v.id.0, budget)?;
+        index(&mut v.occurrences, |v| v.id.0, budget)?;
+        index(&mut v.relations, |v| v.id.0, budget)?;
         Ok(v)
     }
     fn scope(&self, id: ScopeId, budget: &mut Budget) -> Result<&Scope, FactError> {
@@ -299,6 +325,63 @@ impl<'a> View<'a> {
         }
         Err(FactError::Cycle)
     }
+    // Each parent edge is resolved once. Colors reject cycles; cached heights
+    // retain the full logical depth even when a suffix was already traversed.
+    fn scope_forest(&self, budget: &mut Budget) -> Result<(), FactError> {
+        let count = self.scopes.len();
+        budget.charge(Resource::Work, (count as u64).saturating_mul(2))?;
+        budget.charge(Resource::AllocationUnits, (count as u64).saturating_mul(25))?;
+        let mut color = alloc::vec![0_u8; count];
+        let mut heights = alloc::vec![0_u64; count];
+        let mut path = Vec::with_capacity(count);
+        for start in 0..count {
+            budget.charge(Resource::Work, 1)?;
+            if color[start] == 2 {
+                continue;
+            }
+            let mut current = Some(start);
+            let mut height = 0;
+            while let Some(i) = current {
+                budget.charge(Resource::Work, 1)?;
+                if color[i] == 1 {
+                    return Err(FactError::Cycle);
+                }
+                if color[i] == 2 {
+                    budget.observe_depth(heights[i].saturating_add(path.len() as u64))?;
+                    height = heights[i] + 1;
+                    break;
+                }
+                budget.charge(Resource::Nodes, 1)?;
+                self.origin(self.scopes[i].origin)?;
+                color[i] = 1;
+                path.push(i);
+                current = if let Some(parent) = self.scopes[i].parent {
+                    budget.observe_depth(path.len() as u64)?;
+                    budget.charge(
+                        Resource::Work,
+                        u64::from(usize::BITS - count.leading_zeros()) + 1,
+                    )?;
+                    Some(
+                        self.scopes
+                            .binary_search_by_key(&parent.0, |s| s.id.0)
+                            .map_err(|_| FactError::MissingScope)?,
+                    )
+                } else {
+                    None
+                };
+            }
+            while let Some(i) = path.pop() {
+                budget.charge(Resource::Work, 1)?;
+                if height > 0 {
+                    budget.observe_depth(height)?;
+                }
+                heights[i] = height;
+                color[i] = 2;
+                height += 1;
+            }
+        }
+        Ok(())
+    }
     fn validate(&self, registry: &SchemaRegistry, budget: &mut Budget) -> Result<(), FactError> {
         budget.charge(Resource::Work, self.base.analysis_id.len() as u64 + 1)?;
         if self.base.analysis_id.is_empty() {
@@ -327,20 +410,7 @@ impl<'a> View<'a> {
                 }
             }
         }
-        for scope in &self.scopes {
-            budget.charge(Resource::Nodes, 1)?;
-            self.origin(scope.origin)?;
-            let mut current = scope.parent;
-            let mut steps = 0;
-            while let Some(id) = current {
-                budget.observe_depth(steps + 1)?;
-                if id == scope.id || steps > self.scopes.len() as u64 {
-                    return Err(FactError::Cycle);
-                }
-                current = self.scope(id, budget)?.parent;
-                steps += 1;
-            }
-        }
+        self.scope_forest(budget)?;
         for entity in &self.entities {
             budget.charge(Resource::Nodes, 1)?;
             self.name(&entity.name, budget)?;
@@ -403,6 +473,13 @@ impl<'a> View<'a> {
     }
 }
 impl FactSet {
+    /// Validate the declared fact closure without changing its portable order.
+    ///
+    /// For N fact IDs and S scopes, borrowed ID index construction takes
+    /// O(N log N) time and O(N) space; ID lookup is O(log N). Parent-forest
+    /// validation takes O(S log S) time and O(S) extra space. Namespace ancestry
+    /// queries still walk their parent path, and source/origin/type validation
+    /// has its own costs. This is not a linear bound for the whole operation.
     pub fn validate<'a>(
         &'a self,
         registry: &'a SchemaRegistry,
