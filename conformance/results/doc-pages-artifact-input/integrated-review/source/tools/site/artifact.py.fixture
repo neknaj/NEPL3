@@ -1,0 +1,57 @@
+"""Validate downloaded Actions inputs and write the original Pages tar.
+
+Obtain metadata and archive through an authenticated download stage. All identity
+arguments must be selected by the publisher, not copied from untrusted inputs.
+This command does not establish run eligibility or perform a deployment.
+"""
+import argparse
+import json
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from deployment.artifact import MAX_ARCHIVE, selected
+from payload import checked, real_directory
+
+
+def bounded(path, maximum):
+    with path.open('rb') as stream:
+        data = stream.read(maximum + 1)
+    checked(len(data) <= maximum, 'input size limit')
+    return data
+
+
+def export(metadata, archive, output, **identities):
+    # Validate all bytes before creating output. The x mode also refuses an
+    # existing symlink, and the parent must have no linked ancestors.
+    real_directory(output.parent)
+    result = selected(bounded(metadata, 65536), bounded(archive, MAX_ARCHIVE), **identities)
+    with output.open('xb') as stream:
+        stream.write(result.data)
+    return dict(version=1, kind='pages-tar', tar_sha256=result.tar_sha256,
+                manifest_sha256=result.manifest_sha256, tar_bytes=len(result.data),
+                files=result.files, publication_verified=False)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('metadata', type=Path)
+    parser.add_argument('archive', type=Path)
+    parser.add_argument('output', type=Path)
+    for option in ('owner', 'repository', 'source-commit', 'expected-tar', 'expected-manifest'):
+        parser.add_argument('--' + option, required=True)
+    for option in ('artifact-id', 'run-id', 'repository-id'):
+        parser.add_argument('--' + option, required=True, type=int)
+    args = vars(parser.parse_args())
+    try:
+        report = export(**args)
+    except Exception as error:
+        # No token, remote download URL, or untrusted exception text in logs.
+        print(json.dumps(dict(result='failed', reason=type(error).__name__, publication_verified=False)))
+        return 1
+    print(json.dumps(report, sort_keys=True))
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
