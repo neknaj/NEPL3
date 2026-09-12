@@ -12,7 +12,7 @@ use std::{
     path::Path,
 };
 
-const OUTPUT: &str = "design/doc-inventory.json";
+const OUTPUT: &str = "doc/migration/generated/doc-inventory.json";
 const CONTRACTS: &[&str] = &[
     "design/forms.json",
     "design/markup.json",
@@ -287,13 +287,12 @@ fn compare(before: &BTreeMap<String, String>, after: &BTreeMap<String, String>) 
 
 pub(crate) fn write(root: &Path, commit: &str) -> Result<()> {
     let output = generate(root, commit)?;
-    local_path(root, "design")?;
-    if !root.join("design").is_dir()
-        || fs::symlink_metadata(root.join("design"))?
-            .file_type()
-            .is_symlink()
-    {
-        return Err("inventory output parent must be a real directory".into());
+    for parent in ["doc", "doc/migration", "doc/migration/generated"] {
+        local_path(root, parent)?;
+        let metadata = fs::symlink_metadata(root.join(parent))?;
+        if !metadata.is_dir() || metadata.file_type().is_symlink() {
+            return Err("inventory output parent must be a real directory".into());
+        }
     }
     match fs::symlink_metadata(root.join(OUTPUT)) {
         Ok(metadata) => {
@@ -395,6 +394,7 @@ mod tests {
         let commit = String::from_utf8(command(files.root(), "git", &["rev-parse", "HEAD"])?)?
             .trim()
             .to_owned();
+        fs::create_dir_all(files.root().join("doc/migration/generated"))?;
         write(files.root(), &commit)?;
         Ok((files, commit))
     }
