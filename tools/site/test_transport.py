@@ -17,6 +17,11 @@ import base64
 def server(code=200, body=b'{"status":"succeed"}', headers=None, extra_headers=(), length=None):
     seen = []
     class Handler(BaseHTTPRequestHandler):
+        def do_POST(self):
+            data = self.rfile.read(int(self.headers['Content-Length']))
+            self.do_GET()
+            seen[-1] = (*seen[-1], data)
+
         def do_GET(self):
             seen.append((self.path, dict(self.headers)))
             self.send_response(code)

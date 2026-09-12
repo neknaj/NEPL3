@@ -33,11 +33,23 @@ def validate_request(receipt, token, timeout):
 
 def _status(receipt, token, *, timeout=10):
     validate_request(receipt, token, timeout)
+    raw = request(urlsplit(receipt.status_endpoint).path, token, timeout=timeout)
+    try:
+        observation = observed(raw, receipt=receipt, request_url=receipt.status_endpoint)
+    except (ValueError, RecursionError):
+        raise TransportError("Pages status response invalid") from None
+    return Result(observation, raw)
+
+
+def request(path, token, *, timeout, body=None):
+    # Private fixed-host transport shared by status and creation adapters.
+    # Callers validate the path, token, timeout and bounded request body.
     # A fixed host and direct HTTPSConnection do not inherit proxy settings,
     # cookies or redirect handlers. Default TLS certificate checks stay enabled.
     connection = HTTPSConnection("api.github.com", timeout=timeout)
     try:
-        connection.request("GET", urlsplit(receipt.status_endpoint).path, headers={
+        connection.request("GET" if body is None else "POST", path, body=body, headers={
+            "Content-Type": "application/json",
             "Authorization": "Bearer " + token,
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2026-03-10",
@@ -71,11 +83,7 @@ def _status(receipt, token, *, timeout=10):
                 raise TransportError("Pages status truncated response")
             if len(raw) > MAX_RESPONSE:
                 raise TransportError("Pages status response limit")
-        try:
-            observation = observed(raw, receipt=receipt, request_url=receipt.status_endpoint)
-        except (ValueError, RecursionError):
-            raise TransportError("Pages status response invalid") from None
-        return Result(observation, raw)
+        return raw
     except (OSError, HTTPException):
         raise TransportError("Pages status connection failed") from None
     finally:

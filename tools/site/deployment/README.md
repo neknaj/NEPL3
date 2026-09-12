@@ -179,3 +179,24 @@ The caller supplies pins from its validated LKG journal record. Saved identity
 and smoke semantics, authenticated download, current-publication reconciliation
 and deployment authorization remain publisher responsibilities; this function
 does not promote the release to LKG or deploy it.
+
+## Single creation attempt
+
+`create.create` sends one bounded POST attempt to the fixed Pages API through
+an isolated subprocess. The request uses the pinned numeric artifact ID,
+40-hex build version, `github-pages` environment and Actions OIDC credential.
+Both credentials cross stdin only, not argv or diagnostic output. The response
+uses the same bounded HTTP framing checks as status GET and is validated against
+the requested repository before its original bytes and receipt are returned.
+
+The publisher must confirm its durable intent, artifact provenance, permission,
+lock and publication gates before calling this transport. This module does not
+supply those gates or obtain credentials. Any worker/connection/response failure
+after starting the attempt yields CreationUnknown, never an automatic retry or
+an assumption that the server did nothing. Persist the returned receipt before
+polling; reconcile an unresolved intent after loss of the response. Parent
+process timeout kills and collects the child, with ordinary process scheduling
+limitations rather than a hard real-time guarantee.
+
+The request follows the [Pages creation REST contract](https://docs.github.com/en/rest/pages/pages#create-a-github-pages-deployment).
+Tests exercise local HTTP and subprocess boundaries, not live API authorization.
