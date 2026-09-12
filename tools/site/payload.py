@@ -87,6 +87,22 @@ def snapshot(root, expected_manifest):
             total += len(data)
             checked(total <= MAX_BYTES, 'site byte limit')
             files[name] = data
+    return validate_files(files, expected_manifest)
+
+
+def validate_files(files, expected_manifest):
+    checked(isinstance(files, dict) and 0 < len(files) <= MAX_FILES, 'file limit')
+    checked(all(isinstance(data, bytes) for data in files.values()), 'file bytes required')
+    checked(sum(map(len, files.values())) <= MAX_BYTES, 'site byte limit')
+    checked(isinstance(expected_manifest, str) and re.fullmatch(r'[0-9a-f]{64}', expected_manifest), 'invalid expected digest')
+    for name in files:
+        path_name(name)
+    all_names = {name.lower() for name in files}
+    checked(len(all_names) == len(files), 'case-colliding files')
+    for name in files:
+        parts = name.split('/')
+        for length in range(1, len(parts)):
+            checked('/'.join(parts[:length]).lower() not in all_names, 'file/directory prefix collision')
     checked('manifest.json' in files, 'missing manifest')
     checked(digest(files['manifest.json']) == expected_manifest, 'manifest digest mismatch')
     manifest = json.loads(files['manifest.json'].decode('utf-8'), object_pairs_hook=unique_object)
@@ -120,6 +136,15 @@ def pack(root, expected_manifest, output):
     checked(not output.exists(), 'output already exists')
     checked(not output.resolve().is_relative_to(root.resolve()), 'output must be outside input site')
     files = snapshot(root, expected_manifest)
+    payload = tar_bytes(files)
+    with output.open('xb') as stream:
+        stream.write(payload)
+    return {'version': 1, 'kind': 'pages-tar', 'manifest_sha256': expected_manifest,
+            'tar_sha256': digest(payload), 'tar_bytes': len(payload), 'files': len(files),
+            'publication_verified': False}
+
+
+def tar_bytes(files):
     # Only frozen byte buffers enter tarfile. No filesystem link/mtime/uid is
     # copied into the payload, including files modified after snapshot capture.
     buffer = io.BytesIO()
@@ -135,11 +160,7 @@ def pack(root, expected_manifest, output):
     payload = buffer.getvalue()
     # Per-file headers/padding have a separate finite overhead allowance.
     checked(len(payload) <= MAX_BYTES + MAX_FILES * 2048, 'tar size limit')
-    with output.open('xb') as stream:
-        stream.write(payload)
-    return {'version': 1, 'kind': 'pages-tar', 'manifest_sha256': expected_manifest,
-            'tar_sha256': digest(payload), 'tar_bytes': len(payload), 'files': len(files),
-            'publication_verified': False}
+    return payload
 
 
 if __name__ == '__main__':

@@ -43,6 +43,13 @@ tar内の順序・時刻・所有者・modeは固定し、リンク（Windows ju
 receiptの `publication_verified` はfalseです。この梱包だけでは公開確認やLKG昇格になりません。
 境界試験は `python -m unittest discover -s tools/site -p 'test_*.py'` で実行します。
 
+復旧用の `tools/site/recovery.py` は、別途確認したLKGのtar/manifest digestと取得した元tarの
+byte列を受け取ります。ファイルシステムへ展開せず、各member・manifest・file集合の衝突・
+内容・上限を検査し、元byte列をそのまま返します。圧縮wrapperは取得側で分離し、原tarの
+identityと混同しません。canonical tarとの比較は検査であり、比較用の再serialize結果を
+復旧出力として使いません。保存物のimmutability、現在の公開対象、journalの復旧許可は
+別途検査が必要です。通常CIには保存済みの実Doc tarを用いた回帰試験も含めます。
+
 `python tools/site/smoke.py dist/site https://neknaj.github.io/NEPL3/ --manifest-sha256 <検査済みdigest>`
 は、docs-only成果物とHTTPS応答のbyte列、HTML/CSSのMIME、directory indexと未知routeの404を
 照合します。build identityを前後で取得し、redirectや内容の混在を拒否します。
