@@ -149,9 +149,27 @@ fn attr(
 }
 fn accepts(parent: HtmlTag, child: &HtmlNode) -> bool {
     use HtmlTag::*;
+    if let HtmlNode::MathElement {
+        tag, attributes, ..
+    } = child
+    {
+        return *tag == crate::mathml::Tag::Math
+            && match parent {
+                Article | Section | Div | Figcaption | Li | Caption | Th | Td | Figure => true,
+                P | Span | H1 | H2 | H3 | H4 | H5 | H6 | Rt | Em | Strong | Pre | Code | A
+                | Ruby => !attributes.iter().any(|a| {
+                    matches!(
+                        a,
+                        crate::mathml::Attribute::Display(crate::mathml::Display::Block)
+                    )
+                }),
+                _ => false,
+            };
+    }
     let tag = match child {
         HtmlNode::Text { .. } => None,
         HtmlNode::Element { tag, .. } => Some(*tag),
+        HtmlNode::MathElement { .. } => return false,
     };
     match parent {
         Br | Img => false,
@@ -186,6 +204,9 @@ fn sequence(
     for (i, c) in children.iter().enumerate() {
         b.charge(Resource::Work, 1)?;
         let n = node(f, *c)?;
+        if let HtmlNode::MathElement { attributes, .. } = n {
+            b.charge(Resource::Work, attributes.len() as u64)?;
+        }
         if !accepts(t, n) {
             return Err(HtmlError::Content(r));
         }
@@ -291,6 +312,23 @@ fn validate_content<'a>(
     b: &mut Budget,
 ) -> Result<(), HtmlError> {
     let root = node(f, f.root)?;
+    if let HtmlNode::MathElement {
+        tag, attributes, ..
+    } = root
+    {
+        b.charge(Resource::Work, attributes.len() as u64)?;
+        if *tag != crate::mathml::Tag::Math
+            || (slot == HtmlSlot::Phrasing
+                && attributes.iter().any(|a| {
+                    matches!(
+                        a,
+                        crate::mathml::Attribute::Display(crate::mathml::Display::Block)
+                    )
+                }))
+        {
+            return Err(HtmlError::Content(f.root));
+        }
+    }
     if let HtmlNode::Element { tag, .. } = root
         && !(match slot {
             HtmlSlot::Block => tag.is_flow(),
@@ -324,6 +362,49 @@ fn validate_content<'a>(
         stack.push((r, depth, anchor, forbidden, true));
         match n {
             HtmlNode::Text { text: s } => text(s, r, b)?,
+            HtmlNode::MathElement {
+                tag,
+                attributes,
+                children,
+            } => {
+                let mut keys = 0u16;
+                for (j, a) in attributes.iter().enumerate() {
+                    b.charge(Resource::Work, 1)?;
+                    let bit = 1u16 << a.key();
+                    if keys & bit != 0 || !crate::mathml::attribute_allowed(*tag, a, b)? {
+                        return Err(HtmlError::Attribute {
+                            node: r,
+                            index: j as u64,
+                        });
+                    }
+                    keys |= bit;
+                }
+                if crate::mathml::arity(*tag).is_some_and(|n| n != children.len()) {
+                    return Err(HtmlError::Content(r));
+                }
+                for child in children.iter().rev() {
+                    b.charge(Resource::Work, 1)?;
+                    let kind = match node(f, *child)? {
+                        HtmlNode::Text { .. } => crate::mathml::Child::Text,
+                        HtmlNode::Element { tag, .. } if tag.is_phrasing() => {
+                            crate::mathml::Child::Html
+                        }
+                        HtmlNode::Element { .. } => return Err(HtmlError::Content(r)),
+                        HtmlNode::MathElement { tag, .. } => crate::mathml::Child::Element(*tag),
+                    };
+                    if !crate::mathml::accepts(*tag, kind) {
+                        return Err(HtmlError::Content(r));
+                    }
+                    b.charge(Resource::AllocationUnits, 64)?;
+                    stack.push((
+                        *child,
+                        depth.saturating_add(1),
+                        anchor,
+                        (forbidden & !8) | if forbidden & 8 != 0 { 4 } else { 0 },
+                        false,
+                    ));
+                }
+            }
             HtmlNode::Element {
                 tag,
                 attributes,

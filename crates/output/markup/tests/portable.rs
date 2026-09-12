@@ -36,6 +36,86 @@ fn registry() -> Result<SchemaRegistry, String> {
     Ok(r)
 }
 #[test]
+fn html_math_nodes_roundtrip_and_receiver_rechecks_foreign_content() -> Result<(), String> {
+    use nepl3_markup::mathml::Tag;
+    let r = registry()?;
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &store, &mut admission).map_err(err)?;
+    let mut input = HtmlRequest {
+        slot: HtmlSlot::Phrasing,
+        policy: HtmlPolicy { classes: vec![] },
+        fragment: HtmlFragment {
+            root: 0,
+            nodes: vec![
+                HtmlNode::Element {
+                    tag: HtmlTag::Span,
+                    attributes: vec![],
+                    children: vec![1],
+                },
+                HtmlNode::MathElement {
+                    tag: Tag::Math,
+                    attributes: vec![],
+                    children: vec![2],
+                },
+                HtmlNode::MathElement {
+                    tag: Tag::Identifier,
+                    attributes: vec![],
+                    children: vec![3],
+                },
+                HtmlNode::Text { text: "x".into() },
+            ],
+        },
+    };
+    let value = portable::to_value(&input, &r, &mut codec, &mut b()).map_err(err)?;
+    let bytes = nepl3_wire::encode(&value, &mut b()).map_err(err)?;
+    let value = nepl3_wire::decode(&bytes, &mut b()).map_err(err)?;
+    let mut fresh = SourceAdmission::default();
+    let mut receiver = FoundationCodec::new(&r, &store, &mut fresh).map_err(err)?;
+    let received = portable::from_value(&value, &r, &mut receiver, &mut b()).map_err(err)?;
+    assert_eq!(received, input);
+    assert_eq!(
+        serialize(
+            &validate(
+                &received.fragment,
+                received.slot,
+                &received.policy,
+                &mut b()
+            )
+            .map_err(err)?,
+            &mut b()
+        )
+        .map_err(err)?,
+        "<span><math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mi>x</mi></math></span>"
+    );
+    // Alter a schema-valid MathMlTag in the wire value; a mi directly under
+    // HTML must still be rejected by the receiving structural validator.
+    let mut corrupt = value;
+    let NdfValue::Record(request) = &mut corrupt else {
+        return Err("request".into());
+    };
+    let NdfValue::Record(fragment) = &mut request.fields[0] else {
+        return Err("fragment".into());
+    };
+    let NdfValue::List(nodes) = &mut fragment.fields[1] else {
+        return Err("nodes".into());
+    };
+    let NdfValue::Variant(node) = &mut nodes[1] else {
+        return Err("node".into());
+    };
+    let NdfValue::Variant(tag) = &mut node.fields[0] else {
+        return Err("tag".into());
+    };
+    tag.variant = "Identifier".into();
+    assert!(matches!(
+        portable::from_value(&corrupt, &r, &mut receiver, &mut b()),
+        Err(PortableError::Html(HtmlError::Content(0)))
+    ));
+    input.fragment.root = 2;
+    assert!(portable::to_value(&input, &r, &mut codec, &mut b()).is_err());
+    Ok(())
+}
+#[test]
 fn mixed_mathml_first_receiver_checks_phrasing_policy() -> Result<(), String> {
     use nepl3_markup::mathml::{self, Fragment, Node, Tag};
     let r = registry()?;

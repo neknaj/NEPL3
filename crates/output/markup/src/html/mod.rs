@@ -163,6 +163,13 @@ pub enum HtmlNode {
         attributes: Vec<HtmlAttribute>,
         children: Vec<u64>,
     },
+    /// MathML elements share this flat arena with HTML. Only `math` crosses
+    /// from HTML into MathML; only `mtext` admits HTML phrasing children.
+    MathElement {
+        tag: crate::mathml::Tag,
+        attributes: Vec<crate::mathml::Attribute>,
+        children: Vec<u64>,
+    },
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct HtmlFragment {

@@ -179,7 +179,8 @@ impl Output {
     }
 }
 /// Deterministic complete HTML fragment. It adds no document shell, script,
-/// CSS or external-resource loader. Attribute order is ASCII name order.
+/// CSS or external-resource loader. HTML attributes use ASCII name order;
+/// MathML attributes retain the typed input order, as in the MathML serializer.
 /// Output uses one growable buffer, with amortized O(emitted bytes) copy work;
 /// escaped attribute/text temporaries and the explicit traversal frontier remain.
 /// OutputBytes counts emitted bytes once, including escaping. AllocationUnits
@@ -220,8 +221,8 @@ fn fragment_into(
 ) -> Result<(), HtmlError> {
     b.poll()?;
     b.charge(Resource::AllocationUnits, 64)?;
-    let mut stack = vec![(f.root, 1_u64, false)];
-    while let Some((r, depth, exit)) = stack.pop() {
+    let mut stack = vec![(f.root, 1_u64, false, false)];
+    while let Some((r, depth, exit, math_parent)) = stack.pop() {
         b.charge(Resource::Work, 1)?;
         b.observe_depth(depth)?;
         let n = check::node(f, r)?;
@@ -231,11 +232,43 @@ fn fragment_into(
                 out.literal(tag.name(), b)?;
                 out.literal(">", b)?;
             }
+            if let HtmlNode::MathElement { tag, .. } = n {
+                out.literal("</", b)?;
+                out.literal(tag.name(), b)?;
+                out.literal(">", b)?;
+            }
             continue;
         }
         b.charge(Resource::Nodes, 1)?;
         match n {
             HtmlNode::Text { text } => out.text(text, TextContext::Content, r, b)?,
+            HtmlNode::MathElement {
+                tag,
+                attributes,
+                children,
+            } => {
+                out.literal("<", b)?;
+                out.literal(tag.name(), b)?;
+                if *tag == crate::mathml::Tag::Math {
+                    out.literal(" xmlns=\"http://www.w3.org/1998/Math/MathML\"", b)?;
+                }
+                for a in attributes {
+                    let (name, value) = crate::mathml::serialize::attr(a);
+                    out.literal(" ", b)?;
+                    out.literal(name, b)?;
+                    out.literal("=\"", b)?;
+                    out.literal(value, b)?;
+                    out.literal("\"", b)?;
+                }
+                out.literal(">", b)?;
+                b.charge(Resource::AllocationUnits, 64)?;
+                stack.push((r, depth, true, math_parent));
+                for c in children.iter().rev() {
+                    b.charge(Resource::Work, 1)?;
+                    b.charge(Resource::AllocationUnits, 64)?;
+                    stack.push((*c, depth.saturating_add(1), false, true));
+                }
+            }
             HtmlNode::Element {
                 tag,
                 attributes,
@@ -243,7 +276,7 @@ fn fragment_into(
             } => {
                 out.literal("<", b)?;
                 out.literal(tag.name(), b)?;
-                if xml && depth == 1 {
+                if (xml && depth == 1) || math_parent {
                     out.literal(" xmlns=\"http://www.w3.org/1999/xhtml\"", b)?;
                 }
                 b.charge(
@@ -273,14 +306,14 @@ fn fragment_into(
                 }
                 if !tag.is_void() {
                     b.charge(Resource::AllocationUnits, 64)?;
-                    stack.push((r, depth, true));
+                    stack.push((r, depth, true, math_parent));
                     let next = depth
                         .checked_add(1)
                         .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
                     for c in children.iter().rev() {
                         b.charge(Resource::Work, 1)?;
                         b.charge(Resource::AllocationUnits, 64)?;
-                        stack.push((*c, next, false));
+                        stack.push((*c, next, false, false));
                     }
                 }
             }

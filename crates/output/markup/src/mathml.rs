@@ -9,7 +9,7 @@
 //! nodes per appearance and returns no partial string on failure. Both operations
 //! consume the caller's sticky budget; a separate serialization budget is only
 //! appropriate for a separate invocation, not recovery from an exhausted one.
-mod serialize;
+pub(crate) mod serialize;
 use alloc::{string::String, vec::Vec};
 use nepl3_core::budget::{Budget, Resource, StopReason};
 pub use serialize::serialize;
@@ -86,7 +86,7 @@ pub enum Attribute {
     Depth(String),
 }
 impl Attribute {
-    fn key(&self) -> u8 {
+    pub(crate) fn key(&self) -> u8 {
         match self {
             Self::Display(_) => 0,
             Self::NormalIdentifier => 1,
@@ -174,6 +174,45 @@ fn length(s: &str) -> bool {
             !f.is_empty() && !f.ends_with('0') && f.bytes().all(|b| b.is_ascii_digit())
         })
 }
+pub(crate) fn attribute_allowed(
+    tag: Tag,
+    a: &Attribute,
+    b: &mut Budget,
+) -> Result<bool, StopReason> {
+    Ok(match a {
+        Attribute::Display(_) => tag == Tag::Math,
+        Attribute::NormalIdentifier => tag == Tag::Identifier,
+        Attribute::Width(s) | Attribute::Height(s) | Attribute::Depth(s) => {
+            b.charge(Resource::Work, s.len() as u64)?;
+            tag == Tag::Space && length(s)
+        }
+        _ => tag == Tag::Operator,
+    })
+}
+pub(crate) fn arity(tag: Tag) -> Option<usize> {
+    match tag {
+        Tag::Fraction | Tag::Root | Tag::Sub | Tag::Sup | Tag::Under | Tag::Over => Some(2),
+        Tag::SubSup | Tag::UnderOver => Some(3),
+        Tag::Space => Some(0),
+        _ => None,
+    }
+}
+pub(crate) enum Child {
+    Text,
+    Html,
+    Element(Tag),
+}
+pub(crate) fn accepts(tag: Tag, child: Child) -> bool {
+    match tag {
+        Tag::Text => matches!(child, Child::Text | Child::Html),
+        Tag::Identifier | Tag::Number | Tag::Operator => matches!(child, Child::Text),
+        Tag::Table => matches!(child, Child::Element(Tag::TableRow)),
+        Tag::TableRow => matches!(child, Child::Element(Tag::Cell)),
+        _ => {
+            matches!(child, Child::Element(t) if !matches!(t, Tag::Math | Tag::TableRow | Tag::Cell))
+        }
+    }
+}
 fn local(fragment: &Fragment, id: usize, b: &mut Budget) -> Result<(), Error> {
     let Node::Element {
         tag,
@@ -198,15 +237,7 @@ fn local(fragment: &Fragment, id: usize, b: &mut Budget) -> Result<(), Error> {
     for (i, a) in attributes.iter().enumerate() {
         b.charge(Resource::Work, 1)?;
         let bit = 1u16 << a.key();
-        let allowed = match a {
-            Attribute::Display(_) => *tag == Tag::Math,
-            Attribute::NormalIdentifier => *tag == Tag::Identifier,
-            Attribute::Width(s) | Attribute::Height(s) | Attribute::Depth(s) => {
-                b.charge(Resource::Work, s.len() as u64)?;
-                *tag == Tag::Space && length(s)
-            }
-            _ => *tag == Tag::Operator,
-        };
+        let allowed = attribute_allowed(*tag, a, b)?;
         if keys & bit != 0 || !allowed {
             return Err(Error::Attribute {
                 node: id as u64,
@@ -215,35 +246,20 @@ fn local(fragment: &Fragment, id: usize, b: &mut Budget) -> Result<(), Error> {
         }
         keys |= bit;
     }
-    let arity = match tag {
-        Tag::Fraction | Tag::Root | Tag::Sub | Tag::Sup | Tag::Under | Tag::Over => Some(2),
-        Tag::SubSup | Tag::UnderOver => Some(3),
-        Tag::Space => Some(0),
-        _ => None,
-    };
-    if arity.is_some_and(|n| children.len() != n) {
+    if arity(*tag).is_some_and(|n| children.len() != n) {
         return Err(Error::Content(id as u64));
     }
     for child in children {
         b.charge(Resource::Work, 1)?;
         let node = &fragment.nodes[index(*child, fragment.nodes.len())?];
-        let good = match tag {
-            Tag::Text => matches!(node, Node::Text(_) | Node::Html { .. }),
-            Tag::Identifier | Tag::Number | Tag::Operator => {
-                matches!(node, Node::Text(_))
-            }
-            Tag::Table => matches!(
-                node,
-                Node::Element {
-                    tag: Tag::TableRow,
-                    ..
-                }
-            ),
-            Tag::TableRow => matches!(node, Node::Element { tag: Tag::Cell, .. }),
-            _ => {
-                matches!(node,Node::Element{tag,..} if !matches!(tag,Tag::Math|Tag::TableRow|Tag::Cell))
-            }
-        };
+        let good = accepts(
+            *tag,
+            match node {
+                Node::Text(_) => Child::Text,
+                Node::Html { .. } => Child::Html,
+                Node::Element { tag, .. } => Child::Element(*tag),
+            },
+        );
         if !good {
             return Err(Error::Content(id as u64));
         }
@@ -341,6 +357,12 @@ pub fn validate<'a>(fragment: &'a Fragment, b: &mut Budget) -> Result<Validated<
         b.charge(Resource::Work, 1)?;
         match &fragment.nodes[node] {
             Node::Html { fragment: html } => {
+                if matches!(
+                    html.nodes.get(index(html.root, html.nodes.len())?),
+                    Some(crate::html::HtmlNode::MathElement { .. })
+                ) {
+                    return Err(Error::Content(node as u64));
+                }
                 let depth = base.saturating_add(stack.len() as u64 - 1);
                 b.with_depth_at_least(depth, |b| {
                     crate::html::check::validate_into(
