@@ -1,0 +1,110 @@
+[
+  {
+    "command": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_artifact*.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_artifact*.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_candidate*.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_candidate*.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_uploaded.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_uploaded.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_prepared_upload.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_prepared_upload.py"
+    ],
+    "exit_code": 0
+  }
+]

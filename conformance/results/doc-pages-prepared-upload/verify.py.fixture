@@ -1,0 +1,37 @@
+﻿from pathlib import Path
+import sys,json,subprocess,io,zipfile
+from unittest.mock import patch
+p=Path('.tmp/prepared-upload-review');rows=[]
+for pattern in ['test_artifact*.py','test_candidate*.py','test_uploaded.py','test_prepared_upload.py']:
+ for flag in [[],['-O']]:
+  cmd=[sys.executable]+flag+['-m','unittest','discover','-s','tools/site','-p',pattern];r=subprocess.run(cmd,capture_output=True);label=pattern.replace('.py','').replace('*','')+('-optimized' if flag else '-normal');(p/(label+'.stdout')).write_bytes(r.stdout);(p/(label+'.stderr')).write_bytes(r.stderr);rows.append(dict(command=cmd,exit_code=r.returncode))
+(p/'commands.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf8')
+if any(r['exit_code'] for r in rows):raise ValueError('test failure')
+sys.path.insert(0,str(Path('tools/site').resolve()))
+from test_prepared_upload import PreparedUploadTests
+from deployment.candidate import prepare_upload
+from payload import digest
+t=PreparedUploadTests();results=[]
+args,kw,tar=t.fixture();run=json.loads(args[0]);run['conclusion']='failure';args[0]=json.dumps(run).encode()
+with patch('deployment.artifact.uploaded') as upload:
+ try:prepare_upload(*args,**kw)
+ except ValueError:pass
+ else:raise ValueError('failed CI accepted')
+ if upload.call_count:raise ValueError('uploaded before CI gate')
+results.append(dict(case='failed-ci',uploaded_calls=0))
+for variant in ['wrong-receipt-digest','old-receipt-attempt','missing-receipt']:
+ args,kw,tar=t.fixture()
+ with zipfile.ZipFile(io.BytesIO(args[3])) as z:files={n:z.read(n) for n in z.namelist()}
+ receipt=json.loads(files['pages-upload.json'])
+ if variant=='missing-receipt':del files['pages-upload.json']
+ else:
+  receipt['artifact_digest' if variant=='wrong-receipt-digest' else 'attempt']='0'*64 if variant=='wrong-receipt-digest' else 2
+  files['pages-upload.json']=json.dumps(receipt).encode()
+ buf=io.BytesIO()
+ with zipfile.ZipFile(buf,'w') as z:
+  for n,b in files.items():z.writestr(n,b)
+ args[3]=buf.getvalue();meta=json.loads(args[2]);meta.update(size_in_bytes=len(args[3]),digest='sha256:'+digest(args[3]));args[2]=json.dumps(meta).encode()
+ try:prepare_upload(*args,**kw)
+ except (ValueError,KeyError) as e:results.append(dict(case=variant,rejected=True,error=type(e).__name__))
+ else:raise ValueError(variant)
+(p/'probes.json').write_text(json.dumps(results,indent=2)+'\n',encoding='utf8');print(results)

@@ -1,0 +1,21 @@
+﻿from pathlib import Path
+import json,hashlib,subprocess
+p=Path('.tmp/prepared-upload-review')
+(p/'review.md').write_text('''# Independent checked Pages upload review
+
+Reviewed changes on base 2a6629b in artifact.py, candidate.py, new uploaded/prepared-upload tests and final README against existing selected/recovery contracts and spec15 same-payload and CI prerequisites. No implementation edits or live deployment operations.
+
+No blocking finding in this offline connection. prepare_upload requires distinct diagnostic/upload IDs, validates raw CI and the diagnostic ZIP first, then reads pages-upload.json from those identical immutable ZIP bytes. uploaded verifies the producer receipt's exact shape, strict integer version/IDs/run/attempt, nonpublication flag and outer ZIP digest before applying the shared API metadata/path/size/digest/source checks. Pages mode requires exactly one regular artifact.tar. Its original raw tar and manifest must match the independently checked diagnostic payload pins. Refactoring selected into _select preserves the existing diagnostic receipt, unsafe path/kind, duplicate and bounded-size checks.
+
+Independent 20 tests per mode passed normally and with python -O: artifact/export 8, candidate/payload 8, uploaded 2, prepared-upload 2. Additional probes confirmed failed CI calls uploaded zero times. Modified diagnostic ZIPs whose API digest was coherently updated still rejected a wrong producer digest, old producer attempt or missing producer receipt (the latter raises KeyError); valid envelope metadata cannot bypass the inner receipt checks. Positive tests retain the original known tar bytes.
+
+The final README accurately describes verification order, the same-ZIP receipt binding, distinct IDs, single-member tar shape and remaining host gates. Authentication of both metadata/download pairs, trusted workflow/job-to-upload provenance, final freshness, writer lock/state and mutation permission remain outside this function. It consumes raw observations each time rather than accepting a serialized Candidate as proof. Candidate/payload returns do not deploy, establish current public identity or promote LKG. Actual Pages upload/API integration, full repository suite and CI results are separate parent evidence, not independently claimed here.
+''',encoding='utf8',newline='\n')
+for name in ['tools/site/deployment/artifact.py','tools/site/deployment/candidate.py','tools/site/test_uploaded.py','tools/site/test_prepared_upload.py','tools/site/README.md']:
+ f=p/'source'/name;f.parent.mkdir(parents=True,exist_ok=True);f.write_bytes(Path(name).read_bytes())
+(p/'diff.patch').write_bytes(subprocess.run(['git','diff','--','tools/site'],capture_output=True,check=True).stdout)
+rows=[]
+for f in sorted(p.rglob('*')):
+ if f.is_file() and f.name!='manifest.json':
+  b=f.read_bytes();rows.append(dict(path=f.relative_to(p).as_posix(),bytes=len(b),sha256=hashlib.sha256(b).hexdigest()))
+(p/'manifest.json').write_text(json.dumps(dict(files=rows),indent=2)+'\n',encoding='utf8');print(len(rows),sum(r['bytes'] for r in rows))
