@@ -1,0 +1,13 @@
+{
+  "actual_worker_roundtrip": true,
+  "original_bytes": "{ \"id\": 7 }",
+  "network_stubbed_TLS_unverified": true,
+  "launches": [
+    {
+      "isolated": true,
+      "credentials_in_argv": false,
+      "stdin_bytes": 136
+    }
+  ],
+  "invalid_worker_inputs_nonzero_silent": 2
+}

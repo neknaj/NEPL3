@@ -1,0 +1,25 @@
+﻿from pathlib import Path
+import sys,subprocess,json
+from unittest.mock import patch
+p=Path('.tmp/ci-observations-review');rows=[]
+for flags in [[],['-O']]:
+ cmd=[sys.executable]+flags+['-m','unittest','discover','-s','tools/site','-p','test_ci_observations.py'];r=subprocess.run(cmd,capture_output=True);label='optimized' if flags else 'normal';(p/(label+'.stdout')).write_bytes(r.stdout);(p/(label+'.stderr')).write_bytes(r.stderr);rows.append(dict(command=cmd,exit_code=r.returncode))
+if any(r['exit_code'] for r in rows):raise ValueError('test failure')
+sys.path.insert(0,str(Path('tools/site').resolve()))
+from deployment.observations import Query,Kind,read
+from deployment.transport import TransportError
+harness=p/'worker-harness.py';harness.write_text('import sys,runpy\nfrom pathlib import Path\nsys.path.insert(0,'+repr(str(Path('tools/site').resolve()))+')\nimport deployment.observations as o\no.request=lambda *a,**k: b\'{ "id": 7 }\'\nrunpy.run_path('+repr(str(Path('tools/site/deployment/observations/worker.py').resolve()))+',run_name="__main__")\n',encoding='utf8')
+real=subprocess.run
+seen=[]
+def launch(cmd,**kw):
+ seen.append(dict(isolated=cmd[1]=='-I',credentials_in_argv='dummy-token' in str(cmd),stdin_bytes=len(kw['input'])))
+ return real([*cmd[:-1],str(harness.resolve())],**kw)
+with patch('deployment.observations.subprocess.run',side_effect=launch):
+ raw=read(Query('neknaj','NEPL3',Kind.JOBS,7,2),'dummy-token',timeout=2)
+if raw!=b'{ "id": 7 }':raise ValueError('original response changed')
+worker=Path('tools/site/deployment/observations/worker.py').resolve()
+for body in [b'x'*12001,b'{"query":{"kind":"other"}}']:
+ r=real([sys.executable,'-I',str(worker)],input=body,capture_output=True,timeout=2)
+ if r.returncode!=1 or r.stdout or r.stderr:raise ValueError('worker input failure leaked')
+(p/'commands.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf8')
+(p/'worker-probes.json').write_text(json.dumps(dict(actual_worker_roundtrip=True,original_bytes=raw.decode(),network_stubbed_TLS_unverified=True,launches=seen,invalid_worker_inputs_nonzero_silent=2),indent=2)+'\n',encoding='utf8');print(rows)

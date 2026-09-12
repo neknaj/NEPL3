@@ -1,0 +1,17 @@
+﻿from pathlib import Path
+p=Path('.tmp/ci-observations-review')
+(p/'review.md').write_text('''# Independent authenticated CI observations review
+
+Reviewed new deployment/observations package and test_ci_observations.py against spec15 observation/freshness responsibilities, existing candidate/transport contracts and official REST routes. No implementation edits or actual GitHub API actions.
+
+No blocking finding in the JSON transport scope. Query builds only fixed main-ref, workflow-run, attempt-jobs and artifact metadata paths under a validated repository. IDs and optional attempt are strict integers; Kind is an enum; arbitrary URLs/query fragments cannot be supplied. The shared fixed api.github.com HTTPS transport retains default TLS, no redirects/proxy discovery, JSON MIME/encoding/framing checks and a 64KiB response cap. The attempt jobs request explicitly asks page 1/per_page 100; candidate.verify separately rejects incomplete or excessive listings.
+
+Independent 4 tests passed normally and with python -O, using real loopback HTTP with the connection factory substituted (not TLS). Additional actual -I child/worker IPC probe returned original JSON bytes with only its network request stubbed; credentials stayed on stdin, not argv. Oversized 12001-byte and invalid-Kind worker input exited nonzero with empty stdout/stderr. A real sleeping subprocess was stopped by the configured 0.1-second wait and surfaced a sanitized TransportError. Process creation, kill/wait and scheduling overhead prevent a hard real-time guarantee; measured wall time is evidence, not a promised bound.
+
+read validates only a bounded JSON object and returns original bytes. It does not assert the main-ref object identity, successful/eligible CI, authenticated artifact download, writer lock, final freshness or deployment authorization. Response shape/identity must still pass the appropriate semantic verifier. Larger legitimate job JSON fails closed at 64KiB even below 100 jobs. Parent live/API and whole-suite results are separate evidence. No Pages operation or acceptance-state promotion occurred.
+
+Official sources checked 2026-09-13:
+- https://docs.github.com/en/rest/git/refs#get-a-reference (singular /git/ref/heads/main endpoint)
+- https://docs.github.com/en/rest/actions/workflow-jobs#list-jobs-for-a-workflow-run-attempt (specific attempt route and per_page maximum 100)
+Run and artifact routes also match the previously independently reviewed official Actions REST contracts.
+''',encoding='utf8',newline='\n')

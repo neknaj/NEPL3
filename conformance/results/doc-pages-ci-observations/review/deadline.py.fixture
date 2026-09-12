@@ -1,0 +1,15 @@
+﻿from pathlib import Path
+import sys,subprocess,json,time
+from unittest.mock import patch
+p=Path('.tmp/ci-observations-review');sleep=p/'sleep-worker.py';sleep.write_text('import time\ntime.sleep(2)\n',encoding='utf8')
+sys.path.insert(0,str(Path('tools/site').resolve()))
+from deployment.observations import read,Query,Kind
+from deployment.transport import TransportError
+real=subprocess.run
+started=time.monotonic();rejected=False
+def run(cmd,**kw):return real([*cmd[:-1],str(sleep.resolve())],**kw)
+with patch('deployment.observations.subprocess.run',side_effect=run):
+ try:read(Query('a','b',Kind.RUN,1),'dummy-token',timeout=0.1)
+ except TransportError as e:rejected='deadline' in str(e)
+if not rejected:raise ValueError('timeout accepted')
+(p/'deadline-probe.json').write_text(json.dumps(dict(real_sleep_child_rejected=rejected,configured_wait=0.1,elapsed=time.monotonic()-started,not_hard_realtime=True),indent=2)+'\n',encoding='utf8')
