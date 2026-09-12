@@ -22,6 +22,79 @@ pub enum PortableError<E> {
     Expression(crate::check::ShapeError),
     ExactValue(crate::exact::ExactValueError),
     Environment(crate::environment::EnvironmentError),
+    Evaluation(crate::evaluation::Error),
+    EvaluationMismatch,
+}
+
+/// Evaluate against the supplied environment, then encode the neutral result.
+pub fn evaluation_to_value<C: FoundationValueCodec>(
+    input: &crate::check::CheckedExpression<'_>,
+    environment: &crate::environment::CheckedEnvironment<'_>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    let result =
+        crate::evaluation::evaluate(input, environment, budget).map_err(evaluation_error)?;
+    let raw = result.outcome.put(schema(registry)?, codec, budget)?;
+    check_report(registry, &raw, "MathEvaluationOutcome", budget)?;
+    Ok(raw)
+}
+
+/// A remote result cannot establish a proof: recompute with the exact requested
+/// expression/environment and current budget. Return the locally bound result.
+pub fn evaluation_from_value<'a, C: FoundationValueCodec>(
+    raw: &NdfValue,
+    input: &'a crate::check::CheckedExpression<'a>,
+    environment: &crate::environment::CheckedEnvironment<'_>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<crate::evaluation::Evaluation<'a>, PortableError<C::Error>> {
+    use crate::evaluation::Outcome;
+    check_report(registry, raw, "MathEvaluationOutcome", budget)?;
+    let received =
+        crate::model::MathEvaluationOutcome::read(raw, schema(registry)?, codec, budget)?;
+    if let Outcome::Exact(value) = &received {
+        crate::exact::check(value, budget).map_err(exact_error)?;
+    }
+    let expected =
+        crate::evaluation::evaluate(input, environment, budget).map_err(evaluation_error)?;
+    let equal = match (&received, &expected.outcome) {
+        (Outcome::Symbolic(a), Outcome::Symbolic(b)) => {
+            budget.charge(
+                Resource::Work,
+                (a.len() as u64)
+                    .saturating_add(b.len() as u64)
+                    .saturating_add(1),
+            )?;
+            a == b
+        }
+        (Outcome::Exact(a), Outcome::Exact(b)) => {
+            use crate::exact::{self, arithmetic};
+            let a = exact::check(a, budget).map_err(exact_error)?;
+            let b = exact::check(b, budget).map_err(exact_error)?;
+            match arithmetic::compare(&a, &b, arithmetic::Comparison::Equal, budget) {
+                Ok(crate::model::MathExactValue::Truth { value }) => value,
+                Err(arithmetic::Error::Stopped(reason)) => {
+                    return Err(PortableError::Stopped(reason));
+                }
+                Err(arithmetic::Error::OperandShapeMismatch) => false,
+                _ => return Err(PortableError::Shape),
+            }
+        }
+        _ => false,
+    };
+    if !equal {
+        return Err(PortableError::EvaluationMismatch);
+    }
+    Ok(expected)
+}
+fn evaluation_error<E>(error: crate::evaluation::Error) -> PortableError<E> {
+    match error {
+        crate::evaluation::Error::Stopped(reason) => PortableError::Stopped(reason),
+        other => PortableError::Evaluation(other),
+    }
 }
 
 /// Validate every assignment before crossing the portable boundary.

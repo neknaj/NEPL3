@@ -22,7 +22,7 @@ def generate():
             out.append("match self {")
             for case,fs in shape["variant"].items():
                 fields=[rename.get(f[0],f[0]) for f in fs]
-                pat=f"Self::{case}"+("("+fields[0]+")" if name=="MathRoot" else " {"+",".join(fields)+"}" if fields else "")
+                pat=f"Self::{case}"+("("+fields[0]+")" if name in ("MathRoot", "MathEvaluationOutcome") else " {"+",".join(fields)+"}" if fields else "")
                 exprs=[f+".put(s,c,b)?" for f in fields]
                 out.append(pat+f' => variant(s,"{name}","{case}",[{",".join(exprs)}],b),')
             out.append("}")
@@ -40,7 +40,7 @@ def generate():
             for case,fs in shape["variant"].items():
                 fields=[rename.get(f[0],f[0]) for f in fs]
                 exprs=[f+f":Value::read(&f[{i}],s,c,b)?" for i,f in enumerate(fields)]
-                body="(Value::read(&f[0],s,c,b)?)" if name=="MathRoot" else " {"+",".join(exprs)+"}" if fields else ""
+                body="(Value::read(&f[0],s,c,b)?)" if name in ("MathRoot", "MathEvaluationOutcome") else " {"+",".join(exprs)+"}" if fields else ""
                 out.append(f'("{case}",{len(fs)})=>Ok(Self::{case}{body}),')
             out.append("_=>Err(PortableError::Shape),}")
         out.extend(["}","}"])

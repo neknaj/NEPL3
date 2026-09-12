@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/06&#45;math.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page math; source SHA-256 2a475be8f40c5c7b4c3a3c5cfc191f315696933cfc3db65b3d49f0bef8f3e2f7; alias input SHA-256 cae137023719df65f4fdf356ff25c6fac5c3aaa15c90b6b91c82b313d5078aaf; document digest 8afe08c2029ad6539d548bd8219d9f18d8060d1c2ca050be9dfffcbd67a18738; input PageSet digest 4341d478fd3bde6822145e2fc85a8ec3d1262f90dc7c1dc8a0e690392947b406; input context SHA-256 0185af6b5a06d6c33a4a90528f67ca8aed4c6c25f3f6a1590fe27dddfb442fe2. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/06&#45;math.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page math; source SHA-256 5ecae889c4d1bf2e8f03f80f0e843ced253bcf0cac0bc1d2e91b8dc044ac64ef; alias input SHA-256 cae137023719df65f4fdf356ff25c6fac5c3aaa15c90b6b91c82b313d5078aaf; document digest 0972c939043fbdc220115ecf9d79eae78c795384efb2208a6755d2901b0abd59; input PageSet digest 070d1b726bf5b70acc2ae45826a9494a669120493396158cdb80d0d85285cb9b; input context SHA-256 5d0e82a0384ce4e645ca6da26050ecd6a5dab9f0c41976f7af5bf98de4db872a. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="06-math言語"></a>
 
@@ -135,5 +135,9 @@ free\_symbolsはCheckedExpressionからMathFreeSymbolsを生成\[せいせい\]�
 <a name="6-公開操作"></a>
 
 ## 7\. 公開操作\[こうかいそうさ\]
+
+MathEvaluationOutcomeは成功\[せいこう\]した評価\[ひょうか\]の交換値\[こうかんち\]であり、ExactにMathExactValue、SymbolicにMathEvaluationRequirementの列\[れつ\]を持\[も\]つ。各要求\[かくようきゅう\]は元式\[もとしき\]のExprRefとMathEvaluationReasonを保持\[ほじ\]し、評価順\[ひょうかじゅん\]に並\[なら\]ぶ。sumの反復\[はんぷく\]で同\[おな\]じnodeの要求\[ようきゅう\]が生\[しょう\]じた場合\[ばあい\]も、出現\[しゅつげん\]ごとの順序\[じゅんじょ\]と重複\[ちょうふく\]を保\[たも\]つ。
+
+受信側\[じゅしんがわ\]はschemaとExactの形状\[けいじょう\]を検査\[けんさ\]し、指定\[してい\]された不変\[ふへん\]の式\[しき\]と束縛環境\[そくばくかんきょう\]から再評価\[さいひょうか\]する。値\[あたい\]・要求\[ようきゅう\]・理由\[りゆう\]・順序\[じゅんじょ\]が一致\[いっち\]しない結果\[けっか\]はEvaluationMismatchとして拒否\[きょひ\]し、返却値\[へんきゃくち\]は受信値\[じゅしんち\]ではなく再評価\[さいひょうか\]した結果\[けっか\]とする。受信\[じゅしん\]から照合\[しょうごう\]まで同\[おな\]じ予算\[よさん\]を使\[つか\]い、停止\[ていし\]を再試行\[さいしこう\]やSymbolicで消\[け\]さない。この交換値\[こうかんち\]は操作\[そうさ\]の失敗\[しっぱい\]やproviderの通信契約\[つうしんけいやく\]を兼\[か\]ねない。
 
 lower、check、free\_symbols、evaluate、print、render\_mathml。評価結果\[ひょうかけっか\]、部分評価\[ぶぶんひょうか\]の新式\[しんしき\]、元\[もと\]の式\[しき\]を別値\[べつち\]として返\[かえ\]す。文書側\[ぶんしょがわ\]のrender要求\[ようきゅう\]がevaluateを自動\[じどう\]で要求\[ようきゅう\]しない。
