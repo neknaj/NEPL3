@@ -1,0 +1,76 @@
+[
+  {
+    "name": "journal-normal",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_receipt_journal.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "journal-optimized",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_receipt_journal.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "poll-normal",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_poll.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "poll-optimized",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_poll.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "initial-budget-final",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      ".tmp\\recorded-wait-review\\initial-budget-final.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "persistence-budget",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      ".tmp\\recorded-wait-review\\persistence-budget.py"
+    ],
+    "exit_code": 0
+  }
+]

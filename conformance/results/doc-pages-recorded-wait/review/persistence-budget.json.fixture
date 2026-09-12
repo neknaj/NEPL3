@@ -1,0 +1,9 @@
+{
+  "fetch_budgets": [
+    3
+  ],
+  "stop": "deadline",
+  "saved_response_count": 1,
+  "retained_response_count": 1,
+  "saved_head_returned": true
+}
