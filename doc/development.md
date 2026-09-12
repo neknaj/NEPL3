@@ -224,6 +224,8 @@ cargo run --locked -p nepl3-tools -- doc-html export examples/document/linear-co
 
 [CI workflow](../.github/workflows/ci.yml) はmainへのpush・pull request・手動実行で起動します。feature branchのpushとPR更新による全workflowの二重実行を避け、PRではGitHubのmerge refを検査します。PR未作成のcheckpointは自動CI検証済みとは扱わず、必要なら手動実行します。Rustのworkspace testとClippyはLinux・Windows・macOSで実行し、fmt・rustdoc・allocation regression・外部consumer全体・Doc移行とcanonical生成はLinuxで一度実行します。repository checkはrepository-contract jobへ集約します。
 
+tag pushの自動CIも維持します。CI成功だけで正式releaseや公開確認済みとは扱いません。
+
 siteの全Python試験はLinuxのsite-publication jobで実行します。Windowsではjunction拒否、Windows/macOSではstdinへ渡す引数の構築と実processの強制終了・HTTP通信と期限、macOSではsymlink祖先を持つtemporary rootの回帰だけを追加実行します。stdinの試験はprocess呼出しをmockして渡す値を検査し、実際のprocess間転送の証拠とは区別します。共通のmanifest/hash/tar検査をOSごとに反復しません。evidence runnerのファイル・process境界は3 OSで維持します。
 
 文書だけの変更も対象です。固定名 `quality` は引き続き全jobの成功を要求し、失敗・cancel・skipを成功へ読み替えません。ブラウザ・Pulley・RP2040の実行頻度変更は、この重複削減とは別に、変更の影響範囲とmainでの拡張試験を対応させて設計します。
