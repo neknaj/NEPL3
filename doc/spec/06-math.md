@@ -1,84 +1,117 @@
-# 06. Math言語
+<!-- Generated from doc/spec/06&#45;math.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page math; source SHA-256 0c469ae880473c47044cdb4d9d916ad7c0416a7632b3bbce1d7002d2b651525e; alias input SHA-256 cae137023719df65f4fdf356ff25c6fac5c3aaa15c90b6b91c82b313d5078aaf; document digest 3ef90005f4cc27f6de5561a4c2522e683cdaff726d5f893d4c974aaa8390b066; input PageSet digest cfc84388ca019f0970e6c0fccc6cbc48594695c88c9631bcf6c556bb1fa50e8e; input context SHA-256 9b96bdd23f7ed1452c7e02a5c38a1f27dd5eb54c3963e2eddffe918ea1e41035. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
-## 方針
+<a name="06-math言語"></a>
 
-数式の表示対象を保ち、その一部に対する厳密計算を独立した操作として公開する。parse/renderが数式を簡約したり、等式の正しさを主張したりしない。
+# 06\. Math言語\[げんご\]
 
-## 1. 表現
+<a name="n-706f6c696379"></a>
 
-全constructorはmath-signatures参照。Numberは有限十進の原表記を持ち、意味値はBigRationalへ正確に変換する。整数p、分母qはq>0、gcd(|p|,q)=1、zero=0/1へ正規化する。Numberに格納できる値は、約分後のqの素因数が2と5だけの有理数に限る。これ以外をNumberとして構築・decodeする場合はNonFiniteDecimalNumberで拒否する。評価値のRationalはこの制限を持たない。
+<a name="方針"></a>
 
-任意有理数から式を作るconstructor helper `expression_from_rational` は、有限十進ならNumber、それ以外なら整数Numberを子とするFrac(Number(p), Number(q))を返す。元の構文をlowerするときにこのhelperで著者のFracを折り畳まない。`frac 1 2` はFracのまま保持する。Numberのprintはcanonicalな整数または有限十進（指数表記なし、冗長な末尾zeroなし、zeroは0）で、意味値とsnapshotの一致を確認した場合には元lexemeを表示に利用できる。Number(1/3)をprint時だけFracへ変換する設計にはしない。
+## 方針\[ほうしん\]
 
-Identifier leafは数学記号。自由記号を許可し、free symbolはUnresolvedNameのエラーにしない。意味上の入力要求として列挙する。`symbol "..."` で予約語と同じ綴りや複数文字の名前を明示できる。裸のNameとsymbolの同じ綴りは同じ名前解決規則を使う。
+数式\[すうしき\]の表示対象\[ひょうじたいしょう\]を保\[たも\]ち、その一部\[いちぶ\]に対\[たい\]する厳密計算\[げんみつけいさん\]を独立\[どくりつ\]した操作\[そうさ\]として公開\[こうかい\]する。parse\/renderが数式\[すうしき\]を簡約\[かんやく\]したり、等式\[とうしき\]の正\[ただ\]しさを主張\[しゅちょう\]したりしない。
 
-letはinitを外側、bodyを新しい記号scopeで読む。sum/integralのindexはbodyだけで有効であり、lower/upperでは外側を参照する。自由記号に架空の定義位置を与えない。
+<a name="n-65787072657373696f6e"></a>
 
-subscript/superscript/scriptsは表示構造。一般の添字を配列アクセスや指数演算に暗黙変換しない。代数的な累乗にはpowを使う。`call`は数学の関数適用表現で、任意のFnコード実行ではない。
+<a name="1-表現"></a>
 
-## 2. 構造検査
+## 1\. 表現\[ひょうげん\]
 
-matrixは一つ以上のrow、各rowは同じ正の列数。vectorは一つ以上の要素。fenceは左右それぞれ0または1Unicode scalar。空文字で片側だけの括弧を表せる。
+全\[ぜん\]constructorはmath\-signatures参照\[さんしょう\]。Numberは有限十進\[ゆうげんじっしん\]の原表記\[げんひょうき\]を持\[も\]ち、意味値\[いみち\]はBigRationalへ正確\[せいかく\]に変換\[へんかん\]する。整数\[せいすう\]p、分母\[ぶんぼ\]qはq\>0、gcd\(\|p\|\,q\)\=1、zero\=0\/1へ正規化\[せいきか\]する。Numberに格納\[かくのう\]できる値\[あたい\]は、約分後\[やくぶんご\]のqの素因数\[そいんすう\]が2と5だけの有理数\[ゆうりすう\]に限\[かぎ\]る。これ以外\[いがい\]をNumberとして構築\[こうちく\]・decodeする場合\[ばあい\]はNonFiniteDecimalNumberで拒否\[きょひ\]する。評価値\[ひょうかち\]のRationalはこの制限\[せいげん\]を持\[も\]たない。
 
-rootのdegreeが数値literalで0ならInvalidRootDegree。その他の定義域はevaluate時にも検査する。表示だけの式に実数/複素数の数値領域を勝手に割り当てない。
+任意有理数\[にんいゆうりすう\]から式\[しき\]を作\[つく\]るconstructor helper `expression_from_rational` は、有限十進\[ゆうげんじっしん\]ならNumber、それ以外\[いがい\]なら整数\[せいすう\]Numberを子\[こ\]とするFrac\(Number\(p\)\, Number\(q\)\)を返\[かえ\]す。元\[もと\]の構文\[こうぶん\]をlowerするときにこのhelperで著者\[ちょしゃ\]のFracを折\[お\]り畳\[たた\]まない。`frac 1 2` はFracのまま保持\[ほじ\]する。Numberのprintはcanonicalな整数\[せいすう\]または有限十進\[ゆうげんじっしん\]（指数表記\[しすうひょうき\]なし、冗長\[じょうちょう\]な末尾\[まつび\]zeroなし、zeroは0）で、意味値\[いみち\]とsnapshotの一致\[いっち\]を確認\[かくにん\]した場合\[ばあい\]には元\[もと\]lexemeを表示\[ひょうじ\]に利用\[りよう\]できる。Number\(1\/3\)をprint時\[じ\]だけFracへ変換\[へんかん\]する設計\[せっけい\]にはしない。
 
-CheckedExpressionが保証するのは構造・binding・既知の局所制約であり、全記号の値や全演算の数値評価可能性ではない。
+Identifier leafは数学記号\[すうがくきごう\]。自由記号\[じゆうきごう\]\{free symbol\}を許可\[きょか\]する。自由記号\[じゆうきごう\]はUnresolvedNameのエラーにしない。意味上\[いみじょう\]の入力要求\[にゅうりょくようきゅう\]として列挙\[れっきょ\]する。`symbol "..."` で予約語\[よやくご\]と同\[おな\]じ綴\[つづ\]りや複数文字\[ふくすうもじ\]の名前\[なまえ\]を明示\[めいじ\]できる。裸\[はだか\]のNameとsymbolの同\[おな\]じ綴\[つづ\]りは同\[おな\]じ名前解決規則\[なまえかいけつきそく\]を使\[つか\]う。
 
-## 3. evaluate
+letはinitを外側\[そとがわ\]、bodyを新\[あたら\]しい記号\[きごう\]scopeで読\[よ\]む。sum\/integralのindexはbodyだけで有効\[ゆうこう\]であり、lower\/upperでは外側\[そとがわ\]を参照\[さんしょう\]する。自由記号\[じゆうきごう\]に架空\[かくう\]の定義位置\[ていぎいち\]を与\[あた\]えない。
 
-入力はCheckedExpression、自由記号のBindingEnvironment、Limits。出力はExact(Value)またはSymbolic(expression, Requirements)。定義域違反・形状不一致は明確なEvalError。値の種類はScalar(Q)、`Vector(List<Q>)`、`Matrix(rows,cols,List<Q>)`、Truth(Bool)。
+subscript\/superscript\/scriptsは表示構造\[ひょうじこうぞう\]。一般\[いっぱん\]の添字\[そえじ\]を配列\[はいれつ\]アクセスや指数演算\[しすうえんざん\]に暗黙変換\[あんもくへんかん\]しない。代数的\[だいすうてき\]な累乗\[るいじょう\]にはpowを使\[つか\]う。`call`は数学\[すうがく\]の関数適用表現\[かんすうてきようひょうげん\]で、任意\[にんい\]のFnコード実行\[じっこう\]ではない。
 
-評価はsource順の左から右、純粋。letはinitを評価してからbodyを評価する。未解決の記号に依存する部分はSymbolicとし、独立な数値subtreeの計算結果を保持できるが元の構文を上書きしない。
+<a name="n-737472756374757265"></a>
 
-正確に評価する演算:
-- add/sub: Scalar同士、等しい長さのVector、等しい形状のMatrix。
-- neg: Scalar/Vector/Matrixの全要素の符号反転。
-- mul: Scalar×Scalar、ScalarとVector/Matrixの両側、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味が曖昧なのでOperandShapeMismatch。
-- frac: Scalar同士、分母0はDivisionByZero。
-- pow: Scalarの整数指数。0^0は空積として1。0の負指数はDivisionByZero。非整数指数はSymbolic(NonIntegralExponent)。
-- sqrt: 非負Scalarの分子分母がともに完全平方ならExact。非平方はSymbolic(AlgebraicValueRequired)、負ならSymbolic(ComplexValueRequired)。
-- root: 正の整数次数だけExact候補。奇数次数の負数を許し、分子分母が完全n乗ならExact。次数が不正ならInvalidRootDegree、非完全冪ならSymbolic。
-- equal: 同じ種類・形状のExact値の等値。Scalar/配列の比較を混同しない。
-- lt/le: Scalar同士だけ。
-- transpose: Matrixの転置。Vectorは1×nのMatrixにする。
-- det: 正方Matrixだけ。正確な有理数の消去法を用い、pivotは最初の非zero行。形状不正はNotSquare。
-- sum: lower/upperが整数で有限、bodyがScalarとなる場合をexact domainとする。inclusive区間。upper<lowerならScalar 0。各indexはその整数のScalar。反復数はLimitsで制限。Vector/Matrix値の一般総和はSymbolic(UnsupportedExactDomain)であり、暗黙のscalar化はしない。
-- fence/label: 数値意味は内部valueと等しい。annotationは数値評価しない。
+<a name="2-構造検査"></a>
 
-integral、call、表示用text/sequence/subscript/superscript/scriptsは、評価専用規則がない限りSymbolic(NotationOnly)。これらの表示は完全に対応する。解析的な積分や任意関数評価を実装済みとしない。
+## 2\. 構造検査\[こうぞうけんさ\]
 
-## 4. MathML backend
+matrixは一\[ひと\]つ以上\[いじょう\]のrow、各\[かく\]rowは同\[おな\]じ正\[せい\]の列数\[れつすう\]。vectorは一\[ひと\]つ以上\[いじょう\]の要素\[ようそ\]。fenceは左右\[さゆう\]それぞれ0または1Unicode scalar。空文字\[からもじ\]で片側\[かたがわ\]だけの括弧\[かっこ\]を表\[あらわ\]せる。
 
-MathML Coreの要素をtyped Markupで生成する。Number=mn、Symbol=mi、表示Text=mtext、加減乗・比較=mrow+mo、frac=mfrac、sqrt=msqrt、root=mroot、sub/sup/scripts=msub/msup/msubsup、vector/matrix=mtable/mtr/mtd、総和と積分=munder/munderoverまたは対応するscript形をdisplay modeから決定する。
+rootのdegreeが数値\[すうち\]literalで0ならInvalidRootDegree。その他\[ほか\]の定義域\[ていぎいき\]はevaluate時\[じ\]にも検査\[けんさ\]する。表示\[ひょうじ\]だけの式\[しき\]に実数\[じっすう\]\/複素数\[ふくそすう\]の数値領域\[すうちりょういき\]を勝手\[かって\]に割\[わ\]り当\[あ\]てない。
 
-暗黙のブラウザprecedence解釈へ依存しない。binding powerは比較10、add/sub20、mul30、neg40、pow50、atomic60。弱い子を強い親へ入れる際はmoによる可視括弧を挿入。subの右側、powの左側等、同じprecedenceでも非結合な位置に括弧を入れる。fracは分子分母の構造自体がgroupになる。
+CheckedExpressionが保証\[ほしょう\]するのは構造\[こうぞう\]・binding・既知\[きち\]の局所制約\[きょくしょせいやく\]であり、全記号\[ぜんきごう\]の値\[あたい\]や全演算\[ぜんえんざん\]の数値評価可能性\[すうちひょうかかのうせい\]ではない。
 
-数学表示の2項演算は元の順序を保持する。mulのscalar/記号列でも、読み違いを避けるためreference backendは中央点を表示する。callはfunctionと括弧付きarguments。sequenceは指定順のmrowであり、勝手に演算を補わない。
+<a name="n-6576616c75617465"></a>
 
-letは「name := init ; body」のmrow。sumの下限は「index = lower」、上限はupper、bodyに必要な括弧を付ける。integralは積分記号と上下限、body、微分記号dとindex。equalは表示であって証明書ではない。
+## 3\. evaluate
 
-labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備し、mtextを介した注記として出力する。MathMLの内容モデルに適合しないblock内容は受け入れない。
+入力\[にゅうりょく\]はCheckedExpression、自由記号\[じゆうきごう\]のBindingEnvironment、Limits。出力\[しゅつりょく\]はExact\(Value\)またはSymbolic\(expression\, Requirements\)。定義域違反\[ていぎいきいはん\]・形状不一致\[けいじょうふいっち\]は明確\[めいかく\]なEvalError。値\[あたい\]の種類\[しゅるい\]はScalar\(Q\)、`Vector(List<Q>)`、`Matrix(rows,cols,List<Q>)`、Truth\(Bool\)。
 
-## 4.1. 公開arenaと原文保持
+評価\[ひょうか\]はsource順\[じゅん\]の左\[ひだり\]から右\[みぎ\]、純粋\[じゅんすい\]。letはinitを評価\[ひょうか\]してからbodyを評価\[ひょうか\]する。未解決\[みかいけつ\]の記号\[きごう\]に依存\[いぞん\]する部分\[ぶぶん\]はSymbolicとし、独立\[どくりつ\]な数値\[すうち\]subtreeの計算結果\[けいさんけっか\]を保持\[ほじ\]できるが元\[もと\]の構文\[こうぶん\]を上書\[うわが\]きしない。
 
-`interfaces/model.json` のMath record/unionはconstructorの論理的な意味展開であり、Rust enum順や別の再帰wire layoutではない。実値のschemaは `interfaces/math.json` の `MathSyntax` / `MathValue` とする。MathRootはExpr / Row / DocGuestの3種類。MathKindは29 formとNumber leafに対応し、bare SymbolNameは明示Symbolと同じ意味kindへlowerする。子はExprRef / RowRef / DocGuestRef、guestはEmbedRefで平坦なarenaを参照する。schemaの明示variant名とfield列がwire tagであり、入力由来の深さをnativeの再帰所有へ転写しない。
+正確\[せいかく\]に評価\[ひょうか\]する演算\[えんざん\]\:
 
-MathValueの構造検査はカテゴリ、参照、到達性、cycle、共有DAGの最大経路、Number有限十進制約、vector/matrix形状、fence幅、literal 0のroot degreeを検査する。単独Rowは空を表せるが、Matrixに取り込むrowの列数は正で全row同一でなければならない。この証明はsymbol解決済みCheckedExpressionや評価可能性の証明ではない。
+- add\/sub\: Scalar同士\[どうし\]、等\[ひと\]しい長\[なが\]さのVector、等\[ひと\]しい形状\[けいじょう\]のMatrix。
+- neg\: Scalar\/Vector\/Matrixの全要素\[ぜんようそ\]の符号反転\[ふごうはんてん\]。
+- mul\: Scalar×Scalar、ScalarとVector\/Matrixの両側\[りょうがわ\]、Matrix×Matrix、Matrix×Vector。Vector×Vectorは意味\[いみ\]が曖昧\[あいまい\]なのでOperandShapeMismatch。
+- frac\: Scalar同士\[どうし\]、分母\[ぶんぼ\]0はDivisionByZero。
+- pow\: Scalarの整数指数\[せいすうしすう\]。0\^0は空積\[くうせき\]として1。0の負指数\[ふしすう\]はDivisionByZero。非整数指数\[ひせいすうしすう\]はSymbolic\(NonIntegralExponent\)。
+- sqrt\: 非負\[ひふ\]Scalarの分子分母\[ぶんしぶんぼ\]がともに完全平方\[かんぜんへいほう\]ならExact。非平方\[ひへいほう\]はSymbolic\(AlgebraicValueRequired\)、負\[ふ\]ならSymbolic\(ComplexValueRequired\)。
+- root\: 正\[せい\]の整数次数\[せいすうじすう\]だけExact候補\[こうほ\]。奇数次数\[きすうじすう\]の負数\[ふすう\]を許\[ゆる\]し、分子分母\[ぶんしぶんぼ\]が完全\[かんぜん\]n乗\[じょう\]ならExact。次数\[じすう\]が不正\[ふせい\]ならInvalidRootDegree、非完全冪\[ひかんぜんべき\]ならSymbolic。
+- equal\: 同\[おな\]じ種類\[しゅるい\]・形状\[けいじょう\]のExact値\[ち\]の等値\[とうち\]。Scalar\/配列\[はいれつ\]の比較\[ひかく\]を混同\[こんどう\]しない。
+- lt\/le\: Scalar同士\[どうし\]だけ。
+- transpose\: Matrixの転置\[てんち\]。Vectorは1×nのMatrixにする。
+- det\: 正方\[せいほう\]Matrixだけ。正確\[せいかく\]な有理数\[ゆうりすう\]の消去法\[しょうきょほう\]を用\[もち\]い、pivotは最初\[さいしょ\]の非\[ひ\]zero行\[ぎょう\]。形状不正\[けいじょうふせい\]はNotSquare。
+- sum\: lower\/upperが整数\[せいすう\]で有限\[ゆうげん\]、bodyがScalarとなる場合\[ばあい\]をexact domainとする。inclusive区間\[くかん\]。upper\<lowerならScalar 0。各\[かく\]indexはその整数\[せいすう\]のScalar。反復数\[はんぷくすう\]はLimitsで制限\[せいげん\]。Vector\/Matrix値\[ち\]の一般総和\[いっぱんそうわ\]はSymbolic\(UnsupportedExactDomain\)であり、暗黙\[あんもく\]のscalar化\[か\]はしない。
+- fence\/label\: 数値意味\[すうちいみ\]は内部\[ないぶ\]valueと等\[ひと\]しい。annotationは数値評価\[すうちひょうか\]しない。
 
-MathSyntaxはsource宣言、元Origin表、tokenごとのowner headを持つMathView、SourceMapを所有する。Number.spellingは `Option<Span>` のまま保持し、存在する場合は宣言sourceとnode coverに整合する位置を指す。意味Rationalと原lexemeの一致を証明したときだけ元表記をprintへ利用でき、位置構造検査だけをその証明とみなさない。Symbol/Let/Sum/Integralの名前operandは閉じたMathFieldLocationで選択位置とOriginを保持する。本文の名前検索で位置を再発見せず、source-lessの位置はNoneとする。
+integral、call、表示用\[ひょうじよう\]text\/sequence\/subscript\/superscript\/scriptsは、評価専用規則\[ひょうかせんようきそく\]がない限\[かぎ\]りSymbolic\(NotationOnly\)。これらの表示\[ひょうじ\]は完全\[かんぜん\]に対応\[たいおう\]する。解析的\[かいせきてき\]な積分\[せきぶん\]や任意関数評価\[にんいかんすうひょうか\]を実装済\[じっそうず\]みとしない。
 
-LabelのDoc annotationと独立DocGuestは、Doc SentenceのForeignClosureを保持する。ownerの環境・Origin ID・source/map閉包とguest自身のID空間を混同せず、意味変換を行わない。元構文に意味的に不正なDoc annotationがあっても、Mathのsource構造検査を理由にDoc lowerや評価を呼び出してはならない。prepared表示へ渡す意味・内容モデル検査は別の要求として残す。
+<a name="n-6d6174686d6c"></a>
 
-`lower::expression` はhostが選択済みparse/profileを確認したSyntaxBundleと明示Math表層SchemaRef/categoryを受け、現在のBudget/SourceAdmissionで再検査してMathSyntaxを返す。共有sourceは一度だけ計上し、原Frac・表示scripts等を簡約しない。局所constructor制約の失敗は元のsource NodeRefとShapeErrorへ帰属させ、破棄した出力arenaのindexだけを位置情報として返さない。停止は原StopReasonを保持し、元構文木を変更しない。
+## 4\. MathML backend
 
-初回NDF受信はschema検査後に同じsource/Origin/View/guest閉包とarena制約を検査する。宣言sourceの欠落をreceiverのambient storeから補わない。raw MathSyntaxの受信はbinding・free symbol要求・評価結果のproofを発行しない。明示constructor helperは新しいsource-less式を作るためのもので、元式を置換する処理ではない。
+MathML Coreの要素\[ようそ\]をtyped Markupで生成\[せいせい\]する。Number\=mn、Symbol\=mi、表示\[ひょうじ\]Text\=mtext、加減乗\[かげんじょう\]・比較\[ひかく\]\=mrow\+mo、frac\=mfrac、sqrt\=msqrt、root\=mroot、sub\/sup\/scripts\=msub\/msup\/msubsup、vector\/matrix\=mtable\/mtr\/mtd、総和\[そうわ\]と積分\[せきぶん\]\=munder\/munderoverまたは対応\[たいおう\]するscript形\[けい\]をdisplay modeから決定\[けってい\]する。
 
-## 5. 出力と資源
+暗黙\[あんもく\]のブラウザprecedence解釈\[かいしゃく\]へ依存\[いぞん\]しない。binding powerは比較\[ひかく\]10、add\/sub20、mul30、neg40、pow50、atomic60。弱\[よわ\]い子\[こ\]を強\[つよ\]い親\[おや\]へ入\[い\]れる際\[さい\]はmoによる可視括弧\[かしかっこ\]を挿入\[そうにゅう\]。subの右側\[みぎがわ\]、powの左側等\[ひだりがわなど\]、同\[おな\]じprecedenceでも非結合\[ひけつごう\]な位置\[いち\]に括弧\[かっこ\]を入\[い\]れる。fracは分子分母\[ぶんしぶんぼ\]の構造自体\[こうぞうじたい\]がgroupになる。
 
-MathMLは独立した正式portable出力であり、ブラウザがfont/layoutを担当する。Doc・MathのHTML生成は[17章](17-math-html.md)のKaTeXPreferredを標準とし、生成環境でKaTeXを実行してCSS/fontと配布する。忠実変換不能・生成能力不足時はNEPL3 MathMLへ診断付きで切り替える。閲覧時にKaTeXを再実行せず、CLIがpixel描画まで行うとも広告しない。
+数学表示\[すうがくひょうじ\]の2項演算\[こうえんざん\]は元\[もと\]の順序\[じゅんじょ\]を保持\[ほじ\]する。mulのscalar\/記号列\[きごうれつ\]でも、読\[よ\]み違\[ちが\]いを避\[さ\]けるためreference backendは中央点\[ちゅうおうてん\]を表示\[ひょうじ\]する。callはfunctionと括弧付\[かっこつ\]きarguments。sequenceは指定順\[していじゅん\]のmrowであり、勝手\[かって\]に演算\[えんざん\]を補\[おぎな\]わない。
 
-独自layout/rasterizerを追加する場合は、CheckedExpressionまたはMathLayout入力modelを受ける別backendとする。OpenType MATH tableやglyph outlineの実装都合をMathの意味モデルへ持ち込まない。
+letは「name \:\= init \; body」のmrow。sumの下限\[かげん\]は「index \= lower」、上限\[じょうげん\]はupper、bodyに必要\[ひつよう\]な括弧\[かっこ\]を付\[つ\]ける。integralは積分記号\[せきぶんきごう\]と上下限\[じょうかげん\]、body、微分記号\[びぶんきごう\]dとindex。equalは表示\[ひょうじ\]であって証明書\[しょうめいしょ\]ではない。
 
-## 6. 公開操作
+labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ準備\[じゅんび\]し、mtextを介\[かい\]した注記\[ちゅうき\]として出力\[しゅつりょく\]する。MathMLの内容\[ないよう\]モデルに適合\[てきごう\]しないblock内容\[ないよう\]は受\[う\]け入\[い\]れない。
 
-lower、check、free_symbols、evaluate、print、render_mathml。評価結果、部分評価の新式、元の式を別値として返す。文書側のrender要求がevaluateを自動で要求しない。
+<a name="n-6172656e61"></a>
+
+<a name="41-公開arenaと原文保持"></a>
+
+## 4\.1\. 公開\[こうかい\]arenaと原文保持\[げんぶんほじ\]
+
+`interfaces/model.json` のMath record\/unionはconstructorの論理的\[ろんりてき\]な意味展開\[いみてんかい\]であり、Rust enum順\[じゅん\]や別\[べつ\]の再帰\[さいき\]wire layoutではない。実値\[じつち\]のschemaは `interfaces/math.json` の `MathSyntax` \/ `MathValue` とする。MathRootはExpr \/ Row \/ DocGuestの3種類\[しゅるい\]。MathKindは29 formとNumber leafに対応\[たいおう\]し、bare SymbolNameは明示\[めいじ\]Symbolと同\[おな\]じ意味\[いみ\]kindへlowerする。子\[こ\]はExprRef \/ RowRef \/ DocGuestRef、guestはEmbedRefで平坦\[へいたん\]なarenaを参照\[さんしょう\]する。schemaの明示\[めいじ\]variant名\[めい\]とfield列\[れつ\]がwire tagであり、入力由来\[にゅうりょくゆらい\]の深\[ふか\]さをnativeの再帰所有\[さいきしょゆう\]へ転写\[てんしゃ\]しない。
+
+MathValueの構造検査\[こうぞうけんさ\]はカテゴリ、参照\[さんしょう\]、到達性\[とうたつせい\]、cycle、共有\[きょうゆう\]DAGの最大経路\[さいだいけいろ\]、Number有限十進制約\[ゆうげんじっしんせいやく\]、vector\/matrix形状\[けいじょう\]、fence幅\[はば\]、literal 0のroot degreeを検査\[けんさ\]する。単独\[たんどく\]Rowは空\[から\]を表\[あらわ\]せるが、Matrixに取\[と\]り込\[こ\]むrowの列数\[れつすう\]は正\[せい\]で全\[ぜん\]row同一\[どういつ\]でなければならない。この証明\[しょうめい\]はsymbol解決済\[かいけつず\]みCheckedExpressionや評価可能性\[ひょうかかのうせい\]の証明\[しょうめい\]ではない。
+
+MathSyntaxはsource宣言\[せんげん\]、元\[もと\]Origin表\[ひょう\]、tokenごとのowner headを持\[も\]つMathView、SourceMapを所有\[しょゆう\]する。Number\.spellingは `Option<Span>` のまま保持\[ほじ\]し、存在\[そんざい\]する場合\[ばあい\]は宣言\[せんげん\]sourceとnode coverに整合\[せいごう\]する位置\[いち\]を指\[さ\]す。意味\[いみ\]Rationalと原\[げん\]lexemeの一致\[いっち\]を証明\[しょうめい\]したときだけ元表記\[もとひょうき\]をprintへ利用\[りよう\]でき、位置構造検査\[いちこうぞうけんさ\]だけをその証明\[しょうめい\]とみなさない。Symbol\/Let\/Sum\/Integralの名前\[なまえ\]operandは閉\[と\]じたMathFieldLocationで選択位置\[せんたくいち\]とOriginを保持\[ほじ\]する。本文\[ほんぶん\]の名前検索\[なまえけんさく\]で位置\[いち\]を再発見\[さいはっけん\]せず、source\-lessの位置\[いち\]はNoneとする。
+
+LabelのDoc annotationと独立\[どくりつ\]DocGuestは、Doc SentenceのForeignClosureを保持\[ほじ\]する。ownerの環境\[かんきょう\]・Origin ID・source\/map閉包\[へいほう\]とguest自身\[じしん\]のID空間\[くうかん\]を混同\[こんどう\]せず、意味変換\[いみへんかん\]を行\[おこな\]わない。元構文\[もとこうぶん\]に意味的\[いみてき\]に不正\[ふせい\]なDoc annotationがあっても、Mathのsource構造検査\[こうぞうけんさ\]を理由\[りゆう\]にDoc lowerや評価\[ひょうか\]を呼\[よ\]び出\[だ\]してはならない。prepared表示\[ひょうじ\]へ渡\[わた\]す意味\[いみ\]・内容\[ないよう\]モデル検査\[けんさ\]は別\[べつ\]の要求\[ようきゅう\]として残\[のこ\]す。
+
+`lower::expression` はhostが選択済\[せんたくず\]みparse\/profileを確認\[かくにん\]したSyntaxBundleと明示\[めいじ\]Math表層\[ひょうそう\]SchemaRef\/categoryを受\[う\]け、現在\[げんざい\]のBudget\/SourceAdmissionで再検査\[さいけんさ\]してMathSyntaxを返\[かえ\]す。共有\[きょうゆう\]sourceは一度\[いちど\]だけ計上\[けいじょう\]し、原\[げん\]Frac・表示\[ひょうじ\]scripts等\[など\]を簡約\[かんやく\]しない。局所\[きょくしょ\]constructor制約\[せいやく\]の失敗\[しっぱい\]は元\[もと\]のsource NodeRefとShapeErrorへ帰属\[きぞく\]させ、破棄\[はき\]した出力\[しゅつりょく\]arenaのindexだけを位置情報\[いちじょうほう\]として返\[かえ\]さない。停止\[ていし\]は原\[げん\]StopReasonを保持\[ほじ\]し、元構文木\[もとこうぶんき\]を変更\[へんこう\]しない。
+
+初回\[しょかい\]NDF受信\[じゅしん\]はschema検査後\[けんさご\]に同\[おな\]じsource\/Origin\/View\/guest閉包\[へいほう\]とarena制約\[せいやく\]を検査\[けんさ\]する。宣言\[せんげん\]sourceの欠落\[けつらく\]をreceiverのambient storeから補\[おぎな\]わない。raw MathSyntaxの受信\[じゅしん\]はbinding・free symbol要求\[ようきゅう\]・評価結果\[ひょうかけっか\]のproofを発行\[はっこう\]しない。明示\[めいじ\]constructor helperは新\[あたら\]しいsource\-less式\[しき\]を作\[つく\]るためのもので、元式\[もとしき\]を置換\[ちかん\]する処理\[しょり\]ではない。
+
+<a name="n-7265736f7572636573"></a>
+
+<a name="5-出力と資源"></a>
+
+## 5\. 出力\[しゅつりょく\]と資源\[しげん\]
+
+MathMLは独立\[どくりつ\]した正式\[せいしき\]portable出力\[しゅつりょく\]であり、ブラウザがfont\/layoutを担当\[たんとう\]する。Doc・MathのHTML生成\[せいせい\]は[17章\[しょう\]](<17\-math\-html\.md>)のKaTeXPreferredを標準\[ひょうじゅん\]とし、生成環境\[せいせいかんきょう\]でKaTeXを実行\[じっこう\]してCSS\/fontと配布\[はいふ\]する。忠実変換不能\[ちゅうじつへんかんふのう\]・生成能力不足時\[せいせいのうりょくぶそくじ\]はNEPL3 MathMLへ診断付\[しんだんつ\]きで切\[き\]り替\[か\]える。閲覧時\[えつらんじ\]にKaTeXを再実行\[さいじっこう\]せず、CLIがpixel描画\[びょうが\]まで行\[おこな\]うとも広告\[こうこく\]しない。
+
+独自\[どくじ\]layout\/rasterizerを追加\[ついか\]する場合\[ばあい\]は、CheckedExpressionまたはMathLayout入力\[にゅうりょく\]modelを受\[う\]ける別\[べつ\]backendとする。OpenType MATH tableやglyph outlineの実装都合\[じっそうつごう\]をMathの意味\[いみ\]モデルへ持\[も\]ち込\[こ\]まない。
+
+<a name="n-7075626c6963"></a>
+
+<a name="6-公開操作"></a>
+
+## 6\. 公開操作\[こうかいそうさ\]
+
+lower、check、free\_symbols、evaluate、print、render\_mathml。評価結果\[ひょうかけっか\]、部分評価\[ぶぶんひょうか\]の新式\[しんしき\]、元\[もと\]の式\[しき\]を別値\[べつち\]として返\[かえ\]す。文書側\[ぶんしょがわ\]のrender要求\[ようきゅう\]がevaluateを自動\[じどう\]で要求\[ようきゅう\]しない。
