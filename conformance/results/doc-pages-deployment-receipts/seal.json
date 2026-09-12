@@ -1,0 +1,104 @@
+{
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 16,
+      "sha256": "109c335ccc45c5e25b7ba68292d6373b2ac6d5d18a9d0959f4bce0fdfcf39984"
+    },
+    {
+      "path": "README.md",
+      "bytes": 854,
+      "sha256": "f57dc99c3bf8cafd818b5e802b2bbb0e1ee6e81aab44b0ba0f17b3e4e7d96cb4"
+    },
+    {
+      "path": "review/commands.json.fixture",
+      "bytes": 713,
+      "sha256": "10effae3e1b984c092207c32f97f8d5bb46d882fb12a9092bac4db9f0b544ac7"
+    },
+    {
+      "path": "review/final-probe.json.fixture",
+      "bytes": 608,
+      "sha256": "26e21c04f30460821341884815ea4bfb84f3002deed6f53eb9f1373c05c6c412"
+    },
+    {
+      "path": "review/final-probe.py.fixture",
+      "bytes": 1989,
+      "sha256": "64166b214f26f09abc366898703c76da2ba11ed29a8ed3b5a96b2d7e9a6aa5a3"
+    },
+    {
+      "path": "review/final-probe.stderr.txt.fixture",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "review/final-probe.stdout.txt.fixture",
+      "bytes": 608,
+      "sha256": "26e21c04f30460821341884815ea4bfb84f3002deed6f53eb9f1373c05c6c412"
+    },
+    {
+      "path": "review/manifest.json.fixture",
+      "bytes": 2753,
+      "sha256": "c4fc7323bd57df6d6568038848f61b37cb2ea8aa9ebbcac327fba5549970b995"
+    },
+    {
+      "path": "review/normal.stderr.txt.fixture",
+      "bytes": 108,
+      "sha256": "46a59d823d772c3809446eba836399e2612ba33924b6c71abe8e15b736b8f4b7"
+    },
+    {
+      "path": "review/normal.stdout.txt.fixture",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "review/optimized.stderr.txt.fixture",
+      "bytes": 108,
+      "sha256": "46a59d823d772c3809446eba836399e2612ba33924b6c71abe8e15b736b8f4b7"
+    },
+    {
+      "path": "review/optimized.stdout.txt.fixture",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "review/receipt-repro.json.fixture",
+      "bytes": 232,
+      "sha256": "cd5c9d578b5f77db5ca7837fcfa81ddc094a01687642c9030a7c9727c3da99e2"
+    },
+    {
+      "path": "review/receipt-repro.py.fixture",
+      "bytes": 701,
+      "sha256": "9fb8826836ff903ed5cbd788abfc24d71390399e73a311dfe36efea85eff7a88"
+    },
+    {
+      "path": "review/review.md.fixture",
+      "bytes": 2355,
+      "sha256": "708a805f81344b62b94ad6741ef579fa6ed0d01e01c2ef75aced6a0c8aa2dd4f"
+    },
+    {
+      "path": "review/source/tools/site/deployment/__init__.py.fixture",
+      "bytes": 72,
+      "sha256": "6f3a36bcd79aa13b4d327f8bdd85f1c2e87c12de9ecb0fe1cde3194c1c6b81c8"
+    },
+    {
+      "path": "review/source/tools/site/deployment/README.md.fixture",
+      "bytes": 2157,
+      "sha256": "903aad4f959d5225d4516ecf976134a34ec0def1de663288d350b759c15ec22e"
+    },
+    {
+      "path": "review/source/tools/site/deployment/receipt.py.fixture",
+      "bytes": 3497,
+      "sha256": "51b6605ffac414ad333d30ecc7c27c7355b2476a2593436b7bacbfe839367952"
+    },
+    {
+      "path": "review/source/tools/site/test_deployment.py.fixture",
+      "bytes": 3421,
+      "sha256": "bca885f519f53c8d4471b99e93593a69133b7987f657e6b2dc071d73ae955e71"
+    },
+    {
+      "path": "review/sources.md.fixture",
+      "bytes": 1148,
+      "sha256": "6eb12cfffe5c42e5a1a0f71628ba14661e47d10bab0cb34d8b57258b294bd042"
+    }
+  ]
+}

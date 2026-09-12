@@ -1,0 +1,8 @@
+﻿from pathlib import Path
+import sys,json
+sys.path.insert(0,str(Path('tools/site').resolve()))
+from deployment.receipt import Receipt,observed
+receipt=Receipt('expected-deployment','https://api.github.com/repos/neknaj/NEPL3/pages/deployments/different-deployment','not-a-sha256')
+result=observed(b'{"status":"succeed"}',receipt=receipt,request_url=receipt.status_endpoint)
+record={'accepted_inconsistent_receipt':True,'claimed_deployment_id':result.deployment_id,'actual_request_url':receipt.status_endpoint,'phase':result.phase.value}
+p=Path('.tmp/deployment-receipt-review');(p/'receipt-repro.json').write_text(json.dumps(record,indent=2)+'\n',encoding='utf8');print(json.dumps(record,indent=2))
