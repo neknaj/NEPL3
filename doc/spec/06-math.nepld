@@ -215,6 +215,16 @@ body
     nil
   cons section public "7. [公開操作/こうかいそうさ]" body
     cons paragraph
+      cons "[前置構文/ぜんちこうぶん]printerは[検査済/けんさず]みMath[形状/けいじょう]を[受/う]け、Expr・Row・DocGuestのentryとsource textを[返/かえ]す。"
+      cons "[各出現/かくしゅつげん]をfield[順/じゅん]に[出力/しゅつりょく]し、Frac・pow・[表示用/ひょうじよう]scripts・labelを[評価/ひょうか]や[簡約/かんやく]で[置/お]き[換/か]えない。"
+      cons "SymbolはsymbolとTextの[明示形/めいじけい]を[使/つか]い、[束縛名/そくばくめい]がNameで[表/あらわ]せなければUnprintableNameとして[拒否/きょひ]する。"
+      cons "[共有/きょうゆう]nodeも[出現/しゅつげん]ごとに[展開/てんかい]し、[深/ふか]さ・[出力/しゅつりょく]・[作業量/さぎょうりょう]・[確保量/かくほりょう]は[呼出元/よびだしもと]の[共通予算/きょうつうよさん]に[従/したが]う。" nil
+    cons paragraph
+      cons "DocGuestは[正確/せいかく]な[不変/ふへん]ForeignClosureを[同期/どうき]host printerへ[渡/わた]し、[空/から]の[応答/おうとう]やhostの[失敗/しっぱい]を[拒否/きょひ]する。"
+      cons "[保持/ほじ]sourceを[無条件/むじょうけん]に[代用/だいよう]せず、Math coreはDocの[評価/ひょうか]・I/O・provider[選択/せんたく]を[行/おこな]わない。"
+      cons "hostが[生成/せいせい]したguest textと[全体/ぜんたい]のsourceは、[選択/せんたく]したProfileで[再/さい]parseして[対応/たいおう]を[検証/けんしょう]するまでroundtripの[証明/しょうめい]ではない。"
+      cons "[出力/しゅつりょく]には[架空/かくう]のsource identityを[付/つ]けず、[保存/ほぞん]・[再/さい]parseを[担当/たんとう]するhostが[新/あたら]しいsnapshotを[割/わ]り[当/あ]てる。" nil
+    cons paragraph
       cons "MathEvaluationOutcomeは[成功/せいこう]した[評価/ひょうか]の[交換値/こうかんち]であり、ExactにMathExactValue、SymbolicにMathEvaluationRequirementの[列/れつ]を[持/も]つ。"
       cons "[各要求/かくようきゅう]は[元式/もとしき]のExprRefとMathEvaluationReasonを[保持/ほじ]し、[評価順/ひょうかじゅん]に[並/なら]ぶ。"
       cons "sumの[反復/はんぷく]で[同/おな]じnodeの[要求/ようきゅう]が[生/しょう]じた[場合/ばあい]も、[出現/しゅつげん]ごとの[順序/じゅんじょ]と[重複/ちょうふく]を[保/たも]つ。" nil
