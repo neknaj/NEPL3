@@ -1,0 +1,34 @@
+[
+  {
+    "section": null,
+    "name": "02-共通データ契約"
+  },
+  {
+    "section": "policy",
+    "name": "方針"
+  },
+  {
+    "section": "token_syntax",
+    "name": "3-tokenと構文"
+  },
+  {
+    "section": "views",
+    "name": "4-内部view"
+  },
+  {
+    "section": "names_relations",
+    "name": "6-名前関係"
+  },
+  {
+    "section": "facts_authority",
+    "name": "61-共通factsと専用処理の変更範囲"
+  },
+  {
+    "section": "diagnostics_events",
+    "name": "7-診断とevent"
+  },
+  {
+    "section": "budgets_results",
+    "name": "8-予算と結果"
+  }
+]
