@@ -1882,8 +1882,8 @@
     },
     {
       "operation": "math.print",
-      "input": "DomainSyntax + PrintOptions",
-      "output": "SourceArtifact",
+      "input": "MathPrintRequest",
+      "output": "MathPrintResult",
       "definition": "doc/spec/06-math.md",
       "pure": true
     },
