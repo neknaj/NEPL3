@@ -1,0 +1,13 @@
+# Independent review: creation receipt journal bridge
+
+Verdict: no blocking finding in the reviewed local record/replay scope. Exact source snapshots are under source/.
+
+Reviewed deployment/journal.py, the four tests and README against chapter 15's intent-before-API ordering, append-only journal/CAS requirements, receipt preservation and unresolved-intent limitations. record_created requires the current head and final typed intent to match all supplied event identity fields, validates the supplied response against repository/endpoint/ID, preserves the exact response through base64 evidence, and appends the corresponding receipt with the same identities. latest_created validates the final intent/receipt pair, strict evidence fields/version/repository, base64 and the original response again. It does not trust a generic event name with empty evidence.
+
+Independent execution: four real-Git tests passed normally and with Python -O. They cover DeployIntent and RecoveryIntent roundtrips, original response retention, stale/repeated recording, wrong identity/response/repository, generic empty receipt evidence, and a valid large API response whose base64 envelope exceeds journal capacity. commands.json and raw logs preserve final results.
+
+Additional independent real-Git probe rejects changes to transaction, run ID, attempt, source commit, payload digest and intent kind without changing the head. A 65,536-byte otherwise valid response fails the existing journal envelope limit without truncation or ref change. A competitor inserted between the bridge's read and append wins; the bridge's append fails its old-head check and preserves the competing head/events. probe-results.json records these outcomes.
+
+Scope remains local evidence storage and structural association of caller-supplied response bytes. This does not prove that an API request was issued for the intent, validate intent authorization, establish protected-remote durability or reconcile a lost API acknowledgement. The tests deliberately use generic intent evidence, including {}, without treating it as deployment permission. Current publication, public smoke, LKG eligibility, publisher transition correctness and live GitHub writes were not executed or inferred. The reviewer made no production edits.
+
+All three final source snapshots match commit e2ee592 byte-for-byte.

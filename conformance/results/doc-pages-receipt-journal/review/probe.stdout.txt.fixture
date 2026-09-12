@@ -1,0 +1,11 @@
+{
+  "mismatch_transaction": "rejected",
+  "mismatch_run_id": "rejected",
+  "mismatch_attempt": "rejected",
+  "mismatch_source_commit": "rejected",
+  "mismatch_payload_sha256": "rejected",
+  "mismatch_kind": "rejected",
+  "large_base64_envelope": "receipt journal evidence limit",
+  "competing_append": "stale journal head",
+  "winner_retained": true
+}
