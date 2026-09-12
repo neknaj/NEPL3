@@ -1,0 +1,60 @@
+[
+  {
+    "name": "remote-wait-normal",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_remote_wait.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "remote-wait-optimized",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_remote_wait.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "local-journal-normal",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_receipt_journal.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "local-journal-optimized",
+    "args": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_receipt_journal.py"
+    ],
+    "exit_code": 0
+  }
+]
