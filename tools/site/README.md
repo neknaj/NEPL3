@@ -15,7 +15,7 @@ recovery eligibility and LKG persistence remain separate publisher requirements.
 `deployment.candidate.verify` checks authenticated run and attempt-specific job
 observations against a separately selected current main commit, repository ID,
 workflow ID, run ID and attempt. The workflow path is `.github/workflows/ci.yml`;
-only main push/manual runs are accepted. All eight required CI job names must be
+only main push/manual runs are accepted. All required CI job names must be
 unique and successful in a complete job listing. Optional source delivery may
 be skipped, but contradictory failed/running jobs are rejected. Listings above
 100 jobs are rejected rather than silently accepting a partial page.
@@ -100,3 +100,21 @@ The diagnostic and Pages artifact IDs must differ. It returns the checked
 candidate and payload; it does not submit a deployment. API responses and both
 downloads must be authenticated by the host, and freshness/writer-state gates
 still apply immediately before mutation.
+
+## Responsibility and current limits
+
+The failure-mode/ownership decision is [ADR 0008](../../doc/decisions/0008-evidence-and-publisher-boundaries.md).
+Payload validation owns content/byte identity; Actions owns the job graph,
+artifact transfer and same-group execution scheduling. Neither an artifact
+upload nor a deployment receipt proves public health or LKG. This directory's
+`test_*.py` are host regression tests, not publication commands or review evidence.
+Their managed real-document fixture is in `conformance/fixtures/site/`.
+
+Full protocol tests run once in `site-publication`; native jobs retain the
+filesystem staging and isolated-process portability tests. Browser jobs retain
+real rendering and payload integration. `quality` requires every lane. These
+are scoped implementation checks, not T20/S06 acceptance or a live deployment.
+Use the common command collector for new review/test records. Do not add
+per-review runners, source snapshots, or new transport layers to this subsystem.
+Publisher expansion is paused while core/language work resumes after the
+boundary correction; outstanding publication and recovery requirements remain.

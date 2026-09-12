@@ -13,7 +13,8 @@ from .receipt import endpoint
 REQUIRED = frozenset(('quality', 'native (ubuntu-latest)', 'native (windows-latest)',
                       'native (macos-latest)', 'wasi and wasm compilation',
                       'baremetal ARMv6-M build', 'baremetal RP2040 emulator execution',
-                      'Doc HTML browser layout'))
+                      'Doc HTML browser layout', 'repository and generated contracts',
+                      'site publication host tests'))
 
 
 @dataclass(frozen=True)

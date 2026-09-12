@@ -15,8 +15,9 @@ class CandidateTests(unittest.TestCase):
         # Expected gates from ci.yml, independent of the verifier's constant.
         names = ['quality', 'native (ubuntu-latest)', 'native (windows-latest)', 'native (macos-latest)',
                  'wasi and wasm compilation', 'baremetal ARMv6-M build',
-                 'baremetal RP2040 emulator execution', 'Doc HTML browser layout']
-        jobs = dict(total_count=8, jobs=[dict(id=i+1, run_id=7, run_attempt=1, head_sha='a'*40,
+                 'baremetal RP2040 emulator execution', 'Doc HTML browser layout',
+                 'repository and generated contracts', 'site publication host tests']
+        jobs = dict(total_count=len(names), jobs=[dict(id=i+1, run_id=7, run_attempt=1, head_sha='a'*40,
                     name=n, status='completed', conclusion='success') for i,n in enumerate(names)])
         return run, jobs
 
@@ -44,9 +45,9 @@ class CandidateTests(unittest.TestCase):
 
     def test_missing_duplicate_and_partial_job_pages(self):
         run, jobs = self.fixture()
-        for value in [dict(jobs, total_count=9), dict(total_count=7,jobs=jobs['jobs'][:-1]),
-                      dict(total_count=9,jobs=jobs['jobs']+[jobs['jobs'][0]]),
-                      dict(total_count=9,jobs=jobs['jobs']+[dict(jobs['jobs'][0],id=99)])]:
+        for value in [dict(jobs, total_count=len(jobs['jobs'])+1), dict(total_count=len(jobs['jobs'])-1,jobs=jobs['jobs'][:-1]),
+                      dict(total_count=len(jobs['jobs'])+1,jobs=jobs['jobs']+[jobs['jobs'][0]]),
+                      dict(total_count=len(jobs['jobs'])+1,jobs=jobs['jobs']+[dict(jobs['jobs'][0],id=99)])]:
             with self.subTest(value=value), self.assertRaises(ValueError): self.check(run,value)
 
     def test_job_failure_and_identity_mismatch(self):

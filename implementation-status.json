@@ -5,42 +5,59 @@
     {
       "id": "T01",
       "status": "in-progress",
-      "evidence": []
+      "evidence": [
+        "conformance/results/foundation-slice/validation.json"
+      ]
     },
     {
       "id": "T02",
       "status": "in-progress",
-      "evidence": []
+      "evidence": [
+        "conformance/results/foundation-slice/validation.json"
+      ]
     },
     {
       "id": "T03",
       "status": "in-progress",
-      "evidence": []
+      "evidence": [
+        "conformance/results/reader-builtins/validation.json"
+      ]
     },
     {
       "id": "T04",
       "status": "in-progress",
-      "evidence": []
+      "evidence": [
+        "conformance/results/prefix-engine/validation.json"
+      ]
     },
     {
       "id": "T05",
       "status": "in-progress",
-      "evidence": []
+      "evidence": [
+        "conformance/results/grammar-bootstrap/validation.json"
+      ]
     },
     {
       "id": "T06",
       "status": "in-progress",
-      "evidence": []
+      "evidence": [
+        "conformance/results/analysis-key/validation.json"
+      ]
     },
     {
       "id": "T07",
       "status": "in-progress",
-      "evidence": []
+      "evidence": [
+        "conformance/results/doc-prepare/validation.json",
+        "conformance/results/doc-print/validation.json"
+      ]
     },
     {
       "id": "T08",
       "status": "in-progress",
-      "evidence": []
+      "evidence": [
+        "conformance/results/math-notation/validation.json"
+      ]
     },
     {
       "id": "T09",
@@ -50,7 +67,9 @@
     {
       "id": "T10",
       "status": "in-progress",
-      "evidence": []
+      "evidence": [
+        "conformance/results/markup-html/validation.json"
+      ]
     },
     {
       "id": "T11",
@@ -95,7 +114,9 @@
     {
       "id": "T19",
       "status": "in-progress",
-      "evidence": []
+      "evidence": [
+        "conformance/results/doc-site-build/seal.json"
+      ]
     },
     {
       "id": "T20",
@@ -105,17 +126,23 @@
     {
       "id": "T21",
       "status": "in-progress",
-      "evidence": []
+      "evidence": [
+        "conformance/results/doc-canonical-conformance/payloads.json"
+      ]
     },
     {
       "id": "T22",
       "status": "in-progress",
-      "evidence": []
+      "evidence": [
+        "conformance/results/math-notation/validation.json"
+      ]
     },
     {
       "id": "T23",
       "status": "in-progress",
-      "evidence": []
+      "evidence": [
+        "conformance/results/markup-html/validation.json"
+      ]
     },
     {
       "id": "T24",
@@ -130,7 +157,9 @@
     {
       "id": "T26",
       "status": "in-progress",
-      "evidence": []
+      "evidence": [
+        "conformance/results/external-extension-consumer/execution/external-extension-final/result.json"
+      ]
     }
   ],
   "acceptance": [

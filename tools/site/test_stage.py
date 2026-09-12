@@ -9,7 +9,7 @@ from stage import stage
 class StageTests(unittest.TestCase):
     def test_original_tar_copy_and_failure_preservation(self):
         original = gzip.decompress((Path(__file__).resolve().parents[2] /
-            'conformance/results/doc-pages-payload/final-review/identical-tars.tar.gz.fixture').read_bytes())
+            'conformance/fixtures/site/pages.tar.gz.fixture').read_bytes())
         tar = 'cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9'
         manifest = '39000dd5b7aad48deae97741c5b077b44a242a0badb7b30e81b3c1c26f301446'
         with tempfile.TemporaryDirectory() as temporary:
