@@ -1,0 +1,36 @@
+[
+  {
+    "late_final_main": false,
+    "rejected": false,
+    "timeouts": [
+      10,
+      10,
+      10,
+      9,
+      8,
+      7,
+      6,
+      5,
+      4,
+      3
+    ],
+    "main_fetches": 2
+  },
+  {
+    "late_final_main": true,
+    "rejected": true,
+    "timeouts": [
+      10,
+      10,
+      10,
+      9,
+      8,
+      7,
+      6,
+      5,
+      4,
+      3
+    ],
+    "main_fetches": 2
+  }
+]

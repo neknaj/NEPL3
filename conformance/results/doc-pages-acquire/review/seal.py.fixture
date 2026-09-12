@@ -1,0 +1,22 @@
+﻿from pathlib import Path
+import hashlib,json
+p=Path('.tmp/pages-acquire-review')
+(p/'review.md').write_text('''# Independent authenticated candidate acquisition review
+
+Reviewed acquire.py, test_acquire.py and final deployment README on base 4325477d288e00bc9f4d1c7034e3c43dbaf19e94 against spec15 observation/freshness and bounded acquisition contracts, existing read/download transports and candidate.prepare_upload. No implementation edits or actual API/publication operations.
+
+No blocking finding within the read-only acquisition scope. Inputs require distinct diagnostic/upload IDs and independently selected source/tar/manifest pins. The first check verifies run/attempt jobs and exact main ref/commit before downloads. Both API metadata/ZIP pairs pass the existing complete candidate/upload validation. Final run and jobs are reverified, then main is observed last; a final remaining-budget check prevents late success. The result uses the final verified Candidate while preserving before/after raw observations and original downloaded bytes.
+
+Independent final 5 tests passed normally and with python -O. Extra deterministic-time probes simulated one second per communication over a 12-second total budget and verified exact decreasing allowances [10,10,10,9,8,7,6,5,4,3]. Timely completion retained original JSON/ZIP/tar bytes. Making the final main response arrive after the budget rejected success even though all semantic identities remained valid. Existing tests reject changed attempt/jobs/main during acquisition, initial failed CI/wrong ref before download, corrupted ZIP and invalid budgets.
+
+One claim limitation was clarified during review: Evidence is returned only on success. A failed final observation drops partial local evidence from this API rather than returning it; both README and docstring now state this. This is a read-only operation and creates no new deployment uncertainty, but a future publisher's failure-recording policy remains separate. No semantic code changed after the independent test run, only that docstring/document clarification.
+
+The 300-second budget is shared rather than restarted, but synchronous ZIP validation, process startup/cleanup and scheduling can overrun real time; the final checks reject success after expiry. Raw response and ZIP retention uses memory. Observations are not an atomic server snapshot, and caller lock/permissions/current-publication/recovery gates still apply. The tests inject network results but run actual metadata/ZIP/tar verifiers; no TLS/live GitHub acquisition, complete publisher, deployment or LKG claim is made. Parent full-suite results are separate evidence.
+''',encoding='utf8',newline='\n')
+for name in ['tools/site/deployment/acquire.py','tools/site/test_acquire.py','tools/site/deployment/README.md']:
+ f=p/'source'/name;f.parent.mkdir(parents=True,exist_ok=True);f.write_bytes(Path(name).read_bytes())
+rows=[]
+for f in sorted(p.rglob('*')):
+ if f.is_file() and f.name!='manifest.json':
+  b=f.read_bytes();rows.append(dict(path=f.relative_to(p).as_posix(),bytes=len(b),sha256=hashlib.sha256(b).hexdigest()))
+(p/'manifest.json').write_text(json.dumps(dict(files=rows),indent=2)+'\n',encoding='utf8');print(len(rows),sum(r['bytes'] for r in rows))
