@@ -1,0 +1,89 @@
+{
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 16,
+      "sha256": "109c335ccc45c5e25b7ba68292d6373b2ac6d5d18a9d0959f4bce0fdfcf39984"
+    },
+    {
+      "path": "README.md",
+      "bytes": 1041,
+      "sha256": "6e9075905a204a77839712b7b9ce9d3778d6fd0c859886cec8b659770d58be86"
+    },
+    {
+      "path": "review/query-only-fixed.json.fixture",
+      "bytes": 507,
+      "sha256": "af5cda956882ce2e04373bd3a1ad7b5710d54bc7a62fcb6f3dac5cfd14a7b6f4"
+    },
+    {
+      "path": "review/query-only-repro.json.fixture",
+      "bytes": 1953,
+      "sha256": "f3dac685b66482f0ad4583ffcad897f04b54e04f0a52cd07a445c03ffdb3f6ed"
+    },
+    {
+      "path": "review/real-site-fixed.json.fixture",
+      "bytes": 7909,
+      "sha256": "fbcef934ad2dca7913f7876bf39d5cae8caf72409dae1466698e6f48858d9f6e"
+    },
+    {
+      "path": "review/review.md.fixture",
+      "bytes": 5137,
+      "sha256": "352528d826b599f310bd01e8cdb7cae882effa3aa4514fae7f7fa16188d29921"
+    },
+    {
+      "path": "root/0.stderr.fixture",
+      "bytes": 115,
+      "sha256": "e7b5683931debac3fdeb626f2d0c62b3bb81b277dbce78835a9124fde411be95"
+    },
+    {
+      "path": "root/0.stdout.fixture",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "root/1.stderr.fixture",
+      "bytes": 122,
+      "sha256": "04ca2984ca15118ca57bc39434aa4dd3b79b771fd9fd5258f41994d97c2b1d03"
+    },
+    {
+      "path": "root/1.stdout.fixture",
+      "bytes": 76574,
+      "sha256": "56ec79a79375ad3d2fe1de434207f237ae559f8c58ab061079a73f0efe4c1cda"
+    },
+    {
+      "path": "root/commands.json.fixture",
+      "bytes": 503,
+      "sha256": "ebf242484f0b07ca65098d7a3b7440d0a994f96303115be9de7613ccb3b20786"
+    },
+    {
+      "path": "root/run-site-smoke.py.fixture",
+      "bytes": 1270,
+      "sha256": "afa82d0c9d0131d7c92d87bef68c9752df96ccbfa2761b8e5dc8a87ec06d95fd"
+    },
+    {
+      "path": "root/site-smoke-result.json.fixture",
+      "bytes": 7909,
+      "sha256": "492516ec088160e129fce621fc75b6deeec2d77d5179b18720dc20018ea6c339"
+    },
+    {
+      "path": "source/.github/workflows/ci.yml.fixture",
+      "bytes": 17150,
+      "sha256": "5feae9ecee10a5e65d24b82ca59fdead6e953288776dff24cd5a2992a9a77f21"
+    },
+    {
+      "path": "source/doc/development.md.fixture",
+      "bytes": 27870,
+      "sha256": "0497eb8d070350b53878b646d8d8bb3ebbd1c9b205b1cb127d1e5189a59ef84a"
+    },
+    {
+      "path": "source/tools/site/smoke.py.fixture",
+      "bytes": 7249,
+      "sha256": "2efa1c26b5cc327560e4644b1e713f5852b118a67384c9757fde881bfcc09eb3"
+    },
+    {
+      "path": "source/tools/site/test_smoke.py.fixture",
+      "bytes": 5814,
+      "sha256": "f0c4e4edf5de77fdc0575e1dabe346422464cbb5ebe7e557c7165d4ba411d34b"
+    }
+  ]
+}

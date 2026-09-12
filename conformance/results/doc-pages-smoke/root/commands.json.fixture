@@ -1,0 +1,30 @@
+{
+  "source_commit": "e6b157b618189f2a2389d9fbfd48d88a3250d738",
+  "commands": [
+    {
+      "command": [
+        "C:\\Users\\bem\\miniforge3\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/site",
+        "-p",
+        "test_*.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "run",
+        "--locked",
+        "-p",
+        "nepl3-tools",
+        "--",
+        "check"
+      ],
+      "exit_code": 0
+    }
+  ]
+}
