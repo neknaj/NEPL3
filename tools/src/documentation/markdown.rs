@@ -527,12 +527,51 @@ mod tests {
     }
 
     #[test]
-    fn corrected_foundation_and_math_documents_have_no_accidental_html_tags() -> Result<()> {
-        for source in [
-            include_str!("../../../doc/spec/02-foundation.md"),
-            include_str!("../../../doc/spec/06-math.md"),
+    fn corrected_documents_preserve_generic_inline_code() -> Result<()> {
+        for (source, expected) in [
+            (
+                include_str!("../../../doc/spec/02-foundation.md"),
+                &[("List<T>", "<T>"), ("Option<T>", "<T>")][..],
+            ),
+            (
+                include_str!("../../../doc/spec/06-math.md"),
+                &[
+                    ("Vector(List<Q>)", "<Q>"),
+                    ("Matrix(rows,cols,List<Q>)", "<Q>"),
+                    ("Option<Span>", "<Span>"),
+                ][..],
+            ),
         ] {
-            assert!(!extract(source)?.elements.contains_key("raw-html"));
+            // Annotated projections intentionally contain Ruby and anchor HTML.
+            // The regression is loss of generic type text into HTML tags, not
+            // the presence of any HTML anywhere in the document.
+            let structure = extract(source)?;
+            assert!(
+                !structure.html_fragments.iter().any(|fragment| {
+                    matches!(fragment.literal.as_str(), "<T>" | "<Q>" | "<Span>")
+                })
+            );
+            for (text, tag) in expected {
+                assert_eq!(
+                    structure
+                        .inline_code
+                        .iter()
+                        .filter(|code| code.text == *text)
+                        .count(),
+                    1,
+                    "generic type must remain one complete code value: {text}"
+                );
+                let unquoted = source.replace(&format!("`{text}`"), text);
+                assert_ne!(unquoted, source, "fixture must exercise its backticks");
+                let broken = extract(&unquoted)?;
+                assert!(!broken.inline_code.iter().any(|code| code.text == *text));
+                assert!(
+                    broken
+                        .html_fragments
+                        .iter()
+                        .any(|fragment| fragment.literal == *tag)
+                );
+            }
         }
         Ok(())
     }

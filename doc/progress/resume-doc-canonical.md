@@ -2,6 +2,13 @@
 
 ## 2026年9月12日の再開（現在）
 
+PR102は必須CI16件の成功と独立レビュー後、`672949b98f66829eb1b5737f6f92c425f2936c71`
+へ統合した。正式Doc正本は12章である。次の第06章はbranchで13章集合を同じ有限予算で
+各2回生成し、Markdown14ファイル・HTML15ファイルのbyte一致、既存12章HTML/CSSの不変、
+生成Markdown照合・独立レビュー・3ブラウザ表示を確認した。証拠は
+`conformance/results/doc-canonical-math/`。第06章の最終CIとmain統合はまだ行っていない。
+第09章は参照先の実装記録とそのJSON資料の準備が必要なため、リンクを省かず保留する。
+
 第11章の正本切替をbranch上で検証した。全12章のMarkdown/HTMLを各2回生成し、
 集合全体のbyte一致と既存11章HTML/CSSの不変を確認した。生成Markdownを読む受入ID
 checkerの修正、非表示HTML継続行の失敗系、13件のtask試験、14件の対象canonical試験、

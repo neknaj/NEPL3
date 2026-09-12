@@ -1,0 +1,8 @@
+from pathlib import Path
+import hashlib,json
+OUT=Path(__file__).parent;a=Path('.tmp/markdown-chapter06-first');b=Path('.tmp/markdown-chapter06-second')
+checks={'head':'cd883dea39d47deacffa928e67933ff5a8707a27','markdown_repeat':[{'path':p.relative_to(a).as_posix(),'same':p.read_bytes()==b.joinpath(p.relative_to(a)).read_bytes()} for p in a.rglob('*') if p.is_file()],'adopted_md_matches':Path('doc/spec/06-math.md').read_bytes()==a.joinpath('doc/spec/06-math.md').read_bytes()}
+(OUT/'adopted.json').write_text(json.dumps(checks,indent=2),encoding='utf-8')
+files=[{'path':p.relative_to(OUT).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in OUT.rglob('*') if p.is_file() and p.name!='seal.json']
+(OUT/'seal.json').write_text(json.dumps(files,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps({'files':len(files),'max_bytes':max(x['bytes'] for x in files),'total_bytes':sum(x['bytes'] for x in files),'md_repeat_count':len(checks['markdown_repeat']),'md_repeat_all':all(x['same'] for x in checks['markdown_repeat']),'adopted_md_matches':checks['adopted_md_matches']}))

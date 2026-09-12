@@ -1,0 +1,18 @@
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+import json
+ROOT=Path('.tmp/html-chapter06-first').resolve();OUT=Path(__file__).parent
+rows=[]
+with sync_playwright() as p:
+ for name in ['chromium','firefox','webkit']:
+  browser=getattr(p,name).launch(headless=True)
+  ctx=browser.new_context(java_script_enabled=False,offline=name!='webkit',viewport={'width':375,'height':900})
+  ctx.route('http://**/*',lambda r:r.abort());ctx.route('https://**/*',lambda r:r.abort())
+  page=ctx.new_page();requests=[];page.on('request',lambda r:requests.append(r.url))
+  page.goto((ROOT/'docs/spec/06-math.html').as_uri(),wait_until='load')
+  row=page.evaluate('''()=>({lists:document.querySelectorAll('article ul,article ol').length,items:document.querySelectorAll('article li').length,codes:document.querySelectorAll('code').length,ruby:document.querySelectorAll('.nepl-ruby').length,css:[...document.styleSheets].map(s=>s.href),background:getComputedStyle(document.querySelector('article')).backgroundColor,overflow:document.documentElement.scrollWidth>innerWidth})''')
+  page.locator('a[href="17-math-html.html"]').click();row['chapter17_target']=page.locator('h1').inner_text()
+  row.update(browser=name,http_requests=[u for u in requests if u.startswith('http')],offline_emulation=name!='webkit',http_https_aborted=True)
+  rows.append(row);browser.close()
+(OUT/'offline.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps([{k:r[k] for k in ['browser','lists','items','codes','overflow','http_requests']} for r in rows]))

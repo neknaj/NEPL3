@@ -1,0 +1,75 @@
+[
+  {
+    "head": "cd883dea39d47deacffa928e67933ff5a8707a27",
+    "command": [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 1.2102534000005107
+  },
+  {
+    "head": "cd883dea39d47deacffa928e67933ff5a8707a27",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--lib",
+      "doc::canonical::tests::",
+      "--",
+      "--skip",
+      "synchronized_context_spec_drafts_parse_lower_and_check_labels"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 89.03872510002111
+  },
+  {
+    "head": "cd883dea39d47deacffa928e67933ff5a8707a27",
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "doc-canonical",
+      "--check"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 70.9325943000149
+  },
+  {
+    "head": "cd883dea39d47deacffa928e67933ff5a8707a27",
+    "command": [
+      "cargo",
+      "clippy",
+      "--workspace",
+      "--all-targets",
+      "--locked",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 1.3448815000010654
+  },
+  {
+    "head": "cd883dea39d47deacffa928e67933ff5a8707a27",
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "check"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 6.362135000003036
+  }
+]

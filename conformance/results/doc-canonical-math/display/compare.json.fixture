@@ -1,0 +1,157 @@
+{
+  "prior_twelve_html_and_css": [
+    {
+      "path": "docs/spec/00-contract.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/01-architecture.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/07-circuit.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/08-editor.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/11-conformance.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/12-model-invariants.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/13-reproducibility.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/17-math-html.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/18-html-delivery.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/19-html-fragment.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/20-doc-html.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/22-external-extensions.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/assets/doc.css",
+      "same": true
+    }
+  ],
+  "html_repeat": [
+    {
+      "path": "manifest.json",
+      "same": true
+    },
+    {
+      "path": "docs/spec/00-contract.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/01-architecture.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/06-math.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/07-circuit.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/08-editor.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/11-conformance.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/12-model-invariants.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/13-reproducibility.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/17-math-html.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/18-html-delivery.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/19-html-fragment.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/20-doc-html.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/22-external-extensions.html",
+      "same": true
+    },
+    {
+      "path": "docs/spec/assets/doc.css",
+      "same": true
+    }
+  ],
+  "codes_exact": true,
+  "original_code_count": 12,
+  "generated_list_lengths": [
+    13
+  ],
+  "md_separators": 0,
+  "html_budget": {
+    "contract": "nepl3.local-doc-pages.execution/1",
+    "initial_usage": {
+      "allocation_units": 0,
+      "depth": 0,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 0,
+      "output_bytes": 0,
+      "source_bytes": 0,
+      "work": 0
+    },
+    "limits": {
+      "allocation_units": 1000000000,
+      "depth": 1000,
+      "diagnostics": 1000,
+      "events": 1000,
+      "nodes": 20000000,
+      "output_bytes": 10000000,
+      "source_bytes": 10000000,
+      "work": 500000000
+    },
+    "usage": {
+      "allocation_units": 937205778,
+      "depth": 14,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 17068520,
+      "output_bytes": 985465,
+      "source_bytes": 345957,
+      "work": 448252208
+    }
+  }
+}
