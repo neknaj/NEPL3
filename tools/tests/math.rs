@@ -16,6 +16,83 @@ fn err(v: impl std::fmt::Debug) -> String {
 }
 
 #[test]
+fn math_source_evaluates_through_native_and_portable_syntax() -> Result<(), String> {
+    use nepl3_math_core::{check, environment, evaluation, lower, model::*, portable};
+    let compiled = compiled()?;
+    for (source, n, d) in [
+        ("add 2 mul 3 4", 14_i64, 1_i64),
+        ("let x 10 add sum x 1 2 x x", 13, 1),
+        ("sum i 1 2 sum j 1 2 add i j", 12, 1),
+        ("frac 1 3", 1, 3),
+        ("pow 2 neg 3", 1, 8),
+        ("root 3 neg 8", -2, 1),
+        ("sqrt frac 4 9", 2, 3),
+        (
+            "det matrix cons row cons 1 cons 2 nil cons row cons 3 cons 4 nil nil",
+            -2,
+            1,
+        ),
+        (
+            "label 7 Doc sentence cons anno text \"\" cons text \"note\" nil nil",
+            7,
+            1,
+        ),
+    ] {
+        with_input(&compiled, source, "Expr", |tree, profile, b, a| {
+            let syntax = tree
+                .tree()
+                .bundle
+                .validate_with_sources(profile.registry(), b, a)
+                .map_err(err)?;
+            let original = lower::expression(
+                &syntax,
+                &compiled.others[0].schema,
+                check::Category::Expr,
+                profile.registry(),
+                &mut budget(),
+                &mut SourceAdmission::default(),
+            )
+            .map_err(err)?;
+            let empty = SourceStore::default();
+            let mut admission = SourceAdmission::default();
+            let mut codec =
+                FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
+            let raw = portable::to_value(&original, profile.registry(), &mut codec, &mut budget())
+                .map_err(err)?;
+            let bytes = nepl3_wire::encode(&raw, &mut budget()).map_err(err)?;
+            let raw = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+            let actual = portable::from_value(&raw, profile.registry(), &mut codec, &mut budget())
+                .map_err(err)?;
+            let raw_env = BindingEnvironment {
+                assignments: vec![],
+            };
+            let env = environment::check(&raw_env, &mut budget()).map_err(err)?;
+            let expected = nepl3_math_core::number::ratio(
+                &nepl3_core::value::Integer::from(n),
+                &nepl3_core::value::Integer::from(d),
+                &mut budget(),
+            )
+            .map_err(err)?;
+            for input in [&original.value, &actual.value] {
+                let checked = check::expression(input, &mut budget()).map_err(err)?;
+                let result = evaluation::evaluate(&checked, &env, &mut budget()).map_err(err)?;
+                assert_eq!(
+                    result.outcome,
+                    evaluation::Outcome::Exact(MathExactValue::Scalar {
+                        value: expected.clone()
+                    }),
+                    "{source}"
+                );
+                assert!(core::ptr::eq(result.source, input));
+            }
+            Ok(())
+        })
+        .map_err(|e| format!("{source}: {e}"))?;
+    }
+    Ok(())
+}
+
+#[test]
 fn exact_matrix_operations_match_across_ndf_boundary() -> Result<(), String> {
     use nepl3_math_core::{
         exact::{self, arithmetic},

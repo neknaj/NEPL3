@@ -5,6 +5,7 @@ pub mod binding;
 pub mod check;
 pub mod construct;
 pub mod environment;
+pub mod evaluation;
 pub mod exact;
 pub mod free;
 pub mod lower;
