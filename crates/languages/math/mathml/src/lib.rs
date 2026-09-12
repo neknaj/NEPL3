@@ -383,6 +383,9 @@ pub fn render(
         push(attributes, Attribute::Display(display), out.b)?;
     }
     let fragment = Fragment {
+        html_policy: nepl3_markup::html::HtmlPolicy {
+            classes: Vec::new(),
+        },
         nodes: out.nodes,
         root,
     };

@@ -79,6 +79,7 @@ pub fn serialize(input: &Validated<'_>, b: &mut Budget) -> Result<String, Error>
     b.poll()?;
     let f = input.fragment();
     let mut out = String::new();
+    let base = b.current_depth();
     let mut stack = Vec::new();
     push(&mut stack, Action::Node(f.root, 1), b)?;
     while let Some(action) = stack.pop() {
@@ -86,8 +87,16 @@ pub fn serialize(input: &Validated<'_>, b: &mut Budget) -> Result<String, Error>
         match action {
             Action::Node(id, depth) => {
                 b.observe_depth(depth)?;
-                b.charge(Resource::Nodes, 1)?;
+                if !matches!(f.nodes[index(id, f.nodes.len())?], Node::Html { .. }) {
+                    b.charge(Resource::Nodes, 1)?;
+                }
                 match &f.nodes[index(id, f.nodes.len())?] {
+                    Node::Html { fragment } => {
+                        let html = b.with_depth_at_least(base.saturating_add(depth - 1), |b| {
+                            crate::html::serialize::embedded(fragment, b)
+                        })?;
+                        append(&mut out, &html, true, b)?;
+                    }
                     Node::Text(text) => {
                         let escaped =
                             escape(text, TextContext::Content, b).map_err(|e| match e {

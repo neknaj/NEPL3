@@ -227,8 +227,14 @@ fn serialize_mode(
     xml: bool,
     b: &mut Budget,
 ) -> Result<String, HtmlError> {
+    fragment(proof.fragment, xml, b)
+}
+/// Caller must own the composite structural and identity proof.
+pub(crate) fn embedded(f: &HtmlFragment, b: &mut Budget) -> Result<String, HtmlError> {
+    fragment(f, true, b)
+}
+fn fragment(f: &HtmlFragment, xml: bool, b: &mut Budget) -> Result<String, HtmlError> {
     b.poll()?;
-    let f = proof.fragment;
     b.charge(Resource::AllocationUnits, 64)?;
     let mut stack = vec![(f.root, 1_u64, false)];
     let mut out = Output {
