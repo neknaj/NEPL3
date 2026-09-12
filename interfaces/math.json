@@ -897,6 +897,79 @@
       "constraints": [
         "math.source_closure"
       ]
+    },
+    "MathBinding": {
+      "record": [
+        [
+          "occurrence",
+          "U64"
+        ],
+        [
+          "node",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "ExprRef"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathSymbolUse": {
+      "record": [
+        [
+          "occurrence",
+          "U64"
+        ],
+        [
+          "node",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "ExprRef"
+            }
+          }
+        ],
+        [
+          "binding",
+          {
+            "option": "U64"
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathBindings": {
+      "record": [
+        [
+          "definitions",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathBinding"
+              }
+            }
+          }
+        ],
+        [
+          "uses",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathSymbolUse"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
     }
   },
   "operations": {}
