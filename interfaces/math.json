@@ -1146,6 +1146,69 @@
         ]
       },
       "constraints": []
+    },
+    "MathEvaluationFailureKind": {
+      "variant": {
+        "OperandShapeMismatch": [],
+        "NotSquare": [],
+        "DivisionByZero": [],
+        "InvalidRootDegree": []
+      },
+      "constraints": []
+    },
+    "MathEvaluationFailure": {
+      "record": [
+        [
+          "expression",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "ExprRef"
+            }
+          }
+        ],
+        [
+          "kind",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "MathEvaluationFailureKind"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathEvaluationResult": {
+      "variant": {
+        "Success": [
+          [
+            "outcome",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathEvaluationOutcome"
+              }
+            }
+          ]
+        ],
+        "Failure": [
+          [
+            "failure",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathEvaluationFailure"
+              }
+            }
+          ]
+        ]
+      },
+      "constraints": []
     }
   },
   "operations": {}

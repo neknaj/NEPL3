@@ -1932,7 +1932,7 @@
     {
       "operation": "math.evaluate",
       "input": "CheckedExpression + BindingEnvironment + Limits",
-      "output": "Exact | Symbolic | EvalError",
+      "output": "MathEvaluationResult",
       "definition": "doc/spec/06-math.md",
       "pure": true
     },

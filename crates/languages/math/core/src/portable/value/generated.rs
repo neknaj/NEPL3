@@ -333,4 +333,50 @@ match (tag,f.len()) {
 _=>Err(PortableError::Shape),}
 }
 }
+impl Value for MathEvaluationFailureKind {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::OperandShapeMismatch => variant(s,"MathEvaluationFailureKind","OperandShapeMismatch",[],b),
+Self::NotSquare => variant(s,"MathEvaluationFailureKind","NotSquare",[],b),
+Self::DivisionByZero => variant(s,"MathEvaluationFailureKind","DivisionByZero",[],b),
+Self::InvalidRootDegree => variant(s,"MathEvaluationFailureKind","InvalidRootDegree",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,57)?;
+let (tag,f)=case(v,s,"MathEvaluationFailureKind")?;
+match (tag,f.len()) {
+("OperandShapeMismatch",0)=>Ok(Self::OperandShapeMismatch),
+("NotSquare",0)=>Ok(Self::NotSquare),
+("DivisionByZero",0)=>Ok(Self::DivisionByZero),
+("InvalidRootDegree",0)=>Ok(Self::InvalidRootDegree),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for MathEvaluationFailure {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathEvaluationFailure",[self.expression.put(s,c,b)?,self.kind.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,53)?;
+let f=fields(v,s,"MathEvaluationFailure",2)?;
+Ok(Self {expression:Value::read(&f[0],s,c,b)?,kind:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for MathEvaluationResult {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Success {outcome} => variant(s,"MathEvaluationResult","Success",[outcome.put(s,c,b)?],b),
+Self::Failure {failure} => variant(s,"MathEvaluationResult","Failure",[failure.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,52)?;
+let (tag,f)=case(v,s,"MathEvaluationResult")?;
+match (tag,f.len()) {
+("Success",1)=>Ok(Self::Success {outcome:Value::read(&f[0],s,c,b)?}),
+("Failure",1)=>Ok(Self::Failure {failure:Value::read(&f[0],s,c,b)?}),
+_=>Err(PortableError::Shape),}
+}
+}
 }

@@ -278,3 +278,20 @@ pub enum MathEvaluationOutcome {
     Exact(MathExactValue),
     Symbolic(Vec<MathEvaluationRequirement>),
 }
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum MathEvaluationFailureKind {
+    OperandShapeMismatch,
+    NotSquare,
+    DivisionByZero,
+    InvalidRootDegree,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathEvaluationFailure {
+    pub expression: ExprRef,
+    pub kind: MathEvaluationFailureKind,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum MathEvaluationResult {
+    Success { outcome: MathEvaluationOutcome },
+    Failure { failure: MathEvaluationFailure },
+}

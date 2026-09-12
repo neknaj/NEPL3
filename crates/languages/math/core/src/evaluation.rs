@@ -33,6 +33,49 @@ impl From<StopReason> for Error {
 }
 pub use machine::evaluate;
 
+/// Source-bound semantic result. Resource stops and internal failures are not
+/// semantic results and remain errors of the operation producing this report.
+pub struct EvaluationReport<'a> {
+    pub source: &'a MathValue,
+    pub result: MathEvaluationResult,
+}
+pub fn report<'a>(
+    input: &'a crate::check::CheckedExpression<'a>,
+    environment: &crate::environment::CheckedEnvironment<'_>,
+    budget: &mut Budget,
+) -> Result<EvaluationReport<'a>, Error> {
+    let result = match evaluate(input, environment, budget) {
+        Ok(value) => MathEvaluationResult::Success {
+            outcome: value.outcome,
+        },
+        Err(Error::At { expression, error }) => {
+            use MathEvaluationFailureKind as Kind;
+            let kind = match error {
+                arithmetic::Error::OperandShapeMismatch => Kind::OperandShapeMismatch,
+                arithmetic::Error::NotSquare => Kind::NotSquare,
+                arithmetic::Error::Arithmetic(number::ArithmeticError::DivisionByZero) => {
+                    Kind::DivisionByZero
+                }
+                arithmetic::Error::Arithmetic(number::ArithmeticError::InvalidRootDegree) => {
+                    Kind::InvalidRootDegree
+                }
+                arithmetic::Error::Stopped(reason)
+                | arithmetic::Error::Arithmetic(number::ArithmeticError::Stopped(reason)) => {
+                    return Err(Error::Stopped(reason));
+                }
+            };
+            MathEvaluationResult::Failure {
+                failure: MathEvaluationFailure { expression, kind },
+            }
+        }
+        Err(error) => return Err(error),
+    };
+    Ok(EvaluationReport {
+        source: input.value(),
+        result,
+    })
+}
+
 fn push<T>(items: &mut Vec<T>, item: T, b: &mut Budget) -> Result<(), Error> {
     b.charge(Resource::Work, 1)?;
     if items.len() == items.capacity() {

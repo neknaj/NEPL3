@@ -60,7 +60,18 @@ pub fn evaluation_from_value<'a, C: FoundationValueCodec>(
     }
     let expected =
         crate::evaluation::evaluate(input, environment, budget).map_err(evaluation_error)?;
-    let equal = match (&received, &expected.outcome) {
+    if !same_outcome(&received, &expected.outcome, budget)? {
+        return Err(PortableError::EvaluationMismatch);
+    }
+    Ok(expected)
+}
+fn same_outcome<E>(
+    received: &crate::evaluation::Outcome,
+    expected: &crate::evaluation::Outcome,
+    budget: &mut Budget,
+) -> Result<bool, PortableError<E>> {
+    use crate::evaluation::Outcome;
+    Ok(match (received, expected) {
         (Outcome::Symbolic(a), Outcome::Symbolic(b)) => {
             budget.charge(
                 Resource::Work,
@@ -83,6 +94,52 @@ pub fn evaluation_from_value<'a, C: FoundationValueCodec>(
                 _ => return Err(PortableError::Shape),
             }
         }
+        _ => false,
+    })
+}
+
+/// Encode either a successful evaluation or its located semantic failure.
+/// Cancellation/resource stops remain errors; encoding cannot reset a budget.
+pub fn evaluation_result_to_value<C: FoundationValueCodec>(
+    input: &crate::check::CheckedExpression<'_>,
+    environment: &crate::environment::CheckedEnvironment<'_>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    let result = crate::evaluation::report(input, environment, budget).map_err(evaluation_error)?;
+    let raw = result.result.put(schema(registry)?, codec, budget)?;
+    check_report(registry, &raw, "MathEvaluationResult", budget)?;
+    Ok(raw)
+}
+
+/// Recompute both successes and failures against the requested immutable input.
+/// A remote failure is not authoritative, even when it names a valid node.
+pub fn evaluation_result_from_value<'a, C: FoundationValueCodec>(
+    raw: &NdfValue,
+    input: &'a crate::check::CheckedExpression<'a>,
+    environment: &crate::environment::CheckedEnvironment<'_>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<crate::evaluation::EvaluationReport<'a>, PortableError<C::Error>> {
+    use crate::model::{MathEvaluationOutcome, MathEvaluationResult as ResultValue};
+    check_report(registry, raw, "MathEvaluationResult", budget)?;
+    let received = ResultValue::read(raw, schema(registry)?, codec, budget)?;
+    if let ResultValue::Success {
+        outcome: MathEvaluationOutcome::Exact(value),
+    } = &received
+    {
+        crate::exact::check(value, budget).map_err(exact_error)?;
+    }
+    let expected =
+        crate::evaluation::report(input, environment, budget).map_err(evaluation_error)?;
+    budget.charge(Resource::Work, 1)?;
+    let equal = match (&received, &expected.result) {
+        (ResultValue::Success { outcome: a }, ResultValue::Success { outcome: b }) => {
+            same_outcome(a, b, budget)?
+        }
+        (ResultValue::Failure { failure: a }, ResultValue::Failure { failure: b }) => a == b,
         _ => false,
     };
     if !equal {
