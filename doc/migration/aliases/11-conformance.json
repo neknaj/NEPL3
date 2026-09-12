@@ -12,10 +12,6 @@
     "name": "1-必須の試験群"
   },
   {
-    "section": "properties",
-    "name": "2-propertyとfuzz"
-  },
-  {
     "section": "ci",
     "name": "3-不変条件のci"
   },
