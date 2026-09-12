@@ -1,0 +1,29 @@
+[
+  {
+    "name": "site",
+    "command": [
+      "python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_*.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "check",
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "--",
+      "check"
+    ],
+    "exit_code": 0
+  }
+]
