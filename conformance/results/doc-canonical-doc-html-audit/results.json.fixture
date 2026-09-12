@@ -1,0 +1,27 @@
+{
+  "passed": true,
+  "implementation_commit": "f459596e87dfe28b24954cfad82472626033ea91",
+  "payload_count": 209,
+  "payload_bytes": 20932373,
+  "chunked_files": 2,
+  "owners": {
+    "generation": 14,
+    "checks": 11,
+    "html": 12,
+    "markdown": 11,
+    "root-browser": 25,
+    "root-github": 4,
+    "review-resumed20": 16,
+    "review-resumed20-markdown": 6,
+    "review-resumed20-display": 52,
+    "review-resumed20-final": 22,
+    "review-resumed20-bootstrap": 29,
+    "scripts": 7
+  },
+  "source_commit_matches": 6,
+  "html_files": 12,
+  "html_manifest_payloads": 11,
+  "compiler_invocations": 0,
+  "secret_pattern_hits": [],
+  "scope": "Archive integrity and compiler-free byte restoration; browser checks inspected separately, not rerun here."
+}

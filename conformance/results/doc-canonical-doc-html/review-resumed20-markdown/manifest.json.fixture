@@ -1,0 +1,30 @@
+{
+  "scope": "Independent first Markdown result review",
+  "files": [
+    {
+      "path": "20-doc-html.md",
+      "bytes": 16779,
+      "sha256": "d1ba121eec5b9facb658b55c03fe8bd88d361ac308ac3503db702c463b3d5529"
+    },
+    {
+      "path": "manifest-first.json",
+      "bytes": 2515,
+      "sha256": "88c719b63ba392ca59995200b6bdb3f5f037d4439881341854d55301de89322b"
+    },
+    {
+      "path": "manifest-prior9.json",
+      "bytes": 2356,
+      "sha256": "8ffb3ad7b39e600d0833872e52e5804e47e97a1b9aaa4700ff2ef02adbf7d29c"
+    },
+    {
+      "path": "result.json",
+      "bytes": 4351,
+      "sha256": "40b31a2df338241f221fb01cfd5118a555c021adc540bf41f9c1855cc0de6589"
+    },
+    {
+      "path": "review.md",
+      "bytes": 2224,
+      "sha256": "0fddbf04e703436107afb0e93e364251eab5da101f65a6b1c6a33bb55db9a17e"
+    }
+  ]
+}

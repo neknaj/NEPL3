@@ -1,0 +1,53 @@
+{
+  "commit": "10255b819296ba3c7eb786784779a67ac15740d7",
+  "scope": "Independent review of root opening clarification plus mechanical preservation; original draft author is this reviewer, so full manuscript self-read is not independent semantic approval.",
+  "old_draft_sha256": "f71bfc8675e0fef5300b37561351169f69b540d57814a73abe02e3c8041d33cb",
+  "new_draft_sha256": "5d0380d855e620f89140b34e01d0a0f26c20833f4874a655c5fe033523fb861d",
+  "original_markdown_sha256": "301e208075a838537f5325c4a7ccbddccace1bb5e3d0877d4d4c9de2d6982a72",
+  "reverse_exact": true,
+  "paragraphs": 16,
+  "sections": [
+    "local_export",
+    "baseline"
+  ],
+  "codes": [
+    "nepl3-doc-html",
+    "interfaces/doc-html.json",
+    "LocalHtmlRequest",
+    "prepare_local",
+    "RenderedFragment",
+    "NEPL3.Doc.Html.Fragment.v1",
+    "nepl3-tools doc-html export <input.nepld> <new-directory>",
+    "document.html",
+    "assets/doc.css",
+    "manifest.json",
+    "baseline-source:last",
+    "baseline-source:first",
+    "baseline-source:first/last"
+  ],
+  "links": [
+    "https://drafts.csswg.org/css-inline/#baseline-source",
+    "https://www.w3.org/TR/css-grid-1/#grid-baselines",
+    "https://www.w3.org/TR/CSS2/visudet.html#leading",
+    "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+  ],
+  "ruby_count": 467,
+  "aliases": [
+    {
+      "section": null,
+      "name": "20-docのhtml変換"
+    },
+    {
+      "section": "local_export",
+      "name": "開発hostによるローカル文書の書き出し"
+    },
+    {
+      "section": "baseline",
+      "name": "固定cssのbaselineと対応範囲"
+    }
+  ],
+  "prior_server_raw_exact": true,
+  "new_opening": "nepl3-doc-html はDoc coreとmarkupへ依存する純粋backendであり、ファイル・DOM・guest意味処理を実行しない。言語中立の値は interfaces/doc-html.json に定義する。本章のlocal入口は、外部要求が一つもないArticleをHTML fragmentへ変換する制約を持つ。document shellと固定CSSの配布は、後述の開発hostが担当する。一般page/asset/foreign解決と完全なReport操作は、このlocal入口の責務に含めず、別の統合経路で扱う。",
+  "runtime": "not-run",
+  "browser": "not-run; prior captured original GitHub DOM verified locally"
+}

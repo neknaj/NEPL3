@@ -1,0 +1,36 @@
+{
+  "scope": "Independent whole-chapter20 source review; no production/browser claim",
+  "base": "f2cbf4f",
+  "head": "5dc560ecc2ab20bf3f495597c248ef6730d2c05d",
+  "original_sha256": "301e208075a838537f5325c4a7ccbddccace1bb5e3d0877d4d4c9de2d6982a72",
+  "source_sha256": "5d0380d855e620f89140b34e01d0a0f26c20833f4874a655c5fe033523fb861d",
+  "paragraphs": 16,
+  "codes": [
+    "nepl3-doc-html",
+    "interfaces/doc-html.json",
+    "LocalHtmlRequest",
+    "prepare_local",
+    "RenderedFragment",
+    "NEPL3.Doc.Html.Fragment.v1",
+    "nepl3-tools doc-html export <input.nepld> <new-directory>",
+    "document.html",
+    "assets/doc.css",
+    "manifest.json",
+    "baseline-source:last",
+    "baseline-source:first",
+    "baseline-source:first/last"
+  ],
+  "links": [
+    "https://drafts.csswg.org/css-inline/#baseline-source",
+    "https://www.w3.org/TR/css-grid-1/#grid-baselines",
+    "https://www.w3.org/TR/CSS2/visudet.html#leading",
+    "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+  ],
+  "ruby_count": 467,
+  "section_ids": [
+    "local_export",
+    "baseline"
+  ],
+  "production_generation": "not-run-by-reviewer",
+  "browser": "not-run-by-reviewer"
+}

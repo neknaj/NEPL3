@@ -1,0 +1,84 @@
+{
+  "head": "f459596e87dfe28b24954cfad82472626033ea91",
+  "url": "https://github.com/neknaj/NEPL3/blob/f459596e87dfe28b24954cfad82472626033ea91/doc/spec/20-doc-html.md",
+  "rows": [
+    {
+      "fragment": "20-docのhtml変換",
+      "before": {
+        "top": -2104,
+        "scrollY": 2490,
+        "max": 2490
+      },
+      "after": {
+        "top": 125,
+        "scrollY": 261,
+        "hash": "#20-doc%E3%81%AEhtml%E5%A4%89%E6%8F%9B"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "開発hostによるローカル文書の書き出し",
+      "before": {
+        "top": 1775.59375,
+        "scrollY": 261,
+        "max": 2490
+      },
+      "after": {
+        "top": 124.59375,
+        "scrollY": 1912,
+        "hash": "#%E9%96%8B%E7%99%BAhost%E3%81%AB%E3%82%88%E3%82%8B%E3%83%AD%E3%83%BC%E3%82%AB%E3%83%AB%E6%96%87%E6%9B%B8%E3%81%AE%E6%9B%B8%E3%81%8D%E5%87%BA%E3%81%97"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "固定cssのbaselineと対応範囲",
+      "before": {
+        "top": 2650.78125,
+        "scrollY": 0,
+        "max": 2490
+      },
+      "after": {
+        "top": 160.78125,
+        "scrollY": 2490,
+        "hash": "#%E5%9B%BA%E5%AE%9Acss%E3%81%AEbaseline%E3%81%A8%E5%AF%BE%E5%BF%9C%E7%AF%84%E5%9B%B2"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-6c6f63616c5f6578706f7274",
+      "before": {
+        "top": -453.40625,
+        "scrollY": 2490,
+        "max": 2490
+      },
+      "after": {
+        "top": 124.59375,
+        "scrollY": 1912,
+        "hash": "#n-6c6f63616c5f6578706f7274"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    },
+    {
+      "fragment": "n-626173656c696e65",
+      "before": {
+        "top": 2650.78125,
+        "scrollY": 0,
+        "max": 2490
+      },
+      "after": {
+        "top": 160.78125,
+        "scrollY": 2490,
+        "hash": "#n-626173656c696e65"
+      },
+      "stable_samples": 5,
+      "result": "passed"
+    }
+  ],
+  "status": 200,
+  "browser": "151.0.7922.34",
+  "raw_lines_match": true
+}

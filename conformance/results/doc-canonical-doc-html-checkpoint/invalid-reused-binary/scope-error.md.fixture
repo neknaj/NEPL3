@@ -1,0 +1,12 @@
+# Invalid attribution: reused tool binary
+
+The two commands exited0 but did not test chapter20. `tools/src/main.rs`
+derives the repository root from compile-time `CARGO_MANIFEST_DIR`, not cwd.
+Reusing the chapter08 worktree binary therefore read the nine-page chapter08
+registry. The command records' cwd source/registry identity must not be read
+as the actual generation input identity. The manifests show nine source pages
+and chapter08 Usage, with no chapter20. Both outputs and original records are
+retained as a failed harness observation, not chapter20 success evidence.
+
+The corrected invocation first builds a tool in this worktree and verifies its
+manifest includes all ten registered pages. Rust code was not changed.

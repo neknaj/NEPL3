@@ -1,0 +1,29 @@
+{
+  "20-doc-html": {
+    "commit": "5c4ce6184f6d5fa817f472d202101aaf86af3195",
+    "url": "https://github.com/neknaj/NEPL3/blob/5c4ce6184f6d5fa817f472d202101aaf86af3195/doc/spec/20-doc-html.md",
+    "status": 200,
+    "raw_exact": true,
+    "anchors": [
+      {
+        "id": "user-content-20-docのhtml変換",
+        "class": "anchor",
+        "aria-label": "Permalink: 20. DocのHTML変換",
+        "href": "#20-docのhtml変換"
+      },
+      {
+        "id": "user-content-開発hostによるローカル文書の書き出し",
+        "class": "anchor",
+        "aria-label": "Permalink: 開発hostによるローカル文書の書き出し",
+        "href": "#開発hostによるローカル文書の書き出し"
+      },
+      {
+        "id": "user-content-固定cssのbaselineと対応範囲",
+        "class": "anchor",
+        "aria-label": "Permalink: 固定CSSのbaselineと対応範囲",
+        "href": "#固定cssのbaselineと対応範囲"
+      }
+    ],
+    "navigation": "not-run"
+  }
+}

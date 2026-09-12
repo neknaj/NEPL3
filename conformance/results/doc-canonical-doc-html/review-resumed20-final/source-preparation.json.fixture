@@ -1,0 +1,8 @@
+{
+  "commit": "f459596e87dfe28b24954cfad82472626033ea91",
+  "source_root": "C:\\projects\\NEPL3-review20",
+  "archive_sha256": "a60e11883e1161577edf8cf7c07afd8822587659eab1cda68a72be29142d0c34",
+  "method": "git archive exact commit; fresh independent target directory; no borrowed binary",
+  "initial_extraction": "Long-path failure under nested .tmp/source; abandoned partial copy; complete shorter destination used",
+  "source_files": 12330
+}

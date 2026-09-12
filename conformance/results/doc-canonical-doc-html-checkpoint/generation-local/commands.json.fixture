@@ -1,0 +1,46 @@
+[
+  {
+    "source_commit": "10255b819296ba3c7eb786784779a67ac15740d7",
+    "command": [
+      "cargo",
+      "build",
+      "--locked",
+      "-p",
+      "nepl3-tools"
+    ],
+    "registry_sha256": "0cc1b6bb5d65c337c24dcebcb83f4da7b70b289d81ec1bc9ec360c7aa50c3c59",
+    "pid": 28416,
+    "exit_code": 0,
+    "elapsed_seconds": 33.88453500007745
+  },
+  {
+    "source_commit": "10255b819296ba3c7eb786784779a67ac15740d7",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-doc-html\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "markdown",
+      ".tmp/markdown-local"
+    ],
+    "registry_sha256": "0cc1b6bb5d65c337c24dcebcb83f4da7b70b289d81ec1bc9ec360c7aa50c3c59",
+    "pid": 8744,
+    "exit_code": 1,
+    "elapsed_seconds": 49.616250900086015,
+    "executable_sha256": "4a25d49a1c86800ab40b81f623c59b308fe6503b41f4af0f4d747a852f56b6a6",
+    "output_exists": false
+  },
+  {
+    "source_commit": "10255b819296ba3c7eb786784779a67ac15740d7",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-doc-html\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "html",
+      ".tmp/html-local"
+    ],
+    "registry_sha256": "0cc1b6bb5d65c337c24dcebcb83f4da7b70b289d81ec1bc9ec360c7aa50c3c59",
+    "pid": 37728,
+    "exit_code": 1,
+    "elapsed_seconds": 26.485464700032026,
+    "executable_sha256": "4a25d49a1c86800ab40b81f623c59b308fe6503b41f4af0f4d747a852f56b6a6",
+    "output_exists": false
+  }
+]

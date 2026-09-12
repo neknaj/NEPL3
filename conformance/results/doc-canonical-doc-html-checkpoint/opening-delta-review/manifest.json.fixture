@@ -1,0 +1,114 @@
+{
+  "commit": "10255b819296ba3c7eb786784779a67ac15740d7",
+  "scope": "Independent root opening delta review and mechanical preservation only; historical draft self-authored; no production/browser execution",
+  "files": [
+    {
+      "path": "check.log",
+      "bytes": 204,
+      "sha256": "47d84d71e00d477358ca9edbcdeca03d7256bf41bc4fbf80dd35574fcbf504a1"
+    },
+    {
+      "path": "check.py",
+      "bytes": 4473,
+      "sha256": "31e16f96ddbf31b9f7a02186f03216ad954bb61f6dd6dc9e2d5e4458dd13ae6a"
+    },
+    {
+      "path": "fixed-git-diff.txt",
+      "bytes": 2246,
+      "sha256": "50661776472701a88f19e62d2a62feb0c898f892f1dc3cf65086ad86597baa48"
+    },
+    {
+      "path": "helpers.py",
+      "bytes": 3299,
+      "sha256": "68315acfa40d0086e76b823cb464a4e76b9de12d8d9b9103c92277d6adb8ae13"
+    },
+    {
+      "path": "original-draft.nepld",
+      "bytes": 20715,
+      "sha256": "f71bfc8675e0fef5300b37561351169f69b540d57814a73abe02e3c8041d33cb"
+    },
+    {
+      "path": "prior-review/20-doc-html-github.html",
+      "bytes": 269149,
+      "sha256": "a4b05a2c1bfae34a49af7ebbf88d80f95104dccd62968bd1f7e927678a258d60"
+    },
+    {
+      "path": "prior-review/github.json",
+      "bytes": 1036,
+      "sha256": "b87ffde397b9003a32f611812cdd0531dfc69c3d291e08e35312e129b9f3c13e"
+    },
+    {
+      "path": "prior-review/review.md",
+      "bytes": 3707,
+      "sha256": "4be29aa88749a95fae9022d28c4c400a3ed91f3d6c0666d6204315bb9953517b"
+    },
+    {
+      "path": "record.md",
+      "bytes": 4352,
+      "sha256": "921e8b88595ce30b7c9453b9d27a84488a8b5e594bbcf72fa962b41909891093"
+    },
+    {
+      "path": "result.json",
+      "bytes": 2277,
+      "sha256": "f6ed2d0e4744049f92335e969f1a22c16642713595d39d9dff61d58c9bdaa1cc"
+    },
+    {
+      "path": "scope-clarification.json",
+      "bytes": 1579,
+      "sha256": "e6916959b83a1b3ef4c589c9e37676c56cd8392dd9a8e4fe01d483afb2da14f0"
+    },
+    {
+      "path": "seal.py",
+      "bytes": 996,
+      "sha256": "f50cc5ec4a58a55fa88553595abf530a2989d73a453e77809f90938ffbf4059b"
+    },
+    {
+      "path": "source/crates/languages/doc/html/src/prepare.rs",
+      "bytes": 4465,
+      "sha256": "1f9a50dd42056b6db7c5f635dde73a9fa33ca575128e9a34d27e5a40189d24c0"
+    },
+    {
+      "path": "source/design/forms.json",
+      "bytes": 48673,
+      "sha256": "3358610b1391c90b03b342a657b9d5c72eec92e6f9857815c8651b9728d7e693"
+    },
+    {
+      "path": "source/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "source/doc/migration/aliases/20-doc-html.json",
+      "bytes": 260,
+      "sha256": "a89d4b749408c5f6e9ccc8ed5749c8203bf1a66d788d81725b0d44b7af3c82d5"
+    },
+    {
+      "path": "source/doc/spec/20-doc-html.md",
+      "bytes": 8879,
+      "sha256": "301e208075a838537f5325c4a7ccbddccace1bb5e3d0877d4d4c9de2d6982a72"
+    },
+    {
+      "path": "source/doc/spec/20-doc-html.nepld",
+      "bytes": 20915,
+      "sha256": "5d0380d855e620f89140b34e01d0a0f26c20833f4874a655c5fe033523fb861d"
+    },
+    {
+      "path": "source/tools/audit/structure.py",
+      "bytes": 6543,
+      "sha256": "af7b523435c05593cb6d7fa4bc4efb310489ec5815a7cd23df5399acb91af727"
+    },
+    {
+      "path": "source/tools/src/doc/export/pages.rs",
+      "bytes": 15952,
+      "sha256": "8b52561c4468aaa6be61c12bf6431ed7e9a0c7fd250e1a5d3957cfa26826295b"
+    },
+    {
+      "path": "source/tools/src/doc/export.rs",
+      "bytes": 7958,
+      "sha256": "72c30e2ab38500e4e26c649de1f9a91851186fd32f0f396abf72a8dd15ead48a"
+    }
+  ],
+  "excluded": [
+    "__pycache__"
+  ]
+}

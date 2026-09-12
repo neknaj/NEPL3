@@ -1,0 +1,78 @@
+{
+  "20-doc-html": {
+    "sha_md": "301e208075a838537f5325c4a7ccbddccace1bb5e3d0877d4d4c9de2d6982a72",
+    "sha_doc": "f71bfc8675e0fef5300b37561351169f69b540d57814a73abe02e3c8041d33cb",
+    "counts": {
+      "Article": 1,
+      "leaf": 75,
+      "Body": 3,
+      "Paragraph": 16,
+      "Sentence": 12,
+      "InlineCode": 13,
+      "Text": 176,
+      "Ruby": 51,
+      "Section": 2,
+      "Link": 4,
+      "ExternalTarget": 4,
+      "Concat": 2
+    },
+    "headings": [
+      {
+        "id": "local_export",
+        "title": "開発hostによるローカル文書の書き出し"
+      },
+      {
+        "id": "baseline",
+        "title": "固定CSSのbaselineと対応範囲"
+      }
+    ],
+    "links": [
+      {
+        "kind": "ExternalTarget",
+        "fields": {
+          "uri": "https://drafts.csswg.org/css-inline/#baseline-source"
+        }
+      },
+      {
+        "kind": "ExternalTarget",
+        "fields": {
+          "uri": "https://www.w3.org/TR/css-grid-1/#grid-baselines"
+        }
+      },
+      {
+        "kind": "ExternalTarget",
+        "fields": {
+          "uri": "https://www.w3.org/TR/CSS2/visudet.html#leading"
+        }
+      },
+      {
+        "kind": "ExternalTarget",
+        "fields": {
+          "uri": "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+        }
+      }
+    ],
+    "paragraph_count": [
+      16,
+      16
+    ],
+    "mismatches": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      11,
+      12,
+      13,
+      14
+    ],
+    "inline_code_exact": true,
+    "table_rows_exact": true,
+    "ruby_lexical_issues": []
+  }
+}

@@ -1,0 +1,3202 @@
+[
+  {
+    "kind": "Paragraph",
+    "text": "nepl3-doc-html はDoc coreとmarkupへ依存する純粋backendであり、ファイル・DOM・guest意味処理を実行しない。言語中立の値は interfaces/doc-html.json に定義する。現在のlocal入口は、外部要求が一つもないArticleをHTML fragmentへ変換する段階である。一般page/asset/foreign解決、document shellと配布asset、完全なReport操作は、引き続きH1以降で実装する。",
+    "fields": {
+      "items": [
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "nepl3-doc-html"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " はDoc coreとmarkupへ"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "依存"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "いぞん"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "する"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "純粋"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "じゅんすい"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "backendであり、ファイル・DOM・guest"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "意味処理"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "いみしょり"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "を"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "実行"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "じっこう"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "しない。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "言語中立"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "げんごちゅうりつ"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "の"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "値"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "あたい"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "は "
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "interfaces/doc-html.json"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " に"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "定義"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "ていぎ"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "する。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[現在/げんざい]のlocal[入口/いりぐち]は、[外部要求/がいぶようきゅう]が[一/ひと]つもないArticleをHTML fragmentへ[変換/へんかん]する[段階/だんかい]である。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[一般/いっぱん]page/asset/foreign[解決/かいけつ]、document shellと[配布/はいふ]asset、[完全/かんぜん]なReport[操作/そうさ]は、[引/ひ]き[続/つづ]きH1[以降/いこう]で[実装/じっそう]する。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "LocalHtmlRequest はDocumentSyntaxとRenderOptionsを所有する。request codecはDocの構造・source閉包を再検査し、optionsをraw値として復元する。実行準備 prepare_local は、Docの要求発見とlabel検査を実行する。外部要求があれば完全なplanをNeedsResolutionとして返し、空fragmentへ変えない。この拒否は、外部URIの合法性やMath式の意味エラーを判定したものではない。要求がなければoptionsとlocal backend制約を検査し、対象document/optionsを借用する非公開constructorのPreparedLocalArticleを発行する。",
+    "fields": {
+      "items": [
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "LocalHtmlRequest"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " はDocumentSyntaxとRenderOptionsを"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "所有"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "しょゆう"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "する。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "leaf",
+          "token": "\"request codecはDocの[構造/こうぞう]・source[閉包/へいほう]を[再検査/さいけんさ]し、optionsをraw[値/ち]として[復元/ふくげん]する。\""
+        },
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "実行準備"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "じっこうじゅんび"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " "
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "prepare_local"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " は、Docの"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "要求発見"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "ようきゅうはっけん"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "とlabel"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "検査"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "けんさ"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "を"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "実行"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "じっこう"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "する。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[外部要求/がいぶようきゅう]があれば[完全/かんぜん]なplanをNeedsResolutionとして[返/かえ]し、[空/から]fragmentへ[変/か]えない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"この[拒否/きょひ]は、[外部/がいぶ]URIの[合法性/ごうほうせい]やMath[式/しき]の[意味/いみ]エラーを[判定/はんてい]したものではない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[要求/ようきゅう]がなければoptionsとlocal backend[制約/せいやく]を[検査/けんさ]し、[対象/たいしょう]document/optionsを[借用/しゃくよう]する[非公開/ひこうかい]constructorのPreparedLocalArticleを[発行/はっこう]する。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "ParallelModeは、Rows、Columns、Single(language,fallbacks)のいずれかとする。Singleの言語タグは共通Lang規則に従い、候補の重複はASCII case-insensitiveで拒否する。各Parallelは、指定languageから明示fallback順に一致するvariantを選び、存在しなければMissingVariantとする。空Sentenceは、存在するvariantとして保持する。Rows/Columnsは、元順の全variantを表示する。各表示出現のdata-nepl-groupは生成elementの番号から決定し、同じDoc nodeを複数表示しても出現を区別する。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"ParallelModeは、Rows、Columns、Single(language,fallbacks)のいずれかとする。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Singleの[言語/げんご]タグは[共通/きょうつう]Lang[規則/きそく]に[従/したが]い、[候補/こうほ]の[重複/ちょうふく]はASCII case-insensitiveで[拒否/きょひ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[各/かく]Parallelは、[指定/してい]languageから[明示/めいじ]fallback[順/じゅん]に[一致/いっち]するvariantを[選/えら]び、[存在/そんざい]しなければMissingVariantとする。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[空/から]Sentenceは、[存在/そんざい]するvariantとして[保持/ほじ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Rows/Columnsは、[元順/もとじゅん]の[全/ぜん]variantを[表示/ひょうじ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[各表示出現/かくひょうじしゅつげん]のdata-nepl-groupは[生成/せいせい]elementの[番号/ばんごう]から[決定/けってい]し、[同/おな]じDoc nodeを[複数表示/ふくすうひょうじ]しても[出現/しゅつげん]を[区別/くべつ]する。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "Articleはclass nepl-docと言語を持つarticle、titleはh1とする。SectionはUTF-8 byteの小文字hexにn-を付けたidと見出しを持ち、sectionの入れ子ごとにlevelを増やす。6を超える見出しは、role=heading/aria-levelのdivとする。Anchor/Referenceも同じid写像を使用する。Paragraphはdivとし、連続Sentence/Parallelをpへまとめ、子Blockは独立div内へ出し、前後のpを閉じる。子の元順と空白を保持する。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"Articleはclass nepl-docと[言語/げんご]を[持/も]つarticle、titleはh1とする。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"SectionはUTF-8 byteの[小文字/こもじ]hexにn-を[付/つ]けたidと[見出/みだ]しを[持/も]ち、sectionの[入/い]れ[子/こ]ごとにlevelを[増/ふ]やす。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"6を[超/こ]える[見出/みだ]しは、role=heading/aria-levelのdivとする。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Anchor/Referenceも[同/おな]じid[写像/しゃぞう]を[使用/しよう]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Paragraphはdivとし、[連続/れんぞく]Sentence/Parallelをpへまとめ、[子/こ]Blockは[独立/どくりつ]div[内/ない]へ[出/だ]し、[前後/ぜんご]のpを[閉/と]じる。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[子/こ]の[元順/もとじゅん]と[空白/くうはく]を[保持/ほじ]する。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "Sentence/Concatはspan、Emphasis/Strongはem/strong、明示Breakはbrとする。Ruby/Annoは型付きspanと固定CSSを使い、base/reading/全noteを別要素として保持する。Tableはheaderのthead、順序付きtbody/trとth/td、列alignmentの固定classを使う。空表は、空tableのままにする。Listはul/ol、itemはliとBody、明示checkboxは状態を持つ表示spanとする。HTMLのol.start範囲を超えるU64はListStartとして拒否し、丸めない。RawCodeはfigureの任意captionにlanguageHintを保持し、pre/codeには元Textを置く。hintをparser実行要求へ変えない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"Sentence/Concatはspan、Emphasis/Strongはem/strong、[明示/めいじ]Breakはbrとする。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Ruby/Annoは[型付/かたつ]きspanと[固定/こてい]CSSを[使/つか]い、base/reading/[全/ぜん]noteを[別要素/べつようそ]として[保持/ほじ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Tableはheaderのthead、[順序付/じゅんじょつ]きtbody/trとth/td、[列/れつ]alignmentの[固定/こてい]classを[使/つか]う。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[空表/くうひょう]は、[空/から]tableのままにする。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Listはul/ol、itemはliとBody、[明示/めいじ]checkboxは[状態/じょうたい]を[持/も]つ[表示/ひょうじ]spanとする。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"HTMLのol.start[範囲/はんい]を[超/こ]えるU64はListStartとして[拒否/きょひ]し、[丸/まる]めない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"RawCodeはfigureの[任意/にんい]captionにlanguageHintを[保持/ほじ]し、pre/codeには[元/もと]Textを[置/お]く。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"hintをparser[実行要求/じっこうようきゅう]へ[変/か]えない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "renderはHTML arenaを反復構築し、全生成node・属性・文字列・処理待ち・深さをBudgetへ計上する。全結果を共通markup validatorへ通す。本文/属性のXML不適合やHTML内容不適合は、型付きMarkup失敗とする。これらを削除して成功にしない。出力fragmentの深さは256までとし、超過はOutputDepthとして元Doc nodeを示す。これはbrowser出力profileの限界であり、入力意味モデルを平坦化する規則ではない。文書shellは残りの閲覧側深度を含めて検査し、実browserで再確認する。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"renderはHTML arenaを[反復構築/はんぷくこうちく]し、[全生成/ぜんせいせい]node・[属性/ぞくせい]・[文字列/もじれつ]・[処理待/しょりま]ち・[深/ふか]さをBudgetへ[計上/けいじょう]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[全結果/ぜんけっか]を[共通/きょうつう]markup validatorへ[通/とお]す。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[本文/ほんぶん]/[属性/ぞくせい]のXML[不適合/ふてきごう]やHTML[内容不適合/ないようふてきごう]は、[型付/かたつ]きMarkup[失敗/しっぱい]とする。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"これらを[削除/さくじょ]して[成功/せいこう]にしない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[出力/しゅつりょく]fragmentの[深/ふか]さは256までとし、[超過/ちょうか]はOutputDepthとして[元/もと]Doc nodeを[示/しめ]す。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"これはbrowser[出力/しゅつりょく]profileの[限界/げんかい]であり、[入力意味/にゅうりょくいみ]モデルを[平坦化/へいたんか]する[規則/きそく]ではない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[文書/ぶんしょ]shellは[残/のこ]りの[閲覧側深度/えつらんがわしんど]を[含/ふく]めて[検査/けんさ]し、[実/じつ]browserで[再確認/さいかくにん]する。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "RenderedFragment はdocumentDigest、RenderOptions、HtmlRequest、ElementOrigin(element,node)列を保持する。elementは出力arena、nodeは明示Doc arenaの番号で、生成したText/elementごとに一つの原因を出力順で保持する。元DocのSpan/Origin/source表を参照し、架空の生成source位置を作らない。固定stylesheetはcrateのassets/doc.cssであり、HtmlPolicy自己申告やfragment単体を、CSS配布済みの証明としない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "RenderedFragment"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " はdocumentDigest、RenderOptions、HtmlRequest、ElementOrigin(element,node)"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "列"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "れつ"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "を"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "保持"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "ほじ"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "する。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "leaf",
+          "token": "\"elementは[出力/しゅつりょく]arena、nodeは[明示/めいじ]Doc arenaの[番号/ばんごう]で、[生成/せいせい]したText/elementごとに[一/ひと]つの[原因/げんいん]を[出力順/しゅつりょくじゅん]で[保持/ほじ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[元/もと]DocのSpan/Origin/source[表/ひょう]を[参照/さんしょう]し、[架空/かくう]の[生成/せいせい]source[位置/いち]を[作/つく]らない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[固定/こてい]stylesheetはcrateのassets/doc.cssであり、HtmlPolicy[自己申告/じこしんこく]やfragment[単体/たんたい]を、CSS[配布済/はいふず]みの[証明/しょうめい]としない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "portable rendered値は、prepared document/optionsを明示して受け取る。schema・markup・32byte digestを検査した後、同じbackendで再生成し、正式値のcanonical CBORに NEPL3.Doc.Html.Fragment.v1 とゼロbyteを前置したdigestを比較する。改変markup、原因対応の欠落・変更、別document/optionsの結果を、raw受信したproofとして採用しない。これは現在の純粋local変換の再実行比較であり、将来の外部rendererの授権や完全なArtifact検査を代行しない。全体の停止・資源Usageは、同じBudgetで単調に保持する。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"portable rendered[値/ち]は、prepared document/optionsを[明示/めいじ]して[受/う]け[取/と]る。\""
+        },
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "schema・markup・32byte digestを"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "検査"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "けんさ"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "した"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "後"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "あと"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "、"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "同"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "おな"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "じbackendで"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "再生成"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "さいせいせい"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "し、"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "正式値"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "せいしきち"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "のcanonical CBORに "
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "NEPL3.Doc.Html.Fragment.v1"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " とゼロbyteを"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "前置"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "ぜんち"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "したdigestを"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "比較"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "ひかく"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "する。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[改変/かいへん]markup、[原因対応/げんいんたいおう]の[欠落/けつらく]・[変更/へんこう]、[別/べつ]document/optionsの[結果/けっか]を、raw[受信/じゅしん]したproofとして[採用/さいよう]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"これは[現在/げんざい]の[純粋/じゅんすい]local[変換/へんかん]の[再実行比較/さいじっこうひかく]であり、[将来/しょうらい]の[外部/がいぶ]rendererの[授権/じゅけん]や[完全/かんぜん]なArtifact[検査/けんさ]を[代行/だいこう]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[全体/ぜんたい]の[停止/ていし]・[資源/しげん]Usageは、[同/おな]じBudgetで[単調/たんちょう]に[保持/ほじ]する。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "local入口と要求発見だけで、T23やT21を完成にはしない。ページの外部リンク・画像・foreign表現を含む正式要求を満たしてから、16章/18章に従って.nepld正本へ切り替える。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"local[入口/いりぐち]と[要求発見/ようきゅうはっけん]だけで、T23やT21を[完成/かんせい]にはしない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"ページの[外部/がいぶ]リンク・[画像/がぞう]・foreign[表現/ひょうげん]を[含/ふく]む[正式要求/せいしきようきゅう]を[満/み]たしてから、16[章/しょう]/18[章/しょう]に[従/したが]って.nepld[正本/せいほん]へ[切/き]り[替/か]える。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Section",
+    "text": "開発hostによるローカル文書の書き出しnepl3-tools doc-html export <input.nepld> <new-directory> は、共通の標準Doc source処理からlocal HTMLを生成し、document.html、assets/doc.css、manifest.json を新しいディレクトリへ書く。既存の出力は上書きしない。入力はUTF-8、読取り上限は10,000,000 bytesとし、上限を超えた内容を解析しない。生成を完了してから出力ディレクトリを作る。I/O途中の失敗では不完全なディレクトリが残り得るため、manifestは最後に書き、失敗を成功にしない。この入口は開発用hostであり、検査済みbootstrap fixtureをGrammar compilerへ渡してpackageを構成する。正式CLI、生成package配布、suite、全資源解決の完成とは区別する。source読取り/検査、lower、prepare/render/serializeは、それぞれ明示した独立Budgetを持つ。manifestのUsageはその単位で記録し、文書全体が一つのBudgetで完走した記録へ読み替えない。ファイルI/OとmanifestのJSON整形は、hostの責務である。shellは固定HTMLと検査済みfragmentだけから作り、stylesheetはbackendの同じ固定byte列を配布する。CSPは既定の取得・script・formを禁止し、同じoriginのstylesheetだけを許可する。manifestは入力、Profile、Doc schema、生成HTML/CSSのdigestと表示optionsを保持する。現在の形式はlocal export用の記録であり、17章のKaTeX資源bundleや汎用Artifactの境界検査を代行しない。HTTPの非root pathとJavaScript無効の実browserで、生成物を検査する。外部page/asset/foreignが必要な文書はNeedsResolutionのまま拒否し、リンクや埋め込みを落としたHTMLを書き出さない。",
+    "fields": {
+      "id": "local_export",
+      "title": {
+        "kind": "leaf",
+        "token": "\"[開発/かいはつ]hostによるローカル[文書/ぶんしょ]の[書/か]き[出/だ]し\""
+      },
+      "body": {
+        "kind": "Body",
+        "fields": {
+          "blocks": [
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "Sentence",
+                    "fields": {
+                      "inlines": [
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "nepl3-tools doc-html export <input.nepld> <new-directory>"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": " は、"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "共通"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "きょうつう"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "の"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "標準"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "ひょうじゅん"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "Doc source"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "処理"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "しょり"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "からlocal HTMLを"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "生成"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "せいせい"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "し、"
+                          }
+                        },
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "document.html"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "、"
+                          }
+                        },
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "assets/doc.css"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "、"
+                          }
+                        },
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "manifest.json"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": " を"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "新"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "あたら"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "しいディレクトリへ"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "書"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "か"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "く。"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[既存/きそん]の[出力/しゅつりょく]は[上書/うわが]きしない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[入力/にゅうりょく]はUTF-8、[読取/よみと]り[上限/じょうげん]は10,000,000 bytesとし、[上限/じょうげん]を[超/こ]えた[内容/ないよう]を[解析/かいせき]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[生成/せいせい]を[完了/かんりょう]してから[出力/しゅつりょく]ディレクトリを[作/つく]る。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"I/O[途中/とちゅう]の[失敗/しっぱい]では[不完全/ふかんぜん]なディレクトリが[残/のこ]り[得/う]るため、manifestは[最後/さいご]に[書/か]き、[失敗/しっぱい]を[成功/せいこう]にしない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"この[入口/いりぐち]は[開発用/かいはつよう]hostであり、[検査済/けんさず]みbootstrap fixtureをGrammar compilerへ[渡/わた]してpackageを[構成/こうせい]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[正式/せいしき]CLI、[生成/せいせい]package[配布/はいふ]、suite、[全資源解決/ぜんしげんかいけつ]の[完成/かんせい]とは[区別/くべつ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"source[読取/よみと]り/[検査/けんさ]、lower、prepare/render/serializeは、それぞれ[明示/めいじ]した[独立/どくりつ]Budgetを[持/も]つ。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"manifestのUsageはその[単位/たんい]で[記録/きろく]し、[文書全体/ぶんしょぜんたい]が[一/ひと]つのBudgetで[完走/かんそう]した[記録/きろく]へ[読/よ]み[替/か]えない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"ファイルI/OとmanifestのJSON[整形/せいけい]は、hostの[責務/せきむ]である。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "leaf",
+                    "token": "\"shellは[固定/こてい]HTMLと[検査済/けんさず]みfragmentだけから[作/つく]り、stylesheetはbackendの[同/おな]じ[固定/こてい]byte[列/れつ]を[配布/はいふ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"CSPは[既定/きてい]の[取得/しゅとく]・script・formを[禁止/きんし]し、[同/おな]じoriginのstylesheetだけを[許可/きょか]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"manifestは[入力/にゅうりょく]、Profile、Doc schema、[生成/せいせい]HTML/CSSのdigestと[表示/ひょうじ]optionsを[保持/ほじ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[現在/げんざい]の[形式/けいしき]はlocal export[用/よう]の[記録/きろく]であり、17[章/しょう]のKaTeX[資源/しげん]bundleや[汎用/はんよう]Artifactの[境界検査/きょうかいけんさ]を[代行/だいこう]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"HTTPの[非/ひ]root pathとJavaScript[無効/むこう]の[実/じつ]browserで、[生成物/せいせいぶつ]を[検査/けんさ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[外部/がいぶ]page/asset/foreignが[必要/ひつよう]な[文書/ぶんしょ]はNeedsResolutionのまま[拒否/きょひ]し、リンクや[埋/う]め[込/こ]みを[落/お]としたHTMLを[書/か]き[出/だ]さない。\""
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "nepl3-tools doc-html export <input.nepld> <new-directory> は、共通の標準Doc source処理からlocal HTMLを生成し、document.html、assets/doc.css、manifest.json を新しいディレクトリへ書く。既存の出力は上書きしない。入力はUTF-8、読取り上限は10,000,000 bytesとし、上限を超えた内容を解析しない。生成を完了してから出力ディレクトリを作る。I/O途中の失敗では不完全なディレクトリが残り得るため、manifestは最後に書き、失敗を成功にしない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "nepl3-tools doc-html export <input.nepld> <new-directory>"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " は、"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "共通"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "きょうつう"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "の"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "標準"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "ひょうじゅん"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "Doc source"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "処理"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "しょり"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "からlocal HTMLを"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "生成"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "せいせい"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "し、"
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "document.html"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "、"
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "assets/doc.css"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "、"
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "manifest.json"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " を"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "新"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "あたら"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "しいディレクトリへ"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "書"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "か"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "く。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[既存/きそん]の[出力/しゅつりょく]は[上書/うわが]きしない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[入力/にゅうりょく]はUTF-8、[読取/よみと]り[上限/じょうげん]は10,000,000 bytesとし、[上限/じょうげん]を[超/こ]えた[内容/ないよう]を[解析/かいせき]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[生成/せいせい]を[完了/かんりょう]してから[出力/しゅつりょく]ディレクトリを[作/つく]る。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"I/O[途中/とちゅう]の[失敗/しっぱい]では[不完全/ふかんぜん]なディレクトリが[残/のこ]り[得/う]るため、manifestは[最後/さいご]に[書/か]き、[失敗/しっぱい]を[成功/せいこう]にしない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "この入口は開発用hostであり、検査済みbootstrap fixtureをGrammar compilerへ渡してpackageを構成する。正式CLI、生成package配布、suite、全資源解決の完成とは区別する。source読取り/検査、lower、prepare/render/serializeは、それぞれ明示した独立Budgetを持つ。manifestのUsageはその単位で記録し、文書全体が一つのBudgetで完走した記録へ読み替えない。ファイルI/OとmanifestのJSON整形は、hostの責務である。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"この[入口/いりぐち]は[開発用/かいはつよう]hostであり、[検査済/けんさず]みbootstrap fixtureをGrammar compilerへ[渡/わた]してpackageを[構成/こうせい]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[正式/せいしき]CLI、[生成/せいせい]package[配布/はいふ]、suite、[全資源解決/ぜんしげんかいけつ]の[完成/かんせい]とは[区別/くべつ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"source[読取/よみと]り/[検査/けんさ]、lower、prepare/render/serializeは、それぞれ[明示/めいじ]した[独立/どくりつ]Budgetを[持/も]つ。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"manifestのUsageはその[単位/たんい]で[記録/きろく]し、[文書全体/ぶんしょぜんたい]が[一/ひと]つのBudgetで[完走/かんそう]した[記録/きろく]へ[読/よ]み[替/か]えない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"ファイルI/OとmanifestのJSON[整形/せいけい]は、hostの[責務/せきむ]である。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "shellは固定HTMLと検査済みfragmentだけから作り、stylesheetはbackendの同じ固定byte列を配布する。CSPは既定の取得・script・formを禁止し、同じoriginのstylesheetだけを許可する。manifestは入力、Profile、Doc schema、生成HTML/CSSのdigestと表示optionsを保持する。現在の形式はlocal export用の記録であり、17章のKaTeX資源bundleや汎用Artifactの境界検査を代行しない。HTTPの非root pathとJavaScript無効の実browserで、生成物を検査する。外部page/asset/foreignが必要な文書はNeedsResolutionのまま拒否し、リンクや埋め込みを落としたHTMLを書き出さない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "leaf",
+          "token": "\"shellは[固定/こてい]HTMLと[検査済/けんさず]みfragmentだけから[作/つく]り、stylesheetはbackendの[同/おな]じ[固定/こてい]byte[列/れつ]を[配布/はいふ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"CSPは[既定/きてい]の[取得/しゅとく]・script・formを[禁止/きんし]し、[同/おな]じoriginのstylesheetだけを[許可/きょか]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"manifestは[入力/にゅうりょく]、Profile、Doc schema、[生成/せいせい]HTML/CSSのdigestと[表示/ひょうじ]optionsを[保持/ほじ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[現在/げんざい]の[形式/けいしき]はlocal export[用/よう]の[記録/きろく]であり、17[章/しょう]のKaTeX[資源/しげん]bundleや[汎用/はんよう]Artifactの[境界検査/きょうかいけんさ]を[代行/だいこう]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"HTTPの[非/ひ]root pathとJavaScript[無効/むこう]の[実/じつ]browserで、[生成物/せいせいぶつ]を[検査/けんさ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[外部/がいぶ]page/asset/foreignが[必要/ひつよう]な[文書/ぶんしょ]はNeedsResolutionのまま[拒否/きょひ]し、リンクや[埋/う]め[込/こ]みを[落/お]としたHTMLを[書/か]き[出/だ]さない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Section",
+    "text": "固定CSSのbaselineと対応範囲Rubyはreadingを第1行、baseを第2行とし、baseline-source:lastでbase側のbaselineを外へ公開する。Annoはbaseを第1行、notesを第2行とし、baseline-source:firstを使う。空の先頭行を挟まない。これにより、入れ子のbaseも内側要素が公開するbaselineで整列する。明示改行を含むbaseの場合、Rubyは最後の行、Annoは最初の行が整列基準になる。高さを仮定した固定offsetやJavaScriptで合わせない。この指定は CSS Inline Layoutのbaseline-source と Gridのbaseline規則 に基づく。Inline Layoutは草案であり、仕様の存在だけを全browserでの実装証拠にしない。生成文書の対応browserは、固定CSSとの実試験で確認する。幅が狭い場合にもRuby/Annoの内部を任意位置で分割せず、max-contentの一つのinline boxとして保持する。長いbase/reading/notesやpre内codeは横にはみ出し得るため、hostの閲覧・印刷profileは、その表示と移動手段を別途検証する。baseline-source:first/lastの両方を利用できないbrowserでは、同じspan構造にinline-tableの固定CSSを適用する。readingは上側、notesは下側のtable-captionとし、baseを持つ唯一の行からbaselineを公開する。Rubyのbaseはinline-blockとして最終行のbaselineを、Annoのbaseはtable-cellとして最初の行のbaselineを公開する。DOMの順序や注釈内容を変更せず、HTMLの表要素やJavaScriptを追加しない。この代替はWebKitで基底文字が本文より下がる不具合への対応であり、型付きmarkup・意味正規形は変更しない。代替の根拠は CSS2のinline-block baseline と tableのbaseline規則 である。対応propertyの有無だけで合否を決めず、実際のproduction HTMLとCSSをChromium・Firefox・WebKitで表示し、本文とのbaseline、読み・注釈の上下配置、複数行の基準、入れ子と前後行の高さ予約を検査する。文書内のJavaScriptは無効とする。この静的文書の検査はWasm・Playground・支援技術による実操作の受入を代行しない。",
+    "fields": {
+      "id": "baseline",
+      "title": {
+        "kind": "leaf",
+        "token": "\"[固定/こてい]CSSのbaselineと[対応範囲/たいおうはんい]\""
+      },
+      "body": {
+        "kind": "Body",
+        "fields": {
+          "blocks": [
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "Sentence",
+                    "fields": {
+                      "inlines": [
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "Rubyはreadingを"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "第"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "だい"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "1"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "行"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "ぎょう"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "、baseを"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "第"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "だい"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "2"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "行"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "ぎょう"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "とし、"
+                          }
+                        },
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "baseline-source:last"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "でbase"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "側"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "がわ"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "のbaselineを"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "外"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "そと"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "へ"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "公開"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "こうかい"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "する。"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "Sentence",
+                    "fields": {
+                      "inlines": [
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "Annoはbaseを"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "第"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "だい"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "1"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "行"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "ぎょう"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "、notesを"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "第"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "だい"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "2"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "行"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "ぎょう"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "とし、"
+                          }
+                        },
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "baseline-source:first"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "を"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "使"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "つか"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "う。"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[空/から]の[先頭行/せんとうぎょう]を[挟/はさ]まない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"これにより、[入/い]れ[子/こ]のbaseも[内側要素/うちがわようそ]が[公開/こうかい]するbaselineで[整列/せいれつ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[明示改行/めいじかいぎょう]を[含/ふく]むbaseの[場合/ばあい]、Rubyは[最後/さいご]の[行/ぎょう]、Annoは[最初/さいしょ]の[行/ぎょう]が[整列基準/せいれつきじゅん]になる。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[高/たか]さを[仮定/かてい]した[固定/こてい]offsetやJavaScriptで[合/あ]わせない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "Sentence",
+                    "fields": {
+                      "inlines": [
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "この"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "指定"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "してい"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "は "
+                          }
+                        },
+                        {
+                          "kind": "Link",
+                          "fields": {
+                            "target": {
+                              "kind": "ExternalTarget",
+                              "fields": {
+                                "uri": "https://drafts.csswg.org/css-inline/#baseline-source"
+                              }
+                            },
+                            "label": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "CSS Inline Layoutのbaseline-source"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": " と "
+                          }
+                        },
+                        {
+                          "kind": "Link",
+                          "fields": {
+                            "target": {
+                              "kind": "ExternalTarget",
+                              "fields": {
+                                "uri": "https://www.w3.org/TR/css-grid-1/#grid-baselines"
+                              }
+                            },
+                            "label": {
+                              "kind": "Concat",
+                              "fields": {
+                                "inlines": [
+                                  {
+                                    "kind": "Text",
+                                    "fields": {
+                                      "text": "Gridのbaseline"
+                                    }
+                                  },
+                                  {
+                                    "kind": "Ruby",
+                                    "fields": {
+                                      "base": {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "規則"
+                                        }
+                                      },
+                                      "reading": {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "きそく"
+                                        }
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": " に"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "基"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "もと"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "づく。"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"Inline Layoutは[草案/そうあん]であり、[仕様/しよう]の[存在/そんざい]だけを[全/ぜん]browserでの[実装証拠/じっそうしょうこ]にしない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[生成文書/せいせいぶんしょ]の[対応/たいおう]browserは、[固定/こてい]CSSとの[実試験/じつしけん]で[確認/かくにん]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[幅/はば]が[狭/せま]い[場合/ばあい]にもRuby/Annoの[内部/ないぶ]を[任意位置/にんいいち]で[分割/ぶんかつ]せず、max-contentの[一/ひと]つのinline boxとして[保持/ほじ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[長/なが]いbase/reading/notesやpre[内/ない]codeは[横/よこ]にはみ[出/だ]し[得/う]るため、hostの[閲覧/えつらん]・[印刷/いんさつ]profileは、その[表示/ひょうじ]と[移動手段/いどうしゅだん]を[別途検証/べっとけんしょう]する。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "Sentence",
+                    "fields": {
+                      "inlines": [
+                        {
+                          "kind": "InlineCode",
+                          "fields": {
+                            "text": "baseline-source:first/last"
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "の"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "両方"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "りょうほう"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "を"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "利用"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "りよう"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "できないbrowserでは、"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "同"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "おな"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "じspan"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "構造"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "こうぞう"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "にinline-tableの"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "固定"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "こてい"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "CSSを"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "適用"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "てきよう"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "する。"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"readingは[上側/うえがわ]、notesは[下側/したがわ]のtable-captionとし、baseを[持/も]つ[唯一/ゆいいつ]の[行/ぎょう]からbaselineを[公開/こうかい]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"Rubyのbaseはinline-blockとして[最終行/さいしゅうぎょう]のbaselineを、Annoのbaseはtable-cellとして[最初/さいしょ]の[行/ぎょう]のbaselineを[公開/こうかい]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"DOMの[順序/じゅんじょ]や[注釈内容/ちゅうしゃくないよう]を[変更/へんこう]せず、HTMLの[表要素/ひょうようそ]やJavaScriptを[追加/ついか]しない。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"この[代替/だいたい]はWebKitで[基底文字/きていもじ]が[本文/ほんぶん]より[下/さ]がる[不具合/ふぐあい]への[対応/たいおう]であり、[型付/かたつ]きmarkup・[意味正規形/いみせいきけい]は[変更/へんこう]しない。\""
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "Paragraph",
+              "fields": {
+                "items": [
+                  {
+                    "kind": "Sentence",
+                    "fields": {
+                      "inlines": [
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "代替"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "だいたい"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "の"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "根拠"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "こんきょ"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "は "
+                          }
+                        },
+                        {
+                          "kind": "Link",
+                          "fields": {
+                            "target": {
+                              "kind": "ExternalTarget",
+                              "fields": {
+                                "uri": "https://www.w3.org/TR/CSS2/visudet.html#leading"
+                              }
+                            },
+                            "label": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "CSS2のinline-block baseline"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": " と "
+                          }
+                        },
+                        {
+                          "kind": "Link",
+                          "fields": {
+                            "target": {
+                              "kind": "ExternalTarget",
+                              "fields": {
+                                "uri": "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+                              }
+                            },
+                            "label": {
+                              "kind": "Concat",
+                              "fields": {
+                                "inlines": [
+                                  {
+                                    "kind": "Text",
+                                    "fields": {
+                                      "text": "tableのbaseline"
+                                    }
+                                  },
+                                  {
+                                    "kind": "Ruby",
+                                    "fields": {
+                                      "base": {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "規則"
+                                        }
+                                      },
+                                      "reading": {
+                                        "kind": "Text",
+                                        "fields": {
+                                          "text": "きそく"
+                                        }
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": " である。"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[対応/たいおう]propertyの[有無/うむ]だけで[合否/ごうひ]を[決/き]めず、[実際/じっさい]のproduction HTMLとCSSをChromium・Firefox・WebKitで[表示/ひょうじ]し、[本文/ほんぶん]とのbaseline、[読/よ]み・[注釈/ちゅうしゃく]の[上下配置/じょうげはいち]、[複数行/ふくすうぎょう]の[基準/きじゅん]、[入/い]れ[子/こ]と[前後行/ぜんごぎょう]の[高/たか]さ[予約/よやく]を[検査/けんさ]する。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"[文書内/ぶんしょない]のJavaScriptは[無効/むこう]とする。\""
+                  },
+                  {
+                    "kind": "leaf",
+                    "token": "\"この[静的文書/せいてきぶんしょ]の[検査/けんさ]はWasm・Playground・[支援技術/しえんぎじゅつ]による[実操作/じつそうさ]の[受入/うけいれ]を[代行/だいこう]しない。\""
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "Rubyはreadingを第1行、baseを第2行とし、baseline-source:lastでbase側のbaselineを外へ公開する。Annoはbaseを第1行、notesを第2行とし、baseline-source:firstを使う。空の先頭行を挟まない。これにより、入れ子のbaseも内側要素が公開するbaselineで整列する。明示改行を含むbaseの場合、Rubyは最後の行、Annoは最初の行が整列基準になる。高さを仮定した固定offsetやJavaScriptで合わせない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "Rubyはreadingを"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "第"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "だい"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "1"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "行"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "ぎょう"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "、baseを"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "第"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "だい"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "2"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "行"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "ぎょう"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "とし、"
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "baseline-source:last"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "でbase"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "側"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "がわ"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "のbaselineを"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "外"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "そと"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "へ"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "公開"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "こうかい"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "する。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "Annoはbaseを"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "第"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "だい"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "1"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "行"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "ぎょう"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "、notesを"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "第"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "だい"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "2"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "行"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "ぎょう"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "とし、"
+                }
+              },
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "baseline-source:first"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "を"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "使"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "つか"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "う。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[空/から]の[先頭行/せんとうぎょう]を[挟/はさ]まない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"これにより、[入/い]れ[子/こ]のbaseも[内側要素/うちがわようそ]が[公開/こうかい]するbaselineで[整列/せいれつ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[明示改行/めいじかいぎょう]を[含/ふく]むbaseの[場合/ばあい]、Rubyは[最後/さいご]の[行/ぎょう]、Annoは[最初/さいしょ]の[行/ぎょう]が[整列基準/せいれつきじゅん]になる。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[高/たか]さを[仮定/かてい]した[固定/こてい]offsetやJavaScriptで[合/あ]わせない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "この指定は CSS Inline Layoutのbaseline-source と Gridのbaseline規則 に基づく。Inline Layoutは草案であり、仕様の存在だけを全browserでの実装証拠にしない。生成文書の対応browserは、固定CSSとの実試験で確認する。幅が狭い場合にもRuby/Annoの内部を任意位置で分割せず、max-contentの一つのinline boxとして保持する。長いbase/reading/notesやpre内codeは横にはみ出し得るため、hostの閲覧・印刷profileは、その表示と移動手段を別途検証する。",
+    "fields": {
+      "items": [
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "この"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "指定"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "してい"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "は "
+                }
+              },
+              {
+                "kind": "Link",
+                "fields": {
+                  "target": {
+                    "kind": "ExternalTarget",
+                    "fields": {
+                      "uri": "https://drafts.csswg.org/css-inline/#baseline-source"
+                    }
+                  },
+                  "label": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "CSS Inline Layoutのbaseline-source"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " と "
+                }
+              },
+              {
+                "kind": "Link",
+                "fields": {
+                  "target": {
+                    "kind": "ExternalTarget",
+                    "fields": {
+                      "uri": "https://www.w3.org/TR/css-grid-1/#grid-baselines"
+                    }
+                  },
+                  "label": {
+                    "kind": "Concat",
+                    "fields": {
+                      "inlines": [
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "Gridのbaseline"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "規則"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "きそく"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " に"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "基"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "もと"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "づく。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Inline Layoutは[草案/そうあん]であり、[仕様/しよう]の[存在/そんざい]だけを[全/ぜん]browserでの[実装証拠/じっそうしょうこ]にしない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[生成文書/せいせいぶんしょ]の[対応/たいおう]browserは、[固定/こてい]CSSとの[実試験/じつしけん]で[確認/かくにん]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[幅/はば]が[狭/せま]い[場合/ばあい]にもRuby/Annoの[内部/ないぶ]を[任意位置/にんいいち]で[分割/ぶんかつ]せず、max-contentの[一/ひと]つのinline boxとして[保持/ほじ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[長/なが]いbase/reading/notesやpre[内/ない]codeは[横/よこ]にはみ[出/だ]し[得/う]るため、hostの[閲覧/えつらん]・[印刷/いんさつ]profileは、その[表示/ひょうじ]と[移動手段/いどうしゅだん]を[別途検証/べっとけんしょう]する。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Link",
+    "text": "CSS Inline Layoutのbaseline-source",
+    "fields": {
+      "target": {
+        "kind": "ExternalTarget",
+        "fields": {
+          "uri": "https://drafts.csswg.org/css-inline/#baseline-source"
+        }
+      },
+      "label": {
+        "kind": "Text",
+        "fields": {
+          "text": "CSS Inline Layoutのbaseline-source"
+        }
+      }
+    }
+  },
+  {
+    "kind": "Link",
+    "text": "Gridのbaseline規則",
+    "fields": {
+      "target": {
+        "kind": "ExternalTarget",
+        "fields": {
+          "uri": "https://www.w3.org/TR/css-grid-1/#grid-baselines"
+        }
+      },
+      "label": {
+        "kind": "Concat",
+        "fields": {
+          "inlines": [
+            {
+              "kind": "Text",
+              "fields": {
+                "text": "Gridのbaseline"
+              }
+            },
+            {
+              "kind": "Ruby",
+              "fields": {
+                "base": {
+                  "kind": "Text",
+                  "fields": {
+                    "text": "規則"
+                  }
+                },
+                "reading": {
+                  "kind": "Text",
+                  "fields": {
+                    "text": "きそく"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "baseline-source:first/lastの両方を利用できないbrowserでは、同じspan構造にinline-tableの固定CSSを適用する。readingは上側、notesは下側のtable-captionとし、baseを持つ唯一の行からbaselineを公開する。Rubyのbaseはinline-blockとして最終行のbaselineを、Annoのbaseはtable-cellとして最初の行のbaselineを公開する。DOMの順序や注釈内容を変更せず、HTMLの表要素やJavaScriptを追加しない。この代替はWebKitで基底文字が本文より下がる不具合への対応であり、型付きmarkup・意味正規形は変更しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "InlineCode",
+                "fields": {
+                  "text": "baseline-source:first/last"
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "の"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "両方"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "りょうほう"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "を"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "利用"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "りよう"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "できないbrowserでは、"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "同"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "おな"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "じspan"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "構造"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "こうぞう"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "にinline-tableの"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "固定"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "こてい"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "CSSを"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "適用"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "てきよう"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "する。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "leaf",
+          "token": "\"readingは[上側/うえがわ]、notesは[下側/したがわ]のtable-captionとし、baseを[持/も]つ[唯一/ゆいいつ]の[行/ぎょう]からbaselineを[公開/こうかい]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"Rubyのbaseはinline-blockとして[最終行/さいしゅうぎょう]のbaselineを、Annoのbaseはtable-cellとして[最初/さいしょ]の[行/ぎょう]のbaselineを[公開/こうかい]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"DOMの[順序/じゅんじょ]や[注釈内容/ちゅうしゃくないよう]を[変更/へんこう]せず、HTMLの[表要素/ひょうようそ]やJavaScriptを[追加/ついか]しない。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"この[代替/だいたい]はWebKitで[基底文字/きていもじ]が[本文/ほんぶん]より[下/さ]がる[不具合/ふぐあい]への[対応/たいおう]であり、[型付/かたつ]きmarkup・[意味正規形/いみせいきけい]は[変更/へんこう]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Paragraph",
+    "text": "代替の根拠は CSS2のinline-block baseline と tableのbaseline規則 である。対応propertyの有無だけで合否を決めず、実際のproduction HTMLとCSSをChromium・Firefox・WebKitで表示し、本文とのbaseline、読み・注釈の上下配置、複数行の基準、入れ子と前後行の高さ予約を検査する。文書内のJavaScriptは無効とする。この静的文書の検査はWasm・Playground・支援技術による実操作の受入を代行しない。",
+    "fields": {
+      "items": [
+        {
+          "kind": "Sentence",
+          "fields": {
+            "inlines": [
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "代替"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "だいたい"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "の"
+                }
+              },
+              {
+                "kind": "Ruby",
+                "fields": {
+                  "base": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "根拠"
+                    }
+                  },
+                  "reading": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "こんきょ"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": "は "
+                }
+              },
+              {
+                "kind": "Link",
+                "fields": {
+                  "target": {
+                    "kind": "ExternalTarget",
+                    "fields": {
+                      "uri": "https://www.w3.org/TR/CSS2/visudet.html#leading"
+                    }
+                  },
+                  "label": {
+                    "kind": "Text",
+                    "fields": {
+                      "text": "CSS2のinline-block baseline"
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " と "
+                }
+              },
+              {
+                "kind": "Link",
+                "fields": {
+                  "target": {
+                    "kind": "ExternalTarget",
+                    "fields": {
+                      "uri": "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+                    }
+                  },
+                  "label": {
+                    "kind": "Concat",
+                    "fields": {
+                      "inlines": [
+                        {
+                          "kind": "Text",
+                          "fields": {
+                            "text": "tableのbaseline"
+                          }
+                        },
+                        {
+                          "kind": "Ruby",
+                          "fields": {
+                            "base": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "規則"
+                              }
+                            },
+                            "reading": {
+                              "kind": "Text",
+                              "fields": {
+                                "text": "きそく"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "Text",
+                "fields": {
+                  "text": " である。"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[対応/たいおう]propertyの[有無/うむ]だけで[合否/ごうひ]を[決/き]めず、[実際/じっさい]のproduction HTMLとCSSをChromium・Firefox・WebKitで[表示/ひょうじ]し、[本文/ほんぶん]とのbaseline、[読/よ]み・[注釈/ちゅうしゃく]の[上下配置/じょうげはいち]、[複数行/ふくすうぎょう]の[基準/きじゅん]、[入/い]れ[子/こ]と[前後行/ぜんごぎょう]の[高/たか]さ[予約/よやく]を[検査/けんさ]する。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"[文書内/ぶんしょない]のJavaScriptは[無効/むこう]とする。\""
+        },
+        {
+          "kind": "leaf",
+          "token": "\"この[静的文書/せいてきぶんしょ]の[検査/けんさ]はWasm・Playground・[支援技術/しえんぎじゅつ]による[実操作/じつそうさ]の[受入/うけいれ]を[代行/だいこう]しない。\""
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Link",
+    "text": "CSS2のinline-block baseline",
+    "fields": {
+      "target": {
+        "kind": "ExternalTarget",
+        "fields": {
+          "uri": "https://www.w3.org/TR/CSS2/visudet.html#leading"
+        }
+      },
+      "label": {
+        "kind": "Text",
+        "fields": {
+          "text": "CSS2のinline-block baseline"
+        }
+      }
+    }
+  },
+  {
+    "kind": "Link",
+    "text": "tableのbaseline規則",
+    "fields": {
+      "target": {
+        "kind": "ExternalTarget",
+        "fields": {
+          "uri": "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+        }
+      },
+      "label": {
+        "kind": "Concat",
+        "fields": {
+          "inlines": [
+            {
+              "kind": "Text",
+              "fields": {
+                "text": "tableのbaseline"
+              }
+            },
+            {
+              "kind": "Ruby",
+              "fields": {
+                "base": {
+                  "kind": "Text",
+                  "fields": {
+                    "text": "規則"
+                  }
+                },
+                "reading": {
+                  "kind": "Text",
+                  "fields": {
+                    "text": "きそく"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+]

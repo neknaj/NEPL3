@@ -1,0 +1,9 @@
+from pathlib import Path
+import json,hashlib,subprocess
+p=Path(__file__).parent;root=p.parents[1]
+(p/'fixed-git-diff.txt').write_bytes(subprocess.check_output(['git','diff','10255b8^','10255b8','--','doc/spec/20-doc-html.md','doc/spec/20-doc-html.nepld','doc/migration/authored/20-doc-html.nepld','doc/migration/aliases/20-doc-html.json'],cwd=root))
+files=[]
+for f in sorted(p.rglob('*')):
+ if f.is_file() and '__pycache__' not in f.parts and f.name!='manifest.json':
+  b=f.read_bytes();files.append(dict(path=f.relative_to(p).as_posix(),bytes=len(b),sha256=hashlib.sha256(b).hexdigest()))
+m=p/'manifest.json';m.write_text(json.dumps(dict(commit='10255b819296ba3c7eb786784779a67ac15740d7',scope='Independent root opening delta review and mechanical preservation only; historical draft self-authored; no production/browser execution',files=files,excluded=['__pycache__']),ensure_ascii=False,indent=2)+'\n',encoding='utf8',newline='\n');print(hashlib.sha256(m.read_bytes()).hexdigest(),len(files))

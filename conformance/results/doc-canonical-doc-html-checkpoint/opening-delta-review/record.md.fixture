@@ -1,0 +1,22 @@
+# Chapter 20 opening clarification review
+
+Fixed commit: 10255b819296ba3c7eb786784779a67ac15740d7; parent 8127b2ed9688cf7f05b6bf0a2bb432fe02b049f0. No tracked source or draft was edited.
+
+Scope correction: this reviewer authored the historical chapter20 draft. Its full reread is a self-check and is not counted as independent whole-manuscript semantic approval. Root explicitly limited this task to independent review of root's new opening clarification and mechanical correspondence. The prior independent full content review by Kepler, including the preexisting opening scope ambiguity, is copied under prior-review/. That review remains separately attributable.
+
+Result: no blocking finding in this limited change. The root's three replacement sentences correctly distinguish the pure local fragment API from the implemented development-host shell/CSS writer. They do not enlarge the local accepted input set or advertise the complete general suite/Artifact/Report operation. They replace the stale implication that the already implemented shell/export is future work with a responsibility boundary. The later local export conditions and broader T23/T21 exclusions remain unchanged.
+
+Direct code basis at the fixed commit:
+
+- crates/languages/doc/html/src/prepare.rs:35–49: prepare_local runs inspect and returns the complete NeedsResolution plan when requirements are nonempty. It does not resolve missing dependencies or produce an empty fragment.
+- tools/src/doc/export.rs:19–54: the host performs source/lower/local preparation/render, then calls shell with the same output budget.
+- tools/src/doc/export.rs:156–184: only after generation does the host create a new directory, write exact backend CSS, document HTML and final manifest; shell creates fixed HTML around the checked serialized fragment.
+- tools/src/doc/export/pages.rs:86–200 and 268: the separate explicit PageSet/resource input route exists. Its scope explicitly states that assets and foreign rendering remain unsupported and that output is not deployment evidence. Saying general integration responsibilities are outside the local entry does not imply these missing operations are complete.
+
+The changed wording uses ordinary sentence literals. Added readings such as 本章/ほんしょう, 制約/せいやく, 固定/こてい, 後述/こうじゅつ, 担当/たんとう, 責務/せきむ, 統合経路/とうごうけいろ are contextually appropriate. 持/も + つ, 含/ふく + めず and 扱/あつか + う preserve okurigana as ordinary Text. No translation/Anno or code literal was introduced unnecessarily.
+
+Independent byte/structure checks: reversing exactly the recorded three-sentence replacement yields every original draft byte and its recorded SHA-256 f71bfc8675e0fef5300b37561351169f69b540d57814a73abe02e3c8041d33cb. The original Markdown remains byte-identical to the parent. Therefore all content outside this replacement is preserved, rather than inferred from the author's description. The fixed formal structure parses as Article with 16 paragraphs, two Sections, 13 InlineCode values identical to original Markdown in order, four exact External targets including fragments, and 467 Ruby nodes. No table/list/raw-code/image/parallel was introduced. The original and current Section IDs and all three configured aliases are retained.
+
+The prior fixed GitHub HTML capture was parsed independently: embedded rawLines reconstruct the exact original Markdown, and richText contains three actual permalink anchors matching the new alias configuration. This is verification of saved preflight evidence, not a new network fetch or a final generated GitHub navigation test. The four CSS reference URLs are checked for byte preservation only; destination availability or CSS implementation behavior is not newly tested here.
+
+Limits: no production parse/lower/generation/browser execution was performed for chapter20. No canonical cutover, runtime operation completion, budget fit, deployment or broader migration acceptance is claimed. Source snapshots, root clarification input, result and original preflight evidence are fixed by the compact manifest. Python bytecode caches are excluded. Previous manuscript punctuation choices were read but are outside the independent delta approval; Kepler retains the independent whole-content responsibility.

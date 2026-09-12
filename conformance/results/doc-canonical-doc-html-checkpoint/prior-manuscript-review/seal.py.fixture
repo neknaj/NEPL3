@@ -1,0 +1,12 @@
+from pathlib import Path
+import json,hashlib,subprocess,re
+p=Path(__file__).parent;r=p.parents[1];head='5c4ce6184f6d5fa817f472d202101aaf86af3195'
+sha=lambda b:hashlib.sha256(b).hexdigest()
+sources=[]
+for name in ['doc/spec/20-doc-html.md','doc/migration/authored/20-doc-html.nepld','doc/authoring.md','AGENTS.md','doc/spec/21-doc-pages.md','tools/src/doc/projection/annotated.rs','tools/src/doc/projection/annotated/blocks.rs','design/forms.json','tools/audit/structure.py']:
+ b=subprocess.check_output(['git','show',head+':'+name],cwd=r);assert b==(r/name).read_bytes();q=p/'context'/name;q.parent.mkdir(parents=True,exist_ok=True);q.write_bytes(b);sources.append({'path':name,'bytes':len(b),'sha256':sha(b)})
+s=json.loads((p/'structure.json').read_text(encoding='utf8'))['20-doc-html'];md=(p/'20-doc-html.md').read_text(encoding='utf8');urls=re.findall(r'\[[^]]+\]\((https://[^)]+)\)',md);assert urls==[x['fields']['uri'] for x in s['links']]
+g=json.loads((p/'github.json').read_text(encoding='utf8'))['20-doc-html'];assert len(g['anchors'])==3
+(p/'aliases.json').write_text(json.dumps([{'section':i,'name':a['href'][1:]} for i,a in zip([None,'local_export','baseline'],g['anchors'])],ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+files=[{'path':x.relative_to(p).as_posix(),'bytes':x.stat().st_size,'sha256':sha(x.read_bytes())} for x in sorted(p.rglob('*')) if x.is_file() and x.name!='manifest.json']
+(p/'manifest.json').write_text(json.dumps({'scope':'independent read-only next chapter preflight; no runtime','source_commit':head,'sources':sources,'files':files},indent=2)+'\n',encoding='utf8');print(sha((p/'manifest.json').read_bytes()))

@@ -1,0 +1,11 @@
+# Independent first Markdown production-result review
+
+Result: no blocking finding. Source-review evidence in ../review-resumed20 remains unchanged.
+
+Inspected .tmp/markdown-resumed-first against doc/canonical.json and sibling NEPL3-doc-canonical-editor/.tmp/markdown-budget-first. Exactly10 projected files plus receipt exist. Every recorded file length and SHA256 matches actual bytes. Every generated source path, source SHA256, alias SHA256 and renderer header matches the current registered source/alias. Input-context SHA256 was independently rebuilt from fixed big-endian length-framed fields in canonical/projection.rs200-226. The PageSet digest component is consistent in both context headers; the typed PageSet digest itself was not recomputed outside the production pipeline.
+
+Prior9 comparison:00/13/22/18/07/19/08 are byte-identical.01/12 differ only in the two input PageSet/context digest fields of line1; every remaining byte is identical. The full chapter20 generated Markdown was inspected. Independently stripped projection Ruby readings/Markdown escapes reproduce all16 previously reviewed current-source base paragraphs exactly. All13 inline code values,4 exact external URIs including fragments and5 configured/semantic anchors survive.
+
+Receipt initial Usage is all zero and limits equal the registry. Observed usage BEFORE receipt serialization: Work607160055, AllocationUnits1633873615, Nodes25528591, SourceBytes242864, OutputBytes689676, Depth14, Diagnostics0, Events0. This exceeds BOTH former Work600M and Allocation1.5B allowances;800M/2B remain finite selected headroom, not independently proven minimal values. The receipt expressly omits its own serialization from reported Usage; do not call this record a final-total meter.
+
+This checks the first result only. Second-run byte equality, HTML results, actual rendered browser/GitHub navigation, output refusal/preservation execution, restoration and CI remain separate required evidence. Initial scratch header-path regular expression wrongly stopped at the semicolon inside an HTML numeric entity; the corrected check delimits by '; renderer ' and all10 paths pass. This was reviewer helper error, not a generated-source defect.

@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "C:\projects\NEPL3-doc-canonical-doc-html\.tmp\review-resumed20-bootstrap\check.py", line 45, in <module>
+    assert requests and all(x.startswith('file:') for x in requests)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

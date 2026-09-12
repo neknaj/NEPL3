@@ -1,0 +1,36 @@
+[
+  {
+    "source_commit": "10255b819296ba3c7eb786784779a67ac15740d7",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-editor\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "markdown",
+      ".tmp/markdown-initial"
+    ],
+    "executable_sha256": "b274a4cc894f1e4413e0925b9eacdb9ea300c42b379b7db540a068d7fb84f28d",
+    "executable_build_source": "5c4ce6184f6d5fa817f472d202101aaf86af3195; Rust/manifests unchanged",
+    "registry_sha256": "0cc1b6bb5d65c337c24dcebcb83f4da7b70b289d81ec1bc9ec360c7aa50c3c59",
+    "deadline_seconds": 900,
+    "pid": 50256,
+    "exit_code": 0,
+    "elapsed_seconds": 65.00095619994681,
+    "output_exists": true
+  },
+  {
+    "source_commit": "10255b819296ba3c7eb786784779a67ac15740d7",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-editor\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "html",
+      ".tmp/html-initial"
+    ],
+    "executable_sha256": "b274a4cc894f1e4413e0925b9eacdb9ea300c42b379b7db540a068d7fb84f28d",
+    "executable_build_source": "5c4ce6184f6d5fa817f472d202101aaf86af3195; Rust/manifests unchanged",
+    "registry_sha256": "0cc1b6bb5d65c337c24dcebcb83f4da7b70b289d81ec1bc9ec360c7aa50c3c59",
+    "deadline_seconds": 900,
+    "pid": 52496,
+    "exit_code": 0,
+    "elapsed_seconds": 35.10301950003486,
+    "output_exists": true
+  }
+]

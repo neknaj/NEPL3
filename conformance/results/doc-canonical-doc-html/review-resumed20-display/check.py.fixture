@@ -1,0 +1,107 @@
+from pathlib import Path
+import sys,re,json,hashlib,threading,http.server,functools
+from playwright.sync_api import sync_playwright
+ROOT=Path(__file__).resolve().parents[2]; OUT=Path(__file__).parent
+sys.path.insert(0,str(ROOT))
+from tools.audit.structure import Parser,load_forms
+src=(ROOT/'doc/spec/20-doc-html.nepld').read_text(encoding='utf8')
+original=OUT/'original20.md'
+if not original.exists():original.write_bytes((ROOT/'doc/spec/20-doc-html.md').read_bytes())
+md=original.read_text(encoding='utf8')
+registry=json.loads((ROOT/'doc/canonical.json').read_text(encoding='utf8'))
+registration=next(x for x in registry['pages'] if x['id']=='doc-html')
+assert registration['route']=='docs/spec/20-doc-html.html'
+tree=Parser(src,load_forms(ROOT)).complete('Doc/Article')
+def walk(n):
+ if isinstance(n,list):
+  for c in n:yield from walk(c)
+ elif isinstance(n,dict):
+  yield n
+  for c in n.get('fields',{}).values():yield from walk(c)
+def plain(n):
+ if isinstance(n,list):return ''.join(map(plain,n))
+ if not isinstance(n,dict):return ''
+ if n['kind']=='leaf':return re.sub(r'\[([^/\]]+)/[^\]]+\]',r'\1',json.loads(n['token']))
+ f=n['fields'];k=n['kind']
+ if k in ['Text','InlineCode']:return f['text']
+ if k=='Ruby':return plain(f['base'])
+ if k=='Link':return plain(f['label'])
+ return ''.join(plain(c) for c in f.values())
+nodes=list(walk(tree))
+paragraphs=[plain(n) for n in nodes if n['kind']=='Paragraph']
+pairs=[]
+for n in nodes:
+ if n['kind']=='leaf':pairs.extend(re.findall(r'\[([^/\]]+)/([^\]]+)\]',json.loads(n['token'])))
+ elif n['kind']=='Ruby':pairs.append((plain(n['fields']['base']),plain(n['fields']['reading'])))
+codes=re.findall(r'`([^`]+)`',md);links=re.findall(r'\]\((https?://[^)]+)\)',md)
+assert len(paragraphs)==16 and len(codes)==13 and len(links)==4
+assert [n['fields']['text'] for n in nodes if n['kind']=='InlineCode']==codes
+expected=dict(paragraphs=paragraphs,codes=codes,links=links,rubies=pairs,source_sha256=hashlib.sha256(src.encode()).hexdigest())
+(OUT/'expected.json').write_text(json.dumps(expected,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+if '--prepare' in sys.argv:print('Prepared independent source expectations:',len(pairs),'Ruby');sys.exit()
+for a,b in [('html-resumed-first','html-resumed-second'),('markdown-resumed-first','markdown-resumed-second')]:
+ if '--browser-first' in sys.argv:continue
+ first=ROOT/'.tmp'/a;second=ROOT/'.tmp'/b
+ af={str(p.relative_to(first)):hashlib.sha256(p.read_bytes()).hexdigest() for p in first.rglob('*') if p.is_file()}
+ bf={str(p.relative_to(second)):hashlib.sha256(p.read_bytes()).hexdigest() for p in second.rglob('*') if p.is_file()}
+ assert af and af==bf,(a,b)
+ (OUT/(a+'-hashes.json')).write_text(json.dumps(af,indent=2)+'\n',encoding='utf8')
+if '--compare-only' in sys.argv:
+ print('PASS both HTML and Markdown full bundles byte-exact');sys.exit()
+html_manifest=json.loads((ROOT/'.tmp/html-resumed-first/manifest.json').read_text(encoding='utf8'))
+html_entry=next(x for x in html_manifest['files'] if x['path']==registration['route'])
+assert html_entry['sha256']==hashlib.sha256((ROOT/'.tmp/html-resumed-first'/registration['route']).read_bytes()).hexdigest()
+projection=(ROOT/'.tmp/markdown-resumed-first/doc/spec/20-doc-html.md').read_text(encoding='utf8')
+aliases=json.loads((ROOT/registration['aliases']).read_text(encoding='utf8'))
+assert re.findall(r'<a name="([^"]+)"></a>',projection)==[aliases[0]['name'],'n-'+b'local_export'.hex(),aliases[1]['name'],'n-'+b'baseline'.hex(),aliases[2]['name']]
+class Handler(http.server.SimpleHTTPRequestHandler):
+ def log_message(self,fmt,*args):
+  with (OUT/'http.log').open('a',encoding='utf8') as f:f.write(fmt%args+'\n')
+ def translate_path(self,path):
+  for prefix in ['/review/deep/','/another/nested/published/']:
+   if path.startswith(prefix):path=path[len(prefix)-1:];break
+  return super().translate_path(path)
+server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(Handler,directory=str(ROOT/'.tmp/html-resumed-first')))
+threading.Thread(target=server.serve_forever,daemon=True).start()
+measure='''() => {
+ const article=document.querySelector('article');
+ const plain=e=>{const c=e.cloneNode(true);c.querySelectorAll('.nepl-reading,.nepl-notes').forEach(n=>n.remove());return c.textContent};
+ const rubies=[...article.querySelectorAll('.nepl-ruby')];
+ return {paragraphs:[...article.querySelectorAll('.nepl-paragraph')].map(plain),codes:[...article.querySelectorAll('code')].map(n=>n.textContent),links:[...article.querySelectorAll('a[href]')].map(n=>n.getAttribute('href')),rubies:rubies.map(n=>[n.querySelector(':scope>.nepl-base').textContent,n.querySelector(':scope>.nepl-reading').textContent]),headings:[...article.querySelectorAll('h1,h2,h3')].map(plain),sections:[...article.querySelectorAll('section')].map(n=>n.id),gaps:rubies.map(n=>n.querySelector(':scope>.nepl-base').getBoundingClientRect().top-n.querySelector(':scope>.nepl-reading').getBoundingClientRect().bottom),ids:[...document.querySelectorAll('[id]')].map(n=>n.id),scripts:document.scripts.length,css:[...document.styleSheets].map(s=>s.href),background:getComputedStyle(article).backgroundColor,width:document.documentElement.scrollWidth,viewport:innerWidth};
+}'''
+results=[]
+try:
+ with sync_playwright() as p:
+  for engine in ['chromium','firefox','webkit']:
+   browser=getattr(p,engine).launch()
+   for width in [375,1280]:
+    context=browser.new_context(viewport={'width':width,'height':900},java_script_enabled=False)
+    page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+    for prefix in ['/review/deep/','/another/nested/published/']:
+     url=f'http://127.0.0.1:{server.server_port}{prefix}'+registration['route']
+     response=page.goto(url);assert response.status==200
+     row=page.evaluate(measure)
+     assert row['paragraphs']==paragraphs,[(i,a,b) for i,(a,b) in enumerate(zip(row['paragraphs'],paragraphs)) if a!=b]
+     assert row['codes']==codes and row['links']==links
+     assert row['rubies']==[list(x) for x in pairs]
+     assert len(row['headings'])==3 and row['scripts']==0 and len(row['css'])==1
+     assert row['background']=='rgb(13, 17, 23)' and min(row['gaps'])>=-.1
+     assert not errors
+     page.screenshot(path=str(OUT/f'{engine}-{width}-{prefix.split("/")[1]}.png'),full_page=True)
+     if prefix=='/review/deep/':page.screenshot(path=str(OUT/f'{engine}-{width}-opening.png'))
+     for section in ['local_export','baseline']:
+      ident='n-'+section.encode().hex();assert ident in row['sections']
+      page.goto(url+'#'+ident);page.wait_for_timeout(80)
+      move=page.locator('[id="'+ident+'"]').evaluate('(e)=>({top:e.getBoundingClientRect().top,scroll:scrollY})')
+      assert move['scroll']>0 and move['top']<900,move
+      if prefix=='/review/deep/':page.screenshot(path=str(OUT/f'{engine}-{width}-{section}.png'))
+      results.append(dict(engine=engine,version=browser.version,width=width,prefix=prefix,section=section,movement=move,measurement=row))
+    context.close()
+   browser.close()
+finally:
+ server.shutdown()
+ (OUT/'raw-results.json').write_text(json.dumps(results,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+assert len(results)==24
+manifest=dict(passed=True,determinism='pending' if '--browser-first' in sys.argv else 'passed',cases=24,contexts=12,paragraphs=16,inline_code=13,external_links=links,ruby_count=len(pairs),scope='Static exported Doc20 with JavaScript disabled; excludes Wasm, Playground, assistive-technology operations.',files={str(p.relative_to(OUT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in OUT.iterdir() if p.is_file() and p.name!='manifest.json'})
+(OUT/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+print('PASS 24 semantic moves across 12 browser/width/path contexts; all paragraphs, code, URLs, Ruby preserved')

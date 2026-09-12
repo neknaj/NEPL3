@@ -1,0 +1,72 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "cargo",
+      "build",
+      "--locked",
+      "-p",
+      "nepl3-tools",
+      "-j",
+      "2"
+    ],
+    "cwd": "C:\\projects\\NEPL3-review20",
+    "pid": 32740,
+    "timeout_seconds": 1200,
+    "started_utc": "2026-09-12T04:03:25Z",
+    "registry_sha256": "6f746224a05262f80624b7170660fc79c2345cf78ca3a04ea0a8acdd58cc8db2",
+    "source_commit": "f459596e87dfe28b24954cfad82472626033ea91",
+    "exit_code": 0,
+    "elapsed_seconds": 52.31748259998858
+  },
+  {
+    "name": "canonical-check",
+    "command": [
+      "C:\\projects\\NEPL3-review20\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "--check"
+    ],
+    "cwd": "C:\\projects\\NEPL3-review20",
+    "pid": 14092,
+    "timeout_seconds": 900,
+    "started_utc": "2026-09-12T04:04:17Z",
+    "registry_sha256": "6f746224a05262f80624b7170660fc79c2345cf78ca3a04ea0a8acdd58cc8db2",
+    "source_commit": "f459596e87dfe28b24954cfad82472626033ea91",
+    "exit_code": 0,
+    "elapsed_seconds": 82.94277689998853
+  },
+  {
+    "name": "old-limit-markdown",
+    "command": [
+      "C:\\projects\\NEPL3-review20\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "markdown",
+      "C:\\projects\\NEPL3-review20\\old-limit-markdown"
+    ],
+    "cwd": "C:\\projects\\NEPL3-review20",
+    "pid": 28264,
+    "timeout_seconds": 900,
+    "started_utc": "2026-09-12T04:05:40Z",
+    "registry_sha256": "0cc1b6bb5d65c337c24dcebcb83f4da7b70b289d81ec1bc9ec360c7aa50c3c59",
+    "source_commit": "f459596e87dfe28b24954cfad82472626033ea91",
+    "exit_code": 1,
+    "elapsed_seconds": 77.21552850000444
+  },
+  {
+    "name": "old-limit-html",
+    "command": [
+      "C:\\projects\\NEPL3-review20\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "html",
+      "C:\\projects\\NEPL3-review20\\old-limit-html"
+    ],
+    "cwd": "C:\\projects\\NEPL3-review20",
+    "pid": 36732,
+    "timeout_seconds": 900,
+    "started_utc": "2026-09-12T04:06:57Z",
+    "registry_sha256": "0cc1b6bb5d65c337c24dcebcb83f4da7b70b289d81ec1bc9ec360c7aa50c3c59",
+    "source_commit": "f459596e87dfe28b24954cfad82472626033ea91",
+    "exit_code": 1,
+    "elapsed_seconds": 42.19119660000433
+  }
+]

@@ -1,0 +1,48 @@
+from pathlib import Path
+import subprocess,json,hashlib,re,sys
+from html.parser import HTMLParser
+ROOT=Path.cwd();OUT=ROOT/'.tmp/review-canonical20-content';HEAD='10255b819296ba3c7eb786784779a67ac15740d7'
+def git(path,rev=HEAD):return subprocess.check_output(['git','show',rev+':'+path])
+def put(path,b):p=OUT/path;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b)
+for path in ['doc/spec/20-doc-html.md','doc/spec/20-doc-html.nepld','doc/migration/aliases/20-doc-html.json','doc/authoring.md','tools/src/doc/export.rs','tools/src/doc/export/pages.rs','crates/languages/doc/html/src/prepare.rs','tools/audit/structure.py','design/forms.json']:
+ put('source/'+path,git(path))
+delta=(ROOT/'.tmp/scope-clarification.json').read_bytes();put('scope-clarification.json',delta);d=json.loads(delta)
+current=git('doc/spec/20-doc-html.nepld');old=git('doc/migration/authored/20-doc-html.nepld',HEAD+'^');put('original-draft.nepld',old)
+assert hashlib.sha256(old).hexdigest()==d['original_sha256']
+assert current.count(d['after'].encode())==1 and current.replace(d['after'].encode(),d['before'].encode())==old
+assert git('doc/spec/20-doc-html.md')==git('doc/spec/20-doc-html.md',HEAD+'^')
+sys.path.insert(0,str(OUT/'source'))
+from tools.audit.structure import Parser,load_forms
+helper=Path('C:/projects/NEPL3-doc-canonical-html-delivery/.tmp/preflight-after18/helpers.py').read_bytes();put('helpers.py',helper);exec(helper.decode())
+raw=Parser(current.decode(),load_forms(OUT/'source')).complete('Doc/Article');audit_text(raw);pairs.clear();tree=normalize(raw,True)
+codes=[n['fields']['text'] for n in walk(tree) if n['kind']=='InlineCode'];source=git('doc/spec/20-doc-html.md').decode()
+assert codes==re.findall(r'`([^`]+)`',source) and len(codes)==13
+links=[n['fields']['target']['fields']['uri'] for n in walk(tree) if n['kind']=='Link']
+assert links==re.findall(r'\]\((https?://[^)]+)\)',source) and len(links)==4
+sections=[n for n in walk(tree) if n['kind']=='Section'];assert len(sections)==2
+paragraphs=[plain(n) for n in walk(tree) if n['kind']=='Paragraph'];assert len(paragraphs)==16
+assert not [n for n in walk(tree) if n['kind'] in ['List','Table','RawCode','Parallel','Image']]
+prior=Path('C:/projects/NEPL3-doc-canonical-editor/.tmp/preflight-after08')
+for file in ['manifest.json','review.md','github.json','20-doc-html-github.html']:
+ put('prior-review/'+file,(prior/file).read_bytes())
+assert (prior/'20-doc-html.md').read_bytes()==source.encode()
+class Scripts(HTMLParser):
+ def __init__(self):super().__init__();self.active=False;self.parts=[];self.values=[]
+ def handle_starttag(self,t,a):
+  if t=='script' and dict(a).get('type')=='application/json':self.active=True;self.parts=[]
+ def handle_data(self,s):
+  if self.active:self.parts.append(s)
+ def handle_endtag(self,t):
+  if t=='script' and self.active:self.values.append(json.loads(''.join(self.parts)));self.active=False
+class Anchors(HTMLParser):
+ def __init__(self):super().__init__();self.values=[]
+ def handle_starttag(self,t,a):
+  a=dict(a)
+  if t=='a' and a.get('id','').startswith('user-content-'):self.values.append(a)
+s=Scripts();s.feed((prior/'20-doc-html-github.html').read_text(encoding='utf8'))
+payload=next(v['payload'] for v in s.values if 'codeViewBlobRoute' in v.get('payload',{}))
+assert ('\n'.join(payload['codeViewBlobLayoutRoute.StyledBlob']['rawLines'])+'\n').encode()==source.encode()
+a=Anchors();a.feed(payload['codeViewBlobRoute']['richText']);aliases=json.loads(git('doc/migration/aliases/20-doc-html.json'))
+assert [v['href'][1:] for v in a.values]==[v['name'] for v in aliases] and len(aliases)==3
+result=dict(commit=HEAD,scope='Independent review of root opening clarification plus mechanical preservation; original draft author is this reviewer, so full manuscript self-read is not independent semantic approval.',old_draft_sha256=hashlib.sha256(old).hexdigest(),new_draft_sha256=hashlib.sha256(current).hexdigest(),original_markdown_sha256=hashlib.sha256(source.encode()).hexdigest(),reverse_exact=True,paragraphs=16,sections=[n['fields']['id'] for n in sections],codes=codes,links=links,ruby_count=len(pairs),aliases=aliases,prior_server_raw_exact=True,new_opening=paragraphs[0],runtime='not-run',browser='not-run; prior captured original GitHub DOM verified locally')
+put('result.json',(json.dumps(result,ensure_ascii=False,indent=2)+'\n').encode());print('PASS: exact limited opening delta; 16 paragraphs /2 Sections /13 code /4 links /3 aliases; Ruby',len(pairs))
