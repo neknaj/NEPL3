@@ -16,6 +16,101 @@ fn err(v: impl std::fmt::Debug) -> String {
 }
 
 #[test]
+fn evaluation_environment_ndf_rechecks_name_order() -> Result<(), String> {
+    use nepl3_math_core::{environment::EnvironmentError, model::*, portable};
+    let compiled = compiled()?;
+    let registry = &compiled.doc.registry;
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(registry, &sources, &mut admission).map_err(err)?;
+    let input = BindingEnvironment {
+        assignments: ["a", "z"]
+            .into_iter()
+            .map(|name| MathAssignment {
+                name: name.into(),
+                value: MathExactValue::Truth { value: true },
+            })
+            .collect(),
+    };
+    let raw =
+        portable::environment_to_value(&input, registry, &mut codec, &mut budget()).map_err(err)?;
+    let bytes = nepl3_wire::encode(&raw, &mut budget()).map_err(err)?;
+    let mut raw = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+    assert_eq!(
+        portable::environment_from_value(&raw, registry, &mut codec, &mut budget()).map_err(err)?,
+        input
+    );
+    let mut duplicate = raw.clone();
+    let NdfValue::Record(record) = &mut duplicate else {
+        return Err("environment record".into());
+    };
+    let NdfValue::List(items) = &mut record.fields[0] else {
+        return Err("assignment list".into());
+    };
+    items[1] = items[0].clone();
+    assert_eq!(
+        portable::environment_from_value(&duplicate, registry, &mut codec, &mut budget()),
+        Err(portable::PortableError::Environment(
+            EnvironmentError::DuplicateName { index: 1 }
+        ))
+    );
+    let mut invalid = raw.clone();
+    let NdfValue::Record(record) = &mut invalid else {
+        return Err("environment record".into());
+    };
+    let NdfValue::List(items) = &mut record.fields[0] else {
+        return Err("assignment list".into());
+    };
+    let NdfValue::Record(assignment) = &mut items[1] else {
+        return Err("assignment record".into());
+    };
+    let mut vector = portable::exact_to_value(
+        &MathExactValue::Vector {
+            values: vec![
+                nepl3_math_core::number::ratio(
+                    &nepl3_core::value::Integer::from(1_i64),
+                    &nepl3_core::value::Integer::from(1_i64),
+                    &mut budget(),
+                )
+                .map_err(err)?,
+            ],
+        },
+        registry,
+        &mut codec,
+        &mut budget(),
+    )
+    .map_err(err)?;
+    let NdfValue::Variant(value) = &mut vector else {
+        return Err("exact variant".into());
+    };
+    value.fields[0] = NdfValue::List(vec![]);
+    assignment.fields[1] = vector;
+    assert_eq!(
+        portable::environment_from_value(&invalid, registry, &mut codec, &mut budget()),
+        Err(portable::PortableError::Environment(
+            EnvironmentError::Value {
+                index: 1,
+                error: nepl3_math_core::exact::ExactValueError::EmptyVector
+            }
+        ))
+    );
+    let NdfValue::Record(record) = &mut raw else {
+        return Err("environment record".into());
+    };
+    let NdfValue::List(items) = &mut record.fields[0] else {
+        return Err("assignment list".into());
+    };
+    items.swap(0, 1);
+    assert_eq!(
+        portable::environment_from_value(&raw, registry, &mut codec, &mut budget()),
+        Err(portable::PortableError::Environment(
+            EnvironmentError::UnsortedName { index: 1 }
+        ))
+    );
+    Ok(())
+}
+
+#[test]
 fn exact_values_roundtrip_and_reject_forged_matrix_dimensions() -> Result<(), String> {
     use nepl3_math_core::{exact::ExactValueError, model::MathExactValue, portable};
     let compiled = compiled()?;

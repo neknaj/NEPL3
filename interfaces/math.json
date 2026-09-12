@@ -1043,6 +1043,42 @@
         ]
       },
       "constraints": []
+    },
+    "MathAssignment": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "value",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "MathExactValue"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "BindingEnvironment": {
+      "record": [
+        [
+          "assignments",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathAssignment"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
     }
   },
   "operations": {}

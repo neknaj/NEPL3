@@ -263,4 +263,24 @@ match (tag,f.len()) {
 _=>Err(PortableError::Shape),}
 }
 }
+impl Value for MathAssignment {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathAssignment",[self.name.put(s,c,b)?,self.value.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,46)?;
+let f=fields(v,s,"MathAssignment",2)?;
+Ok(Self {name:Value::read(&f[0],s,c,b)?,value:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for BindingEnvironment {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"BindingEnvironment",[self.assignments.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,50)?;
+let f=fields(v,s,"BindingEnvironment",1)?;
+Ok(Self {assignments:Value::read(&f[0],s,c,b)?})
+}
+}
 }
