@@ -298,8 +298,13 @@ GFMのtask markerへ写し、未指定はmarkerを追加しない。空のitem�
 Paragraph以外のblockは拒否し、平坦化や仮の本文補充は行わない。orderedの開始値は
 GFMの9桁以内（0〜999999999）に限り、各itemのmarkerへ同じ値を使う。以後の表示番号は
 Markdownのlist表示に委ね、開始値を丸めたり加算で桁を超えたりしない。
-Breakの継続行はmarker幅に合わせてindentする。隣接する独立ListはMarkdownで結合する
-ため拒否する。checkboxに似た通常Textはescapeし、意図しないtask markerにしない。
+Breakの継続行はmarker幅に合わせてindentする。隣接する独立Listの間には、前後を空行で
+区切った固定コメント `<!-- -->` を生成し、別々のlistと開始値を保持する。
+同じBodyの連続したListごとに適用し、Paragraph・Table・Sectionを挟む場合は追加しない。
+コメントは通常のwriterを通じて資源を計上し、本文由来の任意HTMLを挿入しない。
+これは既存rendererの受理範囲の拡張であり、従来受理した入力の出力byte列は変更しない。
+[CommonMarkの例308](https://spec.commonmark.org/0.31.2/#example-308)に従う。
+checkboxに似た通常Textはescapeし、意図しないtask markerにしない。
 
 Tableは非空のcolumnsと明示headerを持つ場合を扱う。headerなしの先頭rowを昇格したり、
 架空のheaderを追加したりしない。headerだけでrowsが空の場合は許す。元のrow/cell順、

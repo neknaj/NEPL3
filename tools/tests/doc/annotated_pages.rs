@@ -55,6 +55,54 @@ fn links(markdown: &str) -> Vec<String> {
 }
 
 #[test]
+fn adjacent_lists_in_page_set_keep_links_and_separate_numbering() -> Result<(), String> {
+    let c = compiled()?;
+    let a = page(
+        &c,
+        "a",
+        "source/a.md",
+        "docs/a.md",
+        r#"article en "A" body
+        cons list ordered 7 cons item none body cons paragraph cons sentence
+          cons link page "b" some "use" text "B" nil nil nil nil
+        cons list ordered 42 cons item none body cons paragraph cons "Second" nil nil nil nil"#,
+    )?;
+    let b = page(
+        &c,
+        "b",
+        "source/b.md",
+        "docs/nested/b.md",
+        r#"article en "B" body cons section use "Use" body nil nil"#,
+    )?;
+    let set = PageSet {
+        pages: vec![a, b],
+        files: vec![],
+    };
+    let store = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+    let output = render(
+        &set,
+        &c.doc.registry,
+        &mut codec,
+        &mut budget(),
+        &[&[], &[]],
+    )
+    .map_err(err)?;
+    let markdown = &output.pages[0].markdown;
+    assert_eq!(links(markdown), ["nested/b.md#n-757365"]);
+    let starts: Vec<_> = Parser::new(markdown)
+        .filter_map(|e| match e {
+            Event::Start(Tag::List(start)) => Some(start),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(starts, [Some(7), Some(42)]);
+    assert_eq!(markdown.matches("<!-- -->").count(), 1);
+    Ok(())
+}
+
+#[test]
 fn annotated_page_set_resolves_mutual_self_and_passive_file_links() -> Result<(), String> {
     let c = compiled()?;
     let a = page(
