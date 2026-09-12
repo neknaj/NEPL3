@@ -1,0 +1,30 @@
+[
+  {
+    "section": null,
+    "name": "06-math言語"
+  },
+  {
+    "section": "policy",
+    "name": "方針"
+  },
+  {
+    "section": "expression",
+    "name": "1-表現"
+  },
+  {
+    "section": "structure",
+    "name": "2-構造検査"
+  },
+  {
+    "section": "arena",
+    "name": "41-公開arenaと原文保持"
+  },
+  {
+    "section": "resources",
+    "name": "5-出力と資源"
+  },
+  {
+    "section": "public",
+    "name": "6-公開操作"
+  }
+]

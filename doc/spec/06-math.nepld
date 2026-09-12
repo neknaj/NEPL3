@@ -41,7 +41,7 @@ body
       cons "matrixは[一/ひと]つ[以上/いじょう]のrow、[各/かく]rowは[同/おな]じ[正/せい]の[列数/れつすう]。"
       cons "vectorは[一/ひと]つ[以上/いじょう]の[要素/ようそ]。"
       cons "fenceは[左右/さゆう]それぞれ0または1Unicode scalar。"
-      cons "[空文字/くうもじ]で[片側/かたがわ]だけの[括弧/かっこ]を[表/あらわ]せる。" nil
+      cons "[空文字/からもじ]で[片側/かたがわ]だけの[括弧/かっこ]を[表/あらわ]せる。" nil
     cons paragraph
       cons "rootのdegreeが[数値/すうち]literalで0ならInvalidRootDegree。"
       cons "その[他/ほか]の[定義域/ていぎいき]はevaluate[時/じ]にも[検査/けんさ]する。"

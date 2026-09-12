@@ -96,6 +96,14 @@
       "aliases": "doc/migration/aliases/11-conformance.json",
       "route": "docs/spec/11-conformance.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/1"
+    },
+    {
+      "id": "math",
+      "source": "doc/spec/06-math.nepld",
+      "projection": "doc/spec/06-math.md",
+      "aliases": "doc/migration/aliases/06-math.json",
+      "route": "docs/spec/06-math.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/1"
     }
   ],
   "output_limits": {
