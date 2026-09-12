@@ -1,0 +1,29 @@
+[
+  {
+    "case": "ValueError",
+    "post_calls": 1,
+    "wait_calls": 0
+  },
+  {
+    "case": "CreationUnknown",
+    "post_calls": 1,
+    "wait_calls": 0
+  },
+  {
+    "case": "six invalid budgets",
+    "post_calls": 0,
+    "wait_calls": 0
+  },
+  {
+    "case": "fractional remaining",
+    "spent": 0.25,
+    "passed_remaining": 0.75,
+    "receipt_head_used": true
+  },
+  {
+    "case": "fractional remaining",
+    "spent": 0.999,
+    "passed_remaining": 0.0010000000000000009,
+    "receipt_head_used": true
+  }
+]

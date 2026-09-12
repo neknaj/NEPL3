@@ -1,0 +1,29 @@
+﻿from pathlib import Path
+import sys,json,tempfile
+from unittest.mock import Mock
+sys.path.insert(0,str(Path('tools/site').resolve()))
+from test_submit import SubmitTests
+from deployment.submit import _execute
+from deployment.create import CreationUnknown
+p=Path('.tmp/execute-attempt-review');t=SubmitTests();records=[]
+with tempfile.TemporaryDirectory() as d:
+ _,mirror,intent,kwargs=t.setup(d)
+ for error in [ValueError('stale head'),CreationUnknown('receipt unknown')]:
+  post=Mock(side_effect=error);wait=Mock()
+  try:_execute(mirror,None,intent,**kwargs,clock=lambda:0,submit_attempt=post,wait_attempt=wait);raise AssertionError('failure swallowed')
+  except type(error):pass
+  assert post.call_count==1 and wait.call_count==0
+  records.append({'case':type(error).__name__,'post_calls':1,'wait_calls':0})
+ for budget in [True,0,-1,3601,float('nan'),float('inf')]:
+  post=Mock();wait=Mock()
+  try:_execute(mirror,None,intent,**dict(kwargs,remaining_seconds=budget),clock=lambda:0,submit_attempt=post,wait_attempt=wait);raise AssertionError('invalid budget accepted')
+  except ValueError:pass
+  assert not post.called and not wait.called
+ records.append({'case':'six invalid budgets','post_calls':0,'wait_calls':0})
+ for spent,allowance in [(0.25,0.75),(0.999,0.001)]:
+  post=Mock(return_value=('c'*40,None));sentinel=object();wait=Mock(return_value=sentinel)
+  result=_execute(mirror,None,intent,**dict(kwargs,remaining_seconds=1),clock=iter([0,spent]).__next__,submit_attempt=post,wait_attempt=wait)
+  assert result is sentinel and abs(wait.call_args.kwargs['remaining_seconds']-allowance)<1e-12
+  assert wait.call_args.args[1]=='c'*40
+  records.append({'case':'fractional remaining','spent':spent,'passed_remaining':wait.call_args.kwargs['remaining_seconds'],'receipt_head_used':True})
+(p/'probe-results.json').write_text(json.dumps(records,indent=2)+'\n',encoding='utf8');print(json.dumps(records,indent=2))
