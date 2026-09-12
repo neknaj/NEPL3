@@ -4,6 +4,7 @@ extern crate alloc;
 pub mod binding;
 pub mod check;
 pub mod construct;
+pub mod exact;
 pub mod free;
 pub mod lower;
 pub mod model;

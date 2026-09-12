@@ -16,6 +16,59 @@ fn err(v: impl std::fmt::Debug) -> String {
 }
 
 #[test]
+fn exact_values_roundtrip_and_reject_forged_matrix_dimensions() -> Result<(), String> {
+    use nepl3_math_core::{exact::ExactValueError, model::MathExactValue, portable};
+    let compiled = compiled()?;
+    let registry = &compiled.doc.registry;
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(registry, &sources, &mut admission).map_err(err)?;
+    let q = nepl3_math_core::number::ratio(
+        &nepl3_core::value::Integer::from(1_i64),
+        &nepl3_core::value::Integer::from(3_i64),
+        &mut budget(),
+    )
+    .map_err(err)?;
+    for value in [
+        MathExactValue::Scalar { value: q.clone() },
+        MathExactValue::Vector {
+            values: vec![q.clone()],
+        },
+        MathExactValue::Matrix {
+            rows: 1,
+            cols: 1,
+            values: vec![q],
+        },
+        MathExactValue::Truth { value: true },
+    ] {
+        let raw =
+            portable::exact_to_value(&value, registry, &mut codec, &mut budget()).map_err(err)?;
+        let bytes = nepl3_wire::encode(&raw, &mut budget()).map_err(err)?;
+        let mut raw = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+        assert_eq!(
+            portable::exact_from_value(&raw, registry, &mut codec, &mut budget()).map_err(err)?,
+            value
+        );
+        if matches!(value, MathExactValue::Matrix { .. }) {
+            let NdfValue::Variant(variant) = &mut raw else {
+                return Err("exact value variant".into());
+            };
+            variant.fields[1] = NdfValue::U64(2);
+            assert_eq!(
+                portable::exact_from_value(&raw, registry, &mut codec, &mut budget()),
+                Err(portable::PortableError::ExactValue(
+                    ExactValueError::MatrixElementCount {
+                        expected: 2,
+                        actual: 1
+                    }
+                ))
+            );
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn binding_report_portable_roundtrip_rejects_forged_resolution() -> Result<(), String> {
     use nepl3_math_core::{binding, model::*, portable};
     let compiled = compiled()?;

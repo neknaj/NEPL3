@@ -1002,6 +1002,47 @@
         ]
       ],
       "constraints": []
+    },
+    "MathExactValue": {
+      "variant": {
+        "Scalar": [
+          [
+            "value",
+            "Rational"
+          ]
+        ],
+        "Vector": [
+          [
+            "values",
+            {
+              "list": "Rational"
+            }
+          ]
+        ],
+        "Matrix": [
+          [
+            "rows",
+            "U64"
+          ],
+          [
+            "cols",
+            "U64"
+          ],
+          [
+            "values",
+            {
+              "list": "Rational"
+            }
+          ]
+        ],
+        "Truth": [
+          [
+            "value",
+            "Bool"
+          ]
+        ]
+      },
+      "constraints": []
     }
   },
   "operations": {}

@@ -55,6 +55,12 @@ body
       cons "[定義域違反/ていぎいきいはん]・[形状不一致/けいじょうふいっち]は[明確/めいかく]なEvalError。"
       cons sentence cons ruby text "値" text "あたい" cons text "の" cons ruby text "種類" text "しゅるい" cons text "はScalar(Q)、" cons code "Vector(List<Q>)" cons text "、" cons code "Matrix(rows,cols,List<Q>)" cons text "、Truth(Bool)。" nil nil
     cons paragraph
+      cons "MathExactValueは[評価値/ひょうかち]の[言語中立/げんごちゅうりつ]schemaであり、[元/もと]のMathValueとは[別/べつ]である。"
+      cons "ScalarとVectorとMatrixの[要素/ようそ]は[任意/にんい]の[正規形/せいきけい]Rationalで、Numberの[有限十進制約/ゆうげんじっしんせいやく]を[適用/てきよう]しない。"
+      cons "Vectorは[空/から]を[認/みと]めず、Matrixのrowsとcolsは[正/せい]、valuesは[行優先順/ぎょうゆうせんじゅん]でrowsとcolsの[積/せき]に[等/ひと]しい[要素数/ようそすう]を[持/も]つ。"
+      cons "[次元/じげん]の[積/せき]のU64 overflowも[拒否/きょひ]し、NDFの[受信/じゅしん]でも[同/おな]じ[形状検査/けいじょうけんさ]を[行/おこな]う。"
+      cons "この[値/あたい]の[検査/けんさ]だけで[元式/もとしき]の[評価/ひょうか]や[演算/えんざん]の[定義域/ていぎいき]が[証明/しょうめい]されたとは[扱/あつか]わない。" nil
+    cons paragraph
       cons "[評価/ひょうか]はsource[順/じゅん]の[左/ひだり]から[右/みぎ]、[純粋/じゅんすい]。"
       cons "letはinitを[評価/ひょうか]してからbodyを[評価/ひょうか]する。"
       cons "[未解決/みかいけつ]の[記号/きごう]に[依存/いぞん]する[部分/ぶぶん]はSymbolicとし、[独立/どくりつ]な[数値/すうち]subtreeの[計算結果/けいさんけっか]を[保持/ほじ]できるが[元/もと]の[構文/こうぶん]を[上書/うわが]きしない。" nil
