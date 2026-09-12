@@ -9,8 +9,10 @@
 //! nodes per appearance and returns no partial string on failure. Both operations
 //! consume the caller's sticky budget; a separate serialization budget is only
 //! appropriate for a separate invocation, not recovery from an exhausted one.
+mod html;
 pub(crate) mod serialize;
 use alloc::{string::String, vec::Vec};
+pub use html::{HtmlProjection, into_html};
 use nepl3_core::budget::{Budget, Resource, StopReason};
 pub use serialize::serialize;
 

@@ -141,6 +141,32 @@ fn article_math_nodes_select_display_without_evaluating_code() -> Result<(), Str
                         result.rendered.node_roots.len(),
                         result.syntax.value.nodes.len()
                     );
+                    let html = result.into_html(&mut budget()).map_err(err)?;
+                    let html_proof = nepl3_markup::html::validate(
+                        &html.markup.fragment,
+                        html.markup.slot,
+                        &html.markup.policy,
+                        &mut budget(),
+                    )
+                    .map_err(err)?;
+                    assert_eq!(
+                        nepl3_markup::html::serialize_xhtml(&html_proof, &mut budget())
+                            .map_err(err)?,
+                        xml
+                    );
+                    let receiver_html = received_output.into_html(&mut budget()).map_err(err)?;
+                    assert_eq!(receiver_html.markup, html.markup);
+                    assert_eq!(receiver_html.node_roots, html.node_roots);
+                    assert_eq!(html.annotation_roots.len(), html.annotations.len());
+                    for (root, record) in html.annotation_roots.iter().zip(&html.annotations) {
+                        assert!(root.node < html.syntax.value.nodes.len() as u64);
+                        assert!(root.markup < html.markup.fragment.nodes.len() as u64);
+                        assert_eq!(record.origins.first().map(|o| o.element), Some(root.markup));
+                        for origin in &record.origins {
+                            assert!(origin.element < html.markup.fragment.nodes.len() as u64);
+                            assert!(origin.node < record.document.value.nodes.len() as u64);
+                        }
+                    }
                     for resource in 0..4 {
                         let mut limits = budget().limits();
                         match resource {
