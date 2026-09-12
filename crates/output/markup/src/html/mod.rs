@@ -6,7 +6,7 @@ mod serialize;
 mod uri;
 use alloc::{string::String, vec::Vec};
 pub use check::{HtmlError, ValidatedHtml, validate};
-pub use serialize::serialize;
+pub use serialize::{serialize, serialize_xhtml};
 
 /// Check the existing constrained output URI profile without loading its target.
 /// Host preparation and serialization share this lexical rule. This does not

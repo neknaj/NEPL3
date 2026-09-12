@@ -212,6 +212,21 @@ impl Output {
 /// Deterministic complete HTML fragment. It adds no document shell, script,
 /// CSS or external-resource loader. Attribute order is ASCII name order.
 pub fn serialize(proof: &ValidatedHtml<'_>, b: &mut Budget) -> Result<String, HtmlError> {
+    serialize_mode(proof, false, b)
+}
+/// Serialize the checked fragment for XML embedding. An element root declares
+/// the XHTML namespace, void elements are self-closing, and `pre` retains exactly
+/// its input whitespace (no HTML-parser first-newline compensation).
+/// A text root emits escaped text without adding a wrapper or namespace.
+/// This does not prove IDs/resources against an enclosing mixed-namespace tree.
+pub fn serialize_xhtml(proof: &ValidatedHtml<'_>, b: &mut Budget) -> Result<String, HtmlError> {
+    serialize_mode(proof, true, b)
+}
+fn serialize_mode(
+    proof: &ValidatedHtml<'_>,
+    xml: bool,
+    b: &mut Budget,
+) -> Result<String, HtmlError> {
     b.poll()?;
     let f = proof.fragment;
     b.charge(Resource::AllocationUnits, 64)?;
@@ -242,6 +257,9 @@ pub fn serialize(proof: &ValidatedHtml<'_>, b: &mut Budget) -> Result<String, Ht
             } => {
                 out.literal("<", b)?;
                 out.literal(tag.name(), b)?;
+                if xml && depth == 1 {
+                    out.literal(" xmlns=\"http://www.w3.org/1999/xhtml\"", b)?;
+                }
                 b.charge(
                     Resource::AllocationUnits,
                     (attributes.len() as u64)
@@ -263,8 +281,8 @@ pub fn serialize(proof: &ValidatedHtml<'_>, b: &mut Budget) -> Result<String, Ht
                     out.text(&text, TextContext::Attribute, r, b)?;
                     out.literal("\"", b)?;
                 }
-                out.literal(">", b)?;
-                if *tag == HtmlTag::Pre {
+                out.literal(if xml && tag.is_void() { " />" } else { ">" }, b)?;
+                if !xml && *tag == HtmlTag::Pre {
                     out.literal("\n", b)?;
                 }
                 if !tag.is_void() {
