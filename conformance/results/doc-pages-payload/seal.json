@@ -16,14 +16,9 @@
       "sha256": "42b47b5c6d505f9eaf2e97b4d64b016465f43f808a43ff00bb9baa91e6a9af5e"
     },
     {
-      "path": "final-review/final.tar.fixture",
-      "bytes": 1177600,
-      "sha256": "cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9"
-    },
-    {
-      "path": "final-review/first.tar.fixture",
-      "bytes": 1177600,
-      "sha256": "cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9"
+      "path": "final-review/identical-tars.tar.gz.fixture",
+      "bytes": 134720,
+      "sha256": "762bb0d6c2a1f2c9314df03495f75b7ccbe696ac5c75cc5c24e55741c1be5acc"
     },
     {
       "path": "final-review/manifest.json.fixture",
@@ -81,11 +76,6 @@
       "sha256": "3fb6c6bd7910df9a56983df97eb15d3f7ac0f54225a0265ff8c231c6e8edefa6"
     },
     {
-      "path": "final-review/second.tar.fixture",
-      "bytes": 1177600,
-      "sha256": "cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9"
-    },
-    {
       "path": "final-review/version-repro.json.fixture",
       "bytes": 114,
       "sha256": "aef62b1afac00a9dae16e9f7b322ff0e273a9da9d5f46395c52fc796540f2135"
@@ -122,8 +112,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 1242,
-      "sha256": "9e2e89479d6f6da3b926d381844d5821b08e1773178888a1d21aef67ed7c18af"
+      "bytes": 1508,
+      "sha256": "36f47356fa2117eabba4a30680469b725dea06d0f8695bbdf83e2593b7f55eeb"
     }
   ]
 }
