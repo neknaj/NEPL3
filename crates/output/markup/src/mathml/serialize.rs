@@ -1,4 +1,5 @@
 use super::*;
+use crate::output::Output;
 use crate::text::{TextContext, TextError, escape};
 enum Action {
     Node(u64, u64),
@@ -25,26 +26,12 @@ fn push(stack: &mut Vec<Action>, action: Action, b: &mut Budget) -> Result<(), E
     stack.push(action);
     Ok(())
 }
-fn append(out: &mut String, text: &str, precharged: bool, b: &mut Budget) -> Result<(), Error> {
-    b.charge(Resource::Work, text.len() as u64)?;
-    if !precharged {
-        b.charge(Resource::OutputBytes, text.len() as u64)?;
+fn append(out: &mut Output, text: &str, precharged: bool, b: &mut Budget) -> Result<(), Error> {
+    if precharged {
+        out.precharged(text, b)?;
+    } else {
+        out.literal(text, b)?;
     }
-    let len = out
-        .len()
-        .checked_add(text.len())
-        .ok_or_else(|| b.stop(StopReason::AllocationLimit))?;
-    if len > out.capacity() {
-        let capacity = out.capacity().saturating_mul(2).max(len).max(32);
-        b.charge(
-            Resource::AllocationUnits,
-            (capacity - out.capacity()) as u64,
-        )?;
-        b.charge(Resource::Work, out.len() as u64)?;
-        out.try_reserve_exact(capacity - out.len())
-            .map_err(|_| b.stop(StopReason::AllocationLimit))?;
-    }
-    out.push_str(text);
     Ok(())
 }
 fn attr(a: &Attribute) -> (&'static str, &str) {
@@ -78,7 +65,7 @@ fn attr(a: &Attribute) -> (&'static str, &str) {
 pub fn serialize(input: &Validated<'_>, b: &mut Budget) -> Result<String, Error> {
     b.poll()?;
     let f = input.fragment();
-    let mut out = String::new();
+    let mut out = Output::default();
     let base = b.current_depth();
     let mut stack = Vec::new();
     push(&mut stack, Action::Node(f.root, 1), b)?;
@@ -92,10 +79,9 @@ pub fn serialize(input: &Validated<'_>, b: &mut Budget) -> Result<String, Error>
                 }
                 match &f.nodes[index(id, f.nodes.len())?] {
                     Node::Html { fragment } => {
-                        let html = b.with_depth_at_least(base.saturating_add(depth - 1), |b| {
-                            crate::html::serialize::embedded(fragment, b)
+                        b.with_depth_at_least(base.saturating_add(depth - 1), |b| {
+                            crate::html::serialize::embedded(fragment, &mut out, b)
                         })?;
-                        append(&mut out, &html, true, b)?;
                     }
                     Node::Text(text) => {
                         let escaped =
@@ -149,5 +135,5 @@ pub fn serialize(input: &Validated<'_>, b: &mut Budget) -> Result<String, Error>
             }
         }
     }
-    Ok(out)
+    Ok(out.finish())
 }

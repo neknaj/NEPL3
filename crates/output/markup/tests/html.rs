@@ -35,6 +35,38 @@ fn render(f: &HtmlFragment) -> Result<String, HtmlError> {
     serialize(&validate(f, HtmlSlot::Block, &policy(), &mut b)?, &mut b)
 }
 #[test]
+fn output_has_one_byte_charge_and_no_per_delimiter_owned_strings() -> Result<(), HtmlError> {
+    // A roughly 2 KiB document should serialize within a 64 KiB logical
+    // allocation allowance, including traversal. The former owned String per
+    // delimiter exhausted this allowance even for empty void elements.
+    let f = HtmlFragment {
+        root: 0,
+        nodes: vec![
+            element(HtmlTag::Div, &vec![1; 512]),
+            element(HtmlTag::Br, &[]),
+        ],
+    };
+    let proof = validate(&f, HtmlSlot::Block, &policy(), &mut budget())?;
+    let expected = format!("<div>{}</div>", "<br>".repeat(512));
+    let mut limits = budget().limits();
+    limits.allocation_units = 64 * 1024;
+    limits.output_bytes = expected.len() as u64;
+    let mut b = Budget::new(limits);
+    assert_eq!(serialize(&proof, &mut b)?, expected);
+    assert_eq!(b.usage().output_bytes, expected.len() as u64);
+    limits.output_bytes -= 1;
+    let mut stopped = Budget::new(limits);
+    assert!(matches!(
+        serialize(&proof, &mut stopped),
+        Err(HtmlError::Stopped(StopReason::OutputLimit))
+    ));
+    assert!(matches!(
+        serialize(&proof, &mut stopped),
+        Err(HtmlError::Stopped(StopReason::OutputLimit))
+    ));
+    Ok(())
+}
+#[test]
 fn xml_embedding_preserves_namespace_void_nodes_and_pre_text() -> Result<(), HtmlError> {
     let f = HtmlFragment {
         root: 0,
