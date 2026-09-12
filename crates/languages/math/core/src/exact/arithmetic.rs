@@ -84,6 +84,82 @@ pub enum Additive {
     Add,
     Subtract,
 }
+
+/// Scalar division only. In particular, division by a vector is not elementwise.
+pub fn divide(
+    left: &CheckedExactValue<'_>,
+    right: &CheckedExactValue<'_>,
+    b: &mut Budget,
+) -> Result<Value, Error> {
+    start(b)?;
+    match (left.value(), right.value()) {
+        (Value::Scalar { value: l }, Value::Scalar { value: r }) => Ok(Value::Scalar {
+            value: number::divide(l, r, b)?,
+        }),
+        _ => Err(Error::OperandShapeMismatch),
+    }
+}
+
+#[derive(Clone, Copy)]
+pub enum Comparison {
+    Equal,
+    Less,
+    LessEqual,
+}
+
+/// Equal accepts identical kinds and shapes, including Truth. Ordering accepts
+/// only Scalar. At most O(N) rational comparisons and no container allocation;
+/// exact bigint comparison has its own charged temporary storage. A shape error
+/// is not false, and scalar/array coercion is never performed.
+pub fn compare(
+    left: &CheckedExactValue<'_>,
+    right: &CheckedExactValue<'_>,
+    op: Comparison,
+    b: &mut Budget,
+) -> Result<Value, Error> {
+    start(b)?;
+    let (lhs, rhs) = match (left.value(), right.value()) {
+        (Value::Scalar { value: l }, Value::Scalar { value: r }) => {
+            let ordering = number::compare(l, r, b)?;
+            return Ok(Value::Truth {
+                value: match op {
+                    Comparison::Equal => ordering.is_eq(),
+                    Comparison::Less => ordering.is_lt(),
+                    Comparison::LessEqual => ordering.is_le(),
+                },
+            });
+        }
+        (Value::Truth { value: l }, Value::Truth { value: r })
+            if matches!(op, Comparison::Equal) =>
+        {
+            return Ok(Value::Truth { value: l == r });
+        }
+        (Value::Vector { values: l }, Value::Vector { values: r })
+            if matches!(op, Comparison::Equal) && l.len() == r.len() =>
+        {
+            (l, r)
+        }
+        (
+            Value::Matrix {
+                rows: lr,
+                cols: lc,
+                values: l,
+            },
+            Value::Matrix {
+                rows: rr,
+                cols: rc,
+                values: r,
+            },
+        ) if matches!(op, Comparison::Equal) && lr == rr && lc == rc => (l, r),
+        _ => return Err(Error::OperandShapeMismatch),
+    };
+    for (l, r) in lhs.iter().zip(rhs) {
+        if !number::compare(l, r, b)?.is_eq() {
+            return Ok(Value::Truth { value: false });
+        }
+    }
+    Ok(Value::Truth { value: true })
+}
 /// Equal kinds and dimensions only; no scalar broadcasting or truth coercion.
 /// O(N) rational operations and O(N) result storage.
 pub fn additive(

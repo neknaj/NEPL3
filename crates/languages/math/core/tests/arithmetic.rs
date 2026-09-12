@@ -190,3 +190,99 @@ fn matrix_product_stops_atomically_and_charges_result_storage() -> Result<(), St
     assert_eq!(a, before);
     Ok(())
 }
+
+#[test]
+fn scalar_division_and_exact_comparisons_reject_coercions() -> Result<(), String> {
+    use arithmetic::Comparison::{Equal, Less, LessEqual};
+    let scalar = |n| q(n).map(|value| Value::Scalar { value });
+    let three = scalar(3)?;
+    let two = scalar(2)?;
+    let lhs = exact::check(&three, &mut budget()).map_err(err)?;
+    let rhs = exact::check(&two, &mut budget()).map_err(err)?;
+    let fraction = arithmetic::divide(&lhs, &rhs, &mut budget()).map_err(err)?;
+    assert_eq!(
+        fraction,
+        Value::Scalar {
+            value: number::ratio(&Integer::from(3_i64), &Integer::from(2_i64), &mut budget())
+                .map_err(err)?
+        }
+    );
+    for (op, expected) in [(Equal, false), (Less, false), (LessEqual, false)] {
+        assert_eq!(
+            arithmetic::compare(&lhs, &rhs, op, &mut budget()).map_err(err)?,
+            Value::Truth { value: expected }
+        );
+    }
+    assert_eq!(
+        arithmetic::compare(&rhs, &lhs, Less, &mut budget()).map_err(err)?,
+        Value::Truth { value: true }
+    );
+    assert_eq!(
+        arithmetic::compare(&rhs, &rhs, LessEqual, &mut budget()).map_err(err)?,
+        Value::Truth { value: true }
+    );
+    let zero = scalar(0)?;
+    assert_eq!(
+        arithmetic::divide(
+            &lhs,
+            &exact::check(&zero, &mut budget()).map_err(err)?,
+            &mut budget()
+        ),
+        Err(Error::Arithmetic(number::ArithmeticError::DivisionByZero))
+    );
+    for (a, c, expected) in [
+        (vector(&[1, 2])?, vector(&[1, 2])?, true),
+        (vector(&[1, 2])?, vector(&[1, 3])?, false),
+        (matrix(1, 2, &[2, 3])?, matrix(1, 2, &[2, 3])?, true),
+        (matrix(1, 2, &[2, 3])?, matrix(1, 2, &[3, 2])?, false),
+        (
+            Value::Truth { value: true },
+            Value::Truth { value: false },
+            false,
+        ),
+    ] {
+        let l = exact::check(&a, &mut budget()).map_err(err)?;
+        let r = exact::check(&c, &mut budget()).map_err(err)?;
+        assert_eq!(
+            arithmetic::compare(&l, &r, Equal, &mut budget()).map_err(err)?,
+            Value::Truth { value: expected }
+        );
+        for op in [Less, LessEqual] {
+            assert_eq!(
+                arithmetic::compare(&l, &r, op, &mut budget()),
+                Err(Error::OperandShapeMismatch)
+            );
+        }
+        assert_eq!(
+            arithmetic::divide(&l, &r, &mut budget()),
+            Err(Error::OperandShapeMismatch)
+        );
+    }
+    for (a, c) in [
+        (vector(&[1])?, scalar(1)?),
+        (vector(&[1])?, vector(&[1, 2])?),
+        (matrix(1, 2, &[1, 2])?, matrix(2, 1, &[1, 2])?),
+        (Value::Truth { value: true }, scalar(1)?),
+    ] {
+        assert_eq!(
+            arithmetic::compare(
+                &exact::check(&a, &mut budget()).map_err(err)?,
+                &exact::check(&c, &mut budget()).map_err(err)?,
+                Equal,
+                &mut budget()
+            ),
+            Err(Error::OperandShapeMismatch)
+        );
+    }
+    let mut b = budget();
+    b.cancel();
+    assert_eq!(
+        arithmetic::compare(&lhs, &rhs, Equal, &mut b),
+        Err(Error::Stopped(StopReason::Cancelled))
+    );
+    assert_eq!(
+        arithmetic::divide(&lhs, &rhs, &mut b),
+        Err(Error::Stopped(StopReason::Cancelled))
+    );
+    Ok(())
+}
