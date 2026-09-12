@@ -286,3 +286,123 @@ fn scalar_division_and_exact_comparisons_reject_coercions() -> Result<(), String
     );
     Ok(())
 }
+
+#[test]
+fn transpose_and_determinant_preserve_exact_matrix_semantics() -> Result<(), String> {
+    let source = matrix(2, 3, &[1, 2, 3, 4, 5, 6])?;
+    let checked = exact::check(&source, &mut budget()).map_err(err)?;
+    assert_eq!(
+        arithmetic::transpose(&checked, &mut budget()).map_err(err)?,
+        matrix(3, 2, &[1, 4, 2, 5, 3, 6])?
+    );
+    assert_eq!(
+        arithmetic::determinant(&checked, &mut budget()),
+        Err(Error::NotSquare)
+    );
+    let v = vector(&[2, 3, 5])?;
+    let checked_v = exact::check(&v, &mut budget()).map_err(err)?;
+    assert_eq!(
+        arithmetic::transpose(&checked_v, &mut budget()).map_err(err)?,
+        matrix(1, 3, &[2, 3, 5])?
+    );
+    assert_eq!(
+        arithmetic::determinant(&checked_v, &mut budget()),
+        Err(Error::NotSquare)
+    );
+    assert_eq!(
+        arithmetic::transpose(
+            &exact::check(&Value::Truth { value: true }, &mut budget()).map_err(err)?,
+            &mut budget()
+        ),
+        Err(Error::OperandShapeMismatch)
+    );
+    // Independently derived 2x2 determinant a*d-b*c for all 81 small matrices.
+    for a in -1..=1 {
+        for c in -1..=1 {
+            for d in -1..=1 {
+                for e in -1..=1 {
+                    let source = matrix(2, 2, &[a, c, d, e])?;
+                    assert_eq!(
+                        arithmetic::determinant(
+                            &exact::check(&source, &mut budget()).map_err(err)?,
+                            &mut budget()
+                        )
+                        .map_err(err)?,
+                        Value::Scalar {
+                            value: q(a * e - c * d)?
+                        }
+                    );
+                }
+            }
+        }
+    }
+    for (source, expected) in [
+        (matrix(1, 1, &[-7])?, -7),
+        (matrix(3, 3, &[0, 1, 0, 0, 0, 1, 1, 0, 0])?, 1),
+        (matrix(3, 3, &[1, 2, 3, 0, 4, 5, 1, 0, 6])?, 22),
+        (matrix(3, 3, &[1, 2, 3, 2, 4, 6, 0, 1, 2])?, 0),
+    ] {
+        assert_eq!(
+            arithmetic::determinant(
+                &exact::check(&source, &mut budget()).map_err(err)?,
+                &mut budget()
+            )
+            .map_err(err)?,
+            Value::Scalar {
+                value: q(expected)?
+            }
+        );
+    }
+    let half =
+        number::ratio(&Integer::from(1_i64), &Integer::from(2_i64), &mut budget()).map_err(err)?;
+    let thirds =
+        number::ratio(&Integer::from(2_i64), &Integer::from(3_i64), &mut budget()).map_err(err)?;
+    let rational = Value::Matrix {
+        rows: 2,
+        cols: 2,
+        values: vec![half.clone(), q(0)?, q(0)?, thirds],
+    };
+    assert_eq!(
+        arithmetic::determinant(
+            &exact::check(&rational, &mut budget()).map_err(err)?,
+            &mut budget()
+        )
+        .map_err(err)?,
+        Value::Scalar {
+            value: number::ratio(&Integer::from(1_i64), &Integer::from(3_i64), &mut budget())
+                .map_err(err)?
+        }
+    );
+    let source = matrix(2, 2, &[0, 2, 3, 4])?;
+    let before = source.clone();
+    let checked = exact::check(&source, &mut budget()).map_err(err)?;
+    for op in [arithmetic::transpose, arithmetic::determinant] {
+        let mut measured = budget();
+        op(&checked, &mut measured).map_err(err)?;
+        for reason in [
+            StopReason::WorkLimit,
+            StopReason::AllocationLimit,
+            StopReason::NodeLimit,
+        ] {
+            let mut limits = budget().limits();
+            match reason {
+                StopReason::WorkLimit => limits.work = measured.usage().work - 1,
+                StopReason::AllocationLimit => {
+                    limits.allocation_units = measured.usage().allocation_units - 1
+                }
+                _ => limits.nodes = measured.usage().nodes - 1,
+            }
+            let mut b = Budget::new(limits);
+            assert_eq!(op(&checked, &mut b), Err(Error::Stopped(reason)));
+            assert_eq!(b.poll(), Err(reason));
+        }
+        let mut b = budget();
+        b.cancel();
+        assert_eq!(
+            op(&checked, &mut b),
+            Err(Error::Stopped(StopReason::Cancelled))
+        );
+    }
+    assert_eq!(source, before);
+    Ok(())
+}

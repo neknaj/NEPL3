@@ -13,6 +13,7 @@ use nepl3_core::{
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Error {
     OperandShapeMismatch,
+    NotSquare,
     Arithmetic(ArithmeticError),
     Stopped(StopReason),
 }
@@ -105,6 +106,107 @@ pub enum Comparison {
     Equal,
     Less,
     LessEqual,
+}
+
+/// Matrix transpose; Vector becomes a 1*n row Matrix. O(N) scalar copies/storage.
+pub fn transpose(input: &CheckedExactValue<'_>, b: &mut Budget) -> Result<Value, Error> {
+    start(b)?;
+    if let Value::Vector { values: source } = input.value() {
+        let mut values = storage(source.len(), b)?;
+        for value in source {
+            values.push(number::clone_with_budget(value, b)?);
+        }
+        return Ok(Value::Matrix {
+            rows: 1,
+            cols: source.len() as u64,
+            values,
+        });
+    }
+    let Value::Matrix {
+        rows,
+        cols,
+        values: source,
+    } = input.value()
+    else {
+        return Err(Error::OperandShapeMismatch);
+    };
+    let mut values = storage(source.len(), b)?;
+    for col in 0..*cols as usize {
+        for row in 0..*rows as usize {
+            values.push(number::clone_with_budget(
+                &source[row * *cols as usize + col],
+                b,
+            )?);
+        }
+    }
+    Ok(Value::Matrix {
+        rows: *cols,
+        cols: *rows,
+        values,
+    })
+}
+
+/// Exact Gaussian elimination with row pivoting. Square matrices only.
+/// O(n^3) rational operations and O(n^2) temporary storage; rational bit growth
+/// is separately metered. A missing pivot proves determinant zero, not failure.
+pub fn determinant(input: &CheckedExactValue<'_>, b: &mut Budget) -> Result<Value, Error> {
+    start(b)?;
+    let Value::Matrix {
+        rows,
+        cols,
+        values: source,
+    } = input.value()
+    else {
+        return Err(Error::NotSquare);
+    };
+    if rows != cols {
+        return Err(Error::NotSquare);
+    }
+    let n = *rows as usize;
+    let mut values = storage(source.len(), b)?;
+    for value in source {
+        values.push(number::clone_with_budget(value, b)?);
+    }
+    let mut determinant = number::ratio(
+        &nepl3_core::value::Integer::from(1_i64),
+        &nepl3_core::value::Integer::from(1_i64),
+        b,
+    )?;
+    for col in 0..n {
+        let mut pivot = col;
+        while pivot < n && number::is_zero(&values[pivot * n + col], b)? {
+            pivot += 1;
+        }
+        if pivot == n {
+            return Ok(Value::Scalar {
+                value: number::ratio(
+                    &nepl3_core::value::Integer::from(0_i64),
+                    &nepl3_core::value::Integer::from(1_i64),
+                    b,
+                )?,
+            });
+        }
+        if pivot != col {
+            for k in col..n {
+                b.charge(Resource::Work, 1)?;
+                values.swap(col * n + k, pivot * n + k);
+            }
+            determinant = number::negate(&determinant, b)?;
+        }
+        determinant = number::multiply(&determinant, &values[col * n + col], b)?;
+        for row in col + 1..n {
+            if number::is_zero(&values[row * n + col], b)? {
+                continue;
+            }
+            let factor = number::divide(&values[row * n + col], &values[col * n + col], b)?;
+            // Earlier columns are no longer read. No need to allocate zeros.
+            for k in col + 1..n {
+                let product = number::multiply(&factor, &values[col * n + k], b)?;
+                values[row * n + k] = number::subtract(&values[row * n + k], &product, b)?;
+            }
+        }
+    }
+    Ok(Value::Scalar { value: determinant })
 }
 
 /// Equal accepts identical kinds and shapes, including Truth. Ordering accepts
