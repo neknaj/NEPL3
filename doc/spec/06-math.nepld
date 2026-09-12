@@ -173,7 +173,22 @@ body
       cons "[独自/どくじ]layout/rasterizerを[追加/ついか]する[場合/ばあい]は、CheckedExpressionまたはMathLayout[入力/にゅうりょく]modelを[受/う]ける[別/べつ]backendとする。"
       cons "OpenType MATH tableやglyph outlineの[実装都合/じっそうつごう]をMathの[意味/いみ]モデルへ[持/も]ち[込/こ]まない。" nil
     nil
-  cons section public "6. [公開操作/こうかいそうさ]" body
+  cons section bindings "6. [束縛解析/そくばくかいせき]の[交換値/こうかんち]" body
+    cons paragraph
+      cons "MathBindingsは[構造検査後/こうぞうけんさご]のMathValueに[対/たい]する[束縛解析/そくばくかいせき]であり、CheckedExpression[全体/ぜんたい]の[証明/しょうめい]ではない。"
+      cons "MathBindingは[束縛/そくばく]するformのoccurrenceとnodeを、MathSymbolUseは[記号/きごう]のoccurrence・node・bindingを[保持/ほじ]する。"
+      cons "bindingがNoneなら[自由記号/じゆうきごう]であり、Someなら[最/もっと]も[近/ちか]い[束縛/そくばく]formのoccurrenceを[指/さ]す。" nil
+    cons paragraph
+      cons "occurrenceはrootを0として、[意味/いみ]field[順/じゅん]に[子/こ]をたどる[先行順/せんこうじゅん]の[番号/ばんごう]である。"
+      cons "[共有/きょうゆう]nodeも[経路/けいろ]ごとに[別/べつ]のoccurrenceを[持/も]ち、RowとDocGuestにも[番号/ばんごう]を[割/わ]り[当/あ]てる。"
+      cons "DocGuestの[内部/ないぶ]は[走査/そうさ]せず、[名前/なまえ]は[文字列/もじれつ]の[完全一致/かんぜんいっち]で[比較/ひかく]する。" nil
+    cons paragraph
+      cons "definitionsとusesはそれぞれoccurrence[順/じゅん]である。"
+      cons "sourceとOriginは[入力/にゅうりょく]nodeのfield locationを[参照/さんしょう]し、[自由記号/じゆうきごう]に[定義位置/ていぎいち]を[作/つく]らない。"
+      cons "NDF[境界/きょうかい]では[入力/にゅうりょく]を[指定/してい]して[再解析/さいかいせき]し、[参照先/さんしょうさき]・[出現順/しゅつげんじゅん]・[過不足/かふそく]の[不一致/ふいっち]をBindingMismatchとして[拒否/きょひ]する。"
+      cons "[全出現/ぜんしゅつげん]と[名前比較/なまえひかく]に[共通予算/きょうつうよさん]を[適用/てきよう]し、[停止/ていし]した[結果/けっか]を[部分成功/ぶぶんせいこう]として[返/かえ]さない。" nil
+    nil
+  cons section public "7. [公開操作/こうかいそうさ]" body
     cons paragraph
       cons "lower、check、free_symbols、evaluate、print、render_mathml。"
       cons "[評価結果/ひょうかけっか]、[部分評価/ぶぶんひょうか]の[新式/しんしき]、[元/もと]の[式/しき]を[別値/べつち]として[返/かえ]す。"
