@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "scope": "Boundary correction and archive migration on native Windows; full catalog acceptance not asserted",
+  "commands": [
+    {
+      "id": "rustc",
+      "argv": [
+        "rustc",
+        "--version",
+        "--verbose"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 30
+    },
+    {
+      "id": "cargo",
+      "argv": [
+        "cargo",
+        "--version"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 30
+    },
+    {
+      "id": "format",
+      "argv": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 120
+    },
+    {
+      "id": "clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "--workspace",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 600
+    },
+    {
+      "id": "tests",
+      "argv": [
+        "cargo",
+        "test",
+        "--workspace",
+        "--locked"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800
+    },
+    {
+      "id": "contracts",
+      "argv": [
+        "cargo",
+        "run",
+        "--locked",
+        "-p",
+        "nepl3-tools",
+        "--",
+        "check"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300
+    },
+    {
+      "id": "tasks",
+      "argv": [
+        "cargo",
+        "run",
+        "--locked",
+        "-p",
+        "nepl3-tools",
+        "--",
+        "tasks",
+        "--check"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 120
+    }
+  ]
+}

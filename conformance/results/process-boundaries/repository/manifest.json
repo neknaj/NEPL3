@@ -1,0 +1,195 @@
+{
+  "version": 1,
+  "kind": "command-evidence",
+  "scope": "Boundary correction and archive migration on native Windows; full catalog acceptance not asserted",
+  "source_revision": "1f8b7d6b0587ac54254f42afb38af981a0fe7b2a",
+  "runner_sha256": "beee7ca2ef0401f1ac777395224b7fcb16b84ac436da035dce61b2ebbdb22c5d",
+  "source_changed": false,
+  "source_check": "tracked HEAD and diff before/after; ignored inputs and transient changes are not covered",
+  "environment": {
+    "python": "3.13.12 | packaged by conda-forge | (main, Feb  5 2026, 05:41:12) [MSC v.1944 64 bit (AMD64)]",
+    "python_executable": "C:\\Users\\bem\\miniforge3\\python.exe",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "AMD64"
+  },
+  "commands": [
+    {
+      "id": "rustc",
+      "argv": [
+        "rustc",
+        "--version",
+        "--verbose"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 30,
+      "outcome": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": "cargo",
+      "argv": [
+        "cargo",
+        "--version"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 30,
+      "outcome": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": "format",
+      "argv": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 120,
+      "outcome": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": "clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "--workspace",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 600,
+      "outcome": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": "tests",
+      "argv": [
+        "cargo",
+        "test",
+        "--workspace",
+        "--locked"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "outcome": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": "contracts",
+      "argv": [
+        "cargo",
+        "run",
+        "--locked",
+        "-p",
+        "nepl3-tools",
+        "--",
+        "check"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 300,
+      "outcome": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": "tasks",
+      "argv": [
+        "cargo",
+        "run",
+        "--locked",
+        "-p",
+        "nepl3-tools",
+        "--",
+        "tasks",
+        "--check"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 120,
+      "outcome": "passed",
+      "exit_code": 0
+    }
+  ],
+  "files": [
+    {
+      "path": "cargo.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "cargo.stdout",
+      "bytes": 36,
+      "sha256": "f4f564f8936fa8eb53bca8bbe50666489252bbcbeaae0cb0dd54682444697e52"
+    },
+    {
+      "path": "clippy.stderr",
+      "bytes": 1495,
+      "sha256": "268138dc3ab44371c62fd5f41f421404c5176ef7e25c4436ca7c0032f66606ab"
+    },
+    {
+      "path": "clippy.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "contracts.stderr",
+      "bytes": 122,
+      "sha256": "51510a33c2b49318cd7fac58281b2705aa3f31c11a4f43facfe45ca35dbdddc7"
+    },
+    {
+      "path": "contracts.stdout",
+      "bytes": 21391,
+      "sha256": "2c348bc1b279cf769ea458a46a0e5dc7192f310bdfe0f8bd885d76b69aa35557"
+    },
+    {
+      "path": "format.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "format.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "rustc.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "rustc.stdout",
+      "bytes": 194,
+      "sha256": "f3c960598a5e9037c4cf8e4aa06c018171abf07c381d165c3986c6a954dea1bb"
+    },
+    {
+      "path": "spec.json",
+      "bytes": 1556,
+      "sha256": "87c8f16655e92a8166f8518c3895eb666ec5243bc10039dd14955e4fcb76b1f9"
+    },
+    {
+      "path": "tasks.stderr",
+      "bytes": 130,
+      "sha256": "9c9b456176ad24c8012102e5487f4bf59b75621b84a3661aa8d35f6109518ef9"
+    },
+    {
+      "path": "tasks.stdout",
+      "bytes": 114,
+      "sha256": "b348877b86af3ece96e922b9ae903d26c1bf50c973a8be0fbbe4567327dd281a"
+    },
+    {
+      "path": "tests.stderr",
+      "bytes": 6194,
+      "sha256": "f6420cc28fb66cbf259addfd3bc78ec542546ba8997985a02a348072d70ee35d"
+    },
+    {
+      "path": "tests.stdout",
+      "bytes": 57264,
+      "sha256": "f72bc440206e8dca74c972f04bcbc906f5abbb8c096197232ca5b2d99b71601a"
+    }
+  ],
+  "acceptance_decision": false
+}

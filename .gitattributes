@@ -13,6 +13,11 @@
 *.png binary
 *.zip binary
 
+# Command evidence retains the original bytes, including Windows line endings.
+conformance/results/**/*.stdout -text -whitespace
+conformance/results/**/*.stderr -text -whitespace
+conformance/results/**/spec.json -text -whitespace
+
 # 取り込み元の証拠とsource位置試験は元byte列を保つ。
 doc/history/source-manifest.json -text
 doc/history/design-validation.json -text

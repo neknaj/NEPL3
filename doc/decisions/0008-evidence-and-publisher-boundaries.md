@@ -15,7 +15,20 @@ Python本体と `.py.fixture` は1,061ファイル、3,236,358 bytesである。
 全Python一覧はGit blobから採取し、実行せず内容・定義・複合責務・同一hashを
 調査した。詳細一覧は `python -m tools.conformance.inventory <基準commit> <出力path>`
 で必要時に生成し、repositoryへ再複製しない。初回の内容分類では
-95件が要確認であり、これを人による全件精査完了とはしない。
+95件が要確認となった。追加の独立内容監査で、この95件は次の責務へ分類した。
+これは歴史的な全反例の再実行や現行testへの移植完了を意味しない。
+
+| 主責務 | 件数 | 今後の扱い |
+| --- | ---: | --- |
+| 既存toolのコピー・旧版 | 17 | Git revisionと既存toolを参照 |
+| ブラウザ表示・ナビゲーション観測 | 23 | 既存browser/site auditへ必要な回帰だけ追加 |
+| 文書内容・構造・生成結果の比較 | 12 | 通常の意味・projection試験へ |
+| hash一覧作成 | 3 | 共通収集器へ |
+| 固定review文章の書出し | 3 | review文章を直接保存 |
+| 境界・失敗の直接再現 | 7 | 必要な反例を通常testへ |
+| workerの偽応答・sleep | 4 | 管理されたtest fixtureへ |
+| 試験用コピー・Rust試験注入・修正 | 24 | source注入の共通frameworkは作らず通常Rust testへ |
+| 独立期待値生成 | 2 | production実装と統合せず独立性を維持 |
 
 直近の [acquireのseal](https://github.com/neknaj/NEPL3/blob/d87ca8c4ba18e74bc71efb0e2958af87ac971e1b/conformance/results/doc-pages-acquire/review/seal.py.fixture) はレビュー本文の作成、
 sourceのコピー、全ファイルのhash列挙を兼ねる。同名のdownload reviewにも
