@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/06&#45;math.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page math; source SHA-256 850f15eda21d689bda96f5a93b8595e515f81ea41484636d21f6482aacb088c7; alias input SHA-256 cae137023719df65f4fdf356ff25c6fac5c3aaa15c90b6b91c82b313d5078aaf; document digest ad90e7eb0a99a8848b4b513ac6f3487cb30a048e1d71fbcbe788b544832d1390; input PageSet digest e183ffa10a6be3c7c3f1df322f8f76f73ee8e1380319d27de66706bc790fe5c0; input context SHA-256 01a71e3b6feac889d7a4b61f3b24e66b223a4b97f9c2ed41db3cbf4bbb46541d. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/06&#45;math.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page math; source SHA-256 2a475be8f40c5c7b4c3a3c5cfc191f315696933cfc3db65b3d49f0bef8f3e2f7; alias input SHA-256 cae137023719df65f4fdf356ff25c6fac5c3aaa15c90b6b91c82b313d5078aaf; document digest 8afe08c2029ad6539d548bd8219d9f18d8060d1c2ca050be9dfffcbd67a18738; input PageSet digest 4341d478fd3bde6822145e2fc85a8ec3d1262f90dc7c1dc8a0e690392947b406; input context SHA-256 0185af6b5a06d6c33a4a90528f67ca8aed4c6c25f3f6a1590fe27dddfb442fe2. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="06-math言語"></a>
 
@@ -44,7 +44,11 @@ CheckedExpressionが保証\[ほしょう\]するのは構造\[こうぞう\]・b
 
 ## 3\. evaluate
 
+BindingEnvironmentはMathAssignmentのassignments列\[れつ\]であり、各\[かく\]要素\[ようそ\]に名前\[なまえ\]nameとMathExactValueのvalueを持\[も\]つ。名前\[なまえ\]はUTF\-8辞書順\[じしょじゅん\]で厳密\[げんみつ\]に昇順\[しょうじゅん\]とし、重複\[ちょうふく\]と順序違反\[じゅんじょいはん\]を拒否\[きょひ\]する。大文字\[おおもじ\]と小文字\[こもじ\]の同一視\[どういつし\]やUnicode正規化\[せいきか\]は行\[おこな\]わず、Symbolと同\[おな\]じTextを比較\[ひかく\]する。空\[から\]の環境\[かんきょう\]と未使用\[みしよう\]の代入\[だいにゅう\]を許可\[きょか\]するが、未使用\[みしよう\]でも値\[あたい\]の形状\[けいじょう\]を検査\[けんさ\]する。検査済\[けんさず\]み環境\[かんきょう\]は元\[もと\]の不変入力\[ふへんにゅうりょく\]を借用\[しゃくよう\]し、名前\[なまえ\]を二分探索\[にぶんたんさく\]する。名前\[なまえ\]の未存在\[みそんざい\]は不正入力\[ふせいにゅうりょく\]や資源停止\[しげんていし\]と区別\[くべつ\]し、自由記号\[じゆうきごう\]が未解決\[みかいけつ\]の場合\[ばあい\]のSymbolic結果\[けっか\]に利用\[りよう\]する。この検査\[けんさ\]は式\[しき\]の全要求\[ぜんようきゅう\]の充足\[じゅうそく\]を証明\[しょうめい\]せず、NDF受信時\[じゅしんじ\]にも順序\[じゅんじょ\]と値\[あたい\]を再検査\[さいけんさ\]する。
+
 入力\[にゅうりょく\]はCheckedExpression、自由記号\[じゆうきごう\]のBindingEnvironment、Limits。出力\[しゅつりょく\]はExact\(Value\)またはSymbolic\(expression\, Requirements\)。定義域違反\[ていぎいきいはん\]・形状不一致\[けいじょうふいっち\]は明確\[めいかく\]なEvalError。値\[あたい\]の種類\[しゅるい\]はScalar\(Q\)、`Vector(List<Q>)`、`Matrix(rows,cols,List<Q>)`、Truth\(Bool\)。
+
+MathExactValueは評価値\[ひょうかち\]の言語中立\[げんごちゅうりつ\]schemaであり、元\[もと\]のMathValueとは別\[べつ\]である。ScalarとVectorとMatrixの要素\[ようそ\]は任意\[にんい\]の正規形\[せいきけい\]Rationalで、Numberの有限十進制約\[ゆうげんじっしんせいやく\]を適用\[てきよう\]しない。Vectorは空\[から\]を認\[みと\]めず、Matrixのrowsとcolsは正\[せい\]、valuesは行優先順\[ぎょうゆうせんじゅん\]でrowsとcolsの積\[せき\]に等\[ひと\]しい要素数\[ようそすう\]を持\[も\]つ。次元\[じげん\]の積\[せき\]のU64 overflowも拒否\[きょひ\]し、NDFの受信\[じゅしん\]でも同\[おな\]じ形状検査\[けいじょうけんさ\]を行\[おこな\]う。この値\[あたい\]の検査\[けんさ\]だけで元式\[もとしき\]の評価\[ひょうか\]や演算\[えんざん\]の定義域\[ていぎいき\]が証明\[しょうめい\]されたとは扱\[あつか\]わない。
 
 評価\[ひょうか\]はsource順\[じゅん\]の左\[ひだり\]から右\[みぎ\]、純粋\[じゅんすい\]。letはinitを評価\[ひょうか\]してからbodyを評価\[ひょうか\]する。未解決\[みかいけつ\]の記号\[きごう\]に依存\[いぞん\]する部分\[ぶぶん\]はSymbolicとし、独立\[どくりつ\]な数値\[すうち\]subtreeの計算結果\[けいさんけっか\]を保持\[ほじ\]できるが元\[もと\]の構文\[こうぶん\]を上書\[うわが\]きしない。
 

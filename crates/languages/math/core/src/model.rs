@@ -17,6 +17,40 @@ macro_rules! references {
 }
 references!(ExprRef, RowRef, DocGuestRef, EmbedRef);
 
+/// One exact, case-sensitive free-symbol assignment.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathAssignment {
+    pub name: String,
+    pub value: MathExactValue,
+}
+
+/// Canonical ascending UTF-8 names, with no duplicates. Use environment::check
+/// before lookup; unused assignments are permitted but must also be valid.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct BindingEnvironment {
+    pub assignments: Vec<MathAssignment>,
+}
+
+/// Evaluation values are separate from source notation. Rational values need
+/// not have finite decimal expansions. Matrix storage is row-major.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum MathExactValue {
+    Scalar {
+        value: Rational,
+    },
+    Vector {
+        values: Vec<Rational>,
+    },
+    Matrix {
+        rows: u64,
+        cols: u64,
+        values: Vec<Rational>,
+    },
+    Truth {
+        value: bool,
+    },
+}
+
 /// Preorder occurrence numbers distinguish shared nodes visited in different scopes.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MathBinding {

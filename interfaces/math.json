@@ -1002,6 +1002,83 @@
         ]
       ],
       "constraints": []
+    },
+    "MathExactValue": {
+      "variant": {
+        "Scalar": [
+          [
+            "value",
+            "Rational"
+          ]
+        ],
+        "Vector": [
+          [
+            "values",
+            {
+              "list": "Rational"
+            }
+          ]
+        ],
+        "Matrix": [
+          [
+            "rows",
+            "U64"
+          ],
+          [
+            "cols",
+            "U64"
+          ],
+          [
+            "values",
+            {
+              "list": "Rational"
+            }
+          ]
+        ],
+        "Truth": [
+          [
+            "value",
+            "Bool"
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "MathAssignment": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "value",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "MathExactValue"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "BindingEnvironment": {
+      "record": [
+        [
+          "assignments",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathAssignment"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
     }
   },
   "operations": {}

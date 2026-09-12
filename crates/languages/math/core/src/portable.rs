@@ -20,6 +20,71 @@ pub enum PortableError<E> {
     BindingMismatch,
     FreeSymbolsMismatch,
     Expression(crate::check::ShapeError),
+    ExactValue(crate::exact::ExactValueError),
+    Environment(crate::environment::EnvironmentError),
+}
+
+/// Validate every assignment before crossing the portable boundary.
+pub fn environment_to_value<C: FoundationValueCodec>(
+    input: &crate::model::BindingEnvironment,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    crate::environment::check(input, budget).map_err(environment_error)?;
+    let raw = input.put(schema(registry)?, codec, budget)?;
+    check_report(registry, &raw, "BindingEnvironment", budget)?;
+    Ok(raw)
+}
+/// Schema validation alone is insufficient: recheck order and all value shapes.
+pub fn environment_from_value<C: FoundationValueCodec>(
+    raw: &NdfValue,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<crate::model::BindingEnvironment, PortableError<C::Error>> {
+    check_report(registry, raw, "BindingEnvironment", budget)?;
+    let input = crate::model::BindingEnvironment::read(raw, schema(registry)?, codec, budget)?;
+    crate::environment::check(&input, budget).map_err(environment_error)?;
+    Ok(input)
+}
+fn environment_error<E>(error: crate::environment::EnvironmentError) -> PortableError<E> {
+    match error {
+        crate::environment::EnvironmentError::Stopped(reason) => PortableError::Stopped(reason),
+        other => PortableError::Environment(other),
+    }
+}
+
+/// Encode an exact value after checking its container shape.
+pub fn exact_to_value<C: FoundationValueCodec>(
+    input: &crate::model::MathExactValue,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    crate::exact::check(input, budget).map_err(exact_error)?;
+    let raw = input.put(schema(registry)?, codec, budget)?;
+    check_report(registry, &raw, "MathExactValue", budget)?;
+    Ok(raw)
+}
+
+/// Decode canonical rationals and recheck dimensions; no serialized proof is trusted.
+pub fn exact_from_value<C: FoundationValueCodec>(
+    raw: &NdfValue,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<crate::model::MathExactValue, PortableError<C::Error>> {
+    check_report(registry, raw, "MathExactValue", budget)?;
+    let value = crate::model::MathExactValue::read(raw, schema(registry)?, codec, budget)?;
+    crate::exact::check(&value, budget).map_err(exact_error)?;
+    Ok(value)
+}
+fn exact_error<E>(error: crate::exact::ExactValueError) -> PortableError<E> {
+    match error {
+        crate::exact::ExactValueError::Stopped(reason) => PortableError::Stopped(reason),
+        other => PortableError::ExactValue(other),
+    }
 }
 
 /// Generate the report from a checked input, then encode its neutral schema.
