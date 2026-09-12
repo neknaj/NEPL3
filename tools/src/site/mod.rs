@@ -239,6 +239,19 @@ pub fn build(root: &Path, config: &str, output: &Path) -> Result<()> {
         .and_then(|v| v.as_str())
         .ok_or("missing design identity")?;
     let registry = canonical::load(root, "doc/canonical.json")?;
+    let inputs = [
+        "doc/canonical.json",
+        "design/tasks.json",
+        "site/index.html",
+        "site/site.css",
+        "crates/languages/doc/html/assets/doc.css",
+    ];
+    for input in inputs
+        .into_iter()
+        .chain(registry.pages.iter().map(|page| page.source.as_str()))
+    {
+        crate::command(root, "git", &["ls-files", "--error-unmatch", "--", input])?;
+    }
     let generated = canonical::generate_html(root, "doc/canonical.json")?;
     let generated = compose(&config, &registry, generated, &commit, design, &renderer)?;
     let after = String::from_utf8(crate::command(root, "git", &["rev-parse", "HEAD"])?)?;
