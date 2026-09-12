@@ -28,10 +28,40 @@ fn allocation<T>(count: usize, budget: &mut Budget) -> Result<(), SourceError> {
     Ok(())
 }
 impl SourceStore {
+    // Upper bound in the existing (source, revision) index. The predecessor is
+    // the greatest revision only if its full source name matches the request.
+    fn latest_for_edit(
+        &self,
+        source: &SourceId,
+        budget: &mut Budget,
+    ) -> Result<Option<&SourceSnapshot>, SourceError> {
+        budget.poll()?;
+        let (mut low, mut high) = (0, self.index.len());
+        while low < high {
+            let mid = low + (high - low) / 2;
+            let candidate = &self.snapshots[self.index[mid]];
+            comparison(source, &candidate.storage.id.source, budget)?;
+            if candidate.storage.id.source <= *source {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+        }
+        let Some(at) = low.checked_sub(1) else {
+            return Ok(None);
+        };
+        let candidate = &self.snapshots[self.index[at]];
+        comparison(source, &candidate.storage.id.source, budget)?;
+        Ok((candidate.storage.id.source == *source).then_some(candidate))
+    }
     /// Atomically creates one next revision for each edited source. The admission
     /// ledger is shared with the caller's operation, including both original and
     /// generated snapshots. A failed transaction keeps resource charges but makes
     /// no source-store changes. Returned IDs are ordered by SourceId.
+    /// Latest-revision selection uses O(G log S) source-name comparisons for G
+    /// edited sources and S stored snapshots, with no extra lookup storage.
+    /// Edit sorting, validation, materialization and index publication have
+    /// additional costs; this is not a bound for the whole transaction.
     pub fn apply(
         &mut self,
         edits: &[TextEdit],
@@ -69,16 +99,9 @@ impl SourceStore {
         let mut cursor = 0;
         while cursor < sorted.len() {
             let id = &sorted[cursor].span.snapshot;
-            let mut latest: Option<&SourceSnapshot> = None;
-            for source in &self.snapshots {
-                comparison(&id.source, &source.storage.id.source, budget)?;
-                if source.storage.id.source == id.source
-                    && latest.is_none_or(|v| v.storage.id.revision < source.storage.id.revision)
-                {
-                    latest = Some(source);
-                }
-            }
-            let source = latest.ok_or(SourceError::MissingSnapshot)?;
+            let source = self
+                .latest_for_edit(&id.source, budget)?
+                .ok_or(SourceError::MissingSnapshot)?;
             comparison(&id.source, &source.storage.id.source, budget)?;
             if source.storage.id != *id {
                 return Err(SourceError::SnapshotMismatch);

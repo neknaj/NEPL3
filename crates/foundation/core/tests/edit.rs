@@ -35,6 +35,106 @@ fn fixture() -> Result<(SourceStore, Vec<TextEdit>), SourceError> {
     }
     Ok((store, edits))
 }
+
+#[test]
+fn edit_latest_lookup_uses_revision_order_and_rejects_missing_neighbors() -> Result<(), SourceError>
+{
+    let mut store = SourceStore::default();
+    let mut latest = None;
+    // Deliberately disagree with storage order. The index, not the last inserted
+    // snapshot or a neighboring source's revision, must choose revision seven.
+    for revision in [7, 2, 5] {
+        let input = SourceSnapshot::new(
+            SourceId("m".into()),
+            revision,
+            "memory:m".into(),
+            b"abc".to_vec(),
+            &mut budget(),
+        )?;
+        if revision == 7 {
+            latest = Some(input.clone());
+        }
+        store.insert(input)?;
+    }
+    for id in ["a", "m0", "z", "日本"] {
+        store.insert(source(id, "memory:neighbor", "abc")?)?;
+    }
+    for id in ["0", "b", "ma", "zz", "語"] {
+        let absent = source(id, "memory:absent", "abc")?;
+        let before = store.snapshots().to_vec();
+        assert_eq!(
+            store.apply(
+                &[TextEdit {
+                    span: absent.span(0, 1)?,
+                    expected_digest: Digest::of(b"a"),
+                    replacement: "A".into(),
+                }],
+                &mut budget(),
+                &mut SourceAdmission::default()
+            ),
+            Err(SourceError::MissingSnapshot)
+        );
+        assert_eq!(store.snapshots(), before);
+    }
+    let latest = latest.ok_or(SourceError::MissingSnapshot)?;
+    let ids = store.apply(
+        &[TextEdit {
+            span: latest.span(0, 1)?,
+            expected_digest: Digest::of(b"a"),
+            replacement: "A".into(),
+        }],
+        &mut budget(),
+        &mut SourceAdmission::default(),
+    )?;
+    assert_eq!(ids.len(), 1);
+    assert_eq!(ids[0].revision, 8);
+    assert_eq!(ids[0].digest, Digest::of(b"Abc"));
+    Ok(())
+}
+
+#[test]
+fn stale_edit_lookup_is_bounded_among_unrelated_snapshots() -> Result<(), SourceError> {
+    for count in [256, 512, 1024] {
+        let mut store = SourceStore::default();
+        for index in (0..count).rev() {
+            store.insert(source(&format!("n{index:04}"), "memory:other", "x")?)?;
+        }
+        let stale = source("m", "memory:m", "abc")?;
+        store.insert(stale.clone())?;
+        store.insert(SourceSnapshot::new(
+            SourceId("m".into()),
+            1,
+            "memory:m".into(),
+            b"abc".to_vec(),
+            &mut budget(),
+        )?)?;
+        let edits = [TextEdit {
+            span: stale.span(0, 1)?,
+            expected_digest: Digest::of(b"a"),
+            replacement: "A".into(),
+        }];
+        let before = store.snapshots().to_vec();
+        let mut limits = budget().limits();
+        // Eleven binary comparisons plus identity confirmation fit comfortably;
+        // a full scan of even 256 source names cannot fit this finite budget.
+        limits.work = 1024;
+        let mut operation = Budget::new(limits);
+        assert_eq!(
+            store.apply(&edits, &mut operation, &mut SourceAdmission::default()),
+            Err(SourceError::SnapshotMismatch)
+        );
+        assert_eq!(store.snapshots(), before);
+        limits.work = 1;
+        let mut stopped = Budget::new(limits);
+        assert_eq!(
+            store.apply(&edits, &mut stopped, &mut SourceAdmission::default()),
+            Err(SourceError::Stopped(StopReason::WorkLimit))
+        );
+        assert_eq!(stopped.poll(), Err(StopReason::WorkLimit));
+        assert_eq!(store.snapshots(), before);
+    }
+    Ok(())
+}
 #[test]
 fn deletion_admits_original_and_generated_snapshots_once() -> Result<(), SourceError> {
     let input = source("a", "memory:a", "abc")?;
