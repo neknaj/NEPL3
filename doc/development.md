@@ -35,6 +35,14 @@ CIでは同じcheckoutからbuildしたbinaryと生成ログを結び付けて�
 現在の入口は登録済みページのdocs-only生成です。未移行文書・rustdoc・例のサイト統合、
 公開後smokeと復旧を含むPages配信、T19/T20全体の完了は別途検証します。
 
+`python tools/site/payload.py dist/site dist/pages.tar --manifest-sha256 <検査済みmanifestのSHA-256>`
+は、検査対象と同じfile集合・byte列を確認し、HTMLを再生成せずPages用のtarへ固定します。
+CIは実ブラウザ検査のreportからdigestを渡し、元site・tar・receiptを同じartifactに保存します。
+tar内の順序・時刻・所有者・modeは固定し、リンク（Windows junctionを含む）、読取り失敗、
+未登録file、改変、上限超過を拒否します。出力先は入力siteの外にある新規fileに限ります。
+receiptの `publication_verified` はfalseです。この梱包だけでは公開確認やLKG昇格になりません。
+境界試験は `python -m unittest discover -s tools/site -p 'test_*.py'` で実行します。
+
 受入群の文書検査は、Markdownの本文・箇条書きの行頭にあるplainな `A01:` 型の定義を読みます。
 escapeや文字参照をdecodeした表示上のprefixを使うため、nepldから生成した `- A01\:` も
 同じ定義として扱います。見出し・引用・code・HTML・表・脚注や文中の単なる言及は定義にしません。

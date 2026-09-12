@@ -65,6 +65,8 @@ jobs:
         run: python tools/generate/doc_html.py
       - name: Doc browser corpus audit input tests
         run: python -m unittest discover -s tools/audit/doc_html -p 'test_*.py'
+      - name: Pages payload boundary tests
+        run: python -m unittest discover -s tools/site -p 'test_*.py'
       - name: Doc migration candidate and rejection tests
         run: |
           python tools/migration/contract.py
@@ -295,6 +297,11 @@ jobs:
           python -m unittest discover -s tools/audit/site -p 'test_*.py'
           python tools/audit/site/check.py dist/doc-browser/site dist/doc-browser/site-results.json --renderer target/debug/nepl3-tools
           python tools/audit/site/check.py dist/doc-browser/site-alternate dist/doc-browser/site-alternate-results.json --config conformance/inputs/site/alternate.json --renderer target/debug/nepl3-tools
+      - name: Freeze the checked site as a deterministic Pages payload
+        run: |
+          python -m unittest discover -s tools/site -p 'test_*.py'
+          SITE_MANIFEST=$(python -c 'import json; print(json.load(open("dist/doc-browser/site-results.json"))["manifest_sha256"])')
+          python tools/site/payload.py dist/doc-browser/site dist/doc-browser/pages.tar --manifest-sha256 "$SITE_MANIFEST" > dist/doc-browser/pages-receipt.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ always() }}
         with:
