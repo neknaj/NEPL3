@@ -81,3 +81,26 @@ limits remain as described above. Deterministic time tests exercise deadline
 edges without waiting 600 real seconds; the production entry uses monotonic
 time, real sleep and the bounded transport.
 Run `python -m unittest discover -s tools/site -p test_poll.py`.
+
+## Creation receipt journal bridge
+
+`deployment.journal.record_created` validates the API creation response and
+records it immediately after its matching DeployIntent or RecoveryIntent in the
+local Git journal, using the observed parent as CAS. All transaction/run/attempt,
+source and payload fields are preserved. A repeated or stale acknowledgement
+cannot append another receipt. `latest_created` reloads the exact original
+response, revalidates its repository/endpoint/ID and compares the complete event
+identity with the preceding intent. Generic storage accepting an event name is
+not sufficient for this bridge to trust its evidence.
+
+Receipt evidence version 1 has exactly `version`, `owner`, `repository`, and
+`response` (base64 of the original UTF-8 response bytes). The serialized envelope
+must fit the journal's existing 64 KiB limit; large responses therefore fail
+before changing the ref. No digest-only replacement or truncation is used.
+
+This bridge records an already obtained observation. It does not validate the
+intent's deployment authorization, push it to the protected remote, reconcile
+an unacknowledged API request or select a current publication. Those remain
+publisher responsibilities. Tests use real temporary bare Git repositories;
+no live remote or Pages write is performed.
+Run `python -m unittest discover -s tools/site -p test_receipt_journal.py`.
