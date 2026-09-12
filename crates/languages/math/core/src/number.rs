@@ -1,11 +1,13 @@
 //! Exact arithmetic on the common canonical Rational. These helpers do not
 //! decide expression domains or replace the author's notation.
+mod print;
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     value::{Integer, Rational},
 };
 use num_bigint::BigInt;
 use num_traits::{One, Zero};
+pub use print::{DecimalPrintError, print_decimal};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ArithmeticError {
