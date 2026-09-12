@@ -69,6 +69,102 @@ fn notation(value: &MathValue) -> Vec<MathKind> {
         })
         .collect()
 }
+
+#[test]
+fn production_doc_guest_printer_preserves_annotation_semantics() -> Result<(), String> {
+    use nepl3_math_core::print::GuestPrinter;
+    let compiled = compiled()?;
+    let registry = &compiled.doc.registry;
+    let empty = SourceStore::default();
+    for source in [
+        "label x Doc \"[漢字/かんじ]{語/word}\"",
+        "label frac 1 0 Doc sentence cons ruby text \"漢字\" text \"かんじ\" cons break cons anno text \"語\" cons text \"word\" nil nil",
+        "label x Doc sentence cons strong text \"a\\n b\" cons code \"x < y\" nil",
+    ] {
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
+        let value = lower_value(&compiled, source, "Expr")?;
+        let shape = value.validate_shape(&mut budget()).map_err(err)?;
+        let mut host = nepl3_tools::doc::printing::DocGuestPrinter {
+            registry,
+            surface: &compiled.doc.package.schema,
+            codec: &mut codec,
+        };
+        let printed = print::prefix(&shape, &mut host, &mut budget()).map_err(err)?;
+        assert!(printed.text.contains("Doc sentence"));
+        let actual = lower_value(&compiled, &printed.text, "Expr")?;
+        assert_eq!(notation(&value), notation(&actual));
+        let mut documents = Vec::new();
+        for closure in [&value.embeds[0], &actual.embeds[0]] {
+            // These test parses assign the same local source name to different
+            // revisions; compare their meanings in separate admission contexts.
+            let mut admission = SourceAdmission::default();
+            let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
+            let checked = closure
+                .syntax
+                .bundle
+                .validate_with_sources(registry, &mut budget(), &mut SourceAdmission::default())
+                .map_err(err)?;
+            let doc = nepl3_doc_core::lower::document(
+                &checked,
+                &compiled.doc.package.schema,
+                nepl3_doc_core::check::Category::Sentence,
+                registry,
+                &mut budget(),
+                &mut codec,
+            )
+            .map_err(err)?;
+            documents.push(doc);
+        }
+        assert_eq!(documents[0].value.root, documents[1].value.root);
+        let kinds = |doc: &nepl3_doc_core::model::DocumentSyntax| {
+            doc.value
+                .nodes
+                .iter()
+                .map(|n| n.kind.clone())
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(kinds(&documents[0]), kinds(&documents[1]), "{source}");
+        let mut wrong = value.embeds[0].clone();
+        wrong.syntax.category = "Body".into();
+        let mut host = nepl3_tools::doc::printing::DocGuestPrinter {
+            registry,
+            surface: &compiled.doc.package.schema,
+            codec: &mut codec,
+        };
+        assert!(matches!(
+            host.print(&wrong, &mut budget()),
+            Err(nepl3_tools::doc::printing::Error::Selection)
+        ));
+        let mut stopped = budget();
+        stopped.cancel();
+        assert!(matches!(
+            host.print(&value.embeds[0], &mut stopped),
+            Err(nepl3_tools::doc::printing::Error::Stopped(
+                StopReason::Cancelled
+            ))
+        ));
+    }
+    let nested = lower_value(
+        &compiled,
+        "label x Doc sentence cons math Math add 1 2 nil",
+        "Expr",
+    )?;
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
+    let mut host = nepl3_tools::doc::printing::DocGuestPrinter {
+        registry,
+        surface: &compiled.doc.package.schema,
+        codec: &mut codec,
+    };
+    assert!(matches!(
+        host.print(&nested.embeds[0], &mut budget()),
+        Err(nepl3_tools::doc::printing::Error::Print(
+            nepl3_doc_core::print::PrintFailure::MissingBinding { .. }
+        ))
+    ));
+    Ok(())
+}
 #[test]
 fn prefix_print_reparses_every_math_constructor_without_evaluation() -> Result<(), String> {
     let compiled = compiled()?;
