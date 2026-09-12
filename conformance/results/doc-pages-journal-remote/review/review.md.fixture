@@ -1,0 +1,13 @@
+# Independent review: Pages journal remote transport
+
+Verdict: no remaining blocking finding in the reviewed transport scope, subject to the exact source snapshots and passing commands.json evidence.
+
+Reviewed chapter 15 journal durability/fast-forward requirements, remote.py, its five real-Git tests, and the module README. The implementation validates the local journal and requested immediate parent, requires one identical pinned origin fetch/push URL, observes the server before writing, pushes the explicit commit SHA with a normal refspec, and checks the server again. An already accepted identical head is confirmed without a push. It does not silently retry a conflict or failed acknowledgement.
+
+Resolved independent finding: push.followTags=true caused a reachable annotated tag to be sent along with the requested journal ref. followtags-repro.py/json preserve the actual unwanted remote tag write in a temporary bare server. The owner added --no-follow-tags and a regression test. followtags-final.py/json verify that only refs/heads/pages-state is now present. This override is documented by [Git push](https://git-scm.com/docs/git-push).
+
+Independent validation: the five real-Git remote tests ran normally and with Python -O; commands.json records exit codes and raw stdout/stderr. They cover normal publication, read-only lost-ack reconciliation, stale heads, a competitor between observation and push, fetch/push URL mismatch, and suppression of configured tag following. A separate real-Git acknowledgement probe inserts a server successor immediately after the requested push; publication rejects the changed acknowledgement as unknown and retains the successor. No NEPL3 remote journal was written.
+
+The README accurately limits this to transport. The caller must still establish the production lock and protected remote; normal fast-forward transport is not an atomic expected-head CAS against administrator deletion/rollback. Remote-ref Confirmation remains publication_verified=false and is not deployment permission. Publisher transitions, Pages API reconciliation, protection settings, live deployment and LKG acceptance were not tested or completed here. Production implementation was not edited by the reviewer.
+
+Final source snapshots match commit 6f1e9a7 byte-for-byte. The implementation owner temporarily switched the shared worktree during the first final run, causing zero-test/import/missing-file failures; interrupted-* logs preserve that failed run. The subsequent frozen-source run is the commands.json evidence used for this verdict.

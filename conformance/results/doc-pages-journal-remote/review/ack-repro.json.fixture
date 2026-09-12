@@ -1,0 +1,4 @@
+{
+  "result": "rejected: remote journal acknowledgement differs; state unknown",
+  "server_retains_successor": true
+}
