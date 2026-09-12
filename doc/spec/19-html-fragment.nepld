@@ -43,8 +43,11 @@ body
       cons ruby text "検査" text "けんさ"
       cons text "・serializerとする。"
       nil
-    cons "[現段階/げんだんかい]の[対象/たいしょう]はHTML fragmentである。"
-    cons "MathML/SVG/KaTeX[専用/せんよう]profile、DocumentShell、assetのbyte[列/れつ]・MIME・license[検査/けんさ]、Doc PreparedArticle、[完全/かんぜん]な[操作/そうさ]Reportは[後続実装/こうぞくじっそう]であり、[既存/きそん]の[最終要件/さいしゅうようけん]から[除/のぞ]かない。"
+    cons "[現段階/げんだんかい]ではHTML fragmentに[加/くわ]え、MathMLだけで[構成/こうせい]するtreeの[構造検査/こうぞうけんさ]とserializer、NDF codecを[提供/ていきょう]する。"
+    cons "MathMLのmtextへのHTML[統合/とうごう]、Mathからの[変換/へんかん]、SVG/KaTeX[専用/せんよう]profile、DocumentShell、assetのbyte[列/れつ]・MIME・license[検査/けんさ]、Doc PreparedArticle、[完全/かんぜん]な[操作/そうさ]Reportは[後続実装/こうぞくじっそう]であり、[既存/きそん]の[最終要件/さいしゅうようけん]から[除/のぞ]かない。"
+    cons "MathMlFragmentはnodesとrootを[持/も]ち、MathMlNodeはTextまたはElementを[表/あらわ]す。"
+    cons "Elementのtag・attributes・childrenは[型付/かたつ]きであり、[受信側/じゅしんがわ]は[選択/せんたく]したschema digestの[照合/しょうごう]と[型検査/かたけんさ]の[後/あと]に、[参照/さんしょう]・[到達性/とうたつせい]・cycle・[子要素数/こようそすう]・[属性/ぞくせい]・[深/ふか]さを[再検査/さいけんさ]する。"
+    cons "MathMLの[構造/こうぞう]proofは[同/おな]じ[不変/ふへん]treeをborrowし、[数式/すうしき]の[意味/いみ]や[表示環境/ひょうじかんきょう]を[証明/しょうめい]しない。"
     nil
   cons paragraph
     cons "HtmlFragmentはroot U64と[平坦/へいたん]なHtmlNode[列/れつ]を[持/も]つ。"
