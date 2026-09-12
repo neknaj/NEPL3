@@ -8,9 +8,9 @@ OUTPUT=ROOT/"crates/languages/math/core/src/portable/value/generated.rs"
 def generate():
     types=json.loads((ROOT/"interfaces/math.json").read_text(encoding="utf-8"))["types"]
     out=["// Generated from interfaces/math.json by tools/generate/math.py. Do not edit.","use super::*;","#[rustfmt::skip]","mod adapters {", "use super::*;"]
-    rename={"languageHint":"language_hint","sourceMaps":"source_maps","documentDigest":"document_digest","guestDigest":"guest_digest"}
+    rename={"languageHint":"language_hint","sourceMaps":"source_maps","documentDigest":"document_digest","guestDigest":"guest_digest","syntaxDigest":"syntax_digest","docSchema":"doc_schema"}
     for name,shape in types.items():
-        if name in ("MathSyntax",) or name.startswith("View:"): continue
+        if name in ("MathSyntax","MathPrintRequest") or name.startswith("View:"): continue
         out.append(f"impl Value for {name} {{")
         unused_c = "variant" in shape and not any(shape["variant"].values())
         out.append("fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,"+("_c" if unused_c else "c")+":&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {")
@@ -22,7 +22,7 @@ def generate():
             out.append("match self {")
             for case,fs in shape["variant"].items():
                 fields=[rename.get(f[0],f[0]) for f in fs]
-                pat=f"Self::{case}"+("("+fields[0]+")" if name=="MathRoot" else " {"+",".join(fields)+"}" if fields else "")
+                pat=f"Self::{case}"+("("+fields[0]+")" if name in ("MathRoot", "MathEvaluationOutcome") else " {"+",".join(fields)+"}" if fields else "")
                 exprs=[f+".put(s,c,b)?" for f in fields]
                 out.append(pat+f' => variant(s,"{name}","{case}",[{",".join(exprs)}],b),')
             out.append("}")
@@ -40,7 +40,7 @@ def generate():
             for case,fs in shape["variant"].items():
                 fields=[rename.get(f[0],f[0]) for f in fs]
                 exprs=[f+f":Value::read(&f[{i}],s,c,b)?" for i,f in enumerate(fields)]
-                body="(Value::read(&f[0],s,c,b)?)" if name=="MathRoot" else " {"+",".join(exprs)+"}" if fields else ""
+                body="(Value::read(&f[0],s,c,b)?)" if name in ("MathRoot", "MathEvaluationOutcome") else " {"+",".join(exprs)+"}" if fields else ""
                 out.append(f'("{case}",{len(fs)})=>Ok(Self::{case}{body}),')
             out.append("_=>Err(PortableError::Shape),}")
         out.extend(["}","}"])

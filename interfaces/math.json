@@ -970,7 +970,490 @@
         ]
       ],
       "constraints": []
+    },
+    "MathFreeSymbol": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "occurrences",
+          {
+            "list": "U64"
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathFreeSymbols": {
+      "record": [
+        [
+          "symbols",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathFreeSymbol"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathExactValue": {
+      "variant": {
+        "Scalar": [
+          [
+            "value",
+            "Rational"
+          ]
+        ],
+        "Vector": [
+          [
+            "values",
+            {
+              "list": "Rational"
+            }
+          ]
+        ],
+        "Matrix": [
+          [
+            "rows",
+            "U64"
+          ],
+          [
+            "cols",
+            "U64"
+          ],
+          [
+            "values",
+            {
+              "list": "Rational"
+            }
+          ]
+        ],
+        "Truth": [
+          [
+            "value",
+            "Bool"
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "MathAssignment": {
+      "record": [
+        [
+          "name",
+          "Text"
+        ],
+        [
+          "value",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "MathExactValue"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "BindingEnvironment": {
+      "record": [
+        [
+          "assignments",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathAssignment"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathEvaluationReason": {
+      "variant": {
+        "MissingSymbol": [],
+        "NotationOnly": [],
+        "NonIntegralExponent": [],
+        "AlgebraicValueRequired": [],
+        "ComplexValueRequired": [],
+        "UnsupportedExactDomain": []
+      },
+      "constraints": []
+    },
+    "MathEvaluationRequirement": {
+      "record": [
+        [
+          "expression",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "ExprRef"
+            }
+          }
+        ],
+        [
+          "reason",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "MathEvaluationReason"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathEvaluationOutcome": {
+      "variant": {
+        "Exact": [
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathExactValue"
+              }
+            }
+          ]
+        ],
+        "Symbolic": [
+          [
+            "requirements",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.math",
+                  "revision": 1,
+                  "name": "MathEvaluationRequirement"
+                }
+              }
+            }
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "MathEvaluationFailureKind": {
+      "variant": {
+        "OperandShapeMismatch": [],
+        "NotSquare": [],
+        "DivisionByZero": [],
+        "InvalidRootDegree": []
+      },
+      "constraints": []
+    },
+    "MathEvaluationFailure": {
+      "record": [
+        [
+          "expression",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "ExprRef"
+            }
+          }
+        ],
+        [
+          "kind",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "MathEvaluationFailureKind"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathEvaluationResult": {
+      "variant": {
+        "Success": [
+          [
+            "outcome",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathEvaluationOutcome"
+              }
+            }
+          ]
+        ],
+        "Failure": [
+          [
+            "failure",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathEvaluationFailure"
+              }
+            }
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "MathCategory": {
+      "variant": {
+        "Expr": [],
+        "Row": [],
+        "DocGuest": []
+      },
+      "constraints": []
+    },
+    "MathSourceArtifact": {
+      "record": [
+        [
+          "text",
+          "Text"
+        ],
+        [
+          "entry",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "MathCategory"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathPrintedGuest": {
+      "record": [
+        [
+          "syntaxDigest",
+          "Bytes"
+        ],
+        [
+          "guestDigest",
+          "Bytes"
+        ],
+        [
+          "embed",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "EmbedRef"
+            }
+          }
+        ],
+        [
+          "text",
+          "Text"
+        ]
+      ],
+      "constraints": []
+    },
+    "MathPrintIdentity": {
+      "record": [
+        [
+          "syntaxDigest",
+          "Bytes"
+        ],
+        [
+          "guests",
+          {
+            "list": "Bytes"
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathPrintRequest": {
+      "record": [
+        [
+          "syntax",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "MathSyntax"
+            }
+          }
+        ],
+        [
+          "docSchema",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SchemaRef"
+              }
+            }
+          }
+        ],
+        [
+          "guests",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathPrintedGuest"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathPrintFailure": {
+      "variant": {
+        "InvalidGuestIdentity": [
+          [
+            "entry",
+            "U64"
+          ]
+        ],
+        "DuplicateGuest": [
+          [
+            "embed",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "MissingBinding": [
+          [
+            "embed",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "GuestCategory": [
+          [
+            "embed",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "UnresolvedGuest": [
+          [
+            "embed",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "EmptyGuest": [
+          [
+            "embed",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ],
+        "UnprintableName": [
+          [
+            "node",
+            "U64"
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "MathPrintResult": {
+      "variant": {
+        "Complete": [
+          [
+            "artifact",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathSourceArtifact"
+              }
+            }
+          ]
+        ],
+        "Invalid": [
+          [
+            "failure",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathPrintFailure"
+              }
+            }
+          ]
+        ],
+        "Stopped": [
+          [
+            "reason",
+            {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "StopReason"
+              }
+            }
+          ]
+        ]
+      },
+      "constraints": []
     }
   },
-  "operations": {}
+  "operations": {
+    "print": {
+      "input": {
+        "named": {
+          "package": "nepl3.math",
+          "revision": 1,
+          "name": "MathPrintRequest"
+        }
+      },
+      "output": {
+        "named": {
+          "package": "nepl3.math",
+          "revision": 1,
+          "name": "MathPrintResult"
+        }
+      },
+      "pure": true
+    }
+  }
 }

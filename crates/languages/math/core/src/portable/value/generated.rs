@@ -223,4 +223,252 @@ let f=fields(v,s,"MathBindings",2)?;
 Ok(Self {definitions:Value::read(&f[0],s,c,b)?,uses:Value::read(&f[1],s,c,b)?})
 }
 }
+impl Value for MathFreeSymbol {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathFreeSymbol",[self.name.put(s,c,b)?,self.occurrences.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,46)?;
+let f=fields(v,s,"MathFreeSymbol",2)?;
+Ok(Self {name:Value::read(&f[0],s,c,b)?,occurrences:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for MathFreeSymbols {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathFreeSymbols",[self.symbols.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,47)?;
+let f=fields(v,s,"MathFreeSymbols",1)?;
+Ok(Self {symbols:Value::read(&f[0],s,c,b)?})
+}
+}
+impl Value for MathExactValue {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Scalar {value} => variant(s,"MathExactValue","Scalar",[value.put(s,c,b)?],b),
+Self::Vector {values} => variant(s,"MathExactValue","Vector",[values.put(s,c,b)?],b),
+Self::Matrix {rows,cols,values} => variant(s,"MathExactValue","Matrix",[rows.put(s,c,b)?,cols.put(s,c,b)?,values.put(s,c,b)?],b),
+Self::Truth {value} => variant(s,"MathExactValue","Truth",[value.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,46)?;
+let (tag,f)=case(v,s,"MathExactValue")?;
+match (tag,f.len()) {
+("Scalar",1)=>Ok(Self::Scalar {value:Value::read(&f[0],s,c,b)?}),
+("Vector",1)=>Ok(Self::Vector {values:Value::read(&f[0],s,c,b)?}),
+("Matrix",3)=>Ok(Self::Matrix {rows:Value::read(&f[0],s,c,b)?,cols:Value::read(&f[1],s,c,b)?,values:Value::read(&f[2],s,c,b)?}),
+("Truth",1)=>Ok(Self::Truth {value:Value::read(&f[0],s,c,b)?}),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for MathAssignment {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathAssignment",[self.name.put(s,c,b)?,self.value.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,46)?;
+let f=fields(v,s,"MathAssignment",2)?;
+Ok(Self {name:Value::read(&f[0],s,c,b)?,value:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for BindingEnvironment {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"BindingEnvironment",[self.assignments.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,50)?;
+let f=fields(v,s,"BindingEnvironment",1)?;
+Ok(Self {assignments:Value::read(&f[0],s,c,b)?})
+}
+}
+impl Value for MathEvaluationReason {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::MissingSymbol => variant(s,"MathEvaluationReason","MissingSymbol",[],b),
+Self::NotationOnly => variant(s,"MathEvaluationReason","NotationOnly",[],b),
+Self::NonIntegralExponent => variant(s,"MathEvaluationReason","NonIntegralExponent",[],b),
+Self::AlgebraicValueRequired => variant(s,"MathEvaluationReason","AlgebraicValueRequired",[],b),
+Self::ComplexValueRequired => variant(s,"MathEvaluationReason","ComplexValueRequired",[],b),
+Self::UnsupportedExactDomain => variant(s,"MathEvaluationReason","UnsupportedExactDomain",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,52)?;
+let (tag,f)=case(v,s,"MathEvaluationReason")?;
+match (tag,f.len()) {
+("MissingSymbol",0)=>Ok(Self::MissingSymbol),
+("NotationOnly",0)=>Ok(Self::NotationOnly),
+("NonIntegralExponent",0)=>Ok(Self::NonIntegralExponent),
+("AlgebraicValueRequired",0)=>Ok(Self::AlgebraicValueRequired),
+("ComplexValueRequired",0)=>Ok(Self::ComplexValueRequired),
+("UnsupportedExactDomain",0)=>Ok(Self::UnsupportedExactDomain),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for MathEvaluationRequirement {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathEvaluationRequirement",[self.expression.put(s,c,b)?,self.reason.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,57)?;
+let f=fields(v,s,"MathEvaluationRequirement",2)?;
+Ok(Self {expression:Value::read(&f[0],s,c,b)?,reason:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for MathEvaluationOutcome {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Exact(value) => variant(s,"MathEvaluationOutcome","Exact",[value.put(s,c,b)?],b),
+Self::Symbolic(requirements) => variant(s,"MathEvaluationOutcome","Symbolic",[requirements.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,53)?;
+let (tag,f)=case(v,s,"MathEvaluationOutcome")?;
+match (tag,f.len()) {
+("Exact",1)=>Ok(Self::Exact(Value::read(&f[0],s,c,b)?)),
+("Symbolic",1)=>Ok(Self::Symbolic(Value::read(&f[0],s,c,b)?)),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for MathEvaluationFailureKind {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::OperandShapeMismatch => variant(s,"MathEvaluationFailureKind","OperandShapeMismatch",[],b),
+Self::NotSquare => variant(s,"MathEvaluationFailureKind","NotSquare",[],b),
+Self::DivisionByZero => variant(s,"MathEvaluationFailureKind","DivisionByZero",[],b),
+Self::InvalidRootDegree => variant(s,"MathEvaluationFailureKind","InvalidRootDegree",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,57)?;
+let (tag,f)=case(v,s,"MathEvaluationFailureKind")?;
+match (tag,f.len()) {
+("OperandShapeMismatch",0)=>Ok(Self::OperandShapeMismatch),
+("NotSquare",0)=>Ok(Self::NotSquare),
+("DivisionByZero",0)=>Ok(Self::DivisionByZero),
+("InvalidRootDegree",0)=>Ok(Self::InvalidRootDegree),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for MathEvaluationFailure {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathEvaluationFailure",[self.expression.put(s,c,b)?,self.kind.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,53)?;
+let f=fields(v,s,"MathEvaluationFailure",2)?;
+Ok(Self {expression:Value::read(&f[0],s,c,b)?,kind:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for MathEvaluationResult {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Success {outcome} => variant(s,"MathEvaluationResult","Success",[outcome.put(s,c,b)?],b),
+Self::Failure {failure} => variant(s,"MathEvaluationResult","Failure",[failure.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,52)?;
+let (tag,f)=case(v,s,"MathEvaluationResult")?;
+match (tag,f.len()) {
+("Success",1)=>Ok(Self::Success {outcome:Value::read(&f[0],s,c,b)?}),
+("Failure",1)=>Ok(Self::Failure {failure:Value::read(&f[0],s,c,b)?}),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for MathCategory {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Expr => variant(s,"MathCategory","Expr",[],b),
+Self::Row => variant(s,"MathCategory","Row",[],b),
+Self::DocGuest => variant(s,"MathCategory","DocGuest",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,44)?;
+let (tag,f)=case(v,s,"MathCategory")?;
+match (tag,f.len()) {
+("Expr",0)=>Ok(Self::Expr),
+("Row",0)=>Ok(Self::Row),
+("DocGuest",0)=>Ok(Self::DocGuest),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for MathSourceArtifact {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathSourceArtifact",[self.text.put(s,c,b)?,self.entry.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,50)?;
+let f=fields(v,s,"MathSourceArtifact",2)?;
+Ok(Self {text:Value::read(&f[0],s,c,b)?,entry:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for MathPrintedGuest {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathPrintedGuest",[self.syntax_digest.put(s,c,b)?,self.guest_digest.put(s,c,b)?,self.embed.put(s,c,b)?,self.text.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,48)?;
+let f=fields(v,s,"MathPrintedGuest",4)?;
+Ok(Self {syntax_digest:Value::read(&f[0],s,c,b)?,guest_digest:Value::read(&f[1],s,c,b)?,embed:Value::read(&f[2],s,c,b)?,text:Value::read(&f[3],s,c,b)?})
+}
+}
+impl Value for MathPrintIdentity {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathPrintIdentity",[self.syntax_digest.put(s,c,b)?,self.guests.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,49)?;
+let f=fields(v,s,"MathPrintIdentity",2)?;
+Ok(Self {syntax_digest:Value::read(&f[0],s,c,b)?,guests:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for MathPrintFailure {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::InvalidGuestIdentity {entry} => variant(s,"MathPrintFailure","InvalidGuestIdentity",[entry.put(s,c,b)?],b),
+Self::DuplicateGuest {embed} => variant(s,"MathPrintFailure","DuplicateGuest",[embed.put(s,c,b)?],b),
+Self::MissingBinding {embed} => variant(s,"MathPrintFailure","MissingBinding",[embed.put(s,c,b)?],b),
+Self::GuestCategory {embed} => variant(s,"MathPrintFailure","GuestCategory",[embed.put(s,c,b)?],b),
+Self::UnresolvedGuest {embed} => variant(s,"MathPrintFailure","UnresolvedGuest",[embed.put(s,c,b)?],b),
+Self::EmptyGuest {embed} => variant(s,"MathPrintFailure","EmptyGuest",[embed.put(s,c,b)?],b),
+Self::UnprintableName {node} => variant(s,"MathPrintFailure","UnprintableName",[node.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,48)?;
+let (tag,f)=case(v,s,"MathPrintFailure")?;
+match (tag,f.len()) {
+("InvalidGuestIdentity",1)=>Ok(Self::InvalidGuestIdentity {entry:Value::read(&f[0],s,c,b)?}),
+("DuplicateGuest",1)=>Ok(Self::DuplicateGuest {embed:Value::read(&f[0],s,c,b)?}),
+("MissingBinding",1)=>Ok(Self::MissingBinding {embed:Value::read(&f[0],s,c,b)?}),
+("GuestCategory",1)=>Ok(Self::GuestCategory {embed:Value::read(&f[0],s,c,b)?}),
+("UnresolvedGuest",1)=>Ok(Self::UnresolvedGuest {embed:Value::read(&f[0],s,c,b)?}),
+("EmptyGuest",1)=>Ok(Self::EmptyGuest {embed:Value::read(&f[0],s,c,b)?}),
+("UnprintableName",1)=>Ok(Self::UnprintableName {node:Value::read(&f[0],s,c,b)?}),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for MathPrintResult {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Complete {artifact} => variant(s,"MathPrintResult","Complete",[artifact.put(s,c,b)?],b),
+Self::Invalid {failure} => variant(s,"MathPrintResult","Invalid",[failure.put(s,c,b)?],b),
+Self::Stopped {reason} => variant(s,"MathPrintResult","Stopped",[reason.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,47)?;
+let (tag,f)=case(v,s,"MathPrintResult")?;
+match (tag,f.len()) {
+("Complete",1)=>Ok(Self::Complete {artifact:Value::read(&f[0],s,c,b)?}),
+("Invalid",1)=>Ok(Self::Invalid {failure:Value::read(&f[0],s,c,b)?}),
+("Stopped",1)=>Ok(Self::Stopped {reason:Value::read(&f[0],s,c,b)?}),
+_=>Err(PortableError::Shape),}
+}
+}
 }

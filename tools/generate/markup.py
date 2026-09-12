@@ -9,6 +9,8 @@ def generate():
     types=json.loads((ROOT/"interfaces/markup.json").read_text(encoding="utf-8"))["types"]
     out=["// Generated from interfaces/markup.json by tools/generate/markup.py. Do not edit.","use super::*;","#[rustfmt::skip]","mod adapters {", "use super::*;"]
     rename={"languageHint":"language_hint","sourceMaps":"source_maps","documentDigest":"document_digest","guestDigest":"guest_digest"}
+    def tuple_case(name, case):
+        return name == "MarkupRoot" or (name == "MathMlNode" and case == "Text") or (name == "MathMlAttribute" and case != "NormalIdentifier")
     for name,shape in types.items():
         if name in ("MarkupSyntax",) or name.startswith("View:"): continue
         out.append(f"impl Value for {name} {{")
@@ -22,7 +24,7 @@ def generate():
             out.append("match self {")
             for case,fs in shape["variant"].items():
                 fields=[rename.get(f[0],f[0]) for f in fs]
-                pat=f"Self::{case}"+("("+fields[0]+")" if name=="MarkupRoot" else " {"+",".join(fields)+"}" if fields else "")
+                pat=f"Self::{case}"+("("+fields[0]+")" if tuple_case(name, case) else " {"+",".join(fields)+"}" if fields else "")
                 exprs=[f+".put(s,c,b)?" for f in fields]
                 out.append(pat+f' => variant(s,"{name}","{case}",[{",".join(exprs)}],b),')
             out.append("}")
@@ -40,7 +42,7 @@ def generate():
             for case,fs in shape["variant"].items():
                 fields=[rename.get(f[0],f[0]) for f in fs]
                 exprs=[f+f":Value::read(&f[{i}],s,c,b)?" for i,f in enumerate(fields)]
-                body="(Value::read(&f[0],s,c,b)?)" if name=="MarkupRoot" else " {"+",".join(exprs)+"}" if fields else ""
+                body="(Value::read(&f[0],s,c,b)?)" if tuple_case(name, case) else " {"+",".join(exprs)+"}" if fields else ""
                 out.append(f'("{case}",{len(fs)})=>Ok(Self::{case}{body}),')
             out.append("_=>Err(PortableError::Shape),}")
         out.extend(["}","}"])

@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/19&#45;html&#45;fragment.nepld; renderer nepl3-tools.markdown-annotated/2; source SHA-256 373a519dffc1cbbc2bbd2b6334eef8d4490aae6c62798bf26918a5f280bfe083; alias input SHA-256 cd0621a95223650374cd75ef3bac12d7ff578c85d8bdc88f0da70e249d1bd485; document digest daee67107b14af47d3b848fe34782574f22609d5155c8444359afd433c45366a. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/19&#45;html&#45;fragment.nepld; renderer nepl3-tools.markdown-annotated/2; source SHA-256 09ce4f71205117c83b139118be81184e02fd619cbbdf9b9234303b2953d4469b; alias input SHA-256 cd0621a95223650374cd75ef3bac12d7ff578c85d8bdc88f0da70e249d1bd485; document digest 87308506fd66d4322fed17507c5ca3295282ee3adedc05d39e3948828b6f4c70. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="19-html-fragmentの構造契約"></a>
 
@@ -6,7 +6,7 @@
 
 HTML idの拡張\[かくちょう\]とfragmentの符号化規則\[ふごうかきそく\]は `nepl3.safe-markup/2` とする。値\[あたい\]schemaも `nepl3.markup` revision 2へ進\[すす\]め、旧\[きゅう\]revisionの値\[あたい\]を新\[あたら\]しい検査\[けんさ\]proofとして受理\[じゅり\]しない。Doc HTMLのschema参照\[さんしょう\]とportable receiverを同時\[どうじ\]に更新\[こうしん\]する。
 
-`interfaces/markup.json` を言語中立\[げんごちゅうりつ\]の値\[あたい\]schema、`nepl3-markup` をnativeの検査\[けんさ\]・serializerとする。現段階\[げんだんかい\]の対象\[たいしょう\]はHTML fragmentである。MathML\/SVG\/KaTeX専用\[せんよう\]profile、DocumentShell、assetのbyte列\[れつ\]・MIME・license検査\[けんさ\]、Doc PreparedArticle、完全\[かんぜん\]な操作\[そうさ\]Reportは後続実装\[こうぞくじっそう\]であり、既存\[きそん\]の最終要件\[さいしゅうようけん\]から除\[のぞ\]かない。
+`interfaces/markup.json` を言語中立\[げんごちゅうりつ\]の値\[あたい\]schema、`nepl3-markup` をnativeの検査\[けんさ\]・serializerとする。現段階\[げんだんかい\]ではHTML fragmentに加\[くわ\]え、MathMLだけで構成\[こうせい\]するtreeの構造検査\[こうぞうけんさ\]とserializer、NDF codecを提供\[ていきょう\]する。MathMLのmtextへのHTML統合\[とうごう\]、Mathからの変換\[へんかん\]、SVG\/KaTeX専用\[せんよう\]profile、DocumentShell、assetのbyte列\[れつ\]・MIME・license検査\[けんさ\]、Doc PreparedArticle、完全\[かんぜん\]な操作\[そうさ\]Reportは後続実装\[こうぞくじっそう\]であり、既存\[きそん\]の最終要件\[さいしゅうようけん\]から除\[のぞ\]かない。MathMlFragmentはnodesとrootを持\[も\]ち、MathMlNodeはTextまたはElementを表\[あらわ\]す。Elementのtag・attributes・childrenは型付\[かたつ\]きであり、受信側\[じゅしんがわ\]は選択\[せんたく\]したschema digestの照合\[しょうごう\]と型検査\[かたけんさ\]の後\[あと\]に、参照\[さんしょう\]・到達性\[とうたつせい\]・cycle・子要素数\[こようそすう\]・属性\[ぞくせい\]・深\[ふか\]さを再検査\[さいけんさ\]する。MathMLの構造\[こうぞう\]proofは同\[おな\]じ不変\[ふへん\]treeをborrowし、数式\[すうしき\]の意味\[いみ\]や表示環境\[ひょうじかんきょう\]を証明\[しょうめい\]しない。
 
 HtmlFragmentはroot U64と平坦\[へいたん\]なHtmlNode列\[れつ\]を持\[も\]つ。Text、または固定\[こてい\]HtmlTag・型付\[かたつ\]きattribute列\[れつ\]・子\[こ\]U64列\[れつ\]だけを許\[ゆる\]す。Rustのenum ordinalをwireへ保存\[ほぞん\]しない。未知\[みち\]tag\/attribute、RawHtml、style、event handler、script、任意\[にんい\]namespaceを成功\[せいこう\]として受\[う\]け入\[い\]れない。木\[き\]の深\[ふか\]さは参照\[さんしょう\]によって表\[あらわ\]し、深\[ふか\]い入力\[にゅうりょく\]のdropにRust call stackを使\[つか\]わない。
 

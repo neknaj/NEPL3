@@ -337,6 +337,179 @@
         ]
       ],
       "constraints": []
+    },
+    "MathMlTag": {
+      "variant": {
+        "Math": [],
+        "Row": [],
+        "Identifier": [],
+        "Number": [],
+        "Operator": [],
+        "Text": [],
+        "Fraction": [],
+        "Sqrt": [],
+        "Root": [],
+        "Sub": [],
+        "Sup": [],
+        "SubSup": [],
+        "Under": [],
+        "Over": [],
+        "UnderOver": [],
+        "Table": [],
+        "TableRow": [],
+        "Cell": [],
+        "Space": []
+      },
+      "constraints": []
+    },
+    "MathMlDisplay": {
+      "variant": {
+        "Inline": [],
+        "Block": []
+      },
+      "constraints": []
+    },
+    "MathMlOperatorForm": {
+      "variant": {
+        "Prefix": [],
+        "Infix": [],
+        "Postfix": []
+      },
+      "constraints": []
+    },
+    "MathMlAttribute": {
+      "variant": {
+        "Display": [
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.markup",
+                "revision": 2,
+                "name": "MathMlDisplay"
+              }
+            }
+          ]
+        ],
+        "NormalIdentifier": [],
+        "Stretchy": [
+          [
+            "value",
+            "Bool"
+          ]
+        ],
+        "Symmetric": [
+          [
+            "value",
+            "Bool"
+          ]
+        ],
+        "LargeOperator": [
+          [
+            "value",
+            "Bool"
+          ]
+        ],
+        "MovableLimits": [
+          [
+            "value",
+            "Bool"
+          ]
+        ],
+        "Form": [
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.markup",
+                "revision": 2,
+                "name": "MathMlOperatorForm"
+              }
+            }
+          ]
+        ],
+        "Width": [
+          [
+            "value",
+            "Text"
+          ]
+        ],
+        "Height": [
+          [
+            "value",
+            "Text"
+          ]
+        ],
+        "Depth": [
+          [
+            "value",
+            "Text"
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "MathMlNode": {
+      "variant": {
+        "Text": [
+          [
+            "text",
+            "Text"
+          ]
+        ],
+        "Element": [
+          [
+            "tag",
+            {
+              "named": {
+                "package": "nepl3.markup",
+                "revision": 2,
+                "name": "MathMlTag"
+              }
+            }
+          ],
+          [
+            "attributes",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.markup",
+                  "revision": 2,
+                  "name": "MathMlAttribute"
+                }
+              }
+            }
+          ],
+          [
+            "children",
+            {
+              "list": "U64"
+            }
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "MathMlFragment": {
+      "record": [
+        [
+          "nodes",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.markup",
+                "revision": 2,
+                "name": "MathMlNode"
+              }
+            }
+          }
+        ],
+        [
+          "root",
+          "U64"
+        ]
+      ],
+      "constraints": []
     }
   },
   "operations": {}

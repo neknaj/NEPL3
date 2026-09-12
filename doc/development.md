@@ -250,7 +250,7 @@ workflowの構文・権限・依存jobの扱いは [GitHub Actions公式仕様](
 
 ## 実装と独立レビュー
 
-Doc関連の共通値・wire・文書意味APIを固定する前に、[早期inventoryとgap audit](doc-inventory.md) を確認します。`cargo run --locked -p nepl3-tools -- doc-inventory --check` は固定commitの原本と照合し、現在の文書・契約の追加/変更/削除を報告します。通常の `check` にも含まれます。現在の網羅性を主張する場合は新しいcommitを監査して `doc-inventory --check-current` を通します。現時点のbaselineと作業treeには差分があり、strict検査が失敗することを未移行/未監査の成功へ読み替えません。再生成方法と履歴要件は監査文書を参照してください。
+Doc関連の共通値・wire・文書意味APIを固定する前に、[早期inventoryとgap audit](doc-inventory.md) を確認します。`cargo run --locked -p nepl3-tools -- doc-inventory --check` は固定commitの原本と照合し、現在の文書・契約の追加/変更/削除を報告します。通常の `check` とは分離し、baselineの履歴を取得した上で明示的に実行します。現在の網羅性を主張する場合は新しいcommitを監査して `doc-inventory --check-current` を通します。現時点のbaselineと作業treeには差分があり、strict検査が失敗することを未移行/未監査の成功へ読み替えません。再生成方法と履歴要件は監査文書を参照してください。
 
 メインagentが設計具体化、実装、試験、指摘修正と統括を担当し、subagentには独立レビューだけを依頼します。レビュー担当はメインagentの説明だけを根拠にせず、元の契約、実コード、失敗系、期待値の根拠、差分と実行結果を確認します。メインagentが必要な修正・再レビュー・再検査を確認して統合します。専用branchでこまめにcommit・pushし、未レビューのcheckpointと統合可能な変更を区別します。利用上限等で独立レビューが未実行の場合も成功にせず、独立して進められる作業を続けます。具体的な規範は [AGENTS.md](../AGENTS.md) を参照してください。
 
