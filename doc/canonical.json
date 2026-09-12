@@ -84,17 +84,17 @@
   ],
   "output_limits": {
     "source_bytes": 10000000,
-    "work": 600000000,
+    "work": 800000000,
     "depth": 1000,
     "nodes": 30000000,
-    "allocation_units": 1500000000,
+    "allocation_units": 2000000000,
     "output_bytes": 10000000,
     "diagnostics": 1000,
     "events": 1000
   },
   "html_output_limits": {
     "source_bytes": 10000000,
-    "work": 300000000,
+    "work": 400000000,
     "depth": 1000,
     "nodes": 20000000,
     "allocation_units": 750000000,
