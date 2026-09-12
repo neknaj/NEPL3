@@ -224,6 +224,12 @@ body
       cons "[受信/じゅしん]から[照合/しょうごう]まで[同/おな]じ[予算/よさん]を[使/つか]い、[停止/ていし]を[再試行/さいしこう]やSymbolicで[消/け]さない。"
       cons "この[交換値/こうかんち]は[操作/そうさ]の[失敗/しっぱい]やproviderの[通信契約/つうしんけいやく]を[兼/か]ねない。" nil
     cons paragraph
+      cons "MathEvaluationResultはSuccessにMathEvaluationOutcome、FailureにMathEvaluationFailureを[持/も]つ。"
+      cons "Failureは[失敗/しっぱい]したconstructorのExprRefと、OperandShapeMismatch・NotSquare・DivisionByZero・InvalidRootDegreeの[種別/しゅべつ]を[持/も]つ。"
+      cons "[意味上/いみじょう]の[失敗/しっぱい]も[成功/せいこう]と[同/おな]じく[指定入力/していにゅうりょく]から[再評価/さいひょうか]して[照合/しょうごう]し、[改変/かいへん]された[種別/しゅべつ]や[位置/いち]を[拒否/きょひ]する。"
+      cons "cancel・[資源停止/しげんていし]・[内部不変条件違反/ないぶふへんじょうけんいはん]はFailureに[変換/へんかん]せず、[操作/そうさ]のErrとして[返/かえ]す。"
+      cons "providerの[通信失敗/つうしんしっぱい]や[要求/ようきゅう]identityの[照合/しょうごう]は、この[数値評価/すうちひょうか]の[結果型/けっかがた]とは[別/べつ]の[境界契約/きょうかいけいやく]である。" nil
+    cons paragraph
       cons "lower、check、free_symbols、evaluate、print、render_mathml。"
       cons "[評価結果/ひょうかけっか]、[部分評価/ぶぶんひょうか]の[新式/しんしき]、[元/もと]の[式/しき]を[別値/べつち]として[返/かえ]す。"
       cons "[文書側/ぶんしょがわ]のrender[要求/ようきゅう]がevaluateを[自動/じどう]で[要求/ようきゅう]しない。" nil

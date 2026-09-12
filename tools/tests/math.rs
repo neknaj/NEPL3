@@ -16,6 +16,204 @@ fn err(v: impl std::fmt::Debug) -> String {
 }
 
 #[test]
+fn evaluation_failure_results_are_located_recomputed_and_bounded() -> Result<(), String> {
+    use nepl3_math_core::{check, environment, evaluation, lower, model::*, portable};
+    let compiled = compiled()?;
+    for (source, kind) in [
+        ("frac 1 0", MathEvaluationFailureKind::DivisionByZero),
+        ("det 1", MathEvaluationFailureKind::NotSquare),
+        (
+            "neg lt 1 2",
+            MathEvaluationFailureKind::OperandShapeMismatch,
+        ),
+        (
+            "let d neg 1 root d 4",
+            MathEvaluationFailureKind::InvalidRootDegree,
+        ),
+    ] {
+        with_input(&compiled, source, "Expr", |tree, profile, b, a| {
+            let syntax = tree
+                .tree()
+                .bundle
+                .validate_with_sources(profile.registry(), b, a)
+                .map_err(err)?;
+            let original = lower::expression(
+                &syntax,
+                &compiled.others[0].schema,
+                check::Category::Expr,
+                profile.registry(),
+                &mut budget(),
+                &mut SourceAdmission::default(),
+            )
+            .map_err(err)?;
+            let checked = check::expression(&original.value, &mut budget()).map_err(err)?;
+            let raw_env = BindingEnvironment {
+                assignments: vec![],
+            };
+            let env = environment::check(&raw_env, &mut budget()).map_err(err)?;
+            let native = evaluation::report(&checked, &env, &mut budget()).map_err(err)?;
+            let MathEvaluationResult::Failure { failure } = &native.result else {
+                return Err("expected semantic failure".into());
+            };
+            assert_eq!(failure.kind, kind, "{source}");
+            // The location must identify the offending constructor, not its enclosing let.
+            let offending = &original.value.nodes[failure.expression.0 as usize].kind;
+            assert!(matches!(
+                (kind, offending),
+                (
+                    MathEvaluationFailureKind::DivisionByZero,
+                    MathKind::Frac { .. }
+                ) | (MathEvaluationFailureKind::NotSquare, MathKind::Det { .. })
+                    | (
+                        MathEvaluationFailureKind::OperandShapeMismatch,
+                        MathKind::Neg { .. }
+                    )
+                    | (
+                        MathEvaluationFailureKind::InvalidRootDegree,
+                        MathKind::Root { .. }
+                    )
+            ));
+            let empty = SourceStore::default();
+            let mut admission = SourceAdmission::default();
+            let mut codec =
+                FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
+            let raw = portable::evaluation_result_to_value(
+                &checked,
+                &env,
+                profile.registry(),
+                &mut codec,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            let bytes = nepl3_wire::encode(&raw, &mut budget()).map_err(err)?;
+            let raw = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+            let mut measured = budget();
+            let received = portable::evaluation_result_from_value(
+                &raw,
+                &checked,
+                &env,
+                profile.registry(),
+                &mut codec,
+                &mut measured,
+            )
+            .map_err(err)?;
+            assert_eq!(received.result, native.result);
+            assert!(core::ptr::eq(received.source, &original.value));
+            let number = original
+                .value
+                .nodes
+                .iter()
+                .position(|node| matches!(node.kind, MathKind::Number { .. }))
+                .ok_or("numeric leaf")?;
+            let success_source = MathValue {
+                root: MathRoot::Expr(ExprRef(0)),
+                nodes: vec![original.value.nodes[number].clone()],
+                embeds: vec![],
+            };
+            let success_input = check::expression(&success_source, &mut budget()).map_err(err)?;
+            let success = portable::evaluation_result_to_value(
+                &success_input,
+                &env,
+                profile.registry(),
+                &mut codec,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            // A response from a different expression cannot change failure into
+            // success (or success into failure).
+            assert!(matches!(
+                portable::evaluation_result_from_value(
+                    &success,
+                    &checked,
+                    &env,
+                    profile.registry(),
+                    &mut codec,
+                    &mut budget(),
+                ),
+                Err(portable::PortableError::EvaluationMismatch)
+            ));
+            assert!(matches!(
+                portable::evaluation_result_from_value(
+                    &raw,
+                    &success_input,
+                    &env,
+                    profile.registry(),
+                    &mut codec,
+                    &mut budget(),
+                ),
+                Err(portable::PortableError::EvaluationMismatch)
+            ));
+            for change_kind in [false, true] {
+                let mut forged = raw.clone();
+                let NdfValue::Variant(v) = &mut forged else {
+                    return Err("result".into());
+                };
+                let NdfValue::Record(f) = &mut v.fields[0] else {
+                    return Err("failure".into());
+                };
+                if change_kind {
+                    let NdfValue::Variant(k) = &mut f.fields[1] else {
+                        return Err("kind".into());
+                    };
+                    k.variant = if kind == MathEvaluationFailureKind::NotSquare {
+                        "DivisionByZero"
+                    } else {
+                        "NotSquare"
+                    }
+                    .into();
+                } else {
+                    let NdfValue::Record(id) = &mut f.fields[0] else {
+                        return Err("reference".into());
+                    };
+                    id.fields[0] = NdfValue::U64(u64::MAX);
+                }
+                assert!(matches!(
+                    portable::evaluation_result_from_value(
+                        &forged,
+                        &checked,
+                        &env,
+                        profile.registry(),
+                        &mut codec,
+                        &mut budget()
+                    ),
+                    Err(portable::PortableError::EvaluationMismatch)
+                ));
+            }
+            let mut limits = budget().limits();
+            limits.work = measured.usage().work - 1;
+            let mut stopped = Budget::new(limits);
+            assert!(matches!(
+                portable::evaluation_result_from_value(
+                    &raw,
+                    &checked,
+                    &env,
+                    profile.registry(),
+                    &mut codec,
+                    &mut stopped
+                ),
+                Err(portable::PortableError::Stopped(StopReason::WorkLimit))
+            ));
+            assert_eq!(stopped.poll(), Err(StopReason::WorkLimit));
+            let mut cancelled = budget();
+            cancelled.cancel();
+            assert!(matches!(
+                portable::evaluation_result_to_value(
+                    &checked,
+                    &env,
+                    profile.registry(),
+                    &mut codec,
+                    &mut cancelled,
+                ),
+                Err(portable::PortableError::Stopped(StopReason::Cancelled))
+            ));
+            Ok(())
+        })
+        .map_err(|e| format!("{source}: {e}"))?;
+    }
+    Ok(())
+}
+
+#[test]
 fn evaluation_result_rechecks_environment_and_rejects_forged_requirements() -> Result<(), String> {
     use nepl3_math_core::{check, environment, evaluation, model::*, portable};
     let compiled = compiled()?;
@@ -102,6 +300,29 @@ fn evaluation_result_rechecks_environment_and_rejects_forged_requirements() -> R
             Err(portable::PortableError::EvaluationMismatch)
         ));
     }
+    let symbolic = portable::evaluation_result_to_value(
+        &checked,
+        &empty_env,
+        registry,
+        &mut codec,
+        &mut budget(),
+    )
+    .map_err(err)?;
+    let symbolic = portable::evaluation_result_from_value(
+        &symbolic,
+        &checked,
+        &empty_env,
+        registry,
+        &mut codec,
+        &mut budget(),
+    )
+    .map_err(err)?;
+    assert_eq!(
+        symbolic.result,
+        MathEvaluationResult::Success {
+            outcome: result.outcome
+        }
+    );
     let env1 = BindingEnvironment {
         assignments: vec![MathAssignment {
             name: "x".into(),
@@ -320,6 +541,32 @@ fn math_source_evaluates_through_native_and_portable_syntax() -> Result<(), Stri
                 .map_err(err)?;
                 assert_eq!(received.outcome, result.outcome, "{source}");
                 assert!(core::ptr::eq(received.source, input));
+                let envelope = portable::evaluation_result_to_value(
+                    &checked,
+                    &env,
+                    profile.registry(),
+                    &mut codec,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                let bytes = nepl3_wire::encode(&envelope, &mut budget()).map_err(err)?;
+                let envelope = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+                let report = portable::evaluation_result_from_value(
+                    &envelope,
+                    &checked,
+                    &env,
+                    profile.registry(),
+                    &mut codec,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                assert_eq!(
+                    report.result,
+                    MathEvaluationResult::Success {
+                        outcome: result.outcome
+                    }
+                );
+                assert!(core::ptr::eq(report.source, input));
             }
             Ok(())
         })
