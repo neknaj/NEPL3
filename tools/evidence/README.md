@@ -20,8 +20,12 @@ Gitには小さなscope・source参照・必要なmanifestを残す。Actions ar
 永久保存と扱わず、長期保全が必要な証拠は期限前に承認済みの外部保存先へ退避する。
 再利用する回帰probeは通常のtestへ置く。例外的な外部入力や再構成できない資料には
 保存理由を記す。独立レビューは対象commit・scope・指摘・未検証範囲を文章で残す。
-通常のrepository checkは固定archive baselineの取得を必要とする（CIはfull checkout）。
-浅いcloneでは `git fetch origin archive/evidence-2026-09-13` を先に実行する。
+通常のrepository checkはevidence archive refを取得しない。残存する歴史sourceの
+例外は `tools/src/repository/legacy-evidence-sources.txt` の正確なpathだけに限定する。
+この一覧は内容の検証証拠ではなく、既存コピーと新規コピーを区別する移行用の例外である。
+新しいreview sourceを追加するために拡張しない。旧記録の除去時に例外も縮小する。
+Doc inventoryの明示的な履歴監査は別のbaselineを使用するため、shallow cloneで
+全repository検査ができるとまでは主張しない。
 保存済みの過去記録は [履歴索引](../../conformance/history.md) を参照する。
 
 このツールは信頼した開発commandの収集器でありsandboxではない。historicalな
