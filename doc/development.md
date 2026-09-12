@@ -206,7 +206,7 @@ cargo run --locked -p nepl3-tools -- doc-html pages doc/migration/pages.json dis
 ```
 
 [最初の移行候補](migration/README.md) は実際のDoc処理系でHTMLへ変換します。
-CIは限定変換器の固定した移行前fixtureとの一致と生成を各native OSで検査し、
+CIは限定変換器の固定した移行前fixtureとの一致と生成をLinuxで検査し、
 Ubuntuの生成物をartifactへ保存します。現在の仕様からの生成・差分検査は
 別の `doc-canonical` 経路で行います。
 これは公開deployでも正本切替でもありません。旧anchor・Markdown projection・意味審査の
@@ -222,7 +222,11 @@ cargo run --locked -p nepl3-tools -- doc-html export examples/document/linear-co
 
 `document.html` と `assets/` を一緒に配布します。数式・外部ページ・画像等の解決はまだこのlocal入口の対象外で、必要な場合は生成を拒否します。正式文書の正本切替とPages公開は、リンク・意味同等性・配布検査を含む別の工程です。契約は [20章](spec/20-doc-html.md) を参照してください。
 
-[CI workflow](../.github/workflows/ci.yml) はpush・pull request・手動実行で起動し、Linux・Windows・macOSで上記のRust検査とリポジトリ検査を実行します。文書だけの変更も対象です。すべてのmatrix jobの成功を集約する固定名 `quality` を、mainの必須status checkとして使用します。失敗・cancel・skipを成功へ読み替えません。
+[CI workflow](../.github/workflows/ci.yml) はpush・pull request・手動実行で起動します。Rustのworkspace testとClippyはLinux・Windows・macOSで実行し、fmt・rustdoc・allocation regression・外部consumer全体・Doc移行とcanonical生成はLinuxで一度実行します。repository checkはrepository-contract jobへ集約します。
+
+siteの全Python試験はLinuxのsite-publication jobで実行します。Windowsではjunction拒否、Windows/macOSではstdinへ渡す引数の構築と実processの強制終了・HTTP通信と期限、macOSではsymlink祖先を持つtemporary rootの回帰だけを追加実行します。stdinの試験はprocess呼出しをmockして渡す値を検査し、実際のprocess間転送の証拠とは区別します。共通のmanifest/hash/tar検査をOSごとに反復しません。evidence runnerのファイル・process境界は3 OSで維持します。
+
+文書だけの変更も対象です。固定名 `quality` は引き続き全jobの成功を要求し、失敗・cancel・skipを成功へ読み替えません。ブラウザ・Pulley・RP2040の実行頻度変更は、この重複削減とは別に、変更の影響範囲とmainでの拡張試験を対応させて設計します。
 
 検査対象sourceはCI runのcommit SHAで特定します。通常のmain pushではsource tarを別artifactとして再保存せず、Git checkoutまたはGitHubのcommit指定source archiveを使用します。正式releaseで同一の配布byte列を保全する必要がある場合は、そのreleaseの成果物として扱います。
 

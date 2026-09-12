@@ -181,6 +181,14 @@ CIはnativeのproduction/API・OS境界試験を残し、一度で足りる生�
 publication protocol試験を独立host jobへ移す。必要なWindows/macOSのpath/process
 境界試験は選択して残す。qualityは新jobも要求し、必要な検査を解除しない。
 
+後続のworkflow監査では、repository checkがnative 3 OSと専用jobで重複し、
+fmt・rustdoc・allocation probe・全文書生成も3回実行されていた。これらは代表の
+Linux一回へ集約する。siteのgeneric試験は専用Linux jobを正本とし、他OSには
+junction、stdin引数の構築、実processの強制終了、実HTTP/期限、macOSのtemporary-root回帰を残す。
+Rustの全workspace試験とClippyは現時点では3 OSを維持し、未分類のhost試験を
+誤って省略しない。この変更は同じ検査の重複解消であり、browser/emulatorの
+実行頻度変更やrequired gateのskip許容は含まない。
+
 独立した参照監査後、無参照91単位とルートgitattributes指定のみの29単位を
 作業treeから取り除き、[Git履歴索引](../../conformance/history.md)へ移した。
 計8,406ファイル、154,303,564 bytes、JSON/JSON fixture 876,848行を参照化する。
