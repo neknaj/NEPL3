@@ -14,6 +14,107 @@ use nepl3_wire::{environment::environment_digest, foundation::FoundationCodec};
 fn err(v: impl std::fmt::Debug) -> String {
     format!("{v:?}")
 }
+
+#[test]
+fn binding_report_portable_roundtrip_rejects_forged_resolution() -> Result<(), String> {
+    use nepl3_math_core::{binding, model::*, portable};
+    let compiled = compiled()?;
+    let registry = &compiled.doc.registry;
+    let value = MathValue {
+        root: MathRoot::Expr(ExprRef(0)),
+        nodes: vec![
+            MathKind::Let {
+                name: "x".into(),
+                init: ExprRef(1),
+                body: ExprRef(1),
+            },
+            MathKind::Symbol { name: "x".into() },
+        ]
+        .into_iter()
+        .map(|kind| MathNode {
+            kind,
+            origin: None,
+            span: None,
+            locations: vec![],
+        })
+        .collect(),
+        embeds: vec![],
+    };
+    let shape = value.validate_shape(&mut budget()).map_err(err)?;
+    let expected = binding::analyze(&shape, &mut budget()).map_err(err)?;
+    assert_eq!(
+        expected.uses.iter().map(|v| v.binding).collect::<Vec<_>>(),
+        vec![None, Some(0)]
+    );
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(registry, &sources, &mut admission).map_err(err)?;
+    let raw = portable::bindings_to_value(&expected, &shape, registry, &mut codec, &mut budget())
+        .map_err(err)?;
+    let bytes = nepl3_wire::encode(&raw, &mut budget()).map_err(err)?;
+    let mut decoded = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+    assert_eq!(
+        portable::bindings_from_value(&decoded, &shape, registry, &mut codec, &mut budget())
+            .map_err(err)?,
+        expected
+    );
+    // The shape remains valid, but omitting actual uses is not a valid result.
+    let NdfValue::Record(record) = &mut decoded else {
+        return Err("report record".into());
+    };
+    record.fields[1] = NdfValue::List(vec![]);
+    assert_eq!(
+        portable::bindings_from_value(&decoded, &shape, registry, &mut codec, &mut budget()),
+        Err(portable::PortableError::BindingMismatch)
+    );
+    let mut forged = expected.clone();
+    forged.uses[0].binding = Some(0);
+    assert_eq!(
+        portable::bindings_to_value(&forged, &shape, registry, &mut codec, &mut budget()),
+        Err(portable::PortableError::BindingMismatch)
+    );
+    for mutation in 0..4 {
+        let mut altered = raw.clone();
+        let NdfValue::Record(report) = &mut altered else {
+            return Err("report".into());
+        };
+        let NdfValue::List(uses) = &mut report.fields[1] else {
+            return Err("uses".into());
+        };
+        match mutation {
+            0 => uses.swap(0, 1),
+            1 => uses.push(uses[0].clone()),
+            _ => {
+                let NdfValue::Record(use_) = &mut uses[0] else {
+                    return Err("use".into());
+                };
+                if mutation == 2 {
+                    use_.fields[2] = NdfValue::Some(Box::new(NdfValue::U64(0)));
+                } else {
+                    let NdfValue::Record(node) = &mut use_.fields[1] else {
+                        return Err("node".into());
+                    };
+                    node.fields[0] = NdfValue::U64(99);
+                }
+            }
+        }
+        assert_eq!(
+            portable::bindings_from_value(&altered, &shape, registry, &mut codec, &mut budget()),
+            Err(portable::PortableError::BindingMismatch)
+        );
+    }
+    assert!(matches!(
+        portable::bindings_from_value(
+            &NdfValue::Bool(true),
+            &shape,
+            registry,
+            &mut codec,
+            &mut budget()
+        ),
+        Err(portable::PortableError::Schema(_))
+    ));
+    Ok(())
+}
 fn with_input<T>(
     compiled: &Compiled,
     input: &str,
@@ -432,6 +533,21 @@ fn all_math_constructors_lower_from_the_actual_parser_and_first_receiver() -> Re
             )
             .map_err(err)?;
             assert_eq!(tree.tree(), &original_tree);
+            if kind == "Label" || entry == "DocGuest" {
+                let shape = original.value.validate_shape(&mut budget()).map_err(err)?;
+                let bindings =
+                    nepl3_math_core::binding::analyze(&shape, &mut budget()).map_err(err)?;
+                assert!(bindings.definitions.is_empty());
+                // Label visits value at 1, then opaque guest at 2. A root guest
+                // containing Doc ruby x/ex must not introduce a Math symbol.
+                if kind == "Label" {
+                    assert_eq!(bindings.uses.len(), 1);
+                    assert_eq!(bindings.uses[0].occurrence, 1);
+                    assert_eq!(bindings.uses[0].binding, None);
+                } else {
+                    assert!(bindings.uses.is_empty());
+                }
+            }
             let root = match original.value.root {
                 MathRoot::Expr(v) => v.0,
                 MathRoot::Row(v) => v.0,

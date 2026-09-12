@@ -17,6 +17,66 @@ pub enum PortableError<E> {
     Schema(SchemaError),
     Structure(StructureError),
     Shape,
+    BindingMismatch,
+}
+
+/// Encode a binding report only after comparing it to its declared input shape.
+pub fn bindings_to_value<C: FoundationValueCodec>(
+    report: &crate::model::MathBindings,
+    input: &crate::check::ValidatedMathShape<'_>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    budget.charge(
+        Resource::Work,
+        (report.definitions.len() as u64).saturating_add(report.uses.len() as u64),
+    )?;
+    if *report != crate::binding::analyze(input, budget)? {
+        return Err(PortableError::BindingMismatch);
+    }
+    let raw = report.put(schema(registry)?, codec, budget)?;
+    check_bindings(registry, &raw, budget)?;
+    Ok(raw)
+}
+
+/// Untrusted output is not a proof: recompute binding for the supplied input.
+pub fn bindings_from_value<C: FoundationValueCodec>(
+    raw: &NdfValue,
+    input: &crate::check::ValidatedMathShape<'_>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<crate::model::MathBindings, PortableError<C::Error>> {
+    let s = schema(registry)?;
+    check_bindings(registry, raw, budget)?;
+    let report = crate::model::MathBindings::read(raw, s, codec, budget)?;
+    budget.charge(
+        Resource::Work,
+        (report.definitions.len() as u64).saturating_add(report.uses.len() as u64),
+    )?;
+    if report != crate::binding::analyze(input, budget)? {
+        return Err(PortableError::BindingMismatch);
+    }
+    Ok(report)
+}
+
+fn check_bindings<E>(
+    registry: &SchemaRegistry,
+    raw: &NdfValue,
+    budget: &mut Budget,
+) -> Result<(), PortableError<E>> {
+    budget.charge(Resource::AllocationUnits, 22)?;
+    registry.validate(
+        &TypeDescriptor::Named(TypeRef {
+            package: "nepl3.math".into(),
+            revision: 1,
+            name: "MathBindings".into(),
+        }),
+        raw,
+        budget,
+    )?;
+    Ok(())
 }
 impl<E> From<StopReason> for PortableError<E> {
     fn from(v: StopReason) -> Self {
