@@ -224,3 +224,10 @@ has exhausted it. A received receipt is recorded even if time expires afterward,
 and expiration still prevents a successful return. Each Git subprocess has its
 existing bounded timeout; total wall time is not a hard real-time guarantee.
 No public smoke, recovery decision or LKG promotion is inferred from submission.
+
+`submit.execute` connects submission to `wait_remote` using the returned receipt
+head. It subtracts all submission time from the caller's remaining transaction
+budget and caps status waiting at 600 seconds. Unknown or failed submission never
+starts status polling. The resulting head/report contain remotely recorded API
+observations; even Succeeded is not public smoke or LKG promotion. Neither this
+entry nor submit can be retried as a substitute for resuming recorded state.

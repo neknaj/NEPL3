@@ -3,9 +3,12 @@ import unittest
 from dataclasses import replace
 from unittest.mock import patch
 
-from deployment.submit import submit, _submit
+from deployment.submit import submit, _submit, execute, _execute
 from deployment.create import CreationUnknown
-from deployment.journal import latest_created
+from deployment.journal import latest_created, status_history
+from deployment.receipt import observed
+from deployment.transport import Result
+from deployment.poll import Stop
 from journal import Event, load, remote
 from journal.model import decode
 import test_journal_remote
@@ -13,6 +16,41 @@ from test_receipt_journal import RAW
 
 
 class SubmitTests(unittest.TestCase):
+    def test_execute_connects_post_to_remotely_recorded_status(self):
+        with tempfile.TemporaryDirectory() as directory:
+            server, mirror, intent, kwargs = self.setup(directory)
+            def status(receipt, token, **options):
+                self.assertEqual(load(server).events[-1].kind, 'DeployReceipt')
+                raw = b'{ "status": "succeed" }'
+                return Result(observed(raw, receipt=receipt, request_url=receipt.status_endpoint), raw)
+            with patch('deployment.submit.create', return_value=(None, RAW)) as post, \
+                 patch('deployment.transport.status', side_effect=status) as get:
+                head, report = execute(mirror, None, intent, **kwargs)
+            self.assertEqual((post.call_count, get.call_count), (1, 1))
+            self.assertEqual(report.stop, Stop.SUCCEEDED)
+            self.assertEqual(load(server).head, head)
+            self.assertEqual(status_history(server, owner='neknaj', repository='NEPL3').observations,
+                             report.responses)
+
+    def test_execute_passes_remaining_budget_and_never_polls_unknown_creation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            server, mirror, intent, kwargs = self.setup(directory)
+            for budget, elapsed, allowance in [(60, 17, 43), (60, 60, None), (3600, 0, 600)]:
+                with patch('deployment.submit.submit', return_value=('c'*40, None)) as post, \
+                     patch('deployment.journal.wait_remote', return_value='result') as wait:
+                    call = lambda: _execute(mirror, None, intent, **dict(kwargs, remaining_seconds=budget),
+                        clock=iter([0, elapsed]).__next__, submit_attempt=post, wait_attempt=wait)
+                    if allowance is None:
+                        with self.assertRaises(CreationUnknown): call()
+                        wait.assert_not_called()
+                    else:
+                        self.assertEqual(call(), 'result')
+                        self.assertEqual(wait.call_args.kwargs['remaining_seconds'], allowance)
+            with patch('deployment.submit.create', side_effect=CreationUnknown('lost')), \
+                 patch('deployment.journal.wait_remote') as wait:
+                with self.assertRaises(CreationUnknown): execute(mirror, None, intent, **kwargs)
+            wait.assert_not_called()
+
     def setup(self, directory):
         server, (mirror, _) = test_journal_remote.RemoteJournalTests().setup_repositories(directory)
         intent = Event("DeployIntent", "tx1", 23, 1, "a" * 40, "b" * 64)

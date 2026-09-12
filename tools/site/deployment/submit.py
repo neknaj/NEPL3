@@ -12,6 +12,36 @@ from .create import create, validate, CreationUnknown
 from .journal import record_created
 
 
+def execute(mirror, expected_head, intent, *, expected_url, owner, repository,
+            artifact_id, token, oidc_token, remaining_seconds):
+    """Submit once, then await remotely recorded status within the same budget.
+
+    A succeeded status is not public smoke, LKG promotion or proof of the current
+    publication. The caller retains all authorization and reconciliation duties.
+    """
+    from .journal import wait_remote
+    return _execute(mirror, expected_head, intent, expected_url=expected_url,
+                    owner=owner, repository=repository, artifact_id=artifact_id,
+                    token=token, oidc_token=oidc_token, remaining_seconds=remaining_seconds,
+                    clock=time.monotonic, submit_attempt=submit, wait_attempt=wait_remote)
+
+
+def _execute(mirror, expected_head, intent, *, expected_url, owner, repository,
+             artifact_id, token, oidc_token, remaining_seconds, clock,
+             submit_attempt, wait_attempt):
+    checked(type(remaining_seconds) in (int, float) and 0 < remaining_seconds <= 3600,
+            "invalid remaining publication budget")
+    deadline = clock() + remaining_seconds
+    head, _ = submit_attempt(mirror, expected_head, intent, expected_url=expected_url,
+                             owner=owner, repository=repository, artifact_id=artifact_id,
+                             token=token, oidc_token=oidc_token, remaining_seconds=remaining_seconds)
+    remaining = deadline - clock()
+    if remaining <= 0:
+        raise CreationUnknown("publication deadline before polling; reconcile recorded receipt")
+    return wait_attempt(mirror, head, token, expected_url=expected_url, owner=owner,
+                        repository=repository, remaining_seconds=min(600, remaining))
+
+
 def submit(mirror, expected_head, intent, *, expected_url, owner, repository,
            artifact_id, token, oidc_token, remaining_seconds):
     return _submit(mirror, expected_head, intent, expected_url=expected_url,
