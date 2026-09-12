@@ -2,6 +2,17 @@
 
 ## 2026年9月12日の再開（現在）
 
+第11章の正本切替をbranch上で検証した。全12章のMarkdown/HTMLを各2回生成し、
+集合全体のbyte一致と既存11章HTML/CSSの不変を確認した。生成Markdownを読む受入ID
+checkerの修正、非表示HTML継続行の失敗系、13件のtask試験、14件の対象canonical試験、
+全12章のprojection照合、Clippy・repository check、独立レビューを完了した。
+3ブラウザのJS無効表示・旧URLも検査済み。証拠は
+`conformance/results/doc-canonical-conformance/`。最終PRの必須CIと統合はこの記録時点で未完了。
+次は第09章の既存Doc原稿を現行仕様と照合し、準備が整った章から正本へ切り替える。
+完了したworktreeは未保存変更・参照中の資料を保全したうえで撤去し、不要なbuild cacheを残さない。
+
+以下は各停止・訂正時点の経緯であり、現在の未解決状態を表すものではない。
+
 PR101は必須CI16件と独立レビュー後にmainへ統合した。正本は第17章を含む11章となった。
 次の第11章を含む12ページ集合は、Markdown生成がNodeLimitで停止し、成果物を公開していない。
 第11章の36,465byteを加える集合生成には、Markdown Work1B/Nodes40M/Allocation2.5B、

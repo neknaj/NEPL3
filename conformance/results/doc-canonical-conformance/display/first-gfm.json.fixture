@@ -1,0 +1,100 @@
+{
+  "exit": 0,
+  "anchors": [
+    {
+      "tag": "a",
+      "name": "user-content-11-受入条件と検証"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-706f6c696379"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-方針"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-7265717569726564"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-1-必須の試験群"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-70726f70657274696573"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-2-propertyとfuzz"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-6369"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-3-不変条件のci"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-737461676573"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-4-開発の段階"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-65766964656e6365"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-5-群全体の型付き証拠"
+    }
+  ],
+  "list_counts": [
+    2,
+    5,
+    4,
+    5,
+    4,
+    6,
+    6,
+    3,
+    4,
+    8,
+    6,
+    9,
+    4
+  ],
+  "codes": [
+    ">",
+    "]]>",
+    "design/acceptance.json",
+    "cargo fmt --check",
+    "design/tasks.json",
+    "conformance/results/",
+    "task_id",
+    "checks",
+    "commands",
+    "targets",
+    "result",
+    "excluded_acceptance_portions",
+    "interfaces/acceptance-evidence.schema.json",
+    "conformance/results/",
+    "schema",
+    "acceptance_id",
+    "design_revision",
+    "identity",
+    "result",
+    "runs",
+    "nepl3.repository-inputs/1",
+    "kind: command",
+    "kind: review",
+    "conformance/results/",
+    "doc/history/design-validation.json"
+  ],
+  "properties_matching": []
+}

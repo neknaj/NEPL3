@@ -1,0 +1,38 @@
+{
+  "changes": [
+    {
+      "path": "doc/spec/01-architecture.md",
+      "old_sha256": "40a4613c71faffd082c0eb8046253ed32f08afd4ed3e7cd852d81cb007fbc640",
+      "new_sha256": "784ab8d5f93754c653ce2581c532da556ace57765b03886086067167b4f0dd3b"
+    },
+    {
+      "path": "doc/spec/12-model-invariants.md",
+      "old_sha256": "8ba4e274d4086c03372dbef638ef2e13a96991efd37a2a66402ddbb78f3a45a0",
+      "new_sha256": "24b523d62d388d6e2214effccf5c8e4ab9aaafe9109d60b69605909c6b9d8957"
+    },
+    {
+      "path": "doc/spec/17-math-html.md",
+      "old_sha256": "cf222dabae4fc233a28b304aef32e2d7f57a956c0e07f5d91a570ffc4efa8010",
+      "new_sha256": "20b2cb5edfd196f895cf77049c04580c436f6dfbdc8db06e4121d3cd8322b800"
+    },
+    {
+      "path": "doc/spec/11-conformance.md",
+      "old_sha256": "367e270d39ad1f2393bec55ee6c77ebd30a82164205b2a82dfcf78b4c44caf3b",
+      "new_sha256": "db0f085e43ab0aa8c51f85e070e187308f2250ffd376c75f3b6faa0ebde5d864"
+    }
+  ],
+  "prior_eleven_html_and_css_byte_identical": [
+    "docs/spec/00-contract.html",
+    "docs/spec/01-architecture.html",
+    "docs/spec/07-circuit.html",
+    "docs/spec/08-editor.html",
+    "docs/spec/12-model-invariants.html",
+    "docs/spec/13-reproducibility.html",
+    "docs/spec/17-math-html.html",
+    "docs/spec/18-html-delivery.html",
+    "docs/spec/19-html-fragment.html",
+    "docs/spec/20-doc-html.html",
+    "docs/spec/22-external-extensions.html",
+    "docs/spec/assets/doc.css"
+  ]
+}

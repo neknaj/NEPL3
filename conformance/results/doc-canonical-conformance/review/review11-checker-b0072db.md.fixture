@@ -1,0 +1,10 @@
+# Independent acceptance checker review, b0072db
+
+Reviewed the new task/acceptance.rs event walker, owned-set load integration, tests, doc/development contract and properties-alias removal. The original list/escaped-colon regression is addressed, ordinary IDs/entities/duplicate and block exclusions are covered, and alias removal agrees with the unchanged properties automatic heading.
+
+Blocking R11-inline-html: the Event::InlineHtml arm clears line_start but does not retain an exclusion state. The next SoftBreak sets line_start=true while still inside an HTML span. Independent probe compiles the actual source module with the existing pulldown_cmark rlib and finds both inputs accepted as {A01}:
+- intro <span hidden>\nA01: hidden definition\n</span>\n
+- <span hidden>intro\nA01: hidden definition</span>\n
+These are inline HTML, not HtmlBlock: pulldown produces Paragraph, InlineHtml, SoftBreak, Text, InlineHtml events. The result contradicts the documented exclusion of HTML definitions and allows visually hidden text to stand in for an acceptance definition. Preserve exclusion through later lines of the affected paragraph/item or implement a stricter bounded documented rule; do not just clear the four-byte prefix. Add negative multiline-inline-HTML and positive next-paragraph/next-item recovery tests, while retaining legitimate ID-before-HTML-description cases.
+
+Probe source: .tmp/acceptance-review-probe.rs. Existing negative tests only put the ID immediately after the inline tag on the same line, so they miss this case. No tracked edits made by reviewer. Re-review required after root correction.

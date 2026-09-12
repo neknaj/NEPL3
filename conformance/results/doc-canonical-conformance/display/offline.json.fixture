@@ -1,0 +1,50 @@
+[
+  {
+    "lists": 13,
+    "items": 66,
+    "codes": 25,
+    "ruby": 772,
+    "css": [
+      "file:///C:/projects/NEPL3-doc-canonical-conformance/.tmp/html-expanded-first/docs/spec/assets/doc.css"
+    ],
+    "background": "rgb(13, 17, 23)",
+    "overflow": false,
+    "chapter17_target": "17. Doc・MathのHTML\n生成\nせいせい\nと\n数式表示\nすうしきひょうじ",
+    "browser": "chromium",
+    "http_requests": [],
+    "offline_emulation": true,
+    "http_https_aborted": true
+  },
+  {
+    "lists": 13,
+    "items": 66,
+    "codes": 25,
+    "ruby": 772,
+    "css": [
+      "file:///C:/projects/NEPL3-doc-canonical-conformance/.tmp/html-expanded-first/docs/spec/assets/doc.css"
+    ],
+    "background": "rgb(13, 17, 23)",
+    "overflow": false,
+    "chapter17_target": "17. Doc・MathのHTML\n生成\nせいせい\nと\n数式表示\nすうしきひょうじ",
+    "browser": "firefox",
+    "http_requests": [],
+    "offline_emulation": true,
+    "http_https_aborted": true
+  },
+  {
+    "lists": 13,
+    "items": 66,
+    "codes": 25,
+    "ruby": 772,
+    "css": [
+      "file:///C:/projects/NEPL3-doc-canonical-conformance/.tmp/html-expanded-first/docs/spec/assets/doc.css"
+    ],
+    "background": "rgb(13, 17, 23)",
+    "overflow": false,
+    "chapter17_target": "17. Doc・MathのHTML 生成\nせいせい\n と 数式表示\nすうしきひょうじ\n ",
+    "browser": "webkit",
+    "http_requests": [],
+    "offline_emulation": false,
+    "http_https_aborted": true
+  }
+]
