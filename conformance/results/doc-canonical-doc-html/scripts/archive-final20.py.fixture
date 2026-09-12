@@ -1,0 +1,42 @@
+from pathlib import Path
+import hashlib,json,subprocess
+root=Path.cwd(); out=root/'conformance/results/doc-canonical-doc-html'
+out.mkdir(parents=True,exist_ok=True)
+rows=[]; chunks=[]
+def save(owner,p,relative):
+    data=p.read_bytes()
+    if len(data)>1048576:
+        parts=[]
+        for i,start in enumerate(range(0,len(data),524288)):
+            rel=f'{relative}.parts/{i:04d}'
+            name=f'{owner}/{rel}.fixture'; dest=out/name
+            dest.parent.mkdir(parents=True,exist_ok=True); part=data[start:start+524288]; dest.write_bytes(part)
+            rows.append(dict(owner=owner,file=name,restore=rel,bytes=len(part),sha256=hashlib.sha256(part).hexdigest()));parts.append(name)
+        chunks.append(dict(owner=owner,restore=relative,bytes=len(data),sha256=hashlib.sha256(data).hexdigest(),parts=parts));return
+    name=f'{owner}/{relative}.fixture';dest=out/name
+    assert dest.resolve().is_relative_to(out.resolve())
+    dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(data)
+    rows.append(dict(owner=owner,file=name,restore=relative,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+for owner,d in [('generation','resumed-generation'),('checks','resumed-checks'),('html','html-resumed-first'),('markdown','markdown-resumed-first'),('root-browser','browser-canonical20'),('root-github','github-canonical20')]:
+    directory=root/'.tmp'/d
+    for p in sorted(directory.rglob('*')):
+        if p.is_file():save(owner,p,p.relative_to(directory).as_posix())
+for d in ['review-resumed20','review-resumed20-markdown','review-resumed20-display','review-resumed20-final','review-resumed20-bootstrap']:
+    directory=root/'.tmp'/d;manifest=json.loads((directory/'manifest.json').read_text(encoding='utf-8'))
+    entries=manifest['files']
+    if isinstance(entries,dict): entries=[dict(path=k,sha256=v) for k,v in entries.items()]
+    save(d,directory/'manifest.json','manifest.json')
+    for row in entries:
+        p=directory/row['path'];data=p.read_bytes()
+        assert hashlib.sha256(data).hexdigest()==row['sha256']
+        if 'bytes' in row: assert len(data)==row['bytes']
+        save(d,p,row['path'])
+for name in ['resume-generation.py','check-resumed.py','adopt-resumed.py','browser-canonical20.py','github-canonical20.py','archive-final20.py','restore-final20.py']:
+    save('scripts',root/'.tmp'/name,name)
+head='f459596e87dfe28b24954cfad82472626033ea91';sources=[]
+for name in ['doc/canonical.json','doc/spec/20-doc-html.nepld','doc/spec/20-doc-html.md','doc/spec/01-architecture.md','doc/spec/12-model-invariants.md','doc/migration/aliases/20-doc-html.json']:
+    data=(root/name).read_bytes();assert data==subprocess.check_output(['git','show',head+':'+name])
+    sources.append(dict(path=name,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+(out/'payloads.json').write_text(json.dumps(dict(implementation_commit=head,sources=sources,chunked_files=chunks,files=rows),indent=2)+'\n',encoding='utf-8',newline='\n')
+(out/'.gitattributes').write_text('*.fixture -text -whitespace\n',encoding='utf-8',newline='\n')
+print(len(rows),'payloads',sum(r['bytes'] for r in rows),'bytes')

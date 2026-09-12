@@ -1,0 +1,69 @@
+from pathlib import Path
+from urllib.parse import quote
+from playwright.sync_api import sync_playwright
+import subprocess,json
+root=Path(__file__).resolve().parent.parent
+out=root/'.tmp/github-canonical20'
+out.mkdir(exist_ok=True)
+head='f459596e87dfe28b24954cfad82472626033ea91'
+url=f'https://github.com/neknaj/NEPL3/blob/{head}/doc/spec/20-doc-html.md'
+aliases=json.loads((root/'doc/migration/aliases/20-doc-html.json').read_text(encoding='utf-8'))
+fragments=[a['name'] for a in aliases]+['n-'+a['section'].encode().hex() for a in aliases if a['section']]
+expected=(root/'doc/spec/20-doc-html.md').read_text(encoding='utf-8').splitlines()
+def rawlines(value):
+    if isinstance(value,dict):
+        for k,v in value.items():
+            if k=='rawLines' and v==expected:return True
+            if rawlines(v):return True
+    elif isinstance(value,list):
+        return any(rawlines(v) for v in value)
+    return False
+rows=[]
+record=dict(head=head,url=url,rows=rows)
+try:
+    with sync_playwright() as p:
+        browser=p.chromium.launch(headless=True)
+        page=browser.new_page(viewport={'width':1280,'height':1000},reduced_motion='reduce')
+        response=page.goto(url,wait_until='domcontentloaded',timeout=90000)
+        page.locator('article.markdown-body').wait_for(timeout=60000)
+        assert response.status==200
+        (out/'page.html').write_text(page.content(),encoding='utf-8',newline='\n')
+        found=False
+        for text in page.locator('script[type="application/json"]').all_text_contents():
+            try: value=json.loads(text)
+            except ValueError:continue
+            found=found or rawlines(value)
+        assert found, 'server rawLines must match the fixed generated projection'
+        record.update(status=response.status,browser=browser.version,raw_lines_match=True)
+        elements=page.locator('article.markdown-body').evaluate('''a=>[...a.querySelectorAll('[id],[name]')].map(n=>({tag:n.tagName,id:n.id,name:n.getAttribute('name'),text:n.textContent}))''')
+        (out/'elements.json').write_text(json.dumps(elements,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
+        for fragment in fragments:
+            target=page.locator('article.markdown-body').locator('[id="user-content-'+fragment+'"], [name="user-content-'+fragment+'"]')
+            assert target.count()==1,(fragment,target.count())
+            before=None; stable=0
+            for _ in range(100):
+                current=target.evaluate("n=>{const absolute=n.getBoundingClientRect().top+scrollY,max=document.documentElement.scrollHeight-innerHeight;\n                  if (n.getBoundingClientRect().top>=0 && n.getBoundingClientRect().top<1000) scrollTo({top:absolute<max/2?max:0,behavior:'instant'});\n                  return {top:n.getBoundingClientRect().top,scrollY,max};}")
+                outside=current['top']<0 or current['top']>=1000
+                stable=stable+1 if outside and before and abs(current['top']-before['top'])<.1 and abs(current['scrollY']-before['scrollY'])<.1 else 0
+                before=current
+                if stable>=5:break
+                page.wait_for_timeout(100)
+            assert stable>=5 and (before['top']<0 or before['top']>=1000),(fragment,before)
+            page.goto(url+'#'+quote(fragment,safe='-'),wait_until='domcontentloaded')
+            previous=None; stable=0
+            for _ in range(100):
+                current=target.evaluate('n=>({top:n.getBoundingClientRect().top,scrollY,hash:location.hash})')
+                stable=stable+1 if previous and abs(current['scrollY']-previous['scrollY'])<.1 else 0
+                previous=current
+                if stable>=5 and 0<=current['top']<1000:break
+                page.wait_for_timeout(100)
+            assert stable>=5 and 0<=current['top']<1000,(fragment,current)
+            assert abs(before['scrollY']-current['scrollY'])>1
+            rows.append(dict(fragment=fragment,before=before,after=current,stable_samples=stable,result='passed'))
+        page.goto(url,wait_until='domcontentloaded',timeout=90000)
+        page.screenshot(path=str(out/'github.png'))
+        browser.close()
+finally:
+    (out/'results.json').write_text(json.dumps(record,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
+assert len(rows)==5
+print(len(rows),'GitHub anchors passed',flush=True)

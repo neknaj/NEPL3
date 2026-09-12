@@ -1,0 +1,34 @@
+{
+  "commit": "f459596e87dfe28b24954cfad82472626033ea91",
+  "canonical_check": "passed",
+  "old_markdown": "expected AllocationLimit, no output directory",
+  "old_html": "expected WorkLimit, no output directory",
+  "all9597_source_files_restored_exact": true,
+  "binary": {
+    "path": "C:\\projects\\NEPL3-review20\\target\\debug\\nepl3-tools.exe",
+    "sha256": "d04d2619f939f1c5f765a494241a5bdd401dd7245f057140f5c0593910f5b161",
+    "compiled_source_root": "C:\\projects\\NEPL3-review20"
+  },
+  "commands": [
+    {
+      "name": "build",
+      "exit_code": 0,
+      "elapsed_seconds": 52.31748259998858
+    },
+    {
+      "name": "canonical-check",
+      "exit_code": 0,
+      "elapsed_seconds": 82.94277689998853
+    },
+    {
+      "name": "old-limit-markdown",
+      "exit_code": 1,
+      "elapsed_seconds": 77.21552850000444
+    },
+    {
+      "name": "old-limit-html",
+      "exit_code": 1,
+      "elapsed_seconds": 42.19119660000433
+    }
+  ]
+}

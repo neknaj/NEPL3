@@ -1,0 +1,45 @@
+from pathlib import Path
+import hashlib,json,subprocess,re,collections
+root=Path.cwd(); archive=root/'conformance/results/doc-canonical-doc-html'; out=root/'.tmp/review-final20-archive'
+index=json.loads((archive/'payloads.json').read_text(encoding='utf-8'))
+sha=lambda data:hashlib.sha256(data).hexdigest()
+listed=set(); restored={}; secret_hits=[]
+pattern=re.compile(rb'(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{50,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|AKIA[0-9A-Z]{16})')
+for row in index['files']:
+    name=row['file'];assert name not in listed;listed.add(name)
+    path=archive/name;assert path.resolve().is_relative_to(archive.resolve())
+    data=path.read_bytes();assert len(data)==row['bytes'] and sha(data)==row['sha256'],name
+    key=(row['owner'],row['restore']);assert key not in restored;restored[key]=data
+    assert not set(Path(row['restore']).parts)&{'target','node_modules','.git','__pycache__'},name
+    if pattern.search(data):secret_hits.append(name)
+assert not secret_hits,secret_hits
+actual={p.relative_to(archive).as_posix() for p in archive.rglob('*.fixture')}
+assert actual==listed,(actual-listed,listed-actual)
+for row in index['chunked_files']:
+    data=b''.join((archive/name).read_bytes() for name in row['parts'])
+    assert len(data)==row['bytes'] and sha(data)==row['sha256']
+    restored[(row['owner'],row['restore'])]=data
+for row in index['sources']:
+    data=subprocess.check_output(['git','show',index['implementation_commit']+':'+row['path']])
+    assert len(data)==row['bytes'] and sha(data)==row['sha256']
+    assert data==(root/row['path']).read_bytes()
+for owner,directory in [('generation','resumed-generation'),('checks','resumed-checks'),('html','html-resumed-first'),('markdown','markdown-resumed-first'),('root-browser','browser-canonical20'),('root-github','github-canonical20')]:
+    expected={p.relative_to(root/'.tmp'/directory).as_posix():p.read_bytes() for p in (root/'.tmp'/directory).rglob('*') if p.is_file()}
+    seen={name:data for (o,name),data in restored.items() if o==owner and '.parts/' not in name}
+    assert seen==expected,owner
+for owner in ['review-resumed20','review-resumed20-markdown','review-resumed20-display','review-resumed20-final','review-resumed20-bootstrap']:
+    manifest=json.loads(restored[(owner,'manifest.json')]);entries=manifest['files']
+    if isinstance(entries,dict):entries=[dict(path=k,sha256=v) for k,v in entries.items()]
+    expected={'manifest.json'}|{r['path'] for r in entries}
+    seen={name for o,name in restored if o==owner and '.parts/' not in name}
+    assert seen==expected,owner
+    for r in entries: assert sha(restored[(owner,r['path'])])==r['sha256']
+dest=out/'restored-html';assert not dest.exists()
+for (owner,name),data in restored.items():
+    if owner=='html':
+        p=dest/name;assert p.resolve().is_relative_to(dest.resolve());p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data)
+html=list(dest.rglob('*'));files=[p for p in html if p.is_file()];assert len(files)==12
+manifest=json.loads((dest/'manifest.json').read_text(encoding='utf-8'));assert len(manifest['files'])==11
+for r in manifest['files']:assert sha((dest/r['path']).read_bytes())==r['sha256']
+result=dict(passed=True,implementation_commit=index['implementation_commit'],payload_count=len(listed),payload_bytes=sum(r['bytes'] for r in index['files']),chunked_files=len(index['chunked_files']),owners=dict(collections.Counter(r['owner'] for r in index['files'])),source_commit_matches=len(index['sources']),html_files=len(files),html_manifest_payloads=11,compiler_invocations=0,secret_pattern_hits=secret_hits,scope='Archive integrity and compiler-free byte restoration; browser checks inspected separately, not rerun here.')
+(out/'results.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8',newline='\n');print(json.dumps(result,indent=2))

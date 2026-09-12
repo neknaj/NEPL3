@@ -1,0 +1,25 @@
+from pathlib import Path
+import json,hashlib,re,subprocess,sys
+OUT=Path(__file__).parent;ROOT=OUT.parents[1]
+rows=json.loads((OUT/'raw-results.json').read_text(encoding='utf8'))
+headings=re.findall(r'^#{1,3} (.+)$',(OUT/'original20.md').read_text(encoding='utf8'),re.M)
+for row in rows:
+ m=row['measurement']
+ assert m['headings']==headings
+ assert m['ids']==['n-'+b'local_export'.hex(),'n-'+b'baseline'.hex()]
+ assert m['width']==m['viewport']
+p=subprocess.run([sys.executable,str(OUT/'check.py'),'--compare-only'],cwd=ROOT,capture_output=True)
+(OUT/'determinism.log').write_bytes(p.stdout+p.stderr)
+assert p.returncode==0,p.stderr.decode()
+m=json.loads((OUT/'manifest.json').read_text(encoding='utf8'))
+m['determinism']='passed'
+m['visual_review']={'viewed':['chromium-375-opening.png','chromium-1280-baseline.png','firefox-375-local_export.png','webkit-375-baseline.png'],'result':'Readable title, body, readings, code and links; section targets visibly reached; no horizontal document overflow in any measured context. Full-page screenshots also saved for every context.'}
+m['headings']=headings
+github=json.loads((OUT/'github-results.json').read_text(encoding='utf8'))
+assert github['passed'] and github['raw_lines_exact'] and len(github['rows'])==5
+m['github_alias_scope']='Live fixed-commit GitHub rendered Markdown: rawLines exactly match committed generated projection; all three legacy aliases and two semantic anchors unique and navigated from offscreen into viewport in Chromium 1280x900.'
+m['github_commit']=github['head']
+m['reviewed_inputs']={x:hashlib.sha256((ROOT/x).read_bytes()).hexdigest() for x in ['doc/spec/20-doc-html.nepld','doc/migration/aliases/20-doc-html.json','doc/canonical.json','crates/languages/doc/html/assets/doc.css']}
+m['files']={str(p.relative_to(OUT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in OUT.iterdir() if p.is_file() and p.name!='manifest.json'}
+(OUT/'manifest.json').write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+print('PASS: independent display review sealed; full bundles deterministic; heading and ID exactness plus zero horizontal document overflow confirmed')

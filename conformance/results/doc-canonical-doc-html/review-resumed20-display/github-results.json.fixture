@@ -1,0 +1,76 @@
+{
+  "head": "f459596e87dfe28b24954cfad82472626033ea91",
+  "url": "https://github.com/neknaj/NEPL3/blob/f459596e87dfe28b24954cfad82472626033ea91/doc/spec/20-doc-html.md",
+  "projection_sha256": "d1ba121eec5b9facb658b55c03fe8bd88d361ac308ac3503db702c463b3d5529",
+  "rows": [
+    {
+      "fragment": "20-docのhtml変換",
+      "before": {
+        "top": -2204,
+        "scroll": 2590
+      },
+      "after": {
+        "top": 125,
+        "scroll": 261,
+        "hash": "#20-doc%E3%81%AEhtml%E5%A4%89%E6%8F%9B"
+      },
+      "passed": true
+    },
+    {
+      "fragment": "開発hostによるローカル文書の書き出し",
+      "before": {
+        "top": 2036.59375,
+        "scroll": 0
+      },
+      "after": {
+        "top": 124.59375,
+        "scroll": 1912,
+        "hash": "#%E9%96%8B%E7%99%BAhost%E3%81%AB%E3%82%88%E3%82%8B%E3%83%AD%E3%83%BC%E3%82%AB%E3%83%AB%E6%96%87%E6%9B%B8%E3%81%AE%E6%9B%B8%E3%81%8D%E5%87%BA%E3%81%97"
+      },
+      "passed": true
+    },
+    {
+      "fragment": "固定cssのbaselineと対応範囲",
+      "before": {
+        "top": 2650.78125,
+        "scroll": 0
+      },
+      "after": {
+        "top": 124.78125,
+        "scroll": 2526,
+        "hash": "#%E5%9B%BA%E5%AE%9Acss%E3%81%AEbaseline%E3%81%A8%E5%AF%BE%E5%BF%9C%E7%AF%84%E5%9B%B2"
+      },
+      "passed": true
+    },
+    {
+      "fragment": "n-6c6f63616c5f6578706f7274",
+      "before": {
+        "top": 2036.59375,
+        "scroll": 0
+      },
+      "after": {
+        "top": 124.59375,
+        "scroll": 1912,
+        "hash": "#n-6c6f63616c5f6578706f7274"
+      },
+      "passed": true
+    },
+    {
+      "fragment": "n-626173656c696e65",
+      "before": {
+        "top": 2650.78125,
+        "scroll": 0
+      },
+      "after": {
+        "top": 124.78125,
+        "scroll": 2526,
+        "hash": "#n-626173656c696e65"
+      },
+      "passed": true
+    }
+  ],
+  "raw_lines_exact": true,
+  "status": 200,
+  "browser": "151.0.7922.34",
+  "passed": true
+}

@@ -1,0 +1,23 @@
+from pathlib import Path
+import json,hashlib,subprocess
+root=Path.cwd();r=json.loads((root/'doc/canonical.json').read_bytes());changes=[]
+assert len(r['pages'])==10
+for kind,count in [('markdown',11),('html',12)]:
+    def files(phase):
+        d=root/f'.tmp/{kind}-resumed-{phase}'
+        return {p.relative_to(d).as_posix():p.read_bytes() for p in d.rglob('*') if p.is_file()}
+    a,b=files('first'),files('second');assert len(a)==count and a==b
+for p in r['pages']:
+    dest=root/p['projection'];old=dest.read_bytes();new=(root/'.tmp/markdown-resumed-first'/p['projection']).read_bytes()
+    if p['id'] in ['architecture','model-invariants']:
+        assert old.split(b'\n\n',1)[1]==new.split(b'\n\n',1)[1]
+    elif p['id']!='doc-html':assert old==new
+    if old!=new:
+        changes.append(dict(path=p['projection'],old_sha256=hashlib.sha256(old).hexdigest(),new_sha256=hashlib.sha256(new).hexdigest()));dest.write_bytes(new)
+assert len(changes)==3
+prior=Path('C:/projects/NEPL3-doc-canonical-editor/.tmp/html-budget-first');preserved=[]
+for path in prior.rglob('*'):
+    if path.is_file() and path.name!='manifest.json':
+        name=path.relative_to(prior);assert path.read_bytes()==(root/'.tmp/html-resumed-first'/name).read_bytes();preserved.append(name.as_posix())
+assert len(preserved)==10
+(root/'.tmp/resumed-generation/adoption.json').write_text(json.dumps(dict(changes=changes,prior_nine_html_and_css_byte_identical=preserved),indent=2)+'\n',encoding='utf-8',newline='\n')

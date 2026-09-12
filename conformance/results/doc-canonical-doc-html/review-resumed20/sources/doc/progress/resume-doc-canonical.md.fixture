@@ -1,44 +1,5 @@
 # Doc移行の休止・再開地点
 
-## 2026年9月12日の休止準備（現在）
-
-ユーザー指示により、第20章の正本切替を区切りに休止する。
-PR99の対象実装は `f459596e87dfe28b24954cfad82472626033ea91`。
-第20章を含む10章の生成物を採用し、ローカルの14 canonical試験、
-canonical --check、format、Clippy、repository検査は成功した。
-独立した全文・生成物レビュー、JS無効の3ブラウザ表示とGitHubの5 anchor、
-compiler不要の12ファイル復元も確認済み。証拠は
-`conformance/results/doc-canonical-doc-html/` にまとめる。
-exact-headの必須CIと最終監査に合格してからmergeする。
-
-以下の9月9日の「未完了・merge禁止」は当時の記録であり、現在の状態への指示ではない。
-当時の停止や誤ったbinary流用を成功記録へ変更しない。
-T21/T16・Playground・Pages公開・処理系全体の完成は宣言しない。
-
-再開時は最新mainと `doc/canonical.json` を確認し、未移行稿を
-`doc/authoring.md` に従って独立レビュー・実生成・リンク検証後にページ単位で切り替える。
-第11章はRelative linkだけでなく隣接Listの表現も確認する必要がある。
-巨大なreview文書のWorkLimitとsource検査費用は未解決であり、単に上限を増やして
-全体成功としない。Pages公開も未完了である。
-
-別worktree `C:/projects/NEPL3-doc-current-reader-work` の
-`crates/foundation/core/src/budget.rs` と `tools/src/doc/source.rs` の未保存変更は
-本PRへ含めず保全する。休止時のclean確認はmainと本作業branchを対象とする。
-
-## 2026年9月12日の再開
-
-下記は9月9日の休止記録である。再開後にmainを統合し、第20章を含む10章の
-集合生成用予算をMarkdown Work800M/Allocation2B、HTML Work400Mへ調整した。
-Nodes・その他の資源・core/各ページのparse/lower既定値は変更していない。
-同じ入力からMarkdown11ファイル、HTML12ファイルをそれぞれ2回生成し、
-全byte一致を確認した。第20章のprojectionと第01/12章のcontext headerを採用した。
-従来の9文書のHTMLとCSSはbyte一致している。停止の過去記録は成功へ変更しない。
-
-Markdownの実測はWork607,160,055、Allocation1,633,873,615で旧上限をともに超える。
-これはreceipt serialization前の論理使用量であり、実メモリ使用量や最小予算ではない。
-独立した全文・生成内容レビューに加え、実ブラウザ・GitHub anchor・再生成検査・
-必須CIの最終確認を継続する。以下の「未再生成」は休止時点の状態を示す。
-
 ユーザーの2026年9月9日の休止指示により、以下の区切りで停止する。
 処理系全体、T21/T16、Pages公開の完成を意味しない。
 

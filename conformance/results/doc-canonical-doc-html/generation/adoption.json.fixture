@@ -1,0 +1,31 @@
+{
+  "changes": [
+    {
+      "path": "doc/spec/01-architecture.md",
+      "old_sha256": "ce2f1b13c0ad586a18d46ed9592490204f35b901f259619ac714d630469b4175",
+      "new_sha256": "ed1e3e6baaaff7b86cb883efe82631f6da2ff93d20b4d69caf8de6695293b191"
+    },
+    {
+      "path": "doc/spec/12-model-invariants.md",
+      "old_sha256": "e434f569fd1abf3f518fcb11cb0cae5a7a050623ee9098faf8f18314092392da",
+      "new_sha256": "83ae86686ce727c122c390f7dc90dbb7709ceafc4ced3e5caf90f54963ad77a5"
+    },
+    {
+      "path": "doc/spec/20-doc-html.md",
+      "old_sha256": "301e208075a838537f5325c4a7ccbddccace1bb5e3d0877d4d4c9de2d6982a72",
+      "new_sha256": "d1ba121eec5b9facb658b55c03fe8bd88d361ac308ac3503db702c463b3d5529"
+    }
+  ],
+  "prior_nine_html_and_css_byte_identical": [
+    "docs/spec/00-contract.html",
+    "docs/spec/01-architecture.html",
+    "docs/spec/07-circuit.html",
+    "docs/spec/08-editor.html",
+    "docs/spec/12-model-invariants.html",
+    "docs/spec/13-reproducibility.html",
+    "docs/spec/18-html-delivery.html",
+    "docs/spec/19-html-fragment.html",
+    "docs/spec/22-external-extensions.html",
+    "docs/spec/assets/doc.css"
+  ]
+}

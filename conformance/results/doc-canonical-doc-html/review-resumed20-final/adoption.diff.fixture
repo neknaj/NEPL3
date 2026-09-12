@@ -1,0 +1,117 @@
+diff --git a/doc/progress/resume-doc-canonical.md b/doc/progress/resume-doc-canonical.md
+index 0c48dda..b367f4a 100644
+--- a/doc/progress/resume-doc-canonical.md
++++ b/doc/progress/resume-doc-canonical.md
+@@ -1,5 +1,19 @@
+ # Doc移行の休止・再開地点
+ 
++## 2026年9月12日の再開
++
++下記は9月9日の休止記録である。再開後にmainを統合し、第20章を含む10章の
++集合生成用予算をMarkdown Work800M/Allocation2B、HTML Work400Mへ調整した。
++Nodes・その他の資源・core/各ページのparse/lower既定値は変更していない。
++同じ入力からMarkdown11ファイル、HTML12ファイルをそれぞれ2回生成し、
++全byte一致を確認した。第20章のprojectionと第01/12章のcontext headerを採用した。
++従来の9文書のHTMLとCSSはbyte一致している。停止の過去記録は成功へ変更しない。
++
++Markdownの実測はWork607,160,055、Allocation1,633,873,615で旧上限をともに超える。
++これはreceipt serialization前の論理使用量であり、実メモリ使用量や最小予算ではない。
++独立した全文・生成内容レビューに加え、実ブラウザ・GitHub anchor・再生成検査・
++必須CIの最終確認を継続する。以下の「未再生成」は休止時点の状態を示す。
++
+ ユーザーの2026年9月9日の休止指示により、以下の区切りで停止する。
+ 処理系全体、T21/T16、Pages公開の完成を意味しない。
+ 
+diff --git a/doc/spec/01-architecture.md b/doc/spec/01-architecture.md
+index 5438ded..0530976 100644
+--- a/doc/spec/01-architecture.md
++++ b/doc/spec/01-architecture.md
+@@ -1,4 +1,4 @@
+-<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page architecture; source SHA-256 7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 6fc06e6be4d2292a4f9d646035133ace7f2245e6c7f4ee4a1d2edbc8166333fe; input PageSet digest 1fe033103f922bfd695ebafab864c58e92f4d3e3922c3ff2164cef439492da54; input context SHA-256 6451c6ba5b5b2d5afbee98f7071c869b8be4d569505e9d3b092cd19e0b6c21af. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
++<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page architecture; source SHA-256 7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 6fc06e6be4d2292a4f9d646035133ace7f2245e6c7f4ee4a1d2edbc8166333fe; input PageSet digest c7d73dd75feba910ce50d4b302aadf75730b449345302a7aff03809d031ee8f3; input context SHA-256 2b199a8225d451a94db2c2635dd78501e8a28e9f6b12aa7b1d2291d976240e98. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+ 
+ <a name="01-repositorycrate依存方向"></a>
+ 
+diff --git a/doc/spec/12-model-invariants.md b/doc/spec/12-model-invariants.md
+index f405c56..1820899 100644
+--- a/doc/spec/12-model-invariants.md
++++ b/doc/spec/12-model-invariants.md
+@@ -1,4 +1,4 @@
+-<!-- Generated from doc/spec/12&#45;model&#45;invariants.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page model&#45;invariants; source SHA-256 f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8; alias input SHA-256 0d428b3fec7161d2cd0f1b075771d0597505727c39f78e90c835840c638f4c4c; document digest 457cb69d9ed646ceeeaad89f5c9bda75139dc85a0831aa3b5577e562ae39118d; input PageSet digest 1fe033103f922bfd695ebafab864c58e92f4d3e3922c3ff2164cef439492da54; input context SHA-256 6451c6ba5b5b2d5afbee98f7071c869b8be4d569505e9d3b092cd19e0b6c21af. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
++<!-- Generated from doc/spec/12&#45;model&#45;invariants.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page model&#45;invariants; source SHA-256 f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8; alias input SHA-256 0d428b3fec7161d2cd0f1b075771d0597505727c39f78e90c835840c638f4c4c; document digest 457cb69d9ed646ceeeaad89f5c9bda75139dc85a0831aa3b5577e562ae39118d; input PageSet digest c7d73dd75feba910ce50d4b302aadf75730b449345302a7aff03809d031ee8f3; input context SHA-256 2b199a8225d451a94db2c2635dd78501e8a28e9f6b12aa7b1d2291d976240e98. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+ 
+ <a name="12-意味モデル中間表現の補足不変条件"></a>
+ 
+diff --git a/doc/spec/20-doc-html.md b/doc/spec/20-doc-html.md
+index 5f13aef..f9949a5 100644
+--- a/doc/spec/20-doc-html.md
++++ b/doc/spec/20-doc-html.md
+@@ -1,37 +1,49 @@
+-# 20. DocのHTML変換
++<!-- Generated from doc/spec/20&#45;doc&#45;html.nepld; renderer nepl3-tools.markdown-annotated/2; source SHA-256 5d0380d855e620f89140b34e01d0a0f26c20833f4874a655c5fe033523fb861d; alias input SHA-256 a89d4b749408c5f6e9ccc8ed5749c8203bf1a66d788d81725b0d44b7af3c82d5; document digest 238e57cfee192f84fe65ba698a4c909eb0d488ca84db9f3223151aad34e14d49. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+ 
+-`nepl3-doc-html` はDoc coreとmarkupへ依存する純粋backendであり、ファイル・DOM・guest意味処理を実行しない。言語中立の値は `interfaces/doc-html.json` に定義する。現在のlocal入口は、外部要求が一つもないArticleをHTML fragmentへ変換する段階である。一般page/asset/foreign解決、document shellと配布asset、完全なReport操作は引き続きH1以降で実装する。
++<a name="20-docのhtml変換"></a>
+ 
+-`LocalHtmlRequest` はDocumentSyntaxとRenderOptionsを所有する。request codecはDocの構造・source閉包を再検査し、optionsをraw値として復元する。実行準備 `prepare_local` はDocの要求発見とlabel検査を実行する。外部要求があれば完全なplanをNeedsResolutionとして返し、空fragmentへ変えない。この拒否は外部URIの合法性やMath式の意味エラーを判定したものではない。要求がなければoptionsとlocal backend制約を検査し、対象document/optionsを借用する非公開constructorのPreparedLocalArticleを発行する。
++# 20\. DocのHTML変換\[へんかん\]
+ 
+-ParallelModeはRows、Columns、Single(language,fallbacks)のいずれか。Singleの言語タグは共通Lang規則、候補の重複はASCII case-insensitiveで拒否する。各Parallelは指定languageから明示fallback順に一致するvariantを選び、存在しなければMissingVariant。空Sentenceは存在するvariantとして保持する。Rows/Columnsは元順の全variantを表示する。各表示出現のdata-nepl-groupは生成elementの番号から決定し、同じDoc nodeを複数表示しても出現を区別する。
++`nepl3-doc-html` はDoc coreとmarkupへ依存\[いぞん\]する純粋\[じゅんすい\]backendであり、ファイル・DOM・guest意味処理\[いみしょり\]を実行\[じっこう\]しない。言語中立\[げんごちゅうりつ\]の値\[あたい\]は `interfaces/doc-html.json` に定義\[ていぎ\]する。本章\[ほんしょう\]のlocal入口\[いりぐち\]は、外部要求\[がいぶようきゅう\]が一\[ひと\]つもないArticleをHTML fragmentへ変換\[へんかん\]する制約\[せいやく\]を持\[も\]つ。document shellと固定\[こてい\]CSSの配布\[はいふ\]は、後述\[こうじゅつ\]の開発\[かいはつ\]hostが担当\[たんとう\]する。一般\[いっぱん\]page\/asset\/foreign解決\[かいけつ\]と完全\[かんぜん\]なReport操作\[そうさ\]は、このlocal入口\[いりぐち\]の責務\[せきむ\]に含\[ふく\]めず、別\[べつ\]の統合経路\[とうごうけいろ\]で扱\[あつか\]う。
+ 
+-Articleはclass nepl-docと言語を持つarticle、titleはh1。SectionはUTF-8 byteの小文字hexにn-を付けたidと見出しを持ち、sectionの入れ子ごとにlevelを増やす。6を超える見出しはrole=heading/aria-levelのdiv。Anchor/Referenceも同じid写像を使用する。Paragraphはdiv、連続Sentence/Parallelをpへまとめ、子Blockは独立div内へ出し、前後のpを閉じる。子の元順と空白を保持する。
++`LocalHtmlRequest` はDocumentSyntaxとRenderOptionsを所有\[しょゆう\]する。request codecはDocの構造\[こうぞう\]・source閉包\[へいほう\]を再検査\[さいけんさ\]し、optionsをraw値\[ち\]として復元\[ふくげん\]する。実行準備\[じっこうじゅんび\] `prepare_local` は、Docの要求発見\[ようきゅうはっけん\]とlabel検査\[けんさ\]を実行\[じっこう\]する。外部要求\[がいぶようきゅう\]があれば完全\[かんぜん\]なplanをNeedsResolutionとして返\[かえ\]し、空\[から\]fragmentへ変\[か\]えない。この拒否\[きょひ\]は、外部\[がいぶ\]URIの合法性\[ごうほうせい\]やMath式\[しき\]の意味\[いみ\]エラーを判定\[はんてい\]したものではない。要求\[ようきゅう\]がなければoptionsとlocal backend制約\[せいやく\]を検査\[けんさ\]し、対象\[たいしょう\]document\/optionsを借用\[しゃくよう\]する非公開\[ひこうかい\]constructorのPreparedLocalArticleを発行\[はっこう\]する。
+ 
+-Sentence/Concatはspan、Emphasis/Strongはem/strong、明示Breakはbr。Ruby/Annoは型付きspanと固定CSSを使い、base/reading/全noteを別要素として保持する。Tableはheaderのthead、順序付きtbody/trとth/td、列alignmentの固定classを使う。空表は空tableのまま。Listはul/ol、itemはliとBody、明示checkboxは状態を持つ表示spanとする。HTMLのol.start範囲を超えるU64はListStartとして拒否し、丸めない。RawCodeはfigureの任意captionにlanguageHintを保持し、pre/codeには元Textを置く。hintをparser実行要求へ変えない。
++ParallelModeは、Rows、Columns、Single\(language\,fallbacks\)のいずれかとする。Singleの言語\[げんご\]タグは共通\[きょうつう\]Lang規則\[きそく\]に従\[したが\]い、候補\[こうほ\]の重複\[ちょうふく\]はASCII case\-insensitiveで拒否\[きょひ\]する。各\[かく\]Parallelは、指定\[してい\]languageから明示\[めいじ\]fallback順\[じゅん\]に一致\[いっち\]するvariantを選\[えら\]び、存在\[そんざい\]しなければMissingVariantとする。空\[から\]Sentenceは、存在\[そんざい\]するvariantとして保持\[ほじ\]する。Rows\/Columnsは、元順\[もとじゅん\]の全\[ぜん\]variantを表示\[ひょうじ\]する。各表示出現\[かくひょうじしゅつげん\]のdata\-nepl\-groupは生成\[せいせい\]elementの番号\[ばんごう\]から決定\[けってい\]し、同\[おな\]じDoc nodeを複数表示\[ふくすうひょうじ\]しても出現\[しゅつげん\]を区別\[くべつ\]する。
+ 
+-renderはHTML arenaを反復構築し、全生成node・属性・文字列・処理待ち・深さをBudgetへ計上する。全結果を共通markup validatorへ通す。本文/属性のXML不適合やHTML内容不適合は型付きMarkup失敗。これらを削除して成功にしない。出力fragmentの深さは256までとし、超過はOutputDepthとして元Doc nodeを示す。これはbrowser出力profileの限界であり、入力意味モデルを平坦化する規則ではない。文書shellは残りの閲覧側深度を含めて検査し、実browserで再確認する。
++Articleはclass nepl\-docと言語\[げんご\]を持\[も\]つarticle、titleはh1とする。SectionはUTF\-8 byteの小文字\[こもじ\]hexにn\-を付\[つ\]けたidと見出\[みだ\]しを持\[も\]ち、sectionの入\[い\]れ子\[こ\]ごとにlevelを増\[ふ\]やす。6を超\[こ\]える見出\[みだ\]しは、role\=heading\/aria\-levelのdivとする。Anchor\/Referenceも同\[おな\]じid写像\[しゃぞう\]を使用\[しよう\]する。Paragraphはdivとし、連続\[れんぞく\]Sentence\/Parallelをpへまとめ、子\[こ\]Blockは独立\[どくりつ\]div内\[ない\]へ出\[だ\]し、前後\[ぜんご\]のpを閉\[と\]じる。子\[こ\]の元順\[もとじゅん\]と空白\[くうはく\]を保持\[ほじ\]する。
+ 
+-`RenderedFragment` はdocumentDigest、RenderOptions、HtmlRequest、ElementOrigin(element,node)列を保持する。elementは出力arena、nodeは明示Doc arenaの番号で、生成したText/elementごとに一つの原因を出力順で保持する。元DocのSpan/Origin/source表を参照し、架空の生成source位置を作らない。固定stylesheetはcrateのassets/doc.cssであり、HtmlPolicy自己申告やfragment単体をCSS配布済みの証明としない。
++Sentence\/Concatはspan、Emphasis\/Strongはem\/strong、明示\[めいじ\]Breakはbrとする。Ruby\/Annoは型付\[かたつ\]きspanと固定\[こてい\]CSSを使\[つか\]い、base\/reading\/全\[ぜん\]noteを別要素\[べつようそ\]として保持\[ほじ\]する。Tableはheaderのthead、順序付\[じゅんじょつ\]きtbody\/trとth\/td、列\[れつ\]alignmentの固定\[こてい\]classを使\[つか\]う。空表\[くうひょう\]は、空\[から\]tableのままにする。Listはul\/ol、itemはliとBody、明示\[めいじ\]checkboxは状態\[じょうたい\]を持\[も\]つ表示\[ひょうじ\]spanとする。HTMLのol\.start範囲\[はんい\]を超\[こ\]えるU64はListStartとして拒否\[きょひ\]し、丸\[まる\]めない。RawCodeはfigureの任意\[にんい\]captionにlanguageHintを保持\[ほじ\]し、pre\/codeには元\[もと\]Textを置\[お\]く。hintをparser実行要求\[じっこうようきゅう\]へ変\[か\]えない。
+ 
+-portable rendered値はprepared document/optionsを明示して受け取る。schema・markup・32byte digestを検査した後、同じbackendで再生成し、正式値のcanonical CBORに `NEPL3.Doc.Html.Fragment.v1` とゼロbyteを前置したdigestを比較する。改変markup、原因対応の欠落/変更、別document/optionsの結果を、raw受信したproofとして採用しない。これは現在の純粋local変換の再実行比較であり、将来の外部rendererの授権や完全なArtifact検査を代行しない。全体の停止・資源Usageは同じBudgetで単調に保持する。
++renderはHTML arenaを反復構築\[はんぷくこうちく\]し、全生成\[ぜんせいせい\]node・属性\[ぞくせい\]・文字列\[もじれつ\]・処理待\[しょりま\]ち・深\[ふか\]さをBudgetへ計上\[けいじょう\]する。全結果\[ぜんけっか\]を共通\[きょうつう\]markup validatorへ通\[とお\]す。本文\[ほんぶん\]\/属性\[ぞくせい\]のXML不適合\[ふてきごう\]やHTML内容不適合\[ないようふてきごう\]は、型付\[かたつ\]きMarkup失敗\[しっぱい\]とする。これらを削除\[さくじょ\]して成功\[せいこう\]にしない。出力\[しゅつりょく\]fragmentの深\[ふか\]さは256までとし、超過\[ちょうか\]はOutputDepthとして元\[もと\]Doc nodeを示\[しめ\]す。これはbrowser出力\[しゅつりょく\]profileの限界\[げんかい\]であり、入力意味\[にゅうりょくいみ\]モデルを平坦化\[へいたんか\]する規則\[きそく\]ではない。文書\[ぶんしょ\]shellは残\[のこ\]りの閲覧側深度\[えつらんがわしんど\]を含\[ふく\]めて検査\[けんさ\]し、実\[じつ\]browserで再確認\[さいかくにん\]する。
+ 
+-local入口と要求発見だけでT23やT21を完成にはしない。ページの外部リンク・画像・foreign表現を含む正式要求を満たしてから、16章/18章に従って.nepld正本へ切り替える。
++`RenderedFragment` はdocumentDigest、RenderOptions、HtmlRequest、ElementOrigin\(element\,node\)列\[れつ\]を保持\[ほじ\]する。elementは出力\[しゅつりょく\]arena、nodeは明示\[めいじ\]Doc arenaの番号\[ばんごう\]で、生成\[せいせい\]したText\/elementごとに一\[ひと\]つの原因\[げんいん\]を出力順\[しゅつりょくじゅん\]で保持\[ほじ\]する。元\[もと\]DocのSpan\/Origin\/source表\[ひょう\]を参照\[さんしょう\]し、架空\[かくう\]の生成\[せいせい\]source位置\[いち\]を作\[つく\]らない。固定\[こてい\]stylesheetはcrateのassets\/doc\.cssであり、HtmlPolicy自己申告\[じこしんこく\]やfragment単体\[たんたい\]を、CSS配布済\[はいふず\]みの証明\[しょうめい\]としない。
+ 
+-## 開発hostによるローカル文書の書き出し
++portable rendered値\[ち\]は、prepared document\/optionsを明示\[めいじ\]して受\[う\]け取\[と\]る。schema・markup・32byte digestを検査\[けんさ\]した後\[あと\]、同\[おな\]じbackendで再生成\[さいせいせい\]し、正式値\[せいしきち\]のcanonical CBORに `NEPL3.Doc.Html.Fragment.v1` とゼロbyteを前置\[ぜんち\]したdigestを比較\[ひかく\]する。改変\[かいへん\]markup、原因対応\[げんいんたいおう\]の欠落\[けつらく\]・変更\[へんこう\]、別\[べつ\]document\/optionsの結果\[けっか\]を、raw受信\[じゅしん\]したproofとして採用\[さいよう\]しない。これは現在\[げんざい\]の純粋\[じゅんすい\]local変換\[へんかん\]の再実行比較\[さいじっこうひかく\]であり、将来\[しょうらい\]の外部\[がいぶ\]rendererの授権\[じゅけん\]や完全\[かんぜん\]なArtifact検査\[けんさ\]を代行\[だいこう\]しない。全体\[ぜんたい\]の停止\[ていし\]・資源\[しげん\]Usageは、同\[おな\]じBudgetで単調\[たんちょう\]に保持\[ほじ\]する。
+ 
+-`nepl3-tools doc-html export <input.nepld> <new-directory>` は、共通の標準Doc source処理からlocal HTMLを生成し、`document.html`、`assets/doc.css`、`manifest.json` を新しいディレクトリへ書く。既存の出力は上書きしない。入力はUTF-8、読取り上限は10,000,000 bytesとし、上限を超えた内容を解析しない。生成を完了してから出力ディレクトリを作る。I/O途中の失敗では不完全なディレクトリが残り得るため、manifestは最後に書き、失敗を成功にしない。
++local入口\[いりぐち\]と要求発見\[ようきゅうはっけん\]だけで、T23やT21を完成\[かんせい\]にはしない。ページの外部\[がいぶ\]リンク・画像\[がぞう\]・foreign表現\[ひょうげん\]を含\[ふく\]む正式要求\[せいしきようきゅう\]を満\[み\]たしてから、16章\[しょう\]\/18章\[しょう\]に従\[したが\]って\.nepld正本\[せいほん\]へ切\[き\]り替\[か\]える。
+ 
+-この入口は開発用hostであり、検査済みbootstrap fixtureをGrammar compilerへ渡してpackageを構成する。正式CLI、生成package配布、suite、全資源解決の完成とは区別する。source読取り/検査、lower、prepare/render/serializeは、それぞれ明示した独立Budgetを持つ。manifestのUsageはその単位で記録し、文書全体が一つのBudgetで完走した記録へ読み替えない。ファイルI/OとmanifestのJSON整形はhostの責務である。
++<a name="n-6c6f63616c5f6578706f7274"></a>
+ 
+-shellは固定HTMLと検査済みfragmentだけから作り、stylesheetはbackendの同じ固定byte列を配布する。CSPは既定の取得・script・formを禁止し、同じoriginのstylesheetだけを許可する。manifestは入力、Profile、Doc schema、生成HTML/CSSのdigestと表示optionsを保持する。現在の形式はlocal export用の記録であり、17章のKaTeX資源bundleや汎用Artifactの境界検査を代行しない。HTTPの非root pathとJavaScript無効の実browserで生成物を検査する。外部page/asset/foreignが必要な文書はNeedsResolutionのまま拒否し、リンクや埋め込みを落としたHTMLを書き出さない。
++<a name="開発hostによるローカル文書の書き出し"></a>
+ 
+-## 固定CSSのbaselineと対応範囲
++## 開発\[かいはつ\]hostによるローカル文書\[ぶんしょ\]の書\[か\]き出\[だ\]し
+ 
+-Rubyはreadingを第1行、baseを第2行とし、`baseline-source:last`でbase側のbaselineを外へ公開する。Annoはbaseを第1行、notesを第2行とし、`baseline-source:first`を使う。空の先頭行を挟まない。これにより入れ子のbaseも内側要素が公開するbaselineで整列する。明示改行を含むbaseの場合、Rubyは最後の行、Annoは最初の行が整列基準になる。高さを仮定した固定offsetやJavaScriptで合わせない。
++`nepl3-tools doc-html export <input.nepld> <new-directory>` は、共通\[きょうつう\]の標準\[ひょうじゅん\]Doc source処理\[しょり\]からlocal HTMLを生成\[せいせい\]し、`document.html`、`assets/doc.css`、`manifest.json` を新\[あたら\]しいディレクトリへ書\[か\]く。既存\[きそん\]の出力\[しゅつりょく\]は上書\[うわが\]きしない。入力\[にゅうりょく\]はUTF\-8、読取\[よみと\]り上限\[じょうげん\]は10\,000\,000 bytesとし、上限\[じょうげん\]を超\[こ\]えた内容\[ないよう\]を解析\[かいせき\]しない。生成\[せいせい\]を完了\[かんりょう\]してから出力\[しゅつりょく\]ディレクトリを作\[つく\]る。I\/O途中\[とちゅう\]の失敗\[しっぱい\]では不完全\[ふかんぜん\]なディレクトリが残\[のこ\]り得\[う\]るため、manifestは最後\[さいご\]に書\[か\]き、失敗\[しっぱい\]を成功\[せいこう\]にしない。
+ 
+-この指定は [CSS Inline Layoutのbaseline-source](https://drafts.csswg.org/css-inline/#baseline-source) と [Gridのbaseline規則](https://www.w3.org/TR/css-grid-1/#grid-baselines) に基づく。Inline Layoutは草案であり、仕様の存在だけを全browserでの実装証拠にしない。生成文書の対応browserは固定CSSとの実試験で確認する。狭幅時にもRuby/Annoの内部を任意位置で分割せず、max-contentの一つのinline boxとして保持する。長いbase/reading/notesやpre内codeは横にはみ出し得るため、hostの閲覧・印刷profileはその表示と移動手段を別途検証する。
++この入口\[いりぐち\]は開発用\[かいはつよう\]hostであり、検査済\[けんさず\]みbootstrap fixtureをGrammar compilerへ渡\[わた\]してpackageを構成\[こうせい\]する。正式\[せいしき\]CLI、生成\[せいせい\]package配布\[はいふ\]、suite、全資源解決\[ぜんしげんかいけつ\]の完成\[かんせい\]とは区別\[くべつ\]する。source読取\[よみと\]り\/検査\[けんさ\]、lower、prepare\/render\/serializeは、それぞれ明示\[めいじ\]した独立\[どくりつ\]Budgetを持\[も\]つ。manifestのUsageはその単位\[たんい\]で記録\[きろく\]し、文書全体\[ぶんしょぜんたい\]が一\[ひと\]つのBudgetで完走\[かんそう\]した記録\[きろく\]へ読\[よ\]み替\[か\]えない。ファイルI\/OとmanifestのJSON整形\[せいけい\]は、hostの責務\[せきむ\]である。
+ 
+-`baseline-source:first/last`の両方を利用できないbrowserでは、同じspan構造にinline-tableの固定CSSを適用する。readingは上側、notesは下側のtable-captionとし、baseを持つ唯一の行からbaselineを公開する。Rubyのbaseはinline-blockとして最終行のbaselineを、Annoのbaseはtable-cellとして最初の行のbaselineを公開する。DOMの順序や注釈内容を変更せず、HTMLの表要素やJavaScriptを追加しない。この代替はWebKitで基底文字が本文より下がる不具合への対応であり、型付きmarkup・意味正規形は変更しない。
++shellは固定\[こてい\]HTMLと検査済\[けんさず\]みfragmentだけから作\[つく\]り、stylesheetはbackendの同\[おな\]じ固定\[こてい\]byte列\[れつ\]を配布\[はいふ\]する。CSPは既定\[きてい\]の取得\[しゅとく\]・script・formを禁止\[きんし\]し、同\[おな\]じoriginのstylesheetだけを許可\[きょか\]する。manifestは入力\[にゅうりょく\]、Profile、Doc schema、生成\[せいせい\]HTML\/CSSのdigestと表示\[ひょうじ\]optionsを保持\[ほじ\]する。現在\[げんざい\]の形式\[けいしき\]はlocal export用\[よう\]の記録\[きろく\]であり、17章\[しょう\]のKaTeX資源\[しげん\]bundleや汎用\[はんよう\]Artifactの境界検査\[きょうかいけんさ\]を代行\[だいこう\]しない。HTTPの非\[ひ\]root pathとJavaScript無効\[むこう\]の実\[じつ\]browserで、生成物\[せいせいぶつ\]を検査\[けんさ\]する。外部\[がいぶ\]page\/asset\/foreignが必要\[ひつよう\]な文書\[ぶんしょ\]はNeedsResolutionのまま拒否\[きょひ\]し、リンクや埋\[う\]め込\[こ\]みを落\[お\]としたHTMLを書\[か\]き出\[だ\]さない。
+ 
+-代替の根拠は [CSS2のinline-block baseline](https://www.w3.org/TR/CSS2/visudet.html#leading) と [tableのbaseline規則](https://www.w3.org/TR/CSS2/tables.html#height-layout) である。対応propertyの有無だけで合否を決めず、実際のproduction HTMLとCSSをChromium・Firefox・WebKitで表示し、本文とのbaseline、読み・注釈の上下配置、複数行の基準、入れ子と前後行の高さ予約を検査する。文書内のJavaScriptは無効とする。この静的文書の検査はWasm・Playground・支援技術による実操作の受入を代行しない。
++<a name="n-626173656c696e65"></a>
++
++<a name="固定cssのbaselineと対応範囲"></a>
++
++## 固定\[こてい\]CSSのbaselineと対応範囲\[たいおうはんい\]
++
++Rubyはreadingを第\[だい\]1行\[ぎょう\]、baseを第\[だい\]2行\[ぎょう\]とし、`baseline-source:last`でbase側\[がわ\]のbaselineを外\[そと\]へ公開\[こうかい\]する。Annoはbaseを第\[だい\]1行\[ぎょう\]、notesを第\[だい\]2行\[ぎょう\]とし、`baseline-source:first`を使\[つか\]う。空\[から\]の先頭行\[せんとうぎょう\]を挟\[はさ\]まない。これにより、入\[い\]れ子\[こ\]のbaseも内側要素\[うちがわようそ\]が公開\[こうかい\]するbaselineで整列\[せいれつ\]する。明示改行\[めいじかいぎょう\]を含\[ふく\]むbaseの場合\[ばあい\]、Rubyは最後\[さいご\]の行\[ぎょう\]、Annoは最初\[さいしょ\]の行\[ぎょう\]が整列基準\[せいれつきじゅん\]になる。高\[たか\]さを仮定\[かてい\]した固定\[こてい\]offsetやJavaScriptで合\[あ\]わせない。
++
++この指定\[してい\]は [CSS Inline Layoutのbaseline\-source](<https\:\/\/drafts\.csswg\.org\/css\-inline\/\#baseline\-source>) と [Gridのbaseline規則\[きそく\]](<https\:\/\/www\.w3\.org\/TR\/css\-grid\-1\/\#grid\-baselines>) に基\[もと\]づく。Inline Layoutは草案\[そうあん\]であり、仕様\[しよう\]の存在\[そんざい\]だけを全\[ぜん\]browserでの実装証拠\[じっそうしょうこ\]にしない。生成文書\[せいせいぶんしょ\]の対応\[たいおう\]browserは、固定\[こてい\]CSSとの実試験\[じつしけん\]で確認\[かくにん\]する。幅\[はば\]が狭\[せま\]い場合\[ばあい\]にもRuby\/Annoの内部\[ないぶ\]を任意位置\[にんいいち\]で分割\[ぶんかつ\]せず、max\-contentの一\[ひと\]つのinline boxとして保持\[ほじ\]する。長\[なが\]いbase\/reading\/notesやpre内\[ない\]codeは横\[よこ\]にはみ出\[だ\]し得\[う\]るため、hostの閲覧\[えつらん\]・印刷\[いんさつ\]profileは、その表示\[ひょうじ\]と移動手段\[いどうしゅだん\]を別途検証\[べっとけんしょう\]する。
++
++`baseline-source:first/last`の両方\[りょうほう\]を利用\[りよう\]できないbrowserでは、同\[おな\]じspan構造\[こうぞう\]にinline\-tableの固定\[こてい\]CSSを適用\[てきよう\]する。readingは上側\[うえがわ\]、notesは下側\[したがわ\]のtable\-captionとし、baseを持\[も\]つ唯一\[ゆいいつ\]の行\[ぎょう\]からbaselineを公開\[こうかい\]する。Rubyのbaseはinline\-blockとして最終行\[さいしゅうぎょう\]のbaselineを、Annoのbaseはtable\-cellとして最初\[さいしょ\]の行\[ぎょう\]のbaselineを公開\[こうかい\]する。DOMの順序\[じゅんじょ\]や注釈内容\[ちゅうしゃくないよう\]を変更\[へんこう\]せず、HTMLの表要素\[ひょうようそ\]やJavaScriptを追加\[ついか\]しない。この代替\[だいたい\]はWebKitで基底文字\[きていもじ\]が本文\[ほんぶん\]より下\[さ\]がる不具合\[ふぐあい\]への対応\[たいおう\]であり、型付\[かたつ\]きmarkup・意味正規形\[いみせいきけい\]は変更\[へんこう\]しない。
++
++代替\[だいたい\]の根拠\[こんきょ\]は [CSS2のinline\-block baseline](<https\:\/\/www\.w3\.org\/TR\/CSS2\/visudet\.html\#leading>) と [tableのbaseline規則\[きそく\]](<https\:\/\/www\.w3\.org\/TR\/CSS2\/tables\.html\#height\-layout>) である。対応\[たいおう\]propertyの有無\[うむ\]だけで合否\[ごうひ\]を決\[き\]めず、実際\[じっさい\]のproduction HTMLとCSSをChromium・Firefox・WebKitで表示\[ひょうじ\]し、本文\[ほんぶん\]とのbaseline、読\[よ\]み・注釈\[ちゅうしゃく\]の上下配置\[じょうげはいち\]、複数行\[ふくすうぎょう\]の基準\[きじゅん\]、入\[い\]れ子\[こ\]と前後行\[ぜんごぎょう\]の高\[たか\]さ予約\[よやく\]を検査\[けんさ\]する。文書内\[ぶんしょない\]のJavaScriptは無効\[むこう\]とする。この静的文書\[せいてきぶんしょ\]の検査\[けんさ\]はWasm・Playground・支援技術\[しえんぎじゅつ\]による実操作\[じつそうさ\]の受入\[うけいれ\]を代行\[だいこう\]しない。

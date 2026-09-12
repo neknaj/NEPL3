@@ -1,0 +1,906 @@
+{
+  "budget_scope": "Each parse/lower separately bounded; one shared resolve/render/serialize output budget",
+  "execution_identity": "4dd248a9091ea1b5aca1e88082dcbbc9d61a67804a2eca6b83ad742b1ff8bd40",
+  "files": [
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "docs/spec/00-contract.html",
+      "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "docs/spec/01-architecture.html",
+      "sha256": "499aaa1e67781a52c2bc2f3faaa8fc0623b6a8e3c80282eb4a841da597c8936f"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "docs/spec/07-circuit.html",
+      "sha256": "11dedf2469c9c0a2e11c845b1167ffaaa56deeaeea51b76db7a7f484ab43caf5"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "docs/spec/08-editor.html",
+      "sha256": "42b7496ebf4d56eaeb6e59ded50022bf99a676766809459e5b931f25b06e4ff8"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "docs/spec/12-model-invariants.html",
+      "sha256": "904a6dc8d6d7a4cce2d6f99c80654d4caafc75a80e1622a4308df2aeb3afbbdd"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "docs/spec/13-reproducibility.html",
+      "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "docs/spec/18-html-delivery.html",
+      "sha256": "7a2ed0088c71e0766ec304bcc59d2cccffa307a9742a66139eeea99f633b6355"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "docs/spec/19-html-fragment.html",
+      "sha256": "3a5cc5cb6d46262403340997c6ec08ead08362250e5ed90eec6a65993bfa95fc"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "docs/spec/20-doc-html.html",
+      "sha256": "e57ec3c9fec3dc104735c603ad79cf37769945acad818ff69f29a13efcfdb224"
+    },
+    {
+      "license": null,
+      "mime": "text/html; charset=utf-8",
+      "path": "docs/spec/22-external-extensions.html",
+      "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8"
+    },
+    {
+      "license": "MIT",
+      "mime": "text/css; charset=utf-8",
+      "path": "docs/spec/assets/doc.css",
+      "sha256": "f95ac62e6da394ed4324588c749fc670ccc9244d9e54bc8e8a1e0d5046cdee2b"
+    }
+  ],
+  "format": "nepl3.local-doc-pages/1",
+  "identity": "c339b43b2c360ac32e5b28898f2381c555bc1954045a31a2dcc038437c189b12",
+  "options": {
+    "parallel": "Rows"
+  },
+  "output_budget": {
+    "contract": "nepl3.local-doc-pages.execution/1",
+    "initial_usage": {
+      "allocation_units": 0,
+      "depth": 0,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 0,
+      "output_bytes": 0,
+      "source_bytes": 0,
+      "work": 0
+    },
+    "limits": {
+      "allocation_units": 750000000,
+      "depth": 1000,
+      "diagnostics": 1000,
+      "events": 1000,
+      "nodes": 20000000,
+      "output_bytes": 10000000,
+      "source_bytes": 10000000,
+      "work": 400000000
+    },
+    "usage": {
+      "allocation_units": 677108703,
+      "depth": 14,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 12338206,
+      "output_bytes": 708950,
+      "source_bytes": 242864,
+      "work": 319420660
+    }
+  },
+  "output_usage": {
+    "allocation_units": 677108703,
+    "output_bytes": 708950,
+    "work": 319420660
+  },
+  "packages": "compiled checked bootstrap fixtures",
+  "pages": [
+    {
+      "id": "contract",
+      "input": "doc/spec/00-contract.nepld",
+      "lower_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "lower_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "lower_usage": {
+        "allocation_units": 17045934,
+        "depth": 41,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 348082,
+        "output_bytes": 0,
+        "source_bytes": 14766,
+        "work": 4142229
+      },
+      "operation_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "parse_and_validate_usage": {
+        "allocation_units": 66444603,
+        "depth": 44,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 942938,
+        "output_bytes": 183372,
+        "source_bytes": 28792,
+        "work": 8719046
+      },
+      "parse_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "parse_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "profile_sha256": "76e3124196fdaf84bcbb73e889ed34475a9162ec6d824b8d1161adc8cc7bbcba",
+      "route": "docs/spec/00-contract.html",
+      "source": "doc/spec/00-contract.md",
+      "source_sha256": "48c2b1696c7308ee43f26dbf06a6038b38f0199233c1da3ef15a04453f810e93"
+    },
+    {
+      "id": "reproducibility",
+      "input": "doc/spec/13-reproducibility.nepld",
+      "lower_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "lower_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "lower_usage": {
+        "allocation_units": 44709399,
+        "depth": 42,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 930847,
+        "output_bytes": 0,
+        "source_bytes": 33989,
+        "work": 16038429
+      },
+      "operation_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "parse_and_validate_usage": {
+        "allocation_units": 166120534,
+        "depth": 47,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 2516482,
+        "output_bytes": 320322,
+        "source_bytes": 64894,
+        "work": 44170886
+      },
+      "parse_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "parse_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "profile_sha256": "76e3124196fdaf84bcbb73e889ed34475a9162ec6d824b8d1161adc8cc7bbcba",
+      "route": "docs/spec/13-reproducibility.html",
+      "source": "doc/spec/13-reproducibility.md",
+      "source_sha256": "31486ad75e0776d55cc12b2a9b5af2840780ad7812456d9c222a90fd8ab495a8"
+    },
+    {
+      "id": "external-extensions",
+      "input": "doc/spec/22-external-extensions.nepld",
+      "lower_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "lower_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "lower_usage": {
+        "allocation_units": 21030453,
+        "depth": 36,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 438743,
+        "output_bytes": 0,
+        "source_bytes": 15253,
+        "work": 5025812
+      },
+      "operation_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "parse_and_validate_usage": {
+        "allocation_units": 73611958,
+        "depth": 39,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 1177365,
+        "output_bytes": 130469,
+        "source_bytes": 29759,
+        "work": 8354361
+      },
+      "parse_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "parse_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "profile_sha256": "76e3124196fdaf84bcbb73e889ed34475a9162ec6d824b8d1161adc8cc7bbcba",
+      "route": "docs/spec/22-external-extensions.html",
+      "source": "doc/spec/22-external-extensions.md",
+      "source_sha256": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa"
+    },
+    {
+      "id": "architecture",
+      "input": "doc/spec/01-architecture.nepld",
+      "lower_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "lower_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "lower_usage": {
+        "allocation_units": 13588682,
+        "depth": 34,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 262593,
+        "output_bytes": 0,
+        "source_bytes": 18484,
+        "work": 4704080
+      },
+      "operation_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "parse_and_validate_usage": {
+        "allocation_units": 61159412,
+        "depth": 39,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 721339,
+        "output_bytes": 222824,
+        "source_bytes": 33184,
+        "work": 17501972
+      },
+      "parse_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "parse_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "profile_sha256": "76e3124196fdaf84bcbb73e889ed34475a9162ec6d824b8d1161adc8cc7bbcba",
+      "route": "docs/spec/01-architecture.html",
+      "source": "doc/spec/01-architecture.md",
+      "source_sha256": "7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d"
+    },
+    {
+      "id": "html-delivery",
+      "input": "doc/spec/18-html-delivery.nepld",
+      "lower_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "lower_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "lower_usage": {
+        "allocation_units": 18175222,
+        "depth": 27,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 391056,
+        "output_bytes": 0,
+        "source_bytes": 11441,
+        "work": 3719702
+      },
+      "operation_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "parse_and_validate_usage": {
+        "allocation_units": 59740163,
+        "depth": 30,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 1044189,
+        "output_bytes": 65157,
+        "source_bytes": 22771,
+        "work": 4398227
+      },
+      "parse_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "parse_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "profile_sha256": "76e3124196fdaf84bcbb73e889ed34475a9162ec6d824b8d1161adc8cc7bbcba",
+      "route": "docs/spec/18-html-delivery.html",
+      "source": "doc/spec/18-html-delivery.md",
+      "source_sha256": "90c02690b3b98e6c6d305c69750a65678d1ad81c7688042620a77b600babac73"
+    },
+    {
+      "id": "circuit",
+      "input": "doc/spec/07-circuit.nepld",
+      "lower_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "lower_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "lower_usage": {
+        "allocation_units": 23051546,
+        "depth": 35,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 479631,
+        "output_bytes": 0,
+        "source_bytes": 17471,
+        "work": 6733194
+      },
+      "operation_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "parse_and_validate_usage": {
+        "allocation_units": 88714004,
+        "depth": 38,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 1300262,
+        "output_bytes": 212948,
+        "source_bytes": 33930,
+        "work": 15451061
+      },
+      "parse_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "parse_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "profile_sha256": "76e3124196fdaf84bcbb73e889ed34475a9162ec6d824b8d1161adc8cc7bbcba",
+      "route": "docs/spec/07-circuit.html",
+      "source": "doc/spec/07-circuit.md",
+      "source_sha256": "cf169539cb22eb1a7b21fc5c3f15d060975453e7fd72534126f894548c4fbe30"
+    },
+    {
+      "id": "html-fragment",
+      "input": "doc/spec/19-html-fragment.nepld",
+      "lower_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "lower_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "lower_usage": {
+        "allocation_units": 27670107,
+        "depth": 43,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 563862,
+        "output_bytes": 0,
+        "source_bytes": 24130,
+        "work": 8573385
+      },
+      "operation_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "parse_and_validate_usage": {
+        "allocation_units": 107537334,
+        "depth": 48,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 1530254,
+        "output_bytes": 256985,
+        "source_bytes": 45761,
+        "work": 27483975
+      },
+      "parse_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "parse_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "profile_sha256": "76e3124196fdaf84bcbb73e889ed34475a9162ec6d824b8d1161adc8cc7bbcba",
+      "route": "docs/spec/19-html-fragment.html",
+      "source": "doc/spec/19-html-fragment.md",
+      "source_sha256": "373a519dffc1cbbc2bbd2b6334eef8d4490aae6c62798bf26918a5f280bfe083"
+    },
+    {
+      "id": "model-invariants",
+      "input": "doc/spec/12-model-invariants.nepld",
+      "lower_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "lower_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "lower_usage": {
+        "allocation_units": 50069438,
+        "depth": 41,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 1065302,
+        "output_bytes": 0,
+        "source_bytes": 31694,
+        "work": 18125761
+      },
+      "operation_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "parse_and_validate_usage": {
+        "allocation_units": 173443172,
+        "depth": 44,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 2858239,
+        "output_bytes": 252555,
+        "source_bytes": 62137,
+        "work": 26504585
+      },
+      "parse_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "parse_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "profile_sha256": "76e3124196fdaf84bcbb73e889ed34475a9162ec6d824b8d1161adc8cc7bbcba",
+      "route": "docs/spec/12-model-invariants.html",
+      "source": "doc/spec/12-model-invariants.md",
+      "source_sha256": "f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8"
+    },
+    {
+      "id": "editor",
+      "input": "doc/spec/08-editor.nepld",
+      "lower_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "lower_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "lower_usage": {
+        "allocation_units": 85573803,
+        "depth": 49,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 1861295,
+        "output_bytes": 0,
+        "source_bytes": 52604,
+        "work": 35213970
+      },
+      "operation_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "parse_and_validate_usage": {
+        "allocation_units": 282010238,
+        "depth": 52,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 4980045,
+        "output_bytes": 266203,
+        "source_bytes": 103851,
+        "work": 28331768
+      },
+      "parse_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "parse_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "profile_sha256": "76e3124196fdaf84bcbb73e889ed34475a9162ec6d824b8d1161adc8cc7bbcba",
+      "route": "docs/spec/08-editor.html",
+      "source": "doc/spec/08-editor.md",
+      "source_sha256": "d326323331b335da48a044e35a92d2bd89b64bc4fde794131af4ab17ad3f91b6"
+    },
+    {
+      "id": "doc-html",
+      "input": "doc/spec/20-doc-html.nepld",
+      "lower_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "lower_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "lower_usage": {
+        "allocation_units": 27502307,
+        "depth": 40,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 571379,
+        "output_bytes": 0,
+        "source_bytes": 23032,
+        "work": 7603094
+      },
+      "operation_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "parse_and_validate_usage": {
+        "allocation_units": 102046418,
+        "depth": 45,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 1542333,
+        "output_bytes": 214645,
+        "source_bytes": 43947,
+        "work": 16723751
+      },
+      "parse_initial_usage": {
+        "allocation_units": 0,
+        "depth": 0,
+        "diagnostics": 0,
+        "events": 0,
+        "nodes": 0,
+        "output_bytes": 0,
+        "source_bytes": 0,
+        "work": 0
+      },
+      "parse_limits": {
+        "allocation_units": 500000000,
+        "depth": 1000,
+        "diagnostics": 1000,
+        "events": 1000,
+        "nodes": 10000000,
+        "output_bytes": 10000000,
+        "source_bytes": 10000000,
+        "work": 100000000
+      },
+      "profile_sha256": "76e3124196fdaf84bcbb73e889ed34475a9162ec6d824b8d1161adc8cc7bbcba",
+      "route": "docs/spec/20-doc-html.html",
+      "source": "doc/spec/20-doc-html.md",
+      "source_sha256": "5d0380d855e620f89140b34e01d0a0f26c20833f4874a655c5fe033523fb861d"
+    }
+  ],
+  "phase_execution": {
+    "contract": "nepl3.local-doc-pages.phases/1",
+    "identity": "4729613b8f864ae4bf26cdb7518ff0acf00822699549f45e45fff3bd8086d7bb"
+  },
+  "registered_files": [],
+  "renderer": "nepl3-doc-html pages/3",
+  "scope": "Internal Doc page links and checked external http/https/mailto hrefs; no network or destination availability check. Assets and foreign rendering remain unsupported. Not Pages deployment evidence.",
+  "viewer_scripts": false
+}

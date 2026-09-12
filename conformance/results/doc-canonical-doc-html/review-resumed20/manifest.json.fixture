@@ -1,0 +1,80 @@
+{
+  "head": "5dc560ecc2ab20bf3f495597c248ef6730d2c05d",
+  "files": [
+    {
+      "path": "current20.nepld",
+      "bytes": 20915,
+      "sha256": "5d0380d855e620f89140b34e01d0a0f26c20833f4874a655c5fe033523fb861d"
+    },
+    {
+      "path": "original20.md",
+      "bytes": 8879,
+      "sha256": "301e208075a838537f5325c4a7ccbddccace1bb5e3d0877d4d4c9de2d6982a72"
+    },
+    {
+      "path": "paragraphs.json",
+      "bytes": 18522,
+      "sha256": "1c373a80ba1740bff54c0427109198a349fdddb980a0cf5bc01351d7e4b1b596"
+    },
+    {
+      "path": "result.json",
+      "bytes": 1203,
+      "sha256": "38b828f459da7ce9f0544cdfd43fcaca18010ed3aaf138ee27e997ce6cfdf38d"
+    },
+    {
+      "path": "review.md",
+      "bytes": 3323,
+      "sha256": "360a06a426b5babc7d4cc5f39e9ea5177b775600f1fe73dc5d90bf87aa9538b3"
+    },
+    {
+      "path": "ruby-pairs.json",
+      "bytes": 20833,
+      "sha256": "e9f3f63f185381139ed4271a37c0760a912c1ca13fa51f818919fda54d94a705"
+    },
+    {
+      "path": "sources/AGENTS.md",
+      "bytes": 7729,
+      "sha256": "c26941e6dbf896a5e07b7c807789bc1f70bd740e4065092186be42e5ac4baf53"
+    },
+    {
+      "path": "sources/crates/languages/doc/html/src/prepare.rs",
+      "bytes": 4465,
+      "sha256": "1f9a50dd42056b6db7c5f635dde73a9fa33ca575128e9a34d27e5a40189d24c0"
+    },
+    {
+      "path": "sources/doc/authoring.md",
+      "bytes": 6478,
+      "sha256": "0659615a44794990f1c6356a660516e4940f8e8efe272903aff349907deeae08"
+    },
+    {
+      "path": "sources/doc/canonical.json",
+      "bytes": 3569,
+      "sha256": "6f746224a05262f80624b7170660fc79c2345cf78ca3a04ea0a8acdd58cc8db2"
+    },
+    {
+      "path": "sources/doc/migration/aliases/20-doc-html.json",
+      "bytes": 260,
+      "sha256": "a89d4b749408c5f6e9ccc8ed5749c8203bf1a66d788d81725b0d44b7af3c82d5"
+    },
+    {
+      "path": "sources/doc/progress/resume-doc-canonical.md",
+      "bytes": 4181,
+      "sha256": "0af054272b186ce02a523dbb363ff08398f225590fce337893ff5bedb973da6c"
+    },
+    {
+      "path": "sources/tools/src/doc/canonical.rs",
+      "bytes": 9696,
+      "sha256": "9524e5cb8b96059fae0e5c8312f5f9ba257da9cfb9b2e32bdcdb1a6aa0c0a3f1"
+    },
+    {
+      "path": "sources/tools/src/doc/export/pages/resources.rs",
+      "bytes": 5755,
+      "sha256": "69d056386082e90612838ecd8a5f8a9db3fadce41cef1caa0f467a1400f30300"
+    },
+    {
+      "path": "sources/tools/src/doc/export.rs",
+      "bytes": 7958,
+      "sha256": "72c30e2ab38500e4e26c649de1f9a91851186fd32f0f396abf72a8dd15ead48a"
+    }
+  ]
+}

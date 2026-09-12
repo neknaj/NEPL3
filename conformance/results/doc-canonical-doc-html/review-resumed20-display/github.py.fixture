@@ -1,0 +1,51 @@
+from pathlib import Path
+import json,subprocess,hashlib
+from urllib.parse import quote
+from playwright.sync_api import sync_playwright
+OUT=Path(__file__).parent;ROOT=OUT.parents[1]
+head='f459596e87dfe28b24954cfad82472626033ea91'
+source=subprocess.check_output(['git','show',head+':doc/spec/20-doc-html.md'],cwd=ROOT)
+expected=source.decode('utf8').splitlines()
+aliases=json.loads((ROOT/'doc/migration/aliases/20-doc-html.json').read_text(encoding='utf8'))
+fragments=[a['name'] for a in aliases]+['n-'+a['section'].encode().hex() for a in aliases if a['section']]
+url=f'https://github.com/neknaj/NEPL3/blob/{head}/doc/spec/20-doc-html.md'
+record=dict(head=head,url=url,projection_sha256=hashlib.sha256(source).hexdigest(),rows=[])
+def findraw(n):
+ if isinstance(n,dict):
+  if 'rawLines' in n and n['rawLines']==expected:return True
+  return any(findraw(v) for v in n.values())
+ if isinstance(n,list):return any(findraw(v) for v in n)
+ return False
+try:
+ with sync_playwright() as p:
+  browser=p.chromium.launch()
+  page=browser.new_page(viewport={'width':1280,'height':900},reduced_motion='reduce')
+  response=page.goto(url,wait_until='domcontentloaded',timeout=90000)
+  assert response.status==200
+  page.locator('article.markdown-body').wait_for(timeout=60000)
+  (OUT/'github-page.html').write_text(page.content(),encoding='utf8')
+  raw=[json.loads(s) for s in page.locator('script[type="application/json"]').all_text_contents()]
+  assert any(findraw(x) for x in raw)
+  record.update(raw_lines_exact=True,status=200,browser=browser.version)
+  for fragment in fragments:
+   target=page.locator('article.markdown-body').locator('[id="user-content-'+fragment+'"],[name="user-content-'+fragment+'"]')
+   assert target.count()==1,(fragment,target.count())
+   before=target.evaluate('n=>{let y=n.getBoundingClientRect().top+scrollY,max=document.documentElement.scrollHeight-innerHeight;scrollTo({top:y<max/2?max:0,behavior:"instant"});return {top:n.getBoundingClientRect().top,scroll:scrollY}}')
+   assert before['top']<0 or before['top']>=900,before
+   page.goto(url+'#'+quote(fragment,safe='-'),wait_until='domcontentloaded')
+   previous=None;stable=0
+   for attempt in range(100):
+    after=target.evaluate('n=>({top:n.getBoundingClientRect().top,scroll:scrollY,hash:location.hash})')
+    stable=stable+1 if previous and abs(after['scroll']-previous['scroll'])<.1 else 0
+    if stable>=5 and 0<=after['top']<900:break
+    previous=after;page.wait_for_timeout(100)
+   assert stable>=5 and 0<=after['top']<900,(fragment,after)
+   assert abs(before['scroll']-after['scroll'])>1
+   record['rows'].append(dict(fragment=fragment,before=before,after=after,passed=True))
+   page.screenshot(path=str(OUT/f'github-target-{len(record["rows"])}.png'))
+  assert len(record['rows'])==5
+  record['passed']=True
+  browser.close()
+finally:
+ (OUT/'github-results.json').write_text(json.dumps(record,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+print('PASS live fixed-commit GitHub rawLines exact, 3 old aliases + 2 semantic IDs reached from offscreen')

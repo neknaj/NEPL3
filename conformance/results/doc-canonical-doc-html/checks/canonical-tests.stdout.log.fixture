@@ -1,0 +1,20 @@
+
+running 14 tests
+test doc::canonical::tests::canonical_file_access_is_bounded_and_regular ... ok
+test doc::canonical::tests::registered_file_parents_are_rejected_before_staging_any_output ... ok
+test doc::canonical::tests::malformed_html_allowances_fail_before_any_output ... ok
+test doc::canonical::tests::staging_rejects_aggregate_alias_and_page_limits_before_creating_output ... ok
+test doc::canonical::tests::registry_rejects_ambiguous_paths_versions_and_identities ... ok
+test doc::canonical::tests::registration_copy_work_is_admitted_before_its_allocation ... ok
+test doc::canonical::tests::html_uses_canonical_doc_and_never_overwrites_existing_output ... ok
+test doc::canonical::tests::batch_limits_are_selected_before_public_generation_and_recorded ... ok
+test doc::canonical::tests::source_and_projection_changes_are_rejected_without_writing ... ok
+test doc::canonical::tests::mixed_context_preserves_legacy_bytes_and_real_markdown_and_html_links ... ok
+test doc::canonical::tests::html_output_allowance_is_explicit_independent_and_recorded ... ok
+test doc::canonical::tests::grouped_failures_and_sticky_limits_never_publish_partial_outputs ... ok
+test doc::canonical::tests::context_binds_all_raw_inputs_paths_and_registration_order ... ok
+test doc::canonical::tests::real_architecture_draft_links_to_canonical_extensions_with_legacy_bytes_intact has been running for over 60 seconds
+test doc::canonical::tests::real_architecture_draft_links_to_canonical_extensions_with_legacy_bytes_intact ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 68 filtered out; finished in 80.02s
+

@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "pages": [
+    {
+      "id": "contract",
+      "source": "doc/spec/00-contract.nepld",
+      "projection": "doc/spec/00-contract.md",
+      "aliases": "doc/migration/aliases/00-contract.json",
+      "route": "docs/spec/00-contract.html",
+      "renderer": "nepl3-tools.markdown-annotated/2"
+    },
+    {
+      "id": "reproducibility",
+      "source": "doc/spec/13-reproducibility.nepld",
+      "projection": "doc/spec/13-reproducibility.md",
+      "aliases": "doc/migration/aliases/13-reproducibility.json",
+      "route": "docs/spec/13-reproducibility.html",
+      "renderer": "nepl3-tools.markdown-annotated/2"
+    },
+    {
+      "id": "external-extensions",
+      "source": "doc/spec/22-external-extensions.nepld",
+      "projection": "doc/spec/22-external-extensions.md",
+      "aliases": "doc/migration/aliases/22-external-extensions.json",
+      "route": "docs/spec/22-external-extensions.html",
+      "renderer": "nepl3-tools.markdown-annotated/2"
+    },
+    {
+      "id": "architecture",
+      "source": "doc/spec/01-architecture.nepld",
+      "projection": "doc/spec/01-architecture.md",
+      "aliases": "doc/migration/aliases/01-architecture.json",
+      "route": "docs/spec/01-architecture.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/1"
+    },
+    {
+      "id": "html-delivery",
+      "source": "doc/spec/18-html-delivery.nepld",
+      "projection": "doc/spec/18-html-delivery.md",
+      "aliases": "doc/migration/aliases/18-html-delivery.json",
+      "route": "docs/spec/18-html-delivery.html",
+      "renderer": "nepl3-tools.markdown-annotated/2"
+    },
+    {
+      "id": "circuit",
+      "source": "doc/spec/07-circuit.nepld",
+      "projection": "doc/spec/07-circuit.md",
+      "aliases": "doc/migration/aliases/07-circuit.json",
+      "route": "docs/spec/07-circuit.html",
+      "renderer": "nepl3-tools.markdown-annotated/2"
+    },
+    {
+      "id": "html-fragment",
+      "source": "doc/spec/19-html-fragment.nepld",
+      "projection": "doc/spec/19-html-fragment.md",
+      "aliases": "doc/migration/aliases/19-html-fragment.json",
+      "route": "docs/spec/19-html-fragment.html",
+      "renderer": "nepl3-tools.markdown-annotated/2"
+    },
+    {
+      "id": "model-invariants",
+      "source": "doc/spec/12-model-invariants.nepld",
+      "projection": "doc/spec/12-model-invariants.md",
+      "aliases": "doc/migration/aliases/12-model-invariants.json",
+      "route": "docs/spec/12-model-invariants.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/1"
+    },
+    {
+      "id": "editor",
+      "source": "doc/spec/08-editor.nepld",
+      "projection": "doc/spec/08-editor.md",
+      "aliases": "doc/migration/aliases/08-editor.json",
+      "route": "docs/spec/08-editor.html",
+      "renderer": "nepl3-tools.markdown-annotated/2"
+    },
+    {
+      "id": "doc-html",
+      "source": "doc/spec/20-doc-html.nepld",
+      "projection": "doc/spec/20-doc-html.md",
+      "aliases": "doc/migration/aliases/20-doc-html.json",
+      "route": "docs/spec/20-doc-html.html",
+      "renderer": "nepl3-tools.markdown-annotated/2"
+    }
+  ],
+  "output_limits": {
+    "source_bytes": 10000000,
+    "work": 800000000,
+    "depth": 1000,
+    "nodes": 30000000,
+    "allocation_units": 2000000000,
+    "output_bytes": 10000000,
+    "diagnostics": 1000,
+    "events": 1000
+  },
+  "html_output_limits": {
+    "source_bytes": 10000000,
+    "work": 400000000,
+    "depth": 1000,
+    "nodes": 20000000,
+    "allocation_units": 750000000,
+    "output_bytes": 10000000,
+    "diagnostics": 1000,
+    "events": 1000
+  }
+}

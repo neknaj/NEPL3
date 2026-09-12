@@ -1,0 +1,16 @@
+from pathlib import Path
+import subprocess,json,time
+root=Path.cwd();out=root/'.tmp/resumed-checks';out.mkdir(exist_ok=False)
+head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip();rows=[]
+assert not subprocess.check_output(['git','status','--porcelain']).strip()
+cases=[('format',['cargo','fmt','--all','--','--check']),('canonical-tests',['cargo','test','--locked','-p','nepl3-tools','--lib','doc::canonical::tests::','--','--skip','synchronized_context_spec_drafts_parse_lower_and_check_labels']),('canonical',['cargo','run','--locked','-p','nepl3-tools','--','doc-canonical','--check']),('clippy',['cargo','clippy','--workspace','--all-targets','--locked','--','-D','warnings']),('repository',['cargo','run','--locked','-p','nepl3-tools','--','check'])]
+for name,cmd in cases:
+    row=dict(head=head,command=cmd);rows.append(row);start=time.monotonic()
+    with (out/(name+'.stdout.log')).open('wb') as stdout,(out/(name+'.stderr.log')).open('wb') as stderr:
+        result=subprocess.run(cmd,stdout=stdout,stderr=stderr)
+    row.update(exit_code=result.returncode,elapsed_seconds=time.monotonic()-start)
+    (out/'commands.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf-8',newline='\n')
+    print(name,result.returncode,flush=True)
+    if result.returncode:print((out/(name+'.stderr.log')).read_text(encoding='utf-8')[-2000:],flush=True);raise SystemExit(result.returncode)
+    assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==head
+    assert not subprocess.check_output(['git','status','--porcelain']).strip()

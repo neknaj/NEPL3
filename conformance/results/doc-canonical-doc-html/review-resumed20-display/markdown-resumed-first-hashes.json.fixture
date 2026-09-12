@@ -1,0 +1,13 @@
+{
+  "manifest.json": "88c719b63ba392ca59995200b6bdb3f5f037d4439881341854d55301de89322b",
+  "doc\\spec\\00-contract.md": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1",
+  "doc\\spec\\01-architecture.md": "ed1e3e6baaaff7b86cb883efe82631f6da2ff93d20b4d69caf8de6695293b191",
+  "doc\\spec\\07-circuit.md": "e78ef88b70039ef7018516afed788cc092d58a6fe83aee413afbe97527f68c40",
+  "doc\\spec\\08-editor.md": "1c2889b269b99c8be0a281c8bfcda275d38ea421f344fbe4f92a0a5a9c608c2a",
+  "doc\\spec\\12-model-invariants.md": "83ae86686ce727c122c390f7dc90dbb7709ceafc4ced3e5caf90f54963ad77a5",
+  "doc\\spec\\13-reproducibility.md": "454ede4004f0022f8dedb0246ecb227fc36cb57456b9c57fe6614f7a3e512d8e",
+  "doc\\spec\\18-html-delivery.md": "31e0a3af9c56766a737bc5c02a4072662f342a75b7816e7a8aad5da1afd525a5",
+  "doc\\spec\\19-html-fragment.md": "c4e5c48743d327a3b7e7a691151f452c3640deb32656f2097628aa2fa9683768",
+  "doc\\spec\\20-doc-html.md": "d1ba121eec5b9facb658b55c03fe8bd88d361ac308ac3503db702c463b3d5529",
+  "doc\\spec\\22-external-extensions.md": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f"
+}

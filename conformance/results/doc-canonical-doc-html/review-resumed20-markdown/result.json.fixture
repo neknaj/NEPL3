@@ -1,0 +1,111 @@
+{
+  "scope": "Independent first Markdown production result inspection only",
+  "files": [
+    {
+      "path": "doc/spec/00-contract.md",
+      "sha256": "8137b0b9bb992ff8571af00b9764b24e43b5e89cc71978327017d4b67ba019e1",
+      "source_sha256": "48c2b1696c7308ee43f26dbf06a6038b38f0199233c1da3ef15a04453f810e93",
+      "prior_comparison": "identical"
+    },
+    {
+      "path": "doc/spec/13-reproducibility.md",
+      "sha256": "454ede4004f0022f8dedb0246ecb227fc36cb57456b9c57fe6614f7a3e512d8e",
+      "source_sha256": "31486ad75e0776d55cc12b2a9b5af2840780ad7812456d9c222a90fd8ab495a8",
+      "prior_comparison": "identical"
+    },
+    {
+      "path": "doc/spec/22-external-extensions.md",
+      "sha256": "ba0f1d4f9077a5127f9703a4f7209aa04449c269b8922011a40c47df647f726f",
+      "source_sha256": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa",
+      "prior_comparison": "identical"
+    },
+    {
+      "path": "doc/spec/01-architecture.md",
+      "sha256": "ed1e3e6baaaff7b86cb883efe82631f6da2ff93d20b4d69caf8de6695293b191",
+      "source_sha256": "7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d",
+      "prior_comparison": "context-header-only"
+    },
+    {
+      "path": "doc/spec/18-html-delivery.md",
+      "sha256": "31e0a3af9c56766a737bc5c02a4072662f342a75b7816e7a8aad5da1afd525a5",
+      "source_sha256": "90c02690b3b98e6c6d305c69750a65678d1ad81c7688042620a77b600babac73",
+      "prior_comparison": "identical"
+    },
+    {
+      "path": "doc/spec/07-circuit.md",
+      "sha256": "e78ef88b70039ef7018516afed788cc092d58a6fe83aee413afbe97527f68c40",
+      "source_sha256": "cf169539cb22eb1a7b21fc5c3f15d060975453e7fd72534126f894548c4fbe30",
+      "prior_comparison": "identical"
+    },
+    {
+      "path": "doc/spec/19-html-fragment.md",
+      "sha256": "c4e5c48743d327a3b7e7a691151f452c3640deb32656f2097628aa2fa9683768",
+      "source_sha256": "373a519dffc1cbbc2bbd2b6334eef8d4490aae6c62798bf26918a5f280bfe083",
+      "prior_comparison": "identical"
+    },
+    {
+      "path": "doc/spec/12-model-invariants.md",
+      "sha256": "83ae86686ce727c122c390f7dc90dbb7709ceafc4ced3e5caf90f54963ad77a5",
+      "source_sha256": "f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8",
+      "prior_comparison": "context-header-only"
+    },
+    {
+      "path": "doc/spec/08-editor.md",
+      "sha256": "1c2889b269b99c8be0a281c8bfcda275d38ea421f344fbe4f92a0a5a9c608c2a",
+      "source_sha256": "d326323331b335da48a044e35a92d2bd89b64bc4fde794131af4ab17ad3f91b6",
+      "prior_comparison": "identical"
+    },
+    {
+      "path": "doc/spec/20-doc-html.md",
+      "sha256": "d1ba121eec5b9facb658b55c03fe8bd88d361ac308ac3503db702c463b3d5529",
+      "source_sha256": "5d0380d855e620f89140b34e01d0a0f26c20833f4874a655c5fe033523fb861d",
+      "prior_comparison": "new"
+    }
+  ],
+  "input_context_recomputed": "2b199a8225d451a94db2c2635dd78501e8a28e9f6b12aa7b1d2291d976240e98",
+  "pageset_identity": "consistent across two headers; not independently recomputed from typed Doc",
+  "chapter20_base_paragraphs_exact": 16,
+  "chapter20_code_values_exact": 13,
+  "chapter20_links_exact": 4,
+  "anchors": [
+    "20-docのhtml変換",
+    "n-6c6f63616c5f6578706f7274",
+    "開発hostによるローカル文書の書き出し",
+    "n-626173656c696e65",
+    "固定cssのbaselineと対応範囲"
+  ],
+  "budget": {
+    "initial_usage": {
+      "allocation_units": 0,
+      "depth": 0,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 0,
+      "output_bytes": 0,
+      "source_bytes": 0,
+      "work": 0
+    },
+    "limits": {
+      "allocation_units": 2000000000,
+      "depth": 1000,
+      "diagnostics": 1000,
+      "events": 1000,
+      "nodes": 30000000,
+      "output_bytes": 10000000,
+      "source_bytes": 10000000,
+      "work": 800000000
+    },
+    "usage_before_receipt_serialization": {
+      "allocation_units": 1633873615,
+      "depth": 14,
+      "diagnostics": 0,
+      "events": 0,
+      "nodes": 25528591,
+      "output_bytes": 689676,
+      "source_bytes": 242864,
+      "work": 607160055
+    }
+  },
+  "prior_manifest_sha256": "8ffb3ad7b39e600d0833872e52e5804e47e97a1b9aaa4700ff2ef02adbf7d29c",
+  "receipt_sha256": "88c719b63ba392ca59995200b6bdb3f5f037d4439881341854d55301de89322b"
+}

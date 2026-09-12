@@ -1,0 +1,57 @@
+from pathlib import Path
+import json,hashlib,shutil,sys,subprocess,re
+from playwright.sync_api import sync_playwright
+OUT=Path(__file__).parent;ROOT=OUT.parents[1]
+SOURCE=ROOT/'.tmp/html-resumed-first';RESTORED=OUT/'restored-bundle'
+def hashes(root):return {str(p.relative_to(root)).replace('\\','/'):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.rglob('*')) if p.is_file()}
+before=hashes(SOURCE);assert len(before)==12
+manifest=json.loads((SOURCE/'manifest.json').read_text(encoding='utf8'))
+entries={x['path']:x['sha256'] for x in manifest['files']}
+assert len(entries)==11 and set(entries)|{'manifest.json'}==set(before)
+assert all(before[k]==v for k,v in entries.items())
+if not RESTORED.exists():shutil.copytree(SOURCE,RESTORED)
+restored=hashes(RESTORED);assert restored==before
+expected=json.loads((ROOT/'.tmp/review-resumed20-display/expected.json').read_text(encoding='utf8'))
+url=(RESTORED/'docs/spec/20-doc-html.html').as_uri()
+record=dict(passed=False,source=str(SOURCE),restored=str(RESTORED),command=[sys.executable,str(Path(__file__).resolve())],head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),bundle_file_count=12,manifest_listed_files=11,manifest_sha256=before['manifest.json'],hashes=restored,compiler_invocations=0,network='HTTP(S) blocked in every browser; Chromium/Firefox also use offline emulation. WebKit offline emulation failed file navigation, retained as separate evidence.',rows=[])
+measure='''() => {
+ const article=document.querySelector('article');
+ const plain=e=>{const c=e.cloneNode(true);c.querySelectorAll('.nepl-reading,.nepl-notes').forEach(x=>x.remove());return c.textContent};
+ const rubies=[...article.querySelectorAll('.nepl-ruby')];
+ return {paragraphs:[...article.querySelectorAll('.nepl-paragraph')].map(plain),code:[...article.querySelectorAll('code')].map(x=>x.textContent),links:[...article.querySelectorAll('a[href]')].map(x=>x.getAttribute('href')),rubies:rubies.map(x=>[x.querySelector(':scope>.nepl-base').textContent,x.querySelector(':scope>.nepl-reading').textContent]),gaps:rubies.map(x=>x.querySelector(':scope>.nepl-base').getBoundingClientRect().top-x.querySelector(':scope>.nepl-reading').getBoundingClientRect().bottom),background:getComputedStyle(article).backgroundColor,stylesheets:[...document.styleSheets].map(s=>s.href),scripts:document.scripts.length,sections:[...article.querySelectorAll('section')].map(x=>x.id)}
+}'''
+try:
+ with sync_playwright() as p:
+  for engine in ['chromium','firefox','webkit']:
+   browser=getattr(p,engine).launch()
+   offline=engine!='webkit'
+   context=browser.new_context(java_script_enabled=False,offline=offline,viewport={'width':1280,'height':900})
+   context.route(re.compile(r'^https?://'),lambda route:route.abort())
+   page=context.new_page();requests=[];errors=[];page.on('request',lambda r:requests.append(r.url));page.on('pageerror',lambda e:errors.append(str(e)))
+   page.goto(url,wait_until='load');data=page.evaluate(measure)
+   assert data['paragraphs']==expected['paragraphs'] and data['code']==expected['codes'] and data['links']==expected['links']
+   assert data['rubies']==expected['rubies'] and len(data['rubies'])==467
+   assert data['background']=='rgb(13, 17, 23)' and len(data['stylesheets'])==1 and data['scripts']==0
+   assert data['stylesheets'][0]==(RESTORED/'docs/spec/assets/doc.css').as_uri()
+   assert min(data['gaps'])>=-.1 and not errors
+   page.screenshot(path=str(OUT/f'{engine}-opening.png'))
+   moves=[]
+   for section in ['local_export','baseline']:
+    ident='n-'+section.encode().hex();assert ident in data['sections']
+    page.goto(url+'#'+ident,wait_until='load');page.wait_for_timeout(100)
+    move=page.locator('[id="'+ident+'"]').evaluate('n=>({top:n.getBoundingClientRect().top,scroll:scrollY})')
+    assert move['scroll']>0 and -.5<=move['top']<900
+    moves.append(dict(section=section,measurement=move,passed=True))
+    page.screenshot(path=str(OUT/f'{engine}-{section}.png'))
+   # Firefox does not emit request events for these local files. Offline mode,
+   # the file document URL, CSS href and applied style remain explicit evidence.
+   assert all(x.startswith('file:') for x in requests)
+   record['rows'].append(dict(engine=engine,version=browser.version,java_script_enabled=False,playwright_offline_emulation=offline,http_https_blocked=True,requests=requests,page_errors=errors,measurement=data,moves=moves,passed=True))
+   context.close();browser.close()
+ assert hashes(SOURCE)==before and hashes(RESTORED)==before
+ record['passed']=True
+finally:
+ (OUT/'results.json').write_text(json.dumps(record,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+sealed=dict(passed=record['passed'],scope='Compiler-free offline file:// restoration of exact exported HTML/CSS/manifest snapshot; not a rebuild or Wasm/Playground/assistive-technology test.',bundle_file_count=12,manifest_listed_files=11,engines=3,semantic_moves=6,paragraphs=16,inline_code=13,external_url_strings=4,ruby_pairs=467,compiler_invocations=0,files={str(p.relative_to(OUT)).replace('\\','/'):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(OUT.rglob('*')) if p.is_file() and p!=OUT/'manifest.json'})
+(OUT/'manifest.json').write_text(json.dumps(sealed,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
+print('PASS compiler-free offline file restoration: 12 byte-exact files, 3 engines, 6 section moves, all paragraph/code/link/Ruby content preserved')

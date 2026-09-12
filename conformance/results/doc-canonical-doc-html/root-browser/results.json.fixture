@@ -1,0 +1,818 @@
+[
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "20. DocのHTML変換へんかん",
+      "開発かいはつhostによるローカル文書ぶんしょの書かき出だし",
+      "固定こていCSSのbaselineと対応範囲たいおうはんい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3-doc-html",
+      "interfaces/doc-html.json",
+      "LocalHtmlRequest",
+      "prepare_local",
+      "RenderedFragment",
+      "NEPL3.Doc.Html.Fragment.v1",
+      "nepl3-tools doc-html export <input.nepld> <new-directory>",
+      "document.html",
+      "assets/doc.css",
+      "manifest.json",
+      "baseline-source:last",
+      "baseline-source:first",
+      "baseline-source:first/last"
+    ],
+    "links": [
+      "https://drafts.csswg.org/css-inline/#baseline-source",
+      "https://www.w3.org/TR/css-grid-1/#grid-baselines",
+      "https://www.w3.org/TR/CSS2/visudet.html#leading",
+      "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+    ],
+    "codes": [],
+    "ids": [
+      "n-6c6f63616c5f6578706f7274",
+      "n-626173656c696e65"
+    ],
+    "ruby": 467,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 375,
+    "prefix": "html-resumed-first",
+    "navigation": [
+      {
+        "id": "n-6c6f63616c5f6578706f7274",
+        "initial": {
+          "desired": 5119.59375,
+          "start": 0,
+          "max": 8509
+        },
+        "final": 5120
+      },
+      {
+        "id": "n-626173656c696e65",
+        "initial": {
+          "desired": 7048.0625,
+          "start": 0,
+          "max": 8509
+        },
+        "final": 7048
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "20. DocのHTML変換へんかん",
+      "開発かいはつhostによるローカル文書ぶんしょの書かき出だし",
+      "固定こていCSSのbaselineと対応範囲たいおうはんい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3-doc-html",
+      "interfaces/doc-html.json",
+      "LocalHtmlRequest",
+      "prepare_local",
+      "RenderedFragment",
+      "NEPL3.Doc.Html.Fragment.v1",
+      "nepl3-tools doc-html export <input.nepld> <new-directory>",
+      "document.html",
+      "assets/doc.css",
+      "manifest.json",
+      "baseline-source:last",
+      "baseline-source:first",
+      "baseline-source:first/last"
+    ],
+    "links": [
+      "https://drafts.csswg.org/css-inline/#baseline-source",
+      "https://www.w3.org/TR/css-grid-1/#grid-baselines",
+      "https://www.w3.org/TR/CSS2/visudet.html#leading",
+      "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+    ],
+    "codes": [],
+    "ids": [
+      "n-6c6f63616c5f6578706f7274",
+      "n-626173656c696e65"
+    ],
+    "ruby": 467,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 1280,
+    "prefix": "html-resumed-first",
+    "navigation": [
+      {
+        "id": "n-6c6f63616c5f6578706f7274",
+        "initial": {
+          "desired": 1599.515625,
+          "start": 0,
+          "max": 1966
+        },
+        "final": 1600
+      },
+      {
+        "id": "n-626173656c696e65",
+        "initial": {
+          "desired": 1966,
+          "start": 0,
+          "max": 1966
+        },
+        "final": 1966
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "20. DocのHTML変換へんかん",
+      "開発かいはつhostによるローカル文書ぶんしょの書かき出だし",
+      "固定こていCSSのbaselineと対応範囲たいおうはんい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3-doc-html",
+      "interfaces/doc-html.json",
+      "LocalHtmlRequest",
+      "prepare_local",
+      "RenderedFragment",
+      "NEPL3.Doc.Html.Fragment.v1",
+      "nepl3-tools doc-html export <input.nepld> <new-directory>",
+      "document.html",
+      "assets/doc.css",
+      "manifest.json",
+      "baseline-source:last",
+      "baseline-source:first",
+      "baseline-source:first/last"
+    ],
+    "links": [
+      "https://drafts.csswg.org/css-inline/#baseline-source",
+      "https://www.w3.org/TR/css-grid-1/#grid-baselines",
+      "https://www.w3.org/TR/CSS2/visudet.html#leading",
+      "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+    ],
+    "codes": [],
+    "ids": [
+      "n-6c6f63616c5f6578706f7274",
+      "n-626173656c696e65"
+    ],
+    "ruby": 467,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 375,
+    "prefix": "html-resumed-second",
+    "navigation": [
+      {
+        "id": "n-6c6f63616c5f6578706f7274",
+        "initial": {
+          "desired": 5119.59375,
+          "start": 0,
+          "max": 8509
+        },
+        "final": 5120
+      },
+      {
+        "id": "n-626173656c696e65",
+        "initial": {
+          "desired": 7048.0625,
+          "start": 0,
+          "max": 8509
+        },
+        "final": 7048
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "20. DocのHTML変換へんかん",
+      "開発かいはつhostによるローカル文書ぶんしょの書かき出だし",
+      "固定こていCSSのbaselineと対応範囲たいおうはんい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3-doc-html",
+      "interfaces/doc-html.json",
+      "LocalHtmlRequest",
+      "prepare_local",
+      "RenderedFragment",
+      "NEPL3.Doc.Html.Fragment.v1",
+      "nepl3-tools doc-html export <input.nepld> <new-directory>",
+      "document.html",
+      "assets/doc.css",
+      "manifest.json",
+      "baseline-source:last",
+      "baseline-source:first",
+      "baseline-source:first/last"
+    ],
+    "links": [
+      "https://drafts.csswg.org/css-inline/#baseline-source",
+      "https://www.w3.org/TR/css-grid-1/#grid-baselines",
+      "https://www.w3.org/TR/CSS2/visudet.html#leading",
+      "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+    ],
+    "codes": [],
+    "ids": [
+      "n-6c6f63616c5f6578706f7274",
+      "n-626173656c696e65"
+    ],
+    "ruby": 467,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "width": 1280,
+    "prefix": "html-resumed-second",
+    "navigation": [
+      {
+        "id": "n-6c6f63616c5f6578706f7274",
+        "initial": {
+          "desired": 1599.515625,
+          "start": 0,
+          "max": 1966
+        },
+        "final": 1600
+      },
+      {
+        "id": "n-626173656c696e65",
+        "initial": {
+          "desired": 1966,
+          "start": 0,
+          "max": 1966
+        },
+        "final": 1966
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "20. DocのHTML変換へんかん",
+      "開発かいはつhostによるローカル文書ぶんしょの書かき出だし",
+      "固定こていCSSのbaselineと対応範囲たいおうはんい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3-doc-html",
+      "interfaces/doc-html.json",
+      "LocalHtmlRequest",
+      "prepare_local",
+      "RenderedFragment",
+      "NEPL3.Doc.Html.Fragment.v1",
+      "nepl3-tools doc-html export <input.nepld> <new-directory>",
+      "document.html",
+      "assets/doc.css",
+      "manifest.json",
+      "baseline-source:last",
+      "baseline-source:first",
+      "baseline-source:first/last"
+    ],
+    "links": [
+      "https://drafts.csswg.org/css-inline/#baseline-source",
+      "https://www.w3.org/TR/css-grid-1/#grid-baselines",
+      "https://www.w3.org/TR/CSS2/visudet.html#leading",
+      "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+    ],
+    "codes": [],
+    "ids": [
+      "n-6c6f63616c5f6578706f7274",
+      "n-626173656c696e65"
+    ],
+    "ruby": 467,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 375,
+    "prefix": "html-resumed-first",
+    "navigation": [
+      {
+        "id": "n-6c6f63616c5f6578706f7274",
+        "initial": {
+          "desired": 5048.0166015625,
+          "start": 0,
+          "max": 8418
+        },
+        "final": 5048.0166015625
+      },
+      {
+        "id": "n-626173656c696e65",
+        "initial": {
+          "desired": 6952.4501953125,
+          "start": 0,
+          "max": 8418
+        },
+        "final": 6952.4501953125
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "20. DocのHTML変換へんかん",
+      "開発かいはつhostによるローカル文書ぶんしょの書かき出だし",
+      "固定こていCSSのbaselineと対応範囲たいおうはんい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3-doc-html",
+      "interfaces/doc-html.json",
+      "LocalHtmlRequest",
+      "prepare_local",
+      "RenderedFragment",
+      "NEPL3.Doc.Html.Fragment.v1",
+      "nepl3-tools doc-html export <input.nepld> <new-directory>",
+      "document.html",
+      "assets/doc.css",
+      "manifest.json",
+      "baseline-source:last",
+      "baseline-source:first",
+      "baseline-source:first/last"
+    ],
+    "links": [
+      "https://drafts.csswg.org/css-inline/#baseline-source",
+      "https://www.w3.org/TR/css-grid-1/#grid-baselines",
+      "https://www.w3.org/TR/CSS2/visudet.html#leading",
+      "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+    ],
+    "codes": [],
+    "ids": [
+      "n-6c6f63616c5f6578706f7274",
+      "n-626173656c696e65"
+    ],
+    "ruby": 467,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 1280,
+    "prefix": "html-resumed-first",
+    "navigation": [
+      {
+        "id": "n-6c6f63616c5f6578706f7274",
+        "initial": {
+          "desired": 1605.1666259765625,
+          "start": 0,
+          "max": 2006
+        },
+        "final": 1605
+      },
+      {
+        "id": "n-626173656c696e65",
+        "initial": {
+          "desired": 2006,
+          "start": 0,
+          "max": 2006
+        },
+        "final": 2006
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "20. DocのHTML変換へんかん",
+      "開発かいはつhostによるローカル文書ぶんしょの書かき出だし",
+      "固定こていCSSのbaselineと対応範囲たいおうはんい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3-doc-html",
+      "interfaces/doc-html.json",
+      "LocalHtmlRequest",
+      "prepare_local",
+      "RenderedFragment",
+      "NEPL3.Doc.Html.Fragment.v1",
+      "nepl3-tools doc-html export <input.nepld> <new-directory>",
+      "document.html",
+      "assets/doc.css",
+      "manifest.json",
+      "baseline-source:last",
+      "baseline-source:first",
+      "baseline-source:first/last"
+    ],
+    "links": [
+      "https://drafts.csswg.org/css-inline/#baseline-source",
+      "https://www.w3.org/TR/css-grid-1/#grid-baselines",
+      "https://www.w3.org/TR/CSS2/visudet.html#leading",
+      "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+    ],
+    "codes": [],
+    "ids": [
+      "n-6c6f63616c5f6578706f7274",
+      "n-626173656c696e65"
+    ],
+    "ruby": 467,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 375,
+    "prefix": "html-resumed-second",
+    "navigation": [
+      {
+        "id": "n-6c6f63616c5f6578706f7274",
+        "initial": {
+          "desired": 5048.0166015625,
+          "start": 0,
+          "max": 8418
+        },
+        "final": 5048.0166015625
+      },
+      {
+        "id": "n-626173656c696e65",
+        "initial": {
+          "desired": 6952.4501953125,
+          "start": 0,
+          "max": 8418
+        },
+        "final": 6952.4501953125
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "20. DocのHTML変換へんかん",
+      "開発かいはつhostによるローカル文書ぶんしょの書かき出だし",
+      "固定こていCSSのbaselineと対応範囲たいおうはんい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3-doc-html",
+      "interfaces/doc-html.json",
+      "LocalHtmlRequest",
+      "prepare_local",
+      "RenderedFragment",
+      "NEPL3.Doc.Html.Fragment.v1",
+      "nepl3-tools doc-html export <input.nepld> <new-directory>",
+      "document.html",
+      "assets/doc.css",
+      "manifest.json",
+      "baseline-source:last",
+      "baseline-source:first",
+      "baseline-source:first/last"
+    ],
+    "links": [
+      "https://drafts.csswg.org/css-inline/#baseline-source",
+      "https://www.w3.org/TR/css-grid-1/#grid-baselines",
+      "https://www.w3.org/TR/CSS2/visudet.html#leading",
+      "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+    ],
+    "codes": [],
+    "ids": [
+      "n-6c6f63616c5f6578706f7274",
+      "n-626173656c696e65"
+    ],
+    "ruby": 467,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "firefox",
+    "version": "153.0",
+    "width": 1280,
+    "prefix": "html-resumed-second",
+    "navigation": [
+      {
+        "id": "n-6c6f63616c5f6578706f7274",
+        "initial": {
+          "desired": 1605.1666259765625,
+          "start": 0,
+          "max": 2006
+        },
+        "final": 1605
+      },
+      {
+        "id": "n-626173656c696e65",
+        "initial": {
+          "desired": 2006,
+          "start": 0,
+          "max": 2006
+        },
+        "final": 2006
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "20. DocのHTML変換へんかん",
+      "開発かいはつhostによるローカル文書ぶんしょの書かき出だし",
+      "固定こていCSSのbaselineと対応範囲たいおうはんい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3-doc-html",
+      "interfaces/doc-html.json",
+      "LocalHtmlRequest",
+      "prepare_local",
+      "RenderedFragment",
+      "NEPL3.Doc.Html.Fragment.v1",
+      "nepl3-tools doc-html export <input.nepld> <new-directory>",
+      "document.html",
+      "assets/doc.css",
+      "manifest.json",
+      "baseline-source:last",
+      "baseline-source:first",
+      "baseline-source:first/last"
+    ],
+    "links": [
+      "https://drafts.csswg.org/css-inline/#baseline-source",
+      "https://www.w3.org/TR/css-grid-1/#grid-baselines",
+      "https://www.w3.org/TR/CSS2/visudet.html#leading",
+      "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+    ],
+    "codes": [],
+    "ids": [
+      "n-6c6f63616c5f6578706f7274",
+      "n-626173656c696e65"
+    ],
+    "ruby": 467,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 375,
+    "prefix": "html-resumed-first",
+    "navigation": [
+      {
+        "id": "n-6c6f63616c5f6578706f7274",
+        "initial": {
+          "desired": 4438.171875,
+          "start": 0,
+          "max": 7338
+        },
+        "final": 4438
+      },
+      {
+        "id": "n-626173656c696e65",
+        "initial": {
+          "desired": 6124.734375,
+          "start": 0,
+          "max": 7338
+        },
+        "final": 6125
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "20. DocのHTML変換へんかん",
+      "開発かいはつhostによるローカル文書ぶんしょの書かき出だし",
+      "固定こていCSSのbaselineと対応範囲たいおうはんい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3-doc-html",
+      "interfaces/doc-html.json",
+      "LocalHtmlRequest",
+      "prepare_local",
+      "RenderedFragment",
+      "NEPL3.Doc.Html.Fragment.v1",
+      "nepl3-tools doc-html export <input.nepld> <new-directory>",
+      "document.html",
+      "assets/doc.css",
+      "manifest.json",
+      "baseline-source:last",
+      "baseline-source:first",
+      "baseline-source:first/last"
+    ],
+    "links": [
+      "https://drafts.csswg.org/css-inline/#baseline-source",
+      "https://www.w3.org/TR/css-grid-1/#grid-baselines",
+      "https://www.w3.org/TR/CSS2/visudet.html#leading",
+      "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+    ],
+    "codes": [],
+    "ids": [
+      "n-6c6f63616c5f6578706f7274",
+      "n-626173656c696e65"
+    ],
+    "ruby": 467,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 1280,
+    "prefix": "html-resumed-first",
+    "navigation": [
+      {
+        "id": "n-6c6f63616c5f6578706f7274",
+        "initial": {
+          "desired": 1351.921875,
+          "start": 0,
+          "max": 1672
+        },
+        "final": 1352
+      },
+      {
+        "id": "n-626173656c696e65",
+        "initial": {
+          "desired": 1672,
+          "start": 0,
+          "max": 1672
+        },
+        "final": 1672
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "20. DocのHTML変換へんかん",
+      "開発かいはつhostによるローカル文書ぶんしょの書かき出だし",
+      "固定こていCSSのbaselineと対応範囲たいおうはんい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3-doc-html",
+      "interfaces/doc-html.json",
+      "LocalHtmlRequest",
+      "prepare_local",
+      "RenderedFragment",
+      "NEPL3.Doc.Html.Fragment.v1",
+      "nepl3-tools doc-html export <input.nepld> <new-directory>",
+      "document.html",
+      "assets/doc.css",
+      "manifest.json",
+      "baseline-source:last",
+      "baseline-source:first",
+      "baseline-source:first/last"
+    ],
+    "links": [
+      "https://drafts.csswg.org/css-inline/#baseline-source",
+      "https://www.w3.org/TR/css-grid-1/#grid-baselines",
+      "https://www.w3.org/TR/CSS2/visudet.html#leading",
+      "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+    ],
+    "codes": [],
+    "ids": [
+      "n-6c6f63616c5f6578706f7274",
+      "n-626173656c696e65"
+    ],
+    "ruby": 467,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 375,
+    "prefix": "html-resumed-second",
+    "navigation": [
+      {
+        "id": "n-6c6f63616c5f6578706f7274",
+        "initial": {
+          "desired": 4438.171875,
+          "start": 0,
+          "max": 7338
+        },
+        "final": 4438
+      },
+      {
+        "id": "n-626173656c696e65",
+        "initial": {
+          "desired": 6124.734375,
+          "start": 0,
+          "max": 7338
+        },
+        "final": 6125
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  },
+  {
+    "scripts": 0,
+    "lang": "ja",
+    "headings": [
+      "20. DocのHTML変換へんかん",
+      "開発かいはつhostによるローカル文書ぶんしょの書かき出だし",
+      "固定こていCSSのbaselineと対応範囲たいおうはんい"
+    ],
+    "lists": [],
+    "inlineCodes": [
+      "nepl3-doc-html",
+      "interfaces/doc-html.json",
+      "LocalHtmlRequest",
+      "prepare_local",
+      "RenderedFragment",
+      "NEPL3.Doc.Html.Fragment.v1",
+      "nepl3-tools doc-html export <input.nepld> <new-directory>",
+      "document.html",
+      "assets/doc.css",
+      "manifest.json",
+      "baseline-source:last",
+      "baseline-source:first",
+      "baseline-source:first/last"
+    ],
+    "links": [
+      "https://drafts.csswg.org/css-inline/#baseline-source",
+      "https://www.w3.org/TR/css-grid-1/#grid-baselines",
+      "https://www.w3.org/TR/CSS2/visudet.html#leading",
+      "https://www.w3.org/TR/CSS2/tables.html#height-layout"
+    ],
+    "codes": [],
+    "ids": [
+      "n-6c6f63616c5f6578706f7274",
+      "n-626173656c696e65"
+    ],
+    "ruby": 467,
+    "tables": [],
+    "styles": [
+      29
+    ],
+    "overflow": 0,
+    "browser": "webkit",
+    "version": "26.5",
+    "width": 1280,
+    "prefix": "html-resumed-second",
+    "navigation": [
+      {
+        "id": "n-6c6f63616c5f6578706f7274",
+        "initial": {
+          "desired": 1351.921875,
+          "start": 0,
+          "max": 1672
+        },
+        "final": 1352
+      },
+      {
+        "id": "n-626173656c696e65",
+        "initial": {
+          "desired": 1672,
+          "start": 0,
+          "max": 1672
+        },
+        "final": 1672
+      }
+    ],
+    "failed_requests": [],
+    "result": "passed"
+  }
+]

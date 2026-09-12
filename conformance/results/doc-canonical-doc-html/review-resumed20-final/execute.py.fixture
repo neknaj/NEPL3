@@ -1,0 +1,32 @@
+from pathlib import Path
+import subprocess,json,time,hashlib,os
+OUT=Path(__file__).resolve().parent;SRC=Path('C:/projects/NEPL3-review20');records=[]
+def digest(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def save(): (OUT/'commands.json').write_text(json.dumps(records,indent=2)+'\n',encoding='utf8')
+def run(name,cmd,timeout,expected):
+ start=time.monotonic()
+ with (OUT/(name+'.stdout.log')).open('wb') as stdout,(OUT/(name+'.stderr.log')).open('wb') as stderr:
+  p=subprocess.Popen(cmd,cwd=SRC,stdout=stdout,stderr=stderr,creationflags=subprocess.CREATE_NO_WINDOW)
+  row=dict(name=name,command=cmd,cwd=str(SRC),pid=p.pid,timeout_seconds=timeout,started_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),registry_sha256=digest(SRC/'doc/canonical.json'),source_commit='f459596e87dfe28b24954cfad82472626033ea91');records.append(row);save()
+  try:code=p.wait(timeout=timeout)
+  except subprocess.TimeoutExpired:
+   row['timed_out']=True
+   subprocess.run(['taskkill','/PID',str(p.pid),'/T','/F'],stdout=subprocess.PIPE,stderr=subprocess.PIPE,creationflags=subprocess.CREATE_NO_WINDOW,timeout=30)
+   code=p.wait(timeout=30)
+  row.update(exit_code=code,elapsed_seconds=time.monotonic()-start);save()
+  if row.get('timed_out') or (expected=='success' and code!=0) or (expected=='refusal' and code==0):raise RuntimeError(name+' unexpected status')
+ print(name,code,round(row['elapsed_seconds'],2),flush=True)
+run('build',['cargo','build','--locked','-p','nepl3-tools','-j','2'],1200,'success')
+bin=SRC/'target/debug/nepl3-tools.exe';(OUT/'binary.json').write_text(json.dumps({'path':str(bin),'sha256':digest(bin),'compiled_source_root':str(SRC)},indent=2)+'\n',encoding='utf8')
+run('canonical-check',[str(bin),'doc-canonical','--check'],900,'success')
+registry=SRC/'doc/canonical.json';original=registry.read_bytes()
+try:
+ registry.write_bytes((OUT/'old-canonical.json').read_bytes())
+ for mode,reason in [('markdown','AllocationLimit'),('html','WorkLimit')]:
+  target=SRC/('old-limit-'+mode);assert not target.exists()
+  run('old-limit-'+mode,[str(bin),'doc-canonical',mode,str(target)],900,'refusal')
+  error=(OUT/('old-limit-'+mode+'.stderr.log')).read_text(encoding='utf8');assert reason in error,error;assert not target.exists()
+finally:
+ registry.write_bytes(original)
+ assert registry.read_bytes()==original
+ print('Registry restored to fixedHEAD bytes',flush=True)
