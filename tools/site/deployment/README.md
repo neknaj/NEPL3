@@ -104,3 +104,18 @@ an unacknowledged API request or select a current publication. Those remain
 publisher responsibilities. Tests use real temporary bare Git repositories;
 no live remote or Pages write is performed.
 Run `python -m unittest discover -s tools/site -p test_receipt_journal.py`.
+
+`record_status` appends a validated original status response following that
+receipt (or its pending observations), preserving all intent identity fields.
+`status_history` locates the preceding creation receipt and revalidates every
+following Observation, its exact request endpoint and original response. The
+status evidence is exactly version 1, `request_url`, and base64 `response`.
+Journal envelope bounds and CAS apply to each write. The bridge accepts more
+observations only after Pending; success, failure or unknown status ends this
+sequence and requires a separate publisher transition/reconciliation. Reload
+also rejects a forged sequence added through the generic storage API.
+
+A status history is an ordered set of API observations, not public identity,
+smoke success or LKG proof. This bridge does not infer real-time ordering beyond
+the journal order, nor authenticate raw responses supplied by callers: the
+bounded transport and publisher must attribute the actual requests.

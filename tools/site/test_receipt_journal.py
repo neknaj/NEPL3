@@ -5,7 +5,7 @@ import tempfile
 import unittest
 
 from journal import Event, append, load
-from deployment.journal import record_created, latest_created
+from deployment.journal import record_created, latest_created, record_status, status_history
 
 RAW = b'{ "id":"123", "status_url":"https://api.github.com/repos/neknaj/NEPL3/pages/deployments/123/status" }'
 
@@ -63,3 +63,37 @@ class ReceiptJournalTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "evidence limit"):
                 record_created(repo, head, intent, raw, owner="neknaj", repository="NEPL3")
             self.assertEqual(load(repo).head, head)
+
+    def test_status_history_reloads_original_bytes_and_rejects_late_observation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory) / "journal.git"
+            subprocess.run(["git", "init", "--bare", "--quiet", str(repo)], check=True)
+            intent = Event("DeployIntent", "tx1", 23, 1, "a" * 40, "b" * 64)
+            head = append(repo, None, intent, b'{}')
+            head, receipt = record_created(repo, head, intent, RAW, owner="neknaj", repository="NEPL3")
+            for status in [b'{"status":"deployment_queued"}', b'{ "status":"succeed" }']:
+                head, result = record_status(repo, head, status, owner="neknaj", repository="NEPL3", request_url=receipt.status_endpoint)
+            history = status_history(repo, owner="neknaj", repository="NEPL3")
+            self.assertEqual(history.creation_response, RAW)
+            self.assertEqual(history.observations[-1].raw_response, b'{ "status":"succeed" }')
+            self.assertEqual(len(history.observations), 2)
+            with self.assertRaises(ValueError):
+                record_status(repo, head, b'{"status":"succeed"}', owner="neknaj", repository="NEPL3", request_url=receipt.status_endpoint)
+            self.assertEqual(load(repo).head, head)
+
+    def test_status_request_mismatch_and_forged_storage_observation_rejected(self):
+        from journal.model import encode
+        import base64
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory) / "journal.git"
+            subprocess.run(["git", "init", "--bare", "--quiet", str(repo)], check=True)
+            intent = Event("DeployIntent", "tx1", 23, 1, "a" * 40, "b" * 64)
+            head = append(repo, None, intent, b'{}')
+            head, receipt = record_created(repo, head, intent, RAW, owner="neknaj", repository="NEPL3")
+            wrong = receipt.status_endpoint + "-other"
+            with self.assertRaises(ValueError):
+                record_status(repo, head, b'{"status":"succeed"}', owner="neknaj", repository="NEPL3", request_url=wrong)
+            self.assertEqual(load(repo).head, head)
+            proof = encode(dict(version=1, request_url=wrong, response=base64.b64encode(b'{"status":"succeed"}').decode()))
+            append(repo, head, replace(intent, kind="Observation"), proof)
+            with self.assertRaises(ValueError): status_history(repo, owner="neknaj", repository="NEPL3")
