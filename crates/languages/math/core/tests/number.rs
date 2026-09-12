@@ -88,3 +88,113 @@ fn arithmetic_stops_before_big_integer_work_and_retains_operands() -> Result<(),
     }
     Ok(())
 }
+
+#[test]
+fn scalar_order_and_integer_powers_use_exact_arithmetic() -> Result<(), ArithmeticError> {
+    use core::cmp::Ordering::{Equal, Greater, Less};
+    // Independent small rational values, including sign and reciprocal rules.
+    for (a, c, expected) in [
+        ((1, 3), (2, 6), Equal),
+        ((-1, 3), (-1, 2), Greater),
+        ((2, 3), (3, 4), Less),
+        ((0, 1), (-1, 100), Greater),
+    ] {
+        assert_eq!(
+            number::compare(&q(a.0, a.1)?, &q(c.0, c.1)?, &mut budget())?,
+            expected
+        );
+    }
+    for (n, d, exponent, expected_n, expected_d) in [
+        (0, 1, 0_i64, 1, 1),
+        (0, 1, 3, 0, 1),
+        (-2, 3, 3, -8, 27),
+        (-2, 3, -3, -27, 8),
+        (2, 1, -3, 1, 8),
+        (-2, 1, 4, 16, 1),
+    ] {
+        assert_eq!(
+            number::pow_integer(&q(n, d)?, &Integer::from(exponent), &mut budget())?,
+            q(expected_n, expected_d)?
+        );
+    }
+    assert_eq!(
+        number::pow_integer(&q(0, 1)?, &Integer::from(-1_i64), &mut budget()),
+        Err(ArithmeticError::DivisionByZero)
+    );
+    // Exponents are arbitrary precision, not truncated to a machine-sized count.
+    let even = num_bigint::BigInt::from(1_u64) << 100_usize;
+    let odd = &even + 1_u32;
+    for (e, expected) in [(even, 1), (odd, -1)] {
+        assert_eq!(
+            number::pow_integer(&q(-1, 1)?, &Integer::from_bigint(e), &mut budget())?,
+            q(expected, 1)?
+        );
+    }
+    // Adjacent >64-bit integers would compare equal after f64 conversion.
+    let large = num_bigint::BigInt::from(1_u64) << 100_usize;
+    let a = number::ratio(
+        &Integer::from_bigint(large.clone()),
+        &Integer::from(1_i64),
+        &mut budget(),
+    )?;
+    let c = number::ratio(
+        &Integer::from_bigint(large + 1_u32),
+        &Integer::from(1_i64),
+        &mut budget(),
+    )?;
+    assert_eq!(number::compare(&a, &c, &mut budget())?, Less);
+    Ok(())
+}
+
+#[test]
+fn powers_and_comparison_stop_without_mutation() -> Result<(), ArithmeticError> {
+    let base = q(2, 3)?;
+    let exponent = Integer::from(-13_i64);
+    let before = (base.clone(), exponent.clone());
+    let mut measured = budget();
+    number::pow_integer(&base, &exponent, &mut measured)?;
+    for (reason, used) in [
+        (StopReason::WorkLimit, measured.usage().work),
+        (
+            StopReason::AllocationLimit,
+            measured.usage().allocation_units,
+        ),
+    ] {
+        for cap in [0, used / 2, used - 1] {
+            let mut limits = budget().limits();
+            if reason == StopReason::WorkLimit {
+                limits.work = cap;
+            } else {
+                limits.allocation_units = cap;
+            }
+            let mut b = Budget::new(limits);
+            assert_eq!(
+                number::pow_integer(&base, &exponent, &mut b),
+                Err(ArithmeticError::Stopped(reason))
+            );
+            assert_eq!(b.poll(), Err(reason));
+        }
+        let mut limits = budget().limits();
+        if reason == StopReason::WorkLimit {
+            limits.work = 0;
+        } else {
+            limits.allocation_units = 0;
+        }
+        assert_eq!(
+            number::compare(&base, &base, &mut Budget::new(limits)),
+            Err(reason)
+        );
+    }
+    let mut b = budget();
+    b.cancel();
+    assert_eq!(
+        number::pow_integer(&base, &Integer::from(0_i64), &mut b),
+        Err(ArithmeticError::Stopped(StopReason::Cancelled))
+    );
+    assert_eq!(
+        number::compare(&base, &base, &mut b),
+        Err(StopReason::Cancelled)
+    );
+    assert_eq!((base, exponent), before);
+    Ok(())
+}

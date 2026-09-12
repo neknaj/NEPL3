@@ -171,3 +171,63 @@ pub fn negate(value: &Rational, b: &mut Budget) -> Result<Rational, ArithmeticEr
     )
     .map_err(|_| ArithmeticError::DivisionByZero)
 }
+
+/// Exact scalar ordering by cross multiplication of positive denominators.
+/// O(M(B)) arithmetic work and O(B) temporary space for B-bit operands, where
+/// M is bigint multiplication cost. No floating-point conversion is involved.
+pub fn compare(
+    left: &Rational,
+    right: &Rational,
+    b: &mut Budget,
+) -> Result<core::cmp::Ordering, StopReason> {
+    charge(bytes(left).saturating_add(bytes(right)), b)?;
+    let ld = BigInt::from(left.denominator().clone());
+    let rd = BigInt::from(right.denominator().clone());
+    Ok((left.numerator().as_bigint() * rd).cmp(&(right.numerator().as_bigint() * ld)))
+}
+
+/// Scalar integer power, including 0^0 = 1 and negative powers via reciprocal.
+/// A zero base with a negative exponent is DivisionByZero. Noninteger exponent
+/// classification belongs to expression evaluation, not this typed operation.
+/// Repeated squaring uses O(log(|exponent|+1)) rational multiplications. Bit-size
+/// growth of intermediate/output values is charged by each arithmetic operation;
+/// this is not a constant-time or fixed-memory guarantee for large exponents.
+pub fn pow_integer(
+    base: &Rational,
+    exponent: &Integer,
+    b: &mut Budget,
+) -> Result<Rational, ArithmeticError> {
+    b.charge(Resource::Work, 1)?;
+    let negative = exponent.as_bigint() < &BigInt::zero();
+    if negative && base.numerator().as_bigint().is_zero() {
+        return Err(ArithmeticError::DivisionByZero);
+    }
+    charge(1, b)?;
+    let mut result =
+        Rational::new(BigInt::one(), BigInt::one()).map_err(|_| ArithmeticError::DivisionByZero)?;
+    if exponent.as_bigint().is_zero() {
+        return Ok(result);
+    }
+    charge(exponent.as_bigint().bits().div_ceil(8), b)?;
+    let mut remaining = if negative {
+        -exponent.as_bigint()
+    } else {
+        exponent.as_bigint().clone()
+    };
+    let mut power = if negative {
+        divide(&result, base, b)?
+    } else {
+        clone_with_budget(base, b)?
+    };
+    while !remaining.is_zero() {
+        charge(remaining.bits().div_ceil(8), b)?;
+        if !(&remaining % 2_u32).is_zero() {
+            result = multiply(&result, &power, b)?;
+        }
+        remaining /= 2_u32;
+        if !remaining.is_zero() {
+            power = multiply(&power, &power, b)?;
+        }
+    }
+    Ok(result)
+}
