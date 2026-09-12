@@ -1,5 +1,5 @@
-//! Structural proof only. Binding, free-symbol requirements and evaluation are
-//! separate operations and cannot be inferred from this proof.
+//! Structural validation and checked expressions. Shape alone does not establish
+//! binding; checked expressions add binding without claiming evaluation.
 mod document;
 pub(crate) mod edges;
 mod graph;
