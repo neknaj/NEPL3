@@ -71,6 +71,184 @@ fn notation(value: &MathValue) -> Vec<MathKind> {
 }
 
 #[test]
+fn doc_guest_depths_follow_deepest_shared_occurrence() -> Result<(), String> {
+    use nepl3_doc_core::{
+        model::{DocKind, DocNode, InlineRef},
+        print::guest_depths,
+    };
+    let compiled = compiled()?;
+    let registry = &compiled.doc.registry;
+    let math = lower_value(
+        &compiled,
+        "label x Doc sentence cons math Math x nil",
+        "Expr",
+    )?;
+    let closure = &math.embeds[0];
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
+    let checked = closure
+        .syntax
+        .bundle
+        .validate_with_sources(registry, &mut budget(), &mut SourceAdmission::default())
+        .map_err(err)?;
+    let mut document = nepl3_doc_core::lower::document(
+        &checked,
+        &compiled.doc.package.schema,
+        nepl3_doc_core::check::Category::Sentence,
+        registry,
+        &mut budget(),
+        &mut codec,
+    )
+    .map_err(err)?;
+    let root = match document.value.root {
+        nepl3_doc_core::model::DocRoot::Sentence(id) => id.0 as usize,
+        _ => return Err("sentence".into()),
+    };
+    let guest = match &document.value.nodes[root].kind {
+        DocKind::Sentence { inlines } => inlines[0],
+        _ => return Err("sentence node".into()),
+    };
+    let wrapper = document.value.nodes.len() as u64;
+    document.value.nodes.push(DocNode {
+        kind: DocKind::Strong { inline: guest },
+        locations: vec![],
+        origin: None,
+        span: None,
+    });
+    for inlines in [
+        vec![guest, InlineRef(wrapper)],
+        vec![InlineRef(wrapper), guest],
+    ] {
+        document.value.nodes[root].kind = DocKind::Sentence { inlines };
+        let shape = document.value.validate_shape(&mut budget()).map_err(err)?;
+        let mut b = budget();
+        assert_eq!(guest_depths(&shape, &mut b).map_err(err)?, vec![3]);
+        let used = b.usage();
+        let mut nested = budget();
+        let depths = nested
+            .with_depth_at_least(7, |b| guest_depths(&shape, b))
+            .map_err(err)?;
+        assert_eq!(depths, vec![3]);
+        assert_eq!(nested.usage().depth, 10);
+        assert_eq!(nested.current_depth(), 0);
+        for reason in [
+            StopReason::WorkLimit,
+            StopReason::AllocationLimit,
+            StopReason::DepthLimit,
+        ] {
+            let mut limits = budget().limits();
+            match reason {
+                StopReason::WorkLimit => limits.work = used.work - 1,
+                StopReason::AllocationLimit => limits.allocation_units = used.allocation_units - 1,
+                _ => limits.depth = 2,
+            }
+            let mut b = Budget::new(limits);
+            assert_eq!(guest_depths(&shape, &mut b), Err(reason));
+            assert_eq!(b.poll(), Err(reason));
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn selected_math_doc_printers_compose_without_evaluation() -> Result<(), String> {
+    let compiled = compiled()?;
+    let registry = &compiled.doc.registry;
+    let empty = SourceStore::default();
+    for (source, expected) in [
+        (
+            "label x Doc sentence cons math Math add 1 2 nil",
+            "label symbol \"x\" Doc sentence cons math Math add 1 2 nil",
+        ),
+        (
+            "label x Doc sentence cons math Math label frac 1 0 Doc \"[漢字/かんじ]\" nil",
+            "label symbol \"x\" Doc sentence cons math Math label frac 1 0 Doc sentence cons ruby text \"漢字\" text \"かんじ\" nil nil",
+        ),
+    ] {
+        let value = lower_value(&compiled, source, "Expr")?;
+        let shape = value.validate_shape(&mut budget()).map_err(err)?;
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
+        let mut host = nepl3_tools::doc::printing::DocGuestPrinter {
+            registry,
+            surface: &compiled.doc.package.schema,
+            math_surface: Some(&compiled.others[0].schema),
+            codec: &mut codec,
+        };
+        let mut full = budget();
+        let artifact = print::prefix(&shape, &mut host, &mut full).map_err(err)?;
+        // Expected source follows the declared constructors, not evaluation:
+        // addition and division by zero must remain notation at every depth.
+        assert_eq!(artifact.text, expected);
+        let reparsed = lower_value(&compiled, &artifact.text, "Expr")?;
+        assert_eq!(notation(&value), notation(&reparsed));
+        let used = full.usage();
+        let mut wrong_surface = compiled.others[0].schema.clone();
+        wrong_surface.digest.0[0] ^= 1;
+        let mut wrong_host = nepl3_tools::doc::printing::DocGuestPrinter {
+            registry,
+            surface: &compiled.doc.package.schema,
+            math_surface: Some(&wrong_surface),
+            codec: &mut codec,
+        };
+        assert!(matches!(
+            print::prefix(&shape, &mut wrong_host, &mut budget()),
+            Err(print::PrintError::Guest {
+                error: nepl3_tools::doc::printing::Error::Selection,
+                ..
+            })
+        ));
+        let mut host = nepl3_tools::doc::printing::DocGuestPrinter {
+            registry,
+            surface: &compiled.doc.package.schema,
+            math_surface: Some(&compiled.others[0].schema),
+            codec: &mut codec,
+        };
+        let mut limited = budget();
+        let original_limits = limited.limits();
+        let result = limited.with_depth_at_least(64, |b| print::prefix(&shape, &mut host, b));
+        assert!(matches!(
+            result,
+            Err(print::PrintError::Stopped(StopReason::DepthLimit))
+        ));
+        assert_eq!(limited.current_depth(), 0);
+        assert_eq!(limited.limits(), original_limits);
+        assert_eq!(limited.poll(), Err(StopReason::DepthLimit));
+        for (reason, amount) in [
+            (StopReason::WorkLimit, used.work),
+            (StopReason::AllocationLimit, used.allocation_units),
+            (StopReason::OutputLimit, used.output_bytes),
+            (StopReason::NodeLimit, used.nodes),
+            (StopReason::DepthLimit, used.depth),
+        ] {
+            let mut limits = budget().limits();
+            match reason {
+                StopReason::WorkLimit => limits.work = amount - 1,
+                StopReason::AllocationLimit => limits.allocation_units = amount - 1,
+                StopReason::OutputLimit => limits.output_bytes = amount - 1,
+                StopReason::NodeLimit => limits.nodes = amount - 1,
+                _ => limits.depth = amount - 1,
+            }
+            let mut admission = SourceAdmission::default();
+            let mut codec = FoundationCodec::new(registry, &empty, &mut admission).map_err(err)?;
+            let mut host = nepl3_tools::doc::printing::DocGuestPrinter {
+                registry,
+                surface: &compiled.doc.package.schema,
+                math_surface: Some(&compiled.others[0].schema),
+                codec: &mut codec,
+            };
+            let mut b = Budget::new(limits);
+            assert!(matches!(print::prefix(&shape, &mut host, &mut b),
+                Err(print::PrintError::Stopped(actual)) if actual == reason));
+            assert_eq!(b.poll(), Err(reason));
+            assert_eq!(b.current_depth(), 0);
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn production_doc_guest_printer_preserves_annotation_semantics() -> Result<(), String> {
     use nepl3_math_core::print::GuestPrinter;
     let compiled = compiled()?;
@@ -88,6 +266,7 @@ fn production_doc_guest_printer_preserves_annotation_semantics() -> Result<(), S
         let mut host = nepl3_tools::doc::printing::DocGuestPrinter {
             registry,
             surface: &compiled.doc.package.schema,
+            math_surface: None,
             codec: &mut codec,
         };
         let printed = print::prefix(&shape, &mut host, &mut budget()).map_err(err)?;
@@ -130,6 +309,7 @@ fn production_doc_guest_printer_preserves_annotation_semantics() -> Result<(), S
         let mut host = nepl3_tools::doc::printing::DocGuestPrinter {
             registry,
             surface: &compiled.doc.package.schema,
+            math_surface: None,
             codec: &mut codec,
         };
         assert!(matches!(
@@ -155,6 +335,7 @@ fn production_doc_guest_printer_preserves_annotation_semantics() -> Result<(), S
     let mut host = nepl3_tools::doc::printing::DocGuestPrinter {
         registry,
         surface: &compiled.doc.package.schema,
+        math_surface: None,
         codec: &mut codec,
     };
     assert!(matches!(
