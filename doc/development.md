@@ -222,7 +222,7 @@ cargo run --locked -p nepl3-tools -- doc-html export examples/document/linear-co
 
 `document.html` と `assets/` を一緒に配布します。数式・外部ページ・画像等の解決はまだこのlocal入口の対象外で、必要な場合は生成を拒否します。正式文書の正本切替とPages公開は、リンク・意味同等性・配布検査を含む別の工程です。契約は [20章](spec/20-doc-html.md) を参照してください。
 
-[CI workflow](../.github/workflows/ci.yml) はpush・pull request・手動実行で起動します。Rustのworkspace testとClippyはLinux・Windows・macOSで実行し、fmt・rustdoc・allocation regression・外部consumer全体・Doc移行とcanonical生成はLinuxで一度実行します。repository checkはrepository-contract jobへ集約します。
+[CI workflow](../.github/workflows/ci.yml) はmainへのpush・pull request・手動実行で起動します。feature branchのpushとPR更新による全workflowの二重実行を避け、PRではGitHubのmerge refを検査します。PR未作成のcheckpointは自動CI検証済みとは扱わず、必要なら手動実行します。Rustのworkspace testとClippyはLinux・Windows・macOSで実行し、fmt・rustdoc・allocation regression・外部consumer全体・Doc移行とcanonical生成はLinuxで一度実行します。repository checkはrepository-contract jobへ集約します。
 
 siteの全Python試験はLinuxのsite-publication jobで実行します。Windowsではjunction拒否、Windows/macOSではstdinへ渡す引数の構築と実processの強制終了・HTTP通信と期限、macOSではsymlink祖先を持つtemporary rootの回帰だけを追加実行します。stdinの試験はprocess呼出しをmockして渡す値を検査し、実際のprocess間転送の証拠とは区別します。共通のmanifest/hash/tar検査をOSごとに反復しません。evidence runnerのファイル・process境界は3 OSで維持します。
 

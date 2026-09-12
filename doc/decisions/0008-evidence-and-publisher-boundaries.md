@@ -189,6 +189,11 @@ Rustの全workspace試験とClippyは現時点では3 OSを維持し、未分類
 誤って省略しない。この変更は同じ検査の重複解消であり、browser/emulatorの
 実行頻度変更やrequired gateのskip許容は含まない。
 
+feature branchではpushとpull_requestが別concurrency groupで同時に全jobを
+起動していた。branchの自動実行はPRとmain pushへ一本化し、tag pushと手動実行を維持する。
+PRの対象branchは制限せず、依存branchをbaseとする段階PRにも同じ検査を適用する。
+PRなしのcheckpointを検証済み扱いにしない。main保護・qualityの条件は変更しない。
+
 独立した参照監査後、無参照91単位とルートgitattributes指定のみの29単位を
 作業treeから取り除き、[Git履歴索引](../../conformance/history.md)へ移した。
 計8,406ファイル、154,303,564 bytes、JSON/JSON fixture 876,848行を参照化する。
