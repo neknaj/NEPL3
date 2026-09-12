@@ -1,0 +1,5 @@
+{
+  "load": "rejected: journal history count",
+  "append": "rejected: journal history count",
+  "head_unchanged": true
+}
