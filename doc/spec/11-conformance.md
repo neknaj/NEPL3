@@ -1,112 +1,170 @@
-# 11. 受入条件と検証
+<!-- Generated from doc/spec/11&#45;conformance.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page conformance; source SHA-256 0de4c9d1e23370eac83f40f61bd263ea89820bc209c343081c9f85a7c658e5bd; alias input SHA-256 adb2a5929aaa53a705f0628d29a115d3891884f79f7ab2786608a4d947edbb42; document digest ecb7dc19c988a925e3ac5c104442dd1f6a9f1b487863aaf2b13d8f11cf10b32c; input PageSet digest 6a72e3c9710947f6a88ab3ccebe72a56522872d6070feff3c502aba6607b64b3; input context SHA-256 6497e8f5eed41f1b7044feef3a74956a1f87359cfb71603cb88df418da6c8c32. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
-## 方針
+<a name="11-受入条件と検証"></a>
 
-仕様・データ・実装・実行結果を区別する。schemaの形式整合だけで言語が完成したことにしない。正例、誤例、境界、変換前後、異なる実装の比較を受入条件とする。
+# 11\. 受入条件\[うけいれじょうけん\]と検証\[けんしょう\]
 
-## 1. 必須の試験群
+<a name="n-706f6c696379"></a>
 
-X01: 外部workspace/repositoryの新言語がfoundationを変更せず公開APIで解析・schema・source/Origin・診断を扱い、Rust/nativeとNDF/実process providerで意味結果・失敗・停止が一致する。foundation単独の配布/build/test/conformanceとdomainへのproduction/build逆依存不在を検査する。詳細は22章。
-X02: Rust source APIの互換性とportable schema/signatureの互換性を独立した旧版consumer・不正例・互換更新で検査する。単なるdigest差分やpath依存の成功を独立リリース検証へ読み替えない。詳細は22章。
+<a name="方針"></a>
 
-G01: Grammar自身をseedで読み、compileしたpackageとseedの意味正規形が一致。
-G02: declarative readerとRust direct readerの結果・消費範囲・viewが一致。
-G03: 空反復、進捗なし再帰、未定義reader、shape衝突、provider署名違反を正しいcodeで拒否。
-G04: quoted属性内の `>` を含むAngleTag、動的delimiter、部分入力のNeedMore、commit/no-matchの差を検査。
-G05: native provider / NDF loopback / 別process providerから同じ結果。
+## 方針\[ほうしん\]
 
-P01: prefixのserialize/parseで木が同じ。cons/nilを含む全constructorを網羅。Numberの有限十進制約、任意有理数からの式構築、著者のFrac保存も検査する。
-P02: Doc→Math→DocとDoc→Circuitの復帰直後のhost tokenを読み過ぎない。
-P03: headのarityを既読の子の値で変更できない。局所schema更新providerは既読情報だけ利用。
-P04: Recover parseがMissing/Unparsedを保持し、未知arityを0としない。
+仕様\[しよう\]・データ・実装\[じっそう\]・実行結果\[じっこうけっか\]を区別\[くべつ\]する。schemaの形式整合\[けいしきせいごう\]だけで言語\[げんご\]が完成\[かんせい\]したことにしない。正例\[せいれい\]、誤例\[ごれい\]、境界\[きょうかい\]、変換前後\[へんかんぜんご\]、異\[こと\]なる実装\[じっそう\]の比較\[ひかく\]を受入条件\[うけいれじょうけん\]とする。
 
-D01: sentence literalとprefix構築が意味正規形で等しい。
-D02: ネストしたruby/anno、多段note、全escape、空part、閉じ忘れを検査。
-D03: paragraphの深さとparallelのsentence対応が独立。重複languageとparagraph variantは拒否。
-D04: 前方label、重複label、未定義ref、renameの捕捉検査。
-D05: HTMLにユーザー由来scriptが出ず、Doc paragraphのネストが正しい構造で出力される。Markup文字集合違反の拒否、]]>のescape、CRと属性TAB/LF/CRの保存を検査する。
+<a name="n-7265717569726564"></a>
 
-M01: 1/2+1/3=5/6、0.1+0.2=3/10、大整数を丸めず計算。
-M02: matrix形状違反、次元不一致、0除算、非整数指数等を仕様通り分類。
-M03: let/sumのscope、外側と内側の同名、free symbol、notation-onlyのSymbolic。
-M04: すべてのMath constructorをMathMLへ描画。弱い子の括弧、sub/powの結合、source式保存。mspaceの単位付き非負em長さと無効値、Markupの文字制約とXML escapeを検査する。[17章](17-math-html.md)の純粋TeX変換の忠実性・escape、生成時KaTeX、独立MathML fallbackと診断、macro独立性、出力検査、資源上限とStopped保持も要求する。host能力のないWASIでは明示的MathML経路を、対応hostでは実KaTeX経路を実行する。
+<a name="1-必須の試験群"></a>
 
-C01: half-adderを全4入力、adderは小幅の全入力で確認。
-C02: 複数stateの同時更新、testごとのreset、pre-edge出力を検査。initialはPreparedNetlistを受けてslot順の初期値を返す。
-C03: 未定義signal、重複driver、幅違反、組合せloop、再帰instantiationを拒否。
-C04: child moduleのstateを介したfeedbackを組合せloopとして誤拒否しない。
-C05: instanceを2個作ればstateが独立。wire参照は共有。
-C06: vector evaluatorと独立したNOR evaluatorの複数tick一致。4種のnodeとnextBits/outputBitsのsink参照、長さ・bit順を検査する。
+## 1\. 必須\[ひっす\]の試験群\[しけんぐん\]
 
-E01: 日本語/補助平面文字/CRLFにおけるUTF-8/16/32の位置変換。
-E02: SentenceLiteralの内部を正確にハイライトし、外側では1tokenを維持。
-E03: definitionの全範囲とname範囲、対応文関係とdefinitionの区別。
-E04: 更新後に古いdiagnostic/renameを適用しない。
-E05: 増分解析と全解析で意味・診断・参照・位置が一致。
-E06: code表示が不正/非停止のguestをlower・意味check・evaluateしない。Doc自身のCodeもForeignSyntaxのまま表示する。
+- X01\: 外部\[がいぶ\]workspace\/repositoryの新言語\[しんげんご\]がfoundationを変更\[へんこう\]せず公開\[こうかい\]APIで解析\[かいせき\]・schema・source\/Origin・診断\[しんだん\]を扱\[あつか\]い、Rust\/nativeとNDF\/実\[じつ\]process providerで意味結果\[いみけっか\]・失敗\[しっぱい\]・停止\[ていし\]が一致\[いっち\]する。foundation単独\[たんどく\]の配布\[はいふ\]\/build\/test\/conformanceとdomainへのproduction\/build逆依存不在\[ぎゃくいぞんふざい\]を検査\[けんさ\]する。詳細\[しょうさい\]は22章\[しょう\]。
+- X02\: Rust source APIの互換性\[ごかんせい\]とportable schema\/signatureの互換性\[ごかんせい\]を独立\[どくりつ\]した旧版\[きゅうはん\]consumer・不正例\[ふせいれい\]・互換更新\[ごかんこうしん\]で検査\[けんさ\]する。単\[たん\]なるdigest差分\[さぶん\]やpath依存\[いぞん\]の成功\[せいこう\]を独立\[どくりつ\]リリース検証\[けんしょう\]へ読\[よ\]み替\[か\]えない。詳細\[しょうさい\]は22章\[しょう\]。
 
-W01: NDFの全variant roundtrip、未知tag、非canonical整数、負zero、分母0、壊れた参照の拒否。field arrayの順序交換でschema digestが変わり、名前付きvariant mapのkey順だけの交換では変わらないことを検査する。
-W02: nativeとwire経路で一致。Complete/Invalid/Stopped/Awaitを網羅。
-W03: continuationの誤用、未知operation、schema mismatch、過大frameを拒否。
+<!-- -->
 
-A01: workspace DAG、依存許可集合、coreのno_stdを検査。
-A02: native x86_64/aarch64、wasm32-wasip2、wasm32-unknown-unknownでbuildし、利用可能なrunnerで同一goldenを実行。
-A03: runner不在を「テスト成功」にしない。CIの対応runnerを設定して完了にする。
-A04: typed errorsのcatalog、診断stage/位置、resource上限とcancelを検査。sourceBytes超過はUTF-8 byte数で判定しStopped(SourceLimit)を返す。
+- G01\: Grammar自身\[じしん\]をseedで読\[よ\]み、compileしたpackageとseedの意味正規形\[いみせいきけい\]が一致\[いっち\]。
+- G02\: declarative readerとRust direct readerの結果\[けっか\]・消費範囲\[しょうひはんい\]・viewが一致\[いっち\]。
+- G03\: 空反復\[くうはんぷく\]、進捗\[しんちょく\]なし再帰\[さいき\]、未定義\[みていぎ\]reader、shape衝突\[しょうとつ\]、provider署名違反\[しょめいいはん\]を正\[ただ\]しいcodeで拒否\[きょひ\]。
+- G04\: quoted属性内\[ぞくせいない\]の `>` を含\[ふく\]むAngleTag、動的\[どうてき\]delimiter、部分入力\[ぶぶんにゅうりょく\]のNeedMore、commit\/no\-matchの差\[さ\]を検査\[けんさ\]。
+- G05\: native provider \/ NDF loopback \/ 別\[べつ\]process providerから同\[おな\]じ結果\[けっか\]。
 
-U01: TEAのinit/update/view/subscriptionsが決定的で作用を直接実行せず、native/WASI/browserおよび別実装replayでModel/Cmd/Viewの意味が一致する。
-U02: 全要求identityの照合により応答逆転、close/reopen、profile/provider/options/resources変更後の旧結果を拒否する。
-U03: cancel、停止期限、Worker terminate/recreate、epoch更新と再準備を検査。終了後の完了応答を採用しない。
-U04: document閉鎖・再読込、worker/session epoch、listener/timer再登録と解除で旧処理や二重購読が漏れない。
-U05: 日本語IME、補助平面文字、CRLF、選択、undo/redo、format/rename transaction、programmatic edit feedbackとsnapshot競合で入力を失わない。
-U06: Grammarと対象DSLの2editorを提供し、追加の文法・束縛・表示定義だけで共通highlight/definition等を得る。TypeScript再実装を不要にし、外部provider不足は明示する。
-U07: preview隔離、未承認provider拒否、source表示からの非評価、保存・読込・downloadの成功/拒否/容量超過、未保存編集の保護を検査する。
-U08: UI/Worker型のschema closure、native/Wasm/codecと別実装replayの対応、core/domain/engineへのUI依存逆流がないことを検査する。
+<!-- -->
 
-S01: SiteConfigの /NEPL3/ と別の非root baseでトップ/docs/Playground/assets/Worker/Wasm/rustdoc/例manifestを生成・ロードし、deep linkと再読込を検査する。
-S02: docs・例manifest・runtime・profile・assetsの版を照合する。cache混在、欠けた例、digest不一致、版違いを検出し、同一入力buildの決定性を検査する。
-S03: 配信予定artifactを実browserで開き、4言語の代表操作、入出力、診断選択、editor query、停止を実行する。大きなsourceの応答性とkeyboard/focusも確認する。
-S04: docs本文をJSなしで読み、4言語tutorial/reference/例から同じsourceをPlaygroundで開く。page/anchor/検索/linkとaccessibilityを検査し、自動検査と手動確認を区別する。
-S05: 外部backend・localhost・CDNなしで基本4言語操作を行い、sourceの外部送信をせず、sandbox previewがscriptを実行しないことを検査する。
-S06: 最小権限、同じ検査済みSHA/artifact、配信直列化とfreshness、失敗log保存を検査。実Pages公開後のHTTPS smokeとasset/build identityを照合して記録する。公開smoke失敗時は検証済みLKGへの有限復旧・再smoke・元run失敗保持を15章の契約で検査する。
+- P01\: prefixのserialize\/parseで木\[き\]が同\[おな\]じ。cons\/nilを含\[ふく\]む全\[ぜん\]constructorを網羅\[もうら\]。Numberの有限十進制約\[ゆうげんじっしんせいやく\]、任意有理数\[にんいゆうりすう\]からの式構築\[しきこうちく\]、著者\[ちょしゃ\]のFrac保存\[ほぞん\]も検査\[けんさ\]する。
+- P02\: Doc→Math→DocとDoc→Circuitの復帰直後\[ふっきちょくご\]のhost tokenを読\[よ\]み過\[す\]ぎない。
+- P03\: headのarityを既読\[きどく\]の子\[こ\]の値\[あたい\]で変更\[へんこう\]できない。局所\[きょくしょ\]schema更新\[こうしん\]providerは既読情報\[きどくじょうほう\]だけ利用\[りよう\]。
+- P04\: Recover parseがMissing\/Unparsedを保持\[ほじ\]し、未知\[みち\]arityを0としない。
 
-S06の失敗系には、(a)最新candidateのpublic smokeだけが失敗し元tarを復旧できる、(b)後続の健康なdeploymentがあるため旧candidateの復旧を拒否する、(c)cache/API/journal不一致・timeout・外部writer疑いで書込みを停止する、(d)初回公開でLKGがない、(e)Actions artifact失効後も永続snapshotから復旧する、(f)復旧payload消失・改変、(g)復旧deploy・再smokeの失敗、(h)smoke合格後の保存/journal昇格失敗、(i)deploy後にrunが強制cancelされ次のwriterがreconcileを要求する場合を含める。自動復旧回数・時間上限、lock保持、失敗run/incident記録、現行LKGと前世代の保持も検証する。模擬失敗系だけで実Pages公開/復旧のrunner要件を満たした扱いにしない。
+<!-- -->
 
-J01: 全対象文書のinventoryとDoc表現gapを独立レビューし、表/list/link/汎用code/図の必要なschema・文法・backend・wire・conformanceを完成させる。
-J02: 全移行ページを元の固定snapshotと比較し、意味・表・参照・数式・図・コードbyte列の同等性を独立に確認する。一つの正本と生成Markdownの差分検査を行う。
-J03: Doc正本からの公開物で安定page ID/URL/anchor、検索、例revision、リンク、accessibilityを維持し、非root配信とbrowserで確認する。
-J04: 旧版の検証済みrendererによる明示的な文書buildと現行runtime受入を区別し、bootstrap循環がないこと、全ページのDoc正本への切替、決定的生成、欠落・未対応時の停止を検査する。
+- D01\: sentence literalとprefix構築\[こうちく\]が意味正規形\[いみせいきけい\]で等\[ひと\]しい。
+- D02\: ネストしたruby\/anno、多段\[ただん\]note、全\[ぜん\]escape、空\[から\]part、閉\[と\]じ忘\[わす\]れを検査\[けんさ\]。
+- D03\: paragraphの深\[ふか\]さとparallelのsentence対応\[たいおう\]が独立\[どくりつ\]。重複\[ちょうふく\]languageとparagraph variantは拒否\[きょひ\]。
+- D04\: 前方\[ぜんぽう\]label、重複\[ちょうふく\]label、未定義\[みていぎ\]ref、renameの捕捉検査\[ほそくけんさ\]。
+- D05\: HTMLにユーザー由来\[ゆらい\]scriptが出\[で\]ず、Doc paragraphのネストが正\[ただ\]しい構造\[こうぞう\]で出力\[しゅつりょく\]される。Markup文字集合違反\[もじしゅうごういはん\]の拒否\[きょひ\]、`]]>`のescape、CRと属性\[ぞくせい\]TAB\/LF\/CRの保存\[ほぞん\]を検査\[けんさ\]する。
 
-必須群と必須targetの正本は `design/acceptance.json`。本文のID、catalog、implementation-statusの群集合を一致させ、T16は全required群を要求する。r3は55群だが、この数をcheckerの完了条件へ固定しない。nativeはLinux x86_64、Windows x86_64、macOS aarch64、WASIはwasm32-wasip2をWasmtimeで実行、browserは実Chromium/Firefox/WebKitを対象とし、正確な版をlogへ記録する。native process固有群はnative targetで検査する。WebKitの成功から実Safari device QAを推定しない。
+<!-- -->
 
-## 2. propertyとfuzz
+- M01\: 1\/2\+1\/3\=5\/6、0\.1\+0\.2\=3\/10、大整数\[だいせいすう\]を丸\[まる\]めず計算\[けいさん\]。
+- M02\: matrix形状違反\[けいじょういはん\]、次元不一致\[じげんふいっち\]、0除算\[じょざん\]、非整数指数等\[ひせいすうしすうとう\]を仕様通\[しようどお\]り分類\[ぶんるい\]。
+- M03\: let\/sumのscope、外側\[そとがわ\]と内側\[うちがわ\]の同名\[どうめい\]、free symbol、notation\-onlyのSymbolic。
+- M04\: すべてのMath constructorをMathMLへ描画\[びょうが\]。弱\[よわ\]い子\[こ\]の括弧\[かっこ\]、sub\/powの結合\[けつごう\]、source式保存\[しきほぞん\]。mspaceの単位付\[たんいつ\]き非負\[ひふ\]em長\[なが\]さと無効値\[むこうち\]、Markupの文字制約\[もじせいやく\]とXML escapeを検査\[けんさ\]する。[17章\[しょう\]](<17\-math\-html\.md>)の純粋\[じゅんすい\]TeX変換\[へんかん\]の忠実性\[ちゅうじつせい\]・escape、生成時\[せいせいじ\]KaTeX、独立\[どくりつ\]MathML fallbackと診断\[しんだん\]、macro独立性\[どくりつせい\]、出力検査\[しゅつりょくけんさ\]、資源上限\[しげんじょうげん\]とStopped保持\[ほじ\]も要求\[ようきゅう\]する。host能力\[のうりょく\]のないWASIでは明示的\[めいじてき\]MathML経路\[けいろ\]を、対応\[たいおう\]hostでは実\[じつ\]KaTeX経路\[けいろ\]を実行\[じっこう\]する。
 
-任意のvalidな有限prefix treeからprint→parse→lowerの意味一致。任意のUTF-8入力でpanicしない。case分割した入力streamと一括入力が同じ最終token列。消費範囲の単調性。Origin DAGの閉路なし。可逆なSourceMapだけがrenameを許す。小幅回路の原式とNORの一致。
+<!-- -->
 
-fuzz入力でも上限を共有する。大量diagnosticを発生させる入力で無制限allocしない。OOMを完全に回避できると虚偽の保証をしない。
+- C01\: half\-adderを全\[ぜん\]4入力\[にゅうりょく\]、adderは小幅\[こはば\]の全入力\[ぜんにゅうりょく\]で確認\[かくにん\]。
+- C02\: 複数\[ふくすう\]stateの同時更新\[どうじこうしん\]、testごとのreset、pre\-edge出力\[しゅつりょく\]を検査\[けんさ\]。initialはPreparedNetlistを受\[う\]けてslot順\[じゅん\]の初期値\[しょきち\]を返\[かえ\]す。
+- C03\: 未定義\[みていぎ\]signal、重複\[ちょうふく\]driver、幅違反\[はばいはん\]、組合\[くみあわ\]せloop、再帰\[さいき\]instantiationを拒否\[きょひ\]。
+- C04\: child moduleのstateを介\[かい\]したfeedbackを組合\[くみあわ\]せloopとして誤拒否\[ごきょひ\]しない。
+- C05\: instanceを2個作\[こつく\]ればstateが独立\[どくりつ\]。wire参照\[さんしょう\]は共有\[きょうゆう\]。
+- C06\: vector evaluatorと独立\[どくりつ\]したNOR evaluatorの複数\[ふくすう\]tick一致\[いっち\]。4種\[しゅ\]のnodeとnextBits\/outputBitsのsink参照\[さんしょう\]、長\[なが\]さ・bit順\[じゅん\]を検査\[けんさ\]する。
 
-## 3. 不変条件のCI
+<!-- -->
 
-`cargo fmt --check`、clippyの対象warningのdeny、workspace tests、doc tests、package生成の差分検査、dependency検査、target別check、conformance runner、fuzz smoke、license/asset/unsafe監査。
+- E01\: 日本語\[にほんご\]\/補助平面文字\[ほじょへいめんもじ\]\/CRLFにおけるUTF\-8\/16\/32の位置変換\[いちへんかん\]。
+- E02\: SentenceLiteralの内部\[ないぶ\]を正確\[せいかく\]にハイライトし、外側\[そとがわ\]では1tokenを維持\[いじ\]。
+- E03\: definitionの全範囲\[ぜんはんい\]とname範囲\[はんい\]、対応文関係\[たいおうぶんかんけい\]とdefinitionの区別\[くべつ\]。
+- E04\: 更新後\[こうしんご\]に古\[ふる\]いdiagnostic\/renameを適用\[てきよう\]しない。
+- E05\: 増分解析\[ぞうぶんかいせき\]と全解析\[ぜんかいせき\]で意味\[いみ\]・診断\[しんだん\]・参照\[さんしょう\]・位置\[いち\]が一致\[いっち\]。
+- E06\: code表示\[ひょうじ\]が不正\[ふせい\]\/非停止\[ひていし\]のguestをlower・意味\[いみ\]check・evaluateしない。Doc自身\[じしん\]のCodeもForeignSyntaxのまま表示\[ひょうじ\]する。
 
-一つのarchitecture boundaryごとにtestがあり、再設計時に未更新の依存を検出できる。新しいconstructorを追加した際はparser、lower、check、print、render、wire、editorのcoverage表に行が増える。None/unsupportedで黙って網羅扱いにしない。
+<!-- -->
 
-## 4. 開発の段階
+- W01\: NDFの全\[ぜん\]variant roundtrip、未知\[みち\]tag、非\[ひ\]canonical整数\[せいすう\]、負\[ふ\]zero、分母\[ぶんぼ\]0、壊\[こわ\]れた参照\[さんしょう\]の拒否\[きょひ\]。field arrayの順序交換\[じゅんじょこうかん\]でschema digestが変\[か\]わり、名前付\[なまえつ\]きvariant mapのkey順\[じゅん\]だけの交換\[こうかん\]では変\[か\]わらないことを検査\[けんさ\]する。
+- W02\: nativeとwire経路\[けいろ\]で一致\[いっち\]。Complete\/Invalid\/Stopped\/Awaitを網羅\[もうら\]。
+- W03\: continuationの誤用\[ごよう\]、未知\[みち\]operation、schema mismatch、過大\[かだい\]frameを拒否\[きょひ\]。
 
-順序はtasksで管理する。前段を先に完成させることは許可するが、未完の後段をその時点の「完成仕様」と呼ばない。最終受入は全必須試験に対する実行証拠が揃った時点。
+<!-- -->
 
-`design/tasks.json` の各task.acceptanceは、そのタスクが寄与する試験群のcoverage参照である。試験群には後続タスクの責務も含むため、参照した群全体のpassedを前段タスクの完了条件にしない。T16以外のタスクのcompleteには、当該deliverableの実装、scopeを限定した検証証拠、依存タスクのcomplete、および関連する未解消の設計blockerがないことを要求する。証拠は `conformance/results/` 以下のJSONとし、`task_id`、`checks`（空でない文字列の非空list）、`commands`（同）、`targets`（同）、`result`（passed）、`excluded_acceptance_portions`（未検証範囲の文字列list、明示的な空listを許可）を持つ。implementation-statusの当該タスクからファイルを参照する。形だけの証拠ファイルではなく、記載したコマンドの実行結果をレビューする。
+- A01\: workspace DAG、依存許可集合\[いぞんきょかしゅうごう\]、coreのno\_stdを検査\[けんさ\]。
+- A02\: native x86\_64\/aarch64、wasm32\-wasip2、wasm32\-unknown\-unknownでbuildし、利用可能\[りようかのう\]なrunnerで同一\[どういつ\]goldenを実行\[じっこう\]。
+- A03\: runner不在\[ふざい\]を「テスト成功\[せいこう\]」にしない。CIの対応\[たいおう\]runnerを設定\[せってい\]して完了\[かんりょう\]にする。
+- A04\: typed errorsのcatalog、診断\[しんだん\]stage\/位置\[いち\]、resource上限\[じょうげん\]とcancelを検査\[けんさ\]。sourceBytes超過\[ちょうか\]はUTF\-8 byte数\[すう\]で判定\[はんてい\]しStopped\(SourceLimit\)を返\[かえ\]す。
 
-例えばT01のsource契約試験を実行してT01をcompleteにしても、E03/E04のエディタ操作を実装・検査していなければ当該群はnot-runのままとする。群全体のpassedは全要件の実行証拠がそろってから記録する。T16のcompleteには依存タスクの完了に加えて、task.acceptanceに記載した一部の群だけでなく登録された全必須群のpassedとその証拠を必須とする。
+<!-- -->
 
-## 5. 群全体の型付き証拠
+- U01\: TEAのinit\/update\/view\/subscriptionsが決定的\[けっていてき\]で作用\[さよう\]を直接実行\[ちょくせつじっこう\]せず、native\/WASI\/browserおよび別実装\[べつじっそう\]replayでModel\/Cmd\/Viewの意味\[いみ\]が一致\[いっち\]する。
+- U02\: 全要求\[ぜんようきゅう\]identityの照合\[しょうごう\]により応答逆転\[おうとうぎゃくてん\]、close\/reopen、profile\/provider\/options\/resources変更後\[へんこうご\]の旧結果\[きゅうけっか\]を拒否\[きょひ\]する。
+- U03\: cancel、停止期限\[ていしきげん\]、Worker terminate\/recreate、epoch更新\[こうしん\]と再準備\[さいじゅんび\]を検査\[けんさ\]。終了後\[しゅうりょうご\]の完了応答\[かんりょうおうとう\]を採用\[さいよう\]しない。
+- U04\: document閉鎖\[へいさ\]・再読込\[さいよみこみ\]、worker\/session epoch、listener\/timer再登録\[さいとうろく\]と解除\[かいじょ\]で旧処理\[きゅうしょり\]や二重購読\[にじゅうこうどく\]が漏\[も\]れない。
+- U05\: 日本語\[にほんご\]IME、補助平面文字\[ほじょへいめんもじ\]、CRLF、選択\[せんたく\]、undo\/redo、format\/rename transaction、programmatic edit feedbackとsnapshot競合\[きょうごう\]で入力\[にゅうりょく\]を失\[うしな\]わない。
+- U06\: Grammarと対象\[たいしょう\]DSLの2editorを提供\[ていきょう\]し、追加\[ついか\]の文法\[ぶんぽう\]・束縛\[そくばく\]・表示定義\[ひょうじていぎ\]だけで共通\[きょうつう\]highlight\/definition等\[とう\]を得\[え\]る。TypeScript再実装\[さいじっそう\]を不要\[ふよう\]にし、外部\[がいぶ\]provider不足\[ふそく\]は明示\[めいじ\]する。
+- U07\: preview隔離\[かくり\]、未承認\[みしょうにん\]provider拒否\[きょひ\]、source表示\[ひょうじ\]からの非評価\[ひひょうか\]、保存\[ほぞん\]・読込\[よみこみ\]・downloadの成功\[せいこう\]\/拒否\[きょひ\]\/容量超過\[ようりょうちょうか\]、未保存編集\[みほぞんへんしゅう\]の保護\[ほご\]を検査\[けんさ\]する。
+- U08\: UI\/Worker型\[がた\]のschema closure、native\/Wasm\/codecと別実装\[べつじっそう\]replayの対応\[たいおう\]、core\/domain\/engineへのUI依存逆流\[いぞんぎゃくりゅう\]がないことを検査\[けんさ\]する。
 
-scope付きTaskEvidenceと群全体のAcceptanceEvidenceを分ける。群の証拠schemaは `interfaces/acceptance-evidence.schema.json`、配置は `conformance/results/`。`schema`、`acceptance_id`、`design_revision`、`identity`、`result`、`runs` を必須とする。identityはprofile `nepl3.repository-inputs/1` とsource_sha256/spec_sha256を持ち、現在の検査入力へ照合する。source identityの収集・除外規則は開発toolsのidentity操作と開発手順で固定する。
+<!-- -->
 
-runはcatalogのtarget.kindに一致するtag付き型とする。`kind: command` はcommand、target、result、exit_code、非空checks、environment（runnerのname/versionとtoolsのname/version一覧）、log、log_sha256を持つ。`kind: review` はtarget、reviewer識別子、independent=true、decision（approved/rejected）、非空scope、log、log_sha256を持つ。意味同等性レビューのために架空のshell commandや終了コードを作らない。
+- S01\: SiteConfigの \/NEPL3\/ と別\[べつ\]の非\[ひ\]root baseでトップ\/docs\/Playground\/assets\/Worker\/Wasm\/rustdoc\/例\[れい\]manifestを生成\[せいせい\]・ロードし、deep linkと再読込\[さいよみこみ\]を検査\[けんさ\]する。
+- S02\: docs・例\[れい\]manifest・runtime・profile・assetsの版\[ばん\]を照合\[しょうごう\]する。cache混在\[こんざい\]、欠\[か\]けた例\[れい\]、digest不一致\[ふいっち\]、版違\[ばんちが\]いを検出\[けんしゅつ\]し、同一入力\[どういつにゅうりょく\]buildの決定性\[けっていせい\]を検査\[けんさ\]する。
+- S03\: 配信予定\[はいしんよてい\]artifactを実\[じつ\]browserで開\[ひら\]き、4言語\[げんご\]の代表操作\[だいひょうそうさ\]、入出力\[にゅうしゅつりょく\]、診断選択\[しんだんせんたく\]、editor query、停止\[ていし\]を実行\[じっこう\]する。大\[おお\]きなsourceの応答性\[おうとうせい\]とkeyboard\/focusも確認\[かくにん\]する。
+- S04\: docs本文\[ほんぶん\]をJSなしで読\[よ\]み、4言語\[げんご\]tutorial\/reference\/例\[れい\]から同\[おな\]じsourceをPlaygroundで開\[ひら\]く。page\/anchor\/検索\[けんさく\]\/linkとaccessibilityを検査\[けんさ\]し、自動検査\[じどうけんさ\]と手動確認\[しゅどうかくにん\]を区別\[くべつ\]する。
+- S05\: 外部\[がいぶ\]backend・localhost・CDNなしで基本\[きほん\]4言語操作\[げんごそうさ\]を行\[おこな\]い、sourceの外部送信\[がいぶそうしん\]をせず、sandbox previewがscriptを実行\[じっこう\]しないことを検査\[けんさ\]する。
+- S06\: 最小権限\[さいしょうけんげん\]、同\[おな\]じ検査済\[けんさず\]みSHA\/artifact、配信直列化\[はいしんちょくれつか\]とfreshness、失敗\[しっぱい\]log保存\[ほぞん\]を検査\[けんさ\]。実\[じつ\]Pages公開後\[こうかいご\]のHTTPS smokeとasset\/build identityを照合\[しょうごう\]して記録\[きろく\]する。公開\[こうかい\]smoke失敗時\[しっぱいじ\]は検証済\[けんしょうず\]みLKGへの有限復旧\[ゆうげんふっきゅう\]・再\[さい\]smoke・元\[もと\]run失敗保持\[しっぱいほじ\]を15章\[しょう\]の契約\[けいやく\]で検査\[けんさ\]する。
 
-logは `conformance/results/` 内の非空.txtまたは.logファイルとし、証拠JSON自身を実行logにしない。実在logとdigestを検査し、別ID、古いsource/spec/design、未登録target、target種別不一致、改変logを拒否する。passedには全command runがpassedかつexit_code=0、全reviewがapproved、全required targetの実行・レビューを要求する。failedは少なくとも一つの非zero終了の失敗runまたはrejected reviewを含み、早期停止による未実行targetを許すがpassedへ変更できない。未実行を空logやbuild成功で置き換えない。
+S06の失敗系\[しっぱいけい\]には、次\[つぎ\]の場合\[ばあい\]を含\[ふく\]める。
 
-証拠の形式・hash検査は記述された挙動の正しさそのものを証明しない。期待値の根拠、実行コマンドとlog、対象source、coverageを独立レビューする。source/doc仕様を変更した後は古い証拠でcurrent passedを維持せず再実行する。T16は全registered required群の型付き証拠を動的に確認する。
+- \(a\)最新\[さいしん\]candidateのpublic smokeだけが失敗\[しっぱい\]し元\[もと\]tarを復旧\[ふっきゅう\]できる。
+- \(b\)後続\[こうぞく\]の健康\[けんこう\]なdeploymentがあるため旧\[きゅう\]candidateの復旧\[ふっきゅう\]を拒否\[きょひ\]する。
+- \(c\)cache\/API\/journal不一致\[ふいっち\]・timeout・外部\[がいぶ\]writer疑\[うたが\]いで書込\[かきこ\]みを停止\[ていし\]する。
+- \(d\)初回公開\[しょかいこうかい\]でLKGがない。
+- \(e\)Actions artifact失効後\[しっこうご\]も永続\[えいぞく\]snapshotから復旧\[ふっきゅう\]する。
+- \(f\)復旧\[ふっきゅう\]payload消失\[しょうしつ\]・改変\[かいへん\]。
+- \(g\)復旧\[ふっきゅう\]deploy・再\[さい\]smokeの失敗\[しっぱい\]。
+- \(h\)smoke合格後\[ごうかくご\]の保存\[ほぞん\]\/journal昇格失敗\[しょうかくしっぱい\]。
+- \(i\)deploy後\[ご\]にrunが強制\[きょうせい\]cancelされ次\[つぎ\]のwriterがreconcileを要求\[ようきゅう\]する。
 
-この設計パッケージの検査は別扱い。`doc/history/design-validation.json` に、構文例の構造検査、依存DAG、task ID、JSON、例の独立算術/回路検算などの実施範囲を記録する。Rust compiler/editor/browserが完成しているという証拠に使わない。
+自動復旧回数\[じどうふっきゅうかいすう\]・時間上限\[じかんじょうげん\]、lock保持\[ほじ\]、失敗\[しっぱい\]run\/incident記録\[きろく\]、現行\[げんこう\]LKGと前世代\[ぜんせだい\]の保持\[ほじ\]も検証\[けんしょう\]する。模擬失敗系\[もぎしっぱいけい\]だけで実\[じつ\]Pages公開\[こうかい\]\/復旧\[ふっきゅう\]のrunner要件\[ようけん\]を満\[み\]たした扱\[あつか\]いにしない。
+
+- J01\: 全対象文書\[ぜんたいしょうぶんしょ\]のinventoryとDoc表現\[ひょうげん\]gapを独立\[どくりつ\]レビューし、表\[ひょう\]\/list\/link\/汎用\[はんよう\]code\/図\[ず\]の必要\[ひつよう\]なschema・文法\[ぶんぽう\]・backend・wire・conformanceを完成\[かんせい\]させる。
+- J02\: 全移行\[ぜんいこう\]ページを元\[もと\]の固定\[こてい\]snapshotと比較\[ひかく\]し、意味\[いみ\]・表\[ひょう\]・参照\[さんしょう\]・数式\[すうしき\]・図\[ず\]・コードbyte列\[れつ\]の同等性\[どうとうせい\]を独立\[どくりつ\]に確認\[かくにん\]する。一\[ひと\]つの正本\[せいほん\]と生成\[せいせい\]Markdownの差分検査\[さぶんけんさ\]を行\[おこな\]う。
+- J03\: Doc正本\[せいほん\]からの公開物\[こうかいぶつ\]で安定\[あんてい\]page ID\/URL\/anchor、検索\[けんさく\]、例\[れい\]revision、リンク、accessibilityを維持\[いじ\]し、非\[ひ\]root配信\[はいしん\]とbrowserで確認\[かくにん\]する。
+- J04\: 旧版\[きゅうはん\]の検証済\[けんしょうず\]みrendererによる明示的\[めいじてき\]な文書\[ぶんしょ\]buildと現行\[げんこう\]runtime受入\[うけいれ\]を区別\[くべつ\]し、bootstrap循環\[じゅんかん\]がないこと、全\[ぜん\]ページのDoc正本\[せいほん\]への切替\[きりかえ\]、決定的生成\[けっていてきせいせい\]、欠落\[けつらく\]・未対応時\[みたいおうじ\]の停止\[ていし\]を検査\[けんさ\]する。
+
+必須群\[ひっすぐん\]と必須\[ひっす\]targetの正本\[せいほん\]は `design/acceptance.json`。本文\[ほんぶん\]のID、catalog、implementation\-statusの群集合\[ぐんしゅうごう\]を一致\[いっち\]させ、T16は全\[ぜん\]required群\[ぐん\]を要求\[ようきゅう\]する。r3は55群\[ぐん\]だが、この数\[かず\]をcheckerの完了条件\[かんりょうじょうけん\]へ固定\[こてい\]しない。nativeはLinux x86\_64、Windows x86\_64、macOS aarch64、WASIはwasm32\-wasip2をWasmtimeで実行\[じっこう\]、browserは実\[じつ\]Chromium\/Firefox\/WebKitを対象\[たいしょう\]とし、正確\[せいかく\]な版\[ばん\]をlogへ記録\[きろく\]する。native process固有群\[こゆうぐん\]はnative targetで検査\[けんさ\]する。WebKitの成功\[せいこう\]から実\[じつ\]Safari device QAを推定\[すいてい\]しない。
+
+<a name="n-70726f70657274696573"></a>
+
+## 2\. propertyとfuzz
+
+任意\[にんい\]のvalidな有限\[ゆうげん\]prefix treeからprint→parse→lowerの意味一致\[いみいっち\]。任意\[にんい\]のUTF\-8入力\[にゅうりょく\]でpanicしない。case分割\[ぶんかつ\]した入力\[にゅうりょく\]streamと一括入力\[いっかつにゅうりょく\]が同\[おな\]じ最終\[さいしゅう\]token列\[れつ\]。消費範囲\[しょうひはんい\]の単調性\[たんちょうせい\]。Origin DAGの閉路\[へいろ\]なし。可逆\[かぎゃく\]なSourceMapだけがrenameを許\[ゆる\]す。小幅回路\[こはばかいろ\]の原式\[げんしき\]とNORの一致\[いっち\]。
+
+fuzz入力\[にゅうりょく\]でも上限\[じょうげん\]を共有\[きょうゆう\]する。大量\[たいりょう\]diagnosticを発生\[はっせい\]させる入力\[にゅうりょく\]で無制限\[むせいげん\]allocしない。OOMを完全\[かんぜん\]に回避\[かいひ\]できると虚偽\[きょぎ\]の保証\[ほしょう\]をしない。
+
+<a name="n-6369"></a>
+
+<a name="3-不変条件のci"></a>
+
+## 3\. 不変条件\[ふへんじょうけん\]のCI
+
+`cargo fmt --check`、clippyの対象\[たいしょう\]warningのdeny、workspace tests、doc tests、package生成\[せいせい\]の差分検査\[さぶんけんさ\]、dependency検査\[けんさ\]、target別\[べつ\]check、conformance runner、fuzz smoke、license\/asset\/unsafe監査\[かんさ\]。
+
+一\[ひと\]つのarchitecture boundaryごとにtestがあり、再設計時\[さいせっけいじ\]に未更新\[みこうしん\]の依存\[いぞん\]を検出\[けんしゅつ\]できる。新\[あたら\]しいconstructorを追加\[ついか\]した際\[さい\]はparser、lower、check、print、render、wire、editorのcoverage表\[ひょう\]に行\[ぎょう\]が増\[ふ\]える。None\/unsupportedで黙\[だま\]って網羅扱\[もうらあつか\]いにしない。
+
+<a name="n-737461676573"></a>
+
+<a name="4-開発の段階"></a>
+
+## 4\. 開発\[かいはつ\]の段階\[だんかい\]
+
+順序\[じゅんじょ\]はtasksで管理\[かんり\]する。前段\[ぜんだん\]を先\[さき\]に完成\[かんせい\]させることは許可\[きょか\]するが、未完\[みかん\]の後段\[こうだん\]をその時点\[じてん\]の「完成仕様\[かんせいしよう\]」と呼\[よ\]ばない。最終受入\[さいしゅううけいれ\]は全必須試験\[ぜんひっすしけん\]に対\[たい\]する実行証拠\[じっこうしょうこ\]が揃\[そろ\]った時点\[じてん\]。
+
+`design/tasks.json` の各\[かく\]task\.acceptanceは、そのタスクが寄与\[きよ\]する試験群\[しけんぐん\]のcoverage参照\[さんしょう\]である。試験群\[しけんぐん\]には後続\[こうぞく\]タスクの責務\[せきむ\]も含\[ふく\]むため、参照\[さんしょう\]した群全体\[ぐんぜんたい\]のpassedを前段\[ぜんだん\]タスクの完了条件\[かんりょうじょうけん\]にしない。T16以外\[いがい\]のタスクのcompleteには、当該\[とうがい\]deliverableの実装\[じっそう\]、scopeを限定\[げんてい\]した検証証拠\[けんしょうしょうこ\]、依存\[いぞん\]タスクのcomplete、および関連\[かんれん\]する未解消\[みかいしょう\]の設計\[せっけい\]blockerがないことを要求\[ようきゅう\]する。証拠\[しょうこ\]は `conformance/results/` 以下\[いか\]のJSONとし、`task_id`、`checks`（空\[から\]でない文字列\[もじれつ\]の非空\[ひくう\]list）、`commands`（同\[どう\]）、`targets`（同\[どう\]）、`result`（passed）、`excluded_acceptance_portions`（未検証範囲\[みけんしょうはんい\]の文字列\[もじれつ\]list、明示的\[めいじてき\]な空\[から\]listを許可\[きょか\]）を持\[も\]つ。implementation\-statusの当該\[とうがい\]タスクからファイルを参照\[さんしょう\]する。形\[かたち\]だけの証拠\[しょうこ\]ファイルではなく、記載\[きさい\]したコマンドの実行結果\[じっこうけっか\]をレビューする。
+
+例\[たと\]えばT01のsource契約試験\[けいやくしけん\]を実行\[じっこう\]してT01をcompleteにしても、E03\/E04のエディタ操作\[そうさ\]を実装\[じっそう\]・検査\[けんさ\]していなければ当該群\[とうがいぐん\]はnot\-runのままとする。群全体\[ぐんぜんたい\]のpassedは全要件\[ぜんようけん\]の実行証拠\[じっこうしょうこ\]がそろってから記録\[きろく\]する。T16のcompleteには依存\[いぞん\]タスクの完了\[かんりょう\]に加\[くわ\]えて、task\.acceptanceに記載\[きさい\]した一部\[いちぶ\]の群\[ぐん\]だけでなく登録\[とうろく\]された全必須群\[ぜんひっすぐん\]のpassedとその証拠\[しょうこ\]を必須\[ひっす\]とする。
+
+<a name="n-65766964656e6365"></a>
+
+<a name="5-群全体の型付き証拠"></a>
+
+## 5\. 群全体\[ぐんぜんたい\]の型付\[かたつ\]き証拠\[しょうこ\]
+
+scope付\[つ\]きTaskEvidenceと群全体\[ぐんぜんたい\]のAcceptanceEvidenceを分\[わ\]ける。群\[ぐん\]の証拠\[しょうこ\]schemaは `interfaces/acceptance-evidence.schema.json`、配置\[はいち\]は `conformance/results/`。`schema`、`acceptance_id`、`design_revision`、`identity`、`result`、`runs` を必須\[ひっす\]とする。identityはprofile `nepl3.repository-inputs/1` とsource\_sha256\/spec\_sha256を持\[も\]ち、現在\[げんざい\]の検査入力\[けんさにゅうりょく\]へ照合\[しょうごう\]する。source identityの収集\[しゅうしゅう\]・除外規則\[じょがいきそく\]は開発\[かいはつ\]toolsのidentity操作\[そうさ\]と開発手順\[かいはつてじゅん\]で固定\[こてい\]する。
+
+runはcatalogのtarget\.kindに一致\[いっち\]するtag付\[つ\]き型\[がた\]とする。`kind: command` はcommand、target、result、exit\_code、非空\[ひくう\]checks、environment（runnerのname\/versionとtoolsのname\/version一覧\[いちらん\]）、log、log\_sha256を持\[も\]つ。`kind: review` はtarget、reviewer識別子\[しきべつし\]、independent\=true、decision（approved\/rejected）、非空\[ひくう\]scope、log、log\_sha256を持\[も\]つ。意味同等性\[いみどうとうせい\]レビューのために架空\[かくう\]のshell commandや終了\[しゅうりょう\]コードを作\[つく\]らない。
+
+logは `conformance/results/` 内\[ない\]の非空\[ひくう\]\.txtまたは\.logファイルとし、証拠\[しょうこ\]JSON自身\[じしん\]を実行\[じっこう\]logにしない。実在\[じつざい\]logとdigestを検査\[けんさ\]し、別\[べつ\]ID、古\[ふる\]いsource\/spec\/design、未登録\[みとうろく\]target、target種別不一致\[しゅべつふいっち\]、改変\[かいへん\]logを拒否\[きょひ\]する。passedには全\[ぜん\]command runがpassedかつexit\_code\=0、全\[ぜん\]reviewがapproved、全\[ぜん\]required targetの実行\[じっこう\]・レビューを要求\[ようきゅう\]する。failedは少\[すく\]なくとも一\[ひと\]つの非\[ひ\]zero終了\[しゅうりょう\]の失敗\[しっぱい\]runまたはrejected reviewを含\[ふく\]み、早期停止\[そうきていし\]による未実行\[みじっこう\]targetを許\[ゆる\]すがpassedへ変更\[へんこう\]できない。未実行\[みじっこう\]を空\[から\]logやbuild成功\[せいこう\]で置\[お\]き換\[か\]えない。
+
+証拠\[しょうこ\]の形式\[けいしき\]・hash検査\[けんさ\]は記述\[きじゅつ\]された挙動\[きょどう\]の正\[ただ\]しさそのものを証明\[しょうめい\]しない。期待値\[きたいち\]の根拠\[こんきょ\]、実行\[じっこう\]コマンドとlog、対象\[たいしょう\]source、coverageを独立\[どくりつ\]レビューする。source\/doc仕様\[しよう\]を変更\[へんこう\]した後\[あと\]は古\[ふる\]い証拠\[しょうこ\]でcurrent passedを維持\[いじ\]せず再実行\[さいじっこう\]する。T16は全\[ぜん\]registered required群\[ぐん\]の型付\[かたつ\]き証拠\[しょうこ\]を動的\[どうてき\]に確認\[かくにん\]する。
+
+この設計\[せっけい\]パッケージの検査\[けんさ\]は別扱\[べつあつか\]い。`doc/history/design-validation.json` に、構文例\[こうぶんれい\]の構造検査\[こうぞうけんさ\]、依存\[いぞん\]DAG、task ID、JSON、例\[れい\]の独立算術\[どくりつさんじゅつ\]\/回路検算\[かいろけんざん\]などの実施範囲\[じっしはんい\]を記録\[きろく\]する。Rust compiler\/editor\/browserが完成\[かんせい\]しているという証拠\[しょうこ\]に使\[つか\]わない。
