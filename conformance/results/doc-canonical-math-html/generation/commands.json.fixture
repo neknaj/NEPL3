@@ -1,0 +1,73 @@
+[
+  {
+    "head": "c5a79411b60a34a4e74d161b560dc31ec0f521ad",
+    "command": [
+      "cargo",
+      "build",
+      "--locked",
+      "-p",
+      "nepl3-tools"
+    ],
+    "registry_sha256": "0db68e3b773f2a7f5afc4443e4fcd9255ffb3e4af73e26cd80cab6509208983c",
+    "pid": 23916,
+    "exit_code": 0,
+    "elapsed_seconds": 0.17642430000705644,
+    "binary_sha256": "ee540a1d51821b9a90d11711f6736edd10fa07ae7c1801a699921bb667cf6e61"
+  },
+  {
+    "head": "c5a79411b60a34a4e74d161b560dc31ec0f521ad",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-math-html\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "markdown",
+      ".tmp/markdown-expanded-first"
+    ],
+    "registry_sha256": "0db68e3b773f2a7f5afc4443e4fcd9255ffb3e4af73e26cd80cab6509208983c",
+    "pid": 30468,
+    "exit_code": 0,
+    "elapsed_seconds": 68.31740579998586,
+    "binary_sha256": "ee540a1d51821b9a90d11711f6736edd10fa07ae7c1801a699921bb667cf6e61"
+  },
+  {
+    "head": "c5a79411b60a34a4e74d161b560dc31ec0f521ad",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-math-html\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "html",
+      ".tmp/html-expanded-first"
+    ],
+    "registry_sha256": "0db68e3b773f2a7f5afc4443e4fcd9255ffb3e4af73e26cd80cab6509208983c",
+    "pid": 22904,
+    "exit_code": 0,
+    "elapsed_seconds": 39.42179429999669,
+    "binary_sha256": "ee540a1d51821b9a90d11711f6736edd10fa07ae7c1801a699921bb667cf6e61"
+  },
+  {
+    "head": "c5a79411b60a34a4e74d161b560dc31ec0f521ad",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-math-html\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "markdown",
+      ".tmp/markdown-expanded-second"
+    ],
+    "registry_sha256": "0db68e3b773f2a7f5afc4443e4fcd9255ffb3e4af73e26cd80cab6509208983c",
+    "pid": 21144,
+    "exit_code": 0,
+    "elapsed_seconds": 69.78644750002422,
+    "binary_sha256": "ee540a1d51821b9a90d11711f6736edd10fa07ae7c1801a699921bb667cf6e61"
+  },
+  {
+    "head": "c5a79411b60a34a4e74d161b560dc31ec0f521ad",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-math-html\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "html",
+      ".tmp/html-expanded-second"
+    ],
+    "registry_sha256": "0db68e3b773f2a7f5afc4443e4fcd9255ffb3e4af73e26cd80cab6509208983c",
+    "pid": 18784,
+    "exit_code": 0,
+    "elapsed_seconds": 39.870158099976834,
+    "binary_sha256": "ee540a1d51821b9a90d11711f6736edd10fa07ae7c1801a699921bb667cf6e61"
+  }
+]

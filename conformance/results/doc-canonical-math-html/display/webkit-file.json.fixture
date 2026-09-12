@@ -1,0 +1,63 @@
+{
+  "ruby": 703,
+  "css": [
+    "file:///C:/projects/NEPL3-doc-canonical-math-html/.tmp/html-expanded-first/docs/spec/assets/doc.css"
+  ],
+  "background": "rgb(13, 17, 23)",
+  "overflow": false,
+  "ids": [
+    "n-67656e65726174696f6e",
+    "n-6f776e657273686970",
+    "n-6661696c7572655f73746f70",
+    "n-6964656e746974795f7265736f7572636573",
+    "n-636865636b65645f6172746966616374",
+    "n-616363657074616e6365",
+    "n-7265666572656e636573"
+  ],
+  "navigation": [
+    {
+      "id": "n-67656e65726174696f6e",
+      "top": -0.34375,
+      "scroll": 200
+    },
+    {
+      "id": "n-6f776e657273686970",
+      "top": 0.40625,
+      "scroll": 2187
+    },
+    {
+      "id": "n-6661696c7572655f73746f70",
+      "top": -0.21875,
+      "scroll": 3189
+    },
+    {
+      "id": "n-6964656e746974795f7265736f7572636573",
+      "top": 0.203125,
+      "scroll": 5608
+    },
+    {
+      "id": "n-636865636b65645f6172746966616374",
+      "top": -0.421875,
+      "scroll": 8084
+    },
+    {
+      "id": "n-616363657074616e6365",
+      "top": -0.4375,
+      "scroll": 11223
+    },
+    {
+      "id": "n-7265666572656e636573",
+      "top": 318.8125,
+      "scroll": 11813
+    }
+  ],
+  "chapter18_heading": "18. HTMLを 先行利用\nせんこうりよう\n する 実装段階\nじっそうだんかい\n ",
+  "http_requests": [],
+  "requests": [
+    "file:///C:/projects/NEPL3-doc-canonical-math-html/.tmp/html-expanded-first/docs/spec/17-math-html.html",
+    "file:///C:/projects/NEPL3-doc-canonical-math-html/.tmp/html-expanded-first/docs/spec/assets/doc.css",
+    "file:///C:/projects/NEPL3-doc-canonical-math-html/.tmp/html-expanded-first/docs/spec/18-html-delivery.html",
+    "file:///C:/projects/NEPL3-doc-canonical-math-html/.tmp/html-expanded-first/docs/spec/assets/doc.css"
+  ],
+  "delivery": "file URI, normal context, HTTP and HTTPS route abort, JavaScript disabled"
+}

@@ -1,0 +1,12 @@
+from pathlib import Path
+import hashlib,json,re
+OUT=Path(__file__).parent
+root=Path('.tmp/html-expanded-first');second=Path('.tmp/html-expanded-second')
+manifest=json.loads((root/'manifest.json').read_text(encoding='utf-8'))
+checks=[{'path':p.relative_to(root).as_posix(),'same':second.joinpath(p.relative_to(root)).read_bytes()==p.read_bytes()} for p in root.rglob('*') if p.is_file()]
+a=Path('.tmp/original.md').read_text(encoding='utf-8');b=Path('doc/spec/17-math-html.md').read_text(encoding='utf-8')
+result={'html_repeat':checks,'receipt':manifest['output_budget'],'adopted_md_codes_exact':re.findall(r'`([^`]+)`',a)==re.findall(r'`([^`]+)`',b),'adopted_md_sha256':hashlib.sha256(b.encode()).hexdigest()}
+(OUT/'final-checks.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
+files=[{'path':p.relative_to(OUT).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in OUT.rglob('*') if p.is_file() and p.name!='seal.json']
+(OUT/'seal.json').write_text(json.dumps(files,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps({'repeat_files':len(checks),'all_same':all(x['same'] for x in checks),'max_evidence_bytes':max(x['bytes'] for x in files),'evidence_bytes':sum(x['bytes'] for x in files),'md_code_exact':result['adopted_md_codes_exact']}))
