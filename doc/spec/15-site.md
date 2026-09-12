@@ -2,7 +2,7 @@
 
 ## 1. 公開構成
 
-標準公開先を `https://neknaj.github.io/NEPL3/` とするGitHub Pages project siteを最終成果物に含める。独立HTMLのトップ・docsと、ブラウザWasmで動くPlaygroundを配布する。言語処理serverは設けない。現在のsource artifact配布は維持し、サイト実装前に空のPages siteや架空のWasmを公開しない。
+標準公開先を `https://neknaj.github.io/NEPL3/` とするGitHub Pages project siteを最終成果物に含める。独立HTMLのトップ・docsと、ブラウザWasmで動くPlaygroundを配布する。言語処理serverは設けない。通常のsource取得は検査対象commitのGit checkoutまたはsource archiveを用い、main pushごとの重複archive配布は行わない。サイト実装前に空のPages siteや架空のWasmを公開しない。
 
 予定する出力はトップのindex.html、playground/index.html、docs/index.htmlとtutorials/reference/design、api/rust、examples/manifest.json、assets内のJS/CSS/Wasm/Worker、build.json。`site/` は配置・template・固定assetを所有し、`tools/src/site/` が生成と検査を行う。
 
@@ -101,7 +101,7 @@ smokeが失敗したら、lock内でjournalが自分のtransaction/deploymentを
 
 元runの失敗、復旧の最終状態、対象/復旧deployment ID、payload digest、観測identity、API結果、試行数、時間上限、残る公開影響と次に必要な操作を一つのincident記録へ保存する。失敗ログと再smoke証拠を保存し、workflowをfailedで終了する。復旧不能・対象不明はrun summaryとincidentで管理者へ明示し、別途メール等へ送信する機能を暗黙に追加しない。
 
-これらはT20/S06の実装契約であり、現在のsource artifact CIへ未実装の復旧jobを追加した状態ではない。
+これらはT20/S06の実装契約であり、repositoryの検査CIへ未実装の復旧jobを追加した状態ではない。
 
 Doc移行に使う既知のrendererと同revision runtimeの試験を分ける規則は次章に従う。公開URLの準備だけでT20、T21、T16をcompleteにしない。
 

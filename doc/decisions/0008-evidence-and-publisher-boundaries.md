@@ -140,6 +140,12 @@ sourceはGit commitとpath/hashで指す。未保存変更を検証する場合�
 
 ## 8. 完了条件
 
+通常main pushの `deliver-source` はGit管理sourceを再archiveするだけで、検査や
+runtime配布を所有しないため廃止する。CIのcommit参照と全検査gateは維持する。
+[GitHubのsource archive契約](https://docs.github.com/en/repositories/working-with-files/using-files/downloading-source-code-archives)
+に従い、commitのファイル内容と圧縮archiveのbyte同一性を区別する。
+LKGの元payload保全・実行log・正式release成果物をこの削減の対象にしない。
+
 新しい通常reviewで専用Pythonを作らず、同じ共通コマンドで結果を保存・照合
 できる。個別scriptの分類と例外理由が追える。historical evidenceは破壊しない。
 現行testのsourceとdataの場所が明確で、必要な失敗・境界試験が維持される。

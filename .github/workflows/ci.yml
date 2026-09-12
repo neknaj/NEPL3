@@ -378,31 +378,3 @@ jobs:
           test "$ARM_BUILD_RESULT" = success
           test "$RP2040_RESULT" = success
           test "$DOC_BROWSER_RESULT" = success
-
-  deliver-source:
-    name: deliver source
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    needs: [quality]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Checkout tested commit
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.sha }}
-          persist-credentials: false
-      - name: Archive tested source and record identity
-        run: |
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          mkdir -p dist
-          git archive --format=tar.gz --prefix=NEPL3/ --output=dist/NEPL3-source.tar.gz "$GITHUB_SHA"
-          cd dist
-          sha256sum NEPL3-source.tar.gz > SHA256SUMS
-          printf 'repository=%s\ncommit=%s\nworkflow_run=%s\nkind=source-foundation\n' "$GITHUB_REPOSITORY" "$GITHUB_SHA" "$GITHUB_RUN_ID" > SOURCE.txt
-      - name: Upload source bundle
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: NEPL3-source-${{ github.sha }}
-          path: dist/
-          if-no-files-found: error
-          retention-days: 30

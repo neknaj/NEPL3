@@ -224,9 +224,9 @@ cargo run --locked -p nepl3-tools -- doc-html export examples/document/linear-co
 
 [CI workflow](../.github/workflows/ci.yml) はpush・pull request・手動実行で起動し、Linux・Windows・macOSで上記のRust検査とリポジトリ検査を実行します。文書だけの変更も対象です。すべてのmatrix jobの成功を集約する固定名 `quality` を、mainの必須status checkとして使用します。失敗・cancel・skipを成功へ読み替えません。
 
-`main` へのpushで `quality` が成功した後、同じcommit SHAのGit管理対象をsource archiveとしてActions artifactへ保存します。archiveにはLICENSE・仕様・schema・文法・例・開発toolsが入り、SHA-256とcommit識別情報を添付します。保存期間は30日です。これは基盤整備段階の継続的な成果物配布であり、言語runtimeのbinary releaseではありません。`.tmp/` はarchiveへ入りません。
+検査対象sourceはCI runのcommit SHAで特定します。通常のmain pushではsource tarを別artifactとして再保存せず、Git checkoutまたはGitHubのcommit指定source archiveを使用します。正式releaseで同一の配布byte列を保全する必要がある場合は、そのreleaseの成果物として扱います。
 
-source archiveは内容の参照とbuildに使うsnapshotで、`.git/` は含みません。`nepl3-tools check` はGit管理対象も検査するため、完全なリポジトリ検査にはcloneしたcheckoutが必要です。artifact内の `SOURCE.txt` のcommit値を使って `git checkout <commit>` し、上記の検査を実行してください。
+source archiveには `.git/` は含まれません。`nepl3-tools check` の履歴・Git管理対象検査にはcloneしたcheckoutが必要です。CI runのcommit SHAを使って `git checkout <commit>` し、上記の検査を実行してください。GitHubの再生成archiveは同じcommitのファイル内容を参照する手段であり、圧縮byte列の永続的同一性を保証するものではありません。
 
 Actionsの権限は読み取りに限定し、checkoutにcredentialを残しません。外部actionはcommit SHAで固定し、DependabotがCargo依存とActionsの更新PRを作成します。依存更新時も仕様と検査を確認します。
 
@@ -236,7 +236,7 @@ GitHub側ではdescription・topics・文書へのhomepageを設定し、Issues�
 
 共通基盤のWASI試験、ブラウザWasm向けbuild、ARMv6-M向けbuildとRP2040 emulator実行は、上記のPortable execution CIで検査します。これらの実行範囲と、WASI CLI・LSP・operation provider・Web Playgroundという製品入口の完成は区別します。各入口には実装した操作を実runnerで通す受入試験を追加し、foundationの試験やnative開発toolsの成功だけから製品全体のcross-target対応を推定しません。ブラウザ向けbuildも実ブラウザでの実行とは別の証拠です。runtime releaseは該当するconformanceの実行証拠がそろってから設けます。
 
-Web/TEA/siteとDoc移行の計画は [14章](spec/14-web-ui.md)〜[16章](spec/16-doc-migration.md) に従います。現在のCIはsource配布を維持し、Pages公開はT20の実装・受入後です。T21は初回公開とは別に最終完了へ必須で、移行前はMarkdownを正本とします。
+Web/TEA/siteとDoc移行の計画は [14章](spec/14-web-ui.md)〜[16章](spec/16-doc-migration.md) に従います。現在のCIは実装と生成物を検査し、Pages公開はT20の公開前条件を満たしてから行い、公開後の試験を別に記録します。T21は初回公開とは別に最終完了へ必須で、移行前はMarkdownを正本とします。
 
 Pagesの実装では、公開後smokeが失敗したcandidateに対して [15章の復旧契約](spec/15-site.md) を実行します。public smoke済みLKGの元tarを通常のActions retentionとは別に保持し、同じpublisher lockで対象identityを確認して1回だけ復旧・再smokeします。新しい健康な公開や対象不明時は上書きせず停止します。復旧できても元candidate/runはfailedです。現在はこの設計の整備であり、live Pagesの保存先・journal・復旧workflowは未実装です。
 
