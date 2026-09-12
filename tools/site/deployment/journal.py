@@ -96,3 +96,35 @@ def record_status(mirror, expected_head, raw, *, owner, repository, request_url)
     checked(len(evidence) <= MAX_EVIDENCE, "status journal evidence limit")
     head = append(mirror, expected_head, replace(history.event, kind="Observation"), evidence)
     return head, result
+
+
+def wait_recorded(mirror, expected_head, token, *, owner, repository, remaining_seconds):
+    import time
+    from .transport import status
+    return _wait_recorded(mirror, expected_head, token, owner=owner, repository=repository,
+                          remaining_seconds=remaining_seconds, clock=time.monotonic,
+                          sleep=time.sleep, fetch=status)
+
+
+def _wait_recorded(mirror, expected_head, token, *, owner, repository,
+                   remaining_seconds, clock, sleep, fetch):
+    from .poll import _wait, Report, Stop
+    checked(type(remaining_seconds) in (int, float) and 0 < remaining_seconds <= 600,
+            "invalid remaining status wait")
+    deadline = clock() + remaining_seconds
+    history = status_history(mirror, owner=owner, repository=repository)
+    checked(history.head == expected_head, "stale wait journal head")
+    checked(not history.observations or history.observations[-1].observation.phase == Phase.PENDING,
+            "terminal or unknown history requires reconciliation")
+    head = expected_head
+
+    def persist(result):
+        nonlocal head
+        head, _ = record_status(mirror, head, result.raw_response, owner=owner,
+                                repository=repository, request_url=history.receipt.status_endpoint)
+
+    if clock() >= deadline:
+        return head, Report(history.receipt.deployment_id, Stop.DEADLINE, ())
+    report = _wait(history.receipt, token, timeout=remaining_seconds, clock=clock,
+                   sleep=sleep, fetch=fetch, on_response=persist, absolute_deadline=deadline)
+    return head, report

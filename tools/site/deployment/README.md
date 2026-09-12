@@ -119,3 +119,18 @@ A status history is an ordered set of API observations, not public identity,
 smoke success or LKG proof. This bridge does not infer real-time ordering beyond
 the journal order, nor authenticate raw responses supplied by callers: the
 bounded transport and publisher must attribute the actual requests.
+
+`wait_recorded` connects the bounded polling transport to this local journal.
+Every received response is appended before another request or success return.
+If append/replay/CAS fails, the exception stops the wait and no further fetch is
+issued. The caller can reload the durable winning head instead of assuming the
+failed append happened. The returned pair is the last recorded head and wait
+report; late success is still recorded but the report remains Deadline.
+
+The required `remaining_seconds` is the publisher's remaining deployment budget,
+not a fresh timeout on restart. Initial journal read/validation and subsequent
+recording consume this same deadline. The host must calculate it from its transaction
+record; this function cannot reconstruct elapsed wall time from API responses.
+Terminal/unknown history is refused, requiring explicit reconciliation. Local
+writes here do not imply remote durability; remote publication of observations,
+stop/incident records and the overall publisher state machine remain separate.

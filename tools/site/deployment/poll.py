@@ -1,4 +1,4 @@
-"""Bounded deployment observation; no writes, cancellation or publication claim."""
+"""Bounded observation with an optional host persistence sink; no deployment."""
 from dataclasses import dataclass
 from enum import Enum
 import time
@@ -29,11 +29,13 @@ def wait(receipt, token, *, timeout=600):
                  sleep=time.sleep, fetch=status)
 
 
-def _wait(receipt, token, *, timeout, clock, sleep, fetch):
+def _wait(receipt, token, *, timeout, clock, sleep, fetch, on_response=None, absolute_deadline=None):
     checked(isinstance(receipt, Receipt), "invalid receipt")
     receipt.validate()
     checked(type(timeout) in (int, float) and 0 < timeout <= 600, "invalid status wait")
     deadline = clock() + timeout
+    if absolute_deadline is not None:
+        deadline = min(deadline, absolute_deadline)
     responses = []
 
     def done(stop):
@@ -50,6 +52,8 @@ def _wait(receipt, token, *, timeout, clock, sleep, fetch):
         except TransportError:
             return done(Stop.TRANSPORT)
         responses.append(result)
+        if on_response is not None:
+            on_response(result)
         # Startup/cleanup may exceed the child's configured wait. A late
         # successful reply remains evidence, but cannot complete this wait.
         remaining = deadline - clock()
