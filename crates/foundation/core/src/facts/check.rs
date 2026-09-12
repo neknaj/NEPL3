@@ -105,20 +105,46 @@ fn unique<T>(values: &[&T], key: impl Fn(&T) -> u64, budget: &mut Budget) -> Res
     Ok(())
 }
 // Private borrowed indexes: the portable FactSet and its declaration order do
-// not change. Sorting is allocation-free after Vec construction. Precharge a
-// conservative logical O(n log n) allowance before the uninterrupted sort.
+// not change. In-place heapsort meters every comparison and swap, so a Work
+// limit can stop sorting without assuming a library implementation constant.
 fn index<T>(
     values: &mut [&T],
     key: impl Fn(&T) -> u64,
     budget: &mut Budget,
 ) -> Result<(), FactError> {
-    let n = values.len() as u64;
-    let levels = u64::BITS - n.leading_zeros();
-    budget.charge(
-        Resource::Work,
-        n.saturating_mul(u64::from(levels)).saturating_mul(64),
-    )?;
-    values.sort_unstable_by_key(|value| key(value));
+    for root in (0..values.len() / 2).rev() {
+        sift(values, root, &key, budget)?;
+    }
+    for end in (1..values.len()).rev() {
+        budget.charge(Resource::Work, 1)?;
+        values.swap(0, end);
+        sift(&mut values[..end], 0, &key, budget)?;
+    }
+    Ok(())
+}
+fn sift<T>(
+    values: &mut [&T],
+    mut root: usize,
+    key: &impl Fn(&T) -> u64,
+    budget: &mut Budget,
+) -> Result<(), FactError> {
+    while root < values.len() / 2 {
+        budget.charge(Resource::Work, 1)?;
+        let mut child = root * 2 + 1;
+        if child + 1 < values.len() {
+            budget.charge(Resource::Work, 1)?;
+            if key(values[child]) < key(values[child + 1]) {
+                child += 1;
+            }
+        }
+        budget.charge(Resource::Work, 1)?;
+        if key(values[root]) >= key(values[child]) {
+            break;
+        }
+        budget.charge(Resource::Work, 1)?;
+        values.swap(root, child);
+        root = child;
+    }
     Ok(())
 }
 impl<'a> View<'a> {

@@ -99,6 +99,30 @@ fn indexed_scopes_reject_duplicates_missing_parents_cycles_and_depth() -> Result
 }
 
 #[test]
+fn fact_index_sort_stops_without_mutating_portable_input() -> Result<(), String> {
+    let (mut set, registry) = scope_chain(16)?;
+    set.scopes.rotate_left(7);
+    let before = set.clone();
+    let mut full = budget();
+    set.validate(&registry, &mut full, &mut SourceAdmission::default())
+        .map_err(|e| format!("{e:?}"))?;
+    // Exercise all intermediate Work ceilings, including heap construction,
+    // extraction and subsequent validation. No partial proof may escape.
+    for cap in 0..full.usage().work {
+        let mut limits = budget().limits();
+        limits.work = cap;
+        let mut b = Budget::new(limits);
+        assert!(matches!(
+            set.validate(&registry, &mut b, &mut SourceAdmission::default()),
+            Err(FactError::Stopped(StopReason::WorkLimit))
+        ));
+        assert_eq!(b.poll(), Err(StopReason::WorkLimit));
+        assert_eq!(set, before);
+    }
+    Ok(())
+}
+
+#[test]
 fn cached_scope_suffix_keeps_depth_and_stops_before_missing_parent() -> Result<(), String> {
     let (mut set, registry) = scope_chain(12)?;
     // Parent IDs sort before children: each child reuses an already checked suffix.
