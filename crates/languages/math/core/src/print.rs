@@ -1,5 +1,6 @@
 //! Prefix source generation, independent of evaluation and Doc semantics.
 mod output;
+pub mod request;
 use crate::{
     check::{ValidatedMathShape, edges},
     model::*,

@@ -407,4 +407,68 @@ let f=fields(v,s,"MathSourceArtifact",2)?;
 Ok(Self {text:Value::read(&f[0],s,c,b)?,entry:Value::read(&f[1],s,c,b)?})
 }
 }
+impl Value for MathPrintedGuest {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathPrintedGuest",[self.syntax_digest.put(s,c,b)?,self.guest_digest.put(s,c,b)?,self.embed.put(s,c,b)?,self.text.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,48)?;
+let f=fields(v,s,"MathPrintedGuest",4)?;
+Ok(Self {syntax_digest:Value::read(&f[0],s,c,b)?,guest_digest:Value::read(&f[1],s,c,b)?,embed:Value::read(&f[2],s,c,b)?,text:Value::read(&f[3],s,c,b)?})
+}
+}
+impl Value for MathPrintIdentity {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathPrintIdentity",[self.syntax_digest.put(s,c,b)?,self.guests.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,49)?;
+let f=fields(v,s,"MathPrintIdentity",2)?;
+Ok(Self {syntax_digest:Value::read(&f[0],s,c,b)?,guests:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for MathPrintFailure {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::InvalidGuestIdentity {entry} => variant(s,"MathPrintFailure","InvalidGuestIdentity",[entry.put(s,c,b)?],b),
+Self::DuplicateGuest {embed} => variant(s,"MathPrintFailure","DuplicateGuest",[embed.put(s,c,b)?],b),
+Self::MissingBinding {embed} => variant(s,"MathPrintFailure","MissingBinding",[embed.put(s,c,b)?],b),
+Self::GuestCategory {embed} => variant(s,"MathPrintFailure","GuestCategory",[embed.put(s,c,b)?],b),
+Self::UnresolvedGuest {embed} => variant(s,"MathPrintFailure","UnresolvedGuest",[embed.put(s,c,b)?],b),
+Self::EmptyGuest {embed} => variant(s,"MathPrintFailure","EmptyGuest",[embed.put(s,c,b)?],b),
+Self::UnprintableName {node} => variant(s,"MathPrintFailure","UnprintableName",[node.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,48)?;
+let (tag,f)=case(v,s,"MathPrintFailure")?;
+match (tag,f.len()) {
+("InvalidGuestIdentity",1)=>Ok(Self::InvalidGuestIdentity {entry:Value::read(&f[0],s,c,b)?}),
+("DuplicateGuest",1)=>Ok(Self::DuplicateGuest {embed:Value::read(&f[0],s,c,b)?}),
+("MissingBinding",1)=>Ok(Self::MissingBinding {embed:Value::read(&f[0],s,c,b)?}),
+("GuestCategory",1)=>Ok(Self::GuestCategory {embed:Value::read(&f[0],s,c,b)?}),
+("UnresolvedGuest",1)=>Ok(Self::UnresolvedGuest {embed:Value::read(&f[0],s,c,b)?}),
+("EmptyGuest",1)=>Ok(Self::EmptyGuest {embed:Value::read(&f[0],s,c,b)?}),
+("UnprintableName",1)=>Ok(Self::UnprintableName {node:Value::read(&f[0],s,c,b)?}),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for MathPrintResult {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Complete {artifact} => variant(s,"MathPrintResult","Complete",[artifact.put(s,c,b)?],b),
+Self::Invalid {failure} => variant(s,"MathPrintResult","Invalid",[failure.put(s,c,b)?],b),
+Self::Stopped {reason} => variant(s,"MathPrintResult","Stopped",[reason.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,47)?;
+let (tag,f)=case(v,s,"MathPrintResult")?;
+match (tag,f.len()) {
+("Complete",1)=>Ok(Self::Complete {artifact:Value::read(&f[0],s,c,b)?}),
+("Invalid",1)=>Ok(Self::Invalid {failure:Value::read(&f[0],s,c,b)?}),
+("Stopped",1)=>Ok(Self::Stopped {reason:Value::read(&f[0],s,c,b)?}),
+_=>Err(PortableError::Shape),}
+}
+}
 }
