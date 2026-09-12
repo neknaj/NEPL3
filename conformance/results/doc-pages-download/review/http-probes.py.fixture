@@ -1,0 +1,30 @@
+﻿from pathlib import Path
+import sys,json,threading,hashlib
+from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
+from http.client import HTTPConnection
+from unittest.mock import patch
+sys.path.insert(0,str(Path('tools/site').resolve()))
+from deployment.download import _download
+from deployment.observations import Query,Kind
+p=Path('.tmp/pages-download-review');out=[]
+for case in ['chunked','bad-chunk','duplicate-location','missing-location']:
+ seen=[]
+ class Handler(BaseHTTPRequestHandler):
+  def do_GET(self):
+   seen.append(self.path)
+   if self.path.startswith('/repos/'):
+    self.send_response(302)
+    for _ in range(0 if case=='missing-location' else (2 if case=='duplicate-location' else 1)):self.send_header('Location','https://storage123.blob.core.windows.net/a?sig=dummy')
+    self.send_header('Content-Length','0');self.end_headers()
+   else:
+    self.send_response(200);self.send_header('Content-Type','application/zip');self.send_header('Transfer-Encoding','chunked');self.end_headers();self.wfile.write(b'9\r\nzip bytes\r\n'+(b'0\r\n\r\n' if case=='chunked' else b''));self.close_connection=True
+  def log_message(self,*a):pass
+ server=ThreadingHTTPServer(('127.0.0.1',0),Handler);thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+ try:
+  with patch('deployment.download.HTTPSConnection',side_effect=lambda host,timeout:HTTPConnection('127.0.0.1',server.server_port,timeout=timeout)):
+   try:r=_download(Query('a','b',Kind.ARTIFACT,7),'dummy-token',size=9,sha256=hashlib.sha256(b'zip bytes').hexdigest());accepted=True
+   except Exception as e:accepted=False
+  if accepted!=(case=='chunked'):raise ValueError(case)
+  out.append(dict(case=case,accepted=accepted,requests=len(seen)))
+ finally:server.shutdown();server.server_close();thread.join()
+(p/'http-probes.json').write_text(json.dumps(out,indent=2)+'\n',encoding='utf8');print(out)

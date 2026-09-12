@@ -1,0 +1,13 @@
+{
+  "actual_worker": true,
+  "fetch_stubbed": true,
+  "raw_bytes_preserved": true,
+  "launches": [
+    {
+      "isolated": true,
+      "credentials_in_argv": false,
+      "stdin_bytes": 220
+    }
+  ],
+  "invalid_input_silent_failures": 2
+}

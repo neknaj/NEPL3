@@ -1,0 +1,25 @@
+﻿from pathlib import Path
+import sys,subprocess,json,hashlib
+from unittest.mock import patch
+p=Path('.tmp/pages-download-review');rows=[]
+for flags in [[],['-O']]:
+ cmd=[sys.executable]+flags+['-m','unittest','discover','-s','tools/site','-p','test_download.py'];r=subprocess.run(cmd,capture_output=True);label='optimized' if flags else 'normal';(p/(label+'.stdout')).write_bytes(r.stdout);(p/(label+'.stderr')).write_bytes(r.stderr);rows.append(dict(command=cmd,exit_code=r.returncode))
+(p/'commands.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf8')
+if any(r['exit_code'] for r in rows):raise ValueError('test failure')
+sys.path.insert(0,str(Path('tools/site').resolve()))
+from deployment.download import download
+from deployment.observations import Query,Kind
+from deployment.transport import TransportError
+harness=p/'worker-harness.py';harness.write_text('import sys,runpy\nsys.path.insert(0,'+repr(str(Path('tools/site').resolve()))+')\nimport deployment.download as d\nd._download=lambda *a,**k:b"zip bytes"\nrunpy.run_path('+repr(str(Path('tools/site/deployment/download/worker.py').resolve()))+',run_name="__main__")\n',encoding='utf8')
+real=subprocess.run;seen=[]
+def launch(cmd,**kw):
+ seen.append(dict(isolated=cmd[1]=='-I',credentials_in_argv='dummy-token' in str(cmd),stdin_bytes=len(kw['input'])))
+ return real([*cmd[:-1],str(harness.resolve())],**kw)
+opts=dict(size=9,sha256=hashlib.sha256(b'zip bytes').hexdigest())
+with patch('deployment.download.subprocess.run',side_effect=launch):raw=download(Query('a','b',Kind.ARTIFACT,8),'dummy-token',timeout=2,**opts)
+if raw!=b'zip bytes':raise ValueError('worker original bytes')
+worker=str(Path('tools/site/deployment/download/worker.py').resolve())
+for body in [b'x'*12001,b'{"query":{"kind":"bad"}}']:
+ r=real([sys.executable,'-I',worker],input=body,capture_output=True,timeout=2)
+ if r.returncode!=1 or r.stdout or r.stderr:raise ValueError('invalid worker input leaked')
+(p/'worker-probes.json').write_text(json.dumps(dict(actual_worker=True,fetch_stubbed=True,raw_bytes_preserved=True,launches=seen,invalid_input_silent_failures=2),indent=2)+'\n',encoding='utf8');print(rows)
