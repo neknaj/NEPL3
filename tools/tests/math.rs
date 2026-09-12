@@ -596,6 +596,20 @@ fn all_math_constructors_lower_from_the_actual_parser_and_first_receiver() -> Re
             .map_err(err)?;
             assert_eq!(actual.value.root, original.value.root);
             assert_eq!(actual.value.nodes, original.value.nodes);
+            if entry == "Expr" {
+                let native = nepl3_math_core::check::expression(&original.value, &mut budget())
+                    .map_err(err)?;
+                let received = nepl3_math_core::check::expression(&actual.value, &mut budget())
+                    .map_err(err)?;
+                assert!(core::ptr::eq(received.value(), &actual.value));
+                assert_eq!(received.bindings(), native.bindings());
+                assert_eq!(received.value().nodes, original.value.nodes);
+            } else {
+                assert!(matches!(
+                    nepl3_math_core::check::expression(&actual.value, &mut budget()),
+                    Err(nepl3_math_core::check::ShapeError::Category { .. })
+                ));
+            }
             assert_eq!(
                 nepl3_math_core::portable::to_value(
                     &actual,
