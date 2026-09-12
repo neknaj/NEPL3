@@ -11,6 +11,7 @@ use nepl3_core::{
     source::{SourceAdmission, Span},
 };
 mod diagnostic;
+mod index;
 mod occurrences;
 pub use diagnostic::LabelDiagnosticError;
 
@@ -90,6 +91,9 @@ fn push<T>(items: &mut Vec<T>, item: T, b: &mut Budget) -> Result<(), StopReason
 /// Collect declarations before resolving references, so a forward reference
 /// reaches the same definition identity as a later one. Only this Article's
 /// semantic arena is visited; embedded ForeignClosure bundles are not entered.
+/// After structural/occurrence validation and traversal, name indexing costs
+/// O(D log D) comparisons and O(D) space; R references cost O(R log D)
+/// comparisons. Each comparison is bounded by the compared name byte lengths.
 pub fn check<'a>(
     document: &'a DocumentSyntax,
     registry: &SchemaRegistry,
@@ -117,15 +121,6 @@ pub fn check<'a>(
         match &node.kind {
             DocKind::Section { id, .. } | DocKind::Anchor { id, .. } => {
                 let current = site(node, index, id);
-                for previous in &definitions {
-                    b.charge(Resource::Work, (previous.name.len() + id.len()) as u64 + 1)?;
-                    if previous.name == id {
-                        return Err(LabelError::Duplicate {
-                            definition: current,
-                            previous: *previous,
-                        });
-                    }
-                }
                 push(&mut definitions, current, b)?;
             }
             DocKind::Reference { target, .. } => {
@@ -147,19 +142,10 @@ pub fn check<'a>(
         b.charge(Resource::Work, next as u64)?;
         pending[start..].reverse();
     }
+    let names = index::build(&definitions, b)?;
     let mut references = Vec::new();
     for reference in unresolved {
-        let mut target = None;
-        for (index, definition) in definitions.iter().enumerate() {
-            b.charge(
-                Resource::Work,
-                (reference.name.len() + definition.name.len()) as u64 + 1,
-            )?;
-            if reference.name == definition.name {
-                target = Some(DocLabelId(index as u64));
-                break;
-            }
-        }
+        let target = index::find(&names, &definitions, reference.name, b)?;
         let target = target.ok_or(LabelError::Unresolved { reference })?;
         push(&mut references, ResolvedLabel { reference, target }, b)?;
     }
