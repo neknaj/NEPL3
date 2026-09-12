@@ -1,12 +1,52 @@
-//! Structural proof only. Binding, free-symbol requirements and evaluation are
-//! separate operations and cannot be inferred from this proof.
+//! Structural validation and checked expressions. Shape alone does not establish
+//! binding; checked expressions add binding without claiming evaluation.
 mod document;
 pub(crate) mod edges;
 mod graph;
-use crate::model::MathValue;
+use crate::model::{MathBindings, MathRoot, MathValue};
 use alloc::vec::Vec;
 pub use document::{StructureError, ValidatedMathSyntax};
-use nepl3_core::budget::StopReason;
+use nepl3_core::budget::{Budget, StopReason};
+
+/// A checked Math expression, borrowing the exact immutable input it proves.
+/// Free symbols are valid. This is not evaluation, source-bundle admission, or
+/// preparation of foreign annotations; those remain separate operations.
+pub struct CheckedExpression<'a> {
+    shape: ValidatedMathShape<'a>,
+    bindings: MathBindings,
+}
+
+impl<'a> CheckedExpression<'a> {
+    pub fn value(&self) -> &'a MathValue {
+        self.shape.value()
+    }
+
+    pub fn shape(&self) -> &ValidatedMathShape<'a> {
+        &self.shape
+    }
+
+    pub fn bindings(&self) -> &MathBindings {
+        &self.bindings
+    }
+}
+
+/// Validate structure/local constraints and resolve lexical binding using one
+/// caller-owned budget. A serialized report never bypasses either validation.
+pub fn expression<'a>(
+    value: &'a MathValue,
+    budget: &mut Budget,
+) -> Result<CheckedExpression<'a>, ShapeError> {
+    budget.poll()?;
+    let MathRoot::Expr(_) = value.root else {
+        return Err(ShapeError::Category {
+            node: edges::root(value.root).0,
+            expected: Category::Expr,
+        });
+    };
+    let shape = value.validate_shape(budget)?;
+    let bindings = crate::binding::analyze(&shape, budget)?;
+    Ok(CheckedExpression { shape, bindings })
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Category {

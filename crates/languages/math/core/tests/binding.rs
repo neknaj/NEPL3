@@ -30,6 +30,58 @@ fn symbol(name: &str) -> MathKind {
 }
 
 #[test]
+fn checked_expression_keeps_free_symbols_and_rejects_non_expressions() -> Result<(), String> {
+    use nepl3_math_core::check::{self, Category, ShapeError};
+    let v = value(vec![symbol("free")]);
+    let checked = check::expression(&v, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    assert!(core::ptr::eq(checked.value(), &v));
+    assert_eq!(checked.bindings().uses[0].binding, None);
+    let mut row = value(vec![MathKind::Row { values: vec![] }]);
+    row.root = MathRoot::Row(RowRef(0));
+    assert!(matches!(
+        check::expression(&row, &mut budget()),
+        Err(ShapeError::Category {
+            node: 0,
+            expected: Category::Expr
+        })
+    ));
+    let cycle = value(vec![MathKind::Add {
+        left: ExprRef(0),
+        right: ExprRef(0),
+    }]);
+    assert!(matches!(
+        check::expression(&cycle, &mut budget()),
+        Err(ShapeError::Cycle(0))
+    ));
+    Ok(())
+}
+
+#[test]
+fn checked_expression_shares_shape_and_binding_budget() -> Result<(), String> {
+    use nepl3_math_core::check::{self, ShapeError};
+    let v = value(vec![symbol("x")]);
+    let mut measured = budget();
+    v.validate_shape(&mut measured)
+        .map_err(|e| format!("{e:?}"))?;
+    let mut limits = budget().limits();
+    limits.nodes = measured.usage().nodes;
+    let mut limited = Budget::new(limits);
+    // Shape alone fits; visiting the symbol for binding must use the same cap.
+    assert!(matches!(
+        check::expression(&v, &mut limited),
+        Err(ShapeError::Stopped(StopReason::NodeLimit))
+    ));
+    assert_eq!(limited.poll(), Err(StopReason::NodeLimit));
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert!(matches!(
+        check::expression(&v, &mut cancelled),
+        Err(ShapeError::Stopped(StopReason::Cancelled))
+    ));
+    Ok(())
+}
+
+#[test]
 fn shared_node_has_free_and_bound_occurrences() -> Result<(), String> {
     // let x x x: init and body deliberately share a node, but only body binds.
     let v = value(vec![
