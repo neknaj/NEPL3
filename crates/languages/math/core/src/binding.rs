@@ -24,6 +24,9 @@ fn binder(kind: &MathKind) -> Option<(&str, usize)> {
 /// Resolve every symbol occurrence using exact names and nearest enclosing scope.
 /// The input proof validates references/cycles. Output refers only to that input;
 /// node field locations preserve its source/Origin without inventing positions.
+/// Visits occurrences, not unique arena nodes. Symbol lookup scans only active
+/// binders: O(U * B * L) worst case for U uses, B active binders and name length
+/// L, in addition to traversal. Frame storage is O(depth), binder storage O(B).
 pub fn analyze(shape: &ValidatedMathShape<'_>, b: &mut Budget) -> Result<MathBindings, StopReason> {
     b.poll()?;
     let value = shape.value();
@@ -32,6 +35,7 @@ pub fn analyze(shape: &ValidatedMathShape<'_>, b: &mut Budget) -> Result<MathBin
         uses: Vec::new(),
     };
     let mut frames: Vec<Frame> = Vec::new();
+    let mut active: Vec<(&str, u64)> = Vec::new();
     let mut pending = Some(edges::root(value.root).0 as usize);
     let mut occurrence = 0_u64;
     let caller = b.current_depth();
@@ -56,16 +60,11 @@ pub fn analyze(shape: &ValidatedMathShape<'_>, b: &mut Budget) -> Result<MathBin
             }
             if let MathKind::Symbol { name } = kind {
                 let mut binding = None;
-                for frame in frames.iter().rev() {
-                    b.charge(Resource::Work, 1)?;
-                    if frame.active
-                        && let Some((bound, _)) = binder(&value.nodes[frame.node].kind)
-                    {
-                        b.charge(Resource::Work, name.len().min(bound.len()) as u64 + 1)?;
-                        if name == bound {
-                            binding = Some(frame.occurrence);
-                            break;
-                        }
+                for (bound, occurrence) in active.iter().rev() {
+                    b.charge(Resource::Work, name.len().min(bound.len()) as u64 + 1)?;
+                    if name == bound {
+                        binding = Some(*occurrence);
+                        break;
                     }
                 }
                 b.charge(Resource::AllocationUnits, 48)?;
@@ -85,9 +84,24 @@ pub fn analyze(shape: &ValidatedMathShape<'_>, b: &mut Budget) -> Result<MathBin
         let Some(frame) = frames.last_mut() else {
             break;
         };
+        // The preceding child has returned. Only a binder's body activates it;
+        // remove that scope before visiting any sibling or leaving the frame.
+        if frame.active {
+            active.pop();
+            frame.active = false;
+        }
         let kind = &value.nodes[frame.node].kind;
         if let Some((child, _)) = edges::edge(kind, frame.next) {
-            frame.active = binder(kind).is_some_and(|(_, body)| body == frame.next);
+            if let Some((name, body)) = binder(kind)
+                && body == frame.next
+            {
+                b.charge(
+                    Resource::AllocationUnits,
+                    core::mem::size_of::<(&str, u64)>() as u64,
+                )?;
+                active.push((name, frame.occurrence));
+                frame.active = true;
+            }
             frame.next += 1;
             pending = Some(child as usize);
         } else {

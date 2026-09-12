@@ -30,6 +30,38 @@ fn symbol(name: &str) -> MathKind {
 }
 
 #[test]
+fn non_binding_depth_does_not_multiply_symbol_lookup_work() -> Result<(), String> {
+    let mut previous = None;
+    for count in [64, 128, 256] {
+        let mut kinds = Vec::new();
+        for index in 0..count {
+            kinds.push(MathKind::Add {
+                left: ExprRef(2 * index + 1),
+                right: ExprRef(2 * index + 2),
+            });
+            kinds.push(symbol("free"));
+        }
+        kinds.push(symbol("free"));
+        let v = value(kinds);
+        let shape = v
+            .validate_shape(&mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+        let mut b = budget();
+        let report = binding::analyze(&shape, &mut b).map_err(|e| format!("{e:?}"))?;
+        assert!(report.definitions.is_empty());
+        assert_eq!(report.uses.len() as u64, count + 1);
+        assert!(report.uses.iter().all(|usage| usage.binding.is_none()));
+        // Doubling this skew tree doubles visits. No binder exists, so scanning
+        // its increasingly deep arithmetic frames would be quadratic overhead.
+        if let Some(work) = previous {
+            assert!(b.usage().work < 3 * work);
+        }
+        previous = Some(b.usage().work);
+    }
+    Ok(())
+}
+
+#[test]
 fn checked_expression_keeps_free_symbols_and_rejects_non_expressions() -> Result<(), String> {
     use nepl3_math_core::check::{self, Category, ShapeError};
     let v = value(vec![symbol("free")]);
