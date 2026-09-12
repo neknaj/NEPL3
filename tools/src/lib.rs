@@ -1,4 +1,5 @@
-//! Host-only repository checks. These checks never execute language operations.
+//! Host-only development and document generation tools. Language operations use
+//! the production core APIs; repository checks do not imply runtime acceptance.
 
 mod contract;
 mod dependency;

@@ -4,6 +4,7 @@ pub mod canonical;
 pub mod catalog;
 pub mod export;
 pub mod host;
+pub mod math;
 pub mod printing;
 pub mod projection;
 pub mod reader;
