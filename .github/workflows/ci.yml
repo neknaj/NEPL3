@@ -65,7 +65,7 @@ jobs:
         run: python tools/generate/doc_html.py
       - name: Doc browser corpus audit input tests
         run: python -m unittest discover -s tools/audit/doc_html -p 'test_*.py'
-      - name: Pages payload boundary tests
+      - name: Pages payload and HTTP boundary tests
         run: python -m unittest discover -s tools/site -p 'test_*.py'
       - name: Doc migration candidate and rejection tests
         run: |

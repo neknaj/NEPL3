@@ -43,6 +43,15 @@ tar内の順序・時刻・所有者・modeは固定し、リンク（Windows ju
 receiptの `publication_verified` はfalseです。この梱包だけでは公開確認やLKG昇格になりません。
 境界試験は `python -m unittest discover -s tools/site -p 'test_*.py'` で実行します。
 
+`python tools/site/smoke.py dist/site https://neknaj.github.io/NEPL3/ --manifest-sha256 <検査済みdigest>`
+は、docs-only成果物とHTTPS応答のbyte列、HTML/CSSのMIME、directory indexと未知routeの404を
+照合します。build identityを前後で取得し、redirectや内容の混在を拒否します。
+`.nojekyll` は公開内容ではなく配信制御fileとして照合対象から外し、結果にも記録します。
+socket timeoutに加えて外側processを最大300秒で終了させ、失敗時は非zero終了と理由を返します。
+`--local-http` は明示port付き127.0.0.1だけで利用でき、結果はlocal試験として区別します。
+このHTTP照合は公開smokeの一部であり、Pages API/journalの現行deployment、実browser表示、
+全cacheの原子的切替やLKGを証明しません。publisherはそれぞれの証拠を別途照合します。
+
 受入群の文書検査は、Markdownの本文・箇条書きの行頭にあるplainな `A01:` 型の定義を読みます。
 escapeや文字参照をdecodeした表示上のprefixを使うため、nepldから生成した `- A01\:` も
 同じ定義として扱います。見出し・引用・code・HTML・表・脚注や文中の単なる言及は定義にしません。
