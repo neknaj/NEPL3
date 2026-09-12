@@ -1,0 +1,85 @@
+import gzip
+import io
+import json
+from pathlib import Path
+import tarfile
+import unittest
+import zipfile
+
+from deployment.artifact import selected
+from payload import digest
+
+
+class ArtifactTests(unittest.TestCase):
+    def fixture(self, extra=None, receipt_change=None):
+        root = Path(__file__).resolve().parents[2]
+        tar = gzip.decompress((root / 'conformance/results/doc-pages-payload/final-review/identical-tars.tar.gz.fixture').read_bytes())
+        with tarfile.open(fileobj=io.BytesIO(tar)) as source:
+            commit = json.load(source.extractfile('build.json'))['source_commit']
+        # Both expected hashes predate this implementation (14 real Doc chapters).
+        kwargs = dict(owner='neknaj', repository='NEPL3', artifact_id=7, run_id=8, repository_id=9,
+                      source_commit=commit, expected_tar='cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9',
+                      expected_manifest='39000dd5b7aad48deae97741c5b077b44a242a0badb7b30e81b3c1c26f301446')
+        receipt = dict(version=1, kind='pages-tar', publication_verified=False, tar_sha256=kwargs['expected_tar'],
+                       manifest_sha256=kwargs['expected_manifest'], tar_bytes=len(tar), files=22)
+        receipt.update(receipt_change or {})
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, 'w', compression=zipfile.ZIP_DEFLATED) as bundle:
+            bundle.writestr('pages.tar', tar)
+            bundle.writestr('pages-receipt.json', json.dumps(receipt))
+            if extra: bundle.writestr(*extra)
+        archive = buffer.getvalue()
+        url = 'https://api.github.com/repos/neknaj/NEPL3/actions/artifacts/7'
+        meta = dict(id=7, name='doc-browser-'+commit, url=url, archive_download_url=url+'/zip', expired=False,
+                    size_in_bytes=len(archive), digest='sha256:'+digest(archive),
+                    workflow_run=dict(id=8, repository_id=9, head_repository_id=9, head_sha=commit))
+        return meta, archive, kwargs, tar
+
+    def test_real_doc_tar_is_preserved(self):
+        meta, archive, kwargs, tar = self.fixture()
+        result = selected(json.dumps(meta).encode(), archive, **kwargs)
+        self.assertEqual(result.data, tar)
+        self.assertEqual(result.files, 22)
+
+    def test_metadata_substitution_and_archive_corruption(self):
+        meta, archive, kwargs, _ = self.fixture()
+        for key, value in [('id', True), ('expired', True), ('name', 'other'), ('digest', 'sha256:'+'0'*64),
+                           ('size_in_bytes', 1), ('archive_download_url', 'https://other.invalid/')]:
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                selected(json.dumps(dict(meta, **{key:value})).encode(), archive, **kwargs)
+        for key in ('id', 'repository_id', 'head_repository_id', 'head_sha'):
+            changed = dict(meta, workflow_run=dict(meta['workflow_run'], **{key:0}))
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                selected(json.dumps(changed).encode(), archive, **kwargs)
+        with self.assertRaises(ValueError):
+            selected(json.dumps(meta).encode(), archive+b'x', **kwargs)
+
+    def test_untrusted_receipt_cannot_override_expected_identity(self):
+        for change in [dict(files=True), dict(tar_bytes=0), dict(version=True),
+                       dict(tar_sha256='0'*64), dict(publication_verified=True)]:
+            meta, archive, kwargs, _ = self.fixture(receipt_change=change)
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                selected(json.dumps(meta).encode(), archive, **kwargs)
+
+    def test_unsafe_and_duplicate_zip_entries(self):
+        link = zipfile.ZipInfo('alias'); link.create_system = 3; link.external_attr = 0o120777 << 16
+        for entry in [('../escape', b'x'), ('PAGES.TAR', b'x'), (link, b'pages.tar')]:
+            meta, archive, kwargs, _ = self.fixture(extra=entry)
+            with self.subTest(entry=str(entry[0])), self.assertRaises(ValueError):
+                selected(json.dumps(meta).encode(), archive, **kwargs)
+
+    def test_matching_metadata_does_not_change_payload_source(self):
+        meta, archive, kwargs, _ = self.fixture()
+        kwargs['source_commit'] = '0'*40
+        meta['name'] = 'doc-browser-'+'0'*40
+        meta['workflow_run']['head_sha'] = '0'*40
+        with self.assertRaisesRegex(ValueError, 'payload source'):
+            selected(json.dumps(meta).encode(), archive, **kwargs)
+
+    def test_file_prefix_and_mismatched_directory_mode_are_rejected(self):
+        wrong_kind = zipfile.ZipInfo('directory'); wrong_kind.create_system = 3
+        wrong_kind.external_attr = 0o040755 << 16
+        for entry in [('pages.tar/child', b'x'), (wrong_kind, b'')]:
+            meta, archive, kwargs, _ = self.fixture(extra=entry)
+            with self.subTest(entry=str(entry[0])), self.assertRaises(ValueError):
+                selected(json.dumps(meta).encode(), archive, **kwargs)

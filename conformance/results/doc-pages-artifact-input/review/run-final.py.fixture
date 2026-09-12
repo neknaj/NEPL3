@@ -1,0 +1,6 @@
+from pathlib import Path
+import subprocess,sys,json
+p=Path('.tmp/artifact-input-review');rows=[]
+for flag in [[],['-O']]:
+ cmd=[sys.executable]+flag+['-m','unittest','discover','-s','tools/site','-p','test_artifact.py'];r=subprocess.run(cmd,capture_output=True);name='final-optimized' if flag else 'final-normal';(p/(name+'.stdout')).write_bytes(r.stdout);(p/(name+'.stderr')).write_bytes(r.stderr);rows.append(dict(command=cmd,exit_code=r.returncode))
+(p/'final-commands.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf8');print(rows)

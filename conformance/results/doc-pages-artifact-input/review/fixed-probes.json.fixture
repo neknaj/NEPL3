@@ -1,0 +1,12 @@
+[
+  {
+    "case": "file-prefix",
+    "accepted": false,
+    "error": "ValueError"
+  },
+  {
+    "case": "directory-mode-selected",
+    "accepted": false,
+    "error": "ValueError"
+  }
+]

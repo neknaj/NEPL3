@@ -1,0 +1,20 @@
+[
+  {
+    "field": "run_id",
+    "rejected": true,
+    "error": "ValueError"
+  },
+  {
+    "field": "attempt",
+    "rejected": true,
+    "error": "ValueError"
+  },
+  {
+    "field": "source_commit",
+    "rejected": true,
+    "error": "ValueError"
+  },
+  {
+    "evidence_count_rejected": true
+  }
+]

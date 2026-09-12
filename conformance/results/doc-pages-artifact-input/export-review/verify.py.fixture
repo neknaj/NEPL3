@@ -1,0 +1,22 @@
+﻿from pathlib import Path
+import tempfile,os,sys,subprocess,json
+sys.path.insert(0,str(Path('tools/site').resolve()))
+from artifact import export
+from test_artifact import ArtifactTests
+p=Path('.tmp/artifact-export-review');rows=[]
+for flag in [[],['-O']]:
+ cmd=[sys.executable]+flag+['-m','unittest','discover','-s','tools/site','-p','test_artifact_export.py'];r=subprocess.run(cmd,capture_output=True);label='optimized' if flag else 'normal';(p/(label+'.stdout')).write_bytes(r.stdout);(p/(label+'.stderr')).write_bytes(r.stderr);rows.append(dict(command=cmd,exit_code=r.returncode))
+(p/'commands.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf8')
+if any(r['exit_code'] for r in rows):raise ValueError('tests failed')
+with tempfile.TemporaryDirectory() as d:
+ root=Path(d).resolve();target=root/'real';target.mkdir();link=root/'alias'
+ subprocess.run(['powershell','-NoProfile','-Command','New-Item -ItemType Junction -Path $env:NEPL_LINK -Target $env:NEPL_TARGET | Out-Null'],env={**os.environ,'NEPL_LINK':str(link),'NEPL_TARGET':str(target)},check=True)
+ try:
+  m,a,kw,tar=ArtifactTests().fixture();metadata=root/'m.json';metadata.write_text(json.dumps(m),encoding='utf8');archive=root/'a.zip';archive.write_bytes(a)
+  rejected=False
+  try:export(metadata,archive,link/'pages.tar',**kw)
+  except ValueError as e:rejected='linked or non-directory ancestor' in str(e)
+  if not rejected or (target/'pages.tar').exists():raise ValueError('linked output accepted')
+  result=dict(real_junction_output_parent_rejected=rejected,no_target_file_created=True)
+ finally:os.rmdir(link)
+(p/'junction-probe.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf8');print(result)

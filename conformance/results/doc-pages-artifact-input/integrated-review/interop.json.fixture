@@ -1,0 +1,9 @@
+{
+  "exit_code": 0,
+  "original_tar_bytes": 1177600,
+  "original_tar_sha256": "2237a785ae939072fe659720f2e7a865582185dc01bac4dd76589ba417022bdf",
+  "byte_identical": true,
+  "publication_verified": false,
+  "unresolved_creation_still_blocked": true,
+  "interop_pins_from_same_receipt": true
+}

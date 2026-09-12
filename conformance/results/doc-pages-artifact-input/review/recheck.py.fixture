@@ -1,0 +1,19 @@
+from pathlib import Path
+import sys,json,io,zipfile,subprocess
+sys.path.insert(0,str(Path('tools/site').resolve()))
+from test_artifact import ArtifactTests
+from deployment.artifact import selected
+from payload import digest
+p=Path('.tmp/artifact-input-review');out=[]
+for case in ['file-prefix','directory-mode-selected']:
+ meta,archive,kw,tar=ArtifactTests().fixture(extra=('pages.tar/child',b'x') if case=='file-prefix' else None)
+ if case=='directory-mode-selected':
+  target=io.BytesIO()
+  with zipfile.ZipFile(io.BytesIO(archive)) as source,zipfile.ZipFile(target,'w') as dest:
+   for member in source.infolist():
+    if member.filename=='pages.tar':member.external_attr=0o040755<<16;member.create_system=3
+    dest.writestr(member,source.read(member))
+  archive=target.getvalue();meta.update(size_in_bytes=len(archive),digest='sha256:'+digest(archive))
+ try:result=selected(json.dumps(meta).encode(),archive,**kw);out.append(dict(case=case,accepted=result.data==tar))
+ except Exception as e:out.append(dict(case=case,accepted=False,error=type(e).__name__))
+(p/'fixed-probes.json').write_text(json.dumps(out,indent=2)+'\n',encoding='utf8');print(out)

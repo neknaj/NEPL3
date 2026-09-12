@@ -1,0 +1,20 @@
+﻿from pathlib import Path
+p=Path('.tmp/artifact-input-review')
+p.joinpath('review.md').write_text('''# Independent Actions artifact input review
+
+Reviewed artifact.py/test_artifact.py against spec15-site, existing payload/recovery contracts, CI artifact naming/layout and official Actions REST/toolkit sources. No implementation edits or API mutations were performed.
+
+Two malformed ZIP acceptance findings were fixed: file-prefix conflicts (pages.tar plus pages.tar/child) and filename/directory-mode disagreement, including a selected pages.tar marked as a Unix directory. The final version rejects both; original accepted probes and fixed results are retained separately. It also rejects truncated original filenames. No remaining blocker within the offline validation scope.
+
+Final 6 unit tests passed normally and with python -O. Independently checked entry-count exact/over limits. Revalidated the parent's saved real GitHub archive: 455286 ZIP bytes with matching API SHA-256, returning the 1177600-byte/22-file original tar. This interoperability check takes pins from the same saved receipt and is explicitly not independent provenance or eligibility proof. The unit test pins instead predate this implementation and select a known archived raw tar.
+
+API semantics: REST supplies artifact ID, ZIP download endpoint, size, digest and workflow-run identities. The official artifact toolkit hashes the uploaded archive stream and finalizes its uploaded byte count/hash. Therefore comparing downloaded ZIP bytes to size_in_bytes and digest is appropriate for this CI's archived upload mode; these fields are not the expanded files' total or the inner Pages tar digest. The download endpoint returns a redirect, whose authentication/transport handling remains outside this module.
+
+The adapter binds repository/run/source metadata, independent tar/manifest pins, receipt counts and payload build source; recovery verification returns original raw tar bytes without filesystem extraction. Diagnostic artifact ID is not a Pages upload ID. Caller authentication, run attempt, workflow/check eligibility, current-main freshness, publisher lock, network download limits and total deadline remain unimplemented here. ZipFile parses its central directory before MAX_ENTRIES is checked: this count is not a preallocation bound. MAX_ARCHIVE bounds input bytes; isolated-runner/process resource protection still needs integration. No live deployment, authorization, smoke or LKG result is established.
+
+Sources accessed 2026-09-13:
+- https://docs.github.com/en/rest/actions/artifacts
+- https://raw.githubusercontent.com/actions/toolkit/main/packages/artifact/src/internal/upload/upload-artifact.ts
+- https://raw.githubusercontent.com/actions/toolkit/main/packages/artifact/src/internal/upload/blob-upload.ts
+- https://raw.githubusercontent.com/actions/toolkit/main/packages/artifact/src/internal/download/download-artifact.ts
+''',encoding='utf8',newline='\n')
