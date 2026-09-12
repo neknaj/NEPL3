@@ -1,0 +1,31 @@
+[
+  {
+    "case": "real expected-input identity",
+    "result": "passed"
+  },
+  {
+    "case": "stale",
+    "result": "rejected",
+    "reason": "stale source commit"
+  },
+  {
+    "case": "wrong-base",
+    "result": "rejected",
+    "reason": "unexpected base"
+  },
+  {
+    "case": "missing-page",
+    "result": "rejected",
+    "reason": "page coverage"
+  },
+  {
+    "case": "source-digest",
+    "result": "rejected",
+    "reason": "source digest mismatch"
+  },
+  {
+    "case": "wrong-renderer",
+    "result": "rejected",
+    "reason": "renderer mismatch"
+  }
+]

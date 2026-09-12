@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; base-uri 'none'; form-action 'none'">
+<title>NEPL3 ドキュメント</title>
+<link rel="stylesheet" href="/NEPL3/assets/site.css">
+</head>
+<body>
+<main>
+<h1>NEPL3 ドキュメント</h1>
+<p>NEPL3 Docで記述した仕様書です。本文はJavaScriptを無効にしても読めます。</p>
+<p>文書を順次移行しています。現在、このサイトでは以下の仕様書を公開しています。Playgroundは開発中です。</p>
+<nav aria-label="仕様書"><ul><li><a href="/NEPL3/docs/spec/00-contract.html">contract</a></li>
+<li><a href="/NEPL3/docs/spec/01-architecture.html">architecture</a></li>
+<li><a href="/NEPL3/docs/spec/02-foundation.html">foundation</a></li>
+<li><a href="/NEPL3/docs/spec/06-math.html">math</a></li>
+<li><a href="/NEPL3/docs/spec/07-circuit.html">circuit</a></li>
+<li><a href="/NEPL3/docs/spec/08-editor.html">editor</a></li>
+<li><a href="/NEPL3/docs/spec/11-conformance.html">conformance</a></li>
+<li><a href="/NEPL3/docs/spec/12-model-invariants.html">model-invariants</a></li>
+<li><a href="/NEPL3/docs/spec/13-reproducibility.html">reproducibility</a></li>
+<li><a href="/NEPL3/docs/spec/17-math-html.html">math-html</a></li>
+<li><a href="/NEPL3/docs/spec/18-html-delivery.html">html-delivery</a></li>
+<li><a href="/NEPL3/docs/spec/19-html-fragment.html">html-fragment</a></li>
+<li><a href="/NEPL3/docs/spec/20-doc-html.html">doc-html</a></li>
+<li><a href="/NEPL3/docs/spec/22-external-extensions.html">external-extensions</a></li>
+</ul></nav>
+<p><a href="/NEPL3/doc-manifest.json">文書の生成情報</a> · <a href="/NEPL3/build.json">配布情報</a></p>
+</main>
+</body>
+</html>

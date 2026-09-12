@@ -1,0 +1,6 @@
+{
+  "clean_tracked_diff": true,
+  "selected_source_untracked": true,
+  "public_api_error": "git ls-files --error-unmatch -- doc/untracked.nepld failed: error: pathspec 'doc/untracked.nepld' did not match any file(s) known to git\nDid you forget to 'git add'?",
+  "output_absent": true
+}

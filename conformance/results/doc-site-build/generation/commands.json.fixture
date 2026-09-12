@@ -1,0 +1,35 @@
+[
+  {
+    "command": [
+      "target/debug/nepl3-tools.exe",
+      "site",
+      "build",
+      "site/config.json",
+      ".tmp/site-final-primary"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 57.314380800002255
+  },
+  {
+    "command": [
+      "target/debug/nepl3-tools.exe",
+      "site",
+      "build",
+      "conformance/inputs/site/alternate.json",
+      ".tmp/site-final-alternate"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 56.95798089998425
+  },
+  {
+    "command": [
+      "target/debug/nepl3-tools.exe",
+      "site",
+      "build",
+      "site/config.json",
+      ".tmp/site-final-repeat"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 74.64334720000625
+  }
+]

@@ -1,0 +1,46 @@
+from pathlib import Path
+from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
+from urllib.parse import urlsplit
+from playwright.sync_api import sync_playwright
+import json,threading,hashlib,subprocess
+OUT=Path(__file__).parent;rows=[];identities=[]
+for flavor in ['primary','alternate']:
+ root=Path('.tmp/site-final-'+flavor).resolve();build=json.loads((root/'build.json').read_text(encoding='utf-8'));manifest=json.loads((root/'doc-manifest.json').read_text(encoding='utf-8'));base=build['base_path']
+ identity={'flavor':flavor,'build':build,'pages':[]}
+ assert build['runtime_identity'] is None and build['capability']=='docs-only'
+ for p in manifest['pages']:
+  current=Path(p['input']).read_bytes();committed=subprocess.check_output(['git','show',build['source_commit']+':'+p['input']]);digest=hashlib.sha256(current).hexdigest()
+  assert current==committed and digest==p['source_sha256'];identity['pages'].append({'input':p['input'],'sha256':digest,'commit_bytes_equal':True})
+ assert (root/'docs/spec/assets/doc.css').read_bytes()==Path('crates/languages/doc/html/assets/doc.css').read_bytes()
+ identities.append(identity)
+ class Handler(SimpleHTTPRequestHandler):
+  def __init__(self,*a,**kw):super().__init__(*a,directory=str(root),**kw)
+  def do_GET(self):
+   path=urlsplit(self.path).path
+   if not path.startswith(base):self.send_error(404);return
+   self.path='/'+path[len(base):];super().do_GET()
+  def log_message(self,*a):pass
+ server=ThreadingHTTPServer(('127.0.0.1',0),Handler);threading.Thread(target=server.serve_forever,daemon=True).start();origin=f'http://127.0.0.1:{server.server_port}'
+ try:
+  with sync_playwright() as p:
+   for engine in ['chromium','firefox','webkit']:
+    b=getattr(p,engine).launch();ctx=b.new_context(java_script_enabled=False,viewport={'width':375,'height':900});page=ctx.new_page();requests=[];page.on('request',lambda r:requests.append(r.url))
+    row={'flavor':flavor,'engine':engine,'base':base,'clicked':[]}
+    response=page.goto(origin+base,wait_until='load');assert response.status==200
+    links=page.locator('nav a').evaluate_all('(xs)=>xs.map(x=>({href:x.getAttribute("href"),text:x.textContent}))');assert len(links)==14
+    for link in links:
+     page.goto(origin+base,wait_until='load')
+     page.locator('nav a').evaluate_all('(xs,href)=>xs.find(x=>x.getAttribute("href")===href).setAttribute("data-review-target","")',link['href'])
+     with page.expect_navigation(wait_until='load'):
+      page.locator('[data-review-target]').click()
+     assert page.url==origin+link['href'];assert page.locator('article').count()==1
+     before=page.locator('article').text_content();response=page.reload(wait_until='load');assert response.status in [200,304] and before==page.locator('article').text_content(), (flavor,engine,link['href'],response.status,before[:60],page.locator('article').text_content()[:60])
+     row['clicked'].append({'href':link['href'],'reload_same_text':True})
+    page.goto(origin+base+'docs/',wait_until='load');page.keyboard.press('Tab');focus=page.evaluate('''()=>({href:document.activeElement.getAttribute('href'),outline:getComputedStyle(document.activeElement).outlineStyle})''');row['tab_focus']=focus;page.locator('nav a').first.focus();page.keyboard.press('Enter');page.wait_for_url(origin+links[0]['href']);assert page.url==origin+links[0]['href'];row['keyboard']=focus
+    page.goto(origin+base+'docs/spec/02-foundation.html#n-66616374735f617574686f72697479',wait_until='networkidle');page.wait_for_function('scrollY>0');page.reload(wait_until='networkidle');page.wait_for_function('scrollY>0');row['fragment']=page.evaluate('''()=>({hash:location.hash,top:document.querySelector(location.hash).getBoundingClientRect().top,scroll:scrollY})''');assert row['fragment']['scroll']>0
+    page.screenshot(path=str(OUT/f'{flavor}-{engine}-fragment.png'))
+    assert page.goto(origin+base+'missing.html').status==404;assert page.goto(origin+'/assets/site.css').status==404
+    row['unknown_404']=True;row['outside_base_404']=True;row['external_requests']=[u for u in requests if not u.startswith(origin)];assert not row['external_requests'];ctx.close()
+    c=b.new_context(java_script_enabled=True);q=c.new_page();q.goto(origin+base,wait_until='load');q.evaluate('''()=>{let s=document.createElement('script');s.textContent='window.reviewCspExecuted=true';document.head.appendChild(s)}''');assert not q.evaluate('window.reviewCspExecuted===true');row['inline_script_blocked_by_csp']=True;c.close();b.close();rows.append(row)
+ finally:server.shutdown();server.server_close()
+(OUT/'results.json').write_text(json.dumps({'identities':identities,'journeys':rows},ensure_ascii=False,indent=2),encoding='utf-8');print('passed',len(rows),'journeys',sum(len(r['clicked']) for r in rows),'click/reloads')

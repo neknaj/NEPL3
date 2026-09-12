@@ -1,0 +1,870 @@
+{
+  "identities": [
+    {
+      "flavor": "primary",
+      "build": {
+        "base_path": "/NEPL3/",
+        "capability": "docs-only",
+        "design": "nepl3-design-2026-09-06-r4",
+        "files": [
+          {
+            "bytes": 0,
+            "path": ".nojekyll",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "bytes": 335,
+            "path": "assets/site.css",
+            "sha256": "949f4b145fcd3f2bc2f5534baa0956f269ef6e62bce283e0e1f554a3dd30eb46"
+          },
+          {
+            "bytes": 34933,
+            "path": "doc-manifest.json",
+            "sha256": "bd37dc1ecd83dc3d262de2033d6a87671e86a33549841ea0fd69f95534df5e7f"
+          },
+          {
+            "bytes": 1853,
+            "path": "docs/index.html",
+            "sha256": "dd079643727b576bb84d8eaa14a2c8ba22f24648a6c377c2aabfbaf676ad3821"
+          },
+          {
+            "bytes": 38595,
+            "path": "docs/spec/00-contract.html",
+            "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+          },
+          {
+            "bytes": 32896,
+            "path": "docs/spec/01-architecture.html",
+            "sha256": "499aaa1e67781a52c2bc2f3faaa8fc0623b6a8e3c80282eb4a841da597c8936f"
+          },
+          {
+            "bytes": 146562,
+            "path": "docs/spec/02-foundation.html",
+            "sha256": "2b1913c546fcbb4a7a7fe5137a3c7d29112c198ca2584c36000d42885b8030ed"
+          },
+          {
+            "bytes": 70579,
+            "path": "docs/spec/06-math.html",
+            "sha256": "46a7db5d3683c987997d3f4f782e5dedbb71a0d18c1fd1648881afaadb2492b8"
+          },
+          {
+            "bytes": 48369,
+            "path": "docs/spec/07-circuit.html",
+            "sha256": "11dedf2469c9c0a2e11c845b1167ffaaa56deeaeea51b76db7a7f484ab43caf5"
+          },
+          {
+            "bytes": 175180,
+            "path": "docs/spec/08-editor.html",
+            "sha256": "42b7496ebf4d56eaeb6e59ded50022bf99a676766809459e5b931f25b06e4ff8"
+          },
+          {
+            "bytes": 105667,
+            "path": "docs/spec/11-conformance.html",
+            "sha256": "faf98443e21d37df8e0b40c1610ab4661f7563abaa6ee1b493adadada4fd749c"
+          },
+          {
+            "bytes": 95429,
+            "path": "docs/spec/12-model-invariants.html",
+            "sha256": "904a6dc8d6d7a4cce2d6f99c80654d4caafc75a80e1622a4308df2aeb3afbbdd"
+          },
+          {
+            "bytes": 91421,
+            "path": "docs/spec/13-reproducibility.html",
+            "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+          },
+          {
+            "bytes": 93408,
+            "path": "docs/spec/17-math-html.html",
+            "sha256": "3020fb36299144108db052e4eb39f7b1d63caf1477818219c6dd2271f70abb07"
+          },
+          {
+            "bytes": 37232,
+            "path": "docs/spec/18-html-delivery.html",
+            "sha256": "7a2ed0088c71e0766ec304bcc59d2cccffa307a9742a66139eeea99f633b6355"
+          },
+          {
+            "bytes": 61432,
+            "path": "docs/spec/19-html-fragment.html",
+            "sha256": "3a5cc5cb6d46262403340997c6ec08ead08362250e5ed90eec6a65993bfa95fc"
+          },
+          {
+            "bytes": 61453,
+            "path": "docs/spec/20-doc-html.html",
+            "sha256": "e57ec3c9fec3dc104735c603ad79cf37769945acad818ff69f29a13efcfdb224"
+          },
+          {
+            "bytes": 44041,
+            "path": "docs/spec/22-external-extensions.html",
+            "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8"
+          },
+          {
+            "bytes": 3233,
+            "path": "docs/spec/assets/doc.css",
+            "sha256": "cd76fb7ecf7c451f002df80add05c64a274c5b379dde7f012fb12690affac74e"
+          },
+          {
+            "bytes": 1853,
+            "path": "index.html",
+            "sha256": "dd079643727b576bb84d8eaa14a2c8ba22f24648a6c377c2aabfbaf676ad3821"
+          }
+        ],
+        "renderer": {
+          "build_rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)",
+          "executable_sha256": "d6ef8b8608bfaf903d15f644c6970328ec1e4cd01b8a995f747ed2d2a12c2f12"
+        },
+        "runtime_identity": null,
+        "scope": "Registered canonical Doc pages; no Playground, deploy receipt or full T19/T20 acceptance",
+        "site_renderer": "nepl3-tools.site/1",
+        "source_commit": "2390e31127b4d8173c872f61abc48689a24c3cc4",
+        "source_identity_scope": "input checkout; renderer executable identified separately",
+        "version": 1
+      },
+      "pages": [
+        {
+          "input": "doc/spec/00-contract.nepld",
+          "sha256": "48c2b1696c7308ee43f26dbf06a6038b38f0199233c1da3ef15a04453f810e93",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/13-reproducibility.nepld",
+          "sha256": "31486ad75e0776d55cc12b2a9b5af2840780ad7812456d9c222a90fd8ab495a8",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/22-external-extensions.nepld",
+          "sha256": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/01-architecture.nepld",
+          "sha256": "7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/18-html-delivery.nepld",
+          "sha256": "90c02690b3b98e6c6d305c69750a65678d1ad81c7688042620a77b600babac73",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/07-circuit.nepld",
+          "sha256": "cf169539cb22eb1a7b21fc5c3f15d060975453e7fd72534126f894548c4fbe30",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/19-html-fragment.nepld",
+          "sha256": "373a519dffc1cbbc2bbd2b6334eef8d4490aae6c62798bf26918a5f280bfe083",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/12-model-invariants.nepld",
+          "sha256": "f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/08-editor.nepld",
+          "sha256": "d326323331b335da48a044e35a92d2bd89b64bc4fde794131af4ab17ad3f91b6",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/20-doc-html.nepld",
+          "sha256": "5d0380d855e620f89140b34e01d0a0f26c20833f4874a655c5fe033523fb861d",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/17-math-html.nepld",
+          "sha256": "265de78f635661382ab8b42cb0508d74391ac599d0ecff754f90c691371bce31",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/11-conformance.nepld",
+          "sha256": "0de4c9d1e23370eac83f40f61bd263ea89820bc209c343081c9f85a7c658e5bd",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/06-math.nepld",
+          "sha256": "0c469ae880473c47044cdb4d9d916ad7c0416a7632b3bbce1d7002d2b651525e",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/02-foundation.nepld",
+          "sha256": "a995ce6dc28ad3d8470ee5c19276be0a631f14451466a1bd3d17e44290457e8e",
+          "commit_bytes_equal": true
+        }
+      ]
+    },
+    {
+      "flavor": "alternate",
+      "build": {
+        "base_path": "/acceptance/project/",
+        "capability": "docs-only",
+        "design": "nepl3-design-2026-09-06-r4",
+        "files": [
+          {
+            "bytes": 0,
+            "path": ".nojekyll",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "bytes": 335,
+            "path": "assets/site.css",
+            "sha256": "949f4b145fcd3f2bc2f5534baa0956f269ef6e62bce283e0e1f554a3dd30eb46"
+          },
+          {
+            "bytes": 34933,
+            "path": "doc-manifest.json",
+            "sha256": "bd37dc1ecd83dc3d262de2033d6a87671e86a33549841ea0fd69f95534df5e7f"
+          },
+          {
+            "bytes": 2074,
+            "path": "docs/index.html",
+            "sha256": "123c88052699d452960a6b2be4113d3691111594d6de54ad07a837ba455f5ced"
+          },
+          {
+            "bytes": 38595,
+            "path": "docs/spec/00-contract.html",
+            "sha256": "9e20c1b7dbc830f4932fdf069414f56e724125e36f691c19948ed90d31e64815"
+          },
+          {
+            "bytes": 32896,
+            "path": "docs/spec/01-architecture.html",
+            "sha256": "499aaa1e67781a52c2bc2f3faaa8fc0623b6a8e3c80282eb4a841da597c8936f"
+          },
+          {
+            "bytes": 146562,
+            "path": "docs/spec/02-foundation.html",
+            "sha256": "2b1913c546fcbb4a7a7fe5137a3c7d29112c198ca2584c36000d42885b8030ed"
+          },
+          {
+            "bytes": 70579,
+            "path": "docs/spec/06-math.html",
+            "sha256": "46a7db5d3683c987997d3f4f782e5dedbb71a0d18c1fd1648881afaadb2492b8"
+          },
+          {
+            "bytes": 48369,
+            "path": "docs/spec/07-circuit.html",
+            "sha256": "11dedf2469c9c0a2e11c845b1167ffaaa56deeaeea51b76db7a7f484ab43caf5"
+          },
+          {
+            "bytes": 175180,
+            "path": "docs/spec/08-editor.html",
+            "sha256": "42b7496ebf4d56eaeb6e59ded50022bf99a676766809459e5b931f25b06e4ff8"
+          },
+          {
+            "bytes": 105667,
+            "path": "docs/spec/11-conformance.html",
+            "sha256": "faf98443e21d37df8e0b40c1610ab4661f7563abaa6ee1b493adadada4fd749c"
+          },
+          {
+            "bytes": 95429,
+            "path": "docs/spec/12-model-invariants.html",
+            "sha256": "904a6dc8d6d7a4cce2d6f99c80654d4caafc75a80e1622a4308df2aeb3afbbdd"
+          },
+          {
+            "bytes": 91421,
+            "path": "docs/spec/13-reproducibility.html",
+            "sha256": "99b80b99318619335eca6bebbcc2d0ec044f12c2c4fe35d5020dc53af4a355a1"
+          },
+          {
+            "bytes": 93408,
+            "path": "docs/spec/17-math-html.html",
+            "sha256": "3020fb36299144108db052e4eb39f7b1d63caf1477818219c6dd2271f70abb07"
+          },
+          {
+            "bytes": 37232,
+            "path": "docs/spec/18-html-delivery.html",
+            "sha256": "7a2ed0088c71e0766ec304bcc59d2cccffa307a9742a66139eeea99f633b6355"
+          },
+          {
+            "bytes": 61432,
+            "path": "docs/spec/19-html-fragment.html",
+            "sha256": "3a5cc5cb6d46262403340997c6ec08ead08362250e5ed90eec6a65993bfa95fc"
+          },
+          {
+            "bytes": 61453,
+            "path": "docs/spec/20-doc-html.html",
+            "sha256": "e57ec3c9fec3dc104735c603ad79cf37769945acad818ff69f29a13efcfdb224"
+          },
+          {
+            "bytes": 44041,
+            "path": "docs/spec/22-external-extensions.html",
+            "sha256": "08bc5dd0b85a5e70bd7893bd286c01034ccc75e9751510973277f79d5f0f9ba8"
+          },
+          {
+            "bytes": 3233,
+            "path": "docs/spec/assets/doc.css",
+            "sha256": "cd76fb7ecf7c451f002df80add05c64a274c5b379dde7f012fb12690affac74e"
+          },
+          {
+            "bytes": 2074,
+            "path": "index.html",
+            "sha256": "123c88052699d452960a6b2be4113d3691111594d6de54ad07a837ba455f5ced"
+          }
+        ],
+        "renderer": {
+          "build_rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)",
+          "executable_sha256": "d6ef8b8608bfaf903d15f644c6970328ec1e4cd01b8a995f747ed2d2a12c2f12"
+        },
+        "runtime_identity": null,
+        "scope": "Registered canonical Doc pages; no Playground, deploy receipt or full T19/T20 acceptance",
+        "site_renderer": "nepl3-tools.site/1",
+        "source_commit": "2390e31127b4d8173c872f61abc48689a24c3cc4",
+        "source_identity_scope": "input checkout; renderer executable identified separately",
+        "version": 1
+      },
+      "pages": [
+        {
+          "input": "doc/spec/00-contract.nepld",
+          "sha256": "48c2b1696c7308ee43f26dbf06a6038b38f0199233c1da3ef15a04453f810e93",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/13-reproducibility.nepld",
+          "sha256": "31486ad75e0776d55cc12b2a9b5af2840780ad7812456d9c222a90fd8ab495a8",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/22-external-extensions.nepld",
+          "sha256": "0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/01-architecture.nepld",
+          "sha256": "7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/18-html-delivery.nepld",
+          "sha256": "90c02690b3b98e6c6d305c69750a65678d1ad81c7688042620a77b600babac73",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/07-circuit.nepld",
+          "sha256": "cf169539cb22eb1a7b21fc5c3f15d060975453e7fd72534126f894548c4fbe30",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/19-html-fragment.nepld",
+          "sha256": "373a519dffc1cbbc2bbd2b6334eef8d4490aae6c62798bf26918a5f280bfe083",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/12-model-invariants.nepld",
+          "sha256": "f16329d0cc727a51491c061cc6ae2a636a75a24f343deb8f8a782369dd1d53b8",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/08-editor.nepld",
+          "sha256": "d326323331b335da48a044e35a92d2bd89b64bc4fde794131af4ab17ad3f91b6",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/20-doc-html.nepld",
+          "sha256": "5d0380d855e620f89140b34e01d0a0f26c20833f4874a655c5fe033523fb861d",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/17-math-html.nepld",
+          "sha256": "265de78f635661382ab8b42cb0508d74391ac599d0ecff754f90c691371bce31",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/11-conformance.nepld",
+          "sha256": "0de4c9d1e23370eac83f40f61bd263ea89820bc209c343081c9f85a7c658e5bd",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/06-math.nepld",
+          "sha256": "0c469ae880473c47044cdb4d9d916ad7c0416a7632b3bbce1d7002d2b651525e",
+          "commit_bytes_equal": true
+        },
+        {
+          "input": "doc/spec/02-foundation.nepld",
+          "sha256": "a995ce6dc28ad3d8470ee5c19276be0a631f14451466a1bd3d17e44290457e8e",
+          "commit_bytes_equal": true
+        }
+      ]
+    }
+  ],
+  "journeys": [
+    {
+      "flavor": "primary",
+      "engine": "chromium",
+      "base": "/NEPL3/",
+      "clicked": [
+        {
+          "href": "/NEPL3/docs/spec/00-contract.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/01-architecture.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/02-foundation.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/06-math.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/07-circuit.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/08-editor.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/11-conformance.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/12-model-invariants.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/13-reproducibility.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/17-math-html.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/18-html-delivery.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/19-html-fragment.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/20-doc-html.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/22-external-extensions.html",
+          "reload_same_text": true
+        }
+      ],
+      "tab_focus": {
+        "href": "/NEPL3/docs/spec/00-contract.html",
+        "outline": "solid"
+      },
+      "keyboard": {
+        "href": "/NEPL3/docs/spec/00-contract.html",
+        "outline": "solid"
+      },
+      "fragment": {
+        "hash": "#n-66616374735f617574686f72697479",
+        "top": 0.171875,
+        "scroll": 10420
+      },
+      "unknown_404": true,
+      "outside_base_404": true,
+      "external_requests": [],
+      "inline_script_blocked_by_csp": true
+    },
+    {
+      "flavor": "primary",
+      "engine": "firefox",
+      "base": "/NEPL3/",
+      "clicked": [
+        {
+          "href": "/NEPL3/docs/spec/00-contract.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/01-architecture.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/02-foundation.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/06-math.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/07-circuit.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/08-editor.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/11-conformance.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/12-model-invariants.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/13-reproducibility.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/17-math-html.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/18-html-delivery.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/19-html-fragment.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/20-doc-html.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/22-external-extensions.html",
+          "reload_same_text": true
+        }
+      ],
+      "tab_focus": {
+        "href": "/NEPL3/docs/spec/00-contract.html",
+        "outline": "solid"
+      },
+      "keyboard": {
+        "href": "/NEPL3/docs/spec/00-contract.html",
+        "outline": "solid"
+      },
+      "fragment": {
+        "hash": "#n-66616374735f617574686f72697479",
+        "top": 0,
+        "scroll": 10434.3662109375
+      },
+      "unknown_404": true,
+      "outside_base_404": true,
+      "external_requests": [],
+      "inline_script_blocked_by_csp": true
+    },
+    {
+      "flavor": "primary",
+      "engine": "webkit",
+      "base": "/NEPL3/",
+      "clicked": [
+        {
+          "href": "/NEPL3/docs/spec/00-contract.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/01-architecture.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/02-foundation.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/06-math.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/07-circuit.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/08-editor.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/11-conformance.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/12-model-invariants.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/13-reproducibility.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/17-math-html.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/18-html-delivery.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/19-html-fragment.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/20-doc-html.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/NEPL3/docs/spec/22-external-extensions.html",
+          "reload_same_text": true
+        }
+      ],
+      "tab_focus": {
+        "href": null,
+        "outline": "none"
+      },
+      "keyboard": {
+        "href": null,
+        "outline": "none"
+      },
+      "fragment": {
+        "hash": "#n-66616374735f617574686f72697479",
+        "top": -0.5,
+        "scroll": 10424
+      },
+      "unknown_404": true,
+      "outside_base_404": true,
+      "external_requests": [],
+      "inline_script_blocked_by_csp": true
+    },
+    {
+      "flavor": "alternate",
+      "engine": "chromium",
+      "base": "/acceptance/project/",
+      "clicked": [
+        {
+          "href": "/acceptance/project/docs/spec/00-contract.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/01-architecture.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/02-foundation.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/06-math.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/07-circuit.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/08-editor.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/11-conformance.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/12-model-invariants.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/13-reproducibility.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/17-math-html.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/18-html-delivery.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/19-html-fragment.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/20-doc-html.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/22-external-extensions.html",
+          "reload_same_text": true
+        }
+      ],
+      "tab_focus": {
+        "href": "/acceptance/project/docs/spec/00-contract.html",
+        "outline": "solid"
+      },
+      "keyboard": {
+        "href": "/acceptance/project/docs/spec/00-contract.html",
+        "outline": "solid"
+      },
+      "fragment": {
+        "hash": "#n-66616374735f617574686f72697479",
+        "top": 0.171875,
+        "scroll": 10420
+      },
+      "unknown_404": true,
+      "outside_base_404": true,
+      "external_requests": [],
+      "inline_script_blocked_by_csp": true
+    },
+    {
+      "flavor": "alternate",
+      "engine": "firefox",
+      "base": "/acceptance/project/",
+      "clicked": [
+        {
+          "href": "/acceptance/project/docs/spec/00-contract.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/01-architecture.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/02-foundation.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/06-math.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/07-circuit.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/08-editor.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/11-conformance.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/12-model-invariants.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/13-reproducibility.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/17-math-html.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/18-html-delivery.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/19-html-fragment.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/20-doc-html.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/22-external-extensions.html",
+          "reload_same_text": true
+        }
+      ],
+      "tab_focus": {
+        "href": "/acceptance/project/docs/spec/00-contract.html",
+        "outline": "solid"
+      },
+      "keyboard": {
+        "href": "/acceptance/project/docs/spec/00-contract.html",
+        "outline": "solid"
+      },
+      "fragment": {
+        "hash": "#n-66616374735f617574686f72697479",
+        "top": 0,
+        "scroll": 10434.3662109375
+      },
+      "unknown_404": true,
+      "outside_base_404": true,
+      "external_requests": [],
+      "inline_script_blocked_by_csp": true
+    },
+    {
+      "flavor": "alternate",
+      "engine": "webkit",
+      "base": "/acceptance/project/",
+      "clicked": [
+        {
+          "href": "/acceptance/project/docs/spec/00-contract.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/01-architecture.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/02-foundation.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/06-math.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/07-circuit.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/08-editor.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/11-conformance.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/12-model-invariants.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/13-reproducibility.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/17-math-html.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/18-html-delivery.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/19-html-fragment.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/20-doc-html.html",
+          "reload_same_text": true
+        },
+        {
+          "href": "/acceptance/project/docs/spec/22-external-extensions.html",
+          "reload_same_text": true
+        }
+      ],
+      "tab_focus": {
+        "href": null,
+        "outline": "none"
+      },
+      "keyboard": {
+        "href": null,
+        "outline": "none"
+      },
+      "fragment": {
+        "hash": "#n-66616374735f617574686f72697479",
+        "top": -0.5,
+        "scroll": 10424
+      },
+      "unknown_404": true,
+      "outside_base_404": true,
+      "external_requests": [],
+      "inline_script_blocked_by_csp": true
+    }
+  ]
+}

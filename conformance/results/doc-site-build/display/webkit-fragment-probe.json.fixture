@@ -1,0 +1,54 @@
+[
+  {
+    "js": false,
+    "wait": "load",
+    "initial": {
+      "scroll": 10424,
+      "top": -0.5
+    },
+    "settled_initial": 10424,
+    "reloaded": {
+      "scroll": 10424,
+      "top": -0.5
+    }
+  },
+  {
+    "js": false,
+    "wait": "networkidle",
+    "initial": {
+      "scroll": 10424,
+      "top": -0.5
+    },
+    "settled_initial": 10424,
+    "reloaded": {
+      "scroll": 10424,
+      "top": -0.5
+    }
+  },
+  {
+    "js": true,
+    "wait": "load",
+    "initial": {
+      "scroll": 10424,
+      "top": -0.5
+    },
+    "settled_initial": 10424,
+    "reloaded": {
+      "scroll": 10424,
+      "top": -0.5
+    }
+  },
+  {
+    "js": true,
+    "wait": "networkidle",
+    "initial": {
+      "scroll": 10424,
+      "top": -0.5
+    },
+    "settled_initial": 10424,
+    "reloaded": {
+      "scroll": 10424,
+      "top": -0.5
+    }
+  }
+]

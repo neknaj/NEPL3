@@ -1,0 +1,37 @@
+"""Reject corrupted static artifacts before starting a browser."""
+import hashlib
+import json
+from pathlib import Path
+import tempfile
+import unittest
+from check import verify
+
+
+class ArtifactRejection(unittest.TestCase):
+    def test_modified_bytes_missing_resource_and_missing_fragment(self):
+        for html, damage in [
+            ('<h1>Original</h1>', True),
+            ('<link rel="stylesheet" href="missing.css">', False),
+            ('<a href="index.html#missing">Link</a>', False),
+            ('<script>0</script>', False),
+        ]:
+            with self.subTest(html=html), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                data = {
+                    'index.html': html.encode('utf-8'),
+                    'build.json': b'{"base_path":"/NEPL3/"}',
+                }
+                records = []
+                for name, content in data.items():
+                    (root / name).write_bytes(content)
+                    records.append({'path': name, 'bytes': len(content),
+                                    'sha256': hashlib.sha256(content).hexdigest()})
+                (root / 'manifest.json').write_text(json.dumps({'files': records}), encoding='utf-8')
+                if damage:
+                    (root / 'index.html').write_bytes(b'<h1>Changed</h1>')
+                with self.assertRaises(AssertionError):
+                    verify(root)
+
+
+if __name__ == '__main__':
+    unittest.main()
