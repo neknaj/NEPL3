@@ -11,6 +11,19 @@ from payload import digest, pack, snapshot
 
 
 class PayloadTests(unittest.TestCase):
+    def test_manifest_version_requires_integer_one(self):
+        for version in [True, 1.0, '1', None, 2]:
+            with self.subTest(version=version), tempfile.TemporaryDirectory() as directory:
+                parent = Path(directory).resolve(); root = parent / 'site'
+                _, _ = self.fixture(root)
+                manifest = json.loads((root / 'manifest.json').read_bytes())
+                manifest['version'] = version
+                data = json.dumps(manifest).encode('utf-8')
+                (root / 'manifest.json').write_bytes(data)
+                with self.assertRaisesRegex(ValueError, 'unsupported manifest'):
+                    pack(root, digest(data), parent / 'out.tar')
+                self.assertFalse((parent / 'out.tar').exists())
+
     @unittest.skipUnless(os.name == 'nt', 'Windows junction regression')
     def test_windows_junction_is_rejected_without_following_it(self):
         with tempfile.TemporaryDirectory() as directory:

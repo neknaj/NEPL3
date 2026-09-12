@@ -90,7 +90,8 @@ def snapshot(root, expected_manifest):
     checked('manifest.json' in files, 'missing manifest')
     checked(digest(files['manifest.json']) == expected_manifest, 'manifest digest mismatch')
     manifest = json.loads(files['manifest.json'].decode('utf-8'), object_pairs_hook=unique_object)
-    checked(manifest.get('version') == 1, 'unsupported manifest')
+    checked(isinstance(manifest, dict) and type(manifest.get('version')) is int and
+            manifest['version'] == 1, 'unsupported manifest')
     records = manifest.get('files')
     checked(isinstance(records, list) and 0 < len(records) < MAX_FILES, 'invalid file records')
     declared = set()
