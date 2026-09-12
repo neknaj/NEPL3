@@ -135,6 +135,18 @@ Terminal/unknown history is refused, requiring explicit reconciliation. Local
 writes here do not imply remote durability; remote publication of observations,
 stop/incident records and the overall publisher state machine remain separate.
 
+`wait_remote` adds the remote boundary: it confirms the receipt head against the
+pinned origin before polling, then publishes and confirms each locally appended
+observation before the next request or a successful return. Failure preserves the
+local evidence and propagates; it does not retry a write or discard the unmatched
+head. Resume requires explicit reconciliation of local and remote history.
+Initial remote confirmation and subsequent pushes consume the same remaining
+budget. Git subprocesses retain their bounded per-command timeout; this is not a
+hard real-time interrupt of a Git operation already in progress. The caller still
+owns the publisher lock, verifies remote protection and interprets terminal
+observations before any deployment or LKG change. This function performs no Pages
+deployment, publication smoke or LKG promotion.
+
 ## Immutable recovery storage receipt
 
 `release.verify` checks the release metadata and the bytes obtained from its

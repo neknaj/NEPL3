@@ -106,12 +106,33 @@ def wait_recorded(mirror, expected_head, token, *, owner, repository, remaining_
                           sleep=time.sleep, fetch=status)
 
 
+def wait_remote(mirror, expected_head, token, *, expected_url, owner, repository, remaining_seconds):
+    """Persist each observation remotely before fetching again or returning success."""
+    import time
+    from .transport import status
+    from journal import remote
+
+    def confirm_start():
+        checked(remote.head(mirror, expected_url) == expected_head,
+                "remote receipt journal changed; reconcile before polling")
+
+    def confirm_record(previous, current):
+        remote.publish(mirror, expected_url, previous, current)
+
+    return _wait_recorded(mirror, expected_head, token, owner=owner, repository=repository,
+                          remaining_seconds=remaining_seconds, clock=time.monotonic,
+                          sleep=time.sleep, fetch=status, before_wait=confirm_start,
+                          after_record=confirm_record)
+
+
 def _wait_recorded(mirror, expected_head, token, *, owner, repository,
-                   remaining_seconds, clock, sleep, fetch):
+                   remaining_seconds, clock, sleep, fetch, before_wait=None, after_record=None):
     from .poll import _wait, Report, Stop
     checked(type(remaining_seconds) in (int, float) and 0 < remaining_seconds <= 600,
             "invalid remaining status wait")
     deadline = clock() + remaining_seconds
+    if before_wait is not None:
+        before_wait()
     history = status_history(mirror, owner=owner, repository=repository)
     checked(history.head == expected_head, "stale wait journal head")
     checked(not history.observations or history.observations[-1].observation.phase == Phase.PENDING,
@@ -120,8 +141,11 @@ def _wait_recorded(mirror, expected_head, token, *, owner, repository,
 
     def persist(result):
         nonlocal head
+        previous = head
         head, _ = record_status(mirror, head, result.raw_response, owner=owner,
                                 repository=repository, request_url=history.receipt.status_endpoint)
+        if after_record is not None:
+            after_record(previous, head)
 
     if clock() >= deadline:
         return head, Report(history.receipt.deployment_id, Stop.DEADLINE, ())
