@@ -1,0 +1,16 @@
+{
+  "result": {
+    "detail": "non-200 response for build.json",
+    "publication_verified": false,
+    "reason": "ValueError",
+    "result": "failed",
+    "version": 1,
+    "url": "http://127.0.0.1:54797/NEPL3/",
+    "manifest_sha256": "ff4130b037c2c59dfb67098ec46670790fba9c1d7a002bacaadf9e65105f15f7",
+    "transport": "loopback-http"
+  },
+  "requests": [
+    "/NEPL3/build.json?nepl3-smoke=ff4130b037c2c59dfb67098ec46670790fba9c1d7a002bacaadf9e65105f15f7",
+    "/NEPL3/build.json"
+  ]
+}
