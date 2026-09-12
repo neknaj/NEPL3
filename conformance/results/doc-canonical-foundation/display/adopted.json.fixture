@@ -1,0 +1,120 @@
+{
+  "head": "b8dfdd1160472e11d193f56ab2f4b5322ec0b873",
+  "markdown_repeat": [
+    {
+      "path": "manifest.json",
+      "same": true
+    },
+    {
+      "path": "doc/spec/00-contract.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/01-architecture.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/02-foundation.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/06-math.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/07-circuit.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/08-editor.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/11-conformance.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/12-model-invariants.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/13-reproducibility.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/17-math-html.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/18-html-delivery.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/19-html-fragment.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/20-doc-html.md",
+      "same": true
+    },
+    {
+      "path": "doc/spec/22-external-extensions.md",
+      "same": true
+    }
+  ],
+  "adopted_md_matches": true,
+  "prior_markdown_bodies": [
+    {
+      "path": "doc/spec/00-contract.md",
+      "body_same": true
+    },
+    {
+      "path": "doc/spec/01-architecture.md",
+      "body_same": true
+    },
+    {
+      "path": "doc/spec/06-math.md",
+      "body_same": true
+    },
+    {
+      "path": "doc/spec/07-circuit.md",
+      "body_same": true
+    },
+    {
+      "path": "doc/spec/08-editor.md",
+      "body_same": true
+    },
+    {
+      "path": "doc/spec/11-conformance.md",
+      "body_same": true
+    },
+    {
+      "path": "doc/spec/12-model-invariants.md",
+      "body_same": true
+    },
+    {
+      "path": "doc/spec/13-reproducibility.md",
+      "body_same": true
+    },
+    {
+      "path": "doc/spec/17-math-html.md",
+      "body_same": true
+    },
+    {
+      "path": "doc/spec/18-html-delivery.md",
+      "body_same": true
+    },
+    {
+      "path": "doc/spec/19-html-fragment.md",
+      "body_same": true
+    },
+    {
+      "path": "doc/spec/20-doc-html.md",
+      "body_same": true
+    },
+    {
+      "path": "doc/spec/22-external-extensions.md",
+      "body_same": true
+    }
+  ]
+}

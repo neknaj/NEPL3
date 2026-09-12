@@ -1,0 +1,50 @@
+[
+  {
+    "headings": 11,
+    "codes": 19,
+    "ruby": 1111,
+    "anno": 1,
+    "css": [
+      "file:///C:/projects/NEPL3-doc-canonical-conformance/.tmp/html-chapter02-resolved-first/docs/spec/assets/doc.css"
+    ],
+    "background": "rgb(13, 17, 23)",
+    "overflow": false,
+    "nested_top": -0.15625,
+    "browser": "chromium",
+    "http_requests": [],
+    "offline_emulation": true,
+    "http_https_aborted": true
+  },
+  {
+    "headings": 11,
+    "codes": 19,
+    "ruby": 1111,
+    "anno": 1,
+    "css": [
+      "file:///C:/projects/NEPL3-doc-canonical-conformance/.tmp/html-chapter02-resolved-first/docs/spec/assets/doc.css"
+    ],
+    "background": "rgb(13, 17, 23)",
+    "overflow": false,
+    "nested_top": 0,
+    "browser": "firefox",
+    "http_requests": [],
+    "offline_emulation": true,
+    "http_https_aborted": true
+  },
+  {
+    "headings": 11,
+    "codes": 19,
+    "ruby": 1111,
+    "anno": 1,
+    "css": [
+      "file:///C:/projects/NEPL3-doc-canonical-conformance/.tmp/html-chapter02-resolved-first/docs/spec/assets/doc.css"
+    ],
+    "background": "rgb(13, 17, 23)",
+    "overflow": false,
+    "nested_top": 0,
+    "browser": "webkit",
+    "http_requests": [],
+    "offline_emulation": false,
+    "http_https_aborted": true
+  }
+]

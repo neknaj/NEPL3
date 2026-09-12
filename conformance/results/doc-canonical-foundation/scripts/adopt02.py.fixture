@@ -1,0 +1,25 @@
+from pathlib import Path
+import json,hashlib,subprocess
+root=Path.cwd();registry=json.loads((root/'doc/canonical.json').read_bytes());assert len(registry['pages'])==14
+assert not subprocess.check_output(['git','status','--porcelain']).strip()
+for kind,count in [('markdown',15),('html',16)]:
+ def files(phase):
+  d=root/f'.tmp/{kind}-chapter02-resolved-{phase}';return {p.relative_to(d).as_posix():p.read_bytes() for p in d.rglob('*') if p.is_file()}
+ assert len(files('first'))==count and files('first')==files('second')
+prior=root/'.tmp/html-chapter06-first';preserved=[]
+for p in prior.rglob('*'):
+ if p.is_file() and p.name!='manifest.json':
+  n=p.relative_to(prior);assert p.read_bytes()==(root/'.tmp/html-chapter02-resolved-first'/n).read_bytes();preserved.append(n.as_posix())
+assert len(preserved)==14
+pending=[];changes=[]
+for page in registry['pages']:
+ dest=root/page['projection'];old=dest.read_bytes();new=(root/'.tmp/markdown-chapter02-resolved-first'/page['projection']).read_bytes()
+ if page['id']!='foundation':
+  if page['renderer']=='nepl3-tools.markdown-annotated-pages/1':assert old.split(b'\n\n',1)[1]==new.split(b'\n\n',1)[1]
+  else:assert old==new
+ if old!=new:
+  changes.append(dict(path=page['projection'],old_sha256=hashlib.sha256(old).hexdigest(),new_sha256=hashlib.sha256(new).hexdigest()));pending.append((dest,new))
+assert len(changes)==6
+for dest,data in pending:dest.write_bytes(data)
+(root/'.tmp/generation02-resolved/adoption.json').write_text(json.dumps(dict(changes=changes,previous_html_and_css_byte_identical=preserved),indent=2)+'\n',encoding='utf-8')
+print('Adopted foundation and five context headers; previous13 HTML pages and CSS unchanged.')

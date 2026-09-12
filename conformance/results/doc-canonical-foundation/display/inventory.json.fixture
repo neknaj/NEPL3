@@ -1,0 +1,145 @@
+{
+  "scope": "Text inventory only; not Doc parser or meaning proof",
+  "original_code_count": 18,
+  "source_code_count": 19,
+  "expected_code_sequence_equal": true,
+  "original_codes": [
+    "SourceId",
+    "Revision",
+    "SnapshotId = (SourceId, Revision, contentDigest)",
+    "Span = (SnapshotId, start:u64, end:u64)",
+    "[start,end)",
+    "0 <= start <= end <= source.len",
+    "SchemaRef = (packageName, revision, digest)",
+    "KindRef = (SchemaRef, LocalKindId)",
+    "List<T>",
+    "Option<T>",
+    "HeadShape = {arity, arguments, transitionRecipe}",
+    "ViewElement = {kind, span, fields, roles, relations}",
+    "Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)",
+    "SourceMap",
+    "EntityId",
+    "Occurrence",
+    "ScopeId",
+    "traceOverflow: Option<TraceOverflow>"
+  ],
+  "source_codes": [
+    "SourceId",
+    "Revision",
+    "SnapshotId = (SourceId, Revision, contentDigest)",
+    "Span = (SnapshotId, start:u64, end:u64)",
+    "[start,end)",
+    "0 <= start <= end <= source.len",
+    "SchemaRef = (packageName, revision, digest)",
+    "KindRef = (SchemaRef, LocalKindId)",
+    "List<T>",
+    "Option<T>",
+    "HeadShape = {arity, arguments, transitionRecipe}",
+    "ViewElement = {kind, span, fields, roles, relations}",
+    "Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)",
+    "SourceMap",
+    "EntityId",
+    "Occurrence",
+    "ScopeId",
+    "[start,end)",
+    "traceOverflow: Option<TraceOverflow>"
+  ],
+  "headings_original": [
+    [
+      "#",
+      "02. 共通データ契約"
+    ],
+    [
+      "##",
+      "方針"
+    ],
+    [
+      "##",
+      "1. SourceとRange"
+    ],
+    [
+      "##",
+      "2. schemaとkind"
+    ],
+    [
+      "##",
+      "3. Tokenと構文"
+    ],
+    [
+      "##",
+      "4. 内部view"
+    ],
+    [
+      "##",
+      "5. Origin graph"
+    ],
+    [
+      "##",
+      "6. 名前・関係"
+    ],
+    [
+      "###",
+      "6.1. 共通factsと専用処理の変更範囲"
+    ],
+    [
+      "##",
+      "7. 診断とevent"
+    ],
+    [
+      "##",
+      "8. 予算と結果"
+    ]
+  ],
+  "source_sections": [
+    [
+      "  ",
+      "policy",
+      "\"[方針/ほうしん]\""
+    ],
+    [
+      "  ",
+      "source_range",
+      "\"1. SourceとRange\""
+    ],
+    [
+      "  ",
+      "schema_kind",
+      "\"2. schemaとkind\""
+    ],
+    [
+      "  ",
+      "token_syntax",
+      "\"3. Tokenと[構文/こうぶん]\""
+    ],
+    [
+      "  ",
+      "views",
+      "\"4. [内部/ないぶ]view\""
+    ],
+    [
+      "  ",
+      "origins",
+      "\"5. Origin graph\""
+    ],
+    [
+      "  ",
+      "names_relations",
+      "\"6. [名前/なまえ]・[関係/かんけい]\""
+    ],
+    [
+      "      ",
+      "facts_authority",
+      "\"6.1. [共通/きょうつう]factsと[専用処理/せんようしょり]の[変更範囲/へんこうはんい]\""
+    ],
+    [
+      "  ",
+      "diagnostics_events",
+      "\"7. [診断/しんだん]とevent\""
+    ],
+    [
+      "  ",
+      "budgets_results",
+      "\"8. [予算/よさん]と[結果/けっか]\""
+    ]
+  ]
+}

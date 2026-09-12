@@ -104,6 +104,14 @@
       "aliases": "doc/migration/aliases/06-math.json",
       "route": "docs/spec/06-math.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/1"
+    },
+    {
+      "id": "foundation",
+      "source": "doc/spec/02-foundation.nepld",
+      "projection": "doc/spec/02-foundation.md",
+      "aliases": "doc/migration/aliases/02-foundation.json",
+      "route": "docs/spec/02-foundation.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/1"
     }
   ],
   "output_limits": {
@@ -118,10 +126,10 @@
   },
   "html_output_limits": {
     "source_bytes": 10000000,
-    "work": 500000000,
+    "work": 600000000,
     "depth": 1000,
-    "nodes": 20000000,
-    "allocation_units": 1000000000,
+    "nodes": 24000000,
+    "allocation_units": 1250000000,
     "output_bytes": 10000000,
     "diagnostics": 1000,
     "events": 1000

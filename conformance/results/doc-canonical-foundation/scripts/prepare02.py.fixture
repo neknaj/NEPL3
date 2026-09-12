@@ -1,0 +1,13 @@
+from pathlib import Path
+import json,subprocess
+root=Path.cwd();assert not subprocess.check_output(['git','status','--porcelain']).strip()
+out=root/'.tmp/chapter02';out.mkdir(exist_ok=False)
+draft=root/'doc/migration/authored/02-foundation.nepld'
+(out/'original.nepld').write_bytes(draft.read_bytes());(out/'original.md').write_bytes((root/'doc/spec/02-foundation.md').read_bytes())
+draft.rename(root/'doc/spec/02-foundation.nepld')
+p=root/'doc/canonical.json';r=json.loads(p.read_bytes());assert len(r['pages'])==13
+r['pages'].append(dict(id='foundation',source='doc/spec/02-foundation.nepld',projection='doc/spec/02-foundation.md',aliases='doc/migration/aliases/02-foundation.json',route='docs/spec/02-foundation.html',renderer='nepl3-tools.markdown-annotated-pages/1'))
+p.write_text(json.dumps(r,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
+aliases=[(None,'02-共通データ契約'),('policy','方針'),('token_syntax','3-tokenと構文'),('views','4-内部view'),('names_relations','6-名前関係'),('facts_authority','61-共通factsと専用処理の変更範囲'),('diagnostics_events','7-診断とevent'),('budgets_results','8-予算と結果')]
+(root/'doc/migration/aliases/02-foundation.json').write_text(json.dumps([dict(section=s,name=n) for s,n in aliases],ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
+print('Prepared foundation source; generated projection remains pending.')

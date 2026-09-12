@@ -1,0 +1,2114 @@
+[
+  {
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "02. 共通データ契約"
+      },
+      {
+        "tag": "H2",
+        "text": "方針"
+      },
+      {
+        "tag": "H2",
+        "text": "1. SourceとRange"
+      },
+      {
+        "tag": "H2",
+        "text": "2. schemaとkind"
+      },
+      {
+        "tag": "H2",
+        "text": "3. Tokenと構文"
+      },
+      {
+        "tag": "H2",
+        "text": "4. 内部view"
+      },
+      {
+        "tag": "H2",
+        "text": "5. Origin graph"
+      },
+      {
+        "tag": "H2",
+        "text": "6. 名前・関係"
+      },
+      {
+        "tag": "H3",
+        "text": "6.1. 共通factsと専用処理の変更範囲"
+      },
+      {
+        "tag": "H2",
+        "text": "7. 診断とevent"
+      },
+      {
+        "tag": "H2",
+        "text": "8. 予算と結果"
+      }
+    ],
+    "codes": [
+      "SourceId",
+      "Revision",
+      "SnapshotId = (SourceId, Revision, contentDigest)",
+      "Span = (SnapshotId, start:u64, end:u64)",
+      "[start,end)",
+      "0 <= start <= end <= source.len",
+      "SchemaRef = (packageName, revision, digest)",
+      "KindRef = (SchemaRef, LocalKindId)",
+      "List<T>",
+      "Option<T>",
+      "HeadShape = {arity, arguments, transitionRecipe}",
+      "ViewElement = {kind, span, fields, roles, relations}",
+      "Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)",
+      "SourceMap",
+      "EntityId",
+      "Occurrence",
+      "ScopeId",
+      "[start,end)",
+      "traceOverflow: Option<TraceOverflow>"
+    ],
+    "preamble": "atomic pointerを使えるnative/Wasmでは、SourceAdmissionが受入済みの不変snapshot storageを操作内だけで所有し、索引化できる。同じstorageの再受入には既存の証明を再利用し、独立decodeのstorageにはsource/revision/digest/URIとSourceBytesの検査を行う。所有参照を保持して、addressの再利用を防ぐ。内部addressをwire・identity・出力へ含めてはならない。索引のWorkには要素数による探索・shiftの上界を事前計上し、allocatorの配置によるUsageの差を防ぐ。別のSourceAdmissionや非atomic targetへ、この証明を引き継がない。",
+    "preamble_before_policy": true,
+    "facts_parent": "n-6e616d65735f72656c6174696f6e73",
+    "facts_heading": "6.1. 共通きょうつうfactsと専用処理せんようしょりの変更範囲へんこうはんい",
+    "ids": [
+      "n-706f6c696379",
+      "n-736f757263655f72616e6765",
+      "n-736368656d615f6b696e64",
+      "n-746f6b656e5f73796e746178",
+      "n-7669657773",
+      "n-6f726967696e73",
+      "n-6e616d65735f72656c6174696f6e73",
+      "n-66616374735f617574686f72697479",
+      "n-646961676e6f73746963735f6576656e7473",
+      "n-627564676574735f726573756c7473"
+    ],
+    "ruby": 1111,
+    "annos": [
+      {
+        "base": "共有不変storage",
+        "note": "clone間で内容を変更せず共有する格納先",
+        "baseTop": 2324.859375,
+        "noteTop": 2370.921875,
+        "width": 206.46875
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:63439/NEPL3/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "scrollWidth": 375,
+    "links": [],
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "base": "/NEPL3/",
+    "width": 375,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": -0.015625,
+        "scroll": 876
+      },
+      {
+        "id": "n-736f757263655f72616e6765",
+        "count": 1,
+        "top": -0.40625,
+        "scroll": 1112
+      },
+      {
+        "id": "n-736368656d615f6b696e64",
+        "count": 1,
+        "top": -0.03125,
+        "scroll": 5937
+      },
+      {
+        "id": "n-746f6b656e5f73796e746178",
+        "count": 1,
+        "top": -0.15625,
+        "scroll": 6750
+      },
+      {
+        "id": "n-7669657773",
+        "count": 1,
+        "top": 0.109375,
+        "scroll": 9254
+      },
+      {
+        "id": "n-6f726967696e73",
+        "count": 1,
+        "top": 0,
+        "scroll": 10791
+      },
+      {
+        "id": "n-6e616d65735f72656c6174696f6e73",
+        "count": 1,
+        "top": -0.265625,
+        "scroll": 11702
+      },
+      {
+        "id": "n-66616374735f617574686f72697479",
+        "count": 1,
+        "top": -0.15625,
+        "scroll": 12420
+      },
+      {
+        "id": "n-646961676e6f73746963735f6576656e7473",
+        "count": 1,
+        "top": -0.21875,
+        "scroll": 15439
+      },
+      {
+        "id": "n-627564676574735f726573756c7473",
+        "count": 1,
+        "top": 0.390625,
+        "scroll": 18576
+      }
+    ],
+    "reload_fragment": "http://127.0.0.1:63439/NEPL3/docs/spec/02-foundation.html#n-627564676574735f726573756c7473"
+  },
+  {
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "02. 共通データ契約"
+      },
+      {
+        "tag": "H2",
+        "text": "方針"
+      },
+      {
+        "tag": "H2",
+        "text": "1. SourceとRange"
+      },
+      {
+        "tag": "H2",
+        "text": "2. schemaとkind"
+      },
+      {
+        "tag": "H2",
+        "text": "3. Tokenと構文"
+      },
+      {
+        "tag": "H2",
+        "text": "4. 内部view"
+      },
+      {
+        "tag": "H2",
+        "text": "5. Origin graph"
+      },
+      {
+        "tag": "H2",
+        "text": "6. 名前・関係"
+      },
+      {
+        "tag": "H3",
+        "text": "6.1. 共通factsと専用処理の変更範囲"
+      },
+      {
+        "tag": "H2",
+        "text": "7. 診断とevent"
+      },
+      {
+        "tag": "H2",
+        "text": "8. 予算と結果"
+      }
+    ],
+    "codes": [
+      "SourceId",
+      "Revision",
+      "SnapshotId = (SourceId, Revision, contentDigest)",
+      "Span = (SnapshotId, start:u64, end:u64)",
+      "[start,end)",
+      "0 <= start <= end <= source.len",
+      "SchemaRef = (packageName, revision, digest)",
+      "KindRef = (SchemaRef, LocalKindId)",
+      "List<T>",
+      "Option<T>",
+      "HeadShape = {arity, arguments, transitionRecipe}",
+      "ViewElement = {kind, span, fields, roles, relations}",
+      "Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)",
+      "SourceMap",
+      "EntityId",
+      "Occurrence",
+      "ScopeId",
+      "[start,end)",
+      "traceOverflow: Option<TraceOverflow>"
+    ],
+    "preamble": "atomic pointerを使えるnative/Wasmでは、SourceAdmissionが受入済みの不変snapshot storageを操作内だけで所有し、索引化できる。同じstorageの再受入には既存の証明を再利用し、独立decodeのstorageにはsource/revision/digest/URIとSourceBytesの検査を行う。所有参照を保持して、addressの再利用を防ぐ。内部addressをwire・identity・出力へ含めてはならない。索引のWorkには要素数による探索・shiftの上界を事前計上し、allocatorの配置によるUsageの差を防ぐ。別のSourceAdmissionや非atomic targetへ、この証明を引き継がない。",
+    "preamble_before_policy": true,
+    "facts_parent": "n-6e616d65735f72656c6174696f6e73",
+    "facts_heading": "6.1. 共通きょうつうfactsと専用処理せんようしょりの変更範囲へんこうはんい",
+    "ids": [
+      "n-706f6c696379",
+      "n-736f757263655f72616e6765",
+      "n-736368656d615f6b696e64",
+      "n-746f6b656e5f73796e746178",
+      "n-7669657773",
+      "n-6f726967696e73",
+      "n-6e616d65735f72656c6174696f6e73",
+      "n-66616374735f617574686f72697479",
+      "n-646961676e6f73746963735f6576656e7473",
+      "n-627564676574735f726573756c7473"
+    ],
+    "ruby": 1111,
+    "annos": [
+      {
+        "base": "共有不変storage",
+        "note": "clone間で内容を変更せず共有する格納先",
+        "baseTop": 831.59375,
+        "noteTop": 877.65625,
+        "width": 206.46875
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:63439/NEPL3/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "scrollWidth": 1280,
+    "links": [],
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "base": "/NEPL3/",
+    "width": 1280,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": -0.171875,
+        "scroll": 356
+      },
+      {
+        "id": "n-736f757263655f72616e6765",
+        "count": 1,
+        "top": 0.3125,
+        "scroll": 499
+      },
+      {
+        "id": "n-736368656d615f6b696e64",
+        "count": 1,
+        "top": -0.0625,
+        "scroll": 1893
+      },
+      {
+        "id": "n-746f6b656e5f73796e746178",
+        "count": 1,
+        "top": 0.0625,
+        "scroll": 2199
+      },
+      {
+        "id": "n-7669657773",
+        "count": 1,
+        "top": 0.421875,
+        "scroll": 2987
+      },
+      {
+        "id": "n-6f726967696e73",
+        "count": 1,
+        "top": 0.40625,
+        "scroll": 3499
+      },
+      {
+        "id": "n-6e616d65735f72656c6174696f6e73",
+        "count": 1,
+        "top": -0.46875,
+        "scroll": 3806
+      },
+      {
+        "id": "n-66616374735f617574686f72697479",
+        "count": 1,
+        "top": 0.015625,
+        "scroll": 4086
+      },
+      {
+        "id": "n-646961676e6f73746963735f6576656e7473",
+        "count": 1,
+        "top": -0.4375,
+        "scroll": 4907
+      },
+      {
+        "id": "n-627564676574735f726573756c7473",
+        "count": 1,
+        "top": 0.171875,
+        "scroll": 5879
+      }
+    ],
+    "reload_fragment": "http://127.0.0.1:63439/NEPL3/docs/spec/02-foundation.html#n-627564676574735f726573756c7473"
+  },
+  {
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "02. 共通データ契約"
+      },
+      {
+        "tag": "H2",
+        "text": "方針"
+      },
+      {
+        "tag": "H2",
+        "text": "1. SourceとRange"
+      },
+      {
+        "tag": "H2",
+        "text": "2. schemaとkind"
+      },
+      {
+        "tag": "H2",
+        "text": "3. Tokenと構文"
+      },
+      {
+        "tag": "H2",
+        "text": "4. 内部view"
+      },
+      {
+        "tag": "H2",
+        "text": "5. Origin graph"
+      },
+      {
+        "tag": "H2",
+        "text": "6. 名前・関係"
+      },
+      {
+        "tag": "H3",
+        "text": "6.1. 共通factsと専用処理の変更範囲"
+      },
+      {
+        "tag": "H2",
+        "text": "7. 診断とevent"
+      },
+      {
+        "tag": "H2",
+        "text": "8. 予算と結果"
+      }
+    ],
+    "codes": [
+      "SourceId",
+      "Revision",
+      "SnapshotId = (SourceId, Revision, contentDigest)",
+      "Span = (SnapshotId, start:u64, end:u64)",
+      "[start,end)",
+      "0 <= start <= end <= source.len",
+      "SchemaRef = (packageName, revision, digest)",
+      "KindRef = (SchemaRef, LocalKindId)",
+      "List<T>",
+      "Option<T>",
+      "HeadShape = {arity, arguments, transitionRecipe}",
+      "ViewElement = {kind, span, fields, roles, relations}",
+      "Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)",
+      "SourceMap",
+      "EntityId",
+      "Occurrence",
+      "ScopeId",
+      "[start,end)",
+      "traceOverflow: Option<TraceOverflow>"
+    ],
+    "preamble": "atomic pointerを使えるnative/Wasmでは、SourceAdmissionが受入済みの不変snapshot storageを操作内だけで所有し、索引化できる。同じstorageの再受入には既存の証明を再利用し、独立decodeのstorageにはsource/revision/digest/URIとSourceBytesの検査を行う。所有参照を保持して、addressの再利用を防ぐ。内部addressをwire・identity・出力へ含めてはならない。索引のWorkには要素数による探索・shiftの上界を事前計上し、allocatorの配置によるUsageの差を防ぐ。別のSourceAdmissionや非atomic targetへ、この証明を引き継がない。",
+    "preamble_before_policy": true,
+    "facts_parent": "n-6e616d65735f72656c6174696f6e73",
+    "facts_heading": "6.1. 共通きょうつうfactsと専用処理せんようしょりの変更範囲へんこうはんい",
+    "ids": [
+      "n-706f6c696379",
+      "n-736f757263655f72616e6765",
+      "n-736368656d615f6b696e64",
+      "n-746f6b656e5f73796e746178",
+      "n-7669657773",
+      "n-6f726967696e73",
+      "n-6e616d65735f72656c6174696f6e73",
+      "n-66616374735f617574686f72697479",
+      "n-646961676e6f73746963735f6576656e7473",
+      "n-627564676574735f726573756c7473"
+    ],
+    "ruby": 1111,
+    "annos": [
+      {
+        "base": "共有不変storage",
+        "note": "clone間で内容を変更せず共有する格納先",
+        "baseTop": 2324.859375,
+        "noteTop": 2370.921875,
+        "width": 206.46875
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:63439/review/nested/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "scrollWidth": 375,
+    "links": [],
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "base": "/review/nested/",
+    "width": 375,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": -0.015625,
+        "scroll": 876
+      },
+      {
+        "id": "n-736f757263655f72616e6765",
+        "count": 1,
+        "top": -0.40625,
+        "scroll": 1112
+      },
+      {
+        "id": "n-736368656d615f6b696e64",
+        "count": 1,
+        "top": -0.03125,
+        "scroll": 5937
+      },
+      {
+        "id": "n-746f6b656e5f73796e746178",
+        "count": 1,
+        "top": -0.15625,
+        "scroll": 6750
+      },
+      {
+        "id": "n-7669657773",
+        "count": 1,
+        "top": 0.109375,
+        "scroll": 9254
+      },
+      {
+        "id": "n-6f726967696e73",
+        "count": 1,
+        "top": 0,
+        "scroll": 10791
+      },
+      {
+        "id": "n-6e616d65735f72656c6174696f6e73",
+        "count": 1,
+        "top": -0.265625,
+        "scroll": 11702
+      },
+      {
+        "id": "n-66616374735f617574686f72697479",
+        "count": 1,
+        "top": -0.15625,
+        "scroll": 12420
+      },
+      {
+        "id": "n-646961676e6f73746963735f6576656e7473",
+        "count": 1,
+        "top": -0.21875,
+        "scroll": 15439
+      },
+      {
+        "id": "n-627564676574735f726573756c7473",
+        "count": 1,
+        "top": 0.390625,
+        "scroll": 18576
+      }
+    ],
+    "reload_fragment": "http://127.0.0.1:63439/review/nested/docs/spec/02-foundation.html#n-627564676574735f726573756c7473"
+  },
+  {
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "02. 共通データ契約"
+      },
+      {
+        "tag": "H2",
+        "text": "方針"
+      },
+      {
+        "tag": "H2",
+        "text": "1. SourceとRange"
+      },
+      {
+        "tag": "H2",
+        "text": "2. schemaとkind"
+      },
+      {
+        "tag": "H2",
+        "text": "3. Tokenと構文"
+      },
+      {
+        "tag": "H2",
+        "text": "4. 内部view"
+      },
+      {
+        "tag": "H2",
+        "text": "5. Origin graph"
+      },
+      {
+        "tag": "H2",
+        "text": "6. 名前・関係"
+      },
+      {
+        "tag": "H3",
+        "text": "6.1. 共通factsと専用処理の変更範囲"
+      },
+      {
+        "tag": "H2",
+        "text": "7. 診断とevent"
+      },
+      {
+        "tag": "H2",
+        "text": "8. 予算と結果"
+      }
+    ],
+    "codes": [
+      "SourceId",
+      "Revision",
+      "SnapshotId = (SourceId, Revision, contentDigest)",
+      "Span = (SnapshotId, start:u64, end:u64)",
+      "[start,end)",
+      "0 <= start <= end <= source.len",
+      "SchemaRef = (packageName, revision, digest)",
+      "KindRef = (SchemaRef, LocalKindId)",
+      "List<T>",
+      "Option<T>",
+      "HeadShape = {arity, arguments, transitionRecipe}",
+      "ViewElement = {kind, span, fields, roles, relations}",
+      "Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)",
+      "SourceMap",
+      "EntityId",
+      "Occurrence",
+      "ScopeId",
+      "[start,end)",
+      "traceOverflow: Option<TraceOverflow>"
+    ],
+    "preamble": "atomic pointerを使えるnative/Wasmでは、SourceAdmissionが受入済みの不変snapshot storageを操作内だけで所有し、索引化できる。同じstorageの再受入には既存の証明を再利用し、独立decodeのstorageにはsource/revision/digest/URIとSourceBytesの検査を行う。所有参照を保持して、addressの再利用を防ぐ。内部addressをwire・identity・出力へ含めてはならない。索引のWorkには要素数による探索・shiftの上界を事前計上し、allocatorの配置によるUsageの差を防ぐ。別のSourceAdmissionや非atomic targetへ、この証明を引き継がない。",
+    "preamble_before_policy": true,
+    "facts_parent": "n-6e616d65735f72656c6174696f6e73",
+    "facts_heading": "6.1. 共通きょうつうfactsと専用処理せんようしょりの変更範囲へんこうはんい",
+    "ids": [
+      "n-706f6c696379",
+      "n-736f757263655f72616e6765",
+      "n-736368656d615f6b696e64",
+      "n-746f6b656e5f73796e746178",
+      "n-7669657773",
+      "n-6f726967696e73",
+      "n-6e616d65735f72656c6174696f6e73",
+      "n-66616374735f617574686f72697479",
+      "n-646961676e6f73746963735f6576656e7473",
+      "n-627564676574735f726573756c7473"
+    ],
+    "ruby": 1111,
+    "annos": [
+      {
+        "base": "共有不変storage",
+        "note": "clone間で内容を変更せず共有する格納先",
+        "baseTop": 831.59375,
+        "noteTop": 877.65625,
+        "width": 206.46875
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:63439/review/nested/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "scrollWidth": 1280,
+    "links": [],
+    "browser": "chromium",
+    "version": "151.0.7922.34",
+    "base": "/review/nested/",
+    "width": 1280,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": -0.171875,
+        "scroll": 356
+      },
+      {
+        "id": "n-736f757263655f72616e6765",
+        "count": 1,
+        "top": 0.3125,
+        "scroll": 499
+      },
+      {
+        "id": "n-736368656d615f6b696e64",
+        "count": 1,
+        "top": -0.0625,
+        "scroll": 1893
+      },
+      {
+        "id": "n-746f6b656e5f73796e746178",
+        "count": 1,
+        "top": 0.0625,
+        "scroll": 2199
+      },
+      {
+        "id": "n-7669657773",
+        "count": 1,
+        "top": 0.421875,
+        "scroll": 2987
+      },
+      {
+        "id": "n-6f726967696e73",
+        "count": 1,
+        "top": 0.40625,
+        "scroll": 3499
+      },
+      {
+        "id": "n-6e616d65735f72656c6174696f6e73",
+        "count": 1,
+        "top": -0.46875,
+        "scroll": 3806
+      },
+      {
+        "id": "n-66616374735f617574686f72697479",
+        "count": 1,
+        "top": 0.015625,
+        "scroll": 4086
+      },
+      {
+        "id": "n-646961676e6f73746963735f6576656e7473",
+        "count": 1,
+        "top": -0.4375,
+        "scroll": 4907
+      },
+      {
+        "id": "n-627564676574735f726573756c7473",
+        "count": 1,
+        "top": 0.171875,
+        "scroll": 5879
+      }
+    ],
+    "reload_fragment": "http://127.0.0.1:63439/review/nested/docs/spec/02-foundation.html#n-627564676574735f726573756c7473"
+  },
+  {
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "02. 共通データ契約"
+      },
+      {
+        "tag": "H2",
+        "text": "方針"
+      },
+      {
+        "tag": "H2",
+        "text": "1. SourceとRange"
+      },
+      {
+        "tag": "H2",
+        "text": "2. schemaとkind"
+      },
+      {
+        "tag": "H2",
+        "text": "3. Tokenと構文"
+      },
+      {
+        "tag": "H2",
+        "text": "4. 内部view"
+      },
+      {
+        "tag": "H2",
+        "text": "5. Origin graph"
+      },
+      {
+        "tag": "H2",
+        "text": "6. 名前・関係"
+      },
+      {
+        "tag": "H3",
+        "text": "6.1. 共通factsと専用処理の変更範囲"
+      },
+      {
+        "tag": "H2",
+        "text": "7. 診断とevent"
+      },
+      {
+        "tag": "H2",
+        "text": "8. 予算と結果"
+      }
+    ],
+    "codes": [
+      "SourceId",
+      "Revision",
+      "SnapshotId = (SourceId, Revision, contentDigest)",
+      "Span = (SnapshotId, start:u64, end:u64)",
+      "[start,end)",
+      "0 <= start <= end <= source.len",
+      "SchemaRef = (packageName, revision, digest)",
+      "KindRef = (SchemaRef, LocalKindId)",
+      "List<T>",
+      "Option<T>",
+      "HeadShape = {arity, arguments, transitionRecipe}",
+      "ViewElement = {kind, span, fields, roles, relations}",
+      "Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)",
+      "SourceMap",
+      "EntityId",
+      "Occurrence",
+      "ScopeId",
+      "[start,end)",
+      "traceOverflow: Option<TraceOverflow>"
+    ],
+    "preamble": "atomic pointerを使えるnative/Wasmでは、SourceAdmissionが受入済みの不変snapshot storageを操作内だけで所有し、索引化できる。同じstorageの再受入には既存の証明を再利用し、独立decodeのstorageにはsource/revision/digest/URIとSourceBytesの検査を行う。所有参照を保持して、addressの再利用を防ぐ。内部addressをwire・identity・出力へ含めてはならない。索引のWorkには要素数による探索・shiftの上界を事前計上し、allocatorの配置によるUsageの差を防ぐ。別のSourceAdmissionや非atomic targetへ、この証明を引き継がない。",
+    "preamble_before_policy": true,
+    "facts_parent": "n-6e616d65735f72656c6174696f6e73",
+    "facts_heading": "6.1. 共通きょうつうfactsと専用処理せんようしょりの変更範囲へんこうはんい",
+    "ids": [
+      "n-706f6c696379",
+      "n-736f757263655f72616e6765",
+      "n-736368656d615f6b696e64",
+      "n-746f6b656e5f73796e746178",
+      "n-7669657773",
+      "n-6f726967696e73",
+      "n-6e616d65735f72656c6174696f6e73",
+      "n-66616374735f617574686f72697479",
+      "n-646961676e6f73746963735f6576656e7473",
+      "n-627564676574735f726573756c7473"
+    ],
+    "ruby": 1111,
+    "annos": [
+      {
+        "base": "共有不変storage",
+        "note": "clone間で内容を変更せず共有する格納先",
+        "baseTop": 2329.699951171875,
+        "noteTop": 2375.783447265625,
+        "width": 201.53334045410156
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:63439/NEPL3/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "scrollWidth": 375,
+    "links": [],
+    "browser": "firefox",
+    "version": "153.0",
+    "base": "/NEPL3/",
+    "width": 375,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": 0.26666259765625,
+        "scroll": 876
+      },
+      {
+        "id": "n-736f757263655f72616e6765",
+        "count": 1,
+        "top": 0,
+        "scroll": 1111.949951171875
+      },
+      {
+        "id": "n-736368656d615f6b696e64",
+        "count": 1,
+        "top": 0,
+        "scroll": 5946.9501953125
+      },
+      {
+        "id": "n-746f6b656e5f73796e746178",
+        "count": 1,
+        "top": 0,
+        "scroll": 6765.10009765625
+      },
+      {
+        "id": "n-7669657773",
+        "count": 1,
+        "top": 0,
+        "scroll": 9272.3662109375
+      },
+      {
+        "id": "n-6f726967696e73",
+        "count": 1,
+        "top": 0.5333404541015625,
+        "scroll": 10811.3662109375
+      },
+      {
+        "id": "n-6e616d65735f72656c6174696f6e73",
+        "count": 1,
+        "top": 0,
+        "scroll": 11710.7001953125
+      },
+      {
+        "id": "n-66616374735f617574686f72697479",
+        "count": 1,
+        "top": 0,
+        "scroll": 12432.0498046875
+      },
+      {
+        "id": "n-646961676e6f73746963735f6576656e7473",
+        "count": 1,
+        "top": 0,
+        "scroll": 15453.2666015625
+      },
+      {
+        "id": "n-627564676574735f726573756c7473",
+        "count": 1,
+        "top": 0,
+        "scroll": 18564.3828125
+      }
+    ],
+    "reload_fragment": "http://127.0.0.1:63439/NEPL3/docs/spec/02-foundation.html#n-627564676574735f726573756c7473"
+  },
+  {
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "02. 共通データ契約"
+      },
+      {
+        "tag": "H2",
+        "text": "方針"
+      },
+      {
+        "tag": "H2",
+        "text": "1. SourceとRange"
+      },
+      {
+        "tag": "H2",
+        "text": "2. schemaとkind"
+      },
+      {
+        "tag": "H2",
+        "text": "3. Tokenと構文"
+      },
+      {
+        "tag": "H2",
+        "text": "4. 内部view"
+      },
+      {
+        "tag": "H2",
+        "text": "5. Origin graph"
+      },
+      {
+        "tag": "H2",
+        "text": "6. 名前・関係"
+      },
+      {
+        "tag": "H3",
+        "text": "6.1. 共通factsと専用処理の変更範囲"
+      },
+      {
+        "tag": "H2",
+        "text": "7. 診断とevent"
+      },
+      {
+        "tag": "H2",
+        "text": "8. 予算と結果"
+      }
+    ],
+    "codes": [
+      "SourceId",
+      "Revision",
+      "SnapshotId = (SourceId, Revision, contentDigest)",
+      "Span = (SnapshotId, start:u64, end:u64)",
+      "[start,end)",
+      "0 <= start <= end <= source.len",
+      "SchemaRef = (packageName, revision, digest)",
+      "KindRef = (SchemaRef, LocalKindId)",
+      "List<T>",
+      "Option<T>",
+      "HeadShape = {arity, arguments, transitionRecipe}",
+      "ViewElement = {kind, span, fields, roles, relations}",
+      "Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)",
+      "SourceMap",
+      "EntityId",
+      "Occurrence",
+      "ScopeId",
+      "[start,end)",
+      "traceOverflow: Option<TraceOverflow>"
+    ],
+    "preamble": "atomic pointerを使えるnative/Wasmでは、SourceAdmissionが受入済みの不変snapshot storageを操作内だけで所有し、索引化できる。同じstorageの再受入には既存の証明を再利用し、独立decodeのstorageにはsource/revision/digest/URIとSourceBytesの検査を行う。所有参照を保持して、addressの再利用を防ぐ。内部addressをwire・identity・出力へ含めてはならない。索引のWorkには要素数による探索・shiftの上界を事前計上し、allocatorの配置によるUsageの差を防ぐ。別のSourceAdmissionや非atomic targetへ、この証明を引き継がない。",
+    "preamble_before_policy": true,
+    "facts_parent": "n-6e616d65735f72656c6174696f6e73",
+    "facts_heading": "6.1. 共通きょうつうfactsと専用処理せんようしょりの変更範囲へんこうはんい",
+    "ids": [
+      "n-706f6c696379",
+      "n-736f757263655f72616e6765",
+      "n-736368656d615f6b696e64",
+      "n-746f6b656e5f73796e746178",
+      "n-7669657773",
+      "n-6f726967696e73",
+      "n-6e616d65735f72656c6174696f6e73",
+      "n-66616374735f617574686f72697479",
+      "n-646961676e6f73746963735f6576656e7473",
+      "n-627564676574735f726573756c7473"
+    ],
+    "ruby": 1111,
+    "annos": [
+      {
+        "base": "共有不変storage",
+        "note": "clone間で内容を変更せず共有する格納先",
+        "baseTop": 832.8499755859375,
+        "noteTop": 878.933349609375,
+        "width": 201.5333251953125
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:63439/NEPL3/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "scrollWidth": 1280,
+    "links": [],
+    "browser": "firefox",
+    "version": "153.0",
+    "base": "/NEPL3/",
+    "width": 1280,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": 0.9166717529296875,
+        "scroll": 355
+      },
+      {
+        "id": "n-736f757263655f72616e6765",
+        "count": 1,
+        "top": 0,
+        "scroll": 499.4333190917969
+      },
+      {
+        "id": "n-736368656d615f6b696e64",
+        "count": 1,
+        "top": 0.8166656494140625,
+        "scroll": 1894.433349609375
+      },
+      {
+        "id": "n-746f6b656e5f73796e746178",
+        "count": 1,
+        "top": 0.0666656494140625,
+        "scroll": 2203.433349609375
+      },
+      {
+        "id": "n-7669657773",
+        "count": 1,
+        "top": 0.75,
+        "scroll": 2992.433349609375
+      },
+      {
+        "id": "n-6f726967696e73",
+        "count": 1,
+        "top": 0.9333343505859375,
+        "scroll": 3505.433349609375
+      },
+      {
+        "id": "n-6e616d65735f72656c6174696f6e73",
+        "count": 1,
+        "top": 0,
+        "scroll": 3860.699951171875
+      },
+      {
+        "id": "n-66616374735f617574686f72697479",
+        "count": 1,
+        "top": 0.5666656494140625,
+        "scroll": 4141.7001953125
+      },
+      {
+        "id": "n-646961676e6f73746963735f6576656e7473",
+        "count": 1,
+        "top": 0,
+        "scroll": 4964.16650390625
+      },
+      {
+        "id": "n-627564676574735f726573756c7473",
+        "count": 1,
+        "top": 0,
+        "scroll": 5938.18310546875
+      }
+    ],
+    "reload_fragment": "http://127.0.0.1:63439/NEPL3/docs/spec/02-foundation.html#n-627564676574735f726573756c7473"
+  },
+  {
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "02. 共通データ契約"
+      },
+      {
+        "tag": "H2",
+        "text": "方針"
+      },
+      {
+        "tag": "H2",
+        "text": "1. SourceとRange"
+      },
+      {
+        "tag": "H2",
+        "text": "2. schemaとkind"
+      },
+      {
+        "tag": "H2",
+        "text": "3. Tokenと構文"
+      },
+      {
+        "tag": "H2",
+        "text": "4. 内部view"
+      },
+      {
+        "tag": "H2",
+        "text": "5. Origin graph"
+      },
+      {
+        "tag": "H2",
+        "text": "6. 名前・関係"
+      },
+      {
+        "tag": "H3",
+        "text": "6.1. 共通factsと専用処理の変更範囲"
+      },
+      {
+        "tag": "H2",
+        "text": "7. 診断とevent"
+      },
+      {
+        "tag": "H2",
+        "text": "8. 予算と結果"
+      }
+    ],
+    "codes": [
+      "SourceId",
+      "Revision",
+      "SnapshotId = (SourceId, Revision, contentDigest)",
+      "Span = (SnapshotId, start:u64, end:u64)",
+      "[start,end)",
+      "0 <= start <= end <= source.len",
+      "SchemaRef = (packageName, revision, digest)",
+      "KindRef = (SchemaRef, LocalKindId)",
+      "List<T>",
+      "Option<T>",
+      "HeadShape = {arity, arguments, transitionRecipe}",
+      "ViewElement = {kind, span, fields, roles, relations}",
+      "Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)",
+      "SourceMap",
+      "EntityId",
+      "Occurrence",
+      "ScopeId",
+      "[start,end)",
+      "traceOverflow: Option<TraceOverflow>"
+    ],
+    "preamble": "atomic pointerを使えるnative/Wasmでは、SourceAdmissionが受入済みの不変snapshot storageを操作内だけで所有し、索引化できる。同じstorageの再受入には既存の証明を再利用し、独立decodeのstorageにはsource/revision/digest/URIとSourceBytesの検査を行う。所有参照を保持して、addressの再利用を防ぐ。内部addressをwire・identity・出力へ含めてはならない。索引のWorkには要素数による探索・shiftの上界を事前計上し、allocatorの配置によるUsageの差を防ぐ。別のSourceAdmissionや非atomic targetへ、この証明を引き継がない。",
+    "preamble_before_policy": true,
+    "facts_parent": "n-6e616d65735f72656c6174696f6e73",
+    "facts_heading": "6.1. 共通きょうつうfactsと専用処理せんようしょりの変更範囲へんこうはんい",
+    "ids": [
+      "n-706f6c696379",
+      "n-736f757263655f72616e6765",
+      "n-736368656d615f6b696e64",
+      "n-746f6b656e5f73796e746178",
+      "n-7669657773",
+      "n-6f726967696e73",
+      "n-6e616d65735f72656c6174696f6e73",
+      "n-66616374735f617574686f72697479",
+      "n-646961676e6f73746963735f6576656e7473",
+      "n-627564676574735f726573756c7473"
+    ],
+    "ruby": 1111,
+    "annos": [
+      {
+        "base": "共有不変storage",
+        "note": "clone間で内容を変更せず共有する格納先",
+        "baseTop": 2329.699951171875,
+        "noteTop": 2375.783447265625,
+        "width": 201.53334045410156
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:63439/review/nested/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "scrollWidth": 375,
+    "links": [],
+    "browser": "firefox",
+    "version": "153.0",
+    "base": "/review/nested/",
+    "width": 375,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": 0.26666259765625,
+        "scroll": 876
+      },
+      {
+        "id": "n-736f757263655f72616e6765",
+        "count": 1,
+        "top": 0,
+        "scroll": 1111.949951171875
+      },
+      {
+        "id": "n-736368656d615f6b696e64",
+        "count": 1,
+        "top": 0,
+        "scroll": 5946.9501953125
+      },
+      {
+        "id": "n-746f6b656e5f73796e746178",
+        "count": 1,
+        "top": 0,
+        "scroll": 6765.10009765625
+      },
+      {
+        "id": "n-7669657773",
+        "count": 1,
+        "top": 0,
+        "scroll": 9272.3662109375
+      },
+      {
+        "id": "n-6f726967696e73",
+        "count": 1,
+        "top": 0.5333404541015625,
+        "scroll": 10811.3662109375
+      },
+      {
+        "id": "n-6e616d65735f72656c6174696f6e73",
+        "count": 1,
+        "top": 0,
+        "scroll": 11710.7001953125
+      },
+      {
+        "id": "n-66616374735f617574686f72697479",
+        "count": 1,
+        "top": 0,
+        "scroll": 12432.0498046875
+      },
+      {
+        "id": "n-646961676e6f73746963735f6576656e7473",
+        "count": 1,
+        "top": 0,
+        "scroll": 15453.2666015625
+      },
+      {
+        "id": "n-627564676574735f726573756c7473",
+        "count": 1,
+        "top": 0,
+        "scroll": 18564.3828125
+      }
+    ],
+    "reload_fragment": "http://127.0.0.1:63439/review/nested/docs/spec/02-foundation.html#n-627564676574735f726573756c7473"
+  },
+  {
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "02. 共通データ契約"
+      },
+      {
+        "tag": "H2",
+        "text": "方針"
+      },
+      {
+        "tag": "H2",
+        "text": "1. SourceとRange"
+      },
+      {
+        "tag": "H2",
+        "text": "2. schemaとkind"
+      },
+      {
+        "tag": "H2",
+        "text": "3. Tokenと構文"
+      },
+      {
+        "tag": "H2",
+        "text": "4. 内部view"
+      },
+      {
+        "tag": "H2",
+        "text": "5. Origin graph"
+      },
+      {
+        "tag": "H2",
+        "text": "6. 名前・関係"
+      },
+      {
+        "tag": "H3",
+        "text": "6.1. 共通factsと専用処理の変更範囲"
+      },
+      {
+        "tag": "H2",
+        "text": "7. 診断とevent"
+      },
+      {
+        "tag": "H2",
+        "text": "8. 予算と結果"
+      }
+    ],
+    "codes": [
+      "SourceId",
+      "Revision",
+      "SnapshotId = (SourceId, Revision, contentDigest)",
+      "Span = (SnapshotId, start:u64, end:u64)",
+      "[start,end)",
+      "0 <= start <= end <= source.len",
+      "SchemaRef = (packageName, revision, digest)",
+      "KindRef = (SchemaRef, LocalKindId)",
+      "List<T>",
+      "Option<T>",
+      "HeadShape = {arity, arguments, transitionRecipe}",
+      "ViewElement = {kind, span, fields, roles, relations}",
+      "Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)",
+      "SourceMap",
+      "EntityId",
+      "Occurrence",
+      "ScopeId",
+      "[start,end)",
+      "traceOverflow: Option<TraceOverflow>"
+    ],
+    "preamble": "atomic pointerを使えるnative/Wasmでは、SourceAdmissionが受入済みの不変snapshot storageを操作内だけで所有し、索引化できる。同じstorageの再受入には既存の証明を再利用し、独立decodeのstorageにはsource/revision/digest/URIとSourceBytesの検査を行う。所有参照を保持して、addressの再利用を防ぐ。内部addressをwire・identity・出力へ含めてはならない。索引のWorkには要素数による探索・shiftの上界を事前計上し、allocatorの配置によるUsageの差を防ぐ。別のSourceAdmissionや非atomic targetへ、この証明を引き継がない。",
+    "preamble_before_policy": true,
+    "facts_parent": "n-6e616d65735f72656c6174696f6e73",
+    "facts_heading": "6.1. 共通きょうつうfactsと専用処理せんようしょりの変更範囲へんこうはんい",
+    "ids": [
+      "n-706f6c696379",
+      "n-736f757263655f72616e6765",
+      "n-736368656d615f6b696e64",
+      "n-746f6b656e5f73796e746178",
+      "n-7669657773",
+      "n-6f726967696e73",
+      "n-6e616d65735f72656c6174696f6e73",
+      "n-66616374735f617574686f72697479",
+      "n-646961676e6f73746963735f6576656e7473",
+      "n-627564676574735f726573756c7473"
+    ],
+    "ruby": 1111,
+    "annos": [
+      {
+        "base": "共有不変storage",
+        "note": "clone間で内容を変更せず共有する格納先",
+        "baseTop": 832.8499755859375,
+        "noteTop": 878.933349609375,
+        "width": 201.5333251953125
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:63439/review/nested/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "scrollWidth": 1280,
+    "links": [],
+    "browser": "firefox",
+    "version": "153.0",
+    "base": "/review/nested/",
+    "width": 1280,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": 0.9166717529296875,
+        "scroll": 355
+      },
+      {
+        "id": "n-736f757263655f72616e6765",
+        "count": 1,
+        "top": 0,
+        "scroll": 499.4333190917969
+      },
+      {
+        "id": "n-736368656d615f6b696e64",
+        "count": 1,
+        "top": 0.8166656494140625,
+        "scroll": 1894.433349609375
+      },
+      {
+        "id": "n-746f6b656e5f73796e746178",
+        "count": 1,
+        "top": 0.0666656494140625,
+        "scroll": 2203.433349609375
+      },
+      {
+        "id": "n-7669657773",
+        "count": 1,
+        "top": 0.75,
+        "scroll": 2992.433349609375
+      },
+      {
+        "id": "n-6f726967696e73",
+        "count": 1,
+        "top": 0.9333343505859375,
+        "scroll": 3505.433349609375
+      },
+      {
+        "id": "n-6e616d65735f72656c6174696f6e73",
+        "count": 1,
+        "top": 0,
+        "scroll": 3860.699951171875
+      },
+      {
+        "id": "n-66616374735f617574686f72697479",
+        "count": 1,
+        "top": 0.5666656494140625,
+        "scroll": 4141.7001953125
+      },
+      {
+        "id": "n-646961676e6f73746963735f6576656e7473",
+        "count": 1,
+        "top": 0,
+        "scroll": 4964.16650390625
+      },
+      {
+        "id": "n-627564676574735f726573756c7473",
+        "count": 1,
+        "top": 0,
+        "scroll": 5938.18310546875
+      }
+    ],
+    "reload_fragment": "http://127.0.0.1:63439/review/nested/docs/spec/02-foundation.html#n-627564676574735f726573756c7473"
+  },
+  {
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "02. 共通データ契約"
+      },
+      {
+        "tag": "H2",
+        "text": "方針"
+      },
+      {
+        "tag": "H2",
+        "text": "1. SourceとRange"
+      },
+      {
+        "tag": "H2",
+        "text": "2. schemaとkind"
+      },
+      {
+        "tag": "H2",
+        "text": "3. Tokenと構文"
+      },
+      {
+        "tag": "H2",
+        "text": "4. 内部view"
+      },
+      {
+        "tag": "H2",
+        "text": "5. Origin graph"
+      },
+      {
+        "tag": "H2",
+        "text": "6. 名前・関係"
+      },
+      {
+        "tag": "H3",
+        "text": "6.1. 共通factsと専用処理の変更範囲"
+      },
+      {
+        "tag": "H2",
+        "text": "7. 診断とevent"
+      },
+      {
+        "tag": "H2",
+        "text": "8. 予算と結果"
+      }
+    ],
+    "codes": [
+      "SourceId",
+      "Revision",
+      "SnapshotId = (SourceId, Revision, contentDigest)",
+      "Span = (SnapshotId, start:u64, end:u64)",
+      "[start,end)",
+      "0 <= start <= end <= source.len",
+      "SchemaRef = (packageName, revision, digest)",
+      "KindRef = (SchemaRef, LocalKindId)",
+      "List<T>",
+      "Option<T>",
+      "HeadShape = {arity, arguments, transitionRecipe}",
+      "ViewElement = {kind, span, fields, roles, relations}",
+      "Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)",
+      "SourceMap",
+      "EntityId",
+      "Occurrence",
+      "ScopeId",
+      "[start,end)",
+      "traceOverflow: Option<TraceOverflow>"
+    ],
+    "preamble": "atomic pointerを使えるnative/Wasmでは、SourceAdmissionが受入済みの不変snapshot storageを操作内だけで所有し、索引化できる。同じstorageの再受入には既存の証明を再利用し、独立decodeのstorageにはsource/revision/digest/URIとSourceBytesの検査を行う。所有参照を保持して、addressの再利用を防ぐ。内部addressをwire・identity・出力へ含めてはならない。索引のWorkには要素数による探索・shiftの上界を事前計上し、allocatorの配置によるUsageの差を防ぐ。別のSourceAdmissionや非atomic targetへ、この証明を引き継がない。",
+    "preamble_before_policy": true,
+    "facts_parent": "n-6e616d65735f72656c6174696f6e73",
+    "facts_heading": "6.1. 共通きょうつうfactsと専用処理せんようしょりの変更範囲へんこうはんい",
+    "ids": [
+      "n-706f6c696379",
+      "n-736f757263655f72616e6765",
+      "n-736368656d615f6b696e64",
+      "n-746f6b656e5f73796e746178",
+      "n-7669657773",
+      "n-6f726967696e73",
+      "n-6e616d65735f72656c6174696f6e73",
+      "n-66616374735f617574686f72697479",
+      "n-646961676e6f73746963735f6576656e7473",
+      "n-627564676574735f726573756c7473"
+    ],
+    "ruby": 1111,
+    "annos": [
+      {
+        "base": "共有不変storage",
+        "note": "clone間で内容を変更せず共有する格納先",
+        "baseTop": 2098.296875,
+        "noteTop": 2144.359375,
+        "width": 208.6875
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:63439/NEPL3/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "scrollWidth": 375,
+    "links": [],
+    "browser": "webkit",
+    "version": "26.5",
+    "base": "/NEPL3/",
+    "width": 375,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": 0.109375,
+        "scroll": 753
+      },
+      {
+        "id": "n-736f757263655f72616e6765",
+        "count": 1,
+        "top": -0.3125,
+        "scroll": 989
+      },
+      {
+        "id": "n-736368656d615f6b696e64",
+        "count": 1,
+        "top": 0.234375,
+        "scroll": 5324
+      },
+      {
+        "id": "n-746f6b656e5f73796e746178",
+        "count": 1,
+        "top": -0.21875,
+        "scroll": 6097
+      },
+      {
+        "id": "n-7669657773",
+        "count": 1,
+        "top": 0.4375,
+        "scroll": 8376
+      },
+      {
+        "id": "n-6f726967696e73",
+        "count": 1,
+        "top": 0.109375,
+        "scroll": 9775
+      },
+      {
+        "id": "n-6e616d65735f72656c6174696f6e73",
+        "count": 1,
+        "top": -0.28125,
+        "scroll": 10594
+      },
+      {
+        "id": "n-66616374735f617574686f72697479",
+        "count": 1,
+        "top": 0,
+        "scroll": 11283
+      },
+      {
+        "id": "n-646961676e6f73746963735f6576656e7473",
+        "count": 1,
+        "top": -0.109375,
+        "scroll": 13975
+      },
+      {
+        "id": "n-627564676574735f726573756c7473",
+        "count": 1,
+        "top": -0.234375,
+        "scroll": 16796
+      }
+    ],
+    "reload_fragment": "http://127.0.0.1:63439/NEPL3/docs/spec/02-foundation.html#n-627564676574735f726573756c7473"
+  },
+  {
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "02. 共通データ契約"
+      },
+      {
+        "tag": "H2",
+        "text": "方針"
+      },
+      {
+        "tag": "H2",
+        "text": "1. SourceとRange"
+      },
+      {
+        "tag": "H2",
+        "text": "2. schemaとkind"
+      },
+      {
+        "tag": "H2",
+        "text": "3. Tokenと構文"
+      },
+      {
+        "tag": "H2",
+        "text": "4. 内部view"
+      },
+      {
+        "tag": "H2",
+        "text": "5. Origin graph"
+      },
+      {
+        "tag": "H2",
+        "text": "6. 名前・関係"
+      },
+      {
+        "tag": "H3",
+        "text": "6.1. 共通factsと専用処理の変更範囲"
+      },
+      {
+        "tag": "H2",
+        "text": "7. 診断とevent"
+      },
+      {
+        "tag": "H2",
+        "text": "8. 予算と結果"
+      }
+    ],
+    "codes": [
+      "SourceId",
+      "Revision",
+      "SnapshotId = (SourceId, Revision, contentDigest)",
+      "Span = (SnapshotId, start:u64, end:u64)",
+      "[start,end)",
+      "0 <= start <= end <= source.len",
+      "SchemaRef = (packageName, revision, digest)",
+      "KindRef = (SchemaRef, LocalKindId)",
+      "List<T>",
+      "Option<T>",
+      "HeadShape = {arity, arguments, transitionRecipe}",
+      "ViewElement = {kind, span, fields, roles, relations}",
+      "Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)",
+      "SourceMap",
+      "EntityId",
+      "Occurrence",
+      "ScopeId",
+      "[start,end)",
+      "traceOverflow: Option<TraceOverflow>"
+    ],
+    "preamble": "atomic pointerを使えるnative/Wasmでは、SourceAdmissionが受入済みの不変snapshot storageを操作内だけで所有し、索引化できる。同じstorageの再受入には既存の証明を再利用し、独立decodeのstorageにはsource/revision/digest/URIとSourceBytesの検査を行う。所有参照を保持して、addressの再利用を防ぐ。内部addressをwire・identity・出力へ含めてはならない。索引のWorkには要素数による探索・shiftの上界を事前計上し、allocatorの配置によるUsageの差を防ぐ。別のSourceAdmissionや非atomic targetへ、この証明を引き継がない。",
+    "preamble_before_policy": true,
+    "facts_parent": "n-6e616d65735f72656c6174696f6e73",
+    "facts_heading": "6.1. 共通きょうつうfactsと専用処理せんようしょりの変更範囲へんこうはんい",
+    "ids": [
+      "n-706f6c696379",
+      "n-736f757263655f72616e6765",
+      "n-736368656d615f6b696e64",
+      "n-746f6b656e5f73796e746178",
+      "n-7669657773",
+      "n-6f726967696e73",
+      "n-6e616d65735f72656c6174696f6e73",
+      "n-66616374735f617574686f72697479",
+      "n-646961676e6f73746963735f6576656e7473",
+      "n-627564676574735f726573756c7473"
+    ],
+    "ruby": 1111,
+    "annos": [
+      {
+        "base": "共有不変storage",
+        "note": "clone間で内容を変更せず共有する格納先",
+        "baseTop": 785.484375,
+        "noteTop": 831.546875,
+        "width": 208.6875
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:63439/NEPL3/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "scrollWidth": 1280,
+    "links": [],
+    "browser": "webkit",
+    "version": "26.5",
+    "base": "/NEPL3/",
+    "width": 1280,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": -0.25,
+        "scroll": 310
+      },
+      {
+        "id": "n-736f757263655f72616e6765",
+        "count": 1,
+        "top": 0.203125,
+        "scroll": 453
+      },
+      {
+        "id": "n-736368656d615f6b696e64",
+        "count": 1,
+        "top": 0.03125,
+        "scroll": 1714
+      },
+      {
+        "id": "n-746f6b656e5f73796e746178",
+        "count": 1,
+        "top": 0.15625,
+        "scroll": 2020
+      },
+      {
+        "id": "n-7669657773",
+        "count": 1,
+        "top": 0.421875,
+        "scroll": 2762
+      },
+      {
+        "id": "n-6f726967696e73",
+        "count": 1,
+        "top": 0.3125,
+        "scroll": 3228
+      },
+      {
+        "id": "n-6e616d65735f72656c6174696f6e73",
+        "count": 1,
+        "top": 0.375,
+        "scroll": 3488
+      },
+      {
+        "id": "n-66616374735f617574686f72697479",
+        "count": 1,
+        "top": -0.234375,
+        "scroll": 3723
+      },
+      {
+        "id": "n-646961676e6f73746963735f6576656e7473",
+        "count": 1,
+        "top": 0.296875,
+        "scroll": 4543
+      },
+      {
+        "id": "n-627564676574735f726573756c7473",
+        "count": 1,
+        "top": -0.1875,
+        "scroll": 5470
+      }
+    ],
+    "reload_fragment": "http://127.0.0.1:63439/NEPL3/docs/spec/02-foundation.html#n-627564676574735f726573756c7473"
+  },
+  {
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "02. 共通データ契約"
+      },
+      {
+        "tag": "H2",
+        "text": "方針"
+      },
+      {
+        "tag": "H2",
+        "text": "1. SourceとRange"
+      },
+      {
+        "tag": "H2",
+        "text": "2. schemaとkind"
+      },
+      {
+        "tag": "H2",
+        "text": "3. Tokenと構文"
+      },
+      {
+        "tag": "H2",
+        "text": "4. 内部view"
+      },
+      {
+        "tag": "H2",
+        "text": "5. Origin graph"
+      },
+      {
+        "tag": "H2",
+        "text": "6. 名前・関係"
+      },
+      {
+        "tag": "H3",
+        "text": "6.1. 共通factsと専用処理の変更範囲"
+      },
+      {
+        "tag": "H2",
+        "text": "7. 診断とevent"
+      },
+      {
+        "tag": "H2",
+        "text": "8. 予算と結果"
+      }
+    ],
+    "codes": [
+      "SourceId",
+      "Revision",
+      "SnapshotId = (SourceId, Revision, contentDigest)",
+      "Span = (SnapshotId, start:u64, end:u64)",
+      "[start,end)",
+      "0 <= start <= end <= source.len",
+      "SchemaRef = (packageName, revision, digest)",
+      "KindRef = (SchemaRef, LocalKindId)",
+      "List<T>",
+      "Option<T>",
+      "HeadShape = {arity, arguments, transitionRecipe}",
+      "ViewElement = {kind, span, fields, roles, relations}",
+      "Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)",
+      "SourceMap",
+      "EntityId",
+      "Occurrence",
+      "ScopeId",
+      "[start,end)",
+      "traceOverflow: Option<TraceOverflow>"
+    ],
+    "preamble": "atomic pointerを使えるnative/Wasmでは、SourceAdmissionが受入済みの不変snapshot storageを操作内だけで所有し、索引化できる。同じstorageの再受入には既存の証明を再利用し、独立decodeのstorageにはsource/revision/digest/URIとSourceBytesの検査を行う。所有参照を保持して、addressの再利用を防ぐ。内部addressをwire・identity・出力へ含めてはならない。索引のWorkには要素数による探索・shiftの上界を事前計上し、allocatorの配置によるUsageの差を防ぐ。別のSourceAdmissionや非atomic targetへ、この証明を引き継がない。",
+    "preamble_before_policy": true,
+    "facts_parent": "n-6e616d65735f72656c6174696f6e73",
+    "facts_heading": "6.1. 共通きょうつうfactsと専用処理せんようしょりの変更範囲へんこうはんい",
+    "ids": [
+      "n-706f6c696379",
+      "n-736f757263655f72616e6765",
+      "n-736368656d615f6b696e64",
+      "n-746f6b656e5f73796e746178",
+      "n-7669657773",
+      "n-6f726967696e73",
+      "n-6e616d65735f72656c6174696f6e73",
+      "n-66616374735f617574686f72697479",
+      "n-646961676e6f73746963735f6576656e7473",
+      "n-627564676574735f726573756c7473"
+    ],
+    "ruby": 1111,
+    "annos": [
+      {
+        "base": "共有不変storage",
+        "note": "clone間で内容を変更せず共有する格納先",
+        "baseTop": 2098.296875,
+        "noteTop": 2144.359375,
+        "width": 208.6875
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:63439/review/nested/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "scrollWidth": 375,
+    "links": [],
+    "browser": "webkit",
+    "version": "26.5",
+    "base": "/review/nested/",
+    "width": 375,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": 0.109375,
+        "scroll": 753
+      },
+      {
+        "id": "n-736f757263655f72616e6765",
+        "count": 1,
+        "top": -0.3125,
+        "scroll": 989
+      },
+      {
+        "id": "n-736368656d615f6b696e64",
+        "count": 1,
+        "top": 0.234375,
+        "scroll": 5324
+      },
+      {
+        "id": "n-746f6b656e5f73796e746178",
+        "count": 1,
+        "top": -0.21875,
+        "scroll": 6097
+      },
+      {
+        "id": "n-7669657773",
+        "count": 1,
+        "top": 0.4375,
+        "scroll": 8376
+      },
+      {
+        "id": "n-6f726967696e73",
+        "count": 1,
+        "top": 0.109375,
+        "scroll": 9775
+      },
+      {
+        "id": "n-6e616d65735f72656c6174696f6e73",
+        "count": 1,
+        "top": -0.28125,
+        "scroll": 10594
+      },
+      {
+        "id": "n-66616374735f617574686f72697479",
+        "count": 1,
+        "top": 0,
+        "scroll": 11283
+      },
+      {
+        "id": "n-646961676e6f73746963735f6576656e7473",
+        "count": 1,
+        "top": -0.109375,
+        "scroll": 13975
+      },
+      {
+        "id": "n-627564676574735f726573756c7473",
+        "count": 1,
+        "top": -0.234375,
+        "scroll": 16796
+      }
+    ],
+    "reload_fragment": "http://127.0.0.1:63439/review/nested/docs/spec/02-foundation.html#n-627564676574735f726573756c7473"
+  },
+  {
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "02. 共通データ契約"
+      },
+      {
+        "tag": "H2",
+        "text": "方針"
+      },
+      {
+        "tag": "H2",
+        "text": "1. SourceとRange"
+      },
+      {
+        "tag": "H2",
+        "text": "2. schemaとkind"
+      },
+      {
+        "tag": "H2",
+        "text": "3. Tokenと構文"
+      },
+      {
+        "tag": "H2",
+        "text": "4. 内部view"
+      },
+      {
+        "tag": "H2",
+        "text": "5. Origin graph"
+      },
+      {
+        "tag": "H2",
+        "text": "6. 名前・関係"
+      },
+      {
+        "tag": "H3",
+        "text": "6.1. 共通factsと専用処理の変更範囲"
+      },
+      {
+        "tag": "H2",
+        "text": "7. 診断とevent"
+      },
+      {
+        "tag": "H2",
+        "text": "8. 予算と結果"
+      }
+    ],
+    "codes": [
+      "SourceId",
+      "Revision",
+      "SnapshotId = (SourceId, Revision, contentDigest)",
+      "Span = (SnapshotId, start:u64, end:u64)",
+      "[start,end)",
+      "0 <= start <= end <= source.len",
+      "SchemaRef = (packageName, revision, digest)",
+      "KindRef = (SchemaRef, LocalKindId)",
+      "List<T>",
+      "Option<T>",
+      "HeadShape = {arity, arguments, transitionRecipe}",
+      "ViewElement = {kind, span, fields, roles, relations}",
+      "Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)",
+      "SourceMap",
+      "EntityId",
+      "Occurrence",
+      "ScopeId",
+      "[start,end)",
+      "traceOverflow: Option<TraceOverflow>"
+    ],
+    "preamble": "atomic pointerを使えるnative/Wasmでは、SourceAdmissionが受入済みの不変snapshot storageを操作内だけで所有し、索引化できる。同じstorageの再受入には既存の証明を再利用し、独立decodeのstorageにはsource/revision/digest/URIとSourceBytesの検査を行う。所有参照を保持して、addressの再利用を防ぐ。内部addressをwire・identity・出力へ含めてはならない。索引のWorkには要素数による探索・shiftの上界を事前計上し、allocatorの配置によるUsageの差を防ぐ。別のSourceAdmissionや非atomic targetへ、この証明を引き継がない。",
+    "preamble_before_policy": true,
+    "facts_parent": "n-6e616d65735f72656c6174696f6e73",
+    "facts_heading": "6.1. 共通きょうつうfactsと専用処理せんようしょりの変更範囲へんこうはんい",
+    "ids": [
+      "n-706f6c696379",
+      "n-736f757263655f72616e6765",
+      "n-736368656d615f6b696e64",
+      "n-746f6b656e5f73796e746178",
+      "n-7669657773",
+      "n-6f726967696e73",
+      "n-6e616d65735f72656c6174696f6e73",
+      "n-66616374735f617574686f72697479",
+      "n-646961676e6f73746963735f6576656e7473",
+      "n-627564676574735f726573756c7473"
+    ],
+    "ruby": 1111,
+    "annos": [
+      {
+        "base": "共有不変storage",
+        "note": "clone間で内容を変更せず共有する格納先",
+        "baseTop": 785.484375,
+        "noteTop": 831.546875,
+        "width": 208.6875
+      }
+    ],
+    "css": [
+      {
+        "href": "http://127.0.0.1:63439/review/nested/docs/spec/assets/doc.css",
+        "rules": 29
+      }
+    ],
+    "background": "rgb(13, 17, 23)",
+    "scripts": 0,
+    "overflow": false,
+    "scrollWidth": 1280,
+    "links": [],
+    "browser": "webkit",
+    "version": "26.5",
+    "base": "/review/nested/",
+    "width": 1280,
+    "status": 200,
+    "failed": [],
+    "codes_exact": true,
+    "navigation": [
+      {
+        "id": "n-706f6c696379",
+        "count": 1,
+        "top": -0.25,
+        "scroll": 310
+      },
+      {
+        "id": "n-736f757263655f72616e6765",
+        "count": 1,
+        "top": 0.203125,
+        "scroll": 453
+      },
+      {
+        "id": "n-736368656d615f6b696e64",
+        "count": 1,
+        "top": 0.03125,
+        "scroll": 1714
+      },
+      {
+        "id": "n-746f6b656e5f73796e746178",
+        "count": 1,
+        "top": 0.15625,
+        "scroll": 2020
+      },
+      {
+        "id": "n-7669657773",
+        "count": 1,
+        "top": 0.421875,
+        "scroll": 2762
+      },
+      {
+        "id": "n-6f726967696e73",
+        "count": 1,
+        "top": 0.3125,
+        "scroll": 3228
+      },
+      {
+        "id": "n-6e616d65735f72656c6174696f6e73",
+        "count": 1,
+        "top": 0.375,
+        "scroll": 3488
+      },
+      {
+        "id": "n-66616374735f617574686f72697479",
+        "count": 1,
+        "top": -0.234375,
+        "scroll": 3723
+      },
+      {
+        "id": "n-646961676e6f73746963735f6576656e7473",
+        "count": 1,
+        "top": 0.296875,
+        "scroll": 4543
+      },
+      {
+        "id": "n-627564676574735f726573756c7473",
+        "count": 1,
+        "top": -0.1875,
+        "scroll": 5470
+      }
+    ],
+    "reload_fragment": "http://127.0.0.1:63439/review/nested/docs/spec/02-foundation.html#n-627564676574735f726573756c7473"
+  }
+]

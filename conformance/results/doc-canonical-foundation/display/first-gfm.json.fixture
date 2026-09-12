@@ -1,0 +1,100 @@
+{
+  "exit": 0,
+  "anchors": [
+    {
+      "tag": "a",
+      "name": "user-content-02-共通データ契約"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-706f6c696379"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-方針"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-736f757263655f72616e6765"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-736368656d615f6b696e64"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-746f6b656e5f73796e746178"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-3-tokenと構文"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-7669657773"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-4-内部view"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-6f726967696e73"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-6e616d65735f72656c6174696f6e73"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-6-名前関係"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-66616374735f617574686f72697479"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-61-共通factsと専用処理の変更範囲"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-646961676e6f73746963735f6576656e7473"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-7-診断とevent"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-n-627564676574735f726573756c7473"
+    },
+    {
+      "tag": "a",
+      "name": "user-content-8-予算と結果"
+    }
+  ],
+  "list_counts": [],
+  "codes": [
+    "SourceId",
+    "Revision",
+    "SnapshotId = (SourceId, Revision, contentDigest)",
+    "Span = (SnapshotId, start:u64, end:u64)",
+    "[start,end)",
+    "0 <= start <= end <= source.len",
+    "SchemaRef = (packageName, revision, digest)",
+    "KindRef = (SchemaRef, LocalKindId)",
+    "List<T>",
+    "Option<T>",
+    "HeadShape = {arity, arguments, transitionRecipe}",
+    "ViewElement = {kind, span, fields, roles, relations}",
+    "Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)",
+    "SourceMap",
+    "EntityId",
+    "Occurrence",
+    "ScopeId",
+    "[start,end)",
+    "traceOverflow: Option<TraceOverflow>"
+  ],
+  "properties_matching": []
+}

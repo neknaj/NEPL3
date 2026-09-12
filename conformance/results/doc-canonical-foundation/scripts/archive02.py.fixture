@@ -1,0 +1,29 @@
+from pathlib import Path
+import json,hashlib,subprocess
+root=Path.cwd();out=root/'.tmp/archive02';out.mkdir(exist_ok=False);rows=[]
+def save(owner,p,relative):
+ data=p.read_bytes();assert len(data)<1048576
+ name=f'{owner}/{relative}.fixture';dest=out/name
+ assert dest.resolve().is_relative_to(out.resolve())
+ dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(data)
+ rows.append(dict(owner=owner,file=name,restore=relative,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+for owner,directory in [('allocation-stop','generation02'),('work-stop','generation02-expanded'),('generation','generation02-resolved'),('checks','checks02'),('html','html-chapter02-resolved-first'),('markdown','markdown-chapter02-resolved-first'),('preflight','preflight02')]:
+ d=root/'.tmp'/directory
+ for p in sorted(d.rglob('*')):
+  if p.is_file():save(owner,p,p.relative_to(d).as_posix())
+for name in ['prepare02.py','generate02.py','generate02-expanded.py','generate02-resolved.py','check02.py','adopt02.py','restore02.py','archive02.py']:
+ save('scripts',root/'.tmp'/name,name)
+for name in ['original.md','original.nepld']:save('review',root/'.tmp/chapter02'/name,name)
+save('review',root/'.tmp/review02-final.md','independent.md')
+display=root/'.tmp/review02-display';seal=json.loads((display/'seal.json').read_text(encoding='utf-8'))
+save('display',display/'seal.json','seal.json')
+for row in seal:
+ p=display/row['path'];assert len(p.read_bytes())==row['bytes'] and hashlib.sha256(p.read_bytes()).hexdigest()==row['sha256']
+ save('display',p,row['path'])
+head='b8dfdd1160472e11d193f56ab2f4b5322ec0b873';sources=[]
+for name in ['doc/canonical.json','doc/spec/02-foundation.nepld','doc/spec/02-foundation.md','doc/spec/06-math.md','doc/spec/01-architecture.md','doc/spec/12-model-invariants.md','doc/spec/17-math-html.md','doc/spec/11-conformance.md','doc/migration/aliases/02-foundation.json']:
+ data=(root/name).read_bytes();assert data==subprocess.check_output(['git','show',head+':'+name])
+ sources.append(dict(path=name,bytes=len(data),sha256=hashlib.sha256(data).hexdigest()))
+(out/'payloads.json').write_text(json.dumps(dict(implementation_commit=head,sources=sources,files=rows),indent=2)+'\n',encoding='utf-8',newline='\n')
+(out/'.gitattributes').write_text('*.fixture -text -whitespace\n',encoding='utf-8',newline='\n')
+print(len(rows),'payloads',sum(r['bytes'] for r in rows),'bytes')

@@ -1,0 +1,374 @@
+{
+  "codes": [
+    "SourceId",
+    "Revision",
+    "SnapshotId = (SourceId, Revision, contentDigest)",
+    "Span = (SnapshotId, start:u64, end:u64)",
+    "[start,end)",
+    "0 <= start <= end <= source.len",
+    "SchemaRef = (packageName, revision, digest)",
+    "KindRef = (SchemaRef, LocalKindId)",
+    "List<T>",
+    "Option<T>",
+    "HeadShape = {arity, arguments, transitionRecipe}",
+    "ViewElement = {kind, span, fields, roles, relations}",
+    "Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)",
+    "SourceMap",
+    "EntityId",
+    "Occurrence",
+    "ScopeId",
+    "[start,end)",
+    "traceOverflow: Option<TraceOverflow>"
+  ],
+  "lists": [],
+  "links": [
+    {
+      "href": "#02-共通きょうつうデータ契約けいやく",
+      "text": ""
+    },
+    {
+      "href": "#方針ほうしん",
+      "text": ""
+    },
+    {
+      "href": "#1-sourceとrange",
+      "text": ""
+    },
+    {
+      "href": "#2-schemaとkind",
+      "text": ""
+    },
+    {
+      "href": "#3-tokenと構文こうぶん",
+      "text": ""
+    },
+    {
+      "href": "#4-内部ないぶview",
+      "text": ""
+    },
+    {
+      "href": "#5-origin-graph",
+      "text": ""
+    },
+    {
+      "href": "#6-名前なまえ関係かんけい",
+      "text": ""
+    },
+    {
+      "href": "#61-共通きょうつうfactsと専用処理せんようしょりの変更範囲へんこうはんい",
+      "text": ""
+    },
+    {
+      "href": "#7-診断しんだんとevent",
+      "text": ""
+    },
+    {
+      "href": "#8-予算よさんと結果けっか",
+      "text": ""
+    }
+  ],
+  "ids": [
+    "user-content-02-共通きょうつうデータ契約けいやく",
+    "user-content-方針ほうしん",
+    "user-content-1-sourceとrange",
+    "user-content-2-schemaとkind",
+    "user-content-3-tokenと構文こうぶん",
+    "user-content-4-内部ないぶview",
+    "user-content-5-origin-graph",
+    "user-content-6-名前なまえ関係かんけい",
+    "user-content-61-共通きょうつうfactsと専用処理せんようしょりの変更範囲へんこうはんい",
+    "user-content-7-診断しんだんとevent",
+    "user-content-8-予算よさんと結果けっか"
+  ],
+  "headings": [
+    "02. 共通[きょうつう]データ契約[けいやく]",
+    "方針[ほうしん]",
+    "1. SourceとRange",
+    "2. schemaとkind",
+    "3. Tokenと構文[こうぶん]",
+    "4. 内部[ないぶ]view",
+    "5. Origin graph",
+    "6. 名前[なまえ]・関係[かんけい]",
+    "6.1. 共通[きょうつう]factsと専用処理[せんようしょり]の変更範囲[へんこうはんい]",
+    "7. 診断[しんだん]とevent",
+    "8. 予算[よさん]と結果[けっか]"
+  ],
+  "url": "https://github.com/neknaj/NEPL3/blob/b8dfdd1160472e11d193f56ab2f4b5322ec0b873/doc/spec/02-foundation.md",
+  "status": 200,
+  "codes_exact": true,
+  "navigation": [
+    {
+      "name": "02-共通データ契約",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-02-共通データ契約",
+          "top": 125,
+          "parent": "",
+          "next": "02. 共通[きょうつう]データ契約[けいやく]"
+        }
+      ],
+      "scroll": 261
+    },
+    {
+      "name": "方針",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-方針",
+          "top": 124.59375,
+          "parent": "",
+          "next": "方針[ほうしん]"
+        }
+      ],
+      "scroll": 560
+    },
+    {
+      "name": "1-sourceとrange",
+      "nodes": [
+        {
+          "id": "user-content-1-sourceとrange",
+          "name": null,
+          "top": 125.07499694824219,
+          "parent": "1. SourceとRange",
+          "next": "SourceId はhostが与[あた]える、空[から]でないopaque TextのIDである。Revision は、そのsourceの版[はん]を表[あらわ]す。SnapshotId = (SourceId, Revision, con"
+        }
+      ],
+      "scroll": 694
+    },
+    {
+      "name": "2-schemaとkind",
+      "nodes": [
+        {
+          "id": "user-content-2-schemaとkind",
+          "name": null,
+          "top": 125.26249694824219,
+          "parent": "2. schemaとkind",
+          "next": "SchemaRef = (packageName, revision, digest)、KindRef = (SchemaRef, LocalKindId) とする。LocalKindIdとfieldの並[なら]びは、package sch"
+        }
+      ],
+      "scroll": 2324
+    },
+    {
+      "name": "3-tokenと構文",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-3-tokenと構文",
+          "top": 125.15625,
+          "parent": "",
+          "next": "3. Tokenと構文[こうぶん]"
+        }
+      ],
+      "scroll": 2626
+    },
+    {
+      "name": "4-内部view",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-4-内部view",
+          "top": 125.34375,
+          "parent": "",
+          "next": "4. 内部[ないぶ]view"
+        }
+      ],
+      "scroll": 3392
+    },
+    {
+      "name": "5-origin-graph",
+      "nodes": [
+        {
+          "id": "user-content-5-origin-graph",
+          "name": null,
+          "top": 124.82499694824219,
+          "parent": "5. Origin graph",
+          "next": "Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor) と"
+        }
+      ],
+      "scroll": 3967
+    },
+    {
+      "name": "6-名前関係",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-6-名前関係",
+          "top": 124.71875,
+          "parent": "",
+          "next": "6. 名前[なまえ]・関係[かんけい]"
+        }
+      ],
+      "scroll": 4317
+    },
+    {
+      "name": "61-共通factsと専用処理の変更範囲",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-61-共通factsと専用処理の変更範囲",
+          "top": 124.90625,
+          "parent": "",
+          "next": "6.1. 共通[きょうつう]factsと専用処理[せんようしょり]の変更範囲[へんこうはんい]"
+        }
+      ],
+      "scroll": 4563
+    },
+    {
+      "name": "7-診断とevent",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-7-診断とevent",
+          "top": 124.90625,
+          "parent": "",
+          "next": "7. 診断[しんだん]とevent"
+        }
+      ],
+      "scroll": 5532
+    },
+    {
+      "name": "8-予算と結果",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-8-予算と結果",
+          "top": 125.09375,
+          "parent": "",
+          "next": "8. 予算[よさん]と結果[けっか]"
+        }
+      ],
+      "scroll": 6602
+    },
+    {
+      "name": "n-706f6c696379",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-706f6c696379",
+          "top": 124.59375,
+          "parent": "",
+          "next": ""
+        }
+      ],
+      "scroll": 560
+    },
+    {
+      "name": "n-736f757263655f72616e6765",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-736f757263655f72616e6765",
+          "top": 124.78125,
+          "parent": "",
+          "next": "1. SourceとRange"
+        }
+      ],
+      "scroll": 686
+    },
+    {
+      "name": "n-736368656d615f6b696e64",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-736368656d615f6b696e64",
+          "top": 124.96875,
+          "parent": "",
+          "next": "2. schemaとkind"
+        }
+      ],
+      "scroll": 2316
+    },
+    {
+      "name": "n-746f6b656e5f73796e746178",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-746f6b656e5f73796e746178",
+          "top": 125.15625,
+          "parent": "",
+          "next": ""
+        }
+      ],
+      "scroll": 2626
+    },
+    {
+      "name": "n-7669657773",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-7669657773",
+          "top": 125.34375,
+          "parent": "",
+          "next": ""
+        }
+      ],
+      "scroll": 3392
+    },
+    {
+      "name": "n-6f726967696e73",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-6f726967696e73",
+          "top": 124.53125,
+          "parent": "",
+          "next": "5. Origin graph"
+        }
+      ],
+      "scroll": 3959
+    },
+    {
+      "name": "n-6e616d65735f72656c6174696f6e73",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-6e616d65735f72656c6174696f6e73",
+          "top": 124.71875,
+          "parent": "",
+          "next": ""
+        }
+      ],
+      "scroll": 4317
+    },
+    {
+      "name": "n-66616374735f617574686f72697479",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-66616374735f617574686f72697479",
+          "top": 124.90625,
+          "parent": "",
+          "next": ""
+        }
+      ],
+      "scroll": 4563
+    },
+    {
+      "name": "n-646961676e6f73746963735f6576656e7473",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-646961676e6f73746963735f6576656e7473",
+          "top": 124.90625,
+          "parent": "",
+          "next": ""
+        }
+      ],
+      "scroll": 5532
+    },
+    {
+      "name": "n-627564676574735f726573756c7473",
+      "nodes": [
+        {
+          "id": "",
+          "name": "user-content-n-627564676574735f726573756c7473",
+          "top": 125.09375,
+          "parent": "",
+          "next": ""
+        }
+      ],
+      "scroll": 6602
+    }
+  ]
+}

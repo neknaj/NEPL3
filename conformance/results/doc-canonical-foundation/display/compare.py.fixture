@@ -1,0 +1,9 @@
+from pathlib import Path
+import re,json
+OUT=Path(__file__).parent;old=Path('.tmp/html-chapter06-first');new=Path('.tmp/html-chapter02-resolved-first');second=Path('.tmp/html-chapter02-resolved-second')
+comparison=lambda a,b,manifest:[{'path':p.relative_to(a).as_posix(),'same':p.read_bytes()==b.joinpath(p.relative_to(a)).read_bytes()} for p in a.rglob('*') if p.is_file() and (manifest or p.name!='manifest.json')]
+md=Path('.tmp/markdown-chapter02-resolved-first/doc/spec/02-foundation.md').read_text(encoding='utf-8');original=Path('.tmp/chapter02/original.md').read_text(encoding='utf-8');expected=re.findall(r'`([^`]+)`',original);expected.insert(-1,'[start,end)')
+gfm=json.loads((OUT/'first-gfm.json').read_text(encoding='utf-8'));api_html=(OUT/'first-gfm.html').read_text(encoding='utf-8')
+result={'prior_thirteen_html_and_css':comparison(old,new,False),'html_repeat':comparison(new,second,True) if second.exists() else 'pending','codes_expected_exact':gfm['codes']==expected,'generated_code_count':len(gfm['codes']),'api_h3_count':len(re.findall('<h3 ',api_html)),'api_h3':re.findall(r'<h3[^>]*>(.*?)</h3>',api_html),'preamble_before_policy':api_html.index('atomic pointer')<api_html.index('<h2 '),'html_budget':json.loads((new/'manifest.json').read_text(encoding='utf-8'))['output_budget'],'failed_directories_absent':not Path('.tmp/html-chapter02-first').exists() and not Path('.tmp/html-chapter02-expanded-first').exists()}
+(OUT/'compare.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps({k:v for k,v in result.items() if k!='html_budget'}))

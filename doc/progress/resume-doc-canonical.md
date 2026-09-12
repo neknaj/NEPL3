@@ -2,6 +2,27 @@
 
 ## 2026年9月12日の再開（現在）
 
+第02章を含む14章集合は選択した予算内で2回生成に成功し、Markdown15・HTML16ファイルが
+すべてbyte一致した。既存13章HTML/CSSとMarkdown本文を保ち、第02章とcontext headerを採用。
+全projection照合、対象canonical14試験、Clippy・repository検査、独立した原稿・表示・archive
+レビューを完了した。証拠は `conformance/results/doc-canonical-foundation/`。HTML16ファイルの
+compiler不要復元とmanifest15件を照合済み。第06章/第02章の最終CI・統合はまだ完了していない。
+以下の失敗は修正前の記録として保持し、成功した後の証拠と区別する。
+
+第02章のallocation増加後のHTML再実行はWorkLimit（499,999,997 / 500,000,000）で停止。
+Nodes19,497,622、Allocation1,032,057,020、Output480であり、出力dirは生成されていない。
+次の新規操作ではHTML Work600M・Nodes24M・Allocation1.25Bを選択する。Nodesの変更は
+集合拡大に対する有限の余裕であり、NodeLimitが発生したという記録ではない。両停止の
+証拠を残し、Markdown/core/per-pageの予算は維持する。第06章のCIで検出した文書監査testの
+Ruby非対応は独立レビュー・不正例試験で修正し、PR103の必須CIを再実行している。
+
+第02章を追加した14章集合ではMarkdownの初回生成は成功したが、HTMLは
+AllocationLimit（999,999,997 / 1,000,000,000）で停止した。Work427,925,810、
+Nodes18,233,447、Output384は停止時点の使用量であり、完成HTMLの費用ではない。
+停止runは保存し、HTML集合のallocationだけ1,250,000,000へ変更して新規操作で再検証する。
+Work500M・Nodes20M・Markdownとcore/per-pageの既定値は変更しない。この値は
+14章集合の累積論理allocationに対する有限のhost許容量であり、物理heapの最小値ではない。
+
 PR102は必須CI16件の成功と独立レビュー後、`672949b98f66829eb1b5737f6f92c425f2936c71`
 へ統合した。正式Doc正本は12章である。次の第06章はbranchで13章集合を同じ有限予算で
 各2回生成し、Markdown14ファイル・HTML15ファイルのbyte一致、既存12章HTML/CSSの不変、
