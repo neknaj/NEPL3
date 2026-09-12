@@ -34,10 +34,7 @@ impl<E> From<StopReason> for PrintError<E> {
     }
 }
 /// No invented source identity: the host assigns a snapshot when saving/parsing.
-pub struct SourceArtifact {
-    pub text: String,
-    pub entry: crate::check::Category,
-}
+pub use crate::model::MathSourceArtifact as SourceArtifact;
 enum Task {
     Node(u64, u64),
     Children(u64, usize, u64),

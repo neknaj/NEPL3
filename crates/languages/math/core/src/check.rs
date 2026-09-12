@@ -48,12 +48,7 @@ pub fn expression<'a>(
     Ok(CheckedExpression { shape, bindings })
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Category {
-    Expr,
-    Row,
-    DocGuest,
-}
+pub use crate::model::MathCategory as Category;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ShapeError {
     Stopped(StopReason),
