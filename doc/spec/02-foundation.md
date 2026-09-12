@@ -1,125 +1,141 @@
-# 02. 共通データ契約
+<!-- Generated from doc/spec/02&#45;foundation.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page foundation; source SHA-256 a995ce6dc28ad3d8470ee5c19276be0a631f14451466a1bd3d17e44290457e8e; alias input SHA-256 24aa727bef177b04daaacc33c54f71acc51df2491d1d8368e0ca132395d662f4; document digest 3de6d937370b104c2e1c1d963fbe59a7c968cd1d924a40ab9bcc4d002ee1923b; input PageSet digest fd6243f93762260623f00dab496f89cbf65e45ce20431682a0b7afa77831056d; input context SHA-256 4986b81eec90eb0942cc352c4783e4c27d260d01ccbab38383ecdaa45a3df44a. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
-atomic pointerを使えるnative/Wasmでは、SourceAdmissionは受入済みの不変snapshot storageを
-操作内だけで所有・索引化できる。同じstorageの再受入では既存の証明を再利用し、独立decodeの
-storageはsource/revision/digest/URIとSourceBytesの検査を通す。所有参照を保持してaddressの再利用を防ぐ。
-内部addressはwire・identity・出力へ含めず、索引のWorkは要素数による探索・shift上界を事前計上して
-allocator配置によるUsage差を防ぐ。別SourceAdmissionや非atomic targetには証明を引き継がない。
+<a name="02-共通データ契約"></a>
 
-## 方針
+# 02\. 共通\[きょうつう\]データ契約\[けいやく\]
 
-source、種類、構造、意味、解析結果の出自を独立に保持する。エラーやeditor結果を文字列から再解析しない。
+atomic pointerを使\[つか\]えるnative\/Wasmでは、SourceAdmissionが受入済\[うけいれず\]みの不変\[ふへん\]snapshot storageを操作内\[そうさない\]だけで所有\[しょゆう\]し、索引化\[さくいんか\]できる。同\[おな\]じstorageの再受入\[さいうけいれ\]には既存\[きそん\]の証明\[しょうめい\]を再利用\[さいりよう\]し、独立\[どくりつ\]decodeのstorageにはsource\/revision\/digest\/URIとSourceBytesの検査\[けんさ\]を行\[おこな\]う。所有参照\[しょゆうさんしょう\]を保持\[ほじ\]して、addressの再利用\[さいりよう\]を防\[ふせ\]ぐ。内部\[ないぶ\]addressをwire・identity・出力\[しゅつりょく\]へ含\[ふく\]めてはならない。索引\[さくいん\]のWorkには要素数\[ようそすう\]による探索\[たんさく\]・shiftの上界\[じょうかい\]を事前計上\[じぜんけいじょう\]し、allocatorの配置\[はいち\]によるUsageの差\[さ\]を防\[ふせ\]ぐ。別\[べつ\]のSourceAdmissionや非\[ひ\]atomic targetへ、この証明\[しょうめい\]を引\[ひ\]き継\[つ\]がない。
 
-## 1. SourceとRange
+<a name="n-706f6c696379"></a>
 
-`SourceId`はhostが与える空でないopaque TextのID。`Revision`はそのsourceの版。`SnapshotId = (SourceId, Revision, contentDigest)` はnativeとwireで同じ同一性を持ち、wire record名はSourceRefとする。SourceSnapshotはUTF-8の不変byte列とlocatorとしてのURIを別に持つ。ファイルだけでなくメモリ文書・生成文書も許可する。同じURIを持つ独立文書も異なるSourceIdで区別する。coreは乱数・時計・pointerからIDを生成しない。
+<a name="方針"></a>
 
-SourceContentはid:SourceRef、uri:Text、utf8:Textを持つ。受信時は元UTF-8 byte列のSHA-256とid.digestを照合する。SourceBundleはsourcesの列を持ち、同じSourceId/revisionに異なる内容・digest・URIを割り当てる入力、重複したsnapshot宣言を拒否する。SourceStoreへの同一snapshotの再参照は既存の不変値を指し、文書を新しいrevisionへ自動更新しない。URI変更は新しいrevisionとして明示する。
+## 方針\[ほうしん\]
 
-Rustのnative SourceSnapshotは、pointer atomicが使えるtargetではidentity・URI・本文をまとめて非公開の共有不変storageとして保持し、cloneごとに複製しない。同じ共有storageなら三つの値がすべて同じことを保証できる。別storageのidentity・URI・本文は値で比較する。pointer atomicを持たないalloc-only targetでは所有Stringを複製し、Send/Syncの性質を不用意に変更しない。この内部表現をwireに露出させず、NDFの受信では全文とdigestを改めて検査する。編集は新しいsnapshotを構築し、共有元を変更しない。
+source、種類\[しゅるい\]、構造\[こうぞう\]、意味\[いみ\]、解析結果\[かいせきけっか\]の出自\[しゅつじ\]を、独立\[どくりつ\]に保持\[ほじ\]する。エラーやeditor結果\[けっか\]を、文字列\[もじれつ\]から再解析\[さいかいせき\]しない。
 
-共有storageの初回確保と編集による新規確保はAllocationUnitsへ計上し、共有storageを用いるtargetのnative cloneではsnapshot slotを計上する。非atomic targetではidentity・URI・本文の複製費用も計上する。実コピーのclone_with_budgetとCopyPurpose::Cloneは共有storageの内容を走査しない。一方、外部continuation比較前のcharge_cloneとCopyPurpose::Compareはmetadataと本文長を含む保守的な上限を維持する。二つのsnapshotを直接照合するeq_with_budgetは同じ不変storageと確認できる場合だけ内容比較を省略し、別decodeのstorageは比較前に課金する。SpanのSourceId、診断、Originなど、snapshot以外の所有値の複製費用は引き続き計上する。source storeへの挿入は別の操作として索引比較・重複照合・成長費用を計上する。SourceBytesの入場、停止理由の保持、受信境界の検査を免除する最適化ではない。
+<a name="n-736f757263655f72616e6765"></a>
 
-`Span = (SnapshotId, start:u64, end:u64)`。半開区間 `[start,end)`、`0 <= start <= end <= source.len`、UTF-8 scalar境界であることを構築時に検査する。挿入位置には空区間を使用できる。空区間は左/右へのaffinityを必要な操作で別に持つ。行・列・画面幅をSpanへ保存しない。
+## 1\. SourceとRange
 
-CRLFは元の2byteを維持する。LF、CRLF、CRをそれぞれ一つの改行としてLineIndexで扱う。BOMは先頭だけのtriviaとして記録し、勝手に除去して以後のoffsetをずらさない。不正UTF-8はSourceDecodeFailureであり、文字置換して位置を捏造しない。
+`SourceId` はhostが与\[あた\]える、空\[から\]でないopaque TextのIDである。`Revision` は、そのsourceの版\[はん\]を表\[あらわ\]す。`SnapshotId = (SourceId, Revision, contentDigest)` はnativeとwireで同\[おな\]じ同一性\[どういつせい\]を持\[も\]ち、wire record名\[めい\]はSourceRefとする。SourceSnapshotはUTF\-8の不変\[ふへん\]byte列\[れつ\]と、locatorとしてのURIを別\[べつ\]に持\[も\]つ。ファイルのほか、メモリ文書\[ぶんしょ\]や生成文書\[せいせいぶんしょ\]も許可\[きょか\]する。同\[おな\]じURIを持\[も\]つ独立\[どくりつ\]した文書\[ぶんしょ\]も、異\[こと\]なるSourceIdで区別\[くべつ\]する。coreは乱数\[らんすう\]・時計\[とけい\]・pointerからIDを生成\[せいせい\]しない。
 
-診断・query・編集は必ずsnapshotを指定する。最新revision以外の結果を、単にoffsetを保ったまま最新文書へ適用しない。
+SourceContentはid\:SourceRef、uri\:Text、utf8\:Textを持\[も\]つ。受信時\[じゅしんじ\]には元\[もと\]のUTF\-8 byte列\[れつ\]のSHA\-256をid\.digestと照合\[しょうごう\]する。SourceBundleはsourcesの列\[れつ\]を持\[も\]つ。同\[おな\]じSourceId\/revisionに異\[こと\]なる内容\[ないよう\]・digest・URIを割\[わ\]り当\[あ\]てる入力\[にゅうりょく\]と、重複\[じゅうふく\]するsnapshot宣言\[せんげん\]を拒否\[きょひ\]する。SourceStoreへの同一\[どういつ\]snapshotの再参照\[さいさんしょう\]は、既存\[きそん\]の不変値\[ふへんち\]を指\[さ\]す。文書\[ぶんしょ\]を新\[あたら\]しいrevisionへ自動更新\[じどうこうしん\]してはならない。URIの変更\[へんこう\]は、新\[あたら\]しいrevisionとして明示\[めいじ\]する。
 
-SourceStore.applyは同じ操作のBudgetとSourceAdmissionを受け、編集元と生成snapshotを一度ずつSourceBytesへ計上する。全削除で結果が空でも元snapshotの入場を省略しない。edit並替え、snapshot探索と比較、期待digest/出力digestの計算、結果・locator・返却IDのコピーには処理前にWork/AllocationUnitsを課す。並替えはborrowed参照だけを動かし、SourceIdをsort keyとして無計上で複製しない。
+Rustのnative SourceSnapshotは、pointer atomicを使\[つか\]えるtargetではidentity・URI・本文\[ほんぶん\]をまとめた非公開\[ひこうかい\]の共有不変\[きょうゆうふへん\]storage\{clone間\[かん\]で内容\[ないよう\]を変更\[へんこう\]せず共有\[きょうゆう\]する格納先\[かくのうさき\]\}を使\[つか\]う。これらをcloneごとに複製\[ふくせい\]しない。同\[おな\]じ共有\[きょうゆう\]storageなら、三\[みっ\]つの値\[あたい\]がすべて同\[おな\]じであると保証\[ほしょう\]できる。別\[べつ\]storageのidentity・URI・本文\[ほんぶん\]は、値\[あたい\]で比較\[ひかく\]する。pointer atomicを持\[も\]たないalloc\-only targetでは所有\[しょゆう\]Stringを複製\[ふくせい\]し、Send\/Syncの性質\[せいしつ\]を不用意\[ふようい\]に変更\[へんこう\]しない。この内部表現\[ないぶひょうげん\]をwireへ露出\[ろしゅつ\]させず、NDFの受信\[じゅしん\]では全文\[ぜんぶん\]とdigestを改\[あらた\]めて検査\[けんさ\]する。編集\[へんしゅう\]では新\[あたら\]しいsnapshotを構築\[こうちく\]し、共有元\[きょうゆうもと\]を変更\[へんこう\]しない。
 
-全編集の前提と生成identity、全出力と返却IDを準備してから、生成snapshotのadmissionとSourceStoreを同時に確定する。後半の検査失敗で一部sourceのrevisionだけを進めず、未公開の生成IDも予約状態として残さない。既存入力のadmissionと消費済みWork/Allocation/SourceBytesは戻さない。意味検査の失敗後は同じ操作で訂正して再試行できる。予算停止後は同じBudgetの停止理由を保持し、再試行はhostが別操作のBudget/SourceAdmissionを明示した場合に限る。返却IDの順はSourceId順である。
+共有\[きょうゆう\]storageの初回確保\[しょかいかくほ\]と編集\[へんしゅう\]による新規確保\[しんきかくほ\]は、AllocationUnitsへ計上\[けいじょう\]する。共有\[きょうゆう\]storageを使\[つか\]うtargetのnative cloneでは、snapshot slotを計上\[けいじょう\]する。非\[ひ\]atomic targetでは、identity・URI・本文\[ほんぶん\]の複製費用\[ふくせいひよう\]も計上\[けいじょう\]する。実\[じつ\]コピーのclone\_with\_budgetとCopyPurpose\:\:Cloneは、共有\[きょうゆう\]storageの内容\[ないよう\]を走査\[そうさ\]しない。一方\[いっぽう\]、外部\[がいぶ\]continuationの比較前\[ひかくまえ\]に使\[つか\]うcharge\_cloneとCopyPurpose\:\:Compareは、metadataと本文長\[ほんぶんちょう\]を含\[ふく\]む保守的\[ほしゅてき\]な上限\[じょうげん\]を維持\[いじ\]する。二\[ふた\]つのsnapshotを直接照合\[ちょくせつしょうごう\]するeq\_with\_budgetは、同\[おな\]じ不変\[ふへん\]storageと確認\[かくにん\]できる場合\[ばあい\]だけ内容比較\[ないようひかく\]を省略\[しょうりゃく\]する。別\[べつ\]decodeのstorageには、比較前\[ひかくまえ\]に課金\[かきん\]する。SpanのSourceId、診断\[しんだん\]、Originなど、snapshot以外\[いがい\]の所有値\[しょゆうち\]の複製費用\[ふくせいひよう\]は引\[ひ\]き続\[つづ\]き計上\[けいじょう\]する。source storeへの挿入\[そうにゅう\]は別\[べつ\]の操作\[そうさ\]として、索引比較\[さくいんひかく\]・重複照合\[じゅうふくしょうごう\]・成長費用\[せいちょうひよう\]を計上\[けいじょう\]する。この最適化\[さいてきか\]によって、SourceBytesの入場\[にゅうじょう\]、停止理由\[ていしりゆう\]の保持\[ほじ\]、受信境界\[じゅしんきょうかい\]の検査\[けんさ\]が免除\[めんじょ\]されるわけではない。
 
-## 2. schemaとkind
+`Span = (SnapshotId, start:u64, end:u64)` とする。構築時\[こうちくじ\]に、半開区間\[はんかいくかん\] `[start,end)` が `0 <= start <= end <= source.len` を満\[み\]たし、UTF\-8 scalar境界\[きょうかい\]にあることを検査\[けんさ\]する。挿入位置\[そうにゅういち\]には空区間\[くうくかん\]を使\[つか\]える。空区間\[くうくかん\]の左\[ひだり\]または右\[みぎ\]へのaffinityは、必要\[ひつよう\]な操作\[そうさ\]で別\[べつ\]に持\[も\]つ。行\[ぎょう\]・列\[れつ\]・画面幅\[がめんはば\]をSpanへ保存\[ほぞん\]しない。
 
-`SchemaRef = (packageName, revision, digest)`。`KindRef = (SchemaRef, LocalKindId)`。LocalKindIdとfieldの並びはpackage schemaで定義する。Word/String/Variable/Function等を共通の閉じたTokenKindとして置かない。
+CRLFは元\[もと\]の2byteを維持\[いじ\]する。LineIndexでは、LF、CRLF、CRをそれぞれ一\[ひと\]つの改行\[かいぎょう\]として扱\[あつか\]う。BOMは先頭\[せんとう\]だけのtriviaとして記録\[きろく\]する。勝手\[かって\]に除去\[じょきょ\]して、以後\[いご\]のoffsetをずらしてはならない。不正\[ふせい\]UTF\-8はSourceDecodeFailureとし、文字置換\[もじちかん\]で位置\[いち\]を捏造\[ねつぞう\]しない。診断\[しんだん\]・query・編集\[へんしゅう\]は、必\[かなら\]ずsnapshotを指定\[してい\]する。最新\[さいしん\]revision以外\[いがい\]の結果\[けっか\]を、単\[たん\]にoffsetを保\[たも\]ったまま最新文書\[さいしんぶんしょ\]へ適用\[てきよう\]しない。
 
-共通の型言語は Unit / Bool / Natural / Integer / Rational / Text / Bytes / `List<T>` / `Option<T>` / Record / Variant / Reference。全Record/Variantのfieldとvariantは登録済みschemaで検査する。domain内部は対応するRustのstruct/enumを使う。
+SourceStore\.applyは同\[おな\]じ操作\[そうさ\]のBudgetとSourceAdmissionを受\[う\]け、編集元\[へんしゅうもと\]と生成\[せいせい\]snapshotを一度\[いちど\]ずつSourceBytesへ計上\[けいじょう\]する。全削除\[ぜんさくじょ\]で結果\[けっか\]が空\[から\]でも、元\[もと\]snapshotの入場\[にゅうじょう\]を省略\[しょうりゃく\]しない。editの並替\[ならびか\]え、snapshotの探索\[たんさく\]と比較\[ひかく\]、期待\[きたい\]digestと出力\[しゅつりょく\]digestの計算\[けいさん\]、結果\[けっか\]・locator・返却\[へんきゃく\]IDのコピーには、処理前\[しょりまえ\]にWork\/AllocationUnitsを課\[か\]す。並替\[ならびか\]えではborrowed参照\[さんしょう\]だけを動\[うご\]かし、SourceIdをsort keyとして無計上\[むけいじょう\]で複製\[ふくせい\]しない。
 
-種類と表示classは独立。表示classは拡張可能なIDとfallback roleを持つ。共通fallbackはcontent、marker、delimiter、name、quantity、annotation。これは構文の意味分類ではない。
+全編集\[ぜんへんしゅう\]の前提\[ぜんてい\]と生成\[せいせい\]identity、全出力\[ぜんしゅつりょく\]と返却\[へんきゃく\]IDを準備\[じゅんび\]してから、生成\[せいせい\]snapshotのadmissionとSourceStoreを同時\[どうじ\]に確定\[かくてい\]する。後半\[こうはん\]の検査失敗\[けんさしっぱい\]で一部\[いちぶ\]sourceのrevisionだけを進\[すす\]めず、未公開\[みこうかい\]の生成\[せいせい\]IDも予約状態\[よやくじょうたい\]として残\[のこ\]さない。既存入力\[きそんにゅうりょく\]のadmissionと、消費済\[しょうひず\]みのWork\/Allocation\/SourceBytesは戻\[もど\]さない。意味検査\[いみけんさ\]の失敗後\[しっぱいご\]は、同\[おな\]じ操作\[そうさ\]で訂正\[ていせい\]して再試行\[さいしこう\]できる。予算停止後\[よさんていしご\]は同\[おな\]じBudgetの停止理由\[ていしりゆう\]を保持\[ほじ\]し、hostが別操作\[べつそうさ\]のBudget\/SourceAdmissionを明示\[めいじ\]した場合\[ばあい\]だけ再試行\[さいしこう\]できる。返却\[へんきゃく\]IDは、SourceId順\[じゅん\]に並\[なら\]べる。
 
-## 3. Tokenと構文
+<a name="n-736368656d615f6b696e64"></a>
 
-Tokenは、kind、head span、payload、内部view、triviaへの関連を持つ。arityは別のHeadShapeから取得する。SentenceLiteral内部のviewはprefix childrenへ追加しない。
+## 2\. schemaとkind
 
-`HeadShape = {arity, arguments, transitionRecipe}`。argumentsの数はarityと等しい。引数ごとのcontext recipeは既読の子を参照できるが、headのarityは変更できない。
+`SchemaRef = (packageName, revision, digest)`、`KindRef = (SchemaRef, LocalKindId)` とする。LocalKindIdとfieldの並\[なら\]びは、package schemaで定義\[ていぎ\]する。Word\/String\/Variable\/Functionなどを、共通\[きょうつう\]の閉\[と\]じたTokenKindとして置\[お\]かない。
 
-Parsed nodeはkind、head span、enclosing source cover、子NodeId列、opaque payloadへの参照、OriginIdを持つ。通常のsource nodeのchildrenは同一source上で重複しない順序を持つ。生成nodeはOrigin graphを使用し、存在しない連続source範囲を作らない。
+共通\[きょうつう\]の型言語\[かたげんご\]は、Unit \/ Bool \/ Natural \/ Integer \/ Rational \/ Text \/ Bytes \/ `List<T>` \/ `Option<T>` \/ Record \/ Variant \/ Referenceである。全\[ぜん\]Record\/Variantのfieldとvariantを、登録済\[とうろくず\]みschemaで検査\[けんさ\]する。domain内部\[ないぶ\]では、対応\[たいおう\]するRustのstruct\/enumを使\[つか\]う。種類\[しゅるい\]と表示\[ひょうじ\]classは独立\[どくりつ\]している。表示\[ひょうじ\]classは、拡張可能\[かくちょうかのう\]なIDとfallback roleを持\[も\]つ。共通\[きょうつう\]fallbackはcontent、marker、delimiter、name、quantity、annotationであり、構文\[こうぶん\]の意味分類\[いみぶんるい\]ではない。
 
-token/trivia/sourceのlossless保存により元ソースを再現できる。意味正規形のprinterによるroundtripと、元sourceをそのまま出すlossless roundtripは異なる操作。
+<a name="n-746f6b656e5f73796e746178"></a>
 
-ForeignClosureは、単体で取り出したForeignSyntaxと、そのfieldのownerから選択したEnvironmentEntry、ownerOrigins、ownerSources、ownerSourceMapsを持つ。ForeignSyntax.environmentはowner環境表の局所参照であり、同じIDのguest環境へ解決しない。EnvironmentBinding.originもownerOriginsへ解決し、guestのOriginRefと同一視しない。ownerの構文node全体は閉包へ複製しない。
+<a name="3-tokenと構文"></a>
 
-この形式はownerのOrigin列全体を元の順序・IDで保持する。環境のcanonical digestはOriginRefの数値を含むため、origin列を並べ替えたり部分列へ再番号化したままdigestを保存してはならない。ownerとguestはそれぞれ宣言したsourcesだけでOrigin/map/Spanを解決し、相手の表やambient storeで欠損を補わない。表を跨ぐ同一snapshotの共有は許可し、同一表の重複・identity/URI矛盾は拒否する。
+## 3\. Tokenと構文\[こうぶん\]
 
-環境中の名前空間契約はwireのEnvironmentNamespaceRef(schema,name)であり、FactSet中のNamespaceRef(value:U64)とは異なる型である。Rustでは前者をsyntax::NamespaceRef、後者をfacts::NamespaceRefとして区別する。旧EnvironmentBindingのwire参照が両者を混同して非empty bindingをFieldCountで拒否していた不整合を、この明示したdescriptorへ訂正する（R046）。
+Tokenはkind、head span、payload、内部\[ないぶ\]view、triviaへの関連\[かんれん\]を持\[も\]つ。arityは別\[べつ\]のHeadShapeから取得\[しゅとく\]する。SentenceLiteral内部\[ないぶ\]のviewを、prefix childrenへ追加\[ついか\]しない。`HeadShape = {arity, arguments, transitionRecipe}` とし、argumentsの数\[かず\]をarityに一致\[いっち\]させる。引数\[ひきすう\]ごとのcontext recipeは既読\[きどく\]の子\[こ\]を参照\[さんしょう\]できるが、headのarityは変更\[へんこう\]できない。
 
-## 4. 内部view
+Parsed nodeはkind、head span、enclosing source cover、子\[こ\]NodeId列\[れつ\]、opaque payloadへの参照\[さんしょう\]、OriginIdを持\[も\]つ。通常\[つうじょう\]のsource nodeのchildrenは、同一\[どういつ\]source上\[じょう\]で重複\[じゅうふく\]しない順序\[じゅんじょ\]を持\[も\]つ。生成\[せいせい\]nodeはOrigin graphを使\[つか\]い、存在\[そんざい\]しない連続\[れんぞく\]source範囲\[はんい\]を作\[つく\]らない。token\/trivia\/sourceのlossless保存\[ほぞん\]により、元\[もと\]のソースを再現\[さいげん\]できる。意味正規形\[いみせいきけい\]のprinterによるroundtripと、元\[もと\]sourceをそのまま出\[だ\]すlossless roundtripは、異\[こと\]なる操作\[そうさ\]である。
 
-`ViewElement = {kind, span, fields, roles, relations}`。一つのtokenに複数のViewElementが対応してよい。子は親の範囲に含まれる。ただし変換後のviewはSourceMapを介した別snapshot上に置く。外側parserはViewElementの木を歩いて構文を決めない。
+ForeignClosureは、単体\[たんたい\]で取\[と\]り出\[だ\]したForeignSyntaxと、そのfieldのownerから選択\[せんたく\]したEnvironmentEntry、ownerOrigins、ownerSources、ownerSourceMapsを持\[も\]つ。ForeignSyntax\.environmentはowner環境表\[かんきょうひょう\]の局所参照\[きょくしょさんしょう\]であり、同\[おな\]じIDのguest環境\[かんきょう\]へ解決\[かいけつ\]しない。EnvironmentBinding\.originもownerOriginsへ解決\[かいけつ\]し、guestのOriginRefと同一視\[どういつし\]しない。ownerの構文\[こうぶん\]node全体\[ぜんたい\]を、閉包\[へいほう\]へ複製\[ふくせい\]しない。
 
-SyntaxBundleはsourceMapsを所有し、その全端点を同じbundleのsourcesで解決する。foreignのmapはguest bundleに局所であり、hostのtableで不足を補わない。map列は宣言順を保存し、node再採番から独立する。Tokenの各viewとViewElementの各子は、直接包含または検査済みmapによる包含を要求する。childの各byte（空spanは挿入anchor）から全逆経路をたどり、parent内へ帰着することを検査する。Exactはbyte displacement、Transformedは元範囲の全点を対応させ、対応欠損・一部でもparent外の終端がある場合はCoverを返す。parent内へ到達した後のさらに古い生成元は、今回のtokenへの帰属判定に含めない。単に一つのmap経路が存在するだけでは受理しない。全経路の検査にも共有Work/Depth/Nodes/Allocation予算を使い、超過はStoppedとする。
+この形式\[けいしき\]では、ownerのOrigin列全体\[れつぜんたい\]を元\[もと\]の順序\[じゅんじょ\]・IDで保持\[ほじ\]する。環境\[かんきょう\]のcanonical digestはOriginRefの数値\[すうち\]を含\[ふく\]む。そのため、origin列\[れつ\]を並\[なら\]べ替\[か\]えたり、部分列\[ぶぶんれつ\]へ再番号化\[さいばんごうか\]したままdigestを保存\[ほぞん\]してはならない。ownerとguestは、それぞれが宣言\[せんげん\]したsourcesだけでOrigin\/map\/Spanを解決\[かいけつ\]する。相手\[あいて\]の表\[ひょう\]やambient storeで欠損\[けっそん\]を補\[おぎな\]わない。表\[ひょう\]を跨\[また\]ぐ同一\[どういつ\]snapshotの共有\[きょうゆう\]は許可\[きょか\]するが、同一表\[どういつひょう\]の重複\[じゅうふく\]やidentity\/URIの矛盾\[むじゅん\]は拒否\[きょひ\]する。
 
-readerが内部viewを公開しない場合にもtoken全体の位置は必須。その場合、内部の詳細なeditor機能が利用可能であると広告しない。
+環境中\[かんきょうちゅう\]の名前空間契約\[なまえくうかんけいやく\]は、wireのEnvironmentNamespaceRef\(schema\,name\)である。FactSet中\[ちゅう\]のNamespaceRef\(value\:U64\)とは異\[こと\]なる型\[かた\]として扱\[あつか\]う。Rustでは、前者\[ぜんしゃ\]をsyntax\:\:NamespaceRef、後者\[こうしゃ\]をfacts\:\:NamespaceRefとして区別\[くべつ\]する。旧\[きゅう\]EnvironmentBindingのwire参照\[さんしょう\]が両者\[りょうしゃ\]を混同\[こんどう\]し、非\[ひ\]empty bindingをFieldCountで拒否\[きょひ\]していた不整合\[ふせいごう\]は、この明示\[めいじ\]したdescriptorへ訂正\[ていせい\]する（R046）。
 
-## 5. Origin graph
+<a name="n-7669657773"></a>
 
-`Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)`。
+<a name="4-内部view"></a>
 
-脱出列をdecodeした文字列、macro生成物、回路flatten、数式簡約には多対多の対応があり得る。`SourceMap`は区間同士の関係を表す。単なる定数offsetに限定しない。mapの循環は拒否する。
+## 4\. 内部\[ないぶ\]view
 
-診断のprimary位置は、問題の直接入力へ正確に対応する範囲を優先する。生成物に対応がなければ生成呼出し箇所をprimary、template/argumentをrelatedとする。sourceがなければ位置なしのglobal診断とし、0行0列に仮置きしない。
+`ViewElement = {kind, span, fields, roles, relations}` とする。一\[ひと\]つのtokenに、複数\[ふくすう\]のViewElementが対応\[たいおう\]してよい。子\[こ\]は親\[おや\]の範囲\[はんい\]に含\[ふく\]めるが、変換後\[へんかんご\]のviewはSourceMapを介\[かい\]した別\[べつ\]snapshot上\[じょう\]に置\[お\]く。外側\[そとがわ\]parserはViewElementの木\[き\]を歩\[ある\]いて構文\[こうぶん\]を決\[き\]めない。
 
-renameの逆変換は、一意かつ可逆な対応だけ許す。1対多・合成・正規化で戻せない箇所は、明確な理由付きで編集を拒否する。
+SyntaxBundleはsourceMapsを所有\[しょゆう\]し、その全端点\[ぜんたんてん\]を同\[おな\]じbundleのsourcesで解決\[かいけつ\]する。foreignのmapはguest bundleに局所\[きょくしょ\]であり、hostのtableで不足\[ふそく\]を補\[おぎな\]わない。map列\[れつ\]は宣言順\[せんげんじゅん\]を保存\[ほぞん\]し、nodeの再採番\[さいさいばん\]から独立\[どくりつ\]させる。Tokenの各\[かく\]viewとViewElementの各\[かく\]子\[こ\]には、直接包含\[ちょくせつほうがん\]か、検査済\[けんさず\]みmapによる包含\[ほうがん\]を要求\[ようきゅう\]する。childの各\[かく\]byteからすべての逆経路\[ぎゃくけいろ\]をたどり、parent内\[ない\]へ帰着\[きちゃく\]することを検査\[けんさ\]する。空\[くう\]spanでは、挿入\[そうにゅう\]anchorを調\[しら\]べる。Exactはbyte displacement、Transformedは元範囲\[もとはんい\]の全点\[ぜんてん\]を対応\[たいおう\]させる。対応\[たいおう\]が欠\[か\]ける場合\[ばあい\]や、一部\[いちぶ\]でもparent外\[がい\]の終端\[しゅうたん\]がある場合\[ばあい\]には、Coverを返\[かえ\]す。parent内\[ない\]へ到達\[とうたつ\]した後\[あと\]の、さらに古\[ふる\]い生成元\[せいせいもと\]は、今回\[こんかい\]のtokenへの帰属判定\[きぞくはんてい\]に含\[ふく\]めない。単\[たん\]に一\[ひと\]つのmap経路\[けいろ\]が存在\[そんざい\]するだけでは受理\[じゅり\]しない。全経路\[ぜんけいろ\]の検査\[けんさ\]にも共有\[きょうゆう\]Work\/Depth\/Nodes\/Allocation予算\[よさん\]を使\[つか\]い、超過\[ちょうか\]はStoppedとする。
 
-## 6. 名前・関係
+readerが内部\[ないぶ\]viewを公開\[こうかい\]しない場合\[ばあい\]にも、token全体\[ぜんたい\]の位置\[いち\]は必須\[ひっす\]である。その場合\[ばあい\]、内部\[ないぶ\]の詳細\[しょうさい\]なeditor機能\[きのう\]が利用可能\[りようかのう\]であると広告\[こうこく\]しない。
 
-`EntityId`はsnapshot/analysis内の宣言同一性。綴りのhashだけにしない。`Occurrence`は定義・参照等の役割とsource上の位置を持つ。`ScopeId`、名前空間、親scope、export/import edgeを別に持つ。
+<a name="n-6f726967696e73"></a>
 
-参照結果はResolved(entity)、Unresolved(name)、Ambiguous(candidates)、Deferred(requirements)のsum type。definition jumpを単語検索で代用しない。
+## 5\. Origin graph
 
-DocのCorrespondsToは翻訳対応、BindingReferenceは名前参照、Originは生成元。異なる関係を一つの「同じsymbol」へ統合しない。
+`Origin = Direct(Span) | Composite(List<OriginId>) | Generated(operation, callsite, inputs) | Synthetic(reason, anchor)` とする。脱出列\[だっしゅつれつ\]をdecodeした文字列\[もじれつ\]、macro生成物\[せいせいぶつ\]、回路\[かいろ\]flatten、数式簡約\[すうしきかんやく\]には、多対多\[たたいた\]の対応\[たいおう\]があり得\[う\]る。`SourceMap` は区間同士\[くかんどうし\]の関係\[かんけい\]を表\[あらわ\]し、単\[たん\]なる定数\[ていすう\]offsetに限定\[げんてい\]しない。mapの循環\[じゅんかん\]は拒否\[きょひ\]する。
 
-### 6.1. 共通factsと専用処理の変更範囲
+診断\[しんだん\]のprimary位置\[いち\]は、問題\[もんだい\]の直接入力\[ちょくせつにゅうりょく\]へ正確\[せいかく\]に対応\[たいおう\]する範囲\[はんい\]を優先\[ゆうせん\]する。生成物\[せいせいぶつ\]に対応\[たいおう\]がなければ、生成呼出\[せいせいよびだ\]し箇所\[かしょ\]をprimary、template\/argumentをrelatedとする。sourceがなければ位置\[いち\]なしのglobal診断\[しんだん\]とし、0行\[ぎょう\]0列\[れつ\]へ仮置\[かりお\]きしない。renameの逆変換\[ぎゃくへんかん\]には、一意\[いちい\]かつ可逆\[かぎゃく\]な対応\[たいおう\]だけを許\[ゆる\]す。1対多\[たいた\]・合成\[ごうせい\]・正規化\[せいきか\]で戻\[もど\]せない箇所\[かしょ\]の編集\[へんしゅう\]は、明確\[めいかく\]な理由\[りゆう\]を付\[つ\]けて拒否\[きょひ\]する。
 
-FactSetは明示analysisId、namespace、Scope/Entity/Occurrence、typed Relation、scope edge、source/Origin/SourceMapの所有tableを持つ。IDはanalysis内で一意なU64であり、別analysisやguestの同じ数値を同一視しない。namespaceはschema・name・policyと明示root scopeを持ち、同じ名前空間契約を別article/moduleの別rootへ割り当てられる。EntityとOccurrenceのscopeはそのrootの配下に置く。rootの親を暗黙に消すことはしない。
+<a name="n-6e616d65735f72656c6174696f6e73"></a>
 
-Entityのdefinition/selectionはOptionであり、sourceのない意味宣言へ仮Spanを作らない。selectionを持つときはdefinitionの範囲内とする。Occurrenceはsource上の位置、役割と解決結果を保持する。Resolved/Unresolved/Ambiguous/Deferredを区別し、Ambiguousは異なる複数Entity、Deferredは空でない型付き要求列を持つ。共通検査は参照先の存在、名前・名前空間契約、source範囲、型とscope親の非循環を検査する。lexical探索・shadowing・import経由の可視性が正しく計算されたことは別のbinding/resolution検査であり、共通のCheckedFactSetだけでは保証しない。
+<a name="6-名前関係"></a>
 
-専用facts処理には既存FactSetとhostが発行したFactAuthorityを渡す。authorityはcurrentScope、許可namespace、明示的に書き込める既存descendant scope、読み込みを許すimport先scope、更新を許す既存Occurrence、Relationの明示source endpoint、ID予約範囲を固定する。新scopeはcurrentScopeまたは今回作成したscopeの子に限る。Entity/Occurrenceの追加、import/export edge、既存resolution更新は各許可scope/namespaceに限定し、別article/module/guestのscopeを暗黙に更新しない。Relationのsourceも許可scopeの対象か、hostが明示したendpointでなければならない。参照先を知っていることだけでは変更権限にならない。
+## 6\. 名前\[なまえ\]・関係\[かんけい\]
 
-FactDeltaは既存IDを上書きせず、予約された半開区間[start,end)内へ追加する。resolution更新は別の列で既存Occurrenceを指定する。追加sourceはrequestの宣言tableへ付加し、追加OriginのoriginBaseは既存Origin数に一致させる。新旧factsのOriginRefはこの結合tableを指す。namespace列や既存scopeの親を書き換える操作ではない。失敗時にsource/Originをhostのglobal storeへ先行commitして欠損を隠さず、受理前のusage/admission消費は返却しない。
+`EntityId` はsnapshot\/analysis内\[ない\]の宣言同一性\[せんげんどういつせい\]であり、綴\[つづ\]りのhashだけにしない。`Occurrence` は、定義\[ていぎ\]・参照\[さんしょう\]などの役割\[やくわり\]とsource上\[じょう\]の位置\[いち\]を持\[も\]つ。`ScopeId`、名前空間\[なまえくうかん\]、親\[おや\]scope、export\/import edgeは別\[べつ\]に持\[も\]つ。参照結果\[さんしょうけっか\]は、Resolved\(entity\)、Unresolved\(name\)、Ambiguous\(candidates\)、Deferred\(requirements\)のsum typeとする。definition jumpを単語検索\[たんごけんさく\]で代用\[だいよう\]しない。DocのCorrespondsToは翻訳対応\[ほんやくたいおう\]、BindingReferenceは名前参照\[なまえさんしょう\]、Originは生成元\[せいせいもと\]を表\[あらわ\]す。これらの異\[こと\]なる関係\[かんけい\]を、一\[ひと\]つの「同\[おな\]じsymbol」へ統合\[とうごう\]しない。
 
-FactSet/Deltaのtyped wire入口はschema検査後に同じsource・ID・scope・authority検査を行う。FactSetのtable順は保存し、IDの再採番はしない。これは共通値の検査・交換契約であり、T06の解決アルゴリズム、Custom binding callbackの実行、解析操作全体の完了を意味しない。
+<a name="n-66616374735f617574686f72697479"></a>
 
-## 7. 診断とevent
+<a name="61-共通factsと専用処理の変更範囲"></a>
 
-Diagnosticはcode、severity、stage、schema/provider、構造化args、primaryのOption、related列、fix列を持つ。codeはschema所有enumのID。表示言語と文章はrenderer/catalogが決める。
+### 6\.1\. 共通\[きょうつう\]factsと専用処理\[せんようしょり\]の変更範囲\[へんこうはんい\]
 
-Fixは前提snapshotと非重複TextEdit列。古いsnapshotに自動適用しない。expected text/digestを検査する。複数sourceのfixは一つのtransactionとして返す。
+FactSetは明示\[めいじ\]analysisId、namespace、Scope\/Entity\/Occurrence、typed Relation、scope edge、source\/Origin\/SourceMapの所有\[しょゆう\]tableを持\[も\]つ。IDはanalysis内\[ない\]で一意\[いちい\]なU64であり、別\[べつ\]analysisやguestの同\[おな\]じ数値\[すうち\]を同一視\[どういつし\]しない。namespaceはschema・name・policyと明示\[めいじ\]root scopeを持\[も\]つ。同\[おな\]じ名前空間契約\[なまえくうかんけいやく\]を、別\[べつ\]article\/moduleの別\[べつ\]rootへ割\[わ\]り当\[あ\]てられる。EntityとOccurrenceのscopeは、そのrootの配下\[はいか\]に置\[お\]く。rootの親\[おや\]を暗黙\[あんもく\]に消\[け\]すことはしない。
 
-一つのFix内では、各SourceIdの全editが同じsnapshotを前提とする。異なるrevisionを同じsourceの編集transactionへ混ぜない。異なるSourceIdへの複数編集や、primary/relatedが履歴snapshotを参照することはこの制約で禁止しない。
+Entityのdefinition\/selectionはOptionであり、sourceのない意味宣言\[いみせんげん\]へ仮\[かり\]Spanを作\[つく\]らない。selectionを持\[も\]つときは、definitionの範囲内\[はんいない\]とする。Occurrenceはsource上\[じょう\]の位置\[いち\]、役割\[やくわり\]、解決結果\[かいけつけっか\]を保持\[ほじ\]する。Resolved\/Unresolved\/Ambiguous\/Deferredを区別\[くべつ\]する。Ambiguousは異\[こと\]なる複数\[ふくすう\]Entityを、Deferredは空\[から\]でない型付\[かたつ\]き要求列\[ようきゅうれつ\]を持\[も\]つ。共通検査\[きょうつうけんさ\]では、参照先\[さんしょうさき\]の存在\[そんざい\]、名前\[なまえ\]・名前空間契約\[なまえくうかんけいやく\]、source範囲\[はんい\]、型\[かた\]、scope親\[おや\]の非循環\[ひじゅんかん\]を調\[しら\]べる。lexical探索\[たんさく\]・shadowing・importを経由\[けいゆ\]する可視性\[かしせい\]が正\[ただ\]しく計算\[けいさん\]されたことは、別\[べつ\]のbinding\/resolution検査\[けんさ\]で確認\[かくにん\]する。共通\[きょうつう\]のCheckedFactSetだけでは、そこまで保証\[ほしょう\]しない。
 
-EventはParseStarted/RuleTried/RuleCommitted/BindingResolved/OperationFinished等のschema所有kind、operation path、必要な範囲、構造化payload。domainログが全て文字列である必要はない。TraceLevelはOff/Summary/Detailed。Offではeventを作らず予算も消費しない。上限を超えるevent追加の最初の試行でStopped(EventLimit)とし、先頭の許容件数を保持する。既存eventの上書きや、黙ったCompleteは行わない。
+専用\[せんよう\]facts処理\[しょり\]には、既存\[きそん\]FactSetとhostが発行\[はっこう\]したFactAuthorityを渡\[わた\]す。authorityはcurrentScope、許可\[きょか\]namespace、明示的\[めいじてき\]に書\[か\]き込\[こ\]める既存\[きそん\]descendant scope、読込\[よみこ\]みを許\[ゆる\]すimport先\[さき\]scope、更新\[こうしん\]を許\[ゆる\]す既存\[きそん\]Occurrence、Relationの明示\[めいじ\]source endpoint、ID予約範囲\[よやくはんい\]を固定\[こてい\]する。新\[しん\]scopeは、currentScopeまたは今回作成\[こんかいさくせい\]したscopeの子\[こ\]に限\[かぎ\]る。Entity\/Occurrenceの追加\[ついか\]、import\/export edge、既存\[きそん\]resolutionの更新\[こうしん\]は、各\[かく\]許可\[きょか\]scope\/namespaceに限定\[げんてい\]する。別\[べつ\]article\/module\/guestのscopeを暗黙\[あんもく\]に更新\[こうしん\]しない。Relationのsourceも、許可\[きょか\]scopeの対象\[たいしょう\]か、hostが明示\[めいじ\]したendpointでなければならない。参照先\[さんしょうさき\]を知\[し\]っているだけでは、変更権限\[へんこうけんげん\]にならない。
 
-overflowはevent列外の `traceOverflow: Option<TraceOverflow>` に一度だけ記録する。TraceOverflow.droppedは実際に追加を試みて受理されなかった件数であり、通常の即時停止では1。未実行の将来event数を推定しない。この報告fieldによりevents上限0でも停止理由と切捨てを表せる。既にcancelや別limitで停止した処理が終了eventを記録しようとしても、先に確定した停止理由をEventLimitへ置き換えない。
+FactDeltaは既存\[きそん\]IDを上書\[うわが\]きせず、予約\[よやく\]された半開区間\[はんかいくかん\]`[start,end)`の内側\[うちがわ\]へ追加\[ついか\]する。resolutionの更新\[こうしん\]には、別\[べつ\]の列\[れつ\]で既存\[きそん\]Occurrenceを指定\[してい\]する。追加\[ついか\]sourceはrequestの宣言\[せんげん\]tableへ付加\[ふか\]し、追加\[ついか\]OriginのoriginBaseを既存\[きそん\]Origin数\[すう\]に一致\[いっち\]させる。新旧\[しんきゅう\]factsのOriginRefは、この結合\[けつごう\]tableを指\[さ\]す。namespace列\[れつ\]や既存\[きそん\]scopeの親\[おや\]を書\[か\]き換\[か\]える操作\[そうさ\]ではない。失敗時\[しっぱいじ\]にsource\/Originをhostのglobal storeへ先行\[せんこう\]commitして、欠損\[けっそん\]を隠\[かく\]さない。受理前\[じゅりまえ\]に消費\[しょうひ\]したusage\/admissionは返却\[へんきゃく\]しない。
 
-backtrackingで取り消されたcandidateの診断やeditor factsを成功結果へ混入させない。debug traceだけが試行の記録を保持できる。coreはclockやloggerを呼ばず、hostが時刻と出力先を付ける。
+FactSet\/Deltaのtyped wire入口\[いりぐち\]は、schema検査後\[けんさご\]に同\[おな\]じsource・ID・scope・authority検査\[けんさ\]を行\[おこな\]う。FactSetのtable順\[じゅん\]を保存\[ほぞん\]し、IDを再採番\[さいさいばん\]しない。これは共通値\[きょうつうち\]の検査\[けんさ\]・交換契約\[こうかんけいやく\]である。T06の解決\[かいけつ\]アルゴリズム、Custom binding callbackの実行\[じっこう\]、解析操作全体\[かいせきそうさぜんたい\]の完了\[かんりょう\]を意味\[いみ\]しない。
 
-共通Report検査は、登録済みschemaと型付きarguments/payload、primary/related/fix/eventの明示source参照とUTF-8範囲、Fix内の期待digest一致と非重複、正式件数を下回らないusage、正のtraceOverflow.droppedを検査する。同じsnapshotの同一開始位置への編集は空範囲の挿入も含めて競合とする。Report単独のcodecは診断文面の真偽、domain固有codeとargumentsの対応、外部providerが申告した消費量の真正性を証明しない。操作入口は別途保存したrequest・権限・usage履歴へ結び付け、Fix適用時には現在snapshotとの一致を再検査する。既に受理したReportを再検査・再掲してもDiagnostics/Eventsの件数を再課金せず、検査Workと所有コピー費用は計上する。Report用codecへ渡すSourceStoreはその操作が明示した宣言表であり、環境全体のstoreを暗黙に探索しない。
+<a name="n-646961676e6f73746963735f6576656e7473"></a>
 
-## 8. 予算と結果
+<a name="7-診断とevent"></a>
 
-LimitsはsourceBytes、work、depth、nodes、allocationUnits、outputBytes、diagnostics、eventsを持つ。全再帰で共有し、言語を切り替えてリセットしない。論理的なlimit検査とOS allocatorの物理OOMは同一ではない。trusted native codeの無限loopを呼出し後の検査で停止できるとは主張しない。
+## 7\. 診断\[しんだん\]とevent
 
-Usageは同じfield名を持つ別recordで、許容最大値ではなく実際の累積消費を表す。depthだけは最大同時再帰深さであり、現在深さを別に管理する。解放や巻戻しで消費済みwork/nodes/allocationUnits等を返却しない。整数加算のoverflowは該当limitの超過として拒否する。超過した試行を成功した消費に計上してUsageを上限より大きくしない。停止したbudgetを再開・外部操作・別言語への切替で新品に取り替えない。
+Diagnosticはcode、severity、stage、schema\/provider、構造化\[こうぞうか\]args、primaryのOption、related列\[れつ\]、fix列\[れつ\]を持\[も\]つ。codeはschema所有\[しょゆう\]enumのIDとし、表示言語\[ひょうじげんご\]と文章\[ぶんしょう\]はrenderer\/catalogが決\[き\]める。Fixは、前提\[ぜんてい\]snapshotと非重複\[ひじゅうふく\]TextEdit列\[れつ\]を持\[も\]つ。古\[ふる\]いsnapshotに自動適用\[じどうてきよう\]せず、expected text\/digestを検査\[けんさ\]する。複数\[ふくすう\]sourceのfixは、一\[ひと\]つのtransactionとして返\[かえ\]す。
 
-sourceBytesは一つの共有操作contextへ受け入れる各snapshotの元byte長を一度ずつ計上する。参照をたどるたびに同じsnapshotを再計上しない。ただし別のsnapshot生成、変更後のsource、decode後に作るsourceは別入力として計上する。snapshotの構築だけを繰り返す低水準APIと、受け入れ済みbundleの参照を区別する。
+一\[ひと\]つのFix内\[ない\]では、各\[かく\]SourceIdの全\[ぜん\]editが同\[おな\]じsnapshotを前提\[ぜんてい\]とする。異\[こと\]なるrevisionを、同\[おな\]じsourceの編集\[へんしゅう\]transactionへ混\[ま\]ぜない。この制約\[せいやく\]は、異\[こと\]なるSourceIdへの複数編集\[ふくすうへんしゅう\]や、primary\/relatedによる履歴\[りれき\]snapshotの参照\[さんしょう\]を禁止\[きんし\]するものではない。
 
-sourceBytesを超える入力は、文字数ではなく元のUTF-8 byte数で判定し、Stopped(SourceLimit)を返す。元byte列を受け取るsnapshot constructorではこの長さの検査をUTF-8 decodeより前に行う。NDF受信ではCBOR構造・TextのUTF-8・schemaの検査を済ませて初めて埋込みsourceを識別できるため、その段階の失敗が先になる。既に停止したbudgetの理由は後続の検査で置き換えない。
+EventはParseStarted\/RuleTried\/RuleCommitted\/BindingResolved\/OperationFinishedなどのschema所有\[しょゆう\]kind、operation path、必要\[ひつよう\]な範囲\[はんい\]、構造化\[こうぞうか\]payloadを持\[も\]つ。domainログをすべて文字列\[もじれつ\]にする必要\[ひつよう\]はない。TraceLevelはOff\/Summary\/Detailedである。Offではeventを作\[つく\]らず、予算\[よさん\]も消費\[しょうひ\]しない。上限\[じょうげん\]を超\[こ\]えるevent追加\[ついか\]の最初\[さいしょ\]の試行\[しこう\]でStopped\(EventLimit\)とし、先頭\[せんとう\]の許容件数\[きょようけんすう\]を保持\[ほじ\]する。既存\[きそん\]eventの上書\[うわが\]きや、黙\[だま\]ったCompleteは行\[おこな\]わない。
 
-SourceAdmissionは操作共通の資源計上台帳であり、公開されたSourceStoreではない。bundleの後半で失敗しても、前半で受け入れたsnapshotの使用量とidentity照合情報を取り消さない。同じcontextで再試行しても同じsnapshotを二重計上せず、locator・内容の衝突は拒否する。typed bundleの返却とSourceStoreへの反映は全体の検査成功後に行い、取り消した候補のsourceを解析結果へ混入させない。
+overflowはevent列\[れつ\]の外\[そと\]にある `traceOverflow: Option<TraceOverflow>` へ、一度\[いちど\]だけ記録\[きろく\]する。TraceOverflow\.droppedは、実際\[じっさい\]に追加\[ついか\]を試\[こころ\]みて受理\[じゅり\]されなかった件数\[けんすう\]を表\[あらわ\]し、通常\[つうじょう\]の即時停止\[そくじていし\]では1となる。未実行\[みじっこう\]の将来\[しょうらい\]event数\[すう\]を推定\[すいてい\]しない。この報告\[ほうこく\]fieldにより、events上限\[じょうげん\]が0でも停止理由\[ていしりゆう\]と切捨\[きりす\]てを表\[あらわ\]せる。既\[すで\]にcancelや別\[べつ\]limitで停止\[ていし\]した処理\[しょり\]が終了\[しゅうりょう\]eventを記録\[きろく\]しようとしても、先\[さき\]に確定\[かくてい\]した停止理由\[ていしりゆう\]をEventLimitへ置\[お\]き換\[か\]えない。
 
-Rust実装のSourceStoreとSourceAdmissionは、SourceId・revisionをキーとする非公開索引を使用する。索引の一致だけでsnapshotの一致とはせず、digest・locatorと必要な内容比較を維持する。sourceの公開列は挿入順のままとし、索引の比較、追加領域、要素移動を予算へ計上する。複数sourceの編集ではsource列・入場台帳・両索引の準備をすべて済ませてから反映する。空の索引に対する検索も取消しを無視しない。Reportの補助source索引とSourceMapのgraph索引も内部実装であり、wireの順序や位置・循環の意味を変更しない。
+backtrackingで取\[と\]り消\[け\]したcandidateの診断\[しんだん\]やeditor factsを、成功結果\[せいこうけっか\]へ混入\[こんにゅう\]させない。debug traceだけが、試行\[しこう\]の記録\[きろく\]を保持\[ほじ\]できる。coreはclockやloggerを呼\[よ\]ばず、hostが時刻\[じこく\]と出力先\[しゅつりょくさき\]を付\[つ\]ける。
 
-操作結果はComplete(value)、Invalid(partial)、Stopped(reason, partial)を区別し、すべてにdiagnostics、events、usage、traceOverflowを持つReportを付ける。nativeでは共通Reportをまとめ、wireではOperationReplyの定義順にfieldを展開する。providerのAwaitも同じ報告と累積予算を保持する。partialをchecked値として扱わない。diagnostics上限の超過はStopped(DiagnosticLimit)であり、上限0のとき架空の診断を追加せずStopReasonで伝える。入力の問題、未解決の要求、未対応の操作、上限超過、provider違反を別codeで返す。
+共通\[きょうつう\]Report検査\[けんさ\]では、登録済\[とうろくず\]みschemaと型付\[かたつ\]きarguments\/payload、primary\/related\/fix\/eventの明示\[めいじ\]source参照\[さんしょう\]とUTF\-8範囲\[はんい\]、Fix内\[ない\]の期待\[きたい\]digest一致\[いっち\]と非重複\[ひじゅうふく\]を調\[しら\]べる。usageが正式件数\[せいしきけんすう\]を下回\[したまわ\]らず、traceOverflow\.droppedが正\[せい\]であることも検査\[けんさ\]する。同\[おな\]じsnapshotの同一開始位置\[どういつかいしいち\]への編集\[へんしゅう\]は、空範囲\[くうはんい\]の挿入\[そうにゅう\]も含\[ふく\]めて競合\[きょうごう\]とする。Report単独\[たんどく\]のcodecは、診断文面\[しんだんぶんめん\]の真偽\[しんぎ\]、domain固有\[こゆう\]codeとargumentsの対応\[たいおう\]、外部\[がいぶ\]providerが申告\[しんこく\]した消費量\[しょうひりょう\]の真正性\[しんせいせい\]を証明\[しょうめい\]しない。操作入口\[そうさいりぐち\]は、別途保存\[べっとほぞん\]したrequest・権限\[けんげん\]・usage履歴\[りれき\]へ結\[むす\]び付\[つ\]ける。Fixの適用時\[てきようじ\]には、現在\[げんざい\]snapshotとの一致\[いっち\]を再検査\[さいけんさ\]する。既\[すで\]に受理\[じゅり\]したReportを再検査\[さいけんさ\]・再掲\[さいけい\]してもDiagnostics\/Eventsの件数\[けんすう\]を再課金\[さいかきん\]しないが、検査\[けんさ\]Workと所有\[しょゆう\]コピー費用\[ひよう\]は計上\[けいじょう\]する。Report用\[よう\]codecへ渡\[わた\]すSourceStoreは、その操作\[そうさ\]が明示\[めいじ\]した宣言表\[せんげんひょう\]である。環境全体\[かんきょうぜんたい\]のstoreを暗黙\[あんもく\]に探索\[たんさく\]しない。
+
+<a name="n-627564676574735f726573756c7473"></a>
+
+<a name="8-予算と結果"></a>
+
+## 8\. 予算\[よさん\]と結果\[けっか\]
+
+LimitsはsourceBytes、work、depth、nodes、allocationUnits、outputBytes、diagnostics、eventsを持\[も\]つ。全再帰\[ぜんさいき\]で共有\[きょうゆう\]し、言語\[げんご\]を切\[き\]り替\[か\]えてリセットしない。論理的\[ろんりてき\]なlimit検査\[けんさ\]と、OS allocatorの物理\[ぶつり\]OOMは同一\[どういつ\]ではない。trusted native codeの無限\[むげん\]loopを、呼出\[よびだ\]し後\[ご\]の検査\[けんさ\]で停止\[ていし\]できるとは主張\[しゅちょう\]しない。
+
+Usageは同\[おな\]じfield名\[めい\]を持\[も\]つ別\[べつ\]recordであり、許容最大値\[きょようさいだいち\]ではなく、実際\[じっさい\]の累積消費\[るいせきしょうひ\]を表\[あらわ\]す。depthだけは最大同時再帰深\[さいだいどうじさいきふか\]さとし、現在\[げんざい\]の深\[ふか\]さは別\[べつ\]に管理\[かんり\]する。解放\[かいほう\]や巻戻\[まきもど\]しで、消費済\[しょうひず\]みのwork\/nodes\/allocationUnitsなどを返却\[へんきゃく\]しない。整数加算\[せいすうかさん\]のoverflowは、該当\[がいとう\]limitの超過\[ちょうか\]として拒否\[きょひ\]する。超過\[ちょうか\]した試行\[しこう\]を成功\[せいこう\]した消費\[しょうひ\]へ計上\[けいじょう\]して、Usageを上限\[じょうげん\]より大\[おお\]きくしない。停止\[ていし\]したbudgetを、再開\[さいかい\]・外部操作\[がいぶそうさ\]・別言語\[べつげんご\]への切替\[きりか\]えで新品\[しんぴん\]に取\[と\]り替\[か\]えない。
+
+sourceBytesは、一\[ひと\]つの共有操作\[きょうゆうそうさ\]contextへ受\[う\]け入\[い\]れる各\[かく\]snapshotの元\[もと\]byte長\[ちょう\]を、一度\[いちど\]ずつ計上\[けいじょう\]する。参照\[さんしょう\]をたどるたびに、同\[おな\]じsnapshotを再計上\[さいけいじょう\]しない。ただし、別\[べつ\]のsnapshot生成\[せいせい\]、変更後\[へんこうご\]のsource、decode後\[ご\]に作\[つく\]るsourceは、別入力\[べつにゅうりょく\]として計上\[けいじょう\]する。snapshotの構築\[こうちく\]だけを繰\[く\]り返\[かえ\]す低水準\[ていすいじゅん\]APIと、受入済\[うけいれず\]みbundleの参照\[さんしょう\]を区別\[くべつ\]する。
+
+sourceBytesを超\[こ\]える入力\[にゅうりょく\]は、文字数\[もじすう\]ではなく元\[もと\]のUTF\-8 byte数\[すう\]で判定\[はんてい\]し、Stopped\(SourceLimit\)を返\[かえ\]す。元\[もと\]byte列\[れつ\]を受\[う\]け取\[と\]るsnapshot constructorは、この長\[なが\]さをUTF\-8 decodeより前\[まえ\]に検査\[けんさ\]する。NDF受信\[じゅしん\]では、CBOR構造\[こうぞう\]・TextのUTF\-8・schemaの検査\[けんさ\]を済\[す\]ませて初\[はじ\]めて埋込\[うめこ\]みsourceを識別\[しきべつ\]できるため、その段階\[だんかい\]の失敗\[しっぱい\]が先\[さき\]になる。既\[すで\]に停止\[ていし\]したbudgetの理由\[りゆう\]を、後続\[こうぞく\]の検査\[けんさ\]で置\[お\]き換\[か\]えない。
+
+SourceAdmissionは操作共通\[そうさきょうつう\]の資源計上台帳\[しげんけいじょうだいちょう\]であり、公開\[こうかい\]されたSourceStoreではない。bundleの後半\[こうはん\]で失敗\[しっぱい\]しても、前半\[ぜんはん\]で受\[う\]け入\[い\]れたsnapshotの使用量\[しようりょう\]とidentity照合情報\[しょうごうじょうほう\]を取\[と\]り消\[け\]さない。同\[おな\]じcontextで再試行\[さいしこう\]しても同\[おな\]じsnapshotを二重計上\[にじゅうけいじょう\]せず、locatorや内容\[ないよう\]の衝突\[しょうとつ\]は拒否\[きょひ\]する。typed bundleの返却\[へんきゃく\]とSourceStoreへの反映\[はんえい\]は、全体\[ぜんたい\]の検査成功後\[けんさせいこうご\]に行\[おこな\]う。取\[と\]り消\[け\]した候補\[こうほ\]のsourceを、解析結果\[かいせきけっか\]へ混入\[こんにゅう\]させない。
+
+Rust実装\[じっそう\]のSourceStoreとSourceAdmissionは、SourceId・revisionをキーとする非公開索引\[ひこうかいさくいん\]を使\[つか\]う。索引\[さくいん\]の一致\[いっち\]だけでsnapshotの一致\[いっち\]とはせず、digest・locatorと必要\[ひつよう\]な内容比較\[ないようひかく\]を維持\[いじ\]する。sourceの公開列\[こうかいれつ\]は挿入順\[そうにゅうじゅん\]のままとし、索引\[さくいん\]の比較\[ひかく\]、追加領域\[ついかりょういき\]、要素移動\[ようそいどう\]を予算\[よさん\]へ計上\[けいじょう\]する。複数\[ふくすう\]sourceの編集\[へんしゅう\]では、source列\[れつ\]・入場台帳\[にゅうじょうだいちょう\]・両索引\[りょうさくいん\]の準備\[じゅんび\]をすべて済\[す\]ませてから反映\[はんえい\]する。空\[から\]の索引\[さくいん\]に対\[たい\]する検索\[けんさく\]も、取消\[とりけ\]しを無視\[むし\]しない。Reportの補助\[ほじょ\]source索引\[さくいん\]とSourceMapのgraph索引\[さくいん\]も内部実装\[ないぶじっそう\]であり、wireの順序\[じゅんじょ\]や位置\[いち\]・循環\[じゅんかん\]の意味\[いみ\]を変更\[へんこう\]しない。
+
+操作結果\[そうさけっか\]は、Complete\(value\)、Invalid\(partial\)、Stopped\(reason\, partial\)を区別\[くべつ\]する。すべての結果\[けっか\]に、diagnostics、events、usage、traceOverflowを持\[も\]つReportを付\[つ\]ける。nativeでは共通\[きょうつう\]Reportをまとめ、wireではOperationReplyの定義順\[ていぎじゅん\]にfieldを展開\[てんかい\]する。providerのAwaitも、同\[おな\]じ報告\[ほうこく\]と累積予算\[るいせきよさん\]を保持\[ほじ\]する。partialをchecked値\[ち\]として扱\[あつか\]わない。diagnostics上限\[じょうげん\]の超過\[ちょうか\]はStopped\(DiagnosticLimit\)とし、上限\[じょうげん\]0では架空\[かくう\]の診断\[しんだん\]を追加\[ついか\]せず、StopReasonで伝\[つた\]える。入力\[にゅうりょく\]の問題\[もんだい\]、未解決\[みかいけつ\]の要求\[ようきゅう\]、未対応\[みたいおう\]の操作\[そうさ\]、上限超過\[じょうげんちょうか\]、provider違反\[いはん\]は、別\[べつ\]codeで返\[かえ\]す。
