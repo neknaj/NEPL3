@@ -18,6 +18,53 @@ pub enum PortableError<E> {
     Structure(StructureError),
     Shape,
     BindingMismatch,
+    FreeSymbolsMismatch,
+    Expression(crate::check::ShapeError),
+}
+
+/// Generate the report from a checked input, then encode its neutral schema.
+pub fn free_symbols_to_value<C: FoundationValueCodec>(
+    input: &crate::check::CheckedExpression<'_>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    let report = crate::free::symbols(input, budget).map_err(expression_error)?;
+    let raw = report.put(schema(registry)?, codec, budget)?;
+    check_report(registry, &raw, "MathFreeSymbols", budget)?;
+    Ok(raw)
+}
+
+/// Recompute input requirements; reordered, omitted or forged occurrences fail.
+pub fn free_symbols_from_value<C: FoundationValueCodec>(
+    raw: &NdfValue,
+    input: &crate::check::CheckedExpression<'_>,
+    registry: &SchemaRegistry,
+    codec: &mut C,
+    budget: &mut Budget,
+) -> Result<crate::model::MathFreeSymbols, PortableError<C::Error>> {
+    check_report(registry, raw, "MathFreeSymbols", budget)?;
+    let report = crate::model::MathFreeSymbols::read(raw, schema(registry)?, codec, budget)?;
+    let expected = crate::free::symbols(input, budget).map_err(expression_error)?;
+    for symbol in &report.symbols {
+        budget.charge(
+            Resource::Work,
+            (symbol.name.len() as u64)
+                .saturating_add(symbol.occurrences.len() as u64)
+                .saturating_add(1),
+        )?;
+    }
+    if report != expected {
+        return Err(PortableError::FreeSymbolsMismatch);
+    }
+    Ok(report)
+}
+
+fn expression_error<E>(error: crate::check::ShapeError) -> PortableError<E> {
+    match error {
+        crate::check::ShapeError::Stopped(reason) => PortableError::Stopped(reason),
+        other => PortableError::Expression(other),
+    }
 }
 
 /// Encode a binding report only after comparing it to its declared input shape.
@@ -66,12 +113,20 @@ fn check_bindings<E>(
     raw: &NdfValue,
     budget: &mut Budget,
 ) -> Result<(), PortableError<E>> {
-    budget.charge(Resource::AllocationUnits, 22)?;
+    check_report(registry, raw, "MathBindings", budget)
+}
+fn check_report<E>(
+    registry: &SchemaRegistry,
+    raw: &NdfValue,
+    name: &str,
+    budget: &mut Budget,
+) -> Result<(), PortableError<E>> {
+    budget.charge(Resource::AllocationUnits, 10 + name.len() as u64)?;
     registry.validate(
         &TypeDescriptor::Named(TypeRef {
             package: "nepl3.math".into(),
             revision: 1,
-            name: "MathBindings".into(),
+            name: name.into(),
         }),
         raw,
         budget,

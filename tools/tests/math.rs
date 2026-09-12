@@ -51,6 +51,52 @@ fn binding_report_portable_roundtrip_rejects_forged_resolution() -> Result<(), S
     let mut codec = FoundationCodec::new(registry, &sources, &mut admission).map_err(err)?;
     let raw = portable::bindings_to_value(&expected, &shape, registry, &mut codec, &mut budget())
         .map_err(err)?;
+    let checked = nepl3_math_core::check::expression(&value, &mut budget()).map_err(err)?;
+    let free = portable::free_symbols_to_value(&checked, registry, &mut codec, &mut budget())
+        .map_err(err)?;
+    let free_bytes = nepl3_wire::encode(&free, &mut budget()).map_err(err)?;
+    let mut free = nepl3_wire::decode(&free_bytes, &mut budget()).map_err(err)?;
+    let requirements =
+        portable::free_symbols_from_value(&free, &checked, registry, &mut codec, &mut budget())
+            .map_err(err)?;
+    assert_eq!(
+        requirements.symbols,
+        vec![MathFreeSymbol {
+            name: "x".into(),
+            occurrences: vec![1]
+        }]
+    );
+    for occurrences in [vec![2_u64], vec![1, 1]] {
+        let mut forged = free.clone();
+        let NdfValue::Record(report) = &mut forged else {
+            return Err("free report".into());
+        };
+        let NdfValue::List(symbols) = &mut report.fields[0] else {
+            return Err("free symbols".into());
+        };
+        let NdfValue::Record(symbol) = &mut symbols[0] else {
+            return Err("free symbol".into());
+        };
+        symbol.fields[1] = NdfValue::List(occurrences.into_iter().map(NdfValue::U64).collect());
+        assert_eq!(
+            portable::free_symbols_from_value(
+                &forged,
+                &checked,
+                registry,
+                &mut codec,
+                &mut budget()
+            ),
+            Err(portable::PortableError::FreeSymbolsMismatch)
+        );
+    }
+    let NdfValue::Record(report) = &mut free else {
+        return Err("free symbols report".into());
+    };
+    report.fields[0] = NdfValue::List(vec![]);
+    assert_eq!(
+        portable::free_symbols_from_value(&free, &checked, registry, &mut codec, &mut budget()),
+        Err(portable::PortableError::FreeSymbolsMismatch)
+    );
     let bytes = nepl3_wire::encode(&raw, &mut budget()).map_err(err)?;
     let mut decoded = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
     assert_eq!(

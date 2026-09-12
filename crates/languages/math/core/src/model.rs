@@ -36,6 +36,20 @@ pub struct MathBindings {
     pub uses: Vec<MathSymbolUse>,
 }
 
+/// One required free name, with all its unbound occurrence IDs in preorder.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathFreeSymbol {
+    pub name: String,
+    pub occurrences: Vec<u64>,
+}
+
+/// Exact, case-sensitive names sorted by UTF-8 lexical order. No normalization
+/// or invented definition/source position is attached to a free name.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathFreeSymbols {
+    pub symbols: Vec<MathFreeSymbol>,
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum MathRoot {
     Expr(ExprRef),

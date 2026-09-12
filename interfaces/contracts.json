@@ -1939,7 +1939,7 @@
     {
       "operation": "math.free_symbols",
       "input": "CheckedExpression",
-      "output": "List<FreeSymbol>",
+      "output": "MathFreeSymbols",
       "definition": "doc/spec/06-math.md",
       "pure": true
     },

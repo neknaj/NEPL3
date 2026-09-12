@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/06&#45;math.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page math; source SHA-256 f0f0668ed2aba457ab8905f869ebaffeffca4ecdc6f4d4bbf5150c28efdef610; alias input SHA-256 cae137023719df65f4fdf356ff25c6fac5c3aaa15c90b6b91c82b313d5078aaf; document digest 1ac0fdc9ddd775de8f472f06276fb630f0c149a508bd9ed406ccaa17fc754ad5; input PageSet digest 81a57d7f4d0c89df2c97a7ef91f3b401c152035a6cfe805221c9c57166af2116; input context SHA-256 3a5bc7b2e8d8505c91fa329fabe2e087da06c869b0433e4e13308050ca79e220. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/06&#45;math.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page math; source SHA-256 850f15eda21d689bda96f5a93b8595e515f81ea41484636d21f6482aacb088c7; alias input SHA-256 cae137023719df65f4fdf356ff25c6fac5c3aaa15c90b6b91c82b313d5078aaf; document digest ad90e7eb0a99a8848b4b513ac6f3487cb30a048e1d71fbcbe788b544832d1390; input PageSet digest e183ffa10a6be3c7c3f1df322f8f76f73ee8e1380319d27de66706bc790fe5c0; input context SHA-256 01a71e3b6feac889d7a4b61f3b24e66b223a4b97f9c2ed41db3cbf4bbb46541d. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="06-math言語"></a>
 
@@ -117,6 +117,14 @@ MathBindingsは構造検査後\[こうぞうけんさご\]のMathValueに対\[�
 occurrenceはrootを0として、意味\[いみ\]field順\[じゅん\]に子\[こ\]をたどる先行順\[せんこうじゅん\]の番号\[ばんごう\]である。共有\[きょうゆう\]nodeも経路\[けいろ\]ごとに別\[べつ\]のoccurrenceを持\[も\]ち、RowとDocGuestにも番号\[ばんごう\]を割\[わ\]り当\[あ\]てる。DocGuestの内部\[ないぶ\]は走査\[そうさ\]せず、名前\[なまえ\]は文字列\[もじれつ\]の完全一致\[かんぜんいっち\]で比較\[ひかく\]する。
 
 definitionsとusesはそれぞれoccurrence順\[じゅん\]である。sourceとOriginは入力\[にゅうりょく\]nodeのfield locationを参照\[さんしょう\]し、自由記号\[じゆうきごう\]に定義位置\[ていぎいち\]を作\[つく\]らない。NDF境界\[きょうかい\]では入力\[にゅうりょく\]を指定\[してい\]して再解析\[さいかいせき\]し、参照先\[さんしょうさき\]・出現順\[しゅつげんじゅん\]・過不足\[かふそく\]の不一致\[ふいっち\]をBindingMismatchとして拒否\[きょひ\]する。全出現\[ぜんしゅつげん\]と名前比較\[なまえひかく\]に共通予算\[きょうつうよさん\]を適用\[てきよう\]し、停止\[ていし\]した結果\[けっか\]を部分成功\[ぶぶんせいこう\]として返\[かえ\]さない。
+
+<a name="n-66726565696e70757473"></a>
+
+## 6\.1\. 自由記号\[じゆうきごう\]の入力要求\[にゅうりょくようきゅう\]
+
+free\_symbolsはCheckedExpressionからMathFreeSymbolsを生成\[せいせい\]する。symbolsの各要素\[かくようそ\]MathFreeSymbolはnameとoccurrencesを持\[も\]ち、束縛\[そくばく\]されていない出現\[しゅつげん\]だけを同\[おな\]じ名前\[なまえ\]にまとめる。nameはUTF\-8の辞書順\[じしょじゅん\]、occurrencesは先行順\[せんこうじゅん\]とし、重複\[じゅうふく\]・欠落\[けつらく\]を認\[みと\]めない。
+
+名前\[なまえ\]は完全一致\[かんぜんいっち\]で比較\[ひかく\]し、大文字\[おおもじ\]と小文字\[こもじ\]の同一視\[どういつし\]やUnicode正規化\[せいきか\]は行\[おこな\]わない。定義位置\[ていぎいち\]や評価値\[ひょうかち\]を補\[おぎな\]わず、guestの内部\[ないぶ\]も解析\[かいせき\]しない。NDFの受信\[じゅしん\]では指定\[してい\]された入力\[にゅうりょく\]から再計算\[さいけいさん\]し、不一致\[ふいっち\]をFreeSymbolsMismatchとして拒否\[きょひ\]する。共通予算\[きょうつうよさん\]の停止\[ていし\]は部分成功\[ぶぶんせいこう\]へ変\[か\]えない。
 
 <a name="n-7075626c6963"></a>
 
