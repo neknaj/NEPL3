@@ -154,7 +154,7 @@ impl From<StopReason> for PlanError {
         Self::Stopped(e)
     }
 }
-/// Validated plan with operation-local rule links. Portable plan identities and
+/// Validated plan with operation-local rule/provider links. Portable plan identities and
 /// expressions remain unchanged; links are meaningful only in this borrowed plan.
 #[derive(Debug)]
 pub struct CheckedPlan<'a> {
@@ -163,6 +163,7 @@ pub struct CheckedPlan<'a> {
     nullable: Vec<bool>,
     outputs: Vec<TypeDescriptor>,
     rule_links: Vec<Option<usize>>,
+    provider_links: Vec<Option<usize>>,
 }
 impl<'a> CheckedPlan<'a> {
     pub fn registry(&self) -> &'a SchemaRegistry {
@@ -186,6 +187,11 @@ impl<'a> CheckedPlan<'a> {
         let index = *self.rule_links.get(usize::try_from(id.0).ok()?)?;
         let index = index?;
         Some((index, self.plan.rules.get(index)?))
+    }
+    /// O(1) lookup of a signature linked by complete operation identity and kind.
+    pub(crate) fn linked_provider(&self, id: ReaderId) -> Option<&'a ProviderSignature> {
+        let index = (*self.provider_links.get(usize::try_from(id.0).ok()?)?)?;
+        self.plan.providers.get(index)
     }
 }
 impl ReaderPlan {
@@ -287,19 +293,51 @@ impl ReaderPlan {
                 return Err(PlanError::ProviderSignature);
             }
         }
-        budget.charge(Resource::Work, self.expressions.len() as u64)?;
+        budget.charge(
+            Resource::Work,
+            (self.expressions.len() as u64).saturating_mul(2),
+        )?;
         budget.charge(
             Resource::AllocationUnits,
             (self.expressions.len() as u64)
-                .saturating_mul(core::mem::size_of::<Option<usize>>() as u64),
+                .saturating_mul(2 * core::mem::size_of::<Option<usize>>() as u64),
         )?;
         let mut rule_links = alloc::vec![None; self.expressions.len()];
+        let mut provider_links = alloc::vec![None; self.expressions.len()];
         for (index, expr) in self.expressions.iter().enumerate() {
             *at = Some(ReaderId(index as u64));
             budget.charge(Resource::Nodes, 1)?;
             budget.charge(Resource::Work, 1)?;
             for child in children(expr) {
                 self.expression(child)?;
+            }
+            let provider = match expr {
+                ReaderExpr::Call(operation) => Some((operation, ProviderKind::Read)),
+                ReaderExpr::Decode { provider, .. } | ReaderExpr::Map { provider, .. } => {
+                    Some((provider, ProviderKind::Transform))
+                }
+                ReaderExpr::Then { provider, .. } => Some((provider, ProviderKind::Dependent)),
+                _ => None,
+            };
+            if let Some((operation, kind)) = provider {
+                for (provider_index, signature) in self.providers.iter().enumerate() {
+                    budget.charge(
+                        Resource::Work,
+                        1 + operation.name.len() as u64
+                            + operation.schema.package.len() as u64
+                            + 32,
+                    )?;
+                    if signature.operation == *operation && signature.kind == kind {
+                        provider_links[index] = Some(provider_index);
+                        break;
+                    }
+                }
+                let signature = provider_links[index]
+                    .and_then(|i| self.providers.get(i))
+                    .ok_or(PlanError::ProviderSignature)?;
+                if matches!(expr, ReaderExpr::Decode { .. }) && !signature.pure {
+                    return Err(PlanError::ProviderSignature);
+                }
             }
             match expr {
                 ReaderExpr::Scalar(CharClass::Range { lo, hi }) if lo > hi => {
@@ -326,20 +364,6 @@ impl ReaderPlan {
                     if rule_links[index].is_none() {
                         return Err(PlanError::Reference);
                     }
-                }
-                ReaderExpr::Call(operation) => {
-                    self.provider(operation, ProviderKind::Read)?;
-                }
-                ReaderExpr::Decode { provider, .. } => {
-                    if !self.provider(provider, ProviderKind::Transform)?.pure {
-                        return Err(PlanError::ProviderSignature);
-                    }
-                }
-                ReaderExpr::Map { provider, .. } => {
-                    self.provider(provider, ProviderKind::Transform)?;
-                }
-                ReaderExpr::Then { provider, .. } => {
-                    self.provider(provider, ProviderKind::Dependent)?;
                 }
                 ReaderExpr::Node { kind, .. } => {
                     registry
@@ -397,6 +421,7 @@ impl ReaderPlan {
             nullable,
             outputs,
             rule_links,
+            provider_links,
         })
     }
     fn nullable(&self, expr: &ReaderExpr, nullable: &[bool]) -> Result<bool, PlanError> {

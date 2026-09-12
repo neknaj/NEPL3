@@ -527,7 +527,10 @@ impl<'a> ReaderSession<'a> {
             return Err(ReaderError::Continuation);
         }
         let boundary = validate::ProviderBoundary {
-            plan: self.checked.plan(),
+            signature: self
+                .checked
+                .linked_provider(frame.expression)
+                .ok_or(PlanError::ProviderSignature)?,
             registry: self.registry,
             snapshot,
             declared: &c.request.sources,
@@ -574,7 +577,17 @@ impl<'a> ReaderSession<'a> {
         }
         Ok(crate::portable::transform::TransformReplyContext {
             continuation: &saved.continuation,
-            plan: self.checked.plan(),
+            signature: self
+                .checked
+                .linked_provider(
+                    saved
+                        .continuation
+                        .frames
+                        .last()
+                        .ok_or(ReaderError::Continuation)?
+                        .expression,
+                )
+                .ok_or(PlanError::ProviderSignature)?,
             registry: self.registry,
         })
     }
@@ -853,7 +866,10 @@ impl Machine<'_, '_> {
                     return Err(ReaderError::Continuation);
                 }
                 let boundary = validate::ProviderBoundary {
-                    plan: self.checked.plan(),
+                    signature: self
+                        .checked
+                        .linked_provider(frame.expression)
+                        .ok_or(PlanError::ProviderSignature)?,
                     registry: self.registry,
                     snapshot: self.request.snapshot,
                     declared,

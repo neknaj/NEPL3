@@ -5,7 +5,7 @@ mod value;
 use super::*;
 use crate::{
     model::*,
-    plan::ReaderPlan,
+    plan::ProviderSignature,
     runtime::{
         ReaderError,
         validate::{ProviderBoundary, ProviderReplyRef, check_provider},
@@ -15,7 +15,7 @@ use nepl3_core::{source::SourceAdmission, value_codec::FoundationCodecError};
 
 pub struct TransformReplyContext<'a> {
     pub(crate) continuation: &'a ReaderContinuation,
-    pub(crate) plan: &'a ReaderPlan,
+    pub(crate) signature: &'a ProviderSignature,
     pub(crate) registry: &'a SchemaRegistry,
 }
 impl TransformReplyContext<'_> {
@@ -64,7 +64,7 @@ impl TransformReplyContext<'_> {
             .resolve(&c.request.snapshot)
             .ok_or(SourceError::MissingSnapshot)?;
         let boundary = ProviderBoundary {
-            plan: self.plan,
+            signature: self.signature,
             registry: self.registry,
             snapshot,
             declared: &c.request.sources,
