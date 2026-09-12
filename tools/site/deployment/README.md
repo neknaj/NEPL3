@@ -134,3 +134,26 @@ record; this function cannot reconstruct elapsed wall time from API responses.
 Terminal/unknown history is refused, requiring explicit reconciliation. Local
 writes here do not imply remote durability; remote publication of observations,
 stop/incident records and the overall publisher state machine remain separate.
+
+## Immutable recovery storage receipt
+
+`release.verify` checks the release metadata and the bytes obtained from its
+three pinned assets. The recovery storage profile uses `payload.tar` (the
+original Pages tar), `identity.json` (publication identity) and `smoke.json`
+(public smoke evidence). It requires a `site-recovery/` transaction tag, pinned
+release/asset IDs and SHA-256/size, a published non-draft immutable release,
+exactly these uploaded assets, and matching actual downloaded bytes. Metadata
+is bounded to 64 KiB and each asset to 40 MiB. No missing digest, duplicate
+asset, mutable release or altered download is silently accepted.
+
+The returned StorageReceipt records storage identity only. Before LKG
+promotion, the publisher must separately validate the original tar using
+`recovery.verify`, interpret identity/smoke contents, check current deployment
+and remote journal, and authenticate metadata/download transport. This parser
+neither downloads nor publishes releases, resolves tags to commits, or proves
+that a supplied JSON smoke report is true. API `target_commitish` is not used
+as tag-resolution proof. Existing LKG reference validation remains necessary
+before a later deployment because a whole release can still be deleted.
+
+Metadata fields follow the [GitHub releases REST contract](https://docs.github.com/en/rest/releases/releases).
+Run `python -m unittest discover -s tools/site -p test_release.py`.
