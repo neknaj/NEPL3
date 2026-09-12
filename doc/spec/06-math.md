@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/06&#45;math.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page math; source SHA-256 b132fb6bbae01c0a2df74bece864a0702273155dd22bcc4531612f1dc808b7dd; alias input SHA-256 cae137023719df65f4fdf356ff25c6fac5c3aaa15c90b6b91c82b313d5078aaf; document digest 3998b0445f22cf150824168253e2d211a27b9f43f2fac0ccc8bc4a82b3fd4c43; input PageSet digest d523aa1f9375e25d2207c4a8f7301af642539ac0bdf5f70617685d2eb51383fc; input context SHA-256 ec1744ca3a47695560a94414defa624b2da0cd6524b777e36a9bb4d80e56c057. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/06&#45;math.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page math; source SHA-256 c0ee843ad581a9d32fc09508c1d4a9cfbe330d0e167022ad25461b1e89c0a9d7; alias input SHA-256 cae137023719df65f4fdf356ff25c6fac5c3aaa15c90b6b91c82b313d5078aaf; document digest 890462ee2bc19c6517b6695bb4ca81a1036bacc91f4c8e5a6ba1635996987aae; input PageSet digest 8bc7d103270a3166f977448773b5502478554d117aeaa3396f29d0ed21f90644; input context SHA-256 3350b394378ca27ceb417c4b48d9e5264361d3ede2285b83abd726be82f4ff10. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="06-math言語"></a>
 
@@ -135,6 +135,10 @@ free\_symbolsはCheckedExpressionからMathFreeSymbolsを生成\[せいせい\]�
 <a name="6-公開操作"></a>
 
 ## 7\. 公開操作\[こうかいそうさ\]
+
+前置構文\[ぜんちこうぶん\]printerは検査済\[けんさず\]みMath形状\[けいじょう\]を受\[う\]け、Expr・Row・DocGuestのentryとsource textを返\[かえ\]す。各出現\[かくしゅつげん\]をfield順\[じゅん\]に出力\[しゅつりょく\]し、Frac・pow・表示用\[ひょうじよう\]scripts・labelを評価\[ひょうか\]や簡約\[かんやく\]で置\[お\]き換\[か\]えない。SymbolはsymbolとTextの明示形\[めいじけい\]を使\[つか\]い、束縛名\[そくばくめい\]がNameで表\[あらわ\]せなければUnprintableNameとして拒否\[きょひ\]する。共有\[きょうゆう\]nodeも出現\[しゅつげん\]ごとに展開\[てんかい\]し、深\[ふか\]さ・出力\[しゅつりょく\]・作業量\[さぎょうりょう\]・確保量\[かくほりょう\]は呼出元\[よびだしもと\]の共通予算\[きょうつうよさん\]に従\[したが\]う。
+
+DocGuestは正確\[せいかく\]な不変\[ふへん\]ForeignClosureを同期\[どうき\]host printerへ渡\[わた\]し、空\[から\]の応答\[おうとう\]やhostの失敗\[しっぱい\]を拒否\[きょひ\]する。保持\[ほじ\]sourceを無条件\[むじょうけん\]に代用\[だいよう\]せず、Math coreはDocの評価\[ひょうか\]・I\/O・provider選択\[せんたく\]を行\[おこな\]わない。hostが生成\[せいせい\]したguest textと全体\[ぜんたい\]のsourceは、選択\[せんたく\]したProfileで再\[さい\]parseして対応\[たいおう\]を検証\[けんしょう\]するまでroundtripの証明\[しょうめい\]ではない。出力\[しゅつりょく\]には架空\[かくう\]のsource identityを付\[つ\]けず、保存\[ほぞん\]・再\[さい\]parseを担当\[たんとう\]するhostが新\[あたら\]しいsnapshotを割\[わ\]り当\[あ\]てる。
 
 MathEvaluationOutcomeは成功\[せいこう\]した評価\[ひょうか\]の交換値\[こうかんち\]であり、ExactにMathExactValue、SymbolicにMathEvaluationRequirementの列\[れつ\]を持\[も\]つ。各要求\[かくようきゅう\]は元式\[もとしき\]のExprRefとMathEvaluationReasonを保持\[ほじ\]し、評価順\[ひょうかじゅん\]に並\[なら\]ぶ。sumの反復\[はんぷく\]で同\[おな\]じnodeの要求\[ようきゅう\]が生\[しょう\]じた場合\[ばあい\]も、出現\[しゅつげん\]ごとの順序\[じゅんじょ\]と重複\[ちょうふく\]を保\[たも\]つ。
 
