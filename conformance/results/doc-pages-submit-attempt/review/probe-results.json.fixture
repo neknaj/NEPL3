@@ -1,0 +1,17 @@
+[
+  {
+    "case": "receipt push failure",
+    "post_calls": 1,
+    "local_receipt_preserved": true,
+    "remote_intent_preserved": true,
+    "replay_rejected": true,
+    "error": "simulated receipt push failure"
+  },
+  {
+    "case": "late RecoveryReceipt",
+    "post_calls": 1,
+    "remote_receipt_preserved": true,
+    "successful_return": false,
+    "error": "publication deadline after receipt; reconcile recorded state"
+  }
+]
