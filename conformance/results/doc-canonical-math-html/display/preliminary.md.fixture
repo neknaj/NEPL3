@@ -1,0 +1,11 @@
+# Independent chapter 17 display and cutover review
+
+Reviewed AGENTS.md, doc/authoring.md, doc/spec/16-doc-migration.md, original Markdown, the moved Doc source, aliases, and first generated Markdown.
+
+The legacy anchor check loaded the actual public GitHub rendered blob at 6e47d57c874e53a894154b4a349132c34526b9b9. Every configured alias matched exactly one real user-content ID with the expected original heading. Navigation to all eight fragments reached the matching headings; the final two naturally stop at the document bottom. Exact IDs and movement are in legacy-github.json. This is not a guessed slug mapping.
+
+The original and first generated projection have the same 21 code spans in the same order with exact content. Both tables preserve their column association and 3 and 8 data rows. The generated wording makes short cells grammatical sentences without changing the conditions or permitted outcomes. Full annotation-stripped prose differences were read: punctuation, connective spelling, and sentence completion do not remove requirements. The relative reference to chapter 18 and all five KaTeX external references remain in the projection.
+
+The initial HTML generation stopped at allocation usage 749999977 and did not produce a directory. This is not an HTML display pass. Spec16 allows a distinct, explicitly selected html_output_limits budget for a new generation operation. A recorded 750M to 1B allocation-only host allowance adjustment with old failure preservation is consistent with that contract; actual receipt and repeat-generation output remain to verify.
+
+Local browser display, final adopted Markdown, current GitHub alias collision checks, and offline artifact viewing are pending generation/adoption.

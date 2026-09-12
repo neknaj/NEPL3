@@ -1,0 +1,34 @@
+[
+  {
+    "section": null,
+    "name": "17-docmathのhtml生成と数式表示"
+  },
+  {
+    "section": "generation",
+    "name": "1-生成と閲覧"
+  },
+  {
+    "section": "ownership",
+    "name": "2-所有と境界"
+  },
+  {
+    "section": "failure_stop",
+    "name": "3-選択失敗停止"
+  },
+  {
+    "section": "identity_resources",
+    "name": "4-再現性非同期資源"
+  },
+  {
+    "section": "checked_artifact",
+    "name": "5-検査済みartifactと隔離preview"
+  },
+  {
+    "section": "acceptance",
+    "name": "6-受入と実装順"
+  },
+  {
+    "section": "references",
+    "name": "7-根拠"
+  }
+]

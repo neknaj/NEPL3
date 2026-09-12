@@ -1,0 +1,28 @@
+﻿# Independent authored chapter17 preflight
+
+Read-only review of doc/spec/17-math-html.md and doc/migration/authored/17-math-html.nepld against AGENTS.md, doc/authoring.md, spec16/spec21, current annotated writer and canonical page-set contracts. No tracked source or tests were changed. This is preflight, not canonical cutover approval.
+
+No blocking source-semantic or Ruby finding was identified in the full manual read-through. The draft preserves paragraph order and the technical obligations across all seven sections. Minor added Japanese commas and complete-sentence wording in table cells preserve meaning. Sentences with code/link use explicit construction; ordinary text uses sentence literals. Readings split okurigana and particles from kanji bases. No missing required content or added stronger completion claim was found.
+
+Shape: seven sibling Section nodes; two explicit-header tables (3 columns/3 body rows and 2 columns/8 body rows); one flat three-item references list followed by a paragraph in the same Section. No nested lists, parallel, embedded Math/Circuit, image, inline Anchor, or RawCode requires an unsupported profile extension. The code literals are prose/code display, not executable embedded operations. All 21 original Markdown inline code payloads match the 21 Doc InlineCode payloads exactly in order, including the CLI pipe and CSP single quotes. This regex-based literal comparison is appropriate to these simple no-escape payloads but is not production decode or render evidence.
+
+Links: five unchanged external KaTeX URLs, and one relative target18-html-delivery.md without a fragment at draft440. Chapter18 is already registered with logical source doc/spec/18-html-delivery.md. Use markdown-annotated-pages/1 for chapter17; do not rewrite this link to an external GitHub URL or register Markdown as a fake Doc page. Existing single-page host would reject the unresolved requirement by design. No passive host extension is needed. Code-only paths design/markup.json and prose14章 are not additional links.
+
+Content constraints especially retained: KaTeX at generation and not document viewing; independent MathML; no evaluation from rendering; no unapproved arbitrary TeX/HTML; preservation of annotations; typed provider violations vs capability failures; parent Stopped remains Stopped; existing same-request MathML display is not successful operation/save; cumulative fallback budget; bounded maxExpand/maxSize and no false faithful success after clamp; stale response rejection; macro isolation; unobserved Usage not invented; shared preview/export artifact and SaveFinished gating; CSP/asset/doctype/accessibility requirements. Tables keep all eight distinct failure-policy branches.
+
+Legacy heading mapping candidates (must validate actual GitHub anchors before cutover; these are the old visible-heading spellings, not foundation slug rules):
+- article: 17-docmathのhtml生成と数式表示
+- generation: 1-生成と閲覧
+- ownership: 2-所有と境界
+- failure_stop: 3-選択失敗停止
+- identity_resources: 4-再現性非同期資源
+- checked_artifact: 5-検査済みartifactと隔離preview
+- acceptance: 6-受入と実装順
+- references: 7-根拠
+All seven semantic Section IDs need emitted n-hex anchors too. Ruby-bearing projected headings change auto-slugs; do not rely on the old headings remaining automatic aliases.
+
+Staleness: no newly false factual assertion was found. math-core/math-mathml are responsibility names; the planned fully qualified crate is nepl3-math-mathml in design/dependencies.json. Current Cargo members do not include the planned TeX/MathML packages, and design/markup.json remains a restricted contract; preserve the source's explicit warning that a chapter alone is not implementation completion. The source has no pinned KaTeX version requiring an update.
+
+Official references checked live: https://katex.org/docs/options confirms output html/htmlAndMathml, mutable macro environment, size cap and expansion limit; https://katex.org/docs/api confirms renderToString produces HTML strings; https://katex.org/docs/node, /security and /browser remain available and relevant. This does not verify NEPL3 adapter behavior or resource-error classification for an adopted KaTeX package.
+
+Remaining gates: production parse/lower/prepare through the real PageSet with chapter18; bounded full-page Markdown and HTML generation; semantic/code/table/links comparison of actual output; alias and GitHub duplicate-target checks; deterministic regeneration/canonical check/bootstrap and mandatory CI. Keep current source/spec digests and complete independent cutover review after actual outputs exist. Source byte facts and code payload evidence are in facts.json. Neither all Doc nor chapter17 canonical migration is marked complete here.
