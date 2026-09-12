@@ -1,0 +1,14 @@
+﻿from pathlib import Path
+import sys,tempfile,json
+sys.path.insert(0,str(Path('tools/site').resolve()))
+from test_record_smoke import RecordSmokeTests
+from deployment.smoke import _record
+from journal import load
+from journal.model import decode
+p=Path('.tmp/record-smoke-review');now=[0];calls=[]
+with tempfile.TemporaryDirectory() as d:
+ server,args,kwargs,report=RecordSmokeTests().prepare(d);kwargs['remaining_seconds']=3600
+ def observe(*a,**k):calls.append(k['timeout']);now[0]=301;return report
+ head,result=_record(*args,**kwargs,clock=lambda:now[0],observe=observe)
+ state=load(server);record={'http_budget':calls[0],'simulated_http_elapsed':301,'event_kind':state.events[-1].kind,'deadline_exceeded':decode(state.evidence[-1])['deadline_exceeded'],'returned_pass':result['result']=='passed'}
+(p/'smoke-cap-repro.json').write_text(json.dumps(record,indent=2)+'\n',encoding='utf8');print(json.dumps(record,indent=2))

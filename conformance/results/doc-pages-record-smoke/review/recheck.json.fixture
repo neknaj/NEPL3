@@ -1,0 +1,26 @@
+[
+  {
+    "case": "cap",
+    "rejected": true,
+    "remote_kind": "SmokeFailed",
+    "deadline_exceeded": true,
+    "http_budget": 300,
+    "raw_report_preserved": true
+  },
+  {
+    "case": "exact-cap",
+    "rejected": true,
+    "remote_kind": "SmokeFailed",
+    "deadline_exceeded": true,
+    "http_budget": 300,
+    "raw_report_preserved": true
+  },
+  {
+    "case": "late-push",
+    "rejected": true,
+    "remote_kind": "SmokePassed",
+    "deadline_exceeded": false,
+    "http_budget": 60,
+    "raw_report_preserved": true
+  }
+]

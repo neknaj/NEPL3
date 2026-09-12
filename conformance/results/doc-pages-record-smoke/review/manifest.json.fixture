@@ -1,0 +1,80 @@
+{
+  "source_commit": "12543b2",
+  "files": [
+    {
+      "path": "commands.json",
+      "bytes": 486,
+      "sha256": "5a66a92c8e184922819599177331112a0e2277f020174f97aa60bfd9714c8153"
+    },
+    {
+      "path": "normal.stderr",
+      "bytes": 110,
+      "sha256": "f93274c657ca6abc7c2cb07438f918d000b2823d00cb86d7421048758192ec0e"
+    },
+    {
+      "path": "normal.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "optimized.stderr",
+      "bytes": 110,
+      "sha256": "9a841fb30ec19448d70cb9ed6fd6e15a338b918dce87339d8c6a1be44fcb4abd"
+    },
+    {
+      "path": "optimized.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "recheck.json",
+      "bytes": 557,
+      "sha256": "464b01613f4bba8b0b464412977c9434ab3f48582d49abc5ba91a220af974198"
+    },
+    {
+      "path": "review.md",
+      "bytes": 2073,
+      "sha256": "be9c4b0d31cb0d3edcb01f0bd0a30bd5052bed79bf5761bf986b70e836b1dc29"
+    },
+    {
+      "path": "seal.py",
+      "bytes": 3006,
+      "sha256": "597ac852f173d085e9af01083f3f9ac7e3af430e3c3e8eb32d65022f3c3409a1"
+    },
+    {
+      "path": "smoke-cap-repro.json",
+      "bytes": 151,
+      "sha256": "e10d378d8a2889d0ebd237a166c6e974cde97ba37a309e5c063e74e7287e1dd8"
+    },
+    {
+      "path": "smoke-cap-repro.py",
+      "bytes": 928,
+      "sha256": "47280d8be085bc39c0294f63a678da937323937215d245260a6e044832824ccb"
+    },
+    {
+      "path": "source/tools/site/deployment/README.md",
+      "bytes": 16167,
+      "sha256": "e62d37d6422bf507b001338e691095848f3168bc60018b5cb91d80dc2cd5b65b"
+    },
+    {
+      "path": "source/tools/site/deployment/smoke.py",
+      "bytes": 3242,
+      "sha256": "423f93aa61a3a9cc61e83237109e741586a1d6be8922bd051b768c80119272f9"
+    },
+    {
+      "path": "source/tools/site/smoke.py",
+      "bytes": 7249,
+      "sha256": "2efa1c26b5cc327560e4644b1e713f5852b118a67384c9757fde881bfcc09eb3"
+    },
+    {
+      "path": "source/tools/site/test_record_smoke.py",
+      "bytes": 5417,
+      "sha256": "62bb67a0c652cdc3c1e05c00326492666482283ff20fd14ac431ac0b16e3a3c7"
+    },
+    {
+      "path": "verify-final.py",
+      "bytes": 2436,
+      "sha256": "f34e5ab9b7fbb822cf7b0d411210b2ef3662eabba2f664125691d7e49a8d4db9"
+    }
+  ]
+}
