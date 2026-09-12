@@ -1,0 +1,38 @@
+[
+  {
+    "review": ".tmp\\create-transport-review",
+    "verified_files": 20
+  },
+  {
+    "review": ".tmp\\deployment-receipt-review",
+    "verified_files": 17
+  },
+  {
+    "review": ".tmp\\execute-attempt-review",
+    "verified_files": 13
+  },
+  {
+    "review": ".tmp\\pages-poll-review",
+    "verified_files": 13
+  },
+  {
+    "review": ".tmp\\pages-transport-review",
+    "verified_files": 24
+  },
+  {
+    "review": ".tmp\\record-smoke-review",
+    "verified_files": 15
+  },
+  {
+    "review": ".tmp\\recorded-wait-review",
+    "verified_files": 24
+  },
+  {
+    "review": ".tmp\\remote-wait-review",
+    "verified_files": 18
+  },
+  {
+    "review": ".tmp\\stored-payload-review",
+    "verified_files": 18
+  }
+]
