@@ -2,8 +2,9 @@
 //! certify layout, resource availability, or the meaning of a Math expression.
 //! This first tree models MathML-only content. Mixed HTML inside mtext remains
 //! a required separate namespace integration; raw markup is never a substitute.
-//! The neutral codec and Math-to-MathML adapter are not implemented by this
-//! module. These Rust types are not a portable ABI or a completed output contract.
+//! The neutral structure codec is `portable::mathml`; it revalidates received
+//! trees. Math-to-MathML conversion and mixed HTML remain separate work.
+//! These Rust types are not a portable ABI or a completed artifact contract.
 //!
 //! Validation borrows the exact immutable fragment. Serialization expands shared
 //! nodes per appearance and returns no partial string on failure. Both operations
