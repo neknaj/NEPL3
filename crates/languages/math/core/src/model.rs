@@ -309,3 +309,44 @@ pub struct MathSourceArtifact {
     pub text: alloc::string::String,
     pub entry: MathCategory,
 }
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathPrintedGuest {
+    pub syntax_digest: nepl3_core::source::Digest,
+    pub guest_digest: nepl3_core::source::Digest,
+    pub embed: EmbedRef,
+    pub text: String,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathPrintIdentity {
+    pub syntax_digest: nepl3_core::source::Digest,
+    pub guests: Vec<nepl3_core::source::Digest>,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathPrintRequest {
+    pub syntax: MathSyntax,
+    pub doc_schema: Option<nepl3_core::value::SchemaRef>,
+    pub guests: Vec<MathPrintedGuest>,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum MathPrintFailure {
+    InvalidGuestIdentity { entry: u64 },
+    DuplicateGuest { embed: EmbedRef },
+    MissingBinding { embed: EmbedRef },
+    GuestCategory { embed: EmbedRef },
+    UnresolvedGuest { embed: EmbedRef },
+    EmptyGuest { embed: EmbedRef },
+    UnprintableName { node: u64 },
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum MathPrintResult {
+    Complete {
+        artifact: MathSourceArtifact,
+    },
+    Invalid {
+        failure: MathPrintFailure,
+    },
+    Stopped {
+        reason: nepl3_core::budget::StopReason,
+    },
+}
