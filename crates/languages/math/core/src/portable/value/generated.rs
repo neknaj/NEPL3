@@ -283,4 +283,54 @@ let f=fields(v,s,"BindingEnvironment",1)?;
 Ok(Self {assignments:Value::read(&f[0],s,c,b)?})
 }
 }
+impl Value for MathEvaluationReason {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::MissingSymbol => variant(s,"MathEvaluationReason","MissingSymbol",[],b),
+Self::NotationOnly => variant(s,"MathEvaluationReason","NotationOnly",[],b),
+Self::NonIntegralExponent => variant(s,"MathEvaluationReason","NonIntegralExponent",[],b),
+Self::AlgebraicValueRequired => variant(s,"MathEvaluationReason","AlgebraicValueRequired",[],b),
+Self::ComplexValueRequired => variant(s,"MathEvaluationReason","ComplexValueRequired",[],b),
+Self::UnsupportedExactDomain => variant(s,"MathEvaluationReason","UnsupportedExactDomain",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,52)?;
+let (tag,f)=case(v,s,"MathEvaluationReason")?;
+match (tag,f.len()) {
+("MissingSymbol",0)=>Ok(Self::MissingSymbol),
+("NotationOnly",0)=>Ok(Self::NotationOnly),
+("NonIntegralExponent",0)=>Ok(Self::NonIntegralExponent),
+("AlgebraicValueRequired",0)=>Ok(Self::AlgebraicValueRequired),
+("ComplexValueRequired",0)=>Ok(Self::ComplexValueRequired),
+("UnsupportedExactDomain",0)=>Ok(Self::UnsupportedExactDomain),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for MathEvaluationRequirement {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathEvaluationRequirement",[self.expression.put(s,c,b)?,self.reason.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,57)?;
+let f=fields(v,s,"MathEvaluationRequirement",2)?;
+Ok(Self {expression:Value::read(&f[0],s,c,b)?,reason:Value::read(&f[1],s,c,b)?})
+}
+}
+impl Value for MathEvaluationOutcome {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Exact(value) => variant(s,"MathEvaluationOutcome","Exact",[value.put(s,c,b)?],b),
+Self::Symbolic(requirements) => variant(s,"MathEvaluationOutcome","Symbolic",[requirements.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,53)?;
+let (tag,f)=case(v,s,"MathEvaluationOutcome")?;
+match (tag,f.len()) {
+("Exact",1)=>Ok(Self::Exact(Value::read(&f[0],s,c,b)?)),
+("Symbolic",1)=>Ok(Self::Symbolic(Value::read(&f[0],s,c,b)?)),
+_=>Err(PortableError::Shape),}
+}
+}
 }

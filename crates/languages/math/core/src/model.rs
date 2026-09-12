@@ -258,3 +258,23 @@ pub struct MathSyntax {
     pub views: Vec<MathView>,
     pub source_maps: Vec<Mapping>,
 }
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum MathEvaluationReason {
+    MissingSymbol,
+    NotationOnly,
+    NonIntegralExponent,
+    AlgebraicValueRequired,
+    ComplexValueRequired,
+    UnsupportedExactDomain,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathEvaluationRequirement {
+    pub expression: ExprRef,
+    pub reason: MathEvaluationReason,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum MathEvaluationOutcome {
+    Exact(MathExactValue),
+    Symbolic(Vec<MathEvaluationRequirement>),
+}

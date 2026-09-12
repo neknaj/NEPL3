@@ -16,6 +16,221 @@ fn err(v: impl std::fmt::Debug) -> String {
 }
 
 #[test]
+fn evaluation_result_rechecks_environment_and_rejects_forged_requirements() -> Result<(), String> {
+    use nepl3_math_core::{check, environment, evaluation, model::*, portable};
+    let compiled = compiled()?;
+    let registry = &compiled.doc.registry;
+    let source = MathValue {
+        root: MathRoot::Expr(ExprRef(0)),
+        nodes: vec![MathNode {
+            kind: MathKind::Symbol { name: "x".into() },
+            origin: None,
+            span: None,
+            locations: vec![],
+        }],
+        embeds: vec![],
+    };
+    let checked = check::expression(&source, &mut budget()).map_err(err)?;
+    let empty = BindingEnvironment {
+        assignments: vec![],
+    };
+    let empty_env = environment::check(&empty, &mut budget()).map_err(err)?;
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(registry, &sources, &mut admission).map_err(err)?;
+    let raw =
+        portable::evaluation_to_value(&checked, &empty_env, registry, &mut codec, &mut budget())
+            .map_err(err)?;
+    let bytes = nepl3_wire::encode(&raw, &mut budget()).map_err(err)?;
+    let raw = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+    let result = portable::evaluation_from_value(
+        &raw,
+        &checked,
+        &empty_env,
+        registry,
+        &mut codec,
+        &mut budget(),
+    )
+    .map_err(err)?;
+    assert!(core::ptr::eq(result.source, &source));
+    assert_eq!(
+        result.outcome,
+        evaluation::Outcome::Symbolic(vec![evaluation::Requirement {
+            expression: ExprRef(0),
+            reason: evaluation::Reason::MissingSymbol
+        }])
+    );
+    for mutation in 0..4 {
+        let mut forged = raw.clone();
+        let NdfValue::Variant(v) = &mut forged else {
+            return Err("outcome variant".into());
+        };
+        let NdfValue::List(rs) = &mut v.fields[0] else {
+            return Err("requirements".into());
+        };
+        match mutation {
+            0 => rs.clear(),
+            1 => rs.push(rs[0].clone()),
+            2 => {
+                let NdfValue::Record(r) = &mut rs[0] else {
+                    return Err("requirement".into());
+                };
+                let NdfValue::Record(id) = &mut r.fields[0] else {
+                    return Err("expression".into());
+                };
+                id.fields[0] = NdfValue::U64(u64::MAX);
+            }
+            _ => {
+                let NdfValue::Record(r) = &mut rs[0] else {
+                    return Err("requirement".into());
+                };
+                let NdfValue::Variant(reason) = &mut r.fields[1] else {
+                    return Err("reason".into());
+                };
+                reason.variant = "NotationOnly".into();
+            }
+        }
+        assert!(matches!(
+            portable::evaluation_from_value(
+                &forged,
+                &checked,
+                &empty_env,
+                registry,
+                &mut codec,
+                &mut budget()
+            ),
+            Err(portable::PortableError::EvaluationMismatch)
+        ));
+    }
+    let env1 = BindingEnvironment {
+        assignments: vec![MathAssignment {
+            name: "x".into(),
+            value: MathExactValue::Truth { value: true },
+        }],
+    };
+    let env2 = BindingEnvironment {
+        assignments: vec![MathAssignment {
+            name: "x".into(),
+            value: MathExactValue::Truth { value: false },
+        }],
+    };
+    let a = environment::check(&env1, &mut budget()).map_err(err)?;
+    let b = environment::check(&env2, &mut budget()).map_err(err)?;
+    let one = nepl3_math_core::number::ratio(
+        &nepl3_core::value::Integer::from(1_i64),
+        &nepl3_core::value::Integer::from(1_i64),
+        &mut budget(),
+    )
+    .map_err(err)?;
+    for value in [
+        MathExactValue::Scalar { value: one.clone() },
+        MathExactValue::Vector {
+            values: vec![one.clone()],
+        },
+        MathExactValue::Matrix {
+            rows: 1,
+            cols: 1,
+            values: vec![one],
+        },
+        MathExactValue::Truth { value: true },
+    ] {
+        let raw_env = BindingEnvironment {
+            assignments: vec![MathAssignment {
+                name: "x".into(),
+                value: value.clone(),
+            }],
+        };
+        let env = environment::check(&raw_env, &mut budget()).map_err(err)?;
+        let encoded =
+            portable::evaluation_to_value(&checked, &env, registry, &mut codec, &mut budget())
+                .map_err(err)?;
+        let bytes = nepl3_wire::encode(&encoded, &mut budget()).map_err(err)?;
+        let decoded = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+        let received = portable::evaluation_from_value(
+            &decoded,
+            &checked,
+            &env,
+            registry,
+            &mut codec,
+            &mut budget(),
+        )
+        .map_err(err)?;
+        assert_eq!(received.outcome, evaluation::Outcome::Exact(value.clone()));
+        assert!(matches!(
+            portable::evaluation_from_value(
+                &decoded,
+                &checked,
+                &b,
+                registry,
+                &mut codec,
+                &mut budget(),
+            ),
+            Err(portable::PortableError::EvaluationMismatch)
+        ));
+        if let MathExactValue::Matrix { .. } = value {
+            let mut forged = decoded;
+            let NdfValue::Variant(outcome) = &mut forged else {
+                return Err("outcome".into());
+            };
+            let NdfValue::Variant(exact) = &mut outcome.fields[0] else {
+                return Err("exact".into());
+            };
+            exact.fields[0] = NdfValue::U64(0);
+            assert!(matches!(
+                portable::evaluation_from_value(
+                    &forged,
+                    &checked,
+                    &env,
+                    registry,
+                    &mut codec,
+                    &mut budget(),
+                ),
+                Err(portable::PortableError::ExactValue(_))
+            ));
+        }
+    }
+    let receipt = portable::evaluation_to_value(&checked, &a, registry, &mut codec, &mut budget())
+        .map_err(err)?;
+    assert!(matches!(
+        portable::evaluation_from_value(
+            &receipt,
+            &checked,
+            &b,
+            registry,
+            &mut codec,
+            &mut budget()
+        ),
+        Err(portable::PortableError::EvaluationMismatch)
+    ));
+    let mut measured = budget();
+    portable::evaluation_from_value(
+        &raw,
+        &checked,
+        &empty_env,
+        registry,
+        &mut codec,
+        &mut measured,
+    )
+    .map_err(err)?;
+    let mut limits = budget().limits();
+    limits.work = measured.usage().work - 1;
+    let mut stopped = Budget::new(limits);
+    assert!(matches!(
+        portable::evaluation_from_value(
+            &raw,
+            &checked,
+            &empty_env,
+            registry,
+            &mut codec,
+            &mut stopped
+        ),
+        Err(portable::PortableError::Stopped(StopReason::WorkLimit))
+    ));
+    assert_eq!(stopped.poll(), Err(StopReason::WorkLimit));
+    Ok(())
+}
+
+#[test]
 fn math_source_evaluates_through_native_and_portable_syntax() -> Result<(), String> {
     use nepl3_math_core::{check, environment, evaluation, lower, model::*, portable};
     let compiled = compiled()?;
@@ -84,6 +299,27 @@ fn math_source_evaluates_through_native_and_portable_syntax() -> Result<(), Stri
                     "{source}"
                 );
                 assert!(core::ptr::eq(result.source, input));
+                let raw = portable::evaluation_to_value(
+                    &checked,
+                    &env,
+                    profile.registry(),
+                    &mut codec,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                let bytes = nepl3_wire::encode(&raw, &mut budget()).map_err(err)?;
+                let decoded = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+                let received = portable::evaluation_from_value(
+                    &decoded,
+                    &checked,
+                    &env,
+                    profile.registry(),
+                    &mut codec,
+                    &mut budget(),
+                )
+                .map_err(err)?;
+                assert_eq!(received.outcome, result.outcome, "{source}");
+                assert!(core::ptr::eq(received.source, input));
             }
             Ok(())
         })

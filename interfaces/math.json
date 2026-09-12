@@ -1079,6 +1079,73 @@
         ]
       ],
       "constraints": []
+    },
+    "MathEvaluationReason": {
+      "variant": {
+        "MissingSymbol": [],
+        "NotationOnly": [],
+        "NonIntegralExponent": [],
+        "AlgebraicValueRequired": [],
+        "ComplexValueRequired": [],
+        "UnsupportedExactDomain": []
+      },
+      "constraints": []
+    },
+    "MathEvaluationRequirement": {
+      "record": [
+        [
+          "expression",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "ExprRef"
+            }
+          }
+        ],
+        [
+          "reason",
+          {
+            "named": {
+              "package": "nepl3.math",
+              "revision": 1,
+              "name": "MathEvaluationReason"
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    },
+    "MathEvaluationOutcome": {
+      "variant": {
+        "Exact": [
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.math",
+                "revision": 1,
+                "name": "MathExactValue"
+              }
+            }
+          ]
+        ],
+        "Symbolic": [
+          [
+            "requirements",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.math",
+                  "revision": 1,
+                  "name": "MathEvaluationRequirement"
+                }
+              }
+            }
+          ]
+        ]
+      },
+      "constraints": []
     }
   },
   "operations": {}

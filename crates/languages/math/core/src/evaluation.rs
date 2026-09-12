@@ -8,25 +8,10 @@ use nepl3_core::{
     value::{Integer, Rational},
 };
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Reason {
-    MissingSymbol,
-    NotationOnly,
-    NonIntegralExponent,
-    AlgebraicValueRequired,
-    ComplexValueRequired,
-    UnsupportedExactDomain,
-}
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Requirement {
-    pub expression: ExprRef,
-    pub reason: Reason,
-}
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Outcome {
-    Exact(MathExactValue),
-    Symbolic(Vec<Requirement>),
-}
+pub use crate::model::{
+    MathEvaluationOutcome as Outcome, MathEvaluationReason as Reason,
+    MathEvaluationRequirement as Requirement,
+};
 /// Node references in requirements are interpreted only against this exact input.
 pub struct Evaluation<'a> {
     pub source: &'a MathValue,

@@ -215,6 +215,15 @@ body
     nil
   cons section public "7. [公開操作/こうかいそうさ]" body
     cons paragraph
+      cons "MathEvaluationOutcomeは[成功/せいこう]した[評価/ひょうか]の[交換値/こうかんち]であり、ExactにMathExactValue、SymbolicにMathEvaluationRequirementの[列/れつ]を[持/も]つ。"
+      cons "[各要求/かくようきゅう]は[元式/もとしき]のExprRefとMathEvaluationReasonを[保持/ほじ]し、[評価順/ひょうかじゅん]に[並/なら]ぶ。"
+      cons "sumの[反復/はんぷく]で[同/おな]じnodeの[要求/ようきゅう]が[生/しょう]じた[場合/ばあい]も、[出現/しゅつげん]ごとの[順序/じゅんじょ]と[重複/ちょうふく]を[保/たも]つ。" nil
+    cons paragraph
+      cons "[受信側/じゅしんがわ]はschemaとExactの[形状/けいじょう]を[検査/けんさ]し、[指定/してい]された[不変/ふへん]の[式/しき]と[束縛環境/そくばくかんきょう]から[再評価/さいひょうか]する。"
+      cons "[値/あたい]・[要求/ようきゅう]・[理由/りゆう]・[順序/じゅんじょ]が[一致/いっち]しない[結果/けっか]はEvaluationMismatchとして[拒否/きょひ]し、[返却値/へんきゃくち]は[受信値/じゅしんち]ではなく[再評価/さいひょうか]した[結果/けっか]とする。"
+      cons "[受信/じゅしん]から[照合/しょうごう]まで[同/おな]じ[予算/よさん]を[使/つか]い、[停止/ていし]を[再試行/さいしこう]やSymbolicで[消/け]さない。"
+      cons "この[交換値/こうかんち]は[操作/そうさ]の[失敗/しっぱい]やproviderの[通信契約/つうしんけいやく]を[兼/か]ねない。" nil
+    cons paragraph
       cons "lower、check、free_symbols、evaluate、print、render_mathml。"
       cons "[評価結果/ひょうかけっか]、[部分評価/ぶぶんひょうか]の[新式/しんしき]、[元/もと]の[式/しき]を[別値/べつち]として[返/かえ]す。"
       cons "[文書側/ぶんしょがわ]のrender[要求/ようきゅう]がevaluateを[自動/じどう]で[要求/ようきゅう]しない。" nil
