@@ -1,0 +1,34 @@
+from pathlib import Path
+from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
+from threading import Thread
+from playwright.sync_api import sync_playwright
+import json,re,sys
+ROOT=Path(sys.argv[1]).resolve();OUT=Path(__file__).parent/sys.argv[2];OUT.mkdir(exist_ok=True)
+original=Path('.tmp/chapter02/original.md').read_text(encoding='utf-8');expected_codes=re.findall(r'`([^`]+)`',original);expected_codes.insert(-1,'[start,end)')
+class Handler(SimpleHTTPRequestHandler):
+ def log_message(self,*a):pass
+ def translate_path(self,path):
+  prefix=next((base for base in ['/NEPL3/','/review/nested/'] if path.startswith(base)),None)
+  return str(ROOT/path[len(prefix):].split('?',1)[0]) if prefix else str(ROOT/'missing')
+server=ThreadingHTTPServer(('127.0.0.1',0),Handler);Thread(target=server.serve_forever,daemon=True).start();rows=[]
+try:
+ with sync_playwright() as p:
+  for name in ['chromium','firefox','webkit']:
+   browser=getattr(p,name).launch(headless=True)
+   for base in ['/NEPL3/','/review/nested/']:
+    for width in [375,1280]:
+     ctx=browser.new_context(java_script_enabled=False,viewport={'width':width,'height':900});page=ctx.new_page();failed=[];page.on('requestfailed',lambda r:failed.append(r.url))
+     url=f'http://127.0.0.1:{server.server_port}{base}docs/spec/02-foundation.html';response=page.goto(url,wait_until='networkidle')
+     row=page.evaluate('''()=>{let plain=n=>{let c=n.cloneNode(true);c.querySelectorAll('.nepl-reading,.nepl-notes').forEach(x=>x.remove());return c.textContent};let facts=document.getElementById('n-66616374735f617574686f72697479');let first=document.querySelector('article .nepl-paragraph');let policy=document.getElementById('n-706f6c696379');return {headings:[...document.querySelectorAll('h1,h2,h3')].map(n=>({tag:n.tagName,text:plain(n)})),codes:[...document.querySelectorAll('code')].map(n=>n.textContent),preamble:plain(first),preamble_before_policy:!!(first.compareDocumentPosition(policy)&Node.DOCUMENT_POSITION_FOLLOWING),facts_parent:facts.parentElement.closest('section')?.id,facts_heading:facts.querySelector('h3')?.textContent,ids:[...document.querySelectorAll('[id]')].map(n=>n.id),ruby:document.querySelectorAll('.nepl-ruby').length,annos:[...document.querySelectorAll('.nepl-anno')].map(n=>({base:plain(n.querySelector('.nepl-base')),note:plain(n.querySelector('.nepl-notes')),baseTop:n.querySelector('.nepl-base').getBoundingClientRect().top,noteTop:n.querySelector('.nepl-notes').getBoundingClientRect().top,width:n.getBoundingClientRect().width})),css:[...document.styleSheets].map(s=>({href:s.href,rules:s.cssRules.length})),background:getComputedStyle(document.querySelector('article')).backgroundColor,scripts:document.scripts.length,overflow:document.documentElement.scrollWidth>innerWidth,scrollWidth:document.documentElement.scrollWidth,links:[...document.querySelectorAll('a[href]')].map(n=>n.getAttribute('href'))}}''')
+     row.update(browser=name,version=browser.version,base=base,width=width,status=response.status,failed=failed,codes_exact=row['codes']==expected_codes)
+     if base=='/NEPL3/':
+      page.screenshot(path=str(OUT/f'{name}-{width}.png'));page.locator('.nepl-anno').scroll_into_view_if_needed();page.screenshot(path=str(OUT/f'{name}-{width}-anno.png'));page.locator('h3').scroll_into_view_if_needed();page.screenshot(path=str(OUT/f'{name}-{width}-nested.png'))
+     row['navigation']=[]
+     for ident in row['ids']:
+      page.goto(url+'#'+ident,wait_until='load');row['navigation'].append(page.evaluate('''id=>({id,count:document.querySelectorAll('#'+id).length,top:document.getElementById(id).getBoundingClientRect().top,scroll:scrollY})''',ident))
+     page.reload(wait_until='load');row['reload_fragment']=page.url
+     rows.append(row);ctx.close()
+   browser.close()
+finally:server.shutdown();server.server_close()
+(OUT/'results.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps([{k:r[k] for k in ['browser','base','width','status','overflow','codes_exact','facts_parent','failed']} for r in rows]))

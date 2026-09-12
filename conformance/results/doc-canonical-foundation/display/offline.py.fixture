@@ -1,0 +1,15 @@
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+import json,sys
+ROOT=Path(sys.argv[1]).resolve();OUT=Path(__file__).parent;rows=[]
+with sync_playwright() as p:
+ for name in ['chromium','firefox','webkit']:
+  browser=getattr(p,name).launch(headless=True);ctx=browser.new_context(java_script_enabled=False,offline=name!='webkit',viewport={'width':375,'height':900})
+  ctx.route('http://**/*',lambda r:r.abort());ctx.route('https://**/*',lambda r:r.abort())
+  page=ctx.new_page();requests=[];page.on('request',lambda r:requests.append(r.url))
+  url=(ROOT/'docs/spec/02-foundation.html').as_uri();page.goto(url,wait_until='load')
+  row=page.evaluate('''()=>({headings:document.querySelectorAll('h1,h2,h3').length,codes:document.querySelectorAll('code').length,ruby:document.querySelectorAll('.nepl-ruby').length,anno:document.querySelectorAll('.nepl-anno').length,css:[...document.styleSheets].map(s=>s.href),background:getComputedStyle(document.querySelector('article')).backgroundColor,overflow:document.documentElement.scrollWidth>innerWidth})''')
+  page.goto(url+'#n-66616374735f617574686f72697479',wait_until='load');row['nested_top']=page.locator('h3').bounding_box()['y']
+  row.update(browser=name,http_requests=[u for u in requests if u.startswith('http')],offline_emulation=name!='webkit',http_https_aborted=True);rows.append(row);browser.close()
+(OUT/'offline.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps([{k:r[k] for k in ['browser','headings','codes','overflow','http_requests']} for r in rows]))

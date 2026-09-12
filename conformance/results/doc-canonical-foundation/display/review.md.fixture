@@ -1,0 +1,19 @@
+# Independent chapter 02 display and cutover review
+
+Reviewed original .tmp/chapter02/original.md, Doc source, authoring.md, eight configured aliases, and the specs 16/21 migration contracts. Original bytes exactly match f48112f30759d39aa8712a1287a025646aec721e:doc/spec/02-foundation.md. Actual GitHub old-blob rendering contains eleven unique heading IDs with correct movement, including the nested 6.1 heading. Three unchanged headings use automatic IDs; eight require explicit legacy aliases.
+
+Initial successful output checkpoint e82157a184058ba8e753a34edc9ba9f51ef3d6f7:
+
+- Twelve local browser cases (Chromium/Firefox/WebKit, 375/1280 px, /NEPL3/ and /review/nested/, JavaScript disabled) all return HTTP 200, no failed requests, no horizontal document overflow, and applied shared CSS.
+- The preamble remains ahead of the policy section. The 6.1 facts-authority section is an h3 inside the section for 6. Names and Relations. All ten semantic Section IDs are unique and navigation reaches the expected destinations.
+- All original eighteen inline code strings are preserved exactly, with the existing FactDelta interval [start,end) promoted to one additional code span, for nineteen total. Long Origin code and generic angle-bracket strings remain literal text. GitHub GFM API independently renders nineteen code spans, one h3, and the preamble before the first h2.
+- Ruby count is 1111. The single Anno has its explanatory note below the base; width is 202-209 px depending on engine. Narrow Anno and nested-heading screenshots were visually checked and remain readable without document overflow.
+- All prior thirteen HTML pages and shared CSS are byte-identical to .tmp/html-chapter06-first, excluding the changed collection manifest.
+- Direct file viewing succeeds in all three engines with JavaScript disabled and no HTTP(S) requests. Chromium/Firefox use offline=True; WebKit uses normal context with both HTTP and HTTPS blocked. Nested 6.1 navigation works without a compiler or server.
+- Two earlier HTML generations failed with AllocationLimit at 999999997 allocation units and WorkLimit at 499999997 work. Their output directories do not exist, and their logs are retained. The successful operation starts with zero usage and explicitly selects Work600M, Nodes24M, Allocation1.25B. Its recorded usage is Work515272664, Nodes19679272, Allocation1080339874. This is a new finite generation operation, not a continuation or reset of a stopped Budget.
+
+Final adopted checkpoint b8dfdd1160472e11d193f56ab2f4b5322ec0b873: approved for the reviewed chapter 02 content/display/cutover scope, with no blocking finding. Actual GitHub rendering retains all eleven legacy destinations and ten semantic anchors uniquely, with settled navigation reaching the correct sections. The three automatic headings and nested 6.1 anchor are present. Its nineteen code spans match the independently defined original-eighteen-plus-promoted-interval sequence. The GitHub screenshot also confirms the preamble remains between the title and policy heading.
+
+All sixteen HTML output files and all fifteen Markdown output files are byte-identical across the two completed generation runs. Adopted chapter 02 Markdown matches the generated projection. All thirteen prior Markdown bodies, after removing only their generated metadata header, are unchanged. Prior thirteen HTML pages and CSS are unchanged. Earlier failed operations remain failures and their logs are sealed alongside the successful evidence.
+
+This reviews the specification-page migration; it does not establish foundation runtime or global acceptance completion. Human screen-reader and real Safari device QA were not performed. No tracked source was edited by this reviewer. Evidence files use UTF-8 without BOM where applicable, and seal.json records hashes and sizes.

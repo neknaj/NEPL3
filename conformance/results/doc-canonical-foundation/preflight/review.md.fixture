@@ -1,0 +1,47 @@
+# Chapter 02 foundation independent source preflight
+
+Scope: read doc/spec/02-foundation.md and doc/migration/authored/02-foundation.nepld completely in C:/projects/NEPL3-doc-canonical-conformance, with authoring.md, current 13-page canonical registry and the previously inspected spec16/annotated contracts. Read-only; no tracked edits, parser/render invocation or runtime acceptance claim.
+
+Result: no concrete source omission, definite Ruby/Anno reading defect, unresolved link dependency or unsupported local projection shape found. Proceed to bounded generation/final review after the preceding cutover is integrated; this report is not migration approval.
+
+## Content and authoring
+
+The original 20,659-byte Markdown and 45,209-byte authored source retain the atomic snapshot/SourceAdmission preamble before the first Section. Preserve this preamble and its ownership/index/accounting qualification rather than treating it as disposable progress text. Paragraph phrasing is intentionally edited for readability, with shorter sentences and explanatory shared-storage Anno; the technical obligations remain equivalent by full-text comparison.
+
+Especially checked: same-storage versus independently decoded snapshot proofs and atomic/non-atomic behavior; clone versus conservative Compare cost; no pointer-derived wire identity; edit/admission atomic commit versus retained consumed resources; source scalar/CRLF/BOM positions; schema and display-kind separation; lossless versus canonical print; ForeignClosure owner/guest tables, original Origin IDs/digest and R046 namespace distinction; all inverse map paths and empty-span insertion anchor; generated diagnostic/rename restrictions; FactAuthority scope/import/endpoint permissions and reserved-ID FactDelta rules; report/fix conflicts and source closure; first event-overflow stopping and sticky earlier StopReason; retained resource usage and source admission; partial values not checked proofs.
+
+Scope statements continue to distinguish shared FactSet validation from T06 resolution/Custom callback/whole-analysis completion. These are evidence boundaries, not stale numbers to remove after unrelated CI. No status-file promotion or task completion follows from documentation migration.
+
+Normal prose uses sentence literals; explicit sentences contain real code and retain appropriate Ruby/Concat. The shared immutable storage explanation is an Anno whose base includes the English storage word and kanji Ruby, rather than misusing Ruby for a whole semantic gloss. Kana, Latin words and punctuation stay outside Japanese Ruby bases. Empty-interval/empty-span くう readings are not independently classified as errors merely because the preferred reading of 空文字 in chapter06 was からもじ.
+
+## Structures, code and dependency closure
+
+Ten unique Sections: policy, source_range, schema_kind, token_syntax, views, origins, names_relations, facts_authority, diagnostics_events, budgets_results. Forty-one Paragraphs, no Lists, Tables, code blocks, explicit breaks, parallel, Foreign or Math constructors. The single nested facts_authority Section remains last in names_relations Body and preserves the original h3; remaining sections are h2. The article preamble precedes all Sections, so the annotated Body ordering constraint is satisfied.
+
+All eighteen original inline-code payloads remain present and ordered; draft has nineteen spans because the originally plain second [start,end) in FactDelta is now code. Preserve the exact half-open interval text. This markup change does not modify interval semantics, but actual code output remains a final rendering check.
+
+Neither original nor draft has an actual link. Thus there is no Relative/passive artifact dependency; named files/types/operations are retained as original prose or code. Current registry has thirteen pages and does not yet register chapter02; the absence of chapter02 itself is expected before cutover. No renderer capability extension is indicated by this source inspection.
+
+## Proposed legacy heading mapping
+
+The following mapping is a preflight plan; actual GitHub DOM IDs/navigation must be verified later. Preserve all eleven old heading destinations and ten explicit Section IDs.
+
+| Original heading | Section | Planned legacy destination | Mechanism |
+| --- | --- | --- | --- |
+| 02. 共通データ契約 | article | 02-共通データ契約 | explicit alias |
+| 方針 | policy | 方針 | explicit alias |
+| 1. SourceとRange | source_range | 1-sourceとrange | unchanged automatic heading |
+| 2. schemaとkind | schema_kind | 2-schemaとkind | unchanged automatic heading |
+| 3. Tokenと構文 | token_syntax | 3-tokenと構文 | explicit alias |
+| 4. 内部view | views | 4-内部view | explicit alias |
+| 5. Origin graph | origins | 5-origin-graph | unchanged automatic heading |
+| 6. 名前・関係 | names_relations | 6-名前関係 | explicit alias |
+| 6.1. 共通factsと専用処理の変更範囲 | facts_authority | 61-共通factsと専用処理の変更範囲 | explicit alias |
+| 7. 診断とevent | diagnostics_events | 7-診断とevent | explicit alias |
+| 8. 予算と結果 | budgets_results | 8-予算と結果 | explicit alias |
+
+Eight aliases are expected; do not add same-name aliases for the three unannotated headings and create duplicate automatic destinations. Verify GitHub treatment of punctuation/case rather than treating the provisional slug strings as primary evidence.
+
+## Remaining gates
+
+Root must implement registry/source move/aliases, remove the duplicated candidate, and choose explicit budgets before generation. Chapter06 HTML already consumed 937,205,778 of 1,000,000,000 allocation units; this larger page cannot be presumed to fit. Retain any stopped run and do not silently restart with increased limits. Required evidence remains production parse/lower, repeated Markdown/HTML byte equality and receipts, exact adopted projections, prior HTML/CSS preservation, code/Anno/heading display, canonical check and required CI, final independent adoption review and restorable bootstrap evidence. Runtime acceptance, broader Doc migration and T16/T21 completion remain outside this preflight.

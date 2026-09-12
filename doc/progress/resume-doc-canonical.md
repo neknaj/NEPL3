@@ -2,6 +2,13 @@
 
 ## 2026年9月12日の再開（現在）
 
+第02章を含む14章集合は選択した予算内で2回生成に成功し、Markdown15・HTML16ファイルが
+すべてbyte一致した。既存13章HTML/CSSとMarkdown本文を保ち、第02章とcontext headerを採用。
+全projection照合、対象canonical14試験、Clippy・repository検査、独立した原稿・表示・archive
+レビューを完了した。証拠は `conformance/results/doc-canonical-foundation/`。HTML16ファイルの
+compiler不要復元とmanifest15件を照合済み。第06章/第02章の最終CI・統合はまだ完了していない。
+以下の失敗は修正前の記録として保持し、成功した後の証拠と区別する。
+
 第02章のallocation増加後のHTML再実行はWorkLimit（499,999,997 / 500,000,000）で停止。
 Nodes19,497,622、Allocation1,032,057,020、Output480であり、出力dirは生成されていない。
 次の新規操作ではHTML Work600M・Nodes24M・Allocation1.25Bを選択する。Nodesの変更は

@@ -1,0 +1,73 @@
+[
+  {
+    "head": "e82157a184058ba8e753a34edc9ba9f51ef3d6f7",
+    "command": [
+      "cargo",
+      "build",
+      "--locked",
+      "-p",
+      "nepl3-tools"
+    ],
+    "registry_sha256": "f2b123da1abd264d528edc55caecd69129f5fb11706d8af4fcaf04d449438bdd",
+    "pid": 50028,
+    "exit_code": 0,
+    "elapsed_seconds": 3.2502141000004485,
+    "binary_sha256": "f9ccefcfc63f5b1c2f442177280053a3ffb8ce4eb66ef34dc032ed863cd86774"
+  },
+  {
+    "head": "e82157a184058ba8e753a34edc9ba9f51ef3d6f7",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-conformance\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "markdown",
+      ".tmp/markdown-chapter02-resolved-first"
+    ],
+    "registry_sha256": "f2b123da1abd264d528edc55caecd69129f5fb11706d8af4fcaf04d449438bdd",
+    "pid": 50120,
+    "exit_code": 0,
+    "elapsed_seconds": 90.66867370001273,
+    "binary_sha256": "f9ccefcfc63f5b1c2f442177280053a3ffb8ce4eb66ef34dc032ed863cd86774"
+  },
+  {
+    "head": "e82157a184058ba8e753a34edc9ba9f51ef3d6f7",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-conformance\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "html",
+      ".tmp/html-chapter02-resolved-first"
+    ],
+    "registry_sha256": "f2b123da1abd264d528edc55caecd69129f5fb11706d8af4fcaf04d449438bdd",
+    "pid": 45312,
+    "exit_code": 0,
+    "elapsed_seconds": 59.260136500000954,
+    "binary_sha256": "f9ccefcfc63f5b1c2f442177280053a3ffb8ce4eb66ef34dc032ed863cd86774"
+  },
+  {
+    "head": "e82157a184058ba8e753a34edc9ba9f51ef3d6f7",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-conformance\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "markdown",
+      ".tmp/markdown-chapter02-resolved-second"
+    ],
+    "registry_sha256": "f2b123da1abd264d528edc55caecd69129f5fb11706d8af4fcaf04d449438bdd",
+    "pid": 42544,
+    "exit_code": 0,
+    "elapsed_seconds": 93.09467449999647,
+    "binary_sha256": "f9ccefcfc63f5b1c2f442177280053a3ffb8ce4eb66ef34dc032ed863cd86774"
+  },
+  {
+    "head": "e82157a184058ba8e753a34edc9ba9f51ef3d6f7",
+    "command": [
+      "C:\\projects\\NEPL3-doc-canonical-conformance\\target\\debug\\nepl3-tools.exe",
+      "doc-canonical",
+      "html",
+      ".tmp/html-chapter02-resolved-second"
+    ],
+    "registry_sha256": "f2b123da1abd264d528edc55caecd69129f5fb11706d8af4fcaf04d449438bdd",
+    "pid": 49076,
+    "exit_code": 0,
+    "elapsed_seconds": 58.89044859999558,
+    "binary_sha256": "f9ccefcfc63f5b1c2f442177280053a3ffb8ce4eb66ef34dc032ed863cd86774"
+  }
+]

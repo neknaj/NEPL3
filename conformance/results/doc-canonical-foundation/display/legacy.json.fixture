@@ -1,0 +1,150 @@
+{
+  "url": "https://github.com/neknaj/NEPL3/blob/f48112f30759d39aa8712a1287a025646aec721e/doc/spec/02-foundation.md",
+  "status": 200,
+  "original_bytes_match": true,
+  "rows": [
+    {
+      "heading": "02. 共通データ契約",
+      "nodes": [
+        {
+          "id": "user-content-02-共通データ契約",
+          "href": "#02-共通データ契約"
+        }
+      ],
+      "movement": {
+        "top": 125.49687194824219,
+        "scroll": 267
+      }
+    },
+    {
+      "heading": "方針",
+      "nodes": [
+        {
+          "id": "user-content-方針",
+          "href": "#方針"
+        }
+      ],
+      "movement": {
+        "top": 124.88749694824219,
+        "scroll": 472
+      }
+    },
+    {
+      "heading": "1. SourceとRange",
+      "nodes": [
+        {
+          "id": "user-content-1-sourceとrange",
+          "href": "#1-sourceとrange"
+        }
+      ],
+      "movement": {
+        "top": 125.07499694824219,
+        "scroll": 574
+      }
+    },
+    {
+      "heading": "2. schemaとkind",
+      "nodes": [
+        {
+          "id": "user-content-2-schemaとkind",
+          "href": "#2-schemaとkind"
+        }
+      ],
+      "movement": {
+        "top": 125.26249694824219,
+        "scroll": 1692
+      }
+    },
+    {
+      "heading": "3. Tokenと構文",
+      "nodes": [
+        {
+          "id": "user-content-3-tokenと構文",
+          "href": "#3-tokenと構文"
+        }
+      ],
+      "movement": {
+        "top": 125.44999694824219,
+        "scroll": 1970
+      }
+    },
+    {
+      "heading": "4. 内部view",
+      "nodes": [
+        {
+          "id": "user-content-4-内部view",
+          "href": "#4-内部view"
+        }
+      ],
+      "movement": {
+        "top": 124.63749694824219,
+        "scroll": 2649
+      }
+    },
+    {
+      "heading": "5. Origin graph",
+      "nodes": [
+        {
+          "id": "user-content-5-origin-graph",
+          "href": "#5-origin-graph"
+        }
+      ],
+      "movement": {
+        "top": 124.82499694824219,
+        "scroll": 3047
+      }
+    },
+    {
+      "heading": "6. 名前・関係",
+      "nodes": [
+        {
+          "id": "user-content-6-名前関係",
+          "href": "#6-名前関係"
+        }
+      ],
+      "movement": {
+        "top": 125.01249694824219,
+        "scroll": 3365
+      }
+    },
+    {
+      "heading": "6.1. 共通factsと専用処理の変更範囲",
+      "nodes": [
+        {
+          "id": "user-content-61-共通factsと専用処理の変更範囲",
+          "href": "#61-共通factsと専用処理の変更範囲"
+        }
+      ],
+      "movement": {
+        "top": 125.40625,
+        "scroll": 3617
+      }
+    },
+    {
+      "heading": "7. 診断とevent",
+      "nodes": [
+        {
+          "id": "user-content-7-診断とevent",
+          "href": "#7-診断とevent"
+        }
+      ],
+      "movement": {
+        "top": 125.19999694824219,
+        "scroll": 4300
+      }
+    },
+    {
+      "heading": "8. 予算と結果",
+      "nodes": [
+        {
+          "id": "user-content-8-予算と結果",
+          "href": "#8-予算と結果"
+        }
+      ],
+      "movement": {
+        "top": 125.38749694824219,
+        "scroll": 5026
+      }
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+from pathlib import Path
+import hashlib,json,re
+OUT=Path(__file__).parent;a=Path('.tmp/markdown-chapter02-resolved-first');b=Path('.tmp/markdown-chapter02-resolved-second');old=Path('.tmp/markdown-chapter06-first')
+strip_header=lambda x:re.sub(rb'^<!-- Generated.*?-->\s*',b'',x)
+checks={'head':'b8dfdd1160472e11d193f56ab2f4b5322ec0b873','markdown_repeat':[{'path':p.relative_to(a).as_posix(),'same':p.read_bytes()==b.joinpath(p.relative_to(a)).read_bytes()} for p in a.rglob('*') if p.is_file()],'adopted_md_matches':Path('doc/spec/02-foundation.md').read_bytes()==a.joinpath('doc/spec/02-foundation.md').read_bytes(),'prior_markdown_bodies':[{'path':p.relative_to(old).as_posix(),'body_same':strip_header(p.read_bytes())==strip_header(a.joinpath(p.relative_to(old)).read_bytes())} for p in old.rglob('*.md')]}
+(OUT/'adopted.json').write_text(json.dumps(checks,indent=2),encoding='utf-8')
+files=[{'path':p.relative_to(OUT).as_posix(),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'bom':p.read_bytes().startswith(b'\xef\xbb\xbf')} for p in OUT.rglob('*') if p.is_file() and p.name!='seal.json']
+(OUT/'seal.json').write_text(json.dumps(files,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps({'files':len(files),'max_bytes':max(x['bytes'] for x in files),'total_bytes':sum(x['bytes'] for x in files),'bom_files':[x['path'] for x in files if x['bom']],'md_repeat_count':len(checks['markdown_repeat']),'md_repeat_all':all(x['same'] for x in checks['markdown_repeat']),'prior_md_bodies_all_same':all(x['body_same'] for x in checks['prior_markdown_bodies']),'adopted_md_matches':checks['adopted_md_matches']}))
