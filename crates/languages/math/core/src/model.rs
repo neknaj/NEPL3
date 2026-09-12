@@ -17,6 +17,40 @@ macro_rules! references {
 }
 references!(ExprRef, RowRef, DocGuestRef, EmbedRef);
 
+/// One exact, case-sensitive free-symbol assignment.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathAssignment {
+    pub name: String,
+    pub value: MathExactValue,
+}
+
+/// Canonical ascending UTF-8 names, with no duplicates. Use environment::check
+/// before lookup; unused assignments are permitted but must also be valid.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct BindingEnvironment {
+    pub assignments: Vec<MathAssignment>,
+}
+
+/// Evaluation values are separate from source notation. Rational values need
+/// not have finite decimal expansions. Matrix storage is row-major.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum MathExactValue {
+    Scalar {
+        value: Rational,
+    },
+    Vector {
+        values: Vec<Rational>,
+    },
+    Matrix {
+        rows: u64,
+        cols: u64,
+        values: Vec<Rational>,
+    },
+    Truth {
+        value: bool,
+    },
+}
+
 /// Preorder occurrence numbers distinguish shared nodes visited in different scopes.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MathBinding {
@@ -34,6 +68,20 @@ pub struct MathSymbolUse {
 pub struct MathBindings {
     pub definitions: Vec<MathBinding>,
     pub uses: Vec<MathSymbolUse>,
+}
+
+/// One required free name, with all its unbound occurrence IDs in preorder.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathFreeSymbol {
+    pub name: String,
+    pub occurrences: Vec<u64>,
+}
+
+/// Exact, case-sensitive names sorted by UTF-8 lexical order. No normalization
+/// or invented definition/source position is attached to a free name.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathFreeSymbols {
+    pub symbols: Vec<MathFreeSymbol>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -209,4 +257,55 @@ pub struct MathSyntax {
     pub origins: Vec<Origin>,
     pub views: Vec<MathView>,
     pub source_maps: Vec<Mapping>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum MathEvaluationReason {
+    MissingSymbol,
+    NotationOnly,
+    NonIntegralExponent,
+    AlgebraicValueRequired,
+    ComplexValueRequired,
+    UnsupportedExactDomain,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathEvaluationRequirement {
+    pub expression: ExprRef,
+    pub reason: MathEvaluationReason,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum MathEvaluationOutcome {
+    Exact(MathExactValue),
+    Symbolic(Vec<MathEvaluationRequirement>),
+}
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum MathEvaluationFailureKind {
+    OperandShapeMismatch,
+    NotSquare,
+    DivisionByZero,
+    InvalidRootDegree,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathEvaluationFailure {
+    pub expression: ExprRef,
+    pub kind: MathEvaluationFailureKind,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum MathEvaluationResult {
+    Success { outcome: MathEvaluationOutcome },
+    Failure { failure: MathEvaluationFailure },
+}
+/// Exact Math surface category used by shape checking and source reparsing.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum MathCategory {
+    Expr,
+    Row,
+    DocGuest,
+}
+
+/// Generated source without an invented saved source identity.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathSourceArtifact {
+    pub text: alloc::string::String,
+    pub entry: MathCategory,
 }

@@ -50,10 +50,24 @@ body
     nil
   cons section evaluate "3. evaluate" body
     cons paragraph
+      cons "BindingEnvironmentはMathAssignmentのassignments[列/れつ]であり、[各/かく][要素/ようそ]に[名前/なまえ]nameとMathExactValueのvalueを[持/も]つ。"
+      cons "[名前/なまえ]はUTF-8[辞書順/じしょじゅん]で[厳密/げんみつ]に[昇順/しょうじゅん]とし、[重複/ちょうふく]と[順序違反/じゅんじょいはん]を[拒否/きょひ]する。"
+      cons "[大文字/おおもじ]と[小文字/こもじ]の[同一視/どういつし]やUnicode[正規化/せいきか]は[行/おこな]わず、Symbolと[同/おな]じTextを[比較/ひかく]する。"
+      cons "[空/から]の[環境/かんきょう]と[未使用/みしよう]の[代入/だいにゅう]を[許可/きょか]するが、[未使用/みしよう]でも[値/あたい]の[形状/けいじょう]を[検査/けんさ]する。"
+      cons "[検査済/けんさず]み[環境/かんきょう]は[元/もと]の[不変入力/ふへんにゅうりょく]を[借用/しゃくよう]し、[名前/なまえ]を[二分探索/にぶんたんさく]する。"
+      cons "[名前/なまえ]の[未存在/みそんざい]は[不正入力/ふせいにゅうりょく]や[資源停止/しげんていし]と[区別/くべつ]し、[自由記号/じゆうきごう]が[未解決/みかいけつ]の[場合/ばあい]のSymbolic[結果/けっか]に[利用/りよう]する。"
+      cons "この[検査/けんさ]は[式/しき]の[全要求/ぜんようきゅう]の[充足/じゅうそく]を[証明/しょうめい]せず、NDF[受信時/じゅしんじ]にも[順序/じゅんじょ]と[値/あたい]を[再検査/さいけんさ]する。" nil
+    cons paragraph
       cons "[入力/にゅうりょく]はCheckedExpression、[自由記号/じゆうきごう]のBindingEnvironment、Limits。"
       cons "[出力/しゅつりょく]はExact(Value)またはSymbolic(expression, Requirements)。"
       cons "[定義域違反/ていぎいきいはん]・[形状不一致/けいじょうふいっち]は[明確/めいかく]なEvalError。"
       cons sentence cons ruby text "値" text "あたい" cons text "の" cons ruby text "種類" text "しゅるい" cons text "はScalar(Q)、" cons code "Vector(List<Q>)" cons text "、" cons code "Matrix(rows,cols,List<Q>)" cons text "、Truth(Bool)。" nil nil
+    cons paragraph
+      cons "MathExactValueは[評価値/ひょうかち]の[言語中立/げんごちゅうりつ]schemaであり、[元/もと]のMathValueとは[別/べつ]である。"
+      cons "ScalarとVectorとMatrixの[要素/ようそ]は[任意/にんい]の[正規形/せいきけい]Rationalで、Numberの[有限十進制約/ゆうげんじっしんせいやく]を[適用/てきよう]しない。"
+      cons "Vectorは[空/から]を[認/みと]めず、Matrixのrowsとcolsは[正/せい]、valuesは[行優先順/ぎょうゆうせんじゅん]でrowsとcolsの[積/せき]に[等/ひと]しい[要素数/ようそすう]を[持/も]つ。"
+      cons "[次元/じげん]の[積/せき]のU64 overflowも[拒否/きょひ]し、NDFの[受信/じゅしん]でも[同/おな]じ[形状検査/けいじょうけんさ]を[行/おこな]う。"
+      cons "この[値/あたい]の[検査/けんさ]だけで[元式/もとしき]の[評価/ひょうか]や[演算/えんざん]の[定義域/ていぎいき]が[証明/しょうめい]されたとは[扱/あつか]わない。" nil
     cons paragraph
       cons "[評価/ひょうか]はsource[順/じゅん]の[左/ひだり]から[右/みぎ]、[純粋/じゅんすい]。"
       cons "letはinitを[評価/ひょうか]してからbodyを[評価/ひょうか]する。"
@@ -188,7 +202,49 @@ body
       cons "NDF[境界/きょうかい]では[入力/にゅうりょく]を[指定/してい]して[再解析/さいかいせき]し、[参照先/さんしょうさき]・[出現順/しゅつげんじゅん]・[過不足/かふそく]の[不一致/ふいっち]をBindingMismatchとして[拒否/きょひ]する。"
       cons "[全出現/ぜんしゅつげん]と[名前比較/なまえひかく]に[共通予算/きょうつうよさん]を[適用/てきよう]し、[停止/ていし]した[結果/けっか]を[部分成功/ぶぶんせいこう]として[返/かえ]さない。" nil
     nil
+  cons section freeinputs "6.1. [自由記号/じゆうきごう]の[入力要求/にゅうりょくようきゅう]" body
+    cons paragraph
+      cons "free_symbolsはCheckedExpressionからMathFreeSymbolsを[生成/せいせい]する。"
+      cons "symbolsの[各要素/かくようそ]MathFreeSymbolはnameとoccurrencesを[持/も]ち、[束縛/そくばく]されていない[出現/しゅつげん]だけを[同/おな]じ[名前/なまえ]にまとめる。"
+      cons "nameはUTF-8の[辞書順/じしょじゅん]、occurrencesは[先行順/せんこうじゅん]とし、[重複/じゅうふく]・[欠落/けつらく]を[認/みと]めない。" nil
+    cons paragraph
+      cons "[名前/なまえ]は[完全一致/かんぜんいっち]で[比較/ひかく]し、[大文字/おおもじ]と[小文字/こもじ]の[同一視/どういつし]やUnicode[正規化/せいきか]は[行/おこな]わない。"
+      cons "[定義位置/ていぎいち]や[評価値/ひょうかち]を[補/おぎな]わず、guestの[内部/ないぶ]も[解析/かいせき]しない。"
+      cons "NDFの[受信/じゅしん]では[指定/してい]された[入力/にゅうりょく]から[再計算/さいけいさん]し、[不一致/ふいっち]をFreeSymbolsMismatchとして[拒否/きょひ]する。"
+      cons "[共通予算/きょうつうよさん]の[停止/ていし]は[部分成功/ぶぶんせいこう]へ[変/か]えない。" nil
+    nil
   cons section public "7. [公開操作/こうかいそうさ]" body
+    cons paragraph
+      cons "[前置構文/ぜんちこうぶん]printerは[検査済/けんさず]みMath[形状/けいじょう]を[受/う]け、Expr・Row・DocGuestのentryとsource textを[返/かえ]す。"
+      cons "[各出現/かくしゅつげん]をfield[順/じゅん]に[出力/しゅつりょく]し、Frac・pow・[表示用/ひょうじよう]scripts・labelを[評価/ひょうか]や[簡約/かんやく]で[置/お]き[換/か]えない。"
+      cons "SymbolはsymbolとTextの[明示形/めいじけい]を[使/つか]い、[束縛名/そくばくめい]がNameで[表/あらわ]せなければUnprintableNameとして[拒否/きょひ]する。"
+      cons "[共有/きょうゆう]nodeも[出現/しゅつげん]ごとに[展開/てんかい]し、[深/ふか]さ・[出力/しゅつりょく]・[作業量/さぎょうりょう]・[確保量/かくほりょう]は[呼出元/よびだしもと]の[共通予算/きょうつうよさん]に[従/したが]う。" nil
+    cons paragraph
+      cons "DocGuestは[正確/せいかく]な[不変/ふへん]ForeignClosureを[同期/どうき]host printerへ[渡/わた]し、[空/から]の[応答/おうとう]やhostの[失敗/しっぱい]を[拒否/きょひ]する。"
+      cons "[保持/ほじ]sourceを[無条件/むじょうけん]に[代用/だいよう]せず、Math coreはDocの[評価/ひょうか]・I/O・provider[選択/せんたく]を[行/おこな]わない。"
+      cons "hostが[生成/せいせい]したguest textと[全体/ぜんたい]のsourceは、[選択/せんたく]したProfileで[再/さい]parseして[対応/たいおう]を[検証/けんしょう]するまでroundtripの[証明/しょうめい]ではない。"
+      cons "[出力/しゅつりょく]には[架空/かくう]のsource identityを[付/つ]けず、[保存/ほぞん]・[再/さい]parseを[担当/たんとう]するhostが[新/あたら]しいsnapshotを[割/わ]り[当/あ]てる。" nil
+    cons paragraph
+      cons "MathEvaluationOutcomeは[成功/せいこう]した[評価/ひょうか]の[交換値/こうかんち]であり、ExactにMathExactValue、SymbolicにMathEvaluationRequirementの[列/れつ]を[持/も]つ。"
+      cons "[各要求/かくようきゅう]は[元式/もとしき]のExprRefとMathEvaluationReasonを[保持/ほじ]し、[評価順/ひょうかじゅん]に[並/なら]ぶ。"
+      cons "sumの[反復/はんぷく]で[同/おな]じnodeの[要求/ようきゅう]が[生/しょう]じた[場合/ばあい]も、[出現/しゅつげん]ごとの[順序/じゅんじょ]と[重複/ちょうふく]を[保/たも]つ。" nil
+    cons paragraph
+      cons "[受信側/じゅしんがわ]はschemaとExactの[形状/けいじょう]を[検査/けんさ]し、[指定/してい]された[不変/ふへん]の[式/しき]と[束縛環境/そくばくかんきょう]から[再評価/さいひょうか]する。"
+      cons "[値/あたい]・[要求/ようきゅう]・[理由/りゆう]・[順序/じゅんじょ]が[一致/いっち]しない[結果/けっか]はEvaluationMismatchとして[拒否/きょひ]し、[返却値/へんきゃくち]は[受信値/じゅしんち]ではなく[再評価/さいひょうか]した[結果/けっか]とする。"
+      cons "[受信/じゅしん]から[照合/しょうごう]まで[同/おな]じ[予算/よさん]を[使/つか]い、[停止/ていし]を[再試行/さいしこう]やSymbolicで[消/け]さない。"
+      cons "この[交換値/こうかんち]は[操作/そうさ]の[失敗/しっぱい]やproviderの[通信契約/つうしんけいやく]を[兼/か]ねない。" nil
+    cons paragraph
+      cons "MathEvaluationResultはSuccessにMathEvaluationOutcome、FailureにMathEvaluationFailureを[持/も]つ。"
+      cons "Failureは[失敗/しっぱい]したconstructorのExprRefと、OperandShapeMismatch・NotSquare・DivisionByZero・InvalidRootDegreeの[種別/しゅべつ]を[持/も]つ。"
+      cons "[意味上/いみじょう]の[失敗/しっぱい]も[成功/せいこう]と[同/おな]じく[指定入力/していにゅうりょく]から[再評価/さいひょうか]して[照合/しょうごう]し、[改変/かいへん]された[種別/しゅべつ]や[位置/いち]を[拒否/きょひ]する。"
+      cons "cancel・[資源停止/しげんていし]・[内部不変条件違反/ないぶふへんじょうけんいはん]はFailureに[変換/へんかん]せず、[操作/そうさ]のErrとして[返/かえ]す。"
+      cons "providerの[通信失敗/つうしんしっぱい]や[要求/ようきゅう]identityの[照合/しょうごう]は、この[数値評価/すうちひょうか]の[結果型/けっかがた]とは[別/べつ]の[境界契約/きょうかいけいやく]である。" nil
+    cons paragraph
+      cons "MathSourceArtifactはtextとMathCategoryを[持/も]ち、Expr・Row・DocGuestの[再/さい]parse[入口/いりぐち]を[区別/くべつ]する。"
+      cons "portableのencode/decodeはschema[適合/てきごう]dataを[扱/あつか]うだけで、[生成元/せいせいもと]の[証明/しょうめい]ではない。"
+      cons "verifyは[要求/ようきゅう]の[不変/ふへん]Mathと[選択/せんたく]hostから[同/おな]じBudgetでprefixを[再生成/さいせいせい]し、textとcategoryの[完全一致/かんぜんいっち]を[検査/けんさ]する。"
+      cons "[不一致/ふいっち]をMismatchとして[拒否/きょひ]し、[成功時/せいこうじ]も[返/かえ]すのは[局所生成/きょくしょせいせい]したartifactである。"
+      cons "guestの[意味同等性/いみどうとうせい]、provider[要求/ようきゅう]identity、[保存先/ほぞんさき]snapshot、[失敗応答/しっぱいおうとう]のtransportは[別/べつ]の[契約/けいやく]として[検査/けんさ]する。" nil
     cons paragraph
       cons "lower、check、free_symbols、evaluate、print、render_mathml。"
       cons "[評価結果/ひょうかけっか]、[部分評価/ぶぶんひょうか]の[新式/しんしき]、[元/もと]の[式/しき]を[別値/べつち]として[返/かえ]す。"

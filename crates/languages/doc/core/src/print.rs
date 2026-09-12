@@ -1,5 +1,6 @@
 //! Pure source printing. Guest text is explicit host input; retained source
 //! spans alone are not proof that a guest's current syntax matches its bytes.
+mod depth;
 mod model;
 mod output;
 mod prepare;
@@ -9,6 +10,7 @@ use crate::{
     portable::{self, PortableError},
 };
 use alloc::vec::Vec;
+pub use depth::guest_depths;
 pub use model::*;
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
