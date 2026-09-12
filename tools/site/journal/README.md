@@ -50,8 +50,22 @@ The local CAS is not remote durability. Before calling Pages, the future
 publisher must normally fast-forward push the intent, confirm the protected
 remote ref, and hold the required production concurrency lock. It must also
 interpret unresolved intent, recovery and LKG state before issuing operations.
-Remote push, state interpretation, API reconciliation and branch protection
-configuration are not implemented by this storage module.
+`remote.publish(mirror, expected_origin_url, expected_remote_head, new_head)`
+adds the transport step: it requires a single matching fetch/push URL for origin,
+validates local history and the immediate parent, compares the observed remote
+head, normally pushes the explicit new SHA, then observes the remote head again.
+Tags are not followed even if user Git configuration enables that behavior.
+If the remote already has that exact new commit, it confirms without another
+write, for resumption after a lost acknowledgement. Other changed heads, push
+failures or unknown acknowledgement stop the operation; there is no force or
+automatic retry. Tests use separate local bare servers and mirrors.
+
+The caller still needs the production lock and verified protected remote:
+normal fast-forward push rejects a competing descendant, but this transport
+alone cannot prevent an administrator rollback or prove protection settings.
+`Confirmation` is remote-ref evidence, never deployment permission. State
+interpretation, API reconciliation and branch protection configuration remain
+separate work. No NEPL3 remote pages-state ref is written by these tests.
 
 Tests use real temporary Git repositories, including two racing writers and
 reload after an intent. No test writes the NEPL3 remote or its source worktree.
