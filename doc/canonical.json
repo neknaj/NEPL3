@@ -88,6 +88,14 @@
       "aliases": "doc/migration/aliases/17-math-html.json",
       "route": "docs/spec/17-math-html.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/1"
+    },
+    {
+      "id": "conformance",
+      "source": "doc/spec/11-conformance.nepld",
+      "projection": "doc/spec/11-conformance.md",
+      "aliases": "doc/migration/aliases/11-conformance.json",
+      "route": "docs/spec/11-conformance.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/1"
     }
   ],
   "output_limits": {

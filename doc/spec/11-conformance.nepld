@@ -54,7 +54,7 @@ body
         cons "host[能力/のうりょく]のないWASIでは[明示的/めいじてき]MathML[経路/けいろ]を、[対応/たいおう]hostでは[実/じつ]KaTeX[経路/けいろ]を[実行/じっこう]する。" nil nil
       nil
     cons list unordered
-      cons item none body cons paragraph cons "C01: half-adderを[全/ぜん]4[入力/にゅうりょく]、adderは[小幅/しょうはば]の[全入力/ぜんにゅうりょく]で[確認/かくにん]。" nil nil
+      cons item none body cons paragraph cons "C01: half-adderを[全/ぜん]4[入力/にゅうりょく]、adderは[小幅/こはば]の[全入力/ぜんにゅうりょく]で[確認/かくにん]。" nil nil
       cons item none body cons paragraph
         cons "C02: [複数/ふくすう]stateの[同時更新/どうじこうしん]、testごとのreset、pre-edge[出力/しゅつりょく]を[検査/けんさ]。"
         cons "initialはPreparedNetlistを[受/う]けてslot[順/じゅん]の[初期値/しょきち]を[返/かえ]す。" nil nil
@@ -158,7 +158,7 @@ body
       cons "[消費範囲/しょうひはんい]の[単調性/たんちょうせい]。"
       cons "Origin DAGの[閉路/へいろ]なし。"
       cons "[可逆/かぎゃく]なSourceMapだけがrenameを[許/ゆる]す。"
-      cons "[小幅回路/しょうはばかいろ]の[原式/げんしき]とNORの[一致/いっち]。" nil
+      cons "[小幅回路/こはばかいろ]の[原式/げんしき]とNORの[一致/いっち]。" nil
     cons paragraph
       cons "fuzz[入力/にゅうりょく]でも[上限/じょうげん]を[共有/きょうゆう]する。"
       cons "[大量/たいりょう]diagnosticを[発生/はっせい]させる[入力/にゅうりょく]で[無制限/むせいげん]allocしない。"
