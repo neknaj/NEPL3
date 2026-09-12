@@ -1,4 +1,5 @@
 //! Shapes of exact evaluation values, independent of source notation.
+pub mod arithmetic;
 use crate::model::MathExactValue;
 use nepl3_core::budget::{Budget, Resource, StopReason};
 
