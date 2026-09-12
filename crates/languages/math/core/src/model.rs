@@ -17,6 +17,25 @@ macro_rules! references {
 }
 references!(ExprRef, RowRef, DocGuestRef, EmbedRef);
 
+/// Preorder occurrence numbers distinguish shared nodes visited in different scopes.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathBinding {
+    pub occurrence: u64,
+    pub node: ExprRef,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathSymbolUse {
+    pub occurrence: u64,
+    pub node: ExprRef,
+    /// Binder occurrence, not an arena node ID. None denotes a free symbol.
+    pub binding: Option<u64>,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MathBindings {
+    pub definitions: Vec<MathBinding>,
+    pub uses: Vec<MathSymbolUse>,
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum MathRoot {
     Expr(ExprRef),
