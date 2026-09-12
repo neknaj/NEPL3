@@ -244,7 +244,8 @@ body
       cons "[要求/ようきゅう]は[閉包/へいほう]を[含/ふく]むMathSyntax、[明示選択/めいじせんたく]したDoc schema、MathPrintedGuest[列/れつ]を[持/も]つ。"
       cons "guest[応答/おうとう]は[全体/ぜんたい]syntaxのdigest、guest[閉包/へいほう]のdigest、EmbedRef、textを[含/ふく]む。"
       cons "identity[取得/しゅとく]とprint[実行/じっこう]はcanonical[値/ち]から[別々/べつべつ]にdigestを[求/もと]め、[過去/かこ]の[検査/けんさ]で[予算/よさん]を[支払済/しはらいず]みとはしない。"
-      cons "[未選択/みせんたく]、[異/こと]なるschemaやSentence[以外/いがい]のcategory、[欠落/けつらく]・[重複/じゅうふく]・[空/から]のguest、digest[不一致/ふいっち]をInvalidで[拒否/きょひ]する。"
+      cons "[未選択/みせんたく]、[選択/せんたく]したschemaとの[不一致/ふいっち]、[欠落/けつらく]・[重複/じゅうふく]・[空/から]のguest、digest[不一致/ふいっち]をInvalidで[拒否/きょひ]する。"
+      cons "Sentence[以外/いがい]のguest categoryは、identity[計算前/けいさんまえ]の[構造検査/こうぞうけんさ]で[入力境界/にゅうりょくきょうかい]のErrとして[拒否/きょひ]し、Invalid[結果/けっか]へ[変換/へんかん]しない。"
       cons "Completeだけが[完全/かんぜん]なartifactを[返/かえ]し、[停止/ていし]は[元/もと]のStopReasonを[保持/ほじ]したStoppedとなる。"
       cons "[構造不正/こうぞうふせい]は[入力境界/にゅうりょくきょうかい]のErrであり、[受信/じゅしん]した[結果/けっか]dataだけから[実行/じっこう]proofや[遠隔/えんかく]Usageを[信用/しんよう]しない。"
       cons "[生成/せいせい]と[停止後/ていしご]のtransport encodeは[別/べつ]の[処理/しょり]であり、print[途中/とちゅう]のBudgetを[交換/こうかん]して[成功/せいこう]させない。" nil
