@@ -1,0 +1,85 @@
+[
+  {
+    "command": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_stage.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-O",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/site",
+      "-p",
+      "test_stage.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-I",
+      "C:\\projects\\NEPL3-doc-canonical-conformance\\tools\\site\\stage.py",
+      "C:\\Users\\bem\\AppData\\Local\\Temp\\tmpbjqsdj67\\source.tar",
+      "C:\\Users\\bem\\AppData\\Local\\Temp\\tmpbjqsdj67\\artifact.tar",
+      "--expected-tar",
+      "cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9",
+      "--expected-manifest",
+      "39000dd5b7aad48deae97741c5b077b44a242a0badb7b30e81b3c1c26f301446"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-I",
+      "C:\\projects\\NEPL3-doc-canonical-conformance\\tools\\site\\stage.py",
+      "C:\\Users\\bem\\AppData\\Local\\Temp\\tmpbjqsdj67\\source.tar",
+      "C:\\Users\\bem\\AppData\\Local\\Temp\\tmpbjqsdj67\\artifact.tar",
+      "--expected-tar",
+      "cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9",
+      "--expected-manifest",
+      "39000dd5b7aad48deae97741c5b077b44a242a0badb7b30e81b3c1c26f301446"
+    ],
+    "exit_code": 1
+  },
+  {
+    "command": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-I",
+      "C:\\projects\\NEPL3-doc-canonical-conformance\\tools\\site\\stage.py",
+      "C:\\Users\\bem\\AppData\\Local\\Temp\\tmpbjqsdj67\\source.tar",
+      "C:\\Users\\bem\\AppData\\Local\\Temp\\tmpbjqsdj67\\alias\\artifact.tar",
+      "--expected-tar",
+      "cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9",
+      "--expected-manifest",
+      "39000dd5b7aad48deae97741c5b077b44a242a0badb7b30e81b3c1c26f301446"
+    ],
+    "exit_code": 1
+  },
+  {
+    "command": [
+      "C:\\Users\\bem\\miniforge3\\python.exe",
+      "-I",
+      "C:\\projects\\NEPL3-doc-canonical-conformance\\tools\\site\\stage.py",
+      "C:\\Users\\bem\\AppData\\Local\\Temp\\tmpbjqsdj67\\source.tar",
+      "C:\\Users\\bem\\AppData\\Local\\Temp\\tmpbjqsdj67\\invalid.tar",
+      "--expected-tar",
+      "0000000000000000000000000000000000000000000000000000000000000000",
+      "--expected-manifest",
+      "39000dd5b7aad48deae97741c5b077b44a242a0badb7b30e81b3c1c26f301446"
+    ],
+    "exit_code": 1
+  }
+]

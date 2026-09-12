@@ -1,0 +1,62 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 83a5c2c..cd5f6f8 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -302,6 +302,28 @@ jobs:
+           python -m unittest discover -s tools/site -p 'test_*.py'
+           SITE_MANIFEST=$(python -c 'import json; print(json.load(open("dist/doc-browser/site-results.json"))["manifest_sha256"])')
+           python tools/site/payload.py dist/doc-browser/site dist/doc-browser/pages.tar --manifest-sha256 "$SITE_MANIFEST" > dist/doc-browser/pages-receipt.json
++      - name: Stage the original Pages tar without rebuilding
++        run: |
++          mkdir -p dist/pages-payload
++          TAR_SHA=$(python -c 'import json; print(json.load(open("dist/doc-browser/pages-receipt.json"))["tar_sha256"])')
++          MANIFEST_SHA=$(python -c 'import json; print(json.load(open("dist/doc-browser/pages-receipt.json"))["manifest_sha256"])')
++          python -I tools/site/stage.py dist/doc-browser/pages.tar dist/pages-payload/artifact.tar --expected-tar "$TAR_SHA" --expected-manifest "$MANIFEST_SHA" > dist/doc-browser/pages-stage.json
++      - name: Upload the single original Pages payload
++        id: pages-payload
++        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
++        with:
++          name: github-pages-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
++          path: dist/pages-payload/artifact.tar
++          if-no-files-found: error
++          retention-days: 14
++      - name: Preserve Pages upload identity
++        env:
++          PAGES_ARTIFACT_ID: ${{ steps.pages-payload.outputs.artifact-id }}
++          PAGES_ARTIFACT_DIGEST: ${{ steps.pages-payload.outputs.artifact-digest }}
++          PAGES_RUN_ID: ${{ github.run_id }}
++          PAGES_RUN_ATTEMPT: ${{ github.run_attempt }}
++        run: |
++          python -c 'import json,os,pathlib; pathlib.Path("dist/doc-browser/pages-upload.json").write_text(json.dumps({"version":1,"artifact_id":int(os.environ["PAGES_ARTIFACT_ID"]),"artifact_digest":os.environ["PAGES_ARTIFACT_DIGEST"],"run_id":int(os.environ["PAGES_RUN_ID"]),"attempt":int(os.environ["PAGES_RUN_ATTEMPT"]),"publication_verified":False},sort_keys=True)+"\n",encoding="utf-8")'
+       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+         if: ${{ always() }}
+         with:
+diff --git a/tools/site/README.md b/tools/site/README.md
+index 18c04a3..385fec2 100644
+--- a/tools/site/README.md
++++ b/tools/site/README.md
+@@ -69,3 +69,24 @@ python -O -m unittest discover -s tools/site -p 'test_artifact*.py' -v
+ The command accepts bounded local inputs; it does not download credentials or
+ enforce an OS process memory/time limit. Execute it within the bounded publishing
+ job. Formal acceptance and actual Pages deployment remain separate.
++
++## Upload the already frozen tar
++
++CI runs `stage.py` after site/browser checks and deterministic packaging. It
++validates the raw tar and manifest pins, then writes the original bytes to the
++new `dist/pages-payload/artifact.tar`. Existing outputs are refused. A write
++failure is nonzero and may leave a partial file, which must never be uploaded.
++No HTML generation, filesystem extraction or replacement tar serialization is
++used for the output. Only this file enters the separate pinned upload action.
++
++The Pages upload is named `github-pages-<commit>-<run-id>-<attempt>`. Its upload
++ID and outer archive digest are saved in `pages-upload.json` in the diagnostic
++artifact. The outer upload digest differs from the original tar digest; preserve
++both. The upload remains a candidate until authenticated download verification,
++all required CI, freshness, writer state and publication prerequisites pass.
++Uploading from a PR has no Pages mutation permission and does not deploy it.
++
++The staging shape follows the official
++[upload-pages-artifact action](https://github.com/actions/upload-pages-artifact/blob/main/action.yml),
++which uploads a single `artifact.tar` with `actions/upload-artifact`. NEPL3 stages
++its previously verified tar instead of invoking the action's tar rebuild step.
