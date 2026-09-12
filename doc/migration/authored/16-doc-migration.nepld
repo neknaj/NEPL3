@@ -77,7 +77,7 @@ body
           cons text "、"
           cons ruby text "機械" text "きかい"
           cons text "データは "
-          cons code "design/doc-inventory.json"
+          cons code "doc/migration/generated/doc-inventory.json"
           cons text " に"
           cons ruby text "記録" text "きろく"
           cons text "した。"

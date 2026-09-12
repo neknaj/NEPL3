@@ -4,7 +4,7 @@
 
 ## 監査した原本と分類
 
-baselineは `25a096bc183c2b71200902884084cd4082d0aae3`。全trackedファイルを列挙し、57 Markdownページ、10 Rust source、その他の機械入力・履歴・assetを包含理由または除外理由付きで分類した。各ページとRust sourceのpath・SHA-256・byte長、および5つのDoc関連契約のSHA-256は [design/doc-inventory.json](../design/doc-inventory.json) にある。
+baselineは `25a096bc183c2b71200902884084cd4082d0aae3`。全trackedファイルを列挙し、57 Markdownページ、10 Rust source、その他の機械入力・履歴・assetを包含理由または除外理由付きで分類した。各ページとRust sourceのpath・SHA-256・byte長、および5つのDoc関連契約のSHA-256は [doc/migration/generated/doc-inventory.json](../doc/migration/generated/doc-inventory.json) にある。
 
 | 分類 | 件数 | 正本と扱い |
 | --- | ---: | --- |
@@ -88,7 +88,7 @@ cargo run --locked -p nepl3-tools -- doc-inventory --check-current
 cargo run --locked -p nepl3-tools -- doc-inventory --write --commit 25a096bc183c2b71200902884084cd4082d0aae3
 ```
 
-`--check` は完全な40桁commitからGit blobを再読込し、ページ欠落、digest、構造、分類の変更を保存inventoryと照合する。その後、現在のGit-visible Markdown、Rust source、Doc関連契約について追加・変更・削除を出力する。baselineが正しければcurrent deltaがあっても成功するが、現在の網羅性は未確認と明記する。`--check-current` はdeltaがあれば失敗する。通常のrepository `check` は前者を実行する。
+`--check` は完全な40桁commitからGit blobを再読込し、ページ欠落、digest、構造、分類の変更を保存inventoryと照合する。その後、現在のGit-visible Markdown、Rust source、Doc関連契約について追加・変更・削除を出力する。baselineが正しければcurrent deltaがあっても成功するが、現在の網羅性は未確認と明記する。`--check-current` はdeltaがあれば失敗する。これらは明示的な歴史監査であり、通常のrepository `check` は実行しない。
 
 この変更で追加した監査文書、訂正した仕様、tools、生成taskはbaselineに存在しないか内容が異なるので、現在のstrict確認は失敗するのが正しい。新しいAPI判断で現在の網羅性を主張する前に、対象の文書・契約をcommitし、そのcommitで `--write`、差分の独立レビュー、`--check-current` を実行する。新baselineを記録するJSON自身はMarkdown/Rust/API仕様のcurrent比較対象ではないため、自己hash更新を要求しない。生成taskは過去commitのbyte列を読み、現在のgeneratorを動かしてbaselineを書き換えない。
 

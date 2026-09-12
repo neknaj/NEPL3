@@ -58,7 +58,6 @@ pub fn check(root: &Path) -> Result<()> {
     contract::doc_html::check(root)?;
     dependency::check(root, &status.implemented_crates)?;
     task::generate(root, &tasks, &status, false)?;
-    documentation::check(root, false)?;
     println!(
         "Repository checks passed: {files} files, {} tasks, {} acceptance status entries. Runtime acceptance was not run.",
         tasks.tasks.len(),
