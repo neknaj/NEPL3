@@ -2,6 +2,13 @@
 
 ## 2026年9月12日の再開（現在）
 
+第02章のallocation増加後のHTML再実行はWorkLimit（499,999,997 / 500,000,000）で停止。
+Nodes19,497,622、Allocation1,032,057,020、Output480であり、出力dirは生成されていない。
+次の新規操作ではHTML Work600M・Nodes24M・Allocation1.25Bを選択する。Nodesの変更は
+集合拡大に対する有限の余裕であり、NodeLimitが発生したという記録ではない。両停止の
+証拠を残し、Markdown/core/per-pageの予算は維持する。第06章のCIで検出した文書監査testの
+Ruby非対応は独立レビュー・不正例試験で修正し、PR103の必須CIを再実行している。
+
 第02章を追加した14章集合ではMarkdownの初回生成は成功したが、HTMLは
 AllocationLimit（999,999,997 / 1,000,000,000）で停止した。Work427,925,810、
 Nodes18,233,447、Output384は停止時点の使用量であり、完成HTMLの費用ではない。
