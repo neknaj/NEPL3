@@ -62,3 +62,22 @@ replaced, and a real child killed at deadline. They prove HTTP parsing and
 process termination, not live GitHub authentication or TLS interoperability.
 Default TLS behavior follows the [Python HTTPSConnection contract](https://docs.python.org/3/library/http.client.html#http.client.HTTPSConnection).
 Run `python -m unittest discover -s tools/site -p test_transport.py`.
+
+## Deployment wait
+
+`poll.wait(receipt, token, timeout=600)` connects status transport to bounded
+observation. It returns a typed Report with the deployment ID, stop reason and
+original successful HTTP responses. Pending replies wait five seconds (or the
+remaining budget); each subprocess receives at most ten seconds and never a
+fresh budget beyond the remaining wait. At most 128 responses are retained.
+Unknown status, terminal failure and transport failure stop without retries.
+They require publisher reconciliation. Expiration after a late `succeed` keeps
+that response as evidence but returns Deadline, not Succeeded.
+
+This wait performs no cancel/deploy/rollback and does not promote LKG. A
+Succeeded report is one input to the publisher's public-identity/smoke/journal
+checks, never proof of current publication. Overall process startup/cleanup
+limits remain as described above. Deterministic time tests exercise deadline
+edges without waiting 600 real seconds; the production entry uses monotonic
+time, real sleep and the bounded transport.
+Run `python -m unittest discover -s tools/site -p test_poll.py`.
