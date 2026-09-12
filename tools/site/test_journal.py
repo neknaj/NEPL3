@@ -22,6 +22,18 @@ def initialize(path, bare=True):
 
 
 class JournalTests(unittest.TestCase):
+    def test_shallow_boundary_cannot_hide_an_invalid_parent(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory).resolve() / 'journal.git'; initialize(repo)
+            first = append(repo, None, event(), b'{}')
+            tree = store.git(repo, 'rev-parse', first + '^{tree}').decode().strip()
+            second = store.git(repo, 'commit-tree', tree, '-p', first, data=b'No event added\n').decode().strip()
+            store.git(repo, 'update-ref', store.REF, second, first)
+            with self.assertRaisesRegex(ValueError, 'history count'): load(repo)
+            (repo / 'shallow').write_text(second + '\n', encoding='ascii')
+            with self.assertRaisesRegex(ValueError, 'shallow journal'): load(repo)
+            with self.assertRaisesRegex(ValueError, 'shallow journal'): append(repo, second, event(), b'{}')
+
     def test_fast_forward_rewriting_old_event_is_rejected_on_reload(self):
         with tempfile.TemporaryDirectory() as directory:
             repo = Path(directory).resolve() / 'journal.git'; initialize(repo)

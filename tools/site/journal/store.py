@@ -30,6 +30,7 @@ def git(repo, *args, data=None, absent=False):
 def repository(repo):
     checked(git(repo, 'rev-parse', '--is-bare-repository').strip() == b'true', 'journal requires a bare mirror')
     checked(git(repo, 'rev-parse', '--show-object-format').strip() == b'sha1', 'unsupported Git object format')
+    checked(git(repo, 'rev-parse', '--is-shallow-repository').strip() == b'false', 'shallow journal history')
     checked(git(repo, 'symbolic-ref', '-q', REF, absent=True) is None, 'journal ref must not be symbolic')
 
 
