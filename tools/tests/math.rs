@@ -16,6 +16,102 @@ fn err(v: impl std::fmt::Debug) -> String {
 }
 
 #[test]
+fn exact_matrix_operations_match_across_ndf_boundary() -> Result<(), String> {
+    use nepl3_math_core::{
+        exact::{self, arithmetic},
+        model::MathExactValue,
+        number, portable,
+    };
+    let compiled = compiled()?;
+    let registry = &compiled.doc.registry;
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(registry, &sources, &mut admission).map_err(err)?;
+    let mut values = Vec::new();
+    for n in [1_i64, 2, 3, 4] {
+        values.push(
+            number::ratio(
+                &nepl3_core::value::Integer::from(n),
+                &nepl3_core::value::Integer::from(1_i64),
+                &mut budget(),
+            )
+            .map_err(err)?,
+        );
+    }
+    let native = MathExactValue::Matrix {
+        rows: 2,
+        cols: 2,
+        values,
+    };
+    let raw =
+        portable::exact_to_value(&native, registry, &mut codec, &mut budget()).map_err(err)?;
+    let bytes = nepl3_wire::encode(&raw, &mut budget()).map_err(err)?;
+    let decoded = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+    let remote =
+        portable::exact_from_value(&decoded, registry, &mut codec, &mut budget()).map_err(err)?;
+    let checked_native = exact::check(&native, &mut budget()).map_err(err)?;
+    let checked_remote = exact::check(&remote, &mut budget()).map_err(err)?;
+    let native_det = arithmetic::determinant(&checked_native, &mut budget()).map_err(err)?;
+    let remote_det = arithmetic::determinant(&checked_remote, &mut budget()).map_err(err)?;
+    // Independent determinant: 1*4 - 2*3 = -2.
+    assert_eq!(
+        native_det,
+        MathExactValue::Scalar {
+            value: number::ratio(
+                &nepl3_core::value::Integer::from(-2_i64),
+                &nepl3_core::value::Integer::from(1_i64),
+                &mut budget()
+            )
+            .map_err(err)?
+        }
+    );
+    assert_eq!(remote_det, native_det);
+    for (native_result, remote_result) in [
+        (native_det, remote_det),
+        (
+            arithmetic::transpose(&checked_native, &mut budget()).map_err(err)?,
+            arithmetic::transpose(&checked_remote, &mut budget()).map_err(err)?,
+        ),
+        (
+            arithmetic::multiply(&checked_native, &checked_native, &mut budget()).map_err(err)?,
+            arithmetic::multiply(&checked_remote, &checked_remote, &mut budget()).map_err(err)?,
+        ),
+        (
+            arithmetic::compare(
+                &checked_native,
+                &checked_native,
+                arithmetic::Comparison::Equal,
+                &mut budget(),
+            )
+            .map_err(err)?,
+            arithmetic::compare(
+                &checked_remote,
+                &checked_remote,
+                arithmetic::Comparison::Equal,
+                &mut budget(),
+            )
+            .map_err(err)?,
+        ),
+    ] {
+        let expected =
+            portable::exact_to_value(&native_result, registry, &mut codec, &mut budget())
+                .map_err(err)?;
+        let actual = portable::exact_to_value(&remote_result, registry, &mut codec, &mut budget())
+            .map_err(err)?;
+        assert_eq!(
+            nepl3_wire::encode(&expected, &mut budget()).map_err(err)?,
+            nepl3_wire::encode(&actual, &mut budget()).map_err(err)?
+        );
+        assert_eq!(
+            portable::exact_from_value(&actual, registry, &mut codec, &mut budget())
+                .map_err(err)?,
+            native_result
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn evaluation_environment_ndf_rechecks_name_order() -> Result<(), String> {
     use nepl3_math_core::{environment::EnvironmentError, model::*, portable};
     let compiled = compiled()?;
