@@ -36,6 +36,20 @@ class StorageReceipt:
     assets: tuple[Asset, ...]
 
 
+def recover(raw, *, expected_manifest, owner, repository, release_id, tag, assets, downloads):
+    """Validate storage and the original tar; return bytes eligible for staging.
+
+    Expected pins must come from the publisher's validated LKG journal record.
+    This does not authorize deployment or interpret the saved smoke report.
+    """
+    from recovery import verify as verify_payload
+    receipt = verify(raw, owner=owner, repository=repository, release_id=release_id,
+                     tag=tag, assets=assets, downloads=downloads)
+    payload_pin = next(asset for asset in receipt.assets if asset.name == "payload.tar")
+    payload = verify_payload(downloads["payload.tar"], payload_pin.sha256, expected_manifest)
+    return receipt, payload
+
+
 def verify(raw, *, owner, repository, release_id, tag, assets, downloads):
     identifier(release_id)
     for value in (owner, repository):

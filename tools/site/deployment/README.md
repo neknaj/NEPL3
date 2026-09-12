@@ -157,3 +157,13 @@ before a later deployment because a whole release can still be deleted.
 
 Metadata fields follow the [GitHub releases REST contract](https://docs.github.com/en/rest/releases/releases).
 Run `python -m unittest discover -s tools/site -p test_release.py`.
+
+`release.recover` connects that storage check to `recovery.verify`: the pinned
+payload asset digest must match the downloaded bytes, and the original raw tar
+must satisfy the canonical archive, exact file closure and independently pinned
+manifest checks. It returns the storage receipt and the unchanged original tar
+bytes for staging. A matching release digest for arbitrary bytes is insufficient.
+The caller supplies pins from its validated LKG journal record. Saved identity
+and smoke semantics, authenticated download, current-publication reconciliation
+and deployment authorization remain publisher responsibilities; this function
+does not promote the release to LKG or deploy it.

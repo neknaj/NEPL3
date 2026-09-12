@@ -1,12 +1,47 @@
 import copy
 import json
+import gzip
+from pathlib import Path
 import unittest
 
-from deployment.release import Asset, verify
+from deployment.release import Asset, verify, recover
 from payload import digest
 
 
 class ReleaseTests(unittest.TestCase):
+    def stored_payload(self, payload):
+        metadata, kwargs = self.fixture()
+        kwargs["downloads"]["payload.tar"] = payload
+        kwargs["assets"] = tuple(Asset(a.name, a.asset_id, len(kwargs["downloads"][a.name]),
+                                      digest(kwargs["downloads"][a.name])) for a in kwargs["assets"])
+        for row, asset in zip(metadata["assets"], kwargs["assets"]):
+            row.update(size=asset.size, digest="sha256:" + asset.sha256)
+        return json.dumps(metadata).encode(), kwargs
+
+    def test_recover_returns_original_real_doc_tar_after_both_checks(self):
+        root = Path(__file__).resolve().parents[2]
+        data = gzip.decompress((root / "conformance/results/doc-pages-payload/final-review/identical-tars.tar.gz.fixture").read_bytes())
+        raw, kwargs = self.stored_payload(data)
+        # Previously archived 14-chapter site; identity predates this adapter.
+        manifest = "39000dd5b7aad48deae97741c5b077b44a242a0badb7b30e81b3c1c26f301446"
+        receipt, payload = recover(raw, expected_manifest=manifest, **kwargs)
+        self.assertEqual(receipt.release_id, 7)
+        self.assertIs(payload.data, data)
+        self.assertEqual(payload.files, 22)
+        self.assertEqual(payload.tar_sha256, "cc053272f49f8d4d79fc756560df5401bfdc22b8c1e1a1177ae0250cdc265cd9")
+        with self.assertRaisesRegex(ValueError, "manifest digest"):
+            recover(raw, expected_manifest="0" * 64, **kwargs)
+        changed = json.loads(raw); changed["immutable"] = False
+        with self.assertRaisesRegex(ValueError, "immutable"):
+            recover(json.dumps(changed).encode(), expected_manifest=manifest, **kwargs)
+
+    def test_matching_storage_hash_does_not_make_invalid_tar_recoverable(self):
+        import tarfile
+        raw, kwargs = self.stored_payload(b"not a tar archive")
+        verify(raw, **kwargs)  # Storage integrity alone is insufficient.
+        with self.assertRaises(tarfile.ReadError):
+            recover(raw, expected_manifest="0" * 64, **kwargs)
+
     def fixture(self):
         downloads = {"payload.tar": b"original bytes", "identity.json": b"{}", "smoke.json": b'{"result":"passed"}'}
         assets = tuple(Asset(name, i+10, len(data), digest(data)) for i, (name, data) in enumerate(downloads.items()))
