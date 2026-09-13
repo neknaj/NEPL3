@@ -29,3 +29,6 @@ workspace = true
 
 [dependencies.nepl3-markup]
 workspace = true
+
+[dev-dependencies]
+nepl3-math-mathml.workspace = true

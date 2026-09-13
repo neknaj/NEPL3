@@ -42,6 +42,17 @@ fn matches(
     Ok(true)
 }
 use crate::model::LinkTarget;
+fn inspect_request<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    r: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<DocPreparationPlan, PreparationError<'a, C::Error>> {
+    match document.value.root {
+        crate::model::DocRoot::Sentence(_) => prepare::inspect_sentence(document, r, c, b),
+        _ => prepare::inspect(document, r, c, b),
+    }
+}
 pub fn plan_to_value<'a, C: FoundationValueCodec>(
     plan: &DocPreparationPlan,
     document: &'a DocumentSyntax,
@@ -49,7 +60,7 @@ pub fn plan_to_value<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<NdfValue, PreparationError<'a, C::Error>> {
-    let actual = prepare::inspect(document, r, c, b)?;
+    let actual = inspect_request(document, r, c, b)?;
     if !matches(&actual, plan, b)? {
         return Err(PreparationError::Boundary(PortableError::Shape));
     }
@@ -66,7 +77,7 @@ pub fn plan_from_value<'a, C: FoundationValueCodec>(
 ) -> Result<DocPreparationPlan, PreparationError<'a, C::Error>> {
     super::text::check_type(value, "DocPreparationPlan", r, b)?;
     let plan = DocPreparationPlan::read(value, schema(r)?, c, b)?;
-    let actual = prepare::inspect(document, r, c, b)?;
+    let actual = inspect_request(document, r, c, b)?;
     if !matches(&actual, &plan, b)? {
         return Err(PreparationError::Boundary(PortableError::Shape));
     }

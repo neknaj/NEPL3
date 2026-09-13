@@ -33,6 +33,7 @@ pub enum LabelError<'a> {
     Stopped(StopReason),
     Structure(StructureError),
     ExpectedArticle,
+    ExpectedSentence,
     DuplicateOccurrence {
         definition: LabelSite<'a>,
         paths: LabelOccurrencePaths,
@@ -62,6 +63,20 @@ pub struct CheckedLabels<'a> {
     document: &'a DocumentSyntax,
     definitions: Vec<LabelSite<'a>>,
     references: Vec<ResolvedLabel<'a>>,
+}
+/// Labels local to one standalone Sentence. This cannot be used as an
+/// Article-label proof, and does not import labels from a containing document.
+pub struct CheckedSentenceLabels<'a>(CheckedLabels<'a>);
+impl<'a> CheckedSentenceLabels<'a> {
+    pub fn document(&self) -> &'a DocumentSyntax {
+        self.0.document()
+    }
+    pub fn definitions(&self) -> &[LabelSite<'a>] {
+        self.0.definitions()
+    }
+    pub fn references(&self) -> &[ResolvedLabel<'a>] {
+        self.0.references()
+    }
 }
 impl<'a> CheckedLabels<'a> {
     pub fn document(&self) -> &'a DocumentSyntax {
@@ -100,13 +115,36 @@ pub fn check<'a>(
     let DocRoot::Article(root) = document.value.root else {
         return Err(LabelError::ExpectedArticle);
     };
-    occurrences::check(document, structure.shape().postorder(), root, b)?;
+    collect(document, structure.shape().postorder(), root.0, b)
+}
+/// Validate an independently rendered Sentence with its own label namespace.
+/// Forward references and repeated display occurrences obey the same rules as
+/// Article-local labels; references into a surrounding Article are unresolved.
+pub fn check_sentence<'a>(
+    document: &'a DocumentSyntax,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<CheckedSentenceLabels<'a>, LabelError<'a>> {
+    let structure = document.validate_structure(registry, b, admission)?;
+    let DocRoot::Sentence(root) = document.value.root else {
+        return Err(LabelError::ExpectedSentence);
+    };
+    collect(document, structure.shape().postorder(), root.0, b).map(CheckedSentenceLabels)
+}
+fn collect<'a>(
+    document: &'a DocumentSyntax,
+    order: &[usize],
+    root: u64,
+    b: &mut Budget,
+) -> Result<CheckedLabels<'a>, LabelError<'a>> {
+    occurrences::check(document, order, root, b)?;
     let mut definitions: Vec<LabelSite<'a>> = Vec::new();
     let mut unresolved = Vec::new();
     b.charge(Resource::AllocationUnits, document.value.nodes.len() as u64)?;
     let mut visited = vec![false; document.value.nodes.len()];
     let mut pending = Vec::new();
-    push(&mut pending, root.0 as usize, b)?;
+    push(&mut pending, root as usize, b)?;
     while let Some(index) = pending.pop() {
         b.charge(Resource::Work, 1)?;
         if visited[index] {

@@ -9,7 +9,10 @@ pub mod schema;
 use alloc::{string::String, vec::Vec};
 use nepl3_core::{budget::StopReason, source::Digest};
 use nepl3_markup::html::{HtmlError, HtmlRequest};
-pub use prepare::{LocalPreparationError, PreparedLocalArticle, prepare_local};
+pub use prepare::{
+    LocalPreparationError, PreparedLocalArticle, PreparedLocalSentence, prepare_local,
+    prepare_local_sentence,
+};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ParallelMode {
@@ -63,7 +66,7 @@ impl From<HtmlError> for RenderError {
         }
     }
 }
-pub use build::render;
+pub use build::{render, render_sentence};
 
 /// Fixed backend resource; a future document shell includes these exact bytes.
 pub const STYLESHEET: &str = include_str!("../assets/doc.css");
