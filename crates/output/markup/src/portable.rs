@@ -1,5 +1,6 @@
-//! Closed NDF value boundary for HTML fragments. A caller must compare the
+//! Closed NDF value boundaries for HTML and MathML fragments. A caller must compare the
 //! policy with its independent backend resource catalog before actual use.
+pub mod mathml;
 mod value;
 use crate::html::{HtmlError, HtmlRequest, validate};
 use nepl3_core::{
@@ -14,6 +15,7 @@ pub enum PortableError<E> {
     Stopped(StopReason),
     Schema(SchemaError),
     Html(HtmlError),
+    MathMl(crate::mathml::Error),
     Shape,
     Foundation(E),
 }
@@ -45,13 +47,21 @@ fn schema<E>(r: &SchemaRegistry) -> Result<&SchemaRef, PortableError<E>> {
     r.selected("nepl3.markup", 2)
         .ok_or(SchemaError::UnknownSchema.into())
 }
-fn check<E>(r: &SchemaRegistry, v: &NdfValue, b: &mut Budget) -> Result<(), PortableError<E>> {
-    b.charge(Resource::AllocationUnits, 24)?;
+fn check_named<E>(
+    r: &SchemaRegistry,
+    name: &str,
+    v: &NdfValue,
+    b: &mut Budget,
+) -> Result<(), PortableError<E>> {
+    b.charge(
+        Resource::AllocationUnits,
+        ("nepl3.markup".len() + name.len()) as u64,
+    )?;
     r.validate(
         &TypeDescriptor::Named(TypeRef {
             package: "nepl3.markup".into(),
             revision: 2,
-            name: "HtmlRequest".into(),
+            name: name.into(),
         }),
         v,
         b,
@@ -66,7 +76,7 @@ pub fn to_value<C: FoundationValueCodec>(
 ) -> Result<NdfValue, PortableError<C::Error>> {
     validate(&request.fragment, request.slot, &request.policy, b)?;
     let value = request.put(schema(r)?, c, b)?;
-    check(r, &value, b)?;
+    check_named(r, "HtmlRequest", &value, b)?;
     Ok(value)
 }
 pub fn from_value<C: FoundationValueCodec>(
@@ -75,7 +85,7 @@ pub fn from_value<C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<HtmlRequest, PortableError<C::Error>> {
-    check(r, value, b)?;
+    check_named(r, "HtmlRequest", value, b)?;
     let request = HtmlRequest::read(value, schema(r)?, c, b)?;
     validate(&request.fragment, request.slot, &request.policy, b)?;
     Ok(request)
