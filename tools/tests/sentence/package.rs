@@ -218,6 +218,30 @@ fn sentence_surface_compiles_from_production_grammar_with_own_root_and_payload()
                             return Ok(tree.tree().clone());
                         }
                         let projection = projection.map_err(err)?;
+                        let empty = SourceStore::default();
+                        let mut codec =
+                            FoundationCodec::new(resolved.registry(), &empty, admission)
+                                .map_err(err)?;
+                        let syntax = nepl3_sentence_core::lower::presentation::sentence(
+                            tree.syntax(),
+                            &root.schema,
+                            resolved.registry(),
+                            &mut codec,
+                            budget,
+                        )
+                        .map_err(err)?;
+                        assert_eq!(syntax.value, projection.value);
+                        assert_eq!(syntax.sources, bundle.sources);
+                        assert_eq!(syntax.origins, bundle.origins);
+                        assert_eq!(syntax.source_maps, bundle.source_maps);
+                        assert_eq!(syntax.views.len(), bundle.tokens.len());
+                        if input.starts_with("sentence cons ruby text \"漢\"") {
+                            assert_eq!(
+                                nepl3_sentence_core::literal::print(&syntax.value, budget)
+                                    .map_err(err)?,
+                                "\"[漢/かん]{語/note}\""
+                            );
+                        }
                         let output = nepl3_sentence_core::print::prefix(&projection.value, budget)
                             .map_err(err)?;
                         assert_eq!(output, input.trim_end());
@@ -248,6 +272,45 @@ fn sentence_surface_compiles_from_production_grammar_with_own_root_and_payload()
                                 admission
                             ),
                             Err(nepl3_sentence_core::lower::Error::Unsupported(_))
+                        ));
+                        let empty = SourceStore::default();
+                        let mut codec =
+                            FoundationCodec::new(resolved.registry(), &empty, admission)
+                                .map_err(err)?;
+                        let sentence = nepl3_sentence_core::lower::presentation::sentence(
+                            tree.syntax(),
+                            &root.schema,
+                            resolved.registry(),
+                            &mut codec,
+                            budget,
+                        )
+                        .map_err(err)?;
+                        assert_eq!(
+                            nepl3_sentence_core::literal::print(&sentence.value, budget)
+                                .map_err(err)?,
+                            input
+                        );
+                        assert_eq!(sentence.sources[0], source);
+                        let mut tampered = bundle.clone();
+                        let token = tampered.nodes[tampered.root.0 as usize]
+                            .token
+                            .ok_or("literal token")?;
+                        tampered.tokens[token.0 as usize].views.elements.clear();
+                        tampered.tokens[token.0 as usize].views.roots.clear();
+                        // Both views are independently valid, but only the
+                        // original one belongs to this literal's reader result.
+                        let changed = tampered
+                            .validate(resolved.registry(), budget)
+                            .map_err(err)?;
+                        assert!(matches!(
+                            nepl3_sentence_core::lower::literal::sentence(
+                                &changed,
+                                &root.schema,
+                                resolved.registry(),
+                                &mut codec,
+                                budget
+                            ),
+                            Err(nepl3_sentence_core::lower::literal::Error::TokenMismatch(_))
                         ));
                     }
                     Ok(tree.tree().clone())

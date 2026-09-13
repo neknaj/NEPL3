@@ -171,8 +171,23 @@ ProjectionはSentenceValueと入力syntax nodeから意味nodeへの局所対応
 list constructorやBuiltinText operandは独立した意味nodeではないため対応値はNoneとする。
 Source/Origin/Viewを持つ入力構文木は保持し、この対応表を別bundleへ持ち越さない。
 source-less生成も元のSynthetic Originを持つ構文木と対応し、架空Spanを作らない。
-この入口はprefix専用でありSentenceLiteralはUnsupportedとする。literal payloadのowner/token照合、
-統合SentenceSyntaxの位置再配置とliteral/prefix全意味比較は後続のdecoder統合で実装する。
+この入口はprefix専用でありSentenceLiteralはUnsupportedとする。
+
+`lower::literal::sentence`はrootのSentenceLiteralを専用payload codecへ渡す。選択surface、
+leaf shape、実tokenの存在、head/cover一致を検査し、tokenの正確なsnapshotをownerとしてdecodeする。
+payloadとtokenのView/headがそれぞれ妥当なだけでは受理せず、両者の一致も検査する。
+syntax leaf内の意味arenaという所有関係の深さを加え、停止時も呼出元のdepthへ戻す。
+旧Doc payloadや原文の再parseによるfallbackは使わない。
+
+`lower::presentation::sentence`は標準literal/prefixをSentenceSyntaxへ返す共通入口である。
+prefixでは投影mapからdenseな位置表を作り、元のSource/Origin/SourceMapを保持する。
+form headのViewは対応する意味nodeへ、list/BuiltinText等の補助tokenのViewはrootの表記へ付与し、
+全Viewを位置閉包とともに再検査する。これは編集用の元SyntaxBundleを置き換えない。
+literalのSentenceSyntaxはreader payload自身の文章内位置とOriginを保持する。包んでいたleafの
+Originやbindingをpayload内のOriginへ同一化せず、呼出側は元SyntaxBundleも保持する。
+source-less prefixは元Synthetic Originを使用し、架空Spanを作らない。
+literalで表現可能なRuby/Annoの例では、両経路の意味値から得るliteral印字が一致することを検査する。
+任意foreign adapterの意味比較、表示の安全性、Doc本文移行の完了をこの一致から推定しない。
 
 `print::prefix`は標準Sentence表層の全constructorを印字する。Sentence rootと明示Inline入口に
 対応し、Concat、Ruby、InlineAnnoの境界、notes順、Code、強調、Break、外部URIとlabelを保持する。
@@ -181,7 +196,7 @@ TextはBuiltinTextとしてescapeし、文章literalのRuby/Anno区切りとし�
 foreign-inlineは対応する表層adapterを別途選択する必要があるため、標準printerでは
 AdapterRequiredを返す。印字は元の綴り・Source/Origin・共有indexを再現する操作ではない。
 本番packageで標準prefixのparse/lower/print一致とText payload復元を検査する。
-literal統合・foreign adapterを含む全意味往復の完了とは区別する。
+foreign adapterを含む全意味往復とDoc consumer移行の完了とは区別する。
 
 ## 注釈と移行完了条件
 

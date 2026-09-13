@@ -24,5 +24,6 @@ LanguagePackage compilation and native/owned prefix parsing are implemented.
 The standard prefix printer emits all ten forms, keeping constructor boundaries
 and escaping BuiltinText. Foreign-inline output needs its selected surface adapter.
 Standard prefix lowering returns a checked meaning arena and a mapping back to
-the retained syntax bundle. Literal integration, full semantic roundtrips and Doc
-body migration remain in progress.
+the retained syntax bundle. The presentation entry handles literal payloads and
+prefix forms with their source locations and views. Foreign adapters and Doc body
+migration remain in progress; this is not a completed document migration.

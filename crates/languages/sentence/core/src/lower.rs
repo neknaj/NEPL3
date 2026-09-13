@@ -1,6 +1,8 @@
 //! Standard prefix-to-meaning projection. The caller retains the syntax bundle
 //! with its source, origins and views; this operation does not erase that graph.
 use crate::{check, model::*};
+pub mod literal;
+pub mod presentation;
 use alloc::{string::String, vec, vec::Vec};
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
