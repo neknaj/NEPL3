@@ -2,6 +2,14 @@
 
 ## 1. 公開構成
 
+初期docs-only公開は、NEPL3d正本への段階移行を人が閲覧できる形で支える。
+正式文書は移行後のNEPL3d sourceであり、HTMLは再生成できるprojectionである。
+本章第5節の高度なLKG/journal復旧は後段の配信機能とし、初期公開・T21移行の前提にしない。
+初期publisherは成功したmain CIの固定commit・検査済み元payloadを照合し、同じtarを公開して
+主要routeと公開byteを確認する。失敗はworkflow失敗として報告し、自動rollbackやLKG完成を主張しない。
+rustdocの完全性・全fragment監査・Playground完成も初期公開の前提にしない。
+公開namespaceとrepo別の所有境界は[Pages情報設計](../decisions/pages-information-architecture.md)に従う。
+
 標準公開先を `https://neknaj.github.io/NEPL3/` とするGitHub Pages project siteを最終成果物に含める。独立HTMLのトップ・docsと、ブラウザWasmで動くPlaygroundを配布する。言語処理serverは設けない。通常のsource取得は検査対象commitのGit checkoutまたはsource archiveを用い、main pushごとの重複archive配布は行わない。サイト実装前に空のPages siteや架空のWasmを公開しない。
 
 予定する出力はトップのindex.html、playground/index.html、docs/index.htmlとtutorials/reference/design、api/rust、examples/manifest.json、assets内のJS/CSS/Wasm/Worker、build.json。`site/` は配置・template・固定assetを所有し、`tools/src/site/` が生成と検査を行う。
@@ -18,9 +26,36 @@ SiteConfigをbase pathの唯一の設定元にする。既定 `/NEPL3/` と受�
 
 正式文書はdoc/、文法とreferenceはlanguages/とschema/form表、実行例はexamples/、Rust APIは同じcommitのrustdocを入力とする。サイト専用にコピーした別仕様や別サンプルを手で保守しない。MarkdownはDoc移行完了まで正本として利用できるが、最終Doc移行は必須のT21で管理する。
 
+docs-only生成では追跡済みの `doc/spec/NN-name.md` 全体を公開対象とする。
+`doc/canonical.json` 登録ページはDoc正本から生成し、未登録ページだけを既存の
+pulldown-cmarkでHTML化する。生成Markdown projectionを再び正本として読まない。
+両経路は `docs/spec/NN-name.html` の配置を共有し、移行時も登録routeを優先する。
+未移行ページはMarkdown正本であることと同じcommitの原文を表示し、source・route・digest・
+rendererを `markdown-manifest.json` に記録する。各Markdown入力は256KiB、未移行仕様は256ページ、
+最終artifactは既存の32MiB上限内とする。相対リンクは元文書directoryを基準に解決し、
+repository外への脱出を拒否する。公開済み仕様へのリンクはsite内、その他の追跡済みfileは
+同じcommitのGitHub原文へ向ける。raw HTMLはescapeし、画像はalt文を表示する。
+この公開経路はT21の意味同等性検査や正本切替の完了を意味しない。
+
+docs-onlyのトップは現在の`README.md`正本を固定版pulldown-cmarkでHTMLへ投影する。
+サイト収録済み仕様へのリンクはそのサイトrouteへ、siteに未収録のrepository資料は
+同じcommitのGitHub原本へ向ける。欠けた原本や未対応のリンク形式は生成失敗とする。
+raw HTMLは文字列として表示し、外部画像は代替テキストを残す。バッジ等の外部取得を
+生成・閲覧の前提にしない。READMEのSHA-256とrenderer版をbuild情報へ記録する。
+これはREADMEのNEPL3d移行完了ではなく、二つ目の手書き概要を作らないための公開経路である。
+
 page registryは安定page ID、source正本の形式とpath、公開URL、見出し/anchor ID、旧URL aliasを保持する。表示見出しやファイル移設でIDを暗黙に再生成しない。例manifestは安定例ID、language/category、source path、byte digest、必要profile、revisionを持つ。「この例を試す」は同じmanifestから取得した同じbyte列を開く。存在しない例、digest不一致、異なるruntime/profile版を拒否する。
 
 例manifestには実行前提と期待する操作/結果も記録する。4言語それぞれの入門、完全なreference、典型例、診断の読み方、成果物取得、CLI/Web比較を用意する。rustdocだけを生成して利用者文書が完成した扱いにはしない。
+
+T19のdocs-only例表示では、`site/examples.json`が安定ID、repository内のsource path、
+言語alias/categoryと必要source Profileを指定する。生成する`examples/index.html`は原文を
+HTML escapeして表示し、`examples/manifest.json`は元sourceとProfileのbyte digest、commit、
+配布pathを記録する。原文はそのまま`.txt`へ配布し、元拡張子がHTML等でも実行可能なpageにしない。
+表示時の改行正規化と取得原文のbyte保持を区別する。文字列だけでguestを評価せず、
+この段階のcapabilityは`source-view`、`execution_available`はfalseとする。
+source Profileのalias/category照合はResolvedProfileの完成・動作保証ではない。
+実行入口には別途、解決済みProfileと操作・期待結果の契約が必要である。
 
 build.jsonにはsource commit、設計revision、schema/package/providerの解決済みdigest、例manifestと各assetのdigest、renderer/toolchain識別を記録する。`design/profile.json` はsource manifestであり、そのままruntime Profileと呼ばない。R009では解決済みProfileの閉じた型・検査を先に定め、T05/T11で実際のpackage/providerから生成して差分検査する。架空digestや未解決aliasでdispatchしない。R006のschema閉包をUI専用の文字列signatureで迂回しない。
 

@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/19&#45;html&#45;fragment.nepld; renderer nepl3-tools.markdown-annotated/2; source SHA-256 403103f26c087d3e4a21c9cf0e8f24479050c20ab7adfd8cb9e5b0ae7fc7f716; alias input SHA-256 cd0621a95223650374cd75ef3bac12d7ff578c85d8bdc88f0da70e249d1bd485; document digest 1cc3c3f72a88d6e1e9034b47678324c821284eaf5e9e5bb8d421e1be9ce0bd03. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/19&#45;html&#45;fragment.nepld; renderer nepl3-tools.markdown-annotated/2; source SHA-256 403103f26c087d3e4a21c9cf0e8f24479050c20ab7adfd8cb9e5b0ae7fc7f716; alias input SHA-256 cd0621a95223650374cd75ef3bac12d7ff578c85d8bdc88f0da70e249d1bd485; document digest f75abdd6219c4ef502c046a5d815e2e3eebe60709539e825592ba9121393a2da. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="19-html-fragmentの構造契約"></a>
 

@@ -8,4 +8,5 @@ pub mod math;
 pub mod printing;
 pub mod projection;
 pub mod reader;
+pub mod sentence;
 pub mod source;

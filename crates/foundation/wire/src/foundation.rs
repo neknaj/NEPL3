@@ -4,6 +4,7 @@ use crate::{WireError, environment::*, source::*, view::*};
 use alloc::vec::Vec;
 use nepl3_core::{
     budget::{Budget, Resource},
+    origin::{Mapping, SourceMap, ValidatedSourceMap},
     schema::{SchemaError, SchemaRegistry, TypeDescriptor},
     source::{Digest, SourceAdmission, SourceSnapshot, SourceStore, Span},
     syntax::{Environment, EnvironmentEntry},
@@ -16,6 +17,8 @@ pub struct FoundationCodec<'a> {
     schema: &'a SchemaRef,
     registry: &'a SchemaRegistry,
     sources: &'a SourceStore,
+    mappings: &'a [Mapping],
+    validated_mappings: Option<ValidatedSourceMap<'a>>,
     admission: &'a mut SourceAdmission,
 }
 impl<'a> FoundationCodec<'a> {
@@ -34,6 +37,8 @@ impl<'a> FoundationCodec<'a> {
             schema,
             registry,
             sources,
+            mappings: &[],
+            validated_mappings: None,
             admission,
         })
     }
@@ -58,6 +63,29 @@ impl<'a> FoundationCodec<'a> {
         source.slice(span)?;
         Ok(())
     }
+    fn mapping_admission(&mut self, budget: &mut Budget) -> Result<(), WireError> {
+        for mapping in self.mappings {
+            self.span_admission(&mapping.source, budget)?;
+            self.span_admission(&mapping.target, budget)?;
+        }
+        Ok(())
+    }
+    fn validate_views(&mut self, value: &ViewBundle, budget: &mut Budget) -> Result<(), WireError> {
+        match &self.validated_mappings {
+            Some(maps) => value.validate_with_maps(self.sources, self.registry, maps, budget)?,
+            None => {
+                self.mapping_admission(budget)?;
+                let maps = SourceMap::validate_mappings(self.mappings, self.sources, budget)?;
+                value.validate_with_maps(self.sources, self.registry, &maps, budget)?;
+                // Both sources and mapping slices are immutably borrowed for
+                // this scope. Reuse mapping admission/geometry/cycle proof,
+                // not View validation. Rebind or mutable admission access
+                // clears this proof before either context can change.
+                self.validated_mappings = Some(maps);
+            }
+        }
+        Ok(())
+    }
 }
 impl FoundationValueCodec for FoundationCodec<'_> {
     type Error = WireError;
@@ -79,6 +107,7 @@ impl FoundationValueCodec for FoundationCodec<'_> {
         Ok(encoded)
     }
     fn source_admission(&mut self) -> &mut SourceAdmission {
+        self.validated_mappings = None;
         self.admission
     }
     fn encode_fact_set(
@@ -189,10 +218,28 @@ impl FoundationValueCodec for FoundationCodec<'_> {
         &'a mut self,
         sources: &'a SourceStore,
     ) -> impl FoundationValueCodec<Error = WireError> + 'a {
+        self.validated_mappings = None;
         FoundationCodec {
             schema: self.schema,
             registry: self.registry,
             sources,
+            mappings: &[],
+            validated_mappings: None,
+            admission: self.admission,
+        }
+    }
+    fn scoped_with_mappings<'a>(
+        &'a mut self,
+        sources: &'a SourceStore,
+        mappings: &'a [Mapping],
+    ) -> impl FoundationValueCodec<Error = WireError> + 'a {
+        self.validated_mappings = None;
+        FoundationCodec {
+            schema: self.schema,
+            registry: self.registry,
+            sources,
+            mappings,
+            validated_mappings: None,
             admission: self.admission,
         }
     }
@@ -361,7 +408,7 @@ impl FoundationValueCodec for FoundationCodec<'_> {
         for view in &value.elements {
             self.span_admission(&view.span, budget)?;
         }
-        value.validate(self.sources, self.registry, budget)?;
+        self.validate_views(value, budget)?;
         let value = views_value(value, self.schema, budget)?;
         self.validate(&value, "ViewBundle", budget)?;
         Ok(value)
@@ -376,7 +423,7 @@ impl FoundationValueCodec for FoundationCodec<'_> {
         for view in &value.elements {
             self.span_admission(&view.span, budget)?;
         }
-        value.validate(self.sources, self.registry, budget)?;
+        self.validate_views(&value, budget)?;
         Ok(value)
     }
 }

@@ -29,6 +29,7 @@ pub fn compile(
         nepl3_engine::schema::descriptor(budget),
         nepl3_grammar_core::schema::descriptor(budget),
         nepl3_doc_core::schema::descriptor(budget),
+        nepl3_sentence_core::schema::descriptor(budget),
         super::reader::descriptor(budget),
     ] {
         let descriptor = descriptor.map_err(|e| format!("{e:?}"))?;

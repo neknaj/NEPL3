@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "profile": "design/profile.json",
+  "examples": [
+    {
+      "id": "doc.integration",
+      "source": "examples/document/integration.nepld",
+      "language": "Doc",
+      "category": "Article"
+    },
+    {
+      "id": "doc.line-break",
+      "source": "examples/document/line-break.nepld",
+      "language": "Doc",
+      "category": "Article"
+    },
+    {
+      "id": "doc.linear-combination",
+      "source": "examples/document/linear-combination.nepld",
+      "language": "Doc",
+      "category": "Article"
+    },
+    {
+      "id": "doc.parallel",
+      "source": "examples/document/parallel.nepld",
+      "language": "Doc",
+      "category": "Article"
+    },
+    {
+      "id": "doc.prefix",
+      "source": "examples/document/prefix.nepld",
+      "language": "Doc",
+      "category": "Article"
+    },
+    {
+      "id": "doc.references",
+      "source": "examples/document/references.nepld",
+      "language": "Doc",
+      "category": "Article"
+    },
+    {
+      "id": "doc.sentence",
+      "source": "examples/document/sentence.nepld",
+      "language": "Doc",
+      "category": "Article"
+    },
+    {
+      "id": "grammar.angle-tag",
+      "source": "examples/grammar/angle-tag.neplg",
+      "language": "Grammar",
+      "category": "Root"
+    },
+    {
+      "id": "grammar.binding",
+      "source": "examples/grammar/binding.neplg",
+      "language": "Grammar",
+      "category": "Root"
+    },
+    {
+      "id": "grammar.provider",
+      "source": "examples/grammar/provider.neplg",
+      "language": "Grammar",
+      "category": "Root"
+    },
+    {
+      "id": "math.binding",
+      "source": "examples/math/binding.neplm",
+      "language": "Math",
+      "category": "Expr"
+    },
+    {
+      "id": "math.decimal",
+      "source": "examples/math/decimal.neplm",
+      "language": "Math",
+      "category": "Expr"
+    },
+    {
+      "id": "math.doc-label",
+      "source": "examples/math/doc-label.neplm",
+      "language": "Math",
+      "category": "Expr"
+    },
+    {
+      "id": "math.matrix",
+      "source": "examples/math/matrix.neplm",
+      "language": "Math",
+      "category": "Expr"
+    },
+    {
+      "id": "math.notation",
+      "source": "examples/math/notation.neplm",
+      "language": "Math",
+      "category": "Expr"
+    },
+    {
+      "id": "math.rational",
+      "source": "examples/math/rational.neplm",
+      "language": "Math",
+      "category": "Expr"
+    },
+    {
+      "id": "math.sum",
+      "source": "examples/math/sum.neplm",
+      "language": "Math",
+      "category": "Expr"
+    },
+    {
+      "id": "circuit.half-adder",
+      "source": "examples/circuit/half-adder.neplc",
+      "language": "Circuit",
+      "category": "Design"
+    },
+    {
+      "id": "circuit.instances",
+      "source": "examples/circuit/instances.neplc",
+      "language": "Circuit",
+      "category": "Design"
+    },
+    {
+      "id": "circuit.simultaneous",
+      "source": "examples/circuit/simultaneous.neplc",
+      "language": "Circuit",
+      "category": "Design"
+    },
+    {
+      "id": "circuit.state-feedback",
+      "source": "examples/circuit/state-feedback.neplc",
+      "language": "Circuit",
+      "category": "Design"
+    },
+    {
+      "id": "circuit.toggle",
+      "source": "examples/circuit/toggle.neplc",
+      "language": "Circuit",
+      "category": "Design"
+    }
+  ]
+}

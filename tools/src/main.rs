@@ -36,6 +36,7 @@ fn run() -> nepl3_tools::Result<()> {
         ["grammar", "--write"] => nepl3_tools::grammar(&root),
         ["doc", "--write"] => nepl3_tools::doc(&root),
         ["math", "--write"] => nepl3_tools::math(&root),
+        ["sentence", "--write"] => nepl3_tools::sentence(&root),
         ["markup", "--write"] => nepl3_tools::markup(&root),
         ["doc-html", "--write"] => nepl3_tools::doc_html(&root),
         ["doc-html", "export", input, output] => nepl3_tools::doc::export::write(
@@ -75,7 +76,7 @@ fn run() -> nepl3_tools::Result<()> {
                 "nepl3-tools doc-markdown annotated <input.nepld> <aliases.json> <new-output.md>"
             );
             println!(
-                "nepl3-tools check | tasks --check | tasks --write | evidence identity\n  foundation --write | reader --write | engine --write | grammar --write | doc --write | math --write | markup --write | doc-html --write\n  doc-html export <input.nepld> <new-output-directory>\n  doc-html pages <manifest.json> <new-output-directory>\n  doc-inventory --write --commit <40-hex-commit> | doc-inventory --check | doc-inventory --check-current\nRepository checks do not establish runtime conformance."
+                "nepl3-tools check | tasks --check | tasks --write | evidence identity\n  foundation --write | reader --write | engine --write | grammar --write | doc --write | math --write | sentence --write | markup --write | doc-html --write\n  doc-html export <input.nepld> <new-output-directory>\n  doc-html pages <manifest.json> <new-output-directory>\n  doc-inventory --write --commit <40-hex-commit> | doc-inventory --check | doc-inventory --check-current\nRepository checks do not establish runtime conformance."
             );
             Ok(())
         }

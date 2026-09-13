@@ -13,6 +13,7 @@ nepl3-core.workspace = true
 nepl3-grammar-core.workspace = true
 nepl3-doc-core.workspace = true
 nepl3-math-core.workspace = true
+nepl3-sentence-core.workspace = true
 nepl3-reader.workspace = true
 nepl3-engine.workspace = true
 nepl3-wire.workspace = true

@@ -463,7 +463,8 @@
     "nepl3-markup",
     "nepl3-doc-html",
     "nepl3-math-mathml",
-    "nepl3-math-tex"
+    "nepl3-math-tex",
+    "nepl3-sentence-core"
   ],
   "note": "Foundation runtime implementation is in progress. Implemented crate membership does not imply task or acceptance completion; required acceptance remains evidence-bound."
 }

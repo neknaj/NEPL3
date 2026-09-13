@@ -5,7 +5,8 @@
     "Grammar": "Grammar/Root",
     "Doc": "Doc/Article",
     "Math": "Math/Expr",
-    "Circuit": "Circuit/Design"
+    "Circuit": "Circuit/Design",
+    "Sentence": "Sentence/Sentence"
   },
   "categories": {
     "Grammar/Root": {
@@ -2331,6 +2332,119 @@
           ]
         }
       }
+    },
+    "Sentence/Sentence": {
+      "forms": {
+        "sentence": {
+          "kind": "Sentence",
+          "fields": [
+            {
+              "name": "inlines",
+              "read": {
+                "list": "Sentence/Inline"
+              }
+            }
+          ]
+        }
+      },
+      "leaf": "sentence"
+    },
+    "Sentence/Inline": {
+      "forms": {
+        "text": {
+          "kind": "Text",
+          "fields": [
+            {
+              "name": "text",
+              "read": "@Text"
+            }
+          ]
+        },
+        "concat": {
+          "kind": "Concat",
+          "fields": [
+            {
+              "name": "inlines",
+              "read": {
+                "list": "Sentence/Inline"
+              }
+            }
+          ]
+        },
+        "ruby": {
+          "kind": "Ruby",
+          "fields": [
+            {
+              "name": "base",
+              "read": "Sentence/Inline"
+            },
+            {
+              "name": "reading",
+              "read": "Sentence/Inline"
+            }
+          ]
+        },
+        "anno": {
+          "kind": "InlineAnno",
+          "fields": [
+            {
+              "name": "base",
+              "read": "Sentence/Inline"
+            },
+            {
+              "name": "notes",
+              "read": {
+                "list": "Sentence/Inline"
+              }
+            }
+          ]
+        },
+        "code": {
+          "kind": "Code",
+          "fields": [
+            {
+              "name": "text",
+              "read": "@Text"
+            }
+          ]
+        },
+        "em": {
+          "kind": "Emphasis",
+          "fields": [
+            {
+              "name": "inline",
+              "read": "Sentence/Inline"
+            }
+          ]
+        },
+        "strong": {
+          "kind": "Strong",
+          "fields": [
+            {
+              "name": "inline",
+              "read": "Sentence/Inline"
+            }
+          ]
+        },
+        "break": {
+          "kind": "Break",
+          "fields": []
+        },
+        "link": {
+          "kind": "ExternalLink",
+          "fields": [
+            {
+              "name": "uri",
+              "read": "@Text"
+            },
+            {
+              "name": "label",
+              "read": "Sentence/Inline"
+            }
+          ]
+        }
+      },
+      "leaf": null
     }
   },
   "design_revision": "nepl3-design-2026-09-06-r4"

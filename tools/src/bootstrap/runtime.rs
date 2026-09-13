@@ -107,7 +107,7 @@ pub fn executable_identity() -> Result<Digest, RuntimeError> {
     let bytes = std::fs::read(path).map_err(boundary)?;
     Ok(Digest::of(&bytes))
 }
-fn schemas(
+pub(crate) fn schemas(
     compiled: &CompiledLanguage,
     budget: &mut Budget,
 ) -> Result<Vec<SchemaRef>, RuntimeError> {

@@ -7,7 +7,9 @@ pub mod doc;
 mod documentation;
 mod evidence;
 mod repository;
+pub mod sentence;
 pub mod site;
+pub mod source;
 mod task;
 
 #[cfg(test)]
@@ -55,6 +57,7 @@ pub fn check(root: &Path) -> Result<()> {
     contract::grammar::check(root)?;
     contract::doc::check(root)?;
     contract::math::check(root)?;
+    contract::sentence::check(root)?;
     contract::markup::check(root)?;
     contract::doc_html::check(root)?;
     dependency::check(root, &status.implemented_crates)?;
@@ -124,6 +127,10 @@ pub fn doc(root: &Path) -> Result<()> {
 /// Generate the typed Math schema descriptor.
 pub fn math(root: &Path) -> Result<()> {
     contract::math::write(root)
+}
+
+pub fn sentence(root: &Path) -> Result<()> {
+    contract::sentence::write(root)
 }
 
 pub fn markup(root: &Path) -> Result<()> {

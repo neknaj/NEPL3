@@ -1,4 +1,5 @@
-//! An explicitly registered Reader provider around Doc's source-only recognizer.
+//! Doc consumer reader using the independent Sentence recognizer and an
+//! explicit development-host bridge to the current Doc payload contract.
 use nepl3_core::{
     budget::{Budget, Resource},
     diagnostic::{Diagnostic, Related, Report, Severity},
@@ -6,14 +7,13 @@ use nepl3_core::{
     source::{SourceAdmission, SourceStore},
     value::{NdfValue, OperationRef, Record, TypedValue},
 };
-use nepl3_doc_core::{
-    model::DocumentSyntax,
-    sentence::{self, SentenceCode, SentenceError, SentenceOutcome},
-};
 use nepl3_reader::{
     model::{ReadReply, ReadRequest},
     plan::{ProviderKind, ProviderSignature},
     runtime::ReaderError,
+};
+use nepl3_sentence_core::literal::{
+    self as sentence, SentenceCode, SentenceError, SentenceOutcome,
 };
 use nepl3_wire::foundation::FoundationCodec;
 mod descriptor;
@@ -76,7 +76,9 @@ fn boundary(e: sentence::SentenceError) -> ReaderError {
         SentenceError::Stopped(s) => ReaderError::Stopped(s),
         SentenceError::Source(e) => e.into(),
         SentenceError::Schema(e) => e.into(),
-        SentenceError::Shape(_) => ReaderError::ProviderContract,
+        SentenceError::Shape(_) | SentenceError::Syntax(_) | SentenceError::SchemaIdentity => {
+            ReaderError::ProviderContract
+        }
     }
 }
 /// The caller retains Reader's checked context, provider depth and admission.
@@ -124,20 +126,16 @@ pub fn read(
             }),
             SentenceOutcome::Matched(literal) => {
                 let end = literal.head.end();
-                let source = request.snapshot.clone_with_budget(b)?;
-                let view = literal.view.view.clone_with_budget(b)?;
-                b.charge(
-                    Resource::AllocationUnits,
-                    (core::mem::size_of_val(&source) + core::mem::size_of_val(&literal.view))
-                        as u64,
-                )?;
-                let doc = DocumentSyntax {
-                    value: literal.value,
-                    sources: vec![source],
-                    origins: literal.origins,
-                    views: vec![literal.view],
-                    source_maps: vec![],
+                let [presentation] = literal.syntax.views.as_slice() else {
+                    return Err(ReaderError::ProviderContract);
                 };
+                let view = presentation.view.clone_with_budget(b)?;
+                let doc = super::sentence::document(&literal.syntax, registry, b, a).map_err(
+                    |e| match e {
+                        super::sentence::Error::Stopped(s) => ReaderError::Stopped(s),
+                        _ => ReaderError::ProviderContract,
+                    },
+                )?;
                 let mut codec =
                     FoundationCodec::new(registry, sources, a).map_err(|_| ReaderError::Context)?;
                 let value =

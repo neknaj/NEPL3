@@ -1,0 +1,531 @@
+use nepl3_core::{
+    budget::{Budget, Limits, StopReason},
+    schema::SchemaRegistry,
+    source::{SourceAdmission, SourceId, SourceSnapshot, SourceStore},
+};
+use nepl3_sentence_core::{
+    literal::{self, SentenceCode, SentenceError, SentenceLiteral, SentenceOutcome},
+    model::{InlineRef, Kind, Root, SentenceRef, SentenceValue},
+};
+fn b() -> Budget {
+    Budget::new(Limits {
+        source_bytes: 2_000_000,
+        work: 100_000_000,
+        depth: 100_000,
+        nodes: 2_000_000,
+        allocation_units: 200_000_000,
+        output_bytes: 2_000_000,
+        diagnostics: 100,
+        events: 100,
+    })
+}
+fn err(e: impl core::fmt::Debug) -> String {
+    format!("{e:?}")
+}
+fn registry() -> Result<SchemaRegistry, String> {
+    let mut r = SchemaRegistry::default();
+    for d in [
+        nepl3_core::schema::foundation::descriptor(&mut b()),
+        nepl3_sentence_core::schema::descriptor(&mut b()),
+    ] {
+        let d = d.map_err(err)?;
+        r.register(d.reference(&mut b()).map_err(err)?, d, &mut b())
+            .map_err(err)?;
+    }
+    r.finalize(&mut b()).map_err(err)?;
+    Ok(r)
+}
+fn source(text: &str) -> Result<SourceSnapshot, String> {
+    SourceSnapshot::new(
+        SourceId("sentence".into()),
+        1,
+        "memory:sentence".into(),
+        text.as_bytes().to_vec(),
+        &mut b(),
+    )
+    .map_err(err)
+}
+fn parse(text: &str, r: &SchemaRegistry) -> Result<SentenceLiteral, String> {
+    let s = source(text)?;
+    let scan = literal::read(
+        &s,
+        0,
+        s.text().len() as u64,
+        true,
+        r,
+        &mut b(),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    match scan.outcome {
+        SentenceOutcome::Matched(v) => Ok(v),
+        other => Err(err(other)),
+    }
+}
+
+#[test]
+fn referenced_literal_roundtrip_does_not_serialize_the_document_per_token() -> Result<(), String> {
+    use nepl3_sentence_core::portable::literal as payload;
+    use nepl3_wire::foundation::FoundationCodec;
+    let r = registry()?;
+    let empty = SourceStore::default();
+    let mut sizes = vec![];
+    for suffix in [String::new(), "x".repeat(100_000)] {
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+        let v = parse(&format!("\"[漢/かん]𝄞\" {suffix}"), &r)?;
+        let raw = payload::to_value(&v.syntax, &r, &mut codec, &mut b()).map_err(err)?;
+        let bytes = nepl3_wire::encode(&raw, &mut b()).map_err(err)?;
+        sizes.push(bytes.len());
+        let raw = nepl3_wire::decode(&bytes, &mut b()).map_err(err)?;
+        let actual = payload::from_value(&raw, &v.syntax.sources[0], &r, &mut codec, &mut b())
+            .map_err(err)?;
+        assert_eq!(actual, v.syntax);
+    }
+    // The suffix is outside the literal. Only fixed-size snapshot identity
+    // changes; no SourceContent/text from the rest of the document is sent.
+    assert_eq!(sizes[0], sizes[1]);
+    assert!(sizes[1] < 20_000);
+    Ok(())
+}
+
+#[test]
+fn referenced_literal_rejects_wrong_owner_even_when_ambient_source_is_correct() -> Result<(), String>
+{
+    use nepl3_sentence_core::portable::{self, literal as payload};
+    use nepl3_wire::foundation::FoundationCodec;
+    let r = registry()?;
+    let v = parse("\"[漢/かん]\" tail", &r)?;
+    let mut ambient = SourceStore::default();
+    ambient.insert(v.syntax.sources[0].clone()).map_err(err)?;
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &ambient, &mut admission).map_err(err)?;
+    let raw = payload::to_value(&v.syntax, &r, &mut codec, &mut b()).map_err(err)?;
+    // Same id/revision and same literal, different document bytes.
+    let wrong = source("\"[漢/かん]\" fail")?;
+    assert!(payload::from_value(&raw, &wrong, &r, &mut codec, &mut b()).is_err());
+    let mut wrong_kind = v.syntax.clone();
+    wrong_kind.value.nodes[0] = Kind::Code { text: "漢".into() };
+    assert!(matches!(
+        payload::to_value(&wrong_kind, &r, &mut codec, &mut b()),
+        Err(portable::Error::Shape)
+    ));
+    let mut outside = v.syntax.clone();
+    outside.locations[0].head = None;
+    outside.locations[0].cover = Some(
+        outside.sources[0]
+            .span(v.head.end() + 1, outside.sources[0].text().len() as u64)
+            .map_err(err)?,
+    );
+    assert!(matches!(
+        payload::to_value(&outside, &r, &mut codec, &mut b()),
+        Err(portable::Error::Shape)
+    ));
+    let mut forged = raw.clone();
+    let nepl3_core::value::NdfValue::Record(record) = &mut forged else {
+        return Err("record".into());
+    };
+    // Correct wire shape is insufficient: the view must belong to Sentence root.
+    let nepl3_core::value::NdfValue::Record(view) = &mut record.fields[3] else {
+        return Err("view".into());
+    };
+    view.fields[0] = nepl3_core::value::NdfValue::U64(0);
+    assert!(payload::from_value(&forged, &v.syntax.sources[0], &r, &mut codec, &mut b()).is_err());
+    Ok(())
+}
+
+#[test]
+fn referenced_literal_encode_and_decode_preserve_stop_reasons() -> Result<(), String> {
+    use nepl3_sentence_core::portable::{self, literal as payload};
+    use nepl3_wire::foundation::FoundationCodec;
+    let r = registry()?;
+    let v = parse("\"a\"", &r)?;
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let raw = payload::to_value(&v.syntax, &r, &mut codec, &mut b()).map_err(err)?;
+    for reason in [
+        StopReason::SourceLimit,
+        StopReason::WorkLimit,
+        StopReason::NodeLimit,
+        StopReason::AllocationLimit,
+        StopReason::DepthLimit,
+        StopReason::Cancelled,
+    ] {
+        for receiving in [false, true] {
+            let mut admission = SourceAdmission::default();
+            let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+            let mut limits = b().limits();
+            match reason {
+                StopReason::SourceLimit => limits.source_bytes = 0,
+                StopReason::WorkLimit => limits.work = 0,
+                StopReason::NodeLimit => limits.nodes = 0,
+                StopReason::AllocationLimit => limits.allocation_units = 0,
+                StopReason::DepthLimit => limits.depth = 0,
+                _ => {}
+            }
+            let mut budget = Budget::new(limits);
+            if reason == StopReason::Cancelled {
+                budget.cancel();
+            }
+            if receiving {
+                assert_eq!(
+                    payload::from_value(&raw, &v.syntax.sources[0], &r, &mut codec, &mut budget),
+                    Err(portable::Error::Stopped(reason))
+                );
+            } else {
+                assert_eq!(
+                    payload::to_value(&v.syntax, &r, &mut codec, &mut budget),
+                    Err(portable::Error::Stopped(reason))
+                );
+            }
+            assert_eq!(budget.poll(), Err(reason));
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn literal_has_independent_sentence_meaning_and_closed_source_provenance() -> Result<(), String> {
+    let r = registry()?;
+    let literal = parse("\"[漢/かん]{語/note/補足}\"", &r)?;
+    // Expected constructor arena is authored independently of the reader.
+    let expected = SentenceValue {
+        root: Root::Sentence(SentenceRef(7)),
+        nodes: vec![
+            Kind::Text { text: "漢".into() },
+            Kind::Text {
+                text: "かん".into(),
+            },
+            Kind::Ruby {
+                base: InlineRef(0),
+                reading: InlineRef(1),
+            },
+            Kind::Text { text: "語".into() },
+            Kind::Text {
+                text: "note".into(),
+            },
+            Kind::Text {
+                text: "補足".into(),
+            },
+            Kind::InlineAnno {
+                base: InlineRef(3),
+                notes: vec![InlineRef(4), InlineRef(5)],
+            },
+            Kind::Sentence {
+                inlines: vec![InlineRef(2), InlineRef(6)],
+            },
+        ],
+        embeds: vec![],
+    };
+    assert_eq!(literal.syntax.value, expected);
+    let mut budget = b();
+    literal
+        .syntax
+        .validate(&r, &mut budget, &mut SourceAdmission::default())
+        .map_err(err)?;
+    assert_eq!(
+        budget.usage().source_bytes,
+        literal.syntax.sources[0].text().len() as u64
+    );
+    assert_eq!(literal.syntax.views[0].owner, 7);
+    assert_eq!(literal.syntax.locations.len(), expected.nodes.len());
+    let empty = SourceStore::default();
+    let mut a = SourceAdmission::default();
+    let mut c = nepl3_wire::foundation::FoundationCodec::new(&r, &empty, &mut a).map_err(err)?;
+    let raw =
+        nepl3_sentence_core::portable::syntax::to_value(&literal.syntax, &r, &mut c, &mut b())
+            .map_err(err)?;
+    let bytes = nepl3_wire::encode(&raw, &mut b()).map_err(err)?;
+    let raw = nepl3_wire::decode(&bytes, &mut b()).map_err(err)?;
+    let actual = nepl3_sentence_core::portable::syntax::from_value(&raw, &r, &mut c, &mut b())
+        .map_err(err)?;
+    assert_eq!(actual, literal.syntax);
+    Ok(())
+}
+
+#[test]
+fn escapes_are_not_reparsed_and_keep_original_scalar_ranges() -> Result<(), String> {
+    let r = registry()?;
+    let v = parse(r#""\u{5b}x\/y\]\{a\}\n\r\t\"\\𝄞""#, &r)?;
+    assert_eq!(
+        v.syntax.value.nodes[0],
+        Kind::Text {
+            text: "[x/y]{a}\n\r\t\"\\𝄞".into()
+        }
+    );
+    assert_eq!(v.syntax.value.nodes.len(), 2);
+    let escape_kind = r
+        .kind_id(
+            &v.syntax.views[0].view.elements[0].kind.schema,
+            "View:Escape",
+        )
+        .map_err(err)?;
+    let escape = v.syntax.views[0]
+        .view
+        .elements
+        .iter()
+        .find(|v| v.kind.local_kind == escape_kind)
+        .ok_or("escape view")?;
+    assert_eq!(
+        v.syntax.sources[0].slice(&escape.span).map_err(err)?,
+        r"\u{5b}"
+    );
+    Ok(())
+}
+
+#[test]
+fn literal_window_commits_exactly_one_head_and_incomplete_scans_return_no_tree()
+-> Result<(), String> {
+    let r = registry()?;
+    let s = source("前 \"{[漢/かん]/補足}𝄞\" trailing")?;
+    let start = "前 ".len() as u64;
+    let end = s.text().find(" trailing").ok_or("end")? as u64;
+    for limit in (start as usize..end as usize).filter(|i| s.text().is_char_boundary(*i)) {
+        let scan = literal::read(
+            &s,
+            start,
+            limit as u64,
+            false,
+            &r,
+            &mut b(),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(err)?;
+        assert!(
+            matches!(scan.outcome, SentenceOutcome::NeedMore),
+            "limit {limit}"
+        );
+    }
+    let scan = literal::read(
+        &s,
+        start,
+        s.text().len() as u64,
+        true,
+        &r,
+        &mut b(),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    let SentenceOutcome::Matched(v) = scan.outcome else {
+        return Err("literal".into());
+    };
+    assert_eq!((v.head.start(), v.head.end()), (start, end));
+    let scan = literal::read(
+        &s,
+        0,
+        start,
+        true,
+        &r,
+        &mut b(),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    assert!(matches!(scan.outcome, SentenceOutcome::NoMatch));
+    assert!(matches!(
+        literal::read(
+            &s,
+            1,
+            end,
+            true,
+            &r,
+            &mut b(),
+            &mut SourceAdmission::default()
+        ),
+        Err(SentenceError::Source(_))
+    ));
+    Ok(())
+}
+
+#[test]
+fn malformed_literals_have_typed_source_bound_failures() -> Result<(), String> {
+    let r = registry()?;
+    for (text, code) in [
+        ("\"abc", SentenceCode::UnterminatedLiteral),
+        ("\"[a/b\"", SentenceCode::UnclosedAnnotation),
+        ("\"]\"", SentenceCode::UnexpectedDelimiter),
+        ("\"[a/b/c]\"", SentenceCode::SeparatorCount),
+        ("\"[a]\"", SentenceCode::SeparatorCount),
+        ("\"[/b]\"", SentenceCode::EmptyAnnotationPart),
+        ("\"{a/}\"", SentenceCode::EmptyAnnotationPart),
+        ("\"a\nb\"", SentenceCode::DirectLineBreak),
+        (r#""\q""#, SentenceCode::InvalidEscape),
+        (r#""\u{d800}""#, SentenceCode::InvalidScalar),
+        (r#""\u{110000}""#, SentenceCode::InvalidScalar),
+        (r#""\u{}""#, SentenceCode::InvalidScalar),
+    ] {
+        let s = source(text)?;
+        let scan = literal::read(
+            &s,
+            0,
+            text.len() as u64,
+            true,
+            &r,
+            &mut b(),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(err)?;
+        let SentenceOutcome::Failed(failure) = scan.outcome else {
+            return Err(text.into());
+        };
+        assert_eq!(failure.code, code, "{text}");
+        s.slice(&failure.primary).map_err(err)?;
+        if let Some(opening) = failure.opening {
+            assert!(matches!(s.slice(&opening).map_err(err)?, "[" | "{"));
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn nested_input_is_iterative_and_limits_stop_without_partial_success() -> Result<(), String> {
+    let r = registry()?;
+    let text = format!("\"{}x{}\"", "{".repeat(1000), "/y}".repeat(1000));
+    let s = source(&text)?;
+    let mut budget = b();
+    let scan = literal::read(
+        &s,
+        0,
+        text.len() as u64,
+        true,
+        &r,
+        &mut budget,
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    assert!(matches!(scan.outcome, SentenceOutcome::Matched(_)));
+    for reason in [
+        StopReason::DepthLimit,
+        StopReason::WorkLimit,
+        StopReason::NodeLimit,
+        StopReason::AllocationLimit,
+        StopReason::SourceLimit,
+        StopReason::Cancelled,
+    ] {
+        let mut limits = b().limits();
+        match reason {
+            StopReason::DepthLimit => limits.depth = 50,
+            StopReason::WorkLimit => limits.work = 1000,
+            StopReason::NodeLimit => limits.nodes = 10,
+            StopReason::AllocationLimit => limits.allocation_units = 1000,
+            StopReason::SourceLimit => limits.source_bytes = 1,
+            _ => {}
+        }
+        let mut budget = Budget::new(limits);
+        if reason == StopReason::Cancelled {
+            budget.cancel();
+        }
+        assert!(
+            matches!(literal::read(&s, 0, text.len() as u64, true, &r, &mut budget, &mut SourceAdmission::default()), Err(SentenceError::Stopped(s)) if s == reason)
+        );
+        assert_eq!(budget.poll(), Err(reason));
+    }
+    Ok(())
+}
+
+#[test]
+fn literal_print_preserves_nested_content_and_escaped_delimiters() -> Result<(), String> {
+    let r = registry()?;
+    for text in [
+        r#""""#,
+        r#""a\n\r\t\\\"\u{5b}""#,
+        "\"前{[漢/かん]/説明/別注}𝄞\"",
+    ] {
+        let value = parse(text, &r)?.syntax.value;
+        let printed = literal::print(&value, &mut b()).map_err(err)?;
+        let reparsed = parse(&printed, &r)?;
+        assert_eq!(reparsed.syntax.value, value);
+    }
+    Ok(())
+}
+
+#[test]
+fn literal_print_rejects_prefix_only_break_and_stops_expanding_shared_values() -> Result<(), String>
+{
+    let value = SentenceValue {
+        root: Root::Sentence(SentenceRef(1)),
+        nodes: vec![
+            Kind::Break,
+            Kind::Sentence {
+                inlines: vec![InlineRef(0)],
+            },
+        ],
+        embeds: vec![],
+    };
+    assert_eq!(
+        literal::print(&value, &mut b()),
+        Err(literal::PrintError::NotLiteral(InlineRef(0)))
+    );
+    // Only 21 arena nodes, but a million expanded characters: output limits
+    // must count occurrences, not merely unique nodes of the DAG.
+    let mut nodes = vec![Kind::Text { text: "x".into() }];
+    for i in 0..20 {
+        nodes.push(Kind::Concat {
+            inlines: vec![InlineRef(i), InlineRef(i)],
+        });
+    }
+    nodes.push(Kind::Sentence {
+        inlines: vec![InlineRef(20)],
+    });
+    let value = SentenceValue {
+        root: Root::Sentence(SentenceRef(21)),
+        nodes,
+        embeds: vec![],
+    };
+    let mut limits = b().limits();
+    limits.output_bytes = 1000;
+    let mut budget = Budget::new(limits);
+    assert_eq!(
+        literal::print(&value, &mut budget),
+        Err(literal::PrintError::Stopped(StopReason::OutputLimit))
+    );
+    assert_eq!(budget.poll(), Err(StopReason::OutputLimit));
+    Ok(())
+}
+
+#[test]
+fn escape_prefixes_need_more_and_changed_schema_is_not_silently_accepted() -> Result<(), String> {
+    let r = registry()?;
+    let s = source(r#""\u{1d11e}\n""#)?;
+    for end in 0..s.text().len() {
+        let scan = literal::read(
+            &s,
+            0,
+            end as u64,
+            false,
+            &r,
+            &mut b(),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(err)?;
+        assert!(matches!(scan.outcome, SentenceOutcome::NeedMore));
+    }
+    let mut changed = nepl3_sentence_core::schema::descriptor(&mut b()).map_err(err)?;
+    // Type inventory order is canonicalized; change a contract constraint.
+    changed.types[0]
+        .constraints
+        .push("different-literal-contract".into());
+    let mut wrong = SchemaRegistry::default();
+    for d in [
+        nepl3_core::schema::foundation::descriptor(&mut b()).map_err(err)?,
+        changed,
+    ] {
+        wrong
+            .register(d.reference(&mut b()).map_err(err)?, d, &mut b())
+            .map_err(err)?;
+    }
+    wrong.finalize(&mut b()).map_err(err)?;
+    assert!(matches!(
+        literal::read(
+            &s,
+            0,
+            s.text().len() as u64,
+            true,
+            &wrong,
+            &mut b(),
+            &mut SourceAdmission::default()
+        ),
+        Err(SentenceError::SchemaIdentity)
+    ));
+    Ok(())
+}

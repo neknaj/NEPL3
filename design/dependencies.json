@@ -211,13 +211,23 @@
         "nepl3-suite",
         "nepl3-doc-core",
         "nepl3-math-core",
+        "nepl3-sentence-core",
         "nepl3-doc-html",
         "nepl3-math-mathml",
         "nepl3-math-tex",
         "nepl3-markup"
       ],
       "no_std": false,
-      "responsibility": "Generation, conformance, dependency checks and local Doc artifact host"
+      "responsibility": "Generation, conformance, dependency checks and local Doc artifact host; host-only pulldown-cmark HTML feature renders remaining Markdown canonical overview; no domain-core dependency"
+    },
+    {
+      "name": "nepl3-sentence-core",
+      "path": "crates/languages/sentence/core",
+      "dependencies": [
+        "nepl3-core"
+      ],
+      "no_std": true,
+      "responsibility": "Independent structured sentence arena, validation and NDF adapters; no Doc/Math/annotation runtime dependency; extraction under spec23; dev-only nepl3-wire for real CBOR and foreign source-closure boundary tests"
     }
   ],
   "design_revision": "nepl3-design-2026-09-06-r4"

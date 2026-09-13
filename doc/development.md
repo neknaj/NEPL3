@@ -24,6 +24,11 @@ nepld正本へ移行し、検査済みの同じsite artifactを公開します�
 
 ## ローカル環境
 
+初期Pages公開は `.github/workflows/pages.yml` が担当します。main pushのCI成功後、
+そのrunのDoc site・検査report・元tarを取得し、commit/manifest/内容一致を再検査して公開します。
+公開後のHTTP smoke失敗はworkflow失敗として記録します。LKG/journalによる自動復旧は未提供です。
+Markdown/NEPL3d混在公開は正本移行を支える段階であり、全ページ移行やT19/T20完成を意味しません。
+
 `cargo run --locked -p nepl3-tools -- site build site/config.json dist/site` は、
 登録済みDoc正本のHTMLに静的な索引を付け、新規ディレクトリへ一式を生成します。
 追跡済みの設定とcleanな入力checkoutを要求し、生成中にHEADや入力の変更を検出した場合は出力しません。
@@ -32,7 +37,9 @@ nepld正本へ移行し、検査済みの同じsite artifactを公開します�
 CIでは同じcheckoutからbuildしたbinaryと生成ログを結び付けて保管します。
 埋込template・CSSとcheckoutの不一致も拒否します。toolsのbuild.rsはcompiler識別のみを行い、
 文書生成やGrammar compileを実行しません。
-現在の入口は登録済みページのdocs-only生成です。未移行文書・rustdoc・例のサイト統合、
+現在の入口は登録済みDocページ、未移行のMarkdown仕様書、`site/examples.json`の原文例を含むdocs-only生成です。
+原文の配布byte・Profile・digestは同じcheckoutと照合し、表示から例を実行しません。
+仕様書以外の未移行文書・rustdoc・実行例の操作結果を含む統合、
 公開後smokeと復旧を含むPages配信、T19/T20全体の完了は別途検証します。
 
 `python tools/site/payload.py dist/site dist/pages.tar --manifest-sha256 <検査済みmanifestのSHA-256>`
@@ -160,7 +167,7 @@ CIのWASI jobはSHA-256を固定したWasmtime 44.0.1で実装済みcoreの実�
 
 Binding の fixture と Python seed adapter の一致確認は子processを起動する native host 専用試験です。native の通常試験で実行し、Wasm target ではその host 試験だけを型条件で除外します。同じ fixture を使う production compile・parse・analyze・portable codec の試験は `cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1` でも実行します。host 試験を WASI へ誤って含めた初回失敗は対象選択の失敗として記録し、後の runtime 試験成功へ読み替えません。
 
-Doc は `cargo test --locked -p nepl3-doc-core` と `cargo test --locked -p nepl3-tools --test doc` で検査します。後者は実4言語文法のcompile、ParseSession、Doc provider/prefix lowerを通します。同じ試験は `cargo test --locked -p nepl3-tools --test doc --target wasm32-wasip2 -- --test-threads=1` で実行し、元sourceとPython seed adapterの一致確認1件だけをnative専用とします。Docの進行中の範囲と未接続操作は [段階実装](progress/doc-runtime.md) を参照してください。
+Doc は `cargo test --locked -p nepl3-doc-core` と `cargo test --locked -p nepl3-tools --test doc` で検査します。後者は実4言語文法のcompile、ParseSession、Doc provider/prefix lowerを通します。同じ試験は `cargo test --locked -p nepl3-tools --test doc --target wasm32-wasip2 -- --test-threads=1` で実行します。元sourceとPython seed adapterの一致確認1件、およびhostのfile入力・resource出力・alias不正時の出力抑止を扱う3件はnative専用です。Docの進行中の範囲と未接続操作は [段階実装](progress/doc-runtime.md) を参照してください。
 
 Math は `cargo test --locked -p nepl3-math-core` と `cargo test --locked -p nepl3-tools --test math` で検査します。後者は実文法のcompile・ParseSessionからMathの表記を保持するlowerを通し、同じ元入力でWASIも実行します。構造検査と数値演算の個別試験から、式全体の評価・束縛・印字の完成を推定しません。[段階実装](progress/math-runtime.md)に検証済みの範囲と残りを記録します。
 

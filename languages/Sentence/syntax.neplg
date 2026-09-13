@@ -1,0 +1,76 @@
+language Sentence 1 Sentence
+cons extension BuiltinWord "nepl3.reader/name-v1" "reader/v1"
+cons extension SentenceLiteral "sentence.reader/literal-v1" "reader/v1"
+cons reader word call "nepl3.reader/name-v1"
+cons reader literal call "sentence.reader/literal-v1"
+cons reader separation discard some scalar whitespace
+cons mode Code
+cons skip separation
+cons take SentenceLiteral literal
+cons take Word word
+nil
+cons category Sentence Code
+cons category Inline Code
+cons leaf SentenceLiteral Sentence SentenceLiteral none cons style self "content" nil
+cons form Sentence Sentence "sentence"
+cons field inlines listof local Inline
+nil
+group cons visit inlines
+nil
+cons style head "marker" nil
+cons form Text Inline "text"
+cons field text builtin Text
+nil
+none
+cons style head "marker" nil
+cons form Concat Inline "concat"
+cons field inlines listof local Inline
+nil
+group cons visit inlines
+nil
+cons style head "marker" nil
+cons form Ruby Inline "ruby"
+cons field base local Inline
+cons field reading local Inline
+nil
+group cons visit base
+cons visit reading
+nil
+cons style head "marker" nil
+cons form InlineAnno Inline "anno"
+cons field base local Inline
+cons field notes listof local Inline
+nil
+group cons visit base
+cons visit notes
+nil
+cons style head "marker" nil
+cons form Code Inline "code"
+cons field text builtin Text
+nil
+none
+cons style head "marker" nil
+cons form Emphasis Inline "em"
+cons field inline local Inline
+nil
+group cons visit inline
+nil
+cons style head "marker" nil
+cons form Strong Inline "strong"
+cons field inline local Inline
+nil
+group cons visit inline
+nil
+cons style head "marker" nil
+cons form Break Inline "break"
+nil
+none
+cons style head "marker" nil
+cons form ExternalLink Inline "link"
+cons field uri builtin Text
+cons field label local Inline
+nil
+group cons visit label
+nil
+cons style head "marker" nil
+nil
