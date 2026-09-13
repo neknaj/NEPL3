@@ -152,3 +152,22 @@ source編集の原子的な反映は維持する。同期reader callbackは外�
 上記3399での停止は過去の途中版の記録で、現行の再現結果ではない。
 この全文HTML試験はnative/WASIで成功している。多数ページ、全foreign、Pages配信の
 性能・完成までを一例の成功から推定しない。
+
+## Rust API収録の未完了箇所（2026-09-13）
+
+`ee5e2d6`でdocs-only生成へ同じcheckoutのworkspace rustdocを接続した。
+13 libraryの生成は成功し、約41MBのAPI・検索・source資源を収録できるため、
+site/payloadの容量上限を64MiBへ揃えた。通常のDoc本文の予算は変更していない。
+ただし実artifactの全リンク検査は、生成元rustdocに存在しない次の2資源で失敗する。
+
+- `trait.impl/nepl3_engine/binding/host/trait.BindingHost.js`
+- `trait.impl/nepl3_reader/tokenizer/host/trait.TokenizationHost.js`
+
+固定rustdoc `1.97.0 (2d8144b78 2026-07-07)`で、公開traitだけの最小例と
+private moduleから再公開する最小例の両方を生成し、実装一覧JSが存在しないことを確認した。
+TokenizationHostにはproductionのprivate IntegrityHost実装があり、Rust実装全体が存在しない
+という意味ではない。公開implementorの有無と区別する。
+`write_shared.rs`の[固定版実装](https://github.com/rust-lang/rust/blob/2d8144b78/src/librustdoc/html/render/write_shared.rs)
+はimplementor cacheを走査して資源を生成する。空JS、参照scriptの削除、偽implementor、
+欠落の検査除外で成功扱いにはしない。生成toolchainの修正・全リンク再検査・browserでの
+実検索が残るため、Rust API収録とT19/Pages公開は未完了である。

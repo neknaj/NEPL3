@@ -26,6 +26,7 @@ nepld正本へ移行し、検査済みの同じsite artifactを公開します�
 
 `cargo run --locked -p nepl3-tools -- site build site/config.json dist/site` は、
 登録済みDoc正本のHTMLに静的な索引を付け、新規ディレクトリへ一式を生成します。
+出力親directoryは事前に作成します（例: `mkdir -p dist`。PowerShellでは `New-Item -ItemType Directory -Force dist`）。
 追跡済みの設定とcleanな入力checkoutを要求し、生成中にHEADや入力の変更を検出した場合は出力しません。
 `build.json` のsource commitは入力checkout、rendererは実行したbinaryのSHA-256と
 そのbuild時のrustcを別々に記録します。binaryのsource commitを入力checkoutから推定しません。

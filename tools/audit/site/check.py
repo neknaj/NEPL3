@@ -20,12 +20,17 @@ class Document(HTMLParser):
         self.ids = set()
         self.links = []
         self.scripts = 0
+        self.redirect = None
         self.feed(text)
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         if tag == 'script' or any((k.startswith('on') for k in attrs)):
             self.scripts += 1
+        if tag == 'meta' and attrs.get('http-equiv', '').lower() == 'refresh':
+            assert attrs.get('content', '').startswith('0;URL='), 'unexpected redirect'
+            self.redirect = attrs['content'][6:]
+            self.links.append(self.redirect)
         if 'id' in attrs:
             assert attrs['id'] not in self.ids, 'duplicate id'
             self.ids.add(attrs['id'])
@@ -62,6 +67,33 @@ def expected_inputs(build, manifest, doc_manifest, docs, source_root, config_pat
     assert hashlib.sha256(renderer.read_bytes()).hexdigest() == build['renderer']['executable_sha256'], 'renderer mismatch'
 
 
+def validate_links(docs, files, base):
+    for name, doc in docs.items():
+        if not name.startswith('api/rust/'):
+            assert not doc.scripts
+        for link in doc.links:
+            # Rustdoc on Windows can emit backslashes. HTTP(S) URL parsing in
+            # browsers treats these as path separators (unlike urljoin).
+            url = urlsplit(urljoin('https://local.invalid' + base + name, link.replace('\\', '/')))
+            if url.netloc != 'local.invalid':
+                continue
+            assert url.path.startswith(base), (name, link)
+            target = unquote(url.path[len(base):])
+            assert target in files, (name, link, target)
+            if url.fragment:
+                fragment = unquote(url.fragment)
+                seen = set()
+                while target in docs and docs[target].redirect is not None:
+                    assert target.startswith('api/rust/') and target not in seen, 'redirect cycle or non-API redirect'
+                    seen.add(target)
+                    redirected = urlsplit(urljoin('https://local.invalid' + base + target, docs[target].redirect.replace('\\', '/')))
+                    assert redirected.netloc == 'local.invalid' and redirected.path.startswith(base), 'external API redirect'
+                    target = unquote(redirected.path[len(base):])
+                assert target in docs, (name, link)
+                line_range = re.fullmatch(r'(\d+)-(\d+)', fragment) if target.startswith('api/rust/src/') else None
+                assert url.fragment in docs[target].ids or fragment in docs[target].ids or (line_range and all(part in docs[target].ids for part in line_range.groups())), (name, link)
+
+
 def verify(root, source_root=None, config_path='site/config.json', renderer=None):
     root = root.resolve()
     paths = list(root.rglob('*'))
@@ -79,20 +111,7 @@ def verify(root, source_root=None, config_path='site/config.json', renderer=None
         assert len(data) == record['bytes'] and hashlib.sha256(data).hexdigest() == record['sha256']
     docs = {name: Document(path.read_text(encoding='utf-8')) for name, path in files.items() if name.endswith('.html')}
     assert docs, 'empty HTML site'
-    for name, doc in docs.items():
-        if not name.startswith('api/rust/'):
-            assert not doc.scripts
-        for link in doc.links:
-            url = urlsplit(urljoin('https://local.invalid' + base + name, link))
-            if url.netloc != 'local.invalid':
-                continue
-            assert url.path.startswith(base), (name, link)
-            target = unquote(url.path[len(base):])
-            assert target in files, (name, link, target)
-            if url.fragment:
-                fragment = unquote(url.fragment)
-                line_range = re.fullmatch(r'(\d+)-(\d+)', fragment) if target.startswith('api/rust/src/') else None
-                assert fragment in docs[target].ids or (line_range and all(part in docs[target].ids for part in line_range.groups())), (name, link)
+    validate_links(docs, files, base)
     api_docs = {name: doc for name, doc in docs.items() if name.startswith('api/rust/') and name != 'api/rust/index.html'}
     docs = {name: doc for name, doc in docs.items() if name not in api_docs}
     expected_inputs(build, manifest, json.loads((root / 'doc-manifest.json').read_text(encoding='utf-8')),
