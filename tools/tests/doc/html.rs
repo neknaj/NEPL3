@@ -56,6 +56,118 @@ fn annotated_linear_combination_document_reaches_real_html() -> Result<(), Strin
     assert!(!out.contains("<script"));
     Ok(())
 }
+
+#[test]
+fn standalone_sentence_renders_annotation_without_fabricated_article() -> Result<(), String> {
+    use nepl3_doc_html::{portable, prepare_local_sentence, render_sentence};
+    let compiled = compiled_html()?;
+    let source = r#"sentence cons anno ruby text "字" text "じ" cons text "character" nil cons break cons code "<&" nil"#;
+    with_input_route(
+        true,
+        &compiled,
+        source,
+        "Sentence",
+        |tree, profile, b, a| {
+            let syntax = tree
+                .tree()
+                .bundle
+                .validate_with_sources(profile.registry(), b, a)
+                .map_err(err)?;
+            let empty = SourceStore::default();
+            let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
+            let doc = lower::document(
+                &syntax,
+                &compiled.doc.package.schema,
+                Category::Sentence,
+                profile.registry(),
+                &mut budget(),
+                &mut codec,
+            )
+            .map_err(err)?;
+            let options = RenderOptions {
+                parallel: ParallelMode::Rows,
+            };
+            let prepared = prepare_local_sentence(
+                &doc,
+                &options,
+                profile.registry(),
+                &mut codec,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            let rendered = render_sentence(&prepared, &mut budget()).map_err(err)?;
+            assert_eq!(rendered.markup.slot, nepl3_markup::html::HtmlSlot::Phrasing);
+            let checked = nepl3_markup::html::validate(
+                &rendered.markup.fragment,
+                rendered.markup.slot,
+                &rendered.markup.policy,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            let html = nepl3_markup::html::serialize(&checked, &mut budget()).map_err(err)?;
+            println!(
+                "DOC_SENTENCE_HTML {}",
+                html.as_bytes()
+                    .iter()
+                    .map(|byte| format!("{byte:02x}"))
+                    .collect::<String>()
+            );
+            // The specified shared inline tree preserves both annotation levels,
+            // the explicit break, and code escaping without an Article/title.
+            assert_eq!(
+                html,
+                "<span class=\"nepl-sentence\"><span><span class=\"nepl-anno\"><span class=\"nepl-base\"><span class=\"nepl-ruby\"><span class=\"nepl-base\">字</span><span class=\"nepl-reading\">じ</span></span></span><span class=\"nepl-notes\"><span class=\"nepl-note\">character</span></span></span><br><code>&lt;&amp;</code></span></span>"
+            );
+            let value = portable::rendered_sentence_to_value(
+                &rendered,
+                &prepared,
+                profile.registry(),
+                &mut codec,
+                &mut budget(),
+            )
+            .map_err(err)?;
+            let bytes = nepl3_wire::encode(&value, &mut budget()).map_err(err)?;
+            let received = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+            assert_eq!(
+                portable::rendered_sentence_from_value(
+                    &received,
+                    &prepared,
+                    profile.registry(),
+                    &mut codec,
+                    &mut budget()
+                )
+                .map_err(err)?,
+                rendered
+            );
+            let mut altered = rendered.clone();
+            altered.document_digest = Digest::of(b"wrong input");
+            assert!(matches!(
+                portable::rendered_sentence_to_value(
+                    &altered,
+                    &prepared,
+                    profile.registry(),
+                    &mut codec,
+                    &mut budget()
+                ),
+                Err(portable::PortableError::Mismatch)
+            ));
+            for resource in 0..4 {
+                let mut limits = budget().limits();
+                match resource {
+                    0 => limits.work = 0,
+                    1 => limits.allocation_units = 0,
+                    2 => limits.nodes = 0,
+                    _ => limits.depth = 0,
+                }
+                assert!(matches!(
+                    render_sentence(&prepared, &mut Budget::new(limits)),
+                    Err(nepl3_doc_html::RenderError::Stopped(_))
+                ));
+            }
+            Ok(())
+        },
+    )
+}
 #[test]
 fn article_html_preserves_nested_paragraph_order_without_nested_p() -> Result<(), String> {
     let result = html(
@@ -202,7 +314,10 @@ fn local_render_does_not_hide_unresolved_external_inputs_or_invalid_options() {
 
 #[test]
 fn real_source_html_crosses_first_receiver_cbor_with_positions_and_options() -> Result<(), String> {
-    use nepl3_doc_html::{LocalHtmlRequest, portable};
+    let compiled = compiled_html()?;
+    real_source_html_roundtrip(&compiled)
+}
+fn compiled_html() -> Result<Compiled, String> {
     let mut compiled = compiled()?;
     for descriptor in [
         nepl3_markup::schema::descriptor(&mut budget()),
@@ -220,8 +335,12 @@ fn real_source_html_crosses_first_receiver_cbor_with_positions_and_options() -> 
             .map_err(err)?;
     }
     compiled.doc.registry.finalize(&mut budget()).map_err(err)?;
+    Ok(compiled)
+}
+fn real_source_html_roundtrip(compiled: &Compiled) -> Result<(), String> {
+    use nepl3_doc_html::{LocalHtmlRequest, portable};
     let input = "article ja \"原稿🙂\"\r\nbody cons paragraph cons parallel cons variant ja \"[文/ぶん]\" cons variant en \"text\" nil nil nil";
-    with_input(&compiled, input, "Article", |tree, profile, b, a| {
+    with_input(compiled, input, "Article", |tree, profile, b, a| {
         let r = profile.registry();
         let checked = tree
             .tree()
