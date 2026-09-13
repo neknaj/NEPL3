@@ -244,6 +244,16 @@
     "svg": "only svg elements and Text"
   },
   "trusted_shell": "html/head/meta/style/body are emitted by fixed DocumentShell code, not accepted as user Markup nodes; stylesheet body is a fixed backend asset",
+  "katex_computed_style": {
+    "scope": "Lexical predicate for current generated Math TeX layout; not HTML admission, full KaTeX CSS, stylesheet extraction or fidelity proof",
+    "declarations": "Empty or semicolon-separated exact lowercase property:value declarations, optional final semicolon; no whitespace, duplicate property, comments, escapes, functions or URLs",
+    "length": "Unitless 0 or optional minus then decimal em; at most 7 integer and 4 fraction digits, magnitude <= 1000000; decimal point requires fraction digits",
+    "nonnegative_lengths": ["height", "width", "min-width", "padding-left", "border-bottom-width", "border-top-width", "border-right-width"],
+    "signed_lengths": ["top", "bottom", "left", "margin-left", "margin-right", "margin-top", "vertical-align"],
+    "keywords": {"position": ["relative"], "width": ["100%"]},
+    "rejection": "Reject the entire declaration list; never strip unknown properties and claim faithful rendering; retain original bytes/order for later stylesheet lowering",
+    "metering": "O(n) time, O(1) space, no allocation; charge 4n+1 Work before scanning and preserve sticky stop"
+  },
   "default_deny": true,
   "design_revision": "nepl3-design-2026-09-06-r4",
   "html_profile": "interfaces/markup.json and doc/spec/19-html-fragment.md define flat Text/Element/MathElement nodes. HTML admits math roots (inline in phrasing, either display in flow); mtext admits checked HTML phrasing. IDs, ancestry and depth cross namespaces. SVG, KaTeX profiles and full artifact preparation remain required, not silently accepted."
