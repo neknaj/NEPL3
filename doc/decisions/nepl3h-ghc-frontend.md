@@ -66,9 +66,10 @@ apply apply M.fromListWith + pairs
 
 applyは二項constructor、参照された関数は値である。ライブラリ関数ごとの解析arity登録は不要。
 これはNEPL3hで共通prefix規則を使う例であり、foundationや全DSLへapplyの意味を強制しない。
-構文arity、callability、saturationを区別する。別言語は先行import/宣言でshapeを確定した
-関数やcomponentを直接headにできる。未確定の対象は、categoryが明示的に許す参照leafまたは
-明示参照formを使い、固定arity 2のapplyへ適用構造を移す。未知headの自動leaf化はしない。
+構文arity、callability、saturationを区別する。前方情報でshapeが一意なら直接headを使え、
+applyは不要である。未確定の対象はその言語のarity 0の値参照として読み、固定arity 2の
+applyの反復で適用数を表す。ref等の明示形式は既知headと値参照を区別する一案であり、
+後方定義の全参照に必須ではない。Hが通常関数を参照として扱うのはH固有の選択である。
 前方のcontext更新と既読shape不変の詳細は[統合案](multilanguage-hca.md)を参照する。
 readerにはqualified name、foldl'、記号名、module名とliteralを定義する。
 構文headと同名の関数を参照する明示形式も必要だが、その綴りはschema設計時に確定する。
@@ -157,6 +158,10 @@ wrapperはtargetの意味に加えbinding/exportも保存する。文章の名�
 -- 説明用の型案。現行SDK APIではない。
 expand :: ExpansionInput -> Either ExpansionError DocFragment
 ```
+
+これはD fragmentを返す一操作のHaskell実装例である。Sentence生成、C fragment生成等は
+それぞれ別の用途別操作契約を持ち、共通出力をDocFragmentへ統一しない。
+契約は用途別packageまたはconsumer/adapterが所有し、H側の関数型を共通ABIにしない。
 
 hostが明示的に操作を選択して評価し、埋め込みの解析・表示だけでは実行しない。
 Haskell間では通常の値を使い、NEPL3境界では有限NDFデータを使う。

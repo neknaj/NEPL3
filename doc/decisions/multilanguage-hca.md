@@ -1,6 +1,6 @@
 # 複数言語・構造化文章・対象付き注釈の統合案
 
-識別子: `nepl3-multilanguage-hca-design-20260913-r5`。
+識別子: `nepl3-multilanguage-hca-design-20260913-r6`。
 状態: **設計草案、実装未着手、Draft PRで保持する**。
 2026-09-13の統合提案r1と、その後のコメント設計訂正を統合する。
 最後の訂正を優先し、対象を明示する`annotate Sentence target`を標準とする。
@@ -14,12 +14,25 @@ NEPL3h草案はPR #158の `8ff534b387d8c1f8eea439db65ed1b6759c353e2`。
 この文書を置くbranchの元基準や、ユーザーが行った外部調査と混同しない。
 GHC/CircuitGameの再build・外部ソースの再監査は今回行っていない。
 
-## 1. 所有する意味と依存方向
+## 1. NEPL3の目的・中核契約と各言語の責務
+
+NEPL3は、前置・括弧なしの複数言語を、共通のreader/tokenizer・prefix構文・schema・
+Source/Origin基盤で扱う計画である。各言語がtoken内部の読取り、構文arity、後続contextの
+更新規則と意味論を定義する。一つの汎用言語・中間言語・評価器へ統一する計画ではない。
+各token出現の境界とshapeは、その位置までに確定したcontextとtoken自身から決定する。
+先行import・宣言・型・関数・component・macro等は後続contextを更新できるが、
+後続情報で既読shapeを遡及変更しない。異なる言語を同一source内で組み合わせ、
+foreign syntaxを明示的な一対象として扱える。foundationは各言語へ一つの意味論を強制しない。
+
+相互運用はこの言語基盤から導かれる機能であり、NEPL3そのものをmiddlewareだけと定義しない。
+現repositoryのGrammar/Doc/Math/Circuitは現在の実装・設計対象であり、言語集合の上限ではない。
+以下の新言語・新経路の受入は未実施である。
 
 | 所有者 | 責務 |
 | --- | --- |
 | Foundation / reader / engine | 言語中立のSource、Origin、schema、構文、診断、Budget、交換と解析 |
-| 共通Interop package | 操作の意味契約、producer binding、生成slot、有限の型付き値 |
+| 共通operation/provider機構 | 言語中立の要求・応答・schema検査・実装解決の基盤 |
+| 用途別contract package / consumer / adapter | 個別producerの意味契約、生成slot、有限の型付き入出力 |
 | NEPL3h | 独立GHC frontend、Haskell固有の型・評価・module意味 |
 | 別のNEPLプログラミング言語 | その言語の意味論と、実装すると宣言したInterop操作 |
 | NEPL3c | typed signal bundle、primitive、部品合成、一般回路グラフ、帰還・伝搬 |
@@ -29,7 +42,7 @@ GHC/CircuitGameの再build・外部ソースの再監査は今回行っていな
 | NEPL3hdl | clock/reset/register/memory等の同期RTL・合成。新Cと別domain |
 | Adapter / Composition | 言語間変換、型付き受渡し、runner、資源・権限・出力 |
 
-Hは必須マクロ言語、universal evaluator、中間言語にしない。C/A/D/Interopのcore、
+Hは必須マクロ言語、universal evaluator、中間言語にしない。C/A/Dや用途別契約のcore、
 生成器、既定testを不要なGHC依存へ結合しない。複数の言語のproducerを同時に利用できる。
 全言語へcompile/evaluate/renderを強制する巨大traitや中央の言語enumは追加しない。
 native typed fast pathとNDF/1のportable pathを維持する。
@@ -59,6 +72,9 @@ Hの非正格式を別言語へalias変更だけで渡さない。直接ソー�
 
 既存SchemaRef、OperationRef、Report、Complete/Invalid/Stopped/Awaitを再利用し、
 既存fieldを重複した巨大recordや別の輸送protocolへ写し直さない。
+Interopは相互運用の総称であり、全操作を所有する必須の中央package名ではない。
+個別契約は用途別contract packageまたはconsumer/adapterが所有し、実装bindingはcompositionが選ぶ。
+共通化は確認された重複へ限定し、言語追加のたび一つの中央catalogへ意味を集約しない。
 初版のABIはdescriptor完全一致を要求する。変換は方向と版を持つ明示adapterにする。
 同じ公開操作を複数実装が提供できるが、一つの解決済みProfileのbindingは一意に固定する。
 未選択の複数候補は曖昧さとして拒否し、失敗後の無断fallbackはしない。
@@ -80,6 +96,9 @@ UIの採用は[TEA契約](../spec/14-web-ui.md)の全request identityを照合�
 ## 3. 言語中立の構造生成
 
 以下は新しい提案構文であり、production forms catalogへ登録済みではない。
+generate/callはこの例のhost surfaceの選択肢であり、NEPL3共通meta-languageではない。
+共有するのはproducer operationの契約である。別のhostは先行importでproducer自身を
+固定arity headとして導入してもよい。いずれも出現時点のshapeと操作の受入契約を満たす。
 
 ```text
 generate Adder8
@@ -145,13 +164,15 @@ GHC build・第2言語・実descriptor digestは未選定で、架空の固定�
 | record | 全fieldをちょうど一度指定、指定順から型のfield順へ正準化 |
 | driver | sink leafにちょうど一接続、netに外部入力かprimitive出力の一driver。fan-out可 |
 | graph | aliasのみの無driver循環を拒否。primitiveを通るfeedbackは許可 |
-| 依存 | 型・source import・module instance化は初版DAG。宣言順の制約とは分ける |
+| 依存 | 新C固有の初期policyとして型・source import・module instance化をDAGにする |
 | primitive | 通常packageの有限Boolean関数、完全真理値表。名前norだけで認証しない |
 | basis検査 | Entry内の明示dead instanceを含む実primitive closureを許可ID集合と照合 |
 | flatten | moduleを展開して使用primitiveを保存。別basisへの置換は別操作 |
 | 同値 | Boolean関数、gate構造、unit-delay traceの保証を分ける |
 
 Signal<T>は接続、Value<T>は時点の観察値であり、Haskell Bool/list/recordと暗黙変換しない。
+このCのsource import制限は前方確定原則から導かれるNEPL3共通規則ではない。
+別言語は循環importをSCC等で解決する規則を持てるが、各出現のshapeは前方確定する必要がある。
 structの型identityと公開layout閉包は、別言語のSDKでも同じ契約packageに解決する。
 module/source unit/fileを区別し、manifestでnamespaceとsource集合を明示する。
 各fileを独立parseしてunit宣言を結合し、列挙順で意味を変えない。
@@ -169,10 +190,15 @@ analog遅延、metastability、FPGA合成の保証ではない。
 ## 6. NEPL3sentence・A・Dの所有境界と注釈構文
 
 DocのSentence/Inlineのうち文書構造から独立して成立する部分をNEPL3sentenceへ抽出する。
+NEPL3sentenceは独自のLanguagePackageと公開root category `Sentence`を持つ一つのNEPL3言語とする。
+sentence literalとprefix formを持ち、AやDで包まず単独でparse/check/printできることを要求する。
+共有schemaや文章libraryだけで完成とはしない。専用runtime受入とliteral/prefix往復を検証する。
 Sentence、Text、Concat、Ruby、Anno、inline code/emphasis/strong/break/link/reference等を
 文章モデルとして扱う。asset/foreign参照は必要な文書非依存契約と明示adapterを整えて利用する。
 NEPL3sentenceはコメント・本文・HTML出力の用途を決めず、Doc/Math/C/GHCのruntimeに依存しない。
 Article/Section/Paragraph/Table/文書のList/Pageや全体link解決はDが所有する。
+文章内の外部URL等のlink構造はNEPL3sentenceが扱えるが、Dのpage/section/anchor名前空間は
+所有しない。document referenceは明示参照・環境・adapterでDへ解決し、URL構造と区別する。
 foreign inlineは登録済みbridgeで扱い、全言語enumを文章coreへ追加しない。
 
 ```text
@@ -216,8 +242,8 @@ Annotated<T>は共通surface patternであり、generic category機構の新設�
 signal expression/test case、HのModule/Declaration/Expr等を候補にする。
 list constructorや内部delimiterへ一律に適用せず、`annotate "..." nil`は標準では拒否する。
 hostが受理を宣言していないcategory、literal内部、raw code内部を横取りしない。
-`call ripple ...`は中立Interop/Invocationであり、H/Exprではない。H製producerを指していても
-注釈の対象categoryはInvocationで、そのcategoryへの登録を要求する。
+この例の`call ripple ...`はhost surfaceが定義するInvocation categoryであり、
+producerの実装がHでもH/Exprではない。注釈にはその具体categoryへの登録を要求する。
 
 複数のbody itemを説明するときは、module/body/struct/unit等、hostに実在する所有nodeを対象にする。
 注釈の都合だけでtransparentな`group`を追加する案は撤回する。
@@ -351,7 +377,10 @@ PR #158はDraftを維持し、本書作成をcompiler実装・新repo作成・�
 解析開始前に全headを固定することは要求しない。各出現は、その前に確定したcontextと
 token自身から字句境界・category・head identity・arityを決める。先行するimport、宣言、
 型・component定義、macro準備が、後続で使えるform/category/reader/名前を導入してよい。
-通常の値のbindは構文head登録を自動的には意味しない。登録する場合は明示した操作契約を使う。
+各言語が、どの宣言がcontextをどう更新するかを定義する。関数定義がその名前とarityを
+後続headとして導入する言語では、それを通常の定義の意味としてよい。
+別の特殊registration operationや追加source記法を共通基盤から要求しない。
+値のbindingだけを行う言語もあり、他言語の定義規則を暗黙に適用しない。
 
 親headのfield数と各子contextの決定規則は親を識別した時点で確定する。
 子iの具体的contextは、その規則に従い既読の子0..i-1を使って選べる。
@@ -365,8 +394,9 @@ token readerが現在tokenを読むための先読みやNeedMoreを行うこと�
 provider実行は構文原則上排除しないが、通常のparse権限だけで任意workspace codeを実行しない。
 能力不足なら明示的に未解決/停止を返し、無断のnetwork取得・guest評価はしない。
 
-contextは単調追加またはscope局所更新とし、同名headのshadowing、終了時の復帰、曖昧さ拒否を
-宣言する。同じ綴りが別contextで別arityでも、各出現で一意ならよい。
+context更新は追加・削除・切替・shadowing・scope復帰を含め、先行情報で決まればよい。
+単調追加へ限定しない。各言語が更新の作用範囲と衝突・曖昧さの規則を定義する。
+同じ綴りが別contextで別arityでも、各出現で一意ならよい。
 固定した入力・依存asset・初期Profileから更新履歴を追跡できるようにし、可変global registryにしない。
 各context revisionと適用位置・scope・入力identityを継続/cacheへ束縛する。
 backtracking/NeedMore/cancelでcontextをcheckpointへ戻し、外部effectを巻き戻せるとは仮定しない。
@@ -380,6 +410,10 @@ registry・provider・継続・権限・再現性の契約へ反映して実装�
 
 ### 構文arity・callability・saturation
 
+対象の構文arityをその出現位置までの情報から一意に決定できる場合は直接headを使え、applyは不要である。
+決定できない対象は、その言語で定義されたarity 0の値参照として読み、固定arity 2のapplyを
+反復して適用数を表す。後方定義、高階値、部分適用等でも、対象の意味解決とprefix境界を分離できる。
+
 構文arityはparserが読む子の数、関数の引数型とcallabilityは意味論、saturationは適用状態である。
 先行する宣言/importから固定shapeを得たheadは直接使える。componentのport数やstructのfield数を
 後続constructorのshapeに対応させることもできるが、その登録・型・出力・名前衝突規則を明示する。
@@ -391,10 +425,12 @@ port数や型情報を発見しただけで現在のform shapeを暗黙変更し
 値参照を許すcategoryなら固定shapeで解析できる。callability・型・saturationは後段が検査する。
 Haskellの型クラスoverloadがそのまま異なる構文arityのoverloadだと仮定しない。
 
-未知headを万能のarity 0へ自動fallbackしてはならない。categoryが参照leafを明示受理するか、
-明示参照constructorを用いる。例えば提案表記`apply ref add x`では、`ref`自身はarity 1、
+裸の名前を参照leafとして読む規則は各言語が定義でき、後方定義だからrefが必須になるわけではない。
+refは、裸の綴りが既に構文headとして確定している場合に値参照と区別する手段の一案である。
+例えば提案表記`apply ref add x`では、`ref`自身はarity 1、
 その子Name tokenがarity 0で、得られる意味値がReference(add)である。
 既知の2-arity headとして登録された裸のaddを、引数不足だから値参照へ読み替えない。
+参照leafを持たないcategoryで未知headを救済する万能fallbackも設けない。
 Haskell名の後方解決も、その言語のbinding規則が認める場合に限る。
 
 | 出現位置の条件 | 解析方法 |
