@@ -1,4 +1,6 @@
 //! Production four-language profile for Math parsing, including real Doc reader callbacks.
+#[path = "math/annotations.rs"]
+mod annotations;
 #[path = "math/mathml.rs"]
 mod mathml;
 #[path = "math/print.rs"]
