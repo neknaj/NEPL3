@@ -1,7 +1,7 @@
 # NEPL3h: GHCへ接続する独立frontend案
 
 状態: **設計草案・実装未着手**。2026-09-13のユーザー提案を整理した文書である。
-今回の変更は文書のみとし、draft PRで止める。repo作成、依存追加、compiler試作、
+今回の変更は文書のみとする。文書のmergeによってrepo作成、依存追加、compiler試作、
 配布、タスク・受入状態の変更をこの文書から自動的に開始しない。
 当初NEPL3h案を作成した際のNEPL3基準は `3fed238a0021aca770d87c19ecc50fea080e62b1`。
 今回のPRで再照合し、branchへ取り込んだmainは `d8ca89264ca17ebe6c4aba3874cac2775c15b98d`。
