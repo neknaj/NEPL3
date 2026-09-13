@@ -32,7 +32,7 @@ class ArtifactRejection(unittest.TestCase):
             manifest = {'source_commit': commit}
             doc = {'pages': [{'id': 'intro', 'input': 'intro.nepld', 'route': 'docs/intro.html',
                               'source_sha256': hashlib.sha256(b'original input').hexdigest()}]}
-            docs = dict.fromkeys(['index.html', 'docs/index.html', 'docs/intro.html'])
+            docs = dict.fromkeys(['index.html', 'docs/index.html', 'docs/intro.html', 'examples/index.html'])
             expected_inputs(build, manifest, doc, docs, root, 'config.json', renderer)
             for failure in ['commit', 'manifest', 'base', 'route', 'source', 'duplicate', 'renderer', 'design', 'capability']:
                 b, m, d, pages = copy.deepcopy((build, manifest, doc, docs))

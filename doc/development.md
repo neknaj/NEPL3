@@ -32,7 +32,9 @@ nepld正本へ移行し、検査済みの同じsite artifactを公開します�
 CIでは同じcheckoutからbuildしたbinaryと生成ログを結び付けて保管します。
 埋込template・CSSとcheckoutの不一致も拒否します。toolsのbuild.rsはcompiler識別のみを行い、
 文書生成やGrammar compileを実行しません。
-現在の入口は登録済みページのdocs-only生成です。未移行文書・rustdoc・例のサイト統合、
+現在の入口は登録済みページと`site/examples.json`の原文例を含むdocs-only生成です。
+原文の配布byte・Profile・digestは同じcheckoutと照合し、表示から例を実行しません。
+未移行文書・rustdoc・実行例の操作結果を含む統合、
 公開後smokeと復旧を含むPages配信、T19/T20全体の完了は別途検証します。
 
 `python tools/site/payload.py dist/site dist/pages.tar --manifest-sha256 <検査済みmanifestのSHA-256>`

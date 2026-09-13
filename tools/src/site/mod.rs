@@ -1,4 +1,5 @@
 //! Static host composition of production Doc pages. No deployment side effects.
+mod examples;
 use crate::{
     Result,
     doc::{canonical, export::pages::GeneratedPages},
@@ -151,6 +152,12 @@ fn compose(
             escape(&page.id)
         ));
     }
+    if pages.files.contains_key("examples/index.html") {
+        links.push_str(&format!(
+            "<li><a href=\"{}examples/index.html\">実例と原文</a></li>\n",
+            escape(&config.base_path)
+        ));
+    }
     let html = include_str!("../../../site/index.html")
         .replace("{{BASE}}", &escape(&config.base_path))
         .replace("{{PAGES}}", &links);
@@ -173,7 +180,7 @@ fn compose(
         "runtime_identity":null, "site_renderer":"nepl3-tools.site/1", "renderer":renderer,
         "source_identity_scope":"input checkout; renderer executable identified separately",
         "files":identities(&pages.files),
-        "scope":"Registered canonical Doc pages; no Playground, deploy receipt or full T19/T20 acceptance"
+        "scope":"Registered canonical Doc pages and example sources; no Playground, deploy receipt or full T19/T20 acceptance"
     });
     insert(
         &mut pages.files,
@@ -252,7 +259,10 @@ pub fn build(root: &Path, config: &str, output: &Path) -> Result<()> {
     {
         crate::command(root, "git", &["ls-files", "--error-unmatch", "--", input])?;
     }
-    let generated = canonical::generate_html(root, "doc/canonical.json")?;
+    let mut generated = canonical::generate_html(root, "doc/canonical.json")?;
+    for (path, bytes) in examples::generate(root, &config.base_path, &commit)? {
+        insert(&mut generated.files, &path, bytes)?;
+    }
     let generated = compose(&config, &registry, generated, &commit, design, &renderer)?;
     let after = String::from_utf8(crate::command(root, "git", &["rev-parse", "HEAD"])?)?;
     if after.trim() != commit {

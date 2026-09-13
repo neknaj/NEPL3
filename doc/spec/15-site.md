@@ -22,6 +22,15 @@ page registryは安定page ID、source正本の形式とpath、公開URL、見�
 
 例manifestには実行前提と期待する操作/結果も記録する。4言語それぞれの入門、完全なreference、典型例、診断の読み方、成果物取得、CLI/Web比較を用意する。rustdocだけを生成して利用者文書が完成した扱いにはしない。
 
+T19のdocs-only例表示では、`site/examples.json`が安定ID、repository内のsource path、
+言語alias/categoryと必要source Profileを指定する。生成する`examples/index.html`は原文を
+HTML escapeして表示し、`examples/manifest.json`は元sourceとProfileのbyte digest、commit、
+配布pathを記録する。原文はそのまま`.txt`へ配布し、元拡張子がHTML等でも実行可能なpageにしない。
+表示時の改行正規化と取得原文のbyte保持を区別する。文字列だけでguestを評価せず、
+この段階のcapabilityは`source-view`、`execution_available`はfalseとする。
+source Profileのalias/category照合はResolvedProfileの完成・動作保証ではない。
+実行入口には別途、解決済みProfileと操作・期待結果の契約が必要である。
+
 build.jsonにはsource commit、設計revision、schema/package/providerの解決済みdigest、例manifestと各assetのdigest、renderer/toolchain識別を記録する。`design/profile.json` はsource manifestであり、そのままruntime Profileと呼ばない。R009では解決済みProfileの閉じた型・検査を先に定め、T05/T11で実際のpackage/providerから生成して差分検査する。架空digestや未解決aliasでdispatchしない。R006のschema閉包をUI専用の文字列signatureで迂回しない。
 
 docs-onlyではruntimeの解決済みidentityを未存在として明示し、架空値で埋めない。interactive起動時にはHTML/JS/Worker/Wasmのidentity一致を検査する。配信更新や古いcacheで混在を検出したら、新schemaを旧Wasmへ送らず、再取得またはreloadを案内する。公開済みの全commitについてWeb版を永久保存する義務は設けない。
