@@ -55,3 +55,29 @@ Run `node --test tools/audit/math/node.test.mjs` for actual Node realm, warning,
 missing-module, stdio/exit, cancellation and synchronous-loop termination tests.
 The test-only renderer fixture exercises failures and is never a math oracle.
 Worker lifecycle follows the [Node Worker API](https://nodejs.org/api/worker_threads.html).
+
+## Fixed distribution resources
+
+`node/assets.mjs` loads the CSS, all referenced fonts and original LICENSE from
+a trusted installed KaTeX package into owned bytes. `assets.json` pins paths,
+MIME, sizes and SHA-256; no arbitrary package directory traversal is used.
+The resource byte cap is checked before I/O, and reads remain bounded even if a
+file grows. This cap covers retained asset bytes, not total JS heap or I/O time.
+Any missing, truncated or changed resource rejects the whole load. Returned
+buffers belong to the caller, which must revalidate them at an external boundary
+and must not replace them by later path reads. This is neither document admission
+nor proof that the executing renderer binary matches the asset package.
+
+The original `katex.min.css` and sibling `fonts/` paths are retained. See the
+[upstream font layout](https://katex.org/docs/font) and
+[fixed package license](https://github.com/KaTeX/KaTeX/blob/v0.18.7/LICENSE).
+No runtime CDN, font pruning, CSS rewriting, inline-style admission or automatic
+document insertion is added. The artifact owner places the entire set under
+one directory and binds its stylesheet and licensing records.
+
+After a reviewed package upgrade and `npm ci --prefix tools/audit/math`, run
+`node tools/generate/katex.mjs --write`. Without `--write` it verifies the
+inventory. The URL scan only inventories that reviewed fixed CSS; it does not
+sanitize unknown CSS. `node --test tools/audit/math/assets.test.mjs` checks actual
+package closure, bytes and tamper/missing/limit cases. Binary resources remain
+in the package/install or generated artifact, never copied into source history.
