@@ -34,7 +34,10 @@ CIでは同じcheckoutからbuildしたbinaryと生成ログを結び付けて�
 文書生成やGrammar compileを実行しません。
 現在の入口は登録済みDocページ、未移行のMarkdown仕様書、`site/examples.json`の原文例を含むdocs-only生成です。
 原文の配布byte・Profile・digestは同じcheckoutと照合し、表示から例を実行しません。
-仕様書以外の未移行文書・rustdoc・実行例の操作結果を含む統合、
+Rust APIは同じcheckoutからcargo docで生成し、検索assetを含めapi/rustへ収録します。
+Cargoの累積出力を混ぜないため、出力先の拡張子を.rustdocにした新規target directoryを使います。
+通常文書はscriptなし、Rust APIは全HTMLの静的リンク検査と全crate入口のJS有効/無効・実検索を検査します。
+仕様書以外の未移行文書・実行例の操作結果を含む統合、
 公開後smokeと復旧を含むPages配信、T19/T20全体の完了は別途検証します。
 
 `python tools/site/payload.py dist/site dist/pages.tar --manifest-sha256 <検査済みmanifestのSHA-256>`

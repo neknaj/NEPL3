@@ -24,10 +24,24 @@ pulldown-cmarkでHTML化する。生成Markdown projectionを再び正本とし�
 両経路は `docs/spec/NN-name.html` の配置を共有し、移行時も登録routeを優先する。
 未移行ページはMarkdown正本であることと同じcommitの原文を表示し、source・route・digest・
 rendererを `markdown-manifest.json` に記録する。各Markdown入力は256KiB、未移行仕様は256ページ、
-最終artifactは既存の32MiB上限内とする。相対リンクは元文書directoryを基準に解決し、
+最終artifactは64MiB上限内とする。相対リンクは元文書directoryを基準に解決し、
 repository外への脱出を拒否する。公開済み仕様へのリンクはsite内、その他の追跡済みfileは
 同じcommitのGitHub原文へ向ける。raw HTMLはescapeし、画像はalt文を表示する。
 この公開経路はT21の意味同等性検査や正本切替の完了を意味しない。
+
+Rust APIは同じcheckoutで `cargo doc --workspace --no-deps --locked` を実行して
+`api/rust/` へ収録する。Cargoの文書出力は累積するため、site出力ごとの新規target directoryを
+使い、既存directoryを拒否する。workspaceのlibrary targetをmetadataから列挙して全入口の存在を
+検査し、rustdoc版とsource commitを記録する。生成HTML・source・検索JS・CSS・fontを保持し、
+Cargoの`.lock`だけを配信対象から除く。現13 crateのrustdocは約41MBであるため、APIを削らず
+同一artifactへ収めるために生成・browser監査・payload/recoveryの上限を32MiBから64MiBへ変更する。
+file数上限4096は維持する。journalの証拠上限は別契約で変更しない。
+
+通常の文書本文は引き続きscriptなしで検査する。rustdocは全HTMLのローカルリンク・資源・
+fragmentを静的検査し、全crate入口を両base・3browser・2画面幅でJavaScript有効/無効の両方から
+閲覧する。有効時には実検索も確認する。この検査は全APIページのpixel layout試験を意味しない。
+rustdocの標準検索JSをNEPL3 Playground/runtimeの完成と扱わない。
+生成方式は[Cargo公式資料](https://doc.rust-lang.org/cargo/commands/cargo-doc.html)に従う。
 
 docs-onlyのトップは現在の`README.md`正本を固定版pulldown-cmarkでHTMLへ投影する。
 サイト収録済み仕様へのリンクはそのサイトrouteへ、siteに未収録のrepository資料は

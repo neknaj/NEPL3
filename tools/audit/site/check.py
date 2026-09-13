@@ -49,7 +49,7 @@ def expected_inputs(build, manifest, doc_manifest, docs, source_root, config_pat
     tracked = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', commit, '--', 'doc/spec/'], cwd=source_root, text=True).splitlines()
     markdown_routes = {'docs/spec/' + path[len('doc/spec/'):-3] + '.html' for path in tracked
                        if re.fullmatch(r'doc/spec/[0-9]{2}-[^/]*\.md', path) and path not in {p.get('projection') for p in registry}}
-    assert docs.keys() == {page['route'] for page in registry} | markdown_routes | {'index.html', 'docs/index.html', 'examples/index.html'}, 'page coverage'
+    assert docs.keys() == {page['route'] for page in registry} | markdown_routes | {'index.html', 'docs/index.html', 'examples/index.html', 'api/rust/index.html'}, 'page coverage'
     entries = doc_manifest['pages']
     assert len(entries) == len(registry), 'source coverage'
     actual = {entry['id']: entry for entry in entries}
@@ -66,7 +66,7 @@ def verify(root, source_root=None, config_path='site/config.json', renderer=None
     root = root.resolve()
     paths = list(root.rglob('*'))
     assert not any((p.is_symlink() for p in paths)), 'symlink in artifact'
-    assert sum((p.stat().st_size for p in paths if p.is_file())) <= 32 * 1024 * 1024, 'artifact size limit'
+    assert sum((p.stat().st_size for p in paths if p.is_file())) <= 64 * 1024 * 1024, 'artifact size limit'
     manifest = json.loads((root / 'manifest.json').read_text(encoding='utf-8'))
     build = json.loads((root / 'build.json').read_text(encoding='utf-8'))
     base = build['base_path']
@@ -80,7 +80,8 @@ def verify(root, source_root=None, config_path='site/config.json', renderer=None
     docs = {name: Document(path.read_text(encoding='utf-8')) for name, path in files.items() if name.endswith('.html')}
     assert docs, 'empty HTML site'
     for name, doc in docs.items():
-        assert not doc.scripts
+        if not name.startswith('api/rust/'):
+            assert not doc.scripts
         for link in doc.links:
             url = urlsplit(urljoin('https://local.invalid' + base + name, link))
             if url.netloc != 'local.invalid':
@@ -89,13 +90,26 @@ def verify(root, source_root=None, config_path='site/config.json', renderer=None
             target = unquote(url.path[len(base):])
             assert target in files, (name, link, target)
             if url.fragment:
-                assert unquote(url.fragment) in docs[target].ids, (name, link)
+                fragment = unquote(url.fragment)
+                line_range = re.fullmatch(r'(\d+)-(\d+)', fragment) if target.startswith('api/rust/src/') else None
+                assert fragment in docs[target].ids or (line_range and all(part in docs[target].ids for part in line_range.groups())), (name, link)
+    api_docs = {name: doc for name, doc in docs.items() if name.startswith('api/rust/') and name != 'api/rust/index.html'}
+    docs = {name: doc for name, doc in docs.items() if name not in api_docs}
     expected_inputs(build, manifest, json.loads((root / 'doc-manifest.json').read_text(encoding='utf-8')),
                     docs, source_root or Path(__file__).resolve().parents[3], config_path, renderer)
     examples = json.loads((root / 'examples/manifest.json').read_text(encoding='utf-8'))
     checkout = source_root or Path(__file__).resolve().parents[3]
     def blob(path):
         return subprocess.check_output(['git', 'show', build['source_commit'] + ':' + path], cwd=checkout)
+    api = json.loads((root / 'api/rust/manifest.json').read_text(encoding='utf-8'))
+    assert api['version'] == 1 and api['source_commit'] == build['source_commit']
+    metadata = json.loads(subprocess.check_output(['cargo','metadata','--no-deps','--locked','--format-version','1'],cwd=checkout))
+    names = sorted(t['name'] for p in metadata['packages'] if p['id'] in metadata['workspace_members'] for t in p['targets'] if 'lib' in t['kind'])
+    assert api['roots'] == [{'name':name,'route':f'api/rust/{name}/index.html'} for name in names]
+    assert api['command'] == ['cargo','doc','--workspace','--no-deps','--locked']
+    assert api['rustdoc'] == subprocess.check_output(['rustdoc','--version'],cwd=checkout,text=True).strip()
+    assert all(p['route'] in api_docs for p in api['roots'])
+    api_paths = {path for path in files if path.startswith('api/rust/')}
     markdown = json.loads((root / 'markdown-manifest.json').read_text(encoding='utf-8'))
     assert markdown['version'] == 1 and markdown['source_commit'] == build['source_commit']
     assert markdown['renderer'] == 'pulldown-cmark/0.13.4'
@@ -130,7 +144,7 @@ def verify(root, source_root=None, config_path='site/config.json', renderer=None
         example_paths.add(entry['path'])
     for records, expected, sized in [(build['files'], declared - {'build.json'}, True),
                               (json.loads((root / 'doc-manifest.json').read_text(encoding='utf-8'))['files'],
-                               declared - {'build.json', 'index.html', 'docs/index.html', 'assets/site.css', '.nojekyll', 'doc-manifest.json'} - example_paths - markdown_paths, False)]:
+                               declared - {'build.json', 'index.html', 'docs/index.html', 'assets/site.css', '.nojekyll', 'doc-manifest.json'} - example_paths - markdown_paths - api_paths, False)]:
         assert len(records) == len({record['path'] for record in records}), 'duplicate nested file'
         assert {record['path'] for record in records} == expected, 'nested manifest coverage'
         for record in records:
@@ -176,11 +190,30 @@ def verify(root, source_root=None, config_path='site/config.json', renderer=None
                             assert page.locator('pre > code').all_text_contents() == expected_sources, 'example display differs from source'
                         rows.append(dict(engine=engine, version=browser.version, width=width, page=name, **state))
                     context.close()
+                    for enabled in [False, True]:
+                        context = browser.new_context(java_script_enabled=enabled, viewport={'width': width, 'height': 900})
+                        page = context.new_page()
+                        failures = []
+                        page.on('requestfailed', lambda r: failures.append(r.url))
+                        page.on('response', lambda r: failures.append(r.url) if r.status >= 400 else None)
+                        for entry in api['roots']:
+                            response = page.goto(f'http://127.0.0.1:{server.server_port}' + base + entry['route'], wait_until='networkidle')
+                            assert response.status == 200 and not failures, (entry, failures)
+                            assert page.locator('#main-content').is_visible()
+                            if enabled:
+                                search = page.locator('input.search-input')
+                                search.fill('SourceSnapshot')
+                                search.press('Enter')
+                                page.locator('#search').wait_for(state='visible')
+                                page.locator('#search a[href*="struct.SourceSnapshot.html"]').first.wait_for(state='visible')
+                                assert not failures, failures
+                            rows.append(dict(engine=engine, version=browser.version, width=width, page=entry['route'], javascript=enabled, api=True))
+                        context.close()
                 browser.close()
     finally:
         server.shutdown()
         server.server_close()
-    return dict(result='passed', base=base, source_commit=build['source_commit'], manifest_sha256=hashlib.sha256((root / 'manifest.json').read_bytes()).hexdigest(), files=len(files), cases=rows)
+    return dict(result='passed', base=base, source_commit=build['source_commit'], manifest_sha256=hashlib.sha256((root / 'manifest.json').read_bytes()).hexdigest(), files=len(files), static_api_pages=len(api_docs), cases=rows)
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('root', type=Path)

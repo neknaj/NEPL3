@@ -1,4 +1,5 @@
 //! Static host composition of production Doc pages. No deployment side effects.
+mod api;
 mod examples;
 mod overview;
 mod specs;
@@ -10,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{collections::BTreeMap, io::Read, path::Path};
 
-const MAX_SITE_BYTES: usize = 32 * 1024 * 1024;
+const MAX_SITE_BYTES: usize = 64 * 1024 * 1024;
 
 fn check_size(payload: usize, manifest: usize) -> Result<()> {
     if payload.checked_add(manifest).ok_or("site size overflow")? > MAX_SITE_BYTES {
@@ -161,6 +162,12 @@ fn compose(
             escape(&config.base_path)
         ));
     }
+    if pages.files.contains_key("api/rust/index.html") {
+        links.push_str(&format!(
+            "<li><a href=\"{}api/rust/index.html\">Rust API</a></li>\n",
+            escape(&config.base_path)
+        ));
+    }
     for route in pages
         .files
         .keys()
@@ -280,6 +287,14 @@ pub fn build(root: &Path, config: &str, output: &Path) -> Result<()> {
         crate::command(root, "git", &["ls-files", "--error-unmatch", "--", input])?;
     }
     let mut generated = canonical::generate_html(root, "doc/canonical.json")?;
+    for (path, bytes) in api::generate(
+        root,
+        &output.with_extension("rustdoc"),
+        &config.base_path,
+        &commit,
+    )? {
+        insert(&mut generated.files, &path, bytes)?;
+    }
     for (path, bytes) in specs::generate(root, &registry, &config.base_path, &commit)? {
         insert(&mut generated.files, &path, bytes)?;
     }
