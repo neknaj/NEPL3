@@ -21,7 +21,8 @@ All construction, numeric printing and validation use the caller's sticky Budget
 Annotation integration is unfinished. `DocGuest`/`Label` returns the typed
 `AnnotationRequiresPreparation` error rather than removing annotation content.
 The required next stage is prepared Doc phrasing through MathML `mtext`, including
-Ruby/Anno, mixed-namespace depth and identity checks, and XML-safe serialization.
+Ruby/Anno. Markup now provides mixed-namespace depth/identity checks and XHTML
+serialization; the Math annotation preparation/adapter still needs to use them.
 This crate's presence is not completion of T24, Math rendering acceptance, KaTeX,
 the document artifact pipeline or browser verification.
 

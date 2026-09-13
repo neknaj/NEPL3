@@ -1,9 +1,8 @@
 //! Structural MathML profile from design/markup.json. This proof does not
 //! certify layout, resource availability, or the meaning of a Math expression.
-//! This first tree models MathML-only content. Mixed HTML inside mtext remains
-//! a required separate namespace integration; raw markup is never a substitute.
+//! Mixed HTML inside mtext uses checked phrasing nodes, never raw markup.
 //! The neutral structure codec is `portable::mathml`; it revalidates received
-//! trees. Math-to-MathML conversion and mixed HTML remain separate work.
+//! trees, including output-occurrence identities across HTML leaves.
 //! These Rust types are not a portable ABI or a completed artifact contract.
 //!
 //! Validation borrows the exact immutable fragment. Serialization expands shared
@@ -105,6 +104,10 @@ impl Attribute {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Node {
     Text(String),
+    /// Only admitted immediately inside mtext, with the containing policy.
+    Html {
+        fragment: crate::html::HtmlFragment,
+    },
     Element {
         tag: Tag,
         attributes: Vec<Attribute>,
@@ -115,6 +118,7 @@ pub enum Node {
 pub struct Fragment {
     pub nodes: Vec<Node>,
     pub root: u64,
+    pub html_policy: crate::html::HtmlPolicy,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Error {
@@ -125,6 +129,15 @@ pub enum Error {
     Content(u64),
     Attribute { node: u64, index: u64 },
     Text { node: u64, byte: u64 },
+    Html(crate::html::HtmlError),
+}
+impl From<crate::html::HtmlError> for Error {
+    fn from(e: crate::html::HtmlError) -> Self {
+        match e {
+            crate::html::HtmlError::Stopped(s) => Self::Stopped(s),
+            e => Self::Html(e),
+        }
+    }
 }
 impl From<StopReason> for Error {
     fn from(reason: StopReason) -> Self {
@@ -215,7 +228,8 @@ fn local(fragment: &Fragment, id: usize, b: &mut Budget) -> Result<(), Error> {
         b.charge(Resource::Work, 1)?;
         let node = &fragment.nodes[index(*child, fragment.nodes.len())?];
         let good = match tag {
-            Tag::Identifier | Tag::Number | Tag::Operator | Tag::Text => {
+            Tag::Text => matches!(node, Node::Text(_) | Node::Html { .. }),
+            Tag::Identifier | Tag::Number | Tag::Operator => {
                 matches!(node, Node::Text(_))
             }
             Tag::Table => matches!(
@@ -238,10 +252,14 @@ fn local(fragment: &Fragment, id: usize, b: &mut Budget) -> Result<(), Error> {
 }
 
 /// Validate all reachable nodes, arities, attributes and shared-DAG depth.
-/// O(nodes + edges + text/attribute bytes) time and O(nodes) auxiliary space.
+/// Math-only validation is O(nodes + edges + text/attribute bytes). With HTML
+/// leaves, additionally visit expanded occurrences and run HTML validation under
+/// the same budget; shared DAGs may have exponentially many appearances.
+/// O(nodes) Math traversal storage plus the HTML validator's identity/storage cost.
 /// Only a root `math` establishes the namespace; no RawHtml is admitted here.
 pub fn validate<'a>(fragment: &'a Fragment, b: &mut Budget) -> Result<Validated<'a>, Error> {
     b.poll()?;
+    crate::html::check::check_policy(&fragment.html_policy, fragment.root, b)?;
     let count = fragment.nodes.len();
     let root = index(fragment.root, count)?;
     if !matches!(fragment.nodes[root], Node::Element { tag: Tag::Math, .. }) {
@@ -274,7 +292,7 @@ pub fn validate<'a>(fragment: &'a Fragment, b: &mut Budget) -> Result<Validated<
         b.charge(Resource::Work, 1)?;
         b.observe_depth(stack.len() as u64)?;
         let child = match &fragment.nodes[node] {
-            Node::Text(_) => None,
+            Node::Text(_) | Node::Html { .. } => None,
             Node::Element { children, .. } => children.get(next).copied(),
         };
         if let Some(child) = child {
@@ -306,5 +324,49 @@ pub fn validate<'a>(fragment: &'a Fragment, b: &mut Budget) -> Result<Validated<
             return Err(Error::Unreachable(i as u64));
         }
     }
+    b.charge(Resource::Work, count as u64)?;
+    if !fragment
+        .nodes
+        .iter()
+        .any(|node| matches!(node, Node::Html { .. }))
+    {
+        return Ok(Validated { fragment });
+    }
+    // Reuse the bounded DFS stack for output occurrences: shared HTML carrying
+    // an ID must not be accepted twice. Resolve links only after all leaves.
+    let base = b.current_depth();
+    let mut identity = crate::html::check::Identity::default();
+    stack.push((root, 0));
+    while let Some((node, next)) = stack.last().copied() {
+        b.charge(Resource::Work, 1)?;
+        match &fragment.nodes[node] {
+            Node::Html { fragment: html } => {
+                let depth = base.saturating_add(stack.len() as u64 - 1);
+                b.with_depth_at_least(depth, |b| {
+                    crate::html::check::validate_into(
+                        html,
+                        crate::html::HtmlSlot::Phrasing,
+                        &fragment.html_policy,
+                        &mut identity,
+                        b,
+                    )
+                })?;
+                stack.pop();
+            }
+            Node::Text(_) => {
+                stack.pop();
+            }
+            Node::Element { children, .. } => {
+                if let Some(child) = children.get(next) {
+                    let frame = stack.last_mut().ok_or(Error::Reference(node as u64))?;
+                    frame.1 += 1;
+                    stack.push((index(*child, count)?, 0));
+                } else {
+                    stack.pop();
+                }
+            }
+        }
+    }
+    identity.finish(b)?;
     Ok(Validated { fragment })
 }
