@@ -123,6 +123,29 @@ fn pinned_katex_accepts_production_constructor_output() -> Result<(), String> {
         assert!(html.contains("class=\"katex\""), "{source}");
         assert!(html.contains("<math"), "{source}");
         assert!(!html.contains("<script"), "{source}");
+        // Probe the actual fixed renderer's declarations. This extraction is
+        // test-only and does not claim to parse/admit untrusted HTML.
+        for part in html.split(" style=\"").skip(1) {
+            let style = part.split_once('"').ok_or("style closing quote")?.0;
+            assert!(
+                nepl3_markup::katex::computed_style(style, &mut budget()).map_err(err)?,
+                "{source}: out-of-profile style {style}"
+            );
+        }
+        for part in html.split(" d=\"").skip(1) {
+            let path = part.split_once('"').ok_or("path closing quote")?.0;
+            assert!(
+                nepl3_markup::katex::path_data(path, &mut budget()).map_err(err)?,
+                "{source}: out-of-profile SVG path {path}"
+            );
+        }
+        for part in html.split(" viewBox=\"").skip(1) {
+            let viewport = part.split_once('"').ok_or("viewBox closing quote")?.0;
+            assert!(
+                nepl3_markup::katex::view_box(viewport, &mut budget()).map_err(err)?,
+                "{source}: out-of-profile SVG viewport {viewport}"
+            );
+        }
         if source == "日本--" {
             assert!(html.contains("日本--"));
         }
