@@ -48,6 +48,9 @@ foreign閉包、field位置を明示して保持する。source-less値に架空
 `portable::to_value/from_value`は`nepl3.sentence`のSentenceValueを既存NDF値へ対応させる。
 finalize済みregistryと実descriptorの完全identityを照合し、同package・revisionでも異なるdigestを
 採用しない。型付きrecord/variantと順序付きfieldを用い、Rust enumの既定serialize形式へ依存しない。
+foreignの深さを文章arenaと別々に判定しない。共有部分木と共有closureを含む最深の所有位置を求め、
+呼出元の深さに文章側の経路を加えたBudgetでguest閉包を検査する。各arenaが単独で上限内でも、
+合成後の深さが上限を超えれば両codec方向でStoppedを返す。
 送信前と受信後にnativeと同じarena検査を行う。schemaだけに適合する循環・不正参照・空Ruby/Annoを
 成功値にしない。各foreign closureはhostが選んだFoundationValueCodecでsource・Origin・environmentを
 検査する。ambientなsourceによる欠落閉包の補完は認めず、guestの意味評価は行わない。

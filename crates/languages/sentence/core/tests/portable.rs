@@ -411,6 +411,80 @@ fn foreign_cbor_closes_sources_and_rejects_missing_or_forged_owner_data() -> Res
             Err(portable::Error::Foundation(_))
         ));
     }
+    // Shared guest reached first on a short path, then through forty wrappers.
+    // Each arena fits depth 60 in isolation; their composition does not.
+    let mut nested = value.clone();
+    nested.nodes = vec![
+        Kind::Sentence {
+            inlines: vec![InlineRef(1), InlineRef(2)],
+        },
+        Kind::ForeignInline {
+            syntax: EmbedRef(0),
+        },
+    ];
+    for i in 2..42 {
+        nested.nodes.push(Kind::Strong {
+            inline: InlineRef(i + 1),
+        });
+    }
+    nested.nodes.push(Kind::ForeignInline {
+        syntax: EmbedRef(0),
+    });
+    let guest = &mut nested.embeds[0].syntax.bundle;
+    let template = guest.nodes[0].clone();
+    for i in 0..29 {
+        guest.nodes[i].fields = vec![FieldValue::Child(NodeRef(i as u64 + 1))];
+        guest.nodes.push(template.clone());
+    }
+    for node in &mut guest.nodes {
+        node.head = None;
+        node.cover = None;
+    }
+    let mut limits = budget().limits();
+    limits.depth = 60;
+    nested
+        .validate_shape(&mut Budget::new(limits))
+        .map_err(err)?;
+    nested.embeds[0]
+        .validate(
+            &r,
+            &mut Budget::new(limits),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(err)?;
+    let nested_raw = encode(&nested, &r)?;
+    r.validate(
+        &TypeDescriptor::TypedValue,
+        &nested_raw,
+        &mut Budget::new(limits),
+    )
+    .map_err(err)?;
+    let mut b = Budget::new(limits);
+    assert_eq!(
+        decode(&nested_raw, &r, &mut b),
+        Err(portable::Error::Stopped(StopReason::DepthLimit))
+    );
+    assert_eq!(b.poll(), Err(StopReason::DepthLimit));
+    let empty = SourceStore::default();
+    let mut a = SourceAdmission::default();
+    let mut c = FoundationCodec::new(&r, &empty, &mut a).map_err(err)?;
+    let mut b = Budget::new(limits);
+    assert_eq!(
+        portable::to_value(&nested, &r, &mut c, &mut b),
+        Err(portable::Error::Stopped(StopReason::DepthLimit))
+    );
+    let mut b = budget();
+    b.with_depth_at_least::<_, check::Error>(7, |b| {
+        nested
+            .validate_shape(b)?
+            .validate_foreign(&r, b, &mut SourceAdmission::default())?;
+        assert_eq!(b.current_depth(), 7);
+        Ok(())
+    })
+    .map_err(err)?;
+    assert!(b.usage().depth >= 7 + 42 + 30);
+    assert_eq!(b.current_depth(), 0);
+
     let mut limits = budget().limits();
     limits.source_bytes = 0;
     let mut b = Budget::new(limits);

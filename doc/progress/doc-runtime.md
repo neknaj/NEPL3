@@ -25,6 +25,10 @@ ARMv6-M、wasm32-unknown-unknown、wasm32-wasip2はbuild確認であり、target
 codec追加後のSentence全19試験はnativeとWasmtime 44.0.1上のwasm32-wasip2で成功した。
 ARMv6-Mとwasm32-unknown-unknownは引き続きbuild検査であり、browser実行は未検証である。
 これは同じRust実装のtarget別検証で、独立した第2provider実装の適合を意味しない。
+Source/Origin境界の準備中に、値codecで文章とforeignの深さを別々に検査していた欠陥を確認した。
+最深の所有位置に親Budget深さを加えてguestを検査するよう修正した。文章42段・guest30段は
+単独では上限60に収まるが、合成時は送受信とも拒否する。短経路から先に到達する共有guestでも
+最長経路を使い、呼出元の深さを戻す。独立レビューと回帰試験で確認した。
 
 局所syntaxのSource/Origin境界、literal/prefixと独立LanguagePackage、annotation adapter、
 Doc/Math consumerおよび公式sourceの移行は未完了である。旧コメント処理だけは先に削除せず、

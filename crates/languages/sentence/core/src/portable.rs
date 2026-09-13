@@ -84,7 +84,9 @@ pub fn to_value<C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<NdfValue, Error<C::Error>> {
     let schema = schema(registry, b)?;
-    input.validate_shape(b)?;
+    input
+        .validate_shape(b)?
+        .validate_foreign(registry, b, codec.source_admission())?;
     let output = value::encode(input, schema, codec, b)?;
     validate(registry, &output, b)?;
     b.poll()?;
@@ -100,7 +102,9 @@ pub fn from_value<C: FoundationValueCodec>(
     let schema = schema(registry, b)?;
     validate(registry, input, b)?;
     let output = value::decode(input, schema, codec, b)?;
-    output.validate_shape(b)?;
+    output
+        .validate_shape(b)?
+        .validate_foreign(registry, b, codec.source_admission())?;
     b.poll()?;
     Ok(output)
 }

@@ -3,6 +3,7 @@
 use crate::model::{Kind, Root, SentenceValue};
 use alloc::{vec, vec::Vec};
 use nepl3_core::budget::{Budget, Resource, StopReason};
+use nepl3_core::{schema::SchemaRegistry, source::SourceAdmission, syntax::SyntaxError};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Category {
@@ -21,10 +22,19 @@ pub enum Error {
     AnnotationNotes(u64),
     Embed(u64),
     UnusedEmbed(u64),
+    Foreign(SyntaxError),
 }
 impl From<StopReason> for Error {
     fn from(value: StopReason) -> Self {
         Self::Stopped(value)
+    }
+}
+impl From<SyntaxError> for Error {
+    fn from(value: SyntaxError) -> Self {
+        match value.stop_reason() {
+            Some(reason) => Self::Stopped(reason),
+            None => Self::Foreign(value),
+        }
     }
 }
 
@@ -40,6 +50,52 @@ impl<'a> CheckedShape<'a> {
     /// Each node occurs once, after all of its children.
     pub fn postorder(&self) -> &[usize] {
         &self.order
+    }
+
+    /// Checks guest closures at their deepest semantic owner occurrence. This
+    /// remains a source/syntax proof, never a guest evaluation or rendering proof.
+    pub fn validate_foreign(
+        &self,
+        registry: &SchemaRegistry,
+        b: &mut Budget,
+        admission: &mut SourceAdmission,
+    ) -> Result<(), Error> {
+        b.poll()?;
+        let count = self.value.nodes.len();
+        let allocation = count
+            .checked_add(self.value.embeds.len())
+            .and_then(|n| n.checked_mul(core::mem::size_of::<u64>()))
+            .ok_or_else(|| b.stop(StopReason::AllocationLimit))?;
+        b.charge(Resource::AllocationUnits, allocation as u64)?;
+        let mut depths = vec![0u64; count];
+        let mut embeds = vec![0u64; self.value.embeds.len()];
+        let root = match self.value.root {
+            Root::Sentence(r) => r.0,
+            Root::Inline(r) => r.0,
+        };
+        // Arena indices and reachability were established by this borrowed proof.
+        depths[root as usize] = 1;
+        for node in self.order.iter().rev().copied() {
+            b.charge(Resource::Work, 1)?;
+            let mut index = 0;
+            while let Some(child) = self.value.nodes[node].child(index) {
+                b.charge(Resource::Work, 1)?;
+                depths[child.0 as usize] =
+                    depths[child.0 as usize].max(depths[node].saturating_add(1));
+                index += 1;
+            }
+            if let Kind::ForeignInline { syntax } = self.value.nodes[node] {
+                embeds[syntax.0 as usize] = embeds[syntax.0 as usize].max(depths[node]);
+            }
+        }
+        let base = b.current_depth();
+        for (closure, depth) in self.value.embeds.iter().zip(embeds) {
+            b.with_depth_at_least::<_, Error>(base.saturating_add(depth), |b| {
+                closure.validate(registry, b, admission)?;
+                Ok(())
+            })?;
+        }
+        Ok(())
     }
 }
 
