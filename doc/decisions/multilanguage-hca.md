@@ -1,9 +1,10 @@
-# 複数言語・NEPL3h/C/Aと構文コメントの統合案
+# 複数言語・構造化文章・対象付き注釈の統合案
 
-識別子: `nepl3-multilanguage-hca-design-20260913-r4`。
+識別子: `nepl3-multilanguage-hca-design-20260913-r5`。
 状態: **設計草案、実装未着手、Draft PRで保持する**。
 2026-09-13の統合提案r1と、その後のコメント設計訂正を統合する。
 最後の訂正を優先し、対象を明示する`annotate Sentence target`を標準とする。
+Sentence/Inlineは独立したNEPL3sentenceが所有し、Aの注釈とDの本文が別々に利用する。
 独立comment、commentedという別名、`#:`による保存付きtrivia、旧コメントの恒久互換を撤回する。
 本文の「要求する」「拒否する」は将来の契約であり、現在の処理系の挙動ではない。
 
@@ -22,7 +23,8 @@ GHC/CircuitGameの再build・外部ソースの再監査は今回行っていな
 | NEPL3h | 独立GHC frontend、Haskell固有の型・評価・module意味 |
 | 別のNEPLプログラミング言語 | その言語の意味論と、実装すると宣言したInterop操作 |
 | NEPL3c | typed signal bundle、primitive、部品合成、一般回路グラフ、帰還・伝搬 |
-| NEPL3a | Sentence/Inline、Ruby/Anno、構文コメント、付与の共通surface pattern |
+| NEPL3sentence | 文書構造から独立したSentence/Inline、Ruby/Anno等の構造化文章 |
+| NEPL3a | NEPL3sentenceの文章を対象syntaxへ付与する注釈契約と共通surface pattern |
 | NEPL3d | Article/Section/Paragraph/Table等の文書構造 |
 | NEPL3hdl | clock/reset/register/memory等の同期RTL・合成。新Cと別domain |
 | Adapter / Composition | 言語間変換、型付き受渡し、runner、資源・権限・出力 |
@@ -97,7 +99,8 @@ generate Adder8
 例の型・component・producerは事前に解決済みであることを要求する。
 関数の引数数・import結果・後からの生成結果で既読formのarityを変えない。
 
-生成slotはC body、宣言、category付きsyntax、A Sentence、D block、test列を分ける。
+生成slotはC body、宣言、category付きsyntax、NEPL3sentenceのSentence、D block、test列を分ける。
+Sentence生成だけでsyntaxへの注釈付与にはならない。注釈付きsyntax生成は対象を含むannotateを返す。
 入力には挿入先、期待category/interface、明示環境・資源、予約した生成identity領域を持たせる。
 body生成からambient import、primitive定義、全体Profile変更は返せない。
 宣言・reader生成は別の明示phase・capabilityで行う。検査済みの更新は、定義されたscopeの
@@ -163,13 +166,33 @@ settleはStableKnown/StableUnknown/PeriodicKnown/PeriodicUnknown/Limitを分け�
 truth testは組合せ性を検査して安定出力を比較し、trace testはseedと操作列を明示する。
 analog遅延、metastability、FPGA合成の保証ではない。
 
-## 6. Aの文章モデルと正式なコメント構文
+## 6. NEPL3sentence・A・Dの所有境界と注釈構文
 
-DocのSentence/InlineをA所有へ抽出する。Docは文章位置にAを使い、Math注記もAへの
-adapterへ移す。A coreへDoc/Math/C/GHCのruntime依存を入れない。
-Sentence、Text、Concat、Ruby、Anno、inline code/emphasis/break/link/asset等を扱い、
-Article/Paragraph/Tableや全体link解決はDが所有する。
-foreign inlineは登録済みbridgeで扱い、全言語enumをAへ追加しない。
+DocのSentence/Inlineのうち文書構造から独立して成立する部分をNEPL3sentenceへ抽出する。
+Sentence、Text、Concat、Ruby、Anno、inline code/emphasis/strong/break/link/reference等を
+文章モデルとして扱う。asset/foreign参照は必要な文書非依存契約と明示adapterを整えて利用する。
+NEPL3sentenceはコメント・本文・HTML出力の用途を決めず、Doc/Math/C/GHCのruntimeに依存しない。
+Article/Section/Paragraph/Table/文書のList/Pageや全体link解決はDが所有する。
+foreign inlineは登録済みbridgeで扱い、全言語enumを文章coreへ追加しない。
+
+```text
+NEPL3a ── annotation content ──→ NEPL3sentence
+NEPL3d ── document content ────→ NEPL3sentence
+Math annotation adapter ──────→ NEPL3sentence
+```
+
+これは意味の利用関係であり、Cargo直接依存の追加指示ではない。
+Aが所有するのは文章そのものではなく、文章とtarget syntaxの明示的な付与関係である。
+DはAを経由せず文章を本文として利用する。Mathの文章注記も、syntax annotationでない限り
+Aを経由する必要はない。各経路のschema・資源・Source/Originは明示adapterで検査する。
+
+Dのsectionの見出しやparagraphの内容は通常の文書出力に含める。
+同じSentenceでもannotateの第1引数なら著者向け注釈であり、通常の本文出力へ混ぜない。
+妥当な注釈について `render_D(annotate(a,d)) = render_D(d)` を要求する。
+これは本文の表示意味についての等価であり、source identityや生成manifestのbyte一致ではない。
+editor/annotation viewerは別の明示projectionで注釈を表示できる。通常HTMLには非表示要素や
+隠し属性としても注釈本文を自動同梱しない。syntaxとannotation relationには引き続き保持する。
+NEPL3sentenceのinline `anno`は文章の内容なので、本文に使われた場合は通常の文章表示対象となる。
 
 literalと前置構築は同じ意味モデルにlowerする。Ruby/Annoの境界とnote順、Break、
 escapeとTextの違いを維持し、文章対応は[authoring](../authoring.md)どおり文単位とする。
@@ -182,7 +205,7 @@ annotate
 
 | form | fields | arity | domainへの寄与 |
 | --- | --- | ---: | --- |
-| annotate | annotation: A/Sentence, target: Host/T | 2 | 子Tと同じ寄与、子との付与関係を保存 |
+| annotate | annotation: NEPL3sentence/Sentence, target: Host/T | 2 | 子Tと同じ寄与、子との付与関係を保存 |
 
 `annotate`を唯一の標準wrapper名にする。独立したA.Commentと`commented` aliasは設けない。
 文章内部の`anno`は別機能として維持する。
@@ -246,7 +269,7 @@ Skippedへの改名で同じコメント消去を隠して残さない。
 | [engine sidecar](../../crates/foundation/engine/src/portable/region/sidecar.rs) | portable mapping |
 | [contracts](../../interfaces/contracts.json) | TriviaKindの公開variantと派生foundation descriptor |
 | languages / builtin providers | trivia readerの実認識、各skip設定、configuration identity |
-| Doc/Math reader・printer | A抽出後のschema、payload、Source閉包と文書生成 |
+| Doc/Math reader・printer | NEPL3sentence抽出とA付与契約分離後のschema、payload、Source閉包と文書生成 |
 | tests / examples / fixtures | 構文コメントへの移行、位置期待値、旧構文拒否 |
 
 tokenizerの分類分岐だけ消しても、元のskip readerが#を消費すれば解決しない。
@@ -254,7 +277,7 @@ tokenizerの分類分岐だけ消しても、元のskip readerが#を消費す�
 旧foundation revisionを新schemaとして受理せず、productionに旧Comment decoder、
 deprecated variant、feature flag、warning-only acceptanceを残さない。
 
-実装の統合単位は、新A schemaと必要host対応→source移行→文書・生成物・試験更新→
+実装の統合単位は、NEPL3sentence/A schemaと必要host対応→source移行→文書・生成物・試験更新→
 旧skip/variant/codec撤去→全体検査までである。途中段階を移行完了としてmainへ統合しない。
 一時移行toolが必要なら統合前に役割を終え、最終treeに恒久migration subsystemを残さない。
 
@@ -274,7 +297,7 @@ NEPL lexical commentとして一括置換しない。履歴の破壊やGit rewri
 
 | 領域 | 変更する契約 | 成功の根拠 |
 | --- | --- | --- |
-| A / Doc / Math | Sentence/Inline所有、payload、printer、HTML準備、hover | literal/prefix同値、参照閉包、旧文章内容の保存 |
+| NEPL3sentence / A / Doc / Math | 文章と付与関係の所有、payload、printer、HTML準備、hover | literal/prefix同値、参照閉包、本文と著者注釈の分離 |
 | reader / foundation / wire | comment-as-trivia削除、schema版更新 | enum/descriptor/codec一致、旧revision拒否、#負例 |
 | 各host category | Annotated<T>の明示受理と意味射影 | parse treeに残る、寄与不変、annotation関係と位置保存 |
 | C / HDL | 新Cの型・graph・遅延と旧同期意味の分離 | struct往復、driver、basis、帰還trace、移行保証subset |
@@ -287,7 +310,7 @@ language grammar、builtin reader、全影響codec・printer・consumerを同じ
 [canonical登録](../canonical.json)済みページは.nepldを編集してprojectionを再生成する。
 この草案は未登録Markdownのため、Markdown一つを正本として編集する。
 
-実装順は契約固定、Aと基本C、中立生成slot、実際の二言語producer、H固有経路、
+実装順は契約固定、NEPL3sentenceとA・基本C、中立生成slot、実際の二言語producer、H固有経路、
 文書化等の統合、外部package・配布の順とする。各段階は実依存が成立する範囲で進める。
 Hのbrowser完成をC/Aのbuild条件にしない。次の受入はすべて未実行である。
 
@@ -304,6 +327,8 @@ Hのbrowser完成をC/Aのbuild条件にしない。次の受入はすべて未�
 8. Hの非正格性・recursive let、Cabal相互import、native/cross/browserを個別に実行する。
 9. compile・lazy serialization・decode/checkを含む非停止/巨大出力、権限・cache/epochを検査する。
 10. C/AからDへの保存済み結果の文書化ではproducerやsimulationを起動しない。
+11. 同じSentenceをDの本文とAの注釈に使い、通常HTMLは本文だけ、editor projectionは注釈も
+    表示できることを検査する。文章内Annoとsyntax-level annotateを別kindで往復する。
 
 既存test/conformanceと共通の証拠収集を使う。新しい受入判定framework、review script群、
 source snapshot複製は作らない。[ADR 0008](0008-evidence-and-publisher-boundaries.md)を維持する。
@@ -400,15 +425,16 @@ Annotated<T>は説明上の型記法であり、現Grammarにparametric category
 各host surface packageに具体的な固定shapeを登録する。
 
 ```text
-annotate : A/Sentence × C/ModuleItem → C/ModuleItem
-annotate : A/Sentence × C/SignalExpr → C/SignalExpr
-annotate : A/Sentence × C/Field → C/Field
-annotate : A/Sentence × H/Expr → H/Expr
-annotate : A/Sentence × H/Declaration → H/Declaration
+annotate : NEPL3sentence/Sentence × C/ModuleItem → C/ModuleItem
+annotate : NEPL3sentence/Sentence × C/SignalExpr → C/SignalExpr
+annotate : NEPL3sentence/Sentence × C/Field → C/Field
+annotate : NEPL3sentence/Sentence × H/Expr → H/Expr
+annotate : NEPL3sentence/Sentence × H/Declaration → H/Declaration
 ```
 
 共通化するなら実際に重複するGrammar declaration生成だけを共有する。
-実行時genericや未定義のT解決でarityを決めない。文章内部のA/Inline.Annoとhost wrapperは別kindである。
+実行時genericや未定義のT解決でarityを決めない。
+NEPL3sentence/InlineAnnoとNEPL3a/SyntaxAnnotationは別category・別kindである。
 
 Domain(annotate(a,x)) = Domain(x)に加え、hostのBinding/Export/Visibilityもtargetと同じにする。
 `visit target`だけでは子のexportを外へ返す保証にならない。
@@ -417,17 +443,17 @@ Domain(annotate(a,x)) = Domain(x)に加え、hostのBinding/Export/Visibilityも
 source追加でarena番号や生のFactSet IDが同一になるとは要求せず、対応付けたhost Entity・参照・
 scope・可視性・export候補が同じであることを検査する。注釈側のfactsは別に保存する。
 
-Aの文章は独立namespace/rootで解析する。文章内の同じ名前文字列からhost Entityを暗黙captureしない。
+注釈内容のNEPL3sentenceは独立namespace/rootで解析する。文章内の同じ名前文字列からhost Entityを暗黙captureしない。
 明示参照とEnvironmentProjectionによるgrantを使う場合だけ外側候補へ接続する。
 AnnotationRelationは元の正式syntaxから派生する結果であり、syntaxの代用品ではない。
 
 ### domain依存とforeign identity
 
-表層はforeign A/Sentenceを保持し、hostは自分のwrapperとtargetの投影規則を所有する。
-文章意味の検査・render・検索・Doc取込みはAを解決するadapter/compositionで行う。
-C/Hのdomain coreへA coreを直接依存させない。DがAの文章意味を利用する場合も、
+表層はforeign NEPL3sentence/Sentenceを保持し、hostは具体化したwrapperとtargetの投影規則を所有する。
+文章意味の検査・render・検索はNEPL3sentenceを解決するadapter/composition、付与関係はAが担う。
+C/Hのdomain coreへAや文章coreを無断で直接依存させない。AとDが文章を利用する経路も、
 明示foreign参照とadapterを基本にする。typed直接依存を選ぶならdependencies契約を先に改訂し、
-no_std・DAG・責務を検査する。抽出という名称だけでd-core→a-coreを無断追加しない。
+no_std・DAG・責務を検査する。Dの本文をAの注釈へ変換して共通化する構造にはしない。
 
 現DocのGuestLanguage列挙、MathGuest/CircuitGuest、dev hostの既知言語一覧とpackage文字列dispatchは
 一般的な外部言語登録経路と同一視しない。Docに新言語を追加するたびenumを増やす構造を解消する。
@@ -438,14 +464,16 @@ dev hostをgeneral suiteへ昇格させる際は、明示compositionとResolvedP
 ProviderImplementationを選び、完全なOperationRef/実装identity・capabilityを照合する。
 
 Struct fieldは順序付き宣言列を正本とし、名前indexは派生物にする。unordered mapへ戻さない。
-旧Doc Sentence、新A、旧Circuit、新C/HDLは所有者・意味変更に対応した別schema identityを持つ。
+旧Doc Sentence、新NEPL3sentence、新Aの付与契約、旧Circuit、新C/HDLは所有者・意味変更に
+対応した別schema identityを持つ。NEPL3sentenceは提案言語名であり、production package名・digestは
+実descriptor確定時に決める。旧Doc schemaの所有者だけを黙って変更しない。
 同じSchemaRefに違う意味を割り当てない。旧schemaの恒久実装を残す義務とは区別する。
 
 ### 既存open findingsとの接続
 
 R006（operation/transport）、R009（source/resolved Profile）、R014（Doc表現gap）、
 R017（portable source/syntax/reporting）を本設計と切り離さない。
-それぞれproducer schema、動的context/差し替え、A/D抽出、生成syntax/注釈/Originの検証へ結び付ける。
+それぞれproducer schema、動的context/差し替え、NEPL3sentence/A/D分離、生成syntax/注釈/Originの検証へ結び付ける。
 草案追加でcloseしない。各実装変更で正式task/acceptanceと対応する失敗・境界試験を更新する。
 
 追加の受入は、前方import後だけ新headが有効、後方宣言で既読shapeを変更しない、

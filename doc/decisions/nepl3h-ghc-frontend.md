@@ -142,8 +142,10 @@ loaderとpackage集合を一組で固定する。現時点では採用buildを�
 Doc/C/Aに必須の評価器にはしない。以下のHからDocへの生成は具体例であり、
 全言語向けの標準呼出しをH専用の関数型へ固定するものではない。
 統合案のAnnotated<T>はparse treeへ保持し、host loweringだけが注釈を実行意味から射影する。
-標準構文はarity 2の`annotate Sentence target`に統一する。旧lexical commentの恒久互換、
-#:による特殊trivia、独立comment、commented aliasを追加しない。
+標準構文はarity 2の`annotate Sentence target`に統一する。
+Sentenceは独立したNEPL3sentenceが所有し、NEPL3aは文章とtargetの付与関係を所有する。
+Dの本文とMathの文章注記はNEPL3sentenceを利用し、Aを必須の本文経路にしない。
+旧lexical commentの恒久互換、#:による特殊trivia、独立comment、commented aliasを追加しない。
 現Grammarにgeneric categoryがあるとは扱わず、各host surfaceに具体的な固定shapeを登録する。
 wrapperはtargetの意味に加えbinding/exportも保存する。文章の名前空間は独立させる。
 通常の.hsファイルの`--`や`{- -}`はGHCの入口が扱う。NEPL3h tokenizerに同じskip commentを
