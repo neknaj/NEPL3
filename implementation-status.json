@@ -148,8 +148,8 @@
     },
     {
       "id": "T24",
-      "status": "not-implemented",
-      "evidence": []
+      "status": "in-progress",
+      "evidence": ["conformance/results/math-katex/node.json"]
     },
     {
       "id": "T25",
