@@ -31,7 +31,7 @@
 | [T21](T21.md) | 正式文書のNEPL3 Doc DSL移行 | in-progress | T24, T19 |
 | [T22](T22.md) | H0: HTML公開契約の整合 | in-progress | なし |
 | [T23](T23.md) | H1: Doc単独HTMLの実経路 | in-progress | T22 |
-| [T24](T24.md) | H2: Mathを含む生成済みHTML | not-implemented | T23 |
+| [T24](T24.md) | H2: Mathを含む生成済みHTML | in-progress | T23 |
 | [T25](T25.md) | H3: Web生成・隔離preview・export | not-implemented | T24 |
 | [T26](T26.md) | External language contracts and extraction conformance | in-progress | T01, T02, T03, T04, T05, T12 |
 
