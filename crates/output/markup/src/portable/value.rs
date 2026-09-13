@@ -1,5 +1,9 @@
 use super::PortableError;
 use crate::html::*;
+use crate::mathml::{
+    Attribute as MathMlAttribute, Display as MathMlDisplay, Fragment as MathMlFragment,
+    Node as MathMlNode, OperatorForm as MathMlOperatorForm, Tag as MathMlTag,
+};
 use crate::text::TextContext;
 use alloc::{boxed::Box, string::String, vec::Vec};
 use nepl3_core::{

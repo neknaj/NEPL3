@@ -91,12 +91,12 @@ fn canonical<C: FoundationValueCodec>(
 }
 fn replay<C: FoundationValueCodec>(
     v: &NdfValue,
-    prepared: &PreparedLocalArticle<'_>,
+    prepared: &crate::prepare::PreparedRendering<'_>,
     r: &SchemaRegistry,
     c: &mut C,
     b: &mut Budget,
 ) -> Result<(), PortableError<C::Error>> {
-    let actual = render(prepared, b).map_err(|e| match e {
+    let actual = crate::build::render_prepared(prepared, &[], b).map_err(|e| match e {
         RenderError::Stopped(s) => PortableError::Stopped(s),
         e => PortableError::Render(e),
     })?;
@@ -115,7 +115,7 @@ pub fn rendered_to_value<C: FoundationValueCodec>(
 ) -> Result<NdfValue, PortableError<C::Error>> {
     let value = fragment.put(schema(r)?, r, c, b)?;
     check(&value, "RenderedFragment", r, b)?;
-    replay(&value, prepared, r, c, b)?;
+    replay(&value, &prepared.0, r, c, b)?;
     Ok(value)
 }
 pub fn rendered_from_value<C: FoundationValueCodec>(
@@ -127,6 +127,33 @@ pub fn rendered_from_value<C: FoundationValueCodec>(
 ) -> Result<RenderedFragment, PortableError<C::Error>> {
     check(value, "RenderedFragment", r, b)?;
     let fragment = RenderedFragment::read(value, schema(r)?, r, c, b)?;
-    replay(value, prepared, r, c, b)?;
+    replay(value, &prepared.0, r, c, b)?;
+    Ok(fragment)
+}
+
+/// Encode only after replay against the exact locally prepared Sentence.
+pub fn rendered_sentence_to_value<C: FoundationValueCodec>(
+    fragment: &RenderedFragment,
+    prepared: &PreparedLocalSentence<'_>,
+    r: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    let value = fragment.put(schema(r)?, r, c, b)?;
+    check(&value, "RenderedFragment", r, b)?;
+    replay(&value, &prepared.0, r, c, b)?;
+    Ok(value)
+}
+/// A wire fragment is data; the receiver's Sentence proof authorizes replay.
+pub fn rendered_sentence_from_value<C: FoundationValueCodec>(
+    value: &NdfValue,
+    prepared: &PreparedLocalSentence<'_>,
+    r: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<RenderedFragment, PortableError<C::Error>> {
+    check(value, "RenderedFragment", r, b)?;
+    let fragment = RenderedFragment::read(value, schema(r)?, r, c, b)?;
+    replay(value, &prepared.0, r, c, b)?;
     Ok(fragment)
 }

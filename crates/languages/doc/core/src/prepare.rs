@@ -125,6 +125,26 @@ pub fn inspect<'a, C: FoundationValueCodec>(
     })
 }
 
+/// Discover requirements for a standalone Sentence, retaining every language
+/// variant and foreign closure. This checks only Sentence-local labels, never
+/// resolves external inputs or proves the Sentence ready for rendering.
+pub fn inspect_sentence<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    registry: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<DocPreparationPlan, PreparationError<'a, C::Error>> {
+    let checked = labels::check_sentence(document, registry, b, c.source_admission())?;
+    let value = portable::to_value(document, registry, c, b)?;
+    let document_digest = c
+        .canonical_value_digest(DOCUMENT_DOMAIN, &value, b)
+        .map_err(boundary)?;
+    Ok(DocPreparationPlan {
+        document_digest,
+        requirements: discover(checked.document(), c, b)?,
+    })
+}
+
 /// Internal discovery from an Article-local proof. The caller separately owns
 /// the canonical boundary value and its digest; external plans are never proofs.
 pub(crate) fn requirements<'a, C: FoundationValueCodec>(
@@ -132,7 +152,13 @@ pub(crate) fn requirements<'a, C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<Vec<DocRequirement>, PreparationError<'a, C::Error>> {
-    let document = checked.document();
+    discover(checked.document(), c, b)
+}
+fn discover<'a, C: FoundationValueCodec>(
+    document: &'a DocumentSyntax,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<Vec<DocRequirement>, PreparationError<'a, C::Error>> {
     let mut requirements = Vec::new();
     for (index, node) in document.value.nodes.iter().enumerate() {
         b.charge(Resource::Work, 1)?;

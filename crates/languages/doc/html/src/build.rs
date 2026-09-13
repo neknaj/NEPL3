@@ -8,6 +8,7 @@ mod block;
 mod inline;
 const CLASSES: &[&str] = &[
     "nepl-doc",
+    "nepl-sentence",
     "nepl-paragraph",
     "nepl-ruby",
     "nepl-anno",
@@ -189,15 +190,20 @@ pub fn render(
 ) -> Result<RenderedFragment, RenderError> {
     render_prepared(&prepared.0, &[], budget)
 }
+/// Render a prepared standalone Sentence as checked phrasing markup. Ruby and
+/// Anno use the same tree and stylesheet contract as Article rendering.
+pub fn render_sentence(
+    prepared: &PreparedLocalSentence<'_>,
+    budget: &mut Budget,
+) -> Result<RenderedFragment, RenderError> {
+    render_prepared(&prepared.0, &[], budget)
+}
 pub(crate) fn render_prepared(
     prepared: &crate::prepare::PreparedRendering<'_>,
     links: &[(u64, HtmlHref)],
     budget: &mut Budget,
 ) -> Result<RenderedFragment, RenderError> {
     budget.poll()?;
-    let DocRoot::Article(root) = prepared.document.value.root else {
-        return Err(RenderError::InternalShape);
-    };
     let mut w = Builder {
         prepared,
         links,
@@ -207,20 +213,38 @@ pub(crate) fn render_prepared(
         origins: Vec::new(),
         jobs: Vec::new(),
     };
-    let article = w.element(None, root.0, HtmlTag::Article)?;
-    w.class(article, "nepl-doc")?;
-    let DocKind::Article {
-        language,
-        title,
-        body,
-    } = &prepared.document.value.nodes[root.0 as usize].kind
-    else {
-        return Err(RenderError::InternalShape);
+    let (root, slot) = match prepared.document.value.root {
+        DocRoot::Article(root) => (root.0, HtmlSlot::Block),
+        DocRoot::Sentence(root) => (root.0, HtmlSlot::Phrasing),
+        _ => return Err(RenderError::InternalShape),
     };
-    let lang = copy(language, w.b)?;
-    w.attr(article, HtmlAttribute::Lang { value: lang })?;
-    w.job(body.0, article, 1)?;
-    w.heading(article, root.0, title.0, 1)?;
+    let article = w.element(
+        None,
+        root,
+        if slot == HtmlSlot::Block {
+            HtmlTag::Article
+        } else {
+            HtmlTag::Span
+        },
+    )?;
+    if slot == HtmlSlot::Block {
+        w.class(article, "nepl-doc")?;
+        let DocKind::Article {
+            language,
+            title,
+            body,
+        } = &prepared.document.value.nodes[root as usize].kind
+        else {
+            return Err(RenderError::InternalShape);
+        };
+        let lang = copy(language, w.b)?;
+        w.attr(article, HtmlAttribute::Lang { value: lang })?;
+        w.job(body.0, article, 1)?;
+        w.heading(article, root, title.0, 1)?;
+    } else {
+        w.class(article, "nepl-sentence")?;
+        w.job(root, article, 1)?;
+    }
     while let Some(job) = w.jobs.pop() {
         w.b.charge(Resource::Work, 1)?;
         let kind = &prepared.document.value.nodes[job.node as usize].kind;
@@ -238,7 +262,7 @@ pub(crate) fn render_prepared(
             root: article,
             nodes: w.nodes,
         },
-        slot: HtmlSlot::Block,
+        slot,
         policy: HtmlPolicy { classes },
     };
     validate(&markup.fragment, markup.slot, &markup.policy, w.b)?;
