@@ -9,6 +9,7 @@ mod evidence;
 mod repository;
 pub mod sentence;
 pub mod site;
+pub mod source;
 mod task;
 
 #[cfg(test)]

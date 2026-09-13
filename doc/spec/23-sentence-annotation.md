@@ -129,6 +129,38 @@ aliasではなく独立したadapterであり、Sentence coreからreader/engine
 開発hostのnative adapter検証と、独立processのportable provider比較、LanguagePackage経由の
 prefix parse/check/printは別の受入である。
 
+## 独立LanguagePackageの表層
+
+`languages/Sentence/syntax.neplg`をGrammar処理系で解析し、`nepl3.syntax.sentence`へcompileする。
+意味schemaの`nepl3.sentence`とは別identityである。公開rootはSentence、内部categoryはInline、
+列は共通cons/nilを使う。各formの順序付きfieldは`design/forms.json`と対応させる。
+
+| category | head | 順序付き引数 | arity |
+| --- | --- | --- | ---: |
+| Sentence | sentence | inlines: Inline列 | 1 |
+| Sentence | 引用符付きliteral | — | 0 |
+| Inline | text / code | text: Text | 1 |
+| Inline | concat | inlines: Inline列 | 1 |
+| Inline | ruby | base: Inline, reading: Inline | 2 |
+| Inline | anno | base: Inline, notes: Inline列 | 2 |
+| Inline | em / strong | inline: Inline | 1 |
+| Inline | break | — | 0 |
+| Inline | link | uri: Text, label: Inline | 2 |
+
+このlinkは外部URIの文章内構造であり、Docのpage/section/anchorを暗黙解決しない。
+foreign-inlineは登録されたadapterが別の具体formで導入する。全guestを列挙するformや、
+任意の文字列を未検査foreign値へ変換する入口は標準Sentence packageへ追加しない。
+
+SentenceのCode modeは空白（space/tab/CR/LF）だけをskipする。独立comment・annotationや
+directiveをskipに入れない。旧Docのcomment readerをSentenceへ再利用せず、旧`#`入力、
+arity不足、未消費の末尾入力を成功文書にしない。既存Docの旧comment撤去は別の移行境界である。
+
+開発hostは具体OperationRefと実装identityへreader関数を登録し、ResolvedProfileの要求に
+照合してdispatchする。DocとSentenceが同じsource driverを使っても、SentenceへDoc schemaや
+Doc readerを要求しない。native呼出しと所有Await経路は同じ検査済みParseTreeを返す。
+source driverは引き続き開発hostの入口であり、完全なsuite/runtimeや独立process providerの完成を
+意味しない。構文木からSentence意味arenaへのlower、意味check、汎用printは後続の別操作である。
+
 ## 注釈と移行完了条件
 
 `annotate Sentence target`はarity 2の通常formであり、各host categoryへ固定shapeで登録する。

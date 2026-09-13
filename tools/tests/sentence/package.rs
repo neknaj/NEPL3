@@ -1,0 +1,174 @@
+use super::*;
+
+#[test]
+fn sentence_surface_compiles_from_production_grammar_with_own_root_and_payload()
+-> Result<(), String> {
+    let mut budget = b();
+    let mut admission = SourceAdmission::default();
+    // The existing checked Grammar seed is a bootstrap artifact, not a Doc dependency.
+    let seed = nepl3_tools::bootstrap::load(
+        include_bytes!("../../../conformance/fixtures/doc/grammar.json"),
+        &mut budget,
+        &mut admission,
+    )
+    .map_err(err)?;
+    let grammar = nepl3_tools::bootstrap::catalog::compile(
+        &seed,
+        "nepl3.syntax.grammar",
+        &mut budget,
+        &mut admission,
+    )?;
+    let source = SourceSnapshot::new(
+        SourceId("sentence-grammar".into()),
+        1,
+        "repository:languages/Sentence/syntax.neplg".into(),
+        include_bytes!("../../../languages/Sentence/syntax.neplg").to_vec(),
+        &mut budget,
+    )
+    .map_err(err)?;
+    let identity = nepl3_tools::bootstrap::runtime::executable_identity().map_err(err)?;
+    let document = nepl3_tools::bootstrap::runtime::parse(
+        &source,
+        &grammar,
+        identity,
+        &mut budget,
+        &mut admission,
+    )
+    .map_err(|e| format!("Sentence grammar: {e:?}; {:?}", budget.usage()))?;
+    let compiled = nepl3_tools::sentence::catalog::compile(
+        &document,
+        "nepl3.syntax.sentence",
+        &mut budget,
+        &mut admission,
+    )?;
+    compiled
+        .package
+        .check(&compiled.registry, &mut budget)
+        .map_err(err)?;
+    assert_eq!(compiled.package.root, "Sentence");
+    assert!(compiled.registry.selected("nepl3.doc", 1).is_none());
+    assert!(compiled.registry.selected("nepl3.math", 1).is_none());
+    assert!(compiled.package.namespaces.is_empty());
+    let expected = [
+        ("sentence", &["inlines"][..]),
+        ("text", &["text"][..]),
+        ("concat", &["inlines"][..]),
+        ("ruby", &["base", "reading"][..]),
+        ("anno", &["base", "notes"][..]),
+        ("code", &["text"][..]),
+        ("em", &["inline"][..]),
+        ("strong", &["inline"][..]),
+        ("break", &[][..]),
+        ("link", &["uri", "label"][..]),
+    ];
+    assert_eq!(compiled.package.forms.len(), expected.len());
+    for (spelling, fields) in expected {
+        let form = compiled
+            .package
+            .forms
+            .iter()
+            .find(|f| f.spelling == spelling)
+            .ok_or("form")?;
+        assert_eq!(
+            form.fields
+                .iter()
+                .map(|f| f.name.as_str())
+                .collect::<Vec<_>>(),
+            fields
+        );
+        assert_eq!(
+            form.category,
+            if spelling == "sentence" {
+                "Sentence"
+            } else {
+                "Inline"
+            }
+        );
+    }
+    let [leaf] = compiled.package.leaves.as_slice() else {
+        return Err("one literal leaf".into());
+    };
+    assert_eq!(leaf.category, "Sentence");
+    assert!(matches!(&leaf.payload, TypeDescriptor::Named(t)
+        if t.package == "nepl3.sentence" && t.name == "SentenceLiteralPayload"));
+    assert_eq!(compiled.package.reader.providers.len(), 2);
+    assert!(
+        !compiled
+            .package
+            .reader
+            .providers
+            .iter()
+            .any(|p| p.operation.name.contains("trivia"))
+    );
+    for input in [
+        "\"[漢/かん]{語/note}\"",
+        "sentence cons ruby text \"漢\" text \"かん\" cons anno text \"語\" cons text \"note\" nil nil",
+        "sentence cons concat cons text \"a\" cons text \"b\" nil cons code \"x\" cons em text \"e\" cons strong text \"s\" cons break cons link \"https://example.invalid/\" text \"link\" nil",
+        "sentence nil\n",
+    ] {
+        let source = SourceSnapshot::new(
+            SourceId("sentence-input".into()),
+            1,
+            "memory:sentence-input".into(),
+            input.as_bytes().to_vec(),
+            &mut b(),
+        )
+        .map_err(err)?;
+        let mut trees = vec![];
+        for native in [false, true] {
+            let tree = nepl3_tools::sentence::source::with_tree(
+                &compiled,
+                &source,
+                identity,
+                &mut b(),
+                &mut SourceAdmission::default(),
+                native,
+                |tree, _, _, _| {
+                    assert!(!tree.is_recovered());
+                    let bundle = tree.syntax().bundle();
+                    let root = &bundle.nodes[bundle.root.0 as usize];
+                    assert_eq!(
+                        root.kind,
+                        if input.starts_with('"') {
+                            "Leaf:SentenceLiteral"
+                        } else {
+                            "Form:Sentence"
+                        }
+                    );
+                    Ok(tree.tree().clone())
+                },
+            )?;
+            trees.push(tree);
+        }
+        assert_eq!(trees[0], trees[1]);
+    }
+    for input in [
+        "# old comment\nsentence nil",
+        "sentence cons break",
+        "sentence nil extra",
+        "comment \"unowned\"",
+    ] {
+        let source = SourceSnapshot::new(
+            SourceId("invalid-sentence".into()),
+            1,
+            "memory:invalid-sentence".into(),
+            input.as_bytes().to_vec(),
+            &mut b(),
+        )
+        .map_err(err)?;
+        assert!(
+            nepl3_tools::sentence::source::with_tree(
+                &compiled,
+                &source,
+                identity,
+                &mut b(),
+                &mut SourceAdmission::default(),
+                true,
+                |_, _, _, _| Ok(())
+            )
+            .is_err(),
+            "{input}"
+        );
+    }
+    Ok(())
+}

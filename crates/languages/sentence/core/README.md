@@ -25,8 +25,9 @@ without repeating the document's source bytes in every token payload. It checks
 root ownership and source containment; generated/mapped syntax uses the general
 closed syntax envelope. This codec is not the reader/provider implementation.
 
-The independent LanguagePackage, prefix lowering and general printing,
-annotation adapter and Doc/Math migration remain part of
+The development host now compiles the independent LanguagePackage and parses
+literal/prefix sources with the production engine. Prefix lowering and general
+printing, annotation adapters and Doc/Math migration remain part of
 the same ongoing recovery. This stage is not a completed language or removal of
 lexical comments. Do not merge it as a completed migration.
 
