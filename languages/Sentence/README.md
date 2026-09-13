@@ -21,4 +21,6 @@ Annotation belongs to the separate target-wrapper contract; document structure
 belongs to Doc. See [spec 23](../../doc/spec/23-sentence-annotation.md).
 
 LanguagePackage compilation and native/owned prefix parsing are implemented.
-Prefix lowering, general printing and Doc body migration remain in progress.
+The standard prefix printer emits all ten forms, keeping constructor boundaries
+and escaping BuiltinText. Foreign-inline output needs its selected surface adapter.
+Prefix lowering, full semantic roundtrips and Doc body migration remain in progress.

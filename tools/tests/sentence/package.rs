@@ -100,11 +100,53 @@ fn sentence_surface_compiles_from_production_grammar_with_own_root_and_payload()
             .iter()
             .any(|p| p.operation.name.contains("trivia"))
     );
+    use nepl3_sentence_core::model::{InlineRef, Kind, Root, SentenceRef, SentenceValue};
+    let escaped = "[not ruby]{not anno}/\"\\\n\r\t\0\u{85}😀";
+    let value = SentenceValue {
+        root: Root::Sentence(SentenceRef(10)),
+        embeds: vec![],
+        nodes: vec![
+            Kind::Text {
+                text: escaped.into(),
+            },
+            Kind::Code {
+                text: "code".into(),
+            },
+            Kind::Ruby {
+                base: InlineRef(0),
+                reading: InlineRef(1),
+            },
+            Kind::InlineAnno {
+                base: InlineRef(2),
+                notes: vec![InlineRef(1), InlineRef(0)],
+            },
+            Kind::Emphasis {
+                inline: InlineRef(3),
+            },
+            Kind::Strong {
+                inline: InlineRef(4),
+            },
+            Kind::Break,
+            Kind::ExternalLink {
+                uri: "https://example.invalid/".into(),
+                label: InlineRef(5),
+            },
+            Kind::Concat {
+                inlines: vec![InlineRef(6), InlineRef(7)],
+            },
+            Kind::Concat { inlines: vec![] },
+            Kind::Sentence {
+                inlines: vec![InlineRef(8), InlineRef(9)],
+            },
+        ],
+    };
+    let printed = nepl3_sentence_core::print::prefix(&value, &mut b()).map_err(err)?;
     for input in [
         "\"[漢/かん]{語/note}\"",
         "sentence cons ruby text \"漢\" text \"かん\" cons anno text \"語\" cons text \"note\" nil nil",
         "sentence cons concat cons text \"a\" cons text \"b\" nil cons code \"x\" cons em text \"e\" cons strong text \"s\" cons break cons link \"https://example.invalid/\" text \"link\" nil",
         "sentence nil\n",
+        printed.as_str(),
     ] {
         let source = SourceSnapshot::new(
             SourceId("sentence-input".into()),
@@ -126,6 +168,13 @@ fn sentence_surface_compiles_from_production_grammar_with_own_root_and_payload()
                 |tree, _, _, _| {
                     assert!(!tree.is_recovered());
                     let bundle = tree.syntax().bundle();
+                    if input == printed {
+                        // Decode through the real BuiltinText reader, not a
+                        // printer-owned inverse. Delimiters stay ordinary Text.
+                        assert!(bundle.tokens.iter().any(
+                            |t| matches!(&t.payload, NdfValue::Text(text) if text == escaped)
+                        ));
+                    }
                     let root = &bundle.nodes[bundle.root.0 as usize];
                     assert_eq!(
                         root.kind,

@@ -159,7 +159,15 @@ arity不足、未消費の末尾入力を成功文書にしない。既存Docの
 照合してdispatchする。DocとSentenceが同じsource driverを使っても、SentenceへDoc schemaや
 Doc readerを要求しない。native呼出しと所有Await経路は同じ検査済みParseTreeを返す。
 source driverは引き続き開発hostの入口であり、完全なsuite/runtimeや独立process providerの完成を
-意味しない。構文木からSentence意味arenaへのlower、意味check、汎用printは後続の別操作である。
+意味しない。構文木からSentence意味arenaへのlowerと、その結果の意味checkは後続の別操作である。
+
+`print::prefix`は標準Sentence表層の全constructorを印字する。Sentence rootと明示Inline入口に
+対応し、Concat、Ruby、InlineAnnoの境界、notes順、Code、強調、Break、外部URIとlabelを保持する。
+TextはBuiltinTextとしてescapeし、文章literalのRuby/Anno区切りとして再解釈しない。
+共有arenaをsourceへ展開した各出現と出力byteにもBudgetを適用し、失敗・停止時は部分文字列を返さない。
+foreign-inlineは対応する表層adapterを別途選択する必要があるため、標準printerでは
+AdapterRequiredを返す。印字は元の綴り・Source/Origin・共有indexを再現する操作ではない。
+本番packageで出力の解析とText payload復元を検査するが、lowering後の全意味往復の完了とは区別する。
 
 ## 注釈と移行完了条件
 

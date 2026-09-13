@@ -5,5 +5,6 @@ pub mod check;
 pub mod literal;
 pub mod model;
 pub mod portable;
+pub mod print;
 pub mod schema;
 pub mod syntax;

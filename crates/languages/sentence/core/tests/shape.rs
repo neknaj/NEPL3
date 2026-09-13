@@ -253,6 +253,15 @@ fn foreign_indices_are_checked_without_claiming_closure_validity() -> Result<(),
         embeds: vec![closure.clone()],
     };
     checked(&v, &mut budget())?;
+    // A real arena embed reference reaches the printer's adapter boundary.
+    // Guest validity is not asserted: the standard surface cannot print it
+    // and must reject before attempting to render, evaluate, or erase it.
+    assert_eq!(
+        nepl3_sentence_core::print::prefix(&v, &mut budget()),
+        Err(nepl3_sentence_core::print::Error::AdapterRequired(
+            EmbedRef(0)
+        ))
+    );
     v.root = Root::Sentence(SentenceRef(0));
     assert_eq!(
         checked(&v, &mut budget()),

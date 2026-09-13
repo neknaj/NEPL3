@@ -26,8 +26,9 @@ root ownership and source containment; generated/mapped syntax uses the general
 closed syntax envelope. This codec is not the reader/provider implementation.
 
 The development host now compiles the independent LanguagePackage and parses
-literal/prefix sources with the production engine. Prefix lowering and general
-printing, annotation adapters and Doc/Math migration remain part of
+literal/prefix sources with the production engine. The standard prefix printer
+handles all ten forms; foreign output requires a surface adapter. Prefix lowering,
+full semantic roundtrips, annotation adapters and Doc/Math migration remain part of
 the same ongoing recovery. This stage is not a completed language or removal of
 lexical comments. Do not merge it as a completed migration.
 
