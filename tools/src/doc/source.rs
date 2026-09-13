@@ -15,6 +15,7 @@ pub fn host_identity() -> Digest {
             include_str!("../source/host.rs"),
             include_str!("../source/driver.rs"),
             include_str!("reader.rs"),
+            include_str!("sentence.rs"),
             include_str!("../../../crates/foundation/reader/src/builtin/provider.rs")
         )
         .as_bytes(),

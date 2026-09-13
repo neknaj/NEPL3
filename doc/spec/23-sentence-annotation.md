@@ -198,6 +198,23 @@ AdapterRequiredを返す。印字は元の綴り・Source/Origin・共有index�
 本番packageで標準prefixのparse/lower/print一致とText payload復元を検査する。
 foreign adapterを含む全意味往復とDoc consumer移行の完了とは区別する。
 
+## Doc本文readerへの接続
+
+開発hostのDoc readerは独立Sentence coreのliteral読取りを使用し、`tools/src/doc/sentence.rs`の
+明示adapterを通して現在のDoc consumerへ渡す。Doc/Sentence core間の直接依存を追加しない。
+adapterはSentenceSyntaxを検査し、全標準Inlineを同じarena index・順序でDoc値へ変換した後、
+Doc側でも構造を再検査する。CodeはDocのInlineCode、外部linkはLinkTarget::Externalへ対応し、
+foreign CodeやDoc固有のpage参照へ読み替えない。foreign-inlineは個別adapterを要求する。
+Source/Origin/SourceMapとViewを保持し、元SentenceSyntaxのdense位置・View ownerも呼出側で保持できる。
+入力の共有・source-less Syntheticを展開や架空Spanで置き換えず、失敗・停止時は部分Doc値を返さない。
+
+Doc catalogはSentenceの実descriptorを登録する。Doc readerの現在の出力は明示変換後の
+Doc SentencePayloadであり、同じschema identityで独立Sentence payloadを装わない。
+本文の意味は保存されるがViewの所有schemaが変わるため、文書identityと生成Markdown headerの
+document digestは変わる。正本から再生成し、本文・リンク・注釈の一致を確認してprojectionを更新する。
+この接続はDoc本文の解析を独立Sentenceへ移す段階である。Doc意味schemaのSentence所有、旧core API、
+Mathとの既存bridgeをすべて除去したとは扱わず、後続のconsumer移行で責務を整理する。
+
 ## 注釈と移行完了条件
 
 `annotate Sentence target`はarity 2の通常formであり、各host categoryへ固定shapeで登録する。

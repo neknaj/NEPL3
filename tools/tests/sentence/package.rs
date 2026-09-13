@@ -1,4 +1,6 @@
 use super::*;
+use nepl3_core::source::Digest;
+use nepl3_core::value_codec::FoundationValueCodec;
 
 #[test]
 fn sentence_surface_compiles_from_production_grammar_with_own_root_and_payload()
@@ -26,7 +28,23 @@ fn sentence_surface_compiles_from_production_grammar_with_own_root_and_payload()
         &mut budget,
     )
     .map_err(err)?;
-    let identity = nepl3_tools::bootstrap::runtime::executable_identity().map_err(err)?;
+    // This in-process fixture binds the selected adapter sources on both native
+    // and WASI. It does not claim to identify a deployed executable: WASI has no
+    // current_exe, and obtaining a binary identity is the deployment host's job.
+    let identity = Digest::of(
+        concat!(
+            include_str!("package.rs"),
+            include_str!("../../src/bootstrap/runtime.rs"),
+            include_str!("../../src/bootstrap/runtime/host.rs"),
+            include_str!("../../src/sentence/source.rs"),
+            include_str!("../../src/sentence/reader.rs"),
+            include_str!("../../src/source/driver.rs"),
+            include_str!("../../src/source/host.rs"),
+            include_str!("../../src/source/host/dispatch.rs"),
+            include_str!("../../../crates/foundation/reader/src/builtin/provider.rs")
+        )
+        .as_bytes(),
+    );
     let document = nepl3_tools::bootstrap::runtime::parse(
         &source,
         &grammar,
@@ -235,6 +253,42 @@ fn sentence_surface_compiles_from_production_grammar_with_own_root_and_payload()
                         assert_eq!(syntax.origins, bundle.origins);
                         assert_eq!(syntax.source_maps, bundle.source_maps);
                         assert_eq!(syntax.views.len(), bundle.tokens.len());
+                        let doc = nepl3_tools::doc::sentence::document(
+                            &syntax,
+                            resolved.registry(),
+                            budget,
+                            codec.source_admission(),
+                        )
+                        .map_err(err)?;
+                        assert_eq!(doc.sources, syntax.sources);
+                        assert_eq!(doc.origins, syntax.origins);
+                        assert_eq!(doc.source_maps, syntax.source_maps);
+                        assert_eq!(doc.value.nodes.len(), syntax.value.nodes.len());
+                        if input == printed {
+                            use nepl3_doc_core::model::{DocKind, LinkTarget};
+                            assert!(doc.value.nodes.iter().any(
+                                |n| matches!(&n.kind,DocKind::InlineCode { text } if text == "code")
+                            ));
+                            assert!(
+                                doc.value
+                                    .nodes
+                                    .iter()
+                                    .any(|n| matches!(n.kind, DocKind::Break))
+                            );
+                            assert!(
+                                doc.value
+                                    .nodes
+                                    .iter()
+                                    .any(|n| matches!(n.kind, DocKind::Emphasis { .. }))
+                            );
+                            assert!(
+                                doc.value
+                                    .nodes
+                                    .iter()
+                                    .any(|n| matches!(n.kind, DocKind::Strong { .. }))
+                            );
+                            assert!(doc.value.nodes.iter().any(|n| matches!(&n.kind,DocKind::Link { target:LinkTarget::External { uri }, .. } if uri == "https://example.invalid/")));
+                        }
                         if input.starts_with("sentence cons ruby text \"漢\"") {
                             assert_eq!(
                                 nepl3_sentence_core::literal::print(&syntax.value, budget)

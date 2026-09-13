@@ -160,7 +160,7 @@ CIのWASI jobはSHA-256を固定したWasmtime 44.0.1で実装済みcoreの実�
 
 Binding の fixture と Python seed adapter の一致確認は子processを起動する native host 専用試験です。native の通常試験で実行し、Wasm target ではその host 試験だけを型条件で除外します。同じ fixture を使う production compile・parse・analyze・portable codec の試験は `cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1` でも実行します。host 試験を WASI へ誤って含めた初回失敗は対象選択の失敗として記録し、後の runtime 試験成功へ読み替えません。
 
-Doc は `cargo test --locked -p nepl3-doc-core` と `cargo test --locked -p nepl3-tools --test doc` で検査します。後者は実4言語文法のcompile、ParseSession、Doc provider/prefix lowerを通します。同じ試験は `cargo test --locked -p nepl3-tools --test doc --target wasm32-wasip2 -- --test-threads=1` で実行し、元sourceとPython seed adapterの一致確認1件だけをnative専用とします。Docの進行中の範囲と未接続操作は [段階実装](progress/doc-runtime.md) を参照してください。
+Doc は `cargo test --locked -p nepl3-doc-core` と `cargo test --locked -p nepl3-tools --test doc` で検査します。後者は実4言語文法のcompile、ParseSession、Doc provider/prefix lowerを通します。同じ試験は `cargo test --locked -p nepl3-tools --test doc --target wasm32-wasip2 -- --test-threads=1` で実行します。元sourceとPython seed adapterの一致確認1件、およびhostのfile入力・resource出力・alias不正時の出力抑止を扱う3件はnative専用です。Docの進行中の範囲と未接続操作は [段階実装](progress/doc-runtime.md) を参照してください。
 
 Math は `cargo test --locked -p nepl3-math-core` と `cargo test --locked -p nepl3-tools --test math` で検査します。後者は実文法のcompile・ParseSessionからMathの表記を保持するlowerを通し、同じ元入力でWASIも実行します。構造検査と数値演算の個別試験から、式全体の評価・束縛・印字の完成を推定しません。[段階実装](progress/math-runtime.md)に検証済みの範囲と残りを記録します。
 
