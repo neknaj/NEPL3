@@ -1,6 +1,6 @@
 # 複数言語・NEPL3h/C/Aと構文コメントの統合案
 
-識別子: `nepl3-multilanguage-hca-design-20260913-r3`。
+識別子: `nepl3-multilanguage-hca-design-20260913-r4`。
 状態: **設計草案、実装未着手、Draft PRで保持する**。
 2026-09-13の統合提案r1と、その後のコメント設計訂正を統合する。
 最後の訂正を優先し、対象を明示する`annotate Sentence target`を標準とする。
@@ -31,7 +31,8 @@ Hは必須マクロ言語、universal evaluator、中間言語にしない。C/A
 生成器、既定testを不要なGHC依存へ結合しない。複数の言語のproducerを同時に利用できる。
 全言語へcompile/evaluate/renderを強制する巨大traitや中央の言語enumは追加しない。
 native typed fast pathとNDF/1のportable pathを維持する。
-parse・表示・文書化だけではproducer、Haskell、回路testを実行しない。
+parse・表示・文書化から任意のproducer、Haskell、回路testを暗黙実行しない。
+前方の構文拡張の準備にproviderが必要な場合は、後述の明示操作・権限・停止境界を使う。
 
 この整理は[外部拡張契約](../spec/22-external-extensions.md)の責務分離を維持する。
 新規Hは独立repoを予定し、既存domainの抽出は公開API・外部consumer・配布の条件に従う。
@@ -99,7 +100,9 @@ generate Adder8
 生成slotはC body、宣言、category付きsyntax、A Sentence、D block、test列を分ける。
 入力には挿入先、期待category/interface、明示環境・資源、予約した生成identity領域を持たせる。
 body生成からambient import、primitive定義、全体Profile変更は返せない。
-宣言生成は別phase・capabilityで行う。reader生成は次のparse sessionへ適用する。
+宣言・reader生成は別の明示phase・capabilityで行う。検査済みの更新は、定義されたscopeの
+後続位置へ適用できる。必ず次のparse sessionまで待つという以前の制約は撤回する。
+通常のbody生成slotからProfileを更新する権限は与えない。
 
 生成名は展開scopeとlocal identityを持つ。文字列一致で外側をcaptureせず、明示した
 EnvironmentProjectionだけを許可する。wire/schema、Source/Origin閉包、権限、slot、
@@ -193,10 +196,10 @@ hostが受理を宣言していないcategory、literal内部、raw code内部�
 `call ripple ...`は中立Interop/Invocationであり、H/Exprではない。H製producerを指していても
 注釈の対象categoryはInvocationで、そのcategoryへの登録を要求する。
 
-複数のbody itemを説明する場合は、hostの正式な`group items`（arity 1）を対象にできる。
-C/ModuleItemのGroupは順序付きModuleItem列を持ち、loweringは元の列と同じ回路を返す。
-新しいscope、gate、遅延、暗黙のbufferを導入せず、group nodeは付与対象identityとして保存する。
-これはCの提案form追加であり、任意言語へ同じgroup意味を強制しない。
+複数のbody itemを説明するときは、module/body/struct/unit等、hostに実在する所有nodeを対象にする。
+注釈の都合だけでtransparentな`group`を追加する案は撤回する。
+groupingが必要な言語は、その言語自身のscope・可視性・export・前方参照・順序を正式に定義し、
+検査してから対象categoryとして登録する。意味が同じという宣言だけでbinding保存を推定しない。
 moduleやfile全体は対応するmodule/unit rootを包む。root categoryも明示登録を必要とする。
 metadata、license、pragmaは必要になった時に用途別の契約を定義し、説明注釈に実行指令を隠さない。
 formatterの見た目を行末コメント風にすることと、保存する正式source構文は区別する。
@@ -221,7 +224,8 @@ source-sensitiveな反射/TH等には別capabilityと入力identityを与える�
 標準producerへannotationやambient sourceを暗黙に渡さない。
 生成Annotated<T>も手書きと同じschemaで検査し、呼出箇所・生成器・local nodeのOriginを保持する。
 syntax生成slotは文章だけを返して近くのnodeへ付けさせず、対象を含むwrapperを返す。
-semantic fragmentとannotation relationを返すslotも明示target参照を検査し、対象なしの付与を拒否する。
+注釈付き生成は正式なAnnotated構文とtargetを保持し、binding/lowering後にrelationを派生する。
+semantic fragmentとsidecarだけで元の注釈syntaxを代替する経路は設けない。
 
 ## 7. 撤回する機構と移行の原子性
 
@@ -254,7 +258,7 @@ deprecated variant、feature flag、warning-only acceptanceを残さない。
 旧skip/variant/codec撤去→全体検査までである。途中段階を移行完了としてmainへ統合しない。
 一時移行toolが必要なら統合前に役割を終え、最終treeに恒久migration subsystemを残さない。
 
-source変換は内容・説明対象・categoryを確認する。子、group、rootのどれを包むかは
+source変換は内容・説明対象・categoryを確認する。子、既存の所有node、rootのどれを包むかは
 同じ置換規則では決められない。内容をTextとして保存し、旧本文の括弧をRuby/Annoへ再解釈しない。
 対象が曖昧なら執筆判断を行い、適切な受入位置がなければcategory設計を先に確定する。
 直後の式へ自動付与したり、移行用の独立Comment nodeを残したりしない。
@@ -289,7 +293,7 @@ Hのbrowser完成をC/Aのbuild条件にしない。次の受入はすべて未�
 
 1. head/category/arity、literal・raw境界、NoMatch/NeedMore/Stoppedとrollbackで構文情報を失わない。
 2. Annotated<T>がparse tree、Source/Origin、editor/document projectionに残り、host意味は不変。
-   非対応categoryとnilへの注釈を拒否し、groupのscope/順序/回路意味と対象identityを保つ。
+   非対応categoryとnilへの注釈を拒否し、targetのbinding/export/可視性と対象identityを保つ。
 3. 旧skip規則・Comment variant・codec・互換flagがなく、旧#入力と旧schemaを拒否する。
 4. schema/native/portable往復、Unicode位置、生成注釈のOrigin、参照・slot不正を検査する。
 5. 同じ操作を二つの独立したNEPLプログラミング言語で実装し、同時利用とbinding差し替えを実証する。
@@ -316,3 +320,136 @@ D26/AC30の旧consumer維持も、
 
 この草案の独立レビュー・文書整合検査は、A/C/Hの実装受入ではない。
 PR #158はDraftを維持し、本書作成をcompiler実装・新repo作成・依存追加の許可としない。
+
+## 10. 前方確定contextと関数適用
+
+解析開始前に全headを固定することは要求しない。各出現は、その前に確定したcontextと
+token自身から字句境界・category・head identity・arityを決める。先行するimport、宣言、
+型・component定義、macro準備が、後続で使えるform/category/reader/名前を導入してよい。
+通常の値のbindは構文head登録を自動的には意味しない。登録する場合は明示した操作契約を使う。
+
+親headのfield数と各子contextの決定規則は親を識別した時点で確定する。
+子iの具体的contextは、その規則に従い既読の子0..i-1を使って選べる。
+将来のsource、未読の子、当該headの子の評価結果で親のarityを遡って決め直さない。
+token readerが現在tokenを読むための先読みやNeedMoreを行うことと、後続宣言で既読境界を
+再解釈することは別である。新readerは更新後の開始位置から使い、更新前のtokenは変えない。
+
+先行importの解析→package/provider解決→schema/操作検査→context更新→後続解析の順にする。
+取得・生成の実行が必要なら承認された能力と同じ親Budgetの下でAwait/再開する。
+未解決headを推測せず停止し、失敗時は更新を部分公開しない。
+provider実行は構文原則上排除しないが、通常のparse権限だけで任意workspace codeを実行しない。
+能力不足なら明示的に未解決/停止を返し、無断のnetwork取得・guest評価はしない。
+
+contextは単調追加またはscope局所更新とし、同名headのshadowing、終了時の復帰、曖昧さ拒否を
+宣言する。同じ綴りが別contextで別arityでも、各出現で一意ならよい。
+固定した入力・依存asset・初期Profileから更新履歴を追跡できるようにし、可変global registryにしない。
+各context revisionと適用位置・scope・入力identityを継続/cacheへ束縛する。
+backtracking/NeedMore/cancelでcontextをcheckpointへ戻し、外部effectを巻き戻せるとは仮定しない。
+準備済みassetの再利用と結果の採用を分け、再開による無断二重実行を避ける。
+
+現[04章](../spec/04-grammar.md)はHeadProviderのshapeと既読子context選択を定義している。
+一方、現行の宣言作用範囲は導入bodyの部分木、childContext返信は登録済みEntryContextの選択である。
+同一sourceの後続領域へ新schema/readerを入場させる一般経路は、この範囲との差分を仕様・
+registry・provider・継続・権限・再現性の契約へ反映して実装する対象である。
+この草案だけで既存ResolvedProfileの可変化や動的入場の実装完了を主張しない。
+
+### 構文arity・callability・saturation
+
+構文arityはparserが読む子の数、関数の引数型とcallabilityは意味論、saturationは適用状態である。
+先行する宣言/importから固定shapeを得たheadは直接使える。componentのport数やstructのfield数を
+後続constructorのshapeに対応させることもできるが、その登録・型・出力・名前衝突規則を明示する。
+port数や型情報を発見しただけで現在のform shapeを暗黙変更しない。
+
+`apply`は固定arity 2の適用constructorで、適用構造を対象の値と分離する。
+`apply apply f x y`はApply(Apply(Reference(f),x),y)である。
+対象が後方定義、高階値、部分適用、異なる構文arityの未解決候補等で直接headにできない場合にも、
+値参照を許すcategoryなら固定shapeで解析できる。callability・型・saturationは後段が検査する。
+Haskellの型クラスoverloadがそのまま異なる構文arityのoverloadだと仮定しない。
+
+未知headを万能のarity 0へ自動fallbackしてはならない。categoryが参照leafを明示受理するか、
+明示参照constructorを用いる。例えば提案表記`apply ref add x`では、`ref`自身はarity 1、
+その子Name tokenがarity 0で、得られる意味値がReference(add)である。
+既知の2-arity headとして登録された裸のaddを、引数不足だから値参照へ読み替えない。
+Haskell名の後方解決も、その言語のbinding規則が認める場合に限る。
+
+| 出現位置の条件 | 解析方法 |
+| --- | --- |
+| 先行contextでhead shapeが一意 | 直接headを使用できる |
+| 対象の構文arityが未確定、参照leafが明示的に許可される | 参照とapplyで適用構造を明示 |
+| 既知headを部分適用・高階引数として渡す | 明示値参照または値参照専用categoryを使用 |
+| 関数を返す式へさらに適用 | applyを重ね、型と飽和は後段で検査 |
+| headも参照leafも認められない、またはshape候補が曖昧 | 構文上拒否。都合のよい候補を推測しない |
+
+Hが通常の関数参照とbinary applyを選ぶのは言語固有の判断であり、全NEPL言語の必須方式ではない。
+別言語は、先に解決した関数・型・componentを直接headとして登録できる。
+本節の説明例は新しいproduction grammarではなく、各language packageで具体化・検証する。
+
+## 11. 上位契約の再監査と追加の移行条件
+
+### skip / discard
+
+標準NEPL profileのskipは空白・BOM等のlexical separationに限定する。
+annotation/directive/pragma/metadata/documentationを消すreaderを登録してはならない。
+Skippedへ分類名を変えてcomment消去を残す方法も禁止する。discardはtoken内部delimiter等に
+用い、prefix構文に相当する情報を隠さない。外部readerの意味が名前や型だけで分かるとはしない。
+公式reader/profileの実認識と適合試験を検査し、動的導入時も同じ契約・承認を要求する。
+
+### 具体化formとbinding透過性
+
+Annotated<T>は説明上の型記法であり、現Grammarにparametric categoryを新設したことではない。
+各host surface packageに具体的な固定shapeを登録する。
+
+```text
+annotate : A/Sentence × C/ModuleItem → C/ModuleItem
+annotate : A/Sentence × C/SignalExpr → C/SignalExpr
+annotate : A/Sentence × C/Field → C/Field
+annotate : A/Sentence × H/Expr → H/Expr
+annotate : A/Sentence × H/Declaration → H/Declaration
+```
+
+共通化するなら実際に重複するGrammar declaration生成だけを共有する。
+実行時genericや未定義のT解決でarityを決めない。文章内部のA/Inline.Annoとhost wrapperは別kindである。
+
+Domain(annotate(a,x)) = Domain(x)に加え、hostのBinding/Export/Visibilityもtargetと同じにする。
+`visit target`だけでは子のexportを外へ返す保証にならない。
+現binding planのvisit/import/export/propagateと各categoryのscope規則に従い、targetの参照・
+導入・exportを保存する具体planを定義する。recursive header収集でもwrapper越しに対象を認識する。
+source追加でarena番号や生のFactSet IDが同一になるとは要求せず、対応付けたhost Entity・参照・
+scope・可視性・export候補が同じであることを検査する。注釈側のfactsは別に保存する。
+
+Aの文章は独立namespace/rootで解析する。文章内の同じ名前文字列からhost Entityを暗黙captureしない。
+明示参照とEnvironmentProjectionによるgrantを使う場合だけ外側候補へ接続する。
+AnnotationRelationは元の正式syntaxから派生する結果であり、syntaxの代用品ではない。
+
+### domain依存とforeign identity
+
+表層はforeign A/Sentenceを保持し、hostは自分のwrapperとtargetの投影規則を所有する。
+文章意味の検査・render・検索・Doc取込みはAを解決するadapter/compositionで行う。
+C/Hのdomain coreへA coreを直接依存させない。DがAの文章意味を利用する場合も、
+明示foreign参照とadapterを基本にする。typed直接依存を選ぶならdependencies契約を先に改訂し、
+no_std・DAG・責務を検査する。抽出という名称だけでd-core→a-coreを無断追加しない。
+
+現DocのGuestLanguage列挙、MathGuest/CircuitGuest、dev hostの既知言語一覧とpackage文字列dispatchは
+一般的な外部言語登録経路と同一視しない。Docに新言語を追加するたびenumを増やす構造を解消する。
+DocはInlineMath/DisplayMath/CircuitFigure/Code等の文書上の役割を持ち、guestは正確な
+schema/category/package identityを持つforeign syntaxとして保持する。
+役割への意味適合はadapterが検査し、同じschema形や表示名から互換性を推定しない。
+dev hostをgeneral suiteへ昇格させる際は、明示compositionとResolvedProfileの要件から
+ProviderImplementationを選び、完全なOperationRef/実装identity・capabilityを照合する。
+
+Struct fieldは順序付き宣言列を正本とし、名前indexは派生物にする。unordered mapへ戻さない。
+旧Doc Sentence、新A、旧Circuit、新C/HDLは所有者・意味変更に対応した別schema identityを持つ。
+同じSchemaRefに違う意味を割り当てない。旧schemaの恒久実装を残す義務とは区別する。
+
+### 既存open findingsとの接続
+
+R006（operation/transport）、R009（source/resolved Profile）、R014（Doc表現gap）、
+R017（portable source/syntax/reporting）を本設計と切り離さない。
+それぞれproducer schema、動的context/差し替え、A/D抽出、生成syntax/注釈/Originの検証へ結び付ける。
+草案追加でcloseしない。各実装変更で正式task/acceptanceと対応する失敗・境界試験を更新する。
+
+追加の受入は、前方import後だけ新headが有効、後方宣言で既読shapeを変更しない、
+親arity不変と既読子context選択、reader更新位置、曖昧head拒否、scope退出とrollback、
+Await中のcontext固定と失効、provider権限不足、参照leafとheadの区別、部分適用と型エラーの分離、
+annotateのexport/recursive binding保存、注釈namespace隔離、生成syntaxからのsidecar再構成である。
+すべて未実行の設計要求であり、現CI成功から推定しない。
