@@ -81,3 +81,42 @@ inventory. The URL scan only inventories that reviewed fixed CSS; it does not
 sanitize unknown CSS. `node --test tools/audit/math/assets.test.mjs` checks actual
 package closure, bytes and tamper/missing/limit cases. Binary resources remain
 in the package/install or generated artifact, never copied into source history.
+
+## Visual HTML conversion
+
+`parse.mjs` accepts the injected parse5 8.0.0 fragment parser. It rejects parse
+errors, unknown elements/attributes, repaired containers and namespace changes;
+it never strips unknown content and labels the remainder successful. The output
+is a finite postorder **unchecked** tree of span/text and SVG/path/line nodes.
+Run parsing inside the caller's cancellable realm. Its byte/node/depth caps are
+not an exact parser allocation or elapsed-time meter. The outer JSON transport
+must also cap bytes before decoding. See [parseFragment](https://parse5.js.org/functions/parse5.parseFragment.html)
+and [parser options](https://parse5.js.org/interfaces/parse5.ParserOptions.html).
+
+`tools/src/doc/math/katex.rs` consumes this internal host JSON with exact field
+sets, revalidates through `nepl3_markup::katex::fragment`, and writes a visual
+HTML/stylesheet pair. The core proof borrows the exact tree; arbitrary JSON or
+HTML never acquires that proof merely because a parser returned successfully.
+This host JSON is not the portable NDF provider contract.
+
+Computed styles become occurrence-specific classes under a host-assigned unique
+`nepl-math-` scope. Validated declarations retain order/values and gain
+`!important`; the host must exclude competing important declarations (including
+shorthands/`all`) in the fixed CSS and competing author rules in that scope.
+This preserves priority over the fixed renderer's normal declarations, not over
+arbitrary CSS. The browser comparison checks CSSOM, computed properties and
+geometry, and verifies `style-src-attr 'none'` blocks an injected style attribute.
+The class inventory in the integration test comes from actual renderer output;
+production asset admission must independently bind the inventory to fixed CSS.
+
+The pair is visual-only (`aria-hidden=true`). Independent accessible MathML,
+complete source/resource identity, full Doc insertion and browser Worker
+transport remain unfinished. Do not publish this pair alone as an accessible
+document, or claim whole-artifact/fidelity acceptance from these scoped tests.
+
+Run `node --test tools/audit/math/parse.test.mjs` and the regular Rust
+`katex_fragment` tests. The ignored production TeX integration test emits
+`MATH_VISUAL_CASE` records with `--nocapture`; pass its UTF-8 stdout to
+`python tools/audit/math/browser.py --corpus <log>`. It uses the existing pinned
+Playwright requirements and all three engines by default; generated logs remain
+local/CI artifacts rather than source history.

@@ -117,7 +117,7 @@ fn pinned_katex_accepts_production_constructor_output() -> Result<(), String> {
     }
     let results: Vec<serde_json::Value> = serde_json::from_slice(&output.stdout).map_err(err)?;
     assert_eq!(results.len(), inputs.len());
-    for (source, result) in sources.iter().zip(results) {
+    for (source, mut result) in sources.iter().zip(results) {
         assert_eq!(result["version"], "0.18.7");
         let html = result["html"].as_str().ok_or("renderer html")?;
         assert!(html.contains("class=\"katex\""), "{source}");
@@ -173,6 +173,66 @@ fn pinned_katex_accepts_production_constructor_output() -> Result<(), String> {
         if source.starts_with("matrix ") || source.starts_with("vector ") {
             assert!(html.contains("<mtable"), "{source}");
         }
+        let classes: Vec<String> = serde_json::from_value(result["classes"].take()).map_err(err)?;
+        let classes: Vec<&str> = classes.iter().map(String::as_str).collect();
+        let visual = nepl3_tools::doc::math::katex::render(
+            result["visual"].take(),
+            &nepl3_markup::katex::fragment::Policy {
+                classes: &classes,
+                scope: "nepl-math-corpus",
+            },
+            &mut budget(),
+        )
+        .map_err(|e| format!("{source}: visual admission {e:?}"))?;
+        assert!(!visual.html().contains(" style="));
+        assert!(
+            visual
+                .html()
+                .starts_with("<span class=\"nepl-math-corpus\" aria-hidden=\"true\">")
+        );
+        assert!(!visual.stylesheet().contains("url("));
+        // Browser runner consumes original and production-serialized output;
+        // nothing is committed as a renderer golden or review source snapshot.
+        println!(
+            "MATH_VISUAL_CASE {}",
+            serde_json::json!({
+                "original": result["visualHtml"], "html": visual.html(), "css": visual.stylesheet()
+            })
+        );
     }
     Ok(())
+}
+
+#[test]
+fn visual_host_boundary_rejects_forged_and_extra_fields() {
+    use nepl3_tools::doc::math::katex;
+    let valid = serde_json::json!({"kind":"parsed-unchecked","nodes":[
+        {"kind":"span","classes":"katex","style":"","aria_hidden":null,"children":[]}
+    ]});
+    let policy = nepl3_markup::katex::fragment::Policy {
+        classes: &["katex"],
+        scope: "nepl-math-test",
+    };
+    assert!(katex::render(valid.clone(), &policy, &mut budget()).is_ok());
+    let mut extra = valid.clone();
+    extra["nodes"][0]["onclick"] = serde_json::json!("alert(1)");
+    let mut bad_kind = valid.clone();
+    bad_kind["nodes"][0]["kind"] = serde_json::json!("script");
+    let mut bad_ref = valid.clone();
+    bad_ref["nodes"][0]["children"] = serde_json::json!([0]);
+    let mut extra_root = valid.clone();
+    extra_root["trusted"] = serde_json::json!(true);
+    let mut bad_style = valid.clone();
+    bad_style["nodes"][0]["style"] = serde_json::json!("width:url(x)");
+    for value in [extra, bad_kind, bad_ref, extra_root, bad_style] {
+        assert!(katex::render(value, &policy, &mut budget()).is_err());
+    }
+    let mut stopped = budget();
+    stopped.stop(nepl3_core::budget::StopReason::Cancelled);
+    assert!(matches!(
+        katex::render(valid, &policy, &mut stopped),
+        Err(katex::Error::Stopped(
+            nepl3_core::budget::StopReason::Cancelled
+        ))
+    ));
 }

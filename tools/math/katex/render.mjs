@@ -6,7 +6,7 @@ const EXPANSION_LIMIT = 'Too many expansions: infinite loop or need to increase 
 
 // Count Unicode scalar UTF-8 bytes without allocating an encoded copy. Reject
 // isolated surrogates instead of silently changing source through replacement.
-function byteLength(text, limit) {
+export function byteLength(text, limit) {
   let size = 0;
   for (let i = 0; i < text.length; i++) {
     const c = text.charCodeAt(i);
