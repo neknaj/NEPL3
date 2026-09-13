@@ -2,6 +2,14 @@
 
 ## 1. 公開構成
 
+初期docs-only公開は、NEPL3d正本への段階移行を人が閲覧できる形で支える。
+正式文書は移行後のNEPL3d sourceであり、HTMLは再生成できるprojectionである。
+本章第5節の高度なLKG/journal復旧は後段の配信機能とし、初期公開・T21移行の前提にしない。
+初期publisherは成功したmain CIの固定commit・検査済み元payloadを照合し、同じtarを公開して
+主要routeと公開byteを確認する。失敗はworkflow失敗として報告し、自動rollbackやLKG完成を主張しない。
+rustdocの完全性・全fragment監査・Playground完成も初期公開の前提にしない。
+公開namespaceとrepo別の所有境界は[Pages情報設計](../decisions/pages-information-architecture.md)に従う。
+
 標準公開先を `https://neknaj.github.io/NEPL3/` とするGitHub Pages project siteを最終成果物に含める。独立HTMLのトップ・docsと、ブラウザWasmで動くPlaygroundを配布する。言語処理serverは設けない。通常のsource取得は検査対象commitのGit checkoutまたはsource archiveを用い、main pushごとの重複archive配布は行わない。サイト実装前に空のPages siteや架空のWasmを公開しない。
 
 予定する出力はトップのindex.html、playground/index.html、docs/index.htmlとtutorials/reference/design、api/rust、examples/manifest.json、assets内のJS/CSS/Wasm/Worker、build.json。`site/` は配置・template・固定assetを所有し、`tools/src/site/` が生成と検査を行う。

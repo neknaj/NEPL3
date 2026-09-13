@@ -24,6 +24,11 @@ nepld正本へ移行し、検査済みの同じsite artifactを公開します�
 
 ## ローカル環境
 
+初期Pages公開は `.github/workflows/pages.yml` が担当します。main pushのCI成功後、
+そのrunのDoc site・検査report・元tarを取得し、commit/manifest/内容一致を再検査して公開します。
+公開後のHTTP smoke失敗はworkflow失敗として記録します。LKG/journalによる自動復旧は未提供です。
+Markdown/NEPL3d混在公開は正本移行を支える段階であり、全ページ移行やT19/T20完成を意味しません。
+
 `cargo run --locked -p nepl3-tools -- site build site/config.json dist/site` は、
 登録済みDoc正本のHTMLに静的な索引を付け、新規ディレクトリへ一式を生成します。
 追跡済みの設定とcleanな入力checkoutを要求し、生成中にHEADや入力の変更を検出した場合は出力しません。
