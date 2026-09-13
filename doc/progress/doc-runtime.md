@@ -12,6 +12,14 @@ T07 は進行中。`doc/spec/05-document.md` と `design/forms.json` を最終�
 外向けcontinuationへ複写する処理を避ける。providerのreply検査は省略しない。
 catalogのVec全体とreply Boxは、実際の確保・provider実行より先に予算計上する。
 
+#158に基づく境界是正では、source hostの環境・reader stateを固定4言語の列挙から
+解決済みProfileの登録へ変更した。default categoryとreader modeも解決済みentryを使う。
+portable Await経路も同じ登録実装の照合を通し、schemaのpackage文字列によるdispatchを除いた。
+追加alias・登録順変更・非root categoryでnative/portableの構文木一致を確認し、
+同じ操作schemaでも別implementation digestなら両経路で拒否する。
+開発fixtureの言語構成は依然として明示選択であり、一般suite完成やSentence/A抽出、
+comment-as-trivia撤去の完了を意味しない。
+
 この接続だけをHTML backendの未保存変更から分離して検証し、nativeのDoc試験32件、
 WASI31件が成功した。差はhost processを使用するnative専用seed検査である。
 独立レビューでも通常経路・同期経路・fallbackの構文木一致、登録/sourceの不正入力、
