@@ -373,7 +373,7 @@ NEPL lexical commentとして一括置換しない。履歴の破壊やGit rewri
 | reader / foundation / wire | comment-as-trivia削除、schema版更新 | enum/descriptor/codec一致、旧revision拒否、#負例 |
 | 各host category | Annotated<T>の明示受理と意味射影 | parse treeに残る、寄与不変、annotation関係と位置保存 |
 | C / HDL | 新Cの型・graph・遅延と旧同期意味の分離 | struct往復、driver、basis、帰還trace、移行保証subset |
-| Interop | 中立操作とbinding、生成slot、権限 | 二つの独立言語、GHC不在、同時利用、slot不正拒否 |
+| operation/provider・用途別契約 | 中立操作とbinding、生成slot、権限 | 二つの独立言語、GHC不在、同時利用、slot不正拒否 |
 | runner / UI | 全identity・停止・失効・原子的採用 | cancel後旧応答拒否、continuation移送拒否、部分結果未採用 |
 | planning / docs | tasks/dependencies/acceptanceと正本整合 | catalog検査、生成projection差分、未実行状態維持 |
 
