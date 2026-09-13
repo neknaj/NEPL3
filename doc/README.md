@@ -24,6 +24,8 @@ Docで例や解説を書く際は、[文書の執筆指針](authoring.md)のsent
 12. [Math runtime の実装範囲と残り](progress/math-runtime.md)
 13. [Doc・MathのHTML生成と数式表示](spec/17-math-html.md)
 14. [外部言語の追加とrepository分離条件](spec/22-external-extensions.md)
+15. [NEPL3h: 独立GHC frontend案](decisions/nepl3h-ghc-frontend.md) — Haskell互換、Wasm/browser、DSL構造生成と配布方針。設計草案のみで実装未着手。
+16. [複数言語・構造化文章・対象付き注釈の統合案](decisions/multilanguage-hca.md) — 言語中立producer、NEPL3sentence/A/Dの分離、回路モデル、annotateと旧lexical commentの撤去計画。設計草案のみ。
 
 ## 正本と派生資料
 
