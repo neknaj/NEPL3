@@ -143,7 +143,7 @@ def verify(root, source_root=None, config_path='site/config.json', renderer=None
         assert correction['reason'] == 'rustdoc-1.97-empty-public-implementors/1'
         assert api['rustdoc'] == 'rustdoc 1.97.0 (2d8144b78 2026-07-07)'
         for key in ('page', 'resource'):
-            assert correction[key + '_sha256'] == hashlib.sha256(files[correction[key]]).hexdigest()
+            assert correction[key + '_sha256'] == hashlib.sha256(files[correction[key]].read_bytes()).hexdigest()
     assert all(p['route'] in api_docs for p in api['roots'])
     api_paths = {path for path in files if path.startswith('api/rust/')}
     markdown = json.loads((root / 'markdown-manifest.json').read_text(encoding='utf-8'))
@@ -228,22 +228,50 @@ def verify(root, source_root=None, config_path='site/config.json', renderer=None
                     context.close()
                     for enabled in [False, True]:
                         context = browser.new_context(java_script_enabled=enabled, viewport={'width': width, 'height': 900})
-                        page = context.new_page()
-                        failures = []
-                        page.on('requestfailed', lambda r: failures.append(r.url))
-                        page.on('response', lambda r: failures.append(r.url) if r.status >= 400 else None)
                         for entry in api['roots']:
+                            # Each observation owns its page and request log.
+                            # Teardown cancellations from a previous page must
+                            # not become failures of the next crate's requests.
+                            page = context.new_page()
+                            failures = []
+                            finished = {}
+                            page.on('requestfailed', lambda r, log=failures: log.append(('request', r.url, r.failure)))
+                            page.on('response', lambda r, log=failures: log.append(('response', r.url, r.status)) if r.status >= 400 else None)
+                            page.on('requestfinished', lambda r, log=finished: log.update({r.url: r.response()}))
                             response = page.goto(f'http://127.0.0.1:{server.server_port}' + base + entry['route'], wait_until='networkidle')
                             assert response.status == 200 and not failures, (entry, failures)
                             assert page.locator('#main-content').is_visible()
                             if enabled:
+                                # Rustdoc collapses the search field on narrow
+                                # screens; its documented shortcut opens it.
+                                page.keyboard.press('/')
                                 search = page.locator('input.search-input')
                                 search.fill('SourceSnapshot')
                                 search.press('Enter')
                                 page.locator('#search').wait_for(state='visible')
                                 page.locator('#search a[href*="struct.SourceSnapshot.html"]').first.wait_for(state='visible')
-                                assert not failures, failures
-                            rows.append(dict(engine=engine, version=browser.version, width=width, page=entry['route'], javascript=enabled, api=True))
+                                # Rustdoc fills its three result tabs separately.
+                                # Names appearing does not finish the type search.
+                                page.wait_for_function("()=>document.querySelectorAll('#search-tabs .count.loading').length === 0")
+                                page.wait_for_load_state('networkidle')
+                            redundant_cancellations = []
+                            for kind, url, cause in failures:
+                                # WebKit can cancel a duplicate search-shard load
+                                # while successfully loading the same URL. Admit
+                                # only that observed case, with finished response
+                                # bytes equal to this artifact; never a missing
+                                # asset or an unexplained failed request.
+                                assert enabled and engine == 'webkit' and kind == 'request' and cause == 'Load request cancelled', (engine, entry, failures)
+                                completed = finished.get(url)
+                                parsed = urlsplit(url)
+                                assert parsed.scheme == 'http' and parsed.netloc == f'127.0.0.1:{server.server_port}' and not parsed.query and not parsed.fragment, url
+                                assert parsed.path.startswith(base + 'api/rust/search.index/') and parsed.path.endswith('.js'), url
+                                path = unquote(parsed.path[len(base):])
+                                assert path in files and completed is not None and completed.status == 200, (url, failures)
+                                assert completed.body() == files[path].read_bytes(), url
+                                redundant_cancellations.append(url)
+                            rows.append(dict(engine=engine, version=browser.version, width=width, page=entry['route'], javascript=enabled, api=True, redundant_cancellations=redundant_cancellations))
+                            page.close()
                         context.close()
                 browser.close()
     finally:
