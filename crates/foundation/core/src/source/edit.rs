@@ -27,6 +27,41 @@ fn allocation<T>(count: usize, budget: &mut Budget) -> Result<(), SourceError> {
     )?;
     Ok(())
 }
+// Original position breaks equal span keys, preserving the previous stable
+// order (including which malformed edit is diagnosed first).
+fn edit_less(
+    edits: &[TextEdit],
+    a: usize,
+    b: usize,
+    budget: &mut Budget,
+) -> Result<bool, SourceError> {
+    let left = &edits[a].span;
+    let right = &edits[b].span;
+    comparison(&left.snapshot.source, &right.snapshot.source, budget)?;
+    Ok((&left.snapshot.source, left.start, left.end, a)
+        < (&right.snapshot.source, right.start, right.end, b))
+}
+fn sift_edits(
+    edits: &[TextEdit],
+    order: &mut [usize],
+    mut root: usize,
+    budget: &mut Budget,
+) -> Result<(), SourceError> {
+    // root < len/2 proves that 2*root+1 is representable and in bounds.
+    while root < order.len() / 2 {
+        let mut child = root * 2 + 1;
+        if child + 1 < order.len() && edit_less(edits, order[child], order[child + 1], budget)? {
+            child += 1;
+        }
+        if !edit_less(edits, order[root], order[child], budget)? {
+            break;
+        }
+        budget.charge(Resource::Work, 1)?;
+        order.swap(root, child);
+        root = child;
+    }
+    Ok(())
+}
 impl SourceStore {
     // Upper bound in the existing (source, revision) index. The predecessor is
     // the greatest revision only if its full source name matches the request.
@@ -60,8 +95,10 @@ impl SourceStore {
     /// no source-store changes. Returned IDs are ordered by SourceId.
     /// Latest-revision selection uses O(G log S) source-name comparisons for G
     /// edited sources and S stored snapshots, with no extra lookup storage.
-    /// Edit sorting, validation, materialization and index publication have
-    /// additional costs; this is not a bound for the whole transaction.
+    /// Sorting E edits uses O(E log E) span-key comparisons and O(E) indices,
+    /// with constant additional sorting storage. Comparisons include source-name
+    /// byte costs. Validation, materialization and index publication have
+    /// additional costs; these are not bounds for the whole transaction.
     pub fn apply(
         &mut self,
         edits: &[TextEdit],
@@ -69,36 +106,24 @@ impl SourceStore {
         admission: &mut SourceAdmission,
     ) -> Result<Vec<SnapshotId>, SourceError> {
         budget.charge(Resource::Work, 1)?;
-        allocation::<&TextEdit>(edits.len(), budget)?;
-        let mut sorted: Vec<&TextEdit> = Vec::with_capacity(edits.len());
-        // Insertion sort permits cancellation/limits before every comparison and
-        // only moves borrowed pointers; no owned sort keys or hidden scratch heap.
-        for edit in edits {
-            sorted.push(edit);
-            let mut position = sorted.len() - 1;
-            while position > 0 {
-                let prior = sorted[position - 1];
-                comparison(
-                    &prior.span.snapshot.source,
-                    &edit.span.snapshot.source,
-                    budget,
-                )?;
-                if (
-                    &prior.span.snapshot.source,
-                    prior.span.start,
-                    prior.span.end,
-                ) <= (&edit.span.snapshot.source, edit.span.start, edit.span.end)
-                {
-                    break;
-                }
-                sorted.swap(position - 1, position);
-                position -= 1;
-            }
+        allocation::<usize>(edits.len(), budget)?;
+        let mut sorted = Vec::with_capacity(edits.len());
+        for index in 0..edits.len() {
+            budget.charge(Resource::Work, 1)?;
+            sorted.push(index);
+        }
+        for root in (0..sorted.len() / 2).rev() {
+            sift_edits(edits, &mut sorted, root, budget)?;
+        }
+        for end in (1..sorted.len()).rev() {
+            budget.charge(Resource::Work, 1)?;
+            sorted.swap(0, end);
+            sift_edits(edits, &mut sorted[..end], 0, budget)?;
         }
         let mut plans = Vec::new();
         let mut cursor = 0;
         while cursor < sorted.len() {
-            let id = &sorted[cursor].span.snapshot;
+            let id = &edits[sorted[cursor]].span.snapshot;
             let source = self
                 .latest_for_edit(&id.source, budget)?
                 .ok_or(SourceError::MissingSnapshot)?;
@@ -110,8 +135,12 @@ impl SourceStore {
             let revision = id.revision.checked_add(1).ok_or(SourceError::Revision)?;
             let mut next = cursor + 1;
             while next < sorted.len() {
-                comparison(&sorted[next].span.snapshot.source, &id.source, budget)?;
-                if sorted[next].span.snapshot.source != id.source {
+                comparison(
+                    &edits[sorted[next]].span.snapshot.source,
+                    &id.source,
+                    budget,
+                )?;
+                if edits[sorted[next]].span.snapshot.source != id.source {
                     break;
                 }
                 next += 1;
@@ -119,7 +148,8 @@ impl SourceStore {
             let mut end = 0;
             let mut previous_start = None;
             let mut length = source.storage.text.len() as u64;
-            for edit in &sorted[cursor..next] {
+            for &index in &sorted[cursor..next] {
+                let edit = &edits[index];
                 comparison(
                     &edit.span.snapshot.source,
                     &source.storage.id.source,
@@ -144,7 +174,8 @@ impl SourceStore {
             budget.charge(Resource::Work, length)?;
             let mut hash = Sha256::new();
             end = 0;
-            for edit in &sorted[cursor..next] {
+            for &index in &sorted[cursor..next] {
+                let edit = &edits[index];
                 hash.update(
                     source
                         .storage
@@ -239,7 +270,8 @@ impl SourceStore {
             )?;
             let mut output = String::with_capacity(plan.length);
             let mut end = 0;
-            for edit in &sorted[plan.first..plan.last] {
+            for &index in &sorted[plan.first..plan.last] {
+                let edit = &edits[index];
                 output.push_str(
                     source
                         .storage
