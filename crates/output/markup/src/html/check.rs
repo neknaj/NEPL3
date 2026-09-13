@@ -238,13 +238,58 @@ pub fn validate<'a>(
     p: &HtmlPolicy,
     b: &mut Budget,
 ) -> Result<ValidatedHtml<'a>, HtmlError> {
+    let mut identity = Identity::default();
+    validate_into(f, slot, p, &mut identity, b)?;
+    identity.finish(b)?;
+    Ok(ValidatedHtml { fragment: f })
+}
+/// Crate-internal output-occurrence identity collection for mixed documents.
+#[derive(Default)]
+pub(crate) struct Identity<'a> {
+    ids: BTreeSet<&'a str>,
+    links: Vec<(u64, &'a str)>,
+}
+impl Identity<'_> {
+    pub(crate) fn finish(self, b: &mut Budget) -> Result<(), HtmlError> {
+        for (r, id) in self.links {
+            b.charge(
+                Resource::Work,
+                (id.len() as u64 + 1).saturating_mul(self.ids.len() as u64 + 1),
+            )?;
+            if !self.ids.contains(id) {
+                return Err(HtmlError::MissingFragment(r));
+            }
+        }
+        Ok(())
+    }
+}
+pub(crate) fn validate_into<'a>(
+    f: &'a HtmlFragment,
+    slot: HtmlSlot,
+    p: &HtmlPolicy,
+    identity: &mut Identity<'a>,
+    b: &mut Budget,
+) -> Result<(), HtmlError> {
     b.poll()?;
+    check_policy(p, f.root, b)?;
+    validate_content(f, slot, p, identity, b)
+}
+pub(crate) fn check_policy(p: &HtmlPolicy, root: u64, b: &mut Budget) -> Result<(), HtmlError> {
     for c in &p.classes {
-        text(c, f.root, b)?;
+        text(c, root, b)?;
         if !uri::id(c) {
             return Err(HtmlError::Policy);
         }
     }
+    Ok(())
+}
+fn validate_content<'a>(
+    f: &'a HtmlFragment,
+    slot: HtmlSlot,
+    p: &HtmlPolicy,
+    identity: &mut Identity<'a>,
+    b: &mut Budget,
+) -> Result<(), HtmlError> {
     let root = node(f, f.root)?;
     if let HtmlNode::Element { tag, .. } = root
         && !(match slot {
@@ -259,8 +304,8 @@ pub fn validate<'a>(
     let mut state = vec![0_u8; f.nodes.len()];
     b.charge(Resource::AllocationUnits, 64)?;
     let mut stack = vec![(f.root, 1_u64, false, 0_u8, false)];
-    let mut ids = BTreeSet::new();
-    let mut links = Vec::new();
+    let ids = &mut identity.ids;
+    let links = &mut identity.links;
     while let Some((r, depth, anchor, forbidden, exit)) = stack.pop() {
         b.charge(Resource::Work, 1)?;
         let n = node(f, r)?;
@@ -391,14 +436,5 @@ pub fn validate<'a>(
             return Err(HtmlError::Unreachable(i as u64));
         }
     }
-    for (r, id) in links {
-        b.charge(
-            Resource::Work,
-            (id.len() as u64 + 1).saturating_mul(ids.len() as u64 + 1),
-        )?;
-        if !ids.contains(id) {
-            return Err(HtmlError::MissingFragment(r));
-        }
-    }
-    Ok(ValidatedHtml { fragment: f })
+    Ok(())
 }

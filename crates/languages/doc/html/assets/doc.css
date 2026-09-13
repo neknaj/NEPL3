@@ -1,4 +1,5 @@
 .nepl-doc{color-scheme:dark;--nepl-bg:#0d1117;--nepl-bg2:#10161e;--nepl-bg3:#0c1118;--nepl-border:#1d2a3b;--nepl-border2:#253142;--nepl-text:#e2eaf3;--nepl-muted:#7a8fa6;--nepl-accent:#4aa3ff;--nepl-accent2:#88c0ff;background:var(--nepl-bg);color:var(--nepl-text);white-space:pre-wrap;overflow-wrap:anywhere;padding:1.5rem;line-height:1.8;font-family:system-ui,sans-serif}
+.nepl-sentence{white-space:pre-wrap;overflow-wrap:anywhere}
 .nepl-doc a{color:var(--nepl-accent);text-underline-offset:.2em}
 .nepl-doc a:visited{color:var(--nepl-accent2)}
 .nepl-doc a:focus-visible{outline:2px solid var(--nepl-accent2);outline-offset:3px}

@@ -257,4 +257,148 @@ let f=fields(v,s,"HtmlRequest",3)?;
 Ok(Self {fragment:Value::read(&f[0],s,c,b)?,slot:Value::read(&f[1],s,c,b)?,policy:Value::read(&f[2],s,c,b)?})
 }
 }
+impl Value for MathMlTag {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Math => variant(s,"MathMlTag","Math",[],b),
+Self::Row => variant(s,"MathMlTag","Row",[],b),
+Self::Identifier => variant(s,"MathMlTag","Identifier",[],b),
+Self::Number => variant(s,"MathMlTag","Number",[],b),
+Self::Operator => variant(s,"MathMlTag","Operator",[],b),
+Self::Text => variant(s,"MathMlTag","Text",[],b),
+Self::Fraction => variant(s,"MathMlTag","Fraction",[],b),
+Self::Sqrt => variant(s,"MathMlTag","Sqrt",[],b),
+Self::Root => variant(s,"MathMlTag","Root",[],b),
+Self::Sub => variant(s,"MathMlTag","Sub",[],b),
+Self::Sup => variant(s,"MathMlTag","Sup",[],b),
+Self::SubSup => variant(s,"MathMlTag","SubSup",[],b),
+Self::Under => variant(s,"MathMlTag","Under",[],b),
+Self::Over => variant(s,"MathMlTag","Over",[],b),
+Self::UnderOver => variant(s,"MathMlTag","UnderOver",[],b),
+Self::Table => variant(s,"MathMlTag","Table",[],b),
+Self::TableRow => variant(s,"MathMlTag","TableRow",[],b),
+Self::Cell => variant(s,"MathMlTag","Cell",[],b),
+Self::Space => variant(s,"MathMlTag","Space",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,41)?;
+let (tag,f)=case(v,s,"MathMlTag")?;
+match (tag,f.len()) {
+("Math",0)=>Ok(Self::Math),
+("Row",0)=>Ok(Self::Row),
+("Identifier",0)=>Ok(Self::Identifier),
+("Number",0)=>Ok(Self::Number),
+("Operator",0)=>Ok(Self::Operator),
+("Text",0)=>Ok(Self::Text),
+("Fraction",0)=>Ok(Self::Fraction),
+("Sqrt",0)=>Ok(Self::Sqrt),
+("Root",0)=>Ok(Self::Root),
+("Sub",0)=>Ok(Self::Sub),
+("Sup",0)=>Ok(Self::Sup),
+("SubSup",0)=>Ok(Self::SubSup),
+("Under",0)=>Ok(Self::Under),
+("Over",0)=>Ok(Self::Over),
+("UnderOver",0)=>Ok(Self::UnderOver),
+("Table",0)=>Ok(Self::Table),
+("TableRow",0)=>Ok(Self::TableRow),
+("Cell",0)=>Ok(Self::Cell),
+("Space",0)=>Ok(Self::Space),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for MathMlDisplay {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Inline => variant(s,"MathMlDisplay","Inline",[],b),
+Self::Block => variant(s,"MathMlDisplay","Block",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,45)?;
+let (tag,f)=case(v,s,"MathMlDisplay")?;
+match (tag,f.len()) {
+("Inline",0)=>Ok(Self::Inline),
+("Block",0)=>Ok(Self::Block),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for MathMlOperatorForm {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Prefix => variant(s,"MathMlOperatorForm","Prefix",[],b),
+Self::Infix => variant(s,"MathMlOperatorForm","Infix",[],b),
+Self::Postfix => variant(s,"MathMlOperatorForm","Postfix",[],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,_c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,50)?;
+let (tag,f)=case(v,s,"MathMlOperatorForm")?;
+match (tag,f.len()) {
+("Prefix",0)=>Ok(Self::Prefix),
+("Infix",0)=>Ok(Self::Infix),
+("Postfix",0)=>Ok(Self::Postfix),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for MathMlAttribute {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Display(value) => variant(s,"MathMlAttribute","Display",[value.put(s,c,b)?],b),
+Self::NormalIdentifier => variant(s,"MathMlAttribute","NormalIdentifier",[],b),
+Self::Stretchy(value) => variant(s,"MathMlAttribute","Stretchy",[value.put(s,c,b)?],b),
+Self::Symmetric(value) => variant(s,"MathMlAttribute","Symmetric",[value.put(s,c,b)?],b),
+Self::LargeOperator(value) => variant(s,"MathMlAttribute","LargeOperator",[value.put(s,c,b)?],b),
+Self::MovableLimits(value) => variant(s,"MathMlAttribute","MovableLimits",[value.put(s,c,b)?],b),
+Self::Form(value) => variant(s,"MathMlAttribute","Form",[value.put(s,c,b)?],b),
+Self::Width(value) => variant(s,"MathMlAttribute","Width",[value.put(s,c,b)?],b),
+Self::Height(value) => variant(s,"MathMlAttribute","Height",[value.put(s,c,b)?],b),
+Self::Depth(value) => variant(s,"MathMlAttribute","Depth",[value.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,47)?;
+let (tag,f)=case(v,s,"MathMlAttribute")?;
+match (tag,f.len()) {
+("Display",1)=>Ok(Self::Display(Value::read(&f[0],s,c,b)?)),
+("NormalIdentifier",0)=>Ok(Self::NormalIdentifier),
+("Stretchy",1)=>Ok(Self::Stretchy(Value::read(&f[0],s,c,b)?)),
+("Symmetric",1)=>Ok(Self::Symmetric(Value::read(&f[0],s,c,b)?)),
+("LargeOperator",1)=>Ok(Self::LargeOperator(Value::read(&f[0],s,c,b)?)),
+("MovableLimits",1)=>Ok(Self::MovableLimits(Value::read(&f[0],s,c,b)?)),
+("Form",1)=>Ok(Self::Form(Value::read(&f[0],s,c,b)?)),
+("Width",1)=>Ok(Self::Width(Value::read(&f[0],s,c,b)?)),
+("Height",1)=>Ok(Self::Height(Value::read(&f[0],s,c,b)?)),
+("Depth",1)=>Ok(Self::Depth(Value::read(&f[0],s,c,b)?)),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for MathMlNode {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+match self {
+Self::Text(text) => variant(s,"MathMlNode","Text",[text.put(s,c,b)?],b),
+Self::Element {tag,attributes,children} => variant(s,"MathMlNode","Element",[tag.put(s,c,b)?,attributes.put(s,c,b)?,children.put(s,c,b)?],b),
+Self::Html {fragment} => variant(s,"MathMlNode","Html",[fragment.put(s,c,b)?],b),
+}
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,42)?;
+let (tag,f)=case(v,s,"MathMlNode")?;
+match (tag,f.len()) {
+("Text",1)=>Ok(Self::Text(Value::read(&f[0],s,c,b)?)),
+("Element",3)=>Ok(Self::Element {tag:Value::read(&f[0],s,c,b)?,attributes:Value::read(&f[1],s,c,b)?,children:Value::read(&f[2],s,c,b)?}),
+("Html",1)=>Ok(Self::Html {fragment:Value::read(&f[0],s,c,b)?}),
+_=>Err(PortableError::Shape),}
+}
+}
+impl Value for MathMlFragment {
+fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
+record(s,"MathMlFragment",[self.nodes.put(s,c,b)?,self.root.put(s,c,b)?,self.html_policy.put(s,c,b)?],b)
+}
+fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
+b.charge(Resource::Work,46)?;
+let f=fields(v,s,"MathMlFragment",3)?;
+Ok(Self {nodes:Value::read(&f[0],s,c,b)?,root:Value::read(&f[1],s,c,b)?,html_policy:Value::read(&f[2],s,c,b)?})
+}
+}
 }
