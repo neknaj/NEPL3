@@ -50,13 +50,11 @@ jobs:
         run: |
           IDENTITY=$(python tools/site/checked_artifact.py dist/checked "$SOURCE_COMMIT")
           echo "MANIFEST_SHA256=$IDENTITY" >> "$GITHUB_ENV"
-      - name: Upload original Pages tar without rebuilding
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - name: Package checked file bytes using the official Pages transport
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         with:
           name: github-pages
-          path: dist/checked/pages.tar
-          compression-level: 0
-          if-no-files-found: error
+          path: dist/checked/site
           retention-days: 14
       - name: Require current main immediately before publication
         run: test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$SOURCE_COMMIT"
