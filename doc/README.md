@@ -25,6 +25,7 @@ Docで例や解説を書く際は、[文書の執筆指針](authoring.md)のsent
 13. [Doc・MathのHTML生成と数式表示](spec/17-math-html.md)
 14. [外部言語の追加とrepository分離条件](spec/22-external-extensions.md)
 15. [NEPL3h: 独立GHC frontend案](decisions/nepl3h-ghc-frontend.md) — Haskell互換、Wasm/browser、DSL構造生成と配布方針。設計草案のみで実装未着手。
+16. [複数言語・NEPL3h/C/Aと構文コメントの統合案](decisions/multilanguage-hca.md) — 言語中立producer、回路・文章の所有境界、対象付きannotateと旧lexical commentの撤去計画。設計草案のみ。
 
 ## 正本と派生資料
 

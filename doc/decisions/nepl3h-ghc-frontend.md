@@ -133,6 +133,14 @@ loaderとpackage集合を一組で固定する。現時点では採用buildを�
 
 ## DSL構造生成、構文マクロ、TH
 
+共通の生成slot・操作契約・複数producerと構文コメントの所有関係は、
+[統合案](multilanguage-hca.md)で定義する。Hはその操作の実装言語の一つであり、
+Doc/C/Aに必須の評価器にはしない。以下のHからDocへの生成は具体例であり、
+全言語向けの標準呼出しをH専用の関数型へ固定するものではない。
+統合案のAnnotated<T>はparse treeへ保持し、host loweringだけが注釈を実行意味から射影する。
+標準構文はarity 2の`annotate Sentence target`に統一する。旧lexical commentの恒久互換、
+#:による特殊trivia、独立comment、commented aliasを追加しない。
+
 最初の合成例は、普通のHaskell関数で既存libraryによる集計結果をDocの表へ変換するものとする。
 
 ```haskell
