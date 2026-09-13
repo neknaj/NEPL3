@@ -240,6 +240,155 @@
         ]
       ],
       "constraints": []
+    },
+    "SentenceNodeLocation": {
+      "record": [
+        [
+          "origin",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "OriginRef"
+            }
+          }
+        ],
+        [
+          "head",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Span"
+              }
+            }
+          }
+        ],
+        [
+          "cover",
+          {
+            "option": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Span"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": [
+        "sentence.node_location"
+      ]
+    },
+    "SentenceView": {
+      "record": [
+        [
+          "owner",
+          "U64"
+        ],
+        [
+          "head",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "Span"
+            }
+          }
+        ],
+        [
+          "view",
+          {
+            "named": {
+              "package": "nepl3.foundation",
+              "revision": 1,
+              "name": "ViewBundle"
+            }
+          }
+        ]
+      ],
+      "constraints": [
+        "sentence.view_owner"
+      ]
+    },
+    "SentenceSyntax": {
+      "record": [
+        [
+          "value",
+          {
+            "named": {
+              "package": "nepl3.sentence",
+              "revision": 1,
+              "name": "SentenceValue"
+            }
+          }
+        ],
+        [
+          "locations",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.sentence",
+                "revision": 1,
+                "name": "SentenceNodeLocation"
+              }
+            }
+          }
+        ],
+        [
+          "sources",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceContent"
+              }
+            }
+          }
+        ],
+        [
+          "origins",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Origin"
+              }
+            }
+          }
+        ],
+        [
+          "views",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.sentence",
+                "revision": 1,
+                "name": "SentenceView"
+              }
+            }
+          }
+        ],
+        [
+          "sourceMaps",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "SourceMapping"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": [
+        "sentence.source_closure"
+      ]
     }
   },
   "operations": {}

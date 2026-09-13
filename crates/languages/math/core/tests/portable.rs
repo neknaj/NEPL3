@@ -180,3 +180,83 @@ fn schema_valid_math_rejects_nonfinite_numbers_and_missing_source_closure() -> R
     }
     Ok(())
 }
+
+#[test]
+fn mapped_view_parent_child_roundtrip_requires_explicit_mapping_closure() -> Result<(), String> {
+    use nepl3_core::{
+        origin::{Mapping, MappingKind},
+        value::KindRef,
+        view::{ViewBundle, ViewElement, ViewField, ViewRef},
+    };
+    let r = registry()?;
+    let mut original = source_expression()?;
+    let source = original.sources[0].clone();
+    let head = source.span(0, source.text().len() as u64).map_err(err)?;
+    let decoded = SourceSnapshot::new(
+        SourceId("transformed".into()),
+        1,
+        "memory:transformed".into(),
+        source.text().as_bytes().to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    let mapped = decoded.span(0, decoded.text().len() as u64).map_err(err)?;
+    let schema = r.selected("nepl3.foundation", 1).ok_or("foundation")?;
+    let kind = KindRef {
+        schema: schema.clone(),
+        local_kind: r.kind_id(schema, "Token").map_err(err)?,
+    };
+    // Identical byte ranges in different snapshots require an explicit Exact map;
+    // neither the ambient store nor matching text is a containment proof.
+    original.views = vec![MathView {
+        head: head.clone(),
+        view: ViewBundle {
+            roots: vec![ViewRef(0)],
+            elements: vec![
+                ViewElement {
+                    kind: kind.clone(),
+                    span: head.clone(),
+                    fields: vec![ViewField {
+                        name: "decoded".into(),
+                        children: vec![ViewRef(1)],
+                    }],
+                    roles: vec![],
+                    relations: vec![],
+                },
+                ViewElement {
+                    kind,
+                    span: mapped.clone(),
+                    fields: vec![],
+                    roles: vec![],
+                    relations: vec![],
+                },
+            ],
+        },
+    }];
+    original.sources.push(decoded);
+    original.source_maps = vec![Mapping {
+        source: head,
+        target: mapped,
+        kind: MappingKind::Exact,
+    }];
+    original
+        .validate_structure(&r, &mut b(), &mut SourceAdmission::default())
+        .map_err(err)?;
+    let empty = SourceStore::default();
+    let mut a = SourceAdmission::default();
+    let mut c = FoundationCodec::new(&r, &empty, &mut a).map_err(err)?;
+    let value = portable::to_value(&original, &r, &mut c, &mut b()).map_err(err)?;
+    let bytes = nepl3_wire::encode(&value, &mut b()).map_err(err)?;
+    let raw = nepl3_wire::decode(&bytes, &mut b()).map_err(err)?;
+    let actual = portable::from_value(&raw, &r, &mut c, &mut b()).map_err(err)?;
+    assert_eq!(actual, original);
+    let mut invalid = raw;
+    let NdfValue::Record(missing_map) = &mut invalid else {
+        return Err("record".into());
+    };
+    missing_map.fields[4] = NdfValue::List(vec![]);
+    assert!(portable::from_value(&invalid, &r, &mut c, &mut b()).is_err());
+    original.source_maps.clear();
+    assert!(portable::to_value(&original, &r, &mut c, &mut b()).is_err());
+    Ok(())
+}

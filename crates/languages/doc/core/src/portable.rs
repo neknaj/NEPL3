@@ -125,7 +125,7 @@ pub fn to_value<C: FoundationValueCodec>(
             .insert_with_budget(source.clone_with_budget(b)?, b)
             .map_err(StructureError::from)?;
     }
-    let mut scoped = c.scoped(&store);
+    let mut scoped = c.scoped_with_mappings(&store, &document.source_maps);
     let value = document.value.put(s, &mut scoped, b)?;
     let origins = scoped
         .encode_origins(&document.origins, b)
@@ -160,8 +160,12 @@ pub fn from_value<C: FoundationValueCodec>(
     let mut scoped = c.scoped(&store);
     let value = Value::read(&fields[0], s, &mut scoped, b)?;
     let origins = scoped.decode_origins(&fields[2], b).map_err(boundary)?;
-    let views = Value::read(&fields[3], s, &mut scoped, b)?;
-    let source_maps = Value::read(&fields[4], s, &mut scoped, b)?;
+    let source_maps: alloc::vec::Vec<nepl3_core::origin::Mapping> =
+        Value::read(&fields[4], s, &mut scoped, b)?;
+    let views = {
+        let mut mapped = scoped.scoped_with_mappings(&store, &source_maps);
+        Value::read(&fields[3], s, &mut mapped, b)?
+    };
     let output = DocumentSyntax {
         value,
         sources,

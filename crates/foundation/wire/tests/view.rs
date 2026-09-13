@@ -189,3 +189,153 @@ fn token_wire_rejects_invalid_local_view_and_trivia_references_and_source_limit(
     ));
     Ok(())
 }
+
+#[test]
+fn codec_mapping_scope_is_explicit_validated_and_cleared_on_rebind() -> TestResult {
+    use nepl3_core::{
+        origin::{Mapping, MappingKind},
+        value_codec::{FoundationCodecError, FoundationValueCodec},
+    };
+    use nepl3_wire::foundation::FoundationCodec;
+    let (_, registry, mut sources, token) = fixture()?;
+    let mut views = token.views;
+    let original = views.elements[1].span.clone();
+    let source = sources.get_ref(original.snapshot_ref()).ok_or("source")?;
+    let decoded = SourceSnapshot::new(
+        SourceId("decoded".into()),
+        1,
+        "memory:decoded".into(),
+        source
+            .slice(&original)
+            .map_err(|e| format!("{e:?}"))?
+            .as_bytes()
+            .to_vec(),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let mapped = decoded
+        .span(0, decoded.text().len() as u64)
+        .map_err(|e| format!("{e:?}"))?;
+    let view_source_bytes = source.text().len() as u64 + decoded.text().len() as u64;
+    let unused = SourceSnapshot::new(
+        SourceId("unused-map-target".into()),
+        1,
+        "memory:unused".into(),
+        decoded.text().as_bytes().to_vec(),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let unused_span = unused
+        .span(0, unused.text().len() as u64)
+        .map_err(|e| format!("{e:?}"))?;
+    sources.insert(decoded).map_err(|e| format!("{e:?}"))?;
+    sources.insert(unused).map_err(|e| format!("{e:?}"))?;
+    views.elements[1].span = mapped.clone();
+    let maps = [
+        Mapping {
+            source: original.clone(),
+            target: mapped,
+            kind: MappingKind::Exact,
+        },
+        Mapping {
+            source: original.clone(),
+            target: unused_span,
+            kind: MappingKind::Exact,
+        },
+    ];
+    let mut admission = SourceAdmission::default();
+    let mut codec =
+        FoundationCodec::new(&registry, &sources, &mut admission).map_err(|e| format!("{e:?}"))?;
+    assert!(codec.encode_views(&views, &mut budget()).is_err());
+    let raw = {
+        let mut scoped = codec.scoped_with_mappings(&sources, &maps);
+        let raw = scoped
+            .encode_views(&views, &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+        assert_eq!(
+            scoped
+                .decode_views(&raw, &mut budget())
+                .map_err(|e| format!("{e:?}"))?,
+            views
+        );
+        // Warm mapping proof cannot authenticate a different View or mask a stop.
+        let mut broken = views.clone();
+        broken.elements[0].fields[0].children[0] = ViewRef(99);
+        assert!(scoped.encode_views(&broken, &mut budget()).is_err());
+        for cancelled in [false, true] {
+            let mut limits = budget().limits();
+            if !cancelled {
+                limits.work = 0;
+            }
+            let mut stopped = Budget::new(limits);
+            let expected = if cancelled {
+                stopped.cancel();
+                StopReason::Cancelled
+            } else {
+                StopReason::WorkLimit
+            };
+            let error = scoped
+                .decode_views(&raw, &mut stopped)
+                .err()
+                .ok_or("expected warm scope stop")?;
+            assert_eq!(error.stop_reason(), Some(expected));
+            assert_eq!(stopped.poll(), Err(expected));
+        }
+        // Replacing admission must invalidate even unused mapping endpoints.
+        *scoped.source_admission() = SourceAdmission::default();
+        let mut limits = budget().limits();
+        limits.source_bytes = view_source_bytes;
+        let mut stopped = Budget::new(limits);
+        let error = scoped
+            .decode_views(&raw, &mut stopped)
+            .err()
+            .ok_or("expected mapping admission stop")?;
+        assert_eq!(error.stop_reason(), Some(StopReason::SourceLimit));
+        assert_eq!(stopped.poll(), Err(StopReason::SourceLimit));
+        for mapped_child in [false, true] {
+            scoped
+                .decode_views(&raw, &mut budget())
+                .map_err(|e| format!("{e:?}"))?;
+            if mapped_child {
+                let mut child = scoped.scoped_with_mappings(&sources, &maps);
+                *child.source_admission() = SourceAdmission::default();
+            } else {
+                let mut child = scoped.scoped(&sources);
+                *child.source_admission() = SourceAdmission::default();
+            }
+            // Mutating admission through a child also invalidates the warm parent.
+            let mut stopped = Budget::new(limits);
+            let error = scoped
+                .decode_views(&raw, &mut stopped)
+                .err()
+                .ok_or("expected parent mapping admission stop")?;
+            assert_eq!(error.stop_reason(), Some(StopReason::SourceLimit));
+            assert_eq!(stopped.poll(), Err(StopReason::SourceLimit));
+        }
+        // A nested payload must not inherit its caller's containment authority.
+        let mut rebound = scoped.scoped(&sources);
+        assert!(rebound.encode_views(&views, &mut budget()).is_err());
+        assert!(rebound.decode_views(&raw, &mut budget()).is_err());
+        raw
+    };
+    assert!(codec.decode_views(&raw, &mut budget()).is_err());
+    let mut forged = maps.clone();
+    forged[0].source = token.head;
+    let mut invalid = codec.scoped_with_mappings(&sources, &forged);
+    assert!(invalid.encode_views(&views, &mut budget()).is_err());
+    assert!(invalid.decode_views(&raw, &mut budget()).is_err());
+    let mut admission = SourceAdmission::default();
+    let mut codec =
+        FoundationCodec::new(&registry, &sources, &mut admission).map_err(|e| format!("{e:?}"))?;
+    let mut scoped = codec.scoped_with_mappings(&sources, &maps);
+    let mut limits = budget().limits();
+    limits.source_bytes = 0;
+    let mut stopped = Budget::new(limits);
+    let error = scoped
+        .decode_views(&raw, &mut stopped)
+        .err()
+        .ok_or("expected stop")?;
+    assert_eq!(error.stop_reason(), Some(StopReason::SourceLimit));
+    assert_eq!(stopped.poll(), Err(StopReason::SourceLimit));
+    Ok(())
+}

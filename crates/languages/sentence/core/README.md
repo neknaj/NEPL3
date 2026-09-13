@@ -11,7 +11,11 @@ and delegates foreign source closures to the host-selected foundation codec.
 A shape proof alone does not
 validate foreign source closures, resolve document names or certify safe HTML.
 
+`SentenceSyntax` separately retains dense node locations, source snapshots,
+Origin arenas and owner-indexed token views. Native and portable checks enforce
+their declaration closure; this does not prove source/meaning equivalence.
+
 The independent LanguagePackage, literal/prefix lowering and printing,
-Source/Origin boundary, annotation adapter and Doc/Math migration remain part of
+annotation adapter and Doc/Math migration remain part of
 the same ongoing recovery. This stage is not a completed language or removal of
 lexical comments. Do not merge it as a completed migration.

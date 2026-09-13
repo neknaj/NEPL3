@@ -107,6 +107,14 @@ pub trait FoundationValueCodec {
         &'a mut self,
         sources: &'a crate::source::SourceStore,
     ) -> impl FoundationValueCodec<Error = Self::Error> + 'a;
+    /// Rebind sources and the explicit mapping closure used to validate Views.
+    /// Mapping endpoints and geometry must be checked against these sources.
+    /// Ordinary `scoped` clears this mapping context rather than inheriting it.
+    fn scoped_with_mappings<'a>(
+        &'a mut self,
+        sources: &'a crate::source::SourceStore,
+        mappings: &'a [crate::origin::Mapping],
+    ) -> impl FoundationValueCodec<Error = Self::Error> + 'a;
     fn encode_syntax(
         &mut self,
         value: &crate::syntax::SyntaxBundle,

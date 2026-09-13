@@ -30,6 +30,23 @@ Source/Origin境界の準備中に、値codecで文章とforeignの深さを別�
 単独では上限60に収まるが、合成時は送受信とも拒否する。短経路から先に到達する共有guestでも
 最長経路を使い、呼出元の深さを戻す。独立レビューと回帰試験で確認した。
 
+続いてSentenceSyntaxの局所Source/Origin/View境界を追加した。意味arenaと同順・同長の位置表、
+必須Origin、任意head/cover、Viewのowner、payload自身のsource/mapを両codec方向で検査する。
+架空Spanを要求せず、生成値はSynthetic/Generated Originを使う。これは位置の閉包・関連付けの
+検査であり、まだ未実装のreaderによる原文と意味値の一致を証明しない。
+
+独立レビューで、明示SourceMapを持つViewの親子をnativeでは受理しportableでは拒否する欠陥を
+確認し、foundation codecとSentence/Doc/Mathのsyntax境界を一緒に修正した。mapを各Viewで
+再検査する初版は実14ページ文書でWorkLimitとなった。不変scopeに閉じた検査結果を再利用し、
+既存上限のまま生成成功を確認した。各Viewは再検査し、scopeの再束縛とSourceAdmissionへの
+可変アクセスでは親子双方のcacheを失効させる。scope越しのadmission置換を含む負例を維持する。
+SentenceはCIのWASI実行・Wasm/ARM build対象にも追加した。
+最終差分の全workspace試験は730成功・失敗0・既定ignore 2（所有continuation性能比較、
+Node/npm依存KaTeX corpus）。Sentence/Wire/Doc/MathはWasmtime 44.0.1で134成功・失敗0・
+ignore 0、ARMv6-Mとbrowser向けWasmのbuildも成功した。独立レビューの追加指摘を修正し、
+再レビューで指摘なしを確認した。Sentenceのreader/LanguagePackageと注釈・consumer移行、
+旧コメントの撤去は引き続き未完了である。
+
 局所syntaxのSource/Origin境界、literal/prefixと独立LanguagePackage、annotation adapter、
 Doc/Math consumerおよび公式sourceの移行は未完了である。旧コメント処理だけは先に削除せず、
 移行後にschema・wire・生成器まで撤去する。T07や受入状態をこのモデル検査でpassedにしない。

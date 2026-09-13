@@ -60,6 +60,36 @@ foundationの正準化規則に従うため、任意の送信元NodeRef番号を
 owner Originとguest Originを混ぜず、正準CBORの再encodeと意味上の参照対応を検査する。
 この値境界は局所文章のSource/Viewを持つsyntax boundaryとは別であり、印字可能性や安全なHTMLのproofでもない。
 
+## 局所syntaxの位置情報
+
+`SentenceSyntax`はSentenceValueと独立したlocations、sources、origins、views、sourceMapsを持つ。
+locationsはvalue.nodesと同じ順序・長さで、各nodeへOriginId、任意head、任意coverを対応させる。
+OriginIdは必須とし、source-less生成はSynthetic/Generated Originを使う。架空Spanで穴を埋めない。
+headがある場合はcoverを要求し、同snapshotまたは明示SourceMap経由で包含を検査する。
+意味arenaの共有edgeは構文の包含関係と同一ではないため、すべての意味上の子にsource順を強制しない。
+
+SentenceViewはownerの意味node index、元head、ローカルViewBundleを持つ。owner範囲、宣言済みsource、
+ownerにcoverがある場合のhead包含、およびhead内の全ViewElementを検査する。複数の原表記を一つの
+意味nodeへ正規化する場合はownerを明示的に再対応させ、元のViewRefを別ViewBundleへ流用しない。
+coverがない生成nodeでも、明示Source/Originと対応させた元表記のViewは保持できる。
+
+native検査とportable::syntaxの両方向で、重複snapshot revision、未宣言source、古いsnapshotへのSpan、
+Origin参照、SourceMap、View閉包、foreignの合成深さを検査する。portable受信はpayload自身のsourceで
+codecをscopeし、ambient sourceを欠落閉包の代わりにしない。UTF-8 byte位置を保持し、editorで必要な
+UTF-16等への対応は共通Source/LineIndexに委譲する。
+Viewの親子が変換前後のsourceへ分かれる場合も、nativeとportableで同じ明示SourceMapを使う。
+FoundationValueCodecの`scoped_with_mappings`はpayloadのsourceとmappingを同時に限定し、
+View検査時に全mappingの端点・geometry・source admissionを検査する。通常の`scoped`はmapを
+引き継がない。受信側はmappingを検査してからViewをdecodeする。SentenceだけでなくDoc/Mathの
+syntax境界もこの契約を使い、ambient mapや同じ本文で包含を補完しない。wire形状の追加ではなく、
+既存SourceMapをtyped codecへ正しく渡す共通境界の修正である。
+scope内で不変に借用したsource/mappingに対するadmission・geometry・cycle proofは再利用できる。
+各Viewの検査とそのSpanのadmissionは省かず、別scopeへproofを持ち越さない。
+SourceAdmissionを可変参照で公開する前にもproofを失効させる。全mappingの検査を
+各Viewで反復して文書全体の既存Budgetを浪費しない。
+これは関連付けの構造検査であり、原ソースを再parseしたこと、任意の文章値が原文と意味一致すること、
+binding、HTMLの安全性を証明しない。それらはlanguage/adapterの操作で別に検査する。
+
 ## 注釈と移行完了条件
 
 `annotate Sentence target`はarity 2の通常formであり、各host categoryへ固定shapeで登録する。

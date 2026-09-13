@@ -1,5 +1,6 @@
 //! Explicit SentenceValue boundary. Schema, arena and foreign closures are
 //! checked in both directions. No guest meaning or rendering is executed.
+pub mod syntax;
 mod value;
 use crate::{check, model::SentenceValue};
 use nepl3_core::{
@@ -17,6 +18,15 @@ pub enum Error<E> {
     Foundation(E),
     Shape,
     SchemaIdentity,
+    Presentation(crate::syntax::Error),
+}
+impl<E> From<crate::syntax::Error> for Error<E> {
+    fn from(e: crate::syntax::Error) -> Self {
+        match e {
+            crate::syntax::Error::Stopped(s) => Self::Stopped(s),
+            other => Self::Presentation(other),
+        }
+    }
 }
 impl<E> From<StopReason> for Error<E> {
     fn from(e: StopReason) -> Self {
@@ -61,15 +71,23 @@ fn schema<'a, E>(registry: &'a SchemaRegistry, b: &mut Budget) -> Result<&'a Sch
     Ok(selected)
 }
 fn validate<E>(registry: &SchemaRegistry, raw: &NdfValue, b: &mut Budget) -> Result<(), Error<E>> {
+    validate_named(registry, raw, "SentenceValue", b)
+}
+fn validate_named<E>(
+    registry: &SchemaRegistry,
+    raw: &NdfValue,
+    name: &str,
+    b: &mut Budget,
+) -> Result<(), Error<E>> {
     b.charge(
         Resource::AllocationUnits,
-        ("nepl3.sentence".len() + "SentenceValue".len()) as u64,
+        ("nepl3.sentence".len() + name.len()) as u64,
     )?;
     registry.validate(
         &TypeDescriptor::Named(TypeRef {
             package: "nepl3.sentence".into(),
             revision: 1,
-            name: "SentenceValue".into(),
+            name: name.into(),
         }),
         raw,
         b,

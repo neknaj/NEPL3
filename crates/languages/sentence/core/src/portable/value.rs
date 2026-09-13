@@ -7,7 +7,7 @@ use nepl3_core::{
     value_codec::FoundationValueCodec,
 };
 
-fn reserve<T, E>(count: usize, b: &mut Budget) -> Result<Vec<T>, Error<E>> {
+pub(super) fn reserve<T, E>(count: usize, b: &mut Budget) -> Result<Vec<T>, Error<E>> {
     b.charge(Resource::Work, count as u64)?;
     b.charge(
         Resource::AllocationUnits,
@@ -20,7 +20,7 @@ fn text<E>(s: &str, b: &mut Budget) -> Result<String, Error<E>> {
     b.charge(Resource::AllocationUnits, s.len() as u64)?;
     Ok(s.into())
 }
-fn record<E, const N: usize>(
+pub(super) fn record<E, const N: usize>(
     s: &SchemaRef,
     kind: &str,
     fields: [NdfValue; N],
@@ -157,7 +157,11 @@ fn encode_node<E>(v: &Kind, s: &SchemaRef, b: &mut Budget) -> Result<NdfValue, E
         ),
     }
 }
-fn fields<'a, E>(v: &'a NdfValue, s: &SchemaRef, kind: &str) -> Result<&'a [NdfValue], Error<E>> {
+pub(super) fn fields<'a, E>(
+    v: &'a NdfValue,
+    s: &SchemaRef,
+    kind: &str,
+) -> Result<&'a [NdfValue], Error<E>> {
     match v {
         NdfValue::Record(r) if &r.schema == s && r.kind == kind => Ok(&r.fields),
         _ => Err(Error::Shape),
