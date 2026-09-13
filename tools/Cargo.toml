@@ -32,3 +32,4 @@ workspace = true
 
 [dev-dependencies]
 nepl3-math-mathml.workspace = true
+nepl3-math-tex.workspace = true

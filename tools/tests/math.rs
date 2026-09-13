@@ -3,6 +3,8 @@
 mod mathml;
 #[path = "math/print.rs"]
 mod print;
+#[path = "math/tex.rs"]
+mod tex;
 use nepl3_core::{budget::*, source::*};
 use nepl3_core::{
     syntax::{Environment, EnvironmentEntry},
