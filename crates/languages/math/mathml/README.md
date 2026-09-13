@@ -18,11 +18,17 @@ Numbers use exact canonical finite-decimal printing. Shared input nodes retain
 shared output roots, and serialization expands their occurrences in order.
 All construction, numeric printing and validation use the caller's sticky Budget.
 
-Annotation integration is unfinished. `DocGuest`/`Label` returns the typed
+Without a host renderer, `render` returns the typed
 `AnnotationRequiresPreparation` error rather than removing annotation content.
-The required next stage is prepared Doc phrasing through MathML `mtext`, including
-Ruby/Anno. Markup now provides mixed-namespace depth/identity checks and XHTML
-serialization; the Math annotation preparation/adapter still needs to use them.
+Prepared Doc phrasing passes through MathML `mtext`, including Ruby/Anno.
+Markup provides mixed-namespace depth/identity checks and XHTML
+serialization. `render_with_annotations` calls an explicitly supplied host
+renderer with each exact retained closure. It rechecks phrasing, combines class
+policies, and checks identity collisions across expanded output occurrences.
+Labels use `munder` with the Doc fragment inside `mtext`; compound bases are
+parenthesized to preserve their grouping. `tools::doc::annotations` supplies the
+production local Doc lower/check/render adapter and retains the lowered input
+alongside its origin map. Unresolved links/assets/guests remain typed failures.
 This crate's presence is not completion of T24, Math rendering acceptance, KaTeX,
 the document artifact pipeline or browser verification.
 
