@@ -102,7 +102,9 @@ fn check_shell_depth(
             ));
         }
         budget.observe_depth(depth).map_err(err)?;
-        if let HtmlNode::Element { children, .. } = &fragment.nodes[node as usize] {
+        if let HtmlNode::Element { children, .. } | HtmlNode::MathElement { children, .. } =
+            &fragment.nodes[node as usize]
+        {
             for child in children.iter().rev() {
                 push_pending(&mut pending, (*child, depth + 1), budget)?;
             }

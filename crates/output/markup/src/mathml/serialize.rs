@@ -34,7 +34,7 @@ fn append(out: &mut Output, text: &str, precharged: bool, b: &mut Budget) -> Res
     }
     Ok(())
 }
-fn attr(a: &Attribute) -> (&'static str, &str) {
+pub(crate) fn attr(a: &Attribute) -> (&'static str, &str) {
     fn boolean(v: bool) -> &'static str {
         if v { "true" } else { "false" }
     }
