@@ -147,6 +147,8 @@ fn sentence_surface_compiles_from_production_grammar_with_own_root_and_payload()
         "sentence cons concat cons text \"a\" cons text \"b\" nil cons code \"x\" cons em text \"e\" cons strong text \"s\" cons break cons link \"https://example.invalid/\" text \"link\" nil",
         "sentence nil\n",
         printed.as_str(),
+        "sentence cons ruby text \"\" text \"reading\" nil",
+        "sentence cons anno text \"base\" nil nil",
     ] {
         let source = SourceSnapshot::new(
             SourceId("sentence-input".into()),
@@ -165,7 +167,7 @@ fn sentence_surface_compiles_from_production_grammar_with_own_root_and_payload()
                 &mut b(),
                 &mut SourceAdmission::default(),
                 native,
-                |tree, _, _, _| {
+                |tree, resolved, budget, admission| {
                     assert!(!tree.is_recovered());
                     let bundle = tree.syntax().bundle();
                     if input == printed {
@@ -184,6 +186,70 @@ fn sentence_surface_compiles_from_production_grammar_with_own_root_and_payload()
                             "Form:Sentence"
                         }
                     );
+                    let mut wrong_surface = root.schema.clone();
+                    wrong_surface.digest = nepl3_core::source::Digest([0; 32]);
+                    assert!(matches!(
+                        nepl3_sentence_core::lower::prefix(
+                            tree.syntax(),
+                            &wrong_surface,
+                            resolved.registry(),
+                            &mut b(),
+                            &mut SourceAdmission::default()
+                        ),
+                        Err(nepl3_sentence_core::lower::Error::Unsupported(_))
+                    ));
+                    if !input.starts_with('"') {
+                        let projection = nepl3_sentence_core::lower::prefix(
+                            tree.syntax(),
+                            &root.schema,
+                            resolved.registry(),
+                            budget,
+                            admission,
+                        );
+                        if input.contains("ruby text \"\"")
+                            || input.contains("anno text \"base\" nil")
+                        {
+                            // Prefix shape is valid, but the Sentence domain
+                            // rejects empty Ruby content and a missing note.
+                            assert!(matches!(
+                                projection,
+                                Err(nepl3_sentence_core::lower::Error::Shape(_))
+                            ));
+                            return Ok(tree.tree().clone());
+                        }
+                        let projection = projection.map_err(err)?;
+                        let output = nepl3_sentence_core::print::prefix(&projection.value, budget)
+                            .map_err(err)?;
+                        assert_eq!(output, input.trim_end());
+                        assert_eq!(projection.syntax_to_meaning.len(), bundle.nodes.len());
+                        assert!(projection.syntax_to_meaning[bundle.root.0 as usize].is_some());
+                        let mut limits = b().limits();
+                        limits.work = 0;
+                        assert_eq!(
+                            nepl3_sentence_core::lower::prefix(
+                                tree.syntax(),
+                                &root.schema,
+                                resolved.registry(),
+                                &mut Budget::new(limits),
+                                &mut SourceAdmission::default()
+                            )
+                            .err(),
+                            Some(nepl3_sentence_core::lower::Error::Stopped(
+                                StopReason::WorkLimit
+                            ))
+                        );
+                    } else {
+                        assert!(matches!(
+                            nepl3_sentence_core::lower::prefix(
+                                tree.syntax(),
+                                &root.schema,
+                                resolved.registry(),
+                                budget,
+                                admission
+                            ),
+                            Err(nepl3_sentence_core::lower::Error::Unsupported(_))
+                        ));
+                    }
                     Ok(tree.tree().clone())
                 },
             )?;

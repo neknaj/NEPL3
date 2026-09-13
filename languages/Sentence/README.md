@@ -23,4 +23,6 @@ belongs to Doc. See [spec 23](../../doc/spec/23-sentence-annotation.md).
 LanguagePackage compilation and native/owned prefix parsing are implemented.
 The standard prefix printer emits all ten forms, keeping constructor boundaries
 and escaping BuiltinText. Foreign-inline output needs its selected surface adapter.
-Prefix lowering, full semantic roundtrips and Doc body migration remain in progress.
+Standard prefix lowering returns a checked meaning arena and a mapping back to
+the retained syntax bundle. Literal integration, full semantic roundtrips and Doc
+body migration remain in progress.
