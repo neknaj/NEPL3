@@ -41,6 +41,13 @@ file数上限4096は維持する。journalの証拠上限は別契約で変更�
 fragmentを静的検査し、全crate入口を両base・3browser・2画面幅でJavaScript有効/無効の両方から
 閲覧する。有効時には実検索も確認する。この検査は全APIページのpixel layout試験を意味しない。
 rustdocの標準検索JSをNEPL3 Playground/runtimeの完成と扱わない。
+
+固定rustdoc 1.97.0の空の公開implementor一覧JS欠落には、確認済みのBindingHostと
+TokenizationHostだけを対象とする生成adapterを置く。成功した新規workspace生成、
+toolchainの版・完全commit、元traitページのidentityと空の公開一覧を検査してから、
+空の公開データをserializeする。既存資源・HTMLは変更しない。公開実装がある出力、
+未知の版・trait・他の欠落資源には適用しない。元HTMLと追加資源のdigest、理由、
+実rustdoc executableのdigestをAPI manifestに記録する。private実装がないという保証ではない。
 生成方式は[Cargo公式資料](https://doc.rust-lang.org/cargo/commands/cargo-doc.html)に従う。
 
 docs-onlyのトップは現在の`README.md`正本を固定版pulldown-cmarkでHTMLへ投影する。

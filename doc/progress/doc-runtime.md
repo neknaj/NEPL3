@@ -168,6 +168,10 @@ private moduleから再公開する最小例の両方を生成し、実装一覧
 TokenizationHostにはproductionのprivate IntegrityHost実装があり、Rust実装全体が存在しない
 という意味ではない。公開implementorの有無と区別する。
 `write_shared.rs`の[固定版実装](https://github.com/rust-lang/rust/blob/2d8144b78/src/librustdoc/html/render/write_shared.rs)
-はimplementor cacheを走査して資源を生成する。空JS、参照scriptの削除、偽implementor、
-欠落の検査除外で成功扱いにはしない。生成toolchainの修正・全リンク再検査・browserでの
+はimplementor cacheを走査して資源を生成する。一方、その実装はローカルtraitのリンクを
+壊さないため空集合でも資源を生成する意図を明記している。このため、空の公開データの
+serializeまで一律に禁止する判断を訂正し、確認済み2 trait・固定toolchainに限定した
+生成adapterを追加した。HTML・既存JSを変えず、元HTMLと追加資源のdigestを記録する。
+公開実装を持つ実rustdoc出力では補完せず、HTML内の実装と通常資源を保持する反例も検査する。
+参照scriptの削除、偽implementor、欠落の検査除外は行わない。全リンク再検査・browserでの
 実検索が残るため、Rust API収録とT19/Pages公開は未完了である。

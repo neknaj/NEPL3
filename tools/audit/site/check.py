@@ -127,6 +127,23 @@ def verify(root, source_root=None, config_path='site/config.json', renderer=None
     assert api['roots'] == [{'name':name,'route':f'api/rust/{name}/index.html'} for name in names]
     assert api['command'] == ['cargo','doc','--workspace','--no-deps','--locked']
     assert api['rustdoc'] == subprocess.check_output(['rustdoc','--version'],cwd=checkout,text=True).strip()
+    rustdoc_executable = Path(subprocess.check_output(['rustup','which','rustdoc'],cwd=checkout,text=True).strip())
+    assert api['rustdoc_sha256'] == hashlib.sha256(rustdoc_executable.read_bytes()).hexdigest()
+    assert api['compiler'] == subprocess.check_output(['rustc','-vV'],cwd=checkout,text=True).strip()
+    corrected = set()
+    allowed_corrections = {
+        f'api/rust/trait.impl/{owner}/{module}/host/trait.{name}.js': f'api/rust/{owner}/{module}/trait.{name}.html'
+        for owner, module, name in [('nepl3_engine','binding','BindingHost'), ('nepl3_reader','tokenizer','TokenizationHost')]
+    }
+    for correction in api['corrections']:
+        resource = correction['resource']
+        assert resource in allowed_corrections and resource not in corrected
+        corrected.add(resource)
+        assert correction['page'] == allowed_corrections[resource]
+        assert correction['reason'] == 'rustdoc-1.97-empty-public-implementors/1'
+        assert api['rustdoc'] == 'rustdoc 1.97.0 (2d8144b78 2026-07-07)'
+        for key in ('page', 'resource'):
+            assert correction[key + '_sha256'] == hashlib.sha256(files[correction[key]]).hexdigest()
     assert all(p['route'] in api_docs for p in api['roots'])
     api_paths = {path for path in files if path.startswith('api/rust/')}
     markdown = json.loads((root / 'markdown-manifest.json').read_text(encoding='utf-8'))

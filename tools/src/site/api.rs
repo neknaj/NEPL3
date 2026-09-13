@@ -1,4 +1,5 @@
 //! Build and include the current workspace's rustdoc, preserving its assets.
+mod empty;
 use super::{Result, escape, insert};
 use std::{collections::BTreeMap, fs, path::Path, process::Command};
 
@@ -76,6 +77,11 @@ pub(super) fn generate(
     // Cargo doc preserves old outputs. Never admit an existing target directory.
     fs::create_dir(scratch)?;
     let target = fs::canonicalize(scratch)?;
+    let rustdoc_path = String::from_utf8(crate::command(root, "rustup", &["which", "rustdoc"])?)?;
+    let rustdoc_path = rustdoc_path.trim();
+    let rustdoc = String::from_utf8(crate::command(root, rustdoc_path, &["--version"])?)?;
+    let compiler = String::from_utf8(crate::command(root, "rustc", &["-vV"])?)?;
+    let rustdoc_sha256 = super::hash(&fs::read(rustdoc_path)?);
     let status = Command::new("cargo")
         .current_dir(root)
         .args([
@@ -87,6 +93,7 @@ pub(super) fn generate(
         ])
         .arg(&target)
         .env("RUSTDOCFLAGS", "-D warnings")
+        .env("RUSTDOC", rustdoc_path)
         .env_remove("CARGO_ENCODED_RUSTDOCFLAGS")
         .status()?;
     if !status.success() {
@@ -132,6 +139,7 @@ pub(super) fn generate(
     if roots.is_empty() {
         return Err("no workspace Rust API roots".into());
     }
+    let corrections = empty::correct(&mut files, rustdoc.trim(), &compiler)?;
     roots.sort_by(|a, b| a.name.cmp(&b.name));
     let links = roots
         .iter()
@@ -150,12 +158,11 @@ pub(super) fn generate(
         escape(base)
     );
     insert(&mut files, "api/rust/index.html", html.into_bytes())?;
-    let rustdoc = String::from_utf8(crate::command(root, "rustdoc", &["--version"])?)?;
     insert(
         &mut files,
         "api/rust/manifest.json",
         serde_json::to_vec_pretty(
-            &serde_json::json!({"version":1,"source_commit":commit,"rustdoc":rustdoc.trim(),"command":["cargo","doc","--workspace","--no-deps","--locked"],"roots":roots}),
+            &serde_json::json!({"version":1,"source_commit":commit,"rustdoc":rustdoc.trim(),"rustdoc_sha256":rustdoc_sha256,"compiler":compiler.trim(),"corrections":corrections,"command":["cargo","doc","--workspace","--no-deps","--locked"],"roots":roots}),
         )?,
     )?;
     Ok(files)
