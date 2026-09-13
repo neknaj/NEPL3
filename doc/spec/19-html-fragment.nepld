@@ -46,7 +46,7 @@ body
     cons "[現段階/げんだんかい]ではHTML fragmentに[加/くわ]え、mtextにHTML phrasingを[含/ふく]むMathML treeの[構造検査/こうぞうけんさ]とserializer、NDF codecを[提供/ていきょう]する。"
     cons "Math[注釈/ちゅうしゃく]の[準備/じゅんび]・[変換/へんかん]、SVG/KaTeX[専用/せんよう]profile、DocumentShell、assetのbyte[列/れつ]・MIME・license[検査/けんさ]、Doc PreparedArticle、[完全/かんぜん]な[操作/そうさ]Reportは[後続実装/こうぞくじっそう]であり、[既存/きそん]の[最終要件/さいしゅうようけん]から[除/のぞ]かない。"
     cons "MathMlFragmentはnodes・root・htmlPolicyを[持/も]ち、MathMlNodeはText・Element・Htmlの[閉/と]じた[選択/せんたく]である。"
-    cons "Htmlはmtext[直下/ちょっか]だけに[置/お]き、[要求全体/ようきゅうぜんたい]のhtmlPolicyで[許可/きょか]したphrasingとして[検査/けんさ]する。"
+    cons "Htmlはmtext[直下/ちょっか]だけに[置/お]き、rootはHTML[要素/ようそ]またはTextとする。[要求全体/ようきゅうぜんたい]のhtmlPolicyで[許可/きょか]したphrasingとして[検査/けんさ]する。"
     cons "[全/ぜん]HTML[出力出現/しゅつりょくしゅつげん]からIDとfragment[参照/さんしょう]を[集/あつ]め、[重複/じゅうふく]や[未解決参照/みかいけつさんしょう]を[拒否/きょひ]する。"
     cons "[共有/きょうゆう]nodeの[複数表示/ふくすうひょうじ]も[別出現/べつしゅつげん]として[扱/あつか]い、MathMLからHTMLまでの[最深経路/さいしんけいろ]を[同/おな]じBudgetで[検査/けんさ]する。"
     cons "HTML[部分/ぶぶん]は[要素/ようそ]rootにXHTML namespaceを[宣言/せんげん]し、void[要素/ようそ]をXMLの[自己終了形式/じこしゅうりょうけいしき]で[出力/しゅつりょく]する。"
@@ -57,13 +57,16 @@ body
     nil
   cons paragraph
     cons "HtmlFragmentはroot U64と[平坦/へいたん]なHtmlNode[列/れつ]を[持/も]つ。"
-    cons "Text、または[固定/こてい]HtmlTag・[型付/かたつ]きattribute[列/れつ]・[子/こ]U64[列/れつ]だけを[許/ゆる]す。"
+    cons "Text、HTMLのElement、MathMLのMathElementを[許/ゆる]す。[要素/ようそ]は[固定/こてい]tag・[型付/かたつ]きattribute[列/れつ]・[子/こ]U64[列/れつ]を[持/も]つ。"
+    cons "MathElementも[同/おな]じ[平坦/へいたん]なarenaの[子/こ]を[参照/さんしょう]し、HTMLとMathMLの[交互/こうご]の[入/い]れ[子/こ]で[再帰的/さいきてき]な[所有/しょゆう]やdropを[増/ふ]やさない。HTMLからはmathだけがMathMLへ[入/はい]り、MathMLからはmtextの[直下/ちょっか]だけがHTML phrasingを[受/う]け[入/い]れる。"
+    cons "HTML phrasingの[位置/いち]ではdisplay=blockのmathを[拒否/きょひ]する。flowの[位置/いち]ではinlineとblockのmathを[受/う]け[入/い]れる。mathにdisplayが[無/な]い[場合/ばあい]はinlineとして[扱/あつか]う。MathMLの[属性/ぞくせい]と[子要素/こようそ]の[制約/せいやく]は[独立/どくりつ]したMathML treeと[共通/きょうつう]である。"
+    cons "ID・fragment[参照/さんしょう]・aやRubyの[子孫制約/しそんせいやく]・[深/ふか]さはnamespaceを[越/こ]えて[検査/けんさ]する。serializerはmathにMathML namespace、mtextから[入/はい]るHTML[要素/ようそ]にXHTML namespaceを[明示/めいじ]する。"
     cons "Rustのenum ordinalをwireへ[保存/ほぞん]しない。"
     cons "[未知/みち]tag/attribute、RawHtml、style、event handler、script、[任意/にんい]namespaceを[成功/せいこう]として[受/う]け[入/い]れない。"
     cons "[木/き]の[深/ふか]さは[参照/さんしょう]によって[表/あらわ]し、[深/ふか]い[入力/にゅうりょく]のdropにRust call stackを[使/つか]わない。"
     nil
   cons paragraph
-    cons "rootのBlock slotはHTML flow[要素/ようそ]またはText、Phrasing slotはphrasing[要素/ようそ]またはTextを[取/と]る。"
+    cons "rootのBlock slotはHTML flow[要素/ようそ]・math・Text、Phrasing slotはHTML phrasing[要素/ようそ]・inline math・Textを[取/と]る。"
     cons "P/span/[見出/みだ]し/em/strong/pre/code/aは、phrasing[子/こ]だけを[持/も]つ。"
     cons "aはphrasing[子孫/しそん]を[通/とお]しても[入/い]れ[子/こ]にできない。"
     cons "ul/olの[直接子/ちょくせつし]はli、tableはcaption[最大一/さいだいひと]つ・thead[最大一/さいだいひと]つ・tbody[列/れつ]の[順/じゅん]、thead/tbodyはtr、trはth/tdである。"
@@ -249,7 +252,7 @@ body
     cons "リンクの[存在/そんざい]、アクセス[可否/かひ]、ページrevisionを[構造検査/こうぞうけんさ]から[推測/すいそく]しない。"
     nil
   cons paragraph
-    cons "serializerは[検査/けんさ]proofを[借用/しゃくよう]し、attributeをASCII[名前順/なまえじゅん]に[出力/しゅつりょく]する。"
+    cons "serializerは[検査/けんさ]proofを[借用/しゃくよう]し、HTMLのattributeをASCII[名前順/なまえじゅん]に[出力/しゅつりょく]する。MathMLのattributeは[独立/どくりつ]したMathML serializerと[同/おな]じ[入力順/にゅうりょくじゅん]を[保/たも]つ。"
     cons "13[章/しょう]のXML[文字/もじ]・escapeを[保/たも]ち、[属性/ぞくせい]は[二重引用符/にじゅういんようふ]で[囲/かこ]み、void[要素/ようそ]に[終端/しゅうたん]tagを[付/つ]けない。"
     cons "HTML parserがpre[開始直後/かいしちょくご]のLFを[一/ひと]つ[除去/じょきょ]する[規則/きそく]に[合/あ]わせ、pre[開始/かいし]tag[直後/ちょくご]へ[固定/こてい]LFを[一/ひと]つ[追加/ついか]して、[元本文/もとほんぶん]の[先頭改行/せんとうかいぎょう]を[保持/ほじ]する。"
     cons "doctype/head/CSP/CSSは、DocumentShellの[別責務/べつせきむ]である。"

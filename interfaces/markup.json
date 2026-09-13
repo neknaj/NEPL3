@@ -232,6 +232,11 @@
     },
     "HtmlNode": {
       "variant": {
+        "MathElement": [
+          ["tag", {"named": {"package": "nepl3.markup", "revision": 2, "name": "MathMlTag"}}],
+          ["attributes", {"list": {"named": {"package": "nepl3.markup", "revision": 2, "name": "MathMlAttribute"}}}],
+          ["children", {"list": "U64"}]
+        ],
         "Text": [
           [
             "text",

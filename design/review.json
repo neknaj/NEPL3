@@ -216,7 +216,7 @@
         "interfaces/model.json",
         "design/markup.json",
         "design/tasks.json",
-        "design/doc-inventory.json",
+        "doc/migration/generated/doc-inventory.json",
         "doc/doc-inventory.md",
         "tools/src/documentation/mod.rs"
       ],
@@ -247,7 +247,7 @@
       "evidence": [
         "tools/src/documentation/markdown.rs",
         "doc/doc-inventory.md",
-        "design/doc-inventory.json"
+        "doc/migration/generated/doc-inventory.json"
       ],
       "resolution": "Independently reproduced missing link separators and heading/link math with the original Rust extractor. Shared typed inline projection now preserves text/code, soft/hard breaks, inline/display math and footnote markers with UTF-8 source ranges across headings and nested link/images. Independent 45-test run passed, including exact CRLF/break/math and parent propagation regressions. Inventory schema /2 regenerates the unchanged 57-page baseline; 482 segment ranges and all original file identities checked. HTML/style interpretation and runtime Doc migration remain outside this summary projection."
     },

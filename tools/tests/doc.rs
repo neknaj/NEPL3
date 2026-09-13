@@ -16,6 +16,8 @@ mod html;
 mod input;
 #[path = "doc/labels.rs"]
 mod labels;
+#[path = "doc/math.rs"]
+mod math;
 #[path = "doc/mixed.rs"]
 mod mixed;
 #[path = "doc/pages.rs"]

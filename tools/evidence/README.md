@@ -24,8 +24,8 @@ Gitには小さなscope・source参照・必要なmanifestを残す。Actions ar
 例外は `tools/src/repository/legacy-evidence-sources.txt` の正確なpathだけに限定する。
 この一覧は内容の検証証拠ではなく、既存コピーと新規コピーを区別する移行用の例外である。
 新しいreview sourceを追加するために拡張しない。旧記録の除去時に例外も縮小する。
-Doc inventoryの明示的な履歴監査は別のbaselineを使用するため、shallow cloneで
-全repository検査ができるとまでは主張しない。
+Doc inventoryの明示的な履歴監査は別のbaselineを使用する。通常のrepository
+checkからは分離しており、歴史資料の検査を依頼したときだけ旧revisionを取得する。
 保存済みの過去記録は [履歴索引](../../conformance/history.md) を参照する。
 
 このツールは信頼した開発commandの収集器でありsandboxではない。historicalな
