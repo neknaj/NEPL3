@@ -1,4 +1,5 @@
 use super::*;
+use crate::output::Output;
 use crate::text::{TextContext, TextError, escape};
 use alloc::{format, vec};
 use nepl3_core::budget::{Budget, Resource, StopReason};
@@ -161,28 +162,7 @@ fn between_artifacts(
     }
     Ok(out)
 }
-struct Output {
-    pieces: Vec<String>,
-    length: usize,
-}
 impl Output {
-    fn store(&mut self, s: String, b: &mut Budget) -> Result<(), HtmlError> {
-        self.length = self
-            .length
-            .checked_add(s.len())
-            .ok_or_else(|| b.stop(StopReason::OutputLimit))?;
-        b.charge(
-            Resource::AllocationUnits,
-            2 * core::mem::size_of::<String>() as u64,
-        )?;
-        self.pieces.push(s);
-        Ok(())
-    }
-    fn literal(&mut self, s: &str, b: &mut Budget) -> Result<(), HtmlError> {
-        b.charge(Resource::OutputBytes, s.len() as u64)?;
-        allocate(s.len(), b)?;
-        self.store(s.into(), b)
-    }
     fn text(
         &mut self,
         s: &str,
@@ -194,23 +174,16 @@ impl Output {
             TextError::Stopped(s) => HtmlError::Stopped(s),
             e => HtmlError::Text { node: r, error: e },
         })?;
-        self.store(escaped, b)
-    }
-    fn finish(self, b: &mut Budget) -> Result<String, HtmlError> {
-        if self.length > isize::MAX as usize {
-            return Err(b.stop(StopReason::AllocationLimit).into());
-        }
-        allocate(self.length, b)?;
-        let mut result = String::with_capacity(self.length);
-        for piece in self.pieces {
-            b.charge(Resource::Work, 1)?;
-            result.push_str(&piece);
-        }
-        Ok(result)
+        self.precharged(&escaped, b)?;
+        Ok(())
     }
 }
 /// Deterministic complete HTML fragment. It adds no document shell, script,
 /// CSS or external-resource loader. Attribute order is ASCII name order.
+/// Output uses one growable buffer, with amortized O(emitted bytes) copy work;
+/// escaped attribute/text temporaries and the explicit traversal frontier remain.
+/// OutputBytes counts emitted bytes once, including escaping. AllocationUnits
+/// measures logical allocation charges, not a claim about allocator peak RSS.
 pub fn serialize(proof: &ValidatedHtml<'_>, b: &mut Budget) -> Result<String, HtmlError> {
     serialize_mode(proof, false, b)
 }
@@ -227,20 +200,27 @@ fn serialize_mode(
     xml: bool,
     b: &mut Budget,
 ) -> Result<String, HtmlError> {
-    fragment(proof.fragment, xml, b)
+    let mut out = Output::default();
+    fragment_into(proof.fragment, xml, &mut out, b)?;
+    Ok(out.finish())
 }
 /// Caller must own the composite structural and identity proof.
-pub(crate) fn embedded(f: &HtmlFragment, b: &mut Budget) -> Result<String, HtmlError> {
-    fragment(f, true, b)
+pub(crate) fn embedded(
+    f: &HtmlFragment,
+    out: &mut Output,
+    b: &mut Budget,
+) -> Result<(), HtmlError> {
+    fragment_into(f, true, out, b)
 }
-fn fragment(f: &HtmlFragment, xml: bool, b: &mut Budget) -> Result<String, HtmlError> {
+fn fragment_into(
+    f: &HtmlFragment,
+    xml: bool,
+    out: &mut Output,
+    b: &mut Budget,
+) -> Result<(), HtmlError> {
     b.poll()?;
     b.charge(Resource::AllocationUnits, 64)?;
     let mut stack = vec![(f.root, 1_u64, false)];
-    let mut out = Output {
-        pieces: Vec::new(),
-        length: 0,
-    };
     while let Some((r, depth, exit)) = stack.pop() {
         b.charge(Resource::Work, 1)?;
         b.observe_depth(depth)?;
@@ -306,5 +286,5 @@ fn fragment(f: &HtmlFragment, xml: bool, b: &mut Budget) -> Result<String, HtmlE
             }
         }
     }
-    out.finish(b)
+    Ok(())
 }
