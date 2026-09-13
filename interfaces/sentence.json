@@ -389,6 +389,30 @@
       "constraints": [
         "sentence.source_closure"
       ]
+    },
+    "View:Sentence": {
+      "record": [],
+      "constraints": []
+    },
+    "View:TextRun": {
+      "record": [],
+      "constraints": []
+    },
+    "View:Escape": {
+      "record": [],
+      "constraints": []
+    },
+    "View:Ruby": {
+      "record": [],
+      "constraints": []
+    },
+    "View:Anno": {
+      "record": [],
+      "constraints": []
+    },
+    "View:Delimiter": {
+      "record": [],
+      "constraints": []
     }
   },
   "operations": {}

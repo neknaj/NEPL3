@@ -15,7 +15,15 @@ validate foreign source closures, resolve document names or certify safe HTML.
 Origin arenas and owner-indexed token views. Native and portable checks enforce
 their declaration closure; this does not prove source/meaning equivalence.
 
-The independent LanguagePackage, literal/prefix lowering and printing,
+`literal::read` recognizes one quoted sentence and returns its closed syntax;
+`literal::print` emits the literal-expressible content subset. Ruby/InlineAnno,
+escape spelling and original positions remain distinct. Prefix-only forms
+return a typed `NotLiteral` error instead of losing their meaning.
+
+The independent LanguagePackage, prefix lowering and general printing,
 annotation adapter and Doc/Math migration remain part of
 the same ongoing recovery. This stage is not a completed language or removal of
 lexical comments. Do not merge it as a completed migration.
+
+Sentence integration into Doc and docs-only publication precede the full
+annotation migration; Doc content does not depend on annotation completion.

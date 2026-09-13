@@ -13,8 +13,10 @@ Sentence coreはfoundationだけへ依存し、Doc/Math/A/engine/hostへ依存�
 reader adapter、language package compile、各hostとの橋渡しは外側へ置く。
 
 実装順は、独立した有限文章モデルと検査、公開schemaとcodec、literal/prefixとLanguagePackage、
-Aの具体category別wrapperとbinding、Doc/Math consumerの移行、公式source移行、
-旧comment-as-triviaの認識・schema・codec・生成器の撤去とする。
+Doc本文のSentence利用とconsumer移行を先行する。NEPL3dによる文書移行、実文書の性能と
+T19 docs-only Pages公開を優先し、Aの完成をD本文や公開の前提にしない。
+Aの具体category別wrapperとbinding、公式sourceの注釈移行、
+旧comment-as-triviaの認識・schema・codec・生成器の撤去は、その後の別の完了境界とする。
 途中のモデル検査成功を独立言語の完成としない。schema digestは実descriptorから計算する。
 
 ## 独立した文章モデル
@@ -89,6 +91,25 @@ SourceAdmissionを可変参照で公開する前にもproofを失効させる。
 各Viewで反復して文書全体の既存Budgetを浪費しない。
 これは関連付けの構造検査であり、原ソースを再parseしたこと、任意の文章値が原文と意味一致すること、
 binding、HTMLの安全性を証明しない。それらはlanguage/adapterの操作で別に検査する。
+
+## Sentence literalの読取りと印字
+
+Sentence coreの`literal::read`は、明示SourceSnapshotのUTF-8 windowからちょうど一つの
+引用符付きliteralを読む。NoMatch/NeedMore/Failedでは構文や途中の文章を返さない。
+成功時はSentenceSyntaxに元source、denseな位置表、Direct Origin、元綴りのViewを残す。
+このnative helperはLanguagePackageやreader/provider包絡そのものではなく、その解析本体である。
+Doc coreへの依存なしで動作し、Docの旧readerはconsumer移行が終わるまでの現実装として残る。
+
+`[base/reading]`はRuby、`{base/note/...}`は文章内部のInlineAnnoへ対応する。入れ子を許し、
+空のbase/reading/note、余分なRuby区切り、不正な括弧対応を型付き失敗とする。literal内の
+直接CR/LFは拒否し、escapeで生成するTextの改行とは区別する。Unicode escapeの結果を再び
+括弧や区切りとして解釈しない。失敗位置とopening位置も元snapshotへ束縛する。
+
+`literal::print`はliteralで表現できるSentenceを印字する専用操作である。Text/Concat/Ruby/
+InlineAnnoの文章内容を保持するが、元のescape綴りやarena共有を保存する操作ではない。
+Break、code、強調、link、foreignはprefix/adapter出力が必要なためNotLiteralを返し、
+Textや改行へ黙って変換しない。独立LanguagePackageの汎用printerはprefixも扱う別の入口とする。
+readerとprinterは非再帰で処理し、共有値を展開した実出力にもBudgetを適用する。
 
 ## 注釈と移行完了条件
 

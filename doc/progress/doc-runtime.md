@@ -5,7 +5,8 @@ T07 は進行中。`doc/spec/05-document.md` と `design/forms.json` を最終�
 ## #158を優先するSentence・注釈の回復
 
 今後の是正順序は[23章](../spec/23-sentence-annotation.md)に従う。Doc固有機能を広げる前に、
-Sentenceの独立言語化、対象付きannotate、Doc/Mathの文章境界、旧comment-as-triviaを修正する。
+Sentenceの独立言語化からDoc本文の文章境界を移行し、実文書性能とT19 docs-only Pagesを優先する。
+NEPL3a完成・旧comment-as-triviaの全面移行でD本文・公開を止めない。これらは後続で完了させる。
 以下の既存API・性能調査はその時点の実装記録であり、旧所有関係を維持する決定ではない。
 
 最初の実装として`nepl3-sentence-core`を追加した。foundationだけに依存する`no_std + alloc`の
@@ -46,6 +47,14 @@ Node/npm依存KaTeX corpus）。Sentence/Wire/Doc/MathはWasmtime 44.0.1で134�
 ignore 0、ARMv6-Mとbrowser向けWasmのbuildも成功した。独立レビューの追加指摘を修正し、
 再レビューで指摘なしを確認した。Sentenceのreader/LanguagePackageと注釈・consumer移行、
 旧コメントの撤去は引き続き未完了である。
+
+Sentence literalの解析本体と専用印字を独立coreへ移した。Doc型へ依存せず、Ruby/InlineAnno、
+escape前のView、元Source/Originとdense位置表を保つ。Unicode escapeの途中、空注釈部、
+不正delimiter、1,000段の入れ子、共有DAGの出力膨張、明示windowとCBORの往復を検査した。
+literalで表現できないBreak等はNotLiteralとして返し、Textへ黙って変えない。
+この追加後のSentence全33試験はnative/WASIで成功し、独立レビューで指摘なしを確認した。
+LanguagePackage、reader/provider包絡、prefixと汎用印字は次の実装であり、D本文への接続を
+NEPL3a完成より先行する。#165はCIと独立最終レビュー後にmainへ統合済みである。
 
 局所syntaxのSource/Origin境界、literal/prefixと独立LanguagePackage、annotation adapter、
 Doc/Math consumerおよび公式sourceの移行は未完了である。旧コメント処理だけは先に削除せず、
