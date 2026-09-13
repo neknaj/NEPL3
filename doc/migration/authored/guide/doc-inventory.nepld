@@ -7,7 +7,7 @@ body
     cons paragraph
       cons sentence cons text "baselineは " cons code "25a096bc183c2b71200902884084cd4082d0aae3" cons text "。" nil
       cons "[全/ぜん]trackedファイルを[列挙/れっきょ]し、57 Markdownページ、10 Rust source、その[他/た]の[機械入力/きかいにゅうりょく]・[履歴/りれき]・assetを[包含理由/ほうがんりゆう]または[除外理由付/じょがいりゆうつ]きで[分類/ぶんるい]した。"
-      cons sentence cons ruby text "各" text "かく" cons text "ページとRust sourceのpath・SHA-256・byte" cons ruby text "長" text "ちょう" cons text "、および5つのDoc" cons ruby text "関連契約" text "かんれんけいやく" cons text "のSHA-256は " cons link relative "../design/doc-inventory.json" none text "design/doc-inventory.json" cons text " にある。" nil nil
+      cons sentence cons ruby text "各" text "かく" cons text "ページとRust sourceのpath・SHA-256・byte" cons ruby text "長" text "ちょう" cons text "、および5つのDoc" cons ruby text "関連契約" text "かんれんけいやく" cons text "のSHA-256は " cons link relative "../doc/migration/generated/doc-inventory.json" none text "doc/migration/generated/doc-inventory.json" cons text " にある。" nil nil
     cons table cons default cons right cons default nil
       some row cons "[分類/ぶんるい]" cons "[件数/けんすう]" cons "[正本/せいほん]と[扱/あつか]い" nil
       cons row cons "rootのGitHub/agent[向/む]け[入口/いりぐち]" cons "5" cons "README、AGENTS、CODEX、CONTRIBUTING、SECURITY。[現在/げんざい]は[著者/ちょしゃ]が[編集/へんしゅう]するMarkdown。[将来/しょうらい]も[入口/いりぐち]を[維持/いじ]し、Docから[生成/せいせい]するには[先/さき]に[対応契約/たいおうけいやく]が[必要/ひつよう]" nil
@@ -120,7 +120,7 @@ body
       cons "その[後/ご]、[現在/げんざい]のGit-visible Markdown、Rust source、Doc[関連契約/かんれんけいやく]について[追加/ついか]・[変更/へんこう]・[削除/さくじょ]を[出力/しゅつりょく]する。"
       cons "baselineが[正/ただ]しければcurrent deltaがあっても[成功/せいこう]するが、[現在/げんざい]の[網羅性/もうらせい]は[未確認/みかくにん]と[明記/めいき]する。"
       cons sentence cons code "--check-current" cons text " はdeltaがあれば" cons ruby text "失敗" text "しっぱい" cons text "する。" nil
-      cons sentence cons ruby text "通常" text "つうじょう" cons text "のrepository " cons code "check" cons text " は" cons ruby text "前者" text "ぜんしゃ" cons text "を" cons ruby text "実行" text "じっこう" cons text "する。" nil nil
+      cons sentence cons ruby text "通常" text "つうじょう" cons text "のrepository " cons code "check" cons text " からは" cons ruby text "分離" text "ぶんり" cons text "し、" cons ruby text "明示的" text "めいじてき" cons text "な" cons ruby text "歴史監査" text "れきしかんさ" cons text "として" cons ruby text "実行" text "じっこう" cons text "する。" nil nil
     cons paragraph
       cons "この[変更/へんこう]で[追加/ついか]した[監査文書/かんさぶんしょ]、[訂正/ていせい]した[仕様/しよう]、tools、[生成/せいせい]taskはbaselineに[存在/そんざい]しないか[内容/ないよう]が[異/こと]なるので、[現在/げんざい]のstrict[確認/かくにん]は[失敗/しっぱい]するのが[正/ただ]しい。"
       cons sentence cons ruby text "新" text "あたら" cons text "しいAPI" cons ruby text "判断" text "はんだん" cons text "で" cons ruby text "現在" text "げんざい" cons text "の" cons ruby text "網羅性" text "もうらせい" cons text "を" cons ruby text "主張" text "しゅちょう" cons text "する" cons ruby text "前" text "まえ" cons text "に、" cons ruby text "対象" text "たいしょう" cons text "の" cons ruby text "文書" text "ぶんしょ" cons text "・" cons ruby text "契約" text "けいやく" cons text "をcommitし、そのcommitで " cons code "--write" cons text "、" cons ruby text "差分" text "さぶん" cons text "の" cons ruby text "独立" text "どくりつ" cons text "レビュー、" cons code "--check-current" cons text " を" cons ruby text "実行" text "じっこう" cons text "する。" nil

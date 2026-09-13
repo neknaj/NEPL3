@@ -99,7 +99,7 @@ PowerShellで実行ログを保存する際は、後述のUTF-8の指針に従�
 
 [rust-toolchain.toml](../rust-toolchain.toml) に固定したRustと、Gitを使用します。rustupはworkspace内で指定toolchainを選びます。`cargo` の各コマンドはリポジトリrootで実行してください。`Cargo.lock` は管理対象で、CIでは `--locked` を使います。
 
-Doc inventoryのbaseline検証は固定commitのGit objectを必要とするため、CI checkoutは全履歴を取得します。shallow cloneではbaselineを取得してから検査し、object不在を監査成功としてskipしません。source archive単体にはこの履歴が含まれません。
+Doc inventoryの明示的なbaseline監査は固定commitのGit objectを必要とします。通常の `check` からは分離しており、監査時だけbaselineを取得します。object不在を監査成功としてskipしません。source archive単体にはこの履歴が含まれません。
 
 開発toolchainは1.97.0、現時点で宣言・検査するMSRVは1.97です。元設計の「1.85以上」は選定可能な下限であり、1.85での実行証拠を意味しません。初期段階では実際に検査するtoolchainとMSRVを一致させ、未検証の旧版対応を広告しない方針を採ります。将来MSRVを変更するときはCargo.toml、toolchainとCIの検査対象を合わせて見直します。
 
@@ -250,7 +250,7 @@ workflowの構文・権限・依存jobの扱いは [GitHub Actions公式仕様](
 
 ## 実装と独立レビュー
 
-Doc関連の共通値・wire・文書意味APIを固定する前に、[早期inventoryとgap audit](doc-inventory.md) を確認します。`cargo run --locked -p nepl3-tools -- doc-inventory --check` は固定commitの原本と照合し、現在の文書・契約の追加/変更/削除を報告します。通常の `check` にも含まれます。現在の網羅性を主張する場合は新しいcommitを監査して `doc-inventory --check-current` を通します。現時点のbaselineと作業treeには差分があり、strict検査が失敗することを未移行/未監査の成功へ読み替えません。再生成方法と履歴要件は監査文書を参照してください。
+Doc関連の共通値・wire・文書意味APIを固定する前に、[早期inventoryとgap audit](doc-inventory.md) を確認します。`cargo run --locked -p nepl3-tools -- doc-inventory --check` は固定commitの原本と照合し、現在の文書・契約の追加/変更/削除を報告します。通常の `check` とは分離し、baselineの履歴を取得した上で明示的に実行します。現在の網羅性を主張する場合は新しいcommitを監査して `doc-inventory --check-current` を通します。現時点のbaselineと作業treeには差分があり、strict検査が失敗することを未移行/未監査の成功へ読み替えません。再生成方法と履歴要件は監査文書を参照してください。
 
 メインagentが設計具体化、実装、試験、指摘修正と統括を担当し、subagentには独立レビューだけを依頼します。レビュー担当はメインagentの説明だけを根拠にせず、元の契約、実コード、失敗系、期待値の根拠、差分と実行結果を確認します。メインagentが必要な修正・再レビュー・再検査を確認して統合します。専用branchでこまめにcommit・pushし、未レビューのcheckpointと統合可能な変更を区別します。利用上限等で独立レビューが未実行の場合も成功にせず、独立して進められる作業を続けます。具体的な規範は [AGENTS.md](../AGENTS.md) を参照してください。
 
@@ -270,9 +270,19 @@ Doc HTMLの値schemaは `cargo run --locked -p nepl3-tools -- doc-html --write`�
 Docページの正本とMarkdown projectionは `doc/canonical.json` の対応に従う。
 生成adapterはgeneratorの入力から再生成し、JSONという拡張子だけで全てを正本としない。
 
-`design/doc-inventory.json` は固定された過去commitの派生監査であり、現在の全文書
+`doc/migration/generated/doc-inventory.json` は固定された過去commitの派生監査であり、現在の全文書
 一覧ではない。保存によりbaseline改変を差分と再生成検査で検出するため管理を維持する。
 script inventoryは必要時に生成する派生監査資料であり、仕様の新しい正本として保存しない。
+
+`design/review.json` のopen課題は対象taskの完了制約として使用し、correctedの説明は
+歴史記録として読む。現行制約を解決せず、台帳の移動や削除だけで完了可能にしない。
+rootの `languages/` は文法定義、`crates/languages/` はRustの意味処理実装である。
+`site/` は公開入力と静的asset、`tools/site/` はhost側の配布処理と試験を所有する。
+
+Grammarのproduction compilerによるbootstrap一致検査は恒久的な回帰検査である。
+一方、初回入力用seed adapterは置換可能なhost補助であり、現在はDoc生成も使用する。
+代替する検査済みpackage読込経路が成立するまで、移行用という名称だけで削除しない。
+Doc移行候補の作成toolは全対象ページの切替・参照更新後に役割を再評価する。
 
 taskの段階着手には利用する前段成果物が必要。`depends_on` の全タスク完了は
 当該taskをcompleteにする条件である。部分的な実装・監査をin-progressで記録しても、
