@@ -12,6 +12,88 @@ fn budget() -> Budget {
         events: 100,
     })
 }
+
+#[test]
+fn origin_append_reuses_shared_ancestry_heights() -> Result<(), OriginError> {
+    let store = SourceStore::default();
+    let mut graph = OriginGraph::default();
+    let mut b = budget();
+    let mut parent = graph.push(
+        Origin::Synthetic {
+            reason: "seed".into(),
+            anchor: None,
+        },
+        &store,
+        &mut b,
+    )?;
+    // Only 50 nodes and 98 edges, but expanding repeated parent paths would
+    // visit exponentially many occurrences. Graph height is exactly 50.
+    for _ in 1..50 {
+        parent = graph.push(Origin::Composite(vec![parent, parent]), &store, &mut b)?;
+    }
+    assert_eq!(graph.origins().len(), 50);
+    assert!(b.usage().work <= 200);
+    let mut limits = budget().limits();
+    limits.depth = 50;
+    let mut stopped = Budget::new(limits);
+    assert_eq!(
+        graph.push(Origin::Composite(vec![parent]), &store, &mut stopped),
+        Err(OriginError::Stopped(StopReason::DepthLimit))
+    );
+    assert_eq!(graph.origins().len(), 50);
+    assert_eq!(
+        graph.push(Origin::Composite(vec![]), &store, &mut stopped),
+        Err(OriginError::Stopped(StopReason::DepthLimit))
+    );
+    Ok(())
+}
+
+#[test]
+fn imported_origin_heights_survive_forward_references_and_failed_append() -> Result<(), OriginError>
+{
+    let store = SourceStore::default();
+    let origins = vec![
+        Origin::Composite(vec![OriginId(1)]),
+        Origin::Synthetic {
+            reason: "base".into(),
+            anchor: None,
+        },
+    ];
+    let mut graph = OriginGraph::from_origins(origins.clone(), &store, &mut budget())?;
+    assert_eq!(
+        graph.push(
+            Origin::Composite(vec![OriginId(u64::MAX)]),
+            &store,
+            &mut budget()
+        ),
+        Err(OriginError::Reference)
+    );
+    for resource in 0..3 {
+        let mut limits = budget().limits();
+        match resource {
+            0 => limits.depth = 2,
+            1 => limits.nodes = 0,
+            _ => limits.allocation_units = 0,
+        }
+        assert!(matches!(
+            graph.push(
+                Origin::Composite(vec![OriginId(0)]),
+                &store,
+                &mut Budget::new(limits)
+            ),
+            Err(OriginError::Stopped(_))
+        ));
+        assert_eq!(graph.origins(), origins);
+    }
+    let mut b = budget();
+    assert_eq!(
+        graph.push(Origin::Composite(vec![OriginId(0)]), &store, &mut b)?,
+        OriginId(2)
+    );
+    assert_eq!(b.usage().depth, 3);
+    assert_eq!(&graph.origins()[..2], origins);
+    Ok(())
+}
 fn descriptor() -> SchemaDescriptor {
     SchemaDescriptor {
         package: "example".into(),
