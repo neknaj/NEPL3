@@ -13,7 +13,7 @@ import re
 import stat
 import tarfile
 
-MAX_BYTES = 32 * 1024 * 1024
+MAX_BYTES = 64 * 1024 * 1024
 MAX_FILES = 4096
 
 

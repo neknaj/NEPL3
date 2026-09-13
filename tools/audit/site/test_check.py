@@ -6,10 +6,24 @@ import tempfile
 import unittest
 import subprocess
 import copy
-from check import verify, expected_inputs
+from check import verify, expected_inputs, Document, validate_links
 
 
 class ArtifactRejection(unittest.TestCase):
+    def test_rustdoc_fragments_redirects_and_windows_paths(self):
+        docs = {
+            'api/rust/crate/index.html': Document('<a href="redirect.html#impl%3CT%3E">impl</a><script src="..\\search.js"></script>'),
+            'api/rust/crate/redirect.html': Document('<meta http-equiv="refresh" content="0;URL=actual.html">'),
+            'api/rust/crate/actual.html': Document('<div id="impl%3CT%3E">definition</div>'),
+        }
+        files = set(docs) | {'api/rust/search.js'}
+        validate_links(docs, files, '/NEPL3/')
+        with self.assertRaises(AssertionError):
+            validate_links(docs, set(docs), '/NEPL3/')
+        docs['api/rust/crate/actual.html'] = Document('<meta http-equiv="refresh" content="0;URL=redirect.html">')
+        with self.assertRaises(AssertionError):
+            validate_links(docs, files, '/NEPL3/')
+
     def test_expected_checkout_rejects_stale_missing_or_mixed_inputs(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -34,7 +48,7 @@ class ArtifactRejection(unittest.TestCase):
             manifest = {'source_commit': commit}
             doc = {'pages': [{'id': 'intro', 'input': 'intro.nepld', 'route': 'docs/intro.html',
                               'source_sha256': hashlib.sha256(b'original input').hexdigest()}]}
-            docs = dict.fromkeys(['index.html', 'docs/index.html', 'docs/intro.html', 'examples/index.html'])
+            docs = dict.fromkeys(['index.html', 'docs/index.html', 'docs/intro.html', 'examples/index.html', 'api/rust/index.html'])
             expected_inputs(build, manifest, doc, docs, root, 'config.json', renderer)
             for failure in ['commit', 'manifest', 'base', 'route', 'source', 'duplicate', 'renderer', 'design', 'capability']:
                 b, m, d, pages = copy.deepcopy((build, manifest, doc, docs))

@@ -152,3 +152,37 @@ source編集の原子的な反映は維持する。同期reader callbackは外�
 上記3399での停止は過去の途中版の記録で、現行の再現結果ではない。
 この全文HTML試験はnative/WASIで成功している。多数ページ、全foreign、Pages配信の
 性能・完成までを一例の成功から推定しない。
+
+## Rust API収録と残る公開工程（2026-09-13）
+
+`ee5e2d6`でdocs-only生成へ同じcheckoutのworkspace rustdocを接続した。
+13 libraryの生成は成功し、約41MBのAPI・検索・source資源を収録できるため、
+site/payloadの容量上限を64MiBへ揃えた。通常のDoc本文の予算は変更していない。
+その時点の実artifactの全リンク検査は、生成元rustdocに存在しない次の2資源で失敗した。
+
+- `trait.impl/nepl3_engine/binding/host/trait.BindingHost.js`
+- `trait.impl/nepl3_reader/tokenizer/host/trait.TokenizationHost.js`
+
+固定rustdoc `1.97.0 (2d8144b78 2026-07-07)`で、公開traitだけの最小例と
+private moduleから再公開する最小例の両方を生成し、実装一覧JSが存在しないことを確認した。
+TokenizationHostにはproductionのprivate IntegrityHost実装があり、Rust実装全体が存在しない
+という意味ではない。公開implementorの有無と区別する。
+`write_shared.rs`の[固定版実装](https://github.com/rust-lang/rust/blob/2d8144b78/src/librustdoc/html/render/write_shared.rs)
+はimplementor cacheを走査して資源を生成する。一方、その実装はローカルtraitのリンクを
+壊さないため空集合でも資源を生成する意図を明記している。このため、空の公開データの
+serializeまで一律に禁止する判断を訂正し、確認済み2 trait・固定toolchainに限定した
+生成adapterを追加した。HTML・既存JSを変えず、元HTMLと追加資源のdigestを記録する。
+公開実装を持つ実rustdoc出力では補完せず、HTML内の実装と通常資源を保持する反例も検査する。
+参照scriptの削除、偽implementor、欠落の検査除外は行わない。
+
+`dd68526`から生成した両baseのartifactは、各1,705 API HTMLの静的リンク検査と
+合計648 browser case（3 engine・2画面幅、通常文書と全13 crateのJS有効/無効・検索）を通過した。
+独立レビューでも元rustdoc全2,237ファイルのbyte保持と限定2資源の追加を照合した。
+Pages tarは2,298ファイル・45,537,280 bytesで、再読取り後の元byte保持も確認した。
+ローカルHTTPでは2,474応答が一致した。これは実Pages公開smokeではない。
+
+監査は検索の全3 tab完了を待ち、pageごとに通信記録を分離する。
+WebKitの重複検索shard取消は、同caseで完了した200応答がartifactとbyte一致する場合だけ記録付きで区別する。
+最終の例外範囲限定（JS有効、同一origin、query/fragmentなし、検索indexのJSのみ）は、
+独立レビューとWebKit 1280pxの全13 crate追検査で確認した。上の全体結果とこの追検査を区別する。
+最終commitのCI、公開workflowと実Pages配信、T19/T20全体の受入は別途確認する。
