@@ -3,6 +3,10 @@ use nepl3_math_core::{check, lower};
 
 #[test]
 fn actual_math_forms_use_structural_tex_with_explicit_annotation_failure() -> Result<(), String> {
+    for_each_tex(|_, _| Ok(()))
+}
+
+fn for_each_tex(mut inspect: impl FnMut(&str, &str) -> Result<(), String>) -> Result<(), String> {
     let compiled = compiled()?;
     let fixture: serde_json::Value = serde_json::from_str(include_str!(
         "../../../conformance/fixtures/math/lower.json"
@@ -49,9 +53,103 @@ fn actual_math_forms_use_structural_tex_with_explicit_annotation_failure() -> Re
                     assert!(r.node < math.value.nodes.len() as u64);
                     assert!(out.tex().get(r.start as usize..r.end as usize).is_some());
                 }
+                inspect(source, out.tex())?;
             }
             Ok(())
         })?;
+    }
+    Ok(())
+}
+
+#[test]
+#[ignore = "requires Node and npm ci --prefix tools/audit/math"]
+fn pinned_katex_accepts_production_constructor_output() -> Result<(), String> {
+    use std::{
+        io::Write,
+        process::{Command, Stdio},
+    };
+    let mut inputs = Vec::new();
+    let mut sources = Vec::new();
+    for_each_tex(|source, tex| {
+        for display in [false, true] {
+            inputs.push(serde_json::json!({"tex": tex, "displayMode": display}));
+            sources.push(source.to_owned());
+        }
+        Ok(())
+    })?;
+    // Regression inputs absent from the constructor corpus. These enter through
+    // the public checked Math API; the adapter must not reinterpret literal text.
+    for text in ["e\u{301}", "日本--", "<script>\\input{x}$%_&#^~"] {
+        use nepl3_math_core::model::{ExprRef, MathKind, MathNode, MathRoot, MathValue};
+        let value = MathValue {
+            root: MathRoot::Expr(ExprRef(0)),
+            embeds: vec![],
+            nodes: vec![MathNode {
+                kind: MathKind::Text { text: text.into() },
+                origin: None,
+                span: None,
+                locations: vec![],
+            }],
+        };
+        let checked = check::expression(&value, &mut budget()).map_err(err)?;
+        let rendered = nepl3_math_tex::render(&checked, &mut budget()).map_err(err)?;
+        inputs.push(serde_json::json!({"tex": rendered.tex(), "displayMode": false}));
+        sources.push(text.into());
+    }
+    let script = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("audit/math/render.mjs");
+    let mut child = Command::new("node")
+        .arg(script)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(err)?;
+    let input = serde_json::to_vec(&inputs).map_err(err)?;
+    child
+        .stdin
+        .take()
+        .ok_or("node stdin")?
+        .write_all(&input)
+        .map_err(err)?;
+    let output = child.wait_with_output().map_err(err)?;
+    if !output.status.success() {
+        return Err(String::from_utf8_lossy(&output.stderr).into_owned());
+    }
+    let results: Vec<serde_json::Value> = serde_json::from_slice(&output.stdout).map_err(err)?;
+    assert_eq!(results.len(), inputs.len());
+    for (source, result) in sources.iter().zip(results) {
+        assert_eq!(result["version"], "0.18.7");
+        let html = result["html"].as_str().ok_or("renderer html")?;
+        assert!(html.contains("class=\"katex\""), "{source}");
+        assert!(html.contains("<math"), "{source}");
+        assert!(!html.contains("<script"), "{source}");
+        if source == "日本--" {
+            assert!(html.contains("日本--"));
+        }
+        if source.starts_with("<script>") {
+            // Literal payload may span several mtext nodes. Inspect only MathML
+            // text, excluding the TeX annotation and visual HTML duplicate.
+            let math = html.split_once("<annotation").ok_or("MathML annotation")?.0;
+            let mut text = String::new();
+            for part in math.split("<mtext>").skip(1) {
+                text.push_str(part.split_once("</mtext>").ok_or("mtext close")?.0);
+            }
+            let text = text
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&amp;", "&");
+            assert_eq!(&text, source);
+        }
+        // Independently specified constructor shapes, not golden output copies.
+        if source.starts_with("frac ") {
+            assert!(html.contains("<mfrac>"), "{source}");
+        }
+        if source.starts_with("sqrt ") {
+            assert!(html.contains("<msqrt>"), "{source}");
+        }
+        if source.starts_with("matrix ") || source.starts_with("vector ") {
+            assert!(html.contains("<mtable"), "{source}");
+        }
     }
     Ok(())
 }
