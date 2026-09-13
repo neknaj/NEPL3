@@ -36,10 +36,92 @@ fn registry() -> Result<SchemaRegistry, String> {
     Ok(r)
 }
 #[test]
+fn mixed_mathml_first_receiver_checks_phrasing_policy() -> Result<(), String> {
+    use nepl3_markup::mathml::{self, Fragment, Node, Tag};
+    let r = registry()?;
+    let store = SourceStore::default();
+    let mut a = SourceAdmission::default();
+    let mut c = FoundationCodec::new(&r, &store, &mut a).map_err(err)?;
+    let input = Fragment {
+        root: 0,
+        html_policy: HtmlPolicy {
+            classes: vec!["note".into()],
+        },
+        nodes: vec![
+            Node::Element {
+                tag: Tag::Math,
+                attributes: vec![],
+                children: vec![1],
+            },
+            Node::Element {
+                tag: Tag::Text,
+                attributes: vec![],
+                children: vec![2],
+            },
+            Node::Html {
+                fragment: HtmlFragment {
+                    root: 0,
+                    nodes: vec![
+                        HtmlNode::Element {
+                            tag: HtmlTag::Span,
+                            attributes: vec![HtmlAttribute::Class {
+                                values: vec!["note".into()],
+                            }],
+                            children: vec![1],
+                        },
+                        HtmlNode::Text {
+                            text: "<&漢".into(),
+                        },
+                    ],
+                },
+            },
+        ],
+    };
+    let mut value = portable::mathml::to_value(&input, &r, &mut c, &mut b()).map_err(err)?;
+    let bytes = nepl3_wire::encode(&value, &mut b()).map_err(err)?;
+    let store = SourceStore::default();
+    let mut a = SourceAdmission::default();
+    let mut c = FoundationCodec::new(&r, &store, &mut a).map_err(err)?;
+    let mut receiver = b();
+    let decoded = nepl3_wire::decode(&bytes, &mut receiver).map_err(err)?;
+    let output = portable::mathml::from_value(&decoded, &r, &mut c, &mut receiver).map_err(err)?;
+    assert_eq!(input, output);
+    let proof = mathml::validate(&output, &mut receiver).map_err(err)?;
+    assert_eq!(
+        mathml::serialize(&proof, &mut receiver).map_err(err)?,
+        "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtext><span xmlns=\"http://www.w3.org/1999/xhtml\" class=\"note\">&lt;&amp;漢</span></mtext></math>"
+    );
+    fn block(v: &mut NdfValue) -> bool {
+        match v {
+            NdfValue::Variant(v) if v.type_name == "HtmlTag" && v.variant == "Span" => {
+                v.variant = "P".into();
+                true
+            }
+            NdfValue::Variant(v) => v.fields.iter_mut().any(block),
+            NdfValue::Record(v) => v.fields.iter_mut().any(block),
+            NdfValue::List(v) => v.iter_mut().any(block),
+            _ => false,
+        }
+    }
+    assert!(block(&mut value));
+    let bytes = nepl3_wire::encode(&value, &mut b()).map_err(err)?;
+    let decoded = nepl3_wire::decode(&bytes, &mut b()).map_err(err)?;
+    assert!(matches!(
+        portable::mathml::from_value(&decoded, &r, &mut c, &mut b()),
+        Err(PortableError::MathMl(mathml::Error::Html(
+            HtmlError::Content(0)
+        )))
+    ));
+    Ok(())
+}
+#[test]
 fn mathml_first_receiver_rechecks_structure_and_preserves_stops() -> Result<(), String> {
     use nepl3_markup::mathml::{self, Fragment, Node, Tag};
     let r = registry()?;
     let original = Fragment {
+        html_policy: nepl3_markup::html::HtmlPolicy {
+            classes: Vec::new(),
+        },
         root: 0,
         nodes: vec![
             Node::Element {
@@ -186,6 +268,9 @@ fn mathml_all_attribute_tuple_variants_roundtrip() -> Result<(), String> {
     }
     for (tag, attribute) in cases {
         let mut f = Fragment {
+            html_policy: nepl3_markup::html::HtmlPolicy {
+                classes: Vec::new(),
+            },
             root: 0,
             nodes: vec![Node::Element {
                 tag,

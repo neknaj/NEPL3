@@ -378,6 +378,7 @@ fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Resul
 match self {
 Self::Text(text) => variant(s,"MathMlNode","Text",[text.put(s,c,b)?],b),
 Self::Element {tag,attributes,children} => variant(s,"MathMlNode","Element",[tag.put(s,c,b)?,attributes.put(s,c,b)?,children.put(s,c,b)?],b),
+Self::Html {fragment} => variant(s,"MathMlNode","Html",[fragment.put(s,c,b)?],b),
 }
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
@@ -386,17 +387,18 @@ let (tag,f)=case(v,s,"MathMlNode")?;
 match (tag,f.len()) {
 ("Text",1)=>Ok(Self::Text(Value::read(&f[0],s,c,b)?)),
 ("Element",3)=>Ok(Self::Element {tag:Value::read(&f[0],s,c,b)?,attributes:Value::read(&f[1],s,c,b)?,children:Value::read(&f[2],s,c,b)?}),
+("Html",1)=>Ok(Self::Html {fragment:Value::read(&f[0],s,c,b)?}),
 _=>Err(PortableError::Shape),}
 }
 }
 impl Value for MathMlFragment {
 fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
-record(s,"MathMlFragment",[self.nodes.put(s,c,b)?,self.root.put(s,c,b)?],b)
+record(s,"MathMlFragment",[self.nodes.put(s,c,b)?,self.root.put(s,c,b)?,self.html_policy.put(s,c,b)?],b)
 }
 fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {
 b.charge(Resource::Work,46)?;
-let f=fields(v,s,"MathMlFragment",2)?;
-Ok(Self {nodes:Value::read(&f[0],s,c,b)?,root:Value::read(&f[1],s,c,b)?})
+let f=fields(v,s,"MathMlFragment",3)?;
+Ok(Self {nodes:Value::read(&f[0],s,c,b)?,root:Value::read(&f[1],s,c,b)?,html_policy:Value::read(&f[2],s,c,b)?})
 }
 }
 }

@@ -8,7 +8,7 @@ OUTPUT=ROOT/"crates/output/markup/src/portable/value/generated.rs"
 def generate():
     types=json.loads((ROOT/"interfaces/markup.json").read_text(encoding="utf-8"))["types"]
     out=["// Generated from interfaces/markup.json by tools/generate/markup.py. Do not edit.","use super::*;","#[rustfmt::skip]","mod adapters {", "use super::*;"]
-    rename={"languageHint":"language_hint","sourceMaps":"source_maps","documentDigest":"document_digest","guestDigest":"guest_digest"}
+    rename={"languageHint":"language_hint","sourceMaps":"source_maps","documentDigest":"document_digest","guestDigest":"guest_digest","htmlPolicy":"html_policy"}
     def tuple_case(name, case):
         return name == "MarkupRoot" or (name == "MathMlNode" and case == "Text") or (name == "MathMlAttribute" and case != "NormalIdentifier")
     for name,shape in types.items():

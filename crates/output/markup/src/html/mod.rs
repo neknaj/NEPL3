@@ -1,12 +1,12 @@
 //! A closed HTML fragment model. Validation is structural; resource availability
 //! and CSS provenance are host preparation obligations, not inferred from paths.
-mod check;
+pub(crate) mod check;
 mod ruby;
-mod serialize;
+pub(crate) mod serialize;
 mod uri;
 use alloc::{string::String, vec::Vec};
 pub use check::{HtmlError, ValidatedHtml, validate};
-pub use serialize::serialize;
+pub use serialize::{serialize, serialize_xhtml};
 
 /// Check the existing constrained output URI profile without loading its target.
 /// Host preparation and serialization share this lexical rule. This does not

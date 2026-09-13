@@ -486,6 +486,18 @@
               "list": "U64"
             }
           ]
+        ],
+        "Html": [
+          [
+            "fragment",
+            {
+              "named": {
+                "package": "nepl3.markup",
+                "revision": 2,
+                "name": "HtmlFragment"
+              }
+            }
+          ]
         ]
       },
       "constraints": []
@@ -507,6 +519,16 @@
         [
           "root",
           "U64"
+        ],
+        [
+          "htmlPolicy",
+          {
+            "named": {
+              "package": "nepl3.markup",
+              "revision": 2,
+              "name": "HtmlPolicy"
+            }
+          }
         ]
       ],
       "constraints": []
