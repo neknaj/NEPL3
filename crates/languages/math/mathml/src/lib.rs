@@ -65,6 +65,13 @@ impl From<mathml::Error> for Error {
 pub struct Rendered {
     pub fragment: Fragment,
     pub node_roots: Vec<u64>,
+    /// In callback invocation order, binds each host result to its input node
+    /// and output HTML leaf. Embed IDs alone need not identify an occurrence.
+    pub annotation_roots: Vec<AnnotationRoot>,
+}
+pub struct AnnotationRoot {
+    pub node: u64,
+    pub markup: u64,
 }
 
 fn push<T>(v: &mut Vec<T>, item: T, b: &mut Budget) -> Result<(), Error> {
@@ -212,6 +219,7 @@ where
 {
     b.poll()?;
     let mut classes = Vec::new();
+    let mut annotation_roots = Vec::new();
     let value = input.value();
     b.charge(Resource::Work, value.nodes.len() as u64)?;
     b.charge(
@@ -476,6 +484,14 @@ where
                 let html = out.add(Node::Html {
                     fragment: request.fragment,
                 })?;
+                push(
+                    &mut annotation_roots,
+                    AnnotationRoot {
+                        node: i as u64,
+                        markup: html,
+                    },
+                    out.b,
+                )?;
                 out.element(Tag::Text, &[html])?
             }
             K::Label { value, annotation } => {
@@ -506,5 +522,6 @@ where
     Ok(Rendered {
         fragment,
         node_roots: map,
+        annotation_roots,
     })
 }

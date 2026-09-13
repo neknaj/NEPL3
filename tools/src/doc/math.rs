@@ -42,6 +42,97 @@ pub struct RenderedMath {
     pub rendered: nepl3_math_mathml::Rendered,
     pub annotations: Vec<AnnotationRecord>,
 }
+pub struct RenderedHtmlMath {
+    pub syntax: MathSyntax,
+    pub markup: nepl3_markup::html::HtmlRequest,
+    pub node_roots: Vec<u64>,
+    pub annotation_roots: Vec<nepl3_math_mathml::AnnotationRoot>,
+    /// Element indices now refer to `markup`, while Doc node indices continue
+    /// to refer to each record's own retained DocumentSyntax.
+    pub annotations: Vec<AnnotationRecord>,
+}
+#[derive(Debug)]
+pub enum ProjectionError {
+    Stopped(StopReason),
+    Markup(nepl3_markup::mathml::Error),
+    Mapping(u64),
+}
+impl From<StopReason> for ProjectionError {
+    fn from(s: StopReason) -> Self {
+        Self::Stopped(s)
+    }
+}
+impl From<nepl3_markup::mathml::Error> for ProjectionError {
+    fn from(e: nepl3_markup::mathml::Error) -> Self {
+        match e {
+            nepl3_markup::mathml::Error::Stopped(s) => Self::Stopped(s),
+            e => Self::Markup(e),
+        }
+    }
+}
+impl RenderedMath {
+    /// Move generated markup and remap its retained metadata. This is not an
+    /// admission API for externally supplied provenance: provider reports must
+    /// still be checked/replayed against their selected input and operation.
+    pub fn into_html(self, b: &mut Budget) -> Result<RenderedHtmlMath, ProjectionError> {
+        b.poll()?;
+        let Self {
+            syntax,
+            rendered,
+            mut annotations,
+        } = self;
+        let nepl3_math_mathml::Rendered {
+            fragment,
+            mut node_roots,
+            mut annotation_roots,
+        } = rendered;
+        if node_roots.len() != syntax.value.nodes.len()
+            || annotation_roots.len() != annotations.len()
+        {
+            return Err(ProjectionError::Mapping(u64::MAX));
+        }
+        let projection = nepl3_markup::mathml::into_html(fragment, b)?;
+        for (i, root) in node_roots.iter_mut().enumerate() {
+            b.charge(Resource::Work, 1)?;
+            *root = projection
+                .math_node(*root)
+                .ok_or(ProjectionError::Mapping(i as u64))?;
+        }
+        for (root, annotation) in annotation_roots.iter_mut().zip(&mut annotations) {
+            b.charge(Resource::Work, 1)?;
+            let node = usize::try_from(root.node)
+                .ok()
+                .and_then(|i| syntax.value.nodes.get(i))
+                .ok_or(ProjectionError::Mapping(root.node))?;
+            if !matches!(node.kind, nepl3_math_core::model::MathKind::DocGuest { syntax } if syntax.0 == annotation.embed)
+            {
+                return Err(ProjectionError::Mapping(root.node));
+            }
+            for origin in &mut annotation.origins {
+                b.charge(Resource::Work, 1)?;
+                if usize::try_from(origin.node)
+                    .ok()
+                    .is_none_or(|i| i >= annotation.document.value.nodes.len())
+                {
+                    return Err(ProjectionError::Mapping(origin.node));
+                }
+                origin.element = projection
+                    .html_node(root.markup, origin.element)
+                    .ok_or(ProjectionError::Mapping(origin.element))?;
+            }
+            root.markup = projection
+                .math_node(root.markup)
+                .ok_or(ProjectionError::Mapping(root.markup))?;
+        }
+        Ok(RenderedHtmlMath {
+            syntax,
+            markup: projection.into_request(),
+            node_roots,
+            annotation_roots,
+            annotations,
+        })
+    }
+}
 /// Explicit semantic selections; no evaluation, network or implicit renderer.
 /// The declared Math surface must match the complete closure schema identity.
 pub struct MathDisplayHost<'a, C> {
