@@ -179,6 +179,7 @@ name = "nepl3-sentence-core"
 version = "0.1.0"
 dependencies = [
  "nepl3-core",
+ "nepl3-wire",
 ]
 
 [[package]]

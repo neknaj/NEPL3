@@ -226,7 +226,7 @@
         "nepl3-core"
       ],
       "no_std": true,
-      "responsibility": "Independent structured sentence arena and validation; no Doc/Math/annotation runtime dependency; extraction under spec23"
+      "responsibility": "Independent structured sentence arena, validation and NDF adapters; no Doc/Math/annotation runtime dependency; extraction under spec23; dev-only nepl3-wire for real CBOR and foreign source-closure boundary tests"
     }
   ],
   "design_revision": "nepl3-design-2026-09-06-r4"

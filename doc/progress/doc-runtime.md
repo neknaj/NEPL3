@@ -18,7 +18,15 @@ descriptorは既存生成器で`interfaces/sentence.json`から生成し、実de
 独立レビューで不足を指摘されたforeign/root試験を追加し、再レビューで指摘なしを確認した。
 ARMv6-M、wasm32-unknown-unknown、wasm32-wasip2はbuild確認であり、target上の実行証拠ではない。
 
-codec、Source/Origin境界、literal/prefixと独立LanguagePackage、annotation adapter、
+続いてSentenceValueのNDF codecを実装した。実descriptorの完全identity、受信前schema検査と
+受信後arena検査、foundationによるforeign閉包検査を行う。手組みwire fixtureと実CBOR往復、
+共有参照、Unicode、1万段の意味上の深さ、処理途中の非ゼロ予算停止、不正owner source/hashを検査する。
+この値codecはSentence局所syntaxの位置情報・reader payloadを完成させるものではない。
+codec追加後のSentence全19試験はnativeとWasmtime 44.0.1上のwasm32-wasip2で成功した。
+ARMv6-Mとwasm32-unknown-unknownは引き続きbuild検査であり、browser実行は未検証である。
+これは同じRust実装のtarget別検証で、独立した第2provider実装の適合を意味しない。
+
+局所syntaxのSource/Origin境界、literal/prefixと独立LanguagePackage、annotation adapter、
 Doc/Math consumerおよび公式sourceの移行は未完了である。旧コメント処理だけは先に削除せず、
 移行後にschema・wire・生成器まで撤去する。T07や受入状態をこのモデル検査でpassedにしない。
 

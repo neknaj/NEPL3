@@ -11,5 +11,8 @@ publish.workspace = true
 [dependencies]
 nepl3-core.workspace = true
 
+[dev-dependencies]
+nepl3-wire.workspace = true
+
 [lints]
 workspace = true
