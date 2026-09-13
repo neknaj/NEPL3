@@ -32,6 +32,27 @@ alongside its origin map. Unresolved links/assets/guests remain typed failures.
 This crate's presence is not completion of T24, Math rendering acceptance, KaTeX,
 the document artifact pipeline or browser verification.
 
+`tools::doc::math::MathDisplayHost` validates an explicitly selected Math closure
+and generates a complete per-expression result. Its `render_node` selects inline
+or block output from the actual Doc node, rejects Code and retains Math syntax
+plus the annotation provenance needed to interpret rendered roots. It can render
+with no Doc selection only when the expression needs no annotations. Each call
+validates the supplied document structure; callers rendering many nodes should
+not mistake this convenience entry point for a whole-document preparation cache.
+This stage does not insert MathML strings into HTML or declare an Article ready:
+whole-Article preparation and complete resource delivery remain separate.
+
+`mathml::into_html` in the markup crate moves validated backend output into the
+flat mixed HTML arena. Its local `HtmlProjection` retains original MathML and
+HTML-leaf node mappings until the caller consumes the resulting `HtmlRequest`.
+`Rendered` binds each annotation callback to its actual input node and output
+leaf; `RenderedMath::into_html` uses those bindings to remap both Math roots and
+Doc annotation origins. This avoids identifying repeated annotations by an
+embed ID alone. The conversion moves strings, attributes and child buffers; its
+new allocations hold arena nodes and indices, not duplicate annotation text.
+These local mappings are not a portable provenance proof: externally supplied
+rendering claims still require validation/replay against the selected operation.
+
 Tests use real NEPL3 parsing/lowering in `tools/tests/math/mathml.rs`, fixed
 specification constructor inputs, manually derived XML, shared-node input and
 resource stops. No separate review runner or copied source snapshot is needed.

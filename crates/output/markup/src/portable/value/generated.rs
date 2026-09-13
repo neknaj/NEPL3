@@ -214,6 +214,7 @@ _=>Err(PortableError::Shape),}
 impl Value for HtmlNode {
 fn put<C:FoundationValueCodec>(&self,s:&SchemaRef,c:&mut C,b:&mut Budget)->Result<NdfValue,PortableError<C::Error>> {
 match self {
+Self::MathElement {tag,attributes,children} => variant(s,"HtmlNode","MathElement",[tag.put(s,c,b)?,attributes.put(s,c,b)?,children.put(s,c,b)?],b),
 Self::Text {text} => variant(s,"HtmlNode","Text",[text.put(s,c,b)?],b),
 Self::Element {tag,attributes,children} => variant(s,"HtmlNode","Element",[tag.put(s,c,b)?,attributes.put(s,c,b)?,children.put(s,c,b)?],b),
 }
@@ -222,6 +223,7 @@ fn read<C:FoundationValueCodec>(v:&NdfValue,s:&SchemaRef,c:&mut C,b:&mut Budget)
 b.charge(Resource::Work,40)?;
 let (tag,f)=case(v,s,"HtmlNode")?;
 match (tag,f.len()) {
+("MathElement",3)=>Ok(Self::MathElement {tag:Value::read(&f[0],s,c,b)?,attributes:Value::read(&f[1],s,c,b)?,children:Value::read(&f[2],s,c,b)?}),
 ("Text",1)=>Ok(Self::Text {text:Value::read(&f[0],s,c,b)?}),
 ("Element",3)=>Ok(Self::Element {tag:Value::read(&f[0],s,c,b)?,attributes:Value::read(&f[1],s,c,b)?,children:Value::read(&f[2],s,c,b)?}),
 _=>Err(PortableError::Shape),}

@@ -246,5 +246,5 @@
   "trusted_shell": "html/head/meta/style/body are emitted by fixed DocumentShell code, not accepted as user Markup nodes; stylesheet body is a fixed backend asset",
   "default_deny": true,
   "design_revision": "nepl3-design-2026-09-06-r4",
-  "html_profile": "interfaces/markup.json and doc/spec/19-html-fragment.md define the implemented HTML fragment subset. Foreign namespace profiles and full artifact preparation remain required, not silently accepted."
+  "html_profile": "interfaces/markup.json and doc/spec/19-html-fragment.md define flat Text/Element/MathElement nodes. HTML admits math roots (inline in phrasing, either display in flow); mtext admits checked HTML phrasing. IDs, ancestry and depth cross namespaces. SVG, KaTeX profiles and full artifact preparation remain required, not silently accepted."
 }

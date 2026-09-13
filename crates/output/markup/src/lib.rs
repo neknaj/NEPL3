@@ -4,6 +4,7 @@
 extern crate alloc;
 pub mod html;
 pub mod mathml;
+mod output;
 pub mod portable;
 pub mod schema;
 pub mod text;

@@ -20,6 +20,59 @@ fn element(tag: Tag, children: Vec<u64>) -> Node {
     }
 }
 #[test]
+fn mixed_output_charges_escaped_annotation_bytes_once() -> Result<(), Error> {
+    use nepl3_markup::html::{HtmlFragment, HtmlNode, HtmlPolicy, HtmlTag};
+    let f = Fragment {
+        root: 0,
+        html_policy: HtmlPolicy { classes: vec![] },
+        nodes: vec![
+            element(Tag::Math, vec![1]),
+            element(Tag::Text, vec![2]),
+            Node::Html {
+                fragment: HtmlFragment {
+                    root: 0,
+                    nodes: vec![
+                        HtmlNode::Element {
+                            tag: HtmlTag::Span,
+                            attributes: vec![],
+                            children: vec![1],
+                        },
+                        HtmlNode::Text {
+                            text: "字<&".into(),
+                        },
+                    ],
+                },
+            },
+        ],
+    };
+    // Namespace declarations and escaping are specified bytes, not a captured
+    // serialization result. Count UTF-8 bytes, including the Japanese text.
+    let expected = "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtext><span xmlns=\"http://www.w3.org/1999/xhtml\">字&lt;&amp;</span></mtext></math>";
+    let proof = validate(&f, &mut budget())?;
+    let mut limits = budget().limits();
+    limits.output_bytes = expected.len() as u64;
+    let mut b = Budget::new(limits);
+    assert_eq!(serialize(&proof, &mut b)?, expected);
+    assert_eq!(b.usage().output_bytes, expected.len() as u64);
+    limits.output_bytes -= 1;
+    let mut stopped = Budget::new(limits);
+    assert!(matches!(
+        serialize(&proof, &mut stopped),
+        Err(Error::Stopped(StopReason::OutputLimit))
+    ));
+    assert!(matches!(
+        serialize(&proof, &mut stopped),
+        Err(Error::Stopped(StopReason::OutputLimit))
+    ));
+    limits = budget().limits();
+    limits.allocation_units = 0;
+    assert!(matches!(
+        serialize(&proof, &mut Budget::new(limits)),
+        Err(Error::Stopped(StopReason::AllocationLimit))
+    ));
+    Ok(())
+}
+#[test]
 fn mixed_phrasing_resolves_cross_leaf_links_and_rejects_repeated_ids() -> Result<(), Error> {
     use nepl3_markup::html::{
         HtmlAttribute as A, HtmlFragment as F, HtmlHref, HtmlNode as N, HtmlPolicy, HtmlTag as T,
