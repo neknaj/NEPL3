@@ -283,3 +283,4 @@ impl<C: FoundationValueCodec> MathDisplayHost<'_, C> {
         })
     }
 }
+pub mod katex;

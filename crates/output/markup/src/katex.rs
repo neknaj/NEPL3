@@ -1,6 +1,7 @@
 //! Lexical primitives for the generated-Math KaTeX profile. These do not admit
 //! arbitrary HTML or CSS, prove fidelity, or authorize inline style in a CSP.
 use nepl3_core::budget::{Budget, Resource, StopReason};
+pub mod fragment;
 mod path;
 pub use path::{path_data, view_box};
 
