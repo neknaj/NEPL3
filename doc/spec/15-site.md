@@ -30,7 +30,7 @@ repository外への脱出を拒否する。公開済み仕様へのリンクはs
 この公開経路はT21の意味同等性検査や正本切替の完了を意味しない。
 
 docs-onlyのトップは現在の`README.md`正本を固定版pulldown-cmarkでHTMLへ投影する。
-移行済みprojectionへのリンクはcanonical registryのサイトrouteへ、未移行のrepository資料は
+サイト収録済み仕様へのリンクはそのサイトrouteへ、siteに未収録のrepository資料は
 同じcommitのGitHub原本へ向ける。欠けた原本や未対応のリンク形式は生成失敗とする。
 raw HTMLは文字列として表示し、外部画像は代替テキストを残す。バッジ等の外部取得を
 生成・閲覧の前提にしない。READMEのSHA-256とrenderer版をbuild情報へ記録する。

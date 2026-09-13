@@ -200,7 +200,7 @@ fn compose(
         "source_identity_scope":"input checkout; renderer executable identified separately",
         "overview":overview.map(|v| serde_json::json!({"source":"README.md","sha256":v.source_sha256,"renderer":"pulldown-cmark/0.13.4"})),
         "files":identities(&pages.files),
-        "scope":"Registered canonical Doc pages and example sources; no Playground, deploy receipt or full T19/T20 acceptance"
+        "scope":"Canonical Doc pages, unmigrated numbered Markdown specifications and example sources; no Playground, deploy receipt or full T19/T20 acceptance"
     });
     insert(
         &mut pages.files,

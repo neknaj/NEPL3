@@ -21,7 +21,11 @@ pub(super) fn generate(
     base: &str,
     commit: &str,
 ) -> Result<BTreeMap<String, Vec<u8>>> {
-    let tracked = crate::command(root, "git", &["ls-files", "-z", "--", "doc/spec/*.md"])?;
+    let tracked = crate::command(
+        root,
+        "git",
+        &["ls-files", "-z", "--", ":(glob)doc/spec/[0-9][0-9]-*.md"],
+    )?;
     let tracked = std::str::from_utf8(&tracked)?;
     let mut files = BTreeMap::new();
     let mut records = Vec::new();
@@ -74,6 +78,7 @@ mod tests {
         fixture.write("doc/spec/04-grammar.md", "# Grammar\n\n日本語の本文")?;
         fixture.write("doc/spec/05-document.md", "GENERATED MUST NOT BE RENDERED")?;
         fixture.write("doc/other.md", "Other")?;
+        fixture.write("doc/spec/doc-signatures.md", "Generated signature table")?;
         crate::command(fixture.root(), "git", &["add", "."])?;
         let registry = serde_json::from_str(
             r#"{"version":1,"pages":[{"id":"doc","source":"doc.nepld","projection":"doc/spec/05-document.md","aliases":"aliases.json","route":"docs/moved.html","renderer":"test"}]}"#,

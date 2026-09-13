@@ -48,7 +48,7 @@ def expected_inputs(build, manifest, doc_manifest, docs, source_root, config_pat
     assert registry, 'empty canonical registry'
     tracked = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', commit, '--', 'doc/spec/'], cwd=source_root, text=True).splitlines()
     markdown_routes = {'docs/spec/' + path[len('doc/spec/'):-3] + '.html' for path in tracked
-                       if path.endswith('.md') and path not in {p.get('projection') for p in registry}}
+                       if re.fullmatch(r'doc/spec/[0-9]{2}-[^/]*\.md', path) and path not in {p.get('projection') for p in registry}}
     assert docs.keys() == {page['route'] for page in registry} | markdown_routes | {'index.html', 'docs/index.html', 'examples/index.html'}, 'page coverage'
     entries = doc_manifest['pages']
     assert len(entries) == len(registry), 'source coverage'
@@ -101,7 +101,7 @@ def verify(root, source_root=None, config_path='site/config.json', renderer=None
     assert markdown['renderer'] == 'pulldown-cmark/0.13.4'
     projections = {p['projection'] for p in json.loads(blob('doc/canonical.json'))['pages']}
     tracked = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', build['source_commit'], '--', 'doc/spec/'], cwd=checkout, text=True).splitlines()
-    expected_markdown = {p for p in tracked if p.endswith('.md')} - projections
+    expected_markdown = {p for p in tracked if re.fullmatch(r'doc/spec/[0-9]{2}-[^/]*\.md', p)} - projections
     assert {p['source'] for p in markdown['pages']} == expected_markdown
     assert len(markdown['pages']) == len(expected_markdown)
     markdown_paths = {'markdown-manifest.json'}
