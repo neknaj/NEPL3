@@ -18,6 +18,13 @@ SiteConfigをbase pathの唯一の設定元にする。既定 `/NEPL3/` と受�
 
 正式文書はdoc/、文法とreferenceはlanguages/とschema/form表、実行例はexamples/、Rust APIは同じcommitのrustdocを入力とする。サイト専用にコピーした別仕様や別サンプルを手で保守しない。MarkdownはDoc移行完了まで正本として利用できるが、最終Doc移行は必須のT21で管理する。
 
+docs-onlyのトップは現在の`README.md`正本を固定版pulldown-cmarkでHTMLへ投影する。
+移行済みprojectionへのリンクはcanonical registryのサイトrouteへ、未移行のrepository資料は
+同じcommitのGitHub原本へ向ける。欠けた原本や未対応のリンク形式は生成失敗とする。
+raw HTMLは文字列として表示し、外部画像は代替テキストを残す。バッジ等の外部取得を
+生成・閲覧の前提にしない。READMEのSHA-256とrenderer版をbuild情報へ記録する。
+これはREADMEのNEPL3d移行完了ではなく、二つ目の手書き概要を作らないための公開経路である。
+
 page registryは安定page ID、source正本の形式とpath、公開URL、見出し/anchor ID、旧URL aliasを保持する。表示見出しやファイル移設でIDを暗黙に再生成しない。例manifestは安定例ID、language/category、source path、byte digest、必要profile、revisionを持つ。「この例を試す」は同じmanifestから取得した同じbyte列を開く。存在しない例、digest不一致、異なるruntime/profile版を拒否する。
 
 例manifestには実行前提と期待する操作/結果も記録する。4言語それぞれの入門、完全なreference、典型例、診断の読み方、成果物取得、CLI/Web比較を用意する。rustdocだけを生成して利用者文書が完成した扱いにはしない。

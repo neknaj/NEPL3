@@ -73,6 +73,10 @@ fn composition_preserves_doc_bytes_and_identifies_every_payload() -> Result<()> 
         manifest: "{\"doc\":true}".into(),
     };
     for base in ["/NEPL3/", "/acceptance/project/"] {
+        let overview = overview::Overview {
+            html: "<h1>Project overview</h1>".into(),
+            source_sha256: "fixture-source".into(),
+        };
         let config = SiteConfig {
             version: 1,
             base_path: base.into(),
@@ -87,6 +91,7 @@ fn composition_preserves_doc_bytes_and_identifies_every_payload() -> Result<()> 
                 executable_sha256: "test-executable".into(),
                 build_rustc: "test-compiler",
             },
+            Some(&overview),
         )?;
         let second = compose(
             &config,
@@ -98,12 +103,17 @@ fn composition_preserves_doc_bytes_and_identifies_every_payload() -> Result<()> 
                 executable_sha256: "test-executable".into(),
                 build_rustc: "test-compiler",
             },
+            Some(&overview),
         )?;
         assert_eq!(first.files, second.files);
         assert_eq!(first.manifest, second.manifest);
         assert_eq!(first.files["docs/intro.html"], b"<h1>Source output</h1>");
         assert_eq!(first.files["doc-manifest.json"], b"{\"doc\":true}");
         let index = std::str::from_utf8(&first.files["index.html"])?;
+        assert!(index.contains("<h1>Project overview</h1>"));
+        assert!(
+            !std::str::from_utf8(&first.files["docs/index.html"])?.contains("Project overview")
+        );
         assert!(index.contains(&format!("href=\"{base}docs/intro.html\"")));
         assert!(!index.contains("<script"));
         assert!(!index.contains("{{"));
@@ -127,7 +137,8 @@ fn composition_preserves_doc_bytes_and_identifies_every_payload() -> Result<()> 
                 &RendererIdentity {
                     executable_sha256: "test-executable".into(),
                     build_rustc: "test-compiler"
-                }
+                },
+                None,
             )
             .is_err()
         );

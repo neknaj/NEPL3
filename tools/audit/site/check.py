@@ -41,6 +41,8 @@ def expected_inputs(build, manifest, doc_manifest, docs, source_root, config_pat
     config = json.loads(blob(config_path))
     assert config['version'] == 1 and build['base_path'] == config['base_path'], 'unexpected base'
     assert build['design'] == json.loads(blob('design/tasks.json'))['design'], 'design revision mismatch'
+    assert build['overview'] == {'source': 'README.md', 'sha256': hashlib.sha256(blob('README.md')).hexdigest(),
+                                 'renderer': 'pulldown-cmark/0.13.4'}, 'overview source mismatch'
     assert build['capability'] == 'docs-only' and build['runtime_identity'] is None, 'unexpected runtime capability'
     registry = json.loads(blob('doc/canonical.json'))['pages']
     assert registry, 'empty canonical registry'

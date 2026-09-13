@@ -18,6 +18,7 @@ class ArtifactRejection(unittest.TestCase):
             (root / 'design/tasks.json').write_text('{"design":"test-design"}', encoding='utf-8')
             (root / 'config.json').write_text('{"version":1,"base_path":"/NEPL3/"}', encoding='utf-8')
             (root / 'intro.nepld').write_bytes(b'original input')
+            (root / 'README.md').write_bytes(b'# Overview')
             registry = [{'id': 'intro', 'source': 'intro.nepld', 'route': 'docs/intro.html'}]
             (root / 'doc/canonical.json').write_text(json.dumps({'pages': registry}), encoding='utf-8')
             subprocess.run(['git', 'init', '-q'], cwd=root, check=True)
@@ -29,6 +30,7 @@ class ArtifactRejection(unittest.TestCase):
             build = {'source_commit': commit, 'base_path': '/NEPL3/',
                      'design': 'test-design', 'capability': 'docs-only', 'runtime_identity': None,
                      'renderer': {'executable_sha256': hashlib.sha256(renderer.read_bytes()).hexdigest()}}
+            build['overview'] = {'source': 'README.md', 'sha256': hashlib.sha256(b'# Overview').hexdigest(), 'renderer': 'pulldown-cmark/0.13.4'}
             manifest = {'source_commit': commit}
             doc = {'pages': [{'id': 'intro', 'input': 'intro.nepld', 'route': 'docs/intro.html',
                               'source_sha256': hashlib.sha256(b'original input').hexdigest()}]}

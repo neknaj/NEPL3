@@ -30,7 +30,7 @@ sha2 = { version = "0.11.0", default-features = false }
 num-bigint = { version = "0.5", default-features = false }
 num-integer = { version = "0.1", default-features = false }
 num-traits = { version = "0.2", default-features = false }
-pulldown-cmark = { version = "=0.13.4", default-features = false }
+pulldown-cmark = { version = "=0.13.4", default-features = false, features = ["html"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
