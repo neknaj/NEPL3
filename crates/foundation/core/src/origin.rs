@@ -46,6 +46,8 @@ impl From<SourceError> for OriginError {
 #[derive(Debug, Default)]
 pub struct OriginGraph {
     origins: Vec<Origin>,
+    // Immutable after insertion; indices share the origins table's ID space.
+    heights: Vec<u64>,
 }
 impl OriginGraph {
     /// External tables may use arbitrary ordering; all references and cycles are checked before acceptance.
@@ -54,14 +56,21 @@ impl OriginGraph {
         sources: &SourceStore,
         budget: &mut Budget,
     ) -> Result<Self, OriginError> {
-        Self::validate_origins(&origins, sources, budget)?;
-        Ok(Self { origins })
+        let heights = Self::checked_heights(&origins, sources, budget)?;
+        Ok(Self { origins, heights })
     }
     pub fn validate_origins(
         origins: &[Origin],
         sources: &SourceStore,
         budget: &mut Budget,
     ) -> Result<(), OriginError> {
+        Self::checked_heights(origins, sources, budget).map(|_| ())
+    }
+    fn checked_heights(
+        origins: &[Origin],
+        sources: &SourceStore,
+        budget: &mut Budget,
+    ) -> Result<Vec<u64>, OriginError> {
         budget.charge(Resource::AllocationUnits, origins.len() as u64)?;
         let mut state = alloc::vec![0u8; origins.len()];
         budget.charge(
@@ -129,59 +138,48 @@ impl OriginGraph {
                 }
             }
         }
-        Ok(())
+        Ok(heights)
     }
     /// Append-only native construction accepts only existing parents, so cannot introduce cycles.
+    /// Parent height lookup is O(P) for P immediate parent edges, with no ancestor
+    /// traversal. Appending storage is amortized O(1); cached heights use O(N)
+    /// space for N origins. Source-span validation is additional work.
     pub fn push(
         &mut self,
         origin: Origin,
         sources: &SourceStore,
         budget: &mut Budget,
     ) -> Result<OriginId, OriginError> {
+        budget.poll()?;
         validate_spans(&origin, sources)?;
-        for parent in parents(&origin) {
-            if parent.0 >= self.origins.len() as u64 {
-                return Err(OriginError::Reference);
-            }
-        }
         let mut height = 1u64;
         for parent in parents(&origin) {
+            budget.charge(Resource::Work, 1)?;
+            let index = usize::try_from(parent.0).map_err(|_| OriginError::Reference)?;
             height = height.max(
-                self.height(*parent, budget)?
+                self.heights
+                    .get(index)
+                    .ok_or(OriginError::Reference)?
                     .checked_add(1)
-                    .ok_or(StopReason::DepthLimit)?,
+                    .ok_or_else(|| budget.stop(StopReason::DepthLimit))?,
             );
         }
         budget.observe_depth(height)?;
         budget.charge(Resource::Nodes, 1)?;
         budget.charge(
             Resource::AllocationUnits,
-            core::mem::size_of::<Origin>() as u64,
+            (core::mem::size_of::<Origin>() + core::mem::size_of::<u64>()) as u64,
         )?;
+        self.origins
+            .try_reserve(1)
+            .map_err(|_| budget.stop(StopReason::AllocationLimit))?;
+        self.heights
+            .try_reserve(1)
+            .map_err(|_| budget.stop(StopReason::AllocationLimit))?;
         let id = OriginId(self.origins.len() as u64);
         self.origins.push(origin);
+        self.heights.push(height);
         Ok(id)
-    }
-    fn height(&self, id: OriginId, budget: &mut Budget) -> Result<u64, OriginError> {
-        budget.charge(
-            Resource::AllocationUnits,
-            core::mem::size_of::<(OriginId, u64)>() as u64,
-        )?;
-        let mut pending = alloc::vec![(id, 1u64)];
-        let mut height = 0;
-        while let Some((id, depth)) = pending.pop() {
-            budget.charge(Resource::Work, 1)?;
-            budget.observe_depth(depth)?;
-            height = height.max(depth);
-            for parent in parents(self.get(id).ok_or(OriginError::Reference)?) {
-                budget.charge(
-                    Resource::AllocationUnits,
-                    core::mem::size_of::<(OriginId, u64)>() as u64,
-                )?;
-                pending.push((*parent, depth.checked_add(1).ok_or(StopReason::DepthLimit)?));
-            }
-        }
-        Ok(height)
     }
     pub fn get(&self, id: OriginId) -> Option<&Origin> {
         usize::try_from(id.0).ok().and_then(|i| self.origins.get(i))
