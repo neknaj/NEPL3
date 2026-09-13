@@ -1,0 +1,8 @@
+{
+  "name": "nepl3-math-renderer-tests",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "katex": "0.18.7"
+  }
+}
