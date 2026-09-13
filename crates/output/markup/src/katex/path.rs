@@ -1,5 +1,32 @@
 use nepl3_core::budget::{Budget, Resource, StopReason};
 
+/// Validate a generated SVG viewport: exactly four space-separated finite
+/// decimal values in the path coordinate profile. Width and height must be
+/// strictly positive and unsigned. Commas, exponents and non-ASCII whitespace
+/// are outside this generated profile. This does not prove path containment or
+/// aspect-ratio/fidelity. O(n) time, O(1) space, no allocation; 4n+1 Work.
+pub fn view_box(input: &str, budget: &mut Budget) -> Result<bool, StopReason> {
+    let work = (input.len() as u64)
+        .checked_mul(4)
+        .and_then(|n| n.checked_add(1))
+        .ok_or_else(|| budget.stop(StopReason::WorkLimit))?;
+    budget.charge(Resource::Work, work)?;
+    let mut values = input.split(' ');
+    for index in 0..4 {
+        let Some(value) = values.next() else {
+            return Ok(false);
+        };
+        let mut cursor = 0;
+        if !number(value.as_bytes(), &mut cursor, index >= 2) || cursor != value.len() {
+            return Ok(false);
+        }
+        if index >= 2 && !value.bytes().any(|b| matches!(b, b'1'..=b'9')) {
+            return Ok(false);
+        }
+    }
+    Ok(values.next().is_none())
+}
+
 /// Validate the finite SVG path-data profile used by generated Math.
 ///
 /// Requires initial M/m and complete parameter groups for M/L/H/V/C/S/Q/T/A/Z

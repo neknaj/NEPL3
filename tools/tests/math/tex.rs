@@ -139,6 +139,13 @@ fn pinned_katex_accepts_production_constructor_output() -> Result<(), String> {
                 "{source}: out-of-profile SVG path {path}"
             );
         }
+        for part in html.split(" viewBox=\"").skip(1) {
+            let viewport = part.split_once('"').ok_or("viewBox closing quote")?.0;
+            assert!(
+                nepl3_markup::katex::view_box(viewport, &mut budget()).map_err(err)?,
+                "{source}: out-of-profile SVG viewport {viewport}"
+            );
+        }
         if source == "日本--" {
             assert!(html.contains("日本--"));
         }

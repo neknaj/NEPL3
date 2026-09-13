@@ -262,6 +262,7 @@
     "separators": "Optional comma/whitespace between parameters, no leading or trailing comma; adjacent signed/dotted numbers and arc flags follow SVG token boundaries",
     "metering": "O(n) time and O(1) space, no allocation; 4n+1 Work before scanning; failure never drops malformed path content"
   },
+  "katex_view_box": "Exactly four single-space-separated decimal values in katex_path_data number profile; width/height unsigned and strictly positive; no leading/trailing space, commas or other whitespace. 4n+1 Work, O(n) time, O(1) space, no allocation. Does not prove path containment or aspect ratio/fidelity.",
   "default_deny": true,
   "design_revision": "nepl3-design-2026-09-06-r4",
   "html_profile": "interfaces/markup.json and doc/spec/19-html-fragment.md define flat Text/Element/MathElement nodes. HTML admits math roots (inline in phrasing, either display in flow); mtext admits checked HTML phrasing. IDs, ancestry and depth cross namespaces. SVG, KaTeX profiles and full artifact preparation remain required, not silently accepted."

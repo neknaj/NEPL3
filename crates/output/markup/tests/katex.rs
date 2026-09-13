@@ -1,5 +1,5 @@
 use nepl3_core::budget::{Budget, Limits, StopReason};
-use nepl3_markup::katex::{computed_style, path_data};
+use nepl3_markup::katex::{computed_style, path_data, view_box};
 
 fn budget() -> Budget {
     Budget::new(Limits {
@@ -173,4 +173,35 @@ fn svg_work_and_cancellation_boundaries() {
     assert_eq!(path_data("M0 0", &mut short), Err(StopReason::WorkLimit));
     short.cancel();
     assert_eq!(path_data("", &mut short), Err(StopReason::WorkLimit));
+}
+
+#[test]
+fn svg_viewports_have_exactly_four_finite_values_and_positive_dimensions() -> Result<(), StopReason>
+{
+    for value in ["0 0 400000 1080", "-1 -.5 1 .5", "0 0 1000000000 1"] {
+        assert!(view_box(value, &mut budget())?, "{value}");
+    }
+    for value in [
+        "",
+        "0 0 1",
+        "0 0 1 1 1",
+        "0 0 0 1",
+        "0 0 .000 1",
+        "0 0 -1 1",
+        "0 0 +1 1",
+        "0 0 1 NaN",
+        "0 0 1 1e5",
+        "0,0,1,1",
+        "0  0 1 1",
+        " 0 0 1 1",
+        "0 0 1 1 ",
+        "0\t0 1 1",
+        "0 0 1000000001 1",
+    ] {
+        assert!(!view_box(value, &mut budget())?, "{value:?}");
+    }
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert_eq!(view_box("", &mut cancelled), Err(StopReason::Cancelled));
+    Ok(())
 }
