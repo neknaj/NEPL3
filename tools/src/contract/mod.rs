@@ -7,6 +7,7 @@ mod intrinsic;
 pub(crate) mod markup;
 pub(crate) mod math;
 pub(crate) mod reader;
+pub(crate) mod sentence;
 mod types;
 
 use crate::{Result, json, repository::local_path, task::unique};

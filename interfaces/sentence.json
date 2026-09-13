@@ -1,0 +1,246 @@
+{
+  "package": "nepl3.sentence",
+  "revision": 1,
+  "types": {
+    "SentenceRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "InlineRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "EmbedRef": {
+      "record": [
+        [
+          "index",
+          "U64"
+        ]
+      ],
+      "constraints": []
+    },
+    "SentenceRoot": {
+      "variant": {
+        "Sentence": [
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.sentence",
+                "revision": 1,
+                "name": "SentenceRef"
+              }
+            }
+          ]
+        ],
+        "Inline": [
+          [
+            "value",
+            {
+              "named": {
+                "package": "nepl3.sentence",
+                "revision": 1,
+                "name": "InlineRef"
+              }
+            }
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "SentenceKind": {
+      "variant": {
+        "Sentence": [
+          [
+            "inlines",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.sentence",
+                  "revision": 1,
+                  "name": "InlineRef"
+                }
+              }
+            }
+          ]
+        ],
+        "Text": [
+          [
+            "text",
+            "Text"
+          ]
+        ],
+        "Concat": [
+          [
+            "inlines",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.sentence",
+                  "revision": 1,
+                  "name": "InlineRef"
+                }
+              }
+            }
+          ]
+        ],
+        "Ruby": [
+          [
+            "base",
+            {
+              "named": {
+                "package": "nepl3.sentence",
+                "revision": 1,
+                "name": "InlineRef"
+              }
+            }
+          ],
+          [
+            "reading",
+            {
+              "named": {
+                "package": "nepl3.sentence",
+                "revision": 1,
+                "name": "InlineRef"
+              }
+            }
+          ]
+        ],
+        "InlineAnno": [
+          [
+            "base",
+            {
+              "named": {
+                "package": "nepl3.sentence",
+                "revision": 1,
+                "name": "InlineRef"
+              }
+            }
+          ],
+          [
+            "notes",
+            {
+              "list": {
+                "named": {
+                  "package": "nepl3.sentence",
+                  "revision": 1,
+                  "name": "InlineRef"
+                }
+              }
+            }
+          ]
+        ],
+        "Code": [
+          [
+            "text",
+            "Text"
+          ]
+        ],
+        "Emphasis": [
+          [
+            "inline",
+            {
+              "named": {
+                "package": "nepl3.sentence",
+                "revision": 1,
+                "name": "InlineRef"
+              }
+            }
+          ]
+        ],
+        "Strong": [
+          [
+            "inline",
+            {
+              "named": {
+                "package": "nepl3.sentence",
+                "revision": 1,
+                "name": "InlineRef"
+              }
+            }
+          ]
+        ],
+        "Break": [],
+        "ExternalLink": [
+          [
+            "uri",
+            "Text"
+          ],
+          [
+            "label",
+            {
+              "named": {
+                "package": "nepl3.sentence",
+                "revision": 1,
+                "name": "InlineRef"
+              }
+            }
+          ]
+        ],
+        "ForeignInline": [
+          [
+            "syntax",
+            {
+              "named": {
+                "package": "nepl3.sentence",
+                "revision": 1,
+                "name": "EmbedRef"
+              }
+            }
+          ]
+        ]
+      },
+      "constraints": []
+    },
+    "SentenceValue": {
+      "record": [
+        [
+          "root",
+          {
+            "named": {
+              "package": "nepl3.sentence",
+              "revision": 1,
+              "name": "SentenceRoot"
+            }
+          }
+        ],
+        [
+          "nodes",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.sentence",
+                "revision": 1,
+                "name": "SentenceKind"
+              }
+            }
+          }
+        ],
+        [
+          "embeds",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "ForeignClosure"
+              }
+            }
+          }
+        ]
+      ],
+      "constraints": []
+    }
+  },
+  "operations": {}
+}

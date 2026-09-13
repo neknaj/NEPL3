@@ -2,6 +2,26 @@
 
 T07 は進行中。`doc/spec/05-document.md` と `design/forms.json` を最終契約とし、以下の native API ができたことを T07 全体の完了へ読み替えない。
 
+## #158を優先するSentence・注釈の回復
+
+今後の是正順序は[23章](../spec/23-sentence-annotation.md)に従う。Doc固有機能を広げる前に、
+Sentenceの独立言語化、対象付きannotate、Doc/Mathの文章境界、旧comment-as-triviaを修正する。
+以下の既存API・性能調査はその時点の実装記録であり、旧所有関係を維持する決定ではない。
+
+最初の実装として`nepl3-sentence-core`を追加した。foundationだけに依存する`no_std + alloc`の
+順序付き有限arena、category/参照/循環/到達性・非空文章部の検査と独立schemaを持つ。
+descriptorは既存生成器で`interfaces/sentence.json`から生成し、実descriptorからidentityを計算する。
+通常のURL構造とforeign参照を保持するが、guest実行やDの名前解決、安全なHTMLの認証はしない。
+
+新規10試験は成功した。共有DAGの最長深さ、10万段の非再帰検査、資源停止、foreign参照共有・
+未使用拒否、root category、schema所有者・revision・field順の境界を含む。
+独立レビューで不足を指摘されたforeign/root試験を追加し、再レビューで指摘なしを確認した。
+ARMv6-M、wasm32-unknown-unknown、wasm32-wasip2はbuild確認であり、target上の実行証拠ではない。
+
+codec、Source/Origin境界、literal/prefixと独立LanguagePackage、annotation adapter、
+Doc/Math consumerおよび公式sourceの移行は未完了である。旧コメント処理だけは先に削除せず、
+移行後にschema・wire・生成器まで撤去する。T07や受入状態をこのモデル検査でpassedにしない。
+
 ## 同期host接続と文書移行までの残り
 
 `nepl3_tools::doc::host::NativeHost` は、明示Profileの実装identityと操作登録を

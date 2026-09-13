@@ -26,6 +26,7 @@ Docで例や解説を書く際は、[文書の執筆指針](authoring.md)のsent
 14. [外部言語の追加とrepository分離条件](spec/22-external-extensions.md)
 15. [NEPL3h: 独立GHC frontend案](decisions/nepl3h-ghc-frontend.md) — Haskell互換、Wasm/browser、DSL構造生成と配布方針。設計草案のみで実装未着手。
 16. [複数言語・構造化文章・対象付き注釈の統合案](decisions/multilanguage-hca.md) — 言語中立producer、NEPL3sentence/A/Dの分離、回路モデル、annotateと旧lexical commentの撤去計画。設計草案のみ。
+17. [構造化文章と対象付き注釈への是正](spec/23-sentence-annotation.md) — #158から実装へ進む移行契約。Sentenceのモデル・schema検査から開始し、独立言語・Doc/Math・注釈・旧コメント撤去の完了とは区別する。
 
 ## 正本と派生資料
 
