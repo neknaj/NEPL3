@@ -1,5 +1,6 @@
 use super::*;
 use nepl3_doc_core::{check::Category, lower, model::DocKind};
+use nepl3_tools::doc::math::display::{Preference, TexPreparation};
 use nepl3_tools::doc::math::{Error, MathDisplayHost};
 
 #[test]
@@ -95,6 +96,105 @@ fn article_math_nodes_select_display_without_evaluating_code() -> Result<(), Str
                         Err(Error::Selection)
                     ));
                     host.math_surface = &compiled.others[0].schema;
+                    // Both generation paths retain the same input; annotations
+                    // require MathML, whereas frac 1 0 must display without eval.
+                    let display = host
+                        .prepare_node(
+                            &document,
+                            i as u64,
+                            Preference::KaTeXPreferred,
+                            &mut budget(),
+                        )
+                        .map_err(err)?;
+                    assert_eq!(display.mathml().syntax, result.syntax);
+                    assert_eq!(display.mathml().rendered.fragment, result.rendered.fragment);
+                    if matches!(node.kind, DocKind::InlineMath { .. }) {
+                        let TexPreparation::Ready { tex, occurrences } = display.tex() else {
+                            return Err("fraction must prepare TeX".into());
+                        };
+                        assert_eq!(tex, "\\frac{1}{0}");
+                        assert!(!occurrences.is_empty());
+                        for occurrence in occurrences {
+                            assert!(
+                                occurrence.node < display.mathml().syntax.value.nodes.len() as u64
+                            );
+                            assert!(
+                                tex.get(occurrence.start as usize..occurrence.end as usize)
+                                    .is_some()
+                            );
+                        }
+                    } else {
+                        assert!(matches!(
+                            display.tex(),
+                            TexPreparation::Unsupported {
+                                reason: nepl3_math_tex::Unsupported::ForeignAnnotation,
+                                ..
+                            }
+                        ));
+                        assert_eq!(display.mathml().annotations.len(), 1);
+                    }
+                    let mut mathml_budget = budget();
+                    let only = host
+                        .prepare_node(
+                            &document,
+                            i as u64,
+                            Preference::MathMLOnly,
+                            &mut mathml_budget,
+                        )
+                        .map_err(err)?;
+                    assert_eq!(only.tex(), &TexPreparation::MathMLOnly);
+                    assert_eq!(only.mathml().rendered.fragment, result.rendered.fragment);
+                    // Exact MathML-only work is insufficient for the next TeX
+                    // phase. The available fallback cannot turn that stop into Ok.
+                    let mut limits = budget().limits();
+                    limits.work = mathml_budget.usage().work;
+                    let mut limited = Budget::new(limits);
+                    assert!(matches!(
+                        host.prepare_node(
+                            &document,
+                            i as u64,
+                            Preference::KaTeXPreferred,
+                            &mut limited,
+                        ),
+                        Err(Error::Stopped(nepl3_core::budget::StopReason::WorkLimit))
+                    ));
+                    assert_eq!(
+                        limited.poll(),
+                        Err(nepl3_core::budget::StopReason::WorkLimit)
+                    );
+                    if matches!(node.kind, DocKind::InlineMath { .. }) {
+                        // Allow the independently measured MathML preparation
+                        // exactly, but no additional TeX output bytes.
+                        let mut limits = budget().limits();
+                        limits.output_bytes = mathml_budget.usage().output_bytes;
+                        let mut limited = Budget::new(limits);
+                        assert!(matches!(
+                            host.prepare_node(
+                                &document,
+                                i as u64,
+                                Preference::KaTeXPreferred,
+                                &mut limited,
+                            ),
+                            Err(Error::Stopped(nepl3_core::budget::StopReason::OutputLimit))
+                        ));
+                    }
+                    for preference in [Preference::MathMLOnly, Preference::KaTeXPreferred] {
+                        let mut cancelled = budget();
+                        cancelled.stop(nepl3_core::budget::StopReason::Cancelled);
+                        assert!(matches!(
+                            host.prepare_node(&document, i as u64, preference, &mut cancelled,),
+                            Err(Error::Stopped(nepl3_core::budget::StopReason::Cancelled))
+                        ));
+                    }
+                    let received_display = receiver
+                        .prepare_node(
+                            &received,
+                            i as u64,
+                            Preference::KaTeXPreferred,
+                            &mut budget(),
+                        )
+                        .map_err(err)?;
+                    assert_eq!(received_display.tex(), display.tex());
                     let embed = match node.kind {
                         DocKind::InlineMath { syntax } | DocKind::DisplayMath { syntax } => syntax,
                         _ => return Err("Math kind".into()),
@@ -184,7 +284,12 @@ fn article_math_nodes_select_display_without_evaluating_code() -> Result<(), Str
                     seen += 1;
                 }
                 DocKind::Code { .. } => assert!(matches!(
-                    host.render_node(&document, i as u64, &mut budget()),
+                    host.prepare_node(
+                        &document,
+                        i as u64,
+                        Preference::KaTeXPreferred,
+                        &mut budget()
+                    ),
                     Err(Error::Node(_))
                 )),
                 _ => {}

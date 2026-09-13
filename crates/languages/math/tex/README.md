@@ -24,3 +24,11 @@ This implements the pure conversion portion of T24. Fixed-version KaTeX executio
 HTML validation, CSS/fonts, Node/Worker comparison and browser tests remain host
 work. Successful TeX construction alone is not evidence of faithful browser output.
 The native API is not a portable ABI or a completed renderer capability.
+
+The Doc host's `MathDisplayHost::prepare_node` now prepares independent MathML
+and optional TeX from the same lowered Doc Math input. `MathMLOnly` omits TeX;
+`KaTeXPreferred` retains typed unsupported-node reasons with the MathML result.
+The shared budget covers both preparations: exhaustion rejects the operation
+even when MathML was already available. `TexPreparation::Ready` means renderer
+input is ready, not that KaTeX or its output validator has run. Annotation
+documents and origin mappings remain attached to the MathML fallback.
