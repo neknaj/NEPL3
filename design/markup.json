@@ -254,6 +254,14 @@
     "rejection": "Reject the entire declaration list; never strip unknown properties and claim faithful rendering; retain original bytes/order for later stylesheet lowering",
     "metering": "O(n) time, O(1) space, no allocation; charge 4n+1 Work before scanning and preserve sticky stop"
   },
+  "katex_path_data": {
+    "scope": "Finite SVG path lexical predicate; not element/viewport/transform validation or geometry/fidelity proof",
+    "commands": "Initial M/m required; M/L/H/V/C/S/Q/T/A/Z and lowercase relatives, complete groups with implicit repetition; whitespace is ASCII space, tab, CR or LF",
+    "numbers": "Optional sign, decimal with at most 10 integer/16 fraction digits, at least one digit; magnitude <= 1000000000; no exponent",
+    "arcs": "SVG 1.1 grammar subset: radii have no sign; large-arc and sweep flags are single 0/1 bytes",
+    "separators": "Optional comma/whitespace between parameters, no leading or trailing comma; adjacent signed/dotted numbers and arc flags follow SVG token boundaries",
+    "metering": "O(n) time and O(1) space, no allocation; 4n+1 Work before scanning; failure never drops malformed path content"
+  },
   "default_deny": true,
   "design_revision": "nepl3-design-2026-09-06-r4",
   "html_profile": "interfaces/markup.json and doc/spec/19-html-fragment.md define flat Text/Element/MathElement nodes. HTML admits math roots (inline in phrasing, either display in flow); mtext admits checked HTML phrasing. IDs, ancestry and depth cross namespaces. SVG, KaTeX profiles and full artifact preparation remain required, not silently accepted."

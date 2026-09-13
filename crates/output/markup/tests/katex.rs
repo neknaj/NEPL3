@@ -1,5 +1,5 @@
 use nepl3_core::budget::{Budget, Limits, StopReason};
-use nepl3_markup::katex::computed_style;
+use nepl3_markup::katex::{computed_style, path_data};
 
 fn budget() -> Budget {
     Budget::new(Limits {
@@ -101,4 +101,76 @@ fn work_boundary_matches_the_declared_cost() {
         computed_style("height:1em", &mut short),
         Err(StopReason::WorkLimit)
     );
+}
+
+#[test]
+fn svg_commands_repetition_and_arc_flags() -> Result<(), StopReason> {
+    for path in [
+        "M0 0",
+        "m.5-.5 1 2z",
+        "M0,0L1 2 3 4H5V6C1 2 3 4 5 6S1 2 3 4Q1 2 3 4T5 6Z",
+        "M0 0 A30 50 0 01162.55 162.45",
+        "M0 0a1 2 30 1 0 4 5z",
+        "M1. 2.\nL+3 -4",
+        "M1000000000 -1000000000.0000000000000000",
+    ] {
+        assert!(path_data(path, &mut budget())?, "{path}");
+    }
+    Ok(())
+}
+
+#[test]
+fn malformed_svg_path_is_not_partially_accepted() -> Result<(), StopReason> {
+    for path in [
+        "",
+        " ",
+        "Z",
+        "L0 0",
+        "M",
+        "M0",
+        "M,0 0",
+        "M0 0,",
+        "M0 0,L1 1",
+        "M0 0L",
+        "M0 0L1",
+        "M0 0Z1 2",
+        "M0 0C1 2 3 4 5",
+        "M0 0R1 2",
+        "M0 0A-1 2 0 0 1 3 4",
+        "M0 0A+1 2 0 0 1 3 4",
+        "M0 0A1 +.5 0 0 1 3 4",
+        "M0 0A1 2 0 2 1 3 4",
+        "M0 0A1 2 0 0.0 1 3 4",
+        "M0 0A1 2 0 1 -1 3 4",
+        "M0 0A1 2 0 1 1 3",
+        "MNaN 0",
+        "M1e5 0",
+        "M1000000001 0",
+        "M1000000000.0000000000000001 0",
+        "M. 0",
+        "M0\u{c}0",
+        "M0 0<script>",
+        "M0 0\0",
+        "M0 0,,1 2",
+    ] {
+        assert!(!path_data(path, &mut budget())?, "{path:?}");
+    }
+    Ok(())
+}
+
+#[test]
+fn svg_work_and_cancellation_boundaries() {
+    // Four bytes: 4n+1 = 17; path grammar scanning allocates nothing.
+    let mut exact = Budget::new(Limits {
+        work: 17,
+        ..Limits::default()
+    });
+    assert_eq!(path_data("M0 0", &mut exact), Ok(true));
+    let mut short = Budget::new(Limits {
+        work: 16,
+        ..Limits::default()
+    });
+    assert_eq!(path_data("M0 0", &mut short), Err(StopReason::WorkLimit));
+    short.cancel();
+    assert_eq!(path_data("", &mut short), Err(StopReason::WorkLimit));
 }

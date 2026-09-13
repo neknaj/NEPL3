@@ -132,6 +132,13 @@ fn pinned_katex_accepts_production_constructor_output() -> Result<(), String> {
                 "{source}: out-of-profile style {style}"
             );
         }
+        for part in html.split(" d=\"").skip(1) {
+            let path = part.split_once('"').ok_or("path closing quote")?.0;
+            assert!(
+                nepl3_markup::katex::path_data(path, &mut budget()).map_err(err)?,
+                "{source}: out-of-profile SVG path {path}"
+            );
+        }
         if source == "日本--" {
             assert!(html.contains("日本--"));
         }
