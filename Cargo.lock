@@ -196,6 +196,7 @@ dependencies = [
  "nepl3-math-mathml",
  "nepl3-math-tex",
  "nepl3-reader",
+ "nepl3-sentence-core",
  "nepl3-wire",
  "pulldown-cmark",
  "serde",

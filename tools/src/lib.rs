@@ -7,6 +7,7 @@ pub mod doc;
 mod documentation;
 mod evidence;
 mod repository;
+pub mod sentence;
 pub mod site;
 mod task;
 

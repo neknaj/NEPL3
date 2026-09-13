@@ -121,6 +121,14 @@ head外の位置、root以外が所有するView、prefix専用node、foreign、
 照合はconsumerのlower操作が行う。新schemaのdigestはdescriptorから算出し、旧Doc payloadの
 identityやdecoderをSentenceの契約として使い回さない。
 
+開発hostのSentence reader adapterは`nepl3.sentence.reader`の`literal`操作を明示登録する。
+ReadRequest/ReadReply、Unit state、SentenceLiteralPayloadを使用し、ReaderSessionの通常の
+停止・再開・reply検査を通す。操作schemaの正確なidentityを検査し、別operationや不正stateを
+受理しない。NoMatch、NeedMore、位置付きtyped診断、Stoppedを区別する。これはDoc専用readerの
+aliasではなく独立したadapterであり、Sentence coreからreader/engine/toolsへ逆依存しない。
+開発hostのnative adapter検証と、独立processのportable provider比較、LanguagePackage経由の
+prefix parse/check/printは別の受入である。
+
 ## 注釈と移行完了条件
 
 `annotate Sentence target`はarity 2の通常formであり、各host categoryへ固定shapeで登録する。

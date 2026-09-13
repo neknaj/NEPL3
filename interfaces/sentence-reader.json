@@ -1,0 +1,29 @@
+{
+  "package": "nepl3.sentence.reader",
+  "revision": 1,
+  "types": {
+    "SentenceDiagnosticArguments": {
+      "record": [],
+      "constraints": []
+    }
+  },
+  "operations": {
+    "literal": {
+      "input": {
+        "named": {
+          "package": "nepl3.reader",
+          "revision": 1,
+          "name": "ReadRequest"
+        }
+      },
+      "output": {
+        "named": {
+          "package": "nepl3.reader",
+          "revision": 1,
+          "name": "ReadReply"
+        }
+      },
+      "pure": true
+    }
+  }
+}
