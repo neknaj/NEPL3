@@ -34,6 +34,94 @@ fn render(f: &HtmlFragment) -> Result<String, HtmlError> {
     let mut b = budget();
     serialize(&validate(f, HtmlSlot::Block, &policy(), &mut b)?, &mut b)
 }
+#[test]
+fn xml_embedding_preserves_namespace_void_nodes_and_pre_text() -> Result<(), HtmlError> {
+    let f = HtmlFragment {
+        root: 0,
+        nodes: vec![
+            element(HtmlTag::Div, &[1, 6, 7]),
+            element(HtmlTag::Ruby, &[2, 3]),
+            txt("漢"),
+            element(HtmlTag::Rt, &[4]),
+            txt("かん"),
+            txt("\n<&\r"),
+            element(HtmlTag::Br, &[]),
+            element(HtmlTag::Pre, &[5]),
+        ],
+    };
+    let proof = validate(&f, HtmlSlot::Block, &policy(), &mut budget())?;
+    let mut full = budget();
+    let xml = serialize_xhtml(&proof, &mut full)?;
+    assert_eq!(
+        xml,
+        "<div xmlns=\"http://www.w3.org/1999/xhtml\"><ruby>漢<rt>かん</rt></ruby><br /><pre>\n&lt;&amp;&#xD;</pre></div>"
+    );
+    assert_eq!(full.usage().output_bytes, xml.len() as u64);
+    assert_eq!(
+        serialize(&proof, &mut budget())?,
+        "<div><ruby>漢<rt>かん</rt></ruby><br><pre>\n\n&lt;&amp;&#xD;</pre></div>"
+    );
+    let mut outer = budget();
+    assert_eq!(
+        outer.with_depth_at_least(7, |b| serialize_xhtml(&proof, b))?,
+        xml
+    );
+    assert_eq!(outer.usage().depth, full.usage().depth + 7);
+    assert_eq!(outer.current_depth(), 0);
+    for reason in [
+        StopReason::WorkLimit,
+        StopReason::AllocationLimit,
+        StopReason::NodeLimit,
+        StopReason::OutputLimit,
+        StopReason::DepthLimit,
+    ] {
+        let mut limits = budget().limits();
+        match reason {
+            StopReason::WorkLimit => limits.work = full.usage().work - 1,
+            StopReason::AllocationLimit => {
+                limits.allocation_units = full.usage().allocation_units - 1
+            }
+            StopReason::NodeLimit => limits.nodes = full.usage().nodes - 1,
+            StopReason::OutputLimit => limits.output_bytes = full.usage().output_bytes - 1,
+            _ => limits.depth = full.usage().depth - 1,
+        }
+        let mut b = Budget::new(limits);
+        assert_eq!(
+            serialize_xhtml(&proof, &mut b),
+            Err(HtmlError::Stopped(reason))
+        );
+        assert_eq!(b.poll(), Err(reason));
+    }
+    let mut b = budget();
+    b.cancel();
+    assert_eq!(
+        serialize_xhtml(&proof, &mut b),
+        Err(HtmlError::Stopped(StopReason::Cancelled))
+    );
+    let f = HtmlFragment {
+        root: 0,
+        nodes: vec![txt("<&")],
+    };
+    assert_eq!(
+        serialize_xhtml(
+            &validate(&f, HtmlSlot::Phrasing, &policy(), &mut budget())?,
+            &mut budget()
+        )?,
+        "&lt;&amp;"
+    );
+    let f = HtmlFragment {
+        root: 0,
+        nodes: vec![element(HtmlTag::Br, &[])],
+    };
+    assert_eq!(
+        serialize_xhtml(
+            &validate(&f, HtmlSlot::Phrasing, &policy(), &mut budget())?,
+            &mut budget()
+        )?,
+        "<br xmlns=\"http://www.w3.org/1999/xhtml\" />"
+    );
+    Ok(())
+}
 
 #[test]
 fn nested_paragraph_wrapper_links_lists_and_code_preserve_bytes() -> Result<(), HtmlError> {

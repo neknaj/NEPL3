@@ -43,8 +43,17 @@ body
       cons ruby text "検査" text "けんさ"
       cons text "・serializerとする。"
       nil
-    cons "[現段階/げんだんかい]の[対象/たいしょう]はHTML fragmentである。"
-    cons "MathML/SVG/KaTeX[専用/せんよう]profile、DocumentShell、assetのbyte[列/れつ]・MIME・license[検査/けんさ]、Doc PreparedArticle、[完全/かんぜん]な[操作/そうさ]Reportは[後続実装/こうぞくじっそう]であり、[既存/きそん]の[最終要件/さいしゅうようけん]から[除/のぞ]かない。"
+    cons "[現段階/げんだんかい]ではHTML fragmentに[加/くわ]え、mtextにHTML phrasingを[含/ふく]むMathML treeの[構造検査/こうぞうけんさ]とserializer、NDF codecを[提供/ていきょう]する。"
+    cons "Math[注釈/ちゅうしゃく]の[準備/じゅんび]・[変換/へんかん]、SVG/KaTeX[専用/せんよう]profile、DocumentShell、assetのbyte[列/れつ]・MIME・license[検査/けんさ]、Doc PreparedArticle、[完全/かんぜん]な[操作/そうさ]Reportは[後続実装/こうぞくじっそう]であり、[既存/きそん]の[最終要件/さいしゅうようけん]から[除/のぞ]かない。"
+    cons "MathMlFragmentはnodes・root・htmlPolicyを[持/も]ち、MathMlNodeはText・Element・Htmlの[閉/と]じた[選択/せんたく]である。"
+    cons "Htmlはmtext[直下/ちょっか]だけに[置/お]き、[要求全体/ようきゅうぜんたい]のhtmlPolicyで[許可/きょか]したphrasingとして[検査/けんさ]する。"
+    cons "[全/ぜん]HTML[出力出現/しゅつりょくしゅつげん]からIDとfragment[参照/さんしょう]を[集/あつ]め、[重複/じゅうふく]や[未解決参照/みかいけつさんしょう]を[拒否/きょひ]する。"
+    cons "[共有/きょうゆう]nodeの[複数表示/ふくすうひょうじ]も[別出現/べつしゅつげん]として[扱/あつか]い、MathMLからHTMLまでの[最深経路/さいしんけいろ]を[同/おな]じBudgetで[検査/けんさ]する。"
+    cons "HTML[部分/ぶぶん]は[要素/ようそ]rootにXHTML namespaceを[宣言/せんげん]し、void[要素/ようそ]をXMLの[自己終了形式/じこしゅうりょうけいしき]で[出力/しゅつりょく]する。"
+    cons "XML[出力/しゅつりょく]のpreにはHTML parser[用/よう]の[補償改行/ほしょうかいぎょう]を[追加/ついか]せず、Text rootもwrapperを[追加/ついか]しない。"
+    cons "[外側/そとがわ]の[文書/ぶんしょ]とのIDやresourceの[整合/せいごう]は[最終/さいしゅう]artifact[準備/じゅんび]で[別/べつ]に[検査/けんさ]する。"
+    cons "Elementのtag・attributes・childrenは[型付/かたつ]きであり、[受信側/じゅしんがわ]は[選択/せんたく]したschema digestの[照合/しょうごう]と[型検査/かたけんさ]の[後/あと]に、[参照/さんしょう]・[到達性/とうたつせい]・cycle・[子要素数/こようそすう]・[属性/ぞくせい]・[深/ふか]さを[再検査/さいけんさ]する。"
+    cons "MathMLの[構造/こうぞう]proofは[同/おな]じ[不変/ふへん]treeをborrowし、[数式/すうしき]の[意味/いみ]や[表示環境/ひょうじかんきょう]を[証明/しょうめい]しない。"
     nil
   cons paragraph
     cons "HtmlFragmentはroot U64と[平坦/へいたん]なHtmlNode[列/れつ]を[持/も]つ。"

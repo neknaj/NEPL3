@@ -20,8 +20,193 @@ fn element(tag: Tag, children: Vec<u64>) -> Node {
     }
 }
 #[test]
+fn mixed_phrasing_resolves_cross_leaf_links_and_rejects_repeated_ids() -> Result<(), Error> {
+    use nepl3_markup::html::{
+        HtmlAttribute as A, HtmlFragment as F, HtmlHref, HtmlNode as N, HtmlPolicy, HtmlTag as T,
+    };
+    let link = F {
+        root: 0,
+        nodes: vec![
+            N::Element {
+                tag: T::A,
+                attributes: vec![A::Href {
+                    value: HtmlHref::Fragment { id: "note".into() },
+                }],
+                children: vec![1],
+            },
+            N::Text {
+                text: "note".into(),
+            },
+        ],
+    };
+    let ruby = F {
+        root: 0,
+        nodes: vec![
+            N::Element {
+                tag: T::Span,
+                attributes: vec![A::Id {
+                    value: "note".into(),
+                }],
+                children: vec![1, 5],
+            },
+            N::Element {
+                tag: T::Ruby,
+                attributes: vec![],
+                children: vec![2, 3],
+            },
+            N::Text { text: "漢".into() },
+            N::Element {
+                tag: T::Rt,
+                attributes: vec![],
+                children: vec![4],
+            },
+            N::Text {
+                text: "かん".into(),
+            },
+            N::Element {
+                tag: T::Br,
+                attributes: vec![],
+                children: vec![],
+            },
+        ],
+    };
+    let mut f = Fragment {
+        root: 0,
+        html_policy: HtmlPolicy { classes: vec![] },
+        nodes: vec![
+            element(Tag::Math, vec![1]),
+            element(Tag::Text, vec![2, 3]),
+            Node::Html { fragment: link },
+            Node::Html { fragment: ruby },
+        ],
+    };
+    let mut full = budget();
+    let proof = validate(&f, &mut full)?;
+    assert_eq!(full.usage().depth, 6);
+    let expected = "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mtext><a xmlns=\"http://www.w3.org/1999/xhtml\" href=\"#note\">note</a><span xmlns=\"http://www.w3.org/1999/xhtml\" id=\"note\"><ruby>漢<rt>かん</rt></ruby><br /></span></mtext></math>";
+    let mut emitted = budget();
+    assert_eq!(serialize(&proof, &mut emitted)?, expected);
+    assert_eq!(emitted.usage().output_bytes, expected.len() as u64);
+    assert_eq!(emitted.usage().depth, 6);
+    let mut nested = budget();
+    nested.with_depth_at_least(7, |b| validate(&f, b))?;
+    assert_eq!(nested.usage().depth, 13);
+    assert_eq!(nested.current_depth(), 0);
+    for reason in [
+        StopReason::WorkLimit,
+        StopReason::NodeLimit,
+        StopReason::AllocationLimit,
+        StopReason::DepthLimit,
+    ] {
+        let mut limits = budget().limits();
+        match reason {
+            StopReason::WorkLimit => limits.work = full.usage().work - 1,
+            StopReason::NodeLimit => limits.nodes = full.usage().nodes - 1,
+            StopReason::AllocationLimit => {
+                limits.allocation_units = full.usage().allocation_units - 1
+            }
+            _ => limits.depth = full.usage().depth - 1,
+        }
+        let mut b = Budget::new(limits);
+        assert_eq!(validate(&f, &mut b).err(), Some(Error::Stopped(reason)));
+        assert_eq!(b.poll(), Err(reason));
+        assert_eq!(b.current_depth(), 0);
+    }
+    for reason in [
+        StopReason::WorkLimit,
+        StopReason::NodeLimit,
+        StopReason::AllocationLimit,
+        StopReason::OutputLimit,
+        StopReason::DepthLimit,
+    ] {
+        let mut limits = budget().limits();
+        match reason {
+            StopReason::WorkLimit => limits.work = emitted.usage().work - 1,
+            StopReason::NodeLimit => limits.nodes = emitted.usage().nodes - 1,
+            StopReason::AllocationLimit => {
+                limits.allocation_units = emitted.usage().allocation_units - 1
+            }
+            StopReason::OutputLimit => limits.output_bytes = emitted.usage().output_bytes - 1,
+            _ => limits.depth = emitted.usage().depth - 1,
+        }
+        let mut b = Budget::new(limits);
+        assert_eq!(serialize(&proof, &mut b), Err(Error::Stopped(reason)));
+        assert_eq!(b.poll(), Err(reason));
+        assert_eq!(b.current_depth(), 0);
+    }
+    f.nodes[1] = element(Tag::Text, vec![2, 3, 3]);
+    assert!(matches!(
+        validate(&f, &mut budget()),
+        Err(Error::Html(nepl3_markup::html::HtmlError::DuplicateId(0)))
+    ));
+    f.nodes[1] = element(Tag::Identifier, vec![2, 3]);
+    assert_eq!(validate(&f, &mut budget()).err(), Some(Error::Content(1)));
+    f.nodes[1] = element(Tag::Text, vec![2, 3]);
+    let Node::Html { fragment } = &mut f.nodes[3] else {
+        return Err(Error::Content(3));
+    };
+    let N::Element { tag, .. } = &mut fragment.nodes[0] else {
+        return Err(Error::Content(3));
+    };
+    *tag = T::P;
+    assert!(matches!(
+        validate(&f, &mut budget()),
+        Err(Error::Html(nepl3_markup::html::HtmlError::Content(0)))
+    ));
+    Ok(())
+}
+#[test]
+fn shared_html_depth_uses_longest_output_path_in_either_order() -> Result<(), Error> {
+    use nepl3_markup::html::{HtmlFragment, HtmlNode, HtmlPolicy, HtmlTag};
+    for children in [vec![1, 3], vec![3, 1]] {
+        let f = Fragment {
+            root: 0,
+            html_policy: HtmlPolicy { classes: vec![] },
+            nodes: vec![
+                element(Tag::Math, children),
+                element(Tag::Row, vec![2]),
+                element(Tag::Row, vec![3]),
+                element(Tag::Text, vec![4]),
+                Node::Html {
+                    fragment: HtmlFragment {
+                        root: 0,
+                        nodes: vec![
+                            HtmlNode::Element {
+                                tag: HtmlTag::Span,
+                                attributes: vec![],
+                                children: vec![1],
+                            },
+                            HtmlNode::Text { text: "x".into() },
+                        ],
+                    },
+                },
+            ],
+        };
+        let mut b = budget();
+        let proof = validate(&f, &mut b)?;
+        assert_eq!(b.usage().depth, 6);
+        let mut output = budget();
+        serialize(&proof, &mut output)?;
+        assert_eq!(output.usage().depth, 6);
+        let mut limits = budget().limits();
+        limits.depth = 5;
+        assert_eq!(
+            validate(&f, &mut Budget::new(limits)).err(),
+            Some(Error::Stopped(StopReason::DepthLimit))
+        );
+        assert_eq!(
+            serialize(&proof, &mut Budget::new(limits)).err(),
+            Some(Error::Stopped(StopReason::DepthLimit))
+        );
+    }
+    Ok(())
+}
+#[test]
 fn serialization_preserves_structure_escaping_and_resource_stops() -> Result<(), Error> {
     let f = Fragment {
+        html_policy: nepl3_markup::html::HtmlPolicy {
+            classes: Vec::new(),
+        },
         root: 0,
         nodes: vec![
             Node::Element {
@@ -88,6 +273,9 @@ fn serialization_preserves_structure_escaping_and_resource_stops() -> Result<(),
 #[test]
 fn serialization_emits_typed_attributes_and_mathml_end_tags() -> Result<(), Error> {
     let f = Fragment {
+        html_policy: nepl3_markup::html::HtmlPolicy {
+            classes: Vec::new(),
+        },
         root: 0,
         nodes: vec![
             element(Tag::Math, vec![1, 3, 5]),
@@ -145,6 +333,9 @@ fn mathml_checks_all_profile_tags_and_fixed_arities() -> Result<(), Error> {
         (Tag::UnderOver, 3),
     ] {
         let mut f = Fragment {
+            html_policy: nepl3_markup::html::HtmlPolicy {
+                classes: Vec::new(),
+            },
             root: 0,
             nodes: vec![
                 element(Tag::Math, vec![1]),
@@ -161,6 +352,9 @@ fn mathml_checks_all_profile_tags_and_fixed_arities() -> Result<(), Error> {
     }
     for tag in [Tag::Identifier, Tag::Number, Tag::Operator, Tag::Text] {
         let f = Fragment {
+            html_policy: nepl3_markup::html::HtmlPolicy {
+                classes: Vec::new(),
+            },
             root: 0,
             nodes: vec![
                 element(Tag::Math, vec![1]),
@@ -171,6 +365,9 @@ fn mathml_checks_all_profile_tags_and_fixed_arities() -> Result<(), Error> {
         validate(&f, &mut budget())?;
     }
     let table = Fragment {
+        html_policy: nepl3_markup::html::HtmlPolicy {
+            classes: Vec::new(),
+        },
         root: 0,
         nodes: vec![
             element(Tag::Math, vec![1]),
@@ -192,6 +389,9 @@ fn mathml_checks_all_profile_tags_and_fixed_arities() -> Result<(), Error> {
 fn mathml_rejects_attributes_text_and_namespace_confusion() -> Result<(), Error> {
     for length in ["0em", "1em", "12.25em", "0.001em"] {
         let f = Fragment {
+            html_policy: nepl3_markup::html::HtmlPolicy {
+                classes: Vec::new(),
+            },
             root: 0,
             nodes: vec![
                 element(Tag::Math, vec![1]),
@@ -216,6 +416,9 @@ fn mathml_rejects_attributes_text_and_namespace_confusion() -> Result<(), Error>
         "nanem",
     ] {
         let f = Fragment {
+            html_policy: nepl3_markup::html::HtmlPolicy {
+                classes: Vec::new(),
+            },
             root: 0,
             nodes: vec![
                 element(Tag::Math, vec![1]),
@@ -239,6 +442,9 @@ fn mathml_rejects_attributes_text_and_namespace_confusion() -> Result<(), Error>
         ],
     ] {
         let f = Fragment {
+            html_policy: nepl3_markup::html::HtmlPolicy {
+                classes: Vec::new(),
+            },
             root: 0,
             nodes: vec![Node::Element {
                 tag: Tag::Math,
@@ -252,6 +458,9 @@ fn mathml_rejects_attributes_text_and_namespace_confusion() -> Result<(), Error>
         ));
     }
     let mut f = Fragment {
+        html_policy: nepl3_markup::html::HtmlPolicy {
+            classes: Vec::new(),
+        },
         root: 0,
         nodes: vec![
             element(Tag::Math, vec![1]),
@@ -275,6 +484,9 @@ fn mathml_rejects_attributes_text_and_namespace_confusion() -> Result<(), Error>
 #[test]
 fn mathml_shared_depth_cycles_and_stops_are_bounded() -> Result<(), Error> {
     let f = Fragment {
+        html_policy: nepl3_markup::html::HtmlPolicy {
+            classes: Vec::new(),
+        },
         root: 0,
         nodes: vec![
             element(Tag::Math, vec![1, 3]),

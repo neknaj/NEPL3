@@ -1,0 +1,17 @@
+[package]
+name = "nepl3-math-mathml"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+description = "Pure structural Math to checked MathML conversion"
+
+[dependencies]
+nepl3-core.workspace = true
+nepl3-math-core.workspace = true
+nepl3-markup.workspace = true
+
+[lints]
+workspace = true

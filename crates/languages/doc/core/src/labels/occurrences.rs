@@ -8,7 +8,7 @@ struct Link {
 pub(super) fn check<'a>(
     doc: &'a DocumentSyntax,
     order: &[usize],
-    root: ArticleRef,
+    root: u64,
     b: &mut Budget,
 ) -> Result<(), LabelError<'a>> {
     let count = doc.value.nodes.len();
@@ -18,7 +18,7 @@ pub(super) fn check<'a>(
     )?;
     let mut counts = vec![0u8; count];
     let mut links = vec![[None; 2]; count];
-    counts[root.0 as usize] = 1;
+    counts[root as usize] = 1;
     // Reverse postorder is topological even for a shared descendant. Counts
     // saturate at two; no exponentially large display expansion is built.
     for owner in order.iter().rev().copied() {
@@ -33,8 +33,8 @@ pub(super) fn check<'a>(
                 return Err(LabelError::DuplicateOccurrence {
                     definition: site(node, owner, name),
                     paths: LabelOccurrencePaths {
-                        first: path(&links, root.0 as usize, owner, 0, b)?,
-                        second: path(&links, root.0 as usize, owner, 1, b)?,
+                        first: path(&links, root as usize, owner, 0, b)?,
+                        second: path(&links, root as usize, owner, 1, b)?,
                     },
                 });
             }
