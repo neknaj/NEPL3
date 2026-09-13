@@ -64,6 +64,128 @@ fn parse(text: &str, r: &SchemaRegistry) -> Result<SentenceLiteral, String> {
 }
 
 #[test]
+fn referenced_literal_roundtrip_does_not_serialize_the_document_per_token() -> Result<(), String> {
+    use nepl3_sentence_core::portable::literal as payload;
+    use nepl3_wire::foundation::FoundationCodec;
+    let r = registry()?;
+    let empty = SourceStore::default();
+    let mut sizes = vec![];
+    for suffix in [String::new(), "x".repeat(100_000)] {
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+        let v = parse(&format!("\"[漢/かん]𝄞\" {suffix}"), &r)?;
+        let raw = payload::to_value(&v.syntax, &r, &mut codec, &mut b()).map_err(err)?;
+        let bytes = nepl3_wire::encode(&raw, &mut b()).map_err(err)?;
+        sizes.push(bytes.len());
+        let raw = nepl3_wire::decode(&bytes, &mut b()).map_err(err)?;
+        let actual = payload::from_value(&raw, &v.syntax.sources[0], &r, &mut codec, &mut b())
+            .map_err(err)?;
+        assert_eq!(actual, v.syntax);
+    }
+    // The suffix is outside the literal. Only fixed-size snapshot identity
+    // changes; no SourceContent/text from the rest of the document is sent.
+    assert_eq!(sizes[0], sizes[1]);
+    assert!(sizes[1] < 20_000);
+    Ok(())
+}
+
+#[test]
+fn referenced_literal_rejects_wrong_owner_even_when_ambient_source_is_correct() -> Result<(), String>
+{
+    use nepl3_sentence_core::portable::{self, literal as payload};
+    use nepl3_wire::foundation::FoundationCodec;
+    let r = registry()?;
+    let v = parse("\"[漢/かん]\" tail", &r)?;
+    let mut ambient = SourceStore::default();
+    ambient.insert(v.syntax.sources[0].clone()).map_err(err)?;
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &ambient, &mut admission).map_err(err)?;
+    let raw = payload::to_value(&v.syntax, &r, &mut codec, &mut b()).map_err(err)?;
+    // Same id/revision and same literal, different document bytes.
+    let wrong = source("\"[漢/かん]\" fail")?;
+    assert!(payload::from_value(&raw, &wrong, &r, &mut codec, &mut b()).is_err());
+    let mut wrong_kind = v.syntax.clone();
+    wrong_kind.value.nodes[0] = Kind::Code { text: "漢".into() };
+    assert!(matches!(
+        payload::to_value(&wrong_kind, &r, &mut codec, &mut b()),
+        Err(portable::Error::Shape)
+    ));
+    let mut outside = v.syntax.clone();
+    outside.locations[0].head = None;
+    outside.locations[0].cover = Some(
+        outside.sources[0]
+            .span(v.head.end() + 1, outside.sources[0].text().len() as u64)
+            .map_err(err)?,
+    );
+    assert!(matches!(
+        payload::to_value(&outside, &r, &mut codec, &mut b()),
+        Err(portable::Error::Shape)
+    ));
+    let mut forged = raw.clone();
+    let nepl3_core::value::NdfValue::Record(record) = &mut forged else {
+        return Err("record".into());
+    };
+    // Correct wire shape is insufficient: the view must belong to Sentence root.
+    let nepl3_core::value::NdfValue::Record(view) = &mut record.fields[3] else {
+        return Err("view".into());
+    };
+    view.fields[0] = nepl3_core::value::NdfValue::U64(0);
+    assert!(payload::from_value(&forged, &v.syntax.sources[0], &r, &mut codec, &mut b()).is_err());
+    Ok(())
+}
+
+#[test]
+fn referenced_literal_encode_and_decode_preserve_stop_reasons() -> Result<(), String> {
+    use nepl3_sentence_core::portable::{self, literal as payload};
+    use nepl3_wire::foundation::FoundationCodec;
+    let r = registry()?;
+    let v = parse("\"a\"", &r)?;
+    let empty = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+    let raw = payload::to_value(&v.syntax, &r, &mut codec, &mut b()).map_err(err)?;
+    for reason in [
+        StopReason::SourceLimit,
+        StopReason::WorkLimit,
+        StopReason::NodeLimit,
+        StopReason::AllocationLimit,
+        StopReason::DepthLimit,
+        StopReason::Cancelled,
+    ] {
+        for receiving in [false, true] {
+            let mut admission = SourceAdmission::default();
+            let mut codec = FoundationCodec::new(&r, &empty, &mut admission).map_err(err)?;
+            let mut limits = b().limits();
+            match reason {
+                StopReason::SourceLimit => limits.source_bytes = 0,
+                StopReason::WorkLimit => limits.work = 0,
+                StopReason::NodeLimit => limits.nodes = 0,
+                StopReason::AllocationLimit => limits.allocation_units = 0,
+                StopReason::DepthLimit => limits.depth = 0,
+                _ => {}
+            }
+            let mut budget = Budget::new(limits);
+            if reason == StopReason::Cancelled {
+                budget.cancel();
+            }
+            if receiving {
+                assert_eq!(
+                    payload::from_value(&raw, &v.syntax.sources[0], &r, &mut codec, &mut budget),
+                    Err(portable::Error::Stopped(reason))
+                );
+            } else {
+                assert_eq!(
+                    payload::to_value(&v.syntax, &r, &mut codec, &mut budget),
+                    Err(portable::Error::Stopped(reason))
+                );
+            }
+            assert_eq!(budget.poll(), Err(reason));
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn literal_has_independent_sentence_meaning_and_closed_source_provenance() -> Result<(), String> {
     let r = registry()?;
     let literal = parse("\"[漢/かん]{語/note/補足}\"", &r)?;

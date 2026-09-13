@@ -43,7 +43,7 @@ fn optional_from<C: FoundationValueCodec>(
         _ => Err(Error::Shape),
     }
 }
-fn location<C: FoundationValueCodec>(
+pub(super) fn location<C: FoundationValueCodec>(
     v: &NodeLocation,
     s: &SchemaRef,
     c: &mut C,
@@ -59,7 +59,7 @@ fn location<C: FoundationValueCodec>(
     let cover = optional(&v.cover, c, b)?;
     record(s, "SentenceNodeLocation", [origin, head, cover], b)
 }
-fn location_from<C: FoundationValueCodec>(
+pub(super) fn location_from<C: FoundationValueCodec>(
     v: &NdfValue,
     s: &SchemaRef,
     c: &mut C,

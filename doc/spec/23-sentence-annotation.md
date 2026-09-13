@@ -111,6 +111,16 @@ Break、code、強調、link、foreignはprefix/adapter出力が必要なためN
 Textや改行へ黙って変換しない。独立LanguagePackageの汎用printerはprefixも扱う別の入口とする。
 readerとprinterは非再帰で処理し、共有値を展開した実出力にもBudgetを適用する。
 
+reader/providerのliteral受渡しには`SentenceLiteralPayload`を用意する。SentenceValue、
+denseなlocations、Direct Origin列、一つのroot所有Viewを順序付きfieldとして持ち、
+SourceContentをliteralごとにwireへ複製しない。`portable::literal`の受信は呼出側が明示した
+一つのSourceSnapshotだけでcodecをscopeする。同じID/revisionでも本文digestが異なるsource、
+head外の位置、root以外が所有するView、prefix専用node、foreign、mappingを拒否する。
+一般の生成・変換済みsyntaxは閉包付きSentenceSyntaxを使い、このliteral契約へ縮小しない。
+受渡しの構造検査は本文の再parseによる意味一致のproofではない。包むTokenのhead/Viewとの
+照合はconsumerのlower操作が行う。新schemaのdigestはdescriptorから算出し、旧Doc payloadの
+identityやdecoderをSentenceの契約として使い回さない。
+
 ## 注釈と移行完了条件
 
 `annotate Sentence target`はarity 2の通常formであり、各host categoryへ固定shapeで登録する。

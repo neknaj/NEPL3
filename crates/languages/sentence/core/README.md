@@ -20,6 +20,11 @@ their declaration closure; this does not prove source/meaning equivalence.
 escape spelling and original positions remain distinct. Prefix-only forms
 return a typed `NotLiteral` error instead of losing their meaning.
 
+`portable::literal` transfers one literal against an explicit owner snapshot,
+without repeating the document's source bytes in every token payload. It checks
+root ownership and source containment; generated/mapped syntax uses the general
+closed syntax envelope. This codec is not the reader/provider implementation.
+
 The independent LanguagePackage, prefix lowering and general printing,
 annotation adapter and Doc/Math migration remain part of
 the same ongoing recovery. This stage is not a completed language or removal of

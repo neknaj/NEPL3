@@ -1,5 +1,6 @@
 //! Explicit SentenceValue boundary. Schema, arena and foreign closures are
 //! checked in both directions. No guest meaning or rendering is executed.
+pub mod literal;
 pub mod syntax;
 mod value;
 use crate::{check, model::SentenceValue};

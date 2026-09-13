@@ -413,6 +413,57 @@
     "View:Delimiter": {
       "record": [],
       "constraints": []
+    },
+    "SentenceLiteralPayload": {
+      "record": [
+        [
+          "value",
+          {
+            "named": {
+              "package": "nepl3.sentence",
+              "revision": 1,
+              "name": "SentenceValue"
+            }
+          }
+        ],
+        [
+          "locations",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.sentence",
+                "revision": 1,
+                "name": "SentenceNodeLocation"
+              }
+            }
+          }
+        ],
+        [
+          "origins",
+          {
+            "list": {
+              "named": {
+                "package": "nepl3.foundation",
+                "revision": 1,
+                "name": "Origin"
+              }
+            }
+          }
+        ],
+        [
+          "view",
+          {
+            "named": {
+              "package": "nepl3.sentence",
+              "revision": 1,
+              "name": "SentenceView"
+            }
+          }
+        ]
+      ],
+      "constraints": [
+        "sentence.literal_owner"
+      ]
     }
   },
   "operations": {}
