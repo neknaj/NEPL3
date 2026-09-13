@@ -1,6 +1,7 @@
 //! Static host composition of production Doc pages. No deployment side effects.
 mod examples;
 mod overview;
+mod specs;
 use crate::{
     Result,
     doc::{canonical, export::pages::GeneratedPages},
@@ -160,6 +161,20 @@ fn compose(
             escape(&config.base_path)
         ));
     }
+    for route in pages
+        .files
+        .keys()
+        .filter(|path| path.starts_with("docs/spec/") && path.ends_with(".html"))
+    {
+        if !registry.pages.iter().any(|page| page.route == *route) {
+            links.push_str(&format!(
+                "<li><a href=\"{}{}\">{} (Markdown正本)</a></li>\n",
+                escape(&config.base_path),
+                escape(route),
+                escape(route)
+            ));
+        }
+    }
     let html = include_str!("../../../site/index.html")
         .replace("{{BASE}}", &escape(&config.base_path))
         .replace("{{PAGES}}", &links);
@@ -265,6 +280,9 @@ pub fn build(root: &Path, config: &str, output: &Path) -> Result<()> {
         crate::command(root, "git", &["ls-files", "--error-unmatch", "--", input])?;
     }
     let mut generated = canonical::generate_html(root, "doc/canonical.json")?;
+    for (path, bytes) in specs::generate(root, &registry, &config.base_path, &commit)? {
+        insert(&mut generated.files, &path, bytes)?;
+    }
     for (path, bytes) in examples::generate(root, &config.base_path, &commit)? {
         insert(&mut generated.files, &path, bytes)?;
     }

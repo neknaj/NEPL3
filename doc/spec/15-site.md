@@ -18,6 +18,17 @@ SiteConfigをbase pathの唯一の設定元にする。既定 `/NEPL3/` と受�
 
 正式文書はdoc/、文法とreferenceはlanguages/とschema/form表、実行例はexamples/、Rust APIは同じcommitのrustdocを入力とする。サイト専用にコピーした別仕様や別サンプルを手で保守しない。MarkdownはDoc移行完了まで正本として利用できるが、最終Doc移行は必須のT21で管理する。
 
+docs-only生成では追跡済みの `doc/spec/NN-name.md` 全体を公開対象とする。
+`doc/canonical.json` 登録ページはDoc正本から生成し、未登録ページだけを既存の
+pulldown-cmarkでHTML化する。生成Markdown projectionを再び正本として読まない。
+両経路は `docs/spec/NN-name.html` の配置を共有し、移行時も登録routeを優先する。
+未移行ページはMarkdown正本であることと同じcommitの原文を表示し、source・route・digest・
+rendererを `markdown-manifest.json` に記録する。各Markdown入力は256KiB、未移行仕様は256ページ、
+最終artifactは既存の32MiB上限内とする。相対リンクは元文書directoryを基準に解決し、
+repository外への脱出を拒否する。公開済み仕様へのリンクはsite内、その他の追跡済みfileは
+同じcommitのGitHub原文へ向ける。raw HTMLはescapeし、画像はalt文を表示する。
+この公開経路はT21の意味同等性検査や正本切替の完了を意味しない。
+
 docs-onlyのトップは現在の`README.md`正本を固定版pulldown-cmarkでHTMLへ投影する。
 移行済みprojectionへのリンクはcanonical registryのサイトrouteへ、未移行のrepository資料は
 同じcommitのGitHub原本へ向ける。欠けた原本や未対応のリンク形式は生成失敗とする。

@@ -21,7 +21,14 @@ pub(super) fn generate(
         "git",
         &["ls-files", "--error-unmatch", "--", "README.md"],
     )?;
-    let html = render(root, std::str::from_utf8(&bytes)?, registry, base, commit)?;
+    let html = render(
+        root,
+        std::str::from_utf8(&bytes)?,
+        "README.md",
+        registry,
+        base,
+        commit,
+    )?;
     Ok(Overview {
         html,
         source_sha256: super::hash(&bytes),
@@ -31,6 +38,7 @@ pub(super) fn generate(
 fn destination(
     root: &Path,
     value: &str,
+    source: &str,
     registry: &canonical::Registry,
     base: &str,
     commit: &str,
@@ -45,19 +53,35 @@ fn destination(
             "unsupported overview link; use an explicit HTTPS URL or repository file".into(),
         );
     }
-    canonical::bounded(root, value, 4 * 1024 * 1024)?;
-    crate::command(root, "git", &["ls-files", "--error-unmatch", "--", value])?;
+    let mut parts: Vec<_> = source.split('/').collect();
+    parts.pop();
+    for part in value.split('/') {
+        match part {
+            "" | "." => return Err("empty or dot link segment".into()),
+            ".." => {
+                parts.pop().ok_or("link escapes repository")?;
+            }
+            part => parts.push(part),
+        }
+    }
+    let value = parts.join("/");
+    canonical::bounded(root, &value, 4 * 1024 * 1024)?;
+    crate::command(root, "git", &["ls-files", "--error-unmatch", "--", &value])?;
     if let Some(page) = registry.pages.iter().find(|p| p.projection == value) {
         return Ok(format!("{base}{}", page.route));
+    }
+    if let Some(route) = super::specs::route(&value) {
+        return Ok(format!("{base}{route}"));
     }
     Ok(format!(
         "https://github.com/neknaj/NEPL3/blob/{commit}/{value}"
     ))
 }
 
-fn render(
+pub(super) fn render(
     root: &Path,
     source: &str,
+    source_path: &str,
     registry: &canonical::Registry,
     base: &str,
     commit: &str,
@@ -75,7 +99,7 @@ fn render(
                 id,
             }) => Event::Start(Tag::Link {
                 link_type,
-                dest_url: destination(root, &dest_url, registry, base, commit)?.into(),
+                dest_url: destination(root, &dest_url, source_path, registry, base, commit)?.into(),
                 title,
                 id,
             }),
@@ -106,7 +130,14 @@ mod tests {
         )?;
         let source = "# Overview\n\n[![CI](https://example.org/badge.svg)](https://example.org/ci)\n\n<script>alert(1)</script>\n\n[Page](page.md) [Other](other.md)\n\n| A | B |\n|---|---|\n|one|two|";
         for base in ["/NEPL3/", "/acceptance/project/"] {
-            let html = render(fixture.root(), source, &registry, base, "test-commit")?;
+            let html = render(
+                fixture.root(),
+                source,
+                "README.md",
+                &registry,
+                base,
+                "test-commit",
+            )?;
             assert!(html.contains("<h1>Overview</h1>"));
             assert!(html.contains("&lt;script&gt;"));
             assert!(!html.contains("<script") && !html.contains("<img"));
@@ -125,6 +156,7 @@ mod tests {
                 render(
                     fixture.root(),
                     &format!("[bad]({bad})"),
+                    "README.md",
                     &registry,
                     "/NEPL3/",
                     "test-commit"

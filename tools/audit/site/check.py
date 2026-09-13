@@ -6,7 +6,7 @@ It tests generated static pages, not Playground or live Pages deployment.
 """
 if not __debug__:
     raise RuntimeError('site audit requires Python assertions')
-import argparse, hashlib, json, threading, subprocess
+import argparse, hashlib, json, threading, subprocess, re
 from pathlib import Path
 from html.parser import HTMLParser
 from urllib.parse import urlsplit, unquote, urljoin
@@ -46,7 +46,10 @@ def expected_inputs(build, manifest, doc_manifest, docs, source_root, config_pat
     assert build['capability'] == 'docs-only' and build['runtime_identity'] is None, 'unexpected runtime capability'
     registry = json.loads(blob('doc/canonical.json'))['pages']
     assert registry, 'empty canonical registry'
-    assert docs.keys() == {page['route'] for page in registry} | {'index.html', 'docs/index.html', 'examples/index.html'}, 'page coverage'
+    tracked = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', commit, '--', 'doc/spec/'], cwd=source_root, text=True).splitlines()
+    markdown_routes = {'docs/spec/' + path[len('doc/spec/'):-3] + '.html' for path in tracked
+                       if path.endswith('.md') and path not in {p.get('projection') for p in registry}}
+    assert docs.keys() == {page['route'] for page in registry} | markdown_routes | {'index.html', 'docs/index.html', 'examples/index.html'}, 'page coverage'
     entries = doc_manifest['pages']
     assert len(entries) == len(registry), 'source coverage'
     actual = {entry['id']: entry for entry in entries}
@@ -93,6 +96,21 @@ def verify(root, source_root=None, config_path='site/config.json', renderer=None
     checkout = source_root or Path(__file__).resolve().parents[3]
     def blob(path):
         return subprocess.check_output(['git', 'show', build['source_commit'] + ':' + path], cwd=checkout)
+    markdown = json.loads((root / 'markdown-manifest.json').read_text(encoding='utf-8'))
+    assert markdown['version'] == 1 and markdown['source_commit'] == build['source_commit']
+    assert markdown['renderer'] == 'pulldown-cmark/0.13.4'
+    projections = {p['projection'] for p in json.loads(blob('doc/canonical.json'))['pages']}
+    tracked = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', build['source_commit'], '--', 'doc/spec/'], cwd=checkout, text=True).splitlines()
+    expected_markdown = {p for p in tracked if p.endswith('.md')} - projections
+    assert {p['source'] for p in markdown['pages']} == expected_markdown
+    assert len(markdown['pages']) == len(expected_markdown)
+    markdown_paths = {'markdown-manifest.json'}
+    for entry in markdown['pages']:
+        assert re.fullmatch(r'doc/spec/[0-9]{2}-[A-Za-z0-9-]+\.md', entry['source'])
+        assert entry['sha256'] == hashlib.sha256(blob(entry['source'])).hexdigest()
+        assert entry['route'] == 'docs/spec/' + entry['source'][len('doc/spec/'):-3] + '.html'
+        assert entry['route'] in docs
+        markdown_paths.add(entry['route'])
     catalog_bytes = blob('site/examples.json')
     catalog = json.loads(catalog_bytes)
     assert examples['source_commit'] == build['source_commit'] and examples['capability'] == 'source-view'
@@ -112,7 +130,7 @@ def verify(root, source_root=None, config_path='site/config.json', renderer=None
         example_paths.add(entry['path'])
     for records, expected, sized in [(build['files'], declared - {'build.json'}, True),
                               (json.loads((root / 'doc-manifest.json').read_text(encoding='utf-8'))['files'],
-                               declared - {'build.json', 'index.html', 'docs/index.html', 'assets/site.css', '.nojekyll', 'doc-manifest.json'} - example_paths, False)]:
+                               declared - {'build.json', 'index.html', 'docs/index.html', 'assets/site.css', '.nojekyll', 'doc-manifest.json'} - example_paths - markdown_paths, False)]:
         assert len(records) == len({record['path'] for record in records}), 'duplicate nested file'
         assert {record['path'] for record in records} == expected, 'nested manifest coverage'
         for record in records:
