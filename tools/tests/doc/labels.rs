@@ -39,6 +39,109 @@ fn with_document<T>(
 }
 
 #[test]
+fn sentence_labels_keep_preorder_ids_and_first_duplicate_diagnostic() -> Result<(), String> {
+    let compiled = compiled()?;
+    for (source, duplicate) in [
+        (
+            r#"sentence cons ref a text "A" cons ref z text "Z" cons anchor z text "first" cons anchor a text "second" nil"#,
+            false,
+        ),
+        (
+            r#"sentence cons anchor z text "first" cons anchor z text "duplicate" cons anchor a text "later" cons anchor a text "later duplicate" nil"#,
+            true,
+        ),
+    ] {
+        with_input(&compiled, source, "Sentence", |tree, profile, b, a| {
+            let checked = tree
+                .tree()
+                .bundle
+                .validate_with_sources(profile.registry(), b, a)
+                .map_err(err)?;
+            let empty = SourceStore::default();
+            let mut codec = FoundationCodec::new(profile.registry(), &empty, a).map_err(err)?;
+            let doc = lower::document(
+                &checked,
+                &compiled.doc.package.schema,
+                Category::Sentence,
+                profile.registry(),
+                b,
+                &mut codec,
+            )
+            .map_err(err)?;
+            let result =
+                labels::check_sentence(&doc, profile.registry(), b, codec.source_admission());
+            if duplicate {
+                // The first repeated declaration is z, although a sorts first.
+                match result {
+                    Err(LabelError::Duplicate {
+                        definition,
+                        previous,
+                    }) => {
+                        assert_eq!(definition.name, "z");
+                        assert_eq!(previous.name, "z");
+                        assert!(
+                            previous.selection.ok_or("previous span")?.start()
+                                < definition.selection.ok_or("duplicate span")?.start()
+                        );
+                    }
+                    _ => return Err("expected first duplicate in sentence order".into()),
+                }
+            } else {
+                let labels = result.map_err(err)?;
+                // Forward references resolve to declaration-preorder IDs,
+                // never to positions in the sorted name index.
+                assert_eq!(
+                    labels
+                        .definitions()
+                        .iter()
+                        .map(|s| s.name)
+                        .collect::<Vec<_>>(),
+                    vec!["z", "a"]
+                );
+                assert_eq!(
+                    labels
+                        .references()
+                        .iter()
+                        .map(|s| s.target.0)
+                        .collect::<Vec<_>>(),
+                    vec![1, 0]
+                );
+            }
+            Ok(())
+        })?;
+    }
+    Ok(())
+}
+
+#[test]
+fn nested_labels_keep_declaration_order_and_pending_siblings() -> Result<(), String> {
+    let compiled = compiled()?;
+    let source = r#"article en "Title" body cons section z "First" body cons section a "Nested" body nil nil cons section m "Last" body cons paragraph cons sentence cons ref a text "nested" cons ref z text "first" cons ref m text "last" nil nil nil nil"#;
+    with_document(&compiled, source, |doc, r, b, a| {
+        let proof = labels::check(doc, r, b, a).map_err(err)?;
+        // Constructor preorder, neither name sorting nor arena index order:
+        // nested a is visited before the already queued sibling m.
+        assert_eq!(
+            proof
+                .definitions()
+                .iter()
+                .map(|s| s.name)
+                .collect::<Vec<_>>(),
+            vec!["z", "a", "m"]
+        );
+        assert_eq!(
+            proof
+                .references()
+                .iter()
+                .map(|s| s.target.0)
+                .collect::<Vec<_>>(),
+            vec![1, 0, 2]
+        );
+        Ok(())
+    })
+}
+
+#[test]
 fn article_labels_resolve_forward_names_and_keep_operand_selection() -> Result<(), String> {
     let compiled = compiled()?;
     let source = r#"article en "Title" body cons paragraph cons sentence cons ref later text "shown" nil nil cons section later "Heading" body nil nil"#;

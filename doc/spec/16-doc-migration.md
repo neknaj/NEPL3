@@ -12,7 +12,7 @@ rustdocはRust sourceのdoc commentを正本とし、同じAPI解説を手書き
 
 ## 2. 表現能力の監査が変換の前提
 
-inventoryとgap auditはT21まで延期せず、Docに関係するT01の共通値・位置、T02のwire/schema、T07の文書意味APIを固定する前に実施する。対象ページ、原本commit/path/byte digest、意味要素、page ID、公開URL/旧URL、anchor、参照、コード例、表、箇条書き、図、数式、メタ情報、release対応を確認する。初回の具体的な監査は [文書inventoryとgap audit](../doc-inventory.md)、機械データは `design/doc-inventory.json` に記録した。
+inventoryとgap auditはT21まで延期せず、Docに関係するT01の共通値・位置、T02のwire/schema、T07の文書意味APIを固定する前に実施する。対象ページ、原本commit/path/byte digest、意味要素、page ID、公開URL/旧URL、anchor、参照、コード例、表、箇条書き、図、数式、メタ情報、release対応を確認する。初回の具体的な監査は [文書inventoryとgap audit](../doc-inventory.md)、機械データは `doc/migration/generated/doc-inventory.json` に記録した。
 
 初回inventoryはcommitで固定した57 Markdownページの監査であり、現在の全ページの受入ではない。現在との差分は `doc-inventory --check` が追加・変更・削除として出力する。新しいAPI判断時にはその差分も確認し、現在の網羅性を根拠にする場合はcommit済みの新baselineへ更新して `doc-inventory --check-current` を通す。inventory自身のJSON、実行証拠、生成taskの更新によるhash循環を避けるため、HEADのcommit hashを現在の成果物へ自己参照させない。
 
