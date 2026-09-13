@@ -11,6 +11,9 @@ NEPL3側の基準は `3fed238a0021aca770d87c19ecc50fea080e62b1`。
 NEPL3hを、NEPL3の共通表層で記述し、通常のGHC Haskellとして名前解決・型検査・
 コンパイルするlanguage packageとする。独自のHaskell風評価器や標準ライブラリを
 作る計画ではない。Haskellの意味論は当該packageが所有し、NEPL3全体の意味論にしない。
+NEPLの多階層・再帰的なDSL埋め込み、世代ごとの主課題、純粋性と前方確定の理由は
+[統合案の目的・中核契約](multilanguage-hca.md)にまとめる。Hはこの基盤で使う実用的な
+プログラミング言語候補の一つであり、基盤の中心や最終到達点ではない。
 
 [外部拡張の22章](../spec/22-external-extensions.md)、[reader](../spec/03-reader.md)、
 [交換契約](../spec/09-portability.md)、[統合](../spec/10-integration.md)、
