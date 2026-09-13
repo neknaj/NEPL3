@@ -8,10 +8,7 @@ use nepl3_core::{
 };
 use nepl3_engine::{parse::*, profile::*, tree::ValidatedParseTree};
 use nepl3_grammar_core::compile::package::CompiledLanguage;
-use nepl3_reader::{
-    model::{ProviderCall, ReadRequest, ReaderContext},
-    runtime::ProviderReply,
-};
+use nepl3_reader::model::{ProviderCall, ReaderContext};
 use nepl3_wire::{environment::environment_digest, foundation::FoundationCodec};
 pub fn err(v: impl std::fmt::Debug) -> String {
     format!("{v:?}")
@@ -239,17 +236,12 @@ pub fn parse_source_route(
     };
     let digest = environment_digest(&value, foundation, r, b).map_err(err)?;
     let mut contexts = Vec::new();
-    for (alias, category) in [
-        ("Doc", "Article"),
-        ("Math", "Expr"),
-        ("Circuit", "Design"),
-        ("Grammar", "Root"),
-    ] {
-        let owner = resolved.language(alias, b).map_err(err)?;
+    for language in &resolved.profile().languages {
+        let entry = resolved.entry(&language.alias, None, b).map_err(err)?;
         contexts.push(ReaderContext {
-            schema: owner.schema.clone(),
-            category: category.into(),
-            mode: "Code".into(),
+            schema: entry.package.schema,
+            category: entry.category,
+            mode: entry.mode,
             origins: vec![],
             environment: EnvironmentEntry {
                 id: 0,
@@ -266,17 +258,25 @@ pub fn parse_source_route(
             .collect::<Result<Vec<_>, String>>()?;
         let inputs = checked
             .iter()
-            .zip(["Doc", "Math", "Circuit", "Grammar"])
-            .map(|(context, alias)| EnvironmentInput { alias, context })
+            .zip(&resolved.profile().languages)
+            .map(|(context, language)| EnvironmentInput {
+                alias: &language.alias,
+                context,
+            })
             .collect::<Vec<_>>();
         ParseEnvironmentSet::prepare(resolved, &inputs, &store, &mut codec, b)
             .map_err(|e| format!("environments: {e:?}"))?
     };
     let entry = resolved.entry(alias, Some(category), b).map_err(err)?;
-    let states = ["Doc", "Math", "Circuit", "Grammar"].map(|alias| LanguageReaderState {
-        alias: alias.into(),
-        state: NdfValue::Unit,
-    });
+    let states = resolved
+        .profile()
+        .languages
+        .iter()
+        .map(|language| LanguageReaderState {
+            alias: language.alias.clone(),
+            state: NdfValue::Unit,
+        })
+        .collect::<Vec<_>>();
     let mut parser =
         ParseSession::new("doc-parse".into(), resolved, &environments, b).map_err(err)?;
     let request = ParseRequest {
@@ -300,11 +300,11 @@ pub fn parse_source_route(
         identity.source.0,
         identity.revision
     );
+    b.charge(Resource::AllocationUnits, prefix.len() as u64)
+        .map_err(err)?;
+    let mut host =
+        crate::doc::host::NativeHost::new(r, host_identity(), prefix.clone(), b).map_err(err)?;
     let mut result = if native {
-        b.charge(Resource::AllocationUnits, prefix.len() as u64)
-            .map_err(err)?;
-        let mut host = crate::doc::host::NativeHost::new(r, host_identity(), prefix.clone(), b)
-            .map_err(err)?;
         let reply = parser
             .read_with_host(request, &store, b, a, &mut host)
             .map_err(err)?;
@@ -328,57 +328,19 @@ pub fn parse_source_route(
             ParseOutcome::Await { call, continuation } => {
                 let ProviderCall::Read {
                     operation,
-                    request,
                     depth_base,
                     ..
                 } = call.as_ref()
                 else {
                     return Err("unexpected provider".into());
                 };
-                let mut declared = SourceStore::default();
-                for source in &request.sources {
-                    declared.insert(source.clone()).map_err(err)?;
-                }
-                let snapshot = declared
-                    .resolve(&request.snapshot)
-                    .ok_or("request source")?;
+                let requirement = resolved.provider(operation, b).map_err(err)?;
                 let terminal = b
-                    .with_depth_at_least(*depth_base, |b| {
-                        let mut codec = FoundationCodec::new(r, &declared, a)
-                            .map_err(|_| nepl3_reader::runtime::ReaderError::Context)?;
-                        let checked = request
-                            .context
-                            .check(&mut codec, &declared, r, b)
-                            .map_err(|_| nepl3_reader::runtime::ReaderError::Context)?;
-                        (if operation.schema.package == "nepl3.doc.reader" {
-                            crate::doc::reader::read
-                        } else {
-                            nepl3_reader::builtin::provider::read
-                        })(
-                            operation,
-                            ReadRequest {
-                                snapshot,
-                                start: request.start,
-                                limit: request.limit,
-                                final_input: request.final_input,
-                                context: &checked,
-                                state: &request.state,
-                            },
-                            r,
-                            &declared,
-                            b,
-                            a,
-                        )
-                    })
-                    .map_err(err)?;
+                    .with_depth_at_least(*depth_base, |b| host.provider(&call, requirement, b, a))
+                    .map_err(err)?
+                    .ok_or("unavailable reader provider")?;
                 result = parser
-                    .resume(
-                        &continuation,
-                        ProviderReply::Read(Box::new(terminal)),
-                        &store,
-                        b,
-                        a,
-                    )
+                    .resume(&continuation, terminal, &store, b, a)
                     .map_err(err)?;
             }
             ParseOutcome::Reserve { continuation, .. } => {

@@ -18,6 +18,7 @@ use nepl3_wire::foundation::FoundationCodec;
 pub struct NativeHost<'a> {
     registry: &'a SchemaRegistry,
     providers: Vec<ProviderImplementation>,
+    sentence_operation: nepl3_core::value::OperationRef,
     reservation_prefix: String,
     reservation_id: u64,
     sources: SourceStore,
@@ -44,7 +45,12 @@ impl<'a> NativeHost<'a> {
         ] {
             operations.push(provider::operation(kind, registry, budget)?);
         }
-        operations.push(super::reader::signature(registry, budget)?.operation);
+        let sentence_operation = super::reader::signature(registry, budget)?.operation;
+        budget.charge(
+            Resource::AllocationUnits,
+            (sentence_operation.name.len() + sentence_operation.schema.package.len()) as u64,
+        )?;
+        operations.push(sentence_operation.clone());
         budget.charge(
             Resource::AllocationUnits,
             4 * core::mem::size_of::<ProviderImplementation>() as u64,
@@ -66,6 +72,7 @@ impl<'a> NativeHost<'a> {
         Ok(Self {
             registry,
             providers,
+            sentence_operation,
             reservation_prefix,
             reservation_id: 0,
             sources: SourceStore::default(),
@@ -129,7 +136,7 @@ impl ParseHost for NativeHost<'_> {
                     .map(ParseError::Stopped)
                     .unwrap_or(ParseError::Context)
             })?;
-        let read = if operation.schema.package == "nepl3.doc.reader" {
+        let read = if operation == &self.sentence_operation {
             super::reader::read
         } else {
             provider::read
