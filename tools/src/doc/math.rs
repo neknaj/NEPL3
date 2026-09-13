@@ -11,6 +11,7 @@ use nepl3_core::{
 use nepl3_doc_core::model::{DocKind, DocumentSyntax};
 use nepl3_markup::mathml::Display;
 use nepl3_math_core::{check, lower, model::MathSyntax};
+pub mod display;
 
 #[derive(Debug)]
 pub enum Error<E> {
@@ -21,6 +22,7 @@ pub enum Error<E> {
     Syntax(SyntaxError),
     Lower(lower::LowerError),
     Check(check::ShapeError),
+    Tex(nepl3_math_tex::Error),
     Render(nepl3_math_mathml::Error),
     Annotation(nepl3_math_mathml::AnnotationFailure<super::annotations::Error<E>>),
 }

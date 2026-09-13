@@ -51,6 +51,12 @@ impl<'a> Rendered<'a> {
     pub fn occurrences(&self) -> &[Occurrence] {
         &self.occurrences
     }
+    /// Move prepared text and occurrence data to a host that retains the input.
+    /// The returned data carries no source-admission or renderer proof. This is
+    /// O(1) time and space; neither buffer is copied or re-serialized.
+    pub fn into_parts(self) -> (String, Vec<Occurrence>) {
+        (self.tex, self.occurrences)
+    }
 }
 fn push<T>(v: &mut Vec<T>, item: T, b: &mut Budget) -> Result<(), Error> {
     b.charge(Resource::Work, 1)?;
