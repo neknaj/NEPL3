@@ -1,0 +1,16 @@
+[package]
+name = "nepl3-math-tex"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+description = "Budgeted structural Math to TeX conversion"
+
+[dependencies]
+nepl3-core.workspace = true
+nepl3-math-core.workspace = true
+
+[lints]
+workspace = true

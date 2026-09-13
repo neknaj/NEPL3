@@ -63,6 +63,16 @@ jobs:
         run: python -m unittest test_record_smoke.RecordSmokeTests.test_pass_and_failure_are_recorded_remotely
       - name: Evidence runner host portability
         run: python -m unittest tools.evidence.test_runner
+      - name: Node renderer host toolchain
+        if: matrix.os != 'ubuntu-latest'
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.14.1'
+      - name: Node renderer Worker lifecycle portability
+        if: matrix.os != 'ubuntu-latest'
+        run: |
+          npm ci --prefix tools/audit/math --ignore-scripts
+          node --test tools/audit/math/node.test.mjs
       - name: Format
         if: matrix.os == 'ubuntu-latest'
         run: cargo fmt --all -- --check
@@ -183,6 +193,34 @@ jobs:
         run: cargo run --locked -p nepl3-tools -- tasks --check
       - name: Check repository contracts
         run: cargo run --locked -p nepl3-tools -- check
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.14.1'
+          cache: npm
+          cache-dependency-path: tools/audit/math/package-lock.json
+      - name: Install pinned Math renderer for integration tests
+        run: npm ci --prefix tools/audit/math --ignore-scripts
+      - name: Test shared KaTeX generation call
+        run: node --test tools/audit/math/render.test.mjs tools/audit/math/node.test.mjs tools/audit/math/parse.test.mjs
+      - name: Check fixed KaTeX assets
+        run: |
+          node tools/generate/katex.mjs
+          node --test tools/audit/math/assets.test.mjs
+      - name: Check production TeX against KaTeX
+        run: |
+          mkdir -p dist/math-visual
+          cargo test --locked -p nepl3-tools --test math tex::pinned_katex -- --ignored --nocapture > dist/math-visual/corpus.log
+      - name: Pass actual visual corpus and fixed assets to browser checks
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: math-visual-${{ github.sha }}
+          path: |
+            dist/math-visual/corpus.log
+            tools/audit/math/node_modules/katex/dist/katex.min.css
+            tools/audit/math/node_modules/katex/dist/fonts/
+            tools/audit/math/node_modules/katex/LICENSE
+          if-no-files-found: error
+          retention-days: 3
       - name: Verify generated source is unchanged
         run: git diff --exit-code
 
@@ -327,6 +365,7 @@ jobs:
 
   doc-browser:
     name: Doc HTML browser layout
+    needs: [repository-contract]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -348,6 +387,12 @@ jobs:
           cargo test --locked -p nepl3-tools --test doc html::browser_layout_corpus_from_real_doc_source -- --exact --nocapture > dist/doc-browser/corpus.log 2> dist/doc-browser/corpus.stderr
       - name: Check scriptless document layout in three real browsers
         run: python tools/audit/doc_html/browser.py --corpus dist/doc-browser/corpus.log --css crates/languages/doc/html/assets/doc.css --output dist/doc-browser/results.json
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: math-visual-${{ github.sha }}
+          path: dist/math-visual-input
+      - name: Compare generated Math visual styles in three browsers
+        run: python tools/audit/math/browser.py --corpus dist/math-visual-input/dist/math-visual/corpus.log --package dist/math-visual-input/tools/audit/math/node_modules/katex > dist/doc-browser/math-visual-results.json
       - name: Build canonical Doc site at both project paths
         run: |
           cargo run --locked -p nepl3-tools -- site build site/config.json dist/doc-browser/site

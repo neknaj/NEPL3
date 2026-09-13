@@ -244,6 +244,42 @@
     "svg": "only svg elements and Text"
   },
   "trusted_shell": "html/head/meta/style/body are emitted by fixed DocumentShell code, not accepted as user Markup nodes; stylesheet body is a fixed backend asset",
+  "katex_computed_style": {
+    "scope": "Lexical predicate for current generated Math TeX layout; not HTML admission, full KaTeX CSS, stylesheet extraction or fidelity proof",
+    "declarations": "Empty or semicolon-separated exact lowercase property:value declarations, optional final semicolon; no whitespace, duplicate property, comments, escapes, functions or URLs",
+    "length": "Unitless 0 or optional minus then decimal em; at most 7 integer and 4 fraction digits, magnitude <= 1000000; decimal point requires fraction digits",
+    "nonnegative_lengths": ["height", "width", "min-width", "padding-left", "border-bottom-width", "border-top-width", "border-right-width"],
+    "signed_lengths": ["top", "bottom", "left", "margin-left", "margin-right", "margin-top", "vertical-align"],
+    "keywords": {"position": ["relative"], "width": ["100%"]},
+    "rejection": "Reject the entire declaration list; never strip unknown properties and claim faithful rendering; retain original bytes/order for later stylesheet lowering",
+    "metering": "O(n) time, O(1) space, no allocation; charge 4n+1 Work before scanning and preserve sticky stop"
+  },
+  "katex_path_data": {
+    "scope": "Finite SVG path lexical predicate; not element/viewport/transform validation or geometry/fidelity proof",
+    "commands": "Initial M/m required; M/L/H/V/C/S/Q/T/A/Z and lowercase relatives, complete groups with implicit repetition; whitespace is ASCII space, tab, CR or LF",
+    "numbers": "Optional sign, decimal with at most 10 integer/16 fraction digits, at least one digit; magnitude <= 1000000000; no exponent",
+    "arcs": "SVG 1.1 grammar subset: radii have no sign; large-arc and sweep flags are single 0/1 bytes",
+    "separators": "Optional comma/whitespace between parameters, no leading or trailing comma; adjacent signed/dotted numbers and arc flags follow SVG token boundaries",
+    "metering": "O(n) time and O(1) space, no allocation; 4n+1 Work before scanning; failure never drops malformed path content"
+  },
+  "katex_view_box": "Exactly four single-space-separated decimal values in katex_path_data number profile; width/height unsigned and strictly positive; no leading/trailing space, commas or other whitespace. 4n+1 Work, O(n) time, O(1) space, no allocation. Does not prove path containment or aspect ratio/fidelity.",
+  "katex_visual_fragment": {
+    "scope": "Closed native visual profile, separate from author HTML and portable Markup transport; never a renderer authenticity, fidelity, complete artifact or accessibility proof",
+    "structure": "Postorder nodes; last node is Span root; each other node has exactly one parent; children strictly precede parent; no sharing, cycles or unreachable nodes",
+    "nodes": {
+      "Text": "XML 1.0 characters; escaped on serialization",
+      "Span": "Registered class list (empty or exact single-space tokens), katex_computed_style, optional boolean aria-hidden, ordered Text/Span/Svg children",
+      "Svg": "width=100% or nonnegative katex length, height=nonnegative katex length, optional katex_view_box, optional aspect only with viewBox: none/xMinYMin slice/xMidYMin slice/xMaxYMin slice; ordered Path/Line children",
+      "Path": "katex_path_data, no children",
+      "Line": "x1/y1/x2/y2 each 0 or 100%; nonnegative katex length stroke-width, no children"
+    },
+    "policy": "Host supplies sorted unique CSS class identifiers [A-Za-z][A-Za-z0-9_-]*, excluding reserved nepl-math- prefix, plus artifact-unique scope identifier starting nepl-math-; actual CSS/font binding is a host obligation",
+    "serialization": "Visual-only outer span has scope class and aria-hidden=true; HTML/SVG names and namespace are fixed; no URLs or style attributes. Nonempty Span styles become .scope .scope-nINDEX rules with each original declaration/value in original order followed by !important",
+    "cascade_preconditions": "Bound fixed KaTeX CSS must contain no competing important declaration (including shorthands/all); host excludes competing author rules for this scope. Browser tests compare computed properties and geometry under style-src-attr none. Not equivalence for arbitrary author stylesheets; accessible independent MathML and full Doc admission remain required",
+    "metering": "Validation O(N+E+B log(C+1)), O(N) scratch, serialization O(N+E+output bytes), O(N+output bytes) space; sticky budget includes nodes, depth with generated wrapper, work, scratch/output allocation and combined HTML/CSS output bytes; no partial success",
+    "host_parse": "Pinned parse5 8.0.0 parses visual output using HTML5 namespace handling, scripting disabled, source locations and fail-on-parse-error. Unknown elements/attributes/comments, implicit/unclosed container nodes and namespace changes reject the whole result. Finite postorder JSON is still revalidated by Rust; input/node/depth caps do not claim parser heap/time measurement",
+    "host_json": "Internal parsed-unchecked envelope with nodes; exact field sets and types are checked, strings moved into native tree. Outer transport caps bytes before JSON decoding and owns source identity/cancellation; this JSON is not the portable provider ABI"
+  },
   "default_deny": true,
   "design_revision": "nepl3-design-2026-09-06-r4",
   "html_profile": "interfaces/markup.json and doc/spec/19-html-fragment.md define flat Text/Element/MathElement nodes. HTML admits math roots (inline in phrasing, either display in flow); mtext admits checked HTML phrasing. IDs, ancestry and depth cross namespaces. SVG, KaTeX profiles and full artifact preparation remain required, not silently accepted."

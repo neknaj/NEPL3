@@ -3,6 +3,7 @@
 //! build on these primitives; text escaping alone is not an HTML render proof.
 extern crate alloc;
 pub mod html;
+pub mod katex;
 pub mod mathml;
 mod output;
 pub mod portable;

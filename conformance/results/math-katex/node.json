@@ -1,0 +1,18 @@
+{
+  "task_id": "T24",
+  "source_commit": "a5cc6ca961cc628c1a1d9918478fdd789f4f7eb7",
+  "checks": [
+    "Shared pinned KaTeX invocation with explicit unchecked output",
+    "Node Worker execution, bounded diagnostics, missing module, unexpected stdio and exit",
+    "Actual synchronous loop deadline termination and cancellation during termination"
+  ],
+  "commands": ["node --test tools/audit/math/node.test.mjs"],
+  "targets": ["x86_64-pc-windows-msvc host, Node.js"],
+  "result": "passed",
+  "excluded_acceptance_portions": [
+    "Complete Doc artifact preparation and portable provider envelope",
+    "KaTeX markup/CSS/SVG validation, fonts, fidelity and accessibility",
+    "Browser Worker, cross-host CI and end-to-end document acceptance",
+    "Parent resource reservation/settlement and exact external work/allocation accounting"
+  ]
+}

@@ -148,8 +148,8 @@
     },
     {
       "id": "T24",
-      "status": "not-implemented",
-      "evidence": []
+      "status": "in-progress",
+      "evidence": ["conformance/results/math-katex/node.json"]
     },
     {
       "id": "T25",
@@ -462,7 +462,8 @@
     "nepl3-math-core",
     "nepl3-markup",
     "nepl3-doc-html",
-    "nepl3-math-mathml"
+    "nepl3-math-mathml",
+    "nepl3-math-tex"
   ],
   "note": "Foundation runtime implementation is in progress. Implemented crate membership does not imply task or acceptance completion; required acceptance remains evidence-bound."
 }

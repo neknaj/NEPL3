@@ -159,6 +159,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "nepl3-math-tex"
+version = "0.1.0"
+dependencies = [
+ "nepl3-core",
+ "nepl3-math-core",
+]
+
+[[package]]
 name = "nepl3-reader"
 version = "0.1.0"
 dependencies = [
@@ -178,6 +186,7 @@ dependencies = [
  "nepl3-markup",
  "nepl3-math-core",
  "nepl3-math-mathml",
+ "nepl3-math-tex",
  "nepl3-reader",
  "nepl3-wire",
  "pulldown-cmark",

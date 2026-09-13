@@ -213,6 +213,7 @@
         "nepl3-math-core",
         "nepl3-doc-html",
         "nepl3-math-mathml",
+        "nepl3-math-tex",
         "nepl3-markup"
       ],
       "no_std": false,
