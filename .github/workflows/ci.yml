@@ -190,6 +190,8 @@ jobs:
           cache-dependency-path: tools/audit/math/package-lock.json
       - name: Install pinned Math renderer for integration tests
         run: npm ci --prefix tools/audit/math --ignore-scripts
+      - name: Test shared KaTeX generation call
+        run: node --test tools/audit/math/render.test.mjs
       - name: Check production TeX against KaTeX
         run: cargo test --locked -p nepl3-tools --test math tex::pinned_katex -- --ignored
       - name: Verify generated source is unchanged
