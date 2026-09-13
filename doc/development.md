@@ -26,6 +26,9 @@ nepld正本へ移行し、検査済みの同じsite artifactを公開します�
 
 初期Pages公開は `.github/workflows/pages.yml` が担当します。main pushのCI成功後、
 そのrunのDoc site・検査report・元tarを取得し、commit/manifest/内容一致を再検査して公開します。
+検査済みsiteのfile byte列を公式upload-pages-artifactで梱包します。CI tarは照合用に保持し、
+Pages輸送tarと同一byteとは扱いません。初回の独自tar直接uploadはPages側でdeployment_failedとなりました。
+tar entryの先頭`./`等の形式差が疑われるため、輸送を公式actionへ委譲します。HTMLは再buildしません。
 公開後のHTTP smoke失敗はworkflow失敗として記録します。LKG/journalによる自動復旧は未提供です。
 Markdown/NEPL3d混在公開は正本移行を支える段階であり、全ページ移行やT19/T20完成を意味しません。
 

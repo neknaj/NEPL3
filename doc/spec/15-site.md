@@ -5,8 +5,9 @@
 初期docs-only公開は、NEPL3d正本への段階移行を人が閲覧できる形で支える。
 正式文書は移行後のNEPL3d sourceであり、HTMLは再生成できるprojectionである。
 本章第5節の高度なLKG/journal復旧は後段の配信機能とし、初期公開・T21移行の前提にしない。
-初期publisherは成功したmain CIの固定commit・検査済み元payloadを照合し、同じtarを公開して
+初期publisherは成功したmain CIの固定commit・検査済み元payloadを照合し、同じfile byte列を公式Pages actionで梱包して
 主要routeと公開byteを確認する。失敗はworkflow失敗として報告し、自動rollbackやLKG完成を主張しない。
+CIの決定的tarとPages輸送tarのbyte identityは区別し、輸送時にHTMLを再生成しない。
 rustdocの完全性・全fragment監査・Playground完成も初期公開の前提にしない。
 公開namespaceとrepo別の所有境界は[Pages情報設計](../decisions/pages-information-architecture.md)に従う。
 
