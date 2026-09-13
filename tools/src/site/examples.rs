@@ -25,6 +25,7 @@ struct Entry {
 }
 
 fn segment(value: &str) -> bool {
+    let stem = value.split('.').next().unwrap_or("").to_ascii_uppercase();
     !value.is_empty()
         && value.len() <= 128
         && value
@@ -32,6 +33,11 @@ fn segment(value: &str) -> bool {
             .all(|v| v.is_ascii_alphanumeric() || b".-_".contains(&v))
         && value != "."
         && value != ".."
+        && !value.ends_with('.')
+        && !matches!(stem.as_str(), "CON" | "PRN" | "AUX" | "NUL")
+        && !(stem.len() == 4
+            && (stem.starts_with("COM") || stem.starts_with("LPT"))
+            && matches!(stem.as_bytes()[3], b'1'..=b'9'))
 }
 
 pub(super) fn generate(root: &Path, base: &str, commit: &str) -> Result<BTreeMap<String, Vec<u8>>> {

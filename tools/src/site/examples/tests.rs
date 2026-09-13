@@ -42,6 +42,8 @@ fn source_bytes_and_profile_are_explicit_without_executing_guest() -> Result<()>
         ("category", "Other"),
         ("language", "Unknown"),
         ("id", "bad/id"),
+        ("id", "CON"),
+        ("id", "name."),
     ] {
         let mut invalid = catalog.clone();
         invalid["examples"][0][field] = json!(value);
