@@ -1,138 +1,122 @@
-# 16. 正式文書のNEPL3 Doc DSL移行
+<!-- Generated from doc/spec/16&#45;doc&#45;migration.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page doc&#45;migration; source SHA-256 5c51aa106be5f9d83664cbe3662fab0c54ff254feda8b5dacf39097e6ffa8604; alias input SHA-256 712a8a1556e6febd09de7225d16c57a69bfb8a21eec4cc64dfe96d9b1bea5202; document digest b77f3630e9fd0fdf788250a61d08f0c85f998a5af9c677096fc30b3a641bcda8; input PageSet digest de65356f6d29765cf634dc73675f4c4b8d60a0d576eea706c9f5e71d2f8cef78; input context SHA-256 ab9e0565a29769df70b33410370ce7c4321cc0bcd3ad81d04af82f275f485f74. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
-## 1. 最終成果物と移行前の正本
+<a name="16-正式文書のnepl3-doc-dsl移行"></a>
 
-未移行ページのMarkdownは正式な正本として維持する。移行済みページは `doc/canonical.json` にDoc正本と生成Markdownの対応を登録する。最終的には、仕様・設計・開発文書をNEPL3 Doc DSLへ移行し、同じDoc core/backendで公開文書を生成する。初回のWeb公開を全文書移行まで待つ必要はないが、T21と移行の受入J01〜J04をT16の必須条件にする。
+# 16\. 正式文書\[せいしきぶんしょ\]のNEPL3 Doc DSL移行\[いこう\]
 
-文書ごとに正本を一つにする。変換の審査前はMarkdown、審査と受入後は.nepldを正本とし、手書きのMarkdownとDocを並行保守しない。GitHubが必要とするREADME、AGENTS、CONTRIBUTING、SECURITY、CODEX等のMarkdown入口は、移行後の正本から生成する閲覧用artifactとする。生成物は正本path・renderer版を示し、差分検査する。自動生成できる契約が完成するまで現在の入口を除去しない。
+<a name="n-63616e6f6e6963616c5f736f75726365"></a>
 
-`doc/history/` の元manifest・検査報告等の保存byte列、LICENSE、JSON/schema、言語source、例、CI/templateの機械契約は歴史・機械入力として保持する。これは文書本文をMarkdownで二重保守する例外ではない。生成task文書もタスク定義の正本を維持し、最終的にはDocと必要なMarkdown閲覧物を同じ正本から生成する。
+<a name="1-最終成果物と移行前の正本"></a>
 
-rustdocはRust sourceのdoc commentを正本とし、同じAPI解説を手書きDocへ複製しない。inventoryには包含・除外の理由を記録し、rootのGitHub/agent用入口を移行範囲から暗黙に落とさない。
+## 1\. 最終成果物\[さいしゅうせいかぶつ\]と移行前\[いこうまえ\]の正本\[せいほん\]
 
-## 2. 表現能力の監査が変換の前提
+未移行\[みいこう\]ページのMarkdownは正式\[せいしき\]な正本\[せいほん\]として維持\[いじ\]する。移行済\[いこうず\]みページは `doc/canonical.json` にDoc正本\[せいほん\]と生成\[せいせい\]Markdownの対応\[たいおう\]を登録\[とうろく\]する。最終的\[さいしゅうてき\]には、仕様\[しよう\]・設計\[せっけい\]・開発文書\[かいはつぶんしょ\]をNEPL3 Doc DSLへ移行\[いこう\]し、同\[おな\]じDoc core\/backendで公開文書\[こうかいぶんしょ\]を生成\[せいせい\]する。初回\[しょかい\]のWeb公開\[こうかい\]を全文書移行\[ぜんぶんしょいこう\]まで待\[ま\]つ必要\[ひつよう\]はないが、T21と移行\[いこう\]の受入\[うけいれ\]J01〜J04をT16の必須条件\[ひっすじょうけん\]にする。
 
-inventoryとgap auditはT21まで延期せず、Docに関係するT01の共通値・位置、T02のwire/schema、T07の文書意味APIを固定する前に実施する。対象ページ、原本commit/path/byte digest、意味要素、page ID、公開URL/旧URL、anchor、参照、コード例、表、箇条書き、図、数式、メタ情報、release対応を確認する。初回の具体的な監査は [文書inventoryとgap audit](../doc-inventory.md)、機械データは `doc/migration/generated/doc-inventory.json` に記録した。
+文書\[ぶんしょ\]ごとに正本\[せいほん\]を一\[ひと\]つにする。変換\[へんかん\]の審査前\[しんさまえ\]はMarkdown、審査\[しんさ\]と受入後\[うけいれご\]は\.nepldを正本\[せいほん\]とし、手書\[てが\]きのMarkdownとDocを並行保守\[へいこうほしゅ\]しない。GitHubが必要\[ひつよう\]とするREADME、AGENTS、CONTRIBUTING、SECURITY、CODEX等\[とう\]のMarkdown入口\[いりぐち\]は、移行後\[いこうご\]の正本\[せいほん\]から生成\[せいせい\]する閲覧用\[えつらんよう\]artifactとする。生成物\[せいせいぶつ\]は正本\[せいほん\]path・renderer版\[ばん\]を示\[しめ\]し、差分検査\[さぶんけんさ\]する。自動生成\[じどうせいせい\]できる契約\[けいやく\]が完成\[かんせい\]するまで、現在\[げんざい\]の入口\[いりぐち\]を除去\[じょきょ\]しない。
 
-初回inventoryはcommitで固定した57 Markdownページの監査であり、現在の全ページの受入ではない。現在との差分は `doc-inventory --check` が追加・変更・削除として出力する。新しいAPI判断時にはその差分も確認し、現在の網羅性を根拠にする場合はcommit済みの新baselineへ更新して `doc-inventory --check-current` を通す。inventory自身のJSON、実行証拠、生成taskの更新によるhash循環を避けるため、HEADのcommit hashを現在の成果物へ自己参照させない。
+`doc/history/` の元\[もと\]manifest・検査報告等\[けんさほうこくとう\]の保存\[ほぞん\]byte列\[れつ\]、LICENSE、JSON\/schema、言語\[げんご\]source、例\[れい\]、CI\/templateの機械契約\[きかいけいやく\]は、歴史\[れきし\]・機械入力\[きかいにゅうりょく\]として保持\[ほじ\]する。これは、文書本文\[ぶんしょほんぶん\]をMarkdownで二重保守\[にじゅうほしゅ\]する例外\[れいがい\]ではない。生成\[せいせい\]task文書\[ぶんしょ\]もタスク定義\[ていぎ\]の正本\[せいほん\]を維持\[いじ\]し、最終的\[さいしゅうてき\]にはDocと必要\[ひつよう\]なMarkdown閲覧物\[えつらんぶつ\]を同\[おな\]じ正本\[せいほん\]から生成\[せいせい\]する。
 
-早期監査の成果は、必要な意味情報と既存契約の不足を把握してAPI設計へ反映することである。T01/T02/T07にT21完了やbackend完成を前提として追加しない。R014全体の解消には後続schema・文法・backend・wire・conformanceの実装と検証が必要で、T21は早期inventoryを更新しながらページ変換を進める。現在のDocはsentence、節、Ruby/Anno、parallel、内部ref、Math/Circuit/4言語Codeを持つが、既存Markdownの全表現を収容する契約はまだない。
+rustdocはRust sourceのdoc commentを正本\[せいほん\]とし、同\[おな\]じAPI解説\[かいせつ\]を手書\[てが\]きDocへ複製\[ふくせい\]しない。inventoryには包含\[ほうがん\]・除外\[じょがい\]の理由\[りゆう\]を記録\[きろく\]し、rootのGitHub\/agent用入口\[よういりぐち\]を移行範囲\[いこうはんい\]から暗黙\[あんもく\]に落\[お\]とさない。
 
-| 要素 | 現行契約と移行前に解消する課題 |
+<a name="n-65787072657373696f6e5f6175646974"></a>
+
+<a name="2-表現能力の監査が変換の前提"></a>
+
+## 2\. 表現能力\[ひょうげんのうりょく\]の監査\[かんさ\]が変換\[へんかん\]の前提\[ぜんてい\]
+
+inventoryとgap auditはT21まで延期\[えんき\]せず、Docに関係\[かんけい\]するT01の共通値\[きょうつうち\]・位置\[いち\]、T02のwire\/schema、T07の文書意味\[ぶんしょいみ\]APIを固定\[こてい\]する前\[まえ\]に実施\[じっし\]する。対象\[たいしょう\]ページ、原本\[げんぽん\]commit\/path\/byte digest、意味要素\[いみようそ\]、page ID、公開\[こうかい\]URL\/旧\[きゅう\]URL、anchor、参照\[さんしょう\]、コード例\[れい\]、表\[ひょう\]、箇条書\[かじょうが\]き、図\[ず\]、数式\[すうしき\]、メタ情報\[じょうほう\]、release対応\[たいおう\]を確認\[かくにん\]する。初回\[しょかい\]の具体的\[ぐたいてき\]な監査\[かんさ\]は [文書\[ぶんしょ\]inventoryとgap audit](<\.\.\/doc\-inventory\.md>)、機械\[きかい\]データは `doc/migration/generated/doc-inventory.json` に記録\[きろく\]した。
+
+初回\[しょかい\]inventoryは、commitで固定\[こてい\]した57 Markdownページの監査\[かんさ\]であり、現在\[げんざい\]の全\[ぜん\]ページの受入\[うけいれ\]ではない。現在\[げんざい\]との差分\[さぶん\]は `doc-inventory --check` が追加\[ついか\]・変更\[へんこう\]・削除\[さくじょ\]として出力\[しゅつりょく\]する。新\[あたら\]しいAPI判断時\[はんだんじ\]にはその差分\[さぶん\]も確認\[かくにん\]し、現在\[げんざい\]の網羅性\[もうらせい\]を根拠\[こんきょ\]にする場合\[ばあい\]はcommit済\[ず\]みの新\[しん\]baselineへ更新\[こうしん\]して `doc-inventory --check-current` を通\[とお\]す。inventory自身\[じしん\]のJSON、実行証拠\[じっこうしょうこ\]、生成\[せいせい\]taskの更新\[こうしん\]によるhash循環\[じゅんかん\]を避\[さ\]けるため、HEADのcommit hashを現在\[げんざい\]の成果物\[せいかぶつ\]へ自己参照\[じこさんしょう\]させない。
+
+早期監査\[そうきかんさ\]の成果\[せいか\]は、必要\[ひつよう\]な意味情報\[いみじょうほう\]と既存契約\[きそんけいやく\]の不足\[ふそく\]を把握\[はあく\]して、API設計\[せっけい\]へ反映\[はんえい\]することである。T01\/T02\/T07に、T21完了\[かんりょう\]やbackend完成\[かんせい\]を前提\[ぜんてい\]として追加\[ついか\]しない。R014全体\[ぜんたい\]の解消\[かいしょう\]には後続\[こうぞく\]schema・文法\[ぶんぽう\]・backend・wire・conformanceの実装\[じっそう\]と検証\[けんしょう\]が必要\[ひつよう\]で、T21は早期\[そうき\]inventoryを更新\[こうしん\]しながらページ変換\[へんかん\]を進\[すす\]める。現在\[げんざい\]のDocはsentence、節\[せつ\]、Ruby\/Anno、parallel、内部\[ないぶ\]ref、Math\/Circuit\/4言語\[げんご\]Codeを持\[も\]つが、既存\[きそん\]Markdownの全表現\[ぜんひょうげん\]を収容\[しゅうよう\]する契約\[けいやく\]はまだない。
+
+| 要素\[ようそ\] | 現行契約\[げんこうけいやく\]と移行前\[いこうまえ\]に解消\[かいしょう\]する課題\[かだい\] |
 | --- | --- |
-| 表・箇条書き | 意味型・文法・lower/print/portable境界は実装済み。移行先HTMLの構造・accessibilityと元cell/list情報の同等性を検証する。段落へ平坦化しない |
-| 文書間・外部リンク | リンクの意味型と文書内ラベル検査は実装済み。page registryを使った文書間解決、URI・assetの検査、配布後のリンク検証を接続する |
-| 汎用コードblock | 非評価の汎用コード構造と4言語ForeignSyntaxを区別する型・文法は実装済み。Rust、shell、JSON等の元byte列をHTML・移行projectionまで保存する |
-| 図・画像・Mermaid等 | Circuit図だけでは一般の設計図を表せない。許可asset、digest、caption/代替説明、変換とsource対応を定める |
-| 見出し・anchor・脚注 | 明示ID、旧anchorへの互換、脚注と参照の意味を確認し、安定URLを維持する |
+| 表\[ひょう\]・箇条書\[かじょうが\]き | 意味型\[いみがた\]・文法\[ぶんぽう\]・lower\/print\/portable境界\[きょうかい\]は実装済\[じっそうず\]み。移行先\[いこうさき\]HTMLの構造\[こうぞう\]・accessibilityと元\[もと\]cell\/list情報\[じょうほう\]の同等性\[どうとうせい\]を検証\[けんしょう\]し、段落\[だんらく\]へ平坦化\[へいたんか\]しない。 |
+| 文書間\[ぶんしょかん\]・外部\[がいぶ\]リンク | リンクの意味型\[いみがた\]と文書内\[ぶんしょない\]ラベル検査\[けんさ\]は実装済\[じっそうず\]み。page registryを使\[つか\]った文書間解決\[ぶんしょかんかいけつ\]、URI・assetの検査\[けんさ\]、配布後\[はいふご\]のリンク検証\[けんしょう\]を接続\[せつぞく\]する。 |
+| 汎用\[はんよう\]コードblock | 非評価\[ひひょうか\]の汎用\[はんよう\]コード構造\[こうぞう\]と4言語\[げんご\]ForeignSyntaxを区別\[くべつ\]する型\[かた\]・文法\[ぶんぽう\]は実装済\[じっそうず\]み。Rust、shell、JSON等\[とう\]の元\[もと\]byte列\[れつ\]をHTML・移行\[いこう\]projectionまで保存\[ほぞん\]する。 |
+| 図\[ず\]・画像\[がぞう\]・Mermaid等\[とう\] | Circuit図\[ず\]だけでは一般\[いっぱん\]の設計図\[せっけいず\]を表\[あらわ\]せない。許可\[きょか\]asset、digest、caption\/代替説明\[だいたいせつめい\]、変換\[へんかん\]とsource対応\[たいおう\]を定\[さだ\]める。 |
+| 見出\[みだ\]し・anchor・脚注\[きゃくちゅう\] | 明示\[めいじ\]ID、旧\[きゅう\]anchorへの互換\[ごかん\]、脚注\[きゃくちゅう\]と参照\[さんしょう\]の意味\[いみ\]を確認\[かくにん\]し、安定\[あんてい\]URLを維持\[いじ\]する。 |
 
-不足はR014の設計blockerとする。schema・forms・syntax source・backend・wire・conformanceを一つの変更で整備し、独立レビューで解消してから該当ページを変換する。ここでは未定義constructorを追加したふりをせず、任意RawHtmlを抜け道にしない。等価な既存表現を選ぶ場合も、意味とaccessibilityの同等性を独立に確認する。
+不足\[ふそく\]はR014の設計\[せっけい\]blockerとする。schema・forms・syntax source・backend・wire・conformanceを一\[ひと\]つの変更\[へんこう\]で整備\[せいび\]し、独立\[どくりつ\]レビューで解消\[かいしょう\]してから該当\[がいとう\]ページを変換\[へんかん\]する。ここでは未定義\[みていぎ\]constructorを追加\[ついか\]したふりをせず、任意\[にんい\]RawHtmlを抜\[ぬ\]け道\[みち\]にしない。等価\[とうか\]な既存表現\[きそんひょうげん\]を選\[えら\]ぶ場合\[ばあい\]も、意味\[いみ\]とaccessibilityの同等性\[どうとうせい\]を独立\[どくりつ\]に確認\[かくにん\]する。
 
-## 3. ページ単位の切替
+<a name="n-706167655f737769746368"></a>
 
-移行原稿は [執筆指針](../authoring.md) に従う。本文は著者が定めた文単位のSentenceを
-保ち、Text・Ruby・Annoだけで表せる文はsentence literal、参照・強調・code・break等を
-含む文は明示的なsentence構築を選ぶ。日本語Rubyは漢字部分、語句全体の訳注はAnnoへ
-置き、多言語の対応は文単位のparallelにする。変換器が段落を一つのSentenceへまとめた
-候補は、対応単位を確認するまで正本にしない。句点だけによる自動分割や、互換出力の
-未対応を理由とした注釈・Sentence境界の削除で移行を通さない。
+<a name="3-ページ単位の切替"></a>
 
-1. inventoryとgap auditを承認可能な差分として作り、変換元のcommit・path・byte digestを固定する。
-2. parser/meaning/backendの不足を埋め、失敗系・roundtrip・wire・表示の受入を実行する。
-3. 同一page IDとURLを持つDoc sourceを生成・編集し、内容の落ち、表の対応、リンク、anchor、コードbyte列、数式構造、図の説明を独立に比較する。
-4. 独立した意味同等性レビュー、当該ページのHTML構造/accessibility・参照・同版例、決定的buildが通ったページのregistry正本をDocへ切り替える。サイト全体やrustdocの完全閉包をページ切替の前提にしない。
-5. 旧Markdownは削除またはDocからの生成artifactへ変更し、二重編集を検出する。未移行ページはMarkdownを唯一の正本のままにする。
+## 3\. ページ単位\[たんい\]の切替\[きりかえ\]
 
-切替前に `task.spec`、operation.definition、acceptance catalogのspec参照とcheckerのMarkdown ID抽出を点検する。format中立のcanonical page IDへ移すか、Doc正本から検査済みMarkdown互換projectionを生成して既存readerへ渡す契約を実装する。単に.mdを削除して参照を壊さない。projectionだけを手で修正した場合は生成差分検査で拒否する。
+移行原稿\[いこうげんこう\]は [執筆指針\[しっぴつししん\]](<\.\.\/authoring\.md>) に従\[したが\]う。本文\[ほんぶん\]は著者\[ちょしゃ\]が定\[さだ\]めた文単位\[ぶんたんい\]のSentenceを保\[たも\]ち、Text・Ruby・Annoだけで表\[あらわ\]せる文\[ぶん\]はsentence literal、参照\[さんしょう\]・強調\[きょうちょう\]・code・break等\[とう\]を含\[ふく\]む文\[ぶん\]は明示的\[めいじてき\]なsentence構築\[こうちく\]を選\[えら\]ぶ。日本語\[にほんご\]Rubyは漢字部分\[かんじぶぶん\]、語句全体\[ごくぜんたい\]の訳注\[やくちゅう\]はAnnoへ置\[お\]き、多言語\[たげんご\]の対応\[たいおう\]は文単位\[ぶんたんい\]のparallelにする。変換器\[へんかんき\]が段落\[だんらく\]を一\[ひと\]つのSentenceへまとめた候補\[こうほ\]は、対応単位\[たいおうたんい\]を確認\[かくにん\]するまで正本\[せいほん\]にしない。句点\[くてん\]だけによる自動分割\[じどうぶんかつ\]や、互換出力\[ごかんしゅつりょく\]の未対応\[みたいおう\]を理由\[りゆう\]とした注釈\[ちゅうしゃく\]・Sentence境界\[きょうかい\]の削除\[さくじょ\]で、移行\[いこう\]を通\[とお\]さない。
 
-意味同等性レビューは、執筆者とは別の担当が原文・執筆指針・変更原稿・実行結果を読んで行う。ユーザーが許可した独立subagentによるレビューも、この条件を満たす方法として使用する。subagentによる文面の確認、自動accessibility tree検査、人によるscreen reader実操作を別々に記録し、実施していない人の操作を成功としない。
+1. inventoryとgap auditを承認可能\[しょうにんかのう\]な差分\[さぶん\]として作\[つく\]り、変換元\[へんかんもと\]のcommit・path・byte digestを固定\[こてい\]する。
+1. parser\/meaning\/backendの不足\[ふそく\]を埋\[う\]め、失敗系\[しっぱいけい\]・roundtrip・wire・表示\[ひょうじ\]の受入\[うけいれ\]を実行\[じっこう\]する。
+1. 同一\[どういつ\]page IDとURLを持\[も\]つDoc sourceを生成\[せいせい\]・編集\[へんしゅう\]し、内容\[ないよう\]の落\[お\]ち、表\[ひょう\]の対応\[たいおう\]、リンク、anchor、コードbyte列\[れつ\]、数式構造\[すうしきこうぞう\]、図\[ず\]の説明\[せつめい\]を独立\[どくりつ\]に比較\[ひかく\]する。
+1. 独立\[どくりつ\]した意味同等性\[いみどうとうせい\]レビュー、当該\[とうがい\]ページのHTML構造\[こうぞう\]\/accessibility・参照\[さんしょう\]・同版例\[どうばんれい\]、決定的\[けっていてき\]buildが通\[とお\]ったページのregistry正本\[せいほん\]をDocへ切\[き\]り替\[か\]える。サイト全体\[ぜんたい\]やrustdocの完全閉包\[かんぜんへいほう\]をページ切替\[きりかえ\]の前提\[ぜんてい\]にしない。
+1. 旧\[きゅう\]Markdownは削除\[さくじょ\]またはDocからの生成\[せいせい\]artifactへ変更\[へんこう\]し、二重編集\[にじゅうへんしゅう\]を検出\[けんしゅつ\]する。未移行\[みいこう\]ページは、Markdownを唯一\[ゆいいつ\]の正本\[せいほん\]のままにする。
 
-### 正本registryと生成物の検査
+切替前\[きりかえまえ\]に `task.spec`、operation\.definition、acceptance catalogのspec参照\[さんしょう\]と、checkerのMarkdown ID抽出\[ちゅうしゅつ\]を点検\[てんけん\]する。format中立\[ちゅうりつ\]のcanonical page IDへ移\[うつ\]すか、Doc正本\[せいほん\]から検査済\[けんさず\]みMarkdown互換\[ごかん\]projectionを生成\[せいせい\]して既存\[きそん\]readerへ渡\[わた\]す契約\[けいやく\]を実装\[じっそう\]する。単\[たん\]に\.mdを削除\[さくじょ\]して、参照\[さんしょう\]を壊\[こわ\]さない。projectionだけを手\[て\]で修正\[しゅうせい\]した場合\[ばあい\]は、生成差分検査\[せいせいさぶんけんさ\]で拒否\[きょひ\]する。
 
-`doc/canonical.json` のversion 1は、pageごとの安定したid、Doc source、生成projection、alias JSON、HTML route、renderer識別を持つ。未登録ページは移行済みと推定しない。sourceは.nepld、projectionは既存の.mdの場所とし、JSON自体は文書の内容を所有しない。旧原稿を移動した後に、同じDoc本文の手書き複製を移行候補ディレクトリへ残さない。
+意味同等性\[いみどうとうせい\]レビューは、執筆者\[しっぴつしゃ\]とは別\[べつ\]の担当\[たんとう\]が原文\[げんぶん\]・執筆指針\[しっぴつししん\]・変更原稿\[へんこうげんこう\]・実行結果\[じっこうけっか\]を読\[よ\]んで行\[おこな\]う。ユーザーが許可\[きょか\]した独立\[どくりつ\]subagentによるレビューも、この条件\[じょうけん\]を満\[み\]たす方法\[ほうほう\]として使用\[しよう\]する。subagentによる文面\[ぶんめん\]の確認\[かくにん\]、自動\[じどう\]accessibility tree検査\[けんさ\]、人\[ひと\]によるscreen reader実操作\[じつそうさ\]を別々\[べつべつ\]に記録\[きろく\]し、実施\[じっし\]していない人\[ひと\]の操作\[そうさ\]を成功\[せいこう\]としない。
 
-version 1のregistry pathとrouteはASCII英数字・hyphen・underscore・dotを持つcomponentをslashで結ぶ。空component、末尾dot、Windows予約名を拒否し、case-insensitiveに重複を検査する。registryのファイルはdoc/配下とする。これはrepositoryの生成先と入力名を複数OSで同じように扱うためのhost側の制約であり、Doc本文やfoundationのSource URIからUnicodeを除く規則ではない。fragment/percent表記をphysical inputへ混ぜず、Markdown検査だけ成功して同じsourceのHTML生成がpath違反になる不整合を防ぐ。
+<a name="n-7265676973747279"></a>
 
-`nepl3-tools doc-canonical --check` は実際のDoc parser/lowerと検査済みannotated rendererでMarkdownを再生成し、source path・source digest・alias入力digest・document digestを含めたbyte列を既存projectionと比較する。手編集・古いsource・aliasの変更・異なる改行を黙って正規化せず、不一致で失敗する。未知のrenderer、重複identity/path、repository外のpath、symlink、過大入力も拒否する。この検査は明示的な文書生成段階であり、metadataだけを検査する `nepl3-tools check` やCargo build.rsへ混ぜない。
+<a name="正本registryと生成物の検査"></a>
 
-`nepl3-tools doc-canonical html <new-directory>` は同じregistryのDoc sourceを既存のpage-set generatorへ渡し、検査済みHTML・CSS・manifestを新しいディレクトリへ書く。relative linkの論理namespaceは従来のMarkdown path、physical inputはDoc sourceとして分けて記録する。生成MarkdownをHTML生成の入力にしない。失敗後に部分的な成功を返さず、既存の出力も上書きしない。
+### 正本\[せいほん\]registryと生成物\[せいせいぶつ\]の検査\[けんさ\]
 
-### ページ間参照を持つMarkdown projection
+`doc/canonical.json` のversion 1は、pageごとの安定\[あんてい\]したid、Doc source、生成\[せいせい\]projection、alias JSON、HTML route、renderer識別\[しきべつ\]を持\[も\]つ。未登録\[みとうろく\]ページは移行済\[いこうず\]みと推定\[すいてい\]しない。sourceは\.nepld、projectionは既存\[きそん\]の\.mdの場所\[ばしょ\]とし、JSON自体\[じたい\]は文書\[ぶんしょ\]の内容\[ないよう\]を所有\[しょゆう\]しない。旧原稿\[きゅうげんこう\]を移動\[いどう\]した後\[あと\]に、同\[おな\]じDoc本文\[ほんぶん\]の手書\[てが\]き複製\[ふくせい\]を移行候補\[いこうこうほ\]ディレクトリへ残\[のこ\]さない。
 
-`nepl3-tools.markdown-annotated-pages/1` は、登録されたDoc間の参照を扱う別のrenderer識別子とする。
-registry全体と各source・aliasのbyte列を一度読み、同じ固定入力から全ページを生成する。
-page idを解析sourceの名前空間へ与え、論理sourceとMarkdown出力routeにはprojection pathを使う。
-全ページの意味参照と実際に出力するanchorを検査し、全体が成功するまで成果物を返さない。
-未登録のMarkdownをfilesystemから発見して補完することはない。
-移行中の資料へのfragmentなし参照には、registryの任意field `files` に
-`id`、`source`、`route`を持つpassive Markdownを明示登録できる。
-sourceは `doc/` 以下の `.md`、HTML配布routeは `sources/` 以下の `.md` に限定する。
-登録済みDocのsource/projection/aliasや他の登録と衝突する指定を拒否する。
-上限は128件、UTF-8で1件256KiB・合計2MiBとし、存在・正規file・byte数を生成と検査の両方で確認する。
-Markdown projectionは論理sourceへの相対リンクを保ち、HTMLは明示routeへ元byte列を配布する。
-これは資料原文への参照提供であり、NEPL3d正本への昇格やMarkdownのHTML化ではない。
-passive fileは意味上のlabelを持たないためfragment参照を拒否する。
-内容byte列は既存PageSet identityに含め、資料の変更でinput contextを更新する。
-リンク先の存在を暗黙に補うのではなく、段階移行中の閉じた入力集合を宣言するための追加である。
+version 1のregistry pathとrouteはASCII英数字\[えいすうじ\]・hyphen・underscore・dotを持\[も\]つcomponentをslashで結\[むす\]ぶ。空\[から\]component、末尾\[まつび\]dot、Windows予約名\[よやくめい\]を拒否\[きょひ\]し、case\-insensitiveに重複\[ちょうふく\]を検査\[けんさ\]する。registryのファイルはdoc\/配下\[はいか\]とする。これはrepositoryの生成先\[せいせいさき\]と入力名\[にゅうりょくめい\]を複数\[ふくすう\]OSで同\[おな\]じように扱\[あつか\]うためのhost側\[がわ\]の制約\[せいやく\]であり、Doc本文\[ほんぶん\]やfoundationのSource URIからUnicodeを除\[のぞ\]く規則\[きそく\]ではない。fragment\/percent表記\[ひょうき\]をphysical inputへ混\[ま\]ぜず、Markdown検査\[けんさ\]だけ成功\[せいこう\]して同\[おな\]じsourceのHTML生成\[せいせい\]がpath違反\[いはん\]になる不整合\[ふせいごう\]を防\[ふせ\]ぐ。
 
-旧 `nepl3-tools.markdown-annotated/2` と混在できる。旧ページは従来のsource名前空間と生成処理で
-metadataを含めて同じbyte列を作り、ページ集合からの生成bodyとも一致することを要求する。
-この照合により、新しいページの参照先anchorは旧ページの実際のprojectionにも存在する。
-旧rendererだけの `--check` は従来のページごとに独立した処理・予算を維持する。
+`nepl3-tools doc-canonical --check` は実際\[じっさい\]のDoc parser\/lowerと検査済\[けんさず\]みannotated rendererでMarkdownを再生成\[さいせいせい\]し、source path・source digest・alias入力\[にゅうりょく\]digest・document digestを含\[ふく\]めたbyte列\[れつ\]を既存\[きそん\]projectionと比較\[ひかく\]する。手編集\[てへんしゅう\]・古\[ふる\]いsource・aliasの変更\[へんこう\]・異\[こと\]なる改行\[かいぎょう\]を黙\[だま\]って正規化\[せいきか\]せず、不一致\[ふいっち\]で失敗\[しっぱい\]する。未知\[みち\]のrenderer、重複\[ちょうふく\]identity\/path、repository外\[がい\]のpath、symlink、過大入力\[かだいにゅうりょく\]も拒否\[きょひ\]する。この検査\[けんさ\]は明示的\[めいじてき\]な文書生成段階\[ぶんしょせいせいだんかい\]であり、metadataだけを検査\[けんさ\]する `nepl3-tools check` やCargo build\.rsへ混\[ま\]ぜない。
 
-新rendererのmetadataにはページ自身のsource・alias・Document digestに加え、input PageSet digestと
-input context digestを記録する。後者は以下のfieldをこの順に、各fieldのbyte長をu64 big-endianで
-前置して連結し、SHA-256を求める。文字列はUTF-8、digest fieldは32 byteの値とする。
+`nepl3-tools doc-canonical html <new-directory>` は同\[おな\]じregistryのDoc sourceを既存\[きそん\]のpage\-set generatorへ渡\[わた\]し、検査済\[けんさず\]みHTML・CSS・manifestを新\[あたら\]しいディレクトリへ書\[か\]く。relative linkの論理\[ろんり\]namespaceは従来\[じゅうらい\]のMarkdown path、physical inputはDoc sourceとして分\[わ\]けて記録\[きろく\]する。生成\[せいせい\]MarkdownをHTML生成\[せいせい\]の入力\[にゅうりょく\]にしない。失敗後\[しっぱいご\]に部分的\[ぶぶんてき\]な成功\[せいこう\]を返\[かえ\]さず、既存\[きそん\]の出力\[しゅつりょく\]も上書\[うわが\]きしない。
 
-1. `nepl3.canonical-input-context/1` と末尾zero byte、renderer識別子、registry path、registryの元byte列。
-2. input PageSet digest、ページ数を表すu64 big-endianの8 byte。
-3. 登録順に各ページのid、physical source path、projection path、alias path、HTML route、renderer識別子。
-4. 各ページの直前の6 fieldに続けて、sourceの元byte列のSHA-256、aliasの元byte列のSHA-256。
+<a name="n-706167655f70726f6a656374696f6e"></a>
 
-これは入力の同一性であり、完成した配布物のdigestではない。registryの空白・登録順・別ページの
-alias入力だけの変更も、新rendererの生成物を古くする。生成Markdownのbyte列を入力digestへ
-再帰的に含めない。旧rendererのmetadataへ、この新しい集合identityを後付けしない。
+<a name="ページ間参照を持つmarkdown-projection"></a>
 
-`nepl3-tools doc-canonical markdown <new-directory>` は、全ページの検証後にprojection pathを
-保った新しい出力ディレクトリへ書き出す。最後のmanifestには出力byte数とdigestを記録する。
-`--check` と同じ生成経路を使い、repository内の正本や古いprojectionを自動更新しない。
-既存ディレクトリを拒否する。意味検査・生成の失敗では書込みを開始せず、OSの書込み失敗では
-不完全な新規ディレクトリが残り得るが、成功のcompletion manifestを作らない。
+### ページ間参照\[かんさんしょう\]を持\[も\]つMarkdown projection
 
-新rendererを含む検査とMarkdownの集合書出しは128ページ、source合計10,000,000 byte、
-alias合計1 MiB、registry 1 MiB、生成Markdownは1ページ2 MiBを上限とする。
-読み込むhost入力はこの上限で制約する。parseとlowerは各ページの独立した有限operationとし、
-resolve・render・anchor照合・digest・metadata・出力コピーには一つの消費済み状態を保持する
-出力Budgetを用いる。旧rendererの混在ページを再生成するときも、この出力Budgetを共有する。
-registryの任意field `output_limits` は既存のOutputLimitsと同じ8資源の上限を持ち、
-集合の処理開始前に選択する。未指定なら既定のDoc host allowanceで開始する。
-停止後の再試行・暗黙の増額・別予算による継続はしない。旧rendererだけの検査では
-この集合設定を用いず従来のページ単位のoperationを維持する。出力manifestには実際に
-選択した上限と開始時usage、receipt serialize直前のusageを別fieldで記録する。
-最後のusageはreceipt自体のserialize・最終出力課金を含まない値として明示する。
-host JSON・文字列整形の計量は保守的な論理allocation allowanceであり、物理heapの計測ではない。
+`nepl3-tools.markdown-annotated-pages/1` は、登録\[とうろく\]されたDoc間\[かん\]の参照\[さんしょう\]を扱\[あつか\]う別\[べつ\]のrenderer識別子\[しきべつし\]とする。registry全体\[ぜんたい\]と各\[かく\]source・aliasのbyte列\[れつ\]を一度読\[いちどよ\]み、同\[おな\]じ固定入力\[こていにゅうりょく\]から全\[ぜん\]ページを生成\[せいせい\]する。page idを解析\[かいせき\]sourceの名前空間\[なまえくうかん\]へ与\[あた\]え、論理\[ろんり\]sourceとMarkdown出力\[しゅつりょく\]routeにはprojection pathを使\[つか\]う。全\[ぜん\]ページの意味参照\[いみさんしょう\]と実際\[じっさい\]に出力\[しゅつりょく\]するanchorを検査\[けんさ\]し、全体\[ぜんたい\]が成功\[せいこう\]するまで成果物\[せいかぶつ\]を返\[かえ\]さない。未登録\[みとうろく\]のMarkdownをfilesystemから発見\[はっけん\]して補完\[ほかん\]することはない。移行中\[いこうちゅう\]の資料\[しりょう\]へのfragmentなし参照\[さんしょう\]には、registryの任意\[にんい\]field `files` に `id`、`source`、`route`を持\[も\]つpassive Markdownを明示登録\[めいじとうろく\]できる。sourceは `doc/` 以下\[いか\]の `.md`、HTML配布\[はいふ\]routeは `sources/` 以下\[いか\]の `.md` に限定\[げんてい\]する。登録済\[とうろくず\]みDocのsource\/projection\/aliasや他\[ほか\]の登録\[とうろく\]と衝突\[しょうとつ\]する指定\[してい\]を拒否\[きょひ\]する。上限\[じょうげん\]は128件\[けん\]、UTF\-8で1件\[けん\]256KiB・合計\[ごうけい\]2MiBとし、存在\[そんざい\]・正規\[せいき\]file・byte数\[すう\]を生成\[せいせい\]と検査\[けんさ\]の両方\[りょうほう\]で確認\[かくにん\]する。Markdown projectionは論理\[ろんり\]sourceへの相対\[そうたい\]リンクを保\[たも\]ち、HTMLは明示\[めいじ\]routeへ元\[もと\]byte列\[れつ\]を配布\[はいふ\]する。これは資料原文\[しりょうげんぶん\]への参照提供\[さんしょうていきょう\]であり、NEPL3d正本\[せいほん\]への昇格\[しょうかく\]やMarkdownのHTML化\[か\]ではない。passive fileは意味上\[いみじょう\]のlabelを持\[も\]たないため、fragment参照\[さんしょう\]を拒否\[きょひ\]する。内容\[ないよう\]byte列\[れつ\]は既存\[きそん\]PageSet identityに含\[ふく\]め、資料\[しりょう\]の変更\[へんこう\]でinput contextを更新\[こうしん\]する。リンク先\[さき\]の存在\[そんざい\]を暗黙\[あんもく\]に補\[おぎな\]うのではなく、段階移行中\[だんかいいこうちゅう\]の閉\[と\]じた入力集合\[にゅうりょくしゅうごう\]を宣言\[せんげん\]するための追加\[ついか\]である。
 
-HTML集合書出しの予算は、registryの任意field `html_output_limits` で別に選択する。
-指定時はOutputLimitsの8資源をすべて記述し、null・部分指定・未知field・負数は拒否する。
-未指定なら既存のHTML出力予算を維持し、Markdown用の `output_limits` を流用しない。
-生成開始前に選んだ一つのBudgetを、既存のPageSetのresolve・render・serializeへ渡す。
-各ページのparse・lowerは従来どおり独立した有限operationであり、HTML用設定で増額しない。
-停止後の再生成やMarkdown予算へのfallbackは行わず、書込み開始前の停止では出力先を作らない。
-HTML manifestの既存execution identity・選択上限・開始時usageへ実際の設定を記録する。
-このfieldを追加したregistryの元byte列は、新Markdown profileのinput contextにも反映される。
+旧\[きゅう\] `nepl3-tools.markdown-annotated/2` と混在\[こんざい\]できる。旧\[きゅう\]ページは従来\[じゅうらい\]のsource名前空間\[なまえくうかん\]と生成処理\[せいせいしょり\]でmetadataを含\[ふく\]めて同\[おな\]じbyte列\[れつ\]を作\[つく\]り、ページ集合\[しゅうごう\]からの生成\[せいせい\]bodyとも一致\[いっち\]することを要求\[ようきゅう\]する。この照合\[しょうごう\]により、新\[あたら\]しいページの参照先\[さんしょうさき\]anchorは旧\[きゅう\]ページの実際\[じっさい\]のprojectionにも存在\[そんざい\]する。旧\[きゅう\]rendererだけの `--check` は従来\[じゅうらい\]のページごとに独立\[どくりつ\]した処理\[しょり\]・予算\[よさん\]を維持\[いじ\]する。
 
-互換aliasとGitHubの自動見出しIDは独立して発生するため、実際のGitHub表示で重複と移動先を確認する。13章では旧8見出しのうち6つを明示alias、`1-digest` と `3-normal-formとartifact` を同名の自動見出しで維持する。全7Sectionの明示IDも保持する。この判断は13章の実際の見出しに対する対応表であり、任意のMarkdownに対するslug推測をfoundationへ追加するものではない。
+新\[しん\]rendererのmetadataにはページ自身\[じしん\]のsource・alias・Document digestに加\[くわ\]え、input PageSet digestとinput context digestを記録\[きろく\]する。後者\[こうしゃ\]は以下\[いか\]のfieldをこの順\[じゅん\]に、各\[かく\]fieldのbyte長\[ちょう\]をu64 big\-endianで前置\[ぜんち\]して連結\[れんけつ\]し、SHA\-256を求\[もと\]める。文字列\[もじれつ\]はUTF\-8、digest fieldは32 byteの値\[あたい\]とする。
 
-文書をrenderしただけで埋め込まれた例を評価しない。失敗を説明する例や注釈内のcodeはsource表示のまま保存する。リンク先の例を試す操作も例ID・revision・profileを照合する。新しい文法の受入が通る前に文書を新constructorへ一括変換しない。
+1. `nepl3.canonical-input-context/1` と末尾\[まつび\]zero byte、renderer識別子\[しきべつし\]、registry path、registryの元\[もと\]byte列\[れつ\]。
+1. input PageSet digest、ページ数\[すう\]を表\[あらわ\]すu64 big\-endianの8 byte。
+1. 登録順\[とうろくじゅん\]に各\[かく\]ページのid、physical source path、projection path、alias path、HTML route、renderer識別子\[しきべつし\]。
+1. 各\[かく\]ページの直前\[ちょくぜん\]の6 fieldに続\[つづ\]けて、sourceの元\[もと\]byte列\[れつ\]のSHA\-256、aliasの元\[もと\]byte列\[れつ\]のSHA\-256。
 
-## 4. Bootstrapと再現性
+これは入力\[にゅうりょく\]の同一性\[どういつせい\]であり、完成\[かんせい\]した配布物\[はいふぶつ\]のdigestではない。registryの空白\[くうはく\]・登録順\[とうろくじゅん\]・別\[べつ\]ページのalias入力\[にゅうりょく\]だけの変更\[へんこう\]も、新\[しん\]rendererの生成物\[せいせいぶつ\]を古\[ふる\]くする。生成\[せいせい\]Markdownのbyte列\[れつ\]を入力\[にゅうりょく\]digestへ再帰的\[さいきてき\]に含\[ふく\]めない。旧\[きゅう\]rendererのmetadataへ、この新\[あたら\]しい集合\[しゅうごう\]identityを後付\[あとづ\]けしない。
 
-文書生成をCargo build.rsやcompilerのbuild dependencyへ入れない。言語packageのbootstrapと文書サイトの生成を別の明示tools段階にする。compilerをbuildするのに新compilerで文書を読む必要がある循環を作らない。
+`nepl3-tools doc-canonical markdown <new-directory>` は、全\[ぜん\]ページの検証後\[けんしょうご\]にprojection pathを保\[たも\]った新\[あたら\]しい出力\[しゅつりょく\]ディレクトリへ書\[か\]き出\[だ\]す。最後\[さいご\]のmanifestには出力\[しゅつりょく\]byte数\[すう\]とdigestを記録\[きろく\]する。`--check` と同\[おな\]じ生成経路\[せいせいけいろ\]を使\[つか\]い、repository内\[ない\]の正本\[せいほん\]や古\[ふる\]いprojectionを自動更新\[じどうこうしん\]しない。既存\[きそん\]ディレクトリを拒否\[きょひ\]する。意味検査\[いみけんさ\]・生成\[せいせい\]の失敗\[しっぱい\]では書込\[かきこ\]みを開始\[かいし\]せず、OSの書込\[かきこ\]み失敗\[しっぱい\]では不完全\[ふかんぜん\]な新規\[しんき\]ディレクトリが残\[のこ\]り得\[う\]るが、成功\[せいこう\]のcompletion manifestを作\[つく\]らない。
 
-compiler開発で現行rendererが壊れた場合にも仕様を読めるよう、最後に動作検証済みの文書renderer/package/assetをversionとdigestで固定して利用できる。新しいDoc sourceはそのrendererで受理できる版かを確認し、非互換なら停止して互換なrendererの確立を先に行う。失敗後に黙って旧rendererへfallbackしない。明示選択した旧rendererでの文書buildと、同revisionの処理系がDocを正しく扱うruntime受入を別の結果として記録する。
+新\[しん\]rendererを含\[ふく\]む検査\[けんさ\]とMarkdownの集合書出\[しゅうごうかきだ\]しは128ページ、source合計\[ごうけい\]10\,000\,000 byte、alias合計\[ごうけい\]1 MiB、registry 1 MiB、生成\[せいせい\]Markdownは1ページ2 MiBを上限\[じょうげん\]とする。読\[よ\]み込\[こ\]むhost入力\[にゅうりょく\]はこの上限\[じょうげん\]で制約\[せいやく\]する。parseとlowerは各\[かく\]ページの独立\[どくりつ\]した有限\[ゆうげん\]operationとし、resolve・render・anchor照合\[しょうごう\]・digest・metadata・出力\[しゅつりょく\]コピーには一\[ひと\]つの消費済\[しょうひず\]み状態\[じょうたい\]を保持\[ほじ\]する出力\[しゅつりょく\]Budgetを用\[もち\]いる。旧\[きゅう\]rendererの混在\[こんざい\]ページを再生成\[さいせいせい\]するときも、この出力\[しゅつりょく\]Budgetを共有\[きょうゆう\]する。registryの任意\[にんい\]field `output_limits` は既存\[きそん\]のOutputLimitsと同\[おな\]じ8資源\[しげん\]の上限\[じょうげん\]を持\[も\]ち、集合\[しゅうごう\]の処理開始前\[しょりかいしまえ\]に選択\[せんたく\]する。未指定\[みしてい\]なら既定\[きてい\]のDoc host allowanceで開始\[かいし\]する。停止後\[ていしご\]の再試行\[さいしこう\]・暗黙\[あんもく\]の増額\[ぞうがく\]・別予算\[べつよさん\]による継続\[けいぞく\]はしない。旧\[きゅう\]rendererだけの検査\[けんさ\]ではこの集合設定\[しゅうごうせってい\]を用\[もち\]いず従来\[じゅうらい\]のページ単位\[たんい\]のoperationを維持\[いじ\]する。出力\[しゅつりょく\]manifestには実際\[じっさい\]に選択\[せんたく\]した上限\[じょうげん\]と開始時\[かいしじ\]usage、receipt serialize直前\[ちょくぜん\]のusageを別\[べつ\]fieldで記録\[きろく\]する。最後\[さいご\]のusageはreceipt自体\[じたい\]のserialize・最終出力課金\[さいしゅうしゅつりょくかきん\]を含\[ふく\]まない値\[あたい\]として明示\[めいじ\]する。host JSON・文字列整形\[もじれつせいけい\]の計量\[けいりょう\]は保守的\[ほしゅてき\]な論理\[ろんり\]allocation allowanceであり、物理\[ぶつり\]heapの計測\[けいそく\]ではない。
 
-配布済み文書snapshotの閲覧にcompilerを要求しない。過去releaseの文書・asset・例はそのreleaseのidentityで固定する。source、renderer、schema、registry、assetが同じなら生成byte列と意味構造が再現できることを検査し、時刻やnetworkによる差を持ち込まない。
+HTML集合書出\[しゅうごうかきだ\]しの予算\[よさん\]は、registryの任意\[にんい\]field `html_output_limits` で別\[べつ\]に選択\[せんたく\]する。指定時\[していじ\]はOutputLimitsの8資源\[しげん\]をすべて記述\[きじゅつ\]し、null・部分指定\[ぶぶんしてい\]・未知\[みち\]field・負数\[ふすう\]は拒否\[きょひ\]する。未指定\[みしてい\]なら既存\[きそん\]のHTML出力予算\[しゅつりょくよさん\]を維持\[いじ\]し、Markdown用\[よう\]の `output_limits` を流用\[りゅうよう\]しない。生成開始前\[せいせいかいしまえ\]に選\[えら\]んだ一\[ひと\]つのBudgetを、既存\[きそん\]のPageSetのresolve・render・serializeへ渡\[わた\]す。各\[かく\]ページのparse・lowerは従来\[じゅうらい\]どおり独立\[どくりつ\]した有限\[ゆうげん\]operationであり、HTML用設定\[ようせってい\]で増額\[ぞうがく\]しない。停止後\[ていしご\]の再生成\[さいせいせい\]やMarkdown予算\[よさん\]へのfallbackは行\[おこな\]わず、書込\[かきこ\]み開始前\[かいしまえ\]の停止\[ていし\]では出力先\[しゅつりょくさき\]を作\[つく\]らない。HTML manifestの既存\[きそん\]execution identity・選択上限\[せんたくじょうげん\]・開始時\[かいしじ\]usageへ実際\[じっさい\]の設定\[せってい\]を記録\[きろく\]する。このfieldを追加\[ついか\]したregistryの元\[もと\]byte列\[れつ\]は、新\[しん\]Markdown profileのinput contextにも反映\[はんえい\]される。
 
-## 5. 完了条件
+互換\[ごかん\]aliasとGitHubの自動見出\[じどうみだ\]しIDは独立\[どくりつ\]して発生\[はっせい\]するため、実際\[じっさい\]のGitHub表示\[ひょうじ\]で重複\[ちょうふく\]と移動先\[いどうさき\]を確認\[かくにん\]する。13章\[しょう\]では旧\[きゅう\]8見出\[みだ\]しのうち6つを明示\[めいじ\]alias、`1-digest` と `3-normal-formとartifact` を同名\[どうめい\]の自動見出\[じどうみだ\]しで維持\[いじ\]する。全\[ぜん\]7Sectionの明示\[めいじ\]IDも保持\[ほじ\]する。この判断\[はんだん\]は13章\[しょう\]の実際\[じっさい\]の見出\[みだ\]しに対\[たい\]する対応表\[たいおうひょう\]であり、任意\[にんい\]のMarkdownに対\[たい\]するslug推測\[すいそく\]をfoundationへ追加\[ついか\]するものではない。
 
-J01〜J04がすべてpassedで、inventoryの対象ページがDoc正本へ移り、機械入力・byte保存履歴を除く手書きMarkdown本文の二重管理がなくなった時点をT21の完了とする。変換率、未対応表現、未移行ページ、未実行試験を記録し、サイトが表示できることだけで移行完了としない。
+文書\[ぶんしょ\]をrenderしただけで、埋\[う\]め込\[こ\]まれた例\[れい\]を評価\[ひょうか\]しない。失敗\[しっぱい\]を説明\[せつめい\]する例\[れい\]や注釈内\[ちゅうしゃくない\]のcodeは、source表示\[ひょうじ\]のまま保存\[ほぞん\]する。リンク先\[さき\]の例\[れい\]を試\[ため\]す操作\[そうさ\]も、例\[れい\]ID・revision・profileを照合\[しょうごう\]する。新\[あたら\]しい文法\[ぶんぽう\]の受入\[うけいれ\]が通\[とお\]る前\[まえ\]に、文書\[ぶんしょ\]を新\[しん\]constructorへ一括変換\[いっかつへんかん\]しない。
+
+<a name="n-626f6f747374726170"></a>
+
+<a name="4-bootstrapと再現性"></a>
+
+## 4\. Bootstrapと再現性\[さいげんせい\]
+
+文書生成\[ぶんしょせいせい\]をCargo build\.rsやcompilerのbuild dependencyへ入\[い\]れない。言語\[げんご\]packageのbootstrapと文書\[ぶんしょ\]サイトの生成\[せいせい\]を、別\[べつ\]の明示\[めいじ\]tools段階\[だんかい\]にする。compilerをbuildするのに、新\[しん\]compilerで文書\[ぶんしょ\]を読\[よ\]む必要\[ひつよう\]がある循環\[じゅんかん\]を作\[つく\]らない。
+
+compiler開発\[かいはつ\]で現行\[げんこう\]rendererが壊\[こわ\]れた場合\[ばあい\]にも仕様\[しよう\]を読\[よ\]めるよう、最後\[さいご\]に動作検証済\[どうさけんしょうず\]みの文書\[ぶんしょ\]renderer\/package\/assetを、versionとdigestで固定\[こてい\]して利用\[りよう\]できる。新\[あたら\]しいDoc sourceはそのrendererで受理\[じゅり\]できる版\[ばん\]かを確認\[かくにん\]し、非互換\[ひごかん\]なら停止\[ていし\]して、互換\[ごかん\]なrendererの確立\[かくりつ\]を先\[さき\]に行\[おこな\]う。失敗後\[しっぱいご\]に、黙\[だま\]って旧\[きゅう\]rendererへfallbackしない。明示選択\[めいじせんたく\]した旧\[きゅう\]rendererでの文書\[ぶんしょ\]buildと、同\[どう\]revisionの処理系\[しょりけい\]がDocを正\[ただ\]しく扱\[あつか\]うruntime受入\[うけいれ\]を、別\[べつ\]の結果\[けっか\]として記録\[きろく\]する。
+
+配布済\[はいふず\]み文書\[ぶんしょ\]snapshotの閲覧\[えつらん\]に、compilerを要求\[ようきゅう\]しない。過去\[かこ\]releaseの文書\[ぶんしょ\]・asset・例\[れい\]は、そのreleaseのidentityで固定\[こてい\]する。source、renderer、schema、registry、assetが同\[おな\]じなら生成\[せいせい\]byte列\[れつ\]と意味構造\[いみこうぞう\]が再現\[さいげん\]できることを検査\[けんさ\]し、時刻\[じこく\]やnetworkによる差\[さ\]を持\[も\]ち込\[こ\]まない。
+
+<a name="n-636f6d706c6574696f6e"></a>
+
+<a name="5-完了条件"></a>
+
+## 5\. 完了条件\[かんりょうじょうけん\]
+
+J01〜J04がすべてpassedで、inventoryの対象\[たいしょう\]ページがDoc正本\[せいほん\]へ移\[うつ\]り、機械入力\[きかいにゅうりょく\]・byte保存履歴\[ほぞんりれき\]を除\[のぞ\]く手書\[てが\]きMarkdown本文\[ほんぶん\]の二重管理\[にじゅうかんり\]がなくなった時点\[じてん\]を、T21の完了\[かんりょう\]とする。変換率\[へんかんりつ\]、未対応表現\[みたいおうひょうげん\]、未移行\[みいこう\]ページ、未実行試験\[みじっこうしけん\]を記録\[きろく\]し、サイトが表示\[ひょうじ\]できることだけで移行完了\[いこうかんりょう\]としない。

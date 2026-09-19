@@ -1,0 +1,10 @@
+[
+  {"section": null, "name": "16-正式文書のnepl3-doc-dsl移行"},
+  {"section": "canonical_source", "name": "1-最終成果物と移行前の正本"},
+  {"section": "expression_audit", "name": "2-表現能力の監査が変換の前提"},
+  {"section": "page_switch", "name": "3-ページ単位の切替"},
+  {"section": "registry", "name": "正本registryと生成物の検査"},
+  {"section": "page_projection", "name": "ページ間参照を持つmarkdown-projection"},
+  {"section": "bootstrap", "name": "4-bootstrapと再現性"},
+  {"section": "completion", "name": "5-完了条件"}
+]

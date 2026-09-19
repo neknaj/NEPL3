@@ -106,6 +106,14 @@
       "renderer": "nepl3-tools.markdown-annotated-pages/1"
     },
     {
+      "id": "doc-migration",
+      "source": "doc/spec/16-doc-migration.nepld",
+      "projection": "doc/spec/16-doc-migration.md",
+      "aliases": "doc/migration/aliases/16-doc-migration.json",
+      "route": "docs/spec/16-doc-migration.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/1"
+    },
+    {
       "id": "foundation",
       "source": "doc/spec/02-foundation.nepld",
       "projection": "doc/spec/02-foundation.md",
@@ -114,22 +122,26 @@
       "renderer": "nepl3-tools.markdown-annotated-pages/1"
     }
   ],
+  "files": [
+    {"id": "authoring-source", "source": "doc/authoring.md", "route": "sources/authoring.md"},
+    {"id": "doc-inventory-source", "source": "doc/doc-inventory.md", "route": "sources/doc-inventory.md"}
+  ],
   "output_limits": {
     "source_bytes": 10000000,
-    "work": 1000000000,
+    "work": 1300000000,
     "depth": 1000,
-    "nodes": 40000000,
-    "allocation_units": 2500000000,
+    "nodes": 52000000,
+    "allocation_units": 3250000000,
     "output_bytes": 10000000,
     "diagnostics": 1000,
     "events": 1000
   },
   "html_output_limits": {
     "source_bytes": 10000000,
-    "work": 600000000,
+    "work": 800000000,
     "depth": 1000,
-    "nodes": 24000000,
-    "allocation_units": 1250000000,
+    "nodes": 32000000,
+    "allocation_units": 1750000000,
     "output_bytes": 10000000,
     "diagnostics": 1000,
     "events": 1000

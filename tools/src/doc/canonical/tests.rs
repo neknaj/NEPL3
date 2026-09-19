@@ -643,6 +643,10 @@ fn real_architecture_draft_links_to_canonical_extensions_with_legacy_bytes_intac
             f.write(path, fs::read(repository.join(path))?)?;
         }
     }
+    for file in value["files"].as_array().ok_or("files")? {
+        let path = file["source"].as_str().ok_or("reference source")?;
+        f.write(path, fs::read(repository.join(path))?)?;
+    }
     value["pages"].as_array_mut().ok_or("pages")?.push(json!({
         "id":"architecture","source":"doc/spec/01-architecture.nepld",
         "projection":"doc/spec/01-architecture.md","aliases":"doc/architecture.json",
@@ -804,9 +808,15 @@ fn synchronized_context_spec_drafts_parse_lower_and_check_labels() -> Result<()>
         allocation_units: 1_500_000_000,
         ..super::super::source::budget().limits()
     };
-    for name in ["16-doc-migration", "21-doc-pages", "guide/development"] {
-        let text =
-            fs::read_to_string(repository.join(format!("doc/migration/authored/{name}.nepld")))?;
+    for (name, path) in [
+        ("16-doc-migration", "doc/spec/16-doc-migration.nepld"),
+        ("21-doc-pages", "doc/migration/authored/21-doc-pages.nepld"),
+        (
+            "guide/development",
+            "doc/migration/authored/guide/development.nepld",
+        ),
+    ] {
+        let text = fs::read_to_string(repository.join(path))?;
         super::super::source::with_named_input_limits(
             true,
             &compiled,

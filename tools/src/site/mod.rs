@@ -275,7 +275,13 @@ pub fn build(root: &Path, config: &str, output: &Path) -> Result<()> {
     ];
     for input in inputs
         .into_iter()
-        .chain(registry.pages.iter().map(|page| page.source.as_str()))
+        .chain(
+            registry
+                .pages
+                .iter()
+                .flat_map(|page| [page.source.as_str(), page.aliases.as_str()]),
+        )
+        .chain(registry.files.iter().map(|file| file.source.as_str()))
     {
         crate::command(root, "git", &["ls-files", "--error-unmatch", "--", input])?;
     }
