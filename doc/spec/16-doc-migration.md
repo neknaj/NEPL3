@@ -40,7 +40,7 @@ inventoryとgap auditはT21まで延期せず、Docに関係するT01の共通�
 1. inventoryとgap auditを承認可能な差分として作り、変換元のcommit・path・byte digestを固定する。
 2. parser/meaning/backendの不足を埋め、失敗系・roundtrip・wire・表示の受入を実行する。
 3. 同一page IDとURLを持つDoc sourceを生成・編集し、内容の落ち、表の対応、リンク、anchor、コードbyte列、数式構造、図の説明を独立に比較する。
-4. 独立した意味同等性レビュー、HTML構造/accessibility、全リンク、同版例、決定的buildが通ったページのregistry正本をDocへ切り替える。
+4. 独立した意味同等性レビュー、当該ページのHTML構造/accessibility・参照・同版例、決定的buildが通ったページのregistry正本をDocへ切り替える。サイト全体やrustdocの完全閉包をページ切替の前提にしない。
 5. 旧Markdownは削除またはDocからの生成artifactへ変更し、二重編集を検出する。未移行ページはMarkdownを唯一の正本のままにする。
 
 切替前に `task.spec`、operation.definition、acceptance catalogのspec参照とcheckerのMarkdown ID抽出を点検する。format中立のcanonical page IDへ移すか、Doc正本から検査済みMarkdown互換projectionを生成して既存readerへ渡す契約を実装する。単に.mdを削除して参照を壊さない。projectionだけを手で修正した場合は生成差分検査で拒否する。
