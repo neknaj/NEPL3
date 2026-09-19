@@ -382,6 +382,124 @@ fn map_admission_never_copies_long_identity_before_zero_allocation_budget() -> T
 }
 
 #[test]
+fn direct_mapped_ranges_do_not_allocate_per_byte() -> TestResult {
+    let a = source("direct-a", &"x".repeat(100_002))?;
+    let b = source("direct-b", &"x".repeat(100_000))?;
+    let mut sources = SourceStore::default();
+    sources.insert(a.clone()).map_err(|e| format!("{e:?}"))?;
+    sources.insert(b.clone()).map_err(|e| format!("{e:?}"))?;
+    let parent = a.span(1, 100_001).map_err(|e| format!("{e:?}"))?;
+    let child = b.span(0, 100_000).map_err(|e| format!("{e:?}"))?;
+    for kind in [MappingKind::Exact, MappingKind::Transformed] {
+        let maps = [Mapping {
+            source: parent.clone(),
+            target: child.clone(),
+            kind,
+        }];
+        let checked = SourceMap::validate_mappings(&maps, &sources, &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+        // A direct range proof needs no copied IDs or per-byte pending stack.
+        let limits = Limits {
+            allocation_units: 0,
+            work: 10,
+            nodes: 2,
+            depth: 2,
+            ..budget().limits()
+        };
+        let mut query = Budget::new(limits);
+        assert!(
+            checked
+                .contains(&parent, &child, &mut query)
+                .map_err(|e| format!("{e:?}"))?
+        );
+        assert_eq!(query.usage().allocation_units, 0);
+        assert_eq!(query.usage().depth, 2);
+        for (limited, reason) in [
+            (Limits { work: 1, ..limits }, StopReason::WorkLimit),
+            (Limits { nodes: 1, ..limits }, StopReason::NodeLimit),
+            (Limits { depth: 1, ..limits }, StopReason::DepthLimit),
+        ] {
+            let mut stopped = Budget::new(limited);
+            assert_eq!(
+                checked.contains(&parent, &child, &mut stopped),
+                Err(OriginError::Stopped(reason))
+            );
+            assert_eq!(
+                checked.contains(&parent, &child, &mut stopped),
+                Err(OriginError::Stopped(reason))
+            );
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn direct_containment_matches_pointwise_ranges_and_anchor_rules() -> TestResult {
+    let a = source("range-a", "xxxxxx")?;
+    let b = source("range-b", "xxxx")?;
+    let outside = source("range-outside", "x")?;
+    let mut sources = SourceStore::default();
+    for s in [&a, &b, &outside] {
+        sources.insert(s.clone()).map_err(|e| format!("{e:?}"))?;
+    }
+    let span = |s: &SourceSnapshot, start, end| s.span(start, end).map_err(|e| format!("{e:?}"));
+    for kind in [MappingKind::Exact, MappingKind::Transformed] {
+        // A nonempty mapping must not silently map insertion anchors.
+        let maps = [Mapping {
+            source: span(&a, 1, 5)?,
+            target: span(&b, 0, 4)?,
+            kind,
+        }];
+        let checked = SourceMap::validate_mappings(&maps, &sources, &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+        for start in 0..=4 {
+            for end in start..=4 {
+                for pstart in 0..=6 {
+                    for pend in pstart..=6 {
+                        let expected = start != end
+                            && (start..end).all(|byte| {
+                                let points = if kind == MappingKind::Exact {
+                                    (byte + 1)..(byte + 2)
+                                } else {
+                                    1..5
+                                };
+                                points.into_iter().all(|p| pstart <= p && p < pend)
+                            });
+                        assert_eq!(
+                            checked
+                                .contains(
+                                    &span(&a, pstart, pend)?,
+                                    &span(&b, start, end)?,
+                                    &mut budget()
+                                )
+                                .map_err(|e| format!("{e:?}"))?,
+                            expected
+                        );
+                    }
+                }
+            }
+        }
+        // A second path outside the parent invalidates containment, even when
+        // the first mapping alone covers the child. Exercise both union parts.
+        let other = [Mapping {
+            source: span(&outside, 0, 1)?,
+            target: span(&b, 2, 3)?,
+            kind,
+        }];
+        for (first, second) in [(&maps[..], &other[..]), (&other[..], &maps[..])] {
+            let checked = SourceMap::validate_mapping_parts(first, second, &sources, &mut budget())
+                .map_err(|e| format!("{e:?}"))?;
+            assert!(
+                !checked
+                    .contains(&span(&a, 0, 6)?, &span(&b, 0, 4)?, &mut budget())
+                    .map_err(|e| format!("{e:?}"))?
+            );
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn mapped_containment_requires_every_byte_and_every_reverse_path() -> TestResult {
     let a = source("a", "abc")?;
     let b = source("b", "xy")?;

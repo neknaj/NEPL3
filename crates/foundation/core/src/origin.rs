@@ -328,6 +328,11 @@ impl ValidatedSourceMap<'_> {
         if parent.contains(child) {
             return Ok(true);
         }
+        if self.direct_cover(parent, child, budget)? {
+            budget.observe_depth(2)?;
+            budget.charge(Resource::Nodes, 2)?;
+            return Ok(true);
+        }
         for offset in 0..point_count(child) {
             let mut pending = Vec::new();
             push_point(&mut pending, point(child, offset), false, 1, budget)?;
@@ -373,6 +378,53 @@ impl ValidatedSourceMap<'_> {
             }
         }
         Ok(true)
+    }
+
+    /// Prove one whole range without allocating one traversal per byte. This
+    /// succeeds only for a unique incoming mapping covering the entire child.
+    /// Overlapping alternatives, holes and multi-hop paths use the pointwise
+    /// validator, which still requires every reverse path to reach the parent.
+    fn direct_cover(
+        &self,
+        parent: &Span,
+        child: &Span,
+        budget: &mut Budget,
+    ) -> Result<bool, OriginError> {
+        let anchor = child.start() == child.end();
+        let mut candidate: Option<&Mapping> = None;
+        for mapping in self.iter() {
+            budget.charge(Resource::Work, 1)?;
+            let target = &mapping.target;
+            if target.snapshot_ref() != child.snapshot_ref()
+                || (target.start() == target.end()) != anchor
+                || if anchor {
+                    target.start() != child.start()
+                } else {
+                    target.end() <= child.start() || child.end() <= target.start()
+                }
+            {
+                continue;
+            }
+            if candidate.is_some() {
+                return Ok(false);
+            }
+            candidate = Some(mapping);
+        }
+        let Some(mapping) = candidate else {
+            return Ok(false);
+        };
+        if !mapping.target.contains(child) || mapping.source.snapshot_ref() != parent.snapshot_ref()
+        {
+            return Ok(false);
+        }
+        if mapping.kind == MappingKind::Transformed {
+            return Ok(parent.contains(&mapping.source));
+        }
+        // Exact mappings have equal lengths, already checked by construction.
+        // Translate only the requested subrange, without cloning a Span/ID.
+        let start = mapping.source.start() + (child.start() - mapping.target.start());
+        let end = mapping.source.start() + (child.end() - mapping.target.start());
+        Ok(parent.start() <= start && end <= parent.end())
     }
 }
 fn point_on(point: Point<'_>, span: &Span) -> bool {
