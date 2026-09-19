@@ -26,9 +26,9 @@
 | [T16](T16.md) | 全体受入・CI | not-implemented | T13, T14, T15, T20, T21, T25, T26 |
 | [T17](T17.md) | 純粋TEA UI coreと操作境界 | not-implemented | T01, T02, T25 |
 | [T18](T18.md) | 4言語playgroundと共通editor | not-implemented | T15, T17, T25 |
-| [T19](T19.md) | 文書・例・参照の静的サイト | in-progress | なし |
+| [T19](T19.md) | 正本文書の最小公開と静的サイトの拡充 | in-progress | なし |
 | [T20](T20.md) | Web全体受入とGitHub Pages配布 | not-implemented | T15, T18, T19 |
-| [T21](T21.md) | 正式文書のNEPL3 Doc DSL移行 | in-progress | T24, T19 |
+| [T21](T21.md) | 正式文書のNEPL3 Doc DSL移行 | in-progress | なし |
 | [T22](T22.md) | H0: HTML公開契約の整合 | in-progress | なし |
 | [T23](T23.md) | H1: Doc単独HTMLの実経路 | in-progress | T22 |
 | [T24](T24.md) | H2: Mathを含む生成済みHTML | in-progress | T23 |

@@ -139,7 +139,11 @@ body
       cons item none body cons paragraph
         cons "J02: [全移行/ぜんいこう]ページを[元/もと]の[固定/こてい]snapshotと[比較/ひかく]し、[意味/いみ]・[表/ひょう]・[参照/さんしょう]・[数式/すうしき]・[図/ず]・コードbyte[列/れつ]の[同等性/どうとうせい]を[独立/どくりつ]に[確認/かくにん]する。"
         cons "[一/ひと]つの[正本/せいほん]と[生成/せいせい]Markdownの[差分検査/さぶんけんさ]を[行/おこな]う。" nil nil
-      cons item none body cons paragraph cons "J03: Doc[正本/せいほん]からの[公開物/こうかいぶつ]で[安定/あんてい]page ID/URL/anchor、[検索/けんさく]、[例/れい]revision、リンク、accessibilityを[維持/いじ]し、[非/ひ]root[配信/はいしん]とbrowserで[確認/かくにん]する。" nil nil
+      cons item none body cons paragraph
+        cons "J03: [移行/いこう]ページの[安定/あんてい]page ID/URL/anchorと[文書/ぶんしょ]namespace・[参照/さんしょう]の[対応/たいおう]をDoc[意味構造/いみこうぞう]で[確認/かくにん]する。"
+        cons "Doc[正本/せいほん]からのHTMLでは、escaping、[必要/ひつよう]なCSS/font、[主要/しゅよう]リンク、[例/れい]の[内容/ないよう]・revision、[見出/みだ]しや[表/ひょう]の[基本構造/きほんこうぞう]と[可読性/かどくせい]を、[非/ひ]root[配信/はいしん]と[主要/しゅよう]browserで[確認/かくにん]する。"
+        cons "rustdoc・[全/ぜん]サイトの[検索/けんさく]・[全/ぜん]fragmentの[完全閉包/かんぜんへいほう]は、この[移行受入/いこううけいれ]の[前提/ぜんてい]にしない。"
+        nil nil
       cons item none body cons paragraph cons "J04: [旧版/きゅうはん]の[検証済/けんしょうず]みrendererによる[明示的/めいじてき]な[文書/ぶんしょ]buildと[現行/げんこう]runtime[受入/うけいれ]を[区別/くべつ]し、bootstrap[循環/じゅんかん]がないこと、[全/ぜん]ページのDoc[正本/せいほん]への[切替/きりかえ]、[決定的生成/けっていてきせいせい]、[欠落/けつらく]・[未対応時/みたいおうじ]の[停止/ていし]を[検査/けんさ]する。" nil nil
       nil
     cons paragraph

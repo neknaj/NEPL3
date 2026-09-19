@@ -2,9 +2,27 @@
 
 ## 1. 公開構成
 
+GitHub Pagesへの文書公開は明示された成果物であり、任意の作業として取り下げない。
+目的は仕様・設計等のMarkdown正本をNEPL3dへ移し、その出力を人が読めるようにすることである。
+移行済みの正式文書は.nepldであり、HTMLは再生成できるprojectionである。
+T19の配信基盤やrustdocの完全な資源閉包を、T21の言語実装・正本移行の前提にしない。
+
+T19の初期段階は、Markdown/NEPL3dの正本選択、移行前後で維持するroute、HTML生成、
+必要なCSS/font、主要リンクとbrowser可読性、検査した同じ成果物のPages公開とする。
+rustdoc・tutorial・例の拡充、生成HTML全fragmentの詳細監査は後段の改善として分離する。
+既知の補助生成器の不具合は対象と影響を記録し、NEPL3dの移行を止めない。
+NEPL3dのparse/schema/意味・Source/Origin・参照・情報保存の検査、rendererのescaping、
+資源identityと生成失敗の検出は維持する。サイトが読めるだけでこれらの本体検査を代替しない。
+
 標準公開先を `https://neknaj.github.io/NEPL3/` とするGitHub Pages project siteを最終成果物に含める。独立HTMLのトップ・docsと、ブラウザWasmで動くPlaygroundを配布する。言語処理serverは設けない。通常のsource取得は検査対象commitのGit checkoutまたはsource archiveを用い、main pushごとの重複archive配布は行わない。サイト実装前に空のPages siteや架空のWasmを公開しない。
 
-予定する出力はトップのindex.html、playground/index.html、docs/index.htmlとtutorials/reference/design、api/rust、examples/manifest.json、assets内のJS/CSS/Wasm/Worker、build.json。`site/` は配置・template・固定assetを所有し、`tools/src/site/` が生成と検査を行う。
+予定する出力はトップのindex.html、playground/index.html、tutorial/index.html、docs/index.htmlとreference/design、api/rust、examples/manifest.json、assets内のJS/CSS/Wasm/Worker、build.json。`site/` は配置・template・固定assetを所有し、`tools/src/site/` が生成と検査を行う。
+
+`/NEPL3/playground/`、`/NEPL3/tutorial/`、`/NEPL3/docs/` は本体の安定入口として予約する。
+Tutorialの入口は従来のplannedなdocs/tutorialsではなくtutorialとする。予約は公開・実装完了を意味しない。
+PlaygroundとTutorialは特定guest languageの専用UI・入門書にせず、共通原理、最小guest languageの作成、
+LanguagePackage/schema/operation/provider/Profile、別言語のimport/compositionを扱う。
+sentenceとannotationも独立したLanguagePackageとして教材に利用し、foundationの暗黙の特別構文にしない。
 
 T19はUI/runtimeのタスクへ依存せず、既存の固定版Markdown生成器を使うhost側の静的生成経路を先に完成できる。独自Markdown parserを追加しない。能力状態をdocs-only/interactiveで明示し、docs-onlyにはWasmや動くPlaygroundを要求しない。本文はJSを無効にしても読め、静的文書全pageに巨大Wasmを強制loadしない。未実装の操作入口は未提供と説明する。T19のscope付き完了はS01等のinteractive部分のpassedを意味しない。
 
@@ -20,7 +38,7 @@ SiteConfigをbase pathの唯一の設定元にする。既定 `/NEPL3/` と受�
 
 page registryは安定page ID、source正本の形式とpath、公開URL、見出し/anchor ID、旧URL aliasを保持する。表示見出しやファイル移設でIDを暗黙に再生成しない。例manifestは安定例ID、language/category、source path、byte digest、必要profile、revisionを持つ。「この例を試す」は同じmanifestから取得した同じbyte列を開く。存在しない例、digest不一致、異なるruntime/profile版を拒否する。
 
-例manifestには実行前提と期待する操作/結果も記録する。4言語それぞれの入門、完全なreference、典型例、診断の読み方、成果物取得、CLI/Web比較を用意する。rustdocだけを生成して利用者文書が完成した扱いにはしない。
+例manifestには実行前提と期待する操作/結果も記録する。本体の教材は共通原理と言語compositionを中心にし、個別言語はその応用例として扱う。repository分割後の詳細syntax/semantics reference、言語固有tutorial、examples、API/CLI文書は各言語repositoryが所有する。本体Pagesには役割、接続点、package identity、各repositoryへの入口を置き、詳細文書を複製集約しない。分割前の同居文書も所有者を区別し、公開済み入口は分割時に明示的な移行先を定める。rustdocだけを生成して利用者文書が完成した扱いにはしない。
 
 build.jsonにはsource commit、設計revision、schema/package/providerの解決済みdigest、例manifestと各assetのdigest、renderer/toolchain識別を記録する。`design/profile.json` はsource manifestであり、そのままruntime Profileと呼ばない。R009では解決済みProfileの閉じた型・検査を先に定め、T05/T11で実際のpackage/providerから生成して差分検査する。架空digestや未解決aliasでdispatchしない。R006のschema閉包をUI専用の文字列signatureで迂回しない。
 

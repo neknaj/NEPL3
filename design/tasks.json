@@ -293,14 +293,14 @@
     },
     {
       "id": "T19",
-      "title": "文書・例・参照の静的サイト",
+      "title": "正本文書の最小公開と静的サイトの拡充",
       "depends_on": [],
       "acceptance": [
         "S01",
         "S02",
         "S04"
       ],
-      "deliverable": "runtime/UIなしでbuildできるdocs-only静的サイト・4言語tutorial/reference・正本由来例manifest・rustdoc入口・SiteConfig/registryを実装。既存Markdown生成器を用い、実装のないPlayground/Wasmは能力状態で明示する。完全なinteractive版の受入はT20で統合する。 17章のKaTeX CSS/fontの同版・同artifact配布、相対path・digest・licenseを検査する。",
+      "deliverable": "NEPL3d正本移行を支える従属的な配信層を実装する。初期段階はcanonical route、未移行Markdownの既存生成器、NEPL3dからのHTML、必要CSS/font、最小navigationとGitHub Pages公開を扱う。移行前後で同じURLを維持し、生成失敗・escaping・主要リンク・主要browserでの可読性を検査する。rustdoc・tutorial・例の拡充とその詳細監査は後段であり、T21の前提にしない。runtime/UIなしで公開でき、Playground/Wasmの未実装を明示する。17章のMath資源は使用ページに適用する。初期公開をT19全体やT20の完了としない。",
       "spec": "doc/spec/15-site.md"
     },
     {
@@ -325,10 +325,7 @@
     {
       "id": "T21",
       "title": "正式文書のNEPL3 Doc DSL移行",
-      "depends_on": [
-        "T24",
-        "T19"
-      ],
+      "depends_on": [],
       "acceptance": [
         "J01",
         "J02",
@@ -337,7 +334,7 @@
         "D01",
         "D05"
       ],
-      "deliverable": "T01/T02/T07のDoc設計前に用意した固定baseline inventoryとgap reportを再検査・更新し、不足表現のschema・wire・backend・conformanceを完成させてからページ単位でDocへ損失なく移す。一正本、安定URL/anchor、例byte列、再現可能buildとbootstrap回避を検証し、Markdown二重保守を終了する。早期監査だけでR014解消やT21完了にしない。 T23で表現可能なページから準備し、数式ページはT24の実経路を用いてspec等の正本を.nepldへ移す。Math評価やCircuit全体完成を移行開始の前提にしない。",
+      "deliverable": "正式文書をNEPL3d正本へ損失なく移す最優先の本体作業。T01/T02/T07のinventoryとgap reportを更新し、ページが使うparse・schema・Sentence/composition・意味・Source/Origin・binding・文書namespace・wireの契約を実装して検査する。表、参照、コード、数式等の情報保存と独立レビュー、一正本、安定ID/URL、再現生成とbootstrap回避をページ単位で確認する。T19、Pages公開、rustdoc監査、完全なNEPL3aを一括依存にしない。HTMLは導出物であり、そのページに必要なT23/T24の操作だけを利用する。Mathを使わないページをT24全体の完了待ちにしない。依存taskが空でも未実装操作を省略してよい意味ではない。未移行ページと未実行受入を保持し、全ページの移行とJ01〜J04達成までT21完了にしない。",
       "spec": "doc/spec/16-doc-migration.md"
     },
     {
