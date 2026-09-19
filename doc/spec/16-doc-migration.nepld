@@ -194,7 +194,8 @@ body
           cons "[同一/どういつ]page IDとURLを[持/も]つDoc sourceを[生成/せいせい]・[編集/へんしゅう]し、[内容/ないよう]の[落/お]ち、[表/ひょう]の[対応/たいおう]、リンク、anchor、コードbyte[列/れつ]、[数式構造/すうしきこうぞう]、[図/ず]の[説明/せつめい]を[独立/どくりつ]に[比較/ひかく]する。"
           nil nil
         cons item none body cons paragraph
-          cons "[独立/どくりつ]した[意味同等性/いみどうとうせい]レビュー、HTML[構造/こうぞう]/accessibility、[全/ぜん]リンク、[同版例/どうはんれい]、[決定的/けっていてき]buildが[通/とお]ったページのregistry[正本/せいほん]をDocへ[切/き]り[替/か]える。"
+          cons "[独立/どくりつ]した[意味同等性/いみどうとうせい]レビュー、[当該/とうがい]ページのHTML[構造/こうぞう]/accessibility・[参照/さんしょう]・[同版例/どうばんれい]、[決定的/けっていてき]buildが[通/とお]ったページのregistry[正本/せいほん]をDocへ[切/き]り[替/か]える。"
+          cons "サイト[全体/ぜんたい]やrustdocの[完全閉包/かんぜんへいほう]をページ[切替/きりかえ]の[前提/ぜんてい]にしない。"
           nil nil
         cons item none body cons paragraph
           cons "[旧/きゅう]Markdownは[削除/さくじょ]またはDocからの[生成/せいせい]artifactへ[変更/へんこう]し、[二重編集/にじゅうへんしゅう]を[検出/けんしゅつ]する。"
@@ -318,7 +319,54 @@ body
         cons "page idを[解析/かいせき]sourceの[名前空間/なまえくうかん]へ[与/あた]え、[論理/ろんり]sourceとMarkdown[出力/しゅつりょく]routeにはprojection pathを[使/つか]う。"
         cons "[全/ぜん]ページの[意味参照/いみさんしょう]と[実際/じっさい]に[出力/しゅつりょく]するanchorを[検査/けんさ]し、[全体/ぜんたい]が[成功/せいこう]するまで[成果物/せいかぶつ]を[返/かえ]さない。"
         cons "[未登録/みとうろく]のMarkdownをfilesystemから[発見/はっけん]して[補完/ほかん]することはない。"
-        cons "この[入口/いりぐち]にpassive file[登録/とうろく]はない。"
+        cons sentence
+          cons ruby text "移行中" text "いこうちゅう"
+          cons text "の"
+          cons ruby text "資料" text "しりょう"
+          cons text "へのfragmentなし"
+          cons ruby text "参照" text "さんしょう"
+          cons text "には、registryの"
+          cons ruby text "任意" text "にんい"
+          cons text "field "
+          cons code "files"
+          cons text " に "
+          cons code "id"
+          cons text "、"
+          cons code "source"
+          cons text "、"
+          cons code "route"
+          cons text "を"
+          cons ruby text "持" text "も"
+          cons text "つpassive Markdownを"
+          cons ruby text "明示登録" text "めいじとうろく"
+          cons text "できる。"
+          nil
+        cons sentence
+          cons text "sourceは "
+          cons code "doc/"
+          cons text " "
+          cons ruby text "以下" text "いか"
+          cons text "の "
+          cons code ".md"
+          cons text "、HTML"
+          cons ruby text "配布" text "はいふ"
+          cons text "routeは "
+          cons code "sources/"
+          cons text " "
+          cons ruby text "以下" text "いか"
+          cons text "の "
+          cons code ".md"
+          cons text " に"
+          cons ruby text "限定" text "げんてい"
+          cons text "する。"
+          nil
+        cons "[登録済/とうろくず]みDocのsource/projection/aliasや[他/ほか]の[登録/とうろく]と[衝突/しょうとつ]する[指定/してい]を[拒否/きょひ]する。"
+        cons "[上限/じょうげん]は128[件/けん]、UTF-8で1[件/けん]256KiB・[合計/ごうけい]2MiBとし、[存在/そんざい]・[正規/せいき]file・byte[数/すう]を[生成/せいせい]と[検査/けんさ]の[両方/りょうほう]で[確認/かくにん]する。"
+        cons "Markdown projectionは[論理/ろんり]sourceへの[相対/そうたい]リンクを[保/たも]ち、HTMLは[明示/めいじ]routeへ[元/もと]byte[列/れつ]を[配布/はいふ]する。"
+        cons "これは[資料原文/しりょうげんぶん]への[参照提供/さんしょうていきょう]であり、NEPL3d[正本/せいほん]への[昇格/しょうかく]やMarkdownのHTML[化/か]ではない。"
+        cons "passive fileは[意味上/いみじょう]のlabelを[持/も]たないため、fragment[参照/さんしょう]を[拒否/きょひ]する。"
+        cons "[内容/ないよう]byte[列/れつ]は[既存/きそん]PageSet identityに[含/ふく]め、[資料/しりょう]の[変更/へんこう]でinput contextを[更新/こうしん]する。"
+        cons "リンク[先/さき]の[存在/そんざい]を[暗黙/あんもく]に[補/おぎな]うのではなく、[段階移行中/だんかいいこうちゅう]の[閉/と]じた[入力集合/にゅうりょくしゅうごう]を[宣言/せんげん]するための[追加/ついか]である。"
         nil
       cons paragraph
         cons sentence cons ruby text "旧" text "きゅう" cons text " " cons code "nepl3-tools.markdown-annotated/2" cons text " と" cons ruby text "混在" text "こんざい" cons text "できる。" nil
@@ -416,7 +464,7 @@ body
         nil
       cons paragraph
         cons "compiler[開発/かいはつ]で[現行/げんこう]rendererが[壊/こわ]れた[場合/ばあい]にも[仕様/しよう]を[読/よ]めるよう、[最後/さいご]に[動作検証済/どうさけんしょうず]みの[文書/ぶんしょ]renderer/package/assetを、versionとdigestで[固定/こてい]して[利用/りよう]できる。"
-        cons "[新/あたら]しいDoc sourceはそのrendererで[受理/じゅり]できる[版/はん]かを[確認/かくにん]し、[非互換/ひごかん]なら[停止/ていし]して、[互換/ごかん]なrendererの[確立/かくりつ]を[先/さき]に[行/おこな]う。"
+        cons "[新/あたら]しいDoc sourceはそのrendererで[受理/じゅり]できる[版/ばん]かを[確認/かくにん]し、[非互換/ひごかん]なら[停止/ていし]して、[互換/ごかん]なrendererの[確立/かくりつ]を[先/さき]に[行/おこな]う。"
         cons "[失敗後/しっぱいご]に、[黙/だま]って[旧/きゅう]rendererへfallbackしない。"
         cons "[明示選択/めいじせんたく]した[旧/きゅう]rendererでの[文書/ぶんしょ]buildと、[同/どう]revisionの[処理系/しょりけい]がDocを[正/ただ]しく[扱/あつか]うruntime[受入/うけいれ]を、[別/べつ]の[結果/けっか]として[記録/きろく]する。"
         nil

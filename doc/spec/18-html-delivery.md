@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/18&#45;html&#45;delivery.nepld; renderer nepl3-tools.markdown-annotated/2; source SHA-256 90c02690b3b98e6c6d305c69750a65678d1ad81c7688042620a77b600babac73; alias input SHA-256 8cbc6c3d55e45caec8c46dd1fca71807673ada9181eafbee1d94c020a2b31556; document digest 5b7384543fab1dd112720329618effc46b071a5ac3093969dc76bda20d4f9f85. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/18&#45;html&#45;delivery.nepld; renderer nepl3-tools.markdown-annotated/2; source SHA-256 bc7c7786464306afa2e0a1e99d05a817938e1364c24aeef015721ae47d244b29; alias input SHA-256 8cbc6c3d55e45caec8c46dd1fca71807673ada9181eafbee1d94c020a2b31556; document digest 10d4cc5c9f651d71dfafe5cbf667b53e14a08d96941a2690f0f172223b5faffc. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="18-htmlを先行利用する実装段階"></a>
 
@@ -55,4 +55,4 @@ Chromium・Firefox・WebKitで、script禁止\[きんし\]かつsame\-origin権�
 
 ## 正式文書\[せいしきぶんしょ\]のDoc移行\[いこう\]
 
-T23で必要\[ひつよう\]な表現\[ひょうげん\]が使\[つか\]えるページから、T21の棚卸\[たなおろ\]し・変換\[へんかん\]を進\[すす\]める。数式\[すうしき\]を含\[ふく\]むspecは、T24の実生成経路\[じつせいせいけいろ\]を使用\[しよう\]する。T21の完了依存\[かんりょういぞん\]をT24・T19へ接続\[せつぞく\]し、Math評価\[ひょうか\]・Circuit全体\[ぜんたい\]の完成待\[かんせいま\]ちでDoc正本化\[せいほんか\]を遅\[おく\]らせない。ページ単位\[たんい\]の意味\[いみ\]・リンク・安定\[あんてい\]ID・生成物対応\[せいせいぶつたいおう\]とbootstrapの条件\[じょうけん\]は、16章\[しょう\]のまま維持\[いじ\]する。README・AGENTSなどのMarkdown入口\[いりぐち\]は、必要\[ひつよう\]に応\[おう\]じて\.nepld正本\[せいほん\]から生成\[せいせい\]し、二重\[にじゅう\]手書\[てが\]き保守\[ほしゅ\]をしない。
+T23で必要\[ひつよう\]な表現\[ひょうげん\]が使\[つか\]えるページから、T21の棚卸\[たなおろ\]し・変換\[へんかん\]を進\[すす\]める。数式\[すうしき\]を含\[ふく\]むspecは、T24の実生成経路\[じつせいせいけいろ\]を使用\[しよう\]する。T21はT19・T24全体\[ぜんたい\]の完了\[かんりょう\]を一括\[いっかつ\]の前提\[ぜんてい\]にせず、ページが使\[つか\]うDoc・Mathの操作\[そうさ\]ごとに必要\[ひつよう\]な実装\[じっそう\]と検査\[けんさ\]を確認\[かくにん\]する。NEPL3dを正式\[せいしき\]な正本\[せいほん\]とし、HTMLは再生成\[さいせいせい\]できる表示用\[ひょうじよう\]の出力\[しゅつりょく\]とする。Pages公開\[こうかい\]とrustdocの詳細監査\[しょうさいかんさ\]を、Docの本体開発\[ほんたいかいはつ\]・正本移行\[せいほんいこう\]を止\[と\]める条件\[じょうけん\]にしない。ページ単位\[たんい\]の意味\[いみ\]・リンク・安定\[あんてい\]ID・生成物対応\[せいせいぶつたいおう\]とbootstrapの条件\[じょうけん\]は、16章\[しょう\]のまま維持\[いじ\]する。README・AGENTSなどのMarkdown入口\[いりぐち\]は、必要\[ひつよう\]に応\[おう\]じて\.nepld正本\[せいほん\]から生成\[せいせい\]し、二重\[にじゅう\]手書\[てが\]き保守\[ほしゅ\]をしない。

@@ -33,6 +33,9 @@ fn portable_path(name: &str) -> bool {
 pub struct Registry {
     pub version: u32,
     pub pages: Vec<Page>,
+    /// Explicit passive Markdown destinations; never promoted to Doc pages.
+    #[serde(default)]
+    pub files: Vec<ReferenceFile>,
     /// Markdown batch allowance; old-only checks keep per-page limits.
     #[serde(default)]
     pub output_limits: super::export::pages::resources::OutputLimits,
@@ -50,6 +53,40 @@ pub struct Page {
     pub aliases: String,
     pub route: String,
     pub renderer: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ReferenceFile {
+    pub id: String,
+    pub source: String,
+    pub route: String,
+}
+
+fn reference_inputs(
+    root: &Path,
+    files: Vec<ReferenceFile>,
+) -> Result<Vec<(super::export::pages::Entry, Vec<u8>)>> {
+    let mut inputs = Vec::new();
+    let mut total = 0usize;
+    for file in files {
+        let bytes = bounded(root, &file.source, 262_144)?;
+        std::str::from_utf8(&bytes)?;
+        total = total.checked_add(bytes.len()).ok_or("ReferenceLimit")?;
+        if total > 2_097_152 {
+            return Err("ReferenceLimit".into());
+        }
+        inputs.push((
+            super::export::pages::Entry {
+                id: file.id,
+                source: file.source,
+                route: file.route,
+                input: None,
+            },
+            bytes,
+        ));
+    }
+    Ok(inputs)
 }
 
 pub(crate) fn bounded(root: &Path, relative: &str, limit: u64) -> Result<Vec<u8>> {
@@ -125,6 +162,28 @@ fn parse_registry(raw: &[u8]) -> Result<Registry> {
             return Err("invalid or repeated canonical page route".into());
         }
     }
+    if registry.files.len() > 128 {
+        return Err("ReferenceCountLimit".into());
+    }
+    for file in &registry.files {
+        if file.id.is_empty()
+            || !file
+                .id
+                .bytes()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'-')
+            || !ids.insert(&file.id)
+            || !portable_path(&file.source)
+            || !file.source.starts_with("doc/")
+            || !file.source.ends_with(".md")
+            || !paths.insert(file.source.to_ascii_lowercase())
+            || !portable_path(&file.route)
+            || !file.route.starts_with("sources/")
+            || !file.route.ends_with(".md")
+            || !routes.insert(file.route.to_ascii_lowercase())
+        {
+            return Err("invalid or colliding passive Markdown reference".into());
+        }
+    }
     // Every registered source, alias and projection is a file. Reject a known
     // file/directory conflict before staging any output, including old-only
     // registries that do not enter the PageSet resolver. Testing every ancestor
@@ -149,6 +208,7 @@ pub fn check(root: &Path, manifest: &str) -> Result<()> {
     // Keep the existing per-page operation and memory policy for old-only
     // registries. A page-context profile explicitly opts into the batch limit.
     if registry.pages.iter().all(|p| p.renderer == RENDERER) {
+        reference_inputs(root, registry.files)?;
         let compiled = super::source::compiled()?;
         for page in &registry.pages {
             let source = bounded(root, &page.source, super::export::MAX_SOURCE_BYTES)?;
@@ -237,6 +297,7 @@ pub(crate) fn generate_html(
 ) -> Result<super::export::pages::GeneratedPages> {
     let registry = load(root, manifest)?;
     let mut output_budget = registry.html_output_limits.budget();
+    let resources = reference_inputs(root, registry.files)?;
     let mut inputs = Vec::new();
     let mut total = 0u64;
     for page in registry.pages {
@@ -256,9 +317,11 @@ pub(crate) fn generate_html(
             source,
         ));
     }
-    let generated = super::export::pages::generate_with_output_budget(
+    let generated = super::export::pages::generate_with_resources(
         &super::source::compiled()?,
         &inputs,
+        &resources,
+        super::export::pages::resources::PhaseLimits::default(),
         &mut output_budget,
     )?;
     Ok(generated)
