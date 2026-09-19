@@ -673,10 +673,37 @@ fn snapshot_dag<'a>(
                     Resource::Work,
                     prior.source.0.len().min(identity.source.0.len()) as u64 + 41,
                 )?;
-                match prior.cmp(identity) {
-                    core::cmp::Ordering::Equal => found = Some(ordered[at]),
-                    core::cmp::Ordering::Less => low = at + 1,
-                    core::cmp::Ordering::Greater => high = at,
+                let neighbor = match prior.cmp(identity) {
+                    core::cmp::Ordering::Equal => {
+                        found = Some(ordered[at]);
+                        None
+                    }
+                    core::cmp::Ordering::Less => {
+                        low = at + 1;
+                        (low < high).then_some(low)
+                    }
+                    core::cmp::Ordering::Greater => {
+                        high = at;
+                        high.checked_sub(1)
+                    }
+                };
+                // Consecutive source fragments often occupy adjacent ordered
+                // positions. Check that boundary before searching the rest;
+                // the complete snapshot identity still decides every hit.
+                if let Some(next) = neighbor {
+                    let prior = nodes[ordered[next]];
+                    budget.charge(
+                        Resource::Work,
+                        prior.source.0.len().min(identity.source.0.len()) as u64 + 41,
+                    )?;
+                    match prior.cmp(identity) {
+                        core::cmp::Ordering::Equal => {
+                            found = Some(ordered[next]);
+                            ordered_hint = Some(next);
+                        }
+                        core::cmp::Ordering::Less => low = next + 1,
+                        core::cmp::Ordering::Greater => high = next,
+                    }
                 }
             }
             while found.is_none() && low < high {
