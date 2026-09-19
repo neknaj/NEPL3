@@ -809,6 +809,7 @@ fn synchronized_context_spec_drafts_parse_lower_and_check_labels() -> Result<()>
         ..super::super::source::budget().limits()
     };
     for (name, path) in [
+        ("03-reader", "doc/spec/03-reader.nepld"),
         ("16-doc-migration", "doc/spec/16-doc-migration.nepld"),
         ("21-doc-pages", "doc/migration/authored/21-doc-pages.nepld"),
         (
@@ -817,6 +818,13 @@ fn synchronized_context_spec_drafts_parse_lower_and_check_labels() -> Result<()>
         ),
     ] {
         let text = fs::read_to_string(repository.join(path))?;
+        // Adopted chapters must remain usable with the normal canonical page
+        // allowance; larger unpublished drafts retain their explicit cap.
+        let phase_limits = if path.starts_with("doc/spec/") {
+            super::super::source::budget().limits()
+        } else {
+            phase_limits
+        };
         super::super::source::with_named_input_limits(
             true,
             &compiled,
