@@ -152,3 +152,17 @@ source編集の原子的な反映は維持する。同期reader callbackは外�
 上記3399での停止は過去の途中版の記録で、現行の再現結果ではない。
 この全文HTML試験はnative/WASIで成功している。多数ページ、全foreign、Pages配信の
 性能・完成までを一例の成功から推定しない。
+
+## Grammar仕様原稿の検査と残る割当上限
+
+第04章の未公開NEPL3d原稿を、既存の原稿用parse/lower/labels試験へ追加した。
+通常ページのAllocation上限500,000,000では、完成木の検査中に停止する。
+そのため、まだcanonical registryへ登録せず、Markdown正本を維持する。
+未公開原稿用の既存の有限予算で処理できることと、正本切替の準備完了は区別する。
+
+調査で、SyntaxBundle検査が共有SourceSnapshotにも本文コピー分を課金し、
+借用するOrigin配列にも所有配列分を課金していたことが分かった。
+SourceStoreの予算付き参照挿入を使い、Origin検査自身が計上するscratchだけを課金する。
+Source入場、重複拒否、全Originの参照・cycle検査、非atomic targetの実コピー費用は維持する。
+長短sourceの共有費用、source挿入時の停止、未使用Originの不正参照を回帰試験にした。
+この修正後も第04章は通常上限で停止するため、性能課題の解消とは報告しない。

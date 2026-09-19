@@ -150,7 +150,7 @@ body
             cons "[同/おな]じroot[内/ない]への[同名導入/どうめいどうにゅう]はDuplicateGlobalと[位置診断/いちしんだん]で[拒否/きょひ]し、[別/べつ]Foreign bundleのrootへ[暗黙/あんもく]に[導入/どうにゅう]しない。" nil
           cons paragraph
             cons "portableの[構造検査/こうぞうけんさ]は、namespaceStageの[存在/そんざい]、namespace policyとの[組合/くみあわ]せ、root[所属/しょぞく]を[検査/けんさ]する。"
-            cons "そのstageが[実際/じっさい]の[参照時点/さんしょうじてん]の[最新履歴/さいしんりれき]だったことや、[候補/こうほ]を[導入/どうにゅう]する[権限/けんげん]は、[型付/かたつ]き[値/ち]だけでは[証明/しょうめい]しない。"
+            cons "そのstageが[実際/じっさい]の[参照時点/さんしょうじてん]の[最新履歴/さいしんりれき]だったことや、[候補/こうほ]を[導入/どうにゅう]する[権限/けんげん]は、[型付/かたつ]き[値/あたい]だけでは[証明/しょうめい]しない。"
             cons "それらは、[実/じつ]plan[実行/じっこう]の[意味/いみ]proofに[属/ぞく]する。" nil
           cons paragraph
             cons "engineのBindingAnalysisは、[実/じつ]BindingPlanの[完走/かんそう]と[名前解決/なまえかいけつ]により[得/え]る[意味/いみ]proofであり、[共通/きょうつう]CheckedFactSetの[型/かた]・ID・[参照/さんしょう]・source[検査/けんさ]と[区別/くべつ]する。"
@@ -205,7 +205,7 @@ body
             cons "[未登録/みとうろく]はMissingProviderとし、providerの[自己申告/じこしんこく]から[変更権限/へんこうけんげん]を[得/え]ない。" nil
           cons paragraph
             cons "native callbackの[診断/しんだん]・eventは、FactsEmitterによってsource/map・schema・Fix・[件数/けんすう]を[検査/けんさ]した[時点/じてん]で、[正式/せいしき]collectorへ[追加/ついか]する。"
-            cons "[戻/もど]り[値/ち]のCustomOutcomeは、Complete(delta)、Invalid(partial)、Stopped(reason, partial)を[区別/くべつ]する。"
+            cons "[戻/もど]り[値/あたい]のCustomOutcomeは、Complete(delta)、Invalid(partial)、Stopped(reason, partial)を[区別/くべつ]する。"
             cons "deltaの[参照/さんしょう]・[予約/よやく]ID・namespace/root・[変更権限/へんこうけんげん]を[検査/けんさ]し、[必要/ひつよう]storageを[準備/じゅんび]した[後/あと]に[原子的/げんしてき]に[適用/てきよう]する。"
             cons "[停止/ていし]した[親/おや]Budgetへ[新/あたら]しいraw deltaを[無検査/むけんさ]で[追加/ついか]せず、[受理済/じゅりず]みの[診断/しんだん]・event・sources/mapsを[残/のこ]す。"
             cons "[外部/がいぶ]FactsReplyのdecodeとremote[実費/じっぴ]の[精算/せいさん]は、このnative emitterを[呼/よ]んだだけで[成立/せいりつ]したことにはならない。" nil
@@ -326,7 +326,7 @@ body
         cons "hostの[無関係/むかんけい]なglobal storeで[欠落/けつらく]を[補/おぎな]わない。"
         cons "[独立表/どくりつひょう]に[同/おな]じsnapshotを[含/ふく]む[場合/ばあい]はidentity/URIの[一致/いっち]を[要求/ようきゅう]し、SourceAdmissionは[同/おな]じ[操作内/そうさない]で[一度/いちど]だけ[計上/けいじょう]する。" nil
       cons paragraph
-        cons "[共通/きょうつう]facts[値/ち]の[所有/しょゆう]・[検査/けんさ]はnepl3.core、[解析/かいせき]treeを[含/ふく]む[包絡/ほうらく]はengineが[所有/しょゆう]する。"
+        cons "[共通/きょうつう]facts[値/あたい]の[所有/しょゆう]・[検査/けんさ]はnepl3.core、[解析/かいせき]treeを[含/ふく]む[包絡/ほうらく]はengineが[所有/しょゆう]する。"
         cons "[標準/ひょうじゅん]catalogは[実/じつ]descriptorを[登録/とうろく]して[宣言/せんげん]を[照合/しょうごう]する。"
         cons "FactsRequest/Replyの[型付/かたつ]きadapterは、engineからcore-owned FoundationValueCodecを[介/かい]してwireの[実/じつ]FactSet/Delta/Report[変換/へんかん]を[使/つか]う。"
         cons "wireからengineへの[依存/いぞん]は[追加/ついか]しない。"
@@ -340,7 +340,7 @@ body
         cons "[未認証/みにんしょう]・[未許可/みきょか]の[受信/じゅしん]requestから、proofを[発行/はっこう]してはならない。" nil
       cons paragraph
         cons "[別途/べっと]request_from_valueは[送信側/そうしんがわ]のecho/loopback[検査/けんさ]であり、[保存/ほぞん]された[元要求/もとようきゅう]のproofを[要求/ようきゅう]する。"
-        cons "tree/path/nodeを[正準番号/せいじゅんばんごう]へ[変換/へんかん]した[後/あと]、[要求全体/ようきゅうぜんたい]の[型付/かたつ]き[値/ち]を[予算付/よさんつ]きで[照合/しょうごう]する。"
+        cons "tree/path/nodeを[正準番号/せいじゅんばんごう]へ[変換/へんかん]した[後/あと]、[要求全体/ようきゅうぜんたい]の[型付/かたつ]き[値/あたい]を[予算付/よさんつ]きで[照合/しょうごう]する。"
         cons "analysis identity、[既存/きそん]facts、[全/ぜん]namespace・writable/import scope・resolution/relation grant・ID[予約/よやく]も、[一致対象/いっちたいしょう]である。"
         cons "[初回受信/しょかいじゅしん]と、この[完全一致検査/かんぜんいっちけんさ]を[混同/こんどう]しない。"
         cons "[独立/どくりつ]process[間/かん]の[通信認証/つうしんにんしょう]と[実行授権/じっこうじゅけん]は、host transportの[責務/せきむ]である。" nil
@@ -500,7 +500,7 @@ body
           cons paragraph
             cons sentence cons code "withmode M R" cons text " は、Rの" cons ruby text "構文" text "こうぶん" cons text "rootを" cons ruby text "所有" text "しょゆう" cons text "するpackageのmode Mを" cons ruby text "選" text "えら" cons text "ぶ。" nil
             cons "Builtin・Local・ListOfのrootは[現在/げんざい]packageに[属/ぞく]し、Foreignのrootはaliasが[指/さ]すguestに[属/ぞく]する。"
-            cons "[入/い]れ[子/こ]のWithModeは[内側/うちがわ]のrootまで[所属/しょぞく]をたどり、[同/おな]じrootに[複数/ふくすう]overrideがある[場合/ばあい]は[最内側/さいうちがわ]を[使/つか]う。"
+            cons "[入/い]れ[子/こ]のWithModeは[内側/うちがわ]のrootまで[所属/しょぞく]をたどり、[同/おな]じrootに[複数/ふくすう]overrideがある[場合/ばあい]は[最/もっと]も[内側/うちがわ]を[使/つか]う。"
             cons "[無効/むこう]な[外側/そとがわ]mode[宣言/せんげん]も[黙殺/もくさつ]せず、[対応/たいおう]ownerのmodeとして[検査/けんさ]する。" nil
           cons paragraph
             cons sentence cons code "withmode Code (listof (foreign Guest Sentence))" cons text " はhostのcons/nil spineをCodeで" cons ruby text "読" text "よ" cons text "み、" cons ruby text "各" text "かく" cons text "guest" cons ruby text "要素" text "ようそ" cons text "はSentenceの" cons ruby text "既定" text "きてい" cons text "modeを" cons ruby text "使" text "つか" cons text "う。" nil
