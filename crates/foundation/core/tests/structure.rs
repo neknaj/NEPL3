@@ -127,6 +127,94 @@ fn registry() -> Result<(SchemaRegistry, SchemaRef), SchemaError> {
 }
 
 #[test]
+fn validation_reuses_frontier_storage_but_visits_every_value() -> Result<(), SchemaError> {
+    let (registry, _) = registry()?;
+    let ty = TypeDescriptor::List(Box::new(TypeDescriptor::List(Box::new(
+        TypeDescriptor::U64,
+    ))));
+    let value = NdfValue::List(vec![NdfValue::List(vec![NdfValue::U64(7); 32]); 100]);
+    let mut b = Budget::new(Limits {
+        allocation_units: 16_384,
+        ..budget().limits()
+    });
+    registry.validate(&ty, &value, &mut b)?;
+    // Root + 100 rows + 3,200 cells; storage is for the pending frontier, not
+    // a fresh allocation for each visited node. No value checks are skipped.
+    assert_eq!(b.usage().nodes, 3_301);
+    assert_eq!(b.usage().work, 3_301);
+    assert_eq!(b.usage().depth, 3);
+    let mut invalid = value.clone();
+    if let NdfValue::List(rows) = &mut invalid {
+        rows[99] = NdfValue::List(vec![NdfValue::Text("not a U64".into())]);
+    }
+    assert!(matches!(
+        registry.validate(&ty, &invalid, &mut budget()),
+        Err(SchemaError::WrongType)
+    ));
+    Ok(())
+}
+
+#[test]
+fn validation_bounds_frontier_before_expanding_wide_input() -> Result<(), SchemaError> {
+    let (registry, _) = registry()?;
+    let slot = core::mem::size_of::<(&TypeDescriptor, &NdfValue, u64)>() as u64;
+    for width in [2, 100_000] {
+        let value = NdfValue::List(vec![NdfValue::Unit; width]);
+        for (limits, reason) in [
+            (
+                Limits {
+                    work: 1,
+                    ..budget().limits()
+                },
+                StopReason::WorkLimit,
+            ),
+            (
+                Limits {
+                    allocation_units: slot,
+                    ..budget().limits()
+                },
+                StopReason::AllocationLimit,
+            ),
+        ] {
+            let mut b = Budget::new(limits);
+            assert!(
+                matches!(registry.validate(&TypeDescriptor::NdfValue, &value, &mut b), Err(SchemaError::Stopped(found)) if found == reason)
+            );
+            assert_eq!(b.usage().allocation_units, slot);
+            assert_eq!(b.poll(), Err(reason));
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn validation_preserves_left_to_right_error_order() -> Result<(), SchemaError> {
+    let (registry, schema) = registry()?;
+    let missing = NdfValue::Record(Record {
+        schema: schema.clone(),
+        kind: "Missing".into(),
+        fields: vec![],
+    });
+    let wrong_fields = NdfValue::Record(Record {
+        schema,
+        kind: "Pair".into(),
+        fields: vec![],
+    });
+    for (children, expected) in [
+        (
+            vec![missing.clone(), wrong_fields.clone()],
+            SchemaError::UnknownType,
+        ),
+        (vec![wrong_fields, missing], SchemaError::FieldCount),
+    ] {
+        assert!(
+            matches!(registry.validate(&TypeDescriptor::NdfValue, &NdfValue::List(children), &mut budget()), Err(found) if found == expected)
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn descriptor_canonical_json_has_independently_specified_field_order() -> Result<(), SchemaError> {
     let descriptor = descriptor();
     let expected = r#"{"operations":{},"package":"example","revision":1,"types":{"Pair":{"constraints":["positive"],"record":[["first","Natural"],["second","Text"]]}}}"#;

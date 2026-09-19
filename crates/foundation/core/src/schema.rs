@@ -714,22 +714,41 @@ impl SchemaRegistry {
         if !self.finalized {
             return Err(SchemaError::Unfinalized);
         }
+        budget.charge(Resource::Work, 1)?;
         budget.charge(
             Resource::AllocationUnits,
             core::mem::size_of::<(&TypeDescriptor, &NdfValue, u64)>() as u64,
         )?;
         let mut pending = Vec::new();
+        pending
+            .try_reserve_exact(1)
+            .map_err(|_| budget.stop(StopReason::AllocationLimit))?;
+        // Logical reserved slots are independent of allocator over-allocation.
+        // Popping a node reuses its slot; only growing this traversal stack
+        // allocates additional storage, charged before requesting capacity.
+        let mut pending_slots = 1usize;
         pending.push((expected, value, 1u64));
         while let Some((ty, value, depth)) = pending.pop() {
-            budget.charge(Resource::Work, 1)?;
             budget.charge(Resource::Nodes, 1)?;
             budget.observe_depth(depth)?;
             let next_depth = depth.checked_add(1).ok_or(StopReason::DepthLimit)?;
             let mut push = |ty, value| -> Result<(), SchemaError> {
-                budget.charge(
-                    Resource::AllocationUnits,
-                    core::mem::size_of::<(&TypeDescriptor, &NdfValue, u64)>() as u64,
-                )?;
+                // Charge each child before growing the frontier, rather than
+                // allowing a wide input to run to the next pop unmetered.
+                budget.charge(Resource::Work, 1)?;
+                if pending.len() == pending_slots {
+                    let next = pending_slots
+                        .checked_mul(2)
+                        .ok_or_else(|| budget.stop(StopReason::AllocationLimit))?;
+                    let bytes = (next - pending_slots)
+                        .checked_mul(core::mem::size_of::<(&TypeDescriptor, &NdfValue, u64)>())
+                        .ok_or_else(|| budget.stop(StopReason::AllocationLimit))?;
+                    budget.charge(Resource::AllocationUnits, bytes as u64)?;
+                    pending
+                        .try_reserve_exact(next - pending.len())
+                        .map_err(|_| budget.stop(StopReason::AllocationLimit))?;
+                    pending_slots = next;
+                }
                 pending.push((ty, value, next_depth));
                 Ok(())
             };
