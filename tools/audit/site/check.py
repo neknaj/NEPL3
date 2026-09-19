@@ -6,7 +6,7 @@ It tests generated static pages, not Playground or live Pages deployment.
 """
 if not __debug__:
     raise RuntimeError('site audit requires Python assertions')
-import argparse, hashlib, json, threading, subprocess
+import argparse, hashlib, json, threading, subprocess, re
 from pathlib import Path
 from html.parser import HTMLParser
 from urllib.parse import urlsplit, unquote, urljoin
@@ -41,10 +41,15 @@ def expected_inputs(build, manifest, doc_manifest, docs, source_root, config_pat
     config = json.loads(blob(config_path))
     assert config['version'] == 1 and build['base_path'] == config['base_path'], 'unexpected base'
     assert build['design'] == json.loads(blob('design/tasks.json'))['design'], 'design revision mismatch'
+    assert build['overview'] == {'source': 'README.md', 'sha256': hashlib.sha256(blob('README.md')).hexdigest(),
+                                 'renderer': 'pulldown-cmark/0.13.4'}, 'overview source mismatch'
     assert build['capability'] == 'docs-only' and build['runtime_identity'] is None, 'unexpected runtime capability'
     registry = json.loads(blob('doc/canonical.json'))['pages']
     assert registry, 'empty canonical registry'
-    assert docs.keys() == {page['route'] for page in registry} | {'index.html', 'docs/index.html'}, 'page coverage'
+    tracked = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', commit, '--', 'doc/spec/'], cwd=source_root, text=True).splitlines()
+    markdown_routes = {'docs/spec/' + path[len('doc/spec/'):-3] + '.html' for path in tracked
+                       if re.fullmatch(r'doc/spec/[0-9]{2}-[^/]*\.md', path) and path not in {p.get('projection') for p in registry}}
+    assert docs.keys() == {page['route'] for page in registry} | markdown_routes | {'index.html', 'docs/index.html', 'examples/index.html'}, 'page coverage'
     entries = doc_manifest['pages']
     assert len(entries) == len(registry), 'source coverage'
     actual = {entry['id']: entry for entry in entries}
@@ -87,9 +92,45 @@ def verify(root, source_root=None, config_path='site/config.json', renderer=None
                 assert unquote(url.fragment) in docs[target].ids, (name, link)
     expected_inputs(build, manifest, json.loads((root / 'doc-manifest.json').read_text(encoding='utf-8')),
                     docs, source_root or Path(__file__).resolve().parents[3], config_path, renderer)
+    examples = json.loads((root / 'examples/manifest.json').read_text(encoding='utf-8'))
+    checkout = source_root or Path(__file__).resolve().parents[3]
+    def blob(path):
+        return subprocess.check_output(['git', 'show', build['source_commit'] + ':' + path], cwd=checkout)
+    markdown = json.loads((root / 'markdown-manifest.json').read_text(encoding='utf-8'))
+    assert markdown['version'] == 1 and markdown['source_commit'] == build['source_commit']
+    assert markdown['renderer'] == 'pulldown-cmark/0.13.4'
+    projections = {p['projection'] for p in json.loads(blob('doc/canonical.json'))['pages']}
+    tracked = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', build['source_commit'], '--', 'doc/spec/'], cwd=checkout, text=True).splitlines()
+    expected_markdown = {p for p in tracked if re.fullmatch(r'doc/spec/[0-9]{2}-[^/]*\.md', p)} - projections
+    assert {p['source'] for p in markdown['pages']} == expected_markdown
+    assert len(markdown['pages']) == len(expected_markdown)
+    markdown_paths = {'markdown-manifest.json'}
+    for entry in markdown['pages']:
+        assert re.fullmatch(r'doc/spec/[0-9]{2}-[A-Za-z0-9-]+\.md', entry['source'])
+        assert entry['sha256'] == hashlib.sha256(blob(entry['source'])).hexdigest()
+        assert entry['route'] == 'docs/spec/' + entry['source'][len('doc/spec/'):-3] + '.html'
+        assert entry['route'] in docs
+        markdown_paths.add(entry['route'])
+    catalog_bytes = blob('site/examples.json')
+    catalog = json.loads(catalog_bytes)
+    assert examples['source_commit'] == build['source_commit'] and examples['capability'] == 'source-view'
+    assert examples['catalog_sha256'] == hashlib.sha256(catalog_bytes).hexdigest()
+    assert len(examples['examples']) == len(catalog['examples'])
+    assert examples['source_profile'] == {'path': catalog['profile'], 'id': json.loads(blob(catalog['profile']))['id'],
+        'sha256': hashlib.sha256(blob(catalog['profile'])).hexdigest(), 'resolved_runtime': False}
+    example_paths = {'examples/index.html', 'examples/manifest.json'}
+    for entry, declared_example in zip(examples['examples'], catalog['examples']):
+        assert all(entry[k] == v for k, v in declared_example.items()), 'example catalog mismatch'
+        data = blob(entry['source'])
+        assert entry['path'] == 'examples/sources/' + entry['id'] + '.txt', 'example artifact path'
+        assert files[entry['path']].read_bytes() == data, 'example source changed'
+        assert entry['bytes'] == len(data) and entry['sha256'] == hashlib.sha256(data).hexdigest()
+        assert entry['revision'] == build['source_commit'] and entry['execution_available'] is False
+        assert entry['required_source_profile'] == examples['source_profile']['id']
+        example_paths.add(entry['path'])
     for records, expected, sized in [(build['files'], declared - {'build.json'}, True),
                               (json.loads((root / 'doc-manifest.json').read_text(encoding='utf-8'))['files'],
-                               declared - {'build.json', 'index.html', 'docs/index.html', 'assets/site.css', '.nojekyll', 'doc-manifest.json'}, False)]:
+                               declared - {'build.json', 'index.html', 'docs/index.html', 'assets/site.css', '.nojekyll', 'doc-manifest.json'} - example_paths - markdown_paths, False)]:
         assert len(records) == len({record['path'] for record in records}), 'duplicate nested file'
         assert {record['path'] for record in records} == expected, 'nested manifest coverage'
         for record in records:
@@ -130,6 +171,9 @@ def verify(root, source_root=None, config_path='site/config.json', renderer=None
                         response = page.goto(f'http://127.0.0.1:{server.server_port}' + base + name, wait_until='networkidle')
                         state = page.evaluate('()=>({scripts:document.scripts.length,styles:document.styleSheets.length,overflow:document.documentElement.scrollWidth>innerWidth,title:document.title})')
                         assert response.status == 200 and (not fail) and (state['scripts'] == 0) and (state['styles'] > 0) and (not state['overflow']), (name, state, fail)
+                        if name == 'examples/index.html':
+                            expected_sources = [files[e['path']].read_bytes().decode('utf-8').replace('\r\n', '\n').replace('\r', '\n') for e in examples['examples']]
+                            assert page.locator('pre > code').all_text_contents() == expected_sources, 'example display differs from source'
                         rows.append(dict(engine=engine, version=browser.version, width=width, page=name, **state))
                     context.close()
                 browser.close()

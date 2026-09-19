@@ -32,7 +32,7 @@ CI成功は全受入条件の達成を意味しません。検証範囲は[Found
 | NEPL3c / NEPL3hdl | primitive・帰還・伝搬の回路と、同期RTLの責務分離 |
 | NEPL3h | GHCへ接続する独立Haskell frontend |
 
-**これらは設計草案です。** NEPL3sentence/Aへの抽出、旧lexical commentの撤去、新C/HDL、GHC adapter等は実装済みではありません。現行文法を草案の例へ読み替えないでください。[NEPL3h案](doc/decisions/nepl3h-ghc-frontend.md)も、NEPL3全体の評価器や必須マクロ言語を定義するものではありません。
+**設計と実装完了は区別します。** NEPL3sentenceの独立core・LanguagePackage・literal/prefixのparse/check/printと、Doc本文readerへの接続は実装されています。Docの旧Sentence所有の除去、Aへの注釈移行、旧lexical commentの撤去、新C/HDL、GHC adapter等は未完了です。現行文法を草案の例へ読み替えないでください。[NEPL3h案](doc/decisions/nepl3h-ghc-frontend.md)も、NEPL3全体の評価器や必須マクロ言語を定義するものではありません。
 
 ## 読む・開発する
 
@@ -51,7 +51,7 @@ cargo run --locked -p nepl3-tools -- check
 cargo run --locked -p nepl3-tools -- tasks --check
 ```
 
-Rustの版は [rust-toolchain.toml](rust-toolchain.toml) で固定しています。20 crateは目標構成であり、実際のworkspace memberは [Cargo.toml](Cargo.toml) を参照してください。
+Rustの版は [rust-toolchain.toml](rust-toolchain.toml) で固定しています。crateの目標構成は [依存計画](design/dependencies.json)、実際のworkspace memberは [Cargo.toml](Cargo.toml) を参照してください。
 
 上のコマンドはrepository契約とtask生成物の確認です。runtimeの試験は`cargo test --workspace --locked`、その他の必須検査とtarget別の実行手順は[開発手順](doc/development.md)を参照してください。
 

@@ -1,0 +1,74 @@
+name: Publish documentation
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nepl3-pages-production
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      SOURCE_COMMIT: ${{ github.event.workflow_run.head_sha }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13'
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: doc-browser-${{ github.event.workflow_run.head_sha }}
+          path: dist/checked
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Inspect the same payload that passed CI
+        run: |
+          IDENTITY=$(python tools/site/checked_artifact.py dist/checked "$SOURCE_COMMIT")
+          echo "MANIFEST_SHA256=$IDENTITY" >> "$GITHUB_ENV"
+      - name: Package checked file bytes using the official Pages transport
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
+        with:
+          name: github-pages
+          path: dist/checked/site
+          retention-days: 14
+      - name: Require current main immediately before publication
+        run: test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$SOURCE_COMMIT"
+      - name: Deploy checked documentation
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
+      - name: Verify public documentation bytes and basic routes
+        run: |
+          python tools/site/smoke.py dist/checked/site https://neknaj.github.io/NEPL3/ --manifest-sha256 "$MANIFEST_SHA256" > dist/public-smoke.json
+      - name: Preserve public smoke result
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: pages-smoke-${{ github.event.workflow_run.head_sha }}
+          path: dist/public-smoke.json
+          if-no-files-found: warn
+          retention-days: 14

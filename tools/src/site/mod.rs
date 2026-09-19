@@ -1,4 +1,7 @@
 //! Static host composition of production Doc pages. No deployment side effects.
+mod examples;
+mod overview;
+mod specs;
 use crate::{
     Result,
     doc::{canonical, export::pages::GeneratedPages},
@@ -135,6 +138,7 @@ fn compose(
     commit: &str,
     design: &str,
     renderer: &RendererIdentity,
+    overview: Option<&overview::Overview>,
 ) -> Result<GeneratedPages> {
     config.validate()?;
     let mut links = String::new();
@@ -151,11 +155,33 @@ fn compose(
             escape(&page.id)
         ));
     }
+    if pages.files.contains_key("examples/index.html") {
+        links.push_str(&format!(
+            "<li><a href=\"{}examples/index.html\">実例と原文</a></li>\n",
+            escape(&config.base_path)
+        ));
+    }
+    for route in pages
+        .files
+        .keys()
+        .filter(|path| path.starts_with("docs/spec/") && path.ends_with(".html"))
+    {
+        if !registry.pages.iter().any(|page| page.route == *route) {
+            links.push_str(&format!(
+                "<li><a href=\"{}{}\">{} (Markdown正本)</a></li>\n",
+                escape(&config.base_path),
+                escape(route),
+                escape(route)
+            ));
+        }
+    }
     let html = include_str!("../../../site/index.html")
         .replace("{{BASE}}", &escape(&config.base_path))
         .replace("{{PAGES}}", &links);
-    insert(&mut pages.files, "index.html", html.as_bytes().to_vec())?;
-    insert(&mut pages.files, "docs/index.html", html.into_bytes())?;
+    let docs = html.replace("{{OVERVIEW}}", "<h1>NEPL3 ドキュメント</h1>");
+    let home = html.replace("{{OVERVIEW}}", overview.map_or("", |v| v.html.as_str()));
+    insert(&mut pages.files, "index.html", home.into_bytes())?;
+    insert(&mut pages.files, "docs/index.html", docs.into_bytes())?;
     insert(
         &mut pages.files,
         "assets/site.css",
@@ -172,8 +198,9 @@ fn compose(
         "design":design, "base_path":config.base_path,
         "runtime_identity":null, "site_renderer":"nepl3-tools.site/1", "renderer":renderer,
         "source_identity_scope":"input checkout; renderer executable identified separately",
+        "overview":overview.map(|v| serde_json::json!({"source":"README.md","sha256":v.source_sha256,"renderer":"pulldown-cmark/0.13.4"})),
         "files":identities(&pages.files),
-        "scope":"Registered canonical Doc pages; no Playground, deploy receipt or full T19/T20 acceptance"
+        "scope":"Canonical Doc pages, unmigrated numbered Markdown specifications and example sources; no Playground, deploy receipt or full T19/T20 acceptance"
     });
     insert(
         &mut pages.files,
@@ -252,8 +279,23 @@ pub fn build(root: &Path, config: &str, output: &Path) -> Result<()> {
     {
         crate::command(root, "git", &["ls-files", "--error-unmatch", "--", input])?;
     }
-    let generated = canonical::generate_html(root, "doc/canonical.json")?;
-    let generated = compose(&config, &registry, generated, &commit, design, &renderer)?;
+    let mut generated = canonical::generate_html(root, "doc/canonical.json")?;
+    for (path, bytes) in specs::generate(root, &registry, &config.base_path, &commit)? {
+        insert(&mut generated.files, &path, bytes)?;
+    }
+    for (path, bytes) in examples::generate(root, &config.base_path, &commit)? {
+        insert(&mut generated.files, &path, bytes)?;
+    }
+    let overview = overview::generate(root, &registry, &config.base_path, &commit)?;
+    let generated = compose(
+        &config,
+        &registry,
+        generated,
+        &commit,
+        design,
+        &renderer,
+        Some(&overview),
+    )?;
     let after = String::from_utf8(crate::command(root, "git", &["rev-parse", "HEAD"])?)?;
     if after.trim() != commit {
         return Err("source commit changed during site generation".into());

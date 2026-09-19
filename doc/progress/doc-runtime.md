@@ -142,4 +142,13 @@ source編集の原子的な反映は維持する。同期reader callbackは外�
 同じ全文試験は停止位置3399まで進んだが、なおWork上限で停止する。
 途中の線形検索版ではGrammar bootstrapも既存上限で停止したため、その版を完成扱いにせず、
 二分探索版でbootstrapを再実行して成功を確認した。workspace試験とClippyも成功した。
-次は残るsource admission・診断source・Origin graphの繰り返し検索を調べる。
+当時の残件はsource admission・診断source・Origin graphの繰り返し検索だった。
+
+2026-09-13、`272228c`で同じ約13KB全文を`doc-html export`へ再入力したところ、
+既存の各操作Work上限100,000,000のままHTMLまで成功した。使用Workはparse/validateが
+20,362,601、lowerが2,987,790、prepare/render/serializeが6,986,518だった。
+これらは別々の予算を持つ操作であり、一つのend-to-end予算の値ではない。
+入力SHA-256は`9099bbbe48ed75a0768997789229188f53e43348fe930522b119908dfdb7a889`。
+上記3399での停止は過去の途中版の記録で、現行の再現結果ではない。
+この全文HTML試験はnative/WASIで成功している。多数ページ、全foreign、Pages配信の
+性能・完成までを一例の成功から推定しない。

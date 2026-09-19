@@ -24,6 +24,14 @@ nepld正本へ移行し、検査済みの同じsite artifactを公開します�
 
 ## ローカル環境
 
+初期Pages公開は `.github/workflows/pages.yml` が担当します。main pushのCI成功後、
+そのrunのDoc site・検査report・元tarを取得し、commit/manifest/内容一致を再検査して公開します。
+検査済みsiteのfile byte列を公式upload-pages-artifactで梱包します。CI tarは照合用に保持し、
+Pages輸送tarと同一byteとは扱いません。初回の独自tar直接uploadはPages側でdeployment_failedとなりました。
+tar entryの先頭`./`等の形式差が疑われるため、輸送を公式actionへ委譲します。HTMLは再buildしません。
+公開後のHTTP smoke失敗はworkflow失敗として記録します。LKG/journalによる自動復旧は未提供です。
+Markdown/NEPL3d混在公開は正本移行を支える段階であり、全ページ移行やT19/T20完成を意味しません。
+
 `cargo run --locked -p nepl3-tools -- site build site/config.json dist/site` は、
 登録済みDoc正本のHTMLに静的な索引を付け、新規ディレクトリへ一式を生成します。
 追跡済みの設定とcleanな入力checkoutを要求し、生成中にHEADや入力の変更を検出した場合は出力しません。
@@ -32,7 +40,9 @@ nepld正本へ移行し、検査済みの同じsite artifactを公開します�
 CIでは同じcheckoutからbuildしたbinaryと生成ログを結び付けて保管します。
 埋込template・CSSとcheckoutの不一致も拒否します。toolsのbuild.rsはcompiler識別のみを行い、
 文書生成やGrammar compileを実行しません。
-現在の入口は登録済みページのdocs-only生成です。未移行文書・rustdoc・例のサイト統合、
+現在の入口は登録済みDocページ、未移行のMarkdown仕様書、`site/examples.json`の原文例を含むdocs-only生成です。
+原文の配布byte・Profile・digestは同じcheckoutと照合し、表示から例を実行しません。
+仕様書以外の未移行文書・rustdoc・実行例の操作結果を含む統合、
 公開後smokeと復旧を含むPages配信、T19/T20全体の完了は別途検証します。
 
 `python tools/site/payload.py dist/site dist/pages.tar --manifest-sha256 <検査済みmanifestのSHA-256>`
