@@ -5,6 +5,11 @@ body
       cons "[本文/ほんぶん]の[階層/かいそう]、[文単位/ぶんたんい]の[翻訳対応/ほんやくたいおう]、inlineの[注釈/ちゅうしゃく]を[独立/どくりつ]した[構造/こうぞう]として[扱/あつか]う。"
       cons "sentence literalとprefix constructorを[同/おな]じ[意味/いみ]モデルへlowerする。"
       cons "source[表記/ひょうき]は[別/べつ]に[保持/ほじ]する。" nil
+    cons paragraph
+      cons "[文章/ぶんしょう]の[最終的/さいしゅうてき]な[所有者/しょゆうしゃ]は[独立/どくりつ]したNEPL3sentenceであり、Docは[文書構造/ぶんしょこうぞう]を[所有/しょゆう]する。"
+      cons "[現在/げんざい]の[開発/かいはつ]hostはSentenceのliteral readerから[明示/めいじ]adapterでDocのSentencePayloadへ[変換/へんかん]する[段階/だんかい]にある。"
+      cons "[本章/ほんしょう]のDocValue・DocView・payloadは[現在/げんざい]のDoc consumerの[契約/けいやく]であり、Sentenceの[独立/どくりつ]schemaと[同一視/どういつし]しない。"
+      cons sentence cons ruby text "所有関係" text "しょゆうかんけい" cons text "と" cons ruby text "未完了" text "みかんりょう" cons text "のconsumer" cons ruby text "移行" text "いこう" cons text "は" cons link relative "23-sentence-annotation.md" none text "23章" cons text "を" cons ruby text "参照" text "さんしょう" cons text "する。" nil nil
     nil
   cons section types "1. [主要/しゅよう]な[型/かた]" body
     cons paragraph
@@ -327,18 +332,31 @@ body
         cons "hostのtextは[明示/めいじ]データであり、guest[意味/いみ]checkが[成功/せいこう]した[証明/しょうめい]ではない。" nil
       cons paragraph
         cons "identity[取得/しゅとく]のprepareは[独立/どくりつ]した[操作/そうさ]であり、[後/のち]の[実行予算/じっこうよさん]を[支払/しはら]い[済/ず]みとするproofではない。"
-        cons "[公開実行入口/こうかいじっこういりぐち]plain_textは[毎回同一/まいかいどういつ]Budget/SourceAdmissionでdocument[検査/けんさ]、canonical[値生成/ちせいせい]とhash、entry[検査/けんさ]、[出力/しゅつりょく]を[合成/ごうせい]する。"
+        cons "[公開実行入口/こうかいじっこういりぐち]plain_textは[毎回同一/まいかいどういつ]Budget/SourceAdmissionでdocument[検査/けんさ]、canonical[値/あたい]の[生成/せいせい]とhash、entry[検査/けんさ]、[出力/しゅつりょく]を[合成/ごうせい]する。"
         cons "sourceは[共有/きょうゆう]admissionで[同/どう]snapshotを[一度/いちど]だけ[計上/けいじょう]し、[出力/しゅつりょく]byte、Work、Allocation、[深/ふか]さを[計上/けいじょう]する。"
         cons "[停止時/ていしじ]は[元要求/もとようきゅう]を[変更/へんこう]せず、[不完全/ふかんぜん]なTextをCompleteへ[昇格/しょうかく]させない。" nil
       nil
     cons section print "8.2. print の[実行契約/じっこうけいやく]" body
+      cons paragraph
+        cons "hostがguest sourceを[先/さき]に[生成/せいせい]する[場合/ばあい]も、Doc[内/ない]の[埋/う]め[込/こ]み[位置/いち]をDepthへ[引/ひ]き[継/つ]ぐ。"
+        cons sentence cons code "print::guest_depths" cons text " は" cons ruby text "検査済" text "けんさず" cons text "みDoc DAGからEmbedRefごとの" cons ruby text "最大" text "さいだい" cons text "owner" cons ruby text "深" text "ふか" cons text "さを" cons ruby text "求" text "もと" cons text "める。" nil
+        cons "rootを1とし、[共有/きょうゆう]guestは[最初/さいしょ]の[出現/しゅつげん]ではなく[最/もっと]も[深/ふか]い[表示経路/ひょうじけいろ]を[採用/さいよう]する。"
+        cons "これはO(nodes + edges + embeds)の[準備/じゅんび]であり、guestの[意味検査/いみけんさ]やdigest[照合/しょうごう]を[代替/だいたい]しない。"
+        cons "hostは[現在/げんざい]の[深/ふか]さへそのoffsetを[加/くわ]え、[同/おな]じBudgetで[選択済/せんたくず]みguest printerを[呼/よ]ぶ。"
+        cons "[生成結果/せいせいけっか]は[既存/きそん]のdocument/guest digest[付/つ]きPrintedGuestとして[通常/つうじょう]printへ[渡/わた]す。" nil
+      cons paragraph
+        cons "[開発/かいはつ]hostのDoc/Math source adapterは、[明示選択/めいじせんたく]したMath ExprとDoc Sentenceを[相互/そうご]にlower/printし、[評価/ひょうか]を[実行/じっこう]しない。"
+        cons "[同期再帰/どうきさいき]adapterのhost[上限/じょうげん]は[合計/ごうけい]Depth 64とし、[呼出元/よびだしもと]のより[小/ちい]さい[上限/じょうげん]を[維持/いじ]する。"
+        cons "[上限超過/じょうげんちょうか]・cancelを[元/もと]のStoppedとして[返/かえ]し、[別/べつ]Budgetや[原文/げんぶん]コピーで[成功/せいこう]へ[切/き]り[替/か]えない。"
+        cons "このhost[上限/じょうげん]はDoc/Mathの[意味型/いみがた]の[制限/せいげん]ではない。"
+        cons "Circuitなど[未選択/みせんたく]のguestをMathとして[解釈/かいしゃく]せず、[選択不一致/せんたくふいっち]または[未解決/みかいけつ]として[拒否/きょひ]する。" nil
       cons paragraph
         cons sentence cons ruby text "実" text "じつ" cons text "descriptorは " cons code "nepl3.doc@1" cons text " の " cons code "print: PrintRequest -> PrintReply" cons text "（pure）。" nil
         cons "PrintRequestはDocumentSyntax、PrintMode（Prefix / Compact）、[明示/めいじ]GuestBinding[列/れつ]、PrintedGuest[列/れつ]を[所有/しょゆう]する。"
         cons sentence cons text "Completeだけが " cons code "SourceArtifact{text,entry}" cons text " を" cons ruby text "返" text "かえ" cons text "す。" nil
         cons "entryは[再/さい]parseする[具体的/ぐたいてき]なDoc[表層/ひょうそう]categoryであり、hostがtext[保存時/ほぞんじ]のSourceId・revision・URIとSourceSnapshotを[発行/はっこう]する。"
         cons "printerが[架空/かくう]のsnapshotや[元/もと]source[位置/いち]を[作/つく]ることはない。"
-        cons "[再/さい]parse/lowerとの[一致/いっち]はsource/Originを[除/のぞ]いた[意味正規形/いみせいきけい]について[定/さだ]め、[未正規化/みせいきか]のconstructor[値/ち]を[変更/へんこう]して[入力/にゅうりょく]へ[書/か]き[戻/もど]さない。" nil
+        cons "[再/さい]parse/lowerとの[一致/いっち]はsource/Originを[除/のぞ]いた[意味正規形/いみせいきけい]について[定/さだ]め、[未正規化/みせいきか]のconstructor[値/あたい]を[変更/へんこう]して[入力/にゅうりょく]へ[書/か]き[戻/もど]さない。" nil
       cons paragraph
         cons "Prefixは[全/ぜん]constructorを[正式/せいしき]なheadと[引数順/ひきすうじゅん]で[出力/しゅつりょく]する。"
         cons "CompactはSentence[内/ない]がText / Concat / Ruby / Annoだけで[表/あらわ]せる[場合/ばあい]にsentence literalへし、それ[以外/いがい]はprefixを[保持/ほじ]する。"
@@ -347,6 +365,7 @@ body
         cons "[明示/めいじ]BreakはTextの[改行/かいぎょう]と[異/こと]なる[意味/いみ]nodeなので、Breakを[含/ふく]むSentenceをliteralへ[変換/へんかん]しない。"
         cons "[装飾/そうしょく]・link・[画像/がぞう]・Mathを[省略/しょうりゃく]してliteral[化/か]することもない。" nil
       cons paragraph
+        cons "[以下/いか]のentryと4[言語/げんご]wrapperは[現在/げんざい]の[標準/ひょうじゅん]Doc profileの[契約/けいやく]であり、NEPL3[全体/ぜんたい]の[言語集合/げんごしゅうごう]を[制限/せいげん]しない。"
         cons "[補助/ほじょ]fragmentを[含/ふく]む[表層/ひょうそう]entryは20[種類/しゅるい]である。"
         cons "guestの[具体/ぐたい]entryはMathGuest / CircuitGuest / Guestの3[種類/しゅるい]、wrapperはMath / Circuit / Grammar / Docの4[種類/しゅるい]。"
         cons sentence cons ruby text "独立" text "どくりつ" cons text "rootでは " cons code "DocKind.Guest{language,syntax}" cons text " とEmbedKind.Guestを" cons ruby text "保持" text "ほじ" cons text "し、MathGuest/CircuitGuestのrootはそのlanguageとの" cons ruby text "一致" text "いっち" cons text "を" cons ruby text "検査" text "けんさ" cons text "する。" nil
@@ -378,7 +397,7 @@ body
         cons "host[側/がわ]の[統合試験/とうごうしけん]では[実/じつ]guest parserとchecked tree、generic engine printerを[通/とお]し、Doc→Docの[意味不正/いみふせい]なCodeもguest[構文/こうぶん]のまま[保持/ほじ]する。" nil
       cons paragraph
         cons "[公開/こうかい]identity[取得/しゅとく]はhost[要求/ようきゅう]の[準備/じゅんび]データであり、[実行予算/じっこうよさん]を[支払/しはら]い[済/ず]みにするproofではない。"
-        cons "[公開/こうかい]printは[同一/どういつ]Budget/SourceAdmissionでDocumentSyntax[再検査/さいけんさ]、canonical[値生成/ちせいせい]・digest、[全/ぜん]entry[検査/けんさ]と[出力/しゅつりょく]を[合成/ごうせい]する。"
+        cons "[公開/こうかい]printは[同一/どういつ]Budget/SourceAdmissionでDocumentSyntax[再検査/さいけんさ]、canonical[値/あたい]の[生成/せいせい]・digest、[全/ぜん]entry[検査/けんさ]と[出力/しゅつりょく]を[合成/ごうせい]する。"
         cons "sourceの[重複計上/ちょうふくけいじょう]を[避/さ]け、[反復処理/はんぷくしょり]で[共有/きょうゆう]DAGの[各表示経路/かくひょうじけいろ]を[出力/しゅつりょく]し、そのWork・[出力/しゅつりょく]byte・Allocation・Depthを[計上/けいじょう]する。"
         cons "[停止時/ていしじ]は[元要求/もとようきゅう]を[変更/へんこう]せず、[準備中/じゅんびちゅう]も[元/もと]StopReasonのStoppedとUsageを[返/かえ]し、[途中/とちゅう]textをCompleteへ[昇格/しょうかく]させない。"
         cons "[構造/こうぞう]/schema[不正/ふせい]は[型付/かたつ]き[入力境界/にゅうりょくきょうかい]エラー、[受理後/じゅりご]の[不適合/ふてきごう]はPrintFailureとなる。"
