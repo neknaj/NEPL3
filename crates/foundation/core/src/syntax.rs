@@ -204,18 +204,14 @@ impl SyntaxBundle {
                 {
                     return Err(SyntaxError::DuplicateSource);
                 }
-                budget.charge(
-                    Resource::AllocationUnits,
-                    (source.text().len() + source.identity().source.0.len() + source.uri().len())
-                        as u64
-                        + core::mem::size_of::<SourceSnapshot>() as u64,
-                )?;
-                sources.insert(source.clone())?;
+                // Keep the existing duplicate/admission checks, but meter the
+                // actual immutable snapshot clone and source index insertion.
+                // Pointer-atomic targets share storage; other targets still
+                // charge and copy the complete snapshot through this API.
+                sources.insert_ref_with_budget(source, budget)?;
             }
-            budget.charge(
-                Resource::AllocationUnits,
-                (bundle.origins.len() as u64).saturating_mul(core::mem::size_of::<Origin>() as u64),
-            )?;
+            // The table is borrowed. OriginGraph meters its validation scratch
+            // storage; there is no additional owned Origin table to charge.
             OriginGraph::validate_origins(&bundle.origins, &sources, budget)?;
             for (index, environment) in bundle.environments.iter().enumerate() {
                 if bundle.environments[..index]

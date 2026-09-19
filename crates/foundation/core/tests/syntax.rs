@@ -278,6 +278,91 @@ fn foreign_nesting_adds_to_containing_node_path_depth() -> Result<(), SyntaxErro
 }
 
 #[test]
+fn syntax_validation_meters_shared_sources_without_recharging_text_copies()
+-> Result<(), SyntaxError> {
+    let (registry, schema) = registry()?;
+    let mut allocations = Vec::new();
+    for size in [1, 100_000] {
+        let source = SourceSnapshot::new(
+            SourceId("validation-source".into()),
+            0,
+            "memory:validation-source".into(),
+            vec![b'x'; size],
+            &mut budget(),
+        )?;
+        let mut input = bundle(&schema);
+        input.sources.push(source);
+        let mut validation = budget();
+        input.validate(&registry, &mut validation)?;
+        // Admission still accounts for all source bytes, even when storage is
+        // shared. The bundle and its source remain unchanged after validation.
+        assert_eq!(validation.usage().source_bytes, size as u64);
+        assert_eq!(input.sources[0].text().len(), size);
+        allocations.push(validation.usage().allocation_units);
+
+        let mut stopped = budget();
+        let mut admission = SourceAdmission::default();
+        admission.admit_existing(&input.sources[0], &mut stopped)?;
+        // Model earlier work in this same request. Leave enough allocation for
+        // the validator's pending-bundle slot, but none for its source index.
+        // Admission remains shared; no stopped request is given a fresh budget.
+        stopped.charge(
+            Resource::AllocationUnits,
+            stopped.limits().allocation_units
+                - stopped.usage().allocation_units
+                - core::mem::size_of::<(&SyntaxBundle, u64)>() as u64,
+        )?;
+        assert!(matches!(
+            input.validate_with_sources(&registry, &mut stopped, &mut admission),
+            Err(SyntaxError::Stopped(StopReason::AllocationLimit))
+        ));
+        assert_eq!(
+            stopped.usage().allocation_units,
+            stopped.limits().allocation_units
+        );
+        input.sources.push(input.sources[0].clone());
+        assert!(matches!(
+            input.validate(&registry, &mut budget()),
+            Err(SyntaxError::DuplicateSource)
+        ));
+    }
+    // Pointer-atomic targets clone immutable storage handles; targets without
+    // atomics actually copy text and must retain the corresponding charge.
+    #[cfg(target_has_atomic = "ptr")]
+    assert_eq!(allocations[0], allocations[1]);
+    #[cfg(not(target_has_atomic = "ptr"))]
+    assert!(allocations[1] >= allocations[0] + 99_999);
+    Ok(())
+}
+
+#[test]
+fn syntax_validation_borrows_origin_table_but_checks_every_entry() -> Result<(), SyntaxError> {
+    let (registry, schema) = registry()?;
+    let mut input = bundle(&schema);
+    input.origins = vec![
+        Origin::Synthetic {
+            reason: "generated".into(),
+            anchor: None
+        };
+        1_000
+    ];
+    // 100 KB allows the cycle/depth validator's state and traversal storage for
+    // 1,000 disconnected origins, but not a second owned Origin table.
+    let limits = Limits {
+        allocation_units: 100_000,
+        ..budget().limits()
+    };
+    input.validate(&registry, &mut Budget::new(limits))?;
+    // The syntax root uses only origin 0. Unused provenance must still be checked.
+    input.origins[999] = Origin::Composite(vec![OriginId(1_000)]);
+    assert!(matches!(
+        input.validate(&registry, &mut Budget::new(limits)),
+        Err(SyntaxError::Origin(OriginError::Reference))
+    ));
+    Ok(())
+}
+
+#[test]
 fn source_child_cover_must_follow_head_and_stay_in_parent() -> Result<(), SyntaxError> {
     let (registry, schema) = registry()?;
     let source = SourceSnapshot::new(
