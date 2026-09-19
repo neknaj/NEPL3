@@ -114,6 +114,14 @@
       "renderer": "nepl3-tools.markdown-annotated-pages/1"
     },
     {
+      "id": "reader",
+      "source": "doc/spec/03-reader.nepld",
+      "projection": "doc/spec/03-reader.md",
+      "aliases": "doc/migration/aliases/03-reader.json",
+      "route": "docs/spec/03-reader.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/1"
+    },
+    {
       "id": "foundation",
       "source": "doc/spec/02-foundation.nepld",
       "projection": "doc/spec/02-foundation.md",
@@ -128,20 +136,20 @@
   ],
   "output_limits": {
     "source_bytes": 10000000,
-    "work": 1300000000,
+    "work": 1600000000,
     "depth": 1000,
-    "nodes": 52000000,
-    "allocation_units": 3250000000,
+    "nodes": 64000000,
+    "allocation_units": 4000000000,
     "output_bytes": 10000000,
     "diagnostics": 1000,
     "events": 1000
   },
   "html_output_limits": {
     "source_bytes": 10000000,
-    "work": 800000000,
+    "work": 1000000000,
     "depth": 1000,
-    "nodes": 32000000,
-    "allocation_units": 1750000000,
+    "nodes": 40000000,
+    "allocation_units": 2200000000,
     "output_bytes": 10000000,
     "diagnostics": 1000,
     "events": 1000

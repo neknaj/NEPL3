@@ -115,7 +115,7 @@ body
       cons paragraph
         cons "[配布/はいふ]profileではUnicode 16.0.0のXID_Start / XID_Continueを[使/つか]い、underscoreは[開始/かいし]にも[許/ゆる]す。"
         cons "[識別子/しきべつし]を[勝手/かって]にNFC[変換/へんかん]せず、scalar[列/れつ]の[完全一致/かんぜんいっち]で[比較/ひかく]する。"
-        cons "[将来/しょうらい]のUnicode[版変更/はんへんこう]は、package revisionに[含/ふく]める。"
+        cons "[将来/しょうらい]のUnicode[版変更/ばんへんこう]は、package revisionに[含/ふく]める。"
         nil
       cons paragraph
         cons sentence cons text "Nameの" cons ruby text "文字判定" text "もじはんてい" cons text "と" cons ruby text "全綴" text "ぜんつづ" cons text "り" cons ruby text "検査" text "けんさ" cons text "、Langの" cons ruby text "全綴" text "ぜんつづ" cons text "りABNF" cons ruby text "検査" text "けんさ" cons text "は、" cons ruby text "共通" text "きょうつう" cons text "coreの " cons code "lexical" cons text " " cons ruby text "契約" text "けいやく" cons text "としてreaderとdomain printerが" cons ruby text "共有" text "きょうゆう" cons text "する。" nil
@@ -194,7 +194,7 @@ body
         cons "[最初/さいしょ]の[二重引用符/にじゅういんようふ]を[認識/にんしき]したらcommitし、[終了引用符/しゅうりょういんようふ]は[未/み]escapeのものだけとする。"
         cons "LF/CRをliteral[内/ない]へ[直接置/ちょくせつお]くことは[許可/きょか]しない。"
         cons sentence cons ruby text "明示的" text "めいじてき" cons text "な " cons code "\\n" cons text " は" cons ruby text "内容" text "ないよう" cons text "として" cons ruby text "許可" text "きょか" cons text "する。" nil
-        cons "これにより、[未閉/みへい]じliteralが[後続/こうぞく]の[文書全体/ぶんしょぜんたい]を[飲/の]み[込/こ]み[続/つづ]けることを[防/ふせ]ぐ。"
+        cons "これにより、[閉/と]じられていないliteralが[後続/こうぞく]の[文書全体/ぶんしょぜんたい]を[飲/の]み[込/こ]み[続/つづ]けることを[防/ふせ]ぐ。"
         nil
       cons paragraph
         cons "sentence decoderは、quoted[範囲/はんい]の[生/なま]のescapeを[保持/ほじ]して[注釈/ちゅうしゃく]を[認識/にんしき]する。"

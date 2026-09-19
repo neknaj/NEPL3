@@ -1,0 +1,13 @@
+[
+  {"section": null, "name": "03-reader--tokenizer"},
+  {"section": "policy", "name": "方針"},
+  {"section": "request", "name": "1-呼出し契約"},
+  {"section": "combinators", "name": "2-combinatorの意味"},
+  {"section": "lexical", "name": "3-文字集合と基礎reader"},
+  {"section": "modes", "name": "4-modeとtoken決定"},
+  {"section": "sentences", "name": "5-sentence-reader"},
+  {"section": "complex_tokens", "name": "6-html相当の複雑なtoken"},
+  {"section": "properties", "name": "7-解析器の性質"},
+  {"section": "continuation", "name": "8-型付き包絡と継続状態"},
+  {"section": "synchronous", "name": "同期tokenizer-host境界"}
+]
