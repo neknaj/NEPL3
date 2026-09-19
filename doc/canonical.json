@@ -122,6 +122,14 @@
       "renderer": "nepl3-tools.markdown-annotated-pages/1"
     },
     {
+      "id": "grammar",
+      "source": "doc/spec/04-grammar.nepld",
+      "projection": "doc/spec/04-grammar.md",
+      "aliases": "doc/migration/aliases/04-grammar.json",
+      "route": "docs/spec/04-grammar.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/1"
+    },
+    {
       "id": "foundation",
       "source": "doc/spec/02-foundation.nepld",
       "projection": "doc/spec/02-foundation.md",

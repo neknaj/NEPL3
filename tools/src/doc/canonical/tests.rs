@@ -809,7 +809,7 @@ fn synchronized_context_spec_drafts_parse_lower_and_check_labels() -> Result<()>
         ..super::super::source::budget().limits()
     };
     for (name, path) in [
-        ("04-grammar", "doc/migration/authored/04-grammar.nepld"),
+        ("04-grammar", "doc/spec/04-grammar.nepld"),
         ("03-reader", "doc/spec/03-reader.nepld"),
         ("16-doc-migration", "doc/spec/16-doc-migration.nepld"),
         ("21-doc-pages", "doc/migration/authored/21-doc-pages.nepld"),

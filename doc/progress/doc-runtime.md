@@ -153,11 +153,11 @@ source編集の原子的な反映は維持する。同期reader callbackは外�
 この全文HTML試験はnative/WASIで成功している。多数ページ、全foreign、Pages配信の
 性能・完成までを一例の成功から推定しない。
 
-## Grammar仕様原稿の検査と残る割当上限
+## Grammar仕様原稿の検査と割当課金
 
 第04章の未公開NEPL3d原稿を、既存の原稿用parse/lower/labels試験へ追加した。
-通常ページのAllocation上限500,000,000では、完成木の検査中に停止する。
-そのため、まだcanonical registryへ登録せず、Markdown正本を維持する。
+前段の修正時点では、通常ページのAllocation上限500,000,000で完成木の検査中に停止した。
+その時点ではcanonical registryへ登録せず、Markdown正本を維持した。
 未公開原稿用の既存の有限予算で処理できることと、正本切替の準備完了は区別する。
 
 調査で、SyntaxBundle検査が共有SourceSnapshotにも本文コピー分を課金し、
@@ -165,4 +165,16 @@ source編集の原子的な反映は維持する。同期reader callbackは外�
 SourceStoreの予算付き参照挿入を使い、Origin検査自身が計上するscratchだけを課金する。
 Source入場、重複拒否、全Originの参照・cycle検査、非atomic targetの実コピー費用は維持する。
 長短sourceの共有費用、source挿入時の停止、未使用Originの不正参照を回帰試験にした。
-この修正後も第04章は通常上限で停止するため、性能課題の解消とは報告しない。
+この課金修正のみでは第04章は通常上限で停止し、性能課題は未解消だった。
+
+続く計測で、schema検査のpending stackがpop後の容量を再利用していても、
+各pushで新規slot分を課金していたことが分かった。論理的な予約slot数を保持し、
+倍増時の追加容量を確保前に課金する。allocatorの余剰capacityは課金判定に使わない。
+各子のWorkはqueue投入前に課金し、広い入力の無制限な展開を防ぐ。
+全値の型検査・Nodes・深さ・左から右の検査順は維持する。
+
+この修正で第04章は通常予算内のparse/lower/labelsを通過した。
+parseのWorkは94,666,857、Allocationは341,191,768、lowerのWorkは85,689,406だった。
+SourceMapの一意な直接対応を範囲として検査する改善も加えたが、
+この原稿の停止解消に寄与したのはschema stackの課金修正である。
+一文書の成功を全仕様移行や全受入群の達成とは扱わない。
