@@ -11,7 +11,7 @@ use nepl3_core::{
 use nepl3_doc_core::{
     check::Category,
     lower,
-    pages::{PageDocument, PageRegistration, PageSet},
+    pages::{FileBytes, PageDocument, PageFile, PageRegistration, PageSet},
 };
 use nepl3_wire::foundation::FoundationCodec;
 
@@ -55,9 +55,12 @@ fn hex(value: Digest) -> String {
     value.0.iter().map(|b| format!("{b:02x}")).collect()
 }
 
-fn capture(root: &Path, raw: Vec<u8>) -> Result<(Vec<u8>, Vec<Input>, bool)> {
+type ReferenceInputs = Vec<(super::super::export::pages::Entry, Vec<u8>)>;
+
+fn capture(root: &Path, raw: Vec<u8>) -> Result<(Vec<u8>, Vec<Input>, ReferenceInputs, bool)> {
     let registry = parse_registry(&raw)?;
     let grouped = registry.pages.iter().any(|p| p.renderer == RENDERER);
+    let references = reference_inputs(root, registry.files)?;
     if registry.pages.len() > 128 {
         return Err("PageCountLimit".into());
     }
@@ -83,12 +86,13 @@ fn capture(root: &Path, raw: Vec<u8>) -> Result<(Vec<u8>, Vec<Input>, bool)> {
             aliases,
         });
     }
-    Ok((raw, inputs, grouped))
+    Ok((raw, inputs, references, grouped))
 }
 
 fn grouped(
     compiled: &Compiled,
     inputs: &[Input],
+    references: ReferenceInputs,
     budget: &mut Budget,
 ) -> Result<annotated::pages::PagesArtifact> {
     charge(
@@ -149,10 +153,24 @@ fn grouped(
             &input.aliases,
         )?);
     }
-    let set = PageSet {
-        pages,
-        files: Vec::new(),
-    };
+    let mut files = Vec::new();
+    for (entry, bytes) in references {
+        charge(budget, Resource::Work, bytes.len())?;
+        charge(
+            budget,
+            Resource::AllocationUnits,
+            core::mem::size_of::<PageFile>() + entry.source.len(),
+        )?;
+        files.push(PageFile {
+            registration: PageRegistration {
+                id: entry.id,
+                source: entry.source.clone(),
+                route: entry.source,
+            },
+            content: FileBytes(bytes),
+        });
+    }
+    let set = PageSet { pages, files };
     let store = SourceStore::default();
     let mut admission = SourceAdmission::default();
     let mut codec =
@@ -190,10 +208,10 @@ pub(super) fn generate_from_registry(
     let initial_usage = budget.usage();
     let limits = budget.limits();
     charge(budget, Resource::Work, 1)?;
-    let (raw, inputs, needs_group) = capture(root, raw)?;
+    let (raw, inputs, references, needs_group) = capture(root, raw)?;
     let compiled = crate::doc::source::compiled()?;
     let group = if needs_group {
-        Some(grouped(&compiled, &inputs, budget)?)
+        Some(grouped(&compiled, &inputs, references, budget)?)
     } else {
         None
     };

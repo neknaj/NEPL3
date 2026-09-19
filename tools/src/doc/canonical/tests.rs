@@ -9,6 +9,116 @@ fn registry() -> serde_json::Value {
 }
 
 #[test]
+fn explicit_markdown_reference_preserves_bytes_and_changes_context() -> Result<()> {
+    let fixture = Fixture::new()?;
+    let mut manifest = registry();
+    manifest["pages"][0]["renderer"] = json!(projection::RENDERER);
+    manifest["files"] =
+        json!([{"id":"guide", "source":"doc/guide.md", "route":"sources/guide.md"}]);
+    fixture.json("doc/canonical.json", &manifest)?;
+    fixture.write("doc/sample.nepld", r#"article ja "Title" body cons paragraph cons sentence cons link relative "guide.md" none text "Guide" nil nil nil"#)?;
+    fixture.write("doc/aliases.json", "[]")?;
+    fixture.write("doc/guide.md", "# Guide\n\nRaw **Markdown**.\n")?;
+    let first = projection::generate(
+        fixture.root(),
+        "doc/canonical.json",
+        &mut super::super::source::budget(),
+    )?;
+    let links: Vec<_> = pulldown_cmark::Parser::new(&first.files[0].1)
+        .filter_map(|event| match event {
+            pulldown_cmark::Event::Start(pulldown_cmark::Tag::Link { dest_url, .. }) => {
+                Some(dest_url.into_string())
+            }
+            _ => None,
+        })
+        .collect();
+    assert_eq!(links, ["guide.md"]);
+    let html = generate_html(fixture.root(), "doc/canonical.json")?;
+    assert_eq!(
+        html.files["sources/guide.md"],
+        b"# Guide\n\nRaw **Markdown**.\n"
+    );
+    assert!(
+        String::from_utf8(html.files["docs/sample.html"].clone())?.contains("../sources/guide.md")
+    );
+    fixture.write("doc/guide.md", "# Revised guide\n")?;
+    let second = projection::generate(
+        fixture.root(),
+        "doc/canonical.json",
+        &mut super::super::source::budget(),
+    )?;
+    // The visible link is unchanged; the complete PageSet/input identity must not be.
+    assert_eq!(
+        first.files[0].1.split_once("\n\n").map(|p| p.1),
+        second.files[0].1.split_once("\n\n").map(|p| p.1)
+    );
+    assert_ne!(first.files[0].1, second.files[0].1);
+    fixture.write("doc/sample.nepld", r#"article ja "Title" body cons paragraph cons sentence cons link relative "guide.md" some "unknown" text "Guide" nil nil nil"#)?;
+    assert!(
+        projection::generate(
+            fixture.root(),
+            "doc/canonical.json",
+            &mut super::super::source::budget()
+        )
+        .is_err()
+    );
+    manifest["files"] = json!([]);
+    fixture.write("doc/sample.nepld", r#"article ja "Title" body cons paragraph cons sentence cons link relative "guide.md" none text "Guide" nil nil nil"#)?;
+    fixture.json("doc/canonical.json", &manifest)?;
+    assert!(generate_html(fixture.root(), "doc/canonical.json").is_err());
+    Ok(())
+}
+
+#[test]
+fn passive_reference_registry_rejects_unsafe_or_canonical_collisions() -> Result<()> {
+    let original = json!({"id":"guide", "source":"doc/guide.md", "route":"sources/guide.md"});
+    for (field, value) in [
+        ("id", "sample"),
+        ("source", "doc/sample.md"),
+        ("source", "doc/../guide.md"),
+        ("source", "doc/guide.nepld"),
+        ("route", "sources/guide.html"),
+        ("route", "docs/sample.html"),
+        ("route", "sources/../guide.md"),
+    ] {
+        let mut file = original.clone();
+        file[field] = json!(value);
+        let mut manifest = registry();
+        manifest["files"] = json!([file]);
+        assert!(
+            parse_registry(&serde_json::to_vec(&manifest)?).is_err(),
+            "{field}={value}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn old_renderer_check_still_validates_declared_reference_inputs() -> Result<()> {
+    let f = Fixture::new()?;
+    let mut manifest = registry();
+    manifest["files"] =
+        json!([{"id":"guide", "source":"doc/guide.md", "route":"sources/guide.md"}]);
+    f.json("doc/canonical.json", &manifest)?;
+    let source = r#"article ja "Title" body cons paragraph cons "Body" nil nil"#;
+    f.write("doc/sample.nepld", source)?;
+    f.write("doc/aliases.json", "[]")?;
+    let compiled = super::super::source::compiled()?;
+    let markdown = host::generate(&compiled, "doc/sample.nepld", source, b"[]")?;
+    f.write("doc/sample.md", markdown)?;
+    f.write("doc/guide.md", "# Guide\n")?;
+    check(f.root(), "doc/canonical.json")?;
+    fs::remove_file(f.root().join("doc/guide.md"))?;
+    // Reference validation happens before parsing even for old-only renderers.
+    assert!(check(f.root(), "doc/canonical.json").is_err());
+    f.write("doc/guide.md", [0xff])?;
+    assert!(check(f.root(), "doc/canonical.json").is_err());
+    f.write("doc/guide.md", vec![b'x'; 262_145])?;
+    assert!(check(f.root(), "doc/canonical.json").is_err());
+    Ok(())
+}
+
+#[test]
 fn source_and_projection_changes_are_rejected_without_writing() -> Result<()> {
     let fixture = Fixture::new()?;
     let source = r#"article ja "[文/ぶん]" body cons paragraph cons "[本文/ほんぶん]。" nil nil"#;

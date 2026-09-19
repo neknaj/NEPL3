@@ -63,7 +63,17 @@ version 1のregistry pathとrouteはASCII英数字・hyphen・underscore・dot�
 registry全体と各source・aliasのbyte列を一度読み、同じ固定入力から全ページを生成する。
 page idを解析sourceの名前空間へ与え、論理sourceとMarkdown出力routeにはprojection pathを使う。
 全ページの意味参照と実際に出力するanchorを検査し、全体が成功するまで成果物を返さない。
-未登録のMarkdownをfilesystemから発見して補完することはない。この入口にpassive file登録はない。
+未登録のMarkdownをfilesystemから発見して補完することはない。
+移行中の資料へのfragmentなし参照には、registryの任意field `files` に
+`id`、`source`、`route`を持つpassive Markdownを明示登録できる。
+sourceは `doc/` 以下の `.md`、HTML配布routeは `sources/` 以下の `.md` に限定する。
+登録済みDocのsource/projection/aliasや他の登録と衝突する指定を拒否する。
+上限は128件、UTF-8で1件256KiB・合計2MiBとし、存在・正規file・byte数を生成と検査の両方で確認する。
+Markdown projectionは論理sourceへの相対リンクを保ち、HTMLは明示routeへ元byte列を配布する。
+これは資料原文への参照提供であり、NEPL3d正本への昇格やMarkdownのHTML化ではない。
+passive fileは意味上のlabelを持たないためfragment参照を拒否する。
+内容byte列は既存PageSet identityに含め、資料の変更でinput contextを更新する。
+リンク先の存在を暗黙に補うのではなく、段階移行中の閉じた入力集合を宣言するための追加である。
 
 旧 `nepl3-tools.markdown-annotated/2` と混在できる。旧ページは従来のsource名前空間と生成処理で
 metadataを含めて同じbyte列を作り、ページ集合からの生成bodyとも一致することを要求する。
