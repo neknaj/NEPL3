@@ -89,6 +89,7 @@ jobs:
       - name: External language public API consumer
         if: matrix.os == 'ubuntu-latest'
         run: |
+          python -m pip install -r tools/extensions/requirements.txt
           python -m unittest tools.extensions.test_run
           python tools/extensions/run.py
       - name: Preserve external consumer evidence

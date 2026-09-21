@@ -1,5 +1,6 @@
 """Run the public-API consumer outside the repository, without private test imports."""
 import argparse
+from collections.abc import MutableMapping
 import hashlib
 import json
 from pathlib import Path
@@ -7,10 +8,25 @@ import shutil
 import subprocess
 import tempfile
 import tomllib
+import tomlkit
 
 ROOT = Path(__file__).resolve().parents[2]
 FOUNDATION = ROOT / "crates" / "foundation"
 PACKAGES = {f"nepl3-{name}": FOUNDATION / name for name in ("core", "reader", "engine", "wire")}
+
+
+def external_manifest(source, packages):
+    """Change dependency path values in a parsed TOML document."""
+    manifest = tomlkit.parse(source)
+    dependencies = manifest.get("dependencies")
+    if not isinstance(dependencies, MutableMapping):
+        raise ValueError("consumer manifest requires a dependencies table")
+    for name, path in packages.items():
+        dependency = dependencies.get(name)
+        if not isinstance(dependency, MutableMapping) or not isinstance(dependency.get("path"), str):
+            raise ValueError(f"consumer dependency {name} requires an explicit path")
+        dependency["path"] = path.as_posix()
+    return tomlkit.dumps(manifest)
 
 
 def fingerprint():
@@ -67,8 +83,7 @@ def main():
             shutil.copytree(fixture / "src", directory / "src")
             shutil.copyfile(fixture / "Cargo.lock", directory / "Cargo.lock")
             manifest = (fixture / "Cargo.toml").read_text(encoding="utf-8")
-            for name, path in PACKAGES.items():
-                manifest = manifest.replace(f'"../../../crates/foundation/{path.name}"', json.dumps(path.as_posix()))
+            manifest = external_manifest(manifest, PACKAGES)
             (directory / "Cargo.toml").write_text(manifest, encoding="utf-8", newline="\n")
             record["consumer"] = {str(p.relative_to(directory)): hashlib.sha256(p.read_bytes()).hexdigest()
                                   for p in directory.rglob("*") if p.is_file()}

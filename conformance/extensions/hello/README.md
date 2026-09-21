@@ -7,6 +7,7 @@ No Grammar, Doc, Math, Circuit, suite, tools or private test source is imported.
 From the repository root, run:
 
 ```sh
+python -m pip install -r tools/extensions/requirements.txt
 python -m unittest tools.extensions.test_run
 python tools/extensions/run.py --output dist/external-extension
 ```
