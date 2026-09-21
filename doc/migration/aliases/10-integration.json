@@ -1,0 +1,11 @@
+[
+  {"section": null, "name": "10-profile埋め込み実行入口"},
+  {"section": "policy", "name": "方針"},
+  {"section": "profile", "name": "1-profile"},
+  {"section": "bridges", "name": "2-標準bridge"},
+  {"section": "recursion", "name": "3-相互依存と再帰"},
+  {"section": "environment", "name": "4-環境の受渡し"},
+  {"section": "artifacts", "name": "5-artifactの準備"},
+  {"section": "cli", "name": "6-cli"},
+  {"section": "hosts", "name": "7-browsernativewasi"}
+]

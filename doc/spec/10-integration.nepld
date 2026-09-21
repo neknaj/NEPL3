@@ -1,11 +1,17 @@
 article ja "10. Profile・[埋/う]め[込/こ]み・[実行入口/じっこういりぐち]"
 body
+  cons paragraph
+    cons "この[章/しょう]はsuite・bridge・CLIの[目標契約/もくひょうけいやく]を[含/ふく]む。[列挙/れっきょ]した[全操作/ぜんそうさ]の[実装/じっそう]・[全/ぜん]targetでの[受入完了/うけいれかんりょう]を[宣言/せんげん]するものではない。"
+    cons "[現在/げんざい]の[実装/じっそう]と[受入/うけいれ]の[状態/じょうたい]はimplementation-status.jsonで[管理/かんり]する。" nil
   cons section policy "[方針/ほうしん]" body
     cons paragraph
       cons "ソース[上/じょう]の[相互埋/そうごう]め[込/こ]みとcrate[依存/いぞん]を[分離/ぶんり]する。"
       cons "suiteが[登録済/とうろくず]みlanguage package、domain operation、output adapterを[接続/せつぞく]する。" nil
     nil
   cons section profile "1. Profile" body
+    cons paragraph
+      cons "[不変/ふへん]のParseProfileと、[構文位置/こうぶんいち]ごとのcontextを[区別/くべつ]する。[先行/せんこう]する[構文/こうぶん]で[後続/こうぞく]contextを[更新/こうしん]できることは、Profileを[不変/ふへん]とする[契約/けいやく]と[両立/りょうりつ]する。"
+      cons "[各/かく]headのshapeはその[出現/しゅつげん]までに[確定/かくてい]した[情報/じょうほう]から[決/き]め、[後続/こうぞく]sourceから[遡及/そきゅう]して[変更/へんこう]しない。" nil
     cons paragraph
       cons "Profileはlanguage alias→SchemaRef、category mode、provider allowlist、operation bridge、resource snapshot、Limitsを[持/も]つ[不変値/ふへんち]。"
       cons "root languageはファイル[拡張子/かくちょうし]またはCLI[引数/ひきすう]で[選/えら]び、[全/ぜん]ソースを[一律/いちりつ]のlexerで[先/さき]にtoken[化/か]しない。" nil
@@ -58,6 +64,9 @@ body
       cons "alias[別/べつ]のreader stateとenvironmentも[明示/めいじ]し、guest[不足/ふそく]をUnitやhost[環境/かんきょう]で[補/おぎな]わない。" nil
     nil
   cons section bridges "2. [標準/ひょうじゅん]bridge" body
+    cons paragraph
+      cons "ここに[列挙/れっきょ]する[言語/げんご]と[拡張子/かくちょうし]は[標準構成/ひょうじゅんこうせい]であり、[追加可能/ついかかのう]なlanguage packageの[上限/じょうげん]ではない。"
+      cons sentence cons text "Math LabelのDoc.Sentenceは" cons ruby text "既存" text "きそん" cons text "bridgeの" cons ruby text "境界" text "きょうかい" cons text "である。Sentenceの" cons ruby text "最終所有者" text "さいしゅうしょゆうしゃ" cons text "はNEPL3sentenceであり、consumer" cons ruby text "移行" text "いこう" cons text "の" cons ruby text "状態" text "じょうたい" cons text "は" cons link relative "23-sentence-annotation.md" none text "23章" cons text "を" cons ruby text "参照" text "さんしょう" cons text "する。" nil nil
     cons table cons default cons default cons default cons default nil
       some row cons "host slot" cons "source[入口/いりぐち]" cons "guest root" cons "[操作/そうさ]" nil
       cons row cons "Doc InlineMath" cons "Math" cons "Math.Expr" cons "lower/check、17[章/しょう]の[生成/せいせい]policyによるrender" nil
@@ -91,7 +100,7 @@ body
       cons "DocLabel、MathSymbol、CircuitSignalを[一/ひと]つの[名前辞書/なまえじしょ]へ[入/い]れない。"
       cons sentence cons text "bridgeは" cons ruby text "必要" text "ひつよう" cons text "に" cons ruby text "応" text "おう" cons text "じて " cons code "EnvironmentProjection" cons text " として、どのnamespace/entityをどの" cons ruby text "型" text "かた" cons text "の" cons ruby text "外部値" text "がいぶち" cons text "として" cons ruby text "渡" text "わた" cons text "すかを" cons ruby text "明示" text "めいじ" cons text "する。" nil nil
     cons paragraph
-      cons "[配布/はいふ]bridgeはMathのfree symbol[値/ち]をRenderContextから[明示的/めいじてき]に[受/う]け[取/と]り、DocLabelとCircuitSignalは[自動/じどう]exportしない。"
+      cons "[配布/はいふ]bridgeはMathのfree symbol[値/あたい]をRenderContextから[明示的/めいじてき]に[受/う]け[取/と]り、DocLabelとCircuitSignalは[自動/じどう]exportしない。"
       cons "Doc annotation[内/ない]のlabelはそのsentenceの[局所/きょくしょ]scopeで[検査/けんさ]する。"
       cons "[呼出/よびだ]し[側/がわ]のlabel[参照/さんしょう]が[必要/ひつよう]ならprofileのprojectionで[明示/めいじ]する。" nil
     nil

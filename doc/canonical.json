@@ -144,6 +144,14 @@
       "aliases": "doc/migration/aliases/05-document.json",
       "route": "docs/spec/05-document.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/1"
+    },
+    {
+      "id": "integration",
+      "source": "doc/spec/10-integration.nepld",
+      "projection": "doc/spec/10-integration.md",
+      "aliases": "doc/migration/aliases/10-integration.json",
+      "route": "docs/spec/10-integration.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/1"
     }
   ],
   "files": [
@@ -167,7 +175,7 @@
     "source_bytes": 10000000,
     "work": 1900000000,
     "depth": 1000,
-    "nodes": 64000000,
+    "nodes": 72000000,
     "allocation_units": 4000000000,
     "output_bytes": 10000000,
     "diagnostics": 1000,
@@ -175,9 +183,9 @@
   },
   "html_output_limits": {
     "source_bytes": 10000000,
-    "work": 1000000000,
+    "work": 1200000000,
     "depth": 1000,
-    "nodes": 40000000,
+    "nodes": 48000000,
     "allocation_units": 2200000000,
     "output_bytes": 10000000,
     "diagnostics": 1000,
