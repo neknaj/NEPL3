@@ -60,6 +60,144 @@ fn fixture() -> Result<(SchemaRegistry, OperationRef, TypedValue), String> {
 }
 
 #[test]
+fn dependency_results_resume_in_call_order_after_out_of_order_completion() -> Result<(), String> {
+    use nepl3_core::operation::{
+        Invoke, OperationReply,
+        dependencies::{DependencyError, PendingDependencies},
+        lifetime::{RequestLifetimes, RequestPhase},
+    };
+    let (registry, operation, value) = fixture()?;
+    let continuation = Continuation {
+        provider: operation.clone(),
+        parent_request: 7,
+        snapshot_digest: Digest::of(b"generation one"),
+        state: value.clone(),
+    };
+    let calls: Vec<_> = [30, 10, 20]
+        .into_iter()
+        .map(|id| Invoke {
+            request_id: id,
+            operation: operation.clone(),
+            input: value.clone(),
+            environment: value.clone(),
+            sources: vec![],
+            resources: vec![],
+            limits: budget().limits(),
+        })
+        .collect();
+    // Input/environment admission belongs to dispatch; this fixture exercises
+    // terminal output correlation after calls have been admitted by the host.
+    let mut pending = PendingDependencies::new(&continuation, &calls, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        pending.take_resume(&mut budget()),
+        Err(DependencyError::Incomplete)
+    );
+    let sources = SourceStore::default();
+    let complete = OperationResult::Complete {
+        value,
+        report: Report::default(),
+    };
+    assert_eq!(
+        pending.accept(99, complete.clone(), &registry, &sources, &mut budget()),
+        Err(DependencyError::UnknownId)
+    );
+    let mut stopped = Budget::new(Limits {
+        work: 0,
+        ..budget().limits()
+    });
+    assert_eq!(
+        pending.accept(30, complete.clone(), &registry, &sources, &mut stopped),
+        Err(DependencyError::Stopped(StopReason::WorkLimit))
+    );
+    assert_eq!(pending.remaining(), 3);
+    pending
+        .accept(
+            20,
+            OperationResult::Stopped {
+                reason: StopReason::Cancelled,
+                partial: None,
+                report: Report::default(),
+            },
+            &registry,
+            &sources,
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+    pending
+        .accept(30, complete.clone(), &registry, &sources, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        pending.accept(30, complete, &registry, &sources, &mut budget()),
+        Err(DependencyError::DuplicateReply)
+    );
+    pending
+        .accept(
+            10,
+            OperationResult::Invalid {
+                partial: None,
+                report: Report::default(),
+            },
+            &registry,
+            &sources,
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+    let mut allocation = Budget::new(Limits {
+        allocation_units: 0,
+        ..budget().limits()
+    });
+    assert_eq!(
+        pending.take_resume(&mut allocation),
+        Err(DependencyError::Stopped(StopReason::AllocationLimit))
+    );
+    assert_eq!(pending.remaining(), 0);
+    let resume = pending
+        .take_resume(&mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert!(matches!(
+        &resume.dependency_results[..],
+        [
+            OperationReply::Result(OperationResult::Complete { .. }),
+            OperationReply::Result(OperationResult::Invalid { partial: None, .. }),
+            OperationReply::Result(OperationResult::Stopped {
+                reason: StopReason::Cancelled,
+                partial: None,
+                ..
+            })
+        ]
+    ));
+    assert_eq!(resume.continuation, continuation);
+    assert_eq!(
+        pending.take_resume(&mut budget()),
+        Err(DependencyError::Consumed)
+    );
+    let mut lifetimes = RequestLifetimes::default();
+    lifetimes
+        .begin(7, operation, continuation.snapshot_digest, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    lifetimes
+        .suspend(7, continuation.clone(), 3, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    lifetimes
+        .resume(&resume, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(lifetimes.phase(7, &mut budget()), Ok(RequestPhase::Running));
+    let mut duplicate = calls.clone();
+    duplicate[1].request_id = duplicate[0].request_id;
+    assert!(matches!(
+        PendingDependencies::new(&continuation, &duplicate, &mut budget()),
+        Err(DependencyError::DuplicateId)
+    ));
+    duplicate[1].request_id = 7;
+    assert!(matches!(
+        PendingDependencies::new(&continuation, &duplicate, &mut budget()),
+        Err(DependencyError::ParentId)
+    ));
+    Ok(())
+}
+
+#[test]
 fn terminal_results_validate_selected_output_and_preserve_outcomes() -> Result<(), String> {
     let (registry, operation, value) = fixture()?;
     let sources = SourceStore::default();
