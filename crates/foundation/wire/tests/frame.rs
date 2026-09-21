@@ -134,7 +134,7 @@ fn frame_byte_limits_include_headers_and_accumulate_across_messages() -> Result<
             assert_eq!(sender.poll(), Err(StopReason::OutputLimit));
         }
     }
-    // A second NDF value inside the declared payload is not a second frame.
+    // An extra byte inside the declared payload must be rejected as trailing data.
     let mut malformed = encoded;
     malformed[..8].copy_from_slice(&(length - 8 + 1).to_be_bytes());
     malformed.push(0);
