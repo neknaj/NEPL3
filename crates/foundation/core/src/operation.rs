@@ -1,5 +1,6 @@
 //! Transport-independent operation requests and saved continuation identities.
 //! Hosts own dispatch, capability checks and request lifetime.
+pub mod lifetime;
 use crate::{
     budget::{Budget, Limits, Resource, StopReason},
     diagnostic::{OperationResult, Report},

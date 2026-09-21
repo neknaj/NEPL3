@@ -5,6 +5,113 @@ use nepl3_core::{
     value::{NdfValue, OperationRef, Record, SchemaRef, TypedValue, Variant},
 };
 
+#[test]
+fn request_lifetimes_preserve_rejected_await_and_close_every_pending_request() {
+    use nepl3_core::operation::lifetime::{LifetimeError, RequestLifetimes, RequestPhase};
+    let saved = saved();
+    let mut table = RequestLifetimes::default();
+    let mut b = budget();
+    for id in [9, 7, 8] {
+        assert_eq!(
+            table.begin(id, saved.provider.clone(), saved.snapshot_digest, &mut b),
+            Ok(())
+        );
+    }
+    assert_eq!(
+        table.begin(7, saved.provider.clone(), saved.snapshot_digest, &mut b),
+        Err(LifetimeError::DuplicateRequest)
+    );
+    assert_eq!(table.suspend(7, saved.clone(), 0, &mut b), Ok(()));
+    let mut resume = Resume {
+        request_id: 7,
+        continuation: saved.clone(),
+        dependency_results: vec![],
+    };
+    resume.continuation.snapshot_digest.0[0] ^= 1;
+    assert_eq!(
+        table.resume(&resume, &mut b),
+        Err(LifetimeError::Binding(ContinuationError::Snapshot))
+    );
+    assert_eq!(table.phase(7, &mut b), Ok(RequestPhase::Awaiting));
+    resume.continuation = saved.clone();
+    let mut exhausted = Budget::new(Limits {
+        work: 0,
+        ..budget().limits()
+    });
+    assert_eq!(
+        table.resume(&resume, &mut exhausted),
+        Err(LifetimeError::Stopped(StopReason::WorkLimit))
+    );
+    assert_eq!(table.phase(7, &mut b), Ok(RequestPhase::Awaiting));
+    assert_eq!(table.resume(&resume, &mut b), Ok(()));
+    assert_eq!(table.resume(&resume, &mut b), Err(LifetimeError::Phase));
+    assert_eq!(table.finish(7, &mut b), Ok(()));
+    assert_eq!(table.finish(7, &mut b), Err(LifetimeError::Phase));
+    assert_eq!(
+        table.begin(7, saved.provider.clone(), saved.snapshot_digest, &mut b),
+        Err(LifetimeError::DuplicateRequest)
+    );
+    assert_eq!(table.cancel(8, &mut b), Ok(()));
+    assert_eq!(table.finish(8, &mut b), Err(LifetimeError::Phase));
+    assert_eq!(table.finish(99, &mut b), Err(LifetimeError::UnknownRequest));
+    let mut pending = vec![];
+    table.close(|id| pending.push(id));
+    assert_eq!(pending, vec![9]);
+    table.close(|id| pending.push(id));
+    assert_eq!(pending, vec![9]);
+    assert_eq!(table.phase(9, &mut b), Ok(RequestPhase::Cancelled));
+    assert_eq!(
+        table.begin(10, saved.provider.clone(), saved.snapshot_digest, &mut b),
+        Err(LifetimeError::Closed)
+    );
+    assert_eq!(table.resume(&resume, &mut b), Err(LifetimeError::Closed));
+}
+
+#[test]
+fn failed_registration_and_suspend_leave_the_connection_unchanged() {
+    use nepl3_core::operation::lifetime::{LifetimeError, RequestLifetimes, RequestPhase};
+    let saved = saved();
+    let mut table = RequestLifetimes::default();
+    let mut exhausted = Budget::new(Limits {
+        allocation_units: 0,
+        ..budget().limits()
+    });
+    assert_eq!(
+        table.begin(
+            7,
+            saved.provider.clone(),
+            saved.snapshot_digest,
+            &mut exhausted
+        ),
+        Err(LifetimeError::Stopped(StopReason::AllocationLimit))
+    );
+    assert_eq!(
+        table.phase(7, &mut budget()),
+        Err(LifetimeError::UnknownRequest)
+    );
+    assert_eq!(
+        table.begin(
+            7,
+            saved.provider.clone(),
+            saved.snapshot_digest,
+            &mut budget()
+        ),
+        Ok(())
+    );
+    let mut wrong = saved.clone();
+    wrong.parent_request = 8;
+    assert_eq!(
+        table.suspend(7, wrong, 0, &mut budget()),
+        Err(LifetimeError::Binding(ContinuationError::ParentRequest))
+    );
+    assert_eq!(table.phase(7, &mut budget()), Ok(RequestPhase::Running));
+    assert_eq!(table.suspend(7, saved, 0, &mut budget()), Ok(()));
+    let mut cancelled = vec![];
+    table.close(|id| cancelled.push(id));
+    assert_eq!(cancelled, vec![7]);
+    assert_eq!(table.phase(7, &mut budget()), Ok(RequestPhase::Cancelled));
+}
+
 fn budget() -> Budget {
     Budget::new(Limits {
         source_bytes: 10000,
