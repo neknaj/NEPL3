@@ -10,6 +10,7 @@ pub mod environment;
 pub mod facts;
 pub mod foundation;
 pub mod frame;
+pub mod operation;
 pub mod origin;
 pub mod report;
 pub mod source;

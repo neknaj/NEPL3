@@ -13,6 +13,7 @@ use alloc::{boxed::Box, string::String, vec::Vec};
 pub mod canonical;
 mod copy;
 mod foreign;
+pub use foreign::resources as validate_resources;
 pub use foreign::{ForeignClosure, ValidatedForeignClosure};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
