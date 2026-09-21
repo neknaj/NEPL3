@@ -26,6 +26,78 @@ fn source(id: &str, uri: &str, text: &str) -> Result<SourceSnapshot, SourceError
         &mut budget(),
     )
 }
+
+/// Manual host measurement of the actual conflict/admission stages used by
+/// read_seed. It deliberately excludes parsing, fixture construction and I/O.
+/// Timing is evidence, never a CI pass threshold or a whole-command benchmark.
+/// AllocationUnits is contract accounting, not measured heap consumption.
+/// Per-stage timers add overhead; use visit counts and Work for exact growth.
+#[test]
+#[ignore = "host growth measurement; run explicitly with --ignored --nocapture"]
+fn source_scope_growth_measurement() -> Result<(), SourceError> {
+    extern crate std;
+    use nepl3_core::source::SourceAdmission;
+    use std::time::Instant;
+
+    for count in [128usize, 256, 512] {
+        for growing in [false, true] {
+            let available = if growing { count } else { 32 };
+            let mut snapshots = Vec::new();
+            let text = "x".repeat(1024);
+            for i in 0..available {
+                snapshots.push(source(&format!("source-{i:06}"), "memory:probe", &text)?);
+            }
+            let mut store = SourceStore::default();
+            for i in 0..32 {
+                store.insert(source(
+                    &format!("environment-{i:06}"),
+                    "memory:env",
+                    "root",
+                )?)?;
+            }
+            let mut checks = SourceChecks::default();
+            let mut admission = SourceAdmission::default();
+            let mut measured = Budget::new(Limits {
+                work: 1_000_000_000,
+                allocation_units: 100_000_000,
+                ..budget().limits()
+            });
+            let mut visits = 0usize;
+            let mut check_work = 0u64;
+            let mut admission_work = 0u64;
+            let mut check_ns = 0u128;
+            let mut admission_ns = 0u128;
+            let started = Instant::now();
+            for step in 0..count {
+                let len = if growing { step + 1 } else { available };
+                let incoming = &snapshots[..len];
+                let before = measured.usage().work;
+                let phase = Instant::now();
+                checks.check(incoming, &store, &mut measured)?;
+                check_ns += phase.elapsed().as_nanos();
+                check_work += measured.usage().work - before;
+                let before = measured.usage().work;
+                let phase = Instant::now();
+                for snapshot in incoming {
+                    admission.admit_existing(snapshot, &mut measured)?;
+                    visits += 1;
+                }
+                admission_ns += phase.elapsed().as_nanos();
+                admission_work += measured.usage().work - before;
+            }
+            let elapsed = started.elapsed();
+            assert_eq!(checks.checked.len(), available);
+            assert_eq!(measured.usage().source_bytes, (available * 1024) as u64);
+            std::println!(
+                "growth_probe growing={growing} reads={count} sources={available} admission_visits={visits} work={} check_work={check_work} admission_work={admission_work} allocation_units={} check_ns={check_ns} admission_ns={admission_ns} elapsed_ns={}",
+                measured.usage().work,
+                measured.usage().allocation_units,
+                elapsed.as_nanos()
+            );
+        }
+    }
+    Ok(())
+}
 #[test]
 fn reuse_is_bound_to_complete_environment_and_prefix() -> Result<(), SourceError> {
     let mut store = SourceStore::default();
