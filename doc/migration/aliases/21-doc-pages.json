@@ -1,0 +1,8 @@
+[
+  {"section": null, "name": "docページ集合とリンク解決"},
+  {"section": "html_pages", "name": "htmlページ集合"},
+  {"section": "pages_export", "name": "開発hostでの書き出し"},
+  {"section": "markdown_projection", "name": "最初のmarkdown互換projection"},
+  {"section": "annotated", "name": "注釈付きmarkdown閲覧projection"},
+  {"section": "annotated_pages", "name": "明示したページ集合の注釈付きprojection"}
+]

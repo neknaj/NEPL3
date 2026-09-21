@@ -1,375 +1,138 @@
-# Docページ集合とリンク解決
+<!-- Generated from doc/spec/21&#45;doc&#45;pages.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page doc&#45;pages; source SHA-256 6832dd4585f6a410dbb286ac6f3423232660368063f772087e535fd0bd30c3e0; alias input SHA-256 d4a053ac2c1d67ece725bf2f6868717047048053ecda2f14be4c71e7e873e1eb; document digest dc769ff6616b7fa6328dfed297920337091df023c2e5f9c3a53b5fdefe9fb500; input PageSet digest 943ad743b12614300239fe63cb49f04dc425ce932763acae94dab8be258e8a89; input context SHA-256 3aee2f9d1af4170ff68e2561f995e52d2e115755069880d4eb57776b9385cbef. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
-`nepl3_doc_core::pages` は明示されたページ集合内でリンク先を検査する。
-filesystem、URLへの接続、HTML生成、guest評価は行わない。
-ページの意味上の存在と、特定の出力でanchorが表示されることは別の条件である。
+<a name="docページ集合とリンク解決"></a>
 
-`interfaces/doc.json` の順序付きrecordを交換契約とする。
-`PageRegistration` は安定した `id`、入力の論理 `source` path、出力artifact内の
-`route` を持つ。`PageDocument` はregistrationと完全な `DocumentSyntax` を持ち、
-`PageSet` は文書の順序付き非空list `pages` と、非Doc fileの順序付きlist `files` を持つ。
-`PageFile` はregistrationと `content: Bytes` を持ち、元byte列をそのまま交換する。
-文書とfileの登録順は別のindex名前空間とし、`PageDestination` の
-`Page { index }` / `File { index }` で区別する。空のDocをfileの代わりに登録しない。
+# Docページ集合\[しゅうごう\]とリンク解決\[かいけつ\]
 
-- idは空でないASCII英数字・`-_.` の一segmentで、`.` と `..` は禁止する。
-- sourceはUTF-8の相対file path。segmentは空でなく、`.`、`..`、制御文字、
-  `\ : ? # %` を含めない。URI decodeやOS固有のcase foldingは行わない。
-- routeはartifact rootからのASCII相対file path。各segmentはidと同じ文字集合。
-- idの重複、source/routeの重複とfile/directory衝突を拒否する。
-  例：`docs/a` と `docs/a/index.html` は同時に登録できない。
+`nepl3_doc_core::pages` は、明示\[めいじ\]されたページ集合内\[しゅうごうない\]でリンク先\[さき\]を検査\[けんさ\]する。filesystem、URLへの接続\[せつぞく\]、HTML生成\[せいせい\]、guest評価\[ひょうか\]は行\[おこな\]わない。ページの意味上\[いみじょう\]の存在\[そんざい\]と、特定\[とくてい\]の出力\[しゅつりょく\]でanchorが表示\[ひょうじ\]されることは、別\[べつ\]の条件\[じょうけん\]である。
 
-`resolve` は全documentを既存の構造・source・label検査へ通す。同じ操作内で同じ
-source/revisionを別の内容へ置き換えることはできない。文書間で同じlabel名を使う
-ことは許す。未選択のParallel variantも含めて文書全体を検査する。
+`interfaces/doc.json` の順序付\[じゅんじょつ\]きrecordを交換契約\[こうかんけいやく\]とする。`PageRegistration` は安定\[あんてい\]した `id`、入力\[にゅうりょく\]の論理\[ろんり\] `source` path、出力\[しゅつりょく\]artifact内\[ない\]の `route` を持\[も\]つ。`PageDocument` はregistrationと完全\[かんぜん\]な `DocumentSyntax` を持\[も\]ち、`PageSet` は文書\[ぶんしょ\]の順序付\[じゅんじょつ\]き非空\[ひくう\]list `pages` と、非\[ひ\]Doc fileの順序付\[じゅんじょつ\]きlist `files` を持\[も\]つ。`PageFile` はregistrationと `content: Bytes` を持\[も\]ち、元\[もと\]byte列\[れつ\]をそのまま交換\[こうかん\]する。文書\[ぶんしょ\]とfileの登録順\[とうろくじゅん\]は別\[べつ\]のindex名前空間\[なまえくうかん\]とし、`PageDestination` の`Page { index }` \/ `File { index }` で区別\[くべつ\]する。空\[から\]のDocをfileの代\[か\]わりに登録\[とうろく\]しない。
 
-同じ変更不能なPageSetの解決中は、検査済みのNDF表現とlabel検査結果を再利用できる。
-CheckedPagesは登録順の各document digestを保持し、同じ入力を描画するbackendへ渡す。
-PageSetとDocumentのdigestは、それぞれ既定のdomainとcanonical NDF byte列から求める。
-hashの合成への置換、外部から受信したplanの信用、別の入力への検査省略は行わない。
-全documentの構造・境界検査、PageSetのhash、各documentのlabel・hash・要求発見、
-全リンクの解決という順序を保ち、資源消費と停止は同じ操作へ累積する。
+- idは空\[から\]でないASCII英数字\[えいすうじ\]・`-_.` の一\[いち\]segmentで、`.` と `..` は禁止\[きんし\]する。
+- sourceはUTF\-8の相対\[そうたい\]file pathとする。segmentは空\[から\]でなく、`.`、`..`、制御文字\[せいぎょもじ\]、`\ : ? # %` を含\[ふく\]めない。URI decodeやOS固有\[こゆう\]のcase foldingは行\[おこな\]わない。
+- routeはartifact rootからのASCII相対\[そうたい\]file pathとする。各\[かく\]segmentは、idと同\[おな\]じ文字集合\[もじしゅうごう\]に従\[したが\]う。
+- idの重複\[ちょうふく\]、source\/routeの重複\[ちょうふく\]とfile\/directory衝突\[しょうとつ\]を拒否\[きょひ\]する。例\[れい\]として、`docs/a` と `docs/a/index.html` は同時\[どうじ\]に登録\[とうろく\]できない。
 
-開発用Doc source hostのdecode先IDは、元source IDのUTF-8 byte長、ID、revision、
-予約counterを `length:id:revision:counter` と連結する。同じsourceを同じ設定で
-読み直した場合は同じIDを生成し、別sourceのdecode結果を単独counterで衝突させない。
-入力bundle側が予約namespaceと衝突すれば既存source検査で拒否する。短い表現を使い、
-長い解説例もWork 100M / Allocation 500Mの既存上限で検証する。
+`resolve` は全\[ぜん\]documentを、既存\[きそん\]の構造\[こうぞう\]・source・label検査\[けんさ\]へ通\[とお\]す。同\[おな\]じ操作内\[そうさない\]で、同\[おな\]じsource\/revisionを別\[べつ\]の内容\[ないよう\]へ置\[お\]き換\[か\]えることはできない。文書間\[ぶんしょかん\]で同\[おな\]じlabel名\[めい\]を使\[つか\]うことは許\[ゆる\]す。未選択\[みせんたく\]のParallel variantも含\[ふく\]めて、文書全体\[ぶんしょぜんたい\]を検査\[けんさ\]する。
 
-## HTMLページ集合
+同\[おな\]じ変更不能\[へんこうふのう\]なPageSetの解決中\[かいけつちゅう\]は、検査済\[けんさず\]みのNDF表現\[ひょうげん\]とlabel検査結果\[けんさけっか\]を再利用\[さいりよう\]できる。CheckedPagesは登録順\[とうろくじゅん\]の各\[かく\]document digestを保持\[ほじ\]し、同\[おな\]じ入力\[にゅうりょく\]を描画\[びょうが\]するbackendへ渡\[わた\]す。PageSetとDocumentのdigestは、それぞれ既定\[きてい\]のdomainとcanonical NDF byte列\[れつ\]から求\[もと\]める。hashの合成\[ごうせい\]への置換\[ちかん\]、外部\[がいぶ\]から受信\[じゅしん\]したplanの信用\[しんよう\]、別\[べつ\]の入力\[にゅうりょく\]への検査省略\[けんさしょうりゃく\]は行\[おこな\]わない。全\[ぜん\]documentの構造\[こうぞう\]・境界検査\[きょうかいけんさ\]、PageSetのhash、各\[かく\]documentのlabel・hash・要求発見\[ようきゅうはっけん\]、全\[ぜん\]リンクの解決\[かいけつ\]という順序\[じゅんじょ\]を保\[たも\]ち、資源消費\[しげんしょうひ\]と停止\[ていし\]は同\[おな\]じ操作\[そうさ\]へ累積\[るいせき\]する。
 
-`nepl3_doc_html::pages::render_pages` の入力はPageSetと共通RenderOptions。
-全ページを解決してから同じbackendで生成する。外部リンクは19章の既存Markup URI
-profile（http/https/mailto）で検査してHrefとして生成する。これは参照文字列の生成であり、
-接続・到達性確認・リンク先の処理は実行しない。未選択variant内のURIも検査し、不正なら
-`InvalidExternalUri { page, node }` で拒否する。schemeの推測、空白除去、相対URIからの
-外部URL補完を行わない。許可集合はMarkup validatorと同じ実装を使用する。
-画像・foreign等の未解決要求があれば元のplanを返して停止する。このplanは意味側の
-要求を保持するため、既に字句検査した外部リンクも含む。空の表示で代替しない。
-結果のfragmentsは登録順であり、
-PageSet identityと各document digest、実際のoptions、markup、origin対応を保持する。
+開発用\[かいはつよう\]Doc source hostのdecode先\[さき\]IDは、元\[もと\]source IDのUTF\-8 byte長\[ちょう\]、ID、revision、予約\[よやく\]counterを `length:id:revision:counter` と連結\[れんけつ\]する。同\[おな\]じsourceを同\[おな\]じ設定\[せってい\]で読\[よ\]み直\[なお\]した場合\[ばあい\]は同\[おな\]じIDを生成\[せいせい\]し、別\[べつ\]sourceのdecode結果\[けっか\]を単独\[たんどく\]counterで衝突\[しょうとつ\]させない。入力\[にゅうりょく\]bundle側\[がわ\]が予約\[よやく\]namespaceと衝突\[しょうとつ\]すれば、既存\[きそん\]source検査\[けんさ\]で拒否\[きょひ\]する。短\[みじか\]い表現\[ひょうげん\]を使\[つか\]い、長\[なが\]い解説例\[かいせつれい\]もWork 100M \/ Allocation 500Mの既存上限\[きそんじょうげん\]で検証\[けんしょう\]する。
 
-ページ集合内のリンクは `BetweenArtifacts` として実際の元/先routeを結び、fragmentを共通のhex ID
-規則で変換する。全ページの生成後、出力された各hrefのfragmentがリンク先HTMLに
-実在することを検査する。Single表示で隠れたanchorを参照した場合は
-`MissingOutputAnchor { page, node, target }` とし、壊れたリンクを成功で返さない。
-リンク元自身が非表示の場合は出力hrefがないため、この表示上の失敗にはしない。
+<a name="n-68746d6c5f7061676573"></a>
 
-portableは全PagesHtmlRequestから生成を再実行し、RenderedPages全体を照合する。
-route、options、source、targetの変更後に古い結果を採用しない。この結果はHTML
-fragment集合であり、fileの保存完了や公開確認の証拠ではない。
+<a name="htmlページ集合"></a>
 
-## 開発hostでの書き出し
+## HTMLページ集合\[しゅうごう\]
 
-`nepl3-tools doc-html pages <manifest.json> <new-directory>` は、manifestのdirectoryを
-入力rootとし、version 1、pagesの各id/source/routeから文書を読む。sourceの絶対path、
-親directory移動、root外を指すsymlinkを拒否する。入力manifestは64KiB、ページ数は128、
-全入力UTF-8 byte合計は10MBまで。現在の表示はRowsに固定する。
+`nepl3_doc_html::pages::render_pages` の入力\[にゅうりょく\]は、PageSetと共通\[きょうつう\]RenderOptionsである。全\[ぜん\]ページを解決\[かいけつ\]してから、同\[おな\]じbackendで生成\[せいせい\]する。外部\[がいぶ\]リンクは19章\[しょう\]の既存\[きそん\]Markup URI profile（http\/https\/mailto）で検査\[けんさ\]して、Hrefとして生成\[せいせい\]する。これは参照文字列\[さんしょうもじれつ\]の生成\[せいせい\]であり、接続\[せつぞく\]・到達性確認\[とうたつせいかくにん\]・リンク先\[さき\]の処理\[しょり\]は実行\[じっこう\]しない。未選択\[みせんたく\]variant内\[ない\]のURIも検査\[けんさ\]し、不正\[ふせい\]なら `InvalidExternalUri { page, node }` で拒否\[きょひ\]する。schemeの推測\[すいそく\]、空白除去\[くうはくじょきょ\]、相対\[そうたい\]URIからの外部\[がいぶ\]URL補完\[ほかん\]を行\[おこな\]わない。許可集合\[きょかしゅうごう\]は、Markup validatorと同\[おな\]じ実装\[じっそう\]を使用\[しよう\]する。画像\[がぞう\]・foreign等\[とう\]の未解決要求\[みかいけつようきゅう\]があれば、元\[もと\]のplanを返\[かえ\]して停止\[ていし\]する。このplanは意味側\[いみがわ\]の要求\[ようきゅう\]を保持\[ほじ\]するため、既\[すで\]に字句検査\[じくけんさ\]した外部\[がいぶ\]リンクも含\[ふく\]む。空\[から\]の表示\[ひょうじ\]で代替\[だいたい\]しない。結果\[けっか\]のfragmentsは登録順\[とうろくじゅん\]であり、PageSet identityと各\[かく\]document digest、実際\[じっさい\]のoptions、markup、origin対応\[たいおう\]を保持\[ほじ\]する。
 
-各pageには省略可能な `input` を指定できる。これはmanifestのdirectoryから実際に読む
-Doc原稿の相対file pathであり、リンク解決用の論理 `source` とは区別する。
-省略またはnullなら従来どおりsourceを読む。明示したinputは非空・4096 UTF-8 byte以下とし、
-空segment、`.`、`..`、制御文字、`\ : ? # %` を拒否する。絶対pathやroot外へ出るsymlinkも
-許さない。見つからないinputをsourceへfallbackせず、出力directoryを作る前に失敗する。
+ページ集合内\[しゅうごうない\]のリンクは `BetweenArtifacts` として実際\[じっさい\]の元\[もと\]\/先\[さき\]routeを結\[むす\]び、fragmentを共通\[きょうつう\]のhex ID規則\[きそく\]で変換\[へんかん\]する。全\[ぜん\]ページの生成後\[せいせいご\]、出力\[しゅつりょく\]された各\[かく\]hrefのfragmentがリンク先\[さき\]HTMLに実在\[じつざい\]することを検査\[けんさ\]する。Single表示\[ひょうじ\]で隠\[かく\]れたanchorを参照\[さんしょう\]した場合\[ばあい\]は `MissingOutputAnchor { page, node, target }` とし、壊\[こわ\]れたリンクを成功\[せいこう\]で返\[かえ\]さない。リンク元自身\[もとじしん\]が非表示\[ひひょうじ\]の場合\[ばあい\]は出力\[しゅつりょく\]hrefがないため、この表示上\[ひょうじじょう\]の失敗\[しっぱい\]にはしない。
 
-例えばsourceを `docs/intro.md`、inputを `drafts/intro.nepld` とした場合、
-本文の `guide.md` は `docs/guide.md` の登録へ解決する。drafts directoryへ読み替えたり、
-原稿のリンク文字列や拡張子を書き換えたりしない。source名が `.md` でも、inputから読む
-本文はDoc DSLである。これはMarkdown parserを呼ぶ設定ではない。
-成功manifestは実際に選択したinputと論理sourceをともに記録し、読んだbyte列のdigestを結ぶ。
-物理的な配置名だけを変更して同じDoc byte列を渡した場合、PageSetの意味identityは変えない。
-未登録の論理ページや未解決assetをinput設定だけで解決したとは扱わない。
+portableは全\[ぜん\]PagesHtmlRequestから生成\[せいせい\]を再実行\[さいじっこう\]し、RenderedPages全体\[ぜんたい\]を照合\[しょうごう\]する。route、options、source、targetの変更後\[へんこうご\]に古\[ふる\]い結果\[けっか\]を採用\[さいよう\]しない。この結果\[けっか\]はHTML fragment集合\[しゅうごう\]であり、fileの保存完了\[ほぞんかんりょう\]や公開確認\[こうかいかくにん\]の証拠\[しょうこ\]ではない。
 
-非Doc fileはmanifestの省略可能な `files` listへ、pageと同じid/source/route/inputで
-明示登録する（省略は空、nullは禁止）。最大128件で、Doc原稿と合わせた実入力byte数は
-10MBまで。入力path・root境界の検査はpageと共通で、fileの内容はUTF-8へ変換せず保持する。
-`generate_with_resources` も明示されたEntryとbyte列だけを受ける。linkを根拠に周囲のfileを
-探索しない。返却HTMLが参照するfileを、hostは同じ出力集合へbyte完全一致で保存する。
-manifestには登録元・実input・route・byte数・SHA-256を記録し、fileのMIMEは
-`application/octet-stream` とする。これは任意fileを検査済みHTML・CSS・画像として
-認定するAPIではない。公開host側のMIME配信設定や内容実行の許可は別契約である。
+<a name="n-70616765735f6578706f7274"></a>
 
-文書とfileを合わせてid/source/routeの衝突を検査する。衝突診断のregistration indexは
-pagesの後にfilesを連結した順序。`LinkTarget.Page` はDocだけを検索し、`Relative` は
-正規化後のsourceが一致するDocまたはfileを検索する。fileにはDoc anchorがないため、
-fragment付きは `FileFragment { page, node, file }` として拒否する。fragmentの文字列を
-勝手に落とさない。fileへのHTML hrefは実route間の相対参照となる。
+<a name="開発hostでの書き出し"></a>
 
-PageSetのcanonical NDFはfileのregistrationと実byte列を含む。byte列・route・登録順が
-変わればidentityが変わり、portable receiverは古いplan/HTMLを再利用できない。fileの
-境界codec・hash・出力コピーも有限の共通output Budgetに累積し、cancel/停止を引き継ぐ。
-生成するHTML、stylesheet、完了manifestとのpath衝突は保存前に拒否し、stylesheetと
-byte列が偶然一致してもfile登録を共有扱いにしない。この拡張はDoc schemaのdigestを
-更新するため、旧digestのPageSetを新しい2-field recordとしてdecodeしない。
+## 開発\[かいはつ\]hostでの書\[か\]き出\[だ\]し
 
-全pageを同じproduction APIで生成し、HTMLごとの相対 `assets/doc.css` を同梱する。
-同じdirectoryのCSSは共有し、byte列の異なる同名fileやfile/directory衝突を拒否する。
-WindowsとUnixで配置が変わるのを避けるため、共有path segmentの大小文字の不一致、
-末尾dot、Windows予約device名も生成後・保存前に拒否する。公開URLをOSに合わせて
-黙って改名しない。page routeは `.html` で終わらなければならない。
+`nepl3-tools doc-html pages <manifest.json> <new-directory>` は、manifestのdirectoryを入力\[にゅうりょく\]rootとし、version 1、pagesの各\[かく\]id\/source\/routeから文書\[ぶんしょ\]を読\[よ\]む。sourceの絶対\[ぜったい\]path、親\[おや\]directory移動\[いどう\]、root外\[がい\]を指\[さ\]すsymlinkを拒否\[きょひ\]する。入力\[にゅうりょく\]manifestは64KiB、ページ数\[すう\]は128、全入力\[ぜんにゅうりょく\]UTF\-8 byte合計\[ごうけい\]は10MBまでとする。現在\[げんざい\]の表示\[ひょうじ\]はRowsに固定\[こてい\]する。
 
-既存directoryへ上書きせず、全HTML・リンク・配置の検査後に新directoryを作る。
-manifest.jsonは全file保存後に作り、PageSet identity、原稿/Profile、fileのdigest・MIME、
-固定CSSのlicenseを記録する。I/O途中失敗は未完成directoryを残す場合があるが、成功の
-manifestを付けない。この開発hostは静的文書生成までであり、公開サイトのnavigation、
-旧URL互換、Pagesの配信・復旧操作は含まない。
+各\[かく\]pageには省略可能\[しょうりゃくかのう\]な `input` を指定\[してい\]できる。これはmanifestのdirectoryから実際\[じっさい\]に読\[よ\]むDoc原稿\[げんこう\]の相対\[そうたい\]file pathであり、リンク解決用\[かいけつよう\]の論理\[ろんり\] `source` とは区別\[くべつ\]する。省略\[しょうりゃく\]またはnullなら従来\[じゅうらい\]どおりsourceを読\[よ\]む。明示\[めいじ\]したinputは非空\[ひくう\]・4096 UTF\-8 byte以下\[いか\]とし、空\[から\]segment、`.`、`..`、制御文字\[せいぎょもじ\]、`\ : ? # %` を拒否\[きょひ\]する。絶対\[ぜったい\]pathやroot外\[がい\]へ出\[で\]るsymlinkも許\[ゆる\]さない。見\[み\]つからないinputをsourceへfallbackせず、出力\[しゅつりょく\]directoryを作\[つく\]る前\[まえ\]に失敗\[しっぱい\]する。
 
-`LinkTarget.Page` は登録idで検索する。`Relative` はリンク元sourceの親directory
-から解決し、`.` を除去、`..` を一段ずつ戻す。明示したrootより上への移動、絶対path、
-空segment、percent encoding、末尾のdirectory指定を拒否する。
-正規化後のsourceと完全一致する登録だけを採用する。暗黙の拡張子追加、index補完、
-最寄りページへのfallbackは行わない。fragmentはリンク先DocのSection/Anchorの
-意味上のidと完全一致しなければならない。HTMLの `n-` hex IDへの変換はbackendの責務。
+例\[たと\]えばsourceを `docs/intro.md`、inputを `drafts/intro.nepld` とした場合\[ばあい\]、本文\[ほんぶん\]の `guide.md` は `docs/guide.md` の登録\[とうろく\]へ解決\[かいけつ\]する。drafts directoryへ読\[よ\]み替\[か\]えたり、原稿\[げんこう\]のリンク文字列\[もじれつ\]や拡張子\[かくちょうし\]を書\[か\]き換\[か\]えたりしない。source名\[めい\]が `.md` でも、inputから読\[よ\]む本文\[ほんぶん\]はDoc DSLである。これはMarkdown parserを呼\[よ\]ぶ設定\[せってい\]ではない。成功\[せいこう\]manifestは実際\[じっさい\]に選択\[せんたく\]したinputと論理\[ろんり\]sourceをともに記録\[きろく\]し、読\[よ\]んだbyte列\[れつ\]のdigestを結\[むす\]ぶ。物理的\[ぶつりてき\]な配置名\[はいちめい\]だけを変更\[へんこう\]して同\[おな\]じDoc byte列\[れつ\]を渡\[わた\]した場合\[ばあい\]、PageSetの意味\[いみ\]identityは変\[か\]えない。未登録\[みとうろく\]の論理\[ろんり\]ページや未解決\[みかいけつ\]assetをinput設定\[せってい\]だけで解決\[かいけつ\]したとは扱\[あつか\]わない。
 
-`Relative` のpathが空でfragmentが非空の場合だけ、現在の登録Docのsourceを参照先とする。
-これは元文書の `#fragment` を保持するための自己参照であり、fileや親directoryの検索ではない。
-空pathとNone、空pathと空fragmentは `InvalidRelative` のままとする。自己参照でも
-明示IDの完全一致、未選択variantを含む意味検査、実際に出力されたanchorの検査を省略しない。
-リンク先Docを推測したり、見出し本文からslugを自動生成してfragmentを書き換えたりしない。
+非\[ひ\]Doc fileはmanifestの省略可能\[しょうりゃくかのう\]な `files` listへ、pageと同\[おな\]じid\/source\/route\/inputで明示登録\[めいじとうろく\]する（省略\[しょうりゃく\]は空\[から\]、nullは禁止\[きんし\]）。最大\[さいだい\]128件\[けん\]で、Doc原稿\[げんこう\]と合\[あ\]わせた実入力\[じつにゅうりょく\]byte数\[すう\]は10MBまで。入力\[にゅうりょく\]path・root境界\[きょうかい\]の検査\[けんさ\]はpageと共通\[きょうつう\]で、fileの内容\[ないよう\]はUTF\-8へ変換\[へんかん\]せず保持\[ほじ\]する。`generate_with_resources` も明示\[めいじ\]されたEntryとbyte列\[れつ\]だけを受\[う\]ける。linkを根拠\[こんきょ\]に周囲\[しゅうい\]のfileを探索\[たんさく\]しない。返却\[へんきゃく\]HTMLが参照\[さんしょう\]するfileを、hostは同\[おな\]じ出力集合\[しゅつりょくしゅうごう\]へbyte完全一致\[かんぜんいっち\]で保存\[ほぞん\]する。manifestには登録元\[とうろくもと\]・実\[じつ\]input・route・byte数\[すう\]・SHA\-256を記録\[きろく\]し、fileのMIMEは`application/octet-stream` とする。これは任意\[にんい\]fileを検査済\[けんさず\]みHTML・CSS・画像\[がぞう\]として認定\[にんてい\]するAPIではない。公開\[こうかい\]host側\[がわ\]のMIME配信設定\[はいしんせってい\]や内容実行\[ないようじっこう\]の許可\[きょか\]は別契約\[べつけいやく\]である。
 
-`PageLinkPlan` のidentityは `NEPL3.Doc.Pages.v1\0` とPageSetのcanonical NDF byte列
-を連結したSHA-256。登録順、route、各documentのsource・origin・内容を含む。
-linksはページ順、その中でDoc arenaのnode順。各linkに元page/node、先page、
-元のfragmentを保持する。外部URI、asset、foreignの要求は `remaining` に元pageと
-一緒に保持し、成功した内部リンクへ読み替えない。
+文書\[ぶんしょ\]とfileを合\[あ\]わせてid\/source\/routeの衝突\[しょうとつ\]を検査\[けんさ\]する。衝突診断\[しょうとつしんだん\]のregistration indexはpagesの後\[あと\]にfilesを連結\[れんけつ\]した順序\[じゅんじょ\]。`LinkTarget.Page` はDocだけを検索\[けんさく\]し、`Relative` は正規化後\[せいきかご\]のsourceが一致\[いっち\]するDocまたはfileを検索\[けんさく\]する。fileにはDoc anchorがないため、fragment付\[つ\]きは `FileFragment { page, node, file }` として拒否\[きょひ\]する。fragmentの文字列\[もじれつ\]を勝手\[かって\]に落\[お\]とさない。fileへのHTML hrefは実\[じつ\]route間\[かん\]の相対参照\[そうたいさんしょう\]となる。
 
-失敗は空集合、登録値不正（page/field）、衝突（page/previous/field）、不正な相対path
-（page/node）、未登録ページ（page/node）、未存在fragment（page/node/target）、
-既存の構造・label・codec失敗を区別する。全走査・複製・キュー拡張は同じBudgetを使い、
-最初の停止を保持する。部分的なplanを成功として返さない。
+PageSetのcanonical NDFはfileのregistrationと実\[じつ\]byte列\[れつ\]を含\[ふく\]む。byte列\[れつ\]・route・登録順\[とうろくじゅん\]が変\[か\]わればidentityが変\[か\]わり、portable receiverは古\[ふる\]いplan\/HTMLを再利用\[さいりよう\]できない。fileの境界\[きょうかい\]codec・hash・出力\[しゅつりょく\]コピーも有限\[ゆうげん\]の共通\[きょうつう\]output Budgetに累積\[るいせき\]し、cancel\/停止\[ていし\]を引\[ひ\]き継\[つ\]ぐ。生成\[せいせい\]するHTML、stylesheet、完了\[かんりょう\]manifestとのpath衝突\[しょうとつ\]は保存前\[ほぞんまえ\]に拒否\[きょひ\]し、stylesheetとbyte列\[れつ\]が偶然一致\[ぐうぜんいっち\]してもfile登録\[とうろく\]を共有扱\[きょうゆうあつか\]いにしない。この拡張\[かくちょう\]はDoc schemaのdigestを更新\[こうしん\]するため、旧\[きゅう\]digestのPageSetを新\[あたら\]しい2\-field recordとしてdecodeしない。
 
-portableのset receiverは型・source・Doc構造を検査したraw dataを返す。
-`resolve` を呼ぶまでリンク検査済みではない。plan receiverは元PageSetに対して
-解決を再実行し、identity・順序・全link・remainingを比較する。古いregistryの結果、
-linkの省略・先の改変・偽造された成功を受け入れない。
+全\[ぜん\]pageを同\[おな\]じproduction APIで生成\[せいせい\]し、HTMLごとの相対\[そうたい\] `assets/doc.css` を同梱\[どうこん\]する。同\[おな\]じdirectoryのCSSは共有\[きょうゆう\]し、byte列\[れつ\]の異\[こと\]なる同名\[どうめい\]fileやfile\/directory衝突\[しょうとつ\]を拒否\[きょひ\]する。WindowsとUnixで配置\[はいち\]が変\[か\]わるのを避\[さ\]けるため、共有\[きょうゆう\]path segmentの大小文字\[だいしょうもじ\]の不一致\[ふいっち\]、末尾\[まつび\]dot、Windows予約\[よやく\]device名\[めい\]も生成後\[せいせいご\]・保存前\[ほぞんまえ\]に拒否\[きょひ\]する。公開\[こうかい\]URLをOSに合\[あ\]わせて黙\[だま\]って改名\[かいめい\]しない。page routeは `.html` で終\[お\]わらなければならない。
 
-この段階はDoc移行用の意味上のページ索引であり、完全なPreparedArticleではない。
-HTML hostは実際の配置routeとの一致、選択言語でのtarget anchorの出力、全page fileの
-存在を確認する。asset/guest解決、旧URL/anchor対応、一般Markdown projection、意味レビュー、
-Pages配信と復旧の受入は別途必要である。文書inventoryの過去baselineをこの登録の
-代わりに使わず、移行時の実際の文書集合から作成する。
+既存\[きそん\]directoryへ上書\[うわが\]きせず、全\[ぜん\]HTML・リンク・配置\[はいち\]の検査後\[けんさご\]に新\[しん\]directoryを作\[つく\]る。manifest\.jsonは全\[ぜん\]file保存後\[ほぞんご\]に作\[つく\]り、PageSet identity、原稿\[げんこう\]\/Profile、fileのdigest・MIME、固定\[こてい\]CSSのlicenseを記録\[きろく\]する。I\/O途中失敗\[とちゅうしっぱい\]は未完成\[みかんせい\]directoryを残\[のこ\]す場合\[ばあい\]があるが、成功\[せいこう\]のmanifestを付\[つ\]けない。この開発\[かいはつ\]hostは静的文書生成\[せいてきぶんしょせいせい\]までであり、公開\[こうかい\]サイトのnavigation、旧\[きゅう\]URL互換\[ごかん\]、Pagesの配信\[はいしん\]・復旧操作\[ふっきゅうそうさ\]は含\[ふく\]まない。
 
-## 最初のMarkdown互換projection
+`LinkTarget.Page` は登録\[とうろく\]idで検索\[けんさく\]する。`Relative` はリンク元\[もと\]sourceの親\[おや\]directoryから解決\[かいけつ\]し、`.` を除去\[じょきょ\]し、`..` を一段\[いちだん\]ずつ戻\[もど\]す。明示\[めいじ\]したrootより上\[うえ\]への移動\[いどう\]、絶対\[ぜったい\]path、空\[くう\]segment、percent encoding、末尾\[まつび\]のdirectory指定\[してい\]を拒否\[きょひ\]する。正規化後\[せいきかご\]のsourceと完全一致\[かんぜんいっち\]する登録\[とうろく\]だけを採用\[さいよう\]する。暗黙\[あんもく\]の拡張子追加\[かくちょうしついか\]、index補完\[ほかん\]、最寄\[もよ\]りページへのfallbackは行\[おこな\]わない。fragmentは、リンク先\[さき\]DocのSection\/Anchorの意味上\[いみじょう\]のidと完全一致\[かんぜんいっち\]しなければならない。HTMLの `n-` hex IDへの変換\[へんかん\]は、backendの責務\[せきむ\]である。
 
-`nepl3-tools doc-markdown <source.nepld> <new-file.md>` は正式文書の最初の移行候補を
-GitHub等でも閲覧するための限定したhost出力である。通常のDoc parse/lowerに続いて
-`prepare::inspect` を実行し、未解決要求を持つ文書を拒否する。本文をsource文字列の
-正規表現置換で取り出さず、検査済みのDoc arenaを読む。
+`Relative` のpathが空\[から\]でfragmentが非空\[ひくう\]の場合\[ばあい\]だけ、現在\[げんざい\]の登録\[とうろく\]Docのsourceを参照先\[さんしょうさき\]とする。これは元文書\[もとぶんしょ\]の `#fragment` を保持\[ほじ\]するための自己参照\[じこさんしょう\]であり、fileや親\[おや\]directoryの検索\[けんさく\]ではない。空\[から\]pathとNone、空\[から\]pathと空\[から\]fragmentは `InvalidRelative` のままとする。自己参照\[じこさんしょう\]でも明示\[めいじ\]IDの完全一致\[かんぜんいっち\]、未選択\[みせんたく\]variantを含\[ふく\]む意味検査\[いみけんさ\]、実際\[じっさい\]に出力\[しゅつりょく\]されたanchorの検査\[けんさ\]を省略\[しょうりゃく\]しない。リンク先\[さき\]Docを推測\[すいそく\]したり、見出\[みだ\]し本文\[ほんぶん\]からslugを自動生成\[じどうせいせい\]してfragmentを書\[か\]き換\[か\]えたりしない。
 
-対応するArticleは、同階層のSectionだけを持つもの、またはSectionを持たないもの。
-段落は非空のSentence列、listは非空unordered・checkboxなし・各itemが単一段落である。
-同じ段落のSentenceを宣言順に出力し、境界へ空白・改行・句点を補わない。著者が明示した
-境界の空白は保持する。日本語の連続文と空白で区切った英文を同じ規則で扱い、文ごとに
-Markdownの別段落を作らない。paragraphやparallelをSentenceとして平坦化しない。
-Sentence内は非空TextとInlineCode、および本文途中のBreakを扱う。隣接するcode、隣接list、節の入れ子や
-節外の後続blockは、Markdownでの再結合・所属変更を避けるため拒否する。注釈、parallel、
-画像、表、リンク等は将来の契約・試験ができるまでUnsupportedとする。
-これはDoc DSL自体の表現能力を縮小する制約ではない。
+`PageLinkPlan` のidentityは、`NEPL3.Doc.Pages.v1\0` とPageSetのcanonical NDF byte列\[れつ\]を連結\[れんけつ\]したSHA\-256である。登録順\[とうろくじゅん\]、route、各\[かく\]documentのsource・origin・内容\[ないよう\]を含\[ふく\]む。linksはページ順\[じゅん\]、その中\[なか\]でDoc arenaのnode順\[じゅん\]とする。各\[かく\]linkに元\[もと\]page\/node、先\[さき\]page、元\[もと\]のfragmentを保持\[ほじ\]する。外部\[がいぶ\]URI、asset、foreignの要求\[ようきゅう\]は `remaining` に元\[もと\]pageと一緒\[いっしょ\]に保持\[ほじ\]し、成功\[せいこう\]した内部\[ないぶ\]リンクへ読\[よ\]み替\[か\]えない。
 
-TextのASCII句読記号をescapeし、Codeのbacktickと前後空白を保持する。
-制御文字、空のinline、見出しと段落の外端のText空白はこのprojectionでは拒否する。
-同じ段落内のSentence境界ではText空白を許すが、隣接codeの拒否は境界を越えて適用する。
-本文のBreakはbackslashと改行でCommonMarkのhard line breakへ写し、list内では
-継続行をitem本文へindentする。見出し内、Sentence端、連続するBreak、Break前後の
-Text空白は、Markdownで構造や空白が失われるため拒否する。DocのBreak自体を制約せず、
-この閲覧用projectionの非対応として扱う。Text内の改行をBreakへ暗黙変換しない。
-規則は [CommonMark 0.31.2](https://spec.commonmark.org/0.31.2/#code-spans) に従い、
-実際のMarkdown parserで内容とblock/code event列を独立に比較する。
+失敗\[しっぱい\]は空集合\[くうしゅうごう\]、登録値不正\[とうろくちふせい\]（page\/field）、衝突\[しょうとつ\]（page\/previous\/field）、不正\[ふせい\]な相対\[そうたい\]path（page\/node）、未登録\[みとうろく\]ページ（page\/node）、未存在\[みそんざい\]fragment（page\/node\/target）、既存\[きそん\]の構造\[こうぞう\]・label・codec失敗\[しっぱい\]を区別\[くべつ\]する。全走査\[ぜんそうさ\]・複製\[ふくせい\]・キュー拡張\[かくちょう\]は同\[おな\]じBudgetを使\[つか\]い、最初\[さいしょ\]の停止\[ていし\]を保持\[ほじ\]する。部分的\[ぶぶんてき\]なplanを成功\[せいこう\]として返\[かえ\]さない。
 
-Body内のRawCodeは非評価のfenced code blockへ写す。本文内の最長backtick列より
-長く、最低3文字のfenceを使い、TAB・空白・Unicode・LF・末尾の空行を保持する。
-空本文は許す。非空本文は末尾LFを必須とし、CR/CRLFおよびLF/TAB以外の制御文字は
-このprojectionではTextエラーとする。Markdownによる改行正規化や末尾LFの補充を
-元のRawCodeと同一と扱わない。language hintはNoneまたは非空のASCII英数字と
-`_+.-`のみを許し、曖昧なinfo stringを黙って変更しない。list内のRawCodeは未対応。
-この制約はDocのRawCode自体やHTML出力には適用しない。
-規則は [CommonMarkのfenced code block](https://spec.commonmark.org/0.31.2/#fenced-code-blocks)
-に従い、生成Markdownを別parserで読み、コード本文byte列・hint・blockの分離を検査する。
-CLIのrenderer識別子は `nepl3-tools.markdown/4` とする。
+portableのset receiverは、型\[かた\]・source・Doc構造\[こうぞう\]を検査\[けんさ\]したraw dataを返\[かえ\]す。`resolve` を呼\[よ\]ぶまで、リンク検査済\[けんさず\]みではない。plan receiverは元\[もと\]PageSetに対\[たい\]して解決\[かいけつ\]を再実行\[さいじっこう\]し、identity・順序\[じゅんじょ\]・全\[ぜん\]link・remainingを比較\[ひかく\]する。古\[ふる\]いregistryの結果\[けっか\]、linkの省略\[しょうりゃく\]・先\[さき\]の改変\[かいへん\]・偽造\[ぎぞう\]された成功\[せいこう\]を受\[う\]け入\[い\]れない。
 
-型付き `markdown` の準備と出力は同じBudgetを消費し、Work・AllocationUnitsに加え、
-生成する各UTF-8 byteをOutputBytesへ先行計上する。本文上限は1MiB。途中停止から
-部分Markdownを返さない。CLIは別途source上限10MBと入力pathのUTF-8/4096byte上限を
-検査し、source path・digest・renderer版のcommentを付け、新fileへだけ保存する。
-comment内のpathはdelimiterにならないようescapeする。I/O途中失敗は未完成fileを
-残す場合があり、既存fileを置換して成功扱いにはしない。
+この段階\[だんかい\]はDoc移行用\[いこうよう\]の意味上\[いみじょう\]のページ索引\[さくいん\]であり、完全\[かんぜん\]なPreparedArticleではない。HTML hostは実際\[じっさい\]の配置\[はいち\]routeとの一致\[いっち\]、選択言語\[せんたくげんご\]でのtarget anchorの出力\[しゅつりょく\]、全\[ぜん\]page fileの存在\[そんざい\]を確認\[かくにん\]する。asset\/guest解決\[かいけつ\]、旧\[きゅう\]URL\/anchor対応\[たいおう\]、一般\[いっぱん\]Markdown projection、意味\[いみ\]レビュー、Pages配信\[はいしん\]と復旧\[ふっきゅう\]の受入\[うけいれ\]は別途必要\[べっとひつよう\]である。文書\[ぶんしょ\]inventoryの過去\[かこ\]baselineをこの登録\[とうろく\]の代\[か\]わりに使\[つか\]わず、移行時\[いこうじ\]の実際\[じっさい\]の文書集合\[ぶんしょしゅうごう\]から作成\[さくせい\]する。
 
-開発hostのDoc操作はNodes上限を10,000,000とする。Nodesは最終ASTの大きさだけではなく、
-型付き交換値等の検査訪問も含む累積量である。従来の1,000,000では、短いRuby付き512文を
-128段落へ置いた約14KBの文書でも停止した。新上限はこの通常の文単位執筆を受け入れる
-desktop hostの設定であり、coreの資源会計を省く規則ではない。Work上限100,000,000、
-AllocationUnits上限500,000,000と他の上限は維持し、停止後の再試行でBudgetを増やさない。
-bare-metal等の別hostへこの設定を強制しない。全ての大きい文書が処理可能になったとはせず、
-残る資源停止と未解決リンクは区別して記録する。
+<a name="n-6d61726b646f776e5f70726f6a656374696f6e"></a>
 
-文書一式のbuildでは、pages入力manifestの省略可能な `output_limits` に、
-`source_bytes, work, depth, nodes, allocation_units, output_bytes, diagnostics, events`
-の全8fieldを非負のu64整数で指定できる。省略時は上記の開発host既定値を用いる。
-null、一部fieldだけの指定、未知field、負数、非整数は拒否する。0も有効な上限であり、
-その資源が必要になれば停止する。無制限を表す値や自動増額は設けない。
-これは実行前にhostが選択する出力操作の設定であり、入力本文やproviderが変更する権限ではない。
-output_limits自体はparse/lower、bare-metal、previewの既定値やParseProfileのLimitsを変更しない。
+<a name="最初のmarkdown互換projection"></a>
 
-型付きhost入口 `generate_with_output_budget` は呼出し側のBudgetを借り、全PageSetの
-resolve/render/serializeへ同じBudgetを渡す。開始時に停止状態を確認し、既に消費したUsageを
-保持する。失敗後に別予算へ切り替えず、部分成果物や成功manifestを返さない。
-ファイル出力は全生成成功後に始める。I/O失敗時に残る未完成directoryと、生成操作の成功は別である。
-この設定は累積する論理的な資源を制限し、物理的なpeak heapや壁時計の期限は保証しない。
-package/Profile準備、hostのJSON・file容器・manifest生成・I/Oを共有出力Usageへ含めたとはしない。
+## 最初\[さいしょ\]のMarkdown互換\[ごかん\]projection
 
-成功manifestには各ページのparse/lowerの全Limits・全Usageと、共有出力の全Limits・
-開始Usage・終了Usageを記録する。旧 `output_usage` は互換のため3資源の表示として残す。
-PageSetの意味identityと別に `execution_identity` を記録し、出力予算を結び付ける。
-計算はUTF-8の `nepl3.local-doc-pages.execution/1` とNUL、32byteの意味identity、
-上記field順のLimits 8値、同順の開始Usage 8値を連結したSHA-256である。
-各数値は8byte big-endianとし、JSON objectの列挙順へ依存しない。
-同じ内容でも設定や開始Usageが異なれば実行identityは異なる。生成物の内容digestは変更しない。
-新設定による成功を既定設定の停止記録の訂正や、文書移行・Pages公開の受入合格として扱わない。
+`nepl3-tools doc-markdown <source.nepld> <new-file.md>` は、正式文書\[せいしきぶんしょ\]の最初\[さいしょ\]の移行候補\[いこうこうほ\]をGitHub等\[とう\]でも閲覧\[えつらん\]するための、限定\[げんてい\]したhost出力\[しゅつりょく\]である。通常\[つうじょう\]のDoc parse\/lowerに続\[つづ\]いて `prepare::inspect` を実行\[じっこう\]し、未解決要求\[みかいけつようきゅう\]を持\[も\]つ文書\[ぶんしょ\]を拒否\[きょひ\]する。本文\[ほんぶん\]をsource文字列\[もじれつ\]の正規表現置換\[せいきひょうげんちかん\]で取\[と\]り出\[だ\]さず、検査済\[けんさず\]みのDoc arenaを読\[よ\]む。
 
-pages入力manifestには `parse_limits` と `lower_limits` も指定できる。
-いずれもoutput_limitsと同じ完全な8fieldのu64 recordであり、省略だけが既定値を選ぶ。
-null・部分指定・未知field・重複field・負数・非整数・u64の範囲外を拒否する。
-全ページに同じ設定を適用し、各ページのparseとlowerを別々の一操作として開始する。
-出力は従来どおり全ページで一操作である。ページ数に応じてparse/lowerの合計許容量が
-増えるため、これをbuild全体の単一予算とは呼ばない。128ページと全入力10MBの制限は残す。
+対応\[たいおう\]するArticleは、同階層\[どうかいそう\]のSectionだけを持\[も\]つもの、またはSectionを持\[も\]たないものとする。段落\[だんらく\]は非空\[ひくう\]のSentence列\[れつ\]、listは非空\[ひくう\]unordered・checkboxなし・各\[かく\]itemが単一段落\[たんいつだんらく\]であるものとする。同\[おな\]じ段落\[だんらく\]のSentenceを宣言順\[せんげんじゅん\]に出力\[しゅつりょく\]し、境界\[きょうかい\]へ空白\[くうはく\]・改行\[かいぎょう\]・句点\[くてん\]を補\[おぎな\]わない。著者\[ちょしゃ\]が明示\[めいじ\]した境界\[きょうかい\]の空白\[くうはく\]は保持\[ほじ\]する。日本語\[にほんご\]の連続文\[れんぞくぶん\]と空白\[くうはく\]で区切\[くぎ\]った英文\[えいぶん\]を同\[おな\]じ規則\[きそく\]で扱\[あつか\]い、文\[ぶん\]ごとにMarkdownの別段落\[べつだんらく\]を作\[つく\]らない。paragraphやparallelをSentenceとして平坦化\[へいたんか\]しない。Sentence内\[ない\]は非空\[ひくう\]TextとInlineCode、および本文途中\[ほんぶんとちゅう\]のBreakを扱\[あつか\]う。隣接\[りんせつ\]するcode、隣接\[りんせつ\]list、節\[せつ\]の入\[い\]れ子\[こ\]や節外\[せつがい\]の後続\[こうぞく\]blockは、Markdownでの再結合\[さいけつごう\]・所属変更\[しょぞくへんこう\]を避\[さ\]けるため拒否\[きょひ\]する。注釈\[ちゅうしゃく\]、parallel、画像\[がぞう\]、表\[ひょう\]、リンク等\[とう\]は、将来\[しょうらい\]の契約\[けいやく\]・試験\[しけん\]ができるまでUnsupportedとする。これはDoc DSL自体\[じたい\]の表現能力\[ひょうげんのうりょく\]を縮小\[しゅくしょう\]する制約\[せいやく\]ではない。
 
-型付き入口 `generate_with_phase_limits` はPhaseLimitsのparse/lower設定と呼出し側の
-共有出力Budgetを受ける。source hostの `with_named_input_limits` はparse開始前に
-同じLimitsを実BudgetとParseProfileへ設定する。解決済みProfileのdigestも実際の選択を含む。
-この二つは設定を受ける入口であり、消費済みparse/lower Budgetの受領を表さない。
-parse/lowerの開始Usageは0、出力Budgetは従来どおり開始Usageと停止状態を保持する。
-parseにはsource admission・reader・prefix解析・完成木検査、lowerには文書lower全体を含め、
-操作途中の再作成・増額・既定値へのfallbackはしない。失敗したページから後段やファイル生成へ
-進まない。package・registry・Profile準備は別の既定予算を使う有限なsetup処理であり、
-parseのWorkが0でもこのsetupが実行され得る。物理メモリや実時間の上限は保証しない。
+TextのASCII句読記号\[くとうきごう\]をescapeし、Codeのbacktickと前後空白\[ぜんごくうはく\]を保持\[ほじ\]する。制御文字\[せいぎょもじ\]、空\[から\]のinline、見出\[みだ\]しと段落\[だんらく\]の外端\[がいたん\]のText空白\[くうはく\]は、このprojectionでは拒否\[きょひ\]する。同\[おな\]じ段落内\[だんらくない\]のSentence境界\[きょうかい\]ではText空白\[くうはく\]を許\[ゆる\]すが、隣接\[りんせつ\]codeの拒否\[きょひ\]は境界\[きょうかい\]を越\[こ\]えて適用\[てきよう\]する。本文\[ほんぶん\]のBreakはbackslashと改行\[かいぎょう\]でCommonMarkのhard line breakへ写\[うつ\]し、list内\[ない\]では継続行\[けいぞくぎょう\]をitem本文\[ほんぶん\]へindentする。見出\[みだ\]し内\[ない\]、Sentence端\[たん\]、連続\[れんぞく\]するBreak、Break前後\[ぜんご\]のText空白\[くうはく\]は、Markdownで構造\[こうぞう\]や空白\[くうはく\]が失\[うしな\]われるため拒否\[きょひ\]する。DocのBreak自体\[じたい\]を制約\[せいやく\]せず、この閲覧用\[えつらんよう\]projectionの非対応\[ひたいおう\]として扱\[あつか\]う。Text内\[ない\]の改行\[かいぎょう\]をBreakへ暗黙変換\[あんもくへんかん\]しない。規則\[きそく\]は [CommonMark 0\.31\.2](<https\:\/\/spec\.commonmark\.org\/0\.31\.2\/\#code\-spans>) に従\[したが\]い、実際\[じっさい\]のMarkdown parserで内容\[ないよう\]とblock\/code event列\[れつ\]を独立\[どくりつ\]に比較\[ひかく\]する。
 
-各ページの記録はparse_limits、lower_limits、parse_initial_usage、lower_initial_usageと
-既存の終了Usageを持つ。旧operation_limitsは両Limitsが等しい場合だけその値を持ち、
-異なる場合はnullとする。lowerの設定をParseProfileへ混ぜない。既存execution_identityと
-execution/1は出力操作の識別として維持し、別のphase_executionにcontractとidentityを記録する。
-新しいSHA-256入力はUTF-8 `nepl3.local-doc-pages.phases/1` とNUL、32byteの既存
-execution_identity、8byte big-endianのページ数、登録順のページrecordである。
-各recordは32byteの実Profile digest、parse Limits 8値、parse開始Usage 8値、
-lower Limits 8値、lower開始Usage 8値を既存field順の8byte big-endianで連結する。
-この設定入口の開始Usageは全て0である。終了Usageを要求identityへ混ぜず実行記録へ残す。
-物理input pathは配置情報として記録し、新identityへ追加しない。lower設定だけの変更でも
-新identityは変わるが、同じ文書内容・出力予算の既存identityは変わらない。
-parse設定変更はProfileへ反映されるため、文書identityが不変であるとは約束しない。
+Body内\[ない\]のRawCodeは、非評価\[ひひょうか\]のfenced code blockへ写\[うつ\]す。本文内\[ほんぶんない\]の最長\[さいちょう\]backtick列\[れつ\]より長\[なが\]く、最低\[さいてい\]3文字\[もじ\]のfenceを使\[つか\]い、TAB・空白\[くうはく\]・Unicode・LF・末尾\[まつび\]の空行\[くうぎょう\]を保持\[ほじ\]する。空本文\[くうほんぶん\]は許\[ゆる\]す。非空本文\[ひくうほんぶん\]は末尾\[まつび\]LFを必須\[ひっす\]とし、CR\/CRLFおよびLF\/TAB以外\[いがい\]の制御文字\[せいぎょもじ\]は、このprojectionではTextエラーとする。Markdownによる改行正規化\[かいぎょうせいきか\]や末尾\[まつび\]LFの補充\[ほじゅう\]を、元\[もと\]のRawCodeと同一\[どういつ\]と扱\[あつか\]わない。language hintはNone、または非空\[ひくう\]のASCII英数字\[えいすうじ\]と `_+.-` のみを許\[ゆる\]し、曖昧\[あいまい\]なinfo stringを黙\[だま\]って変更\[へんこう\]しない。list内\[ない\]のRawCodeは未対応\[みたいおう\]である。この制約\[せいやく\]は、DocのRawCode自体\[じたい\]やHTML出力\[しゅつりょく\]には適用\[てきよう\]しない。規則\[きそく\]は [CommonMarkのfenced code block](<https\:\/\/spec\.commonmark\.org\/0\.31\.2\/\#fenced\-code\-blocks>) に従\[したが\]い、生成\[せいせい\]Markdownを別\[べつ\]parserで読\[よ\]み、コード本文\[ほんぶん\]byte列\[れつ\]・hint・blockの分離\[ぶんり\]を検査\[けんさ\]する。CLIのrenderer識別子\[しきべつし\]は `nepl3-tools.markdown/4` とする。
 
-Sectionの明示ID、source/origin対応、Doc固有のSentence境界をMarkdownから復元する
-一般的なroundtripではない。旧anchor対応・正本registry切替・人の意味レビューは別条件で、
-限定projectionの成功だけで元Markdownを削除しない。
+型付\[かたつ\]き `markdown` の準備\[じゅんび\]と出力\[しゅつりょく\]は同\[おな\]じBudgetを消費\[しょうひ\]し、Work・AllocationUnitsに加\[くわ\]え、生成\[せいせい\]する各\[かく\]UTF\-8 byteをOutputBytesへ先行計上\[せんこうけいじょう\]する。本文上限\[ほんぶんじょうげん\]は1MiBとする。途中停止\[とちゅうていし\]から部分\[ぶぶん\]Markdownを返\[かえ\]さない。CLIは別途\[べっと\]source上限\[じょうげん\]10MBと入力\[にゅうりょく\]pathのUTF\-8\/4096byte上限\[じょうげん\]を検査\[けんさ\]し、source path・digest・renderer版\[ばん\]のcommentを付\[つ\]け、新\[しん\]fileへだけ保存\[ほぞん\]する。comment内\[ない\]のpathは、delimiterにならないようescapeする。I\/O途中失敗\[とちゅうしっぱい\]は未完成\[みかんせい\]fileを残\[のこ\]す場合\[ばあい\]があり、既存\[きそん\]fileを置換\[ちかん\]して成功扱\[せいこうあつか\]いにはしない。
 
-## 注釈付きMarkdown閲覧projection
+開発\[かいはつ\]hostのDoc操作\[そうさ\]は、Nodes上限\[じょうげん\]を10\,000\,000とする。Nodesは最終\[さいしゅう\]ASTの大\[おお\]きさだけではなく、型付\[かたつ\]き交換値等\[こうかんちとう\]の検査訪問\[けんさほうもん\]も含\[ふく\]む累積量\[るいせきりょう\]である。従来\[じゅうらい\]の1\,000\,000では、短\[みじか\]いRuby付\[つ\]き512文\[ぶん\]を128段落\[だんらく\]へ置\[お\]いた約\[やく\]14KBの文書\[ぶんしょ\]でも停止\[ていし\]した。新上限\[しんじょうげん\]はこの通常\[つうじょう\]の文単位執筆\[ぶんたんいしっぴつ\]を受\[う\]け入\[い\]れるdesktop hostの設定\[せってい\]であり、coreの資源会計\[しげんかいけい\]を省\[はぶ\]く規則\[きそく\]ではない。Work上限\[じょうげん\]100\,000\,000、AllocationUnits上限\[じょうげん\]500\,000\,000と他\[ほか\]の上限\[じょうげん\]は維持\[いじ\]し、停止後\[ていしご\]の再試行\[さいしこう\]でBudgetを増\[ふ\]やさない。bare\-metal等\[とう\]の別\[べつ\]hostへ、この設定\[せってい\]を強制\[きょうせい\]しない。すべての大\[おお\]きい文書\[ぶんしょ\]が処理可能\[しょりかのう\]になったとはせず、残\[のこ\]る資源停止\[しげんていし\]と未解決\[みかいけつ\]リンクは区別\[くべつ\]して記録\[きろく\]する。
 
-`nepl3-tools doc-markdown annotated <source.nepld> <aliases.json> <new-file.md>` は、
-Doc正本の読み・注記をGitHub等の閲覧用Markdownへ明示する別profileである。
-既存の `doc-markdown` の互換規則は変更しない。renderer識別子は
-`nepl3-tools.markdown-annotated/2` とする。版2はlistとtableの閲覧構造を追加する。
-版1から引き継ぐ構造の表示規則は変えず、正本registryのrendererと生成metadataを
-同じ版へ更新して再生成・差分検査する。古いrendererを新しい能力として広告しない。
+文書一式\[ぶんしょいっしき\]のbuildでは、pages入力\[にゅうりょく\]manifestの省略可能\[しょうりゃくかのう\]な `output_limits` に、`source_bytes, work, depth, nodes, allocation_units, output_bytes, diagnostics, events`の全\[ぜん\]8fieldを非負\[ひふ\]のu64整数\[せいすう\]で指定\[してい\]できる。省略時\[しょうりゃくじ\]は上記\[じょうき\]の開発\[かいはつ\]host既定値\[きていち\]を用\[もち\]いる。null、一部\[いちぶ\]fieldだけの指定\[してい\]、未知\[みち\]field、負数\[ふすう\]、非整数\[ひせいすう\]は拒否\[きょひ\]する。0も有効\[ゆうこう\]な上限\[じょうげん\]であり、その資源\[しげん\]が必要\[ひつよう\]になれば停止\[ていし\]する。無制限\[むせいげん\]を表\[あらわ\]す値\[あたい\]や自動増額\[じどうぞうがく\]は設\[もう\]けない。これは実行前\[じっこうまえ\]にhostが選択\[せんたく\]する出力操作\[しゅつりょくそうさ\]の設定\[せってい\]であり、入力本文\[にゅうりょくほんぶん\]やproviderが変更\[へんこう\]する権限\[けんげん\]ではない。output\_limits自体\[じたい\]はparse\/lower、bare\-metal、previewの既定値\[きていち\]やParseProfileのLimitsを変更\[へんこう\]しない。
 
-Rubyは `本体[読み]`、Annoは `本体{注記1/注記2}` の表示へ写し、入れ子も型付きの
-子要素を順に辿る。括弧等はMarkdownの構文として解釈されないようescapeする。
-これは全注釈を読めるようにする表示上の約束であり、元から同じ括弧を含むTextと
-一意に区別できる符号化ではない。Docへ復元するroundtrip形式や、Docの構造をすべて
-保存した形式とは扱わない。正本のRuby・Anno・Sentenceの境界はDoc側に保持する。
+型付\[かたつ\]きhost入口\[いりぐち\] `generate_with_output_budget` は呼出\[よびだ\]し側\[がわ\]のBudgetを借\[か\]り、全\[ぜん\]PageSetのresolve\/render\/serializeへ同\[おな\]じBudgetを渡\[わた\]す。開始時\[かいしじ\]に停止状態\[ていしじょうたい\]を確認\[かくにん\]し、既\[すで\]に消費\[しょうひ\]したUsageを保持\[ほじ\]する。失敗後\[しっぱいご\]に別予算\[べつよさん\]へ切\[き\]り替\[か\]えず、部分成果物\[ぶぶんせいかぶつ\]や成功\[せいこう\]manifestを返\[かえ\]さない。ファイル出力\[しゅつりょく\]は全生成成功後\[ぜんせいせいせいこうご\]に始\[はじ\]める。I\/O失敗時\[しっぱいじ\]に残\[のこ\]る未完成\[みかんせい\]directoryと、生成操作\[せいせいそうさ\]の成功\[せいこう\]は別\[べつ\]である。この設定\[せってい\]は累積\[るいせき\]する論理的\[ろんりてき\]な資源\[しげん\]を制限\[せいげん\]し、物理的\[ぶつりてき\]なpeak heapや壁時計\[かべどけい\]の期限\[きげん\]は保証\[ほしょう\]しない。package\/Profile準備\[じゅんび\]、hostのJSON・file容器\[ようき\]・manifest生成\[せいせい\]・I\/Oを共有出力\[きょうゆうしゅつりょく\]Usageへ含\[ふく\]めたとはしない。
 
-通常のparse/lowerと `prepare::inspect` を通したArticleを入力とする。
-Text、InlineCode、Concat、Ruby、Anno、Strong、Emphasis、外部Linkと本文途中のBreakを
-扱う。Strong/Emphasisは固定の `<strong>` / `<em>` の開始・終了tagを生成し、著者が
-任意のHTML・属性・styleを挿入する経路は設けない。外部URIは既存Markupの許可規則で
-検査し、Markdown parserによるentity decodeでも元URIが変わらないようescapeする。
-入れ子のLinkとLink内のBreakは拒否する。URIへの接続や到達性の確認は行わない。
+成功\[せいこう\]manifestには各\[かく\]ページのparse\/lowerの全\[ぜん\]Limits・全\[ぜん\]Usageと、共有出力\[きょうゆうしゅつりょく\]の全\[ぜん\]Limits・開始\[かいし\]Usage・終了\[しゅうりょう\]Usageを記録\[きろく\]する。旧\[きゅう\] `output_usage` は互換\[ごかん\]のため3資源\[しげん\]の表示\[ひょうじ\]として残\[のこ\]す。PageSetの意味\[いみ\]identityと別\[べつ\]に `execution_identity` を記録\[きろく\]し、出力予算\[しゅつりょくよさん\]を結\[むす\]び付\[つ\]ける。計算\[けいさん\]はUTF\-8の `nepl3.local-doc-pages.execution/1` とNUL、32byteの意味\[いみ\]identity、上記\[じょうき\]field順\[じゅん\]のLimits 8値\[ち\]、同順\[どうじゅん\]の開始\[かいし\]Usage 8値\[ち\]を連結\[れんけつ\]したSHA\-256である。各数値\[かくすうち\]は8byte big\-endianとし、JSON objectの列挙順\[れっきょじゅん\]へ依存\[いぞん\]しない。同\[おな\]じ内容\[ないよう\]でも設定\[せってい\]や開始\[かいし\]Usageが異\[こと\]なれば実行\[じっこう\]identityは異\[こと\]なる。生成物\[せいせいぶつ\]の内容\[ないよう\]digestは変更\[へんこう\]しない。新設定\[しんせってい\]による成功\[せいこう\]を既定設定\[きていせってい\]の停止記録\[ていしきろく\]の訂正\[ていせい\]や、文書移行\[ぶんしょいこう\]・Pages公開\[こうかい\]の受入合格\[うけいれごうかく\]として扱\[あつか\]わない。
 
-ParagraphはSentence列を宣言順に表示し、Sentence境界へ空白や句点を補わない。
-Concatは透明な構造として扱う。空TextはDocの意味正規化に従い表示文字を追加しない。
-見出し・段落の可視内容全体が空の場合、外端のText空白、隣接するInlineCode、端または
-連続するBreakとその前後のText空白を拒否する。透明なConcatや装飾でこの検査を回避
-できない。見出しのBreakは拒否し、Text内のLFはBreakへ置換しない。
+pages入力\[にゅうりょく\]manifestには `parse_limits` と `lower_limits` も指定\[してい\]できる。いずれもoutput\_limitsと同\[おな\]じ完全\[かんぜん\]な8fieldのu64 recordであり、省略\[しょうりゃく\]だけが既定値\[きていち\]を選\[えら\]ぶ。null・部分指定\[ぶぶんしてい\]・未知\[みち\]field・重複\[じゅうふく\]field・負数\[ふすう\]・非整数\[ひせいすう\]・u64の範囲外\[はんいがい\]を拒否\[きょひ\]する。全\[ぜん\]ページに同\[おな\]じ設定\[せってい\]を適用\[てきよう\]し、各\[かく\]ページのparseとlowerを別々\[べつべつ\]の一操作\[いちそうさ\]として開始\[かいし\]する。出力\[しゅつりょく\]は従来\[じゅうらい\]どおり全\[ぜん\]ページで一操作\[いちそうさ\]である。ページ数\[すう\]に応\[おう\]じてparse\/lowerの合計許容量\[ごうけいきょようりょう\]が増\[ふ\]えるため、これをbuild全体\[ぜんたい\]の単一予算\[たんいつよさん\]とは呼\[よ\]ばない。128ページと全入力\[ぜんにゅうりょく\]10MBの制限\[せいげん\]は残\[のこ\]す。
 
-Bodyには導入のParagraph/RawCode/List/Tableと、その後にSection列を置ける。SectionのBodyも
-同じ規則で再帰的に扱い、Articleの見出しを第1段として第6段まで生成する。
-同じBodyでSectionの後に通常blockが現れる場合は、Markdownで所属が変わるため拒否する。
-RawCodeのbyte列・末尾LF・hint・fenceの制約は既存projectionと共通である。
-Listは非空のunordered/orderedを扱い、各itemは一つのParagraphからなるBodyを持つ。
-Paragraph内のSentenceは通常本文と同じ注釈付き規則で連結する。checked/uncheckedは
-GFMのtask markerへ写し、未指定はmarkerを追加しない。空のitem本文、複数段落、入れ子、
-Paragraph以外のblockは拒否し、平坦化や仮の本文補充は行わない。orderedの開始値は
-GFMの9桁以内（0〜999999999）に限り、各itemのmarkerへ同じ値を使う。以後の表示番号は
-Markdownのlist表示に委ね、開始値を丸めたり加算で桁を超えたりしない。
-Breakの継続行はmarker幅に合わせてindentする。隣接する独立Listの間には、前後を空行で
-区切った固定コメント `<!-- -->` を生成し、別々のlistと開始値を保持する。
-同じBodyの連続したListごとに適用し、Paragraph・Table・Sectionを挟む場合は追加しない。
-コメントは通常のwriterを通じて資源を計上し、本文由来の任意HTMLを挿入しない。
-これは既存rendererの受理範囲の拡張であり、従来受理した入力の出力byte列は変更しない。
-[CommonMarkの例308](https://spec.commonmark.org/0.31.2/#example-308)に従う。
-checkboxに似た通常Textはescapeし、意図しないtask markerにしない。
+型付\[かたつ\]き入口\[いりぐち\] `generate_with_phase_limits` はPhaseLimitsのparse\/lower設定\[せってい\]と呼出\[よびだ\]し側\[がわ\]の共有出力\[きょうゆうしゅつりょく\]Budgetを受\[う\]ける。source hostの `with_named_input_limits` はparse開始前\[かいしまえ\]に同\[おな\]じLimitsを実\[じつ\]BudgetとParseProfileへ設定\[せってい\]する。解決済\[かいけつず\]みProfileのdigestも実際\[じっさい\]の選択\[せんたく\]を含\[ふく\]む。この二\[ふた\]つは設定\[せってい\]を受\[う\]ける入口\[いりぐち\]であり、消費済\[しょうひず\]みparse\/lower Budgetの受領\[じゅりょう\]を表\[あらわ\]さない。parse\/lowerの開始\[かいし\]Usageは0、出力\[しゅつりょく\]Budgetは従来\[じゅうらい\]どおり開始\[かいし\]Usageと停止状態\[ていしじょうたい\]を保持\[ほじ\]する。parseにはsource admission・reader・prefix解析\[かいせき\]・完成木検査\[かんせいきけんさ\]、lowerには文書\[ぶんしょ\]lower全体\[ぜんたい\]を含\[ふく\]め、操作途中\[そうさとちゅう\]の再作成\[さいさくせい\]・増額\[ぞうがく\]・既定値\[きていち\]へのfallbackはしない。失敗\[しっぱい\]したページから後段\[こうだん\]やファイル生成\[せいせい\]へ進\[すす\]まない。package・registry・Profile準備\[じゅんび\]は別\[べつ\]の既定予算\[きていよさん\]を使\[つか\]う有限\[ゆうげん\]なsetup処理\[しょり\]であり、parseのWorkが0でもこのsetupが実行\[じっこう\]され得\[う\]る。物理\[ぶつり\]メモリや実時間\[じつじかん\]の上限\[じょうげん\]は保証\[ほしょう\]しない。
 
-Tableは非空のcolumnsと明示headerを持つ場合を扱う。headerなしの先頭rowを昇格したり、
-架空のheaderを追加したりしない。headerだけでrowsが空の場合は許す。元のrow/cell順、
-cell数とDefault/Left/Center/RightをGFM tableへ写す。空のSentence cellは空cellとして
-保持するが、空の見出し・段落・InlineCodeを許す規則には拡張しない。cell内の注釈・装飾・
-外部Link・InlineCodeは共通のinline処理を使う。Textとcodeにあるpipeをtable区切りにせず、
-codeではpipeごとに追加する一つのescapeだけがGFM処理で消費されるようにする。
-既存backslashやbacktickを含むcode内容も保持する。cell内のBreak、外端のText空白、
-複数blockはこのprofileでは扱わず、空白除去や改行の黙殺で成功させない。
-規則は [GFMの表](https://github.github.com/gfm/#tables-extension-) とlist/task listの
-契約に従い、別parserで構造・文字列・checkbox・開始値を検査する。
+各\[かく\]ページの記録\[きろく\]はparse\_limits、lower\_limits、parse\_initial\_usage、lower\_initial\_usageと既存\[きそん\]の終了\[しゅうりょう\]Usageを持\[も\]つ。旧\[きゅう\]operation\_limitsは両\[りょう\]Limitsが等\[ひと\]しい場合\[ばあい\]だけその値\[あたい\]を持\[も\]ち、異\[こと\]なる場合\[ばあい\]はnullとする。lowerの設定\[せってい\]をParseProfileへ混\[ま\]ぜない。既存\[きそん\]execution\_identityとexecution\/1は出力操作\[しゅつりょくそうさ\]の識別\[しきべつ\]として維持\[いじ\]し、別\[べつ\]のphase\_executionにcontractとidentityを記録\[きろく\]する。新\[あたら\]しいSHA\-256入力\[にゅうりょく\]はUTF\-8 `nepl3.local-doc-pages.phases/1` とNUL、32byteの既存\[きそん\]execution\_identity、8byte big\-endianのページ数\[すう\]、登録順\[とうろくじゅん\]のページrecordである。各\[かく\]recordは32byteの実\[じつ\]Profile digest、parse Limits 8値\[あたい\]、parse開始\[かいし\]Usage 8値\[あたい\]、lower Limits 8値\[あたい\]、lower開始\[かいし\]Usage 8値\[あたい\]を既存\[きそん\]field順\[じゅん\]の8byte big\-endianで連結\[れんけつ\]する。この設定入口\[せっていいりぐち\]の開始\[かいし\]Usageは全\[すべ\]て0である。終了\[しゅうりょう\]Usageを要求\[ようきゅう\]identityへ混\[ま\]ぜず実行記録\[じっこうきろく\]へ残\[のこ\]す。物理\[ぶつり\]input pathは配置情報\[はいちじょうほう\]として記録\[きろく\]し、新\[しん\]identityへ追加\[ついか\]しない。lower設定\[せってい\]だけの変更\[へんこう\]でも新\[しん\]identityは変\[か\]わるが、同\[おな\]じ文書内容\[ぶんしょないよう\]・出力予算\[しゅつりょくよさん\]の既存\[きそん\]identityは変\[か\]わらない。parse設定変更\[せっていへんこう\]はProfileへ反映\[はんえい\]されるため、文書\[ぶんしょ\]identityが不変\[ふへん\]であるとは約束\[やくそく\]しない。
 
-このprofileはParallel、画像、参照、inline Anchorを扱わない。
-Relative/Page link、asset、foreignの要求を含む入力はNeedsResolutionとし、
-周辺fileの探索や仮のPageSet登録で成功させない。Doc/HTML側の対応範囲を狭めるものではない。
+Sectionの明示\[めいじ\]ID、source\/origin対応\[たいおう\]、Doc固有\[こゆう\]のSentence境界\[きょうかい\]をMarkdownから復元\[ふくげん\]する、一般的\[いっぱんてき\]なroundtripではない。旧\[きゅう\]anchor対応\[たいおう\]・正本\[せいほん\]registry切替\[きりかえ\]・人\[ひと\]の意味\[いみ\]レビューは別条件\[べつじょうけん\]であり、限定\[げんてい\]projectionの成功\[せいこう\]だけで元\[もと\]Markdownを削除\[さくじょ\]しない。
 
-aliasesはJSONのrecord配列で、各recordの `name` は必須、`section` はSectionの意味ID、
-nullまたは省略ならArticleを指す。未知field・重複fieldは拒否する。
-nameは非空でUnicode英数字とASCIIの `-` / `_` のみを許す。nameの重複、存在しない
-Section、生成時に到達しないSectionを拒否する。SectionにはHTML backendと同じ
-`n-` とIDのUTF-8 byte列の小文字hexからなるanchorを付ける。追加aliasとこれらの
-anchorの衝突も拒否する。固定の `<a name="...">` を見出し前に生成する。
+<a name="n-616e6e6f7461746564"></a>
 
-aliasは移行担当が原文と対応付けて指定する。この生成操作だけではGitHub等が自動で
-付ける見出しanchorとの衝突や、他ページからの旧URLの互換性を保証しない。
-正本切替には、対象プラットフォームの生成結果で全anchorとリンクを独立に照合する。
-自動slugを推測して旧fragmentを置き換えない。本文・コード・注釈の対応確認と、
-実ブラウザでの表示・移動確認も別途必要である。
+<a name="注釈付きmarkdown閲覧projection"></a>
 
-型付きrenderは同じ有限Budgetで準備・URI検査・注釈走査・出力を行う。
-Work、Nodes、Depth、AllocationUnits、OutputBytesの停止とcancelを保持し、
-部分Markdownや予算を初期化した再試行を成功として返さない。本文は1MiBまで。
-CLIはsourceを10MB、aliases入力を1MiBまで読み、入力pathをUTF-8・4096byte以下に制限する。
-source byte列、aliasesの元JSON byte列、Documentのdigestとrenderer版をcommentへ記録する。
-すべての生成検査の後に新fileだけを作り、既存fileを上書きしない。I/O途中の失敗は
-未完成fileを残す場合がある。公開・移行registryの切替・他ページの生成はこの操作に含めない。
+## 注釈付\[ちゅうしゃくつ\]きMarkdown閲覧\[えつらん\]projection
 
-### 明示したページ集合の注釈付きprojection
+`nepl3-tools doc-markdown annotated <source.nepld> <aliases.json> <new-file.md>` は、Doc正本\[せいほん\]の読\[よ\]み・注記\[ちゅうき\]をGitHub等\[とう\]の閲覧用\[えつらんよう\]Markdownへ明示\[めいじ\]する別\[べつ\]profileである。既存\[きそん\]の `doc-markdown` の互換規則\[ごかんきそく\]は変更\[へんこう\]しない。renderer識別子\[しきべつし\]は `nepl3-tools.markdown-annotated/2` とする。版\[ばん\]2はlistとtableの閲覧構造\[えつらんこうぞう\]を追加\[ついか\]する。版\[ばん\]1から引\[ひ\]き継\[つ\]ぐ構造\[こうぞう\]の表示規則\[ひょうじきそく\]は変\[か\]えず、正本\[せいほん\]registryのrendererと生成\[せいせい\]metadataを同\[おな\]じ版\[ばん\]へ更新\[こうしん\]して再生成\[さいせいせい\]・差分検査\[さぶんけんさ\]する。古\[ふる\]いrendererを新\[あたら\]しい能力\[のうりょく\]として広告\[こうこく\]しない。
 
-開発hostの `projection::annotated::pages::render` は、明示したPageSetと各Docページの
-alias列を受け取る別の入口とする。単一Articleの `/2` 操作へ周辺file探索を追加しない。
-PageSetのsourceは論理的な原文path、routeは出力Markdownのpathとし、HTML routeから
-拡張子を推測して作らない。既存の `pages::resolve` が実際の不変な集合を検査し、
-署名済みという申告や受信したPageLinkPlanをnative proofとして使用しない。
+Rubyは `本体[読み]`、Annoは `本体{注記1/注記2}` の表示\[ひょうじ\]へ写\[うつ\]し、入\[い\]れ子\[こ\]も型付\[かたつ\]きの子要素\[こようそ\]を順\[じゅん\]に辿\[たど\]る。括弧等\[かっことう\]はMarkdownの構文\[こうぶん\]として解釈\[かいしゃく\]されないようescapeする。これは全注釈\[ぜんちゅうしゃく\]を読\[よ\]めるようにする表示上\[ひょうじじょう\]の約束\[やくそく\]であり、元\[もと\]から同\[おな\]じ括弧\[かっこ\]を含\[ふく\]むTextと一意\[いちい\]に区別\[くべつ\]できる符号化\[ふごうか\]ではない。Docへ復元\[ふくげん\]するroundtrip形式\[けいしき\]や、Docの構造\[こうぞう\]をすべて保存\[ほぞん\]した形式\[けいしき\]とは扱\[あつか\]わない。正本\[せいほん\]のRuby・Anno・Sentenceの境界\[きょうかい\]はDoc側\[がわ\]に保持\[ほじ\]する。
 
-RelativeとPageの参照を解決し、出力元routeから出力先routeへの相対URIを生成する。
-Docへのsemantic fragmentには、意味上のlabelの存在に加え、そのページの実projectionに
-`n-` とUTF-8小文字hexのanchorが出力されたことを要求する。自己参照と相互参照は許し、
-再帰的に生成せず、全ページを一括検査・生成してから返す。既存profileで表せない後続
-ページがある場合も、先行ページだけを成功結果として返さない。
+通常\[つうじょう\]のparse\/lowerと `prepare::inspect` を通\[とお\]したArticleを入力\[にゅうりょく\]とする。Text、InlineCode、Concat、Ruby、Anno、Strong、Emphasis、外部\[がいぶ\]Linkと本文途中\[ほんぶんとちゅう\]のBreakを扱\[あつか\]う。Strong\/Emphasisは固定\[こてい\]の `<strong>` \/ `<em>` の開始\[かいし\]・終了\[しゅうりょう\]tagを生成\[せいせい\]し、著者\[ちょしゃ\]が任意\[にんい\]のHTML・属性\[ぞくせい\]・styleを挿入\[そうにゅう\]する経路\[けいろ\]は設\[もう\]けない。外部\[がいぶ\]URIは既存\[きそん\]Markupの許可規則\[きょかきそく\]で検査\[けんさ\]し、Markdown parserによるentity decodeでも元\[もと\]URIが変\[か\]わらないようescapeする。入\[い\]れ子\[こ\]のLinkとLink内\[ない\]のBreakは拒否\[きょひ\]する。URIへの接続\[せつぞく\]や到達性\[とうたつせい\]の確認\[かくにん\]は行\[おこな\]わない。
 
-未移行Markdown等は、呼出し側が実bytesを明示したPageFileとして扱える。このfileは
-parse・実行しない。Relativeのfragmentなし参照のみを許し、FileFragmentの拒否と
-Page targetがDoc専用である規則を維持する。原文Markdownのbyte列をHTMLとして配布したり、
-架空のDocや見出しslugを補ったりしない。
-16章の混在site hostが明示的に生成したHTMLをPageFileへ渡す場合は、原文と生成物の
-digestおよびrenderer/contextを別に記録する。coreはHTMLも受動的な実byte列として扱う。
-各Docのsource namespaceは一意なpage IDで
-分け、同じ集合のcodec admissionで異なる内容を同じsnapshotとして受理しない。
+ParagraphはSentence列\[れつ\]を宣言順\[せんげんじゅん\]に表示\[ひょうじ\]し、Sentence境界\[きょうかい\]へ空白\[くうはく\]や句点\[くてん\]を補\[おぎな\]わない。Concatは透明\[とうめい\]な構造\[こうぞう\]として扱\[あつか\]う。空\[から\]TextはDocの意味正規化\[いみせいきか\]に従\[したが\]い表示文字\[ひょうじもじ\]を追加\[ついか\]しない。見出\[みだ\]し・段落\[だんらく\]の可視内容全体\[かしないようぜんたい\]が空\[から\]の場合\[ばあい\]、外端\[がいたん\]のText空白\[くうはく\]、隣接\[りんせつ\]するInlineCode、端\[はし\]または連続\[れんぞく\]するBreakとその前後\[ぜんご\]のText空白\[くうはく\]を拒否\[きょひ\]する。透明\[とうめい\]なConcatや装飾\[そうしょく\]でこの検査\[けんさ\]を回避\[かいひ\]できない。見出\[みだ\]しのBreakは拒否\[きょひ\]し、Text内\[ない\]のLFはBreakへ置換\[ちかん\]しない。
 
-返すidentityは既存のPageSet identityであり、原Doc・登録path・受動fileの実bytesに
-結び付く。aliasやrendererを含む配布artifact全体のidentityとは区別する。canonical hostの
-新profileは、[16章](16-doc-migration.md) のinput context digestへそれらを別途記録する。
-Doc間で生成Markdownのdigestを再帰的に含めない。
-同じ有限Budgetで解決・生成・出力anchor検査を行い、停止後の再試行に新しい予算を与えない。
-このtyped入口自体にはファイルI/Oを含めない。canonical registryからの明示的な接続と
-Markdownの集合書出しは16章のhostが担当する。HTMLは既存のPageSet backendへ接続し、
-Markdownの成功からHTML・Web・公開の全体受入を推定しない。
+Bodyには導入\[どうにゅう\]のParagraph\/RawCode\/List\/Tableと、その後\[あと\]にSection列\[れつ\]を置\[お\]ける。SectionのBodyも同\[おな\]じ規則\[きそく\]で再帰的\[さいきてき\]に扱\[あつか\]い、Articleの見出\[みだ\]しを第\[だい\]1段\[だん\]として第\[だい\]6段\[だん\]まで生成\[せいせい\]する。同\[おな\]じBodyでSectionの後\[あと\]に通常\[つうじょう\]blockが現\[あらわ\]れる場合\[ばあい\]は、Markdownで所属\[しょぞく\]が変\[か\]わるため拒否\[きょひ\]する。RawCodeのbyte列\[れつ\]・末尾\[まつび\]LF・hint・fenceの制約\[せいやく\]は既存\[きそん\]projectionと共通\[きょうつう\]である。Listは非空\[ひくう\]のunordered\/orderedを扱\[あつか\]い、各\[かく\]itemは一\[ひと\]つのParagraphからなるBodyを持\[も\]つ。Paragraph内\[ない\]のSentenceは通常本文\[つうじょうほんぶん\]と同\[おな\]じ注釈付\[ちゅうしゃくつ\]き規則\[きそく\]で連結\[れんけつ\]する。checked\/uncheckedはGFMのtask markerへ写\[うつ\]し、未指定\[みしてい\]はmarkerを追加\[ついか\]しない。空\[から\]のitem本文\[ほんぶん\]、複数段落\[ふくすうだんらく\]、入\[い\]れ子\[こ\]、Paragraph以外\[いがい\]のblockは拒否\[きょひ\]し、平坦化\[へいたんか\]や仮\[かり\]の本文補充\[ほんぶんほじゅう\]は行\[おこな\]わない。orderedの開始値\[かいしち\]はGFMの9桁以内\[けたいない\]（0〜999999999）に限\[かぎ\]り、各\[かく\]itemのmarkerへ同\[おな\]じ値\[あたい\]を使\[つか\]う。以後\[いご\]の表示番号\[ひょうじばんごう\]はMarkdownのlist表示\[ひょうじ\]に委\[ゆだ\]ね、開始値\[かいしち\]を丸\[まる\]めたり加算\[かさん\]で桁\[けた\]を超\[こ\]えたりしない。Breakの継続行\[けいぞくぎょう\]はmarker幅\[はば\]に合\[あ\]わせてindentする。隣接\[りんせつ\]する独立\[どくりつ\]Listの間\[あいだ\]には、前後\[ぜんご\]を空行\[くうぎょう\]で区切\[くぎ\]った固定\[こてい\]コメント `<!-- -->` を生成\[せいせい\]し、別々\[べつべつ\]のlistと開始値\[かいしち\]を保持\[ほじ\]する。同\[おな\]じBodyの連続\[れんぞく\]したListごとに適用\[てきよう\]し、Paragraph・Table・Sectionを挟\[はさ\]む場合\[ばあい\]は追加\[ついか\]しない。コメントは通常\[つうじょう\]のwriterを通\[つう\]じて資源\[しげん\]を計上\[けいじょう\]し、本文由来\[ほんぶんゆらい\]の任意\[にんい\]HTMLを挿入\[そうにゅう\]しない。これは既存\[きそん\]rendererの受理範囲\[じゅりはんい\]の拡張\[かくちょう\]であり、従来受理\[じゅうらいじゅり\]した入力\[にゅうりょく\]の出力\[しゅつりょく\]byte列\[れつ\]は変更\[へんこう\]しない。[CommonMarkの例\[れい\]308](<https\:\/\/spec\.commonmark\.org\/0\.31\.2\/\#example\-308>)に従\[したが\]う。checkboxに似\[に\]た通常\[つうじょう\]Textはescapeし、意図\[いと\]しないtask markerにしない。
+
+Tableは非空\[ひくう\]のcolumnsと明示\[めいじ\]headerを持\[も\]つ場合\[ばあい\]を扱\[あつか\]う。headerなしの先頭\[せんとう\]rowを昇格\[しょうかく\]したり、架空\[かくう\]のheaderを追加\[ついか\]したりしない。headerだけでrowsが空\[から\]の場合\[ばあい\]は許\[ゆる\]す。元\[もと\]のrow\/cell順\[じゅん\]、cell数\[すう\]とDefault\/Left\/Center\/RightをGFM tableへ写\[うつ\]す。空\[から\]のSentence cellは空\[から\]cellとして保持\[ほじ\]するが、空\[から\]の見出\[みだ\]し・段落\[だんらく\]・InlineCodeを許\[ゆる\]す規則\[きそく\]には拡張\[かくちょう\]しない。cell内\[ない\]の注釈\[ちゅうしゃく\]・装飾\[そうしょく\]・外部\[がいぶ\]Link・InlineCodeは共通\[きょうつう\]のinline処理\[しょり\]を使\[つか\]う。Textとcodeにあるpipeをtable区切\[くぎ\]りにせず、codeではpipeごとに追加\[ついか\]する一\[ひと\]つのescapeだけがGFM処理\[しょり\]で消費\[しょうひ\]されるようにする。既存\[きそん\]backslashやbacktickを含\[ふく\]むcode内容\[ないよう\]も保持\[ほじ\]する。cell内\[ない\]のBreak、外端\[がいたん\]のText空白\[くうはく\]、複数\[ふくすう\]blockはこのprofileでは扱\[あつか\]わず、空白除去\[くうはくじょきょ\]や改行\[かいぎょう\]の黙殺\[もくさつ\]で成功\[せいこう\]させない。規則\[きそく\]は [GFMの表\[ひょう\]](<https\:\/\/github\.github\.com\/gfm\/\#tables\-extension\->) とlist\/task listの契約\[けいやく\]に従\[したが\]い、別\[べつ\]parserで構造\[こうぞう\]・文字列\[もじれつ\]・checkbox・開始値\[かいしち\]を検査\[けんさ\]する。
+
+このprofileはParallel、画像\[がぞう\]、参照\[さんしょう\]、inline Anchorを扱\[あつか\]わない。Relative\/Page link、asset、foreignの要求\[ようきゅう\]を含\[ふく\]む入力\[にゅうりょく\]はNeedsResolutionとし、周辺\[しゅうへん\]fileの探索\[たんさく\]や仮\[かり\]のPageSet登録\[とうろく\]で成功\[せいこう\]させない。Doc\/HTML側\[がわ\]の対応範囲\[たいおうはんい\]を狭\[せば\]めるものではない。
+
+aliasesはJSONのrecord配列\[はいれつ\]で、各\[かく\]recordの `name` は必須\[ひっす\]、`section` はSectionの意味\[いみ\]ID、nullまたは省略\[しょうりゃく\]ならArticleを指\[さ\]す。未知\[みち\]field・重複\[じゅうふく\]fieldは拒否\[きょひ\]する。nameは非空\[ひくう\]でUnicode英数字\[えいすうじ\]とASCIIの `-` \/ `_` のみを許\[ゆる\]す。nameの重複\[じゅうふく\]、存在\[そんざい\]しないSection、生成時\[せいせいじ\]に到達\[とうたつ\]しないSectionを拒否\[きょひ\]する。SectionにはHTML backendと同\[おな\]じ `n-` とIDのUTF\-8 byte列\[れつ\]の小文字\[こもじ\]hexからなるanchorを付\[つ\]ける。追加\[ついか\]aliasとこれらのanchorの衝突\[しょうとつ\]も拒否\[きょひ\]する。固定\[こてい\]の `<a name="...">` を見出\[みだ\]し前\[まえ\]に生成\[せいせい\]する。
+
+aliasは移行担当\[いこうたんとう\]が原文\[げんぶん\]と対応付\[たいおうづ\]けて指定\[してい\]する。この生成操作\[せいせいそうさ\]だけではGitHub等\[とう\]が自動\[じどう\]で付\[つ\]ける見出\[みだ\]しanchorとの衝突\[しょうとつ\]や、他\[た\]ページからの旧\[きゅう\]URLの互換性\[ごかんせい\]を保証\[ほしょう\]しない。正本切替\[せいほんきりかえ\]には、対象\[たいしょう\]プラットフォームの生成結果\[せいせいけっか\]で全\[ぜん\]anchorとリンクを独立\[どくりつ\]に照合\[しょうごう\]する。自動\[じどう\]slugを推測\[すいそく\]して旧\[きゅう\]fragmentを置\[お\]き換\[か\]えない。本文\[ほんぶん\]・コード・注釈\[ちゅうしゃく\]の対応確認\[たいおうかくにん\]と、実\[じつ\]ブラウザでの表示\[ひょうじ\]・移動確認\[いどうかくにん\]も別途必要\[べっとひつよう\]である。
+
+型付\[かたつ\]きrenderは同\[おな\]じ有限\[ゆうげん\]Budgetで準備\[じゅんび\]・URI検査\[けんさ\]・注釈走査\[ちゅうしゃくそうさ\]・出力\[しゅつりょく\]を行\[おこな\]う。Work、Nodes、Depth、AllocationUnits、OutputBytesの停止\[ていし\]とcancelを保持\[ほじ\]し、部分\[ぶぶん\]Markdownや予算\[よさん\]を初期化\[しょきか\]した再試行\[さいしこう\]を成功\[せいこう\]として返\[かえ\]さない。本文\[ほんぶん\]は1MiBまで。CLIはsourceを10MB、aliases入力\[にゅうりょく\]を1MiBまで読\[よ\]み、入力\[にゅうりょく\]pathをUTF\-8・4096byte以下\[いか\]に制限\[せいげん\]する。source byte列\[れつ\]、aliasesの元\[もと\]JSON byte列\[れつ\]、Documentのdigestとrenderer版\[ばん\]をcommentへ記録\[きろく\]する。すべての生成検査\[せいせいけんさ\]の後\[あと\]に新\[しん\]fileだけを作\[つく\]り、既存\[きそん\]fileを上書\[うわが\]きしない。I\/O途中\[とちゅう\]の失敗\[しっぱい\]は未完成\[みかんせい\]fileを残\[のこ\]す場合\[ばあい\]がある。公開\[こうかい\]・移行\[いこう\]registryの切替\[きりかえ\]・他\[た\]ページの生成\[せいせい\]はこの操作\[そうさ\]に含\[ふく\]めない。
+
+<a name="n-616e6e6f74617465645f7061676573"></a>
+
+<a name="明示したページ集合の注釈付きprojection"></a>
+
+### 明示\[めいじ\]したページ集合\[しゅうごう\]の注釈付\[ちゅうしゃくつ\]きprojection
+
+開発\[かいはつ\]hostの `projection::annotated::pages::render` は、明示\[めいじ\]したPageSetと各\[かく\]Docページのalias列\[れつ\]を受\[う\]け取\[と\]る別\[べつ\]の入口\[いりぐち\]とする。単一\[たんいつ\]Articleの `/2` 操作\[そうさ\]へ周辺\[しゅうへん\]file探索\[たんさく\]を追加\[ついか\]しない。PageSetのsourceは論理的\[ろんりてき\]な原文\[げんぶん\]path、routeは出力\[しゅつりょく\]Markdownのpathとし、HTML routeから拡張子\[かくちょうし\]を推測\[すいそく\]して作\[つく\]らない。既存\[きそん\]の `pages::resolve` が実際\[じっさい\]の不変\[ふへん\]な集合\[しゅうごう\]を検査\[けんさ\]し、署名済\[しょめいず\]みという申告\[しんこく\]や受信\[じゅしん\]したPageLinkPlanをnative proofとして使用\[しよう\]しない。
+
+RelativeとPageの参照\[さんしょう\]を解決\[かいけつ\]し、出力元\[しゅつりょくもと\]routeから出力先\[しゅつりょくさき\]routeへの相対\[そうたい\]URIを生成\[せいせい\]する。Docへのsemantic fragmentには、意味上\[いみじょう\]のlabelの存在\[そんざい\]に加\[くわ\]え、そのページの実\[じつ\]projectionに `n-` とUTF\-8小文字\[こもじ\]hexのanchorが出力\[しゅつりょく\]されたことを要求\[ようきゅう\]する。自己参照\[じこさんしょう\]と相互参照\[そうごさんしょう\]は許\[ゆる\]し、再帰的\[さいきてき\]に生成\[せいせい\]せず、全\[ぜん\]ページを一括検査\[いっかつけんさ\]・生成\[せいせい\]してから返\[かえ\]す。既存\[きそん\]profileで表\[あらわ\]せない後続\[こうぞく\]ページがある場合\[ばあい\]も、先行\[せんこう\]ページだけを成功結果\[せいこうけっか\]として返\[かえ\]さない。
+
+未移行\[みいこう\]Markdown等\[とう\]は、呼出\[よびだ\]し側\[がわ\]が実\[じつ\]bytesを明示\[めいじ\]したPageFileとして扱\[あつか\]える。このfileはparse・実行\[じっこう\]しない。Relativeのfragmentなし参照\[さんしょう\]のみを許\[ゆる\]し、FileFragmentの拒否\[きょひ\]とPage targetがDoc専用\[せんよう\]である規則\[きそく\]を維持\[いじ\]する。原文\[げんぶん\]Markdownのbyte列\[れつ\]をHTMLとして配布\[はいふ\]したり、架空\[かくう\]のDocや見出\[みだ\]しslugを補\[おぎな\]ったりしない。16章\[しょう\]の混在\[こんざい\]site hostが明示的\[めいじてき\]に生成\[せいせい\]したHTMLをPageFileへ渡\[わた\]す場合\[ばあい\]は、原文\[げんぶん\]と生成物\[せいせいぶつ\]のdigestおよびrenderer\/contextを別\[べつ\]に記録\[きろく\]する。coreはHTMLも受動的\[じゅどうてき\]な実\[じつ\]byte列\[れつ\]として扱\[あつか\]う。各\[かく\]Docのsource namespaceは一意\[いちい\]なpage IDで分\[わ\]け、同\[おな\]じ集合\[しゅうごう\]のcodec admissionで異\[こと\]なる内容\[ないよう\]を同\[おな\]じsnapshotとして受理\[じゅり\]しない。
+
+返\[かえ\]すidentityは既存\[きそん\]のPageSet identityであり、原\[げん\]Doc・登録\[とうろく\]path・受動\[じゅどう\]fileの実\[じつ\]bytesに結\[むす\]び付\[つ\]く。aliasやrendererを含\[ふく\]む配布\[はいふ\]artifact全体\[ぜんたい\]のidentityとは区別\[くべつ\]する。canonical hostの新\[しん\]profileは、[16章\[しょう\]](<16\-doc\-migration\.md>) のinput context digestへそれらを別途記録\[べっときろく\]する。Doc間\[かん\]で生成\[せいせい\]Markdownのdigestを再帰的\[さいきてき\]に含\[ふく\]めない。同\[おな\]じ有限\[ゆうげん\]Budgetで解決\[かいけつ\]・生成\[せいせい\]・出力\[しゅつりょく\]anchor検査\[けんさ\]を行\[おこな\]い、停止後\[ていしご\]の再試行\[さいしこう\]に新\[あたら\]しい予算\[よさん\]を与\[あた\]えない。このtyped入口自体\[いりぐちじたい\]にはファイルI\/Oを含\[ふく\]めない。canonical registryからの明示的\[めいじてき\]な接続\[せつぞく\]とMarkdownの集合書出\[しゅうごうかきだ\]しは16章\[しょう\]のhostが担当\[たんとう\]する。HTMLは既存\[きそん\]のPageSet backendへ接続\[せつぞく\]し、Markdownの成功\[せいこう\]からHTML・Web・公開\[こうかい\]の全体受入\[ぜんたいうけいれ\]を推定\[すいてい\]しない。

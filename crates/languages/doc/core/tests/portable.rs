@@ -462,3 +462,52 @@ fn mapped_view_parent_child_roundtrip_requires_explicit_mapping_closure() -> Res
     assert!(portable::to_value(&original, &r, &mut c, &mut b()).is_err());
     Ok(())
 }
+
+#[test]
+fn additional_views_reuse_the_same_source_closure() -> Result<(), String> {
+    use nepl3_core::origin::{Mapping, MappingKind};
+    let r = registry()?;
+    let mut document = literal(&r)?;
+    let source = document.sources[0].clone();
+    let decoded = SourceSnapshot::new(
+        SourceId("decoded".into()),
+        1,
+        "memory:decoded".into(),
+        source.text().as_bytes().to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    let mapping = Mapping {
+        source: source.span(0, source.text().len() as u64).map_err(err)?,
+        target: decoded.span(0, decoded.text().len() as u64).map_err(err)?,
+        kind: MappingKind::Exact,
+    };
+    document.sources.push(decoded);
+    let view = document.views[0].clone();
+    let mut increments = Vec::new();
+    for count in [8, 16, 32] {
+        document.source_maps = vec![mapping.clone(); count];
+        let mut costs = Vec::new();
+        for views in [1, 17] {
+            document.views = vec![view.clone(); views];
+            let mut budget = b();
+            document
+                .validate_structure(&r, &mut budget, &mut SourceAdmission::default())
+                .map_err(err)?;
+            costs.push(budget.usage().work);
+        }
+        // These views reference the original snapshot directly. Extra valid
+        // mappings change initial closure validation, not the work of adding
+        // identical views after that immutable store has been validated.
+        increments.push(costs[1] - costs[0]);
+    }
+    assert!(increments[0] > 0);
+    assert_eq!(increments, vec![increments[0]; 3]);
+    document.sources.pop();
+    assert!(
+        document
+            .validate_structure(&r, &mut b(), &mut SourceAdmission::default())
+            .is_err()
+    );
+    Ok(())
+}
