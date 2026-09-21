@@ -258,6 +258,20 @@ Pagesの実装では、公開後smokeが失敗したcandidateに対して [15章
 
 workflowの構文・権限・依存jobの扱いは [GitHub Actions公式仕様](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)、artifactの保存は [公式ガイド](https://docs.github.com/en/actions/tutorials/store-and-share-data) に従います。
 
+## branchとPRの統合手順
+
+通常は更新済みmainから短命のtopic branchを作り、一つの論理的変更と関連試験を同じPRで閉じます。同じ要求の修正を別の依存PRへ分散させず、無関係なtopicを取り込む統合branchへ転用しません。実装中の主要topic一つとレビュー・CI待ち一つ程度を目安とし、同じ領域の未統合stackを伸ばす前に先行変更を閉じます。独立した作業を禁止する件数上限ではありません。
+
+mainの取得・確認だけでは作業branchを更新しません。必要なAPIや修正の導入、競合解消、strict gateへの対応など、理由がある時点で更新し、その理由をPRへ記録します。統合順序を決め、レビュー修正と必要なbase更新をまとめてから統合候補を固定し、必須CIを完了させます。同じtreeでも、別headの成功や別baseとの検証を現在候補の成功へ読み替えません。保護設定を緩めて同期を省略しません。
+
+依存PRでは親PRと親head、子固有のcommit範囲を記録します。親の統合後は旧base・旧headと子branchからの参照を確認・保全し、子固有の差分だけを新mainへrebase/cherry-pickして整理します。親がsquash済みなら、古い親commitを子の変更として再投入しません。元系列とのrange-diff、最終差分、競合解消を確認し、必要な再レビューと新候補のCIを行います。共有branchの書換えは利用者・子branchへの影響を確認し、remoteの期待SHAを指定したforce-with-leaseを使います。通常のforce pushは使いません。確認できなければ新branchへ固有差分を移し、旧branchを保全します。
+
+通常の単一変更PRはsquash mergeを既定とします。元のcommit系列や統合点を保持する必要がある場合は、理由を示してrebase mergeまたはmerge commitを選びます。統合後のtopic branchを別の作業へ再利用せず、公開済みmainは別途合意した履歴移行なしに書き換えません。既存stackも一括で無条件に書き換えず、親から順に整理します。
+
+PRには対象commit・base、確認した契約と差分、重要な指摘と解消、独立実行とログ確認の区別、未確認範囲を短く残します。merge queueは導入済みとは扱いません。必要になった場合に既存GitHub機能と`merge_group`のCI対応を別途検証します。独自の統合管理frameworkは追加しません。
+
+この運用は [Gitのtopic workflow](https://git-scm.com/docs/gitworkflows) と [GitHubの統合方式・squash後のbranchに関する注意](https://docs.github.com/en/pull-requests/reference/pull-request-merges) を参考に、NEPL3の独立レビュー・strict CI条件へ適用したものです。
+
 ## 実装と独立レビュー
 
 Doc関連の共通値・wire・文書意味APIを固定する前に、[早期inventoryとgap audit](doc-inventory.md) を確認します。`cargo run --locked -p nepl3-tools -- doc-inventory --check` は固定commitの原本と照合し、現在の文書・契約の追加/変更/削除を報告します。通常の `check` とは分離し、baselineの履歴を取得した上で明示的に実行します。現在の網羅性を主張する場合は新しいcommitを監査して `doc-inventory --check-current` を通します。現時点のbaselineと作業treeには差分があり、strict検査が失敗することを未移行/未監査の成功へ読み替えません。再生成方法と履歴要件は監査文書を参照してください。
