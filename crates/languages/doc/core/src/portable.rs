@@ -116,12 +116,16 @@ pub fn to_value<C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
-    to_value_with_structure(document, registry, c, b).map(|(value, _)| value)
+    let (value, _) = encode_with_structure(document, registry, c, b)?;
+    check(registry, &value, b)?;
+    Ok(value)
 }
 
 // Retain the native immutable proof for the same operation's label traversal.
-// Raw NDF callers still enter through the public validation boundary.
-pub(crate) fn to_value_with_structure<'a, C: FoundationValueCodec>(
+// The caller must validate the generated NDF at its output boundary: either
+// DocumentSyntax in to_value, or the enclosing PageSet in pages::set_to_value.
+// This helper retains all native structure and foundation codec validation.
+fn encode_with_structure<'a, C: FoundationValueCodec>(
     document: &'a DocumentSyntax,
     registry: &SchemaRegistry,
     c: &mut C,
@@ -149,7 +153,6 @@ pub(crate) fn to_value_with_structure<'a, C: FoundationValueCodec>(
         [value, sources, origins, views, maps],
         b,
     )?;
-    check(registry, &output, b)?;
     Ok((output, structure))
 }
 pub fn from_value<C: FoundationValueCodec>(

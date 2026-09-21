@@ -1,0 +1,75 @@
+article ja "NEPL3 Tutorial — [入力/にゅうりょく]と[構文/こうぶん]を[観察/かんさつ]する"
+body
+  cons section purpose "この[章/しょう]の[到達点/とうたつてん]"
+    body
+      cons paragraph
+        cons "NEPL3は、[独立/どくりつ]したDSLの[構文/こうぶん]・[位置/いち]・[診断/しんだん]の[契約/けいやく]を[共有/きょうゆう]し、[言語/げんご]の[再帰的/さいきてき]な[相互埋込/そうごうめこ]みを[扱/あつか]う[基盤/きばん]である。"
+        cons "この[章/しょう]では、Helloという[小/ちい]さな[言語/げんご]へ[入力/にゅうりょく]を[与/あた]え、[構文木/こうぶんぎ]・token・[診断/しんだん]を[観察/かんさつ]する。"
+        cons "Helloの[文法/ぶんぽう]はLanguagePackageとして[定義/ていぎ]され、[公開/こうかい]APIを[利用/りよう]する[独立/どくりつ]したconsumerから[実行/じっこう]される。"
+        cons "[言語/げんご]の[作成/さくせい]、[別/べつ]のpackageとのcomposition、Sentence・annotation、[多階層/たかいそう]の[埋込/うめこ]みは、[基本課程/きほんかてい]の[後続/こうぞく]の[到達点/とうたつてん]である。"
+        nil
+      nil
+  cons section setup "[実行環境/じっこうかんきょう]"
+    body
+      cons paragraph
+        cons "NEPL3リポジトリをcheckoutし、rustupとRustのbuildに[必要/ひつよう]な[環境/かんきょう]を[用意/ようい]する。"
+        cons "[以下/いか]のコマンドはリポジトリのrootで[実行/じっこう]する。"
+        cons "Rustのversionはrust-toolchain.toml、[依存/いぞん]ライブラリはconsumerのCargo.lockで[固定/こてい]される。"
+        cons "[初回/しょかい]のbuildではtoolchainと[依存/いぞん]ライブラリの[取得/しゅとく]にネットワーク[接続/せつぞく]を[使用/しよう]する。"
+        nil
+      cons rawcode some "sh" "cargo run --locked --manifest-path conformance/extensions/hello/Cargo.toml --example inspect -- \"hello 世界\"\n"
+      nil
+  cons section tree "[入力/にゅうりょく]と[構文木/こうぶんぎ]"
+    body
+      cons paragraph
+        cons "tokenは、readerが[入力/にゅうりょく]から[読/よ]み[取/と]る[単位/たんい]である。"
+        cons "headは[構文/こうぶん]の[先頭/せんとう]に[置/お]かれ、その[位置/いち]で[有効/ゆうこう]な[規則/きそく]に[従/したが]って[子/こ]の[読取/よみと]りを[定/さだ]める。"
+        cons "Helloはheadであるhelloと、その[子/こ]である[一/ひと]つの[名前/なまえ]を[読/よ]む。"
+        cons "[解析結果/かいせきけっか]のGreeting nodeはName nodeを[子/こ]として[保持/ほじ]する。"
+        cons "[次/つぎ]は[出力/しゅつりょく]の[冒頭/ぼうとう]である。"
+        nil
+      cons rawcode some "text" "Complete; cursor=12\nroot: NodeRef(0)\nnode 0: org.example.hello::Greeting [Child(NodeRef(1))]\nnode 1: org.example.hello::Name []\n"
+      cons paragraph
+        cons "Completeは[入力/にゅうりょく]の[解析/かいせき]が[完了/かんりょう]した[状態/じょうたい]を[表/あらわ]す。"
+        cons "cursorは[読取/よみと]りが[進/すす]んだUTF-8のbyte[位置/いち]である。"
+        cons "tokenのpayloadにはhelloと[世界/せかい]が[保持/ほじ]される。"
+        cons "helloと[空白/くうはく]は6 bytes、[世界/せかい]は6 bytesであるため、[名前/なまえ]の[範囲/はんい]は6..12となる。"
+        cons "OriginのDirectは、その[構造/こうぞう]が[入力/にゅうりょく]sourceの[範囲/はんい]に[直接/ちょくせつ][対応/たいおう]することを[示/しめ]す。"
+        nil
+      nil
+  cons section exercise "[名前/なまえ]を[変更/へんこう]する"
+    body
+      cons paragraph
+        cons "コマンドの[入力引数/にゅうりょくひきすう]をhello NEPL3へ[変更/へんこう]し、[再実行/さいじっこう]する。"
+        cons "GreetingとNameの[親子関係/おやこかんけい]は[維持/いじ]され、[最後/さいご]のtokenのpayloadはNEPL3、[範囲/はんい]は6..11となる。"
+        cons "[次/つぎ]に[別/べつ]の[名前/なまえ]を[指定/してい]し、そのUTF-8 byte[数/すう]とcursorを[比較/ひかく]する。"
+        cons "[演習/えんしゅう]では[入力引数/にゅうりょくひきすう]を[編集/へんしゅう]する。"
+        nil
+      nil
+  cons section diagnostics "[回復/かいふく]と[未完入力/みかんにゅうりょく]"
+    body
+      cons paragraph
+        cons "goodbye [世界/せかい]を[指定/してい]すると、[未知/みち]のheadに[対/たい]してRecoveredとUnparsedInputの[診断/しんだん]が[表示/ひょうじ]される。"
+        cons "helloだけを[指定/してい]すると、[入力終端/にゅうりょくしゅうたん]で[子/こ]が[不足/ふそく]するため、RecoveredとMissingChildが[表示/ひょうじ]される。"
+        cons "Recoveredは、[問題/もんだい]を[診断/しんだん]に[記録/きろく]し、[回復/かいふく]した[構文/こうぶん]を[返/かえ]した[状態/じょうたい]である。"
+        nil
+      cons rawcode some "sh" "cargo run --locked --manifest-path conformance/extensions/hello/Cargo.toml --example inspect -- --partial \"hello \"\n"
+      cons paragraph
+        cons "--partialは[追加/ついか]の[入力/にゅうりょく]が[続/つづ]く[条件/じょうけん]を[指定/してい]する。"
+        cons "この[例/れい]ではNeedMoreが[返/かえ]される。"
+        cons "[末尾/まつび]の[空白/くうはく]も[引用符/いんようふ]の[内部/ないぶ]へ[含/ふく]める。"
+        cons "exampleは[解析結果/かいせきけっか]を[観察/かんさつ]するため、RecoveredやStoppedもデータとして[表示/ひょうじ]する。"
+        cons "[終了/しゅうりょう]コード0は[観察処理/かんさつしょり]の[完了/かんりょう]を[示/しめ]す。"
+        cons "[解析/かいせき]の[状態/じょうたい]は[出力/しゅつりょく]のoutcomeと[診断/しんだん]で[確認/かくにん]する。"
+        nil
+      nil
+  cons section next "[実装/じっそう]との[対応/たいおう]"
+    body
+      cons paragraph
+        cons "conformance/extensions/hello/src/lib.rsのlanguageはschemaとLanguagePackageを[構築/こうちく]する。"
+        cons "src/parse.rsはParseProfileとsource・environmentを[準備/じゅんび]し、ParseSessionを[実行/じっこう]する。"
+        cons "examples/inspect.rsは[結果/けっか]を[表示/ひょうじ]し、src/tests.rsは[位置/いち]・[回復/かいふく]・[停止/ていし]とNDF[交換/こうかん]を[検査/けんさ]する。"
+        cons "この[章/しょう]の[完了条件/かんりょうじょうけん]は、[入力/にゅうりょく]の[変更/へんこう]とtoken・[位置/いち]の[変化/へんか]を[対応/たいおう]させ、Complete・Recovered・NeedMoreを[説明/せつめい]できることである。"
+        nil
+      nil
+  nil

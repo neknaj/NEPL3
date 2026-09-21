@@ -22,7 +22,7 @@ CI成功は全受入条件の達成を意味しません。検証範囲は[Found
 
 ## 現在試せる最小の言語
 
-[外部Hello言語](conformance/extensions/hello/README.md)は、独立したCargo workspaceから公開core・reader・engine・wire APIだけを使い、`hello <name>` を解析します。元のconsumerを変更せず実行する手順と、構文木・UTF-8位置・診断について検査する内容を説明しています。任意入力の結果を表示するexampleは未提供です。一般的なimport/compositionやannotationの完成例でもありません。
+[Helloの導入章](doc/tutorial/hello.md)では、入力を変更し、構文木・UTF-8位置・診断を観察する。[外部Hello言語](conformance/extensions/hello/README.md)は、独立したCargo workspaceから公開core・reader・engine・wire APIを利用する実行例である。一般的なimport/compositionとannotationは、後続の教材・実装の対象である。
 
 ## 次の統合設計案
 
