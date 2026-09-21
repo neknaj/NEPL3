@@ -11,14 +11,38 @@ T07 は進行中。`doc/spec/05-document.md` と `design/forms.json` を最終�
 第05章は通常のpage予算でparse/lowerと文書集合のHTML生成が成立した。
 旧Markdownとの内容比較、旧見出しalias、17章・23章へのリンクを検査して正本移行する。
 Markdown集合のWork上限はページ追加に対応する別の実行設定であり、単体の性能保証ではない。
-source集合が増え続ける入力の計算量・実時間・実メモリの評価は未実施であり、
-通常予算内で一つの文書を処理できたことから増大入力の性能を推定しない。
-次の性能改善では、既存集合の再走査と検証scopeの寿命を調べる。
+source集合の増大については、readerの競合検査とadmissionだけを実行する限定測定を追加した。
+parser全体の実時間・実メモリは未測定であり、単体文書の予算適合やこの限定測定から推定しない。
+次の性能改善では、以下の測定を基に既存集合の再走査と検証scopeの寿命を調べる。
 
 Sentence consumerの所有移行、NEPL3a、旧lexical commentの全面撤去、T07/T21全体は
 未完了のままである。HTML/rustdocの高度化をこれらの本体開発の前提にしない。
 
 ## 段階別の履歴
+
+### 2026-09-21: source集合の反復走査の基準測定
+
+`tokenizer::source_checks::tests::source_scope_growth_measurement` は明示実行するignored testである。
+固定32 sourceと、読取りごとに1 source増える入力を128/256/512回処理する。
+測定対象のaccepted sourceは各1 KiB、固定environmentの32 sourceは各4 bytesである。
+fixture構築・parser・I/Oを測定に含めない。
+同じscope内で実際のSourceChecksとSourceAdmissionを再利用する。
+
+| 増大入力の読取り回数 | admission走査回数 | 競合検査Work | admission Work |
+| ---: | ---: | ---: | ---: |
+| 128 | 8,256 | 32,960 | 144,462 |
+| 256 | 32,896 | 82,304 | 477,190 |
+| 512 | 131,328 | 230,144 | 1,714,046 |
+
+Windows native releaseの一回の実測では、この二段階の合計時間は約0.17/0.57/2.25 msだった。
+細粒度timerの費用を含む参考値であり、安定した性能閾値や処理系全体の二次時間を主張しない。
+固定入力のadmission走査は4,096/8,192/16,384回である。
+AllocationUnitsも出力するが契約上の課金値であり、実heap使用量ではない。
+測定testはsource bytesの二重課金がないことも検査する。
+
+この経路には増大する既存集合の二次的な走査が残る。検証省略の実装はまだ行っていない。
+AcceptedTokenizationReportのscopeと長さだけでは、現在のSourceAdmissionでの受入済みを証明できない。
+集合の分岐・rollback・別admission・環境変更を扱う失効条件を保った上で改善する。
 
 ## #158を優先するSentence・注釈の回復
 
