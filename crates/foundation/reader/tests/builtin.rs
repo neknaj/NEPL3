@@ -329,6 +329,98 @@ fn text_decoding_retains_each_exact_or_transformed_source_range() -> Result<(), 
     assert_eq!(source_maps[0].target.end(), 0);
     Ok(())
 }
+
+#[test]
+fn text_identity_lookup_checks_only_the_reserved_revision() -> Result<(), ReaderError> {
+    for (revision, uri, text, conflict) in [
+        (0, "memory:decoded", "A", false),
+        (0, "memory:other", "A", true),
+        (0, "memory:decoded", "B", true),
+        (1, "memory:other", "B", false),
+    ] {
+        let mut fixture = Fixture::new(r#""\u{41}""#)?;
+        fixture.store.insert(SourceSnapshot::new(
+            SourceId("decoded".into()),
+            revision,
+            uri.into(),
+            text.as_bytes().to_vec(),
+            &mut budget(),
+        )?)?;
+        let result = fixture.whole(BuiltinReader::Text, true);
+        if conflict {
+            assert!(matches!(
+                result,
+                Err(ReaderError::Source(SourceError::IdentityConflict))
+            ));
+        } else {
+            let ReadReply::Matched { value, .. } = result? else {
+                return Err(ReaderError::Context);
+            };
+            assert_eq!(value, NdfValue::Text("A".into()));
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn text_lookup_work_grows_with_index_depth_and_literal_count() -> Result<(), ReaderError> {
+    let mut measurements = Vec::new();
+    for count in [128, 512, 2048] {
+        let mut fixture = Fixture::new(r#""A""#)?;
+        for i in 0..count {
+            fixture.store.insert(SourceSnapshot::new(
+                SourceId(format!("unrelated-{i:04}")),
+                0,
+                format!("memory:unrelated-{i:04}"),
+                vec![],
+                &mut budget(),
+            )?)?;
+        }
+        let mut work = Vec::new();
+        for repetitions in [1, 2, 4] {
+            let mut b = budget();
+            for _ in 0..repetitions {
+                let result = fixture.read(
+                    BuiltinReader::Text,
+                    0,
+                    3,
+                    true,
+                    &mut b,
+                    &mut SourceAdmission::default(),
+                )?;
+                assert!(matches!(result, ReadReply::Matched { .. }));
+            }
+            work.push(b.usage().work);
+        }
+        assert_eq!(work[1], work[0] * 2);
+        assert_eq!(work[2], work[0] * 4);
+        measurements.push(work[0]);
+        let mut limits = budget().limits();
+        limits.work = work[0] - 1;
+        assert!(matches!(
+            fixture.read(
+                BuiltinReader::Text,
+                0,
+                3,
+                true,
+                &mut Budget::new(limits),
+                &mut SourceAdmission::default()
+            )?,
+            ReadReply::Stopped {
+                reason: StopReason::WorkLimit,
+                ..
+            }
+        ));
+    }
+    // Four times as many fixed-width source IDs adds two binary-search levels.
+    // This bounds the measured reader operation, excluding store construction
+    // and the fixture's separate context proof. A full scan adds 384/1536 Work.
+    for pair in measurements.windows(2) {
+        assert!(pair[1] >= pair[0]);
+        assert!(pair[1] - pair[0] < 128, "{measurements:?}");
+    }
+    Ok(())
+}
 #[test]
 fn committed_text_rejects_invalid_escapes_scalars_and_direct_lines() -> Result<(), ReaderError> {
     for text in ["\"\\q\"", "\"\\uX\"", "\"\\u{g}\""] {
