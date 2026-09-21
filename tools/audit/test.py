@@ -16,6 +16,33 @@ class StructureTests(unittest.TestCase):
             with self.subTest(text=text), self.assertRaises(AuditError):
                 Parser(text, self.categories)
 
+    def test_text_values_follow_nepl3_scalar_escapes(self):
+        # Fixed semantic expectations, not a second decoder used as an oracle.
+        cases = [
+            ('"plain"', 'plain'),
+            ('"世界𠮷"', '世界𠮷'),
+            (r'"\"\\\n\r\t"', '"\\\n\r\t'),
+            (r'"\u{0}\u{41}\u{20bb7}\u{10FFFF}"', '\0A𠮷\U0010ffff'),
+            (r'"he\u{6c}lo"', 'hello'),
+        ]
+        categories = {"Test/Root": {"leaf": None, "forms": {
+            "root": {"kind": "Root", "fields": [{"name": "title", "read": "@Text"}]}
+        }}}
+        for source, expected in cases:
+            with self.subTest(source=source):
+                self.assertEqual(Parser(source, {}).complete("@Text"), expected)
+                self.assertEqual(
+                    Parser("root " + source, categories).complete("Test/Root"),
+                    {"kind": "Root", "fields": {"title": expected}},
+                )
+
+    def test_json_only_and_invalid_scalar_escapes_are_rejected(self):
+        for source in [r'"\u0041"', r'"\b"', r'"\f"', r'"\/"', r'"\uD800"',
+                       r'"\u{}"', r'"\u{D800}"', r'"\u{DFFF}"',
+                       r'"\u{110000}"', r'"\u{0000041}"', r'"\u{G}"', r'"\u{41"']:
+            with self.subTest(source=source), self.assertRaises(AuditError):
+                Parser(source, {}).complete("@Text")
+
     def test_arity_trailing_tokens_and_unknown_forms_are_rejected(self):
         for text in ["frac 1", "frac 1 2 3", "unknown 1 2"]:
             with self.subTest(text=text), self.assertRaises(AuditError):
