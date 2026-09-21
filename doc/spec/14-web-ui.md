@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/14&#45;web&#45;ui.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page web&#45;ui; source SHA-256 9ede4845c82e3fb0dc0711f943c5714df3426abca964e2570c87eae4555a64ae; alias input SHA-256 76af7a32409a225e5a16830c4db4c4f9d5ffb1fa1c7c8ae94ab60a443ef1f843; document digest f61a7ddddedcecc47d0cdaa039197a4ce14be403390d52906b8ff167dec66c60; page input SHA-256 0ba03398629c8fb30bc1fe691e272a80a180fecd7a6c5d2623eb73b7e502bb09. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/14&#45;web&#45;ui.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page web&#45;ui; source SHA-256 9ede4845c82e3fb0dc0711f943c5714df3426abca964e2570c87eae4555a64ae; alias input SHA-256 76af7a32409a225e5a16830c4db4c4f9d5ffb1fa1c7c8ae94ab60a443ef1f843; page input SHA-256 1b6305f6199b36f37ba94ed08d93dbb171492262b9da32ce0603ff05b26fa886. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="14-web-uiteaplayground"></a>
 

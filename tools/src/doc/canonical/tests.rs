@@ -31,6 +31,32 @@ fn canonical_source_link_follows_title_and_uses_projection_directory() -> Result
             &mut super::super::source::budget(),
         )?;
         let markdown = &output.files[0].1;
+        // Internal identities may change with the foundation schema even when
+        // this page's source and rendered text are identical. Preserve them in
+        // the receipt, keeping the public file's metadata source-local.
+        assert!(!markdown.contains("document digest"));
+        let receipt: serde_json::Value = serde_json::from_str(&output.manifest)?;
+        let digest = receipt["files"][0]["document_digest"]
+            .as_str()
+            .ok_or("missing document receipt")?;
+        assert_eq!(digest.len(), 64);
+        assert!(digest.bytes().all(|c| c.is_ascii_hexdigit()));
+        assert_eq!(receipt["files"][0]["path"], "doc/view/sample.md");
+        if renderer == RENDERER {
+            let source = fs::read_to_string(fixture.root().join("doc/source.nepld"))?;
+            let artifact = crate::doc::projection::annotated::host::from_source(
+                &super::super::source::compiled()?,
+                &source,
+                &[],
+            )?;
+            let expected: String = artifact
+                .document_digest
+                .0
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect();
+            assert_eq!(digest, expected);
+        }
         assert!(markdown.contains(concat!(
             "<a name=\"old-title\"></a>\n\n",
             "# <ruby>題<rt>だい</rt></ruby>\n\n",

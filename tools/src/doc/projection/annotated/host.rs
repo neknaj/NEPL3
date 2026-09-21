@@ -9,7 +9,7 @@ use std::{
     path::Path,
 };
 
-pub const RENDERER: &str = "nepl3-tools.markdown-annotated/3";
+pub const RENDERER: &str = "nepl3-tools.markdown-annotated/4";
 
 pub fn from_source(
     compiled: &Compiled,
@@ -110,6 +110,26 @@ pub(crate) fn generate_with_budget(
     source_href: Option<&str>,
     output_budget: &mut Budget,
 ) -> crate::Result<String> {
+    generate_with_receipt(
+        compiled,
+        path,
+        source,
+        alias_bytes,
+        source_href,
+        output_budget,
+    )
+    .map(|(text, _)| text)
+}
+
+/// Keep the internal schema-dependent identity in the generation receipt.
+pub(crate) fn generate_with_receipt(
+    compiled: &Compiled,
+    path: &str,
+    source: &str,
+    alias_bytes: &[u8],
+    source_href: Option<&str>,
+    output_budget: &mut Budget,
+) -> crate::Result<(String, Digest)> {
     output_budget.poll().map_err(err)?;
     if path.len() > 4096 || path.chars().any(char::is_control) {
         return Err("input path is not representable in projection metadata".into());
@@ -140,19 +160,18 @@ pub(crate) fn generate_with_budget(
     let hex = |digest: Digest| -> String { digest.0.iter().map(|b| format!("{b:02x}")).collect() };
     let source_digest = hex(Digest::of(source.as_bytes()));
     let options_digest = hex(Digest::of(alias_bytes));
-    let document_digest = hex(artifact.document_digest);
     let path = path
         .replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;")
         .replace('-', "&#45;");
     let metadata = format!(
-        "<!-- Generated from {path}; renderer {RENDERER}; source SHA-256 {source_digest}; alias input SHA-256 {options_digest}; document digest {document_digest}. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->\n\n"
+        "<!-- Generated from {path}; renderer {RENDERER}; source SHA-256 {source_digest}; alias input SHA-256 {options_digest}. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->\n\n"
     );
     // Block separators belong between blocks; a file ends with one LF.
     let text = metadata + artifact.markdown.trim_end_matches('\n') + "\n";
     output_budget
         .charge(Resource::OutputBytes, text.len() as u64)
         .map_err(err)?;
-    Ok(text)
+    Ok((text, artifact.document_digest))
 }

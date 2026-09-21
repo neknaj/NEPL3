@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/09&#45;portability.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page portability; source SHA-256 229b76ec982a2eb2585809ae138e865e137d31bfb9feb838416a45dd2dc9b465; alias input SHA-256 f6e5ea8b221e730a8d50ed28afc74cb0afd9831704b5f19b3729abf52cd8cd9d; document digest 6544d42afbd9029178a4fdb8bad3e9559615b889d06f7ddb16c4dfc872721f3b; page input SHA-256 6b2568aec600bd41513911fdba3c0e1975872ec48fa409956409c0b7b358ea37. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/09&#45;portability.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page portability; source SHA-256 229b76ec982a2eb2585809ae138e865e137d31bfb9feb838416a45dd2dc9b465; alias input SHA-256 f6e5ea8b221e730a8d50ed28afc74cb0afd9831704b5f19b3729abf52cd8cd9d; page input SHA-256 9aa3793c9c8353d2d3201f238919679312ab0bc51bed4b4b58d6cc09af88f58d. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="09-rust以外へ置換するための契約"></a>
 
