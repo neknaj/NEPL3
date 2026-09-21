@@ -1,6 +1,7 @@
 //! Immutable host routing inputs; operation lifetime transitions stay with the host.
 use super::*;
 use nepl3_core::budget::Resource;
+use nepl3_core::operation::lifetime::{LifetimeError, RequestLifetimes};
 
 pub struct ReplyContext<'a, S> {
     pub request: &'a Invoke,
@@ -14,6 +15,7 @@ pub enum RouteError {
     UnorderedOrDuplicate,
     UnknownRequest(u64),
     Reply(ReplyError),
+    Lifetime(LifetimeError),
 }
 impl From<StopReason> for RouteError {
     fn from(reason: StopReason) -> Self {
@@ -58,6 +60,52 @@ impl<'a, S> ReplyRoutes<'a, S> {
 }
 
 impl<R: Read, W: Write> Connection<R, W> {
+    /// Receive a routed reply and require its host lifetime to be Running with
+    /// the same operation identity and snapshot. Terminal replies are committed
+    /// as Finished before returning. Await remains Running until the host checks
+    /// dependency grants and commits suspend; do so before receiving again.
+    /// On failure the host must cancel its remaining connection lifetimes.
+    #[allow(clippy::too_many_arguments)]
+    pub fn receive_active_reply<S: DiagnosticSourceResolver>(
+        &mut self,
+        routes: &ReplyRoutes<'_, S>,
+        lifetimes: &mut RequestLifetimes,
+        registry: &SchemaRegistry,
+        sources: &SourceStore,
+        admission: &mut SourceAdmission,
+        transport: &mut Budget,
+        validation: &mut Budget,
+    ) -> Result<(usize, OperationReply), RouteError> {
+        let result = (|| {
+            let (index, reply) = self.receive_routed_reply(
+                routes, registry, sources, admission, transport, validation,
+            )?;
+            let saved = &routes.entries[index];
+            let map = |error| match error {
+                LifetimeError::Stopped(reason) => RouteError::Stopped(reason),
+                other => RouteError::Lifetime(other),
+            };
+            lifetimes
+                .check_reply(
+                    saved.request.request_id,
+                    &saved.request.operation,
+                    saved.context,
+                    validation,
+                )
+                .map_err(map)?;
+            if matches!(reply, OperationReply::Result(_)) {
+                lifetimes
+                    .finish(saved.request.request_id, validation)
+                    .map_err(map)?;
+            }
+            Ok((index, reply))
+        })();
+        if result.is_err() {
+            self.closed = true;
+        }
+        result
+    }
+
     /// Admit an out-of-order reply using its saved host context and narrow
     /// diagnostic grants. Returns the table index and validated reply.
     /// The host must check/update its request lifetime before scheduling or

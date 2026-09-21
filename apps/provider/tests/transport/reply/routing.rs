@@ -2,6 +2,191 @@ use super::*;
 use nepl3_provider::reply::{ReplyContext, ReplyRoutes, RouteError};
 
 #[test]
+fn await_and_validation_stops_preserve_running_until_host_commit() -> Result<(), String> {
+    use nepl3_core::operation::lifetime::{RequestLifetimes, RequestPhase};
+    let (registry, request) = fixture()?;
+    let sources = SourceStore::default();
+    let context = Digest::of(b"saved");
+    let entries = [ReplyContext {
+        request: &request,
+        context,
+        authorized_sources: &sources,
+    }];
+    let routes = ReplyRoutes::new(&entries, &mut budget()).map_err(error)?;
+    let awaiting = ProviderFrame::Reply {
+        request_id: request.request_id,
+        reply: OperationReply::Await {
+            continuation: Continuation {
+                provider: request.operation.clone(),
+                parent_request: request.request_id,
+                snapshot_digest: context,
+                state: request.input.clone(),
+            },
+            calls: vec![],
+            report: Report::default(),
+        },
+    };
+    let mut observed_work = 0;
+    for (frame, phase) in [
+        (awaiting, RequestPhase::Running),
+        (reply(&request), RequestPhase::Finished),
+    ] {
+        let mut lifetimes = RequestLifetimes::default();
+        lifetimes
+            .begin(
+                request.request_id,
+                request.operation.clone(),
+                context,
+                &mut budget(),
+            )
+            .map_err(error)?;
+        let mut transport = connection(&frame, &registry)?;
+        let mut validation = budget();
+        transport
+            .receive_active_reply(
+                &routes,
+                &mut lifetimes,
+                &registry,
+                &sources,
+                &mut SourceAdmission::default(),
+                &mut budget(),
+                &mut validation,
+            )
+            .map_err(error)?;
+        assert_eq!(
+            lifetimes
+                .phase(request.request_id, &mut budget())
+                .map_err(error)?,
+            phase
+        );
+        if phase == RequestPhase::Finished {
+            observed_work = validation.usage().work;
+        }
+    }
+    // Every insufficient validation allowance, including the final finish lookup,
+    // must preserve Running and close transport rather than publish completion.
+    for work in 0..observed_work {
+        let mut lifetimes = RequestLifetimes::default();
+        lifetimes
+            .begin(
+                request.request_id,
+                request.operation.clone(),
+                context,
+                &mut budget(),
+            )
+            .map_err(error)?;
+        let mut transport = connection(&reply(&request), &registry)?;
+        let mut validation = Budget::new(Limits {
+            work,
+            ..budget().limits()
+        });
+        assert!(
+            transport
+                .receive_active_reply(
+                    &routes,
+                    &mut lifetimes,
+                    &registry,
+                    &sources,
+                    &mut SourceAdmission::default(),
+                    &mut budget(),
+                    &mut validation
+                )
+                .is_err()
+        );
+        assert!(transport.is_closed());
+        assert_eq!(validation.poll(), Err(StopReason::WorkLimit));
+        assert_eq!(
+            lifetimes
+                .phase(request.request_id, &mut budget())
+                .map_err(error)?,
+            RequestPhase::Running
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn active_routing_finishes_once_and_rejects_inactive_or_changed_bindings() -> Result<(), String> {
+    use nepl3_core::operation::lifetime::{RequestLifetimes, RequestPhase};
+    let (registry, request) = fixture()?;
+    let sources = SourceStore::default();
+    let context = Digest::of(b"saved");
+    let entries = [ReplyContext {
+        request: &request,
+        context,
+        authorized_sources: &sources,
+    }];
+    let routes = ReplyRoutes::new(&entries, &mut budget()).map_err(error)?;
+    for mode in 0..6 {
+        let mut lifetimes = RequestLifetimes::default();
+        let mut provider = request.operation.clone();
+        if mode == 4 {
+            provider.name = "other".into();
+        }
+        if mode != 5 {
+            lifetimes
+                .begin(
+                    request.request_id,
+                    provider,
+                    if mode == 3 {
+                        Digest::of(b"changed")
+                    } else {
+                        context
+                    },
+                    &mut budget(),
+                )
+                .map_err(error)?;
+        }
+        match mode {
+            1 => lifetimes
+                .finish(request.request_id, &mut budget())
+                .map_err(error)?,
+            2 => lifetimes
+                .cancel(request.request_id, &mut budget())
+                .map_err(error)?,
+            _ => (),
+        }
+        let mut transport = connection(&reply(&request), &registry)?;
+        let outcome = transport.receive_active_reply(
+            &routes,
+            &mut lifetimes,
+            &registry,
+            &sources,
+            &mut SourceAdmission::default(),
+            &mut budget(),
+            &mut budget(),
+        );
+        if mode == 0 {
+            assert_eq!(outcome.map_err(error)?.0, 0);
+            assert_eq!(
+                lifetimes
+                    .phase(request.request_id, &mut budget())
+                    .map_err(error)?,
+                RequestPhase::Finished
+            );
+            let mut duplicate = connection(&reply(&request), &registry)?;
+            assert!(matches!(
+                duplicate.receive_active_reply(
+                    &routes,
+                    &mut lifetimes,
+                    &registry,
+                    &sources,
+                    &mut SourceAdmission::default(),
+                    &mut budget(),
+                    &mut budget()
+                ),
+                Err(RouteError::Lifetime(_))
+            ));
+            assert!(duplicate.is_closed());
+        } else {
+            assert!(matches!(outcome, Err(RouteError::Lifetime(_))));
+            assert!(transport.is_closed());
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn diagnostics_use_selected_route_grants_instead_of_codec_sources() -> Result<(), String> {
     use nepl3_core::diagnostic::{Diagnostic, Severity};
     let (registry, first) = fixture()?;
