@@ -7,6 +7,12 @@ use nepl3_core::{
 };
 
 fn fixture() -> Result<(SchemaRegistry, OperationRef, TypedValue), String> {
+    fixture_with_input(TypeDescriptor::Unit)
+}
+
+fn fixture_with_input(
+    input: TypeDescriptor,
+) -> Result<(SchemaRegistry, OperationRef, TypedValue), String> {
     let output = TypeDescriptor::Named(TypeRef {
         package: "test.result".into(),
         revision: 1,
@@ -30,7 +36,7 @@ fn fixture() -> Result<(SchemaRegistry, OperationRef, TypedValue), String> {
             .collect(),
         operations: vec![OperationDescriptor {
             name: "run".into(),
-            input: TypeDescriptor::Unit,
+            input,
             output,
             pure: true,
         }],
@@ -57,6 +63,78 @@ fn fixture() -> Result<(SchemaRegistry, OperationRef, TypedValue), String> {
             fields: vec![NdfValue::U64(42)],
         }),
     ))
+}
+
+#[test]
+fn invoke_admission_checks_selected_operation_input_and_environment() -> Result<(), String> {
+    use nepl3_core::operation::{Invoke, request::InputValidationError as E};
+    let (registry, operation, value) = fixture_with_input(TypeDescriptor::Named(TypeRef {
+        package: "test.result".into(),
+        revision: 1,
+        name: "Output".into(),
+    }))?;
+    let call = Invoke {
+        request_id: 1,
+        operation: operation.clone(),
+        input: value.clone(),
+        environment: value,
+        sources: vec![],
+        resources: vec![],
+        limits: budget().limits(),
+    };
+    assert_eq!(
+        call.validate_input(&operation, &registry, &mut budget()),
+        Ok(())
+    );
+    let mut wrong = call.clone();
+    if let TypedValue::Record(record) = &mut wrong.input {
+        record.kind = "Other".into();
+    }
+    // Same fields and scalar shape, different named type: reject before dispatch.
+    assert!(matches!(
+        wrong.validate_input(&operation, &registry, &mut budget()),
+        Err(E::Schema(_))
+    ));
+    let mut wrong = call.clone();
+    wrong.operation.schema.digest = Digest::of(b"another provider schema");
+    assert_eq!(
+        wrong.validate_input(&operation, &registry, &mut budget()),
+        Err(E::OperationMismatch)
+    );
+    let mut wrong = call.clone();
+    wrong.operation.name = "missing".into();
+    assert_eq!(
+        wrong.validate_input(&wrong.operation, &registry, &mut budget()),
+        Err(E::UnknownOperation)
+    );
+    let mut wrong = call.clone();
+    if let TypedValue::Record(record) = &mut wrong.environment {
+        record.fields.clear();
+    }
+    assert!(matches!(
+        wrong.validate_input(&operation, &registry, &mut budget()),
+        Err(E::Schema(_))
+    ));
+    assert_eq!(
+        call.validate_input(&operation, &SchemaRegistry::default(), &mut budget()),
+        Err(E::Schema(SchemaError::Unfinalized))
+    );
+    let mut limited = Budget::new(Limits {
+        work: 0,
+        ..budget().limits()
+    });
+    assert_eq!(
+        call.validate_input(&operation, &registry, &mut limited),
+        Err(E::Stopped(StopReason::WorkLimit))
+    );
+    assert_eq!(limited.poll(), Err(StopReason::WorkLimit));
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert_eq!(
+        call.validate_input(&operation, &registry, &mut cancelled),
+        Err(E::Stopped(StopReason::Cancelled))
+    );
+    Ok(())
 }
 
 #[test]
