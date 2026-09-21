@@ -13,6 +13,8 @@ mod activation;
 mod execution;
 #[path = "dispatch/grants.rs"]
 mod grants;
+#[path = "dispatch/scheduler.rs"]
+mod scheduler;
 #[path = "dispatch/suspension.rs"]
 mod suspension;
 

@@ -18,8 +18,8 @@
 | [T08](T08.md) | Math意味モデルと厳密計算 | in-progress | T04 |
 | [T09](T09.md) | Circuit checkerと実行 | not-implemented | T04 |
 | [T10](T10.md) | 安全な出力backend | in-progress | T07, T08, T09, T24 |
-| [T11](T11.md) | Suiteと埋め込みbridge | not-implemented | T05, T06, T10, T24 |
-| [T12](T12.md) | 別process provider | not-implemented | T02, T11 |
+| [T11](T11.md) | Suiteと埋め込みbridge | in-progress | T05, T06, T10, T24 |
+| [T12](T12.md) | 別process provider | in-progress | T02, T11 |
 | [T13](T13.md) | Native/WASI CLI | not-implemented | T11, T12, T23, T24 |
 | [T14](T14.md) | 汎用LSP serverとeditor接続 | not-implemented | T06, T11 |
 | [T15](T15.md) | Browser workerとWasm API | not-implemented | T11, T02, T25 |
