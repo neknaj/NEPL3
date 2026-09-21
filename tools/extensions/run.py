@@ -117,6 +117,13 @@ def main():
             ]:
                 run(cargo + ["run", "--locked", "--example", "inspect", "--"] + arguments,
                     directory, f"inspect-{name}.log")
+            for name, text in [
+                ("nested", "add 1 mul 2 3"),
+                ("unary", "neg 7"),
+                ("missing-child", "add 1"),
+            ]:
+                run(cargo + ["run", "--locked", "--example", "miniexpr", "--", text],
+                    directory, f"miniexpr-{name}.log")
         completed = True
     finally:
         record["foundation_unchanged"] = before == fingerprint()

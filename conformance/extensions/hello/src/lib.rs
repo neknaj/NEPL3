@@ -10,6 +10,7 @@ use nepl3_reader::{builtin::BuiltinReader, plan::ReaderPlan, tokenizer::*};
 
 mod parse;
 pub use parse::parse;
+pub mod miniexpr;
 
 pub fn budget() -> Budget {
     Budget::new(Limits {
