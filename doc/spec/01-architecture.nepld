@@ -1,6 +1,6 @@
 article ja "01. Repository・crate・[依存方向/いぞんほうこう]"
 body
-  cons section policy "[方針/ほうしん]"
+  cons section policy "[構成/こうせい]と[依存関係/いぞんかんけい]の[設計方針/せっけいほうしん]"
     body
       cons paragraph
         cons sentence cons concat cons ruby text "初期" text "しょき" cons text "repositoryは " nil cons code "NEPL3" cons text " のmonorepoとする。" nil
