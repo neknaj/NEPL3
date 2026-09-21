@@ -20,6 +20,7 @@ use std::{
 };
 mod model;
 mod reference;
+mod routing;
 mod schema_failure;
 use model::*;
 
@@ -458,6 +459,9 @@ fn run_process(
 }
 
 pub fn run() -> Result<(), String> {
+    if std::env::args().any(|arg| arg == "--routing-child") {
+        return routing::child();
+    }
     if let Some(mode) = schema_failure::child_mode() {
         return schema_failure::child(mode);
     }
@@ -468,11 +472,12 @@ pub fn run() -> Result<(), String> {
         run_case(input).map_err(|e| format!("input {input}: {e}"))?;
     }
     schema_failure::run()?;
+    routing::run()?;
     run_process("--provider-child", |connection| {
         exchange(connection, 41, true)
     })?;
     println!(
-        "process_protocol: 7 passed (3 schema failures; 3 native/process comparisons; 1 suspended cancellation)"
+        "process_protocol: 8 passed (3 schema failures; 3 native/process comparisons; 1 suspended cancellation; 1 reverse-order routing)"
     );
     Ok(())
 }
