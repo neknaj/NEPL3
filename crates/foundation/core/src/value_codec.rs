@@ -41,6 +41,13 @@ pub trait FoundationValueCodec {
         value: &crate::schema::TypeDescriptor,
         budget: &mut Budget,
     ) -> Result<NdfValue, Self::Error>;
+    /// Decode symbolic type data after checking the registered foundation schema.
+    /// Named references retain their identity; resolution belongs to the caller.
+    fn decode_type_descriptor(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<crate::schema::TypeDescriptor, Self::Error>;
     fn foundation_schema(&self) -> &SchemaRef;
     fn source_admission(&mut self) -> &mut crate::source::SourceAdmission;
     fn encode_fact_set(

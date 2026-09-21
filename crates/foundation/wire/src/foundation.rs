@@ -106,6 +106,14 @@ impl FoundationValueCodec for FoundationCodec<'_> {
         self.validate(&encoded, "TypeDescriptor", budget)?;
         Ok(encoded)
     }
+    fn decode_type_descriptor(
+        &mut self,
+        value: &NdfValue,
+        budget: &mut Budget,
+    ) -> Result<TypeDescriptor, WireError> {
+        self.validate(value, "TypeDescriptor", budget)?;
+        types::decode(value, self.schema, budget)
+    }
     fn source_admission(&mut self) -> &mut SourceAdmission {
         self.validated_mappings = None;
         self.admission
