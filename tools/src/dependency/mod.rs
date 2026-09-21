@@ -3,6 +3,7 @@ use crate::{
     task::{dag, unique},
 };
 use serde::Deserialize;
+mod declarations;
 use std::{
     collections::{BTreeMap, BTreeSet},
     path::Path,
@@ -226,17 +227,7 @@ pub(crate) fn check(root: &Path, implemented: &[String]) -> Result<()> {
         if policy.no_std {
             core_count += 1;
             let source = read(root, &format!("{}/src/lib.rs", policy.path))?;
-            if !source.lines().any(|line| line.trim() == "#![no_std]")
-                || !source
-                    .lines()
-                    .any(|line| line.trim() == "extern crate alloc;")
-            {
-                return Err(format!(
-                    "{}: requires unconditional no_std and alloc declarations",
-                    package.name
-                )
-                .into());
-            }
+            declarations::check(&source).map_err(|error| format!("{}: {error}", package.name))?;
             // Source declarations alone do not establish external-crate portability.
             command(
                 root,
