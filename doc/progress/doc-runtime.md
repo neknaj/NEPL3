@@ -14,6 +14,8 @@ Markdown集合のWork上限はページ追加に対応する別の実行設定�
 source集合の増大については、readerの競合検査とadmissionだけを実行する限定測定を追加した。
 parser全体の実時間・実メモリは未測定であり、単体文書の予算適合やこの限定測定から推定しない。
 次の性能改善では、以下の測定を基に既存集合の再走査と検証scopeの寿命を調べる。
+受入済みcollectorの再admissionは、台帳の一致を確認できる同期readで再利用する。
+同期hostもcallback境界ごとの交換検出を通す。resumeとSourceChecksの集合比較は残件である。
 
 Sentence consumerの所有移行、NEPL3a、旧lexical commentの全面撤去、T07/T21全体は
 未完了のままである。HTML/rustdocの高度化をこれらの本体開発の前提にしない。
@@ -56,6 +58,25 @@ host callback中の台帳交換をまだ追跡しないため、host付きread�
 Stopped・raw復元には証明を付けない。非atomic targetも全検査を維持する。
 したがって全source処理の線形化、Doc host全体の高速化、実heap削減が完了したとはしない。
 次段階はcallback/resumeを含む台帳寿命と、残るSourceChecksの集合比較である。
+
+### 2026-09-21: 同期hostの台帳交換を追跡
+
+同期hostのprovider/reservation callbackを共通wrapperで囲み、各返却時点の台帳を
+読取り開始時のscopeと照合する。失効は累積し、複数callbackでAからBへ交換した後に
+Aへ戻っても証明を再発行しない。正常終端かつ台帳交換・host errorがない場合だけ、
+host付きreadも受入済みcollectorの証明を保持する。
+
+callback内部だけで台帳を交換して元へ戻した場合、返却sourceはruntimeによって
+現在の台帳へ再検査・入場される。callback内部の任意状態を証明しているわけではない。
+試験は二つのprovider呼出しでsourceを実際に生成し、A→B→Aで失効した後に
+最初のsourceの再admissionが必要になることをSourceBytesで確認する。
+reservationの交換、None、エラー返却でも失効を累積する。
+resume/portableからは引き続き証明を発行しない。
+
+実文書6件のparse/lower/labels試験も成功した。第05章はそれぞれ73,092,384 /
+66,285,115 / 8,413,256 Workで、各段階の通常100,000,000 Work枠内だった。
+未採用の第21章草案はparseが113,044,768 Workであり、明示した草案用枠での成功を
+通常ページ枠への適合や正本移行完了とは扱わない。実時間の比較実験・実heap測定は別途必要である。
 
 ## #158を優先するSentence・注釈の回復
 

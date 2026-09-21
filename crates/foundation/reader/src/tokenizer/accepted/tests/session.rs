@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn session_issues_scope_only_for_host_free_completed_reads()
+fn session_issues_scope_only_for_completed_reads_with_stable_admission()
 -> Result<(), crate::runtime::ReaderError> {
     use crate::{model::*, plan::*, tokenizer::*};
     use nepl3_core::{
@@ -182,11 +182,11 @@ fn session_issues_scope_only_for_host_free_completed_reads()
             assert!(matches!(reply.outcome, TokenizationOutcome::Token(_)));
             assert_eq!(
                 reply.accepted.admission_scope.is_some(),
-                cfg!(target_has_atomic = "ptr") && !hosted
+                cfg!(target_has_atomic = "ptr")
             );
             let work = b.usage().work;
             reply.accepted.admit_sources(&mut ledger, &mut b)?;
-            if cfg!(target_has_atomic = "ptr") && !hosted {
+            if cfg!(target_has_atomic = "ptr") {
                 assert_eq!(b.usage().work, work);
             }
             let mut branch = reply.accepted.checkpoint(&mut b)?;
@@ -209,6 +209,154 @@ fn session_issues_scope_only_for_host_free_completed_reads()
             let restored =
                 AcceptedTokenizationReply::from_native(raw_reply, Rc::new(scope.clone()), &b);
             assert!(restored.accepted.admission_scope.is_none());
+        }
+    }
+    struct SourceHost {
+        saved: SourceAdmission,
+        exchange: bool,
+        restore_inside: bool,
+        fail: bool,
+        calls: u64,
+    }
+    impl TokenizationHost for SourceHost {
+        fn provider(
+            &mut self,
+            call: &ProviderCall,
+            b: &mut Budget,
+            admission: &mut SourceAdmission,
+        ) -> Result<Option<crate::runtime::ProviderReply>, crate::runtime::ReaderError> {
+            let ProviderCall::Read { request, .. } = call else {
+                return Err(crate::runtime::ReaderError::ProviderContract);
+            };
+            if self.exchange {
+                core::mem::swap(admission, &mut self.saved);
+            }
+            self.calls += 1;
+            let generated = admission.create(
+                SourceId(alloc::format!("generated-{}", self.calls)),
+                0,
+                "memory:generated".into(),
+                vec![b'g'],
+                b,
+            )?;
+            if self.restore_inside {
+                core::mem::swap(admission, &mut self.saved);
+            }
+            if self.fail {
+                return Err(crate::runtime::ReaderError::ProviderContract);
+            }
+            Ok(Some(crate::runtime::ProviderReply::Read(
+                alloc::boxed::Box::new(ReadReply::Matched {
+                    value: NdfValue::Text("x".into()),
+                    end: request.limit,
+                    new_state: NdfValue::Unit,
+                    view: nepl3_core::view::ViewBundle {
+                        elements: vec![],
+                        roots: vec![],
+                    },
+                    facts: vec![],
+                    sources: vec![generated],
+                    source_maps: vec![],
+                    report: Report {
+                        usage: b.usage(),
+                        ..Report::default()
+                    },
+                }),
+            )))
+        }
+        fn reservation(
+            &mut self,
+            _: &ReservationRequest,
+            _: &mut Budget,
+            _: &mut SourceAdmission,
+        ) -> Result<Option<nepl3_core::source::SourceReservation>, crate::runtime::ReaderError>
+        {
+            Err(crate::runtime::ReaderError::ProviderContract)
+        }
+    }
+    let operation = nepl3_core::value::OperationRef {
+        schema: external_ref.clone(),
+        name: "read".into(),
+    };
+    let mut host_plan = plan.clone();
+    host_plan.expressions = vec![
+        ReaderExpr::Call(operation.clone()),
+        ReaderExpr::Seq(vec![ReaderId(0), ReaderId(0)]),
+    ];
+    host_plan.rules[0].root = ReaderId(1);
+    host_plan.rules[0].output =
+        TypeDescriptor::List(alloc::boxed::Box::new(TypeDescriptor::NdfValue));
+    host_plan.providers = vec![ProviderSignature {
+        operation,
+        kind: ProviderKind::Read,
+        value_input: TypeDescriptor::Unit,
+        value_output: TypeDescriptor::Text,
+        pure: true,
+        state_type: TypeDescriptor::Unit,
+        continuation_type: reader_type("ReaderContinuation"),
+    }];
+    let host_checked = host_plan.check(&registry, &mut setup)?;
+    for (exchange, restore_inside, fail) in [
+        (false, false, false),
+        (true, false, false),
+        (true, true, false),
+        (true, false, true),
+    ] {
+        let mut b = budget();
+        let mut admission = SourceAdmission::default();
+        let mut host = SourceHost {
+            saved: SourceAdmission::default(),
+            exchange,
+            restore_inside,
+            fail,
+            calls: 0,
+        };
+        let accepted = AcceptedTokenizationReport::empty(scope.clone(), &mut b)?;
+        let mut session =
+            TokenizationSession::new("host".into(), &modes, &host_checked, &registry, &mut b)?;
+        let result = session.read_accepted_with_host(
+            ScopedTokenizationRequest {
+                scope: &scope,
+                target: TokenTarget::Mode,
+                input: TokenizationRequest {
+                    snapshot: &source,
+                    start: 0,
+                    limit: 1,
+                    final_input: true,
+                    context: &context,
+                    state: &NdfValue::Unit,
+                },
+            },
+            &store,
+            &mut b,
+            &mut admission,
+            accepted,
+            &mut host,
+        )?;
+        if fail {
+            assert!(result.host_error.is_some());
+            assert!(result.reply.accepted.admission_scope.is_none());
+        } else {
+            assert!(matches!(
+                result.reply.outcome,
+                TokenizationOutcome::Token(_)
+            ));
+            assert_eq!(host.calls, 2);
+            assert_eq!(result.reply.accepted.sources.len(), 2);
+            assert_eq!(
+                result.reply.accepted.admission_scope.is_some(),
+                cfg!(target_has_atomic = "ptr") && (!exchange || restore_inside)
+            );
+            let before = b.usage().source_bytes;
+            result
+                .reply
+                .accepted
+                .admit_sources(&mut admission, &mut b)?;
+            // A -> B -> A left the first source only in B. Rechecking is required.
+            assert_eq!(
+                b.usage().source_bytes - before,
+                u64::from(exchange && !restore_inside)
+            );
         }
     }
     for decode in [false, true] {
@@ -343,6 +491,74 @@ fn session_issues_scope_only_for_host_free_completed_reads()
     };
     let mut text_modes = modes.clone();
     text_modes[0].take[0].reader = TokenReader::Builtin(crate::builtin::BuiltinReader::Text);
+    struct TextHost {
+        replace: bool,
+    }
+    impl TokenizationHost for TextHost {
+        fn provider(
+            &mut self,
+            _: &ProviderCall,
+            _: &mut Budget,
+            _: &mut SourceAdmission,
+        ) -> Result<Option<crate::runtime::ProviderReply>, crate::runtime::ReaderError> {
+            Err(crate::runtime::ReaderError::ProviderContract)
+        }
+        fn reservation(
+            &mut self,
+            _: &ReservationRequest,
+            _: &mut Budget,
+            admission: &mut SourceAdmission,
+        ) -> Result<Option<nepl3_core::source::SourceReservation>, crate::runtime::ReaderError>
+        {
+            if self.replace {
+                *admission = SourceAdmission::default();
+            }
+            Ok(Some(nepl3_core::source::SourceReservation {
+                source_id: SourceId("decoded-host".into()),
+                revision: 0,
+                uri: "memory:decoded-host".into(),
+            }))
+        }
+    }
+    for replace in [false, true] {
+        let mut b = budget();
+        let mut ledger = SourceAdmission::default();
+        let accepted = AcceptedTokenizationReport::empty(quoted_scope.clone(), &mut b)?;
+        let mut session = TokenizationSession::new(
+            "quoted-host".into(),
+            &text_modes,
+            &checked,
+            &registry,
+            &mut b,
+        )?;
+        let reply = session
+            .read_accepted_with_host(
+                ScopedTokenizationRequest {
+                    scope: &quoted_scope,
+                    target: TokenTarget::Mode,
+                    input: TokenizationRequest {
+                        snapshot: &quoted,
+                        start: 0,
+                        limit: 3,
+                        final_input: true,
+                        context: &context,
+                        state: &NdfValue::Unit,
+                    },
+                },
+                &quoted_store,
+                &mut b,
+                &mut ledger,
+                accepted,
+                &mut TextHost { replace },
+            )?
+            .reply;
+        assert!(matches!(reply.outcome, TokenizationOutcome::Token(_)));
+        assert!(!reply.accepted.sources.is_empty());
+        assert_eq!(
+            reply.accepted.admission_scope.is_some(),
+            !replace && cfg!(target_has_atomic = "ptr")
+        );
+    }
     let mut b = budget();
     let mut ledger = SourceAdmission::default();
     let accepted = AcceptedTokenizationReport::empty(quoted_scope.clone(), &mut b)?;

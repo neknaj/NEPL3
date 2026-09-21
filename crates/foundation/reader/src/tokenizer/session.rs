@@ -433,27 +433,37 @@ impl<'a> TokenizationSession<'a> {
         }
         let scope = Rc::clone(&accepted.scope);
         let prefix = Prefix::capture(&accepted);
-        // Only this synchronous, host-free path proves that one ledger owns
-        // every accepted source throughout the operation. Resume and host
-        // callbacks retain full checks until their ledger transitions are tracked.
-        let admission_scope = if host.is_none() {
-            match admission.scope_with_budget(budget) {
-                Ok(scope) => scope,
-                Err(SourceError::Stopped(reason)) => {
-                    return Ok(AcceptedTokenizationReply::from_native(
-                        empty_stop(request.start, reason, accepted, budget),
-                        scope,
-                        budget,
-                    ));
-                }
-                Err(error) => return Err(rejected(error.into(), accepted, budget)),
+        // Synchronous callbacks are tracked individually. Resume still needs
+        // a fresh admission check of the retained prefix before issuing proof.
+        let admission_scope = match admission.scope_with_budget(budget) {
+            Ok(scope) => scope,
+            Err(SourceError::Stopped(reason)) => {
+                return Ok(AcceptedTokenizationReply::from_native(
+                    empty_stop(request.start, reason, accepted, budget),
+                    scope,
+                    budget,
+                ));
             }
-        } else {
-            None
+            Err(error) => return Err(rejected(error.into(), accepted, budget)),
         };
+        let mut guarded = host.map(|inner| super::host::AdmissionHost {
+            inner,
+            scope: admission_scope.as_ref(),
+            changed: false,
+        });
         let result = self.read_seed(
-            target, request, sources, budget, admission, accepted, host, host_error,
+            target,
+            request,
+            sources,
+            budget,
+            admission,
+            accepted,
+            guarded
+                .as_mut()
+                .map(|host| host as &mut dyn super::TokenizationHost),
+            host_error,
         );
+        let stable = guarded.as_ref().is_none_or(|host| !host.changed) && host_error.is_none();
         match result {
             Ok(reply) => {
                 let proved = matches!(
@@ -465,7 +475,7 @@ impl<'a> TokenizationSession<'a> {
                         | TokenizationOutcome::Failed { .. }
                 );
                 let mut reply = AcceptedTokenizationReply::from_native(reply, scope, budget);
-                if proved {
+                if proved && stable {
                     reply.accepted.admission_scope = admission_scope;
                 }
                 Ok(reply)
