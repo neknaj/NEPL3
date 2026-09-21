@@ -5,6 +5,48 @@ use nepl3_core::operation::{
 };
 use nepl3_suite::suspension::{self, AwaitError};
 
+fn resume_parent(
+    parent: &Invoke,
+    resume: &nepl3_core::operation::Resume,
+    _: &SchemaRegistry,
+    budget: &mut Budget,
+) -> Result<OperationResult<TypedValue>, StopReason> {
+    budget.charge(Resource::Work, 1)?;
+    let [
+        OperationReply::Result(OperationResult::Complete {
+            value: TypedValue::Record(dependency),
+            ..
+        }),
+    ] = resume.dependency_results.as_slice()
+    else {
+        return Ok(OperationResult::Invalid {
+            partial: None,
+            report: Report::default(),
+        });
+    };
+    let [NdfValue::U64(right)] = dependency.fields.as_slice() else {
+        return Ok(OperationResult::Invalid {
+            partial: None,
+            report: Report::default(),
+        });
+    };
+    let mut value = parent.input.clone_with_budget(budget)?;
+    if let TypedValue::Record(record) = &mut value
+        && let [NdfValue::U64(left)] = record.fields.as_mut_slice()
+        && let Some(sum) = left.checked_add(*right)
+    {
+        *left = sum;
+        return Ok(OperationResult::Complete {
+            value,
+            report: Report::default(),
+        });
+    }
+    Ok(OperationResult::Invalid {
+        partial: None,
+        report: Report::default(),
+    })
+}
+
 fn saved(parent: &Invoke, context: Digest) -> Continuation {
     Continuation {
         provider: parent.operation.clone(),
@@ -93,9 +135,70 @@ fn admitted_await_collects_dispatched_dependencies_and_resumes_saved_lifetime() 
     let resume = pending
         .take_resume(&mut budget())
         .map_err(|e| format!("{e:?}"))?;
-    lifetimes
-        .resume(&resume, &mut budget())
-        .map_err(|e| format!("{e:?}"))?;
+    use nepl3_suite::dispatch::resume as dispatch;
+    let registration = dispatch::Registration {
+        operation: &parent.operation,
+        implementation: identity,
+        resume: resume_parent,
+    };
+    let grants = [&sources];
+    let saved = dispatch::SavedAwait {
+        parent: &parent,
+        context,
+        continuation: &continuation,
+        calls: &calls,
+        sources: &grants,
+    };
+    let run = |request: &nepl3_core::operation::Resume,
+               lifetimes: &mut RequestLifetimes,
+               execution: &mut Budget| {
+        dispatch::execute(
+            &registration,
+            identity,
+            &saved,
+            request,
+            lifetimes,
+            &registry,
+            &sources,
+            execution,
+            &mut budget(),
+        )
+    };
+    let mut wrong = resume.clone();
+    wrong.continuation.parent_request = 99;
+    assert!(matches!(
+        run(&wrong, &mut lifetimes, &mut execution),
+        Err(dispatch::ResumeError::Binding(_))
+    ));
+    let mut wrong = resume.clone();
+    if let OperationReply::Result(OperationResult::Complete {
+        value: TypedValue::Record(record),
+        ..
+    }) = &mut wrong.dependency_results[0]
+    {
+        record.fields.clear();
+    }
+    assert!(matches!(
+        run(&wrong, &mut lifetimes, &mut execution),
+        Err(dispatch::ResumeError::Dispatch(DispatchError::Output(_)))
+    ));
+    assert_eq!(
+        lifetimes.phase(parent.request_id, &mut budget()),
+        Ok(RequestPhase::Awaiting)
+    );
+    let completed = run(&resume, &mut lifetimes, &mut execution).map_err(|e| format!("{e:?}"))?;
+    let OperationResult::Complete {
+        value: TypedValue::Record(record),
+        ..
+    } = completed
+    else {
+        return Err("expected resumed result".into());
+    };
+    assert_eq!(record.fields, vec![NdfValue::U64(52)]);
+    assert!(matches!(
+        run(&resume, &mut lifetimes, &mut execution),
+        Err(dispatch::ResumeError::Lifetime(_))
+    ));
     assert_eq!(
         lifetimes.phase(parent.request_id, &mut budget()),
         Ok(RequestPhase::Running)

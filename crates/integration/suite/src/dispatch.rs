@@ -7,6 +7,7 @@ use nepl3_core::{
     source::Digest,
     value::{OperationRef, TypedValue},
 };
+pub mod resume;
 
 /// A native implementation of a terminal operation. Operations which suspend
 /// use the separate Await/Resume host path; this callback owns no continuation.
@@ -75,8 +76,29 @@ pub fn invoke_terminal(
             InputValidationError::Stopped(s) => DispatchError::Stopped(s),
             e => DispatchError::Input(e),
         })?;
+    run_terminal(
+        request,
+        selected,
+        registry,
+        sources,
+        execution,
+        validation,
+        |budget| invoke(request, registry, budget),
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(super) fn run_terminal(
+    request: &Invoke,
+    selected: &OperationRef,
+    registry: &SchemaRegistry,
+    sources: &impl DiagnosticSourceResolver,
+    execution: &mut Budget,
+    validation: &mut Budget,
+    invoke: impl FnOnce(&mut Budget) -> Result<OperationResult<TypedValue>, StopReason>,
+) -> Result<OperationResult<TypedValue>, DispatchError> {
     let result = execution.with_ceiling(request.limits, |budget| {
-        let result = invoke(request, registry, budget).map_err(|reason| budget.stop(reason))?;
+        let result = invoke(budget).map_err(|reason| budget.stop(reason))?;
         if let OperationResult::Stopped { reason, .. } = &result {
             budget.stop(*reason);
         }
