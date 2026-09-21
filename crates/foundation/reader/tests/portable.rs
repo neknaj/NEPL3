@@ -10,6 +10,112 @@ use nepl3_reader::{model::*, plan::*, portable::*, runtime::ReaderSession};
 use nepl3_wire::{environment::environment_digest, foundation::FoundationCodec};
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 #[test]
+fn dependent_request_preserves_first_and_admits_only_declared_sources() -> TestResult {
+    macro_rules! checked {
+        ($v:expr) => {
+            $v.map_err(|e| format!("{e:?}"))?
+        };
+    }
+    let (schema, registry, global, mut request) = fixture()?;
+    request.start = 1;
+    let request = DependentRequest {
+        first: NdfValue::Text("先行結果".into()),
+        end: 1,
+        request,
+    };
+    let mut b = budget();
+    let mut admission = SourceAdmission::default();
+    let mut codec = checked!(FoundationCodec::new(&registry, &global, &mut admission));
+    let value = checked!(dependent::to_value(
+        &request, &schema, &mut codec, &global, &registry, &mut b
+    ));
+    let bytes = checked!(nepl3_wire::encode(&value, &mut b));
+    let value = checked!(nepl3_wire::decode(&bytes, &mut b));
+    let empty = SourceStore::default();
+    let mut receiving_admission = SourceAdmission::default();
+    let mut codec = checked!(FoundationCodec::new(
+        &registry,
+        &empty,
+        &mut receiving_admission
+    ));
+    let snapshots = checked!(dependent::sources(
+        &value, &schema, &mut codec, &registry, &mut b
+    ));
+    let mut declared = SourceStore::default();
+    for source in snapshots {
+        checked!(declared.insert(source));
+    }
+    assert_eq!(declared.snapshots().len(), 2);
+    let mut codec = checked!(FoundationCodec::new(
+        &registry,
+        &declared,
+        &mut receiving_admission
+    ));
+    let restored = checked!(dependent::from_value(
+        &value, &schema, &mut codec, &declared, &registry, &mut b
+    ));
+    assert_eq!(restored, request);
+    // Independently inspect schema field order and the cursor at EOF.
+    let NdfValue::Record(record) = &value else {
+        return Err("record".into());
+    };
+    assert_eq!(record.kind, "DependentRequest");
+    assert_eq!(record.fields[0], NdfValue::Text("先行結果".into()));
+    assert_eq!(record.fields[1], NdfValue::U64(1));
+    let mut mismatch = value.clone();
+    if let NdfValue::Record(record) = &mut mismatch {
+        record.fields[1] = NdfValue::U64(0);
+    }
+    assert!(
+        dependent::from_value(&mismatch, &schema, &mut codec, &declared, &registry, &mut b)
+            .is_err()
+    );
+    let mut native_mismatch = request.clone();
+    native_mismatch.end = 0;
+    assert!(
+        dependent::to_value(
+            &native_mismatch,
+            &schema,
+            &mut codec,
+            &declared,
+            &registry,
+            &mut b
+        )
+        .is_err()
+    );
+    let mut missing = value.clone();
+    if let NdfValue::Record(record) = &mut missing
+        && let NdfValue::Record(nested) = &mut record.fields[2]
+    {
+        nested.fields[1] = NdfValue::List(vec![]);
+    }
+    assert!(
+        dependent::from_value(&missing, &schema, &mut codec, &declared, &registry, &mut b).is_err()
+    );
+    for allocation in [false, true] {
+        let mut limits = budget().limits();
+        if allocation {
+            limits.allocation_units = 0;
+        } else {
+            limits.work = 0;
+        }
+        let mut stopped = Budget::new(limits);
+        assert!(
+            dependent::from_value(
+                &value,
+                &schema,
+                &mut codec,
+                &declared,
+                &registry,
+                &mut stopped
+            )
+            .is_err()
+        );
+        assert!(stopped.poll().is_err());
+    }
+    Ok(())
+}
+#[test]
 fn portable_plan_preserves_arena_and_rejects_invalid_references() -> TestResult {
     use nepl3_reader::portable::plan as exchange;
     let (schema, registry, sources, _) = fixture()?;

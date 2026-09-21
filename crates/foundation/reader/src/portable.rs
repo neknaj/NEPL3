@@ -1,4 +1,5 @@
 //! Typed reader request boundary. Source-table admission precedes context decoding.
+pub mod dependent;
 pub mod plan;
 pub mod read;
 pub mod transform;
@@ -123,6 +124,15 @@ fn validate<E>(
     registry: &SchemaRegistry,
     budget: &mut Budget,
 ) -> Result<(), PortableError<E>> {
+    validate_named(value, schema, "ReadRequest", registry, budget)
+}
+fn validate_named<E>(
+    value: &NdfValue,
+    schema: &SchemaRef,
+    name: &str,
+    registry: &SchemaRegistry,
+    budget: &mut Budget,
+) -> Result<(), PortableError<E>> {
     if schema.package != crate::schema::PACKAGE
         || schema.revision != crate::schema::REVISION
         || registry.descriptor(schema).is_none()
@@ -131,14 +141,14 @@ fn validate<E>(
     }
     budget.charge(
         Resource::AllocationUnits,
-        (schema.package.len() + "ReadRequest".len()) as u64,
+        (schema.package.len() + name.len()) as u64,
     )?;
     registry
         .validate(
             &TypeDescriptor::Named(TypeRef {
                 package: schema.package.clone(),
                 revision: schema.revision,
-                name: "ReadRequest".into(),
+                name: name.into(),
             }),
             value,
             budget,
