@@ -153,9 +153,9 @@ fn symbolic_type_descriptors_preserve_all_variants_and_nested_named_data() -> Re
         if index == 3 {
             receive_budget.cancel();
         }
-        let failure = codec
-            .decode_type_descriptor(&value, &mut receive_budget)
-            .expect_err("fresh exhausted receive budget must stop");
+        let Err(failure) = codec.decode_type_descriptor(&value, &mut receive_budget) else {
+            return Err("fresh exhausted receive budget must stop".into());
+        };
         assert_eq!(
             nepl3_core::value_codec::FoundationCodecError::stop_reason(&failure),
             Some(reason)
