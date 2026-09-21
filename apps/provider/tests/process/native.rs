@@ -18,6 +18,7 @@ use std::{
 };
 mod model;
 mod reference;
+mod schema_failure;
 use model::*;
 
 fn child() -> Result<(), String> {
@@ -308,8 +309,21 @@ fn reap(process: &mut Process) -> Result<ExitStatus, String> {
 }
 
 fn run_case(input: u64) -> Result<(), String> {
+    run_process("--provider-child", move |connection| {
+        exchange(connection, input)
+    })
+}
+
+fn run_process(
+    child_argument: &str,
+    exchange: impl FnOnce(
+        Connection<std::process::ChildStdout, std::process::ChildStdin>,
+    ) -> Result<(), String>
+    + Send
+    + 'static,
+) -> Result<(), String> {
     let mut command = Command::new(std::env::current_exe().map_err(error)?);
-    command.arg("--provider-child");
+    command.arg(child_argument);
     let mut process = Process::spawn(&mut command).map_err(error)?;
     let Some(connection) = process.take_transport() else {
         let cleanup = process.terminate();
@@ -317,7 +331,7 @@ fn run_case(input: u64) -> Result<(), String> {
     };
     let (sender, receiver) = mpsc::channel();
     let worker = std::thread::spawn(move || {
-        let result = exchange(connection, input);
+        let result = exchange(connection);
         sender.send(()).map_err(error)?;
         result
     });
@@ -356,14 +370,18 @@ fn run_case(input: u64) -> Result<(), String> {
 }
 
 pub fn run() -> Result<(), String> {
+    if let Some(mode) = schema_failure::child_mode() {
+        return schema_failure::child(mode);
+    }
     if std::env::args().any(|arg| arg == "--provider-child") {
         return child();
     }
     for input in [0, 41, u64::MAX] {
         run_case(input).map_err(|e| format!("input {input}: {e}"))?;
     }
+    schema_failure::run()?;
     println!(
-        "process_protocol: 3 passed (schema exchange, native/process Await and Resume; normal and overflow results)"
+        "process_protocol: 6 passed (3 schema failures; 3 schema exchange and native/process Await and Resume comparisons)"
     );
     Ok(())
 }
