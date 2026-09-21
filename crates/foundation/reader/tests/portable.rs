@@ -36,6 +36,44 @@ fn portable_plan_preserves_arena_and_rejects_invalid_references() -> TestResult 
     let checked = plan
         .check(&registry, &mut budget())
         .map_err(|e| format!("{e:?}"))?;
+    use nepl3_reader::{
+        builtin::BuiltinReader,
+        tokenizer::{ReaderMode, SkipRule, TokenReader},
+    };
+    let mode = ReaderMode {
+        name: "Code".into(),
+        skip: vec![
+            SkipRule {
+                reader: TokenReader::Builtin(BuiltinReader::Trivia),
+            },
+            SkipRule {
+                reader: TokenReader::Rule("entry".into()),
+            },
+        ],
+        take: vec![],
+    };
+    let mode_value = exchange::mode_to_value(&mode, &checked, &mut codec, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        exchange::mode_from_value(&mode_value, &checked, &mut codec, &mut budget())
+            .map_err(|e| format!("{e:?}"))?,
+        mode
+    );
+    let mut invalid_mode = mode_value.clone();
+    let NdfValue::Record(record) = &mut invalid_mode else {
+        return Err("mode".into());
+    };
+    let NdfValue::List(skip) = &mut record.fields[1] else {
+        return Err("skip".into());
+    };
+    let NdfValue::Record(rule) = &mut skip[1] else {
+        return Err("skip rule".into());
+    };
+    let NdfValue::Variant(reader) = &mut rule.fields[0] else {
+        return Err("reader".into());
+    };
+    reader.fields[0] = NdfValue::Text("missing".into());
+    assert!(exchange::mode_from_value(&invalid_mode, &checked, &mut codec, &mut budget()).is_err());
     let value =
         exchange::to_value(&checked, &mut codec, &mut budget()).map_err(|e| format!("{e:?}"))?;
     let bytes = nepl3_wire::encode(&value, &mut budget()).map_err(|e| format!("{e:?}"))?;

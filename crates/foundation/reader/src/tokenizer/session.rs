@@ -158,6 +158,33 @@ pub struct TokenizationSession<'a> {
     next_operation: u64,
     source_checks: super::source_checks::SourceChecks,
 }
+pub(crate) fn validate_modes(
+    modes: &[ReaderMode],
+    checked: &CheckedPlan<'_>,
+    registry: &SchemaRegistry,
+    budget: &mut Budget,
+) -> Result<(), ReaderError> {
+    for (index, mode) in modes.iter().enumerate() {
+        budget.charge(Resource::Work, (index + mode.name.len()) as u64)?;
+        if mode.name.is_empty() || modes[..index].iter().any(|m| m.name == mode.name) {
+            return Err(ReaderError::Context);
+        }
+        for reader in mode
+            .skip
+            .iter()
+            .map(|s| &s.reader)
+            .chain(mode.take.iter().map(|t| &t.reader))
+        {
+            if let TokenReader::Rule(name) = reader {
+                checked.plan().rule(name)?;
+            }
+        }
+        for take in &mode.take {
+            registry.kind_name(&take.kind.schema, take.kind.local_kind)?;
+        }
+    }
+    Ok(())
+}
 impl<'a> TokenizationSession<'a> {
     pub fn new(
         session_id: String,
@@ -166,25 +193,7 @@ impl<'a> TokenizationSession<'a> {
         registry: &'a SchemaRegistry,
         budget: &mut Budget,
     ) -> Result<Self, ReaderError> {
-        for (index, mode) in modes.iter().enumerate() {
-            budget.charge(Resource::Work, (index + mode.name.len()) as u64)?;
-            if mode.name.is_empty() || modes[..index].iter().any(|m| m.name == mode.name) {
-                return Err(ReaderError::Context);
-            }
-            for reader in mode
-                .skip
-                .iter()
-                .map(|s| &s.reader)
-                .chain(mode.take.iter().map(|t| &t.reader))
-            {
-                if let TokenReader::Rule(name) = reader {
-                    checked.plan().rule(name)?;
-                }
-            }
-            for take in &mode.take {
-                registry.kind_name(&take.kind.schema, take.kind.local_kind)?;
-            }
-        }
+        validate_modes(modes, checked, registry, budget)?;
         let plan_digest = checked.plan().digest(budget)?;
         let configuration_digest = super::identity::digest(modes, plan_digest, budget)?;
         let reader = ReaderSession::new(copy(&session_id, budget)?, checked, registry, budget)?;

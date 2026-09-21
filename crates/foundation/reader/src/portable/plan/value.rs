@@ -2,6 +2,10 @@ use super::*;
 #[cfg(test)]
 mod tests;
 use crate::plan::*;
+use crate::{
+    builtin::BuiltinReader,
+    tokenizer::{ReaderMode, SkipRule, TakeRule, TokenReader},
+};
 use nepl3_core::{
     value::{KindRef, OperationRef, Variant},
     view::{FallbackRole, PresentationClass},
@@ -227,6 +231,41 @@ macro_rules! unit_enum {($ty:ident,$owner:ident,[$($case:ident),*])=>{impl Value
     fn decode<C:FoundationValueCodec>(v:&NdfValue,s:&Context<'_>,_:&mut C,b:&mut Budget)->Result<Self,PortableError<C::Error>> {match parts(v,s.$owner,stringify!($ty),b)? { $((stringify!($case),[])=>Ok(Self::$case),)* _=>Err(PortableError::Shape)}}
 }};}
 unit_enum!(ProviderKind, reader, [Read, Transform, Dependent]);
+unit_enum!(
+    BuiltinReader,
+    reader,
+    [Name, Text, Nat, Number, Lang, Trivia]
+);
+record_value!(ReaderMode,reader,3,[name:0,skip:1,take:2]);
+record_value!(SkipRule,reader,1,[reader:0]);
+record_value!(TakeRule,reader,2,[reader:0,kind:1]);
+impl Value for TokenReader {
+    fn encode<C: FoundationValueCodec>(
+        &self,
+        s: &Context<'_>,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<NdfValue, PortableError<C::Error>> {
+        match self {
+            Self::Builtin(v) => {
+                variant(s.reader, "TokenReader", "Builtin", [v.encode(s, c, b)?], b)
+            }
+            Self::Rule(v) => variant(s.reader, "TokenReader", "Rule", [v.encode(s, c, b)?], b),
+        }
+    }
+    fn decode<C: FoundationValueCodec>(
+        v: &NdfValue,
+        s: &Context<'_>,
+        c: &mut C,
+        b: &mut Budget,
+    ) -> Result<Self, PortableError<C::Error>> {
+        match parts(v, s.reader, "TokenReader", b)? {
+            ("Builtin", [v]) => Ok(Self::Builtin(Value::decode(v, s, c, b)?)),
+            ("Rule", [v]) => Ok(Self::Rule(Value::decode(v, s, c, b)?)),
+            _ => Err(PortableError::Shape),
+        }
+    }
+}
 unit_enum!(
     FallbackRole,
     foundation,
