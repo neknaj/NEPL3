@@ -41,8 +41,46 @@ The output directory must not already exist. The runner copies this consumer
 outside the repository and resolves its four path dependencies to the checked
 foundation tree. It pins the repository toolchain and this consumer's lockfile,
 checks the independent workspace and dependency identities, and runs format,
-Clippy, the Rust tests and the five example inputs above. Logs and source/consumer hashes are retained,
+Clippy, the Rust tests, the five Hello inputs above and three MiniExpr inputs below. Logs and source/consumer hashes are retained,
 including command failures and partial timeout output.
+
+## Define and inspect recursive expressions
+
+[`src/miniexpr.rs`](src/miniexpr.rs) defines a second package,
+`org.example.miniexpr`, through the same public Foundation APIs. Its `Expr`
+category accepts natural-number leaves, unary `neg`, and binary `add` and `mul`.
+Each form field uses `ReadSpec::Local` to read another `Expr`. The ordered
+`Nat`/`Name` readers distinguish numbers from form heads. The Nat reader returns
+an `Integer` payload; its lexical contract admits nonnegative decimal integers.
+Binding visitors cover the recursive fields explicitly.
+
+```sh
+cargo run --locked --manifest-path conformance/extensions/hello/Cargo.toml --example miniexpr -- "add 1 mul 2 3"
+```
+
+The result is `Complete; cursor=13`, followed by five syntax nodes. `Add` has
+children `Natural(1)` and `Mul`; `Mul` has children `Natural(2)` and `Natural(3)`.
+The numeric token spans are `4..5`, `10..11`, and `12..13`.
+`source print: Complete("add 1 mul 2 3")` reports the separate printing result.
+Try `neg 7`, `neg add 1 2`, and `add 1`. The last input produces recovery and
+diagnostics, with no successful print result.
+
+`inspect` parses one expression, validates a complete tree against its resolved
+package, and passes that proof to the existing source-backed printer. The
+printer retains accepted lexemes and leading trivia. The returned cursor marks
+the consumed expression; host-owned trailing input remains outside that output.
+Each operation uses its own resource budget. Recovery, unfinished input, and
+resource stops remain explicit outcomes. Arithmetic evaluation and semantic
+normalization are future operations of the example language.
+
+To change the accepted head, edit the `add` spelling in `language()` to `sum`
+and run the example with `sum 1 2`. The `Add` schema and its two fields remain
+the same. The regression test constructs this variation separately and verifies
+its tree and printed spelling. Restore the declaration when the exercise ends;
+the tests retain the standard language's independent expectations.
+
+The two packages currently run in separate profiles. Package composition and
+cross-language embedding remain later exercises.
 
 ## What the existing example verifies
 

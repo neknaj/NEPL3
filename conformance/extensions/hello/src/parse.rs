@@ -24,7 +24,38 @@ pub(crate) fn with_reply<T>(
         &mut FoundationCodec<'_>,
     ) -> Result<T, String>,
 ) -> Result<T, String> {
-    let (package, registry) = language()?;
+    with_language(
+        input,
+        final_input,
+        stopped,
+        language()?,
+        ("Hello", "hello"),
+        inspect,
+    )
+}
+
+pub(crate) fn with_language<T>(
+    input: &str,
+    final_input: bool,
+    stopped: bool,
+    language: (LanguagePackage, SchemaRegistry),
+    identity: (&str, &str),
+    inspect: impl FnOnce(
+        ParseReply,
+        &ResolvedParseProfile<'_>,
+        &SchemaRegistry,
+        &mut FoundationCodec<'_>,
+    ) -> Result<T, String>,
+) -> Result<T, String> {
+    let (package, registry) = language;
+    let (alias, source_name) = identity;
+    let mode = package
+        .categories
+        .iter()
+        .find(|category| category.name == package.root)
+        .ok_or("missing root category")?
+        .mode
+        .clone();
     let mut setup = budget();
     let identity = package
         .check(&registry, &mut setup)
@@ -36,11 +67,11 @@ pub(crate) fn with_reply<T>(
         .ok_or("foundation")?
         .clone();
     let profile = ParseProfile {
-        id: "external-hello/1".into(),
+        id: format!("external-{source_name}/1"),
         languages: vec![LanguageRegistration {
-            alias: "Hello".into(),
+            alias: alias.into(),
             package: identity,
-            default_category: "Greeting".into(),
+            default_category: package.root.clone(),
         }],
         schemas: vec![
             package.schema.clone(),
@@ -70,9 +101,9 @@ pub(crate) fn with_reply<T>(
         )
         .map_err(error)?;
     let source = SourceSnapshot::new(
-        SourceId("hello-input".into()),
+        SourceId(format!("{source_name}-input")),
         7,
-        "memory:hello".into(),
+        format!("memory:{source_name}"),
         input.as_bytes().to_vec(),
         &mut setup,
     )
@@ -87,8 +118,8 @@ pub(crate) fn with_reply<T>(
         environment_digest(&environment, &foundation, &registry, &mut setup).map_err(error)?;
     let raw = ReaderContext {
         schema: package.schema.clone(),
-        category: "Greeting".into(),
-        mode: "Words".into(),
+        category: package.root.clone(),
+        mode,
         origins: vec![],
         environment: EnvironmentEntry {
             id: 0,
@@ -104,7 +135,7 @@ pub(crate) fn with_reply<T>(
     let environments = ParseEnvironmentSet::prepare(
         &resolved,
         &[EnvironmentInput {
-            alias: "Hello",
+            alias,
             context: &checked,
         }],
         &sources,
@@ -112,7 +143,7 @@ pub(crate) fn with_reply<T>(
         &mut setup,
     )
     .map_err(error)?;
-    let entry = resolved.entry("Hello", None, &mut setup).map_err(error)?;
+    let entry = resolved.entry(alias, None, &mut setup).map_err(error)?;
     let mut session = ParseSession::new(
         "external-parse".into(),
         &resolved,
@@ -133,7 +164,7 @@ pub(crate) fn with_reply<T>(
                 final_input,
                 entry: &entry,
                 states: &[LanguageReaderState {
-                    alias: "Hello".into(),
+                    alias: alias.into(),
                     state: NdfValue::Unit,
                 }],
             },
