@@ -10,6 +10,7 @@ use crate::{
     },
 };
 use nepl3_core::source::SourceAdmission;
+pub mod operation;
 mod value;
 use super::transform::{boundary, reader};
 

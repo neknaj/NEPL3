@@ -4,13 +4,39 @@ use nepl3_wire::foundation::FoundationCodec;
 
 #[test]
 fn terminal_read_replies_preserve_fields_and_reject_forged_cursor() -> Result<(), String> {
+    for dependent in [false, true] {
+        terminal_replies(dependent)?;
+    }
+    Ok(())
+}
+
+fn terminal_replies(dependent: bool) -> Result<(), String> {
     macro_rules! checked {
         ($value:expr) => {
             $value.map_err(|e| format!("{e:?}"))?
         };
     }
     let (registry, schema) = checked!(registry());
-    let p = provider_plan(&schema);
+    let p = if dependent {
+        let mut signature = signature(&schema, ProviderKind::Dependent);
+        signature.value_input = TypeDescriptor::Unit;
+        let mut p = plan(
+            &schema,
+            vec![
+                ReaderExpr::Literal("".into()),
+                ReaderExpr::Then {
+                    first: ReaderId(0),
+                    provider: signature.operation.clone(),
+                },
+            ],
+            1,
+            TypeDescriptor::Text,
+        );
+        p.providers.push(signature);
+        p
+    } else {
+        provider_plan(&schema)
+    };
     let plan = checked!(p.check(&registry, &mut budget()));
     let mut b = budget();
     let mut session = checked!(ReaderSession::new(
@@ -213,8 +239,133 @@ fn terminal_read_replies_preserve_fields_and_reject_forged_cursor() -> Result<()
             &value, &receiving, &mut codec, &mut b
         ));
         assert_eq!(decoded, reply);
+        let operation = checked!(read::operation::to_reply(
+            &reply, &receiving, &mut codec, &mut b
+        ));
+        let mut transport_admission = SourceAdmission::default();
+        let bytes = checked!(nepl3_wire::operation::encode_reply(
+            &operation,
+            &registry,
+            &store,
+            &mut transport_admission,
+            &mut b
+        ));
+        let operation = checked!(nepl3_wire::operation::decode_reply(
+            &bytes,
+            &registry,
+            &store,
+            &mut transport_admission,
+            &mut b
+        ));
+        let restored = checked!(read::operation::from_reply(
+            &operation, &receiving, &mut codec, &mut b
+        ));
+        match (case, restored) {
+            ("Matched" | "NoMatch" | "NeedMore", OperationResult::Complete { value, .. }) => {
+                assert_eq!(value, reply)
+            }
+            (
+                "Failed",
+                OperationResult::Invalid {
+                    partial: Some(value),
+                    ..
+                },
+            ) => assert_eq!(value, reply),
+            (
+                "Stopped",
+                OperationResult::Stopped {
+                    reason: StopReason::Cancelled,
+                    partial: Some(value),
+                    ..
+                },
+            ) => assert_eq!(value, reply),
+            _ => return Err("operation outcome".into()),
+        }
+        let mut forged = operation.clone();
+        if let nepl3_core::operation::OperationReply::Result(
+            OperationResult::Complete { report, .. }
+            | OperationResult::Invalid { report, .. }
+            | OperationResult::Stopped { report, .. },
+        ) = &mut forged
+        {
+            report.usage.work += 1;
+        }
+        assert!(read::operation::from_reply(&forged, &receiving, &mut codec, &mut b).is_err());
+        // The outer outcome must describe the encoded reader outcome exactly.
+        // A valid payload and report do not authorize changing its result tag.
+        let mut wrong_outcome = operation.clone();
+        if let nepl3_core::operation::OperationReply::Result(result) = &mut wrong_outcome {
+            *result = match result.clone() {
+                OperationResult::Complete { value, report } => OperationResult::Invalid {
+                    partial: Some(value),
+                    report,
+                },
+                OperationResult::Invalid {
+                    partial: Some(value),
+                    report,
+                } => OperationResult::Complete { value, report },
+                OperationResult::Stopped {
+                    partial, report, ..
+                } => OperationResult::Stopped {
+                    reason: StopReason::WorkLimit,
+                    partial,
+                    report,
+                },
+                _ => return Err("missing terminal payload".into()),
+            };
+        }
+        assert!(
+            read::operation::from_reply(&wrong_outcome, &receiving, &mut codec, &mut b).is_err()
+        );
         if case == "Matched" {
             received_match = Some(decoded);
+        }
+    }
+    {
+        use nepl3_core::operation::OperationReply;
+        let mut codec = checked!(FoundationCodec::new(&registry, &store, &mut admission));
+        for stopped in [false, true] {
+            let report = Report {
+                usage: b.usage(),
+                ..Report::default()
+            };
+            let result = if stopped {
+                OperationResult::Stopped {
+                    reason: StopReason::Cancelled,
+                    partial: None,
+                    report,
+                }
+            } else {
+                OperationResult::Invalid {
+                    partial: None,
+                    report,
+                }
+            };
+            let envelope = OperationReply::Result(result);
+            let decoded = checked!(read::operation::from_reply(
+                &envelope, &receiving, &mut codec, &mut b
+            ));
+            assert!(matches!(
+                (stopped, decoded),
+                (false, OperationResult::Invalid { partial: None, .. })
+                    | (
+                        true,
+                        OperationResult::Stopped {
+                            reason: StopReason::Cancelled,
+                            partial: None,
+                            ..
+                        }
+                    )
+            ));
+            let mut stopped_budget = Budget::new(Limits {
+                work: 0,
+                ..budget().limits()
+            });
+            assert!(
+                read::operation::from_reply(&envelope, &receiving, &mut codec, &mut stopped_budget)
+                    .is_err()
+            );
+            assert_eq!(stopped_budget.poll(), Err(StopReason::WorkLimit));
         }
     }
     let reply = ProviderReply::Read(Box::new(received_match.ok_or("missing matched reply")?));
