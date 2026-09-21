@@ -20,6 +20,10 @@ NEPL3は、**多数の異なるDSLを、括弧なし前置記法の共通規律�
 
 CI成功は全受入条件の達成を意味しません。検証範囲は[Foundation](doc/progress/foundation-runtime.md)、[Doc](doc/progress/doc-runtime.md)、[Math](doc/progress/math-runtime.md)の実装記録と、[実装状態](implementation-status.json)を参照してください。実際のworkspace構成は[Cargo.toml](Cargo.toml)が示します。
 
+## 現在試せる最小の言語
+
+[外部Hello言語](conformance/extensions/hello/README.md)は、独立したCargo workspaceから公開core・reader・engine・wire APIだけを使い、`hello <name>` を解析します。入力を変更して構文木とUTF-8位置を確認する手順も同じREADMEにあります。独立言語の登録・解析・交換境界を試す入口であり、一般的なimport/compositionやannotationの完成例ではありません。
+
 ## 次の統合設計案
 
 [統合設計草案](doc/decisions/multilanguage-hca.md)では、NEPLの世代ごとの目的、前方contextと関数適用、用途別producer契約、回路モデル、言語の独立性を整理しています。
@@ -38,7 +42,7 @@ CI成功は全受入条件の達成を意味しません。検証範囲は[Found
 
 | 入口 | 内容 |
 | --- | --- |
-| [ドキュメント](doc/README.md) | 仕様と設計資料の読み順 |
+| [ドキュメント](doc/README.md) | 理解・実行・契約照会・開発・現在状態の目的別入口 |
 | [開発手順](doc/development.md) | ツールチェーン、検査、CI/CD |
 | [実装状態](implementation-status.json) | 実装タスクと受入試験の実行状態 |
 | [タスク索引](tasks/README.md) | 依存順の実装作業 |
