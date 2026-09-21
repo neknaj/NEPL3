@@ -1,6 +1,45 @@
-use super::NdfValue;
+use super::{NdfValue, TypedValue};
 use crate::budget::{Budget, Resource, StopReason};
 use alloc::vec::Vec;
+impl TypedValue {
+    /// Compare borrowed typed values without cloning their payloads.
+    pub fn equal_with_budget(&self, other: &Self, b: &mut Budget) -> Result<bool, StopReason> {
+        b.charge(Resource::Work, 1)?;
+        let (a_schema, a_name, a_variant, a_fields) = match self {
+            Self::Record(v) => (&v.schema, &v.kind, None, &v.fields),
+            Self::Variant(v) => (&v.schema, &v.type_name, Some(&v.variant), &v.fields),
+        };
+        let (c_schema, c_name, c_variant, c_fields) = match other {
+            Self::Record(v) => (&v.schema, &v.kind, None, &v.fields),
+            Self::Variant(v) => (&v.schema, &v.type_name, Some(&v.variant), &v.fields),
+        };
+        b.observe_depth(1)?;
+        b.charge(
+            Resource::Work,
+            (a_schema.package.len() as u64)
+                .saturating_add(c_schema.package.len() as u64)
+                .saturating_add(a_name.len() as u64)
+                .saturating_add(c_name.len() as u64)
+                .saturating_add(a_variant.map_or(0, |v| v.len()) as u64)
+                .saturating_add(c_variant.map_or(0, |v| v.len()) as u64)
+                .saturating_add(41),
+        )?;
+        if a_schema != c_schema
+            || a_name != c_name
+            || a_variant != c_variant
+            || a_fields.len() != c_fields.len()
+        {
+            return Ok(false);
+        }
+        for (a, c) in a_fields.iter().zip(c_fields) {
+            b.charge(Resource::Work, 1)?;
+            if !b.with_depth(|b| a.equal_with_budget(c, b))? {
+                return Ok(false);
+            }
+        }
+        Ok(true)
+    }
+}
 impl NdfValue {
     /// Iterative equality with all variable comparisons and traversal charged before use.
     pub fn equal_with_budget(&self, other: &Self, b: &mut Budget) -> Result<bool, StopReason> {

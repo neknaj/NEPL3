@@ -2,6 +2,85 @@ use super::*;
 use nepl3_core::diagnostic::{OperationResult, Report};
 
 #[test]
+fn decoded_resume_is_checked_against_host_saved_lifetime() -> Result<(), String> {
+    use nepl3_core::operation::lifetime::{LifetimeError, RequestLifetimes, RequestPhase};
+    let (registry, call) = setup()?;
+    let sources = SourceStore::default();
+    let continuation = Continuation {
+        provider: call.operation.clone(),
+        parent_request: call.request_id,
+        snapshot_digest: Digest::of(b"saved request snapshot"),
+        state: call.environment.clone(),
+    };
+    let mut host = RequestLifetimes::default();
+    host.begin(
+        call.request_id,
+        call.operation,
+        continuation.snapshot_digest,
+        &mut budget(),
+    )
+    .map_err(error)?;
+    host.suspend(call.request_id, continuation.clone(), 0, &mut budget())
+        .map_err(error)?;
+    for forged in [true, false] {
+        let mut received = continuation.clone();
+        if forged {
+            // Both records satisfy the same wire schema. Host correlation must
+            // reject the changed state even after successful schema decoding.
+            received.state = call.input.clone();
+        }
+        let frame = ProviderFrame::Resume(Resume {
+            request_id: call.request_id,
+            continuation: received,
+            dependency_results: vec![],
+        });
+        let bytes = encode_frame(
+            &frame,
+            &registry,
+            &sources,
+            &mut SourceAdmission::default(),
+            &mut budget(),
+        )
+        .map_err(error)?;
+        let (frame, remaining) = decode_frame(
+            &bytes,
+            true,
+            &registry,
+            &sources,
+            &mut SourceAdmission::default(),
+            &mut budget(),
+        )
+        .map_err(error)?
+        .ok_or("missing resume frame")?;
+        assert!(remaining.is_empty());
+        let ProviderFrame::Resume(resume) = frame else {
+            return Err("expected resume".into());
+        };
+        if forged {
+            assert_eq!(
+                host.resume(&resume, &mut budget()),
+                Err(LifetimeError::Binding(ContinuationError::State))
+            );
+            assert_eq!(
+                host.phase(call.request_id, &mut budget()),
+                Ok(RequestPhase::Awaiting)
+            );
+        } else {
+            host.resume(&resume, &mut budget()).map_err(error)?;
+            assert_eq!(
+                host.phase(call.request_id, &mut budget()),
+                Ok(RequestPhase::Running)
+            );
+            assert_eq!(
+                host.resume(&resume, &mut budget()),
+                Err(LifetimeError::Phase)
+            );
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn provider_frames_preserve_cases_ids_and_stream_boundaries() -> Result<(), String> {
     let (registry, call) = setup()?;
     let sources = SourceStore::default();
