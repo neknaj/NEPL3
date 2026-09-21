@@ -6,6 +6,8 @@ use nepl3_core::{
     source::Digest,
 };
 use nepl3_suite::dispatch::suspending;
+mod routing;
+pub use routing::{ReplyContext, ReplyRoutes, RouteError};
 
 #[derive(Debug)]
 pub enum ReplyError {
