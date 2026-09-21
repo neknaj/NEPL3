@@ -34,49 +34,42 @@ pub fn render<C: FoundationValueCodec>(
 where
     C::Error: core::fmt::Debug,
 {
-    Ok(render_resolved(document, registry, codec, budget, aliases, &[])?.0)
-}
-
-// Only this module's PageSet resolver can construct the non-external bindings.
-fn render_resolved<C: FoundationValueCodec>(
-    document: &DocumentSyntax,
-    registry: &SchemaRegistry,
-    codec: &mut C,
-    budget: &mut Budget,
-    aliases: &[Alias],
-    links: &[(u64, String)],
-) -> Result<(Artifact, Vec<String>), Error>
-where
-    C::Error: core::fmt::Debug,
-{
     let plan = prepare::inspect(document, registry, codec, budget).map_err(|e| match e {
         prepare::PreparationError::Stopped(s) => Error::Stopped(s),
         e => Error::Invalid(format!("{e:?}")),
     })?;
     for requirement in &plan.requirements {
-        budget.charge(Resource::Work, 1)?;
-        match requirement {
-            prepare::DocRequirement::Link {
-                node,
-                target: LinkTarget::External { uri },
-            } => {
-                if !nepl3_markup::html::external_uri(uri, budget)? {
-                    return Err(Error::Text { node: *node });
-                }
-            }
-            prepare::DocRequirement::Link { node, .. } => {
-                let mut found = false;
-                for (actual, _) in links {
-                    budget.charge(Resource::Work, 1)?;
-                    found |= actual == node;
-                }
-                if !found {
-                    return Err(Error::NeedsResolution);
-                }
-            }
-            _ => return Err(Error::NeedsResolution),
-        }
+        check_pending(requirement, budget)?;
     }
+    Ok(render_resolved(document, budget, aliases, &[], plan.document_digest)?.0)
+}
+
+fn check_pending(requirement: &prepare::DocRequirement, budget: &mut Budget) -> Result<(), Error> {
+    budget.charge(Resource::Work, 1)?;
+    match requirement {
+        prepare::DocRequirement::Link {
+            node,
+            target: LinkTarget::External { uri },
+        } => {
+            if !nepl3_markup::html::external_uri(uri, budget)? {
+                return Err(Error::Text { node: *node });
+            }
+        }
+        _ => return Err(Error::NeedsResolution),
+    }
+    Ok(())
+}
+
+// Private: callers have either inspected this document or resolved its exact
+// borrowed PageSet. A decoded plan/digest is never an admission proof.
+fn render_resolved(
+    document: &DocumentSyntax,
+    budget: &mut Budget,
+    aliases: &[Alias],
+    links: &[(u64, String)],
+    document_digest: Digest,
+) -> Result<(Artifact, Vec<String>), Error> {
+    budget.poll()?;
     let DocRoot::Article(root) = document.value.root else {
         return Err(Error::Unsupported { node: 0 });
     };
@@ -151,7 +144,7 @@ where
     Ok((
         Artifact {
             markdown: writer.plain.output,
-            document_digest: plan.document_digest,
+            document_digest,
         },
         writer.emitted,
     ))
