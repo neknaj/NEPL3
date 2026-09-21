@@ -116,6 +116,66 @@ fn dependent_request_preserves_first_and_admits_only_declared_sources() -> TestR
     Ok(())
 }
 #[test]
+fn dependent_cursor_must_be_a_source_boundary() -> TestResult {
+    macro_rules! checked {
+        ($v:expr) => {
+            $v.map_err(|e| format!("{e:?}"))?
+        };
+    }
+    let (schema, registry, mut store, mut request) = fixture()?;
+    let mut b = budget();
+    let input = checked!(SourceSnapshot::new(
+        SourceId("unicode".into()),
+        1,
+        "memory:unicode".into(),
+        "あb".as_bytes().to_vec(),
+        &mut b,
+    ));
+    request.snapshot = input.reference();
+    request.sources.push(input.clone());
+    request.start = 3;
+    request.limit = 4;
+    checked!(store.insert(input));
+    let request = DependentRequest {
+        first: NdfValue::Unit,
+        end: 3,
+        request,
+    };
+    let mut admission = SourceAdmission::default();
+    let mut codec = checked!(FoundationCodec::new(&registry, &store, &mut admission));
+    let value = checked!(dependent::to_value(
+        &request, &schema, &mut codec, &store, &registry, &mut b
+    ));
+    for cursor in [1, 2, 5] {
+        let mut invalid = request.clone();
+        invalid.end = cursor;
+        invalid.request.start = cursor;
+        assert!(
+            dependent::to_value(&invalid, &schema, &mut codec, &store, &registry, &mut b).is_err()
+        );
+        let mut invalid = value.clone();
+        let NdfValue::Record(record) = &mut invalid else {
+            return Err("record".into());
+        };
+        record.fields[1] = NdfValue::U64(cursor);
+        let NdfValue::Record(nested) = &mut record.fields[2] else {
+            return Err("request".into());
+        };
+        nested.fields[2] = NdfValue::U64(cursor);
+        assert!(
+            dependent::from_value(&invalid, &schema, &mut codec, &store, &registry, &mut b)
+                .is_err()
+        );
+    }
+    let restored = checked!(dependent::from_value(
+        &value, &schema, &mut codec, &store, &registry, &mut b
+    ));
+    assert_eq!(restored.end, 3);
+    assert_eq!(restored.request.limit, 4);
+    Ok(())
+}
+
+#[test]
 fn portable_plan_preserves_arena_and_rejects_invalid_references() -> TestResult {
     use nepl3_reader::portable::plan as exchange;
     let (schema, registry, sources, _) = fixture()?;
