@@ -183,6 +183,7 @@ fn run(
     request: &OwnedReadRequest,
     sources: &SourceStore,
     registry: &SchemaRegistry,
+    exchange_plan: bool,
 ) -> Result<(NdfValue, u64, NdfValue), String> {
     let mut b = budget();
     let mut admission = SourceAdmission::default();
@@ -202,6 +203,17 @@ fn run(
             output: TypeDescriptor::Unit,
         }],
         providers: vec![],
+    };
+    let plan = if exchange_plan {
+        let proof = plan.check(registry, &mut b).map_err(|e| format!("{e:?}"))?;
+        let encoded = nepl3_reader::portable::plan::to_value(&proof, &mut codec, &mut b)
+            .map_err(|e| format!("{e:?}"))?;
+        let bytes = nepl3_wire::encode(&encoded, &mut b).map_err(|e| format!("{e:?}"))?;
+        let value = nepl3_wire::decode(&bytes, &mut b).map_err(|e| format!("{e:?}"))?;
+        nepl3_reader::portable::plan::from_value(&value, registry, &mut codec, &mut b)
+            .map_err(|e| format!("{e:?}"))?
+    } else {
+        plan
     };
     let checked = plan.check(registry, &mut b).map_err(|e| format!("{e:?}"))?;
     let mut session = ReaderSession::new("portable-fixture".into(), &checked, registry, &mut b)
@@ -279,9 +291,12 @@ fn native_request_and_checked_ndf_loopback_execute_with_identical_meaning() -> T
     assert_eq!(restored, request);
     assert_eq!(declared.snapshots().len(), 2);
     assert_eq!(
-        run(&request, &global, &registry)?,
-        run(&restored, &declared, &registry)?
+        run(&request, &global, &registry, false)?,
+        run(&restored, &declared, &registry, false)?
     );
+    let received_plan = run(&restored, &declared, &registry, true)?;
+    assert_eq!(received_plan, (NdfValue::Unit, 1, NdfValue::Unit));
+    assert_eq!(received_plan, run(&request, &global, &registry, false)?);
     Ok(())
 }
 
