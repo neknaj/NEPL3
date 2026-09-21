@@ -164,6 +164,17 @@ GitHub Pagesの静的公開とproject siteの仕様は [GitHub公式資料](http
 
 復旧契約の制約は [Pages REST API](https://docs.github.com/en/rest/pages/pages)、[deploy-pages](https://github.com/actions/deploy-pages)、[Actions concurrency](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#concurrency)、[artifact削除とretention](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/remove-workflow-artifacts)、[immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases) に照合した。GitHubの機能を組み合わせた上記の状態機械はNEPL3の設計判断であり、GitHubが自動rollbackを保証するという意味ではない。
 
+## 移行中のDocからMarkdown仕様への参照
+
+canonical registryに原文参照として明示登録された未移行Markdown仕様は、混在site内では
+同じbuildで生成したHTML routeへ接続する。既存のMarkdown rendererを一度だけ実行し、
+その実byte列をDoc PageSetの受動fileとして渡す。raw MarkdownをHTML routeへ置かない。
+原文path/digestと生成HTMLのroute/digest、renderer、commit/base pathを分離して記録する。
+原文変更、未登録の差替え、route衝突、生成物欠落を拒否する。
+単独Doc HTML exportは原文配布を維持し、site用CSS/navigationや未同梱HTMLを仮定しない。
+Markdown projectionも原文へのリンクを維持する。fragmentはPageFileの既存拒否規則に従う。
+これはNEPL3d正本化の証拠ではなく、正本切替えの前後で公開routeを保つhostの接続である。
+
 ## 数式生成assetと書出し文書
 
 [17章](17-math-html.md)のKaTeX実装・CSS/fontは同版の同一artifactに束縛し、path・digest・license・CSS相対font参照を検査する。PlaygroundのWorkerはその資源からHTMLを生成し、previewと書出しで同じ生成artifactを使う。S01/S02/S03/S04/S05では非root path、資源欠落時の診断とMathML設定、外部CDNなしの閲覧、JavaScript無効の書出済み文書を検査する。対話生成がJavaScriptを必要とすることと、生成済み文書の閲覧条件を分けて表示する。
