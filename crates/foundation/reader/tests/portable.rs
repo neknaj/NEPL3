@@ -9,6 +9,91 @@ use nepl3_core::{
 use nepl3_reader::{model::*, plan::*, portable::*, runtime::ReaderSession};
 use nepl3_wire::{environment::environment_digest, foundation::FoundationCodec};
 type TestResult = Result<(), Box<dyn std::error::Error>>;
+#[test]
+fn portable_plan_preserves_arena_and_rejects_invalid_references() -> TestResult {
+    use nepl3_reader::portable::plan as exchange;
+    let (schema, registry, sources, _) = fixture()?;
+    let plan = ReaderPlan {
+        schema,
+        state_type: TypeDescriptor::Unit,
+        expressions: vec![
+            ReaderExpr::Literal("a".into()),
+            ReaderExpr::Scalar(CharClass::Range {
+                lo: 'あ', hi: 'ん'
+            }),
+            ReaderExpr::Seq(vec![ReaderId(0), ReaderId(1)]),
+        ],
+        rules: vec![ReaderRule {
+            name: "entry".into(),
+            root: ReaderId(2),
+            output: TypeDescriptor::List(Box::new(TypeDescriptor::NdfValue)),
+        }],
+        providers: vec![],
+    };
+    let mut admission = SourceAdmission::default();
+    let mut codec =
+        FoundationCodec::new(&registry, &sources, &mut admission).map_err(|e| format!("{e:?}"))?;
+    let checked = plan
+        .check(&registry, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let value =
+        exchange::to_value(&checked, &mut codec, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    let bytes = nepl3_wire::encode(&value, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    let received = nepl3_wire::decode(&bytes, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        exchange::from_value(&received, &registry, &mut codec, &mut budget())
+            .map_err(|e| format!("{e:?}"))?,
+        plan
+    );
+    let NdfValue::Record(record) = &value else {
+        return Err("record".into());
+    };
+    assert_eq!(record.kind, "ReaderPlan");
+    assert_eq!(record.fields.len(), 5);
+    let NdfValue::List(expressions) = &record.fields[2] else {
+        return Err("expressions".into());
+    };
+    let NdfValue::Variant(seq) = &expressions[2] else {
+        return Err("sequence".into());
+    };
+    assert_eq!(seq.variant, "Seq");
+    let NdfValue::List(ids) = &seq.fields[0] else {
+        return Err("indices".into());
+    };
+    for (index, id) in ids.iter().enumerate() {
+        let NdfValue::Record(id) = id else {
+            return Err("ReaderId".into());
+        };
+        assert_eq!(id.fields, vec![NdfValue::U64(index as u64)]);
+    }
+    for invalid in [2, 99] {
+        let mut value = value.clone();
+        let NdfValue::Record(record) = &mut value else {
+            return Err("record".into());
+        };
+        let NdfValue::List(expressions) = &mut record.fields[2] else {
+            return Err("expressions".into());
+        };
+        let NdfValue::Variant(seq) = &mut expressions[2] else {
+            return Err("sequence".into());
+        };
+        let NdfValue::List(ids) = &mut seq.fields[0] else {
+            return Err("indices".into());
+        };
+        let NdfValue::Record(id) = &mut ids[0] else {
+            return Err("ReaderId".into());
+        };
+        id.fields[0] = NdfValue::U64(invalid);
+        assert!(exchange::from_value(&value, &registry, &mut codec, &mut budget()).is_err());
+    }
+    let mut stopped = budget();
+    stopped.cancel();
+    assert!(matches!(
+        exchange::from_value(&value, &registry, &mut codec, &mut stopped),
+        Err(PortableError::Stopped(_))
+    ));
+    Ok(())
+}
 fn budget() -> Budget {
     Budget::new(Limits {
         source_bytes: 1_000_000,

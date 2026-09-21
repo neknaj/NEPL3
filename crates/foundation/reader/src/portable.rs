@@ -1,4 +1,5 @@
 //! Typed reader request boundary. Source-table admission precedes context decoding.
+pub mod plan;
 pub mod transform;
 use crate::{
     context::ContextError,
@@ -23,6 +24,7 @@ pub enum PortableError<E> {
     Shape,
     UndeclaredSource,
     Reader(crate::runtime::ReaderError),
+    Plan(crate::plan::PlanError),
 }
 impl<E> From<StopReason> for PortableError<E> {
     fn from(value: StopReason) -> Self {
