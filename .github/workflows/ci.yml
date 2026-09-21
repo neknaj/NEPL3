@@ -27,6 +27,10 @@ jobs:
     name: native (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
+    env:
+      # Optimize canonical projection without disabling runtime checks.
+      CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_RELEASE_OVERFLOW_CHECKS: 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -138,10 +142,10 @@ jobs:
         run: cargo doc --workspace --no-deps --locked
       - name: Canonical Doc Markdown projections
         if: matrix.os == 'ubuntu-latest'
-        run: cargo run --locked -p nepl3-tools -- doc-canonical --check
+        run: cargo run --release --locked -p nepl3-tools -- doc-canonical --check
       - name: Export canonical Doc pages
         if: matrix.os == 'ubuntu-latest'
-        run: cargo run --locked -p nepl3-tools -- doc-canonical html dist/doc-canonical
+        run: cargo run --release --locked -p nepl3-tools -- doc-canonical html dist/doc-canonical
       - name: Preserve canonical Doc snapshot
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
