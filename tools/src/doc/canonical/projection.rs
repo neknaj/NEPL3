@@ -15,7 +15,7 @@ use nepl3_doc_core::{
 };
 use nepl3_wire::foundation::FoundationCodec;
 
-pub(super) const RENDERER: &str = "nepl3-tools.markdown-annotated-pages/2";
+pub(super) const RENDERER: &str = "nepl3-tools.markdown-annotated-pages/3";
 const CONTEXT: &[u8] = b"nepl3.canonical-input-context/1\0";
 const MAX_ALIASES: u64 = 1_048_576;
 const MAX_OUTPUT: u64 = 2_097_152;
@@ -41,10 +41,20 @@ fn charge(budget: &mut Budget, resource: Resource, count: usize) -> Result<()> {
 fn field(bytes: &mut Vec<u8>, value: &[u8], budget: &mut Budget) -> Result<()> {
     let length = value.len().checked_add(8).ok_or("ContextLimit")?;
     let new_length = bytes.len().checked_add(length).ok_or("ContextLimit")?;
-    charge(budget, Resource::Work, new_length)?;
+    charge(budget, Resource::Work, length)?;
     if new_length > bytes.capacity() {
-        charge(budget, Resource::AllocationUnits, new_length)?;
-        bytes.try_reserve_exact(length)?;
+        let capacity = bytes
+            .capacity()
+            .checked_mul(2)
+            .ok_or("ContextLimit")?
+            .max(new_length);
+        charge(
+            budget,
+            Resource::AllocationUnits,
+            capacity - bytes.capacity(),
+        )?;
+        charge(budget, Resource::Work, bytes.len())?;
+        bytes.try_reserve_exact(capacity - bytes.len())?;
     }
     bytes.extend_from_slice(&(value.len() as u64).to_be_bytes());
     bytes.extend_from_slice(value);
@@ -53,6 +63,48 @@ fn field(bytes: &mut Vec<u8>, value: &[u8], budget: &mut Budget) -> Result<()> {
 
 fn hex(value: Digest) -> String {
     value.0.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+fn page_context(
+    input: &Input,
+    dependencies: &[annotated::pages::LinkDependency],
+    budget: &mut Budget,
+) -> Result<Digest> {
+    let mut bytes = Vec::new();
+    field(&mut bytes, b"nepl3.canonical-page-context/1\0", budget)?;
+    let p = &input.page;
+    for value in [&p.renderer, &p.id, &p.source, &p.projection, &p.aliases] {
+        field(&mut bytes, value.as_bytes(), budget)?;
+    }
+    for value in [input.source.as_bytes(), input.aliases.as_slice()] {
+        charge(budget, Resource::Work, value.len())?;
+        field(&mut bytes, &Digest::of(value).0, budget)?;
+    }
+    field(
+        &mut bytes,
+        &(dependencies.len() as u64).to_be_bytes(),
+        budget,
+    )?;
+    for dependency in dependencies {
+        field(&mut bytes, &dependency.node.to_be_bytes(), budget)?;
+        for value in [
+            dependency.target_kind,
+            &dependency.target_id,
+            &dependency.route,
+        ] {
+            field(&mut bytes, value.as_bytes(), budget)?;
+        }
+        field(
+            &mut bytes,
+            &[u8::from(dependency.fragment.is_some())],
+            budget,
+        )?;
+        if let Some(fragment) = &dependency.fragment {
+            field(&mut bytes, fragment.as_bytes(), budget)?;
+        }
+    }
+    charge(budget, Resource::Work, bytes.len())?;
+    Ok(Digest::of(&bytes))
 }
 
 type ReferenceInputs = Vec<(super::super::export::pages::Entry, Vec<u8>)>;
@@ -312,7 +364,7 @@ fn generate_batch(
             legacy
         } else {
             let group = group.as_ref().ok_or("missing page context")?;
-            let context = identity.ok_or("missing context identity")?;
+            let context = page_context(input, &group.dependencies[index], budget)?;
             let artifact = &group.pages[index];
             // Paths passed portable ASCII validation. Escaping hyphens prevents
             // a filename from closing the comment; none contains a newline.
@@ -326,13 +378,12 @@ fn generate_batch(
             charge(budget, Resource::Work, reserve)?;
             charge(budget, Resource::AllocationUnits, reserve)?;
             format!(
-                "<!-- Generated from {}; renderer {RENDERER}; page {}; source SHA-256 {}; alias input SHA-256 {}; document digest {}; input PageSet digest {}; input context SHA-256 {}. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->\n\n{}\n",
+                "<!-- Generated from {}; renderer {RENDERER}; page {}; source SHA-256 {}; alias input SHA-256 {}; document digest {}; page input SHA-256 {}. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->\n\n{}\n",
                 page.source.replace('-', "&#45;"),
                 page.id.replace('-', "&#45;"),
                 hex(Digest::of(input.source.as_bytes())),
                 hex(Digest::of(&input.aliases)),
                 hex(artifact.document_digest),
-                hex(group.identity),
                 hex(context),
                 artifact.markdown.trim_end_matches('\n')
             )
@@ -363,7 +414,26 @@ fn generate_batch(
     // Reserve before json! copies the records and before serialization. Each
     // portable path is <=4096 bytes; 32 KiB covers escaped path, fields, digest
     // and pretty-print spacing. Both copies are included in this allowance.
-    let receipt_allowance = (files.len() * 32768 + 1024) * 2;
+    let dependency_allowance = group.as_ref().map_or(Ok(0usize), |g| {
+        g.dependencies
+            .iter()
+            .flatten()
+            .try_fold(0usize, |total, link| {
+                let size = link
+                    .target_id
+                    .len()
+                    .checked_add(link.route.len())
+                    .and_then(|n| n.checked_add(link.fragment.as_ref().map_or(0, String::len)))
+                    .and_then(|n| n.checked_mul(6))
+                    .and_then(|n| n.checked_add(512))
+                    .ok_or("ContextLimit")?;
+                total.checked_add(size).ok_or("ContextLimit")
+            })
+    })?;
+    let receipt_allowance = (files.len() * 32768 + 1024)
+        .checked_add(dependency_allowance)
+        .and_then(|n| n.checked_mul(2))
+        .ok_or("ContextLimit")?;
     charge(budget, Resource::Work, receipt_allowance)?;
     charge(budget, Resource::AllocationUnits, receipt_allowance)?;
     // This final receipt is not an input to the next generation.
@@ -373,8 +443,11 @@ fn generate_batch(
         "allocation_units":u.allocation_units,"output_bytes":u.output_bytes,
         "diagnostics":u.diagnostics,"events":u.events})
     };
-    let receipt = serde_json::json!({"format":"nepl3.canonical-markdown-stage/1",
-        "input_context":identity.map(hex),"files":records,
+    let receipt = serde_json::json!({"format":"nepl3.canonical-markdown-stage/2",
+        "input_context":identity.map(hex),"input_pageset":group.as_ref().map(|g| hex(g.identity)),
+        "page_dependencies":group.as_ref().map(|g| inputs.iter().zip(&g.dependencies).map(|(input, dependencies)|
+            serde_json::json!({"path":input.page.projection,"links":dependencies})).collect::<Vec<_>>()),
+        "files":records,
         "output_budget":{"limits":{"source_bytes":limits.source_bytes,"work":limits.work,
             "depth":limits.depth,"nodes":limits.nodes,"allocation_units":limits.allocation_units,
             "output_bytes":limits.output_bytes,"diagnostics":limits.diagnostics,"events":limits.events},
