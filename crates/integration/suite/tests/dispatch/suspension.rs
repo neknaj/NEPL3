@@ -56,32 +56,76 @@ fn saved(parent: &Invoke, context: Digest) -> Continuation {
     }
 }
 
+fn invoke_parent(
+    parent: &Invoke,
+    context: Digest,
+    _: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<OperationReply, StopReason> {
+    b.charge(Resource::Work, 17)?;
+    let mut child = parent.clone();
+    child.request_id = 2;
+    if let TypedValue::Record(record) = &mut child.input {
+        record.fields[0] = NdfValue::U64(10);
+    }
+    Ok(OperationReply::Await {
+        continuation: saved(parent, context),
+        calls: vec![child],
+        report: Report::default(),
+    })
+}
+
+fn stopped_await(
+    parent: &Invoke,
+    context: Digest,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<OperationReply, StopReason> {
+    let reply = invoke_parent(parent, context, registry, b)?;
+    b.stop(StopReason::WorkLimit);
+    Ok(reply)
+}
+
 #[test]
 fn admitted_await_collects_dispatched_dependencies_and_resumes_saved_lifetime() -> Result<(), String>
 {
     let (registry, parent) = fixture()?;
     let context = Digest::of(b"host admitted parent context");
-    let continuation = saved(&parent, context);
-    let mut child = parent.clone();
-    child.request_id = 2;
-    // Different input makes the dependency distinct from its ancestor.
-    if let TypedValue::Record(record) = &mut child.input {
-        record.fields[0] = NdfValue::U64(10);
-    }
-    let calls = [child];
+    let identity = Digest::of(b"test provider");
+    let mut execution = budget();
     let sources = SourceStore::default();
     let mut lifetimes = RequestLifetimes::default();
     lifetimes
         .begin_call(&parent, context, None, &mut budget())
         .map_err(|e| format!("{e:?}"))?;
-    let mut pending = suspension::prepare(
+    use nepl3_suite::dispatch::suspending;
+    let registration = suspending::Registration {
+        operation: &parent.operation,
+        implementation: identity,
+        invoke: invoke_parent,
+    };
+    let reply = suspending::invoke(
+        &registration,
+        identity,
         &parent,
         context,
-        &continuation,
-        &calls,
-        &Report::default(),
         &registry,
         &sources,
+        &mut execution,
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let OperationReply::Await {
+        continuation,
+        calls,
+        ..
+    } = reply
+    else {
+        return Err("expected native Await".into());
+    };
+    let mut pending = nepl3_core::operation::dependencies::PendingDependencies::new(
+        &continuation,
+        &calls,
         &mut budget(),
     )
     .map_err(|e| format!("{e:?}"))?;
@@ -96,12 +140,7 @@ fn admitted_await_collects_dispatched_dependencies_and_resumes_saved_lifetime() 
     lifetimes
         .begin_call(&calls[0], context, Some(parent.request_id), &mut budget())
         .map_err(|e| format!("{e:?}"))?;
-    let identity = Digest::of(b"test provider");
-    let mut execution = budget();
-    // Preserve work already consumed by the suspended parent.
-    execution
-        .charge(Resource::Work, 17)
-        .map_err(|e| format!("{e:?}"))?;
+    // Preserve the actual parent callback's work during dependency execution.
     let parent_usage = execution.usage();
     let registrations = [Registration {
         operation: &calls[0].operation,
@@ -286,5 +325,34 @@ fn await_admission_rejects_changed_binding_bad_calls_and_stops() -> Result<(), S
         ),
         Err(AwaitError::Stopped(StopReason::WorkLimit))
     ));
+    Ok(())
+}
+
+#[test]
+fn suspending_dispatch_rejects_an_await_after_execution_stopped() -> Result<(), String> {
+    use nepl3_suite::dispatch::suspending;
+    let (registry, parent) = fixture()?;
+    let identity = Digest::of(b"provider");
+    let registration = suspending::Registration {
+        operation: &parent.operation,
+        implementation: identity,
+        invoke: stopped_await,
+    };
+    let mut execution = budget();
+    let result = suspending::invoke(
+        &registration,
+        identity,
+        &parent,
+        Digest::of(b"context"),
+        &registry,
+        &SourceStore::default(),
+        &mut execution,
+        &mut budget(),
+    );
+    assert!(matches!(
+        result,
+        Err(suspending::Error::Stopped(StopReason::WorkLimit))
+    ));
+    assert_eq!(execution.poll(), Err(StopReason::WorkLimit));
     Ok(())
 }

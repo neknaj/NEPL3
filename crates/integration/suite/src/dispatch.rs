@@ -8,6 +8,7 @@ use nepl3_core::{
     value::{OperationRef, TypedValue},
 };
 pub mod resume;
+pub mod suspending;
 
 /// A native implementation of a terminal operation. Operations which suspend
 /// use the separate Await/Resume host path; this callback owns no continuation.
@@ -97,16 +98,9 @@ pub(super) fn run_terminal(
     validation: &mut Budget,
     invoke: impl FnOnce(&mut Budget) -> Result<OperationResult<TypedValue>, StopReason>,
 ) -> Result<OperationResult<TypedValue>, DispatchError> {
-    let result = execution.with_ceiling(request.limits, |budget| {
-        let result = invoke(budget).map_err(|reason| budget.stop(reason))?;
-        if let OperationResult::Stopped { reason, .. } = &result {
-            budget.stop(*reason);
-        }
-        if let Err(reason) = budget.poll()
-            && !matches!(&result, OperationResult::Stopped { reason: reported, .. } if *reported == reason) {
-            return Err(reason);
-        }
-        Ok(result)
+    let result = run_with_limits(request.limits, execution, invoke, |result| match result {
+        OperationResult::Stopped { reason, .. } => Some(*reason),
+        _ => None,
     })?;
     result
         .validate_for(selected, registry, sources, validation)
@@ -115,4 +109,25 @@ pub(super) fn run_terminal(
             e => DispatchError::Output(e),
         })?;
     Ok(result)
+}
+
+fn run_with_limits<T>(
+    limits: nepl3_core::budget::Limits,
+    execution: &mut Budget,
+    invoke: impl FnOnce(&mut Budget) -> Result<T, StopReason>,
+    stopped: impl FnOnce(&T) -> Option<StopReason>,
+) -> Result<T, StopReason> {
+    execution.with_ceiling(limits, |budget| {
+        let result = invoke(budget).map_err(|reason| budget.stop(reason))?;
+        let reported = stopped(&result);
+        if let Some(reason) = reported {
+            budget.stop(reason);
+        }
+        if let Err(reason) = budget.poll()
+            && reported != Some(reason)
+        {
+            return Err(reason);
+        }
+        Ok(result)
+    })
 }
