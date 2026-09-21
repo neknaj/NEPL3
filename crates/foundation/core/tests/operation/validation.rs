@@ -98,6 +98,21 @@ fn dependency_results_resume_in_call_order_after_out_of_order_completion() -> Re
         value,
         report: Report::default(),
     };
+    let mut wrong = complete.clone();
+    if let OperationResult::Complete {
+        value: TypedValue::Record(record),
+        ..
+    } = &mut wrong
+    {
+        record.kind = "Other".into();
+    }
+    assert_eq!(
+        pending.accept(30, wrong, &registry, &sources, &mut budget()),
+        Err(DependencyError::Output(ResultValidationError::Schema(
+            SchemaError::WrongType
+        )))
+    );
+    assert_eq!(pending.remaining(), 3);
     assert_eq!(
         pending.accept(99, complete.clone(), &registry, &sources, &mut budget()),
         Err(DependencyError::UnknownId)
