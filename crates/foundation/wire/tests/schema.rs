@@ -208,6 +208,72 @@ fn descriptor_receipt_requires_dependencies_before_use() -> Result<(), String> {
 }
 
 #[test]
+fn exchanged_mutual_dependencies_finalize_in_either_registration_order() -> Result<(), String> {
+    let transport = registry()?;
+    let mut received = Vec::new();
+    for (package, dependency) in [("example.a", "example.b"), ("example.b", "example.a")] {
+        let descriptor = SchemaDescriptor {
+            package: package.into(),
+            revision: 1,
+            types: vec![NamedType {
+                name: "Node".into(),
+                shape: TypeShape::Record {
+                    fields: vec![FieldDescriptor {
+                        name: "next".into(),
+                        ty: TypeDescriptor::Option(Box::new(TypeDescriptor::Named(TypeRef {
+                            package: dependency.into(),
+                            revision: 1,
+                            name: "Node".into(),
+                        }))),
+                    }],
+                },
+                constraints: vec![],
+            }],
+            operations: vec![],
+        };
+        let identity = descriptor.reference(&mut budget()).map_err(error)?;
+        let bytes = schema::encode(&descriptor, &transport, &mut budget()).map_err(error)?;
+        let decoded =
+            schema::decode(&bytes, &identity, &transport, &mut budget()).map_err(error)?;
+        received.push((identity, decoded));
+    }
+    for order in [[0, 1], [1, 0]] {
+        let mut destination = SchemaRegistry::default();
+        for (step, index) in order.into_iter().enumerate() {
+            let (identity, descriptor) = &received[index];
+            destination
+                .register(identity.clone(), descriptor.clone(), &mut budget())
+                .map_err(error)?;
+            if step == 0 {
+                assert_eq!(
+                    destination.finalize(&mut budget()),
+                    Err(SchemaError::UnknownSchema)
+                );
+                assert!(!destination.is_finalized());
+            }
+        }
+        destination.finalize(&mut budget()).map_err(error)?;
+        // Both optional links resolve, while a finite leaf contains no next node.
+        for (identity, _) in &received {
+            let leaf = NdfValue::Record(Record {
+                schema: identity.clone(),
+                kind: "Node".into(),
+                fields: vec![NdfValue::None],
+            });
+            let expected = TypeDescriptor::Named(TypeRef {
+                package: identity.package.clone(),
+                revision: identity.revision,
+                name: "Node".into(),
+            });
+            destination
+                .validate(&expected, &leaf, &mut budget())
+                .map_err(error)?;
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn descriptor_boundaries_reject_excess_depth_schema_forgery_and_resource_stops()
 -> Result<(), String> {
     let registry = registry()?;
