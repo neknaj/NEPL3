@@ -1,12 +1,48 @@
 """Orchestration fault injection; these tests do not claim Rust execution."""
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import subprocess
 import tempfile
+import tomllib
 import unittest
 from unittest.mock import patch
 
 from tools.extensions import run
+
+
+class ManifestTests(unittest.TestCase):
+    def test_paths_are_toml_values_and_other_values_are_preserved(self):
+        source = '''[package]
+name = "consumer"
+description = "../../../crates/foundation/core"
+[workspace]
+[dependencies]
+# The same text in a comment is not a path field: "../../../crates/foundation/core"
+nepl3-core = { path = '../../../crates/foundation/core', features = ["example"], default-features = false }
+[dependencies.nepl3-reader]
+path = "../../../crates/foundation/reader"
+optional = true
+'''
+        # JSON surrogate pairs are not TOML Unicode scalars. Also cover the
+        # quoting/control characters that require TOML-specific serialization.
+        for name in ["ASCII", "日本語", "𠮷田", 'quote"apostrophe\'back\\slash', "tab\tline\nreturn\r", "control\x00\x1f\x7f"]:
+            with self.subTest(name=name):
+                paths = {package: PurePosixPath("/tmp") / name / package
+                         for package in ("nepl3-core", "nepl3-reader")}
+                output = run.external_manifest(source, paths)
+                expected = tomllib.loads(source)
+                for package, path in paths.items():
+                    expected["dependencies"][package]["path"] = path.as_posix()
+                self.assertEqual(tomllib.loads(output), expected)
+                self.assertIn('# The same text in a comment is not a path field: "../../../crates/foundation/core"', output)
+
+    def test_missing_or_non_path_dependencies_are_rejected(self):
+        for source in ['[package]\nname="consumer"', '[dependencies]',
+                       '[dependencies]\nnepl3-core="1"',
+                       '[dependencies]\nnepl3-core={version="1"}',
+                       '[dependencies]\nnepl3-core={path=1}']:
+            with self.subTest(source=source), self.assertRaises(ValueError):
+                run.external_manifest(source, {"nepl3-core": PurePosixPath("/tmp/core")})
 
 
 class RunnerFailures(unittest.TestCase):
