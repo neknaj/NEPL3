@@ -160,6 +160,14 @@
       "aliases": "doc/migration/aliases/21-doc-pages.json",
       "route": "docs/spec/21-doc-pages.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/1"
+    },
+    {
+      "id": "portability",
+      "source": "doc/spec/09-portability.nepld",
+      "projection": "doc/spec/09-portability.md",
+      "aliases": "doc/migration/aliases/09-portability.json",
+      "route": "docs/spec/09-portability.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/1"
     }
   ],
   "files": [
@@ -177,6 +185,11 @@
       "id": "sentence-annotation-source",
       "source": "doc/spec/23-sentence-annotation.md",
       "route": "sources/23-sentence-annotation.md"
+    },
+    {
+      "id": "foundation-runtime-source",
+      "source": "doc/progress/foundation-runtime.md",
+      "route": "sources/foundation-runtime.md"
     }
   ],
   "output_limits": {

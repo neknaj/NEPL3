@@ -1,0 +1,14 @@
+[
+  {"section": null, "name": "09-rust以外へ置換するための契約"},
+  {"section": "policy", "name": "方針"},
+  {"section": "layers", "name": "1-三つの層"},
+  {"section": "ndf", "name": "2-ndf1"},
+  {"section": "intrinsic", "name": "21-intrinsic値の閉じた記述"},
+  {"section": "references", "name": "22-descriptorの型参照検査と残る契約"},
+  {"section": "descriptor", "name": "23-実行可能なschema-descriptor"},
+  {"section": "invocation", "name": "3-操作呼出し"},
+  {"section": "transform", "name": "31-reader-transformの操作返信"},
+  {"section": "native", "name": "4-native-provider"},
+  {"section": "process", "name": "5-process-provider"},
+  {"section": "replacement", "name": "6-置換手順"}
+]

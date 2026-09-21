@@ -1,5 +1,8 @@
 article ja "09. Rust[以外/いがい]へ[置換/ちかん]するための[契約/けいやく]"
 body
+  cons paragraph
+    cons "この[章/しょう]は[公開境界/こうかいきょうかい]と[置換/ちかん]の[目標契約/もくひょうけいやく]を[定/さだ]める。[全/ぜん]provider・process transport・[全/ぜん]targetの[実装/じっそう]と[受入完了/うけいれかんりょう]を[宣言/せんげん]するものではない。"
+    cons "[現在/げんざい]の[実装/じっそう]と[受入状態/うけいれじょうたい]はimplementation-status.jsonで[管理/かんり]する。" nil
   cons section policy "[方針/ほうしん]" body
     cons paragraph
       cons "[意味/いみ]モデル・[操作/そうさ]・[診断/しんだん]・source[対応/たいおう]のschemaを[公開境界/こうかいきょうかい]とする。"
@@ -10,7 +13,7 @@ body
     cons list ordered 1
       cons item none body cons paragraph cons "[言語中立/げんごちゅうりつ]のschema: field[順/じゅん]、variant、[必須制約/ひっすせいやく]、[整数/せいすう]/[有理数/ゆうりすう]、[範囲/はんい]と[参照/さんしょう]、operation signature。" nil nil
       cons item none body cons paragraph cons "Rustの[型付/かたつ]きAPI: schemaに[対応/たいおう]するstruct/enumと[関数/かんすう]。" cons "Rust[内/ない]の[通常利用/つうじょうりよう]ではserialize[不要/ふよう]。" nil nil
-      cons item none body cons paragraph cons "transport adapter: schema[値/ち]をNDF（[下記/かき]）でencode/decodeし、[別/べつ]process/[別実装/べつじっそう]へ[渡/わた]す。" nil nil
+      cons item none body cons paragraph cons "transport adapter: schema[値/あたい]をNDF（[下記/かき]）でencode/decodeし、[別/べつ]process/[別実装/べつじっそう]へ[渡/わた]す。" nil nil
       nil
     cons paragraph
       cons "この[分離/ぶんり]により、[将来/しょうらい]のNEPL3プログラミング[言語/げんご]は[同/おな]じschemaを[生成/せいせい]/[消費/しょうひ]する[実装/じっそう]を[持/も]てばよい。"
@@ -18,7 +21,7 @@ body
     nil
   cons section ndf "2. NDF/1" body
     cons paragraph
-      cons sentence cons text "canonical" cons ruby text "値" text "ち" cons text "digestは " cons code "SHA-256(domain || canonical NDF/1 CBOR(value))" cons text " とする。" nil
+      cons sentence cons text "canonical" cons ruby text "値" text "あたい" cons text "digestは " cons code "SHA-256(domain || canonical NDF/1 CBOR(value))" cons text " とする。" nil
       cons "digest[専用経路/せんようけいろ]は[通常/つうじょう]のencoderと[同/おな]じ[符号化規則/ふごうかきそく]でbyte[片/へん]を[順次/じゅんじ]hashへ[渡/わた]してよく、[完全/かんぜん]なCBOR bufferの[作成/さくせい]を[必須/ひっす]にしない。"
       cons "この[場合/ばあい]も[値/あたい]の[走査/そうさ]・[整数/せいすう]の[一時表現/いちじひょうげん]・stackの[割当/わりあて]と、[符号化/ふごうか]およびhashの[全/ぜん]byte[処理/しょり]を[同/おな]じBudgetへ[先行課金/せんこうかきん]し、[停止時/ていしじ]はdigestを[返/かえ]さない。"
       cons "[出力/しゅつりょく]は32byteのdigestとして[課金/かきん]する。"
@@ -61,7 +64,7 @@ body
       cons sentence cons code "interfaces/contracts.json" cons text " と" cons ruby text "各言語" text "かくげんご" cons text "constructor" cons ruby text "表" text "ひょう" cons text "からcodecの" cons ruby text "網羅性検査" text "もうらせいけんさ" cons text "を" cons ruby text "生成" text "せいせい" cons text "する。" nil
       cons "serdeのderive[既定表現/きていひょうげん]を[契約/けいやく]にせず、custom codecでNDFへ[写/うつ]す。"
       cons "[内部/ないぶ]でserdeを[使/つか]う[場合/ばあい]も[明示/めいじ]したarray/schemaに[固定/こてい]する。" nil
-    cons section intrinsic "2.1 intrinsic[値/ち]の[閉/と]じた[記述/きじゅつ]" body
+    cons section intrinsic "2.1 intrinsic[値/あたい]の[閉/と]じた[記述/きじゅつ]" body
       cons paragraph
         cons sentence cons code "interfaces/contracts.json" cons text " の " cons code "intrinsic_types" cons text " は、NDF/1をdecodeした" cons ruby text "論理値" text "ろんりち" cons text "の" cons ruby text "型" text "かた" cons text "を" cons ruby text "定義" text "ていぎ" cons text "する。" nil
         cons sentence cons code "NdfValue" cons text " の12caseは" cons ruby text "上表" text "じょうひょう" cons text "のtag 0–11に" cons ruby text "一対一" text "いちたいいち" cons text "で" cons ruby text "対応" text "たいおう" cons text "する。" nil
@@ -80,7 +83,7 @@ body
       cons paragraph
         cons sentence cons text "intrinsicの" cons ruby text "識別子" text "しきべつし" cons text " " cons code "nepl3.ndf/1" cons text " は" cons ruby text "本符号化" text "ほんふごうか" cons text "profileに" cons ruby text "組" text "く" cons text "み" cons ruby text "込" text "こ" cons text "まれた" cons ruby text "固定識別子" text "こていしきべつし" cons text "である。" nil
         cons "intrinsic[自体/じたい]へdomain SchemaRefや[自己/じこ]hashを[要求/ようきゅう]しない。"
-        cons "Record/Variant headerのSchemaRefは[運/はこ]ばれるdomain[値/ち]のdescriptorを[識別/しきべつ]し、intrinsicの[識別子/しきべつし]とは[別物/べつもの]である。"
+        cons "Record/Variant headerのSchemaRefは[運/はこ]ばれるdomain[値/あたい]のdescriptorを[識別/しきべつ]し、intrinsicの[識別子/しきべつし]とは[別物/べつもの]である。"
         cons "domain descriptorの[登録/とうろく]・digest[検証/けんしょう]は[必要/ひつよう]であり、TypedValueという[型名/かためい]やtag10/11であることだけでは[検査済/けんさず]みにならない。"
         cons sentence cons ruby text "通常" text "つうじょう" cons text "のfieldとしてのSchemaRefは " cons code "nepl3.foundation" cons text " revision 1のSchemaRef recordをtag10で" cons ruby text "運" text "はこ" cons text "ぶ。" nil
         cons "そのheaderのSchemaRefだけが[裸/はだか]のtupleとなるため、[無限/むげん]のwrapper[再帰/さいき]は[生/しょう]じない。" nil
@@ -128,7 +131,7 @@ body
         cons sentence cons code "interfaces/foundation.json" cons text " はcontractsから " cons code "cargo run --locked -p nepl3-tools -- foundation --write" cons text " で" cons ruby text "生成" text "せいせい" cons text "する" cons ruby text "実際" text "じっさい" cons text "の " cons code "nepl3.foundation" cons text " descriptorである。" nil
         cons "build.rsから[生成/せいせい]せず、[通常/つうじょう]の[検査/けんさ]で[正本/せいほん]との[一致/いっち]とproduction core registryによる[登録/とうろく]・[参照閉包/さんしょうへいほう]を[検査/けんさ]する。"
         cons "[未完成/みかんせい]のoperation[説明表/せつめいひょう]を[実行可能/じっこうかのう]なoperationsへコピーしない。"
-        cons "このpackageは[共通値/きょうつうち]・transport recordのschemaを[提供/ていきょう]し、[言語操作/げんごそうさ]の[実装/じっそう]を[広告/こうこく]しない。" nil
+        cons "このpackageは[共通/きょうつう]の[値/あたい]・transport recordのschemaを[提供/ていきょう]し、[言語操作/げんごそうさ]の[実装/じっそう]を[広告/こうこく]しない。" nil
       cons paragraph
         cons sentence cons ruby text "同" text "おな" cons text "じ" cons ruby text "明示生成" text "めいじせいせい" cons text "で " cons code "crates/foundation/core/src/schema/foundation.rs" cons text " を" cons ruby text "作" text "つく" cons text "り、productionの " cons code "foundation::descriptor" cons text " が" cons ruby text "型付" text "かたつ" cons text "きdescriptorを" cons ruby text "構築" text "こうちく" cons text "する。" nil
         cons "[構築前/こうちくまえ]に[割当/わりあて]・work[予算/よさん]を[計上/けいじょう]し、toolsのJSON parserをproductionへ[依存/いぞん]させない。"
@@ -148,7 +151,7 @@ body
       cons "provider manifestにinput/output schema、[必要/ひつよう]capability、[純粋性契約/じゅんすいせいけいやく]を[宣言/せんげん]する。" nil
     cons paragraph
       cons "ReplyはComplete / Invalid / Stopped / Awaitのvariant。"
-      cons "DiagnosticとEventは[成功値/せいこうち]と[別/べつ]field。"
+      cons "DiagnosticとEventは[成功/せいこう]の[値/あたい]と[別/べつ]field。"
       cons "[未対応/みたいおう]operationを[空/から]の[値/あたい]や[成功/せいこう]Unitで[返/かえ]さない。" nil
     cons paragraph
       cons "Awaitは[外部/がいぶ]service[要求/ようきゅう]とcontinuationを[返/かえ]す。"
