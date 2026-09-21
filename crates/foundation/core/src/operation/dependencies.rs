@@ -3,6 +3,7 @@ use super::lifetime::{LifetimeError, RequestLifetimes};
 use super::validation::ResultValidationError;
 use super::*;
 use crate::{diagnostic::validation::DiagnosticSourceResolver, schema::SchemaRegistry};
+use alloc::borrow::Cow;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DependencyError {
@@ -30,14 +31,15 @@ impl From<ResultValidationError> for DependencyError {
     }
 }
 
-/// Borrows the immutable Await accepted by the host. The host authorizes calls,
+/// Retains the immutable Await accepted by the host, borrowed or owned.
+/// The host authorizes calls,
 /// registers their connection-wide IDs, detects call graph cycles, and executes
 /// them within the parent's budget. Nested Await replies are resolved by the
 /// host before submitting their terminal results here. Each batch is one Await
 /// generation; transport routing must retain that association.
 pub struct PendingDependencies<'a> {
-    continuation: &'a Continuation,
-    calls: &'a [Invoke],
+    continuation: Cow<'a, Continuation>,
+    calls: Cow<'a, [Invoke]>,
     index: Vec<(u64, usize)>,
     results: Vec<Option<OperationResult<TypedValue>>>,
     remaining: usize,
@@ -80,6 +82,13 @@ impl<'a> PendingDependencies<'a> {
         calls: &'a [Invoke],
         b: &mut Budget,
     ) -> Result<Self, DependencyError> {
+        Self::from_inputs(Cow::Borrowed(continuation), Cow::Borrowed(calls), b)
+    }
+    fn from_inputs(
+        continuation: Cow<'a, Continuation>,
+        calls: Cow<'a, [Invoke]>,
+        b: &mut Budget,
+    ) -> Result<Self, DependencyError> {
         b.poll()?;
         let mut index = Vec::new();
         reserve(&mut index, calls.len(), b)?;
@@ -108,14 +117,22 @@ impl<'a> PendingDependencies<'a> {
         reserve(&mut results, calls.len(), b)?;
         b.charge(Resource::Work, calls.len() as u64)?;
         results.resize_with(calls.len(), || None);
+        let remaining = calls.len();
         Ok(Self {
             continuation,
             calls,
             index,
             results,
-            remaining: calls.len(),
+            remaining,
             consumed: false,
         })
+    }
+    /// Immutable input retained for host scheduling and Resume validation.
+    pub fn calls(&self) -> &[Invoke] {
+        &self.calls
+    }
+    pub fn continuation(&self) -> &Continuation {
+        &self.continuation
     }
     /// Validate and store one terminal result. Rejection leaves every slot intact.
     /// The supplied resolver must carry the permissions of this specific call.
@@ -208,7 +225,7 @@ impl<'a> PendingDependencies<'a> {
         if self.results.iter().any(Option::is_none) {
             return Err(DependencyError::Incomplete);
         }
-        let saved = self.continuation;
+        let saved = &*self.continuation;
         b.charge(
             Resource::Work,
             (saved.provider.name.len() as u64)
@@ -243,5 +260,21 @@ impl<'a> PendingDependencies<'a> {
             continuation,
             dependency_results,
         })
+    }
+}
+
+impl PendingDependencies<'static> {
+    /// Move an owned Await generation into host scheduling state without cloning
+    /// its inputs. Their construction was charged by the producer; this method
+    /// charges the same correlation index and result storage as `new`.
+    /// Schema, grants and lifetime admission remain the host's responsibility.
+    /// Failure consumes the supplied inputs. Construct this state before
+    /// publishing lifetimes, or cancel admitted requests on failure.
+    pub fn from_owned(
+        continuation: Continuation,
+        calls: Vec<Invoke>,
+        b: &mut Budget,
+    ) -> Result<Self, DependencyError> {
+        Self::from_inputs(Cow::Owned(continuation), Cow::Owned(calls), b)
     }
 }

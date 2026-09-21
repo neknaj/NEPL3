@@ -340,6 +340,15 @@ fn call_graph_rejects_ancestor_cycles_and_retains_distinct_inputs_and_contexts()
 
 #[test]
 fn dependency_results_resume_in_call_order_after_out_of_order_completion() -> Result<(), String> {
+    dependency_collection(false)
+}
+
+#[test]
+fn owned_dependency_results_survive_producer_and_resume_in_call_order() -> Result<(), String> {
+    dependency_collection(true)
+}
+
+fn dependency_collection(owned: bool) -> Result<(), String> {
     use nepl3_core::operation::{
         Invoke, OperationReply,
         dependencies::{DependencyError, PendingDependencies},
@@ -366,8 +375,29 @@ fn dependency_results_resume_in_call_order_after_out_of_order_completion() -> Re
         .collect();
     // Input/environment admission belongs to dispatch; this fixture exercises
     // terminal output correlation after calls have been admitted by the host.
-    let mut pending = PendingDependencies::new(&continuation, &calls, &mut budget())
+    let mut construction = budget();
+    let mut pending = if owned {
+        // The returned state owns the producer's inputs and can be retained by
+        // a host frame after that producer has returned. No input clone occurs
+        // inside from_owned; the test copies only to retain independent oracles.
+        fn retain(
+            continuation: Continuation,
+            calls: Vec<Invoke>,
+            budget: &mut Budget,
+        ) -> Result<PendingDependencies<'static>, DependencyError> {
+            PendingDependencies::from_owned(continuation, calls, budget)
+        }
+        retain(continuation.clone(), calls.clone(), &mut construction)
+    } else {
+        PendingDependencies::new(&continuation, &calls, &mut construction)
+    }
+    .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(pending.calls(), calls);
+    assert_eq!(pending.continuation(), &continuation);
+    let mut borrowed_cost = budget();
+    PendingDependencies::new(&continuation, &calls, &mut borrowed_cost)
         .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(construction.usage(), borrowed_cost.usage());
     assert_eq!(
         pending.take_resume(&mut budget()),
         Err(DependencyError::Incomplete)
@@ -483,9 +513,17 @@ fn dependency_results_resume_in_call_order_after_out_of_order_completion() -> Re
         PendingDependencies::new(&continuation, &duplicate, &mut budget()),
         Err(DependencyError::DuplicateId)
     ));
+    assert!(matches!(
+        PendingDependencies::from_owned(continuation.clone(), duplicate.clone(), &mut budget()),
+        Err(DependencyError::DuplicateId)
+    ));
     duplicate[1].request_id = 7;
     assert!(matches!(
         PendingDependencies::new(&continuation, &duplicate, &mut budget()),
+        Err(DependencyError::ParentId)
+    ));
+    assert!(matches!(
+        PendingDependencies::from_owned(continuation, duplicate, &mut budget()),
         Err(DependencyError::ParentId)
     ));
     Ok(())
