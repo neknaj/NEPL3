@@ -1,4 +1,6 @@
 use super::*;
+#[path = "scheduler/outcomes.rs"]
+mod outcomes;
 use nepl3_core::operation::{Continuation, OperationReply, Resume};
 use nepl3_suite::{
     dispatch::{resume, suspending},
@@ -247,6 +249,46 @@ fn scheduler_preserves_sibling_order_and_resumes_empty_and_repeated_await() -> R
         );
         assert_eq!(limited.poll(), Err(StopReason::WorkLimit));
         assert_eq!(cancelled, vec![root.request_id]);
+        for allocation in [false, true] {
+            let count = if allocation {
+                validation.usage().allocation_units
+            } else {
+                work
+            };
+            for limit in 0..count {
+                let mut limits = budget().limits();
+                let reason = if allocation {
+                    limits.allocation_units = limit;
+                    StopReason::AllocationLimit
+                } else {
+                    limits.work = limit;
+                    StopReason::WorkLimit
+                };
+                let mut limited = Budget::new(limits);
+                cancelled.clear();
+                assert!(
+                    scheduler::run(
+                        &registrations,
+                        &root,
+                        &registry,
+                        &mut budget(),
+                        &mut limited,
+                        |_, _| {},
+                        |id| cancelled.push(id)
+                    )
+                    .is_err(),
+                    "limit {limit}"
+                );
+                assert_eq!(limited.poll(), Err(reason));
+                assert!(cancelled.iter().all(|id| {
+                    [root.request_id, root.request_id + 9, root.request_id + 10].contains(id)
+                }));
+                let notified = cancelled.len();
+                cancelled.sort_unstable();
+                cancelled.dedup();
+                assert_eq!(cancelled.len(), notified);
+            }
+        }
     }
     Ok(())
 }
