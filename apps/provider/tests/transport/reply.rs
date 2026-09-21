@@ -9,6 +9,142 @@ use nepl3_provider::reply::ReplyError;
 fn error(e: impl core::fmt::Debug) -> String {
     format!("{e:?}")
 }
+
+fn increment(
+    request: &Invoke,
+    _: Digest,
+    _: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<OperationReply, StopReason> {
+    b.charge(Resource::Work, 1)?;
+    let mut value = request.input.clone_with_budget(b)?;
+    if let TypedValue::Record(record) = &mut value
+        && let [NdfValue::U64(number)] = record.fields.as_mut_slice()
+        && let Some(next) = number.checked_add(1)
+    {
+        *number = next;
+        return Ok(OperationReply::Result(OperationResult::Complete {
+            value,
+            report: Report::default(),
+        }));
+    }
+    Ok(OperationReply::Result(OperationResult::Invalid {
+        partial: None,
+        report: Report::default(),
+    }))
+}
+
+#[test]
+fn wire_invoke_executes_native_callback_and_returns_the_checked_result() -> Result<(), String> {
+    let (registry, request) = fixture()?;
+    let sources = SourceStore::default();
+    let context = Digest::of(b"host authorized context");
+    let identity = Digest::of(b"native increment implementation");
+    let registration = nepl3_suite::dispatch::suspending::Registration {
+        operation: &request.operation,
+        implementation: identity,
+        invoke: increment,
+    };
+    let mut server = connection(&ProviderFrame::Invoke(request.clone()), &registry)?;
+    let Some(ProviderFrame::Invoke(received)) = server
+        .receive(
+            &registry,
+            &sources,
+            &mut SourceAdmission::default(),
+            &mut budget(),
+        )
+        .map_err(error)?
+    else {
+        return Err("expected incoming Invoke".into());
+    };
+    let mut execution = budget();
+    let native = server
+        .dispatch_invoke(
+            &registration,
+            identity,
+            &received,
+            context,
+            &registry,
+            &sources,
+            &sources,
+            &mut SourceAdmission::default(),
+            &mut execution,
+            &mut budget(),
+            &mut budget(),
+        )
+        .map_err(error)?;
+    assert!(execution.usage().work > 0);
+    let (_, bytes) = server.into_parts();
+    let mut client = Connection::new(Cursor::new(bytes), Vec::new());
+    let portable =
+        receive(&mut client, &request, context, &registry, &mut budget()).map_err(error)?;
+    assert_eq!(portable, native);
+    let OperationReply::Result(OperationResult::Complete {
+        value: TypedValue::Record(record),
+        ..
+    }) = portable
+    else {
+        return Err("expected complete record".into());
+    };
+    // Independent expectation: the callback increments the initial 41 once.
+    assert_eq!(record.fields, vec![NdfValue::U64(42)]);
+    Ok(())
+}
+
+#[test]
+fn rejected_dispatch_and_closed_transport_do_not_execute_or_emit_a_reply() -> Result<(), String> {
+    let (registry, request) = fixture()?;
+    let sources = SourceStore::default();
+    let identity = Digest::of(b"native implementation");
+    let registration = nepl3_suite::dispatch::suspending::Registration {
+        operation: &request.operation,
+        implementation: identity,
+        invoke: increment,
+    };
+    let mut server = Connection::new(Cursor::new(Vec::<u8>::new()), Vec::<u8>::new());
+    let mut execution = budget();
+    let failed = server.dispatch_invoke(
+        &registration,
+        Digest::of(b"different implementation"),
+        &request,
+        identity,
+        &registry,
+        &sources,
+        &sources,
+        &mut SourceAdmission::default(),
+        &mut execution,
+        &mut budget(),
+        &mut budget(),
+    );
+    assert!(matches!(
+        failed,
+        Err(nepl3_provider::dispatch::DispatchError::Operation(_))
+    ));
+    assert!(server.is_closed());
+    assert_eq!(execution.usage().work, 0);
+    let failed = server.dispatch_invoke(
+        &registration,
+        identity,
+        &request,
+        identity,
+        &registry,
+        &sources,
+        &sources,
+        &mut SourceAdmission::default(),
+        &mut execution,
+        &mut budget(),
+        &mut budget(),
+    );
+    assert!(matches!(
+        failed,
+        Err(nepl3_provider::dispatch::DispatchError::Transport(
+            TransportError::Closed
+        ))
+    ));
+    assert_eq!(execution.usage().work, 0);
+    assert!(server.into_parts().1.is_empty());
+    Ok(())
+}
 fn fixture() -> Result<(SchemaRegistry, Invoke), String> {
     let mut registry = SchemaRegistry::default();
     let foundation = foundation::descriptor(&mut budget()).map_err(error)?;
