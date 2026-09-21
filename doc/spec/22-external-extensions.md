@@ -1,72 +1,74 @@
-<!-- Generated from doc/spec/22&#45;external&#45;extensions.nepld; renderer nepl3-tools.markdown-annotated/2; source SHA-256 0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa; alias input SHA-256 132807f48bf3acceac6beacff6fd690cac164b5d0701ac40b0f0a03c7abfc923; document digest e4f95c527031332a55b17ff175627960bb35ea6d67625b7bf8a282a519f90cb1. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/22&#45;external&#45;extensions.nepld; renderer nepl3-tools.markdown-annotated/3; source SHA-256 0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa; alias input SHA-256 132807f48bf3acceac6beacff6fd690cac164b5d0701ac40b0f0a03c7abfc923; document digest e4f95c527031332a55b17ff175627960bb35ea6d67625b7bf8a282a519f90cb1. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="22-外部言語の追加とrepository分離条件"></a>
 
-# 22\. 外部言語\[がいぶげんご\]の追加\[ついか\]とrepository分離条件\[ぶんりじょうけん\]
+# 22\. <ruby>外部言語<rt>がいぶげんご</rt></ruby>の<ruby>追加<rt>ついか</rt></ruby>とrepository<ruby>分離条件<rt>ぶんりじょうけん</rt></ruby>
+
+[正本（NEPL3d）](<22-external-extensions.nepld>)
 
 <a name="n-626f756e64617279"></a>
 
 <a name="1-目的と境界"></a>
 
-## 1\. 目的\[もくてき\]と境界\[きょうかい\]
+## 1\. <ruby>目的<rt>もくてき</rt></ruby>と<ruby>境界<rt>きょうかい</rt></ruby>
 
-NEPL3のfoundationを、個別言語\[こべつげんご\]の追加\[ついか\]で変更\[へんこう\]しないことをアーキテクチャの不変条件\[ふへんじょうけん\]とする。これは既存\[きそん\]の公開契約\[こうかいけいやく\]を使\[つか\]う拡張\[かくちょう\]についての条件\[じょうけん\]であり、共通機能\[きょうつうきのう\]の欠陥修正\[けっかんしゅうせい\]や、理由\[りゆう\]を記録\[きろく\]した互換性変更\[ごかんせいへんこう\]を永久\[えいきゅう\]に禁止\[きんし\]するものではない。現時点\[げんじてん\]ではmonorepoを維持\[いじ\]する。実際\[じっさい\]のrepository作成\[さくせい\]、crate公開\[こうかい\]、権限変更\[けんげんへんこう\]はこの仕様\[しよう\]だけで実施\[じっし\]しない。
+NEPL3のfoundationを、<ruby>個別言語<rt>こべつげんご</rt></ruby>の<ruby>追加<rt>ついか</rt></ruby>で<ruby>変更<rt>へんこう</rt></ruby>しないことをアーキテクチャの<ruby>不変条件<rt>ふへんじょうけん</rt></ruby>とする。これは<ruby>既存<rt>きそん</rt></ruby>の<ruby>公開契約<rt>こうかいけいやく</rt></ruby>を<ruby>使<rt>つか</rt></ruby>う<ruby>拡張<rt>かくちょう</rt></ruby>についての<ruby>条件<rt>じょうけん</rt></ruby>であり、<ruby>共通機能<rt>きょうつうきのう</rt></ruby>の<ruby>欠陥修正<rt>けっかんしゅうせい</rt></ruby>や、<ruby>理由<rt>りゆう</rt></ruby>を<ruby>記録<rt>きろく</rt></ruby>した<ruby>互換性変更<rt>ごかんせいへんこう</rt></ruby>を<ruby>永久<rt>えいきゅう</rt></ruby>に<ruby>禁止<rt>きんし</rt></ruby>するものではない。<ruby>現時点<rt>げんじてん</rt></ruby>ではmonorepoを<ruby>維持<rt>いじ</rt></ruby>する。<ruby>実際<rt>じっさい</rt></ruby>のrepository<ruby>作成<rt>さくせい</rt></ruby>、crate<ruby>公開<rt>こうかい</rt></ruby>、<ruby>権限変更<rt>けんげんへんこう</rt></ruby>はこの<ruby>仕様<rt>しよう</rt></ruby>だけで<ruby>実施<rt>じっし</rt></ruby>しない。
 
-責務\[せきむ\]は次\[つぎ\]の五層\[ごそう\]に分\[わ\]ける。
+<ruby>責務<rt>せきむ</rt></ruby>は<ruby>次<rt>つぎ</rt></ruby>の<ruby>五層<rt>ごそう</rt></ruby>に<ruby>分<rt>わ</rt></ruby>ける。
 
-| 層\[そう\] | 所有\[しょゆう\]するもの |
+| <ruby>層<rt>そう</rt></ruby> | <ruby>所有<rt>しょゆう</rt></ruby>するもの |
 | --- | --- |
-| Foundation | source、Origin、診断\[しんだん\]、schema、値\[あたい\]、予算\[よさん\]、言語中立\[げんごちゅうりつ\]の交換境界\[こうかんきょうかい\] |
-| Language infrastructure | reader、prefix engine、共通\[きょうつう\]エディタ機構\[きこう\] |
-| Domain \/ Language package | Grammar、Doc、Math、Circuitおよび外部言語\[がいぶげんご\]の意味\[いみ\]・構文定義\[こうぶんていぎ\] |
-| Backend \/ Adapter | HTML・MathML・SVG等\[とう\]の出力\[しゅつりょく\]、任意\[にんい\]のdomain間接続\[かんせつぞく\] |
-| Composition | suite、CLI、provider host、LSP、Web製品\[せいひん\]の構成\[こうせい\] |
+| Foundation | source、Origin、<ruby>診断<rt>しんだん</rt></ruby>、schema、<ruby>値<rt>あたい</rt></ruby>、<ruby>予算<rt>よさん</rt></ruby>、<ruby>言語中立<rt>げんごちゅうりつ</rt></ruby>の<ruby>交換境界<rt>こうかんきょうかい</rt></ruby> |
+| Language infrastructure | reader、prefix engine、<ruby>共通<rt>きょうつう</rt></ruby>エディタ<ruby>機構<rt>きこう</rt></ruby> |
+| Domain \/ Language package | Grammar、Doc、Math、Circuitおよび<ruby>外部言語<rt>がいぶげんご</rt></ruby>の<ruby>意味<rt>いみ</rt></ruby>・<ruby>構文定義<rt>こうぶんていぎ</rt></ruby> |
+| Backend \/ Adapter | HTML・MathML・SVG<ruby>等<rt>とう</rt></ruby>の<ruby>出力<rt>しゅつりょく</rt></ruby>、<ruby>任意<rt>にんい</rt></ruby>のdomain<ruby>間接続<rt>かんせつぞく</rt></ruby> |
+| Composition | suite、CLI、provider host、LSP、Web<ruby>製品<rt>せいひん</rt></ruby>の<ruby>構成<rt>こうせい</rt></ruby> |
 
-Foundationとreader\/engineのproduction・build依存\[いぞん\]からdomain、出力\[しゅつりょく\]backend、apps、toolsへの逆依存\[ぎゃくいぞん\]を禁止\[きんし\]する。Doc・Math・Circuit core間\[かん\]の依存禁止\[いぞんきんし\]と、`no_std + alloc`、hostへのI\/O集約\[しゅうやく\]を維持\[いじ\]する。markupはDoc固有\[こゆう\]の意味\[いみ\]を持\[も\]たず、複数\[ふくすう\]backendが共有\[きょうゆう\]する検査済\[けんさず\]み出力契約\[しゅつりょくけいやく\]を所有\[しょゆう\]する。
+Foundationとreader\/engineのproduction・build<ruby>依存<rt>いぞん</rt></ruby>からdomain、<ruby>出力<rt>しゅつりょく</rt></ruby>backend、apps、toolsへの<ruby>逆依存<rt>ぎゃくいぞん</rt></ruby>を<ruby>禁止<rt>きんし</rt></ruby>する。Doc・Math・Circuit core<ruby>間<rt>かん</rt></ruby>の<ruby>依存禁止<rt>いぞんきんし</rt></ruby>と、`no_std + alloc`、hostへのI\/O<ruby>集約<rt>しゅうやく</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby>する。markupはDoc<ruby>固有<rt>こゆう</rt></ruby>の<ruby>意味<rt>いみ</rt></ruby>を<ruby>持<rt>も</rt></ruby>たず、<ruby>複数<rt>ふくすう</rt></ruby>backendが<ruby>共有<rt>きょうゆう</rt></ruby>する<ruby>検査済<rt>けんさず</rt></ruby>み<ruby>出力契約<rt>しゅつりょくけいやく</rt></ruby>を<ruby>所有<rt>しょゆう</rt></ruby>する。
 
-新\[あたら\]しい構文\[こうぶん\]を既存\[きそん\]の意味\[いみ\]モデルへlowerすることと、新\[あたら\]しい意味領域\[いみりょういき\]を作\[つく\]ることを分\[わ\]ける。別\[べつ\]frontendやbackendの接続可能性\[せつぞくかのうせい\]は、Markdown frontendやPDF backendの実装済\[じっそうず\]み宣言\[せんげん\]ではない。
+<ruby>新<rt>あたら</rt></ruby>しい<ruby>構文<rt>こうぶん</rt></ruby>を<ruby>既存<rt>きそん</rt></ruby>の<ruby>意味<rt>いみ</rt></ruby>モデルへlowerすることと、<ruby>新<rt>あたら</rt></ruby>しい<ruby>意味領域<rt>いみりょういき</rt></ruby>を<ruby>作<rt>つく</rt></ruby>ることを<ruby>分<rt>わ</rt></ruby>ける。<ruby>別<rt>べつ</rt></ruby>frontendやbackendの<ruby>接続可能性<rt>せつぞくかのうせい</rt></ruby>は、Markdown frontendやPDF backendの<ruby>実装済<rt>じっそうず</rt></ruby>み<ruby>宣言<rt>せんげん</rt></ruby>ではない。
 
 <a name="n-756e697473"></a>
 
 <a name="2-拡張単位"></a>
 
-## 2\. 拡張単位\[かくちょうたんい\]
+## 2\. <ruby>拡張単位<rt>かくちょうたんい</rt></ruby>
 
-共通基盤\[きょうつうきばん\]へ言語名\[げんごめい\]を列挙\[れっきょ\]するenumや、全言語\[ぜんげんご\]へcompile・evaluate・render等\[とう\]を強制\[きょうせい\]する巨大\[きょだい\]traitを設\[もう\]けない。各\[かく\]packageがschemaと必要\[ひつよう\]な操作\[そうさ\]を所有\[しょゆう\]し、hostが明示登録\[めいじとうろく\]したpackage・provider・資源\[しげん\]からProfileを解決\[かいけつ\]する。公式四言語\[こうしきよんげんご\]も同\[おな\]じ公開契約\[こうかいけいやく\]を使\[つか\]うreference extensionとし、言語名\[げんごめい\]による特例\[とくれい\]をfoundationへ入\[い\]れない。操作\[そうさ\]の意味\[いみ\]、能力不足\[のうりょくぶそく\]、署名違反\[しょめいいはん\]、Invalid、Stopped、Awaitを区別\[くべつ\]する。任意\[にんい\]の未知\[みち\]operationを成功\[せいこう\]として扱\[あつか\]わず、要求\[ようきゅう\]と登録済\[とうろくず\]みschema\/signatureを照合\[しょうごう\]する。
+<ruby>共通基盤<rt>きょうつうきばん</rt></ruby>へ<ruby>言語名<rt>げんごめい</rt></ruby>を<ruby>列挙<rt>れっきょ</rt></ruby>するenumや、<ruby>全言語<rt>ぜんげんご</rt></ruby>へcompile・evaluate・render<ruby>等<rt>とう</rt></ruby>を<ruby>強制<rt>きょうせい</rt></ruby>する<ruby>巨大<rt>きょだい</rt></ruby>traitを<ruby>設<rt>もう</rt></ruby>けない。<ruby>各<rt>かく</rt></ruby>packageがschemaと<ruby>必要<rt>ひつよう</rt></ruby>な<ruby>操作<rt>そうさ</rt></ruby>を<ruby>所有<rt>しょゆう</rt></ruby>し、hostが<ruby>明示登録<rt>めいじとうろく</rt></ruby>したpackage・provider・<ruby>資源<rt>しげん</rt></ruby>からProfileを<ruby>解決<rt>かいけつ</rt></ruby>する。<ruby>公式四言語<rt>こうしきよんげんご</rt></ruby>も<ruby>同<rt>おな</rt></ruby>じ<ruby>公開契約<rt>こうかいけいやく</rt></ruby>を<ruby>使<rt>つか</rt></ruby>うreference extensionとし、<ruby>言語名<rt>げんごめい</rt></ruby>による<ruby>特例<rt>とくれい</rt></ruby>をfoundationへ<ruby>入<rt>い</rt></ruby>れない。<ruby>操作<rt>そうさ</rt></ruby>の<ruby>意味<rt>いみ</rt></ruby>、<ruby>能力不足<rt>のうりょくぶそく</rt></ruby>、<ruby>署名違反<rt>しょめいいはん</rt></ruby>、Invalid、Stopped、Awaitを<ruby>区別<rt>くべつ</rt></ruby>する。<ruby>任意<rt>にんい</rt></ruby>の<ruby>未知<rt>みち</rt></ruby>operationを<ruby>成功<rt>せいこう</rt></ruby>として<ruby>扱<rt>あつか</rt></ruby>わず、<ruby>要求<rt>ようきゅう</rt></ruby>と<ruby>登録済<rt>とうろくず</rt></ruby>みschema\/signatureを<ruby>照合<rt>しょうごう</rt></ruby>する。
 
-Rust内\[ない\]の型付\[かたつ\]き直接呼出\[ちょくせつよびだ\]しと、NDFを使\[つか\]うportable provider境界\[きょうかい\]を維持\[いじ\]する。Rustのpointer、allocator、メモリ上\[じょう\]のenum配置\[はいち\]、trait vtableを外部\[がいぶ\]ABIにしない。optionalなDoc\/Math\/Circuit連携\[れんけい\]はadapterまたはsuiteが接続\[せつぞく\]し、構文\[こうぶん\]を埋\[う\]め込\[こ\]んだだけではguestを評価\[ひょうか\]しない。
+Rust<ruby>内<rt>ない</rt></ruby>の<ruby>型付<rt>かたつ</rt></ruby>き<ruby>直接呼出<rt>ちょくせつよびだ</rt></ruby>しと、NDFを<ruby>使<rt>つか</rt></ruby>うportable provider<ruby>境界<rt>きょうかい</rt></ruby>を<ruby>維持<rt>いじ</rt></ruby>する。Rustのpointer、allocator、メモリ<ruby>上<rt>じょう</rt></ruby>のenum<ruby>配置<rt>はいち</rt></ruby>、trait vtableを<ruby>外部<rt>がいぶ</rt></ruby>ABIにしない。optionalなDoc\/Math\/Circuit<ruby>連携<rt>れんけい</rt></ruby>はadapterまたはsuiteが<ruby>接続<rt>せつぞく</rt></ruby>し、<ruby>構文<rt>こうぶん</rt></ruby>を<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>んだだけではguestを<ruby>評価<rt>ひょうか</rt></ruby>しない。
 
-現在\[げんざい\]の実\[じつ\]コードにはLanguagePackage、SchemaRegistry、ParseProfile\/RuntimeCatalog、reader providerとtyped adapterがある。これだけから、LanguagePackage\/Profileの完全\[かんぜん\]な交換\[こうかん\]・動的\[どうてき\]ロードや、Invoke\/Resume\/Reply\/Cancel\/Closeを通\[とお\]す汎用\[はんよう\]process providerの完成\[かんせい\]を推定\[すいてい\]しない。未実装経路\[みじっそうけいろ\]はT26の未達範囲\[みたつはんい\]として実装\[じっそう\]する。
+<ruby>現在<rt>げんざい</rt></ruby>の<ruby>実<rt>じつ</rt></ruby>コードにはLanguagePackage、SchemaRegistry、ParseProfile\/RuntimeCatalog、reader providerとtyped adapterがある。これだけから、LanguagePackage\/Profileの<ruby>完全<rt>かんぜん</rt></ruby>な<ruby>交換<rt>こうかん</rt></ruby>・<ruby>動的<rt>どうてき</rt></ruby>ロードや、Invoke\/Resume\/Reply\/Cancel\/Closeを<ruby>通<rt>とお</rt></ruby>す<ruby>汎用<rt>はんよう</rt></ruby>process providerの<ruby>完成<rt>かんせい</rt></ruby>を<ruby>推定<rt>すいてい</rt></ruby>しない。<ruby>未実装経路<rt>みじっそうけいろ</rt></ruby>はT26の<ruby>未達範囲<rt>みたつはんい</rt></ruby>として<ruby>実装<rt>じっそう</rt></ruby>する。
 
 <a name="n-636f6d7061746962696c697479"></a>
 
 <a name="3-二つの互換性境界"></a>
 
-## 3\. 二\[ふた\]つの互換性境界\[ごかんせいきょうかい\]
+## 3\. <ruby>二<rt>ふた</rt></ruby>つの<ruby>互換性境界<rt>ごかんせいきょうかい</rt></ruby>
 
-Cargoのpackage versionはRust source APIの互換性\[ごかんせい\]を表\[あらわ\]す。schemaのpackage\/revision\/digestはportable契約\[けいやく\]の識別\[しきべつ\]に使\[つか\]う。Rust APIだけの非互換変更\[ひごかんへんこう\]とwire\/schemaの非互換変更\[ひごかんへんこう\]を別々\[べつべつ\]に検出\[けんしゅつ\]する。すべての変更\[へんこう\]で両方\[りょうほう\]の版\[はん\]を上\[あ\]げる規則\[きそく\]にはしない。両方\[りょうほう\]へ影響\[えいきょう\]する変更\[へんこう\]では両方\[りょうほう\]の移行条件\[いこうじょうけん\]を記録\[きろく\]する。digest不一致\[ふいっち\]は同一\[どういつ\]でないことの検出\[けんしゅつ\]であり、変更\[へんこう\]の互換性\[ごかんせい\]や意味\[いみ\]の正\[ただ\]しさの証明\[しょうめい\]ではない。schemaを変\[か\]えない挙動\[きょどう\]の回帰\[かいき\]もconformanceで検査\[けんさ\]する。
+Cargoのpackage versionはRust source APIの<ruby>互換性<rt>ごかんせい</rt></ruby>を<ruby>表<rt>あらわ</rt></ruby>す。schemaのpackage\/revision\/digestはportable<ruby>契約<rt>けいやく</rt></ruby>の<ruby>識別<rt>しきべつ</rt></ruby>に<ruby>使<rt>つか</rt></ruby>う。Rust APIだけの<ruby>非互換変更<rt>ひごかんへんこう</rt></ruby>とwire\/schemaの<ruby>非互換変更<rt>ひごかんへんこう</rt></ruby>を<ruby>別々<rt>べつべつ</rt></ruby>に<ruby>検出<rt>けんしゅつ</rt></ruby>する。すべての<ruby>変更<rt>へんこう</rt></ruby>で<ruby>両方<rt>りょうほう</rt></ruby>の<ruby>版<rt>はん</rt></ruby>を<ruby>上<rt>あ</rt></ruby>げる<ruby>規則<rt>きそく</rt></ruby>にはしない。<ruby>両方<rt>りょうほう</rt></ruby>へ<ruby>影響<rt>えいきょう</rt></ruby>する<ruby>変更<rt>へんこう</rt></ruby>では<ruby>両方<rt>りょうほう</rt></ruby>の<ruby>移行条件<rt>いこうじょうけん</rt></ruby>を<ruby>記録<rt>きろく</rt></ruby>する。digest<ruby>不一致<rt>ふいっち</rt></ruby>は<ruby>同一<rt>どういつ</rt></ruby>でないことの<ruby>検出<rt>けんしゅつ</rt></ruby>であり、<ruby>変更<rt>へんこう</rt></ruby>の<ruby>互換性<rt>ごかんせい</rt></ruby>や<ruby>意味<rt>いみ</rt></ruby>の<ruby>正<rt>ただ</rt></ruby>しさの<ruby>証明<rt>しょうめい</rt></ruby>ではない。schemaを<ruby>変<rt>か</rt></ruby>えない<ruby>挙動<rt>きょどう</rt></ruby>の<ruby>回帰<rt>かいき</rt></ruby>もconformanceで<ruby>検査<rt>けんさ</rt></ruby>する。
 
-抽出前\[ちゅうしゅつまえ\]に、固定旧版\[こていきゅうはん\]consumerのcompile試験\[しけん\]、変更\[へんこう\]したschema\/signatureの拒否試験\[きょひしけん\]、互換更新\[ごかんこうしん\]の正例\[せいれい\]を用意\[ようい\]する。path依存\[いぞん\]や固定\[こてい\]Git commitでの成功\[せいこう\]を、独立\[どくりつ\]SemVerリリースの互換性検証\[ごかんせいけんしょう\]に読\[よ\]み替\[か\]えない。
+<ruby>抽出前<rt>ちゅうしゅつまえ</rt></ruby>に、<ruby>固定旧版<rt>こていきゅうはん</rt></ruby>consumerのcompile<ruby>試験<rt>しけん</rt></ruby>、<ruby>変更<rt>へんこう</rt></ruby>したschema\/signatureの<ruby>拒否試験<rt>きょひしけん</rt></ruby>、<ruby>互換更新<rt>ごかんこうしん</rt></ruby>の<ruby>正例<rt>せいれい</rt></ruby>を<ruby>用意<rt>ようい</rt></ruby>する。path<ruby>依存<rt>いぞん</rt></ruby>や<ruby>固定<rt>こてい</rt></ruby>Git commitでの<ruby>成功<rt>せいこう</rt></ruby>を、<ruby>独立<rt>どくりつ</rt></ruby>SemVerリリースの<ruby>互換性検証<rt>ごかんせいけんしょう</rt></ruby>に<ruby>読<rt>よ</rt></ruby>み<ruby>替<rt>か</rt></ruby>えない。
 
 <a name="n-737461676573"></a>
 
 <a name="4-段階と分離の判定"></a>
 
-## 4\. 段階\[だんかい\]と分離\[ぶんり\]の判定\[はんてい\]
+## 4\. <ruby>段階<rt>だんかい</rt></ruby>と<ruby>分離<rt>ぶんり</rt></ruby>の<ruby>判定<rt>はんてい</rt></ruby>
 
-T26はT01〜T05とT12の成果物\[せいかぶつ\]を使\[つか\]う横断的\[おうだんてき\]な実装\[じっそう\]・受入\[うけいれ\]タスクとする。T01等\[とう\]の個別\[こべつ\]タスク完了\[かんりょう\]をT26完了\[かんりょう\]に依存\[いぞん\]させず、foundationの抽出可能性\[ちゅうしゅつかのうせい\]と最終\[さいしゅう\]T16の条件\[じょうけん\]にT26を置\[お\]く。Doc移行\[いこう\]・HTML・Pagesの先行作業\[せんこうさぎょう\]をT26へ依存\[いぞん\]させない。
+T26はT01〜T05とT12の<ruby>成果物<rt>せいかぶつ</rt></ruby>を<ruby>使<rt>つか</rt></ruby>う<ruby>横断的<rt>おうだんてき</rt></ruby>な<ruby>実装<rt>じっそう</rt></ruby>・<ruby>受入<rt>うけいれ</rt></ruby>タスクとする。T01<ruby>等<rt>とう</rt></ruby>の<ruby>個別<rt>こべつ</rt></ruby>タスク<ruby>完了<rt>かんりょう</rt></ruby>をT26<ruby>完了<rt>かんりょう</rt></ruby>に<ruby>依存<rt>いぞん</rt></ruby>させず、foundationの<ruby>抽出可能性<rt>ちゅうしゅつかのうせい</rt></ruby>と<ruby>最終<rt>さいしゅう</rt></ruby>T16の<ruby>条件<rt>じょうけん</rt></ruby>にT26を<ruby>置<rt>お</rt></ruby>く。Doc<ruby>移行<rt>いこう</rt></ruby>・HTML・Pagesの<ruby>先行作業<rt>せんこうさぎょう</rt></ruby>をT26へ<ruby>依存<rt>いぞん</rt></ruby>させない。
 
-最初\[さいしょ\]の実装段階\[じっそうだんかい\]では `conformance/extensions/hello/` の独立\[どくりつ\]Cargo workspaceをリポジトリ外\[がい\]へコピーし、公開\[こうかい\]foundation APIだけで動\[うご\]かす。`hello <name>` のschema・reader設定\[せってい\]・formはconsumerが定義\[ていぎ\]する。解析結果\[かいせきけっか\]の独立\[どくりつ\]した期待値\[きたいち\]、UTF\-8 byte位置\[いち\]、source revision、Origin、診断\[しんだん\]、未知\[みち\]head、NeedMore、停止\[ていし\]、不正\[ふせい\]NDF拒否\[きょひ\]を検査\[けんさ\]する。typed ParseTreeをproduction wireで交換\[こうかん\]し、canonicalな意味値\[いみち\]の一致\[いっち\]を比較\[ひかく\]する。これは別\[べつ\]process providerの比較\[ひかく\]ではない。
+<ruby>最初<rt>さいしょ</rt></ruby>の<ruby>実装段階<rt>じっそうだんかい</rt></ruby>では `conformance/extensions/hello/` の<ruby>独立<rt>どくりつ</rt></ruby>Cargo workspaceをリポジトリ<ruby>外<rt>がい</rt></ruby>へコピーし、<ruby>公開<rt>こうかい</rt></ruby>foundation APIだけで<ruby>動<rt>うご</rt></ruby>かす。`hello <name>` のschema・reader<ruby>設定<rt>せってい</rt></ruby>・formはconsumerが<ruby>定義<rt>ていぎ</rt></ruby>する。<ruby>解析結果<rt>かいせきけっか</rt></ruby>の<ruby>独立<rt>どくりつ</rt></ruby>した<ruby>期待値<rt>きたいち</rt></ruby>、UTF\-8 byte<ruby>位置<rt>いち</rt></ruby>、source revision、Origin、<ruby>診断<rt>しんだん</rt></ruby>、<ruby>未知<rt>みち</rt></ruby>head、NeedMore、<ruby>停止<rt>ていし</rt></ruby>、<ruby>不正<rt>ふせい</rt></ruby>NDF<ruby>拒否<rt>きょひ</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。typed ParseTreeをproduction wireで<ruby>交換<rt>こうかん</rt></ruby>し、canonicalな<ruby>意味値<rt>いみち</rt></ruby>の<ruby>一致<rt>いっち</rt></ruby>を<ruby>比較<rt>ひかく</rt></ruby>する。これは<ruby>別<rt>べつ</rt></ruby>process providerの<ruby>比較<rt>ひかく</rt></ruby>ではない。
 
-`python tools/extensions/run.py` は固定\[こてい\]toolchainとconsumerのCargo\.lockを使\[つか\]い、外部\[がいぶ\]workspaceのmember、foundation依存\[いぞん\]の実\[じつ\]path、実行前後\[じっこうぜんご\]のfoundation内容\[ないよう\]を検査\[けんさ\]する。format・Clippy・production API試験\[しけん\]を実行\[じっこう\]し、source hash、consumer hash、版\[はん\]、command、結果\[けっか\]、生\[なま\]logを保存\[ほぞん\]する。現段階\[げんだんかい\]では依存先\[いぞんさき\]のfoundationはmonorepoのpathであり、親\[おや\]workspaceから切\[き\]り離\[はな\]した配布物\[はいふぶつ\]のbuildを証明\[しょうめい\]しない。
+`python tools/extensions/run.py` は<ruby>固定<rt>こてい</rt></ruby>toolchainとconsumerのCargo\.lockを<ruby>使<rt>つか</rt></ruby>い、<ruby>外部<rt>がいぶ</rt></ruby>workspaceのmember、foundation<ruby>依存<rt>いぞん</rt></ruby>の<ruby>実<rt>じつ</rt></ruby>path、<ruby>実行前後<rt>じっこうぜんご</rt></ruby>のfoundation<ruby>内容<rt>ないよう</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。format・Clippy・production API<ruby>試験<rt>しけん</rt></ruby>を<ruby>実行<rt>じっこう</rt></ruby>し、source hash、consumer hash、<ruby>版<rt>はん</rt></ruby>、command、<ruby>結果<rt>けっか</rt></ruby>、<ruby>生<rt>なま</rt></ruby>logを<ruby>保存<rt>ほぞん</rt></ruby>する。<ruby>現段階<rt>げんだんかい</rt></ruby>では<ruby>依存先<rt>いぞんさき</rt></ruby>のfoundationはmonorepoのpathであり、<ruby>親<rt>おや</rt></ruby>workspaceから<ruby>切<rt>き</rt></ruby>り<ruby>離<rt>はな</rt></ruby>した<ruby>配布物<rt>はいふぶつ</rt></ruby>のbuildを<ruby>証明<rt>しょうめい</rt></ruby>しない。
 
-実際\[じっさい\]のrepository分離\[ぶんり\]には、次\[つぎ\]の全条件\[ぜんじょうけん\]を必要\[ひつよう\]とする。
+<ruby>実際<rt>じっさい</rt></ruby>のrepository<ruby>分離<rt>ぶんり</rt></ruby>には、<ruby>次<rt>つぎ</rt></ruby>の<ruby>全条件<rt>ぜんじょうけん</rt></ruby>を<ruby>必要<rt>ひつよう</rt></ruby>とする。
 
-1. foundation四\[よん\]crateだけの配布\[はいふ\]・build\/test\/conformanceが成立\[せいりつ\]し、親\[おや\]monorepoの生成器\[せいせいき\]・domain・私有\[しゆう\]fixtureを要求\[ようきゅう\]しない。
-1. 別\[べつ\]workspaceおよび独立\[どくりつ\]repositoryにある新言語\[しんげんご\]が公開契約\[こうかいけいやく\]だけでparse・schema・source\/Origin・診断\[しんだん\]・providerを提供\[ていきょう\]する。追加時\[ついかじ\]にfoundation sourceを変更\[へんこう\]しない。
-1. Rust直接呼出\[ちょくせつよびだ\]し、NDF loopback、実際\[じっさい\]の別\[べつ\]process providerで、意味結果\[いみけっか\]・位置\[いち\]・診断\[しんだん\]・失敗\[しっぱい\]・停止\[ていし\]が一致\[いっち\]する。
-1. schema\/package\/Profileの交換\[こうかん\]と解決\[かいけつ\]、署名\[しょめい\]\/版\[はん\]\/digest不一致\[ふいっち\]、未知\[みち\]operation、資源\[しげん\]・取消\[とりけ\]し・継続\[けいぞく\]の境界\[きょうかい\]を検証\[けんしょう\]する。
-1. Rust APIとportable契約\[けいやく\]の互換性検査\[ごかんせいけんさ\]が別々\[べつべつ\]に機能\[きのう\]する。
-1. 正式\[せいしき\]catalogのX01とX02に実行\[じっこう\]・独立\[どくりつ\]レビュー証拠\[しょうこ\]がある。
+1. foundation<ruby>四<rt>よん</rt></ruby>crateだけの<ruby>配布<rt>はいふ</rt></ruby>・build\/test\/conformanceが<ruby>成立<rt>せいりつ</rt></ruby>し、<ruby>親<rt>おや</rt></ruby>monorepoの<ruby>生成器<rt>せいせいき</rt></ruby>・domain・<ruby>私有<rt>しゆう</rt></ruby>fixtureを<ruby>要求<rt>ようきゅう</rt></ruby>しない。
+1. <ruby>別<rt>べつ</rt></ruby>workspaceおよび<ruby>独立<rt>どくりつ</rt></ruby>repositoryにある<ruby>新言語<rt>しんげんご</rt></ruby>が<ruby>公開契約<rt>こうかいけいやく</rt></ruby>だけでparse・schema・source\/Origin・<ruby>診断<rt>しんだん</rt></ruby>・providerを<ruby>提供<rt>ていきょう</rt></ruby>する。<ruby>追加時<rt>ついかじ</rt></ruby>にfoundation sourceを<ruby>変更<rt>へんこう</rt></ruby>しない。
+1. Rust<ruby>直接呼出<rt>ちょくせつよびだ</rt></ruby>し、NDF loopback、<ruby>実際<rt>じっさい</rt></ruby>の<ruby>別<rt>べつ</rt></ruby>process providerで、<ruby>意味結果<rt>いみけっか</rt></ruby>・<ruby>位置<rt>いち</rt></ruby>・<ruby>診断<rt>しんだん</rt></ruby>・<ruby>失敗<rt>しっぱい</rt></ruby>・<ruby>停止<rt>ていし</rt></ruby>が<ruby>一致<rt>いっち</rt></ruby>する。
+1. schema\/package\/Profileの<ruby>交換<rt>こうかん</rt></ruby>と<ruby>解決<rt>かいけつ</rt></ruby>、<ruby>署名<rt>しょめい</rt></ruby>\/<ruby>版<rt>はん</rt></ruby>\/digest<ruby>不一致<rt>ふいっち</rt></ruby>、<ruby>未知<rt>みち</rt></ruby>operation、<ruby>資源<rt>しげん</rt></ruby>・<ruby>取消<rt>とりけ</rt></ruby>し・<ruby>継続<rt>けいぞく</rt></ruby>の<ruby>境界<rt>きょうかい</rt></ruby>を<ruby>検証<rt>けんしょう</rt></ruby>する。
+1. Rust APIとportable<ruby>契約<rt>けいやく</rt></ruby>の<ruby>互換性検査<rt>ごかんせいけんさ</rt></ruby>が<ruby>別々<rt>べつべつ</rt></ruby>に<ruby>機能<rt>きのう</rt></ruby>する。
+1. <ruby>正式<rt>せいしき</rt></ruby>catalogのX01とX02に<ruby>実行<rt>じっこう</rt></ruby>・<ruby>独立<rt>どくりつ</rt></ruby>レビュー<ruby>証拠<rt>しょうこ</rt></ruby>がある。
 
-条件成立後\[じょうけんせいりつご\]の最初\[さいしょ\]の抽出対象\[ちゅうしゅつたいしょう\]をDocとし、その経験\[けいけん\]で契約不足\[けいやくぶそく\]を確認\[かくにん\]する。Circuitは条件\[じょうけん\]が整\[ととの\]った時点\[じてん\]で別\[べつ\]repositoryで開始\[かいし\]する計画\[けいかく\]とするが、条件待\[じょうけんま\]ちを理由\[りゆう\]に既存\[きそん\]のCircuit実装目標\[じっそうもくひょう\]を放棄\[ほうき\]しない。四言語\[よんげんご\]、CLI\/WASI、provider、エディタ、TEA Playground、Pages、Doc文書移行\[ぶんしょいこう\]の最終範囲\[さいしゅうはんい\]は維持\[いじ\]する。
+<ruby>条件成立後<rt>じょうけんせいりつご</rt></ruby>の<ruby>最初<rt>さいしょ</rt></ruby>の<ruby>抽出対象<rt>ちゅうしゅつたいしょう</rt></ruby>をDocとし、その<ruby>経験<rt>けいけん</rt></ruby>で<ruby>契約不足<rt>けいやくぶそく</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>する。Circuitは<ruby>条件<rt>じょうけん</rt></ruby>が<ruby>整<rt>ととの</rt></ruby>った<ruby>時点<rt>じてん</rt></ruby>で<ruby>別<rt>べつ</rt></ruby>repositoryで<ruby>開始<rt>かいし</rt></ruby>する<ruby>計画<rt>けいかく</rt></ruby>とするが、<ruby>条件待<rt>じょうけんま</rt></ruby>ちを<ruby>理由<rt>りゆう</rt></ruby>に<ruby>既存<rt>きそん</rt></ruby>のCircuit<ruby>実装目標<rt>じっそうもくひょう</rt></ruby>を<ruby>放棄<rt>ほうき</rt></ruby>しない。<ruby>四言語<rt>よんげんご</rt></ruby>、CLI\/WASI、provider、エディタ、TEA Playground、Pages、Doc<ruby>文書移行<rt>ぶんしょいこう</rt></ruby>の<ruby>最終範囲<rt>さいしゅうはんい</rt></ruby>は<ruby>維持<rt>いじ</rt></ruby>する。

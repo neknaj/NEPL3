@@ -111,7 +111,7 @@ where
 
 // Both routes have already passed PageSet's portable ASCII path validation.
 // No filesystem normalization, URL guessing or platform path separator is used.
-fn relative(
+pub(crate) fn relative(
     source: &str,
     target: &str,
     fragment: Option<&str>,

@@ -1,94 +1,96 @@
-<!-- Generated from doc/spec/00&#45;contract.nepld; renderer nepl3-tools.markdown-annotated/2; source SHA-256 c5d05dad1dfd9941c138ca3ec4ec778f6734eb6dc43f36e3433582df8a9a7236; alias input SHA-256 e272bc38006f1fc97f70928aa2963fe0245fa4575ddffadcc8d460b1f24a42cc; document digest a7c334752b6db743d90b56b3366fee2acc1a94a0ed6a7cc1e1a05e71e50dda38. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/00&#45;contract.nepld; renderer nepl3-tools.markdown-annotated/3; source SHA-256 c5d05dad1dfd9941c138ca3ec4ec778f6734eb6dc43f36e3433582df8a9a7236; alias input SHA-256 e272bc38006f1fc97f70928aa2963fe0245fa4575ddffadcc8d460b1f24a42cc; document digest a7c334752b6db743d90b56b3366fee2acc1a94a0ed6a7cc1e1a05e71e50dda38. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="00-対象と設計上の決定"></a>
 
-# 00\. 目的\[もくてき\]・適用範囲\[てきようはんい\]・設計原則\[せっけいげんそく\]
+# 00\. <ruby>目的<rt>もくてき</rt></ruby>・<ruby>適用範囲<rt>てきようはんい</rt></ruby>・<ruby>設計原則<rt>せっけいげんそく</rt></ruby>
+
+[正本（NEPL3d）](<00-contract.nepld>)
 
 <a name="n-706f6c696379"></a>
 
 <a name="方針"></a>
 
-## NEPL3の目的\[もくてき\]と仕様\[しよう\]の役割\[やくわり\]
+## NEPL3の<ruby>目的<rt>もくてき</rt></ruby>と<ruby>仕様<rt>しよう</rt></ruby>の<ruby>役割<rt>やくわり</rt></ruby>
 
-NEPL3は、多数\[たすう\]の独立\[どくりつ\]したDSLを、括弧\[かっこ\]なし前置記法\[ぜんちきほう\]の共通規律\[きょうつうきりつ\]で多階層\[たかいそう\]・再帰的\[さいきてき\]に相互\[そうご\]埋\[う\]め込\[こ\]みする言語基盤\[げんごきばん\]である。ある言語\[げんご\]の構文\[こうぶん\]の内部\[ないぶ\]に別\[べつ\]の言語\[げんご\]を使\[つか\]い、その内部\[ないぶ\]でさらに別\[べつ\]の言語\[げんご\]を使\[つか\]う構成\[こうせい\]を扱\[あつか\]う。reader・構文\[こうぶん\]・source・診断\[しんだん\]の契約\[けいやく\]を共有\[きょうゆう\]し、各言語\[かくげんご\]の意味論\[いみろん\]は各言語\[かくげんご\]が所有\[しょゆう\]する。先行情報\[せんこうじょうほう\]から後続\[こうぞく\]・内側\[うちがわ\]の構文\[こうぶん\]を確定\[かくてい\]し、その後\[あと\]の意味解決\[いみかいけつ\]は個別言語\[こべつげんご\]へ委\[ゆだ\]ねる。
+NEPL3は、<ruby>多数<rt>たすう</rt></ruby>の<ruby>独立<rt>どくりつ</rt></ruby>したDSLを、<ruby>括弧<rt>かっこ</rt></ruby>なし<ruby>前置記法<rt>ぜんちきほう</rt></ruby>の<ruby>共通規律<rt>きょうつうきりつ</rt></ruby>で<ruby>多階層<rt>たかいそう</rt></ruby>・<ruby>再帰的<rt>さいきてき</rt></ruby>に<ruby>相互<rt>そうご</rt></ruby><ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みする<ruby>言語基盤<rt>げんごきばん</rt></ruby>である。ある<ruby>言語<rt>げんご</rt></ruby>の<ruby>構文<rt>こうぶん</rt></ruby>の<ruby>内部<rt>ないぶ</rt></ruby>に<ruby>別<rt>べつ</rt></ruby>の<ruby>言語<rt>げんご</rt></ruby>を<ruby>使<rt>つか</rt></ruby>い、その<ruby>内部<rt>ないぶ</rt></ruby>でさらに<ruby>別<rt>べつ</rt></ruby>の<ruby>言語<rt>げんご</rt></ruby>を<ruby>使<rt>つか</rt></ruby>う<ruby>構成<rt>こうせい</rt></ruby>を<ruby>扱<rt>あつか</rt></ruby>う。reader・<ruby>構文<rt>こうぶん</rt></ruby>・source・<ruby>診断<rt>しんだん</rt></ruby>の<ruby>契約<rt>けいやく</rt></ruby>を<ruby>共有<rt>きょうゆう</rt></ruby>し、<ruby>各言語<rt>かくげんご</rt></ruby>の<ruby>意味論<rt>いみろん</rt></ruby>は<ruby>各言語<rt>かくげんご</rt></ruby>が<ruby>所有<rt>しょゆう</rt></ruby>する。<ruby>先行情報<rt>せんこうじょうほう</rt></ruby>から<ruby>後続<rt>こうぞく</rt></ruby>・<ruby>内側<rt>うちがわ</rt></ruby>の<ruby>構文<rt>こうぶん</rt></ruby>を<ruby>確定<rt>かくてい</rt></ruby>し、その<ruby>後<rt>あと</rt></ruby>の<ruby>意味解決<rt>いみかいけつ</rt></ruby>は<ruby>個別言語<rt>こべつげんご</rt></ruby>へ<ruby>委<rt>ゆだ</rt></ruby>ねる。
 
-この仕様\[しよう\]の契約\[けいやく\]\{contract\}は、各言語\[かくげんご\]の意味\[いみ\]と、操作\[そうさ\]の入力\[にゅうりょく\]・出力\[しゅつりょく\]・成功条件\[せいこうじょうけん\]・失敗時\[しっぱいじ\]の扱\[あつか\]いを定\[さだ\]める。実装\[じっそう\]は、操作\[そうさ\]が要求\[ようきゅう\]する機能\[きのう\]を満\[み\]たした場合\[ばあい\]に成功\[せいこう\]を返\[かえ\]す。未実装\[みじっそう\]の機能\[きのう\]や未確定\[みかくてい\]の判断\[はんだん\]を必要\[ひつよう\]とする操作\[そうさ\]を、成功\[せいこう\]として返\[かえ\]してはならない。拡張点\[かくちょうてん\]\{extension point\}についても、入力\[にゅうりょく\]・出力\[しゅつりょく\]・失敗\[しっぱい\]・許可範囲\[きょかはんい\]を定義\[ていぎ\]する。
+この<ruby>仕様<rt>しよう</rt></ruby>の<ruby>契約<rt>けいやく</rt></ruby>\{contract\}は、<ruby>各言語<rt>かくげんご</rt></ruby>の<ruby>意味<rt>いみ</rt></ruby>と、<ruby>操作<rt>そうさ</rt></ruby>の<ruby>入力<rt>にゅうりょく</rt></ruby>・<ruby>出力<rt>しゅつりょく</rt></ruby>・<ruby>成功条件<rt>せいこうじょうけん</rt></ruby>・<ruby>失敗時<rt>しっぱいじ</rt></ruby>の<ruby>扱<rt>あつか</rt></ruby>いを<ruby>定<rt>さだ</rt></ruby>める。<ruby>実装<rt>じっそう</rt></ruby>は、<ruby>操作<rt>そうさ</rt></ruby>が<ruby>要求<rt>ようきゅう</rt></ruby>する<ruby>機能<rt>きのう</rt></ruby>を<ruby>満<rt>み</rt></ruby>たした<ruby>場合<rt>ばあい</rt></ruby>に<ruby>成功<rt>せいこう</rt></ruby>を<ruby>返<rt>かえ</rt></ruby>す。<ruby>未実装<rt>みじっそう</rt></ruby>の<ruby>機能<rt>きのう</rt></ruby>や<ruby>未確定<rt>みかくてい</rt></ruby>の<ruby>判断<rt>はんだん</rt></ruby>を<ruby>必要<rt>ひつよう</rt></ruby>とする<ruby>操作<rt>そうさ</rt></ruby>を、<ruby>成功<rt>せいこう</rt></ruby>として<ruby>返<rt>かえ</rt></ruby>してはならない。<ruby>拡張点<rt>かくちょうてん</rt></ruby>\{extension point\}についても、<ruby>入力<rt>にゅうりょく</rt></ruby>・<ruby>出力<rt>しゅつりょく</rt></ruby>・<ruby>失敗<rt>しっぱい</rt></ruby>・<ruby>許可範囲<rt>きょかはんい</rt></ruby>を<ruby>定義<rt>ていぎ</rt></ruby>する。
 
 <a name="n-74617267657473"></a>
 
 <a name="1-実装対象"></a>
 
-## 1\. 実装対象\[じっそうたいしょう\]
+## 1\. <ruby>実装対象<rt>じっそうたいしょう</rt></ruby>
 
-このリポジトリは、共通基盤\[きょうつうきばん\]を利用\[りよう\]するreference languageとして、Grammar・Doc・Math・Circuitの契約\[けいやく\]を定\[さだ\]める。外部\[がいぶ\]の独立\[どくりつ\]した言語\[げんご\]も、22章\[しょう\]の公開契約\[こうかいけいやく\]を通\[とお\]して追加\[ついか\]できる。言語\[げんご\]の追加\[ついか\]では、この契約\[けいやく\]を使\[つか\]い、foundationへの言語名\[げんごめい\]による特例\[とくれい\]の追加\[ついか\]を禁止\[きんし\]する。
+このリポジトリは、<ruby>共通基盤<rt>きょうつうきばん</rt></ruby>を<ruby>利用<rt>りよう</rt></ruby>するreference languageとして、Grammar・Doc・Math・Circuitの<ruby>契約<rt>けいやく</rt></ruby>を<ruby>定<rt>さだ</rt></ruby>める。<ruby>外部<rt>がいぶ</rt></ruby>の<ruby>独立<rt>どくりつ</rt></ruby>した<ruby>言語<rt>げんご</rt></ruby>も、22<ruby>章<rt>しょう</rt></ruby>の<ruby>公開契約<rt>こうかいけいやく</rt></ruby>を<ruby>通<rt>とお</rt></ruby>して<ruby>追加<rt>ついか</rt></ruby>できる。<ruby>言語<rt>げんご</rt></ruby>の<ruby>追加<rt>ついか</rt></ruby>では、この<ruby>契約<rt>けいやく</rt></ruby>を<ruby>使<rt>つか</rt></ruby>い、foundationへの<ruby>言語名<rt>げんごめい</rt></ruby>による<ruby>特例<rt>とくれい</rt></ruby>の<ruby>追加<rt>ついか</rt></ruby>を<ruby>禁止<rt>きんし</rt></ruby>する。
 
-- Grammarは、readerとprefix構造\[こうぞう\]、束縛\[そくばく\]\{binding\}、表示分類\[ひょうじぶんるい\]、外部\[がいぶ\]readerの接続\[せつぞく\]を定義\[ていぎ\]する。それらを検査済\[けんさず\]みのLanguagePackageへcompileする。
-- Docは、再帰的\[さいきてき\]な文書構造\[ぶんしょこうぞう\]、sentence literal、rubyとanno、sentence単位\[たんい\]のparallel、相互参照\[そうごさんしょう\]、数式\[すうしき\]・回路\[かいろ\]・コードの埋\[う\]め込\[こ\]みを保持\[ほじ\]する。これらの構造\[こうぞう\]からHTMLを生成\[せいせい\]する。
-- Mathは、構造化\[こうぞうか\]した数学表現\[すうがくひょうげん\]、束縛\[そくばく\]、厳密\[げんみつ\]な有理数\[ゆうりすう\]と配列\[はいれつ\]の計算\[けいさん\]、MathML Coreへの出力\[しゅつりょく\]を扱\[あつか\]う。
-- Circuitは、二値\[にち\]・固定幅\[こていはば\]・同期\[どうき\]離散時間\[りさんじかん\]の階層回路\[かいそうかいろ\]を宣言\[せんげん\]する。検査\[けんさ\]、elaboration、step、テスト、NOR IR、SVGへの出力\[しゅつりょく\]を扱\[あつか\]う。
+- Grammarは、readerとprefix<ruby>構造<rt>こうぞう</rt></ruby>、<ruby>束縛<rt>そくばく</rt></ruby>\{binding\}、<ruby>表示分類<rt>ひょうじぶんるい</rt></ruby>、<ruby>外部<rt>がいぶ</rt></ruby>readerの<ruby>接続<rt>せつぞく</rt></ruby>を<ruby>定義<rt>ていぎ</rt></ruby>する。それらを<ruby>検査済<rt>けんさず</rt></ruby>みのLanguagePackageへcompileする。
+- Docは、<ruby>再帰的<rt>さいきてき</rt></ruby>な<ruby>文書構造<rt>ぶんしょこうぞう</rt></ruby>、sentence literal、rubyとanno、sentence<ruby>単位<rt>たんい</rt></ruby>のparallel、<ruby>相互参照<rt>そうごさんしょう</rt></ruby>、<ruby>数式<rt>すうしき</rt></ruby>・<ruby>回路<rt>かいろ</rt></ruby>・コードの<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みを<ruby>保持<rt>ほじ</rt></ruby>する。これらの<ruby>構造<rt>こうぞう</rt></ruby>からHTMLを<ruby>生成<rt>せいせい</rt></ruby>する。
+- Mathは、<ruby>構造化<rt>こうぞうか</rt></ruby>した<ruby>数学表現<rt>すうがくひょうげん</rt></ruby>、<ruby>束縛<rt>そくばく</rt></ruby>、<ruby>厳密<rt>げんみつ</rt></ruby>な<ruby>有理数<rt>ゆうりすう</rt></ruby>と<ruby>配列<rt>はいれつ</rt></ruby>の<ruby>計算<rt>けいさん</rt></ruby>、MathML Coreへの<ruby>出力<rt>しゅつりょく</rt></ruby>を<ruby>扱<rt>あつか</rt></ruby>う。
+- Circuitは、<ruby>二値<rt>にち</rt></ruby>・<ruby>固定幅<rt>こていはば</rt></ruby>・<ruby>同期<rt>どうき</rt></ruby><ruby>離散時間<rt>りさんじかん</rt></ruby>の<ruby>階層回路<rt>かいそうかいろ</rt></ruby>を<ruby>宣言<rt>せんげん</rt></ruby>する。<ruby>検査<rt>けんさ</rt></ruby>、elaboration、step、テスト、NOR IR、SVGへの<ruby>出力<rt>しゅつりょく</rt></ruby>を<ruby>扱<rt>あつか</rt></ruby>う。
 
-現在\[げんざい\]のworkspace構成\[こうせい\]はCargo\.toml、実装\[じっそう\]と受入試験\[うけいれしけん\]の状態\[じょうたい\]はimplementation\-status\.jsonに記録\[きろく\]する。上記\[じょうき\]の一覧\[いちらん\]は実装\[じっそう\]の目標\[もくひょう\]を示\[しめ\]し、各機能\[かくきのう\]の利用可否\[りようかひ\]はその状態\[じょうたい\]に従\[したが\]う。
+<ruby>現在<rt>げんざい</rt></ruby>のworkspace<ruby>構成<rt>こうせい</rt></ruby>はCargo\.toml、<ruby>実装<rt>じっそう</rt></ruby>と<ruby>受入試験<rt>うけいれしけん</rt></ruby>の<ruby>状態<rt>じょうたい</rt></ruby>はimplementation\-status\.jsonに<ruby>記録<rt>きろく</rt></ruby>する。<ruby>上記<rt>じょうき</rt></ruby>の<ruby>一覧<rt>いちらん</rt></ruby>は<ruby>実装<rt>じっそう</rt></ruby>の<ruby>目標<rt>もくひょう</rt></ruby>を<ruby>示<rt>しめ</rt></ruby>し、<ruby>各機能<rt>かくきのう</rt></ruby>の<ruby>利用可否<rt>りようかひ</rt></ruby>はその<ruby>状態<rt>じょうたい</rt></ruby>に<ruby>従<rt>したが</rt></ruby>う。
 
-SentenceとDocの所有境界\[しょゆうきょうかい\]および移行\[いこう\]は23章\[しょう\]に定\[さだ\]める。Circuitは7章\[しょう\]の回路言語\[かいろげんご\]を指\[さ\]し、NEPL3cの設計案\[せっけいあん\]は別\[べつ\]の契約\[けいやく\]として扱\[あつか\]う。
+SentenceとDocの<ruby>所有境界<rt>しょゆうきょうかい</rt></ruby>および<ruby>移行<rt>いこう</rt></ruby>は23<ruby>章<rt>しょう</rt></ruby>に<ruby>定<rt>さだ</rt></ruby>める。Circuitは7<ruby>章<rt>しょう</rt></ruby>の<ruby>回路言語<rt>かいろげんご</rt></ruby>を<ruby>指<rt>さ</rt></ruby>し、NEPL3cの<ruby>設計案<rt>せっけいあん</rt></ruby>は<ruby>別<rt>べつ</rt></ruby>の<ruby>契約<rt>けいやく</rt></ruby>として<ruby>扱<rt>あつか</rt></ruby>う。
 
-完成品\[かんせいひん\]には、native CLI、wasm32\-wasip2 CLI、browser worker用\[よう\]Wasm、汎用\[はんよう\]LSP server、portable operation providerを含\[ふく\]める。
+<ruby>完成品<rt>かんせいひん</rt></ruby>には、native CLI、wasm32\-wasip2 CLI、browser worker<ruby>用<rt>よう</rt></ruby>Wasm、<ruby>汎用<rt>はんよう</rt></ruby>LSP server、portable operation providerを<ruby>含<rt>ふく</rt></ruby>める。
 
-r3では、独立\[どくりつ\]した言語\[げんご\]を登録\[とうろく\]して組\[く\]み合\[あ\]わせるWeb Playgroundと、純粋\[じゅんすい\]TEA UI coreを含\[ふく\]める。Grammar・Doc・Math・Circuitの4言語\[げんご\]は、Playgroundで扱\[あつか\]うreference profileとして提供\[ていきょう\]する。静的\[せいてき\]な文書\[ぶんしょ\]・例\[れい\]・Rust APIサイトを生成\[せいせい\]し、GitHub Pagesで配布\[はいふ\]する。正式文書\[せいしきぶんしょ\]を最終的\[さいしゅうてき\]にNEPL3 Doc DSLへ移行\[いこう\]する計画\[けいかく\]と、その受入\[うけいれ\]も必須\[ひっす\]とする。未移行\[みいこう\]のページはMarkdownを正本\[せいほん\]\{canonical source\}とし、移行審査\[いこうしんさ\]を通過\[つうか\]したページはNEPL3dを正本\[せいほん\]とする。移行済\[いこうず\]みページの正本\[せいほん\]と生成\[せいせい\]するMarkdownはdoc\/canonical\.jsonで管理\[かんり\]する。未定義\[みていぎ\]のDoc表現\[ひょうげん\]を、情報\[じょうほう\]を失\[うしな\]う変換\[へんかん\]やRawHtmlで埋\[う\]めてはならない。詳細\[しょうさい\]は14〜16章\[しょう\]に定\[さだ\]める。
+r3では、<ruby>独立<rt>どくりつ</rt></ruby>した<ruby>言語<rt>げんご</rt></ruby>を<ruby>登録<rt>とうろく</rt></ruby>して<ruby>組<rt>く</rt></ruby>み<ruby>合<rt>あ</rt></ruby>わせるWeb Playgroundと、<ruby>純粋<rt>じゅんすい</rt></ruby>TEA UI coreを<ruby>含<rt>ふく</rt></ruby>める。Grammar・Doc・Math・Circuitの4<ruby>言語<rt>げんご</rt></ruby>は、Playgroundで<ruby>扱<rt>あつか</rt></ruby>うreference profileとして<ruby>提供<rt>ていきょう</rt></ruby>する。<ruby>静的<rt>せいてき</rt></ruby>な<ruby>文書<rt>ぶんしょ</rt></ruby>・<ruby>例<rt>れい</rt></ruby>・Rust APIサイトを<ruby>生成<rt>せいせい</rt></ruby>し、GitHub Pagesで<ruby>配布<rt>はいふ</rt></ruby>する。<ruby>正式文書<rt>せいしきぶんしょ</rt></ruby>を<ruby>最終的<rt>さいしゅうてき</rt></ruby>にNEPL3 Doc DSLへ<ruby>移行<rt>いこう</rt></ruby>する<ruby>計画<rt>けいかく</rt></ruby>と、その<ruby>受入<rt>うけいれ</rt></ruby>も<ruby>必須<rt>ひっす</rt></ruby>とする。<ruby>未移行<rt>みいこう</rt></ruby>のページはMarkdownを<ruby>正本<rt>せいほん</rt></ruby>\{canonical source\}とし、<ruby>移行審査<rt>いこうしんさ</rt></ruby>を<ruby>通過<rt>つうか</rt></ruby>したページはNEPL3dを<ruby>正本<rt>せいほん</rt></ruby>とする。<ruby>移行済<rt>いこうず</rt></ruby>みページの<ruby>正本<rt>せいほん</rt></ruby>と<ruby>生成<rt>せいせい</rt></ruby>するMarkdownはdoc\/canonical\.jsonで<ruby>管理<rt>かんり</rt></ruby>する。<ruby>未定義<rt>みていぎ</rt></ruby>のDoc<ruby>表現<rt>ひょうげん</rt></ruby>を、<ruby>情報<rt>じょうほう</rt></ruby>を<ruby>失<rt>うしな</rt></ruby>う<ruby>変換<rt>へんかん</rt></ruby>やRawHtmlで<ruby>埋<rt>う</rt></ruby>めてはならない。<ruby>詳細<rt>しょうさい</rt></ruby>は14〜16<ruby>章<rt>しょう</rt></ruby>に<ruby>定<rt>さだ</rt></ruby>める。
 
-汎用\[はんよう\]NEPL3プログラミング言語\[げんご\]、動画\[どうが\]DSL、完全\[かんぜん\]なHTML処理系\[しょりけい\]、アナログまたは伝播遅延\[でんぱちえん\]を扱\[あつか\]う回路\[かいろ\]、CAS、証明器\[しょうめいき\]、独自\[どくじ\]フォントrasterizerは、このパッケージの言語\[げんご\]には含\[ふく\]めない。これらの名前\[なまえ\]でstubを提供\[ていきょう\]してはならない。追加実装\[ついかじっそう\]は、登録済\[とうろくず\]みのschema・operation・readerの公開契約\[こうかいけいやく\]を通\[とお\]して行\[おこな\]う。MathML・HTML・SVGの出力\[しゅつりょく\]は、正式\[せいしき\]な出力\[しゅつりょく\]backendである。後\[あと\]で捨\[す\]てる仮\[かり\]のrendererとして実装\[じっそう\]してはならない。
+<ruby>汎用<rt>はんよう</rt></ruby>NEPL3プログラミング<ruby>言語<rt>げんご</rt></ruby>、<ruby>動画<rt>どうが</rt></ruby>DSL、<ruby>完全<rt>かんぜん</rt></ruby>なHTML<ruby>処理系<rt>しょりけい</rt></ruby>、アナログまたは<ruby>伝播遅延<rt>でんぱちえん</rt></ruby>を<ruby>扱<rt>あつか</rt></ruby>う<ruby>回路<rt>かいろ</rt></ruby>、CAS、<ruby>証明器<rt>しょうめいき</rt></ruby>、<ruby>独自<rt>どくじ</rt></ruby>フォントrasterizerは、このパッケージの<ruby>言語<rt>げんご</rt></ruby>には<ruby>含<rt>ふく</rt></ruby>めない。これらの<ruby>名前<rt>なまえ</rt></ruby>でstubを<ruby>提供<rt>ていきょう</rt></ruby>してはならない。<ruby>追加実装<rt>ついかじっそう</rt></ruby>は、<ruby>登録済<rt>とうろくず</rt></ruby>みのschema・operation・readerの<ruby>公開契約<rt>こうかいけいやく</rt></ruby>を<ruby>通<rt>とお</rt></ruby>して<ruby>行<rt>おこな</rt></ruby>う。MathML・HTML・SVGの<ruby>出力<rt>しゅつりょく</rt></ruby>は、<ruby>正式<rt>せいしき</rt></ruby>な<ruby>出力<rt>しゅつりょく</rt></ruby>backendである。<ruby>後<rt>あと</rt></ruby>で<ruby>捨<rt>す</rt></ruby>てる<ruby>仮<rt>かり</rt></ruby>のrendererとして<ruby>実装<rt>じっそう</rt></ruby>してはならない。
 
 <a name="n-626f756e646172696573"></a>
 
 <a name="2-保存する意味上の境界"></a>
 
-## 2\. 保存\[ほぞん\]する意味上\[いみじょう\]の境界\[きょうかい\]
+## 2\. <ruby>保存<rt>ほぞん</rt></ruby>する<ruby>意味上<rt>いみじょう</rt></ruby>の<ruby>境界<rt>きょうかい</rt></ruby>
 
-- arityは、headを識別\[しきべつ\]した時点\[じてん\]で既知\[きち\]のschemaとcontextから確定\[かくてい\]する。子\[こ\]の評価結果\[ひょうかけっか\]によって、親\[おや\]のarityを変更\[へんこう\]してはならない。
-- listは、既知\[きち\]の `cons`（arity 2）と `nil`（arity 0）を展開\[てんかい\]した構文\[こうぶん\]で表\[あらわ\]す。listofは、この固定\[こてい\]arityの構文\[こうぶん\]を生成\[せいせい\]するschema compilerのcombinatorである。
-- 構文\[こうぶん\]arityを先行情報\[せんこうじょうほう\]から確定\[かくてい\]できる対象\[たいしょう\]は、直接\[ちょくせつ\]headとして読\[よ\]める。arityを確定\[かくてい\]できない関数値\[かんすうち\]への適用\[てきよう\]を扱\[あつか\]う言語\[げんご\]では、その言語\[げんご\]のarity 0の値参照\[ちさんしょう\]と、固定\[こてい\]arity 2のapplyで適用構造\[てきようこうぞう\]を表\[あらわ\]す。この方式\[ほうしき\]で複数\[ふくすう\]の引数\[ひきすう\]を渡\[わた\]す場合\[ばあい\]は、binary applyを反復\[はんぷく\]する。今回\[こんかい\]のDSL constructorを、関数値\[かんすうち\]の適用\[てきよう\]へ強制的\[きょうせいてき\]に変換\[へんかん\]してはならない。
-- 共通\[きょうつう\]prefix構文木\[こうぶんぎ\]は、headとその子\[こ\]の関係\[かんけい\]を表\[あらわ\]す。token内部\[ないぶ\]のreaderは、その言語\[げんご\]が定\[さだ\]める構造\[こうぞう\]を解析\[かいせき\]し、エディタ向\[む\]けにviewを公開\[こうかい\]できる。editor用\[よう\]のviewを公開\[こうかい\]しても、共通\[きょうつう\]parserの子\[こ\]の数\[かず\]は変\[か\]わらない。
-- Parsed、Resolved、Checked、Preparedは、構文\[こうぶん\]の解析\[かいせき\]、参照\[さんしょう\]の解決\[かいけつ\]、条件\[じょうけん\]の検査\[けんさ\]、操作\[そうさ\]に必要\[ひつよう\]な準備\[じゅんび\]を表\[あらわ\]す状態\[じょうたい\]である。各操作\[かくそうさ\]が要求\[ようきゅう\]する状態\[じょうたい\]と、その成立条件\[せいりつじょうけん\]は各言語\[かくげんご\]の仕様\[しよう\]に定\[さだ\]める。共通基盤\[きょうつうきばん\]は、すべての言語\[げんご\]に同\[おな\]じ処理順序\[しょりじゅんじょ\]を必須\[ひっす\]として課\[か\]してはならない。
-- 元\[もと\]の表記\[ひょうき\]と位置\[いち\]を扱\[あつか\]う操作\[そうさ\]は、保存\[ほぞん\]したsourceとsource spanを使\[つか\]う。意味値\[いみち\]だけから、元\[もと\]のsource表記\[ひょうき\]やsource spanを逆算\[ぎゃくさん\]してはならない。
+- arityは、headを<ruby>識別<rt>しきべつ</rt></ruby>した<ruby>時点<rt>じてん</rt></ruby>で<ruby>既知<rt>きち</rt></ruby>のschemaとcontextから<ruby>確定<rt>かくてい</rt></ruby>する。<ruby>子<rt>こ</rt></ruby>の<ruby>評価結果<rt>ひょうかけっか</rt></ruby>によって、<ruby>親<rt>おや</rt></ruby>のarityを<ruby>変更<rt>へんこう</rt></ruby>してはならない。
+- listは、<ruby>既知<rt>きち</rt></ruby>の `cons`（arity 2）と `nil`（arity 0）を<ruby>展開<rt>てんかい</rt></ruby>した<ruby>構文<rt>こうぶん</rt></ruby>で<ruby>表<rt>あらわ</rt></ruby>す。listofは、この<ruby>固定<rt>こてい</rt></ruby>arityの<ruby>構文<rt>こうぶん</rt></ruby>を<ruby>生成<rt>せいせい</rt></ruby>するschema compilerのcombinatorである。
+- <ruby>構文<rt>こうぶん</rt></ruby>arityを<ruby>先行情報<rt>せんこうじょうほう</rt></ruby>から<ruby>確定<rt>かくてい</rt></ruby>できる<ruby>対象<rt>たいしょう</rt></ruby>は、<ruby>直接<rt>ちょくせつ</rt></ruby>headとして<ruby>読<rt>よ</rt></ruby>める。arityを<ruby>確定<rt>かくてい</rt></ruby>できない<ruby>関数値<rt>かんすうち</rt></ruby>への<ruby>適用<rt>てきよう</rt></ruby>を<ruby>扱<rt>あつか</rt></ruby>う<ruby>言語<rt>げんご</rt></ruby>では、その<ruby>言語<rt>げんご</rt></ruby>のarity 0の<ruby>値参照<rt>ちさんしょう</rt></ruby>と、<ruby>固定<rt>こてい</rt></ruby>arity 2のapplyで<ruby>適用構造<rt>てきようこうぞう</rt></ruby>を<ruby>表<rt>あらわ</rt></ruby>す。この<ruby>方式<rt>ほうしき</rt></ruby>で<ruby>複数<rt>ふくすう</rt></ruby>の<ruby>引数<rt>ひきすう</rt></ruby>を<ruby>渡<rt>わた</rt></ruby>す<ruby>場合<rt>ばあい</rt></ruby>は、binary applyを<ruby>反復<rt>はんぷく</rt></ruby>する。<ruby>今回<rt>こんかい</rt></ruby>のDSL constructorを、<ruby>関数値<rt>かんすうち</rt></ruby>の<ruby>適用<rt>てきよう</rt></ruby>へ<ruby>強制的<rt>きょうせいてき</rt></ruby>に<ruby>変換<rt>へんかん</rt></ruby>してはならない。
+- <ruby>共通<rt>きょうつう</rt></ruby>prefix<ruby>構文木<rt>こうぶんぎ</rt></ruby>は、headとその<ruby>子<rt>こ</rt></ruby>の<ruby>関係<rt>かんけい</rt></ruby>を<ruby>表<rt>あらわ</rt></ruby>す。token<ruby>内部<rt>ないぶ</rt></ruby>のreaderは、その<ruby>言語<rt>げんご</rt></ruby>が<ruby>定<rt>さだ</rt></ruby>める<ruby>構造<rt>こうぞう</rt></ruby>を<ruby>解析<rt>かいせき</rt></ruby>し、エディタ<ruby>向<rt>む</rt></ruby>けにviewを<ruby>公開<rt>こうかい</rt></ruby>できる。editor<ruby>用<rt>よう</rt></ruby>のviewを<ruby>公開<rt>こうかい</rt></ruby>しても、<ruby>共通<rt>きょうつう</rt></ruby>parserの<ruby>子<rt>こ</rt></ruby>の<ruby>数<rt>かず</rt></ruby>は<ruby>変<rt>か</rt></ruby>わらない。
+- Parsed、Resolved、Checked、Preparedは、<ruby>構文<rt>こうぶん</rt></ruby>の<ruby>解析<rt>かいせき</rt></ruby>、<ruby>参照<rt>さんしょう</rt></ruby>の<ruby>解決<rt>かいけつ</rt></ruby>、<ruby>条件<rt>じょうけん</rt></ruby>の<ruby>検査<rt>けんさ</rt></ruby>、<ruby>操作<rt>そうさ</rt></ruby>に<ruby>必要<rt>ひつよう</rt></ruby>な<ruby>準備<rt>じゅんび</rt></ruby>を<ruby>表<rt>あらわ</rt></ruby>す<ruby>状態<rt>じょうたい</rt></ruby>である。<ruby>各操作<rt>かくそうさ</rt></ruby>が<ruby>要求<rt>ようきゅう</rt></ruby>する<ruby>状態<rt>じょうたい</rt></ruby>と、その<ruby>成立条件<rt>せいりつじょうけん</rt></ruby>は<ruby>各言語<rt>かくげんご</rt></ruby>の<ruby>仕様<rt>しよう</rt></ruby>に<ruby>定<rt>さだ</rt></ruby>める。<ruby>共通基盤<rt>きょうつうきばん</rt></ruby>は、すべての<ruby>言語<rt>げんご</rt></ruby>に<ruby>同<rt>おな</rt></ruby>じ<ruby>処理順序<rt>しょりじゅんじょ</rt></ruby>を<ruby>必須<rt>ひっす</rt></ruby>として<ruby>課<rt>か</rt></ruby>してはならない。
+- <ruby>元<rt>もと</rt></ruby>の<ruby>表記<rt>ひょうき</rt></ruby>と<ruby>位置<rt>いち</rt></ruby>を<ruby>扱<rt>あつか</rt></ruby>う<ruby>操作<rt>そうさ</rt></ruby>は、<ruby>保存<rt>ほぞん</rt></ruby>したsourceとsource spanを<ruby>使<rt>つか</rt></ruby>う。<ruby>意味値<rt>いみち</rt></ruby>だけから、<ruby>元<rt>もと</rt></ruby>のsource<ruby>表記<rt>ひょうき</rt></ruby>やsource spanを<ruby>逆算<rt>ぎゃくさん</rt></ruby>してはならない。
 
 <a name="n-70726f746f7479706573"></a>
 
 <a name="3-試作の扱い"></a>
 
-## 3\. 試作\[しさく\]の扱\[あつか\]い
+## 3\. <ruby>試作<rt>しさく</rt></ruby>の<ruby>扱<rt>あつか</rt></ruby>い
 
-段階的\[だんかいてき\]な実装\[じっそう\]でも、API・モデル・エラー・責務\[せきむ\]はこの仕様\[しよう\]の契約\[けいやく\]に従\[したが\]う。後\[あと\]で交換\[こうかん\]することを前提\[ぜんてい\]に、契約\[けいやく\]を省略\[しょうりゃく\]した仮設計\[かりせっけい\]を実装\[じっそう\]することを禁止\[きんし\]する。設計\[せっけい\]の誤\[あやま\]りは、後方互換\[こうほうごかん\]の維持\[いじ\]に優先\[ゆうせん\]して修正\[しゅうせい\]できる。設計\[せっけい\]を変更\[へんこう\]するときは、新\[あたら\]しいdesign revisionを与\[あた\]え、関連\[かんれん\]するすべての契約\[けいやく\]と試験\[しけん\]を同時\[どうじ\]に更新\[こうしん\]する。
+<ruby>段階的<rt>だんかいてき</rt></ruby>な<ruby>実装<rt>じっそう</rt></ruby>でも、API・モデル・エラー・<ruby>責務<rt>せきむ</rt></ruby>はこの<ruby>仕様<rt>しよう</rt></ruby>の<ruby>契約<rt>けいやく</rt></ruby>に<ruby>従<rt>したが</rt></ruby>う。<ruby>後<rt>あと</rt></ruby>で<ruby>交換<rt>こうかん</rt></ruby>することを<ruby>前提<rt>ぜんてい</rt></ruby>に、<ruby>契約<rt>けいやく</rt></ruby>を<ruby>省略<rt>しょうりゃく</rt></ruby>した<ruby>仮設計<rt>かりせっけい</rt></ruby>を<ruby>実装<rt>じっそう</rt></ruby>することを<ruby>禁止<rt>きんし</rt></ruby>する。<ruby>設計<rt>せっけい</rt></ruby>の<ruby>誤<rt>あやま</rt></ruby>りは、<ruby>後方互換<rt>こうほうごかん</rt></ruby>の<ruby>維持<rt>いじ</rt></ruby>に<ruby>優先<rt>ゆうせん</rt></ruby>して<ruby>修正<rt>しゅうせい</rt></ruby>できる。<ruby>設計<rt>せっけい</rt></ruby>を<ruby>変更<rt>へんこう</rt></ruby>するときは、<ruby>新<rt>あたら</rt></ruby>しいdesign revisionを<ruby>与<rt>あた</rt></ruby>え、<ruby>関連<rt>かんれん</rt></ruby>するすべての<ruby>契約<rt>けいやく</rt></ruby>と<ruby>試験<rt>しけん</rt></ruby>を<ruby>同時<rt>どうじ</rt></ruby>に<ruby>更新<rt>こうしん</rt></ruby>する。
 
-`v1` は契約識別\[けいやくしきべつ\]に用\[もち\]いるrevisionであり、将来\[しょうらい\]の無期限\[むきげん\]なABI互換\[ごかん\]を約束\[やくそく\]する呼称\[こしょう\]ではない。
+`v1` は<ruby>契約識別<rt>けいやくしきべつ</rt></ruby>に<ruby>用<rt>もち</rt></ruby>いるrevisionであり、<ruby>将来<rt>しょうらい</rt></ruby>の<ruby>無期限<rt>むきげん</rt></ruby>なABI<ruby>互換<rt>ごかん</rt></ruby>を<ruby>約束<rt>やくそく</rt></ruby>する<ruby>呼称<rt>こしょう</rt></ruby>ではない。
 
 <a name="n-696e76617269616e7473"></a>
 
 <a name="4-不変条件"></a>
 
-## 4\. 不変条件\[ふへんじょうけん\]
+## 4\. <ruby>不変条件<rt>ふへんじょうけん</rt></ruby>
 
-以下\[いか\]のINV01〜INV14は、構文\[こうぶん\]・source・言語\[げんご\]の接続\[せつぞく\]・操作結果\[そうさけっか\]を通\[つう\]じて保持\[ほじ\]する条件\[じょうけん\]である。意味\[いみ\]モデルと中間表現\[ちゅうかんひょうげん\]の補足\[ほそく\]不変条件\[ふへんじょうけん\]は12章\[しょう\]、受入試験\[うけいれしけん\]は11章\[しょう\]に定\[さだ\]める。
+<ruby>以下<rt>いか</rt></ruby>のINV01〜INV14は、<ruby>構文<rt>こうぶん</rt></ruby>・source・<ruby>言語<rt>げんご</rt></ruby>の<ruby>接続<rt>せつぞく</rt></ruby>・<ruby>操作結果<rt>そうさけっか</rt></ruby>を<ruby>通<rt>つう</rt></ruby>じて<ruby>保持<rt>ほじ</rt></ruby>する<ruby>条件<rt>じょうけん</rt></ruby>である。<ruby>意味<rt>いみ</rt></ruby>モデルと<ruby>中間表現<rt>ちゅうかんひょうげん</rt></ruby>の<ruby>補足<rt>ほそく</rt></ruby><ruby>不変条件<rt>ふへんじょうけん</rt></ruby>は12<ruby>章<rt>しょう</rt></ruby>、<ruby>受入試験<rt>うけいれしけん</rt></ruby>は11<ruby>章<rt>しょう</rt></ruby>に<ruby>定<rt>さだ</rt></ruby>める。
 
-- INV01：prefixの境界\[きょうかい\]が一意\[いちい\]であること。
-- INV02：未知\[みち\]のarityを推測\[すいそく\]しないこと。
-- INV03：読\[よ\]み過\[す\]ぎを禁止\[きんし\]すること。
-- INV04：source snapshotへの所属\[しょぞく\]を保持\[ほじ\]すること。
-- INV05：source mappingを明示\[めいじ\]すること。
-- INV06：domain\-specific kindを使\[つか\]うこと。
-- INV07：値\[あたい\]の生成\[せいせい\]と実行対象\[じっこうたいしょう\]を区別\[くべつ\]すること。
-- INV08：不正\[ふせい\]な構文\[こうぶん\]も保存\[ほぞん\]できること。
-- INV09：言語\[げんご\]coreの依存関係\[いぞんかんけい\]をDAGにすること。
-- INV10：意味\[いみ\]と操作\[そうさ\]の契約\[けいやく\]をportableにすること。
-- INV11：failureを成功\[せいこう\]へ変\[か\]えないこと。
-- INV12：同\[おな\]じresource snapshotから決定的\[けっていてき\]な結果\[けっか\]を得\[え\]ること。
-- INV13：sentenceの対応単位\[たいおうたんい\]を著者\[ちょしゃ\]が指定\[してい\]すること。
-- INV14：providerとworkspaceのtrustを区別\[くべつ\]すること。
+- INV01：prefixの<ruby>境界<rt>きょうかい</rt></ruby>が<ruby>一意<rt>いちい</rt></ruby>であること。
+- INV02：<ruby>未知<rt>みち</rt></ruby>のarityを<ruby>推測<rt>すいそく</rt></ruby>しないこと。
+- INV03：<ruby>読<rt>よ</rt></ruby>み<ruby>過<rt>す</rt></ruby>ぎを<ruby>禁止<rt>きんし</rt></ruby>すること。
+- INV04：source snapshotへの<ruby>所属<rt>しょぞく</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>すること。
+- INV05：source mappingを<ruby>明示<rt>めいじ</rt></ruby>すること。
+- INV06：domain\-specific kindを<ruby>使<rt>つか</rt></ruby>うこと。
+- INV07：<ruby>値<rt>あたい</rt></ruby>の<ruby>生成<rt>せいせい</rt></ruby>と<ruby>実行対象<rt>じっこうたいしょう</rt></ruby>を<ruby>区別<rt>くべつ</rt></ruby>すること。
+- INV08：<ruby>不正<rt>ふせい</rt></ruby>な<ruby>構文<rt>こうぶん</rt></ruby>も<ruby>保存<rt>ほぞん</rt></ruby>できること。
+- INV09：<ruby>言語<rt>げんご</rt></ruby>coreの<ruby>依存関係<rt>いぞんかんけい</rt></ruby>をDAGにすること。
+- INV10：<ruby>意味<rt>いみ</rt></ruby>と<ruby>操作<rt>そうさ</rt></ruby>の<ruby>契約<rt>けいやく</rt></ruby>をportableにすること。
+- INV11：failureを<ruby>成功<rt>せいこう</rt></ruby>へ<ruby>変<rt>か</rt></ruby>えないこと。
+- INV12：<ruby>同<rt>おな</rt></ruby>じresource snapshotから<ruby>決定的<rt>けっていてき</rt></ruby>な<ruby>結果<rt>けっか</rt></ruby>を<ruby>得<rt>え</rt></ruby>ること。
+- INV13：sentenceの<ruby>対応単位<rt>たいおうたんい</rt></ruby>を<ruby>著者<rt>ちょしゃ</rt></ruby>が<ruby>指定<rt>してい</rt></ruby>すること。
+- INV14：providerとworkspaceのtrustを<ruby>区別<rt>くべつ</rt></ruby>すること。
 
 <a name="n-7370656c6c696e6773"></a>
 
 <a name="5-具体的な綴り"></a>
 
-## 5\. constructorと名前参照\[なまえさんしょう\]
+## 5\. constructorと<ruby>名前参照<rt>なまえさんしょう</rt></ruby>
 
-構文\[こうぶん\]をプログラムから生成\[せいせい\]するときは、各言語\[かくげんご\]の公開\[こうかい\]constructor APIで構造\[こうぞう\]を構築\[こうちく\]する。追加\[ついか\]する言語\[げんご\]も、同\[おな\]じconstructor schemaを呼\[よ\]び出\[だ\]す契約\[けいやく\]を使\[つか\]う。Grammar・Doc・Math・Circuitの組込\[くみこ\]みには `Fn`、`value`、`splice` を含\[ふく\]めない。Grammarの `call` \/ `map` \/ `then` は、Rust providerへ処理\[しょり\]を接続\[せつぞく\]する拡張点\[かくちょうてん\]である。
+<ruby>構文<rt>こうぶん</rt></ruby>をプログラムから<ruby>生成<rt>せいせい</rt></ruby>するときは、<ruby>各言語<rt>かくげんご</rt></ruby>の<ruby>公開<rt>こうかい</rt></ruby>constructor APIで<ruby>構造<rt>こうぞう</rt></ruby>を<ruby>構築<rt>こうちく</rt></ruby>する。<ruby>追加<rt>ついか</rt></ruby>する<ruby>言語<rt>げんご</rt></ruby>も、<ruby>同<rt>おな</rt></ruby>じconstructor schemaを<ruby>呼<rt>よ</rt></ruby>び<ruby>出<rt>だ</rt></ruby>す<ruby>契約<rt>けいやく</rt></ruby>を<ruby>使<rt>つか</rt></ruby>う。Grammar・Doc・Math・Circuitの<ruby>組込<rt>くみこ</rt></ruby>みには `Fn`、`value`、`splice` を<ruby>含<rt>ふく</rt></ruby>めない。Grammarの `call` \/ `map` \/ `then` は、Rust providerへ<ruby>処理<rt>しょり</rt></ruby>を<ruby>接続<rt>せつぞく</rt></ruby>する<ruby>拡張点<rt>かくちょうてん</rt></ruby>である。
 
-各言語\[かくげんご\]の全\[ぜん\]constructorとarityは `design/forms.json` に定\[さだ\]める。そこで定義\[ていぎ\]されていない綴\[つづ\]りは、該当\[がいとう\]カテゴリの明示的\[めいじてき\]な識別子\[しきべつし\]leaf規則\[きそく\]に一致\[いっち\]する場合\[ばあい\]だけ、名前参照\[なまえさんしょう\]として読\[よ\]める。未知\[みち\]のformを、arity 0と推測\[すいそく\]してはならない。
+<ruby>各言語<rt>かくげんご</rt></ruby>の<ruby>全<rt>ぜん</rt></ruby>constructorとarityは `design/forms.json` に<ruby>定<rt>さだ</rt></ruby>める。そこで<ruby>定義<rt>ていぎ</rt></ruby>されていない<ruby>綴<rt>つづ</rt></ruby>りは、<ruby>該当<rt>がいとう</rt></ruby>カテゴリの<ruby>明示的<rt>めいじてき</rt></ruby>な<ruby>識別子<rt>しきべつし</rt></ruby>leaf<ruby>規則<rt>きそく</rt></ruby>に<ruby>一致<rt>いっち</rt></ruby>する<ruby>場合<rt>ばあい</rt></ruby>だけ、<ruby>名前参照<rt>なまえさんしょう</rt></ruby>として<ruby>読<rt>よ</rt></ruby>める。<ruby>未知<rt>みち</rt></ruby>のformを、arity 0と<ruby>推測<rt>すいそく</rt></ruby>してはならない。

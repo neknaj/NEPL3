@@ -314,7 +314,11 @@ body
       cons section page_projection "ページ[間参照/かんさんしょう]を[持/も]つMarkdown projection"
         body
       cons paragraph
-        cons sentence cons code "nepl3-tools.markdown-annotated-pages/1" cons text " は、" cons ruby text "登録" text "とうろく" cons text "されたDoc" cons ruby text "間" text "かん" cons text "の" cons ruby text "参照" text "さんしょう" cons text "を" cons ruby text "扱" text "あつか" cons text "う" cons ruby text "別" text "べつ" cons text "のrenderer" cons ruby text "識別子" text "しきべつし" cons text "とする。" nil
+        cons sentence cons code "nepl3-tools.markdown-annotated-pages/2" cons text " は、" cons ruby text "登録" text "とうろく" cons text "されたDoc" cons ruby text "間" text "かん" cons text "の" cons ruby text "参照" text "さんしょう" cons text "を" cons ruby text "扱" text "あつか" cons text "うrendererの" cons ruby text "識別子" text "しきべつし" cons text "である。" nil
+        cons "[生成/せいせい]Markdownでは、Rubyの[本体/ほんたい]をruby[要素/ようそ]、[読/よ]みをその[子/こ]のrt[要素/ようそ]で[表/あらわ]す。"
+        cons "[入/い]れ[子/こ]の[構造/こうぞう]と[内容/ないよう]を[保持/ほじ]し、Textに[含/ふく]まれる[記号/きごう]はMarkdownの[規則/きそく]でescapeする。"
+        cons "[登録済/とうろくず]みページのタイトル[直後/ちょくご]に、NEPL3d[正本/せいほん]へのリンクを[表示/ひょうじ]する。"
+        cons "リンクは[生成/せいせい]Markdownの[配置/はいち]から[正本/せいほん]への[相対/そうたい]パスとする。"
         cons "registry[全体/ぜんたい]と[各/かく]source・aliasのbyte[列/れつ]を[一度読/いちどよ]み、[同/おな]じ[固定入力/こていにゅうりょく]から[全/ぜん]ページを[生成/せいせい]する。"
         cons "page idを[解析/かいせき]sourceの[名前空間/なまえくうかん]へ[与/あた]え、[論理/ろんり]sourceとMarkdown[出力/しゅつりょく]routeにはprojection pathを[使/つか]う。"
         cons "[全/ぜん]ページの[意味参照/いみさんしょう]と[実際/じっさい]に[出力/しゅつりょく]するanchorを[検査/けんさ]し、[全体/ぜんたい]が[成功/せいこう]するまで[成果物/せいかぶつ]を[返/かえ]さない。"
@@ -375,8 +379,9 @@ body
         cons "リンク[先/さき]の[存在/そんざい]を[暗黙/あんもく]に[補/おぎな]うのではなく、[段階移行中/だんかいいこうちゅう]の[閉/と]じた[入力集合/にゅうりょくしゅうごう]を[宣言/せんげん]するための[追加/ついか]である。"
         nil
       cons paragraph
-        cons sentence cons ruby text "旧" text "きゅう" cons text " " cons code "nepl3-tools.markdown-annotated/2" cons text " と" cons ruby text "混在" text "こんざい" cons text "できる。" nil
-        cons "[旧/きゅう]ページは[従来/じゅうらい]のsource[名前空間/なまえくうかん]と[生成処理/せいせいしょり]でmetadataを[含/ふく]めて[同/おな]じbyte[列/れつ]を[作/つく]り、ページ[集合/しゅうごう]からの[生成/せいせい]bodyとも[一致/いっち]することを[要求/ようきゅう]する。"
+        cons sentence cons ruby text "単独" text "たんどく" cons text "ページのrenderer " cons code "nepl3-tools.markdown-annotated/3" cons text " と" cons ruby text "混在" text "こんざい" cons text "できる。" nil
+        cons "[単独/たんどく]ページのrendererにも[同/おな]じRuby[表記/ひょうき]を[適用/てきよう]し、canonical[生成/せいせい]では[正本/せいほん]リンクを[追加/ついか]する。"
+        cons "source[名前空間/なまえくうかん]を[保持/ほじ]し、[単独/たんどく]の[生成処理/せいせいしょり]とページ[集合/しゅうごう]からの[生成/せいせい]bodyが[一致/いっち]することを[要求/ようきゅう]する。"
         cons "この[照合/しょうごう]により、[新/あたら]しいページの[参照先/さんしょうさき]anchorは[旧/きゅう]ページの[実際/じっさい]のprojectionにも[存在/そんざい]する。"
         cons sentence cons ruby text "旧" text "きゅう" cons text "rendererだけの " cons code "--check" cons text " は" cons ruby text "従来" text "じゅうらい" cons text "のページごとに" cons ruby text "独立" text "どくりつ" cons text "した" cons ruby text "処理" text "しょり" cons text "・" cons ruby text "予算" text "よさん" cons text "を" cons ruby text "維持" text "いじ" cons text "する。" nil
         nil

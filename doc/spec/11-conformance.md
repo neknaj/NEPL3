@@ -1,170 +1,172 @@
-<!-- Generated from doc/spec/11&#45;conformance.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page conformance; source SHA-256 3d847e397d5ff3f1b6b6048a7b281ad2ef5c13bd7713f1b6bd1b1081889794d2; alias input SHA-256 adb2a5929aaa53a705f0628d29a115d3891884f79f7ab2786608a4d947edbb42; document digest 0174565b6daeb9fc4b6107ff14e0240d820ada55da70d3575577b94f6861b0e1; input PageSet digest 50e37ed43a557679a195eabe4f0d2c5f0ce71d02d9ee30e0ffe9804016ade898; input context SHA-256 cc34df8bce1783f92a8db6600f26d2ffb6a27631264d65895b7d6d46498c3312. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/11&#45;conformance.nepld; renderer nepl3-tools.markdown-annotated-pages/2; page conformance; source SHA-256 3d847e397d5ff3f1b6b6048a7b281ad2ef5c13bd7713f1b6bd1b1081889794d2; alias input SHA-256 adb2a5929aaa53a705f0628d29a115d3891884f79f7ab2786608a4d947edbb42; document digest 0174565b6daeb9fc4b6107ff14e0240d820ada55da70d3575577b94f6861b0e1; input PageSet digest 29117181a385e93c76e7de2f56d10f8f7898d9cfb887adfb362b4379632a5a1d; input context SHA-256 a3f380eb88606e94c817b66bc2f494ec239dda0c89e4b4d1bc89b938fe0290ac. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="11-受入条件と検証"></a>
 
-# 11\. 受入条件\[うけいれじょうけん\]と検証\[けんしょう\]
+# 11\. <ruby>受入条件<rt>うけいれじょうけん</rt></ruby>と<ruby>検証<rt>けんしょう</rt></ruby>
+
+[正本（NEPL3d）](<11-conformance.nepld>)
 
 <a name="n-706f6c696379"></a>
 
 <a name="方針"></a>
 
-## 方針\[ほうしん\]
+## <ruby>方針<rt>ほうしん</rt></ruby>
 
-仕様\[しよう\]・データ・実装\[じっそう\]・実行結果\[じっこうけっか\]を区別\[くべつ\]する。schemaの形式整合\[けいしきせいごう\]だけで言語\[げんご\]が完成\[かんせい\]したことにしない。正例\[せいれい\]、誤例\[ごれい\]、境界\[きょうかい\]、変換前後\[へんかんぜんご\]、異\[こと\]なる実装\[じっそう\]の比較\[ひかく\]を受入条件\[うけいれじょうけん\]とする。
+<ruby>仕様<rt>しよう</rt></ruby>・データ・<ruby>実装<rt>じっそう</rt></ruby>・<ruby>実行結果<rt>じっこうけっか</rt></ruby>を<ruby>区別<rt>くべつ</rt></ruby>する。schemaの<ruby>形式整合<rt>けいしきせいごう</rt></ruby>だけで<ruby>言語<rt>げんご</rt></ruby>が<ruby>完成<rt>かんせい</rt></ruby>したことにしない。<ruby>正例<rt>せいれい</rt></ruby>、<ruby>誤例<rt>ごれい</rt></ruby>、<ruby>境界<rt>きょうかい</rt></ruby>、<ruby>変換前後<rt>へんかんぜんご</rt></ruby>、<ruby>異<rt>こと</rt></ruby>なる<ruby>実装<rt>じっそう</rt></ruby>の<ruby>比較<rt>ひかく</rt></ruby>を<ruby>受入条件<rt>うけいれじょうけん</rt></ruby>とする。
 
 <a name="n-7265717569726564"></a>
 
 <a name="1-必須の試験群"></a>
 
-## 1\. 必須\[ひっす\]の試験群\[しけんぐん\]
+## 1\. <ruby>必須<rt>ひっす</rt></ruby>の<ruby>試験群<rt>しけんぐん</rt></ruby>
 
-- X01\: 外部\[がいぶ\]workspace\/repositoryの新言語\[しんげんご\]がfoundationを変更\[へんこう\]せず公開\[こうかい\]APIで解析\[かいせき\]・schema・source\/Origin・診断\[しんだん\]を扱\[あつか\]い、Rust\/nativeとNDF\/実\[じつ\]process providerで意味結果\[いみけっか\]・失敗\[しっぱい\]・停止\[ていし\]が一致\[いっち\]する。foundation単独\[たんどく\]の配布\[はいふ\]\/build\/test\/conformanceとdomainへのproduction\/build逆依存不在\[ぎゃくいぞんふざい\]を検査\[けんさ\]する。詳細\[しょうさい\]は22章\[しょう\]。
-- X02\: Rust source APIの互換性\[ごかんせい\]とportable schema\/signatureの互換性\[ごかんせい\]を独立\[どくりつ\]した旧版\[きゅうはん\]consumer・不正例\[ふせいれい\]・互換更新\[ごかんこうしん\]で検査\[けんさ\]する。単\[たん\]なるdigest差分\[さぶん\]やpath依存\[いぞん\]の成功\[せいこう\]を独立\[どくりつ\]リリース検証\[けんしょう\]へ読\[よ\]み替\[か\]えない。詳細\[しょうさい\]は22章\[しょう\]。
-
-<!-- -->
-
-- G01\: Grammar自身\[じしん\]をseedで読\[よ\]み、compileしたpackageとseedの意味正規形\[いみせいきけい\]が一致\[いっち\]。
-- G02\: declarative readerとRust direct readerの結果\[けっか\]・消費範囲\[しょうひはんい\]・viewが一致\[いっち\]。
-- G03\: 空反復\[くうはんぷく\]、進捗\[しんちょく\]なし再帰\[さいき\]、未定義\[みていぎ\]reader、shape衝突\[しょうとつ\]、provider署名違反\[しょめいいはん\]を正\[ただ\]しいcodeで拒否\[きょひ\]。
-- G04\: quoted属性内\[ぞくせいない\]の `>` を含\[ふく\]むAngleTag、動的\[どうてき\]delimiter、部分入力\[ぶぶんにゅうりょく\]のNeedMore、commit\/no\-matchの差\[さ\]を検査\[けんさ\]。
-- G05\: native provider \/ NDF loopback \/ 別\[べつ\]process providerから同\[おな\]じ結果\[けっか\]。
+- X01\: <ruby>外部<rt>がいぶ</rt></ruby>workspace\/repositoryの<ruby>新言語<rt>しんげんご</rt></ruby>がfoundationを<ruby>変更<rt>へんこう</rt></ruby>せず<ruby>公開<rt>こうかい</rt></ruby>APIで<ruby>解析<rt>かいせき</rt></ruby>・schema・source\/Origin・<ruby>診断<rt>しんだん</rt></ruby>を<ruby>扱<rt>あつか</rt></ruby>い、Rust\/nativeとNDF\/<ruby>実<rt>じつ</rt></ruby>process providerで<ruby>意味結果<rt>いみけっか</rt></ruby>・<ruby>失敗<rt>しっぱい</rt></ruby>・<ruby>停止<rt>ていし</rt></ruby>が<ruby>一致<rt>いっち</rt></ruby>する。foundation<ruby>単独<rt>たんどく</rt></ruby>の<ruby>配布<rt>はいふ</rt></ruby>\/build\/test\/conformanceとdomainへのproduction\/build<ruby>逆依存不在<rt>ぎゃくいぞんふざい</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。<ruby>詳細<rt>しょうさい</rt></ruby>は22<ruby>章<rt>しょう</rt></ruby>。
+- X02\: Rust source APIの<ruby>互換性<rt>ごかんせい</rt></ruby>とportable schema\/signatureの<ruby>互換性<rt>ごかんせい</rt></ruby>を<ruby>独立<rt>どくりつ</rt></ruby>した<ruby>旧版<rt>きゅうはん</rt></ruby>consumer・<ruby>不正例<rt>ふせいれい</rt></ruby>・<ruby>互換更新<rt>ごかんこうしん</rt></ruby>で<ruby>検査<rt>けんさ</rt></ruby>する。<ruby>単<rt>たん</rt></ruby>なるdigest<ruby>差分<rt>さぶん</rt></ruby>やpath<ruby>依存<rt>いぞん</rt></ruby>の<ruby>成功<rt>せいこう</rt></ruby>を<ruby>独立<rt>どくりつ</rt></ruby>リリース<ruby>検証<rt>けんしょう</rt></ruby>へ<ruby>読<rt>よ</rt></ruby>み<ruby>替<rt>か</rt></ruby>えない。<ruby>詳細<rt>しょうさい</rt></ruby>は22<ruby>章<rt>しょう</rt></ruby>。
 
 <!-- -->
 
-- P01\: prefixのserialize\/parseで木\[き\]が同\[おな\]じ。cons\/nilを含\[ふく\]む全\[ぜん\]constructorを網羅\[もうら\]。Numberの有限十進制約\[ゆうげんじっしんせいやく\]、任意有理数\[にんいゆうりすう\]からの式構築\[しきこうちく\]、著者\[ちょしゃ\]のFrac保存\[ほぞん\]も検査\[けんさ\]する。
-- P02\: Doc→Math→DocとDoc→Circuitの復帰直後\[ふっきちょくご\]のhost tokenを読\[よ\]み過\[す\]ぎない。
-- P03\: headのarityを既読\[きどく\]の子\[こ\]の値\[あたい\]で変更\[へんこう\]できない。局所\[きょくしょ\]schema更新\[こうしん\]providerは既読情報\[きどくじょうほう\]だけ利用\[りよう\]。
-- P04\: Recover parseがMissing\/Unparsedを保持\[ほじ\]し、未知\[みち\]arityを0としない。
+- G01\: Grammar<ruby>自身<rt>じしん</rt></ruby>をseedで<ruby>読<rt>よ</rt></ruby>み、compileしたpackageとseedの<ruby>意味正規形<rt>いみせいきけい</rt></ruby>が<ruby>一致<rt>いっち</rt></ruby>。
+- G02\: declarative readerとRust direct readerの<ruby>結果<rt>けっか</rt></ruby>・<ruby>消費範囲<rt>しょうひはんい</rt></ruby>・viewが<ruby>一致<rt>いっち</rt></ruby>。
+- G03\: <ruby>空反復<rt>くうはんぷく</rt></ruby>、<ruby>進捗<rt>しんちょく</rt></ruby>なし<ruby>再帰<rt>さいき</rt></ruby>、<ruby>未定義<rt>みていぎ</rt></ruby>reader、shape<ruby>衝突<rt>しょうとつ</rt></ruby>、provider<ruby>署名違反<rt>しょめいいはん</rt></ruby>を<ruby>正<rt>ただ</rt></ruby>しいcodeで<ruby>拒否<rt>きょひ</rt></ruby>。
+- G04\: quoted<ruby>属性内<rt>ぞくせいない</rt></ruby>の `>` を<ruby>含<rt>ふく</rt></ruby>むAngleTag、<ruby>動的<rt>どうてき</rt></ruby>delimiter、<ruby>部分入力<rt>ぶぶんにゅうりょく</rt></ruby>のNeedMore、commit\/no\-matchの<ruby>差<rt>さ</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>。
+- G05\: native provider \/ NDF loopback \/ <ruby>別<rt>べつ</rt></ruby>process providerから<ruby>同<rt>おな</rt></ruby>じ<ruby>結果<rt>けっか</rt></ruby>。
 
 <!-- -->
 
-- D01\: sentence literalとprefix構築\[こうちく\]が意味正規形\[いみせいきけい\]で等\[ひと\]しい。
-- D02\: ネストしたruby\/anno、多段\[ただん\]note、全\[ぜん\]escape、空\[から\]part、閉\[と\]じ忘\[わす\]れを検査\[けんさ\]。
-- D03\: paragraphの深\[ふか\]さとparallelのsentence対応\[たいおう\]が独立\[どくりつ\]。重複\[ちょうふく\]languageとparagraph variantは拒否\[きょひ\]。
-- D04\: 前方\[ぜんぽう\]label、重複\[ちょうふく\]label、未定義\[みていぎ\]ref、renameの捕捉検査\[ほそくけんさ\]。
-- D05\: HTMLにユーザー由来\[ゆらい\]scriptが出\[で\]ず、Doc paragraphのネストが正\[ただ\]しい構造\[こうぞう\]で出力\[しゅつりょく\]される。Markup文字集合違反\[もじしゅうごういはん\]の拒否\[きょひ\]、`]]>`のescape、CRと属性\[ぞくせい\]TAB\/LF\/CRの保存\[ほぞん\]を検査\[けんさ\]する。
+- P01\: prefixのserialize\/parseで<ruby>木<rt>き</rt></ruby>が<ruby>同<rt>おな</rt></ruby>じ。cons\/nilを<ruby>含<rt>ふく</rt></ruby>む<ruby>全<rt>ぜん</rt></ruby>constructorを<ruby>網羅<rt>もうら</rt></ruby>。Numberの<ruby>有限十進制約<rt>ゆうげんじっしんせいやく</rt></ruby>、<ruby>任意有理数<rt>にんいゆうりすう</rt></ruby>からの<ruby>式構築<rt>しきこうちく</rt></ruby>、<ruby>著者<rt>ちょしゃ</rt></ruby>のFrac<ruby>保存<rt>ほぞん</rt></ruby>も<ruby>検査<rt>けんさ</rt></ruby>する。
+- P02\: Doc→Math→DocとDoc→Circuitの<ruby>復帰直後<rt>ふっきちょくご</rt></ruby>のhost tokenを<ruby>読<rt>よ</rt></ruby>み<ruby>過<rt>す</rt></ruby>ぎない。
+- P03\: headのarityを<ruby>既読<rt>きどく</rt></ruby>の<ruby>子<rt>こ</rt></ruby>の<ruby>値<rt>あたい</rt></ruby>で<ruby>変更<rt>へんこう</rt></ruby>できない。<ruby>局所<rt>きょくしょ</rt></ruby>schema<ruby>更新<rt>こうしん</rt></ruby>providerは<ruby>既読情報<rt>きどくじょうほう</rt></ruby>だけ<ruby>利用<rt>りよう</rt></ruby>。
+- P04\: Recover parseがMissing\/Unparsedを<ruby>保持<rt>ほじ</rt></ruby>し、<ruby>未知<rt>みち</rt></ruby>arityを0としない。
 
 <!-- -->
 
-- M01\: 1\/2\+1\/3\=5\/6、0\.1\+0\.2\=3\/10、大整数\[だいせいすう\]を丸\[まる\]めず計算\[けいさん\]。
-- M02\: matrix形状違反\[けいじょういはん\]、次元不一致\[じげんふいっち\]、0除算\[じょざん\]、非整数指数等\[ひせいすうしすうとう\]を仕様通\[しようどお\]り分類\[ぶんるい\]。
-- M03\: let\/sumのscope、外側\[そとがわ\]と内側\[うちがわ\]の同名\[どうめい\]、free symbol、notation\-onlyのSymbolic。
-- M04\: すべてのMath constructorをMathMLへ描画\[びょうが\]。弱\[よわ\]い子\[こ\]の括弧\[かっこ\]、sub\/powの結合\[けつごう\]、source式保存\[しきほぞん\]。mspaceの単位付\[たんいつ\]き非負\[ひふ\]em長\[なが\]さと無効値\[むこうち\]、Markupの文字制約\[もじせいやく\]とXML escapeを検査\[けんさ\]する。[17章\[しょう\]](<17\-math\-html\.md>)の純粋\[じゅんすい\]TeX変換\[へんかん\]の忠実性\[ちゅうじつせい\]・escape、生成時\[せいせいじ\]KaTeX、独立\[どくりつ\]MathML fallbackと診断\[しんだん\]、macro独立性\[どくりつせい\]、出力検査\[しゅつりょくけんさ\]、資源上限\[しげんじょうげん\]とStopped保持\[ほじ\]も要求\[ようきゅう\]する。host能力\[のうりょく\]のないWASIでは明示的\[めいじてき\]MathML経路\[けいろ\]を、対応\[たいおう\]hostでは実\[じつ\]KaTeX経路\[けいろ\]を実行\[じっこう\]する。
+- D01\: sentence literalとprefix<ruby>構築<rt>こうちく</rt></ruby>が<ruby>意味正規形<rt>いみせいきけい</rt></ruby>で<ruby>等<rt>ひと</rt></ruby>しい。
+- D02\: ネストしたruby\/anno、<ruby>多段<rt>ただん</rt></ruby>note、<ruby>全<rt>ぜん</rt></ruby>escape、<ruby>空<rt>から</rt></ruby>part、<ruby>閉<rt>と</rt></ruby>じ<ruby>忘<rt>わす</rt></ruby>れを<ruby>検査<rt>けんさ</rt></ruby>。
+- D03\: paragraphの<ruby>深<rt>ふか</rt></ruby>さとparallelのsentence<ruby>対応<rt>たいおう</rt></ruby>が<ruby>独立<rt>どくりつ</rt></ruby>。<ruby>重複<rt>ちょうふく</rt></ruby>languageとparagraph variantは<ruby>拒否<rt>きょひ</rt></ruby>。
+- D04\: <ruby>前方<rt>ぜんぽう</rt></ruby>label、<ruby>重複<rt>ちょうふく</rt></ruby>label、<ruby>未定義<rt>みていぎ</rt></ruby>ref、renameの<ruby>捕捉検査<rt>ほそくけんさ</rt></ruby>。
+- D05\: HTMLにユーザー<ruby>由来<rt>ゆらい</rt></ruby>scriptが<ruby>出<rt>で</rt></ruby>ず、Doc paragraphのネストが<ruby>正<rt>ただ</rt></ruby>しい<ruby>構造<rt>こうぞう</rt></ruby>で<ruby>出力<rt>しゅつりょく</rt></ruby>される。Markup<ruby>文字集合違反<rt>もじしゅうごういはん</rt></ruby>の<ruby>拒否<rt>きょひ</rt></ruby>、`]]>`のescape、CRと<ruby>属性<rt>ぞくせい</rt></ruby>TAB\/LF\/CRの<ruby>保存<rt>ほぞん</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。
 
 <!-- -->
 
-- C01\: half\-adderを全\[ぜん\]4入力\[にゅうりょく\]、adderは小幅\[こはば\]の全入力\[ぜんにゅうりょく\]で確認\[かくにん\]。
-- C02\: 複数\[ふくすう\]stateの同時更新\[どうじこうしん\]、testごとのreset、pre\-edge出力\[しゅつりょく\]を検査\[けんさ\]。initialはPreparedNetlistを受\[う\]けてslot順\[じゅん\]の初期値\[しょきち\]を返\[かえ\]す。
-- C03\: 未定義\[みていぎ\]signal、重複\[ちょうふく\]driver、幅違反\[はばいはん\]、組合\[くみあわ\]せloop、再帰\[さいき\]instantiationを拒否\[きょひ\]。
-- C04\: child moduleのstateを介\[かい\]したfeedbackを組合\[くみあわ\]せloopとして誤拒否\[ごきょひ\]しない。
-- C05\: instanceを2個作\[こつく\]ればstateが独立\[どくりつ\]。wire参照\[さんしょう\]は共有\[きょうゆう\]。
-- C06\: vector evaluatorと独立\[どくりつ\]したNOR evaluatorの複数\[ふくすう\]tick一致\[いっち\]。4種\[しゅ\]のnodeとnextBits\/outputBitsのsink参照\[さんしょう\]、長\[なが\]さ・bit順\[じゅん\]を検査\[けんさ\]する。
+- M01\: 1\/2\+1\/3\=5\/6、0\.1\+0\.2\=3\/10、<ruby>大整数<rt>だいせいすう</rt></ruby>を<ruby>丸<rt>まる</rt></ruby>めず<ruby>計算<rt>けいさん</rt></ruby>。
+- M02\: matrix<ruby>形状違反<rt>けいじょういはん</rt></ruby>、<ruby>次元不一致<rt>じげんふいっち</rt></ruby>、0<ruby>除算<rt>じょざん</rt></ruby>、<ruby>非整数指数等<rt>ひせいすうしすうとう</rt></ruby>を<ruby>仕様通<rt>しようどお</rt></ruby>り<ruby>分類<rt>ぶんるい</rt></ruby>。
+- M03\: let\/sumのscope、<ruby>外側<rt>そとがわ</rt></ruby>と<ruby>内側<rt>うちがわ</rt></ruby>の<ruby>同名<rt>どうめい</rt></ruby>、free symbol、notation\-onlyのSymbolic。
+- M04\: すべてのMath constructorをMathMLへ<ruby>描画<rt>びょうが</rt></ruby>。<ruby>弱<rt>よわ</rt></ruby>い<ruby>子<rt>こ</rt></ruby>の<ruby>括弧<rt>かっこ</rt></ruby>、sub\/powの<ruby>結合<rt>けつごう</rt></ruby>、source<ruby>式保存<rt>しきほぞん</rt></ruby>。mspaceの<ruby>単位付<rt>たんいつ</rt></ruby>き<ruby>非負<rt>ひふ</rt></ruby>em<ruby>長<rt>なが</rt></ruby>さと<ruby>無効値<rt>むこうち</rt></ruby>、Markupの<ruby>文字制約<rt>もじせいやく</rt></ruby>とXML escapeを<ruby>検査<rt>けんさ</rt></ruby>する。[17<ruby>章<rt>しょう</rt></ruby>](<17\-math\-html\.md>)の<ruby>純粋<rt>じゅんすい</rt></ruby>TeX<ruby>変換<rt>へんかん</rt></ruby>の<ruby>忠実性<rt>ちゅうじつせい</rt></ruby>・escape、<ruby>生成時<rt>せいせいじ</rt></ruby>KaTeX、<ruby>独立<rt>どくりつ</rt></ruby>MathML fallbackと<ruby>診断<rt>しんだん</rt></ruby>、macro<ruby>独立性<rt>どくりつせい</rt></ruby>、<ruby>出力検査<rt>しゅつりょくけんさ</rt></ruby>、<ruby>資源上限<rt>しげんじょうげん</rt></ruby>とStopped<ruby>保持<rt>ほじ</rt></ruby>も<ruby>要求<rt>ようきゅう</rt></ruby>する。host<ruby>能力<rt>のうりょく</rt></ruby>のないWASIでは<ruby>明示的<rt>めいじてき</rt></ruby>MathML<ruby>経路<rt>けいろ</rt></ruby>を、<ruby>対応<rt>たいおう</rt></ruby>hostでは<ruby>実<rt>じつ</rt></ruby>KaTeX<ruby>経路<rt>けいろ</rt></ruby>を<ruby>実行<rt>じっこう</rt></ruby>する。
 
 <!-- -->
 
-- E01\: 日本語\[にほんご\]\/補助平面文字\[ほじょへいめんもじ\]\/CRLFにおけるUTF\-8\/16\/32の位置変換\[いちへんかん\]。
-- E02\: SentenceLiteralの内部\[ないぶ\]を正確\[せいかく\]にハイライトし、外側\[そとがわ\]では1tokenを維持\[いじ\]。
-- E03\: definitionの全範囲\[ぜんはんい\]とname範囲\[はんい\]、対応文関係\[たいおうぶんかんけい\]とdefinitionの区別\[くべつ\]。
-- E04\: 更新後\[こうしんご\]に古\[ふる\]いdiagnostic\/renameを適用\[てきよう\]しない。
-- E05\: 増分解析\[ぞうぶんかいせき\]と全解析\[ぜんかいせき\]で意味\[いみ\]・診断\[しんだん\]・参照\[さんしょう\]・位置\[いち\]が一致\[いっち\]。
-- E06\: code表示\[ひょうじ\]が不正\[ふせい\]\/非停止\[ひていし\]のguestをlower・意味\[いみ\]check・evaluateしない。Doc自身\[じしん\]のCodeもForeignSyntaxのまま表示\[ひょうじ\]する。
+- C01\: half\-adderを<ruby>全<rt>ぜん</rt></ruby>4<ruby>入力<rt>にゅうりょく</rt></ruby>、adderは<ruby>小幅<rt>こはば</rt></ruby>の<ruby>全入力<rt>ぜんにゅうりょく</rt></ruby>で<ruby>確認<rt>かくにん</rt></ruby>。
+- C02\: <ruby>複数<rt>ふくすう</rt></ruby>stateの<ruby>同時更新<rt>どうじこうしん</rt></ruby>、testごとのreset、pre\-edge<ruby>出力<rt>しゅつりょく</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>。initialはPreparedNetlistを<ruby>受<rt>う</rt></ruby>けてslot<ruby>順<rt>じゅん</rt></ruby>の<ruby>初期値<rt>しょきち</rt></ruby>を<ruby>返<rt>かえ</rt></ruby>す。
+- C03\: <ruby>未定義<rt>みていぎ</rt></ruby>signal、<ruby>重複<rt>ちょうふく</rt></ruby>driver、<ruby>幅違反<rt>はばいはん</rt></ruby>、<ruby>組合<rt>くみあわ</rt></ruby>せloop、<ruby>再帰<rt>さいき</rt></ruby>instantiationを<ruby>拒否<rt>きょひ</rt></ruby>。
+- C04\: child moduleのstateを<ruby>介<rt>かい</rt></ruby>したfeedbackを<ruby>組合<rt>くみあわ</rt></ruby>せloopとして<ruby>誤拒否<rt>ごきょひ</rt></ruby>しない。
+- C05\: instanceを2<ruby>個作<rt>こつく</rt></ruby>ればstateが<ruby>独立<rt>どくりつ</rt></ruby>。wire<ruby>参照<rt>さんしょう</rt></ruby>は<ruby>共有<rt>きょうゆう</rt></ruby>。
+- C06\: vector evaluatorと<ruby>独立<rt>どくりつ</rt></ruby>したNOR evaluatorの<ruby>複数<rt>ふくすう</rt></ruby>tick<ruby>一致<rt>いっち</rt></ruby>。4<ruby>種<rt>しゅ</rt></ruby>のnodeとnextBits\/outputBitsのsink<ruby>参照<rt>さんしょう</rt></ruby>、<ruby>長<rt>なが</rt></ruby>さ・bit<ruby>順<rt>じゅん</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。
 
 <!-- -->
 
-- W01\: NDFの全\[ぜん\]variant roundtrip、未知\[みち\]tag、非\[ひ\]canonical整数\[せいすう\]、負\[ふ\]zero、分母\[ぶんぼ\]0、壊\[こわ\]れた参照\[さんしょう\]の拒否\[きょひ\]。field arrayの順序交換\[じゅんじょこうかん\]でschema digestが変\[か\]わり、名前付\[なまえつ\]きvariant mapのkey順\[じゅん\]だけの交換\[こうかん\]では変\[か\]わらないことを検査\[けんさ\]する。
-- W02\: nativeとwire経路\[けいろ\]で一致\[いっち\]。Complete\/Invalid\/Stopped\/Awaitを網羅\[もうら\]。
-- W03\: continuationの誤用\[ごよう\]、未知\[みち\]operation、schema mismatch、過大\[かだい\]frameを拒否\[きょひ\]。
+- E01\: <ruby>日本語<rt>にほんご</rt></ruby>\/<ruby>補助平面文字<rt>ほじょへいめんもじ</rt></ruby>\/CRLFにおけるUTF\-8\/16\/32の<ruby>位置変換<rt>いちへんかん</rt></ruby>。
+- E02\: SentenceLiteralの<ruby>内部<rt>ないぶ</rt></ruby>を<ruby>正確<rt>せいかく</rt></ruby>にハイライトし、<ruby>外側<rt>そとがわ</rt></ruby>では1tokenを<ruby>維持<rt>いじ</rt></ruby>。
+- E03\: definitionの<ruby>全範囲<rt>ぜんはんい</rt></ruby>とname<ruby>範囲<rt>はんい</rt></ruby>、<ruby>対応文関係<rt>たいおうぶんかんけい</rt></ruby>とdefinitionの<ruby>区別<rt>くべつ</rt></ruby>。
+- E04\: <ruby>更新後<rt>こうしんご</rt></ruby>に<ruby>古<rt>ふる</rt></ruby>いdiagnostic\/renameを<ruby>適用<rt>てきよう</rt></ruby>しない。
+- E05\: <ruby>増分解析<rt>ぞうぶんかいせき</rt></ruby>と<ruby>全解析<rt>ぜんかいせき</rt></ruby>で<ruby>意味<rt>いみ</rt></ruby>・<ruby>診断<rt>しんだん</rt></ruby>・<ruby>参照<rt>さんしょう</rt></ruby>・<ruby>位置<rt>いち</rt></ruby>が<ruby>一致<rt>いっち</rt></ruby>。
+- E06\: code<ruby>表示<rt>ひょうじ</rt></ruby>が<ruby>不正<rt>ふせい</rt></ruby>\/<ruby>非停止<rt>ひていし</rt></ruby>のguestをlower・<ruby>意味<rt>いみ</rt></ruby>check・evaluateしない。Doc<ruby>自身<rt>じしん</rt></ruby>のCodeもForeignSyntaxのまま<ruby>表示<rt>ひょうじ</rt></ruby>する。
 
 <!-- -->
 
-- A01\: workspace DAG、依存許可集合\[いぞんきょかしゅうごう\]、coreのno\_stdを検査\[けんさ\]。
-- A02\: native x86\_64\/aarch64、wasm32\-wasip2、wasm32\-unknown\-unknownでbuildし、利用可能\[りようかのう\]なrunnerで同一\[どういつ\]goldenを実行\[じっこう\]。
-- A03\: runner不在\[ふざい\]を「テスト成功\[せいこう\]」にしない。CIの対応\[たいおう\]runnerを設定\[せってい\]して完了\[かんりょう\]にする。
-- A04\: typed errorsのcatalog、診断\[しんだん\]stage\/位置\[いち\]、resource上限\[じょうげん\]とcancelを検査\[けんさ\]。sourceBytes超過\[ちょうか\]はUTF\-8 byte数\[すう\]で判定\[はんてい\]しStopped\(SourceLimit\)を返\[かえ\]す。
+- W01\: NDFの<ruby>全<rt>ぜん</rt></ruby>variant roundtrip、<ruby>未知<rt>みち</rt></ruby>tag、<ruby>非<rt>ひ</rt></ruby>canonical<ruby>整数<rt>せいすう</rt></ruby>、<ruby>負<rt>ふ</rt></ruby>zero、<ruby>分母<rt>ぶんぼ</rt></ruby>0、<ruby>壊<rt>こわ</rt></ruby>れた<ruby>参照<rt>さんしょう</rt></ruby>の<ruby>拒否<rt>きょひ</rt></ruby>。field arrayの<ruby>順序交換<rt>じゅんじょこうかん</rt></ruby>でschema digestが<ruby>変<rt>か</rt></ruby>わり、<ruby>名前付<rt>なまえつ</rt></ruby>きvariant mapのkey<ruby>順<rt>じゅん</rt></ruby>だけの<ruby>交換<rt>こうかん</rt></ruby>では<ruby>変<rt>か</rt></ruby>わらないことを<ruby>検査<rt>けんさ</rt></ruby>する。
+- W02\: nativeとwire<ruby>経路<rt>けいろ</rt></ruby>で<ruby>一致<rt>いっち</rt></ruby>。Complete\/Invalid\/Stopped\/Awaitを<ruby>網羅<rt>もうら</rt></ruby>。
+- W03\: continuationの<ruby>誤用<rt>ごよう</rt></ruby>、<ruby>未知<rt>みち</rt></ruby>operation、schema mismatch、<ruby>過大<rt>かだい</rt></ruby>frameを<ruby>拒否<rt>きょひ</rt></ruby>。
 
 <!-- -->
 
-- U01\: TEAのinit\/update\/view\/subscriptionsが決定的\[けっていてき\]で作用\[さよう\]を直接実行\[ちょくせつじっこう\]せず、native\/WASI\/browserおよび別実装\[べつじっそう\]replayでModel\/Cmd\/Viewの意味\[いみ\]が一致\[いっち\]する。
-- U02\: 全要求\[ぜんようきゅう\]identityの照合\[しょうごう\]により応答逆転\[おうとうぎゃくてん\]、close\/reopen、profile\/provider\/options\/resources変更後\[へんこうご\]の旧結果\[きゅうけっか\]を拒否\[きょひ\]する。
-- U03\: cancel、停止期限\[ていしきげん\]、Worker terminate\/recreate、epoch更新\[こうしん\]と再準備\[さいじゅんび\]を検査\[けんさ\]。終了後\[しゅうりょうご\]の完了応答\[かんりょうおうとう\]を採用\[さいよう\]しない。
-- U04\: document閉鎖\[へいさ\]・再読込\[さいよみこみ\]、worker\/session epoch、listener\/timer再登録\[さいとうろく\]と解除\[かいじょ\]で旧処理\[きゅうしょり\]や二重購読\[にじゅうこうどく\]が漏\[も\]れない。
-- U05\: 日本語\[にほんご\]IME、補助平面文字\[ほじょへいめんもじ\]、CRLF、選択\[せんたく\]、undo\/redo、format\/rename transaction、programmatic edit feedbackとsnapshot競合\[きょうごう\]で入力\[にゅうりょく\]を失\[うしな\]わない。
-- U06\: Grammarと対象\[たいしょう\]DSLの2editorを提供\[ていきょう\]し、追加\[ついか\]の文法\[ぶんぽう\]・束縛\[そくばく\]・表示定義\[ひょうじていぎ\]だけで共通\[きょうつう\]highlight\/definition等\[とう\]を得\[え\]る。TypeScript再実装\[さいじっそう\]を不要\[ふよう\]にし、外部\[がいぶ\]provider不足\[ふそく\]は明示\[めいじ\]する。
-- U07\: preview隔離\[かくり\]、未承認\[みしょうにん\]provider拒否\[きょひ\]、source表示\[ひょうじ\]からの非評価\[ひひょうか\]、保存\[ほぞん\]・読込\[よみこみ\]・downloadの成功\[せいこう\]\/拒否\[きょひ\]\/容量超過\[ようりょうちょうか\]、未保存編集\[みほぞんへんしゅう\]の保護\[ほご\]を検査\[けんさ\]する。
-- U08\: UI\/Worker型\[がた\]のschema closure、native\/Wasm\/codecと別実装\[べつじっそう\]replayの対応\[たいおう\]、core\/domain\/engineへのUI依存逆流\[いぞんぎゃくりゅう\]がないことを検査\[けんさ\]する。
+- A01\: workspace DAG、<ruby>依存許可集合<rt>いぞんきょかしゅうごう</rt></ruby>、coreのno\_stdを<ruby>検査<rt>けんさ</rt></ruby>。
+- A02\: native x86\_64\/aarch64、wasm32\-wasip2、wasm32\-unknown\-unknownでbuildし、<ruby>利用可能<rt>りようかのう</rt></ruby>なrunnerで<ruby>同一<rt>どういつ</rt></ruby>goldenを<ruby>実行<rt>じっこう</rt></ruby>。
+- A03\: runner<ruby>不在<rt>ふざい</rt></ruby>を「テスト<ruby>成功<rt>せいこう</rt></ruby>」にしない。CIの<ruby>対応<rt>たいおう</rt></ruby>runnerを<ruby>設定<rt>せってい</rt></ruby>して<ruby>完了<rt>かんりょう</rt></ruby>にする。
+- A04\: typed errorsのcatalog、<ruby>診断<rt>しんだん</rt></ruby>stage\/<ruby>位置<rt>いち</rt></ruby>、resource<ruby>上限<rt>じょうげん</rt></ruby>とcancelを<ruby>検査<rt>けんさ</rt></ruby>。sourceBytes<ruby>超過<rt>ちょうか</rt></ruby>はUTF\-8 byte<ruby>数<rt>すう</rt></ruby>で<ruby>判定<rt>はんてい</rt></ruby>しStopped\(SourceLimit\)を<ruby>返<rt>かえ</rt></ruby>す。
 
 <!-- -->
 
-- S01\: SiteConfigの \/NEPL3\/ と別\[べつ\]の非\[ひ\]root baseでトップ\/docs\/Playground\/assets\/Worker\/Wasm\/rustdoc\/例\[れい\]manifestを生成\[せいせい\]・ロードし、deep linkと再読込\[さいよみこみ\]を検査\[けんさ\]する。
-- S02\: docs・例\[れい\]manifest・runtime・profile・assetsの版\[ばん\]を照合\[しょうごう\]する。cache混在\[こんざい\]、欠\[か\]けた例\[れい\]、digest不一致\[ふいっち\]、版違\[ばんちが\]いを検出\[けんしゅつ\]し、同一入力\[どういつにゅうりょく\]buildの決定性\[けっていせい\]を検査\[けんさ\]する。
-- S03\: 配信予定\[はいしんよてい\]artifactを実\[じつ\]browserで開\[ひら\]き、4言語\[げんご\]の代表操作\[だいひょうそうさ\]、入出力\[にゅうしゅつりょく\]、診断選択\[しんだんせんたく\]、editor query、停止\[ていし\]を実行\[じっこう\]する。共通基盤\[きょうつうきばん\]やUIの言語名分岐\[げんごめいぶんき\]を変更\[へんこう\]せず最小\[さいしょう\]の独立\[どくりつ\]LanguagePackageを登録\[とうろく\]し、parse\/check\/printと別\[べつ\]packageのimport\/composition、Source\/Origin・診断\[しんだん\]を確認\[かくにん\]する。sentenceとannotationを別言語\[べつげんご\]として組\[く\]み込\[こ\]み、注釈\[ちゅうしゃく\]の対象関係\[たいしょうかんけい\]とbinding・domain意味\[いみ\]の保持\[ほじ\]を検査\[けんさ\]する。大\[おお\]きなsourceの応答性\[おうとうせい\]とkeyboard\/focusも確認\[かくにん\]する。
-- S04\: docs本文\[ほんぶん\]をJSなしで読\[よ\]み、4言語\[げんご\]tutorial\/reference\/例\[れい\]から同\[おな\]じsourceをPlaygroundで開\[ひら\]く。page\/anchor\/検索\[けんさく\]\/linkとaccessibilityを検査\[けんさ\]し、自動検査\[じどうけんさ\]と手動確認\[しゅどうかくにん\]を区別\[くべつ\]する。
-- S05\: 外部\[がいぶ\]backend・localhost・CDNなしで基本\[きほん\]4言語操作\[げんごそうさ\]を行\[おこな\]い、sourceの外部送信\[がいぶそうしん\]をせず、sandbox previewがscriptを実行\[じっこう\]しないことを検査\[けんさ\]する。
-- S06\: 最小権限\[さいしょうけんげん\]、同\[おな\]じ検査済\[けんさず\]みSHA\/artifact、配信直列化\[はいしんちょくれつか\]とfreshness、失敗\[しっぱい\]log保存\[ほぞん\]を検査\[けんさ\]。実\[じつ\]Pages公開後\[こうかいご\]のHTTPS smokeとasset\/build identityを照合\[しょうごう\]して記録\[きろく\]する。公開\[こうかい\]smoke失敗時\[しっぱいじ\]は検証済\[けんしょうず\]みLKGへの有限復旧\[ゆうげんふっきゅう\]・再\[さい\]smoke・元\[もと\]run失敗保持\[しっぱいほじ\]を15章\[しょう\]の契約\[けいやく\]で検査\[けんさ\]する。
+- U01\: TEAのinit\/update\/view\/subscriptionsが<ruby>決定的<rt>けっていてき</rt></ruby>で<ruby>作用<rt>さよう</rt></ruby>を<ruby>直接実行<rt>ちょくせつじっこう</rt></ruby>せず、native\/WASI\/browserおよび<ruby>別実装<rt>べつじっそう</rt></ruby>replayでModel\/Cmd\/Viewの<ruby>意味<rt>いみ</rt></ruby>が<ruby>一致<rt>いっち</rt></ruby>する。
+- U02\: <ruby>全要求<rt>ぜんようきゅう</rt></ruby>identityの<ruby>照合<rt>しょうごう</rt></ruby>により<ruby>応答逆転<rt>おうとうぎゃくてん</rt></ruby>、close\/reopen、profile\/provider\/options\/resources<ruby>変更後<rt>へんこうご</rt></ruby>の<ruby>旧結果<rt>きゅうけっか</rt></ruby>を<ruby>拒否<rt>きょひ</rt></ruby>する。
+- U03\: cancel、<ruby>停止期限<rt>ていしきげん</rt></ruby>、Worker terminate\/recreate、epoch<ruby>更新<rt>こうしん</rt></ruby>と<ruby>再準備<rt>さいじゅんび</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>。<ruby>終了後<rt>しゅうりょうご</rt></ruby>の<ruby>完了応答<rt>かんりょうおうとう</rt></ruby>を<ruby>採用<rt>さいよう</rt></ruby>しない。
+- U04\: document<ruby>閉鎖<rt>へいさ</rt></ruby>・<ruby>再読込<rt>さいよみこみ</rt></ruby>、worker\/session epoch、listener\/timer<ruby>再登録<rt>さいとうろく</rt></ruby>と<ruby>解除<rt>かいじょ</rt></ruby>で<ruby>旧処理<rt>きゅうしょり</rt></ruby>や<ruby>二重購読<rt>にじゅうこうどく</rt></ruby>が<ruby>漏<rt>も</rt></ruby>れない。
+- U05\: <ruby>日本語<rt>にほんご</rt></ruby>IME、<ruby>補助平面文字<rt>ほじょへいめんもじ</rt></ruby>、CRLF、<ruby>選択<rt>せんたく</rt></ruby>、undo\/redo、format\/rename transaction、programmatic edit feedbackとsnapshot<ruby>競合<rt>きょうごう</rt></ruby>で<ruby>入力<rt>にゅうりょく</rt></ruby>を<ruby>失<rt>うしな</rt></ruby>わない。
+- U06\: Grammarと<ruby>対象<rt>たいしょう</rt></ruby>DSLの2editorを<ruby>提供<rt>ていきょう</rt></ruby>し、<ruby>追加<rt>ついか</rt></ruby>の<ruby>文法<rt>ぶんぽう</rt></ruby>・<ruby>束縛<rt>そくばく</rt></ruby>・<ruby>表示定義<rt>ひょうじていぎ</rt></ruby>だけで<ruby>共通<rt>きょうつう</rt></ruby>highlight\/definition<ruby>等<rt>とう</rt></ruby>を<ruby>得<rt>え</rt></ruby>る。TypeScript<ruby>再実装<rt>さいじっそう</rt></ruby>を<ruby>不要<rt>ふよう</rt></ruby>にし、<ruby>外部<rt>がいぶ</rt></ruby>provider<ruby>不足<rt>ふそく</rt></ruby>は<ruby>明示<rt>めいじ</rt></ruby>する。
+- U07\: preview<ruby>隔離<rt>かくり</rt></ruby>、<ruby>未承認<rt>みしょうにん</rt></ruby>provider<ruby>拒否<rt>きょひ</rt></ruby>、source<ruby>表示<rt>ひょうじ</rt></ruby>からの<ruby>非評価<rt>ひひょうか</rt></ruby>、<ruby>保存<rt>ほぞん</rt></ruby>・<ruby>読込<rt>よみこみ</rt></ruby>・downloadの<ruby>成功<rt>せいこう</rt></ruby>\/<ruby>拒否<rt>きょひ</rt></ruby>\/<ruby>容量超過<rt>ようりょうちょうか</rt></ruby>、<ruby>未保存編集<rt>みほぞんへんしゅう</rt></ruby>の<ruby>保護<rt>ほご</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。
+- U08\: UI\/Worker<ruby>型<rt>がた</rt></ruby>のschema closure、native\/Wasm\/codecと<ruby>別実装<rt>べつじっそう</rt></ruby>replayの<ruby>対応<rt>たいおう</rt></ruby>、core\/domain\/engineへのUI<ruby>依存逆流<rt>いぞんぎゃくりゅう</rt></ruby>がないことを<ruby>検査<rt>けんさ</rt></ruby>する。
 
-S06の失敗系\[しっぱいけい\]には、次\[つぎ\]の場合\[ばあい\]を含\[ふく\]める。
+<!-- -->
 
-- \(a\)最新\[さいしん\]candidateのpublic smokeだけが失敗\[しっぱい\]し元\[もと\]tarを復旧\[ふっきゅう\]できる。
-- \(b\)後続\[こうぞく\]の健康\[けんこう\]なdeploymentがあるため旧\[きゅう\]candidateの復旧\[ふっきゅう\]を拒否\[きょひ\]する。
-- \(c\)cache\/API\/journal不一致\[ふいっち\]・timeout・外部\[がいぶ\]writer疑\[うたが\]いで書込\[かきこ\]みを停止\[ていし\]する。
-- \(d\)初回公開\[しょかいこうかい\]でLKGがない。
-- \(e\)Actions artifact失効後\[しっこうご\]も永続\[えいぞく\]snapshotから復旧\[ふっきゅう\]する。
-- \(f\)復旧\[ふっきゅう\]payload消失\[しょうしつ\]・改変\[かいへん\]。
-- \(g\)復旧\[ふっきゅう\]deploy・再\[さい\]smokeの失敗\[しっぱい\]。
-- \(h\)smoke合格後\[ごうかくご\]の保存\[ほぞん\]\/journal昇格失敗\[しょうかくしっぱい\]。
-- \(i\)deploy後\[ご\]にrunが強制\[きょうせい\]cancelされ次\[つぎ\]のwriterがreconcileを要求\[ようきゅう\]する。
+- S01\: SiteConfigの \/NEPL3\/ と<ruby>別<rt>べつ</rt></ruby>の<ruby>非<rt>ひ</rt></ruby>root baseでトップ\/docs\/Playground\/assets\/Worker\/Wasm\/rustdoc\/<ruby>例<rt>れい</rt></ruby>manifestを<ruby>生成<rt>せいせい</rt></ruby>・ロードし、deep linkと<ruby>再読込<rt>さいよみこみ</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。
+- S02\: docs・<ruby>例<rt>れい</rt></ruby>manifest・runtime・profile・assetsの<ruby>版<rt>ばん</rt></ruby>を<ruby>照合<rt>しょうごう</rt></ruby>する。cache<ruby>混在<rt>こんざい</rt></ruby>、<ruby>欠<rt>か</rt></ruby>けた<ruby>例<rt>れい</rt></ruby>、digest<ruby>不一致<rt>ふいっち</rt></ruby>、<ruby>版違<rt>ばんちが</rt></ruby>いを<ruby>検出<rt>けんしゅつ</rt></ruby>し、<ruby>同一入力<rt>どういつにゅうりょく</rt></ruby>buildの<ruby>決定性<rt>けっていせい</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。
+- S03\: <ruby>配信予定<rt>はいしんよてい</rt></ruby>artifactを<ruby>実<rt>じつ</rt></ruby>browserで<ruby>開<rt>ひら</rt></ruby>き、4<ruby>言語<rt>げんご</rt></ruby>の<ruby>代表操作<rt>だいひょうそうさ</rt></ruby>、<ruby>入出力<rt>にゅうしゅつりょく</rt></ruby>、<ruby>診断選択<rt>しんだんせんたく</rt></ruby>、editor query、<ruby>停止<rt>ていし</rt></ruby>を<ruby>実行<rt>じっこう</rt></ruby>する。<ruby>共通基盤<rt>きょうつうきばん</rt></ruby>やUIの<ruby>言語名分岐<rt>げんごめいぶんき</rt></ruby>を<ruby>変更<rt>へんこう</rt></ruby>せず<ruby>最小<rt>さいしょう</rt></ruby>の<ruby>独立<rt>どくりつ</rt></ruby>LanguagePackageを<ruby>登録<rt>とうろく</rt></ruby>し、parse\/check\/printと<ruby>別<rt>べつ</rt></ruby>packageのimport\/composition、Source\/Origin・<ruby>診断<rt>しんだん</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>する。sentenceとannotationを<ruby>別言語<rt>べつげんご</rt></ruby>として<ruby>組<rt>く</rt></ruby>み<ruby>込<rt>こ</rt></ruby>み、<ruby>注釈<rt>ちゅうしゃく</rt></ruby>の<ruby>対象関係<rt>たいしょうかんけい</rt></ruby>とbinding・domain<ruby>意味<rt>いみ</rt></ruby>の<ruby>保持<rt>ほじ</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。<ruby>大<rt>おお</rt></ruby>きなsourceの<ruby>応答性<rt>おうとうせい</rt></ruby>とkeyboard\/focusも<ruby>確認<rt>かくにん</rt></ruby>する。
+- S04\: docs<ruby>本文<rt>ほんぶん</rt></ruby>をJSなしで<ruby>読<rt>よ</rt></ruby>み、4<ruby>言語<rt>げんご</rt></ruby>tutorial\/reference\/<ruby>例<rt>れい</rt></ruby>から<ruby>同<rt>おな</rt></ruby>じsourceをPlaygroundで<ruby>開<rt>ひら</rt></ruby>く。page\/anchor\/<ruby>検索<rt>けんさく</rt></ruby>\/linkとaccessibilityを<ruby>検査<rt>けんさ</rt></ruby>し、<ruby>自動検査<rt>じどうけんさ</rt></ruby>と<ruby>手動確認<rt>しゅどうかくにん</rt></ruby>を<ruby>区別<rt>くべつ</rt></ruby>する。
+- S05\: <ruby>外部<rt>がいぶ</rt></ruby>backend・localhost・CDNなしで<ruby>基本<rt>きほん</rt></ruby>4<ruby>言語操作<rt>げんごそうさ</rt></ruby>を<ruby>行<rt>おこな</rt></ruby>い、sourceの<ruby>外部送信<rt>がいぶそうしん</rt></ruby>をせず、sandbox previewがscriptを<ruby>実行<rt>じっこう</rt></ruby>しないことを<ruby>検査<rt>けんさ</rt></ruby>する。
+- S06\: <ruby>最小権限<rt>さいしょうけんげん</rt></ruby>、<ruby>同<rt>おな</rt></ruby>じ<ruby>検査済<rt>けんさず</rt></ruby>みSHA\/artifact、<ruby>配信直列化<rt>はいしんちょくれつか</rt></ruby>とfreshness、<ruby>失敗<rt>しっぱい</rt></ruby>log<ruby>保存<rt>ほぞん</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>。<ruby>実<rt>じつ</rt></ruby>Pages<ruby>公開後<rt>こうかいご</rt></ruby>のHTTPS smokeとasset\/build identityを<ruby>照合<rt>しょうごう</rt></ruby>して<ruby>記録<rt>きろく</rt></ruby>する。<ruby>公開<rt>こうかい</rt></ruby>smoke<ruby>失敗時<rt>しっぱいじ</rt></ruby>は<ruby>検証済<rt>けんしょうず</rt></ruby>みLKGへの<ruby>有限復旧<rt>ゆうげんふっきゅう</rt></ruby>・<ruby>再<rt>さい</rt></ruby>smoke・<ruby>元<rt>もと</rt></ruby>run<ruby>失敗保持<rt>しっぱいほじ</rt></ruby>を15<ruby>章<rt>しょう</rt></ruby>の<ruby>契約<rt>けいやく</rt></ruby>で<ruby>検査<rt>けんさ</rt></ruby>する。
 
-自動復旧回数\[じどうふっきゅうかいすう\]・時間上限\[じかんじょうげん\]、lock保持\[ほじ\]、失敗\[しっぱい\]run\/incident記録\[きろく\]、現行\[げんこう\]LKGと前世代\[ぜんせだい\]の保持\[ほじ\]も検証\[けんしょう\]する。模擬失敗系\[もぎしっぱいけい\]だけで実\[じつ\]Pages公開\[こうかい\]\/復旧\[ふっきゅう\]のrunner要件\[ようけん\]を満\[み\]たした扱\[あつか\]いにしない。
+S06の<ruby>失敗系<rt>しっぱいけい</rt></ruby>には、<ruby>次<rt>つぎ</rt></ruby>の<ruby>場合<rt>ばあい</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>める。
 
-- J01\: 全対象文書\[ぜんたいしょうぶんしょ\]のinventoryとDoc表現\[ひょうげん\]gapを独立\[どくりつ\]レビューし、表\[ひょう\]\/list\/link\/汎用\[はんよう\]code\/図\[ず\]の必要\[ひつよう\]なschema・文法\[ぶんぽう\]・backend・wire・conformanceを完成\[かんせい\]させる。
-- J02\: 全移行\[ぜんいこう\]ページを元\[もと\]の固定\[こてい\]snapshotと比較\[ひかく\]し、意味\[いみ\]・表\[ひょう\]・参照\[さんしょう\]・数式\[すうしき\]・図\[ず\]・コードbyte列\[れつ\]の同等性\[どうとうせい\]を独立\[どくりつ\]に確認\[かくにん\]する。一\[ひと\]つの正本\[せいほん\]と生成\[せいせい\]Markdownの差分検査\[さぶんけんさ\]を行\[おこな\]う。
-- J03\: 移行\[いこう\]ページの安定\[あんてい\]page ID\/URL\/anchorと文書\[ぶんしょ\]namespace・参照\[さんしょう\]の対応\[たいおう\]をDoc意味構造\[いみこうぞう\]で確認\[かくにん\]する。Doc正本\[せいほん\]からのHTMLでは、escaping、必要\[ひつよう\]なCSS\/font、主要\[しゅよう\]リンク、例\[れい\]の内容\[ないよう\]・revision、見出\[みだ\]しや表\[ひょう\]の基本構造\[きほんこうぞう\]と可読性\[かどくせい\]を、非\[ひ\]root配信\[はいしん\]と主要\[しゅよう\]browserで確認\[かくにん\]する。rustdoc・全\[ぜん\]サイトの検索\[けんさく\]・全\[ぜん\]fragmentの完全閉包\[かんぜんへいほう\]は、この移行受入\[いこううけいれ\]の前提\[ぜんてい\]にしない。
-- J04\: 旧版\[きゅうはん\]の検証済\[けんしょうず\]みrendererによる明示的\[めいじてき\]な文書\[ぶんしょ\]buildと現行\[げんこう\]runtime受入\[うけいれ\]を区別\[くべつ\]し、bootstrap循環\[じゅんかん\]がないこと、全\[ぜん\]ページのDoc正本\[せいほん\]への切替\[きりかえ\]、決定的生成\[けっていてきせいせい\]、欠落\[けつらく\]・未対応時\[みたいおうじ\]の停止\[ていし\]を検査\[けんさ\]する。
+- \(a\)<ruby>最新<rt>さいしん</rt></ruby>candidateのpublic smokeだけが<ruby>失敗<rt>しっぱい</rt></ruby>し<ruby>元<rt>もと</rt></ruby>tarを<ruby>復旧<rt>ふっきゅう</rt></ruby>できる。
+- \(b\)<ruby>後続<rt>こうぞく</rt></ruby>の<ruby>健康<rt>けんこう</rt></ruby>なdeploymentがあるため<ruby>旧<rt>きゅう</rt></ruby>candidateの<ruby>復旧<rt>ふっきゅう</rt></ruby>を<ruby>拒否<rt>きょひ</rt></ruby>する。
+- \(c\)cache\/API\/journal<ruby>不一致<rt>ふいっち</rt></ruby>・timeout・<ruby>外部<rt>がいぶ</rt></ruby>writer<ruby>疑<rt>うたが</rt></ruby>いで<ruby>書込<rt>かきこ</rt></ruby>みを<ruby>停止<rt>ていし</rt></ruby>する。
+- \(d\)<ruby>初回公開<rt>しょかいこうかい</rt></ruby>でLKGがない。
+- \(e\)Actions artifact<ruby>失効後<rt>しっこうご</rt></ruby>も<ruby>永続<rt>えいぞく</rt></ruby>snapshotから<ruby>復旧<rt>ふっきゅう</rt></ruby>する。
+- \(f\)<ruby>復旧<rt>ふっきゅう</rt></ruby>payload<ruby>消失<rt>しょうしつ</rt></ruby>・<ruby>改変<rt>かいへん</rt></ruby>。
+- \(g\)<ruby>復旧<rt>ふっきゅう</rt></ruby>deploy・<ruby>再<rt>さい</rt></ruby>smokeの<ruby>失敗<rt>しっぱい</rt></ruby>。
+- \(h\)smoke<ruby>合格後<rt>ごうかくご</rt></ruby>の<ruby>保存<rt>ほぞん</rt></ruby>\/journal<ruby>昇格失敗<rt>しょうかくしっぱい</rt></ruby>。
+- \(i\)deploy<ruby>後<rt>ご</rt></ruby>にrunが<ruby>強制<rt>きょうせい</rt></ruby>cancelされ<ruby>次<rt>つぎ</rt></ruby>のwriterがreconcileを<ruby>要求<rt>ようきゅう</rt></ruby>する。
 
-必須群\[ひっすぐん\]と必須\[ひっす\]targetの正本\[せいほん\]は `design/acceptance.json`。本文\[ほんぶん\]のID、catalog、implementation\-statusの群集合\[ぐんしゅうごう\]を一致\[いっち\]させ、T16は全\[ぜん\]required群\[ぐん\]を要求\[ようきゅう\]する。r3は55群\[ぐん\]だが、この数\[かず\]をcheckerの完了条件\[かんりょうじょうけん\]へ固定\[こてい\]しない。nativeはLinux x86\_64、Windows x86\_64、macOS aarch64、WASIはwasm32\-wasip2をWasmtimeで実行\[じっこう\]、browserは実\[じつ\]Chromium\/Firefox\/WebKitを対象\[たいしょう\]とし、正確\[せいかく\]な版\[ばん\]をlogへ記録\[きろく\]する。native process固有群\[こゆうぐん\]はnative targetで検査\[けんさ\]する。WebKitの成功\[せいこう\]から実\[じつ\]Safari device QAを推定\[すいてい\]しない。
+<ruby>自動復旧回数<rt>じどうふっきゅうかいすう</rt></ruby>・<ruby>時間上限<rt>じかんじょうげん</rt></ruby>、lock<ruby>保持<rt>ほじ</rt></ruby>、<ruby>失敗<rt>しっぱい</rt></ruby>run\/incident<ruby>記録<rt>きろく</rt></ruby>、<ruby>現行<rt>げんこう</rt></ruby>LKGと<ruby>前世代<rt>ぜんせだい</rt></ruby>の<ruby>保持<rt>ほじ</rt></ruby>も<ruby>検証<rt>けんしょう</rt></ruby>する。<ruby>模擬失敗系<rt>もぎしっぱいけい</rt></ruby>だけで<ruby>実<rt>じつ</rt></ruby>Pages<ruby>公開<rt>こうかい</rt></ruby>\/<ruby>復旧<rt>ふっきゅう</rt></ruby>のrunner<ruby>要件<rt>ようけん</rt></ruby>を<ruby>満<rt>み</rt></ruby>たした<ruby>扱<rt>あつか</rt></ruby>いにしない。
+
+- J01\: <ruby>全対象文書<rt>ぜんたいしょうぶんしょ</rt></ruby>のinventoryとDoc<ruby>表現<rt>ひょうげん</rt></ruby>gapを<ruby>独立<rt>どくりつ</rt></ruby>レビューし、<ruby>表<rt>ひょう</rt></ruby>\/list\/link\/<ruby>汎用<rt>はんよう</rt></ruby>code\/<ruby>図<rt>ず</rt></ruby>の<ruby>必要<rt>ひつよう</rt></ruby>なschema・<ruby>文法<rt>ぶんぽう</rt></ruby>・backend・wire・conformanceを<ruby>完成<rt>かんせい</rt></ruby>させる。
+- J02\: <ruby>全移行<rt>ぜんいこう</rt></ruby>ページを<ruby>元<rt>もと</rt></ruby>の<ruby>固定<rt>こてい</rt></ruby>snapshotと<ruby>比較<rt>ひかく</rt></ruby>し、<ruby>意味<rt>いみ</rt></ruby>・<ruby>表<rt>ひょう</rt></ruby>・<ruby>参照<rt>さんしょう</rt></ruby>・<ruby>数式<rt>すうしき</rt></ruby>・<ruby>図<rt>ず</rt></ruby>・コードbyte<ruby>列<rt>れつ</rt></ruby>の<ruby>同等性<rt>どうとうせい</rt></ruby>を<ruby>独立<rt>どくりつ</rt></ruby>に<ruby>確認<rt>かくにん</rt></ruby>する。<ruby>一<rt>ひと</rt></ruby>つの<ruby>正本<rt>せいほん</rt></ruby>と<ruby>生成<rt>せいせい</rt></ruby>Markdownの<ruby>差分検査<rt>さぶんけんさ</rt></ruby>を<ruby>行<rt>おこな</rt></ruby>う。
+- J03\: <ruby>移行<rt>いこう</rt></ruby>ページの<ruby>安定<rt>あんてい</rt></ruby>page ID\/URL\/anchorと<ruby>文書<rt>ぶんしょ</rt></ruby>namespace・<ruby>参照<rt>さんしょう</rt></ruby>の<ruby>対応<rt>たいおう</rt></ruby>をDoc<ruby>意味構造<rt>いみこうぞう</rt></ruby>で<ruby>確認<rt>かくにん</rt></ruby>する。Doc<ruby>正本<rt>せいほん</rt></ruby>からのHTMLでは、escaping、<ruby>必要<rt>ひつよう</rt></ruby>なCSS\/font、<ruby>主要<rt>しゅよう</rt></ruby>リンク、<ruby>例<rt>れい</rt></ruby>の<ruby>内容<rt>ないよう</rt></ruby>・revision、<ruby>見出<rt>みだ</rt></ruby>しや<ruby>表<rt>ひょう</rt></ruby>の<ruby>基本構造<rt>きほんこうぞう</rt></ruby>と<ruby>可読性<rt>かどくせい</rt></ruby>を、<ruby>非<rt>ひ</rt></ruby>root<ruby>配信<rt>はいしん</rt></ruby>と<ruby>主要<rt>しゅよう</rt></ruby>browserで<ruby>確認<rt>かくにん</rt></ruby>する。rustdoc・<ruby>全<rt>ぜん</rt></ruby>サイトの<ruby>検索<rt>けんさく</rt></ruby>・<ruby>全<rt>ぜん</rt></ruby>fragmentの<ruby>完全閉包<rt>かんぜんへいほう</rt></ruby>は、この<ruby>移行受入<rt>いこううけいれ</rt></ruby>の<ruby>前提<rt>ぜんてい</rt></ruby>にしない。
+- J04\: <ruby>旧版<rt>きゅうはん</rt></ruby>の<ruby>検証済<rt>けんしょうず</rt></ruby>みrendererによる<ruby>明示的<rt>めいじてき</rt></ruby>な<ruby>文書<rt>ぶんしょ</rt></ruby>buildと<ruby>現行<rt>げんこう</rt></ruby>runtime<ruby>受入<rt>うけいれ</rt></ruby>を<ruby>区別<rt>くべつ</rt></ruby>し、bootstrap<ruby>循環<rt>じゅんかん</rt></ruby>がないこと、<ruby>全<rt>ぜん</rt></ruby>ページのDoc<ruby>正本<rt>せいほん</rt></ruby>への<ruby>切替<rt>きりかえ</rt></ruby>、<ruby>決定的生成<rt>けっていてきせいせい</rt></ruby>、<ruby>欠落<rt>けつらく</rt></ruby>・<ruby>未対応時<rt>みたいおうじ</rt></ruby>の<ruby>停止<rt>ていし</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。
+
+<ruby>必須群<rt>ひっすぐん</rt></ruby>と<ruby>必須<rt>ひっす</rt></ruby>targetの<ruby>正本<rt>せいほん</rt></ruby>は `design/acceptance.json`。<ruby>本文<rt>ほんぶん</rt></ruby>のID、catalog、implementation\-statusの<ruby>群集合<rt>ぐんしゅうごう</rt></ruby>を<ruby>一致<rt>いっち</rt></ruby>させ、T16は<ruby>全<rt>ぜん</rt></ruby>required<ruby>群<rt>ぐん</rt></ruby>を<ruby>要求<rt>ようきゅう</rt></ruby>する。r3は55<ruby>群<rt>ぐん</rt></ruby>だが、この<ruby>数<rt>かず</rt></ruby>をcheckerの<ruby>完了条件<rt>かんりょうじょうけん</rt></ruby>へ<ruby>固定<rt>こてい</rt></ruby>しない。nativeはLinux x86\_64、Windows x86\_64、macOS aarch64、WASIはwasm32\-wasip2をWasmtimeで<ruby>実行<rt>じっこう</rt></ruby>、browserは<ruby>実<rt>じつ</rt></ruby>Chromium\/Firefox\/WebKitを<ruby>対象<rt>たいしょう</rt></ruby>とし、<ruby>正確<rt>せいかく</rt></ruby>な<ruby>版<rt>ばん</rt></ruby>をlogへ<ruby>記録<rt>きろく</rt></ruby>する。native process<ruby>固有群<rt>こゆうぐん</rt></ruby>はnative targetで<ruby>検査<rt>けんさ</rt></ruby>する。WebKitの<ruby>成功<rt>せいこう</rt></ruby>から<ruby>実<rt>じつ</rt></ruby>Safari device QAを<ruby>推定<rt>すいてい</rt></ruby>しない。
 
 <a name="n-70726f70657274696573"></a>
 
 ## 2\. propertyとfuzz
 
-任意\[にんい\]のvalidな有限\[ゆうげん\]prefix treeからprint→parse→lowerの意味一致\[いみいっち\]。任意\[にんい\]のUTF\-8入力\[にゅうりょく\]でpanicしない。case分割\[ぶんかつ\]した入力\[にゅうりょく\]streamと一括入力\[いっかつにゅうりょく\]が同\[おな\]じ最終\[さいしゅう\]token列\[れつ\]。消費範囲\[しょうひはんい\]の単調性\[たんちょうせい\]。Origin DAGの閉路\[へいろ\]なし。可逆\[かぎゃく\]なSourceMapだけがrenameを許\[ゆる\]す。小幅回路\[こはばかいろ\]の原式\[げんしき\]とNORの一致\[いっち\]。
+<ruby>任意<rt>にんい</rt></ruby>のvalidな<ruby>有限<rt>ゆうげん</rt></ruby>prefix treeからprint→parse→lowerの<ruby>意味一致<rt>いみいっち</rt></ruby>。<ruby>任意<rt>にんい</rt></ruby>のUTF\-8<ruby>入力<rt>にゅうりょく</rt></ruby>でpanicしない。case<ruby>分割<rt>ぶんかつ</rt></ruby>した<ruby>入力<rt>にゅうりょく</rt></ruby>streamと<ruby>一括入力<rt>いっかつにゅうりょく</rt></ruby>が<ruby>同<rt>おな</rt></ruby>じ<ruby>最終<rt>さいしゅう</rt></ruby>token<ruby>列<rt>れつ</rt></ruby>。<ruby>消費範囲<rt>しょうひはんい</rt></ruby>の<ruby>単調性<rt>たんちょうせい</rt></ruby>。Origin DAGの<ruby>閉路<rt>へいろ</rt></ruby>なし。<ruby>可逆<rt>かぎゃく</rt></ruby>なSourceMapだけがrenameを<ruby>許<rt>ゆる</rt></ruby>す。<ruby>小幅回路<rt>こはばかいろ</rt></ruby>の<ruby>原式<rt>げんしき</rt></ruby>とNORの<ruby>一致<rt>いっち</rt></ruby>。
 
-fuzz入力\[にゅうりょく\]でも上限\[じょうげん\]を共有\[きょうゆう\]する。大量\[たいりょう\]diagnosticを発生\[はっせい\]させる入力\[にゅうりょく\]で無制限\[むせいげん\]allocしない。OOMを完全\[かんぜん\]に回避\[かいひ\]できると虚偽\[きょぎ\]の保証\[ほしょう\]をしない。
+fuzz<ruby>入力<rt>にゅうりょく</rt></ruby>でも<ruby>上限<rt>じょうげん</rt></ruby>を<ruby>共有<rt>きょうゆう</rt></ruby>する。<ruby>大量<rt>たいりょう</rt></ruby>diagnosticを<ruby>発生<rt>はっせい</rt></ruby>させる<ruby>入力<rt>にゅうりょく</rt></ruby>で<ruby>無制限<rt>むせいげん</rt></ruby>allocしない。OOMを<ruby>完全<rt>かんぜん</rt></ruby>に<ruby>回避<rt>かいひ</rt></ruby>できると<ruby>虚偽<rt>きょぎ</rt></ruby>の<ruby>保証<rt>ほしょう</rt></ruby>をしない。
 
 <a name="n-6369"></a>
 
 <a name="3-不変条件のci"></a>
 
-## 3\. 不変条件\[ふへんじょうけん\]のCI
+## 3\. <ruby>不変条件<rt>ふへんじょうけん</rt></ruby>のCI
 
-`cargo fmt --check`、clippyの対象\[たいしょう\]warningのdeny、workspace tests、doc tests、package生成\[せいせい\]の差分検査\[さぶんけんさ\]、dependency検査\[けんさ\]、target別\[べつ\]check、conformance runner、fuzz smoke、license\/asset\/unsafe監査\[かんさ\]。
+`cargo fmt --check`、clippyの<ruby>対象<rt>たいしょう</rt></ruby>warningのdeny、workspace tests、doc tests、package<ruby>生成<rt>せいせい</rt></ruby>の<ruby>差分検査<rt>さぶんけんさ</rt></ruby>、dependency<ruby>検査<rt>けんさ</rt></ruby>、target<ruby>別<rt>べつ</rt></ruby>check、conformance runner、fuzz smoke、license\/asset\/unsafe<ruby>監査<rt>かんさ</rt></ruby>。
 
-一\[ひと\]つのarchitecture boundaryごとにtestがあり、再設計時\[さいせっけいじ\]に未更新\[みこうしん\]の依存\[いぞん\]を検出\[けんしゅつ\]できる。新\[あたら\]しいconstructorを追加\[ついか\]した際\[さい\]はparser、lower、check、print、render、wire、editorのcoverage表\[ひょう\]に行\[ぎょう\]が増\[ふ\]える。None\/unsupportedで黙\[だま\]って網羅扱\[もうらあつか\]いにしない。
+<ruby>一<rt>ひと</rt></ruby>つのarchitecture boundaryごとにtestがあり、<ruby>再設計時<rt>さいせっけいじ</rt></ruby>に<ruby>未更新<rt>みこうしん</rt></ruby>の<ruby>依存<rt>いぞん</rt></ruby>を<ruby>検出<rt>けんしゅつ</rt></ruby>できる。<ruby>新<rt>あたら</rt></ruby>しいconstructorを<ruby>追加<rt>ついか</rt></ruby>した<ruby>際<rt>さい</rt></ruby>はparser、lower、check、print、render、wire、editorのcoverage<ruby>表<rt>ひょう</rt></ruby>に<ruby>行<rt>ぎょう</rt></ruby>が<ruby>増<rt>ふ</rt></ruby>える。None\/unsupportedで<ruby>黙<rt>だま</rt></ruby>って<ruby>網羅扱<rt>もうらあつか</rt></ruby>いにしない。
 
 <a name="n-737461676573"></a>
 
 <a name="4-開発の段階"></a>
 
-## 4\. 開発\[かいはつ\]の段階\[だんかい\]
+## 4\. <ruby>開発<rt>かいはつ</rt></ruby>の<ruby>段階<rt>だんかい</rt></ruby>
 
-順序\[じゅんじょ\]はtasksで管理\[かんり\]する。前段\[ぜんだん\]を先\[さき\]に完成\[かんせい\]させることは許可\[きょか\]するが、未完\[みかん\]の後段\[こうだん\]をその時点\[じてん\]の「完成仕様\[かんせいしよう\]」と呼\[よ\]ばない。最終受入\[さいしゅううけいれ\]は全必須試験\[ぜんひっすしけん\]に対\[たい\]する実行証拠\[じっこうしょうこ\]が揃\[そろ\]った時点\[じてん\]。
+<ruby>順序<rt>じゅんじょ</rt></ruby>はtasksで<ruby>管理<rt>かんり</rt></ruby>する。<ruby>前段<rt>ぜんだん</rt></ruby>を<ruby>先<rt>さき</rt></ruby>に<ruby>完成<rt>かんせい</rt></ruby>させることは<ruby>許可<rt>きょか</rt></ruby>するが、<ruby>未完<rt>みかん</rt></ruby>の<ruby>後段<rt>こうだん</rt></ruby>をその<ruby>時点<rt>じてん</rt></ruby>の「<ruby>完成仕様<rt>かんせいしよう</rt></ruby>」と<ruby>呼<rt>よ</rt></ruby>ばない。<ruby>最終受入<rt>さいしゅううけいれ</rt></ruby>は<ruby>全必須試験<rt>ぜんひっすしけん</rt></ruby>に<ruby>対<rt>たい</rt></ruby>する<ruby>実行証拠<rt>じっこうしょうこ</rt></ruby>が<ruby>揃<rt>そろ</rt></ruby>った<ruby>時点<rt>じてん</rt></ruby>。
 
-`design/tasks.json` の各\[かく\]task\.acceptanceは、そのタスクが寄与\[きよ\]する試験群\[しけんぐん\]のcoverage参照\[さんしょう\]である。試験群\[しけんぐん\]には後続\[こうぞく\]タスクの責務\[せきむ\]も含\[ふく\]むため、参照\[さんしょう\]した群全体\[ぐんぜんたい\]のpassedを前段\[ぜんだん\]タスクの完了条件\[かんりょうじょうけん\]にしない。T16以外\[いがい\]のタスクのcompleteには、当該\[とうがい\]deliverableの実装\[じっそう\]、scopeを限定\[げんてい\]した検証証拠\[けんしょうしょうこ\]、依存\[いぞん\]タスクのcomplete、および関連\[かんれん\]する未解消\[みかいしょう\]の設計\[せっけい\]blockerがないことを要求\[ようきゅう\]する。証拠\[しょうこ\]は `conformance/results/` 以下\[いか\]のJSONとし、`task_id`、`checks`（空\[から\]でない文字列\[もじれつ\]の非空\[ひくう\]list）、`commands`（同\[どう\]）、`targets`（同\[どう\]）、`result`（passed）、`excluded_acceptance_portions`（未検証範囲\[みけんしょうはんい\]の文字列\[もじれつ\]list、明示的\[めいじてき\]な空\[から\]listを許可\[きょか\]）を持\[も\]つ。implementation\-statusの当該\[とうがい\]タスクからファイルを参照\[さんしょう\]する。形\[かたち\]だけの証拠\[しょうこ\]ファイルではなく、記載\[きさい\]したコマンドの実行結果\[じっこうけっか\]をレビューする。
+`design/tasks.json` の<ruby>各<rt>かく</rt></ruby>task\.acceptanceは、そのタスクが<ruby>寄与<rt>きよ</rt></ruby>する<ruby>試験群<rt>しけんぐん</rt></ruby>のcoverage<ruby>参照<rt>さんしょう</rt></ruby>である。<ruby>試験群<rt>しけんぐん</rt></ruby>には<ruby>後続<rt>こうぞく</rt></ruby>タスクの<ruby>責務<rt>せきむ</rt></ruby>も<ruby>含<rt>ふく</rt></ruby>むため、<ruby>参照<rt>さんしょう</rt></ruby>した<ruby>群全体<rt>ぐんぜんたい</rt></ruby>のpassedを<ruby>前段<rt>ぜんだん</rt></ruby>タスクの<ruby>完了条件<rt>かんりょうじょうけん</rt></ruby>にしない。T16<ruby>以外<rt>いがい</rt></ruby>のタスクのcompleteには、<ruby>当該<rt>とうがい</rt></ruby>deliverableの<ruby>実装<rt>じっそう</rt></ruby>、scopeを<ruby>限定<rt>げんてい</rt></ruby>した<ruby>検証証拠<rt>けんしょうしょうこ</rt></ruby>、<ruby>依存<rt>いぞん</rt></ruby>タスクのcomplete、および<ruby>関連<rt>かんれん</rt></ruby>する<ruby>未解消<rt>みかいしょう</rt></ruby>の<ruby>設計<rt>せっけい</rt></ruby>blockerがないことを<ruby>要求<rt>ようきゅう</rt></ruby>する。<ruby>証拠<rt>しょうこ</rt></ruby>は `conformance/results/` <ruby>以下<rt>いか</rt></ruby>のJSONとし、`task_id`、`checks`（<ruby>空<rt>から</rt></ruby>でない<ruby>文字列<rt>もじれつ</rt></ruby>の<ruby>非空<rt>ひくう</rt></ruby>list）、`commands`（<ruby>同<rt>どう</rt></ruby>）、`targets`（<ruby>同<rt>どう</rt></ruby>）、`result`（passed）、`excluded_acceptance_portions`（<ruby>未検証範囲<rt>みけんしょうはんい</rt></ruby>の<ruby>文字列<rt>もじれつ</rt></ruby>list、<ruby>明示的<rt>めいじてき</rt></ruby>な<ruby>空<rt>から</rt></ruby>listを<ruby>許可<rt>きょか</rt></ruby>）を<ruby>持<rt>も</rt></ruby>つ。implementation\-statusの<ruby>当該<rt>とうがい</rt></ruby>タスクからファイルを<ruby>参照<rt>さんしょう</rt></ruby>する。<ruby>形<rt>かたち</rt></ruby>だけの<ruby>証拠<rt>しょうこ</rt></ruby>ファイルではなく、<ruby>記載<rt>きさい</rt></ruby>したコマンドの<ruby>実行結果<rt>じっこうけっか</rt></ruby>をレビューする。
 
-例\[たと\]えばT01のsource契約試験\[けいやくしけん\]を実行\[じっこう\]してT01をcompleteにしても、E03\/E04のエディタ操作\[そうさ\]を実装\[じっそう\]・検査\[けんさ\]していなければ当該群\[とうがいぐん\]はnot\-runのままとする。群全体\[ぐんぜんたい\]のpassedは全要件\[ぜんようけん\]の実行証拠\[じっこうしょうこ\]がそろってから記録\[きろく\]する。T16のcompleteには依存\[いぞん\]タスクの完了\[かんりょう\]に加\[くわ\]えて、task\.acceptanceに記載\[きさい\]した一部\[いちぶ\]の群\[ぐん\]だけでなく登録\[とうろく\]された全必須群\[ぜんひっすぐん\]のpassedとその証拠\[しょうこ\]を必須\[ひっす\]とする。
+<ruby>例<rt>たと</rt></ruby>えばT01のsource<ruby>契約試験<rt>けいやくしけん</rt></ruby>を<ruby>実行<rt>じっこう</rt></ruby>してT01をcompleteにしても、E03\/E04のエディタ<ruby>操作<rt>そうさ</rt></ruby>を<ruby>実装<rt>じっそう</rt></ruby>・<ruby>検査<rt>けんさ</rt></ruby>していなければ<ruby>当該群<rt>とうがいぐん</rt></ruby>はnot\-runのままとする。<ruby>群全体<rt>ぐんぜんたい</rt></ruby>のpassedは<ruby>全要件<rt>ぜんようけん</rt></ruby>の<ruby>実行証拠<rt>じっこうしょうこ</rt></ruby>がそろってから<ruby>記録<rt>きろく</rt></ruby>する。T16のcompleteには<ruby>依存<rt>いぞん</rt></ruby>タスクの<ruby>完了<rt>かんりょう</rt></ruby>に<ruby>加<rt>くわ</rt></ruby>えて、task\.acceptanceに<ruby>記載<rt>きさい</rt></ruby>した<ruby>一部<rt>いちぶ</rt></ruby>の<ruby>群<rt>ぐん</rt></ruby>だけでなく<ruby>登録<rt>とうろく</rt></ruby>された<ruby>全必須群<rt>ぜんひっすぐん</rt></ruby>のpassedとその<ruby>証拠<rt>しょうこ</rt></ruby>を<ruby>必須<rt>ひっす</rt></ruby>とする。
 
 <a name="n-65766964656e6365"></a>
 
 <a name="5-群全体の型付き証拠"></a>
 
-## 5\. 群全体\[ぐんぜんたい\]の型付\[かたつ\]き証拠\[しょうこ\]
+## 5\. <ruby>群全体<rt>ぐんぜんたい</rt></ruby>の<ruby>型付<rt>かたつ</rt></ruby>き<ruby>証拠<rt>しょうこ</rt></ruby>
 
-scope付\[つ\]きTaskEvidenceと群全体\[ぐんぜんたい\]のAcceptanceEvidenceを分\[わ\]ける。群\[ぐん\]の証拠\[しょうこ\]schemaは `interfaces/acceptance-evidence.schema.json`、配置\[はいち\]は `conformance/results/`。`schema`、`acceptance_id`、`design_revision`、`identity`、`result`、`runs` を必須\[ひっす\]とする。identityはprofile `nepl3.repository-inputs/1` とsource\_sha256\/spec\_sha256を持\[も\]ち、現在\[げんざい\]の検査入力\[けんさにゅうりょく\]へ照合\[しょうごう\]する。source identityの収集\[しゅうしゅう\]・除外規則\[じょがいきそく\]は開発\[かいはつ\]toolsのidentity操作\[そうさ\]と開発手順\[かいはつてじゅん\]で固定\[こてい\]する。
+scope<ruby>付<rt>つ</rt></ruby>きTaskEvidenceと<ruby>群全体<rt>ぐんぜんたい</rt></ruby>のAcceptanceEvidenceを<ruby>分<rt>わ</rt></ruby>ける。<ruby>群<rt>ぐん</rt></ruby>の<ruby>証拠<rt>しょうこ</rt></ruby>schemaは `interfaces/acceptance-evidence.schema.json`、<ruby>配置<rt>はいち</rt></ruby>は `conformance/results/`。`schema`、`acceptance_id`、`design_revision`、`identity`、`result`、`runs` を<ruby>必須<rt>ひっす</rt></ruby>とする。identityはprofile `nepl3.repository-inputs/1` とsource\_sha256\/spec\_sha256を<ruby>持<rt>も</rt></ruby>ち、<ruby>現在<rt>げんざい</rt></ruby>の<ruby>検査入力<rt>けんさにゅうりょく</rt></ruby>へ<ruby>照合<rt>しょうごう</rt></ruby>する。source identityの<ruby>収集<rt>しゅうしゅう</rt></ruby>・<ruby>除外規則<rt>じょがいきそく</rt></ruby>は<ruby>開発<rt>かいはつ</rt></ruby>toolsのidentity<ruby>操作<rt>そうさ</rt></ruby>と<ruby>開発手順<rt>かいはつてじゅん</rt></ruby>で<ruby>固定<rt>こてい</rt></ruby>する。
 
-runはcatalogのtarget\.kindに一致\[いっち\]するtag付\[つ\]き型\[がた\]とする。`kind: command` はcommand、target、result、exit\_code、非空\[ひくう\]checks、environment（runnerのname\/versionとtoolsのname\/version一覧\[いちらん\]）、log、log\_sha256を持\[も\]つ。`kind: review` はtarget、reviewer識別子\[しきべつし\]、independent\=true、decision（approved\/rejected）、非空\[ひくう\]scope、log、log\_sha256を持\[も\]つ。意味同等性\[いみどうとうせい\]レビューのために架空\[かくう\]のshell commandや終了\[しゅうりょう\]コードを作\[つく\]らない。
+runはcatalogのtarget\.kindに<ruby>一致<rt>いっち</rt></ruby>するtag<ruby>付<rt>つ</rt></ruby>き<ruby>型<rt>がた</rt></ruby>とする。`kind: command` はcommand、target、result、exit\_code、<ruby>非空<rt>ひくう</rt></ruby>checks、environment（runnerのname\/versionとtoolsのname\/version<ruby>一覧<rt>いちらん</rt></ruby>）、log、log\_sha256を<ruby>持<rt>も</rt></ruby>つ。`kind: review` はtarget、reviewer<ruby>識別子<rt>しきべつし</rt></ruby>、independent\=true、decision（approved\/rejected）、<ruby>非空<rt>ひくう</rt></ruby>scope、log、log\_sha256を<ruby>持<rt>も</rt></ruby>つ。<ruby>意味同等性<rt>いみどうとうせい</rt></ruby>レビューのために<ruby>架空<rt>かくう</rt></ruby>のshell commandや<ruby>終了<rt>しゅうりょう</rt></ruby>コードを<ruby>作<rt>つく</rt></ruby>らない。
 
-logは `conformance/results/` 内\[ない\]の非空\[ひくう\]\.txtまたは\.logファイルとし、証拠\[しょうこ\]JSON自身\[じしん\]を実行\[じっこう\]logにしない。実在\[じつざい\]logとdigestを検査\[けんさ\]し、別\[べつ\]ID、古\[ふる\]いsource\/spec\/design、未登録\[みとうろく\]target、target種別不一致\[しゅべつふいっち\]、改変\[かいへん\]logを拒否\[きょひ\]する。passedには全\[ぜん\]command runがpassedかつexit\_code\=0、全\[ぜん\]reviewがapproved、全\[ぜん\]required targetの実行\[じっこう\]・レビューを要求\[ようきゅう\]する。failedは少\[すく\]なくとも一\[ひと\]つの非\[ひ\]zero終了\[しゅうりょう\]の失敗\[しっぱい\]runまたはrejected reviewを含\[ふく\]み、早期停止\[そうきていし\]による未実行\[みじっこう\]targetを許\[ゆる\]すがpassedへ変更\[へんこう\]できない。未実行\[みじっこう\]を空\[から\]logやbuild成功\[せいこう\]で置\[お\]き換\[か\]えない。
+logは `conformance/results/` <ruby>内<rt>ない</rt></ruby>の<ruby>非空<rt>ひくう</rt></ruby>\.txtまたは\.logファイルとし、<ruby>証拠<rt>しょうこ</rt></ruby>JSON<ruby>自身<rt>じしん</rt></ruby>を<ruby>実行<rt>じっこう</rt></ruby>logにしない。<ruby>実在<rt>じつざい</rt></ruby>logとdigestを<ruby>検査<rt>けんさ</rt></ruby>し、<ruby>別<rt>べつ</rt></ruby>ID、<ruby>古<rt>ふる</rt></ruby>いsource\/spec\/design、<ruby>未登録<rt>みとうろく</rt></ruby>target、target<ruby>種別不一致<rt>しゅべつふいっち</rt></ruby>、<ruby>改変<rt>かいへん</rt></ruby>logを<ruby>拒否<rt>きょひ</rt></ruby>する。passedには<ruby>全<rt>ぜん</rt></ruby>command runがpassedかつexit\_code\=0、<ruby>全<rt>ぜん</rt></ruby>reviewがapproved、<ruby>全<rt>ぜん</rt></ruby>required targetの<ruby>実行<rt>じっこう</rt></ruby>・レビューを<ruby>要求<rt>ようきゅう</rt></ruby>する。failedは<ruby>少<rt>すく</rt></ruby>なくとも<ruby>一<rt>ひと</rt></ruby>つの<ruby>非<rt>ひ</rt></ruby>zero<ruby>終了<rt>しゅうりょう</rt></ruby>の<ruby>失敗<rt>しっぱい</rt></ruby>runまたはrejected reviewを<ruby>含<rt>ふく</rt></ruby>み、<ruby>早期停止<rt>そうきていし</rt></ruby>による<ruby>未実行<rt>みじっこう</rt></ruby>targetを<ruby>許<rt>ゆる</rt></ruby>すがpassedへ<ruby>変更<rt>へんこう</rt></ruby>できない。<ruby>未実行<rt>みじっこう</rt></ruby>を<ruby>空<rt>から</rt></ruby>logやbuild<ruby>成功<rt>せいこう</rt></ruby>で<ruby>置<rt>お</rt></ruby>き<ruby>換<rt>か</rt></ruby>えない。
 
-証拠\[しょうこ\]の形式\[けいしき\]・hash検査\[けんさ\]は記述\[きじゅつ\]された挙動\[きょどう\]の正\[ただ\]しさそのものを証明\[しょうめい\]しない。期待値\[きたいち\]の根拠\[こんきょ\]、実行\[じっこう\]コマンドとlog、対象\[たいしょう\]source、coverageを独立\[どくりつ\]レビューする。source\/doc仕様\[しよう\]を変更\[へんこう\]した後\[あと\]は古\[ふる\]い証拠\[しょうこ\]でcurrent passedを維持\[いじ\]せず再実行\[さいじっこう\]する。T16は全\[ぜん\]registered required群\[ぐん\]の型付\[かたつ\]き証拠\[しょうこ\]を動的\[どうてき\]に確認\[かくにん\]する。
+<ruby>証拠<rt>しょうこ</rt></ruby>の<ruby>形式<rt>けいしき</rt></ruby>・hash<ruby>検査<rt>けんさ</rt></ruby>は<ruby>記述<rt>きじゅつ</rt></ruby>された<ruby>挙動<rt>きょどう</rt></ruby>の<ruby>正<rt>ただ</rt></ruby>しさそのものを<ruby>証明<rt>しょうめい</rt></ruby>しない。<ruby>期待値<rt>きたいち</rt></ruby>の<ruby>根拠<rt>こんきょ</rt></ruby>、<ruby>実行<rt>じっこう</rt></ruby>コマンドとlog、<ruby>対象<rt>たいしょう</rt></ruby>source、coverageを<ruby>独立<rt>どくりつ</rt></ruby>レビューする。source\/doc<ruby>仕様<rt>しよう</rt></ruby>を<ruby>変更<rt>へんこう</rt></ruby>した<ruby>後<rt>あと</rt></ruby>は<ruby>古<rt>ふる</rt></ruby>い<ruby>証拠<rt>しょうこ</rt></ruby>でcurrent passedを<ruby>維持<rt>いじ</rt></ruby>せず<ruby>再実行<rt>さいじっこう</rt></ruby>する。T16は<ruby>全<rt>ぜん</rt></ruby>registered required<ruby>群<rt>ぐん</rt></ruby>の<ruby>型付<rt>かたつ</rt></ruby>き<ruby>証拠<rt>しょうこ</rt></ruby>を<ruby>動的<rt>どうてき</rt></ruby>に<ruby>確認<rt>かくにん</rt></ruby>する。
 
-この設計\[せっけい\]パッケージの検査\[けんさ\]は別扱\[べつあつか\]い。`doc/history/design-validation.json` に、構文例\[こうぶんれい\]の構造検査\[こうぞうけんさ\]、依存\[いぞん\]DAG、task ID、JSON、例\[れい\]の独立算術\[どくりつさんじゅつ\]\/回路検算\[かいろけんざん\]などの実施範囲\[じっしはんい\]を記録\[きろく\]する。Rust compiler\/editor\/browserが完成\[かんせい\]しているという証拠\[しょうこ\]に使\[つか\]わない。
+この<ruby>設計<rt>せっけい</rt></ruby>パッケージの<ruby>検査<rt>けんさ</rt></ruby>は<ruby>別扱<rt>べつあつか</rt></ruby>い。`doc/history/design-validation.json` に、<ruby>構文例<rt>こうぶんれい</rt></ruby>の<ruby>構造検査<rt>こうぞうけんさ</rt></ruby>、<ruby>依存<rt>いぞん</rt></ruby>DAG、task ID、JSON、<ruby>例<rt>れい</rt></ruby>の<ruby>独立算術<rt>どくりつさんじゅつ</rt></ruby>\/<ruby>回路検算<rt>かいろけんざん</rt></ruby>などの<ruby>実施範囲<rt>じっしはんい</rt></ruby>を<ruby>記録<rt>きろく</rt></ruby>する。Rust compiler\/editor\/browserが<ruby>完成<rt>かんせい</rt></ruby>しているという<ruby>証拠<rt>しょうこ</rt></ruby>に<ruby>使<rt>つか</rt></ruby>わない。
