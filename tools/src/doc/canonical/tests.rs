@@ -820,9 +820,9 @@ fn synchronized_context_spec_drafts_parse_lower_and_check_labels() -> Result<()>
         ),
     ] {
         let text = fs::read_to_string(repository.join(path))?;
-        // Adopted chapters must remain usable with the normal canonical page
-        // allowance; larger unpublished drafts retain their explicit cap.
-        let phase_limits = if path.starts_with("doc/spec/") {
+        // Adopted chapters and the Doc specification candidate must remain
+        // usable with normal page limits; other drafts keep their explicit cap.
+        let phase_limits = if path.starts_with("doc/spec/") || name == "05-document" {
             super::super::source::budget().limits()
         } else {
             phase_limits

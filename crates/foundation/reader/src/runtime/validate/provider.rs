@@ -211,7 +211,21 @@ pub(crate) fn check_provider(
         // resolver merely to validate an empty report's usage/overflow fields.
         return report(returned, saved, machine.registry, original_sources, budget);
     }
-    let sources = combined(machine, added, original_sources, budget, admission)?;
+    let local = !failed
+        && added.is_empty()
+        && maps.is_empty()
+        && returned.diagnostics.is_empty()
+        && returned.events.is_empty()
+        && local_artifacts(machine.snapshot, start, end, view, facts, budget)?;
+    let sources = if local {
+        // Every returned position was proven to use this authorized snapshot.
+        // Do not reconstruct unrelated accepted declarations merely to check it.
+        let mut sources = SourceStore::default();
+        sources.insert_ref_with_budget(machine.snapshot, budget)?;
+        sources
+    } else {
+        combined(machine, added, original_sources, budget, admission)?
+    };
     artifacts(
         machine, added, maps, view, facts, start, end, &sources, budget, admission,
     )?;
@@ -257,6 +271,49 @@ pub(crate) fn check_provider(
         }
     }
     Ok(())
+}
+fn local_artifacts(
+    snapshot: &SourceSnapshot,
+    start: u64,
+    end: u64,
+    view: &ViewBundle,
+    facts: &[ReaderFact],
+    budget: &mut Budget,
+) -> Result<bool, ReaderError> {
+    let consumed = snapshot.span_with_budget(start, end, budget)?;
+    if !direct_artifact_geometry(&consumed, view, facts, budget)? {
+        return Ok(false);
+    }
+    // Presentation/Relation spans need not be captures. Account and check them
+    // explicitly before restricting the resolver; Capture was checked above.
+    for fact in facts {
+        let spans: &[nepl3_core::source::Span] = match fact {
+            ReaderFact::Capture { .. } => continue,
+            ReaderFact::Presentation { span, .. } => core::slice::from_ref(span),
+            ReaderFact::Relation { from, to, .. } => {
+                for span in [from, to] {
+                    budget.charge(
+                        Resource::Work,
+                        span.snapshot_ref().source.0.len() as u64 + 43,
+                    )?;
+                    if !consumed.contains(span) {
+                        return Ok(false);
+                    }
+                }
+                continue;
+            }
+        };
+        for span in spans {
+            budget.charge(
+                Resource::Work,
+                span.snapshot_ref().source.0.len() as u64 + 43,
+            )?;
+            if !consumed.contains(span) {
+                return Ok(false);
+            }
+        }
+    }
+    Ok(true)
 }
 fn check_view_offset(view: &ViewBundle, offset: usize) -> Result<(), ReaderError> {
     (offset as u64)
