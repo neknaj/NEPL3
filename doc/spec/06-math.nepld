@@ -131,23 +131,25 @@ body
       cons "MathML Coreの[要素/ようそ]をtyped Markupで[生成/せいせい]する。"
       cons "Number=mn、Symbol=mi、[表示/ひょうじ]Text=mtext、[加減乗/かげんじょう]・[比較/ひかく]=mrow+mo、frac=mfrac、sqrt=msqrt、root=mroot、sub/sup/scripts=msub/msup/msubsup、vector/matrix=mtable/mtr/mtd、[総和/そうわ]と[積分/せきぶん]=munder/munderoverまたは[対応/たいおう]するscript[形/けい]をdisplay modeから[決定/けってい]する。" nil
     cons paragraph
-      cons "[暗黙/あんもく]のブラウザprecedence[解釈/かいしゃく]へ[依存/いぞん]しない。"
-      cons "binding powerは[比較/ひかく]10、add/sub20、mul30、neg40、pow50、atomic60。"
-      cons "[弱/よわ]い[子/こ]を[強/つよ]い[親/おや]へ[入/い]れる[際/さい]はmoによる[可視括弧/かしかっこ]を[挿入/そうにゅう]。"
-      cons "subの[右側/みぎがわ]、powの[左側等/ひだりがわなど]、[同/おな]じprecedenceでも[非結合/ひけつごう]な[位置/いち]に[括弧/かっこ]を[入/い]れる。"
-      cons "fracは[分子分母/ぶんしぶんぼ]の[構造自体/こうぞうじたい]がgroupになる。" nil
+      cons "backendは[式/しき]の[演算順序/えんざんじゅんじょ]を[表示構造/ひょうじこうぞう]へ[明示/めいじ]する。"
+      cons "binding powerは[比較/ひかく]を10、add/subを20、mulを30、negを40、powを50、atomicを60とする。"
+      cons "[子/こ]のbinding powerが[親/おや]より[小/ちい]さい[場合/ばあい]は、mo[要素/ようそ]で[可視/かし]の[括弧/かっこ]を[挿入/そうにゅう]する。"
+      cons "subの[右側/みぎがわ]やpowの[左側/ひだりがわ]など、[結合順序/けつごうじゅんじょ]の[保持/ほじ]が[必要/ひつよう]な[位置/いち]には、binding powerが[等/ひと]しい[場合/ばあい]も[括弧/かっこ]を[挿入/そうにゅう]する。"
+      cons "fracでは、[分子/ぶんし]と[分母/ぶんぼ]の[構造/こうぞう]がそれぞれの[演算範囲/えんざんはんい]を[表/あらわ]す。" nil
     cons paragraph
       cons "[数学表示/すうがくひょうじ]の2[項演算/こうえんざん]は[元/もと]の[順序/じゅんじょ]を[保持/ほじ]する。"
       cons "mulのscalar/[記号列/きごうれつ]でも、[読/よ]み[違/ちが]いを[避/さ]けるためreference backendは[中央点/ちゅうおうてん]を[表示/ひょうじ]する。"
-      cons "callはfunctionと[括弧付/かっこつ]きarguments。"
-      cons "sequenceは[指定順/していじゅん]のmrowであり、[勝手/かって]に[演算/えんざん]を[補/おぎな]わない。" nil
+      cons "callはfunctionに[続/つづ]けて、[括弧/かっこ]で[囲/かこ]んだargumentsを[表示/ひょうじ]する。"
+      cons "sequenceは[指定/してい]された[要素/ようそ]を[元/もと]の[順序/じゅんじょ]でmrowへ[配置/はいち]する。"
+      cons "sequenceへの[演算/えんざん]の[自動補完/じどうほかん]は[禁止/きんし]する。" nil
     cons paragraph
-      cons "letは「name := init ; body」のmrow。"
+      cons "letは「name := init ; body」をmrowで[表示/ひょうじ]する。"
       cons "sumの[下限/かげん]は「index = lower」、[上限/じょうげん]はupper、bodyに[必要/ひつよう]な[括弧/かっこ]を[付/つ]ける。"
-      cons "integralは[積分記号/せきぶんきごう]と[上下限/じょうかげん]、body、[微分記号/びぶんきごう]dとindex。"
-      cons "equalは[表示/ひょうじ]であって[証明書/しょうめいしょ]ではない。" nil
+      cons "integralは、[積分記号/せきぶんきごう]と[上下限/じょうかげん]、body、[微分記号/びぶんきごう]dとindexを[表示/ひょうじ]する。"
+      cons "equalは[等式/とうしき]の[表示/ひょうじ]を[生成/せいせい]する。"
+      cons "[等式/とうしき]の[正/ただ]しさは、この[表示処理/ひょうじしょり]の[保証範囲/ほしょうはんい]に[含/ふく]めない。" nil
     cons paragraph
-      cons "labelのDoc sentence annotationはsuiteがsafeなphrasing fragmentへ[準備/じゅんび]し、mtextを[介/かい]した[注記/ちゅうき]として[出力/しゅつりょく]する。"
+      cons "labelのDoc sentence annotationは、suiteが[安全性/あんぜんせい]を[確認/かくにん]したphrasing fragmentへ[変換/へんかん]し、mtextを[介/かい]した[注記/ちゅうき]として[出力/しゅつりょく]する。"
       cons "MathMLではlabelをmunderで[表/あらわ]し、[最初/さいしょ]の[子要素/こようそ]に[数式/すうしき]、[次/つぎ]の[子要素/こようそ]にDocのXHTML phrasingを[含/ふく]むmtextを[置/お]く。[複合演算/ふくごうえんざん]を[注記/ちゅうき]する[場合/ばあい]はbaseを[括弧/かっこ]で[囲/かこ]み、[注記/ちゅうき]の[対象範囲/たいしょうはんい]と[周囲/しゅうい]の[演算順序/えんざんじゅんじょ]を[保/たも]つ。"
       cons "hostは[選択済/せんたくず]みのDoc rendererへ[元/もと]のForeignClosureを[渡/わた]し、[同/おな]じBudgetで[準備/じゅんび]と[変換/へんかん]を[行/おこな]う。Docの[型/かた]・source・[局所/きょくしょ]labelを[検査/けんさ]し、[未解決/みかいけつ]の[外部要求/がいぶようきゅう]を[保持/ほじ]する。Math backendは[返/かえ]されたphrasingと[結合後/けつごうご]の[全表示経路/ぜんひょうじけいろ]を[検査/けんさ]し、[重複/じゅうふく]するHTML IDやblock[内容/ないよう]を[拒否/きょひ]する。"
       cons "MathMLの[内容/ないよう]モデルに[適合/てきごう]しないblock[内容/ないよう]は[受/う]け[入/い]れない。" nil
