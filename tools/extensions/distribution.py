@@ -10,6 +10,7 @@ import tomlkit
 
 ROOT = Path(__file__).resolve().parents[2]
 MEMBERS = tuple(f"crates/foundation/{name}" for name in ("core", "wire", "reader", "engine"))
+SUPPORT = ("Cargo.lock", "rust-toolchain.toml", "LICENSE")
 
 
 def check_lock(original, extracted):
@@ -60,7 +61,8 @@ def export(root, destination):
         ["git", "ls-files", "-z", "--", *MEMBERS], cwd=root
     ).decode("utf-8").split("\0")
     paths = [Path(p) for p in paths if p]
-    for path in paths:
+    copies = paths + [Path(p) for p in SUPPORT]
+    for path in copies + [Path("Cargo.toml")] + [Path(m) / "Cargo.toml" for m in MEMBERS]:
         source = root / path
         if source.is_symlink() or not source.resolve().is_relative_to(root):
             raise ValueError(f"source path escapes distribution: {path}")
@@ -71,7 +73,7 @@ def export(root, destination):
         [(root / member / "Cargo.toml").read_text(encoding="utf-8") for member in MEMBERS],
     )
     destination.mkdir(parents=True, exist_ok=False)
-    for path in paths + [Path("Cargo.lock"), Path("rust-toolchain.toml"), Path("LICENSE")]:
+    for path in copies:
         target = destination / path
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(root / path, target)

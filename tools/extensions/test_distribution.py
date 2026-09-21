@@ -1,11 +1,37 @@
 """Distribution boundary and lock preservation tests."""
 import tomllib
 import unittest
+from pathlib import Path
+import tempfile
+from unittest.mock import patch
 
-from tools.extensions.distribution import MEMBERS, check_lock, workspace_manifest
+from tools.extensions.distribution import MEMBERS, SUPPORT, check_lock, export, workspace_manifest
 
 
 class DistributionTests(unittest.TestCase):
+    def test_every_root_input_is_checked_before_output_is_created(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            for name in (*SUPPORT, "Cargo.toml"):
+                (root / name).write_text("fixture", encoding="utf-8")
+            for member in MEMBERS:
+                directory = root / member
+                directory.mkdir(parents=True)
+                (directory / "Cargo.toml").write_text("fixture", encoding="utf-8")
+            for name in (*SUPPORT, "Cargo.toml"):
+                rejected = root / name
+                output = root / "output"
+                # Inject the filesystem predicate without requiring Windows
+                # symlink privileges. No TOML or Cargo operation may follow it.
+                with self.subTest(name=name), \
+                        patch("tools.extensions.distribution.subprocess.check_output", return_value=b""), \
+                        patch.object(Path, "is_symlink", lambda path: path == rejected), \
+                        patch("tools.extensions.distribution.subprocess.run") as cargo:
+                    with self.assertRaises(ValueError):
+                        export(root, output)
+                    cargo.assert_not_called()
+                    self.assertFalse(output.exists())
+
     def test_only_used_dependencies_and_inherited_settings_are_retained(self):
         source = '''[workspace]
 members = ["tools"]
