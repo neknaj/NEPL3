@@ -47,13 +47,16 @@ pub(crate) fn set_to_value_with_structures<'a, C: FoundationValueCodec>(
     for page in &set.pages {
         b.charge(Resource::Work, 1)?;
         let registration = page.registration.put(s, c, b)?;
-        let (document, structure) = to_value_with_structure(&page.document, r, c, b)?;
+        let (document, structure) = encode_with_structure(&page.document, r, c, b)?;
         pages::push(&mut structures, structure, b)?;
         let value = record(s, "PageDocument", [registration, document], b)?;
         pages::push(&mut values, value, b)?;
     }
     let files = set.files.put(s, c, b)?;
     let value = record(s, "PageSet", [NdfValue::List(values), files], b)?;
+    // This recursively validates every DocumentSyntax, registration and file.
+    // Checking each document again before this traversal duplicates the same
+    // schema work. No generated value leaves this boundary before this check.
     text::check_type(&value, "PageSet", r, b)?;
     Ok((value, structures))
 }

@@ -19,6 +19,85 @@ fn b() -> Budget {
 fn err(e: impl core::fmt::Debug) -> String {
     format!("{e:?}")
 }
+
+#[test]
+fn batch_encoding_preserves_checked_documents_and_stops() -> Result<(), String> {
+    let r = registry()?;
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&r, &sources, &mut admission).map_err(err)?;
+    let example = set().pages.remove(0);
+    let mut standalone_budget = b();
+    let standalone = portable::to_value(&example.document, &r, &mut codec, &mut standalone_budget)
+        .map_err(err)?;
+    let mut previous_work = None;
+    for count in [4, 8, 16] {
+        let input = PageSet {
+            pages: (0..count)
+                .map(|i| PageDocument {
+                    registration: PageRegistration {
+                        id: format!("page-{i:02}"),
+                        source: format!("doc/page-{i:02}.nepld"),
+                        route: format!("docs/page-{i:02}.html"),
+                    },
+                    document: example.document.clone(),
+                })
+                .collect(),
+            files: vec![],
+        };
+        let mut budget = b();
+        let value =
+            portable::pages::set_to_value(&input, &r, &mut codec, &mut budget).map_err(err)?;
+        let NdfValue::Record(root) = &value else {
+            return Err("PageSet record".into());
+        };
+        let NdfValue::List(pages) = &root.fields[0] else {
+            return Err("page list".into());
+        };
+        for page in pages {
+            let NdfValue::Record(page) = page else {
+                return Err("PageDocument record".into());
+            };
+            // The standalone checked public adapter is an independent entry to
+            // the same wire contract; batching must preserve every document.
+            assert_eq!(page.fields[1], standalone);
+        }
+        if let Some(previous) = previous_work {
+            assert!(budget.usage().work < previous * 3);
+        }
+        previous_work = Some(budget.usage().work);
+        // This fixture permits 20% above independently checked standalone
+        // documents for PageSet/PageDocument wrappers and registrations.
+        // A second DocumentSyntax schema walk exceeds this allowance.
+        let allowance = standalone_budget.usage().work * count as u64 * 6 / 5;
+        assert!(budget.usage().work < allowance);
+        let mut limits = b().limits();
+        limits.work = budget.usage().work - 1;
+        let mut limited = Budget::new(limits);
+        assert!(matches!(
+            portable::pages::set_to_value(&input, &r, &mut codec, &mut limited),
+            Err(portable::PortableError::Stopped(
+                nepl3_core::budget::StopReason::WorkLimit
+            ))
+        ));
+        let mut corrupt = value;
+        let NdfValue::Record(root) = &mut corrupt else {
+            return Err("PageSet record".into());
+        };
+        let NdfValue::List(pages) = &mut root.fields[0] else {
+            return Err("page list".into());
+        };
+        let NdfValue::Record(page) = &mut pages[0] else {
+            return Err("PageDocument record".into());
+        };
+        page.fields[1] = NdfValue::Unit;
+        assert!(portable::pages::set_from_value(&corrupt, &r, &mut codec, &mut b()).is_err());
+        let mut invalid = input;
+        invalid.pages[0].document.value.root = DocRoot::Article(ArticleRef(u64::MAX));
+        assert!(portable::pages::set_to_value(&invalid, &r, &mut codec, &mut b()).is_err());
+    }
+    Ok(())
+}
 fn registry() -> Result<SchemaRegistry, String> {
     let mut r = SchemaRegistry::default();
     for d in [
