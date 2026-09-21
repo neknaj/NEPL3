@@ -1,22 +1,24 @@
 # Doc文書の執筆指針
 
-この指針は、NEPL3の例・仕様・解説をDocで書くときの表記選択を定める。[Doc仕様](spec/05-document.md)の構文・意味を変更するものではない。正式文書の正本切替えは[移行条件](spec/16-doc-migration.md)に従う。
+この指針は、NEPL3の例・仕様・解説をDocで執筆する際の表記選択と確認手順を定める。構文と意味は[Doc仕様](spec/05-document.md)、正式文書の正本切替えは[移行条件](spec/16-doc-migration.md)を参照する。
 
 ## Sentence literalを標準にする場面
 
-本文がText・Ruby・Annoで表せる場合は、読みやすいsentence literalを基本とする。通常の説明文、見出し、表のセル、対応文のvariantに使える。Ruby・Annoの入れ子だけを理由に前置構築へ展開する必要はない。
+Sentence literalは、Text・Ruby・Annoからなる文章を引用符内に記述する表記である。通常の説明文、見出し、表のセル、対応文のvariantでは、この表記を基本とする。Ruby・Annoの入れ子も表現できる。
 
 ```text
 "これは{[文書/ぶんしょ]/document}の[例/れい]です。"
 ```
 
-一つのliteralは一つのSentenceである。本文では著者が対応させたい文ごとに分ける。見出しや表のセルは短い語句でもSentenceとしてよい。句点の数から処理系が自動分割する規則は設けない。
+一つのliteralは一つのSentenceを表す。本文では、著者が対応させる文ごとにliteralを記述する。見出しや表のセルでは、短い語句も一つのSentenceとして扱える。Sentenceの境界は著者が指定し、literal内の句点は本文の一部として扱う。
 
-literal内にソース上の直接改行は書かない。文書の明示的な改行には[明示的な改行](#明示的な改行はbreak)の`break`を使い、そのSentenceは前置構築にする。`\n`はTextのデータとしてLFを保持するescapeであり、文書構造の改行を表す標準表記にはしない。引用符は `\"`、backslashは `\\`、文字としての注釈区切りは `\[` などでescapeする。画面幅に応じた折返しは表示側に任せる。長い一文は、それだけを理由に別の対応単位へ分割せず、編集しにくい場合に前置構築を選ぶ。
+literalはソース上の一行に記述する。引用符は `\"`、バックスラッシュは `\\`、文字としての注釈区切りは `\[` などでescapeする。`\n`はTextのデータとしてLFを保持するescapeである。
+
+文書構造として指定する改行には、前置構築の[`break`](#明示的な改行はbreak)を使う。画面幅に応じた折返しは表示側が処理する。長い文も著者が指定した対応単位を保持し、編集上の都合に応じて前置構築を選択する。
 
 ## 明示的なsentence構築を選ぶ場面
 
-`strong`・`em`・`ref`・`anchor`・`link`・Inline位置の`code`・画像・Mathなど、literalにないInlineを含むSentenceは前置構築で表す。明示Breakが必要な場合も同様で、Text内のLFへ置換しない。
+前置構築は、`sentence`の子としてInlineを列挙する表記である。強調の`strong`・`em`、参照の`ref`・`anchor`・`link`、Inline位置の`code`、画像、Math、明示的な改行の`break`を含むSentenceに使用する。
 
 ```text
 sentence
@@ -31,13 +33,15 @@ sentence
   nil
 ```
 
-複雑な注釈の各部分を編集・比較したい場合や、constructor API・構文の解説を示す場合にも前置構築を使える。機能を見せるためだけに通常の本文すべてを展開する必要はない。プログラムから文書を生成するときは、型付きconstructorで意味構造を作り、ソース文字列の連結と再解析を前提にしない。
+複雑な注釈の各部分を編集・比較する場合や、constructor API・構文を解説する場合にも前置構築を使用できる。通常の本文は、含まれるInlineと編集目的に応じて表記を選択する。
 
-`text "..."` の引用部分は通常Textであり、sentence literalの注釈構文を再解釈しない。前置構築でRuby・Annoが必要なら、それぞれのconstructorを使う。Sentence literalはSentenceであってInlineではないため、`sentence`のInline列へそのまま挿入しない。
+プログラムから文書を生成する通常の経路では、型付きconstructorで意味構造を構築し、既存の検査・printerへ渡す。ソース文字列の出力はprinterが担当する。
+
+`text "..."` の引用部分は通常のText値として保持される。Ruby・Annoは、それぞれのconstructorで構築する。Sentence literalのcategoryはSentenceであり、`sentence`の子に使用できるcategoryはInlineである。
 
 ## 明示的な改行はbreak
 
-`break`は引数を持たないInline constructorである。同じSentenceの途中で改行するために使い、Sentenceやparagraphの境界を増やさない。HTMLでは`br`、plain text抽出ではLFになる。段落を分けたい場合はparagraphを作る。空の段落や複数のbreakを余白調整に使わない。
+`break`は引数を持たないInline constructorであり、同じSentence内の改行位置を指定する。HTMLでは`br`、plain text抽出ではLFとして出力される。Sentenceの対応単位は保持される。段落の境界はparagraphで表す。空の段落や複数のbreakによる余白調整は禁止する。
 
 ```text
 sentence
@@ -48,11 +52,11 @@ sentence
   nil
 ```
 
-既存のText内LFやRawCodeの元の改行は、内容を保つためにそのまま保持する。`break`との自動相互変換はしない。Compact printerも、breakを含むSentenceをliteralへ押し込まない。[改行の例](../examples/document/line-break.nepld)では、日英の対応文それぞれにbreakを置いている。
+既存のText内LFとRawCodeの改行は、元の内容として保持する。これらと`break`の自動相互変換は禁止する。Compact printerは、breakを含むSentenceを前置構築で出力する。[改行の例](../examples/document/line-break.nepld)では、日英の対応文それぞれにbreakを配置している。
 
 ## sentenceとparallelの使い分け
 
-多言語の本文は文単位で `parallel` を作り、各 `variant` にその言語のSentenceを置く。段落全体を一つの対応文に詰め込まない。各言語は意味が対応する自然な文にし、語順や単語数の一致を要求しない。
+`parallel`は、意味が対応する各言語のSentenceをまとめる構造である。本文では文ごとに作成し、各`variant`へ対応する言語のSentenceを配置する。複数の文からなる段落は、文ごとのparallelを並べて表す。各言語の語順と語数は、その言語で自然に意味を表現するために選択する。
 
 ```text
 parallel
@@ -61,23 +65,25 @@ parallel
   nil
 ```
 
-variantごとにliteralと前置構築を選べる。一方の言語に構造が必要でも、他方まで機械的に同じ表記へ変換しない。強調や参照を付ける場合は、対応言語でも意味と参照先が一致するか確認する。翻訳がない場合を空Sentenceでごまかさず、空の翻訳を意図する場合だけ空Sentenceを使う。
+表記はvariantごとに選択する。各言語で必要なInlineに応じて、literalと前置構築を組み合わせられる。強調や参照を付ける場合は、対応言語の意味と参照先も確認する。空Sentenceは、空の翻訳を意図する場合に限って使用する。
 
-[線型結合の例](../examples/document/linear-combination.nepld)は両経路を学べる例として、最初の対応文にliteral、続く対応文に明示的なsentence構築を残す。本文の対応単位はどちらも同じである。
+[線型結合の例](../examples/document/linear-combination.nepld)では、最初の対応文をliteral、続く対応文を明示的なsentence構築で記述する。両表記とも、文単位の意味対応を保持する教材として使用する。
 
 ## RubyとAnnoの対象
 
-日本語の振り仮名は[GlossのRuby指針](https://github.com/neknaj/gloss#ruby)に従い、漢字部分に付ける。送り仮名・助詞・片仮名・数字・記号を漢字と一緒にRubyの本体へ包まない。読みは文脈に合う語・漢字部分の単位で付け、漢字一文字ずつへの分割を強制しない。
+Rubyは本文に読みを付与する構造である。日本語の振り仮名は[GlossのRuby指針](https://github.com/neknaj/gloss#ruby)に従い、漢字部分に付ける。送り仮名・助詞・カタカナ・数字・記号は通常のTextとして配置する。読みの単位は、文脈に合う語または漢字部分とする。
 
 語句全体の訳語・意味説明はAnnoに置く。例えば `{[原点/げんてん]を[通/とお]る[直線/ちょくせん]/a line through the origin}` とする。前置構築ではAnnoのbaseをConcatで組み、その子をRubyとTextに分ける。カタカナ語は `{ベクトル/vector}` のように意味注釈を付けられる。
 
-これは日本語文書の執筆指針である。中国語のピンインや他言語の転写など、Rubyが扱える一般的な音韻注釈をparserやschemaで禁止しない。
+漢字部分への振り仮名という規則は、日本語文書の執筆に適用する。Rubyのparserとschemaは、中国語のピンインや他言語の転写を含む一般的な音韻注釈を扱う。
 
 ## 構造と確認
 
-話題のまとまりはsection、連続する本文はparagraph、列挙はlist、同じ項目を比較する情報はtableで表す。参照には安定したsection/anchor IDを使う。機能の使用数を増やすことを目的に、不要な装飾・表・埋め込みを足さない。
+話題のまとまりはsection、連続する本文はparagraph、列挙はlist、同じ項目を比較する情報はtableで表す。参照には安定したsection/anchor IDを使う。装飾・表・埋め込みは、読者が内容を理解するために必要な箇所へ配置する。
 
-表記を変更したときは本文・読み・注釈・対応文・強調・参照を保つ。literalと前置構築の等価性は意味構造で確認し、元ソースの位置まで同一だとは扱わない。構造auditの成功と、実parser・lower・HTML生成の成功も区別する。資源停止や未対応機能が残っている例は、実行可能と広告せず制約を記録する。
+表記変更後は、本文・読み・注釈・対応文・強調・参照の保持を確認する。literalと前置構築の等価性は意味構造で判定する。ソース位置は各表記のsourceに属し、変更後の位置を個別に確認する。
+
+構造audit、正式なparser、lower、HTML生成は、それぞれの検証結果を記録する。資源停止や未対応機能が残る例には、その制約を明記する。実行可能性の説明は、実際に成功した処理範囲に限定する。
 
 RustのDoc APIで既存部分を組み替える場合は、正式にlowerした`DocumentSyntax`から親子参照を辿って対象を選び、`fragment(DocRoot, registry, budget, admission)`で抽出する。抽出は元文書全体を検証し、到達可能なnodeとembedを再配置する。共有参照とForeignClosureを保持し、Source・Origin・View・source mapは元identityのまま保持する。このため、費用と保持するsource集合は元文書全体に依存する。
 
