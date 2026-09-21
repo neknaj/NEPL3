@@ -1,4 +1,6 @@
 use super::*;
+#[cfg(test)]
+mod tests;
 use crate::plan::*;
 use nepl3_core::{
     value::{KindRef, OperationRef, Variant},
