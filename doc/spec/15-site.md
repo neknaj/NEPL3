@@ -1,180 +1,178 @@
-# 15. 静的サイト・例・GitHub Pages
+<!-- Generated from doc/spec/15&#45;site.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page site; source SHA-256 8cca6e5ac51a421b1a830d823b0025f5f1aee5a88a95f480c61c484a061ca95d; alias input SHA-256 4447b5e98720cbfcb6df9ded70f221095091b1d9f630497be982a07aa7c823c2; document digest 812476e6a3ee7c2abc2d51b13d1894846f3509550ed7c2786029f03c25e0b038; input PageSet digest 0f2ce49aa1cabeeb08c4e819bcdc1b59d9d5c67860fc748c8a584179d468a3da; input context SHA-256 282aaa9f1f863bca7dcccb234f007f2ea850de273d33c56548853943f9df53e0. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
-## 1. 公開構成
+<a name="15-静的サイト例github-pages"></a>
 
-GitHub Pagesへの文書公開は明示された成果物であり、任意の作業として取り下げない。
-目的は仕様・設計等のMarkdown正本をNEPL3dへ移し、その出力を人が読めるようにすることである。
-移行済みの正式文書は.nepldであり、HTMLは再生成できるprojectionである。
-T19の配信基盤やrustdocの完全な資源閉包を、T21の言語実装・正本移行の前提にしない。
+# 15\. 静的\[せいてき\]サイト・例\[れい\]・GitHub Pages
 
-T19の初期段階は、Markdown/NEPL3dの正本選択、移行前後で維持するroute、HTML生成、
-必要なCSS/font、主要リンクとbrowser可読性、検査した同じ成果物のPages公開とする。
-rustdoc・tutorial・例の拡充、生成HTML全fragmentの詳細監査は後段の改善として分離する。
-既知の補助生成器の不具合は対象と影響を記録し、NEPL3dの移行を止めない。
-NEPL3dのparse/schema/意味・Source/Origin・参照・情報保存の検査、rendererのescaping、
-資源identityと生成失敗の検出は維持する。サイトが読めるだけでこれらの本体検査を代替しない。
+<a name="n-7075626c69635f6c61796f7574"></a>
 
-初期docs-only公開は、NEPL3d正本への段階移行を人が閲覧できる形で支える。
-正式文書は移行後のNEPL3d sourceであり、HTMLは再生成できるprojectionである。
-本章第5節の高度なLKG/journal復旧は後段の配信機能とし、初期公開・T21移行の前提にしない。
-初期publisherは成功したmain CIの固定commit・検査済み元payloadを照合し、同じfile byte列を公式Pages actionで梱包して
-主要routeと公開byteを確認する。失敗はworkflow失敗として報告し、自動rollbackやLKG完成を主張しない。
-CIの決定的tarとPages輸送tarのbyte identityは区別し、輸送時にHTMLを再生成しない。
-rustdocの完全性・全fragment監査・Playground完成も初期公開の前提にしない。
-公開namespaceとrepo別の所有境界は[Pages情報設計](../decisions/pages-information-architecture.md)に従う。
+<a name="1-公開構成"></a>
 
+## 1\. 公開構成\[こうかいこうせい\]
 
-標準公開先を `https://neknaj.github.io/NEPL3/` とするGitHub Pages project siteを最終成果物に含める。独立HTMLのトップ・docsと、ブラウザWasmで動くPlaygroundを配布する。言語処理serverは設けない。通常のsource取得は検査対象commitのGit checkoutまたはsource archiveを用い、main pushごとの重複archive配布は行わない。サイト実装前に空のPages siteや架空のWasmを公開しない。
+GitHub Pagesへの文書公開\[ぶんしょこうかい\]は明示\[めいじ\]された成果物\[せいかぶつ\]であり、任意\[にんい\]の作業\[さぎょう\]として取\[と\]り下\[さ\]げない。目的\[もくてき\]は仕様\[しよう\]・設計\[せっけい\]などのMarkdown正本\[せいほん\]をNEPL3dへ移\[うつ\]し、その出力\[しゅつりょく\]を人\[ひと\]が読\[よ\]めるようにすることである。移行済\[いこうず\]みの正式文書\[せいしきぶんしょ\]は\.nepldであり、HTMLは再生成\[さいせいせい\]できるprojectionである。T19の配信基盤\[はいしんきばん\]やrustdocの完全\[かんぜん\]な資源閉包\[しげんへいほう\]を、T21の言語実装\[げんごじっそう\]・正本移行\[せいほんいこう\]の前提\[ぜんてい\]にしない。
 
-予定する出力はトップのindex.html、playground/index.html、tutorial/index.html、docs/index.htmlとreference/design、api/rust、examples/manifest.json、assets内のJS/CSS/Wasm/Worker、build.json。`site/` は配置・template・固定assetを所有し、`tools/src/site/` が生成と検査を行う。
+T19の初期段階\[しょきだんかい\]は、Markdown\/NEPL3dの正本選択\[せいほんせんたく\]、移行前後\[いこうぜんご\]で維持\[いじ\]するroute、HTML生成\[せいせい\]、必要\[ひつよう\]なCSS\/font、主要\[しゅよう\]リンクとbrowser可読性\[かどくせい\]、検査\[けんさ\]した同\[おな\]じ成果物\[せいかぶつ\]のPages公開\[こうかい\]とする。rustdoc・tutorial・例\[れい\]の拡充\[かくじゅう\]、生成\[せいせい\]HTML全\[ぜん\]fragmentの詳細監査\[しょうさいかんさ\]は、後段\[こうだん\]の改善\[かいぜん\]として分離\[ぶんり\]する。既知\[きち\]の補助生成器\[ほじょせいせいき\]の不具合\[ふぐあい\]は対象\[たいしょう\]と影響\[えいきょう\]を記録\[きろく\]し、NEPL3dの移行\[いこう\]を止\[と\]めない。NEPL3dのparse\/schema\/意味\[いみ\]・Source\/Origin・参照\[さんしょう\]・情報保存\[じょうほうほぞん\]の検査\[けんさ\]、rendererのescaping、資源\[しげん\]identityと生成失敗\[せいせいしっぱい\]の検出\[けんしゅつ\]は維持\[いじ\]する。サイトが読\[よ\]めるだけで、これらの本体検査\[ほんたいけんさ\]を代替\[だいたい\]しない。
 
-`/NEPL3/playground/`、`/NEPL3/tutorial/`、`/NEPL3/docs/` は本体の安定入口として予約する。
-Tutorialの入口は従来のplannedなdocs/tutorialsではなくtutorialとする。予約は公開・実装完了を意味しない。
-PlaygroundとTutorialは特定guest languageの専用UI・入門書にせず、共通原理、最小guest languageの作成、
-LanguagePackage/schema/operation/provider/Profile、別言語のimport/compositionを扱う。
-sentenceとannotationも独立したLanguagePackageとして教材に利用し、foundationの暗黙の特別構文にしない。
+初期\[しょき\]docs\-only公開\[こうかい\]は、NEPL3d正本\[せいほん\]への段階移行\[だんかいいこう\]を人\[ひと\]が閲覧\[えつらん\]できる形\[かたち\]で支\[ささ\]える。正式文書\[せいしきぶんしょ\]は移行後\[いこうご\]のNEPL3d sourceであり、HTMLは再生成\[さいせいせい\]できるprojectionである。本章第\[ほんしょうだい\]5節\[せつ\]の高度\[こうど\]なLKG\/journal復旧\[ふっきゅう\]は後段\[こうだん\]の配信機能\[はいしんきのう\]とし、初期公開\[しょきこうかい\]・T21移行\[いこう\]の前提\[ぜんてい\]にしない。初期\[しょき\]publisherは成功\[せいこう\]したmain CIの固定\[こてい\]commit・検査済\[けんさず\]み元\[もと\]payloadを照合\[しょうごう\]し、同\[おな\]じfile byte列\[れつ\]を公式\[こうしき\]Pages actionで梱包\[こんぽう\]して、主要\[しゅよう\]routeと公開\[こうかい\]byteを確認\[かくにん\]する。失敗\[しっぱい\]はworkflow失敗\[しっぱい\]として報告\[ほうこく\]し、自動\[じどう\]rollbackやLKG完成\[かんせい\]を主張\[しゅちょう\]しない。CIの決定的\[けっていてき\]tarとPages輸送\[ゆそう\]tarのbyte identityは区別\[くべつ\]し、輸送時\[ゆそうじ\]にHTMLを再生成\[さいせいせい\]しない。rustdocの完全性\[かんぜんせい\]・全\[ぜん\]fragment監査\[かんさ\]・Playground完成\[かんせい\]も初期公開\[しょきこうかい\]の前提\[ぜんてい\]にしない。公開\[こうかい\]namespaceとrepo別\[べつ\]の所有境界\[しょゆうきょうかい\]は[Pages情報設計\[じょうほうせっけい\]](<\.\.\/decisions\/pages\-information\-architecture\.md>)に従\[したが\]う。
 
-T19はUI/runtimeのタスクへ依存せず、既存の固定版Markdown生成器を使うhost側の静的生成経路を先に完成できる。独自Markdown parserを追加しない。能力状態をdocs-only/interactiveで明示し、docs-onlyにはWasmや動くPlaygroundを要求しない。本文はJSを無効にしても読め、静的文書全pageに巨大Wasmを強制loadしない。未実装の操作入口は未提供と説明する。T19のscope付き完了はS01等のinteractive部分のpassedを意味しない。
+標準公開先\[ひょうじゅんこうかいさき\]を `https://neknaj.github.io/NEPL3/` とするGitHub Pages project siteを最終成果物\[さいしゅうせいかぶつ\]に含\[ふく\]める。独立\[どくりつ\]HTMLのトップ・docsと、ブラウザWasmで動\[うご\]くPlaygroundを配布\[はいふ\]する。言語処理\[げんごしょり\]serverは設\[もう\]けない。通常\[つうじょう\]のsource取得\[しゅとく\]は検査対象\[けんさたいしょう\]commitのGit checkoutまたはsource archiveを用\[もち\]い、main pushごとの重複\[ちょうふく\]archive配布\[はいふ\]は行\[おこな\]わない。サイト実装前\[じっそうまえ\]に空\[から\]のPages siteや架空\[かくう\]のWasmを公開\[こうかい\]しない。
 
-T20でT15/T18の実Wasm/Worker/UIを統合して全Web受入とPages公開を完成させる。T21はDoc rendererを使う文書移行を担当する。初期docs-only公開と全体完成を分け、language compilerが未実装なことだけで静的文書生成を止めない。
+予定\[よてい\]する出力\[しゅつりょく\]は、トップのindex\.html、playground\/index\.html、tutorial\/index\.html、docs\/index\.htmlとreference\/design、api\/rust、examples\/manifest\.json、assets内\[ない\]のJS\/CSS\/Wasm\/Worker、build\.jsonである。`site/` は配置\[はいち\]・template・固定\[こてい\]assetを所有\[しょゆう\]し、`tools/src/site/` が生成\[せいせい\]と検査\[けんさ\]を行\[おこな\]う。
 
-SiteConfigをbase pathの唯一の設定元にする。既定 `/NEPL3/` と受入用 `/acceptance/project/` の両方で、全HTML、CSS、JS、Worker、Wasm、rustdoc、例manifest、画像、検索、リンクを検査する。root絶対の `/assets/` を混ぜない。baseは先頭・末尾slash付きの正規化済みpathで、query、fragment、`..`、origin混入を拒否する。
+`/NEPL3/playground/`、`/NEPL3/tutorial/`、`/NEPL3/docs/` は本体\[ほんたい\]の安定入口\[あんていいりぐち\]として予約\[よやく\]する。Tutorialの入口\[いりぐち\]は、従来\[じゅうらい\]のplannedなdocs\/tutorialsではなくtutorialとする。予約\[よやく\]は公開\[こうかい\]・実装完了\[じっそうかんりょう\]を意味\[いみ\]しない。PlaygroundとTutorialは特定\[とくてい\]guest languageの専用\[せんよう\]UI・入門書\[にゅうもんしょ\]にせず、共通原理\[きょうつうげんり\]、最小\[さいしょう\]guest languageの作成\[さくせい\]、LanguagePackage\/schema\/operation\/provider\/Profile、別言語\[べつげんご\]のimport\/compositionを扱\[あつか\]う。sentenceとannotationも独立\[どくりつ\]したLanguagePackageとして教材\[きょうざい\]に利用\[りよう\]し、foundationの暗黙\[あんもく\]の特別構文\[とくべつこうぶん\]にしない。
 
-トップ/docsは静的なdirectory/index.htmlのroute、Playground内部はhash routeを使う。例は `/NEPL3/playground/#/doc?example=doc.sentence&revision=<commit>`。直接アクセス・再読み込みで復元でき、存在しないpage/例/版を別のものへ黙ってfallbackしない。未知routeは404または型付きのMissingRouteとして示す。
+T19はUI\/runtimeのタスクへ依存\[いぞん\]せず、既存\[きそん\]の固定版\[こていばん\]Markdown生成器\[せいせいき\]を使\[つか\]うhost側\[がわ\]の静的生成経路\[せいてきせいせいけいろ\]を先\[さき\]に完成\[かんせい\]できる。独自\[どくじ\]Markdown parserを追加\[ついか\]しない。能力状態\[のうりょくじょうたい\]をdocs\-only\/interactiveで明示\[めいじ\]し、docs\-onlyにはWasmや動\[うご\]くPlaygroundを要求\[ようきゅう\]しない。本文\[ほんぶん\]はJSを無効\[むこう\]にしても読\[よ\]め、静的文書\[せいてきぶんしょ\]の全\[ぜん\]pageに巨大\[きょだい\]Wasmを強制\[きょうせい\]loadしない。未実装\[みじっそう\]の操作入口\[そうさいりぐち\]は、未提供\[みていきょう\]と説明\[せつめい\]する。T19のscope付\[つ\]き完了\[かんりょう\]は、S01等\[とう\]のinteractive部分\[ぶぶん\]のpassedを意味\[いみ\]しない。
 
-## 2. 正本とmanifest
+T20でT15\/T18の実\[じつ\]Wasm\/Worker\/UIを統合\[とうごう\]して、全\[ぜん\]Web受入\[うけいれ\]とPages公開\[こうかい\]を完成\[かんせい\]させる。T21は、Doc rendererを使\[つか\]う文書移行\[ぶんしょいこう\]を担当\[たんとう\]する。初期\[しょき\]docs\-only公開\[こうかい\]と全体完成\[ぜんたいかんせい\]を分\[わ\]け、language compilerが未実装\[みじっそう\]なことだけで静的文書生成\[せいてきぶんしょせいせい\]を止\[と\]めない。
 
-正式文書はdoc/、文法とreferenceはlanguages/とschema/form表、実行例はexamples/、Rust APIは同じcommitのrustdocを入力とする。サイト専用にコピーした別仕様や別サンプルを手で保守しない。MarkdownはDoc移行完了まで正本として利用できるが、最終Doc移行は必須のT21で管理する。
+SiteConfigをbase pathの唯一\[ゆいいつ\]の設定元\[せっていもと\]にする。既定\[きてい\] `/NEPL3/` と受入用\[うけいれよう\] `/acceptance/project/` の両方\[りょうほう\]で、全\[ぜん\]HTML、CSS、JS、Worker、Wasm、rustdoc、例\[れい\]manifest、画像\[がぞう\]、検索\[けんさく\]、リンクを検査\[けんさ\]する。root絶対\[ぜったい\]の `/assets/` を混\[ま\]ぜない。baseは先頭\[せんとう\]・末尾\[まつび\]slash付\[つ\]きの正規化済\[せいきかず\]みpathとし、query、fragment、`..`、origin混入\[こんにゅう\]を拒否\[きょひ\]する。
 
-docs-only生成では追跡済みの `doc/spec/NN-name.md` 全体を公開対象とする。
-`doc/canonical.json` 登録ページはDoc正本から生成し、未登録ページだけを既存の
-pulldown-cmarkでHTML化する。生成Markdown projectionを再び正本として読まない。
-両経路は `docs/spec/NN-name.html` の配置を共有し、移行時も登録routeを優先する。
-未移行ページはMarkdown正本であることと同じcommitの原文を表示し、source・route・digest・
-rendererを `markdown-manifest.json` に記録する。各Markdown入力は256KiB、未移行仕様は256ページ、
-最終artifactは既存の32MiB上限内とする。相対リンクは元文書directoryを基準に解決し、
-repository外への脱出を拒否する。公開済み仕様へのリンクはsite内、その他の追跡済みfileは
-同じcommitのGitHub原文へ向ける。raw HTMLはescapeし、画像はalt文を表示する。
-この公開経路はT21の意味同等性検査や正本切替の完了を意味しない。
+トップ\/docsは静的\[せいてき\]なdirectory\/index\.htmlのroute、Playground内部\[ないぶ\]はhash routeを使\[つか\]う。例\[れい\]は `/NEPL3/playground/#/doc?example=doc.sentence&revision=<commit>` である。直接\[ちょくせつ\]アクセス・再読\[さいよ\]み込\[こ\]みで復元\[ふくげん\]でき、存在\[そんざい\]しないpage・例\[れい\]・版\[はん\]を別\[べつ\]のものへ黙\[だま\]ってfallbackしない。未知\[みち\]routeは404、または型付\[かたつ\]きのMissingRouteとして示\[しめ\]す。
 
-docs-onlyのトップは現在の`README.md`正本を固定版pulldown-cmarkでHTMLへ投影する。
-サイト収録済み仕様へのリンクはそのサイトrouteへ、siteに未収録のrepository資料は
-同じcommitのGitHub原本へ向ける。欠けた原本や未対応のリンク形式は生成失敗とする。
-raw HTMLは文字列として表示し、外部画像は代替テキストを残す。バッジ等の外部取得を
-生成・閲覧の前提にしない。READMEのSHA-256とrenderer版をbuild情報へ記録する。
-これはREADMEのNEPL3d移行完了ではなく、二つ目の手書き概要を作らないための公開経路である。
+<a name="n-736f75726365735f6d616e6966657374"></a>
 
-page registryは安定page ID、source正本の形式とpath、公開URL、見出し/anchor ID、旧URL aliasを保持する。表示見出しやファイル移設でIDを暗黙に再生成しない。例manifestは安定例ID、language/category、source path、byte digest、必要profile、revisionを持つ。「この例を試す」は同じmanifestから取得した同じbyte列を開く。存在しない例、digest不一致、異なるruntime/profile版を拒否する。
+<a name="2-正本とmanifest"></a>
 
-例manifestには実行前提と期待する操作/結果も記録する。本体の教材は共通原理と言語compositionを中心にし、個別言語はその応用例として扱う。repository分割後の詳細syntax/semantics reference、言語固有tutorial、examples、API/CLI文書は各言語repositoryが所有する。本体Pagesには役割、接続点、package identity、各repositoryへの入口を置き、詳細文書を複製集約しない。分割前の同居文書も所有者を区別し、公開済み入口は分割時に明示的な移行先を定める。rustdocだけを生成して利用者文書が完成した扱いにはしない。
+## 2\. 正本\[せいほん\]とmanifest
 
-T19のdocs-only例表示では、`site/examples.json`が安定ID、repository内のsource path、
-言語alias/categoryと必要source Profileを指定する。生成する`examples/index.html`は原文を
-HTML escapeして表示し、`examples/manifest.json`は元sourceとProfileのbyte digest、commit、
-配布pathを記録する。原文はそのまま`.txt`へ配布し、元拡張子がHTML等でも実行可能なpageにしない。
-表示時の改行正規化と取得原文のbyte保持を区別する。文字列だけでguestを評価せず、
-この段階のcapabilityは`source-view`、`execution_available`はfalseとする。
-source Profileのalias/category照合はResolvedProfileの完成・動作保証ではない。
-実行入口には別途、解決済みProfileと操作・期待結果の契約が必要である。
+正式文書\[せいしきぶんしょ\]はdoc\/、文法\[ぶんぽう\]とreferenceはlanguages\/とschema\/form表\[ひょう\]、実行例\[じっこうれい\]はexamples\/、Rust APIは同\[おな\]じcommitのrustdocを入力\[にゅうりょく\]とする。サイト専用\[せんよう\]にコピーした別仕様\[べつしよう\]や別\[べつ\]サンプルを手\[て\]で保守\[ほしゅ\]しない。MarkdownはDoc移行完了\[いこうかんりょう\]まで正本\[せいほん\]として利用\[りよう\]できるが、最終\[さいしゅう\]Doc移行\[いこう\]は必須\[ひっす\]のT21で管理\[かんり\]する。
 
-build.jsonにはsource commit、設計revision、schema/package/providerの解決済みdigest、例manifestと各assetのdigest、renderer/toolchain識別を記録する。`design/profile.json` はsource manifestであり、そのままruntime Profileと呼ばない。R009では解決済みProfileの閉じた型・検査を先に定め、T05/T11で実際のpackage/providerから生成して差分検査する。架空digestや未解決aliasでdispatchしない。R006のschema閉包をUI専用の文字列signatureで迂回しない。
+docs\-only生成では追跡済みの `doc/spec/NN-name.md` 全体を公開対象とする。`doc/canonical.json` 登録ページはDoc正本から生成し、未登録ページだけを既存のpulldown\-cmarkでHTML化する。生成\[せいせい\]Markdown projectionを再\[ふたた\]び正本\[せいほん\]として読\[よ\]まない。両経路は `docs/spec/NN-name.html` の配置を共有し、移行時も登録routeを優先する。未移行ページはMarkdown正本であることと同じcommitの原文を表示し、source・route・digest・rendererを `markdown-manifest.json` に記録する。各\[かく\]Markdown入力\[にゅうりょく\]は256KiB、未移行仕様\[みいこうしよう\]は256ページ、最終\[さいしゅう\]artifactは既存\[きそん\]の32MiB上限内\[じょうげんない\]とする。相対\[そうたい\]リンクは元文書\[もとぶんしょ\]directoryを基準\[きじゅん\]に解決\[かいけつ\]し、repository外\[がい\]への脱出\[だっしゅつ\]を拒否\[きょひ\]する。公開済\[こうかいず\]み仕様\[しよう\]へのリンクはsite内\[ない\]、その他\[た\]の追跡済\[ついせきず\]みfileは同\[おな\]じcommitのGitHub原文\[げんぶん\]へ向\[む\]ける。raw HTMLはescapeし、画像\[がぞう\]はalt文\[ぶん\]を表示\[ひょうじ\]する。この公開経路\[こうかいけいろ\]は、T21の意味同等性検査\[いみどうとうせいけんさ\]や正本切替\[せいほんきりかえ\]の完了\[かんりょう\]を意味\[いみ\]しない。
 
-docs-onlyではruntimeの解決済みidentityを未存在として明示し、架空値で埋めない。interactive起動時にはHTML/JS/Worker/Wasmのidentity一致を検査する。配信更新や古いcacheで混在を検出したら、新schemaを旧Wasmへ送らず、再取得またはreloadを案内する。公開済みの全commitについてWeb版を永久保存する義務は設けない。
+docs\-onlyのトップは現在の`README.md`正本を固定版pulldown\-cmarkでHTMLへ投影する。サイト収録済\[しゅうろくず\]み仕様\[しよう\]へのリンクはそのサイトrouteへ、siteに未収録\[みしゅうろく\]のrepository資料\[しりょう\]は同\[おな\]じcommitのGitHub原本\[げんぽん\]へ向\[む\]ける。欠\[か\]けた原本\[げんぽん\]や未対応\[みたいおう\]のリンク形式\[けいしき\]は生成失敗\[せいせいしっぱい\]とする。raw HTMLは文字列\[もじれつ\]として表示\[ひょうじ\]し、外部画像\[がいぶがぞう\]は代替\[だいたい\]テキストを残\[のこ\]す。バッジなどの外部取得\[がいぶしゅとく\]を生成\[せいせい\]・閲覧\[えつらん\]の前提\[ぜんてい\]にしない。READMEのSHA\-256とrenderer版\[ばん\]をbuild情報\[じょうほう\]へ記録\[きろく\]する。これはREADMEのNEPL3d移行完了\[いこうかんりょう\]ではなく、二\[ふた\]つ目\[め\]の手書\[てが\]き概要\[がいよう\]を作\[つく\]らないための公開経路\[こうかいけいろ\]である。
 
-## 3. 文書buildと利用品質
+page registryは、安定\[あんてい\]page ID、source正本\[せいほん\]の形式\[けいしき\]とpath、公開\[こうかい\]URL、見出\[みだ\]し\/anchor ID、旧\[きゅう\]URL aliasを保持\[ほじ\]する。表示見出\[ひょうじみだ\]しやファイル移設\[いせつ\]で、IDを暗黙\[あんもく\]に再生成\[さいせいせい\]しない。例\[れい\]manifestは、安定例\[あんていれい\]ID、language\/category、source path、byte digest、必要\[ひつよう\]profile、revisionを持\[も\]つ。「この例\[れい\]を試\[ため\]す」は、同\[おな\]じmanifestから取得\[しゅとく\]した同\[おな\]じbyte列\[れつ\]を開\[ひら\]く。存在\[そんざい\]しない例\[れい\]、digest不一致\[ふいっち\]、異\[こと\]なるruntime\/profile版\[はん\]を拒否\[きょひ\]する。
 
-固定toolchain・依存・asset・入力snapshotで決定的にbuildする。buildで意図しないnetwork取得、時刻埋込、例の評価を行わない。必要なdownloadは明示した取得段階でdigest固定し、生成段階は取得済みresourceだけを使う。欠けたresource、未解決参照、重複ID、unsupported content、失敗したrendererをエラーとする。
+例\[れい\]manifestには、実行前提\[じっこうぜんてい\]と期待\[きたい\]する操作\[そうさ\]・結果\[けっか\]も記録\[きろく\]する。本体\[ほんたい\]の教材\[きょうざい\]は共通原理\[きょうつうげんり\]と言語\[げんご\]compositionを中心\[ちゅうしん\]にし、個別言語\[こべつげんご\]はその応用例\[おうようれい\]として扱\[あつか\]う。repository分割後\[ぶんかつご\]の詳細\[しょうさい\]syntax\/semantics reference、言語固有\[げんごこゆう\]tutorial、examples、API\/CLI文書\[ぶんしょ\]は各言語\[かくげんご\]repositoryが所有\[しょゆう\]する。本体\[ほんたい\]Pagesには役割\[やくわり\]、接続点\[せつぞくてん\]、package identity、各\[かく\]repositoryへの入口\[いりぐち\]を置\[お\]き、詳細文書\[しょうさいぶんしょ\]を複製集約\[ふくせいしゅうやく\]しない。分割前\[ぶんかつまえ\]の同居文書\[どうきょぶんしょ\]も所有者\[しょゆうしゃ\]を区別\[くべつ\]し、公開済\[こうかいず\]み入口\[いりぐち\]は分割時\[ぶんかつじ\]に明示的\[めいじてき\]な移行先\[いこうさき\]を定\[さだ\]める。rustdocだけを生成\[せいせい\]して、利用者文書\[りようしゃぶんしょ\]が完成\[かんせい\]した扱\[あつか\]いにはしない。
 
-検索index、navigation、見出し階層、tableのheader、図の代替説明、keyboard操作、focus、contrast、拡大時の読み順、診断からの移動を検証する。自動アクセシビリティ検査に加え、指定browserでkeyboardと日本語IMEを手動確認する。未実行のdevice/screen reader確認を自動試験から推定しない。
+T19のdocs\-only例表示では、`site/examples.json`が安定ID、repository内のsource path、言語alias\/categoryと必要source Profileを指定する。生成する`examples/index.html`は原文をHTML escapeして表示し、`examples/manifest.json`は元sourceとProfileのbyte digest、commit、配布pathを記録する。原文はそのまま`.txt`へ配布し、元拡張子がHTMLなどでも実行可能なpageにしない。表示時\[ひょうじじ\]の改行正規化\[かいぎょうせいきか\]と取得原文\[しゅとくげんぶん\]のbyte保持\[ほじ\]を区別\[くべつ\]する。文字列だけでguestを評価せず、この段階のcapabilityは`source-view`、`execution_available`はfalseとする。source Profileのalias\/category照合\[しょうごう\]は、ResolvedProfileの完成\[かんせい\]・動作保証\[どうさほしょう\]ではない。実行入口\[じっこういりぐち\]には別途\[べっと\]、解決済\[かいけつず\]みProfileと操作\[そうさ\]・期待結果\[きたいけっか\]の契約\[けいやく\]が必要\[ひつよう\]である。
 
-## 4. 配布
+build\.jsonには、source commit、設計\[せっけい\]revision、schema\/package\/providerの解決済\[かいけつず\]みdigest、例\[れい\]manifestと各\[かく\]assetのdigest、renderer\/toolchain識別\[しきべつ\]を記録\[きろく\]する。`design/profile.json` はsource manifestであり、そのままruntime Profileとは呼\[よ\]ばない。R009では解決済\[かいけつず\]みProfileの閉\[と\]じた型\[かた\]・検査\[けんさ\]を先\[さき\]に定\[さだ\]め、T05\/T11で実際\[じっさい\]のpackage\/providerから生成\[せいせい\]して差分検査\[さぶんけんさ\]する。架空\[かくう\]digestや未解決\[みかいけつ\]aliasでdispatchしない。R006のschema閉包\[へいほう\]を、UI専用\[せんよう\]の文字列\[もじれつ\]signatureで迂回\[うかい\]しない。
 
-T20でWasm/JS/Worker/docs/rustdoc/例manifest/build.jsonを一つのartifactにまとめる。実際の非root baseでbuild・browser・リンク検査を通し、quality成功後に**同じartifact**を配布する。検査後の別rebuildを配信しない。deploy jobだけに `pages: write` と `id-token: write`、`github-pages` environmentを与え、PR jobは公開権限を持たない。
+docs\-onlyでは、runtimeの解決済\[かいけつず\]みidentityが未存在\[みそんざい\]であることを明示\[めいじ\]し、架空値\[かくうち\]で埋\[う\]めない。interactive起動時\[きどうじ\]には、HTML\/JS\/Worker\/Wasmのidentity一致\[いっち\]を検査\[けんさ\]する。配信更新\[はいしんこうしん\]や古\[ふる\]いcacheで混在\[こんざい\]を検出\[けんしゅつ\]したら、新\[しん\]schemaを旧\[きゅう\]Wasmへ送\[おく\]らず、再取得\[さいしゅとく\]またはreloadを案内\[あんない\]する。公開済\[こうかいず\]みの全\[ぜん\]commitについて、Web版\[ばん\]を永久保存\[えいきゅうほぞん\]する義務\[ぎむ\]は設\[もう\]けない。
 
-Pagesのworkflow公開sourceを実状態で確認し、fork PRをprivileged workflowで再実行しない。配信は共通concurrency groupで直列化し、公開直前にmainとartifactのfreshnessを確認して古いrunの後勝ちを防ぐ。gateは実行したcode/schema/site checksとartifactに基づき、T16 completeの文字列をdeploy前提にしない。公開smoke→T20証拠→T16完了の順序を成立させる。
+<a name="n-6275696c645f7175616c697479"></a>
 
-公開後はHTTPSでdeep link・Worker/Wasm・例実行・asset digestとbuild identityを照合し、対象URL、commit、artifact ID、検査結果を保存する。事前検査に失敗したcandidateは公開しない。公開後に初めて問題が判明する場合には、検証済み復旧が終わるまで不良candidateが配信される可能性がある。無停止・全cacheの原子的切替を保証せず、公開previewが使えることも前提にしない。docs-only更新は動作確認済みruntimeをdigest固定して利用できるが、異なる版を混ぜて同一runtime版と称さず、build.jsonで各版と互換性を示す。runtime更新には当該runtimeとbrowserの受入条件を要求する。
+<a name="3-文書buildと利用品質"></a>
 
-公開後smokeが失敗した場合はworkflowを失敗として維持し、配信成功の記録を付けない。実Pages deployなしのローカルHTTP確認は公開確認の代わりにならない。失敗を記録するだけで緑の成功statusにする実装は禁止する。
+## 3\. 文書\[ぶんしょ\]buildと利用品質\[りようひんしつ\]
 
-公開済みcandidateのsmoke失敗には、以下の旧成果物への復旧契約を適用する。失敗statusだけでは、すでに切り替わった公開物は元へ戻らない。
+固定\[こてい\]toolchain・依存\[いぞん\]・asset・入力\[にゅうりょく\]snapshotで、決定的\[けっていてき\]にbuildする。buildで意図\[いと\]しないnetwork取得\[しゅとく\]、時刻埋込\[じこくうめこみ\]、例\[れい\]の評価\[ひょうか\]を行\[おこな\]わない。必要\[ひつよう\]なdownloadは明示\[めいじ\]した取得段階\[しゅとくだんかい\]でdigest固定\[こてい\]し、生成段階\[せいせいだんかい\]は取得済\[しゅとくず\]みresourceだけを使\[つか\]う。欠\[か\]けたresource、未解決参照\[みかいけつさんしょう\]、重複\[ちょうふく\]ID、unsupported content、失敗\[しっぱい\]したrendererをエラーとする。
 
-## 5. 公開失敗からの復旧
+検索\[けんさく\]index、navigation、見出\[みだ\]し階層\[かいそう\]、tableのheader、図\[ず\]の代替説明\[だいたいせつめい\]、keyboard操作\[そうさ\]、focus、contrast、拡大時\[かくだいじ\]の読\[よ\]み順\[じゅん\]、診断\[しんだん\]からの移動\[いどう\]を検証\[けんしょう\]する。自動\[じどう\]アクセシビリティ検査\[けんさ\]に加\[くわ\]え、指定\[してい\]browserでkeyboardと日本語\[にほんご\]IMEを手動確認\[しゅどうかくにん\]する。未実行\[みじっこう\]のdevice\/screen reader確認\[かくにん\]を、自動試験\[じどうしけん\]から推定\[すいてい\]しない。
 
-### 保持する成果物とidentity
+<a name="n-646973747269627574696f6e"></a>
 
-復旧基準（LastKnownGood、以下LKG）は、事前CIに通っただけのartifactではなく、**実Pages公開後の必須smokeにも合格し、その証拠と復旧用payloadを永続保存した成果物**とする。元source commit、build identity、base/origin、能力状態、schema/profile/asset digest、元のPages payload archiveのSHA-256、公開deployment ID、smoke証拠digest、保存先release/asset IDを結び付ける。デプロイ後にbuild.jsonへdeployment IDを書き足して検査済みpayloadを変更しない。deployment IDとの対応は外側のreceiptで管理する。
+<a name="4-配布"></a>
 
-復旧用の保存先はrepositoryのimmutableなrecovery releaseとし、予約した `site-recovery/` tagで通常のruntime releaseと区別する。Pagesのpublic smoke合格後、recovery releaseをpublishする前のdraftへ元payload・identity・smoke証拠をすべて添付し、immutableとして公開できたこと、download可能なbytesとdigestを確認してからLKGへ昇格する。現在この機能やPagesを有効化済みとは扱わず、T20で設定・権限・公開後のimmutabilityを実確認する。利用できなければ新candidateの自動公開を開始しない。
+## 4\. 配布\[はいふ\]
 
-保存単位は `upload-pages-artifact` が運ぶ**元のtar payloadのbyte列**とそのdigestである。Actions側のupload wrapper、圧縮やartifact IDは再uploadで変わり得る。復旧時は保存済みtarを検証して現在の復旧runへ再uploadし、Pagesが受けるpayloadの同一性を検査してdeployする。sourceからのrebuild、tar内容の編集、異なるHTMLへの差替えを復旧扱いにしない。
+T20でWasm\/JS\/Worker\/docs\/rustdoc\/例\[れい\]manifest\/build\.jsonを、一\[ひと\]つのartifactにまとめる。実際\[じっさい\]の非\[ひ\]root baseでbuild・browser・リンク検査\[けんさ\]を通\[とお\]し、quality成功後\[せいこうご\]に<strong>同\[おな\]じartifact</strong>を配布\[はいふ\]する。検査後\[けんさご\]の別\[べつ\]rebuildを配信\[はいしん\]しない。deploy jobだけに `pages: write` と `id-token: write`、`github-pages` environmentを与\[あた\]え、PR jobは公開権限\[こうかいけんげん\]を持\[も\]たない。
 
-Actions artifactの短いretentionや元runの存在を復旧保存の条件にしない。LKGとその直前の公開検証済みsnapshotを保持し、後継の公開smoke・永続保存・journal昇格がすべて済むまで削除しない。最後の更新から日数が経ってもこの2世代を期限切れにしない。3世代目以降の削除は参照・復旧中でないことを同じ公開lock内で確認し、管理者の明示した整理操作で行う。全過去版の永久保存は要求しない。release全体の削除や外部障害まで不可逆に防げるとは主張せず、次の公開前に復旧payloadの取得とdigestを再検査する。壊れていれば公開を止める。
+Pagesのworkflow公開\[こうかい\]sourceを実状態\[じつじょうたい\]で確認\[かくにん\]し、fork PRをprivileged workflowで再実行\[さいじっこう\]しない。配信\[はいしん\]は共通\[きょうつう\]concurrency groupで直列化\[ちょくれつか\]し、公開直前\[こうかいちょくぜん\]にmainとartifactのfreshnessを確認\[かくにん\]して、古\[ふる\]いrunの後勝\[あとが\]ちを防\[ふせ\]ぐ。gateは実行\[じっこう\]したcode\/schema\/site checksとartifactに基\[もと\]づき、T16 completeの文字列\[もじれつ\]をdeploy前提\[ぜんてい\]にしない。公開\[こうかい\]smoke→T20証拠\[しょうこ\]→T16完了\[かんりょう\]の順序\[じゅんじょ\]を成立\[せいりつ\]させる。
 
-### 全writerを一つのtransactionにする
+公開後\[こうかいご\]はHTTPSでdeep link・Worker\/Wasm・例実行\[れいじっこう\]・asset digestとbuild identityを照合\[しょうごう\]し、対象\[たいしょう\]URL、commit、artifact ID、検査結果\[けんさけっか\]を保存\[ほぞん\]する。事前検査\[じぜんけんさ\]に失敗\[しっぱい\]したcandidateは公開\[こうかい\]しない。公開後\[こうかいご\]に初\[はじ\]めて問題\[もんだい\]が判明\[はんめい\]する場合\[ばあい\]には、検証済\[けんしょうず\]み復旧\[ふっきゅう\]が終\[お\]わるまで、不良\[ふりょう\]candidateが配信\[はいしん\]される可能性\[かのうせい\]がある。無停止\[むていし\]・全\[ぜん\]cacheの原子的切替\[げんしてききりかえ\]を保証\[ほしょう\]せず、公開\[こうかい\]previewが使\[つか\]えることも前提\[ぜんてい\]にしない。docs\-only更新\[こうしん\]は動作確認済\[どうさかくにんず\]みruntimeをdigest固定\[こてい\]して利用\[りよう\]できるが、異\[こと\]なる版\[はん\]を混\[ま\]ぜて同一\[どういつ\]runtime版\[ばん\]と称\[しょう\]さず、build\.jsonで各版\[かくはん\]と互換性\[ごかんせい\]を示\[しめ\]す。runtime更新\[こうしん\]には、当該\[とうがい\]runtimeとbrowserの受入条件\[うけいれじょうけん\]を要求\[ようきゅう\]する。
 
-通常公開・手動再実行・watchdog・復旧・LKG昇格・保管整理は、同じliteral concurrency group `nepl3-pages-production` を使うpublisher workflowだけで行う。`cancel-in-progress: false` とし、公開直前確認からdeploy、public smoke、昇格または復旧、再smoke、最終記録までlockを保持する。deployだけを一つのjobでlockし、smokeや復旧をlock外へ出さない。別のCI workflowのcancel設定をpublisherに引き継がない。
+公開後\[こうかいご\]smokeが失敗\[しっぱい\]した場合\[ばあい\]はworkflowを失敗\[しっぱい\]として維持\[いじ\]し、配信成功\[はいしんせいこう\]の記録\[きろく\]を付\[つ\]けない。実\[じつ\]Pages deployなしのローカルHTTP確認\[かくにん\]は、公開確認\[こうかいかくにん\]の代\[か\]わりにならない。失敗\[しっぱい\]を記録\[きろく\]するだけで、緑\[みどり\]の成功\[せいこう\]statusにする実装\[じっそう\]は禁止\[きんし\]する。
 
-Pagesへの直接書込み権限を持つ他workflow・tokenや旧branch公開を残さない。手動の復旧も同じwriter経路と `github-pages` environmentを通す。必要なPages権限はpublisher、release/journal書込みのcontents権限は当該保存jobに限定する。concurrencyは同一repositoryで同じgroupを使う実行間の排他であり、外部管理者操作を原子的に封鎖するAPIとは扱わない。待機の順序から新旧を推定せず、lock取得後にcandidateのsource freshnessを再検査する。
+公開済\[こうかいず\]みcandidateのsmoke失敗\[しっぱい\]には、以下\[いか\]の旧成果物\[きゅうせいかぶつ\]への復旧契約\[ふっきゅうけいやく\]を適用\[てきよう\]する。失敗\[しっぱい\]statusだけでは、すでに切\[き\]り替\[か\]わった公開物\[こうかいぶつ\]は元\[もと\]へ戻\[もど\]らない。
 
-`pages-state` 保護branchを公開制御journalに使い、Pagesのsource branchとはしない。journalは世代番号、transaction ID、元run/attempt、candidate artifact/deployment ID、前LKG、最新の公開観測、smoke/復旧結果をappend-only eventで記録する。force pushを使わずfast-forwardだけで更新し、読んだjournal世代と親commitが変わっていれば書込みをやめて再確認する。Git refの競合検出とPagesの切替は一つのatomic transactionではない。
+<a name="n-7265636f76657279"></a>
 
-Pagesへの変更要求前にtransaction IDとpayload identityを持つ `DeployIntent` または `RecoveryIntent` をjournalへ永続記録する。APIが要求を受理した後、deployment IDを記録する前にrunが消失する場合がある。未解決intentを次のwriterが見たら、lockを取得できたことだけで前deployが終わったと仮定しない。control-plane上の受理・進行・配信対象を管理者も含め同じ経路でreconcileできるまで、新candidateと復旧の両方を停止する。
+<a name="5-公開失敗からの復旧"></a>
 
-LKG昇格順は「public smoke合格→immutable復旧releaseの確定とdownload検証→journalのLKG pointer更新」。途中で失敗したら `HealthyUncommitted` とし、旧LKGを残したまま次のcandidate公開を禁止する。再開時は同じpayload・証拠に加えてjournal/API/公開identityを再照合し、新たなpublic smokeに合格してから昇格を完了する。再smoke不合格はcandidate失敗として以下の照合付き復旧へ移し、対象不明ならRecoveryBlockedとする。過去のsmokeだけを信頼しない。journal更新後に保存物を作る順序は禁止する。
+## 5\. 公開失敗\[こうかいしっぱい\]からの復旧\[ふっきゅう\]
 
-### 失敗candidateだけを復旧する条件
+<a name="n-72657461696e65645f6964656e74697479"></a>
 
-smokeが失敗したら、lock内でjournalが自分のtransaction/deploymentを現在の未解決candidateとして指していること、保存されたAPI receiptと当該deployment IDのstatus、公開build.jsonとasset identityを照合する。HTTPは有限の再取得・cache再検証を行うが、一回のcache hitを現在のdeploymentの証明にしない。
+<a name="保持する成果物とidentity"></a>
 
-公開identityが失敗candidateと一致し、API/journalに別の新しい公開がなく、LKGの保存payloadと証拠が検証できる場合だけ復旧を許す。候補Aの処理中に確認された後続BをAの復旧で上書きしない。Bが健康なら `Superseded` としてAの復旧を中止する。別candidate、status応答欠落、timeout、journal欠落、cache混在、APIと公開identityの不一致、外部writerの疑いは `RecoveryBlocked` とし、自動で公開物を書き換えない。
+### 保持\[ほじ\]する成果物\[せいかぶつ\]とidentity
 
-公開APIはPages deploymentの作成・特定IDのstatus・cancelを提供するが、expected-current-deploymentを指定したcompare-and-swap切替は公開契約にない。特定IDの `succeed` は、そのIDが現在も配信中である証明ではない。単一writerとjournal、公開identityの照合を前提にし、それでも現在対象を確定できなければ止める。cache混在時にrollbackで安定するだろうと推測して書き込まない。
+復旧基準\[ふっきゅうきじゅん\]\{LastKnownGood\}（LastKnownGood、以下\[いか\]LKG）は、事前\[じぜん\]CIに通\[とお\]っただけのartifactではなく、<strong>実\[じつ\]Pages公開後\[こうかいご\]の必須\[ひっす\]smokeにも合格\[ごうかく\]し、その証拠\[しょうこ\]と復旧用\[ふっきゅうよう\]payloadを永続保存\[えいぞくほぞん\]した成果物\[せいかぶつ\]</strong>とする。元\[もと\]source commit、build identity、base\/origin、能力状態\[のうりょくじょうたい\]、schema\/profile\/asset digest、元\[もと\]のPages payload archiveのSHA\-256、公開\[こうかい\]deployment ID、smoke証拠\[しょうこ\]digest、保存先\[ほぞんさき\]release\/asset IDを結\[むす\]び付\[つ\]ける。デプロイ後\[ご\]にbuild\.jsonへdeployment IDを書\[か\]き足\[た\]して、検査済\[けんさず\]みpayloadを変更\[へんこう\]しない。deployment IDとの対応\[たいおう\]は、外側\[そとがわ\]のreceiptで管理\[かんり\]する。
 
-### 有限の復旧と再確認
+復旧用\[ふっきゅうよう\]の保存先\[ほぞんさき\]はrepositoryのimmutableなrecovery releaseとし、予約\[よやく\]した `site-recovery/` tagで通常\[つうじょう\]のruntime releaseと区別\[くべつ\]する。Pagesのpublic smoke合格後\[ごうかくご\]、recovery releaseをpublishする前\[まえ\]のdraftへ、元\[もと\]payload・identity・smoke証拠\[しょうこ\]をすべて添付\[てんぷ\]する。immutableとして公開\[こうかい\]できたことと、download可能\[かのう\]なbytesとdigestを確認\[かくにん\]してから、LKGへ昇格\[しょうかく\]する。現在\[げんざい\]この機能\[きのう\]やPagesを有効化済\[ゆうこうかず\]みとは扱\[あつか\]わず、T20で設定\[せってい\]・権限\[けんげん\]・公開後\[こうかいご\]のimmutabilityを実確認\[じつかくにん\]する。利用\[りよう\]できなければ、新\[しん\]candidateの自動公開\[じどうこうかい\]を開始\[かいし\]しない。
 
-適格なLKGを現在のrunへ再uploadし、新しい復旧deployment IDと元candidateへの関係をjournalへ記録してdeployする。復旧はcandidateあたり自動で1回まで。復旧後に元LKGの能力状態に対応するHTTPS smokeとpayload/asset identity検査をもう一度行う。合格した場合だけ `Recovered` とする。journalの `current_publication` は新しい復旧deployment IDと再smoke結果へ更新し、`last_known_good` は元payload/source/元smoke証拠の保存先を維持する。古いdeployment IDを現行配信のIDとして再利用しない。元candidateとそのrunの結果はfailedのまま維持し、復旧成功を元candidateの成功へ書き換えない。
+保存単位\[ほぞんたんい\]は `upload-pages-artifact` が運\[はこ\]ぶ<strong>元\[もと\]のtar payloadのbyte列\[れつ\]</strong>とそのdigestである。Actions側\[がわ\]のupload wrapper、圧縮\[あっしゅく\]やartifact IDは、再\[さい\]uploadで変\[か\]わり得\[う\]る。復旧時\[ふっきゅうじ\]は保存済\[ほぞんず\]みtarを検証\[けんしょう\]して現在\[げんざい\]の復旧\[ふっきゅう\]runへ再\[さい\]uploadし、Pagesが受\[う\]けるpayloadの同一性\[どういつせい\]を検査\[けんさ\]してdeployする。sourceからのrebuild、tar内容\[ないよう\]の編集\[へんしゅう\]、異\[こと\]なるHTMLへの差替\[さしか\]えを復旧扱\[ふっきゅうあつか\]いにしない。
 
-復旧payloadのsource commitがmainより古いことは意図した動作である。復旧のfreshnessは現在の失敗transaction・deployment・公開identityに対して検査し、新candidateをmainへ照合する規則と混同しない。復旧の実行codeは信頼済みpublisherを使い、古いsourceのworkflowを無検査で実行しない。
+Actions artifactの短\[みじか\]いretentionや元\[もと\]runの存在\[そんざい\]を、復旧保存\[ふっきゅうほぞん\]の条件\[じょうけん\]にしない。LKGとその直前\[ちょくぜん\]の公開検証済\[こうかいけんしょうず\]みsnapshotを保持\[ほじ\]し、後継\[こうけい\]の公開\[こうかい\]smoke・永続保存\[えいぞくほぞん\]・journal昇格\[しょうかく\]がすべて済\[す\]むまで削除\[さくじょ\]しない。最後\[さいご\]の更新\[こうしん\]から日数\[にっすう\]が経\[た\]っても、この2世代\[せだい\]を期限切\[きげんぎ\]れにしない。3世代目以降\[せだいめいこう\]の削除\[さくじょ\]は、参照\[さんしょう\]・復旧中\[ふっきゅうちゅう\]でないことを同\[おな\]じ公開\[こうかい\]lock内\[ない\]で確認\[かくにん\]し、管理者\[かんりしゃ\]の明示\[めいじ\]した整理操作\[せいりそうさ\]で行\[おこな\]う。全過去版\[ぜんかこばん\]の永久保存\[えいきゅうほぞん\]は要求\[ようきゅう\]しない。release全体\[ぜんたい\]の削除\[さくじょ\]や外部障害\[がいぶしょうがい\]まで不可逆\[ふかぎゃく\]に防\[ふせ\]げるとは主張\[しゅちょう\]せず、次\[つぎ\]の公開前\[こうかいまえ\]に復旧\[ふっきゅう\]payloadの取得\[しゅとく\]とdigestを再検査\[さいけんさ\]する。壊\[こわ\]れていれば、公開\[こうかい\]を止\[と\]める。
 
-初回公開にLKGがなくsmokeが失敗した場合は `BootstrapFailed` とし、復旧済みと主張しない。公開が不完全な可能性とLKG不在を明示し、後続の通常自動公開を停止する。既存のpayloadを削除したり、未検証の保守ページへ置換したりせず、管理者が同じwriter経路で状態を確認し、検証済みの修正candidateを明示的に選んで初回公開を再開する。
+<a name="n-73696e676c655f7472616e73616374696f6e"></a>
 
-復旧payloadの取得失敗・digest違反・復旧deploy失敗・再smoke失敗は `RecoveryFailed`、lock所有runの強制cancel・runner消失・journal途中状態は `RecoveryUnknown` とする。自動復旧の再帰や無限retryをしない。後続publisherは未解決journalを見たら通常公開を停止し、同じlockでreconcileする。状態が確定しない間は書込みを拒否する。管理者操作であっても新しい健康な公開を無条件に上書きしない。
+<a name="全writerを一つのtransactionにする"></a>
 
-上限は各deploymentのstatus待機600秒、各public smoke300秒、identity再照合5回かつ120秒以内、復旧payload取得300秒、transaction全体3600秒とする。個々のcheckにも終了条件を持たせる。GitHub側の停止や全体timeoutでcleanupが必ず動くとは仮定せず、journalを次回のreconcileへ残す。
+### 全\[ぜん\]writerを一\[ひと\]つのtransactionにする
 
-| 状態 | 条件と次の動作 |
+通常公開\[つうじょうこうかい\]・手動再実行\[しゅどうさいじっこう\]・watchdog・復旧\[ふっきゅう\]・LKG昇格\[しょうかく\]・保管整理\[ほかんせいり\]は、同\[おな\]じliteral concurrency group `nepl3-pages-production` を使\[つか\]うpublisher workflowだけで行\[おこな\]う。`cancel-in-progress: false` とし、公開直前確認\[こうかいちょくぜんかくにん\]からdeploy、public smoke、昇格\[しょうかく\]または復旧\[ふっきゅう\]、再\[さい\]smoke、最終記録\[さいしゅうきろく\]までlockを保持\[ほじ\]する。deployだけを一\[ひと\]つのjobでlockし、smokeや復旧\[ふっきゅう\]をlock外\[がい\]へ出\[だ\]さない。別\[べつ\]のCI workflowのcancel設定\[せってい\]を、publisherに引\[ひ\]き継\[つ\]がない。
+
+Pagesへの直接書込\[ちょくせつかきこ\]み権限\[けんげん\]を持\[も\]つ他\[ほか\]のworkflow・tokenや、旧\[きゅう\]branch公開\[こうかい\]を残\[のこ\]さない。手動\[しゅどう\]の復旧\[ふっきゅう\]も、同\[おな\]じwriter経路\[けいろ\]と `github-pages` environmentを通\[とお\]す。必要\[ひつよう\]なPages権限\[けんげん\]はpublisher、release\/journal書込\[かきこ\]みのcontents権限\[けんげん\]は当該保存\[とうがいほぞん\]jobに限定\[げんてい\]する。concurrencyは同一\[どういつ\]repositoryで同\[おな\]じgroupを使\[つか\]う実行間\[じっこうかん\]の排他\[はいた\]であり、外部管理者操作\[がいぶかんりしゃそうさ\]を原子的\[げんしてき\]に封鎖\[ふうさ\]するAPIとは扱\[あつか\]わない。待機\[たいき\]の順序\[じゅんじょ\]から新旧\[しんきゅう\]を推定\[すいてい\]せず、lock取得後\[しゅとくご\]にcandidateのsource freshnessを再検査\[さいけんさ\]する。
+
+`pages-state` 保護\[ほご\]branchを公開制御\[こうかいせいぎょ\]journalに使\[つか\]い、Pagesのsource branchとはしない。journalは世代番号\[せだいばんごう\]、transaction ID、元\[もと\]run\/attempt、candidate artifact\/deployment ID、前\[ぜん\]LKG、最新\[さいしん\]の公開観測\[こうかいかんそく\]、smoke\/復旧結果\[ふっきゅうけっか\]をappend\-only eventで記録\[きろく\]する。force pushを使\[つか\]わずfast\-forwardだけで更新\[こうしん\]し、読\[よ\]んだjournal世代\[せだい\]と親\[おや\]commitが変\[か\]わっていれば、書込\[かきこ\]みをやめて再確認\[さいかくにん\]する。Git refの競合検出\[きょうごうけんしゅつ\]とPagesの切替\[きりかえ\]は、一\[ひと\]つのatomic transactionではない。
+
+Pagesへの変更要求前\[へんこうようきゅうまえ\]に、transaction IDとpayload identityを持\[も\]つ `DeployIntent` または `RecoveryIntent` をjournalへ永続記録\[えいぞくきろく\]する。APIが要求\[ようきゅう\]を受理\[じゅり\]した後\[あと\]、deployment IDを記録\[きろく\]する前\[まえ\]にrunが消失\[しょうしつ\]する場合\[ばあい\]がある。未解決\[みかいけつ\]intentを次\[つぎ\]のwriterが見\[み\]たら、lockを取得\[しゅとく\]できたことだけで前\[まえ\]のdeployが終\[お\]わったと仮定\[かてい\]しない。control\-plane上\[じょう\]の受理\[じゅり\]・進行\[しんこう\]・配信対象\[はいしんたいしょう\]を、管理者\[かんりしゃ\]も含\[ふく\]め同\[おな\]じ経路\[けいろ\]でreconcileできるまで、新\[しん\]candidateと復旧\[ふっきゅう\]の両方\[りょうほう\]を停止\[ていし\]する。
+
+LKG昇格順\[しょうかくじゅん\]は「public smoke合格\[ごうかく\]→immutable復旧\[ふっきゅう\]releaseの確定\[かくてい\]とdownload検証\[けんしょう\]→journalのLKG pointer更新\[こうしん\]」とする。途中\[とちゅう\]で失敗\[しっぱい\]したら `HealthyUncommitted` とし、旧\[きゅう\]LKGを残\[のこ\]したまま次\[つぎ\]のcandidate公開\[こうかい\]を禁止\[きんし\]する。再開時\[さいかいじ\]は同\[おな\]じpayload・証拠\[しょうこ\]に加\[くわ\]えてjournal\/API\/公開\[こうかい\]identityを再照合\[さいしょうごう\]し、新\[あら\]たなpublic smokeに合格\[ごうかく\]してから昇格\[しょうかく\]を完了\[かんりょう\]する。再\[さい\]smoke不合格\[ふごうかく\]はcandidate失敗\[しっぱい\]として以下\[いか\]の照合付\[しょうごうつ\]き復旧\[ふっきゅう\]へ移\[うつ\]し、対象不明\[たいしょうふめい\]ならRecoveryBlockedとする。過去\[かこ\]のsmokeだけを信頼\[しんらい\]しない。journal更新後\[こうしんご\]に保存物\[ほぞんぶつ\]を作\[つく\]る順序\[じゅんじょ\]は禁止\[きんし\]する。
+
+<a name="n-7265636f766572795f656c69676962696c697479"></a>
+
+<a name="失敗candidateだけを復旧する条件"></a>
+
+### 失敗\[しっぱい\]candidateだけを復旧\[ふっきゅう\]する条件\[じょうけん\]
+
+smokeが失敗\[しっぱい\]したら、lock内\[ない\]でjournalが自分\[じぶん\]のtransaction\/deploymentを現在\[げんざい\]の未解決\[みかいけつ\]candidateとして指\[さ\]していること、保存\[ほぞん\]されたAPI receiptと当該\[とうがい\]deployment IDのstatus、公開\[こうかい\]build\.jsonとasset identityを照合\[しょうごう\]する。HTTPは有限\[ゆうげん\]の再取得\[さいしゅとく\]・cache再検証\[さいけんしょう\]を行\[おこな\]うが、一回\[いっかい\]のcache hitを現在\[げんざい\]のdeploymentの証明\[しょうめい\]にしない。
+
+公開\[こうかい\]identityが失敗\[しっぱい\]candidateと一致\[いっち\]し、API\/journalに別\[べつ\]の新\[あたら\]しい公開\[こうかい\]がなく、LKGの保存\[ほぞん\]payloadと証拠\[しょうこ\]が検証\[けんしょう\]できる場合\[ばあい\]だけ、復旧\[ふっきゅう\]を許\[ゆる\]す。候補\[こうほ\]Aの処理中\[しょりちゅう\]に確認\[かくにん\]された後続\[こうぞく\]Bを、Aの復旧\[ふっきゅう\]で上書\[うわが\]きしない。Bが健康\[けんこう\]なら `Superseded` として、Aの復旧\[ふっきゅう\]を中止\[ちゅうし\]する。別\[べつ\]candidate、status応答欠落\[おうとうけつらく\]、timeout、journal欠落\[けつらく\]、cache混在\[こんざい\]、APIと公開\[こうかい\]identityの不一致\[ふいっち\]、外部\[がいぶ\]writerの疑\[うたが\]いは `RecoveryBlocked` とし、自動\[じどう\]で公開物\[こうかいぶつ\]を書\[か\]き換\[か\]えない。
+
+公開\[こうかい\]APIは、Pages deploymentの作成\[さくせい\]・特定\[とくてい\]IDのstatus・cancelを提供\[ていきょう\]するが、expected\-current\-deploymentを指定\[してい\]したcompare\-and\-swap切替\[きりかえ\]は公開契約\[こうかいけいやく\]にない。特定\[とくてい\]IDの `succeed` は、そのIDが現在\[げんざい\]も配信中\[はいしんちゅう\]である証明\[しょうめい\]ではない。単一\[たんいつ\]writerとjournal、公開\[こうかい\]identityの照合\[しょうごう\]を前提\[ぜんてい\]にし、それでも現在対象\[げんざいたいしょう\]を確定\[かくてい\]できなければ止\[と\]める。cache混在時\[こんざいじ\]に、rollbackで安定\[あんてい\]するだろうと推測\[すいそく\]して書\[か\]き込\[こ\]まない。
+
+<a name="n-626f756e6465645f7265636f76657279"></a>
+
+<a name="有限の復旧と再確認"></a>
+
+### 有限\[ゆうげん\]の復旧\[ふっきゅう\]と再確認\[さいかくにん\]
+
+適格\[てきかく\]なLKGを現在\[げんざい\]のrunへ再\[さい\]uploadし、新\[あたら\]しい復旧\[ふっきゅう\]deployment IDと元\[もと\]candidateへの関係\[かんけい\]をjournalへ記録\[きろく\]してdeployする。復旧\[ふっきゅう\]はcandidateあたり自動\[じどう\]で1回\[かい\]までとする。復旧後\[ふっきゅうご\]に、元\[もと\]LKGの能力状態\[のうりょくじょうたい\]に対応\[たいおう\]するHTTPS smokeとpayload\/asset identity検査\[けんさ\]をもう一度\[いちど\]行\[おこな\]う。合格\[ごうかく\]した場合\[ばあい\]だけ `Recovered` とする。journalの `current_publication` は新\[あたら\]しい復旧\[ふっきゅう\]deployment IDと再\[さい\]smoke結果\[けっか\]へ更新\[こうしん\]し、`last_known_good` は元\[もと\]payload\/source\/元\[もと\]smoke証拠\[しょうこ\]の保存先\[ほぞんさき\]を維持\[いじ\]する。古\[ふる\]いdeployment IDを、現行配信\[げんこうはいしん\]のIDとして再利用\[さいりよう\]しない。元\[もと\]candidateとそのrunの結果\[けっか\]はfailedのまま維持\[いじ\]し、復旧成功\[ふっきゅうせいこう\]を元\[もと\]candidateの成功\[せいこう\]へ書\[か\]き換\[か\]えない。
+
+復旧\[ふっきゅう\]payloadのsource commitがmainより古\[ふる\]いことは、意図\[いと\]した動作\[どうさ\]である。復旧\[ふっきゅう\]のfreshnessは、現在\[げんざい\]の失敗\[しっぱい\]transaction・deployment・公開\[こうかい\]identityに対\[たい\]して検査\[けんさ\]し、新\[しん\]candidateをmainへ照合\[しょうごう\]する規則\[きそく\]と混同\[こんどう\]しない。復旧\[ふっきゅう\]の実行\[じっこう\]codeは信頼済\[しんらいず\]みpublisherを使\[つか\]い、古\[ふる\]いsourceのworkflowを無検査\[むけんさ\]で実行\[じっこう\]しない。
+
+初回公開\[しょかいこうかい\]にLKGがなくsmokeが失敗\[しっぱい\]した場合\[ばあい\]は `BootstrapFailed` とし、復旧済\[ふっきゅうず\]みと主張\[しゅちょう\]しない。公開\[こうかい\]が不完全\[ふかんぜん\]な可能性\[かのうせい\]とLKG不在\[ふざい\]を明示\[めいじ\]し、後続\[こうぞく\]の通常自動公開\[つうじょうじどうこうかい\]を停止\[ていし\]する。既存\[きそん\]のpayloadを削除\[さくじょ\]したり、未検証\[みけんしょう\]の保守\[ほしゅ\]ページへ置換\[ちかん\]したりせず、管理者\[かんりしゃ\]が同\[おな\]じwriter経路\[けいろ\]で状態\[じょうたい\]を確認\[かくにん\]し、検証済\[けんしょうず\]みの修正\[しゅうせい\]candidateを明示的\[めいじてき\]に選\[えら\]んで初回公開\[しょかいこうかい\]を再開\[さいかい\]する。
+
+復旧\[ふっきゅう\]payloadの取得失敗\[しゅとくしっぱい\]・digest違反\[いはん\]・復旧\[ふっきゅう\]deploy失敗\[しっぱい\]・再\[さい\]smoke失敗\[しっぱい\]は `RecoveryFailed`、lock所有\[しょゆう\]runの強制\[きょうせい\]cancel・runner消失\[しょうしつ\]・journal途中状態\[とちゅうじょうたい\]は `RecoveryUnknown` とする。自動復旧\[じどうふっきゅう\]の再帰\[さいき\]や無限\[むげん\]retryをしない。後続\[こうぞく\]publisherは未解決\[みかいけつ\]journalを見\[み\]たら通常公開\[つうじょうこうかい\]を停止\[ていし\]し、同\[おな\]じlockでreconcileする。状態\[じょうたい\]が確定\[かくてい\]しない間\[あいだ\]は、書込\[かきこ\]みを拒否\[きょひ\]する。管理者操作\[かんりしゃそうさ\]であっても、新\[あたら\]しい健康\[けんこう\]な公開\[こうかい\]を無条件\[むじょうけん\]に上書\[うわが\]きしない。
+
+上限\[じょうげん\]は、各\[かく\]deploymentのstatus待機\[たいき\]600秒\[びょう\]、各\[かく\]public smoke300秒\[びょう\]、identity再照合\[さいしょうごう\]5回\[かい\]かつ120秒以内\[びょういない\]、復旧\[ふっきゅう\]payload取得\[しゅとく\]300秒\[びょう\]、transaction全体\[ぜんたい\]3600秒\[びょう\]とする。個々\[ここ\]のcheckにも終了条件\[しゅうりょうじょうけん\]を持\[も\]たせる。GitHub側\[がわ\]の停止\[ていし\]や全体\[ぜんたい\]timeoutでcleanupが必\[かなら\]ず動\[うご\]くとは仮定\[かてい\]せず、journalを次回\[じかい\]のreconcileへ残\[のこ\]す。
+
+| 状態\[じょうたい\] | 条件\[じょうけん\]と次\[つぎ\]の動作\[どうさ\] |
 | --- | --- |
-| DeployIntent / RecoveryIntent | 書込み前に保存。応答とdeployment IDが未確定なら新規書込みを停止 |
-| HealthyUncommitted | public smoke合格、永続保存またはLKG昇格が未確定。同じ内容の確定処理だけを再開 |
-| Healthy | public smoke・永続保存・journal昇格がすべて合格。次candidateを許す |
-| Recovered | 旧payloadの再deployと再smokeに合格。元candidate/runはfailed |
-| Superseded | 後続の健康な公開を確認。旧candidateの復旧を行わない |
-| RecoveryBlocked / RecoveryUnknown | 対象不一致・不明・未解決intent。reconcileまで書込み禁止 |
-| BootstrapFailed | LKGなしで初回smoke失敗。自動削除を行わず、明示した修正candidateで再開 |
-| RecoveryFailed | payload取得・deploy・再smokeが失敗。自動再帰をせずincidentに残す |
+| DeployIntent \/ RecoveryIntent | 書込前\[かきこみまえ\]に保存\[ほぞん\]し、応答\[おうとう\]とdeployment IDが未確定\[みかくてい\]なら新規書込\[しんきかきこ\]みを停止\[ていし\]する。 |
+| HealthyUncommitted | public smoke合格後\[ごうかくご\]、永続保存\[えいぞくほぞん\]またはLKG昇格\[しょうかく\]が未確定\[みかくてい\]であるため、同\[おな\]じ内容\[ないよう\]の確定処理\[かくていしょり\]だけを再開\[さいかい\]する。 |
+| Healthy | public smoke・永続保存\[えいぞくほぞん\]・journal昇格\[しょうかく\]がすべて合格\[ごうかく\]しており、次\[つぎ\]のcandidateを許\[ゆる\]す。 |
+| Recovered | 旧\[きゅう\]payloadの再\[さい\]deployと再\[さい\]smokeに合格\[ごうかく\]した状態\[じょうたい\]であり、元\[もと\]candidate\/runはfailedのままにする。 |
+| Superseded | 後続\[こうぞく\]の健康\[けんこう\]な公開\[こうかい\]を確認\[かくにん\]したため、旧\[きゅう\]candidateの復旧\[ふっきゅう\]を行\[おこな\]わない。 |
+| RecoveryBlocked \/ RecoveryUnknown | 対象不一致\[たいしょうふいっち\]・不明\[ふめい\]・未解決\[みかいけつ\]intentがあり、reconcileまで書込\[かきこ\]みを禁止\[きんし\]する。 |
+| BootstrapFailed | LKGなしで初回\[しょかい\]smokeが失敗\[しっぱい\]したため、自動削除\[じどうさくじょ\]を行\[おこな\]わず、明示\[めいじ\]した修正\[しゅうせい\]candidateで再開\[さいかい\]する。 |
+| RecoveryFailed | payload取得\[しゅとく\]・deploy・再\[さい\]smokeが失敗\[しっぱい\]したため、自動再帰\[じどうさいき\]をせずincidentに残\[のこ\]す。 |
 
-元runの失敗、復旧の最終状態、対象/復旧deployment ID、payload digest、観測identity、API結果、試行数、時間上限、残る公開影響と次に必要な操作を一つのincident記録へ保存する。失敗ログと再smoke証拠を保存し、workflowをfailedで終了する。復旧不能・対象不明はrun summaryとincidentで管理者へ明示し、別途メール等へ送信する機能を暗黙に追加しない。
+元\[もと\]runの失敗\[しっぱい\]、復旧\[ふっきゅう\]の最終状態\[さいしゅうじょうたい\]、対象\[たいしょう\]\/復旧\[ふっきゅう\]deployment ID、payload digest、観測\[かんそく\]identity、API結果\[けっか\]、試行数\[しこうすう\]、時間上限\[じかんじょうげん\]、残\[のこ\]る公開影響\[こうかいえいきょう\]と次\[つぎ\]に必要\[ひつよう\]な操作\[そうさ\]を、一\[ひと\]つのincident記録\[きろく\]へ保存\[ほぞん\]する。失敗\[しっぱい\]ログと再\[さい\]smoke証拠\[しょうこ\]を保存\[ほぞん\]し、workflowをfailedで終了\[しゅうりょう\]する。復旧不能\[ふっきゅうふのう\]・対象不明\[たいしょうふめい\]はrun summaryとincidentで管理者\[かんりしゃ\]へ明示\[めいじ\]し、別途\[べっと\]メール等\[とう\]へ送信\[そうしん\]する機能\[きのう\]を暗黙\[あんもく\]に追加\[ついか\]しない。
 
-これらはT20/S06の実装契約であり、repositoryの検査CIへ未実装の復旧jobを追加した状態ではない。
+これらはT20\/S06の実装契約\[じっそうけいやく\]であり、repositoryの検査\[けんさ\]CIへ未実装\[みじっそう\]の復旧\[ふっきゅう\]jobを追加\[ついか\]した状態\[じょうたい\]ではない。
 
-Doc移行に使う既知のrendererと同revision runtimeの試験を分ける規則は次章に従う。公開URLの準備だけでT20、T21、T16をcompleteにしない。
+Doc移行\[いこう\]に使\[つか\]う既知\[きち\]のrendererと同\[どう\]revision runtimeの試験\[しけん\]を分\[わ\]ける規則\[きそく\]は、次章\[じしょう\]に従\[したが\]う。公開\[こうかい\]URLの準備\[じゅんび\]だけで、T20、T21、T16をcompleteにしない。
 
-GitHub Pagesの静的公開とproject siteの仕様は [GitHub公式資料](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)、workflowの権限・artifact・environmentは [custom workflows公式資料](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages) に従う。
+GitHub Pagesの静的公開\[せいてきこうかい\]とproject siteの仕様\[しよう\]は [GitHub公式資料\[こうしきしりょう\]](<https\:\/\/docs\.github\.com\/en\/pages\/getting\-started\-with\-github\-pages\/what\-is\-github\-pages>)、workflowの権限\[けんげん\]・artifact・environmentは [custom workflows公式資料\[こうしきしりょう\]](<https\:\/\/docs\.github\.com\/en\/pages\/getting\-started\-with\-github\-pages\/using\-custom\-workflows\-with\-github\-pages>) に従\[したが\]う。復旧契約\[ふっきゅうけいやく\]の制約\[せいやく\]は [Pages REST API](<https\:\/\/docs\.github\.com\/en\/rest\/pages\/pages>)、[deploy\-pages](<https\:\/\/github\.com\/actions\/deploy\-pages>)、[Actions concurrency](<https\:\/\/docs\.github\.com\/en\/actions\/reference\/workflows\-and\-actions\/workflow\-syntax\#concurrency>)、[artifact削除\[さくじょ\]とretention](<https\:\/\/docs\.github\.com\/en\/actions\/how\-tos\/manage\-workflow\-runs\/remove\-workflow\-artifacts>)、[immutable releases](<https\:\/\/docs\.github\.com\/en\/code\-security\/concepts\/supply\-chain\-security\/immutable\-releases>) に照合\[しょうごう\]した。GitHubの機能\[きのう\]を組\[く\]み合\[あ\]わせた上記\[じょうき\]の状態機械\[じょうたいきかい\]はNEPL3の設計判断\[せっけいはんだん\]であり、GitHubが自動\[じどう\]rollbackを保証\[ほしょう\]するという意味\[いみ\]ではない。
 
-復旧契約の制約は [Pages REST API](https://docs.github.com/en/rest/pages/pages)、[deploy-pages](https://github.com/actions/deploy-pages)、[Actions concurrency](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#concurrency)、[artifact削除とretention](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/remove-workflow-artifacts)、[immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases) に照合した。GitHubの機能を組み合わせた上記の状態機械はNEPL3の設計判断であり、GitHubが自動rollbackを保証するという意味ではない。
+<a name="n-6d6967726174696f6e5f7265666572656e636573"></a>
 
-## 移行中のDocからMarkdown仕様への参照
+<a name="移行中のdocからmarkdown仕様への参照"></a>
 
-canonical registryに原文参照として明示登録された未移行Markdown仕様は、混在site内では
-同じbuildで生成したHTML routeへ接続する。既存のMarkdown rendererを一度だけ実行し、
-その実byte列をDoc PageSetの受動fileとして渡す。raw MarkdownをHTML routeへ置かない。
-原文path/digestと生成HTMLのroute/digest、renderer、commit/base pathを分離して記録する。
-原文変更、未登録の差替え、route衝突、生成物欠落を拒否する。
-単独Doc HTML exportは原文配布を維持し、site用CSS/navigationや未同梱HTMLを仮定しない。
-Markdown projectionも原文へのリンクを維持する。fragmentはPageFileの既存拒否規則に従う。
-これはNEPL3d正本化の証拠ではなく、正本切替えの前後で公開routeを保つhostの接続である。
+## 移行中\[いこうちゅう\]のDocからMarkdown仕様\[しよう\]への参照\[さんしょう\]
 
-## 数式生成assetと書出し文書
+canonical registryに原文参照\[げんぶんさんしょう\]として明示登録\[めいじとうろく\]された未移行\[みいこう\]Markdown仕様\[しよう\]は、混在\[こんざい\]site内\[ない\]では同\[おな\]じbuildで生成\[せいせい\]したHTML routeへ接続\[せつぞく\]する。既存\[きそん\]のMarkdown rendererを一度\[いちど\]だけ実行\[じっこう\]し、その実\[じつ\]byte列\[れつ\]をDoc PageSetの受動\[じゅどう\]fileとして渡\[わた\]す。raw MarkdownをHTML routeへ置\[お\]かない。原文\[げんぶん\]path\/digestと生成\[せいせい\]HTMLのroute\/digest、renderer、commit\/base pathを分離\[ぶんり\]して記録\[きろく\]する。原文変更\[げんぶんへんこう\]、未登録\[みとうろく\]の差替\[さしか\]え、route衝突\[しょうとつ\]、生成物欠落\[せいせいぶつけつらく\]を拒否\[きょひ\]する。単独\[たんどく\]Doc HTML exportは原文配布\[げんぶんはいふ\]を維持\[いじ\]し、site用\[よう\]CSS\/navigationや未同梱\[みどうこん\]HTMLを仮定\[かてい\]しない。Markdown projectionも原文\[げんぶん\]へのリンクを維持\[いじ\]する。fragmentはPageFileの既存拒否規則\[きそんきょひきそく\]に従\[したが\]う。これはNEPL3d正本化\[せいほんか\]の証拠\[しょうこ\]ではなく、正本切替\[せいほんきりか\]えの前後\[ぜんご\]で公開\[こうかい\]routeを保\[たも\]つhostの接続\[せつぞく\]である。
 
-[17章](17-math-html.md)のKaTeX実装・CSS/fontは同版の同一artifactに束縛し、path・digest・license・CSS相対font参照を検査する。PlaygroundのWorkerはその資源からHTMLを生成し、previewと書出しで同じ生成artifactを使う。S01/S02/S03/S04/S05では非root path、資源欠落時の診断とMathML設定、外部CDNなしの閲覧、JavaScript無効の書出済み文書を検査する。対話生成がJavaScriptを必要とすることと、生成済み文書の閲覧条件を分けて表示する。
+<a name="n-6d6174685f617373657473"></a>
+
+<a name="数式生成assetと書出し文書"></a>
+
+## 数式生成\[すうしきせいせい\]assetと書出\[かきだ\]し文書\[ぶんしょ\]
+
+[17章\[しょう\]](<17\-math\-html\.md>)のKaTeX実装\[じっそう\]・CSS\/fontは同版\[どうはん\]の同一\[どういつ\]artifactに束縛\[そくばく\]し、path・digest・license・CSS相対\[そうたい\]font参照\[さんしょう\]を検査\[けんさ\]する。PlaygroundのWorkerはその資源\[しげん\]からHTMLを生成\[せいせい\]し、previewと書出\[かきだ\]しで同\[おな\]じ生成\[せいせい\]artifactを使\[つか\]う。S01\/S02\/S03\/S04\/S05では非\[ひ\]root path、資源欠落時\[しげんけつらくじ\]の診断\[しんだん\]とMathML設定\[せってい\]、外部\[がいぶ\]CDNなしの閲覧\[えつらん\]、JavaScript無効\[むこう\]の書出済\[かきだしず\]み文書\[ぶんしょ\]を検査\[けんさ\]する。対話生成\[たいわせいせい\]がJavaScriptを必要\[ひつよう\]とすることと、生成済\[せいせいず\]み文書\[ぶんしょ\]の閲覧条件\[えつらんじょうけん\]を分\[わ\]けて表示\[ひょうじ\]する。

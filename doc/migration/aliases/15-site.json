@@ -1,0 +1,14 @@
+[
+  {"section": null, "name": "15-静的サイト例github-pages"},
+  {"section": "public_layout", "name": "1-公開構成"},
+  {"section": "sources_manifest", "name": "2-正本とmanifest"},
+  {"section": "build_quality", "name": "3-文書buildと利用品質"},
+  {"section": "distribution", "name": "4-配布"},
+  {"section": "recovery", "name": "5-公開失敗からの復旧"},
+  {"section": "retained_identity", "name": "保持する成果物とidentity"},
+  {"section": "single_transaction", "name": "全writerを一つのtransactionにする"},
+  {"section": "recovery_eligibility", "name": "失敗candidateだけを復旧する条件"},
+  {"section": "bounded_recovery", "name": "有限の復旧と再確認"},
+  {"section": "migration_references", "name": "移行中のdocからmarkdown仕様への参照"},
+  {"section": "math_assets", "name": "数式生成assetと書出し文書"}
+]
