@@ -152,6 +152,14 @@
       "aliases": "doc/migration/aliases/10-integration.json",
       "route": "docs/spec/10-integration.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/1"
+    },
+    {
+      "id": "doc-pages",
+      "source": "doc/spec/21-doc-pages.nepld",
+      "projection": "doc/spec/21-doc-pages.md",
+      "aliases": "doc/migration/aliases/21-doc-pages.json",
+      "route": "docs/spec/21-doc-pages.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/1"
     }
   ],
   "files": [

@@ -870,16 +870,16 @@ fn synchronized_context_spec_drafts_parse_lower_and_check_labels() -> Result<()>
         ("04-grammar", "doc/spec/04-grammar.nepld"),
         ("03-reader", "doc/spec/03-reader.nepld"),
         ("16-doc-migration", "doc/spec/16-doc-migration.nepld"),
-        ("21-doc-pages", "doc/migration/authored/21-doc-pages.nepld"),
+        ("21-doc-pages", "doc/spec/21-doc-pages.nepld"),
         (
             "guide/development",
             "doc/migration/authored/guide/development.nepld",
         ),
     ] {
         let text = fs::read_to_string(repository.join(path))?;
-        // Adopted chapters and the Pages draft must remain usable with normal
-        // page limits. This also bounds repeated map validation on a real document.
-        let phase_limits = if path.starts_with("doc/spec/") || name == "21-doc-pages" {
+        // Adopted chapters must remain usable with normal page limits; other
+        // drafts keep their explicit cap.
+        let phase_limits = if path.starts_with("doc/spec/") {
             super::super::source::budget().limits()
         } else {
             phase_limits
