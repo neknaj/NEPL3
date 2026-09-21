@@ -51,6 +51,22 @@ pub struct Resume {
     pub dependency_results: Vec<OperationReply>,
 }
 
+/// Process transport envelope. Request lifetime, cancellation and connection
+/// shutdown are enforced by the host after decoding this structural value.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ProviderFrame {
+    Invoke(Invoke),
+    Resume(Resume),
+    Reply {
+        request_id: u64,
+        reply: OperationReply,
+    },
+    Cancel {
+        request_id: u64,
+    },
+    Close,
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ContinuationError {
     Stopped(StopReason),

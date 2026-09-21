@@ -50,7 +50,7 @@ impl Codec for StopReason {
     }
 }
 
-fn admit(
+pub(super) fn admit(
     sources: &SourceStore,
     admission: &mut SourceAdmission,
     b: &mut Budget,
@@ -89,7 +89,7 @@ fn validate_report(
     report.validate(sources, &[], registry, b)?;
     Ok(())
 }
-fn reply_value(
+pub(super) fn reply_value(
     value: &OperationReply,
     s: &SchemaRef,
     registry: &SchemaRegistry,
@@ -168,7 +168,7 @@ fn report_from(
         trace_overflow: Codec::from(overflow, s, sources, b)?,
     })
 }
-fn reply_from(
+pub(super) fn reply_from(
     value: &NdfValue,
     s: &SchemaRef,
     registry: &SchemaRegistry,
@@ -247,7 +247,18 @@ pub fn encode_resume(
 ) -> Result<Vec<u8>, WireError> {
     admit(sources, admission, b)?;
     let s = schema(registry)?;
-    let value = record(
+    let value = resume_value(value, s, registry, sources, admission, b)?;
+    crate::encode_checked(&value, &expected("Resume"), registry, b)
+}
+pub(super) fn resume_value(
+    value: &Resume,
+    s: &SchemaRef,
+    registry: &SchemaRegistry,
+    sources: &SourceStore,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<NdfValue, WireError> {
+    record(
         s,
         "Resume",
         [
@@ -258,8 +269,7 @@ pub fn encode_resume(
             })?,
         ],
         b,
-    )?;
-    crate::encode_checked(&value, &expected("Resume"), registry, b)
+    )
 }
 pub fn decode_resume(
     input: &[u8],
@@ -271,7 +281,17 @@ pub fn decode_resume(
     admit(sources, admission, b)?;
     let s = schema(registry)?;
     let value = crate::decode_checked(input, &expected("Resume"), registry, b)?;
-    let f = fields(value.value(), s, "Resume", 3)?;
+    resume_from(value.value(), s, registry, sources, admission, b)
+}
+pub(super) fn resume_from(
+    value: &NdfValue,
+    s: &SchemaRef,
+    registry: &SchemaRegistry,
+    sources: &SourceStore,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<Resume, WireError> {
+    let f = fields(value, s, "Resume", 3)?;
     Ok(Resume {
         request_id: as_u64(&f[0])?,
         continuation: Codec::from(&f[1], s, sources, b)?,

@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/16&#45;doc&#45;migration.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page doc&#45;migration; source SHA-256 91baa756a067224f7d9c0085e5d0817a2a1eddb48fe0126ae0746d4655761ecc; alias input SHA-256 712a8a1556e6febd09de7225d16c57a69bfb8a21eec4cc64dfe96d9b1bea5202; document digest fcafcbcc85ef8b2b7ef44c8607bc9921ec28a4b333c17f43f079b9854aab419c; page input SHA-256 553a98350592f8e6cea813c95374d6a041aa76fea8818aa6bf0f833b62749fe2. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/16&#45;doc&#45;migration.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page doc&#45;migration; source SHA-256 91baa756a067224f7d9c0085e5d0817a2a1eddb48fe0126ae0746d4655761ecc; alias input SHA-256 712a8a1556e6febd09de7225d16c57a69bfb8a21eec4cc64dfe96d9b1bea5202; document digest 7e1df4425eab9caa88f97ebdc901f34a7eff2df3f606ad9e50a90fe253c78ce1; page input SHA-256 553a98350592f8e6cea813c95374d6a041aa76fea8818aa6bf0f833b62749fe2. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="16-正式文書のnepl3-doc-dsl移行"></a>
 

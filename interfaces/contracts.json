@@ -301,6 +301,15 @@
         ]
       ]
     },
+    "ProviderFrame": {
+      "variants": {
+        "Invoke": [["call", "Invoke"]],
+        "Resume": [["resume", "Resume"]],
+        "Reply": [["requestId", "U64"], ["reply", "OperationReply"]],
+        "Cancel": [["requestId", "U64"]],
+        "Close": []
+      }
+    },
     "OperationReply": {
       "variants": {
         "Complete": [

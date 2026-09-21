@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/22&#45;external&#45;extensions.nepld; renderer nepl3-tools.markdown-annotated/3; source SHA-256 0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa; alias input SHA-256 132807f48bf3acceac6beacff6fd690cac164b5d0701ac40b0f0a03c7abfc923; document digest e4f95c527031332a55b17ff175627960bb35ea6d67625b7bf8a282a519f90cb1. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/22&#45;external&#45;extensions.nepld; renderer nepl3-tools.markdown-annotated/3; source SHA-256 0a4b8bf7f98cfc2c75ef1e96cd4bf8e9a6dd84cb070aed7ff5f3ff70c55a64fa; alias input SHA-256 132807f48bf3acceac6beacff6fd690cac164b5d0701ac40b0f0a03c7abfc923; document digest fb8bf34eb1bc34bce337b6ff33bb45432a2df80a35e55215b20376bcf73b8919. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="22-外部言語の追加とrepository分離条件"></a>
 

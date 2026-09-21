@@ -1,4 +1,4 @@
-<!-- Generated from doc/tutorial/hello.nepld; renderer nepl3-tools.markdown-annotated/3; source SHA-256 310aa046ddd9598b309c50d56e0c8239781330d79df8780a28266fc3e233adfa; alias input SHA-256 37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570; document digest 743d32e59254f0cb18e4899ff9cd4d101a10c88eb3041946b4e6448287d5778b. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/tutorial/hello.nepld; renderer nepl3-tools.markdown-annotated/3; source SHA-256 310aa046ddd9598b309c50d56e0c8239781330d79df8780a28266fc3e233adfa; alias input SHA-256 37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570; document digest 33cd149fde20796625f6188e0b077e1905892cc3a3140caf39aeee2be178569a. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 # NEPL3 Tutorial — <ruby>入力<rt>にゅうりょく</rt></ruby>と<ruby>構文<rt>こうぶん</rt></ruby>を<ruby>観察<rt>かんさつ</rt></ruby>する
 
