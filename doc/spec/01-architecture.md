@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page architecture; source SHA-256 1865063649eb42080aeb420ee856b957ee704bf0f0aa298bb783a45b34a2f43e; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 73e71f15f0cfe1870187c8730301b5ee5b38e14a6521f1af17c9685888dac709; page input SHA-256 605476f187f9f97a2824f61ca5c08f560af1dec892b664cdd72ebe46a50cd556. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page architecture; source SHA-256 e40e874325fb78cc5c7e5d545e9e42a159a81d2f630edd246641d59e84ae5ee4; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 7dd9239e9a6c041123e3c2d6ffb792ad73ed84f9effa5b85022fdf77b14df972; page input SHA-256 9ab5fc4c8f965446b505628243926c10d8b1e4eed619669c888a4c1f165a4eba. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="01-repositorycrate依存方向"></a>
 
@@ -10,7 +10,7 @@
 
 <a name="方針"></a>
 
-## <ruby>方針<rt>ほうしん</rt></ruby>
+## <ruby>構成<rt>こうせい</rt></ruby>と<ruby>依存関係<rt>いぞんかんけい</rt></ruby>の<ruby>設計方針<rt>せっけいほうしん</rt></ruby>
 
 <ruby>初期<rt>しょき</rt></ruby>repositoryは `NEPL3` のmonorepoとする。<ruby>意味上<rt>いみじょう</rt></ruby>の<ruby>境界<rt>きょうかい</rt></ruby>とcrateの<ruby>依存方向<rt>いぞんほうこう</rt></ruby>\{consumerからdependencyへの<ruby>向<rt>む</rt></ruby>き\}を<ruby>一致<rt>いっち</rt></ruby>させ、<ruby>言語<rt>げんご</rt></ruby>と<ruby>出力<rt>しゅつりょく</rt></ruby>backendを<ruby>分離<rt>ぶんり</rt></ruby>する。crateの<ruby>全一覧<rt>ぜんいちらん</rt></ruby>と、<ruby>直接依存<rt>ちょくせついぞん</rt></ruby>の<ruby>許可集合<rt>きょかしゅうごう</rt></ruby>は `design/dependencies.json` に<ruby>記<rt>しる</rt></ruby>す。
 

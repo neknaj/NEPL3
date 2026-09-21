@@ -1,6 +1,6 @@
 article ja "03. Reader / tokenizer"
 body
-  cons section policy "[方針/ほうしん]"
+  cons section policy "Readerの[役割/やくわり]"
     body cons paragraph
       cons "Readerは、snapshotの[指定範囲/していはんい]をcontextとstateに[従/したが]って[読/よ]み、[認識/にんしき]した[値/あたい]と[終了位置/しゅうりょういち]、[更新後/こうしんご]の[状態/じょうたい]を[返/かえ]す。"
       cons "[読取/よみと]り[規則/きそく]は、[再帰/さいき]、[状態/じょうたい]の[更新/こうしん]、[外部実装/がいぶじっそう]への[委譲/いじょう]を[使用/しよう]できる。"

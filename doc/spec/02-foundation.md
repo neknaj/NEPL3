@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/02&#45;foundation.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page foundation; source SHA-256 8ae400f51516075bc558c0e232db1bbf555fdf1302c47cfb4becad0b781ae733; alias input SHA-256 24aa727bef177b04daaacc33c54f71acc51df2491d1d8368e0ca132395d662f4; document digest 865abc333d84a0b51713ab598ce0289ad0096b64ede36bbe73614f77878a8528; page input SHA-256 1b4c62534807f337113381872098844bc075c86b4189ab8032a0d895e991aa19. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/02&#45;foundation.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page foundation; source SHA-256 59a66ea6836009cca875302e52ecf79494559a253213a6bea76f8a5565fc54a4; alias input SHA-256 24aa727bef177b04daaacc33c54f71acc51df2491d1d8368e0ca132395d662f4; document digest 4fedcebdd7cd13b34f19ab5f2caf37a3d1a926868cae99b5712972b98989eeca; page input SHA-256 90250b104fe9abbe8348b34479a65b3b09f52c853e3dc48129a8045c1adbb9f5. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="02-共通データ契約"></a>
 
@@ -10,7 +10,7 @@
 
 <a name="方針"></a>
 
-## <ruby>方針<rt>ほうしん</rt></ruby>
+## <ruby>共通<rt>きょうつう</rt></ruby>データ<ruby>契約<rt>けいやく</rt></ruby>の<ruby>対象<rt>たいしょう</rt></ruby>
 
 Foundationは、<ruby>各言語<rt>かくげんご</rt></ruby>が<ruby>共通<rt>きょうつう</rt></ruby>に<ruby>利用<rt>りよう</rt></ruby>するデータと<ruby>操作<rt>そうさ</rt></ruby>の<ruby>契約<rt>けいやく</rt></ruby>を<ruby>定義<rt>ていぎ</rt></ruby>する。source、<ruby>種類<rt>しゅるい</rt></ruby>、<ruby>構造<rt>こうぞう</rt></ruby>、<ruby>意味<rt>いみ</rt></ruby>、<ruby>解析結果<rt>かいせきけっか</rt></ruby>の<ruby>出自<rt>しゅつじ</rt></ruby>を<ruby>独立<rt>どくりつ</rt></ruby>したデータとして<ruby>保持<rt>ほじ</rt></ruby>し、<ruby>参照<rt>さんしょう</rt></ruby>によって<ruby>対応付<rt>たいおうづ</rt></ruby>ける。<ruby>本章<rt>ほんしょう</rt></ruby>では、sourceのidentityと<ruby>位置<rt>いち</rt></ruby>、<ruby>型<rt>かた</rt></ruby>と<ruby>構造<rt>こうぞう</rt></ruby>、<ruby>診断<rt>しんだん</rt></ruby>、<ruby>操作<rt>そうさ</rt></ruby>の<ruby>資源制限<rt>しげんせいげん</rt></ruby>を<ruby>順<rt>じゅん</rt></ruby>に<ruby>定義<rt>ていぎ</rt></ruby>する。エラーやeditor<ruby>結果<rt>けっか</rt></ruby>を、<ruby>文字列<rt>もじれつ</rt></ruby>から<ruby>再解析<rt>さいかいせき</rt></ruby>しない。
 

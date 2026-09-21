@@ -1,16 +1,10 @@
 article ja "04. Grammar[言語/げんご]"
 body
-  cons paragraph
-    cons "[共通/きょうつう]parserの[各/かく]arenaは、[操作内/そうさない]で[受理/じゅり]したsource/map[列/れつ]の[取込位置/とりこみいち]をprivate[状態/じょうたい]として[保持/ほじ]できる。"
-    cons "[受理列/じゅりれつ]は[成功/せいこう]したtoken[読取/よみと]り[間/かん]でprefixを[保持/ほじ]し、arenaには[未取込/みとりこみ]suffixだけを[検査/けんさ]・[追加/ついか]する。"
-    cons "Foreign arenaは[独立/どくりつ]した[取込位置/とりこみいち]から[開始/かいし]し、host[復帰後/ふっきご]も[必要/ひつよう]なsource/mapを[保持/ほじ]する。"
-    cons "[外部/がいぶ]ParseProgressのechoからこの[位置/いち]を[構築/こうちく]せず、[別/べつ]revisionの[再解析/さいかいせき]は[新/あたら]しい[状態/じょうたい]から[始/はじ]める。"
-    nil
-  cons section policy "[方針/ほうしん]"
+  cons section policy "Grammarの[役割/やくわり]"
     body cons paragraph
-      cons "Grammarは、reader・prefix[形状/けいじょう]・[束縛/そくばく]・[表示/ひょうじ]の[定義/ていぎ]を[同/おな]じpackageへまとめる。"
-      cons "[任意/にんい]プログラムを、[小/ちい]さなGrammar IRへ[必/かなら]ず[還元/かんげん]することは[要求/ようきゅう]しない。"
-      cons "call/map/thenで[登録済/とうろくず]みproviderへ[委譲/いじょう]できる。"
+      cons "Grammarは、[言語/げんご]のreader・prefix[形状/けいじょう]・[束縛/そくばく]・[表示/ひょうじ]を[定義/ていぎ]する[言語/げんご]である。"
+      cons "Grammar compilerは、これらの[定義/ていぎ]を[同/おな]じpackageへまとめる。"
+      cons "[読取/よみと]りや[値変換/ちへんかん]の[処理/しょり]は、Grammar IRによる[記述/きじゅつ]と、call/map/thenを[通/つう]じた[登録済/とうろくず]みproviderへの[委譲/いじょう]を[組/く]み[合/あ]わせて[定義/ていぎ]できる。"
       nil nil
   cons section roots "1. [文書/ぶんしょ]の[根/ね]と[名前解決/なまえかいけつ]"
     body
@@ -483,12 +477,6 @@ body
   cons section bootstrap "8. Grammar[自身/じしん]のbootstrap"
     body
       cons paragraph
-        cons "[検査済/けんさず]みParseTreeは、[同/おな]じ[不変/ふへん]なSyntaxBundleに[対/たい]して[成立/せいりつ]したsource・[型/かた]・[参照/さんしょう]の[検査/けんさ]proofを、[借用/しゃくよう]で[公開/こうかい]できる。"
-        cons sentence cons text "Rustの " cons code "ValidatedParseTree::syntax" cons text " は " cons code "validate_with_sources" cons text " の" cons ruby text "結果" text "けっか" cons text "を" cons ruby text "保持" text "ほじ" cons text "して" cons ruby text "返" text "かえ" cons text "し、" cons ruby text "同" text "おな" cons text "じ" cons ruby text "操作内" text "そうさない" cons text "でのlower" cons ruby text "準備" text "じゅんび" cons text "に" cons ruby text "再検査" text "さいけんさ" cons text "・" cons ruby text "再計上" text "さいけいじょう" cons text "を" cons ruby text "要求" text "ようきゅう" cons text "しない。" nil
-        cons "raw[入力/にゅうりょく]、[変更/へんこう]したtree、[別/べつ]のsnapshotへ、このproofを[付/つ]け[替/か]えてはならない。"
-        cons "[環境内容/かんきょうないよう]digestの[一致/いっち]やDSLの[意味検査/いみけんさ]まで[証明/しょうめい]したものとは[扱/あつか]わず、それらの[検査/けんさ]は[引/ひ]き[続/つづ]き[必要/ひつよう]とする。"
-        cons "proofを[使/つか]う[下流操作自身/かりゅうそうさじしん]の[処理量/しょりりょう]とsource admissionは[省略/しょうりゃく]しない。" nil
-      cons paragraph
         cons "[完全/かんぜん]な[文法表/ぶんぽうひょう]からseed descriptorを[生成/せいせい]し、[通常/つうじょう]engineで[自分/じぶん]のlanguage[定義/ていぎ]を[読/よ]む。"
         cons "seedのarity[手書/てが]き[表/ひょう]とsourceを、[独立/どくりつ]に[二重管理/にじゅうかんり]しない。"
         cons "[生成/せいせい]した[全表/ぜんひょう]・source・seedの[対応/たいおう]を[機械検査/きかいけんさ]する。" nil
@@ -517,5 +505,24 @@ body
             cons "Foreignのalias/category/modeは、[解決済/かいけつず]みProfileで[検査/けんさ]する[対象/たいしょう]として[残/のこ]る。"
             cons "package[意味/いみ]digest、[解決済/かいけつず]みEntryContext/Profile、[実/じつ]parse/Grammar bootstrapを、この[局所/きょくしょ]proofから[推定/すいてい]しない。" nil
           nil
+      nil
+  cons section native_parse_state "9. native parserの[検証/けんしょう]と[状態管理/じょうたいかんり]"
+    body
+      cons paragraph
+        cons "[本節/ほんせつ]は、native parserが[操作内/そうさない]で[保持/ほじ]する[状態/じょうたい]と、[検証結果/けんしょうけっか]を[再利用/さいりよう]する[条件/じょうけん]を[定/さだ]める。"
+        cons "[共通/きょうつう]parserの[各/かく]arenaは、[操作内/そうさない]で[受理/じゅり]したsource/map[列/れつ]の[取込位置/とりこみいち]をprivate[状態/じょうたい]として[保持/ほじ]できる。"
+        cons "[受理列/じゅりれつ]は[成功/せいこう]したtoken[読取/よみと]り[間/かん]でprefixを[保持/ほじ]し、arenaには[未取込/みとりこみ]suffixだけを[検査/けんさ]・[追加/ついか]する。"
+        cons "Foreign arenaは[独立/どくりつ]した[取込位置/とりこみいち]から[開始/かいし]し、host[復帰後/ふっきご]も[必要/ひつよう]なsource/mapを[保持/ほじ]する。"
+        cons "[外部/がいぶ]ParseProgressのechoからこの[位置/いち]を[構築/こうちく]せず、[別/べつ]revisionの[再解析/さいかいせき]は[新/あたら]しい[状態/じょうたい]から[開始/かいし]する。"
+        nil
+      cons paragraph
+        cons "[検査済/けんさず]みParseTreeは、[同/おな]じ[不変/ふへん]なSyntaxBundleに[対/たい]して[成立/せいりつ]したsource・[型/かた]・[参照/さんしょう]の[検査/けんさ]proofを、[借用/しゃくよう]で[公開/こうかい]できる。"
+        cons sentence cons text "Rustの " cons code "ValidatedParseTree::syntax" cons text " は " cons code "validate_with_sources" cons text " の" cons ruby text "結果" text "けっか" cons text "を" cons ruby text "保持" text "ほじ" cons text "して" cons ruby text "返" text "かえ" cons text "す。" nil
+        cons "[同/おな]じ[操作内/そうさない]のlower[準備/じゅんび]では、この[検証結果/けんしょうけっか]を[再利用/さいりよう]できる。"
+        cons "[再利用/さいりよう]する[場合/ばあい]、[対応/たいおう]する[検査/けんさ]と[資源計上/しげんけいじょう]を[省略/しょうりゃく]できる。"
+        cons "raw[入力/にゅうりょく]、[変更/へんこう]したtree、[別/べつ]のsnapshotへ、このproofを[付/つ]け[替/か]えてはならない。"
+        cons "[環境内容/かんきょうないよう]digestの[一致/いっち]とDSLの[意味/いみ]は、それぞれ[別途/べっと][検査/けんさ]する。"
+        cons "proofを[使用/しよう]する[下流操作/かりゅうそうさ]の[処理量/しょりりょう]は[個別/こべつ]に[計上/けいじょう]し、source admissionも[実行/じっこう]する。"
+        nil
       nil
   nil

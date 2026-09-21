@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/03&#45;reader.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page reader; source SHA-256 847f3cc5c56525d2314eea08916427a9cf507935223a75910c8a58a6731e577e; alias input SHA-256 7b0de26b733079af4d75d3bf3190b6fcfd22d378a02de4b108f9c6d59e72ac4b; document digest 4456c4181e6d2e8af3eab46a032652205ab480d8b33b55a00d56544efd84e016; page input SHA-256 04b41cad01874e4f9082013dd3ac3443c49fda9ffdf3666b8f5ed5503963acf7. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/03&#45;reader.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page reader; source SHA-256 d7f17ec78482452e849a84a8345eddf64b6cf104cad3a4f6aed2ed7a8f38566a; alias input SHA-256 7b0de26b733079af4d75d3bf3190b6fcfd22d378a02de4b108f9c6d59e72ac4b; document digest b9a950c9a46d9f160cbd5d07eb7ff3e9fc7ae2bf3b9084413e5c0341a4d1a9a0; page input SHA-256 4464950c180b893dc07956bfb43ac91e58f046a85c44b0e48ac6af472689ffea. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="03-reader--tokenizer"></a>
 
@@ -10,7 +10,7 @@
 
 <a name="方針"></a>
 
-## <ruby>方針<rt>ほうしん</rt></ruby>
+## Readerの<ruby>役割<rt>やくわり</rt></ruby>
 
 Readerは、snapshotの<ruby>指定範囲<rt>していはんい</rt></ruby>をcontextとstateに<ruby>従<rt>したが</rt></ruby>って<ruby>読<rt>よ</rt></ruby>み、<ruby>認識<rt>にんしき</rt></ruby>した<ruby>値<rt>あたい</rt></ruby>と<ruby>終了位置<rt>しゅうりょういち</rt></ruby>、<ruby>更新後<rt>こうしんご</rt></ruby>の<ruby>状態<rt>じょうたい</rt></ruby>を<ruby>返<rt>かえ</rt></ruby>す。<ruby>読取<rt>よみと</rt></ruby>り<ruby>規則<rt>きそく</rt></ruby>は、<ruby>再帰<rt>さいき</rt></ruby>、<ruby>状態<rt>じょうたい</rt></ruby>の<ruby>更新<rt>こうしん</rt></ruby>、<ruby>外部実装<rt>がいぶじっそう</rt></ruby>への<ruby>委譲<rt>いじょう</rt></ruby>を<ruby>使用<rt>しよう</rt></ruby>できる。tokenizerはReaderの<ruby>結果<rt>けっか</rt></ruby>から<ruby>一<rt>ひと</rt></ruby>つのtokenを<ruby>構成<rt>こうせい</rt></ruby>し、<ruby>共通<rt>きょうつう</rt></ruby>prefix parserへ<ruby>返<rt>かえ</rt></ruby>す。
 
