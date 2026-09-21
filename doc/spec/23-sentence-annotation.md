@@ -1,8 +1,8 @@
 # 23. 構造化文章と対象付き注釈への是正
 
-この章は[#158の統合設計](../decisions/multilanguage-hca.md)を実装へ具体化する。
-Sentence/A移行が完了するまでの作業branch上の契約であり、既存Doc・readerの移行完了を意味しない。
-旧コメントの認識だけを先に削除する変更はmainへ統合しない。
+この章は[#158の統合設計](../decisions/multilanguage-hca.md)を具体化した、Sentenceと対象付きannotationの規範契約である。契約の採用と実装完了は別であり、実装・正式受入の状態は [実装状態の正本](../../implementation-status.json) を参照する。
+
+入出力・意味・失敗条件・source閉包・資源停止はこの章で定義する。`literal::read`等のRust名は現在の実装入口を指し、他言語の実装にRust ABIや内部module構成を要求しない。[Doc runtimeの記録](../progress/doc-runtime.md) は現在の接続範囲と履歴を説明し、[T07/T19/T21のタスク定義](../../design/tasks.json) が移行順と成果物を所有する。
 
 ## 所有者と実装順
 
@@ -12,11 +12,8 @@ NEPL3dは文書構造を所有する。Doc本文をA経由にしない。
 Sentence coreはfoundationだけへ依存し、Doc/Math/A/engine/hostへ依存しない。
 reader adapter、language package compile、各hostとの橋渡しは外側へ置く。
 
-実装順は、独立した有限文章モデルと検査、公開schemaとcodec、literal/prefixとLanguagePackage、
-Doc本文のSentence利用とconsumer移行を先行する。NEPL3dによる文書移行、実文書の性能と
-T19 docs-only Pages公開を優先し、Aの完成をD本文や公開の前提にしない。
-Aの具体category別wrapperとbinding、公式sourceの注釈移行、
-旧comment-as-triviaの認識・schema・codec・生成器の撤去は、その後の別の完了境界とする。
+この節の見出しは既存参照のため維持する。実装順の正本はT07であり、本文は所有境界を定める。
+Doc本文とannotationはそれぞれSentenceを使用し、Aの完成をD本文や公開の前提にしない。
 途中のモデル検査成功を独立言語の完成としない。schema digestは実descriptorから計算する。
 
 ## 独立した文章モデル
@@ -200,6 +197,8 @@ foreign adapterを含む全意味往復とDoc consumer移行の完了とは区�
 
 ## Doc本文readerへの接続
 
+この節はconsumer所有移行中のadapter契約である。Sentenceの恒久的な意味モデルと、現在のDoc payloadへの変換を区別する。移行完了後も必要なforeign adapterと、旧所有を除去するまでの互換変換を同じ完成条件にしない。
+
 開発hostのDoc readerは独立Sentence coreのliteral読取りを使用し、`tools/src/doc/sentence.rs`の
 明示adapterを通して現在のDoc consumerへ渡す。Doc/Sentence core間の直接依存を追加しない。
 adapterはSentenceSyntaxを検査し、全標準Inlineを同じarena index・順序でDoc値へ変換した後、
@@ -216,6 +215,8 @@ document digestは変わる。正本から再生成し、本文・リンク・�
 Mathとの既存bridgeをすべて除去したとは扱わず、後続のconsumer移行で責務を整理する。
 
 ## 注釈と移行完了条件
+
+以下は移行後にも維持する注釈契約と、旧経路を除去する際の受入条件である。実施順・各段階の残件はT07と実装状態で管理する。旧コメントの認識だけを先に削除する変更はmainへ統合しない。
 
 `annotate Sentence target`はarity 2の通常formであり、各host categoryへ固定shapeで登録する。
 runtimeのgeneric categoryや独立Comment、commented、特殊trivia導入子を追加しない。

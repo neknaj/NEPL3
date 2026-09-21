@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/00&#45;contract.nepld; renderer nepl3-tools.markdown-annotated/2; source SHA-256 48c2b1696c7308ee43f26dbf06a6038b38f0199233c1da3ef15a04453f810e93; alias input SHA-256 e272bc38006f1fc97f70928aa2963fe0245fa4575ddffadcc8d460b1f24a42cc; document digest 7df6e5e7b2c5f6b54cf0a9c3510da473a43da7eb8d18ca948fff9291268a17cc. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/00&#45;contract.nepld; renderer nepl3-tools.markdown-annotated/2; source SHA-256 5cabfae7f850a66f9080818c3a1dbdf113a1b0979ef06f9d3a06c16cb45df60d; alias input SHA-256 e272bc38006f1fc97f70928aa2963fe0245fa4575ddffadcc8d460b1f24a42cc; document digest 9d78cf6ef990045ac01f6cbb904e4e233d6852a79b0df1d8dc2a477ad2388a21. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="00-対象と設計上の決定"></a>
 
@@ -10,6 +10,8 @@
 
 ## 方針\[ほうしん\]
 
+NEPL3は、多数\[たすう\]の独立\[どくりつ\]したDSLを、括弧\[かっこ\]なし前置記法\[ぜんちきほう\]の共通規律\[きょうつうきりつ\]で多階層\[たかいそう\]・再帰的\[さいきてき\]に相互\[そうご\]埋\[う\]め込\[こ\]みする言語基盤\[げんごきばん\]である。reader・構文\[こうぶん\]・source・診断\[しんだん\]の契約\[けいやく\]を共有\[きょうゆう\]し、各言語\[かくげんご\]の意味論\[いみろん\]は各言語\[かくげんご\]が所有\[しょゆう\]する。先行情報\[せんこうじょうほう\]から後続\[こうぞく\]・内側\[うちがわ\]の構文\[こうぶん\]を確定\[かくてい\]し、その後\[あと\]の意味解決\[いみかいけつ\]は個別言語\[こべつげんご\]へ委\[ゆだ\]ねる。
+
 この仕様\[しよう\]は、実装\[じっそう\]すべき言語\[げんご\]と操作\[そうさ\]を、閉\[と\]じた契約\[けいやく\]\{contract\}として定義\[ていぎ\]する。未実装\[みじっそう\]の機能\[きのう\]を、将来\[しょうらい\]の曖昧\[あいまい\]な判断\[はんだん\]に委\[ゆだ\]ねたまま、現在\[げんざい\]の成功\[せいこう\]する経路\[けいろ\]へ置\[お\]いてはならない。拡張点\[かくちょうてん\]\{extension point\}についても、入力\[にゅうりょく\]・出力\[しゅつりょく\]・失敗\[しっぱい\]・許可範囲\[きょかはんい\]を定義\[ていぎ\]する。
 
 <a name="n-74617267657473"></a>
@@ -17,6 +19,8 @@
 <a name="1-実装対象"></a>
 
 ## 1\. 実装対象\[じっそうたいしょう\]
+
+以下\[いか\]はこのrepositoryが仕様化\[しようか\]するreference language群\[ぐん\]であり、NEPL3へ追加\[ついか\]できる言語\[げんご\]の上限\[じょうげん\]ではない。外部言語\[がいぶげんご\]も22章\[しょう\]の公開契約\[こうかいけいやく\]を使\[つか\]い、foundationへ言語名\[げんごめい\]の特例\[とくれい\]を追加\[ついか\]しない。この一覧\[いちらん\]は完成済\[かんせいず\]み機能\[きのう\]の一覧\[いちらん\]ではなく、現在\[げんざい\]のworkspaceはCargo\.toml、実装\[じっそう\]・受入状態\[うけいれじょうたい\]はimplementation\-status\.jsonで確認\[かくにん\]する。SentenceとDocの所有移行\[しょゆういこう\]は23章\[しょう\]で定\[さだ\]め、現行\[げんこう\]Circuitの契約\[けいやく\]を新\[あたら\]しいNEPL3cの設計案\[せっけいあん\]と同一視\[どういつし\]しない。
 
 - Grammarは、readerとprefix構造\[こうぞう\]、束縛\[そくばく\]\{binding\}、表示分類\[ひょうじぶんるい\]、外部\[がいぶ\]readerの接続\[せつぞく\]を定義\[ていぎ\]する。それらを検査済\[けんさず\]みのLanguagePackageへcompileする。
 - Docは、再帰的\[さいきてき\]な文書構造\[ぶんしょこうぞう\]、sentence literal、rubyとanno、sentence単位\[たんい\]のparallel、相互参照\[そうごさんしょう\]、数式\[すうしき\]・回路\[かいろ\]・コードの埋\[う\]め込\[こ\]みを保持\[ほじ\]する。これらの構造\[こうぞう\]からHTMLを生成\[せいせい\]する。

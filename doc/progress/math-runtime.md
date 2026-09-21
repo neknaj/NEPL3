@@ -1,5 +1,13 @@
 # Math runtime の段階実装
 
+## 現在状態を確認する入口
+
+T08の状態と検証記録は[実装状態の正本](../../implementation-status.json)、到達条件は[タスク定義](../../design/tasks.json)を参照する。現在の契約は[第06章](../spec/06-math.md)、Sentenceの所有と接続は[第23章](../spec/23-sentence-annotation.md)で確認する。
+
+以下は構造・数値helper導入時の記録である。Doc Sentenceの旧接続や「残り」の記述は、その段階の状態を示す。現在のMath印字・MathML等の実装判断には、実装状態の正本が指す検証記録を用いる。
+
+## 構造・数値helper導入時の記録
+
 T08は進行中。`doc/spec/06-math.md` と `design/forms.json` を最終契約とし、以下の構造・数値helperの実行を式evaluateやT08全体の完成へ読み替えない。
 
 `nepl3-math-core` はno_std + alloc。workspace production依存は共通coreだけで、Doc coreやengineへ依存しない。任意精度の型付き有理数はcoreのInteger/Rationalを使い、Math側のnum-bigint/num-traitsは既定featureを無効にした明示外部依存である。Math固有のNumber有限十進制約と予算付き算術helperをMath側に持つ。

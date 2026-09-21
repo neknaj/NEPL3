@@ -1,111 +1,15 @@
 # 開発と検査
 
-## Portable execution CI
+この文書は現在の開発操作を案内します。編集先は [canonical registry](canonical.json)、必要な成果物は [タスク定義](../design/tasks.json)、必須受入群・targetは [受入catalog](../design/acceptance.json) で確認します。
 
-WASI foundationは同じcomponentをWasmtime 44.0.1のnative codegenと
-Pulley64で実行し、終了状態・試験数・elapsed以外の出力を比較します。
-PulleyもCraneliftでbytecodeを生成するため、別compilerの検証とは扱いません。
-空のlibrary test binaryはemptyとして記録し、集約では実試験の成功を要求します。
-各processは180秒で停止・回収し、失敗ログもartifactへ保存します。
-比較用componentは `cargo test --release` で最適化します。通常のdebug WASI試験は
-別途維持します。非最適化のengine parse全20件はCIのPulleyで180秒を超えたため、
-試験の削除やcoreの資源上限変更ではなく、配布時にも使う最適化コードを比較します。
+- 初回準備と基本検査: [ローカル環境](#ローカル環境)。
+- 文書変更: [文書生成と初期Pages公開](#文書生成と初期pages公開)、[ページ集合と移行候補](#ページ集合と移行候補)。
+- 提出・統合: [branchとPRの統合手順](#branchとprの統合手順)、[実装と独立レビュー](#実装と独立レビュー)。
+- target別の保証範囲: [Portable execution CI](#portable-execution-ci)。過去の停止理由と現在の実行構成は分けて読みます。
 
-[RP2040 adapter](../conformance/targets/rp2040/README.md) は別workspaceの
-bare-metal harnessです。production core/reader/wire/engineの依存を使用し、
-HAL・UART・allocatorを外側へ置きます。ARMv6-M buildと固定版rp2040jsでの
-UF2実行は別job・別証拠です。初期実行範囲はsource位置・budget・NDFの4件で、
-Reader/Engine全受入や実機試験の代わりにはしません。
-
-実ブラウザのWasm・Playground、RISC-V、big-endianの検査はそれぞれ独立した未達範囲です。
-このCI整備をDoc HTML・文書移行・Pages公開の完成へ読み替えません。
-CIの区切り後はDoc生成を進め、意味・リンク・安定IDの対応を検証できたページから
-nepld正本へ移行し、検査済みの同じsite artifactを公開します。
+編集中は変更を再現する局所試験を使い、提出前に影響する契約・生成物・targetを検査します。下記の全体検査一覧とCIの必須条件は維持し、部分試験を正式受入の代用にしません。
 
 ## ローカル環境
-
-初期Pages公開は `.github/workflows/pages.yml` が担当します。main pushのCI成功後、
-そのrunのDoc site・検査report・元tarを取得し、commit/manifest/内容一致を再検査して公開します。
-検査済みsiteのfile byte列を公式upload-pages-artifactで梱包します。CI tarは照合用に保持し、
-Pages輸送tarと同一byteとは扱いません。初回の独自tar直接uploadはPages側でdeployment_failedとなりました。
-tar entryの先頭`./`等の形式差が疑われるため、輸送を公式actionへ委譲します。HTMLは再buildしません。
-公開後のHTTP smoke失敗はworkflow失敗として記録します。LKG/journalによる自動復旧は未提供です。
-Markdown/NEPL3d混在公開は正本移行を支える段階であり、全ページ移行やT19/T20完成を意味しません。
-
-`cargo run --locked -p nepl3-tools -- site build site/config.json dist/site` は、
-登録済みDoc正本のHTMLに静的な索引を付け、新規ディレクトリへ一式を生成します。
-追跡済みの設定とcleanな入力checkoutを要求し、生成中にHEADや入力の変更を検出した場合は出力しません。
-`build.json` のsource commitは入力checkout、rendererは実行したbinaryのSHA-256と
-そのbuild時のrustcを別々に記録します。binaryのsource commitを入力checkoutから推定しません。
-CIでは同じcheckoutからbuildしたbinaryと生成ログを結び付けて保管します。
-埋込template・CSSとcheckoutの不一致も拒否します。toolsのbuild.rsはcompiler識別のみを行い、
-文書生成やGrammar compileを実行しません。
-現在の入口は登録済みDocページ、未移行のMarkdown仕様書、`site/examples.json`の原文例を含むdocs-only生成です。
-原文の配布byte・Profile・digestは同じcheckoutと照合し、表示から例を実行しません。
-仕様書以外の未移行文書・rustdoc・実行例の操作結果を含む統合、
-公開後smokeと復旧を含むPages配信、T19/T20全体の完了は別途検証します。
-
-`python tools/site/payload.py dist/site dist/pages.tar --manifest-sha256 <検査済みmanifestのSHA-256>`
-は、検査対象と同じfile集合・byte列を確認し、HTMLを再生成せずPages用のtarへ固定します。
-CIは実ブラウザ検査のreportからdigestを渡し、元site・tar・receiptを同じartifactに保存します。
-tar内の順序・時刻・所有者・modeは固定し、リンク（Windows junctionを含む）、読取り失敗、
-未登録file、改変、上限超過を拒否します。出力先は入力siteの外にある新規fileに限ります。
-receiptの `publication_verified` はfalseです。この梱包だけでは公開確認やLKG昇格になりません。
-境界試験は `python -m unittest discover -s tools/site -p 'test_*.py'` で実行します。
-
-復旧用の `tools/site/recovery.py` は、別途確認したLKGのtar/manifest digestと取得した元tarの
-byte列を受け取ります。ファイルシステムへ展開せず、各member・manifest・file集合の衝突・
-内容・上限を検査し、元byte列をそのまま返します。圧縮wrapperは取得側で分離し、原tarの
-identityと混同しません。canonical tarとの比較は検査であり、比較用の再serialize結果を
-復旧出力として使いません。保存物のimmutability、現在の公開対象、journalの復旧許可は
-別途検査が必要です。通常CIには保存済みの実Doc tarを用いた回帰試験も含めます。
-
-`python tools/site/smoke.py dist/site https://neknaj.github.io/NEPL3/ --manifest-sha256 <検査済みdigest>`
-は、docs-only成果物とHTTPS応答のbyte列、HTML/CSSのMIME、directory indexと未知routeの404を
-照合します。build identityを前後で取得し、redirectや内容の混在を拒否します。
-`.nojekyll` は公開内容ではなく配信制御fileとして照合対象から外し、結果にも記録します。
-socket timeoutに加えて外側processを最大300秒で終了させ、失敗時は非zero終了と理由を返します。
-`--local-http` は明示port付き127.0.0.1だけで利用でき、結果はlocal試験として区別します。
-このHTTP照合は公開smokeの一部であり、Pages API/journalの現行deployment、実browser表示、
-全cacheの原子的切替やLKGを証明しません。publisherはそれぞれの証拠を別途照合します。
-
-受入群の文書検査は、Markdownの本文・箇条書きの行頭にあるplainな `A01:` 型の定義を読みます。
-escapeや文字参照をdecodeした表示上のprefixを使うため、nepldから生成した `- A01\:` も
-同じ定義として扱います。見出し・引用・code・HTML・表・脚注や文中の単なる言及は定義にしません。
-ID自体をlinkや強調で組み立てず、説明部分に必要な注釈・code・linkを配置してください。
-inline HTMLを含む段落では、タグの後の改行から定義の抽出を再開しません。
-次の独立した段落・list itemから再開し、非表示span中のIDを定義と誤認するのを避けます。
-重複定義を拒否し、catalogとの集合一致と全required条件の検査は維持します。
-
-`doc/canonical.json` に登録された仕様はnepldを編集します。生成Markdownを直接変更しないでください。
-`cargo run --locked -p nepl3-tools -- doc-canonical --check` はproduction APIで再生成して差分を検査します。
-更新時は `doc-markdown annotated` で新しい一時ファイルへ生成し、差分をレビューして既存のprojectionへ反映します。
-ページ間リンクを持つ `nepl3-tools.markdown-annotated-pages/1` の登録後は、
-`cargo run --locked -p nepl3-tools -- doc-canonical markdown dist/canonical-markdown` で全登録ページを
-新規ディレクトリへ生成します。参照先・別ページのaliasも同じ入力集合に含め、旧rendererのページは
-既存byte列を維持します。成功した生成物の差分をレビューしてからprojectionへ反映してください。
-`cargo run --locked -p nepl3-tools -- doc-canonical html dist/doc-canonical` は、同じ正本からHTML一式を新規出力します。
-HTML集合の有限出力予算を明示する場合は、registryの `html_output_limits` に8資源をすべて指定します。
-Markdown用の `output_limits` とは別の設定であり、未指定時は従来のHTML既定値を維持します。
-停止した実行を成功として再試行せず、新しい設定での生成は別の実行として記録します。
-いずれも文書の明示的な生成工程とし、Cargo build.rsへ入れません。
-
-Doc HTMLの配置は、固定版Playwrightと対応するChromium・Firefox・WebKitでCI実行します。
-実NEPL3入力からproduction backendで生成した13例を、2画面幅・3文字サイズ・3行高で表示し、
-Ruby/Annoのbaseline、複数行、入れ子、注釈と前後行の高さ予約を検査します。
-文書のJavaScriptは無効です。これは静的HTMLの検査であり、Wasm実行や支援技術の操作試験ではありません。
-runner不在・例の欠落・配置不一致は失敗となり、quality jobも失敗します。
-
-```sh
-python -m pip install -r tools/audit/doc_html/requirements.txt
-python -m playwright install chromium firefox webkit
-mkdir -p dist/doc-browser
-cargo test --locked -p nepl3-tools --test doc html::browser_layout_corpus_from_real_doc_source -- --exact --nocapture > dist/doc-browser/corpus.log
-python tools/audit/doc_html/browser.py --corpus dist/doc-browser/corpus.log --css crates/languages/doc/html/assets/doc.css --output dist/doc-browser/results.json
-```
-
-Linuxではbrowser用のsystem libraryも必要なため、CIは`playwright install --with-deps`を使います。
-PowerShellで実行ログを保存する際は、後述のUTF-8の指針に従ってください。
 
 [rust-toolchain.toml](../rust-toolchain.toml) に固定したRustと、Gitを使用します。rustupはworkspace内で指定toolchainを選びます。`cargo` の各コマンドはリポジトリrootで実行してください。`Cargo.lock` は管理対象で、CIでは `--locked` を使います。
 
@@ -204,6 +108,91 @@ CIと同じ.gitattributesに従うfresh checkoutで通常ファイルをLFにそ
 証拠は同じdesign revisionとsource/spec digest、群ID、必須target、実行結果、log digestへ照合します。改変した証拠・別ID・古い版・未実行targetをpassedとして受理しません。形式検査だけで試験の正しさを証明した扱いにせず、期待値とlogの独立レビューを行います。
 
 実行証拠は `kind: command` としてコマンド、終了コード、runner/tool版を記録します。人による意味レビューは `kind: review` としてreviewer、独立性、scope、approved/rejectedを記録し、架空のコマンドを作りません。catalogのtarget種別と一致させ、非空の.txt/.log記録とSHA-256を添付します。詳細な必須fieldは証拠schemaに従います。
+
+## 文書生成と初期Pages公開
+
+初期Pages公開は `.github/workflows/pages.yml` が担当します。main pushのCI成功後、
+そのrunのDoc site・検査report・元tarを取得し、commit/manifest/内容一致を再検査して公開します。
+検査済みsiteのfile byte列を公式upload-pages-artifactで梱包します。CI tarは照合用に保持し、
+Pages輸送tarと同一byteとは扱いません。初回の独自tar直接uploadはPages側でdeployment_failedとなりました。
+tar entryの先頭`./`等の形式差が疑われるため、輸送を公式actionへ委譲します。HTMLは再buildしません。
+公開後のHTTP smoke失敗はworkflow失敗として記録します。LKG/journalによる自動復旧は未提供です。
+Markdown/NEPL3d混在公開は正本移行を支える段階であり、全ページ移行やT19/T20完成を意味しません。
+
+`cargo run --locked -p nepl3-tools -- site build site/config.json dist/site` は、
+登録済みDoc正本のHTMLに静的な索引を付け、新規ディレクトリへ一式を生成します。
+追跡済みの設定とcleanな入力checkoutを要求し、生成中にHEADや入力の変更を検出した場合は出力しません。
+`build.json` のsource commitは入力checkout、rendererは実行したbinaryのSHA-256と
+そのbuild時のrustcを別々に記録します。binaryのsource commitを入力checkoutから推定しません。
+CIでは同じcheckoutからbuildしたbinaryと生成ログを結び付けて保管します。
+埋込template・CSSとcheckoutの不一致も拒否します。toolsのbuild.rsはcompiler識別のみを行い、
+文書生成やGrammar compileを実行しません。
+現在の入口は登録済みDocページ、未移行のMarkdown仕様書、`site/examples.json`の原文例を含むdocs-only生成です。
+原文の配布byte・Profile・digestは同じcheckoutと照合し、表示から例を実行しません。
+仕様書以外の未移行文書・rustdoc・実行例の操作結果を含む統合、
+公開後smokeと復旧を含むPages配信、T19/T20全体の完了は別途検証します。
+
+`python tools/site/payload.py dist/site dist/pages.tar --manifest-sha256 <検査済みmanifestのSHA-256>`
+は、検査対象と同じfile集合・byte列を確認し、HTMLを再生成せずPages用のtarへ固定します。
+CIは実ブラウザ検査のreportからdigestを渡し、元site・tar・receiptを同じartifactに保存します。
+tar内の順序・時刻・所有者・modeは固定し、リンク（Windows junctionを含む）、読取り失敗、
+未登録file、改変、上限超過を拒否します。出力先は入力siteの外にある新規fileに限ります。
+receiptの `publication_verified` はfalseです。この梱包だけでは公開確認やLKG昇格になりません。
+境界試験は `python -m unittest discover -s tools/site -p 'test_*.py'` で実行します。
+
+復旧用の `tools/site/recovery.py` は、別途確認したLKGのtar/manifest digestと取得した元tarの
+byte列を受け取ります。ファイルシステムへ展開せず、各member・manifest・file集合の衝突・
+内容・上限を検査し、元byte列をそのまま返します。圧縮wrapperは取得側で分離し、原tarの
+identityと混同しません。canonical tarとの比較は検査であり、比較用の再serialize結果を
+復旧出力として使いません。保存物のimmutability、現在の公開対象、journalの復旧許可は
+別途検査が必要です。通常CIには保存済みの実Doc tarを用いた回帰試験も含めます。
+
+`python tools/site/smoke.py dist/site https://neknaj.github.io/NEPL3/ --manifest-sha256 <検査済みdigest>`
+は、docs-only成果物とHTTPS応答のbyte列、HTML/CSSのMIME、directory indexと未知routeの404を
+照合します。build identityを前後で取得し、redirectや内容の混在を拒否します。
+`.nojekyll` は公開内容ではなく配信制御fileとして照合対象から外し、結果にも記録します。
+socket timeoutに加えて外側processを最大300秒で終了させ、失敗時は非zero終了と理由を返します。
+`--local-http` は明示port付き127.0.0.1だけで利用でき、結果はlocal試験として区別します。
+このHTTP照合は公開smokeの一部であり、Pages API/journalの現行deployment、実browser表示、
+全cacheの原子的切替やLKGを証明しません。publisherはそれぞれの証拠を別途照合します。
+
+受入群の文書検査は、Markdownの本文・箇条書きの行頭にあるplainな `A01:` 型の定義を読みます。
+escapeや文字参照をdecodeした表示上のprefixを使うため、nepldから生成した `- A01\:` も
+同じ定義として扱います。見出し・引用・code・HTML・表・脚注や文中の単なる言及は定義にしません。
+ID自体をlinkや強調で組み立てず、説明部分に必要な注釈・code・linkを配置してください。
+inline HTMLを含む段落では、タグの後の改行から定義の抽出を再開しません。
+次の独立した段落・list itemから再開し、非表示span中のIDを定義と誤認するのを避けます。
+重複定義を拒否し、catalogとの集合一致と全required条件の検査は維持します。
+
+`doc/canonical.json` に登録された仕様はnepldを編集します。生成Markdownを直接変更しないでください。
+`cargo run --locked -p nepl3-tools -- doc-canonical --check` はproduction APIで再生成して差分を検査します。
+更新時は `doc-markdown annotated` で新しい一時ファイルへ生成し、差分をレビューして既存のprojectionへ反映します。
+ページ間リンクを持つ `nepl3-tools.markdown-annotated-pages/1` の登録後は、
+`cargo run --locked -p nepl3-tools -- doc-canonical markdown dist/canonical-markdown` で全登録ページを
+新規ディレクトリへ生成します。参照先・別ページのaliasも同じ入力集合に含め、旧rendererのページは
+既存byte列を維持します。成功した生成物の差分をレビューしてからprojectionへ反映してください。
+`cargo run --locked -p nepl3-tools -- doc-canonical html dist/doc-canonical` は、同じ正本からHTML一式を新規出力します。
+HTML集合の有限出力予算を明示する場合は、registryの `html_output_limits` に8資源をすべて指定します。
+Markdown用の `output_limits` とは別の設定であり、未指定時は従来のHTML既定値を維持します。
+停止した実行を成功として再試行せず、新しい設定での生成は別の実行として記録します。
+いずれも文書の明示的な生成工程とし、Cargo build.rsへ入れません。
+
+Doc HTMLの配置は、固定版Playwrightと対応するChromium・Firefox・WebKitでCI実行します。
+実NEPL3入力からproduction backendで生成した13例を、2画面幅・3文字サイズ・3行高で表示し、
+Ruby/Annoのbaseline、複数行、入れ子、注釈と前後行の高さ予約を検査します。
+文書のJavaScriptは無効です。これは静的HTMLの検査であり、Wasm実行や支援技術の操作試験ではありません。
+runner不在・例の欠落・配置不一致は失敗となり、quality jobも失敗します。
+
+```sh
+python -m pip install -r tools/audit/doc_html/requirements.txt
+python -m playwright install chromium firefox webkit
+mkdir -p dist/doc-browser
+cargo test --locked -p nepl3-tools --test doc html::browser_layout_corpus_from_real_doc_source -- --exact --nocapture > dist/doc-browser/corpus.log
+python tools/audit/doc_html/browser.py --corpus dist/doc-browser/corpus.log --css crates/languages/doc/html/assets/doc.css --output dist/doc-browser/results.json
+```
+
+Linuxではbrowser用のsystem libraryも必要なため、CIは`playwright install --with-deps`を使います。
+PowerShellで実行ログを保存する際は、[ローカル環境](#ローカル環境)のUTF-8の指針に従ってください。
 
 ## ページ集合と移行候補
 
@@ -324,3 +313,25 @@ taskの段階着手には利用する前段成果物が必要。`depends_on` の
 review成功からconformance合格、uploadから公開済み、公開済みからLKGを推定しない。
 新しい保存script・sourceコピーを結果配下に作らず、再現に必要なcommit/path、宣言入力、
 command、環境、原出力とhashを使用する。
+
+## Portable execution CI
+
+WASI foundationは同じcomponentをWasmtime 44.0.1のnative codegenと
+Pulley64で実行し、終了状態・試験数・elapsed以外の出力を比較します。
+PulleyもCraneliftでbytecodeを生成するため、別compilerの検証とは扱いません。
+空のlibrary test binaryはemptyとして記録し、集約では実試験の成功を要求します。
+各processは180秒で停止・回収し、失敗ログもartifactへ保存します。
+比較用componentは `cargo test --release` で最適化します。通常のdebug WASI試験は
+別途維持します。非最適化のengine parse全20件はCIのPulleyで180秒を超えたため、
+試験の削除やcoreの資源上限変更ではなく、配布時にも使う最適化コードを比較します。
+
+[RP2040 adapter](../conformance/targets/rp2040/README.md) は別workspaceの
+bare-metal harnessです。production core/reader/wire/engineの依存を使用し、
+HAL・UART・allocatorを外側へ置きます。ARMv6-M buildと固定版rp2040jsでの
+UF2実行は別job・別証拠です。初期実行範囲はsource位置・budget・NDFの4件で、
+Reader/Engine全受入や実機試験の代わりにはしません。
+
+実ブラウザのWasm・Playground、RISC-V、big-endianの検査はそれぞれ独立した未達範囲です。
+このCI整備をDoc HTML・文書移行・Pages公開の完成へ読み替えません。
+CIの区切り後はDoc生成を進め、意味・リンク・安定IDの対応を検証できたページから
+nepld正本へ移行し、検査済みの同じsite artifactを公開します。

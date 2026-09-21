@@ -1,65 +1,23 @@
 article ja "18. HTMLを[先行利用/せんこうりよう]する[実装段階/じっそうだんかい]"
 body
   cons paragraph
-    cons "2026-09-07の[追加指示/ついかしじ]により、Doc[入力/にゅうりょく]からHTMLまでを[先行/せんこう]して[利用可能/りようかのう]にする。"
-    cons "[基準/きじゅん]として[提示/ていじ]された933f0bbへ[戻/もど]さず、[既存/きそん]のlower::document・labels::check・plain_text・source printerを[再利用/さいりよう]する。"
-    cons "Mathのarena・shape・lower・codecは、[進行中/しんこうちゅう]の[表示用/ひょうじよう][実装/じっそう]を[利用/りよう]する。"
-    cons "source printerをHTML rendererへ[読/よ]み[替/か]えない。"
-    nil
+    cons "この[章/しょう]はHTML[生成/せいせい]の[各層/かくそう]の[接続/せつぞく]と、[先行利用/せんこうりよう]の[範囲/はんい]を[定/さだ]める。"
+    cons "[構文/こうぶん]を[印字/いんじ]するsource printerをHTML rendererへ[読/よ]み[替/か]えない。"
+    cons "[採用/さいよう]の[経緯/けいい]は[設計判断/せっけいはんだん]0006、[現在/げんざい]の[実装状態/じっそうじょうたい]はimplementation-status.jsonを[参照/さんしょう]する。" nil
   cons section implementation_dependencies "[実装依存/じっそういぞん]"
     body
-      cons table cons left cons left cons left nil
-        some row
-          cons "[正式/せいしき]タスク"
-          cons "[段階/だんかい]"
-          cons "[成果物/せいかぶつ]と[終了範囲/しゅうりょうはんい]"
-          nil
-        cons row
-          cons "T22"
-          cons "H0"
-          cons "Doc[用/よう]markup、[文書/ぶんしょ]check・prepare、URI・asset、renderer、17[章/しょう]の[型/かた]・codec・[制約/せいやく]を[具体化/ぐたいか]し、[対応/たいおう]する[公開/こうかい]APIの[実装前提/じっそうぜんてい]を[揃/そろ]える。"
-          nil
-        cons row
-          cons "T23"
-          cons "H1"
-          cons "[既存/きそん]のparser・lower・labelsを[使/つか]うDoc[単独/たんどく]HTML、[検査済/けんさず]みpage・asset[解決/かいけつ]、markup・doc-html、[安全/あんぜん]なserializer、suiteとCLIを[実際/じっさい]に[利用/りよう]する[入口/いりぐち]。"
-          nil
-        cons row
-          cons "T24"
-          cons "H2"
-          cons "Math[表示用/ひょうじよう][構造/こうぞう]とbinding、[独立/どくりつ]MathML、[型付/かたつ]きTeX、Node host KaTeX、[式/しき]ごとのfallbackを、[実/じつ]NEPL3[入力/にゅうりょく]から[接続/せつぞく]する。"
-          nil
-        cons row
-          cons "T25"
-          cons "H3"
-          cons "[純粋/じゅんすい]TEA、[共通/きょうつう]Wasm、Worker[生成/せいせい]、[隔離/かくり]preview、[同/どう]artifactのexportを、Nodeとの[比較/ひかく]と3 browserで[検証/けんしょう]する。"
-          nil
-        nil
       cons paragraph
-        cons "[依存/いぞん]はT22→T23→T24→T25の[順/じゅん]に[成果物/せいかぶつ]を[供給/きょうきゅう]する。"
-        cons "ここでの[矢印/やじるし]は[実装順/じっそうじゅん]を[表/あらわ]す。"
-        cons sentence
-          cons code "design/tasks.json"
-          cons text "の"
-          cons code "depends_on"
-          cons text "では、"
-          cons ruby text "後段" text "こうだん"
-          cons text "が"
-          cons ruby text "前段" text "ぜんだん"
-          cons text "を"
-          cons ruby text "参照" text "さんしょう"
-          cons text "する。"
-          nil
-        cons "T22は[先行/せんこう]foundation・Doc・Mathの[実/じつ]APIを[検証/けんしょう]して[利用/りよう]するが、T01〜T09の[全体完了/ぜんたいかんりょう]を[待/ま]たせない。"
-        cons "T23は[未対応/みたいおう]embedを[型付/かたつ]きで[拒否/きょひ]し、T24でMathの[実解決/じつかいけつ]を[追加/ついか]する。"
-        cons "[空/から]のfragmentで[段階/だんかい]をまたがない。"
-        nil
+        cons "H0〜H3はT22〜T25に[対応/たいおう]する[作業段階/さぎょうだんかい]であり、[順序/じゅんじょ]・[成果物/せいかぶつ]・[受入条件/うけいれじょうけん]の[正本/せいほん]はdesign/tasks.jsonとする。"
+        cons "[各段階/かくだんかい]では[利用/りよう]する[前段/ぜんだん]の[実/じつ]APIを[検証/けんしょう]し、[空/から]のfragmentで[未実装/みじっそう]を[隠/かく]さない。"
+        cons "T22はT01〜T09の[全体完了/ぜんたいかんりょう]を[着手条件/ちゃくしゅじょうけん]にせず、T23では[未対応/みたいおう]embedを[型付/かたつ]きで[拒否/きょひ]し、T24でMathの[実解決/じつかいけつ]を[追加/ついか]する。" nil
+      cons paragraph
+        cons "[各層/かくそう]の[詳細契約/しょうさいけいやく]は、Docの[意味/いみ]・[構造/こうぞう]が05[章/しょう]、[数式表示/すうしきひょうじ]が17[章/しょう]、[型付/かたつ]きmarkupとserializerが19[章/しょう]、DocのprepareとHTML[変換/へんかん]が20[章/しょう]、[集合/しゅうごう]のpage・anchor[解決/かいけつ]が21[章/しょう]である。"
+        cons "15[章/しょう]は[生成済/せいせいず]み[文書/ぶんしょ]の[配置/はいち]と[公開/こうかい]、16[章/しょう]は[正式文書/せいしきぶんしょ]の[正本切替/せいほんきりかえ]を[所有/しょゆう]する。"
+        cons "[以下/いか]はそれらの[接続/せつぞく]に[必要/ひつよう]な[保証/ほしょう]の[要約/ようやく]であり、[各層/かくそう]の[独立/どくりつ]した[検査/けんさ]を[置/お]き[換/か]えない。" nil
       cons paragraph
         cons "T10・T11・T13・T15・T17・T18は[先行経路/せんこうけいろ]を[再利用/さいりよう]して、[当初/とうしょ]の[全責務/ぜんせきむ]を[実装/じっそう]する。"
-        cons "Math evaluate、Circuit、LSP、[汎用/はんよう]provider、4[言語/げんご]UI[全体/ぜんたい]、Pages[全受入/ぜんうけいれ]、T21[文書移行/ぶんしょいこう]は[残/のこ]る。"
-        cons "T16はT25と[既存/きそん]の[最終依存/さいしゅういぞん]、すべてのrequired[受入条件/うけいれじょうけん]を[要求/ようきゅう]する。"
-        cons "[先行利用/せんこうりよう]の[成功/せいこう]から、[既存/きそん]タスクや[受入群全体/うけいれぐんぜんたい]をpassedにしない。"
-        nil
+        cons "Math evaluate、Circuit、LSP、[汎用/はんよう]provider、reference profileのUI、Pages[全受入/ぜんうけいれ]、T21[文書移行/ぶんしょいこう]の[完成/かんせい]を[先行利用/せんこうりよう]の[成功/せいこう]から[推定/すいてい]しない。"
+        cons "T16はT25と[既存/きそん]の[最終依存/さいしゅういぞん]、すべてのrequired[受入条件/うけいれじょうけん]を[要求/ようきゅう]する。" nil
       nil
   cons section document_preparation "H0/H1の[契約/けいやく]"
     body
