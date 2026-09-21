@@ -54,6 +54,52 @@ pub struct ProviderSignature {
     pub state_type: TypeDescriptor,
     pub continuation_type: TypeDescriptor,
 }
+impl ProviderSignature {
+    /// Validate the selected operation's envelope and the reader value types.
+    /// A plan additionally binds `state_type` to its own persistent state type.
+    pub fn check(&self, registry: &SchemaRegistry, budget: &mut Budget) -> Result<(), PlanError> {
+        budget.poll()?;
+        for ty in [
+            &self.value_input,
+            &self.value_output,
+            &self.state_type,
+            &self.continuation_type,
+        ] {
+            registry.validate_type(ty, budget)?;
+        }
+        let descriptor = registry
+            .descriptor(&self.operation.schema)
+            .ok_or(PlanError::ProviderSignature)?;
+        let mut selected = None;
+        for operation in &descriptor.operations {
+            budget.charge(
+                Resource::Work,
+                (operation.name.len() as u64)
+                    .saturating_add(self.operation.name.len() as u64)
+                    .saturating_add(1),
+            )?;
+            if operation.name == self.operation.name {
+                selected = Some(operation);
+                break;
+            }
+        }
+        let operation = selected.ok_or(PlanError::ProviderSignature)?;
+        let (input, output) = match self.kind {
+            ProviderKind::Read => ("ReadRequest", "ReadReply"),
+            ProviderKind::Transform => ("TransformRequest", "TransformReply"),
+            ProviderKind::Dependent => ("DependentRequest", "ReadReply"),
+        };
+        if operation.pure != self.pure
+            || !reader_type(&operation.input, input)
+            || !reader_type(&operation.output, output)
+            || !reader_type(&self.continuation_type, "ReaderContinuation")
+            || self.kind == ProviderKind::Read && self.value_input != TypeDescriptor::Unit
+        {
+            return Err(PlanError::ProviderSignature);
+        }
+        Ok(())
+    }
+}
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ReaderExpr {
     Literal(String),
@@ -265,31 +311,8 @@ impl ReaderPlan {
             {
                 return Err(PlanError::DuplicateProvider);
             }
-            registry.validate_type(&provider.value_input, budget)?;
-            registry.validate_type(&provider.value_output, budget)?;
-            registry.validate_type(&provider.state_type, budget)?;
-            registry.validate_type(&provider.continuation_type, budget)?;
-            let descriptor = registry
-                .descriptor(&provider.operation.schema)
-                .ok_or(PlanError::ProviderSignature)?;
-            let operation = descriptor
-                .operations
-                .iter()
-                .find(|op| op.name == provider.operation.name)
-                .ok_or(PlanError::ProviderSignature)?;
-            let (input, output) = match provider.kind {
-                ProviderKind::Read => ("ReadRequest", "ReadReply"),
-                ProviderKind::Transform => ("TransformRequest", "TransformReply"),
-                ProviderKind::Dependent => ("DependentRequest", "ReadReply"),
-            };
-            if provider.state_type != self.state_type
-                || operation.pure != provider.pure
-                || !reader_type(&operation.input, input)
-                || !reader_type(&operation.output, output)
-                || !reader_type(&provider.continuation_type, "ReaderContinuation")
-                || provider.kind == ProviderKind::Read
-                    && provider.value_input != TypeDescriptor::Unit
-            {
+            provider.check(registry, budget)?;
+            if provider.state_type != self.state_type {
                 return Err(PlanError::ProviderSignature);
             }
         }

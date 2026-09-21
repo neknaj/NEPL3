@@ -10,6 +10,134 @@ use nepl3_reader::{model::*, plan::*, portable::*, runtime::ReaderSession};
 use nepl3_wire::{environment::environment_digest, foundation::FoundationCodec};
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 #[test]
+fn dispatch_input_checks_selected_operation_and_concrete_value_types() -> TestResult {
+    use nepl3_core::{
+        schema::{OperationDescriptor, SchemaDescriptor},
+        value::OperationRef,
+        view::ViewBundle,
+    };
+    use nepl3_reader::portable::dispatch::{self, DispatchContext, ProviderInput};
+    macro_rules! checked {
+        ($v:expr) => {
+            $v.map_err(|e| format!("{e:?}"))?
+        };
+    }
+    let (_, mut registry, sources, request) = fixture()?;
+    let mut b = budget();
+    let reader_type = |name: &str| {
+        TypeDescriptor::Named(TypeRef {
+            package: "nepl3.reader".into(),
+            revision: 1,
+            name: name.into(),
+        })
+    };
+    let descriptor = SchemaDescriptor {
+        package: "test.dispatch".into(),
+        revision: 1,
+        types: vec![],
+        operations: [
+            ("read", "ReadRequest", "ReadReply"),
+            ("dependent", "DependentRequest", "ReadReply"),
+            ("transform", "TransformRequest", "TransformReply"),
+        ]
+        .into_iter()
+        .map(|(name, input, output)| OperationDescriptor {
+            name: name.into(),
+            input: reader_type(input),
+            output: reader_type(output),
+            pure: true,
+        })
+        .collect(),
+    };
+    let schema = checked!(descriptor.reference(&mut b));
+    checked!(registry.register(schema.clone(), descriptor, &mut b));
+    checked!(registry.finalize(&mut b));
+    let span = checked!(
+        sources
+            .resolve(&request.snapshot)
+            .ok_or("snapshot")?
+            .span(0, 1)
+    );
+    let inputs = [
+        (
+            "read",
+            ProviderKind::Read,
+            ProviderInput::Read(Box::new(request.clone())),
+        ),
+        (
+            "dependent",
+            ProviderKind::Dependent,
+            ProviderInput::Dependent(Box::new(DependentRequest {
+                first: NdfValue::Text("first".into()),
+                end: 0,
+                request: request.clone(),
+            })),
+        ),
+        (
+            "transform",
+            ProviderKind::Transform,
+            ProviderInput::Transform(Box::new(TransformRequest {
+                value: NdfValue::Text("first".into()),
+                span,
+                view: ViewBundle {
+                    elements: vec![],
+                    roots: vec![],
+                },
+                context: request.context.clone(),
+            })),
+        ),
+    ];
+    let mut admission = SourceAdmission::default();
+    let mut codec = checked!(FoundationCodec::new(&registry, &sources, &mut admission));
+    for (name, kind, input) in inputs {
+        let mut signature = ProviderSignature {
+            operation: OperationRef {
+                schema: schema.clone(),
+                name: name.into(),
+            },
+            kind,
+            value_input: if kind == ProviderKind::Read {
+                TypeDescriptor::Unit
+            } else {
+                TypeDescriptor::Text
+            },
+            value_output: TypeDescriptor::Text,
+            pure: true,
+            state_type: TypeDescriptor::Unit,
+            continuation_type: reader_type("ReaderContinuation"),
+        };
+        let context = DispatchContext {
+            signature: &signature,
+            sources: &sources,
+            mappings: &[],
+            registry: &registry,
+        };
+        let value = checked!(dispatch::to_value(&input, &context, &mut codec, &mut b));
+        assert_eq!(
+            checked!(dispatch::from_value(&value, &context, &mut codec, &mut b)),
+            input
+        );
+        // Keep the operation envelope valid while changing its concrete input contract.
+        if kind == ProviderKind::Read {
+            signature.state_type = TypeDescriptor::Text;
+        } else {
+            signature.value_input = TypeDescriptor::U64;
+        }
+        let context = DispatchContext {
+            signature: &signature,
+            sources: &sources,
+            mappings: &[],
+            registry: &registry,
+        };
+        assert!(dispatch::to_value(&input, &context, &mut codec, &mut b).is_err());
+        assert!(dispatch::from_value(&value, &context, &mut codec, &mut b).is_err());
+        signature.operation.name = "missing".into();
+        assert!(signature.check(&registry, &mut b).is_err());
+    }
+    Ok(())
+}
+
+#[test]
 fn transform_request_requires_mapping_for_cross_source_view_children() -> TestResult {
     use nepl3_core::{
         origin::{Mapping, MappingKind},
