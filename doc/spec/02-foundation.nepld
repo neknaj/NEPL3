@@ -46,7 +46,7 @@ body
         cons "[別/べつ]decodeのstorageには、[比較前/ひかくまえ]に[課金/かきん]する。"
         cons "SpanのSourceId、[診断/しんだん]、Originなど、snapshot[以外/いがい]の[所有値/しょゆうち]の[複製費用/ふくせいひよう]は[引/ひ]き[続/つづ]き[計上/けいじょう]する。"
         cons "source storeへの[挿入/そうにゅう]は[別/べつ]の[操作/そうさ]として、[索引比較/さくいんひかく]・[重複照合/じゅうふくしょうごう]・[成長費用/せいちょうひよう]を[計上/けいじょう]する。"
-        cons "この[最適化/さいてきか]によって、SourceBytesの[入場/にゅうじょう]、[停止理由/ていしりゆう]の[保持/ほじ]、[受信境界/じゅしんきょうかい]の[検査/けんさ]が[免除/めんじょ]されるわけではない。"
+        cons "[共有/きょうゆう]storageを[使用/しよう]する[場合/ばあい]も、SourceBytesの[計上/けいじょう]、[停止理由/ていしりゆう]の[保持/ほじ]、[受信境界/じゅしんきょうかい]の[検査/けんさ]を[要求/ようきゅう]する。"
         nil
       cons paragraph
         cons sentence cons code "Span = (SnapshotId, start:u64, end:u64)" cons text " とする。" nil
@@ -92,7 +92,7 @@ body
         cons "domain[内部/ないぶ]では、[対応/たいおう]するRustのstruct/enumを[使/つか]う。"
         cons "[種類/しゅるい]と[表示/ひょうじ]classは[独立/どくりつ]している。"
         cons "[表示/ひょうじ]classは、[拡張可能/かくちょうかのう]なIDとfallback roleを[持/も]つ。"
-        cons "[共通/きょうつう]fallbackはcontent、marker、delimiter、name、quantity、annotationであり、[構文/こうぶん]の[意味分類/いみぶんるい]ではない。"
+        cons "[表示用/ひょうじよう]の[共通/きょうつう]fallbackは、content、marker、delimiter、name、quantity、annotationである。[構文/こうぶん]の[意味分類/いみぶんるい]は[各言語/かくげんご]の[契約/けいやく]で[定義/ていぎ]する。"
         nil
       nil
   cons section token_syntax "3. Tokenと[構文/こうぶん]"
@@ -219,7 +219,7 @@ body
             cons "resolutionの[更新/こうしん]には、[別/べつ]の[列/れつ]で[既存/きそん]Occurrenceを[指定/してい]する。"
             cons "[追加/ついか]sourceはrequestの[宣言/せんげん]tableへ[付加/ふか]し、[追加/ついか]OriginのoriginBaseを[既存/きそん]Origin[数/すう]に[一致/いっち]させる。"
             cons "[新旧/しんきゅう]factsのOriginRefは、この[結合/けつごう]tableを[指/さ]す。"
-            cons "namespace[列/れつ]や[既存/きそん]scopeの[親/おや]を[書/か]き[換/か]える[操作/そうさ]ではない。"
+            cons "FactDeltaの[適用時/てきようじ]には、namespace[列/れつ]と[既存/きそん]scopeの[親/おや]を[保持/ほじ]する。"
             cons "[失敗時/しっぱいじ]にsource/Originをhostのglobal storeへ[先行/せんこう]commitして、[欠損/けっそん]を[隠/かく]さない。"
             cons "[受理前/じゅりまえ]に[消費/しょうひ]したusage/admissionは[返却/へんきゃく]しない。"
             nil
@@ -243,7 +243,7 @@ body
       cons paragraph
         cons "[一/ひと]つのFix[内/ない]では、[各/かく]SourceIdの[全/ぜん]editが[同/おな]じsnapshotを[前提/ぜんてい]とする。"
         cons "[異/こと]なるrevisionを、[同/おな]じsourceの[編集/へんしゅう]transactionへ[混/ま]ぜない。"
-        cons "この[制約/せいやく]は、[異/こと]なるSourceIdへの[複数編集/ふくすうへんしゅう]や、primary/relatedによる[履歴/りれき]snapshotの[参照/さんしょう]を[禁止/きんし]するものではない。"
+        cons "[異/こと]なるSourceIdへの[複数編集/ふくすうへんしゅう]と、primary/relatedによる[履歴/りれき]snapshotの[参照/さんしょう]は[許可/きょか]する。"
         nil
       cons paragraph
         cons "EventはParseStarted/RuleTried/RuleCommitted/BindingResolved/OperationFinishedなどのschema[所有/しょゆう]kind、operation path、[必要/ひつよう]な[範囲/はんい]、[構造化/こうぞうか]payloadを[持/も]つ。"
@@ -282,11 +282,11 @@ body
       cons paragraph
         cons "LimitsはsourceBytes、work、depth、nodes、allocationUnits、outputBytes、diagnostics、eventsを[持/も]つ。"
         cons "[全再帰/ぜんさいき]で[共有/きょうゆう]し、[言語/げんご]を[切/き]り[替/か]えてリセットしない。"
-        cons "[論理的/ろんりてき]なlimit[検査/けんさ]と、OS allocatorの[物理/ぶつり]OOMは[同一/どういつ]ではない。"
+        cons "Limitsによる[検査/けんさ]は、[操作/そうさ]の[論理的/ろんりてき]な[資源上限/しげんじょうげん]を[対象/たいしょう]とする。OS allocatorの[物理的/ぶつりてき]なOOMは、[独立/どくりつ]した[失敗条件/しっぱいじょうけん]である。"
         cons "trusted native codeの[無限/むげん]loopを、[呼出/よびだ]し[後/ご]の[検査/けんさ]で[停止/ていし]できるとは[主張/しゅちょう]しない。"
         nil
       cons paragraph
-        cons "Usageは[同/おな]じfield[名/めい]を[持/も]つ[別/べつ]recordであり、[許容最大値/きょようさいだいち]ではなく、[実際/じっさい]の[累積消費/るいせきしょうひ]を[表/あらわ]す。"
+        cons "Usageは、Limitsと[同/おな]じfield[名/めい]を[持/も]ち、[実際/じっさい]の[累積消費/るいせきしょうひ]を[記録/きろく]するrecordである。"
         cons "depthだけは[最大同時再帰深/さいだいどうじさいきふか]さとし、[現在/げんざい]の[深/ふか]さは[別/べつ]に[管理/かんり]する。"
         cons "[解放/かいほう]や[巻戻/まきもど]しで、[消費済/しょうひず]みのwork/nodes/allocationUnitsなどを[返却/へんきゃく]しない。"
         cons "[整数加算/せいすうかさん]のoverflowは、[該当/がいとう]limitの[超過/ちょうか]として[拒否/きょひ]する。"
@@ -300,7 +300,7 @@ body
         cons "snapshotの[構築/こうちく]だけを[繰/く]り[返/かえ]す[低水準/ていすいじゅん]APIと、[受入済/うけいれず]みbundleの[参照/さんしょう]を[区別/くべつ]する。"
         nil
       cons paragraph
-        cons "sourceBytesを[超/こ]える[入力/にゅうりょく]は、[文字数/もじすう]ではなく[元/もと]のUTF-8 byte[数/すう]で[判定/はんてい]し、Stopped(SourceLimit)を[返/かえ]す。"
+        cons "sourceBytesの[上限/じょうげん]は、[元/もと]のUTF-8 byte[数/すう]で[判定/はんてい]する。[上限/じょうげん]を[超/こ]える[入力/にゅうりょく]にはStopped(SourceLimit)を[返/かえ]す。"
         cons "[元/もと]byte[列/れつ]を[受/う]け[取/と]るsnapshot constructorは、この[長/なが]さをUTF-8 decodeより[前/まえ]に[検査/けんさ]する。"
         cons "NDF[受信/じゅしん]では、CBOR[構造/こうぞう]・TextのUTF-8・schemaの[検査/けんさ]を[済/す]ませて[初/はじ]めて[埋込/うめこ]みsourceを[識別/しきべつ]できるため、その[段階/だんかい]の[失敗/しっぱい]が[先/さき]になる。"
         cons "[既/すで]に[停止/ていし]したbudgetの[理由/りゆう]を、[後続/こうぞく]の[検査/けんさ]で[置/お]き[換/か]えない。"
