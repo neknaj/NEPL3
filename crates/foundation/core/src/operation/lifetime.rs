@@ -20,7 +20,10 @@ impl From<StopReason> for LifetimeError {
 }
 impl From<ContinuationError> for LifetimeError {
     fn from(v: ContinuationError) -> Self {
-        Self::Binding(v)
+        match v {
+            ContinuationError::Stopped(reason) => Self::Stopped(reason),
+            error => Self::Binding(error),
+        }
     }
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

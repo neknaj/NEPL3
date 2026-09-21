@@ -123,6 +123,53 @@ fn failed_registration_and_suspend_leave_the_connection_unchanged() {
     assert_eq!(table.phase(7, &mut budget()), Ok(RequestPhase::Cancelled));
 }
 
+#[test]
+fn every_resume_work_boundary_preserves_await_until_success() {
+    use nepl3_core::operation::lifetime::{LifetimeError, RequestLifetimes, RequestPhase};
+    let saved = saved();
+    let resume = Resume {
+        request_id: 7,
+        continuation: saved.clone(),
+        dependency_results: vec![],
+    };
+    let prepare = || {
+        let mut table = RequestLifetimes::default();
+        assert_eq!(
+            table.begin(
+                7,
+                saved.provider.clone(),
+                saved.snapshot_digest,
+                &mut budget()
+            ),
+            Ok(())
+        );
+        assert_eq!(table.suspend(7, saved.clone(), 0, &mut budget()), Ok(()));
+        table
+    };
+    let mut measured = budget();
+    assert_eq!(prepare().resume(&resume, &mut measured), Ok(()));
+    let required = measured.usage().work;
+    // Exercise every admission point, including equality traversal and the
+    // final ID lookup. Expected states follow the atomic transition contract.
+    for work in 0..=required {
+        let mut table = prepare();
+        let mut limited = Budget::new(Limits {
+            work,
+            ..budget().limits()
+        });
+        let result = table.resume(&resume, &mut limited);
+        if work < required {
+            assert_eq!(result, Err(LifetimeError::Stopped(StopReason::WorkLimit)));
+            assert_eq!(table.phase(7, &mut budget()), Ok(RequestPhase::Awaiting));
+            assert_eq!(limited.poll(), Err(StopReason::WorkLimit));
+            assert_eq!(table.resume(&resume, &mut budget()), Ok(()));
+        } else {
+            assert_eq!(result, Ok(()));
+            assert_eq!(table.phase(7, &mut budget()), Ok(RequestPhase::Running));
+        }
+    }
+}
+
 fn budget() -> Budget {
     Budget::new(Limits {
         source_bytes: 10000,
