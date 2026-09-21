@@ -6,10 +6,30 @@ import tempfile
 import unittest
 import subprocess
 import copy
-from check import verify, expected_inputs
+from check import verify, expected_inputs, shared_markdown_paths
 
 
 class ArtifactRejection(unittest.TestCase):
+    def test_shared_markdown_provenance_is_not_inferred_from_a_route(self):
+        raw, html = b'# Guide', b'<h1>Guide</h1>'
+        source_hash, output_hash = [hashlib.sha256(b).hexdigest() for b in (raw, html)]
+        registry = {'files': [{'id': 'guide', 'source': 'doc/spec/23-guide.md', 'route': 'sources/23-guide.md'}]}
+        markdown = {'pages': [{'source': 'doc/spec/23-guide.md', 'route': 'docs/spec/23-guide.html', 'sha256': source_hash}]}
+        build = {'base_path': '/NEPL3/', 'source_commit': 'fixture'}
+        receipt = {'id': 'guide', 'source': 'doc/spec/23-guide.md', 'input': 'doc/spec/23-guide.md',
+            'route': 'docs/spec/23-guide.html', 'source_sha256': source_hash, 'sha256': output_hash, 'bytes': len(html),
+            'projection': {'renderer': 'nepl3-tools.site-markdown/1; pulldown-cmark/0.13.4',
+                'context': json.dumps({'base': '/NEPL3/', 'source_commit': 'fixture'}),
+                'output_route': 'docs/spec/23-guide.html', 'output_sha256': output_hash}}
+        def check(records):
+            return shared_markdown_paths(registry, records, markdown, build, lambda _: raw, lambda _: html)
+        self.assertEqual(check([receipt]), {'docs/spec/23-guide.html'})
+        for field in ['source_sha256', 'sha256', 'route', 'input']:
+            corrupt = copy.deepcopy(receipt); corrupt[field] = 'incorrect'
+            with self.subTest(field=field), self.assertRaises(AssertionError): check([corrupt])
+        with self.assertRaises(AssertionError): check([receipt, receipt])
+        with self.assertRaises(AssertionError): check([])
+
     def test_expected_checkout_rejects_stale_missing_or_mixed_inputs(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

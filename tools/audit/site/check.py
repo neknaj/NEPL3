@@ -62,6 +62,35 @@ def expected_inputs(build, manifest, doc_manifest, docs, source_root, config_pat
     assert hashlib.sha256(renderer.read_bytes()).hexdigest() == build['renderer']['executable_sha256'], 'renderer mismatch'
 
 
+def shared_markdown_paths(registry, registered, markdown, build, source_bytes, output_bytes):
+    """Allow only explicitly selected, source-bound HTML in both manifests."""
+    declared = {r['id']: r for r in registry.get('files', [])}
+    assert len(declared) == len(registry.get('files', [])), 'duplicate reference id'
+    receipts = {r['id']: r for r in registered}
+    assert receipts.keys() == declared.keys() and len(receipts) == len(registered), 'reference coverage'
+    markdown_by_source = {r['source']: r for r in markdown['pages']}
+    shared = set()
+    for ident, reference in declared.items():
+        receipt = receipts[ident]
+        assert receipt['source'] == receipt['input'] == reference['source'], 'reference input'
+        raw = source_bytes(reference['source'])
+        if reference['source'] not in markdown_by_source:
+            assert 'projection' not in receipt and receipt['route'] == reference['route'], 'raw reference route'
+            assert output_bytes(receipt['route']) == raw, 'raw reference bytes'
+            continue
+        entry = markdown_by_source[reference['source']]
+        projection = receipt['projection']
+        assert receipt['route'] == projection['output_route'] == entry['route'], 'projected reference route'
+        assert receipt['source_sha256'] == entry['sha256'] == hashlib.sha256(raw).hexdigest(), 'reference source digest'
+        payload = output_bytes(entry['route'])
+        assert receipt['sha256'] == projection['output_sha256'] == hashlib.sha256(payload).hexdigest(), 'reference output digest'
+        assert receipt['bytes'] == len(payload), 'reference output size'
+        assert projection['renderer'] == 'nepl3-tools.site-markdown/1; pulldown-cmark/0.13.4', 'reference renderer'
+        assert json.loads(projection['context']) == {'base': build['base_path'], 'source_commit': build['source_commit']}, 'reference context'
+        shared.add(entry['route'])
+    return shared
+
+
 def verify(root, source_root=None, config_path='site/config.json', renderer=None):
     root = root.resolve()
     paths = list(root.rglob('*'))
@@ -111,6 +140,9 @@ def verify(root, source_root=None, config_path='site/config.json', renderer=None
         assert entry['route'] == 'docs/spec/' + entry['source'][len('doc/spec/'):-3] + '.html'
         assert entry['route'] in docs
         markdown_paths.add(entry['route'])
+    doc_manifest = json.loads((root / 'doc-manifest.json').read_text(encoding='utf-8'))
+    shared = shared_markdown_paths(json.loads(blob('doc/canonical.json')),
+        doc_manifest.get('registered_files', []), markdown, build, blob, lambda path: files[path].read_bytes())
     catalog_bytes = blob('site/examples.json')
     catalog = json.loads(catalog_bytes)
     assert examples['source_commit'] == build['source_commit'] and examples['capability'] == 'source-view'
@@ -130,7 +162,7 @@ def verify(root, source_root=None, config_path='site/config.json', renderer=None
         example_paths.add(entry['path'])
     for records, expected, sized in [(build['files'], declared - {'build.json'}, True),
                               (json.loads((root / 'doc-manifest.json').read_text(encoding='utf-8'))['files'],
-                               declared - {'build.json', 'index.html', 'docs/index.html', 'assets/site.css', '.nojekyll', 'doc-manifest.json'} - example_paths - markdown_paths, False)]:
+                               (declared - {'build.json', 'index.html', 'docs/index.html', 'assets/site.css', '.nojekyll', 'doc-manifest.json'} - example_paths - markdown_paths) | shared, False)]:
         assert len(records) == len({record['path'] for record in records}), 'duplicate nested file'
         assert {record['path'] for record in records} == expected, 'nested manifest coverage'
         for record in records:

@@ -2,6 +2,24 @@
 
 T07 は進行中。`doc/spec/05-document.md` と `design/forms.json` を最終契約とし、以下の native API ができたことを T07 全体の完了へ読み替えない。
 
+## 現在状態を確認する入口
+
+正本の一覧は `doc/canonical.json`、実装・受入の状態は `implementation-status.json`、
+到達条件は `design/tasks.json` を参照する。以下の履歴にある「未完了」「停止」は、
+その段階の結果であり、現在の残件を列挙したものではない。
+
+第05章は通常のpage予算でparse/lowerと文書集合のHTML生成が成立した。
+旧Markdownとの内容比較、旧見出しalias、17章・23章へのリンクを検査して正本移行する。
+Markdown集合のWork上限はページ追加に対応する別の実行設定であり、単体の性能保証ではない。
+source集合が増え続ける入力の計算量・実時間・実メモリの評価は未実施であり、
+通常予算内で一つの文書を処理できたことから増大入力の性能を推定しない。
+次の性能改善では、既存集合の再走査と検証scopeの寿命を調べる。
+
+Sentence consumerの所有移行、NEPL3a、旧lexical commentの全面撤去、T07/T21全体は
+未完了のままである。HTML/rustdocの高度化をこれらの本体開発の前提にしない。
+
+## 段階別の履歴
+
 ## #158を優先するSentence・注釈の回復
 
 今後の是正順序は[23章](../spec/23-sentence-annotation.md)に従う。Doc固有機能を広げる前に、
