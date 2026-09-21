@@ -107,7 +107,8 @@ impl DocumentSyntax {
             store.insert_with_budget(source.clone_with_budget(b)?, b)?;
         }
         OriginGraph::validate_origins(&self.origins, &store, b)?;
-        let maps = SourceMap::validate_mappings(&self.source_maps, &store, b)?;
+        let maps =
+            SourceMap::validate_mappings(&self.source_maps, &store, b)?.bind_sources(&store, b)?;
         for (index, node) in self.value.nodes.iter().enumerate() {
             b.charge(Resource::Work, 1)?;
             if let Some(origin) = node.origin
