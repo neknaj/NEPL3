@@ -4,6 +4,8 @@ use nepl3_core::{
     source::Digest,
     value::{NdfValue, OperationRef, Record, SchemaRef, TypedValue, Variant},
 };
+#[path = "operation/batch.rs"]
+mod batch;
 #[path = "operation/validation.rs"]
 mod validation;
 

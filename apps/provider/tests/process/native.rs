@@ -272,18 +272,10 @@ fn exchange(
     let dependency = approved.invocation().request();
     let dependency_context = model::context(dependency, &registry)?;
     lifetimes
-        .begin_call(
-            dependency,
-            dependency_context,
-            Some(request.request_id),
-            &mut budget(),
-        )
-        .map_err(error)?;
-    lifetimes
-        .suspend(
+        .suspend_calls(
             request.request_id,
             continuation.clone(),
-            calls.len(),
+            &[(dependency, dependency_context)],
             &mut budget(),
         )
         .map_err(error)?;
