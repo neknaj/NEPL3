@@ -1,3 +1,4 @@
+use nepl3_core::operation::lifetime::RequestPhase;
 use nepl3_core::{
     budget::*,
     diagnostic::{OperationResult, Report},
@@ -7,6 +8,7 @@ use nepl3_core::{
     source::*,
     value::*,
 };
+use nepl3_provider::reply::{ReplyContext, ReplyRoutes};
 use nepl3_provider::{Connection, process::Process};
 use nepl3_suite::dispatch::{resume, suspending};
 use nepl3_suite::grants::Grants;
@@ -18,6 +20,7 @@ use std::{
 };
 mod model;
 mod reference;
+mod routing;
 mod schema_failure;
 use model::*;
 
@@ -178,6 +181,16 @@ fn exchange(
     let sources = granted_sources()?;
     let context = context(&request, &registry)?;
     let mut admission = SourceAdmission::default();
+    let mut lifetimes = RequestLifetimes::default();
+    lifetimes
+        .begin_call(&request, context, None, &mut budget())
+        .map_err(error)?;
+    let contexts = [ReplyContext {
+        request: &request,
+        context,
+        authorized_sources: &sources,
+    }];
+    let routes = ReplyRoutes::new(&contexts, &mut budget()).map_err(error)?;
     connection
         .send(
             &ProviderFrame::Invoke(request.clone()),
@@ -187,18 +200,24 @@ fn exchange(
             &mut budget(),
         )
         .map_err(error)?;
-    let reply = connection
-        .receive_reply(
-            &request,
-            context,
+    let (route, reply) = connection
+        .receive_active_reply(
+            &routes,
+            &mut lifetimes,
             &registry,
-            &sources,
             &sources,
             &mut admission,
             &mut budget(),
             &mut budget(),
         )
         .map_err(error)?;
+    assert_eq!(route, 0);
+    assert_eq!(
+        lifetimes
+            .phase(request.request_id, &mut budget())
+            .map_err(error)?,
+        RequestPhase::Running
+    );
     let OperationReply::Await {
         continuation,
         calls,
@@ -211,6 +230,15 @@ fn exchange(
         return Err("unexpected dependency selection".into());
     }
     if cancel {
+        lifetimes
+            .cancel_tree(request.request_id, &mut budget(), |_| {})
+            .map_err(error)?;
+        assert_eq!(
+            lifetimes
+                .phase(request.request_id, &mut budget())
+                .map_err(error)?,
+            RequestPhase::Cancelled
+        );
         for frame in [
             ProviderFrame::Cancel {
                 request_id: request.request_id,
@@ -232,12 +260,38 @@ fn exchange(
     };
     let authority =
         Grants::new(&request.environment, &sources, &[], &mut budget()).map_err(error)?;
-    let approved = authority.admit(&calls[0], &mut budget()).map_err(error)?;
+    let policy = [nepl3_suite::grants::dependencies::OperationGrant {
+        operation: &selected,
+        grants: &authority,
+    }];
+    let approved = nepl3_suite::grants::dependencies::authorize(&calls, &policy, &mut budget())
+        .map_err(error)?;
+    let [approved] = approved.as_slice() else {
+        return Err("expected one authorized dependency".into());
+    };
+    let dependency = approved.invocation().request();
+    let dependency_context = model::context(dependency, &registry)?;
+    lifetimes
+        .begin_call(
+            dependency,
+            dependency_context,
+            Some(request.request_id),
+            &mut budget(),
+        )
+        .map_err(error)?;
+    lifetimes
+        .suspend(
+            request.request_id,
+            continuation.clone(),
+            calls.len(),
+            &mut budget(),
+        )
+        .map_err(error)?;
     let OperationReply::Result(result) = suspending::invoke(
         &registration,
         identity(),
-        approved.request(),
-        context,
+        approved.invocation().request(),
+        dependency_context,
         &registry,
         &sources,
         &mut budget(),
@@ -252,7 +306,11 @@ fn exchange(
     pending
         .accept(18, result, &registry, &sources, &mut budget())
         .map_err(error)?;
+    lifetimes
+        .finish(dependency.request_id, &mut budget())
+        .map_err(error)?;
     let resume = pending.take_resume(&mut budget()).map_err(error)?;
+    lifetimes.resume(&resume, &mut budget()).map_err(error)?;
     connection
         .send(
             &ProviderFrame::Resume(resume),
@@ -262,18 +320,24 @@ fn exchange(
             &mut budget(),
         )
         .map_err(error)?;
-    let reply = connection
-        .receive_reply(
-            &request,
-            context,
+    let (route, reply) = connection
+        .receive_active_reply(
+            &routes,
+            &mut lifetimes,
             &registry,
-            &sources,
             &sources,
             &mut admission,
             &mut budget(),
             &mut budget(),
         )
         .map_err(error)?;
+    assert_eq!(route, 0);
+    assert_eq!(
+        lifetimes
+            .phase(request.request_id, &mut budget())
+            .map_err(error)?,
+        RequestPhase::Finished
+    );
     reference::compare(&reference::execute(&registry, &request)?, &reply)?;
     // Independent arithmetic expectation includes the checked overflow boundary.
     match (input.checked_add(1), reply) {
@@ -395,6 +459,9 @@ fn run_process(
 }
 
 pub fn run() -> Result<(), String> {
+    if std::env::args().any(|arg| arg == "--routing-child") {
+        return routing::child();
+    }
     if let Some(mode) = schema_failure::child_mode() {
         return schema_failure::child(mode);
     }
@@ -405,11 +472,12 @@ pub fn run() -> Result<(), String> {
         run_case(input).map_err(|e| format!("input {input}: {e}"))?;
     }
     schema_failure::run()?;
+    routing::run()?;
     run_process("--provider-child", |connection| {
         exchange(connection, 41, true)
     })?;
     println!(
-        "process_protocol: 7 passed (3 schema failures; 3 native/process comparisons; 1 suspended cancellation)"
+        "process_protocol: 8 passed (3 schema failures; 3 native/process comparisons; 1 suspended cancellation; 1 reverse-order routing)"
     );
     Ok(())
 }

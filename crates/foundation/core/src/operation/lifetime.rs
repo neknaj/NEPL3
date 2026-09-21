@@ -291,6 +291,36 @@ impl RequestLifetimes {
             State::Cancelled => RequestPhase::Cancelled,
         })
     }
+    /// Check the host-saved reply binding before accepting a delivery.
+    /// The host commits finish/suspend only after reply and dependency checks.
+    pub fn check_reply(
+        &self,
+        id: u64,
+        provider: &OperationRef,
+        snapshot: Digest,
+        b: &mut Budget,
+    ) -> Result<(), LifetimeError> {
+        let index = self.active(id, b)?;
+        let entry = &self.entries[index];
+        if !matches!(entry.state, State::Running) {
+            return Err(LifetimeError::Phase);
+        }
+        b.charge(
+            Resource::Work,
+            (provider.name.len() as u64)
+                .saturating_add(entry.provider.name.len() as u64)
+                .saturating_add(provider.schema.package.len() as u64)
+                .saturating_add(entry.provider.schema.package.len() as u64)
+                .saturating_add(104),
+        )?;
+        if entry.provider != *provider {
+            return Err(LifetimeError::Binding(ContinuationError::Provider));
+        }
+        if entry.snapshot != snapshot {
+            return Err(LifetimeError::Binding(ContinuationError::Snapshot));
+        }
+        Ok(())
+    }
     /// Cancel an active request and every active descendant registered through
     /// `begin_call`. Finished/cancelled descendants retain their terminal state.
     /// Selection and all fallible accounting precede mutation; notifications run

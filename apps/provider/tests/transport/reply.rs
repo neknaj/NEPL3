@@ -10,6 +10,8 @@ use nepl3_suite::grants::Grants;
 mod control;
 #[path = "reply/resume.rs"]
 mod resume;
+#[path = "reply/routing.rs"]
+mod routing;
 
 fn error(e: impl core::fmt::Debug) -> String {
     format!("{e:?}")
