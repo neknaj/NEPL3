@@ -433,6 +433,7 @@ impl<'a> TokenizationSession<'a> {
         }
         let scope = Rc::clone(&accepted.scope);
         let prefix = Prefix::capture(&accepted);
+        let checked_len = accepted.sources.len();
         // Synchronous callbacks are tracked individually. Resume still needs
         // a fresh admission check of the retained prefix before issuing proof.
         let admission_scope = match admission.scope_with_budget(budget) {
@@ -477,6 +478,16 @@ impl<'a> TokenizationSession<'a> {
                 let mut reply = AcceptedTokenizationReply::from_native(reply, scope, budget);
                 if proved && stable {
                     reply.accepted.admission_scope = admission_scope;
+                    // read_seed checked the entire starting prefix. Runtime
+                    // collection only appends beyond it; new sources are not
+                    // covered until the next read checks their suffix.
+                    if let Err(error) = reply.accepted.retain_checked_prefix(sources, checked_len) {
+                        self.close();
+                        return Err(AcceptedTokenizationFailure::BrokenPrefix {
+                            original_error: error,
+                            observed_stop: budget.poll().err(),
+                        });
+                    }
                 }
                 Ok(reply)
             }
@@ -556,7 +567,7 @@ impl<'a> TokenizationSession<'a> {
         }
         let accepted_check = (|| -> Result<(), ReaderError> {
             self.source_checks
-                .check(&accepted.sources, sources, budget)?;
+                .check(accepted.unchecked_sources(sources)?, sources, budget)?;
             accepted.admit_sources(admission, budget)?;
             if accepted.report.diagnostics.is_empty() && accepted.report.events.is_empty() {
                 // Every source in this private prefix was checked and admitted,
