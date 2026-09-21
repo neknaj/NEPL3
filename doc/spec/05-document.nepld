@@ -71,8 +71,11 @@ body
         cons "DG06のSection/Anchor/Referenceのarticle[内/ない]IDとは[区別/くべつ]し、ページ[名/めい]、[外部/がいぶ]URI、[相対/そうたい]pathを[同/おな]じ[名前空間/なまえくうかん]で[自動解決/じどうかいけつ]しない。"
         cons "[公開/こうかい]URIへの[写像/しゃぞう]とリンク[解決/かいけつ]はcheck/prepare[側/がわ]の[明示入力/めいじにゅうりょく]であり、[構造値/こうぞうち]だけからファイル[読出/よみだ]し[権限/けんげん]や[安全/あんぜん]なHTML[属性/ぞくせい]を[得/え]ない。" nil
       cons paragraph
-        cons "DG04のInlineCodeとRawCodeは[意味解析/いみかいせき]しないTextを[保持/ほじ]する。"
-        cons "RawCodeのlanguageHintは[任意/にんい]の[表示情報/ひょうじじょうほう]で、parserや[評価器/ひょうかき]の[自動実行要求/じどうじっこうようきゅう]ではない。"
+        cons "DG04のInlineCodeとRawCodeは、[表示対象/ひょうじたいしょう]のコードをTextとして[保持/ほじ]する。"
+        cons "これらのTextに[対/たい]する[意味解析/いみかいせき]は[実行/じっこう]しない。"
+        cons "RawCodeのlanguageHintは、[任意/にんい]に[指定/してい]できる[表示用/ひょうじよう]の[言語情報/げんごじょうほう]である。"
+        cons "parserや[評価器/ひょうかき]の[実行/じっこう]は、hostの[明示的/めいじてき]な[操作選択/そうさせんたく]に[従/したが]う。" nil
+      cons paragraph
         cons "DG05のImage/InlineImageはAssetRef(id,[任意/にんい]digest)とaltを[持/も]ち、block[画像/がぞう]は[任意/にんい]captionを[持/も]つ。"
         cons "[表層/ひょうそう]のdigestはOptionalTextの64[桁/けた]hexを32byteのDigestへlowerし、[無効/むこう]な[桁数/けたすう]・[文字/もじ]を[拒否/きょひ]する。"
         cons "assetの[読出/よみだ]し、digest[照合/しょうごう]、[表示準備/ひょうじじゅんび]は[別/べつ]の[解決操作/かいけつそうさ]で[行/おこな]う。"
@@ -208,9 +211,11 @@ body
       cons "[対応単位/たいおうたんい]を[二/ふた]つに[分/わ]ける[場合/ばあい]は、[著者/ちょしゃ]が[二/ふた]つのSentence nodeを[作成/さくせい]する。" nil
     cons paragraph
       cons "Parallelはvariantのlanguageがcase-insensitiveで[重複/じゅうふく]しないこと、2variant[以上/いじょう]であることを[検査/けんさ]する。"
-      cons "[空/くう]Sentenceは[翻訳/ほんやく]が[空/から]であるという[明示値/めいじち]として[許/ゆる]すが、missingと[推測/すいそく]して[他言語/たげんご]から[補/おぎな]わない。"
+      cons "[空/くう]Sentenceは、[翻訳/ほんやく]の[内容/ないよう]が[空/から]であることを[表/あらわ]す[明示値/めいじち]として[保持/ほじ]する。"
+      cons "これをmissingとして[扱/あつか]い、[他言語/たげんご]から[内容/ないよう]を[補完/ほかん]することは[禁止/きんし]する。"
       cons "variantの[並/なら]び[順/じゅん]は、ソース[上/じょう]の[順序/じゅんじょ]を[保持/ほじ]する。"
-      cons "[各/かく]variantにCorrespondsTo relationを[与/あた]え、[名前束縛/なまえそくばく]の[同一性/どういつせい]にはしない。" nil
+      cons "[各/かく]variantの[意味対応/いみたいおう]はCorrespondsTo relationで[表/あらわ]す。"
+      cons "[名前束縛/なまえそくばく]の[同一性/どういつせい]は、このrelationの[保証範囲/ほしょうはんい]に[含/ふく]めない。" nil
     cons paragraph
       cons "paragraphのネスト、[節番号/せつばんごう]、HTMLの[行折返/ぎょうおりかえ]しはこの[対応/たいおう]を[変更/へんこう]しない。"
       cons "[単一言語表示/たんいつげんごひょうじ]はRenderOptionsの[指定/してい]languageに[一致/いっち]するvariantのみを[選/えら]ぶ。"
@@ -225,7 +230,8 @@ body
       cons "Reference.targetの[解決範囲/かいけつはんい]は、そのarticle[内/ない]のDocLabel[空間/くうかん]に[限定/げんてい]し、[前方参照/ぜんぽうさんしょう]を[認/みと]める。" nil
     cons paragraph
       cons "source[上/じょう]の[名前/なまえ]の[選択範囲/せんたくはんい]と、[定義全体/ていぎぜんたい]の[範囲/はんい]を[分/わ]ける。"
-      cons "Referenceは[表示/ひょうじ]labelを[持/も]ち、[参照先/さんしょうさき]の[見出/みだ]し[文字列/もじれつ]を[自動/じどう]コピーしない。"
+      cons "Referenceの[表示内容/ひょうじないよう]は、そのlabelで[指定/してい]する。"
+      cons "[参照先/さんしょうさき]の[見出/みだ]し[文字列/もじれつ]の[自動/じどう]コピーは[禁止/きんし]する。"
       cons sentence cons text "HTML idは " cons code "n-" cons text " + UTF-8 byteの" cons ruby text "小文字" text "こもじ" cons text "hexとし、" cons ruby text "任意" text "にんい" cons text "の" cons ruby text "名前" text "なまえ" cons text "から" cons ruby text "衝突" text "しょうとつ" cons text "なく" cons ruby text "生成" text "せいせい" cons text "する。" nil nil
     cons paragraph
       cons sentence cons code "DocNode.locations" cons text " は" cons ruby text "名前" text "なまえ" cons text "operandの" cons ruby text "位置" text "いち" cons text "を " cons code "DocFieldLocation" cons text " として" cons ruby text "保持" text "ほじ" cons text "する。" nil
