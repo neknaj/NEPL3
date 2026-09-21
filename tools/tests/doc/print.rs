@@ -1013,6 +1013,190 @@ fn printer_requires_explicit_current_guest_print_and_binding_at_first_receiver()
 }
 
 #[test]
+fn fragment_preserves_shared_foreign_syntax_and_rejects_invalid_inputs() -> Result<(), String> {
+    use nepl3_doc_core::check::StructureError;
+    let compiled = compiled()?;
+    with_input(
+        &compiled,
+        "sentence cons math Math add 1 2 cons math Math add 3 4 cons math Math add 5 6 nil",
+        "Sentence",
+        |tree, profile, b, a| {
+            let checked = tree
+                .tree()
+                .bundle
+                .validate_with_sources(profile.registry(), b, a)
+                .map_err(err)?;
+            let empty = SourceStore::default();
+            let mut admission = SourceAdmission::default();
+            let mut codec =
+                FoundationCodec::new(profile.registry(), &empty, &mut admission).map_err(err)?;
+            let mut doc = lower::document(
+                &checked,
+                &compiled.doc.package.schema,
+                Category::Sentence,
+                profile.registry(),
+                &mut budget(),
+                &mut codec,
+            )
+            .map_err(err)?;
+            let DocRoot::Sentence(sentence) = doc.value.root else {
+                return Err("sentence root".into());
+            };
+            let DocKind::Sentence { ref inlines } = doc.value.nodes[sentence.0 as usize].kind
+            else {
+                return Err("sentence".into());
+            };
+            let selected = inlines[1];
+            let DocKind::InlineMath { syntax } = doc.value.nodes[selected.0 as usize].kind else {
+                return Err("math".into());
+            };
+            let retained = doc.value.embeds[syntax.0 as usize].clone();
+            let selected_node = doc.value.nodes[selected.0 as usize].clone();
+            let shared_embed = InlineRef(doc.value.nodes.len() as u64);
+            doc.value.nodes.push(selected_node.clone());
+            let concat = InlineRef(doc.value.nodes.len() as u64);
+            doc.value.nodes.push(DocNode {
+                kind: DocKind::Concat {
+                    inlines: vec![selected, shared_embed, selected],
+                },
+                locations: vec![],
+                origin: None,
+                span: None,
+            });
+            let DocKind::Sentence { ref mut inlines } = doc.value.nodes[sentence.0 as usize].kind
+            else {
+                return Err("sentence".into());
+            };
+            inlines[1] = concat;
+            let before = doc.clone();
+            let root = DocRoot::Inline(concat);
+            let mut complete = budget();
+            let result = doc
+                .fragment(
+                    root,
+                    profile.registry(),
+                    &mut complete,
+                    &mut SourceAdmission::default(),
+                )
+                .map_err(err)?;
+            assert_eq!(doc, before);
+            assert_eq!(result.value.root, DocRoot::Inline(InlineRef(2)));
+            assert_eq!(result.value.nodes.len(), 3);
+            let mut expected_node = selected_node;
+            expected_node.kind = DocKind::InlineMath {
+                syntax: EmbedRef(0),
+            };
+            assert_eq!(result.value.nodes[0], expected_node);
+            assert_eq!(result.value.nodes[1], expected_node);
+            assert_eq!(
+                result.value.nodes[2].kind,
+                DocKind::Concat {
+                    inlines: vec![InlineRef(0), InlineRef(1), InlineRef(0)]
+                }
+            );
+            assert_eq!(result.value.embeds, vec![retained]);
+            assert_eq!(result.sources, doc.sources);
+            assert_eq!(result.origins, doc.origins);
+            assert_eq!(result.views, doc.views);
+            assert_eq!(result.source_maps, doc.source_maps);
+            for (invalid, expected) in [
+                (
+                    DocRoot::Inline(InlineRef(u64::MAX)),
+                    ShapeError::Reference(u64::MAX),
+                ),
+                (
+                    DocRoot::Article(ArticleRef(concat.0)),
+                    ShapeError::Category {
+                        node: concat.0,
+                        expected: Category::Article,
+                    },
+                ),
+            ] {
+                assert_eq!(
+                    doc.fragment(
+                        invalid,
+                        profile.registry(),
+                        &mut budget(),
+                        &mut SourceAdmission::default()
+                    ),
+                    Err(StructureError::Shape(expected))
+                );
+            }
+            let mut malformed = doc.clone();
+            malformed.value.nodes.push(DocNode {
+                kind: DocKind::Text {
+                    text: "unreachable".into(),
+                },
+                locations: vec![],
+                origin: None,
+                span: None,
+            });
+            assert_eq!(
+                malformed.fragment(
+                    root,
+                    profile.registry(),
+                    &mut budget(),
+                    &mut SourceAdmission::default()
+                ),
+                Err(StructureError::Shape(ShapeError::Unreachable(
+                    doc.value.nodes.len() as u64
+                )))
+            );
+            for (limits, reason) in [
+                (
+                    Limits {
+                        work: complete.usage().work - 1,
+                        ..budget().limits()
+                    },
+                    StopReason::WorkLimit,
+                ),
+                (
+                    Limits {
+                        allocation_units: complete.usage().allocation_units - 1,
+                        ..budget().limits()
+                    },
+                    StopReason::AllocationLimit,
+                ),
+                (
+                    Limits {
+                        work: 0,
+                        ..budget().limits()
+                    },
+                    StopReason::WorkLimit,
+                ),
+                (
+                    Limits {
+                        allocation_units: 0,
+                        ..budget().limits()
+                    },
+                    StopReason::AllocationLimit,
+                ),
+                (
+                    Limits {
+                        depth: 1,
+                        ..budget().limits()
+                    },
+                    StopReason::DepthLimit,
+                ),
+            ] {
+                let mut limited = Budget::new(limits);
+                assert_eq!(
+                    doc.fragment(
+                        root,
+                        profile.registry(),
+                        &mut limited,
+                        &mut SourceAdmission::default()
+                    ),
+                    Err(StructureError::Stopped(reason))
+                );
+                assert_eq!(doc, before);
+            }
+            Ok(())
+        },
+    )
+}
+
+#[test]
 fn paragraph_edit_uses_model_span_and_preserves_surrounding_source() -> Result<(), String> {
     let compiled = compiled()?;
     let input = "article en \"T\" body\r\n  cons paragraph cons \"same\" nil\r\n  cons paragraph cons \"[字/じ]{base/note}\" nil\r\n  cons paragraph cons \"same\" nil nil";

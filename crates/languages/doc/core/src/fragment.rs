@@ -18,6 +18,8 @@ impl DocumentSyntax {
     /// not used by the fragment. Node spans still describe original source;
     /// printing and applying an edit require a new snapshot and a fresh parse.
     /// This operation neither evaluates guests nor produces printed guest text.
+    /// Labels and preparation results must be resolved for the new fragment.
+    /// Validation and cloning costs depend on the entire input document.
     pub fn fragment(
         &self,
         root: DocRoot,
@@ -101,7 +103,7 @@ impl DocumentSyntax {
         )?;
         output.value.nodes = Vec::with_capacity(count as usize);
         output.value.embeds = Vec::with_capacity(embeds.len());
-        // Reuse owned slots via swaps; no unmetered deep clone of a guest.
+        // Move owned slots; no unmetered deep clone of a guest.
         for &old in checked.shape().postorder() {
             budget.charge(Resource::Work, 1)?;
             if !selected[old] {

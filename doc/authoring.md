@@ -78,3 +78,7 @@ variantごとにliteralと前置構築を選べる。一方の言語に構造が
 話題のまとまりはsection、連続する本文はparagraph、列挙はlist、同じ項目を比較する情報はtableで表す。参照には安定したsection/anchor IDを使う。機能の使用数を増やすことを目的に、不要な装飾・表・埋め込みを足さない。
 
 表記を変更したときは本文・読み・注釈・対応文・強調・参照を保つ。literalと前置構築の等価性は意味構造で確認し、元ソースの位置まで同一だとは扱わない。構造auditの成功と、実parser・lower・HTML生成の成功も区別する。資源停止や未対応機能が残っている例は、実行可能と広告せず制約を記録する。
+
+RustのDoc APIで既存部分を組み替える場合は、正式にlowerした`DocumentSyntax`から親子参照を辿って対象を選び、`fragment(DocRoot, registry, budget, admission)`で抽出する。抽出は元文書全体を検証し、到達可能なnodeとembedを再配置する。共有参照とForeignClosureを保持し、Source・Origin・View・source mapは元identityのまま保持する。このため、費用と保持するsource集合は元文書全体に依存する。
+
+抽出後に型付きconstructorでListItemなどを構築し、既存printerへ渡す。sourceの局所編集には、元モデルが示すSpanと元byte列のdigestを持つ`TextEdit`を`SourceStore::apply`へ渡す。変更後の位置は新しいsnapshotの再parseで確定し、参照解決やprepareも改めて行う。実行例は[Doc printer統合試験](../tools/tests/doc/print.rs)の`paragraph_edit_uses_model_span_and_preserves_surrounding_source`にある。
