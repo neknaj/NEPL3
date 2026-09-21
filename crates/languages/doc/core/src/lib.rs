@@ -14,5 +14,4 @@ pub mod portable;
 pub mod prepare;
 pub mod print;
 pub mod schema;
-pub mod sentence;
 pub mod text;

@@ -7,6 +7,132 @@ use nepl3_sentence_core::{
     model::*,
     syntax::{NodeLocation, SentenceSyntax},
 };
+
+#[test]
+fn literal_bridge_and_typed_doc_share_normal_form_and_provenance() -> Result<(), String> {
+    use nepl3_doc_core::model as d;
+    use nepl3_sentence_core::literal::{self, SentenceOutcome};
+    let mut r = SchemaRegistry::default();
+    for descriptor in [
+        nepl3_core::schema::foundation::descriptor(&mut b()),
+        nepl3_sentence_core::schema::descriptor(&mut b()),
+        nepl3_doc_core::schema::descriptor(&mut b()),
+    ] {
+        let descriptor = descriptor.map_err(err)?;
+        r.register(
+            descriptor.reference(&mut b()).map_err(err)?,
+            descriptor,
+            &mut b(),
+        )
+        .map_err(err)?;
+    }
+    r.finalize(&mut b()).map_err(err)?;
+    let source = SourceSnapshot::new(
+        SourceId("bridge-literal".into()),
+        1,
+        "memory:bridge-literal".into(),
+        b"\"ab[x/y]\"".to_vec(),
+        &mut b(),
+    )
+    .map_err(err)?;
+    let scan = literal::read(
+        &source,
+        0,
+        source.text().len() as u64,
+        true,
+        &r,
+        &mut b(),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    let SentenceOutcome::Matched(literal) = scan.outcome else {
+        return Err("expected literal".into());
+    };
+    let doc = nepl3_tools::doc::sentence::document(
+        &literal.syntax,
+        &r,
+        &mut b(),
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    // Independent constructor input contains empty/adjacent Text and Concat;
+    // normalization must yield the same meaning as the actual literal reader.
+    let kinds = vec![
+        d::DocKind::Text { text: "a".into() },
+        d::DocKind::Text {
+            text: String::new(),
+        },
+        d::DocKind::Text { text: "b".into() },
+        d::DocKind::Concat {
+            inlines: vec![d::InlineRef(0), d::InlineRef(1), d::InlineRef(2)],
+        },
+        d::DocKind::Text { text: "x".into() },
+        d::DocKind::Text { text: "y".into() },
+        d::DocKind::Ruby {
+            base: d::InlineRef(4),
+            reading: d::InlineRef(5),
+        },
+        d::DocKind::Sentence {
+            inlines: vec![d::InlineRef(3), d::InlineRef(6)],
+        },
+    ];
+    let prefix = d::DocumentSyntax {
+        value: d::DocValue {
+            root: d::DocRoot::Sentence(d::SentenceRef(7)),
+            nodes: kinds
+                .into_iter()
+                .map(|kind| d::DocNode {
+                    kind,
+                    locations: vec![],
+                    origin: None,
+                    span: None,
+                })
+                .collect(),
+            embeds: vec![],
+        },
+        sources: vec![],
+        origins: vec![],
+        views: vec![],
+        source_maps: vec![],
+    };
+    let normal =
+        nepl3_doc_core::normalize::document(&prefix, &r, &mut b(), &mut SourceAdmission::default())
+            .map_err(err)?;
+    assert_eq!(normal.value.root, doc.value.root);
+    assert_eq!(
+        normal
+            .value
+            .nodes
+            .iter()
+            .map(|node| &node.kind)
+            .collect::<Vec<_>>(),
+        doc.value
+            .nodes
+            .iter()
+            .map(|node| &node.kind)
+            .collect::<Vec<_>>()
+    );
+    let mut operation = b();
+    let normalized = nepl3_doc_core::normalize::document(
+        &doc,
+        &r,
+        &mut operation,
+        &mut SourceAdmission::default(),
+    )
+    .map_err(err)?;
+    assert_eq!(normalized.views, doc.views);
+    assert_eq!(normalized.origins, doc.origins);
+    assert_eq!(operation.usage().source_bytes, source.text().len() as u64);
+    assert_eq!(doc.sources, literal.syntax.sources);
+    assert_eq!(doc.origins, literal.syntax.origins);
+    assert_eq!(doc.source_maps, literal.syntax.source_maps);
+    for (node, location) in doc.value.nodes.iter().zip(&literal.syntax.locations) {
+        assert_eq!(node.origin, Some(location.origin));
+        assert_eq!(node.span, location.cover);
+    }
+    Ok(())
+}
+
 #[test]
 fn doc_bridge_preserves_generated_shared_inline_and_rejects_unselected_foreign()
 -> Result<(), String> {

@@ -451,6 +451,61 @@ fn malformed_literals_have_typed_source_bound_failures() -> Result<(), String> {
 }
 
 #[test]
+fn migrated_doc_literal_cases_preserve_text_and_annotation_structure() -> Result<(), String> {
+    let r = registry()?;
+    for (text, expected, ruby, anno) in [
+        ("\"\"", vec![], 0, 0),
+        ("\"a/b\"", vec!["a/b"], 0, 0),
+        (r#""\[a\/b\]""#, vec!["[a/b]"], 0, 0),
+        (r#""\u{5B}x\u{2F}y\u{5D}""#, vec!["[x/y]"], 0, 0),
+        (
+            "\"これは{[文書/ぶんしょ]/document}を記述する。\"",
+            vec!["これは", "文書", "ぶんしょ", "document", "を記述する。"],
+            1,
+            1,
+        ),
+        (r#""[ /\n]""#, vec![" ", "\n"], 1, 0),
+    ] {
+        let literal = parse(text, &r)?;
+        let syntax = &literal.syntax;
+        let actual: Vec<_> = syntax
+            .value
+            .nodes
+            .iter()
+            .filter_map(|kind| match kind {
+                Kind::Text { text } => Some(text.as_str()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(actual, expected, "{text}");
+        assert_eq!(
+            syntax
+                .value
+                .nodes
+                .iter()
+                .filter(|kind| matches!(kind, Kind::Ruby { .. }))
+                .count(),
+            ruby
+        );
+        assert_eq!(
+            syntax
+                .value
+                .nodes
+                .iter()
+                .filter(|kind| matches!(kind, Kind::InlineAnno { .. }))
+                .count(),
+            anno
+        );
+        let mut operation = b();
+        syntax
+            .validate(&r, &mut operation, &mut SourceAdmission::default())
+            .map_err(err)?;
+        assert_eq!(operation.usage().source_bytes, text.len() as u64);
+    }
+    Ok(())
+}
+
+#[test]
 fn nested_input_is_iterative_and_limits_stop_without_partial_success() -> Result<(), String> {
     let r = registry()?;
     let text = format!("\"{}x{}\"", "{".repeat(1000), "/y}".repeat(1000));
