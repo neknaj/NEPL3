@@ -1,0 +1,16 @@
+[package]
+name = "nepl3-provider"
+description = "Host I/O for portable NEPL3 process providers"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+nepl3-core.workspace = true
+nepl3-wire.workspace = true
+
+[lints]
+workspace = true
