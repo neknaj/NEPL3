@@ -2,6 +2,14 @@
   "version": 1,
   "pages": [
     {
+      "id": "tutorial-hello",
+      "source": "doc/tutorial/hello.nepld",
+      "projection": "doc/tutorial/hello.md",
+      "aliases": "doc/tutorial/hello.aliases.json",
+      "route": "tutorial/index.html",
+      "renderer": "nepl3-tools.markdown-annotated/3"
+    },
+    {
       "id": "contract",
       "source": "doc/spec/00-contract.nepld",
       "projection": "doc/spec/00-contract.md",
