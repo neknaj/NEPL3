@@ -2,6 +2,97 @@ use super::*;
 use nepl3_provider::reply::{ReplyContext, ReplyRoutes, RouteError};
 
 #[test]
+fn managed_reply_failure_cancels_remaining_requests_once_after_budget_stop() -> Result<(), String> {
+    use nepl3_core::operation::lifetime::{RequestLifetimes, RequestPhase};
+    let (registry, request) = fixture()?;
+    let sources = SourceStore::default();
+    let context = Digest::of(b"saved");
+    let entries = [ReplyContext {
+        request: &request,
+        context,
+        authorized_sources: &sources,
+    }];
+    let routes = ReplyRoutes::new(&entries, &mut budget()).map_err(error)?;
+    for mode in 0..5 {
+        let mut lifetimes = RequestLifetimes::default();
+        for id in [request.request_id, 100, 101] {
+            lifetimes
+                .begin(id, request.operation.clone(), context, &mut budget())
+                .map_err(error)?;
+        }
+        lifetimes.finish(101, &mut budget()).map_err(error)?;
+        let mut frame = reply(&request);
+        if mode == 1
+            && let ProviderFrame::Reply { request_id, .. } = &mut frame
+        {
+            *request_id = 999;
+        }
+        if mode == 2 {
+            frame = ProviderFrame::Close;
+        }
+        let mut connection = if mode == 3 {
+            Connection::new(Cursor::new(Vec::new()), Vec::new())
+        } else {
+            connection(&frame, &registry)?
+        };
+        let mut transport = budget();
+        let mut validation = budget();
+        if mode == 0 {
+            validation = Budget::new(Limits {
+                work: 0,
+                ..budget().limits()
+            });
+        }
+        if mode == 4 {
+            transport.cancel();
+        }
+        let mut cancelled = vec![];
+        assert!(
+            connection
+                .receive_managed_reply(
+                    &routes,
+                    &mut lifetimes,
+                    &registry,
+                    &sources,
+                    &mut SourceAdmission::default(),
+                    &mut transport,
+                    &mut validation,
+                    |id| cancelled.push(id)
+                )
+                .is_err()
+        );
+        assert!(connection.is_closed());
+        assert_eq!(cancelled, [request.request_id, 100]);
+        for id in [request.request_id, 100] {
+            assert_eq!(
+                lifetimes.phase(id, &mut budget()).map_err(error)?,
+                RequestPhase::Cancelled
+            );
+        }
+        assert_eq!(
+            lifetimes.phase(101, &mut budget()).map_err(error)?,
+            RequestPhase::Finished
+        );
+        assert!(
+            connection
+                .receive_managed_reply(
+                    &routes,
+                    &mut lifetimes,
+                    &registry,
+                    &sources,
+                    &mut SourceAdmission::default(),
+                    &mut budget(),
+                    &mut budget(),
+                    |id| cancelled.push(id)
+                )
+                .is_err()
+        );
+        assert_eq!(cancelled, [request.request_id, 100]);
+    }
+    Ok(())
+}
+
+#[test]
 fn await_and_validation_stops_preserve_running_until_host_commit() -> Result<(), String> {
     use nepl3_core::operation::lifetime::{RequestLifetimes, RequestPhase};
     let (registry, request) = fixture()?;

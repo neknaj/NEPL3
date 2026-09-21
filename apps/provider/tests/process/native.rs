@@ -201,7 +201,7 @@ fn exchange(
         )
         .map_err(error)?;
     let (route, reply) = connection
-        .receive_active_reply(
+        .receive_managed_reply(
             &routes,
             &mut lifetimes,
             &registry,
@@ -209,6 +209,7 @@ fn exchange(
             &mut admission,
             &mut budget(),
             &mut budget(),
+            |_| {},
         )
         .map_err(error)?;
     assert_eq!(route, 0);
@@ -314,7 +315,7 @@ fn exchange(
         )
         .map_err(error)?;
     let (route, reply) = connection
-        .receive_active_reply(
+        .receive_managed_reply(
             &routes,
             &mut lifetimes,
             &registry,
@@ -322,6 +323,7 @@ fn exchange(
             &mut admission,
             &mut budget(),
             &mut budget(),
+            |_| {},
         )
         .map_err(error)?;
     assert_eq!(route, 0);
