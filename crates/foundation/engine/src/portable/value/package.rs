@@ -119,7 +119,7 @@ impl Value for TypeDescriptor {
         c.decode_type_descriptor(v, b).map_err(boundary)
     }
 }
-id!(OriginId, foundation, "OriginId");
+id!(OriginId, foundation, "OriginRef");
 record_value!(Category,engine,"Category",2,[name:0,mode:1]);
 record_value!(Form,engine,"Form",7,[category:0,kind:1,spelling:2,fields:3,binding:4,styles:5,selection_rules:6]);
 record_value!(Leaf,engine,"Leaf",7,[category:0,kind:1,token_kind:2,payload:3,binding:4,styles:5,selection_rules:6]);

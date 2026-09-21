@@ -34,6 +34,7 @@ fn source_store<E>(
     Ok(store)
 }
 /// Serialize all declaration arenas and provenance of a checked package.
+/// Source snapshots use the foundation codec's canonical identity order.
 pub fn to_value<C: FoundationValueCodec>(
     checked: &CheckedLanguagePackage<'_>,
     codec: &mut C,
