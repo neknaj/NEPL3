@@ -11,13 +11,10 @@ fn projection(value: &Value) -> Result<String> {
     if descriptor.package != "nepl3.reader" || descriptor.revision != 1 {
         return Err("unexpected reader package identity".into());
     }
-    Ok(foundation::generate::source(&descriptor)?
-        .replace(
-            "Generated from interfaces/contracts.json via interfaces/foundation.json.",
-            "Generated from interfaces/reader.json.",
-        )
-        .replace("foundation --write", "reader --write")
-        .replace("crate::budget::", "nepl3_core::budget::"))
+    foundation::generate::source_with(
+        &descriptor,
+        foundation::generate::Output::domain("interfaces/reader.json", "reader"),
+    )
 }
 pub(crate) fn check(root: &Path) -> Result<()> {
     let value: Value = json(root, "interfaces/reader.json")?;

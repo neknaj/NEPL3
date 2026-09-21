@@ -3,6 +3,31 @@ use super::*;
 
 pub(super) const PATH: &str = "crates/foundation/core/src/schema/foundation.rs";
 
+/// Trusted generator settings, separate from schema string values.
+#[derive(Clone, Copy)]
+pub(crate) struct Output {
+    pub provenance: &'static str,
+    pub command: &'static str,
+    pub budget: &'static str,
+    pub allocator: &'static str,
+}
+
+impl Output {
+    pub(crate) const fn domain(provenance: &'static str, command: &'static str) -> Self {
+        Self {
+            provenance,
+            command,
+            budget: "nepl3_core::budget",
+            allocator: "alloc",
+        }
+    }
+
+    pub(crate) const fn host(mut self) -> Self {
+        self.allocator = "std";
+        self
+    }
+}
+
 #[derive(Default)]
 struct Cost {
     bytes: usize,
@@ -10,6 +35,7 @@ struct Cost {
     variants: usize,
     boxes: usize,
     strings: usize,
+    allocator: &'static str,
 }
 impl Cost {
     fn string(&mut self, text: &str) -> String {
@@ -25,8 +51,9 @@ impl Cost {
                 } else {
                     "Option"
                 };
+                let allocator = self.allocator;
                 format!(
-                    "super::TypeDescriptor::{name}(alloc::boxed::Box::new({}))",
+                    "super::TypeDescriptor::{name}({allocator}::boxed::Box::new({}))",
                     self.ty(inner)
                 )
             }
@@ -51,12 +78,28 @@ impl Cost {
                 format!("super::FieldDescriptor {{ name: {name}, ty: {ty} }}")
             })
             .collect::<Vec<_>>();
-        format!("alloc::vec![{}]", items.join(","))
+        format!("{}::vec![{}]", self.allocator, items.join(","))
     }
 }
 
 pub(crate) fn source(descriptor: &SchemaDescriptor) -> Result<String> {
-    let mut cost = Cost::default();
+    source_with(
+        descriptor,
+        Output {
+            provenance: "interfaces/contracts.json via interfaces/foundation.json",
+            command: "foundation",
+            budget: "crate::budget",
+            allocator: "alloc",
+        },
+    )
+}
+
+pub(crate) fn source_with(descriptor: &SchemaDescriptor, output: Output) -> Result<String> {
+    let mut cost = Cost {
+        allocator: output.allocator,
+        ..Cost::default()
+    };
+    let allocator = output.allocator;
     let package = cost.string(&descriptor.package);
     let mut types = Vec::new();
     for ty in &descriptor.types {
@@ -77,7 +120,7 @@ pub(crate) fn source(descriptor: &SchemaDescriptor) -> Result<String> {
                     ));
                 }
                 format!(
-                    "super::TypeShape::Variant {{ variants: alloc::vec![{}] }}",
+                    "super::TypeShape::Variant {{ variants: {allocator}::vec![{}] }}",
                     items.join(",")
                 )
             }
@@ -89,7 +132,7 @@ pub(crate) fn source(descriptor: &SchemaDescriptor) -> Result<String> {
             .map(|id| cost.string(id))
             .collect::<Vec<_>>()
             .join(",");
-        types.push(format!("super::NamedType {{ name: {name}, shape: {shape}, constraints: alloc::vec![{constraints}] }}"));
+        types.push(format!("super::NamedType {{ name: {name}, shape: {shape}, constraints: {allocator}::vec![{constraints}] }}"));
     }
     let mut operations = Vec::new();
     for operation in &descriptor.operations {
@@ -99,21 +142,24 @@ pub(crate) fn source(descriptor: &SchemaDescriptor) -> Result<String> {
         operations.push(format!("super::OperationDescriptor {{ name: {name}, input: {input}, output: {output}, pure: {} }}",operation.pure));
     }
     Ok(format!(
-        "//! Generated from interfaces/contracts.json via interfaces/foundation.json.\n\
-         //! Regenerate with `cargo run --locked -p nepl3-tools -- foundation --write`.\n\
+        "//! Generated from {provenance}.\n\
+         //! Regenerate with `cargo run --locked -p nepl3-tools -- {command} --write`.\n\
          //! Registers structural shapes; named semantic constraints require their owning validators.\n\n\
          #[rustfmt::skip]\n\
-         pub fn descriptor(budget: &mut crate::budget::Budget) -> Result<super::SchemaDescriptor, super::SchemaError> {{\n\
-         budget.charge(crate::budget::Resource::AllocationUnits, ({bytes}usize{named}{fields}{variants}{boxes}{strings}{operation_cost}) as u64)?;\n\
-         budget.charge(crate::budget::Resource::Work, {work})?;\n\
-         Ok(super::SchemaDescriptor {{ package: {package}, revision: {revision}, types: alloc::vec![{types}], operations: alloc::vec![{operations}] }})\n\
+         pub fn descriptor(budget: &mut {budget}::Budget) -> Result<super::SchemaDescriptor, super::SchemaError> {{\n\
+         budget.charge({budget}::Resource::AllocationUnits, ({bytes}usize{named}{fields}{variants}{boxes}{strings}{operation_cost}) as u64)?;\n\
+         budget.charge({budget}::Resource::Work, {work})?;\n\
+         Ok(super::SchemaDescriptor {{ package: {package}, revision: {revision}, types: {allocator}::vec![{types}], operations: {allocator}::vec![{operations}] }})\n\
          }}\n",
+        provenance = output.provenance,
+        command = output.command,
+        budget = output.budget,
         bytes = cost.bytes,
         named = storage(descriptor.types.len(), "super::NamedType"),
         fields = storage(cost.fields, "super::FieldDescriptor"),
         variants = storage(cost.variants, "super::VariantDescriptor"),
         boxes = storage(cost.boxes, "super::TypeDescriptor"),
-        strings = storage(cost.strings, "alloc::string::String"),
+        strings = storage(cost.strings, &format!("{allocator}::string::String")),
         work = cost.bytes
             + cost.fields
             + cost.variants
@@ -133,3 +179,6 @@ fn storage(count: usize, ty: &str) -> String {
         count => format!(" + {count} * core::mem::size_of::<{ty}>()"),
     }
 }
+
+#[cfg(test)]
+mod tests;

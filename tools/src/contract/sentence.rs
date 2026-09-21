@@ -11,27 +11,20 @@ fn reader_projection(value: &Value) -> Result<String> {
     if descriptor.package != "nepl3.sentence.reader" || descriptor.revision != 1 {
         return Err("unexpected Sentence reader adapter identity".into());
     }
-    Ok(foundation::generate::source(&descriptor)?
-        .replace(
-            "Generated from interfaces/contracts.json via interfaces/foundation.json.",
-            "Generated from interfaces/sentence-reader.json.",
-        )
-        .replace("foundation --write", "sentence --write")
-        .replace("crate::budget::", "nepl3_core::budget::")
-        .replace("alloc::", "std::"))
+    foundation::generate::source_with(
+        &descriptor,
+        foundation::generate::Output::domain("interfaces/sentence-reader.json", "sentence").host(),
+    )
 }
 fn projection(value: &Value) -> Result<String> {
     let descriptor = foundation::descriptor(value)?;
     if descriptor.package != "nepl3.sentence" || descriptor.revision != 1 {
         return Err("unexpected Sentence package identity".into());
     }
-    Ok(foundation::generate::source(&descriptor)?
-        .replace(
-            "Generated from interfaces/contracts.json via interfaces/foundation.json.",
-            "Generated from interfaces/sentence.json.",
-        )
-        .replace("foundation --write", "sentence --write")
-        .replace("crate::budget::", "nepl3_core::budget::"))
+    foundation::generate::source_with(
+        &descriptor,
+        foundation::generate::Output::domain("interfaces/sentence.json", "sentence"),
+    )
 }
 pub(crate) fn check(root: &Path) -> Result<()> {
     let value: Value = json(root, "interfaces/sentence.json")?;
