@@ -17,6 +17,7 @@ use std::{
     time::{Duration, Instant},
 };
 mod model;
+mod reference;
 use model::*;
 
 fn child() -> Result<(), String> {
@@ -123,11 +124,8 @@ fn child() -> Result<(), String> {
                         &mut budget(),
                     )
                     .map_err(error)?;
-                if !matches!(
-                    result,
-                    OperationReply::Result(OperationResult::Complete { .. })
-                ) {
-                    return Err("expected completion".into());
+                if !matches!(result, OperationReply::Result(_)) {
+                    return Err("expected terminal result".into());
                 }
                 lifetimes
                     .finish(parent.request_id, &mut budget())
@@ -142,8 +140,12 @@ fn child() -> Result<(), String> {
 
 fn exchange(
     mut connection: Connection<std::process::ChildStdout, std::process::ChildStdin>,
+    input: u64,
 ) -> Result<(), String> {
-    let (registry, request) = fixture()?;
+    let (registry, mut request) = fixture()?;
+    if let TypedValue::Record(record) = &mut request.input {
+        record.fields[0] = NdfValue::U64(input);
+    }
     let sources = SourceStore::default();
     let context = context(&request, &registry)?;
     let mut admission = SourceAdmission::default();
@@ -230,16 +232,18 @@ fn exchange(
             &mut budget(),
         )
         .map_err(error)?;
-    let OperationReply::Result(OperationResult::Complete {
-        value: TypedValue::Record(record),
-        ..
-    }) = reply
-    else {
-        return Err("expected remote completion".into());
-    };
-    // Independent semantic expectation, not merely equality of two codec paths.
-    if record.fields != vec![NdfValue::U64(42)] {
-        return Err("expected 41 + 1 = 42".into());
+    reference::compare(&reference::execute(&registry, &request)?, &reply)?;
+    // Independent arithmetic expectation includes the checked overflow boundary.
+    match (input.checked_add(1), reply) {
+        (
+            Some(expected),
+            OperationReply::Result(OperationResult::Complete {
+                value: TypedValue::Record(record),
+                ..
+            }),
+        ) if record.fields == vec![NdfValue::U64(expected)] => {}
+        (None, OperationReply::Result(OperationResult::Invalid { partial: None, .. })) => {}
+        _ => return Err("incorrect increment value or overflow result".into()),
     }
     connection
         .send(
@@ -266,10 +270,7 @@ fn reap(process: &mut Process) -> Result<ExitStatus, String> {
     }
 }
 
-pub fn run() -> Result<(), String> {
-    if std::env::args().any(|arg| arg == "--provider-child") {
-        return child();
-    }
+fn run_case(input: u64) -> Result<(), String> {
     let mut command = Command::new(std::env::current_exe().map_err(error)?);
     command.arg("--provider-child");
     let mut process = Process::spawn(&mut command).map_err(error)?;
@@ -279,7 +280,7 @@ pub fn run() -> Result<(), String> {
     };
     let (sender, receiver) = mpsc::channel();
     let worker = std::thread::spawn(move || {
-        let result = exchange(connection);
+        let result = exchange(connection, input);
         sender.send(()).map_err(error)?;
         result
     });
@@ -314,8 +315,18 @@ pub fn run() -> Result<(), String> {
     if !status.success() {
         return Err("provider process failed".into());
     }
+    Ok(())
+}
+
+pub fn run() -> Result<(), String> {
+    if std::env::args().any(|arg| arg == "--provider-child") {
+        return child();
+    }
+    for input in [0, 41, u64::MAX] {
+        run_case(input).map_err(|e| format!("input {input}: {e}"))?;
+    }
     println!(
-        "process_protocol: 1 passed (Invoke -> Await -> native dependency -> Resume -> Complete -> Close)"
+        "process_protocol: 3 passed (native/process Await and Resume; normal and overflow results)"
     );
     Ok(())
 }
