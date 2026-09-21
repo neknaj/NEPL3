@@ -55,6 +55,12 @@ fn admitted_await_collects_dispatched_dependencies_and_resumes_saved_lifetime() 
         .begin_call(&calls[0], context, Some(parent.request_id), &mut budget())
         .map_err(|e| format!("{e:?}"))?;
     let identity = Digest::of(b"test provider");
+    let mut execution = budget();
+    // Preserve work already consumed by the suspended parent.
+    execution
+        .charge(Resource::Work, 17)
+        .map_err(|e| format!("{e:?}"))?;
+    let parent_usage = execution.usage();
     let registrations = [Registration {
         operation: &calls[0].operation,
         implementation: identity,
@@ -67,10 +73,11 @@ fn admitted_await_collects_dispatched_dependencies_and_resumes_saved_lifetime() 
         &calls[0],
         &registry,
         &sources,
-        &mut budget(),
+        &mut execution,
         &mut budget(),
     )
     .map_err(|e| format!("{e:?}"))?;
+    assert!(execution.usage().work > parent_usage.work);
     pending
         .accept(
             calls[0].request_id,
