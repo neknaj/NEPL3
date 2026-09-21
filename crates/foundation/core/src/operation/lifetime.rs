@@ -49,6 +49,10 @@ struct Entry {
 
 /// IDs remain reserved until this connection is discarded. This prevents late
 /// replies from being attributed to a different request that reused an ID.
+/// Each successful resume consumes the current Await phase. If a provider later
+/// returns identical continuation state, this table cannot identify the Await
+/// generation from that state alone. The host must correlate each generation's
+/// dependency calls and results before accepting its resume.
 #[derive(Default)]
 pub struct RequestLifetimes {
     entries: Vec<Entry>,
@@ -161,7 +165,7 @@ impl RequestLifetimes {
         resume.check_binding(continuation, *dependencies, b)?;
         Ok(())
     }
-    /// Consume a checked Await exactly once, immediately before provider resume.
+    /// Consume the current checked Await phase, immediately before provider resume.
     pub fn resume(&mut self, resume: &Resume, b: &mut Budget) -> Result<(), LifetimeError> {
         self.check_resume(resume, b)?;
         let index = self.active(resume.request_id, b)?;

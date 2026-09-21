@@ -105,6 +105,17 @@ fn failed_registration_and_suspend_leave_the_connection_unchanged() {
         Err(LifetimeError::Binding(ContinuationError::ParentRequest))
     );
     assert_eq!(table.phase(7, &mut budget()), Ok(RequestPhase::Running));
+    // Binding is valid; allocation of the saved continuation must still be
+    // admitted before the Running state is replaced.
+    let mut allocation_stop = Budget::new(Limits {
+        allocation_units: 0,
+        ..budget().limits()
+    });
+    assert_eq!(
+        table.suspend(7, saved.clone(), 0, &mut allocation_stop),
+        Err(LifetimeError::Stopped(StopReason::AllocationLimit))
+    );
+    assert_eq!(table.phase(7, &mut budget()), Ok(RequestPhase::Running));
     assert_eq!(table.suspend(7, saved, 0, &mut budget()), Ok(()));
     let mut cancelled = vec![];
     table.close(|id| cancelled.push(id));
