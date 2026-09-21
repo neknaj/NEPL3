@@ -186,7 +186,9 @@ body
         cons "Reportが[不正/ふせい]な[返信/へんしん]は[待機/たいき]を[消費/しょうひ]せず、[訂正返信/ていせいへんしん]を[再検査/さいけんさ]できる。" nil
       cons paragraph
         cons "この[対応/たいおう]の[実/じつ]codecは[保存要求/ほぞんようきゅう]proofを[使/つか]うTransform[返信/へんしん]のnative/NDF[比較/ひかく]を[提供/ていきょう]する。"
-        cons "ReadのMatched/NoMatch/NeedMoreは[正常/せいじょう]なreader[結果/けっか]としてCompleteへ[運/はこ]ぶ[対象/たいしょう]だが、その[操作返信/そうさへんしん]adapter、[初回/しょかい]provider[要求/ようきゅう]、[全/ぜん]Await[継続/けいぞく]、process transportの[実装完了/じっそうかんりょう]をこのTransform[比較/ひかく]から[推定/すいてい]しない。" nil
+        cons "Read/Dependentの[終端返信/しゅうたんへんしん]も[保存要求/ほぞんようきゅう]を[照合/しょうごう]し、Matched/NoMatch/NeedMoreをComplete、FailedをInvalid、StoppedをStoppedへ[対応/たいおう]させる。"
+        cons "[受信時/じゅしんじ]は[追加/ついか]sourceとmappingを[検査/けんさ]し、[内外/ないがい]のReportと[停止理由/ていしりゆう]の[一致/いっち]を[確認/かくにん]する。"
+        cons "[終端返信/しゅうたんへんしん]のadapterとnative/NDF[比較/ひかく]は[実装済/じっそうず]みであり、[初回/しょかい]provider[要求/ようきゅう]、[全/ぜん]Await[継続/けいぞく]、process transportへの[接続/せつぞく]は[後続/こうぞく]の[実装範囲/じっそうはんい]である。" nil
       nil
     nil
   cons section native "4. native provider" body

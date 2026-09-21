@@ -591,6 +591,31 @@ impl<'a> ReaderSession<'a> {
             registry: self.registry,
         })
     }
+    /// Borrow the exact saved Read/Dependent dispatch for boundary validation.
+    pub fn pending_read(&self) -> Result<crate::portable::read::ReadReplyContext<'_>, ReaderError> {
+        let saved = self.pending.as_ref().ok_or(ReaderError::NoPending)?;
+        if !matches!(
+            saved.continuation.pending,
+            ProviderCall::Read { .. } | ProviderCall::Dependent { .. }
+        ) {
+            return Err(ReaderError::ProviderContract);
+        }
+        Ok(crate::portable::read::ReadReplyContext {
+            continuation: &saved.continuation,
+            signature: self
+                .checked
+                .linked_provider(
+                    saved
+                        .continuation
+                        .frames
+                        .last()
+                        .ok_or(ReaderError::Continuation)?
+                        .expression,
+                )
+                .ok_or(PlanError::ProviderSignature)?,
+            registry: self.registry,
+        })
+    }
     /// A containing tokenizer terminates its operation if it cannot publish an Await envelope.
     pub(crate) fn discard_pending(&mut self) {
         self.pending = None;

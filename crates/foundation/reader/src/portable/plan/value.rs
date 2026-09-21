@@ -11,12 +11,14 @@ use nepl3_core::{
     view::{FallbackRole, PresentationClass},
 };
 
-pub(super) struct Context<'a> {
-    reader: &'a SchemaRef,
+pub(in crate::portable) struct Context<'a> {
+    pub(in crate::portable) reader: &'a SchemaRef,
     foundation: &'a SchemaRef,
 }
 impl<'a> Context<'a> {
-    pub(super) fn new<E>(registry: &'a SchemaRegistry) -> Result<Self, PortableError<E>> {
+    pub(in crate::portable) fn new<E>(
+        registry: &'a SchemaRegistry,
+    ) -> Result<Self, PortableError<E>> {
         Ok(Self {
             reader: registry
                 .selected("nepl3.reader", 1)
@@ -27,7 +29,7 @@ impl<'a> Context<'a> {
         })
     }
 }
-pub(super) trait Value: Sized {
+pub(in crate::portable) trait Value: Sized {
     fn encode<C: FoundationValueCodec>(
         &self,
         s: &Context<'_>,

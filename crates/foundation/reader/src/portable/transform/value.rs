@@ -4,7 +4,7 @@ use nepl3_core::{
     value::Variant,
     view::{FallbackRole, PresentationClass},
 };
-fn variant<E, const N: usize>(
+pub(in crate::portable) fn variant<E, const N: usize>(
     schema: &SchemaRef,
     name: &str,
     case: &str,
@@ -23,7 +23,7 @@ fn variant<E, const N: usize>(
         fields: Vec::from(values),
     }))
 }
-fn parts<'a, E>(
+pub(in crate::portable) fn parts<'a, E>(
     v: &'a NdfValue,
     s: &SchemaRef,
     name: &str,
@@ -35,13 +35,13 @@ fn parts<'a, E>(
         _ => Err(PortableError::Shape),
     }
 }
-fn sequence<E>(v: &NdfValue) -> Result<&[NdfValue], PortableError<E>> {
+pub(in crate::portable) fn sequence<E>(v: &NdfValue) -> Result<&[NdfValue], PortableError<E>> {
     match v {
         NdfValue::List(v) => Ok(v),
         _ => Err(PortableError::Shape),
     }
 }
-fn primary_value<C: FoundationValueCodec>(
+pub(in crate::portable) fn primary_value<C: FoundationValueCodec>(
     diagnostic: &nepl3_core::diagnostic::Diagnostic,
     report: &nepl3_core::diagnostic::Report,
     encoded: &NdfValue,
@@ -184,7 +184,7 @@ pub(super) fn decode<C: FoundationValueCodec>(
         report,
     })
 }
-pub(super) fn stop_name(v: StopReason) -> &'static str {
+pub(in crate::portable) fn stop_name(v: StopReason) -> &'static str {
     match v {
         StopReason::Cancelled => "Cancelled",
         StopReason::SourceLimit => "SourceLimit",
@@ -197,7 +197,7 @@ pub(super) fn stop_name(v: StopReason) -> &'static str {
         StopReason::EventLimit => "EventLimit",
     }
 }
-fn stop_from(v: &str) -> Option<StopReason> {
+pub(in crate::portable) fn stop_from(v: &str) -> Option<StopReason> {
     Some(match v {
         "Cancelled" => StopReason::Cancelled,
         "SourceLimit" => StopReason::SourceLimit,
@@ -232,7 +232,7 @@ fn fallback_from(v: &str) -> Option<FallbackRole> {
         _ => return None,
     })
 }
-fn facts_value<C: FoundationValueCodec>(
+pub(in crate::portable) fn facts_value<C: FoundationValueCodec>(
     facts: &[ReaderFact],
     s: &SchemaRef,
     c: &mut C,
@@ -300,7 +300,7 @@ fn facts_value<C: FoundationValueCodec>(
     }
     Ok(NdfValue::List(values))
 }
-fn facts_from<C: FoundationValueCodec>(
+pub(in crate::portable) fn facts_from<C: FoundationValueCodec>(
     value: &NdfValue,
     s: &SchemaRef,
     c: &mut C,

@@ -2,6 +2,8 @@ use nepl3_core::{budget::*, diagnostic::*, schema::*, source::*, syntax::*, valu
 use nepl3_reader::{model::*, plan::*, runtime::*};
 #[path = "runtime/checkpoints.rs"]
 mod checkpoints;
+#[path = "runtime/read.rs"]
+mod read;
 #[path = "runtime/retry.rs"]
 mod retry;
 #[path = "runtime/tokenizer_host.rs"]
@@ -441,6 +443,23 @@ fn session_binds_call_source_plan_usage_and_closes_after_consumed_resume() -> Re
     };
     assert_eq!(continuation.report, report);
     assert_eq!(continuation.usage, report.usage);
+    // Receiving a reply can validate it while the exact pending slot stays
+    // borrowed. A rejected cursor must leave that slot available for retry.
+    assert!(session.pending_transform().is_err());
+    let ProviderReply::Read(valid) = terminal("a", 1, &mut b)? else {
+        return Err(ReaderError::ProviderContract);
+    };
+    let mut bad_cursor = (*valid).clone();
+    if let ReadReply::Matched { end, .. } = &mut bad_cursor {
+        *end = 2;
+    }
+    let receiving = session.pending_read()?;
+    assert!(
+        receiving
+            .validate(&bad_cursor, &mut b, &mut admission)
+            .is_err()
+    );
+    receiving.validate(&valid, &mut b, &mut admission)?;
     let mut forged = continuation.clone();
     forged.session_id = "other".into();
     let reply = terminal("a", 1, &mut b)?;
