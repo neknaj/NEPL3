@@ -60,6 +60,104 @@ fn fixture() -> Result<(SchemaRegistry, OperationRef, TypedValue), String> {
 }
 
 #[test]
+fn call_graph_rejects_ancestor_cycles_and_retains_distinct_inputs_and_contexts()
+-> Result<(), String> {
+    use nepl3_core::operation::{
+        Invoke,
+        lifetime::{LifetimeError, RequestLifetimes, RequestPhase},
+    };
+    let (_, operation, value) = fixture()?;
+    let root = Invoke {
+        request_id: 1,
+        operation,
+        input: value.clone(),
+        environment: value,
+        sources: vec![],
+        resources: vec![],
+        limits: budget().limits(),
+    };
+    let context = Digest::of(b"host admitted full context");
+    let mut table = RequestLifetimes::default();
+    table
+        .begin_call(&root, context, None, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let mut second = root.clone();
+    second.request_id = 2;
+    second.operation.name = "other".into();
+    table
+        .begin_call(&second, context, Some(1), &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let mut recursive = root.clone();
+    recursive.request_id = 3;
+    recursive.limits.work = 1; // Different ID/limit must not conceal a cycle.
+    assert_eq!(
+        table.begin_call(&recursive, context, Some(2), &mut budget()),
+        Err(LifetimeError::CyclicOperation)
+    );
+    assert_eq!(
+        table.phase(3, &mut budget()),
+        Err(LifetimeError::UnknownRequest)
+    );
+    if let TypedValue::Record(v) = &mut recursive.input {
+        v.fields[0] = NdfValue::U64(43);
+    }
+    table
+        .begin_call(&recursive, context, Some(2), &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let mut different_context = root.clone();
+    different_context.request_id = 4;
+    table
+        .begin_call(
+            &different_context,
+            Digest::of(b"different admitted context"),
+            Some(3),
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+    // A sibling with the same input has no dependency on the first sibling.
+    let mut sibling = recursive.clone();
+    sibling.request_id = 5;
+    table
+        .begin_call(&sibling, context, Some(2), &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(table.phase(5, &mut budget()), Ok(RequestPhase::Running));
+    let mut late = root.clone();
+    late.request_id = 6;
+    assert_eq!(
+        table.begin_call(&late, context, Some(99), &mut budget()),
+        Err(LifetimeError::UnknownRequest)
+    );
+    table
+        .begin(99, root.operation.clone(), context, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        table.begin_call(&late, context, Some(99), &mut budget()),
+        Err(LifetimeError::MissingCallIdentity)
+    );
+    table
+        .cancel(99, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        table.begin_call(&late, context, Some(99), &mut budget()),
+        Err(LifetimeError::Phase)
+    );
+    let mut limited = Budget::new(Limits {
+        depth: 1,
+        ..budget().limits()
+    });
+    late.input = recursive.input;
+    assert_eq!(
+        table.begin_call(&late, context, Some(4), &mut limited),
+        Err(LifetimeError::Stopped(StopReason::DepthLimit))
+    );
+    assert_eq!(
+        table.phase(6, &mut budget()),
+        Err(LifetimeError::UnknownRequest)
+    );
+    Ok(())
+}
+
+#[test]
 fn dependency_results_resume_in_call_order_after_out_of_order_completion() -> Result<(), String> {
     use nepl3_core::operation::{
         Invoke, OperationReply,
