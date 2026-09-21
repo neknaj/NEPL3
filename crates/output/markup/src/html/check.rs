@@ -1,6 +1,7 @@
+pub(crate) use super::identity::Identity;
 use super::*;
 use crate::text::{TextError, is_xml_character};
-use alloc::{collections::BTreeSet, vec};
+use alloc::vec;
 use nepl3_core::budget::{Budget, Resource, StopReason};
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum HtmlError {
@@ -265,25 +266,6 @@ pub fn validate<'a>(
     Ok(ValidatedHtml { fragment: f })
 }
 /// Crate-internal output-occurrence identity collection for mixed documents.
-#[derive(Default)]
-pub(crate) struct Identity<'a> {
-    ids: BTreeSet<&'a str>,
-    links: Vec<(u64, &'a str)>,
-}
-impl Identity<'_> {
-    pub(crate) fn finish(self, b: &mut Budget) -> Result<(), HtmlError> {
-        for (r, id) in self.links {
-            b.charge(
-                Resource::Work,
-                (id.len() as u64 + 1).saturating_mul(self.ids.len() as u64 + 1),
-            )?;
-            if !self.ids.contains(id) {
-                return Err(HtmlError::MissingFragment(r));
-            }
-        }
-        Ok(())
-    }
-}
 pub(crate) fn validate_into<'a>(
     f: &'a HtmlFragment,
     slot: HtmlSlot,
@@ -342,8 +324,6 @@ fn validate_content<'a>(
     let mut state = vec![0_u8; f.nodes.len()];
     b.charge(Resource::AllocationUnits, 64)?;
     let mut stack = vec![(f.root, 1_u64, false, 0_u8, false)];
-    let ids = &mut identity.ids;
-    let links = &mut identity.links;
     while let Some((r, depth, anchor, forbidden, exit)) = stack.pop() {
         b.charge(Resource::Work, 1)?;
         let n = node(f, r)?;
@@ -443,21 +423,13 @@ fn validate_content<'a>(
                     }
                     attr(a, *tag, p, r, j as u64, b)?;
                     if let HtmlAttribute::Id { value } = a {
-                        b.charge(Resource::AllocationUnits, value.len() as u64 + 128)?;
-                        b.charge(
-                            Resource::Work,
-                            (value.len() as u64 + 1).saturating_mul(ids.len() as u64 + 1),
-                        )?;
-                        if !ids.insert(value.as_str()) {
-                            return Err(HtmlError::DuplicateId(r));
-                        }
+                        identity.id(r, value, b)?;
                     }
                     if let HtmlAttribute::Href {
                         value: HtmlHref::Fragment { id },
                     } = a
                     {
-                        b.charge(Resource::AllocationUnits, 64)?;
-                        links.push((r, id.as_str()));
+                        identity.link(r, id, b)?;
                     }
                 }
                 if *tag == HtmlTag::Img

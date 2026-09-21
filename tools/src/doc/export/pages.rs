@@ -226,7 +226,7 @@ pub fn generate_with_resources(
             return Err("HTML route must end in .html".into());
         }
         let html = shell(fragment, output_budget)
-            .map_err(|e| format!("serialize: {e}; usage={:?}", output_budget.usage()))?;
+            .map_err(|e| format!("page {route}: {e}; usage={:?}", output_budget.usage()))?;
         insert(&mut files, route.clone(), html.into_bytes())?;
         file_kinds.insert(route.clone(), "text/html; charset=utf-8");
         let css = match route.rsplit_once('/') {
