@@ -15,6 +15,74 @@ fn error(e: impl core::fmt::Debug) -> String {
     format!("{e:?}")
 }
 
+fn negotiating(
+    registry: &SchemaRegistry,
+    incoming: bool,
+) -> Result<Connection<Cursor<Vec<u8>>, Vec<u8>>, String> {
+    let request = ProviderFrame::SchemaRequest { schemas: vec![] };
+    let mut server = connection(&request, registry)?;
+    if incoming {
+        server
+            .receive(
+                registry,
+                &SourceStore::default(),
+                &mut SourceAdmission::default(),
+                &mut budget(),
+            )
+            .map_err(error)?;
+    } else {
+        server
+            .send(
+                &request,
+                registry,
+                &SourceStore::default(),
+                &mut SourceAdmission::default(),
+                &mut budget(),
+            )
+            .map_err(error)?;
+    }
+    Ok(server)
+}
+
+#[test]
+fn schema_exchange_rejects_invoke_before_callback() -> Result<(), String> {
+    let (registry, request) = fixture()?;
+    let sources = SourceStore::default();
+    let grants = Grants::new(&request.environment, &sources, &[], &mut budget()).map_err(error)?;
+    let approved = grants.admit(&request, &mut budget()).map_err(error)?;
+    let identity = Digest::of(b"implementation");
+    let registration = nepl3_suite::dispatch::suspending::Registration {
+        operation: &request.operation,
+        implementation: identity,
+        invoke: increment,
+    };
+    for incoming in [false, true] {
+        let mut server = negotiating(&registry, incoming)?;
+        let mut execution = budget();
+        assert!(matches!(
+            server.dispatch_invoke(
+                &registration,
+                identity,
+                &approved,
+                identity,
+                &registry,
+                &SourceStore::default(),
+                &SourceStore::default(),
+                &mut SourceAdmission::default(),
+                &mut execution,
+                &mut budget(),
+                &mut budget()
+            ),
+            Err(nepl3_provider::dispatch::DispatchError::Transport(
+                TransportError::ProtocolState
+            ))
+        ));
+        assert_eq!(execution.usage().work, 0);
+        assert!(server.is_closed());
+    }
+    Ok(())
+}
+
 fn increment(
     request: &Invoke,
     _: Digest,

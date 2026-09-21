@@ -36,9 +36,7 @@ impl<R: Read, W: Write> Connection<R, W> {
         validation: &mut Budget,
         transport: &mut Budget,
     ) -> Result<OperationReply, DispatchError> {
-        if self.closed {
-            return Err(DispatchError::Transport(TransportError::Closed));
-        }
+        self.operation_phase().map_err(DispatchError::Transport)?;
         let result = (|| {
             let reply = resume::execute(
                 registration,
@@ -90,9 +88,7 @@ impl<R: Read, W: Write> Connection<R, W> {
         validation: &mut Budget,
         transport: &mut Budget,
     ) -> Result<OperationReply, DispatchError> {
-        if self.closed {
-            return Err(DispatchError::Transport(TransportError::Closed));
-        }
+        self.operation_phase().map_err(DispatchError::Transport)?;
         let request = authorized.request();
         let result = (|| {
             let reply = suspending::invoke(

@@ -72,7 +72,9 @@ Grammarの型付きconstructor arenaは `design/forms.json` から `python tools
 
 CIのWASI jobはSHA-256を固定したWasmtime 44.0.1で実装済みcoreの実試験を実行し、browser向けWasmのcompileも行います。ローカルでは `CARGO_TARGET_WASM32_WASIP2_RUNNER` を `wasmtime run` とし、`cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html --target wasm32-wasip2 -- --test-threads=1` を実行します。browser targetのcompile成功はブラウザ上の実行・描画試験を意味しません。
 
-providerのstream transportは `cargo test --locked -p nepl3-provider` で検査する。WASIでは同じコマンドに `--target wasm32-wasip2` を追加する。frameの分割転送、切断、長さ制限、codecとI/Oの停止、Close後の再利用拒否を対象とする。別processでのoperation実行は後続のhost統合で検証する。
+providerのstream transportは `cargo test --locked -p nepl3-provider` で検査する。WASIでは同じコマンドに `--target wasm32-wasip2` を追加する。frameの分割転送、切断、長さ制限、codecとI/Oの停止、Close後の再利用拒否、schema交換を対象とする。
+
+nativeの `cargo test --locked -p nepl3-provider --test process_protocol` は、実processのstdin/stdoutでschemaを取得し、Invoke・Await・Resumeの結果とUnicode診断をnative経路と比較する。schema不足・identity不一致・応答前EOFと、Await中のCancelも検査する。このtest targetは専用harnessを使い、protocol用stdoutへテストランナーの表示が混入することを防ぐ。WASIではOS process試験を明示的にskipする。一般的なhost scheduler、process間の総予算管理、全providerの互換性は継続する実装・受入範囲である。
 
 Sentenceの統合経路は `cargo test --locked -p nepl3-tools --test sentence --target wasm32-wasip2 -- --test-threads=1` で実行します。独立LanguagePackageのsurface compile、ReaderSession/provider、literalのportable受渡し、位置付き診断・停止、Doc bridgeを対象とし、Sentence core単体試験と区別します。nativeではworkspace試験に含み、WASIでも同じ入口を実行します。
 

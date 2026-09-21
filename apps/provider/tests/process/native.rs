@@ -18,6 +18,7 @@ use std::{
 };
 mod model;
 mod reference;
+mod schema_failure;
 use model::*;
 
 fn child() -> Result<(), String> {
@@ -26,6 +27,9 @@ fn child() -> Result<(), String> {
     let authority =
         Grants::new(&prototype.environment, &sources, &[], &mut budget()).map_err(error)?;
     let mut connection = Connection::new(io::stdin().lock(), io::stdout().lock());
+    connection
+        .serve_schemas(&registry, &mut budget())
+        .map_err(error)?;
     let mut admission = SourceAdmission::default();
     let mut lifetimes = RequestLifetimes::default();
     let mut execution = budget();
@@ -132,7 +136,18 @@ fn child() -> Result<(), String> {
                     .map_err(error)?;
                 assert!(execution.usage().work >= 12);
             }
-            Some(ProviderFrame::Close) => return Ok(()),
+            Some(ProviderFrame::Cancel { request_id }) => {
+                let Some((parent, _, _, _)) = pending.take() else {
+                    return Err("cancel without suspended request".into());
+                };
+                if request_id != parent.request_id
+                    || lifetimes.phase(request_id, &mut budget()).map_err(error)?
+                        != nepl3_core::operation::lifetime::RequestPhase::Cancelled
+                {
+                    return Err("cancel did not terminate the suspended lifetime".into());
+                }
+            }
+            Some(ProviderFrame::Close) if pending.is_none() => return Ok(()),
             _ => return Err("unexpected fixture protocol message".into()),
         }
     }
@@ -141,8 +156,22 @@ fn child() -> Result<(), String> {
 fn exchange(
     mut connection: Connection<std::process::ChildStdout, std::process::ChildStdin>,
     input: u64,
+    cancel: bool,
 ) -> Result<(), String> {
-    let (registry, mut request) = fixture()?;
+    let (_, mut request) = fixture()?;
+    let base = bootstrap()?;
+    assert!(base.selected("test.process", 1).is_none());
+    let registry = connection
+        .request_schemas(
+            base,
+            core::slice::from_ref(&request.operation.schema),
+            &mut budget(),
+        )
+        .map_err(error)?;
+    assert_eq!(
+        registry.selected("test.process", 1),
+        Some(&request.operation.schema)
+    );
     if let TypedValue::Record(record) = &mut request.input {
         record.fields[0] = NdfValue::U64(input);
     }
@@ -180,6 +209,19 @@ fn exchange(
     };
     if calls.len() != 1 || calls[0].operation.name != "increment" || calls[0].request_id != 18 {
         return Err("unexpected dependency selection".into());
+    }
+    if cancel {
+        for frame in [
+            ProviderFrame::Cancel {
+                request_id: request.request_id,
+            },
+            ProviderFrame::Close,
+        ] {
+            connection
+                .send(&frame, &registry, &sources, &mut admission, &mut budget())
+                .map_err(error)?;
+        }
+        return Ok(());
     }
     let mut selected = request.operation.clone();
     selected.name = "increment".into();
@@ -292,8 +334,21 @@ fn reap(process: &mut Process) -> Result<ExitStatus, String> {
 }
 
 fn run_case(input: u64) -> Result<(), String> {
+    run_process("--provider-child", move |connection| {
+        exchange(connection, input, false)
+    })
+}
+
+fn run_process(
+    child_argument: &str,
+    exchange: impl FnOnce(
+        Connection<std::process::ChildStdout, std::process::ChildStdin>,
+    ) -> Result<(), String>
+    + Send
+    + 'static,
+) -> Result<(), String> {
     let mut command = Command::new(std::env::current_exe().map_err(error)?);
-    command.arg("--provider-child");
+    command.arg(child_argument);
     let mut process = Process::spawn(&mut command).map_err(error)?;
     let Some(connection) = process.take_transport() else {
         let cleanup = process.terminate();
@@ -301,7 +356,7 @@ fn run_case(input: u64) -> Result<(), String> {
     };
     let (sender, receiver) = mpsc::channel();
     let worker = std::thread::spawn(move || {
-        let result = exchange(connection, input);
+        let result = exchange(connection);
         sender.send(()).map_err(error)?;
         result
     });
@@ -340,14 +395,21 @@ fn run_case(input: u64) -> Result<(), String> {
 }
 
 pub fn run() -> Result<(), String> {
+    if let Some(mode) = schema_failure::child_mode() {
+        return schema_failure::child(mode);
+    }
     if std::env::args().any(|arg| arg == "--provider-child") {
         return child();
     }
     for input in [0, 41, u64::MAX] {
         run_case(input).map_err(|e| format!("input {input}: {e}"))?;
     }
+    schema_failure::run()?;
+    run_process("--provider-child", |connection| {
+        exchange(connection, 41, true)
+    })?;
     println!(
-        "process_protocol: 3 passed (native/process Await and Resume; normal and overflow results)"
+        "process_protocol: 7 passed (3 schema failures; 3 native/process comparisons; 1 suspended cancellation)"
     );
     Ok(())
 }

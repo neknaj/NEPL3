@@ -303,6 +303,8 @@
     },
     "ProviderFrame": {
       "variants": {
+        "SchemaRequest": [["schemas", "List<SchemaRef>"]],
+        "SchemaReply": [["descriptors", "List<Bytes>"]],
         "Invoke": [["call", "Invoke"]],
         "Resume": [["resume", "Resume"]],
         "Reply": [["requestId", "U64"], ["reply", "OperationReply"]],

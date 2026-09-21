@@ -38,7 +38,7 @@ pub fn granted_sources() -> Result<SourceStore, String> {
         .map_err(error)?;
     Ok(store)
 }
-pub fn fixture() -> Result<(SchemaRegistry, Invoke), String> {
+pub fn bootstrap() -> Result<SchemaRegistry, String> {
     let mut registry = SchemaRegistry::default();
     let foundation = foundation::descriptor(&mut budget()).map_err(error)?;
     registry
@@ -48,6 +48,11 @@ pub fn fixture() -> Result<(SchemaRegistry, Invoke), String> {
             &mut budget(),
         )
         .map_err(error)?;
+    registry.finalize(&mut budget()).map_err(error)?;
+    Ok(registry)
+}
+pub fn fixture() -> Result<(SchemaRegistry, Invoke), String> {
+    let mut registry = bootstrap()?;
     let ty = TypeDescriptor::Named(TypeRef {
         package: "test.process".into(),
         revision: 1,

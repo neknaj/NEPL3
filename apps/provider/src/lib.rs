@@ -7,6 +7,7 @@ pub mod dispatch;
 #[cfg(not(target_family = "wasm"))]
 pub mod process;
 pub mod reply;
+pub mod schema;
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     operation::ProviderFrame,
@@ -19,6 +20,7 @@ use std::io::{self, Read, Write};
 
 #[derive(Debug)]
 pub enum TransportError {
+    ProtocolState,
     Io(io::Error),
     Wire(WireError),
     Stopped(StopReason),
@@ -46,6 +48,14 @@ pub struct Connection<R, W> {
     reader: R,
     writer: W,
     closed: bool,
+    phase: Phase,
+}
+#[derive(Clone, Copy)]
+enum Phase {
+    Fresh,
+    RequestSent,
+    RequestReceived,
+    Ready,
 }
 impl<R: Read, W: Write> Connection<R, W> {
     pub fn new(reader: R, writer: W) -> Self {
@@ -53,6 +63,7 @@ impl<R: Read, W: Write> Connection<R, W> {
             reader,
             writer,
             closed: false,
+            phase: Phase::Fresh,
         }
     }
     pub fn is_closed(&self) -> bool {
@@ -60,6 +71,16 @@ impl<R: Read, W: Write> Connection<R, W> {
     }
     pub fn into_parts(self) -> (R, W) {
         (self.reader, self.writer)
+    }
+    fn operation_phase(&mut self) -> Result<(), TransportError> {
+        if self.closed {
+            return Err(TransportError::Closed);
+        }
+        if matches!(self.phase, Phase::RequestSent | Phase::RequestReceived) {
+            self.closed = true;
+            return Err(TransportError::ProtocolState);
+        }
+        Ok(())
     }
 
     pub fn receive(
@@ -112,6 +133,7 @@ impl<R: Read, W: Write> Connection<R, W> {
         if !suffix.is_empty() {
             return Err(WireError::InvalidLength.into());
         }
+        self.advance(&frame, true)?;
         Ok(Some(frame))
     }
     pub fn send(
@@ -126,6 +148,7 @@ impl<R: Read, W: Write> Connection<R, W> {
             return Err(TransportError::Closed);
         }
         let result = (|| {
+            self.advance(frame, false)?;
             let bytes =
                 nepl3_wire::operation::encode_frame(frame, registry, sources, admission, b)?;
             let mut rest = bytes.as_slice();
@@ -152,6 +175,22 @@ impl<R: Read, W: Write> Connection<R, W> {
             self.closed = true;
         }
         result
+    }
+
+    fn advance(&mut self, frame: &ProviderFrame, incoming: bool) -> Result<(), TransportError> {
+        self.phase = match (self.phase, frame, incoming) {
+            (_, ProviderFrame::Close, _) => Phase::Ready,
+            (Phase::Fresh, ProviderFrame::SchemaRequest { .. }, false) => Phase::RequestSent,
+            (Phase::Fresh, ProviderFrame::SchemaRequest { .. }, true) => Phase::RequestReceived,
+            (Phase::RequestSent, ProviderFrame::SchemaReply { .. }, true) => Phase::Ready,
+            (Phase::RequestReceived, ProviderFrame::SchemaReply { .. }, false) => Phase::Ready,
+            (_, ProviderFrame::SchemaRequest { .. } | ProviderFrame::SchemaReply { .. }, _) => {
+                return Err(TransportError::ProtocolState);
+            }
+            (Phase::Fresh | Phase::Ready, _, _) => Phase::Ready,
+            _ => return Err(TransportError::ProtocolState),
+        };
+        Ok(())
     }
 }
 fn fill(reader: &mut impl Read, bytes: &mut [u8], b: &mut Budget) -> Result<usize, TransportError> {
