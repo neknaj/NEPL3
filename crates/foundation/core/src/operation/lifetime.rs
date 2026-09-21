@@ -291,6 +291,65 @@ impl RequestLifetimes {
             State::Cancelled => RequestPhase::Cancelled,
         })
     }
+    /// Cancel an active request and every active descendant registered through
+    /// `begin_call`. Finished/cancelled descendants retain their terminal state.
+    /// Selection and all fallible accounting precede mutation; notifications run
+    /// only after every selected entry has transitioned. The host interrupts the
+    /// corresponding providers when notified. On budget failure the table is
+    /// unchanged; allocation-free `close` remains available for emergency cleanup.
+    /// Selection walks parent IDs using the existing sorted request index.
+    pub fn cancel_tree(
+        &mut self,
+        id: u64,
+        b: &mut Budget,
+        mut notify: impl FnMut(u64),
+    ) -> Result<(), LifetimeError> {
+        let root = self.active(id, b)?;
+        if !matches!(
+            self.entries[root].state,
+            State::Running | State::Awaiting { .. }
+        ) {
+            return Err(LifetimeError::Phase);
+        }
+        let mut selected = Vec::new();
+        let bytes = self
+            .entries
+            .len()
+            .checked_mul(core::mem::size_of::<usize>())
+            .ok_or(LifetimeError::Capacity)?;
+        b.charge(Resource::AllocationUnits, bytes as u64)?;
+        selected
+            .try_reserve_exact(self.entries.len())
+            .map_err(|_| LifetimeError::Capacity)?;
+        for (index, entry) in self.entries.iter().enumerate() {
+            b.charge(Resource::Work, 1)?;
+            if !matches!(entry.state, State::Running | State::Awaiting { .. }) {
+                continue;
+            }
+            let mut ancestor = index;
+            loop {
+                b.charge(Resource::Work, 1)?;
+                if ancestor == root {
+                    selected.push(index);
+                    break;
+                }
+                let Some(parent) = self.entries[ancestor].parent else {
+                    break;
+                };
+                ancestor = self
+                    .locate(parent, b)?
+                    .map_err(|_| LifetimeError::UnknownRequest)?;
+            }
+        }
+        b.charge(Resource::Work, (selected.len() as u64).saturating_mul(2))?;
+        for &index in &selected {
+            self.entries[index].state = State::Cancelled;
+        }
+        for index in selected {
+            notify(self.entries[index].id);
+        }
+        Ok(())
+    }
     /// Allocation-free shutdown remains available after resource exhaustion.
     /// Notify the host of each pending ID to interrupt execution/transport.
     pub fn close(&mut self, mut cancel: impl FnMut(u64)) {

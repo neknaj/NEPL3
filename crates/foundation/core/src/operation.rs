@@ -2,6 +2,7 @@
 //! Hosts own dispatch, capability checks and request lifetime.
 pub mod dependencies;
 pub mod lifetime;
+pub mod request;
 pub mod validation;
 use crate::{
     budget::{Budget, Limits, Resource, StopReason},
