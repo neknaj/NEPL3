@@ -123,20 +123,22 @@ body
       cons sentence cons ruby text "対応" text "たいおう" cons text "しない " cons code "]" cons text " / " cons code "}" cons text " はエラー。" nil
       cons sentence cons text "topの " cons code "/" cons text " は" cons ruby text "通常文字" text "つうじょうもじ" cons text "。" nil
       cons sentence cons ruby text "注釈" text "ちゅうしゃく" cons text "field" cons ruby text "内" text "ない" cons text "のliteral " cons code "/" cons text " は " cons code "\\/" cons text " と" cons ruby text "書" text "か" cons text "く。" nil
-      cons "Rubyはtop-level separatorがちょうど[一/ひと]つ。"
-      cons "Annoは[一/ひと]つ[以上/いじょう]。" nil
+      cons "Rubyは、そのRuby[直下/ちょっか]のseparatorをちょうど[一/ひと]つ[持/も]つ。"
+      cons "Annoは、そのAnno[直下/ちょっか]のseparatorを[一/ひと]つ[以上/いじょう][持/も]つ。" nil
     cons paragraph
       cons sentence cons text "escapeは" cons ruby text "通常" text "つうじょう" cons text "Textのものに" cons ruby text "加" text "くわ" cons text "え " cons code "\\[" cons text "、" cons code "\\]" cons text "、" cons code "\\{" cons text "、" cons code "\\}" cons text "、" cons code "\\/" cons text "。" nil
-      cons "escapeの[出力/しゅつりょく]を[改/あらた]めて[注釈開始/ちゅうしゃくかいし]として[解析/かいせき]しない。"
+      cons "escapeで[得/え]られた[文字/もじ]はTextの[内容/ないよう]として[保持/ほじ]する。"
       cons sentence cons ruby text "直接" text "ちょくせつ" cons text "のCR/LFは" cons ruby text "禁止" text "きんし" cons text "、" cons code "\\n" cons text " は" cons ruby text "内容" text "ないよう" cons text "の" cons ruby text "改行" text "かいぎょう" cons text "。" nil
-      cons "EOF・[改行/かいぎょう]・[終了引用符/しゅうりょういんようふ]に[達/たっ]した[時点/じてん]で[閉/と]じていない[注釈/ちゅうしゃく]は、その[開始位置/かいしいち]をrelatedに[持/も]つUnclosedAnnotation。" nil
+      cons "EOF・[改行/かいぎょう]・[終了引用符/しゅうりょういんようふ]に[達/たっ]した[時点/じてん]で[注釈/ちゅうしゃく]が[未完/みかん]なら、UnclosedAnnotationを[返/かえ]す。"
+      cons "この[診断/しんだん]のrelatedには、[注釈/ちゅうしゃく]の[開始位置/かいしいち]を[記録/きろく]する。" nil
     cons paragraph
-      cons "Nonemptyはlower[後/ご]に[可視内容/かしないよう]が[存在/そんざい]すること。"
-      cons "[空/くう]Textや[空/くう]Concatだけのbase/reading/noteはEmptyAnnotationPart。"
-      cons "Annoのnotesは[非空/ひくう]。"
-      cons "Sentence[自体/じたい]は[空/から]を[許/ゆる]す。" nil
+      cons "Nonemptyは、lower[後/ご]に[可視内容/かしないよう]を[持/も]つという[条件/じょうけん]である。"
+      cons "base・reading・noteが[空/くう]Textや[空/くう]Concatだけで[構成/こうせい]される[場合/ばあい]は、EmptyAnnotationPartを[返/かえ]す。"
+      cons "Annoのnotesには、[一/ひと]つ[以上/いじょう]のnoteを[指定/してい]する。"
+      cons "Sentence[自体/じたい]には[空/から]の[内容/ないよう]も[指定/してい]できる。" nil
     cons paragraph
-      cons "ここで[可視内容/かしないよう]はfontや[描画幅/びょうがはば]に[依存/いぞん]させず、[保持/ほじ]する[内容/ないよう]で[判定/はんてい]する。"
+      cons "[可視内容/かしないよう]の[有無/うむ]は、[意味/いみ]モデルが[保持/ほじ]する[内容/ないよう]から[判定/はんてい]する。"
+      cons "この[判定/はんてい]は、フォントや[描画幅/びょうがはば]によらず[同/おな]じ[結果/けっか]を[返/かえ]す。"
       cons "Text（および[明示/めいじ]inline code）は[非空/ひくう]なら[内容/ないよう]を[持/も]ち、[空白/くうはく]だけのTextやescapeで[生成/せいせい]した[改行/かいぎょう]も[含/ふく]める。"
       cons "[明示/めいじ]Break、InlineMath、inline[画像/がぞう]は[表示要素/ひょうじようそ]として[内容/ないよう]を[持/も]つ。"
       cons "Concatは[子/こ]のいずれか、[装飾/そうしょく]・Anchor・Reference・Linkはlabel/[子/こ]、Ruby/Annoはbaseの[内容/ないよう]を[用/もち]いる。"
@@ -147,7 +149,7 @@ body
     cons section linebreak "2.1. [文書構造/ぶんしょこうぞう]の[明示改行/めいじかいぎょう]" body
       cons paragraph
         cons sentence cons ruby text "前置構文" text "ぜんちこうぶん" cons text "の " cons code "break" cons text "（Doc/Inline、arity 0）はDoc.Breakを" cons ruby text "構築" text "こうちく" cons text "する。" nil
-        cons "[同/おな]じSentence[内/ない]の[明示的/めいじてき]な[改行/かいぎょう]であり、[新/あたら]しいSentence・Paragraph・Parallel variantを[作/つく]らない。"
+        cons "Breakは[同/おな]じSentence[内/ない]の[改行位置/かいぎょういち]を[指定/してい]し、Sentence・Paragraph・Parallel variantの[境界/きょうかい]を[保持/ほじ]する。"
         cons sentence cons ruby text "例" text "たと" cons text "えば " cons code "sentence cons text \"a\" cons break cons text \"b\" nil" cons text " と" cons ruby text "書" text "か" cons text "く。" nil
         cons sentence cons text "HTMLは" cons code "br" cons text "、plain_textはLFを" cons ruby text "出力" text "しゅつりょく" cons text "し、source printerは" cons code "break" cons text "を" cons ruby text "保持" text "ほじ" cons text "する。" nil nil
       cons paragraph
@@ -161,7 +163,7 @@ body
     cons rawcode some "text" "sentence\n  cons text \"これは\"\n  cons anno\n    ruby text \"文書\" text \"ぶんしょ\"\n    cons text \"document\" nil\n  cons text \"を記述する。\"\n  nil\n"
     cons paragraph
       cons "[上例/じょうれい]と[前節/ぜんせつ]のliteralは、Origin/sourceを[除/のぞ]いた[意味正規形/いみせいきけい]が[等/ひと]しい。"
-      cons "[正規化/せいきか]はConcatの[平坦化/へいたんか]、[空/くう]Textの[除去/じょきょ]、[同/おな]じinline[列内/れつない]の[隣接/りんせつ]Textの[結合/けつごう]だけ。"
+      cons "[正規化/せいきか]の[対象/たいしょう]は、Concatの[平坦化/へいたんか]、[空/くう]Textの[除去/じょきょ]、[同/おな]じInline[列内/れつない]の[隣接/りんせつ]Textの[結合/けつごう]に[限定/げんてい]する。"
       cons "Ruby/Annoの[境界/きょうかい]、noteの[順/じゅん]、[明示/めいじ]Break、Math[等/など]の[埋/う]め[込/こ]みは[保存/ほぞん]する。" nil
     cons paragraph
       cons "[受理済/じゅりず]みSentenceLiteralとprefix constructorの[混在/こんざい]lowerでは、literal payloadを[明示/めいじ]DocumentSyntax schemaとpayload[自身/じしん]のsource[宣言/せんげん]で[検査/けんさ]する。"
@@ -201,13 +203,13 @@ body
     nil
   cons section parallel "4. parallelの[単位/たんい]" body
     cons paragraph
-      cons "Sentenceは[著者/ちょしゃ]が[明示/めいじ]した[対応単位/たいおうたんい]であり、[句読点/くとうてん]を[自動検出/じどうけんしゅつ]した[自然言語学的/しぜんげんごがくてき]な[文/ぶん]ではない。"
-      cons "literal[中/ちゅう]に[句点/くてん]が[二/ふた]つあっても[一/ひと]つのSentence。"
-      cons "[二/ふた]つのSentenceに[対応/たいおう]させたい[場合/ばあい]は[著者/ちょしゃ]が[別/べつ]ノードにする。" nil
+      cons "Sentenceは、[著者/ちょしゃ]が[指定/してい]する[文章/ぶんしょう]の[対応単位/たいおうたんい]である。"
+      cons "literal[中/ちゅう]の[句点/くてん]の[数/かず]によらず、[一/ひと]つのliteralを[一/ひと]つのSentenceとして[扱/あつか]う。"
+      cons "[対応単位/たいおうたんい]を[二/ふた]つに[分/わ]ける[場合/ばあい]は、[著者/ちょしゃ]が[二/ふた]つのSentence nodeを[作成/さくせい]する。" nil
     cons paragraph
       cons "Parallelはvariantのlanguageがcase-insensitiveで[重複/じゅうふく]しないこと、2variant[以上/いじょう]であることを[検査/けんさ]する。"
       cons "[空/くう]Sentenceは[翻訳/ほんやく]が[空/から]であるという[明示値/めいじち]として[許/ゆる]すが、missingと[推測/すいそく]して[他言語/たげんご]から[補/おぎな]わない。"
-      cons "[並/なら]び[順/じゅん]はソース[順/じゅん]。"
+      cons "variantの[並/なら]び[順/じゅん]は、ソース[上/じょう]の[順序/じゅんじょ]を[保持/ほじ]する。"
       cons "[各/かく]variantにCorrespondsTo relationを[与/あた]え、[名前束縛/なまえそくばく]の[同一性/どういつせい]にはしない。" nil
     cons paragraph
       cons "paragraphのネスト、[節番号/せつばんごう]、HTMLの[行折返/ぎょうおりかえ]しはこの[対応/たいおう]を[変更/へんこう]しない。"
@@ -219,9 +221,8 @@ body
     cons paragraph
       cons "Section.idとInline Anchor.idはarticleのDocLabel[空間/くうかん]へ[定義/ていぎ]をexportする。"
       cons "ネストしたparagraph/sectionも[同/おな]じarticle[内/ない]で[集/あつ]める。"
-      cons "[重複/じゅうふく]はエラー。"
-      cons "Reference.targetはarticle[内/ない]から[解決/かいけつ]し、[前方参照/ぜんぽうさんしょう]を[認/みと]める。"
-      cons "[別/べつ]articleやforeign[言語/げんご]へ[暗黙/あんもく]にscopeを[広/ひろ]げない。" nil
+      cons "[同/おな]じIDの[重複定義/じゅうふくていぎ]はエラーとする。"
+      cons "Reference.targetの[解決範囲/かいけつはんい]は、そのarticle[内/ない]のDocLabel[空間/くうかん]に[限定/げんてい]し、[前方参照/ぜんぽうさんしょう]を[認/みと]める。" nil
     cons paragraph
       cons "source[上/じょう]の[名前/なまえ]の[選択範囲/せんたくはんい]と、[定義全体/ていぎぜんたい]の[範囲/はんい]を[分/わ]ける。"
       cons "Referenceは[表示/ひょうじ]labelを[持/も]ち、[参照先/さんしょうさき]の[見出/みだ]し[文字列/もじれつ]を[自動/じどう]コピーしない。"
