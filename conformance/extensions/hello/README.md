@@ -112,6 +112,14 @@ The composition uses statically registered packages. Source-level import,
 Sentence/annotation integration, evaluation, and independent package distribution
 remain subsequent stages of the external-language contract.
 
+The `portable_profile_drives_recursive_parsing` test exchanges the complete
+`ParseProfile` through `nepl3_engine::portable::profile` and the NDF wire codec.
+The receiver constructs its own package catalog, resolves the received package
+identities and operation/resource requirements, and parses normal and recovered
+recursive inputs. It compares the full parse reply with the native profile path,
+including diagnostics and source positions. Package implementations remain host
+registrations; portable `LanguagePackage` loading is a subsequent stage.
+
 ## What the existing example verifies
 
 Start with `unicode_source_and_external_kind_survive_native_and_ndf` in

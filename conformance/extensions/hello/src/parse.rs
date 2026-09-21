@@ -79,6 +79,78 @@ pub(crate) fn with_languages<T>(
         &mut FoundationCodec<'_>,
     ) -> Result<T, String>,
 ) -> Result<T, String> {
+    let profile = languages.profile(identity.1)?;
+    with_profile(
+        input,
+        final_input,
+        stopped,
+        (languages, profile),
+        identity,
+        inspect,
+    )
+}
+
+impl Languages<'_> {
+    pub(crate) fn profile(&self, source_name: &str) -> Result<ParseProfile, String> {
+        let languages = &self.packages;
+        let registry = &self.registry;
+        let mut setup = budget();
+        let foundation = registry
+            .selected("nepl3.foundation", 1)
+            .ok_or("foundation")?
+            .clone();
+        let profile = ParseProfile {
+            id: format!("external-{source_name}/1"),
+            languages: languages
+                .iter()
+                .map(|(alias, package)| {
+                    Ok(LanguageRegistration {
+                        alias: (*alias).into(),
+                        package: package
+                            .check(registry, &mut setup)
+                            .map_err(error)?
+                            .semantic_identity(&mut setup)
+                            .map_err(error)?,
+                        default_category: package.root.clone(),
+                    })
+                })
+                .collect::<Result<Vec<_>, String>>()?,
+            schemas: languages
+                .iter()
+                .map(|(_, package)| package.schema.clone())
+                .chain([
+                    foundation,
+                    registry
+                        .selected("nepl3.reader", 1)
+                        .ok_or("reader")?
+                        .clone(),
+                ])
+                .collect(),
+            head_providers: vec![],
+            category_modes: vec![],
+            providers: vec![],
+            allowlist: vec![],
+            resources: vec![],
+            limits: budget().limits(),
+        };
+        Ok(profile)
+    }
+}
+
+pub(crate) fn with_profile<T>(
+    input: &str,
+    final_input: bool,
+    stopped: bool,
+    configuration: (Languages<'_>, ParseProfile),
+    identity: (&str, &str),
+    inspect: impl FnOnce(
+        ParseReply,
+        &ResolvedParseProfile<'_>,
+        &SchemaRegistry,
+        &mut FoundationCodec<'_>,
+    ) -> Result<T, String>,
+) -> Result<T, String> {
+    let (languages, profile) = configuration;
     let Languages {
         packages: languages,
         registry,
@@ -89,40 +161,6 @@ pub(crate) fn with_languages<T>(
         .selected("nepl3.foundation", 1)
         .ok_or("foundation")?
         .clone();
-    let profile = ParseProfile {
-        id: format!("external-{source_name}/1"),
-        languages: languages
-            .iter()
-            .map(|(alias, package)| {
-                Ok(LanguageRegistration {
-                    alias: (*alias).into(),
-                    package: package
-                        .check(&registry, &mut setup)
-                        .map_err(error)?
-                        .semantic_identity(&mut setup)
-                        .map_err(error)?,
-                    default_category: package.root.clone(),
-                })
-            })
-            .collect::<Result<Vec<_>, String>>()?,
-        schemas: languages
-            .iter()
-            .map(|(_, package)| package.schema.clone())
-            .chain([
-                foundation.clone(),
-                registry
-                    .selected("nepl3.reader", 1)
-                    .ok_or("reader")?
-                    .clone(),
-            ])
-            .collect(),
-        head_providers: vec![],
-        category_modes: vec![],
-        providers: vec![],
-        allowlist: vec![],
-        resources: vec![],
-        limits: budget().limits(),
-    };
     let packages = languages.iter().map(|(_, p)| p).collect::<Vec<_>>();
     let resolved = profile
         .resolve(
