@@ -382,43 +382,49 @@ fn admitted_await_collects_dispatched_dependencies_and_resumes_saved_lifetime() 
         &mut budget(),
     )
     .map_err(|e| format!("{e:?}"))?;
-    let OperationReply::Await {
-        continuation,
-        calls,
-        ..
-    } = reply
-    else {
-        return Err("expected native Await".into());
+    use nepl3_suite::{
+        grants::{
+            Grants,
+            dependencies::{OperationGrant, authorize},
+        },
+        suspension::host::activate_owned,
     };
-    let mut pending = nepl3_core::operation::dependencies::PendingDependencies::new(
-        &continuation,
-        &calls,
+    let grant = Grants::new(&parent.environment, &sources, &[], &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let policy = [OperationGrant {
+        operation: &parent.operation,
+        grants: &grant,
+    }];
+    let active = activate_owned(
+        &parent,
+        context,
+        reply,
+        &policy,
+        &[context],
+        &registry,
+        &sources,
+        &mut lifetimes,
         &mut budget(),
     )
     .map_err(|e| format!("{e:?}"))?;
-    lifetimes
-        .suspend(
-            parent.request_id,
-            continuation.clone(),
-            calls.len(),
-            &mut budget(),
-        )
-        .map_err(|e| format!("{e:?}"))?;
-    lifetimes
-        .begin_call(&calls[0], context, Some(parent.request_id), &mut budget())
-        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(active.report, Report::default());
+    let mut pending = active.pending;
+    // Authorization is reborrowed from immutable owned calls at dispatch time.
+    let approved =
+        authorize(pending.calls(), &policy, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    let call = approved[0].invocation().request();
     // Preserve the actual parent callback's work during dependency execution.
     let parent_usage = execution.usage();
     let registrations = [Registration {
-        operation: &calls[0].operation,
+        operation: &call.operation,
         implementation: identity,
         invoke: increment,
     }];
     let result = invoke_terminal(
         &registrations,
-        &calls[0].operation,
+        &call.operation,
         identity,
-        &calls[0],
+        call,
         &registry,
         &sources,
         &mut execution,
@@ -426,17 +432,17 @@ fn admitted_await_collects_dispatched_dependencies_and_resumes_saved_lifetime() 
     )
     .map_err(|e| format!("{e:?}"))?;
     assert!(execution.usage().work > parent_usage.work);
+    let child_id = call.request_id;
     pending
-        .accept(
-            calls[0].request_id,
+        .accept_active(
+            child_id,
+            context,
             result,
             &registry,
             &sources,
+            &mut lifetimes,
             &mut budget(),
         )
-        .map_err(|e| format!("{e:?}"))?;
-    lifetimes
-        .finish(calls[0].request_id, &mut budget())
         .map_err(|e| format!("{e:?}"))?;
     let resume = pending
         .take_resume(&mut budget())
@@ -451,8 +457,8 @@ fn admitted_await_collects_dispatched_dependencies_and_resumes_saved_lifetime() 
     let saved = dispatch::SavedAwait {
         parent: &parent,
         context,
-        continuation: &continuation,
-        calls: &calls,
+        continuation: pending.continuation(),
+        calls: pending.calls(),
         sources: &grants,
     };
     let run = |request: &nepl3_core::operation::Resume,
