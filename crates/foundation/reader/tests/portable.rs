@@ -10,6 +10,149 @@ use nepl3_reader::{model::*, plan::*, portable::*, runtime::ReaderSession};
 use nepl3_wire::{environment::environment_digest, foundation::FoundationCodec};
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 #[test]
+fn transform_request_resolves_only_dispatch_sources_and_checks_views() -> TestResult {
+    use nepl3_core::view::{ViewBundle, ViewRef};
+    use nepl3_reader::portable::transform::request as exchange;
+    macro_rules! checked {
+        ($v:expr) => {
+            $v.map_err(|e| format!("{e:?}"))?
+        };
+    }
+    let (schema, registry, global, request) = fixture()?;
+    let mut declared = SourceStore::default();
+    for source in &request.sources {
+        checked!(declared.insert(source.clone()));
+    }
+    let request = TransformRequest {
+        value: NdfValue::Text("変換入力".into()),
+        span: checked!(
+            declared
+                .resolve(&request.snapshot)
+                .ok_or("snapshot")?
+                .span(0, 1)
+        ),
+        view: ViewBundle {
+            elements: vec![],
+            roots: vec![],
+        },
+        context: request.context,
+    };
+    let mut b = budget();
+    let mut admission = SourceAdmission::default();
+    let mut codec = checked!(FoundationCodec::new(&registry, &global, &mut admission));
+    let value = checked!(exchange::to_value(
+        &request,
+        &schema,
+        &mut codec,
+        &declared,
+        &[],
+        &registry,
+        &mut b
+    ));
+    let bytes = checked!(nepl3_wire::encode(&value, &mut b));
+    let value = checked!(nepl3_wire::decode(&bytes, &mut b));
+    let restored = checked!(exchange::from_value(
+        &value,
+        &schema,
+        &mut codec,
+        &declared,
+        &[],
+        &registry,
+        &mut b
+    ));
+    assert_eq!(restored, request);
+    let NdfValue::Record(record) = &value else {
+        return Err("record".into());
+    };
+    assert_eq!(record.kind, "TransformRequest");
+    assert_eq!(record.fields[0], NdfValue::Text("変換入力".into()));
+    // Ambient host sources cannot supply either the context or the input span.
+    for absent in ["aux", "input"] {
+        let mut incomplete = SourceStore::default();
+        for source in declared.snapshots() {
+            if source.identity().source.0 != absent {
+                checked!(incomplete.insert(source.clone()));
+            }
+        }
+        assert!(
+            exchange::to_value(
+                &request,
+                &schema,
+                &mut codec,
+                &incomplete,
+                &[],
+                &registry,
+                &mut b
+            )
+            .is_err()
+        );
+        assert!(
+            exchange::from_value(
+                &value,
+                &schema,
+                &mut codec,
+                &incomplete,
+                &[],
+                &registry,
+                &mut b
+            )
+            .is_err()
+        );
+    }
+    let mut invalid = request.clone();
+    invalid.view.roots.push(ViewRef(0));
+    assert!(
+        exchange::to_value(
+            &invalid,
+            &schema,
+            &mut codec,
+            &declared,
+            &[],
+            &registry,
+            &mut b
+        )
+        .is_err()
+    );
+    let mut invalid = request.clone();
+    invalid.context.environment.digest.0[0] ^= 1;
+    assert!(
+        exchange::to_value(
+            &invalid,
+            &schema,
+            &mut codec,
+            &declared,
+            &[],
+            &registry,
+            &mut b
+        )
+        .is_err()
+    );
+    for allocation in [false, true] {
+        let mut limits = budget().limits();
+        if allocation {
+            limits.allocation_units = 0;
+        } else {
+            limits.work = 0;
+        }
+        let mut stopped = Budget::new(limits);
+        assert!(
+            exchange::from_value(
+                &value,
+                &schema,
+                &mut codec,
+                &declared,
+                &[],
+                &registry,
+                &mut stopped
+            )
+            .is_err()
+        );
+        assert!(stopped.poll().is_err());
+    }
+    Ok(())
+}
+
+#[test]
 fn dependent_request_preserves_first_and_admits_only_declared_sources() -> TestResult {
     macro_rules! checked {
         ($v:expr) => {

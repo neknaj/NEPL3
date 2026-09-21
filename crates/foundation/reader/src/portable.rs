@@ -1,4 +1,5 @@
 //! Typed reader request boundary. Source-table admission precedes context decoding.
+mod context;
 pub mod dependent;
 pub mod plan;
 pub mod read;
@@ -233,22 +234,7 @@ pub fn request_to_value<C: FoundationValueCodec>(
         ],
         budget,
     )?;
-    let context = record(
-        schema,
-        "ReaderContext",
-        [
-            schema_value(&request.context.schema, &foundation, budget)?,
-            text(&request.context.category, budget)?,
-            text(&request.context.mode, budget)?,
-            codec
-                .encode_environment(&request.context.environment, budget)
-                .map_err(PortableError::Boundary)?,
-            codec
-                .encode_origins(&request.context.origins, budget)
-                .map_err(PortableError::Boundary)?,
-        ],
-        budget,
-    )?;
+    let context = context::to_value(&request.context, schema, codec, budget)?;
     let value = record(
         schema,
         "ReadRequest",
@@ -307,18 +293,7 @@ pub fn request_from_value<C: FoundationValueCodec>(
         revision: number(&reference[1])?,
         digest: digest(&reference[2])?,
     };
-    let context = fields(&f[5], schema, "ReaderContext", 5)?;
-    let context = ReaderContext {
-        schema: schema_from(&context[0], &foundation, budget)?,
-        category: string(&context[1], budget)?,
-        mode: string(&context[2], budget)?,
-        environment: codec
-            .decode_environment(&context[3], budget)
-            .map_err(PortableError::Boundary)?,
-        origins: codec
-            .decode_origins(&context[4], budget)
-            .map_err(PortableError::Boundary)?,
-    };
+    let context = context::from_value(&f[5], schema, codec, budget)?;
     let NdfValue::Bool(final_input) = &f[4] else {
         return Err(PortableError::Shape);
     };
