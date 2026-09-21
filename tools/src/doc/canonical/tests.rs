@@ -877,9 +877,9 @@ fn synchronized_context_spec_drafts_parse_lower_and_check_labels() -> Result<()>
         ),
     ] {
         let text = fs::read_to_string(repository.join(path))?;
-        // Adopted chapters must remain
-        // usable with normal page limits; other drafts keep their explicit cap.
-        let phase_limits = if path.starts_with("doc/spec/") {
+        // Adopted chapters and the Pages draft must remain usable with normal
+        // page limits. This also bounds repeated map validation on a real document.
+        let phase_limits = if path.starts_with("doc/spec/") || name == "21-doc-pages" {
             super::super::source::budget().limits()
         } else {
             phase_limits

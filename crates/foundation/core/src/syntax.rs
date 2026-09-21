@@ -222,7 +222,8 @@ impl SyntaxBundle {
                 }
                 foreign::environment(&environment.value, bundle.origins.len(), registry, budget)?;
             }
-            let maps = SourceMap::validate_mappings(&bundle.source_maps, &sources, budget)?;
+            let maps = SourceMap::validate_mappings(&bundle.source_maps, &sources, budget)?
+                .bind_sources(&sources, budget)?;
             for token in &bundle.tokens {
                 token.validate_with_maps(&sources, registry, &maps, budget)?;
             }
