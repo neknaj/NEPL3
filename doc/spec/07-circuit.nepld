@@ -1,22 +1,24 @@
 article ja "07. Circuit[言語/げんご]"
 body
-  cons section policy "[方針/ほうしん]" body
+  cons section policy "Circuitの[回路/かいろ]モデル" body
     cons paragraph
-      cons "[二値/にち]・[固定幅/こていはば]・[同期離散時間/どうきりさんじかん]の[回路/かいろ]を[正式/せいしき]な[意味領域/いみりょういき]とする。"
-      cons "[構文木/こうぶんき]と[回路/かいろ]graph、[回路生成/かいろせいせい]と[信号/しんごう]の[実行値/じっこうち]、[定義/ていぎ]の[再利用/さいりよう]と[状態/じょうたい]の[共有/きょうゆう]を[分離/ぶんり]する。"
+      cons "Circuitは、[二値/にち]・[固定幅/こていはば]・[同期離散時間/どうきりさんじかん]の[回路/かいろ]を[表/あらわ]す[言語/げんご]である。"
+      cons "[構文木/こうぶんき]はmoduleや[信号/しんごう]の[宣言/せんげん]を[保持/ほじ]し、elaborationはそれらを[回路/かいろ]グラフへ[展開/てんかい]する。"
+      cons "[信号/しんごう]の[実行値/じっこうち]は、[生成/せいせい]した[回路/かいろ]と[各時刻/かくじこく]の[入力/にゅうりょく]・[状態/じょうたい]から[計算/けいさん]する。"
+      cons "[同/おな]じmodule[定義/ていぎ]を[再利用/さいりよう]する[場合/ばあい]も、[各/かく]instanceは[独立/どくりつ]した[状態/じょうたい]を[持/も]つ。"
       nil
     nil
   cons section surface "1. surfaceと[型/かた]" body
     cons paragraph
-      cons "Designはmodules、entry[名/めい]、tests。"
-      cons "Moduleはname、[入力列/にゅうりょくれつ]、[宣言列/せんげんれつ]、[出力列/しゅつりょくれつ]。"
-      cons "[入力/にゅうりょく]/[出力/しゅつりょく]/stateの[幅/はば]は[正/せい]のNat。"
-      cons "upper boundは[構成上/こうせいじょう]のLimitsで[決/き]まり、[暗黙/あんもく]の32/64bitに[制限/せいげん]しない。"
+      cons "Designはmodules、entry[名/めい]、testsを[保持/ほじ]する。"
+      cons "Moduleはname、[入力列/にゅうりょくれつ]、[宣言列/せんげんれつ]、[出力列/しゅつりょくれつ]で[構成/こうせい]する。"
+      cons "[入力/にゅうりょく]・[出力/しゅつりょく]・stateの[幅/はば]は[正/せい]のNatであり、[上限/じょうげん]は[構成/こうせい]に[指定/してい]したLimitsで[定/さだ]める。"
+      cons "32bitや64bitを[超/こ]える[幅/はば]も、そのLimitsの[範囲内/はんいない]で[扱/あつか]う。"
       nil
     cons paragraph
-      cons sentence cons text "bit-vectorは " cons code "(width, unsigned value)" cons text "、" cons code "0 <= value < 2^width" cons text "。" nil
-      cons "bits width valueの[範囲外/はんいがい]はエラーで、literalの[切捨/きりす]てをしない。"
-      cons "true/falseは1bit。"
+      cons sentence cons text "bit-vectorは " cons code "(width, unsigned value)" cons text " で" cons ruby text "表" text "あらわ" cons text "し、" cons code "0 <= value < 2^width" cons text " を" cons ruby text "要求" text "ようきゅう" cons text "する。" nil
+      cons "bits width valueのliteralがこの[範囲外/はんいがい]の[場合/ばあい]はエラーとする。"
+      cons "trueとfalseは1bitの[値/あたい]である。"
       nil
     cons paragraph
       cons "[信号名/しんごうめい]はinput/wire/stateの[共通空間/きょうつうくうかん]。"
@@ -55,18 +57,18 @@ body
     nil
   cons section operations "3. [演算/えんざん]" body
     cons paragraph
-      cons "notはbitwise。"
-      cons "and/or/xor/nor/addは[等幅/とうはば]の2[入力/にゅうりょく]。"
-      cons "addはmod 2^widthの[加算/かさん]。"
-      cons "[符号付/ふごうつ]き[解釈/かいしゃく]はしない。" nil
+      cons "notは[各/かく]ビットを[反転/はんてん]する。"
+      cons "and・or・xor・nor・addは、[等/ひと]しい[幅/はば]の2[入力/にゅうりょく]を[取/と]る。"
+      cons "addは2^widthを[法/ほう]とする[加算/かさん]である。"
+      cons "[値/あたい]は[符号/ふごう]なしのビット[列/れつ]として[扱/あつか]う。" nil
     cons paragraph
-      cons "muxは1bit selectと[等幅/とうはば]のyes/no。"
-      cons "select=1ならyes。" nil
-    cons paragraph cons "concat a bはaを[上位/じょうい]、bを[下位/かい]へ[置/お]き、[幅/はば]はwa+wb。" nil
+      cons "muxは1bitのselectと、[等/ひと]しい[幅/はば]のyes・noを[取/と]る。"
+      cons "select=1ならyes、select=0ならnoを[返/かえ]す。" nil
+    cons paragraph cons "concat a bはaを[上位/じょうい]、bを[下位/かい]へ[配置/はいち]する。" cons "aとbの[幅/はば]をwa・wbとすると、[結果/けっか]の[幅/はば]はwa+wbである。" nil
     cons paragraph
       cons sentence cons text "slice value lo widthはLSB=0として " cons code "[lo,lo+width)" cons text " を" cons ruby text "抜" text "ぬ" cons text "き" cons ruby text "出" text "だ" cons text "す。" nil
-      cons "width>0かつlo+width<=[入力幅/にゅうりょくはば]。"
-      cons "[全加算/ぜんかさん]・index[計算/けいさん]をcheckedにする。" nil
+      cons "width>0かつlo+width<=[入力幅/にゅうりょくはば]を[要求/ようきゅう]する。"
+      cons "[幅/はば]とindexの[計算/けいさん]では、すべての[加算/かさん]を[含/ふく]めてoverflowを[検査/けんさ]する。" nil
     nil
   cons section elaboration "4. [検査/けんさ]とelaboration" body
     cons list ordered 1

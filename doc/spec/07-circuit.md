@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/07&#45;circuit.nepld; renderer nepl3-tools.markdown-annotated/4; source SHA-256 cf169539cb22eb1a7b21fc5c3f15d060975453e7fd72534126f894548c4fbe30; alias input SHA-256 7c23dac644010c8dfb51fae2b60e7ac78510e84492dd442386ff3679536eb53a. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/07&#45;circuit.nepld; renderer nepl3-tools.markdown-annotated/4; source SHA-256 8e0751927cb4f3ef3ddb4fa7a3e7110304db3d0db6f06aada2915d454319e7e8; alias input SHA-256 7c23dac644010c8dfb51fae2b60e7ac78510e84492dd442386ff3679536eb53a. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="07-circuit言語"></a>
 
@@ -10,9 +10,9 @@
 
 <a name="方針"></a>
 
-## <ruby>方針<rt>ほうしん</rt></ruby>
+## Circuitの<ruby>回路<rt>かいろ</rt></ruby>モデル
 
-<ruby>二値<rt>にち</rt></ruby>・<ruby>固定幅<rt>こていはば</rt></ruby>・<ruby>同期離散時間<rt>どうきりさんじかん</rt></ruby>の<ruby>回路<rt>かいろ</rt></ruby>を<ruby>正式<rt>せいしき</rt></ruby>な<ruby>意味領域<rt>いみりょういき</rt></ruby>とする。<ruby>構文木<rt>こうぶんき</rt></ruby>と<ruby>回路<rt>かいろ</rt></ruby>graph、<ruby>回路生成<rt>かいろせいせい</rt></ruby>と<ruby>信号<rt>しんごう</rt></ruby>の<ruby>実行値<rt>じっこうち</rt></ruby>、<ruby>定義<rt>ていぎ</rt></ruby>の<ruby>再利用<rt>さいりよう</rt></ruby>と<ruby>状態<rt>じょうたい</rt></ruby>の<ruby>共有<rt>きょうゆう</rt></ruby>を<ruby>分離<rt>ぶんり</rt></ruby>する。
+Circuitは、<ruby>二値<rt>にち</rt></ruby>・<ruby>固定幅<rt>こていはば</rt></ruby>・<ruby>同期離散時間<rt>どうきりさんじかん</rt></ruby>の<ruby>回路<rt>かいろ</rt></ruby>を<ruby>表<rt>あらわ</rt></ruby>す<ruby>言語<rt>げんご</rt></ruby>である。<ruby>構文木<rt>こうぶんき</rt></ruby>はmoduleや<ruby>信号<rt>しんごう</rt></ruby>の<ruby>宣言<rt>せんげん</rt></ruby>を<ruby>保持<rt>ほじ</rt></ruby>し、elaborationはそれらを<ruby>回路<rt>かいろ</rt></ruby>グラフへ<ruby>展開<rt>てんかい</rt></ruby>する。<ruby>信号<rt>しんごう</rt></ruby>の<ruby>実行値<rt>じっこうち</rt></ruby>は、<ruby>生成<rt>せいせい</rt></ruby>した<ruby>回路<rt>かいろ</rt></ruby>と<ruby>各時刻<rt>かくじこく</rt></ruby>の<ruby>入力<rt>にゅうりょく</rt></ruby>・<ruby>状態<rt>じょうたい</rt></ruby>から<ruby>計算<rt>けいさん</rt></ruby>する。<ruby>同<rt>おな</rt></ruby>じmodule<ruby>定義<rt>ていぎ</rt></ruby>を<ruby>再利用<rt>さいりよう</rt></ruby>する<ruby>場合<rt>ばあい</rt></ruby>も、<ruby>各<rt>かく</rt></ruby>instanceは<ruby>独立<rt>どくりつ</rt></ruby>した<ruby>状態<rt>じょうたい</rt></ruby>を<ruby>持<rt>も</rt></ruby>つ。
 
 <a name="n-73757266616365"></a>
 
@@ -20,9 +20,9 @@
 
 ## 1\. surfaceと<ruby>型<rt>かた</rt></ruby>
 
-Designはmodules、entry<ruby>名<rt>めい</rt></ruby>、tests。Moduleはname、<ruby>入力列<rt>にゅうりょくれつ</rt></ruby>、<ruby>宣言列<rt>せんげんれつ</rt></ruby>、<ruby>出力列<rt>しゅつりょくれつ</rt></ruby>。<ruby>入力<rt>にゅうりょく</rt></ruby>\/<ruby>出力<rt>しゅつりょく</rt></ruby>\/stateの<ruby>幅<rt>はば</rt></ruby>は<ruby>正<rt>せい</rt></ruby>のNat。upper boundは<ruby>構成上<rt>こうせいじょう</rt></ruby>のLimitsで<ruby>決<rt>き</rt></ruby>まり、<ruby>暗黙<rt>あんもく</rt></ruby>の32\/64bitに<ruby>制限<rt>せいげん</rt></ruby>しない。
+Designはmodules、entry<ruby>名<rt>めい</rt></ruby>、testsを<ruby>保持<rt>ほじ</rt></ruby>する。Moduleはname、<ruby>入力列<rt>にゅうりょくれつ</rt></ruby>、<ruby>宣言列<rt>せんげんれつ</rt></ruby>、<ruby>出力列<rt>しゅつりょくれつ</rt></ruby>で<ruby>構成<rt>こうせい</rt></ruby>する。<ruby>入力<rt>にゅうりょく</rt></ruby>・<ruby>出力<rt>しゅつりょく</rt></ruby>・stateの<ruby>幅<rt>はば</rt></ruby>は<ruby>正<rt>せい</rt></ruby>のNatであり、<ruby>上限<rt>じょうげん</rt></ruby>は<ruby>構成<rt>こうせい</rt></ruby>に<ruby>指定<rt>してい</rt></ruby>したLimitsで<ruby>定<rt>さだ</rt></ruby>める。32bitや64bitを<ruby>超<rt>こ</rt></ruby>える<ruby>幅<rt>はば</rt></ruby>も、そのLimitsの<ruby>範囲内<rt>はんいない</rt></ruby>で<ruby>扱<rt>あつか</rt></ruby>う。
 
-bit\-vectorは `(width, unsigned value)`、`0 <= value < 2^width`。bits width valueの<ruby>範囲外<rt>はんいがい</rt></ruby>はエラーで、literalの<ruby>切捨<rt>きりす</rt></ruby>てをしない。true\/falseは1bit。
+bit\-vectorは `(width, unsigned value)` で<ruby>表<rt>あらわ</rt></ruby>し、`0 <= value < 2^width` を<ruby>要求<rt>ようきゅう</rt></ruby>する。bits width valueのliteralがこの<ruby>範囲外<rt>はんいがい</rt></ruby>の<ruby>場合<rt>ばあい</rt></ruby>はエラーとする。trueとfalseは1bitの<ruby>値<rt>あたい</rt></ruby>である。
 
 <ruby>信号名<rt>しんごうめい</rt></ruby>はinput\/wire\/stateの<ruby>共通空間<rt>きょうつうくうかん</rt></ruby>。instance<ruby>名<rt>めい</rt></ruby>はInstance<ruby>空間<rt>くうかん</rt></ruby>、module<ruby>名<rt>めい</rt></ruby>はDesign<ruby>内<rt>ない</rt></ruby>のModule<ruby>空間<rt>くうかん</rt></ruby>、output<ruby>名<rt>めい</rt></ruby>は<ruby>各<rt>かく</rt></ruby>moduleのOutput<ruby>空間<rt>くうかん</rt></ruby>。<ruby>同<rt>おな</rt></ruby>じ<ruby>空間<rt>くうかん</rt></ruby>の<ruby>重複<rt>ちょうふく</rt></ruby>はエラー。outputは<ruby>内部<rt>ないぶ</rt></ruby>で<ruby>裸<rt>はだか</rt></ruby>の<ruby>名前参照<rt>なまえさんしょう</rt></ruby>として<ruby>再利用<rt>さいりよう</rt></ruby>しない。<ruby>共有<rt>きょうゆう</rt></ruby>したい<ruby>式<rt>しき</rt></ruby>はwireで<ruby>宣言<rt>せんげん</rt></ruby>する。
 
@@ -46,13 +46,13 @@ Name leafは<ruby>信号参照<rt>しんごうさんしょう</rt></ruby>。at i
 
 ## 3\. <ruby>演算<rt>えんざん</rt></ruby>
 
-notはbitwise。and\/or\/xor\/nor\/addは<ruby>等幅<rt>とうはば</rt></ruby>の2<ruby>入力<rt>にゅうりょく</rt></ruby>。addはmod 2\^widthの<ruby>加算<rt>かさん</rt></ruby>。<ruby>符号付<rt>ふごうつ</rt></ruby>き<ruby>解釈<rt>かいしゃく</rt></ruby>はしない。
+notは<ruby>各<rt>かく</rt></ruby>ビットを<ruby>反転<rt>はんてん</rt></ruby>する。and・or・xor・nor・addは、<ruby>等<rt>ひと</rt></ruby>しい<ruby>幅<rt>はば</rt></ruby>の2<ruby>入力<rt>にゅうりょく</rt></ruby>を<ruby>取<rt>と</rt></ruby>る。addは2\^widthを<ruby>法<rt>ほう</rt></ruby>とする<ruby>加算<rt>かさん</rt></ruby>である。<ruby>値<rt>あたい</rt></ruby>は<ruby>符号<rt>ふごう</rt></ruby>なしのビット<ruby>列<rt>れつ</rt></ruby>として<ruby>扱<rt>あつか</rt></ruby>う。
 
-muxは1bit selectと<ruby>等幅<rt>とうはば</rt></ruby>のyes\/no。select\=1ならyes。
+muxは1bitのselectと、<ruby>等<rt>ひと</rt></ruby>しい<ruby>幅<rt>はば</rt></ruby>のyes・noを<ruby>取<rt>と</rt></ruby>る。select\=1ならyes、select\=0ならnoを<ruby>返<rt>かえ</rt></ruby>す。
 
-concat a bはaを<ruby>上位<rt>じょうい</rt></ruby>、bを<ruby>下位<rt>かい</rt></ruby>へ<ruby>置<rt>お</rt></ruby>き、<ruby>幅<rt>はば</rt></ruby>はwa\+wb。
+concat a bはaを<ruby>上位<rt>じょうい</rt></ruby>、bを<ruby>下位<rt>かい</rt></ruby>へ<ruby>配置<rt>はいち</rt></ruby>する。aとbの<ruby>幅<rt>はば</rt></ruby>をwa・wbとすると、<ruby>結果<rt>けっか</rt></ruby>の<ruby>幅<rt>はば</rt></ruby>はwa\+wbである。
 
-slice value lo widthはLSB\=0として `[lo,lo+width)` を<ruby>抜<rt>ぬ</rt></ruby>き<ruby>出<rt>だ</rt></ruby>す。width\>0かつlo\+width\<\=<ruby>入力幅<rt>にゅうりょくはば</rt></ruby>。<ruby>全加算<rt>ぜんかさん</rt></ruby>・index<ruby>計算<rt>けいさん</rt></ruby>をcheckedにする。
+slice value lo widthはLSB\=0として `[lo,lo+width)` を<ruby>抜<rt>ぬ</rt></ruby>き<ruby>出<rt>だ</rt></ruby>す。width\>0かつlo\+width\<\=<ruby>入力幅<rt>にゅうりょくはば</rt></ruby>を<ruby>要求<rt>ようきゅう</rt></ruby>する。<ruby>幅<rt>はば</rt></ruby>とindexの<ruby>計算<rt>けいさん</rt></ruby>では、すべての<ruby>加算<rt>かさん</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>めてoverflowを<ruby>検査<rt>けんさ</rt></ruby>する。
 
 <a name="n-656c61626f726174696f6e"></a>
 
