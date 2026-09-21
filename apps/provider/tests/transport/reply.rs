@@ -5,6 +5,8 @@ use nepl3_core::{
     value::*,
 };
 use nepl3_provider::reply::ReplyError;
+#[path = "reply/control.rs"]
+mod control;
 #[path = "reply/resume.rs"]
 mod resume;
 
