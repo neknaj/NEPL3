@@ -19,6 +19,7 @@ nepl3-engine.workspace = true
 nepl3-wire.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+syn.workspace = true
 sha2.workspace = true
 pulldown-cmark.workspace = true
 

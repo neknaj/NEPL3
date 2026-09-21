@@ -218,7 +218,7 @@
         "nepl3-markup"
       ],
       "no_std": false,
-      "responsibility": "Generation, conformance, dependency checks and local Doc artifact host; host-only pulldown-cmark HTML feature renders remaining Markdown canonical overview; no domain-core dependency"
+      "responsibility": "Generation, conformance, dependency checks and local Doc artifact host; host-only pulldown-cmark HTML feature renders remaining Markdown canonical overview; host-only syn full/parsing checks Rust declarations before compilation; no domain-core dependency"
     },
     {
       "name": "nepl3-sentence-core",
