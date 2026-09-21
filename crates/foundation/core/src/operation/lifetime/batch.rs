@@ -6,8 +6,9 @@ impl RequestLifetimes {
     /// Schema, dependency allowlist and result ordering are checked by the caller.
     /// No callback runs here. Failure preserves all IDs and request phases; budget
     /// charges and any reserved capacity remain consumed.
-    /// With N existing requests and K children, sorted-vector insertion can move
-    /// O(K*K + N*K) entries; these moves are charged before publication.
+    /// With N existing requests and K children, sorting and publication cost
+    /// O(K log K + N + K) work and O(N + K) temporary entry storage. Ancestry,
+    /// call validation and input cloning have additional, separately metered costs.
     pub fn suspend_calls(
         &mut self,
         parent: u64,
@@ -28,38 +29,28 @@ impl RequestLifetimes {
             .ok_or(LifetimeError::Capacity)?;
         let bytes = calls
             .len()
-            .checked_mul(core::mem::size_of::<(usize, Entry)>())
+            .checked_mul(core::mem::size_of::<Entry>())
             .ok_or(LifetimeError::Capacity)?;
         b.charge(Resource::AllocationUnits, bytes as u64)?;
-        let mut prepared: Vec<(usize, Entry)> = Vec::new();
+        let mut prepared: Vec<Entry> = Vec::new();
         prepared
             .try_reserve_exact(calls.len())
             .map_err(|_| LifetimeError::Capacity)?;
         for &(call, snapshot) in calls {
             let entry = self.prepare_call(call, snapshot, Some(parent), b)?;
-            let mut lo = 0;
-            let mut hi = prepared.len();
-            while lo < hi {
-                b.charge(Resource::Work, 1)?;
-                let mid = lo + (hi - lo) / 2;
-                match prepared[mid].1.id.cmp(&entry.id) {
-                    core::cmp::Ordering::Less => lo = mid + 1,
-                    core::cmp::Ordering::Greater => hi = mid,
-                    core::cmp::Ordering::Equal => return Err(LifetimeError::DuplicateRequest),
-                }
-            }
-            let index = self
-                .locate(entry.id, b)?
-                .err()
-                .ok_or(LifetimeError::DuplicateRequest)?;
-            b.charge(Resource::Work, (prepared.len() - lo) as u64 + 1)?;
-            prepared.insert(lo, (index, entry));
+            b.charge(Resource::Work, 1)?;
+            prepared.push(entry);
         }
-        // Sorted insertion moves only the original suffix: prior siblings have
-        // smaller IDs and remain before the next insertion point.
+        sort(&mut prepared, b)?;
+        for pair in prepared.windows(2) {
+            b.charge(Resource::Work, 1)?;
+            if pair[0].id == pair[1].id {
+                return Err(LifetimeError::DuplicateRequest);
+            }
+        }
         let mut shifted_parent = parent_index;
-        for (index, entry) in &prepared {
-            b.charge(Resource::Work, (self.entries.len() - index) as u64 + 1)?;
+        for entry in &prepared {
+            b.charge(Resource::Work, 1)?;
             if entry.id < parent {
                 shifted_parent += 1;
             }
@@ -68,32 +59,74 @@ impl RequestLifetimes {
             Resource::AllocationUnits,
             core::mem::size_of::<Continuation>() as u64,
         )?;
-        if total > self.entries.capacity() {
-            let capacity = self
-                .entries
-                .capacity()
-                .checked_mul(2)
-                .ok_or(LifetimeError::Capacity)?
-                .max(total);
-            let bytes = (capacity - self.entries.capacity())
-                .checked_mul(core::mem::size_of::<Entry>())
-                .ok_or(LifetimeError::Capacity)?;
-            b.charge(Resource::AllocationUnits, bytes as u64)?;
-            b.charge(Resource::Work, self.entries.len() as u64)?;
-            self.entries
-                .try_reserve_exact(capacity - self.entries.len())
-                .map_err(|_| LifetimeError::Capacity)?;
-        }
-        b.charge(Resource::Work, 1)?;
+        let bytes = total
+            .checked_mul(core::mem::size_of::<Entry>())
+            .ok_or(LifetimeError::Capacity)?;
+        b.charge(Resource::AllocationUnits, bytes as u64)?;
+        let mut merged = Vec::new();
+        merged
+            .try_reserve_exact(total)
+            .map_err(|_| LifetimeError::Capacity)?;
+        // Each entry is moved once; at most one ID comparison per output entry.
+        b.charge(
+            Resource::Work,
+            (total as u64).saturating_mul(2).saturating_add(1),
+        )?;
         let continuation = Box::new(continuation);
         // All fallible checks and accounting precede publication.
-        for (offset, (index, entry)) in prepared.into_iter().enumerate() {
-            self.entries.insert(index + offset, entry);
+        let mut existing = core::mem::take(&mut self.entries).into_iter().peekable();
+        let mut children = prepared.into_iter().peekable();
+        while let (Some(old), Some(new)) = (existing.peek(), children.peek()) {
+            let next = if old.id < new.id {
+                existing.next()
+            } else {
+                children.next()
+            };
+            if let Some(entry) = next {
+                merged.push(entry);
+            }
         }
-        self.entries[shifted_parent].state = State::Awaiting {
+        merged.extend(existing);
+        merged.extend(children);
+        merged[shifted_parent].state = State::Awaiting {
             continuation,
             dependencies: calls.len(),
         };
+        self.entries = merged;
         Ok(())
     }
+}
+
+// The same budgeted heapsort strategy used by core's source/fact indexes.
+// Sorting mutates only staged entries, so a stop cannot affect live requests.
+fn sort(entries: &mut [Entry], b: &mut Budget) -> Result<(), LifetimeError> {
+    for root in (0..entries.len() / 2).rev() {
+        sift(entries, root, b)?;
+    }
+    for end in (1..entries.len()).rev() {
+        b.charge(Resource::Work, 1)?;
+        entries.swap(0, end);
+        sift(&mut entries[..end], 0, b)?;
+    }
+    Ok(())
+}
+fn sift(entries: &mut [Entry], mut root: usize, b: &mut Budget) -> Result<(), LifetimeError> {
+    while root < entries.len() / 2 {
+        b.charge(Resource::Work, 1)?;
+        let mut child = root * 2 + 1;
+        if child + 1 < entries.len() {
+            b.charge(Resource::Work, 1)?;
+            if entries[child].id < entries[child + 1].id {
+                child += 1;
+            }
+        }
+        b.charge(Resource::Work, 1)?;
+        if entries[root].id >= entries[child].id {
+            break;
+        }
+        b.charge(Resource::Work, 1)?;
+        entries.swap(root, child);
+        root = child;
+    }
+    Ok(())
 }

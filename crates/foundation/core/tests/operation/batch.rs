@@ -151,3 +151,84 @@ fn every_insufficient_batch_budget_leaves_all_request_states_unchanged() {
         }
     }
 }
+
+#[test]
+fn batch_growth_keeps_sorted_lookup_and_subquadratic_work() {
+    fn measure(existing: usize, children: usize) -> u64 {
+        let (mut table, parent, _) = fixture();
+        let snapshot = saved().snapshot_digest;
+        for index in 0..existing {
+            assert_eq!(
+                table.begin(
+                    1000 + 2 * index as u64,
+                    parent.operation.clone(),
+                    snapshot,
+                    &mut budget()
+                ),
+                Ok(())
+            );
+        }
+        // Descending odd IDs interleave with unrelated even IDs after sorting.
+        let calls: Vec<_> = (0..children)
+            .rev()
+            .map(|index| {
+                let mut call = parent.clone();
+                call.request_id = 1001 + 2 * index as u64;
+                call.operation.name = "child".into();
+                call
+            })
+            .collect();
+        let batch: Vec<_> = calls.iter().map(|call| (call, snapshot)).collect();
+        // This growth probe materializes hundreds of typed calls; its capacity
+        // is separate from the small fixture's stop-boundary budgets above.
+        let mut measured = Budget::new(Limits {
+            work: 10_000_000,
+            allocation_units: 10_000_000,
+            ..budget().limits()
+        });
+        assert_eq!(
+            table.suspend_calls(7, saved(), &batch, &mut measured),
+            Ok(())
+        );
+        for index in 0..existing {
+            assert_eq!(
+                table.phase(1000 + 2 * index as u64, &mut budget()),
+                Ok(RequestPhase::Running)
+            );
+        }
+        for call in &calls {
+            assert_eq!(
+                table.phase(call.request_id, &mut budget()),
+                Ok(RequestPhase::Running)
+            );
+        }
+        assert_eq!(table.phase(7, &mut budget()), Ok(RequestPhase::Awaiting));
+        let mut cancelled = vec![];
+        assert_eq!(
+            table.cancel_tree(7, &mut budget(), |id| cancelled.push(id)),
+            Ok(())
+        );
+        let expected: Vec<_> = core::iter::once(7)
+            .chain((0..children).map(|i| 1001 + 2 * i as u64))
+            .collect();
+        assert_eq!(cancelled, expected);
+        measured.usage().work
+    }
+    for axis in [false, true] {
+        let values: Vec<_> = [128, 256, 512]
+            .into_iter()
+            .map(|n| {
+                if axis {
+                    measure(n, 128)
+                } else {
+                    measure(128, n)
+                }
+            })
+            .collect();
+        // Doubling either input axis admits logarithmic index/sort overhead;
+        // repeated quadratic insertion tends toward a factor of four.
+        for pair in values.windows(2) {
+            assert!(pair[1] * 2 < pair[0] * 5, "axis {axis}: {values:?}");
+        }
+    }
+}
