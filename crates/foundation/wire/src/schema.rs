@@ -3,7 +3,7 @@
 use crate::{WireError, boundary::typed::Codec, boundary::*, source::*, view::*};
 use alloc::vec::Vec;
 use nepl3_core::{
-    budget::Budget,
+    budget::{Budget, Resource, StopReason},
     schema::{
         FieldDescriptor, NamedType, OperationDescriptor, SchemaDescriptor, SchemaError,
         SchemaRegistry, TypeDescriptor, TypeShape, VariantDescriptor,
@@ -220,7 +220,13 @@ pub fn decode(
     let s = foundation(registry, b)?;
     let value = crate::decode_checked(input, &expected("SchemaDescriptor"), registry, b)?;
     let descriptor: SchemaDescriptor = Codec::from(value.value(), s, &SourceStore::default(), b)?;
-    if &descriptor.reference(b)? != identity {
+    let actual = descriptor.reference(b)?;
+    let comparison_work = (actual.package.len() as u64)
+        .checked_add(identity.package.len() as u64)
+        .and_then(|n| n.checked_add(40))
+        .ok_or_else(|| b.stop(StopReason::WorkLimit))?;
+    b.charge(Resource::Work, comparison_work)?;
+    if &actual != identity {
         return Err(SchemaError::IdentityMismatch.into());
     }
     Ok(descriptor)

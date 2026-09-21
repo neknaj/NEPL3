@@ -131,6 +131,14 @@ fn descriptors_reject_identity_mismatch_duplicates_and_stops() -> Result<(), Str
     let descriptor = sample();
     let identity = descriptor.reference(&mut budget()).map_err(error)?;
     let bytes = schema::encode(&descriptor, &registry, &mut budget()).map_err(error)?;
+    let mut measured = budget();
+    schema::decode(&bytes, &identity, &registry, &mut measured).map_err(error)?;
+    let mut below = Budget::new(Limits {
+        work: measured.usage().work - 1,
+        ..budget().limits()
+    });
+    assert!(schema::decode(&bytes, &identity, &registry, &mut below).is_err());
+    assert_eq!(below.poll(), Err(StopReason::WorkLimit));
     for bad in [
         SchemaRef {
             package: "other".into(),
@@ -262,6 +270,28 @@ fn descriptor_boundaries_reject_excess_depth_schema_forgery_and_resource_stops()
     assert_eq!(
         schema::decode(&bytes, &identity, &registry, &mut large()).map_err(error)?,
         deep
+    );
+    let mut raw = nepl3_wire::decode(&bytes, &mut large()).map_err(error)?;
+    let NdfValue::Record(record) = &mut raw else {
+        return Err("descriptor".into());
+    };
+    let NdfValue::List(operations) = &mut record.fields[3] else {
+        return Err("operations".into());
+    };
+    let NdfValue::Record(operation) = &mut operations[0] else {
+        return Err("operation".into());
+    };
+    let inner = core::mem::replace(&mut operation.fields[1], NdfValue::Unit);
+    operation.fields[1] = NdfValue::Variant(Variant {
+        schema: operation.schema.clone(),
+        type_name: "TypeDescriptor".into(),
+        variant: "List".into(),
+        fields: vec![inner],
+    });
+    let forged = nepl3_wire::encode(&raw, &mut large()).map_err(error)?;
+    assert_eq!(
+        schema::decode(&forged, &identity, &registry, &mut large()),
+        Err(WireError::Schema(SchemaError::DescriptorDepth))
     );
     deep.operations[0].input = TypeDescriptor::List(Box::new(deep.operations[0].input.clone()));
     assert_eq!(
