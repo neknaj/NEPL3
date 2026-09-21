@@ -32,6 +32,22 @@ fn host_context_identity_tracks_authorized_content_and_ignores_transport_order()
         context_digest(&reordered, configuration, &registry, &mut budget()).map_err(error)?,
         original
     );
+    let mut graph = nepl3_core::operation::lifetime::RequestLifetimes::default();
+    graph
+        .begin_call(&call, original, None, &mut budget())
+        .map_err(error)?;
+    reordered.input = call.input.clone();
+    let reordered_context =
+        context_digest(&reordered, configuration, &registry, &mut budget()).map_err(error)?;
+    assert_eq!(
+        graph.begin_call(
+            &reordered,
+            reordered_context,
+            Some(call.request_id),
+            &mut budget()
+        ),
+        Err(nepl3_core::operation::lifetime::LifetimeError::CyclicOperation)
+    );
     for kind in ["environment", "source", "resource", "configuration"] {
         let mut changed = call.clone();
         let mut config = configuration;
