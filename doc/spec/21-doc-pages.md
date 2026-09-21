@@ -358,8 +358,11 @@ Docへのsemantic fragmentには、意味上のlabelの存在に加え、その�
 
 未移行Markdown等は、呼出し側が実bytesを明示したPageFileとして扱える。このfileは
 parse・実行しない。Relativeのfragmentなし参照のみを許し、FileFragmentの拒否と
-Page targetがDoc専用である規則を維持する。MarkdownをHTML routeへ置き換えたり、
-架空のDocや見出しslugを補ったりしない。各Docのsource namespaceは一意なpage IDで
+Page targetがDoc専用である規則を維持する。原文Markdownのbyte列をHTMLとして配布したり、
+架空のDocや見出しslugを補ったりしない。
+16章の混在site hostが明示的に生成したHTMLをPageFileへ渡す場合は、原文と生成物の
+digestおよびrenderer/contextを別に記録する。coreはHTMLも受動的な実byte列として扱う。
+各Docのsource namespaceは一意なpage IDで
 分け、同じ集合のcodec admissionで異なる内容を同じsnapshotとして受理しない。
 
 返すidentityは既存のPageSet identityであり、原Doc・登録path・受動fileの実bytesに

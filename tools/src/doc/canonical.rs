@@ -5,6 +5,7 @@ use serde::Deserialize;
 use std::{collections::BTreeSet, fs, io::Read, path::Path};
 
 mod projection;
+pub(crate) mod references;
 #[cfg(test)]
 mod tests;
 
@@ -295,9 +296,20 @@ pub(crate) fn generate_html(
     root: &Path,
     manifest: &str,
 ) -> Result<super::export::pages::GeneratedPages> {
+    generate_html_with_projections(root, manifest, &[])
+}
+
+/// A composing host may replace explicitly registered passive sources with
+/// already rendered projections. Standalone export continues to deliver sources.
+pub(crate) fn generate_html_with_projections(
+    root: &Path,
+    manifest: &str,
+    projections: &[references::Projection],
+) -> Result<super::export::pages::GeneratedPages> {
     let registry = load(root, manifest)?;
     let mut output_budget = registry.html_output_limits.budget();
-    let resources = reference_inputs(root, registry.files)?;
+    let mut resources = reference_inputs(root, registry.files)?;
+    references::apply(&mut resources, projections)?;
     let mut inputs = Vec::new();
     let mut total = 0u64;
     for page in registry.pages {
@@ -317,12 +329,13 @@ pub(crate) fn generate_html(
             source,
         ));
     }
-    let generated = super::export::pages::generate_with_resources(
+    let mut generated = super::export::pages::generate_with_resources(
         &super::source::compiled()?,
         &inputs,
         &resources,
         super::export::pages::resources::PhaseLimits::default(),
         &mut output_budget,
     )?;
+    references::record(&mut generated, projections)?;
     Ok(generated)
 }

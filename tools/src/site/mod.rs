@@ -285,8 +285,21 @@ pub fn build(root: &Path, config: &str, output: &Path) -> Result<()> {
     {
         crate::command(root, "git", &["ls-files", "--error-unmatch", "--", input])?;
     }
-    let mut generated = canonical::generate_html(root, "doc/canonical.json")?;
-    for (path, bytes) in specs::generate(root, &registry, &config.base_path, &commit)? {
+    let mut markdown = specs::generate(root, &registry, &config.base_path, &commit)?;
+    let references =
+        specs::reference_projections(root, &registry, &markdown, &config.base_path, &commit)?;
+    let mut generated =
+        canonical::generate_html_with_projections(root, "doc/canonical.json", &references)?;
+    for reference in &references {
+        // The PageSet has delivered this exact generated file. Do not regenerate
+        // or overwrite its route during site composition.
+        if markdown.remove(&reference.route).as_deref()
+            != generated.files.get(&reference.route).map(Vec::as_slice)
+        {
+            return Err("reference projection payload mismatch".into());
+        }
+    }
+    for (path, bytes) in markdown {
         insert(&mut generated.files, &path, bytes)?;
     }
     for (path, bytes) in examples::generate(root, &config.base_path, &commit)? {

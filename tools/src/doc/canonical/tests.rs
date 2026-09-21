@@ -9,6 +9,63 @@ fn registry() -> serde_json::Value {
 }
 
 #[test]
+fn prepared_reference_keeps_source_and_output_identities_separate() -> Result<()> {
+    let fixture = Fixture::new()?;
+    let mut manifest = registry();
+    manifest["files"] = json!([{"id":"guide","source":"doc/guide.md","route":"sources/guide.md"}]);
+    fixture.json("doc/canonical.json", &manifest)?;
+    fixture.write("doc/sample.nepld", r#"article ja "Title" body cons paragraph cons sentence cons link relative "guide.md" none text "Guide" nil nil nil"#)?;
+    fixture.write("doc/guide.md", "# Guide\n")?;
+    let mut projections = [references::Projection {
+        source: "doc/guide.md".into(),
+        source_sha256: references::hash(b"# Guide\n"),
+        route: "docs/guide.html".into(),
+        renderer: "fixture-renderer/1".into(),
+        context: "explicit test context".into(),
+        bytes: b"<!doctype html><title>Guide</title><h1>Guide</h1>".to_vec(),
+    }];
+    let output =
+        generate_html_with_projections(fixture.root(), "doc/canonical.json", &projections)?;
+    assert_eq!(output.files["docs/guide.html"], projections[0].bytes);
+    assert!(!output.files.contains_key("sources/guide.md"));
+    assert!(
+        std::str::from_utf8(&output.files["docs/sample.html"])?.contains("href=\"guide.html\"")
+    );
+    let receipt: serde_json::Value = serde_json::from_str(&output.manifest)?;
+    let resource = &receipt["registered_files"][0];
+    assert_eq!(resource["source_sha256"], projections[0].source_sha256);
+    assert_eq!(resource["sha256"], references::hash(&projections[0].bytes));
+    assert_ne!(resource["source_sha256"], resource["sha256"]);
+    assert_eq!(resource["projection"]["output_sha256"], resource["sha256"]);
+    assert_eq!(resource["input"], "doc/guide.md");
+    fixture.write("doc/sample.nepld", r#"article ja "Title" body cons paragraph cons sentence cons link relative "guide.md" some "guide" text "Guide" nil nil nil"#)?;
+    assert!(
+        generate_html_with_projections(fixture.root(), "doc/canonical.json", &projections).is_err()
+    );
+    fixture.write("doc/sample.nepld", r#"article ja "Title" body cons paragraph cons sentence cons link relative "guide.md" none text "Guide" nil nil nil"#)?;
+    // Normal standalone export still delivers the original bytes, not an HTML
+    // projection with implicit site dependencies.
+    assert_eq!(
+        generate_html(fixture.root(), "doc/canonical.json")?.files["sources/guide.md"],
+        b"# Guide\n"
+    );
+    projections[0].route = "docs/sample.html".into();
+    assert!(
+        generate_html_with_projections(fixture.root(), "doc/canonical.json", &projections).is_err()
+    );
+    projections[0].route = "docs/guide.html".into();
+    fixture.write("doc/guide.md", "# Changed\n")?;
+    assert!(
+        generate_html_with_projections(fixture.root(), "doc/canonical.json", &projections).is_err()
+    );
+    projections[0].source = "doc/unregistered.md".into();
+    assert!(
+        generate_html_with_projections(fixture.root(), "doc/canonical.json", &projections).is_err()
+    );
+    Ok(())
+}
+
+#[test]
 fn explicit_markdown_reference_preserves_bytes_and_changes_context() -> Result<()> {
     let fixture = Fixture::new()?;
     let mut manifest = registry();
