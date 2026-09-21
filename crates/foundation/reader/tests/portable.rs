@@ -10,6 +10,106 @@ use nepl3_reader::{model::*, plan::*, portable::*, runtime::ReaderSession};
 use nepl3_wire::{environment::environment_digest, foundation::FoundationCodec};
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 #[test]
+fn transform_request_requires_mapping_for_cross_source_view_children() -> TestResult {
+    use nepl3_core::{
+        origin::{Mapping, MappingKind},
+        value::KindRef,
+        view::{ViewBundle, ViewElement, ViewField, ViewRef},
+    };
+    use nepl3_reader::portable::transform::request as exchange;
+    macro_rules! checked {
+        ($v:expr) => {
+            $v.map_err(|e| format!("{e:?}"))?
+        };
+    }
+    let (schema, registry, mut store, request) = fixture()?;
+    let mut b = budget();
+    let source_span = checked!(store.resolve(&request.snapshot).ok_or("source")?.span(0, 1));
+    let generated = checked!(SourceSnapshot::new(
+        SourceId("mapped".into()),
+        0,
+        "memory:mapped".into(),
+        b"b".to_vec(),
+        &mut b
+    ));
+    let target_span = checked!(generated.span(0, 1));
+    checked!(store.insert(generated));
+    let kind = KindRef {
+        schema: schema.clone(),
+        local_kind: checked!(registry.kind_id(&schema, "ReadRequest")),
+    };
+    let view = ViewBundle {
+        elements: vec![
+            ViewElement {
+                kind: kind.clone(),
+                span: source_span.clone(),
+                fields: vec![ViewField {
+                    name: "child".into(),
+                    children: vec![ViewRef(1)],
+                }],
+                roles: vec![],
+                relations: vec![],
+            },
+            ViewElement {
+                kind,
+                span: target_span.clone(),
+                fields: vec![],
+                roles: vec![],
+                relations: vec![],
+            },
+        ],
+        roots: vec![ViewRef(0)],
+    };
+    let mappings = [Mapping {
+        source: source_span.clone(),
+        target: target_span,
+        kind: MappingKind::Transformed,
+    }];
+    let request = TransformRequest {
+        value: NdfValue::Unit,
+        span: source_span,
+        view,
+        context: request.context,
+    };
+    let mut admission = SourceAdmission::default();
+    let mut codec = checked!(FoundationCodec::new(&registry, &store, &mut admission));
+    let encoded = checked!(exchange::to_value(
+        &request, &schema, &mut codec, &store, &mappings, &registry, &mut b
+    ));
+    let bytes = checked!(nepl3_wire::encode(&encoded, &mut b));
+    let encoded = checked!(nepl3_wire::decode(&bytes, &mut b));
+    let restored = checked!(exchange::from_value(
+        &encoded, &schema, &mut codec, &store, &mappings, &registry, &mut b
+    ));
+    assert_eq!(restored, request);
+    assert!(
+        exchange::to_value(
+            &request,
+            &schema,
+            &mut codec,
+            &store,
+            &[],
+            &registry,
+            &mut b
+        )
+        .is_err()
+    );
+    assert!(
+        exchange::from_value(
+            &encoded,
+            &schema,
+            &mut codec,
+            &store,
+            &[],
+            &registry,
+            &mut b
+        )
+        .is_err()
+    );
+    Ok(())
+}
+
+#[test]
 fn transform_request_resolves_only_dispatch_sources_and_checks_views() -> TestResult {
     use nepl3_core::view::{ViewBundle, ViewRef};
     use nepl3_reader::portable::transform::request as exchange;
