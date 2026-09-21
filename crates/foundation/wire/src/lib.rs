@@ -13,6 +13,7 @@ pub mod frame;
 pub mod operation;
 pub mod origin;
 pub mod report;
+pub mod schema;
 pub mod source;
 pub mod syntax;
 pub mod view;

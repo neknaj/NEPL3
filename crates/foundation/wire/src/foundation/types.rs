@@ -11,7 +11,7 @@ use nepl3_core::{
     value::{NdfValue, SchemaRef},
 };
 
-pub(super) fn decode(
+pub(crate) fn decode(
     mut value: &NdfValue,
     schema: &SchemaRef,
     budget: &mut Budget,
@@ -99,7 +99,7 @@ pub(super) fn decode(
     Ok(output)
 }
 
-pub(super) fn encode(
+pub(crate) fn encode(
     mut value: &TypeDescriptor,
     schema: &SchemaRef,
     budget: &mut Budget,
