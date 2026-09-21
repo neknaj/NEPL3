@@ -13,7 +13,7 @@ Docで例や解説を書く際は、[文書の執筆指針](authoring.md)のsent
 | したいこと | 最初に読む資料 | 確認できること |
 | --- | --- | --- |
 | NEPL3を理解する | [README](../README.md)、[共通契約](spec/00-contract.md)、[アーキテクチャ](spec/01-architecture.md) | 多階層の言語埋め込みと、基盤・各言語の所有境界 |
-| 実際に試す・小さな言語を追加する | [外部Hello言語](../conformance/extensions/hello/README.md)、[公開拡張契約](spec/22-external-extensions.md) | 公開APIだけで独立言語を登録・解析し、入力を変えて結果を確認する |
+| 実在する小さな言語を試す | [外部Hello言語](../conformance/extensions/hello/README.md)、[公開拡張契約](spec/22-external-extensions.md) | consumerを変更せず実行し、公開API・構文・位置・診断の検査内容を確認する。任意入力の表示exampleは未提供 |
 | 構文・交換契約を調べる | [Foundation](spec/02-foundation.md)、[reader](spec/03-reader.md)、[Grammar](spec/04-grammar.md)、[交換](spec/09-portability.md)、[統合](spec/10-integration.md) | 入出力・shape・source・失敗条件。schema正本は下表 |
 | 文書・数式を扱う | [Doc](spec/05-document.md)、[Math](spec/06-math.md)、[Sentence/annotation](spec/23-sentence-annotation.md)、[執筆指針](authoring.md) | 意味モデルと文章表記。Sentenceの契約とconsumer移行状態は区別する |
 | HTML・公開の境界を調べる | [数式表示](spec/17-math-html.md)、[markup](spec/19-html-fragment.md)、[Doc HTML](spec/20-doc-html.md)、[ページ参照](spec/21-doc-pages.md)、[site](spec/15-site.md) | 各層の独立した保証。HTMLは正式文書のprojection |

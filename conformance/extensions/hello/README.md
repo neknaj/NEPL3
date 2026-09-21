@@ -18,7 +18,7 @@ checks the independent workspace and dependency identities, and runs format,
 Clippy and the three Rust tests. Logs and source/consumer hashes are retained,
 including command failures and partial timeout output.
 
-## Change an input and inspect the result
+## What the existing example verifies
 
 Start with `unicode_source_and_external_kind_survive_native_and_ndf` in
 [`src/tests.rs`](src/tests.rs). Its `run("hello 世界", true, false)` call parses a
@@ -26,13 +26,11 @@ complete input. The expected root is `org.example.hello::Greeting` with one
 recipient field; the final token contains `世界`, spans UTF-8 bytes 6..12, and
 retains a Direct Origin. No domain-specific evaluator runs.
 
-To try another recipient, change that call to `run("hello Rust", true, false)`.
-In the same test, change the expected cursor to 10, token payload to `Rust`,
-and token span to `(6, 10)`. Keep the kind, field-count, source revision and
-Origin assertions. Run the command above with a **new output directory**, for
-example `dist/external-extension-rust`. This checks your changed input through
-the real public parser and NDF exchange rather than replacing the parser with
-a mock. Restore the example after experimenting.
+Run the commands above without editing the consumer or its assertions.
+This example currently exposes its behavior through regression tests. An
+interactive example that accepts arbitrary input and displays the resulting
+tree and diagnostics is not provided yet. Editing test expectations is not
+the usage interface.
 
 The other tests distinguish an unknown head (`goodbye 世界`, recovery with an
 `UnparsedInput` diagnostic), unfinished input (`hello `, NeedMore) and explicit
