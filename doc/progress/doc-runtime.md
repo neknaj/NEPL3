@@ -191,3 +191,14 @@ Work計測からSourceMapのsnapshot検索を調べ、直前の検索位置に�
 各比較前の課金を維持する。順序付きedgeを反復する257頂点のstarでは、修正前の
 WorkLimitに対し修正後は435,257 Workで検査できた。第05章は通常予算で停止しており、
 この小さい回帰試験を同原稿の性能課題の解消とは扱わない。
+
+続いてreaderのprovider境界で、新規mappingがなく全包含関係を同一snapshot内で
+直接確認できる場合に限り、private checkpointで検査済みのmapping集合の再検査を省いた。
+viewのschema・参照・cycle、factのmetadataとsource位置の検査は引き続き実行する。
+間接的な包含関係または新規mappingがある場合は従来通り集合全体を検査する。
+不正KindRef、空Capture名、未登録Presentation/Relation schema、追加mapによるcycle、
+停止予算を負例として検査した。readerのnative試験とWASI runtime試験、
+追加負例を含むlibrary試験は成功し、独立レビューの指摘を修正した。
+
+同じ第05章の通常HTML出力はcursor 54,300まで進んだが、Work上限100,000,000で
+停止した。予算を変更しておらず、第05章の正本切替および性能課題の解消は未達である。

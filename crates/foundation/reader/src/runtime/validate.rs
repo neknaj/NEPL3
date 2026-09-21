@@ -73,6 +73,8 @@ pub(crate) fn request(
     Ok(())
 }
 mod provider;
+#[cfg(test)]
+mod tests;
 pub(super) use provider::apply_provider;
 pub(crate) use provider::{ProviderBoundary, ProviderReplyRef, check_provider};
 
@@ -195,14 +197,23 @@ fn artifacts(
         // private checkpoint contains already accepted mappings; neither a
         // provider reply nor an echoed continuation can mutate that collector.
         // Source declarations, value/state, report and outcome checks remain
-        // in check_provider. Nonempty artifacts still validate the full union,
-        // including cycles introduced across old and new mappings.
+        // in check_provider. New mappings or indirect geometry validate the
+        // full union, including cycles across old and new mappings.
         return Ok(());
     }
-    let mapped =
-        SourceMap::validate_mapping_parts(&machine.current.source_maps, maps, sources, budget)?;
-    view.validate_with_maps(sources, machine.registry, &mapped, budget)?;
     let consumed = machine.snapshot.span_with_budget(start, end, budget)?;
+    // An accepted checkpoint cannot be mutated by a provider reply. If no
+    // mapping is added and every containment obligation is direct, old maps
+    // cannot affect this validation. Still validate all view/fact structure,
+    // schema references and source geometry below.
+    let direct = maps.is_empty() && direct_artifact_geometry(&consumed, view, facts, budget)?;
+    let prior = if direct {
+        &[][..]
+    } else {
+        &machine.current.source_maps
+    };
+    let mapped = SourceMap::validate_mapping_parts(prior, maps, sources, budget)?;
+    view.validate_with_maps(sources, machine.registry, &mapped, budget)?;
     for element in &view.elements {
         if !mapped.contains(&consumed, &element.span, budget)? {
             return Err(ReaderError::ProviderContract);
@@ -241,6 +252,56 @@ fn artifacts(
         }
     }
     Ok(())
+}
+fn direct_artifact_geometry(
+    consumed: &nepl3_core::source::Span,
+    view: &ViewBundle,
+    facts: &[ReaderFact],
+    budget: &mut Budget,
+) -> Result<bool, ReaderError> {
+    fn contains(
+        outer: &nepl3_core::source::Span,
+        inner: &nepl3_core::source::Span,
+        budget: &mut Budget,
+    ) -> Result<bool, ReaderError> {
+        budget.charge(
+            Resource::Work,
+            outer
+                .snapshot_ref()
+                .source
+                .0
+                .len()
+                .min(inner.snapshot_ref().source.0.len()) as u64
+                + 43,
+        )?;
+        Ok::<_, ReaderError>(outer.contains(inner))
+    }
+    for element in &view.elements {
+        if !contains(consumed, &element.span, budget)? {
+            return Ok(false);
+        }
+        for field in &element.fields {
+            budget.charge(Resource::Work, 1)?;
+            for child in &field.children {
+                let Ok(child) = view.element(*child) else {
+                    // The regular validator owns the typed reference error.
+                    return Ok(false);
+                };
+                if !contains(&element.span, &child.span, budget)? {
+                    return Ok(false);
+                }
+            }
+        }
+    }
+    for fact in facts {
+        budget.charge(Resource::Work, 1)?;
+        if let ReaderFact::Capture { span, .. } = fact
+            && !contains(consumed, span, budget)?
+        {
+            return Ok(false);
+        }
+    }
+    Ok(true)
 }
 fn append_view(
     target: &mut ViewBundle,
