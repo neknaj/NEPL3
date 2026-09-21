@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/07&#45;circuit.nepld; renderer nepl3-tools.markdown-annotated/3; source SHA-256 cf169539cb22eb1a7b21fc5c3f15d060975453e7fd72534126f894548c4fbe30; alias input SHA-256 7c23dac644010c8dfb51fae2b60e7ac78510e84492dd442386ff3679536eb53a; document digest 60aae4046a1cbf0e395a06db8ee5424939ae9a5d95e0a111cabe36954692e35d. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/07&#45;circuit.nepld; renderer nepl3-tools.markdown-annotated/3; source SHA-256 cf169539cb22eb1a7b21fc5c3f15d060975453e7fd72534126f894548c4fbe30; alias input SHA-256 7c23dac644010c8dfb51fae2b60e7ac78510e84492dd442386ff3679536eb53a; document digest f0638bf2c1bdcec99f99bc466b0daca847f0c693b050a116ae5245f752b2d5f2. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="07-circuit言語"></a>
 

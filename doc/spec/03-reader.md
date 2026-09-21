@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/03&#45;reader.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page reader; source SHA-256 d7f17ec78482452e849a84a8345eddf64b6cf104cad3a4f6aed2ed7a8f38566a; alias input SHA-256 7b0de26b733079af4d75d3bf3190b6fcfd22d378a02de4b108f9c6d59e72ac4b; document digest b9a950c9a46d9f160cbd5d07eb7ff3e9fc7ae2bf3b9084413e5c0341a4d1a9a0; page input SHA-256 4464950c180b893dc07956bfb43ac91e58f046a85c44b0e48ac6af472689ffea. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/03&#45;reader.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page reader; source SHA-256 d7f17ec78482452e849a84a8345eddf64b6cf104cad3a4f6aed2ed7a8f38566a; alias input SHA-256 7b0de26b733079af4d75d3bf3190b6fcfd22d378a02de4b108f9c6d59e72ac4b; document digest f7feb0cbea714ee738f817cae322eb1f166b5db34a607b7340e2ba97d37fbba9; page input SHA-256 4464950c180b893dc07956bfb43ac91e58f046a85c44b0e48ac6af472689ffea. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="03-reader--tokenizer"></a>
 

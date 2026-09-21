@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/02&#45;foundation.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page foundation; source SHA-256 59a66ea6836009cca875302e52ecf79494559a253213a6bea76f8a5565fc54a4; alias input SHA-256 24aa727bef177b04daaacc33c54f71acc51df2491d1d8368e0ca132395d662f4; document digest 4fedcebdd7cd13b34f19ab5f2caf37a3d1a926868cae99b5712972b98989eeca; page input SHA-256 90250b104fe9abbe8348b34479a65b3b09f52c853e3dc48129a8045c1adbb9f5. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/02&#45;foundation.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page foundation; source SHA-256 59a66ea6836009cca875302e52ecf79494559a253213a6bea76f8a5565fc54a4; alias input SHA-256 24aa727bef177b04daaacc33c54f71acc51df2491d1d8368e0ca132395d662f4; document digest 1c0e158c409dc462347be14b6634e8ea9910cf7f1752b70b6fa7fd06d64e8326; page input SHA-256 90250b104fe9abbe8348b34479a65b3b09f52c853e3dc48129a8045c1adbb9f5. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="02-共通データ契約"></a>
 

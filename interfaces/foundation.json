@@ -1915,6 +1915,58 @@
         ]
       ]
     },
+    "ProviderFrame": {
+      "constraints": [],
+      "variant": {
+        "Cancel": [
+          [
+            "requestId",
+            "U64"
+          ]
+        ],
+        "Close": [],
+        "Invoke": [
+          [
+            "call",
+            {
+              "named": {
+                "name": "Invoke",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Reply": [
+          [
+            "requestId",
+            "U64"
+          ],
+          [
+            "reply",
+            {
+              "named": {
+                "name": "OperationReply",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ],
+        "Resume": [
+          [
+            "resume",
+            {
+              "named": {
+                "name": "Resume",
+                "package": "nepl3.foundation",
+                "revision": 1
+              }
+            }
+          ]
+        ]
+      }
+    },
     "ReferenceResolution": {
       "constraints": [],
       "variant": {

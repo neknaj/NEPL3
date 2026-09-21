@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page architecture; source SHA-256 e40e874325fb78cc5c7e5d545e9e42a159a81d2f630edd246641d59e84ae5ee4; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 7dd9239e9a6c041123e3c2d6ffb792ad73ed84f9effa5b85022fdf77b14df972; page input SHA-256 9ab5fc4c8f965446b505628243926c10d8b1e4eed619669c888a4c1f165a4eba. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page architecture; source SHA-256 e40e874325fb78cc5c7e5d545e9e42a159a81d2f630edd246641d59e84ae5ee4; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 9dfc21448887c63fa5a95ada604de992b36924dcd3b25c5edfe77b7aa953d897; page input SHA-256 9ab5fc4c8f965446b505628243926c10d8b1e4eed619669c888a4c1f165a4eba. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="01-repositorycrate依存方向"></a>
 

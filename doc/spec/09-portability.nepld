@@ -207,6 +207,10 @@ body
       cons "[失敗診断/しっぱいしんだん]はReply、hostの[運用/うんよう]logはstderr。" nil
     cons paragraph
       cons "frame kindはInvoke / Resume / Reply / Cancel / Close。"
+      cons "NDF payloadはProviderFrame variantとし、Invokeはcall、Resumeはresume、ReplyはrequestIdとreply、CancelはrequestId、Closeは[空/から]のfield[列/れつ]を[持/も]つ。"
+      cons "InvokeとResumeのrequestIdは[内包/ないほう]するrecordに[保持/ほじ]する。"
+      cons "Cancelは[指定要求/していようきゅう]の[停止/ていし]を[要求/ようきゅう]し、Closeは[接続全体/せつぞくぜんたい]の[終了/しゅうりょう]を[要求/ようきゅう]する。"
+      cons "hostはCloseの[受信後/じゅしんご]に[新規要求/しんきようきゅう]の[受付/うけつけ]を[終了/しゅうりょう]し、[残存要求/ざんそんようきゅう]を[停止/ていし]して[接続/せつぞく]を[閉/と]じる。"
       cons "[複数要求/ふくすうようきゅう]をrequestIdで[識別/しきべつ]する。"
       cons "requestIdの[重複/じゅうふく]、[知/し]らないcontinuation、schema mismatchをprotocol errorにする。"
       cons "[再試行/さいしこう]は[純粋/じゅんすい]なoperationに[限/かぎ]り、[要求全体/ようきゅうぜんたい]が[同/おな]じ[場合/ばあい]に[行/おこな]う。" nil

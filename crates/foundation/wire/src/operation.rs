@@ -1,9 +1,11 @@
 //! Typed Invoke/Continuation boundaries using the registered foundation schema.
 //! These codecs check transport structure and supplied content identities.
 //! Operation dispatch, authorization and continuation registration belong to hosts.
+mod frame;
 mod reply;
 use crate::{WireError, boundary::typed::Codec, boundary::*, source::*, view::*};
 use alloc::vec::Vec;
+pub use frame::{decode_frame, encode_frame};
 use nepl3_core::{
     budget::{Budget, Limits},
     operation::{Continuation, Invoke},

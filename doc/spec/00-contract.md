@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/00&#45;contract.nepld; renderer nepl3-tools.markdown-annotated/3; source SHA-256 c5d05dad1dfd9941c138ca3ec4ec778f6734eb6dc43f36e3433582df8a9a7236; alias input SHA-256 e272bc38006f1fc97f70928aa2963fe0245fa4575ddffadcc8d460b1f24a42cc; document digest a7c334752b6db743d90b56b3366fee2acc1a94a0ed6a7cc1e1a05e71e50dda38. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/00&#45;contract.nepld; renderer nepl3-tools.markdown-annotated/3; source SHA-256 c5d05dad1dfd9941c138ca3ec4ec778f6734eb6dc43f36e3433582df8a9a7236; alias input SHA-256 e272bc38006f1fc97f70928aa2963fe0245fa4575ddffadcc8d460b1f24a42cc; document digest f3e63a3b98eb8e57f8b73a7d3e67ebe22b0a258be397a452a28b4ac7e08b0178. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="00-対象と設計上の決定"></a>
 

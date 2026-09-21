@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/06&#45;math.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page math; source SHA-256 4936bc730bc7fb430049935bda78e2ea0668f5ffdb84a4583ccd880b35243e94; alias input SHA-256 cae137023719df65f4fdf356ff25c6fac5c3aaa15c90b6b91c82b313d5078aaf; document digest 4cb58c9c38d14cffa3673bdb9c56730fb0f9bb8d629dcec09b1ff27e49f5d360; page input SHA-256 25e6899ca240ba0f60a18317301340d426e0277345efe2ba02ba0f70a3b714fd. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/06&#45;math.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page math; source SHA-256 4936bc730bc7fb430049935bda78e2ea0668f5ffdb84a4583ccd880b35243e94; alias input SHA-256 cae137023719df65f4fdf356ff25c6fac5c3aaa15c90b6b91c82b313d5078aaf; document digest 3534bf120830131fb0ff62d783bdb24085f257ffbe215a5579949b152e56a96b; page input SHA-256 25e6899ca240ba0f60a18317301340d426e0277345efe2ba02ba0f70a3b714fd. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="06-math言語"></a>
 
