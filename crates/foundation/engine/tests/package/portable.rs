@@ -14,6 +14,42 @@ mod facts;
 #[path = "portable/profile.rs"]
 mod profile_exchange;
 
+#[test]
+fn complete_package_exchange_preserves_declarations_and_identity() -> TestResult {
+    let (package, registry) = fixture()?;
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec = FoundationCodec::new(&registry, &sources, &mut admission).map_err(err)?;
+    let checked = package.check(&registry, &mut budget()).map_err(err)?;
+    let value = portable::package::to_value(&checked, &mut codec, &mut budget()).map_err(err)?;
+    let bytes = nepl3_wire::encode(&value, &mut budget()).map_err(err)?;
+    let decoded = nepl3_wire::decode(&bytes, &mut budget()).map_err(err)?;
+    let restored = portable::package::from_value(&decoded, &registry, &mut codec, &mut budget())
+        .map_err(err)?;
+    assert_eq!(restored, package);
+    assert_eq!(
+        restored
+            .check(&registry, &mut budget())
+            .map_err(err)?
+            .semantic_identity(&mut budget())
+            .map_err(err)?,
+        checked.semantic_identity(&mut budget()).map_err(err)?
+    );
+    let NdfValue::Record(record) = &value else {
+        return Err("package record".into());
+    };
+    assert_eq!(record.kind, "LanguagePackage");
+    assert_eq!(record.fields.len(), 14);
+    assert_eq!(record.fields[2], NdfValue::Text(package.root.clone()));
+    let mut invalid = value.clone();
+    let NdfValue::Record(record) = &mut invalid else {
+        return Err("package record".into());
+    };
+    record.fields[2] = NdfValue::Text("missing category".into());
+    assert!(portable::package::from_value(&invalid, &registry, &mut codec, &mut budget()).is_err());
+    Ok(())
+}
+
 fn profile(package: &LanguagePackage, registry: &SchemaRegistry) -> Result<ParseProfile, String> {
     let identity = package
         .check(registry, &mut budget())

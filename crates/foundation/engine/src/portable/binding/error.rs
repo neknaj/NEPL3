@@ -63,6 +63,7 @@ impl<'a> ErrorSchemas<'a> {
     }
     fn value_schemas(&self) -> Schemas<'_> {
         Schemas {
+            reader: self.reader,
             engine: self.engine,
             foundation: self.foundation,
         }
