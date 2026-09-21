@@ -109,6 +109,8 @@ body
         cons "cache[混在/こんざい]、[欠/か]けた[例/れい]、digest[不一致/ふいっち]、[版違/ばんちが]いを[検出/けんしゅつ]し、[同一入力/どういつにゅうりょく]buildの[決定性/けっていせい]を[検査/けんさ]する。" nil nil
       cons item none body cons paragraph
         cons "S03: [配信予定/はいしんよてい]artifactを[実/じつ]browserで[開/ひら]き、4[言語/げんご]の[代表操作/だいひょうそうさ]、[入出力/にゅうしゅつりょく]、[診断選択/しんだんせんたく]、editor query、[停止/ていし]を[実行/じっこう]する。"
+        cons "[共通基盤/きょうつうきばん]やUIの[言語名分岐/げんごめいぶんき]を[変更/へんこう]せず[最小/さいしょう]の[独立/どくりつ]LanguagePackageを[登録/とうろく]し、parse/check/printと[別/べつ]packageのimport/composition、Source/Origin・[診断/しんだん]を[確認/かくにん]する。"
+        cons "sentenceとannotationを[別言語/べつげんご]として[組/く]み[込/こ]み、[注釈/ちゅうしゃく]の[対象関係/たいしょうかんけい]とbinding・domain[意味/いみ]の[保持/ほじ]を[検査/けんさ]する。"
         cons "[大/おお]きなsourceの[応答性/おうとうせい]とkeyboard/focusも[確認/かくにん]する。" nil nil
       cons item none body cons paragraph
         cons "S04: docs[本文/ほんぶん]をJSなしで[読/よ]み、4[言語/げんご]tutorial/reference/[例/れい]から[同/おな]じsourceをPlaygroundで[開/ひら]く。"

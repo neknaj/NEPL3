@@ -2,7 +2,7 @@
 
 ## 1. 責務と実装範囲
 
-4言語の操作をブラウザWasmから利用するPlaygroundを最終成果物に含める。専用の言語処理server、localhost LSP、WebSocketを利用条件にしない。T15はWorker/Wasm実行境界を所有し、T17は純粋UI core、T18はWeb editorと操作画面を所有する。現在は計画であり、動く画面・Wasm・完成したUI schemaを提供した状態ではない。
+NEPL3の共通構文基盤と言語compositionをブラウザWasmから利用するPlaygroundを最終成果物に含める。既存4言語はreference profileとして扱い、特定guest languageの専用IDEや閉じた言語一覧を共通UIのモデルにしない。専用の言語処理server、localhost LSP、WebSocketを利用条件にしない。T15はWorker/Wasm実行境界を所有し、T17は純粋UI core、T18はWeb editorと操作画面を所有する。現在は計画であり、動く画面・Wasm・完成したUI schemaを提供した状態ではない。
 
 `nepl3-ui-core` は `no_std + alloc` とし、Model、Msg、Cmd、SubscriptionSet、ViewModelと純粋な状態遷移を所有する。依存は共通coreの値・source・操作データ契約に限定する。suite、各言語実装、DOM、Web API、LSP transportを呼ばない。共通操作型を閉じるR006、解決済みProfileを型として定めるR009を先に解消し、UI型の穴を万能辞書やRust pointerで埋めない。
 
@@ -36,7 +36,13 @@ IME中にpreview更新でeditorを再生成したり、無条件の全文置換�
 
 毎eventで巨大sourceやASTを複製しない。不変snapshot handle、差分、共有データを使用し、公開wireではpointerを運ばない。WidgetとModelに独立したsource正本を持たせない。
 
-## 5. 四言語の操作
+## 5. 言語compositionとreference profileの操作
+
+Playgroundでは最小の独立LanguagePackageを作成し、共通基盤やUIの言語名分岐を変更せず登録して、そのsourceをparse/check/printできることを検証する。head/arity、先行構文による後続contextの更新、外国語構文の境界、Source/Originと診断を観察できるようにする。
+
+さらに別LanguagePackageをimport/compositionし、単一source内の多階層埋め込みを共通操作経路で扱う。sentenceやannotationも独立した基礎言語として利用し、foundationやeditorの特別構文へ内蔵しない。annotationでは対象syntaxとの関係と、対象のbinding・domain意味の保持を確認する。未実装package・provider・操作は能力不足を示し、受入済みとしない。
+
+以下の4言語の既存操作要件はreference profileの受入として維持する。追加言語の登録とcompositionの受入を、これらの固定例だけで代替しない。Playground/Tutorialの共通原理と各言語固有referenceの所有は、[Pages情報設計](../decisions/pages-information-architecture.md)に従う。
 
 | 言語 | 必須操作と表示 |
 | --- | --- |
