@@ -168,6 +168,14 @@
       "aliases": "doc/migration/aliases/09-portability.json",
       "route": "docs/spec/09-portability.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/1"
+    },
+    {
+      "id": "web-ui",
+      "source": "doc/spec/14-web-ui.nepld",
+      "projection": "doc/spec/14-web-ui.md",
+      "aliases": "doc/migration/aliases/14-web-ui.json",
+      "route": "docs/spec/14-web-ui.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/1"
     }
   ],
   "files": [
@@ -190,6 +198,11 @@
       "id": "foundation-runtime-source",
       "source": "doc/progress/foundation-runtime.md",
       "route": "sources/foundation-runtime.md"
+    },
+    {
+      "id": "pages-information-architecture-source",
+      "source": "doc/decisions/pages-information-architecture.md",
+      "route": "sources/pages-information-architecture.md"
     }
   ],
   "output_limits": {
@@ -204,7 +217,7 @@
   },
   "html_output_limits": {
     "source_bytes": 10000000,
-    "work": 1200000000,
+    "work": 1300000000,
     "depth": 1000,
     "nodes": 48000000,
     "allocation_units": 2200000000,
