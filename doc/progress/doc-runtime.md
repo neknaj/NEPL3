@@ -2,6 +2,24 @@
 
 T07 は進行中。`doc/spec/05-document.md` と `design/forms.json` を最終契約とし、以下の native API ができたことを T07 全体の完了へ読み替えない。
 
+## 現在状態を確認する入口
+
+正本の一覧は `doc/canonical.json`、実装・受入の状態は `implementation-status.json`、
+到達条件は `design/tasks.json` を参照する。以下の履歴にある「未完了」「停止」は、
+その段階の結果であり、現在の残件を列挙したものではない。
+
+第05章は通常のpage予算でparse/lowerと文書集合のHTML生成が成立した。
+旧Markdownとの内容比較、旧見出しalias、17章・23章へのリンクを検査して正本移行する。
+Markdown集合のWork上限はページ追加に対応する別の実行設定であり、単体の性能保証ではない。
+source集合が増え続ける入力の計算量・実時間・実メモリの評価は未実施であり、
+通常予算内で一つの文書を処理できたことから増大入力の性能を推定しない。
+次の性能改善では、既存集合の再走査と検証scopeの寿命を調べる。
+
+Sentence consumerの所有移行、NEPL3a、旧lexical commentの全面撤去、T07/T21全体は
+未完了のままである。HTML/rustdocの高度化をこれらの本体開発の前提にしない。
+
+## 段階別の履歴
+
 ## #158を優先するSentence・注釈の回復
 
 今後の是正順序は[23章](../spec/23-sentence-annotation.md)に従う。Doc固有機能を広げる前に、
@@ -226,3 +244,17 @@ tokenごとに再構築していた費用を減らした。
 labels 8,413,256 Workに収まり、この予算を原稿の回帰試験にも適用した。
 単独HTML出力はWorkLimitではなく17章・23章への2リンクのNeedsResolutionまで進む。
 これはHTML生成・リンク解決・文書の意味比較・正本切替の完了を意味しない。
+
+第05章の正本移行では、原稿を `doc/spec/05-document.nepld` へ移し、旧見出し16件を
+aliasとして登録した。第23章は未移行Markdownの原文参照であり、Doc正本へ昇格させない。
+本文の独立比較でinline code92個、RawCode2個、15節、リンク2件の保存を確認した。
+18ページのHTML集合は通常のpage予算で生成でき、第05章のparseは87,582,341 Work、
+lowerは65,610,740 Workとなった。JavaScript無効のChromium/Firefox/WebKitで本文と
+17章HTML・23章原文へのリンクを確認した。混在siteでは23章を既生成HTMLへ接続する。
+
+Markdown集合の旧Work上限1,600,000,000では停止し、途中出力を採用しなかった。
+18ページ用に集合Workだけを1,900,000,000へ変更した別実行は1,615,489,130 Work、
+63,205,674 Nodesで完了した。Nodes上限64,000,000と各pageの通常予算は維持する。
+既存17ページの本文は不変で、集合入力digestに伴うmetadataだけが更新される。
+停止診断にはpage・段階・Usageを加え、文書集合の停止と単体解析の停止を区別する。
+この移行はT07/T21全体や未移行の残り6章の完成を意味しない。

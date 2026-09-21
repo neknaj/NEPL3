@@ -119,17 +119,19 @@ fn grouped(
                 let mut admission = SourceAdmission::default();
                 let mut codec = FoundationCodec::new(profile.registry(), &store, &mut admission)
                     .map_err(err)?;
+                let mut lower_budget = crate::doc::source::budget();
                 lower::document(
                     tree.syntax(),
                     &compiled.doc.package.schema,
                     Category::Article,
                     profile.registry(),
-                    &mut crate::doc::source::budget(),
+                    &mut lower_budget,
                     &mut codec,
                 )
-                .map_err(err)
+                .map_err(|e| format!("lower: {e:?}; usage={:?}", lower_budget.usage()))
             },
-        )?;
+        )
+        .map_err(|e| format!("canonical page {}: {e}", page.source))?;
         let registration_bytes = page.id.len() + page.projection.len() * 2;
         charge(budget, Resource::Work, registration_bytes)?;
         charge(
@@ -183,7 +185,7 @@ fn grouped(
     let refs: Vec<_> = aliases.iter().map(Vec::as_slice).collect();
     Ok(
         annotated::pages::render(&set, &compiled.doc.registry, &mut codec, budget, &refs)
-            .map_err(err)?,
+            .map_err(|e| format!("Markdown page set: {e:?}; usage={:?}", budget.usage()))?,
     )
 }
 
@@ -199,6 +201,21 @@ pub(super) fn generate(root: &Path, manifest: &str, budget: &mut Budget) -> Resu
 }
 
 pub(super) fn generate_from_registry(
+    root: &Path,
+    manifest: &str,
+    raw: Vec<u8>,
+    budget: &mut Budget,
+) -> Result<Generated> {
+    generate_batch(root, manifest, raw, budget).map_err(|e| {
+        if budget.poll().is_err() {
+            format!("canonical Markdown batch: {e}; usage={:?}", budget.usage()).into()
+        } else {
+            e
+        }
+    })
+}
+
+fn generate_batch(
     root: &Path,
     manifest: &str,
     raw: Vec<u8>,

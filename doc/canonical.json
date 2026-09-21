@@ -136,15 +136,36 @@
       "aliases": "doc/migration/aliases/02-foundation.json",
       "route": "docs/spec/02-foundation.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/1"
+    },
+    {
+      "id": "document",
+      "source": "doc/spec/05-document.nepld",
+      "projection": "doc/spec/05-document.md",
+      "aliases": "doc/migration/aliases/05-document.json",
+      "route": "docs/spec/05-document.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/1"
     }
   ],
   "files": [
-    {"id": "authoring-source", "source": "doc/authoring.md", "route": "sources/authoring.md"},
-    {"id": "doc-inventory-source", "source": "doc/doc-inventory.md", "route": "sources/doc-inventory.md"}
+    {
+      "id": "authoring-source",
+      "source": "doc/authoring.md",
+      "route": "sources/authoring.md"
+    },
+    {
+      "id": "doc-inventory-source",
+      "source": "doc/doc-inventory.md",
+      "route": "sources/doc-inventory.md"
+    },
+    {
+      "id": "sentence-annotation-source",
+      "source": "doc/spec/23-sentence-annotation.md",
+      "route": "sources/23-sentence-annotation.md"
+    }
   ],
   "output_limits": {
     "source_bytes": 10000000,
-    "work": 1600000000,
+    "work": 1900000000,
     "depth": 1000,
     "nodes": 64000000,
     "allocation_units": 4000000000,

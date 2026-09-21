@@ -1,0 +1,18 @@
+[
+  {"section": null, "name": "05-doc言語"},
+  {"section": "policy", "name": "方針"},
+  {"section": "types", "name": "1-主要な型"},
+  {"section": "arena", "name": "11-意味モデルと公開arena"},
+  {"section": "elements", "name": "12-文書入力に必要な要素"},
+  {"section": "inspection", "name": "13-文書準備の要求発見"},
+  {"section": "literal", "name": "2-sentence-literalの完全な規則"},
+  {"section": "linebreak", "name": "21-文書構造の明示改行"},
+  {"section": "equivalence", "name": "3-prefix経路との等価性"},
+  {"section": "parallel", "name": "4-parallelの単位"},
+  {"section": "labels", "name": "5-ラベルと参照"},
+  {"section": "embedding", "name": "6-埋め込み"},
+  {"section": "html", "name": "7-html-backend"},
+  {"section": "public", "name": "8-公開操作"},
+  {"section": "plaintext", "name": "81-plain_text-の実行契約"},
+  {"section": "print", "name": "82-print-の実行契約"}
+]
