@@ -81,6 +81,7 @@ def main():
                 raise RuntimeError("temporary workspace must be outside the repository")
             fixture = ROOT / "conformance/extensions/hello"
             shutil.copytree(fixture / "src", directory / "src")
+            shutil.copytree(fixture / "examples", directory / "examples")
             shutil.copyfile(fixture / "Cargo.lock", directory / "Cargo.lock")
             manifest = (fixture / "Cargo.toml").read_text(encoding="utf-8")
             manifest = external_manifest(manifest, PACKAGES)
@@ -107,6 +108,15 @@ def main():
                 raise RuntimeError("unexpected domain, app, tools, or substituted foundation dependency")
             run(cargo + ["clippy", "--locked", "--all-targets", "--", "-D", "warnings"], directory, "clippy.log")
             run(cargo + ["test", "--locked"], directory, "test.log")
+            for name, arguments in [
+                ("unicode", ["hello 世界"]),
+                ("recipient", ["hello NEPL3"]),
+                ("unknown-head", ["goodbye 世界"]),
+                ("missing-child", ["hello"]),
+                ("partial", ["--partial", "hello "]),
+            ]:
+                run(cargo + ["run", "--locked", "--example", "inspect", "--"] + arguments,
+                    directory, f"inspect-{name}.log")
         completed = True
     finally:
         record["foundation_unchanged"] = before == fingerprint()

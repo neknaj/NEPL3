@@ -4,6 +4,31 @@ This independent Cargo workspace defines `org.example.hello` with the syntax
 `hello <name>`. It imports only public core, reader, engine and wire APIs.
 No Grammar, Doc, Math, Circuit, suite, tools or private test source is imported.
 
+## Observe an input
+
+From the repository root, run:
+
+```sh
+cargo run --locked --manifest-path conformance/extensions/hello/Cargo.toml --example inspect -- "hello 世界"
+```
+
+The example prints the typed `ParseReply`: the outcome, syntax nodes and fields,
+tokens with UTF-8 byte spans, source provenance and diagnostics. For this input,
+the outcome is `Complete`, the root kind is `Greeting`, and the final token's
+payload is `世界` at bytes `6..12`. Replace the input argument with `hello NEPL3`
+to observe the recipient and its span change to `6..11`.
+
+`goodbye 世界` produces `Recovered` with an `UnparsedInput` diagnostic. `hello`
+examines a missing child at end of input. To examine an unfinished buffer, pass
+`--partial "hello "` after the Cargo `--`; the outcome is `NeedMore`.
+
+The command prints recovery and stop outcomes as data and exits successfully
+when observation completes. Argument errors and setup/parse API errors produce
+a nonzero exit status. The output uses Rust's diagnostic `Debug` representation;
+its layout is intended for inspection. The example performs parsing only.
+
+## Run the external workspace checks
+
 From the repository root, run:
 
 ```sh
@@ -16,7 +41,7 @@ The output directory must not already exist. The runner copies this consumer
 outside the repository and resolves its four path dependencies to the checked
 foundation tree. It pins the repository toolchain and this consumer's lockfile,
 checks the independent workspace and dependency identities, and runs format,
-Clippy and the three Rust tests. Logs and source/consumer hashes are retained,
+Clippy, the Rust tests and the five example inputs above. Logs and source/consumer hashes are retained,
 including command failures and partial timeout output.
 
 ## What the existing example verifies
@@ -27,11 +52,8 @@ complete input. The expected root is `org.example.hello::Greeting` with one
 recipient field; the final token contains `世界`, spans UTF-8 bytes 6..12, and
 retains a Direct Origin. No domain-specific evaluator runs.
 
-Run the commands above without editing the consumer or its assertions.
-This example currently exposes its behavior through regression tests. An
-interactive example that accepts arbitrary input and displays the resulting
-tree and diagnostics is not provided yet. Editing test expectations is not
-the usage interface.
+Run the checks without editing the consumer or its assertions. The `inspect`
+example accepts input independently of these regression expectations.
 
 The other tests distinguish an unknown head (`goodbye 世界`, recovery with an
 `UnparsedInput` diagnostic), unfinished input (`hello `, NeedMore) and explicit
@@ -39,7 +61,8 @@ cancellation (Stopped). Changing a greeting's recipient cannot introduce a new
 head: the form and its one-child shape are defined by `language()` in
 [`src/lib.rs`](src/lib.rs).
 
-That function constructs a schema and `LanguagePackage`; `run` resolves a
+That function constructs a schema and `LanguagePackage`; the shared parser in
+[`src/parse.rs`](src/parse.rs) resolves a
 `ParseProfile`, prepares explicit source/environment inputs, and calls
 `ParseSession`. The exchange uses the typed portable tree adapters and
 `FoundationCodec`. This is a small native public-API consumer, not yet a general
