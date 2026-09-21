@@ -5,7 +5,7 @@ use nepl3_core::operation::{
 };
 use nepl3_suite::suspension::{self, AwaitError};
 
-fn resume_parent(
+fn resume_parent_result(
     parent: &Invoke,
     resume: &nepl3_core::operation::Resume,
     _: &SchemaRegistry,
@@ -47,6 +47,15 @@ fn resume_parent(
     })
 }
 
+fn resume_parent(
+    parent: &Invoke,
+    resume: &nepl3_core::operation::Resume,
+    registry: &SchemaRegistry,
+    budget: &mut Budget,
+) -> Result<OperationReply, StopReason> {
+    resume_parent_result(parent, resume, registry, budget).map(OperationReply::Result)
+}
+
 fn saved(parent: &Invoke, context: Digest) -> Continuation {
     Continuation {
         provider: parent.operation.clone(),
@@ -84,6 +93,133 @@ fn stopped_await(
     let reply = invoke_parent(parent, context, registry, b)?;
     b.stop(StopReason::WorkLimit);
     Ok(reply)
+}
+
+fn await_again(
+    parent: &Invoke,
+    resume: &nepl3_core::operation::Resume,
+    _: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<OperationReply, StopReason> {
+    b.charge(Resource::Work, 7)?;
+    let mut continuation = saved(parent, resume.continuation.snapshot_digest);
+    // Distinct provider state identifies the next suspension in this fixture.
+    if let TypedValue::Record(record) = &mut continuation.state {
+        record.fields[0] = NdfValue::U64(99);
+    }
+    Ok(OperationReply::Await {
+        continuation,
+        calls: vec![],
+        report: Report::default(),
+    })
+}
+
+#[test]
+fn resume_can_suspend_again_and_rejects_the_previous_generation() -> Result<(), String> {
+    use nepl3_core::operation::Resume;
+    use nepl3_suite::dispatch::resume as dispatch;
+    let (registry, parent) = fixture()?;
+    let context = Digest::of(b"context");
+    let identity = Digest::of(b"provider");
+    let sources = SourceStore::default();
+    let first = saved(&parent, context);
+    let request = Resume {
+        request_id: parent.request_id,
+        continuation: first.clone(),
+        dependency_results: vec![],
+    };
+    let mut lifetimes = RequestLifetimes::default();
+    lifetimes
+        .begin_call(&parent, context, None, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    lifetimes
+        .suspend(parent.request_id, first.clone(), 0, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let mut execution = budget();
+    let registration = dispatch::Registration {
+        operation: &parent.operation,
+        implementation: identity,
+        resume: await_again,
+    };
+    let saved_first = dispatch::SavedAwait {
+        parent: &parent,
+        context,
+        continuation: &first,
+        calls: &[],
+        sources: &[] as &[&SourceStore],
+    };
+    let reply = dispatch::execute(
+        &registration,
+        identity,
+        &saved_first,
+        &request,
+        &mut lifetimes,
+        &registry,
+        &sources,
+        &mut execution,
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let OperationReply::Await {
+        continuation: second,
+        ..
+    } = reply
+    else {
+        return Err("expected second Await".into());
+    };
+    assert_eq!(execution.usage().work, 7);
+    lifetimes
+        .suspend(parent.request_id, second.clone(), 0, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let saved_second = dispatch::SavedAwait {
+        continuation: &second,
+        ..saved_first
+    };
+    assert!(matches!(
+        dispatch::execute(
+            &registration,
+            identity,
+            &saved_second,
+            &request,
+            &mut lifetimes,
+            &registry,
+            &sources,
+            &mut execution,
+            &mut budget()
+        ),
+        Err(dispatch::ResumeError::Binding(_))
+    ));
+    assert_eq!(execution.usage().work, 7);
+    let second_request = Resume {
+        continuation: second.clone(),
+        ..request
+    };
+    let registration = dispatch::Registration {
+        resume: resume_parent,
+        ..registration
+    };
+    let reply = dispatch::execute(
+        &registration,
+        identity,
+        &saved_second,
+        &second_request,
+        &mut lifetimes,
+        &registry,
+        &sources,
+        &mut execution,
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    // No dependency was supplied; this provider explicitly returns Invalid.
+    assert!(matches!(
+        reply,
+        OperationReply::Result(OperationResult::Invalid { .. })
+    ));
+    assert_eq!(execution.usage().work, 8);
+    lifetimes
+        .finish(parent.request_id, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    Ok(())
 }
 
 #[test]
@@ -226,10 +362,10 @@ fn admitted_await_collects_dispatched_dependencies_and_resumes_saved_lifetime() 
         Ok(RequestPhase::Awaiting)
     );
     let completed = run(&resume, &mut lifetimes, &mut execution).map_err(|e| format!("{e:?}"))?;
-    let OperationResult::Complete {
+    let OperationReply::Result(OperationResult::Complete {
         value: TypedValue::Record(record),
         ..
-    } = completed
+    }) = completed
     else {
         return Err("expected resumed result".into());
     };

@@ -56,9 +56,21 @@ pub fn invoke(
             _ => None,
         },
     )?;
-    match &reply {
+    validate_reply(&reply, request, context, registry, sources, validation)?;
+    Ok(reply)
+}
+
+pub(super) fn validate_reply(
+    reply: &OperationReply,
+    request: &Invoke,
+    context: Digest,
+    registry: &SchemaRegistry,
+    sources: &impl DiagnosticSourceResolver,
+    validation: &mut Budget,
+) -> Result<(), Error> {
+    match reply {
         OperationReply::Result(result) => result
-            .validate_for(registration.operation, registry, sources, validation)
+            .validate_for(&request.operation, registry, sources, validation)
             .map_err(|e| match e {
                 ResultValidationError::Stopped(s) => Error::Stopped(s),
                 e => Error::Dispatch(DispatchError::Output(e)),
@@ -84,5 +96,5 @@ pub fn invoke(
             })?;
         }
     }
-    Ok(reply)
+    Ok(())
 }

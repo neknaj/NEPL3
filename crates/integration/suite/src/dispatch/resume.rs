@@ -5,17 +5,13 @@ use nepl3_core::operation::{
     lifetime::{LifetimeError, RequestLifetimes},
 };
 
-pub type TerminalResume = fn(
-    &Invoke,
-    &Resume,
-    &SchemaRegistry,
-    &mut Budget,
-) -> Result<OperationResult<TypedValue>, StopReason>;
+pub type ResumeOperation =
+    fn(&Invoke, &Resume, &SchemaRegistry, &mut Budget) -> Result<OperationReply, StopReason>;
 
 pub struct Registration<'a> {
     pub operation: &'a OperationRef,
     pub implementation: Digest,
-    pub resume: TerminalResume,
+    pub resume: ResumeOperation,
 }
 
 /// Immutable data retained by the host for this Await generation. Each source
@@ -36,6 +32,7 @@ pub enum ResumeError {
     Lifetime(LifetimeError),
     SourceCount,
     NonterminalDependency,
+    Await(crate::suspension::AwaitError),
 }
 impl From<DispatchError> for ResumeError {
     fn from(error: DispatchError) -> Self {
@@ -67,6 +64,8 @@ fn lifetime(error: LifetimeError) -> ResumeError {
 /// lifetime's Await phase. Once the callback begins, it owns execution failure:
 /// the generation has been consumed and cannot be retried as a fresh Resume.
 /// Provider-specific continuation-state semantics remain the callback's duty.
+/// A returned Await is structurally admitted; the host registers its next
+/// generation and authorizes dependencies before scheduling further execution.
 #[allow(clippy::too_many_arguments)]
 pub fn execute<S: DiagnosticSourceResolver>(
     registration: &Registration<'_>,
@@ -78,7 +77,7 @@ pub fn execute<S: DiagnosticSourceResolver>(
     output_sources: &impl DiagnosticSourceResolver,
     execution: &mut Budget,
     validation: &mut Budget,
-) -> Result<OperationResult<TypedValue>, ResumeError> {
+) -> Result<OperationReply, ResumeError> {
     execution.poll()?;
     validation.charge(Resource::Work, 32)?;
     if registration.implementation != implementation {
@@ -128,14 +127,27 @@ pub fn execute<S: DiagnosticSourceResolver>(
     // Check the execution ceiling before consuming the saved generation.
     execution.with_ceiling(saved.parent.limits, |_| Ok::<(), StopReason>(()))?;
     lifetimes.resume(resume, validation).map_err(lifetime)?;
-    run_terminal(
+    let reply = run_with_limits(
+        saved.parent.limits,
+        execution,
+        |budget| (registration.resume)(saved.parent, resume, registry, budget),
+        |reply| match reply {
+            OperationReply::Result(OperationResult::Stopped { reason, .. }) => Some(*reason),
+            _ => None,
+        },
+    )?;
+    super::suspending::validate_reply(
+        &reply,
         saved.parent,
-        registration.operation,
+        saved.context,
         registry,
         output_sources,
-        execution,
         validation,
-        |budget| (registration.resume)(saved.parent, resume, registry, budget),
     )
-    .map_err(Into::into)
+    .map_err(|error| match error {
+        super::suspending::Error::Stopped(s) => ResumeError::Stopped(s),
+        super::suspending::Error::Dispatch(e) => ResumeError::Dispatch(e),
+        super::suspending::Error::Await(e) => ResumeError::Await(e),
+    })?;
+    Ok(reply)
 }
