@@ -27,6 +27,42 @@ fn source(id: &str, uri: &str, text: &str) -> Result<SourceSnapshot, SourceError
     )
 }
 
+#[test]
+fn prepared_environment_skips_only_unchanged_collection() -> Result<(), SourceError> {
+    let mut store = SourceStore::default();
+    for i in 0..128 {
+        store.insert(source(&format!("env-{i}"), "memory:e", "x")?)?;
+    }
+    store.prepare_scope(&mut budget())?;
+    let incoming = vec![source("new", "memory:n", "x")?];
+    let mut checks = SourceChecks::default();
+    checks.check(&incoming, &store, &mut budget())?;
+    let mut limited = Budget::new(Limits {
+        // One accepted-prefix comparison, no 128-element environment walk.
+        work: if cfg!(target_has_atomic = "ptr") {
+            1
+        } else {
+            100_000
+        },
+        ..budget().limits()
+    });
+    checks.check(&incoming, &store, &mut limited)?;
+    store.insert(source("new", "memory:n", "different")?)?;
+    store.prepare_scope(&mut budget())?;
+    assert_eq!(
+        checks.check(&incoming, &store, &mut budget()),
+        Err(SourceError::IdentityConflict)
+    );
+    let mut other = SourceStore::default();
+    other.insert(source("new", "memory:n", "different")?)?;
+    other.prepare_scope(&mut budget())?;
+    assert_eq!(
+        checks.check(&incoming, &other, &mut budget()),
+        Err(SourceError::IdentityConflict)
+    );
+    Ok(())
+}
+
 /// Manual host measurement of the actual conflict/admission stages used by
 /// read_seed. It deliberately excludes parsing, fixture construction and I/O.
 /// Timing is evidence, never a CI pass threshold or a whole-command benchmark.
@@ -94,6 +130,52 @@ fn source_scope_growth_measurement() -> Result<(), SourceError> {
                 measured.usage().allocation_units,
                 elapsed.as_nanos()
             );
+        }
+    }
+    Ok(())
+}
+
+/// Isolate unchanged-environment comparison; no parser or accepted sources.
+/// Each case uses n environment snapshots and n reads, so the unprepared path
+/// performs n*(n-1) comparisons after the first retained copy.
+#[test]
+#[ignore = "host environment measurement; run explicitly with --ignored --nocapture"]
+fn environment_scope_growth_measurement() -> Result<(), SourceError> {
+    extern crate std;
+    for count in [128usize, 256, 512] {
+        for prepared in [false, true] {
+            let mut store = SourceStore::default();
+            for i in 0..count {
+                store.insert(source(&format!("env-{i:06}"), "memory:e", "x")?)?;
+            }
+            if prepared {
+                store.prepare_scope(&mut budget())?;
+            }
+            let mut checks = SourceChecks::default();
+            // Exclude one-time cache construction from repeated comparison.
+            checks.check(&[], &store, &mut budget())?;
+            let mut measured = budget();
+            let started = std::time::Instant::now();
+            for _ in 1..count {
+                checks.check(&[], &store, &mut measured)?;
+            }
+            std::println!(
+                "environment_probe prepared={prepared} sources={count} reads={} work={} allocation_units={} elapsed_ns={}",
+                count - 1,
+                measured.usage().work,
+                measured.usage().allocation_units,
+                started.elapsed().as_nanos()
+            );
+            if cfg!(target_has_atomic = "ptr") {
+                assert_eq!(
+                    measured.usage().work,
+                    if prepared {
+                        0
+                    } else {
+                        (count * (count - 1)) as u64
+                    }
+                );
+            }
         }
     }
     Ok(())

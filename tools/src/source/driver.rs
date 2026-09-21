@@ -46,6 +46,7 @@ pub fn parse(
     let foundation = r.selected("nepl3.foundation", 1).ok_or("foundation")?;
     let mut store = SourceStore::default();
     store.insert(source.clone()).map_err(err)?;
+    store.prepare_scope(b).map_err(err)?;
     let value = Environment {
         bindings: vec![],
         resources: vec![],
