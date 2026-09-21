@@ -15,3 +15,8 @@ nepl3-suite = { path = "../../crates/integration/suite" }
 
 [lints]
 workspace = true
+
+[[test]]
+name = "process_protocol"
+path = "tests/process/protocol.rs"
+harness = false
