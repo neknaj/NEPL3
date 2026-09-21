@@ -1,32 +1,35 @@
 article ja "05. Doc[言語/げんご]"
 body
-  cons section policy "[方針/ほうしん]" body
+  cons section policy "Docの[役割/やくわり]と[適用範囲/てきようはんい]" body
     cons paragraph
-      cons "[本文/ほんぶん]の[階層/かいそう]、[文単位/ぶんたんい]の[翻訳対応/ほんやくたいおう]、inlineの[注釈/ちゅうしゃく]を[独立/どくりつ]した[構造/こうぞう]として[扱/あつか]う。"
-      cons "sentence literalとprefix constructorを[同/おな]じ[意味/いみ]モデルへlowerする。"
-      cons "source[表記/ひょうき]は[別/べつ]に[保持/ほじ]する。" nil
+      cons "Docは、[記事/きじ]・[節/せつ]・[段落/だんらく]・[表/ひょう]などの[文書構造/ぶんしょこうぞう]を[表/あらわ]す[言語/げんご]である。"
+      cons "[本文/ほんぶん]の[階層/かいそう]、[文単位/ぶんたんい]の[翻訳対応/ほんやくたいおう]、Inlineの[注釈/ちゅうしゃく]を、それぞれ[独立/どくりつ]した[構造/こうぞう]として[保持/ほじ]する。"
+      cons "Sentence literalとprefix constructorは、[同/おな]じ[意味/いみ]モデルへlowerする[二/ふた]つの[表記/ひょうき]である。"
+      cons "[元/もと]のsource[表記/ひょうき]は、[意味/いみ]モデルに[対応/たいおう]する[情報/じょうほう]として[保持/ほじ]する。" nil
     cons paragraph
-      cons "[文章/ぶんしょう]の[最終的/さいしゅうてき]な[所有者/しょゆうしゃ]は[独立/どくりつ]したNEPL3sentenceであり、Docは[文書構造/ぶんしょこうぞう]を[所有/しょゆう]する。"
-      cons "[現在/げんざい]の[開発/かいはつ]hostはSentenceのliteral readerから[明示/めいじ]adapterでDocのSentencePayloadへ[変換/へんかん]する[段階/だんかい]にある。"
-      cons "[本章/ほんしょう]のDocValue・DocView・payloadは[現在/げんざい]のDoc consumerの[契約/けいやく]であり、Sentenceの[独立/どくりつ]schemaと[同一視/どういつし]しない。"
+      cons "[文章構造/ぶんしょうこうぞう]を[所有/しょゆう]する[言語/げんご]はNEPL3sentenceであり、Docはその[文章/ぶんしょう]を[文書構造/ぶんしょこうぞう]へ[配置/はいち]する。"
+      cons "[現在/げんざい]の[実装/じっそう]は[所有移行/しょゆういこう]の[途中/とちゅう]にあり、[開発/かいはつ]hostがSentenceのliteral readerの[結果/けっか]を[明示的/めいじてき]なadapterでDocのSentencePayloadへ[変換/へんかん]する。"
+      cons "[本章/ほんしょう]のDocValue・DocView・payloadは、このDoc consumerが[扱/あつか]う[値/あたい]と[操作/そうさ]の[契約/けいやく]を[定/さだ]める。"
+      cons "NEPL3sentenceの[値/あたい]は、[独立/どくりつ]したSentence schemaで[定義/ていぎ]する。"
       cons sentence cons ruby text "所有関係" text "しょゆうかんけい" cons text "と" cons ruby text "未完了" text "みかんりょう" cons text "のconsumer" cons ruby text "移行" text "いこう" cons text "は" cons link relative "23-sentence-annotation.md" none text "23章" cons text "を" cons ruby text "参照" text "さんしょう" cons text "する。" nil nil
     nil
   cons section types "1. [主要/しゅよう]な[型/かた]" body
     cons paragraph
-      cons "Article(language, title:Sentence, body:Body)。"
-      cons "BodyはBlockの[列/れつ]。"
-      cons "BlockはParagraph、Section、DisplayMath、CircuitFigure、Code、Table、List、RawCode、Image。"
-      cons "ParagraphはFlowの[列/れつ]。"
-      cons "FlowはSentence、ParallelとBlockの[各/かく]variant。"
-      cons "したがってParagraphを[再帰的/さいきてき]に[含/ふく]められる。"
-      cons "SentenceはInlineの[列/れつ]。"
-      cons "Parallelは2[個以上/こいじょう]のVariant(language, sentence)の[列/れつ]。"
-      cons "VariantへParagraphやParallelは[入/い]れられない。"
-      cons "InlineはText、Concat、Ruby(base,reading)、Anno(base,notes)、InlineMath、Anchor(id,label)、Reference(target,label)、Emphasis、Strong、Break、Link、InlineCode、InlineImage。" nil
+      cons "Articleは[記事全体/きじぜんたい]を[表/あらわ]し、language、Sentence[型/がた]のtitle、Body[型/がた]のbodyを[持/も]つ。"
+      cons "BodyはBlockの[列/れつ]であり、[文書/ぶんしょ]を[構成/こうせい]する[要素/ようそ]の[順序/じゅんじょ]を[保持/ほじ]する。"
+      cons "Blockの[種類/しゅるい]はParagraph、Section、DisplayMath、CircuitFigure、Code、Table、List、RawCode、Imageである。" nil
     cons paragraph
-      cons "[全/ぜん]signatureはdoc-signaturesを[参照/さんしょう]。"
-      cons "bare quoted[文字列/もじれつ]をSentence/Flowの[位置/いち]で[読/よ]むとSentenceLiteralになる。"
-      cons sentence cons code "text" cons text " の" cons ruby text "子" text "こ" cons text "は" cons ruby text "通常" text "つうじょう" cons text "Textであり、その" cons ruby text "内部" text "ないぶ" cons text "の " cons code "[" cons text " や " cons code "{" cons text " を" cons ruby text "注釈" text "ちゅうしゃく" cons text "と" cons ruby text "解釈" text "かいしゃく" cons text "しない。" nil nil
+      cons "ParagraphはFlowの[列/れつ]として[本文/ほんぶん]を[構成/こうせい]する。"
+      cons "FlowにはSentence、Parallel、およびBlockの[各/かく]variantを[配置/はいち]できるため、Paragraphの[再帰的/さいきてき]な[構成/こうせい]も[可能/かのう]である。"
+      cons "SentenceはInlineの[列/れつ]であり、[文章内/ぶんしょうない]の[内容/ないよう]と[順序/じゅんじょ]を[保持/ほじ]する。"
+      cons "Parallelは2[個以上/こいじょう]のVariantの[列/れつ]であり、[各/かく]VariantはlanguageとSentence[型/がた]のsentenceを[持/も]つ。"
+      cons "Variantの[本文/ほんぶん]に[指定/してい]できる[型/かた]はSentenceに[限定/げんてい]する。" nil
+    cons paragraph
+      cons "Inlineの[種類/しゅるい]はText、Concat、Ruby(base,reading)、Anno(base,notes)、InlineMath、Anchor(id,label)、Reference(target,label)、Emphasis、Strong、Break、Link、InlineCode、InlineImageである。" nil
+    cons paragraph
+      cons "[各/かく]constructorの[全/ぜん]signatureはdoc-signaturesを[参照/さんしょう]する。"
+      cons "Sentence/Flowの[位置/いち]に[引用符/いんようふ]で[囲/かこ]んだ[文字列/もじれつ]を[直接/ちょくせつ][記述/きじゅつ]すると、SentenceLiteralとして[読/よ]み[取/と]る。"
+      cons sentence cons code "text" cons text " の" cons ruby text "子" text "こ" cons text "は" cons ruby text "通常" text "つうじょう" cons text "のText" cons ruby text "値" text "あたい" cons text "であり、" cons code "[" cons text " や " cons code "{" cons text " も" cons ruby text "文字" text "もじ" cons text "として" cons ruby text "保持" text "ほじ" cons text "する。" nil nil
     cons section arena "1.1 [意味/いみ]モデルと[公開/こうかい]arena" body
       cons paragraph
         cons sentence cons code "interfaces/model.json" cons text " の " cons code "Doc:*" cons text " recordと " cons code "Doc/*" cons text " unionはconstructorの" cons ruby text "論理的" text "ろんりてき" cons text "な" cons ruby text "意味展開" text "いみてんかい" cons text "であり、" cons ruby text "独立" text "どくりつ" cons text "した" cons ruby text "再帰" text "さいき" cons text "wire layoutではない。" nil
