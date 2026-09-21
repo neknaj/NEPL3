@@ -97,3 +97,50 @@ fn frame_limits_are_checked_before_payload_arrives() -> Result<(), String> {
     );
     Ok(())
 }
+
+#[test]
+fn frame_byte_limits_include_headers_and_accumulate_across_messages() -> Result<(), String> {
+    let registry = registry()?;
+    let ty = TypeDescriptor::U64;
+    let value = NdfValue::U64(7);
+    let encoded = frame::encode_checked(&value, &ty, &registry, &mut budget()).map_err(error)?;
+    let length = encoded.len() as u64;
+    let mut limits = budget().limits();
+    limits.source_bytes = length * 2;
+    let mut receiver = Budget::new(limits);
+    for count in 1..=2 {
+        let (decoded, remaining) =
+            frame::decode_checked(&encoded, true, &ty, &registry, &mut receiver)
+                .map_err(error)?
+                .ok_or("complete frame")?;
+        assert_eq!(decoded.value(), &value);
+        assert!(remaining.is_empty());
+        assert_eq!(receiver.usage().source_bytes, count * length);
+    }
+    assert_eq!(
+        frame::decode_checked(&encoded[..8], false, &ty, &registry, &mut receiver),
+        Err(WireError::Stopped(StopReason::SourceLimit))
+    );
+    assert_eq!(receiver.poll(), Err(StopReason::SourceLimit));
+    for available in [length - 1, length] {
+        limits.output_bytes = available;
+        let mut sender = Budget::new(limits);
+        let output = frame::encode_checked(&value, &ty, &registry, &mut sender);
+        if available == length {
+            assert_eq!(output.map_err(error)?, encoded);
+            assert_eq!(sender.usage().output_bytes, length);
+        } else {
+            assert_eq!(output, Err(WireError::Stopped(StopReason::OutputLimit)));
+            assert_eq!(sender.poll(), Err(StopReason::OutputLimit));
+        }
+    }
+    // A second NDF value inside the declared payload is not a second frame.
+    let mut malformed = encoded;
+    malformed[..8].copy_from_slice(&(length - 8 + 1).to_be_bytes());
+    malformed.push(0);
+    assert_eq!(
+        frame::decode_checked(&malformed, true, &ty, &registry, &mut budget()),
+        Err(WireError::TrailingData)
+    );
+    Ok(())
+}
