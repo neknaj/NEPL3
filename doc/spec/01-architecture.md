@@ -1,22 +1,24 @@
-<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/1; page architecture; source SHA-256 7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 08a456b41610c3973de4c3b859ccb15babcae7628e5e5e8e11e9755ab3b34573; input PageSet digest 1b5e3849c4d1f347ca6b59e97d9d1ae4c0244cc6657f3d39aa12480838b9c40d; input context SHA-256 9a8c521bcbe028c7be3bf71358a9de1352f11057e9787ac4bf04245bcd480b31. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/2; page architecture; source SHA-256 7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 08a456b41610c3973de4c3b859ccb15babcae7628e5e5e8e11e9755ab3b34573; input PageSet digest 29117181a385e93c76e7de2f56d10f8f7898d9cfb887adfb362b4379632a5a1d; input context SHA-256 a3f380eb88606e94c817b66bc2f494ec239dda0c89e4b4d1bc89b938fe0290ac. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="01-repositorycrate依存方向"></a>
 
-# 01\. Repository・crate・依存方向\[いぞんほうこう\]
+# 01\. Repository・crate・<ruby>依存方向<rt>いぞんほうこう</rt></ruby>
+
+[正本（NEPL3d）](<01-architecture.nepld>)
 
 <a name="n-706f6c696379"></a>
 
 <a name="方針"></a>
 
-## 方針\[ほうしん\]
+## <ruby>方針<rt>ほうしん</rt></ruby>
 
-初期\[しょき\]repositoryは `NEPL3` のmonorepoとする。意味上\[いみじょう\]の境界\[きょうかい\]とcrateの依存方向\[いぞんほうこう\]\{consumerからdependencyへの向\[む\]き\}を一致\[いっち\]させ、言語\[げんご\]と出力\[しゅつりょく\]backendを分離\[ぶんり\]する。crateの全一覧\[ぜんいちらん\]と、直接依存\[ちょくせついぞん\]の許可集合\[きょかしゅうごう\]は `design/dependencies.json` に記\[しる\]す。
+<ruby>初期<rt>しょき</rt></ruby>repositoryは `NEPL3` のmonorepoとする。<ruby>意味上<rt>いみじょう</rt></ruby>の<ruby>境界<rt>きょうかい</rt></ruby>とcrateの<ruby>依存方向<rt>いぞんほうこう</rt></ruby>\{consumerからdependencyへの<ruby>向<rt>む</rt></ruby>き\}を<ruby>一致<rt>いっち</rt></ruby>させ、<ruby>言語<rt>げんご</rt></ruby>と<ruby>出力<rt>しゅつりょく</rt></ruby>backendを<ruby>分離<rt>ぶんり</rt></ruby>する。crateの<ruby>全一覧<rt>ぜんいちらん</rt></ruby>と、<ruby>直接依存<rt>ちょくせついぞん</rt></ruby>の<ruby>許可集合<rt>きょかしゅうごう</rt></ruby>は `design/dependencies.json` に<ruby>記<rt>しる</rt></ruby>す。
 
 <a name="n-6c61796f7574"></a>
 
 <a name="1-配置"></a>
 
-## 1\. 配置\[はいち\]
+## 1\. <ruby>配置<rt>はいち</rt></ruby>
 
 ```text
 NEPL3/
@@ -62,15 +64,15 @@ NEPL3/
   tasks/
 ```
 
-ファイル名\[めい\]の階層\[かいそう\]は、ディレクトリで表\[あらわ\]す。例\[たと\]えば `source_span_map.rs` を階層\[かいそう\]の代\[か\]わりに使\[つか\]わず、`source/map.rs` とする。各\[かく\] `src` の直下\[ちょっか\]には、`lib.rs` または `main.rs` を置\[お\]く。
+ファイル<ruby>名<rt>めい</rt></ruby>の<ruby>階層<rt>かいそう</rt></ruby>は、ディレクトリで<ruby>表<rt>あらわ</rt></ruby>す。<ruby>例<rt>たと</rt></ruby>えば `source_span_map.rs` を<ruby>階層<rt>かいそう</rt></ruby>の<ruby>代<rt>か</rt></ruby>わりに<ruby>使<rt>つか</rt></ruby>わず、`source/map.rs` とする。<ruby>各<rt>かく</rt></ruby> `src` の<ruby>直下<rt>ちょっか</rt></ruby>には、`lib.rs` または `main.rs` を<ruby>置<rt>お</rt></ruby>く。
 
 <a name="n-646570656e64656e63696573"></a>
 
 <a name="2-主な依存方向"></a>
 
-## 2\. 主\[おも\]な依存方向\[いぞんほうこう\]
+## 2\. <ruby>主<rt>おも</rt></ruby>な<ruby>依存方向<rt>いぞんほうこう</rt></ruby>
 
-依存\[いぞん\]の向\[む\]きは `consumer -> dependency` と表\[あらわ\]す。
+<ruby>依存<rt>いぞん</rt></ruby>の<ruby>向<rt>む</rt></ruby>きは `consumer -> dependency` と<ruby>表<rt>あらわ</rt></ruby>す。
 
 ```text
 reader -> core
@@ -91,11 +93,11 @@ apps -> suite, core (+ wire where required, web -> ui-core)
 tools -> grammar-core, suite, foundation
 ```
 
-`core` は、すべてのdomainのenumを持\[も\]つものではない。typed schema、位置\[いち\]、診断\[しんだん\]、公開値\[こうかいち\]を所有\[しょゆう\]する。domain coreは共通\[きょうつう\]のParsed treeを受\[う\]け取\[と\]り、そのdomainのモデルへlowerする。engineはDocやRubyなどの意味\[いみ\]を知\[し\]らない。
+`core` は、すべてのdomainのenumを<ruby>持<rt>も</rt></ruby>つものではない。typed schema、<ruby>位置<rt>いち</rt></ruby>、<ruby>診断<rt>しんだん</rt></ruby>、<ruby>公開値<rt>こうかいち</rt></ruby>を<ruby>所有<rt>しょゆう</rt></ruby>する。domain coreは<ruby>共通<rt>きょうつう</rt></ruby>のParsed treeを<ruby>受<rt>う</rt></ruby>け<ruby>取<rt>と</rt></ruby>り、そのdomainのモデルへlowerする。engineはDocやRubyなどの<ruby>意味<rt>いみ</rt></ruby>を<ruby>知<rt>し</rt></ruby>らない。
 
-Doc内\[ない\]のMathとMath内\[ない\]のDocは、suiteのbridgeが処理\[しょり\]する。doc\-coreはmath\-coreをimportしない。出力\[しゅつりょく\]backend同士\[どうし\]も、相互\[そうご\]にimportしない。suiteが依存関係\[いぞんかんけい\]に従\[したが\]って埋\[う\]め込\[こ\]みを準備\[じゅんび\]し、backendsへ型付\[かたつ\]きの解決済\[かいけつず\]みfragmentを渡\[わた\]す。
+Doc<ruby>内<rt>ない</rt></ruby>のMathとMath<ruby>内<rt>ない</rt></ruby>のDocは、suiteのbridgeが<ruby>処理<rt>しょり</rt></ruby>する。doc\-coreはmath\-coreをimportしない。<ruby>出力<rt>しゅつりょく</rt></ruby>backend<ruby>同士<rt>どうし</rt></ruby>も、<ruby>相互<rt>そうご</rt></ruby>にimportしない。suiteが<ruby>依存関係<rt>いぞんかんけい</rt></ruby>に<ruby>従<rt>したが</rt></ruby>って<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みを<ruby>準備<rt>じゅんび</rt></ruby>し、backendsへ<ruby>型付<rt>かたつ</rt></ruby>きの<ruby>解決済<rt>かいけつず</rt></ruby>みfragmentを<ruby>渡<rt>わた</rt></ruby>す。
 
-ui\-coreは、純粋\[じゅんすい\]なModel・Msg・update・viewと、commandおよびsubscriptionの記述\[きじゅつ\]を所有\[しょゆう\]する。suiteやDOMを実行\[じっこう\]してはならない。実行\[じっこう\]・Worker・editor widgetは、host adapterが担当\[たんとう\]する。目標\[もくひょう\]は20 crateで、そのうち15 crateが `no_std + alloc` である。この目標\[もくひょう\]を、実装済\[じっそうず\]みmemberの数\[かず\]と同一視\[どういつし\]してはならない。文書\[ぶんしょ\]とsiteの生成\[せいせい\]は、toolsの明示的\[めいじてき\]な段階\[だんかい\]で行\[おこな\]う。`build.rs` を通\[とお\]して、compilerと文書\[ぶんしょ\]rendererを循環依存\[じゅんかんいぞん\]させてはならない。
+ui\-coreは、<ruby>純粋<rt>じゅんすい</rt></ruby>なModel・Msg・update・viewと、commandおよびsubscriptionの<ruby>記述<rt>きじゅつ</rt></ruby>を<ruby>所有<rt>しょゆう</rt></ruby>する。suiteやDOMを<ruby>実行<rt>じっこう</rt></ruby>してはならない。<ruby>実行<rt>じっこう</rt></ruby>・Worker・editor widgetは、host adapterが<ruby>担当<rt>たんとう</rt></ruby>する。<ruby>目標<rt>もくひょう</rt></ruby>は20 crateで、そのうち15 crateが `no_std + alloc` である。この<ruby>目標<rt>もくひょう</rt></ruby>を、<ruby>実装済<rt>じっそうず</rt></ruby>みmemberの<ruby>数<rt>かず</rt></ruby>と<ruby>同一視<rt>どういつし</rt></ruby>してはならない。<ruby>文書<rt>ぶんしょ</rt></ruby>とsiteの<ruby>生成<rt>せいせい</rt></ruby>は、toolsの<ruby>明示的<rt>めいじてき</rt></ruby>な<ruby>段階<rt>だんかい</rt></ruby>で<ruby>行<rt>おこな</rt></ruby>う。`build.rs` を<ruby>通<rt>とお</rt></ruby>して、compilerと<ruby>文書<rt>ぶんしょ</rt></ruby>rendererを<ruby>循環依存<rt>じゅんかんいぞん</rt></ruby>させてはならない。
 
 <a name="n-626f6f747374726170"></a>
 
@@ -103,40 +105,40 @@ ui\-coreは、純粋\[じゅんすい\]なModel・Msg・update・viewと、comma
 
 ## 3\. surface descriptorとGrammarのbootstrap
 
-`languages/*/syntax.neplg` は、各言語\[かくげんご\]のsurface定義\[ていぎ\]である。Grammar compilerがpackageを生成\[せいせい\]し、その生成済\[せいせいず\]みpackageもcommitする。通常\[つうじょう\]のbuildで、toolsやgrammar compilerをbuild dependencyにしてはならない。`cargo run -p nepl3-tools -- generate --check` により、sourceとの一致\[いっち\]を検査\[けんさ\]する。
+`languages/*/syntax.neplg` は、<ruby>各言語<rt>かくげんご</rt></ruby>のsurface<ruby>定義<rt>ていぎ</rt></ruby>である。Grammar compilerがpackageを<ruby>生成<rt>せいせい</rt></ruby>し、その<ruby>生成済<rt>せいせいず</rt></ruby>みpackageもcommitする。<ruby>通常<rt>つうじょう</rt></ruby>のbuildで、toolsやgrammar compilerをbuild dependencyにしてはならない。`cargo run -p nepl3-tools -- generate --check` により、sourceとの<ruby>一致<rt>いっち</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>する。
 
-Grammar自身\[じしん\]の初期\[しょき\]packageは、同一\[どういつ\]のGrammar syntaxを表\[あらわ\]す検査済\[けんさず\]みseedとする。別\[べつ\]の小\[ちい\]さなGrammar dialectは作\[つく\]らない。seedで自身\[じしん\]のsourceを読\[よ\]み、compileしたdescriptorの意味正規形\[いみせいきけい\]とseedを比較\[ひかく\]する。これは自己\[じこ\]ホスト前\[まえ\]の永続的\[えいぞくてき\]なbootstrap契約\[けいやく\]であり、将来\[しょうらい\]の実装\[じっそう\]でも同\[おな\]じseedを使\[つか\]える。
+Grammar<ruby>自身<rt>じしん</rt></ruby>の<ruby>初期<rt>しょき</rt></ruby>packageは、<ruby>同一<rt>どういつ</rt></ruby>のGrammar syntaxを<ruby>表<rt>あらわ</rt></ruby>す<ruby>検査済<rt>けんさず</rt></ruby>みseedとする。<ruby>別<rt>べつ</rt></ruby>の<ruby>小<rt>ちい</rt></ruby>さなGrammar dialectは<ruby>作<rt>つく</rt></ruby>らない。seedで<ruby>自身<rt>じしん</rt></ruby>のsourceを<ruby>読<rt>よ</rt></ruby>み、compileしたdescriptorの<ruby>意味正規形<rt>いみせいきけい</rt></ruby>とseedを<ruby>比較<rt>ひかく</rt></ruby>する。これは<ruby>自己<rt>じこ</rt></ruby>ホスト<ruby>前<rt>まえ</rt></ruby>の<ruby>永続的<rt>えいぞくてき</rt></ruby>なbootstrap<ruby>契約<rt>けいやく</rt></ruby>であり、<ruby>将来<rt>しょうらい</rt></ruby>の<ruby>実装<rt>じっそう</rt></ruby>でも<ruby>同<rt>おな</rt></ruby>じseedを<ruby>使<rt>つか</rt></ruby>える。
 
 <a name="n-72757374"></a>
 
 <a name="4-rust設定"></a>
 
-## 4\. Rust設定\[せってい\]
+## 4\. Rust<ruby>設定<rt>せってい</rt></ruby>
 
-workspaceはedition 2024、resolver 3とする。MSRVは1\.85\.0以上\[いじょう\]とし、実装開始時\[じっそうかいしじ\]に使\[つか\]う一\[ひと\]つのstable toolchainを `rust-toolchain.toml` に完全\[かんぜん\]な版番号\[はんばんごう\]で固定\[こてい\]する。MSRVと開発\[かいはつ\]toolchainは同一視\[どういつし\]しない。外部依存\[がいぶいぞん\]はworkspace\.dependenciesで集中管理\[しゅうちゅうかんり\]し、Cargo\.lockをcommitする。
+workspaceはedition 2024、resolver 3とする。MSRVは1\.85\.0<ruby>以上<rt>いじょう</rt></ruby>とし、<ruby>実装開始時<rt>じっそうかいしじ</rt></ruby>に<ruby>使<rt>つか</rt></ruby>う<ruby>一<rt>ひと</rt></ruby>つのstable toolchainを `rust-toolchain.toml` に<ruby>完全<rt>かんぜん</rt></ruby>な<ruby>版番号<rt>はんばんごう</rt></ruby>で<ruby>固定<rt>こてい</rt></ruby>する。MSRVと<ruby>開発<rt>かいはつ</rt></ruby>toolchainは<ruby>同一視<rt>どういつし</rt></ruby>しない。<ruby>外部依存<rt>がいぶいぞん</rt></ruby>はworkspace\.dependenciesで<ruby>集中管理<rt>しゅうちゅうかんり</rt></ruby>し、Cargo\.lockをcommitする。
 
-core系\[けい\]crateは常\[つね\]に `#![no_std]` とし、allocを使\[つか\]う。coreをstd化\[か\]するfeatureは設\[もう\]けない。標準\[ひょうじゅん\]ライブラリが必要\[ひつよう\]なアダプタはappsへ置\[お\]く。native\-only crateがcoreに入\[はい\]り込\[こ\]むことを、cargo metadataとtarget buildによって検出\[けんしゅつ\]する。
+core<ruby>系<rt>けい</rt></ruby>crateは<ruby>常<rt>つね</rt></ruby>に `#![no_std]` とし、allocを<ruby>使<rt>つか</rt></ruby>う。coreをstd<ruby>化<rt>か</rt></ruby>するfeatureは<ruby>設<rt>もう</rt></ruby>けない。<ruby>標準<rt>ひょうじゅん</rt></ruby>ライブラリが<ruby>必要<rt>ひつよう</rt></ruby>なアダプタはappsへ<ruby>置<rt>お</rt></ruby>く。native\-only crateがcoreに<ruby>入<rt>はい</rt></ruby>り<ruby>込<rt>こ</rt></ruby>むことを、cargo metadataとtarget buildによって<ruby>検出<rt>けんしゅつ</rt></ruby>する。
 
-math\-coreは `num-bigint` \/ `num-rational` \/ `num-integer` \/ `num-traits` を、default\-features\=falseで利用\[りよう\]してよい。対応\[たいおう\]する互換\[ごかん\]version集合\[しゅうごう\]を一度\[いちど\]resolveし、lockする。異\[こと\]なるBigIntの版\[はん\]を、言語間\[げんごかん\]で露出\[ろしゅつ\]させてはならない。公開\[こうかい\]する意味値\[いみち\]には、この仕様\[しよう\]のcanonical integer・rational型\[がた\]を使\[つか\]う。
+math\-coreは `num-bigint` \/ `num-rational` \/ `num-integer` \/ `num-traits` を、default\-features\=falseで<ruby>利用<rt>りよう</rt></ruby>してよい。<ruby>対応<rt>たいおう</rt></ruby>する<ruby>互換<rt>ごかん</rt></ruby>version<ruby>集合<rt>しゅうごう</rt></ruby>を<ruby>一度<rt>いちど</rt></ruby>resolveし、lockする。<ruby>異<rt>こと</rt></ruby>なるBigIntの<ruby>版<rt>はん</rt></ruby>を、<ruby>言語間<rt>げんごかん</rt></ruby>で<ruby>露出<rt>ろしゅつ</rt></ruby>させてはならない。<ruby>公開<rt>こうかい</rt></ruby>する<ruby>意味値<rt>いみち</rt></ruby>には、この<ruby>仕様<rt>しよう</rt></ruby>のcanonical integer・rational<ruby>型<rt>がた</rt></ruby>を<ruby>使<rt>つか</rt></ruby>う。
 
-安全\[あんぜん\]なRustを原則\[げんそく\]とする。FFIや高速化\[こうそくか\]のためにunsafeが必要\[ひつよう\]なら、該当\[がいとう\]adapterの内部\[ないぶ\]へ局在\[きょくざい\]させ、unsafe契約\[けいやく\]と試験\[しけん\]を添\[そ\]える。domainからpointerを外部\[がいぶ\]へ公開\[こうかい\]してはならない。
+<ruby>安全<rt>あんぜん</rt></ruby>なRustを<ruby>原則<rt>げんそく</rt></ruby>とする。FFIや<ruby>高速化<rt>こうそくか</rt></ruby>のためにunsafeが<ruby>必要<rt>ひつよう</rt></ruby>なら、<ruby>該当<rt>がいとう</rt></ruby>adapterの<ruby>内部<rt>ないぶ</rt></ruby>へ<ruby>局在<rt>きょくざい</rt></ruby>させ、unsafe<ruby>契約<rt>けいやく</rt></ruby>と<ruby>試験<rt>しけん</rt></ruby>を<ruby>添<rt>そ</rt></ruby>える。domainからpointerを<ruby>外部<rt>がいぶ</rt></ruby>へ<ruby>公開<rt>こうかい</rt></ruby>してはならない。
 
 <a name="n-616c6c6f7765645f646570656e64656e63696573"></a>
 
 <a name="5-許可集合の検査"></a>
 
-## 5\. 許可集合\[きょかしゅうごう\]の検査\[けんさ\]
+## 5\. <ruby>許可集合<rt>きょかしゅうごう</rt></ruby>の<ruby>検査<rt>けんさ</rt></ruby>
 
-dependency checkerはproduction依存\[いぞん\]とbuild依存\[いぞん\]を検査\[けんさ\]し、dev依存\[いぞん\]を別\[べつ\]の集合\[しゅうごう\]として出力\[しゅつりょく\]する。productionからappsやtoolsへの経路\[けいろ\]、domain core同士\[どうし\]の経路\[けいろ\]、閉路\[へいろ\]、std依存\[いぞん\]を検出\[けんしゅつ\]する。外部\[がいぶ\]crateの採用\[さいよう\]によって、coreへOS機能\[きのう\]が混入\[こんにゅう\]しないことを確認\[かくにん\]する。
+dependency checkerはproduction<ruby>依存<rt>いぞん</rt></ruby>とbuild<ruby>依存<rt>いぞん</rt></ruby>を<ruby>検査<rt>けんさ</rt></ruby>し、dev<ruby>依存<rt>いぞん</rt></ruby>を<ruby>別<rt>べつ</rt></ruby>の<ruby>集合<rt>しゅうごう</rt></ruby>として<ruby>出力<rt>しゅつりょく</rt></ruby>する。productionからappsやtoolsへの<ruby>経路<rt>けいろ</rt></ruby>、domain core<ruby>同士<rt>どうし</rt></ruby>の<ruby>経路<rt>けいろ</rt></ruby>、<ruby>閉路<rt>へいろ</rt></ruby>、std<ruby>依存<rt>いぞん</rt></ruby>を<ruby>検出<rt>けんしゅつ</rt></ruby>する。<ruby>外部<rt>がいぶ</rt></ruby>crateの<ruby>採用<rt>さいよう</rt></ruby>によって、coreへOS<ruby>機能<rt>きのう</rt></ruby>が<ruby>混入<rt>こんにゅう</rt></ruby>しないことを<ruby>確認<rt>かくにん</rt></ruby>する。
 
-単一\[たんいつ\]repositoryであっても、各\[かく\]coreは独立\[どくりつ\]して `check --no-default-features` できるものとする。将来\[しょうらい\]のrepository分割\[ぶんかつ\]を、現在\[げんざい\]の依存環境\[いぞんかんきょう\]へ強制\[きょうせい\]しない。公開\[こうかい\]schemaと操作\[そうさ\]の単位\[たんい\]で、実装\[じっそう\]を交換\[こうかん\]できるようにする。
+<ruby>単一<rt>たんいつ</rt></ruby>repositoryであっても、<ruby>各<rt>かく</rt></ruby>coreは<ruby>独立<rt>どくりつ</rt></ruby>して `check --no-default-features` できるものとする。<ruby>将来<rt>しょうらい</rt></ruby>のrepository<ruby>分割<rt>ぶんかつ</rt></ruby>を、<ruby>現在<rt>げんざい</rt></ruby>の<ruby>依存環境<rt>いぞんかんきょう</rt></ruby>へ<ruby>強制<rt>きょうせい</rt></ruby>しない。<ruby>公開<rt>こうかい</rt></ruby>schemaと<ruby>操作<rt>そうさ</rt></ruby>の<ruby>単位<rt>たんい</rt></ruby>で、<ruby>実装<rt>じっそう</rt></ruby>を<ruby>交換<rt>こうかん</rt></ruby>できるようにする。
 
-外部言語\[がいぶげんご\]の追加\[ついか\]でfoundation sourceを変更\[へんこう\]しない条件\[じょうけん\]と、repository分離前\[ぶんりまえ\]の実証\[じっしょう\]は [外部拡張契約\[がいぶかくちょうけいやく\]](<22\-external\-extensions\.md>) に従\[したが\]う。現時点\[げんじてん\]ではmonorepoを維持\[いじ\]し、独立\[どくりつ\]workspaceの公開\[こうかい\]API利用\[りよう\]から、配布\[はいふ\]・provider・互換性試験\[ごかんせいしけん\]へ進\[すす\]む。
+<ruby>外部言語<rt>がいぶげんご</rt></ruby>の<ruby>追加<rt>ついか</rt></ruby>でfoundation sourceを<ruby>変更<rt>へんこう</rt></ruby>しない<ruby>条件<rt>じょうけん</rt></ruby>と、repository<ruby>分離前<rt>ぶんりまえ</rt></ruby>の<ruby>実証<rt>じっしょう</rt></ruby>は [<ruby>外部拡張契約<rt>がいぶかくちょうけいやく</rt></ruby>](<22\-external\-extensions\.md>) に<ruby>従<rt>したが</rt></ruby>う。<ruby>現時点<rt>げんじてん</rt></ruby>ではmonorepoを<ruby>維持<rt>いじ</rt></ruby>し、<ruby>独立<rt>どくりつ</rt></ruby>workspaceの<ruby>公開<rt>こうかい</rt></ruby>API<ruby>利用<rt>りよう</rt></ruby>から、<ruby>配布<rt>はいふ</rt></ruby>・provider・<ruby>互換性試験<rt>ごかんせいしけん</rt></ruby>へ<ruby>進<rt>すす</rt></ruby>む。
 
 <a name="n-63757272656e745f7374616765"></a>
 
 <a name="現在の作業段階"></a>
 
-## 現在\[げんざい\]の作業段階\[さぎょうだんかい\]
+## <ruby>現在<rt>げんざい</rt></ruby>の<ruby>作業段階<rt>さぎょうだんかい</rt></ruby>
 
-以上\[いじょう\]は、目標\[もくひょう\]とする構成\[こうせい\]である。現在\[げんざい\]のworkspace memberはルートCargo\.tomlを、実装状態\[じっそうじょうたい\]はimplementation\-status\.jsonを正本\[せいほん\]とする。crateは、その責務\[せきむ\]を実装\[じっそう\]する段階\[だんかい\]で追加\[ついか\]する。開発\[かいはつ\]toolchainとMSRVの選定理由\[せんていりゆう\]はdoc\/development\.mdを、リポジトリ整備\[せいび\]の判断\[はんだん\]はdoc\/decisions\/0001\-repository\-foundation\.mdを参照\[さんしょう\]する。
+<ruby>以上<rt>いじょう</rt></ruby>は、<ruby>目標<rt>もくひょう</rt></ruby>とする<ruby>構成<rt>こうせい</rt></ruby>である。<ruby>現在<rt>げんざい</rt></ruby>のworkspace memberはルートCargo\.tomlを、<ruby>実装状態<rt>じっそうじょうたい</rt></ruby>はimplementation\-status\.jsonを<ruby>正本<rt>せいほん</rt></ruby>とする。crateは、その<ruby>責務<rt>せきむ</rt></ruby>を<ruby>実装<rt>じっそう</rt></ruby>する<ruby>段階<rt>だんかい</rt></ruby>で<ruby>追加<rt>ついか</rt></ruby>する。<ruby>開発<rt>かいはつ</rt></ruby>toolchainとMSRVの<ruby>選定理由<rt>せんていりゆう</rt></ruby>はdoc\/development\.mdを、リポジトリ<ruby>整備<rt>せいび</rt></ruby>の<ruby>判断<rt>はんだん</rt></ruby>はdoc\/decisions\/0001\-repository\-foundation\.mdを<ruby>参照<rt>さんしょう</rt></ruby>する。

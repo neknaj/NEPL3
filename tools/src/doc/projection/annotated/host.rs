@@ -9,7 +9,7 @@ use std::{
     path::Path,
 };
 
-pub const RENDERER: &str = "nepl3-tools.markdown-annotated/2";
+pub const RENDERER: &str = "nepl3-tools.markdown-annotated/3";
 
 pub fn from_source(
     compiled: &Compiled,
@@ -96,7 +96,7 @@ pub fn generate(
     source: &str,
     alias_bytes: &[u8],
 ) -> crate::Result<String> {
-    generate_with_budget(compiled, path, source, alias_bytes, &mut budget())
+    generate_with_budget(compiled, path, source, alias_bytes, None, &mut budget())
 }
 
 /// Preserve the legacy source namespace and bytes while sharing a caller's
@@ -107,6 +107,7 @@ pub(crate) fn generate_with_budget(
     path: &str,
     source: &str,
     alias_bytes: &[u8],
+    source_href: Option<&str>,
     output_budget: &mut Budget,
 ) -> crate::Result<String> {
     output_budget.poll().map_err(err)?;
@@ -123,7 +124,10 @@ pub(crate) fn generate_with_budget(
         .charge(Resource::AllocationUnits, alias_bytes.len() as u64 * 32)
         .map_err(err)?;
     let options: Vec<Alias> = serde_json::from_slice(alias_bytes)?;
-    let artifact = from_source_with_budget(compiled, source, &options, output_budget)?;
+    let mut artifact = from_source_with_budget(compiled, source, &options, output_budget)?;
+    if let Some(href) = source_href {
+        artifact.source_link(href, output_budget).map_err(err)?;
+    }
     // Logical allowance includes the escaped path intermediates, digest text,
     // metadata formatting and final body copy; it is not physical heap metering.
     let reserve = (path.len() * 5 + 1024 + artifact.markdown.len()) * 8;

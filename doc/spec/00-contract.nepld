@@ -1,25 +1,26 @@
-article ja "00. [対象/たいしょう]と[設計/せっけい]の[決定/けってい]"
+article ja "00. [目的/もくてき]・[適用範囲/てきようはんい]・[設計原則/せっけいげんそく]"
 body
-  cons section policy "[方針/ほうしん]"
+  cons section policy "NEPL3の[目的/もくてき]と[仕様/しよう]の[役割/やくわり]"
     body
       cons paragraph
         cons "NEPL3は、[多数/たすう]の[独立/どくりつ]したDSLを、[括弧/かっこ]なし[前置記法/ぜんちきほう]の[共通規律/きょうつうきりつ]で[多階層/たかいそう]・[再帰的/さいきてき]に[相互/そうご][埋/う]め[込/こ]みする[言語基盤/げんごきばん]である。"
+        cons "ある[言語/げんご]の[構文/こうぶん]の[内部/ないぶ]に[別/べつ]の[言語/げんご]を[使/つか]い、その[内部/ないぶ]でさらに[別/べつ]の[言語/げんご]を[使/つか]う[構成/こうせい]を[扱/あつか]う。"
         cons "reader・[構文/こうぶん]・source・[診断/しんだん]の[契約/けいやく]を[共有/きょうゆう]し、[各言語/かくげんご]の[意味論/いみろん]は[各言語/かくげんご]が[所有/しょゆう]する。"
         cons "[先行情報/せんこうじょうほう]から[後続/こうぞく]・[内側/うちがわ]の[構文/こうぶん]を[確定/かくてい]し、その[後/あと]の[意味解決/いみかいけつ]は[個別言語/こべつげんご]へ[委/ゆだ]ねる。"
         nil
       cons paragraph
-        cons "この[仕様/しよう]は、[実装/じっそう]すべき[言語/げんご]と[操作/そうさ]を、[閉/と]じた{[契約/けいやく]/contract}として[定義/ていぎ]する。"
-        cons "[未実装/みじっそう]の[機能/きのう]を、[将来/しょうらい]の[曖昧/あいまい]な[判断/はんだん]に[委/ゆだ]ねたまま、[現在/げんざい]の[成功/せいこう]する[経路/けいろ]へ[置/お]いてはならない。"
+        cons "この[仕様/しよう]の{[契約/けいやく]/contract}は、[各言語/かくげんご]の[意味/いみ]と、[操作/そうさ]の[入力/にゅうりょく]・[出力/しゅつりょく]・[成功条件/せいこうじょうけん]・[失敗時/しっぱいじ]の[扱/あつか]いを[定/さだ]める。"
+        cons "[実装/じっそう]は、[操作/そうさ]が[要求/ようきゅう]する[機能/きのう]を[満/み]たした[場合/ばあい]に[成功/せいこう]を[返/かえ]す。"
+        cons "[未実装/みじっそう]の[機能/きのう]や[未確定/みかくてい]の[判断/はんだん]を[必要/ひつよう]とする[操作/そうさ]を、[成功/せいこう]として[返/かえ]してはならない。"
         cons "{[拡張点/かくちょうてん]/extension point}についても、[入力/にゅうりょく]・[出力/しゅつりょく]・[失敗/しっぱい]・[許可範囲/きょかはんい]を[定義/ていぎ]する。"
         nil
       nil
   cons section targets "1. [実装対象/じっそうたいしょう]"
     body
       cons paragraph
-        cons "[以下/いか]はこのrepositoryが[仕様化/しようか]するreference language[群/ぐん]であり、NEPL3へ[追加/ついか]できる[言語/げんご]の[上限/じょうげん]ではない。"
-        cons "[外部言語/がいぶげんご]も22[章/しょう]の[公開契約/こうかいけいやく]を[使/つか]い、foundationへ[言語名/げんごめい]の[特例/とくれい]を[追加/ついか]しない。"
-        cons "この[一覧/いちらん]は[完成済/かんせいず]み[機能/きのう]の[一覧/いちらん]ではなく、[現在/げんざい]のworkspaceはCargo.toml、[実装/じっそう]・[受入状態/うけいれじょうたい]はimplementation-status.jsonで[確認/かくにん]する。"
-        cons "SentenceとDocの[所有移行/しょゆういこう]は23[章/しょう]で[定/さだ]め、[現行/げんこう]Circuitの[契約/けいやく]を[新/あたら]しいNEPL3cの[設計案/せっけいあん]と[同一視/どういつし]しない。"
+        cons "このリポジトリは、[共通基盤/きょうつうきばん]を[利用/りよう]するreference languageとして、Grammar・Doc・Math・Circuitの[契約/けいやく]を[定/さだ]める。"
+        cons "[外部/がいぶ]の[独立/どくりつ]した[言語/げんご]も、22[章/しょう]の[公開契約/こうかいけいやく]を[通/とお]して[追加/ついか]できる。"
+        cons "[言語/げんご]の[追加/ついか]では、この[契約/けいやく]を[使/つか]い、foundationへの[言語名/げんごめい]による[特例/とくれい]の[追加/ついか]を[禁止/きんし]する。"
         nil
       cons list unordered
         cons item none body
@@ -47,12 +48,23 @@ body
           nil
         nil
       cons paragraph
+        cons "[現在/げんざい]のworkspace[構成/こうせい]はCargo.toml、[実装/じっそう]と[受入試験/うけいれしけん]の[状態/じょうたい]はimplementation-status.jsonに[記録/きろく]する。"
+        cons "[上記/じょうき]の[一覧/いちらん]は[実装/じっそう]の[目標/もくひょう]を[示/しめ]し、[各機能/かくきのう]の[利用可否/りようかひ]はその[状態/じょうたい]に[従/したが]う。"
+        nil
+      cons paragraph
+        cons "SentenceとDocの[所有境界/しょゆうきょうかい]および[移行/いこう]は23[章/しょう]に[定/さだ]める。"
+        cons "Circuitは7[章/しょう]の[回路言語/かいろげんご]を[指/さ]し、NEPL3cの[設計案/せっけいあん]は[別/べつ]の[契約/けいやく]として[扱/あつか]う。"
+        nil
+      cons paragraph
         cons "[完成品/かんせいひん]には、native CLI、wasm32-wasip2 CLI、browser worker[用/よう]Wasm、[汎用/はんよう]LSP server、portable operation providerを[含/ふく]める。"
         nil
       cons paragraph
-        cons "r3では、4[言語/げんご]のWeb Playground、[純粋/じゅんすい]TEA UI core、[静的/せいてき]な[文書/ぶんしょ]・[例/れい]・Rust APIサイトと、GitHub Pagesでの[配布/はいふ]を[含/ふく]める。"
+        cons "r3では、[独立/どくりつ]した[言語/げんご]を[登録/とうろく]して[組/く]み[合/あ]わせるWeb Playgroundと、[純粋/じゅんすい]TEA UI coreを[含/ふく]める。"
+        cons "Grammar・Doc・Math・Circuitの4[言語/げんご]は、Playgroundで[扱/あつか]うreference profileとして[提供/ていきょう]する。"
+        cons "[静的/せいてき]な[文書/ぶんしょ]・[例/れい]・Rust APIサイトを[生成/せいせい]し、GitHub Pagesで[配布/はいふ]する。"
         cons "[正式文書/せいしきぶんしょ]を[最終的/さいしゅうてき]にNEPL3 Doc DSLへ[移行/いこう]する[計画/けいかく]と、その[受入/うけいれ]も[必須/ひっす]とする。"
-        cons "[現在/げんざい]のMarkdownは、[移行審査/いこうしんさ]が[済/す]むまでは{[正本/せいほん]/canonical source}である。"
+        cons "[未移行/みいこう]のページはMarkdownを{[正本/せいほん]/canonical source}とし、[移行審査/いこうしんさ]を[通過/つうか]したページはNEPL3dを[正本/せいほん]とする。"
+        cons "[移行済/いこうず]みページの[正本/せいほん]と[生成/せいせい]するMarkdownはdoc/canonical.jsonで[管理/かんり]する。"
         cons "[未定義/みていぎ]のDoc[表現/ひょうげん]を、[情報/じょうほう]を[失/うしな]う[変換/へんかん]やRawHtmlで[埋/う]めてはならない。"
         cons "[詳細/しょうさい]は14〜16[章/しょう]に[定/さだ]める。"
         nil
@@ -90,30 +102,34 @@ body
               cons ruby text "表" text "あらわ"
               cons text "す。"
               nil
-            cons "listofはschema compilerのcombinatorであり、[可変/かへん]arityを[導入/どうにゅう]する[抜/ぬ]け[道/みち]ではない。"
+            cons "listofは、この[固定/こてい]arityの[構文/こうぶん]を[生成/せいせい]するschema compilerのcombinatorである。"
             nil
           nil
         cons item none body
           cons paragraph
-            cons "[将来/しょうらい]、[複数引数/ふくすうひきすう]の[関数適用/かんすうてきよう]を[導入/どうにゅう]する[言語/げんご]では、binary applyを[反復/はんぷく]する。"
+            cons "[構文/こうぶん]arityを[先行情報/せんこうじょうほう]から[確定/かくてい]できる[対象/たいしょう]は、[直接/ちょくせつ]headとして[読/よ]める。"
+            cons "arityを[確定/かくてい]できない[関数値/かんすうち]への[適用/てきよう]を[扱/あつか]う[言語/げんご]では、その[言語/げんご]のarity 0の[値参照/ちさんしょう]と、[固定/こてい]arity 2のapplyで[適用構造/てきようこうぞう]を[表/あらわ]す。"
+            cons "この[方式/ほうしき]で[複数/ふくすう]の[引数/ひきすう]を[渡/わた]す[場合/ばあい]は、binary applyを[反復/はんぷく]する。"
             cons "[今回/こんかい]のDSL constructorを、[関数値/かんすうち]の[適用/てきよう]へ[強制的/きょうせいてき]に[変換/へんかん]してはならない。"
             nil
           nil
         cons item none body
           cons paragraph
-            cons "token[内部/ないぶ]readerの[木/き]と、[共通/きょうつう]prefix[構文木/こうぶんぎ]は、[別/べつ]の[構造/こうぞう]である。"
+            cons "[共通/きょうつう]prefix[構文木/こうぶんぎ]は、headとその[子/こ]の[関係/かんけい]を[表/あらわ]す。"
+            cons "token[内部/ないぶ]のreaderは、その[言語/げんご]が[定/さだ]める[構造/こうぞう]を[解析/かいせき]し、エディタ[向/む]けにviewを[公開/こうかい]できる。"
             cons "editor[用/よう]のviewを[公開/こうかい]しても、[共通/きょうつう]parserの[子/こ]の[数/かず]は[変/か]わらない。"
             nil
           nil
         cons item none body
           cons paragraph
-            cons "Parsed、Resolved、Checked、Preparedを[区別/くべつ]する。"
-            cons "すべての[言語/げんご]へ、[同/おな]じ[必須/ひっす]pipelineを[課/か]してはならない。"
-            cons "[操作/そうさ]ごとの[前提/ぜんてい]は、[各章/かくしょう]に[記/しる]す。"
+            cons "Parsed、Resolved、Checked、Preparedは、[構文/こうぶん]の[解析/かいせき]、[参照/さんしょう]の[解決/かいけつ]、[条件/じょうけん]の[検査/けんさ]、[操作/そうさ]に[必要/ひつよう]な[準備/じゅんび]を[表/あらわ]す[状態/じょうたい]である。"
+            cons "[各操作/かくそうさ]が[要求/ようきゅう]する[状態/じょうたい]と、その[成立条件/せいりつじょうけん]は[各言語/かくげんご]の[仕様/しよう]に[定/さだ]める。"
+            cons "[共通基盤/きょうつうきばん]は、すべての[言語/げんご]に[同/おな]じ[処理順序/しょりじゅんじょ]を[必須/ひっす]として[課/か]してはならない。"
             nil
           nil
         cons item none body
           cons paragraph
+            cons "[元/もと]の[表記/ひょうき]と[位置/いち]を[扱/あつか]う[操作/そうさ]は、[保存/ほぞん]したsourceとsource spanを[使/つか]う。"
             cons "[意味値/いみち]だけから、[元/もと]のsource[表記/ひょうき]やsource spanを[逆算/ぎゃくさん]してはならない。"
             nil
           nil
@@ -122,8 +138,9 @@ body
   cons section prototypes "3. [試作/しさく]の[扱/あつか]い"
     body
       cons paragraph
-        cons "この[設計/せっけい]のAPI・モデル・エラー・[責務/せきむ]を、[後/あと]で[交換/こうかん]する[粗/あら]い[仮設計/かりせっけい]として[実装/じっそう]してはならない。"
-        cons "[後方互換/こうほうごかん]を[維持/いじ]するために、[誤/あやま]った[設計/せっけい]を[保存/ほぞん]することも[要求/ようきゅう]しない。"
+        cons "[段階的/だんかいてき]な[実装/じっそう]でも、API・モデル・エラー・[責務/せきむ]はこの[仕様/しよう]の[契約/けいやく]に[従/したが]う。"
+        cons "[後/あと]で[交換/こうかん]することを[前提/ぜんてい]に、[契約/けいやく]を[省略/しょうりゃく]した[仮設計/かりせっけい]を[実装/じっそう]することを[禁止/きんし]する。"
+        cons "[設計/せっけい]の[誤/あやま]りは、[後方互換/こうほうごかん]の[維持/いじ]に[優先/ゆうせん]して[修正/しゅうせい]できる。"
         cons "[設計/せっけい]を[変更/へんこう]するときは、[新/あたら]しいdesign revisionを[与/あた]え、[関連/かんれん]するすべての[契約/けいやく]と[試験/しけん]を[同時/どうじ]に[更新/こうしん]する。"
         nil
       cons paragraph
@@ -149,6 +166,10 @@ body
       nil
   cons section invariants "4. [不変条件/ふへんじょうけん]"
     body
+      cons paragraph
+        cons "[以下/いか]のINV01〜INV14は、[構文/こうぶん]・source・[言語/げんご]の[接続/せつぞく]・[操作結果/そうさけっか]を[通/つう]じて[保持/ほじ]する[条件/じょうけん]である。"
+        cons "[意味/いみ]モデルと[中間表現/ちゅうかんひょうげん]の[補足/ほそく][不変条件/ふへんじょうけん]は12[章/しょう]、[受入試験/うけいれしけん]は11[章/しょう]に[定/さだ]める。"
+        nil
       cons list unordered
         cons item none body cons paragraph cons "INV01：prefixの[境界/きょうかい]が[一意/いちい]であること。" nil nil
         cons item none body cons paragraph cons "INV02：[未知/みち]のarityを[推測/すいそく]しないこと。" nil nil
@@ -166,20 +187,20 @@ body
         cons item none body cons paragraph cons "INV14：providerとworkspaceのtrustを[区別/くべつ]すること。" nil nil
         nil
       nil
-  cons section spellings "5. [具体的/ぐたいてき]な[綴/つづ]り"
+  cons section spellings "5. constructorと[名前参照/なまえさんしょう]"
     body
       cons paragraph
+        cons "[構文/こうぶん]をプログラムから[生成/せいせい]するときは、[各言語/かくげんご]の[公開/こうかい]constructor APIで[構造/こうぞう]を[構築/こうちく]する。"
+        cons "[追加/ついか]する[言語/げんご]も、[同/おな]じconstructor schemaを[呼/よ]び[出/だ]す[契約/けいやく]を[使/つか]う。"
         cons sentence
-          cons concat cons ruby text "以前" text "いぜん" cons text "の" cons ruby text "会話" text "かいわ" cons text "にあった " nil
+          cons concat cons text "Grammar・Doc・Math・Circuitの" cons ruby text "組込" text "くみこ" cons text "みには " nil
           cons code "Fn"
           cons text "、"
           cons code "value"
           cons text "、"
           cons code "splice"
-          cons concat cons text " は、" cons ruby text "今回" text "こんかい" cons text "の4" cons ruby text "言語" text "げんご" cons text "の" cons ruby text "組込" text "くみこ" cons text "みではない。" nil
+          cons concat cons text " を" cons ruby text "含" text "ふく" cons text "めない。" nil
           nil
-        cons "[構文生成/こうぶんせいせい]は、[各言語/かくげんご]の[公開/こうかい]constructor APIで[実際/じっさい]に[行/おこな]える。"
-        cons "[将来/しょうらい]の[言語/げんご]は、[同/おな]じconstructor schemaを[呼/よ]び[出/だ]して[実装/じっそう]する。"
         cons sentence
           cons text "Grammarの "
           cons code "call"
@@ -187,7 +208,7 @@ body
           cons code "map"
           cons text " / "
           cons code "then"
-          cons concat cons text " は、" cons ruby text "現在" text "げんざい" cons text "もRust providerへ" cons ruby text "接続" text "せつぞく" cons text "できる" cons ruby text "完全" text "かんぜん" cons text "な" cons ruby text "拡張点" text "かくちょうてん" cons text "である。" nil
+          cons concat cons text " は、Rust providerへ" cons ruby text "処理" text "しょり" cons text "を" cons ruby text "接続" text "せつぞく" cons text "する" cons ruby text "拡張点" text "かくちょうてん" cons text "である。" nil
           nil
         nil
       cons paragraph

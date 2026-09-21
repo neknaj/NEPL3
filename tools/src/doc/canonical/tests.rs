@@ -9,6 +9,48 @@ fn registry() -> serde_json::Value {
 }
 
 #[test]
+fn canonical_source_link_follows_title_and_uses_projection_directory() -> Result<()> {
+    let fixture = Fixture::new()?;
+    fixture.write(
+        "doc/source.nepld",
+        r#"article ja "[題/だい]" body cons paragraph cons "本文" nil nil"#,
+    )?;
+    fixture.write(
+        "doc/aliases.json",
+        r#"[{"section":null,"name":"old-title"}]"#,
+    )?;
+    for renderer in [RENDERER, projection::RENDERER] {
+        let mut manifest = registry();
+        manifest["pages"][0]["source"] = json!("doc/source.nepld");
+        manifest["pages"][0]["projection"] = json!("doc/view/sample.md");
+        manifest["pages"][0]["renderer"] = json!(renderer);
+        fixture.json("doc/canonical.json", &manifest)?;
+        let output = projection::generate(
+            fixture.root(),
+            "doc/canonical.json",
+            &mut super::super::source::budget(),
+        )?;
+        let markdown = &output.files[0].1;
+        assert!(markdown.contains(concat!(
+            "<a name=\"old-title\"></a>\n\n",
+            "# <ruby>題<rt>だい</rt></ruby>\n\n",
+            "[正本（NEPL3d）](<../source.nepld>)\n\n",
+            "本文\n"
+        )));
+        let links: Vec<_> = pulldown_cmark::Parser::new(markdown)
+            .filter_map(|e| match e {
+                pulldown_cmark::Event::Start(pulldown_cmark::Tag::Link { dest_url, .. }) => {
+                    Some(dest_url.into_string())
+                }
+                _ => None,
+            })
+            .collect();
+        assert_eq!(links, ["../source.nepld"]);
+    }
+    Ok(())
+}
+
+#[test]
 fn prepared_reference_keeps_source_and_output_identities_separate() -> Result<()> {
     let fixture = Fixture::new()?;
     let mut manifest = registry();
@@ -89,7 +131,7 @@ fn explicit_markdown_reference_preserves_bytes_and_changes_context() -> Result<(
             _ => None,
         })
         .collect();
-    assert_eq!(links, ["guide.md"]);
+    assert_eq!(links, ["sample.nepld", "guide.md"]);
     let html = generate_html(fixture.root(), "doc/canonical.json")?;
     assert_eq!(
         html.files["sources/guide.md"],
@@ -161,7 +203,14 @@ fn old_renderer_check_still_validates_declared_reference_inputs() -> Result<()> 
     f.write("doc/sample.nepld", source)?;
     f.write("doc/aliases.json", "[]")?;
     let compiled = super::super::source::compiled()?;
-    let markdown = host::generate(&compiled, "doc/sample.nepld", source, b"[]")?;
+    let markdown = host::generate_with_budget(
+        &compiled,
+        "doc/sample.nepld",
+        source,
+        b"[]",
+        Some("sample.nepld"),
+        &mut super::super::source::budget(),
+    )?;
     f.write("doc/sample.md", markdown)?;
     f.write("doc/guide.md", "# Guide\n")?;
     check(f.root(), "doc/canonical.json")?;
@@ -183,14 +232,21 @@ fn source_and_projection_changes_are_rejected_without_writing() -> Result<()> {
     fixture.write("doc/sample.nepld", source)?;
     fixture.write("doc/aliases.json", b"[]")?;
     let compiled = super::super::source::compiled()?;
-    let view = host::generate(&compiled, "doc/sample.nepld", source, b"[]")?;
+    let view = host::generate_with_budget(
+        &compiled,
+        "doc/sample.nepld",
+        source,
+        b"[]",
+        Some("sample.nepld"),
+        &mut super::super::source::budget(),
+    )?;
     let visible: String = pulldown_cmark::Parser::new(&view)
         .filter_map(|event| match event {
             pulldown_cmark::Event::Text(text) => Some(text.into_string()),
             _ => None,
         })
         .collect();
-    assert_eq!(visible, "文[ぶん]本文[ほんぶん]。");
+    assert_eq!(visible, "文ぶん正本（NEPL3d）本文ほんぶん。");
     assert!(view.starts_with("<!-- Generated from doc/sample.nepld;"));
     fixture.write("doc/sample.md", &view)?;
     check(fixture.root(), "doc/canonical.json")?;
@@ -510,11 +566,13 @@ fn mixed_context_preserves_legacy_bytes_and_real_markdown_and_html_links() -> Re
     let aliases = fs::read(f.root().join("doc/target.json"))?;
     assert_eq!(
         generated.files[1].1,
-        host::generate(
+        host::generate_with_budget(
             &super::super::source::compiled()?,
             "doc/target.nepld",
             &source,
-            &aliases
+            &aliases,
+            Some("../target.nepld"),
+            &mut super::super::source::budget(),
         )?
     );
     let links: Vec<_> = pulldown_cmark::Parser::new(&generated.files[0].1)
@@ -527,7 +585,10 @@ fn mixed_context_preserves_legacy_bytes_and_real_markdown_and_html_links() -> Re
             }
         })
         .collect();
-    assert_eq!(links, ["sub/target.md#n-757365", "sample.md"]);
+    assert_eq!(
+        links,
+        ["sample.nepld", "sub/target.md#n-757365", "sample.md"]
+    );
     assert!(generated.files[1].1.contains("<a name=\"n-757365\"></a>"));
     assert!(generated.files[1].1.contains("<a name=\"old-use\"></a>"));
     for (path, text) in &generated.files {

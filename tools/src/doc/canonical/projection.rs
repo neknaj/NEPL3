@@ -15,7 +15,7 @@ use nepl3_doc_core::{
 };
 use nepl3_wire::foundation::FoundationCodec;
 
-pub(super) const RENDERER: &str = "nepl3-tools.markdown-annotated-pages/1";
+pub(super) const RENDERER: &str = "nepl3-tools.markdown-annotated-pages/2";
 const CONTEXT: &[u8] = b"nepl3.canonical-input-context/1\0";
 const MAX_ALIASES: u64 = 1_048_576;
 const MAX_OUTPUT: u64 = 2_097_152;
@@ -227,11 +227,23 @@ fn generate_batch(
     charge(budget, Resource::Work, 1)?;
     let (raw, inputs, references, needs_group) = capture(root, raw)?;
     let compiled = crate::doc::source::compiled()?;
-    let group = if needs_group {
+    let mut group = if needs_group {
         Some(grouped(&compiled, &inputs, references, budget)?)
     } else {
         None
     };
+    if let Some(group) = &mut group {
+        for (artifact, input) in group.pages.iter_mut().zip(&inputs) {
+            let href = annotated::pages::relative(
+                &input.page.projection,
+                &input.page.source,
+                None,
+                budget,
+            )
+            .map_err(err)?;
+            artifact.source_link(&href, budget).map_err(err)?;
+        }
+    }
     let mut context = Vec::new();
     let identity = if let Some(group) = &group {
         field(&mut context, CONTEXT, budget)?;
@@ -272,11 +284,14 @@ fn generate_batch(
         budget.poll().map_err(err)?;
         let page = &input.page;
         let text = if page.renderer == host::RENDERER {
+            let href = annotated::pages::relative(&page.projection, &page.source, None, budget)
+                .map_err(err)?;
             let legacy = host::generate_with_budget(
                 &compiled,
                 &page.source,
                 &input.source,
                 &input.aliases,
+                Some(&href),
                 budget,
             )?;
             if let Some(group) = &group {

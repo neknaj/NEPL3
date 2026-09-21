@@ -167,10 +167,10 @@ inline HTMLを含む段落では、タグの後の改行から定義の抽出を
 `doc/canonical.json` に登録された仕様はnepldを編集します。生成Markdownを直接変更しないでください。
 `cargo run --locked -p nepl3-tools -- doc-canonical --check` はproduction APIで再生成して差分を検査します。
 更新時は `doc-markdown annotated` で新しい一時ファイルへ生成し、差分をレビューして既存のprojectionへ反映します。
-ページ間リンクを持つ `nepl3-tools.markdown-annotated-pages/1` の登録後は、
+ページ間リンクを持つ `nepl3-tools.markdown-annotated-pages/2` の登録後は、
 `cargo run --locked -p nepl3-tools -- doc-canonical markdown dist/canonical-markdown` で全登録ページを
 新規ディレクトリへ生成します。参照先・別ページのaliasも同じ入力集合に含め、旧rendererのページは
-既存byte列を維持します。成功した生成物の差分をレビューしてからprojectionへ反映してください。
+同じrendererでの単独生成と本文を一致させる。Rubyは`<ruby>`・`<rt>`で出力し、タイトル直後にNEPL3d正本への相対リンクを置く。成功した生成物の差分をレビューしてからprojectionへ反映する。
 `cargo run --locked -p nepl3-tools -- doc-canonical html dist/doc-canonical` は、同じ正本からHTML一式を新規出力します。
 HTML集合の有限出力予算を明示する場合は、registryの `html_output_limits` に8資源をすべて指定します。
 Markdown用の `output_limits` とは別の設定であり、未指定時は従来のHTML既定値を維持します。

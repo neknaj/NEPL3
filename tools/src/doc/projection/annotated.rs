@@ -18,11 +18,77 @@ pub struct Alias {
 pub struct Artifact {
     pub markdown: String,
     pub document_digest: Digest,
+    /// Structural insertion boundary after the article heading and separator.
+    pub(crate) title_end: usize,
+}
+
+impl Artifact {
+    /// Add repository provenance at the boundary recorded by the renderer.
+    /// Canonical registry paths use the portable ASCII path alphabet.
+    pub(crate) fn source_link(&mut self, href: &str, budget: &mut Budget) -> Result<(), Error> {
+        budget.charge(Resource::Work, href.len() as u64 + 1)?;
+        if href.is_empty()
+            || !href
+                .bytes()
+                .all(|c| c.is_ascii_alphanumeric() || b"/._-".contains(&c))
+        {
+            return Err(Error::Invalid("invalid canonical source link".into()));
+        }
+        let size = href
+            .len()
+            .checked_mul(2)
+            .and_then(|n| n.checked_add(128))
+            .and_then(|n| n.checked_add(self.markdown.len()))
+            .ok_or_else(|| budget.stop(StopReason::AllocationLimit))?;
+        budget.charge(Resource::Work, size as u64)?;
+        budget.charge(Resource::AllocationUnits, size as u64)?;
+        let link = format!("[正本（NEPL3d）](<{href}>)\n\n");
+        budget.charge(Resource::OutputBytes, link.len() as u64)?;
+        if self.markdown.len() + link.len() > 1024 * 1024 {
+            return Err(Error::OutputLimit);
+        }
+        self.markdown.reserve_exact(link.len());
+        self.markdown.insert_str(self.title_end, &link);
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn source_link_stops_before_mutating_the_artifact() {
+        for reason in [
+            StopReason::WorkLimit,
+            StopReason::AllocationLimit,
+            StopReason::OutputLimit,
+        ] {
+            let mut limits = crate::doc::source::budget().limits();
+            match reason {
+                StopReason::WorkLimit => limits.work = 0,
+                StopReason::AllocationLimit => limits.allocation_units = 0,
+                StopReason::OutputLimit => limits.output_bytes = 0,
+                _ => unreachable!(),
+            }
+            let mut budget = Budget::new(limits);
+            let mut artifact = Artifact {
+                markdown: "# T\n\nBody\n".into(),
+                title_end: 5,
+                document_digest: Digest::of(b"fixture"),
+            };
+            assert!(
+                matches!(artifact.source_link("../source.nepld", &mut budget), Err(Error::Stopped(actual)) if actual == reason)
+            );
+            assert_eq!(artifact.markdown, "# T\n\nBody\n");
+            assert!(budget.poll().is_err());
+        }
+    }
 }
 
 /// Render one checked Article with external links. Cross-page links, assets
 /// and foreign operations still require a page-set/host preparation path.
-/// Ruby is displayed as `base[reading]`, Anno as `base{note1/note2}`; nested
+/// Ruby uses inline HTML `ruby`/`rt`, Anno displays `base{note1/note2}`; nested
 /// content is walked structurally, including code and semantic decorations.
 pub fn render<C: FoundationValueCodec>(
     document: &DocumentSyntax,
@@ -119,6 +185,7 @@ fn render_resolved(
     writer.plain.emit("# ")?;
     writer.sentences(&[title.0], None)?;
     writer.plain.emit("\n\n")?;
+    let title_end = writer.plain.output.len();
     writer.body(body.0, 1)?;
     // An alias for an unreachable section must not silently disappear.
     for alias in aliases {
@@ -143,6 +210,7 @@ fn render_resolved(
     }
     Ok((
         Artifact {
+            title_end,
             markdown: writer.plain.output,
             document_digest,
         },
@@ -162,6 +230,8 @@ enum Piece<'a> {
     Code(u64, &'a str),
     Break(u64),
     Tag(&'static str),
+    /// Ruby base/reading boundaries separate adjacent code spans.
+    RubyTag(&'static str),
     LinkStart(u64),
     LinkEnd(u64, &'a str),
 }
@@ -272,10 +342,11 @@ impl<'a> Annotated<'a, '_> {
                         DocKind::Break => push(&mut pieces, Piece::Break(node), self.plain.budget)?,
                         DocKind::Ruby { base, reading } => {
                             for task in [
-                                Task::Piece(Piece::Text(node, "]")),
+                                Task::Piece(Piece::RubyTag("</rt></ruby>")),
                                 Task::Node(reading.0, next),
-                                Task::Piece(Piece::Text(node, "[")),
+                                Task::Piece(Piece::RubyTag("<rt>")),
                                 Task::Node(base.0, next),
+                                Task::Piece(Piece::Tag("<ruby>")),
                             ] {
                                 push(&mut stack, task, self.plain.budget)?;
                             }
@@ -415,7 +486,7 @@ impl<'a> Annotated<'a, '_> {
                     }
                     previous_code = true;
                 }
-                Piece::Tag(tag) => {
+                Piece::Tag(tag) | Piece::RubyTag(tag) => {
                     self.plain.emit(tag)?;
                     previous_code = false;
                 }

@@ -324,7 +324,11 @@ fn annotated_page_set_resolves_mutual_self_and_passive_file_links() -> Result<()
             .markdown
             .contains("<a name=\"n-757365\"></a>")
     );
-    assert!(output.pages[1].markdown.contains("戻\\[もど\\]"));
+    assert!(
+        output.pages[1]
+            .markdown
+            .contains("<ruby>戻<rt>もど</rt></ruby>")
+    );
     // Passive bytes belong to context identity even though they are not parsed.
     set.files[0].content.0.push(b'!');
     let changed = render(

@@ -66,7 +66,7 @@ fn adjacent_lists_preserve_distinct_blocks_and_numbering() -> Result<(), String>
         assert_eq!(lists, expected);
         assert_eq!(item_counts, [2, 2]);
         assert_eq!(checks, [true, false]);
-        assert_eq!(visible, "TA[a]BC<!-- -->");
+        assert_eq!(visible, "TAaBC<!-- -->");
         assert_eq!(codes, ["x"]);
         assert_eq!(breaks, 1);
         assert_eq!(comments, 1);
@@ -155,7 +155,7 @@ fn annotated_lists_preserve_start_checks_notes_and_break_continuations() -> Resu
     assert_eq!(code, ["a|b"]);
     assert_eq!(
         visible,
-        "例確認[かくにん]。次 step式[しき]{}未了。[x] literalSeparator.項目。"
+        "例確認かくにん。次 step式しき{}未了。[x] literalSeparator.項目。"
     );
     Ok(())
 }
@@ -252,7 +252,7 @@ fn annotated_tables_preserve_cells_alignment_notes_and_literal_pipes() -> Result
             "C",
             "D",
             "",
-            "値[あたい]{value}",
+            "値あたい{value}",
             "a|b",
             "x\\|y",
             "a\\|b",

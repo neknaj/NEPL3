@@ -215,11 +215,21 @@ pub fn check(root: &Path, manifest: &str) -> Result<()> {
             let source = bounded(root, &page.source, super::export::MAX_SOURCE_BYTES)?;
             let aliases = bounded(root, &page.aliases, MAX_REGISTRY)?;
             repository::json::validate(std::str::from_utf8(&aliases)?)?;
-            let expected = host::generate(
+            let mut budget = super::source::budget();
+            let href = super::projection::annotated::pages::relative(
+                &page.projection,
+                &page.source,
+                None,
+                &mut budget,
+            )
+            .map_err(super::source::err)?;
+            let expected = host::generate_with_budget(
                 &compiled,
                 &page.source,
                 std::str::from_utf8(&source)?,
                 &aliases,
+                Some(&href),
+                &mut budget,
             )?;
             if bounded(root, &page.projection, 2_097_152)? != expected.as_bytes() {
                 return Err(format!(

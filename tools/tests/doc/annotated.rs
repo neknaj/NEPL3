@@ -3,6 +3,29 @@ use nepl3_tools::doc::projection::annotated::{Alias, host::from_source};
 use pulldown_cmark::{Event, Parser, Tag};
 
 #[test]
+fn ruby_html_keeps_nested_readings_code_and_escaped_text() -> Result<(), String> {
+    let source = r#"article ja "[題/だい]" body cons paragraph cons sentence
+        cons anno ruby text "漢<&" ruby text "かん" text "kan" cons text "meaning" nil
+        cons text " " cons ruby code "a|b" code "r<&"
+        cons text " " cons ruby text "字" text "</rt><script>&" nil nil nil"#;
+    let markdown = from_source(&compiled()?, source, &[])?.markdown;
+    let mut html = String::new();
+    pulldown_cmark::html::push_html(&mut html, Parser::new(&markdown));
+    // Expected nesting is defined directly from the authored Doc model: an
+    // outer reading contains Ruby, and Anno follows its complete base.
+    assert_eq!(
+        html,
+        concat!(
+            "<h1><ruby>題<rt>だい</rt></ruby></h1>\n",
+            "<p><ruby>漢&lt;&amp;<rt><ruby>かん<rt>kan</rt></ruby></rt></ruby>{meaning} ",
+            "<ruby><code>a|b</code><rt><code>r&lt;&amp;</code></rt></ruby> ",
+            "<ruby>字<rt>&lt;/rt&gt;&lt;script&gt;&amp;</rt></ruby></p>\n"
+        )
+    );
+    Ok(())
+}
+
+#[test]
 fn annotated_view_preserves_typed_notes_code_and_nested_sections() -> Result<(), String> {
     let source = r##"article ja "[文/ぶん]"
     body cons paragraph cons "導入。" nil
@@ -44,7 +67,7 @@ fn annotated_view_preserves_typed_notes_code_and_nested_sections() -> Result<(),
     }
     assert_eq!(
         text,
-        "文[ぶん]導入。外[そと]漢[かん]字 base{/n[2]&amp;} link Next.Inner本文。Last終わり。"
+        "文ぶん導入。外そと漢かん字 base{/n[2]&amp;} link Next.Inner本文。Last終わり。"
     );
     assert_eq!(codes, ["a/b"]);
     assert_eq!(headings, [1, 2, 3, 2]);
@@ -134,7 +157,7 @@ fn authored_chapter_thirteen_generates_annotations_without_rewriting() -> Result
             "https://www.rfc-editor.org/rfc/rfc3987.html"
         ]
     );
-    assert!(output.contains("再現性\\[さいげんせい\\]"));
+    assert!(output.contains("<ruby>再現性<rt>さいげんせい</rt></ruby>"));
     Ok(())
 }
 
@@ -261,7 +284,7 @@ fn annotated_host_rejects_invalid_aliases_before_creating_output()
         assert!(text.contains("source&#45;&#45;metadata.nepld"));
         assert_eq!(text.matches("<!--").count(), 1);
         assert_eq!(text.matches("-->").count(), 1);
-        assert!(text.contains("renderer nepl3-tools.markdown-annotated/2"));
+        assert!(text.contains("renderer nepl3-tools.markdown-annotated/3"));
         assert!(text.contains("<a name=\"old-title\"></a>"));
         assert!(text.ends_with('\n'));
         assert!(!text.ends_with("\n\n"));
