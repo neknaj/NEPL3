@@ -13,6 +13,8 @@ use nepl3_core::{
 mod diagnostic;
 mod index;
 mod occurrences;
+#[cfg(test)]
+mod tests;
 pub use diagnostic::LabelDiagnosticError;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -116,6 +118,16 @@ pub fn check<'a>(
     admission: &mut SourceAdmission,
 ) -> Result<CheckedLabels<'a>, LabelError<'a>> {
     let structure = document.validate_structure(registry, b, admission)?;
+    check_structure(&structure, b)
+}
+
+/// Use the exact document and traversal order held by the native proof.
+pub(crate) fn check_structure<'a>(
+    structure: &crate::check::ValidatedDocumentSyntax<'a>,
+    b: &mut Budget,
+) -> Result<CheckedLabels<'a>, LabelError<'a>> {
+    b.poll()?;
+    let document = structure.document();
     let DocRoot::Article(root) = document.value.root else {
         return Err(LabelError::ExpectedArticle);
     };

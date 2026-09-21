@@ -198,6 +198,7 @@ pub fn generate_with_resources(
     let mut c = FoundationCodec::new(r, &empty, &mut a).map_err(err)?;
     let rendered = render_pages(&request, r, &mut c, output_budget)
         .map_err(|e| format!("resolve/render: {e:?}; usage={:?}", output_budget.usage()))?;
+    let rendered_usage = output_budget.usage();
     let mut files = BTreeMap::new();
     let mut file_kinds = BTreeMap::new();
     for file in &request.set.files {
@@ -225,8 +226,12 @@ pub fn generate_with_resources(
         if !route.ends_with(".html") {
             return Err("HTML route must end in .html".into());
         }
-        let html = shell(fragment, output_budget)
-            .map_err(|e| format!("serialize: {e}; usage={:?}", output_budget.usage()))?;
+        let html = shell(fragment, output_budget).map_err(|e| {
+            format!(
+                "page {route}: {e}; render completed usage={rendered_usage:?}; usage={:?}",
+                output_budget.usage()
+            )
+        })?;
         insert(&mut files, route.clone(), html.into_bytes())?;
         file_kinds.insert(route.clone(), "text/html; charset=utf-8");
         let css = match route.rsplit_once('/') {

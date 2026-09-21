@@ -32,19 +32,30 @@ pub fn set_to_value<C: FoundationValueCodec>(
     c: &mut C,
     b: &mut Budget,
 ) -> Result<NdfValue, PortableError<C::Error>> {
+    set_to_value_with_structures(set, r, c, b).map(|(value, _)| value)
+}
+
+pub(crate) fn set_to_value_with_structures<'a, C: FoundationValueCodec>(
+    set: &'a PageSet,
+    r: &SchemaRegistry,
+    c: &mut C,
+    b: &mut Budget,
+) -> Result<(NdfValue, Vec<crate::check::ValidatedDocumentSyntax<'a>>), PortableError<C::Error>> {
     let s = schema(r)?;
     let mut values = Vec::new();
+    let mut structures = Vec::new();
     for page in &set.pages {
         b.charge(Resource::Work, 1)?;
         let registration = page.registration.put(s, c, b)?;
-        let document = to_value(&page.document, r, c, b)?;
+        let (document, structure) = to_value_with_structure(&page.document, r, c, b)?;
+        pages::push(&mut structures, structure, b)?;
         let value = record(s, "PageDocument", [registration, document], b)?;
         pages::push(&mut values, value, b)?;
     }
     let files = set.files.put(s, c, b)?;
     let value = record(s, "PageSet", [NdfValue::List(values), files], b)?;
     text::check_type(&value, "PageSet", r, b)?;
-    Ok(value)
+    Ok((value, structures))
 }
 /// Structural receiver. Call pages::resolve to check registrations, actual
 /// labels and links. Separate documents cannot redefine one source revision.
