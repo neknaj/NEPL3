@@ -60,6 +60,33 @@ impl<'a, S> ReplyRoutes<'a, S> {
 }
 
 impl<R: Read, W: Write> Connection<R, W> {
+    /// Receive an active reply and close every remaining connection lifetime on
+    /// transport, validation or correlation failure. Cleanup is allocation-free
+    /// and works after either budget stops. The callback interrupts execution;
+    /// it must not block or panic. Terminal requests receive no notification.
+    /// The table must contain only requests owned by this connection. The host
+    /// retains responsibility for process termination/reaping and Await setup.
+    #[allow(clippy::too_many_arguments)]
+    pub fn receive_managed_reply<S: DiagnosticSourceResolver>(
+        &mut self,
+        routes: &ReplyRoutes<'_, S>,
+        lifetimes: &mut RequestLifetimes,
+        registry: &SchemaRegistry,
+        sources: &SourceStore,
+        admission: &mut SourceAdmission,
+        transport: &mut Budget,
+        validation: &mut Budget,
+        cancel: impl FnMut(u64),
+    ) -> Result<(usize, OperationReply), RouteError> {
+        let result = self.receive_active_reply(
+            routes, lifetimes, registry, sources, admission, transport, validation,
+        );
+        if result.is_err() {
+            lifetimes.close(cancel);
+        }
+        result
+    }
+
     /// Receive a routed reply and require its host lifetime to be Running with
     /// the same operation identity and snapshot. Terminal replies are committed
     /// as Finished before returning. Await remains Running until the host checks

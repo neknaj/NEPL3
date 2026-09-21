@@ -201,7 +201,7 @@ fn exchange(
         )
         .map_err(error)?;
     let (route, reply) = connection
-        .receive_active_reply(
+        .receive_managed_reply(
             &routes,
             &mut lifetimes,
             &registry,
@@ -209,6 +209,7 @@ fn exchange(
             &mut admission,
             &mut budget(),
             &mut budget(),
+            |_| {},
         )
         .map_err(error)?;
     assert_eq!(route, 0);
@@ -218,12 +219,7 @@ fn exchange(
             .map_err(error)?,
         RequestPhase::Running
     );
-    let OperationReply::Await {
-        continuation,
-        calls,
-        ..
-    } = reply
-    else {
+    let OperationReply::Await { calls, .. } = &reply else {
         return Err("expected remote Await".into());
     };
     if calls.len() != 1 || calls[0].operation.name != "increment" || calls[0].request_id != 18 {
@@ -264,29 +260,24 @@ fn exchange(
         operation: &selected,
         grants: &authority,
     }];
-    let approved = nepl3_suite::grants::dependencies::authorize(&calls, &policy, &mut budget())
-        .map_err(error)?;
-    let [approved] = approved.as_slice() else {
+    let dependency_context = model::context(&calls[0], &registry)?;
+    let active = nepl3_suite::suspension::host::activate(
+        &request,
+        context,
+        &reply,
+        &policy,
+        &[dependency_context],
+        &registry,
+        &sources,
+        &mut lifetimes,
+        &mut budget(),
+    )
+    .map_err(error)?;
+    let mut pending = active.pending;
+    let [approved] = active.authorized.as_slice() else {
         return Err("expected one authorized dependency".into());
     };
     let dependency = approved.invocation().request();
-    let dependency_context = model::context(dependency, &registry)?;
-    lifetimes
-        .begin_call(
-            dependency,
-            dependency_context,
-            Some(request.request_id),
-            &mut budget(),
-        )
-        .map_err(error)?;
-    lifetimes
-        .suspend(
-            request.request_id,
-            continuation.clone(),
-            calls.len(),
-            &mut budget(),
-        )
-        .map_err(error)?;
     let OperationReply::Result(result) = suspending::invoke(
         &registration,
         identity(),
@@ -301,13 +292,16 @@ fn exchange(
     else {
         return Err("expected terminal dependency".into());
     };
-    let mut pending =
-        PendingDependencies::new(&continuation, &calls, &mut budget()).map_err(error)?;
     pending
-        .accept(18, result, &registry, &sources, &mut budget())
-        .map_err(error)?;
-    lifetimes
-        .finish(dependency.request_id, &mut budget())
+        .accept_active(
+            dependency.request_id,
+            dependency_context,
+            result,
+            &registry,
+            &sources,
+            &mut lifetimes,
+            &mut budget(),
+        )
         .map_err(error)?;
     let resume = pending.take_resume(&mut budget()).map_err(error)?;
     lifetimes.resume(&resume, &mut budget()).map_err(error)?;
@@ -321,7 +315,7 @@ fn exchange(
         )
         .map_err(error)?;
     let (route, reply) = connection
-        .receive_active_reply(
+        .receive_managed_reply(
             &routes,
             &mut lifetimes,
             &registry,
@@ -329,6 +323,7 @@ fn exchange(
             &mut admission,
             &mut budget(),
             &mut budget(),
+            |_| {},
         )
         .map_err(error)?;
     assert_eq!(route, 0);

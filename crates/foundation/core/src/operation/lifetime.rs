@@ -2,6 +2,7 @@
 //! result validation are performed by the host before committing transitions.
 use super::*;
 use alloc::boxed::Box;
+mod batch;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum LifetimeError {
@@ -121,6 +122,16 @@ impl RequestLifetimes {
         parent: Option<u64>,
         b: &mut Budget,
     ) -> Result<(), LifetimeError> {
+        let entry = self.prepare_call(call, snapshot, parent, b)?;
+        self.register(entry, b)
+    }
+    fn prepare_call(
+        &self,
+        call: &Invoke,
+        snapshot: Digest,
+        parent: Option<u64>,
+        b: &mut Budget,
+    ) -> Result<Entry, LifetimeError> {
         b.poll()?;
         if self.closed {
             return Err(LifetimeError::Closed);
@@ -169,20 +180,18 @@ impl RequestLifetimes {
         b.charge(
             Resource::AllocationUnits,
             (call.operation.name.len() as u64)
-                .saturating_add(call.operation.schema.package.len() as u64),
+                .saturating_add(call.operation.schema.package.len() as u64)
+                .saturating_add(core::mem::size_of::<TypedValue>() as u64),
         )?;
         let input = Box::new(call.input.clone_with_budget(b)?);
-        self.register(
-            Entry {
-                id: call.request_id,
-                provider: call.operation.clone(),
-                snapshot,
-                state: State::Running,
-                parent,
-                input: Some(input),
-            },
-            b,
-        )
+        Ok(Entry {
+            id: call.request_id,
+            provider: call.operation.clone(),
+            snapshot,
+            state: State::Running,
+            parent,
+            input: Some(input),
+        })
     }
     fn register(&mut self, entry: Entry, b: &mut Budget) -> Result<(), LifetimeError> {
         b.poll()?;
