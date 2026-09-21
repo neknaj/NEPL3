@@ -63,6 +63,8 @@ jobs:
         run: python -m unittest test_record_smoke.RecordSmokeTests.test_pass_and_failure_are_recorded_remotely
       - name: Evidence runner host portability
         run: python -m unittest tools.evidence.test_runner
+      - name: Generated checkout gate tests
+        run: python -m unittest tools.audit.test_clean
       - name: Node renderer host toolchain
         if: matrix.os != 'ubuntu-latest'
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -148,8 +150,8 @@ jobs:
           path: dist/doc-canonical/
           if-no-files-found: error
           retention-days: 14
-      - name: Verify clean tracked files
-        run: git diff --exit-code
+      - name: Verify unchanged checkout
+        run: python tools/audit/clean.py
 
   repository-contract:
     name: repository and generated contracts
@@ -222,7 +224,7 @@ jobs:
           if-no-files-found: error
           retention-days: 3
       - name: Verify generated source is unchanged
-        run: git diff --exit-code
+        run: python tools/audit/clean.py
 
   site-publication:
     name: site publication host tests
