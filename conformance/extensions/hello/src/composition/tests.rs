@@ -2,6 +2,65 @@ use super::*;
 use nepl3_core::syntax::FieldValue;
 
 #[test]
+fn portable_profile_drives_recursive_parsing() -> Result<(), String> {
+    use nepl3_core::source::SourceStore;
+    use nepl3_engine::{portable::profile as exchange, profile::RuntimeCatalog};
+    use nepl3_wire::foundation::FoundationCodec;
+
+    let sender = languages("Expr", "Frame")?;
+    let profile = sender.profile("composition")?;
+    let packages = sender.packages.iter().map(|(_, p)| p).collect::<Vec<_>>();
+    let catalog = RuntimeCatalog {
+        packages: &packages,
+        providers: &[],
+        resources: &[],
+    };
+    let resolved = profile
+        .resolve(&catalog, &sender.registry, &mut budget())
+        .map_err(error)?;
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec =
+        FoundationCodec::new(&sender.registry, &sources, &mut admission).map_err(error)?;
+    let value = exchange::to_value(&resolved, &mut codec, &mut budget()).map_err(error)?;
+    let bytes = nepl3_wire::encode(&value, &mut budget()).map_err(error)?;
+
+    // The receiver reconstructs its own packages and registry. Only requirements
+    // cross the wire; executable registrations remain supplied by the host.
+    for input in ["add framed frame neg 7 2", "framed frame 未知", "framed"] {
+        let receiver = languages("Expr", "Frame")?;
+        let packages = receiver.packages.iter().map(|(_, p)| p).collect::<Vec<_>>();
+        let catalog = RuntimeCatalog {
+            packages: &packages,
+            providers: &[],
+            resources: &[],
+        };
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(&receiver.registry, &sources, &mut admission).map_err(error)?;
+        let value = nepl3_wire::decode(&bytes, &mut budget()).map_err(error)?;
+        let received = exchange::from_value(
+            &value,
+            &catalog,
+            &receiver.registry,
+            &mut codec,
+            &mut budget(),
+        )
+        .map_err(error)?;
+        let observed = super::super::parse::with_profile(
+            input,
+            true,
+            false,
+            (receiver, received),
+            ("Expr", "composition"),
+            |reply, _, _, _| Ok(reply),
+        )?;
+        assert_eq!(observed, inspect(input, true)?.parse);
+    }
+    Ok(())
+}
+
+#[test]
 fn recursive_packages_keep_contexts_source_and_print() -> Result<(), String> {
     let input = "add framed frame neg 7 2";
     let result = inspect(input, true)?;

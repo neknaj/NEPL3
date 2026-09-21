@@ -283,3 +283,4 @@ record_value!(PackageIdentity,engine,"PackageIdentity",2,[schema:0,semantic_dige
 record_value!(EntryContext,engine,"EntryContext",4,[package:0,alias:1,category:2,mode:3]);
 record_value!(ForeignStep,engine,"ForeignStep",2,[node:0,field:1]);
 mod head;
+mod profile;
