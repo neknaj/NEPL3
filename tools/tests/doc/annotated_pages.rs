@@ -108,6 +108,94 @@ fn page_projection_reuses_validation_and_matches_standalone_digest() -> Result<(
 }
 
 #[test]
+fn page_projection_scales_with_pages_without_rescanning_all_links() -> Result<(), String> {
+    let c = compiled()?;
+    let store = SourceStore::default();
+    // Vary page count independently of links per page. Internal links exercise
+    // plan.links; external links exercise plan.remaining. Empty pages between
+    // populated pages exercise advancing across gaps without losing entries.
+    for (internal, external) in [(0, 1), (1, 0), (3, 2)] {
+        let mut pages = Vec::new();
+        for index in 0..32 {
+            let id = format!("p{index:02}");
+            let source = if index % 4 == 1 {
+                "article en \"Empty\" body nil".to_owned()
+            } else {
+                format!(
+                    "article en \"A\" body cons paragraph cons sentence {}{}nil nil nil",
+                    "cons link page \"p00\" none text \"Local\" ".repeat(internal),
+                    "cons link external \"https://example.com/\" text \"External\" "
+                        .repeat(external)
+                )
+            };
+            pages.push(page(
+                &c,
+                &id,
+                &format!("{id}.nepld"),
+                &format!("{id}.md"),
+                &source,
+            )?);
+        }
+        let mut work = Vec::new();
+        for count in [8, 16, 32] {
+            let set = PageSet {
+                pages: pages[..count].to_vec(),
+                files: vec![],
+            };
+            // Isolate projection work from resolver lookup costs. Each run
+            // starts with a fresh codec/admission and the same immutable input.
+            let mut admission = SourceAdmission::default();
+            let mut codec =
+                FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+            let mut resolved = budget();
+            let proof = resolve(&set, &c.doc.registry, &mut codec, &mut resolved).map_err(err)?;
+            let mut admission = SourceAdmission::default();
+            let mut codec =
+                FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+            let mut actual = budget();
+            let aliases = vec![&[][..]; count];
+            let output =
+                render(&set, &c.doc.registry, &mut codec, &mut actual, &aliases).map_err(err)?;
+            assert_eq!(output.pages.len(), count);
+            for (index, artifact) in output.pages.iter().enumerate() {
+                let expected = if index % 4 == 1 {
+                    vec![]
+                } else {
+                    let mut links = vec!["p00.md".to_owned(); internal];
+                    links.extend(vec!["https://example.com/".to_owned(); external]);
+                    links
+                };
+                assert_eq!(links(&artifact.markdown), expected);
+                assert_eq!(
+                    Some(artifact.document_digest),
+                    proof.document_digest(index as u64)
+                );
+            }
+            work.push(
+                actual
+                    .usage()
+                    .work
+                    .checked_sub(resolved.usage().work)
+                    .ok_or("resolution work mismatch")?,
+            );
+        }
+        // Identical fixed-width pages are repeated in groups of four. Their
+        // writer cost is linear; a small allowance covers terminal cursor
+        // comparisons. Whole-plan filtering instead adds P*(L+R) work and
+        // exceeds this bound even with just one link per populated page.
+        assert!(
+            work[1] <= 2 * work[0] + 16,
+            "{internal}/{external}: {work:?}"
+        );
+        assert!(
+            work[2] <= 2 * work[1] + 16,
+            "{internal}/{external}: {work:?}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn checked_pages_still_reject_unsafe_external_and_guest_requirements() -> Result<(), String> {
     let c = compiled()?;
     let store = SourceStore::default();

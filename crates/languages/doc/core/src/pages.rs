@@ -128,6 +128,9 @@ impl<'a> CheckedPages<'a> {
     pub fn set(&self) -> &'a PageSet {
         self.set
     }
+    /// Both links and remaining requirements are grouped by increasing source
+    /// page index, preserving requirement order within each page. This order
+    /// is guaranteed for this native proof, not for an unvalidated wire plan.
     pub fn plan(&self) -> &PageLinkPlan {
         &self.plan
     }
