@@ -35,6 +35,15 @@ where
     let mut output = Vec::new();
     for (page, input) in set.pages.iter().enumerate() {
         budget.charge(Resource::Work, 1)?;
+        for pending in &checked.plan().remaining {
+            budget.charge(Resource::Work, 1)?;
+            if pending.page == page as u64 {
+                check_pending(&pending.requirement, budget)?;
+            }
+        }
+        let document_digest = checked
+            .document_digest(page as u64)
+            .ok_or_else(|| Error::Invalid("missing checked document digest".into()))?;
         let mut links = Vec::new();
         for link in &checked.plan().links {
             budget.charge(Resource::Work, 1)?;
@@ -55,11 +64,10 @@ where
         }
         let rendered = render_resolved(
             &input.document,
-            registry,
-            codec,
             budget,
             aliases[page],
             &links,
+            document_digest,
         )?;
         push(&mut output, rendered, budget)?;
     }

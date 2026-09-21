@@ -243,6 +243,7 @@ pub struct SourceMap {
 pub struct ValidatedSourceMap<'a> {
     mappings: &'a [Mapping],
     additional: &'a [Mapping],
+    validated_sources: Option<&'a SourceStore>,
 }
 impl SourceMap {
     /// Borrows a mapping table whose entries were admitted through `insert`.
@@ -250,6 +251,7 @@ impl SourceMap {
         ValidatedSourceMap {
             mappings: &self.mappings,
             additional: &[],
+            validated_sources: None,
         }
     }
     pub fn validate_mappings<'a>(
@@ -272,6 +274,7 @@ impl SourceMap {
         let mapped = ValidatedSourceMap {
             mappings,
             additional,
+            validated_sources: None,
         };
         for mapping in mapped.iter() {
             budget.charge(Resource::Work, 1)?;
@@ -294,7 +297,18 @@ impl SourceMap {
         Ok(mapped)
     }
 }
-impl ValidatedSourceMap<'_> {
+impl<'a> ValidatedSourceMap<'a> {
+    /// Bind source closure validation to an immutable store borrow. The bound
+    /// proof cannot outlive that store; unbound proofs retain revalidation.
+    pub fn bind_sources(
+        mut self,
+        sources: &'a SourceStore,
+        budget: &mut Budget,
+    ) -> Result<Self, OriginError> {
+        self.validate_sources(sources, budget)?;
+        self.validated_sources = Some(sources);
+        Ok(self)
+    }
     fn iter(&self) -> impl Iterator<Item = &Mapping> + Clone {
         self.mappings.iter().chain(self.additional)
     }
@@ -305,6 +319,12 @@ impl ValidatedSourceMap<'_> {
         budget: &mut Budget,
     ) -> Result<(), OriginError> {
         budget.charge(Resource::Work, 1)?;
+        if self
+            .validated_sources
+            .is_some_and(|original| core::ptr::eq(original, sources))
+        {
+            return Ok(());
+        }
         for mapping in self.iter() {
             for span in [&mapping.source, &mapping.target] {
                 budget.charge(Resource::Work, 1)?;

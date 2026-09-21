@@ -5,6 +5,67 @@ use nepl3_core::{
 };
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 #[test]
+fn source_closure_proof_is_scoped_to_the_borrowed_store() -> TestResult {
+    let a = source("proof-a", "abc")?;
+    let b = source("proof-b", "abc")?;
+    let mut store = SourceStore::default();
+    store.insert(a.clone()).map_err(|e| format!("{e:?}"))?;
+    store.insert(b.clone()).map_err(|e| format!("{e:?}"))?;
+    let maps = [Mapping {
+        source: a.span(0, 3).map_err(|e| format!("{e:?}"))?,
+        target: b.span(0, 3).map_err(|e| format!("{e:?}"))?,
+        kind: MappingKind::Exact,
+    }];
+    let proof = SourceMap::validate_mapping_parts(&[], &maps, &store, &mut budget())
+        .and_then(|proof| proof.bind_sources(&store, &mut budget()))
+        .map_err(|e| format!("{e:?}"))?;
+    // Reusing the very same immutable store needs only a stop/budget check,
+    // independent of the number of mappings or subsequent token validations.
+    let mut one = Budget::new(Limits {
+        work: 1,
+        ..budget().limits()
+    });
+    proof
+        .validate_sources(&store, &mut one)
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(one.usage().work, 1);
+    let mut copied = SourceStore::default();
+    copied.insert(a.clone()).map_err(|e| format!("{e:?}"))?;
+    copied.insert(b.clone()).map_err(|e| format!("{e:?}"))?;
+    let mut check = budget();
+    proof
+        .validate_sources(&copied, &mut check)
+        .map_err(|e| format!("{e:?}"))?;
+    assert!(check.usage().work > 1);
+    let mut missing = SourceStore::default();
+    missing.insert(a).map_err(|e| format!("{e:?}"))?;
+    assert!(proof.validate_sources(&missing, &mut budget()).is_err());
+    // Matching IDs and revisions with changed bytes are not the bound store.
+    missing
+        .insert(source("proof-b", "xyz")?)
+        .map_err(|e| format!("{e:?}"))?;
+    assert!(proof.validate_sources(&missing, &mut budget()).is_err());
+    let mut zero = Budget::new(Limits {
+        work: 0,
+        ..budget().limits()
+    });
+    assert!(matches!(
+        proof.validate_sources(&store, &mut zero),
+        Err(OriginError::Stopped(StopReason::WorkLimit))
+    ));
+    let mut stopped = budget();
+    stopped.cancel();
+    assert!(matches!(
+        proof.validate_sources(&store, &mut stopped),
+        Err(OriginError::Stopped(StopReason::Cancelled))
+    ));
+    // An unbound proof still checks closure, including when binding is requested.
+    let unbound =
+        SourceMap::validate_mappings(&maps, &store, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    assert!(unbound.bind_sources(&missing, &mut budget()).is_err());
+    Ok(())
+}
+#[test]
 fn repeated_ordered_snapshot_edges_reuse_neighbor_positions() -> TestResult {
     let mut sources = SourceStore::default();
     let root = source("root", "x")?;

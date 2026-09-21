@@ -55,6 +55,85 @@ fn links(markdown: &str) -> Vec<String> {
 }
 
 #[test]
+fn page_projection_reuses_validation_and_matches_standalone_digest() -> Result<(), String> {
+    let c = compiled()?;
+    let store = SourceStore::default();
+    for count in [8, 16, 32] {
+        let source = format!(
+            "article en \"A\" body {} nil",
+            "cons paragraph cons \"A structured document with repeated independent paragraphs.\" nil ".repeat(count)
+        );
+        let set = PageSet {
+            pages: vec![page(&c, "a", "a.md", "a.md", &source)?],
+            files: vec![],
+        };
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+        let mut resolved = budget();
+        let checked = resolve(&set, &c.doc.registry, &mut codec, &mut resolved).map_err(err)?;
+        let digest = checked.document_digest(0).ok_or("missing digest")?;
+        // This is the old redundant work, in the same warm admission state.
+        let mut repeated = budget();
+        let standalone = annotated::render(
+            &set.pages[0].document,
+            &c.doc.registry,
+            &mut codec,
+            &mut repeated,
+            &[],
+        )
+        .map_err(err)?;
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+        let mut actual = budget();
+        let output = render(&set, &c.doc.registry, &mut codec, &mut actual, &[&[]]).map_err(err)?;
+        assert_eq!(output.pages[0].markdown, standalone.markdown);
+        assert_eq!(output.pages[0].document_digest, standalone.document_digest);
+        assert_eq!(output.pages[0].document_digest, digest);
+        let extra = actual
+            .usage()
+            .work
+            .checked_sub(resolved.usage().work)
+            .ok_or("missing resolution work")?;
+        // The writer must cost less than repeating complete preparation plus
+        // that same writer. Regressing to per-page inspect violates this bound.
+        assert!(
+            extra < repeated.usage().work / 2,
+            "{count} paragraphs: extra={extra}, repeated={}",
+            repeated.usage().work
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn checked_pages_still_reject_unsafe_external_and_guest_requirements() -> Result<(), String> {
+    let c = compiled()?;
+    let store = SourceStore::default();
+    for inline in [
+        r#"link external "javascript:alert(1)" text "bad""#,
+        "math Math frac 1 0",
+    ] {
+        let source =
+            format!("article en \"A\" body cons paragraph cons sentence cons {inline} nil nil nil");
+        let set = PageSet {
+            pages: vec![page(&c, "a", "a.md", "a.md", &source)?],
+            files: vec![],
+        };
+        let mut admission = SourceAdmission::default();
+        let mut codec =
+            FoundationCodec::new(&c.doc.registry, &store, &mut admission).map_err(err)?;
+        let failure = render(&set, &c.doc.registry, &mut codec, &mut budget(), &[&[]]);
+        assert!(
+            matches!(failure, Err(Error::Text { .. } | Error::NeedsResolution)),
+            "{failure:?}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn adjacent_lists_in_page_set_keep_links_and_separate_numbering() -> Result<(), String> {
     let c = compiled()?;
     let a = page(

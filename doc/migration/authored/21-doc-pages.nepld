@@ -1032,7 +1032,7 @@ body
           cons ruby text "登録順" text "とうろくじゅん"
           cons text "のページrecordである。"
           nil
-        cons "[各/かく]recordは32byteの[実/じつ]Profile digest、parse Limits 8[値/ち]、parse[開始/かいし]Usage 8[値/ち]、lower Limits 8[値/ち]、lower[開始/かいし]Usage 8[値/ち]を[既存/きそん]field[順/じゅん]の8byte big-endianで[連結/れんけつ]する。"
+        cons "[各/かく]recordは32byteの[実/じつ]Profile digest、parse Limits 8[値/あたい]、parse[開始/かいし]Usage 8[値/あたい]、lower Limits 8[値/あたい]、lower[開始/かいし]Usage 8[値/あたい]を[既存/きそん]field[順/じゅん]の8byte big-endianで[連結/れんけつ]する。"
         cons "この[設定入口/せっていいりぐち]の[開始/かいし]Usageは[全/すべ]て0である。"
         cons "[終了/しゅうりょう]Usageを[要求/ようきゅう]identityへ[混/ま]ぜず[実行記録/じっこうきろく]へ[残/のこ]す。"
         cons "[物理/ぶつり]input pathは[配置情報/はいちじょうほう]として[記録/きろく]し、[新/しん]identityへ[追加/ついか]しない。"
@@ -1186,7 +1186,9 @@ body
         cons "[未移行/みいこう]Markdown[等/とう]は、[呼出/よびだ]し[側/がわ]が[実/じつ]bytesを[明示/めいじ]したPageFileとして[扱/あつか]える。"
         cons "このfileはparse・[実行/じっこう]しない。"
         cons "Relativeのfragmentなし[参照/さんしょう]のみを[許/ゆる]し、FileFragmentの[拒否/きょひ]とPage targetがDoc[専用/せんよう]である[規則/きそく]を[維持/いじ]する。"
-        cons "MarkdownをHTML routeへ[置/お]き[換/か]えたり、[架空/かくう]のDocや[見出/みだ]しslugを[補/おぎな]ったりしない。"
+        cons "[原文/げんぶん]Markdownのbyte[列/れつ]をHTMLとして[配布/はいふ]したり、[架空/かくう]のDocや[見出/みだ]しslugを[補/おぎな]ったりしない。"
+        cons "16[章/しょう]の[混在/こんざい]site hostが[明示的/めいじてき]に[生成/せいせい]したHTMLをPageFileへ[渡/わた]す[場合/ばあい]は、[原文/げんぶん]と[生成物/せいせいぶつ]のdigestおよびrenderer/contextを[別/べつ]に[記録/きろく]する。"
+        cons "coreはHTMLも[受動的/じゅどうてき]な[実/じつ]byte[列/れつ]として[扱/あつか]う。"
         cons "[各/かく]Docのsource namespaceは[一意/いちい]なpage IDで[分/わ]け、[同/おな]じ[集合/しゅうごう]のcodec admissionで[異/こと]なる[内容/ないよう]を[同/おな]じsnapshotとして[受理/じゅり]しない。"
         nil
       cons paragraph
