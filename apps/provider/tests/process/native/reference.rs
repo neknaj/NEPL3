@@ -2,7 +2,7 @@
 use super::*;
 
 pub fn execute(registry: &SchemaRegistry, request: &Invoke) -> Result<OperationReply, String> {
-    let sources = SourceStore::default();
+    let sources = granted_sources()?;
     let authority =
         Grants::new(&request.environment, &sources, &[], &mut budget()).map_err(error)?;
     let approved = authority.admit(request, &mut budget()).map_err(error)?;

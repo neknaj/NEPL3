@@ -22,7 +22,7 @@ use model::*;
 
 fn child() -> Result<(), String> {
     let (registry, prototype) = fixture()?;
-    let sources = SourceStore::default();
+    let sources = granted_sources()?;
     let authority =
         Grants::new(&prototype.environment, &sources, &[], &mut budget()).map_err(error)?;
     let mut connection = Connection::new(io::stdin().lock(), io::stdout().lock());
@@ -44,7 +44,7 @@ fn child() -> Result<(), String> {
             .map_err(error)?;
         match frame {
             Some(ProviderFrame::Invoke(request)) => {
-                // This conformance provider grants no external sources/resources.
+                // This provider grants the fixed Unicode fixture and no resources.
                 if pending.is_some() {
                     return Err("concurrent fixture request".into());
                 }
@@ -146,7 +146,7 @@ fn exchange(
     if let TypedValue::Record(record) = &mut request.input {
         record.fields[0] = NdfValue::U64(input);
     }
-    let sources = SourceStore::default();
+    let sources = granted_sources()?;
     let context = context(&request, &registry)?;
     let mut admission = SourceAdmission::default();
     connection
@@ -242,7 +242,28 @@ fn exchange(
                 ..
             }),
         ) if record.fields == vec![NdfValue::U64(expected)] => {}
-        (None, OperationReply::Result(OperationResult::Invalid { partial: None, .. })) => {}
+        (
+            None,
+            OperationReply::Result(OperationResult::Invalid {
+                partial: None,
+                report,
+            }),
+        ) => {
+            let [diagnostic] = report.diagnostics.as_slice() else {
+                return Err("expected overflow diagnostic".into());
+            };
+            let span = diagnostic
+                .primary
+                .as_ref()
+                .ok_or("missing diagnostic span")?;
+            if diagnostic.code != "increment-overflow"
+                || span.start() != 4
+                || span.end() != 10
+                || input_source()?.slice(span).map_err(error)? != "世界"
+            {
+                return Err("incorrect Unicode diagnostic position".into());
+            }
+        }
         _ => return Err("incorrect increment value or overflow result".into()),
     }
     connection

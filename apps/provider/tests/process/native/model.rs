@@ -1,4 +1,5 @@
 use super::*;
+use nepl3_core::diagnostic::{Diagnostic, Severity};
 pub fn error(e: impl core::fmt::Debug) -> String {
     format!("{e:?}")
 }
@@ -19,6 +20,23 @@ pub fn identity() -> Digest {
 }
 pub fn context(call: &Invoke, registry: &SchemaRegistry) -> Result<Digest, String> {
     nepl3_wire::operation::context_digest(call, identity(), registry, &mut budget()).map_err(error)
+}
+pub fn input_source() -> Result<SourceSnapshot, String> {
+    SourceSnapshot::new(
+        SourceId("fixture".into()),
+        1,
+        "memory:fixture".into(),
+        "add 世界".as_bytes().to_vec(),
+        &mut budget(),
+    )
+    .map_err(error)
+}
+pub fn granted_sources() -> Result<SourceStore, String> {
+    let mut store = SourceStore::default();
+    store
+        .insert_with_budget(input_source()?, &mut budget())
+        .map_err(error)?;
+    Ok(store)
 }
 pub fn fixture() -> Result<(SchemaRegistry, Invoke), String> {
     let mut registry = SchemaRegistry::default();
@@ -78,7 +96,7 @@ pub fn fixture() -> Result<(SchemaRegistry, Invoke), String> {
             },
             input: value.clone(),
             environment: value,
-            sources: vec![],
+            sources: vec![input_source()?],
             resources: vec![],
             limits: budget().limits(),
         },
@@ -102,9 +120,37 @@ pub fn increment(
             report: Report::default(),
         }));
     }
+    let primary = match request.sources.first().map(|source| source.span(4, 10)) {
+        Some(Ok(span)) => span,
+        // A malformed fixture context has no valid location to report.
+        _ => {
+            return Ok(OperationReply::Result(OperationResult::Invalid {
+                partial: None,
+                report: Report::default(),
+            }));
+        }
+    };
     Ok(OperationReply::Result(OperationResult::Invalid {
         partial: None,
-        report: Report::default(),
+        // Fixture-owned source and diagnostic arguments; production validators
+        // check their identity, UTF-8 boundaries, schema and granted visibility.
+        report: Report {
+            diagnostics: vec![Diagnostic {
+                schema: request.operation.schema.clone(),
+                code: "increment-overflow".into(),
+                severity: Severity::Error,
+                stage: "check".into(),
+                arguments: request.input.clone(),
+                primary: Some(primary),
+                related: vec![],
+                fixes: vec![],
+            }],
+            usage: Usage {
+                diagnostics: 1,
+                ..Usage::default()
+            },
+            ..Report::default()
+        },
     }))
 }
 pub fn await_increment(
@@ -142,6 +188,14 @@ pub fn finish(
         return Ok(OperationReply::Result(OperationResult::Complete {
             value: value.clone_with_budget(b)?,
             report: Report::default(),
+        }));
+    }
+    if let [OperationReply::Result(OperationResult::Invalid { report, .. })] =
+        request.dependency_results.as_slice()
+    {
+        return Ok(OperationReply::Result(OperationResult::Invalid {
+            partial: None,
+            report: report.clone(),
         }));
     }
     Ok(OperationReply::Result(OperationResult::Invalid {
