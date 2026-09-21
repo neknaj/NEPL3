@@ -15,7 +15,7 @@ use nepl3_doc_core::{
 };
 use nepl3_wire::foundation::FoundationCodec;
 
-pub(super) const RENDERER: &str = "nepl3-tools.markdown-annotated-pages/3";
+pub(super) const RENDERER: &str = "nepl3-tools.markdown-annotated-pages/4";
 const CONTEXT: &[u8] = b"nepl3.canonical-input-context/1\0";
 const MAX_ALIASES: u64 = 1_048_576;
 const MAX_OUTPUT: u64 = 2_097_152;
@@ -329,16 +329,17 @@ fn generate_batch(
     charge(
         budget,
         Resource::AllocationUnits,
-        inputs.len() * core::mem::size_of::<(String, String)>(),
+        inputs.len() * (core::mem::size_of::<(String, String)>() + core::mem::size_of::<Digest>()),
     )?;
     let mut files = Vec::with_capacity(inputs.len());
+    let mut documents = Vec::with_capacity(inputs.len());
     for (index, input) in inputs.iter().enumerate() {
         budget.poll().map_err(err)?;
         let page = &input.page;
-        let text = if page.renderer == host::RENDERER {
+        let (text, document_digest) = if page.renderer == host::RENDERER {
             let href = annotated::pages::relative(&page.projection, &page.source, None, budget)
                 .map_err(err)?;
-            let legacy = host::generate_with_budget(
+            let (legacy, document_digest) = host::generate_with_receipt(
                 &compiled,
                 &page.source,
                 &input.source,
@@ -361,7 +362,7 @@ fn generate_batch(
                     return Err("legacy projection differs from resolved page body/anchors".into());
                 }
             }
-            legacy
+            (legacy, document_digest)
         } else {
             let group = group.as_ref().ok_or("missing page context")?;
             let context = page_context(input, &group.dependencies[index], budget)?;
@@ -377,15 +378,17 @@ fn generate_batch(
             )?;
             charge(budget, Resource::Work, reserve)?;
             charge(budget, Resource::AllocationUnits, reserve)?;
-            format!(
-                "<!-- Generated from {}; renderer {RENDERER}; page {}; source SHA-256 {}; alias input SHA-256 {}; document digest {}; page input SHA-256 {}. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->\n\n{}\n",
-                page.source.replace('-', "&#45;"),
-                page.id.replace('-', "&#45;"),
-                hex(Digest::of(input.source.as_bytes())),
-                hex(Digest::of(&input.aliases)),
-                hex(artifact.document_digest),
-                hex(context),
-                artifact.markdown.trim_end_matches('\n')
+            (
+                format!(
+                    "<!-- Generated from {}; renderer {RENDERER}; page {}; source SHA-256 {}; alias input SHA-256 {}; page input SHA-256 {}. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->\n\n{}\n",
+                    page.source.replace('-', "&#45;"),
+                    page.id.replace('-', "&#45;"),
+                    hex(Digest::of(input.source.as_bytes())),
+                    hex(Digest::of(&input.aliases)),
+                    hex(context),
+                    artifact.markdown.trim_end_matches('\n')
+                ),
+                artifact.document_digest,
             )
         };
         if text.len() as u64 > MAX_OUTPUT {
@@ -399,6 +402,7 @@ fn generate_batch(
             page.projection.len() + core::mem::size_of::<(String, String)>(),
         )?;
         files.push((page.projection.clone(), text));
+        documents.push(document_digest);
     }
     charge(
         budget,
@@ -406,10 +410,10 @@ fn generate_batch(
         files.len() * core::mem::size_of::<serde_json::Value>(),
     )?;
     let mut records = Vec::with_capacity(files.len());
-    for (path, text) in &files {
+    for ((path, text), document_digest) in files.iter().zip(documents) {
         charge(budget, Resource::Work, text.len() + path.len())?;
         charge(budget, Resource::AllocationUnits, path.len() * 6 + 512)?;
-        records.push(serde_json::json!({"path":path,"sha256":hex(Digest::of(text.as_bytes())),"bytes":text.len()}));
+        records.push(serde_json::json!({"path":path,"sha256":hex(Digest::of(text.as_bytes())),"bytes":text.len(),"document_digest":hex(document_digest)}));
     }
     // Reserve before json! copies the records and before serialization. Each
     // portable path is <=4096 bytes; 32 KiB covers escaped path, fields, digest

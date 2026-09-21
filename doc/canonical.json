@@ -7,7 +7,7 @@
       "projection": "doc/tutorial/hello.md",
       "aliases": "doc/tutorial/hello.aliases.json",
       "route": "tutorial/index.html",
-      "renderer": "nepl3-tools.markdown-annotated/3"
+      "renderer": "nepl3-tools.markdown-annotated/4"
     },
     {
       "id": "contract",
@@ -15,7 +15,7 @@
       "projection": "doc/spec/00-contract.md",
       "aliases": "doc/migration/aliases/00-contract.json",
       "route": "docs/spec/00-contract.html",
-      "renderer": "nepl3-tools.markdown-annotated/3"
+      "renderer": "nepl3-tools.markdown-annotated/4"
     },
     {
       "id": "reproducibility",
@@ -23,7 +23,7 @@
       "projection": "doc/spec/13-reproducibility.md",
       "aliases": "doc/migration/aliases/13-reproducibility.json",
       "route": "docs/spec/13-reproducibility.html",
-      "renderer": "nepl3-tools.markdown-annotated/3"
+      "renderer": "nepl3-tools.markdown-annotated/4"
     },
     {
       "id": "external-extensions",
@@ -31,7 +31,7 @@
       "projection": "doc/spec/22-external-extensions.md",
       "aliases": "doc/migration/aliases/22-external-extensions.json",
       "route": "docs/spec/22-external-extensions.html",
-      "renderer": "nepl3-tools.markdown-annotated/3"
+      "renderer": "nepl3-tools.markdown-annotated/4"
     },
     {
       "id": "architecture",
@@ -39,7 +39,7 @@
       "projection": "doc/spec/01-architecture.md",
       "aliases": "doc/migration/aliases/01-architecture.json",
       "route": "docs/spec/01-architecture.html",
-      "renderer": "nepl3-tools.markdown-annotated-pages/3"
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     },
     {
       "id": "html-delivery",
@@ -47,7 +47,7 @@
       "projection": "doc/spec/18-html-delivery.md",
       "aliases": "doc/migration/aliases/18-html-delivery.json",
       "route": "docs/spec/18-html-delivery.html",
-      "renderer": "nepl3-tools.markdown-annotated/3"
+      "renderer": "nepl3-tools.markdown-annotated/4"
     },
     {
       "id": "circuit",
@@ -55,7 +55,7 @@
       "projection": "doc/spec/07-circuit.md",
       "aliases": "doc/migration/aliases/07-circuit.json",
       "route": "docs/spec/07-circuit.html",
-      "renderer": "nepl3-tools.markdown-annotated/3"
+      "renderer": "nepl3-tools.markdown-annotated/4"
     },
     {
       "id": "html-fragment",
@@ -63,7 +63,7 @@
       "projection": "doc/spec/19-html-fragment.md",
       "aliases": "doc/migration/aliases/19-html-fragment.json",
       "route": "docs/spec/19-html-fragment.html",
-      "renderer": "nepl3-tools.markdown-annotated/3"
+      "renderer": "nepl3-tools.markdown-annotated/4"
     },
     {
       "id": "model-invariants",
@@ -71,7 +71,7 @@
       "projection": "doc/spec/12-model-invariants.md",
       "aliases": "doc/migration/aliases/12-model-invariants.json",
       "route": "docs/spec/12-model-invariants.html",
-      "renderer": "nepl3-tools.markdown-annotated-pages/3"
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     },
     {
       "id": "editor",
@@ -79,7 +79,7 @@
       "projection": "doc/spec/08-editor.md",
       "aliases": "doc/migration/aliases/08-editor.json",
       "route": "docs/spec/08-editor.html",
-      "renderer": "nepl3-tools.markdown-annotated/3"
+      "renderer": "nepl3-tools.markdown-annotated/4"
     },
     {
       "id": "doc-html",
@@ -87,7 +87,7 @@
       "projection": "doc/spec/20-doc-html.md",
       "aliases": "doc/migration/aliases/20-doc-html.json",
       "route": "docs/spec/20-doc-html.html",
-      "renderer": "nepl3-tools.markdown-annotated/3"
+      "renderer": "nepl3-tools.markdown-annotated/4"
     },
     {
       "id": "math-html",
@@ -95,7 +95,7 @@
       "projection": "doc/spec/17-math-html.md",
       "aliases": "doc/migration/aliases/17-math-html.json",
       "route": "docs/spec/17-math-html.html",
-      "renderer": "nepl3-tools.markdown-annotated-pages/3"
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     },
     {
       "id": "conformance",
@@ -103,7 +103,7 @@
       "projection": "doc/spec/11-conformance.md",
       "aliases": "doc/migration/aliases/11-conformance.json",
       "route": "docs/spec/11-conformance.html",
-      "renderer": "nepl3-tools.markdown-annotated-pages/3"
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     },
     {
       "id": "math",
@@ -111,7 +111,7 @@
       "projection": "doc/spec/06-math.md",
       "aliases": "doc/migration/aliases/06-math.json",
       "route": "docs/spec/06-math.html",
-      "renderer": "nepl3-tools.markdown-annotated-pages/3"
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     },
     {
       "id": "doc-migration",
@@ -119,7 +119,7 @@
       "projection": "doc/spec/16-doc-migration.md",
       "aliases": "doc/migration/aliases/16-doc-migration.json",
       "route": "docs/spec/16-doc-migration.html",
-      "renderer": "nepl3-tools.markdown-annotated-pages/3"
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     },
     {
       "id": "reader",
@@ -127,7 +127,7 @@
       "projection": "doc/spec/03-reader.md",
       "aliases": "doc/migration/aliases/03-reader.json",
       "route": "docs/spec/03-reader.html",
-      "renderer": "nepl3-tools.markdown-annotated-pages/3"
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     },
     {
       "id": "grammar",
@@ -135,7 +135,7 @@
       "projection": "doc/spec/04-grammar.md",
       "aliases": "doc/migration/aliases/04-grammar.json",
       "route": "docs/spec/04-grammar.html",
-      "renderer": "nepl3-tools.markdown-annotated-pages/3"
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     },
     {
       "id": "foundation",
@@ -143,7 +143,7 @@
       "projection": "doc/spec/02-foundation.md",
       "aliases": "doc/migration/aliases/02-foundation.json",
       "route": "docs/spec/02-foundation.html",
-      "renderer": "nepl3-tools.markdown-annotated-pages/3"
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     },
     {
       "id": "document",
@@ -151,7 +151,7 @@
       "projection": "doc/spec/05-document.md",
       "aliases": "doc/migration/aliases/05-document.json",
       "route": "docs/spec/05-document.html",
-      "renderer": "nepl3-tools.markdown-annotated-pages/3"
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     },
     {
       "id": "integration",
@@ -159,7 +159,7 @@
       "projection": "doc/spec/10-integration.md",
       "aliases": "doc/migration/aliases/10-integration.json",
       "route": "docs/spec/10-integration.html",
-      "renderer": "nepl3-tools.markdown-annotated-pages/3"
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     },
     {
       "id": "doc-pages",
@@ -167,7 +167,7 @@
       "projection": "doc/spec/21-doc-pages.md",
       "aliases": "doc/migration/aliases/21-doc-pages.json",
       "route": "docs/spec/21-doc-pages.html",
-      "renderer": "nepl3-tools.markdown-annotated-pages/3"
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     },
     {
       "id": "portability",
@@ -175,7 +175,7 @@
       "projection": "doc/spec/09-portability.md",
       "aliases": "doc/migration/aliases/09-portability.json",
       "route": "docs/spec/09-portability.html",
-      "renderer": "nepl3-tools.markdown-annotated-pages/3"
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     },
     {
       "id": "web-ui",
@@ -183,7 +183,7 @@
       "projection": "doc/spec/14-web-ui.md",
       "aliases": "doc/migration/aliases/14-web-ui.json",
       "route": "docs/spec/14-web-ui.html",
-      "renderer": "nepl3-tools.markdown-annotated-pages/3"
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     },
     {
       "id": "site",
@@ -191,7 +191,7 @@
       "projection": "doc/spec/15-site.md",
       "aliases": "doc/migration/aliases/15-site.json",
       "route": "docs/spec/15-site.html",
-      "renderer": "nepl3-tools.markdown-annotated-pages/3"
+      "renderer": "nepl3-tools.markdown-annotated-pages/4"
     }
   ],
   "files": [

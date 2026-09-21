@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/04&#45;grammar.nepld; renderer nepl3-tools.markdown-annotated-pages/3; page grammar; source SHA-256 fefb3d68267233c1ed903734c60e3ed115efd3c6e64dd3bc49358a3723385840; alias input SHA-256 ffe8ce448133c7124191d2d57181f7835884968b311cd4e03108d91d5c6c6f63; document digest 6f45499e5ba9aa1bcba8eca6a4eb319d341e08d0b9e64a42bd990ee2116d6d06; page input SHA-256 5eeb780b93903a0f3a2f96504ba8023face5040a70a316733eaceb8153ee6d07. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/04&#45;grammar.nepld; renderer nepl3-tools.markdown-annotated-pages/4; page grammar; source SHA-256 fefb3d68267233c1ed903734c60e3ed115efd3c6e64dd3bc49358a3723385840; alias input SHA-256 ffe8ce448133c7124191d2d57181f7835884968b311cd4e03108d91d5c6c6f63; page input SHA-256 3f562b6eab4b9c8193b5c5a861eb12d9083d3e9deea19cb9f76239014866e0bd. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="04-grammar言語"></a>
 
