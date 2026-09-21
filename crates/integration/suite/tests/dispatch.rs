@@ -7,6 +7,8 @@ use nepl3_core::{
     value::*,
 };
 use nepl3_suite::dispatch::*;
+#[path = "dispatch/suspension.rs"]
+mod suspension;
 
 fn budget() -> Budget {
     Budget::new(Limits {
