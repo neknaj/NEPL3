@@ -338,6 +338,79 @@ fn literal_window_commits_exactly_one_head_and_incomplete_scans_return_no_tree()
 }
 
 #[test]
+fn annotation_failures_preserve_exact_original_byte_ranges() -> Result<(), String> {
+    let r = registry()?;
+    // Byte offsets are counted in the original UTF-8 input: the opening '['
+    // after '前' starts at byte 4, and EOF after 'ぶん' is byte 15. A CRLF
+    // failure points at CR alone; empty parts retain a zero-width location.
+    // These expectations migrate the former Doc reader's diagnostic contract.
+    for (text, code, primary, opening) in [
+        (
+            "\"前[文/ぶん",
+            SentenceCode::UnclosedAnnotation,
+            (15, 15),
+            Some((4, 5)),
+        ),
+        (
+            "\"[x/y\"",
+            SentenceCode::UnclosedAnnotation,
+            (5, 6),
+            Some((1, 2)),
+        ),
+        (
+            "\"[x/y\r\n",
+            SentenceCode::UnclosedAnnotation,
+            (5, 6),
+            Some((1, 2)),
+        ),
+        (
+            "\"[/y]\"",
+            SentenceCode::EmptyAnnotationPart,
+            (2, 2),
+            Some((1, 2)),
+        ),
+        (
+            "\"[x/y/z]\"",
+            SentenceCode::SeparatorCount,
+            (5, 6),
+            Some((1, 2)),
+        ),
+        ("\"]\"", SentenceCode::UnexpectedDelimiter, (1, 2), None),
+    ] {
+        let s = source(text)?;
+        let scan = literal::read(
+            &s,
+            0,
+            text.len() as u64,
+            true,
+            &r,
+            &mut b(),
+            &mut SourceAdmission::default(),
+        )
+        .map_err(err)?;
+        let SentenceOutcome::Failed(failure) = scan.outcome else {
+            return Err(format!("expected diagnostic for {text:?}"));
+        };
+        assert_eq!(failure.code, code, "{text:?}");
+        assert_eq!(
+            (failure.primary.start(), failure.primary.end()),
+            primary,
+            "{text:?}"
+        );
+        s.slice(&failure.primary).map_err(err)?;
+        if let Some(span) = &failure.opening {
+            assert_eq!(s.slice(span).map_err(err)?, "[");
+        }
+        assert_eq!(
+            failure.opening.map(|span| (span.start(), span.end())),
+            opening,
+            "{text:?}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn malformed_literals_have_typed_source_bound_failures() -> Result<(), String> {
     let r = registry()?;
     for (text, code) in [
