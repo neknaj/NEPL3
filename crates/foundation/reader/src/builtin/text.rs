@@ -180,12 +180,17 @@ pub(super) fn read(
             kind: MappingKind::Exact,
         });
     }
-    budget.charge(Resource::Work, sources.snapshots().len() as u64)?;
-    for source in sources.snapshots() {
-        if source.identity().source == reservation.source_id
-            && source.identity().revision == reservation.revision
-            && (source.uri() != reservation.uri || source.text() != decoded)
-        {
+    if let Some(source) =
+        sources.get_revision_with_budget(&reservation.source_id, reservation.revision, budget)?
+    {
+        budget.charge(
+            Resource::Work,
+            (source.uri().len() as u64)
+                .saturating_add(reservation.uri.len() as u64)
+                .saturating_add(source.text().len() as u64)
+                .saturating_add(decoded.len() as u64),
+        )?;
+        if source.uri() != reservation.uri || source.text() != decoded {
             return Err(SourceError::IdentityConflict.into());
         }
     }
