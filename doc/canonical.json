@@ -176,6 +176,14 @@
       "aliases": "doc/migration/aliases/14-web-ui.json",
       "route": "docs/spec/14-web-ui.html",
       "renderer": "nepl3-tools.markdown-annotated-pages/1"
+    },
+    {
+      "id": "site",
+      "source": "doc/spec/15-site.nepld",
+      "projection": "doc/spec/15-site.md",
+      "aliases": "doc/migration/aliases/15-site.json",
+      "route": "docs/spec/15-site.html",
+      "renderer": "nepl3-tools.markdown-annotated-pages/1"
     }
   ],
   "files": [
