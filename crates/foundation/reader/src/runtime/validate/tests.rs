@@ -69,7 +69,7 @@ fn direct_artifacts_do_not_revalidate_unrelated_accepted_maps() -> Result<(), St
         diagnostics: Vec::new(),
         events: Vec::new(),
         trace_overflow: None,
-        sources: Vec::new(),
+        sources: sources.snapshots().iter().skip(1).cloned().collect(),
         source_maps: maps,
     };
     let signature = crate::plan::ProviderSignature {
@@ -200,6 +200,125 @@ fn direct_artifacts_do_not_revalidate_unrelated_accepted_maps() -> Result<(), St
         check(&view, &outside, &[], &mut budget()),
         Err(ReaderError::ProviderContract)
     );
+    let call = ProviderCall::Read {
+        session_id: "local-artifact-test".into(),
+        call_id: 0,
+        depth_base: 0,
+        operation: signature.operation.clone(),
+        request: OwnedReadRequest {
+            snapshot: root.reference(),
+            sources: vec![root.clone()],
+            start: 0,
+            limit: 1,
+            final_input: true,
+            state: NdfValue::Unit,
+            // Context preparation is checked by the request boundary, before this
+            // response validator. This fixture exercises only response acceptance.
+            context: ReaderContext {
+                schema: signature.operation.schema.clone(),
+                category: "Token".into(),
+                mode: "test".into(),
+                environment: nepl3_core::syntax::EnvironmentEntry {
+                    id: 0,
+                    digest: nepl3_core::source::Digest([0; 32]),
+                    value: nepl3_core::syntax::Environment {
+                        bindings: vec![],
+                        resources: vec![],
+                    },
+                },
+                origins: vec![],
+            },
+        },
+    };
+    let response = |facts: Vec<ReaderFact>, added: Vec<SourceSnapshot>| ReadReply::Matched {
+        value: NdfValue::Unit,
+        end: 1,
+        new_state: NdfValue::Unit,
+        view: view.clone(),
+        facts,
+        sources: added,
+        source_maps: vec![],
+        report: Report::default(),
+    };
+    let verify = |reply: &ReadReply, b: &mut Budget| {
+        check_provider(
+            &boundary,
+            0,
+            &call,
+            ProviderReplyRef::Read(reply),
+            Usage::default(),
+            &sources,
+            b,
+            &mut SourceAdmission::default(),
+        )
+    };
+    let mut local_budget = Budget::new(Limits {
+        work: 3000,
+        ..budget().limits()
+    });
+    verify(&response(facts.clone(), vec![]), &mut local_budget).map_err(|e| format!("{e:?}"))?;
+    let presentation = ReaderFact::Presentation {
+        class: nepl3_core::view::PresentationClass {
+            schema: signature.operation.schema.clone(),
+            name: "test".into(),
+            fallback: nepl3_core::view::FallbackRole::Content,
+        },
+        span: root.span(1, 2).map_err(|e| format!("{e:?}"))?,
+    };
+    let relation = ReaderFact::Relation {
+        schema: signature.operation.schema.clone(),
+        kind: "test".into(),
+        from: span.clone(),
+        to: root.span(1, 2).map_err(|e| format!("{e:?}"))?,
+    };
+    // These facts are valid outside the consumed range: use the full resolver.
+    verify(
+        &response(vec![presentation, relation], vec![]),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    let absent = source("absent").map_err(|e| format!("{e:?}"))?;
+    let foreign = ReaderFact::Relation {
+        schema: signature.operation.schema.clone(),
+        kind: "test".into(),
+        from: span.clone(),
+        to: absent.span(0, 1).map_err(|e| format!("{e:?}"))?,
+    };
+    assert_eq!(
+        verify(&response(vec![foreign], vec![]), &mut budget()),
+        Err(ReaderError::Source(SourceError::MissingSnapshot))
+    );
+    let conflict = SourceSnapshot::new(
+        SourceId("root".into()),
+        0,
+        "memory:root".into(),
+        b"zz".to_vec(),
+        &mut budget(),
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        verify(&response(facts.clone(), vec![conflict]), &mut budget()),
+        Err(ReaderError::Source(SourceError::IdentityConflict))
+    );
+    let mut bad_report = response(facts.clone(), vec![]);
+    if let ReadReply::Matched { report, .. } = &mut bad_report {
+        report.usage.work = u64::MAX;
+    }
+    assert_eq!(
+        verify(&bad_report, &mut budget()),
+        Err(ReaderError::ProviderContract)
+    );
+    let mut bad_kind = response(facts.clone(), vec![]);
+    if let ReadReply::Matched { view, .. } = &mut bad_kind {
+        view.elements[0].kind.local_kind = u64::MAX;
+    }
+    assert_eq!(
+        verify(&bad_kind, &mut budget()),
+        Err(ReaderError::View(ViewError::Schema(
+            SchemaError::UnknownType
+        )))
+    );
+
     // A newly supplied reverse edge must still detect a cycle with the prefix.
     let cycle = [Mapping {
         source: current.source_maps[0].target.clone(),

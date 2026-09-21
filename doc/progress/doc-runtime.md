@@ -215,3 +215,14 @@ tokenizer session内で、照合した宣言集合と受入済みprefixのimmuta
 この変更の通常HTML出力はcursor 70,193でWorkLimitとなった。上限は同じ100,000,000で、
 第05章の完走と正本化はまだ未達である。環境変更、変更されたsuffix、同一内容の
 別storage、部分的なcache確保後の停止と再検査を回帰試験で確認する。
+
+さらに、新しいsource/mapと診断/eventがなく、全artifactの位置を消費範囲内で
+直接確認できるprovider応答では、そのsnapshotだけで通常の応答検査を行う。
+範囲外の合法なPresentation/Relationは従来のresolverへ戻し、不正なschema・参照・
+report、新規sourceの競合を省略しない。private checkpointの無関係なsource集合を
+tokenごとに再構築していた費用を減らした。
+
+第05章は通常予算でparse 88,653,715 Work、lower 66,285,115 Work、
+labels 8,413,256 Workに収まり、この予算を原稿の回帰試験にも適用した。
+単独HTML出力はWorkLimitではなく17章・23章への2リンクのNeedsResolutionまで進む。
+これはHTML生成・リンク解決・文書の意味比較・正本切替の完了を意味しない。
