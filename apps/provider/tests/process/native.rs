@@ -26,6 +26,9 @@ fn child() -> Result<(), String> {
     let authority =
         Grants::new(&prototype.environment, &sources, &[], &mut budget()).map_err(error)?;
     let mut connection = Connection::new(io::stdin().lock(), io::stdout().lock());
+    connection
+        .serve_schemas(&registry, &mut budget())
+        .map_err(error)?;
     let mut admission = SourceAdmission::default();
     let mut lifetimes = RequestLifetimes::default();
     let mut execution = budget();
@@ -142,7 +145,20 @@ fn exchange(
     mut connection: Connection<std::process::ChildStdout, std::process::ChildStdin>,
     input: u64,
 ) -> Result<(), String> {
-    let (registry, mut request) = fixture()?;
+    let (_, mut request) = fixture()?;
+    let base = bootstrap()?;
+    assert!(base.selected("test.process", 1).is_none());
+    let registry = connection
+        .request_schemas(
+            base,
+            core::slice::from_ref(&request.operation.schema),
+            &mut budget(),
+        )
+        .map_err(error)?;
+    assert_eq!(
+        registry.selected("test.process", 1),
+        Some(&request.operation.schema)
+    );
     if let TypedValue::Record(record) = &mut request.input {
         record.fields[0] = NdfValue::U64(input);
     }
@@ -347,7 +363,7 @@ pub fn run() -> Result<(), String> {
         run_case(input).map_err(|e| format!("input {input}: {e}"))?;
     }
     println!(
-        "process_protocol: 3 passed (native/process Await and Resume; normal and overflow results)"
+        "process_protocol: 3 passed (schema exchange, native/process Await and Resume; normal and overflow results)"
     );
     Ok(())
 }
