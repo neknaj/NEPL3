@@ -2,11 +2,10 @@
 use crate::*;
 use nepl3_core::operation::{Resume, lifetime::RequestLifetimes};
 use nepl3_core::{
-    diagnostic::validation::DiagnosticSourceResolver,
-    operation::{Invoke, OperationReply},
-    source::Digest,
+    diagnostic::validation::DiagnosticSourceResolver, operation::OperationReply, source::Digest,
 };
 use nepl3_suite::dispatch::{resume, suspending};
+use nepl3_suite::grants::AuthorizedInvoke;
 
 #[derive(Debug)]
 pub enum DispatchError {
@@ -68,8 +67,8 @@ impl<R: Read, W: Write> Connection<R, W> {
         result
     }
 
-    /// The host has decoded the Invoke, authorized its environment/resources,
-    /// registered its lifetime, and selected this implementation independently.
+    /// Requires the host's immutable environment/source/resource grant proof.
+    /// The host registers its lifetime and selects this implementation independently.
     /// `context` is computed from those admitted inputs and host configuration.
     ///
     /// The returned reply is retained by the host for terminal lifetime closure
@@ -81,7 +80,7 @@ impl<R: Read, W: Write> Connection<R, W> {
         &mut self,
         registration: &suspending::Registration<'_>,
         implementation: Digest,
-        request: &Invoke,
+        authorized: &AuthorizedInvoke<'_>,
         context: Digest,
         registry: &SchemaRegistry,
         sources: &SourceStore,
@@ -94,6 +93,7 @@ impl<R: Read, W: Write> Connection<R, W> {
         if self.closed {
             return Err(DispatchError::Transport(TransportError::Closed));
         }
+        let request = authorized.request();
         let result = (|| {
             let reply = suspending::invoke(
                 registration,

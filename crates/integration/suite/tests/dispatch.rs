@@ -7,6 +7,8 @@ use nepl3_core::{
     value::*,
 };
 use nepl3_suite::dispatch::*;
+#[path = "dispatch/grants.rs"]
+mod grants;
 #[path = "dispatch/suspension.rs"]
 mod suspension;
 

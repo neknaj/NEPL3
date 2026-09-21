@@ -9,6 +9,7 @@ use nepl3_core::{
 };
 use nepl3_provider::{Connection, process::Process};
 use nepl3_suite::dispatch::{resume, suspending};
+use nepl3_suite::grants::Grants;
 use std::{
     io,
     process::{Command, ExitStatus},
@@ -16,11 +17,14 @@ use std::{
     time::{Duration, Instant},
 };
 mod model;
+mod reference;
 use model::*;
 
 fn child() -> Result<(), String> {
     let (registry, prototype) = fixture()?;
-    let sources = SourceStore::default();
+    let sources = granted_sources()?;
+    let authority =
+        Grants::new(&prototype.environment, &sources, &[], &mut budget()).map_err(error)?;
     let mut connection = Connection::new(io::stdin().lock(), io::stdout().lock());
     let mut admission = SourceAdmission::default();
     let mut lifetimes = RequestLifetimes::default();
@@ -40,14 +44,11 @@ fn child() -> Result<(), String> {
             .map_err(error)?;
         match frame {
             Some(ProviderFrame::Invoke(request)) => {
-                // This conformance provider grants no external sources/resources.
-                if !request.sources.is_empty()
-                    || !request.resources.is_empty()
-                    || request.environment != prototype.environment
-                    || pending.is_some()
-                {
-                    return Err("ungranted context or concurrent fixture request".into());
+                // This provider grants the fixed Unicode fixture and no resources.
+                if pending.is_some() {
+                    return Err("concurrent fixture request".into());
                 }
+                let approved = authority.admit(&request, &mut budget()).map_err(error)?;
                 let context = context(&request, &registry)?;
                 lifetimes
                     .begin_call(&request, context, None, &mut budget())
@@ -61,7 +62,7 @@ fn child() -> Result<(), String> {
                     .dispatch_invoke(
                         &registration,
                         identity(),
-                        &request,
+                        &approved,
                         context,
                         &registry,
                         &sources,
@@ -123,11 +124,8 @@ fn child() -> Result<(), String> {
                         &mut budget(),
                     )
                     .map_err(error)?;
-                if !matches!(
-                    result,
-                    OperationReply::Result(OperationResult::Complete { .. })
-                ) {
-                    return Err("expected completion".into());
+                if !matches!(result, OperationReply::Result(_)) {
+                    return Err("expected terminal result".into());
                 }
                 lifetimes
                     .finish(parent.request_id, &mut budget())
@@ -142,9 +140,13 @@ fn child() -> Result<(), String> {
 
 fn exchange(
     mut connection: Connection<std::process::ChildStdout, std::process::ChildStdin>,
+    input: u64,
 ) -> Result<(), String> {
-    let (registry, request) = fixture()?;
-    let sources = SourceStore::default();
+    let (registry, mut request) = fixture()?;
+    if let TypedValue::Record(record) = &mut request.input {
+        record.fields[0] = NdfValue::U64(input);
+    }
+    let sources = granted_sources()?;
     let context = context(&request, &registry)?;
     let mut admission = SourceAdmission::default();
     connection
@@ -186,10 +188,13 @@ fn exchange(
         implementation: identity(),
         invoke: increment,
     };
+    let authority =
+        Grants::new(&request.environment, &sources, &[], &mut budget()).map_err(error)?;
+    let approved = authority.admit(&calls[0], &mut budget()).map_err(error)?;
     let OperationReply::Result(result) = suspending::invoke(
         &registration,
         identity(),
-        &calls[0],
+        approved.request(),
         context,
         &registry,
         &sources,
@@ -227,16 +232,39 @@ fn exchange(
             &mut budget(),
         )
         .map_err(error)?;
-    let OperationReply::Result(OperationResult::Complete {
-        value: TypedValue::Record(record),
-        ..
-    }) = reply
-    else {
-        return Err("expected remote completion".into());
-    };
-    // Independent semantic expectation, not merely equality of two codec paths.
-    if record.fields != vec![NdfValue::U64(42)] {
-        return Err("expected 41 + 1 = 42".into());
+    reference::compare(&reference::execute(&registry, &request)?, &reply)?;
+    // Independent arithmetic expectation includes the checked overflow boundary.
+    match (input.checked_add(1), reply) {
+        (
+            Some(expected),
+            OperationReply::Result(OperationResult::Complete {
+                value: TypedValue::Record(record),
+                ..
+            }),
+        ) if record.fields == vec![NdfValue::U64(expected)] => {}
+        (
+            None,
+            OperationReply::Result(OperationResult::Invalid {
+                partial: None,
+                report,
+            }),
+        ) => {
+            let [diagnostic] = report.diagnostics.as_slice() else {
+                return Err("expected overflow diagnostic".into());
+            };
+            let span = diagnostic
+                .primary
+                .as_ref()
+                .ok_or("missing diagnostic span")?;
+            if diagnostic.code != "increment-overflow"
+                || span.start() != 4
+                || span.end() != 10
+                || input_source()?.slice(span).map_err(error)? != "世界"
+            {
+                return Err("incorrect Unicode diagnostic position".into());
+            }
+        }
+        _ => return Err("incorrect increment value or overflow result".into()),
     }
     connection
         .send(
@@ -263,10 +291,7 @@ fn reap(process: &mut Process) -> Result<ExitStatus, String> {
     }
 }
 
-pub fn run() -> Result<(), String> {
-    if std::env::args().any(|arg| arg == "--provider-child") {
-        return child();
-    }
+fn run_case(input: u64) -> Result<(), String> {
     let mut command = Command::new(std::env::current_exe().map_err(error)?);
     command.arg("--provider-child");
     let mut process = Process::spawn(&mut command).map_err(error)?;
@@ -276,7 +301,7 @@ pub fn run() -> Result<(), String> {
     };
     let (sender, receiver) = mpsc::channel();
     let worker = std::thread::spawn(move || {
-        let result = exchange(connection);
+        let result = exchange(connection, input);
         sender.send(()).map_err(error)?;
         result
     });
@@ -311,8 +336,18 @@ pub fn run() -> Result<(), String> {
     if !status.success() {
         return Err("provider process failed".into());
     }
+    Ok(())
+}
+
+pub fn run() -> Result<(), String> {
+    if std::env::args().any(|arg| arg == "--provider-child") {
+        return child();
+    }
+    for input in [0, 41, u64::MAX] {
+        run_case(input).map_err(|e| format!("input {input}: {e}"))?;
+    }
     println!(
-        "process_protocol: 1 passed (Invoke -> Await -> native dependency -> Resume -> Complete -> Close)"
+        "process_protocol: 3 passed (native/process Await and Resume; normal and overflow results)"
     );
     Ok(())
 }
