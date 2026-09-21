@@ -132,6 +132,26 @@ fn malformed_output(
     })
 }
 
+fn return_stop_error(
+    _: &Invoke,
+    _: &SchemaRegistry,
+    _: &mut Budget,
+) -> Result<OperationResult<TypedValue>, StopReason> {
+    Err(StopReason::WorkLimit)
+}
+
+fn return_stopped(
+    call: &Invoke,
+    _: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<OperationResult<TypedValue>, StopReason> {
+    Ok(OperationResult::Stopped {
+        reason: StopReason::WorkLimit,
+        partial: Some(call.input.clone_with_budget(b)?),
+        report: Report::default(),
+    })
+}
+
 #[test]
 fn admission_and_output_validation_surround_execution_and_limits_are_monotonic()
 -> Result<(), String> {
@@ -259,6 +279,8 @@ fn execution_stop_preserves_checked_partial_and_cannot_be_reported_as_complete()
 -> Result<(), String> {
     let (registry, call) = fixture()?;
     for (callback, has_partial) in [
+        (return_stop_error as TerminalOperation, false),
+        (return_stopped as TerminalOperation, true),
         (stop as TerminalOperation, true),
         (hide_stop as TerminalOperation, false),
     ] {

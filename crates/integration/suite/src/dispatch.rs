@@ -76,7 +76,10 @@ pub fn invoke_terminal(
             e => DispatchError::Input(e),
         })?;
     let result = execution.with_ceiling(request.limits, |budget| {
-        let result = invoke(request, registry, budget)?;
+        let result = invoke(request, registry, budget).map_err(|reason| budget.stop(reason))?;
+        if let OperationResult::Stopped { reason, .. } = &result {
+            budget.stop(*reason);
+        }
         if let Err(reason) = budget.poll()
             && !matches!(&result, OperationResult::Stopped { reason: reported, .. } if *reported == reason) {
             return Err(reason);
