@@ -7,6 +7,7 @@ use nepl3_core::{
     operation::ProviderFrame,
     schema::SchemaRegistry,
     source::{SourceAdmission, SourceStore},
+    value_codec::FoundationCodecError,
 };
 use nepl3_wire::WireError;
 use std::io::{self, Read, Write};
@@ -21,7 +22,10 @@ pub enum TransportError {
 }
 impl From<WireError> for TransportError {
     fn from(error: WireError) -> Self {
-        Self::Wire(error)
+        match error.stop_reason() {
+            Some(reason) => Self::Stopped(reason),
+            None => Self::Wire(error),
+        }
     }
 }
 impl From<StopReason> for TransportError {

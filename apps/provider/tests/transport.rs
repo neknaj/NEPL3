@@ -126,18 +126,50 @@ fn clean_eof_and_truncated_frames_are_distinct_and_length_is_checked_first() -> 
         source_bytes: 8,
         ..budget().limits()
     });
-    assert!(
-        receiver
-            .receive(
-                &registry,
-                &sources,
-                &mut SourceAdmission::default(),
-                &mut limited
-            )
-            .is_err()
-    );
+    assert!(matches!(
+        receiver.receive(
+            &registry,
+            &sources,
+            &mut SourceAdmission::default(),
+            &mut limited
+        ),
+        Err(TransportError::Stopped(StopReason::SourceLimit))
+    ));
     assert_eq!(limited.poll(), Err(StopReason::SourceLimit));
     assert_eq!(limited.usage().allocation_units, 0);
+    Ok(())
+}
+
+#[test]
+fn codec_stops_are_normalized_before_transport_output() -> Result<(), String> {
+    let registry = registry()?;
+    let mut sender = Connection::new(io::empty(), Vec::new());
+    let mut limited = Budget::new(Limits {
+        output_bytes: 0,
+        ..budget().limits()
+    });
+    assert!(matches!(
+        sender.send(
+            &ProviderFrame::Close,
+            &registry,
+            &SourceStore::default(),
+            &mut SourceAdmission::default(),
+            &mut limited
+        ),
+        Err(TransportError::Stopped(StopReason::OutputLimit))
+    ));
+    assert!(sender.is_closed());
+    assert!(sender.into_parts().1.is_empty());
+    // Schema validation can report a stop through a nested codec error.
+    let nested = nepl3_wire::WireError::Schema(SchemaError::Stopped(StopReason::WorkLimit));
+    assert!(matches!(
+        TransportError::from(nested),
+        TransportError::Stopped(StopReason::WorkLimit)
+    ));
+    assert!(matches!(
+        TransportError::from(nepl3_wire::WireError::InvalidLength),
+        TransportError::Wire(nepl3_wire::WireError::InvalidLength)
+    ));
     Ok(())
 }
 
