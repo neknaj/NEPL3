@@ -5,6 +5,7 @@ use nepl3_core::{
     value::*,
 };
 use nepl3_provider::reply::ReplyError;
+use nepl3_suite::grants::Grants;
 #[path = "reply/control.rs"]
 mod control;
 #[path = "reply/resume.rs"]
@@ -62,11 +63,13 @@ fn wire_invoke_executes_native_callback_and_returns_the_checked_result() -> Resu
         return Err("expected incoming Invoke".into());
     };
     let mut execution = budget();
+    let grants = Grants::new(&request.environment, &sources, &[], &mut budget()).map_err(error)?;
+    let approved = grants.admit(&received, &mut budget()).map_err(error)?;
     let native = server
         .dispatch_invoke(
             &registration,
             identity,
-            &received,
+            &approved,
             context,
             &registry,
             &sources,
@@ -96,6 +99,59 @@ fn wire_invoke_executes_native_callback_and_returns_the_checked_result() -> Resu
 }
 
 #[test]
+fn decoded_ungranted_environment_cannot_reach_dispatch() -> Result<(), String> {
+    let (registry, request) = fixture()?;
+    let sources = SourceStore::default();
+    let grants = Grants::new(&request.environment, &sources, &[], &mut budget()).map_err(error)?;
+    let mut untrusted = request.clone();
+    if let TypedValue::Record(record) = &mut untrusted.environment {
+        record.fields[0] = NdfValue::U64(99);
+    }
+    // This is schema-valid wire data; permission comes from independent host state.
+    let mut server = connection(&ProviderFrame::Invoke(untrusted), &registry)?;
+    let Some(ProviderFrame::Invoke(received)) = server
+        .receive(
+            &registry,
+            &sources,
+            &mut SourceAdmission::default(),
+            &mut budget(),
+        )
+        .map_err(error)?
+    else {
+        return Err("expected decoded Invoke".into());
+    };
+    let identity = Digest::of(b"host implementation");
+    let registration = nepl3_suite::dispatch::suspending::Registration {
+        operation: &request.operation,
+        implementation: identity,
+        invoke: increment,
+    };
+    let mut execution = budget();
+    let outcome = grants.admit(&received, &mut budget()).map(|approved| {
+        server.dispatch_invoke(
+            &registration,
+            identity,
+            &approved,
+            identity,
+            &registry,
+            &sources,
+            &sources,
+            &mut SourceAdmission::default(),
+            &mut execution,
+            &mut budget(),
+            &mut budget(),
+        )
+    });
+    assert!(matches!(
+        outcome,
+        Err(nepl3_suite::grants::GrantError::Environment)
+    ));
+    assert_eq!(execution.usage().work, 0);
+    assert!(server.into_parts().1.is_empty());
+    Ok(())
+}
+
+#[test]
 fn rejected_dispatch_and_closed_transport_do_not_execute_or_emit_a_reply() -> Result<(), String> {
     let (registry, request) = fixture()?;
     let sources = SourceStore::default();
@@ -107,10 +163,12 @@ fn rejected_dispatch_and_closed_transport_do_not_execute_or_emit_a_reply() -> Re
     };
     let mut server = Connection::new(Cursor::new(Vec::<u8>::new()), Vec::<u8>::new());
     let mut execution = budget();
+    let grants = Grants::new(&request.environment, &sources, &[], &mut budget()).map_err(error)?;
+    let approved = grants.admit(&request, &mut budget()).map_err(error)?;
     let failed = server.dispatch_invoke(
         &registration,
         Digest::of(b"different implementation"),
-        &request,
+        &approved,
         identity,
         &registry,
         &sources,
@@ -129,7 +187,7 @@ fn rejected_dispatch_and_closed_transport_do_not_execute_or_emit_a_reply() -> Re
     let failed = server.dispatch_invoke(
         &registration,
         identity,
-        &request,
+        &approved,
         identity,
         &registry,
         &sources,
@@ -162,10 +220,12 @@ fn failed_reply_write_keeps_execution_work_and_prevents_callback_retry() -> Resu
     };
     let mut server = Connection::new(io::empty(), Broken);
     let mut execution = budget();
+    let grants = Grants::new(&request.environment, &sources, &[], &mut budget()).map_err(error)?;
+    let approved = grants.admit(&request, &mut budget()).map_err(error)?;
     let result = server.dispatch_invoke(
         &registration,
         identity,
-        &request,
+        &approved,
         identity,
         &registry,
         &sources,
@@ -187,7 +247,7 @@ fn failed_reply_write_keeps_execution_work_and_prevents_callback_retry() -> Resu
     let retry = server.dispatch_invoke(
         &registration,
         identity,
-        &request,
+        &approved,
         identity,
         &registry,
         &sources,

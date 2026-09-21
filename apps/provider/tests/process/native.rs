@@ -9,6 +9,7 @@ use nepl3_core::{
 };
 use nepl3_provider::{Connection, process::Process};
 use nepl3_suite::dispatch::{resume, suspending};
+use nepl3_suite::grants::Grants;
 use std::{
     io,
     process::{Command, ExitStatus},
@@ -21,6 +22,8 @@ use model::*;
 fn child() -> Result<(), String> {
     let (registry, prototype) = fixture()?;
     let sources = SourceStore::default();
+    let authority =
+        Grants::new(&prototype.environment, &sources, &[], &mut budget()).map_err(error)?;
     let mut connection = Connection::new(io::stdin().lock(), io::stdout().lock());
     let mut admission = SourceAdmission::default();
     let mut lifetimes = RequestLifetimes::default();
@@ -41,13 +44,10 @@ fn child() -> Result<(), String> {
         match frame {
             Some(ProviderFrame::Invoke(request)) => {
                 // This conformance provider grants no external sources/resources.
-                if !request.sources.is_empty()
-                    || !request.resources.is_empty()
-                    || request.environment != prototype.environment
-                    || pending.is_some()
-                {
-                    return Err("ungranted context or concurrent fixture request".into());
+                if pending.is_some() {
+                    return Err("concurrent fixture request".into());
                 }
+                let approved = authority.admit(&request, &mut budget()).map_err(error)?;
                 let context = context(&request, &registry)?;
                 lifetimes
                     .begin_call(&request, context, None, &mut budget())
@@ -61,7 +61,7 @@ fn child() -> Result<(), String> {
                     .dispatch_invoke(
                         &registration,
                         identity(),
-                        &request,
+                        &approved,
                         context,
                         &registry,
                         &sources,
@@ -186,10 +186,13 @@ fn exchange(
         implementation: identity(),
         invoke: increment,
     };
+    let authority =
+        Grants::new(&request.environment, &sources, &[], &mut budget()).map_err(error)?;
+    let approved = authority.admit(&calls[0], &mut budget()).map_err(error)?;
     let OperationReply::Result(result) = suspending::invoke(
         &registration,
         identity(),
-        &calls[0],
+        approved.request(),
         context,
         &registry,
         &sources,
