@@ -1,4 +1,5 @@
 //! Exact host-approved invocation context, independent of wire-supplied identity.
+pub mod dependencies;
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     operation::Invoke,

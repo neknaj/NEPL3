@@ -232,11 +232,19 @@ fn exchange(
     };
     let authority =
         Grants::new(&request.environment, &sources, &[], &mut budget()).map_err(error)?;
-    let approved = authority.admit(&calls[0], &mut budget()).map_err(error)?;
+    let policy = [nepl3_suite::grants::dependencies::OperationGrant {
+        operation: &selected,
+        grants: &authority,
+    }];
+    let approved = nepl3_suite::grants::dependencies::authorize(&calls, &policy, &mut budget())
+        .map_err(error)?;
+    let [approved] = approved.as_slice() else {
+        return Err("expected one authorized dependency".into());
+    };
     let OperationReply::Result(result) = suspending::invoke(
         &registration,
         identity(),
-        approved.request(),
+        approved.invocation().request(),
         context,
         &registry,
         &sources,

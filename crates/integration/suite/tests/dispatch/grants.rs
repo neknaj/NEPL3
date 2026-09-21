@@ -5,6 +5,72 @@ use nepl3_core::{
 };
 use nepl3_suite::grants::{GrantError, Grants};
 
+#[test]
+fn dependency_batch_requires_exact_operation_and_context_before_dispatch() -> Result<(), String> {
+    use nepl3_suite::grants::dependencies::{DependencyGrantError, OperationGrant, authorize};
+    let (_, request) = fixture()?;
+    let sources = SourceStore::default();
+    let grants = Grants::new(&request.environment, &sources, &[], &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let policy = [OperationGrant {
+        operation: &request.operation,
+        grants: &grants,
+    }];
+    let mut next = request.clone();
+    next.request_id += 1;
+    let mut calls = vec![request.clone(), next];
+    let approved = authorize(&calls, &policy, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    assert_eq!(approved.len(), 2);
+    for (index, proof) in approved.iter().enumerate() {
+        assert_eq!(proof.operation(), &request.operation);
+        assert!(core::ptr::eq(proof.invocation().request(), &calls[index]));
+    }
+    drop(approved);
+    calls[1].operation.schema.digest = Digest::of(b"unapproved version");
+    assert!(matches!(
+        authorize(&calls, &policy, &mut budget()),
+        Err(DependencyGrantError::NotAllowed)
+    ));
+    calls[1].operation = request.operation.clone();
+    if let TypedValue::Record(record) = &mut calls[1].environment {
+        record.fields[0] = NdfValue::U64(99);
+    }
+    assert!(matches!(
+        authorize(&calls, &policy, &mut budget()),
+        Err(DependencyGrantError::Context(GrantError::Environment))
+    ));
+    calls[1].environment = request.environment.clone();
+    let duplicate = [
+        OperationGrant {
+            operation: &request.operation,
+            grants: &grants,
+        },
+        OperationGrant {
+            operation: &request.operation,
+            grants: &grants,
+        },
+    ];
+    assert!(matches!(
+        authorize(&calls, &duplicate, &mut budget()),
+        Err(DependencyGrantError::Ambiguous)
+    ));
+    for allocation in [false, true] {
+        let mut limits = budget().limits();
+        if allocation {
+            limits.allocation_units = 0;
+        } else {
+            limits.work = 0;
+        }
+        let mut stopped = Budget::new(limits);
+        assert!(matches!(
+            authorize(&calls, &policy, &mut stopped),
+            Err(DependencyGrantError::Stopped(_))
+        ));
+        assert!(stopped.poll().is_err());
+    }
+    Ok(())
+}
+
 fn snapshot(uri: &str) -> Result<SourceSnapshot, String> {
     SourceSnapshot::new(
         SourceId("input".into()),
