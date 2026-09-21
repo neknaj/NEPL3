@@ -4,6 +4,7 @@ pub mod analysis;
 pub mod binding;
 pub mod facts;
 pub mod head;
+pub mod package;
 pub mod profile;
 pub mod query;
 pub mod region;
@@ -17,6 +18,8 @@ use nepl3_core::{
 
 #[derive(Debug)]
 pub enum PortableError<E> {
+    Package(crate::package::PackageError),
+    Reader(nepl3_reader::portable::PortableError<E>),
     Stopped(StopReason),
     Boundary(E),
     Schema(SchemaError),

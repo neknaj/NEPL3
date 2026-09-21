@@ -8,6 +8,7 @@ mod source_checks;
 pub use host::{TokenizationHost, TokenizationHostReply};
 pub use model::*;
 pub use session::TokenizationSession;
+pub(crate) use session::validate_modes;
 
 mod accepted;
 pub use accepted::{AcceptedTokenizationReply, AcceptedTokenizationReport};

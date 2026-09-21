@@ -4,12 +4,100 @@ use crate::{
     boundary::variant,
     source::{record, text},
 };
-use alloc::vec::Vec;
+use alloc::{boxed::Box, vec::Vec};
 use nepl3_core::{
     budget::{Budget, Resource},
-    schema::TypeDescriptor,
+    schema::{TypeDescriptor, TypeRef},
     value::{NdfValue, SchemaRef},
 };
+
+pub(super) fn decode(
+    mut value: &NdfValue,
+    schema: &SchemaRef,
+    budget: &mut Budget,
+) -> Result<TypeDescriptor, WireError> {
+    let mut wrappers = Vec::new();
+    let mut output = loop {
+        budget.charge(Resource::Work, 1)?;
+        budget.observe_depth(wrappers.len() as u64 + 1)?;
+        let NdfValue::Variant(v) = value else {
+            return Err(WireError::InvalidType);
+        };
+        if &v.schema != schema || v.type_name != "TypeDescriptor" {
+            return Err(WireError::InvalidType);
+        }
+        if v.variant == "List" || v.variant == "Option" {
+            let [inner] = v.fields.as_slice() else {
+                return Err(WireError::InvalidType);
+            };
+            budget.charge(
+                Resource::AllocationUnits,
+                core::mem::size_of::<bool>() as u64,
+            )?;
+            wrappers.push(v.variant == "List");
+            value = inner;
+            continue;
+        }
+        if v.variant == "Named" {
+            let [reference] = v.fields.as_slice() else {
+                return Err(WireError::InvalidType);
+            };
+            let fields = crate::source::fields(reference, schema, "TypeRef", 3)?;
+            let [
+                NdfValue::Text(package),
+                NdfValue::U64(revision),
+                NdfValue::Text(name),
+            ] = fields
+            else {
+                return Err(WireError::InvalidType);
+            };
+            budget.charge(Resource::Work, (package.len() + name.len()) as u64)?;
+            if package.is_empty() || name.is_empty() {
+                return Err(WireError::InvalidType);
+            }
+            budget.charge(
+                Resource::AllocationUnits,
+                (package.len() + name.len()) as u64,
+            )?;
+            break TypeDescriptor::Named(TypeRef {
+                package: package.clone(),
+                revision: *revision,
+                name: name.clone(),
+            });
+        }
+        if !v.fields.is_empty() {
+            return Err(WireError::InvalidType);
+        }
+        break match v.variant.as_str() {
+            "Unit" => TypeDescriptor::Unit,
+            "Bool" => TypeDescriptor::Bool,
+            "U64" => TypeDescriptor::U64,
+            "Integer" => TypeDescriptor::Integer,
+            "Natural" => TypeDescriptor::Natural,
+            "Rational" => TypeDescriptor::Rational,
+            "Text" => TypeDescriptor::Text,
+            "Bytes" => TypeDescriptor::Bytes,
+            "Bytes32" => TypeDescriptor::Bytes32,
+            "NdfValue" => TypeDescriptor::NdfValue,
+            "NdfScalar" => TypeDescriptor::NdfScalar,
+            "TypedValue" => TypeDescriptor::TypedValue,
+            _ => return Err(WireError::InvalidType),
+        };
+    };
+    while let Some(list) = wrappers.pop() {
+        budget.charge(Resource::Work, 1)?;
+        budget.charge(
+            Resource::AllocationUnits,
+            core::mem::size_of::<TypeDescriptor>() as u64,
+        )?;
+        output = if list {
+            TypeDescriptor::List(Box::new(output))
+        } else {
+            TypeDescriptor::Option(Box::new(output))
+        };
+    }
+    Ok(output)
+}
 
 pub(super) fn encode(
     mut value: &TypeDescriptor,

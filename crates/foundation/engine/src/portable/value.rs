@@ -14,12 +14,16 @@ use nepl3_core::{
 };
 
 pub(super) struct Schemas<'a> {
+    pub reader: &'a SchemaRef,
     pub engine: &'a SchemaRef,
     pub foundation: &'a SchemaRef,
 }
 impl<'a> Schemas<'a> {
     pub fn new<E>(registry: &'a SchemaRegistry) -> Result<Self, PortableError<E>> {
         Ok(Self {
+            reader: registry
+                .selected("nepl3.reader", 1)
+                .ok_or(SchemaError::UnknownSchema)?,
             engine: registry
                 .selected("nepl3.engine", 1)
                 .ok_or(SchemaError::UnknownSchema)?,
@@ -283,4 +287,5 @@ record_value!(PackageIdentity,engine,"PackageIdentity",2,[schema:0,semantic_dige
 record_value!(EntryContext,engine,"EntryContext",4,[package:0,alias:1,category:2,mode:3]);
 record_value!(ForeignStep,engine,"ForeignStep",2,[node:0,field:1]);
 mod head;
+mod package;
 mod profile;

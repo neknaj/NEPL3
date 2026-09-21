@@ -2,6 +2,88 @@ use super::*;
 use nepl3_core::syntax::FieldValue;
 
 #[test]
+fn received_packages_execute_recursive_composition() -> Result<(), String> {
+    use nepl3_core::source::SourceStore;
+    use nepl3_engine::{
+        portable::{package as exchange, profile},
+        profile::RuntimeCatalog,
+    };
+    use nepl3_wire::foundation::FoundationCodec;
+    let sender = languages("Expr", "Frame")?;
+    let sources = SourceStore::default();
+    let mut admission = SourceAdmission::default();
+    let mut codec =
+        FoundationCodec::new(&sender.registry, &sources, &mut admission).map_err(error)?;
+    let sender_profile = sender.profile("composition")?;
+    let sender_packages = sender.packages.iter().map(|(_, p)| p).collect::<Vec<_>>();
+    let catalog = RuntimeCatalog {
+        packages: &sender_packages,
+        providers: &[],
+        resources: &[],
+    };
+    let resolved = sender_profile
+        .resolve(&catalog, &sender.registry, &mut budget())
+        .map_err(error)?;
+    let profile_value = profile::to_value(&resolved, &mut codec, &mut budget()).map_err(error)?;
+    let profile_bytes = nepl3_wire::encode(&profile_value, &mut budget()).map_err(error)?;
+    let mut transported = Vec::new();
+    for (alias, package) in &sender.packages {
+        let checked = package
+            .check(&sender.registry, &mut budget())
+            .map_err(error)?;
+        let value = exchange::to_value(&checked, &mut codec, &mut budget()).map_err(error)?;
+        transported.push((
+            *alias,
+            nepl3_wire::encode(&value, &mut budget()).map_err(error)?,
+        ));
+    }
+    for input in [
+        "add framed frame neg 7 2",
+        "framed frame framed frame 7",
+        "framed frame 未知",
+        "framed",
+    ] {
+        // Only schema registrations are supplied locally. Every executable
+        // package definition below is decoded from the transmitted bytes.
+        let registry = languages("Expr", "Frame")?.registry;
+        let mut admission = SourceAdmission::default();
+        let mut codec = FoundationCodec::new(&registry, &sources, &mut admission).map_err(error)?;
+        let mut packages = Vec::new();
+        for (alias, bytes) in &transported {
+            let value = nepl3_wire::decode(bytes, &mut budget()).map_err(error)?;
+            packages.push((
+                *alias,
+                exchange::from_value(&value, &registry, &mut codec, &mut budget())
+                    .map_err(error)?,
+            ));
+        }
+        let received_packages = packages.iter().map(|(_, p)| p).collect::<Vec<_>>();
+        let catalog = RuntimeCatalog {
+            packages: &received_packages,
+            providers: &[],
+            resources: &[],
+        };
+        let value = nepl3_wire::decode(&profile_bytes, &mut budget()).map_err(error)?;
+        let received_profile =
+            profile::from_value(&value, &catalog, &registry, &mut codec, &mut budget())
+                .map_err(error)?;
+        let result = super::super::parse::with_profile(
+            input,
+            true,
+            false,
+            (
+                super::super::parse::Languages { packages, registry },
+                received_profile,
+            ),
+            ("Expr", "composition"),
+            |reply, _, _, _| Ok(reply),
+        )?;
+        assert_eq!(result, inspect(input, true)?.parse);
+    }
+    Ok(())
+}
+
+#[test]
 fn portable_profile_drives_recursive_parsing() -> Result<(), String> {
     use nepl3_core::source::SourceStore;
     use nepl3_engine::{portable::profile as exchange, profile::RuntimeCatalog};

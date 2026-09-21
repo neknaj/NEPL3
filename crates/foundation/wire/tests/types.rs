@@ -47,6 +47,12 @@ fn symbolic_type_descriptors_preserve_all_variants_and_nested_named_data() -> Re
             .encode_type_descriptor(&ty, &mut budget())
             .map_err(error)?;
         assert_eq!(
+            codec
+                .decode_type_descriptor(&value, &mut budget())
+                .map_err(error)?,
+            ty
+        );
+        assert_eq!(
             value,
             NdfValue::Variant(Variant {
                 schema: schema.clone(),
@@ -91,6 +97,29 @@ fn symbolic_type_descriptors_preserve_all_variants_and_nested_named_data() -> Re
     );
     let bytes = nepl3_wire::encode(&value, &mut budget()).map_err(error)?;
     assert_eq!(
+        codec
+            .decode_type_descriptor(&value, &mut budget())
+            .map_err(error)?,
+        ty
+    );
+    for case in 0..4 {
+        let mut malformed = value.clone();
+        let NdfValue::Variant(v) = &mut malformed else {
+            return Err("variant".into());
+        };
+        match case {
+            0 => v.schema.digest = Digest::of(b"wrong schema"),
+            1 => v.variant = "Unknown".into(),
+            2 => v.fields.clear(),
+            _ => v.fields.push(NdfValue::Unit),
+        }
+        assert!(
+            codec
+                .decode_type_descriptor(&malformed, &mut budget())
+                .is_err()
+        );
+    }
+    assert_eq!(
         nepl3_wire::decode(&bytes, &mut budget()).map_err(error)?,
         value
     );
@@ -120,6 +149,22 @@ fn symbolic_type_descriptors_preserve_all_variants_and_nested_named_data() -> Re
             Err(WireError::Stopped(reason))
         );
         assert_eq!(stopped.poll(), Err(reason));
+        let mut receive_budget = Budget::new(limits);
+        if index == 3 {
+            receive_budget.cancel();
+        }
+        let Err(failure) = codec.decode_type_descriptor(&value, &mut receive_budget) else {
+            return Err("fresh exhausted receive budget must stop".into());
+        };
+        assert_eq!(
+            nepl3_core::value_codec::FoundationCodecError::stop_reason(&failure),
+            Some(reason)
+        );
+        assert_eq!(receive_budget.poll(), Err(reason));
+        assert_eq!(
+            codec.decode_type_descriptor(&value, &mut stopped),
+            Err(WireError::Stopped(reason))
+        );
     }
     Ok(())
 }
@@ -154,6 +199,10 @@ fn deep_symbolic_types_roundtrip_and_stop_without_recursive_cleanup() -> Result<
     let encoded = codec.encode_type_descriptor(&ty, &mut b).map_err(error)?;
     let bytes = nepl3_wire::encode(&encoded, &mut b).map_err(error)?;
     let decoded = nepl3_wire::decode(&bytes, &mut b).map_err(error)?;
+    let received = codec
+        .decode_type_descriptor(&decoded, &mut b)
+        .map_err(error)?;
+    assert_eq!(received, ty);
     assert_eq!(encoded, decoded);
     // Inspect the constructor order independently of the encoder's algorithm.
     let mut cursor = &decoded;

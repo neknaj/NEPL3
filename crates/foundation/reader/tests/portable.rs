@@ -9,6 +9,129 @@ use nepl3_core::{
 use nepl3_reader::{model::*, plan::*, portable::*, runtime::ReaderSession};
 use nepl3_wire::{environment::environment_digest, foundation::FoundationCodec};
 type TestResult = Result<(), Box<dyn std::error::Error>>;
+#[test]
+fn portable_plan_preserves_arena_and_rejects_invalid_references() -> TestResult {
+    use nepl3_reader::portable::plan as exchange;
+    let (schema, registry, sources, _) = fixture()?;
+    let plan = ReaderPlan {
+        schema,
+        state_type: TypeDescriptor::Unit,
+        expressions: vec![
+            ReaderExpr::Literal("a".into()),
+            ReaderExpr::Scalar(CharClass::Range {
+                lo: 'あ', hi: 'ん'
+            }),
+            ReaderExpr::Seq(vec![ReaderId(0), ReaderId(1)]),
+        ],
+        rules: vec![ReaderRule {
+            name: "entry".into(),
+            root: ReaderId(2),
+            output: TypeDescriptor::List(Box::new(TypeDescriptor::NdfValue)),
+        }],
+        providers: vec![],
+    };
+    let mut admission = SourceAdmission::default();
+    let mut codec =
+        FoundationCodec::new(&registry, &sources, &mut admission).map_err(|e| format!("{e:?}"))?;
+    let checked = plan
+        .check(&registry, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    use nepl3_reader::{
+        builtin::BuiltinReader,
+        tokenizer::{ReaderMode, SkipRule, TokenReader},
+    };
+    let mode = ReaderMode {
+        name: "Code".into(),
+        skip: vec![
+            SkipRule {
+                reader: TokenReader::Builtin(BuiltinReader::Trivia),
+            },
+            SkipRule {
+                reader: TokenReader::Rule("entry".into()),
+            },
+        ],
+        take: vec![],
+    };
+    let mode_value = exchange::mode_to_value(&mode, &checked, &mut codec, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        exchange::mode_from_value(&mode_value, &checked, &mut codec, &mut budget())
+            .map_err(|e| format!("{e:?}"))?,
+        mode
+    );
+    let mut invalid_mode = mode_value.clone();
+    let NdfValue::Record(record) = &mut invalid_mode else {
+        return Err("mode".into());
+    };
+    let NdfValue::List(skip) = &mut record.fields[1] else {
+        return Err("skip".into());
+    };
+    let NdfValue::Record(rule) = &mut skip[1] else {
+        return Err("skip rule".into());
+    };
+    let NdfValue::Variant(reader) = &mut rule.fields[0] else {
+        return Err("reader".into());
+    };
+    reader.fields[0] = NdfValue::Text("missing".into());
+    assert!(exchange::mode_from_value(&invalid_mode, &checked, &mut codec, &mut budget()).is_err());
+    let value =
+        exchange::to_value(&checked, &mut codec, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    let bytes = nepl3_wire::encode(&value, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    let received = nepl3_wire::decode(&bytes, &mut budget()).map_err(|e| format!("{e:?}"))?;
+    assert_eq!(
+        exchange::from_value(&received, &registry, &mut codec, &mut budget())
+            .map_err(|e| format!("{e:?}"))?,
+        plan
+    );
+    let NdfValue::Record(record) = &value else {
+        return Err("record".into());
+    };
+    assert_eq!(record.kind, "ReaderPlan");
+    assert_eq!(record.fields.len(), 5);
+    let NdfValue::List(expressions) = &record.fields[2] else {
+        return Err("expressions".into());
+    };
+    let NdfValue::Variant(seq) = &expressions[2] else {
+        return Err("sequence".into());
+    };
+    assert_eq!(seq.variant, "Seq");
+    let NdfValue::List(ids) = &seq.fields[0] else {
+        return Err("indices".into());
+    };
+    for (index, id) in ids.iter().enumerate() {
+        let NdfValue::Record(id) = id else {
+            return Err("ReaderId".into());
+        };
+        assert_eq!(id.fields, vec![NdfValue::U64(index as u64)]);
+    }
+    for invalid in [2, 99] {
+        let mut value = value.clone();
+        let NdfValue::Record(record) = &mut value else {
+            return Err("record".into());
+        };
+        let NdfValue::List(expressions) = &mut record.fields[2] else {
+            return Err("expressions".into());
+        };
+        let NdfValue::Variant(seq) = &mut expressions[2] else {
+            return Err("sequence".into());
+        };
+        let NdfValue::List(ids) = &mut seq.fields[0] else {
+            return Err("indices".into());
+        };
+        let NdfValue::Record(id) = &mut ids[0] else {
+            return Err("ReaderId".into());
+        };
+        id.fields[0] = NdfValue::U64(invalid);
+        assert!(exchange::from_value(&value, &registry, &mut codec, &mut budget()).is_err());
+    }
+    let mut stopped = budget();
+    stopped.cancel();
+    assert!(matches!(
+        exchange::from_value(&value, &registry, &mut codec, &mut stopped),
+        Err(PortableError::Stopped(_))
+    ));
+    Ok(())
+}
 fn budget() -> Budget {
     Budget::new(Limits {
         source_bytes: 1_000_000,
@@ -98,6 +221,7 @@ fn run(
     request: &OwnedReadRequest,
     sources: &SourceStore,
     registry: &SchemaRegistry,
+    exchange_plan: bool,
 ) -> Result<(NdfValue, u64, NdfValue), String> {
     let mut b = budget();
     let mut admission = SourceAdmission::default();
@@ -117,6 +241,17 @@ fn run(
             output: TypeDescriptor::Unit,
         }],
         providers: vec![],
+    };
+    let plan = if exchange_plan {
+        let proof = plan.check(registry, &mut b).map_err(|e| format!("{e:?}"))?;
+        let encoded = nepl3_reader::portable::plan::to_value(&proof, &mut codec, &mut b)
+            .map_err(|e| format!("{e:?}"))?;
+        let bytes = nepl3_wire::encode(&encoded, &mut b).map_err(|e| format!("{e:?}"))?;
+        let value = nepl3_wire::decode(&bytes, &mut b).map_err(|e| format!("{e:?}"))?;
+        nepl3_reader::portable::plan::from_value(&value, registry, &mut codec, &mut b)
+            .map_err(|e| format!("{e:?}"))?
+    } else {
+        plan
     };
     let checked = plan.check(registry, &mut b).map_err(|e| format!("{e:?}"))?;
     let mut session = ReaderSession::new("portable-fixture".into(), &checked, registry, &mut b)
@@ -194,9 +329,12 @@ fn native_request_and_checked_ndf_loopback_execute_with_identical_meaning() -> T
     assert_eq!(restored, request);
     assert_eq!(declared.snapshots().len(), 2);
     assert_eq!(
-        run(&request, &global, &registry)?,
-        run(&restored, &declared, &registry)?
+        run(&request, &global, &registry, false)?,
+        run(&restored, &declared, &registry, false)?
     );
+    let received_plan = run(&restored, &declared, &registry, true)?;
+    assert_eq!(received_plan, (NdfValue::Unit, 1, NdfValue::Unit));
+    assert_eq!(received_plan, run(&request, &global, &registry, false)?);
     Ok(())
 }
 
