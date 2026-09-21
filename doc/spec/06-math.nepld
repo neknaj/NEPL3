@@ -53,28 +53,32 @@ body
     nil
   cons section evaluate "3. evaluate" body
     cons paragraph
+      cons "evaluateはCheckedExpression、[自由記号/じゆうきごう]のBindingEnvironment、Limitsを[入力/にゅうりょく]として[受/う]け[取/と]る。"
+      cons "[評価結果/ひょうかけっか]はExact(Value)またはSymbolic(expression, Requirements)で[返/かえ]す。"
+      cons "[定義域違反/ていぎいきいはん]と[形状不一致/けいじょうふいっち]はEvalErrorとして[返/かえ]す。"
+      cons sentence cons ruby text "値" text "あたい" cons text "の" cons ruby text "種類" text "しゅるい" cons text "はScalar(Q)、" cons code "Vector(List<Q>)" cons text "、" cons code "Matrix(rows,cols,List<Q>)" cons text "、Truth(Bool)である。" nil nil
+    cons paragraph
       cons "BindingEnvironmentはMathAssignmentのassignments[列/れつ]であり、[各/かく][要素/ようそ]に[名前/なまえ]nameとMathExactValueのvalueを[持/も]つ。"
       cons "[名前/なまえ]はUTF-8[辞書順/じしょじゅん]で[厳密/げんみつ]に[昇順/しょうじゅん]とし、[重複/ちょうふく]と[順序違反/じゅんじょいはん]を[拒否/きょひ]する。"
-      cons "[大文字/おおもじ]と[小文字/こもじ]の[同一視/どういつし]やUnicode[正規化/せいきか]は[行/おこな]わず、Symbolと[同/おな]じTextを[比較/ひかく]する。"
-      cons "[空/から]の[環境/かんきょう]と[未使用/みしよう]の[代入/だいにゅう]を[許可/きょか]するが、[未使用/みしよう]でも[値/あたい]の[形状/けいじょう]を[検査/けんさ]する。"
+      cons "[名前/なまえ]はSymbolと[同/おな]じTextの[完全一致/かんぜんいっち]で[比較/ひかく]する。"
+      cons "[大文字/おおもじ]・[小文字/こもじ]とUnicode[表記/ひょうき]は、[入力/にゅうりょく]のまま[保持/ほじ]する。"
+      cons "[空/から]の[環境/かんきょう]と[未使用/みしよう]の[代入/だいにゅう]も[受理/じゅり]し、[使用/しよう]の[有無/うむ]を[問/と]わずすべての[値/あたい]の[形状/けいじょう]を[検査/けんさ]する。"
       cons "[検査済/けんさず]み[環境/かんきょう]は[元/もと]の[不変入力/ふへんにゅうりょく]を[借用/しゃくよう]し、[名前/なまえ]を[二分探索/にぶんたんさく]する。"
       cons "[名前/なまえ]の[未存在/みそんざい]は[不正入力/ふせいにゅうりょく]や[資源停止/しげんていし]と[区別/くべつ]し、[自由記号/じゆうきごう]が[未解決/みかいけつ]の[場合/ばあい]のSymbolic[結果/けっか]に[利用/りよう]する。"
       cons "この[検査/けんさ]は[式/しき]の[全要求/ぜんようきゅう]の[充足/じゅうそく]を[証明/しょうめい]せず、NDF[受信時/じゅしんじ]にも[順序/じゅんじょ]と[値/あたい]を[再検査/さいけんさ]する。" nil
     cons paragraph
-      cons "[入力/にゅうりょく]はCheckedExpression、[自由記号/じゆうきごう]のBindingEnvironment、Limits。"
-      cons "[出力/しゅつりょく]はExact(Value)またはSymbolic(expression, Requirements)。"
-      cons "[定義域違反/ていぎいきいはん]・[形状不一致/けいじょうふいっち]は[明確/めいかく]なEvalError。"
-      cons sentence cons ruby text "値" text "あたい" cons text "の" cons ruby text "種類" text "しゅるい" cons text "はScalar(Q)、" cons code "Vector(List<Q>)" cons text "、" cons code "Matrix(rows,cols,List<Q>)" cons text "、Truth(Bool)。" nil nil
-    cons paragraph
-      cons "MathExactValueは[評価値/ひょうかち]の[言語中立/げんごちゅうりつ]schemaであり、[元/もと]のMathValueとは[別/べつ]である。"
-      cons "ScalarとVectorとMatrixの[要素/ようそ]は[任意/にんい]の[正規形/せいきけい]Rationalで、Numberの[有限十進制約/ゆうげんじっしんせいやく]を[適用/てきよう]しない。"
-      cons "Vectorは[空/から]を[認/みと]めず、Matrixのrowsとcolsは[正/せい]、valuesは[行優先順/ぎょうゆうせんじゅん]でrowsとcolsの[積/せき]に[等/ひと]しい[要素数/ようそすう]を[持/も]つ。"
+      cons "MathExactValueは[評価値/ひょうかち]を[交換/こうかん]するための[言語中立/げんごちゅうりつ]schemaである。"
+      cons "[評価対象/ひょうかたいしょう]の[式/しき]はMathValueで[表/あらわ]し、その[評価値/ひょうかち]をMathExactValueで[表/あらわ]す。"
+      cons "ScalarとVectorとMatrixの[要素/ようそ]には、[任意/にんい]の[正規形/せいきけい]Rationalを[使用/しよう]できる。"
+      cons "Vectorは[一/ひと]つ[以上/いじょう]の[要素/ようそ]を[持/も]つ。"
+      cons "Matrixのrowsとcolsは[正/せい]とし、valuesにはrowsとcolsの[積/せき]に[等/ひと]しい[個数/こすう]の[要素/ようそ]を[行優先順/ぎょうゆうせんじゅん]で[格納/かくのう]する。"
       cons "[次元/じげん]の[積/せき]のU64 overflowも[拒否/きょひ]し、NDFの[受信/じゅしん]でも[同/おな]じ[形状検査/けいじょうけんさ]を[行/おこな]う。"
       cons "この[値/あたい]の[検査/けんさ]だけで[元式/もとしき]の[評価/ひょうか]や[演算/えんざん]の[定義域/ていぎいき]が[証明/しょうめい]されたとは[扱/あつか]わない。" nil
     cons paragraph
-      cons "[評価/ひょうか]はsource[順/じゅん]の[左/ひだり]から[右/みぎ]、[純粋/じゅんすい]。"
+      cons "[評価/ひょうか]は[純粋/じゅんすい]な[操作/そうさ]であり、source[順/じゅん]に[左/ひだり]から[右/みぎ]へ[進/すす]む。"
       cons "letはinitを[評価/ひょうか]してからbodyを[評価/ひょうか]する。"
-      cons "[未解決/みかいけつ]の[記号/きごう]に[依存/いぞん]する[部分/ぶぶん]はSymbolicとし、[独立/どくりつ]な[数値/すうち]subtreeの[計算結果/けいさんけっか]を[保持/ほじ]できるが[元/もと]の[構文/こうぶん]を[上書/うわが]きしない。" nil
+      cons "[未解決/みかいけつ]の[記号/きごう]に[依存/いぞん]する[部分/ぶぶん]はSymbolicとして[扱/あつか]う。"
+      cons "[独立/どくりつ]した[数値/すうち]subtreeの[計算結果/けいさんけっか]は、[元/もと]の[構文/こうぶん]を[保持/ほじ]したまま[別/べつ]の[値/あたい]として[保持/ほじ]できる。" nil
     cons paragraph cons "[正確/せいかく]に[評価/ひょうか]する[演算/えんざん]:" nil
     cons list unordered
       cons item none body cons paragraph cons "add/sub: Scalar[同士/どうし]、[等/ひと]しい[長/なが]さのVector、[等/ひと]しい[形状/けいじょう]のMatrix。" nil nil
