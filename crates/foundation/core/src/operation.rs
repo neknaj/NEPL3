@@ -73,6 +73,8 @@ pub enum ContinuationError {
     Provider,
     ParentRequest,
     Snapshot,
+    State,
+    DependencyCount,
 }
 impl From<StopReason> for ContinuationError {
     fn from(reason: StopReason) -> Self {
@@ -80,6 +82,20 @@ impl From<StopReason> for ContinuationError {
     }
 }
 impl Continuation {
+    /// Match the exact continuation retained by the host. This does not consume
+    /// its pending slot or validate operation-specific state semantics.
+    pub fn check_saved(&self, saved: &Self, budget: &mut Budget) -> Result<(), ContinuationError> {
+        self.check_binding(
+            &saved.provider,
+            saved.parent_request,
+            saved.snapshot_digest,
+            budget,
+        )?;
+        if !self.state.equal_with_budget(&saved.state, budget)? {
+            return Err(ContinuationError::State);
+        }
+        Ok(())
+    }
     /// Compare against host-saved identity before resuming. The host must also
     /// recognize this continuation and validate its operation-specific state.
     pub fn check_binding(
@@ -107,5 +123,26 @@ impl Continuation {
             return Err(ContinuationError::Snapshot);
         }
         Ok(())
+    }
+}
+
+impl Resume {
+    /// Check correlation before the host validates ordered dependency results
+    /// against saved calls and their output contracts. A successful check leaves
+    /// replay prevention and pending-slot consumption to the owning host.
+    pub fn check_binding(
+        &self,
+        saved: &Continuation,
+        dependency_count: usize,
+        budget: &mut Budget,
+    ) -> Result<(), ContinuationError> {
+        budget.charge(Resource::Work, 1)?;
+        if self.request_id != saved.parent_request {
+            return Err(ContinuationError::ParentRequest);
+        }
+        if self.dependency_results.len() != dependency_count {
+            return Err(ContinuationError::DependencyCount);
+        }
+        self.continuation.check_saved(saved, budget)
     }
 }
