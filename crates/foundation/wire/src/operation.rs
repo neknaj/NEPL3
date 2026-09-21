@@ -1,6 +1,7 @@
 //! Typed Invoke/Continuation boundaries using the registered foundation schema.
 //! These codecs check transport structure and supplied content identities.
 //! Operation dispatch, authorization and continuation registration belong to hosts.
+mod reply;
 use crate::{WireError, boundary::typed::Codec, boundary::*, source::*, view::*};
 use alloc::vec::Vec;
 use nepl3_core::{
@@ -11,6 +12,7 @@ use nepl3_core::{
     syntax::{ResourceContent, validate_resources},
     value::{NdfValue, OperationRef, SchemaRef},
 };
+pub use reply::{decode_reply, decode_resume, encode_reply, encode_resume};
 
 impl Codec for OperationRef {
     fn value(&self, s: &SchemaRef, b: &mut Budget) -> Result<NdfValue, WireError> {
@@ -120,8 +122,17 @@ pub fn encode_invoke(
 ) -> Result<Vec<u8>, WireError> {
     b.poll()?;
     let s = schema(registry)?;
+    let value = invoke_value(value, s, admission, b)?;
+    crate::encode_checked(&value, &expected("Invoke"), registry, b)
+}
+fn invoke_value(
+    value: &Invoke,
+    s: &SchemaRef,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<NdfValue, WireError> {
     validate_resources(&value.resources, b)?;
-    let value = record(
+    record(
         s,
         "Invoke",
         [
@@ -141,8 +152,7 @@ pub fn encode_invoke(
             value.limits.value(s, b)?,
         ],
         b,
-    )?;
-    crate::encode_checked(&value, &expected("Invoke"), registry, b)
+    )
 }
 /// Decode a request after schema, source identity and resource-content checks.
 /// The selected operation must additionally validate its input/environment
@@ -156,7 +166,15 @@ pub fn decode_invoke(
     b.poll()?;
     let s = schema(registry)?;
     let value = crate::decode_checked(input, &expected("Invoke"), registry, b)?;
-    let f = fields(value.value(), s, "Invoke", 7)?;
+    invoke_from(value.value(), s, admission, b)
+}
+fn invoke_from(
+    value: &NdfValue,
+    s: &SchemaRef,
+    admission: &mut SourceAdmission,
+    b: &mut Budget,
+) -> Result<Invoke, WireError> {
+    let f = fields(value, s, "Invoke", 7)?;
     let empty = SourceStore::default();
     let value = Invoke {
         request_id: as_u64(&f[0])?,

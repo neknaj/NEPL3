@@ -2,6 +2,8 @@ use nepl3_core::{
     budget::*, operation::*, schema::*, source::*, syntax::ResourceContent, value::*,
 };
 use nepl3_wire::{WireError, operation::*};
+#[path = "operation/reply.rs"]
+mod reply;
 fn error(e: impl core::fmt::Debug) -> String {
     format!("{e:?}")
 }

@@ -2,6 +2,7 @@
 //! Hosts own dispatch, capability checks and request lifetime.
 use crate::{
     budget::{Budget, Limits, Resource, StopReason},
+    diagnostic::{OperationResult, Report},
     source::{Digest, SourceSnapshot},
     syntax::ResourceContent,
     value::{OperationRef, TypedValue},
@@ -28,6 +29,26 @@ pub struct Continuation {
     pub parent_request: u64,
     pub snapshot_digest: Digest,
     pub state: TypedValue,
+}
+
+/// A terminal operation result or suspended calls with a saved continuation.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum OperationReply {
+    Result(OperationResult<TypedValue>),
+    Await {
+        continuation: Continuation,
+        calls: Vec<Invoke>,
+        report: Report,
+    },
+}
+
+/// Results are ordered as the dependency calls of the saved Await. The host
+/// checks correspondence to those calls before passing this record to a provider.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Resume {
+    pub request_id: u64,
+    pub continuation: Continuation,
+    pub dependency_results: Vec<OperationReply>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
