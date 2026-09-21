@@ -90,6 +90,7 @@ impl AcceptedTokenizationFailure {
 }
 
 pub(super) struct Prefix {
+    conflict_scope: Option<super::accepted::SourceConflictScope>,
     admission_scope: Option<nepl3_core::source::SourceAdmissionScope>,
     scope: Rc<TokenizationScope>,
     limits: Limits,
@@ -99,6 +100,7 @@ pub(super) struct Prefix {
 impl Prefix {
     pub fn capture(accepted: &AcceptedTokenizationReport) -> Self {
         Self {
+            conflict_scope: accepted.conflict_scope.clone(),
             admission_scope: accepted.admission_scope.clone(),
             scope: Rc::clone(&accepted.scope),
             limits: accepted.limits,
@@ -133,6 +135,7 @@ impl Prefix {
         live.source_maps.truncate(self.lengths[3]);
         live.report.trace_overflow = self.overflow;
         Ok(AcceptedTokenizationReport {
+            conflict_scope: self.conflict_scope,
             admission_scope: self.admission_scope,
             scope: self.scope,
             limits: self.limits,

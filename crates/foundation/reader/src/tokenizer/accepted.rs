@@ -18,8 +18,43 @@ pub struct AcceptedTokenizationReport {
     pub(super) source_maps: Vec<Mapping>,
     pub(super) limits: Limits,
     pub(super) admission_scope: Option<nepl3_core::source::SourceAdmissionScope>,
+    pub(super) conflict_scope: Option<SourceConflictScope>,
+}
+/// Owned environment plus the checked prefix of this append-only collector.
+/// Never serialized or inferred from a length supplied by an external caller.
+#[derive(Clone, Debug)]
+pub(super) struct SourceConflictScope {
+    environment: nepl3_core::source::SourceStoreScope,
+    checked_len: usize,
 }
 impl AcceptedTokenizationReport {
+    pub(super) fn unchecked_sources<'a>(
+        &'a self,
+        store: &nepl3_core::source::SourceStore,
+    ) -> Result<&'a [SourceSnapshot], crate::runtime::ReaderError> {
+        let start = self
+            .conflict_scope
+            .as_ref()
+            .filter(|proof| store.matches_scope(&proof.environment))
+            .map_or(0, |proof| proof.checked_len);
+        self.sources
+            .get(start..)
+            .ok_or(crate::runtime::ReaderError::Continuation)
+    }
+    pub(super) fn retain_checked_prefix(
+        &mut self,
+        store: &nepl3_core::source::SourceStore,
+        checked_len: usize,
+    ) -> Result<(), crate::runtime::ReaderError> {
+        if checked_len > self.sources.len() {
+            return Err(crate::runtime::ReaderError::Continuation);
+        }
+        self.conflict_scope = store.scope().map(|environment| SourceConflictScope {
+            environment,
+            checked_len,
+        });
+        Ok(())
+    }
     pub(super) fn admit_sources(
         &self,
         admission: &mut nepl3_core::source::SourceAdmission,
@@ -55,6 +90,7 @@ impl AcceptedTokenizationReport {
             source_maps: Vec::new(),
             limits: budget.limits(),
             admission_scope: None,
+            conflict_scope: None,
         })
     }
     pub fn scope(&self) -> &TokenizationScope {
@@ -261,6 +297,7 @@ impl AcceptedTokenizationReport {
             source_maps,
             limits: self.limits,
             admission_scope: self.admission_scope.clone(),
+            conflict_scope: self.conflict_scope.clone(),
         })
     }
     pub fn into_parts(self) -> (Report, Vec<SourceSnapshot>, Vec<Mapping>) {
@@ -313,6 +350,7 @@ impl AcceptedTokenizationReply {
                 source_maps: reply.source_maps,
                 limits: budget.limits(),
                 admission_scope: None,
+                conflict_scope: None,
             },
         }
     }

@@ -76,6 +76,7 @@ fn session_issues_scope_only_for_completed_reads_with_stable_admission()
     )?;
     let mut store = SourceStore::default();
     store.insert(source.clone())?;
+    store.prepare_scope(&mut setup)?;
     let environment = Environment {
         bindings: vec![],
         resources: vec![],
@@ -178,6 +179,7 @@ fn session_issues_scope_only_for_completed_reads_with_stable_admission()
         if stopped {
             assert!(matches!(reply.outcome, TokenizationOutcome::Stopped { .. }));
             assert!(reply.accepted.admission_scope.is_none());
+            assert!(reply.accepted.conflict_scope.is_none());
         } else {
             assert!(matches!(reply.outcome, TokenizationOutcome::Token(_)));
             assert_eq!(
@@ -185,6 +187,9 @@ fn session_issues_scope_only_for_completed_reads_with_stable_admission()
                 cfg!(target_has_atomic = "ptr")
             );
             let work = b.usage().work;
+            if cfg!(target_has_atomic = "ptr") {
+                assert!(reply.accepted.unchecked_sources(&store)?.is_empty());
+            }
             reply.accepted.admit_sources(&mut ledger, &mut b)?;
             if cfg!(target_has_atomic = "ptr") {
                 assert_eq!(b.usage().work, work);
@@ -209,6 +214,7 @@ fn session_issues_scope_only_for_completed_reads_with_stable_admission()
             let restored =
                 AcceptedTokenizationReply::from_native(raw_reply, Rc::new(scope.clone()), &b);
             assert!(restored.accepted.admission_scope.is_none());
+            assert!(restored.accepted.conflict_scope.is_none());
         }
     }
     struct SourceHost {
@@ -343,6 +349,8 @@ fn session_issues_scope_only_for_completed_reads_with_stable_admission()
             ));
             assert_eq!(host.calls, 2);
             assert_eq!(result.reply.accepted.sources.len(), 2);
+            // Sources produced by this read are not part of its entry proof.
+            assert_eq!(result.reply.accepted.unchecked_sources(&store)?.len(), 2);
             assert_eq!(
                 result.reply.accepted.admission_scope.is_some(),
                 cfg!(target_has_atomic = "ptr") && (!exchange || restore_inside)

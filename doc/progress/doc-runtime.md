@@ -16,12 +16,29 @@ parser全体の実時間・実メモリは未測定であり、単体文書の�
 次の性能改善では、以下の測定を基に既存集合の再走査と検証scopeの寿命を調べる。
 受入済みcollectorの再admissionは、台帳の一致を確認できる同期readで再利用する。
 同期hostもcallback境界ごとの交換検出を通す。SourceStoreを明示準備した経路では、
-環境集合の所有付きscopeも再利用する。resumeと受入済みsource列のprefix比較は残件である。
+環境集合の所有付きscopeも再利用する。正常な同期readでは、collectorが保持する
+環境検査済みprefixを引き継ぎ、追加sourceだけを検査する。resume経路は残件である。
 
 Sentence consumerの所有移行、NEPL3a、旧lexical commentの全面撤去、T07/T21全体は
 未完了のままである。HTML/rustdocの高度化をこれらの本体開発の前提にしない。
 
 ## 段階別の履歴
+
+### 2026-09-21: collectorの環境検査済みprefixを保持
+
+正常な同期readが返すcollectorに、開始時のsource長までの競合検査scopeを保存する。
+新規生成sourceは次のreadで検査する。公開appendは追加分をこの証明へ含めず、
+checkpointとrollbackは元の検査範囲を実source列と一緒に保持する。
+別store・未準備store・raw復元・resume・停止ではこの省略を推定しない。
+SourceChecksの補助cacheは検査済みの値列であり、collector内のindexではない。
+
+限定測定`accepted_prefix_growth_measurement`はsourceを1件ずつ増やして競合検査だけを
+128/256/512回行う。source構築・parser・admissionは含めない。
+従来のWorkは8,384/33,152/131,840、prefix保持時は10,797/21,677/43,437だった。
+128件では定数費用によりWorkが増えるが、増大入力の反復比較は線形に変わる。
+Windows debugの参考時間は従来0.26/0.78/3.02 ms、prefix保持時0.046/0.073/0.147 ms。
+これは全parserの実時間や実heapの改善率ではない。別分岐が同じ長さの場合、rollback後の
+別suffix、環境競合、検査停止、実host生成直後の未検査suffixを回帰試験で確認した。
 
 ### 2026-09-21: 変更されていないSourceStoreの環境比較を再利用
 

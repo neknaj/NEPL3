@@ -11,6 +11,9 @@ use nepl3_core::{
 pub(super) struct SourceChecks {
     environment: Vec<SourceSnapshot>,
     environment_scope: Option<SourceStoreScope>,
+    // Values from the last checked slice, not collector-relative positions.
+    // Callers may supply a full collector or its unproved suffix. Every reuse
+    // still compares values under the same environment.
     checked: Vec<SourceSnapshot>,
 }
 impl SourceChecks {
