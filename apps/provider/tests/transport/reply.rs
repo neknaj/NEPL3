@@ -145,6 +145,63 @@ fn rejected_dispatch_and_closed_transport_do_not_execute_or_emit_a_reply() -> Re
     assert!(server.into_parts().1.is_empty());
     Ok(())
 }
+
+#[test]
+fn failed_reply_write_keeps_execution_work_and_prevents_callback_retry() -> Result<(), String> {
+    let (registry, request) = fixture()?;
+    let sources = SourceStore::default();
+    let identity = Digest::of(b"native implementation");
+    let registration = nepl3_suite::dispatch::suspending::Registration {
+        operation: &request.operation,
+        implementation: identity,
+        invoke: increment,
+    };
+    let mut server = Connection::new(io::empty(), Broken);
+    let mut execution = budget();
+    let result = server.dispatch_invoke(
+        &registration,
+        identity,
+        &request,
+        identity,
+        &registry,
+        &sources,
+        &sources,
+        &mut SourceAdmission::default(),
+        &mut execution,
+        &mut budget(),
+        &mut budget(),
+    );
+    assert!(matches!(
+        result,
+        Err(nepl3_provider::dispatch::DispatchError::Transport(
+            TransportError::Io(_)
+        ))
+    ));
+    assert!(server.is_closed());
+    let work = execution.usage().work;
+    assert!(work > 0);
+    let retry = server.dispatch_invoke(
+        &registration,
+        identity,
+        &request,
+        identity,
+        &registry,
+        &sources,
+        &sources,
+        &mut SourceAdmission::default(),
+        &mut execution,
+        &mut budget(),
+        &mut budget(),
+    );
+    assert!(matches!(
+        retry,
+        Err(nepl3_provider::dispatch::DispatchError::Transport(
+            TransportError::Closed
+        ))
+    ));
+    assert_eq!(execution.usage().work, work);
+    Ok(())
+}
 fn fixture() -> Result<(SchemaRegistry, Invoke), String> {
     let mut registry = SchemaRegistry::default();
     let foundation = foundation::descriptor(&mut budget()).map_err(error)?;
