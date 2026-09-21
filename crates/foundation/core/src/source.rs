@@ -492,8 +492,55 @@ pub struct SourceAdmission {
     index: Vec<usize>,
     #[cfg(target_has_atomic = "ptr")]
     shared: Vec<SnapshotStorage>,
+    #[cfg(target_has_atomic = "ptr")]
+    owner: Option<alloc::sync::Arc<()>>,
+}
+
+/// Native ledger identity, not a source, wire identity, or budget proof.
+/// Owning the marker prevents address reuse from matching a different ledger.
+#[derive(Clone, Debug)]
+pub struct SourceAdmissionScope {
+    #[cfg(target_has_atomic = "ptr")]
+    owner: alloc::sync::Arc<()>,
 }
 impl SourceAdmission {
+    /// Obtain a native marker for an owned collector's admission provenance.
+    /// Targets without pointer atomics retain full checks and return None.
+    /// Callers still share this ledger with one operation's Budget.
+    pub fn scope_with_budget(
+        &mut self,
+        budget: &mut Budget,
+    ) -> Result<Option<SourceAdmissionScope>, SourceError> {
+        budget.poll()?;
+        #[cfg(target_has_atomic = "ptr")]
+        {
+            if self.owner.is_none() {
+                budget.charge(
+                    Resource::AllocationUnits,
+                    core::mem::size_of::<SourceAdmissionScope>() as u64,
+                )?;
+                self.owner = Some(alloc::sync::Arc::new(()));
+            }
+            Ok(self.owner.as_ref().map(|owner| SourceAdmissionScope {
+                owner: alloc::sync::Arc::clone(owner),
+            }))
+        }
+        #[cfg(not(target_has_atomic = "ptr"))]
+        Ok(None)
+    }
+    pub fn matches_scope(&self, scope: &SourceAdmissionScope) -> bool {
+        #[cfg(target_has_atomic = "ptr")]
+        {
+            self.owner
+                .as_ref()
+                .is_some_and(|owner| alloc::sync::Arc::ptr_eq(owner, &scope.owner))
+        }
+        #[cfg(not(target_has_atomic = "ptr"))]
+        {
+            let _ = scope;
+            false
+        }
+    }
     /// Reconstructs a repeated declaration from a nested wire bundle without charging
     /// its source bytes twice. UTF-8, locator, digest and work are still checked.
     pub fn import(

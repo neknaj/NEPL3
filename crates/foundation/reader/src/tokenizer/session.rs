@@ -433,11 +433,43 @@ impl<'a> TokenizationSession<'a> {
         }
         let scope = Rc::clone(&accepted.scope);
         let prefix = Prefix::capture(&accepted);
+        // Only this synchronous, host-free path proves that one ledger owns
+        // every accepted source throughout the operation. Resume and host
+        // callbacks retain full checks until their ledger transitions are tracked.
+        let admission_scope = if host.is_none() {
+            match admission.scope_with_budget(budget) {
+                Ok(scope) => scope,
+                Err(SourceError::Stopped(reason)) => {
+                    return Ok(AcceptedTokenizationReply::from_native(
+                        empty_stop(request.start, reason, accepted, budget),
+                        scope,
+                        budget,
+                    ));
+                }
+                Err(error) => return Err(rejected(error.into(), accepted, budget)),
+            }
+        } else {
+            None
+        };
         let result = self.read_seed(
             target, request, sources, budget, admission, accepted, host, host_error,
         );
         match result {
-            Ok(reply) => Ok(AcceptedTokenizationReply::from_native(reply, scope, budget)),
+            Ok(reply) => {
+                let proved = matches!(
+                    reply.outcome,
+                    TokenizationOutcome::Token(_)
+                        | TokenizationOutcome::End
+                        | TokenizationOutcome::NoMatch { .. }
+                        | TokenizationOutcome::NeedMore { .. }
+                        | TokenizationOutcome::Failed { .. }
+                );
+                let mut reply = AcceptedTokenizationReply::from_native(reply, scope, budget);
+                if proved {
+                    reply.accepted.admission_scope = admission_scope;
+                }
+                Ok(reply)
+            }
             Err(failure) => match prefix.restore(failure.accepted) {
                 Ok(accepted) => Err(AcceptedTokenizationFailure::Recoverable {
                     error: failure.error,
@@ -515,12 +547,11 @@ impl<'a> TokenizationSession<'a> {
         let accepted_check = (|| -> Result<(), ReaderError> {
             self.source_checks
                 .check(&accepted.sources, sources, budget)?;
-            for added in &accepted.sources {
-                admission.admit_existing(added, budget)?;
-            }
+            accepted.admit_sources(admission, budget)?;
             if accepted.report.diagnostics.is_empty() && accepted.report.events.is_empty() {
-                // The loop above checked/admitted every source in this private
-                // prefix. An empty report has no range to resolve; retain its
+                // Every source in this private prefix was checked and admitted,
+                // or retained admission in the same ledger. An empty report has
+                // no range to resolve; retain its
                 // usage/overflow validation without rebuilding that same index.
                 return runtime::validate::accepted_report(
                     &accepted.report,

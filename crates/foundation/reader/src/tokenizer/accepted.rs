@@ -1,4 +1,6 @@
 //! Native proof for a collector produced by the tokenizer. Raw wire values cannot forge it.
+#[cfg(test)]
+mod tests;
 use super::*;
 use alloc::{rc::Rc, vec::Vec};
 use nepl3_core::{
@@ -15,8 +17,26 @@ pub struct AcceptedTokenizationReport {
     pub(super) sources: Vec<SourceSnapshot>,
     pub(super) source_maps: Vec<Mapping>,
     pub(super) limits: Limits,
+    pub(super) admission_scope: Option<nepl3_core::source::SourceAdmissionScope>,
 }
 impl AcceptedTokenizationReport {
+    pub(super) fn admit_sources(
+        &self,
+        admission: &mut nepl3_core::source::SourceAdmission,
+        budget: &mut Budget,
+    ) -> Result<(), crate::runtime::ReaderError> {
+        budget.poll()?;
+        if !self
+            .admission_scope
+            .as_ref()
+            .is_some_and(|scope| admission.matches_scope(scope))
+        {
+            for source in &self.sources {
+                admission.admit_existing(source, budget)?;
+            }
+        }
+        Ok(())
+    }
     pub fn empty(
         scope: TokenizationScope,
         budget: &mut Budget,
@@ -34,6 +54,7 @@ impl AcceptedTokenizationReport {
             sources: Vec::new(),
             source_maps: Vec::new(),
             limits: budget.limits(),
+            admission_scope: None,
         })
     }
     pub fn scope(&self) -> &TokenizationScope {
@@ -52,6 +73,7 @@ impl AcceptedTokenizationReport {
         admission: &mut nepl3_core::source::SourceAdmission,
     ) -> Result<(), crate::runtime::ReaderError> {
         use nepl3_core::budget::Resource;
+        self.retain_admission_scope(admission);
         if self.limits != budget.limits()
             || !crate::runtime::usage_at_least(budget.usage(), self.report.usage)
             || !crate::runtime::usage_at_least(saved, self.report.usage)
@@ -160,6 +182,7 @@ impl AcceptedTokenizationReport {
         budget: &mut Budget,
         admission: &mut nepl3_core::source::SourceAdmission,
     ) -> Result<(), crate::runtime::ReaderError> {
+        self.retain_admission_scope(admission);
         if self.limits != budget.limits()
             || !crate::runtime::usage_at_least(budget.usage(), self.report.usage)
         {
@@ -237,6 +260,7 @@ impl AcceptedTokenizationReport {
             sources,
             source_maps,
             limits: self.limits,
+            admission_scope: self.admission_scope.clone(),
         })
     }
     pub fn into_parts(self) -> (Report, Vec<SourceSnapshot>, Vec<Mapping>) {
@@ -250,6 +274,15 @@ impl AcceptedTokenizationReport {
     }
     pub fn source_maps(&self) -> &[Mapping] {
         &self.source_maps
+    }
+    fn retain_admission_scope(&mut self, admission: &nepl3_core::source::SourceAdmission) {
+        if self
+            .admission_scope
+            .as_ref()
+            .is_some_and(|scope| !admission.matches_scope(scope))
+        {
+            self.admission_scope = None;
+        }
     }
 }
 #[derive(Debug)]
@@ -279,6 +312,7 @@ impl AcceptedTokenizationReply {
                 sources: reply.sources,
                 source_maps: reply.source_maps,
                 limits: budget.limits(),
+                admission_scope: None,
             },
         }
     }

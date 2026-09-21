@@ -44,6 +44,19 @@ AllocationUnitsも出力するが契約上の課金値であり、実heap使用�
 AcceptedTokenizationReportのscopeと長さだけでは、現在のSourceAdmissionでの受入済みを証明できない。
 集合の分岐・rollback・別admission・環境変更を扱う失効条件を保った上で改善する。
 
+### 2026-09-21: 同期collectorのadmission再利用
+
+上記測定後、atomic pointerを持つtargetで、hostなし同期readが返す所有されたcollectorに
+SourceAdmissionのopaque scopeを保持する経路を追加した。同じ台帳なら入場済みsourceの
+再admissionを走査せず、別台帳では全sourceを検査する。source環境との競合検査は維持する。
+checkpointとrollbackは実際のsource集合とscopeを一緒に保持する。
+公開append/diagnosticへ別台帳を渡す場合は以前の証明を失効させる。
+
+host callback中の台帳交換をまだ追跡しないため、host付きread・Await・Reserve・resume・
+Stopped・raw復元には証明を付けない。非atomic targetも全検査を維持する。
+したがって全source処理の線形化、Doc host全体の高速化、実heap削減が完了したとはしない。
+次段階はcallback/resumeを含む台帳寿命と、残るSourceChecksの集合比較である。
+
 ## #158を優先するSentence・注釈の回復
 
 今後の是正順序は[23章](../spec/23-sentence-annotation.md)に従う。Doc固有機能を広げる前に、

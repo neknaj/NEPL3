@@ -90,6 +90,7 @@ impl AcceptedTokenizationFailure {
 }
 
 pub(super) struct Prefix {
+    admission_scope: Option<nepl3_core::source::SourceAdmissionScope>,
     scope: Rc<TokenizationScope>,
     limits: Limits,
     lengths: [usize; 4],
@@ -98,6 +99,7 @@ pub(super) struct Prefix {
 impl Prefix {
     pub fn capture(accepted: &AcceptedTokenizationReport) -> Self {
         Self {
+            admission_scope: accepted.admission_scope.clone(),
             scope: Rc::clone(&accepted.scope),
             limits: accepted.limits,
             lengths: [
@@ -131,6 +133,7 @@ impl Prefix {
         live.source_maps.truncate(self.lengths[3]);
         live.report.trace_overflow = self.overflow;
         Ok(AcceptedTokenizationReport {
+            admission_scope: self.admission_scope,
             scope: self.scope,
             limits: self.limits,
             report: live.report,

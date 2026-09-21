@@ -8,6 +8,7 @@ use nepl3_core::{
 
 fn prefix() -> Prefix {
     Prefix {
+        admission_scope: None,
         scope: Rc::new(TokenizationScope {
             operation_id: "original".into(),
             profile_digest: Digest([7; 32]),
