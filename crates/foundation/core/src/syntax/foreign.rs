@@ -186,7 +186,13 @@ pub(super) fn environment(
         }
         registry.validate_typed(&binding.value, b)?;
     }
-    for (index, resource) in value.resources.iter().enumerate() {
+    resources(&value.resources, b)
+}
+
+/// Verify content digests and unique, nonempty resource identities.
+pub fn resources(values: &[ResourceContent], b: &mut Budget) -> Result<(), SyntaxError> {
+    b.poll()?;
+    for (index, resource) in values.iter().enumerate() {
         b.charge(
             Resource::Work,
             (resource.bytes.len() + resource.id.len()) as u64 + 1,
@@ -194,7 +200,7 @@ pub(super) fn environment(
         if resource.id.is_empty() || resource.digest != Digest::of(&resource.bytes) {
             return Err(SyntaxError::ResourceDigest);
         }
-        for prior in &value.resources[..index] {
+        for prior in &values[..index] {
             b.charge(
                 Resource::Work,
                 (prior.id.len() + resource.id.len()) as u64 + 1,

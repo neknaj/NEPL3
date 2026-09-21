@@ -6,6 +6,7 @@ pub mod budget;
 pub mod diagnostic;
 pub mod facts;
 pub mod lexical;
+pub mod operation;
 pub mod origin;
 pub mod schema;
 pub mod source;
