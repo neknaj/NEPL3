@@ -1,6 +1,8 @@
 # GitHub Pages の情報設計と安定 URL
 
-Status: planned
+Decision status: adopted — PR #169、統合commit `e52fc8d8d5122b5f0977ee662dc85d2d56927a86`。
+
+Implementation status: partial — この決定の採用は、Playground・Tutorial・repository分割・全公開routeの実装完了を意味しない。実装と正式受入の状態は [implementation-status.json](../../implementation-status.json) とT18〜T21・T26で管理する。
 
 この文書は、NEPL3 ecosystem の GitHub Pages で公開する主要 surface の安定 URL と、その役割を定める。Pages は NEPL3d 等の正本から得られる公開 projection と interactive surface の配布先であり、HTML 自体を正式文書の正本とはしない。
 

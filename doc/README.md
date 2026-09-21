@@ -8,25 +8,25 @@
 
 Docで例や解説を書く際は、[文書の執筆指針](authoring.md)のsentence literal・前置構築・parallel・Ruby/Annoの使い分けに従ってください。
 
-## 読み順
+## 目的から探す
 
-1. [対象範囲と共通契約](spec/00-contract.md)、[アーキテクチャ](spec/01-architecture.md)
-2. [共通基盤](spec/02-foundation.md)、[reader](spec/03-reader.md)、[Grammar](spec/04-grammar.md)
-3. [Doc](spec/05-document.md)、[Math](spec/06-math.md)、[Circuit](spec/07-circuit.md)
-4. [エディタ支援](spec/08-editor.md)、[交換契約](spec/09-portability.md)、[統合](spec/10-integration.md)
-5. [受入条件](spec/11-conformance.md)、[モデル不変条件](spec/12-model-invariants.md)、[再現性](spec/13-reproducibility.md)
-6. [開発手順](development.md)、[タスク索引](../tasks/README.md)、[実装状態](../implementation-status.json)
-7. [初期設計の独立レビュー](review.md)、[r2の契約訂正](decisions/0002-design-contract-corrections.md)
-8. [Web UI・TEA](spec/14-web-ui.md)、[静的サイト・Pages](spec/15-site.md)、[Doc DSL移行](spec/16-doc-migration.md)、[r3の判断](decisions/0003-web-tea-doc-migration.md)
-9. [Pages復旧と早期Doc inventoryの判断](decisions/0004-pages-recovery-doc-inventory.md)、[文書inventoryとgap audit](doc-inventory.md)
-10. [r4 foundation契約](decisions/0005-foundation-runtime-contracts.md)、[実装・検証の進捗](progress/foundation-runtime.md)
-11. [Doc runtime の実装範囲と残り](progress/doc-runtime.md)
-12. [Math runtime の実装範囲と残り](progress/math-runtime.md)
-13. [Doc・MathのHTML生成と数式表示](spec/17-math-html.md)
-14. [外部言語の追加とrepository分離条件](spec/22-external-extensions.md)
-15. [NEPL3h: 独立GHC frontend案](decisions/nepl3h-ghc-frontend.md) — Haskell互換、Wasm/browser、DSL構造生成と配布方針。設計草案のみで実装未着手。
-16. [複数言語・構造化文章・対象付き注釈の統合案](decisions/multilanguage-hca.md) — 言語中立producer、NEPL3sentence/A/Dの分離、回路モデル、annotateと旧lexical commentの撤去計画。設計草案のみ。
-17. [構造化文章と対象付き注釈への是正](spec/23-sentence-annotation.md) — #158から実装へ進む移行契約。Sentenceのモデル・schema検査から開始し、独立言語・Doc/Math・注釈・旧コメント撤去の完了とは区別する。
+| したいこと | 最初に読む資料 | 確認できること |
+| --- | --- | --- |
+| NEPL3を理解する | [README](../README.md)、[共通契約](spec/00-contract.md)、[アーキテクチャ](spec/01-architecture.md) | 多階層の言語埋め込みと、基盤・各言語の所有境界 |
+| 実在する小さな言語を試す | [外部Hello言語](../conformance/extensions/hello/README.md)、[公開拡張契約](spec/22-external-extensions.md) | consumerを変更せず実行し、公開API・構文・位置・診断の検査内容を確認する。任意入力の表示exampleは未提供 |
+| 構文・交換契約を調べる | [Foundation](spec/02-foundation.md)、[reader](spec/03-reader.md)、[Grammar](spec/04-grammar.md)、[交換](spec/09-portability.md)、[統合](spec/10-integration.md) | 入出力・shape・source・失敗条件。schema正本は下表 |
+| 文書・数式を扱う | [Doc](spec/05-document.md)、[Math](spec/06-math.md)、[Sentence/annotation](spec/23-sentence-annotation.md)、[執筆指針](authoring.md) | 意味モデルと文章表記。Sentenceの契約とconsumer移行状態は区別する |
+| HTML・公開の境界を調べる | [数式表示](spec/17-math-html.md)、[markup](spec/19-html-fragment.md)、[Doc HTML](spec/20-doc-html.md)、[ページ参照](spec/21-doc-pages.md)、[site](spec/15-site.md) | 各層の独立した保証。HTMLは正式文書のprojection |
+| 開発・検査する | [開発手順](development.md)、[受入条件](spec/11-conformance.md)、[モデル不変条件](spec/12-model-invariants.md)、[再現性](spec/13-reproducibility.md) | 変更に対応する検査と、正式受入との区別 |
+| 編集先・現在状態を確認する | [canonical registry](canonical.json)、[実装状態](../implementation-status.json)、[タスク索引](../tasks/README.md) | 正本、実行済み範囲、依存する成果物と残件 |
+
+個別の設計対象は [Circuit](spec/07-circuit.md)、[editor](spec/08-editor.md)、[Web UI](spec/14-web-ui.md) を参照してください。文書移行の条件は [第16章](spec/16-doc-migration.md) にあります。仕様全章や過去レビューの通読は、最小例の実行の前提ではありません。
+
+## 設計理由と実装記録
+
+[統合設計](decisions/multilanguage-hca.md) と [NEPL3h案](decisions/nepl3h-ghc-frontend.md) は設計の意図を説明します。実装契約は仕様・schema、実装完了は状態正本で確認します。[Pages情報設計](decisions/pages-information-architecture.md) も採用状態と実装状態を分けています。
+
+[Foundation](progress/foundation-runtime.md)、[Doc](progress/doc-runtime.md)、[Math](progress/math-runtime.md) の記録は能力と検証範囲を説明します。日時付きの結果を現在の全体状態と同一視しません。[初期レビュー](review.md)、[r2訂正](decisions/0002-design-contract-corrections.md)、[Web/Doc移行の判断](decisions/0003-web-tea-doc-migration.md)、[Pages復旧の判断](decisions/0004-pages-recovery-doc-inventory.md)、[foundation契約の判断](decisions/0005-foundation-runtime-contracts.md)、[inventory監査](doc-inventory.md) は経緯や根拠を調べる入口です。
 
 ## 正本と派生資料
 
@@ -40,7 +40,7 @@ Docで例や解説を書く際は、[文書の執筆指針](authoring.md)のsent
 | [interfaces/foundation.json](../interfaces/foundation.json) | contractsから生成しproduction registryで検査する共通package descriptor |
 | [interfaces/doc.json](../interfaces/doc.json)、[doc-reader.json](../interfaces/doc-reader.json) | Doc arena値と、domain coreから分離したsentence reader adapterの実schema |
 | [interfaces/math.json](../interfaces/math.json) | Mathの表記を保持するarenaとsource閉包の実schema。構造proofと式の評価を分離する |
-| `languages/*/syntax.neplg` | 4言語の文法source |
+| `languages/*/syntax.neplg` | 各LanguagePackageの文法source |
 | [conformance/cases.json](../conformance/cases.json)、[examples/](../examples/) | 受入条件と検証入力 |
 | [implementation-status.json](../implementation-status.json) | 実装・試験の実行状態。仕様定義と分離する |
 | [design/acceptance.json](../design/acceptance.json) | 必須受入群と必須targetのcatalog |
