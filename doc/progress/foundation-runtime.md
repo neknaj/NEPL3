@@ -1,5 +1,13 @@
 # Foundation runtimeの実装記録
 
+## 現在状態を確認する入口
+
+実装・受入の現在状態は[実装状態の正本](../../implementation-status.json)、成果物と依存関係は[タスク定義](../../design/tasks.json)を参照する。公開APIを使う最小の実行経路は[外部Hello consumer](../../conformance/extensions/hello/README.md)にある。今回の作業範囲と担当は[開発規約](../../AGENTS.md)に従って決める。
+
+以下は開始commitからの実装履歴である。試験件数、担当分担、依存version、未完了範囲は各段階の記録として保存する。現在の依存versionはCargo.lock、実行可能な検査手順は[開発手順](../development.md)で確認する。
+
+## 初期実装からの履歴
+
 最初の実装区切りはcore 45件、reader 27件、wire 18件のproduction API試験を独立実行し、予算停止時のreport保持、長いSourceIdの割当前検査、Contextのsource閉包・同一性衝突、typed requestのNDF往復を確認した。統括の検査コマンド・source/spec identity・実行target・結果・未検証範囲は [区切りの検証記録](../../conformance/results/foundation-slice/validation.json) に保存する。この記録は開発途中のscope付き検証で、task完了や受入群全体のpassedを示さない。
 
 開始点は `6c9dd5f07376a3920a52ef61022d0adc011cca9f`。統括agentがcleanなworktree `C:/projects/NEPL3-runtime` とbranch `feat/foundation-runtime` を作成した。目標はNEPL3の最終仕様全体であり、最初の実装段階としてT01 core、T02 wire、T03 reader、T04 engine、T05 Grammar bootstrapを進める。
