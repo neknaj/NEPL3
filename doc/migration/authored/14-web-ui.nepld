@@ -2,7 +2,8 @@ article ja "14. Web UI・TEA・Playground"
 body
   cons section responsibilities "1. [責務/せきむ]と[実装範囲/じっそうはんい]" body
     cons paragraph
-      cons "4[言語/げんご]の[操作/そうさ]をブラウザWasmから[利用/りよう]するPlaygroundを、[最終成果物/さいしゅうせいかぶつ]に[含/ふく]める。"
+      cons "NEPL3の[共通構文基盤/きょうつうこうぶんきばん]と[言語/げんご]compositionをブラウザWasmから[利用/りよう]するPlaygroundを、[最終成果物/さいしゅうせいかぶつ]に[含/ふく]める。"
+      cons "[既存/きそん]4[言語/げんご]はreference profileとして[扱/あつか]い、[特定/とくてい]guest languageの[専用/せんよう]IDEや[閉/と]じた[言語一覧/げんごいちらん]を[共通/きょうつう]UIのモデルにしない。"
       cons "[専用/せんよう]の[言語処理/げんごしょり]server、localhost LSP、WebSocketを[利用条件/りようじょうけん]にしない。"
       cons "T15はWorker/Wasm[実行境界/じっこうきょうかい]、T17は[純粋/じゅんすい]UI core、T18はWeb editorと[操作画面/そうさがめん]を[所有/しょゆう]する。"
       cons "[現在/げんざい]は[計画/けいかく]であり、[動/うご]く[画面/がめん]・Wasm・[完成/かんせい]したUI schemaを[提供/ていきょう]した[状態/じょうたい]ではない。" nil
@@ -76,7 +77,19 @@ body
       cons "[不変/ふへん]snapshot handle、[差分/さぶん]、[共有/きょうゆう]データを[使用/しよう]し、[公開/こうかい]wireではpointerを[運/はこ]ばない。"
       cons "WidgetとModelに、[独立/どくりつ]したsource[正本/せいほん]を[持/も]たせない。" nil
     nil
-  cons section operations "5. [四言語/よんげんご]の[操作/そうさ]" body
+  cons section operations "5. [言語/げんご]compositionとreference profileの[操作/そうさ]" body
+    cons paragraph
+      cons "Playgroundでは[最小/さいしょう]の[独立/どくりつ]LanguagePackageを[作成/さくせい]し、[共通基盤/きょうつうきばん]やUIの[言語名分岐/げんごめいぶんき]を[変更/へんこう]せず[登録/とうろく]して、そのsourceをparse/check/printできることを[検証/けんしょう]する。"
+      cons "head/arity、[先行構文/せんこうこうぶん]による[後続/こうぞく]contextの[更新/こうしん]、[外国語構文/がいこくごこうぶん]の[境界/きょうかい]、Source/Originと[診断/しんだん]を[観察/かんさつ]できるようにする。" nil
+    cons paragraph
+      cons "さらに[別/べつ]LanguagePackageをimport/compositionし、[単一/たんいつ]source[内/ない]の[多階層埋/たかいそうう]め[込/こ]みを[共通操作経路/きょうつうそうさけいろ]で[扱/あつか]う。"
+      cons "sentenceやannotationも[独立/どくりつ]した[基礎言語/きそげんご]として[利用/りよう]し、foundationやeditorの[特別構文/とくべつこうぶん]へ[内蔵/ないぞう]しない。"
+      cons "annotationでは[対象/たいしょう]syntaxとの[関係/かんけい]と、[対象/たいしょう]のbinding・domain[意味/いみ]の[保持/ほじ]を[確認/かくにん]する。"
+      cons "[未実装/みじっそう]package・provider・[操作/そうさ]は[能力不足/のうりょくぶそく]を[示/しめ]し、[受入済/うけいれず]みとしない。" nil
+    cons paragraph
+      cons "[以下/いか]の4[言語/げんご]の[既存操作要件/きそんそうさようけん]はreference profileの[受入/うけいれ]として[維持/いじ]する。"
+      cons "[追加言語/ついかげんご]の[登録/とうろく]とcompositionの[受入/うけいれ]を、これらの[固定例/こていれい]だけで[代替/だいたい]しない。"
+      cons sentence cons text "Playground/Tutorialの" cons ruby text "共通原理" text "きょうつうげんり" cons text "と" cons ruby text "各言語固有" text "かくげんごこゆう" cons text "referenceの" cons ruby text "所有" text "しょゆう" cons text "は、" cons link relative "../decisions/pages-information-architecture.md" none concat cons text "Pages" cons ruby text "情報設計" text "じょうほうせっけい" nil cons text "に" cons ruby text "従" text "したが" cons text "う。" nil nil
     cons table
       cons left cons left nil
       some row cons "[言語/げんご]" cons "[必須操作/ひっすそうさ]と[表示/ひょうじ]" nil
