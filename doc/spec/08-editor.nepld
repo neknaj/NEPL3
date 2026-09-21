@@ -65,18 +65,20 @@ body
     nil
   cons section region "3. regionの[選択/せんたく]" body
     cons paragraph
-      cons "source positionから、[同一/どういつ]snapshot[上/じょう]で[包含/ほうがん]する[最小/さいしょう]のfield/elementを[選/えら]ぶ。"
-      cons "grammar priority、[最内側/さいうちがわ]、[宣言順/せんげんじゅん]でtie-breakを[固定/こてい]する。"
-      cons "sentence[内/ない]のreadingを[問/と]い[合/あ]わせたらsentence token[全体/ぜんたい]よりreading viewを[優先/ゆうせん]する。" nil
+      cons "region[選択/せんたく]は、[指定/してい]されたsource positionを[包含/ほうがん]するfield・elementのうち、[同一/どういつ]snapshot[上/じょう]で[最小/さいしょう]の[範囲/はんい]を[選択/せんたく]する[操作/そうさ]である。"
+      cons "[範囲/はんい]の[長/なが]さが[等/ひと]しい[場合/ばあい]は、grammar priority、[最内側/さいうちがわ]、[宣言順/せんげんじゅん]の[順/じゅん]に[判定/はんてい]する。"
+      cons "[例/たと]えばsentence[内/ない]のreadingの[位置/いち]を[指定/してい]すると、そのreading viewをsentence token[全体/ぜんたい]より[優先/ゆうせん]する。" nil
     cons paragraph
       cons sentence cons ruby text "現在" text "げんざい" cons text "の " cons code "analysis::region::regions" cons text " はprepared Binding" cons ruby text "入力" text "にゅうりょく" cons text "の" cons ruby text "検査済" text "けんさず" cons text "みtree/Profileと、" cons ruby text "明示" text "めいじ" cons text "ReaderFactBatch sidecarを" cons ruby text "受" text "う" cons text "ける。" nil
       cons sentence cons code "RegionKey" cons text " は" cons ruby text "既存" text "きそん" cons text "AnalysisKeyとsidecarのdigestの" cons ruby text "組" text "くみ" cons text "である。" nil
       cons sentence cons text "sidecarは " cons code "RegionSidecar { facts: Option<List<ReaderFactBatch>> }" cons text " を" cons ruby text "正準" text "せいじゅん" cons text "NDF/1 CBORへ" cons ruby text "符号化" text "ふごうか" cons text "し、" cons code "SHA-256(\"nepl3.region.reader-facts/1\\0\" || bytes)" cons text " で" cons ruby text "識別" text "しきべつ" cons text "する。" nil
       cons "Foreign pathとnodeはtreeの[正準/せいじゅん]DFS[番号/ばんごう]へ[写/うつ]し、batch/fact/triviaの[順序/じゅんじょ]は[保存/ほぞん]する。"
-      cons "NoneはSyntaxOnly、Some（[空列/くうれつ]を[含/ふく]む）はReaderFactsとして[区別/くべつ]し、[入力/にゅうりょく]しなかったCaptureをView[名/めい]から[推測/すいそく]しない。" nil
+      cons "factsがNoneの[場合/ばあい]はSyntaxOnly、Someの[場合/ばあい]は[空列/くうれつ]も[含/ふく]めてReaderFactsとして[扱/あつか]う。"
+      cons "Captureは[明示/めいじ]された[入力/にゅうりょく]だけを[使用/しよう]し、View[名/めい]からの[推測/すいそく]による[補完/ほかん]は[禁止/きんし]する。" nil
     cons paragraph
       cons "sidecarのentryは[所有/しょゆう]bundle/nodeの[保存/ほぞん]selectionと[照合/しょうごう]する。"
-      cons "nodeのあるbatchのtriviaはToken.leadingTriviaの[完全/かんぜん]な[再掲/さいけい]であり、[別/べつ]tokenをSkippedと[名乗/なの]って[混入/こんにゅう]できない。"
+      cons "nodeのあるbatchのtriviaは、Token.leadingTriviaと[完全/かんぜん]に[一致/いっち]する[列/れつ]を[要求/ようきゅう]する。"
+      cons "[別/べつ]のtokenをSkippedとして[混入/こんにゅう]した[入力/にゅうりょく]は[拒否/きょひ]する。"
       cons "Captureは[所有/しょゆう]bundleの[宣言/せんげん]SourceMapを[使/つか]い、token headまたは[正式/せいしき]なskip triviaへの[包含/ほうがん]を[検査/けんさ]する。"
       cons "Presentation/Relationは[通常/つうじょう]reader[契約/けいやく]どおり[明示/めいじ]source/schemaの[整合/せいごう]を[検査/けんさ]し、[消費範囲/しょうひはんい]への[包含条件/ほうがんじょうけん]を[追加/ついか]しない。"
       cons "[所有/しょゆう]bundleのsource/map[不足/ふそく]をForeignの[別表/べっぴょう]で[補/おぎな]わない。"
@@ -95,24 +97,31 @@ body
       cons "[回復/かいふく]nodeはRecoveryとして[区別/くべつ]し、UnknownHeadのUnparsed[範囲/はんい]へ[推測/すいそく]した[子/こ]を[追加/ついか]しない。"
       cons "Missingの[空/くう]anchorやEOFを[直前/ちょくぜん]の[名前/なまえ]に[吸着/きゅうちゃく]させない。" nil
     cons paragraph
-      cons "[表示用/ひょうじよう]SourceMap[投影/とうえい]は[領域/りょういき]ownerの[明示表/めいじひょう]だけをたどる。"
+      cons "[表示用/ひょうじよう]のSourceMap[投影/とうえい]は、[領域/りょういき]を[所有/しょゆう]するbundleが[明示/めいじ]した[表/ひょう]だけを[参照/さんしょう]する。"
       cons "[隣接/りんせつ]Exact[区間/くかん]は[同/おな]じsourceとbyte[変位/へんい]の[連続被覆/れんぞくひふく]として[結合/けつごう]し、[区間分割/くかんぶんかつ]や[表順/ひょうじゅん]で[結果/けっか]を[変/か]えない。"
-      cons "[完全/かんぜん]Exact、[部分被覆/ぶぶんひふく]ExactFragment、[保守的/ほしゅてき]なTransformedを[区別/くべつ]し、[多義的/たぎてき]な[表示候補/ひょうじこうほ]を[保持/ほじ]する。"
+      cons "[範囲全体/はんいぜんたい]を[対応付/たいおうづ]けるExact、[部分被覆/ぶぶんひふく]を[表/あらわ]すExactFragment、[保守的/ほしゅてき]な[対応/たいおう]を[表/あらわ]すTransformedを[区別/くべつ]し、[複数/ふくすう]の[対応/たいおう]がある[場合/ばあい]はその[表示候補/ひょうじこうほ]を[保持/ほじ]する。"
       cons "この[表示情報/ひょうじじょうほう]はrenameの[一意逆写像/いちいぎゃくしゃぞう]や[位置単位/いちたんい]の[名前解決/なまえかいけつ]を[証明/しょうめい]しない。"
       cons "Foreign fieldの[子位置/こいち]には[子/こ]bundleの[表/ひょう]を[使/つか]い、guestだけにあるmapをhost nodeへ[適用/てきよう]しない。"
       cons "map[探索/たんさく]の[深/ふか]さは[構文/こうぶん]/View ownerの[深/ふか]さに[合成/ごうせい]して[計量/けいりょう]する。" nil
     cons paragraph
-      cons "RegionReplyは[全表示/ぜんひょうじ]regionと[選択/せんたく]index、またはtyped Invalid/Stopped、Usage-only Report、[明示/めいじ]source[閉包/へいほう]を[返/かえ]す。"
+      cons "RegionReplyの[成功結果/せいこうけっか]は、[全表示/ぜんひょうじ]regionと[選択/せんたく]indexを[保持/ほじ]する。"
+      cons "[選択/せんたく]indexは、[該当/がいとう]する[範囲/はんい]がない[場合/ばあい]にはNoneとなる。"
+      cons "[失敗/しっぱい]と[停止/ていし]は、[型付/かたつ]きのInvalid・Stoppedで[表/あらわ]す。"
+      cons "[各返信/かくへんしん]には、Usageだけを[持/も]つReportを[含/ふく]める。"
+      cons "source[列/れつ]は、[成功時/せいこうじ]には[明示/めいじ]source[閉包/へいほう]を[保持/ほじ]し、[失敗/しっぱい]・[停止時/ていしじ]には[空列/くうれつ]とする。"
       cons "[停止/ていし]で[候補途中列/こうほとちゅうれつ]を[公開/こうかい]しない。"
       cons "[初回/しょかい]tree/sidecar/request[復元/ふくげん]は[元/もと]Rust[要求/ようきゅう]やambient sourceによる[補完/ほかん]を[必要/ひつよう]としない。"
       cons "[返信/へんしん]のCompleteは[対応/たいおう]する[準備入力/じゅんびにゅうりょく]から[構造選択/こうぞうせんたく]を[予算付/よさんつ]きで[再計算/さいけいさん]して[照合/しょうごう]する。"
       cons "これはreader[実行認証/じっこうにんしょう]、Binding[完了/かんりょう]proof、[別/べつ]process[費用計測/ひようけいそく]の[代/か]わりではない。"
       cons "[一般/いっぱん]regionを[用/もち]いるdefinition/references[入口/いりぐち]は[次節/じせつ]のRegionQueryであり、[既存/きそん]のOccurrenceベース[入口/いりぐち]の[動作/どうさ]を[変更/へんこう]しない。" nil
     cons paragraph
-      cons "[型付/かたつ]きregion[列/れつ]の[構築/こうちく]はWork・Nodes・Depth・AllocationUnitsとsource[受入/うけいれ]を[計上/けいじょう]し、まだ[生成/せいせい]していないserializationのbyte[数/すう]をOutputBytesへ[推計加算/すいけいかさん]しない。"
+      cons "[型付/かたつ]きregion[列/れつ]の[構築/こうちく]では、Work・Nodes・Depth・AllocationUnitsとsource[受入/うけいれ]を[計上/けいじょう]する。"
+      cons "serializationのOutputBytesは[実出力/じつしゅつりょく]の[生成段階/せいせいだんかい]で[計上/けいじょう]し、region[列/れつ]の[構築時/こうちくじ]に[推計値/すいけいち]を[加算/かさん]する[処理/しょり]は[禁止/きんし]する。"
       cons "native[返信/へんしん]のReportはその[計算終了時点/けいさんしゅうりょうじてん]のUsageである。"
       cons "[実/じつ]NDF/1 CBOR encodeは[同/おな]じ[操作予算/そうさよさん]へ[実出力/じつしゅつりょく]のOutputBytesを[生成前/せいせいまえ]に[課金/かきん]する。"
-      cons "[従/したが]ってnativeのOutputBytes[上限/じょうげん]0で[型付/かたつ]き[結果/けっか]が[得/え]られることと、[実/じつ]encodeがOutputLimitで[停止/ていし]することは[別/べつ]の[境界/きょうかい]であり、[返信中/へんしんちゅう]のUsageをその[後/ご]のserializationや[外部/がいぶ]transportまで[含/ふく]む[総費用/そうひよう]と[扱/あつか]わない。" nil
+      cons "このため、nativeのOutputBytes[上限/じょうげん]が0でも[型付/かたつ]き[結果/けっか]を[取得/しゅとく]できる[場合/ばあい]がある。"
+      cons "その[結果/けっか]をencodeする[際/さい]は、[出力/しゅつりょく]の[生成前/せいせいまえ]の[課金/かきん]でOutputLimitとなり[得/う]る。"
+      cons "[返信中/へんしんちゅう]のUsageの[対象/たいしょう]はnative[処理/しょり]の[終了/しゅうりょう]までであり、[後続/こうぞく]のserializationと[外部/がいぶ]transportの[費用/ひよう]はそれぞれの[処理/しょり]で[扱/あつか]う。" nil
     cons paragraph
       cons "highlightは[内部/ないぶ]regionへ[分割/ぶんかつ]し、leafに[近/ちか]い[具体的/ぐたいてき]classを[優先/ゆうせん]する。"
       cons "overlapを[持/も]つ[元/もと]データは[保存/ほぞん]するが、LSPへは[非重複/ひじゅうふく]・source[順/じゅん]・[単一行/たんいつぎょう]に[正規化/せいきか]したspan[列/れつ]を[返/かえ]す。"
