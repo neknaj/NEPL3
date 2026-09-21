@@ -95,7 +95,8 @@ Sentence coreの`literal::read`は、明示SourceSnapshotのUTF-8 windowから�
 引用符付きliteralを読む。NoMatch/NeedMore/Failedでは構文や途中の文章を返さない。
 成功時はSentenceSyntaxに元source、denseな位置表、Direct Origin、元綴りのViewを残す。
 このnative helperはLanguagePackageやreader/provider包絡そのものではなく、その解析本体である。
-Doc coreへの依存なしで動作し、Docの旧readerはconsumer移行が終わるまでの現実装として残る。
+Doc coreへの依存なしで動作する。Doc本文もこのreaderを明示adapter経由で使用し、
+Doc coreの重複したSentence parsing APIは撤去した。Docの意味schema・payloadの所有移行は別の残件である。
 
 `[base/reading]`はRuby、`{base/note/...}`は文章内部のInlineAnnoへ対応する。入れ子を許し、
 空のbase/reading/note、余分なRuby区切り、不正な括弧対応を型付き失敗とする。literal内の
@@ -211,8 +212,9 @@ Doc catalogはSentenceの実descriptorを登録する。Doc readerの現在の�
 Doc SentencePayloadであり、同じschema identityで独立Sentence payloadを装わない。
 本文の意味は保存されるがViewの所有schemaが変わるため、文書identityと生成Markdown headerの
 document digestは変わる。正本から再生成し、本文・リンク・注釈の一致を確認してprojectionを更新する。
-この接続はDoc本文の解析を独立Sentenceへ移す段階である。Doc意味schemaのSentence所有、旧core API、
-Mathとの既存bridgeをすべて除去したとは扱わず、後続のconsumer移行で責務を整理する。
+この接続はDoc本文の解析を独立Sentenceへ移す段階である。重複parserの撤去後も、Doc意味schemaの
+Sentence所有、現行lowerが受信するDoc SentencePayload、Mathとの既存bridgeは残る。
+これらは後続のconsumer所有移行で整理する。
 
 ## 注釈と移行完了条件
 

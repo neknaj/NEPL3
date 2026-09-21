@@ -19,6 +19,9 @@ parser全体の実時間・実メモリは未測定であり、単体文書の�
 環境集合の所有付きscopeも再利用する。正常な同期readでは、collectorが保持する
 環境検査済みprefixを引き継ぎ、追加sourceだけを検査する。resume経路は残件である。
 
+Doc coreの重複Sentence parserと公開parsing APIは撤去した。literalの意味・診断位置は
+独立Sentenceで、Doc normalizationとの一致はhost bridgeで検査する。Doc portable試験は
+source・Origin・Viewを持つ型付きfixtureを使い、現行のSentencePayload境界を保持する。
 Sentence consumerの所有移行、NEPL3a、旧lexical commentの全面撤去、T07/T21全体は
 未完了のままである。HTML/rustdocの高度化をこれらの本体開発の前提にしない。
 

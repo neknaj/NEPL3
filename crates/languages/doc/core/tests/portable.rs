@@ -7,7 +7,6 @@ use nepl3_core::{
 use nepl3_doc_core::{
     model::*,
     portable::{self, PortableError},
-    sentence::{self, SentenceOutcome},
 };
 use nepl3_wire::foundation::FoundationCodec;
 fn b() -> Budget {
@@ -47,26 +46,140 @@ fn literal(r: &SchemaRegistry) -> Result<DocumentSyntax, String> {
         &mut b(),
     )
     .map_err(err)?;
-    let scan = sentence::read(
-        &source,
-        0,
-        source.text().len() as u64,
-        true,
-        r,
-        &mut b(),
-        &mut SourceAdmission::default(),
-    )
-    .map_err(err)?;
-    let SentenceOutcome::Matched(lit) = scan.outcome else {
-        return Err("literal".into());
+    document_fixture(source, r)
+}
+
+fn document_fixture(source: SourceSnapshot, r: &SchemaRegistry) -> Result<DocumentSyntax, String> {
+    use nepl3_core::{
+        origin::{Origin, OriginId},
+        value::KindRef,
+        view::{ViewBundle, ViewElement, ViewField, ViewRef},
     };
-    Ok(DocumentSyntax {
-        value: lit.value,
+    // Hand-authored semantic arena for "前{[文/ぶん]/note}後". Byte ranges
+    // refer to the original UTF-8 source, independently of any Sentence parser.
+    let entries = [
+        (
+            DocKind::Text { text: "前".into() },
+            1,
+            4,
+            "View:TextRun",
+            vec![],
+        ),
+        (
+            DocKind::Text { text: "文".into() },
+            6,
+            9,
+            "View:TextRun",
+            vec![],
+        ),
+        (
+            DocKind::Text {
+                text: "ぶん".into(),
+            },
+            10,
+            16,
+            "View:TextRun",
+            vec![],
+        ),
+        (
+            DocKind::Ruby {
+                base: InlineRef(1),
+                reading: InlineRef(2),
+            },
+            5,
+            17,
+            "View:Ruby",
+            vec![ViewRef(1), ViewRef(2)],
+        ),
+        (
+            DocKind::Text {
+                text: "note".into(),
+            },
+            18,
+            22,
+            "View:TextRun",
+            vec![],
+        ),
+        (
+            DocKind::Anno {
+                base: InlineRef(3),
+                notes: vec![InlineRef(4)],
+            },
+            4,
+            23,
+            "View:Anno",
+            vec![ViewRef(3), ViewRef(4)],
+        ),
+        (
+            DocKind::Text { text: "後".into() },
+            23,
+            26,
+            "View:TextRun",
+            vec![],
+        ),
+        (
+            DocKind::Sentence {
+                inlines: vec![InlineRef(0), InlineRef(5), InlineRef(6)],
+            },
+            0,
+            27,
+            "View:Sentence",
+            vec![ViewRef(0), ViewRef(5), ViewRef(6)],
+        ),
+    ];
+    let schema = r.selected("nepl3.doc", 1).ok_or("Doc schema")?;
+    let mut nodes = Vec::new();
+    let mut origins = Vec::new();
+    let mut elements = Vec::new();
+    for (kind, start, end, view_kind, children) in entries {
+        let span = source.span(start, end).map_err(err)?;
+        let origin = OriginId(origins.len() as u64);
+        origins.push(Origin::Direct(span.clone()));
+        nodes.push(DocNode {
+            kind,
+            origin: Some(origin),
+            span: Some(span.clone()),
+            locations: vec![],
+        });
+        elements.push(ViewElement {
+            kind: KindRef {
+                schema: schema.clone(),
+                local_kind: r.kind_id(schema, view_kind).map_err(err)?,
+            },
+            span,
+            fields: if children.is_empty() {
+                vec![]
+            } else {
+                vec![ViewField {
+                    name: "items".into(),
+                    children,
+                }]
+            },
+            roles: vec![],
+            relations: vec![],
+        });
+    }
+    let document = DocumentSyntax {
+        value: DocValue {
+            root: DocRoot::Sentence(SentenceRef(7)),
+            nodes,
+            embeds: vec![],
+        },
+        views: vec![DocView {
+            head: source.span(0, 27).map_err(err)?,
+            view: ViewBundle {
+                roots: vec![ViewRef(7)],
+                elements,
+            },
+        }],
         sources: vec![source],
-        origins: lit.origins,
-        views: vec![lit.view],
+        origins,
         source_maps: vec![],
-    })
+    };
+    document
+        .validate_structure(r, &mut b(), &mut SourceAdmission::default())
+        .map_err(err)?;
+    Ok(document)
 }
 
 #[test]
@@ -165,26 +278,7 @@ fn sentence_payload_uses_only_the_explicit_owner_after_cbor() -> Result<(), Stri
         &mut b(),
     )
     .map_err(err)?;
-    let scan = sentence::read(
-        &source,
-        0,
-        source.text().len() as u64,
-        true,
-        &r,
-        &mut b(),
-        &mut SourceAdmission::default(),
-    )
-    .map_err(err)?;
-    let SentenceOutcome::Matched(lit) = scan.outcome else {
-        return Err("literal".into());
-    };
-    let doc = DocumentSyntax {
-        value: lit.value,
-        sources: vec![source.clone()],
-        origins: lit.origins,
-        views: vec![lit.view],
-        source_maps: vec![],
-    };
+    let doc = document_fixture(source.clone(), &r)?;
     let mut ambient = SourceStore::default();
     ambient.insert(source.clone()).map_err(err)?;
     let mut admission = SourceAdmission::default();
