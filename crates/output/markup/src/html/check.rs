@@ -87,7 +87,9 @@ fn attr(
                 for class in &p.classes {
                     b.charge(Resource::Work, class.len() as u64 + 1)?;
                     if class == v {
-                        found = true
+                        found = true;
+                        // check_policy has already validated every entry.
+                        break;
                     }
                 }
                 valid &= found;
