@@ -121,9 +121,9 @@ including diagnostics and source positions. Package implementations remain host
 registrations in that test.
 
 `received_packages_execute_recursive_composition` sends both complete package
-definitions through `nepl3_engine::portable::package` and the NDF wire codec.
-The receiver validates them against its own schema registry and executes recursive
-parsing with the decoded packages. Normal input, repeated reentry, an unknown
+definitions and their `ParseProfile` through the portable adapters and NDF wire codec.
+The receiver validates the packages against its own schema registry, resolves the
+received profile against those packages, and executes recursive parsing. Normal input, repeated reentry, an unknown
 Unicode head, and a missing child produce the same parse replies as native
 registration. Schema descriptors remain explicitly supplied by the host; this
 test covers package transport and execution within the external consumer.
