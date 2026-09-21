@@ -10,6 +10,109 @@ fn fixture() -> Result<(SchemaRegistry, OperationRef, TypedValue), String> {
     fixture_with_input(TypeDescriptor::Unit)
 }
 
+fn cancellation_tree() -> Result<nepl3_core::operation::lifetime::RequestLifetimes, String> {
+    use nepl3_core::operation::{Invoke, lifetime::RequestLifetimes};
+    let (_, operation, value) = fixture()?;
+    let mut table = RequestLifetimes::default();
+    for (id, parent) in [
+        (10u64, None),
+        (3, Some(10)),
+        (20, Some(3)),
+        (7, None),
+        (8, Some(10)),
+        (6, Some(8)),
+        (4, Some(10)),
+    ] {
+        let call = Invoke {
+            request_id: id,
+            operation: operation.clone(),
+            input: value.clone(),
+            environment: value.clone(),
+            sources: vec![],
+            resources: vec![],
+            limits: budget().limits(),
+        };
+        table
+            .begin_call(&call, Digest::of(&id.to_be_bytes()), parent, &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+    }
+    table
+        .cancel(8, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    table
+        .finish(4, &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    table
+        .suspend(
+            10,
+            Continuation {
+                provider: operation,
+                parent_request: 10,
+                snapshot_digest: Digest::of(&10u64.to_be_bytes()),
+                state: value,
+            },
+            3,
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+    Ok(table)
+}
+
+#[test]
+fn subtree_cancellation_preserves_unrelated_requests_and_is_atomic_at_every_work_stop()
+-> Result<(), String> {
+    use nepl3_core::operation::lifetime::{LifetimeError, RequestPhase};
+    let mut table = cancellation_tree()?;
+    let mut b = budget();
+    let mut notified = vec![];
+    table
+        .cancel_tree(10, &mut b, |id| notified.push(id))
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(notified, [3, 6, 10, 20]);
+    for id in [3, 6, 8, 10, 20] {
+        assert_eq!(table.phase(id, &mut budget()), Ok(RequestPhase::Cancelled));
+    }
+    assert_eq!(table.phase(4, &mut budget()), Ok(RequestPhase::Finished));
+    assert_eq!(table.phase(7, &mut budget()), Ok(RequestPhase::Running));
+    assert_eq!(
+        table.cancel_tree(10, &mut budget(), |_| {}),
+        Err(LifetimeError::Phase)
+    );
+    // Every failure point precedes all transitions and all host notifications.
+    for work in 0..b.usage().work {
+        let mut table = cancellation_tree()?;
+        let mut limited = Budget::new(Limits {
+            work,
+            ..budget().limits()
+        });
+        let mut notified = vec![];
+        assert_eq!(
+            table.cancel_tree(10, &mut limited, |id| notified.push(id)),
+            Err(LifetimeError::Stopped(StopReason::WorkLimit))
+        );
+        assert!(notified.is_empty());
+        assert_eq!(table.phase(10, &mut budget()), Ok(RequestPhase::Awaiting));
+        for id in [3, 6, 20] {
+            assert_eq!(table.phase(id, &mut budget()), Ok(RequestPhase::Running));
+        }
+    }
+    let mut table = cancellation_tree()?;
+    let mut limited = Budget::new(Limits {
+        allocation_units: 0,
+        ..budget().limits()
+    });
+    let mut notified = vec![];
+    assert_eq!(
+        table.cancel_tree(10, &mut limited, |id| notified.push(id)),
+        Err(LifetimeError::Stopped(StopReason::AllocationLimit))
+    );
+    assert!(notified.is_empty());
+    assert_eq!(table.phase(10, &mut budget()), Ok(RequestPhase::Awaiting));
+    table.close(|id| notified.push(id));
+    assert_eq!(notified, [3, 6, 7, 10, 20]);
+    Ok(())
+}
+
 fn fixture_with_input(
     input: TypeDescriptor,
 ) -> Result<(SchemaRegistry, OperationRef, TypedValue), String> {
