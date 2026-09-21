@@ -5,6 +5,38 @@ use nepl3_core::{
 };
 type TestResult = Result<(), Box<dyn std::error::Error>>;
 #[test]
+fn repeated_ordered_snapshot_edges_reuse_neighbor_positions() -> TestResult {
+    let mut sources = SourceStore::default();
+    let root = source("root", "x")?;
+    sources.insert(root.clone()).map_err(|e| format!("{e:?}"))?;
+    let mut leaves = Vec::new();
+    for i in 0..256 {
+        let leaf = source(&format!("fragment-{i:04}"), "x")?;
+        sources.insert(leaf.clone()).map_err(|e| format!("{e:?}"))?;
+        leaves.push(leaf);
+    }
+    let mut mappings = Vec::new();
+    for _ in 0..8 {
+        for leaf in &leaves {
+            mappings.push(Mapping {
+                source: root.span(0, 1).map_err(|e| format!("{e:?}"))?,
+                target: leaf.span(0, 1).map_err(|e| format!("{e:?}"))?,
+                kind: MappingKind::Exact,
+            });
+        }
+    }
+    // Duplicate edges preserve this 257-vertex star. Later ordered sweeps
+    // should find neighboring existing identities without binary searches.
+    let mut b = budget();
+    SourceMap::validate_mappings(&mappings, &sources, &mut b).map_err(|e| format!("{e:?}"))?;
+    assert_eq!(b.usage().nodes, 257);
+    assert_eq!(b.usage().depth, 2);
+    eprintln!("repeated ordered map work: {}", b.usage().work);
+    assert!(b.usage().work < 500_000);
+    Ok(())
+}
+
+#[test]
 fn ordered_graph_hint_survives_insertions_before_and_after_cached_positions() -> TestResult {
     let mut sources = SourceStore::default();
     let mut vertices = Vec::new();

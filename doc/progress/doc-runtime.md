@@ -178,3 +178,16 @@ parseのWorkは94,666,857、Allocationは341,191,768、lowerのWorkは85,689,406
 SourceMapの一意な直接対応を範囲として検査する改善も加えたが、
 この原稿の停止解消に寄与したのはschema stackの課金修正である。
 一文書の成功を全仕様移行や全受入群の達成とは扱わない。
+
+## Doc仕様原稿の次の性能境界
+
+第05章の原稿で欠けていたguest printerの深さ合成とDoc/Math adapterの停止契約を補い、
+独立Sentence readerから現Doc consumerへ変換する段階を正文と原稿に明記した。
+修正後のCLIによる通常Work上限100,000,000でのHTML出力はcursor 47,445でWorkLimitとなり、
+正本切替は行っていない。
+
+Work計測からSourceMapのsnapshot検索を調べ、直前の検索位置に隣接するidentityを
+二分探索の前に照合する改善を加えた。完全なSnapshotIdの比較、cycle検査、重複edge、
+各比較前の課金を維持する。順序付きedgeを反復する257頂点のstarでは、修正前の
+WorkLimitに対し修正後は435,257 Workで検査できた。第05章は通常予算で停止しており、
+この小さい回帰試験を同原稿の性能課題の解消とは扱わない。
