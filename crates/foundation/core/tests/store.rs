@@ -1,4 +1,44 @@
+use nepl3_core::diagnostic::validation::{DiagnosticSourceResolver, ReportValidationError};
 use nepl3_core::{budget::*, source::*};
+
+#[test]
+fn diagnostic_source_lookup_uses_index_and_checks_digest() -> Result<(), ReportValidationError> {
+    let mut store = SourceStore::default();
+    // Sorted IDs put the target at the end of the old linear scan.
+    for i in 0..512 {
+        store.insert(source(&format!("s-{i:04}"), "abc")?)?;
+    }
+    let target = source("s-0511", "abc")?;
+    let span = target.span(1, 3)?;
+    let mut limited = Budget::new(Limits {
+        work: 256,
+        ..budget().limits()
+    });
+    assert_eq!(
+        DiagnosticSourceResolver::slice(&store, &span, &mut limited)?,
+        "bc"
+    );
+    // Same ID/revision alone is insufficient; a different digest is rejected.
+    let wrong = source("s-0511", "xyz")?;
+    assert_eq!(
+        DiagnosticSourceResolver::slice(&store, &wrong.span(0, 1)?, &mut budget()),
+        Err(ReportValidationError::Source(SourceError::MissingSnapshot))
+    );
+    let absent = source("absent", "x")?;
+    assert_eq!(
+        DiagnosticSourceResolver::slice(&store, &absent.span(0, 1)?, &mut budget()),
+        Err(ReportValidationError::Source(SourceError::MissingSnapshot))
+    );
+    let mut stopped = Budget::new(Limits {
+        work: 0,
+        ..budget().limits()
+    });
+    assert_eq!(
+        DiagnosticSourceResolver::slice(&store, &span, &mut stopped),
+        Err(ReportValidationError::Stopped(StopReason::WorkLimit))
+    );
+    Ok(())
+}
 
 fn budget() -> Budget {
     Budget::new(Limits {

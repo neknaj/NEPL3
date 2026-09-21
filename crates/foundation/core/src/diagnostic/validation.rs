@@ -54,16 +54,17 @@ impl DiagnosticSourceResolver for SourceStore {
         span: &Span,
         budget: &mut Budget,
     ) -> Result<&'a str, ReportValidationError> {
-        for source in self.snapshots() {
-            budget.charge(
-                Resource::Work,
-                (span.snapshot_ref().source.0.len() + source.identity().source.0.len()) as u64 + 34,
-            )?;
-            if source.identity() == span.snapshot_ref() {
-                return Ok(source.slice(span)?);
-            }
+        let id = span.snapshot_ref();
+        let source = self
+            .get_revision_with_budget(&id.source, id.revision, budget)?
+            .ok_or(SourceError::MissingSnapshot)?;
+        budget.charge(Resource::Work, 33)?;
+        if source.identity().digest != id.digest {
+            return Err(SourceError::MissingSnapshot.into());
         }
-        Err(SourceError::MissingSnapshot.into())
+        // The indexed key and digest establish snapshot identity. Validate the
+        // range without comparing the variable-length source name again.
+        Ok(source.slice_range(span.start(), span.end())?)
     }
 }
 fn check_span(
