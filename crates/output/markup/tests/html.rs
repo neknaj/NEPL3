@@ -35,6 +35,55 @@ fn render(f: &HtmlFragment) -> Result<String, HtmlError> {
     serialize(&validate(f, HtmlSlot::Block, &policy(), &mut b)?, &mut b)
 }
 #[test]
+fn class_membership_finishes_at_match_and_validates_the_whole_policy() -> Result<(), HtmlError> {
+    let mut leaf = element(HtmlTag::Span, &[]);
+    attr(
+        &mut leaf,
+        HtmlAttribute::Class {
+            values: vec!["allowed".into()],
+        },
+    );
+    let f = HtmlFragment {
+        root: 0,
+        nodes: vec![element(HtmlTag::Div, &vec![1; 64]), leaf],
+    };
+    let measure = |count| -> Result<u64, HtmlError> {
+        let mut classes = vec!["allowed".into()];
+        classes.extend((0..count).map(|i| format!("unused-{i:04}")));
+        let mut b = budget();
+        validate(&f, HtmlSlot::Block, &HtmlPolicy { classes }, &mut b)?;
+        Ok(b.usage().work)
+    };
+    // Adding unused policy entries should cost one policy validation, not one
+    // scan per emitted occurrence of the shared leaf.
+    assert!(measure(64)? < measure(16)? * 2);
+    let mut p = HtmlPolicy {
+        classes: vec!["allowed".into(), "bad class".into()],
+    };
+    assert!(matches!(
+        validate(&f, HtmlSlot::Block, &p, &mut budget()),
+        Err(HtmlError::Policy)
+    ));
+    p.classes = vec!["different".into()];
+    assert!(matches!(
+        validate(&f, HtmlSlot::Block, &p, &mut budget()),
+        Err(HtmlError::Attribute { .. })
+    ));
+    p.classes = vec!["different".into(), "allowed".into()];
+    let mut full = budget();
+    validate(&f, HtmlSlot::Block, &p, &mut full)?;
+    for work in [0, full.usage().work - 1] {
+        let mut limits = budget().limits();
+        limits.work = work;
+        let mut stopped = Budget::new(limits);
+        assert!(matches!(
+            validate(&f, HtmlSlot::Block, &p, &mut stopped),
+            Err(HtmlError::Stopped(StopReason::WorkLimit))
+        ));
+    }
+    Ok(())
+}
+#[test]
 fn output_has_one_byte_charge_and_no_per_delimiter_owned_strings() -> Result<(), HtmlError> {
     // A roughly 2 KiB document should serialize within a 64 KiB logical
     // allocation allowance, including traversal. The former owned String per
