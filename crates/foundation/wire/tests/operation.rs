@@ -32,6 +32,11 @@ fn setup() -> Result<(SchemaRegistry, Invoke), String> {
         kind: "TraceOverflow".into(),
         fields: vec![NdfValue::U64(3)],
     });
+    let environment = TypedValue::Record(Record {
+        schema: schema.clone(),
+        kind: "TraceOverflow".into(),
+        fields: vec![NdfValue::U64(9)],
+    });
     let source = SourceSnapshot::new(
         SourceId("input".into()),
         4,
@@ -48,8 +53,8 @@ fn setup() -> Result<(SchemaRegistry, Invoke), String> {
                 schema,
                 name: "fixture".into(),
             },
-            input: typed.clone(),
-            environment: typed,
+            input: typed,
+            environment,
             sources: vec![source],
             resources: vec![ResourceContent {
                 id: "asset".into(),
@@ -87,6 +92,14 @@ fn invoke_preserves_contract_field_order_and_uses_the_callers_budget() -> Result
     assert_eq!(root.kind, "Invoke");
     assert_eq!(root.fields.len(), 7);
     assert_eq!(root.fields[0], NdfValue::U64(17));
+    // Distinct payloads expose a symmetric encoder/decoder field swap.
+    for (index, expected) in [(2, 3), (3, 9)] {
+        let NdfValue::Record(payload) = &root.fields[index] else {
+            return Err("typed payload".into());
+        };
+        assert_eq!(payload.kind, "TraceOverflow");
+        assert_eq!(payload.fields, vec![NdfValue::U64(expected)]);
+    }
     let NdfValue::Record(limits) = &root.fields[6] else {
         return Err("Limits record".into());
     };
