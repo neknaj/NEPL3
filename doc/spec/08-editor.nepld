@@ -11,36 +11,42 @@ body
       cons "[解析/かいせき]には、SourceSnapshot[集合/しゅうごう]、profile・packageのrevision[集合/しゅうごう]、[明示的/めいじてき]なresource・schema[環境/かんきょう]、[解析/かいせき]optionsを[入力/にゅうりょく]する。"
       cons "AnalysisSnapshotは、[結果/けっか]としてParsed tree、[内部/ないぶ]views、Scope・Entity・Occurrence、[型付/かたつ]きRelations、Diagnostics、ExpectedAt、Dependenciesを[保持/ほじ]する。" nil
     cons paragraph
-      cons "[全結果/ぜんけっか]にSnapshotIdとanalysis keyを[付/つ]ける。"
-      cons "keyには[言語/げんご]/reader/providerのrevision、context、[操作/そうさ]optionsを[含/ふく]む。"
+      cons "すべての[解析結果/かいせきけっか]にSnapshotIdとanalysis keyを[付与/ふよ]し、[対応/たいおう]するsnapshotと[解析条件/かいせきじょうけん]を[識別/しきべつ]する。"
+      cons "keyには、[言語/げんご]・reader・providerのrevision、context、[操作/そうさ]optionsを[含/ふく]む。"
       cons "spanのある[結果/けっか]を[意味値/いみち]だけのcacheから[再利用/さいりよう]しない。" nil
     cons paragraph
-      cons "Binding の prepared request は AnalysisKey の treeDigest、profileDigest、executionDigest、requestDigest を[固定/こてい]する。"
+      cons "Bindingのprepared requestは、[入力/にゅうりょく]と[実行条件/じっこうじょうけん]をAnalysisKeyのtreeDigest・profileDigest・executionDigest・requestDigestで[固定/こてい]する。"
       cons "treeDigest は[局所/きょくしょ]nodeを[正準化/せいじゅんか]した[完全/かんぜん]な ParseTree の NDF/1 CBORに[基/もと]づき、[明示/めいじ]sourceのidentity・URI・[元/もと]bytes、payload、[環境/かんきょう]、[各選択/かくせんたく]contextを[含/ふく]む。"
       cons "profileDigest は[解決済/かいけつず]みProfileの[意味/いみ]identityで、[選択/せんたく]schema、provider[実装/じっそう]、resource、[既定/きてい]limitsを[含/ふく]む。"
       cons "executionDigest はalias[名順/めいじゅん]の[実/じつ]package execution identity[表/ひょう]に[基/もと]づき、[同/おな]じ[意味/いみ]でも[異/こと]なるarena[配置/はいち]を[区別/くべつ]する。"
       cons "requestDigest はanalysis ID、[型付/かたつ]きBindingOptions、[有効/ゆうこう]な[操作/そうさ]Limitsを[含/ふく]む。"
-      cons "[現在/げんざい]のBindingOptionsは[空/くう]recordであり、[未実装/みじっそう]の[意味/いみ]optionを[黙/だま]って[受/う]け[入/い]れない。" nil
+      cons "[現在/げんざい]のBindingOptionsは[空/くう]のrecordである。"
+      cons "[未実装/みじっそう]の[意味/いみ]optionを[指定/してい]した[要求/ようきゅう]は[拒否/きょひ]する。" nil
     cons paragraph
       cons sentence cons text "treeDigest・executionDigest・requestDigestは " cons code "SHA-256(domain || canonical NDF/1 CBOR(value))" cons text " とし、tree・execution・requestのdomainはそれぞれ " cons code "nepl3.analysis.tree/1" cons text "、" cons code "nepl3.analysis.execution/1" cons text "、" cons code "nepl3.analysis.request/1" cons text " に" cons ruby text "終端" text "しゅうたん" cons text "zero byteを" cons ruby text "付" text "つ" cons text "ける。" nil
       cons "profileDigestは[既存/きそん]の[解決済/かいけつず]みProfile identityアルゴリズムに[従/したが]う。"
       cons "codecは[正準化/せいじゅんか]とhashのWork・[割当/わりあて]・[出力量/しゅつりょくりょう]を[操作/そうさ]Budgetへ[計上/けいじょう]する。"
       cons "SourceSnapshotを[内包/ないほう]した[値/あたい]のhash[計算/けいさん]だけで[新/あら]たなsource lookup[権限/けんげん]を[付与/ふよ]しない。" nil
     cons paragraph
-      cons "prepareは[明示的/めいじてき]に[渡/わた]されたBudgetとSourceAdmissionで[要求/ようきゅう]を[検査/けんさ]し、keyを[算出/さんしゅつ]する。"
-      cons "[実行/じっこう]LimitsはProfileの[上限/じょうげん]を[超/こ]えられず、executeのBudgetのLimitsは[要求/ようきゅう]と[完全一致/かんぜんいっち]しなければならない。"
-      cons "prepareと[実行/じっこう]は[独立/どくりつ]した[操作予算/そうさよさん]を[使/つか]うことも、[同一/どういつ]pipelineの[累積/るいせき]Budget/SourceAdmissionを[共有/きょうゆう]することもできるが、[使用済/しようず]み[量/りょう]を[払/はら]い[戻/もど]さない。"
+      cons "prepareは、[明示的/めいじてき]に[渡/わた]されたBudgetとSourceAdmissionを[用/もち]いて[要求/ようきゅう]を[検査/けんさ]し、keyを[算出/さんしゅつ]する。"
+      cons "[実行/じっこう]LimitsはProfileの[上限以下/じょうげんいか]とし、executeに[渡/わた]すBudgetのLimitsは[要求/ようきゅう]のLimitsと[完全/かんぜん]に[一致/いっち]させる。"
+      cons "prepareと[実行/じっこう]には、[独立/どくりつ]した[操作予算/そうさよさん]を[使用/しよう]できる。"
+      cons "[同一/どういつ]pipelineの[累積/るいせき]Budget・SourceAdmissionを[共有/きょうゆう]する[構成/こうせい]も[可能/かのう]である。"
+      cons "いずれの[構成/こうせい]でも、[使用済/しようず]みの[資源量/しげんりょう]の[払戻/はらいもど]しは[禁止/きんし]する。"
       cons "keyは[有効上限/ゆうこうじょうげん]を[保持/ほじ]し、[開始時/かいしじ]の[残量/ざんりょう]やtransportの[観測/かんそく]Usageを[認証/にんしょう]する[値/あたい]ではない。"
       cons "[途中停止結果/とちゅうていしけっか]から[完了/かんりょう]proofを[生成/せいせい]しない。" nil
     cons paragraph
-      cons "[初回/しょかい]BindingRequest decoderは[元/もと]のRust[要求/ようきゅう]を[持/も]たず、[明示/めいじ]sourceを[持/も]つ[受信/じゅしん]treeと[選択済/せんたくず]みProfileからkeyを[再計算/さいけいさん]する。"
+      cons "[初回/しょかい]のBindingRequest decoderは、[明示/めいじ]sourceを[保持/ほじ]する[受信/じゅしん]treeと[選択済/せんたくず]みProfileからkeyを[再計算/さいけいさん]する。"
+      cons "この[復元/ふくげん]は、[元/もと]のRust[要求/ようきゅう]を[保持/ほじ]していない[受信側/じゅしんがわ]で[実行/じっこう]できる。"
       cons "[自己申告/じこしんこく]keyやLimitsを[通信認証/つうしんにんしょう]・hostの[実行許可/じっこうきょか]へ[昇格/しょうかく]しない。"
       cons "[受信/じゅしん]raw[要求/ようきゅう]のprepareでも[再計算/さいけいさん]・[一致検査/いっちけんさ]を[行/おこな]い、その[間/あいだ]に[変更/へんこう]されたtree/contextや[条件/じょうけん]を[拒否/きょひ]する。"
-      cons "BoundBindingReplyは[全結果枝/ぜんけっかえだ]のkeyと[通常/つうじょう]BindingReplyを[保持/ほじ]する。"
-      cons "raw[返信/へんしん]decoderの[一致検査/いっちけんさ]は[意味/いみ]proofの[発行/はっこう]ではなく、[完了/かんりょう]proofは[実/じつ]BindingPlanの[実行/じっこう]からのみ[得/え]る。" nil
+      cons "BoundBindingReplyは、すべての[結果/けっか]の[分岐/ぶんき]にkeyと[通常/つうじょう]のBindingReplyを[保持/ほじ]する。"
+      cons "raw[返信/へんしん]decoderは[一致検査/いっちけんさ]を[担当/たんとう]する。"
+      cons "Binding[解析/かいせき]の[完了/かんりょう]を[表/あらわ]すproofは、[実際/じっさい]のBindingPlanの[実行/じっこう]からのみ[取得/しゅとく]できる。" nil
     cons paragraph
       cons "BoundBindingReply.for_source はhostが[現在要求/げんざいようきゅう]しているAnalysisKeyとの[完全一致/かんぜんいっち]とSourceRefのrevision/digestを[検査/けんさ]してから、[完了/かんりょう]したBindingAnalysisを[公開/こうかい]する。"
-      cons "これは[定義/ていぎ]・[参照検索/さんしょうけんさく]の[前提/ぜんてい]となる[照合入口/しょうごういりぐち]であり、positionからの[対象選択/たいしょうせんたく]、[定義/ていぎ]ジャンプ、[参照検索/さんしょうけんさく]、renameのアルゴリズム[完成/かんせい]を[意味/いみ]しない。"
+      cons "この[操作/そうさ]は、[定義/ていぎ]・[参照検索/さんしょうけんさく]の[前提/ぜんてい]となる[結果/けっか]の[照合/しょうごう]と[公開/こうかい]を[担当/たんとう]する。"
+      cons "positionからの[対象選択/たいしょうせんたく]、[定義/ていぎ]ジャンプ、[参照検索/さんしょうけんさく]、renameは、[照合後/しょうごうご]の[結果/けっか]に[対/たい]する[個別/こべつ]の[操作/そうさ]として[実装/じっそう]する。"
       cons "[既存/きそん]のunkeyed analyzeのFactSet.analysis_idだけを、editor[用/よう]のstale[判定/はんてい]として[使/つか]わない。" nil
     nil
   cons section derived "2. [自動/じどう]で[得/え]られる[機能/きのう]" body
