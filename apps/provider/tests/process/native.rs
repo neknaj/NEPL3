@@ -257,10 +257,7 @@ fn reap(process: &mut Process) -> Result<ExitStatus, String> {
             Ok(Some(status)) => return Ok(status),
             Ok(None) if Instant::now() < deadline => std::thread::sleep(Duration::from_millis(10)),
             outcome => {
-                let cleanup = process.terminate();
-                return Err(format!(
-                    "provider failed to exit: {outcome:?}; cleanup: {cleanup:?}"
-                ));
+                return Err(format!("provider failed to exit: {outcome:?}"));
             }
         }
     }
@@ -284,18 +281,34 @@ pub fn run() -> Result<(), String> {
         result
     });
     let signal = receiver.recv_timeout(Duration::from_secs(10));
-    let status = if signal.is_ok() {
+    let observed = if signal.is_ok() {
         reap(&mut process)
     } else {
-        process.terminate().map_err(error)
+        Err(format!("protocol deadline/channel failure: {signal:?}"))
     };
-    // Terminating the child releases blocked pipe I/O before joining the worker.
+    let (status, failure) = match observed {
+        Ok(status) => (status, None),
+        Err(reason) => match process.terminate() {
+            Ok(status) => (status, Some(reason)),
+            Err(cleanup) => {
+                // The child may still own its pipe ends. Do not block in join.
+                return Err(format!(
+                    "{reason}; cleanup failed: {cleanup}; worker detached because child exit is unconfirmed"
+                ));
+            }
+        },
+    };
+    // Exit/reaping is confirmed, releasing this fixture's blocked pipe I/O.
     let result = worker
         .join()
-        .map_err(|_| "protocol worker panicked".to_owned())?;
-    signal.map_err(error)?;
-    result?;
-    if !status?.success() {
+        .map_err(|_| "protocol worker panicked".to_owned());
+    if let Some(failure) = failure {
+        return Err(format!(
+            "{failure}; cleanup exit: {status}; worker: {result:?}"
+        ));
+    }
+    result??;
+    if !status.success() {
         return Err("provider process failed".into());
     }
     println!(
