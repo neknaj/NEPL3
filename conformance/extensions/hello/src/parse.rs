@@ -4,6 +4,11 @@ use nepl3_engine::{parse::*, profile::*};
 use nepl3_reader::model::ReaderContext;
 use nepl3_wire::{environment::environment_digest, foundation::FoundationCodec};
 
+pub(crate) struct Languages<'a> {
+    pub packages: Vec<(&'a str, LanguagePackage)>,
+    pub registry: SchemaRegistry,
+}
+
 /// Parse a Hello input using the example's public foundation dependencies.
 /// `final_input` distinguishes a complete input from an unfinished input buffer.
 /// Recovery, suspension and resource stops remain explicit in `ParseReply`.
@@ -48,39 +53,69 @@ pub(crate) fn with_language<T>(
     ) -> Result<T, String>,
 ) -> Result<T, String> {
     let (package, registry) = language;
+    with_languages(
+        input,
+        final_input,
+        stopped,
+        Languages {
+            packages: vec![(identity.0, package)],
+            registry,
+        },
+        identity,
+        inspect,
+    )
+}
+
+pub(crate) fn with_languages<T>(
+    input: &str,
+    final_input: bool,
+    stopped: bool,
+    languages: Languages<'_>,
+    identity: (&str, &str),
+    inspect: impl FnOnce(
+        ParseReply,
+        &ResolvedParseProfile<'_>,
+        &SchemaRegistry,
+        &mut FoundationCodec<'_>,
+    ) -> Result<T, String>,
+) -> Result<T, String> {
+    let Languages {
+        packages: languages,
+        registry,
+    } = languages;
     let (alias, source_name) = identity;
-    let mode = package
-        .categories
-        .iter()
-        .find(|category| category.name == package.root)
-        .ok_or("missing root category")?
-        .mode
-        .clone();
     let mut setup = budget();
-    let identity = package
-        .check(&registry, &mut setup)
-        .map_err(error)?
-        .semantic_identity(&mut setup)
-        .map_err(error)?;
     let foundation = registry
         .selected("nepl3.foundation", 1)
         .ok_or("foundation")?
         .clone();
     let profile = ParseProfile {
         id: format!("external-{source_name}/1"),
-        languages: vec![LanguageRegistration {
-            alias: alias.into(),
-            package: identity,
-            default_category: package.root.clone(),
-        }],
-        schemas: vec![
-            package.schema.clone(),
-            foundation.clone(),
-            registry
-                .selected("nepl3.reader", 1)
-                .ok_or("reader")?
-                .clone(),
-        ],
+        languages: languages
+            .iter()
+            .map(|(alias, package)| {
+                Ok(LanguageRegistration {
+                    alias: (*alias).into(),
+                    package: package
+                        .check(&registry, &mut setup)
+                        .map_err(error)?
+                        .semantic_identity(&mut setup)
+                        .map_err(error)?,
+                    default_category: package.root.clone(),
+                })
+            })
+            .collect::<Result<Vec<_>, String>>()?,
+        schemas: languages
+            .iter()
+            .map(|(_, package)| package.schema.clone())
+            .chain([
+                foundation.clone(),
+                registry
+                    .selected("nepl3.reader", 1)
+                    .ok_or("reader")?
+                    .clone(),
+            ])
+            .collect(),
         head_providers: vec![],
         category_modes: vec![],
         providers: vec![],
@@ -88,7 +123,7 @@ pub(crate) fn with_language<T>(
         resources: vec![],
         limits: budget().limits(),
     };
-    let packages = [&package];
+    let packages = languages.iter().map(|(_, p)| p).collect::<Vec<_>>();
     let resolved = profile
         .resolve(
             &RuntimeCatalog {
@@ -116,33 +151,46 @@ pub(crate) fn with_language<T>(
     };
     let digest =
         environment_digest(&environment, &foundation, &registry, &mut setup).map_err(error)?;
-    let raw = ReaderContext {
-        schema: package.schema.clone(),
-        category: package.root.clone(),
-        mode,
-        origins: vec![],
-        environment: EnvironmentEntry {
-            id: 0,
-            digest,
-            value: environment,
-        },
-    };
+    let raw = languages
+        .iter()
+        .map(|(_, package)| {
+            let mode = package
+                .categories
+                .iter()
+                .find(|c| c.name == package.root)
+                .ok_or("missing root category")?
+                .mode
+                .clone();
+            Ok(ReaderContext {
+                schema: package.schema.clone(),
+                category: package.root.clone(),
+                mode,
+                origins: vec![],
+                environment: EnvironmentEntry {
+                    id: 0,
+                    digest,
+                    value: environment.clone(),
+                },
+            })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     let mut admission = SourceAdmission::default();
     let mut codec = FoundationCodec::new(&registry, &sources, &mut admission).map_err(error)?;
     let checked = raw
-        .check(&mut codec, &sources, &registry, &mut setup)
-        .map_err(error)?;
-    let environments = ParseEnvironmentSet::prepare(
-        &resolved,
-        &[EnvironmentInput {
-            alias,
-            context: &checked,
-        }],
-        &sources,
-        &mut codec,
-        &mut setup,
-    )
-    .map_err(error)?;
+        .iter()
+        .map(|raw| {
+            raw.check(&mut codec, &sources, &registry, &mut setup)
+                .map_err(error)
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let inputs = languages
+        .iter()
+        .zip(&checked)
+        .map(|((alias, _), context)| EnvironmentInput { alias, context })
+        .collect::<Vec<_>>();
+    let environments =
+        ParseEnvironmentSet::prepare(&resolved, &inputs, &sources, &mut codec, &mut setup)
+            .map_err(error)?;
     let entry = resolved.entry(alias, None, &mut setup).map_err(error)?;
     let mut session = ParseSession::new(
         "external-parse".into(),
@@ -163,10 +211,13 @@ pub(crate) fn with_language<T>(
                 limit: input.len() as u64,
                 final_input,
                 entry: &entry,
-                states: &[LanguageReaderState {
-                    alias: alias.into(),
-                    state: NdfValue::Unit,
-                }],
+                states: &languages
+                    .iter()
+                    .map(|(alias, _)| LanguageReaderState {
+                        alias: (*alias).into(),
+                        state: NdfValue::Unit,
+                    })
+                    .collect::<Vec<_>>(),
             },
             &sources,
             &mut operation,
