@@ -114,6 +114,137 @@ fn await_again(
     })
 }
 
+fn invalid_await_after_resume(
+    parent: &Invoke,
+    resume: &nepl3_core::operation::Resume,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<OperationReply, StopReason> {
+    let mut reply = await_again(parent, resume, registry, b)?;
+    if let OperationReply::Await { continuation, .. } = &mut reply {
+        continuation.parent_request = 999;
+    }
+    Ok(reply)
+}
+
+fn stopped_resume(
+    parent: &Invoke,
+    resume: &nepl3_core::operation::Resume,
+    registry: &SchemaRegistry,
+    b: &mut Budget,
+) -> Result<OperationReply, StopReason> {
+    let reply = await_again(parent, resume, registry, b)?;
+    b.stop(StopReason::Cancelled);
+    Ok(reply)
+}
+
+#[test]
+fn resume_failure_preserves_or_consumes_generation_at_the_callback_boundary() -> Result<(), String>
+{
+    use nepl3_core::operation::Resume;
+    use nepl3_suite::dispatch::resume as dispatch;
+    let (registry, parent) = fixture()?;
+    let context = Digest::of(b"context");
+    let identity = Digest::of(b"provider");
+    let sources = SourceStore::default();
+    let continuation = saved(&parent, context);
+    let request = Resume {
+        request_id: parent.request_id,
+        continuation: continuation.clone(),
+        dependency_results: vec![],
+    };
+    let saved = dispatch::SavedAwait {
+        parent: &parent,
+        context,
+        continuation: &continuation,
+        calls: &[],
+        sources: &[] as &[&SourceStore],
+    };
+    for callback in [
+        invalid_await_after_resume as dispatch::ResumeOperation,
+        stopped_resume,
+    ] {
+        let registration = dispatch::Registration {
+            operation: &parent.operation,
+            implementation: identity,
+            resume: callback,
+        };
+        let mut lifetimes = RequestLifetimes::default();
+        lifetimes
+            .begin_call(&parent, context, None, &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+        lifetimes
+            .suspend(parent.request_id, continuation.clone(), 0, &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+        let mut execution = budget();
+        let mut exhausted = Budget::new(Limits {
+            work: 0,
+            ..budget().limits()
+        });
+        assert!(matches!(
+            dispatch::execute(
+                &registration,
+                identity,
+                &saved,
+                &request,
+                &mut lifetimes,
+                &registry,
+                &sources,
+                &mut execution,
+                &mut exhausted
+            ),
+            Err(dispatch::ResumeError::Stopped(StopReason::WorkLimit))
+        ));
+        assert_eq!(
+            lifetimes.phase(parent.request_id, &mut budget()),
+            Ok(RequestPhase::Awaiting)
+        );
+        assert_eq!(execution.usage().work, 0);
+
+        let result = dispatch::execute(
+            &registration,
+            identity,
+            &saved,
+            &request,
+            &mut lifetimes,
+            &registry,
+            &sources,
+            &mut execution,
+            &mut budget(),
+        );
+        assert!(matches!(
+            result,
+            Err(dispatch::ResumeError::Await(AwaitError::Binding(_)))
+                | Err(dispatch::ResumeError::Stopped(StopReason::Cancelled))
+        ));
+        // Execution began: even a rejected reply consumes the saved generation.
+        assert_eq!(
+            lifetimes.phase(parent.request_id, &mut budget()),
+            Ok(RequestPhase::Running)
+        );
+        assert_eq!(execution.usage().work, 7);
+        // A fresh execution budget cannot make the same Resume deliverable again.
+        assert!(matches!(
+            dispatch::execute(
+                &registration,
+                identity,
+                &saved,
+                &request,
+                &mut lifetimes,
+                &registry,
+                &sources,
+                &mut budget(),
+                &mut budget()
+            ),
+            Err(dispatch::ResumeError::Lifetime(_))
+        ));
+        lifetimes
+            .cancel(parent.request_id, &mut budget())
+            .map_err(|e| format!("{e:?}"))?;
+    }
+    Ok(())
+}
+
 #[test]
 fn resume_can_suspend_again_and_rejects_the_previous_generation() -> Result<(), String> {
     use nepl3_core::operation::Resume;
