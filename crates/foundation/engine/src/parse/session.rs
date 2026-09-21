@@ -942,6 +942,20 @@ impl<'a> ParseSession<'a> {
             build::slot::<ForeignSyntax>(budget)?;
             build::slot::<BundleContext>(budget)?;
         }
+        // A recovered guest root belongs to the engine recovery schema. The
+        // selected guest package remains recorded in NodeSelection.entry.
+        let foreign_schema = if frame.foreign {
+            let schema = &arena
+                .nodes
+                .get(usize::try_from(node.0).map_err(|_| ParseError::Reference)?)
+                .ok_or(ParseError::Reference)?
+                .schema;
+            budget.charge(Resource::Work, schema.package.len() as u64 + 1)?;
+            budget.charge(Resource::AllocationUnits, schema.package.len() as u64)?;
+            Some(schema.clone())
+        } else {
+            None
+        };
         let fields = &mut machine
             .progress
             .frames
@@ -971,7 +985,7 @@ impl<'a> ParseSession<'a> {
                 .context
                 .environment;
             FieldValue::Foreign(Box::new(ForeignSyntax {
-                schema: frame.entry.package.schema,
+                schema: foreign_schema.ok_or(ParseError::Reference)?,
                 category: frame.entry.category,
                 root: node,
                 bundle: arena.finish(node),

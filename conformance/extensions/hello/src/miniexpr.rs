@@ -39,6 +39,13 @@ pub fn inspect(input: &str, final_input: bool) -> Result<Observation, String> {
 
 /// Natural-number leaves and prefix forms with one or two Expr children.
 pub fn language() -> Result<(LanguagePackage, SchemaRegistry), String> {
+    definition(None)
+}
+
+/// Construct the composition variant with an explicitly selected Frame alias.
+pub(crate) fn definition(
+    frame_alias: Option<&str>,
+) -> Result<(LanguagePackage, SchemaRegistry), String> {
     let mut b = budget();
     let mut registry = SchemaRegistry::default();
     for descriptor in [
@@ -65,7 +72,7 @@ pub fn language() -> Result<(LanguagePackage, SchemaRegistry), String> {
         constraints: vec![],
         shape: TypeShape::Record { fields },
     };
-    let descriptor = SchemaDescriptor {
+    let mut descriptor = SchemaDescriptor {
         package: "org.example.miniexpr".into(),
         revision: 1,
         operations: vec![],
@@ -90,6 +97,20 @@ pub fn language() -> Result<(LanguagePackage, SchemaRegistry), String> {
             ),
         ],
     };
+    if frame_alias.is_some() {
+        descriptor.package = "org.example.miniexpr.framed".into();
+        descriptor.types.push(record(
+            "Framed",
+            vec![FieldDescriptor {
+                name: "value".into(),
+                ty: TypeDescriptor::Named(TypeRef {
+                    package: "nepl3.foundation".into(),
+                    revision: 1,
+                    name: "ForeignSyntax".into(),
+                }),
+            }],
+        ));
+    }
     let schema = descriptor.reference(&mut b).map_err(error)?;
     registry
         .register(schema.clone(), descriptor, &mut b)
@@ -118,7 +139,7 @@ pub fn language() -> Result<(LanguagePackage, SchemaRegistry), String> {
             styles: vec![],
         })
     };
-    let package = LanguagePackage {
+    let mut package = LanguagePackage {
         schema: schema.clone(),
         payload_schemas: vec![],
         root: "Expr".into(),
@@ -186,6 +207,15 @@ pub fn language() -> Result<(LanguagePackage, SchemaRegistry), String> {
             declarations: vec![],
         },
     };
+    if let Some(alias) = frame_alias {
+        package.reads.push(ReadSpec::Foreign {
+            alias: alias.into(),
+            category: "Frame".into(),
+        });
+        let mut framed = form("framed", "Framed", &["value"], BindingId(1))?;
+        framed.fields[0].read = ReadSpecId(1);
+        package.forms.push(framed);
+    }
     package.check(&registry, &mut b).map_err(error)?;
     Ok((package, registry))
 }

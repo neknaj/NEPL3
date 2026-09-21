@@ -1,72 +1,59 @@
-//! An independently owned syntax package using only public foundation APIs.
-//! The host test adapter is intentionally std; production dependencies remain no_std.
-use nepl3_core::{
-    budget::{Budget, Limits},
-    schema::*,
-    value::KindRef,
-};
-use nepl3_engine::package::*;
-use nepl3_reader::{builtin::BuiltinReader, plan::ReaderPlan, tokenizer::*};
+//! Explicit recursive composition of two independently identified packages.
+//! MiniExpr `framed` enters Frame; Frame `frame` returns to MiniExpr.
+use super::*;
+use nepl3_core::source::SourceAdmission;
+use nepl3_engine::parse::{ParseOutcome, print};
 
-mod parse;
-pub use parse::parse;
-pub mod composition;
-pub mod miniexpr;
-
-pub fn budget() -> Budget {
-    Budget::new(Limits {
-        source_bytes: 100_000,
-        work: 10_000_000,
-        depth: 100,
-        nodes: 100_000,
-        allocation_units: 100_000_000,
-        output_bytes: 1_000_000,
-        diagnostics: 100,
-        events: 100,
-    })
+/// Observe a composed expression with source-backed printing after validation.
+pub fn inspect(input: &str, final_input: bool) -> Result<miniexpr::Observation, String> {
+    super::parse::with_languages(
+        input,
+        final_input,
+        false,
+        languages("Expr", "Frame")?,
+        ("Expr", "composition"),
+        |parse, profile, _, _| {
+            let printed = if let ParseOutcome::Complete { tree, .. } = &parse.outcome {
+                let proof = tree
+                    .validate(profile, &mut budget(), &mut SourceAdmission::default())
+                    .map_err(error)?;
+                Some(
+                    print::source_tree(&proof, &mut budget(), &mut SourceAdmission::default())
+                        .map_err(error)?,
+                )
+            } else {
+                None
+            };
+            Ok(miniexpr::Observation { parse, printed })
+        },
+    )
 }
-pub fn error(e: impl core::fmt::Debug) -> String {
-    format!("{e:?}")
-}
 
-/// `hello <name>` has exactly one name argument; no domain crate owns this form.
-pub fn language() -> Result<(LanguagePackage, SchemaRegistry), String> {
+/// The host supplies aliases; each package declares its foreign category reads.
+pub(crate) fn languages<'a>(
+    expr_alias: &'a str,
+    frame_alias: &'a str,
+) -> Result<super::parse::Languages<'a>, String> {
+    let (expr, mut registry) = miniexpr::definition(Some(frame_alias))?;
     let mut b = budget();
-    let mut registry = SchemaRegistry::default();
-    for descriptor in [
-        nepl3_core::schema::foundation::descriptor(&mut b),
-        nepl3_reader::schema::descriptor(&mut b),
-        nepl3_engine::schema::descriptor(&mut b),
-    ] {
-        let descriptor = descriptor.map_err(error)?;
-        let reference = descriptor.reference(&mut b).map_err(error)?;
-        registry
-            .register(reference, descriptor, &mut b)
-            .map_err(error)?;
-    }
     let descriptor = SchemaDescriptor {
-        package: "org.example.hello".into(),
+        package: "org.example.frame".into(),
         revision: 1,
         operations: vec![],
         types: vec![
             NamedType {
-                name: "Greeting".into(),
+                name: "Frame".into(),
                 constraints: vec![],
                 shape: TypeShape::Record {
                     fields: vec![FieldDescriptor {
-                        name: "recipient".into(),
+                        name: "expression".into(),
                         ty: TypeDescriptor::Named(TypeRef {
                             package: "nepl3.foundation".into(),
                             revision: 1,
-                            name: "NodeRef".into(),
+                            name: "ForeignSyntax".into(),
                         }),
                     }],
                 },
-            },
-            NamedType {
-                name: "Name".into(),
-                constraints: vec![],
-                shape: TypeShape::Record { fields: vec![] },
             },
             NamedType {
                 name: "Word".into(),
@@ -85,16 +72,16 @@ pub fn language() -> Result<(LanguagePackage, SchemaRegistry), String> {
         .register(schema.clone(), descriptor, &mut b)
         .map_err(error)?;
     registry.finalize(&mut b).map_err(error)?;
-    let kind = |name: &str| -> Result<KindRef, String> {
+    let kind = |name| -> Result<KindRef, String> {
         Ok(KindRef {
             schema: schema.clone(),
             local_kind: registry.kind_id(&schema, name).map_err(error)?,
         })
     };
-    let package = LanguagePackage {
+    let frame = LanguagePackage {
         schema: schema.clone(),
         payload_schemas: vec![],
-        root: "Greeting".into(),
+        root: "Frame".into(),
         reader: ReaderPlan {
             schema: schema.clone(),
             state_type: TypeDescriptor::Unit,
@@ -103,7 +90,7 @@ pub fn language() -> Result<(LanguagePackage, SchemaRegistry), String> {
             providers: vec![],
         },
         modes: vec![ReaderMode {
-            name: "Words".into(),
+            name: "FrameCode".into(),
             skip: vec![SkipRule {
                 reader: TokenReader::Builtin(BuiltinReader::Trivia),
             }],
@@ -113,20 +100,19 @@ pub fn language() -> Result<(LanguagePackage, SchemaRegistry), String> {
             }],
         }],
         categories: vec![Category {
-            name: "Greeting".into(),
-            mode: "Words".into(),
+            name: "Frame".into(),
+            mode: "FrameCode".into(),
         }],
-        reads: vec![ReadSpec::Builtin {
-            reader: BuiltinReader::Name,
-            kind: kind("Name")?,
-            token_kind: kind("Word")?,
+        reads: vec![ReadSpec::Foreign {
+            alias: expr_alias.into(),
+            category: "Expr".into(),
         }],
         forms: vec![Form {
-            category: "Greeting".into(),
-            kind: kind("Greeting")?,
-            spelling: "hello".into(),
+            category: "Frame".into(),
+            kind: kind("Frame")?,
+            spelling: "frame".into(),
             fields: vec![FieldSpec {
-                name: "recipient".into(),
+                name: "expression".into(),
                 read: ReadSpecId(0),
             }],
             binding: BindingId(0),
@@ -135,7 +121,7 @@ pub fn language() -> Result<(LanguagePackage, SchemaRegistry), String> {
         }],
         leaves: vec![],
         namespaces: vec![],
-        bindings: vec![Binding::Group(vec![])],
+        bindings: vec![Binding::Visit("expression".into())],
         extensions: vec![],
         recovery: nepl3_engine::recovery::RecoveryPlan {
             default_unexpected: nepl3_engine::recovery::UnexpectedPolicy::PreserveRemainder,
@@ -148,8 +134,11 @@ pub fn language() -> Result<(LanguagePackage, SchemaRegistry), String> {
             declarations: vec![],
         },
     };
-    package.check(&registry, &mut b).map_err(error)?;
-    Ok((package, registry))
+    frame.check(&registry, &mut b).map_err(error)?;
+    Ok(super::parse::Languages {
+        packages: vec![(expr_alias, expr), (frame_alias, frame)],
+        registry,
+    })
 }
 
 #[cfg(test)]

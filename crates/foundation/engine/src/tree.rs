@@ -288,9 +288,7 @@ fn field(
                     + foreign.schema.package.len() as u64
                     + 34,
             )?;
-            if foreign.schema != expected.entry.package.schema
-                || foreign.category != expected.entry.category
-            {
+            if foreign.category != expected.entry.category {
                 return Err(TreeError::Selection);
             }
             let context = contexts
@@ -298,12 +296,16 @@ fn field(
                 .find(|(b, _)| core::ptr::eq(*b, &foreign.bundle))
                 .map(|(_, c)| c)
                 .ok_or(TreeError::Selection)?;
-            target(
-                expected,
-                selection(context, foreign.root, budget)?,
-                package,
-                budget,
-            )
+            let selected = selection(context, foreign.root, budget)?;
+            // Native graph validation ties ForeignSyntax.schema to the actual
+            // root. Recovery nodes have the engine schema; their guest identity
+            // is checked by target and their kind/recovery record below.
+            if foreign.schema != expected.entry.package.schema
+                && !matches!(selected.shape, ShapeSelection::Recovery)
+            {
+                return Err(TreeError::Selection);
+            }
+            target(expected, selected, package, budget)
         }
         _ => {
             let _ = bundle;

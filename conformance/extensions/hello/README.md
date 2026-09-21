@@ -79,8 +79,38 @@ the same. The regression test constructs this variation separately and verifies
 its tree and printed spelling. Restore the declaration when the exercise ends;
 the tests retain the standard language's independent expectations.
 
-The two packages currently run in separate profiles. Package composition and
-cross-language embedding remain later exercises.
+## Compose two recursive languages
+
+[`src/composition.rs`](src/composition.rs) registers an extended MiniExpr and an
+independently identified Frame package in one `ParseProfile`. The composition
+variant has schema `org.example.miniexpr.framed`; the standalone MiniExpr schema
+and its existing forms remain available. Each package names its foreign category
+through `ReadSpec::Foreign`. The host supplies the aliases `Expr` and `Frame`.
+
+```sh
+cargo run --locked --manifest-path conformance/extensions/hello/Cargo.toml --example composition -- "add framed frame neg 7 2"
+```
+
+`framed` enters the Frame category. Its `frame` head reads an Expr, so `neg 7`
+returns to MiniExpr. The final `2` is the second child of the outer `add`.
+The result reports `Complete; cursor=24` and three bundle contexts, with paths
+identifying both language boundaries. `FrameCode` belongs to Frame; `Code`
+belongs to Expr. Source printing preserves the complete accepted input.
+The `7` token retains the original source span `21..22` across both boundaries.
+
+Try `framed unknown` and `framed frame`. Each produces `Recovered` with a
+diagnostic and no successful print. A recovered foreign root has the engine
+recovery schema; the expected guest package/category/mode stays in its
+`NodeSelection.entry`. `ForeignSyntax.schema` agrees with its actual root.
+Validation checks the recovery record and selected guest context together.
+NDF exchange preserves these identities and rejects forged selections.
+
+The runner executes these three composition inputs in the external workspace,
+in addition to the Hello and standalone MiniExpr examples. The tests also rename
+both host aliases, reject a missing package, and distinguish unfinished input.
+The composition uses statically registered packages. Source-level import,
+Sentence/annotation integration, evaluation, and independent package distribution
+remain subsequent stages of the external-language contract.
 
 ## What the existing example verifies
 
