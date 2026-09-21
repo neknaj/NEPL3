@@ -1,5 +1,4 @@
-//! Generated from interfaces/fixture.json.
-//! Regenerate with `cargo run --locked -p nepl3-tools -- fixture --write`.
+//! Generated from the test descriptor in tools/src/contract/foundation/generate/tests.rs.
 //! Registers structural shapes; named semantic constraints require their owning validators.
 
 #[rustfmt::skip]
