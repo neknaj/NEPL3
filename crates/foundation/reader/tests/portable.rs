@@ -117,6 +117,33 @@ fn dispatch_input_checks_selected_operation_and_concrete_value_types() -> TestRe
             checked!(dispatch::from_value(&value, &context, &mut codec, &mut b)),
             input
         );
+        let mut wrong_kind = value.clone();
+        if let nepl3_core::value::TypedValue::Record(record) = &mut wrong_kind {
+            record.kind = if kind == ProviderKind::Read {
+                "DependentRequest"
+            } else {
+                "ReadRequest"
+            }
+            .into();
+        }
+        assert!(dispatch::from_value(&wrong_kind, &context, &mut codec, &mut b).is_err());
+        for reason in [
+            nepl3_core::budget::StopReason::WorkLimit,
+            nepl3_core::budget::StopReason::AllocationLimit,
+        ] {
+            let mut limits = budget().limits();
+            if reason == nepl3_core::budget::StopReason::WorkLimit {
+                limits.work = 0;
+            } else {
+                limits.allocation_units = 0;
+            }
+            let mut stopped = Budget::new(limits);
+            assert!(dispatch::to_value(&input, &context, &mut codec, &mut stopped).is_err());
+            assert_eq!(stopped.poll(), Err(reason));
+            let mut stopped = Budget::new(limits);
+            assert!(dispatch::from_value(&value, &context, &mut codec, &mut stopped).is_err());
+            assert_eq!(stopped.poll(), Err(reason));
+        }
         // Keep the operation envelope valid while changing its concrete input contract.
         if kind == ProviderKind::Read {
             signature.state_type = TypeDescriptor::Text;
