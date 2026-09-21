@@ -198,3 +198,75 @@ fn descriptor_receipt_requires_dependencies_before_use() -> Result<(), String> {
     assert!(destination.finalize(&mut budget()).is_err());
     Ok(())
 }
+
+#[test]
+fn descriptor_boundaries_reject_excess_depth_schema_forgery_and_resource_stops()
+-> Result<(), String> {
+    let registry = registry()?;
+    let descriptor = sample();
+    let identity = descriptor.reference(&mut budget()).map_err(error)?;
+    let bytes = schema::encode(&descriptor, &registry, &mut budget()).map_err(error)?;
+    for reason in [
+        StopReason::WorkLimit,
+        StopReason::AllocationLimit,
+        StopReason::DepthLimit,
+    ] {
+        let mut limits = budget().limits();
+        match reason {
+            StopReason::WorkLimit => limits.work = 0,
+            StopReason::AllocationLimit => limits.allocation_units = 0,
+            StopReason::DepthLimit => limits.depth = 0,
+            _ => return Err("unexpected resource".into()),
+        }
+        for encode in [false, true] {
+            let mut stopped = Budget::new(limits);
+            if encode {
+                assert!(schema::encode(&descriptor, &registry, &mut stopped).is_err());
+            } else {
+                assert!(schema::decode(&bytes, &identity, &registry, &mut stopped).is_err());
+            }
+            assert_eq!(stopped.poll(), Err(reason));
+        }
+    }
+    let mut cancelled = budget();
+    cancelled.cancel();
+    assert_eq!(
+        schema::decode(&bytes, &identity, &registry, &mut cancelled),
+        Err(WireError::Stopped(StopReason::Cancelled))
+    );
+    let mut raw = nepl3_wire::decode(&bytes, &mut budget()).map_err(error)?;
+    let NdfValue::Record(record) = &mut raw else {
+        return Err("record".into());
+    };
+    record.schema.digest = Digest::of(b"forged foundation");
+    let forged = nepl3_wire::encode(&raw, &mut budget()).map_err(error)?;
+    assert!(schema::decode(&forged, &identity, &registry, &mut budget()).is_err());
+
+    // Spec13 canonical descriptor identity accepts depth 128, rejects 129.
+    // Increase only this test's NDF depth allowance: symbolic wrappers occupy
+    // multiple NDF nodes each. The production descriptor limit remains 128.
+    let mut deep = sample();
+    let mut ty = TypeDescriptor::U64;
+    for _ in 0..128 {
+        ty = TypeDescriptor::List(Box::new(ty));
+    }
+    deep.operations[0].input = ty;
+    let large = || {
+        Budget::new(Limits {
+            depth: 1024,
+            ..budget().limits()
+        })
+    };
+    let identity = deep.reference(&mut large()).map_err(error)?;
+    let bytes = schema::encode(&deep, &registry, &mut large()).map_err(error)?;
+    assert_eq!(
+        schema::decode(&bytes, &identity, &registry, &mut large()).map_err(error)?,
+        deep
+    );
+    deep.operations[0].input = TypeDescriptor::List(Box::new(deep.operations[0].input.clone()));
+    assert_eq!(
+        schema::encode(&deep, &registry, &mut large()),
+        Err(WireError::Schema(SchemaError::DescriptorDepth))
+    );
+    Ok(())
+}
