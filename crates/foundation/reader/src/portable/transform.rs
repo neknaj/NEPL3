@@ -1,6 +1,7 @@
 //! Transform reply encoding is tied to a host's saved native dispatch. It does
 //! not authenticate remote Usage or replace the VM's resume-time validation.
 pub mod operation;
+pub mod request;
 pub(super) mod value;
 use super::*;
 use crate::{
