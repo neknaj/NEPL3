@@ -371,17 +371,22 @@ fn admitted_await_collects_dispatched_dependencies_and_resumes_saved_lifetime() 
         implementation: identity,
         invoke: invoke_parent,
     };
-    let reply = suspending::invoke(
-        &registration,
-        identity,
-        &parent,
-        context,
-        &registry,
-        &sources,
-        &mut execution,
-        &mut budget(),
-    )
-    .map_err(|e| format!("{e:?}"))?;
+    let root_scope = suspension::execution::ExecutionScope::root(&mut execution, parent.limits)
+        .map_err(|e| format!("{e:?}"))?;
+    let reply = root_scope
+        .run(&mut execution, |execution| {
+            suspending::invoke(
+                &registration,
+                identity,
+                &parent,
+                context,
+                &registry,
+                &sources,
+                execution,
+                &mut budget(),
+            )
+        })
+        .map_err(|e| format!("{e:?}"))?;
     use nepl3_suite::{
         grants::{
             Grants,
@@ -413,6 +418,9 @@ fn admitted_await_collects_dispatched_dependencies_and_resumes_saved_lifetime() 
     let approved =
         authorize(pending.calls(), &policy, &mut budget()).map_err(|e| format!("{e:?}"))?;
     let call = approved[0].invocation().request();
+    let child_scope = root_scope
+        .child(call.limits, &mut execution)
+        .map_err(|e| format!("{e:?}"))?;
     // Preserve the actual parent callback's work during dependency execution.
     let parent_usage = execution.usage();
     let registrations = [Registration {
@@ -420,17 +428,20 @@ fn admitted_await_collects_dispatched_dependencies_and_resumes_saved_lifetime() 
         implementation: identity,
         invoke: increment,
     }];
-    let result = invoke_terminal(
-        &registrations,
-        &call.operation,
-        identity,
-        call,
-        &registry,
-        &sources,
-        &mut execution,
-        &mut budget(),
-    )
-    .map_err(|e| format!("{e:?}"))?;
+    let result = child_scope
+        .run(&mut execution, |execution| {
+            invoke_terminal(
+                &registrations,
+                &call.operation,
+                identity,
+                call,
+                &registry,
+                &sources,
+                execution,
+                &mut budget(),
+            )
+        })
+        .map_err(|e| format!("{e:?}"))?;
     assert!(execution.usage().work > parent_usage.work);
     let child_id = call.request_id;
     pending
@@ -464,17 +475,19 @@ fn admitted_await_collects_dispatched_dependencies_and_resumes_saved_lifetime() 
     let run = |request: &nepl3_core::operation::Resume,
                lifetimes: &mut RequestLifetimes,
                execution: &mut Budget| {
-        dispatch::execute(
-            &registration,
-            identity,
-            &saved,
-            request,
-            lifetimes,
-            &registry,
-            &sources,
-            execution,
-            &mut budget(),
-        )
+        root_scope.run(execution, |execution| {
+            dispatch::execute(
+                &registration,
+                identity,
+                &saved,
+                request,
+                lifetimes,
+                &registry,
+                &sources,
+                execution,
+                &mut budget(),
+            )
+        })
     };
     let mut wrong = resume.clone();
     wrong.continuation.parent_request = 99;

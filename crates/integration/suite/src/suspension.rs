@@ -1,4 +1,5 @@
 //! Admission of a provider's Await before dependency execution.
+pub mod execution;
 pub mod host;
 use nepl3_core::{
     budget::{Budget, StopReason},

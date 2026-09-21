@@ -9,6 +9,8 @@ use nepl3_core::{
 use nepl3_suite::dispatch::*;
 #[path = "dispatch/activation.rs"]
 mod activation;
+#[path = "dispatch/execution.rs"]
+mod execution;
 #[path = "dispatch/grants.rs"]
 mod grants;
 #[path = "dispatch/suspension.rs"]
