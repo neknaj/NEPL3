@@ -19,6 +19,14 @@ pub struct ActiveAwait<'a> {
     pub authorized: Vec<AuthorizedDependency<'a>>,
 }
 
+/// Owned generation and its validated provider report. The host retains reports
+/// across suspension and accounts actual execution independently of claimed Usage.
+/// Dropping this state requires the same lifetime cleanup as `ActiveAwait`.
+pub struct OwnedActiveAwait {
+    pub pending: PendingDependencies<'static>,
+    pub report: Report,
+}
+
 #[derive(Debug)]
 pub enum ActivationError {
     Stopped(StopReason),
@@ -81,6 +89,84 @@ pub fn activate<'a>(
         DependencyGrantError::Stopped(s) => ActivationError::Stopped(s),
         e => ActivationError::Grants(e),
     })?;
+    publish(parent, continuation, calls, contexts, lifetimes, budget)?;
+    Ok(ActiveAwait {
+        pending,
+        authorized,
+    })
+}
+
+/// Admit and retain an owned Await for a host frame. All checks and allocations
+/// precede lifetime publication; a rejected reply is consumed with no table
+/// change. This result retains no authorization proof: dispatch must use the
+/// current host policy to authorize each borrowed call before invoking it.
+/// Execution budgets and cancellation remain the scheduler's responsibility.
+#[allow(clippy::too_many_arguments)]
+pub fn activate_owned(
+    parent: &Invoke,
+    context: Digest,
+    reply: OperationReply,
+    policy: &[OperationGrant<'_>],
+    contexts: &[Digest],
+    registry: &SchemaRegistry,
+    sources: &impl DiagnosticSourceResolver,
+    lifetimes: &mut RequestLifetimes,
+    budget: &mut Budget,
+) -> Result<OwnedActiveAwait, ActivationError> {
+    budget.poll()?;
+    let OperationReply::Await {
+        continuation,
+        calls,
+        report,
+    } = reply
+    else {
+        return Err(ActivationError::NotAwait);
+    };
+    if contexts.len() != calls.len() {
+        return Err(ActivationError::ContextCount);
+    }
+    validate(
+        parent,
+        context,
+        &continuation,
+        &calls,
+        &report,
+        registry,
+        sources,
+        budget,
+    )
+    .map_err(|e| match e {
+        AwaitError::Stopped(s) => ActivationError::Stopped(s),
+        e => ActivationError::Await(e),
+    })?;
+    dependencies::authorize(&calls, policy, budget).map_err(|e| match e {
+        DependencyGrantError::Stopped(s) => ActivationError::Stopped(s),
+        e => ActivationError::Grants(e),
+    })?;
+    let pending =
+        PendingDependencies::from_owned(continuation, calls, budget).map_err(|e| match e {
+            DependencyError::Stopped(s) => ActivationError::Stopped(s),
+            e => ActivationError::Await(AwaitError::Dependencies(e)),
+        })?;
+    publish(
+        parent,
+        pending.continuation(),
+        pending.calls(),
+        contexts,
+        lifetimes,
+        budget,
+    )?;
+    Ok(OwnedActiveAwait { pending, report })
+}
+
+fn publish(
+    parent: &Invoke,
+    continuation: &Continuation,
+    calls: &[Invoke],
+    contexts: &[Digest],
+    lifetimes: &mut RequestLifetimes,
+    budget: &mut Budget,
+) -> Result<(), ActivationError> {
     let bytes = calls
         .len()
         .checked_mul(core::mem::size_of::<(&Invoke, Digest)>())
@@ -110,8 +196,5 @@ pub fn activate<'a>(
             LifetimeError::Stopped(s) => ActivationError::Stopped(s),
             e => ActivationError::Lifetime(e),
         })?;
-    Ok(ActiveAwait {
-        pending,
-        authorized,
-    })
+    Ok(())
 }

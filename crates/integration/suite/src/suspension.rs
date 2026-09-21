@@ -43,6 +43,33 @@ pub fn prepare<'a>(
     sources: &impl DiagnosticSourceResolver,
     budget: &mut Budget,
 ) -> Result<PendingDependencies<'a>, AwaitError> {
+    validate(
+        parent,
+        context,
+        continuation,
+        calls,
+        report,
+        registry,
+        sources,
+        budget,
+    )?;
+    PendingDependencies::new(continuation, calls, budget).map_err(|e| match e {
+        DependencyError::Stopped(s) => AwaitError::Stopped(s),
+        e => AwaitError::Dependencies(e),
+    })
+}
+
+#[allow(clippy::too_many_arguments)]
+fn validate(
+    parent: &Invoke,
+    context: Digest,
+    continuation: &Continuation,
+    calls: &[Invoke],
+    report: &Report,
+    registry: &SchemaRegistry,
+    sources: &impl DiagnosticSourceResolver,
+    budget: &mut Budget,
+) -> Result<(), AwaitError> {
     continuation
         .check_binding(&parent.operation, parent.request_id, context, budget)
         .map_err(|e| match e {
@@ -71,8 +98,5 @@ pub fn prepare<'a>(
                 e => AwaitError::Call(e),
             })?;
     }
-    PendingDependencies::new(continuation, calls, budget).map_err(|e| match e {
-        DependencyError::Stopped(s) => AwaitError::Stopped(s),
-        e => AwaitError::Dependencies(e),
-    })
+    Ok(())
 }

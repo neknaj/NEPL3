@@ -5,7 +5,7 @@ use nepl3_core::operation::{
 };
 use nepl3_suite::{
     grants::{Grants, dependencies::OperationGrant},
-    suspension::host::{ActivationError, activate},
+    suspension::host::{ActivationError, activate, activate_owned},
 };
 
 fn running(parent: &Invoke, context: Digest) -> RequestLifetimes {
@@ -16,6 +16,167 @@ fn running(parent: &Invoke, context: Digest) -> RequestLifetimes {
     );
     table
 }
+
+#[test]
+fn owned_activation_retains_calls_and_publishes_only_after_all_budgeted_checks()
+-> Result<(), String> {
+    let (registry, parent) = fixture()?;
+    let sources = SourceStore::default();
+    let grants = Grants::new(&parent.environment, &sources, &[], &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let policy = [OperationGrant {
+        operation: &parent.operation,
+        grants: &grants,
+    }];
+    let context = Digest::of(b"owned host context");
+    let mut table = running(&parent, context);
+    let mut measured = budget();
+    // The temporary provider reply is moved into state which survives admission.
+    let active = activate_owned(
+        &parent,
+        context,
+        reply(&parent, context),
+        &policy,
+        &[context],
+        &registry,
+        &sources,
+        &mut table,
+        &mut measured,
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(active.report, Report::default());
+    let mut pending = active.pending;
+    let admission_usage = measured.usage();
+    assert_eq!(
+        table.phase(parent.request_id, &mut budget()),
+        Ok(RequestPhase::Awaiting)
+    );
+    let child_id = pending.calls()[0].request_id;
+    let value = pending.calls()[0].input.clone();
+    assert_eq!(
+        table.phase(child_id, &mut budget()),
+        Ok(RequestPhase::Running)
+    );
+    pending
+        .accept_active(
+            child_id,
+            context,
+            OperationResult::Complete {
+                value,
+                report: Report::default(),
+            },
+            &registry,
+            &sources,
+            &mut table,
+            &mut budget(),
+        )
+        .map_err(|e| format!("{e:?}"))?;
+    let resume = pending
+        .take_resume(&mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(table.check_resume(&resume, &mut budget()), Ok(()));
+    for allocation in [false, true] {
+        let count = if allocation {
+            admission_usage.allocation_units
+        } else {
+            admission_usage.work
+        };
+        for limit in 0..count {
+            let mut table = running(&parent, context);
+            let mut limits = budget().limits();
+            let reason = if allocation {
+                limits.allocation_units = limit;
+                StopReason::AllocationLimit
+            } else {
+                limits.work = limit;
+                StopReason::WorkLimit
+            };
+            let mut limited = Budget::new(limits);
+            assert!(
+                matches!(activate_owned(&parent, context, reply(&parent, context),
+                &policy, &[context], &registry, &sources, &mut table, &mut limited),
+                Err(ActivationError::Stopped(s)) if s == reason)
+            );
+            unchanged(&table, &parent);
+        }
+    }
+    let mut table = running(&parent, context);
+    assert!(matches!(
+        activate_owned(
+            &parent,
+            context,
+            reply(&parent, context),
+            &[],
+            &[context],
+            &registry,
+            &sources,
+            &mut table,
+            &mut budget()
+        ),
+        Err(ActivationError::Grants(_))
+    ));
+    unchanged(&table, &parent);
+    Ok(())
+}
+#[test]
+fn owned_activation_preserves_provider_report_without_absorbing_claimed_usage() -> Result<(), String>
+{
+    use nepl3_core::diagnostic::{Diagnostic, Event, Severity};
+    let (registry, parent) = fixture()?;
+    let sources = SourceStore::default();
+    let grants = Grants::new(&parent.environment, &sources, &[], &mut budget())
+        .map_err(|e| format!("{e:?}"))?;
+    let policy = [OperationGrant {
+        operation: &parent.operation,
+        grants: &grants,
+    }];
+    let context = Digest::of(b"report context");
+    let mut expected = Report::default();
+    expected.usage.work = u64::MAX;
+    expected.usage.diagnostics = 1;
+    expected.usage.events = 1;
+    expected.diagnostics.push(Diagnostic {
+        schema: parent.operation.schema.clone(),
+        code: "await-note".into(),
+        severity: Severity::Information,
+        stage: "invoke".into(),
+        arguments: parent.input.clone(),
+        primary: None,
+        related: vec![],
+        fixes: vec![],
+    });
+    expected.events.push(Event {
+        schema: parent.operation.schema.clone(),
+        kind: "suspend".into(),
+        operation_path: vec![parent.request_id],
+        span: None,
+        payload: parent.input.clone(),
+    });
+    let mut response = reply(&parent, context);
+    if let OperationReply::Await { report, .. } = &mut response {
+        *report = expected.clone();
+    }
+    let mut table = running(&parent, context);
+    let mut measured = budget();
+    let active = activate_owned(
+        &parent,
+        context,
+        response,
+        &policy,
+        &[context],
+        &registry,
+        &sources,
+        &mut table,
+        &mut measured,
+    )
+    .map_err(|e| format!("{e:?}"))?;
+    assert_eq!(active.report, expected);
+    assert_eq!(measured.poll(), Ok(()));
+    assert!(measured.usage().work < measured.limits().work);
+    assert_eq!(active.pending.remaining(), 1);
+    Ok(())
+}
+
 fn reply(parent: &Invoke, context: Digest) -> OperationReply {
     let mut call = parent.clone();
     call.request_id = parent.request_id + 1;
