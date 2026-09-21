@@ -1,4 +1,4 @@
-"""Bounded design-source structure audit, independent of the future Rust parser.
+"""Bounded design-source structure audit with the first-seed Text decoder.
 
 Only ASCII identifiers and the supplied quoted-string subset are recognized.
 No Unicode 16 XID, BCP47, sentence semantics, reader execution, bootstrap,
@@ -7,10 +7,15 @@ recovery, provider, or language operation conformance is established here.
 
 import json
 import re
+import sys
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
+# Also support direct execution from outside the repository root.
+sys.path.insert(0, str(ROOT))
+from tools.bootstrap.grammar import SeedError, decode_text
+
 TOKEN = re.compile(r'"(?:\\[^\r\n]|[^"\\\r\n])*"|#[^\r\n]*|[^\s"#]+')
 NAME = re.compile(r"[A-Za-z_][A-Za-z_0-9]*")
 NUMBER = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?")
@@ -77,7 +82,12 @@ class Parser:
             }
             if not valid.get(category):
                 raise AuditError(f"Unsupported audit token for {category}: {token}")
-            return json.loads(token) if token.startswith('"') else token
+            if category == "@Text":
+                try:
+                    return decode_text(token)
+                except SeedError as error:
+                    raise AuditError(f"Invalid NEPL3 Text: {error}") from error
+            return token
         if category not in self.categories:
             raise AuditError(f"Unknown category: {category}")
         definition = self.categories[category]
