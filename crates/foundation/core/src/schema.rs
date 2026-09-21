@@ -484,6 +484,42 @@ impl SchemaRegistry {
             .map(|(reference, _)| reference)
             .find(|reference| reference.package == package && reference.revision == revision)
     }
+    /// Check both the selected operation's expected type and the payload's
+    /// structure. The borrowed boundary avoids copying a remote result merely
+    /// to wrap it in `NdfValue` for validation.
+    pub fn validate_typed_as(
+        &self,
+        expected: &TypeDescriptor,
+        value: &crate::value::TypedValue,
+        budget: &mut Budget,
+    ) -> Result<(), SchemaError> {
+        budget.poll()?;
+        self.validate_type(expected, budget)?;
+        match expected {
+            TypeDescriptor::NdfValue | TypeDescriptor::TypedValue => (),
+            TypeDescriptor::Named(named) => {
+                let (schema, name) = match value {
+                    crate::value::TypedValue::Record(v) => (&v.schema, &v.kind),
+                    crate::value::TypedValue::Variant(v) => (&v.schema, &v.type_name),
+                };
+                budget.charge(
+                    Resource::Work,
+                    (schema.package.len() + named.package.len() + name.len() + named.name.len())
+                        as u64
+                        + 1,
+                )?;
+                if schema.package != named.package
+                    || schema.revision != named.revision
+                    || name != &named.name
+                {
+                    return Err(SchemaError::WrongType);
+                }
+            }
+            _ => return Err(SchemaError::WrongType),
+        }
+        self.validate_typed(value, budget)
+    }
+
     /// Checks a borrowed typed payload without cloning a possibly deep external value.
     pub fn validate_typed(
         &self,

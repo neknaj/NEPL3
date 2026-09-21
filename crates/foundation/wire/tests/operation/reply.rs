@@ -1,4 +1,5 @@
 use super::*;
+use nepl3_core::diagnostic::validation;
 use nepl3_core::diagnostic::*;
 
 fn fixture() -> Result<(SchemaRegistry, SourceStore, Vec<OperationReply>), String> {

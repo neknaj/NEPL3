@@ -4,6 +4,8 @@ use nepl3_core::{
     source::Digest,
     value::{NdfValue, OperationRef, Record, SchemaRef, TypedValue, Variant},
 };
+#[path = "operation/validation.rs"]
+mod validation;
 
 #[test]
 fn request_lifetimes_preserve_rejected_await_and_close_every_pending_request() {

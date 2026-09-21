@@ -12,6 +12,8 @@ pub enum LifetimeError {
     UnknownRequest,
     Phase,
     Capacity,
+    MissingCallIdentity,
+    CyclicOperation,
 }
 impl From<StopReason> for LifetimeError {
     fn from(v: StopReason) -> Self {
@@ -48,6 +50,8 @@ struct Entry {
     provider: OperationRef,
     snapshot: Digest,
     state: State,
+    parent: Option<u64>,
+    input: Option<Box<TypedValue>>,
 }
 
 /// IDs remain reserved until this connection is discarded. This prevents late
@@ -92,12 +96,101 @@ impl RequestLifetimes {
         snapshot: Digest,
         b: &mut Budget,
     ) -> Result<(), LifetimeError> {
+        self.register(
+            Entry {
+                id,
+                provider,
+                snapshot,
+                state: State::Running,
+                parent: None,
+                input: None,
+            },
+            b,
+        )
+    }
+    /// Register an admitted call and reject an identical operation/input/context
+    /// on its active ancestor chain. The host computes `snapshot` from the full
+    /// immutable operation context (environment, authorized sources/resources and
+    /// provider configuration); a remote supplied digest is not authority.
+    /// Request IDs and resource limits do not distinguish recursive call identity.
+    /// Every ancestor must have been registered through this method.
+    pub fn begin_call(
+        &mut self,
+        call: &Invoke,
+        snapshot: Digest,
+        parent: Option<u64>,
+        b: &mut Budget,
+    ) -> Result<(), LifetimeError> {
+        b.poll()?;
+        if self.closed {
+            return Err(LifetimeError::Closed);
+        }
+        if self.locate(call.request_id, b)?.is_ok() {
+            return Err(LifetimeError::DuplicateRequest);
+        }
+        let mut ancestor = parent;
+        let mut depth = 1u64;
+        b.observe_depth(depth)?;
+        while let Some(id) = ancestor {
+            let entry = &self.entries[self.active(id, b)?];
+            if !matches!(entry.state, State::Running | State::Awaiting { .. }) {
+                return Err(LifetimeError::Phase);
+            }
+            let input = entry
+                .input
+                .as_ref()
+                .ok_or(LifetimeError::MissingCallIdentity)?;
+            b.charge(
+                Resource::Work,
+                (entry.provider.schema.package.len() as u64)
+                    .saturating_add(call.operation.schema.package.len() as u64)
+                    .saturating_add(entry.provider.name.len() as u64)
+                    .saturating_add(call.operation.name.len() as u64)
+                    .saturating_add(66),
+            )?;
+            if entry.snapshot == snapshot
+                && entry.provider == call.operation
+                && input.equal_with_budget(&call.input, b)?
+            {
+                return Err(LifetimeError::CyclicOperation);
+            }
+            ancestor = entry.parent;
+            depth = depth
+                .checked_add(1)
+                .ok_or_else(|| b.stop(StopReason::DepthLimit))?;
+            b.observe_depth(depth)?;
+        }
+        b.charge(
+            Resource::Work,
+            (call.operation.name.len() as u64)
+                .saturating_add(call.operation.schema.package.len() as u64)
+                .saturating_add(1),
+        )?;
+        b.charge(
+            Resource::AllocationUnits,
+            (call.operation.name.len() as u64)
+                .saturating_add(call.operation.schema.package.len() as u64),
+        )?;
+        let input = Box::new(call.input.clone_with_budget(b)?);
+        self.register(
+            Entry {
+                id: call.request_id,
+                provider: call.operation.clone(),
+                snapshot,
+                state: State::Running,
+                parent,
+                input: Some(input),
+            },
+            b,
+        )
+    }
+    fn register(&mut self, entry: Entry, b: &mut Budget) -> Result<(), LifetimeError> {
         b.poll()?;
         if self.closed {
             return Err(LifetimeError::Closed);
         }
         let index = self
-            .locate(id, b)?
+            .locate(entry.id, b)?
             .err()
             .ok_or(LifetimeError::DuplicateRequest)?;
         b.charge(Resource::Work, (self.entries.len() - index) as u64 + 1)?;
@@ -119,15 +212,7 @@ impl RequestLifetimes {
                 .try_reserve_exact(extra)
                 .map_err(|_| LifetimeError::Capacity)?;
         }
-        self.entries.insert(
-            index,
-            Entry {
-                id,
-                provider,
-                snapshot,
-                state: State::Running,
-            },
-        );
+        self.entries.insert(index, entry);
         Ok(())
     }
     /// The caller has checked the Await report, dependency allowlist and graph.

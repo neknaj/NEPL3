@@ -2,6 +2,8 @@ use nepl3_core::{
     budget::*, operation::*, schema::*, source::*, syntax::ResourceContent, value::*,
 };
 use nepl3_wire::{WireError, operation::*};
+#[path = "operation/context.rs"]
+mod context;
 #[path = "operation/frame.rs"]
 mod frame;
 #[path = "operation/reply.rs"]

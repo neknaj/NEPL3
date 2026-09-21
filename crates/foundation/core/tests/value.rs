@@ -15,6 +15,72 @@ fn limits() -> Limits {
         events: 100,
     }
 }
+
+#[test]
+fn borrowed_payload_is_checked_against_the_selected_output_type() -> Result<(), String> {
+    use nepl3_core::{
+        schema::*,
+        value::{Record, TypedValue},
+    };
+    let err = |e| format!("{e:?}");
+    let mut b = Budget::new(limits());
+    let descriptor = foundation::descriptor(&mut b).map_err(err)?;
+    let schema = descriptor.reference(&mut b).map_err(err)?;
+    let mut registry = SchemaRegistry::default();
+    registry
+        .register(schema.clone(), descriptor, &mut b)
+        .map_err(err)?;
+    registry.finalize(&mut b).map_err(err)?;
+    let value = TypedValue::Record(Record {
+        schema: schema.clone(),
+        kind: "TraceOverflow".into(),
+        fields: vec![NdfValue::U64(3)],
+    });
+    let named = |name: &str| {
+        TypeDescriptor::Named(TypeRef {
+            package: schema.package.clone(),
+            revision: schema.revision,
+            name: name.into(),
+        })
+    };
+    for expected in [
+        named("TraceOverflow"),
+        TypeDescriptor::TypedValue,
+        TypeDescriptor::NdfValue,
+    ] {
+        registry
+            .validate_typed_as(&expected, &value, &mut Budget::new(limits()))
+            .map_err(err)?;
+    }
+    // Both types are registered. Self-schema validity alone cannot establish
+    // that a provider returned the output selected by its operation contract.
+    assert_eq!(
+        registry.validate_typed_as(&named("Limits"), &value, &mut Budget::new(limits())),
+        Err(SchemaError::WrongType)
+    );
+    assert_eq!(
+        registry.validate_typed_as(&TypeDescriptor::U64, &value, &mut Budget::new(limits())),
+        Err(SchemaError::WrongType)
+    );
+    let mut forged = value.clone();
+    if let TypedValue::Record(v) = &mut forged {
+        v.schema.digest.0[0] ^= 1;
+    }
+    assert_eq!(
+        registry.validate_typed_as(&named("TraceOverflow"), &forged, &mut Budget::new(limits())),
+        Err(SchemaError::UnknownSchema)
+    );
+    let mut stopped = Budget::new(Limits {
+        work: 0,
+        ..limits()
+    });
+    assert_eq!(
+        registry.validate_typed_as(&named("TraceOverflow"), &value, &mut stopped),
+        Err(SchemaError::Stopped(StopReason::WorkLimit))
+    );
+    assert_eq!(stopped.poll(), Err(StopReason::WorkLimit));
+    Ok(())
+}
 #[test]
 fn equality_charges_frontier_before_queueing_wide_input() {
     // The old borrowed implementation expanded every child at Work=1 before
