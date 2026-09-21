@@ -177,7 +177,7 @@ fn terminal_replies(dependent: bool) -> Result<(), String> {
         sources: vec![],
         source_maps: vec![],
         report: Report {
-            diagnostics: vec![diagnostic],
+            diagnostics: vec![diagnostic.clone()],
             usage: b.usage(),
             ..Report::default()
         },
@@ -366,6 +366,21 @@ fn terminal_replies(dependent: bool) -> Result<(), String> {
                     .is_err()
             );
             assert_eq!(stopped_budget.poll(), Err(StopReason::WorkLimit));
+            // A failure without a domain partial has no generated-source grant.
+            // This source exists locally but is absent from the saved dispatch.
+            let mut foreign_report = envelope.clone();
+            if let OperationReply::Result(
+                OperationResult::Invalid { report, .. } | OperationResult::Stopped { report, .. },
+            ) = &mut foreign_report
+            {
+                let mut foreign_diagnostic = diagnostic.clone();
+                foreign_diagnostic.primary = Some(checked!(generated.span(0, 1)));
+                report.diagnostics.push(foreign_diagnostic);
+            }
+            assert!(
+                read::operation::from_reply(&foreign_report, &receiving, &mut codec, &mut b)
+                    .is_err()
+            );
         }
     }
     let reply = ProviderReply::Read(Box::new(received_match.ok_or("missing matched reply")?));
