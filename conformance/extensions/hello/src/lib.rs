@@ -8,6 +8,9 @@ use nepl3_core::{
 use nepl3_engine::package::*;
 use nepl3_reader::{builtin::BuiltinReader, plan::ReaderPlan, tokenizer::*};
 
+mod parse;
+pub use parse::parse;
+
 pub fn budget() -> Budget {
     Budget::new(Limits {
         source_bytes: 100_000,
