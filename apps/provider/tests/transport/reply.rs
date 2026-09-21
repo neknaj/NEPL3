@@ -5,6 +5,8 @@ use nepl3_core::{
     value::*,
 };
 use nepl3_provider::reply::ReplyError;
+#[path = "reply/resume.rs"]
+mod resume;
 
 fn error(e: impl core::fmt::Debug) -> String {
     format!("{e:?}")
