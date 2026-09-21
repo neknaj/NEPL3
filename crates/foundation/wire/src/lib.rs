@@ -9,6 +9,7 @@ mod encode;
 pub mod environment;
 pub mod facts;
 pub mod foundation;
+pub mod frame;
 pub mod origin;
 pub mod report;
 pub mod source;
