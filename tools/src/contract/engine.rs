@@ -11,13 +11,10 @@ fn projection(value: &Value) -> Result<String> {
     if descriptor.package != "nepl3.engine" || descriptor.revision != 1 {
         return Err("unexpected engine package identity".into());
     }
-    Ok(foundation::generate::source(&descriptor)?
-        .replace(
-            "Generated from interfaces/contracts.json via interfaces/foundation.json.",
-            "Generated from interfaces/engine.json.",
-        )
-        .replace("foundation --write", "engine --write")
-        .replace("crate::budget::", "nepl3_core::budget::"))
+    foundation::generate::source_with(
+        &descriptor,
+        foundation::generate::Output::domain("interfaces/engine.json", "engine"),
+    )
 }
 pub(crate) fn check(root: &Path) -> Result<()> {
     let value: Value = json(root, "interfaces/engine.json")?;

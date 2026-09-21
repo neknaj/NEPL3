@@ -12,14 +12,10 @@ fn reader_projection(value: &Value) -> Result<String> {
     if descriptor.package != "nepl3.doc.reader" || descriptor.revision != 1 {
         return Err("unexpected Doc reader adapter identity".into());
     }
-    Ok(foundation::generate::source(&descriptor)?
-        .replace(
-            "Generated from interfaces/contracts.json via interfaces/foundation.json.",
-            "Generated from interfaces/doc-reader.json.",
-        )
-        .replace("foundation --write", "doc --write")
-        .replace("crate::budget::", "nepl3_core::budget::")
-        .replace("alloc::", "std::"))
+    foundation::generate::source_with(
+        &descriptor,
+        foundation::generate::Output::domain("interfaces/doc-reader.json", "doc").host(),
+    )
 }
 
 fn projection(value: &Value) -> Result<String> {
@@ -27,13 +23,10 @@ fn projection(value: &Value) -> Result<String> {
     if descriptor.package != "nepl3.doc" || descriptor.revision != 1 {
         return Err("unexpected doc package identity".into());
     }
-    Ok(foundation::generate::source(&descriptor)?
-        .replace(
-            "Generated from interfaces/contracts.json via interfaces/foundation.json.",
-            "Generated from interfaces/doc.json.",
-        )
-        .replace("foundation --write", "doc --write")
-        .replace("crate::budget::", "nepl3_core::budget::"))
+    foundation::generate::source_with(
+        &descriptor,
+        foundation::generate::Output::domain("interfaces/doc.json", "doc"),
+    )
 }
 pub(crate) fn check(root: &Path) -> Result<()> {
     let value: Value = json(root, "interfaces/doc.json")?;

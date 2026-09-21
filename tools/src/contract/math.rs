@@ -10,13 +10,10 @@ fn projection(value: &Value) -> Result<String> {
     if descriptor.package != "nepl3.math" || descriptor.revision != 1 {
         return Err("unexpected Math package identity".into());
     }
-    Ok(foundation::generate::source(&descriptor)?
-        .replace(
-            "Generated from interfaces/contracts.json via interfaces/foundation.json.",
-            "Generated from interfaces/math.json.",
-        )
-        .replace("foundation --write", "math --write")
-        .replace("crate::budget::", "nepl3_core::budget::"))
+    foundation::generate::source_with(
+        &descriptor,
+        foundation::generate::Output::domain("interfaces/math.json", "math"),
+    )
 }
 pub(crate) fn check(root: &Path) -> Result<()> {
     let value: Value = json(root, "interfaces/math.json")?;

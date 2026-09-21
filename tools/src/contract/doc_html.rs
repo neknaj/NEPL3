@@ -10,13 +10,10 @@ fn projection(value: &Value) -> Result<String> {
     if descriptor.package != "nepl3.doc.html" || descriptor.revision != 1 {
         return Err("unexpected Doc HTML package identity".into());
     }
-    Ok(foundation::generate::source(&descriptor)?
-        .replace(
-            "Generated from interfaces/contracts.json via interfaces/foundation.json.",
-            "Generated from interfaces/doc-html.json.",
-        )
-        .replace("foundation --write", "doc-html --write")
-        .replace("crate::budget::", "nepl3_core::budget::"))
+    foundation::generate::source_with(
+        &descriptor,
+        foundation::generate::Output::domain("interfaces/doc-html.json", "doc-html"),
+    )
 }
 pub(crate) fn check(root: &Path) -> Result<()> {
     let value: Value = json(root, "interfaces/doc-html.json")?;
