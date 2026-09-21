@@ -35,21 +35,26 @@ body
         cons sentence cons code "interfaces/model.json" cons text " の " cons code "Doc:*" cons text " recordと " cons code "Doc/*" cons text " unionはconstructorの" cons ruby text "論理的" text "ろんりてき" cons text "な" cons ruby text "意味展開" text "いみてんかい" cons text "であり、" cons ruby text "独立" text "どくりつ" cons text "した" cons ruby text "再帰" text "さいき" cons text "wire layoutではない。" nil
         cons sentence cons text "Doc" cons ruby text "操作" text "そうさ" cons text "で" cons ruby text "送受信" text "そうじゅしん" cons text "する" cons ruby text "値" text "あたい" cons text "の" cons ruby text "正本" text "せいほん" cons text "は " cons code "interfaces/doc.json" cons text " の " cons code "DocumentSyntax" cons text " / " cons code "DocValue" cons text "。" nil
         cons sentence cons code "DocValue.nodes" cons text " の" cons ruby text "各" text "かく" cons text " " cons code "DocNode.kind" cons text " がconstructorを" cons ruby text "表" text "あらわ" cons text "し、" cons ruby text "子" text "こ" cons text "はカテゴリ" cons ruby text "別" text "べつ" cons text "のindex" cons ruby text "参照" text "さんしょう" cons text "を" cons ruby text "使" text "つか" cons text "う。" nil
-        cons "Rust enumの[並/なら]びをwire tagへ[転用/てんよう]せず、schemaの[明示/めいじ]variant[名/めい]とfield[列/れつ]を[対応/たいおう]させる。" nil
+        cons "wire tagはschemaの[明示的/めいじてき]なvariant[名/めい]とfield[列/れつ]に[対応/たいおう]させる。"
+        cons "Rust enumの[宣言順/せんげんじゅん]からwire tagを[決定/けってい]することは[禁止/きんし]する。" nil
       cons paragraph
         cons sentence cons text "Article" cons ruby text "以外" text "いがい" cons text "のBody、Block、Flow、Sentence、Inline、Variant、Row、ListItem、MathGuest、CircuitGuest、Guestも" cons ruby text "明示" text "めいじ" cons text " " cons code "DocRoot" cons text " として" cons ruby text "単独" text "たんどく" cons text "のfragmentを" cons ruby text "構成" text "こうせい" cons text "できる。" nil
         cons "Alignment、ListStyle、Check、LinkTarget、Asset、OptionalRow、OptionalSentence、OptionalTextは[表層/ひょうそう]の[固定/こてい]arity[補助/ほじょ]constructorである。"
         cons "[単独/たんどく]lower[時/じ]には[対応/たいおう]するarena wrapperをrootとする。"
         cons "[親/おや]constructorのoperandである[場合/ばあい]はAlignment、ListKind、Option、LinkTarget、AssetRefという[型付/かたつ]き[値/あたい]へ[取/と]り[込/こ]み、[補助/ほじょ]wrapperを[意味的/いみてき]な[子/こ]として[残/のこ]さない。"
-        cons "[元/もと]operandのView、Origin、source byte[宣言/せんげん]はこの[取/と]り[込/こ]みで[破棄/はき]しない。"
+        cons "[元/もと]operandのView、Origin、source byte[宣言/せんげん]は、[型付/かたつ]き[値/あたい]への[変換後/へんかんご]も[保持/ほじ]する。"
         cons sentence cons text "Optionやlistの" cons ruby text "暗黙文法" text "あんもくぶんぽう" cons text "は" cons ruby text "導入" text "どうにゅう" cons text "せず、signatureにある " cons code "none" cons text " / " cons code "some" cons text "、" cons code "cons" cons text " / " cons code "nil" cons text " を" cons ruby text "読" text "よ" cons text "む。" nil nil
       cons paragraph
         cons "arenaの[構造検査/こうぞうけんさ]はroot/childカテゴリ、index[範囲/はんい]、[循環/じゅんかん]、[到達性/とうたつせい]、[注釈内容/ちゅうしゃくないよう]、[表/ひょう]の[列数等/れつすうなど]を[検査/けんさ]する。"
-        cons "[共有/きょうゆう]DAGを[許/ゆる]すが[全経路/ぜんけいろ]の[最大/さいだい]Depthを[検査/けんさ]し、ForeignClosureの[内側深/うちがわふか]さもその[所有/しょゆう]nodeまでの[深/ふか]さに[合成/ごうせい]する。"
-        cons "この[構造/こうぞう]proofはlabel[解決/かいけつ]、guest[意味/いみ]check、PreparedArticleを[意味/いみ]しない。"
+        cons "nodeを[共有/きょうゆう]するDAGを[扱/あつか]う[場合/ばあい]も、[全経路/ぜんけいろ]の[最大/さいだい]Depthを[検査/けんさ]する。"
+        cons "ForeignClosureの[内部/ないぶ]の[深/ふか]さは、その[所有/しょゆう]nodeまでの[深/ふか]さに[合成/ごうせい]する。"
+        cons "[構造/こうぞう]proofが[保証/ほしょう]する[範囲/はんい]は、これらのarena[不変条件/ふへんじょうけん]である。"
+        cons "label[解決/かいけつ]、guestの[意味検査/いみけんさ]、PreparedArticleの[成立/せいりつ]は、それぞれ[対応/たいおう]する[操作/そうさ]で[確認/かくにん]する。" nil
+      cons paragraph
         cons sentence cons text "tokenごとのViewは " cons code "DocView.head" cons text " に" cons ruby text "束縛" text "そくばく" cons text "し、ViewRefとrelationのID" cons ruby text "空間" text "くうかん" cons text "をtoken" cons ruby text "間" text "かん" cons text "で" cons ruby text "混" text "ま" cons text "ぜない。" nil
         cons "Text[正規化後/せいきかご]も[元/もと]ViewとOriginを[保存/ほぞん]する。"
-        cons "sourceを[持/も]つTextとsource-less Textを[結合/けつごう]する[場合/ばあい]、[後者/こうしゃ]を[明示/めいじ]Synthetic OriginとしてCompositeに[含/ふく]め、[既知/きち]spanを[全体/ぜんたい]のspanに[偽装/ぎそう]しない。" nil
+        cons "sourceを[持/も]つTextとsource-less Textを[結合/けつごう]する[場合/ばあい]、source-less Textを[明示的/めいじてき]なSynthetic OriginとしてCompositeに[含/ふく]める。"
+        cons "[既知/きち]のspanは、そのspanが[表/あらわ]す[部分/ぶぶん]に[限/かぎ]って[対応/たいおう]させる。" nil
       nil
     cons section elements "1.2 [文書入力/ぶんしょにゅうりょく]に[必要/ひつよう]な[要素/ようそ]" body
       cons paragraph
@@ -80,27 +85,30 @@ body
     cons section inspection "1.3 [文書準備/ぶんしょじゅんび]の[要求発見/ようきゅうはっけん]" body
       cons paragraph
         cons sentence cons code "prepare::inspect" cons text " はArticleの" cons ruby text "構造" text "こうぞう" cons text "・source" cons ruby text "閉包" text "へいほう" cons text "・article" cons ruby text "内" text "ない" cons text "labelを" cons ruby text "検査" text "けんさ" cons text "し、" cons code "DocPreparationPlan" cons text " を" cons ruby text "返" text "かえ" cons text "す。" nil
-        cons "これは[必要/ひつよう]な[外部入力/がいぶにゅうりょく]の[列挙/れっきょ]であり、[完全/かんぜん]なPreparedArticleではない。"
-        cons "[全/ぜん]Parallel variantを[対象/たいしょう]とし、[表示言語/ひょうじげんご]の[選択/せんたく]やguest[操作/そうさ]を[実行/じっこう]しない。" nil
+        cons "DocPreparationPlanは、[文書/ぶんしょ]の[準備/じゅんび]に[必要/ひつよう]な[外部入力/がいぶにゅうりょく]を[列挙/れっきょ]した[値/あたい]である。"
+        cons "[列挙/れっきょ]の[対象/たいしょう]は[全/ぜん]Parallel variantであり、[表示言語/ひょうじげんご]の[選択/せんたく]とguest[操作/そうさ]は[後続/こうぞく]の[処理/しょり]が[担当/たんとう]する。"
+        cons "PreparedArticleは、[列挙/れっきょ]した[要求/ようきゅう]を[解決/かいけつ]し、[必要/ひつよう]な[準備条件/じゅんびじょうけん]を[満/み]たした[段階/だんかい]で[得/え]られる。" nil
       cons paragraph
         cons sentence cons text "planは " cons code "documentDigest" cons text " と" cons ruby text "順序付" text "じゅんじょつ" cons text "き " cons code "requirements" cons text " を" cons ruby text "持" text "も" cons text "つ。" nil
         cons "Linkは[意味/いみ]node indexと[元/もと]LinkTarget、Assetは[意味/いみ]node indexと[元/もと]AssetRef、ForeignはEmbedRef・EmbedKind・guestDigestを[持/も]つ。"
         cons "Link/Assetはarena[順/じゅん]に[一度/いちど]ずつ[列挙/れっきょ]し、その[後/ご]owner embed[表順/ひょうじゅん]にForeignを[列挙/れっきょ]する。"
-        cons "[同/おな]じ[資源/しげん]を[参照/さんしょう]する[別/べつ]nodeは[別/べつ]の[要求/ようきゅう]であり、[共有/きょうゆう]nodeの[表示出現/ひょうじしゅつげん]ごとには[増/ふ]やさない。"
+        cons "Link/Assetの[要求/ようきゅう]はnode[単位/たんい]で[列挙/れっきょ]する。"
+        cons "Link/Assetでは、[同/おな]じ[資源/しげん]を[参照/さんしょう]する[別/べつ]nodeは[個別/こべつ]の[要求/ようきゅう]となり、[共有/きょうゆう]nodeは[表示/ひょうじ]の[出現回数/しゅつげんかいすう]によらず[一/ひと]つの[要求/ようきゅう]となる。"
         cons "Codeも[構文/こうぶん]のままForeignとして[保持/ほじ]し、[意味/いみ]エラーを[含/ふく]む[例/れい]の[表示/ひょうじ]を[可能/かのう]にする。" nil
       cons paragraph
         cons sentence cons text "documentDigestは " cons code "SHA-256(\"NEPL3.Doc.Prepare.Document.v1\\0\" || canonical-NDF/1-CBOR(DocumentSyntax))" cons text "、guestDigestは " cons code "SHA-256(\"NEPL3.Doc.Prepare.Guest.v1\\0\" || canonical-NDF/1-CBOR(ForeignClosure))" cons text "。" nil
         cons sentence cons text "domainの " cons code "\\0" cons text " はゼロbyte、digestは32byte。" nil
-        cons "owner[環境/かんきょう]・source・Originを[含/ふく]め、[型名/かためい]やURIだけをidentityにしない。"
+        cons "digestの[入力/にゅうりょく]には、owner[環境/かんきょう]・source・Originを[含/ふく]める。"
         cons "Doc nodeとOrigin IDは[保持/ほじ]し、[共通/きょうつう]codecのsource[表順/ひょうじゅん]・guest NodeRef[正準化/せいじゅんか]に[従/したが]う。" nil
       cons paragraph
         cons "portable planの[送受信/そうじゅしん]には[対象/たいしょう]DocumentSyntaxを[明示/めいじ]し、[同/おな]じ[検査/けんさ]と[要求列挙/ようきゅうれっきょ]を[再実行/さいじっこう]して[全/ぜん]fieldを[比較/ひかく]する。"
         cons "schema-validでも[古/ふる]い[文書/ぶんしょ]、[欠落/けつらく]/[追加/ついか]/[重複/じゅうふく]/[順序違/じゅんじょちが]い、[異/こと]なるnode/guest/digestを[拒否/きょひ]する。"
         cons "source admissionとBudgetを[操作内/そうさない]で[共有/きょうゆう]し、[停止/ていし]は[元/もと]StopReasonを[保持/ほじ]する。"
-        cons "native helperのPreparationErrorは[構造/こうぞう]/label/boundary/[停止/ていし]を[区別/くべつ]するが、[完全/かんぜん]なcheck/prepareのReport[操作包絡/そうさほうらく]として[広告/こうこく]しない。" nil
+        cons "native helperのPreparationErrorは、[構造/こうぞう]・label・boundary・[停止/ていし]を[区別/くべつ]する[型付/かたつ]きエラーである。"
+        cons "[完全/かんぜん]なcheck/prepareのReport[操作包絡/そうさほうらく]は、[対応/たいおう]する[公開操作/こうかいそうさ]の[契約/けいやく]に[従/したが]って[構成/こうせい]する。" nil
       cons paragraph
-        cons "この[発見段階/はっけんだんかい]はURIの[安全性/あんぜんせい]、page/fragmentの[存在/そんざい]、asset byte[列/れつ]・MIME・digestの[適合/てきごう]、guest[生成物/せいせいぶつ]や[表示言語/ひょうじげんご]の[準備/じゅんび]を[証明/しょうめい]しない。"
-        cons "[後続/こうぞく]prepareで[明示資源/めいじしげん]・[解決結果/かいけつけっか]を[同/おな]じdocument/guest identityへ[束縛/そくばく]し、[必要条件/ひつようじょうけん]がすべて[満/み]たされてからHTML backendへ[渡/わた]す。" nil
+        cons "[後続/こうぞく]のprepareでは、URIの[安全性/あんぜんせい]、page/fragmentの[存在/そんざい]、asset byte[列/れつ]・MIME・digestの[適合/てきごう]、guest[生成物/せいせいぶつ]と[表示言語/ひょうじげんご]の[準備/じゅんび]を[確認/かくにん]する。"
+        cons "[明示資源/めいじしげん]と[解決結果/かいけつけっか]は[同/おな]じdocument/guest identityへ[束縛/そくばく]し、[必要条件/ひつようじょうけん]がすべて[満/み]たされたPreparedArticleをHTML backendへ[渡/わた]す。" nil
       nil
     nil
   cons section literal "2. sentence literalの[完全/かんぜん]な[規則/きそく]" body
