@@ -1,4 +1,6 @@
 use super::*;
+#[path = "scheduler/admission.rs"]
+mod admission;
 #[path = "scheduler/outcomes.rs"]
 mod outcomes;
 use nepl3_core::operation::{Continuation, OperationReply, Resume};
