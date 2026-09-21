@@ -292,10 +292,15 @@ fn exchange(
         return Err("expected terminal dependency".into());
     };
     pending
-        .accept(18, result, &registry, &sources, &mut budget())
-        .map_err(error)?;
-    lifetimes
-        .finish(dependency.request_id, &mut budget())
+        .accept_active(
+            dependency.request_id,
+            dependency_context,
+            result,
+            &registry,
+            &sources,
+            &mut lifetimes,
+            &mut budget(),
+        )
         .map_err(error)?;
     let resume = pending.take_resume(&mut budget()).map_err(error)?;
     lifetimes.resume(&resume, &mut budget()).map_err(error)?;

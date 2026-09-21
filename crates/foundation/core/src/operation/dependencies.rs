@@ -1,4 +1,5 @@
 //! One Await generation: correlate terminal replies and preserve call order.
+use super::lifetime::{LifetimeError, RequestLifetimes};
 use super::validation::ResultValidationError;
 use super::*;
 use crate::{diagnostic::validation::DiagnosticSourceResolver, schema::SchemaRegistry};
@@ -7,6 +8,7 @@ use crate::{diagnostic::validation::DiagnosticSourceResolver, schema::SchemaRegi
 pub enum DependencyError {
     Stopped(StopReason),
     Output(ResultValidationError),
+    Lifetime(LifetimeError),
     DuplicateId,
     ParentId,
     UnknownId,
@@ -125,6 +127,47 @@ impl<'a> PendingDependencies<'a> {
         sources: &impl DiagnosticSourceResolver,
         b: &mut Budget,
     ) -> Result<(), DependencyError> {
+        let position = self.validate_result(id, &result, registry, sources, b)?;
+        self.results[position] = Some(result);
+        self.remaining -= 1;
+        Ok(())
+    }
+    /// Accept a terminal result and finish its Running lifetime atomically.
+    /// `context` comes from the host's saved child invocation. Use `accept` when
+    /// the transport has already committed a validated terminal lifetime.
+    /// Any rejection leaves both this collection and the lifetime unchanged.
+    #[allow(clippy::too_many_arguments)]
+    pub fn accept_active(
+        &mut self,
+        id: u64,
+        context: Digest,
+        result: OperationResult<TypedValue>,
+        registry: &SchemaRegistry,
+        sources: &impl DiagnosticSourceResolver,
+        lifetimes: &mut RequestLifetimes,
+        b: &mut Budget,
+    ) -> Result<(), DependencyError> {
+        let position = self.validate_result(id, &result, registry, sources, b)?;
+        let map = |e| match e {
+            LifetimeError::Stopped(s) => DependencyError::Stopped(s),
+            e => DependencyError::Lifetime(e),
+        };
+        lifetimes
+            .check_reply(id, &self.calls[position].operation, context, b)
+            .map_err(map)?;
+        lifetimes.finish(id, b).map_err(map)?;
+        self.results[position] = Some(result);
+        self.remaining -= 1;
+        Ok(())
+    }
+    fn validate_result(
+        &self,
+        id: u64,
+        result: &OperationResult<TypedValue>,
+        registry: &SchemaRegistry,
+        sources: &impl DiagnosticSourceResolver,
+        b: &mut Budget,
+    ) -> Result<usize, DependencyError> {
         b.poll()?;
         if self.consumed {
             return Err(DependencyError::Consumed);
@@ -146,9 +189,7 @@ impl<'a> PendingDependencies<'a> {
             return Err(DependencyError::DuplicateReply);
         }
         result.validate_for(&self.calls[position].operation, registry, sources, b)?;
-        self.results[position] = Some(result);
-        self.remaining -= 1;
-        Ok(())
+        Ok(position)
     }
     pub fn remaining(&self) -> usize {
         self.remaining
