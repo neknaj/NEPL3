@@ -272,25 +272,27 @@ body
     nil
   cons section html "7. HTML backend" body
     cons paragraph
-      cons "Articleはarticle[要素/ようそ]、titleはh1。"
-      cons "Sectionはsection[要素/ようそ]と[適切/てきせつ]な[見出/みだ]し。"
-      cons "[深/ふか]さ6[超/ちょう]はrole=headingとaria-levelを[持/も]つ[要素/ようそ]を[使/つか]う。"
-      cons "Paragraphを[機械的/きかいてき]に[入/い]れ[子/こ]のpへ[変換/へんかん]しない。"
-      cons "Paragraphはdiv[構造/こうぞう]、[連続/れんぞく]したSentence/Parallelのrunをpへまとめ、[子/こ]Blockはrunを[閉/と]じてから[出/だ]す。" nil
+      cons "Articleはarticle[要素/ようそ]として[出力/しゅつりょく]し、titleはh1[要素/ようそ]に[配置/はいち]する。"
+      cons "Sectionはsection[要素/ようそ]と、その[階層/かいそう]に[対応/たいおう]する[見出/みだ]しで[表/あらわ]す。"
+      cons "[見出/みだ]しの[深/ふか]さが6を[超/こ]える[場合/ばあい]は、role=headingとaria-levelを[持/も]つ[要素/ようそ]を[使用/しよう]する。"
+      cons "Paragraphはdiv[要素/ようそ]で[構成/こうせい]し、[連続/れんぞく]するSentence・Parallelを[一/ひと]つのp[要素/ようそ]にまとめる。"
+      cons "[子/こ]Blockを[出力/しゅつりょく]する[際/さい]は、[先/さき]にp[要素/ようそ]を[終了/しゅうりょう]する。"
+      cons "この[構成/こうせい]により、Paragraphの[入/い]れ[子/こ]をdivで[保持/ほじ]し、p[要素/ようそ]の[入/い]れ[子/こ]を[防/ふせ]ぐ。" nil
     cons paragraph
-      cons "Sentence[間/かん]へ[空白/くうはく]を[勝手/かって]に[挿入/そうにゅう]しない。"
-      cons "[必要/ひつよう]な[空白/くうはく]はTextに[含/ふく]める。"
-      cons "white-space:pre-wrapで[著者/ちょしゃ]の[空白/くうはく]と[明示改行/めいじかいぎょう]を[尊重/そんちょう]する。" nil
+      cons "Sentence[間/かん]の[空白/くうはく]は、[著者/ちょしゃ]がTextに[指定/してい]する。"
+      cons "rendererによるSentence[間/かん]への[空白/くうはく]の[自動挿入/じどうそうにゅう]は[禁止/きんし]する。"
+      cons "white-space:pre-wrapを[適用/てきよう]し、[指定/してい]された[空白/くうはく]と[明示改行/めいじかいぎょう]を[保持/ほじ]する。" nil
     cons paragraph
       cons "Ruby/Annoはネスト[可能/かのう]なtyped span[構造/こうぞう]として[描画/びょうが]し、base、[上側/うえがわ]のreading、[下側/したがわ]のnotesを[分離/ぶんり]する。"
       cons "reference backendはinline-gridを[基本/きほん]とし、[必要/ひつよう]なbaseline[指定/してい]に[未対応/みたいおう]のbrowserでは20[章/しょう]のinline-table[配置/はいち]へ[切/き]り[替/か]える。"
       cons "[同/おな]じspan[構造/こうぞう]を[維持/いじ]するため、CSSの[選択/せんたく]によってsemantic HTML[正規形/せいきけい]は[変/か]わらない。"
       cons "[単純/たんじゅん]Rubyには[別/べつ]backendでHTML ruby/rtを[使用/しよう]してもよい。"
-      cons "CSSは[配布/はいふ]asset、リモートfont/CDN/JSは[不要/ふよう]。" nil
+      cons "CSSは[配布/はいふ]assetに[含/ふく]める。"
+      cons "リモートフォント・CDN・JavaScriptへの[依存/いぞん]は[不要/ふよう]とする。" nil
     cons paragraph
-      cons "Parallelは[一/ひと]つのalignment wrapperにlanguageごとのsentence spanを[入/い]れる。"
-      cons "[横並/よこなら]び・[縦並/たてなら]び・[単一言語/たんいつげんご]はRenderOptionsとして[変/か]える。"
-      cons "DOM[上/じょう]に[対応関係/たいおうかんけい]IDを[保存/ほぞん]する。" nil
+      cons "Parallelは、languageごとのsentence spanを[一/ひと]つのalignment wrapperに[配置/はいち]する。"
+      cons "RenderOptionsで、[横並/よこなら]び・[縦並/たてなら]び・[単一言語/たんいつげんご]の[表示/ひょうじ]を[選択/せんたく]する。"
+      cons "[各/かく]Sentenceの[対応関係/たいおうかんけい]を[示/しめ]すIDは、DOM[上/じょう]に[保持/ほじ]する。" nil
     cons paragraph
       cons "[全/ぜん]Text/[属性/ぞくせい]をmarkup serializerでescapeする。"
       cons "RawHtml variantはDocに[存在/そんざい]しない。"
