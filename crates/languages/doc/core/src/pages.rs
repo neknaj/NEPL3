@@ -291,7 +291,7 @@ pub fn resolve<'a, C: FoundationValueCodec>(
     b: &mut Budget,
 ) -> Result<CheckedPages<'a>, PageError<'a, C::Error>> {
     registrations(set, b)?;
-    let value = portable::pages::set_to_value(set, registry, c, b)?;
+    let (value, structures) = portable::pages::set_to_value_with_structures(set, registry, c, b)?;
     let identity = c
         .canonical_value_digest(SET_DOMAIN, &value, b)
         .map_err(|e| match e.stop_reason() {
@@ -301,16 +301,14 @@ pub fn resolve<'a, C: FoundationValueCodec>(
     let mut definitions = Vec::new();
     let mut plans = Vec::new();
     let mut document_digests = Vec::new();
-    for (page, input) in set.pages.iter().enumerate() {
-        let labels = labels::check(&input.document, registry, b, c.source_admission()).map_err(
-            |e| match e {
-                labels::LabelError::Stopped(s) => PageError::Stopped(s),
-                e => PageError::Input {
-                    page: page as u64,
-                    error: PreparationError::Label(e),
-                },
+    for (page, structure) in structures.iter().enumerate() {
+        let labels = labels::check_structure(structure, b).map_err(|e| match e {
+            labels::LabelError::Stopped(s) => PageError::Stopped(s),
+            e => PageError::Input {
+                page: page as u64,
+                error: PreparationError::Label(e),
             },
-        )?;
+        })?;
         // set_to_value has already structurally validated and encoded every
         // document. Hash the exact child value instead of constructing it again.
         let document_value = portable::pages::document_value(&value, page, b)?;

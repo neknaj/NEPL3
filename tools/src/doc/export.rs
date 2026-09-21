@@ -175,8 +175,14 @@ fn shell(
     output_budget: &mut nepl3_core::budget::Budget,
 ) -> Result<String, String> {
     let m = &rendered.markup;
+    let validation_start = output_budget.usage();
     let checked = nepl3_markup::html::validate(&m.fragment, m.slot, &m.policy, output_budget)
-        .map_err(|e| format!("HTML validation: {e:?}"))?;
+        .map_err(|e| {
+            format!(
+                "HTML validation: {e:?}; initial usage={validation_start:?}; arena nodes={}",
+                m.fragment.nodes.len()
+            )
+        })?;
     check_shell_depth(&m.fragment, output_budget).map_err(|e| format!("HTML shell depth: {e}"))?;
     let fragment = nepl3_markup::html::serialize(&checked, output_budget)
         .map_err(|e| format!("HTML serialization: {e:?}"))?;
