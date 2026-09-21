@@ -72,6 +72,8 @@ Grammarの型付きconstructor arenaは `design/forms.json` から `python tools
 
 CIのWASI jobはSHA-256を固定したWasmtime 44.0.1で実装済みcoreの実試験を実行し、browser向けWasmのcompileも行います。ローカルでは `CARGO_TARGET_WASM32_WASIP2_RUNNER` を `wasmtime run` とし、`cargo test --locked -p nepl3-core -p nepl3-reader -p nepl3-wire -p nepl3-engine -p nepl3-grammar-core -p nepl3-doc-core -p nepl3-sentence-core -p nepl3-math-core -p nepl3-markup -p nepl3-doc-html --target wasm32-wasip2 -- --test-threads=1` を実行します。browser targetのcompile成功はブラウザ上の実行・描画試験を意味しません。
 
+providerのstream transportは `cargo test --locked -p nepl3-provider` で検査する。WASIでは同じコマンドに `--target wasm32-wasip2` を追加する。frameの分割転送、切断、長さ制限、codecとI/Oの停止、Close後の再利用拒否を対象とする。別processでのoperation実行は後続のhost統合で検証する。
+
 Sentenceの統合経路は `cargo test --locked -p nepl3-tools --test sentence --target wasm32-wasip2 -- --test-threads=1` で実行します。独立LanguagePackageのsurface compile、ReaderSession/provider、literalのportable受渡し、位置付き診断・停止、Doc bridgeを対象とし、Sentence core単体試験と区別します。nativeではworkspace試験に含み、WASIでも同じ入口を実行します。
 
 Binding の fixture と Python seed adapter の一致確認は子processを起動する native host 専用試験です。native の通常試験で実行し、Wasm target ではその host 試験だけを型条件で除外します。同じ fixture を使う production compile・parse・analyze・portable codec の試験は `cargo test --locked -p nepl3-tools --test grammar binding:: --target wasm32-wasip2 -- --test-threads=1` でも実行します。host 試験を WASI へ誤って含めた初回失敗は対象選択の失敗として記録し、後の runtime 試験成功へ読み替えません。
