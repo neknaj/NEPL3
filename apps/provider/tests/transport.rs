@@ -1,6 +1,8 @@
 use nepl3_core::{budget::*, operation::ProviderFrame, schema::*, source::*};
 use nepl3_provider::{Connection, TransportError};
 use std::io::{self, Cursor, Read, Write};
+#[path = "transport/reply.rs"]
+mod reply;
 
 fn budget() -> Budget {
     Budget::new(Limits {

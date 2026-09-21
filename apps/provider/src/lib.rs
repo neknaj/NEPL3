@@ -2,6 +2,7 @@
 //! Operation dispatch, schema negotiation and request lifetimes are supplied by
 //! the host. Blocking stream implementations must supply their own deadline and
 //! interruption mechanism; Budget is checked between I/O calls.
+pub mod reply;
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     operation::ProviderFrame,
