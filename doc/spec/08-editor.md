@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/08&#45;editor.nepld; renderer nepl3-tools.markdown-annotated/4; source SHA-256 d326323331b335da48a044e35a92d2bd89b64bc4fde794131af4ab17ad3f91b6; alias input SHA-256 0e85d24ed98a8e151b582442218b17d3d4f191755c9528582080443fca21746b. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/08&#45;editor.nepld; renderer nepl3-tools.markdown-annotated/4; source SHA-256 d13ae173c9912a289539bdd3d6f5f7598bb1733aad2f19725d934d899e03a5fc; alias input SHA-256 0e85d24ed98a8e151b582442218b17d3d4f191755c9528582080443fca21746b. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="08-共通editor-serviceと診断"></a>
 
@@ -10,9 +10,9 @@
 
 <a name="方針"></a>
 
-## <ruby>方針<rt>ほうしん</rt></ruby>
+## <ruby>共通<rt>きょうつう</rt></ruby>エディタ<ruby>機能<rt>きのう</rt></ruby>の<ruby>役割<rt>やくわり</rt></ruby>
 
-<ruby>一度宣言<rt>いちどせんげん</rt></ruby>したgrammar\/binding\/style<ruby>情報<rt>じょうほう</rt></ruby>からeditor<ruby>機能<rt>きのう</rt></ruby>を<ruby>導出<rt>どうしゅつ</rt></ruby>する。<ruby>専用<rt>せんよう</rt></ruby>parserも<ruby>同<rt>おな</rt></ruby>じfactsを<ruby>返<rt>かえ</rt></ruby>して<ruby>支援<rt>しえん</rt></ruby>を<ruby>受<rt>う</rt></ruby>ける。<ruby>共通分類<rt>きょうつうぶんるい</rt></ruby>をプログラミング<ruby>言語<rt>げんご</rt></ruby>の<ruby>要素<rt>ようそ</rt></ruby>に<ruby>限定<rt>げんてい</rt></ruby>しない。
+<ruby>共通<rt>きょうつう</rt></ruby>editor serviceは、<ruby>各言語<rt>かくげんご</rt></ruby>が<ruby>宣言<rt>せんげん</rt></ruby>したgrammar・binding・styleの<ruby>情報<rt>じょうほう</rt></ruby>から、<ruby>構文<rt>こうぶん</rt></ruby>ハイライト、<ruby>補完<rt>ほかん</rt></ruby>、<ruby>定義<rt>ていぎ</rt></ruby>ジャンプなどのエディタ<ruby>機能<rt>きのう</rt></ruby>を<ruby>導出<rt>どうしゅつ</rt></ruby>する。<ruby>言語<rt>げんご</rt></ruby>の<ruby>宣言<rt>せんげん</rt></ruby>をこれらの<ruby>機能<rt>きのう</rt></ruby>で<ruby>共用<rt>きょうよう</rt></ruby>し、<ruby>専用<rt>せんよう</rt></ruby>parserも<ruby>同<rt>おな</rt></ruby>じ<ruby>契約<rt>けいやく</rt></ruby>のfactsを<ruby>返<rt>かえ</rt></ruby>すことで<ruby>共通<rt>きょうつう</rt></ruby>の<ruby>支援<rt>しえん</rt></ruby>を<ruby>利用<rt>りよう</rt></ruby>できる。<ruby>共通分類<rt>きょうつうぶんるい</rt></ruby>は、プログラミング<ruby>言語<rt>げんご</rt></ruby>を<ruby>含<rt>ふく</rt></ruby>む<ruby>各<rt>かく</rt></ruby>DSLの<ruby>要素<rt>ようそ</rt></ruby>を<ruby>対象<rt>たいしょう</rt></ruby>とする。
 
 <a name="n-736e617073686f74"></a>
 
@@ -20,7 +20,7 @@
 
 ## 1\. AnalysisSnapshotの<ruby>入力<rt>にゅうりょく</rt></ruby>と<ruby>同一性<rt>どういつせい</rt></ruby>
 
-<ruby>入力<rt>にゅうりょく</rt></ruby>はSourceSnapshot<ruby>集合<rt>しゅうごう</rt></ruby>、profile\/package revision<ruby>集合<rt>しゅうごう</rt></ruby>、<ruby>明示的<rt>めいじてき</rt></ruby>なresource\/schema<ruby>環境<rt>かんきょう</rt></ruby>、<ruby>解析<rt>かいせき</rt></ruby>options。<ruby>結果<rt>けっか</rt></ruby>はParsed tree、<ruby>内部<rt>ないぶ</rt></ruby>views、Scope\/Entity\/Occurrence、typed Relations、Diagnostics、ExpectedAt、Dependencies。
+<ruby>解析<rt>かいせき</rt></ruby>には、SourceSnapshot<ruby>集合<rt>しゅうごう</rt></ruby>、profile・packageのrevision<ruby>集合<rt>しゅうごう</rt></ruby>、<ruby>明示的<rt>めいじてき</rt></ruby>なresource・schema<ruby>環境<rt>かんきょう</rt></ruby>、<ruby>解析<rt>かいせき</rt></ruby>optionsを<ruby>入力<rt>にゅうりょく</rt></ruby>する。AnalysisSnapshotは、<ruby>結果<rt>けっか</rt></ruby>としてParsed tree、<ruby>内部<rt>ないぶ</rt></ruby>views、Scope・Entity・Occurrence、<ruby>型付<rt>かたつ</rt></ruby>きRelations、Diagnostics、ExpectedAt、Dependenciesを<ruby>保持<rt>ほじ</rt></ruby>する。
 
 <ruby>全結果<rt>ぜんけっか</rt></ruby>にSnapshotIdとanalysis keyを<ruby>付<rt>つ</rt></ruby>ける。keyには<ruby>言語<rt>げんご</rt></ruby>\/reader\/providerのrevision、context、<ruby>操作<rt>そうさ</rt></ruby>optionsを<ruby>含<rt>ふく</rt></ruby>む。spanのある<ruby>結果<rt>けっか</rt></ruby>を<ruby>意味値<rt>いみち</rt></ruby>だけのcacheから<ruby>再利用<rt>さいりよう</rt></ruby>しない。
 
@@ -40,11 +40,11 @@ BoundBindingReply\.for\_source はhostが<ruby>現在要求<rt>げんざいよ�
 
 ## 2\. <ruby>自動<rt>じどう</rt></ruby>で<ruby>得<rt>え</rt></ruby>られる<ruby>機能<rt>きのう</rt></ruby>
 
-schemaのform\/leaf\/fieldとreader captureから<ruby>構文<rt>こうぶん</rt></ruby>ハイライト、<ruby>構造的<rt>こうぞうてき</rt></ruby>selection、expected categoryの<ruby>補完<rt>ほかん</rt></ruby>を<ruby>提供<rt>ていきょう</rt></ruby>する。binding\/reference\/export\/importから<ruby>定義<rt>ていぎ</rt></ruby>ジャンプ、<ruby>参照検索<rt>さんしょうけんさく</rt></ruby>、<ruby>未定義<rt>みていぎ</rt></ruby>\/<ruby>重複診断<rt>じゅうふくしんだん</rt></ruby>、scope<ruby>内<rt>ない</rt></ruby>の<ruby>候補補完<rt>こうほほかん</rt></ruby>を<ruby>提供<rt>ていきょう</rt></ruby>する。name fieldとenclosing rangeからoutlineを<ruby>作<rt>つく</rt></ruby>る。ドキュメントfieldを<ruby>宣言<rt>せんげん</rt></ruby>すればhoverに<ruby>出<rt>だ</rt></ruby>す。
+schemaのform\/leaf\/fieldとreader captureから<ruby>構文<rt>こうぶん</rt></ruby>ハイライト、<ruby>構造的<rt>こうぞうてき</rt></ruby>selection、expected categoryの<ruby>補完<rt>ほかん</rt></ruby>を<ruby>提供<rt>ていきょう</rt></ruby>する。binding\/reference\/export\/importから<ruby>定義<rt>ていぎ</rt></ruby>ジャンプ、<ruby>参照検索<rt>さんしょうけんさく</rt></ruby>、<ruby>未定義<rt>みていぎ</rt></ruby>\/<ruby>重複診断<rt>じゅうふくしんだん</rt></ruby>、scope<ruby>内<rt>ない</rt></ruby>の<ruby>候補補完<rt>こうほほかん</rt></ruby>を<ruby>提供<rt>ていきょう</rt></ruby>する。name fieldとenclosing rangeからアウトラインを<ruby>構成<rt>こうせい</rt></ruby>する。<ruby>宣言<rt>せんげん</rt></ruby>されたドキュメントfieldの<ruby>内容<rt>ないよう</rt></ruby>は、hoverに<ruby>表示<rt>ひょうじ</rt></ruby>する。
 
-<ruby>型推論<rt>かたすいろん</rt></ruby>、<ruby>回路幅<rt>かいろはば</rt></ruby>、<ruby>数値計算結果等<rt>すうちけいさんけっかなど</rt></ruby>はdomain factsの<ruby>追加<rt>ついか</rt></ruby>で<ruby>精度<rt>せいど</rt></ruby>を<ruby>上<rt>あ</rt></ruby>げる。grammarだけから<ruby>任意<rt>にんい</rt></ruby>domainの<ruby>意味<rt>いみ</rt></ruby>を<ruby>推測<rt>すいそく</rt></ruby>したと<ruby>主張<rt>しゅちょう</rt></ruby>しない。
+<ruby>型推論<rt>かたすいろん</rt></ruby>、<ruby>回路幅<rt>かいろはば</rt></ruby>、<ruby>数値計算<rt>すうちけいさん</rt></ruby>の<ruby>結果<rt>けっか</rt></ruby>など、<ruby>各言語<rt>かくげんご</rt></ruby>の<ruby>意味<rt>いみ</rt></ruby>に<ruby>基<rt>もと</rt></ruby>づく<ruby>情報<rt>じょうほう</rt></ruby>はdomain factsとして<ruby>追加<rt>ついか</rt></ruby>し、エディタ<ruby>機能<rt>きのう</rt></ruby>の<ruby>精度<rt>せいど</rt></ruby>を<ruby>高<rt>たか</rt></ruby>める。これらの<ruby>意味情報<rt>いみじょうほう</rt></ruby>の<ruby>提供<rt>ていきょう</rt></ruby>には、<ruby>対象<rt>たいしょう</rt></ruby>domainのfactsを<ruby>必要<rt>ひつよう</rt></ruby>とする。
 
-<ruby>手書<rt>てが</rt></ruby>きreaderにはview\/factsの<ruby>同<rt>おな</rt></ruby>じcontractを<ruby>要求<rt>ようきゅう</rt></ruby>する。<ruby>内部<rt>ないぶ</rt></ruby>viewなしならtoken<ruby>全体<rt>ぜんたい</rt></ruby>のfallbackだけ。すべてのcustom readerへ<ruby>精密<rt>せいみつ</rt></ruby>な<ruby>内部支援<rt>ないぶしえん</rt></ruby>を<ruby>自動生成<rt>じどうせいせい</rt></ruby>できるとはしない。
+<ruby>手書<rt>てが</rt></ruby>きreaderにも、view・factsの<ruby>共通契約<rt>きょうつうけいやく</rt></ruby>を<ruby>要求<rt>ようきゅう</rt></ruby>する。token<ruby>内部<rt>ないぶ</rt></ruby>の<ruby>精密<rt>せいみつ</rt></ruby>な<ruby>支援<rt>しえん</rt></ruby>は、readerが<ruby>提供<rt>ていきょう</rt></ruby>する<ruby>内部<rt>ないぶ</rt></ruby>viewとfactsの<ruby>範囲<rt>はんい</rt></ruby>で<ruby>行<rt>おこな</rt></ruby>う。<ruby>内部<rt>ないぶ</rt></ruby>viewがない<ruby>場合<rt>ばあい</rt></ruby>は、token<ruby>全体<rt>ぜんたい</rt></ruby>を<ruby>対象<rt>たいしょう</rt></ruby>とするfallbackのみを<ruby>提供<rt>ていきょう</rt></ruby>する。
 
 <a name="n-726567696f6e"></a>
 

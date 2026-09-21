@@ -1,15 +1,15 @@
 article ja "08. [共通/きょうつう]editor serviceと[診断/しんだん]"
 body
-  cons section policy "[方針/ほうしん]" body
+  cons section policy "[共通/きょうつう]エディタ[機能/きのう]の[役割/やくわり]" body
     cons paragraph
-      cons "[一度宣言/いちどせんげん]したgrammar/binding/style[情報/じょうほう]からeditor[機能/きのう]を[導出/どうしゅつ]する。"
-      cons "[専用/せんよう]parserも[同/おな]じfactsを[返/かえ]して[支援/しえん]を[受/う]ける。"
-      cons "[共通分類/きょうつうぶんるい]をプログラミング[言語/げんご]の[要素/ようそ]に[限定/げんてい]しない。" nil
+      cons "[共通/きょうつう]editor serviceは、[各言語/かくげんご]が[宣言/せんげん]したgrammar・binding・styleの[情報/じょうほう]から、[構文/こうぶん]ハイライト、[補完/ほかん]、[定義/ていぎ]ジャンプなどのエディタ[機能/きのう]を[導出/どうしゅつ]する。"
+      cons "[言語/げんご]の[宣言/せんげん]をこれらの[機能/きのう]で[共用/きょうよう]し、[専用/せんよう]parserも[同/おな]じ[契約/けいやく]のfactsを[返/かえ]すことで[共通/きょうつう]の[支援/しえん]を[利用/りよう]できる。"
+      cons "[共通分類/きょうつうぶんるい]は、プログラミング[言語/げんご]を[含/ふく]む[各/かく]DSLの[要素/ようそ]を[対象/たいしょう]とする。" nil
     nil
   cons section snapshot "1. AnalysisSnapshotの[入力/にゅうりょく]と[同一性/どういつせい]" body
     cons paragraph
-      cons "[入力/にゅうりょく]はSourceSnapshot[集合/しゅうごう]、profile/package revision[集合/しゅうごう]、[明示的/めいじてき]なresource/schema[環境/かんきょう]、[解析/かいせき]options。"
-      cons "[結果/けっか]はParsed tree、[内部/ないぶ]views、Scope/Entity/Occurrence、typed Relations、Diagnostics、ExpectedAt、Dependencies。" nil
+      cons "[解析/かいせき]には、SourceSnapshot[集合/しゅうごう]、profile・packageのrevision[集合/しゅうごう]、[明示的/めいじてき]なresource・schema[環境/かんきょう]、[解析/かいせき]optionsを[入力/にゅうりょく]する。"
+      cons "AnalysisSnapshotは、[結果/けっか]としてParsed tree、[内部/ないぶ]views、Scope・Entity・Occurrence、[型付/かたつ]きRelations、Diagnostics、ExpectedAt、Dependenciesを[保持/ほじ]する。" nil
     cons paragraph
       cons "[全結果/ぜんけっか]にSnapshotIdとanalysis keyを[付/つ]ける。"
       cons "keyには[言語/げんご]/reader/providerのrevision、context、[操作/そうさ]optionsを[含/ふく]む。"
@@ -47,15 +47,15 @@ body
     cons paragraph
       cons "schemaのform/leaf/fieldとreader captureから[構文/こうぶん]ハイライト、[構造的/こうぞうてき]selection、expected categoryの[補完/ほかん]を[提供/ていきょう]する。"
       cons "binding/reference/export/importから[定義/ていぎ]ジャンプ、[参照検索/さんしょうけんさく]、[未定義/みていぎ]/[重複診断/じゅうふくしんだん]、scope[内/ない]の[候補補完/こうほほかん]を[提供/ていきょう]する。"
-      cons "name fieldとenclosing rangeからoutlineを[作/つく]る。"
-      cons "ドキュメントfieldを[宣言/せんげん]すればhoverに[出/だ]す。" nil
+      cons "name fieldとenclosing rangeからアウトラインを[構成/こうせい]する。"
+      cons "[宣言/せんげん]されたドキュメントfieldの[内容/ないよう]は、hoverに[表示/ひょうじ]する。" nil
     cons paragraph
-      cons "[型推論/かたすいろん]、[回路幅/かいろはば]、[数値計算結果等/すうちけいさんけっかなど]はdomain factsの[追加/ついか]で[精度/せいど]を[上/あ]げる。"
-      cons "grammarだけから[任意/にんい]domainの[意味/いみ]を[推測/すいそく]したと[主張/しゅちょう]しない。" nil
+      cons "[型推論/かたすいろん]、[回路幅/かいろはば]、[数値計算/すうちけいさん]の[結果/けっか]など、[各言語/かくげんご]の[意味/いみ]に[基/もと]づく[情報/じょうほう]はdomain factsとして[追加/ついか]し、エディタ[機能/きのう]の[精度/せいど]を[高/たか]める。"
+      cons "これらの[意味情報/いみじょうほう]の[提供/ていきょう]には、[対象/たいしょう]domainのfactsを[必要/ひつよう]とする。" nil
     cons paragraph
-      cons "[手書/てが]きreaderにはview/factsの[同/おな]じcontractを[要求/ようきゅう]する。"
-      cons "[内部/ないぶ]viewなしならtoken[全体/ぜんたい]のfallbackだけ。"
-      cons "すべてのcustom readerへ[精密/せいみつ]な[内部支援/ないぶしえん]を[自動生成/じどうせいせい]できるとはしない。" nil
+      cons "[手書/てが]きreaderにも、view・factsの[共通契約/きょうつうけいやく]を[要求/ようきゅう]する。"
+      cons "token[内部/ないぶ]の[精密/せいみつ]な[支援/しえん]は、readerが[提供/ていきょう]する[内部/ないぶ]viewとfactsの[範囲/はんい]で[行/おこな]う。"
+      cons "[内部/ないぶ]viewがない[場合/ばあい]は、token[全体/ぜんたい]を[対象/たいしょう]とするfallbackのみを[提供/ていきょう]する。" nil
     nil
   cons section region "3. regionの[選択/せんたく]" body
     cons paragraph
