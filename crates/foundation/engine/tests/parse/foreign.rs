@@ -33,8 +33,7 @@ fn mode(package: &mut LanguagePackage, name: &str, marker: &str) {
         take: package.modes[0].take.clone(),
     });
 }
-#[test]
-fn foreign_root_mode_is_guest_owned_and_normal_child_and_host_restore_defaults() -> TestResult {
+fn run_foreign(input: &str, accept_names: bool) -> Result<ParseReply, Box<dyn std::error::Error>> {
     let (mut host, registry) = fixture()?;
     let mut guest = host.clone();
     let kind = |name: &str| -> Result<KindRef, String> {
@@ -72,6 +71,9 @@ fn foreign_root_mode_is_guest_owned_and_normal_child_and_host_restore_defaults()
     guest.bindings = vec![Binding::None, Binding::Visit("value".into())];
     host.leaves[0].binding = BindingId(0);
     guest.leaves[0].binding = BindingId(0);
+    if !accept_names {
+        guest.leaves.clear();
+    }
     host.forms = vec![Form {
         category: "Expr".into(),
         kind: pair,
@@ -154,7 +156,6 @@ fn foreign_root_mode_is_guest_owned_and_normal_child_and_host_restore_defaults()
             &mut setup,
         )
         .map_err(|e| format!("{e:?}"))?;
-    let input = "pair :wrap @x ~y trailing";
     let source = SourceSnapshot::new(
         SourceId("foreign-input".into()),
         0,
@@ -243,6 +244,13 @@ fn foreign_root_mode_is_guest_owned_and_normal_child_and_host_restore_defaults()
             &mut admission,
         )
         .map_err(|e| format!("{e:?}"))?;
+    Ok(reply)
+}
+
+#[test]
+fn foreign_root_mode_is_guest_owned_and_normal_child_and_host_restore_defaults() -> TestResult {
+    let input = "pair :wrap @x ~y trailing";
+    let reply = run_foreign(input, true)?;
     let ParseOutcome::Complete { tree, cursor, .. } = reply.outcome else {
         return Err(format!("{reply:?}").into());
     };
@@ -263,5 +271,39 @@ fn foreign_root_mode_is_guest_owned_and_normal_child_and_host_restore_defaults()
     assert_eq!(guest_context.nodes[1].entry.mode, "Code");
     assert_eq!(guest_context.nodes[1].entry.alias, "Guest");
     assert_eq!(reply.report.usage.source_bytes, input.len() as u64);
+    Ok(())
+}
+
+#[test]
+fn foreign_root_recovery_preserves_actual_schema_and_expected_guest() -> TestResult {
+    for (input, kind) in [
+        ("pair unknown", "RecoveryUnparsed"),
+        ("pair", "RecoveryMissing"),
+    ] {
+        let reply = run_foreign(input, false)?;
+        let ParseOutcome::Recovered { tree, .. } = reply.outcome else {
+            return Err(format!("expected recovered: {reply:?}").into());
+        };
+        let FieldValue::Foreign(guest) = &tree.bundle.nodes[0].fields[0] else {
+            return Err("guest".into());
+        };
+        let root = guest
+            .bundle
+            .node(guest.root)
+            .map_err(|e| format!("{e:?}"))?;
+        assert_eq!(guest.schema, root.schema);
+        assert_eq!(root.schema.package, "nepl3.engine");
+        assert_eq!(root.kind, kind);
+        let context = tree
+            .contexts
+            .iter()
+            .find(|c| !c.path.is_empty())
+            .ok_or("guest selection")?;
+        assert_eq!(context.nodes[0].entry.alias, "Guest");
+        assert_eq!(context.nodes[0].entry.category, "Expr");
+        assert_eq!(context.nodes[0].entry.mode, "Alt");
+        assert_ne!(context.nodes[0].entry.package.schema, root.schema);
+        assert!(!reply.report.diagnostics.is_empty());
+    }
     Ok(())
 }
