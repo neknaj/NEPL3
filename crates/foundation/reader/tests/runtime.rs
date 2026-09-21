@@ -2,6 +2,8 @@ use nepl3_core::{budget::*, diagnostic::*, schema::*, source::*, syntax::*, valu
 use nepl3_reader::{model::*, plan::*, runtime::*};
 #[path = "runtime/checkpoints.rs"]
 mod checkpoints;
+#[path = "runtime/read.rs"]
+mod read;
 #[path = "runtime/retry.rs"]
 mod retry;
 #[path = "runtime/tokenizer_host.rs"]

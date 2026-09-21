@@ -10,6 +10,8 @@ use crate::{
     },
 };
 use nepl3_core::source::SourceAdmission;
+mod value;
+use super::transform::{boundary, reader};
 
 pub struct ReadReplyContext<'a> {
     pub(crate) continuation: &'a ReaderContinuation,
@@ -18,6 +20,11 @@ pub struct ReadReplyContext<'a> {
 }
 
 impl ReadReplyContext<'_> {
+    fn schema(&self) -> Result<&SchemaRef, ReaderError> {
+        self.registry
+            .selected(crate::schema::PACKAGE, crate::schema::REVISION)
+            .ok_or(ReaderError::Context)
+    }
     /// Apply the native provider checks before accepting a received reply.
     /// Await is handled by operation dispatch; this boundary accepts terminal
     /// replies to the saved Read or Dependent call, just like ReaderSession.
@@ -59,4 +66,105 @@ impl ReadReplyContext<'_> {
             )
         })
     }
+}
+
+fn checked<C: FoundationValueCodec>(
+    value: &NdfValue,
+    context: &ReadReplyContext<'_>,
+    b: &mut Budget,
+) -> Result<(), PortableError<C::Error>> {
+    b.charge(
+        Resource::AllocationUnits,
+        (crate::schema::PACKAGE.len() + "ReadReply".len()) as u64,
+    )?;
+    context
+        .registry
+        .validate(
+            &TypeDescriptor::Named(TypeRef {
+                package: crate::schema::PACKAGE.into(),
+                revision: crate::schema::REVISION,
+                name: "ReadReply".into(),
+            }),
+            value,
+            b,
+        )
+        .map_err(|e| reader(ReaderError::Schema(e)))?;
+    Ok(())
+}
+
+/// Encode a terminal reply after the native saved-dispatch checks.
+pub fn reply_to_value<C: FoundationValueCodec>(
+    reply: &ReadReply,
+    context: &ReadReplyContext<'_>,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<NdfValue, PortableError<C::Error>> {
+    context
+        .validate(reply, b, codec.source_admission())
+        .map_err(reader)?;
+    let (added, maps, _) = value::metadata(reply)?;
+    let sources = super::transform::dispatch_sources(
+        context.continuation,
+        added,
+        b,
+        codec.source_admission(),
+    )
+    .map_err(reader)?;
+    let result = {
+        let mut scoped = codec.scoped_with_mappings(&sources, maps);
+        value::encode(
+            reply,
+            context.schema().map_err(reader)?,
+            context.registry,
+            &mut scoped,
+            b,
+        )?
+    };
+    checked::<C>(&result, context, b)?;
+    Ok(result)
+}
+
+/// Decode source declarations before source-bearing fields, then enforce the
+/// same saved-dispatch checks as native replies. The pending slot is retained.
+pub fn reply_from_value<C: FoundationValueCodec>(
+    value: &NdfValue,
+    context: &ReadReplyContext<'_>,
+    codec: &mut C,
+    b: &mut Budget,
+) -> Result<ReadReply, PortableError<C::Error>> {
+    checked::<C>(value, context, b)?;
+    let schema = context.schema().map_err(reader)?;
+    let (case, fields) = super::transform::value::parts(value, schema, "ReadReply")?;
+    let (source_index, map_index) = value::source_indices(case, fields.len())?;
+    let added = codec
+        .decode_sources(&fields[source_index], b)
+        .map_err(boundary)?;
+    let sources = super::transform::dispatch_sources(
+        context.continuation,
+        &added,
+        b,
+        codec.source_admission(),
+    )
+    .map_err(reader)?;
+    let maps = codec
+        .scoped(&sources)
+        .decode_mappings(&fields[map_index], b)
+        .map_err(boundary)?;
+    let reply = {
+        let mut scoped = codec.scoped_with_mappings(&sources, &maps);
+        value::decode(
+            case,
+            fields,
+            added,
+            &maps,
+            schema,
+            context.registry,
+            &mut scoped,
+            b,
+        )?
+    };
+    context
+        .validate(&reply, b, codec.source_admission())
+        .map_err(reader)?;
+    Ok(reply)
 }

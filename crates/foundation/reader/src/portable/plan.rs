@@ -1,5 +1,5 @@
 //! Portable reader definitions retain arena indices and symbolic type identities.
-mod value;
+pub(super) mod value;
 use super::*;
 use crate::plan::{CheckedPlan, PlanError, ReaderPlan};
 use crate::tokenizer::ReaderMode;

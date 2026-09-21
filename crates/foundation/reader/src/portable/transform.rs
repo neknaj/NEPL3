@@ -1,7 +1,7 @@
 //! Transform reply encoding is tied to a host's saved native dispatch. It does
 //! not authenticate remote Usage or replace the VM's resume-time validation.
 pub mod operation;
-mod value;
+pub(super) mod value;
 use super::*;
 use crate::{
     model::*,
@@ -96,13 +96,13 @@ impl TransformReplyContext<'_> {
         })
     }
 }
-fn reader<E>(error: ReaderError) -> PortableError<E> {
+pub(super) fn reader<E>(error: ReaderError) -> PortableError<E> {
     match crate::runtime::stop_reason(&error) {
         Some(reason) => PortableError::Stopped(reason),
         None => PortableError::Reader(error),
     }
 }
-fn boundary<E: FoundationCodecError>(error: E) -> PortableError<E> {
+pub(super) fn boundary<E: FoundationCodecError>(error: E) -> PortableError<E> {
     match error.stop_reason() {
         Some(reason) => PortableError::Stopped(reason),
         None => PortableError::Boundary(error),
