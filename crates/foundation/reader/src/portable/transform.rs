@@ -13,6 +13,34 @@ use crate::{
 };
 use nepl3_core::{source::SourceAdmission, value_codec::FoundationCodecError};
 
+pub(super) fn dispatch_sources(
+    continuation: &ReaderContinuation,
+    added: &[SourceSnapshot],
+    budget: &mut Budget,
+    admission: &mut SourceAdmission,
+) -> Result<SourceStore, ReaderError> {
+    let mut store = SourceStore::default();
+    for source in continuation
+        .request
+        .sources
+        .iter()
+        .chain(&continuation.current.sources)
+        .chain(added)
+    {
+        admission.admit_existing(source, budget)?;
+        for prior in store.snapshots() {
+            budget.charge(
+                Resource::Work,
+                (prior.identity().source.0.len() as u64)
+                    .saturating_add(source.identity().source.0.len() as u64)
+                    .saturating_add(34),
+            )?;
+        }
+        store.insert_with_budget(crate::runtime::copy::copy(source, budget)?, budget)?;
+    }
+    Ok(store)
+}
+
 pub struct TransformReplyContext<'a> {
     pub(crate) continuation: &'a ReaderContinuation,
     pub(crate) signature: &'a ProviderSignature,
@@ -30,27 +58,7 @@ impl TransformReplyContext<'_> {
         budget: &mut Budget,
         admission: &mut SourceAdmission,
     ) -> Result<SourceStore, ReaderError> {
-        let mut store = SourceStore::default();
-        for source in self
-            .continuation
-            .request
-            .sources
-            .iter()
-            .chain(&self.continuation.current.sources)
-            .chain(added)
-        {
-            admission.admit_existing(source, budget)?;
-            for prior in store.snapshots() {
-                budget.charge(
-                    Resource::Work,
-                    (prior.identity().source.0.len() as u64)
-                        .saturating_add(source.identity().source.0.len() as u64)
-                        .saturating_add(34),
-                )?;
-            }
-            store.insert_with_budget(crate::runtime::copy::copy(source, budget)?, budget)?;
-        }
-        Ok(store)
+        dispatch_sources(self.continuation, added, budget, admission)
     }
     fn validate(
         &self,
