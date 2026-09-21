@@ -151,7 +151,13 @@ fn explicit_markdown_reference_preserves_bytes_and_changes_context() -> Result<(
         first.files[0].1.split_once("\n\n").map(|p| p.1),
         second.files[0].1.split_once("\n\n").map(|p| p.1)
     );
-    assert_ne!(first.files[0].1, second.files[0].1);
+    assert_eq!(first.files[0].1, second.files[0].1);
+    let first_receipt: serde_json::Value = serde_json::from_str(&first.manifest)?;
+    let second_receipt: serde_json::Value = serde_json::from_str(&second.manifest)?;
+    assert_ne!(
+        first_receipt["input_context"],
+        second_receipt["input_context"]
+    );
     fixture.write("doc/sample.nepld", r#"article ja "Title" body cons paragraph cons sentence cons link relative "guide.md" some "unknown" text "Guide" nil nil nil"#)?;
     assert!(
         projection::generate(
@@ -609,7 +615,7 @@ fn mixed_context_preserves_legacy_bytes_and_real_markdown_and_html_links() -> Re
 }
 
 #[test]
-fn context_binds_all_raw_inputs_paths_and_registration_order() -> Result<()> {
+fn page_context_tracks_only_used_inputs_and_links() -> Result<()> {
     let f = Fixture::new()?;
     let original = mixed(&f)?;
     let before = projection::generate(
@@ -620,6 +626,39 @@ fn context_binds_all_raw_inputs_paths_and_registration_order() -> Result<()> {
     for (path, text) in &before.files {
         f.write(path, text)?;
     }
+    let source = fs::read(f.root().join("doc/sample.nepld"))?;
+    f.write("doc/sample.nepld", [source.as_slice(), b" \n"].concat())?;
+    let own_change = projection::generate(
+        f.root(),
+        "doc/canonical.json",
+        &mut super::super::source::budget(),
+    )?;
+    assert_ne!(before.files[0].1, own_change.files[0].1);
+    assert_eq!(before.files[1].1, own_change.files[1].1);
+    f.write("doc/sample.nepld", &source)?;
+    let target_source = fs::read(f.root().join("doc/target.nepld"))?;
+    f.write("doc/target.nepld", r#"article en "Revised title" body cons section use "Use" body cons paragraph cons "Revised target body." nil nil nil"#)?;
+    let revised = projection::generate(
+        f.root(),
+        "doc/canonical.json",
+        &mut super::super::source::budget(),
+    )?;
+    assert_eq!(before.files[0].1, revised.files[0].1);
+    assert_ne!(before.files[1].1, revised.files[1].1);
+    let receipt: serde_json::Value = serde_json::from_str(&revised.manifest)?;
+    assert_eq!(
+        receipt["page_dependencies"][0]["links"][0]["target_id"],
+        "target"
+    );
+    assert_eq!(
+        receipt["page_dependencies"][0]["links"][0]["route"],
+        "doc/sub/target.md"
+    );
+    assert_eq!(
+        receipt["page_dependencies"][0]["links"][0]["fragment"],
+        "use"
+    );
+    f.write("doc/target.nepld", &target_source)?;
     let aliases = fs::read(f.root().join("doc/target.json"))?;
     f.write("doc/target.json", [aliases.as_slice(), b" "].concat())?;
     assert!(check(f.root(), "doc/canonical.json").is_err());
@@ -628,8 +667,10 @@ fn context_binds_all_raw_inputs_paths_and_registration_order() -> Result<()> {
         "doc/canonical.json",
         &mut super::super::source::budget(),
     )?;
-    assert_ne!(before.files[0].1, after.files[0].1);
-    // The visible body is stable; exact input bytes still invalidate metadata.
+    assert_eq!(before.files[0].1, after.files[0].1);
+    assert_ne!(before.files[1].1, after.files[1].1);
+    // The alias input belongs to the target; its unrelated change leaves the
+    // source page's checked link interface and complete Markdown unchanged.
     assert_eq!(
         before.files[0].1.split_once("\n\n").map(|v| v.1),
         after.files[0].1.split_once("\n\n").map(|v| v.1)
@@ -655,7 +696,11 @@ fn context_binds_all_raw_inputs_paths_and_registration_order() -> Result<()> {
             "doc/canonical.json",
             &mut super::super::source::budget(),
         )?;
-        assert_ne!(before.files[0].1, after.files[0].1, "{field}");
+        if field == "projection" {
+            assert_ne!(before.files[0].1, after.files[0].1, "{field}");
+        } else {
+            assert_eq!(before.files[0].1, after.files[0].1, "{field}");
+        }
     }
     let mut changed = original.clone();
     changed["pages"].as_array_mut().ok_or("pages")?.reverse();
@@ -665,7 +710,7 @@ fn context_binds_all_raw_inputs_paths_and_registration_order() -> Result<()> {
         "doc/canonical.json",
         &mut super::super::source::budget(),
     )?;
-    assert_ne!(before.files[0].1, after.files[1].1);
+    assert_eq!(before.files[0].1, after.files[1].1);
     assert_eq!(before.files[1].1, after.files[0].1);
     f.json("doc/canonical.json", &original)?;
     f.write(
@@ -677,7 +722,7 @@ fn context_binds_all_raw_inputs_paths_and_registration_order() -> Result<()> {
         "doc/other-registry.json",
         &mut super::super::source::budget(),
     )?;
-    assert_ne!(before.files[0].1, after.files[0].1);
+    assert_eq!(before.files[0].1, after.files[0].1);
     Ok(())
 }
 

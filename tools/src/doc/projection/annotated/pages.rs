@@ -9,6 +9,24 @@ pub struct PagesArtifact {
     /// This is not a digest of the final distribution artifact.
     pub identity: Digest,
     pub pages: Vec<Artifact>,
+    /// Link interfaces used by each page, in source traversal order. Target
+    /// contents are not embedded by this viewing profile.
+    pub dependencies: Vec<Vec<LinkDependency>>,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct LinkDependency {
+    pub node: u64,
+    pub target_kind: &'static str,
+    pub target_id: String,
+    pub route: String,
+    pub fragment: Option<String>,
+}
+
+fn owned(value: &str, budget: &mut Budget) -> Result<String, Error> {
+    budget.charge(Resource::Work, value.len() as u64)?;
+    budget.charge(Resource::AllocationUnits, value.len() as u64)?;
+    Ok(value.into())
 }
 
 /// Resolve the exact immutable set and render every page before returning any
@@ -33,6 +51,7 @@ where
         e => Error::Invalid(format!("{e:?}")),
     })?;
     let mut output = Vec::new();
+    let mut dependencies = Vec::new();
     // CheckedPages is constructed by resolve in source-page order. Consume
     // each requirement/link once instead of filtering the whole set per page.
     let mut pending = checked.plan().remaining.as_slice();
@@ -51,15 +70,33 @@ where
             .document_digest(page as u64)
             .ok_or_else(|| Error::Invalid("missing checked document digest".into()))?;
         let mut links = Vec::new();
+        let mut used = Vec::new();
         while let Some((link, rest)) = page_links.split_first() {
             budget.charge(Resource::Work, 1)?;
             if link.page != page as u64 {
                 break;
             }
-            let target = match link.target {
-                PageDestination::Page { index } => &set.pages[index as usize].registration.route,
-                PageDestination::File { index } => &set.files[index as usize].registration.route,
+            let (target_kind, registration) = match link.target {
+                PageDestination::Page { index } => {
+                    ("page", &set.pages[index as usize].registration)
+                }
+                PageDestination::File { index } => {
+                    ("file", &set.files[index as usize].registration)
+                }
             };
+            let target = &registration.route;
+            let dependency = LinkDependency {
+                node: link.node,
+                target_kind,
+                target_id: owned(&registration.id, budget)?,
+                route: owned(target, budget)?,
+                fragment: link
+                    .fragment
+                    .as_deref()
+                    .map(|v| owned(v, budget))
+                    .transpose()?,
+            };
+            push(&mut used, dependency, budget)?;
             let href = relative(
                 &input.registration.route,
                 target,
@@ -77,6 +114,7 @@ where
             document_digest,
         )?;
         push(&mut output, rendered, budget)?;
+        push(&mut dependencies, used, budget)?;
     }
     if !pending.is_empty() || !page_links.is_empty() {
         return Err(Error::Invalid("checked page plan order mismatch".into()));
@@ -106,6 +144,7 @@ where
     Ok(PagesArtifact {
         identity: checked.plan().identity,
         pages,
+        dependencies,
     })
 }
 

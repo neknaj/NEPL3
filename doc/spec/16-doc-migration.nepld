@@ -314,7 +314,7 @@ body
       cons section page_projection "ページ[間参照/かんさんしょう]を[持/も]つMarkdown projection"
         body
       cons paragraph
-        cons sentence cons code "nepl3-tools.markdown-annotated-pages/2" cons text " は、" cons ruby text "登録" text "とうろく" cons text "されたDoc" cons ruby text "間" text "かん" cons text "の" cons ruby text "参照" text "さんしょう" cons text "を" cons ruby text "扱" text "あつか" cons text "うrendererの" cons ruby text "識別子" text "しきべつし" cons text "である。" nil
+        cons sentence cons code "nepl3-tools.markdown-annotated-pages/3" cons text " は、" cons ruby text "登録" text "とうろく" cons text "されたDoc" cons ruby text "間" text "かん" cons text "の" cons ruby text "参照" text "さんしょう" cons text "を" cons ruby text "扱" text "あつか" cons text "うrendererの" cons ruby text "識別子" text "しきべつし" cons text "である。" nil
         cons "[生成/せいせい]Markdownでは、Rubyの[本体/ほんたい]をruby[要素/ようそ]、[読/よ]みをその[子/こ]のrt[要素/ようそ]で[表/あらわ]す。"
         cons "[入/い]れ[子/こ]の[構造/こうぞう]と[内容/ないよう]を[保持/ほじ]し、Textに[含/ふく]まれる[記号/きごう]はMarkdownの[規則/きそく]でescapeする。"
         cons "[登録済/とうろくず]みページのタイトル[直後/ちょくご]に、NEPL3d[正本/せいほん]へのリンクを[表示/ひょうじ]する。"
@@ -386,8 +386,17 @@ body
         cons sentence cons ruby text "旧" text "きゅう" cons text "rendererだけの " cons code "--check" cons text " は" cons ruby text "従来" text "じゅうらい" cons text "のページごとに" cons ruby text "独立" text "どくりつ" cons text "した" cons ruby text "処理" text "しょり" cons text "・" cons ruby text "予算" text "よさん" cons text "を" cons ruby text "維持" text "いじ" cons text "する。" nil
         nil
       cons paragraph
-        cons "[新/しん]rendererのmetadataにはページ[自身/じしん]のsource・alias・Document digestに[加/くわ]え、input PageSet digestとinput context digestを[記録/きろく]する。"
-        cons "[後者/こうしゃ]は[以下/いか]のfieldをこの[順/じゅん]に、[各/かく]fieldのbyte[長/ちょう]をu64 big-endianで[前置/ぜんち]して[連結/れんけつ]し、SHA-256を[求/もと]める。"
+        cons "[各/かく]Markdownのヘッダーには、ページ[自身/じしん]のsource・alias・Document digestと、ページ[単位/たんい]の[生成入力/せいせいにゅうりょく]digestを[記録/きろく]する。"
+        cons "ページ[生成入力/せいせいにゅうりょく]は、domain、renderer[識別子/しきべつし]、ページid、source path、projection path、alias path、sourceとaliasのSHA-256、[参照依存/さんしょういぞん]の[順/じゅん]で[構成/こうせい]する。"
+        cons sentence cons text "domainは" cons code "nepl3.canonical-page-context/1" cons text "と" cons ruby text "末尾" text "まつび" cons text "zero byteである。" nil
+        cons "[参照依存/さんしょういぞん]は[件数/けんすう]に[続/つづ]けて、[参照解決/さんしょうかいけつ]planの[順/じゅん]にnode[番号/ばんごう]、[対象種別/たいしょうしゅべつ]pageまたはfile、[対象/たいしょう]id、Markdown route、fragmentの[有無/うむ]、[存在/そんざい]するfragmentを[記録/きろく]する。"
+        cons "[件数/けんすう]とnode[番号/ばんごう]はu64 big-endian、fragmentの[有無/うむ]は0または1の1 byteとする。"
+        cons "リンクは[参照先/さんしょうさき]のrouteとanchorを[利用/りよう]する。[参照先本文/さんしょうさきほんぶん]を[変更/へんこう]しても、この[対応/たいおう]を[保持/ほじ]する[場合/ばあい]は[参照元/さんしょうもと]のMarkdownを[保持/ほじ]する。"
+        cons "[意味上/いみじょう]のlabelと[実際/じっさい]に[出力/しゅつりょく]するanchorを[照合/しょうごう]し、[参照切/さんしょうぎ]れを[拒否/きょひ]する。"
+        nil
+      cons paragraph
+        cons "[集合全体/しゅうごうぜんたい]のinput PageSet digestとinput context digestは[生成/せいせい]manifestに[記録/きろく]し、[各/かく]ページの[参照依存/さんしょういぞん]も[一覧/いちらん]として[保持/ほじ]する。"
+        cons "input contextは[以下/いか]のfieldをこの[順/じゅん]に[構成/こうせい]する。ページ[生成入力/せいせいにゅうりょく]とinput contextは、[各/かく]fieldのbyte[長/ちょう]をu64 big-endianで[前置/ぜんち]して[連結/れんけつ]し、SHA-256を[求/もと]める。"
         cons "[文字列/もじれつ]はUTF-8、digest fieldは32 byteの[値/あたい]とする。"
         nil
       cons list ordered 1
@@ -398,7 +407,7 @@ body
         nil
       cons paragraph
         cons "これは[入力/にゅうりょく]の[同一性/どういつせい]であり、[完成/かんせい]した[配布物/はいふぶつ]のdigestではない。"
-        cons "registryの[空白/くうはく]・[登録順/とうろくじゅん]・[別/べつ]ページのalias[入力/にゅうりょく]だけの[変更/へんこう]も、[新/しん]rendererの[生成物/せいせいぶつ]を[古/ふる]くする。"
+        cons "registryの[空白/くうはく]・[登録順/とうろくじゅん]・[別/べつ]ページのalias[入力/にゅうりょく]の[変更/へんこう]は、manifestのinput contextへ[反映/はんえい]する。[生成入力/せいせいにゅうりょく]と[参照依存/さんしょういぞん]が[同一/どういつ]のページはMarkdownのbyte[列/れつ]を[保持/ほじ]する。"
         cons "[生成/せいせい]Markdownのbyte[列/れつ]を[入力/にゅうりょく]digestへ[再帰的/さいきてき]に[含/ふく]めない。"
         cons "[旧/きゅう]rendererのmetadataへ、この[新/あたら]しい[集合/しゅうごう]identityを[後付/あとづ]けしない。"
         nil
