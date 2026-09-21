@@ -44,6 +44,29 @@ checks the independent workspace and dependency identities, and runs format,
 Clippy, the Rust tests, the five Hello inputs above and three MiniExpr inputs below. Logs and source/consumer hashes are retained,
 including command failures and partial timeout output.
 
+To verify a foundation-only source distribution, run:
+
+```sh
+python -m unittest tools.extensions.test_distribution
+python tools/extensions/run.py --distribution --output dist/foundation-extension
+```
+
+This mode extracts the four foundation crates into a separate temporary workspace,
+runs their tests, and points the external consumer at the extracted crate paths.
+Cargo metadata verifies those exact dependency locations. The extraction retains
+the toolchain, license, inherited package settings and only the required workspace
+dependencies. Cargo prunes the lockfile offline; every retained package record
+must match the original lockfile, including its version and checksum. Populate
+the dependency cache with the normal repository build before extraction.
+
+To retain the source workspace for inspection or transfer, use
+`python tools/extensions/distribution.py dist/foundation-source`.
+The destination must be new. It contains the four crates and their tests;
+Doc, other domain crates, apps and development tools remain outside this artifact.
+These commands verify source extraction and consumption. Registry publication,
+an independent released repository and process-provider exchange remain separate
+acceptance requirements.
+
 ## Define and inspect recursive expressions
 
 [`src/miniexpr.rs`](src/miniexpr.rs) defines a second package,
