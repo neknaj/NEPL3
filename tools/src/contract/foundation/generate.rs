@@ -7,7 +7,7 @@ pub(super) const PATH: &str = "crates/foundation/core/src/schema/foundation.rs";
 #[derive(Clone, Copy)]
 pub(crate) struct Output {
     pub provenance: &'static str,
-    pub command: &'static str,
+    pub command: Option<&'static str>,
     pub budget: &'static str,
     pub allocator: &'static str,
 }
@@ -16,7 +16,7 @@ impl Output {
     pub(crate) const fn domain(provenance: &'static str, command: &'static str) -> Self {
         Self {
             provenance,
-            command,
+            command: Some(command),
             budget: "nepl3_core::budget",
             allocator: "alloc",
         }
@@ -87,7 +87,7 @@ pub(crate) fn source(descriptor: &SchemaDescriptor) -> Result<String> {
         descriptor,
         Output {
             provenance: "interfaces/contracts.json via interfaces/foundation.json",
-            command: "foundation",
+            command: Some("foundation"),
             budget: "crate::budget",
             allocator: "alloc",
         },
@@ -141,9 +141,12 @@ pub(crate) fn source_with(descriptor: &SchemaDescriptor, output: Output) -> Resu
         let output = cost.ty(&operation.output);
         operations.push(format!("super::OperationDescriptor {{ name: {name}, input: {input}, output: {output}, pure: {} }}",operation.pure));
     }
+    let regeneration = output.command.map_or_else(String::new, |command| {
+        format!("//! Regenerate with `cargo run --locked -p nepl3-tools -- {command} --write`.\n")
+    });
     Ok(format!(
         "//! Generated from {provenance}.\n\
-         //! Regenerate with `cargo run --locked -p nepl3-tools -- {command} --write`.\n\
+         {regeneration}\
          //! Registers structural shapes; named semantic constraints require their owning validators.\n\n\
          #[rustfmt::skip]\n\
          pub fn descriptor(budget: &mut {budget}::Budget) -> Result<super::SchemaDescriptor, super::SchemaError> {{\n\
@@ -152,7 +155,6 @@ pub(crate) fn source_with(descriptor: &SchemaDescriptor, output: Output) -> Resu
          Ok(super::SchemaDescriptor {{ package: {package}, revision: {revision}, types: {allocator}::vec![{types}], operations: {allocator}::vec![{operations}] }})\n\
          }}\n",
         provenance = output.provenance,
-        command = output.command,
         budget = output.budget,
         bytes = cost.bytes,
         named = storage(descriptor.types.len(), "super::NamedType"),

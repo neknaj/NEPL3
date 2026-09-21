@@ -21,10 +21,19 @@ fn compiled_projection_preserves_schema_values_and_identity() -> Result<()> {
     };
     let emitted = source_with(
         &expected,
-        Output::domain("interfaces/fixture.json", "fixture").host(),
+        Output {
+            provenance: "the test descriptor in tools/src/contract/foundation/generate/tests.rs",
+            command: None,
+            budget: "nepl3_core::budget",
+            allocator: "std",
+        },
     )?;
     // The checked fixture is compiled as Rust, so this equality ties the emitted
     // code to a descriptor we can execute and compare with independent values.
+    // When changing the descriptor or generator, update tests/host.rs to the
+    // emitted source shown by this assertion, then run:
+    // cargo test --locked -p nepl3-tools compiled_projection_preserves_schema_values_and_identity
+    // No fixture CLI or interfaces/fixture.json exists; this is a test input.
     assert_eq!(emitted, include_str!("tests/host.rs"));
     let mut budget = crate::contract::foundation::budget();
     let actual = host::descriptor(&mut budget).map_err(|e| format!("{e:?}"))?;

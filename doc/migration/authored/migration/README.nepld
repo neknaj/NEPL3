@@ -9,7 +9,7 @@ body
     cons sentence cons code "authored/" cons text " は " cons link relative "../authoring.md" none ruby text "執筆指針" text "しっぴつししん" cons text " に" cons ruby text "従" text "したが" cons text "って" cons ruby text "人" text "ひと" cons text "が" cons ruby text "読" text "よ" cons text "む" cons ruby text "文" text "ぶん" cons text "・" cons ruby text "振" text "ふ" cons text "り" cons ruby text "仮名" text "がな" cons text "・" cons ruby text "注釈" text "ちゅうしゃく" cons text "・" cons ruby text "構造" text "こうぞう" cons text "を" cons ruby text "判断" text "はんだん" cons text "して" cons ruby text "書" text "か" cons text "き" cons ruby text "直" text "なお" cons text "した" cons ruby text "原稿" text "げんこう" cons text "です。" nil
     cons "[元文書/もとぶんしょ]のcommitとdigestを[固定/こてい]して[対応/たいおう]を[確認/かくにん]し、[執筆者/しっぴつしゃ]とは[別/べつ]の[担当/たんとう]が[本文/ほんぶん]・コード・[表/ひょう]・[参照/さんしょう]を[独立/どくりつ]レビューします。"
     cons "[通常/つうじょう]の[本文/ほんぶん]にはsentence literalを[使/つか]い、コードや[参照/さんしょう]などを[含/ふく]む[文/ぶん]には[明示的/めいじてき]なsentence[構築/こうちく]を[使/つか]います。"
-    cons "[原本/げんぽん]が[更新/こうしん]された[場合/ばあい]は[差分/さぶん]を[原稿/げんこう]にも[反映/はんえい]し、その[差分/さぶん]を[再/さい]レビューします。"
+    cons "[移行対象/いこうたいしょう]に[選/えら]んだ[時点/じてん]で[現在/げんざい]の[正本/せいほん]との[差分/さぶん]を[原稿/げんこう]へ[反映/はんえい]し、[独立/どくりつ]レビューする。[待機中/たいきちゅう]の[全原稿/ぜんげんこう]を[第二/だいに]の[正本/せいほん]として[常時同期/じょうじどうき]する[運用/うんよう]にはしない。"
     nil
   cons paragraph
     cons "[原稿/げんこう]の[作成/さくせい]・[内容/ないよう]レビューと、[実処理系/じつしょりけい]によるHTML[生成/せいせい]・リンク/[旧/きゅう]anchor[互換/ごかん]・[正式/せいしき]な[正本切替/せいほんきりか]えは[別/べつ]の[工程/こうてい]です。"
@@ -20,7 +20,7 @@ body
     body
       cons paragraph
         cons sentence cons code "generated/*-signatures.nepld" cons text " は " cons code "design/forms.json" cons text " から" cons ruby text "生成" text "せいせい" cons text "する4" cons ruby text "言語" text "げんご" cons text "の" cons ruby text "構文表" text "こうぶんひょう" cons text "です。" nil
-        cons sentence cons code "python tools/generate/signatures.py --write" cons text " で" cons ruby text "更新" text "こうしん" cons text "し、" cons ruby text "引数" text "ひきすう" cons text "なし" cons ruby text "実行" text "じっこう" cons text "で" cons ruby text "差分" text "さぶん" cons text "を" cons ruby text "検査" text "けんさ" cons text "します。" nil
+        cons sentence cons code "cargo run --locked -p nepl3-tools -- signatures --write" cons text " で" cons ruby text "更新" text "こうしん" cons text "し、" cons code "cargo run --locked -p nepl3-tools -- signatures --check" cons text " で" cons ruby text "差分" text "さぶん" cons text "を" cons ruby text "検査" text "けんさ" cons text "する。" nil
         cons "[通常本文/つうじょうほんぶん]の[機械的/きかいてき]な[置換/ちかん]ではなく、[規範/きはん]データのカテゴリ・form・field[順/じゅん]・[読取/よみとり]カテゴリ・arity・[葉/は]の[規則/きそく]をDocのsectionとtableへ[投影/とうえい]します。"
         cons "コードはInlineCodeで[保持/ほじ]します。"
         cons "これらは[手書/てが]きで[保守/ほしゅ]せず、[元/もと]のMarkdown[構文表/こうぶんひょう]との[正本切替/せいほんきりか]えや[旧/きゅう]anchor[互換/ごかん]の[完了/かんりょう]とは[区別/くべつ]します。"
