@@ -10,6 +10,10 @@ body
       nil
   cons section layout "1. [配置/はいち]"
     body
+      cons paragraph
+        cons "[次/つぎ]の[配置/はいち]は、[各/かく]crateとツールの[責務/せきむ]を[示/しめ]す[目標構成/もくひょうこうせい]である。"
+        cons sentence cons concat cons ruby text "現在" text "げんざい" cons text "のworkspace memberは " nil cons code "Cargo.toml" cons concat cons text "、" cons ruby text "各機能" text "かくきのう" cons text "の" cons ruby text "実装状態" text "じっそうじょうたい" cons text "は " nil cons code "implementation-status.json" cons concat cons text " で" cons ruby text "確認" text "かくにん" cons text "する。" nil nil
+        nil
       cons rawcode some "text" "NEPL3/\n  Cargo.toml\n  Cargo.lock\n  rust-toolchain.toml\n  AGENTS.md\n  doc/\n    spec/\n    decisions/\n    history/\n  design/\n  interfaces/\n  languages/\n    grammar/ syntax.neplg package.ndf\n    doc/     syntax.neplg package.ndf\n    math/    syntax.neplg package.ndf\n    circuit/ syntax.neplg package.ndf\n  crates/\n    foundation/\n      core/src/       source/ schema/ value/ syntax/ origin/ diagnostic/ budget/\n      reader/src/     plan/ combinator/ execution/ extension/\n      engine/src/     parse/ binding/ index/ query/ recovery/\n      wire/src/       cbor/ schema/ protocol/\n    languages/\n      grammar/core/src/ bootstrap/ model/ check/ compile/\n      doc/core/src/     model/ sentence/ lower/ check/ facts/\n      doc/html/src/     render/ style/\n      math/core/src/    model/ number/ lower/ check/ evaluate/ facts/\n      math/mathml/src/  render/ precedence/\n      circuit/core/src/ model/ lower/ check/ elaborate/ simulate/ nor/ facts/\n      circuit/svg/src/  layout/ render/\n    output/markup/src/  model/ validate/ serialize/\n    integration/suite/src/ profile/ bridge/ operation/ workspace/\n    ui/core/src/ model/ message/ update/ command/ subscription/ view/\n  apps/ cli/ lsp/ web/ provider/\n  web/src/ shell/ editor/ worker/ preview/ storage/ bindings/\n  site/\n  editors/ vscode/ neovim/\n  tools/src/ generate/ contract/ dependency/ task/\n  examples/\n  conformance/\n  tasks/\n"
       cons paragraph
         cons "ファイル[名/めい]の[階層/かいそう]は、ディレクトリで[表/あらわ]す。"
@@ -24,10 +28,10 @@ body
         nil
       cons rawcode some "text" "reader -> core\nengine -> core, reader\ngrammar-core -> core, reader, engine\ndoc-core -> core\nmath-core -> core\ncircuit-core -> core\nmarkup -> core\ndoc-html -> doc-core, markup, core\nmath-tex -> math-core, core\nmath-mathml -> math-core, markup, core\ncircuit-svg -> circuit-core, markup, core\nsuite -> engine, reader, grammar-core, domain cores, output backends, core\nwire -> core\nui-core -> core (公開操作のデータ契約のみ)\napps -> suite, core (+ wire where required, web -> ui-core)\ntools -> grammar-core, suite, foundation\n"
       cons paragraph
-        cons sentence cons code "core" cons concat cons text " は、すべてのdomainのenumを" cons ruby text "持" text "も" cons text "つものではない。" nil nil
-        cons "typed schema、[位置/いち]、[診断/しんだん]、[公開値/こうかいち]を[所有/しょゆう]する。"
+        cons sentence cons code "core" cons concat cons text " は、typed schema、" cons ruby text "位置" text "いち" cons text "、" cons ruby text "診断" text "しんだん" cons text "、" cons ruby text "公開値" text "こうかいち" cons text "を" cons ruby text "所有" text "しょゆう" cons text "する。" nil nil
+        cons "[各/かく]domainの[意味/いみ]モデルと、それを[表/あらわ]すenumは、[対応/たいおう]するdomain coreが[所有/しょゆう]する。"
         cons "domain coreは[共通/きょうつう]のParsed treeを[受/う]け[取/と]り、そのdomainのモデルへlowerする。"
-        cons "engineはDocやRubyなどの[意味/いみ]を[知/し]らない。"
+        cons "engineは[共通/きょうつう]の[構文/こうぶん]・[束縛/そくばく]・[照会/しょうかい]の[契約/けいやく]を[扱/あつか]い、DocやRubyなどの[意味/いみ]は[各/かく]domainが[定義/ていぎ]する。"
         nil
       cons paragraph
         cons "Doc[内/ない]のMathとMath[内/ない]のDocは、suiteのbridgeが[処理/しょり]する。"
@@ -39,8 +43,12 @@ body
         cons "ui-coreは、[純粋/じゅんすい]なModel・Msg・update・viewと、commandおよびsubscriptionの[記述/きじゅつ]を[所有/しょゆう]する。"
         cons "suiteやDOMを[実行/じっこう]してはならない。"
         cons "[実行/じっこう]・Worker・editor widgetは、host adapterが[担当/たんとう]する。"
+        nil
+      cons paragraph
         cons sentence cons concat cons ruby text "目標" text "もくひょう" cons text "は20 crateで、そのうち15 crateが " nil cons code "no_std + alloc" cons text " である。" nil
-        cons "この[目標/もくひょう]を、[実装済/じっそうず]みmemberの[数/かず]と[同一視/どういつし]してはならない。"
+        cons sentence cons concat cons ruby text "実装済" text "じっそうず" cons text "みのworkspace memberは、ルートの " nil cons code "Cargo.toml" cons concat cons text " に" cons ruby text "記載" text "きさい" cons text "する。" nil nil
+        nil
+      cons paragraph
         cons "[文書/ぶんしょ]とsiteの[生成/せいせい]は、toolsの[明示的/めいじてき]な[段階/だんかい]で[行/おこな]う。"
         cons sentence cons code "build.rs" cons concat cons text " を" cons ruby text "通" text "とお" cons text "して、compilerと" cons ruby text "文書" text "ぶんしょ" cons text "rendererを" cons ruby text "循環依存" text "じゅんかんいぞん" cons text "させてはならない。" nil nil
         nil

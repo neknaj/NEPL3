@@ -1,4 +1,4 @@
-<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/2; page architecture; source SHA-256 7a4f4c92bdaf0e48784391d67a992ea80d6121e43be02f4f579442ee0a13282d; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 08a456b41610c3973de4c3b859ccb15babcae7628e5e5e8e11e9755ab3b34573; input PageSet digest 29117181a385e93c76e7de2f56d10f8f7898d9cfb887adfb362b4379632a5a1d; input context SHA-256 a3f380eb88606e94c817b66bc2f494ec239dda0c89e4b4d1bc89b938fe0290ac. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
+<!-- Generated from doc/spec/01&#45;architecture.nepld; renderer nepl3-tools.markdown-annotated-pages/2; page architecture; source SHA-256 1865063649eb42080aeb420ee856b957ee704bf0f0aa298bb783a45b34a2f43e; alias input SHA-256 68e8d477eace79d400f01a46f2499b7a01ce26b7033726f493fd00c7c0ad90d5; document digest 73e71f15f0cfe1870187c8730301b5ee5b38e14a6521f1af17c9685888dac709; input PageSet digest 06af63f0629d28f3f3cd380a0752cc882b4d35375ddc9f7066beec70c8a60944; input context SHA-256 ed700e2f76ece9ddda9c24308c5cfe29bfa6379c4cfbb30fc5683c91654ccd7a. All-notes viewing profile, not a Doc roundtrip encoding. Edit the Doc source. -->
 
 <a name="01-repositorycrate依存方向"></a>
 
@@ -19,6 +19,8 @@
 <a name="1-配置"></a>
 
 ## 1\. <ruby>配置<rt>はいち</rt></ruby>
+
+<ruby>次<rt>つぎ</rt></ruby>の<ruby>配置<rt>はいち</rt></ruby>は、<ruby>各<rt>かく</rt></ruby>crateとツールの<ruby>責務<rt>せきむ</rt></ruby>を<ruby>示<rt>しめ</rt></ruby>す<ruby>目標構成<rt>もくひょうこうせい</rt></ruby>である。<ruby>現在<rt>げんざい</rt></ruby>のworkspace memberは `Cargo.toml`、<ruby>各機能<rt>かくきのう</rt></ruby>の<ruby>実装状態<rt>じっそうじょうたい</rt></ruby>は `implementation-status.json` で<ruby>確認<rt>かくにん</rt></ruby>する。
 
 ```text
 NEPL3/
@@ -93,11 +95,15 @@ apps -> suite, core (+ wire where required, web -> ui-core)
 tools -> grammar-core, suite, foundation
 ```
 
-`core` は、すべてのdomainのenumを<ruby>持<rt>も</rt></ruby>つものではない。typed schema、<ruby>位置<rt>いち</rt></ruby>、<ruby>診断<rt>しんだん</rt></ruby>、<ruby>公開値<rt>こうかいち</rt></ruby>を<ruby>所有<rt>しょゆう</rt></ruby>する。domain coreは<ruby>共通<rt>きょうつう</rt></ruby>のParsed treeを<ruby>受<rt>う</rt></ruby>け<ruby>取<rt>と</rt></ruby>り、そのdomainのモデルへlowerする。engineはDocやRubyなどの<ruby>意味<rt>いみ</rt></ruby>を<ruby>知<rt>し</rt></ruby>らない。
+`core` は、typed schema、<ruby>位置<rt>いち</rt></ruby>、<ruby>診断<rt>しんだん</rt></ruby>、<ruby>公開値<rt>こうかいち</rt></ruby>を<ruby>所有<rt>しょゆう</rt></ruby>する。<ruby>各<rt>かく</rt></ruby>domainの<ruby>意味<rt>いみ</rt></ruby>モデルと、それを<ruby>表<rt>あらわ</rt></ruby>すenumは、<ruby>対応<rt>たいおう</rt></ruby>するdomain coreが<ruby>所有<rt>しょゆう</rt></ruby>する。domain coreは<ruby>共通<rt>きょうつう</rt></ruby>のParsed treeを<ruby>受<rt>う</rt></ruby>け<ruby>取<rt>と</rt></ruby>り、そのdomainのモデルへlowerする。engineは<ruby>共通<rt>きょうつう</rt></ruby>の<ruby>構文<rt>こうぶん</rt></ruby>・<ruby>束縛<rt>そくばく</rt></ruby>・<ruby>照会<rt>しょうかい</rt></ruby>の<ruby>契約<rt>けいやく</rt></ruby>を<ruby>扱<rt>あつか</rt></ruby>い、DocやRubyなどの<ruby>意味<rt>いみ</rt></ruby>は<ruby>各<rt>かく</rt></ruby>domainが<ruby>定義<rt>ていぎ</rt></ruby>する。
 
 Doc<ruby>内<rt>ない</rt></ruby>のMathとMath<ruby>内<rt>ない</rt></ruby>のDocは、suiteのbridgeが<ruby>処理<rt>しょり</rt></ruby>する。doc\-coreはmath\-coreをimportしない。<ruby>出力<rt>しゅつりょく</rt></ruby>backend<ruby>同士<rt>どうし</rt></ruby>も、<ruby>相互<rt>そうご</rt></ruby>にimportしない。suiteが<ruby>依存関係<rt>いぞんかんけい</rt></ruby>に<ruby>従<rt>したが</rt></ruby>って<ruby>埋<rt>う</rt></ruby>め<ruby>込<rt>こ</rt></ruby>みを<ruby>準備<rt>じゅんび</rt></ruby>し、backendsへ<ruby>型付<rt>かたつ</rt></ruby>きの<ruby>解決済<rt>かいけつず</rt></ruby>みfragmentを<ruby>渡<rt>わた</rt></ruby>す。
 
-ui\-coreは、<ruby>純粋<rt>じゅんすい</rt></ruby>なModel・Msg・update・viewと、commandおよびsubscriptionの<ruby>記述<rt>きじゅつ</rt></ruby>を<ruby>所有<rt>しょゆう</rt></ruby>する。suiteやDOMを<ruby>実行<rt>じっこう</rt></ruby>してはならない。<ruby>実行<rt>じっこう</rt></ruby>・Worker・editor widgetは、host adapterが<ruby>担当<rt>たんとう</rt></ruby>する。<ruby>目標<rt>もくひょう</rt></ruby>は20 crateで、そのうち15 crateが `no_std + alloc` である。この<ruby>目標<rt>もくひょう</rt></ruby>を、<ruby>実装済<rt>じっそうず</rt></ruby>みmemberの<ruby>数<rt>かず</rt></ruby>と<ruby>同一視<rt>どういつし</rt></ruby>してはならない。<ruby>文書<rt>ぶんしょ</rt></ruby>とsiteの<ruby>生成<rt>せいせい</rt></ruby>は、toolsの<ruby>明示的<rt>めいじてき</rt></ruby>な<ruby>段階<rt>だんかい</rt></ruby>で<ruby>行<rt>おこな</rt></ruby>う。`build.rs` を<ruby>通<rt>とお</rt></ruby>して、compilerと<ruby>文書<rt>ぶんしょ</rt></ruby>rendererを<ruby>循環依存<rt>じゅんかんいぞん</rt></ruby>させてはならない。
+ui\-coreは、<ruby>純粋<rt>じゅんすい</rt></ruby>なModel・Msg・update・viewと、commandおよびsubscriptionの<ruby>記述<rt>きじゅつ</rt></ruby>を<ruby>所有<rt>しょゆう</rt></ruby>する。suiteやDOMを<ruby>実行<rt>じっこう</rt></ruby>してはならない。<ruby>実行<rt>じっこう</rt></ruby>・Worker・editor widgetは、host adapterが<ruby>担当<rt>たんとう</rt></ruby>する。
+
+<ruby>目標<rt>もくひょう</rt></ruby>は20 crateで、そのうち15 crateが `no_std + alloc` である。<ruby>実装済<rt>じっそうず</rt></ruby>みのworkspace memberは、ルートの `Cargo.toml` に<ruby>記載<rt>きさい</rt></ruby>する。
+
+<ruby>文書<rt>ぶんしょ</rt></ruby>とsiteの<ruby>生成<rt>せいせい</rt></ruby>は、toolsの<ruby>明示的<rt>めいじてき</rt></ruby>な<ruby>段階<rt>だんかい</rt></ruby>で<ruby>行<rt>おこな</rt></ruby>う。`build.rs` を<ruby>通<rt>とお</rt></ruby>して、compilerと<ruby>文書<rt>ぶんしょ</rt></ruby>rendererを<ruby>循環依存<rt>じゅんかんいぞん</rt></ruby>させてはならない。
 
 <a name="n-626f6f747374726170"></a>
 
