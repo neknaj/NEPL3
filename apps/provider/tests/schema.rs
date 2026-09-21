@@ -1,5 +1,7 @@
 use nepl3_core::{budget::*, schema::*, value::*};
 use nepl3_provider::schema::{SchemaAdmissionError, admit};
+#[path = "schema/exchange.rs"]
+mod exchange;
 
 fn budget() -> Budget {
     Budget::new(Limits {

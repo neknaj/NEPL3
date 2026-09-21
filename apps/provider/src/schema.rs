@@ -1,5 +1,7 @@
 //! Admit a descriptor batch selected by the host before operation dispatch.
 //! Transport negotiation supplies the bytes; it never chooses trusted identities.
+mod exchange;
+pub use exchange::SchemaExchangeError;
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     schema::{SchemaDescriptor, SchemaError, SchemaRegistry},

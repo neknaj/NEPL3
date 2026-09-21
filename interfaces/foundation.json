@@ -1964,6 +1964,28 @@
               }
             }
           ]
+        ],
+        "SchemaReply": [
+          [
+            "descriptors",
+            {
+              "list": "Bytes"
+            }
+          ]
+        ],
+        "SchemaRequest": [
+          [
+            "schemas",
+            {
+              "list": {
+                "named": {
+                  "name": "SchemaRef",
+                  "package": "nepl3.foundation",
+                  "revision": 1
+                }
+              }
+            }
+          ]
         ]
       }
     },

@@ -14,6 +14,20 @@ pub fn encode_frame(
     reply::admit(sources, admission, b)?;
     let s = schema(registry)?;
     let value = match value {
+        ProviderFrame::SchemaRequest { schemas } => variant(
+            s,
+            "ProviderFrame",
+            "SchemaRequest",
+            [schemas.value(s, b)?],
+            b,
+        )?,
+        ProviderFrame::SchemaReply { descriptors } => variant(
+            s,
+            "ProviderFrame",
+            "SchemaReply",
+            [sequence(descriptors, b, |value, b| bytes(value, b))?],
+            b,
+        )?,
         ProviderFrame::Invoke(call) => variant(
             s,
             "ProviderFrame",
@@ -74,6 +88,12 @@ pub fn decode_frame<'a>(
     reply::admit(sources, admission, b)?;
     let (case, fields) = variant_parts(value.value(), s, "ProviderFrame")?;
     let result = match (case, fields) {
+        ("SchemaRequest", [schemas]) => ProviderFrame::SchemaRequest {
+            schemas: Codec::from(schemas, s, sources, b)?,
+        },
+        ("SchemaReply", [descriptors]) => ProviderFrame::SchemaReply {
+            descriptors: collect(list(descriptors)?, b, bytes_from)?,
+        },
         ("Invoke", [call]) => ProviderFrame::Invoke(invoke_from(call, s, admission, b)?),
         ("Resume", [resume]) => ProviderFrame::Resume(reply::resume_from(
             resume, s, registry, sources, admission, b,

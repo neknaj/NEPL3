@@ -2,6 +2,73 @@ use super::*;
 use nepl3_core::operation::lifetime::{RequestLifetimes, RequestPhase};
 use nepl3_suite::dispatch::resume::{Registration, SavedAwait};
 
+#[test]
+fn schema_exchange_rejects_resume_before_consuming_await() -> Result<(), String> {
+    let (registry, parent) = fixture()?;
+    let identity = Digest::of(b"implementation");
+    let sources = SourceStore::default();
+    let continuation = Continuation {
+        provider: parent.operation.clone(),
+        parent_request: 17,
+        snapshot_digest: identity,
+        state: parent.input.clone(),
+    };
+    let request = Resume {
+        request_id: 17,
+        continuation: continuation.clone(),
+        dependency_results: vec![],
+    };
+    let saved = SavedAwait::<SourceStore> {
+        parent: &parent,
+        context: identity,
+        continuation: &continuation,
+        calls: &[],
+        sources: &[],
+    };
+    let registration = Registration {
+        operation: &parent.operation,
+        implementation: identity,
+        resume: resume_result,
+    };
+    for incoming in [false, true] {
+        let mut server = negotiating(&registry, incoming)?;
+        let mut lifetimes = RequestLifetimes::default();
+        lifetimes
+            .begin_call(&parent, identity, None, &mut budget())
+            .map_err(error)?;
+        lifetimes
+            .suspend(17, continuation.clone(), 0, &mut budget())
+            .map_err(error)?;
+        let mut execution = budget();
+        assert!(matches!(
+            server.dispatch_resume(
+                &registration,
+                identity,
+                &saved,
+                &request,
+                &mut lifetimes,
+                &registry,
+                &sources,
+                &sources,
+                &mut SourceAdmission::default(),
+                &mut execution,
+                &mut budget(),
+                &mut budget()
+            ),
+            Err(nepl3_provider::dispatch::DispatchError::Transport(
+                TransportError::ProtocolState
+            ))
+        ));
+        assert_eq!(execution.usage().work, 0);
+        assert_eq!(
+            lifetimes.phase(17, &mut budget()),
+            Ok(RequestPhase::Awaiting)
+        );
+        assert!(server.is_closed());
+    }
+    Ok(())
+}
+
 fn resume_result(
     _: &Invoke,
     request: &Resume,

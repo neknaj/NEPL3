@@ -9,7 +9,7 @@ use crate::{
     diagnostic::{OperationResult, Report},
     source::{Digest, SourceSnapshot},
     syntax::ResourceContent,
-    value::{OperationRef, TypedValue},
+    value::{OperationRef, SchemaRef, TypedValue},
 };
 use alloc::vec::Vec;
 
@@ -59,6 +59,14 @@ pub struct Resume {
 /// shutdown are enforced by the host after decoding this structural value.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ProviderFrame {
+    /// Host-selected identities, in descriptor response order.
+    SchemaRequest {
+        schemas: Vec<SchemaRef>,
+    },
+    /// Each item is a standalone NDF SchemaDescriptor using the bootstrap schema.
+    SchemaReply {
+        descriptors: Vec<Vec<u8>>,
+    },
     Invoke(Invoke),
     Resume(Resume),
     Reply {

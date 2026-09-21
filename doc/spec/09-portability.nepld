@@ -208,7 +208,14 @@ body
       cons "stdoutへlogを[書/か]かない。"
       cons "[失敗診断/しっぱいしんだん]はReply、hostの[運用/うんよう]logはstderr。" nil
     cons paragraph
-      cons "frame kindはInvoke / Resume / Reply / Cancel / Close。"
+      cons "frame kindはSchemaRequest / SchemaReply / Invoke / Resume / Reply / Cancel / Close。"
+      cons "[接続開始時/せつぞくかいしじ]のschema[交換/こうかん]では、hostが[選択/せんたく]したSchemaRefの[順序付/じゅんじょつ]き[列/れつ]をSchemaRequest.schemasとして[送/おく]る。"
+      cons "providerは[同/おな]じ[順序/じゅんじょ]のSchemaDescriptor NDF byte[列/れつ]をSchemaReply.descriptorsとして[返/かえ]す。"
+      cons "[両/りょう]frameとdescriptorは[接続前/せつぞくまえ]に[共有/きょうゆう]したfoundation schemaで[符号化/ふごうか]する。"
+      cons "hostが[必要/ひつよう]なschema[集合/しゅうごう]を[接続前/せつぞくまえ]に[照合済/しょうごうず]みの[場合/ばあい]は、そのregistryで[操作/そうさ]を[開始/かいし]できる。"
+      cons "hostは[全/ぜん]descriptorのidentityを[要求/ようきゅう]と[照合/しょうごう]し、[登録後/とうろくご]に[参照閉包/さんしょうへいほう]をfinalizeしてからInvokeを[開始/かいし]する。"
+      cons "schema[交換/こうかん]は[一接続/いちせつぞく]につき[一回/いっかい]とし、[不足/ふそく]、[重複/じゅうふく]、identity[不一致/ふいっち]、[未解決参照/みかいけつさんしょう]、[未要求/みようきゅう]のSchemaReplyはprotocol errorとして[接続/せつぞく]を[終了/しゅうりょう]する。"
+      cons "schema[交換/こうかん]で[確定/かくてい]する[情報/じょうほう]は[型/かた]と[操作署名/そうさしょめい]である。operationの[実行権限/じっこうけんげん]とresourceの[利用権限/りようけんげん]はhostの[登録/とうろく]に[従/したが]う。"
       cons "NDF payloadはProviderFrame variantとし、Invokeはcall、Resumeはresume、ReplyはrequestIdとreply、CancelはrequestId、Closeは[空/から]のfield[列/れつ]を[持/も]つ。"
       cons "InvokeとResumeのrequestIdは[内包/ないほう]するrecordに[保持/ほじ]する。"
       cons "Cancelは[指定要求/していようきゅう]の[停止/ていし]を[要求/ようきゅう]し、Closeは[接続全体/せつぞくぜんたい]の[終了/しゅうりょう]を[要求/ようきゅう]する。"
