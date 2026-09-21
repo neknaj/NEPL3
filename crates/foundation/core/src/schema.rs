@@ -594,6 +594,27 @@ impl SchemaRegistry {
                 variants.sort_by(|a, b| a.name.cmp(&b.name));
             }
         }
+        if self.schemas.len() == self.schemas.capacity() {
+            let next = self
+                .schemas
+                .capacity()
+                .checked_mul(2)
+                .and_then(|capacity| {
+                    self.schemas
+                        .len()
+                        .checked_add(1)
+                        .map(|minimum| capacity.max(minimum))
+                })
+                .ok_or_else(|| budget.stop(StopReason::AllocationLimit))?;
+            let bytes = (next - self.schemas.capacity())
+                .checked_mul(core::mem::size_of::<(SchemaRef, SchemaDescriptor)>())
+                .ok_or_else(|| budget.stop(StopReason::AllocationLimit))?;
+            budget.charge(Resource::AllocationUnits, bytes as u64)?;
+            budget.charge(Resource::Work, self.schemas.len() as u64)?;
+            self.schemas
+                .try_reserve_exact(next - self.schemas.len())
+                .map_err(|_| budget.stop(StopReason::AllocationLimit))?;
+        }
         self.finalized = false;
         self.schemas.push((expected, descriptor));
         Ok(())

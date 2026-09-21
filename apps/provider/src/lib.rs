@@ -7,6 +7,7 @@ pub mod dispatch;
 #[cfg(not(target_family = "wasm"))]
 pub mod process;
 pub mod reply;
+pub mod schema;
 use nepl3_core::{
     budget::{Budget, Resource, StopReason},
     operation::ProviderFrame,
