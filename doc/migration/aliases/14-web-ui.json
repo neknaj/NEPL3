@@ -1,0 +1,11 @@
+[
+  {"section": null, "name": "14-web-uiteaplayground"},
+  {"section": "responsibilities", "name": "1-責務と実装範囲"},
+  {"section": "layout", "name": "2-配置とhost"},
+  {"section": "asynchronous", "name": "3-非同期の同一性と停止"},
+  {"section": "editor", "name": "4-editorのtransaction"},
+  {"section": "operations", "name": "5-言語compositionとreference-profileの操作"},
+  {"section": "operations", "name": "5-四言語の操作"},
+  {"section": "preview", "name": "6-previewとsourceの保護"},
+  {"section": "references", "name": "7-根拠"}
+]
