@@ -202,3 +202,16 @@ viewのschema・参照・cycle、factのmetadataとsource位置の検査は引�
 
 同じ第05章の通常HTML出力はcursor 54,300まで進んだが、Work上限100,000,000で
 停止した。予算を変更しておらず、第05章の正本切替および性能課題の解消は未達である。
+
+次のWork計測ではtokenizerの受入済みsourceに対する競合検索が約30,804,689を占めた。
+単発検索のhintとbatch検索は実文書で改善せず撤回した。
+tokenizer session内で、照合した宣言集合と受入済みprefixのimmutable snapshotを保持し、
+次回も完全一致する部分の競合検索だけを再利用する。宣言集合の変更・prefix変更は
+再検査し、source admission・report検査・継続scope検査は従来通り実行する。
+保持するsnapshotは所有し、allocatorのaddress再利用を同一性の根拠にしない。
+外部decode値は内容比較を省かず、closeで保持情報を解放する。
+検査の順序・Usageは変わり得るが、停止を成功へ変換したり新しい予算へ移したりしない。
+
+この変更の通常HTML出力はcursor 70,193でWorkLimitとなった。上限は同じ100,000,000で、
+第05章の完走と正本化はまだ未達である。環境変更、変更されたsuffix、同一内容の
+別storage、部分的なcache確保後の停止と再検査を回帰試験で確認する。

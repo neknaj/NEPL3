@@ -4,6 +4,7 @@ mod host;
 mod identity;
 pub mod model;
 mod session;
+mod source_checks;
 pub use host::{TokenizationHost, TokenizationHostReply};
 pub use model::*;
 pub use session::TokenizationSession;

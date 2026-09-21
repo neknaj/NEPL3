@@ -156,6 +156,7 @@ pub struct TokenizationSession<'a> {
     configuration_digest: Digest,
     scope: Option<Rc<TokenizationScope>>,
     next_operation: u64,
+    source_checks: super::source_checks::SourceChecks,
 }
 impl<'a> TokenizationSession<'a> {
     pub fn new(
@@ -200,6 +201,7 @@ impl<'a> TokenizationSession<'a> {
             configuration_digest,
             scope: None,
             next_operation: 0,
+            source_checks: super::source_checks::SourceChecks::default(),
         })
     }
     /// Terminate the current suspended call after its enclosing operation has retained its report.
@@ -210,6 +212,7 @@ impl<'a> TokenizationSession<'a> {
     pub fn close(&mut self) {
         self.closed = true;
         self.pending = None;
+        self.source_checks = super::source_checks::SourceChecks::default();
         self.reader.close();
     }
     pub fn read(
@@ -510,17 +513,9 @@ impl<'a> TokenizationSession<'a> {
             };
         }
         let accepted_check = (|| -> Result<(), ReaderError> {
+            self.source_checks
+                .check(&accepted.sources, sources, budget)?;
             for added in &accepted.sources {
-                if let Some(prior) = sources.get_revision_with_budget(
-                    &added.identity().source,
-                    added.identity().revision,
-                    budget,
-                )? {
-                    budget.charge(Resource::Work, prior.uri().len() as u64 + 33)?;
-                    if prior.identity() != added.identity() || prior.uri() != added.uri() {
-                        return Err(SourceError::IdentityConflict.into());
-                    }
-                }
                 admission.admit_existing(added, budget)?;
             }
             if accepted.report.diagnostics.is_empty() && accepted.report.events.is_empty() {
