@@ -308,8 +308,8 @@ body
       cons "plain_text(PlainTextRequest) -> PlainTextReply。"
       cons "print(PrintRequest) -> PrintReply。" nil
     cons paragraph
-      cons "AnnotationPolicyはBaseOnly、WithReadings、WithAllNotesを[明示/めいじ]する。"
-      cons "テキスト[抽出時/ちゅうしゅつじ]に[隠/かく]れた[翻訳選択/ほんやくせんたく]を[行/おこな]わない。"
+      cons "AnnotationPolicyは、テキスト[抽出/ちゅうしゅつ]に[含/ふく]める[注釈/ちゅうしゃく]をBaseOnly・WithReadings・WithAllNotesから[選択/せんたく]する。"
+      cons "[抽出処理/ちゅうしゅつしょり]による[暗黙/あんもく]の[翻訳選択/ほんやくせんたく]は[禁止/きんし]する。"
       cons "[各/かく]constructorはRust APIとportable record constructorの[双方/そうほう]から[呼/よ]べる。" nil
     cons section plaintext "8.1. plain_text の[実行契約/じっこうけいやく]" body
       cons paragraph
@@ -329,9 +329,9 @@ body
         cons "[入/い]れ[子/こ]にも[同/おな]じpolicyを[適用/てきよう]する。"
         cons "TextとInlineCodeの[文字/もじ]は[変更/へんこう]せず、BreakはLFを[一/ひと]つ[出力/しゅつりょく]する。"
         cons "[装飾/そうしょく]は[子/こ]inline、Anchor/Reference/Linkは[明示/めいじ]label、InlineImageは[明示/めいじ]alt Sentenceを[投影/とうえい]する。"
-        cons "Sentence/Concatの[子間/こかん]に[空白/くうはく]を[追加/ついか]しない。"
-        cons "この[出力/しゅつりょく]は[再/さい]parse[用/よう]sentence literalではなく、[角括弧/かくかっこ]・[波括弧/なみかっこ]・slashをescapeし[直/なお]さない。"
-        cons "[任意/にんい]separatorのoptionsは[設/もう]けない。" nil
+        cons "Sentence・Concatの[子/こ]は、[指定順/していじゅん]に[区切/くぎ]り[文字/もじ]を[挿入/そうにゅう]せず[連結/れんけつ]する。"
+        cons "[出力/しゅつりょく]は[表示用/ひょうじよう]のプレーンテキストであり、[角括弧/かくかっこ]・[波括弧/なみかっこ]・スラッシュをそのまま[保持/ほじ]する。"
+        cons "[区切/くぎ]り[文字/もじ]の[指定/してい]は、この[操作/そうさ]のoptionsに[含/ふく]めない。" nil
       cons paragraph
         cons "InlineMathは[暗黙/あんもく]にlower・[意味/いみ]check・[評価/ひょうか]しない。"
         cons sentence cons ruby text "必要" text "ひつよう" cons text "な" cons ruby text "表示" text "ひょうじ" cons text "textはhostが " cons code "ResolvedInlineText{documentDigest,embed,guestDigest,text}" cons text " として" cons ruby text "提供" text "ていきょう" cons text "する。" nil
@@ -341,14 +341,18 @@ body
         cons "guest[側/がわ]はowner[環境/かんきょう]・[元/もと]Origin[列/れつ]・source/map[閉包/へいほう]も[含/ふく]み、[局所/きょくしょ]EmbedRefだけの[一致/いっち]で[別/べつ]guestや[古/ふる]い[環境/かんきょう]のtextを[再利用/さいりよう]しない。" nil
       cons paragraph
         cons "[全提供/ぜんていきょう]entryについて32byte digest、[対象/たいしょう]InlineMath、[重複/ちょうふく]EmbedRef、[現在/げんざい]document/guest[両/りょう]identityとの[一致/いっち]を[検査/けんさ]する。"
-        cons "policyがそのentryを[表示/ひょうじ]しない[場合/ばあい]も[不正/ふせい]entryを[黙殺/もくさつ]しない。"
-        cons "[一方/いっぽう]、[未提供/みていきょう]textによるUnresolvedEmbedは[選択/せんたく]policyで[実際/じっさい]に[投影/とうえい]するInlineMathだけに[適用/てきよう]し、BaseOnlyで[隠/かく]れるreading/notesのtextを[要求/ようきゅう]しない。"
-        cons "hostのtextは[明示/めいじ]データであり、guest[意味/いみ]checkが[成功/せいこう]した[証明/しょうめい]ではない。" nil
+        cons "[提供/ていきょう]されたentryは、policyによる[表示/ひょうじ]の[有無/うむ]を[問/と]わず[検査/けんさ]し、[不正/ふせい]なentryを[拒否/きょひ]する。"
+        cons "textの[提供/ていきょう]が[必須/ひっす]となるのは、[選択/せんたく]したpolicyで[実際/じっさい]に[投影/とうえい]するInlineMathである。"
+        cons "そのtextが[未提供/みていきょう]の[場合/ばあい]はUnresolvedEmbedを[返/かえ]す。"
+        cons "BaseOnlyで[表示/ひょうじ]の[対象外/たいしょうがい]となるreading・notesのtextは[省略/しょうりゃく]できる。"
+        cons "hostが[提供/ていきょう]するtextは[表示用/ひょうじよう]データとして[受理/じゅり]する。"
+        cons "guestの[意味/いみ]checkの[成功/せいこう]は、この[受理/じゅり]による[保証範囲/ほしょうはんい]に[含/ふく]めない。" nil
       cons paragraph
-        cons "identity[取得/しゅとく]のprepareは[独立/どくりつ]した[操作/そうさ]であり、[後/のち]の[実行予算/じっこうよさん]を[支払/しはら]い[済/ず]みとするproofではない。"
-        cons "[公開実行入口/こうかいじっこういりぐち]plain_textは[毎回同一/まいかいどういつ]Budget/SourceAdmissionでdocument[検査/けんさ]、canonical[値/あたい]の[生成/せいせい]とhash、entry[検査/けんさ]、[出力/しゅつりょく]を[合成/ごうせい]する。"
+        cons "identityを[取得/しゅとく]するprepareと、plain_textの[実行/じっこう]は、[個別/こべつ]に[資源/しげん]を[計上/けいじょう]する[操作/そうさ]である。"
+        cons "[公開実行入口/こうかいじっこういりぐち]plain_textは、[呼出/よびだ]しごとにdocument[検査/けんさ]、canonical[値/あたい]の[生成/せいせい]とhash、entry[検査/けんさ]、[出力/しゅつりょく]を[実行/じっこう]し、これらの[処理/しょり]で[同一/どういつ]のBudget・SourceAdmissionを[共有/きょうゆう]する。"
         cons "sourceは[共有/きょうゆう]admissionで[同/どう]snapshotを[一度/いちど]だけ[計上/けいじょう]し、[出力/しゅつりょく]byte、Work、Allocation、[深/ふか]さを[計上/けいじょう]する。"
-        cons "[停止時/ていしじ]は[元要求/もとようきゅう]を[変更/へんこう]せず、[不完全/ふかんぜん]なTextをCompleteへ[昇格/しょうかく]させない。" nil
+        cons "[停止時/ていしじ]は[元要求/もとようきゅう]を[保持/ほじ]し、Stoppedを[返/かえ]す。"
+        cons "Completeは、テキスト[抽出/ちゅうしゅつ]が[完了/かんりょう]した[場合/ばあい]に[限/かぎ]って[返/かえ]す。" nil
       nil
     cons section print "8.2. print の[実行契約/じっこうけいやく]" body
       cons paragraph
