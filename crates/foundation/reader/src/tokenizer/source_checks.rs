@@ -4,12 +4,13 @@ mod tests;
 use alloc::vec::Vec;
 use nepl3_core::{
     budget::{Budget, Resource},
-    source::{SourceError, SourceSnapshot, SourceStore},
+    source::{SourceError, SourceSnapshot, SourceStore, SourceStoreScope},
 };
 
 #[derive(Default)]
 pub(super) struct SourceChecks {
     environment: Vec<SourceSnapshot>,
+    environment_scope: Option<SourceStoreScope>,
     checked: Vec<SourceSnapshot>,
 }
 impl SourceChecks {
@@ -20,8 +21,12 @@ impl SourceChecks {
         budget: &mut Budget,
     ) -> Result<(), SourceError> {
         budget.poll()?;
-        let mut same = self.environment.len() == store.snapshots().len();
-        if same {
+        let owned = self
+            .environment_scope
+            .as_ref()
+            .is_some_and(|scope| store.matches_scope(scope));
+        let mut same = owned || self.environment.len() == store.snapshots().len();
+        if same && !owned {
             for (old, new) in self.environment.iter().zip(store.snapshots()) {
                 if !old.eq_with_budget(new, budget)? {
                     same = false;
@@ -63,6 +68,7 @@ impl SourceChecks {
         } else {
             self.checked.truncate(prefix);
         }
+        self.environment_scope = store.scope();
         for source in &incoming[prefix..] {
             self.checked.push(source.clone_with_budget(budget)?);
         }

@@ -345,6 +345,9 @@ impl SourceStore {
             admission_index.insert(at, admission.admitted.len() + offset);
         }
         // No typed failure or budget charge can occur after this commit point.
+        if !prepared.is_empty() {
+            self.invalidate_scope();
+        }
         admission.admitted.extend(admitted_outputs);
         admission.index = admission_index;
         self.snapshots.extend(prepared);

@@ -15,12 +15,28 @@ source集合の増大については、readerの競合検査とadmissionだけ�
 parser全体の実時間・実メモリは未測定であり、単体文書の予算適合やこの限定測定から推定しない。
 次の性能改善では、以下の測定を基に既存集合の再走査と検証scopeの寿命を調べる。
 受入済みcollectorの再admissionは、台帳の一致を確認できる同期readで再利用する。
-同期hostもcallback境界ごとの交換検出を通す。resumeとSourceChecksの集合比較は残件である。
+同期hostもcallback境界ごとの交換検出を通す。SourceStoreを明示準備した経路では、
+環境集合の所有付きscopeも再利用する。resumeと受入済みsource列のprefix比較は残件である。
 
 Sentence consumerの所有移行、NEPL3a、旧lexical commentの全面撤去、T07/T21全体は
 未完了のままである。HTML/rustdocの高度化をこれらの本体開発の前提にしない。
 
 ## 段階別の履歴
+
+### 2026-09-21: 変更されていないSourceStoreの環境比較を再利用
+
+SourceStoreのscopeは集合を構築した後に明示準備する。新規挿入と非空編集のcommitで
+失効し、同値の重複挿入・空編集・途中停止では維持する。再準備しない場合と非atomic
+targetは従来の内容比較を使う。台帳のscopeとは別であり、schemaや資源入場を証明しない。
+共通開発hostのparse入口で準備し、tokenizerは同じ集合の反復比較だけを省く。
+
+限定測定`environment_scope_growth_measurement`は128/256/512件の環境をそれぞれ
+127/255/511回再比較する。初回の保存とfixture構築、parser、accepted sourceは含めない。
+未準備時のWorkは16,256/65,280/261,632、準備時は0であり、各回のBudget pollは維持する。
+Windows debugの参考実時間は未準備0.38/1.42/5.85 ms、準備0.011/0.016/0.033 msだった。
+この測定は環境比較だけのもので、parser全体の性能・実heap削減・全source経路の線形化を
+示さない。AllocationUnitsは実heap計測ではない。独立レビューで求められた編集commit
+直前のAllocation停止も、集合とscopeの不変性を回帰試験で確認した。
 
 ### 2026-09-21: source集合の反復走査の基準測定
 

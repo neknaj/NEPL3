@@ -1,6 +1,8 @@
 //! Immutable UTF-8 snapshots, checked byte spans and editor position adapters.
 mod edit;
 use crate::budget::{Budget, Resource, StopReason};
+#[cfg(target_has_atomic = "ptr")]
+use alloc::sync::Arc;
 use alloc::{string::String, vec::Vec};
 #[cfg(target_has_atomic = "ptr")]
 type SnapshotStorage = alloc::sync::Arc<SnapshotData>;
@@ -759,8 +761,59 @@ pub struct SourceStore {
     // Position of the most recent successful insertion/duplicate in `index`.
     // This is only a search hint, never an identity or validation proof.
     insertion_hint: Option<usize>,
+    #[cfg(target_has_atomic = "ptr")]
+    owner: Option<Arc<()>>,
+}
+/// Native ownership witness for one unchanged source collection. This is not
+/// source admission, schema validation, or a portable source identity.
+#[derive(Clone, Debug)]
+pub struct SourceStoreScope {
+    #[cfg(target_has_atomic = "ptr")]
+    owner: Arc<()>,
 }
 impl SourceStore {
+    /// Opt into constant-time collection comparison after building the store.
+    /// A successful insertion/edit invalidates the witness; callers can prepare
+    /// a fresh one afterwards. Failed mutations and equal duplicates retain it.
+    /// On non-atomic targets scope() stays None; collection comparison is used.
+    pub fn prepare_scope(&mut self, budget: &mut Budget) -> Result<(), SourceError> {
+        budget.poll()?;
+        #[cfg(target_has_atomic = "ptr")]
+        if self.owner.is_none() {
+            budget.charge(
+                Resource::AllocationUnits,
+                core::mem::size_of::<SourceStoreScope>() as u64,
+            )?;
+            self.owner = Some(Arc::new(()));
+        }
+        Ok(())
+    }
+    pub fn scope(&self) -> Option<SourceStoreScope> {
+        #[cfg(target_has_atomic = "ptr")]
+        return self.owner.as_ref().map(|owner| SourceStoreScope {
+            owner: Arc::clone(owner),
+        });
+        #[cfg(not(target_has_atomic = "ptr"))]
+        None
+    }
+    pub fn matches_scope(&self, scope: &SourceStoreScope) -> bool {
+        #[cfg(target_has_atomic = "ptr")]
+        return self
+            .owner
+            .as_ref()
+            .is_some_and(|owner| Arc::ptr_eq(owner, &scope.owner));
+        #[cfg(not(target_has_atomic = "ptr"))]
+        {
+            let _ = scope;
+            false
+        }
+    }
+    fn invalidate_scope(&mut self) {
+        #[cfg(target_has_atomic = "ptr")]
+        {
+            self.owner = None;
+        }
+    }
     pub fn snapshots(&self) -> &[SourceSnapshot] {
         &self.snapshots
     }
@@ -781,6 +834,7 @@ impl SourceStore {
                 self.index.insert(at, self.snapshots.len());
                 self.snapshots.push(snapshot);
                 self.insertion_hint = Some(at);
+                self.invalidate_scope();
                 Ok(())
             }
         }
@@ -816,6 +870,7 @@ impl SourceStore {
                 self.index.insert(at, self.snapshots.len());
                 self.snapshots.push(snapshot);
                 self.insertion_hint = Some(at);
+                self.invalidate_scope();
                 Ok(())
             }
         }
@@ -854,6 +909,7 @@ impl SourceStore {
                 self.index.insert(at, self.snapshots.len());
                 self.snapshots.push(owned);
                 self.insertion_hint = Some(at);
+                self.invalidate_scope();
                 Ok(())
             }
         }
