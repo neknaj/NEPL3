@@ -153,6 +153,27 @@ body
         cons "MarkdownはDoc[移行完了/いこうかんりょう]まで[正本/せいほん]として[利用/りよう]できるが、[最終/さいしゅう]Doc[移行/いこう]は[必須/ひっす]のT21で[管理/かんり]する。"
         nil
       cons paragraph
+        cons sentence cons text "docs-only生成では追跡済みの " cons code "doc/spec/NN-name.md" cons text " 全体を公開対象とする。" nil
+        cons sentence cons code "doc/canonical.json" cons text " 登録ページはDoc正本から生成し、未登録ページだけを既存のpulldown-cmarkでHTML化する。" nil
+        cons "[生成/せいせい]Markdown projectionを[再/ふたた]び[正本/せいほん]として[読/よ]まない。"
+        cons sentence cons text "両経路は " cons code "docs/spec/NN-name.html" cons text " の配置を共有し、移行時も登録routeを優先する。" nil
+        cons sentence cons text "未移行ページはMarkdown正本であることと同じcommitの原文を表示し、source・route・digest・rendererを " cons code "markdown-manifest.json" cons text " に記録する。" nil
+        cons "[各/かく]Markdown[入力/にゅうりょく]は256KiB、[未移行仕様/みいこうしよう]は256ページ、[最終/さいしゅう]artifactは[既存/きそん]の32MiB[上限内/じょうげんない]とする。"
+        cons "[相対/そうたい]リンクは[元文書/もとぶんしょ]directoryを[基準/きじゅん]に[解決/かいけつ]し、repository[外/がい]への[脱出/だっしゅつ]を[拒否/きょひ]する。"
+        cons "[公開済/こうかいず]み[仕様/しよう]へのリンクはsite[内/ない]、その[他/た]の[追跡済/ついせきず]みfileは[同/おな]じcommitのGitHub[原文/げんぶん]へ[向/む]ける。"
+        cons "raw HTMLはescapeし、[画像/がぞう]はalt[文/ぶん]を[表示/ひょうじ]する。"
+        cons "この[公開経路/こうかいけいろ]は、T21の[意味同等性検査/いみどうとうせいけんさ]や[正本切替/せいほんきりかえ]の[完了/かんりょう]を[意味/いみ]しない。"
+        nil
+      cons paragraph
+        cons sentence cons text "docs-onlyのトップは現在の" cons code "README.md" cons text "正本を固定版pulldown-cmarkでHTMLへ投影する。" nil
+        cons "サイト[収録済/しゅうろくず]み[仕様/しよう]へのリンクはそのサイトrouteへ、siteに[未収録/みしゅうろく]のrepository[資料/しりょう]は[同/おな]じcommitのGitHub[原本/げんぽん]へ[向/む]ける。"
+        cons "[欠/か]けた[原本/げんぽん]や[未対応/みたいおう]のリンク[形式/けいしき]は[生成失敗/せいせいしっぱい]とする。"
+        cons "raw HTMLは[文字列/もじれつ]として[表示/ひょうじ]し、[外部画像/がいぶがぞう]は[代替/だいたい]テキストを[残/のこ]す。"
+        cons "バッジなどの[外部取得/がいぶしゅとく]を[生成/せいせい]・[閲覧/えつらん]の[前提/ぜんてい]にしない。"
+        cons "READMEのSHA-256とrenderer[版/ばん]をbuild[情報/じょうほう]へ[記録/きろく]する。"
+        cons "これはREADMEのNEPL3d[移行完了/いこうかんりょう]ではなく、[二/ふた]つ[目/め]の[手書/てが]き[概要/がいよう]を[作/つく]らないための[公開経路/こうかいけいろ]である。"
+        nil
+      cons paragraph
         cons "page registryは、[安定/あんてい]page ID、source[正本/せいほん]の[形式/けいしき]とpath、[公開/こうかい]URL、[見出/みだ]し/anchor ID、[旧/きゅう]URL aliasを[保持/ほじ]する。"
         cons "[表示見出/ひょうじみだ]しやファイル[移設/いせつ]で、IDを[暗黙/あんもく]に[再生成/さいせいせい]しない。"
         cons "[例/れい]manifestは、[安定例/あんていれい]ID、language/category、source path、byte digest、[必要/ひつよう]profile、revisionを[持/も]つ。"
@@ -161,8 +182,20 @@ body
         nil
       cons paragraph
         cons "[例/れい]manifestには、[実行前提/じっこうぜんてい]と[期待/きたい]する[操作/そうさ]・[結果/けっか]も[記録/きろく]する。"
-        cons "4[言語/げんご]それぞれの[入門/にゅうもん]、[完全/かんぜん]なreference、[典型例/てんけいれい]、[診断/しんだん]の[読/よ]み[方/かた]、[成果物取得/せいかぶつしゅとく]、CLI/Web[比較/ひかく]を[用意/ようい]する。"
+        cons "[本体/ほんたい]の[教材/きょうざい]は[共通原理/きょうつうげんり]と[言語/げんご]compositionを[中心/ちゅうしん]にし、[個別言語/こべつげんご]はその[応用例/おうようれい]として[扱/あつか]う。"
+        cons "repository[分割後/ぶんかつご]の[詳細/しょうさい]syntax/semantics reference、[言語固有/げんごこゆう]tutorial、examples、API/CLI[文書/ぶんしょ]は[各言語/かくげんご]repositoryが[所有/しょゆう]する。"
+        cons "[本体/ほんたい]Pagesには[役割/やくわり]、[接続点/せつぞくてん]、package identity、[各/かく]repositoryへの[入口/いりぐち]を[置/お]き、[詳細文書/しょうさいぶんしょ]を[複製集約/ふくせいしゅうやく]しない。"
+        cons "[分割前/ぶんかつまえ]の[同居文書/どうきょぶんしょ]も[所有者/しょゆうしゃ]を[区別/くべつ]し、[公開済/こうかいず]み[入口/いりぐち]は[分割時/ぶんかつじ]に[明示的/めいじてき]な[移行先/いこうさき]を[定/さだ]める。"
         cons "rustdocだけを[生成/せいせい]して、[利用者文書/りようしゃぶんしょ]が[完成/かんせい]した[扱/あつか]いにはしない。"
+        nil
+      cons paragraph
+        cons sentence cons text "T19のdocs-only例表示では、" cons code "site/examples.json" cons text "が安定ID、repository内のsource path、言語alias/categoryと必要source Profileを指定する。" nil
+        cons sentence cons text "生成する" cons code "examples/index.html" cons text "は原文をHTML escapeして表示し、" cons code "examples/manifest.json" cons text "は元sourceとProfileのbyte digest、commit、配布pathを記録する。" nil
+        cons sentence cons text "原文はそのまま" cons code ".txt" cons text "へ配布し、元拡張子がHTMLなどでも実行可能なpageにしない。" nil
+        cons "[表示時/ひょうじじ]の[改行正規化/かいぎょうせいきか]と[取得原文/しゅとくげんぶん]のbyte[保持/ほじ]を[区別/くべつ]する。"
+        cons sentence cons text "文字列だけでguestを評価せず、この段階のcapabilityは" cons code "source-view" cons text "、" cons code "execution_available" cons text "はfalseとする。" nil
+        cons "source Profileのalias/category[照合/しょうごう]は、ResolvedProfileの[完成/かんせい]・[動作保証/どうさほしょう]ではない。"
+        cons "[実行入口/じっこういりぐち]には[別途/べっと]、[解決済/かいけつず]みProfileと[操作/そうさ]・[期待結果/きたいけっか]の[契約/けいやく]が[必要/ひつよう]である。"
         nil
       cons paragraph
         cons "build.jsonには、source commit、[設計/せっけい]revision、schema/package/providerの[解決済/かいけつず]みdigest、[例/れい]manifestと[各/かく]assetのdigest、renderer/toolchain[識別/しきべつ]を[記録/きろく]する。"
@@ -675,7 +708,7 @@ body
             cons "[復旧不能/ふっきゅうふのう]・[対象不明/たいしょうふめい]はrun summaryとincidentで[管理者/かんりしゃ]へ[明示/めいじ]し、[別途/べっと]メール[等/とう]へ[送信/そうしん]する[機能/きのう]を[暗黙/あんもく]に[追加/ついか]しない。"
             nil
           cons paragraph
-            cons "これらはT20/S06の[実装契約/じっそうけいやく]であり、[現在/げんざい]のsource artifact CIへ[未実装/みじっそう]の[復旧/ふっきゅう]jobを[追加/ついか]した[状態/じょうたい]ではない。"
+            cons "これらはT20/S06の[実装契約/じっそうけいやく]であり、repositoryの[検査/けんさ]CIへ[未実装/みじっそう]の[復旧/ふっきゅう]jobを[追加/ついか]した[状態/じょうたい]ではない。"
             nil
           cons paragraph
             cons "Doc[移行/いこう]に[使/つか]う[既知/きち]のrendererと[同/どう]revision runtimeの[試験/しけん]を[分/わ]ける[規則/きそく]は、[次章/じしょう]に[従/したが]う。"
@@ -718,6 +751,20 @@ body
             cons "GitHubの[機能/きのう]を[組/く]み[合/あ]わせた[上記/じょうき]の[状態機械/じょうたいきかい]はNEPL3の[設計判断/せっけいはんだん]であり、GitHubが[自動/じどう]rollbackを[保証/ほしょう]するという[意味/いみ]ではない。"
             nil
           nil
+      nil
+  cons section migration_references "[移行中/いこうちゅう]のDocからMarkdown[仕様/しよう]への[参照/さんしょう]"
+    body
+      cons paragraph
+        cons "canonical registryに[原文参照/げんぶんさんしょう]として[明示登録/めいじとうろく]された[未移行/みいこう]Markdown[仕様/しよう]は、[混在/こんざい]site[内/ない]では[同/おな]じbuildで[生成/せいせい]したHTML routeへ[接続/せつぞく]する。"
+        cons "[既存/きそん]のMarkdown rendererを[一度/いちど]だけ[実行/じっこう]し、その[実/じつ]byte[列/れつ]をDoc PageSetの[受動/じゅどう]fileとして[渡/わた]す。"
+        cons "raw MarkdownをHTML routeへ[置/お]かない。"
+        cons "[原文/げんぶん]path/digestと[生成/せいせい]HTMLのroute/digest、renderer、commit/base pathを[分離/ぶんり]して[記録/きろく]する。"
+        cons "[原文変更/げんぶんへんこう]、[未登録/みとうろく]の[差替/さしか]え、route[衝突/しょうとつ]、[生成物欠落/せいせいぶつけつらく]を[拒否/きょひ]する。"
+        cons "[単独/たんどく]Doc HTML exportは[原文配布/げんぶんはいふ]を[維持/いじ]し、site[用/よう]CSS/navigationや[未同梱/みどうこん]HTMLを[仮定/かてい]しない。"
+        cons "Markdown projectionも[原文/げんぶん]へのリンクを[維持/いじ]する。"
+        cons "fragmentはPageFileの[既存拒否規則/きそんきょひきそく]に[従/したが]う。"
+        cons "これはNEPL3d[正本化/せいほんか]の[証拠/しょうこ]ではなく、[正本切替/せいほんきりか]えの[前後/ぜんご]で[公開/こうかい]routeを[保/たも]つhostの[接続/せつぞく]である。"
+        nil
       nil
   cons section math_assets "[数式生成/すうしきせいせい]assetと[書出/かきだ]し[文書/ぶんしょ]"
     body cons paragraph
