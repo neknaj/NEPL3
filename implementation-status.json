@@ -452,6 +452,7 @@
     }
   ],
   "implemented_crates": [
+    "nepl3-provider",
     "nepl3-core",
     "nepl3-reader",
     "nepl3-engine",
