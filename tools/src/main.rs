@@ -13,6 +13,8 @@ fn run() -> nepl3_tools::Result<()> {
         .as_slice()
     {
         ["check"] => nepl3_tools::check(&root),
+        ["signatures", "--check"] => nepl3_tools::doc::signatures::run(&root, false),
+        ["signatures", "--write"] => nepl3_tools::doc::signatures::run(&root, true),
         ["site", "build", config, output] => {
             nepl3_tools::site::build(&root, config, std::path::Path::new(output))
         }
@@ -67,6 +69,7 @@ fn run() -> nepl3_tools::Result<()> {
         ["doc-inventory", "--check"] => nepl3_tools::doc_inventory(&root, None, false),
         ["doc-inventory", "--check-current"] => nepl3_tools::doc_inventory(&root, None, true),
         ["--help"] | ["-h"] => {
+            println!("nepl3-tools signatures --check | signatures --write");
             println!("nepl3-tools site build <site-config.json> <new-output-directory>");
             println!("nepl3-tools doc-canonical --check");
             println!("nepl3-tools doc-canonical markdown <new-output-directory>");

@@ -12,7 +12,8 @@
 ## 構文表の生成候補
 
 `generated/*-signatures.nepld` は `design/forms.json` から生成する4言語の構文表です。
-`python tools/generate/signatures.py --write` で更新し、引数なし実行で差分を検査します。
+`cargo run --locked -p nepl3-tools -- signatures --write` で更新し、`signatures --check` で差分を検査する。
+生成器は型付きDocモデルでsection・table・Sentenceを構築し、既存の検査とsource printerへ渡す。
 通常本文の機械的な置換ではなく、規範データのカテゴリ・form・field順・読取カテゴリ・arity・葉の規則をDocのsectionとtableへ投影します。コードはInlineCodeで保持します。
 これらは手書きで保守せず、元のMarkdown構文表との正本切替えや旧anchor互換の完了とは区別します。
 
