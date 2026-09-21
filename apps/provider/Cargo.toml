@@ -11,6 +11,7 @@ publish.workspace = true
 [dependencies]
 nepl3-core.workspace = true
 nepl3-wire.workspace = true
+nepl3-suite = { path = "../../crates/integration/suite" }
 
 [lints]
 workspace = true

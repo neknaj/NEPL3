@@ -60,7 +60,11 @@ pub fn invoke(
     Ok(reply)
 }
 
-pub(super) fn validate_reply(
+/// Validate a native or decoded portable reply against the immutable request
+/// and context retained by the host. Source permissions are supplied separately.
+/// This admits structural data; dispatch, grants and lifetime transitions remain
+/// the host's responsibility. Report usage never replaces host-side accounting.
+pub fn validate_reply(
     reply: &OperationReply,
     request: &Invoke,
     context: Digest,
