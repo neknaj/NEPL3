@@ -33,22 +33,28 @@ where
         e => Error::Invalid(format!("{e:?}")),
     })?;
     let mut output = Vec::new();
+    // CheckedPages is constructed by resolve in source-page order. Consume
+    // each requirement/link once instead of filtering the whole set per page.
+    let mut pending = checked.plan().remaining.as_slice();
+    let mut page_links = checked.plan().links.as_slice();
     for (page, input) in set.pages.iter().enumerate() {
         budget.charge(Resource::Work, 1)?;
-        for pending in &checked.plan().remaining {
+        while let Some((requirement, rest)) = pending.split_first() {
             budget.charge(Resource::Work, 1)?;
-            if pending.page == page as u64 {
-                check_pending(&pending.requirement, budget)?;
+            if requirement.page != page as u64 {
+                break;
             }
+            check_pending(&requirement.requirement, budget)?;
+            pending = rest;
         }
         let document_digest = checked
             .document_digest(page as u64)
             .ok_or_else(|| Error::Invalid("missing checked document digest".into()))?;
         let mut links = Vec::new();
-        for link in &checked.plan().links {
+        while let Some((link, rest)) = page_links.split_first() {
             budget.charge(Resource::Work, 1)?;
             if link.page != page as u64 {
-                continue;
+                break;
             }
             let target = match link.target {
                 PageDestination::Page { index } => &set.pages[index as usize].registration.route,
@@ -61,6 +67,7 @@ where
                 budget,
             )?;
             push(&mut links, (link.node, href), budget)?;
+            page_links = rest;
         }
         let rendered = render_resolved(
             &input.document,
@@ -70,6 +77,9 @@ where
             document_digest,
         )?;
         push(&mut output, rendered, budget)?;
+    }
+    if !pending.is_empty() || !page_links.is_empty() {
+        return Err(Error::Invalid("checked page plan order mismatch".into()));
     }
     // Semantic label existence is insufficient: the selected viewing profile
     // must actually emit the destination anchor (not an unreachable arena node).
